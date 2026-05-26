@@ -1,18 +1,24 @@
 'use client';
 
 /**
- * Session 3a coming-soon homepage.
+ * Sportsvyn homepage — Session 3b polished brand version.
  *
- * Intentionally minimal — "ugly but functional." Brand polish (Saira Condensed
- * wordmark with macron-Y treatment, color tokens, countdown timer, hero imagery)
- * is deferred to Session 3b.
+ * Composes the Wordmark (SPORTSVȲN with macron-Y), the live vestaboard
+ * countdown to the 2026 FIFA World Cup opener, and the email signup form.
+ * Replaces the Session 3a "ugly but functional" placeholder.
  *
- * UTM capture: on mount, we read window.location.search and forward any
- * allow-listed utm_* params along with the email to /api/email/signup so
- * attribution survives the signup.
+ * Brand tokens used: bg-graphite, text-volt, text-muted, text-paper-warm
+ * (defined in app/globals.css via Tailwind v4 @theme). Body background is
+ * --color-ink, set on <body> in globals.css.
+ *
+ * UTM capture: on mount, reads utm_source/utm_medium/utm_campaign from
+ * window.location.search via an allowlist filter and forwards them with
+ * the email to /api/email/signup.
  */
 
 import { useEffect, useState } from 'react';
+import Wordmark from '@/components/Wordmark';
+import Countdown from '@/components/Countdown';
 
 export default function Home() {
   const [email, setEmail] = useState('');
@@ -61,14 +67,25 @@ export default function Home() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-100 px-4">
-      <main className="w-full max-w-md flex flex-col items-center gap-8 text-center">
-        <h1 className="text-5xl font-bold tracking-tight">Sportsvyn</h1>
-        <p className="text-lg text-zinc-400">
-          Sports editorial. Coming June 2026.
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+      <main className="w-full max-w-2xl flex flex-col items-center text-center">
+        <Wordmark />
+
+        <p className="font-serif italic text-xl sm:text-2xl text-paper-warm mt-4">
+          Read the Game.
         </p>
 
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3">
+        <div className="mt-12 sm:mt-16">
+          <Countdown />
+          <p className="font-mono text-xs text-muted tracking-widest uppercase mt-3">
+            World Cup Begins · June 11, 2026
+          </p>
+        </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="mt-12 sm:mt-16 w-full max-w-sm"
+        >
           <label htmlFor="email" className="sr-only">
             Email address
           </label>
@@ -80,28 +97,22 @@ export default function Home() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
             disabled={submitting}
-            className="w-full px-4 py-2 rounded bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 disabled:opacity-50"
+            className="w-full px-4 py-3 bg-graphite border border-charcoal rounded text-paper-warm placeholder:text-muted focus:outline-none focus:border-volt disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={submitting}
-            className="w-full px-4 py-2 rounded bg-zinc-100 text-zinc-950 font-medium hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-3 w-full px-4 py-3 bg-volt text-ink font-mono font-medium uppercase tracking-widest text-sm rounded hover:bg-volt/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {submitting ? 'Submitting…' : 'Notify me'}
+            {submitting ? 'Sending…' : 'Notify me'}
           </button>
-        </form>
 
-        <div className="min-h-[1.5rem] text-sm" aria-live="polite">
-          {status === 'success' && (
-            <p className="text-green-400">Thanks — we&apos;ll be in touch.</p>
-          )}
-          {status === 'invalid' && (
-            <p className="text-amber-400">Please enter a valid email.</p>
-          )}
-          {status === 'error' && (
-            <p className="text-red-400">Something went wrong. Try again.</p>
-          )}
-        </div>
+          <div className="mt-4 h-6 text-sm text-muted" aria-live="polite">
+            {status === 'success' && "Thanks — we'll be in touch."}
+            {status === 'invalid' && 'Please enter a valid email.'}
+            {status === 'error' && 'Something went wrong. Try again.'}
+          </div>
+        </form>
       </main>
     </div>
   );
