@@ -1,22 +1,31 @@
 /**
- * Sportsvyn brand wordmark — "SPORTSVȲN" with a macron above the Y.
+ * Sportsvyn brand wordmark -- "SPORTSVȲN" with a macron above the Y.
  *
- * The macron is rendered as a CSS-drawn bar (an absolutely-positioned empty
- * span using bg-current) rather than a Unicode combining character, so its
- * thickness, width, and offset are tunable independently of the typeface.
+ * The macron is rendered as a CSS-drawn bar (an absolutely-positioned
+ * empty span using bg-current) rather than a Unicode combining
+ * character, so its thickness, width, and offset are tunable
+ * independently of the typeface.
  *
- * Screen readers read the visible glyphs "SPORTSVYN" naturally; the macron
- * span is aria-hidden.
+ * Screen readers read the visible glyphs "SPORTSVYN" naturally; the
+ * macron span is aria-hidden.
  *
- * Optimized for hero size by default (text-7xl on mobile, text-8xl on
- * desktop). Pass `className` to override or extend the default styling at
- * smaller sizes elsewhere.
+ * Sizing:
+ *   The default `sizeClassName` is the hero-tier scale used on the
+ *   homepage. Callers on utility pages (/confirmed, etc.) pass a
+ *   smaller scale. A dedicated prop is required because Tailwind
+ *   emits same-family utilities (text-xs ... text-9xl) in spec order
+ *   in the generated stylesheet, so a smaller class passed via the
+ *   `className` slot won't override the larger default by virtue of
+ *   className-string position alone.
  */
 
-export default function Wordmark({ className = '' }) {
+export default function Wordmark({
+  className = '',
+  sizeClassName = 'text-5xl sm:text-6xl md:text-8xl',
+}) {
   return (
     <h1
-      className={`font-display italic font-black text-paper-warm tracking-tighter leading-none whitespace-nowrap text-5xl sm:text-6xl md:text-8xl ${className}`}
+      className={`font-display italic font-black text-paper-warm tracking-tighter leading-none whitespace-nowrap ${sizeClassName} ${className}`}
     >
       <span>SPORTSV</span>
       <span className="relative inline-block text-volt">
