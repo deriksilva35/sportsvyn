@@ -8,6 +8,35 @@
   --color-paper-warm: #F5F5F2;
   --color-volt: #D4FF00;
   --color-muted: #888888;
+
+  /* Added for team page + future bespoke editorial surfaces */
+  --color-jade: #2A8A4F;
+  --color-terra: #B8410F;
+  --color-live-red: #E63946;
+  --color-rule-dark: #2E2E2E;
+  --color-rule-darker: #1F1F1F;
+  --color-muted-light: #B5B5B5;
+  --color-muted-dim: #5A5A5A;
+  --color-volt-dim: #B8DD00;
+}
+
+/* Mockup-name aliases so bespoke page CSS can write var(--ink) etc.
+   These are aliases, not duplicates — single source of truth above. */
+:root {
+  --ink: var(--color-ink);
+  --graphite: var(--color-graphite);
+  --charcoal: var(--color-charcoal);
+  --paper-warm: var(--color-paper-warm);
+  --volt: var(--color-volt);
+  --muted: var(--color-muted);
+  --jade: var(--color-jade);
+  --terra: var(--color-terra);
+  --live-red: var(--color-live-red);
+  --rule-dark: var(--color-rule-dark);
+  --rule-darker: var(--color-rule-darker);
+  --muted-light: var(--color-muted-light);
+  --muted-dim: var(--color-muted-dim);
+  --volt-dim: var(--color-volt-dim);
 }
 
 /* Brand font tokens — @theme inline so they reference layout.js CSS variables */
