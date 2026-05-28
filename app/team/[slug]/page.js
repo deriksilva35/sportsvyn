@@ -43,6 +43,7 @@ export async function generateMetadata({ params }) {
   return {
     title: `${team.name} — Sportsvyn`,
     description: `Power ranking, form, stats, top performers, and schedule for ${team.name}.`,
+    robots: { index: false, follow: false },
   };
 }
 
