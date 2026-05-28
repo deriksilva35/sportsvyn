@@ -61,45 +61,116 @@ function BlurbCard({ team }) {
   );
 }
 
-function MovementChip({ movement }) {
-  if (movement == null || movement === 0) {
-    return <span className="val flat">— No change</span>;
-  }
-  if (movement > 0) {
-    return <span className="val up">▲ +{movement}</span>;
-  }
-  return <span className="val down">▼ {movement}</span>;
-}
-
 function formatAmerican(n) {
   if (n == null) return '—';
   return n > 0 ? `+${n}` : `${n}`;
 }
 
+function formatSignedInt(n) {
+  return Number(n) > 0 ? `+${n}` : `${n}`;
+}
+
+function formatSignedPct(n) {
+  const v = Number(n);
+  return `${v > 0 ? '+' : ''}${v.toFixed(2)}%`;
+}
+
+// Inline delta — small, colored, sits flush against the number it describes.
+// No new CSS classes; inline style pulls --volt / --terra from globals.css.
+function InlineDelta({ direction, children }) {
+  const color =
+    direction === 'up' ? 'var(--volt)' :
+    direction === 'down' ? 'var(--terra)' :
+    'var(--muted)';
+  return (
+    <span
+      style={{
+        marginLeft: '6px',
+        fontFamily: 'var(--font-mono)',
+        fontSize: '10px',
+        fontWeight: 700,
+        letterSpacing: '0.04em',
+        color,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
 function OddsTile({ kicker, context, market, impliedLabel = 'Implied' }) {
   if (!market) return null;
+
   const books = market.source_books?.length
     ? `Avg of ${market.source_books.join(' · ')}`
     : null;
+
+  // American odds and implied probability move in OPPOSITE directions by
+  // definition: shorter price ⇒ higher probability. Each delta is colored by
+  // its own axis so the two views describe the same underlying market shift
+  // without contradicting each other.
+  const probMove = market.movement_24h_prob;
+  const oddsMove = market.movement_24h_odds;
+
+  const probDir =
+    probMove == null || Number(probMove) === 0 ? 'flat' :
+    Number(probMove) > 0 ? 'up' : 'down';
+
+  // Shortened price = american odds number got smaller / more negative = more
+  // favored. So negative oddsMove maps to a terra ▼ on the price.
+  const oddsDir =
+    oddsMove == null || Number(oddsMove) === 0 ? 'flat' :
+    Number(oddsMove) < 0 ? 'down' : 'up';
+
+  const meaning =
+    probDir === 'up'   ? 'more favored — shorter price' :
+    probDir === 'down' ? 'less favored — longer price'  :
+    null;
+
   return (
     <div className="odds-tile">
       <div className="odds-tile-kicker">{kicker}</div>
       {context && <div className="odds-tile-context">{context}</div>}
+
       <div className="odds-tile-row">
-        <span className="odds-tile-american">{formatAmerican(market.american_odds)}</span>
+        <span className="odds-tile-american">
+          {formatAmerican(market.american_odds)}
+          {oddsDir !== 'flat' && (
+            <InlineDelta direction={oddsDir}>
+              {oddsDir === 'down' ? '▼' : '▲'} {formatSignedInt(oddsMove)}
+            </InlineDelta>
+          )}
+        </span>
         <div className="odds-tile-implied">
           <span className="odds-tile-implied-val">
             {market.implied_probability != null
               ? `${Number(market.implied_probability).toFixed(1)}%`
               : '—'}
+            {probDir !== 'flat' && (
+              <InlineDelta direction={probDir}>
+                {probDir === 'up' ? '▲' : '▼'} {formatSignedPct(probMove)}
+              </InlineDelta>
+            )}
           </span>
           <span className="odds-tile-implied-label">{impliedLabel}</span>
         </div>
       </div>
-      <div className="odds-tile-mvmt">
-        <span className="label">24h move</span>
-        <MovementChip movement={market.movement_24h_odds} />
-      </div>
+
+      {meaning && (
+        <div
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '10px',
+            color: 'var(--muted-light)',
+            letterSpacing: '0.04em',
+            marginTop: '2px',
+          }}
+        >
+          {meaning}
+        </div>
+      )}
+
       {books && <div className="odds-tile-source">{books}</div>}
     </div>
   );
