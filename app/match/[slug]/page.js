@@ -100,6 +100,56 @@ async function getPreview(matchId) {
   return rows[0] ?? null;
 }
 
+// Cross-league form fetch: the same real team can have multiple teams rows
+// (one per league it appears in). The CTE collects all rows sharing the
+// same api_sports id so the form query finds matches across leagues.
+async function getFormForTeam(teamId) {
+  if (!teamId) return null;
+  const rows = await sql`
+    WITH this_team_ids AS (
+      SELECT id FROM teams
+      WHERE external_ids->>'api_sports' = (
+        SELECT external_ids->>'api_sports' FROM teams WHERE id = ${teamId}
+      )
+    )
+    SELECT
+      m.kickoff_at,
+      m.home_team_id, m.away_team_id,
+      m.home_score, m.away_score,
+      (SELECT name FROM teams WHERE id = ${teamId}) AS this_team_name,
+      (this_team_ids.id IS NOT NULL)               AS was_home
+    FROM matches m
+    LEFT JOIN this_team_ids ON this_team_ids.id = m.home_team_id
+    WHERE (
+        m.home_team_id IN (SELECT id FROM this_team_ids)
+        OR m.away_team_id IN (SELECT id FROM this_team_ids)
+      )
+      AND m.status = 'final'
+      AND m.kickoff_at < now()
+    ORDER BY m.kickoff_at DESC
+    LIMIT 5
+  `;
+  if (rows.length === 0) return null;
+
+  // Reverse → oldest first so the FormCard pill row reads chronologically
+  // left-to-right (newest on the right).
+  const results = rows.slice().reverse().map((r) => {
+    const us = r.was_home ? r.home_score : r.away_score;
+    const them = r.was_home ? r.away_score : r.home_score;
+    let code = 'D';
+    if (us != null && them != null) {
+      if (us > them) code = 'W';
+      else if (us < them) code = 'L';
+    }
+    return { code };
+  });
+
+  return {
+    team_name: rows[0].this_team_name,
+    results,
+  };
+}
+
 function tabsForStatus(status) {
   const isLive = status === 'live';
   const isFinal = status === 'final';
@@ -177,10 +227,12 @@ export default async function MatchPage({ params }) {
   const match = await getMatchBySlug(slug);
   if (!match) notFound();
 
-  const [watchScore, broadcasters, preview] = await Promise.all([
+  const [watchScore, broadcasters, preview, homeForm, awayForm] = await Promise.all([
     getWatchScore(match.id),
     getBroadcasters(match.id, 'US'),
     getPreview(match.id),
+    getFormForTeam(match.home_team_id),
+    getFormForTeam(match.away_team_id),
   ]);
 
   const tabs = tabsForStatus(match.status);
@@ -225,7 +277,7 @@ export default async function MatchPage({ params }) {
           </div>
 
           <PowerRankingsCompare home={null} away={null} />
-          <FormSection home={null} away={null} />
+          <FormSection home={homeForm} away={awayForm} />
         </div>
 
         {/* LINEUPS PANEL */}
