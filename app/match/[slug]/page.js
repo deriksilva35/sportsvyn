@@ -87,6 +87,19 @@ async function getBroadcasters(matchId, country = 'US') {
   return rows.length ? rows : null;
 }
 
+async function getPreview(matchId) {
+  const rows = await sql`
+    SELECT title, subtitle, body, author, published_at, updated_at
+    FROM articles
+    WHERE match_id = ${matchId}
+      AND type = 'preview'
+      AND score_type IS NULL
+    ORDER BY updated_at DESC
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
 function tabsForStatus(status) {
   const isLive = status === 'live';
   const isFinal = status === 'final';
@@ -164,9 +177,10 @@ export default async function MatchPage({ params }) {
   const match = await getMatchBySlug(slug);
   if (!match) notFound();
 
-  const [watchScore, broadcasters] = await Promise.all([
+  const [watchScore, broadcasters, preview] = await Promise.all([
     getWatchScore(match.id),
     getBroadcasters(match.id, 'US'),
+    getPreview(match.id),
   ]);
 
   const tabs = tabsForStatus(match.status);
@@ -200,7 +214,7 @@ export default async function MatchPage({ params }) {
         >
           <div className="preview-twocol">
             <div className="preview-twocol-left">
-              <PreviewLeft preview={null} match={match} />
+              <PreviewLeft preview={preview} match={match} />
             </div>
             <div className="preview-twocol-right">
               <WatchScoreVertical score={watchScore} />
