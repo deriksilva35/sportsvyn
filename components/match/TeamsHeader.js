@@ -7,11 +7,22 @@
  * gets the .favored class. The CSS supports it; the data feed does not yet.
  */
 
-function FlagSlot({ abbreviation, colorPrimary, size = 'lg' }) {
-  const known = new Set(['USA', 'SEN']);
+// Flag rendering: reads teams.flag_svg_path (populated by formSync /
+// backfill-flags from lib/flags.js's code→ISO map → flagcdn SVG URL).
+// Falls back to an empty bordered rectangle if no flag URL is on file
+// (sparse-data fixture or an unmapped country code).
+function FlagSlot({ flagSvgPath, colorPrimary, size = 'lg' }) {
   const cls = `flag flag-${size}`;
-  if (abbreviation && known.has(abbreviation.toUpperCase())) {
-    return <span className={`${cls} flag-${abbreviation.toLowerCase()}`} />;
+  if (flagSvgPath) {
+    return (
+      <span className={cls} aria-hidden="true">
+        <img
+          src={flagSvgPath}
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      </span>
+    );
   }
   return (
     <span
@@ -27,7 +38,7 @@ export default function TeamsHeader({ match }) {
     <div className="teams-header">
       <div className="teams-header-team">
         <FlagSlot
-          abbreviation={match.home_abbreviation}
+          flagSvgPath={match.home_flag_svg}
           colorPrimary={match.home_flag_color}
         />
         <div className="teams-header-team-name">{match.home_name ?? 'Home'}</div>
@@ -36,7 +47,7 @@ export default function TeamsHeader({ match }) {
       <div className="teams-header-team away">
         <div className="teams-header-team-name">{match.away_name ?? 'Away'}</div>
         <FlagSlot
-          abbreviation={match.away_abbreviation}
+          flagSvgPath={match.away_flag_svg}
           colorPrimary={match.away_flag_color}
         />
       </div>

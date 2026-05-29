@@ -46,10 +46,12 @@ async function getMatchBySlug(slug) {
       h.slug                AS home_slug,
       h.abbreviation        AS home_abbreviation,
       h.flag_color_primary  AS home_flag_color,
+      h.flag_svg_path       AS home_flag_svg,
       a.name                AS away_name,
       a.slug                AS away_slug,
       a.abbreviation        AS away_abbreviation,
-      a.flag_color_primary  AS away_flag_color
+      a.flag_color_primary  AS away_flag_color,
+      a.flag_svg_path       AS away_flag_svg
     FROM matches m
     LEFT JOIN teams h ON h.id = m.home_team_id
     LEFT JOIN teams a ON a.id = m.away_team_id

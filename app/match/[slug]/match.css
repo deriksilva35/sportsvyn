@@ -67,11 +67,14 @@
 }
 
 /* ============ FLAGS (page-scoped) ============ */
+/* Full-color treatment confirmed in the comparison file. The original
+   muting filter (saturate 0.92 / contrast 1.4 / brightness 0.75) was
+   dropped — flags render at native flagcdn colors. */
 .flag {
   display: inline-block; background-size: cover; background-position: center;
-  filter: saturate(0.92) contrast(1.4) brightness(0.75);
   border: 1px solid var(--rule-darker);
   vertical-align: middle;
+  overflow: hidden;
 }
 .flag-tiny { width: 14px; height: 10px; }
 .flag-sm   { width: 22px; height: 16px; }
