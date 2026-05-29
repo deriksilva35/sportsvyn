@@ -1,18 +1,36 @@
 /**
- * /match/[slug] — minimal live/recap surface.
+ * /match/[slug] — pre-match / live / recap surface.
  *
- * Plain markup, deliberately under-designed. Reads one row from `matches`
- * + joined team rows, optionally calls API-Sports for lineups (only when
- * the match isn't 'scheduled' — pre-match lineups don't exist yet), and
- * mounts <LivePoller> when status='live'.
+ * Port of the locked Option-C layout (sportsvyn-match-prematch-option-c-tabs-twocol.html)
+ * with the v2-winprob rail composition. Server Component shell;
+ * MatchTabBar is the only client island.
  *
- * noindex during the dev-data phase. Same posture as /team/[slug].
+ * SHELL build: every data block is a graceful-empty slot. Real wiring
+ * for Watch Score, Win Probability, Edge Pick, Where-to-Watch, Power
+ * Rankings, and Form lands in the next slice. The page renders
+ * top-to-bottom for sparse-data fixtures (e.g. the USA-Senegal friendly
+ * with no rankings, no odds, no recent finals) without crashes and
+ * without fabricated content.
+ *
+ * noindex remains active through the dev-data phase.
  */
 
 import { notFound } from 'next/navigation';
 import { sql } from '@/lib/db';
-import { apiSports } from '@/lib/apiSports';
+import Wordmark from '@/components/Wordmark';
+import MatchMetaStrip from '@/components/match/MatchMetaStrip';
+import TeamsHeader from '@/components/match/TeamsHeader';
+import MatchTabBar from '@/components/match/MatchTabBar';
+import PreviewLeft from '@/components/match/PreviewLeft';
+import WatchScoreVertical from '@/components/match/WatchScoreVertical';
+import WinProbability from '@/components/match/WinProbability';
+import EdgePick from '@/components/match/EdgePick';
+import WhereToWatch from '@/components/match/WhereToWatch';
+import PowerRankingsCompare from '@/components/match/PowerRankingsCompare';
+import FormSection from '@/components/match/FormSection';
 import LivePoller from '@/components/match/LivePoller';
+
+import './match.css';
 
 export const metadata = {
   robots: { index: false, follow: false },
@@ -24,12 +42,14 @@ async function getMatchBySlug(slug) {
       m.id, m.slug, m.kickoff_at, m.status, m.stage, m.group_code,
       m.home_team_id, m.away_team_id, m.home_score, m.away_score,
       m.venue, m.external_ids,
-      h.name              AS home_name,
-      h.slug              AS home_slug,
-      h.abbreviation      AS home_abbreviation,
-      a.name              AS away_name,
-      a.slug              AS away_slug,
-      a.abbreviation      AS away_abbreviation
+      h.name                AS home_name,
+      h.slug                AS home_slug,
+      h.abbreviation        AS home_abbreviation,
+      h.flag_color_primary  AS home_flag_color,
+      a.name                AS away_name,
+      a.slug                AS away_slug,
+      a.abbreviation        AS away_abbreviation,
+      a.flag_color_primary  AS away_flag_color
     FROM matches m
     LEFT JOIN teams h ON h.id = m.home_team_id
     LEFT JOIN teams a ON a.id = m.away_team_id
@@ -39,112 +59,103 @@ async function getMatchBySlug(slug) {
   return rows[0] ?? null;
 }
 
-function fmtKickoff(d) {
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone: 'America/New_York',
-    timeZoneName: 'short',
-  }).format(new Date(d));
+async function getWatchScore(matchId) {
+  const rows = await sql`
+    SELECT
+      stakes_score, quality_score, narrative_score, drama_score, moment_score,
+      composite_score,
+      stakes_note, quality_note, narrative_note, drama_note, moment_note,
+      watch_summary
+    FROM articles
+    WHERE match_id = ${matchId}
+      AND type = 'preview'
+      AND score_type = 'watch'
+    ORDER BY updated_at DESC
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
 }
 
-const CONTAINER_STYLE = { maxWidth: 900, margin: '0 auto', padding: '48px 24px' };
-const KICKER_STYLE = {
-  fontFamily: 'var(--font-mono)',
-  fontSize: 10,
-  letterSpacing: '0.22em',
-  textTransform: 'uppercase',
-  color: 'var(--muted)',
-  marginBottom: 12,
-};
-const NAME_STYLE = {
-  fontFamily: 'var(--font-display)',
-  fontStyle: 'italic',
-  fontWeight: 900,
-  fontSize: 32,
-  letterSpacing: '-0.02em',
-  color: 'var(--paper-warm)',
-  textTransform: 'uppercase',
-};
-const SCORE_STYLE = {
-  ...NAME_STYLE,
-  fontSize: 40,
-  color: 'var(--volt)',
-};
-const META_STYLE = {
-  fontFamily: 'var(--font-mono)',
-  fontSize: 11,
-  color: 'var(--muted)',
-  letterSpacing: '0.14em',
-  textTransform: 'uppercase',
-  marginTop: 8,
-};
-const SECTION_HEAD_STYLE = {
-  fontFamily: 'var(--font-mono)',
-  fontSize: 10,
-  letterSpacing: '0.22em',
-  textTransform: 'uppercase',
-  color: 'var(--volt)',
-  borderBottom: '1px solid var(--rule-dark)',
-  paddingBottom: 8,
-  marginTop: 40,
-  marginBottom: 16,
-  fontWeight: 700,
-};
+async function getBroadcasters(matchId, country = 'US') {
+  const rows = await sql`
+    SELECT broadcaster_name, broadcaster_type, is_primary, display_order, language_code
+    FROM match_broadcasters
+    WHERE match_id = ${matchId}
+      AND country_code = ${country}
+    ORDER BY display_order
+  `;
+  return rows.length ? rows : null;
+}
 
-function Lineups({ lineups }) {
-  if (!lineups?.length) return null;
+function tabsForStatus(status) {
+  const isLive = status === 'live';
+  const isFinal = status === 'final';
+  return {
+    list: [
+      { key: 'preview', label: 'Preview' },
+      { key: 'lineups', label: 'Lineups & Injuries' },
+      { key: 'odds',    label: 'Odds & Projections' },
+      {
+        key: 'live',
+        label: 'Live',
+        dot: isLive ? 'live' : 'muted',
+      },
+      { key: 'recap',   label: 'Recap', hidden: !isFinal },
+    ],
+    defaultTab: isFinal ? 'recap' : isLive ? 'live' : 'preview',
+  };
+}
+
+function SiteHeader() {
   return (
-    <div>
-      <div style={SECTION_HEAD_STYLE}>§ Lineups</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
-        {lineups.map((side) => (
-          <div key={side.team.id}>
-            <div
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontStyle: 'italic',
-                fontWeight: 900,
-                fontSize: 18,
-                color: 'var(--paper-warm)',
-                textTransform: 'uppercase',
-                letterSpacing: '-0.01em',
-                marginBottom: 4,
-              }}
-            >
-              {side.team.name}
-            </div>
-            <div style={{ ...META_STYLE, marginTop: 0, marginBottom: 12 }}>
-              Formation {side.formation ?? '—'}
-              {side.coach?.name && <> · Coach {side.coach.name}</>}
-            </div>
-            <ol style={{ paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {(side.startXI ?? []).map((p) => (
-                <li
-                  key={p.player.id}
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 12,
-                    color: 'var(--paper-warm)',
-                  }}
-                >
-                  <span style={{ color: 'var(--muted)', display: 'inline-block', width: 24 }}>
-                    {p.player.number ?? '–'}
-                  </span>
-                  {p.player.name}
-                  <span style={{ color: 'var(--muted-dim)', marginLeft: 6 }}>
-                    {p.player.pos ?? ''}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        ))}
+    <header className="site-header">
+      <div className="brand-row">
+        <Wordmark sizeClassName="text-[22px]" />
       </div>
-    </div>
+      <div className="nav">
+        <a href="/">Home</a>
+        <a href="#">Bracket</a>
+        <a href="#">Rankings</a>
+        <a href="#">Reads</a>
+      </div>
+      <div className="header-cta">
+        <a href="#" className="signin">Sign In</a>
+        <button type="button" className="member-btn">Become a Member</button>
+      </div>
+    </header>
+  );
+}
+
+function SiteFooter() {
+  return (
+    <footer className="site-footer">
+      <div className="site-footer-inner">
+        <div className="footer-brand">
+          <Wordmark sizeClassName="text-[28px]" />
+          <p className="tagline">Read the Game. Editorial sports coverage that takes the reader seriously.</p>
+          <p className="copyright">© 2026 Sportsvyn · Considered Network</p>
+        </div>
+        <div className="footer-links">
+          <div className="footer-col">
+            <h4>Read</h4>
+            <a href="#">Daily Card</a>
+            <a href="#">Bracket</a>
+            <a href="#">Rankings</a>
+            <a href="#">Stats</a>
+          </div>
+          <div className="footer-col">
+            <h4>About</h4>
+            <a href="#">Methodology</a>
+            <a href="#">Voice Bible</a>
+          </div>
+          <div className="footer-col">
+            <h4>Follow</h4>
+            <a href="#">Newsletter</a>
+            <a href="#">RSS</a>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -153,43 +164,77 @@ export default async function MatchPage({ params }) {
   const match = await getMatchBySlug(slug);
   if (!match) notFound();
 
+  const [watchScore, broadcasters] = await Promise.all([
+    getWatchScore(match.id),
+    getBroadcasters(match.id, 'US'),
+  ]);
+
+  const tabs = tabsForStatus(match.status);
+  const isLive = match.status === 'live';
   const fixtureApiId = match.external_ids?.api_sports
     ? Number(match.external_ids.api_sports)
     : null;
 
-  let lineups = [];
-  if (fixtureApiId && match.status !== 'scheduled') {
-    try {
-      lineups = await apiSports.lineups(fixtureApiId);
-    } catch (err) {
-      console.error('lineups fetch failed:', err);
-      lineups = [];
-    }
-  }
-
-  const isLive = match.status === 'live';
-  const isFinal = match.status === 'final';
-  const isScheduled = match.status === 'scheduled';
-
   return (
-    <main style={CONTAINER_STYLE}>
-      <div style={KICKER_STYLE}>
-        {match.stage ?? 'Friendly'} · {match.venue ?? 'Venue TBD'}
-      </div>
+    <>
+      <SiteHeader />
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          gap: 24,
-          alignItems: 'center',
-          padding: '24px 0',
-          borderBottom: '1px solid var(--rule-dark)',
-        }}
-      >
-        <div style={NAME_STYLE}>{match.home_name}</div>
+      <main className="match-page">
+        <div className="breadcrumb">
+          <a href="/">Home</a>
+          <span className="sep">/</span>
+          <a href="#">FIFA World Cup 2026</a>
+          <span className="sep">/</span>
+          <span className="current">{match.home_name} vs {match.away_name}</span>
+        </div>
 
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+        <MatchMetaStrip match={match} />
+        <TeamsHeader match={match} />
+
+        <MatchTabBar tabs={tabs.list} defaultTab={tabs.defaultTab} />
+
+        {/* PREVIEW PANEL */}
+        <div
+          data-tab-panel="preview"
+          className={`tab-panel${tabs.defaultTab === 'preview' ? ' active' : ''}`}
+        >
+          <div className="preview-twocol">
+            <div className="preview-twocol-left">
+              <PreviewLeft preview={null} match={match} />
+            </div>
+            <div className="preview-twocol-right">
+              <WatchScoreVertical score={watchScore} />
+              <WinProbability probability={null} homeName={match.home_name} awayName={match.away_name} />
+              <EdgePick pick={null} />
+              <WhereToWatch broadcasters={broadcasters} />
+            </div>
+          </div>
+
+          <PowerRankingsCompare home={null} away={null} />
+          <FormSection home={null} away={null} />
+        </div>
+
+        {/* LINEUPS PANEL */}
+        <div
+          data-tab-panel="lineups"
+          className={`tab-panel${tabs.defaultTab === 'lineups' ? ' active' : ''}`}
+        >
+          <div className="tab-stub">Lineups & injuries publish ~60 minutes before kickoff.</div>
+        </div>
+
+        {/* ODDS PANEL */}
+        <div
+          data-tab-panel="odds"
+          className={`tab-panel${tabs.defaultTab === 'odds' ? ' active' : ''}`}
+        >
+          <div className="tab-stub">Odds & projections (futures + match props) — wiring next.</div>
+        </div>
+
+        {/* LIVE PANEL */}
+        <div
+          data-tab-panel="live"
+          className={`tab-panel${tabs.defaultTab === 'live' ? ' active' : ''}`}
+        >
           {isLive ? (
             <LivePoller
               fixtureId={fixtureApiId}
@@ -200,28 +245,21 @@ export default async function MatchPage({ params }) {
                 minute: null,
               }}
             />
-          ) : isFinal ? (
-            <div style={SCORE_STYLE}>
-              {match.home_score ?? 0} — {match.away_score ?? 0}
-            </div>
           ) : (
-            <div style={{ ...META_STYLE, marginTop: 0 }}>vs</div>
+            <div className="tab-stub">Live commentary + clock activate at kickoff.</div>
           )}
-          <div style={META_STYLE}>
-            {isFinal ? 'Full Time' : isLive ? 'Live' : fmtKickoff(match.kickoff_at)}
-          </div>
         </div>
 
-        <div style={{ ...NAME_STYLE, textAlign: 'right' }}>{match.away_name}</div>
-      </div>
-
-      {isScheduled && (
-        <div style={{ ...META_STYLE, marginTop: 24 }}>
-          Lineups not yet announced — published roughly an hour before kickoff.
+        {/* RECAP PANEL */}
+        <div
+          data-tab-panel="recap"
+          className={`tab-panel${tabs.defaultTab === 'recap' ? ' active' : ''}`}
+        >
+          <div className="tab-stub">Recap publishes within minutes of full time.</div>
         </div>
-      )}
+      </main>
 
-      <Lineups lineups={lineups} />
-    </main>
+      <SiteFooter />
+    </>
   );
 }
