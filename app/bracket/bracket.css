@@ -1,0 +1,459 @@
+/* Bracket page CSS — ported from the locked v3 mockup
+   (~/Downloads/sportsvyn-bracket-v3.html, "Option 2 locked, volt logic applied").
+   Site chrome (.site-header/.site-footer/.breadcrumb) duplicated from
+   match.css so the bracket page renders consistent with the match page; if
+   we later need three+ surfaces sharing the same chrome, extract to a
+   shared stylesheet then. Flags use full-color (filter: none) matching the
+   match page's approved treatment — v3's muting filter dropped. */
+
+/* ============ SITE HEADER (mirrored from match.css) ============ */
+.site-header {
+  border-bottom: 1px solid var(--rule-dark);
+  padding: 18px 48px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--ink);
+}
+.site-header .brand-row { display: flex; align-items: center; gap: 24px; }
+.site-header .nav {
+  display: flex; gap: 24px;
+  font-family: var(--font-mono);
+  font-size: 11px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+.site-header .nav a { color: var(--muted); text-decoration: none; }
+.site-header .nav a.active { color: var(--paper-warm); }
+.site-header .nav a:hover { color: var(--volt); }
+.site-header .header-cta { display: flex; gap: 12px; align-items: center; }
+.site-header .header-cta .signin {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  text-decoration: none;
+}
+.site-header .header-cta .member-btn {
+  background: var(--volt); color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 10px 16px; border: none; cursor: pointer;
+}
+
+/* ============ PAGE LAYOUT ============ */
+.bracket-page {
+  /* No max-width — v3's bracket needs the room to breathe (1500px min for
+     the 9-column knockout layout). The container itself overflow-x:autos. */
+  padding: 32px 48px 0;
+}
+
+/* ============ BREADCRUMB ============ */
+.breadcrumb {
+  margin-bottom: 24px;
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+}
+.breadcrumb a { color: var(--muted); text-decoration: none; }
+.breadcrumb a:hover { color: var(--volt); }
+.breadcrumb .sep { color: var(--rule-dark); }
+.breadcrumb .current { color: var(--paper-warm); }
+
+/* ============ GROUP STAGE STRIP (v3 verbatim) ============ */
+.group-strip {
+  padding: 32px 0;
+  border-bottom: 1px solid var(--rule-dark);
+  background: var(--ink);
+}
+.group-strip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 24px;
+}
+.group-strip-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  color: var(--paper-warm);
+}
+.group-strip-stat {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.group-strip-stat .accent { color: var(--volt); }
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.group-card {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 14px 16px;
+}
+.group-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule-dark);
+  margin-bottom: 8px;
+}
+.group-card-label {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--paper-warm);
+}
+.group-card-label .grp { color: var(--volt); }
+.group-card-meta {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* ============ GROUP TEAM ROW (v3 verbatim) ============ */
+.team-row-v2 {
+  display: grid;
+  grid-template-columns: 12px 20px 1fr 28px 22px 22px 28px;
+  gap: 7px;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 12px;
+}
+.team-row-v2 .pos {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted-dim);
+  text-align: right;
+}
+.team-row-v2 .flag {
+  width: 20px;
+  height: 14px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--rule-darker);
+  overflow: hidden;
+}
+.team-row-v2 .flag img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.team-row-v2 .name {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 500;
+  color: var(--paper-warm);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.team-row-v2 .pts {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--paper-warm);
+  font-weight: 700;
+  text-align: right;
+}
+.team-row-v2 .num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted-light);
+  text-align: right;
+}
+.team-row-v2 .adv {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--volt);
+  font-weight: 700;
+  text-align: right;
+}
+/* qualified / eliminated / live modifiers from v3 — unused pre-tournament
+   but kept so they activate once standings data populates (matchday 1+). */
+.team-row-v2.qualified .pos { color: var(--volt); font-weight: 700; }
+.team-row-v2.qualified .pts { color: var(--volt); }
+.team-row-v2.eliminated .name {
+  color: var(--muted-dim);
+  text-decoration: line-through;
+  text-decoration-color: var(--muted-dim);
+}
+.team-row-v2.eliminated .pos,
+.team-row-v2.eliminated .pts,
+.team-row-v2.eliminated .num,
+.team-row-v2.eliminated .adv {
+  color: var(--muted-dim);
+}
+.team-row-v2.eliminated .flag {
+  filter: saturate(0.3) contrast(1.2) brightness(0.5);
+}
+.team-row-v2-header {
+  display: grid;
+  grid-template-columns: 12px 20px 1fr 28px 22px 22px 28px;
+  gap: 7px;
+  align-items: center;
+  padding: 0 0 4px 0;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--muted-dim);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.team-row-v2-header > span:nth-child(n+4) { text-align: right; }
+
+/* Pre-tournament honest-empty: dim the ADV "—" so it reads as "not yet"
+   instead of as a real datum at full volt weight. */
+.team-row-v2 .adv.empty {
+  color: var(--muted-dim);
+  font-weight: 400;
+}
+
+/* ============ BRACKET CONTAINER (v3 verbatim) ============ */
+.bracket-container {
+  padding: 32px 0;
+  background: var(--ink);
+  overflow-x: auto;
+}
+.bracket-container-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 24px;
+}
+.bracket-container-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  color: var(--paper-warm);
+}
+.bracket-b {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(160px, 1fr));
+  gap: 18px;
+  min-width: 1500px;
+  align-items: stretch;
+}
+.bracket-b .round-col {
+  display: flex;
+  flex-direction: column;
+}
+.bracket-b .round-header {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule-dark);
+  text-align: center;
+}
+
+/* ============ MATCH CELL ============ */
+.match-cell-v2 {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 10px 12px;
+  width: 100%;
+  transition: border-color 120ms;
+}
+.match-cell-v2.tbd {
+  background: var(--ink);
+  border-color: var(--rule-darker);
+}
+.match-cell-v2.live {
+  border-color: var(--terra);
+  box-shadow: 0 0 0 1px var(--terra);
+}
+.match-cell-v2.final {
+  background: var(--graphite);
+  border-color: var(--rule-dark);
+}
+.match-cell-v2-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.match-cell-v2-meta .final-label {
+  color: var(--muted-light);
+  font-weight: 500;
+}
+
+/* TEAM IN MATCH CELL */
+.match-team-v2 {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 13px;
+}
+.match-team-v2 .flag {
+  width: 18px;
+  height: 13px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--rule-darker);
+  overflow: hidden;
+}
+.match-team-v2 .flag img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.match-team-v2 .tname {
+  font-family: 'Saira Condensed', sans-serif;
+  font-weight: 700;
+  font-style: italic;
+  text-transform: uppercase;
+  color: var(--paper-warm);
+  letter-spacing: 0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.match-team-v2 .tscore {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--paper-warm);
+  font-size: 14px;
+}
+/* favored / pickem / leading / winner / loser variants kept for when real
+   knockout fixtures land — currently every cell is .tbd, so none of these
+   activate yet. */
+.match-team-v2.favored .tname { color: var(--volt); }
+.match-team-v2.pickem .tname  { color: var(--volt); }
+.match-team-v2.leading .tname { color: var(--volt); }
+.match-team-v2.leading .tscore { color: var(--volt); }
+.match-team-v2.winner .tname  { color: var(--volt); }
+.match-team-v2.winner .tscore { color: var(--volt); }
+.match-team-v2.loser .tname {
+  color: var(--muted-dim);
+  text-decoration: line-through;
+  text-decoration-color: var(--muted-dim);
+}
+.match-team-v2.loser .tscore { color: var(--muted-dim); }
+.match-team-v2.loser .flag   { filter: saturate(0.3) contrast(1.2) brightness(0.5); }
+/* TBD ghost — slot placeholder, no flag image, dim italic name */
+.match-team-v2.tbd .tname {
+  color: var(--muted-dim);
+  font-weight: 400;
+}
+.match-team-v2.tbd .flag {
+  background: var(--charcoal);
+  filter: none;
+}
+
+/* ============ BRACKET COLUMN SPACING (v3 verbatim) ============ */
+.bracket-b .col-r32-l .match-cell-v2:not(:last-child) { margin-bottom: 10px; }
+.bracket-b .col-r32-r .match-cell-v2:not(:last-child) { margin-bottom: 10px; }
+.bracket-b .col-r16-l { justify-content: space-around; }
+.bracket-b .col-r16-l .match-cell-v2 { margin: 22px 0; }
+.bracket-b .col-r16-r { justify-content: space-around; }
+.bracket-b .col-r16-r .match-cell-v2 { margin: 22px 0; }
+.bracket-b .col-qf-l { justify-content: space-around; }
+.bracket-b .col-qf-l .match-cell-v2 { margin: 70px 0; }
+.bracket-b .col-qf-r { justify-content: space-around; }
+.bracket-b .col-qf-r .match-cell-v2 { margin: 70px 0; }
+.bracket-b .col-sf-l { justify-content: center; }
+.bracket-b .col-sf-r { justify-content: center; }
+
+.bracket-b .col-trophy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+.trophy-cell {
+  background: var(--ink);
+  border: 1px solid var(--volt);
+  padding: 20px 12px;
+  text-align: center;
+  margin-bottom: 16px;
+  box-shadow: 0 0 0 1px var(--volt);
+  width: 100%;
+}
+.trophy-cell .label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--volt);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.trophy-cell .icon {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 32px;
+  color: var(--volt);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.trophy-cell .who {
+  font-family: 'Saira Condensed', sans-serif;
+  font-weight: 700;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--muted-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============ FOOTER (mirrored from match.css) ============ */
+.site-footer {
+  padding: 48px 48px 32px;
+  background: var(--graphite);
+  border-top: 1px solid var(--rule-dark);
+  margin-top: 48px;
+}
+.site-footer-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr auto;
+  gap: 48px; align-items: start;
+}
+.footer-brand .tagline {
+  font-family: var(--font-serif);
+  font-style: italic; font-size: 15px;
+  color: var(--muted-light); max-width: 360px;
+  line-height: 1.45; margin: 12px 0 20px;
+}
+.footer-brand .copyright {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted-dim);
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.footer-links { display: grid; grid-template-columns: repeat(3, auto); gap: 40px; }
+.footer-col h4 {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--volt);
+  letter-spacing: 0.24em; text-transform: uppercase;
+  margin: 0 0 10px;
+}
+.footer-col a {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--paper-warm);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  text-decoration: none; padding: 5px 0;
+}
+.footer-col a:hover { color: var(--volt); }

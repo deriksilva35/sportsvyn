@@ -179,7 +179,7 @@ function SiteHeader() {
       </div>
       <div className="nav">
         <a href="/">Home</a>
-        <a href="#">Bracket</a>
+        <a href="/bracket">Bracket</a>
         <a href="#">Rankings</a>
         <a href="#">Reads</a>
       </div>

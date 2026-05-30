@@ -10,6 +10,7 @@
 
 import { sql } from '../lib/db.js';
 import { apiSports } from '../lib/apiSports.js';
+import { fetchWcGroups, assertWcGroupsIntegrity } from '../lib/wcGroups.js';
 
 const WC_LEAGUE_API_ID = 1;
 const SEASON = 2026;
@@ -42,12 +43,34 @@ function mapStatus(short) {
   return out;
 }
 
-function mapStageAndGroup(round) {
+// Stage + group resolver.
+//
+// stage comes from the API-Sports round string (which IS reliable for stage:
+// "Group Stage - N", "Round of 32", "Quarter-finals", etc.).
+//
+// group_code is preferred from a passed-in standingsMap (Map<api_sports_team_id,
+// 'A'..'L'>) since the 2026 WC's round strings don't carry the letter — they're
+// just "Group Stage - 1/2/3". The ^Group X - N$ regex stays as a fallback so
+// tournaments that DO emit the embedded letter still work without a standings
+// pre-fetch.
+function mapStageAndGroup(round, { homeApiId, awayApiId, standingsMap } = {}) {
   if (!round) return { stage: null, groupCode: null };
   const r = round.trim();
-  const groupLetter = r.match(/^Group\s+([A-L])\s*-\s*\d+$/i);
-  if (groupLetter) return { stage: 'group', groupCode: groupLetter[1].toUpperCase() };
-  if (/^Group\s+Stage\b/i.test(r)) return { stage: 'group', groupCode: null };
+
+  const embedded = r.match(/^Group\s+([A-L])\s*-\s*\d+$/i);
+  if (embedded) return { stage: 'group', groupCode: embedded[1].toUpperCase() };
+
+  if (/^Group\s+Stage\b/i.test(r)) {
+    let groupCode = null;
+    if (standingsMap) {
+      const fromHome = standingsMap.get(String(homeApiId));
+      const fromAway = standingsMap.get(String(awayApiId));
+      const candidate = fromHome ?? fromAway;
+      if (candidate && /^[A-L]$/.test(candidate)) groupCode = candidate;
+    }
+    return { stage: 'group', groupCode };
+  }
+
   if (/^Round of 32/i.test(r))     return { stage: 'round_of_32', groupCode: null };
   if (/^Round of 16/i.test(r))     return { stage: 'round_of_16', groupCode: null };
   if (/^Quarter[- ]?finals?/i.test(r)) return { stage: 'quarter', groupCode: null };
@@ -117,7 +140,7 @@ async function upsertTeams(leagueId) {
   return map;
 }
 
-async function upsertFixtures(leagueId, teamIdMap) {
+async function upsertFixtures(leagueId, teamIdMap, standingsMap) {
   const fixtures = await apiSports.fixtures(WC_LEAGUE_API_ID, SEASON);
   let upserted = 0;
   let skipped = 0;
@@ -139,7 +162,9 @@ async function upsertFixtures(leagueId, teamIdMap) {
     const datePart = ymd(f.fixture.date);
     const slug = `${homeSlug}-vs-${awaySlug}-${datePart}`;
     const status = mapStatus(f.fixture.status.short);
-    const { stage, groupCode } = mapStageAndGroup(f.league.round);
+    const { stage, groupCode } = mapStageAndGroup(f.league.round, {
+      homeApiId, awayApiId, standingsMap,
+    });
     const externalIds = JSON.stringify({ api_sports: String(f.fixture.id) });
     const venue = f.fixture.venue?.name ?? null;
 
@@ -226,7 +251,19 @@ async function verify(leagueId) {
   const teamIdMap = await upsertTeams(leagueId);
   console.log(`teams upserted: ${teamIdMap.size}`);
 
-  const { upserted, skipped, skippedReasons } = await upsertFixtures(leagueId, teamIdMap);
+  // Pre-fetch group standings so fixture upsert can resolve group_code for
+  // tournaments (like 2026 WC) whose round strings omit the group letter.
+  // Hard-fail on integrity issues — refuse to write bad group assignments.
+  const { groups, map: standingsMap, duplicates } = await fetchWcGroups();
+  const integrityIssues = assertWcGroupsIntegrity({ groups, map: standingsMap, duplicates });
+  if (integrityIssues.length) {
+    console.error('Group standings integrity check failed:');
+    for (const i of integrityIssues) console.error('  ✗ ' + i);
+    throw new Error('Refusing to import — group assignments would be unreliable.');
+  }
+  console.log(`standings groups: ${groups.length} (12 expected), teams in map: ${standingsMap.size}`);
+
+  const { upserted, skipped, skippedReasons } = await upsertFixtures(leagueId, teamIdMap, standingsMap);
   console.log(`matches upserted: ${upserted}  (skipped: ${skipped})`);
   for (const r of skippedReasons) console.log(`  · ${r}`);
 
