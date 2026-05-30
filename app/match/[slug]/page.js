@@ -29,6 +29,7 @@ import WhereToWatch from '@/components/match/WhereToWatch';
 import PowerRankingsCompare from '@/components/match/PowerRankingsCompare';
 import FormSection from '@/components/match/FormSection';
 import LivePoller from '@/components/match/LivePoller';
+import MatchBrief from '@/components/match/MatchBrief';
 
 import './match.css';
 
@@ -87,6 +88,41 @@ async function getBroadcasters(matchId, country = 'US') {
     ORDER BY display_order
   `;
   return rows.length ? rows : null;
+}
+
+// Reads the 3 current rows from odds_markets (one per outcome) and shapes
+// them into { home_pct, draw_pct, away_pct }. Returns null when the row
+// count isn't exactly 3 or any label is missing — the WinProbability
+// component already hides itself on null, so absence stays honest.
+async function getWinProbability(matchId) {
+  const rows = await sql`
+    SELECT selection_label, implied_probability::float AS pct
+    FROM odds_markets
+    WHERE match_id = ${matchId}
+      AND market_scope = 'match'
+      AND market_type = 'match_winner'
+      AND is_current = true
+  `;
+  if (rows.length !== 3) return null;
+  const byLabel = Object.fromEntries(rows.map((r) => [r.selection_label, r.pct]));
+  if (byLabel.home == null || byLabel.draw == null || byLabel.away == null) return null;
+  return { home_pct: byLabel.home, draw_pct: byLabel.draw, away_pct: byLabel.away };
+}
+
+// Latest brief for this match. The match_briefs table is indexed on
+// (match_id, generated_at DESC); we just take row 0. validation_status
+// is included for visibility but doesn't gate render — the fallback
+// template still produces a complete brief.
+async function getBrief(matchId) {
+  const rows = await sql`
+    SELECT headline, paragraph_1, paragraph_2, paragraph_3,
+           validation_status, generated_at, published_at
+    FROM match_briefs
+    WHERE match_id = ${matchId}
+    ORDER BY generated_at DESC
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
 }
 
 async function getPreview(matchId) {
@@ -229,12 +265,14 @@ export default async function MatchPage({ params }) {
   const match = await getMatchBySlug(slug);
   if (!match) notFound();
 
-  const [watchScore, broadcasters, preview, homeForm, awayForm] = await Promise.all([
+  const [watchScore, broadcasters, preview, homeForm, awayForm, winProbability, brief] = await Promise.all([
     getWatchScore(match.id),
     getBroadcasters(match.id, 'US'),
     getPreview(match.id),
     getFormForTeam(match.home_team_id),
     getFormForTeam(match.away_team_id),
+    getWinProbability(match.id),
+    getBrief(match.id),
   ]);
 
   const tabs = tabsForStatus(match.status);
@@ -272,7 +310,7 @@ export default async function MatchPage({ params }) {
             </div>
             <div className="preview-twocol-right">
               <WatchScoreVertical score={watchScore} />
-              <WinProbability probability={null} homeName={match.home_name} awayName={match.away_name} />
+              <WinProbability probability={winProbability} homeName={match.home_name} awayName={match.away_name} />
               <EdgePick pick={null} />
               <WhereToWatch broadcasters={broadcasters} />
             </div>
@@ -323,7 +361,7 @@ export default async function MatchPage({ params }) {
           data-tab-panel="recap"
           className={`tab-panel${tabs.defaultTab === 'recap' ? ' active' : ''}`}
         >
-          <div className="tab-stub">Recap publishes within minutes of full time.</div>
+          <MatchBrief brief={brief} />
         </div>
       </main>
 
