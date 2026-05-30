@@ -31,6 +31,7 @@ import FormSection from '@/components/match/FormSection';
 import LivePoller from '@/components/match/LivePoller';
 import MatchBrief from '@/components/match/MatchBrief';
 import OddsDetail from '@/components/match/OddsDetail';
+import MatchLineups from '@/components/match/MatchLineups';
 
 import './match.css';
 
@@ -165,6 +166,26 @@ async function getBrief(matchId) {
     LIMIT 1
   `;
   return rows[0] ?? null;
+}
+
+// Current home + away lineups for the match. Returns null when either
+// side's is_current row is missing — MatchLineups falls back to the
+// graceful stub on null, so partial states (one side published, one not)
+// never render half-empty.
+async function getLineups(matchId) {
+  const rows = await sql`
+    SELECT team_side, formation, players, fetched_at
+    FROM match_lineups
+    WHERE match_id = ${matchId} AND is_current = true
+  `;
+  if (rows.length !== 2) return null;
+  const bySide = Object.fromEntries(rows.map((r) => [r.team_side, r]));
+  if (!bySide.home || !bySide.away) return null;
+  return {
+    home: bySide.home,
+    away: bySide.away,
+    fetched_at: bySide.home.fetched_at,
+  };
 }
 
 async function getPreview(matchId) {
@@ -307,7 +328,7 @@ export default async function MatchPage({ params }) {
   const match = await getMatchBySlug(slug);
   if (!match) notFound();
 
-  const [watchScore, broadcasters, preview, homeForm, awayForm, winProbability, brief, oddsDetail] = await Promise.all([
+  const [watchScore, broadcasters, preview, homeForm, awayForm, winProbability, brief, oddsDetail, lineups] = await Promise.all([
     getWatchScore(match.id),
     getBroadcasters(match.id, 'US'),
     getPreview(match.id),
@@ -316,6 +337,7 @@ export default async function MatchPage({ params }) {
     getWinProbability(match.id),
     getBrief(match.id),
     getOddsDetail(match.id),
+    getLineups(match.id),
   ]);
 
   // Favored side for the teams-header treatment: highest implied % between
@@ -377,7 +399,11 @@ export default async function MatchPage({ params }) {
           data-tab-panel="lineups"
           className={`tab-panel${tabs.defaultTab === 'lineups' ? ' active' : ''}`}
         >
-          <div className="tab-stub">Lineups & injuries publish ~60 minutes before kickoff.</div>
+          <MatchLineups
+            lineups={lineups}
+            homeName={match.home_name}
+            awayName={match.away_name}
+          />
         </div>
 
         {/* ODDS PANEL */}

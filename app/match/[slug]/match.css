@@ -489,6 +489,93 @@
   text-align: right;
 }
 
+/* ============ LINEUPS (tab panel) ============ */
+.match-lineups {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 24px 28px;
+}
+.match-lineups-meta {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule-dark);
+  margin-bottom: 20px;
+}
+.match-lineups-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+@media (max-width: 720px) {
+  .match-lineups-grid { grid-template-columns: 1fr; gap: 24px; }
+}
+.lineup-column {
+  display: flex; flex-direction: column;
+}
+.lineup-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px; flex-wrap: wrap;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule-darker);
+  margin-bottom: 14px;
+}
+.lineup-team {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--paper-warm);
+}
+.lineup-formation {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  color: var(--volt);
+  letter-spacing: 0.22em;
+}
+.lineup-section { margin-bottom: 18px; }
+.lineup-section:last-child { margin-bottom: 0; }
+.lineup-section-label {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.lineup-player {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px dotted var(--rule-darker);
+}
+.lineup-player:last-child { border-bottom: none; }
+.lineup-player .num {
+  font-family: var(--font-mono);
+  font-size: 11px; color: var(--muted-light);
+  font-weight: 700; text-align: right;
+}
+.lineup-player .name {
+  font-family: 'Saira Condensed', sans-serif;
+  font-weight: 500; font-size: 14px;
+  color: var(--paper-warm);
+  letter-spacing: 0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lineup-player .pos {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted-dim);
+  letter-spacing: 0.18em;
+}
+.lineup-empty {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted-dim);
+  letter-spacing: 0.18em;
+  padding: 4px 0;
+}
+
 /* ============ EDGE PICK (rail) ============ */
 .edge-vertical {
   background: var(--ink);
