@@ -30,6 +30,7 @@ import PowerRankingsCompare from '@/components/match/PowerRankingsCompare';
 import FormSection from '@/components/match/FormSection';
 import LivePoller from '@/components/match/LivePoller';
 import MatchBrief from '@/components/match/MatchBrief';
+import OddsDetail from '@/components/match/OddsDetail';
 
 import './match.css';
 
@@ -91,12 +92,17 @@ async function getBroadcasters(matchId, country = 'US') {
 }
 
 // Reads the 3 current rows from odds_markets (one per outcome) and shapes
-// them into { home_pct, draw_pct, away_pct }. Returns null when the row
-// count isn't exactly 3 or any label is missing — the WinProbability
-// component already hides itself on null, so absence stays honest.
+// them for the rail. Returns null when the row count isn't exactly 3 or
+// any label is missing — the WinProbability component already hides
+// itself on null, so absence stays honest.
+//
+// Returns implied % (primary, drives the rail bars and big numbers) plus
+// American odds (secondary, rendered as a small line under each %).
 async function getWinProbability(matchId) {
   const rows = await sql`
-    SELECT selection_label, implied_probability::float AS pct
+    SELECT selection_label,
+           implied_probability::float AS pct,
+           american_odds
     FROM odds_markets
     WHERE match_id = ${matchId}
       AND market_scope = 'match'
@@ -104,9 +110,45 @@ async function getWinProbability(matchId) {
       AND is_current = true
   `;
   if (rows.length !== 3) return null;
-  const byLabel = Object.fromEntries(rows.map((r) => [r.selection_label, r.pct]));
-  if (byLabel.home == null || byLabel.draw == null || byLabel.away == null) return null;
-  return { home_pct: byLabel.home, draw_pct: byLabel.draw, away_pct: byLabel.away };
+  const byLabel = Object.fromEntries(rows.map((r) => [r.selection_label, r]));
+  if (!byLabel.home || !byLabel.draw || !byLabel.away) return null;
+  return {
+    home_pct: byLabel.home.pct,
+    draw_pct: byLabel.draw.pct,
+    away_pct: byLabel.away.pct,
+    home_american: byLabel.home.american_odds,
+    draw_american: byLabel.draw.american_odds,
+    away_american: byLabel.away.american_odds,
+  };
+}
+
+// Full odds detail for the Odds & Projections tab. Same is_current rows
+// as the rail, plus decimal, num_books, fetched_at for the metadata
+// footer. Null when no current rows exist for this match.
+async function getOddsDetail(matchId) {
+  const rows = await sql`
+    SELECT selection_label,
+           american_odds,
+           decimal_odds::float AS decimal_odds,
+           implied_probability::float AS implied_pct,
+           num_books,
+           fetched_at
+    FROM odds_markets
+    WHERE match_id = ${matchId}
+      AND market_scope = 'match'
+      AND market_type = 'match_winner'
+      AND is_current = true
+  `;
+  if (rows.length === 0) return null;
+  const byLabel = Object.fromEntries(rows.map((r) => [r.selection_label, r]));
+  if (!byLabel.home || !byLabel.draw || !byLabel.away) return null;
+  return {
+    home: byLabel.home,
+    draw: byLabel.draw,
+    away: byLabel.away,
+    num_books: byLabel.home.num_books,
+    fetched_at: byLabel.home.fetched_at,
+  };
 }
 
 // Latest brief for this match. The match_briefs table is indexed on
@@ -265,7 +307,7 @@ export default async function MatchPage({ params }) {
   const match = await getMatchBySlug(slug);
   if (!match) notFound();
 
-  const [watchScore, broadcasters, preview, homeForm, awayForm, winProbability, brief] = await Promise.all([
+  const [watchScore, broadcasters, preview, homeForm, awayForm, winProbability, brief, oddsDetail] = await Promise.all([
     getWatchScore(match.id),
     getBroadcasters(match.id, 'US'),
     getPreview(match.id),
@@ -273,7 +315,17 @@ export default async function MatchPage({ params }) {
     getFormForTeam(match.away_team_id),
     getWinProbability(match.id),
     getBrief(match.id),
+    getOddsDetail(match.id),
   ]);
+
+  // Favored side for the teams-header treatment: highest implied % between
+  // home and away (draw doesn't count). Null when no odds — never guess a
+  // favorite without market data.
+  let favoredSide = null;
+  if (winProbability) {
+    if (winProbability.home_pct > winProbability.away_pct) favoredSide = 'home';
+    else if (winProbability.away_pct > winProbability.home_pct) favoredSide = 'away';
+  }
 
   const tabs = tabsForStatus(match.status);
   const isLive = match.status === 'live';
@@ -295,7 +347,7 @@ export default async function MatchPage({ params }) {
         </div>
 
         <MatchMetaStrip match={match} />
-        <TeamsHeader match={match} />
+        <TeamsHeader match={match} favoredSide={favoredSide} />
 
         <MatchTabBar tabs={tabs.list} defaultTab={tabs.defaultTab} />
 
@@ -333,7 +385,11 @@ export default async function MatchPage({ params }) {
           data-tab-panel="odds"
           className={`tab-panel${tabs.defaultTab === 'odds' ? ' active' : ''}`}
         >
-          <div className="tab-stub">Odds & projections (futures + match props) — wiring next.</div>
+          <OddsDetail
+            odds={oddsDetail}
+            homeName={match.home_name}
+            awayName={match.away_name}
+          />
         </div>
 
         {/* LIVE PANEL */}

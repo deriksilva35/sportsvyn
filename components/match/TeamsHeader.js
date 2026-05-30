@@ -33,10 +33,16 @@ function FlagSlot({ flagSvgPath, colorPrimary, size = 'lg' }) {
   );
 }
 
-export default function TeamsHeader({ match }) {
+// favoredSide: 'home' | 'away' | null. Derived from win probability — null
+// when no odds exist so we never guess a favorite without market data.
+// The .teams-header-team.favored rule in match.css flips that side's team
+// name from paper-warm to volt — subtle, no additional badge or weight.
+export default function TeamsHeader({ match, favoredSide = null }) {
+  const homeClass = `teams-header-team${favoredSide === 'home' ? ' favored' : ''}`;
+  const awayClass = `teams-header-team away${favoredSide === 'away' ? ' favored' : ''}`;
   return (
     <div className="teams-header">
-      <div className="teams-header-team">
+      <div className={homeClass}>
         <FlagSlot
           flagSvgPath={match.home_flag_svg}
           colorPrimary={match.home_flag_color}
@@ -44,7 +50,7 @@ export default function TeamsHeader({ match }) {
         <div className="teams-header-team-name">{match.home_name ?? 'Home'}</div>
       </div>
       <div className="teams-header-vs">vs</div>
-      <div className="teams-header-team away">
+      <div className={awayClass}>
         <div className="teams-header-team-name">{match.away_name ?? 'Away'}</div>
         <FlagSlot
           flagSvgPath={match.away_flag_svg}

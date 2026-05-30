@@ -416,6 +416,77 @@
   color: var(--paper-warm);
 }
 .winprob-prematch-cell.home .pct { color: var(--volt); }
+.winprob-prematch-cell .odds {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+/* ============ ODDS DETAIL (tab panel) ============ */
+.odds-detail {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 24px 28px;
+}
+.odds-detail-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule-dark);
+  margin-bottom: 20px;
+}
+.odds-detail-title {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--paper-warm);
+}
+.odds-detail-meta {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+.odds-detail-table {
+  display: grid;
+  grid-template-columns: 140px repeat(3, 1fr);
+  row-gap: 6px;
+  column-gap: 12px;
+  align-items: center;
+}
+.odds-detail-table .col-head {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule-darker);
+  margin-bottom: 6px;
+}
+.odds-detail-table .col-head.team-name { color: var(--paper-warm); }
+.odds-detail-table .col-head.favored { color: var(--volt); }
+.odds-detail-table .row-label {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+.odds-detail-table .cell {
+  font-family: var(--font-mono);
+  font-size: 14px; color: var(--paper-warm);
+  font-weight: 500;
+  text-align: center;
+}
+.odds-detail-table .cell.favored { color: var(--volt); font-weight: 700; }
+.odds-detail-footer {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-darker);
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted-dim);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  text-align: right;
+}
 
 /* ============ EDGE PICK (rail) ============ */
 .edge-vertical {
