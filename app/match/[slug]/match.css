@@ -431,6 +431,7 @@
 }
 .odds-detail-header {
   display: flex; justify-content: space-between; align-items: baseline;
+  gap: 24px; flex-wrap: wrap;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--rule-dark);
   margin-bottom: 20px;
