@@ -36,6 +36,15 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+// Opt out of static prerender. The page reads matches + teams from the DB on
+// every request — without this, Next.js 16's default prerendered the route
+// at build time and froze the resulting HTML, so subsequent data imports
+// (the WC fixture/team backfill that lands outside the build) would not
+// surface until the next deploy. force-dynamic makes /bracket SSR on every
+// hit, matching the /match/[slug] behavior (which is dynamic by virtue of
+// its slug param).
+export const dynamic = 'force-dynamic';
+
 const GROUP_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
 
 async function getGroupTeams() {
