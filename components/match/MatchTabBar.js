@@ -17,13 +17,19 @@ import { useEffect, useState } from 'react';
 export default function MatchTabBar({ tabs, defaultTab }) {
   const [active, setActive] = useState(defaultTab);
 
+  // No dependency array — re-assert panel .active on every render so the
+  // client state stays the source of truth even after router.refresh()
+  // re-renders the server tree with a different defaultTab (e.g. when
+  // KickoffWatcher detects scheduled→live and the server's new JSX
+  // would otherwise flip which panel has the active class). Idempotent:
+  // classList ops on already-correct elements are no-ops.
   useEffect(() => {
     const panels = document.querySelectorAll('[data-tab-panel]');
     for (const p of panels) {
       if (p.getAttribute('data-tab-panel') === active) p.classList.add('active');
       else p.classList.remove('active');
     }
-  }, [active]);
+  });
 
   return (
     <div className="tab-bar" role="tablist">

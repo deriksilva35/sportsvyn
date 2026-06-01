@@ -33,6 +33,7 @@ import LivePoller from '@/components/match/LivePoller';
 import MatchBrief from '@/components/match/MatchBrief';
 import OddsDetail from '@/components/match/OddsDetail';
 import MatchLineups from '@/components/match/MatchLineups';
+import KickoffWatcher from '@/components/match/KickoffWatcher';
 
 import './match.css';
 
@@ -315,6 +316,12 @@ export default async function MatchPage({ params }) {
           <span className="sep">/</span>
           <span className="current">{match.home_name} vs {match.away_name}</span>
         </div>
+
+        <KickoffWatcher
+          slug={match.slug}
+          initialStatus={match.status}
+          kickoffAt={match.kickoff_at}
+        />
 
         <MatchMetaStrip match={match} />
         <TeamsHeader match={match} favoredSide={favoredSide} />
