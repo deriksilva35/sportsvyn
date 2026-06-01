@@ -3,37 +3,8 @@
    mockup-named CSS vars (--ink, --volt, --jade, etc.) used by /team/[slug]
    resolve via globals.css aliases. */
 
-/* ============ SITE HEADER ============ */
-.site-header {
-  border-bottom: 1px solid var(--rule-dark);
-  padding: 18px 48px;
-  display: flex; justify-content: space-between; align-items: center;
-  background: var(--ink);
-}
-.site-header .brand-row { display: flex; align-items: center; gap: 24px; }
-.site-header .nav {
-  display: flex; gap: 24px;
-  font-family: var(--font-mono);
-  font-size: 11px; color: var(--muted);
-  letter-spacing: 0.18em; text-transform: uppercase;
-}
-.site-header .nav a { color: var(--muted); text-decoration: none; }
-.site-header .nav a.active { color: var(--paper-warm); }
-.site-header .nav a:hover { color: var(--volt); }
-.site-header .header-cta { display: flex; gap: 12px; align-items: center; }
-.site-header .header-cta .signin {
-  font-family: var(--font-mono);
-  font-size: 10px; color: var(--muted);
-  letter-spacing: 0.18em; text-transform: uppercase;
-  text-decoration: none;
-}
-.site-header .header-cta .member-btn {
-  background: var(--volt); color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.18em; text-transform: uppercase;
-  padding: 10px 16px; border: none; cursor: pointer;
-}
+/* Site header + footer rules moved to components/site-chrome.css (imported
+   via the shared SiteHeader / SiteFooter components). */
 
 /* ============ PAGE LAYOUT ============ */
 .match-page {
@@ -808,41 +779,4 @@
   background: var(--graphite);
 }
 
-/* ============ FOOTER ============ */
-.site-footer {
-  padding: 48px 48px 32px;
-  background: var(--graphite);
-  border-top: 1px solid var(--rule-dark);
-  margin-top: 48px;
-}
-.site-footer-inner {
-  max-width: 1100px; margin: 0 auto;
-  display: grid; grid-template-columns: 1fr auto;
-  gap: 48px; align-items: start;
-}
-.footer-brand .tagline {
-  font-family: var(--font-serif);
-  font-style: italic; font-size: 15px;
-  color: var(--muted-light); max-width: 360px;
-  line-height: 1.45; margin: 12px 0 20px;
-}
-.footer-brand .copyright {
-  font-family: var(--font-mono);
-  font-size: 9px; color: var(--muted-dim);
-  letter-spacing: 0.2em; text-transform: uppercase;
-}
-.footer-links { display: grid; grid-template-columns: repeat(3, auto); gap: 40px; }
-.footer-col h4 {
-  font-family: var(--font-mono);
-  font-size: 9px; color: var(--volt);
-  letter-spacing: 0.24em; text-transform: uppercase;
-  margin: 0 0 10px;
-}
-.footer-col a {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 10px; color: var(--paper-warm);
-  letter-spacing: 0.14em; text-transform: uppercase;
-  text-decoration: none; padding: 5px 0;
-}
-.footer-col a:hover { color: var(--volt); }
+/* Footer rules moved to components/site-chrome.css. */

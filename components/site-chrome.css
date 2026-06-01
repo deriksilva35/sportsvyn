@@ -1,0 +1,159 @@
+/* Shared site chrome — header + mobile drawer + footer.
+   Imported by components/SiteHeader.js and components/SiteFooter.js so it
+   gets bundled into every route that renders either component. Used by
+   /match/[slug] and /bracket; /team/[slug] uses its own variant (divergent
+   markup — separate slice to reconcile).
+
+   At ≥768px the header renders exactly as it did before this extraction:
+   one flex row with the wordmark on the left, the 4-link nav center, and
+   Sign In + Become a Member on the right. The hamburger button + drawer
+   are display:none, so the DOM gains a single hidden <button> and no
+   visual changes.
+
+   At <768px the desktop nav and the CTA cluster collapse to display:none;
+   the hamburger button appears in their place and toggles a drawer that
+   stacks Home/Bracket/Rankings/Reads/Sign In/Become a Member below the
+   header bar. Horizontal padding tightens from 48px to 16px so the bar
+   itself doesn't eat half the viewport. */
+
+/* ============ SITE HEADER (≥768px — desktop, unchanged from match.css) ============ */
+.site-header {
+  border-bottom: 1px solid var(--rule-dark);
+  padding: 18px 48px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--ink);
+}
+.site-header .brand-row { display: flex; align-items: center; gap: 24px; }
+.site-header .nav {
+  display: flex; gap: 24px;
+  font-family: var(--font-mono);
+  font-size: 11px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+.site-header .nav a { color: var(--muted); text-decoration: none; }
+.site-header .nav a.active { color: var(--paper-warm); }
+.site-header .nav a:hover { color: var(--volt); }
+.site-header .header-cta { display: flex; gap: 12px; align-items: center; }
+.site-header .header-cta .signin {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  text-decoration: none;
+}
+.site-header .header-cta .member-btn {
+  background: var(--volt); color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 10px 16px; border: none; cursor: pointer;
+}
+
+/* Hamburger button — hidden on desktop, revealed by the media query below */
+.hamburger-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30px;
+  height: 22px;
+}
+.hamburger-btn span {
+  display: block;
+  height: 2px;
+  background: var(--paper-warm);
+  width: 100%;
+  transition: background 120ms;
+}
+.hamburger-btn:hover span { background: var(--volt); }
+.hamburger-btn[aria-expanded="true"] span { background: var(--volt); }
+
+/* Mobile drawer — hidden on desktop entirely (only mounted on mobile open) */
+.mobile-drawer { display: none; }
+
+/* ============ MOBILE BREAKPOINT (<768px) ============ */
+@media (max-width: 767px) {
+  .site-header {
+    padding: 14px 16px;             /* reclaim the 48px-per-side viewport */
+  }
+  .site-header .nav,
+  .site-header .header-cta {
+    display: none;                  /* off the bar; into the drawer */
+  }
+  .hamburger-btn {
+    display: flex;                  /* show the toggle */
+  }
+  .mobile-drawer {
+    display: flex;
+    flex-direction: column;
+    background: var(--ink);
+    border-bottom: 1px solid var(--rule-dark);
+    padding: 4px 16px 14px;
+  }
+  .mobile-drawer a {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule-darker);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .mobile-drawer a.active { color: var(--paper-warm); }
+  .mobile-drawer a:hover  { color: var(--volt); }
+  .mobile-drawer .signin {
+    /* same nav-link treatment in the drawer — visually one list */
+    color: var(--muted);
+  }
+  .mobile-drawer .member-btn {
+    margin-top: 14px;
+    background: var(--volt); color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 14px; border: none; cursor: pointer;
+    width: 100%;
+  }
+}
+
+/* ============ SITE FOOTER (mirrored from match.css verbatim) ============ */
+.site-footer {
+  padding: 48px 48px 32px;
+  background: var(--graphite);
+  border-top: 1px solid var(--rule-dark);
+  margin-top: 48px;
+}
+.site-footer-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr auto;
+  gap: 48px; align-items: start;
+}
+.footer-brand .tagline {
+  font-family: var(--font-serif);
+  font-style: italic; font-size: 15px;
+  color: var(--muted-light); max-width: 360px;
+  line-height: 1.45; margin: 12px 0 20px;
+}
+.footer-brand .copyright {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted-dim);
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.footer-links { display: grid; grid-template-columns: repeat(3, auto); gap: 40px; }
+.footer-col h4 {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--volt);
+  letter-spacing: 0.24em; text-transform: uppercase;
+  margin: 0 0 10px;
+}
+.footer-col a {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--paper-warm);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  text-decoration: none; padding: 5px 0;
+}
+.footer-col a:hover { color: var(--volt); }

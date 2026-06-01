@@ -17,7 +17,8 @@
 
 import { notFound } from 'next/navigation';
 import { sql } from '@/lib/db';
-import Wordmark from '@/components/Wordmark';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
 import MatchMetaStrip from '@/components/match/MatchMetaStrip';
 import TeamsHeader from '@/components/match/TeamsHeader';
 import MatchTabBar from '@/components/match/MatchTabBar';
@@ -268,59 +269,6 @@ function tabsForStatus(status) {
     ],
     defaultTab: isFinal ? 'recap' : isLive ? 'live' : 'preview',
   };
-}
-
-function SiteHeader() {
-  return (
-    <header className="site-header">
-      <div className="brand-row">
-        <Wordmark sizeClassName="text-[22px]" />
-      </div>
-      <div className="nav">
-        <a href="/">Home</a>
-        <a href="/bracket">Bracket</a>
-        <a href="#">Rankings</a>
-        <a href="#">Reads</a>
-      </div>
-      <div className="header-cta">
-        <a href="#" className="signin">Sign In</a>
-        <button type="button" className="member-btn">Become a Member</button>
-      </div>
-    </header>
-  );
-}
-
-function SiteFooter() {
-  return (
-    <footer className="site-footer">
-      <div className="site-footer-inner">
-        <div className="footer-brand">
-          <Wordmark sizeClassName="text-[28px]" />
-          <p className="tagline">Read the Game. Editorial sports coverage that takes the reader seriously.</p>
-          <p className="copyright">© 2026 Sportsvyn · Considered Network</p>
-        </div>
-        <div className="footer-links">
-          <div className="footer-col">
-            <h4>Read</h4>
-            <a href="#">Daily Card</a>
-            <a href="#">Bracket</a>
-            <a href="#">Rankings</a>
-            <a href="#">Stats</a>
-          </div>
-          <div className="footer-col">
-            <h4>About</h4>
-            <a href="#">Methodology</a>
-            <a href="#">Voice Bible</a>
-          </div>
-          <div className="footer-col">
-            <h4>Follow</h4>
-            <a href="#">Newsletter</a>
-            <a href="#">RSS</a>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
 }
 
 export default async function MatchPage({ params }) {
