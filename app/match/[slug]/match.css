@@ -255,6 +255,81 @@
   letter-spacing: 0.18em; text-transform: uppercase;
 }
 
+/* ============ KEY MOMENTS (LIVE tab panel timeline) ============ */
+.commentary-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule-dark);
+}
+.commentary-header-title {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 22px; line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--paper-warm);
+}
+.commentary-header-title .accent { color: var(--volt); }
+.commentary-header-meta {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+
+.stream-entry {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.stream-entry:first-of-type { padding-top: 4px; }
+.stream-entry:last-of-type { border-bottom: none; }
+.stream-minute {
+  font-family: var(--font-mono);
+  font-size: 12px; font-weight: 700;
+  color: var(--volt);
+  letter-spacing: 0.06em;
+  text-align: right;
+}
+.stream-entry.auto .stream-minute { color: var(--muted); }
+.stream-body { min-width: 0; }
+.stream-event-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  padding: 3px 8px;
+  margin-bottom: 6px;
+}
+.stream-event-tag.GOAL    { background: var(--jade);     color: var(--paper-warm); }
+.stream-event-tag.YELLOW  { background: #C8A800;          color: var(--ink); }
+.stream-event-tag.RED     { background: var(--terra);    color: var(--paper-warm); }
+.stream-event-tag.SUB     { background: var(--charcoal); color: var(--paper-warm); border: 1px solid var(--rule-dark); }
+.stream-event-tag.CHANCE  { background: var(--volt);     color: var(--ink); }
+/* VAR — distinctive "reviewed" look: ink-on-volt-border, parallels the
+   MOMENTUM style for editorial annotations the mock used. */
+.stream-event-tag.VAR     { background: var(--ink);      color: var(--volt); border: 1px solid var(--volt); }
+
+.stream-entry.auto .stream-prose {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted-light);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+@media (max-width: 767px) {
+  .commentary-header { margin-bottom: 12px; padding-bottom: 10px; }
+  .commentary-header-title { font-size: 18px; }
+  .commentary-header-meta { font-size: 9px; letter-spacing: 0.16em; }
+  .stream-entry { grid-template-columns: 38px 1fr; gap: 12px; padding: 12px 0; }
+  .stream-minute { font-size: 11px; }
+  .stream-event-tag { font-size: 8px; letter-spacing: 0.18em; padding: 2px 6px; }
+  .stream-entry.auto .stream-prose { font-size: 11px; line-height: 1.4; }
+}
+
 @media (max-width: 767px) {
   .live-banner { padding: 18px 14px 16px; }
   .live-indicator { top: 10px; right: 12px; font-size: 9px; letter-spacing: 0.22em; }

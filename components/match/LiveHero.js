@@ -23,6 +23,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const PERIOD_LABELS = {
   '1H':   '1st Half',
@@ -80,6 +81,7 @@ export default function LiveHero({
 }) {
   const [state, setState] = useState(initialState);
   const [error, setError] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +93,12 @@ export default function LiveHero({
         if (!cancelled) {
           setError(false);
           setState((prev) => ({ ...prev, ...data }));
+          // Re-run the server tree so anything written to the DB by this
+          // tick's syncFixture (events, score, status) flows into the
+          // server-rendered components below — notably KeyMoments. The
+          // page is already ƒ-dynamic; refresh is cheap and lets the
+          // factual timeline feel live without a separate poller.
+          router.refresh();
         }
       } catch {
         if (!cancelled) setError(true);
@@ -98,7 +106,7 @@ export default function LiveHero({
     }
     const interval = setInterval(tick, 60_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [fixtureId]);
+  }, [fixtureId, router]);
 
   const home = state.home_score ?? 0;
   const away = state.away_score ?? 0;

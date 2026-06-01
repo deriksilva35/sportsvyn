@@ -34,6 +34,7 @@ import MatchBrief from '@/components/match/MatchBrief';
 import OddsDetail from '@/components/match/OddsDetail';
 import MatchLineups from '@/components/match/MatchLineups';
 import KickoffWatcher from '@/components/match/KickoffWatcher';
+import KeyMoments from '@/components/match/KeyMoments';
 
 import './match.css';
 
@@ -170,6 +171,22 @@ async function getBrief(matchId) {
   return rows[0] ?? null;
 }
 
+// Newest-first event feed for the Key Moments timeline. is_current=true
+// filter ensures VAR-cancelled goals never surface (the disallowed-goal
+// row gets flipped to is_current=false by syncMatchEvents). LIMIT 50 is
+// well above any realistic match's event count.
+async function getKeyMoments(matchId) {
+  const rows = await sql`
+    SELECT id, minute, minute_extra, event_type, detail, team_side,
+           player_name, assist_name
+    FROM match_events
+    WHERE match_id = ${matchId} AND is_current = true
+    ORDER BY minute DESC, minute_extra DESC NULLS LAST, id DESC
+    LIMIT 50
+  `;
+  return rows;
+}
+
 // Current home + away lineups for the match. Returns null when either
 // side's is_current row is missing — MatchLineups falls back to the
 // graceful stub on null, so partial states (one side published, one not)
@@ -278,7 +295,7 @@ export default async function MatchPage({ params }) {
   const match = await getMatchBySlug(slug);
   if (!match) notFound();
 
-  const [watchScore, broadcasters, preview, homeForm, awayForm, winProbability, brief, oddsDetail, lineups] = await Promise.all([
+  const [watchScore, broadcasters, preview, homeForm, awayForm, winProbability, brief, oddsDetail, lineups, keyMoments] = await Promise.all([
     getWatchScore(match.id),
     getBroadcasters(match.id, 'US'),
     getPreview(match.id),
@@ -288,6 +305,7 @@ export default async function MatchPage({ params }) {
     getBrief(match.id),
     getOddsDetail(match.id),
     getLineups(match.id),
+    getKeyMoments(match.id),
   ]);
 
   // Favored side for the teams-header treatment: highest implied % between
@@ -301,6 +319,7 @@ export default async function MatchPage({ params }) {
 
   const tabs = tabsForStatus(match.status);
   const isLive = match.status === 'live';
+  const isFinal = match.status === 'final';
   const fixtureApiId = match.external_ids?.api_sports
     ? Number(match.external_ids.api_sports)
     : null;
@@ -394,16 +413,20 @@ export default async function MatchPage({ params }) {
           />
         </div>
 
-        {/* LIVE PANEL — score + minute + winprob now live in the LiveHero
-            banner above (visible regardless of which tab is open). This
-            panel reserves space for the Key Moments timeline / event feed
-            UI (downstream slice consuming match_events). */}
+        {/* LIVE PANEL — score + minute + winprob live in the LiveHero
+            banner above. This panel holds the Key Moments timeline,
+            which renders during live AND after FT (the timeline is a
+            forensic record of the match — useful in recap too). */}
         <div
           data-tab-panel="live"
           className={`tab-panel${tabs.defaultTab === 'live' ? ' active' : ''}`}
         >
-          {isLive ? (
-            <div className="tab-stub">Key Moments timeline — wiring next.</div>
+          {isLive || isFinal ? (
+            <KeyMoments
+              events={keyMoments}
+              homeAbbr={match.home_abbreviation}
+              awayAbbr={match.away_abbreviation}
+            />
           ) : (
             <div className="tab-stub">Live commentary + clock activate at kickoff.</div>
           )}
