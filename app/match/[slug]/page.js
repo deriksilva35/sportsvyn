@@ -29,7 +29,7 @@ import EdgePick from '@/components/match/EdgePick';
 import WhereToWatch from '@/components/match/WhereToWatch';
 import PowerRankingsCompare from '@/components/match/PowerRankingsCompare';
 import FormSection from '@/components/match/FormSection';
-import LivePoller from '@/components/match/LivePoller';
+import LiveHero from '@/components/match/LiveHero';
 import MatchBrief from '@/components/match/MatchBrief';
 import OddsDetail from '@/components/match/OddsDetail';
 import MatchLineups from '@/components/match/MatchLineups';
@@ -260,7 +260,8 @@ function tabsForStatus(status) {
     list: [
       { key: 'preview', label: 'Preview' },
       { key: 'lineups', label: 'Lineups & Injuries' },
-      { key: 'odds',    label: 'Odds & Projections' },
+      // Odds tab pulses red during live too — mirrors the locked v4 mock.
+      { key: 'odds',    label: 'Odds & Projections', dot: isLive ? 'live' : undefined },
       {
         key: 'live',
         label: 'Live',
@@ -324,7 +325,27 @@ export default async function MatchPage({ params }) {
         />
 
         <MatchMetaStrip match={match} />
-        <TeamsHeader match={match} favoredSide={favoredSide} />
+        {isLive ? (
+          <LiveHero
+            fixtureId={fixtureApiId}
+            initialState={{
+              status: match.status,
+              status_short: null,
+              home_score: match.home_score,
+              away_score: match.away_score,
+              minute: null,
+            }}
+            homeName={match.home_name}
+            awayName={match.away_name}
+            homeFlagSvg={match.home_flag_svg}
+            awayFlagSvg={match.away_flag_svg}
+            homeAbbr={match.home_abbreviation}
+            awayAbbr={match.away_abbreviation}
+            winProbability={winProbability}
+          />
+        ) : (
+          <TeamsHeader match={match} favoredSide={favoredSide} />
+        )}
 
         <MatchTabBar tabs={tabs.list} defaultTab={tabs.defaultTab} />
 
@@ -373,21 +394,16 @@ export default async function MatchPage({ params }) {
           />
         </div>
 
-        {/* LIVE PANEL */}
+        {/* LIVE PANEL — score + minute + winprob now live in the LiveHero
+            banner above (visible regardless of which tab is open). This
+            panel reserves space for the Key Moments timeline / event feed
+            UI (downstream slice consuming match_events). */}
         <div
           data-tab-panel="live"
           className={`tab-panel${tabs.defaultTab === 'live' ? ' active' : ''}`}
         >
           {isLive ? (
-            <LivePoller
-              fixtureId={fixtureApiId}
-              initialState={{
-                status: match.status,
-                home_score: match.home_score,
-                away_score: match.away_score,
-                minute: null,
-              }}
-            />
+            <div className="tab-stub">Key Moments timeline — wiring next.</div>
           ) : (
             <div className="tab-stub">Live commentary + clock activate at kickoff.</div>
           )}

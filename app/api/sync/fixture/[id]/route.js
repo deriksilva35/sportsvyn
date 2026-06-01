@@ -27,6 +27,7 @@ export async function GET(_request, { params }) {
     const result = await syncFixture(fixtureId);
     return Response.json({
       status: result.status,
+      status_short: result.status_short,
       home_score: result.home_score,
       away_score: result.away_score,
       minute: result.minute,
