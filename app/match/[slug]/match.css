@@ -347,6 +347,32 @@
   line-height: 1.4;
 }
 
+/* Lifecycle rows (KICK-OFF / HALF-TIME / FULL TIME) — synthesized
+   section breaks from match state, NOT colored event tags. Collapse the
+   minute/body grid into a single centered mono row that reads as a
+   divider in the feed. The score meta on FULL TIME gets slight extra
+   prominence (paper-warm + larger size) so the result reads cleanly. */
+.stream-entry.lifecycle { grid-template-columns: 1fr; padding: 10px 0; }
+.stream-lifecycle-row {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.stream-lifecycle-label { color: var(--muted); font-weight: 700; }
+.stream-lifecycle-sep   { color: var(--muted); opacity: 0.5; }
+.stream-lifecycle-meta {
+  color: var(--paper-warm);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
 @media (max-width: 767px) {
   .commentary-header { margin-bottom: 12px; padding-bottom: 10px; }
   .commentary-header-title { font-size: 18px; }
@@ -355,6 +381,8 @@
   .stream-minute { font-size: 11px; }
   .stream-event-tag { font-size: 8px; letter-spacing: 0.18em; padding: 2px 6px; }
   .stream-entry.auto .stream-prose { font-size: 11px; line-height: 1.4; }
+  .stream-lifecycle-row { font-size: 9px; gap: 8px; letter-spacing: 0.18em; }
+  .stream-lifecycle-meta { font-size: 12px; }
 }
 
 /* ============ LIVE LAYOUT — two-col on desktop, stack on mobile ============ */

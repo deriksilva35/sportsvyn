@@ -444,11 +444,22 @@ export default async function MatchPage({ params }) {
           data-tab-panel="live"
           className={`tab-panel${tabs.defaultTab === 'live' ? ' active' : ''}`}
         >
+          {/* KeyMoments renders in all three states (scheduled / live /
+              final) — its lifecycle scaffold synthesizes KICK-OFF/HT/FT
+              markers from match.status so the LIVE tab is never a dead
+              empty panel post-kickoff, and the pre-kickoff "no key
+              moments yet" stub is owned by the component itself.
+              MatchStats (right rail) only renders for live + final. */}
           {isLive || isFinal ? (
             <div className="live-layout">
               <div className="live-main">
                 <KeyMoments
                   events={keyMoments}
+                  match={{
+                    status: match.status,
+                    home_score: match.home_score,
+                    away_score: match.away_score,
+                  }}
                   homeAbbr={match.home_abbreviation}
                   awayAbbr={match.away_abbreviation}
                 />
@@ -458,7 +469,16 @@ export default async function MatchPage({ params }) {
               </div>
             </div>
           ) : (
-            <div className="tab-stub">Live commentary + clock activate at kickoff.</div>
+            <KeyMoments
+              events={keyMoments}
+              match={{
+                status: match.status,
+                home_score: match.home_score,
+                away_score: match.away_score,
+              }}
+              homeAbbr={match.home_abbreviation}
+              awayAbbr={match.away_abbreviation}
+            />
           )}
         </div>
 

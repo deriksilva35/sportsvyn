@@ -23,6 +23,29 @@
  * Substitution direction (easy to flip — locked here): API-Sports's
  * subst events use player_name for the player going OFF and assist_name
  * for the player coming ON. Rendered as "{OFF} off · {IN} on".
+ *
+ * Lifecycle scaffold (KICK-OFF / HALF-TIME / FULL TIME): synthesized
+ * from match.status + the highest event minute. NOT passed through
+ * from the API — derived here so they're never missing when the API
+ * skips them. Rendered as quiet centered divider rows (mono caps,
+ * muted) so they read as section breaks rather than event lines.
+ *
+ *   KICK-OFF   — present whenever the match has started (live | final).
+ *                Anchors the feed at minute 0 so the LIVE tab is never
+ *                a dead "no key moments yet" panel post-kickoff.
+ *   HALF-TIME  — present when match.status='final' (definitely passed
+ *                HT) OR when a live match has positive evidence of
+ *                second-half play (an event at minute >= 46). The
+ *                conservative read means a truly 0-0 live match at HT
+ *                with zero events won't show the marker, but we never
+ *                falsely claim HT has happened.
+ *   FULL TIME  — present only when match.status='final', with the
+ *                final score line ("3 — 2") as meta.
+ *
+ * Empty-state ("No key moments yet — events post during play.") only
+ * shows when the lifecycle scaffold yields zero entries AND there are
+ * zero events — i.e. pre-kickoff. Once status flips to live the
+ * KICK-OFF anchor replaces the empty state.
  */
 
 function formatMinute(e) {
@@ -92,8 +115,88 @@ function describe(e, homeAbbr, awayAbbr) {
   };
 }
 
-export default function KeyMoments({ events = [], homeAbbr, awayAbbr }) {
-  if (!Array.isArray(events) || events.length === 0) {
+// Synthesize lifecycle markers from match state. See header doc for the
+// gating rules per marker. Returns rows in the same shape as event rows
+// so they can be merged + sorted alongside them.
+function buildLifecycleRows(match, events) {
+  if (!match) return [];
+  const isLive = match.status === 'live';
+  const isFinal = match.status === 'final';
+  if (!isLive && !isFinal) return [];
+
+  const rows = [];
+
+  // KICK-OFF — anchors the bottom of the newest-first feed.
+  rows.push({
+    kind: 'lifecycle',
+    lifecycle: 'kickoff',
+    label: 'KICK-OFF',
+    meta: null,
+    sortMinute: -1,
+    sortExtra: 0,
+  });
+
+  // HALF-TIME — sort to appear newer than the latest 45+X stoppage event
+  // (extra=MAX_SAFE_INTEGER) so the feed reads, top-to-bottom:
+  //   ... 2H events ... HALF-TIME ... 45+X stoppage events ... 1H events ... KICK-OFF
+  const reachedHalfTime =
+    isFinal || (isLive && events.some((e) => (e.minute ?? 0) >= 46));
+  if (reachedHalfTime) {
+    rows.push({
+      kind: 'lifecycle',
+      lifecycle: 'halftime',
+      label: 'HALF-TIME',
+      meta: null,
+      sortMinute: 45,
+      sortExtra: Number.MAX_SAFE_INTEGER,
+    });
+  }
+
+  // FULL TIME — only at final, sorts to top of the feed with the score
+  // line as meta.
+  if (isFinal) {
+    const home = match.home_score ?? 0;
+    const away = match.away_score ?? 0;
+    rows.push({
+      kind: 'lifecycle',
+      lifecycle: 'fulltime',
+      label: 'FULL TIME',
+      meta: `${home} — ${away}`,
+      sortMinute: Number.MAX_SAFE_INTEGER,
+      sortExtra: 0,
+    });
+  }
+
+  return rows;
+}
+
+function eventRowSortKey(e) {
+  return {
+    sortMinute: e.minute ?? 0,
+    sortExtra: e.minute_extra ?? 0,
+    sortId: e.id ?? 0,
+  };
+}
+
+export default function KeyMoments({ events = [], match = null, homeAbbr, awayAbbr }) {
+  const eventList = Array.isArray(events) ? events : [];
+  const lifecycle = buildLifecycleRows(match, eventList);
+
+  const rows = [
+    ...eventList.map((e) => ({ kind: 'event', data: e, ...eventRowSortKey(e) })),
+    ...lifecycle.map((l) => ({ ...l, data: l, sortId: 0 })),
+  ];
+
+  // Newest-first: minute DESC, extra DESC, id DESC. Lifecycle markers
+  // get extreme sort minutes (-1 for kickoff, MAX for fulltime) and a
+  // saturated extra for HT so they land at their intended positions.
+  rows.sort((a, b) => {
+    if (a.sortMinute !== b.sortMinute) return b.sortMinute - a.sortMinute;
+    if (a.sortExtra !== b.sortExtra) return b.sortExtra - a.sortExtra;
+    return b.sortId - a.sortId;
+  });
+
+  if (rows.length === 0) {
     return <div className="tab-stub">No key moments yet — events post during play.</div>;
   }
 
@@ -105,7 +208,26 @@ export default function KeyMoments({ events = [], homeAbbr, awayAbbr }) {
         </div>
         <div className="commentary-header-meta">Latest first · Auto-updates</div>
       </div>
-      {events.map((e, i) => {
+      {rows.map((r, i) => {
+        if (r.kind === 'lifecycle') {
+          return (
+            <div
+              key={`lifecycle-${r.lifecycle}`}
+              className={`stream-entry lifecycle lifecycle-${r.lifecycle}`}
+            >
+              <div className="stream-lifecycle-row">
+                <span className="stream-lifecycle-label">{r.label}</span>
+                {r.meta && (
+                  <>
+                    <span className="stream-lifecycle-sep">·</span>
+                    <span className="stream-lifecycle-meta">{r.meta}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        }
+        const e = r.data;
         const { tag, modifier, prose } = describe(e, homeAbbr, awayAbbr);
         return (
           <div key={e.id ?? `${e.minute}-${e.minute_extra}-${i}`} className="stream-entry auto">
