@@ -1,8 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/cron/poll-live",     "schedule": "* * * * *" },
-    { "path": "/api/cron/refresh-odds",  "schedule": "0 * * * *" },
-    { "path": "/api/cron/poll-lineups",  "schedule": "*/10 * * * *" }
+    { "path": "/api/cron/poll-live",        "schedule": "* * * * *" },
+    { "path": "/api/cron/refresh-odds",     "schedule": "0 * * * *" },
+    { "path": "/api/cron/poll-lineups",     "schedule": "*/10 * * * *" },
+    { "path": "/api/cron/generate-briefs",  "schedule": "*/2 * * * *" }
   ]
 }
