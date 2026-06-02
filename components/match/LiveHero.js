@@ -24,6 +24,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { coalesceClock } from '@/lib/liveHeroState';
 
 const PERIOD_LABELS = {
   '1H':   '1st Half',
@@ -44,6 +45,10 @@ function periodLabel(shortCode) {
   if (!shortCode) return '';
   return PERIOD_LABELS[shortCode] ?? '';
 }
+
+// coalesceClock is in lib/liveHeroState.js so the pure merge logic can
+// be unit-tested in Node without JSX compilation. See that module's
+// header for why this exists (API-Sports null-tick clobbering).
 
 // 3-letter label for the win-prob bar segments. Prefer the team's
 // abbreviation column (always 3 chars when populated); fall back to the
@@ -105,7 +110,7 @@ export default function LiveHero({
         const data = await res.json();
         if (!cancelled) {
           setError(false);
-          setState((prev) => ({ ...prev, ...data }));
+          setState((prev) => coalesceClock(prev, data));
           // Re-run the server tree so anything written to the DB by this
           // tick's syncFixture (events, score, status) flows into the
           // server-rendered components below — notably KeyMoments. The
@@ -150,15 +155,31 @@ export default function LiveHero({
           </div>
           {/* Period line: at live we show "{minute}' · {period}" (e.g. "67' ·
               2nd Half"). At final there's no live minute clock — just the
-              "Final" label (or "Final (AET)" / "Final (PEN)" when applicable). */}
+              "Final" label (or "Final (AET)" / "Final (PEN)" when applicable).
+              Cold-paint safety: if BOTH minute and status_short are null
+              (just-mounted live state before the first good poll resolves),
+              render a quiet "LIVE" rather than an empty div. The first
+              good poll replaces it with the real clock. */}
           <div className="live-period">
-            {!isFinalState && state.minute != null && (
-              <>
-                <span className="minute">{state.minute}&apos;</span>
-                {period && <span> · </span>}
-              </>
-            )}
-            {period && <span>{period}</span>}
+            {(() => {
+              if (isFinalState) {
+                return period ? <span>{period}</span> : null;
+              }
+              const hasMinute = state.minute != null;
+              const hasPeriod = !!period;
+              if (hasMinute && hasPeriod) {
+                return (
+                  <>
+                    <span className="minute">{state.minute}&apos;</span>
+                    <span> · </span>
+                    <span>{period}</span>
+                  </>
+                );
+              }
+              if (hasMinute) return <span className="minute">{state.minute}&apos;</span>;
+              if (hasPeriod) return <span>{period}</span>;
+              return <span className="live-period-pending">LIVE</span>;
+            })()}
           </div>
         </div>
         <TeamCell name={awayName} flagSvg={awayFlagSvg} leading={leading === 'away'} />
