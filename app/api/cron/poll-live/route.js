@@ -23,6 +23,7 @@
 
 import { getMatchesToPoll } from '@/lib/liveMatches';
 import { syncFixture } from '@/lib/syncFixture';
+import { captureLiveWatchScoreTick } from '@/lib/captureLiveWatchScore';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -51,6 +52,18 @@ export async function GET(request) {
     }
     try {
       const r = await syncFixture(apiId);
+      // Piggyback: capture a Live Watch Score history row from the just-written
+      // is_current event state. Own try/catch — a capture failure (DB blip,
+      // formula throw) can't abort the surrounding poll-live loop or block
+      // other matches. The sync_log row from syncFixture is independent.
+      try {
+        await captureLiveWatchScoreTick(r.match_id, r);
+      } catch (capErr) {
+        console.error(
+          `captureLiveWatchScoreTick failed for match ${r.match_id} (${r.slug}):`,
+          capErr,
+        );
+      }
       results.push({
         id: r.match_id,
         slug: r.slug,
