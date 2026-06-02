@@ -145,6 +145,8 @@
   letter-spacing: 0.28em; text-transform: uppercase;
   font-weight: 700;
 }
+/* Final-state indicator: muted, no pulse, no live-red. */
+.live-indicator.final { color: var(--muted-dim); }
 .live-dot {
   width: 8px; height: 8px;
   background: var(--live-red);
@@ -234,10 +236,35 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: clip;
-  padding: 0 8px;
+  padding: 0 2px;             /* tight padding so even 8-10% segments fit "NN%" */
   box-sizing: border-box;
   flex-shrink: 0;             /* keep declared % widths exact under flex */
 }
+
+/* Bar + legend live in a vertical stack inside the .winprob-banner grid's
+   middle cell. The legend carries team labels regardless of how narrow a
+   bar segment is — solves lopsided splits like 82/12/6 where in-bar team
+   labels would clip into garbage. */
+.winprob-banner-bars-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.winprob-banner-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.winprob-banner-legend .legend-home { color: var(--volt); }
+.winprob-banner-legend .legend-draw { color: var(--muted); }
+.winprob-banner-legend .legend-away { color: var(--paper-warm); }
 .winprob-banner-bars .winprob-bar.home { background: var(--volt); color: var(--ink); }
 .winprob-banner-bars .winprob-bar.draw { background: var(--muted); color: var(--paper-warm); }
 .winprob-banner-bars .winprob-bar.away { background: var(--muted-dim); color: var(--paper-warm); }
@@ -330,6 +357,75 @@
   .stream-entry.auto .stream-prose { font-size: 11px; line-height: 1.4; }
 }
 
+/* ============ LIVE LAYOUT — two-col on desktop, stack on mobile ============ */
+.live-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.live-main { min-width: 0; }
+.live-right { min-width: 0; }
+@media (max-width: 767px) {
+  .live-layout { grid-template-columns: 1fr; gap: 20px; }
+}
+
+/* ============ FULL MATCH STATS PANEL (v4 mock .live-stats) ============ */
+.live-stats {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 18px 22px;
+}
+.live-stats-header {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--volt);
+  letter-spacing: 0.26em; text-transform: uppercase;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.stat-cluster {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.stat-cluster:last-child { border-bottom: none; padding-bottom: 0; }
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+.stat-row .label {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.stat-bar {
+  height: 6px;
+  background: var(--ink);
+  border: 1px solid var(--rule-darker);
+  display: flex;
+  margin-bottom: 6px;
+}
+.stat-bar-home { background: var(--volt);      height: 100%; }
+.stat-bar-away { background: var(--muted-dim); height: 100%; margin-left: auto; }
+.stat-vals {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.stat-vals .home { color: var(--volt); }
+.stat-vals .away { color: var(--paper-warm); }
+
+@media (max-width: 767px) {
+  .live-stats { padding: 14px 16px; }
+  .live-stats-header { font-size: 9px; letter-spacing: 0.22em; }
+  .stat-cluster { padding: 8px 0; }
+  .stat-row .label { font-size: 8px; letter-spacing: 0.16em; }
+  .stat-vals { font-size: 10px; }
+}
+
 @media (max-width: 767px) {
   .live-banner { padding: 18px 14px 16px; }
   .live-indicator { top: 10px; right: 12px; font-size: 9px; letter-spacing: 0.22em; }
@@ -346,7 +442,10 @@
   .winprob-banner-source { font-size: 8px; }
   .winprob-banner-bars .winprob-bar {
     font-size: 9px; letter-spacing: 0.04em;
-    padding: 0 4px;            /* tighter padding on narrow widths */
+    padding: 0 2px;            /* even tighter on mobile */
+  }
+  .winprob-banner-legend {
+    font-size: 8px; letter-spacing: 0.06em; gap: 6px;
   }
 }
 .teams-header-vs {

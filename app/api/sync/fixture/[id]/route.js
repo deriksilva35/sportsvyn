@@ -24,32 +24,47 @@
 import { syncFixture } from '@/lib/syncFixture';
 import { sql } from '@/lib/db';
 
+// Belt-and-suspenders against any intermediate caching: dynamic ensures
+// the route is never statically optimized; revalidate=0 disables Next's
+// data-cache layer; and every response below sets explicit
+// Cache-Control: no-store so Vercel's edge cache cannot serve a stale
+// response to LiveHero's 60s poll (the 81'/3-1 hybrid we caught
+// during the live test was the symptom of an intermediate cache
+// returning an older response after the DB had already advanced).
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const NO_STORE = { 'Cache-Control': 'no-store, no-transform' };
+
 export async function GET(_request, { params }) {
   const { id } = await params;
   const fixtureId = Number(id);
 
   if (!Number.isInteger(fixtureId) || fixtureId <= 0) {
-    return Response.json({ error: 'Invalid fixture id' }, { status: 400 });
+    return Response.json({ error: 'Invalid fixture id' }, { status: 400, headers: NO_STORE });
   }
 
   const rows = await sql`
     SELECT 1 FROM matches WHERE external_ids->>'api_sports' = ${String(fixtureId)} LIMIT 1
   `;
   if (!rows[0]) {
-    return Response.json({ error: 'Fixture not in coverage' }, { status: 403 });
+    return Response.json({ error: 'Fixture not in coverage' }, { status: 403, headers: NO_STORE });
   }
 
   try {
     const result = await syncFixture(fixtureId);
-    return Response.json({
-      status: result.status,
-      status_short: result.status_short,
-      home_score: result.home_score,
-      away_score: result.away_score,
-      minute: result.minute,
-    });
+    return Response.json(
+      {
+        status: result.status,
+        status_short: result.status_short,
+        home_score: result.home_score,
+        away_score: result.away_score,
+        minute: result.minute,
+      },
+      { headers: NO_STORE },
+    );
   } catch (err) {
     console.error('syncFixture failed:', err);
-    return Response.json({ error: 'Sync failed' }, { status: 500 });
+    return Response.json({ error: 'Sync failed' }, { status: 500, headers: NO_STORE });
   }
 }

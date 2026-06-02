@@ -35,6 +35,7 @@ import OddsDetail from '@/components/match/OddsDetail';
 import MatchLineups from '@/components/match/MatchLineups';
 import KickoffWatcher from '@/components/match/KickoffWatcher';
 import KeyMoments from '@/components/match/KeyMoments';
+import MatchStats from '@/components/match/MatchStats';
 
 import './match.css';
 
@@ -187,6 +188,21 @@ async function getKeyMoments(matchId) {
   return rows;
 }
 
+// Current home + away match statistics. Returns null when either side's
+// is_current row is missing — MatchStats renders the graceful stub when
+// the prop is null, so pre-kickoff (no stats yet) shows that path.
+async function getMatchStatistics(matchId) {
+  const rows = await sql`
+    SELECT team_side, stats
+    FROM match_statistics
+    WHERE match_id = ${matchId} AND is_current = true
+  `;
+  if (rows.length !== 2) return null;
+  const bySide = Object.fromEntries(rows.map((r) => [r.team_side, r.stats]));
+  if (!bySide.home || !bySide.away) return null;
+  return { home: bySide.home, away: bySide.away };
+}
+
 // Current home + away lineups for the match. Returns null when either
 // side's is_current row is missing — MatchLineups falls back to the
 // graceful stub on null, so partial states (one side published, one not)
@@ -295,7 +311,7 @@ export default async function MatchPage({ params }) {
   const match = await getMatchBySlug(slug);
   if (!match) notFound();
 
-  const [watchScore, broadcasters, preview, homeForm, awayForm, winProbability, brief, oddsDetail, lineups, keyMoments] = await Promise.all([
+  const [watchScore, broadcasters, preview, homeForm, awayForm, winProbability, brief, oddsDetail, lineups, keyMoments, matchStatistics] = await Promise.all([
     getWatchScore(match.id),
     getBroadcasters(match.id, 'US'),
     getPreview(match.id),
@@ -306,6 +322,7 @@ export default async function MatchPage({ params }) {
     getOddsDetail(match.id),
     getLineups(match.id),
     getKeyMoments(match.id),
+    getMatchStatistics(match.id),
   ]);
 
   // Favored side for the teams-header treatment: highest implied % between
@@ -344,12 +361,18 @@ export default async function MatchPage({ params }) {
         />
 
         <MatchMetaStrip match={match} />
-        {isLive ? (
+        {/* LiveHero renders for both 'live' AND 'final' — at final it shows
+            the final score with leading-side volt + "Final" label (no live
+            pulse, no minute clock). Polling is guarded off inside LiveHero
+            for terminal states so a final match doesn't keep calling
+            /api/sync/fixture. Scheduled state still falls back to
+            TeamsHeader (no score exists yet, "vs" is correct). */}
+        {(isLive || isFinal) ? (
           <LiveHero
             fixtureId={fixtureApiId}
             initialState={{
               status: match.status,
-              status_short: null,
+              status_short: isFinal ? 'FT' : null,
               home_score: match.home_score,
               away_score: match.away_score,
               minute: null,
@@ -422,11 +445,18 @@ export default async function MatchPage({ params }) {
           className={`tab-panel${tabs.defaultTab === 'live' ? ' active' : ''}`}
         >
           {isLive || isFinal ? (
-            <KeyMoments
-              events={keyMoments}
-              homeAbbr={match.home_abbreviation}
-              awayAbbr={match.away_abbreviation}
-            />
+            <div className="live-layout">
+              <div className="live-main">
+                <KeyMoments
+                  events={keyMoments}
+                  homeAbbr={match.home_abbreviation}
+                  awayAbbr={match.away_abbreviation}
+                />
+              </div>
+              <div className="live-right">
+                <MatchStats stats={matchStatistics} minute={null} />
+              </div>
+            </div>
           ) : (
             <div className="tab-stub">Live commentary + clock activate at kickoff.</div>
           )}

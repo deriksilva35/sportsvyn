@@ -50,14 +50,34 @@ export async function GET(request) {
   const url = new URL(request.url);
   const dryRun = url.searchParams.get('dry') === '1';
 
+  // Two-window candidate set:
+  //   (A) Pre-kickoff: scheduled matches in the next 12h (existing behavior).
+  //   (B) Post-kickoff grace: matches that just kicked off in the last 30 min
+  //       AND don't yet have lineups in match_lineups. Covers the friendly-
+  //       fixture case where API-Sports publishes lineups at or just after
+  //       kickoff — without this, poll-lineups stops looking the moment
+  //       kickoff_at < now() and lineups never reach the DB.
+  //   Once a fixture has is_current=true lineup rows for both sides, the
+  //   NOT EXISTS clause filters it out — no re-polling for matches already
+  //   captured.
   const candidates = await sql`
     SELECT m.id,
            m.kickoff_at,
            m.external_ids->>'api_sports' AS api_sports_id
     FROM matches m
-    WHERE m.status = 'scheduled'
+    WHERE (
+      m.status = 'scheduled'
       AND m.kickoff_at > now()
       AND m.kickoff_at < now() + interval '12 hours'
+    ) OR (
+      m.status IN ('scheduled', 'live')
+      AND m.kickoff_at <= now()
+      AND m.kickoff_at > now() - interval '30 minutes'
+      AND NOT EXISTS (
+        SELECT 1 FROM match_lineups ml
+        WHERE ml.match_id = m.id AND ml.is_current = true
+      )
+    )
     ORDER BY m.kickoff_at
   `;
 

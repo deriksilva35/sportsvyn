@@ -35,6 +35,9 @@ const PERIOD_LABELS = {
   'SUSP': 'Suspended',
   'INT':  'Interrupted',
   'LIVE': '',
+  'FT':   'Final',
+  'AET':  'Final (AET)',
+  'PEN':  'Final (PEN)',
 };
 
 function periodLabel(shortCode) {
@@ -84,6 +87,16 @@ export default function LiveHero({
   const router = useRouter();
 
   useEffect(() => {
+    // No polling when status is terminal — the match is over, score and
+    // events are frozen, the sync route would just trigger a needless
+    // paid API-Sports call + DB write per tick. Mount-time check covers
+    // the page-loaded-at-final case; the state.status dep covers the
+    // live→final transition (when status flips to final mid-session,
+    // the cleanup runs and the next pass returns early before starting
+    // a new interval).
+    if (state.status === 'final' || state.status === 'postponed' || state.status === 'cancelled') {
+      return;
+    }
     let cancelled = false;
     async function tick() {
       try {
@@ -106,20 +119,25 @@ export default function LiveHero({
     }
     const interval = setInterval(tick, 60_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [fixtureId, router]);
+  }, [fixtureId, router, state.status]);
 
   const home = state.home_score ?? 0;
   const away = state.away_score ?? 0;
-  // Leading side derives from the live score, not from pre-match
-  // probability. Equal scores → no leading highlight on either side.
+  // Leading side derives from the score (live or final). Equal scores
+  // (or scoreless draws at FT) → no leading highlight on either side.
   const leading = home > away ? 'home' : away > home ? 'away' : null;
   const period = periodLabel(state.status_short);
+  const isFinalState = state.status === 'final';
 
   return (
     <div className="live-banner">
-      <div className="live-indicator">
-        <span className="live-dot" />
-        <span>Live</span>
+      {/* Indicator pill: pulsing red "Live" while in play; muted "Final"
+          marker at FT (no pulse, no live-red). Keeps the same corner
+          placement so the visual frame of the banner stays consistent
+          across the two states. */}
+      <div className={`live-indicator${isFinalState ? ' final' : ''}`}>
+        {!isFinalState && <span className="live-dot" />}
+        <span>{isFinalState ? 'Final' : 'Live'}</span>
       </div>
 
       <div className="live-score-row">
@@ -130,9 +148,17 @@ export default function LiveHero({
             <span className="sep">—</span>
             <span className={leading === 'away' ? 'leading' : undefined}>{away}</span>
           </div>
+          {/* Period line: at live we show "{minute}' · {period}" (e.g. "67' ·
+              2nd Half"). At final there's no live minute clock — just the
+              "Final" label (or "Final (AET)" / "Final (PEN)" when applicable). */}
           <div className="live-period">
-            <span className="minute">{state.minute != null ? `${state.minute}'` : '—'}</span>
-            {period && <span> · {period}</span>}
+            {!isFinalState && state.minute != null && (
+              <>
+                <span className="minute">{state.minute}&apos;</span>
+                {period && <span> · </span>}
+              </>
+            )}
+            {period && <span>{period}</span>}
           </div>
         </div>
         <TeamCell name={awayName} flagSvg={awayFlagSvg} leading={leading === 'away'} />
@@ -143,19 +169,38 @@ export default function LiveHero({
           <div className="winprob-banner-label">
             <div>Win Probability</div>
           </div>
-          <div
-            className="winprob-banner-bars"
-            role="img"
-            aria-label="Pre-kickoff market win probability"
-          >
-            <div className="winprob-bar home" style={{ width: `${winProbability.home_pct}%` }}>
-              {shortLabel(homeAbbr, homeName)} {winProbability.home_pct.toFixed(0)}%
+          {/* Bar shows pct-only inside each segment (and only when the
+              segment is wide enough — drops the text below ~8% so a
+              lopsided split like 82/12/6 doesn't clip into garbage).
+              Legend row below carries the team-labeled values at full
+              width regardless of segment size — mirrors the pre-match
+              WinProbability rail's bar-plus-cells pattern. */}
+          <div className="winprob-banner-bars-stack">
+            <div
+              className="winprob-banner-bars"
+              role="img"
+              aria-label="Pre-kickoff market win probability"
+            >
+              <div className="winprob-bar home" style={{ width: `${winProbability.home_pct}%` }}>
+                {winProbability.home_pct >= 8 ? `${winProbability.home_pct.toFixed(0)}%` : ''}
+              </div>
+              <div className="winprob-bar draw" style={{ width: `${winProbability.draw_pct}%` }}>
+                {winProbability.draw_pct >= 8 ? `${winProbability.draw_pct.toFixed(0)}%` : ''}
+              </div>
+              <div className="winprob-bar away" style={{ width: `${winProbability.away_pct}%` }}>
+                {winProbability.away_pct >= 8 ? `${winProbability.away_pct.toFixed(0)}%` : ''}
+              </div>
             </div>
-            <div className="winprob-bar draw" style={{ width: `${winProbability.draw_pct}%` }}>
-              Draw {winProbability.draw_pct.toFixed(0)}%
-            </div>
-            <div className="winprob-bar away" style={{ width: `${winProbability.away_pct}%` }}>
-              {shortLabel(awayAbbr, awayName)} {winProbability.away_pct.toFixed(0)}%
+            <div className="winprob-banner-legend">
+              <span className="legend-home">
+                {shortLabel(homeAbbr, homeName)} {winProbability.home_pct.toFixed(0)}%
+              </span>
+              <span className="legend-draw">
+                Draw {winProbability.draw_pct.toFixed(0)}%
+              </span>
+              <span className="legend-away">
+                {shortLabel(awayAbbr, awayName)} {winProbability.away_pct.toFixed(0)}%
+              </span>
             </div>
           </div>
           <div className="winprob-banner-source">Market · Pre-kickoff consensus</div>
