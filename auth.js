@@ -27,7 +27,8 @@ import NextAuth from 'next-auth';
 import PostgresAdapter from '@auth/pg-adapter';
 import { Pool } from '@neondatabase/serverless';
 import Resend from 'next-auth/providers/resend';
-import { EMAIL_FROM } from '@/lib/resend';
+import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from '@/lib/resend';
+import { buildMagicLinkEmail } from '@/lib/emails/magicLink';
 
 export const { handlers, auth, signIn, signOut } = NextAuth(() => {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -37,6 +38,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
       Resend({
         apiKey: process.env.RESEND_API_KEY,
         from: EMAIL_FROM,
+        // Overriding sendVerificationRequest replaces Auth.js's default
+        // fetch('https://api.resend.com/emails', ...) entirely. We route
+        // through the existing lib/resend.js client so the magic-link
+        // email shares the same Resend account, replyTo, and house template
+        // shell (see lib/emails/magicLink.js) as the homepage signup
+        // confirmation. apiKey above remains set because the provider
+        // type definition declares it required even when sendVerification-
+        // Request is overridden.
+        async sendVerificationRequest({ identifier, url }) {
+          const { subject, html, text } = buildMagicLinkEmail({ url, identifier });
+          await resend.emails.send({
+            from: EMAIL_FROM,
+            to: identifier,
+            replyTo: EMAIL_REPLY_TO,
+            subject,
+            html,
+            text,
+          });
+        },
       }),
     ],
     trustHost: true,
