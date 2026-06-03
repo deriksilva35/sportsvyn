@@ -34,6 +34,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   return {
     adapter: PostgresAdapter(pool),
+    pages: {
+      // Custom branded surfaces. signIn replaces the default
+      // /api/auth/signin HTML card; verifyRequest is the post-submit
+      // "check your email" landing; error folds the SignInPageErrorParam
+      // back into our own signin form's aria-live row instead of using
+      // a separate /error route. The wire endpoints
+      // (/api/auth/signin/resend, /api/auth/callback/resend) remain
+      // functional — pages: only retargets the UI shell, not the API.
+      signIn: '/signin',
+      verifyRequest: '/signin/check-email',
+      error: '/signin',
+    },
     providers: [
       Resend({
         apiKey: process.env.RESEND_API_KEY,

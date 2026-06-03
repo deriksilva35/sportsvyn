@@ -28,7 +28,7 @@
 
 import { notFound } from 'next/navigation';
 import { sql } from '@/lib/db';
-import SiteHeader from '@/components/SiteHeader';
+import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 
 import './bracket.css';
@@ -178,7 +178,7 @@ export default async function BracketPage() {
 
   return (
     <>
-      <SiteHeader activeNav="bracket" />
+      <SiteHeaderServer activeNav="bracket" />
 
       <main className="bracket-page">
         <div className="breadcrumb">
