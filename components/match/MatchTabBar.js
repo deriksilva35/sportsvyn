@@ -12,10 +12,11 @@
  * the .active class on the panel matching the clicked tab.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function MatchTabBar({ tabs, defaultTab }) {
   const [active, setActive] = useState(defaultTab);
+  const barRef = useRef(null);
 
   // No dependency array — re-assert panel .active on every render so the
   // client state stays the source of truth even after router.refresh()
@@ -31,21 +32,46 @@ export default function MatchTabBar({ tabs, defaultTab }) {
     }
   });
 
+  // Mobile: when the tab row overflows horizontally (≤390px can't fit
+  // all five labels), center the active tab in view on change.
+  // block:'nearest' prevents any vertical page-scroll. Guarded on
+  // scrollWidth > clientWidth so desktop (no overflow) is a no-op.
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+    if (bar.scrollWidth <= bar.clientWidth) return;
+    const btn = bar.querySelector('.tab.active');
+    if (!btn) return;
+    btn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }, [active]);
+
+  // .tab-bar-scroll wraps .tab-bar in a flex container so the
+  // scroll-container .tab-bar becomes a flex item with min-width: 0.
+  // Without the wrapper, the .tab-bar's nowrap .tab buttons (sum
+  // ≈ 727px) were laying out at their full positions on iOS Safari
+  // — even with overflow-x:auto on .tab-bar, iOS sized the layout
+  // viewport to that full content width on first paint and refused
+  // to retract it. As a flex item with `flex:1 min-width:0`, the
+  // .tab-bar's content can't establish its parent's width — the
+  // buttons still scroll internally, but their layout positions
+  // can't bubble up to widen the document.
   return (
-    <div className="tab-bar" role="tablist">
-      {tabs.map((t) => (
-        <button
-          key={t.key}
-          type="button"
-          role="tab"
-          aria-selected={active === t.key}
-          className={`tab${active === t.key ? ' active' : ''}${t.hidden ? ' hidden' : ''}`}
-          onClick={() => setActive(t.key)}
-        >
-          {t.label}
-          {t.dot && <span className={`dot${t.dot === 'live' ? ' live' : ''}${t.dot === 'muted' ? ' muted' : ''}`} />}
-        </button>
-      ))}
+    <div className="tab-bar-scroll">
+      <div className="tab-bar" role="tablist" ref={barRef}>
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={active === t.key}
+            className={`tab${active === t.key ? ' active' : ''}${t.hidden ? ' hidden' : ''}`}
+            onClick={() => setActive(t.key)}
+          >
+            {t.label}
+            {t.dot && <span className={`dot${t.dot === 'live' ? ' live' : ''}${t.dot === 'muted' ? ' muted' : ''}`} />}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

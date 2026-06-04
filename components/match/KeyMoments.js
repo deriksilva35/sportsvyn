@@ -204,7 +204,7 @@ export default function KeyMoments({ events = [], match = null, homeAbbr, awayAb
     <div className="key-moments">
       <div className="commentary-header">
         <div className="commentary-header-title">
-          Key <span className="accent">Moments</span> &amp; Events
+          Key <span className="accent">Moments</span>{' '}&amp; Events
         </div>
         <div className="commentary-header-meta">Latest first · Auto-updates</div>
       </div>

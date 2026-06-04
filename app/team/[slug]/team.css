@@ -25,8 +25,66 @@
 .site-header .nav a { color: var(--muted); text-decoration: none; }
 .site-header .nav a:hover { color: var(--volt); }
 
+/* Team page header mobile: this divergent header (different from the
+   shared SiteHeader in components/site-chrome.css) carries Bracket /
+   Rankings / Stats / Reads as four nowrap links visible at ALL
+   viewports. At 414px device, the brand-row (wordmark + crumb) +
+   nav (4 nowrap links + 3 gaps + 48px-per-side padding) summed to
+   ~584-607px — that's main.page-shell's 607px measurement from the
+   real-device debug. The nav was the wrapper-widening culprit.
+   Until the team header gets migrated to the shared SiteHeader (a
+   separate slice), at ≤767px:
+     - hide the desktop nav (display:none) — its content was the
+       min-content floor pushing the header wider than viewport
+     - tighten the 48px-per-side padding to 16px — matches the
+       .match-page / .page-shell mobile scale
+     - collapse the crumb to a single line (the "WORLD CUP 2026 /
+       TEAM" crumb is decorative; users have the breadcrumb in the
+       page body)
+   When the team header migration lands, this block goes away. */
+@media (max-width: 767px) {
+  .site-header-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .site-header .nav {
+    display: none;
+  }
+  .site-header .crumb {
+    font-size: 9px;
+  }
+}
+
 /* BREADCRUMB */
-.page-shell { max-width: 1100px; margin: 0 auto; padding: 24px 48px 80px; }
+/* min-width: 0 + mobile padding override: same fix as .match-page in
+   app/match/[slug]/match.css. main.page-shell is a flex item of
+   <body className="flex flex-col"> (app/layout.js); default min-width
+   auto resolves to content min-content, which any wide nowrap descendant
+   was forcing past 390px viewport and overflowing horizontally.
+   min-width: 0 breaks that propagation; 16px mobile padding replaces
+   the 48px each side that ate 24% of a 390px viewport. See match.css
+   PAGE LAYOUT comment for the full diagnostic chain. */
+.page-shell {
+  width: 100%;
+  /* See match.css .match-page for the full rationale. Same fix: hard-
+     cap to min(1100px, 100%) so the wrapper can't widen past the
+     viewport on mobile, even if a child's intrinsic min-content
+     bubbles up past what min-width:0 should have intercepted. Real-
+     device debug showed main.page-shell at 607px on a 414 device
+     with 4 unrelated children all at 575 (= 607 minus 32px mobile
+     padding) — same-width-children signature of wrapper widening. */
+  max-width: min(1100px, 100%);
+  min-width: 0;
+  margin: 0 auto;
+  padding: 24px 48px 80px;
+  /* overflow-x: hidden scoped to this wrapper only — clips rogue
+     descendant overflow at the wrapper boundary without affecting
+     html/body. See match.css comment for tradeoffs. */
+  overflow-x: hidden;
+}
+@media (max-width: 767px) {
+  .page-shell { padding-left: 16px; padding-right: 16px; }
+}
 .breadcrumb {
   margin-bottom: 20px;
   font-family: var(--font-mono);
@@ -94,6 +152,18 @@
   border: 1px solid var(--rule-dark);
   border-left: 3px solid var(--volt);
   min-width: 220px;
+}
+@media (max-width: 767px) {
+  /* The 220px min-width was the team-page wrapper's min-content
+     floor: as a grid item with no min-width:0 override, it forced
+     its parent grid track to ≥220px, which propagated up through
+     the .team-hero grid (1.6fr 1fr or similar), the .page-shell,
+     and into body's flex sizing — main.page-shell measured 607px
+     on a 414 device, and 220px is exactly the kind of stuck floor
+     that compounds with the .team-hero grid's content min-content
+     to produce that number. min-width: 0 lets the block shrink to
+     fit the panel at mobile. */
+  .team-rank-block { min-width: 0; }
 }
 .team-rank-kicker {
   font-family: var(--font-mono);
@@ -788,6 +858,54 @@
   font-family: var(--font-mono); font-style: normal;
 }
 
+/* ============ MOBILE OVERRIDES (≤767px) ============
+   Schedule + recent-next + footer mobile rules. Without these the
+   real-iPhone debug box surfaced span.schedule-result at right=572
+   (110px-wide schedule grid column laid out off the right edge of
+   the wrapper) and div.footer-links at right=540 (footer's desktop
+   grid pushing past viewport). Both iOS observed and used to widen
+   the layout viewport to ~440 from sw=414. */
+@media (max-width: 767px) {
+  /* Schedule rows: compress fixed columns + ellipsize long team
+     names. 60+50+1fr+60 + gaps + padding fits the 382px content
+     area on a 414 device. Min-width: 0 on the matchup column lets
+     it shrink (default 1fr = minmax(auto, 1fr) was holding it open
+     to its content's full nowrap width). */
+  .schedule-row {
+    grid-template-columns: 60px 50px minmax(0, 1fr) 60px;
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 9px;
+  }
+  .schedule-matchup { min-width: 0; gap: 4px; }
+  .schedule-matchup .team-label {
+    font-size: 10px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .schedule-matchup .flag-mini { width: 14px; height: 10px; }
+  .schedule-result { font-size: 13px; }
+  .schedule-stage { font-size: 8px; letter-spacing: 0.14em; }
+  .schedule-date { font-size: 9px; letter-spacing: 0.1em; }
+
+  /* Recent + Next two-card row: stacks at mobile. The 1fr 1fr grid
+     at desktop puts both cards side by side; on a phone they each
+     need full width to render the score row + form strip without
+     truncation. */
+  .recent-next-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Footer mobile rules moved to the end of this file — see the
+     "MOBILE FOOTER" @media block after the desktop footer
+     declarations. Reason: they need to come AFTER the desktop
+     .site-footer-inner / .footer-links rules in source order
+     (same specificity → latter wins). */
+}
+
 /* ============ FLAGS — gradient renditions for seeded teams ============ */
 .flag-arg, .flag-mini.flag-arg { background: linear-gradient(180deg, #74ACDF 33%, #FFFFFF 33% 66%, #74ACDF 66%); }
 .flag-aus, .flag-mini.flag-aus { background: #00008B; position: relative; }
@@ -863,3 +981,31 @@
   text-decoration: none; padding: 5px 0;
 }
 .footer-col a:hover { color: var(--volt); }
+
+/* ============ MOBILE FOOTER (≤767px) ============
+   Placed at the END of the file specifically to come AFTER the
+   desktop .site-footer-inner / .footer-links declarations above —
+   the first attempt put these rules earlier in the file inside the
+   main MOBILE OVERRIDES block, but the desktop rules then appeared
+   LATER in source order at the same specificity and won the
+   cascade, so the footer never stacked on a real device despite
+   the @media (max-width: 767px) matching. Source order matters
+   when specificity ties. Same shape as the shared SiteFooter
+   mobile fix in components/site-chrome.css; the team page renders
+   its footer inline with team.css rules instead of using the
+   shared SiteFooter component, so the shared fix doesn't
+   propagate here. */
+@media (max-width: 767px) {
+  .site-footer {
+    padding: 32px 16px 24px;
+    margin-top: 32px;
+  }
+  .site-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .footer-links {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}

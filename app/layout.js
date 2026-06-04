@@ -29,6 +29,17 @@ export const metadata = {
   description: "Sports editorial. Read the Game.",
 };
 
+// Next.js App Router requires viewport to be exported separately from
+// metadata (it was deprecated as a metadata field in Next 14). Without
+// this, real mobile browsers fall back to a ~980px layout viewport and
+// scale the desktop layout down — everything looks tiny + cramped.
+// device-width + initialScale:1 makes the page render at the device's
+// actual CSS pixel width, the way every site has been doing since 2010.
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export default function RootLayout({ children }) {
   return (
     <html

@@ -32,10 +32,31 @@ function parsePercent(value) {
   return m ? Number(m[1]) : null;
 }
 
-function num(value) {
-  if (value == null) return '—';
-  if (typeof value === 'number') return String(value);
-  return String(value);
+// StatValue — shared null-state renderer for any stat cell.
+// CRITICAL: gates on value == null ONLY (not falsiness) so a real 0
+// (e.g. OFFSIDES 0) renders in the normal color, not the muted null
+// state. The inner span's color rule wins over the parent .home/.away
+// color for null cells via .stat-value--null; non-null cells inherit
+// the parent's color (home=volt, away=paper-warm). See match.css.
+function StatValue({ v }) {
+  if (v == null) {
+    return <span className="stat-value stat-value--null">—</span>;
+  }
+  return <span className="stat-value">{v}</span>;
+}
+
+// Composite-string formatter for the multi-field stats (Passes ·
+// accuracy, Fouls · Y · R). Returns null when the primary count is
+// missing so StatValue handles the null-state render. Real 0 in any
+// subfield stays as a numeric — the formatter only nulls when the
+// LEAD field is absent.
+function passesText(count, pct) {
+  if (count == null) return null;
+  return pct != null ? `${count} · ${pct}` : String(count);
+}
+function foulsText(fouls, yellows, reds) {
+  if (fouls == null) return null;
+  return `${fouls} · ${yellows ?? 0} · ${reds ?? 0}`;
 }
 
 function StatBar({ homePct, awayPct }) {
@@ -58,8 +79,8 @@ function StatCluster({ label, homeValue, awayValue, bar = null }) {
       </div>
       {bar}
       <div className="stat-vals">
-        <span className="home">{homeValue}</span>
-        <span className="away">{awayValue}</span>
+        <span className="home"><StatValue v={homeValue} /></span>
+        <span className="away"><StatValue v={awayValue} /></span>
       </div>
     </div>
   );
@@ -87,17 +108,15 @@ export default function MatchStats({ stats = null, minute = null }) {
   const homeXgPct = hasXg && totalXg > 0 ? (homeXg / totalXg) * 100 : 0;
   const awayXgPct = hasXg && totalXg > 0 ? (awayXg / totalXg) * 100 : 0;
 
-  // Passes (count · accuracy)
-  const homePasses = h['Total passes'];
-  const awayPasses = a['Total passes'];
-  const homePassPct = h['Passes %'];
-  const awayPassPct = a['Passes %'];
-  const passesHome = homePasses != null ? `${homePasses}${homePassPct ? ' · ' + homePassPct : ''}` : '—';
-  const passesAway = awayPasses != null ? `${awayPasses}${awayPassPct ? ' · ' + awayPassPct : ''}` : '—';
+  // Passes (count · accuracy). passesText returns null when count is
+  // null so the cell renders the muted null state instead of "— / —".
+  const passesHome = passesText(h['Total passes'], h['Passes %']);
+  const passesAway = passesText(a['Total passes'], a['Passes %']);
 
-  // Fouls · Yellow · Red (combined row)
-  const foulsHome = `${num(h['Fouls'])} · ${num(h['Yellow Cards'] ?? 0)} · ${num(h['Red Cards'] ?? 0)}`;
-  const foulsAway = `${num(a['Fouls'])} · ${num(a['Yellow Cards'] ?? 0)} · ${num(a['Red Cards'] ?? 0)}`;
+  // Fouls · Yellow · Red (combined row). foulsText returns null when
+  // fouls is absent; real 0 in any subfield renders normally.
+  const foulsHome = foulsText(h['Fouls'], h['Yellow Cards'], h['Red Cards']);
+  const foulsAway = foulsText(a['Fouls'], a['Yellow Cards'], a['Red Cards']);
 
   const headerSuffix = minute != null ? ` · ${minute}'` : '';
 
@@ -125,26 +144,26 @@ export default function MatchStats({ stats = null, minute = null }) {
 
       <StatCluster
         label="Total Shots"
-        homeValue={num(h['Total Shots'])}
-        awayValue={num(a['Total Shots'])}
+        homeValue={h['Total Shots']}
+        awayValue={a['Total Shots']}
       />
 
       <StatCluster
         label="On Target"
-        homeValue={num(h['Shots on Goal'])}
-        awayValue={num(a['Shots on Goal'])}
+        homeValue={h['Shots on Goal']}
+        awayValue={a['Shots on Goal']}
       />
 
       <StatCluster
         label="Blocked"
-        homeValue={num(h['Blocked Shots'])}
-        awayValue={num(a['Blocked Shots'])}
+        homeValue={h['Blocked Shots']}
+        awayValue={a['Blocked Shots']}
       />
 
       <StatCluster
         label="Saves"
-        homeValue={num(h['Goalkeeper Saves'])}
-        awayValue={num(a['Goalkeeper Saves'])}
+        homeValue={h['Goalkeeper Saves']}
+        awayValue={a['Goalkeeper Saves']}
       />
 
       <StatCluster
@@ -155,14 +174,14 @@ export default function MatchStats({ stats = null, minute = null }) {
 
       <StatCluster
         label="Corners"
-        homeValue={num(h['Corner Kicks'])}
-        awayValue={num(a['Corner Kicks'])}
+        homeValue={h['Corner Kicks']}
+        awayValue={a['Corner Kicks']}
       />
 
       <StatCluster
         label="Offsides"
-        homeValue={num(h['Offsides'])}
-        awayValue={num(a['Offsides'])}
+        homeValue={h['Offsides']}
+        awayValue={a['Offsides']}
       />
 
       <StatCluster

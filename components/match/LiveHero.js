@@ -134,16 +134,34 @@ export default function LiveHero({
   const period = periodLabel(state.status_short);
   const isFinalState = state.status === 'final';
 
+  // Hero accent driven by match.status (shared pattern). --live-red is
+  // reserved for live; --jade marks final; rule-dark for everything else.
+  // The CSS pulse on .live-dot only runs inside .match-hero--live, so
+  // even if the dot were rendered outside live state (it isn't — the
+  // JSX gates that too), the pulse would not animate. Live-red border
+  // never appears on a final match — the bug the v4 hero shipped with.
+  const accent = {
+    scheduled: 'match-hero',
+    live:      'match-hero match-hero--live',
+    final:     'match-hero match-hero--final',
+    postponed: 'match-hero match-hero--postponed',
+    cancelled: 'match-hero match-hero--postponed',
+  }[state.status] ?? 'match-hero';
+
   return (
-    <div className="live-banner">
-      {/* Indicator pill: pulsing red "Live" while in play; muted "Final"
-          marker at FT (no pulse, no live-red). Keeps the same corner
-          placement so the visual frame of the banner stays consistent
-          across the two states. */}
-      <div className={`live-indicator${isFinalState ? ' final' : ''}`}>
-        {!isFinalState && <span className="live-dot" />}
-        <span>{isFinalState ? 'Final' : 'Live'}</span>
-      </div>
+    <div className={accent}>
+      {/* Indicator pill: pulsing red "Live" while in play. Renders ONLY for
+          status='live' — at final, the under-score period label ("Final" /
+          "Final (AET)" / "Final (PEN)") is the single FT marker, so a
+          corner "Final" would double-stamp the same word. Scheduled,
+          postponed, and cancelled have no corner indicator either; the
+          accent border on .match-hero carries the state. */}
+      {state.status === 'live' && (
+        <div className="live-indicator">
+          <span className="live-dot" />
+          <span>Live</span>
+        </div>
+      )}
 
       <div className="live-score-row">
         <TeamCell name={homeName} flagSvg={homeFlagSvg} leading={leading === 'home'} />

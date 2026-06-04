@@ -32,7 +32,7 @@ import FormSection from '@/components/match/FormSection';
 import LiveHero from '@/components/match/LiveHero';
 import MatchBrief from '@/components/match/MatchBrief';
 import OddsDetail from '@/components/match/OddsDetail';
-import MatchLineups from '@/components/match/MatchLineups';
+import MatchLineups from '@/components/match/MatchLineupsPitch';
 import KickoffWatcher from '@/components/match/KickoffWatcher';
 import KeyMoments from '@/components/match/KeyMoments';
 import MatchStats from '@/components/match/MatchStats';
@@ -298,7 +298,10 @@ function tabsForStatus(status) {
       {
         key: 'live',
         label: 'Live',
-        dot: isLive ? 'live' : 'muted',
+        // Dot renders ONLY while status='live'. A 'muted' dot on a
+        // postponed/scheduled/cancelled tab reads as "live but inactive"
+        // and was the source of the "VS + dead LIVE dot" report.
+        dot: isLive ? 'live' : undefined,
       },
       { key: 'recap',   label: 'Recap', hidden: !isFinal },
     ],

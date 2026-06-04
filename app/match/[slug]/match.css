@@ -7,10 +7,46 @@
    via the shared SiteHeader / SiteFooter components). */
 
 /* ============ PAGE LAYOUT ============ */
+/* min-width: 0 is load-bearing for mobile. main.match-page is a flex
+   item of <body className="flex flex-col"> (set in app/layout.js).
+   Default min-width on a flex item is `auto`, which resolves to the
+   item's content min-content. With wide nowrap children inside (the
+   tab bar's five labels summing ~727px, the live-score row, etc.),
+   that min-content was forcing match-page to ~805px at 390px viewport,
+   which propagated to body and caused document horizontal scroll.
+   min-width: 0 explicitly lets the flex item shrink to the body's
+   cross-axis size; internal wide children (the tab bar's overflow-x
+   scroll, etc.) handle their own overflow locally. Diagnosed via
+   the chain query at 390px: body=390 → match-page=805 (wall) →
+   tab-panel=709 → lineups panel=709.
+   Mobile padding override: 48px each side ate 96px of a 390px
+   viewport — un-readable. 16px keeps the same editorial frame
+   without strangling the content area. Vertical padding kept at
+   desktop scale; touch reach is fine. */
 .match-page {
-  max-width: 1100px;
+  width: 100%;
+  /* min(1100px, 100%): caps the wrapper at 1100px desktop AND at the
+     viewport on mobile. Combined with width:100%, the wrapper is
+     exactly the viewport width on mobile regardless of any internal
+     min-content propagation that min-width:0 alone failed to stop on
+     iOS Safari. Real-device debug showed main.match-page measuring
+     757px on a 414 device with 4 unrelated children all at exactly
+     725 — same-width children indicates a common widening floor that
+     the wrapper had absorbed and propagated. This caps that floor. */
+  max-width: min(1100px, 100%);
+  min-width: 0;
   margin: 0 auto;
   padding: 32px 48px 80px;
+  /* overflow-x: hidden scoped to the wrapper (NOT html/body) — clips
+     any rogue child that still exceeds the viewport without hiding
+     document-level bugs elsewhere. If a future child genuinely needs
+     to scroll horizontally inside the page (e.g., the bracket's
+     1500px knockout grid would, but that lives on /bracket not here),
+     remove or relax this on that page only. */
+  overflow-x: hidden;
+}
+@media (max-width: 767px) {
+  .match-page { padding-left: 16px; padding-right: 16px; }
 }
 
 /* Section rhythm — shared with the team page */
@@ -78,6 +114,13 @@
 .breadcrumb .current { color: var(--paper-warm); }
 
 /* ============ MATCH META STRIP ============ */
+/* Mobile (≤767px): vertical stack. flex-wrap: wrap was the original
+   mobile strategy, but on a real iPhone a long venue value
+   ("Cardiff City Stadium", "Mercedes-Benz Stadium") held the first
+   row wider than its container and pushed STAGE off the right edge —
+   flex-wrap only breaks between items, never inside a single item.
+   Column stack at mobile guarantees each KICKOFF / VENUE / STAGE row
+   gets the full panel width and reads cleanly top-to-bottom. */
 .match-meta-strip {
   background: var(--graphite);
   border: 1px solid var(--rule-dark);
@@ -101,6 +144,15 @@
 }
 .match-meta-value.volt { color: var(--volt); }
 .match-meta-value.muted { color: var(--muted-dim); }
+
+@media (max-width: 767px) {
+  .match-meta-strip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+}
 
 /* ============ TEAMS HEADER (above the tabs) ============ */
 .teams-header {
@@ -128,14 +180,25 @@
 }
 .teams-header-team.favored .teams-header-team-name { color: var(--volt); }
 
-/* ============ LIVE HERO (replaces .teams-header during status='live') ============ */
-.live-banner {
+/* ============ MATCH HERO (state-driven accent — shared pattern) ============
+   Border color is keyed to match.status via the .match-hero--{state} modifier.
+   Wrapper is rendered by LiveHero (for status=live|final) and applies the
+   accent class derived from status in page.js. --live-red is RESERVED for
+   live state; --jade marks final; rule-dark is the neutral fallback. The
+   pulse animation only runs when the wrapper has --live, so a live dot
+   in JSX without the live wrapper modifier is static (defense in depth
+   alongside the JSX render gate that already skips the dot for final). */
+.match-hero {
   background: var(--graphite);
-  border: 1px solid var(--live-red);
+  border: 1px solid var(--rule-dark);
   padding: 24px 32px;
   margin-bottom: 24px;
   position: relative;
 }
+.match-hero--live      { border-color: var(--live-red); }
+.match-hero--final     { border-color: var(--jade); }
+.match-hero--postponed { border-color: var(--rule-dark); }
+
 .live-indicator {
   position: absolute;
   top: 12px; right: 16px;
@@ -145,12 +208,17 @@
   letter-spacing: 0.28em; text-transform: uppercase;
   font-weight: 700;
 }
-/* Final-state indicator: muted, no pulse, no live-red. */
-.live-indicator.final { color: var(--muted-dim); }
+/* (Removed: .live-indicator.final — the corner indicator no longer
+   renders at final. The under-score "Final" period label is the
+   single FT marker; double-stamping the word was Item 5 of the
+   polish pass.) */
 .live-dot {
   width: 8px; height: 8px;
   background: var(--live-red);
   border-radius: 50%;
+}
+/* Pulse only fires inside the --live wrapper (status-driven). */
+.match-hero--live .live-dot {
   animation: pulse 1.5s ease-in-out infinite;
 }
 .live-score-row {
@@ -185,7 +253,13 @@
   word-break: break-word;
 }
 .live-team.leading .live-team-name { color: var(--volt); }
-.live-score-block { text-align: center; }
+/* min-width: 0 lets the score-block (the auto column in
+   .live-score-row's `1fr auto 1fr` grid) shrink past its nowrap
+   content's min-content if the hero itself is constrained narrow.
+   Without this, the nowrap .live-score (font-size 52px mobile) was
+   the floor for the auto column and could push the grid wider than
+   the hero's inner content area on a real phone. */
+.live-score-block { text-align: center; min-width: 0; }
 .live-score {
   font-family: var(--font-display);
   font-weight: 900; font-style: italic;
@@ -283,8 +357,13 @@
 }
 
 /* ============ KEY MOMENTS (LIVE tab panel timeline) ============ */
+/* Section-head pattern: flex row, title on the left, meta pushed right
+   via margin-left:auto. gap:16px is a fallback so they never visually
+   collide if the title wraps or grows. Same shape will apply to other
+   "title + meta" section heads as they're built out (Full Match Stats
+   header is a candidate). */
 .commentary-header {
-  display: flex; justify-content: space-between; align-items: baseline;
+  display: flex; align-items: baseline; gap: 16px;
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--rule-dark);
@@ -297,11 +376,17 @@
   letter-spacing: -0.02em;
   color: var(--paper-warm);
 }
-.commentary-header-title .accent { color: var(--volt); }
+/* padding-right: 0.06em prevents the italic "Moments" stroke from
+   overrunning into the following "&" glyph. Pure space chars aren't
+   enough — italic descenders ignore them. */
+.commentary-header-title .accent { color: var(--volt); padding-right: 0.06em; }
 .commentary-header-meta {
+  margin-left: auto;
   font-family: var(--font-mono);
-  font-size: 10px; color: var(--muted);
+  font-size: 11px;
+  color: rgba(245, 245, 242, 0.45);
   letter-spacing: 0.2em; text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .stream-entry {
@@ -446,6 +531,13 @@
 .stat-vals .home { color: var(--volt); }
 .stat-vals .away { color: var(--paper-warm); }
 
+/* Null-state value treatment — shared pattern via <StatValue v={...}/>.
+   Gate is on value == null ONLY (not falsiness) so 0 stays normal color
+   (e.g. OFFSIDES 0 is a real datum, not a missing one). The inner span's
+   color directly overrides the outer .home/.away color for null cells. */
+.stat-value       { font-family: var(--font-mono); }
+.stat-value--null { color: rgba(245,245,242,0.30); }
+
 @media (max-width: 767px) {
   .live-stats { padding: 14px 16px; }
   .live-stats-header { font-size: 9px; letter-spacing: 0.22em; }
@@ -455,22 +547,34 @@
 }
 
 @media (max-width: 767px) {
-  .live-banner { padding: 18px 14px 16px; }
+  .match-hero { padding: 18px 14px 16px; }
   .live-indicator { top: 10px; right: 12px; font-size: 9px; letter-spacing: 0.22em; }
-  .live-score-row { gap: 12px; }
+  .live-score-row { gap: 8px; }      /* tighter at mobile so 1fr team
+                                         cells get more room beside the
+                                         auto score column */
   .live-team-flag { width: 44px; height: 30px; }
   .live-team-name { font-size: 15px; }
-  .live-score { font-size: 52px; }
-  .live-score .sep { margin: 0 8px; }
+  /* 44px instead of 52px: at 52px, "X—X" with the wide em-dash + sep
+     margins + 1fr team cells was bleeding past the hero border on a
+     real iPhone. 44px shrinks the score block enough that even a
+     three-digit value ("10—10") fits inside the hero at 390px. */
+  .live-score { font-size: 44px; }
+  .live-score .sep { margin: 0 4px; }
   .live-period { font-size: 9px; letter-spacing: 0.18em; }
   .winprob-banner {
     grid-template-columns: 1fr;
     gap: 8px; margin-top: 14px; padding-top: 14px;
   }
   .winprob-banner-source { font-size: 8px; }
+  /* Mobile: drop the in-bar % labels entirely. At ≤390px the segments
+     can't fit "HAI 31%" without clipping into garbage; the legend row
+     below the bar (HAI 31% · DRAW 30% · ZEA 39%) carries the values
+     at full width and is the single source of truth. font-size:0 +
+     color:transparent hides the text while preserving bar dimensions. */
   .winprob-banner-bars .winprob-bar {
-    font-size: 9px; letter-spacing: 0.04em;
-    padding: 0 2px;            /* even tighter on mobile */
+    font-size: 0;
+    padding: 0;
+    color: transparent;
   }
   .winprob-banner-legend {
     font-size: 8px; letter-spacing: 0.06em; gap: 6px;
@@ -485,12 +589,50 @@
 }
 
 /* ============ TAB BAR ============ */
+/* Mobile: horizontal scroll with snap. The five tabs (Preview / Lineups
+   & Injuries / Odds & Projections / Live / Recap) won't fit at 390px;
+   instead of wrapping to two lines, the row scrolls horizontally with
+   scroll-snap so a half-visible tab snaps fully into view. MatchTabBar
+   centers the active tab in viewport on change (see component). */
+/* .tab-bar-scroll: flex parent that contains .tab-bar. The wrap is
+   load-bearing on iOS — see comment in MatchTabBar.js. As a flex
+   container with min-width:0, it constrains its child (.tab-bar)
+   to the available cross-axis width, decoupling .tab-bar's nowrap
+   content layout from the document/viewport sizing. */
+.tab-bar-scroll {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
 .tab-bar {
+  flex: 1;
   display: flex;
   border-bottom: 2px solid var(--rule-dark);
   margin-bottom: 32px;
   overflow-x: auto;
+  /* iOS Safari needs the legacy -webkit prefix for touch-driven
+     momentum scroll on a horizontally overflowing container — without
+     it the bar still scrolls but feels like a desktop scrollbar drag,
+     not a finger swipe. Reads as "the tab bar is just cut off" on a
+     real phone because the touch gesture doesn't engage the scroll. */
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+  /* min-width: 0 + max-width: 100% — load-bearing on iOS Safari.
+     Per CSS Sizing 3, a scroll container's min-content size should
+     reduce to 0 in its scroll axis; in theory `overflow-x: auto` alone
+     handles this. In practice, on iOS Safari, the 5 nowrap .tab
+     children (sum ≈ 727px) were establishing main.match-page's content
+     width despite min-width:0 on the wrapper — the tab-bar's
+     intrinsic min-content was bubbling up the block sizing chain.
+     Explicit `min-width: 0; max-width: 100%; width: 100%` pins
+     .tab-bar to the parent's content area, forcing tabs into the
+     internal scroll instead of widening the document. */
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
 }
 .tab-bar::-webkit-scrollbar { display: none; }
 .tab {
@@ -507,6 +649,11 @@
   position: relative;
   white-space: nowrap;
   transition: color 120ms;
+  /* Snap target = center to agree with MatchTabBar's
+     scrollIntoView({ inline: 'center' }). 'start' would cause a
+     visible "centers, then jumps to start" glitch under
+     scroll-snap-type: x mandatory. */
+  scroll-snap-align: center;
 }
 .tab:hover { color: var(--paper-warm); }
 .tab.active { color: var(--volt); }
@@ -894,6 +1041,268 @@
   font-size: 10px; color: var(--muted-dim);
   letter-spacing: 0.18em;
   padding: 4px 0;
+}
+
+/* ============ LINEUPS PITCH (item-7 pitch render, unwired) ============
+   New one-team-at-a-time render with segmented toggle + vertical ink
+   pitch. Not active yet — page.js still imports the old MatchLineups
+   (two-column list). Class names are scoped (.match-lineups-pitch /
+   .lineup-stage-* / .lineup-pitch-*) so they don't collide with the
+   old block above. Swap the import in page.js when approved. */
+.match-lineups-pitch {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 24px 28px;
+}
+.lineup-toggle-row {
+  display: flex;
+  border: 1px solid var(--rule-dark);
+  margin-bottom: 24px;
+  background: var(--ink);
+}
+.lineup-toggle {
+  flex: 1;
+  min-width: 0;                /* defensive: let toggles shrink past min-content
+                                  when long team names ("Saudi Arabia",
+                                  "United States") would otherwise refuse to
+                                  shrink and push the toggle row wider than
+                                  the panel. overflow:hidden + text-overflow
+                                  below handle the truncation. */
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: color 120ms, background 120ms;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lineup-toggle:hover:not(.active) { color: var(--paper-warm); }
+.lineup-toggle.active {
+  color: var(--ink);
+  background: var(--volt);
+}
+.lineup-toggle.active:hover { color: var(--ink); }
+
+.lineup-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.lineup-stage-header {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.lineup-stage-shown-team {
+  min-width: 0;                /* defensive: long team names that fit on a
+                                  single line at desktop could otherwise force
+                                  the flex header wider than its container. */
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  color: var(--paper-warm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lineup-stage-formation {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  color: var(--volt);
+  letter-spacing: 0.22em;
+}
+
+/* Vertical pitch. 2:3 aspect mirrors a real football field. Ink
+   background with rgba(paper, 0.15) markings — visible enough to
+   parse the formation, dim enough that the volt jerseys carry the
+   visual weight. */
+.lineup-pitch {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 2 / 3;
+  background:
+    linear-gradient(180deg, #0b1612 0%, #060c0a 100%);
+  border: 1px solid var(--rule-darker);
+  margin: 0 auto 24px;
+}
+.lineup-pitch-markings {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+.lineup-pitch-markings line,
+.lineup-pitch-markings rect,
+.lineup-pitch-markings circle {
+  stroke: rgba(245, 245, 242, 0.15);
+  fill: none;
+  stroke-width: 0.5;
+  vector-effect: non-scaling-stroke;
+}
+.lineup-pitch-markings .lineup-pitch-dot {
+  fill: rgba(245, 245, 242, 0.18);
+  stroke: none;
+}
+
+.lineup-pitch-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+.lineup-jersey {
+  width: 36px; height: 36px;
+  background: var(--volt);
+  color: var(--ink);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+.lineup-surname {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 9px; font-weight: 700;
+  color: var(--paper-warm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+/* Graceful fallback: API-Sports omitted grid coords (common on thin
+   payloads / friendlies). Pitch is skipped; the list below carries
+   the XI. Stub copy matches the null-stat honest-gap tone. */
+.lineup-pitch-stub {
+  width: 100%;
+  padding: 24px 16px;
+  margin-bottom: 24px;
+  background: var(--ink);
+  border: 1px dashed var(--rule-darker);
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted-dim);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  text-align: center;
+}
+
+.lineup-list-section {
+  width: 100%;
+  margin-top: 22px;
+}
+.lineup-list-section:first-of-type { margin-top: 0; }
+.lineup-list-section-label {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.lineup-list {
+  width: 100%;
+  list-style: none;
+  padding: 0; margin: 0;
+}
+.lineup-list-row {
+  display: grid;
+  /* minmax(0, 1fr) instead of bare 1fr: bare 1fr is shorthand for
+     minmax(auto, 1fr), and `auto` min holds the column open to the
+     name cell's content min-content width even with overflow:hidden +
+     ellipsis on .lineup-list-name in some grid implementations.
+     Explicit 0 minimum lets the column shrink and ellipsize cleanly. */
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.lineup-list-row:last-child { border-bottom: none; }
+.lineup-list-num {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  color: var(--volt);
+  letter-spacing: 0.06em;
+  text-align: right;
+}
+.lineup-list-name {
+  font-family: 'Saira Condensed', sans-serif;
+  font-weight: 500; font-size: 14px;
+  color: var(--paper-warm);
+  letter-spacing: 0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lineup-list-pos {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+.lineup-list-empty {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted-dim);
+  letter-spacing: 0.18em;
+  padding: 12px 0;
+  text-align: center;
+}
+
+/* Injuries honest-gap block. Sits below the lineups panel — same
+   .match-lineups-pitch padding scale so it reads as part of the
+   same tab body. Stub copy is monolithic muted-dim, matching the
+   null-stat tone elsewhere on the page. */
+.lineup-injuries {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule-dark);
+}
+.lineup-injuries-label {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.lineup-injuries-stub {
+  font-family: var(--font-mono);
+  font-size: 11px; color: var(--muted-dim);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 12px 0;
+}
+
+@media (max-width: 767px) {
+  .match-lineups-pitch { padding: 18px 14px; }
+  .lineup-toggle { font-size: 10px; padding: 12px 10px; letter-spacing: 0.16em; }
+  .lineup-stage-header { gap: 8px; margin-bottom: 14px; }
+  .lineup-stage-shown-team { font-size: 16px; }
+  .lineup-stage-formation { font-size: 10px; letter-spacing: 0.18em; }
+  .lineup-pitch { max-width: 100%; aspect-ratio: 2 / 2.8; }
+  .lineup-jersey { width: 30px; height: 30px; font-size: 13px; }
+  .lineup-surname { font-size: 8px; max-width: 68px; }
+  .lineup-list-row { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; padding: 8px 0; }
+  .lineup-list-name { font-size: 13px; }
 }
 
 /* ============ EDGE PICK (rail) ============ */
