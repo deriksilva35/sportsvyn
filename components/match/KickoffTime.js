@@ -1,0 +1,68 @@
+'use client';
+
+/**
+ * KickoffTime — client island that renders the match kickoff in the
+ * VISITOR's local timezone with the zone abbreviation appended.
+ *
+ * Storage is clean UTC (matches.kickoff_at is timestamptz). The server
+ * doesn't know the visitor's zone, so it can't safely render a local
+ * time during SSR — guessing the visitor's zone and overwriting after
+ * hydration would (a) cause a hydration-content mismatch warning and
+ * (b) flash one time-shifted value before settling on another.
+ *
+ * Render strategy:
+ *   1. SSR + first client render: both produce the UTC time labeled
+ *      "UTC" via the deterministic formatUtc(kickoffAt). Identical
+ *      bytes → no hydration warning.
+ *   2. After mount, useEffect computes the visitor-local time via
+ *      formatLocal(kickoffAt) and setState updates the rendered value.
+ *      The swap happens AFTER hydration completes; React doesn't treat
+ *      it as a mismatch.
+ *
+ * The UTC pre-hydration value is informative on its own (a reader on
+ * a JS-disabled browser still sees a real kickoff time, just labeled
+ * UTC), and length-stable so the layout doesn't shift on swap:
+ *   pre:  "Thu, Jun 4, 7:00 PM UTC"
+ *   post: "Thu, Jun 4, 12:00 PM PDT"
+ * Same fonts (parent .match-meta-value mono treatment), same color
+ * (parent .volt), same approximate length.
+ *
+ * Locale: undefined on formatLocal → uses the visitor's browser locale.
+ * formatUtc explicitly pins 'en-US' so the SSR string is deterministic
+ * regardless of the runtime's default locale.
+ */
+
+import { useEffect, useState } from 'react';
+
+const FORMAT_OPTIONS = {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZoneName: 'short',
+};
+
+function formatUtc(iso) {
+  return new Intl.DateTimeFormat('en-US', { ...FORMAT_OPTIONS, timeZone: 'UTC' }).format(new Date(iso));
+}
+
+function formatLocal(iso) {
+  // undefined locale → visitor's browser default. No timeZone option →
+  // visitor's system timezone, which yields the local "PDT"/"EDT"/etc.
+  // abbreviation in timeZoneName: 'short'.
+  return new Intl.DateTimeFormat(undefined, FORMAT_OPTIONS).format(new Date(iso));
+}
+
+export default function KickoffTime({ kickoffAt }) {
+  // useState initializer runs once per render path (SSR + first client
+  // render). Both compute the same UTC string via the deterministic
+  // formatter, so the hydration content matches.
+  const [label, setLabel] = useState(() => formatUtc(kickoffAt));
+
+  useEffect(() => {
+    setLabel(formatLocal(kickoffAt));
+  }, [kickoffAt]);
+
+  return <>{label}</>;
+}

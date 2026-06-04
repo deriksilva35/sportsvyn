@@ -2,20 +2,15 @@
  * MatchMetaStrip — graphite strip with stacked label+value pairs.
  * Per the Option-C mockup: Kickoff (in volt) · Venue · Stage · Referee · Weather.
  * Each item is omitted when its value is null — sparse data renders fewer items.
+ *
+ * Kickoff is rendered via the <KickoffTime> client island so it
+ * displays in the VISITOR's local timezone (with zone abbreviation
+ * appended). The previous hardcoded 'America/New_York' formatter
+ * lived here as fmtKickoff — removed. See KickoffTime.js for the
+ * SSR→local-time hydration strategy.
  */
 
-function fmtKickoff(d) {
-  if (!d) return null;
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone: 'America/New_York',
-    timeZoneName: 'short',
-  }).format(new Date(d));
-}
+import KickoffTime from './KickoffTime';
 
 function MetaItem({ label, value, className = '' }) {
   if (value == null || value === '') return null;
@@ -45,7 +40,11 @@ export default function MatchMetaStrip({ match }) {
 
   return (
     <div className="match-meta-strip">
-      <MetaItem label="Kickoff" value={fmtKickoff(match?.kickoff_at)} className="volt" />
+      <MetaItem
+        label="Kickoff"
+        value={match?.kickoff_at ? <KickoffTime kickoffAt={match.kickoff_at} /> : null}
+        className="volt"
+      />
       <MetaItem label="Venue" value={match?.venue} />
       <MetaItem label="Stage" value={stageLabel} />
     </div>
