@@ -5,7 +5,12 @@
  * current edition's point enlarged and stroked. Archive list renders one row
  * per edition with label/score/movement; per-edition blurb body is not in
  * scope here (seeded data has no ranking_row_blurb entries).
+ *
+ * Date column uses <LocalDate> client island for visitor-zone rendering
+ * (was hardcoded ET). See components/LocalDate.js.
  */
+
+import LocalDate from '@/components/LocalDate';
 
 const Y_MIN = 6;
 const Y_MAX = 10;
@@ -24,12 +29,6 @@ function buildPath(points) {
   return points
     .map(({ x, y }, i) => (i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`))
     .join(' ');
-}
-
-function fmtDate(d) {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short', day: 'numeric', timeZone: 'America/New_York',
-  }).format(new Date(d));
 }
 
 function Sparkline({ entries }) {
@@ -131,7 +130,7 @@ function Archive({ entries }) {
             {e.published_at && (
               <>
                 <span className="sep">·</span>
-                <span>{fmtDate(e.published_at)}</span>
+                <span><LocalDate iso={e.published_at} /></span>
               </>
             )}
             {e.rank_movement != null && e.rank_movement !== 0 && (

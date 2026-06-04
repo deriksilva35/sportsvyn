@@ -5,9 +5,9 @@
  *
  * Kickoff is rendered via the <KickoffTime> client island so it
  * displays in the VISITOR's local timezone (with zone abbreviation
- * appended). The previous hardcoded 'America/New_York' formatter
- * lived here as fmtKickoff — removed. See KickoffTime.js for the
- * SSR→local-time hydration strategy.
+ * appended). The previous hardcoded ET formatter lived here as
+ * fmtKickoff — removed. See KickoffTime.js for the SSR→local-time
+ * hydration strategy.
  */
 
 import KickoffTime from './KickoffTime';

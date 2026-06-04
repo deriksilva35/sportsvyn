@@ -5,19 +5,13 @@
 
 import Flag from './Flag';
 import { stageDisplay } from './SportsvynOutlook';
+import LocalDate from '@/components/LocalDate';
+import LocalTime from '@/components/LocalTime';
 
-const TZ = 'America/New_York';
-
-function fmtDate(d) {
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: TZ })
-    .format(new Date(d));
-}
-
-function fmtTime(d) {
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: TZ,
-  }).format(new Date(d));
-}
+// Local-zone client islands replace the previous hardcoded TZ formatters.
+// Date column → <LocalDate> (no zone abbrev — date-only). Upcoming-match
+// time in result column → <LocalTime> (weekday + time + zone abbrev).
+// See components/LocalDate.js + LocalTime.js.
 
 function ScheduleRow({ match, teamId }) {
   const isHome = match.home_team_id === teamId;
@@ -38,7 +32,7 @@ function ScheduleRow({ match, teamId }) {
     const code = us > them ? 'win' : us < them ? 'loss' : 'draw';
     resultEl = <span className={`schedule-result ${code}`}>{us}—{them}</span>;
   } else if (isUpcoming) {
-    resultEl = <span className="schedule-result tbd">{fmtTime(match.kickoff_at)}</span>;
+    resultEl = <span className="schedule-result tbd"><LocalTime iso={match.kickoff_at} /></span>;
   } else {
     resultEl = <span className="schedule-result tbd">{match.status}</span>;
   }
@@ -49,7 +43,7 @@ function ScheduleRow({ match, teamId }) {
 
   return (
     <div className={`schedule-row${isUpcoming ? ' upcoming' : ''}`}>
-      <span className="schedule-date">{fmtDate(match.kickoff_at)}</span>
+      <span className="schedule-date"><LocalDate iso={match.kickoff_at} /></span>
       <span className="schedule-stage">{stage}</span>
       <div className="schedule-matchup">
         <Flag abbreviation={usAbbr} colorPrimary={usColor} variant="mini" />

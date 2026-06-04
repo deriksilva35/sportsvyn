@@ -15,7 +15,9 @@
  * row; the "Auto-generated" chip is only emitted when author === 'auto'.
  */
 
-const DEFAULT_TZ = 'America/New_York';
+// (Removed: a dead DEFAULT_TZ constant pinned to ET — declared but
+// never referenced. relativeTime() uses Intl.RelativeTimeFormat which
+// has no timezone option. Predated the user-local TZ rework.)
 
 function relativeTime(date) {
   if (!date) return null;

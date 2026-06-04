@@ -5,19 +5,14 @@
 
 import Flag from './Flag';
 import { stageDisplay } from './SportsvynOutlook';
+import LocalDate from '@/components/LocalDate';
+import LocalTime from '@/components/LocalTime';
 
-const TZ = 'America/New_York';
-
-function fmtDateShort(d) {
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: TZ })
-    .format(new Date(d));
-}
-
-function fmtTime(d) {
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: TZ,
-  }).format(new Date(d));
-}
+// Local-zone formatters (LocalDate / LocalTime client islands) replace
+// the previous hardcoded-ET fmtDateShort + fmtTime. Date cells get
+// visitor-zone date (no zone label); time cells get visitor-zone time
+// WITH zone abbreviation. See components/LocalDate.js + LocalTime.js
+// for the SSR-stable hydration pattern.
 
 function MatchCard({ match, teamId, broadcasters, kind }) {
   const isHome = match.home_team_id === teamId;
@@ -29,7 +24,6 @@ function MatchCard({ match, teamId, broadcasters, kind }) {
   const usColor = isHome ? match.home_flag_color : match.away_flag_color;
 
   const stage = stageDisplay(match.stage) ?? '—';
-  const dateLabel = fmtDateShort(match.kickoff_at);
 
   if (kind === 'recent') {
     const usScore = isHome ? match.home_score : match.away_score;
@@ -40,7 +34,9 @@ function MatchCard({ match, teamId, broadcasters, kind }) {
       <div className="match-card">
         <div className="match-card-header">
           <div className="match-card-kicker">Most Recent</div>
-          <div className="match-card-meta">{dateLabel} · {stage}</div>
+          <div className="match-card-meta">
+            <LocalDate iso={match.kickoff_at} /> · {stage}
+          </div>
         </div>
         <div className="match-card-body">
           <div className="match-scoreline">
@@ -72,7 +68,6 @@ function MatchCard({ match, teamId, broadcasters, kind }) {
   }
 
   // kind === 'next'
-  const timeLabel = fmtTime(match.kickoff_at);
   const primary = broadcasters?.find((b) => b.is_primary);
   const others = broadcasters?.filter((b) => !b.is_primary) ?? [];
 
@@ -80,7 +75,13 @@ function MatchCard({ match, teamId, broadcasters, kind }) {
     <div className="match-card">
       <div className="match-card-header">
         <div className="match-card-kicker next">Next Match · {stage}</div>
-        <div className="match-card-meta">{dateLabel} · {timeLabel.split(', ')[0]}</div>
+        {/* Meta line was "Jun 4 · Thu" — date + weekday duplicated.
+            The full LocalTime below already carries the weekday in its
+            output ("Thu, 7:00 PM PDT"), so the meta line just shows the
+            date now. Cleaner, no duplication. */}
+        <div className="match-card-meta">
+          <LocalDate iso={match.kickoff_at} />
+        </div>
       </div>
       <div className="match-card-body">
         <div className="match-scoreline">
@@ -90,8 +91,12 @@ function MatchCard({ match, teamId, broadcasters, kind }) {
           </div>
           <div className="match-scoreline-center">
             <div className="match-time-display">
-              {timeLabel}
-              {match.venue && <div className="label">ET · {match.venue}</div>}
+              <LocalTime iso={match.kickoff_at} />
+              {/* "ET · {venue}" prefix removed — LocalTime above now
+                  carries the visitor's zone abbreviation, so the
+                  hardcoded "ET" prefix was redundant + wrong for
+                  non-ET visitors. Just the venue now. */}
+              {match.venue && <div className="label">{match.venue}</div>}
             </div>
           </div>
           <div className="match-team-block away">
