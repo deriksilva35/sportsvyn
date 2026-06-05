@@ -30,6 +30,7 @@ import { notFound } from 'next/navigation';
 import { sql } from '@/lib/db';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
+import BracketTabBar from '@/components/bracket/BracketTabBar';
 
 import './bracket.css';
 
@@ -96,6 +97,28 @@ async function getGroupMatchdayProgress() {
     byLetter.set(r.group_code, Math.floor(r.finals / 2));
   }
   return byLetter;
+}
+
+// Drives the BracketTabBar's initial active tab. The expanded 48-team
+// WC has 12 groups × 6 matches each = 72 group-stage matches. When all
+// 72 are final, the group stage is concluded and the default tab flips
+// from "Group Stage" to "Tournament". Manual taps + hash deep-links
+// always override this default for the session; this just decides what
+// loads first.
+//
+// Strict equality on === 72: if total seeded matches < 72 (e.g. the WC
+// import didn't finish, or this is a dev env with partial data), the
+// default stays on Group Stage. Avoids a false-positive flip when the
+// "all final" count happens to equal the partially-seeded total.
+async function getGroupStageComplete() {
+  const rows = await sql`
+    SELECT count(*)::int AS final_count
+    FROM matches
+    WHERE league_id = (SELECT id FROM leagues WHERE slug = 'fifa-wc-2026')
+      AND stage = 'group'
+      AND status = 'final'
+  `;
+  return rows[0]?.final_count === 72;
 }
 
 function BracketFlag({ flagSvgPath }) {
@@ -167,14 +190,20 @@ function TbdCell({ date, label, slotA, slotB }) {
 }
 
 export default async function BracketPage() {
-  const [groupTeams, matchdayProgress] = await Promise.all([
+  const [groupTeams, matchdayProgress, groupStageComplete] = await Promise.all([
     getGroupTeams(),
     getGroupMatchdayProgress(),
+    getGroupStageComplete(),
   ]);
 
   // If literally no group data exists (e.g. WC import never ran on this env),
   // 404 rather than render an empty page. /match/[slug] uses the same pattern.
   if (groupTeams.size === 0) notFound();
+
+  // State-aware initial tab. Server-computed so the SSR render lands on
+  // the correct panel; no flash of the wrong tab on first paint. Hash
+  // present on load overrides this in BracketTabBar's mount effect.
+  const defaultTab = groupStageComplete ? 'tournament' : 'group';
 
   return (
     <>
@@ -189,8 +218,13 @@ export default async function BracketPage() {
           <span className="current">Bracket</span>
         </div>
 
+        <BracketTabBar defaultTab={defaultTab} />
+
         {/* ============ GROUP STAGE ============ */}
-        <section className="group-strip">
+        <section
+          data-tab-panel="group"
+          className={`group-strip tab-panel${defaultTab === 'group' ? ' active' : ''}`}
+        >
           <div className="group-strip-header">
             <div className="group-strip-title">Group Stage</div>
             <div className="group-strip-stat">
@@ -215,7 +249,10 @@ export default async function BracketPage() {
         </section>
 
         {/* ============ KNOCKOUT BRACKET (structure only — TBD until draw) ============ */}
-        <section className="bracket-container">
+        <section
+          data-tab-panel="tournament"
+          className={`bracket-container tab-panel${defaultTab === 'tournament' ? ' active' : ''}`}
+        >
           <div className="bracket-container-header">
             <div className="bracket-container-title">Knockout Bracket</div>
             <div className="group-strip-stat">

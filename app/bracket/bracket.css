@@ -426,3 +426,64 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ============ TAB BAR (Group Stage / Tournament switcher) ============
+   Two-tab switcher introduced after 3cc782a — visual treatment mirrored
+   from the match-page .tab-bar / .tab pattern (volt active color +
+   under-tab volt underline). Bracket-specific tweak: .tab has flex: 1
+   so the two tabs split the bar in equal halves, full-width edge-to-edge.
+   Match-page tabs auto-size to content because there are 5 of them; the
+   bracket has 2 and wants the section-header treatment.
+   See components/bracket/BracketTabBar.js for the state + hash logic. */
+.tab-bar {
+  display: flex;
+  border-bottom: 2px solid var(--rule-dark);
+  margin-bottom: 32px;
+  width: 100%;
+  min-width: 0;
+}
+.tab {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 16px 24px;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  text-align: center;
+  transition: color 120ms;
+  min-width: 0;
+}
+.tab:hover { color: var(--paper-warm); }
+.tab.active { color: var(--volt); }
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--volt);
+}
+
+/* Panels: server renders both, only the .active one is visible. The
+   tab-panel rule is *low specificity (single class) and comes AFTER
+   .group-strip / .bracket-container in source order, so the default
+   `display: none` wins; .tab-panel.active flips it back to block for
+   the active tab. */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+@media (max-width: 767px) {
+  .tab-bar { margin-bottom: 20px; }
+  .tab {
+    padding: 14px 12px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+  }
+}
