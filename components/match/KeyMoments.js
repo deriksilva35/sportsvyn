@@ -200,6 +200,12 @@ export default function KeyMoments({ events = [], match = null, homeAbbr, awayAb
     return <div className="tab-stub">No key moments yet — events post during play.</div>;
   }
 
+  // Feed-level marker for the AI gloss surface. ONE marker per feed,
+  // not per line. Always shown when the feed has any rows — readers
+  // see the section's intent even before a gloss has populated. A
+  // qualifying event without a gloss yet renders the structured row
+  // alone (no placeholder). See migration 027 for the gloss state
+  // machine (NULL = pending, '' = tried-empty, text = render).
   return (
     <div className="key-moments">
       <div className="commentary-header">
@@ -208,6 +214,7 @@ export default function KeyMoments({ events = [], match = null, homeAbbr, awayAb
         </div>
         <div className="commentary-header-meta">Latest first · Auto-updates</div>
       </div>
+      <div className="key-moments-ai-marker">Live Notes · Auto-Generated</div>
       {rows.map((r, i) => {
         if (r.kind === 'lifecycle') {
           return (
@@ -229,12 +236,17 @@ export default function KeyMoments({ events = [], match = null, homeAbbr, awayAb
         }
         const e = r.data;
         const { tag, modifier, prose } = describe(e, homeAbbr, awayAbbr);
+        // Gloss: render only when present AND non-empty. NULL (pending)
+        // and '' (tried-empty sentinel) both render as nothing — the
+        // structured row stands alone. Informative-or-nothing.
+        const hasGloss = typeof e.gloss === 'string' && e.gloss.length > 0;
         return (
           <div key={e.id ?? `${e.minute}-${e.minute_extra}-${i}`} className="stream-entry auto">
             <div className="stream-minute">{formatMinute(e)}</div>
             <div className="stream-body">
               <span className={`stream-event-tag ${modifier}`}>{tag}</span>
               <div className="stream-prose">{prose}</div>
+              {hasGloss && <div className="stream-gloss">{e.gloss}</div>}
             </div>
           </div>
         );

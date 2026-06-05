@@ -43,6 +43,13 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+// Force dynamic SSR so AI gloss writes (and new match_events rows) flow
+// into the next request without rebuild. The render reads gloss off
+// match_events; the gloss column is updated out-of-band by the
+// generate-gloss pass, and static-cached responses would never see new
+// values until a deploy.
+export const dynamic = 'force-dynamic';
+
 async function getMatchBySlug(slug) {
   const rows = await sql`
     SELECT
@@ -179,7 +186,7 @@ async function getBrief(matchId) {
 async function getKeyMoments(matchId) {
   const rows = await sql`
     SELECT id, minute, minute_extra, event_type, detail, team_side,
-           player_name, assist_name
+           player_name, assist_name, gloss
     FROM match_events
     WHERE match_id = ${matchId} AND is_current = true
     ORDER BY minute DESC, minute_extra DESC NULLS LAST, id DESC
