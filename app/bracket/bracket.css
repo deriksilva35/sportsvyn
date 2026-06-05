@@ -391,3 +391,38 @@
 }
 
 /* Footer rules moved to components/site-chrome.css. */
+
+/* ============ GROUP STRIP MOBILE (≤767px) ============
+   bracket.css had ZERO mobile rules — the knockout tree's 1500px width
+   is intentional (horizontally-scrollable), but the group strip above
+   it (header + 4-col grid of 12 group cards) was held at desktop
+   geometry on mobile, producing two visible bugs at 390px:
+     (a) .group-strip-header is flex/space-between/no-wrap → the 28px
+         italic "GROUP STAGE" title + the mono subtitle collided into
+         each other at narrow widths.
+     (b) .groups-grid is repeat(4, 1fr) → each of 12 group cards
+         squeezed to ~61px → right two columns clipped off-screen.
+   Plus .bracket-page padding was 48px each side → ate ~25% of the
+   viewport on 390px devices.
+   The knockout tree itself (.bracket-container, .bracket-b,
+   .round-col) is INTENTIONALLY untouched — that's the
+   1500px-min-with-horizontal-scroll design per the .bracket-page
+   header comment. Only the header bars (.group-strip-header above
+   the group cards + .bracket-container-header above the knockout
+   tree) get the column-stack treatment — both had identical
+   flex/space-between/no-wrap overlap bugs at narrow widths. */
+@media (max-width: 767px) {
+  .bracket-page {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .group-strip-header,
+  .bracket-container-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .groups-grid {
+    grid-template-columns: 1fr;
+  }
+}

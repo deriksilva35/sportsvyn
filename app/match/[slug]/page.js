@@ -328,18 +328,31 @@ export default async function MatchPage({ params }) {
     getMatchStatistics(match.id),
   ]);
 
-  // Favored side for the teams-header treatment: highest implied % between
-  // home and away (draw doesn't count). Null when no odds — never guess a
-  // favorite without market data.
-  let favoredSide = null;
-  if (winProbability) {
-    if (winProbability.home_pct > winProbability.away_pct) favoredSide = 'home';
-    else if (winProbability.away_pct > winProbability.home_pct) favoredSide = 'away';
-  }
-
   const tabs = tabsForStatus(match.status);
   const isLive = match.status === 'live';
   const isFinal = match.status === 'final';
+
+  // Win-prob bar retires at full-time. The frozen pre-kickoff consensus
+  // ("MEX 75%" on a 5-1 final) reads oddly at status='final' — recap
+  // owns full-time. Same retirement applies in scheduled + live where
+  // the bar IS meaningful (pre-kickoff market signal + frozen-at-kickoff
+  // honesty during live). Matches the live-XI retirement decision: both
+  // surfaces hide at final.
+  // Gate centralized here so both consumers (LiveHero's winprob-banner
+  // + the Preview tab's WinProbability rail) drop on the same condition
+  // without each component having to know the rule.
+  const visibleWinProb = isFinal ? null : winProbability;
+
+  // Favored side for the teams-header treatment: highest implied % between
+  // home and away (draw doesn't count). Null when no odds — never guess a
+  // favorite without market data. Also nulls at final (visibleWinProb is
+  // null there) — the actual result is known by then, "favored" highlight
+  // is editorial baggage.
+  let favoredSide = null;
+  if (visibleWinProb) {
+    if (visibleWinProb.home_pct > visibleWinProb.away_pct) favoredSide = 'home';
+    else if (visibleWinProb.away_pct > visibleWinProb.home_pct) favoredSide = 'away';
+  }
   const fixtureApiId = match.external_ids?.api_sports
     ? Number(match.external_ids.api_sports)
     : null;
@@ -386,7 +399,7 @@ export default async function MatchPage({ params }) {
             awayFlagSvg={match.away_flag_svg}
             homeAbbr={match.home_abbreviation}
             awayAbbr={match.away_abbreviation}
-            winProbability={winProbability}
+            winProbability={visibleWinProb}
           />
         ) : (
           <TeamsHeader match={match} favoredSide={favoredSide} />
@@ -405,7 +418,7 @@ export default async function MatchPage({ params }) {
             </div>
             <div className="preview-twocol-right">
               <WatchScoreVertical score={watchScore} />
-              <WinProbability probability={winProbability} homeName={match.home_name} awayName={match.away_name} />
+              <WinProbability probability={visibleWinProb} homeName={match.home_name} awayName={match.away_name} />
               <EdgePick pick={null} />
               <WhereToWatch broadcasters={broadcasters} />
             </div>
