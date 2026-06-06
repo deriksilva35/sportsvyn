@@ -76,6 +76,10 @@ async function getMatchBySlug(slug) {
 }
 
 async function getWatchScore(matchId) {
+  // status='published' is the render gate — pending_review (status='preview')
+  // rows wait for admin and don't surface here. The analyst-pass row carries
+  // both the Watch Score dimensions AND the Preview body; getPreview below
+  // reads from the same row when it exists.
   const rows = await sql`
     SELECT
       stakes_score, quality_score, narrative_score, drama_score, moment_score,
@@ -86,6 +90,7 @@ async function getWatchScore(matchId) {
     WHERE match_id = ${matchId}
       AND type = 'preview'
       AND score_type = 'watch'
+      AND status = 'published'
     ORDER BY updated_at DESC
     LIMIT 1
   `;
@@ -231,13 +236,21 @@ async function getLineups(matchId) {
 }
 
 async function getPreview(matchId) {
+  // Prefer the analyst-pass row (score_type='watch') when it carries a body
+  // — that's the single row produced by the pre-match analyst pass, used
+  // for BOTH the Watch Score rail AND the editorial Preview left column.
+  // Falls back to a human-authored preview (score_type IS NULL) if one was
+  // written separately. status='published' filter applies to both — pending
+  // admin review (status='preview') keeps the stub on the page.
   const rows = await sql`
-    SELECT title, subtitle, body, author, published_at, updated_at
+    SELECT title, subtitle, body, author, published_at, updated_at, edited_at,
+           score_type
     FROM articles
     WHERE match_id = ${matchId}
       AND type = 'preview'
-      AND score_type IS NULL
-    ORDER BY updated_at DESC
+      AND status = 'published'
+      AND body IS NOT NULL
+    ORDER BY (score_type = 'watch') DESC, updated_at DESC
     LIMIT 1
   `;
   return rows[0] ?? null;
