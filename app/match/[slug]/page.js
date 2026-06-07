@@ -36,6 +36,7 @@ import MatchLineups from '@/components/match/MatchLineupsPitch';
 import KickoffWatcher from '@/components/match/KickoffWatcher';
 import KeyMoments from '@/components/match/KeyMoments';
 import MatchStats from '@/components/match/MatchStats';
+import LiveWatchScore from '@/components/match/LiveWatchScore';
 
 import './match.css';
 
@@ -501,7 +502,21 @@ export default async function MatchPage({ params }) {
                 />
               </div>
               <div className="live-right">
-                <MatchStats stats={matchStatistics} minute={null} />
+                {/* Three-card rail: live watch score (new) → match stats
+                    (existing, wrapped in rail-card chrome) → broadcasters
+                    (existing). The wrapped components have their own
+                    border/bg neutralized via the .rail-card > .live-stats /
+                    .watch-block / .slot-empty CSS reset in match.css so
+                    each card reads as a single visual shell. */}
+                <div className="rail">
+                  <LiveWatchScore match={match} />
+                  <div className="rail-card">
+                    <MatchStats stats={matchStatistics} minute={null} />
+                  </div>
+                  <div className="rail-card">
+                    <WhereToWatch broadcasters={broadcasters} />
+                  </div>
+                </div>
               </div>
             </div>
           ) : (

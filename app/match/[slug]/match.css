@@ -1642,3 +1642,137 @@
   }
   .winprob-prematch-cell .odds { font-size: 9px; }
 }
+
+/* ============ LIVE TAB RIGHT RAIL — shared chrome ============ */
+/* Ported from sportsvyn-match-live-tab-v1.html. .rail wraps the three
+   live-tab right-column cards (LiveWatchScore + MatchStats + WhereToWatch).
+   sticky/top:92px keeps the rail in view while the Key Moments timeline
+   scrolls in the main column; goes static on mobile (single column). */
+
+@keyframes redPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0); border-color: var(--live-red); }
+  50%      { box-shadow: 0 0 22px 0 rgba(230, 57, 70, 0.18); border-color: #ff5562; }
+}
+
+.rail {
+  display: flex; flex-direction: column;
+  gap: 20px;
+  position: sticky; top: 92px;
+}
+.rail-card {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  border-left: 3px solid var(--volt);
+}
+.rail-card.live-card {
+  border-left-color: var(--live-red);
+  animation: redPulse 2.4s ease-in-out infinite;
+}
+.rail-card-head {
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--rule-dark);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.rail-card-kicker {
+  font-family: var(--font-mono);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--volt);
+}
+.rail-card.live-card .rail-card-kicker { color: var(--live-red); }
+.rail-now-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 8px; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--live-red);
+}
+.rail-now-tag .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--live-red);
+  /* Re-uses the existing match.css 'pulse' keyframe (opacity-only) so we
+     don't ship two near-identical dot animations. The mock had a
+     dotPulse keyframe with an extra scale transform; the visual cost of
+     dropping the scale is negligible at 6px. */
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Wrapped existing components (MatchStats / WhereToWatch / slot-empty)
+   already carry their own bg + border + padding. When nested inside a
+   .rail-card we neutralize that inner chrome so the rail-card's own
+   chrome (graphite bg + 1px rule + 3px volt-left) is the only visual
+   shell. Padding is reset to match the LiveWatchScore body rhythm so
+   all three cards line up. */
+.rail-card > .live-stats,
+.rail-card > .watch-block,
+.rail-card > .slot-empty {
+  background: transparent;
+  border: none;
+  padding: 16px 18px;
+  margin: 0;
+}
+
+/* ============ LIVE WATCH SCORE — ws-* body ============ */
+.ws-body { padding: 18px 18px 16px; }
+.ws-number-row {
+  display: flex; align-items: baseline; gap: 4px;
+  margin-bottom: 4px;
+}
+.ws-number {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  font-size: 56px; line-height: 0.8; letter-spacing: -0.04em;
+  color: var(--volt);
+}
+.ws-outof {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  font-size: 22px; letter-spacing: -0.02em;
+  color: var(--muted-dim);
+}
+.ws-trend {
+  font-family: var(--font-mono);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--volt);
+  margin-bottom: 16px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.ws-spark {
+  width: 100%; height: 76px;
+  display: block;
+  margin-bottom: 14px;
+}
+.ws-caption {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13px; line-height: 1.5;
+  color: var(--paper-warm);
+}
+.ws-footer {
+  padding: 11px 18px;
+  border-top: 1px solid var(--rule-dark);
+  background: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted-dim);
+}
+
+/* Live-hero border pulse — mock has the red border glowing during live
+   (animation: redPulse on the hero box). Previous match.css only set
+   border-color: live-red on .match-hero--live (line 198) with no
+   animation, so the border read as static. The CSS animation
+   short-hand applies the keyframe to the hero box-shadow + border-color.
+   Final state stays static (.match-hero--final is jade, not red). */
+.match-hero--live { animation: redPulse 2.4s ease-in-out infinite; }
+
+@media (max-width: 767px) {
+  .rail { position: static; gap: 16px; }
+  .ws-body { padding: 16px 16px 14px; }
+  .ws-number { font-size: 48px; }
+  .ws-outof { font-size: 20px; }
+  .ws-spark { height: 64px; }
+  .ws-footer { padding: 10px 16px; }
+}
+
