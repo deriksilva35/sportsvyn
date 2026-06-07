@@ -6,24 +6,32 @@
  * header return 401 so the endpoint can't be turned into a public
  * API-Sports proxy.
  *
- * Behaviour:
- *   - Query getMatchesToPoll() (lib/liveMatches.js). Predicate covers
- *     live matches plus scheduled matches inside a [now-4h, now+15m]
- *     window so the very first poll fires before kickoff.
- *   - When the list is empty (the common case — no live match), return
- *     {polled:0} without calling API-Sports. Zero budget, zero
- *     sync_log rows.
- *   - For each match, call syncFixture(apiSportsId) wrapped in its own
- *     try/catch so one failing fixture doesn't abort the others. The
- *     sync_log row for a failed call is written by syncFixture's own
- *     catch arm, not here.
- *
- * Response: { polled: N, matches: [{ id, slug, status, score, minute, error? }] }
+ * Tick flow (order matters):
+ *   1. STUCK-LIVE SWEEP (always runs) — resolves matches that have been
+ *      status='live' longer than STUCK_LIVE_TIMEOUT_MIN (lib/
+ *      stuckLiveSweep.js). Calls one apiSports.fixture per candidate to
+ *      confirm; force-flips to final if the API call fails OR confirms
+ *      FT. Crucially, this still runs when the daily-cap breaker is
+ *      tripped — it just operates in fallback mode (no API call, force-
+ *      flip from last-known DB score). Prevents stuck-live matches
+ *      becoming a permanent quota drain.
+ *   2. CIRCUIT-BREAKER CHECK — if the daily-cap sentinel is engaged for
+ *      the current UTC date, skip the normal poll loop entirely. We
+ *      already know API calls will fail; no point hammering. The
+ *      breaker auto-clears at UTC midnight via the date comparison in
+ *      isDailyCapTripped().
+ *   3. NORMAL POLL — query getMatchesToPoll() (lib/liveMatches.js), sync
+ *      each fixture, capture the live watch score tick. Per-match
+ *      try/catch isolation as before. A DailyCapError surfaced during
+ *      this loop trips the breaker and halts the rest of the tick.
  */
 
 import { getMatchesToPoll } from '@/lib/liveMatches';
 import { syncFixture } from '@/lib/syncFixture';
 import { captureLiveWatchScoreTick } from '@/lib/captureLiveWatchScore';
+import { sweepStuckLive } from '@/lib/stuckLiveSweep';
+import { isDailyCapTripped, tripDailyCap } from '@/lib/cronCircuitBreaker';
+import { DailyCapError } from '@/lib/apiSports';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -37,14 +45,49 @@ export async function GET(request) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const matches = await getMatchesToPoll();
+  // STEP 1: stuck-live sweep — always runs, even when the breaker is
+  // tripped. We read the breaker state first so the sweep knows whether
+  // it can poll-once-before-flip or has to go straight to fallback.
+  let breakerTripped = await isDailyCapTripped();
+  const sweep = await sweepStuckLive({ breakerTripped });
+  if (sweep.swept > 0) {
+    console.log(
+      `poll-live sweep: ${sweep.swept} stuck-live candidates ·`,
+      `${sweep.resolved.length} resolved ·`,
+      `${sweep.wouldNotFlip.length} left live (API confirmed still playing)`,
+    );
+  }
+  // The sweep may have detected the daily cap itself (via its own
+  // poll-once attempt) and tripped the breaker. Re-read so STEP 2 sees
+  // the latest state.
+  breakerTripped = await isDailyCapTripped();
 
+  // STEP 2: breaker gate — if engaged, skip the main poll loop. The
+  // sweep already ran; nothing else useful to do this tick.
+  if (breakerTripped) {
+    return Response.json({
+      polled: 0,
+      matches: [],
+      breaker: 'tripped',
+      sweep,
+    });
+  }
+
+  // STEP 3: normal poll loop.
+  const matches = await getMatchesToPoll();
   if (matches.length === 0) {
-    return Response.json({ polled: 0, matches: [] });
+    return Response.json({ polled: 0, matches: [], sweep });
   }
 
   const results = [];
+  let trippedMidLoop = false;
   for (const m of matches) {
+    if (trippedMidLoop) {
+      // Daily-cap surfaced during this tick. Don't keep hammering;
+      // record the un-polled matches in the response for visibility.
+      results.push({ id: m.id, slug: m.slug, skipped: 'daily_cap_tripped' });
+      continue;
+    }
     const apiId = Number(m.api_sports_id);
     if (!Number.isInteger(apiId) || apiId <= 0) {
       results.push({ id: m.id, slug: m.slug, error: 'invalid api_sports id' });
@@ -52,10 +95,6 @@ export async function GET(request) {
     }
     try {
       const r = await syncFixture(apiId);
-      // Piggyback: capture a Live Watch Score history row from the just-written
-      // is_current event state. Own try/catch — a capture failure (DB blip,
-      // formula throw) can't abort the surrounding poll-live loop or block
-      // other matches. The sync_log row from syncFixture is independent.
       try {
         await captureLiveWatchScoreTick(r.match_id, r);
       } catch (capErr) {
@@ -72,6 +111,19 @@ export async function GET(request) {
         minute: r.minute,
       });
     } catch (err) {
+      // Daily-cap detected mid-loop: trip the breaker now (so the next
+      // tick reads it as engaged + the sweep treats subsequent stuck-
+      // live matches as fallback) and stop hammering this loop.
+      if (err instanceof DailyCapError) {
+        await tripDailyCap({ reason: 'detected_in_poll_loop' });
+        trippedMidLoop = true;
+        results.push({
+          id: m.id,
+          slug: m.slug,
+          error: 'daily_cap_tripped_breaker',
+        });
+        continue;
+      }
       // syncFixture already wrote its own error row to sync_log.
       results.push({
         id: m.id,
@@ -81,5 +133,10 @@ export async function GET(request) {
     }
   }
 
-  return Response.json({ polled: results.length, matches: results });
+  return Response.json({
+    polled: results.length,
+    matches: results,
+    sweep,
+    breaker_tripped_mid_loop: trippedMidLoop,
+  });
 }
