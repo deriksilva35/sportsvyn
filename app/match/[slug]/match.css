@@ -1759,6 +1759,117 @@
   color: var(--muted-dim);
 }
 
+/* ============ KEY MOMENTS TIMELINE — mock-faithful km-* class system ============ */
+/* Ported from sportsvyn-match-live-tab-v1.html. Replaces the previous
+   .stream-* row layout. Three-column grid: minute / icon-box / body.
+   Headlines render in Saira Black Italic (var(--font-display)); the
+   optional AI gloss renders as a Source-Serif italic sub-line under
+   the headline. Goal rows get a faint volt-tint background + volt
+   scorer name. */
+.km {
+  display: flex; flex-direction: column;
+  margin-top: 16px;
+}
+.km-row {
+  display: grid;
+  grid-template-columns: 54px 30px 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 13px 4px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.km-row:last-child { border-bottom: none; }
+/* Goal-row tint: faint volt wash, bleed slightly past the row gutter
+   so the highlight reads as "this entry" not "this column." */
+.km-row.goal {
+  background: rgba(212, 255, 0, 0.035);
+  margin: 0 -10px;
+  padding-left: 14px; padding-right: 14px;
+}
+.km-min {
+  font-family: var(--font-mono);
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--paper-warm);
+  text-align: right;
+}
+.km-row.goal .km-min { color: var(--volt); }
+
+/* Icon boxes — 30px bordered square, ink bg, SVG inside at 15px. Each
+   kind sets its own stroke/fill color via CSS so the same SVG can
+   render in any palette. */
+.km-icon {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--rule-dark);
+  background: var(--ink);
+}
+.km-icon svg { width: 15px; height: 15px; }
+.km-icon.goal         { border-color: var(--volt); }
+.km-icon.goal svg     { color: var(--volt); }
+.km-icon.yellow svg   { color: #E8C547; }
+.km-icon.red          { border-color: var(--live-red); }
+.km-icon.red svg      { color: var(--live-red); }
+.km-icon.sub svg      { color: var(--muted-light); }
+.km-icon.var svg      { color: var(--muted-light); }
+.km-icon.missed svg   { color: var(--muted-dim); }
+
+.km-body {
+  display: flex; flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.km-headline {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 15px; line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--paper-warm);
+}
+.km-row.goal .km-headline .scored { color: var(--volt); }
+/* AI gloss sub-line — Source Serif italic, sits directly under the
+   templated headline. Same visual treatment as the previous
+   .stream-gloss so existing gloss prose reads identically. Only
+   renders when present + non-empty (component-side gate); a null
+   gloss leaves the body with just the headline. */
+.km-gloss {
+  margin-top: 4px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--paper-warm);
+  opacity: 0.78;
+}
+
+/* Lifecycle dividers (KICK-OFF / HALF-TIME / FULL TIME) — full-width
+   centered mono caps with horizontal rules on either side. Replaces
+   the previous .stream-entry.lifecycle treatment for the km layout. */
+.km-divider {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 4px 12px;
+  font-family: var(--font-mono);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--muted-dim);
+}
+.km-divider::before, .km-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--rule-dark);
+}
+.km-divider.kickoff { color: var(--muted); }
+
+@media (max-width: 767px) {
+  .km-row { grid-template-columns: 40px 26px 1fr; gap: 12px; padding: 11px 4px; }
+  .km-row.goal { margin: 0 -8px; padding-left: 12px; padding-right: 12px; }
+  .km-icon { width: 26px; height: 26px; }
+  .km-icon svg { width: 13px; height: 13px; }
+  .km-min { font-size: 12px; }
+  .km-headline { font-size: 14px; }
+  .km-gloss { font-size: 12px; line-height: 1.42; }
+  .km-divider { padding: 12px 2px 10px; gap: 10px; font-size: 8px; letter-spacing: 0.2em; }
+}
+
 /* Live-hero border pulse — mock has the red border glowing during live
    (animation: redPulse on the hero box). Previous match.css only set
    border-color: live-red on .match-hero--live (line 198) with no

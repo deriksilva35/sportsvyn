@@ -1,51 +1,39 @@
 /**
- * KeyMoments — factual live event timeline for the LIVE tab panel.
+ * KeyMoments — Live tab event timeline with deterministic templated
+ * headlines, mock-faithful icon boxes, and optional AI gloss sub-line.
  *
- * Reads from match_events (migration 022, written by the poll-live cron
- * via lib/events.js). Server component — receives the rows as a prop
- * from app/match/[slug]/page.js's Promise.all. Refresh cadence comes
- * from LiveHero.js calling router.refresh() after each successful
- * fetch tick, so new events written by the cron flow into the
- * server-rendered panel without a manual reload.
+ * Ported from sportsvyn-match-live-tab-v1.html (.km-* class system).
+ * Replaces the prior .stream-* row layout. Mock-style three-column row:
+ * minute · icon-box · body (headline + optional gloss).
  *
- * Locked v4 mock pattern (.stream-entry.auto): minute column on the
- * left, content column on the right with a small uppercase tag +
- * one-line prose. NO editorial overlays (headlines, prose enrichment,
- * bylines) — that is ③b's territory. Strictly factual reads of the
- * row.
+ * HEADLINE LOGIC (deterministic, NO AI):
+ *   - Goals: vocabulary picked from the score state BEFORE this goal.
+ *     0-0 → "OPENS THE SCORING"; trailing→tied → "EQUALISES";
+ *     tied→leading → "PUTS {TEAM} AHEAD" (or RESTORES if this side
+ *     led earlier in the match); leading→leading-by-more → "DOUBLES"
+ *     when the new margin is 2, else "EXTENDS".
+ *   - Own goals: scorer name replaced with literal "OWN GOAL".
+ *   - Missed penalties: "{PLAYER} MISSES THE PENALTY" (no score change).
+ *   - Yellow: "{PLAYER} BOOKED" · Red / 2nd yellow: "{PLAYER} SENT OFF".
+ *   - Subst: "{IN} ON FOR {OUT}" (API-Sports convention: player_name =
+ *     OFF, assist_name = IN).
+ *   - VAR: "VAR CHECK — {DETAIL}" (or "VAR CHECK" when detail empty).
  *
- * VAR handling: events with event_type='Var' render as their own row
- * (tag VAR · {team_abbr}, prose "{player} goal disallowed"). The
- * disallowed goal itself never reaches this component because the
- * page-side query filters is_current=true, and a VAR-cancelled goal
- * is flipped to is_current=false by syncMatchEvents.
+ * SCORE-STATE: derived by iterating events in chronological order. The
+ * page-side query already filters is_current=true so VAR-cancelled
+ * goals don't poison the running score. hasLed[side] tracks whether
+ * this side has held the lead at any point earlier in the match —
+ * powers the RESTORES headline.
  *
- * Substitution direction (easy to flip — locked here): API-Sports's
- * subst events use player_name for the player going OFF and assist_name
- * for the player coming ON. Rendered as "{OFF} off · {IN} on".
+ * GLOSS RENDERING: the AI gloss (match_events.gloss column) renders as
+ * an italic sub-line under the headline ONLY when non-empty. NULL
+ * (pending pass) and '' (tried-empty sentinel) both render nothing —
+ * no dangling em-dash, no empty prose line. Fixes the prod bug where
+ * un-glossed rows showed a bare "—".
  *
- * Lifecycle scaffold (KICK-OFF / HALF-TIME / FULL TIME): synthesized
- * from match.status + the highest event minute. NOT passed through
- * from the API — derived here so they're never missing when the API
- * skips them. Rendered as quiet centered divider rows (mono caps,
- * muted) so they read as section breaks rather than event lines.
- *
- *   KICK-OFF   — present whenever the match has started (live | final).
- *                Anchors the feed at minute 0 so the LIVE tab is never
- *                a dead "no key moments yet" panel post-kickoff.
- *   HALF-TIME  — present when match.status='final' (definitely passed
- *                HT) OR when a live match has positive evidence of
- *                second-half play (an event at minute >= 46). The
- *                conservative read means a truly 0-0 live match at HT
- *                with zero events won't show the marker, but we never
- *                falsely claim HT has happened.
- *   FULL TIME  — present only when match.status='final', with the
- *                final score line ("3 — 2") as meta.
- *
- * Empty-state ("No key moments yet — events post during play.") only
- * shows when the lifecycle scaffold yields zero entries AND there are
- * zero events — i.e. pre-kickoff. Once status flips to live the
- * KICK-OFF anchor replaces the empty state.
+ * LIFECYCLE SCAFFOLD: KICK-OFF / HALF-TIME / FULL TIME synthesized from
+ * match.status + event minute reach. Same rules as before; render as
+ * .km-divider with optional score meta on FULL TIME.
  */
 
 function formatMinute(e) {
@@ -56,68 +44,247 @@ function formatMinute(e) {
   return `${m}'`;
 }
 
-// Clean-omits the team suffix when teamAbbr is missing (e.g. DEV's
-// friendlies-league rows have NULL abbreviation; PROD's WC rows have
-// 'USA' / 'SEN' etc populated). Avoids the trailing " · " ghost.
-function tagWithTeam(base, teamAbbr) {
-  return teamAbbr ? `${base} · ${teamAbbr}` : base;
+// ============================================================================
+// HEADLINE DERIVATION
+// ============================================================================
+
+// Compute per-goal headline using the score state BEFORE the goal +
+// whether each side has led at any point before this event. The split
+// between "before" (used here) and "after" (caller updates) is what
+// keeps the vocabulary correct on extends/restores — DOUBLES/EXTENDS
+// reads "before this was a 1- or 2-goal lead; this goal added another."
+function goalHeadline({ side, scorer, teamName, detail, before, after, hasLedBefore }) {
+  const isOwnGoal = detail === 'Own Goal';
+  // For own goals, the API-Sports payload puts team_side on the
+  // BENEFITING team and player_name on the player who put it in (their
+  // own net). Crediting that player by name reads wrong; replace with
+  // the literal "OWN GOAL" prefix so the headline reads neutrally.
+  const namePart = isOwnGoal
+    ? 'OWN GOAL'
+    : (scorer && scorer.length > 0 ? scorer.toUpperCase() : null);
+
+  const scoringSide = side; // 'home' | 'away'
+  const otherSide = scoringSide === 'home' ? 'away' : 'home';
+
+  const beforeScoring = before[scoringSide];
+  const beforeOther   = before[otherSide];
+  const afterScoring  = after[scoringSide];
+  const afterOther    = after[otherSide];
+
+  const wasZeroZero   = beforeScoring === 0 && beforeOther === 0;
+  const wasTied       = beforeScoring === beforeOther;
+  const wasLeading    = beforeScoring > beforeOther;
+  const wasTrailing   = beforeScoring < beforeOther;
+  const nowTied       = afterScoring === afterOther;
+  const nowLeading    = afterScoring > afterOther;
+  const margin        = afterScoring - afterOther;
+
+  let template;
+  if (wasZeroZero) {
+    template = 'OPENS THE SCORING';
+  } else if (wasTrailing && nowTied) {
+    template = 'EQUALISES';
+  } else if (wasTied && nowLeading) {
+    template = hasLedBefore[scoringSide] ? `RESTORES THE LEAD` : `PUTS ${teamName} AHEAD`;
+  } else if (wasLeading && nowLeading) {
+    // Same side extending an existing lead.
+    template = margin === 2 ? 'DOUBLES THE LEAD' : 'EXTENDS THE LEAD';
+  } else if (wasTrailing && afterScoring < afterOther) {
+    // Trailing team scores but still trails — the other side leads by 1+.
+    // Standard football vocab: "pulls one back". Sits above the generic
+    // fallback so this common pattern reads correctly instead of as
+    // "MAKES IT 2-1".
+    template = 'PULLS ONE BACK';
+  } else {
+    // True fallback — anything not matching the seven cases above.
+    // Always honest: literal score change.
+    template = `MAKES IT ${after.home}-${after.away}`;
+  }
+
+  // namePart prepended only when we have a real name. Own goals get
+  // "OWN GOAL" prefix; missing scorer falls back to bare template.
+  return namePart ? `${namePart} ${template}` : template;
 }
 
-function describe(e, homeAbbr, awayAbbr) {
-  const teamAbbr = e.team_side === 'home' ? homeAbbr : awayAbbr;
-  const player = e.player_name ?? '—';
-  const assist = e.assist_name;
-
-  if (e.event_type === 'Goal') {
-    let prose;
-    if (e.detail === 'Penalty')           prose = `${player} (penalty)`;
-    else if (e.detail === 'Own Goal')     prose = `${player} (own goal)`;
-    else if (e.detail === 'Missed Penalty') prose = `${player} — missed penalty`;
-    else                                  prose = assist ? `${player} (${assist})` : player;
-    const modifier = e.detail === 'Missed Penalty' ? 'CHANCE' : 'GOAL';
-    return { tag: tagWithTeam('GOAL', teamAbbr), modifier, prose };
-  }
+// Non-goal event vocabulary. Pure: receives the row + team labels,
+// returns { kind, headline }. kind drives the icon-box class.
+function describeNonGoal(e) {
+  const player = e.player_name && e.player_name.length > 0 ? e.player_name.toUpperCase() : null;
+  const assist = e.assist_name && e.assist_name.length > 0 ? e.assist_name.toUpperCase() : null;
 
   if (e.event_type === 'Card') {
     if (e.detail === 'Yellow Card') {
-      return { tag: tagWithTeam('YELLOW', teamAbbr), modifier: 'YELLOW', prose: player };
+      return { kind: 'yellow', headline: player ? `${player} BOOKED` : 'BOOKING' };
     }
     if (e.detail === 'Red Card' || e.detail === 'Second Yellow card') {
-      return { tag: tagWithTeam('RED', teamAbbr), modifier: 'RED', prose: player };
+      return { kind: 'red', headline: player ? `${player} SENT OFF` : 'RED CARD' };
     }
-    return { tag: tagWithTeam('CARD', teamAbbr), modifier: 'YELLOW', prose: `${player}${e.detail ? ' — ' + e.detail : ''}` };
+    return { kind: 'yellow', headline: player ? `${player} — ${(e.detail ?? 'CARD').toUpperCase()}` : (e.detail ?? 'CARD').toUpperCase() };
   }
 
   if (e.event_type === 'subst') {
-    // player = OFF, assist = IN (API-Sports convention; matches the v4
-    // mock's "Boufal off · Cheddira on" prose).
-    return {
-      tag: tagWithTeam('SUB', teamAbbr),
-      modifier: 'SUB',
-      prose: assist ? `${player} off · ${assist} on` : `${player} off`,
-    };
+    // API convention: player_name = OFF, assist_name = IN.
+    if (assist && player) return { kind: 'sub', headline: `${assist} ON FOR ${player}` };
+    if (player)           return { kind: 'sub', headline: `${player} SUBSTITUTED OFF` };
+    return { kind: 'sub', headline: 'SUBSTITUTION' };
   }
 
   if (e.event_type === 'Var') {
-    if (e.detail === 'Goal cancelled') {
-      return { tag: tagWithTeam('VAR', teamAbbr), modifier: 'VAR', prose: `${player} goal disallowed` };
-    }
-    return { tag: tagWithTeam('VAR', teamAbbr), modifier: 'VAR', prose: `${player}${e.detail ? ' — ' + e.detail : ''}` };
+    const outcome = e.detail ? e.detail.toUpperCase() : null;
+    return { kind: 'var', headline: outcome ? `VAR CHECK — ${outcome}` : 'VAR CHECK' };
   }
 
-  // Forward-compat for unknown event_types — render a generic tag rather
-  // than crash. event_type stays unconstrained at the schema level so a
-  // new API-Sports type lands gracefully.
-  return {
-    tag: tagWithTeam('EVENT', teamAbbr),
-    modifier: 'SUB',
-    prose: `${player}${e.detail ? ' — ' + e.detail : ''}`,
-  };
+  // Forward-compat: an unknown event_type lands gracefully with a
+  // neutral icon. Headline reads the data we have.
+  return { kind: 'sub', headline: player ? `${player} — ${(e.event_type ?? 'EVENT').toUpperCase()}` : (e.event_type ?? 'EVENT').toUpperCase() };
 }
 
-// Synthesize lifecycle markers from match state. See header doc for the
-// gating rules per marker. Returns rows in the same shape as event rows
-// so they can be merged + sorted alongside them.
+// Single pass over events (chronological) to derive per-event headlines.
+// Returns a Map<event_id, { kind, headline }>. Score state is mutated
+// in-step; hasLed transitions on the AFTER state of each goal so a
+// "restores the lead" goal can use the post-state's leader to decide
+// whether the scoring side has led before.
+export function deriveHeadlines(events, { homeName, awayName }) {
+  const headlines = new Map();
+  const state = {
+    home: 0,
+    away: 0,
+    hasLed: { home: false, away: false },
+  };
+
+  const chronological = events
+    .slice()
+    .sort((a, b) => {
+      const am = a.minute ?? 0, bm = b.minute ?? 0;
+      if (am !== bm) return am - bm;
+      const ae = a.minute_extra ?? 0, be = b.minute_extra ?? 0;
+      if (ae !== be) return ae - be;
+      return (a.id ?? 0) - (b.id ?? 0);
+    });
+
+  for (const e of chronological) {
+    if (e.event_type === 'Goal' && e.detail !== 'Missed Penalty') {
+      const side = e.team_side === 'home' ? 'home' : 'away';
+      const before = { home: state.home, away: state.away };
+      // hasLedBefore is a SNAPSHOT — read before mutating, used by the
+      // headline picker; we update hasLed after the headline is locked
+      // so the current goal doesn't self-disqualify a RESTORES read.
+      const hasLedBefore = { home: state.hasLed.home, away: state.hasLed.away };
+      state[side] += 1;
+      const after = { home: state.home, away: state.away };
+
+      const teamName = side === 'home' ? (homeName ?? 'HOME') : (awayName ?? 'AWAY');
+      const headline = goalHeadline({
+        side,
+        scorer: e.player_name,
+        teamName: teamName.toUpperCase(),
+        detail: e.detail,
+        before,
+        after,
+        hasLedBefore,
+      });
+
+      // Update hasLed based on the AFTER state for downstream events.
+      if (after.home > after.away) state.hasLed.home = true;
+      if (after.away > after.home) state.hasLed.away = true;
+
+      headlines.set(e.id, {
+        kind: 'goal',
+        headline,
+        side,
+        scorer: e.player_name ?? null,
+      });
+      continue;
+    }
+
+    if (e.event_type === 'Goal' && e.detail === 'Missed Penalty') {
+      const player = e.player_name && e.player_name.length > 0 ? e.player_name.toUpperCase() : null;
+      headlines.set(e.id, {
+        kind: 'missed',
+        headline: player ? `${player} MISSES THE PENALTY` : 'PENALTY MISSED',
+      });
+      continue;
+    }
+
+    const { kind, headline } = describeNonGoal(e);
+    headlines.set(e.id, { kind, headline });
+  }
+
+  return headlines;
+}
+
+// ============================================================================
+// ICON BOXES — SVGs ported verbatim from the mock
+// ============================================================================
+
+function KmIcon({ kind }) {
+  switch (kind) {
+    case 'goal':
+      return (
+        <span className="km-icon goal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>
+            <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/>
+          </svg>
+        </span>
+      );
+    case 'yellow':
+      return (
+        <span className="km-icon yellow">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="6" y="3" width="12" height="18" rx="1.5"/>
+          </svg>
+        </span>
+      );
+    case 'red':
+      return (
+        <span className="km-icon red">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="6" y="3" width="12" height="18" rx="1.5"/>
+          </svg>
+        </span>
+      );
+    case 'sub':
+      return (
+        <span className="km-icon sub">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <path d="M7 7l-4 4 4 4M3 11h10"/>
+            <path d="M17 17l4-4-4-4M21 13H11"/>
+          </svg>
+        </span>
+      );
+    case 'var':
+      return (
+        <span className="km-icon var">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <rect x="3" y="6" width="18" height="12" rx="1.5"/>
+            <path d="M9 9l3 3 3-3"/>
+          </svg>
+        </span>
+      );
+    case 'missed':
+      // Off-target / missed-chance feel: same circle as goal but desaturated
+      // via .km-icon.missed CSS class.
+      return (
+        <span className="km-icon missed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M8 8l8 8M16 8l-8 8"/>
+          </svg>
+        </span>
+      );
+    default:
+      return (
+        <span className="km-icon sub" aria-hidden="true" />
+      );
+  }
+}
+
+// ============================================================================
+// LIFECYCLE ROWS
+// ============================================================================
+
 function buildLifecycleRows(match, events) {
   if (!match) return [];
   const isLive = match.status === 'live';
@@ -126,7 +293,6 @@ function buildLifecycleRows(match, events) {
 
   const rows = [];
 
-  // KICK-OFF — anchors the bottom of the newest-first feed.
   rows.push({
     kind: 'lifecycle',
     lifecycle: 'kickoff',
@@ -136,9 +302,6 @@ function buildLifecycleRows(match, events) {
     sortExtra: 0,
   });
 
-  // HALF-TIME — sort to appear newer than the latest 45+X stoppage event
-  // (extra=MAX_SAFE_INTEGER) so the feed reads, top-to-bottom:
-  //   ... 2H events ... HALF-TIME ... 45+X stoppage events ... 1H events ... KICK-OFF
   const reachedHalfTime =
     isFinal || (isLive && events.some((e) => (e.minute ?? 0) >= 46));
   if (reachedHalfTime) {
@@ -152,8 +315,6 @@ function buildLifecycleRows(match, events) {
     });
   }
 
-  // FULL TIME — only at final, sorts to top of the feed with the score
-  // line as meta.
   if (isFinal) {
     const home = match.home_score ?? 0;
     const away = match.away_score ?? 0;
@@ -178,18 +339,28 @@ function eventRowSortKey(e) {
   };
 }
 
-export default function KeyMoments({ events = [], match = null, homeAbbr, awayAbbr }) {
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export default function KeyMoments({ events = [], match = null, homeAbbr, awayAbbr, homeName, awayName }) {
   const eventList = Array.isArray(events) ? events : [];
   const lifecycle = buildLifecycleRows(match, eventList);
+
+  // Pass team names (full or abbr fallback) to the headline derivation
+  // for "PUTS {TEAM} AHEAD". Prefer abbr for the headline since it
+  // reads tighter at Saira-uppercase scale ("PUTS USA AHEAD" beats
+  // "PUTS UNITED STATES AHEAD"). Full name preferred only when no abbr.
+  const headlines = deriveHeadlines(eventList, {
+    homeName: homeAbbr ?? homeName,
+    awayName: awayAbbr ?? awayName,
+  });
 
   const rows = [
     ...eventList.map((e) => ({ kind: 'event', data: e, ...eventRowSortKey(e) })),
     ...lifecycle.map((l) => ({ ...l, data: l, sortId: 0 })),
   ];
 
-  // Newest-first: minute DESC, extra DESC, id DESC. Lifecycle markers
-  // get extreme sort minutes (-1 for kickoff, MAX for fulltime) and a
-  // saturated extra for HT so they land at their intended positions.
   rows.sort((a, b) => {
     if (a.sortMinute !== b.sortMinute) return b.sortMinute - a.sortMinute;
     if (a.sortExtra !== b.sortExtra) return b.sortExtra - a.sortExtra;
@@ -200,12 +371,6 @@ export default function KeyMoments({ events = [], match = null, homeAbbr, awayAb
     return <div className="tab-stub">No key moments yet — events post during play.</div>;
   }
 
-  // Feed-level marker for the AI gloss surface. ONE marker per feed,
-  // not per line. Always shown when the feed has any rows — readers
-  // see the section's intent even before a gloss has populated. A
-  // qualifying event without a gloss yet renders the structured row
-  // alone (no placeholder). See migration 027 for the gloss state
-  // machine (NULL = pending, '' = tried-empty, text = render).
   return (
     <div className="key-moments">
       <div className="commentary-header">
@@ -215,42 +380,60 @@ export default function KeyMoments({ events = [], match = null, homeAbbr, awayAb
         <div className="commentary-header-meta">Latest first · Auto-updates</div>
       </div>
       <div className="key-moments-ai-marker">Live Notes · Auto-Generated</div>
-      {rows.map((r, i) => {
-        if (r.kind === 'lifecycle') {
+
+      <div className="km">
+        {rows.map((r, i) => {
+          if (r.kind === 'lifecycle') {
+            const cls = `km-divider${r.lifecycle === 'kickoff' ? ' kickoff' : ''}`;
+            return (
+              <div key={`lifecycle-${r.lifecycle}`} className={cls}>
+                <span>
+                  {r.label}
+                  {r.meta && <> · {r.meta}</>}
+                </span>
+              </div>
+            );
+          }
+          const e = r.data;
+          const h = headlines.get(e.id) ?? { kind: 'sub', headline: '' };
+          const isGoal = h.kind === 'goal';
+          const hasGloss = typeof e.gloss === 'string' && e.gloss.length > 0;
+          const rowClass = `km-row${isGoal ? ' goal' : ''}`;
+
+          // Scorer span gets .scored treatment so the volt highlight on
+          // goal rows lands on the name only. The first whitespace in
+          // the headline separates the (upper-cased) scorer from the
+          // template; we wrap that initial segment.
+          let headlineNode;
+          if (isGoal && h.scorer) {
+            const upperScorer = h.scorer.toUpperCase();
+            if (h.headline.startsWith(upperScorer)) {
+              const tail = h.headline.slice(upperScorer.length);
+              headlineNode = (
+                <>
+                  <span className="scored">{upperScorer}</span>
+                  {tail}
+                </>
+              );
+            } else {
+              headlineNode = h.headline;
+            }
+          } else {
+            headlineNode = h.headline;
+          }
+
           return (
-            <div
-              key={`lifecycle-${r.lifecycle}`}
-              className={`stream-entry lifecycle lifecycle-${r.lifecycle}`}
-            >
-              <div className="stream-lifecycle-row">
-                <span className="stream-lifecycle-label">{r.label}</span>
-                {r.meta && (
-                  <>
-                    <span className="stream-lifecycle-sep">·</span>
-                    <span className="stream-lifecycle-meta">{r.meta}</span>
-                  </>
-                )}
+            <div key={e.id ?? `${e.minute}-${e.minute_extra}-${i}`} className={rowClass}>
+              <div className="km-min">{formatMinute(e)}</div>
+              <KmIcon kind={h.kind} />
+              <div className="km-body">
+                <div className="km-headline">{headlineNode}</div>
+                {hasGloss && <div className="km-gloss">{e.gloss}</div>}
               </div>
             </div>
           );
-        }
-        const e = r.data;
-        const { tag, modifier, prose } = describe(e, homeAbbr, awayAbbr);
-        // Gloss: render only when present AND non-empty. NULL (pending)
-        // and '' (tried-empty sentinel) both render as nothing — the
-        // structured row stands alone. Informative-or-nothing.
-        const hasGloss = typeof e.gloss === 'string' && e.gloss.length > 0;
-        return (
-          <div key={e.id ?? `${e.minute}-${e.minute_extra}-${i}`} className="stream-entry auto">
-            <div className="stream-minute">{formatMinute(e)}</div>
-            <div className="stream-body">
-              <span className={`stream-event-tag ${modifier}`}>{tag}</span>
-              <div className="stream-prose">{prose}</div>
-              {hasGloss && <div className="stream-gloss">{e.gloss}</div>}
-            </div>
-          </div>
-        );
-      })}
+        })}
+      </div>
     </div>
   );
 }
