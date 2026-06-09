@@ -23,6 +23,7 @@ import {
   getTeamOdds,
   getNextMatchBroadcasters,
 } from '@/lib/teams';
+import { getTeamSquad } from '@/lib/players';
 
 import TeamHero from '@/components/team/TeamHero';
 import SportsvynOutlook from '@/components/team/SportsvynOutlook';
@@ -30,6 +31,7 @@ import FormStrip from '@/components/team/FormStrip';
 import RecentNext from '@/components/team/RecentNext';
 import TeamStatsGrid from '@/components/team/TeamStatsGrid';
 import TopPlayers from '@/components/team/TopPlayers';
+import SquadList from '@/components/team/SquadList';
 import Trajectory from '@/components/team/Trajectory';
 import Schedule from '@/components/team/Schedule';
 import Articles from '@/components/team/Articles';
@@ -75,9 +77,10 @@ export default async function TeamPage({ params }) {
   const matches = await getTeamMatches(team.id);
   const { recent, next } = pickRecentAndNext(matches);
 
-  const [stats, players, trajectory, odds, broadcasters] = await Promise.all([
+  const [stats, players, squad, trajectory, odds, broadcasters] = await Promise.all([
     getTeamStats(team.id),
     getTopPlayers(team.id),
+    getTeamSquad(team.id),
     getTeamTrajectory(team.id),
     getTeamOdds(team.id, next?.id ?? null),
     next ? getNextMatchBroadcasters(next.id) : Promise.resolve([]),
@@ -125,6 +128,7 @@ export default async function TeamPage({ params }) {
           <a href="#matches" className="anchor-pill">Recent + Next</a>
           <a href="#stats" className="anchor-pill">Team Stats</a>
           <a href="#players" className="anchor-pill">Top Players</a>
+          <a href="#squad" className="anchor-pill">Squad</a>
           <a href="#trajectory" className="anchor-pill">Trajectory</a>
           <a href="#schedule" className="anchor-pill">Schedule</a>
           <a href="#articles" className="anchor-pill">Articles</a>
@@ -138,6 +142,7 @@ export default async function TeamPage({ params }) {
         />
         <TeamStatsGrid stats={stats} />
         <TopPlayers players={players} />
+        <SquadList players={squad} teamName={team.name} />
         <Trajectory entries={trajectory} />
         <Schedule matches={matches} teamId={team.id} />
         <Articles team={team} />

@@ -1009,3 +1009,91 @@
     gap: 16px;
   }
 }
+
+/* ============================================================================
+ * SQUAD LIST — components/team/SquadList.js
+ *
+ * Compact, list-shaped roster grouped by position. Net-new to the
+ * team-page mock (the mock's "Full squad →" CTA pointed at this).
+ * No 26-photo grid — design rule.
+ * ============================================================================ */
+.squad-list {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+}
+.squad-group {
+  border-right: 1px solid var(--rule-darker);
+  border-bottom: 1px solid var(--rule-darker);
+  padding: 4px 0;
+}
+.squad-group:nth-child(2n) { border-right: none; }
+.squad-group:nth-last-child(-n+2) { border-bottom: none; }
+.squad-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px 18px 8px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.squad-group-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--volt);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.squad-group-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted-dim);
+  letter-spacing: 0.18em;
+}
+.squad-group-rows {
+  display: flex;
+  flex-direction: column;
+}
+.squad-row {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 18px;
+  text-decoration: none;
+  color: inherit;
+  border-bottom: 1px solid var(--rule-darker);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.squad-row:last-child { border-bottom: none; }
+.squad-row:hover {
+  background: rgba(212, 255, 0, 0.04);
+}
+.squad-row:hover .squad-row-name { color: var(--volt); }
+.squad-row-num {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--paper-warm);
+  letter-spacing: 0.02em;
+  text-align: right;
+}
+.squad-row-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--paper-warm);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  .squad-list { grid-template-columns: 1fr; }
+  .squad-group { border-right: none; }
+  .squad-group:nth-last-child(-n+2) { border-bottom: 1px solid var(--rule-darker); }
+  .squad-group:last-child { border-bottom: none; }
+}
+
