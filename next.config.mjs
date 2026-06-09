@@ -9,7 +9,7 @@ const nextConfig = {
   // emulation can't reproduce.
   // 10.0.0.87 is the laptop's current LAN IP (changes when the
   // machine moves networks — re-check via `ipconfig getifaddr en0`).
-  allowedDevOrigins: ['10.0.0.87'],
+  allowedDevOrigins: ['10.0.0.87', '10.112.32.186'],
 };
 
 export default nextConfig;
