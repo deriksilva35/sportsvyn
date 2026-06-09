@@ -15,7 +15,7 @@
  */
 
 import { revalidatePath } from 'next/cache';
-import { getPendingBlurbs, getRecentlyReviewed, publishBlurb, rejectBlurb } from '@/lib/blurbs';
+import { getPendingBlurbs, getRecentlyReviewed, publishBlurb, publishAllPending, rejectBlurb } from '@/lib/blurbs';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { robots: { index: false, follow: false } };
@@ -58,6 +58,23 @@ async function rejectAction(formData) {
   if (!Number.isFinite(id) || id < 1) return;
   await rejectBlurb({ id, reviewedBy: 'admin', notes });
   revalidatePath('/admin/blurbs');
+}
+
+// Bulk-approve every pending row of the currently-filtered blurb_type.
+// Type-scoped — never publishes across unrelated types. Requires the editor
+// to type "APPROVE" in the confirm field, so a stray click can't fire it.
+async function bulkApproveAction(formData) {
+  'use server';
+  const blurbType = formData.get('blurbType')?.toString().trim();
+  const confirm = formData.get('confirm')?.toString().trim();
+  const reviewedBy = formData.get('reviewedBy')?.toString().trim() || 'admin';
+  if (!blurbType || confirm !== 'APPROVE') return;
+  await publishAllPending({ blurbType, reviewedBy });
+  // Revalidate the queue + every team-page slug (cheap broad invalidate; the
+  // team pages are dynamic-rendered and will pick up new blurb_body on next hit).
+  revalidatePath('/admin/blurbs');
+  revalidatePath('/team/[slug]', 'page');
+  revalidatePath('/');
 }
 
 function fmtTime(d) {
@@ -107,6 +124,52 @@ export default async function BlurbsAdmin({ searchParams }) {
       </nav>
 
       <h2 style={sectionHeaderStyle('var(--volt)')}>Pending Review · {pending.length}</h2>
+
+      {/* Bulk-approve — only when filtered to a single blurb_type and pending > 0.
+          Per-row approve/reject still available below; this is additive. */}
+      {pending.length > 0 && typeFilter && (
+        <form
+          action={bulkApproveAction}
+          style={{
+            background: 'var(--ink)',
+            border: '1px solid var(--rule-dark)',
+            borderLeft: '3px solid var(--volt)',
+            padding: '14px 18px',
+            marginBottom: 20,
+            display: 'flex',
+            gap: 12,
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          <input type="hidden" name="blurbType" value={typeFilter} />
+          <input type="hidden" name="reviewedBy" value="admin" />
+          <div style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--paper-warm)' }}>
+            Approve ALL {pending.length} pending · {typeFilter.replace(/_/g, ' ')}
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.16em' }}>
+            type <span style={{ color: 'var(--volt)' }}>APPROVE</span> to confirm →
+          </div>
+          <input
+            type="text"
+            name="confirm"
+            placeholder="APPROVE"
+            autoComplete="off"
+            required
+            style={{
+              background: 'transparent',
+              color: 'var(--paper-warm)',
+              border: '1px solid var(--rule-dark)',
+              padding: '8px 12px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              width: 140,
+              letterSpacing: '0.18em',
+            }}
+          />
+          <button type="submit" style={approveButtonStyle}>Approve All</button>
+        </form>
+      )}
 
       {pending.length === 0 && (
         <p style={{ padding: '16px 0', color: 'var(--muted)' }}>
