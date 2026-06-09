@@ -316,9 +316,12 @@ function TodaysReadsSection({ reads }) {
 // =============================================================================
 // THE MARKET — explainer unit (replaces the Stage-1 shell)
 // =============================================================================
+// Need ~half a credible field priced before the ladder reads as a market.
+const MARKET_MIN_FIELD = 8;
+
 function MarketUnit({ ladder }) {
-  // No data → keep the shell.
-  if (!ladder || ladder.rows.length === 0) {
+  // Thin field → fall back to the shell (a 1- or 2-team ladder isn't a ladder).
+  if (!ladder || ladder.rows.length < MARKET_MIN_FIELD) {
     return (
       <div className="dc-section">
         <div className="dc-section-label">The Market</div>
