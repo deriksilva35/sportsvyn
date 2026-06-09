@@ -30,9 +30,14 @@ export default function Wordmark({
       <span>SPORTSV</span>
       <span className="relative inline-block text-volt">
         Y
+        {/* Macron is decoration — make it non-interactive so taps that
+            land on the thin bar fall through to the wrapping <a> on
+            inline-crumb pages (team/player) and don't intercept clicks
+            anywhere else (SiteHeader pages don't wrap Wordmark in an
+            anchor — no regression there). */}
         <span
           aria-hidden="true"
-          className="absolute top-[-0.05em] left-1/2 -translate-x-[35%] w-[115%] h-[0.07em] bg-volt"
+          className="absolute top-[-0.05em] left-1/2 -translate-x-[35%] w-[115%] h-[0.07em] bg-volt pointer-events-none"
         />
       </span>
       <span>N</span>

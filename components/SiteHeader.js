@@ -27,9 +27,14 @@
  * magic-link flow (/signin) by design — passwordless = no separate
  * signup UX.
  *
- * Team page intentionally NOT migrated — that header is a divergent
- * variant (.site-header-inner wrapper, no CTA cluster, breadcrumb
- * instead of nav). Separate slice to reconcile.
+ * /team/[slug] and /player/[slug] also use this SiteHeader since the
+ * divergent inline-crumb variant was retired. They drop the
+ * decorative "WORLD CUP 2026 / TEAM | PLAYER" pill in favor of the
+ * in-body breadcrumb they were already rendering.
+ *
+ * Wordmark is wrapped in <a href="/"> so a tap on the brand routes
+ * home from every route. The .wordmark-home tap-target rule lives in
+ * components/site-chrome.css.
  */
 
 import { useState } from 'react';
@@ -102,7 +107,9 @@ export default function SiteHeader({ activeNav = null, session = null }) {
     <>
       <header className="site-header">
         <div className="brand-row">
-          <Wordmark sizeClassName="text-[22px]" />
+          <a href="/" className="wordmark-home" aria-label="Sportsvyn home">
+            <Wordmark sizeClassName="text-[22px]" />
+          </a>
         </div>
         <div className="nav">
           <a href="/" className={navClass(activeNav, 'home')}>Home</a>

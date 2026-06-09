@@ -24,6 +24,21 @@
   background: var(--ink);
 }
 .site-header .brand-row { display: flex; align-items: center; gap: 24px; }
+/* Wordmark hit target — vertical padding gives the <a> a generous tap
+   box around the 22px-tall wordmark. Negative margin on the wrapper
+   cancels the visible header-bar growth so the bar height looks
+   unchanged. (display:inline-block + line-height:1 avoids the
+   inline-flex layout that left iOS Safari with letter-pixel-only
+   hit targets in the prior attempts.) */
+.site-header .brand-row a.wordmark-home {
+  display: inline-block;
+  padding: 11px 0;
+  margin: -11px 0;
+  line-height: 1;
+  color: inherit;
+  text-decoration: none;
+  -webkit-tap-highlight-color: rgba(212, 255, 0, 0.18);
+}
 .site-header .nav {
   display: flex; gap: 24px;
   font-family: var(--font-mono);

@@ -1,60 +1,12 @@
 /* Team page CSS — ported verbatim from sportsvyn-team-argentina-v2.html.
    Mockup-named CSS vars (--ink, --volt, --jade, etc.) are defined in
-   app/globals.css as aliases over the @theme tokens. */
+   app/globals.css as aliases over the @theme tokens.
 
-/* SITE HEADER */
-.site-header { border-bottom: 1px solid var(--rule-dark); background: var(--ink); }
-.site-header-inner {
-  max-width: 1100px; margin: 0 auto; padding: 16px 48px;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.site-header .brand-row { display: flex; align-items: center; gap: 24px; }
-.site-header .brand-row a.wordmark-home { text-decoration: none; color: inherit; display: inline-flex; }
-.site-header .crumb {
-  font-family: var(--font-mono);
-  font-size: 11px; color: var(--paper-warm);
-  letter-spacing: 0.18em; text-transform: uppercase;
-}
-.site-header .crumb .sep { color: var(--rule-dark); margin: 0 12px; }
-.site-header .crumb .accent { color: var(--volt); }
-.site-header .nav {
-  display: flex; gap: 24px;
-  font-family: var(--font-mono);
-  font-size: 11px; color: var(--muted);
-  letter-spacing: 0.18em; text-transform: uppercase;
-}
-.site-header .nav a { color: var(--muted); text-decoration: none; }
-.site-header .nav a:hover { color: var(--volt); }
-
-/* Team page header mobile: this divergent header (different from the
-   shared SiteHeader in components/site-chrome.css) carries Bracket /
-   Rankings / Stats / Reads as four nowrap links visible at ALL
-   viewports. At 414px device, the brand-row (wordmark + crumb) +
-   nav (4 nowrap links + 3 gaps + 48px-per-side padding) summed to
-   ~584-607px — that's main.page-shell's 607px measurement from the
-   real-device debug. The nav was the wrapper-widening culprit.
-   Until the team header gets migrated to the shared SiteHeader (a
-   separate slice), at ≤767px:
-     - hide the desktop nav (display:none) — its content was the
-       min-content floor pushing the header wider than viewport
-     - tighten the 48px-per-side padding to 16px — matches the
-       .match-page / .page-shell mobile scale
-     - collapse the crumb to a single line (the "WORLD CUP 2026 /
-       TEAM" crumb is decorative; users have the breadcrumb in the
-       page body)
-   When the team header migration lands, this block goes away. */
-@media (max-width: 767px) {
-  .site-header-inner {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  .site-header .nav {
-    display: none;
-  }
-  .site-header .crumb {
-    font-size: 9px;
-  }
-}
+   Site header rules used to live here as a divergent copy of the
+   shared header chrome. Now removed — /team/[slug] renders
+   <SiteHeaderServer/> like the rest of the site, and the chrome CSS
+   reaches the route through SiteHeader's components/site-chrome.css
+   import. Single source of truth. */
 
 /* BREADCRUMB */
 /* min-width: 0 + mobile padding override: same fix as .match-page in
@@ -222,6 +174,12 @@
   grid-template-columns: 1.6fr 1fr;
   gap: 14px;
   margin-bottom: 28px;
+}
+@media (max-width: 767px) {
+  /* Stack on mobile — blurb takes full width, odds tile sits below.
+     Without this, the desktop 1.6fr:1fr grid leaves the blurb in a
+     ~55% column with the odds tile crammed alongside, both squished. */
+  .outlook-section { grid-template-columns: 1fr; }
 }
 .outlook-blurb {
   background: var(--graphite);

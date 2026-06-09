@@ -7,41 +7,10 @@
  * Tokens (--ink, --graphite, --rule-dark, --paper-warm, --muted, --volt,
  * --terra, etc.) come from globals.css — same set the team page uses. */
 
-/* ───────── SITE HEADER chrome ─────────
-   Copied verbatim from app/team/[slug]/team.css so /player and /team
-   render byte-identical chrome. Both pages use the inline crumb header
-   pattern (not the shared SiteHeader.js used by /, /match, /bracket);
-   the CSS reaches them by living in the per-route stylesheet. When the
-   inline-header variants get reconciled into the shared SiteHeader,
-   this block + the team.css twin go away together. */
-.site-header { border-bottom: 1px solid var(--rule-dark); background: var(--ink); }
-.site-header-inner {
-  max-width: 1100px; margin: 0 auto; padding: 16px 48px;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.site-header .brand-row { display: flex; align-items: center; gap: 24px; }
-.site-header .brand-row a.wordmark-home { text-decoration: none; color: inherit; display: inline-flex; }
-.site-header .crumb {
-  font-family: var(--font-mono);
-  font-size: 11px; color: var(--paper-warm);
-  letter-spacing: 0.18em; text-transform: uppercase;
-}
-.site-header .crumb .sep { color: var(--rule-dark); margin: 0 12px; }
-.site-header .crumb .accent { color: var(--volt); }
-.site-header .nav {
-  display: flex; gap: 24px;
-  font-family: var(--font-mono);
-  font-size: 11px; color: var(--muted);
-  letter-spacing: 0.18em; text-transform: uppercase;
-}
-.site-header .nav a { color: var(--muted); text-decoration: none; }
-.site-header .nav a:hover { color: var(--volt); }
-
-@media (max-width: 767px) {
-  .site-header-inner { padding-left: 16px; padding-right: 16px; }
-  .site-header .nav  { display: none; }
-  .site-header .crumb { font-size: 9px; }
-}
+/* Site-header chrome used to live here as a per-route copy. Removed
+   when /player/[slug] migrated to <SiteHeaderServer/>; chrome CSS now
+   reaches the route through SiteHeader's components/site-chrome.css
+   import. */
 
 .page-shell {
   max-width: 1100px;

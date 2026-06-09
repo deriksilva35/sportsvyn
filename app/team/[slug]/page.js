@@ -14,6 +14,7 @@
 
 import { notFound } from 'next/navigation';
 import Wordmark from '@/components/Wordmark';
+import SiteHeaderServer from '@/components/SiteHeaderServer';
 import {
   getTeamBySlug,
   getTeamStats,
@@ -90,24 +91,7 @@ export default async function TeamPage({ params }) {
 
   return (
     <>
-      <header className="site-header">
-        <div className="site-header-inner">
-          <div className="brand-row">
-            <a href="/" className="wordmark-home" aria-label="Sportsvyn home">
-              <Wordmark sizeClassName="text-[22px]" />
-            </a>
-            <div className="crumb">
-              <span className="accent">WORLD CUP 2026</span>
-              <span className="sep">/</span>
-              TEAM
-            </div>
-          </div>
-          <div className="nav">
-            <a href="/bracket">Bracket</a>
-            {/* Rankings / Stats / Reads removed until those routes ship. */}
-          </div>
-        </div>
-      </header>
+      <SiteHeaderServer />
 
       <main className="page-shell">
         <div className="breadcrumb">
