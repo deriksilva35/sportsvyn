@@ -1,0 +1,400 @@
+/* /player/[slug] — Engine-B skeleton install.
+ *
+ * Ports the populated bits of the mock (hero · match log · anchor pills ·
+ * section-head · dormant panel) and stops there. When stats / composite /
+ * outlook / trajectory etc. populate, their styles will be added alongside.
+ *
+ * Tokens (--ink, --graphite, --rule-dark, --paper-warm, --muted, --volt,
+ * --terra, etc.) come from globals.css — same set the team page uses. */
+
+.page-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 48px 80px;
+}
+
+.breadcrumb {
+  margin-bottom: 20px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.breadcrumb a { color: var(--muted); text-decoration: none; }
+.breadcrumb .sep { color: var(--rule-dark); }
+.breadcrumb .current { color: var(--paper-warm); }
+
+/* ───────── PLAYER HERO ───────── */
+.player-hero {
+  display: grid;
+  grid-template-columns: 220px 1fr auto;
+  gap: 28px;
+  align-items: flex-start;
+  padding: 28px 0 32px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--rule-dark);
+}
+.player-hero-photo {
+  width: 220px;
+  height: 280px;
+  background:
+    linear-gradient(145deg, rgba(212,255,0,0.04) 0%, transparent 30%),
+    linear-gradient(135deg, #2A2A2A 0%, #1A1A1A 50%, #0A0A0A 100%);
+  border: 1px solid var(--rule-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.player-hero-photo::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--volt);
+}
+.player-hero-photo svg {
+  width: 60%;
+  height: 60%;
+  color: var(--muted);
+  opacity: 0.5;
+}
+.player-hero-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* Raw api-sports portrait until the duotone treatment lands; mute and
+     pull toward the brand palette so it doesn't read as a vendor stamp. */
+  filter: grayscale(0.6) contrast(1.05) brightness(0.92) saturate(0.85);
+}
+
+.player-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  padding-top: 4px;
+}
+.player-hero-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: 56px;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: var(--paper-warm);
+}
+.player-hero-affil-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.player-hero-affil-row .team-flag {
+  width: 28px;
+  height: 20px;
+  border: 1px solid var(--rule-darker);
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.92) contrast(1.4) brightness(0.78);
+}
+.player-hero-affil-row .team-name {
+  color: var(--paper-warm);
+  font-weight: 700;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+.player-hero-affil-row .team-name:hover { color: var(--volt); }
+.player-hero-affil-row .pipe { color: var(--rule-dark); }
+.player-hero-affil-row .pos { color: var(--volt); font-weight: 700; }
+.player-hero-affil-row .num { color: var(--paper-warm); font-weight: 700; }
+
+/* ───────── COMPOSITE BLOCK (DORMANT — populates later) ───────── */
+.player-composite-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 22px;
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  border-left: 3px solid var(--volt);
+  min-width: 220px;
+  max-width: 260px;
+}
+.player-composite-kicker {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--volt);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+.player-composite-block--dormant .player-dormant-line {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule-darker);
+}
+
+/* ───────── ANCHOR PILLS ───────── */
+.anchor-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  margin: 14px 0 24px;
+  border-top: 1px solid var(--rule-dark);
+  border-bottom: 1px solid var(--rule-dark);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--ink);
+}
+.anchor-pill {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 6px 12px;
+  text-decoration: none;
+}
+.anchor-pill:hover { color: var(--paper-warm); border-color: var(--volt); }
+
+/* ───────── SECTION HEAD (matches mock) ───────── */
+.player-section { margin-bottom: 36px; }
+.player-section .section-head {
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--rule-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.player-section .section-head-left {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.player-section .section-head-num {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--volt);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.player-section .section-head-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--paper-warm);
+}
+.player-section .section-head-title .accent { color: var(--volt); }
+.player-section .section-head-cta {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--paper-warm);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-weight: 700;
+}
+.player-section .section-head-cta:hover { color: var(--volt); }
+.player-section .section-head-cta .arrow { color: var(--volt); margin-left: 4px; }
+
+/* ───────── DORMANT EMPTY-STATE PANEL ───────── */
+.player-dormant {
+  background: var(--graphite);
+  border: 1px solid var(--rule-darker);
+  border-left: 2px solid var(--rule-dark);
+  padding: 18px 22px;
+}
+.player-dormant-line {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* ───────── MATCH LOG (populated) ───────── */
+.match-by-match-list {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+}
+.mbm-row {
+  display: grid;
+  grid-template-columns: 72px 90px 1fr 200px 70px;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--rule-darker);
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.12s ease;
+}
+.mbm-row:last-child { border-bottom: none; }
+.mbm-row:hover { background: rgba(212, 255, 0, 0.04); }
+.mbm-row.upcoming { background: rgba(212, 255, 0, 0.03); }
+.mbm-row.live { background: rgba(230, 57, 70, 0.06); }
+.mbm-date {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.mbm-stage {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--volt);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.mbm-stage.future { color: var(--muted-dim); }
+.mbm-match {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--paper-warm);
+}
+.mbm-match .flag-mini {
+  width: 18px;
+  height: 13px;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.92) contrast(1.4) brightness(0.78);
+  border: 1px solid var(--rule-darker);
+  flex-shrink: 0;
+}
+.mbm-match .matchup {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+.mbm-match .scoreline {
+  color: var(--volt);
+  margin: 0 6px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 900;
+  font-size: 14px;
+}
+.mbm-match .scoreline.pending {
+  color: var(--muted-dim);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+.mbm-contribution {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mbm-contribution-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.mbm-contribution-val {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 0.85;
+  color: var(--volt);
+  letter-spacing: -0.02em;
+}
+.mbm-contribution-val.zero { color: var(--muted-dim); }
+.mbm-contribution-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.mbm-contribution-pending {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.mbm-rating {
+  text-align: right;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 900;
+  font-size: 18px;
+  color: var(--paper-warm);
+  letter-spacing: -0.02em;
+}
+.mbm-rating--placeholder {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-light);
+  font-weight: 700;
+}
+.mbm-rating-label {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: var(--muted-dim);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ───────── MOBILE ───────── */
+@media (max-width: 720px) {
+  .page-shell { padding: 18px 16px 64px; }
+  .player-hero {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .player-hero-photo { width: 140px; height: 180px; }
+  .player-hero-name { font-size: 36px; }
+  .player-composite-block { max-width: 100%; }
+  .mbm-row {
+    grid-template-columns: 64px 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 8px 14px;
+  }
+  .mbm-row .mbm-stage      { grid-column: 2 / 3; }
+  .mbm-row .mbm-date       { grid-row: 1 / 2; }
+  .mbm-row .mbm-match      { grid-column: 1 / -1; grid-row: 2 / 3; }
+  .mbm-row .mbm-contribution { grid-column: 1 / -1; grid-row: 3 / 4; }
+  .mbm-row > div:last-child  { grid-column: 1 / -1; }
+  .mbm-rating, .mbm-rating-label { text-align: left; }
+}

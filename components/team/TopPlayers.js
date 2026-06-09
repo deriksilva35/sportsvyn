@@ -93,8 +93,16 @@ function StatRow({ player }) {
 function PlayerCard({ player }) {
   const kicker = kickerForRank(player.rank_composite, player.position);
   const posLabel = POSITION_LABEL(player.position);
+  // Whole card becomes the link when we have a slug — the previous
+  // CTA-only "#" stub is replaced by a real destination at
+  // /player/[slug]. Falls back to a plain div if the row somehow
+  // lacks a slug (it shouldn't — getTopPlayers projects p.slug).
+  const Wrapper = player.slug ? 'a' : 'div';
+  const wrapperProps = player.slug
+    ? { href: `/player/${player.slug}`, className: 'player-card player-card--link' }
+    : { className: 'player-card' };
   return (
-    <div className="player-card">
+    <Wrapper {...wrapperProps}>
       <div className="player-card-header">
         <div className="player-card-kicker">{kicker}</div>
         {player.rank_composite != null && player.composite_score != null && (
@@ -115,9 +123,9 @@ function PlayerCard({ player }) {
         <StatRow player={player} />
       </div>
       <div className="player-card-footer">
-        <a href="#" className="player-card-cta">Player page <span className="arrow">→</span></a>
+        <span className="player-card-cta">Player page <span className="arrow">→</span></span>
       </div>
-    </div>
+    </Wrapper>
   );
 }
 
