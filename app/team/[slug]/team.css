@@ -9,6 +9,7 @@
   display: flex; justify-content: space-between; align-items: center;
 }
 .site-header .brand-row { display: flex; align-items: center; gap: 24px; }
+.site-header .brand-row a.wordmark-home { text-decoration: none; color: inherit; display: inline-flex; }
 .site-header .crumb {
   font-family: var(--font-mono);
   font-size: 11px; color: var(--paper-warm);

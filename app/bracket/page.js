@@ -87,7 +87,11 @@ function GroupCard({ letter, teams, matchdayComplete }) {
         <div key={team.id} className="team-row-v2">
           <span className="pos">{idx + 1}</span>
           <BracketFlag flagSvgPath={team.flag_svg_path} />
-          <span className="name">{team.name}</span>
+          {team.slug ? (
+            <a href={`/team/${team.slug}`} className="name team-link">{team.name}</a>
+          ) : (
+            <span className="name">{team.name}</span>
+          )}
           <span className="num">0-0</span>
           <span className="num">0</span>
           <span className="pts">0</span>

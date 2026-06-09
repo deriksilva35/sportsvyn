@@ -93,7 +93,9 @@ export default async function TeamPage({ params }) {
       <header className="site-header">
         <div className="site-header-inner">
           <div className="brand-row">
-            <Wordmark sizeClassName="text-[22px]" />
+            <a href="/" className="wordmark-home" aria-label="Sportsvyn home">
+              <Wordmark sizeClassName="text-[22px]" />
+            </a>
             <div className="crumb">
               <span className="accent">WORLD CUP 2026</span>
               <span className="sep">/</span>
@@ -101,10 +103,8 @@ export default async function TeamPage({ params }) {
             </div>
           </div>
           <div className="nav">
-            <a href="#">Bracket</a>
-            <a href="#">Rankings</a>
-            <a href="#">Stats</a>
-            <a href="#">Reads</a>
+            <a href="/bracket">Bracket</a>
+            {/* Rankings / Stats / Reads removed until those routes ship. */}
           </div>
         </div>
       </header>

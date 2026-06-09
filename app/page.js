@@ -514,7 +514,11 @@ function HomeGroupCard({ letter, teams, matchdaysComplete }) {
       {teams.map((t) => (
         <div key={t.id} className="home-group-card-row">
           <Flag svgPath={t.flag_svg_path} />
-          <span>{t.name}</span>
+          {t.slug ? (
+            <a href={`/team/${t.slug}`} className="team-link">{t.name}</a>
+          ) : (
+            <span>{t.name}</span>
+          )}
         </div>
       ))}
     </div>
