@@ -106,10 +106,10 @@ export default function SiteHeader({ activeNav = null, session = null }) {
         </div>
         <div className="nav">
           <a href="/" className={navClass(activeNav, 'home')}>Home</a>
-          <a href="/schedule" className={navClass(activeNav, 'scores')}>Scores</a>
           <a href="/bracket" className={navClass(activeNav, 'bracket')}>Bracket</a>
           <a href="#" className={navClass(activeNav, 'rankings')}>Rankings</a>
           <a href="#" className={navClass(activeNav, 'reads')}>Reads</a>
+          <a href="/" className={navClass(activeNav, 'daily-card')}>Daily Card</a>
         </div>
         <div className="header-cta">
           {rightCluster()}
@@ -128,10 +128,10 @@ export default function SiteHeader({ activeNav = null, session = null }) {
       {drawerOpen && (
         <nav className="mobile-drawer" aria-label="Mobile menu">
           <a href="/" className={navClass(activeNav, 'home')}>Home</a>
-          <a href="/schedule" className={navClass(activeNav, 'scores')}>Scores</a>
           <a href="/bracket" className={navClass(activeNav, 'bracket')}>Bracket</a>
           <a href="#" className={navClass(activeNav, 'rankings')}>Rankings</a>
           <a href="#" className={navClass(activeNav, 'reads')}>Reads</a>
+          <a href="/" className={navClass(activeNav, 'daily-card')}>Daily Card</a>
           {rightCluster()}
         </nav>
       )}

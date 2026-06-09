@@ -1,0 +1,595 @@
+/* app/home.css — Sportsvyn δ (Bracket Wall) homepage.
+   Ported from ~/Downloads/sportsvyn-homepage-delta-bracket.html. CSS
+   variables (--ink, --graphite, --volt etc.) resolve via globals.css.
+   Site header / footer styles intentionally omitted — handled by the
+   shared SiteHeader / SiteFooter components. */
+
+/* MAIN GRID
+   Stage-2 layout: the left column now contains BOTH the daily card AND
+   the bracket wall. This lets the rail (in the right column) be as tall
+   as the LEFT COLUMN STACK rather than the daily card alone — so a
+   short daily-card (empty slate, hidden reads, etc.) never leaves a
+   "dead ink" band beside the sticky rail. */
+.home-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 48px;
+  padding: 36px 48px 0;
+  max-width: 1400px;
+  margin: 0;
+  padding-left: 48px;
+  align-items: start;
+}
+.home-main-left {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* DAILY CARD */
+.daily-card {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 32px 36px;
+}
+.dc-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--rule-dark);
+  margin-bottom: 24px;
+}
+.dc-title-row { display: flex; align-items: baseline; gap: 14px; }
+.dc-title {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 32px; line-height: 1;
+  letter-spacing: -0.03em; color: var(--paper-warm);
+}
+.dc-title .accent { color: var(--volt); }
+.dc-header-meta-group { display: flex; align-items: center; gap: 12px; }
+.dc-meta {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.dc-header-link {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--paper-warm);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--rule-dark);
+  padding: 8px 12px;
+  transition: border-color 120ms, color 120ms;
+}
+.dc-header-link:hover { border-color: var(--volt); color: var(--volt); }
+
+.dc-intro {
+  font-family: var(--font-serif);
+  font-style: italic; font-size: 22px;
+  line-height: 1.4; color: var(--paper-warm);
+  margin-bottom: 28px; max-width: 720px;
+}
+.dc-intro .accent { color: var(--volt); }
+.dc-author {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: 28px;
+}
+.dc-author .author { color: var(--paper-warm); }
+.dc-author .sep { color: var(--rule-dark); margin: 0 8px; }
+
+.dc-section { margin-bottom: 28px; }
+.dc-section-label {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--volt);
+  letter-spacing: 0.26em; text-transform: uppercase;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.dc-section-label-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.dc-section-label-row .dc-section-label {
+  margin-bottom: 0; padding-bottom: 0; border-bottom: none;
+}
+.dc-section-link {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--paper-warm);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  text-decoration: none; transition: color 120ms;
+}
+.dc-section-link:hover { color: var(--volt); }
+
+/* Slate rows */
+.dc-match-row {
+  display: grid; grid-template-columns: 1fr auto auto;
+  gap: 16px; align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.dc-match-row:last-child { border-bottom: none; }
+.dc-match-teams {
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 700; font-style: italic;
+  font-size: 14px; text-transform: uppercase;
+  color: var(--paper-warm); letter-spacing: 0.01em;
+  display: flex; align-items: center;
+}
+.dc-match-time {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+.dc-match-ws {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  font-size: 18px; color: var(--volt);
+}
+.dc-match-empty {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 14px 0;
+}
+.dc-live-tag {
+  color: var(--terra);
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 0.18em;
+  margin-left: 10px;
+  text-transform: uppercase;
+}
+
+/* Tournament progress strip */
+.dc-bracket-strip {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 12px; margin-top: 4px;
+}
+.dc-bracket-round {
+  text-align: center; padding: 14px 8px 12px;
+  border: 1px solid var(--rule-darker);
+  background: var(--ink);
+}
+.dc-bracket-round.active { border-color: var(--volt); }
+.dc-bracket-round-label {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.dc-bracket-round.active .dc-bracket-round-label { color: var(--volt); }
+.dc-bracket-round-count {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  font-size: 36px; line-height: 0.9;
+  color: var(--paper-warm);
+  margin-bottom: 4px;
+}
+.dc-bracket-round.active .dc-bracket-round-count { color: var(--volt); }
+.dc-bracket-round-meta {
+  font-family: var(--font-mono);
+  font-size: 8px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+
+/* Today's Reads rows */
+.dc-read-row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule-darker);
+  display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center;
+  text-decoration: none;
+}
+.dc-read-row:last-child { border-bottom: none; }
+.dr-kicker {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--volt);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.dr-headline {
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 700; font-style: italic;
+  font-size: 16px; text-transform: uppercase;
+  color: var(--paper-warm); letter-spacing: 0.01em;
+  line-height: 1.1;
+}
+.dr-read-time {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+
+/* THE MARKET (explainer, never a pick — wired to tournament_winner odds) */
+.dc-market {
+  background: var(--ink);
+  border: 1px solid var(--rule-dark);
+  border-left: 3px solid var(--volt);
+  padding: 16px 18px;
+}
+.dc-market-label {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--volt);
+  letter-spacing: 0.24em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.dc-market-body {
+  font-family: var(--font-serif);
+  font-style: italic; font-size: 14px;
+  color: var(--muted-light); line-height: 1.45;
+  margin-bottom: 12px;
+}
+.dc-market-ladder {
+  list-style: none;
+  margin: 0 0 12px 0; padding: 0;
+}
+.dc-market-ladder li {
+  display: grid;
+  grid-template-columns: 18px 16px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.dc-market-ladder li:last-child { border-bottom: none; }
+.dc-market-ladder .dcml-pos {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted-dim); font-weight: 700;
+}
+.dc-market-ladder .dcml-name {
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 700; font-style: italic;
+  font-size: 13px; text-transform: uppercase;
+  color: var(--paper-warm); letter-spacing: 0.01em;
+}
+.dc-market-ladder .dcml-pct {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  color: var(--volt); letter-spacing: 0.04em;
+}
+.dc-market-footnote {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted-dim);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+.dc-market-method {
+  color: var(--muted); text-decoration: none;
+  border-bottom: 1px solid var(--rule-dark);
+}
+.dc-market-method:hover { color: var(--volt); border-bottom-color: var(--volt); }
+
+/* SLATE EMPTY-STATE SIGNPOST (Stage 2 — designed empty state) */
+.dc-slate-signpost {
+  border-left: 3px solid var(--rule-dark);
+  background: var(--ink);
+  padding: 16px 18px 18px;
+}
+.dc-slate-signpost-label {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.dc-slate-signpost-anchor {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 17px; line-height: 1.45;
+  color: var(--paper-warm);
+}
+
+/* Daily-card footer (prev/next) */
+.dc-footer {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule-dark);
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+/* RIGHT RAIL */
+.right-rail { position: sticky; top: 24px; }
+.sidebar-zone-header {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--volt);
+  letter-spacing: 0.28em; text-transform: uppercase;
+  padding-bottom: 12px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--volt);
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.sidebar-zone-header .meta {
+  color: var(--muted-dim);
+  letter-spacing: 0.18em;
+  font-size: 9px;
+}
+.sidebar-block {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  transition: border-color 120ms;
+}
+.sidebar-block.live { border-color: var(--terra); }
+.sidebar-block .sb-label {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--volt);
+  letter-spacing: 0.24em; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.sidebar-block.live .sb-label { color: var(--terra); }
+.sidebar-block .sb-title {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 16px; line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--paper-warm);
+  margin-bottom: 8px;
+}
+.sidebar-block .sb-meta {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  line-height: 1.4;
+}
+.sidebar-block .sb-meta .volt { color: var(--volt); }
+
+.sidebar-list {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+.sidebar-list .sl-label {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--volt);
+  letter-spacing: 0.24em; text-transform: uppercase;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.sl-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule-darker);
+  display: grid; grid-template-columns: 14px 1fr auto;
+  gap: 8px; align-items: center;
+  text-decoration: none;
+}
+.sl-item:last-child { border-bottom: none; }
+.sl-item .pos {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted-dim); font-weight: 700;
+}
+.sl-item .name {
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 700; font-style: italic;
+  font-size: 12px; text-transform: uppercase;
+  color: var(--paper-warm); letter-spacing: 0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: flex; align-items: center; gap: 5px;
+}
+.sl-item .val {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--paper-warm); font-weight: 700;
+}
+.sl-item .val.volt { color: var(--volt); }
+.move-up   { color: var(--volt); }
+.move-down { color: var(--terra); }
+.move-flat { color: var(--muted-dim); }
+
+.sl-empty {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 10px 0;
+}
+
+.fr-item {
+  padding: 10px 0; border-bottom: 1px solid var(--rule-darker);
+  display: block; text-decoration: none;
+}
+.fr-item:last-child { border-bottom: none; }
+.fr-kicker {
+  font-family: var(--font-mono);
+  font-size: 8px; color: var(--volt);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.fr-headline {
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 900; font-style: italic;
+  font-size: 14px; line-height: 1.1;
+  color: var(--paper-warm); text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+/* Inline tiny flag — used in lists + slate rows */
+.flag-inline-svg {
+  display: inline-block;
+  width: 16px; height: 11px;
+  margin-right: 6px;
+  background-size: cover; background-position: center;
+  border: 1px solid var(--rule-darker);
+  vertical-align: middle;
+}
+.flag-tiny-svg {
+  display: inline-block;
+  width: 14px; height: 10px;
+  background-size: cover; background-position: center;
+  border: 1px solid var(--rule-darker);
+  vertical-align: middle;
+}
+.flag-inline-empty { background: var(--charcoal); }
+
+/* ============ BRACKET WALL (group-stage, now INSIDE .home-main-left) ============
+   The Stage-1 version was a full-bleed section AFTER .home-main (with
+   80px horizontal padding + ink contrast band). Stage 2 nests it inside
+   the left grid column so the rail's height is bounded by the LEFT
+   COLUMN STACK (daily-card + bracket-wall). Visual separation from the
+   daily-card above is now carried by margin-top + border-top + a
+   subtle inset, NOT a full-width contrast band. */
+.bracket-wall-section {
+  padding: 32px 0 24px;
+  background: transparent;
+  border-top: 1px solid var(--rule-dark);
+  margin-top: 32px;
+}
+.bracket-wall-inner {
+  max-width: none;
+  margin: 0;
+  padding-left: 0;
+}
+.bw-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rule-dark);
+}
+.bw-title-row { display: flex; align-items: baseline; gap: 16px; }
+.bw-title {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 36px; line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--paper-warm);
+}
+.bw-title .accent { color: var(--volt); }
+.bw-stage {
+  font-family: var(--font-mono);
+  font-size: 11px; color: var(--volt);
+  letter-spacing: 0.22em; text-transform: uppercase;
+}
+.bw-link {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--paper-warm);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--rule-dark);
+  padding: 10px 16px;
+  transition: border-color 120ms, color 120ms;
+}
+.bw-link:hover { border-color: var(--volt); color: var(--volt); }
+
+/* Group-stage 12-card grid — homepage variant. Same shape as /bracket
+   but rendered inside the bracket-wall section's chrome. */
+.home-groups-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.home-group-card {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 14px 16px;
+}
+.home-group-card-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.home-group-card-label {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  font-size: 22px;
+  color: var(--volt);
+  letter-spacing: -0.02em;
+}
+.home-group-card-meta {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.home-group-card-row {
+  display: grid; grid-template-columns: 20px 1fr;
+  gap: 8px; align-items: center;
+  padding: 5px 0;
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 700; font-style: italic;
+  font-size: 13px; text-transform: uppercase;
+  color: var(--paper-warm); letter-spacing: 0.01em;
+}
+.home-group-card-row .flag-inline-svg { margin-right: 0; }
+
+/* MORE FROM SPORTSVYN — section AFTER .home-main, full-bleed.
+   Stage-2 rename: this used to be .below-bw-rail (nested under the
+   bracket-wall section); now bracket-wall lives in the grid and this
+   rail stands on its own below .home-main. */
+.more-from-section {
+  padding: 64px 48px 40px;
+  background: var(--ink);
+  border-top: 1px solid var(--rule-darker);
+  margin-top: 64px;
+}
+.more-from-inner {
+  max-width: 1400px;
+  margin: 0;
+  padding-left: 48px;
+}
+.more-from-title {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 22px;
+  color: var(--paper-warm);
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+
+/* Subscribe band */
+.subscribe-band {
+  background: var(--volt);
+  color: var(--ink);
+  padding: 36px 48px;
+  margin: 60px 0 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: center;
+  max-width: 1400px;
+}
+.subscribe-band .sb-text {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 28px;
+  letter-spacing: -0.02em; line-height: 1;
+  color: var(--ink);
+}
+.subscribe-band .sb-text em {
+  font-style: italic; color: var(--ink);
+  opacity: 0.75; font-weight: 400;
+  font-size: 17px; text-transform: none;
+  display: block; margin-top: 10px;
+  font-family: var(--font-serif);
+  letter-spacing: 0;
+}
+.subscribe-band .sb-button {
+  background: var(--ink); color: var(--volt);
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  padding: 18px 28px;
+  border: none; cursor: pointer;
+  text-decoration: none;
+}
+
+/* Mobile */
+@media (max-width: 1024px) {
+  .home-main { grid-template-columns: 1fr; gap: 32px; padding: 24px 20px 0; padding-left: 20px; }
+  .right-rail { position: static; }
+}
+@media (max-width: 767px) {
+  .daily-card { padding: 20px 18px; }
+  .dc-title { font-size: 24px; }
+  .dc-intro { font-size: 18px; }
+  .dc-bracket-strip { grid-template-columns: repeat(2, 1fr); }
+  .home-groups-grid { grid-template-columns: 1fr; }
+  .bracket-wall-section { padding: 48px 20px 32px; }
+  .bracket-wall-inner { padding-left: 0; }
+  .bw-title { font-size: 26px; }
+  .bw-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .subscribe-band { grid-template-columns: 1fr; padding: 24px 20px; }
+}

@@ -27,10 +27,15 @@
  */
 
 import { notFound } from 'next/navigation';
-import { sql } from '@/lib/db';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import BracketTabBar from '@/components/bracket/BracketTabBar';
+import {
+  GROUP_LETTERS,
+  getGroupTeams,
+  getGroupMatchdayProgress,
+  getGroupStageComplete,
+} from '@/lib/bracket';
 
 import './bracket.css';
 
@@ -46,80 +51,6 @@ export const metadata = {
 // hit, matching the /match/[slug] behavior (which is dynamic by virtue of
 // its slug param).
 export const dynamic = 'force-dynamic';
-
-const GROUP_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
-
-async function getGroupTeams() {
-  const rows = await sql`
-    WITH wc_league AS (
-      SELECT id FROM leagues WHERE slug = 'fifa-wc-2026' LIMIT 1
-    ),
-    wc_group_teams AS (
-      SELECT m.group_code, m.home_team_id AS team_id
-      FROM matches m, wc_league
-      WHERE m.league_id = wc_league.id AND m.stage = 'group' AND m.group_code IS NOT NULL
-      UNION
-      SELECT m.group_code, m.away_team_id AS team_id
-      FROM matches m, wc_league
-      WHERE m.league_id = wc_league.id AND m.stage = 'group' AND m.group_code IS NOT NULL
-    )
-    SELECT
-      wgt.group_code,
-      t.id, t.name, t.slug, t.flag_svg_path
-    FROM wc_group_teams wgt
-    JOIN teams t ON t.id = wgt.team_id
-    ORDER BY wgt.group_code, t.name
-  `;
-  // Bucket by group letter
-  const byLetter = new Map();
-  for (const r of rows) {
-    if (!byLetter.has(r.group_code)) byLetter.set(r.group_code, []);
-    byLetter.get(r.group_code).push(r);
-  }
-  return byLetter;
-}
-
-async function getGroupMatchdayProgress() {
-  // matchday_complete = floor(finals_count / 2), because each group plays 2
-  // matches per matchday (4 teams = 2 simultaneous pairings).
-  const rows = await sql`
-    SELECT
-      group_code,
-      count(*) FILTER (WHERE status = 'final')::int AS finals
-    FROM matches
-    WHERE league_id = (SELECT id FROM leagues WHERE slug = 'fifa-wc-2026')
-      AND stage = 'group'
-      AND group_code IS NOT NULL
-    GROUP BY group_code
-  `;
-  const byLetter = new Map();
-  for (const r of rows) {
-    byLetter.set(r.group_code, Math.floor(r.finals / 2));
-  }
-  return byLetter;
-}
-
-// Drives the BracketTabBar's initial active tab. The expanded 48-team
-// WC has 12 groups × 6 matches each = 72 group-stage matches. When all
-// 72 are final, the group stage is concluded and the default tab flips
-// from "Group Stage" to "Tournament". Manual taps + hash deep-links
-// always override this default for the session; this just decides what
-// loads first.
-//
-// Strict equality on === 72: if total seeded matches < 72 (e.g. the WC
-// import didn't finish, or this is a dev env with partial data), the
-// default stays on Group Stage. Avoids a false-positive flip when the
-// "all final" count happens to equal the partially-seeded total.
-async function getGroupStageComplete() {
-  const rows = await sql`
-    SELECT count(*)::int AS final_count
-    FROM matches
-    WHERE league_id = (SELECT id FROM leagues WHERE slug = 'fifa-wc-2026')
-      AND stage = 'group'
-      AND status = 'final'
-  `;
-  return rows[0]?.final_count === 72;
-}
 
 function BracketFlag({ flagSvgPath }) {
   if (flagSvgPath) {

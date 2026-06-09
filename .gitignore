@@ -39,3 +39,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local tooling
+.claude/
+
+# local design docs / dumps
+Docs/
+
+# one-off scripts (spikes, backfills, dry-runs) — not part of the app surface
+scripts/dryrun-prematch-analyst.mjs
+scripts/flag-compare.html
+scripts/recompute-watch-score-v2.mjs
+scripts/spike-apisports.mjs
+scripts/spike-odds-find.mjs
+scripts/spike-odds.mjs
+scripts/inspect-prod-rankings.mjs
+scripts/port-rankings-dev-to-prod.mjs
