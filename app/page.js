@@ -300,8 +300,8 @@ function TodaysReadsSection({ reads }) {
       <div className="dc-section-label">
         Today&rsquo;s Reads · {reads.length} {reads.length === 1 ? 'Piece' : 'Pieces'}
       </div>
-      {reads.map((r) => (
-        <a key={r.slug} className="dc-read-row" href={`/article/${r.slug}`}>
+      {reads.filter((r) => r.match_slug).map((r) => (
+        <a key={r.slug} className="dc-read-row" href={`/match/${r.match_slug}`}>
           <div>
             <div className="dr-kicker">{r.kicker}</div>
             <div className="dr-headline">{r.title}</div>
@@ -598,9 +598,9 @@ export default async function HomePage() {
   ] = await Promise.all([
     readFixturesByPtDay({ leagueSlug: WC_LEAGUE_SLUG, ptStart: ptDay, ptEnd: ptDay }),
     readFixturesByPtDay({ leagueSlug: FRIENDLIES_LEAGUE_SLUG, ptStart: ptDay, ptEnd: ptDay }),
-    getTodaysReads({ ptDay, limit: 5 }),
-    getFeaturedReads({ limit: 3 }),
-    getFeaturedReads({ limit: 6 }),
+    getTodaysReads({ ptDay, limit: 4 }),
+    Promise.resolve([]),  // Featured Reads — hidden until real long-form ships
+    Promise.resolve([]),  // Recent Reads   — same; previews already live on /match/[slug]
     getCurrentLiveMatches(),
     getWatchScoresForDate(ptDay),
     getGroupTeams(),
