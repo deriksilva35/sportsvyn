@@ -24,8 +24,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import KickoffTime from '@/components/match/KickoffTime';
-import FlagSlot from '@/components/FlagSlot';
+import FixtureCard, { bucketOf } from '@/components/match/FixtureCard';
 
 // ─── DATE HELPERS (PT-string arithmetic without timezone drift) ──────────
 
@@ -92,13 +91,9 @@ const STATUS_OPTIONS = [
 ];
 
 // ─── RENDER HELPERS ──────────────────────────────────────────────────────
-
-function bucketOf(status) {
-  if (status === 'live')      return 'live';
-  if (status === 'final')     return 'final';
-  if (status === 'cancelled') return 'cancelled';
-  return 'upcoming';
-}
+// bucketOf lives on FixtureCard.js (shared with the card itself) and is
+// re-imported above. The match-card-only helpers (statusLabel,
+// scoreOrDash, loserClass) moved alongside the card into FixtureCard.
 
 function groupByPtDay(fixtures) {
   const out = new Map();
@@ -107,81 +102,6 @@ function groupByPtDay(fixtures) {
     out.get(f.pt_day).push(f);
   }
   return out;
-}
-
-function statusLabel(f) {
-  if (f.status === 'live')      return 'LIVE';
-  if (f.status === 'final')     return 'FULL TIME';
-  if (f.status === 'cancelled') return 'CANCELLED';
-  return null;
-}
-
-function scoreOrDash(f, side) {
-  if (f.status === 'cancelled') return '';
-  if (f[`${side}_score`] == null) return '';
-  return f[`${side}_score`];
-}
-
-function loserClass(f, side) {
-  if (f.status !== 'final') return '';
-  const h = f.home_score ?? 0;
-  const a = f.away_score ?? 0;
-  if (h === a) return '';
-  if (side === 'home' && a > h) return 'lose';
-  if (side === 'away' && h > a) return 'lose';
-  return '';
-}
-
-function MatchCard({ f }) {
-  const bucket = bucketOf(f.status);
-  const isLive = bucket === 'live';
-  const isCancelled = bucket === 'cancelled';
-  const cardCls = ['sch-card', isLive ? 'is-live' : '', isCancelled ? 'is-cancelled' : ''].filter(Boolean).join(' ');
-  const hasGoals = (f.goals.home.length + f.goals.away.length) > 0;
-  return (
-    <a className={cardCls} href={`/match/${f.slug}`}>
-      <div className="sch-matchup">
-        <div className="sch-row">
-          <FlagSlot flagSvgPath={f.home.flag_svg_path} colorPrimary={f.home.flag_color} size="md" />
-          <span className={`sch-nm ${loserClass(f, 'home')}`}>{f.home.name}</span>
-          <span className={`sch-sc ${loserClass(f, 'home')}`}>{scoreOrDash(f, 'home')}</span>
-        </div>
-        <div className="sch-row">
-          <FlagSlot flagSvgPath={f.away.flag_svg_path} colorPrimary={f.away.flag_color} size="md" />
-          <span className={`sch-nm ${loserClass(f, 'away')}`}>{f.away.name}</span>
-          <span className={`sch-sc ${loserClass(f, 'away')}`}>{scoreOrDash(f, 'away')}</span>
-        </div>
-        {hasGoals && (
-          <div className="sch-goals">
-            <div className="sch-goals-col">
-              {f.goals.home.map((g, i) => (
-                <div key={`h-${i}`} className="sch-goal"><span className="sch-goal-pip" /><span>{g}</span></div>
-              ))}
-            </div>
-            <div className="sch-goals-col away">
-              {f.goals.away.map((g, i) => (
-                <div key={`a-${i}`} className="sch-goal away"><span className="sch-goal-pip" /><span>{g}</span></div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="sch-meta">
-        <div className={`sch-status ${bucket}`}>
-          {isLive && <span className="sch-dot sch-pulse" aria-hidden="true" />}
-          <span className="sch-status-txt">
-            {statusLabel(f) ?? <KickoffTime kickoffAt={f.kickoff_at} />}
-          </span>
-        </div>
-        {(bucket === 'upcoming' || bucket === 'live') && (
-          <div className="sch-wp3 unpriced">
-            <div className="sch-wp3-label">Win Probability</div>
-            <div className="sch-wp3-note">Not yet priced · fills near kickoff</div>
-          </div>
-        )}
-      </div>
-    </a>
-  );
 }
 
 function StatusSection({ title, items, modifier }) {
@@ -194,7 +114,7 @@ function StatusSection({ title, items, modifier }) {
         <span className="sch-seclabel-ct">{items.length}</span>
       </div>
       <div className="sch-feed">
-        {items.map((f) => <MatchCard key={f.id} f={f} />)}
+        {items.map((f) => <FixtureCard key={f.id} f={f} />)}
       </div>
     </>
   );
@@ -247,7 +167,7 @@ function renderWeekLens(fixtures, statusFilter, stageFilter, groupFilter, window
           <span>{heading}</span>
           <span className="sch-dayhead-ct">{items.length} {items.length === 1 ? 'match' : 'matches'}</span>
         </div>
-        {items.map((f) => <MatchCard key={f.id} f={f} />)}
+        {items.map((f) => <FixtureCard key={f.id} f={f} />)}
       </div>
     );
   }
