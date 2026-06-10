@@ -28,6 +28,7 @@ import SiteHeaderServer from '@/components/SiteHeaderServer';
 import { getPlayerBySlug, getPlayerGroupFixtures } from '@/lib/players';
 
 import PlayerHero from '@/components/player/PlayerHero';
+import PlayerBioGrid from '@/components/player/PlayerBioGrid';
 import PlayerMatchLog from '@/components/player/PlayerMatchLog';
 import DormantSection from '@/components/player/DormantSection';
 
@@ -69,6 +70,10 @@ export default async function PlayerPage({ params }) {
         </div>
 
         <PlayerHero player={player} />
+
+        {/* Bio grid renders only when at least one bio field is populated.
+            Pre-backfill (today) → returns null, no header, no broken grid. */}
+        <PlayerBioGrid player={player} />
 
         <section className="player-section">
           <div className="section-head">
