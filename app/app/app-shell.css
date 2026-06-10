@@ -425,11 +425,53 @@
   padding-top: 10px;
 }
 
-/* Inline flag emoji */
+/* Inline flag emoji (legacy — still used if any emoji slot remains) */
 .sv-app .sv-flag {
   font-size: 1em;
   line-height: 1;
   margin-right: 4px;
+}
+
+/* SVG flag (real flag URLs from teams.flag_svg_path) */
+.sv-app .sv-flag-svg {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 1.2em;
+  height: 0.8em;
+  margin-right: 6px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  vertical-align: middle;
+  border-radius: 1px;
+  box-shadow: 0 0 0 1px var(--charcoal);
+}
+.sv-app .sv-flag-svg--empty {
+  background: var(--charcoal);
+}
+
+/* Honest empty-state body (centered serif message inside a card) */
+.sv-app .sv-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  padding: 18px 8px 30px;
+  text-align: center;
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 32ch;
+  margin-inline: auto;
+}
+
+/* Inline emphasised text inside body copy (e.g. market top-priced name) */
+.sv-app .sv-followed-text {
+  color: var(--volt);
+  font-weight: 500;
 }
 
 /* ─── DOTS + HINT ───────────────────────────────────────────────────────── */
