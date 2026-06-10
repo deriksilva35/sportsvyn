@@ -113,6 +113,7 @@ export default function SiteHeader({ activeNav = null, session = null }) {
         </div>
         <div className="nav">
           <a href="/" className={navClass(activeNav, 'home')}>Home</a>
+          <a href="/schedule" className={navClass(activeNav, 'schedule')}>Schedule</a>
           <a href="/bracket" className={navClass(activeNav, 'bracket')}>Bracket</a>
           {/* Rankings / Reads dead-link removed until those routes ship.
               Daily Card kept since href="/" resolves (links into the same
@@ -136,6 +137,7 @@ export default function SiteHeader({ activeNav = null, session = null }) {
       {drawerOpen && (
         <nav className="mobile-drawer" aria-label="Mobile menu">
           <a href="/" className={navClass(activeNav, 'home')}>Home</a>
+          <a href="/schedule" className={navClass(activeNav, 'schedule')}>Schedule</a>
           <a href="/bracket" className={navClass(activeNav, 'bracket')}>Bracket</a>
           {/* Rankings / Reads dead-link removed; Daily Card kept (href="/"
               resolves to the same surface). */}

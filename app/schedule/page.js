@@ -76,7 +76,7 @@ export default async function SchedulePage({ searchParams }) {
 
   return (
     <>
-      <SiteHeaderServer activeNav="scores" />
+      <SiteHeaderServer activeNav="schedule" />
       <main className="schedule-wrap">
         <ScheduleClient
           fixtures={fixturesWithGoals}
