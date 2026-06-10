@@ -7,7 +7,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Paint the window + root view ink so the status-bar area (above the
+        // inset webview when overlaysWebView=false) matches the dark site.
+        // The StatusBar plugin's backgroundColor is Android-only; iOS shows
+        // whatever the host view paints behind the status bar text.
+        let ink = UIColor(red: 10.0 / 255.0, green: 10.0 / 255.0, blue: 10.0 / 255.0, alpha: 1.0)
+        self.window?.backgroundColor = ink
+        self.window?.rootViewController?.view.backgroundColor = ink
         return true
     }
 
