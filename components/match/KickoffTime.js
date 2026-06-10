@@ -34,24 +34,53 @@
 
 import { useEffect, useState } from 'react';
 
-const FORMAT_OPTIONS = {
-  weekday: 'short',
-  month: 'short',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-  timeZoneName: 'short',
-};
+// Assemble the formatted string from parts ourselves rather than calling
+// .format() — the locale-specific connector between date and time
+// ("Thu, Jun 11, 7:00 PM" vs "Thu, Jun 11 at 7:00 PM") varies between
+// ICU versions, and Node 20 + a recent Chrome happen to pick different
+// connectors. That landed as a hydration warning on /schedule once the
+// WC slate started rendering MatchCards. formatToParts is deterministic
+// across runtimes for the parts we ask for; the join template is ours.
+function formatFromParts(parts, zoneLabel) {
+  const v = (t) => parts.find((p) => p.type === t)?.value ?? '';
+  const weekday = v('weekday');
+  const month   = v('month');
+  const day     = v('day');
+  const hour    = v('hour');
+  const minute  = v('minute');
+  const period  = v('dayPeriod');
+  return `${weekday}, ${month} ${day}, ${hour}:${minute} ${period} ${zoneLabel}`;
+}
 
 function formatUtc(iso) {
-  return new Intl.DateTimeFormat('en-US', { ...FORMAT_OPTIONS, timeZone: 'UTC' }).format(new Date(iso));
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'UTC',
+  });
+  return formatFromParts(fmt.formatToParts(new Date(iso)), 'UTC');
 }
 
 function formatLocal(iso) {
-  // undefined locale → visitor's browser default. No timeZone option →
-  // visitor's system timezone, which yields the local "PDT"/"EDT"/etc.
-  // abbreviation in timeZoneName: 'short'.
-  return new Intl.DateTimeFormat(undefined, FORMAT_OPTIONS).format(new Date(iso));
+  // Pin 'en-US' for the part labels (the visible text stays consistent
+  // with the SSR string format). Visitor's local zone comes from
+  // resolvedOptions(); the zone label is the short name in that zone.
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZoneName: 'short',
+  });
+  const parts = fmt.formatToParts(new Date(iso));
+  const zoneLabel = parts.find((p) => p.type === 'timeZoneName')?.value ?? '';
+  return formatFromParts(parts, zoneLabel);
 }
 
 export default function KickoffTime({ kickoffAt }) {
