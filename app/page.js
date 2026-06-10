@@ -409,6 +409,7 @@ function LiveOrNextBlock({ liveMatches, nextFixture }) {
       <div className="sb-title">
         <Flag svgPath={nextFixture.home?.flag_svg_path} />
         {teamShort(nextFixture.home?.name, nextFixture.home?.abbreviation)} v{' '}
+        <Flag svgPath={nextFixture.away?.flag_svg_path} />
         {teamShort(nextFixture.away?.name, nextFixture.away?.abbreviation)}
       </div>
       <div className="sb-meta">{fmtKickoffPt(nextFixture.kickoff_at)}</div>

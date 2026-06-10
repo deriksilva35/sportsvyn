@@ -333,6 +333,11 @@
   font-size: 9px; color: var(--muted);
   letter-spacing: 0.18em; text-transform: uppercase;
   line-height: 1.4;
+  /* Time string ("12:00 PM PT") must never clip from a parent overflow:
+     keep it on one line so it overflows visibly rather than getting
+     silently truncated to "00 PM PT". The 11-char string + uppercase +
+     letter-spacing fits comfortably even in a 320px-wide mobile column. */
+  white-space: nowrap;
 }
 .sidebar-block .sb-meta .volt { color: var(--volt); }
 
