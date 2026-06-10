@@ -1,22 +1,17 @@
 /**
  * /schedule — soccer-tuned scores + schedule page.
  *
- * Implements the locked WC mock (Docs/sportsvyn-scores-worldcup-v1.html)
- * pointed at the international-friendlies league for THIS ship. Same
- * reader handles the WC slice — change leagueSlug, the rest of the
- * page composes from the fixtures-table reader.
+ * Pointed at fifa-wc-2026. force-dynamic so DB changes (new fixtures,
+ * status flips, goals) flow into the next request without rebuild.
  *
- * force-dynamic so DB changes (new fixtures, status flips, goals) flow
- * into the next request without rebuild. Same lesson as /bracket.
+ * STEP 2.5 — loads the FULL tournament fixture set up front (it's tiny:
+ * 72 group-stage rows over 18 days plus future knockouts). The client
+ * scrubs over the loaded fixtures via a 7-day window with ‹ › arrows,
+ * so paging through days is instant — no re-fetch on every arrow tap.
  *
- * Today + This Week are the live lenses. Following is the lens
- * scaffold for the WC slice (where "all USA matches" pays off against
- * seeded group games); on friendlies it shows an honest placeholder.
- *
- * Dormant WC furniture (stage filter, group chips A–L, standings) is
- * built into ScheduleClient but only renders when the page-level
- * showWcTournamentFurniture prop is true. Activating for the WC slice
- * is a one-line flip.
+ * WC tournament furniture (stage + group filters) render as inline
+ * dropdowns next to the scrubber. Initial filter state hydrates from
+ * ?stage and ?group; selection round-trips back to the URL.
  */
 
 import SiteHeaderServer from '@/components/SiteHeaderServer';
@@ -25,7 +20,6 @@ import {
   readFixturesByPtDay,
   readScheduleGoals,
   toPtIsoDate,
-  buildScrubberDays,
 } from '@/lib/scheduleData';
 import ScheduleClient from './ScheduleClient';
 
@@ -36,44 +30,49 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-// Same force-dynamic discipline as /bracket and /match/[slug]. Without
-// this, the schedule prerenders at build time and stale fixtures + old
-// statuses freeze in until the next deploy — exactly what bit /bracket
-// before we added this export.
 export const dynamic = 'force-dynamic';
 
 const LEAGUE_SLUG = 'fifa-wc-2026';
 
-export default async function SchedulePage() {
-  // "Today PT" derived server-side from the request moment. This is the
-  // default scrubber center; the client may pick a different day from
-  // the scrubber, but the server-rendered default is anchored here.
-  const todayPt = toPtIsoDate(new Date());
-  const scrubberDays = buildScrubberDays(todayPt, 3, 3);
-  const ptStart = scrubberDays[0].ptDate;
-  const ptEnd = scrubberDays[scrubberDays.length - 1].ptDate;
+// Generous bounds — the actual WC range is Jun 11 → mid-July; we widen
+// to a 3-day pre-buffer and through end-of-July to catch the final +
+// any third-place fixture. The DB only returns rows that exist within
+// the range, so the buffer is free.
+const LOAD_RANGE_START = '2026-06-08';
+const LOAD_RANGE_END   = '2026-07-31';
 
-  // One round-trip for fixtures, one for goals on the visible match
-  // set. Goals only populates for live/final matches that have events;
-  // scheduled-only matches don't trigger a goals row.
+export default async function SchedulePage({ searchParams }) {
+  // Next 16 hands searchParams as a Promise — await before reading.
+  // ?stage and ?group hydrate the initial filter state on first paint
+  // so URLs like /schedule?group=D land directly on the filtered view.
+  const sp = (await searchParams) ?? {};
+  const pickStr = (v) => (Array.isArray(v) ? v[0] : v) ?? null;
+  const initialStageFilter  = pickStr(sp.stage)  ?? 'all';
+  const initialGroupFilter  = pickStr(sp.group)  ?? 'all';
+  const initialStatusFilter = pickStr(sp.status) ?? 'all';
+
+  const todayPt = toPtIsoDate(new Date());
+
   const fixtures = await readFixturesByPtDay({
     leagueSlug: LEAGUE_SLUG,
-    ptStart,
-    ptEnd,
+    ptStart: LOAD_RANGE_START,
+    ptEnd:   LOAD_RANGE_END,
   });
   const matchIds = fixtures.map((f) => f.id);
   const goalsByMatch = await readScheduleGoals(matchIds);
 
-  // Attach goals + a render-ready clock label per fixture. The clock
-  // text is the localized kickoff stub the card shows when there's no
-  // live minute (the live minute itself comes from match data when we
-  // wire poll-live's minute into the page; for now scheduled shows the
-  // local time via KickoffTime client island, final shows "Full Time",
-  // cancelled shows "Cancelled").
   const fixturesWithGoals = fixtures.map((f) => ({
     ...f,
     goals: goalsByMatch.get(f.id) ?? { home: [], away: [] },
   }));
+
+  // Derive tournament bounds from the actual loaded fixtures so the
+  // scrubber arrows disable at the correct edges. Falls back to the
+  // load window when fixtures are empty (defensive — should never be
+  // hit pre-launch since the DB is seeded).
+  const ptDays = fixturesWithGoals.map((f) => f.pt_day).sort();
+  const tournamentStart = ptDays[0] ?? LOAD_RANGE_START;
+  const tournamentEnd   = ptDays[ptDays.length - 1] ?? LOAD_RANGE_END;
 
   return (
     <>
@@ -81,17 +80,16 @@ export default async function SchedulePage() {
       <main className="schedule-wrap">
         <ScheduleClient
           fixtures={fixturesWithGoals}
-          scrubberDays={scrubberDays}
           defaultPtDay={todayPt}
+          tournamentStart={tournamentStart}
+          tournamentEnd={tournamentEnd}
           leagueSlug={LEAGUE_SLUG}
-          // Tournament furniture hidden for friendlies; flip to true on
-          // the WC slice. The scaffold (stage chips, group A–L row,
-          // standings table) is built but skipped at render-time here.
-          showWcTournamentFurniture={false}
-          // Stub header copy. The WC slice supplies its own (the
-          // "48 nations. 12 groups." subhead from the mock).
+          showWcTournamentFurniture={true}
+          initialStageFilter={initialStageFilter}
+          initialGroupFilter={initialGroupFilter}
+          initialStatusFilter={initialStatusFilter}
           kickerText="Read the Game"
-          subheadText={null}
+          subheadText="48 nations · 12 groups · one tournament"
         />
       </main>
       <SiteFooter />

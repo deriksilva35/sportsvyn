@@ -15,38 +15,39 @@
   padding: 0 24px;
 }
 
-/* ---------- Page head ---------- */
-.sch-pagehead { padding: 40px 0 20px; }
+/* ---------- Page head (compressed Step-2.5 proportions) ---------- */
+.sch-pagehead { padding: 24px 0 12px; }
 .sch-kicker {
   font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--volt);
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 .sch-title {
   font-family: var(--font-display);
   font-weight: 900;
   font-style: italic;
   letter-spacing: -0.04em;
-  font-size: 52px;
+  font-size: 48px;
   line-height: 0.95;
   color: var(--paper);
+  margin: 0;
 }
 .sch-title-ctx { color: var(--muted); }
 .sch-subhead {
   font-family: var(--font-serif);
   font-style: italic;
   color: var(--muted);
-  font-size: 15px;
-  margin-top: 12px;
+  font-size: 14px;
+  margin-top: 8px;
 }
 
 /* ---------- Lens tabs ---------- */
 .sch-lens {
   display: flex;
   gap: 2px;
-  margin-top: 28px;
+  margin-top: 16px;
   border-bottom: 1px solid var(--charcoal);
 }
 .sch-lens button {
@@ -69,21 +70,65 @@
   border-bottom-color: var(--volt);
 }
 
-/* ---------- Date scrubber ---------- */
+/* ---------- Control bar (scrubber + arrows + inline dropdowns) ---------- */
+.sch-controlbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 14px 0 0;
+  padding: 10px 0 12px;
+  border-bottom: 1px solid var(--charcoal);
+  flex-wrap: wrap;
+}
+.sch-scrubwrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sch-arrow {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 50px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 3px;
+  color: var(--paper-dim, #C5C5C2);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: .15s;
+}
+.sch-arrow:hover { background: #242424; color: var(--paper); }
+.sch-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+  background: transparent;
+  border-color: var(--charcoal);
+}
+.sch-arrow:disabled:hover { background: transparent; color: var(--paper-dim, #C5C5C2); }
+
+/* Date scrubber (7-day windowed strip) */
 .sch-scrub {
   display: flex;
-  margin-top: 18px;
+  flex: 1 1 auto;
+  min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
+  gap: 2px;
 }
 .sch-scrub::-webkit-scrollbar { display: none; }
 .sch-scrub button {
-  flex: 0 0 auto;
+  position: relative;
+  flex: 1 1 0;
+  min-width: 56px;
   background: none;
   border: none;
   cursor: pointer;
   text-align: center;
-  padding: 8px 18px;
+  padding: 7px 8px 11px;
   color: var(--muted);
   border-radius: 3px;
   transition: .15s;
@@ -92,64 +137,147 @@
 .sch-scrub button:hover { background: var(--graphite); }
 .sch-scrub button.active { background: var(--graphite); }
 .sch-scrub-d {
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   display: block;
+  white-space: nowrap;
 }
 .sch-scrub button.active .sch-scrub-d { color: var(--volt); }
 .sch-scrub-n {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--paper-dim, #C5C5C2);
   display: block;
   margin-top: 3px;
 }
 .sch-scrub button.active .sch-scrub-n { color: var(--paper); }
-
-/* ---------- Filters ---------- */
-.sch-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  margin: 24px 0 0;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--charcoal);
+.sch-scrub-dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--volt);
+  opacity: 0.85;
 }
-.sch-filters.row2 { padding-top: 14px; }
-.sch-filters.status-only { padding-top: 14px; }
-.sch-chip {
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  color: var(--paper-dim, #C5C5C2);
+
+/* ---------- Inline filter dropdowns ---------- */
+.sch-ddrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sch-dd { position: relative; }
+.sch-dd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: var(--graphite);
   border: 1px solid var(--charcoal);
   border-radius: 999px;
   padding: 7px 14px;
+  color: var(--paper-dim, #C5C5C2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
   cursor: pointer;
   transition: .15s;
-  white-space: nowrap;
-  font-family: var(--font-mono);
 }
-.sch-chip:hover { background: #242424; }
-.sch-chip.on {
+.sch-dd-btn:hover { background: #242424; color: var(--paper); }
+.sch-dd.open .sch-dd-btn { background: #242424; color: var(--paper); }
+.sch-dd.active .sch-dd-btn {
   background: var(--volt);
-  color: var(--ink);
   border-color: var(--volt);
+  color: var(--ink);
   font-weight: 500;
 }
-.sch-chip-gp {
-  padding: 7px 12px;
-  min-width: 38px;
-  text-align: center;
-}
-.sch-flabel {
+.sch-dd-label {
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted);
-  margin-right: 4px;
 }
+.sch-dd.active .sch-dd-label { color: var(--ink); opacity: 0.65; }
+.sch-dd-sep { opacity: 0.4; }
+.sch-dd-value { font-size: 12px; }
+.sch-dd-caret { font-size: 11px; margin-left: 2px; }
+
+.sch-dd-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 180px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 6px;
+  padding: 6px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+}
+.sch-dd-list { list-style: none; margin: 0; padding: 0; }
+.sch-dd-list li { margin: 0; }
+.sch-dd-list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background: transparent;
+  border: 0;
+  color: var(--paper-dim, #C5C5C2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: .12s;
+}
+.sch-dd-list button:hover { background: #242424; color: var(--paper); }
+.sch-dd-list button.is-on { background: var(--volt); color: var(--ink); font-weight: 500; }
+
+/* Group panel: special — "All" pill above a 4×3 A–L grid */
+.sch-dd-grouppanel { min-width: 240px; padding: 8px; }
+.sch-dd-gpall {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: transparent;
+  border: 1px solid var(--charcoal);
+  border-radius: 999px;
+  color: var(--paper-dim, #C5C5C2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: .12s;
+}
+.sch-dd-gpall:hover { background: #242424; color: var(--paper); }
+.sch-dd-gpall.is-on { background: var(--volt); border-color: var(--volt); color: var(--ink); font-weight: 500; }
+.sch-dd-gpgrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.sch-dd-gpcell {
+  background: var(--ink);
+  border: 1px solid var(--charcoal);
+  border-radius: 4px;
+  color: var(--paper-dim, #C5C5C2);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 0;
+  cursor: pointer;
+  transition: .12s;
+}
+.sch-dd-gpcell:hover { background: #242424; color: var(--paper); }
+.sch-dd-gpcell.is-on { background: var(--volt); border-color: var(--volt); color: var(--ink); }
 
 /* ---------- Section labels ---------- */
 .sch-seclabel {
@@ -375,14 +503,22 @@
 /* ---------- Mobile (820px breakpoint matches the mock) ---------- */
 @media (max-width: 820px) {
   .sch-shell { padding: 0 16px; }
-  .sch-pagehead { padding: 28px 0 16px; }
-  .sch-title { font-size: 36px; }
-  .sch-subhead { font-size: 13px; }
+  .sch-pagehead { padding: 18px 0 10px; }
+  .sch-title { font-size: 34px; }
+  .sch-subhead { font-size: 12px; margin-top: 6px; }
+  .sch-lens { margin-top: 12px; }
   .sch-lens button { padding: 10px 12px 12px; font-size: 12px; letter-spacing: 0.06em; }
-  .sch-scrub button { padding: 8px 14px; }
+
+  .sch-scrub button { padding: 7px 6px 11px; min-width: 44px; }
   .sch-scrub-n { font-size: 14px; }
-  .sch-filters { gap: 8px; padding-bottom: 14px; }
-  .sch-chip { padding: 6px 11px; font-size: 11px; }
+  .sch-arrow { width: 28px; height: 44px; }
+
+  /* Filter dropdowns stack below the scrubber on narrow screens */
+  .sch-controlbar { gap: 8px; padding: 8px 0 10px; }
+  .sch-ddrow { width: 100%; gap: 6px; }
+  .sch-dd-btn { padding: 6px 12px; font-size: 11px; }
+  .sch-dd-panel { right: auto; left: 0; min-width: 200px; }
+  .sch-dd-grouppanel { min-width: 220px; }
 
   .sch-card { grid-template-columns: 1fr; }
   .sch-meta {
@@ -398,7 +534,13 @@
   .sch-goals { padding-left: 37px; gap: 4px 14px; }
   .sch-goal { font-size: 10px; }
 
-  .sch-seclabel { margin: 28px 0 12px; }
+  .sch-seclabel { margin: 22px 0 10px; }
   .sch-seclabel-lbl { font-size: 13px; letter-spacing: 0.12em; }
   .sch-dayhead { font-size: 14px; }
+}
+
+/* Tighter still on phones, per brief's ≤760px stack point */
+@media (max-width: 760px) {
+  .sch-controlbar { flex-direction: column; align-items: stretch; }
+  .sch-scrubwrap { width: 100%; }
 }
