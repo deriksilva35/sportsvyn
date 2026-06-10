@@ -13,17 +13,392 @@
 .home-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 48px;
+  /* column-gap stays at 48px (between Today's Card and sidebar). row-gap
+     held at 0 so the daily-card → bracket-wall stacking on desktop
+     keeps its prior spacing (bracket-wall brings its own margin-top
+     and border-top); without the row-gap-0 the new direct-child
+     grid layout would add 48px on top of that. Mobile @media below
+     resets to a sane 32px row-gap once we collapse to one column. */
+  column-gap: 48px;
+  row-gap: 0;
   padding: 36px 48px 0;
   max-width: 1400px;
-  margin: 0;
+  margin: 0 auto;
   padding-left: 48px;
   align-items: start;
 }
+
+/* Explicit grid placement on desktop — the DOM source order is
+   daily-card → right-rail → bracket-wall (so mobile stacks as
+   "card → games → power → bracket"). These rules re-pin the same
+   three children to the approved 2/3 + 1/3 layout: card top-left,
+   sidebar full-height right, bracket below card. */
+.home-main > .daily-card           { grid-column: 1; grid-row: 1; }
+.home-main > .right-rail           { grid-column: 2; grid-row: 1 / span 2; }
+.home-main > .bracket-wall-section { grid-column: 1; grid-row: 2; }
+
+/* Pre-3c-mobile-fix .home-main-left wrapper no longer renders, but
+   the rule stays (harmless) so existing search/diff is small. */
 .home-main-left {
   display: flex;
   flex-direction: column;
   min-width: 0;
+}
+
+/* GAMES BAND — games-first lead at the TOP of the left column
+   (.home-main-left). The right column sidebar rides up alongside it
+   from row 1. Card visuals come from components/match/fixture-card.css
+   via the FixtureCard import; this block styles the section headers,
+   feed wrapper, empty state, the "Full schedule →" link, and a
+   context-scoped card reflow that stacks meta UNDER matchup at any
+   viewport width (the inner 2/3 column is too narrow for the default
+   side-by-side meta panel — see the .home-games-band .sch-* rules
+   further down). */
+.home-games-band {
+  padding-top: 4px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--rule-dark);
+  margin-bottom: 28px;
+  min-width: 0;
+}
+.home-games-section { margin-top: 22px; }
+.home-games-section:first-child { margin-top: 0; }
+.home-games-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.home-games-headline {
+  font-family: var(--font-cond, var(--font-mono));
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper-warm);
+}
+.home-games-headline.live { color: var(--live-red); }
+.home-games-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.home-games-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--rule-dark);
+}
+.home-games-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.home-games-feed {
+  /* No flex/grid wrapper — FixtureCard cards stack vertically with
+     their own margin-bottom (.sch-card has margin-bottom: 10px in
+     fixture-card.css). Matches /schedule's feed visually. */
+}
+.home-games-empty {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--muted);
+  padding: 18px 0 4px;
+}
+.home-games-quiet {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--muted);
+  padding: 6px 0 12px;
+}
+
+/* ─── SIDEBAR — LIVE & NEXT UNIT (.sg-*) ───────────────────────────────
+   Lives in the right rail above Power Rankings. Hero on top (live or
+   next-up), collapsible compact list below, "Full schedule →" footer. */
+
+.sg-card {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 18px 18px 16px;
+  margin-bottom: 18px;
+}
+
+/* HERO — shared chrome */
+.sg-hero {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+}
+.sg-hero:hover .sg-hero-name { color: var(--volt); }
+
+/* Live hero — pulse + LIVE word above the teams */
+.sg-hero-live { padding-top: 2px; }
+.sg-hero-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.sg-pulse {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--live-red);
+  animation: sch-pulse 1.6s ease-in-out infinite;
+}
+.sg-live-word {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--live-red);
+}
+
+/* Next-up hero — quiet kicker above the teams */
+.sg-hero-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--volt);
+  margin-bottom: 8px;
+}
+
+/* Shared teams block inside the hero */
+.sg-hero-teams { display: flex; flex-direction: column; gap: 6px; }
+.sg-hero-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.sg-hero-row .flag-inline-svg {
+  width: 22px; height: 16px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+.sg-hero-name {
+  font-family: var(--font-cond, var(--font-mono));
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  color: var(--paper-warm);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color .12s;
+}
+.sg-hero-score {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Next-up meta line (kickoff + venue) */
+.sg-hero-meta {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sg-hero-venue { color: var(--muted-dim, var(--muted)); }
+
+/* LIVE WATCH SCORE — number + track bar */
+.sg-ws {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-dark);
+}
+.sg-ws-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.sg-ws-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sg-ws-value {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+}
+.sg-ws-track {
+  height: 4px;
+  background: var(--rule-dark);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.sg-ws-fill {
+  display: block;
+  height: 100%;
+  background: var(--volt);
+}
+
+/* Empty-state line when the 3-day window is somehow dry */
+.sg-quiet {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 4px 0 6px;
+}
+
+/* TOGGLE — native <details>, no client JS needed */
+.sg-toggle {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-dark);
+}
+.sg-toggle summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--paper-dim, var(--muted));
+  padding: 4px 0;
+}
+.sg-toggle summary::-webkit-details-marker { display: none; }
+.sg-toggle summary:hover { color: var(--volt); }
+.sg-toggle-show, .sg-toggle-hide { flex: 1; }
+.sg-toggle[open] .sg-toggle-show { display: none; }
+.sg-toggle:not([open]) .sg-toggle-hide { display: none; }
+.sg-toggle-caret {
+  font-size: 11px;
+  transition: transform .15s;
+}
+.sg-toggle[open] .sg-toggle-caret { transform: rotate(180deg); }
+
+/* Day group inside the toggle list */
+.sg-list { margin-top: 8px; }
+.sg-day:not(:first-child) { margin-top: 14px; }
+.sg-day-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* Compact row — mini-flag + abbr v abbr + kickoff time */
+.sg-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border-top: 1px solid var(--rule-darker);
+  text-decoration: none;
+  color: inherit;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  transition: color .12s;
+}
+.sg-day:first-child .sg-row:first-of-type { border-top: 0; }
+.sg-row:hover { color: var(--volt); }
+.sg-row .flag-tiny-svg {
+  width: 14px; height: 10px;
+  border-radius: 1px;
+  flex: 0 0 auto;
+}
+.sg-abbr {
+  color: var(--paper-warm);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.sg-vs { color: var(--muted); }
+.sg-row-time {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+/* Footer link */
+.sg-full {
+  display: inline-block;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule-dark);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--paper-warm);
+  text-decoration: none;
+  transition: color .12s;
+  width: 100%;
+}
+.sg-full:hover { color: var(--volt); }
+.home-games-full {
+  display: inline-block;
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-warm);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-dark);
+  padding-bottom: 4px;
+  transition: color .15s, border-color .15s;
+}
+.home-games-full:hover { color: var(--volt); border-color: var(--volt); }
+
+/* Context-scoped card reflow — STACKS meta below matchup at every
+   viewport width INSIDE the homepage games band only. The card's
+   default rules in components/match/fixture-card.css still hold for
+   /schedule (side-by-side meta). We're not editing the default; we're
+   adding a context override that only matches under .home-games-band.
+   Selectors mirror what fixture-card.css applies at @media ≤820px so
+   the column-narrow case behaves identically to the mobile case. */
+.home-games-band .sch-card {
+  grid-template-columns: 1fr;
+}
+.home-games-band .sch-meta {
+  border-left: none;
+  border-top: 1px solid var(--charcoal);
+  padding: 14px 18px;
+}
+.home-games-band .sch-matchup { padding: 14px 18px; }
+.home-games-band .sch-row { gap: 11px; }
+.home-games-band .sch-row .flag { width: 26px; height: 19px; }
+.home-games-band .sch-nm { font-size: 18px; }
+.home-games-band .sch-sc { font-size: 18px; }
+.home-games-band .sch-goals { padding-left: 37px; gap: 4px 14px; }
+.home-games-band .sch-goal { font-size: 10px; }
+
+@media (max-width: 1024px) {
+  .home-games-band { margin-bottom: 20px; }
+  .home-games-section { margin-top: 18px; }
+  .home-games-headline { font-size: 14px; letter-spacing: 0.12em; }
+}
+@media (max-width: 767px) {
+  .home-games-band { padding-top: 4px; padding-bottom: 20px; margin-bottom: 18px; }
+  .home-games-head { gap: 8px; margin-bottom: 10px; }
+  .home-games-sub { display: none; }   /* keep headers compact on phone */
+  .home-games-section { margin-top: 16px; }
 }
 
 /* DAILY CARD */
@@ -583,7 +958,21 @@
 
 /* Mobile */
 @media (max-width: 1024px) {
-  .home-main { grid-template-columns: 1fr; gap: 32px; padding: 24px 20px 0; padding-left: 20px; }
+  /* Collapse to a single column and let DOM source order (daily-card →
+     sidebar → bracket-wall) be the stack. Reset the desktop explicit
+     placement so each child auto-places into its own row. */
+  .home-main {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 24px 20px 0;
+    padding-left: 20px;
+  }
+  .home-main > .daily-card,
+  .home-main > .right-rail,
+  .home-main > .bracket-wall-section {
+    grid-column: auto;
+    grid-row: auto;
+  }
   .right-rail { position: static; }
 }
 @media (max-width: 767px) {

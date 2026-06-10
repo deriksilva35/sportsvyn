@@ -108,7 +108,7 @@ export default function SiteHeader({ activeNav = null, session = null }) {
       <header className="site-header">
         <div className="brand-row">
           <a href="/" className="wordmark-home" aria-label="Sportsvyn home">
-            <Wordmark sizeClassName="text-[22px]" />
+            <Wordmark sizeClassName="text-[28px]" />
           </a>
         </div>
         <div className="nav">

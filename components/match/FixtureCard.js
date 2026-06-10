@@ -25,6 +25,7 @@
 
 import KickoffTime from './KickoffTime';
 import FlagSlot from '../FlagSlot';
+import './fixture-card.css';
 
 export function bucketOf(status) {
   if (status === 'live')      return 'live';
