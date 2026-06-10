@@ -185,7 +185,11 @@ function DailyCardHeader({ ptDateLabel }) {
   );
 }
 
-const PLACEHOLDER_INTRO = "The 2026 World Cup arrives in three days, and the case for every side is already written into the squads we've named. Today's card sets the bracket as it stands. Group draws are settled. Friendlies are finishing. The match feed becomes the column on June 11.";
+// Evergreen fallback — shown when no daily_card_intros row is published
+// for today. No date references, no countdowns; ages without rotting.
+// The published-row path (getCurrentDailyCardIntro) overrides this when
+// an editor approves a daily intro for the day.
+const PLACEHOLDER_INTRO = "Today’s card reads the tournament as it stands — what’s settled, what’s still open, and what’s worth your attention next.";
 
 function DailyCardIntro({ publishedIntro }) {
   // Reads ONLY status='published' rows. Pending review / rejected stay
