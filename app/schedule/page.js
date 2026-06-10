@@ -42,7 +42,7 @@ export const metadata = {
 // before we added this export.
 export const dynamic = 'force-dynamic';
 
-const LEAGUE_SLUG = 'international-friendlies';
+const LEAGUE_SLUG = 'fifa-wc-2026';
 
 export default async function SchedulePage() {
   // "Today PT" derived server-side from the request moment. This is the

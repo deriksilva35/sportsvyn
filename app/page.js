@@ -41,7 +41,6 @@ export const dynamic = 'force-dynamic';
 export const metadata = { robots: { index: false, follow: false } };
 
 const WC_LEAGUE_SLUG = 'fifa-wc-2026';
-const FRIENDLIES_LEAGUE_SLUG = 'international-friendlies';
 
 // =============================================================================
 // helpers (pure)
@@ -588,7 +587,6 @@ export default async function HomePage() {
   // Parallel reads — every helper returns [] / null on absence.
   const [
     todaysFixtures,
-    todaysFixturesFriendlies,
     todaysReads,
     featuredReads,
     moreReads,
@@ -602,7 +600,6 @@ export default async function HomePage() {
     marketLadder,
   ] = await Promise.all([
     readFixturesByPtDay({ leagueSlug: WC_LEAGUE_SLUG, ptStart: ptDay, ptEnd: ptDay }),
-    readFixturesByPtDay({ leagueSlug: FRIENDLIES_LEAGUE_SLUG, ptStart: ptDay, ptEnd: ptDay }),
     getTodaysReads({ ptDay, limit: 4 }),
     Promise.resolve([]),  // Featured Reads — hidden until real long-form ships
     Promise.resolve([]),  // Recent Reads   — same; previews already live on /match/[slug]
@@ -616,7 +613,10 @@ export default async function HomePage() {
     readTournamentWinnerLadder({ leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
   ]);
 
-  const slate = todaysFixtures.length > 0 ? todaysFixtures : todaysFixturesFriendlies;
+  // WC-only. An off-day (no WC kickoffs) renders an empty slate; we no
+  // longer backfill with friendlies — the empty state is handled by the
+  // signpost + NEXT UP block.
+  const slate = todaysFixtures;
 
   const watchScoreByMatchId = new Map();
   for (const r of watchScoresToday) watchScoreByMatchId.set(r.match_id, r.composite);
