@@ -108,10 +108,15 @@
 
 /* Flag sizes — scoped to .rankings-wrap so we don't pollute the global
    namespace. Mirrors app/match/[slug]/match.css's flag-* convention so
-   FlagSlot renders identically here as on the schedule / match pages. */
+   FlagSlot renders identically here as on the schedule / match pages.
+   The `.flag img` rule is the load-bearing fix: globals/tailwind ship
+   `img,video{height:auto}` which can override FlagSlot's inline
+   height:100%. Constraining the img at the stylesheet level (same
+   pattern match.css uses for .live-team-flag img) makes the size
+   stick regardless of preflight order. */
 .rankings-wrap .flag {
   display: inline-block;
-  flex-shrink: 0;
+  flex: none;
   background: rgba(245,245,242,0.06);
   border: 1px solid rgba(245,245,242,0.08);
   overflow: hidden;
@@ -119,6 +124,12 @@
 }
 .rankings-wrap .flag-sm   { width: 22px; height: 16px; }
 .rankings-wrap .flag-md   { width: 40px; height: 28px; }
+.rankings-wrap .flag img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .rankings-wrap .rc-name {
   font-family: var(--font-saira), sans-serif;
   font-weight: 800; font-style: italic;
