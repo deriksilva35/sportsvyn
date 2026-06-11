@@ -326,15 +326,22 @@ function TodaysReadsSection({ reads }) {
       <div className="dc-section-label">
         Today&rsquo;s Reads · {reads.length} {reads.length === 1 ? 'Piece' : 'Pieces'}
       </div>
-      {reads.filter((r) => r.match_slug).map((r) => (
-        <a key={r.slug} className="dc-read-row" href={`/match/${r.match_slug}`}>
-          <div>
-            <div className="dr-kicker">{r.kicker}</div>
-            <div className="dr-headline">{r.title}</div>
-          </div>
-          <div className="dr-read-time">{r.read_time_min} min</div>
-        </a>
-      ))}
+      {reads.map((r) => {
+        // Preview rows live on /match/[slug] (the body renders inside
+        // the match Preview tab). Essays/edge/etc. live at /article/[slug].
+        // match_slug distinguishes the two — null means the article isn't
+        // attached to a match, so the article reader is the right route.
+        const href = r.match_slug ? `/match/${r.match_slug}` : `/article/${r.slug}`;
+        return (
+          <a key={r.slug} className="dc-read-row" href={href}>
+            <div>
+              <div className="dr-kicker">{r.kicker}</div>
+              <div className="dr-headline">{r.title}</div>
+            </div>
+            <div className="dr-read-time">{r.read_time_min} min</div>
+          </a>
+        );
+      })}
     </div>
   );
 }
