@@ -343,7 +343,11 @@ function eventRowSortKey(e) {
 // MAIN COMPONENT
 // ============================================================================
 
-export default function KeyMoments({ events = [], match = null, homeAbbr, awayAbbr, homeName, awayName }) {
+export default function KeyMoments({
+  events = [], match = null,
+  homeAbbr, awayAbbr, homeName, awayName,
+  homeFlag, homeFlagColor, awayFlag, awayFlagColor,
+}) {
   const eventList = Array.isArray(events) ? events : [];
   const lifecycle = buildLifecycleRows(match, eventList);
 
@@ -355,6 +359,21 @@ export default function KeyMoments({ events = [], match = null, homeAbbr, awayAb
     homeName: homeAbbr ?? homeName,
     awayName: awayAbbr ?? awayName,
   });
+
+  // Per-event flag lookup. team_side is CHECK-constrained on the DB
+  // ('home'|'away'), so the home/away branch is total — but we still
+  // guard for a missing team_side defensively (legacy rows pre-migration)
+  // and return all-null so the row renders without a flag slot rather
+  // than mis-attributing it.
+  function eventFlag(side) {
+    if (side !== 'home' && side !== 'away') return { svg: null, color: null, abbr: null };
+    const isHome = side === 'home';
+    return {
+      svg:   isHome ? homeFlag       : awayFlag,
+      color: isHome ? homeFlagColor  : awayFlagColor,
+      abbr:  isHome ? homeAbbr       : awayAbbr,
+    };
+  }
 
   const rows = [
     ...eventList.map((e) => ({ kind: 'event', data: e, ...eventRowSortKey(e) })),
@@ -422,10 +441,31 @@ export default function KeyMoments({ events = [], match = null, homeAbbr, awayAb
             headlineNode = h.headline;
           }
 
+          // Per-event flag column. team_side is CHECK-constrained on the
+          // DB so the home/away branch is total in normal data; the
+          // defensive null path renders no flag AND drops the grid
+          // column via .km-row-no-flag so the row stays aligned.
+          // If the team has a flag_svg_path, we render it. If not (an
+          // unmapped country), we fall back to the mono abbr chip so
+          // the row still visually signals which side.
+          const ef = eventFlag(e.team_side);
+          let flagNode = null;
+          if (ef.svg) {
+            flagNode = (
+              <span className="km-flag" aria-hidden="true">
+                <img src={ef.svg} alt="" />
+              </span>
+            );
+          } else if (ef.abbr) {
+            flagNode = <span className="km-flag-abbr">{ef.abbr}</span>;
+          }
+          const rowClassFinal = `${rowClass}${flagNode ? '' : ' km-row-no-flag'}`;
+
           return (
-            <div key={e.id ?? `${e.minute}-${e.minute_extra}-${i}`} className={rowClass}>
+            <div key={e.id ?? `${e.minute}-${e.minute_extra}-${i}`} className={rowClassFinal}>
               <div className="km-min">{formatMinute(e)}</div>
               <KmIcon kind={h.kind} />
+              {flagNode}
               <div className="km-body">
                 <div className="km-headline">{headlineNode}</div>
                 {hasGloss && <div className="km-gloss">{e.gloss}</div>}

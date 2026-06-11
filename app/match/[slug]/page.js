@@ -499,6 +499,10 @@ export default async function MatchPage({ params }) {
                   }}
                   homeAbbr={match.home_abbreviation}
                   awayAbbr={match.away_abbreviation}
+                  homeFlag={match.home_flag_svg}
+                  homeFlagColor={match.home_flag_color}
+                  awayFlag={match.away_flag_svg}
+                  awayFlagColor={match.away_flag_color}
                 />
               </div>
               <div className="live-right">
@@ -529,6 +533,10 @@ export default async function MatchPage({ params }) {
               }}
               homeAbbr={match.home_abbreviation}
               awayAbbr={match.away_abbreviation}
+              homeFlag={match.home_flag_svg}
+              homeFlagColor={match.home_flag_color}
+              awayFlag={match.away_flag_svg}
+              awayFlagColor={match.away_flag_color}
             />
           )}
         </div>
