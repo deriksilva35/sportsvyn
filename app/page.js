@@ -287,7 +287,7 @@ function SlateSection({ fixtures, watchScoreByMatchId, nextFixture }) {
 
 function TournamentProgress({ groupProgress }) {
   const played = groupProgress.final_group;
-  const matchdaysPlayed = groupProgress.total_matchdays_played;
+  const matchdaysPlayed = groupProgress.min_matchdays_complete;
   return (
     <div className="dc-section">
       <div className="dc-section-label-row">
@@ -984,10 +984,17 @@ export default async function HomePage() {
           <DailyCardIntro publishedIntro={publishedIntro} />
           <DailyCardByline ptDateLabel={ptDateLabel} />
 
-          {/* The 3-day games block moved OUT of the card and into the
-              sidebar as the "Live & Next" unit (right column). Today's
-              Card is editorial-only: intro → byline → Tournament
-              Progress → Today's Reads → The Market. */}
+          {/* The 3-day games block lives in the sidebar (Live & Next).
+              Today's slate stays IN the card: the immediate "what's
+              happening today, what's already final" reads as the lead
+              after the intro/byline, ahead of the structural progress
+              strip. SlateSection renders SlateSignpost when the day
+              has zero fixtures, so this slot never collapses ugly. */}
+          <SlateSection
+            fixtures={todaysFixtures}
+            watchScoreByMatchId={watchScoreByMatchId}
+            nextFixture={nextFixture}
+          />
 
           <TournamentProgress groupProgress={groupProgress} />
 
