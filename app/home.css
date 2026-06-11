@@ -901,15 +901,44 @@
   letter-spacing: 0.2em; text-transform: uppercase;
 }
 .home-group-card-row {
-  display: grid; grid-template-columns: 20px 1fr;
+  display: grid; grid-template-columns: 20px 1fr 24px;
   gap: 8px; align-items: center;
   padding: 5px 0;
   font-family: var(--font-display-condensed, var(--font-display));
   font-weight: 700; font-style: italic;
   font-size: 13px; text-transform: uppercase;
   color: var(--paper-warm); letter-spacing: 0.01em;
+  min-width: 0; /* allow ellipsis on the name cell */
 }
 .home-group-card-row .flag-inline-svg { margin-right: 0; }
+
+/* Long-name guard. Cards run ~135px content wide on desktop; with the
+   24px points column the name slot is ~80px. Names like "Bosnia &
+   Herzegovina" / "Cape Verde Islands" must truncate cleanly rather
+   than wrap and break row alignment. Applies to both the <a> (linked)
+   and <span> (no slug) variants. */
+.home-group-card-row > a,
+.home-group-card-row > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Per-team points cell. Mono numerals (read cleaner upright than the
+   italic display family used for the team name), right-aligned, same
+   paper-warm color as the row. Intentionally NOT volt-tinted — every
+   team will have points within a few days and a leader-tint would lose
+   meaning fast. */
+.home-group-card-pts {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-style: normal;
+  font-size: 12px;
+  text-align: right;
+  color: var(--paper-warm);
+  letter-spacing: 0;
+}
 
 /* MORE FROM SPORTSVYN — section AFTER .home-main, full-bleed.
    Stage-2 rename: this used to be .below-bw-rail (nested under the

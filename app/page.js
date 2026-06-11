@@ -28,6 +28,7 @@ import { getFeaturedReads, getTodaysReads } from '@/lib/articles';
 import {
   GROUP_LETTERS,
   getGroupTeams,
+  getGroupStandings,
   getGroupMatchdayProgress,
   getGroupStageProgress,
 } from '@/lib/bracket';
@@ -547,20 +548,21 @@ function HomeGroupCard({ letter, teams, matchdaysComplete }) {
         <div className="home-group-card-meta">{matchdaysComplete} of 3</div>
       </div>
       {teams.map((t) => (
-        <div key={t.id} className="home-group-card-row">
+        <div key={t.team_id} className="home-group-card-row">
           <Flag svgPath={t.flag_svg_path} />
           {t.slug ? (
             <a href={`/team/${t.slug}`} className="team-link">{t.name}</a>
           ) : (
             <span>{t.name}</span>
           )}
+          <span className="home-group-card-pts">{t.points}</span>
         </div>
       ))}
     </div>
   );
 }
 
-function BracketWallGroupStage({ groupTeams, matchdayMap }) {
+function BracketWallGroupStage({ groupStandings, matchdayMap }) {
   return (
     <section className="bracket-wall-section">
       <div className="bracket-wall-inner">
@@ -576,7 +578,7 @@ function BracketWallGroupStage({ groupTeams, matchdayMap }) {
             <HomeGroupCard
               key={letter}
               letter={letter}
-              teams={groupTeams.get(letter) ?? []}
+              teams={groupStandings.get(letter) ?? []}
               matchdaysComplete={matchdayMap.get(letter) ?? 0}
             />
           ))}
@@ -878,7 +880,7 @@ export default async function HomePage() {
     moreReads,
     liveMatches,
     watchScoresToday,
-    groupTeams,
+    groupStandings,
     matchdayMap,
     groupProgress,
     rankingTop5,
@@ -891,7 +893,7 @@ export default async function HomePage() {
     Promise.resolve([]),  // Recent Reads   — same; previews already live on /match/[slug]
     getCurrentLiveMatches(),
     getWatchScoresForDate(ptDay),
-    getGroupTeams(),
+    getGroupStandings(),  // ordered standings rows (incl. points/wins/draws/losses/gf/ga/gd)
     getGroupMatchdayProgress(),
     getGroupStageProgress(),
     getTopN({ listSlug: 'team-power', leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
@@ -1020,7 +1022,7 @@ export default async function HomePage() {
             it sits at the bottom of the stack (after the sidebar). On
             desktop the explicit grid placement in home.css pins it to
             column 1, row 2 (right below Today's Card). */}
-        <BracketWallGroupStage groupTeams={groupTeams} matchdayMap={matchdayMap} />
+        <BracketWallGroupStage groupStandings={groupStandings} matchdayMap={matchdayMap} />
       </main>
 
       {showMoreRail && <MoreFromSportsvyn reads={belowFeatured} />}
