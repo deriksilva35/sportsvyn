@@ -33,6 +33,7 @@ import BracketTabBar from '@/components/bracket/BracketTabBar';
 import {
   GROUP_LETTERS,
   getGroupTeams,
+  getGroupStandings,
   getGroupMatchdayProgress,
   getGroupStageComplete,
 } from '@/lib/bracket';
@@ -78,26 +79,31 @@ function GroupCard({ letter, teams, matchdayComplete }) {
         <span></span>
         <span></span>
         <span></span>
-        <span>W-L</span>
+        <span>W-D-L</span>
         <span>GD</span>
         <span>PTS</span>
         <span>ADV</span>
       </div>
-      {teams.map((team, idx) => (
-        <div key={team.id} className="team-row-v2">
-          <span className="pos">{idx + 1}</span>
-          <BracketFlag flagSvgPath={team.flag_svg_path} />
-          {team.slug ? (
-            <a href={`/team/${team.slug}`} className="name team-link">{team.name}</a>
-          ) : (
-            <span className="name">{team.name}</span>
-          )}
-          <span className="num">0-0</span>
-          <span className="num">0</span>
-          <span className="pts">0</span>
-          <span className="adv empty">—</span>
-        </div>
-      ))}
+      {teams.map((team, idx) => {
+        const wdl = `${team.wins}-${team.draws}-${team.losses}`;
+        const gd  = team.gd > 0 ? `+${team.gd}` : `${team.gd}`;
+        const pts = `${team.points}`;
+        return (
+          <div key={team.team_id} className="team-row-v2">
+            <span className="pos">{idx + 1}</span>
+            <BracketFlag flagSvgPath={team.flag_svg_path} />
+            {team.slug ? (
+              <a href={`/team/${team.slug}`} className="name team-link">{team.name}</a>
+            ) : (
+              <span className="name">{team.name}</span>
+            )}
+            <span className="num">{wdl}</span>
+            <span className="num">{gd}</span>
+            <span className="pts">{pts}</span>
+            <span className="adv empty">—</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -125,8 +131,9 @@ function TbdCell({ date, label, slotA, slotB }) {
 }
 
 export default async function BracketPage() {
-  const [groupTeams, matchdayProgress, groupStageComplete] = await Promise.all([
+  const [groupTeams, groupStandings, matchdayProgress, groupStageComplete] = await Promise.all([
     getGroupTeams(),
+    getGroupStandings(),
     getGroupMatchdayProgress(),
     getGroupStageComplete(),
   ]);
@@ -169,7 +176,7 @@ export default async function BracketPage() {
           </div>
           <div className="groups-grid">
             {GROUP_LETTERS.map((letter) => {
-              const teams = groupTeams.get(letter) ?? [];
+              const teams = groupStandings.get(letter) ?? groupTeams.get(letter) ?? [];
               const matchdayComplete = matchdayProgress.get(letter) ?? 0;
               return (
                 <GroupCard

@@ -97,7 +97,13 @@
 /* ============ GROUP TEAM ROW (v3 verbatim) ============ */
 .team-row-v2 {
   display: grid;
-  grid-template-columns: 12px 20px 1fr 28px 22px 22px 28px;
+  /* Cols: pos(12) flag(20) name(1fr) W-D-L(36) GD(22) PTS(22) ADV(28).
+     W-D-L was 28px when it held two segments ("2-0"); widened to 36px
+     so the three-segment form ("2-1-0") doesn't crowd GD. Mobile keeps
+     the same template — .groups-grid drops to 1fr at 767px, so each
+     card actually has MORE horizontal room there than on desktop's
+     4-column grid, and the wider W-D-L slot still fits cleanly. */
+  grid-template-columns: 12px 20px 1fr 36px 22px 22px 28px;
   gap: 7px;
   align-items: center;
   padding: 5px 0;
@@ -171,7 +177,13 @@
 }
 .team-row-v2-header {
   display: grid;
-  grid-template-columns: 12px 20px 1fr 28px 22px 22px 28px;
+  /* Cols: pos(12) flag(20) name(1fr) W-D-L(36) GD(22) PTS(22) ADV(28).
+     W-D-L was 28px when it held two segments ("2-0"); widened to 36px
+     so the three-segment form ("2-1-0") doesn't crowd GD. Mobile keeps
+     the same template — .groups-grid drops to 1fr at 767px, so each
+     card actually has MORE horizontal room there than on desktop's
+     4-column grid, and the wider W-D-L slot still fits cleanly. */
+  grid-template-columns: 12px 20px 1fr 36px 22px 22px 28px;
   gap: 7px;
   align-items: center;
   padding: 0 0 4px 0;
