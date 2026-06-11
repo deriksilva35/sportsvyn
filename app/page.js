@@ -505,6 +505,7 @@ function PowerRankingsList({ topRows }) {
           </span>
         </a>
       ))}
+      <a className="sl-more" href="/power-rankings">View full rankings →</a>
     </div>
   );
 }

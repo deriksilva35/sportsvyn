@@ -765,6 +765,24 @@
   padding: 10px 0;
 }
 
+/* "View full rankings →" — sidebar-list footer link. Mono-caps to match
+   the .sl-label family, muted by default, volt on hover. Top border
+   separates it from the last .sl-item (which kills its own bottom rule).
+   Scoped to .sidebar-list so it doesn't bleed into other surfaces. */
+.sidebar-list .sl-more {
+  display: block;
+  padding: 10px 0 2px;
+  border-top: 1px solid var(--rule-darker);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.sidebar-list .sl-more:hover { color: var(--volt); }
+
 .fr-item {
   padding: 10px 0; border-bottom: 1px solid var(--rule-darker);
   display: block; text-decoration: none;
