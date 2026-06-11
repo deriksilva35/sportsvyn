@@ -1,5 +1,5 @@
 /**
- * /rankings — Team Power Rankings article page.
+ * /power-rankings — Team Power Rankings article page.
  *
  * Renders the current is_current+published edition of the team-power
  * list (lib/rankings.getCurrentEdition + getRankingsForPage). Layout
@@ -139,7 +139,7 @@ export default async function RankingsPage() {
   if (!edition || allRows.length === 0) {
     return (
       <>
-        <SiteHeaderServer activeNav="rankings" />
+        <SiteHeaderServer activeNav="power-rankings" />
         <main className="rankings-wrap">
           <header className="hero">
             <div className="kicker">Power Rankings</div>
@@ -163,7 +163,7 @@ export default async function RankingsPage() {
 
   return (
     <>
-      <SiteHeaderServer activeNav="rankings" />
+      <SiteHeaderServer activeNav="power-rankings" />
       <main className="rankings-wrap">
 
         <header className="hero">
