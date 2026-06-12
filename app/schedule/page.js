@@ -14,6 +14,7 @@
  * ?stage and ?group; selection round-trips back to the URL.
  */
 
+import { auth } from '@/auth';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import {
@@ -21,6 +22,7 @@ import {
   readScheduleGoals,
   toPtIsoDate,
 } from '@/lib/scheduleData';
+import { getFollowedTeamIds } from '@/lib/follows';
 import ScheduleClient from './ScheduleClient';
 
 import './schedule.css';
@@ -66,6 +68,15 @@ export default async function SchedulePage({ searchParams }) {
     goals: goalsByMatch.get(f.id) ?? { home: [], away: [] },
   }));
 
+  // Session resolved at the route shell; followedSet flattens to an
+  // array because Sets don't survive the RSC payload cleanly (they
+  // serialize as plain objects). The client rebuilds a Set via useMemo
+  // inside ScheduleClient. Empty list when logged-out — has() returns
+  // false for every fixture, so no name gets tinted.
+  const session = await auth();
+  const followedSet = await getFollowedTeamIds(session?.user?.id ?? null);
+  const followedTeamIds = Array.from(followedSet);
+
   // Derive tournament bounds from the actual loaded fixtures so the
   // scrubber arrows disable at the correct edges. Falls back to the
   // load window when fixtures are empty (defensive — should never be
@@ -90,6 +101,7 @@ export default async function SchedulePage({ searchParams }) {
           initialStatusFilter={initialStatusFilter}
           kickerText="Read the Game"
           subheadText="48 nations · 12 groups · one tournament"
+          followedTeamIds={followedTeamIds}
         />
       </main>
       <SiteFooter />

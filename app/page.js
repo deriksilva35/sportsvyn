@@ -36,6 +36,8 @@ import { getCurrentLiveMatches } from '@/lib/liveMatches';
 import { getWatchScoresForDate } from '@/lib/watchScore';
 import { getCurrentEdition, getTopN } from '@/lib/rankings';
 import { getCurrentDailyCardIntro } from '@/lib/dailyCardIntro';
+import { getFollowedTeamIds } from '@/lib/follows';
+import { auth } from '@/auth';
 import FixtureCard, { bucketOf } from '@/components/match/FixtureCard';
 import KickoffTime from '@/components/match/KickoffTime';
 
@@ -238,18 +240,29 @@ function SlateSignpost({ nextFixture }) {
   );
 }
 
-function SlateRow({ fixture, watchScore }) {
+function SlateRow({ fixture, watchScore, followedSet }) {
   const isLive  = fixture.status === 'live';
   const isFinal = fixture.status === 'final';
+  // fixture.home.id / fixture.away.id ride in from readFixturesByPtDay
+  // (lib/scheduleData.js projects { id, name, abbreviation, flag_svg_path,
+  // flag_color }) — no SQL change. We wrap each team-name text node in
+  // its own span so the tint is scoped to the name only and the flag,
+  // 'v' separator, and live tag stay paper-warm.
+  const homeFollowed = followedSet?.has(fixture.home?.id);
+  const awayFollowed = followedSet?.has(fixture.away?.id);
   return (
     <a className="dc-match-row" href={`/match/${fixture.slug}`}>
       <div className="dc-match-teams">
         <Flag svgPath={fixture.home?.flag_svg_path} />
-        {teamShort(fixture.home?.name, fixture.home?.abbreviation)}
+        <span className={homeFollowed ? 'team-name-followed' : undefined}>
+          {teamShort(fixture.home?.name, fixture.home?.abbreviation)}
+        </span>
         {' v '}
         <span style={{ marginLeft: '6px', display: 'inline-flex', alignItems: 'center' }}>
           <Flag svgPath={fixture.away?.flag_svg_path} />
-          {teamShort(fixture.away?.name, fixture.away?.abbreviation)}
+          <span className={awayFollowed ? 'team-name-followed' : undefined}>
+            {teamShort(fixture.away?.name, fixture.away?.abbreviation)}
+          </span>
         </span>
         {isLive && <span className="dc-live-tag">· LIVE</span>}
       </div>
@@ -269,7 +282,7 @@ function SlateRow({ fixture, watchScore }) {
   );
 }
 
-function SlateSection({ fixtures, watchScoreByMatchId, nextFixture }) {
+function SlateSection({ fixtures, watchScoreByMatchId, nextFixture, followedSet }) {
   if (fixtures.length === 0) {
     return <SlateSignpost nextFixture={nextFixture} />;
   }
@@ -279,7 +292,12 @@ function SlateSection({ fixtures, watchScoreByMatchId, nextFixture }) {
         Today&rsquo;s Slate · {fixtures.length} {fixtures.length === 1 ? 'Match' : 'Matches'}
       </div>
       {fixtures.map((f) => (
-        <SlateRow key={f.id} fixture={f} watchScore={watchScoreByMatchId.get(f.id) ?? null} />
+        <SlateRow
+          key={f.id}
+          fixture={f}
+          watchScore={watchScoreByMatchId.get(f.id) ?? null}
+          followedSet={followedSet}
+        />
       ))}
     </div>
   );
@@ -491,7 +509,7 @@ function moveGlyph(label) {
   return '—';
 }
 
-function PowerRankingsList({ topRows }) {
+function PowerRankingsList({ topRows, followedSet }) {
   if (!topRows || topRows.length === 0) {
     return (
       <div className="sidebar-list">
@@ -506,7 +524,7 @@ function PowerRankingsList({ topRows }) {
       {topRows.map((r) => (
         <a key={r.team_id} className="sl-item" href={`/team/${r.team_slug}`}>
           <span className="pos">{r.rank}</span>
-          <span className="name">{r.team_name}</span>
+          <span className={`name${followedSet?.has(r.team_id) ? ' team-name-followed' : ''}`}>{r.team_name}</span>
           <span className="val">
             <span className={moveClass(r.movement_label)}>{moveGlyph(r.movement_label)}</span>{' '}
             {display1dp(r.score)}
@@ -540,29 +558,37 @@ function WatchScoresTodayList({ rows }) {
 // =============================================================================
 // Below-fold bracket wall (group stage at launch, lives INSIDE .home-main now)
 // =============================================================================
-function HomeGroupCard({ letter, teams, matchdaysComplete }) {
+function HomeGroupCard({ letter, teams, matchdaysComplete, followedSet }) {
   return (
     <div className="home-group-card">
       <div className="home-group-card-header">
         <div className="home-group-card-label">{letter}</div>
         <div className="home-group-card-meta">{matchdaysComplete} of 3</div>
       </div>
-      {teams.map((t) => (
-        <div key={t.team_id} className="home-group-card-row">
-          <Flag svgPath={t.flag_svg_path} />
-          {t.slug ? (
-            <a href={`/team/${t.slug}`} className="team-link">{t.name}</a>
-          ) : (
-            <span>{t.name}</span>
-          )}
-          <span className="home-group-card-pts">{t.points}</span>
-        </div>
-      ))}
+      {teams.map((t) => {
+        const followed = followedSet?.has(t.team_id);
+        return (
+          <div key={t.team_id} className="home-group-card-row">
+            <Flag svgPath={t.flag_svg_path} />
+            {t.slug ? (
+              <a
+                href={`/team/${t.slug}`}
+                className={`team-link${followed ? ' team-name-followed' : ''}`}
+              >
+                {t.name}
+              </a>
+            ) : (
+              <span className={followed ? 'team-name-followed' : undefined}>{t.name}</span>
+            )}
+            <span className="home-group-card-pts">{t.points}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function BracketWallGroupStage({ groupStandings, matchdayMap }) {
+function BracketWallGroupStage({ groupStandings, matchdayMap, followedSet }) {
   return (
     <section className="bracket-wall-section">
       <div className="bracket-wall-inner">
@@ -580,6 +606,7 @@ function BracketWallGroupStage({ groupStandings, matchdayMap }) {
               letter={letter}
               teams={groupStandings.get(letter) ?? []}
               matchdaysComplete={matchdayMap.get(letter) ?? 0}
+              followedSet={followedSet}
             />
           ))}
         </div>
@@ -872,6 +899,14 @@ export default async function HomePage() {
   const ptDay1 = addPtDays(ptDay, 1);
   const ptDay2 = addPtDays(ptDay, 2);
 
+  // Session resolved server-side; followedSet feeds the volt-name tint
+  // on HomeGroupCard team-links, SlateRow home/away team names, and
+  // PowerRankingsList rows. getFollowedTeamIds returns an empty Set for
+  // null userId, so the logged-out render path naturally writes no
+  // .team-name-followed class anywhere.
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+
   // Parallel reads — every helper returns [] / null on absence.
   const [
     fixtures3Day,
@@ -886,6 +921,7 @@ export default async function HomePage() {
     rankingTop5,
     publishedIntro,
     marketLadder,
+    followedSet,
   ] = await Promise.all([
     readFixturesByPtDay({ leagueSlug: WC_LEAGUE_SLUG, ptStart: ptDay, ptEnd: ptDay2 }),
     getTodaysReads({ ptDay, limit: 4 }),
@@ -899,6 +935,7 @@ export default async function HomePage() {
     getTopN({ listSlug: 'team-power', leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
     getCurrentDailyCardIntro(ptDay),
     readTournamentWinnerLadder({ leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
+    getFollowedTeamIds(userId),
   ]);
 
   // Attach goals once (same pattern /schedule uses) — only fires the
@@ -994,6 +1031,7 @@ export default async function HomePage() {
             fixtures={todaysFixtures}
             watchScoreByMatchId={watchScoreByMatchId}
             nextFixture={nextFixture}
+            followedSet={followedSet}
           />
 
           <TournamentProgress groupProgress={groupProgress} />
@@ -1020,7 +1058,7 @@ export default async function HomePage() {
             ptDay1={ptDay1}
             ptDay2={ptDay2}
           />
-          <PowerRankingsList topRows={showRankings ? rankingTop5 : []} />
+          <PowerRankingsList topRows={showRankings ? rankingTop5 : []} followedSet={followedSet} />
           <FeaturedReadsList reads={topFeatured} label="Featured Reads" />
           <WatchScoresTodayList rows={watchScoresToday.slice(0, 3)} />
         </aside>
@@ -1029,7 +1067,7 @@ export default async function HomePage() {
             it sits at the bottom of the stack (after the sidebar). On
             desktop the explicit grid placement in home.css pins it to
             column 1, row 2 (right below Today's Card). */}
-        <BracketWallGroupStage groupStandings={groupStandings} matchdayMap={matchdayMap} />
+        <BracketWallGroupStage groupStandings={groupStandings} matchdayMap={matchdayMap} followedSet={followedSet} />
       </main>
 
       {showMoreRail && <MoreFromSportsvyn reads={belowFeatured} />}

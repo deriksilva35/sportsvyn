@@ -104,7 +104,7 @@ function groupByPtDay(fixtures) {
   return out;
 }
 
-function StatusSection({ title, items, modifier }) {
+function StatusSection({ title, items, modifier, followedSet }) {
   if (items.length === 0) return null;
   return (
     <>
@@ -114,7 +114,7 @@ function StatusSection({ title, items, modifier }) {
         <span className="sch-seclabel-ct">{items.length}</span>
       </div>
       <div className="sch-feed">
-        {items.map((f) => <FixtureCard key={f.id} f={f} />)}
+        {items.map((f) => <FixtureCard key={f.id} f={f} followedSet={followedSet} />)}
       </div>
     </>
   );
@@ -128,7 +128,7 @@ function applyTournamentFilters(fixtures, stageFilter, groupFilter) {
   return list;
 }
 
-function renderTodayLens(fixtures, statusFilter, stageFilter, groupFilter, ptDay) {
+function renderTodayLens(fixtures, statusFilter, stageFilter, groupFilter, ptDay, followedSet) {
   const filtered = applyTournamentFilters(fixtures, stageFilter, groupFilter);
   const todays = filtered.filter((f) => f.pt_day === ptDay);
   let list = todays;
@@ -144,15 +144,15 @@ function renderTodayLens(fixtures, statusFilter, stageFilter, groupFilter, ptDay
   };
   return (
     <>
-      <StatusSection title="Live Now"  items={grouped.live}      modifier="live" />
-      <StatusSection title="Upcoming"  items={grouped.upcoming} />
-      <StatusSection title="Full Time" items={grouped.final} />
-      <StatusSection title="Cancelled" items={grouped.cancelled} modifier="cancelled" />
+      <StatusSection title="Live Now"  items={grouped.live}      modifier="live" followedSet={followedSet} />
+      <StatusSection title="Upcoming"  items={grouped.upcoming} followedSet={followedSet} />
+      <StatusSection title="Full Time" items={grouped.final} followedSet={followedSet} />
+      <StatusSection title="Cancelled" items={grouped.cancelled} modifier="cancelled" followedSet={followedSet} />
     </>
   );
 }
 
-function renderWeekLens(fixtures, statusFilter, stageFilter, groupFilter, windowDays, todayPt) {
+function renderWeekLens(fixtures, statusFilter, stageFilter, groupFilter, windowDays, todayPt, followedSet) {
   let list = applyTournamentFilters(fixtures, stageFilter, groupFilter);
   if (statusFilter !== 'all') list = list.filter((f) => bucketOf(f.status) === statusFilter);
   const grouped = groupByPtDay(list);
@@ -167,7 +167,7 @@ function renderWeekLens(fixtures, statusFilter, stageFilter, groupFilter, window
           <span>{heading}</span>
           <span className="sch-dayhead-ct">{items.length} {items.length === 1 ? 'match' : 'matches'}</span>
         </div>
-        {items.map((f) => <FixtureCard key={f.id} f={f} />)}
+        {items.map((f) => <FixtureCard key={f.id} f={f} followedSet={followedSet} />)}
       </div>
     );
   }
@@ -243,7 +243,13 @@ export default function ScheduleClient({
   initialStatusFilter = 'all',
   kickerText,
   subheadText,
+  followedTeamIds = [],
 }) {
+  // The route shell passes followedTeamIds as a plain array because Sets
+  // don't survive the RSC payload (they JSON.stringify to {}). Rebuild
+  // the Set client-side once per fresh prop value so FixtureCard can
+  // do O(1) lookups when deciding whether to volt-tint a team name.
+  const followedSet = useMemo(() => new Set(followedTeamIds), [followedTeamIds]);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -311,10 +317,10 @@ export default function ScheduleClient({
   function slideForward() { if (canForward) setWindowStart(clampDate(addDays(windowStart,  windowSize), tournamentStart, lastWindowStart)); }
 
   const content = useMemo(() => {
-    if (lens === 'today') return renderTodayLens(fixtures, statusFilter, stageFilter, groupFilter, ptDay);
-    if (lens === 'week')  return renderWeekLens(fixtures, statusFilter, stageFilter, groupFilter, windowDays, defaultPtDay);
+    if (lens === 'today') return renderTodayLens(fixtures, statusFilter, stageFilter, groupFilter, ptDay, followedSet);
+    if (lens === 'week')  return renderWeekLens(fixtures, statusFilter, stageFilter, groupFilter, windowDays, defaultPtDay, followedSet);
     return renderFollowingLens();
-  }, [lens, ptDay, statusFilter, stageFilter, groupFilter, fixtures, windowDays, defaultPtDay]);
+  }, [lens, ptDay, statusFilter, stageFilter, groupFilter, fixtures, windowDays, defaultPtDay, followedSet]);
 
   // Active-state booleans for the dropdown highlight.
   const stageActive  = stageFilter  !== 'all';

@@ -57,23 +57,29 @@ function loserClass(f, side) {
   return '';
 }
 
-export default function FixtureCard({ f }) {
+export default function FixtureCard({ f, followedSet }) {
   const bucket = bucketOf(f.status);
   const isLive = bucket === 'live';
   const isCancelled = bucket === 'cancelled';
   const cardCls = ['sch-card', isLive ? 'is-live' : '', isCancelled ? 'is-cancelled' : ''].filter(Boolean).join(' ');
   const hasGoals = (f.goals.home.length + f.goals.away.length) > 0;
+  // followedSet is optional — FixtureCard is shared and may be used in
+  // places that don't pass it. ?. + the global rule's !important keep
+  // the loser-class color (.lose dims to muted) from winning the
+  // cascade when a followed team has lost.
+  const homeFollowed = followedSet?.has(f.home.id);
+  const awayFollowed = followedSet?.has(f.away.id);
   return (
     <a className={cardCls} href={`/match/${f.slug}`}>
       <div className="sch-matchup">
         <div className="sch-row">
           <FlagSlot flagSvgPath={f.home.flag_svg_path} colorPrimary={f.home.flag_color} size="md" />
-          <span className={`sch-nm ${loserClass(f, 'home')}`}>{f.home.name}</span>
+          <span className={`sch-nm ${loserClass(f, 'home')}${homeFollowed ? ' team-name-followed' : ''}`}>{f.home.name}</span>
           <span className={`sch-sc ${loserClass(f, 'home')}`}>{scoreOrDash(f, 'home')}</span>
         </div>
         <div className="sch-row">
           <FlagSlot flagSvgPath={f.away.flag_svg_path} colorPrimary={f.away.flag_color} size="md" />
-          <span className={`sch-nm ${loserClass(f, 'away')}`}>{f.away.name}</span>
+          <span className={`sch-nm ${loserClass(f, 'away')}${awayFollowed ? ' team-name-followed' : ''}`}>{f.away.name}</span>
           <span className={`sch-sc ${loserClass(f, 'away')}`}>{scoreOrDash(f, 'away')}</span>
         </div>
         {hasGoals && (

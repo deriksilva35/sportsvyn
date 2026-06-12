@@ -27,6 +27,7 @@
  */
 
 import { notFound } from 'next/navigation';
+import { auth } from '@/auth';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import BracketTabBar from '@/components/bracket/BracketTabBar';
@@ -37,6 +38,7 @@ import {
   getGroupMatchdayProgress,
   getGroupStageComplete,
 } from '@/lib/bracket';
+import { getFollowedTeamIds } from '@/lib/follows';
 
 import './bracket.css';
 
@@ -66,7 +68,7 @@ function BracketFlag({ flagSvgPath }) {
   return <span className="flag" aria-hidden="true" />;
 }
 
-function GroupCard({ letter, teams, matchdayComplete }) {
+function GroupCard({ letter, teams, matchdayComplete, followedSet }) {
   return (
     <div className="group-card">
       <div className="group-card-header">
@@ -93,9 +95,14 @@ function GroupCard({ letter, teams, matchdayComplete }) {
             <span className="pos">{idx + 1}</span>
             <BracketFlag flagSvgPath={team.flag_svg_path} />
             {team.slug ? (
-              <a href={`/team/${team.slug}`} className="name team-link">{team.name}</a>
+              <a
+                href={`/team/${team.slug}`}
+                className={`name team-link${followedSet?.has(team.team_id) ? ' team-name-followed' : ''}`}
+              >
+                {team.name}
+              </a>
             ) : (
-              <span className="name">{team.name}</span>
+              <span className={`name${followedSet?.has(team.team_id) ? ' team-name-followed' : ''}`}>{team.name}</span>
             )}
             <span className="num">{wdl}</span>
             <span className="num">{gd}</span>
@@ -131,11 +138,18 @@ function TbdCell({ date, label, slotA, slotB }) {
 }
 
 export default async function BracketPage() {
-  const [groupTeams, groupStandings, matchdayProgress, groupStageComplete] = await Promise.all([
+  // Session resolved server-side; followedSet feeds the volt-name tint
+  // on each group's team rows. Empty Set for logged-out — has() is a
+  // no-op so no per-call guard is needed at the render point.
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+
+  const [groupTeams, groupStandings, matchdayProgress, groupStageComplete, followedSet] = await Promise.all([
     getGroupTeams(),
     getGroupStandings(),
     getGroupMatchdayProgress(),
     getGroupStageComplete(),
+    getFollowedTeamIds(userId),
   ]);
 
   // If literally no group data exists (e.g. WC import never ran on this env),
@@ -184,6 +198,7 @@ export default async function BracketPage() {
                   letter={letter}
                   teams={teams}
                   matchdayComplete={matchdayComplete}
+                  followedSet={followedSet}
                 />
               );
             })}
