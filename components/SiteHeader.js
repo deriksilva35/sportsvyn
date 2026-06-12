@@ -120,6 +120,10 @@ export default function SiteHeader({ activeNav = null, session = null }) {
               Daily Card kept since href="/" resolves (links into the same
               surface Daily Card lives on). */}
           <a href="/" className={navClass(activeNav, 'daily-card')}>Daily Card</a>
+          {/* /my is gated server-side: unauthenticated visitors get a 307
+              redirect to /signin?callbackUrl=/my, so the link is safe to
+              show in nav for everyone (the signin funnel is intentional). */}
+          <a href="/my" className={navClass(activeNav, 'my')}>My Sportsvyn</a>
         </div>
         <div className="header-cta">
           {rightCluster()}
@@ -144,6 +148,7 @@ export default function SiteHeader({ activeNav = null, session = null }) {
           {/* Reads dead-link still removed; Daily Card kept (href="/"
               resolves to the same surface). */}
           <a href="/" className={navClass(activeNav, 'daily-card')}>Daily Card</a>
+          <a href="/my" className={navClass(activeNav, 'my')}>My Sportsvyn</a>
           {rightCluster()}
         </nav>
       )}
