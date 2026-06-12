@@ -13,6 +13,7 @@
  */
 
 import { notFound } from 'next/navigation';
+import { auth } from '@/auth';
 import Wordmark from '@/components/Wordmark';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import {
@@ -25,6 +26,7 @@ import {
   getNextMatchBroadcasters,
 } from '@/lib/teams';
 import { getTeamSquad } from '@/lib/players';
+import { isFollowingTeam } from '@/lib/follows';
 
 import TeamHero from '@/components/team/TeamHero';
 import SportsvynOutlook from '@/components/team/SportsvynOutlook';
@@ -78,13 +80,22 @@ export default async function TeamPage({ params }) {
   const matches = await getTeamMatches(team.id);
   const { recent, next } = pickRecentAndNext(matches);
 
-  const [stats, players, squad, trajectory, odds, broadcasters] = await Promise.all([
+  // Session is resolved server-side so the initial follow state renders
+  // synchronously — no client flash from outline → filled on hydration.
+  // The session itself is not prop-drilled to the client; only the
+  // boolean `isAuthed` and the seed value cross the server/client line.
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  const isAuthed = !!session?.user;
+
+  const [stats, players, squad, trajectory, odds, broadcasters, initialFollowing] = await Promise.all([
     getTeamStats(team.id),
     getTopPlayers(team.id),
     getTeamSquad(team.id),
     getTeamTrajectory(team.id),
     getTeamOdds(team.id, next?.id ?? null),
     next ? getNextMatchBroadcasters(next.id) : Promise.resolve([]),
+    isFollowingTeam(userId, team.id),
   ]);
 
   const nextInfo = nextMatchOpponentInfo(next, team.id);
@@ -104,7 +115,7 @@ export default async function TeamPage({ params }) {
           <span className="current">{team.name}</span>
         </div>
 
-        <TeamHero team={team} />
+        <TeamHero team={team} isAuthed={isAuthed} initialFollowing={initialFollowing} />
         <SportsvynOutlook team={team} odds={odds} nextMatch={nextInfo} />
         <FormStrip matches={matches} teamId={team.id} stats={stats} />
 
