@@ -338,7 +338,7 @@ function TournamentProgress({ groupProgress }) {
   );
 }
 
-function TodaysReadsSection({ reads }) {
+function TodaysReadsSection({ reads, followedSet }) {
   if (!reads || reads.length === 0) return null;
   return (
     <div className="dc-section">
@@ -348,14 +348,24 @@ function TodaysReadsSection({ reads }) {
       {reads.map((r) => {
         // Preview rows live on /match/[slug] (the body renders inside
         // the match Preview tab). Essays/edge/etc. live at /article/[slug].
-        // match_slug distinguishes the two — null means the article isn't
+        // match_slug distinguishes the two; null means the article isn't
         // attached to a match, so the article reader is the right route.
         const href = r.match_slug ? `/match/${r.match_slug}` : `/article/${r.slug}`;
+        // Volt-title tint on followed-team previews. home_team_id /
+        // away_team_id ride in from getTodaysReads via the matches
+        // join and are null for non-preview rows (no match_id), so the
+        // null-guard silently skips essays/edges/profiles. Same primitive
+        // as the team-name tint shipped in f1da5a5; the followedSet is
+        // the homepage's existing Set computed once via getFollowedTeamIds.
+        const teamFollowed =
+          (r.home_team_id != null && followedSet?.has(r.home_team_id)) ||
+          (r.away_team_id != null && followedSet?.has(r.away_team_id));
+        const headlineClass = teamFollowed ? 'dr-headline team-name-followed' : 'dr-headline';
         return (
           <a key={r.slug} className="dc-read-row" href={href}>
             <div>
               <div className="dr-kicker">{r.kicker}</div>
-              <div className="dr-headline">{r.title}</div>
+              <div className={headlineClass}>{r.title}</div>
             </div>
             <div className="dr-read-time">{r.read_time_min} min</div>
           </a>
@@ -1036,7 +1046,7 @@ export default async function HomePage() {
 
           <TournamentProgress groupProgress={groupProgress} />
 
-          <TodaysReadsSection reads={todaysReads} />
+          <TodaysReadsSection reads={todaysReads} followedSet={followedSet} />
 
           <MarketUnit ladder={marketLadder} />
         </article>
