@@ -108,7 +108,7 @@ export default async function TeamPage({ params }) {
         <div className="breadcrumb">
           <a href="/">Home</a>
           <span className="sep">/</span>
-          <a href="#">FIFA World Cup 2026</a>
+          <a href="/world-cup-2026/bracket">FIFA World Cup 2026</a>
           <span className="sep">/</span>
           <a href="#">Teams</a>
           <span className="sep">/</span>

@@ -27,7 +27,7 @@ export default function SiteFooter() {
           <div className="footer-col">
             <h4>Read</h4>
             <a href="#">Daily Card</a>
-            <a href="/bracket">Bracket</a>
+            <a href="/world-cup-2026/bracket">Bracket</a>
             <a href="#">Rankings</a>
             <a href="#">Stats</a>
           </div>

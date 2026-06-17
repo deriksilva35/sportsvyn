@@ -182,7 +182,7 @@ function DailyCardHeader({ ptDateLabel }) {
       </div>
       <div className="dc-header-meta-group">
         <div className="dc-meta">{ptDateLabel}</div>
-        <a href="/bracket" className="dc-header-link">Full Bracket →</a>
+        <a href="/world-cup-2026/bracket" className="dc-header-link">Full Bracket →</a>
       </div>
     </div>
   );
@@ -310,7 +310,7 @@ function TournamentProgress({ groupProgress }) {
     <div className="dc-section">
       <div className="dc-section-label-row">
         <div className="dc-section-label">Tournament Progress</div>
-        <a href="/bracket" className="dc-section-link">Full Bracket →</a>
+        <a href="/world-cup-2026/bracket" className="dc-section-link">Full Bracket →</a>
       </div>
       <div className="dc-bracket-strip">
         <div className={`dc-bracket-round${played === 0 ? '' : ' active'}`}>
@@ -541,7 +541,7 @@ function PowerRankingsList({ topRows, followedSet }) {
           </span>
         </a>
       ))}
-      <a className="sl-more" href="/power-rankings">View full rankings →</a>
+      <a className="sl-more" href="/world-cup-2026/rankings/power">View full rankings →</a>
     </div>
   );
 }
@@ -607,7 +607,7 @@ function BracketWallGroupStage({ groupStandings, matchdayMap, followedSet }) {
             <div className="bw-title">The <span className="accent">Bracket</span></div>
             <div className="bw-stage">Group Stage · 12 Groups</div>
           </div>
-          <a href="/bracket" className="bw-link">Full Bracket Page →</a>
+          <a href="/world-cup-2026/bracket" className="bw-link">Full Bracket Page →</a>
         </div>
         <div className="home-groups-grid">
           {GROUP_LETTERS.map((letter) => (

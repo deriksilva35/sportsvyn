@@ -75,7 +75,7 @@ function EmptyState() {
         Tap the star on any team to follow them. Their fixtures, group,
         and coverage will gather here.
       </p>
-      <a className="my-empty-cta" href="/bracket">Browse the bracket</a>
+      <a className="my-empty-cta" href="/world-cup-2026/bracket">Browse the bracket</a>
     </section>
   );
 }

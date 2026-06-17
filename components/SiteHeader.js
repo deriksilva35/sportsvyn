@@ -114,8 +114,8 @@ export default function SiteHeader({ activeNav = null, session = null }) {
         <div className="nav">
           <a href="/" className={navClass(activeNav, 'home')}>Home</a>
           <a href="/schedule" className={navClass(activeNav, 'schedule')}>Schedule</a>
-          <a href="/bracket" className={navClass(activeNav, 'bracket')}>Bracket</a>
-          <a href="/power-rankings" className={navClass(activeNav, 'power-rankings')}>Rankings</a>
+          <a href="/world-cup-2026/bracket" className={navClass(activeNav, 'bracket')}>Bracket</a>
+          <a href="/world-cup-2026/rankings" className={navClass(activeNav, 'rankings')}>Rankings</a>
           {/* Reads dead-link still removed until that route ships.
               Daily Card kept since href="/" resolves (links into the same
               surface Daily Card lives on). */}
@@ -143,8 +143,8 @@ export default function SiteHeader({ activeNav = null, session = null }) {
         <nav className="mobile-drawer" aria-label="Mobile menu">
           <a href="/" className={navClass(activeNav, 'home')}>Home</a>
           <a href="/schedule" className={navClass(activeNav, 'schedule')}>Schedule</a>
-          <a href="/bracket" className={navClass(activeNav, 'bracket')}>Bracket</a>
-          <a href="/power-rankings" className={navClass(activeNav, 'power-rankings')}>Rankings</a>
+          <a href="/world-cup-2026/bracket" className={navClass(activeNav, 'bracket')}>Bracket</a>
+          <a href="/world-cup-2026/rankings" className={navClass(activeNav, 'rankings')}>Rankings</a>
           {/* Reads dead-link still removed; Daily Card kept (href="/"
               resolves to the same surface). */}
           <a href="/" className={navClass(activeNav, 'daily-card')}>Daily Card</a>
