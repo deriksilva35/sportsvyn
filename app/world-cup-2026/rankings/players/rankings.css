@@ -226,4 +226,46 @@
   .rankings-wrap .rc-blurb,
   .rankings-wrap .rc-split { padding-left: 0; margin-top: 12px; }
   .rankings-wrap .b-split  { display: none; }
+  .rankings-wrap .pos-chip { font-size: 9px; padding: 2px 5px; }
 }
+
+/* ---- Tournament MVP additions (player-leaf only) ----
+   Position chip sits between the player name and the composite score
+   on the top-10 cards, and between the name and the production/impact
+   split on the bare rows. Color-coded per the editorial palette:
+   ATT volt, MID warm, DEF cool, GK accent. */
+.rankings-wrap .pos-chip {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; padding: 3px 6px;
+  border-radius: 2px; min-width: 30px; text-align: center;
+  background: rgba(245,245,242,0.06);
+  border: 1px solid rgba(245,245,242,0.12);
+  color: #b8b8b3;
+}
+.rankings-wrap .pos-chip[data-pos="ATT"] {
+  color: var(--volt, #D4FF00);
+  border-color: rgba(212,255,0,0.35);
+}
+.rankings-wrap .pos-chip[data-pos="MID"] {
+  color: #d8b25a;
+  border-color: rgba(216,178,90,0.35);
+}
+.rankings-wrap .pos-chip[data-pos="DEF"] {
+  color: #6aa5e0;
+  border-color: rgba(106,165,224,0.35);
+}
+.rankings-wrap .pos-chip[data-pos="GK"] {
+  color: #c98ddf;
+  border-color: rgba(201,141,223,0.35);
+}
+
+/* Tighter score sizing for the player card -- player names run longer
+   than team names, so the composite score uses a slightly more compact
+   monospace block to keep the top row balanced. */
+.rankings-wrap .rank-card.pp .rc-score { font-size: 28px; }
+.rankings-wrap .rank-card.pp .rc-name  { font-size: 24px; }
+
+/* Player bare-row alignment: nudge the position chip so it doesn't
+   collide with the flag at small widths. */
+.rankings-wrap .bare.pp .pos-chip { margin: 0 4px; }

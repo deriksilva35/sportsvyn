@@ -1,22 +1,24 @@
 /**
- * /world-cup-2026/rankings/players: Player Power Rankings stub.
+ * /world-cup-2026/rankings/players: Tournament MVP (Player Power) rankings.
  *
- * Surface gate: requires 'players' in the resolved competition's
- * rankings surfaces (set in leagues.metadata). Today the WC declares
- * 'players' but no ranking_lists row with slug 'player-power' yet
- * has a published current edition. The page renders an honest empty
- * state until the first edition lands, at which point the same code
- * path used by the power leaf will start producing real rows
- * without any change here.
+ * Surface-gated by leagues.metadata.rankings declaring 'players'. URL
+ * leaf 'players' maps to ranking_lists.slug 'player-power' via
+ * RANKING_LIST_META_BY_URL_LEAF. The empty-state branch stays as the
+ * pre-edition fallback for any future cycle; the rows-bearing branch
+ * renders the live board.
  *
- * Force-dynamic so the moment the player-power edition flips to
- * is_current=true + status='published', the next request reads it.
+ * Sibling to the power leaf. The reader joins players on entry.player_id
+ * (team-power's reader joins teams on entry.team_id; both share the
+ * editorial_blurbs back-pointer for top-N annotation).
+ *
+ * force-dynamic so each request reads the current edition.
  */
 
 import { notFound } from 'next/navigation';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
-import { getCurrentEdition, getRankingsForPage } from '@/lib/rankings';
+import FlagSlot from '@/components/FlagSlot';
+import { getCurrentEdition, getPlayerRankingsForPage } from '@/lib/rankings';
 import {
   resolveCompetitionBySegment,
   requireRankingsListSurface,
@@ -29,11 +31,101 @@ const COMPETITION_URL_SLUG = 'world-cup-2026';
 const RANKING_URL_LEAF     = 'players';
 
 export const metadata = {
-  title: 'Player Power Rankings · Sportsvyn',
-  robots: { index: false, follow: false },
+  title: 'Tournament MVP · Sportsvyn',
+  description: 'The Player-of-the-Tournament conversation, ranked. Production from match events, impact from grounded analysis, recomputed after every matchday.',
 };
 
 export const dynamic = 'force-dynamic';
+
+function fmtScore(n) {
+  if (n == null || Number.isNaN(Number(n))) return '—';
+  return Number(n).toFixed(2);
+}
+
+function fmtSubScore(n) {
+  if (n == null || Number.isNaN(Number(n))) return '—';
+  return Number(n).toFixed(1);
+}
+
+function fmtUpdated(d) {
+  if (!d) return '—';
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    hour12: true, timeZone: 'America/Los_Angeles',
+  }).format(new Date(d)) + ' PT';
+}
+
+function MovementPill({ label }) {
+  if (label === 'up')           return <span className="mvmt up">{'▲'} UP</span>;
+  if (label === 'down')         return <span className="mvmt down">{'▼'} DOWN</span>;
+  if (label === 'hold')         return <span className="mvmt hold">{'—'}</span>;
+  if (label === 'returning')    return <span className="mvmt new">RETURN</span>;
+  if (label === 'needs_review') return <span className="mvmt hold">?</span>;
+  return <span className="mvmt new">NEW</span>;
+}
+
+function MovementBare({ label }) {
+  if (label === 'up')           return <span className="b-mvmt up">{'▲'}</span>;
+  if (label === 'down')         return <span className="b-mvmt down">{'▼'}</span>;
+  if (label === 'hold')         return <span className="b-mvmt hold">{'—'}</span>;
+  if (label === 'returning')    return <span className="b-mvmt">RET</span>;
+  if (label === 'needs_review') return <span className="b-mvmt hold">?</span>;
+  return <span className="b-mvmt">NEW</span>;
+}
+
+function PlayerRankCard({ row }) {
+  const isTop3 = row.rank <= 3;
+  return (
+    <a className={`rank-card pp${isTop3 ? ' top3' : ''}`} href={`/player/${row.player_slug}`}>
+      <div className="rc-top">
+        <span className="rc-rank">{row.rank}</span>
+        {row.team_flag_svg_path ? (
+          <FlagSlot
+            flagSvgPath={row.team_flag_svg_path}
+            colorPrimary={row.team_flag_color_primary}
+            size="md"
+          />
+        ) : null}
+        <span className="rc-name">{row.player_name}</span>
+        <span className="pos-chip" data-pos={row.player_position}>{row.player_position}</span>
+        <span className="rc-score">{fmtScore(row.score)}</span>
+        <MovementPill label={row.movement_label} />
+      </div>
+      <p className="rc-split">
+        <span className="lab">PRODUCTION</span>{' '}
+        <span className="ed">{fmtSubScore(row.production_score)}</span>
+        {' '}{'·'}{' '}
+        <span className="lab">IMPACT</span>{' '}
+        <span className="si">{fmtSubScore(row.impact_score)}</span>
+      </p>
+      {row.blurb_body ? (
+        <p className="rc-blurb">{row.blurb_body}</p>
+      ) : null}
+    </a>
+  );
+}
+
+function PlayerBareRow({ row }) {
+  return (
+    <a className="bare pp" href={`/player/${row.player_slug}`}>
+      <span className="b-rank">{row.rank}</span>
+      {row.team_flag_svg_path ? (
+        <FlagSlot
+          flagSvgPath={row.team_flag_svg_path}
+          colorPrimary={row.team_flag_color_primary}
+          size="sm"
+        />
+      ) : null}
+      <span className="b-name">{row.player_name}</span>
+      <span className="pos-chip" data-pos={row.player_position}>{row.player_position}</span>
+      <span className="b-split">
+        PR {fmtSubScore(row.production_score)} {'·'} IM {fmtSubScore(row.impact_score)}
+      </span>
+      <span className="b-score">{fmtScore(row.score)}</span>
+      <MovementBare label={row.movement_label} />
+    </a>
+  );
+}
 
 export default async function PlayerRankingsLeafPage() {
   const comp = await resolveCompetitionBySegment(COMPETITION_URL_SLUG);
@@ -42,14 +134,9 @@ export default async function PlayerRankingsLeafPage() {
   const leafMeta = getRankingListMetaForUrlLeaf(RANKING_URL_LEAF);
   if (!leafMeta) notFound();
 
-  // Attempt the same read shape the power leaf uses. When no published
-  // current edition exists for the player-power list, both calls return
-  // their canonical empty signal (null + []) and we drop into the empty
-  // state below. Calling both up front means the day rows arrive the
-  // page lights up without touching this file.
   const [edition, allRows] = await Promise.all([
     getCurrentEdition({ listSlug: leafMeta.listSlug, leagueSlug: comp.slug }),
-    getRankingsForPage({ listSlug: leafMeta.listSlug, leagueSlug: comp.slug, limit: 48 }),
+    getPlayerRankingsForPage({ listSlug: leafMeta.listSlug, leagueSlug: comp.slug, limit: 50 }),
   ]);
 
   const hasRows = !!edition && allRows.length > 0;
@@ -60,10 +147,10 @@ export default async function PlayerRankingsLeafPage() {
         <SiteHeaderServer activeNav="rankings" />
         <main className="rankings-wrap">
           <header className="hero">
-            <div className="kicker">Player Power Rankings</div>
+            <div className="kicker">Tournament MVP</div>
             <h1>Coming with kickoff.</h1>
             <p className="dek">
-              Sportsvyn keeps a separate read on the players inside each squad. The first player-rankings edition lands once the tournament is underway and there is real tape to score against.
+              Sportsvyn keeps a separate read on the players inside each squad. The first Tournament MVP edition lands once the tournament is underway and there is real tape to score against.
             </p>
             <div className="meta-row">
               <span>By <span className="v">Derik Silva</span></span>
@@ -87,21 +174,65 @@ export default async function PlayerRankingsLeafPage() {
     );
   }
 
-  // Rows-bearing state placeholder. When the player-power edition
-  // actually publishes, the next ship can lift the power leaf{'’'}s
-  // PlayerCard / BareRow components verbatim. Leaving as a minimal
-  // visible state for now so the surface is reachable.
+  const editionLabel = edition.edition_label
+    ? `Edition ${edition.edition_number} · ${edition.edition_label}`
+    : `Edition ${edition.edition_number}`;
+  const prodWeightPct   = Math.round((edition.editorial_weight ?? 0) * 100);
+  const impactWeightPct = Math.round((edition.sites_weight ?? 0) * 100);
+
+  const blurbed = allRows.filter((r) => r.rank <= 10);
+  const bare    = allRows.filter((r) => r.rank > 10);
+
   return (
     <>
       <SiteHeaderServer activeNav="rankings" />
       <main className="rankings-wrap">
+
         <header className="hero">
-          <div className="kicker">Player Power Rankings</div>
-          <h1>Edition {edition.edition_number}.</h1>
+          <div className="kicker">Tournament MVP {'·'} {editionLabel}</div>
+          <h1>The Player-of-the-Tournament<br />conversation, <span className="accent">ranked.</span></h1>
           <p className="dek">
-            {allRows.length} players ranked. Cards land on the next iteration.
+            Sportsvyn reads what the players have actually done at this tournament: every goal, every assist, every red card, against the strength of the opposition. The composite is the argument. The board recomputes after every matchday.
           </p>
+          <div className="meta-row">
+            <span>By <span className="v">Derik Silva</span></span>
+            <span>Updated <span className="v">{fmtUpdated(edition.published_at)}</span></span>
+            <span><span className="v">{allRows.length}</span> players ranked</span>
+          </div>
         </header>
+
+        <div className="method">
+          <div className="method-label">How this is scored</div>
+          <p>
+            Each player{'’'}s score blends two layers. Production is deterministic from match events, weighting open-play goals over penalties, crediting assists, and docking red cards. Impact is a grounded read of the actual matches the player has been part of: was the goal decisive, did they carry the team, did the opposition resist. Production keeps the board honest; impact separates the hat-trick-in-a-rout from the late winner against a top side.
+          </p>
+          <div className="layers">
+            <span className="layer">PRODUCTION <span className="w">{prodWeightPct}%</span></span>
+            <span className="layer">IMPACT <span className="w">{impactWeightPct}%</span></span>
+            <span className="layer off">STATURE {'—'} <span className="w">future</span></span>
+          </div>
+        </div>
+
+        <div className="list-head">
+          <h2>Tournament MVP</h2>
+          <span className="count">TOP 10 ANNOTATED {'·'} 11-{allRows.length} LISTED</span>
+        </div>
+
+        {blurbed.map((row) => (
+          <PlayerRankCard key={row.ranking_entry_id} row={row} />
+        ))}
+
+        <div className="bare-rows">
+          {bare.map((row) => (
+            <PlayerBareRow key={row.ranking_entry_id} row={row} />
+          ))}
+        </div>
+
+        <div className="foot">
+          <p>Recomputed after every matchday. Production from match events; impact grounded in this-tournament fact only.</p>
+          <p>Explain, don{'’'}t pick. {'—'} Sportsvyn</p>
+        </div>
+
       </main>
       <SiteFooter />
     </>
