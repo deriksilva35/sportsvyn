@@ -34,7 +34,7 @@ import {
 } from '@/lib/bracket';
 import { getCurrentLiveMatches } from '@/lib/liveMatches';
 import { getWatchScoresForDate } from '@/lib/watchScore';
-import { getCurrentEdition, getTopN } from '@/lib/rankings';
+import { getCurrentEdition, getTopN, getPlayerTopN } from '@/lib/rankings';
 import { getCurrentDailyCardIntro } from '@/lib/dailyCardIntro';
 import { getFollowedTeamIds } from '@/lib/follows';
 import { auth } from '@/auth';
@@ -546,6 +546,36 @@ function PowerRankingsList({ topRows, followedSet }) {
   );
 }
 
+function PlayerRankingsList({ topRows }) {
+  if (!topRows || topRows.length === 0) {
+    return (
+      <div className="sidebar-list">
+        <div className="sl-label">Tournament MVP · Top 5</div>
+        <div className="sl-empty">Coming this week</div>
+      </div>
+    );
+  }
+  return (
+    <div className="sidebar-list">
+      <div className="sl-label">Tournament MVP · Top 5</div>
+      {topRows.map((r) => (
+        <a key={r.player_id} className="sl-item" href={`/player/${r.player_slug}`}>
+          <span className="pos">{r.rank}</span>
+          <span className="name">
+            <Flag svgPath={r.team_flag_svg_path} size="tiny" />
+            {r.player_name}
+          </span>
+          <span className="val">
+            <span className={moveClass(r.movement_label)}>{moveGlyph(r.movement_label)}</span>{' '}
+            {display1dp(r.score)}
+          </span>
+        </a>
+      ))}
+      <a className="sl-more" href="/world-cup-2026/rankings/players">View full rankings →</a>
+    </div>
+  );
+}
+
 function WatchScoresTodayList({ rows }) {
   if (!rows || rows.length === 0) return null;
   return (
@@ -929,6 +959,7 @@ export default async function HomePage() {
     matchdayMap,
     groupProgress,
     rankingTop5,
+    playerTop5,
     publishedIntro,
     marketLadder,
     followedSet,
@@ -943,6 +974,7 @@ export default async function HomePage() {
     getGroupMatchdayProgress(),
     getGroupStageProgress(),
     getTopN({ listSlug: 'team-power', leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
+    getPlayerTopN({ listSlug: 'player-power', leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
     getCurrentDailyCardIntro(ptDay),
     readTournamentWinnerLadder({ leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
     getFollowedTeamIds(userId),
@@ -1069,6 +1101,7 @@ export default async function HomePage() {
             ptDay2={ptDay2}
           />
           <PowerRankingsList topRows={showRankings ? rankingTop5 : []} followedSet={followedSet} />
+          <PlayerRankingsList topRows={playerTop5} />
           <FeaturedReadsList reads={topFeatured} label="Featured Reads" />
           <WatchScoresTodayList rows={watchScoresToday.slice(0, 3)} />
         </aside>
