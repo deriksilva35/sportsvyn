@@ -149,14 +149,27 @@
 .rankings-wrap .mvmt.up    { color: #2A8A4F; border: 1px solid rgba(42,138,79,0.5); }
 .rankings-wrap .mvmt.down  { color: #B8410F; border: 1px solid rgba(184,65,15,0.5); }
 .rankings-wrap .mvmt.hold  { color: #888;   border: 1px solid rgba(245,245,242,0.08); }
+.rankings-wrap .rc-record {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em;
+  color: #b8b8b3; margin: 12px 0 0; padding-left: 74px;
+}
+.rankings-wrap .rc-record .rec-wdl { color: var(--paper-warm, #F5F5F2); font-weight: 700; }
+.rankings-wrap .rc-record .rec-gd  { color: #b8b8b3; }
+.rankings-wrap .rc-record .rec-pts { color: #888; }
 .rankings-wrap .rc-split {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 11px; letter-spacing: 0.08em;
-  color: #888; margin: 14px 0 0; padding-left: 74px;
+  color: #888; margin: 6px 0 0; padding-left: 74px;
 }
 .rankings-wrap .rc-split .lab { color: #666; }
 .rankings-wrap .rc-split .ed,
 .rankings-wrap .rc-split .si { color: #b8b8b3; }
+.rankings-wrap .b-record {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px; color: #b8b8b3; letter-spacing: 0.04em;
+  margin-right: 8px; white-space: nowrap;
+}
 .rankings-wrap .rc-blurb {
   font-family: var(--font-source-serif), serif;
   font-style: italic; font-weight: 400;

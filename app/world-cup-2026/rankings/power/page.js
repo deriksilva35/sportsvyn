@@ -25,7 +25,7 @@ import { notFound } from 'next/navigation';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import FlagSlot from '@/components/FlagSlot';
-import { getCurrentEdition, getRankingsForPage } from '@/lib/rankings';
+import { getCurrentEdition, getRankingsForPage, getTotalFinalsCount } from '@/lib/rankings';
 import {
   resolveCompetitionBySegment,
   requireRankingsListSurface,
@@ -75,7 +75,41 @@ function MovementBare({ label }) {
   return <span className="b-mvmt">NEW</span>;
 }
 
-function RankCard({ row }) {
+function fmtGd(gf, ga) {
+  const gd = (gf ?? 0) - (ga ?? 0);
+  return gd > 0 ? `+${gd}` : `${gd}`;
+}
+
+function RecordLine({ row, showPoints }) {
+  if (!row.matches_played) return null;
+  const pts = 3 * (row.wins ?? 0) + (row.draws ?? 0);
+  return (
+    <p className="rc-record">
+      <span className="rec-wdl">{row.wins}-{row.draws}-{row.losses}</span>
+      {' '}{'·'}{' '}
+      <span className="rec-gd">{fmtGd(row.gf, row.ga)}</span>
+      {showPoints ? (
+        <>
+          {' '}{'·'}{' '}
+          <span className="rec-pts">{pts} pts</span>
+        </>
+      ) : null}
+    </p>
+  );
+}
+
+function RecordBare({ row, showPoints }) {
+  if (!row.matches_played) return null;
+  const pts = 3 * (row.wins ?? 0) + (row.draws ?? 0);
+  return (
+    <span className="b-record">
+      {row.wins}-{row.draws}-{row.losses} {'·'} {fmtGd(row.gf, row.ga)}
+      {showPoints ? ` · ${pts}p` : ''}
+    </span>
+  );
+}
+
+function RankCard({ row, showPoints }) {
   const isTop3 = row.rank <= 3;
   return (
     <a className={`rank-card${isTop3 ? ' top3' : ''}`} href={`/team/${row.team_slug}`}>
@@ -90,6 +124,7 @@ function RankCard({ row }) {
         <span className="rc-score">{fmtScore(row.score)}</span>
         <MovementPill label={row.movement_label} />
       </div>
+      <RecordLine row={row} showPoints={showPoints} />
       <p className="rc-split">
         <span className="lab">EDITORIAL</span>{' '}
         <span className="ed">{fmtScore(row.editorial_composite)}</span>
@@ -104,7 +139,7 @@ function RankCard({ row }) {
   );
 }
 
-function BareRow({ row }) {
+function BareRow({ row, showPoints }) {
   return (
     <a className="bare" href={`/team/${row.team_slug}`}>
       <span className="b-rank">{row.rank}</span>
@@ -114,6 +149,7 @@ function BareRow({ row }) {
         size="sm"
       />
       <span className="b-name">{row.team_name}</span>
+      <RecordBare row={row} showPoints={showPoints} />
       <span className="b-split">
         ED {fmtScore(row.editorial_composite)} {'·'} SI {fmtScore(row.sites_composite)}
       </span>
@@ -130,10 +166,12 @@ export default async function PowerRankingsLeafPage() {
   const leafMeta = getRankingListMetaForUrlLeaf(RANKING_URL_LEAF);
   if (!leafMeta) notFound();
 
-  const [edition, allRows] = await Promise.all([
+  const [edition, allRows, finalsCount] = await Promise.all([
     getCurrentEdition({ listSlug: leafMeta.listSlug, leagueSlug: comp.slug }),
     getRankingsForPage({ listSlug: leafMeta.listSlug, leagueSlug: comp.slug, limit: 48 }),
+    getTotalFinalsCount({ leagueSlug: comp.slug }),
   ]);
+  const showPoints = finalsCount <= 72;  // group stage only; knockouts drop pts
 
   if (!edition || allRows.length === 0) {
     return (
@@ -196,12 +234,12 @@ export default async function PowerRankingsLeafPage() {
         </div>
 
         {blurbed.map((row) => (
-          <RankCard key={row.ranking_entry_id} row={row} />
+          <RankCard key={row.ranking_entry_id} row={row} showPoints={showPoints} />
         ))}
 
         <div className="bare-rows">
           {bare.map((row) => (
-            <BareRow key={row.ranking_entry_id} row={row} />
+            <BareRow key={row.ranking_entry_id} row={row} showPoints={showPoints} />
           ))}
         </div>
 
