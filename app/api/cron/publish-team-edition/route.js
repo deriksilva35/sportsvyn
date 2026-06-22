@@ -25,7 +25,14 @@ import { sql } from '@/lib/db';
 import { publishTeamEditionDaily } from '@/lib/rankings/teamEditionScheduler';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300;
+// 800s (Pro + Fluid Compute App-Router ceiling supports up to 1800s).
+// Steady-state heavy-matchday case: ~16-24 teams re-scored at ~19s per
+// LLM call = 304-456s. 300s left no margin for the "8 matches in a day"
+// case; 800s covers any realistic day with room for envelope-SQL drift,
+// and stays tight enough to catch a runaway-call-count regression before
+// it burns unbounded LLM spend. The cold first-fire (48 teams unstamped =
+// ~918s) is handled by a one-shot manual run, not the cron.
+export const maxDuration = 800;
 
 export async function GET(request) {
   const authHeader = request.headers.get('authorization');
