@@ -36,6 +36,8 @@ import {
   getGroupStandings,
   getGroupMatchdayProgress,
   getGroupStageComplete,
+  computeAdvancement,
+  getRemainingGroupFixtures,
 } from '@/lib/bracket';
 import { getFollowedTeamIds } from '@/lib/follows';
 import {
@@ -64,7 +66,15 @@ function BracketFlag({ flagSvgPath }) {
   return <span className="flag" aria-hidden="true" />;
 }
 
-function GroupCard({ letter, teams, matchdayComplete, followedSet }) {
+function AdvBadge({ status }) {
+  if (status === 'through')      return <span className="adv-badge adv-through">THROUGH</span>;
+  if (status === 'in_hunt')      return <span className="adv-badge adv-hunt">IN HUNT</span>;
+  if (status === 'third_watch')  return <span className="adv-badge adv-watch">3RD WATCH</span>;
+  if (status === 'out')          return <span className="adv-badge adv-out">OUT</span>;
+  return <span className="adv-badge adv-empty">{'—'}</span>;
+}
+
+function GroupCard({ letter, teams, matchdayComplete, followedSet, advancement }) {
   return (
     <div className="group-card">
       <div className="group-card-header">
@@ -103,7 +113,7 @@ function GroupCard({ letter, teams, matchdayComplete, followedSet }) {
             <span className="num">{wdl}</span>
             <span className="num">{gd}</span>
             <span className="pts">{pts}</span>
-            <span className="adv empty">{'\u2014'}</span>
+            <AdvBadge status={advancement?.get(team.team_id) ?? null} />
           </div>
         );
       })}
@@ -139,15 +149,19 @@ export default async function BracketPage() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  const [groupTeams, groupStandings, matchdayProgress, groupStageComplete, followedSet] = await Promise.all([
+  const [groupTeams, groupStandings, matchdayProgress, groupStageComplete, followedSet, remainingFixtures] = await Promise.all([
     getGroupTeams(comp.slug),
     getGroupStandings(comp.slug),
     getGroupMatchdayProgress(comp.slug),
     getGroupStageComplete(comp.slug),
     getFollowedTeamIds(userId),
+    getRemainingGroupFixtures(comp.slug),
   ]);
 
   if (groupTeams.size === 0) notFound();
+
+  // Pure JS over the standings + remaining fixtures already fetched.
+  const advancement = computeAdvancement(groupStandings, remainingFixtures);
 
   const defaultTab = groupStageComplete ? 'tournament' : 'group';
 
@@ -189,6 +203,7 @@ export default async function BracketPage() {
                   teams={teams}
                   matchdayComplete={matchdayComplete}
                   followedSet={followedSet}
+                  advancement={advancement}
                 />
               );
             })}

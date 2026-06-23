@@ -157,6 +157,24 @@
   font-weight: 700;
   text-align: right;
 }
+/* Per-team advancement signal -- computed live from standings + remaining
+   match math. Four states, fixture-aware exact clinch (through), with
+   conservative semantics for the lower states. third_watch is the honest
+   mid-stage state for 3rd-place teams whose fate depends on the cross-
+   group best-thirds comparison. */
+.team-row-v2 .adv-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+.team-row-v2 .adv-through { color: var(--volt); }
+.team-row-v2 .adv-hunt    { color: var(--muted-light); font-weight: 500; }
+.team-row-v2 .adv-watch   { color: var(--terra); }
+.team-row-v2 .adv-out     { color: var(--muted-dim); font-weight: 500; }
+.team-row-v2 .adv-empty   { color: var(--muted-dim); font-weight: 500; }
 /* qualified / eliminated / live modifiers from v3 — unused pre-tournament
    but kept so they activate once standings data populates (matchday 1+). */
 .team-row-v2.qualified .pos { color: var(--volt); font-weight: 700; }
