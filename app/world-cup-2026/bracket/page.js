@@ -37,6 +37,7 @@ import {
   getGroupMatchdayProgress,
   getGroupStageComplete,
   computeAdvancement,
+  getKnockoutBracket,
   getRemainingGroupFixtures,
 } from '@/lib/bracket';
 import { getFollowedTeamIds } from '@/lib/follows';
@@ -121,23 +122,67 @@ function GroupCard({ letter, teams, matchdayComplete, followedSet, advancement }
   );
 }
 
-function TbdCell({ date, label, slotA, slotB }) {
+// Short date label in PT, e.g. "JUL 1" -- matches the existing bracket
+// visual language. kickoff_at is a UTC Date; converting to PT before
+// formatting keeps the date that displays consistent with what fans see
+// locally on the West Coast (where the schedule mostly anchors).
+function fmtKoDate(kickoffAt) {
+  if (!kickoffAt) return '';
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric',
+  }).format(new Date(kickoffAt)).toUpperCase();
+}
+
+// Drop "Stadium"/"Field"/"Park" suffix in tight cells; the venue value is
+// shown in the cell meta line. Falls back to full name if shortening would
+// produce an empty string.
+function shortVenue(name) {
+  if (!name) return '';
+  const stripped = name
+    .replace(/\bStadium\b/g, '')
+    .replace(/\bField\b/g, '')
+    .replace(/\bPark\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return stripped || name;
+}
+
+// Data-driven cell. `match` is one row from getKnockoutBracket(). When
+// home/away are unresolved (slot label only), renders as tbd-styled rows.
+// When resolved (team_id set, post-resolver), renders flag + team name +
+// score for finals.
+function KnockoutCell({ match }) {
+  if (!match) return null;
+  const date = fmtKoDate(match.kickoff_at);
+  const venue = shortVenue(match.venue);
+  const bothResolved = match.home.resolved && match.away.resolved;
   return (
-    <div className="match-cell-v2 tbd">
+    <div className={`match-cell-v2${bothResolved ? '' : ' tbd'}`}>
       <div className="match-cell-v2-meta">
         <span>{date}</span>
-        <span className="final-label">{label}</span>
+        <span className="final-label">{venue}</span>
       </div>
-      <div className="match-team-v2 tbd">
-        <span className="flag" aria-hidden="true" />
-        <span className="tname">{slotA}</span>
-        <span className="tscore">{'\u2014'}</span>
+      <KnockoutTeamRow side={match.home} score={match.home_score} status={match.status} />
+      <KnockoutTeamRow side={match.away} score={match.away_score} status={match.status} />
+    </div>
+  );
+}
+
+function KnockoutTeamRow({ side, score, status }) {
+  if (side.resolved) {
+    return (
+      <div className="match-team-v2">
+        <BracketFlag flagSvgPath={side.flag_svg_path} />
+        <span className="tname">{side.name}</span>
+        <span className="tscore">{status === 'final' ? score : '\u2014'}</span>
       </div>
-      <div className="match-team-v2 tbd">
-        <span className="flag" aria-hidden="true" />
-        <span className="tname">{slotB}</span>
-        <span className="tscore">{'\u2014'}</span>
-      </div>
+    );
+  }
+  return (
+    <div className="match-team-v2 tbd">
+      <span className="flag" aria-hidden="true" />
+      <span className="tname">{side.label}</span>
+      <span className="tscore">{'\u2014'}</span>
     </div>
   );
 }
@@ -149,12 +194,13 @@ export default async function BracketPage() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  const [groupTeams, groupStandings, matchdayProgress, groupStageComplete, followedSet, remainingFixtures] = await Promise.all([
+  const [groupTeams, groupStandings, matchdayProgress, groupStageComplete, followedSet, knockoutBracket, remainingFixtures] = await Promise.all([
     getGroupTeams(comp.slug),
     getGroupStandings(comp.slug),
     getGroupMatchdayProgress(comp.slug),
     getGroupStageComplete(comp.slug),
     getFollowedTeamIds(userId),
+    getKnockoutBracket(comp.slug),
     getRemainingGroupFixtures(comp.slug),
   ]);
 
@@ -223,100 +269,74 @@ export default async function BracketPage() {
             </div>
           </div>
 
+          {/* Canonical WC 2026 bracket layout. Match numbers within each
+              side are ordered so adjacent R32 cells feed the same R16,
+              R16 cells feed the same QF, etc. force-dynamic on this page
+              + getKnockoutBracket reading live ensures resolved teams
+              show up automatically once the (step-2) resolver fills the
+              home_team_id / away_team_id columns. */}
           <div className="bracket-b">
-            {/* LEFT SIDE R32 */}
             <div className="round-col col-r32-l">
               <div className="round-header">R32</div>
-              <TbdCell date="JUN 28" label="TBD" slotA="W A" slotB="2B" />
-              <TbdCell date="JUN 28" label="TBD" slotA="W B" slotB="2A" />
-              <TbdCell date="JUN 28" label="TBD" slotA="W C" slotB="2D" />
-              <TbdCell date="JUN 28" label="TBD" slotA="W D" slotB="2C" />
-              <TbdCell date="JUN 30" label="TBD" slotA="W E" slotB="2F" />
-              <TbdCell date="JUN 30" label="TBD" slotA="W F" slotB="2E" />
-              <TbdCell date="JUL 1"  label="TBD" slotA="3rd ABCD" slotB="3rd EFGH" />
-              <TbdCell date="JUL 1"  label="TBD" slotA="3rd IJKL" slotB="3rd ABCD" />
+              {[73, 75, 74, 77, 83, 84, 81, 82].map((mn) => (
+                <KnockoutCell key={mn} match={knockoutBracket.get(mn)} />
+              ))}
             </div>
 
-            {/* LEFT R16 */}
             <div className="round-col col-r16-l">
               <div className="round-header">R16</div>
-              <TbdCell date="JUL 4" label="TBD" slotA="W1" slotB="W2" />
-              <TbdCell date="JUL 4" label="TBD" slotA="W3" slotB="W4" />
-              <TbdCell date="JUL 5" label="TBD" slotA="W5" slotB="W6" />
-              <TbdCell date="JUL 5" label="TBD" slotA="W7" slotB="W8" />
+              {[89, 90, 93, 94].map((mn) => (
+                <KnockoutCell key={mn} match={knockoutBracket.get(mn)} />
+              ))}
             </div>
 
-            {/* LEFT QF */}
             <div className="round-col col-qf-l">
               <div className="round-header">QF</div>
-              <TbdCell date="JUL 10" label="TBD" slotA="QF1" slotB="QF1" />
-              <TbdCell date="JUL 10" label="TBD" slotA="QF2" slotB="QF2" />
+              {[97, 98].map((mn) => (
+                <KnockoutCell key={mn} match={knockoutBracket.get(mn)} />
+              ))}
             </div>
 
-            {/* LEFT SF */}
             <div className="round-col col-sf-l">
               <div className="round-header">SF</div>
-              <TbdCell date="JUL 14" label="TBD" slotA="SF1" slotB="SF1" />
+              <KnockoutCell match={knockoutBracket.get(101)} />
             </div>
 
-            {/* TROPHY / FINAL */}
             <div className="round-col col-trophy">
               <div className="trophy-cell">
                 <div className="label">The Final</div>
-                <div className="icon">19.JUL</div>
-                <div className="who">MetLife {'·'} 3PM</div>
+                <div className="icon">{fmtKoDate(knockoutBracket.get(104)?.kickoff_at)}</div>
+                <div className="who">{shortVenue(knockoutBracket.get(104)?.venue)}</div>
               </div>
-              <div style={{ marginTop: 16, width: '100%' }} className="match-cell-v2 tbd">
-                <div className="match-cell-v2-meta">
-                  <span>JUL 18</span>
-                  <span className="final-label">3RD</span>
-                </div>
-                <div className="match-team-v2 tbd">
-                  <span className="flag" aria-hidden="true" />
-                  <span className="tname">L SF1</span>
-                  <span className="tscore">{'\u2014'}</span>
-                </div>
-                <div className="match-team-v2 tbd">
-                  <span className="flag" aria-hidden="true" />
-                  <span className="tname">L SF2</span>
-                  <span className="tscore">{'\u2014'}</span>
-                </div>
+              <div style={{ marginTop: 16, width: '100%' }}>
+                <KnockoutCell match={knockoutBracket.get(103)} />
               </div>
             </div>
 
-            {/* RIGHT SF */}
             <div className="round-col col-sf-r">
               <div className="round-header">SF</div>
-              <TbdCell date="JUL 15" label="TBD" slotA="SF2" slotB="SF2" />
+              <KnockoutCell match={knockoutBracket.get(102)} />
             </div>
 
-            {/* RIGHT QF */}
             <div className="round-col col-qf-r">
               <div className="round-header">QF</div>
-              <TbdCell date="JUL 11" label="TBD" slotA="QF3" slotB="QF3" />
-              <TbdCell date="JUL 11" label="TBD" slotA="QF4" slotB="QF4" />
+              {[99, 100].map((mn) => (
+                <KnockoutCell key={mn} match={knockoutBracket.get(mn)} />
+              ))}
             </div>
 
-            {/* RIGHT R16 */}
             <div className="round-col col-r16-r">
               <div className="round-header">R16</div>
-              <TbdCell date="JUL 6" label="TBD" slotA="W9"  slotB="W10" />
-              <TbdCell date="JUL 6" label="TBD" slotA="W11" slotB="W12" />
-              <TbdCell date="JUL 7" label="TBD" slotA="W13" slotB="W14" />
-              <TbdCell date="JUL 7" label="TBD" slotA="W15" slotB="W16" />
+              {[91, 92, 95, 96].map((mn) => (
+                <KnockoutCell key={mn} match={knockoutBracket.get(mn)} />
+              ))}
             </div>
 
-            {/* RIGHT SIDE R32 */}
             <div className="round-col col-r32-r">
               <div className="round-header">R32</div>
-              <TbdCell date="JUN 29" label="TBD" slotA="W G" slotB="2H" />
-              <TbdCell date="JUN 29" label="TBD" slotA="W H" slotB="2G" />
-              <TbdCell date="JUN 29" label="TBD" slotA="W I" slotB="2J" />
-              <TbdCell date="JUN 29" label="TBD" slotA="W J" slotB="2I" />
-              <TbdCell date="JUN 30" label="TBD" slotA="W K" slotB="2L" />
-              <TbdCell date="JUN 30" label="TBD" slotA="W L" slotB="2K" />
-              <TbdCell date="JUL 1"  label="TBD" slotA="3rd EFGH" slotB="3rd IJKL" />
-              <TbdCell date="JUL 1"  label="TBD" slotA="3rd ABCD" slotB="TBD" />
+              {[76, 78, 79, 80, 86, 88, 85, 87].map((mn) => (
+                <KnockoutCell key={mn} match={knockoutBracket.get(mn)} />
+              ))}
             </div>
           </div>
         </section>
