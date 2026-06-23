@@ -38,7 +38,7 @@ import {
   getGroupStageComplete,
   computeAdvancement,
   getKnockoutBracket,
-  getRemainingGroupFixtures,
+  getGroupMatches,
 } from '@/lib/bracket';
 import { getFollowedTeamIds } from '@/lib/follows';
 import {
@@ -194,20 +194,21 @@ export default async function BracketPage() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  const [groupTeams, groupStandings, matchdayProgress, groupStageComplete, followedSet, knockoutBracket, remainingFixtures] = await Promise.all([
+  const [groupTeams, groupStandings, matchdayProgress, groupStageComplete, followedSet, knockoutBracket, allGroupMatches] = await Promise.all([
     getGroupTeams(comp.slug),
     getGroupStandings(comp.slug),
     getGroupMatchdayProgress(comp.slug),
     getGroupStageComplete(comp.slug),
     getFollowedTeamIds(userId),
     getKnockoutBracket(comp.slug),
-    getRemainingGroupFixtures(comp.slug),
+    getGroupMatches(comp.slug),
   ]);
 
   if (groupTeams.size === 0) notFound();
 
-  // Pure JS over the standings + remaining fixtures already fetched.
-  const advancement = computeAdvancement(groupStandings, remainingFixtures);
+  // Pure JS over the standings + all matches per group (played + unplayed).
+  // computeAdvancement uses orderGroup internally for the FIFA 2026 chain.
+  const advancement = computeAdvancement(groupStandings, allGroupMatches);
 
   const defaultTab = groupStageComplete ? 'tournament' : 'group';
 
