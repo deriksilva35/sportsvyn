@@ -7,6 +7,7 @@
     { "path": "/api/cron/generate-briefs",  "schedule": "*/2 * * * *" },
     { "path": "/api/cron/generate-gloss",   "schedule": "*/2 * * * *" },
     { "path": "/api/cron/publish-player-edition", "schedule": "0 12 * * *" },
-    { "path": "/api/cron/publish-team-edition",   "schedule": "30 12 * * *" }
+    { "path": "/api/cron/publish-team-edition",   "schedule": "30 12 * * *" },
+    { "path": "/api/cron/resolve-bracket",        "schedule": "*/15 * * * *" }
   ]
 }
