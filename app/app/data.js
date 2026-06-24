@@ -28,22 +28,22 @@ const WC_LEAGUE_SLUG = 'fifa-wc-2026';
 const FOLLOWED_TEAMS   = new Set(['Mexico', 'Argentina']);
 const FOLLOWED_PLAYERS = new Set(['L. Messi']);
 
-// Static editorial copy keyed by match slug. When a slug isn't here,
-// the NEXT UP card omits the lede/body and the "what to watch" block.
-const NEXT_UP_STATIC_COPY = {
-  // Mexico v South Africa opener (slug shape mirrors site convention).
-  'mexico-vs-south-africa-2026-06-11': {
-    lede: 'A reopened Azteca, a home crowd at full voice, a Bafana side that arrived more dangerous than the seeding implied.',
-    body: 'Mexico starts the tournament as host with everything to gain and nothing yet to prove. South Africa is the kind of team that punishes a slow first half — quick on the break, organised in midfield, willing to sit and counter. The script writes itself only if Mexico lets it.',
-    watch: [
-      'Edson Álvarez vs Teboho Mokoena in midfield — first 20 minutes set the tempo.',
-      'Set pieces: South Africa is taller on average and will hunt the second ball.',
-    ],
-  },
-};
-
 // =============================================================================
-// 1. NEXT UP — next WC fixture + match-winner probability + opener copy.
+// 1. NEXT UP — next WC fixture + match-winner probability + prematch copy.
+//
+// Editorial copy is sourced from the prematch analyst-pass row on `articles`
+// (type='preview', score_type='watch', status='published'), associated to
+// the match by articles.match_id. The /api/cron/prematch-analyst cron keeps
+// this row fresh for every upcoming WC fixture within a 72h kickoff window,
+// so NEXT UP is self-maintaining — no hand-keyed slug map.
+//
+// Mapping into the card shape:
+//   lede  ← article.subtitle  (the 40-70 word watch_summary — purpose-built
+//                              verdict prose, exactly lede shape)
+//   body  ← article.body      (two-paragraph editorial preview)
+//   watch ← null              (the analyst pass writes prose, not discrete
+//                              bullets; the card hides the block on null
+//                              rather than fabricate)
 // =============================================================================
 export async function readNextUp() {
   const matchRows = await sql`
@@ -106,15 +106,31 @@ export async function readNextUp() {
   }
 
   const meta = formatNextUpMeta(m.kickoff_at, m.venue);
-  const copy = NEXT_UP_STATIC_COPY[m.slug] ?? null;
+
+  // Prematch analyst-pass row. One row per match (the freeze invariant in
+  // lib/aiPrematchRunner.js enforces single-row uniqueness on
+  // match_id+type+score_type). Falls back to null cleanly when the cron
+  // hasn't generated the row yet — card renders the bare fixture + win-prob.
+  const previewRows = await sql`
+    SELECT body, subtitle
+      FROM articles
+     WHERE match_id    = ${m.id}
+       AND type        = 'preview'
+       AND score_type  = 'watch'
+       AND status      = 'published'
+       AND body        IS NOT NULL
+     ORDER BY published_at DESC NULLS LAST
+     LIMIT 1
+  `;
+  const preview = previewRows[0] ?? null;
 
   return {
     match,
     meta,
     winProb,
-    lede: copy?.lede ?? null,
-    body: copy?.body ?? null,
-    watch: copy?.watch ?? null,
+    lede: preview?.subtitle ?? null,
+    body: preview?.body ?? null,
+    watch: null,
   };
 }
 
@@ -313,6 +329,11 @@ export async function readStatsTopScorers() {
     scorer_stats AS (
       SELECT me.player_api_id,
              MAX(me.player_name) AS event_name,
+             -- Event-level team identity. A scorer plays for ONE national
+             -- team across all WC goal events, so MAX is just "pick any".
+             -- This is the unambiguous flag source (vs guessing from
+             -- home/away or trusting the players table to exist).
+             MAX(me.team_api_id) AS team_api_id,
              COUNT(*) FILTER (
                WHERE me.detail NOT IN ('Own Goal', 'Goal cancelled', 'Missed Penalty')
              )::int AS goals
@@ -348,7 +369,14 @@ export async function readStatsTopScorers() {
     FROM scorer_stats s
     LEFT JOIN assist_stats a ON a.assist_api_id = s.player_api_id
     LEFT JOIN players p ON (p.external_ids->>'api_sports')::int = s.player_api_id
-    LEFT JOIN teams   t ON t.id = p.current_team_id
+    -- Flag join: event-level team (s.team_api_id) is the scoring team for
+    -- the goal event. Filtered to the WC league so the flag comes from the
+    -- correct teams row when a national side has multiple league bindings.
+    -- Independent of the players-row presence — works for scorers without
+    -- a populated players entry.
+    LEFT JOIN teams   t
+      ON (t.external_ids->>'api_sports')::int = s.team_api_id
+     AND t.league_id IN (SELECT id FROM leagues WHERE slug = ${WC_LEAGUE_SLUG})
     ORDER BY s.goals DESC, COALESCE(a.assists, 0) DESC, name ASC
     LIMIT 5
   `;
