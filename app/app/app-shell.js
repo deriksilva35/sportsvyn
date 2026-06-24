@@ -185,7 +185,9 @@ function CardNextUp({ data }) {
       <div className="sv-meta">{meta}</div>
 
       {lede && <p className="sv-lede">{lede}</p>}
-      {body && <p className="sv-body">{body}</p>}
+      {bodyParagraphs(body).map((p, i) => (
+        <p key={i} className="sv-body">{p}</p>
+      ))}
 
       {winProb && (
         <>
@@ -355,6 +357,22 @@ function CardStats({ data }) {
 }
 
 // ─── PRIMITIVES ──────────────────────────────────────────────────────────
+
+// Split a body string on double-newlines into trimmed, non-empty paragraphs.
+// HTML collapses raw newlines to whitespace, so an article whose `body`
+// field is two paragraphs joined by "\n\n" would otherwise render as one
+// continuous block. Re-implemented locally (small helper) to keep app/app/
+// self-contained and avoid an import from lib/ or components/. Returns
+// [] for null / empty / whitespace-only input, so the caller's .map()
+// emits zero <p>s and the card renders no body block (matching the prior
+// `{body && ...}` behavior).
+function bodyParagraphs(body) {
+  if (!body || typeof body !== 'string') return [];
+  return body
+    .split(/\n\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
 
 function EmptyCard({ kicker, message, accent = false }) {
   return (
