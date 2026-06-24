@@ -12,21 +12,21 @@ import {
   readPlayerPotTop5,
   readWatchScoresToday,
   readTheRead,
-  readTheMarket,
+  readStatsTopScorers,
 } from './data';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AppShellPage() {
-  const [nextUp, power, playerPot, watch, read, market] = await Promise.all([
+  const [nextUp, power, playerPot, watch, read, stats] = await Promise.all([
     readNextUp(),
     readTeamPowerTop5(),
     readPlayerPotTop5(),
     readWatchScoresToday(),
     readTheRead(),
-    readTheMarket(),
+    readStatsTopScorers(),
   ]);
 
-  const cards = { nextUp, power, playerPot, watch, read, market };
+  const cards = { nextUp, power, playerPot, watch, read, stats };
   return <AppShellClient cards={cards} />;
 }

@@ -104,7 +104,7 @@ function Deck({ cards }) {
     { key: 'player', render: () => <CardPlayers rows={cards.playerPot} /> },
     { key: 'watch',  render: () => <CardWatch  rows={cards.watch} /> },
     { key: 'read',   render: () => <CardRead   article={cards.read} /> },
-    { key: 'market', render: () => <CardMarket market={cards.market} /> },
+    { key: 'stats',  render: () => <CardStats  data={cards.stats} /> },
   ];
 
   function onScroll() {
@@ -322,28 +322,34 @@ function CardRead({ article }) {
   );
 }
 
-function CardMarket({ market }) {
+function CardStats({ data }) {
+  if (!data || !data.scorers || data.scorers.length === 0) {
+    return <EmptyCard kicker="Golden Boot · Top 5" message="Scorers populate as matches play." />;
+  }
+  const { scorers, matches_played, total_goals, avg_goals_per_match } = data;
+  const footerBits = [
+    `${matches_played} ${matches_played === 1 ? 'match' : 'matches'}`,
+    `${total_goals} goals`,
+    `${avg_goals_per_match} per game`,
+  ];
   return (
-    <div className="sv-card-body sv-card--accent">
-      <div className="sv-kicker">Market Explainer</div>
-      <h2 className="sv-title">Reading the Market in Plain English</h2>
-      <p className="sv-lede">
-        What the numbers say without the jargon, the chest-thumping, or the picks.
-      </p>
-      <p className="sv-body">
-        We translate live odds into language: who the market actually fears, who it does not yet
-        believe, and where opinion is shifting between kickoff and kickoff. We explain — we do not
-        pick. The market is a sentiment thermometer, not a forecast. Read it for what it is.
-      </p>
-      {market && (
-        <p className="sv-body">
-          Right now the field is priced across {market.totalCount} teams; the shortest price sits
-          on <strong className="sv-followed-text">{market.topName}</strong>, which de-vigs to
-          ~{market.topPctDevig.toFixed(0)}% — a market that respects them, not one that has
-          decided.
-        </p>
-      )}
-      <div className="sv-card-footer">explain · don&rsquo;t pick</div>
+    <div className="sv-card-body">
+      <div className="sv-kicker">Golden Boot · Top 5</div>
+      <h2 className="sv-title">The race for the Golden Boot</h2>
+      <ol className="sv-ranklist">
+        {scorers.map((r, i) => (
+          <li key={`${r.name}-${i}`} className={`sv-rankrow ${r.followed ? 'is-followed' : ''}`}>
+            <span className="sv-rank-num">{i + 1}</span>
+            <FlagSvg path={r.flag_svg_path} />
+            <span className="sv-rank-name">
+              {r.followed && <span className="sv-star" aria-hidden="true">★</span>}
+              {r.name}
+            </span>
+            <span className="sv-rank-score">{r.goals}</span>
+          </li>
+        ))}
+      </ol>
+      <div className="sv-card-footer">{footerBits.join(' · ')}</div>
     </div>
   );
 }
