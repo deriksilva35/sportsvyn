@@ -53,3 +53,15 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     'Segoe UI', Roboto, sans-serif;
 }
+
+/* My Sportsvyn — followed-team name tint. Shared across /bracket,
+   homepage (group cards + slate + power rankings sidebar), and
+   /schedule. Color only — no background, no border, no weight. The
+   !important is intentional: per-route stylesheets (bracket.css,
+   home.css, schedule.css) load after globals.css and define name
+   colors on classes like .team-link, .sch-nm, etc.; we want the
+   followed state to win unambiguously without depending on selector
+   specificity tricks. Single declaration; nothing else to override. */
+.team-name-followed {
+  color: var(--volt) !important;
+}

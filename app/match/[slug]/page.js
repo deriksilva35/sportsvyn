@@ -386,7 +386,7 @@ export default async function MatchPage({ params }) {
         <div className="breadcrumb">
           <a href="/">Home</a>
           <span className="sep">/</span>
-          <a href="#">FIFA World Cup 2026</a>
+          <a href="/world-cup-2026/bracket">FIFA World Cup 2026</a>
           <span className="sep">/</span>
           <span className="current">{match.home_name} vs {match.away_name}</span>
         </div>
@@ -499,6 +499,10 @@ export default async function MatchPage({ params }) {
                   }}
                   homeAbbr={match.home_abbreviation}
                   awayAbbr={match.away_abbreviation}
+                  homeFlag={match.home_flag_svg}
+                  homeFlagColor={match.home_flag_color}
+                  awayFlag={match.away_flag_svg}
+                  awayFlagColor={match.away_flag_color}
                 />
               </div>
               <div className="live-right">
@@ -529,6 +533,10 @@ export default async function MatchPage({ params }) {
               }}
               homeAbbr={match.home_abbreviation}
               awayAbbr={match.away_abbreviation}
+              homeFlag={match.home_flag_svg}
+              homeFlagColor={match.home_flag_color}
+              awayFlag={match.away_flag_svg}
+              awayFlagColor={match.away_flag_color}
             />
           )}
         </div>

@@ -4,6 +4,7 @@
  */
 
 import Flag from './Flag';
+import FollowStar from './FollowStar';
 
 function coachShortName(name) {
   if (!name) return null;
@@ -22,7 +23,7 @@ function MovementChip({ movement }) {
   return <span className="team-rank-mvmt down">▼ Down {Math.abs(movement)}</span>;
 }
 
-export default function TeamHero({ team }) {
+export default function TeamHero({ team, isAuthed = false, initialFollowing = false }) {
   return (
     <section className="team-hero">
       <div className="team-hero-left">
@@ -32,7 +33,18 @@ export default function TeamHero({ team }) {
             colorPrimary={team.flag_color_primary}
             variant="hero"
           />
-          <h1 className="team-hero-name">{team.name}</h1>
+          {/* Name + star share a flex cluster so the star can wrap below
+              the H1 on narrow viewports without breaking the flag's
+              left-anchored position. */}
+          <div className="team-name-and-star">
+            <h1 className="team-hero-name">{team.name}</h1>
+            <FollowStar
+              teamId={team.id}
+              teamName={team.name}
+              isAuthed={isAuthed}
+              initialFollowing={initialFollowing}
+            />
+          </div>
         </div>
         <div className="team-meta-row">
           {team.confederation && (

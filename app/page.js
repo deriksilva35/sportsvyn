@@ -21,27 +21,52 @@ import SiteFooter from '@/components/SiteFooter';
 
 import {
   readFixturesByPtDay,
+  readScheduleGoals,
   toPtIsoDate,
 } from '@/lib/scheduleData';
 import { getFeaturedReads, getTodaysReads } from '@/lib/articles';
 import {
   GROUP_LETTERS,
   getGroupTeams,
+  getGroupStandings,
   getGroupMatchdayProgress,
   getGroupStageProgress,
 } from '@/lib/bracket';
 import { getCurrentLiveMatches } from '@/lib/liveMatches';
 import { getWatchScoresForDate } from '@/lib/watchScore';
-import { getCurrentEdition, getTopN } from '@/lib/rankings';
+import { getCurrentEdition, getTopN, getPlayerTopN } from '@/lib/rankings';
 import { getCurrentDailyCardIntro } from '@/lib/dailyCardIntro';
+import { getFollowedTeamIds } from '@/lib/follows';
+import { auth } from '@/auth';
+import FixtureCard, { bucketOf } from '@/components/match/FixtureCard';
+import KickoffTime from '@/components/match/KickoffTime';
 
 import './home.css';
+
+// PT-day arithmetic on YYYY-MM-DD strings (no timezone drift).
+// Mirrors ScheduleClient's helpers so the homepage's 3-day window
+// shares the same date semantics as /schedule.
+function addPtDays(ptDateStr, n) {
+  const [y, m, d] = ptDateStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + n);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+}
+const PT_WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const PT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function ptDayLabel(ptDateStr) {
+  const [y, m, d] = ptDateStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return {
+    weekday: PT_WEEKDAYS[dt.getUTCDay()],
+    monthDay: `${PT_MONTHS[dt.getUTCMonth()]} ${dt.getUTCDate()}`,
+  };
+}
 
 export const dynamic = 'force-dynamic';
 export const metadata = { robots: { index: false, follow: false } };
 
 const WC_LEAGUE_SLUG = 'fifa-wc-2026';
-const FRIENDLIES_LEAGUE_SLUG = 'international-friendlies';
 
 // =============================================================================
 // helpers (pure)
@@ -157,13 +182,17 @@ function DailyCardHeader({ ptDateLabel }) {
       </div>
       <div className="dc-header-meta-group">
         <div className="dc-meta">{ptDateLabel}</div>
-        <a href="/bracket" className="dc-header-link">Full Bracket →</a>
+        <a href="/world-cup-2026/bracket" className="dc-header-link">Full Bracket →</a>
       </div>
     </div>
   );
 }
 
-const PLACEHOLDER_INTRO = "The 2026 World Cup arrives in three days, and the case for every side is already written into the squads we've named. Today's card sets the bracket as it stands. Group draws are settled. Friendlies are finishing. The match feed becomes the column on June 11.";
+// Evergreen fallback — shown when no daily_card_intros row is published
+// for today. No date references, no countdowns; ages without rotting.
+// The published-row path (getCurrentDailyCardIntro) overrides this when
+// an editor approves a daily intro for the day.
+const PLACEHOLDER_INTRO = "Today’s card reads the tournament as it stands — what’s settled, what’s still open, and what’s worth your attention next.";
 
 function DailyCardIntro({ publishedIntro }) {
   // Reads ONLY status='published' rows. Pending review / rejected stay
@@ -211,18 +240,29 @@ function SlateSignpost({ nextFixture }) {
   );
 }
 
-function SlateRow({ fixture, watchScore }) {
+function SlateRow({ fixture, watchScore, followedSet }) {
   const isLive  = fixture.status === 'live';
   const isFinal = fixture.status === 'final';
+  // fixture.home.id / fixture.away.id ride in from readFixturesByPtDay
+  // (lib/scheduleData.js projects { id, name, abbreviation, flag_svg_path,
+  // flag_color }) — no SQL change. We wrap each team-name text node in
+  // its own span so the tint is scoped to the name only and the flag,
+  // 'v' separator, and live tag stay paper-warm.
+  const homeFollowed = followedSet?.has(fixture.home?.id);
+  const awayFollowed = followedSet?.has(fixture.away?.id);
   return (
     <a className="dc-match-row" href={`/match/${fixture.slug}`}>
       <div className="dc-match-teams">
         <Flag svgPath={fixture.home?.flag_svg_path} />
-        {teamShort(fixture.home?.name, fixture.home?.abbreviation)}
+        <span className={homeFollowed ? 'team-name-followed' : undefined}>
+          {teamShort(fixture.home?.name, fixture.home?.abbreviation)}
+        </span>
         {' v '}
         <span style={{ marginLeft: '6px', display: 'inline-flex', alignItems: 'center' }}>
           <Flag svgPath={fixture.away?.flag_svg_path} />
-          {teamShort(fixture.away?.name, fixture.away?.abbreviation)}
+          <span className={awayFollowed ? 'team-name-followed' : undefined}>
+            {teamShort(fixture.away?.name, fixture.away?.abbreviation)}
+          </span>
         </span>
         {isLive && <span className="dc-live-tag">· LIVE</span>}
       </div>
@@ -242,7 +282,7 @@ function SlateRow({ fixture, watchScore }) {
   );
 }
 
-function SlateSection({ fixtures, watchScoreByMatchId, nextFixture }) {
+function SlateSection({ fixtures, watchScoreByMatchId, nextFixture, followedSet }) {
   if (fixtures.length === 0) {
     return <SlateSignpost nextFixture={nextFixture} />;
   }
@@ -252,7 +292,12 @@ function SlateSection({ fixtures, watchScoreByMatchId, nextFixture }) {
         Today&rsquo;s Slate · {fixtures.length} {fixtures.length === 1 ? 'Match' : 'Matches'}
       </div>
       {fixtures.map((f) => (
-        <SlateRow key={f.id} fixture={f} watchScore={watchScoreByMatchId.get(f.id) ?? null} />
+        <SlateRow
+          key={f.id}
+          fixture={f}
+          watchScore={watchScoreByMatchId.get(f.id) ?? null}
+          followedSet={followedSet}
+        />
       ))}
     </div>
   );
@@ -260,12 +305,12 @@ function SlateSection({ fixtures, watchScoreByMatchId, nextFixture }) {
 
 function TournamentProgress({ groupProgress }) {
   const played = groupProgress.final_group;
-  const matchdaysPlayed = groupProgress.total_matchdays_played;
+  const matchdaysPlayed = groupProgress.min_matchdays_complete;
   return (
     <div className="dc-section">
       <div className="dc-section-label-row">
         <div className="dc-section-label">Tournament Progress</div>
-        <a href="/bracket" className="dc-section-link">Full Bracket →</a>
+        <a href="/world-cup-2026/bracket" className="dc-section-link">Full Bracket →</a>
       </div>
       <div className="dc-bracket-strip">
         <div className={`dc-bracket-round${played === 0 ? '' : ' active'}`}>
@@ -293,22 +338,39 @@ function TournamentProgress({ groupProgress }) {
   );
 }
 
-function TodaysReadsSection({ reads }) {
+function TodaysReadsSection({ reads, followedSet }) {
   if (!reads || reads.length === 0) return null;
   return (
     <div className="dc-section">
       <div className="dc-section-label">
         Today&rsquo;s Reads · {reads.length} {reads.length === 1 ? 'Piece' : 'Pieces'}
       </div>
-      {reads.filter((r) => r.match_slug).map((r) => (
-        <a key={r.slug} className="dc-read-row" href={`/match/${r.match_slug}`}>
-          <div>
-            <div className="dr-kicker">{r.kicker}</div>
-            <div className="dr-headline">{r.title}</div>
-          </div>
-          <div className="dr-read-time">{r.read_time_min} min</div>
-        </a>
-      ))}
+      {reads.map((r) => {
+        // Preview rows live on /match/[slug] (the body renders inside
+        // the match Preview tab). Essays/edge/etc. live at /article/[slug].
+        // match_slug distinguishes the two; null means the article isn't
+        // attached to a match, so the article reader is the right route.
+        const href = r.match_slug ? `/match/${r.match_slug}` : `/article/${r.slug}`;
+        // Volt-title tint on followed-team previews. home_team_id /
+        // away_team_id ride in from getTodaysReads via the matches
+        // join and are null for non-preview rows (no match_id), so the
+        // null-guard silently skips essays/edges/profiles. Same primitive
+        // as the team-name tint shipped in f1da5a5; the followedSet is
+        // the homepage's existing Set computed once via getFollowedTeamIds.
+        const teamFollowed =
+          (r.home_team_id != null && followedSet?.has(r.home_team_id)) ||
+          (r.away_team_id != null && followedSet?.has(r.away_team_id));
+        const headlineClass = teamFollowed ? 'dr-headline team-name-followed' : 'dr-headline';
+        return (
+          <a key={r.slug} className="dc-read-row" href={href}>
+            <div>
+              <div className="dr-kicker">{r.kicker}</div>
+              <div className={headlineClass}>{r.title}</div>
+            </div>
+            <div className="dr-read-time">{r.read_time_min} min</div>
+          </a>
+        );
+      })}
     </div>
   );
 }
@@ -457,7 +519,7 @@ function moveGlyph(label) {
   return '—';
 }
 
-function PowerRankingsList({ topRows }) {
+function PowerRankingsList({ topRows, followedSet }) {
   if (!topRows || topRows.length === 0) {
     return (
       <div className="sidebar-list">
@@ -472,13 +534,44 @@ function PowerRankingsList({ topRows }) {
       {topRows.map((r) => (
         <a key={r.team_id} className="sl-item" href={`/team/${r.team_slug}`}>
           <span className="pos">{r.rank}</span>
-          <span className="name">{r.team_name}</span>
+          <span className={`name${followedSet?.has(r.team_id) ? ' team-name-followed' : ''}`}>{r.team_name}</span>
           <span className="val">
             <span className={moveClass(r.movement_label)}>{moveGlyph(r.movement_label)}</span>{' '}
             {display1dp(r.score)}
           </span>
         </a>
       ))}
+      <a className="sl-more" href="/world-cup-2026/rankings/power">View full rankings →</a>
+    </div>
+  );
+}
+
+function PlayerRankingsList({ topRows }) {
+  if (!topRows || topRows.length === 0) {
+    return (
+      <div className="sidebar-list">
+        <div className="sl-label">Tournament MVP · Top 5</div>
+        <div className="sl-empty">Coming this week</div>
+      </div>
+    );
+  }
+  return (
+    <div className="sidebar-list">
+      <div className="sl-label">Tournament MVP · Top 5</div>
+      {topRows.map((r) => (
+        <a key={r.player_id} className="sl-item" href={`/player/${r.player_slug}`}>
+          <span className="pos">{r.rank}</span>
+          <span className="name">
+            <Flag svgPath={r.team_flag_svg_path} size="tiny" />
+            {r.player_name}
+          </span>
+          <span className="val">
+            <span className={moveClass(r.movement_label)}>{moveGlyph(r.movement_label)}</span>{' '}
+            {display1dp(r.score)}
+          </span>
+        </a>
+      ))}
+      <a className="sl-more" href="/world-cup-2026/rankings/players">View full rankings →</a>
     </div>
   );
 }
@@ -505,28 +598,37 @@ function WatchScoresTodayList({ rows }) {
 // =============================================================================
 // Below-fold bracket wall (group stage at launch, lives INSIDE .home-main now)
 // =============================================================================
-function HomeGroupCard({ letter, teams, matchdaysComplete }) {
+function HomeGroupCard({ letter, teams, matchdaysComplete, followedSet }) {
   return (
     <div className="home-group-card">
       <div className="home-group-card-header">
         <div className="home-group-card-label">{letter}</div>
         <div className="home-group-card-meta">{matchdaysComplete} of 3</div>
       </div>
-      {teams.map((t) => (
-        <div key={t.id} className="home-group-card-row">
-          <Flag svgPath={t.flag_svg_path} />
-          {t.slug ? (
-            <a href={`/team/${t.slug}`} className="team-link">{t.name}</a>
-          ) : (
-            <span>{t.name}</span>
-          )}
-        </div>
-      ))}
+      {teams.map((t) => {
+        const followed = followedSet?.has(t.team_id);
+        return (
+          <div key={t.team_id} className="home-group-card-row">
+            <Flag svgPath={t.flag_svg_path} />
+            {t.slug ? (
+              <a
+                href={`/team/${t.slug}`}
+                className={`team-link${followed ? ' team-name-followed' : ''}`}
+              >
+                {t.name}
+              </a>
+            ) : (
+              <span className={followed ? 'team-name-followed' : undefined}>{t.name}</span>
+            )}
+            <span className="home-group-card-pts">{t.points}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function BracketWallGroupStage({ groupTeams, matchdayMap }) {
+function BracketWallGroupStage({ groupStandings, matchdayMap, followedSet }) {
   return (
     <section className="bracket-wall-section">
       <div className="bracket-wall-inner">
@@ -535,15 +637,16 @@ function BracketWallGroupStage({ groupTeams, matchdayMap }) {
             <div className="bw-title">The <span className="accent">Bracket</span></div>
             <div className="bw-stage">Group Stage · 12 Groups</div>
           </div>
-          <a href="/bracket" className="bw-link">Full Bracket Page →</a>
+          <a href="/world-cup-2026/bracket" className="bw-link">Full Bracket Page →</a>
         </div>
         <div className="home-groups-grid">
           {GROUP_LETTERS.map((letter) => (
             <HomeGroupCard
               key={letter}
               letter={letter}
-              teams={groupTeams.get(letter) ?? []}
+              teams={groupStandings.get(letter) ?? []}
               matchdaysComplete={matchdayMap.get(letter) ?? 0}
+              followedSet={followedSet}
             />
           ))}
         </div>
@@ -578,6 +681,251 @@ function SubscribeBand() {
 }
 
 // =============================================================================
+// SIDEBAR — LIVE & NEXT  (the new home for the 3-day games slate)
+//
+// Hero slot:
+//   · ≥1 live match  → live hero (pulse + LIVE + flags + score + Live
+//                        Watch Score number + track bar).
+//   · No live match  → "Next Up" hero (the next upcoming WC fixture).
+//   · Neither        → no hero, just the toggle (if anything to show).
+//
+// Toggle below the hero (native <details> — no client JS):
+//   collapsed by default, expands to a compact list of the rest of
+//   the 3-day window grouped by day. Compact rows = mini-flag + abbr
+//   v abbr + kickoff time, linking each to /match/[slug].
+//
+// "Full schedule →" link footer.
+// =============================================================================
+async function SidebarGamesUnit({
+  liveToday, restToday, day1, day2, nextFixture,
+  ptDay, ptDay1, ptDay2,
+}) {
+  const hasLive = liveToday.length > 0;
+
+  // Days that have matches end up in the toggle. Live matches are
+  // already in the hero so they're not duplicated below.
+  const groups = [];
+  if (restToday.length) {
+    const lbl = ptDayLabel(ptDay);
+    groups.push({ id: 'today', label: `Today · ${lbl.weekday} · ${lbl.monthDay}`, list: restToday });
+  }
+  if (day1.length) {
+    const lbl = ptDayLabel(ptDay1);
+    groups.push({ id: 'day1', label: `${lbl.weekday} · ${lbl.monthDay}`, list: day1 });
+  }
+  if (day2.length) {
+    const lbl = ptDayLabel(ptDay2);
+    groups.push({ id: 'day2', label: `${lbl.weekday} · ${lbl.monthDay}`, list: day2 });
+  }
+  const totalMore = groups.reduce((acc, g) => acc + g.list.length, 0);
+
+  // If literally nothing in the 3-day window AND no nextFixture, the
+  // unit collapses to just the Full-schedule link. Defensive empty state.
+  const hasAnything = hasLive || nextFixture || totalMore > 0;
+
+  return (
+    <section className="sg-card" aria-label="Live and next games">
+      {hasLive
+        ? <SidebarLiveHero match={liveToday[0]} />
+        : nextFixture
+          ? <SidebarNextUpHero next={nextFixture} />
+          : <div className="sg-quiet">No matches in the next three days.</div>
+      }
+
+      {totalMore > 0 && (
+        <details className="sg-toggle">
+          <summary>
+            <span className="sg-toggle-show">Show {totalMore} more {totalMore === 1 ? 'game' : 'games'}</span>
+            <span className="sg-toggle-hide">Hide games</span>
+            <span className="sg-toggle-caret" aria-hidden="true">▾</span>
+          </summary>
+          <div className="sg-list">
+            {groups.map((g) => (
+              <div key={g.id} className="sg-day">
+                <div className="sg-day-label">{g.label}</div>
+                {g.list.map((f) => <SgCompactRow key={f.id} f={f} />)}
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+
+      {hasAnything && <a className="sg-full" href="/schedule">Full schedule →</a>}
+    </section>
+  );
+}
+
+// Live hero — reads the most recent composite_score from
+// match_watch_score_history (same source the match page's
+// LiveWatchScore reads). composite is null when no ticks have landed
+// yet (first ~30 seconds of kickoff); the track bar hides until one
+// tick lands rather than rendering a fake zero.
+async function SidebarLiveHero({ match }) {
+  const rows = await sql`
+    SELECT composite_score::float AS composite
+      FROM match_watch_score_history
+     WHERE match_id = ${match.id}
+     ORDER BY recorded_at DESC, id DESC
+     LIMIT 1
+  `;
+  const ws = rows[0]?.composite ?? null;
+  return (
+    <a className="sg-hero sg-hero-live" href={`/match/${match.slug}`}>
+      <div className="sg-hero-status">
+        <span className="sg-pulse" aria-hidden="true" />
+        <span className="sg-live-word">LIVE</span>
+      </div>
+      <div className="sg-hero-teams">
+        <div className="sg-hero-row">
+          <Flag svgPath={match.home.flag_svg_path} />
+          <span className="sg-hero-name">{match.home.name}</span>
+          <span className="sg-hero-score">{match.home_score ?? 0}</span>
+        </div>
+        <div className="sg-hero-row">
+          <Flag svgPath={match.away.flag_svg_path} />
+          <span className="sg-hero-name">{match.away.name}</span>
+          <span className="sg-hero-score">{match.away_score ?? 0}</span>
+        </div>
+      </div>
+      {ws != null && (
+        <div className="sg-ws">
+          <div className="sg-ws-head">
+            <span className="sg-ws-label">Live Watch Score</span>
+            <span className="sg-ws-value">{ws.toFixed(1)}</span>
+          </div>
+          <div className="sg-ws-track" aria-hidden="true">
+            <span
+              className="sg-ws-fill"
+              style={{ width: `${Math.max(0, Math.min(100, ws * 10))}%` }}
+            />
+          </div>
+        </div>
+      )}
+    </a>
+  );
+}
+
+// Next-up hero — pre-tournament / between-games state. Reuses the
+// nextFixture already pulled by HomePage for the existing sidebar copy.
+function SidebarNextUpHero({ next }) {
+  return (
+    <a className="sg-hero sg-hero-next" href={`/match/${next.slug}`}>
+      <div className="sg-hero-label">Next Up</div>
+      <div className="sg-hero-teams">
+        <div className="sg-hero-row">
+          <Flag svgPath={next.home.flag_svg_path} />
+          <span className="sg-hero-name">{next.home.name}</span>
+        </div>
+        <div className="sg-hero-row">
+          <Flag svgPath={next.away.flag_svg_path} />
+          <span className="sg-hero-name">{next.away.name}</span>
+        </div>
+      </div>
+      <div className="sg-hero-meta">
+        <KickoffTime kickoffAt={next.kickoff_at} />
+        {next.venue && <span className="sg-hero-venue"> · {next.venue}</span>}
+      </div>
+    </a>
+  );
+}
+
+// Compact row — mini flag + abbr v abbr + time. Links to /match/<slug>.
+function SgCompactRow({ f }) {
+  return (
+    <a className="sg-row" href={`/match/${f.slug}`}>
+      <Flag svgPath={f.home.flag_svg_path} size="tiny" />
+      <span className="sg-abbr">{f.home.abbreviation ?? f.home.name}</span>
+      <span className="sg-vs">v</span>
+      <Flag svgPath={f.away.flag_svg_path} size="tiny" />
+      <span className="sg-abbr">{f.away.abbreviation ?? f.away.name}</span>
+      <span className="sg-row-time"><KickoffTime kickoffAt={f.kickoff_at} /></span>
+    </a>
+  );
+}
+
+// =============================================================================
+// GAMES BAND — top-of-homepage fixture sections (games-first on launch)
+//
+// LIVE NOW   → renders only if there are status='live' matches today
+// TODAY      → always renders; empty-state copy when zero matches
+// DAY+1      → labelled day section if it has matches
+// DAY+2      → labelled day section if it has matches
+// Full schedule → link to /schedule for the rest of the tournament
+// =============================================================================
+function HomeGamesBand({ liveToday, restToday, day1, day2, ptDay, ptDay1, ptDay2 }) {
+  const todayLbl = ptDayLabel(ptDay);
+  const day1Lbl  = ptDayLabel(ptDay1);
+  const day2Lbl  = ptDayLabel(ptDay2);
+
+  // Each subsection renders only when it has matches. No empty-TODAY
+  // row inside the daily card — the editorial intro already frames the
+  // pre-tournament moment. If literally nothing falls in the 3-day
+  // window (off-day during a tournament break, or a data-load failure),
+  // a single quiet line stands in.
+  const hasAnything = liveToday.length + restToday.length + day1.length + day2.length > 0;
+  if (!hasAnything) {
+    return (
+      <section className="home-games-band" aria-label="Today's games">
+        <div className="home-games-quiet">No matches in the next three days.</div>
+        <a className="home-games-full" href="/schedule">Full schedule →</a>
+      </section>
+    );
+  }
+
+  return (
+    <section className="home-games-band" aria-label="Today's games">
+      {liveToday.length > 0 && (
+        <GamesSection
+          headline="Live Now"
+          modifier="live"
+          count={liveToday.length}
+          fixtures={liveToday}
+        />
+      )}
+      {restToday.length > 0 && (
+        <GamesSection
+          headline="Today"
+          sub={`${todayLbl.weekday} · ${todayLbl.monthDay}`}
+          count={restToday.length}
+          fixtures={restToday}
+        />
+      )}
+      {day1.length > 0 && (
+        <GamesSection
+          headline={day1Lbl.weekday}
+          sub={day1Lbl.monthDay}
+          count={day1.length}
+          fixtures={day1}
+        />
+      )}
+      {day2.length > 0 && (
+        <GamesSection
+          headline={day2Lbl.weekday}
+          sub={day2Lbl.monthDay}
+          count={day2.length}
+          fixtures={day2}
+        />
+      )}
+      <a className="home-games-full" href="/schedule">Full schedule →</a>
+    </section>
+  );
+}
+
+function GamesSection({ headline, sub, modifier, count, fixtures }) {
+  return (
+    <div className="home-games-section">
+      <div className="home-games-head">
+        <span className={`home-games-headline ${modifier ?? ''}`.trim()}>{headline}</span>
+        {sub && <span className="home-games-sub">{sub}</span>}
+        <span className="home-games-rule" aria-hidden="true" />
+        <span className="home-games-count">{count} {count === 1 ? 'match' : 'matches'}</span>
+      </div>
+      <div className="home-games-feed">{fixtures.map((f) => <FixtureCard key={f.id} f={f} />)}</div>
+    </div>
+  );
+}
+
+// =============================================================================
 // MAIN PAGE
 // =============================================================================
 export default async function HomePage() {
@@ -585,38 +933,75 @@ export default async function HomePage() {
   const ptDay = toPtIsoDate(now);
   const ptDateLabel = fmtPtDate(now);
 
+  // Games-band date window: today + 2 calendar days PT. Same reader
+  // /schedule uses; widened from today-only so the new homepage games
+  // sections (TODAY + DAY+1 + DAY+2) all draw from one round-trip.
+  const ptDay1 = addPtDays(ptDay, 1);
+  const ptDay2 = addPtDays(ptDay, 2);
+
+  // Session resolved server-side; followedSet feeds the volt-name tint
+  // on HomeGroupCard team-links, SlateRow home/away team names, and
+  // PowerRankingsList rows. getFollowedTeamIds returns an empty Set for
+  // null userId, so the logged-out render path naturally writes no
+  // .team-name-followed class anywhere.
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+
   // Parallel reads — every helper returns [] / null on absence.
   const [
-    todaysFixtures,
-    todaysFixturesFriendlies,
+    fixtures3Day,
     todaysReads,
     featuredReads,
     moreReads,
     liveMatches,
     watchScoresToday,
-    groupTeams,
+    groupStandings,
     matchdayMap,
     groupProgress,
     rankingTop5,
+    playerTop5,
     publishedIntro,
     marketLadder,
+    followedSet,
   ] = await Promise.all([
-    readFixturesByPtDay({ leagueSlug: WC_LEAGUE_SLUG, ptStart: ptDay, ptEnd: ptDay }),
-    readFixturesByPtDay({ leagueSlug: FRIENDLIES_LEAGUE_SLUG, ptStart: ptDay, ptEnd: ptDay }),
+    readFixturesByPtDay({ leagueSlug: WC_LEAGUE_SLUG, ptStart: ptDay, ptEnd: ptDay2 }),
     getTodaysReads({ ptDay, limit: 4 }),
     Promise.resolve([]),  // Featured Reads — hidden until real long-form ships
     Promise.resolve([]),  // Recent Reads   — same; previews already live on /match/[slug]
     getCurrentLiveMatches(),
     getWatchScoresForDate(ptDay),
-    getGroupTeams(),
+    getGroupStandings(),  // ordered standings rows (incl. points/wins/draws/losses/gf/ga/gd)
     getGroupMatchdayProgress(),
     getGroupStageProgress(),
     getTopN({ listSlug: 'team-power', leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
+    getPlayerTopN({ listSlug: 'player-power', leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
     getCurrentDailyCardIntro(ptDay),
     readTournamentWinnerLadder({ leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
+    getFollowedTeamIds(userId),
   ]);
 
-  const slate = todaysFixtures.length > 0 ? todaysFixtures : todaysFixturesFriendlies;
+  // Attach goals once (same pattern /schedule uses) — only fires the
+  // goal-events query if any of the 3 days has fixtures.
+  const fixtureIds = fixtures3Day.map((f) => f.id);
+  const goalsByMatch = fixtureIds.length > 0 ? await readScheduleGoals(fixtureIds) : new Map();
+  const fixtures3DayWithGoals = fixtures3Day.map((f) => ({
+    ...f,
+    goals: goalsByMatch.get(f.id) ?? { home: [], away: [] },
+  }));
+
+  // Partition for the new games-band sections.
+  const todaysFixtures = fixtures3DayWithGoals.filter((f) => f.pt_day === ptDay);
+  const day1Fixtures   = fixtures3DayWithGoals.filter((f) => f.pt_day === ptDay1);
+  const day2Fixtures   = fixtures3DayWithGoals.filter((f) => f.pt_day === ptDay2);
+  // LIVE NOW = today's matches whose status is currently 'live'. TODAY's
+  // section excludes those (no duplication) — every other status (scheduled
+  // / final / cancelled) shows in TODAY in kickoff order.
+  const liveTodayFixtures = todaysFixtures.filter((f) => bucketOf(f.status) === 'live');
+  const restTodayFixtures = todaysFixtures.filter((f) => bucketOf(f.status) !== 'live');
+
+  // Existing daily-card slate stays today-only; the variable name keeps
+  // the editorial helpers below unchanged.
+  const slate = todaysFixtures;
 
   const watchScoreByMatchId = new Map();
   for (const r of watchScoresToday) watchScoreByMatchId.set(r.match_id, r.composite);
@@ -659,43 +1044,73 @@ export default async function HomePage() {
       <SiteHeaderServer activeNav="home" />
 
       <main className="home-main">
-        {/* LEFT COLUMN — Daily Card + Bracket Wall, stacked.
-            Bracket Wall lives INSIDE the grid now so a short Daily Card
-            doesn't leave dead ink beside the sticky rail. */}
-        <div className="home-main-left">
-          <article className="daily-card">
-            <DailyCardHeader ptDateLabel={ptDateLabel} />
-            <DailyCardIntro publishedIntro={publishedIntro} />
-            <DailyCardByline ptDateLabel={ptDateLabel} />
+        {/*
+          DOM source order: Today's Card → sidebar (Live & Next +
+          Power Rankings) → Bracket Wall. On mobile the .home-main
+          grid collapses to 1 column and that's the natural stack —
+          games come right after the card, bracket sits below them.
 
-            <SlateSection
-              fixtures={slate}
-              watchScoreByMatchId={watchScoreByMatchId}
-              nextFixture={nextFixture}
-            />
+          On desktop the explicit grid-placement in home.css pins:
+            daily-card     → column 1, row 1
+            right-rail     → column 2, row 1 / span 2  (top-aligned)
+            bracket-wall   → column 1, row 2           (below card)
+          so the approved 2/3 + 1/3 layout is preserved. No CSS
+          `order:` hacks — DOM order matches visual order on mobile
+          and the desktop just re-pins via grid placement.
+        */}
+        <article className="daily-card">
+          <DailyCardHeader ptDateLabel={ptDateLabel} />
+          <DailyCardIntro publishedIntro={publishedIntro} />
+          <DailyCardByline ptDateLabel={ptDateLabel} />
 
-            <TournamentProgress groupProgress={groupProgress} />
+          {/* The 3-day games block lives in the sidebar (Live & Next).
+              Today's slate stays IN the card: the immediate "what's
+              happening today, what's already final" reads as the lead
+              after the intro/byline, ahead of the structural progress
+              strip. SlateSection renders SlateSignpost when the day
+              has zero fixtures, so this slot never collapses ugly. */}
+          <SlateSection
+            fixtures={todaysFixtures}
+            watchScoreByMatchId={watchScoreByMatchId}
+            nextFixture={nextFixture}
+            followedSet={followedSet}
+          />
 
-            <TodaysReadsSection reads={todaysReads} />
+          <TournamentProgress groupProgress={groupProgress} />
 
-            <MarketUnit ladder={marketLadder} />
-          </article>
+          <TodaysReadsSection reads={todaysReads} followedSet={followedSet} />
 
-          <BracketWallGroupStage groupTeams={groupTeams} matchdayMap={matchdayMap} />
-        </div>
+          <MarketUnit ladder={marketLadder} />
+        </article>
 
-        {/* RIGHT COLUMN — Sportsvyn Now rail */}
+        {/* SIDEBAR — right column on desktop, slots between Today's
+            Card and Bracket Wall on mobile (which is the point of the
+            DOM-order fix). Live & Next leads (live hero or next-up
+            hero, plus a collapsible list of the rest of the 3-day
+            window). Power Rankings sits below. POT rankings land here
+            later as a third unit. */}
         <aside className="right-rail">
-          <div className="sidebar-zone-header">
-            <span>Sportsvyn Now</span>
-          </div>
-
-          <LiveOrNextBlock liveMatches={liveMatches} nextFixture={nextFixture} />
-          <TodaysCardSummaryBlock fixtureCount={slate.length} readCount={readCount} />
+          <SidebarGamesUnit
+            liveToday={liveTodayFixtures}
+            restToday={restTodayFixtures}
+            day1={day1Fixtures}
+            day2={day2Fixtures}
+            nextFixture={nextFixture}
+            ptDay={ptDay}
+            ptDay1={ptDay1}
+            ptDay2={ptDay2}
+          />
+          <PowerRankingsList topRows={showRankings ? rankingTop5 : []} followedSet={followedSet} />
+          <PlayerRankingsList topRows={playerTop5} />
           <FeaturedReadsList reads={topFeatured} label="Featured Reads" />
-          <PowerRankingsList topRows={showRankings ? rankingTop5 : []} />
           <WatchScoresTodayList rows={watchScoresToday.slice(0, 3)} />
         </aside>
+
+        {/* Bracket Wall — last in source order on the grid. On mobile
+            it sits at the bottom of the stack (after the sidebar). On
+            desktop the explicit grid placement in home.css pins it to
+            column 1, row 2 (right below Today's Card). */}
+        <BracketWallGroupStage groupStandings={groupStandings} matchdayMap={matchdayMap} followedSet={followedSet} />
       </main>
 
       {showMoreRail && <MoreFromSportsvyn reads={belowFeatured} />}

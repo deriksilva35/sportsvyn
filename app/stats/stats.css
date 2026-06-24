@@ -1,0 +1,475 @@
+/* /stats CSS, ported from stats-hub-mock.html. Tokens routed through
+   our --color-* alias chain (app/globals.css). Always-dark.
+
+   Local additions over global tokens:
+     --paper-dim:   #C5C5C2  (slightly muted paper, mock's --paper-dim)
+     --rule-inner:  #161616  (ov-row internal divider)
+     --border-thin: derived  (1px solid var(--charcoal))
+
+   No em or en dashes anywhere in this file. */
+
+.stats-wrap {
+  --paper-dim:   #C5C5C2;
+  --rule-inner:  #161616;
+  --border-thin: 1px solid var(--charcoal);
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+  font-family: var(--font-display);
+  color: var(--paper-warm);
+  line-height: 1.4;
+}
+
+/* ----- hero ---------------------------------------------------------- */
+.stats-hero {
+  border-bottom: var(--border-thin);
+  padding: 48px 0 0;
+}
+.stats-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--volt);
+}
+.stats-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  font-size: clamp(40px, 7vw, 76px);
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  margin: 10px 0 6px;
+}
+.stats-subhead {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 28px;
+}
+.stats-subhead b {
+  color: var(--paper-dim);
+  font-weight: 500;
+}
+.stats-live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--volt);
+  margin-right: 7px;
+  vertical-align: middle;
+  box-shadow: 0 0 0 0 rgba(212, 255, 0, 0.6);
+  animation: statsPulse 2s infinite;
+}
+@keyframes statsPulse {
+  0%   { box-shadow: 0 0 0 0    rgba(212, 255, 0, 0.5); }
+  70%  { box-shadow: 0 0 0 7px  rgba(212, 255, 0, 0);   }
+  100% { box-shadow: 0 0 0 0    rgba(212, 255, 0, 0);   }
+}
+
+/* ----- tabs --------------------------------------------------------- */
+.stats-tabs {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  border-top: var(--border-thin);
+  scrollbar-width: none;
+}
+.stats-tabs::-webkit-scrollbar { display: none; }
+.stats-tab {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 16px 18px;
+  border: 0;
+  border-right: var(--border-thin);
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  background: none;
+}
+.stats-tab:first-child { border-left: var(--border-thin); }
+.stats-tab.active { color: var(--paper-warm); }
+.stats-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--volt);
+}
+.stats-tab .stats-soon {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+  background: var(--volt-dim);
+  padding: 2px 5px;
+  border-radius: 2px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* ----- section header ---------------------------------------------- */
+.stats-sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 34px 0 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.stats-sec-head h2 {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+.stats-sec-head .meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ----- leaderboard tables ------------------------------------------ */
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 40px;
+}
+.stats-table thead th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 0 12px 12px;
+  border-bottom: var(--border-thin);
+}
+.stats-table thead th.num { text-align: right; }
+.stats-table thead th.sortable { cursor: pointer; user-select: none; }
+.stats-table thead th.sortable:hover { color: var(--paper-dim); }
+.stats-table thead th.sorted { color: var(--volt); }
+.stats-table thead th.sorted::after {
+  content: " " attr(data-arrow);
+  font-family: var(--font-mono);
+}
+.stats-table tbody td {
+  padding: 14px 12px;
+  border-bottom: var(--border-thin);
+  vertical-align: middle;
+}
+.stats-table tbody tr:hover { background: var(--graphite); }
+.stats-rk {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--muted);
+  width: 34px;
+}
+.stats-rk.top { color: var(--volt); }
+.stats-pl {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+}
+.stats-pl a { color: inherit; }
+.stats-pl a:hover { color: var(--volt); }
+.stats-pl .team {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  display: block;
+  margin-top: 2px;
+}
+.stats-pos {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  border: var(--border-thin);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+.stats-table td.num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--paper-warm);
+}
+.stats-table td.num.big {
+  font-size: 22px;
+  font-weight: 700;
+}
+.stats-table td.num.volt { color: var(--volt); }
+.stats-table td.num.terra { color: var(--terra); }
+.stats-table td.num.jade { color: var(--jade); }
+.stats-breakdown {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.stats-barcell { width: 120px; }
+.stats-bar {
+  height: 6px;
+  background: var(--charcoal);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.stats-bar > i {
+  display: block;
+  height: 100%;
+  background: var(--volt);
+}
+
+/* ----- overview grid ----------------------------------------------- */
+.stats-ov-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--charcoal);
+  border: var(--border-thin);
+  margin-bottom: 40px;
+}
+.stats-ov-cell {
+  background: var(--ink);
+  padding: 20px;
+}
+.stats-ov-cell h3 {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.stats-ov-cell h3 .h3-left { display: inline-flex; align-items: center; gap: 6px; }
+.stats-ov-cell h3 a {
+  color: var(--volt-dim);
+  text-decoration: none;
+}
+.stats-ov-cell h3 a:hover { color: var(--volt); }
+.stats-ov-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule-inner);
+  gap: 8px;
+}
+.stats-ov-row:last-child { border-bottom: none; }
+.stats-ov-row .nm {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.stats-ov-row .nm small {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 10px;
+  color: var(--muted);
+}
+.stats-ov-row .vl {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--paper-warm);
+  flex: 0 0 auto;
+}
+.stats-ov-row .vl.volt { color: var(--volt); }
+.stats-ov-row .rkn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  width: 18px;
+  flex: 0 0 18px;
+}
+.stats-ov-row a.nm-link { color: inherit; text-decoration: none; display: contents; }
+.stats-ov-row a.nm-link:hover .nm > span:nth-child(2) { color: var(--volt); }
+
+/* ----- SV Points explainer (inline on SV tab) ---------------------- */
+.stats-svnote {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.7;
+  border-left: 2px solid var(--volt-dim);
+  padding: 10px 0 10px 16px;
+  margin: -8px 0 28px;
+  letter-spacing: 0.02em;
+}
+.stats-svnote b { color: var(--paper-dim); font-weight: 500; }
+
+/* ----- SV Points tooltip ("?" affordance) -------------------------- */
+.sv-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.sv-tip-btn {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--muted);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.sv-tip-btn:hover,
+.sv-tip-btn[aria-expanded="true"] {
+  color: var(--volt);
+  border-color: var(--volt);
+}
+.sv-tip-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 4px;
+  padding: 14px 16px;
+  z-index: 20;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--paper-dim);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  display: none;
+}
+.sv-tip-popover.open { display: block; }
+.sv-tip-popover h4 {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--volt);
+  margin: 0 0 8px;
+}
+.sv-tip-popover dl {
+  margin: 0 0 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+}
+.sv-tip-popover dt { color: var(--muted); }
+.sv-tip-popover dd { color: var(--paper-warm); text-align: right; }
+.sv-tip-popover .sv-caveat {
+  border-top: 1px solid var(--charcoal);
+  padding-top: 8px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+/* ----- coming-soon panel ------------------------------------------- */
+.stats-soonpanel {
+  border: 1px dashed var(--charcoal);
+  border-radius: 4px;
+  padding: 48px 32px;
+  text-align: center;
+  margin: 24px 0 48px;
+}
+.stats-soonpanel .tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--volt-dim);
+  border: 1px solid var(--volt-dim);
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 2px;
+  margin-bottom: 18px;
+}
+.stats-soonpanel h3 {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+.stats-soonpanel p {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 440px;
+  margin: 0 auto;
+  letter-spacing: 0.02em;
+}
+
+/* ----- Players / Teams sub-toggle on All Stats --------------------- */
+.stats-subtoggle {
+  display: inline-flex;
+  border: var(--border-thin);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.stats-subtoggle button {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.stats-subtoggle button.active {
+  background: var(--volt);
+  color: var(--ink);
+  font-weight: 700;
+}
+.stats-subtoggle button:not(.active):hover { color: var(--paper-warm); }
+
+/* ----- footer note ------------------------------------------------- */
+.stats-footer-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-dim);
+  letter-spacing: 0.04em;
+  padding: 30px 0 70px;
+  border-top: var(--border-thin);
+  margin-top: 20px;
+}
+
+/* ----- panels: hide non-active --------------------------------------- */
+.stats-panel { display: none; }
+.stats-panel.show { display: block; }
+
+@media (max-width: 680px) {
+  .stats-ov-grid { grid-template-columns: 1fr; }
+  .stats-barcell { display: none; }
+  .stats-table thead th.hidem,
+  .stats-table tbody td.hidem { display: none; }
+  .sv-tip-popover { right: auto; left: 0; }
+}

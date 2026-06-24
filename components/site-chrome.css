@@ -25,7 +25,7 @@
 }
 .site-header .brand-row { display: flex; align-items: center; gap: 24px; }
 /* Wordmark hit target — vertical padding gives the <a> a generous tap
-   box around the 22px-tall wordmark. Negative margin on the wrapper
+   box around the 28px-tall wordmark. Negative margin on the wrapper
    cancels the visible header-bar growth so the bar height looks
    unchanged. (display:inline-block + line-height:1 avoids the
    inline-flex layout that left iOS Safari with letter-pixel-only

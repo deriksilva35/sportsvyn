@@ -1,0 +1,184 @@
+/* fixture-card.css — styles for components/match/FixtureCard.js.
+ *
+ * Selectors keep their original .sch-* names so /schedule continues to
+ * render byte-identical with no JSX changes; this file just relocates
+ * the rules out of app/schedule/schedule.css so any consumer of
+ * FixtureCard.js (schedule, homepage, etc.) inherits them by importing
+ * the component. Imported from FixtureCard.js itself.
+ */
+
+/* ---------- Match card ---------- */
+.sch-card {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 3px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color .15s;
+  text-decoration: none;
+  color: inherit;
+}
+.sch-card:hover { border-color: var(--muted); }
+.sch-matchup {
+  padding: 18px 22px;
+  position: relative;
+}
+.sch-matchup::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+}
+.sch-card.is-live .sch-matchup::before { background: var(--live, #E63946); }
+.sch-card.is-cancelled .sch-matchup::before { background: var(--muted); opacity: 0.45; }
+.sch-card.is-cancelled { opacity: 0.78; }
+
+.sch-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 7px 0;
+  min-width: 0;
+}
+.sch-row .flag {
+  width: 30px;
+  height: 22px;
+  display: inline-block;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--charcoal);
+  border: 1px solid var(--charcoal);
+  flex: 0 0 auto;
+}
+.sch-nm {
+  font-family: var(--font-cond, var(--font-mono));
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: 0.01em;
+  flex: 1;
+  min-width: 0;
+  color: var(--paper);
+}
+.sch-nm.lose { color: var(--muted); }
+.sch-sc {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  min-width: 24px;
+  text-align: right;
+  color: var(--paper);
+}
+.sch-sc.lose { color: var(--muted); }
+
+/* Goalscorer lines under a card's matchup — only when goals exist. */
+.sch-goals {
+  margin-top: 12px;
+  padding-top: 12px;
+  padding-left: 43px;
+  border-top: 1px solid var(--charcoal);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 18px;
+}
+.sch-goals-col { display: flex; flex-direction: column; gap: 4px; }
+.sch-goals-col.away { text-align: right; }
+.sch-goal {
+  font-size: 11px;
+  color: var(--paper-dim, #C5C5C2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.5;
+}
+.sch-goal.away { justify-content: flex-end; }
+.sch-goal.away .sch-goal-pip { order: 2; }
+.sch-goal-pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--volt);
+  flex: 0 0 auto;
+}
+
+/* ---------- Meta column ---------- */
+.sch-meta {
+  border-left: 1px solid var(--charcoal);
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+}
+.sch-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.sch-status.live .sch-status-txt {
+  color: var(--paper);
+  font-family: var(--font-mono);
+}
+.sch-status.final .sch-status-txt {
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+.sch-status.upcoming .sch-status-txt {
+  color: var(--paper);
+  font-size: 13px;
+}
+.sch-status.cancelled .sch-status-txt {
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+.sch-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--live, #E63946);
+}
+.sch-pulse { animation: sch-pulse 1.6s ease-in-out infinite; }
+@keyframes sch-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+
+/* ---------- Win probability (unpriced) ---------- */
+.sch-wp3 { margin-top: 15px; }
+.sch-wp3-label {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.sch-wp3-note {
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  font-family: var(--font-serif);
+}
+
+/* ---------- Card mobile (820px breakpoint shared with site chrome) ---------- */
+@media (max-width: 820px) {
+  .sch-card { grid-template-columns: 1fr; }
+  .sch-meta {
+    border-left: none;
+    border-top: 1px solid var(--charcoal);
+    padding: 14px 18px;
+  }
+  .sch-matchup { padding: 14px 18px; }
+  .sch-row { gap: 11px; }
+  .sch-row .flag { width: 26px; height: 19px; }
+  .sch-nm { font-size: 18px; }
+  .sch-sc { font-size: 18px; }
+  .sch-goals { padding-left: 37px; gap: 4px 14px; }
+  .sch-goal { font-size: 10px; }
+}

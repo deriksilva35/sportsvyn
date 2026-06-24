@@ -1,29 +1,53 @@
 /**
- * proxy.js — Sportsvyn admin authentication gate.
+ * proxy.js: Sportsvyn proxy. Two responsibilities live here, in order:
  *
- * Next 16 renamed the `middleware` file convention to `proxy`. This is
- * the project's single Proxy, at the root beside app/. The proxy
- * convention runs on the Node.js runtime by default in Next 16 and
- * cannot be configured to Edge, so `node:crypto` and `Buffer` are
- * available natively.
+ *   1. Competition-namespacing REDIRECTS.
+ *      Old canonical paths (/bracket, /power-rankings) issue 308
+ *      (Permanent Redirect) to their dated namespaced canonicals. The
+ *      evergreen alias family (/world-cup/<sub>) issues 307 (Temporary
+ *      Redirect) to the current edition resolved from
+ *      leagues.metadata.family + is_current_edition, because the
+ *      target moves between editions (the 2030 cycle will repoint
+ *      these aliases to /world-cup-2030/<sub>).
  *
- * Gates /admin/* and /api/admin/* with HTTP Basic Auth, checking
- * credentials against ADMIN_USERNAME and ADMIN_SECRET from the
- * environment. Comparison is constant-time (SHA-256 digest +
- * timingSafeEqual) so a wrong guess leaks no timing signal.
+ *   2. Admin auth gate (existing).
+ *      Basic Auth on /admin/* and /api/admin/*, constant-time
+ *      comparison, fail-closed when ADMIN_USERNAME or ADMIN_SECRET
+ *      are missing.
  *
- * Fail-closed: if either env var is missing, returns 500 instead of
- * issuing a challenge. A misconfigured gate is a broken gate.
+ * Single export, single function: Next 16 forbids multiple proxy
+ * functions in a project. The redirect block early-returns for the
+ * structural paths it handles; everything else falls through to the
+ * admin-auth code unchanged.
  *
- * TODO: Per Next proxy docs, re-verify ADMIN_SECRET in admin route
- * handlers / Server Actions as defense-in-depth. The matcher below
- * can drop coverage on refactor.
+ * Runtime is Node (cannot be configured to Edge), so node:crypto +
+ * the Neon HTTP driver work natively. The DB call required by the
+ * evergreen alias resolution adds one HTTPS round trip per alias hit
+ * (cached per request by React.cache inside the resolver, though
+ * only one call per request is ever made for that family).
+ *
+ * Matcher discipline (see config.matcher below):
+ *   - Catches ONLY the paths this proxy actually handles. Anything
+ *     not on the list never invokes the function and is unaffected.
+ *   - Does NOT catch shared-library routes (/schedule, /match/*,
+ *     /team/*, /player/*, /article/*), global routes (/, /my,
+ *     /signin*, /confirmed), the new namespaced routes
+ *     (/world-cup-2026/*), static assets, or non-admin API endpoints.
  */
 
 import { NextResponse } from 'next/server';
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { resolveCurrentEditionForFamily } from './lib/competition.js';
 
 const REALM = 'Sportsvyn Admin';
+const EVERGREEN_FAMILY = 'world-cup';
+
+// Old canonical to new canonical. Permanent (308): these moves are not
+// going to revert; the migration is committed.
+const PERMANENT_REDIRECTS = {
+  '/bracket':        '/world-cup-2026/bracket',
+  '/power-rankings': '/world-cup-2026/rankings/power',
+};
 
 function challenge() {
   return new NextResponse('Authentication required.', {
@@ -40,11 +64,50 @@ function safeEqual(a, b) {
   return timingSafeEqual(ah, bh);
 }
 
-export function proxy(request) {
+export async function proxy(request) {
+  const { pathname } = request.nextUrl;
+
+  // -------------------------------------------------------------------------
+  // 1. Old canonical (permanent redirect, 308).
+  // -------------------------------------------------------------------------
+  if (Object.prototype.hasOwnProperty.call(PERMANENT_REDIRECTS, pathname)) {
+    const dest = request.nextUrl.clone();
+    dest.pathname = PERMANENT_REDIRECTS[pathname];
+    return NextResponse.redirect(dest, 308);
+  }
+
+  // -------------------------------------------------------------------------
+  // 2. Evergreen alias (temporary redirect, 307). /world-cup/<sub> forwards
+  //    to /<currentEdition.urlSlug>/<sub>. If no current edition exists
+  //    (data-config gap) we fall through and let Next render the natural
+  //    404 rather than synthesizing one here.
+  // -------------------------------------------------------------------------
+  if (pathname.startsWith('/world-cup/')) {
+    const sub = pathname.slice('/world-cup'.length);
+    const comp = await resolveCurrentEditionForFamily(EVERGREEN_FAMILY);
+    if (comp?.urlSlug) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = `/${comp.urlSlug}${sub}`;
+      return NextResponse.redirect(dest, 307);
+    }
+    return NextResponse.next();
+  }
+
+  // Bare /world-cup (no subpath). Phase 3 does not define a redirect for
+  // this; Phase 4 may add a thin overview page or alias it. Until then,
+  // pass through and let Next render the natural 404.
+  if (pathname === '/world-cup') {
+    return NextResponse.next();
+  }
+
+  // -------------------------------------------------------------------------
+  // 3. Admin auth gate (unchanged from prior shape).
+  //    Anything not handled above falls into this block, which the matcher
+  //    restricts to /admin/* and /api/admin/* via config.matcher below.
+  // -------------------------------------------------------------------------
   const expectedUser = process.env.ADMIN_USERNAME;
   const expectedSecret = process.env.ADMIN_SECRET;
 
-  // Fail closed if the gate itself is misconfigured.
   if (!expectedUser || !expectedSecret) {
     return new NextResponse('Admin auth is not configured.', { status: 500 });
   }
@@ -65,7 +128,6 @@ export function proxy(request) {
     return challenge();
   }
 
-  // Evaluate both comparisons before deciding — no short-circuit.
   const userOk = safeEqual(user, expectedUser);
   const passOk = safeEqual(pass, expectedSecret);
   if (!userOk || !passOk) {
@@ -76,5 +138,16 @@ export function proxy(request) {
 }
 
 export const config = {
-  matcher: ['/admin', '/admin/:path*', '/api/admin', '/api/admin/:path*'],
+  matcher: [
+    // Admin auth scope (unchanged).
+    '/admin',
+    '/admin/:path*',
+    '/api/admin',
+    '/api/admin/:path*',
+    // Competition-namespacing redirect scope (Phase 3 additions).
+    '/bracket',
+    '/power-rankings',
+    '/world-cup',
+    '/world-cup/:path*',
+  ],
 };
