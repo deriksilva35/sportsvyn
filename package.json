@@ -11,6 +11,9 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.0",
     "@auth/pg-adapter": "^1.11.2",
+    "@capacitor/core": "^7.6.6",
+    "@capacitor/ios": "^7.6.6",
+    "@capacitor/status-bar": "^7.0.6",
     "@neondatabase/serverless": "^1.1.0",
     "next": "16.2.6",
     "next-auth": "^5.0.0-beta.31",
@@ -22,6 +25,7 @@
     "resend": "^6.12.4"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.6.6",
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",

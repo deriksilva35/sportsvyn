@@ -1,0 +1,651 @@
+/* /app mobile shell — all rules scoped under .sv-app to prevent leakage. */
+
+.sv-app {
+  /* design tokens — scoped to /app */
+  --ink:        #0A0A0A;
+  --volt:       #D4FF00;
+  --paper:      #F5F5F2;
+  --paper-dim:  #cfcfca;
+  --graphite:   #141414;
+  --charcoal:   #262626;
+  --muted:      #7a7a78;
+  --hairline:   #1d1d1d;
+  --live-red:   #E63946;
+
+  /* font stacks come from next/font CSS vars set on <html> in the root layout */
+  --sv-font-saira:  var(--font-saira),  'Saira', system-ui, sans-serif;
+  --sv-font-serif:  var(--font-source-serif), 'Source Serif 4', Georgia, serif;
+  --sv-font-mono:   var(--font-jetbrains-mono), 'JetBrains Mono', ui-monospace, monospace;
+
+  /* layout: own the viewport. body in root layout is flex-col min-h-full,
+     so flex:1 makes us claim remaining height; 100dvh as a safety floor. */
+  flex: 1;
+  min-height: 100dvh;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--sv-font-mono);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ─── SHELL FRAME ───────────────────────────────────────────────────────── */
+
+.sv-app .sv-shell {
+  display: flex;
+  flex-direction: column;
+  /* Lock to viewport. 100dvh = dynamic viewport height (mobile-correct;
+     accounts for the iOS URL bar collapse). overflow: hidden ensures the
+     PAGE never scrolls — only cards scroll internally. With this lock the
+     header/nav become bounded flex children and stay on-screen. */
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ─── HEADER ────────────────────────────────────────────────────────────── */
+
+.sv-app .sv-header {
+  /* Pinned at top as a fixed flex child of .sv-shell (no longer sticky,
+     since the shell itself is viewport-locked and the page never scrolls). */
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--ink);
+  border-bottom: 1px solid var(--hairline);
+  padding: 12px 16px;
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+}
+
+/* LEFT — Daily Card / volt monogram tile */
+.sv-app .sv-deck-tile {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--volt);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.55;
+  transition: opacity 120ms ease, box-shadow 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-deck-tile.is-active {
+  opacity: 1;
+}
+
+.sv-app .sv-deck-monogram {
+  position: relative;
+  font-family: var(--sv-font-saira);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink);
+  padding-top: 4px;
+  display: inline-block;
+}
+.sv-app .sv-macron {
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 2px;
+  border-radius: 1px;
+}
+.sv-app .sv-macron-ink { background: var(--ink); }
+
+/* CENTER — wordmark stack */
+.sv-app .sv-wordmark-stack {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.sv-app .sv-wordmark {
+  font-family: var(--sv-font-saira);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 19px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--paper);
+  white-space: nowrap;
+}
+.sv-app .sv-y-volt {
+  position: relative;
+  color: var(--volt);
+  display: inline-block;
+}
+.sv-app .sv-macron-volt {
+  background: var(--volt);
+  top: -1px;
+  left: 0;
+  right: 0;
+}
+.sv-app .sv-dateline {
+  margin-top: 4px;
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-transform: uppercase;
+  min-height: 11px;       /* reserve space while date loads to avoid CLS */
+}
+
+/* RIGHT — account avatar */
+.sv-app .sv-avatar {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--charcoal);
+  color: var(--paper);
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 0 solid transparent;
+  outline-offset: 2px;
+  transition: outline-color 120ms ease, outline-width 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-avatar.is-active {
+  outline: 2px solid var(--volt);
+}
+
+/* ─── STAGE ─────────────────────────────────────────────────────────────── */
+
+.sv-app .sv-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--ink);
+  min-height: 0;            /* allow children with overflow:auto to shrink correctly */
+}
+
+.sv-app .sv-placeholder {
+  margin: auto;             /* center within the column-stage */
+  padding: 32px 24px;
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  max-width: 32ch;
+  line-height: 1.5;
+}
+
+/* ─── DECK + CARDS ──────────────────────────────────────────────────────── */
+
+.sv-app .sv-deck-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+.sv-app .sv-deck {
+  /* flex: 1 1 auto = grow and shrink from auto basis (the content row).
+     min-height: 0 is REQUIRED so the flex child can actually shrink below
+     its content's intrinsic size and let the cards' overflow-y:auto kick in. */
+  flex: 1 1 auto;
+  display: flex;
+  gap: 18px;
+  padding: 16px 18px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 18px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  min-height: 0;
+}
+.sv-app .sv-deck::-webkit-scrollbar { display: none; }
+
+.sv-app .sv-card {
+  flex: 0 0 calc(100% - 36px);
+  /* Explicit height = deck-row height. Bounds the card so long content
+     (Next Up preview) scrolls inside, and short content (Golden Boot rows)
+     fills the bounded space without pushing layout. */
+  height: 100%;
+  scroll-snap-align: center;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.sv-app .sv-card::-webkit-scrollbar { display: none; }
+
+.sv-app .sv-card-body {
+  padding: 22px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sv-app .sv-card--accent {
+  border-left: 2px solid var(--volt);
+}
+
+/* Card header */
+.sv-app .sv-kicker {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--volt);
+  line-height: 1.2;
+}
+.sv-app .sv-title {
+  font-family: var(--sv-font-saira);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 24px;
+  line-height: 1.05;
+  letter-spacing: -0.005em;
+  color: var(--paper);
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+.sv-app .sv-title--longform {
+  font-size: 22px;
+  line-height: 1.15;
+  display: block;
+}
+.sv-app .sv-meta {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-vs {
+  font-family: var(--sv-font-saira);
+  color: var(--muted);
+  font-weight: 900;
+  font-style: italic;
+}
+
+/* Followed (★ + volt) */
+.sv-app .sv-followed { color: var(--volt); }
+.sv-app .sv-star {
+  color: var(--volt);
+  margin-right: 3px;
+  font-size: 0.78em;
+  vertical-align: 1px;
+}
+
+/* Body copy */
+.sv-app .sv-lede {
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--paper);
+  margin: 0;
+}
+.sv-app .sv-body {
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--paper-dim);
+  margin: 0;
+}
+.sv-app .sv-section-label {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* Win-prob mini-bar */
+.sv-app .sv-probbar {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--charcoal);
+}
+.sv-app .sv-probbar-seg { height: 100%; display: block; }
+.sv-app .sv-probbar-home { background: var(--volt); }
+.sv-app .sv-probbar-draw { background: var(--charcoal); }
+.sv-app .sv-probbar-away { background: #4a4a48; }
+.sv-app .sv-prob-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+.sv-app .sv-prob-legend strong {
+  color: var(--paper);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  margin-right: 4px;
+}
+
+/* Bullets */
+.sv-app .sv-bullets {
+  margin: 0;
+  padding: 0 0 0 18px;
+  list-style: disc;
+}
+.sv-app .sv-bullets li {
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--paper-dim);
+  margin-bottom: 6px;
+}
+.sv-app .sv-bullets li:last-child { margin-bottom: 0; }
+
+/* Ranklists (Power, Players, Watch) */
+.sv-app .sv-ranklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sv-app .sv-rankrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.sv-app .sv-rankrow:last-child { border-bottom: 0; }
+.sv-app .sv-rank-num {
+  flex: 0 0 22px;
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+}
+.sv-app .sv-rank-name {
+  flex: 1;
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--paper);
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+.sv-app .sv-rankrow.is-followed .sv-rank-name,
+.sv-app .sv-rankrow.is-followed .sv-rank-score { color: var(--volt); }
+.sv-app .sv-rank-score {
+  font-family: var(--sv-font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.sv-app .sv-ranklist--players .sv-rankrow { padding: 12px 0; }
+.sv-app .sv-player-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sv-app .sv-player-meta .sv-rank-name { flex: initial; }
+.sv-app .sv-rank-sub {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Card footer (small mono byline) */
+.sv-app .sv-card-footer {
+  margin-top: 8px;
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-top: 1px solid var(--hairline);
+  padding-top: 10px;
+}
+
+/* Inline flag emoji (legacy — still used if any emoji slot remains) */
+.sv-app .sv-flag {
+  font-size: 1em;
+  line-height: 1;
+  margin-right: 4px;
+}
+
+/* SVG flag (real flag URLs from teams.flag_svg_path) */
+.sv-app .sv-flag-svg {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 1.2em;
+  height: 0.8em;
+  margin-right: 6px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  vertical-align: middle;
+  border-radius: 1px;
+  box-shadow: 0 0 0 1px var(--charcoal);
+}
+.sv-app .sv-flag-svg--empty {
+  background: var(--charcoal);
+}
+
+/* Honest empty-state body (centered serif message inside a card) */
+.sv-app .sv-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  padding: 18px 8px 30px;
+  text-align: center;
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 32ch;
+  margin-inline: auto;
+}
+
+/* Inline emphasised text inside body copy (e.g. market top-priced name) */
+.sv-app .sv-followed-text {
+  color: var(--volt);
+  font-weight: 500;
+}
+
+/* ─── TODAY'S CARD — slate rows ─────────────────────────────────────────── */
+/* Reuses the deck's row aesthetic (hairline-separated, mono numerals, Saira
+   names) like the Golden Boot / followed-entity rows, laid out as anchors:
+   [ flags + abbreviations ] · [ kickoff / score ] · [ watch score ]. */
+
+.sv-app .sv-matchlist {
+  display: flex;
+  flex-direction: column;
+}
+.sv-app .sv-match-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--hairline);
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-match-row:last-child { border-bottom: 0; }
+.sv-app .sv-match-row:active { background: rgba(255, 255, 255, 0.025); }
+
+.sv-app .sv-match-teams {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  color: var(--paper);
+}
+
+.sv-app .sv-live-tag {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--live-red);
+  white-space: nowrap;
+  margin-left: 2px;
+}
+
+.sv-app .sv-match-right {
+  flex: 0 0 auto;
+  font-family: var(--sv-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.sv-app .sv-match-ws {
+  flex: 0 0 30px;
+  text-align: right;
+  font-family: var(--sv-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Honest empty slate — short serif line, same register as sv-empty. */
+.sv-app .sv-today-empty {
+  padding: 22px 4px 26px;
+  text-align: center;
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ─── DOTS + HINT ───────────────────────────────────────────────────────── */
+
+.sv-app .sv-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0 0;
+}
+.sv-app .sv-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--charcoal);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: width 160ms ease, background 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-dot.is-active {
+  width: 18px;
+  background: var(--volt);
+}
+.sv-app .sv-deck-hint {
+  text-align: center;
+  font-family: var(--sv-font-mono);
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px 0 14px;
+}
+
+/* ─── BOTTOM NAV ────────────────────────────────────────────────────────── */
+
+.sv-app .sv-nav {
+  /* Pinned at bottom as a fixed flex child of .sv-shell. ALWAYS visible
+     since the shell is viewport-locked. safe-area-inset-bottom clears the
+     iPhone home indicator. */
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  background: var(--ink);
+  border-top: 1px solid var(--hairline);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.sv-app .sv-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px 12px;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-family: var(--sv-font-mono);
+  cursor: pointer;
+  transition: color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-nav-item.is-active { color: var(--volt); }
+.sv-app .sv-nav-item:active { transform: translateY(0.5px); }
+
+.sv-app .sv-nav-icon {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+}
+.sv-app .sv-nav-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.sv-app .sv-nav-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1;
+}
