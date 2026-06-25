@@ -13,20 +13,22 @@ import {
   readWatchScoresToday,
   readTheRead,
   readStatsTopScorers,
+  readSchedule,
 } from './data';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AppShellPage() {
-  const [todaysCard, power, playerPot, watch, read, stats] = await Promise.all([
+  const [todaysCard, power, playerPot, watch, read, stats, schedule] = await Promise.all([
     readTodaysCard(),
     readTeamPowerTop5(),
     readPlayerPotTop5(),
     readWatchScoresToday(),
     readTheRead(),
     readStatsTopScorers(),
+    readSchedule(),
   ]);
 
   const cards = { todaysCard, power, playerPot, watch, read, stats };
-  return <AppShellClient cards={cards} />;
+  return <AppShellClient cards={cards} schedule={schedule} />;
 }

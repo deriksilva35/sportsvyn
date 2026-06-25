@@ -532,3 +532,111 @@ export async function readStatsTopScorers() {
     avg_goals_per_match: avgGoalsPerMatch,
   };
 }
+
+// =============================================================================
+// 7. SCHEDULE — the whole WC tournament, PT-day grouped, for the in-shell
+// Schedules screen (Strategy 1: lives inside the /app shell, nav persists).
+//
+// Generalizes readTodaysCard from a single PT day to the full tournament
+// range. Mirrors lib/scheduleData.js's readFixturesByPtDay range query
+// WITHOUT importing it; the range matches /schedule's LOAD_RANGE_* bounds.
+//
+// Everything the client needs is computed SERVER-SIDE, PT-locked:
+//   · kickoffLabel ← fmtKickoffPt ("3:00 PM PT")  — no client Date math
+//   · dayLabel     ← "Wednesday · Jun 24"          (PT calendar day)
+//   · isToday / isLive / isFinal pre-derived
+//   · grouping into ordered { ptDay, dayLabel, isToday, fixtures } done here
+// so the component renders groups directly, sidestepping KickoffTime's
+// visitor-local hydration dance entirely.
+//
+// Scorer pips ("Player MM'") are intentionally OMITTED this commit (deferred
+// to Commit 2 with lenses/filters) to keep the first screen lean — same call
+// readTodaysCard made.
+// =============================================================================
+
+// Tournament load window — matches /schedule's LOAD_RANGE_START/END
+// (app/schedule/page.js). Generous bounds; the DB only returns rows that
+// exist, so the pre/post buffer is free.
+const SCHEDULE_RANGE_START = '2026-06-08';
+const SCHEDULE_RANGE_END   = '2026-07-31';
+
+// PT-locked day header from a 'YYYY-MM-DD' PT-day string → "Wednesday · Jun 24".
+// pt_day is already the PT calendar day (computed in SQL via AT TIME ZONE), so
+// reading its parts back as a UTC date is drift-free and deterministic.
+function ptDayHeaderLabel(ptDay) {
+  const [y, m, d] = ptDay.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const weekday = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'long' }).format(dt);
+  const md      = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }).format(dt);
+  return `${weekday} · ${md}`;
+}
+
+export async function readSchedule() {
+  // Today's PT calendar day, "YYYY-MM-DD" — used to flag the "today" group.
+  const ptToday = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Los_Angeles',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+
+  // Full-tournament fixtures. Replicates readFixturesByPtDay's join/filter
+  // across the whole range. PT-day computed in SQL (the load-bearing detail:
+  // a 00:00Z kickoff lands on the correct PT calendar day, not the UTC one).
+  const rows = await sql`
+    SELECT
+      m.id, m.slug, m.kickoff_at, m.status,
+      m.home_score, m.away_score,
+      to_char((m.kickoff_at AT TIME ZONE 'America/Los_Angeles')::date, 'YYYY-MM-DD') AS pt_day,
+      h.name AS home_name, h.flag_svg_path AS home_flag, h.flag_color_primary AS home_flag_color,
+      a.name AS away_name, a.flag_svg_path AS away_flag, a.flag_color_primary AS away_flag_color
+    FROM matches m
+    JOIN teams   h  ON h.id  = m.home_team_id
+    JOIN teams   a  ON a.id  = m.away_team_id
+    JOIN leagues lg ON lg.id = m.league_id
+   WHERE lg.slug = ${WC_LEAGUE_SLUG}
+     AND (m.kickoff_at AT TIME ZONE 'America/Los_Angeles')::date >= ${SCHEDULE_RANGE_START}::date
+     AND (m.kickoff_at AT TIME ZONE 'America/Los_Angeles')::date <= ${SCHEDULE_RANGE_END}::date
+   ORDER BY m.kickoff_at ASC, m.id ASC
+  `;
+
+  // Group into ordered days. Rows are already kickoff-ASC, so first-seen
+  // pt_day order is chronological — no sort needed.
+  const days = [];
+  const byDay = new Map();
+  for (const r of rows) {
+    let group = byDay.get(r.pt_day);
+    if (!group) {
+      group = {
+        ptDay: r.pt_day,
+        dayLabel: ptDayHeaderLabel(r.pt_day),
+        isToday: r.pt_day === ptToday,
+        fixtures: [],
+      };
+      byDay.set(r.pt_day, group);
+      days.push(group);
+    }
+    group.fixtures.push({
+      id: r.id,
+      slug: r.slug,
+      home: {
+        name: r.home_name,
+        flag_svg_path: r.home_flag,
+        flag_color: r.home_flag_color,
+        followed: FOLLOWED_TEAMS.has(r.home_name),
+      },
+      away: {
+        name: r.away_name,
+        flag_svg_path: r.away_flag,
+        flag_color: r.away_flag_color,
+        followed: FOLLOWED_TEAMS.has(r.away_name),
+      },
+      kickoffLabel: fmtKickoffPt(r.kickoff_at),
+      status: r.status,
+      isLive: r.status === 'live',
+      isFinal: r.status === 'final',
+      home_score: r.home_score,
+      away_score: r.away_score,
+    });
+  }
+
+  return { days, count: rows.length };
+}

@@ -15,8 +15,12 @@ const PLACEHOLDERS = {
 // their PLACEHOLDERS string. Read currently has no clean destination
 // (only /article/[slug] exists; no article-index route), so it stays in-
 // shell pending a decision.
+// 'sched' is now an IN-SHELL section (no href) — tapping it switches the
+// stage to <ScheduleView> while the header + bottom nav persist (Strategy 1),
+// instead of soft-loading the website's /schedule and dropping the shell.
+// bracket/rankings stay as <Link> navigations for now (later commits).
 const NAV_ITEMS = [
-  { id: 'sched',    label: 'Schedules', Icon: IconSched,    href: '/schedule' },
+  { id: 'sched',    label: 'Schedules', Icon: IconSched },
   { id: 'bracket',  label: 'Bracket',   Icon: IconBracket,  href: '/world-cup-2026/bracket' },
   { id: 'rankings', label: 'Rankings',  Icon: IconRankings, href: '/world-cup-2026/rankings' },
   { id: 'read',     label: 'Read',      Icon: IconRead },
@@ -25,7 +29,7 @@ const NAV_ITEMS = [
 const DAYS_SHORT = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 const MONTHS = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
 
-export default function AppShellClient({ cards }) {
+export default function AppShellClient({ cards, schedule }) {
   const [section, setSection] = useState('deck');
   const [dateline, setDateline] = useState('');
 
@@ -74,7 +78,9 @@ export default function AppShellClient({ cards }) {
       <main className="sv-stage">
         {section === 'deck'
           ? <Deck cards={cards} />
-          : <div className="sv-placeholder">{PLACEHOLDERS[section]}</div>
+          : section === 'sched'
+            ? <ScheduleView data={schedule} />
+            : <div className="sv-placeholder">{PLACEHOLDERS[section]}</div>
         }
       </main>
 
@@ -176,6 +182,92 @@ function Deck({ cards }) {
       <div className="sv-deck-hint">← swipe · scroll inside →</div>
     </div>
   );
+}
+
+// ─── SCHEDULE VIEW ─────────────────────────────────────────────────────────
+// In-shell Schedules screen (Commit 1): the whole WC tournament, PT-day
+// grouped, vertically scrolling inside .sv-stage while the header + bottom
+// nav stay pinned. All data arrives pre-shaped from readSchedule (server,
+// PT-locked) — no client Date math, no KickoffTime island, no FixtureCard /
+// schedule.css import. Rows are rebuilt in the deck's design language.
+// Lenses / scrubber / filters / scorer pips are Commit 2.
+
+function ScheduleView({ data }) {
+  if (!data || !data.days || data.days.length === 0) {
+    return (
+      <div className="sv-sched">
+        <div className="sv-sched-empty">No fixtures scheduled yet.</div>
+      </div>
+    );
+  }
+  return (
+    <div className="sv-sched">
+      <div className="sv-sched-head">
+        <div className="sv-kicker">Schedule</div>
+        <div className="sv-meta">
+          {data.count} {data.count === 1 ? 'Match' : 'Matches'} · Full Tournament
+        </div>
+      </div>
+
+      {data.days.map((day) => (
+        <section key={day.ptDay} className="sv-sched-day">
+          <div className={`sv-sched-dayhead ${day.isToday ? 'is-today' : ''}`}>
+            <span className="sv-sched-daylabel">{day.dayLabel}</span>
+            {day.isToday && <span className="sv-sched-todaytag">· Today</span>}
+            <span className="sv-sched-dayrule" aria-hidden="true" />
+            <span className="sv-sched-daycount">
+              {day.fixtures.length} {day.fixtures.length === 1 ? 'match' : 'matches'}
+            </span>
+          </div>
+          <div className="sv-sched-list">
+            {day.fixtures.map((f) => <ScheduleMatchRow key={f.id} f={f} />)}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+// One fixture — a stacked two-line matchup (home over away) so FULL country
+// names get their own line and wrap gracefully instead of colliding on one
+// row. Plain <a> (stays in-WebView via allowNavigation; NOT a Next <Link>).
+function ScheduleMatchRow({ f }) {
+  return (
+    <a className="sv-sched-row" href={`/match/${f.slug}`}>
+      <div className="sv-sched-teams">
+        <div className="sv-sched-team">
+          <FlagSvg path={f.home.flag_svg_path} />
+          <span className={`sv-sched-name ${f.home.followed ? 'sv-followed' : ''}`}>
+            {f.home.followed && <span className="sv-star" aria-hidden="true">★</span>}
+            {f.home.name}
+          </span>
+          <span className="sv-sched-score">{scoreOrBlank(f, f.home_score)}</span>
+        </div>
+        <div className="sv-sched-team">
+          <FlagSvg path={f.away.flag_svg_path} />
+          <span className={`sv-sched-name ${f.away.followed ? 'sv-followed' : ''}`}>
+            {f.away.followed && <span className="sv-star" aria-hidden="true">★</span>}
+            {f.away.name}
+          </span>
+          <span className="sv-sched-score">{scoreOrBlank(f, f.away_score)}</span>
+        </div>
+      </div>
+      <div className="sv-sched-meta">
+        {f.isLive
+          ? <span className="sv-live-tag">● LIVE</span>
+          : f.isFinal
+            ? <span className="sv-sched-status">Full Time</span>
+            : <span className="sv-sched-time">{f.kickoffLabel}</span>}
+      </div>
+    </a>
+  );
+}
+
+// Per-side score: shown only once a match is live or final (0 is a real
+// score, so guard on null, not falsiness). Scheduled / cancelled → blank.
+function scoreOrBlank(f, score) {
+  if (!f.isLive && !f.isFinal) return '';
+  return score == null ? '' : score;
 }
 
 // ─── CARDS ───────────────────────────────────────────────────────────────

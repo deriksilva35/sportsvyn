@@ -649,3 +649,167 @@
   text-transform: uppercase;
   line-height: 1;
 }
+
+/* ─── SCHEDULE VIEW (in-shell Schedules screen) ──────────────────────────── */
+/* Vertically scrolls inside .sv-stage (flex:1, min-height:0); the header and
+   bottom nav are siblings outside the stage, so they stay pinned. Rows are
+   rebuilt in the deck's design language — no schedule.css. */
+
+.sv-app .sv-sched {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 18px 24px;
+  scrollbar-width: none;
+}
+.sv-app .sv-sched::-webkit-scrollbar { display: none; }
+
+.sv-app .sv-sched-head { margin-bottom: 14px; }
+
+.sv-app .sv-sched-day { margin-bottom: 18px; }
+.sv-app .sv-sched-day:last-child { margin-bottom: 0; }
+
+/* Day header — sticks to the top of the scroll so the current day stays
+   labelled while scrolling a long tournament. Opaque ink so rows don't
+   bleed through. */
+.sv-app .sv-sched-dayhead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  background: var(--ink);
+  border-bottom: 1px solid var(--hairline);
+}
+.sv-app .sv-sched-daylabel {
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--paper);
+  white-space: nowrap;
+}
+.sv-app .sv-sched-dayhead.is-today .sv-sched-daylabel { color: var(--volt); }
+.sv-app .sv-sched-todaytag {
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--volt);
+  white-space: nowrap;
+}
+.sv-app .sv-sched-dayrule {
+  flex: 1;
+  height: 1px;
+  background: var(--hairline);
+}
+.sv-app .sv-sched-daycount {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.sv-app .sv-sched-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Stacked two-line matchup — full names get their own line and wrap. */
+.sv-app .sv-sched-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-sched-row:active { background: #1a1a1a; }
+
+.sv-app .sv-sched-teams {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sv-app .sv-sched-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sv-app .sv-sched-name {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: var(--paper);
+  overflow-wrap: anywhere;   /* long full names wrap instead of overflowing */
+}
+.sv-app .sv-sched-name.sv-followed { color: var(--volt); }
+.sv-app .sv-sched-score {
+  flex: 0 0 auto;
+  min-width: 16px;
+  text-align: right;
+  font-family: var(--sv-font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+
+.sv-app .sv-sched-meta {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 62px;
+}
+.sv-app .sv-sched-time {
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.sv-app .sv-sched-status {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: right;
+}
+
+.sv-app .sv-sched-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 24px;
+  text-align: center;
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--muted);
+}
