@@ -1,19 +1,24 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 
 const PLACEHOLDERS = {
   account:  'MY SPORTSVYN — Step 4',
-  sched:    'SCHEDULES — data in a later step',
-  bracket:  'BRACKET — later step',
-  rankings: 'RANKINGS — later step',
-  read:     'READ — later step',
+  read:     'READ — destination pending (no article index route yet)',
 };
 
+// Bottom nav items. Items with `href` navigate (Capacitor WebView soft-loads
+// the full site page; v1 intentionally drops the /app shell on tap — we are
+// NOT persisting app-chrome over site pages yet). Items without `href` stay
+// as in-shell sections that toggle the local `section` state and render
+// their PLACEHOLDERS string. Read currently has no clean destination
+// (only /article/[slug] exists; no article-index route), so it stays in-
+// shell pending a decision.
 const NAV_ITEMS = [
-  { id: 'sched',    label: 'Schedules', Icon: IconSched },
-  { id: 'bracket',  label: 'Bracket',   Icon: IconBracket },
-  { id: 'rankings', label: 'Rankings',  Icon: IconRankings },
+  { id: 'sched',    label: 'Schedules', Icon: IconSched,    href: '/schedule' },
+  { id: 'bracket',  label: 'Bracket',   Icon: IconBracket,  href: '/world-cup-2026/bracket' },
+  { id: 'rankings', label: 'Rankings',  Icon: IconRankings, href: '/world-cup-2026/rankings' },
   { id: 'read',     label: 'Read',      Icon: IconRead },
 ];
 
@@ -74,19 +79,35 @@ export default function AppShellClient({ cards }) {
       </main>
 
       <nav className="sv-nav" aria-label="Primary">
-        {NAV_ITEMS.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            type="button"
-            className={`sv-nav-item ${section === id ? 'is-active' : ''}`}
-            aria-label={label}
-            aria-pressed={section === id}
-            onClick={() => setSection(id)}
-          >
-            <span className="sv-nav-icon" aria-hidden="true"><Icon /></span>
-            <span className="sv-nav-label">{label}</span>
-          </button>
-        ))}
+        {NAV_ITEMS.map(({ id, label, Icon, href }) => {
+          const isActive = section === id;
+          const className = `sv-nav-item ${isActive ? 'is-active' : ''}`;
+          const inner = (
+            <>
+              <span className="sv-nav-icon" aria-hidden="true"><Icon /></span>
+              <span className="sv-nav-label">{label}</span>
+            </>
+          );
+          if (href) {
+            return (
+              <Link key={id} href={href} className={className} aria-label={label}>
+                {inner}
+              </Link>
+            );
+          }
+          return (
+            <button
+              key={id}
+              type="button"
+              className={className}
+              aria-label={label}
+              aria-pressed={isActive}
+              onClick={() => setSection(id)}
+            >
+              {inner}
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
@@ -99,7 +120,7 @@ function Deck({ cards }) {
   const [activeIdx, setActiveIdx] = useState(0);
 
   const slots = [
-    { key: 'nextup', render: () => <CardNextUp data={cards.nextUp} /> },
+    { key: 'today',  render: () => <CardTodaysCard data={cards.todaysCard} /> },
     { key: 'power',  render: () => <CardPower  rows={cards.power} /> },
     { key: 'player', render: () => <CardPlayers rows={cards.playerPot} /> },
     { key: 'watch',  render: () => <CardWatch  rows={cards.watch} /> },
@@ -159,61 +180,66 @@ function Deck({ cards }) {
 
 // ─── CARDS ───────────────────────────────────────────────────────────────
 
-function CardNextUp({ data }) {
+// TODAY'S CARD — the deck's lead card. Mirrors the homepage's daily-card
+// Header (kicker + dateline) + SlateSection (slate label + match rows),
+// restyled in the deck's own design language. All time/date strings arrive
+// pre-formatted from readTodaysCard (server, PT-locked) — no client Date math.
+function CardTodaysCard({ data }) {
+  // readTodaysCard never returns null (empty slate → count 0); the guard is
+  // purely defensive against a data-load failure.
   if (!data) {
-    return (
-      <EmptyCard kicker="Next Up" message="Next fixture posts soon." accent />
-    );
+    return <EmptyCard kicker="Today&rsquo;s Card" message="Today&rsquo;s slate posts soon." accent />;
   }
-  const { match, meta, winProb, lede, body, watch } = data;
+  const { dateline, fixtures, count } = data;
   return (
     <div className="sv-card-body sv-card--accent">
-      <div className="sv-kicker">Next Up</div>
-      <h2 className="sv-title">
-        <FlagSvg path={match.home.flag_svg_path} />
-        <span className={match.home.followed ? 'sv-followed' : undefined}>
-          {match.home.followed && <span className="sv-star" aria-hidden="true">★</span>}
-          {match.home.name}
-        </span>
-        <span className="sv-vs"> v </span>
-        <FlagSvg path={match.away.flag_svg_path} />
-        <span className={match.away.followed ? 'sv-followed' : undefined}>
-          {match.away.followed && <span className="sv-star" aria-hidden="true">★</span>}
-          {match.away.name}
-        </span>
-      </h2>
-      <div className="sv-meta">{meta}</div>
+      <div className="sv-kicker">Today&rsquo;s Card</div>
+      <div className="sv-meta">{dateline}</div>
 
-      {lede && <p className="sv-lede">{lede}</p>}
-      {bodyParagraphs(body).map((p, i) => (
-        <p key={i} className="sv-body">{p}</p>
-      ))}
+      <div className="sv-section-label">
+        Today&rsquo;s Slate · {count} {count === 1 ? 'Match' : 'Matches'}
+      </div>
 
-      {winProb && (
-        <>
-          <div className="sv-section-label">Win probability</div>
-          <div className="sv-probbar" aria-label="Win probability">
-            <span className="sv-probbar-seg sv-probbar-home" style={{ width: `${winProb.home}%` }} />
-            <span className="sv-probbar-seg sv-probbar-draw" style={{ width: `${winProb.draw}%` }} />
-            <span className="sv-probbar-seg sv-probbar-away" style={{ width: `${winProb.away}%` }} />
-          </div>
-          <div className="sv-prob-legend">
-            <span><strong>{winProb.homeCode ?? 'HOME'}</strong> {winProb.home}%</span>
-            <span><strong>Draw</strong> {winProb.draw}%</span>
-            <span><strong>{winProb.awayCode ?? 'AWAY'}</strong> {winProb.away}%</span>
-          </div>
-        </>
-      )}
-
-      {watch && watch.length > 0 && (
-        <>
-          <div className="sv-section-label">What to watch</div>
-          <ul className="sv-bullets">
-            {watch.map((b, i) => <li key={i}>{b}</li>)}
-          </ul>
-        </>
+      {count === 0 ? (
+        <div className="sv-today-empty">No matches today</div>
+      ) : (
+        <div className="sv-matchlist">
+          {fixtures.map((f) => <TodayMatchRow key={f.id} f={f} />)}
+        </div>
       )}
     </div>
+  );
+}
+
+// One slate row — plain <a> (stays in-WebView via the allowNavigation fix;
+// deliberately NOT a Next <Link>, we want the real /match navigation).
+function TodayMatchRow({ f }) {
+  const right = f.isFinal
+    ? `FT ${f.home_score ?? 0}–${f.away_score ?? 0}`
+    : f.isLive
+      ? `${f.home_score ?? 0}–${f.away_score ?? 0}`
+      : f.kickoffLabel;
+  return (
+    <a className="sv-match-row" href={`/match/${f.slug}`}>
+      <span className="sv-match-teams">
+        <FlagSvg path={f.home.flag_svg_path} />
+        <span className={f.home.followed ? 'sv-followed' : undefined}>
+          {f.home.followed && <span className="sv-star" aria-hidden="true">★</span>}
+          {teamShort(f.home.name, f.home.abbreviation)}
+        </span>
+        <span className="sv-vs"> v </span>
+        <FlagSvg path={f.away.flag_svg_path} />
+        <span className={f.away.followed ? 'sv-followed' : undefined}>
+          {f.away.followed && <span className="sv-star" aria-hidden="true">★</span>}
+          {teamShort(f.away.name, f.away.abbreviation)}
+        </span>
+        {f.isLive && <span className="sv-live-tag">· LIVE</span>}
+      </span>
+      <span className="sv-match-right">{right}</span>
+      <span className="sv-match-ws">
+        {f.watchScore != null ? f.watchScore.toFixed(1) : ''}
+      </span>
+    </a>
   );
 }
 
@@ -358,20 +384,14 @@ function CardStats({ data }) {
 
 // ─── PRIMITIVES ──────────────────────────────────────────────────────────
 
-// Split a body string on double-newlines into trimmed, non-empty paragraphs.
-// HTML collapses raw newlines to whitespace, so an article whose `body`
-// field is two paragraphs joined by "\n\n" would otherwise render as one
-// continuous block. Re-implemented locally (small helper) to keep app/app/
-// self-contained and avoid an import from lib/ or components/. Returns
-// [] for null / empty / whitespace-only input, so the caller's .map()
-// emits zero <p>s and the card renders no body block (matching the prior
-// `{body && ...}` behavior).
-function bodyParagraphs(body) {
-  if (!body || typeof body !== 'string') return [];
-  return body
-    .split(/\n\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+// Short team label for slate rows: abbreviation when present, else the
+// first three letters of the name, upper-cased. Mirrors the homepage's
+// teamShort intent (abbr-first) but with the deck's compact 3-char fallback
+// so a row never widens out to a full country name.
+function teamShort(name, abbr) {
+  if (abbr && abbr.length > 0) return abbr;
+  if (!name) return '—';
+  return name.slice(0, 3).toUpperCase();
 }
 
 function EmptyCard({ kicker, message, accent = false }) {

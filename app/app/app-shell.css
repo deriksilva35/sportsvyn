@@ -485,6 +485,86 @@
   font-weight: 500;
 }
 
+/* ─── TODAY'S CARD — slate rows ─────────────────────────────────────────── */
+/* Reuses the deck's row aesthetic (hairline-separated, mono numerals, Saira
+   names) like the Golden Boot / followed-entity rows, laid out as anchors:
+   [ flags + abbreviations ] · [ kickoff / score ] · [ watch score ]. */
+
+.sv-app .sv-matchlist {
+  display: flex;
+  flex-direction: column;
+}
+.sv-app .sv-match-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--hairline);
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-match-row:last-child { border-bottom: 0; }
+.sv-app .sv-match-row:active { background: rgba(255, 255, 255, 0.025); }
+
+.sv-app .sv-match-teams {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  color: var(--paper);
+}
+
+.sv-app .sv-live-tag {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--live-red);
+  white-space: nowrap;
+  margin-left: 2px;
+}
+
+.sv-app .sv-match-right {
+  flex: 0 0 auto;
+  font-family: var(--sv-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.sv-app .sv-match-ws {
+  flex: 0 0 30px;
+  text-align: right;
+  font-family: var(--sv-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Honest empty slate — short serif line, same register as sv-empty. */
+.sv-app .sv-today-empty {
+  padding: 22px 4px 26px;
+  text-align: center;
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 /* ─── DOTS + HINT ───────────────────────────────────────────────────────── */
 
 .sv-app .sv-dots {

@@ -28,6 +28,116 @@ const WC_LEAGUE_SLUG = 'fifa-wc-2026';
 const FOLLOWED_TEAMS   = new Set(['Mexico', 'Argentina']);
 const FOLLOWED_PLAYERS = new Set(['L. Messi']);
 
+// PT-locked kickoff formatter — "3:00 PM PT". Mirrors the homepage's
+// fmtKickoffPt (app/page.js) so the deck and the site read identically.
+// Returns a finished STRING; the client never re-derives time from a Date,
+// which is what sidesteps the KickoffTime hydration mismatch.
+function fmtKickoffPt(kickoffAt) {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    hour: 'numeric', minute: '2-digit', hour12: true,
+  }).format(new Date(kickoffAt)) + ' PT';
+}
+
+// =============================================================================
+// 0. TODAY'S CARD — today's PT World Cup slate + per-match peak Watch Score.
+//
+// The deck's lead card (replaces NEXT UP). Mirrors the homepage's
+// SlateSection data path (app/page.js) WITHOUT importing it:
+//
+//   fixtures   ← readFixturesByPtDay (lib/scheduleData.js), reimplemented
+//                locally and narrowed to the WC league AND today's PT day.
+//                PT-day grouping is computed in SQL via AT TIME ZONE so a
+//                00:00Z kickoff lands on the correct PT calendar day, not
+//                the UTC one (the load-bearing detail scheduleData.js calls
+//                out for the two 00:00Z-kickoff seeded fixtures).
+//   watchScore ← getWatchScoresForDate (lib/watchScore.js), reimplemented
+//                locally: each match's PEAK composite_score for the day,
+//                INNER-joined to the history so matches with no ticks simply
+//                don't appear in the map (→ watchScore null, never a fake 0).
+//
+// dateline and each kickoffLabel are formatted SERVER-SIDE, PT-locked, and
+// returned as ready-to-render strings — the client does zero Date math.
+//
+// Never returns null: an empty slate is { dateline, fixtures: [], count: 0 }
+// so the card renders an honest "No matches today" rather than collapsing.
+// =============================================================================
+export async function readTodaysCard() {
+  // Today's PT calendar day, "YYYY-MM-DD" (en-CA yields the ISO-shaped date).
+  const ptDay = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Los_Angeles',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+
+  // Server-computed dateline, PT-locked (hydration-safe): "Wed, Jun 24".
+  // Same shape as the homepage's fmtPtDate.
+  const dateline = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    weekday: 'short', month: 'short', day: 'numeric',
+  }).format(new Date());
+
+  // Today's WC fixtures, ordered by kickoff. Replicates readFixturesByPtDay's
+  // join/filter, narrowed to one PT day and the WC league.
+  const rows = await sql`
+    SELECT
+      m.id, m.slug, m.kickoff_at, m.status,
+      m.home_score, m.away_score,
+      h.name AS home_name, h.abbreviation AS home_abbreviation, h.flag_svg_path AS home_flag,
+      a.name AS away_name, a.abbreviation AS away_abbreviation, a.flag_svg_path AS away_flag
+    FROM matches m
+    JOIN teams   h  ON h.id  = m.home_team_id
+    JOIN teams   a  ON a.id  = m.away_team_id
+    JOIN leagues lg ON lg.id = m.league_id
+   WHERE lg.slug = ${WC_LEAGUE_SLUG}
+     AND (m.kickoff_at AT TIME ZONE 'America/Los_Angeles')::date = ${ptDay}::date
+   ORDER BY m.kickoff_at ASC, m.id ASC
+  `;
+
+  // Per-match PEAK Watch Score for the day. Replicates getWatchScoresForDate:
+  // MAX(composite_score) per match via LATERAL, INNER on `composite IS NOT
+  // NULL` so untracked matches drop out (and read as watchScore null below).
+  const wsRows = await sql`
+    SELECT m.id AS match_id, ws.composite::float AS composite
+      FROM matches m
+      JOIN leagues lg ON lg.id = m.league_id
+      JOIN LATERAL (
+        SELECT MAX(h.composite_score)::float AS composite
+          FROM match_watch_score_history h
+         WHERE h.match_id = m.id
+      ) ws ON ws.composite IS NOT NULL
+     WHERE lg.slug = ${WC_LEAGUE_SLUG}
+       AND (m.kickoff_at AT TIME ZONE 'America/Los_Angeles')::date = ${ptDay}::date
+  `;
+  const watchByMatch = new Map();
+  for (const r of wsRows) watchByMatch.set(r.match_id, Number(r.composite));
+
+  const fixtures = rows.map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    home: {
+      name: r.home_name,
+      abbreviation: r.home_abbreviation,
+      flag_svg_path: r.home_flag,
+      followed: FOLLOWED_TEAMS.has(r.home_name),
+    },
+    away: {
+      name: r.away_name,
+      abbreviation: r.away_abbreviation,
+      flag_svg_path: r.away_flag,
+      followed: FOLLOWED_TEAMS.has(r.away_name),
+    },
+    kickoffLabel: fmtKickoffPt(r.kickoff_at),
+    status: r.status,
+    isLive: r.status === 'live',
+    isFinal: r.status === 'final',
+    home_score: r.home_score,
+    away_score: r.away_score,
+    watchScore: watchByMatch.get(r.id) ?? null,
+  }));
+
+  return { dateline, fixtures, count: fixtures.length };
+}
+
 // =============================================================================
 // 1. NEXT UP — next WC fixture + match-winner probability + prematch copy.
 //
