@@ -549,9 +549,12 @@ export async function readStatsTopScorers() {
 // so the component renders groups directly, sidestepping KickoffTime's
 // visitor-local hydration dance entirely.
 //
-// Scorer pips ("Player MM'") are intentionally OMITTED this commit (deferred
-// to Commit 2 with lenses/filters) to keep the first screen lean — same call
-// readTodaysCard made.
+// Commit 2 adds the interactive scaffolding the in-shell lenses/scrubber/
+// filters need — all still computed/shaped server-side:
+//   · stage + group_code per fixture (Stage / Group filters)
+//   · scorer pips goals:{home,away} per fixture (readScheduleGoalsLocal)
+//   · ptToday + tournamentStart/End so the scrubber builds its contiguous
+//     7-day strip (incl. empty days) without recomputing PT date math.
 // =============================================================================
 
 // Tournament load window — matches /schedule's LOAD_RANGE_START/END
@@ -559,6 +562,34 @@ export async function readStatsTopScorers() {
 // exist, so the pre/post buffer is free.
 const SCHEDULE_RANGE_START = '2026-06-08';
 const SCHEDULE_RANGE_END   = '2026-07-31';
+
+// Scorer pips for the loaded fixtures — replicates lib/scheduleData.js's
+// readScheduleGoals locally (no lib/ import). Returns Map<match_id,
+// {home:[],away:[]}> of "Player MM'" lines. is_current=true drops VAR-reversed
+// goals; Missed Penalty is excluded (a chance, not a scoring event); own goals
+// get a " (og)" suffix and are credited to the stored team_side.
+async function readScheduleGoalsLocal(matchIds) {
+  if (!Array.isArray(matchIds) || matchIds.length === 0) return new Map();
+  const rows = await sql`
+    SELECT match_id, minute, minute_extra, team_side, player_name, detail
+      FROM match_events
+     WHERE match_id = ANY(${matchIds})
+       AND is_current = true
+       AND event_type = 'Goal'
+       AND (detail IS NULL OR detail <> 'Missed Penalty')
+     ORDER BY match_id, minute ASC, COALESCE(minute_extra, 0) ASC, id ASC
+  `;
+  const out = new Map();
+  for (const r of rows) {
+    if (!out.has(r.match_id)) out.set(r.match_id, { home: [], away: [] });
+    const bucket  = out.get(r.match_id);
+    const minute  = r.minute_extra ? `${r.minute}+${r.minute_extra}′` : `${r.minute}′`;
+    const ownGoal = r.detail === 'Own Goal' ? ' (og)' : '';
+    const line    = `${r.player_name ?? '—'}${ownGoal} ${minute}`;
+    (r.team_side === 'home' ? bucket.home : bucket.away).push(line);
+  }
+  return out;
+}
 
 // PT-locked day header from a 'YYYY-MM-DD' PT-day string → "Wednesday · Jun 24".
 // pt_day is already the PT calendar day (computed in SQL via AT TIME ZONE), so
@@ -584,7 +615,7 @@ export async function readSchedule() {
   const rows = await sql`
     SELECT
       m.id, m.slug, m.kickoff_at, m.status,
-      m.home_score, m.away_score,
+      m.home_score, m.away_score, m.stage, m.group_code,
       to_char((m.kickoff_at AT TIME ZONE 'America/Los_Angeles')::date, 'YYYY-MM-DD') AS pt_day,
       h.name AS home_name, h.flag_svg_path AS home_flag, h.flag_color_primary AS home_flag_color,
       a.name AS away_name, a.flag_svg_path AS away_flag, a.flag_color_primary AS away_flag_color
@@ -597,6 +628,10 @@ export async function readSchedule() {
      AND (m.kickoff_at AT TIME ZONE 'America/Los_Angeles')::date <= ${SCHEDULE_RANGE_END}::date
    ORDER BY m.kickoff_at ASC, m.id ASC
   `;
+
+  // Scorer pips for every loaded match, one round-trip. Empty Map when no
+  // events; each fixture defaults to { home:[], away:[] } below.
+  const goalsByMatch = await readScheduleGoalsLocal(rows.map((r) => r.id));
 
   // Group into ordered days. Rows are already kickoff-ASC, so first-seen
   // pt_day order is chronological — no sort needed.
@@ -617,6 +652,8 @@ export async function readSchedule() {
     group.fixtures.push({
       id: r.id,
       slug: r.slug,
+      stage: r.stage,
+      group_code: r.group_code,
       home: {
         name: r.home_name,
         flag_svg_path: r.home_flag,
@@ -635,8 +672,17 @@ export async function readSchedule() {
       isFinal: r.status === 'final',
       home_score: r.home_score,
       away_score: r.away_score,
+      goals: goalsByMatch.get(r.id) ?? { home: [], away: [] },
     });
   }
 
-  return { days, count: rows.length };
+  // Bounds for the scrubber's contiguous window (incl. empty days). ptToday
+  // lets it open on today without recomputing PT date math client-side.
+  return {
+    days,
+    count: rows.length,
+    ptToday,
+    tournamentStart: days[0]?.ptDay ?? null,
+    tournamentEnd:   days[days.length - 1]?.ptDay ?? null,
+  };
 }

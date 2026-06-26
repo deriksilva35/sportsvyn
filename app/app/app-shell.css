@@ -650,24 +650,224 @@
   line-height: 1;
 }
 
-/* ─── SCHEDULE VIEW (in-shell Schedules screen) ──────────────────────────── */
-/* Vertically scrolls inside .sv-stage (flex:1, min-height:0); the header and
-   bottom nav are siblings outside the stage, so they stay pinned. Rows are
-   rebuilt in the deck's design language — no schedule.css. */
+/* ─── SCHEDULE VIEW (in-shell, interactive — Commit 2) ───────────────────── */
+/* .sv-sched is a flex column inside .sv-stage: a FIXED control zone
+   (lens tabs + scrubber + filters) that does NOT scroll, over a scrolling
+   match list. Header + bottom nav are siblings outside .sv-stage, so they
+   stay pinned. Rows rebuilt in the deck's language — no schedule.css. */
 
 .sv-app .sv-sched {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* Fixed top control zone — stays put while the list scrolls beneath it. */
+.sv-app .sv-sched-controls {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--ink);
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* Lens tabs */
+.sv-app .sv-sched-lenstabs {
+  display: flex;
+  gap: 6px;
+}
+.sv-app .sv-sched-lens {
+  flex: 1;
+  padding: 7px 6px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-sched-lens.is-on {
+  color: var(--ink);
+  background: var(--volt);
+  border-color: var(--volt);
+  font-weight: 700;
+}
+
+/* 7-day scrubber */
+.sv-app .sv-sched-scrub {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+.sv-app .sv-sched-arrow {
+  flex: 0 0 auto;
+  width: 26px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 8px;
+  color: var(--paper);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-sched-arrow:disabled { opacity: 0.3; cursor: default; }
+.sv-app .sv-sched-days {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 4px;
+}
+.sv-app .sv-sched-daycell {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 2px 9px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 8px;
+  color: var(--paper);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-sched-daycell.is-sel {
+  border-color: var(--volt);
+  background: #1c1c14;
+}
+.sv-app .sv-sched-cw {
+  font-family: var(--sv-font-mono);
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.sv-app .sv-sched-daycell.is-sel .sv-sched-cw { color: var(--volt); }
+.sv-app .sv-sched-cn {
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--paper);
+  white-space: nowrap;
+}
+.sv-app .sv-sched-cdot {
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--volt);
+}
+
+/* Filters (Stage / Group / Status) */
+.sv-app .sv-sched-filters {
+  display: flex;
+  gap: 6px;
+}
+.sv-app .sv-sched-dd {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.sv-app .sv-sched-ddbtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 8px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 8px;
+  color: var(--paper);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-sched-dd.is-active .sv-sched-ddbtn { border-color: var(--volt); }
+.sv-app .sv-sched-ddlabel {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-sched-ddval {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  color: var(--paper);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sv-app .sv-sched-dd.is-active .sv-sched-ddval { color: var(--volt); }
+.sv-app .sv-sched-ddcaret {
+  font-size: 8px;
+  color: var(--muted);
+}
+.sv-app .sv-sched-ddpanel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.sv-app .sv-sched-ddopt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--paper);
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-sched-ddopt.is-on { color: var(--volt); }
+.sv-app .sv-sched-ddopt:active { background: var(--charcoal); }
+.sv-app .sv-sched-ddgrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  padding-top: 3px;
+}
+.sv-app .sv-sched-ddopt--grid { text-align: center; padding: 8px 0; }
+
+/* Scrolling match list (the only scroll region; controls stay fixed above) */
+.sv-app .sv-sched-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 16px 18px 24px;
+  padding: 14px;
   scrollbar-width: none;
 }
-.sv-app .sv-sched::-webkit-scrollbar { display: none; }
-
-.sv-app .sv-sched-head { margin-bottom: 14px; }
+.sv-app .sv-sched-scroll::-webkit-scrollbar { display: none; }
 
 .sv-app .sv-sched-day { margin-bottom: 18px; }
 .sv-app .sv-sched-day:last-child { margin-bottom: 0; }
@@ -724,11 +924,13 @@
   gap: 8px;
 }
 
-/* Stacked two-line matchup — full names get their own line and wrap. */
+/* Stacked two-line matchup — full names get their own line and wrap.
+   Row is a column: matchup (.sv-sched-main: teams | meta) over optional
+   scorer pips (.sv-sched-goals). */
 .sv-app .sv-sched-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   padding: 12px 14px;
   background: var(--graphite);
   border: 1px solid var(--charcoal);
@@ -738,6 +940,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 .sv-app .sv-sched-row:active { background: #1a1a1a; }
+
+.sv-app .sv-sched-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
 .sv-app .sv-sched-teams {
   flex: 1;
@@ -800,9 +1008,46 @@
   text-align: right;
 }
 
+/* Scorer pips — home scorers left column, away right, each a volt pip + line. */
+.sv-app .sv-sched-goals {
+  display: flex;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline);
+}
+.sv-app .sv-sched-goalcol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sv-app .sv-sched-goalcol--away {
+  align-items: flex-end;
+  text-align: right;
+}
+.sv-app .sv-sched-goal {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--paper-dim);
+}
+.sv-app .sv-sched-goalcol--away .sv-sched-goal { flex-direction: row-reverse; }
+.sv-app .sv-sched-gpip {
+  flex: 0 0 auto;
+  width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--volt);
+}
+
 .sv-app .sv-sched-empty {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 200px;
@@ -811,5 +1056,6 @@
   font-family: var(--sv-font-serif);
   font-style: italic;
   font-size: 14px;
+  line-height: 1.5;
   color: var(--muted);
 }
