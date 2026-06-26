@@ -1,7 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { loadMatch } from './actions';
+
+// Lets deeply-nested rows (Today's Card rows, Schedule rows) open the in-shell
+// match view without prop-drilling through Deck / ScheduleView render helpers.
+const MatchNavContext = createContext(null);
 
 const PLACEHOLDERS = {
   account:  'MY SPORTSVYN — Step 4',
@@ -15,8 +20,12 @@ const PLACEHOLDERS = {
 // their PLACEHOLDERS string. Read currently has no clean destination
 // (only /article/[slug] exists; no article-index route), so it stays in-
 // shell pending a decision.
+// 'sched' is now an IN-SHELL section (no href) — tapping it switches the
+// stage to <ScheduleView> while the header + bottom nav persist (Strategy 1),
+// instead of soft-loading the website's /schedule and dropping the shell.
+// bracket/rankings stay as <Link> navigations for now (later commits).
 const NAV_ITEMS = [
-  { id: 'sched',    label: 'Schedules', Icon: IconSched,    href: '/schedule' },
+  { id: 'sched',    label: 'Schedules', Icon: IconSched },
   { id: 'bracket',  label: 'Bracket',   Icon: IconBracket,  href: '/world-cup-2026/bracket' },
   { id: 'rankings', label: 'Rankings',  Icon: IconRankings, href: '/world-cup-2026/rankings' },
   { id: 'read',     label: 'Read',      Icon: IconRead },
@@ -25,9 +34,45 @@ const NAV_ITEMS = [
 const DAYS_SHORT = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 const MONTHS = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
 
-export default function AppShellClient({ cards }) {
+export default function AppShellClient({ cards, schedule }) {
   const [section, setSection] = useState('deck');
   const [dateline, setDateline] = useState('');
+
+  // ─ In-shell match view: section gains a 'match' value + a target slug,
+  //   on-demand data via the loadMatch server action, cached per slug. ─
+  const [matchSlug, setMatchSlug]       = useState(null);
+  const [matchReturn, setMatchReturn]   = useState('deck');
+  const [matchData, setMatchData]       = useState(null);
+  const [matchLoading, setMatchLoading] = useState(false);
+  const [matchError, setMatchError]     = useState(false);
+  const matchCache = useRef(new Map());   // slug → assembled data (instant re-open)
+  const reqSlug    = useRef(null);        // guards against stale awaits clobbering
+
+  async function openMatch(slug) {
+    if (!slug) return;
+    setMatchReturn(section);     // remember where we came from for Back
+    setMatchSlug(slug);
+    setSection('match');
+    setMatchError(false);
+    reqSlug.current = slug;
+
+    const cached = matchCache.current.get(slug);
+    if (cached) { setMatchData(cached); setMatchLoading(false); return; }
+
+    setMatchData(null);
+    setMatchLoading(true);
+    try {
+      const data = await loadMatch(slug);
+      if (reqSlug.current !== slug) return;   // a newer open superseded this one
+      if (data) { matchCache.current.set(slug, data); setMatchData(data); }
+      else setMatchError(true);
+    } catch {
+      if (reqSlug.current === slug) setMatchError(true);
+    } finally {
+      if (reqSlug.current === slug) setMatchLoading(false);
+    }
+  }
+  function closeMatch() { setSection(matchReturn); }
 
   useEffect(() => {
     const now = new Date();
@@ -35,6 +80,7 @@ export default function AppShellClient({ cards }) {
   }, []);
 
   return (
+    <MatchNavContext.Provider value={openMatch}>
     <div className="sv-shell">
       <header className="sv-header">
         <button
@@ -74,7 +120,11 @@ export default function AppShellClient({ cards }) {
       <main className="sv-stage">
         {section === 'deck'
           ? <Deck cards={cards} />
-          : <div className="sv-placeholder">{PLACEHOLDERS[section]}</div>
+          : section === 'sched'
+            ? <ScheduleView data={schedule} />
+            : section === 'match'
+              ? <MatchView data={matchData} loading={matchLoading} error={matchError} onBack={closeMatch} />
+              : <div className="sv-placeholder">{PLACEHOLDERS[section]}</div>
         }
       </main>
 
@@ -110,6 +160,7 @@ export default function AppShellClient({ cards }) {
         })}
       </nav>
     </div>
+    </MatchNavContext.Provider>
   );
 }
 
@@ -178,6 +229,571 @@ function Deck({ cards }) {
   );
 }
 
+// ─── SCHEDULE VIEW (in-shell, interactive — Commit 2) ───────────────────────
+// Replicates the website ScheduleClient's logic — lenses (Today / This Week /
+// Following) + a 7-day scrubber + Stage/Group/Status filters + scorer pips —
+// rebuilt in the deck's design language. All data is pre-shaped by
+// readSchedule (server, PT-locked); the client does only PT-STRING date math
+// for the scrubber window (no Date/TZ guessing, no KickoffTime, no FixtureCard
+// / schedule.css import). Filter state is in-memory only (no URL mirroring —
+// the shell never reloads, so there's nothing to deep-link). Defaults to TODAY.
+
+// PT-string date helpers (operate on 'YYYY-MM-DD' — no timezone drift).
+const SCHED_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const SCHED_MONTHS   = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function ptDateFromStr(s) { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); }
+function ptDateToStr(d) {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+function addPtDays(s, n) { const d = ptDateFromStr(s); d.setUTCDate(d.getUTCDate() + n); return ptDateToStr(d); }
+function clampPtDate(d, lo, hi) { if (lo && d < lo) return lo; if (hi && d > hi) return hi; return d; }
+
+// Stage ordering + labels (mirrors the web ScheduleClient).
+const SCHED_STAGE_ORDER = ['group', 'round-of-32', 'round-of-16', 'quarters', 'quarterfinals', 'semis', 'semifinals', 'third-place', 'final'];
+const SCHED_STAGE_LABELS = {
+  group: 'Group Stage', 'round-of-32': 'Round of 32', 'round-of-16': 'Round of 16',
+  quarters: 'Quarters', quarterfinals: 'Quarters', semis: 'Semis', semifinals: 'Semis',
+  final: 'Final', 'third-place': 'Third Place',
+};
+function schedStageLabel(s) {
+  if (SCHED_STAGE_LABELS[s]) return SCHED_STAGE_LABELS[s];
+  return String(s).split(/[-_]/g).map((p) => (p.length ? p[0].toUpperCase() + p.slice(1) : p)).join(' ');
+}
+const SCHED_GROUP_LETTERS  = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+const SCHED_STATUS_OPTIONS = [
+  { k: 'all', label: 'All' }, { k: 'live', label: 'Live' }, { k: 'upcoming', label: 'Upcoming' },
+  { k: 'final', label: 'Final' }, { k: 'cancelled', label: 'Cancelled' },
+];
+
+function schedBucketOf(status) {
+  if (status === 'live')      return 'live';
+  if (status === 'final')     return 'final';
+  if (status === 'cancelled') return 'cancelled';
+  return 'upcoming';
+}
+function applySchedFilters(list, stageFilter, groupFilter) {
+  let out = list;
+  if (stageFilter !== 'all') out = out.filter((f) => f.stage === stageFilter);
+  if (groupFilter !== 'all') out = out.filter((f) => f.group_code === groupFilter);
+  return out;
+}
+
+function ScheduleView({ data }) {
+  const days    = data?.days ?? [];
+  const ptToday = data?.ptToday ?? '';
+  const tournamentStart = data?.tournamentStart ?? ptToday;
+  const tournamentEnd   = data?.tournamentEnd ?? ptToday;
+
+  // Flat fixture list; each carries pt_day for day-filtering/grouping.
+  const fixtures = useMemo(
+    () => days.flatMap((d) => d.fixtures.map((f) => ({ ...f, pt_day: d.ptDay }))),
+    [days],
+  );
+  // Days with ≥1 fixture → volt dot in the scrubber.
+  const matchDaySet = useMemo(() => new Set(days.map((d) => d.ptDay)), [days]);
+
+  const windowSize = 7;
+  const lastWindowStart = clampPtDate(addPtDays(tournamentEnd, -(windowSize - 1)), tournamentStart, tournamentEnd);
+
+  // DEFAULT TO TODAY: selected day = ptToday clamped into the tournament range
+  // (pins to tournamentStart only when today is pre-tournament).
+  const initialSelectedDay = clampPtDate(ptToday, tournamentStart, tournamentEnd);
+
+  const [lens, setLens]                 = useState('today');
+  const [ptDay, setPtDay]               = useState(initialSelectedDay);
+  const [windowStart, setWindowStart]   = useState(clampPtDate(initialSelectedDay, tournamentStart, lastWindowStart));
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [stageFilter, setStageFilter]   = useState('all');
+  const [groupFilter, setGroupFilter]   = useState('all');
+
+  // Distinct stages present, sorted by canonical tournament order.
+  const availableStages = useMemo(() => {
+    const set = new Set();
+    for (const f of fixtures) if (f.stage) set.add(f.stage);
+    return [...set].sort((a, b) => {
+      const ia = SCHED_STAGE_ORDER.indexOf(a), ib = SCHED_STAGE_ORDER.indexOf(b);
+      if (ia === -1 && ib === -1) return a.localeCompare(b);
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+  }, [fixtures]);
+
+  // Contiguous 7-day strip from windowStart — INCLUDES empty days (string math).
+  const windowDays = useMemo(() => {
+    const out = [];
+    for (let i = 0; i < windowSize; i++) {
+      const ds = addPtDays(windowStart, i);
+      const d  = ptDateFromStr(ds);
+      out.push({
+        ptDate: ds,
+        weekday: SCHED_WEEKDAYS[d.getUTCDay()],
+        label: `${SCHED_MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`,
+        isToday: ds === ptToday,
+      });
+    }
+    return out;
+  }, [windowStart, ptToday]);
+
+  const canBack    = windowStart > tournamentStart;
+  const canForward = windowStart < lastWindowStart;
+  function slideBack()    { if (canBack)    setWindowStart(clampPtDate(addPtDays(windowStart, -windowSize), tournamentStart, lastWindowStart)); }
+  function slideForward() { if (canForward) setWindowStart(clampPtDate(addPtDays(windowStart,  windowSize), tournamentStart, lastWindowStart)); }
+
+  const content = useMemo(() => {
+    if (lens === 'today') return renderTodayLens(fixtures, statusFilter, stageFilter, groupFilter, ptDay);
+    if (lens === 'week')  return renderWeekLens(fixtures, statusFilter, stageFilter, groupFilter, windowDays, ptToday);
+    return renderFollowingLens();
+  }, [lens, ptDay, statusFilter, stageFilter, groupFilter, fixtures, windowDays, ptToday]);
+
+  // Hooks above are unconditional; only the render branches on emptiness.
+  if (!data || days.length === 0) {
+    return (
+      <div className="sv-sched">
+        <div className="sv-sched-empty">No fixtures scheduled yet.</div>
+      </div>
+    );
+  }
+
+  const stageValue  = stageFilter  === 'all' ? 'All' : schedStageLabel(stageFilter);
+  const groupValue  = groupFilter  === 'all' ? 'All' : groupFilter;
+  const statusValue = statusFilter === 'all' ? 'All' : (SCHED_STATUS_OPTIONS.find((s) => s.k === statusFilter)?.label ?? statusFilter);
+
+  return (
+    <div className="sv-sched">
+      {/* Fixed control zone — does NOT scroll with the list. */}
+      <div className="sv-sched-controls">
+        <div className="sv-sched-lenstabs" role="tablist" aria-label="Schedule lens">
+          {[{ k: 'today', label: 'Today' }, { k: 'week', label: 'This Week' }, { k: 'following', label: 'Following' }].map((l) => (
+            <button
+              key={l.k}
+              type="button"
+              role="tab"
+              aria-selected={lens === l.k}
+              className={`sv-sched-lens ${lens === l.k ? 'is-on' : ''}`}
+              onClick={() => setLens(l.k)}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+
+        {(lens === 'today' || lens === 'week') && (
+          <div className="sv-sched-scrub">
+            <button type="button" className="sv-sched-arrow" aria-label="Previous week" disabled={!canBack} onClick={slideBack}>‹</button>
+            <div className="sv-sched-days">
+              {windowDays.map((d) => {
+                const isSel = d.ptDate === ptDay && lens === 'today';
+                return (
+                  <button
+                    key={d.ptDate}
+                    type="button"
+                    className={`sv-sched-daycell ${isSel ? 'is-sel' : ''}`}
+                    onClick={() => setPtDay(d.ptDate)}
+                  >
+                    <span className="sv-sched-cw">{d.weekday}{d.isToday ? ' · Today' : ''}</span>
+                    <span className="sv-sched-cn">{d.label}</span>
+                    {matchDaySet.has(d.ptDate) && <span className="sv-sched-cdot" aria-hidden="true" />}
+                  </button>
+                );
+              })}
+            </div>
+            <button type="button" className="sv-sched-arrow" aria-label="Next week" disabled={!canForward} onClick={slideForward}>›</button>
+          </div>
+        )}
+
+        {(lens === 'today' || lens === 'week') && (
+          <div className="sv-sched-filters">
+            <SchedSelect label="Stage" value={stageValue} active={stageFilter !== 'all'}>
+              {(close) => (
+                <>
+                  <SchedOpt on={stageFilter === 'all'} onClick={() => { setStageFilter('all'); close(); }}>All</SchedOpt>
+                  {availableStages.map((s) => (
+                    <SchedOpt key={s} on={stageFilter === s} onClick={() => { setStageFilter(s); close(); }}>{schedStageLabel(s)}</SchedOpt>
+                  ))}
+                </>
+              )}
+            </SchedSelect>
+            <SchedSelect label="Group" value={groupValue} active={groupFilter !== 'all'}>
+              {(close) => (
+                <>
+                  <SchedOpt on={groupFilter === 'all'} onClick={() => { setGroupFilter('all'); close(); }}>All</SchedOpt>
+                  <div className="sv-sched-ddgrid">
+                    {SCHED_GROUP_LETTERS.map((g) => (
+                      <SchedOpt key={g} on={groupFilter === g} grid onClick={() => { setGroupFilter(g); close(); }}>{g}</SchedOpt>
+                    ))}
+                  </div>
+                </>
+              )}
+            </SchedSelect>
+            <SchedSelect label="Status" value={statusValue} active={statusFilter !== 'all'}>
+              {(close) => (
+                <>
+                  {SCHED_STATUS_OPTIONS.map((s) => (
+                    <SchedOpt key={s.k} on={statusFilter === s.k} onClick={() => { setStatusFilter(s.k); close(); }}>{s.label}</SchedOpt>
+                  ))}
+                </>
+              )}
+            </SchedSelect>
+          </div>
+        )}
+      </div>
+
+      {/* Scrolling match list. */}
+      <div className="sv-sched-scroll">{content}</div>
+    </div>
+  );
+}
+
+// TODAY lens — selected day, split into status sections (self-hiding when
+// empty), in order: Live Now → Upcoming → Full Time → Cancelled.
+// NOTE: the web ScheduleClient has a bug where its grouped{} omits the `live`
+// key, so its "Live Now" section never populates — fixed here.
+function renderTodayLens(fixtures, statusFilter, stageFilter, groupFilter, ptDay) {
+  let list = applySchedFilters(fixtures, stageFilter, groupFilter).filter((f) => f.pt_day === ptDay);
+  if (statusFilter !== 'all') list = list.filter((f) => schedBucketOf(f.status) === statusFilter);
+  if (list.length === 0) return <div className="sv-sched-empty">No matches match these filters.</div>;
+  const grouped = {
+    live:      list.filter((f) => schedBucketOf(f.status) === 'live'),
+    upcoming:  list.filter((f) => schedBucketOf(f.status) === 'upcoming'),
+    final:     list.filter((f) => schedBucketOf(f.status) === 'final'),
+    cancelled: list.filter((f) => schedBucketOf(f.status) === 'cancelled'),
+  };
+  return (
+    <>
+      <SchedStatusSection title="Live Now"  items={grouped.live}      modifier="is-live" />
+      <SchedStatusSection title="Upcoming"  items={grouped.upcoming} />
+      <SchedStatusSection title="Full Time" items={grouped.final} />
+      <SchedStatusSection title="Cancelled" items={grouped.cancelled} modifier="is-cancelled" />
+    </>
+  );
+}
+
+// THIS WEEK lens — the visible window, one day-section per non-empty day.
+function renderWeekLens(fixtures, statusFilter, stageFilter, groupFilter, windowDays, ptToday) {
+  let list = applySchedFilters(fixtures, stageFilter, groupFilter);
+  if (statusFilter !== 'all') list = list.filter((f) => schedBucketOf(f.status) === statusFilter);
+  const byDay = new Map();
+  for (const f of list) {
+    if (!byDay.has(f.pt_day)) byDay.set(f.pt_day, []);
+    byDay.get(f.pt_day).push(f);
+  }
+  const sections = [];
+  for (const d of windowDays) {
+    const items = byDay.get(d.ptDate);
+    if (!items || items.length === 0) continue;
+    sections.push(
+      <section key={d.ptDate} className="sv-sched-day">
+        <div className={`sv-sched-dayhead ${d.isToday ? 'is-today' : ''}`}>
+          <span className="sv-sched-daylabel">{d.weekday} · {d.label}{d.isToday ? ' · Today' : ''}</span>
+          <span className="sv-sched-dayrule" aria-hidden="true" />
+          <span className="sv-sched-daycount">{items.length} {items.length === 1 ? 'match' : 'matches'}</span>
+        </div>
+        <div className="sv-sched-list">
+          {items.map((f) => <ScheduleMatchRow key={f.id} f={f} />)}
+        </div>
+      </section>,
+    );
+  }
+  if (sections.length === 0) return <div className="sv-sched-empty">No matches in this week match these filters.</div>;
+  return <>{sections}</>;
+}
+
+// FOLLOWING lens — placeholder for now (matches the web; real follow-filtering
+// is a later commit). Per-fixture followed flags already ride in, but Following
+// is its own slice we build out separately.
+function renderFollowingLens() {
+  return (
+    <div className="sv-sched-empty">
+      Following nations · coming with the World Cup slate.
+      <br />
+      One nation will show its full path, several blend into a single timeline.
+    </div>
+  );
+}
+
+function SchedStatusSection({ title, items, modifier }) {
+  if (items.length === 0) return null;
+  return (
+    <section className="sv-sched-day">
+      <div className="sv-sched-dayhead">
+        <span className={`sv-sched-daylabel ${modifier ?? ''}`}>{title}</span>
+        <span className="sv-sched-dayrule" aria-hidden="true" />
+        <span className="sv-sched-daycount">{items.length}</span>
+      </div>
+      <div className="sv-sched-list">
+        {items.map((f) => <ScheduleMatchRow key={f.id} f={f} />)}
+      </div>
+    </section>
+  );
+}
+
+// Compact dropdown filter — closes on outside-click / Escape. In-shell only,
+// no URL state.
+function SchedSelect({ label, value, active, children }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e) { if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false); }
+    function onKey(e) { if (e.key === 'Escape') setOpen(false); }
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
+  }, [open]);
+  return (
+    <div className={`sv-sched-dd ${open ? 'is-open' : ''} ${active ? 'is-active' : ''}`} ref={rootRef}>
+      <button type="button" className="sv-sched-ddbtn" aria-haspopup="true" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <span className="sv-sched-ddlabel">{label}</span>
+        <span className="sv-sched-ddval">{value}</span>
+        <span className="sv-sched-ddcaret" aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="sv-sched-ddpanel" role="menu" onClick={(e) => e.stopPropagation()}>
+          {children(() => setOpen(false))}
+        </div>
+      )}
+    </div>
+  );
+}
+function SchedOpt({ on, grid, onClick, children }) {
+  return (
+    <button type="button" className={`sv-sched-ddopt ${grid ? 'sv-sched-ddopt--grid' : ''} ${on ? 'is-on' : ''}`} onClick={onClick}>
+      {children}
+    </button>
+  );
+}
+
+// One fixture — a stacked two-line matchup (home over away) so FULL country
+// names get their own line and wrap gracefully. Scorer pips render beneath
+// when goals exist (home scorers left, away right). Plain <a> (stays in-
+// WebView via allowNavigation; NOT a Next <Link>).
+function ScheduleMatchRow({ f }) {
+  const openMatch = useContext(MatchNavContext);
+  const hasGoals = (f.goals.home.length + f.goals.away.length) > 0;
+  // Keep the real href (accessible + JS-off fallback) but intercept the tap
+  // to open the match IN-SHELL instead of navigating out to the website.
+  const onClick = (e) => { if (openMatch) { e.preventDefault(); openMatch(f.slug); } };
+  return (
+    <a className="sv-sched-row" href={`/match/${f.slug}`} onClick={onClick}>
+      <div className="sv-sched-main">
+        <div className="sv-sched-teams">
+          <div className="sv-sched-team">
+            <FlagSvg path={f.home.flag_svg_path} />
+            <span className={`sv-sched-name ${f.home.followed ? 'sv-followed' : ''}`}>
+              {f.home.followed && <span className="sv-star" aria-hidden="true">★</span>}
+              {f.home.name}
+            </span>
+            <span className="sv-sched-score">{scoreOrBlank(f, f.home_score)}</span>
+          </div>
+          <div className="sv-sched-team">
+            <FlagSvg path={f.away.flag_svg_path} />
+            <span className={`sv-sched-name ${f.away.followed ? 'sv-followed' : ''}`}>
+              {f.away.followed && <span className="sv-star" aria-hidden="true">★</span>}
+              {f.away.name}
+            </span>
+            <span className="sv-sched-score">{scoreOrBlank(f, f.away_score)}</span>
+          </div>
+        </div>
+        <div className="sv-sched-meta">
+          {f.isLive
+            ? <span className="sv-live-tag">● LIVE</span>
+            : f.isFinal
+              ? <span className="sv-sched-status">Full Time</span>
+              : <span className="sv-sched-time">{f.kickoffLabel}</span>}
+        </div>
+      </div>
+      {hasGoals && (
+        <div className="sv-sched-goals">
+          <div className="sv-sched-goalcol">
+            {f.goals.home.map((g, i) => (
+              <div key={`h-${i}`} className="sv-sched-goal"><span className="sv-sched-gpip" aria-hidden="true" />{g}</div>
+            ))}
+          </div>
+          <div className="sv-sched-goalcol sv-sched-goalcol--away">
+            {f.goals.away.map((g, i) => (
+              <div key={`a-${i}`} className="sv-sched-goal"><span className="sv-sched-gpip" aria-hidden="true" />{g}</div>
+            ))}
+          </div>
+        </div>
+      )}
+    </a>
+  );
+}
+
+// Per-side score: shown only once a match is live or final (0 is a real
+// score, so guard on null, not falsiness). Scheduled / cancelled → blank.
+function scoreOrBlank(f, score) {
+  if (!f.isLive && !f.isFinal) return '';
+  return score == null ? '' : score;
+}
+
+// ─── MATCH VIEW (in-shell, on-demand — Commit 1: pre-match + recap) ─────────
+// Reached by tapping a Today's Card / Schedule row (openMatch via context).
+// Data arrives from the loadMatch server action (assembled by readMatch). All
+// times are pre-formatted PT server-side. LEAN static modules only — live
+// polling is Commit 2. Built in the deck's design language (no match.css).
+
+// Client-side relative time for the recap byline. MatchView never SSRs (it
+// only mounts on a client tap, section!=='match' at first paint), so Date.now()
+// here can't cause a hydration mismatch.
+function relTime(ts) {
+  const then = new Date(ts).getTime();
+  if (Number.isNaN(then)) return '';
+  const diffSec = Math.max(0, Math.round((Date.now() - then) / 1000));
+  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  if (diffSec < 60) return rtf.format(-diffSec, 'second');
+  const min = Math.round(diffSec / 60); if (min < 60) return rtf.format(-min, 'minute');
+  const hr  = Math.round(min / 60);     if (hr < 48)  return rtf.format(-hr, 'hour');
+  return rtf.format(-Math.round(hr / 24), 'day');
+}
+
+function MatchView({ data, loading, error, onBack }) {
+  return (
+    <div className="sv-match">
+      <button type="button" className="sv-match-back" onClick={onBack}>‹ Back</button>
+      {loading ? (
+        <div className="sv-match-status-msg">
+          <span className="sv-match-spinner" aria-hidden="true" />
+          Loading match…
+        </div>
+      ) : error || !data ? (
+        <div className="sv-match-status-msg">Couldn&rsquo;t load this match.</div>
+      ) : (
+        <MatchBody data={data} />
+      )}
+    </div>
+  );
+}
+
+function MatchBody({ data }) {
+  const { state, header, meta, watchScore, preview, winProb, whereToWatch, brief } = data;
+  const showScore = state === 'recap' || state === 'live';
+  return (
+    <>
+      <div className="sv-match-head">
+        <div className="sv-match-teams2">
+          <div className={`sv-match-team ${header.favored === 'home' ? 'is-favored' : ''}`}>
+            <FlagSvg path={header.home.flag_svg_path} />
+            <span className={`sv-match-tname ${header.home.followed ? 'sv-followed' : ''}`}>
+              {header.home.followed && <span className="sv-star" aria-hidden="true">★</span>}
+              {header.home.name}
+            </span>
+          </div>
+          <div className="sv-match-mid">
+            {showScore
+              ? <span className="sv-match-bigscore">{header.home_score ?? 0}<span className="sv-match-dash">–</span>{header.away_score ?? 0}</span>
+              : <span className="sv-match-vsbig">v</span>}
+          </div>
+          <div className={`sv-match-team ${header.favored === 'away' ? 'is-favored' : ''}`}>
+            <FlagSvg path={header.away.flag_svg_path} />
+            <span className={`sv-match-tname ${header.away.followed ? 'sv-followed' : ''}`}>
+              {header.away.followed && <span className="sv-star" aria-hidden="true">★</span>}
+              {header.away.name}
+            </span>
+          </div>
+        </div>
+
+        <div className="sv-match-statusline">
+          {state === 'recap' ? 'Full Time' : state === 'live' ? 'Live' : meta.kickoffLabel}
+        </div>
+        {(meta.stage || meta.venue) && (
+          <div className="sv-match-metaline">
+            {[meta.stage && schedStageLabel(meta.stage), meta.venue].filter(Boolean).join(' · ')}
+          </div>
+        )}
+        {state === 'live' && (
+          <div className="sv-match-livenote">Live coverage updating — full live view coming soon.</div>
+        )}
+      </div>
+
+      {watchScore && <MatchWatchScore ws={watchScore} />}
+
+      {(state === 'prematch' || state === 'live') && (
+        <>
+          {preview && (preview.lede || preview.paragraphs.length > 0) && (
+            <div className="sv-match-block">
+              <div className="sv-kicker">Preview</div>
+              {preview.lede && <p className="sv-lede">{preview.lede}</p>}
+              {preview.paragraphs.map((p, i) => <p key={i} className="sv-body">{p}</p>)}
+            </div>
+          )}
+          {winProb && <MatchWinProb wp={winProb} homeName={header.home.name} awayName={header.away.name} />}
+          {whereToWatch && whereToWatch.length > 0 && (
+            <div className="sv-match-block">
+              <div className="sv-kicker">Where to Watch</div>
+              <div className="sv-match-bcasts">
+                {whereToWatch.map((b, i) => (
+                  <span key={i} className={`sv-match-bcast ${b.primary ? 'is-primary' : ''}`}>{b.name}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {state === 'recap' && (
+        brief ? (
+          <div className="sv-match-block">
+            <div className="sv-kicker">Recap</div>
+            <h2 className="sv-title sv-title--longform">{brief.headline}</h2>
+            <div className="sv-match-byline">
+              By Sportsvyn · Auto-generated{brief.published_at ? ` · ${relTime(brief.published_at)}` : ''}
+            </div>
+            {brief.paragraphs.map((p, i) => <p key={i} className="sv-body">{p}</p>)}
+          </div>
+        ) : (
+          <div className="sv-match-block">
+            <div className="sv-empty">Recap publishes after full time.</div>
+          </div>
+        )
+      )}
+    </>
+  );
+}
+
+function MatchWatchScore({ ws }) {
+  const DIMS = [
+    ['stakes', 'Stakes'], ['quality', 'Quality'], ['narrative', 'Narrative'],
+    ['drama', 'Drama'], ['moment', 'Moment'],
+  ];
+  return (
+    <div className="sv-match-block">
+      <div className="sv-kicker">Watch Score</div>
+      <div className="sv-match-wsrow">
+        <span className="sv-match-wsnum">{ws.composite.toFixed(1)}</span>
+        {ws.summary && <p className="sv-match-wssum">{ws.summary}</p>}
+      </div>
+      <div className="sv-match-dims">
+        {DIMS.filter(([k]) => ws.dims[k] != null).map(([k, label]) => (
+          <div key={k} className="sv-match-dim">
+            <span className="sv-match-dimval">{Number(ws.dims[k]).toFixed(1)}</span>
+            <span className="sv-match-dimlabel">{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MatchWinProb({ wp, homeName, awayName }) {
+  return (
+    <div className="sv-match-block">
+      <div className="sv-kicker">Win Probability</div>
+      <div className="sv-probbar" aria-label="Win probability">
+        <span className="sv-probbar-seg sv-probbar-home" style={{ width: `${wp.home_pct}%` }} />
+        <span className="sv-probbar-seg sv-probbar-draw" style={{ width: `${wp.draw_pct}%` }} />
+        <span className="sv-probbar-seg sv-probbar-away" style={{ width: `${wp.away_pct}%` }} />
+      </div>
+      <div className="sv-prob-legend">
+        <span><strong>{homeName}</strong> {Math.round(wp.home_pct)}%</span>
+        <span><strong>Draw</strong> {Math.round(wp.draw_pct)}%</span>
+        <span><strong>{awayName}</strong> {Math.round(wp.away_pct)}%</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── CARDS ───────────────────────────────────────────────────────────────
 
 // TODAY'S CARD — the deck's lead card. Mirrors the homepage's daily-card
@@ -214,13 +830,16 @@ function CardTodaysCard({ data }) {
 // One slate row — plain <a> (stays in-WebView via the allowNavigation fix;
 // deliberately NOT a Next <Link>, we want the real /match navigation).
 function TodayMatchRow({ f }) {
+  const openMatch = useContext(MatchNavContext);
   const right = f.isFinal
     ? `FT ${f.home_score ?? 0}–${f.away_score ?? 0}`
     : f.isLive
       ? `${f.home_score ?? 0}–${f.away_score ?? 0}`
       : f.kickoffLabel;
+  // Real href kept for accessibility/fallback; tap opens the match in-shell.
+  const onClick = (e) => { if (openMatch) { e.preventDefault(); openMatch(f.slug); } };
   return (
-    <a className="sv-match-row" href={`/match/${f.slug}`}>
+    <a className="sv-match-row" href={`/match/${f.slug}`} onClick={onClick}>
       <span className="sv-match-teams">
         <FlagSvg path={f.home.flag_svg_path} />
         <span className={f.home.followed ? 'sv-followed' : undefined}>

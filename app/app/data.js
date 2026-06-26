@@ -532,3 +532,344 @@ export async function readStatsTopScorers() {
     avg_goals_per_match: avgGoalsPerMatch,
   };
 }
+
+// =============================================================================
+// 7. SCHEDULE — the whole WC tournament, PT-day grouped, for the in-shell
+// Schedules screen (Strategy 1: lives inside the /app shell, nav persists).
+//
+// Generalizes readTodaysCard from a single PT day to the full tournament
+// range. Mirrors lib/scheduleData.js's readFixturesByPtDay range query
+// WITHOUT importing it; the range matches /schedule's LOAD_RANGE_* bounds.
+//
+// Everything the client needs is computed SERVER-SIDE, PT-locked:
+//   · kickoffLabel ← fmtKickoffPt ("3:00 PM PT")  — no client Date math
+//   · dayLabel     ← "Wednesday · Jun 24"          (PT calendar day)
+//   · isToday / isLive / isFinal pre-derived
+//   · grouping into ordered { ptDay, dayLabel, isToday, fixtures } done here
+// so the component renders groups directly, sidestepping KickoffTime's
+// visitor-local hydration dance entirely.
+//
+// Commit 2 adds the interactive scaffolding the in-shell lenses/scrubber/
+// filters need — all still computed/shaped server-side:
+//   · stage + group_code per fixture (Stage / Group filters)
+//   · scorer pips goals:{home,away} per fixture (readScheduleGoalsLocal)
+//   · ptToday + tournamentStart/End so the scrubber builds its contiguous
+//     7-day strip (incl. empty days) without recomputing PT date math.
+// =============================================================================
+
+// Tournament load window — matches /schedule's LOAD_RANGE_START/END
+// (app/schedule/page.js). Generous bounds; the DB only returns rows that
+// exist, so the pre/post buffer is free.
+const SCHEDULE_RANGE_START = '2026-06-08';
+const SCHEDULE_RANGE_END   = '2026-07-31';
+
+// Scorer pips for the loaded fixtures — replicates lib/scheduleData.js's
+// readScheduleGoals locally (no lib/ import). Returns Map<match_id,
+// {home:[],away:[]}> of "Player MM'" lines. is_current=true drops VAR-reversed
+// goals; Missed Penalty is excluded (a chance, not a scoring event); own goals
+// get a " (og)" suffix and are credited to the stored team_side.
+async function readScheduleGoalsLocal(matchIds) {
+  if (!Array.isArray(matchIds) || matchIds.length === 0) return new Map();
+  const rows = await sql`
+    SELECT match_id, minute, minute_extra, team_side, player_name, detail
+      FROM match_events
+     WHERE match_id = ANY(${matchIds})
+       AND is_current = true
+       AND event_type = 'Goal'
+       AND (detail IS NULL OR detail <> 'Missed Penalty')
+     ORDER BY match_id, minute ASC, COALESCE(minute_extra, 0) ASC, id ASC
+  `;
+  const out = new Map();
+  for (const r of rows) {
+    if (!out.has(r.match_id)) out.set(r.match_id, { home: [], away: [] });
+    const bucket  = out.get(r.match_id);
+    const minute  = r.minute_extra ? `${r.minute}+${r.minute_extra}′` : `${r.minute}′`;
+    const ownGoal = r.detail === 'Own Goal' ? ' (og)' : '';
+    const line    = `${r.player_name ?? '—'}${ownGoal} ${minute}`;
+    (r.team_side === 'home' ? bucket.home : bucket.away).push(line);
+  }
+  return out;
+}
+
+// PT-locked day header from a 'YYYY-MM-DD' PT-day string → "Wednesday · Jun 24".
+// pt_day is already the PT calendar day (computed in SQL via AT TIME ZONE), so
+// reading its parts back as a UTC date is drift-free and deterministic.
+function ptDayHeaderLabel(ptDay) {
+  const [y, m, d] = ptDay.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const weekday = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'long' }).format(dt);
+  const md      = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }).format(dt);
+  return `${weekday} · ${md}`;
+}
+
+export async function readSchedule() {
+  // Today's PT calendar day, "YYYY-MM-DD" — used to flag the "today" group.
+  const ptToday = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Los_Angeles',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+
+  // Full-tournament fixtures. Replicates readFixturesByPtDay's join/filter
+  // across the whole range. PT-day computed in SQL (the load-bearing detail:
+  // a 00:00Z kickoff lands on the correct PT calendar day, not the UTC one).
+  const rows = await sql`
+    SELECT
+      m.id, m.slug, m.kickoff_at, m.status,
+      m.home_score, m.away_score, m.stage, m.group_code,
+      to_char((m.kickoff_at AT TIME ZONE 'America/Los_Angeles')::date, 'YYYY-MM-DD') AS pt_day,
+      h.name AS home_name, h.flag_svg_path AS home_flag, h.flag_color_primary AS home_flag_color,
+      a.name AS away_name, a.flag_svg_path AS away_flag, a.flag_color_primary AS away_flag_color
+    FROM matches m
+    JOIN teams   h  ON h.id  = m.home_team_id
+    JOIN teams   a  ON a.id  = m.away_team_id
+    JOIN leagues lg ON lg.id = m.league_id
+   WHERE lg.slug = ${WC_LEAGUE_SLUG}
+     AND (m.kickoff_at AT TIME ZONE 'America/Los_Angeles')::date >= ${SCHEDULE_RANGE_START}::date
+     AND (m.kickoff_at AT TIME ZONE 'America/Los_Angeles')::date <= ${SCHEDULE_RANGE_END}::date
+   ORDER BY m.kickoff_at ASC, m.id ASC
+  `;
+
+  // Scorer pips for every loaded match, one round-trip. Empty Map when no
+  // events; each fixture defaults to { home:[], away:[] } below.
+  const goalsByMatch = await readScheduleGoalsLocal(rows.map((r) => r.id));
+
+  // Group into ordered days. Rows are already kickoff-ASC, so first-seen
+  // pt_day order is chronological — no sort needed.
+  const days = [];
+  const byDay = new Map();
+  for (const r of rows) {
+    let group = byDay.get(r.pt_day);
+    if (!group) {
+      group = {
+        ptDay: r.pt_day,
+        dayLabel: ptDayHeaderLabel(r.pt_day),
+        isToday: r.pt_day === ptToday,
+        fixtures: [],
+      };
+      byDay.set(r.pt_day, group);
+      days.push(group);
+    }
+    group.fixtures.push({
+      id: r.id,
+      slug: r.slug,
+      stage: r.stage,
+      group_code: r.group_code,
+      home: {
+        name: r.home_name,
+        flag_svg_path: r.home_flag,
+        flag_color: r.home_flag_color,
+        followed: FOLLOWED_TEAMS.has(r.home_name),
+      },
+      away: {
+        name: r.away_name,
+        flag_svg_path: r.away_flag,
+        flag_color: r.away_flag_color,
+        followed: FOLLOWED_TEAMS.has(r.away_name),
+      },
+      kickoffLabel: fmtKickoffPt(r.kickoff_at),
+      status: r.status,
+      isLive: r.status === 'live',
+      isFinal: r.status === 'final',
+      home_score: r.home_score,
+      away_score: r.away_score,
+      goals: goalsByMatch.get(r.id) ?? { home: [], away: [] },
+    });
+  }
+
+  // Bounds for the scrubber's contiguous window (incl. empty days). ptToday
+  // lets it open on today without recomputing PT date math client-side.
+  return {
+    days,
+    count: rows.length,
+    ptToday,
+    tournamentStart: days[0]?.ptDay ?? null,
+    tournamentEnd:   days[days.length - 1]?.ptDay ?? null,
+  };
+}
+
+// =============================================================================
+// 8. MATCH — single match snapshot for the in-shell match view, fetched
+// ON DEMAND (per-match; can't preload 104 matches in /app's Promise.all).
+//
+// COMMIT 1 = STATIC pre-match + recap modules only. Mirrors the queries in
+// app/match/[slug]/page.js WITHOUT importing it (self-contained, no lib/):
+//   · match + teams           (the spine)
+//   · watch score             ← articles analyst row (composite + 5 dims +
+//                               notes). NB: a DIFFERENT source than Today's
+//                               Card, which used match_watch_score_history's
+//                               LATERAL MAX — here it's the editorial article.
+//   · preview prose           ← articles (same source/shape as readNextUp:
+//                               prefer score_type='watch', subtitle→lede,
+//                               body→paragraph split)
+//   · win probability         ← odds_markets 3-way (retires at FT)
+//   · where to watch          ← match_broadcasters
+//   · brief (recap)           ← match_briefs latest row
+//
+// DEFERRED to Commit 2 (NOT queried here): lineups, full odds detail, form,
+// key-moments timeline, power-rankings compare, edge pick, live polling.
+//
+// Times are pre-formatted server-side, PT-locked (no KickoffTime). Returns
+// null when the slug doesn't resolve so the shell can show an honest error.
+// =============================================================================
+
+// "Wed, Jun 24 · 3:00 PM PT" — PT-locked full kickoff label for the match meta.
+function fmtKickoffFull(kickoffAt) {
+  const d = new Date(kickoffAt);
+  const date = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric',
+  }).format(d);
+  const time = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit', hour12: true,
+  }).format(d);
+  return `${date} · ${time} PT`;
+}
+
+export async function readMatch(slug) {
+  const matchRows = await sql`
+    SELECT
+      m.id, m.slug, m.status, m.kickoff_at, m.home_score, m.away_score,
+      m.venue, m.stage, m.group_code, m.home_team_id, m.away_team_id,
+      h.name AS home_name, h.flag_svg_path AS home_flag, h.flag_color_primary AS home_flag_color,
+      a.name AS away_name, a.flag_svg_path AS away_flag, a.flag_color_primary AS away_flag_color
+    FROM matches m
+    LEFT JOIN teams h ON h.id = m.home_team_id
+    LEFT JOIN teams a ON a.id = m.away_team_id
+    WHERE m.slug = ${slug}
+    LIMIT 1
+  `;
+  const m = matchRows[0];
+  if (!m) return null;
+
+  const isLive  = m.status === 'live';
+  const isFinal = m.status === 'final';
+  const state   = isLive ? 'live' : isFinal ? 'recap' : 'prematch';
+
+  const [watchRows, previewRows, oddsRows, bcastRows, briefRows] = await Promise.all([
+    // Watch Score — articles analyst row (NOT the history LATERAL).
+    sql`
+      SELECT composite_score,
+             stakes_score, quality_score, narrative_score, drama_score, moment_score,
+             stakes_note, quality_note, narrative_note, drama_note, moment_note,
+             watch_summary
+        FROM articles
+       WHERE match_id = ${m.id}
+         AND type = 'preview' AND score_type = 'watch' AND status = 'published'
+       ORDER BY updated_at DESC
+       LIMIT 1
+    `,
+    // Preview prose — same source/shape as readNextUp ("Next Up").
+    sql`
+      SELECT subtitle, body
+        FROM articles
+       WHERE match_id = ${m.id}
+         AND type = 'preview' AND status = 'published' AND body IS NOT NULL
+       ORDER BY (score_type = 'watch') DESC, updated_at DESC
+       LIMIT 1
+    `,
+    // Win probability — current 3-way match_winner odds.
+    sql`
+      SELECT selection_label, implied_probability::float AS pct, american_odds
+        FROM odds_markets
+       WHERE match_id = ${m.id}
+         AND market_scope = 'match' AND market_type = 'match_winner' AND is_current = true
+    `,
+    // Where to watch — US broadcasters.
+    sql`
+      SELECT broadcaster_name, broadcaster_type, is_primary, language_code
+        FROM match_broadcasters
+       WHERE match_id = ${m.id} AND country_code = 'US'
+       ORDER BY display_order
+    `,
+    // Brief — latest recap row.
+    sql`
+      SELECT headline, paragraph_1, paragraph_2, paragraph_3, published_at, generated_at
+        FROM match_briefs
+       WHERE match_id = ${m.id}
+       ORDER BY generated_at DESC
+       LIMIT 1
+    `,
+  ]);
+
+  // Watch Score (composite + dims + notes), or null when untracked.
+  const w = watchRows[0] ?? null;
+  const watchScore = w && w.composite_score != null
+    ? {
+        composite: Number(w.composite_score),
+        dims: {
+          stakes: w.stakes_score, quality: w.quality_score, narrative: w.narrative_score,
+          drama: w.drama_score, moment: w.moment_score,
+        },
+        notes: {
+          stakes: w.stakes_note, quality: w.quality_note, narrative: w.narrative_note,
+          drama: w.drama_note, moment: w.moment_note,
+        },
+        summary: w.watch_summary ?? null,
+      }
+    : null;
+
+  // Preview prose — subtitle→lede, body→paragraphs (split on blank lines).
+  const p = previewRows[0] ?? null;
+  const preview = p
+    ? {
+        lede: p.subtitle ?? null,
+        paragraphs: (p.body ?? '').split(/\n\n+/).map((s) => s.trim()).filter(Boolean),
+      }
+    : null;
+
+  // Win probability — exactly home/draw/away; retires at full-time.
+  let winProb = null;
+  if (!isFinal && oddsRows.length === 3) {
+    const by = Object.fromEntries(oddsRows.map((r) => [r.selection_label, r]));
+    if (by.home && by.draw && by.away) {
+      winProb = {
+        home_pct: by.home.pct, draw_pct: by.draw.pct, away_pct: by.away.pct,
+        home_american: by.home.american_odds, draw_american: by.draw.american_odds, away_american: by.away.american_odds,
+      };
+    }
+  }
+
+  // Favored side from the visible win-prob (draw doesn't count); null at FT.
+  let favored = null;
+  if (winProb) {
+    if (winProb.home_pct > winProb.away_pct) favored = 'home';
+    else if (winProb.away_pct > winProb.home_pct) favored = 'away';
+  }
+
+  const whereToWatch = bcastRows.map((r) => ({
+    name: r.broadcaster_name,
+    type: r.broadcaster_type,
+    primary: r.is_primary,
+    language: r.language_code,
+  }));
+
+  const b = briefRows[0] ?? null;
+  const brief = b
+    ? {
+        headline: b.headline,
+        paragraphs: [b.paragraph_1, b.paragraph_2, b.paragraph_3].filter(Boolean),
+        published_at: b.published_at ?? b.generated_at ?? null,
+      }
+    : null;
+
+  return {
+    slug: m.slug,
+    state,
+    header: {
+      home: { name: m.home_name, flag_svg_path: m.home_flag, flag_color: m.home_flag_color, followed: FOLLOWED_TEAMS.has(m.home_name) },
+      away: { name: m.away_name, flag_svg_path: m.away_flag, flag_color: m.away_flag_color, followed: FOLLOWED_TEAMS.has(m.away_name) },
+      home_score: m.home_score,
+      away_score: m.away_score,
+      favored,
+    },
+    meta: {
+      kickoffLabel: fmtKickoffFull(m.kickoff_at),
+      venue: m.venue ?? null,
+      stage: m.stage ?? null,
+    },
+    watchScore,
+    preview,
+    winProb,
+    whereToWatch,
+    brief,
+  };
+}
