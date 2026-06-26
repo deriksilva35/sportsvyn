@@ -14,9 +14,16 @@
  * action is just the client-callable boundary.
  */
 
-import { readMatch } from './data';
+import { readMatch, readRankings } from './data';
 
 export async function loadMatch(slug) {
   if (typeof slug !== 'string' || slug.length === 0) return null;
   return await readMatch(slug);
+}
+
+// Rankings (Team Power + Tournament MVP) — paramless, lazy-loaded on first
+// tap of the Rankings tab (not preloaded in /app's Promise.all). Cached
+// client-side for the session since editions only change after a matchday.
+export async function loadRankings() {
+  return await readRankings();
 }

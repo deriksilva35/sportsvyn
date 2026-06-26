@@ -940,3 +940,176 @@ export async function readMatch(slug) {
     keyMoments,
   };
 }
+
+// =============================================================================
+// 9. RANKINGS — Team Power + Tournament MVP (player-power), both lists in one
+// reader for the in-shell Rankings screen (lazy-loaded via loadRankings).
+//
+// Replicates lib/rankings.js's getCurrentEdition + getRankingsForPage +
+// getPlayerRankingsForPage WITHOUT importing them. Both are the CURRENT
+// published edition (is_current=true, status='published'). The AI blurb is
+// the editor-approved row blurb from the editorial_blurbs table (blurb_type=
+// 'ranking_row_blurb') — NOT articles — joined per ranking_entry with the
+// same fingerprint guard the web uses (so a blurb only shows if it was
+// approved against the current finals fingerprint). Top-10 carry a blurb;
+// 11+ come back blurb=null naturally (no approved row blurb).
+//
+// Edition published_at is PT-pre-formatted server-side (no KickoffTime).
+// A list with no current edition returns { empty: true } for an honest
+// empty state (defensive — both are populated on PROD right now).
+// =============================================================================
+
+// PT-locked edition-updated label, e.g. "Jun 27, 9:00 AM PT".
+function fmtRankUpdated(d) {
+  if (!d) return null;
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
+  }).format(new Date(d)) + ' PT';
+}
+function editionLabelOf(ed) {
+  return ed.edition_label
+    ? `Edition ${ed.edition_number} · ${ed.edition_label}`
+    : `Edition ${ed.edition_number}`;
+}
+
+export async function readRankings() {
+  const currentEditionSql = (listSlug) => sql`
+    SELECT ed.id, ed.edition_number, ed.edition_label, ed.published_at
+      FROM ranking_editions ed
+      JOIN ranking_lists rl ON rl.id = ed.ranking_list_id
+      JOIN leagues lg       ON lg.id = rl.league_id
+     WHERE rl.slug = ${listSlug} AND lg.slug = ${WC_LEAGUE_SLUG}
+       AND ed.is_current = true AND ed.status = 'published'
+     LIMIT 1
+  `;
+
+  const [teamEdRows, playerEdRows, teamRows, playerRows, finalsRows] = await Promise.all([
+    currentEditionSql('team-power'),
+    currentEditionSql('player-power'),
+    // Team Power rows — replicates getRankingsForPage (record + blurb join).
+    sql`
+      SELECT
+        e.rank, e.team_id,
+        t.name AS team_name, t.slug AS team_slug,
+        t.flag_svg_path AS team_flag_svg_path, t.flag_color_primary AS team_flag_color_primary,
+        e.score::float AS score, e.movement_label,
+        e.editorial_composite::float AS editorial_composite, e.sites_composite::float AS sites_composite,
+        rec.wins, rec.draws, rec.losses, rec.gf, rec.ga, rec.matches_played,
+        b.body AS blurb_body
+      FROM ranking_entries e
+      JOIN ranking_editions ed ON ed.id = e.ranking_edition_id
+      JOIN ranking_lists rl    ON rl.id = ed.ranking_list_id
+      JOIN leagues lg          ON lg.id = rl.league_id
+      JOIN teams t             ON t.id  = e.team_id
+      LEFT JOIN LATERAL (
+        SELECT count(*)::int AS fingerprint
+          FROM matches m
+         WHERE m.league_id = lg.id AND m.status = 'final'
+           AND (m.home_team_id = t.id OR m.away_team_id = t.id)
+      ) fp ON true
+      LEFT JOIN LATERAL (
+        SELECT
+          count(*) FILTER (WHERE (m.home_team_id=t.id AND m.home_score>m.away_score) OR (m.away_team_id=t.id AND m.away_score>m.home_score))::int AS wins,
+          count(*) FILTER (WHERE m.home_score = m.away_score)::int AS draws,
+          count(*) FILTER (WHERE (m.home_team_id=t.id AND m.home_score<m.away_score) OR (m.away_team_id=t.id AND m.away_score<m.home_score))::int AS losses,
+          COALESCE(sum(CASE WHEN m.home_team_id=t.id THEN m.home_score ELSE m.away_score END),0)::int AS gf,
+          COALESCE(sum(CASE WHEN m.home_team_id=t.id THEN m.away_score ELSE m.home_score END),0)::int AS ga,
+          count(*)::int AS matches_played
+          FROM matches m
+         WHERE m.league_id = lg.id AND m.status = 'final'
+           AND (m.home_team_id = t.id OR m.away_team_id = t.id)
+      ) rec ON true
+      LEFT JOIN editorial_blurbs b
+             ON b.ranking_entry_id = e.id
+            AND b.blurb_type = 'ranking_row_blurb' AND b.status = 'editor_approved' AND b.is_current = true
+            AND (b.approved_against_fingerprint IS NULL OR b.approved_against_fingerprint = fp.fingerprint)
+      WHERE rl.slug = 'team-power' AND lg.slug = ${WC_LEAGUE_SLUG}
+        AND ed.is_current = true AND ed.status = 'published'
+      ORDER BY e.rank ASC
+      LIMIT 48
+    `,
+    // Tournament MVP rows — replicates getPlayerRankingsForPage.
+    sql`
+      SELECT
+        e.rank,
+        COALESCE(p.known_as, p.full_name) AS player_name, p.slug AS player_slug, p.position AS player_position,
+        nt.flag_svg_path AS team_flag_svg_path, nt.flag_color_primary AS team_flag_color_primary,
+        e.score::float AS score, e.output_score::float AS production_score, e.impact_score::float AS impact_score,
+        e.movement_label, b.body AS blurb_body
+      FROM ranking_entries e
+      JOIN ranking_editions ed ON ed.id = e.ranking_edition_id
+      JOIN ranking_lists rl    ON rl.id = ed.ranking_list_id
+      JOIN leagues lg          ON lg.id = rl.league_id
+      JOIN players p           ON p.id  = e.player_id
+      LEFT JOIN teams nt       ON nt.id = p.current_team_id
+      LEFT JOIN LATERAL (
+        SELECT count(*)::int AS fingerprint
+          FROM match_events me JOIN matches m ON m.id = me.match_id
+         WHERE m.league_id = lg.id AND me.is_current = true
+           AND (me.player_api_id = (p.external_ids->>'api_sports')::int
+                OR me.assist_api_id = (p.external_ids->>'api_sports')::int)
+      ) fp ON true
+      LEFT JOIN editorial_blurbs b
+             ON b.ranking_entry_id = e.id
+            AND b.blurb_type = 'ranking_row_blurb' AND b.status = 'editor_approved' AND b.is_current = true
+            AND (b.approved_against_fingerprint IS NULL OR b.approved_against_fingerprint = fp.fingerprint)
+      WHERE rl.slug = 'player-power' AND lg.slug = ${WC_LEAGUE_SLUG}
+        AND ed.is_current = true AND ed.status = 'published'
+      ORDER BY e.rank ASC
+      LIMIT 50
+    `,
+    // Finals count → group-stage points are dropped once knockouts begin (>72).
+    sql`SELECT count(*)::int AS n FROM matches m JOIN leagues lg ON lg.id = m.league_id WHERE lg.slug = ${WC_LEAGUE_SLUG} AND m.status = 'final'`,
+  ]);
+
+  const showPoints = (finalsRows[0]?.n ?? 0) <= 72;
+
+  const teamEd = teamEdRows[0] ?? null;
+  const teams = teamEd
+    ? {
+        editionLabel: editionLabelOf(teamEd),
+        updatedLabel: fmtRankUpdated(teamEd.published_at),
+        showPoints,
+        rows: teamRows.map((r) => ({
+          rank: r.rank,
+          name: r.team_name,
+          slug: r.team_slug,
+          flag_svg_path: r.team_flag_svg_path,
+          flag_color: r.team_flag_color_primary,
+          score: r.score,
+          movement: r.movement_label,
+          editorial: r.editorial_composite,
+          sites: r.sites_composite,
+          wins: r.wins, draws: r.draws, losses: r.losses, gf: r.gf, ga: r.ga,
+          matches_played: r.matches_played,
+          followed: FOLLOWED_TEAMS.has(r.team_name),
+          blurb: r.blurb_body ?? null,
+        })),
+      }
+    : { empty: true };
+
+  const playerEd = playerEdRows[0] ?? null;
+  const players = playerEd
+    ? {
+        editionLabel: editionLabelOf(playerEd),
+        updatedLabel: fmtRankUpdated(playerEd.published_at),
+        rows: playerRows.map((r) => ({
+          rank: r.rank,
+          name: r.player_name,
+          slug: r.player_slug,
+          position: r.player_position,
+          flag_svg_path: r.team_flag_svg_path,
+          flag_color: r.team_flag_color_primary,
+          score: r.score,
+          movement: r.movement_label,
+          production: r.production_score,
+          impact: r.impact_score,
+          followed: FOLLOWED_PLAYERS.has(r.player_name),
+          blurb: r.blurb_body ?? null,
+        })),
+      }
+    : { empty: true };
+
+  return { teams, players };
+}
