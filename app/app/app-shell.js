@@ -1,7 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { loadMatch } from './actions';
+
+// Lets deeply-nested rows (Today's Card rows, Schedule rows) open the in-shell
+// match view without prop-drilling through Deck / ScheduleView render helpers.
+const MatchNavContext = createContext(null);
 
 const PLACEHOLDERS = {
   account:  'MY SPORTSVYN — Step 4',
@@ -33,12 +38,49 @@ export default function AppShellClient({ cards, schedule }) {
   const [section, setSection] = useState('deck');
   const [dateline, setDateline] = useState('');
 
+  // ─ In-shell match view: section gains a 'match' value + a target slug,
+  //   on-demand data via the loadMatch server action, cached per slug. ─
+  const [matchSlug, setMatchSlug]       = useState(null);
+  const [matchReturn, setMatchReturn]   = useState('deck');
+  const [matchData, setMatchData]       = useState(null);
+  const [matchLoading, setMatchLoading] = useState(false);
+  const [matchError, setMatchError]     = useState(false);
+  const matchCache = useRef(new Map());   // slug → assembled data (instant re-open)
+  const reqSlug    = useRef(null);        // guards against stale awaits clobbering
+
+  async function openMatch(slug) {
+    if (!slug) return;
+    setMatchReturn(section);     // remember where we came from for Back
+    setMatchSlug(slug);
+    setSection('match');
+    setMatchError(false);
+    reqSlug.current = slug;
+
+    const cached = matchCache.current.get(slug);
+    if (cached) { setMatchData(cached); setMatchLoading(false); return; }
+
+    setMatchData(null);
+    setMatchLoading(true);
+    try {
+      const data = await loadMatch(slug);
+      if (reqSlug.current !== slug) return;   // a newer open superseded this one
+      if (data) { matchCache.current.set(slug, data); setMatchData(data); }
+      else setMatchError(true);
+    } catch {
+      if (reqSlug.current === slug) setMatchError(true);
+    } finally {
+      if (reqSlug.current === slug) setMatchLoading(false);
+    }
+  }
+  function closeMatch() { setSection(matchReturn); }
+
   useEffect(() => {
     const now = new Date();
     setDateline(`${DAYS_SHORT[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`);
   }, []);
 
   return (
+    <MatchNavContext.Provider value={openMatch}>
     <div className="sv-shell">
       <header className="sv-header">
         <button
@@ -80,7 +122,9 @@ export default function AppShellClient({ cards, schedule }) {
           ? <Deck cards={cards} />
           : section === 'sched'
             ? <ScheduleView data={schedule} />
-            : <div className="sv-placeholder">{PLACEHOLDERS[section]}</div>
+            : section === 'match'
+              ? <MatchView data={matchData} loading={matchLoading} error={matchError} onBack={closeMatch} />
+              : <div className="sv-placeholder">{PLACEHOLDERS[section]}</div>
         }
       </main>
 
@@ -116,6 +160,7 @@ export default function AppShellClient({ cards, schedule }) {
         })}
       </nav>
     </div>
+    </MatchNavContext.Provider>
   );
 }
 
@@ -524,9 +569,13 @@ function SchedOpt({ on, grid, onClick, children }) {
 // when goals exist (home scorers left, away right). Plain <a> (stays in-
 // WebView via allowNavigation; NOT a Next <Link>).
 function ScheduleMatchRow({ f }) {
+  const openMatch = useContext(MatchNavContext);
   const hasGoals = (f.goals.home.length + f.goals.away.length) > 0;
+  // Keep the real href (accessible + JS-off fallback) but intercept the tap
+  // to open the match IN-SHELL instead of navigating out to the website.
+  const onClick = (e) => { if (openMatch) { e.preventDefault(); openMatch(f.slug); } };
   return (
-    <a className="sv-sched-row" href={`/match/${f.slug}`}>
+    <a className="sv-sched-row" href={`/match/${f.slug}`} onClick={onClick}>
       <div className="sv-sched-main">
         <div className="sv-sched-teams">
           <div className="sv-sched-team">
@@ -579,6 +628,172 @@ function scoreOrBlank(f, score) {
   return score == null ? '' : score;
 }
 
+// ─── MATCH VIEW (in-shell, on-demand — Commit 1: pre-match + recap) ─────────
+// Reached by tapping a Today's Card / Schedule row (openMatch via context).
+// Data arrives from the loadMatch server action (assembled by readMatch). All
+// times are pre-formatted PT server-side. LEAN static modules only — live
+// polling is Commit 2. Built in the deck's design language (no match.css).
+
+// Client-side relative time for the recap byline. MatchView never SSRs (it
+// only mounts on a client tap, section!=='match' at first paint), so Date.now()
+// here can't cause a hydration mismatch.
+function relTime(ts) {
+  const then = new Date(ts).getTime();
+  if (Number.isNaN(then)) return '';
+  const diffSec = Math.max(0, Math.round((Date.now() - then) / 1000));
+  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  if (diffSec < 60) return rtf.format(-diffSec, 'second');
+  const min = Math.round(diffSec / 60); if (min < 60) return rtf.format(-min, 'minute');
+  const hr  = Math.round(min / 60);     if (hr < 48)  return rtf.format(-hr, 'hour');
+  return rtf.format(-Math.round(hr / 24), 'day');
+}
+
+function MatchView({ data, loading, error, onBack }) {
+  return (
+    <div className="sv-match">
+      <button type="button" className="sv-match-back" onClick={onBack}>‹ Back</button>
+      {loading ? (
+        <div className="sv-match-status-msg">
+          <span className="sv-match-spinner" aria-hidden="true" />
+          Loading match…
+        </div>
+      ) : error || !data ? (
+        <div className="sv-match-status-msg">Couldn&rsquo;t load this match.</div>
+      ) : (
+        <MatchBody data={data} />
+      )}
+    </div>
+  );
+}
+
+function MatchBody({ data }) {
+  const { state, header, meta, watchScore, preview, winProb, whereToWatch, brief } = data;
+  const showScore = state === 'recap' || state === 'live';
+  return (
+    <>
+      <div className="sv-match-head">
+        <div className="sv-match-teams2">
+          <div className={`sv-match-team ${header.favored === 'home' ? 'is-favored' : ''}`}>
+            <FlagSvg path={header.home.flag_svg_path} />
+            <span className={`sv-match-tname ${header.home.followed ? 'sv-followed' : ''}`}>
+              {header.home.followed && <span className="sv-star" aria-hidden="true">★</span>}
+              {header.home.name}
+            </span>
+          </div>
+          <div className="sv-match-mid">
+            {showScore
+              ? <span className="sv-match-bigscore">{header.home_score ?? 0}<span className="sv-match-dash">–</span>{header.away_score ?? 0}</span>
+              : <span className="sv-match-vsbig">v</span>}
+          </div>
+          <div className={`sv-match-team ${header.favored === 'away' ? 'is-favored' : ''}`}>
+            <FlagSvg path={header.away.flag_svg_path} />
+            <span className={`sv-match-tname ${header.away.followed ? 'sv-followed' : ''}`}>
+              {header.away.followed && <span className="sv-star" aria-hidden="true">★</span>}
+              {header.away.name}
+            </span>
+          </div>
+        </div>
+
+        <div className="sv-match-statusline">
+          {state === 'recap' ? 'Full Time' : state === 'live' ? 'Live' : meta.kickoffLabel}
+        </div>
+        {(meta.stage || meta.venue) && (
+          <div className="sv-match-metaline">
+            {[meta.stage && schedStageLabel(meta.stage), meta.venue].filter(Boolean).join(' · ')}
+          </div>
+        )}
+        {state === 'live' && (
+          <div className="sv-match-livenote">Live coverage updating — full live view coming soon.</div>
+        )}
+      </div>
+
+      {watchScore && <MatchWatchScore ws={watchScore} />}
+
+      {(state === 'prematch' || state === 'live') && (
+        <>
+          {preview && (preview.lede || preview.paragraphs.length > 0) && (
+            <div className="sv-match-block">
+              <div className="sv-kicker">Preview</div>
+              {preview.lede && <p className="sv-lede">{preview.lede}</p>}
+              {preview.paragraphs.map((p, i) => <p key={i} className="sv-body">{p}</p>)}
+            </div>
+          )}
+          {winProb && <MatchWinProb wp={winProb} homeName={header.home.name} awayName={header.away.name} />}
+          {whereToWatch && whereToWatch.length > 0 && (
+            <div className="sv-match-block">
+              <div className="sv-kicker">Where to Watch</div>
+              <div className="sv-match-bcasts">
+                {whereToWatch.map((b, i) => (
+                  <span key={i} className={`sv-match-bcast ${b.primary ? 'is-primary' : ''}`}>{b.name}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {state === 'recap' && (
+        brief ? (
+          <div className="sv-match-block">
+            <div className="sv-kicker">Recap</div>
+            <h2 className="sv-title sv-title--longform">{brief.headline}</h2>
+            <div className="sv-match-byline">
+              By Sportsvyn · Auto-generated{brief.published_at ? ` · ${relTime(brief.published_at)}` : ''}
+            </div>
+            {brief.paragraphs.map((p, i) => <p key={i} className="sv-body">{p}</p>)}
+          </div>
+        ) : (
+          <div className="sv-match-block">
+            <div className="sv-empty">Recap publishes after full time.</div>
+          </div>
+        )
+      )}
+    </>
+  );
+}
+
+function MatchWatchScore({ ws }) {
+  const DIMS = [
+    ['stakes', 'Stakes'], ['quality', 'Quality'], ['narrative', 'Narrative'],
+    ['drama', 'Drama'], ['moment', 'Moment'],
+  ];
+  return (
+    <div className="sv-match-block">
+      <div className="sv-kicker">Watch Score</div>
+      <div className="sv-match-wsrow">
+        <span className="sv-match-wsnum">{ws.composite.toFixed(1)}</span>
+        {ws.summary && <p className="sv-match-wssum">{ws.summary}</p>}
+      </div>
+      <div className="sv-match-dims">
+        {DIMS.filter(([k]) => ws.dims[k] != null).map(([k, label]) => (
+          <div key={k} className="sv-match-dim">
+            <span className="sv-match-dimval">{Number(ws.dims[k]).toFixed(1)}</span>
+            <span className="sv-match-dimlabel">{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MatchWinProb({ wp, homeName, awayName }) {
+  return (
+    <div className="sv-match-block">
+      <div className="sv-kicker">Win Probability</div>
+      <div className="sv-probbar" aria-label="Win probability">
+        <span className="sv-probbar-seg sv-probbar-home" style={{ width: `${wp.home_pct}%` }} />
+        <span className="sv-probbar-seg sv-probbar-draw" style={{ width: `${wp.draw_pct}%` }} />
+        <span className="sv-probbar-seg sv-probbar-away" style={{ width: `${wp.away_pct}%` }} />
+      </div>
+      <div className="sv-prob-legend">
+        <span><strong>{homeName}</strong> {Math.round(wp.home_pct)}%</span>
+        <span><strong>Draw</strong> {Math.round(wp.draw_pct)}%</span>
+        <span><strong>{awayName}</strong> {Math.round(wp.away_pct)}%</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── CARDS ───────────────────────────────────────────────────────────────
 
 // TODAY'S CARD — the deck's lead card. Mirrors the homepage's daily-card
@@ -615,13 +830,16 @@ function CardTodaysCard({ data }) {
 // One slate row — plain <a> (stays in-WebView via the allowNavigation fix;
 // deliberately NOT a Next <Link>, we want the real /match navigation).
 function TodayMatchRow({ f }) {
+  const openMatch = useContext(MatchNavContext);
   const right = f.isFinal
     ? `FT ${f.home_score ?? 0}–${f.away_score ?? 0}`
     : f.isLive
       ? `${f.home_score ?? 0}–${f.away_score ?? 0}`
       : f.kickoffLabel;
+  // Real href kept for accessibility/fallback; tap opens the match in-shell.
+  const onClick = (e) => { if (openMatch) { e.preventDefault(); openMatch(f.slug); } };
   return (
-    <a className="sv-match-row" href={`/match/${f.slug}`}>
+    <a className="sv-match-row" href={`/match/${f.slug}`} onClick={onClick}>
       <span className="sv-match-teams">
         <FlagSvg path={f.home.flag_svg_path} />
         <span className={f.home.followed ? 'sv-followed' : undefined}>

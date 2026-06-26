@@ -686,3 +686,190 @@ export async function readSchedule() {
     tournamentEnd:   days[days.length - 1]?.ptDay ?? null,
   };
 }
+
+// =============================================================================
+// 8. MATCH — single match snapshot for the in-shell match view, fetched
+// ON DEMAND (per-match; can't preload 104 matches in /app's Promise.all).
+//
+// COMMIT 1 = STATIC pre-match + recap modules only. Mirrors the queries in
+// app/match/[slug]/page.js WITHOUT importing it (self-contained, no lib/):
+//   · match + teams           (the spine)
+//   · watch score             ← articles analyst row (composite + 5 dims +
+//                               notes). NB: a DIFFERENT source than Today's
+//                               Card, which used match_watch_score_history's
+//                               LATERAL MAX — here it's the editorial article.
+//   · preview prose           ← articles (same source/shape as readNextUp:
+//                               prefer score_type='watch', subtitle→lede,
+//                               body→paragraph split)
+//   · win probability         ← odds_markets 3-way (retires at FT)
+//   · where to watch          ← match_broadcasters
+//   · brief (recap)           ← match_briefs latest row
+//
+// DEFERRED to Commit 2 (NOT queried here): lineups, full odds detail, form,
+// key-moments timeline, power-rankings compare, edge pick, live polling.
+//
+// Times are pre-formatted server-side, PT-locked (no KickoffTime). Returns
+// null when the slug doesn't resolve so the shell can show an honest error.
+// =============================================================================
+
+// "Wed, Jun 24 · 3:00 PM PT" — PT-locked full kickoff label for the match meta.
+function fmtKickoffFull(kickoffAt) {
+  const d = new Date(kickoffAt);
+  const date = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric',
+  }).format(d);
+  const time = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit', hour12: true,
+  }).format(d);
+  return `${date} · ${time} PT`;
+}
+
+export async function readMatch(slug) {
+  const matchRows = await sql`
+    SELECT
+      m.id, m.slug, m.status, m.kickoff_at, m.home_score, m.away_score,
+      m.venue, m.stage, m.group_code, m.home_team_id, m.away_team_id,
+      h.name AS home_name, h.flag_svg_path AS home_flag, h.flag_color_primary AS home_flag_color,
+      a.name AS away_name, a.flag_svg_path AS away_flag, a.flag_color_primary AS away_flag_color
+    FROM matches m
+    LEFT JOIN teams h ON h.id = m.home_team_id
+    LEFT JOIN teams a ON a.id = m.away_team_id
+    WHERE m.slug = ${slug}
+    LIMIT 1
+  `;
+  const m = matchRows[0];
+  if (!m) return null;
+
+  const isLive  = m.status === 'live';
+  const isFinal = m.status === 'final';
+  const state   = isLive ? 'live' : isFinal ? 'recap' : 'prematch';
+
+  const [watchRows, previewRows, oddsRows, bcastRows, briefRows] = await Promise.all([
+    // Watch Score — articles analyst row (NOT the history LATERAL).
+    sql`
+      SELECT composite_score,
+             stakes_score, quality_score, narrative_score, drama_score, moment_score,
+             stakes_note, quality_note, narrative_note, drama_note, moment_note,
+             watch_summary
+        FROM articles
+       WHERE match_id = ${m.id}
+         AND type = 'preview' AND score_type = 'watch' AND status = 'published'
+       ORDER BY updated_at DESC
+       LIMIT 1
+    `,
+    // Preview prose — same source/shape as readNextUp ("Next Up").
+    sql`
+      SELECT subtitle, body
+        FROM articles
+       WHERE match_id = ${m.id}
+         AND type = 'preview' AND status = 'published' AND body IS NOT NULL
+       ORDER BY (score_type = 'watch') DESC, updated_at DESC
+       LIMIT 1
+    `,
+    // Win probability — current 3-way match_winner odds.
+    sql`
+      SELECT selection_label, implied_probability::float AS pct, american_odds
+        FROM odds_markets
+       WHERE match_id = ${m.id}
+         AND market_scope = 'match' AND market_type = 'match_winner' AND is_current = true
+    `,
+    // Where to watch — US broadcasters.
+    sql`
+      SELECT broadcaster_name, broadcaster_type, is_primary, language_code
+        FROM match_broadcasters
+       WHERE match_id = ${m.id} AND country_code = 'US'
+       ORDER BY display_order
+    `,
+    // Brief — latest recap row.
+    sql`
+      SELECT headline, paragraph_1, paragraph_2, paragraph_3, published_at, generated_at
+        FROM match_briefs
+       WHERE match_id = ${m.id}
+       ORDER BY generated_at DESC
+       LIMIT 1
+    `,
+  ]);
+
+  // Watch Score (composite + dims + notes), or null when untracked.
+  const w = watchRows[0] ?? null;
+  const watchScore = w && w.composite_score != null
+    ? {
+        composite: Number(w.composite_score),
+        dims: {
+          stakes: w.stakes_score, quality: w.quality_score, narrative: w.narrative_score,
+          drama: w.drama_score, moment: w.moment_score,
+        },
+        notes: {
+          stakes: w.stakes_note, quality: w.quality_note, narrative: w.narrative_note,
+          drama: w.drama_note, moment: w.moment_note,
+        },
+        summary: w.watch_summary ?? null,
+      }
+    : null;
+
+  // Preview prose — subtitle→lede, body→paragraphs (split on blank lines).
+  const p = previewRows[0] ?? null;
+  const preview = p
+    ? {
+        lede: p.subtitle ?? null,
+        paragraphs: (p.body ?? '').split(/\n\n+/).map((s) => s.trim()).filter(Boolean),
+      }
+    : null;
+
+  // Win probability — exactly home/draw/away; retires at full-time.
+  let winProb = null;
+  if (!isFinal && oddsRows.length === 3) {
+    const by = Object.fromEntries(oddsRows.map((r) => [r.selection_label, r]));
+    if (by.home && by.draw && by.away) {
+      winProb = {
+        home_pct: by.home.pct, draw_pct: by.draw.pct, away_pct: by.away.pct,
+        home_american: by.home.american_odds, draw_american: by.draw.american_odds, away_american: by.away.american_odds,
+      };
+    }
+  }
+
+  // Favored side from the visible win-prob (draw doesn't count); null at FT.
+  let favored = null;
+  if (winProb) {
+    if (winProb.home_pct > winProb.away_pct) favored = 'home';
+    else if (winProb.away_pct > winProb.home_pct) favored = 'away';
+  }
+
+  const whereToWatch = bcastRows.map((r) => ({
+    name: r.broadcaster_name,
+    type: r.broadcaster_type,
+    primary: r.is_primary,
+    language: r.language_code,
+  }));
+
+  const b = briefRows[0] ?? null;
+  const brief = b
+    ? {
+        headline: b.headline,
+        paragraphs: [b.paragraph_1, b.paragraph_2, b.paragraph_3].filter(Boolean),
+        published_at: b.published_at ?? b.generated_at ?? null,
+      }
+    : null;
+
+  return {
+    slug: m.slug,
+    state,
+    header: {
+      home: { name: m.home_name, flag_svg_path: m.home_flag, flag_color: m.home_flag_color, followed: FOLLOWED_TEAMS.has(m.home_name) },
+      away: { name: m.away_name, flag_svg_path: m.away_flag, flag_color: m.away_flag_color, followed: FOLLOWED_TEAMS.has(m.away_name) },
+      home_score: m.home_score,
+      away_score: m.away_score,
+      favored,
+    },
+    meta: {
+      kickoffLabel: fmtKickoffFull(m.kickoff_at),
+      venue: m.venue ?? null,
+      stage: m.stage ?? null,
+    },
+    watchScore,
+    preview,
+    winProb,
+    whereToWatch,
+    brief,
+  };
+}

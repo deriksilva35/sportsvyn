@@ -1059,3 +1059,244 @@
   line-height: 1.5;
   color: var(--muted);
 }
+
+/* ─── MATCH VIEW (in-shell, on-demand — Commit 1) ────────────────────────── */
+/* Scrolls vertically inside .sv-stage; header + bottom nav persist outside it.
+   Reuses deck tokens (.sv-kicker / .sv-lede / .sv-body / .sv-probbar /
+   .sv-prob-legend / .sv-empty). No match.css. */
+
+.sv-app .sv-match {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 16px 28px;
+  scrollbar-width: none;
+}
+.sv-app .sv-match::-webkit-scrollbar { display: none; }
+
+.sv-app .sv-match-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 12px;
+  padding: 6px 10px 6px 4px;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-match-back:active { color: var(--volt); }
+
+/* Loading / error */
+.sv-app .sv-match-status-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 220px;
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-match-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--charcoal);
+  border-top-color: var(--volt);
+  border-radius: 50%;
+  animation: sv-match-spin 0.7s linear infinite;
+}
+@keyframes sv-match-spin { to { transform: rotate(360deg); } }
+
+/* Header */
+.sv-app .sv-match-head {
+  padding: 6px 0 16px;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 16px;
+}
+.sv-app .sv-match-teams2 {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.sv-app .sv-match-team {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.sv-app .sv-match-team .sv-flag-svg {
+  width: 2.4em;
+  height: 1.6em;
+  margin: 0;
+}
+.sv-app .sv-match-tname {
+  font-family: var(--sv-font-saira);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.1;
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+.sv-app .sv-match-team.is-favored .sv-match-tname { color: var(--volt); }
+.sv-app .sv-match-mid {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+  min-width: 56px;
+}
+.sv-app .sv-match-bigscore {
+  font-family: var(--sv-font-saira);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sv-app .sv-match-dash { color: var(--muted); margin: 0 5px; }
+.sv-app .sv-match-vsbig {
+  font-family: var(--sv-font-saira);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--muted);
+}
+.sv-app .sv-match-statusline {
+  margin-top: 14px;
+  text-align: center;
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--volt);
+}
+.sv-app .sv-match-metaline {
+  margin-top: 4px;
+  text-align: center;
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-match-livenote {
+  margin-top: 10px;
+  text-align: center;
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--live-red);
+}
+
+/* Module blocks */
+.sv-app .sv-match-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.sv-app .sv-match-block:last-child { border-bottom: 0; }
+
+/* Watch Score */
+.sv-app .sv-match-wsrow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.sv-app .sv-match-wsnum {
+  flex: 0 0 auto;
+  font-family: var(--sv-font-saira);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 34px;
+  line-height: 1;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-match-wssum {
+  margin: 0;
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--paper-dim);
+}
+.sv-app .sv-match-dims {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sv-app .sv-match-dim {
+  flex: 1 1 0;
+  min-width: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 8px;
+}
+.sv-app .sv-match-dimval {
+  font-family: var(--sv-font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-match-dimlabel {
+  font-family: var(--sv-font-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Where to watch */
+.sv-app .sv-match-bcasts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sv-app .sv-match-bcast {
+  padding: 5px 10px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 6px;
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  color: var(--paper-dim);
+}
+.sv-app .sv-match-bcast.is-primary {
+  color: var(--paper);
+  border-color: var(--muted);
+}
+
+/* Recap byline */
+.sv-app .sv-match-byline {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
