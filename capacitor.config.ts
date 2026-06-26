@@ -5,8 +5,9 @@ const config: CapacitorConfig = {
   appName: 'Sportsvyn',
   webDir: 'www',
   server: {
-    url: 'https://sportsvyn.com',
+    url: 'https://sportsvyn.com/app',
     cleartext: false,
+    allowNavigation: ['sportsvyn.com'],
   },
   plugins: {
     StatusBar: {
