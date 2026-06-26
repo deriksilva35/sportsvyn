@@ -1113,3 +1113,164 @@ export async function readRankings() {
 
   return { teams, players };
 }
+
+// =============================================================================
+// 10. BRACKET — knockout (vertical round-by-round) + group standings, for the
+// in-shell Bracket screen (lazy-loaded via loadBracket).
+//
+// Replicates lib/bracket.js's getKnockoutBracket + getGroupStandings WITHOUT
+// importing them. Two deltas vs the web reader:
+//   · KNOCKOUT: adds m.slug (the web cell wasn't tappable; the app opens the
+//     in-shell match view from resolved cells, which needs the slug), and
+//     pre-derives dateLabel (PT) / isFinal / isLive / winner side. Grouped
+//     server-side into ordered rounds (R32→…→Final).
+//   · GROUP STANDINGS: computed in JS from group membership + final matches
+//     with STANDARD tiebreakers (points → GD → GF → name) — NOT the full
+//     FIFA-2026 head-to-head chain (lib/bracket's orderGroup/sortClusterFifa2026
+//     are too intricate to port self-contained). Advancement badges
+//     (computeAdvancement) are OMITTED — settled now that the group stage is
+//     complete; the knockout bracket itself shows who advanced.
+//
+// Times are PT-pre-formatted server-side (no KickoffTime).
+// =============================================================================
+
+const BRACKET_GROUP_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+const BRACKET_STAGE_ORDER = ['round_of_32', 'round_of_16', 'quarter', 'semi', 'third_place', 'final'];
+const BRACKET_ROUND_LABEL = {
+  round_of_32: 'Round of 32', round_of_16: 'Round of 16', quarter: 'Quarters',
+  semi: 'Semis', third_place: 'Third Place', final: 'Final',
+};
+
+// PT short knockout date, e.g. "JUN 28" (matches the web's fmtKoDate uppercase).
+function fmtKoDate(kickoffAt) {
+  if (!kickoffAt) return '';
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric',
+  }).format(new Date(kickoffAt)).toUpperCase();
+}
+
+export async function readBracket() {
+  const [knockoutRows, memberRows, groupFinals, pendingRows] = await Promise.all([
+    // Knockout matches — replicates getKnockoutBracket + m.slug.
+    sql`
+      SELECT m.id AS match_id, m.slug, m.stage, m.kickoff_at, m.venue, m.status,
+             m.home_team_id, m.away_team_id, m.home_score, m.away_score, m.metadata,
+             ht.name AS home_name, ht.slug AS home_slug, ht.flag_svg_path AS home_flag, ht.flag_color_primary AS home_flag_color,
+             at.name AS away_name, at.slug AS away_slug, at.flag_svg_path AS away_flag, at.flag_color_primary AS away_flag_color
+        FROM matches m
+        JOIN leagues lg ON lg.id = m.league_id
+        LEFT JOIN teams ht ON ht.id = m.home_team_id
+        LEFT JOIN teams at ON at.id = m.away_team_id
+       WHERE lg.slug = ${WC_LEAGUE_SLUG}
+         AND m.stage IN ('round_of_32','round_of_16','quarter','semi','third_place','final')
+       ORDER BY (m.metadata->>'match_number')::int
+    `,
+    // Group membership (every team in a group fixture, played or not) + info.
+    sql`
+      SELECT DISTINCT m.group_code, v.tid AS team_id,
+             t.name, t.slug, t.flag_svg_path, t.flag_color_primary
+        FROM matches m
+        JOIN leagues lg ON lg.id = m.league_id
+        CROSS JOIN LATERAL (VALUES (m.home_team_id), (m.away_team_id)) AS v(tid)
+        JOIN teams t ON t.id = v.tid
+       WHERE lg.slug = ${WC_LEAGUE_SLUG} AND m.stage = 'group' AND m.group_code IS NOT NULL
+         AND v.tid IS NOT NULL
+    `,
+    // Final group matches (drive the standings stats).
+    sql`
+      SELECT m.group_code, m.home_team_id, m.away_team_id, m.home_score, m.away_score
+        FROM matches m
+        JOIN leagues lg ON lg.id = m.league_id
+       WHERE lg.slug = ${WC_LEAGUE_SLUG} AND m.stage = 'group' AND m.group_code IS NOT NULL
+         AND m.status = 'final'
+    `,
+    // Pending group matches → groupStageComplete drives the default sub-tab.
+    sql`
+      SELECT count(*) FILTER (WHERE m.status <> 'final')::int AS pending
+        FROM matches m JOIN leagues lg ON lg.id = m.league_id
+       WHERE lg.slug = ${WC_LEAGUE_SLUG} AND m.stage = 'group' AND m.group_code IS NOT NULL
+    `,
+  ]);
+
+  // ── Knockout: shape each match, then group into ordered rounds. ──
+  const matches = [];
+  for (const r of knockoutRows) {
+    const mn = r.metadata?.match_number;
+    if (mn == null) continue;
+    const isFinal = r.status === 'final';
+    const isLive  = r.status === 'live';
+    let winner = null;
+    if (isFinal && r.home_score != null && r.away_score != null) {
+      if (r.home_score > r.away_score) winner = 'home';
+      else if (r.away_score > r.home_score) winner = 'away';
+    }
+    matches.push({
+      match_number: mn,
+      match_id: r.match_id,
+      slug: r.slug,
+      stage: r.stage,
+      roundLabel: BRACKET_ROUND_LABEL[r.stage] ?? (r.metadata?.round_label ?? r.stage),
+      dateLabel: fmtKoDate(r.kickoff_at),
+      venue: r.venue ?? null,
+      status: r.status,
+      isFinal,
+      isLive,
+      home_score: r.home_score,
+      away_score: r.away_score,
+      winner,
+      home: r.home_team_id
+        ? { resolved: true, team_id: r.home_team_id, name: r.home_name, slug: r.home_slug, flag_svg_path: r.home_flag, flag_color: r.home_flag_color, followed: FOLLOWED_TEAMS.has(r.home_name) }
+        : { resolved: false, label: r.metadata?.slot_home?.label ?? 'TBD' },
+      away: r.away_team_id
+        ? { resolved: true, team_id: r.away_team_id, name: r.away_name, slug: r.away_slug, flag_svg_path: r.away_flag, flag_color: r.away_flag_color, followed: FOLLOWED_TEAMS.has(r.away_name) }
+        : { resolved: false, label: r.metadata?.slot_away?.label ?? 'TBD' },
+    });
+  }
+  const knockout = BRACKET_STAGE_ORDER
+    .map((stage) => ({
+      stage,
+      roundLabel: BRACKET_ROUND_LABEL[stage],
+      matches: matches.filter((m) => m.stage === stage),  // already match_number-ordered
+    }))
+    .filter((r) => r.matches.length > 0);
+
+  // ── Group standings: stats from finals, ordered points→GD→GF→name. ──
+  const byLetter = new Map();  // letter → Map<team_id, stat>
+  for (const m of memberRows) {
+    if (!byLetter.has(m.group_code)) byLetter.set(m.group_code, new Map());
+    const g = byLetter.get(m.group_code);
+    if (!g.has(m.team_id)) {
+      g.set(m.team_id, {
+        team_id: m.team_id, name: m.name, slug: m.slug,
+        flag_svg_path: m.flag_svg_path, flag_color: m.flag_color_primary,
+        wins: 0, draws: 0, losses: 0, gf: 0, ga: 0, points: 0,
+      });
+    }
+  }
+  for (const m of groupFinals) {
+    const g = byLetter.get(m.group_code);
+    if (!g) continue;
+    const home = g.get(m.home_team_id), away = g.get(m.away_team_id);
+    if (!home || !away) continue;
+    const hs = m.home_score ?? 0, as = m.away_score ?? 0;
+    home.gf += hs; home.ga += as; away.gf += as; away.ga += hs;
+    if (hs > as)      { home.wins++; home.points += 3; away.losses++; }
+    else if (hs < as) { away.wins++; away.points += 3; home.losses++; }
+    else              { home.draws++; away.draws++; home.points++; away.points++; }
+  }
+  const groups = BRACKET_GROUP_LETTERS
+    .map((letter) => {
+      const g = byLetter.get(letter);
+      if (!g) return null;
+      const teams = [...g.values()]
+        .map((t) => ({ ...t, gd: t.gf - t.ga, followed: FOLLOWED_TEAMS.has(t.name) }))
+        .sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name))
+        .map((t, i) => ({ ...t, pos: i + 1 }));
+      return { letter, teams };
+    })
+    .filter((g) => g && g.teams.length > 0);
+
+  const groupStageComplete = (pendingRows[0]?.pending ?? 1) === 0;
+
+  return { knockout, groups, groupStageComplete };
+}

@@ -1614,3 +1614,189 @@
   line-height: 1.5;
   color: var(--muted);
 }
+
+/* ─── BRACKET VIEW (in-shell, vertical round-by-round — Commit 2) ─────────── */
+/* Reuses .sv-rank container (fixed toggle + scroll). Knockout = round sections
+   of stacked match cells; Group = stacked standings tables. */
+
+/* Knockout rounds */
+.sv-app .sv-bracket-round { margin-bottom: 18px; }
+.sv-app .sv-bracket-roundhead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  background: var(--ink);
+  border-bottom: 1px solid var(--hairline);
+}
+.sv-app .sv-bracket-roundlabel {
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--volt);
+  white-space: nowrap;
+}
+.sv-app .sv-bracket-roundcount {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+.sv-app .sv-bracket-cells {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Knockout match cell */
+.sv-app .sv-bracket-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 13px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app a.sv-bracket-cell:active { background: #1a1a1a; }
+.sv-app .sv-bracket-cell.is-tbd { opacity: 0.85; }
+.sv-app .sv-bracket-cellmeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-bracket-venue {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sv-app .sv-bracket-ft { color: var(--paper); }
+
+.sv-app .sv-bracket-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sv-app .sv-bracket-tname {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+.sv-app .sv-bracket-side.is-loser .sv-bracket-tname,
+.sv-app .sv-bracket-side.is-loser .sv-bracket-tscore { color: var(--muted); }
+.sv-app .sv-bracket-slot {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.sv-app .sv-bracket-tscore {
+  flex: 0 0 auto;
+  min-width: 14px;
+  text-align: right;
+  font-family: var(--sv-font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Group standings tables */
+.sv-app .sv-bracket-group { margin-bottom: 18px; }
+.sv-app .sv-bracket-grouphead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 0;
+  margin-bottom: 6px;
+  background: var(--ink);
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+.sv-app .sv-bracket-table { display: flex; flex-direction: column; }
+.sv-app .sv-bracket-trow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--hairline);
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app a.sv-bracket-trow:active { background: #1a1a1a; }
+.sv-app .sv-bracket-trow:last-child { border-bottom: 0; }
+.sv-app .sv-bracket-thead {
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 5px;
+}
+.sv-app .sv-bracket-thead span {
+  font-family: var(--sv-font-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-bracket-tpos {
+  flex: 0 0 18px;
+  text-align: center;
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-bracket-tteam {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+.sv-app .sv-bracket-tnum {
+  flex: 0 0 46px;
+  text-align: right;
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  color: var(--paper-dim);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-bracket-tpts {
+  flex: 0 0 30px;
+  text-align: right;
+  font-family: var(--sv-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+}
