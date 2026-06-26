@@ -74,6 +74,26 @@ export default function AppShellClient({ cards, schedule }) {
   }
   function closeMatch() { setSection(matchReturn); }
 
+  // ─ Live poll: re-call the DB-only loadMatch every 60s ONLY while a live
+  //   match is open. Rides the poll-live cron's per-minute DB writes — no
+  //   API-Sports call, no /api/sync/fixture, no KickoffWatcher. Wholesale-
+  //   replaces matchData (static fields return identical → no flicker).
+  //   STOPS via three paths, all caught by the deps + cleanup:
+  //     · Back / nav tab     → `section` changes
+  //     · open another match → `matchSlug` changes
+  //     · full-time          → next snapshot's `state` !== 'live'
+  useEffect(() => {
+    if (section !== 'match' || matchData?.state !== 'live') return;
+    let cancelled = false;
+    const slug = matchSlug;
+    const id = setInterval(async () => {
+      const fresh = await loadMatch(slug);
+      if (cancelled || reqSlug.current !== slug) return;   // stale guard (Commit 1's ref)
+      if (fresh) { matchCache.current.set(slug, fresh); setMatchData(fresh); }
+    }, 60_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [section, matchSlug, matchData?.state]);
+
   useEffect(() => {
     const now = new Date();
     setDateline(`${DAYS_SHORT[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`);
@@ -666,9 +686,30 @@ function MatchView({ data, loading, error, onBack }) {
   );
 }
 
+// Period labels for the live clock (mirrors LiveHero's PERIOD_LABELS subset).
+const SV_PERIOD = {
+  '1H': '1st Half', 'HT': 'Half-time', '2H': '2nd Half', 'ET': 'Extra Time',
+  'BT': 'Break', 'P': 'Penalties', 'SUSP': 'Suspended', 'INT': 'Interrupted',
+};
+function liveClockLabel(lc) {
+  if (!lc) return 'Live';
+  const clock = lc.minute != null
+    ? (lc.minute_extra ? `${lc.minute}+${lc.minute_extra}'` : `${lc.minute}'`)
+    : null;
+  const period = SV_PERIOD[lc.status_short] ?? null;
+  if (clock && period) return `${clock} · ${period}`;
+  return clock || period || 'Live';
+}
+
 function MatchBody({ data }) {
-  const { state, header, meta, watchScore, preview, winProb, whereToWatch, brief } = data;
-  const showScore = state === 'recap' || state === 'live';
+  const {
+    state, header, meta, watchScore, preview, winProb, whereToWatch, brief,
+    liveClock, liveWatch, keyMoments,
+  } = data;
+  const isLive  = state === 'live';
+  const isRecap = state === 'recap';
+  const showScore = isLive || isRecap;
+  const moments = keyMoments ?? [];
   return (
     <>
       <div className="sv-match-head">
@@ -694,22 +735,25 @@ function MatchBody({ data }) {
           </div>
         </div>
 
-        <div className="sv-match-statusline">
-          {state === 'recap' ? 'Full Time' : state === 'live' ? 'Live' : meta.kickoffLabel}
+        <div className={`sv-match-statusline ${isLive ? 'is-live' : ''}`}>
+          {isLive
+            ? <><span className="sv-match-livepulse" aria-hidden="true" />{liveClockLabel(liveClock)}</>
+            : isRecap ? 'Full Time' : meta.kickoffLabel}
         </div>
         {(meta.stage || meta.venue) && (
           <div className="sv-match-metaline">
             {[meta.stage && schedStageLabel(meta.stage), meta.venue].filter(Boolean).join(' · ')}
           </div>
         )}
-        {state === 'live' && (
-          <div className="sv-match-livenote">Live coverage updating — full live view coming soon.</div>
-        )}
       </div>
 
-      {watchScore && <MatchWatchScore ws={watchScore} />}
+      {/* Watch score: editorial analyst score pre-match; the LIVE tick score
+          during live + recap (latest while live, peak at FT). */}
+      {state === 'prematch' && watchScore && <MatchWatchScore ws={watchScore} />}
+      {(isLive || isRecap) && liveWatch && <MatchLiveWatch liveWatch={liveWatch} mode={isRecap ? 'recap' : 'live'} />}
 
-      {(state === 'prematch' || state === 'live') && (
+      {/* PRE-MATCH body */}
+      {state === 'prematch' && (
         <>
           {preview && (preview.lede || preview.paragraphs.length > 0) && (
             <div className="sv-match-block">
@@ -732,21 +776,33 @@ function MatchBody({ data }) {
         </>
       )}
 
-      {state === 'recap' && (
-        brief ? (
-          <div className="sv-match-block">
-            <div className="sv-kicker">Recap</div>
-            <h2 className="sv-title sv-title--longform">{brief.headline}</h2>
-            <div className="sv-match-byline">
-              By Sportsvyn · Auto-generated{brief.published_at ? ` · ${relTime(brief.published_at)}` : ''}
+      {/* LIVE body: frozen consensus win-prob + the live timeline. */}
+      {isLive && (
+        <>
+          {winProb && <MatchWinProb wp={winProb} homeName={header.home.name} awayName={header.away.name} />}
+          {moments.length > 0 && <MatchKeyMoments moments={moments} />}
+        </>
+      )}
+
+      {/* RECAP body: the brief, then the final timeline. */}
+      {isRecap && (
+        <>
+          {brief ? (
+            <div className="sv-match-block">
+              <div className="sv-kicker">Recap</div>
+              <h2 className="sv-title sv-title--longform">{brief.headline}</h2>
+              <div className="sv-match-byline">
+                By Sportsvyn · Auto-generated{brief.published_at ? ` · ${relTime(brief.published_at)}` : ''}
+              </div>
+              {brief.paragraphs.map((p, i) => <p key={i} className="sv-body">{p}</p>)}
             </div>
-            {brief.paragraphs.map((p, i) => <p key={i} className="sv-body">{p}</p>)}
-          </div>
-        ) : (
-          <div className="sv-match-block">
-            <div className="sv-empty">Recap publishes after full time.</div>
-          </div>
-        )
+          ) : (
+            <div className="sv-match-block">
+              <div className="sv-empty">Recap publishes after full time.</div>
+            </div>
+          )}
+          {moments.length > 0 && <MatchKeyMoments moments={moments} />}
+        </>
       )}
     </>
   );
@@ -789,6 +845,109 @@ function MatchWinProb({ wp, homeName, awayName }) {
         <span><strong>{homeName}</strong> {Math.round(wp.home_pct)}%</span>
         <span><strong>Draw</strong> {Math.round(wp.draw_pct)}%</span>
         <span><strong>{awayName}</strong> {Math.round(wp.away_pct)}%</span>
+      </div>
+    </div>
+  );
+}
+
+// LIVE watch score — from the live tick series (NOT the editorial composite).
+// Live: latest tick + trend-from-kickoff. Recap: peak, frozen. A small SVG
+// sparkline draws when there are ≥3 ticks.
+function MatchLiveWatch({ liveWatch, mode }) {
+  const series = liveWatch.series;
+  let num, trendGlyph, trendLabel, trendDetail;
+  if (mode === 'recap') {
+    num = series.reduce((mx, r) => (r.composite > mx ? r.composite : mx), -Infinity);
+    trendGlyph = '●'; trendLabel = 'Final'; trendDetail = `peaked at ${num.toFixed(1)}`;
+  } else {
+    num = liveWatch.latest.composite;
+    const delta = num - liveWatch.baseline;
+    if (delta > 0.3)       { trendGlyph = '▲'; trendLabel = 'Climbing'; trendDetail = `+${delta.toFixed(1)} from kickoff`; }
+    else if (delta < -0.3) { trendGlyph = '▼'; trendLabel = 'Cooling';  trendDetail = `${delta.toFixed(1)} from kickoff`; }
+    else                   { trendGlyph = '●'; trendLabel = 'Steady';   trendDetail = null; }
+  }
+  const spark = buildSparkPath(series);
+  return (
+    <div className="sv-match-block">
+      <div className="sv-match-lwhead">
+        <span className="sv-kicker">Live Watch Score</span>
+        {mode === 'live' && (
+          <span className="sv-match-lwtag"><span className="sv-match-livepulse" aria-hidden="true" />Live Now</span>
+        )}
+      </div>
+      <div className="sv-match-lwrow">
+        <span className="sv-match-wsnum">{num.toFixed(1)}</span>
+        <span className="sv-match-lwtrend">
+          {trendGlyph} {trendLabel}{trendDetail ? ` · ${trendDetail}` : ''}
+        </span>
+      </div>
+      {spark && (
+        <svg className="sv-match-spark" viewBox="0 0 280 60" preserveAspectRatio="none" aria-hidden="true">
+          <path d={spark.fill} fill="rgba(212,255,0,0.16)" />
+          <path d={spark.line} fill="none" stroke="#D4FF00" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          <circle cx={spark.last.x} cy={spark.last.y} r="3.5" fill="#D4FF00" />
+        </svg>
+      )}
+    </div>
+  );
+}
+
+// Minimal data-scaled sparkline (index on X, composite on Y). Returns null
+// under 3 ticks (caller renders number + trend without a degenerate line).
+function buildSparkPath(series) {
+  if (!series || series.length < 3) return null;
+  const W = 280, H = 60, PADX = 2, PADT = 6, PADB = 8;
+  const ys = series.map((r) => r.composite);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys), ySpan = (yMax - yMin) || 1;
+  const dW = W - PADX * 2, dH = H - PADT - PADB, baseY = H - PADB;
+  const pts = series.map((r, i) => ({
+    x: PADX + (i / (series.length - 1)) * dW,
+    y: PADT + dH - ((r.composite - yMin) / ySpan) * dH,
+  }));
+  const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const last = pts[pts.length - 1], first = pts[0];
+  const fill = `${line} L${last.x.toFixed(1)},${baseY} L${first.x.toFixed(1)},${baseY} Z`;
+  return { line, fill, last };
+}
+
+// Key-moments timeline (newest-first). Goal/card pips + player + AI gloss.
+function MatchKeyMoments({ moments }) {
+  return (
+    <div className="sv-match-block">
+      <div className="sv-kicker">Key Moments</div>
+      <div className="sv-match-moments">
+        {moments.map((e) => <MatchMomentRow key={e.id} e={e} />)}
+      </div>
+    </div>
+  );
+}
+function momentKind(e) {
+  if (e.event_type === 'Goal') return 'goal';
+  if (e.event_type === 'Card') return (e.detail || '').toLowerCase().includes('red') ? 'red' : 'yellow';
+  if (e.event_type === 'subst') return 'sub';
+  return 'other';
+}
+function momentLabel(e) {
+  if (e.event_type === 'Goal') return e.detail && e.detail !== 'Normal Goal' ? e.detail : 'Goal';
+  if (e.event_type === 'Card') return e.detail || 'Card';
+  if (e.event_type === 'subst') return 'Substitution';
+  return e.detail || e.event_type;
+}
+function MatchMomentRow({ e }) {
+  const min = e.minute_extra
+    ? `${e.minute}+${e.minute_extra}'`
+    : (e.minute != null ? `${e.minute}'` : '·');
+  const kind = momentKind(e);
+  return (
+    <div className={`sv-match-moment ${e.team_side ? `is-${e.team_side}` : ''}`}>
+      <span className="sv-match-mmin">{min}</span>
+      <span className={`sv-match-mpip sv-match-mpip--${kind}`} aria-hidden="true" />
+      <div className="sv-match-mbody">
+        <div className="sv-match-mhead">
+          {e.player_name && <strong>{e.player_name}</strong>}
+          <span className="sv-match-mtype">{e.player_name ? ' · ' : ''}{momentLabel(e)}</span>
+        </div>
+        {e.gloss && <div className="sv-match-mgloss">{e.gloss}</div>}
       </div>
     </div>
   );

@@ -744,7 +744,7 @@ export async function readMatch(slug) {
   const isFinal = m.status === 'final';
   const state   = isLive ? 'live' : isFinal ? 'recap' : 'prematch';
 
-  const [watchRows, previewRows, oddsRows, bcastRows, briefRows] = await Promise.all([
+  const [watchRows, previewRows, oddsRows, bcastRows, briefRows, liveWatchRows, momentRows] = await Promise.all([
     // Watch Score — articles analyst row (NOT the history LATERAL).
     sql`
       SELECT composite_score,
@@ -787,6 +787,29 @@ export async function readMatch(slug) {
        WHERE match_id = ${m.id}
        ORDER BY generated_at DESC
        LIMIT 1
+    `,
+    // LIVE watch-score tick series (DB-only; written every minute by the
+    // poll-live cron's captureLiveWatchScoreTick). Same query LiveWatchScore
+    // uses. This is the LIVE composite series — DISTINCT from the static
+    // editorial articles composite above; we keep both. The latest tick also
+    // carries the live clock (minute / minute_extra / status_short).
+    sql`
+      SELECT minute, minute_extra, status_short,
+             home_score, away_score, goals_count, lead_changes,
+             composite_score::float AS composite_score, recorded_at
+        FROM match_watch_score_history
+       WHERE match_id = ${m.id}
+       ORDER BY recorded_at ASC, id ASC
+    `,
+    // Key moments — newest-first event feed incl. AI gloss. Same query the
+    // KeyMoments component uses; is_current drops VAR-cancelled goals.
+    sql`
+      SELECT id, minute, minute_extra, event_type, detail, team_side,
+             player_name, assist_name, gloss
+        FROM match_events
+       WHERE match_id = ${m.id} AND is_current = true
+       ORDER BY minute DESC, minute_extra DESC NULLS LAST, id DESC
+       LIMIT 50
     `,
   ]);
 
@@ -851,6 +874,46 @@ export async function readMatch(slug) {
       }
     : null;
 
+  // LIVE watch-score series (tick history). Distinct from the editorial
+  // `watchScore` composite above. `latest` drives the live number; the
+  // series drives the trend + sparkline. null when no ticks (pre-kickoff).
+  const series = liveWatchRows.map((r) => ({
+    minute: r.minute,
+    minute_extra: r.minute_extra,
+    status_short: r.status_short,
+    home_score: r.home_score,
+    away_score: r.away_score,
+    goals_count: r.goals_count,
+    lead_changes: r.lead_changes,
+    composite: Number(r.composite_score),
+  }));
+  const liveWatch = series.length > 0
+    ? { series, latest: series[series.length - 1], baseline: series[0].composite }
+    : null;
+
+  // Live clock — the latest tick's minute / extra / period (DB-only, no
+  // API-Sports). The LiveHero clock reads the same fields (status.elapsed →
+  // minute, status.short → status_short). Consumed by the live header only.
+  const liveClock = liveWatch
+    ? {
+        minute: liveWatch.latest.minute,
+        minute_extra: liveWatch.latest.minute_extra,
+        status_short: liveWatch.latest.status_short,
+      }
+    : null;
+
+  const keyMoments = momentRows.map((r) => ({
+    id: r.id,
+    minute: r.minute,
+    minute_extra: r.minute_extra,
+    event_type: r.event_type,
+    detail: r.detail,
+    team_side: r.team_side,
+    player_name: r.player_name,
+    assist_name: r.assist_name,
+    gloss: r.gloss,
+  }));
+
   return {
     slug: m.slug,
     state,
@@ -871,5 +934,9 @@ export async function readMatch(slug) {
     winProb,
     whereToWatch,
     brief,
+    // Live fields (DB-only; refreshed each tick when loadMatch is re-called).
+    liveClock,
+    liveWatch,
+    keyMoments,
   };
 }

@@ -1300,3 +1300,120 @@
   text-transform: uppercase;
   color: var(--muted);
 }
+
+/* ─── MATCH VIEW · LIVE (Commit 2) ───────────────────────────────────────── */
+
+/* Live clock + pulse in the status line */
+.sv-app .sv-match-statusline.is-live {
+  color: var(--live-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.sv-app .sv-match-livepulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live-red);
+  box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.6);
+  animation: sv-match-pulse 1.6s ease-out infinite;
+}
+@keyframes sv-match-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.55); }
+  70%  { box-shadow: 0 0 0 7px rgba(230, 57, 70, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0); }
+}
+
+/* Live Watch Score block */
+.sv-app .sv-match-lwhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sv-app .sv-match-lwtag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--live-red);
+}
+.sv-app .sv-match-lwrow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.sv-app .sv-match-lwtrend {
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.sv-app .sv-match-spark {
+  width: 100%;
+  height: 60px;
+  display: block;
+}
+
+/* Key moments timeline */
+.sv-app .sv-match-moments {
+  display: flex;
+  flex-direction: column;
+}
+.sv-app .sv-match-moment {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.sv-app .sv-match-moment:last-child { border-bottom: 0; }
+.sv-app .sv-match-mmin {
+  flex: 0 0 34px;
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+  padding-top: 1px;
+}
+.sv-app .sv-match-mpip {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: var(--muted);
+}
+.sv-app .sv-match-mpip--goal   { background: var(--volt); border-radius: 50%; }
+.sv-app .sv-match-mpip--yellow { background: #E7C200; }
+.sv-app .sv-match-mpip--red    { background: var(--live-red); }
+.sv-app .sv-match-mpip--sub    { background: var(--charcoal); box-shadow: inset 0 0 0 1.5px var(--muted); }
+.sv-app .sv-match-mbody { flex: 1; min-width: 0; }
+.sv-app .sv-match-mhead {
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--paper);
+}
+.sv-app .sv-match-mhead strong { font-weight: 700; }
+.sv-app .sv-match-mtype {
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-match-mgloss {
+  margin-top: 3px;
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--paper-dim);
+}
