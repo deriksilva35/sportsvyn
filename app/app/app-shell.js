@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { loadMatch } from './actions';
+import { loadMatch, loadRankings, loadBracket } from './actions';
 
 // Lets deeply-nested rows (Today's Card rows, Schedule rows) open the in-shell
 // match view without prop-drilling through Deck / ScheduleView render helpers.
@@ -26,8 +26,8 @@ const PLACEHOLDERS = {
 // bracket/rankings stay as <Link> navigations for now (later commits).
 const NAV_ITEMS = [
   { id: 'sched',    label: 'Schedules', Icon: IconSched },
-  { id: 'bracket',  label: 'Bracket',   Icon: IconBracket,  href: '/world-cup-2026/bracket' },
-  { id: 'rankings', label: 'Rankings',  Icon: IconRankings, href: '/world-cup-2026/rankings' },
+  { id: 'bracket',  label: 'Bracket',   Icon: IconBracket },
+  { id: 'rankings', label: 'Rankings',  Icon: IconRankings },
   { id: 'read',     label: 'Read',      Icon: IconRead },
 ];
 
@@ -94,6 +94,64 @@ export default function AppShellClient({ cards, schedule }) {
     return () => { cancelled = true; clearInterval(id); };
   }, [section, matchSlug, matchData?.state]);
 
+  // ─ Rankings: lazy-loaded once on first tap of the Rankings tab (NOT in
+  //   /app's Promise.all). Cached for the session — editions only change
+  //   after a matchday, so no re-fetch on revisit. Same on-demand+cache
+  //   shape as the match view, but paramless (one payload).
+  const [rankingsData, setRankingsData]       = useState(null);
+  const [rankingsLoading, setRankingsLoading] = useState(false);
+  const [rankingsError, setRankingsError]     = useState(false);
+  const rankingsLoaded = useRef(false);   // loaded-once guard
+  useEffect(() => {
+    if (section !== 'rankings' || rankingsLoaded.current) return;
+    let cancelled = false;
+    rankingsLoaded.current = true;
+    setRankingsError(false);
+    setRankingsLoading(true);
+    (async () => {
+      try {
+        const data = await loadRankings();
+        if (cancelled) return;
+        if (data) setRankingsData(data);
+        else { setRankingsError(true); rankingsLoaded.current = false; }
+      } catch {
+        if (!cancelled) { setRankingsError(true); rankingsLoaded.current = false; }
+      } finally {
+        if (!cancelled) setRankingsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [section]);
+
+  // ─ Bracket: lazy-loaded once on first tap (same pattern as Rankings).
+  //   Tradeoff: loaded-once means newly-resolved knockout slots (filled by
+  //   the cron as matches finish) won't appear without reopening the app —
+  //   acceptable for v1 (same staleness tolerance as Rankings; we don't poll).
+  const [bracketData, setBracketData]       = useState(null);
+  const [bracketLoading, setBracketLoading] = useState(false);
+  const [bracketError, setBracketError]     = useState(false);
+  const bracketLoaded = useRef(false);
+  useEffect(() => {
+    if (section !== 'bracket' || bracketLoaded.current) return;
+    let cancelled = false;
+    bracketLoaded.current = true;
+    setBracketError(false);
+    setBracketLoading(true);
+    (async () => {
+      try {
+        const data = await loadBracket();
+        if (cancelled) return;
+        if (data) setBracketData(data);
+        else { setBracketError(true); bracketLoaded.current = false; }
+      } catch {
+        if (!cancelled) { setBracketError(true); bracketLoaded.current = false; }
+      } finally {
+        if (!cancelled) setBracketLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [section]);
+
   useEffect(() => {
     const now = new Date();
     setDateline(`${DAYS_SHORT[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`);
@@ -144,7 +202,11 @@ export default function AppShellClient({ cards, schedule }) {
             ? <ScheduleView data={schedule} />
             : section === 'match'
               ? <MatchView data={matchData} loading={matchLoading} error={matchError} onBack={closeMatch} />
-              : <div className="sv-placeholder">{PLACEHOLDERS[section]}</div>
+              : section === 'rankings'
+                ? <RankingsView data={rankingsData} loading={rankingsLoading} error={rankingsError} />
+                : section === 'bracket'
+                  ? <BracketView data={bracketData} loading={bracketLoading} error={bracketError} />
+                  : <div className="sv-placeholder">{PLACEHOLDERS[section]}</div>
         }
       </main>
 
@@ -950,6 +1012,298 @@ function MatchMomentRow({ e }) {
         {e.gloss && <div className="sv-match-mgloss">{e.gloss}</div>}
       </div>
     </div>
+  );
+}
+
+// ─── RANKINGS VIEW (in-shell, lazy-loaded — Commit 1) ───────────────────────
+// Team Power ⇄ Tournament MVP sub-tabs. Top-10 = blurb-forward cards (the AI
+// editorial_blurbs row blurb is the centerpiece); 11+ = compact bare rows.
+// Secondary metrics (record + editorial/sites, or production/impact) compact
+// to one small line so the blurb gets room. Team/player rows are plain web-
+// page links (NOT openMatch — they aren't matches). Built in deck CSS.
+
+function fmtRk(n)  { return n == null || Number.isNaN(Number(n)) ? '—' : Number(n).toFixed(2); }
+function fmtRk1(n) { return n == null || Number.isNaN(Number(n)) ? '—' : Number(n).toFixed(1); }
+function rankMove(label) {
+  if (label === 'up')           return { cls: 'up',   txt: '▲ UP' };
+  if (label === 'down')         return { cls: 'down', txt: '▼ DOWN' };
+  if (label === 'hold')         return { cls: 'hold', txt: '—' };
+  if (label === 'returning')    return { cls: 'new',  txt: 'RET' };
+  if (label === 'needs_review') return { cls: 'hold', txt: '?' };
+  return { cls: 'new', txt: 'NEW' };
+}
+function RankMovePill({ label }) {
+  const m = rankMove(label);
+  return <span className={`sv-rank-move ${m.cls}`}>{m.txt}</span>;
+}
+
+function RankingsView({ data, loading, error }) {
+  const [rankLens, setRankLens] = useState('teams');
+  return (
+    <div className="sv-rank">
+      <div className="sv-rank-controls">
+        <div className="sv-sched-lenstabs" role="tablist" aria-label="Rankings list">
+          {[{ k: 'teams', label: 'Team Power' }, { k: 'players', label: 'Tournament MVP' }].map((t) => (
+            <button
+              key={t.k}
+              type="button"
+              role="tab"
+              aria-selected={rankLens === t.k}
+              className={`sv-sched-lens ${rankLens === t.k ? 'is-on' : ''}`}
+              onClick={() => setRankLens(t.k)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="sv-rank-scroll">
+        {loading
+          ? <div className="sv-match-status-msg"><span className="sv-match-spinner" aria-hidden="true" />Loading rankings…</div>
+          : error || !data
+            ? <div className="sv-match-status-msg">Couldn&rsquo;t load rankings.</div>
+            : <RankList list={rankLens === 'teams' ? data.teams : data.players} kind={rankLens} />}
+      </div>
+    </div>
+  );
+}
+
+function RankList({ list, kind }) {
+  if (!list || list.empty || !list.rows || list.rows.length === 0) {
+    return (
+      <div className="sv-rank-empty">
+        {kind === 'players'
+          ? 'Tournament MVP rankings begin once the tournament is underway.'
+          : 'Rankings publish before the opener.'}
+      </div>
+    );
+  }
+  const top  = list.rows.filter((r) => r.rank <= 10);
+  const bare = list.rows.filter((r) => r.rank > 10);
+  return (
+    <>
+      <div className="sv-rank-edhead">
+        <div className="sv-kicker">{kind === 'players' ? 'Tournament MVP' : 'Team Power'}</div>
+        <div className="sv-rank-edline">
+          {list.editionLabel}{list.updatedLabel ? ` · Updated ${list.updatedLabel}` : ''}
+        </div>
+      </div>
+      <div className="sv-rank-cards">
+        {top.map((r) => (kind === 'teams'
+          ? <RankTeamCard key={r.rank} r={r} showPoints={list.showPoints} />
+          : <RankPlayerCard key={r.rank} r={r} />))}
+      </div>
+      {bare.length > 0 && (
+        <div className="sv-rank-bares">
+          {bare.map((r) => <RankBareRow key={r.rank} r={r} kind={kind} />)}
+        </div>
+      )}
+    </>
+  );
+}
+
+function RankTeamCard({ r, showPoints }) {
+  const gd = (r.gf ?? 0) - (r.ga ?? 0);
+  const gdStr = gd > 0 ? `+${gd}` : `${gd}`;
+  const pts = 3 * (r.wins ?? 0) + (r.draws ?? 0);
+  return (
+    <a className="sv-rank-card" href={`/team/${r.slug}`}>
+      <div className="sv-rank-top">
+        <span className="sv-rank-num">{r.rank}</span>
+        <FlagSvg path={r.flag_svg_path} />
+        <span className={`sv-rank-name ${r.followed ? 'sv-followed' : ''}`}>
+          {r.followed && <span className="sv-star" aria-hidden="true">★</span>}{r.name}
+        </span>
+        <span className="sv-rank-score">{fmtRk(r.score)}</span>
+        <RankMovePill label={r.movement} />
+      </div>
+      <div className="sv-rank-metrics">
+        {r.matches_played > 0 && <span>{r.wins}-{r.draws}-{r.losses} · {gdStr}{showPoints ? ` · ${pts}p` : ''}</span>}
+        <span>ED {fmtRk(r.editorial)} · SI {fmtRk(r.sites)}</span>
+      </div>
+      {r.blurb && <p className="sv-rank-blurb">{r.blurb}</p>}
+    </a>
+  );
+}
+
+function RankPlayerCard({ r }) {
+  return (
+    <a className="sv-rank-card" href={`/player/${r.slug}`}>
+      <div className="sv-rank-top">
+        <span className="sv-rank-num">{r.rank}</span>
+        {r.flag_svg_path ? <FlagSvg path={r.flag_svg_path} /> : null}
+        <span className={`sv-rank-name ${r.followed ? 'sv-followed' : ''}`}>
+          {r.followed && <span className="sv-star" aria-hidden="true">★</span>}{r.name}
+        </span>
+        {r.position && <span className="sv-rank-pos">{r.position}</span>}
+        <span className="sv-rank-score">{fmtRk(r.score)}</span>
+        <RankMovePill label={r.movement} />
+      </div>
+      <div className="sv-rank-metrics">
+        <span>PROD {fmtRk1(r.production)} · IMP {fmtRk1(r.impact)}</span>
+      </div>
+      {r.blurb && <p className="sv-rank-blurb">{r.blurb}</p>}
+    </a>
+  );
+}
+
+function RankBareRow({ r, kind }) {
+  const href = kind === 'teams' ? `/team/${r.slug}` : `/player/${r.slug}`;
+  return (
+    <a className="sv-rank-bare" href={href}>
+      <span className="sv-rank-bnum">{r.rank}</span>
+      <FlagSvg path={r.flag_svg_path} />
+      <span className={`sv-rank-bname ${r.followed ? 'sv-followed' : ''}`}>{r.name}</span>
+      {kind === 'players' && r.position && <span className="sv-rank-bpos">{r.position}</span>}
+      <span className="sv-rank-bscore">{fmtRk(r.score)}</span>
+      <RankMovePill label={r.movement} />
+    </a>
+  );
+}
+
+// ─── BRACKET VIEW (in-shell, lazy-loaded — Commit 2, the last screen) ───────
+// Group Stage ⇄ Knockout sub-tabs. Knockout = VERTICAL round-by-round (the web
+// is a horizontal tree; this is phone-native). Resolved knockout cells (both
+// sides + a slug) open the in-shell match view via openMatch; TBD/slugless
+// cells are static. Group rows are plain /team web links. Built in deck CSS.
+
+function BracketView({ data, loading, error }) {
+  // Default sub-tab derives from groupStageComplete (knockout once group done),
+  // with a user override. Derived (not an effect) so it's right on first paint.
+  const [tab, setTab] = useState(null);
+  const activeTab = tab ?? (data?.groupStageComplete ? 'knockout' : 'group');
+  return (
+    <div className="sv-rank">
+      <div className="sv-rank-controls">
+        <div className="sv-sched-lenstabs" role="tablist" aria-label="Bracket view">
+          {[{ k: 'group', label: 'Group Stage' }, { k: 'knockout', label: 'Knockout' }].map((t) => (
+            <button
+              key={t.k}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === t.k}
+              className={`sv-sched-lens ${activeTab === t.k ? 'is-on' : ''}`}
+              onClick={() => setTab(t.k)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="sv-rank-scroll">
+        {loading
+          ? <div className="sv-match-status-msg"><span className="sv-match-spinner" aria-hidden="true" />Loading bracket…</div>
+          : error || !data
+            ? <div className="sv-match-status-msg">Couldn&rsquo;t load the bracket.</div>
+            : activeTab === 'knockout'
+              ? <KnockoutPanel rounds={data.knockout} />
+              : <GroupPanel groups={data.groups} />}
+      </div>
+    </div>
+  );
+}
+
+function KnockoutPanel({ rounds }) {
+  if (!rounds || rounds.length === 0) {
+    return <div className="sv-rank-empty">The knockout bracket sets after the group stage.</div>;
+  }
+  return (
+    <>
+      {rounds.map((rd) => (
+        <section key={rd.stage} className="sv-bracket-round">
+          <div className="sv-bracket-roundhead">
+            <span className="sv-bracket-roundlabel">{rd.roundLabel}</span>
+            <span className="sv-sched-dayrule" aria-hidden="true" />
+            <span className="sv-bracket-roundcount">{rd.matches.length}</span>
+          </div>
+          <div className="sv-bracket-cells">
+            {rd.matches.map((m) => <BracketCell key={m.match_number} m={m} />)}
+          </div>
+        </section>
+      ))}
+    </>
+  );
+}
+
+function BracketCell({ m }) {
+  const openMatch = useContext(MatchNavContext);
+  const bothResolved = m.home.resolved && m.away.resolved;
+  const tappable = bothResolved && m.slug && openMatch;   // gate: resolved + slug
+  const inner = (
+    <>
+      <div className="sv-bracket-cellmeta">
+        <span>{m.dateLabel}</span>
+        {m.venue && <span className="sv-bracket-venue">{m.venue}</span>}
+        {m.isLive ? <span className="sv-live-tag">● LIVE</span> : m.isFinal ? <span className="sv-bracket-ft">FT</span> : null}
+      </div>
+      <BracketSide side={m.home} score={m.home_score} show={m.isFinal || m.isLive} loser={m.winner === 'away'} />
+      <BracketSide side={m.away} score={m.away_score} show={m.isFinal || m.isLive} loser={m.winner === 'home'} />
+    </>
+  );
+  const cls = `sv-bracket-cell${bothResolved ? '' : ' is-tbd'}`;
+  if (tappable) {
+    return (
+      <a className={cls} href={`/match/${m.slug}`} onClick={(e) => { e.preventDefault(); openMatch(m.slug); }}>
+        {inner}
+      </a>
+    );
+  }
+  return <div className={cls}>{inner}</div>;
+}
+
+function BracketSide({ side, score, show, loser }) {
+  if (!side.resolved) {
+    return (
+      <div className="sv-bracket-side is-tbd">
+        <span className="sv-flag-svg sv-flag-svg--empty" aria-hidden="true" />
+        <span className="sv-bracket-slot">{side.label}</span>
+      </div>
+    );
+  }
+  return (
+    <div className={`sv-bracket-side ${loser ? 'is-loser' : ''}`}>
+      <FlagSvg path={side.flag_svg_path} />
+      <span className={`sv-bracket-tname ${side.followed ? 'sv-followed' : ''}`}>
+        {side.followed && <span className="sv-star" aria-hidden="true">★</span>}{side.name}
+      </span>
+      <span className="sv-bracket-tscore">{show ? (score ?? 0) : ''}</span>
+    </div>
+  );
+}
+
+function GroupPanel({ groups }) {
+  if (!groups || groups.length === 0) {
+    return <div className="sv-rank-empty">Group standings populate as matches play.</div>;
+  }
+  return (
+    <>
+      {groups.map((g) => (
+        <section key={g.letter} className="sv-bracket-group">
+          <div className="sv-bracket-grouphead">Group {g.letter}</div>
+          <div className="sv-bracket-table">
+            <div className="sv-bracket-trow sv-bracket-thead">
+              <span className="sv-bracket-tpos" />
+              <span className="sv-bracket-tteam" />
+              <span className="sv-bracket-tnum">W-D-L</span>
+              <span className="sv-bracket-tnum">GD</span>
+              <span className="sv-bracket-tpts">PTS</span>
+            </div>
+            {g.teams.map((t) => (
+              <a key={t.team_id} className="sv-bracket-trow" href={`/team/${t.slug}`}>
+                <span className="sv-bracket-tpos">{t.pos}</span>
+                <span className="sv-bracket-tteam">
+                  <FlagSvg path={t.flag_svg_path} />
+                  <span className={t.followed ? 'sv-followed' : undefined}>{t.name}</span>
+                </span>
+                <span className="sv-bracket-tnum">{t.wins}-{t.draws}-{t.losses}</span>
+                <span className="sv-bracket-tnum">{t.gd > 0 ? `+${t.gd}` : t.gd}</span>
+                <span className="sv-bracket-tpts">{t.points}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))}
+    </>
   );
 }
 

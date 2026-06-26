@@ -940,3 +940,337 @@ export async function readMatch(slug) {
     keyMoments,
   };
 }
+
+// =============================================================================
+// 9. RANKINGS — Team Power + Tournament MVP (player-power), both lists in one
+// reader for the in-shell Rankings screen (lazy-loaded via loadRankings).
+//
+// Replicates lib/rankings.js's getCurrentEdition + getRankingsForPage +
+// getPlayerRankingsForPage WITHOUT importing them. Both are the CURRENT
+// published edition (is_current=true, status='published'). The AI blurb is
+// the editor-approved row blurb from the editorial_blurbs table (blurb_type=
+// 'ranking_row_blurb') — NOT articles — joined per ranking_entry with the
+// same fingerprint guard the web uses (so a blurb only shows if it was
+// approved against the current finals fingerprint). Top-10 carry a blurb;
+// 11+ come back blurb=null naturally (no approved row blurb).
+//
+// Edition published_at is PT-pre-formatted server-side (no KickoffTime).
+// A list with no current edition returns { empty: true } for an honest
+// empty state (defensive — both are populated on PROD right now).
+// =============================================================================
+
+// PT-locked edition-updated label, e.g. "Jun 27, 9:00 AM PT".
+function fmtRankUpdated(d) {
+  if (!d) return null;
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
+  }).format(new Date(d)) + ' PT';
+}
+function editionLabelOf(ed) {
+  return ed.edition_label
+    ? `Edition ${ed.edition_number} · ${ed.edition_label}`
+    : `Edition ${ed.edition_number}`;
+}
+
+export async function readRankings() {
+  const currentEditionSql = (listSlug) => sql`
+    SELECT ed.id, ed.edition_number, ed.edition_label, ed.published_at
+      FROM ranking_editions ed
+      JOIN ranking_lists rl ON rl.id = ed.ranking_list_id
+      JOIN leagues lg       ON lg.id = rl.league_id
+     WHERE rl.slug = ${listSlug} AND lg.slug = ${WC_LEAGUE_SLUG}
+       AND ed.is_current = true AND ed.status = 'published'
+     LIMIT 1
+  `;
+
+  const [teamEdRows, playerEdRows, teamRows, playerRows, finalsRows] = await Promise.all([
+    currentEditionSql('team-power'),
+    currentEditionSql('player-power'),
+    // Team Power rows — replicates getRankingsForPage (record + blurb join).
+    sql`
+      SELECT
+        e.rank, e.team_id,
+        t.name AS team_name, t.slug AS team_slug,
+        t.flag_svg_path AS team_flag_svg_path, t.flag_color_primary AS team_flag_color_primary,
+        e.score::float AS score, e.movement_label,
+        e.editorial_composite::float AS editorial_composite, e.sites_composite::float AS sites_composite,
+        rec.wins, rec.draws, rec.losses, rec.gf, rec.ga, rec.matches_played,
+        b.body AS blurb_body
+      FROM ranking_entries e
+      JOIN ranking_editions ed ON ed.id = e.ranking_edition_id
+      JOIN ranking_lists rl    ON rl.id = ed.ranking_list_id
+      JOIN leagues lg          ON lg.id = rl.league_id
+      JOIN teams t             ON t.id  = e.team_id
+      LEFT JOIN LATERAL (
+        SELECT count(*)::int AS fingerprint
+          FROM matches m
+         WHERE m.league_id = lg.id AND m.status = 'final'
+           AND (m.home_team_id = t.id OR m.away_team_id = t.id)
+      ) fp ON true
+      LEFT JOIN LATERAL (
+        SELECT
+          count(*) FILTER (WHERE (m.home_team_id=t.id AND m.home_score>m.away_score) OR (m.away_team_id=t.id AND m.away_score>m.home_score))::int AS wins,
+          count(*) FILTER (WHERE m.home_score = m.away_score)::int AS draws,
+          count(*) FILTER (WHERE (m.home_team_id=t.id AND m.home_score<m.away_score) OR (m.away_team_id=t.id AND m.away_score<m.home_score))::int AS losses,
+          COALESCE(sum(CASE WHEN m.home_team_id=t.id THEN m.home_score ELSE m.away_score END),0)::int AS gf,
+          COALESCE(sum(CASE WHEN m.home_team_id=t.id THEN m.away_score ELSE m.home_score END),0)::int AS ga,
+          count(*)::int AS matches_played
+          FROM matches m
+         WHERE m.league_id = lg.id AND m.status = 'final'
+           AND (m.home_team_id = t.id OR m.away_team_id = t.id)
+      ) rec ON true
+      LEFT JOIN editorial_blurbs b
+             ON b.ranking_entry_id = e.id
+            AND b.blurb_type = 'ranking_row_blurb' AND b.status = 'editor_approved' AND b.is_current = true
+            AND (b.approved_against_fingerprint IS NULL OR b.approved_against_fingerprint = fp.fingerprint)
+      WHERE rl.slug = 'team-power' AND lg.slug = ${WC_LEAGUE_SLUG}
+        AND ed.is_current = true AND ed.status = 'published'
+      ORDER BY e.rank ASC
+      LIMIT 48
+    `,
+    // Tournament MVP rows — replicates getPlayerRankingsForPage.
+    sql`
+      SELECT
+        e.rank,
+        COALESCE(p.known_as, p.full_name) AS player_name, p.slug AS player_slug, p.position AS player_position,
+        nt.flag_svg_path AS team_flag_svg_path, nt.flag_color_primary AS team_flag_color_primary,
+        e.score::float AS score, e.output_score::float AS production_score, e.impact_score::float AS impact_score,
+        e.movement_label, b.body AS blurb_body
+      FROM ranking_entries e
+      JOIN ranking_editions ed ON ed.id = e.ranking_edition_id
+      JOIN ranking_lists rl    ON rl.id = ed.ranking_list_id
+      JOIN leagues lg          ON lg.id = rl.league_id
+      JOIN players p           ON p.id  = e.player_id
+      LEFT JOIN teams nt       ON nt.id = p.current_team_id
+      LEFT JOIN LATERAL (
+        SELECT count(*)::int AS fingerprint
+          FROM match_events me JOIN matches m ON m.id = me.match_id
+         WHERE m.league_id = lg.id AND me.is_current = true
+           AND (me.player_api_id = (p.external_ids->>'api_sports')::int
+                OR me.assist_api_id = (p.external_ids->>'api_sports')::int)
+      ) fp ON true
+      LEFT JOIN editorial_blurbs b
+             ON b.ranking_entry_id = e.id
+            AND b.blurb_type = 'ranking_row_blurb' AND b.status = 'editor_approved' AND b.is_current = true
+            AND (b.approved_against_fingerprint IS NULL OR b.approved_against_fingerprint = fp.fingerprint)
+      WHERE rl.slug = 'player-power' AND lg.slug = ${WC_LEAGUE_SLUG}
+        AND ed.is_current = true AND ed.status = 'published'
+      ORDER BY e.rank ASC
+      LIMIT 50
+    `,
+    // Finals count → group-stage points are dropped once knockouts begin (>72).
+    sql`SELECT count(*)::int AS n FROM matches m JOIN leagues lg ON lg.id = m.league_id WHERE lg.slug = ${WC_LEAGUE_SLUG} AND m.status = 'final'`,
+  ]);
+
+  const showPoints = (finalsRows[0]?.n ?? 0) <= 72;
+
+  const teamEd = teamEdRows[0] ?? null;
+  const teams = teamEd
+    ? {
+        editionLabel: editionLabelOf(teamEd),
+        updatedLabel: fmtRankUpdated(teamEd.published_at),
+        showPoints,
+        rows: teamRows.map((r) => ({
+          rank: r.rank,
+          name: r.team_name,
+          slug: r.team_slug,
+          flag_svg_path: r.team_flag_svg_path,
+          flag_color: r.team_flag_color_primary,
+          score: r.score,
+          movement: r.movement_label,
+          editorial: r.editorial_composite,
+          sites: r.sites_composite,
+          wins: r.wins, draws: r.draws, losses: r.losses, gf: r.gf, ga: r.ga,
+          matches_played: r.matches_played,
+          followed: FOLLOWED_TEAMS.has(r.team_name),
+          blurb: r.blurb_body ?? null,
+        })),
+      }
+    : { empty: true };
+
+  const playerEd = playerEdRows[0] ?? null;
+  const players = playerEd
+    ? {
+        editionLabel: editionLabelOf(playerEd),
+        updatedLabel: fmtRankUpdated(playerEd.published_at),
+        rows: playerRows.map((r) => ({
+          rank: r.rank,
+          name: r.player_name,
+          slug: r.player_slug,
+          position: r.player_position,
+          flag_svg_path: r.team_flag_svg_path,
+          flag_color: r.team_flag_color_primary,
+          score: r.score,
+          movement: r.movement_label,
+          production: r.production_score,
+          impact: r.impact_score,
+          followed: FOLLOWED_PLAYERS.has(r.player_name),
+          blurb: r.blurb_body ?? null,
+        })),
+      }
+    : { empty: true };
+
+  return { teams, players };
+}
+
+// =============================================================================
+// 10. BRACKET — knockout (vertical round-by-round) + group standings, for the
+// in-shell Bracket screen (lazy-loaded via loadBracket).
+//
+// Replicates lib/bracket.js's getKnockoutBracket + getGroupStandings WITHOUT
+// importing them. Two deltas vs the web reader:
+//   · KNOCKOUT: adds m.slug (the web cell wasn't tappable; the app opens the
+//     in-shell match view from resolved cells, which needs the slug), and
+//     pre-derives dateLabel (PT) / isFinal / isLive / winner side. Grouped
+//     server-side into ordered rounds (R32→…→Final).
+//   · GROUP STANDINGS: computed in JS from group membership + final matches
+//     with STANDARD tiebreakers (points → GD → GF → name) — NOT the full
+//     FIFA-2026 head-to-head chain (lib/bracket's orderGroup/sortClusterFifa2026
+//     are too intricate to port self-contained). Advancement badges
+//     (computeAdvancement) are OMITTED — settled now that the group stage is
+//     complete; the knockout bracket itself shows who advanced.
+//
+// Times are PT-pre-formatted server-side (no KickoffTime).
+// =============================================================================
+
+const BRACKET_GROUP_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+const BRACKET_STAGE_ORDER = ['round_of_32', 'round_of_16', 'quarter', 'semi', 'third_place', 'final'];
+const BRACKET_ROUND_LABEL = {
+  round_of_32: 'Round of 32', round_of_16: 'Round of 16', quarter: 'Quarters',
+  semi: 'Semis', third_place: 'Third Place', final: 'Final',
+};
+
+// PT short knockout date, e.g. "JUN 28" (matches the web's fmtKoDate uppercase).
+function fmtKoDate(kickoffAt) {
+  if (!kickoffAt) return '';
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric',
+  }).format(new Date(kickoffAt)).toUpperCase();
+}
+
+export async function readBracket() {
+  const [knockoutRows, memberRows, groupFinals, pendingRows] = await Promise.all([
+    // Knockout matches — replicates getKnockoutBracket + m.slug.
+    sql`
+      SELECT m.id AS match_id, m.slug, m.stage, m.kickoff_at, m.venue, m.status,
+             m.home_team_id, m.away_team_id, m.home_score, m.away_score, m.metadata,
+             ht.name AS home_name, ht.slug AS home_slug, ht.flag_svg_path AS home_flag, ht.flag_color_primary AS home_flag_color,
+             at.name AS away_name, at.slug AS away_slug, at.flag_svg_path AS away_flag, at.flag_color_primary AS away_flag_color
+        FROM matches m
+        JOIN leagues lg ON lg.id = m.league_id
+        LEFT JOIN teams ht ON ht.id = m.home_team_id
+        LEFT JOIN teams at ON at.id = m.away_team_id
+       WHERE lg.slug = ${WC_LEAGUE_SLUG}
+         AND m.stage IN ('round_of_32','round_of_16','quarter','semi','third_place','final')
+       ORDER BY (m.metadata->>'match_number')::int
+    `,
+    // Group membership (every team in a group fixture, played or not) + info.
+    sql`
+      SELECT DISTINCT m.group_code, v.tid AS team_id,
+             t.name, t.slug, t.flag_svg_path, t.flag_color_primary
+        FROM matches m
+        JOIN leagues lg ON lg.id = m.league_id
+        CROSS JOIN LATERAL (VALUES (m.home_team_id), (m.away_team_id)) AS v(tid)
+        JOIN teams t ON t.id = v.tid
+       WHERE lg.slug = ${WC_LEAGUE_SLUG} AND m.stage = 'group' AND m.group_code IS NOT NULL
+         AND v.tid IS NOT NULL
+    `,
+    // Final group matches (drive the standings stats).
+    sql`
+      SELECT m.group_code, m.home_team_id, m.away_team_id, m.home_score, m.away_score
+        FROM matches m
+        JOIN leagues lg ON lg.id = m.league_id
+       WHERE lg.slug = ${WC_LEAGUE_SLUG} AND m.stage = 'group' AND m.group_code IS NOT NULL
+         AND m.status = 'final'
+    `,
+    // Pending group matches → groupStageComplete drives the default sub-tab.
+    sql`
+      SELECT count(*) FILTER (WHERE m.status <> 'final')::int AS pending
+        FROM matches m JOIN leagues lg ON lg.id = m.league_id
+       WHERE lg.slug = ${WC_LEAGUE_SLUG} AND m.stage = 'group' AND m.group_code IS NOT NULL
+    `,
+  ]);
+
+  // ── Knockout: shape each match, then group into ordered rounds. ──
+  const matches = [];
+  for (const r of knockoutRows) {
+    const mn = r.metadata?.match_number;
+    if (mn == null) continue;
+    const isFinal = r.status === 'final';
+    const isLive  = r.status === 'live';
+    let winner = null;
+    if (isFinal && r.home_score != null && r.away_score != null) {
+      if (r.home_score > r.away_score) winner = 'home';
+      else if (r.away_score > r.home_score) winner = 'away';
+    }
+    matches.push({
+      match_number: mn,
+      match_id: r.match_id,
+      slug: r.slug,
+      stage: r.stage,
+      roundLabel: BRACKET_ROUND_LABEL[r.stage] ?? (r.metadata?.round_label ?? r.stage),
+      dateLabel: fmtKoDate(r.kickoff_at),
+      venue: r.venue ?? null,
+      status: r.status,
+      isFinal,
+      isLive,
+      home_score: r.home_score,
+      away_score: r.away_score,
+      winner,
+      home: r.home_team_id
+        ? { resolved: true, team_id: r.home_team_id, name: r.home_name, slug: r.home_slug, flag_svg_path: r.home_flag, flag_color: r.home_flag_color, followed: FOLLOWED_TEAMS.has(r.home_name) }
+        : { resolved: false, label: r.metadata?.slot_home?.label ?? 'TBD' },
+      away: r.away_team_id
+        ? { resolved: true, team_id: r.away_team_id, name: r.away_name, slug: r.away_slug, flag_svg_path: r.away_flag, flag_color: r.away_flag_color, followed: FOLLOWED_TEAMS.has(r.away_name) }
+        : { resolved: false, label: r.metadata?.slot_away?.label ?? 'TBD' },
+    });
+  }
+  const knockout = BRACKET_STAGE_ORDER
+    .map((stage) => ({
+      stage,
+      roundLabel: BRACKET_ROUND_LABEL[stage],
+      matches: matches.filter((m) => m.stage === stage),  // already match_number-ordered
+    }))
+    .filter((r) => r.matches.length > 0);
+
+  // ── Group standings: stats from finals, ordered points→GD→GF→name. ──
+  const byLetter = new Map();  // letter → Map<team_id, stat>
+  for (const m of memberRows) {
+    if (!byLetter.has(m.group_code)) byLetter.set(m.group_code, new Map());
+    const g = byLetter.get(m.group_code);
+    if (!g.has(m.team_id)) {
+      g.set(m.team_id, {
+        team_id: m.team_id, name: m.name, slug: m.slug,
+        flag_svg_path: m.flag_svg_path, flag_color: m.flag_color_primary,
+        wins: 0, draws: 0, losses: 0, gf: 0, ga: 0, points: 0,
+      });
+    }
+  }
+  for (const m of groupFinals) {
+    const g = byLetter.get(m.group_code);
+    if (!g) continue;
+    const home = g.get(m.home_team_id), away = g.get(m.away_team_id);
+    if (!home || !away) continue;
+    const hs = m.home_score ?? 0, as = m.away_score ?? 0;
+    home.gf += hs; home.ga += as; away.gf += as; away.ga += hs;
+    if (hs > as)      { home.wins++; home.points += 3; away.losses++; }
+    else if (hs < as) { away.wins++; away.points += 3; home.losses++; }
+    else              { home.draws++; away.draws++; home.points++; away.points++; }
+  }
+  const groups = BRACKET_GROUP_LETTERS
+    .map((letter) => {
+      const g = byLetter.get(letter);
+      if (!g) return null;
+      const teams = [...g.values()]
+        .map((t) => ({ ...t, gd: t.gf - t.ga, followed: FOLLOWED_TEAMS.has(t.name) }))
+        .sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name))
+        .map((t, i) => ({ ...t, pos: i + 1 }));
+      return { letter, teams };
+    })
+    .filter((g) => g && g.teams.length > 0);
+
+  const groupStageComplete = (pendingRows[0]?.pending ?? 1) === 0;
+
+  return { knockout, groups, groupStageComplete };
+}

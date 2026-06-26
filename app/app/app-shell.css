@@ -1417,3 +1417,386 @@
   line-height: 1.45;
   color: var(--paper-dim);
 }
+
+/* ─── RANKINGS VIEW (in-shell, lazy-loaded — Commit 1) ───────────────────── */
+/* Fixed sub-tab toggle (reuses .sv-sched-lenstabs) over a scrolling list.
+   Top-10 = blurb-forward cards; 11+ = compact bare rows. */
+
+.sv-app .sv-rank {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sv-app .sv-rank-controls {
+  flex: 0 0 auto;
+  padding: 12px 14px;
+  background: var(--ink);
+  border-bottom: 1px solid var(--hairline);
+}
+.sv-app .sv-rank-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px;
+  scrollbar-width: none;
+}
+.sv-app .sv-rank-scroll::-webkit-scrollbar { display: none; }
+
+.sv-app .sv-rank-edhead { margin-bottom: 12px; }
+.sv-app .sv-rank-edline {
+  margin-top: 3px;
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Movement pill */
+.sv-app .sv-rank-move {
+  flex: 0 0 auto;
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.sv-app .sv-rank-move.up   { color: var(--volt); }
+.sv-app .sv-rank-move.down { color: var(--live-red); }
+.sv-app .sv-rank-move.new  { color: var(--paper); }
+
+/* Top-10 blurb-forward cards */
+.sv-app .sv-rank-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.sv-app .sv-rank-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-rank-card:active { background: #1a1a1a; }
+.sv-app .sv-rank-top {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.sv-app .sv-rank-num {
+  flex: 0 0 auto;
+  min-width: 24px;
+  font-family: var(--sv-font-saira);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-rank-name {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.15;
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+.sv-app .sv-rank-name.sv-followed { color: var(--volt); }
+.sv-app .sv-rank-pos {
+  flex: 0 0 auto;
+  font-family: var(--sv-font-mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 2px 5px;
+  border: 1px solid var(--charcoal);
+  border-radius: 4px;
+}
+.sv-app .sv-rank-score {
+  flex: 0 0 auto;
+  font-family: var(--sv-font-mono);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-rank-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+/* The blurb — centerpiece, serif reading style with room to breathe. */
+.sv-app .sv-rank-blurb {
+  margin: 2px 0 0;
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--paper-dim);
+}
+
+/* 11+ compact bare rows */
+.sv-app .sv-rank-bares {
+  display: flex;
+  flex-direction: column;
+}
+.sv-app .sv-rank-bare {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--hairline);
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-rank-bare:last-child { border-bottom: 0; }
+.sv-app .sv-rank-bnum {
+  flex: 0 0 22px;
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-rank-bname {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+.sv-app .sv-rank-bname.sv-followed { color: var(--volt); }
+.sv-app .sv-rank-bpos {
+  flex: 0 0 auto;
+  font-family: var(--sv-font-mono);
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-rank-bscore {
+  flex: 0 0 auto;
+  font-family: var(--sv-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+
+.sv-app .sv-rank-empty {
+  padding: 40px 24px;
+  text-align: center;
+  font-family: var(--sv-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ─── BRACKET VIEW (in-shell, vertical round-by-round — Commit 2) ─────────── */
+/* Reuses .sv-rank container (fixed toggle + scroll). Knockout = round sections
+   of stacked match cells; Group = stacked standings tables. */
+
+/* Knockout rounds */
+.sv-app .sv-bracket-round { margin-bottom: 18px; }
+.sv-app .sv-bracket-roundhead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  background: var(--ink);
+  border-bottom: 1px solid var(--hairline);
+}
+.sv-app .sv-bracket-roundlabel {
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--volt);
+  white-space: nowrap;
+}
+.sv-app .sv-bracket-roundcount {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+.sv-app .sv-bracket-cells {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Knockout match cell */
+.sv-app .sv-bracket-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 13px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app a.sv-bracket-cell:active { background: #1a1a1a; }
+.sv-app .sv-bracket-cell.is-tbd { opacity: 0.85; }
+.sv-app .sv-bracket-cellmeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-bracket-venue {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sv-app .sv-bracket-ft { color: var(--paper); }
+
+.sv-app .sv-bracket-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sv-app .sv-bracket-tname {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+.sv-app .sv-bracket-side.is-loser .sv-bracket-tname,
+.sv-app .sv-bracket-side.is-loser .sv-bracket-tscore { color: var(--muted); }
+.sv-app .sv-bracket-slot {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.sv-app .sv-bracket-tscore {
+  flex: 0 0 auto;
+  min-width: 14px;
+  text-align: right;
+  font-family: var(--sv-font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Group standings tables */
+.sv-app .sv-bracket-group { margin-bottom: 18px; }
+.sv-app .sv-bracket-grouphead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 0;
+  margin-bottom: 6px;
+  background: var(--ink);
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+.sv-app .sv-bracket-table { display: flex; flex-direction: column; }
+.sv-app .sv-bracket-trow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--hairline);
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app a.sv-bracket-trow:active { background: #1a1a1a; }
+.sv-app .sv-bracket-trow:last-child { border-bottom: 0; }
+.sv-app .sv-bracket-thead {
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 5px;
+}
+.sv-app .sv-bracket-thead span {
+  font-family: var(--sv-font-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-bracket-tpos {
+  flex: 0 0 18px;
+  text-align: center;
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-bracket-tteam {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+.sv-app .sv-bracket-tnum {
+  flex: 0 0 46px;
+  text-align: right;
+  font-family: var(--sv-font-mono);
+  font-size: 11px;
+  color: var(--paper-dim);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-bracket-tpts {
+  flex: 0 0 30px;
+  text-align: right;
+  font-family: var(--sv-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+}
