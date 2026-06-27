@@ -24,6 +24,7 @@
 
 import { notFound } from 'next/navigation';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
+import BackToAppBar from '@/components/BackToAppBar';
 
 import { getPlayerBySlug, getPlayerGroupFixtures } from '@/lib/players';
 
@@ -56,6 +57,7 @@ export default async function PlayerPage({ params }) {
 
   return (
     <>
+      <BackToAppBar />
       <SiteHeaderServer />
 
       <main className="page-shell">
