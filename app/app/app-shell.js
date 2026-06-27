@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { loadMatch, loadRankings, loadBracket } from './actions';
+import { loadMatch, loadRankings, loadBracket, loadStats } from './actions';
 
 // Lets deeply-nested rows (Today's Card rows, Schedule rows) open the in-shell
 // match view without prop-drilling through Deck / ScheduleView render helpers.
@@ -28,6 +28,7 @@ const NAV_ITEMS = [
   { id: 'sched',    label: 'Schedules', Icon: IconSched },
   { id: 'bracket',  label: 'Bracket',   Icon: IconBracket },
   { id: 'rankings', label: 'Rankings',  Icon: IconRankings },
+  { id: 'stats',    label: 'Stats',     Icon: IconStats },
   { id: 'read',     label: 'Read',      Icon: IconRead },
 ];
 
@@ -152,6 +153,33 @@ export default function AppShellClient({ cards, schedule }) {
     return () => { cancelled = true; };
   }, [section]);
 
+  // ─ Stats: lazy-loaded once on first tap (same pattern as Rankings/Bracket).
+  //   Loaded-once cache; a reopen shows fresh numbers — acceptable v1, no poll.
+  const [statsData, setStatsData]       = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError]     = useState(false);
+  const statsLoaded = useRef(false);
+  useEffect(() => {
+    if (section !== 'stats' || statsLoaded.current) return;
+    let cancelled = false;
+    statsLoaded.current = true;
+    setStatsError(false);
+    setStatsLoading(true);
+    (async () => {
+      try {
+        const data = await loadStats();
+        if (cancelled) return;
+        if (data) setStatsData(data);
+        else { setStatsError(true); statsLoaded.current = false; }
+      } catch {
+        if (!cancelled) { setStatsError(true); statsLoaded.current = false; }
+      } finally {
+        if (!cancelled) setStatsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [section]);
+
   useEffect(() => {
     const now = new Date();
     setDateline(`${DAYS_SHORT[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`);
@@ -206,7 +234,9 @@ export default function AppShellClient({ cards, schedule }) {
                 ? <RankingsView data={rankingsData} loading={rankingsLoading} error={rankingsError} />
                 : section === 'bracket'
                   ? <BracketView data={bracketData} loading={bracketLoading} error={bracketError} />
-                  : <div className="sv-placeholder">{PLACEHOLDERS[section]}</div>
+                  : section === 'stats'
+                    ? <StatsView data={statsData} loading={statsLoading} error={statsError} />
+                    : <div className="sv-placeholder">{PLACEHOLDERS[section]}</div>
         }
       </main>
 
@@ -1307,6 +1337,161 @@ function GroupPanel({ groups }) {
   );
 }
 
+// ─── STATS VIEW (in-shell, lazy-loaded — leaderboards) ──────────────────────
+// Category sub-tabs (Overview / Scorers / Assists / G+A / SV Points /
+// Discipline); each a vertical leaderboard with team flags. Player rows are
+// plain /player web links (NOT openMatch). Built in deck CSS. No dates.
+
+const STAT_TABS = [
+  { k: 'overview', label: 'Overview' },
+  { k: 'scorers',  label: 'Scorers' },
+  { k: 'assists',  label: 'Assists' },
+  { k: 'ga',       label: 'G+A' },
+  { k: 'sv',       label: 'SV Points' },
+  { k: 'discipline', label: 'Discipline' },
+];
+
+function statMetricValue(r, metric) {
+  if (metric === 'goals')              return r.goals;
+  if (metric === 'assists')            return r.assists;
+  if (metric === 'goal_contributions') return r.goal_contributions;
+  if (metric === 'sv_points')          return r.sv_points;
+  if (metric === 'cards')              return `${r.yellow_cards}Y ${r.red_cards}R`;
+  return '';
+}
+
+function StatsView({ data, loading, error }) {
+  const [statLens, setStatLens] = useState('overview');
+  return (
+    <div className="sv-rank">
+      <div className="sv-rank-controls">
+        {/* 6 categories → horizontally scrollable pill row. */}
+        <div className="sv-stats-tabs" role="tablist" aria-label="Stats category">
+          {STAT_TABS.map((t) => (
+            <button
+              key={t.k}
+              type="button"
+              role="tab"
+              aria-selected={statLens === t.k}
+              className={`sv-stats-tab ${statLens === t.k ? 'is-on' : ''}`}
+              onClick={() => setStatLens(t.k)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="sv-rank-scroll">
+        {loading
+          ? <div className="sv-match-status-msg"><span className="sv-match-spinner" aria-hidden="true" />Loading stats…</div>
+          : error || !data
+            ? <div className="sv-match-status-msg">Couldn&rsquo;t load stats.</div>
+            : statLens === 'overview'
+              ? <StatsOverview data={data} />
+              : <StatLeaderboard data={data} lens={statLens} />}
+      </div>
+    </div>
+  );
+}
+
+function StatsOverview({ data }) {
+  const t = data.totals;
+  const tiles = [
+    ['Goals', t.goals], ['Matches', t.matches], ['Avg / Match', t.avgGoals.toFixed(1)],
+    ['Assists', t.assists], ['Cards', `${t.yellow}Y ${t.red}R`],
+  ];
+  return (
+    <>
+      <div className="sv-stats-totals">
+        {tiles.map(([label, val]) => (
+          <div key={label} className="sv-stats-tot">
+            <span className="sv-stats-totval">{val}</span>
+            <span className="sv-stats-totlabel">{label}</span>
+          </div>
+        ))}
+      </div>
+      <StatsMini title="Top Scorers" rows={data.scorers}    metric="goals" />
+      <StatsMini title="Top Assists" rows={data.assists}    metric="assists" />
+      <StatsMini title="SV Points"   rows={data.svPoints}   metric="sv_points" />
+      <StatsMini title="Discipline"  rows={data.discipline} metric="cards" />
+    </>
+  );
+}
+
+function StatsMini({ title, rows, metric }) {
+  const top = (rows ?? []).slice(0, 5);
+  if (top.length === 0) return null;
+  return (
+    <div className="sv-stats-mini">
+      <div className="sv-kicker">{title}</div>
+      {top.map((r) => {
+        const body = (
+          <>
+            <span className="sv-stats-mrank">{r.rank}</span>
+            <FlagSvg path={r.flag_svg_path} />
+            <span className={`sv-stats-mname ${r.followed ? 'sv-followed' : ''}`}>{r.player_name}</span>
+            <span className="sv-stats-mval">{statMetricValue(r, metric)}</span>
+          </>
+        );
+        return r.player_slug
+          ? <a key={r.player_api_id} className="sv-stats-minirow" href={`/player/${r.player_slug}`}>{body}</a>
+          : <div key={r.player_api_id} className="sv-stats-minirow">{body}</div>;
+      })}
+    </div>
+  );
+}
+
+function StatLeaderboard({ data, lens }) {
+  const cfg = {
+    scorers:    { rows: data.scorers,       title: 'Scorers',             metric: 'goals',              sub: 'Goals · own goals excluded' },
+    assists:    { rows: data.assists,       title: 'Assists',             metric: 'assists',            sub: 'Primary assists' },
+    ga:         { rows: data.contributions, title: 'Goal Contributions',  metric: 'goal_contributions', sub: 'Goals + assists' },
+    sv:         { rows: data.svPoints,      title: 'SV Points',           metric: 'sv_points',          sub: 'Sportsvyn metric · v1' },
+    discipline: { rows: data.discipline,    title: 'Discipline',          metric: 'cards',              sub: 'Cards · red ranks first' },
+  }[lens];
+  if (!cfg) return null;
+  if (!cfg.rows || cfg.rows.length === 0) {
+    return <div className="sv-rank-empty">No qualifying players yet.</div>;
+  }
+  return (
+    <>
+      <div className="sv-stats-boardhead">
+        <div className="sv-kicker">{cfg.title}</div>
+        <div className="sv-stats-boardsub">{cfg.sub}</div>
+      </div>
+      <div className="sv-stats-rows">
+        {cfg.rows.map((r) => <StatRow key={r.player_api_id} r={r} metric={cfg.metric} />)}
+      </div>
+    </>
+  );
+}
+
+function StatRow({ r, metric }) {
+  const body = (
+    <>
+      <span className="sv-stats-rank">{r.rank}</span>
+      <FlagSvg path={r.flag_svg_path} />
+      <div className="sv-stats-pl">
+        <span className={`sv-stats-pname ${r.followed ? 'sv-followed' : ''}`}>
+          {r.followed && <span className="sv-star" aria-hidden="true">★</span>}{r.player_name}
+        </span>
+        <span className="sv-stats-pteam">{[r.team_abbr || r.team_name, r.position].filter(Boolean).join(' · ')}</span>
+      </div>
+      {metric === 'cards' ? (
+        <span className="sv-stats-cards">
+          <span className="sv-stats-yc">{r.yellow_cards}Y</span>
+          <span className={`sv-stats-rc ${r.red_cards > 0 ? 'has' : ''}`}>{r.red_cards}R</span>
+        </span>
+      ) : (
+        <span className="sv-stats-val">{statMetricValue(r, metric)}</span>
+      )}
+    </>
+  );
+  return r.player_slug
+    ? <a className="sv-stats-row" href={`/player/${r.player_slug}`}>{body}</a>
+    : <div className="sv-stats-row">{body}</div>;
+}
+
 // ─── CARDS ───────────────────────────────────────────────────────────────
 
 // TODAY'S CARD — the deck's lead card. Mirrors the homepage's daily-card
@@ -1569,6 +1754,18 @@ function IconRankings() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M5 21V11" /><path d="M12 21V5" /><path d="M19 21v-7" />
+    </svg>
+  );
+}
+// Trophy — deliberately distinct from the bar-chart IconRankings.
+function IconStats() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
+      <path d="M7 6H4.5v1.5A3 3 0 0 0 7 10.4" />
+      <path d="M17 6h2.5v1.5a3 3 0 0 1-2.5 2.9" />
+      <path d="M12 14v3" />
+      <path d="M9.5 17.5h5v3h-5z" />
     </svg>
   );
 }
