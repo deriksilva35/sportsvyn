@@ -177,8 +177,27 @@
   .sch-matchup { padding: 14px 18px; }
   .sch-row { gap: 11px; }
   .sch-row .flag { width: 26px; height: 19px; }
+  .sch-flag-tbd { width: 26px; height: 19px; }
   .sch-nm { font-size: 18px; }
+  .sch-nm-tbd { font-size: 15px; }
   .sch-sc { font-size: 18px; }
   .sch-goals { padding-left: 37px; gap: 4px 14px; }
   .sch-goal { font-size: 10px; }
+}
+
+/* Unresolved knockout side (slot-label fallback) — dimmed "to be determined",
+   consistent with /bracket's tbd rows. Empty flag box keeps name alignment. */
+.sch-flag-tbd {
+  width: 30px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 2px;
+  border: 1px dashed var(--charcoal);
+  background: transparent;
+}
+.sch-nm-tbd {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 0.04em;
 }

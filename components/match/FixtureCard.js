@@ -57,6 +57,36 @@ function loserClass(f, side) {
   return '';
 }
 
+// One matchup side. A resolved side (real team) renders exactly as the card
+// always has: flag + name + score. An unresolved knockout side (null team —
+// surfaced on /schedule via the reader's LEFT JOIN + slot label) renders in
+// label mode: empty flag slot + the slot label (e.g. "1D", "W73", "3rd
+// B/E/F/I/J") + a dash, mirroring /bracket's KnockoutTeamRow. INNER-JOIN
+// callers (homepage/app) always pass a resolved side, so they hit the
+// unchanged path. `resolved` is the reader's flag; fall back to an id check
+// for callers that don't set it.
+function SideRow({ f, side, followedSet }) {
+  const t = f[side];
+  const isResolved = t?.resolved ?? (t?.id != null);
+  if (isResolved) {
+    const followed = followedSet?.has(t.id);
+    return (
+      <div className="sch-row">
+        <FlagSlot flagSvgPath={t.flag_svg_path} colorPrimary={t.flag_color} size="md" />
+        <span className={`sch-nm ${loserClass(f, side)}${followed ? ' team-name-followed' : ''}`}>{t.name}</span>
+        <span className={`sch-sc ${loserClass(f, side)}`}>{scoreOrDash(f, side)}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="sch-row sch-row-tbd">
+      <span className="sch-flag-tbd" aria-hidden="true" />
+      <span className="sch-nm sch-nm-tbd">{t?.label ?? 'TBD'}</span>
+      <span className="sch-sc">{'—'}</span>
+    </div>
+  );
+}
+
 export default function FixtureCard({ f, followedSet }) {
   const bucket = bucketOf(f.status);
   const isLive = bucket === 'live';
@@ -64,24 +94,14 @@ export default function FixtureCard({ f, followedSet }) {
   const cardCls = ['sch-card', isLive ? 'is-live' : '', isCancelled ? 'is-cancelled' : ''].filter(Boolean).join(' ');
   const hasGoals = (f.goals.home.length + f.goals.away.length) > 0;
   // followedSet is optional — FixtureCard is shared and may be used in
-  // places that don't pass it. ?. + the global rule's !important keep
-  // the loser-class color (.lose dims to muted) from winning the
-  // cascade when a followed team has lost.
-  const homeFollowed = followedSet?.has(f.home.id);
-  const awayFollowed = followedSet?.has(f.away.id);
+  // places that don't pass it. SideRow resolves the per-side follow tint
+  // (and the global rule's !important keeps the loser-class color from
+  // winning the cascade when a followed team has lost).
   return (
     <a className={cardCls} href={`/match/${f.slug}`}>
       <div className="sch-matchup">
-        <div className="sch-row">
-          <FlagSlot flagSvgPath={f.home.flag_svg_path} colorPrimary={f.home.flag_color} size="md" />
-          <span className={`sch-nm ${loserClass(f, 'home')}${homeFollowed ? ' team-name-followed' : ''}`}>{f.home.name}</span>
-          <span className={`sch-sc ${loserClass(f, 'home')}`}>{scoreOrDash(f, 'home')}</span>
-        </div>
-        <div className="sch-row">
-          <FlagSlot flagSvgPath={f.away.flag_svg_path} colorPrimary={f.away.flag_color} size="md" />
-          <span className={`sch-nm ${loserClass(f, 'away')}${awayFollowed ? ' team-name-followed' : ''}`}>{f.away.name}</span>
-          <span className={`sch-sc ${loserClass(f, 'away')}`}>{scoreOrDash(f, 'away')}</span>
-        </div>
+        <SideRow f={f} side="home" followedSet={followedSet} />
+        <SideRow f={f} side="away" followedSet={followedSet} />
         {hasGoals && (
           <div className="sch-goals">
             <div className="sch-goals-col">
