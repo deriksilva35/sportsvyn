@@ -39,7 +39,7 @@ const RANKING_URL_LEAF     = 'power';
 
 export const metadata = {
   title: 'Power Rankings · Sportsvyn',
-  description: 'Forty-eight nations, ranked. Sportsvyn reads FIFA and ESPN, scores the squads itself, and forms its own order.',
+  description: 'Forty-eight nations, ranked. Sportsvyn scores the squads itself and forms its own order.',
 };
 
 export const dynamic = 'force-dynamic';
@@ -128,9 +128,6 @@ function RankCard({ row, showPoints }) {
       <p className="rc-split">
         <span className="lab">EDITORIAL</span>{' '}
         <span className="ed">{fmtScore(row.editorial_composite)}</span>
-        {' '}{'·'}{' '}
-        <span className="lab">SITES</span>{' '}
-        <span className="si">{fmtScore(row.sites_composite)}</span>
       </p>
       {row.blurb_body ? (
         <p className="rc-blurb">{row.blurb_body}</p>
@@ -151,7 +148,7 @@ function BareRow({ row, showPoints }) {
       <span className="b-name">{row.team_name}</span>
       <RecordBare row={row} showPoints={showPoints} />
       <span className="b-split">
-        ED {fmtScore(row.editorial_composite)} {'·'} SI {fmtScore(row.sites_composite)}
+        ED {fmtScore(row.editorial_composite)}
       </span>
       <span className="b-score">{fmtScore(row.score)}</span>
       <MovementBare label={row.movement_label} />
@@ -193,7 +190,6 @@ export default async function PowerRankingsLeafPage() {
     ? `Edition ${edition.edition_number} · ${edition.edition_label}`
     : `Edition ${edition.edition_number}`;
   const edWeightPct    = Math.round((edition.editorial_weight ?? 0) * 100);
-  const sitesWeightPct = Math.round((edition.sites_weight ?? 0) * 100);
 
   const blurbed = allRows.filter((r) => r.rank <= 10);
   const bare    = allRows.filter((r) => r.rank > 10);
@@ -207,7 +203,7 @@ export default async function PowerRankingsLeafPage() {
           <div className="kicker">Power Rankings {'·'} {editionLabel}</div>
           <h1>The board before<br />a ball is <span className="accent">kicked.</span></h1>
           <p className="dek">
-            Forty-eight nations, ranked. Sportsvyn reads FIFA and ESPN, scores the squads itself, and forms its own order, the composite is the argument. Here is where the tournament stands the night before it starts.
+            Forty-eight nations, ranked. Sportsvyn scores the squads itself and forms its own order {'—'} the composite is the argument. Here is where the tournament stands.
           </p>
           <div className="meta-row">
             <span>By <span className="v">Derik Silva</span></span>
@@ -219,11 +215,10 @@ export default async function PowerRankingsLeafPage() {
         <div className="method">
           <div className="method-label">How this is scored</div>
           <p>
-            Each team{'’'}s score blends two layers: Sportsvyn{'’'}s own five-dimension editorial read, and the consensus of FIFA{'’'}s and ESPN{'’'}s rankings converted to a 0-10 scale. Pre-tournament, only the dimensions you can judge before kickoff are live, squad and coherence, so results, process, and momentum hold until the first whistle.
+            Each team{'’'}s score is Sportsvyn{'’'}s own editorial read across five dimensions {'—'} result, squad, coherence, process, and momentum {'—'} on a 0-10 scale, result-led. A dimension that can{'’'}t yet be judged is held, and the rest re-weighted.
           </p>
           <div className="layers">
             <span className="layer">EDITORIAL <span className="w">{edWeightPct}%</span></span>
-            <span className="layer">SITES <span className="w">{sitesWeightPct}%</span></span>
             <span className="layer off">USER {'\u2014'} <span className="w">Phase 2</span></span>
           </div>
         </div>
@@ -244,7 +239,7 @@ export default async function PowerRankingsLeafPage() {
         </div>
 
         <div className="foot">
-          <p>Recomputed after every matchday during the tournament. Editorial layer scored by Sportsvyn; sites layer blends FIFA and ESPN.</p>
+          <p>Recomputed after every matchday during the tournament. Scored by Sportsvyn across five editorial dimensions.</p>
           <p>Explain, don{'’'}t pick. {'\u2014'} Sportsvyn</p>
         </div>
 
