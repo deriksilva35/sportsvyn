@@ -14,7 +14,7 @@
  * action is just the client-callable boundary.
  */
 
-import { readMatch, readRankings, readBracket } from './data';
+import { readMatch, readRankings, readBracket, readStats } from './data';
 
 export async function loadMatch(slug) {
   if (typeof slug !== 'string' || slug.length === 0) return null;
@@ -32,4 +32,10 @@ export async function loadRankings() {
 // first tap of the Bracket tab. Cached for the session (loaded-once).
 export async function loadBracket() {
   return await readBracket();
+}
+
+// Stats (tournament leaderboards) — paramless, lazy-loaded on first tap of
+// the Stats tab. Cached for the session (loaded-once).
+export async function loadStats() {
+  return await readStats();
 }

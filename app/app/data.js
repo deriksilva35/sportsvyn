@@ -1274,3 +1274,152 @@ export async function readBracket() {
 
   return { knockout, groups, groupStageComplete };
 }
+
+// =============================================================================
+// 11. STATS — tournament leaderboards for the in-shell Stats screen
+// (lazy-loaded via loadStats). Leaderboards-first; the web's wide sortable
+// All-Stats table is deferred.
+//
+// Replicates lib/stats.js EXACTLY: ONE wide aggregation over match_events
+// (is_current, league-scoped) → one row per player who scored/assisted/was
+// carded; every leaderboard is then a pure JS filter+sort+slice over that
+// single dataset (no per-board DB hit). NOT tournament_aggregated_stats /
+// player_match_stats (both 0 rows on PROD — Wave 2). Adds team flag
+// (flag_svg_path + flag_color_primary) the web reader omits. sv_points uses
+// the web's exact formula so the numbers match /stats. No dates anywhere.
+// =============================================================================
+
+// Copied verbatim from lib/stats.js computeSvPoints so SV Points match the web.
+function computeSvPointsLocal(p) {
+  const isDefOrGk = p.position === 'DEF' || p.position === 'GK';
+  const goalWeight = isDefOrGk ? 6 : 5;
+  const goalsPts   = Number(p.goals ?? 0) * goalWeight;
+  const penaltyB   = Number(p.penalty_goals ?? 0) * 2;
+  const assistPts  = Number(p.assists ?? 0) * 3;
+  const ownGoalPts = Number(p.own_goals ?? 0) * -2;
+  const yellowPts  = Number(p.yellow_cards ?? 0) * -1;
+  const redPts     = Number(p.red_cards ?? 0) * -3;
+  return goalsPts + penaltyB + assistPts + ownGoalPts + yellowPts + redPts;
+}
+
+// Descending comparator with numeric tiebreakers then name (mirrors lib/stats).
+function statsDescBy(key, ...tiebreakers) {
+  return (a, b) => {
+    const d = (b[key] ?? 0) - (a[key] ?? 0);
+    if (d !== 0) return d;
+    for (const tk of tiebreakers) {
+      const td = (b[tk] ?? 0) - (a[tk] ?? 0);
+      if (td !== 0) return td;
+    }
+    return String(a.player_name ?? '').localeCompare(String(b.player_name ?? ''));
+  };
+}
+
+const STATS_BOARD_DEPTH = 25;  // enough to scroll, not the full table
+
+export async function readStats() {
+  const [aggRows, matchCounts, eventCounts] = await Promise.all([
+    // Wide per-player aggregation — quote-matches lib/stats.js + team flags.
+    sql`
+      WITH lg_matches AS (
+        SELECT m.id FROM matches m JOIN leagues lg ON lg.id = m.league_id WHERE lg.slug = ${WC_LEAGUE_SLUG}
+      ),
+      scorer_stats AS (
+        SELECT me.player_api_id, MAX(me.player_name) AS player_name,
+               COUNT(*) FILTER (WHERE me.event_type='Goal' AND me.detail != 'Own Goal' AND me.detail != 'Goal cancelled' AND me.detail != 'Missed Penalty')::int AS goals,
+               COUNT(*) FILTER (WHERE me.event_type='Goal' AND me.detail = 'Penalty')::int   AS penalty_goals,
+               COUNT(*) FILTER (WHERE me.event_type='Goal' AND me.detail = 'Own Goal')::int  AS own_goals,
+               COUNT(*) FILTER (WHERE me.event_type='Card' AND me.detail = 'Yellow Card')::int AS yellow_cards,
+               COUNT(*) FILTER (WHERE me.event_type='Card' AND me.detail = 'Red Card')::int    AS red_cards
+          FROM match_events me
+         WHERE me.is_current = true AND me.player_api_id IS NOT NULL AND me.match_id IN (SELECT id FROM lg_matches)
+         GROUP BY me.player_api_id
+      ),
+      assist_stats AS (
+        SELECT me.assist_api_id AS player_api_id, MAX(me.assist_name) AS assist_name, COUNT(*)::int AS assists
+          FROM match_events me
+         WHERE me.is_current = true AND me.event_type='Goal' AND me.detail != 'Own Goal' AND me.detail != 'Goal cancelled' AND me.detail != 'Missed Penalty'
+           AND me.assist_api_id IS NOT NULL AND me.match_id IN (SELECT id FROM lg_matches)
+         GROUP BY me.assist_api_id
+      ),
+      unified AS (
+        SELECT COALESCE(s.player_api_id, a.player_api_id) AS player_api_id,
+               COALESCE(s.player_name, a.assist_name)     AS event_name,
+               COALESCE(s.goals, 0) AS goals, COALESCE(s.penalty_goals, 0) AS penalty_goals,
+               COALESCE(s.own_goals, 0) AS own_goals, COALESCE(a.assists, 0) AS assists,
+               COALESCE(s.yellow_cards, 0) AS yellow_cards, COALESCE(s.red_cards, 0) AS red_cards
+          FROM scorer_stats s FULL OUTER JOIN assist_stats a ON a.player_api_id = s.player_api_id
+      )
+      SELECT u.player_api_id,
+             COALESCE(p.full_name, u.event_name) AS player_name,
+             p.slug AS player_slug, p.position AS position,
+             t.name AS team_name, t.slug AS team_slug, t.abbreviation AS team_abbr,
+             t.flag_svg_path AS flag_svg_path, t.flag_color_primary AS flag_color,
+             u.goals, u.penalty_goals, u.own_goals, u.assists, u.yellow_cards, u.red_cards,
+             (u.goals + u.assists)::int AS goal_contributions
+        FROM unified u
+        LEFT JOIN players p ON (p.external_ids->>'api_sports')::int = u.player_api_id
+        LEFT JOIN teams   t ON t.id = p.current_team_id
+    `,
+    sql`
+      SELECT COUNT(*) FILTER (WHERE m.status IN ('final','live'))::int AS played_or_live
+        FROM matches m JOIN leagues lg ON lg.id = m.league_id WHERE lg.slug = ${WC_LEAGUE_SLUG}
+    `,
+    sql`
+      SELECT
+        COUNT(*) FILTER (WHERE me.event_type='Goal' AND me.detail != 'Own Goal' AND me.detail != 'Goal cancelled' AND me.detail != 'Missed Penalty')::int AS goals,
+        COUNT(*) FILTER (WHERE me.event_type='Goal' AND me.detail = 'Own Goal')::int AS own_goals,
+        COUNT(*) FILTER (WHERE me.event_type='Goal' AND me.detail != 'Own Goal' AND me.detail != 'Goal cancelled' AND me.detail != 'Missed Penalty' AND me.assist_api_id IS NOT NULL)::int AS assists_recorded,
+        COUNT(*) FILTER (WHERE me.event_type='Card' AND me.detail = 'Yellow Card')::int AS yellow_cards,
+        COUNT(*) FILTER (WHERE me.event_type='Card' AND me.detail = 'Red Card')::int AS red_cards
+        FROM match_events me JOIN matches m ON m.id = me.match_id JOIN leagues lg ON lg.id = m.league_id
+       WHERE lg.slug = ${WC_LEAGUE_SLUG} AND me.is_current = true
+    `,
+  ]);
+
+  // One enriched player array; every board derives from it.
+  const players = aggRows.map((r) => ({
+    player_api_id: r.player_api_id,
+    player_name: r.player_name,
+    player_slug: r.player_slug,
+    position: r.position,
+    team_name: r.team_name,
+    team_abbr: r.team_abbr,
+    team_slug: r.team_slug,
+    flag_svg_path: r.flag_svg_path,
+    flag_color: r.flag_color,
+    goals: r.goals, penalty_goals: r.penalty_goals, own_goals: r.own_goals,
+    assists: r.assists, yellow_cards: r.yellow_cards, red_cards: r.red_cards,
+    goal_contributions: r.goal_contributions,
+    sv_points: computeSvPointsLocal(r),
+    followed: FOLLOWED_PLAYERS.has(r.player_name),
+  }));
+
+  const board = (filterFn, comparator) =>
+    players.filter(filterFn).sort(comparator).slice(0, STATS_BOARD_DEPTH)
+      .map((p, i) => ({ ...p, rank: i + 1 }));
+
+  const scorers       = board((p) => p.goals > 0,              statsDescBy('goals', 'assists'));
+  const assists       = board((p) => p.assists > 0,            statsDescBy('assists', 'goals'));
+  const contributions = board((p) => p.goal_contributions > 0, statsDescBy('goal_contributions', 'goals'));
+  const svPoints      = board((p) => p.sv_points > 0,          statsDescBy('sv_points', 'goals', 'assists'));
+  const discipline    = board(
+    (p) => (p.yellow_cards + p.red_cards) > 0,
+    (a, b) => (b.red_cards - a.red_cards) || (b.yellow_cards - a.yellow_cards) || String(a.player_name ?? '').localeCompare(String(b.player_name ?? '')),
+  );
+
+  const mc = matchCounts[0] ?? {};
+  const ec = eventCounts[0] ?? {};
+  const matches = mc.played_or_live ?? 0;
+  const totalGoalsInclOg = (ec.goals ?? 0) + (ec.own_goals ?? 0);
+  const totals = {
+    goals: ec.goals ?? 0,
+    matches,
+    avgGoals: matches > 0 ? Math.round((totalGoalsInclOg / matches) * 10) / 10 : 0,
+    assists: ec.assists_recorded ?? 0,
+    yellow: ec.yellow_cards ?? 0,
+    red: ec.red_cards ?? 0,
+  };
+
+  return { totals, scorers, assists, contributions, svPoints, discipline };
+}

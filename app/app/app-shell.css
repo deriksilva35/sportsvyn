@@ -644,10 +644,13 @@
 }
 
 .sv-app .sv-nav-label {
-  font-size: 9px;
-  letter-spacing: 0.18em;
+  /* 5 tabs: tighter tracking + a hair smaller so "SCHEDULES" doesn't clip
+     on ≤360px phones. (was 9px / 0.18em at 4 tabs.) */
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1;
+  white-space: nowrap;
 }
 
 /* ─── SCHEDULE VIEW (in-shell, interactive — Commit 2) ───────────────────── */
@@ -1800,3 +1803,188 @@
   color: var(--volt);
   font-variant-numeric: tabular-nums;
 }
+
+/* ─── STATS VIEW (in-shell leaderboards) ─────────────────────────────────── */
+/* Reuses .sv-rank container (fixed controls + scroll). 6 category pills scroll
+   horizontally; Overview = totals grid + top-5 minis; boards = vertical lists. */
+
+/* Horizontally-scrollable category pills (6 won't fit one phone row) */
+.sv-app .sv-stats-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.sv-app .sv-stats-tabs::-webkit-scrollbar { display: none; }
+.sv-app .sv-stats-tab {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-stats-tab.is-on {
+  color: var(--ink);
+  background: var(--volt);
+  border-color: var(--volt);
+  font-weight: 700;
+}
+
+/* Overview — tournament totals grid */
+.sv-app .sv-stats-totals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.sv-app .sv-stats-tot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 6px;
+  background: var(--graphite);
+  border: 1px solid var(--charcoal);
+  border-radius: 10px;
+}
+.sv-app .sv-stats-totval {
+  font-family: var(--sv-font-saira);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-stats-totlabel {
+  font-family: var(--sv-font-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Overview — top-5 mini lists */
+.sv-app .sv-stats-mini { margin-bottom: 16px; }
+.sv-app .sv-stats-mini .sv-kicker { margin-bottom: 6px; }
+.sv-app .sv-stats-minirow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--hairline);
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-stats-minirow:last-child { border-bottom: 0; }
+.sv-app .sv-stats-mrank {
+  flex: 0 0 18px;
+  text-align: center;
+  font-family: var(--sv-font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-stats-mname {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+.sv-app .sv-stats-mname.sv-followed { color: var(--volt); }
+.sv-app .sv-stats-mval {
+  flex: 0 0 auto;
+  font-family: var(--sv-font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Leaderboard board */
+.sv-app .sv-stats-boardhead { margin-bottom: 10px; }
+.sv-app .sv-stats-boardsub {
+  margin-top: 3px;
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-stats-rows { display: flex; flex-direction: column; }
+.sv-app .sv-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--hairline);
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-app .sv-stats-row:last-child { border-bottom: 0; }
+.sv-app .sv-stats-rank {
+  flex: 0 0 22px;
+  text-align: center;
+  font-family: var(--sv-font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-stats-pl {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sv-app .sv-stats-pname {
+  font-family: 'Saira Condensed', var(--sv-font-saira);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.15;
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+.sv-app .sv-stats-pname.sv-followed { color: var(--volt); }
+.sv-app .sv-stats-pteam {
+  font-family: var(--sv-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sv-app .sv-stats-val {
+  flex: 0 0 auto;
+  font-family: var(--sv-font-mono);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-stats-cards {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  font-family: var(--sv-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.sv-app .sv-stats-yc { color: #E7C200; }
+.sv-app .sv-stats-rc { color: var(--muted); }
+.sv-app .sv-stats-rc.has { color: var(--live-red); }
