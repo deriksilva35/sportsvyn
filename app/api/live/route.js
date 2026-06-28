@@ -18,8 +18,9 @@
  *                         replica instead of readRankings (which pulls all 48
  *                         teams + 50 players + blurbs — too heavy for a 60s poll).
  *
- * Same-origin: the HUD is served from sportsvyn.com/glasses-hud/ and polls
- * sportsvyn.com/api/live — same origin, so NO CORS headers are needed.
+ * CORS: the Meta glasses WebView polls this from a sandboxed / cross-origin
+ * context, so every response sends Access-Control-Allow-Origin '*' (public,
+ * read-only scores) plus an OPTIONS preflight handler.
  *
  * Graceful: any failure returns a 200 with empty arrays + an `error` flag, so a
  * flaky poll degrades rather than crashing the HUD.
@@ -29,6 +30,19 @@ import { sql } from '@/lib/db';
 import { readTodaysCard } from '@/app/app/data';
 
 export const dynamic = 'force-dynamic';
+
+// Public read-only scores polled by the Meta glasses WebView (a sandboxed /
+// cross-origin context), so allow any origin. Applied to every response.
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Cache-Control': 'no-store',
+};
+
+// Preflight (the WebView may send an OPTIONS before the GET).
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
 
 const WC_LEAGUE_SLUG = 'fifa-wc-2026';
 
@@ -128,9 +142,9 @@ export async function GET() {
       rank: r.rank, team: r.team, abbr: r.abbr, flag: r.flag, score: r.score, delta: r.delta,
     }));
 
-    return Response.json({ updatedAt, dateline: card.dateline, matches, rankingsTop5 });
+    return Response.json({ updatedAt, dateline: card.dateline, matches, rankingsTop5 }, { headers: CORS_HEADERS });
   } catch (err) {
     console.error('/api/live failed:', err);
-    return Response.json({ updatedAt, matches: [], rankingsTop5: [], error: 'unavailable' }, { status: 200 });
+    return Response.json({ updatedAt, matches: [], rankingsTop5: [], error: 'unavailable' }, { status: 200, headers: CORS_HEADERS });
   }
 }

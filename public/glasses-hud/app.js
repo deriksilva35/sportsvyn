@@ -6,10 +6,11 @@
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
 const CONFIG = {
-  // '' = same-origin (production at sportsvyn.com/glasses-hud/ → /api/live).
-  // For a local file:// preview, set to 'https://sportsvyn.com' (may be
-  // CORS-blocked → SAMPLE_DATA renders instead; the UI is still fully demoable).
-  API_BASE: '',
+  // Absolute base so the Meta glasses WebView always hits the real endpoint
+  // regardless of its sandbox / effective origin — a relative '/api/live' fails
+  // there. /api/live serves CORS '*', so cross-origin is allowed. (Same value
+  // works for a local file:// preview; SAMPLE_DATA still covers a blocked fetch.)
+  API_BASE: 'https://sportsvyn.com',
   POLL_MS: 60000,                 // 60s, per the perf budget
   AUTO_ADVANCE_ON_LIVE: true,     // toggle: auto-skip the beat into Live HUD when a match is live
   BEAT_MS: 2600,                  // how long the home beat holds before deciding
