@@ -5,12 +5,25 @@
    the SAME arrow keys work for desktop browser preview, no glasses needed. */
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
+// API base resolved at runtime. A SAME-ORIGIN relative '' is the proven path in
+// any normal browser — the page is served from sportsvyn.com (prod) or a local
+// dev server, where '/api/live' resolves directly (no CORS involved). Hard-
+// coding an absolute base regressed that (the browser fell back to SAMPLE_DATA),
+// so we only use the absolute URL for the Meta glasses WebView, whose sandbox
+// origin is NOT one of these and where a relative path can't resolve; the
+// endpoint serves CORS '*' for that case.
+function resolveApiBase() {
+  try {
+    const o = (typeof location !== 'undefined' && location.origin) || '';
+    if (o.includes('sportsvyn.com') || o.includes('localhost') || o.includes('127.0.0.1')) return '';
+    return 'https://sportsvyn.com';
+  } catch (_e) {
+    return 'https://sportsvyn.com';
+  }
+}
+
 const CONFIG = {
-  // Absolute base so the Meta glasses WebView always hits the real endpoint
-  // regardless of its sandbox / effective origin — a relative '/api/live' fails
-  // there. /api/live serves CORS '*', so cross-origin is allowed. (Same value
-  // works for a local file:// preview; SAMPLE_DATA still covers a blocked fetch.)
-  API_BASE: 'https://sportsvyn.com',
+  API_BASE: resolveApiBase(),
   POLL_MS: 60000,                 // 60s, per the perf budget
   AUTO_ADVANCE_ON_LIVE: true,     // toggle: auto-skip the beat into Live HUD when a match is live
   BEAT_MS: 2600,                  // how long the home beat holds before deciding
@@ -219,6 +232,9 @@ async function fetchLive() {
     const json = await res.json();
     state.data = json; state.lastGood = json; state.stale = false;
   } catch (err) {
+    // Surface the REAL reason in the console (glasses + browser) instead of
+    // failing silently into SAMPLE_DATA — names the resolved URL it tried.
+    console.error('[hud] /api/live fetch failed:', CONFIG.API_BASE + '/api/live', err);
     // graceful: keep last-good; if never succeeded, fall back to SAMPLE_DATA
     if (state.lastGood) state.data = state.lastGood;
     else state.data = SAMPLE_DATA;
