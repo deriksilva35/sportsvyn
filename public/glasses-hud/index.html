@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="Sportsvyn live HUD for Meta Ray-Ban Display — live scores, Watch Score, schedule, bracket, rankings, stats.">
+  <meta name="mrbd-web-app-capable" content="yes">
+  <title>Sportsvyn HUD</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="stage">
+    <!-- Smart home beat -->
+    <div id="beat" class="beat">
+      <div class="wordmark">SPORTSV<span class="y">&#x232;</span>N</div>
+      <div class="tagline">Read the Game</div>
+      <div class="enter-hint">pinch to enter</div>
+    </div>
+
+    <!-- Live-first carousel -->
+    <div id="carousel" class="carousel hidden">
+      <div class="track" id="track">
+        <section class="surface" data-surface="live">     <div class="panel" id="surf-live"></div></section>
+        <section class="surface" data-surface="schedule"> <div class="panel" id="surf-schedule"></div></section>
+        <section class="surface" data-surface="bracket">  <div class="panel" id="surf-bracket"></div></section>
+        <section class="surface" data-surface="rankings"> <div class="panel" id="surf-rankings"></div></section>
+        <section class="surface" data-surface="stats">    <div class="panel" id="surf-stats"></div></section>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div class="staleflag hidden" id="stale">stale &middot; last good</div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
