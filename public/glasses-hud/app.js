@@ -24,7 +24,8 @@ function resolveApiBase() {
 
 const CONFIG = {
   API_BASE: resolveApiBase(),
-  POLL_MS: 60000,                 // 60s, per the perf budget
+  POLL_MS: 60000,                 // 60s live scores, per the perf budget
+  BOARD_POLL_MS: 300000,          // 5min for /api/board — bracket changes per-round, stats per-match
   AUTO_ADVANCE_ON_LIVE: true,     // toggle: auto-skip the beat into Live HUD when a match is live
   BEAT_MS: 2600,                  // how long the home beat holds before deciding
 };
@@ -78,10 +79,12 @@ const SAMPLE_STATS = {
 const state = {
   data: SAMPLE_DATA,   // current render data (last-good or sample)
   lastGood: null,      // last successful /api/live payload
+  board: null,         // last successful /api/board payload ({ bracket, stats })
   surface: 0,
   inCarousel: false,
   stale: false,
   pollId: null,
+  boardPollId: null,
   bracketMode: 'convergence', // convergence | road  (ArrowUp/Down/Enter toggles)
 };
 
@@ -188,31 +191,39 @@ function renderRankings() {
 }
 
 function renderBracket() {
-  const b = SAMPLE_BRACKET;
+  const real = state.board && state.board.bracket;
+  const b = real || SAMPLE_BRACKET;          // real when loaded; sample only offline
+  const conv = b.convergence || [];
+  const road = b.road || [];
   let body;
   if (state.bracketMode === 'convergence') {
-    body = `<div class="bk-conv">${b.convergence.map((c) => `
+    body = conv.length
+      ? `<div class="bk-conv">${conv.map((c) => `
       <div class="bk-meet"><div class="where">${esc(c.where)}</div>
-        <div class="bk-feed">${esc(c.a)} <span class="vs">v</span> ${esc(c.b)}</div></div>`).join('')}</div>`;
+        <div class="bk-feed">${esc(c.a)} <span class="vs">v</span> ${esc(c.b)}</div></div>`).join('')}</div>`
+      : '<div class="lh-empty" style="margin:auto">Semifinals not set</div>';
   } else {
-    body = `<div class="bk-road">${b.road.map((r) => `
-      <div class="bk-leg"><span class="rd">${esc(r.rd)}</span><span class="opp">${esc(r.opp)}</span></div>`).join('')}</div>`;
+    body = road.length
+      ? `<div class="bk-road">${road.map((r) => `
+      <div class="bk-leg"><span class="rd">${esc(r.rd)}</span><span class="opp">${esc(r.opp)}</span></div>`).join('')}</div>`
+      : '<div class="lh-empty" style="margin:auto">No knockout results yet</div>';
   }
   $('surf-bracket').innerHTML = `
     <div class="shead"><span class="title">Bracket</span>
-      <span class="bk-mode">${state.bracketMode === 'convergence' ? 'Convergence' : 'Road'} · ↑↓</span></div>
+      <span class="bk-mode">${state.bracketMode === 'convergence' ? 'Convergence' : 'Results'} · ↑↓</span></div>
     ${body}
-    <div class="ph-note">placeholder · bracket data not in /api/live yet</div>`;
+    ${real ? '' : '<div class="ph-note">offline · sample</div>'}`;
 }
 
 function renderStats() {
-  const g = SAMPLE_STATS.goldenBoot;
+  const real = state.board && state.board.stats && state.board.stats.goldenBoot;
+  const g = real || SAMPLE_STATS.goldenBoot;   // real when loaded; sample only offline
   $('surf-stats').innerHTML = `
-    <div class="shead"><span class="title">Golden Boot</span><span class="tag placeholder">sample</span></div>
+    <div class="shead"><span class="title">Golden Boot</span>${real ? '' : '<span class="tag placeholder">sample</span>'}</div>
     <div class="st-hero"><div class="num">${g.leader.goals}</div>
       <div class="who">${esc(g.leader.name)} · ${esc(g.leader.team)}</div><div class="lbl">goals · leader</div></div>
-    ${g.chasers.map((c) => `<div class="st-chaser"><span class="who">${esc(c.name)} · ${esc(c.team)}</span><span class="g">${c.goals}</span></div>`).join('')}
-    <div class="ph-note">placeholder · stats not in /api/live yet</div>`;
+    ${(g.chasers || []).map((c) => `<div class="st-chaser"><span class="who">${esc(c.name)} · ${esc(c.team)}</span><span class="g">${c.goals}</span></div>`).join('')}
+    ${real ? '' : '<div class="ph-note">offline · sample</div>'}`;
 }
 
 function renderDots() {
@@ -242,8 +253,30 @@ async function fetchLive() {
   }
   renderAll();
 }
-function startPoll() { stopPoll(); fetchLive(); state.pollId = setInterval(fetchLive, CONFIG.POLL_MS); }
-function stopPoll() { if (state.pollId) { clearInterval(state.pollId); state.pollId = null; } }
+// /api/board — bracket + stats (real data; slower poll). Same graceful pattern
+// as fetchLive: keep last-good board on failure, fall back to SAMPLE only when
+// no board has ever loaded (handled in renderBracket/renderStats via state.board).
+async function fetchBoard() {
+  try {
+    const res = await fetch(CONFIG.API_BASE + '/api/board', { cache: 'no-store' });
+    if (!res.ok) throw new Error('http ' + res.status);
+    const json = await res.json();
+    if (json && json.bracket) state.board = json; // ignore graceful-error payloads (bracket null)
+  } catch (err) {
+    console.error('[hud] /api/board fetch failed:', CONFIG.API_BASE + '/api/board', err);
+    // keep last-good state.board; renderers fall back to SAMPLE if it's still null
+  }
+  renderBracket(); renderStats();
+}
+function startPoll() {
+  stopPoll();
+  fetchLive();  state.pollId = setInterval(fetchLive, CONFIG.POLL_MS);
+  fetchBoard(); state.boardPollId = setInterval(fetchBoard, CONFIG.BOARD_POLL_MS);
+}
+function stopPoll() {
+  if (state.pollId) { clearInterval(state.pollId); state.pollId = null; }
+  if (state.boardPollId) { clearInterval(state.boardPollId); state.boardPollId = null; }
+}
 document.addEventListener('visibilitychange', () => { if (document.hidden) stopPoll(); else startPoll(); });
 
 // ─── NAVIGATION (D-pad arrows + pinch/Enter + back/Escape) ─────────────────
