@@ -121,6 +121,36 @@ function fmtKickoff(iso) {
 const trendGlyph = (t) => (t === 'up' ? '▲' : t === 'down' ? '▼' : '▪');
 const deltaGlyph = (d) => (d === 'up' ? '▲' : d === 'down' ? '▼' : '–');
 
+// Live events feed — one row per event, mirroring the web Key Moments rows
+// (icon by kind, the deriveHeadlines() headline, gloss sub-line). The server
+// (/api/live) already computed `kind`/`headline`/`gloss` from the web vocabulary.
+function eventGlyph(kind) {
+  switch (kind) {
+    case 'goal':   return '<span style="color:var(--volt)">&#9679;</span>';   // ● volt
+    case 'yellow': return '<span style="color:#f4c430">&#9646;</span>';        // ▮ yellow
+    case 'red':    return '<span style="color:var(--live)">&#9646;</span>';    // ▮ red
+    case 'sub':    return '<span style="color:var(--muted)">&#8644;</span>';   // ⇄ sub
+    case 'var':    return '<span style="color:var(--muted)">&#9707;</span>';   // ◻ VAR
+    case 'missed': return '<span style="color:var(--muted)">&#10005;</span>';  // ✕ missed pen
+    default:       return '<span style="color:var(--muted)">&#8226;</span>';
+  }
+}
+function eventRow(e) {
+  // Goal rows volt-highlight the scorer (the headline's leading segment) — the
+  // web's .scored treatment.
+  const up = e.scorer ? e.scorer.toUpperCase() : '';
+  const head = (e.kind === 'goal' && up && e.headline.startsWith(up))
+    ? `<span style="color:var(--volt)">${esc(up)}</span>${esc(e.headline.slice(up.length))}`
+    : esc(e.headline);
+  return `<div style="display:flex;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <span style="color:var(--muted);font-size:11px;min-width:30px">${esc(e.minute)}</span>
+      <span style="min-width:14px;text-align:center;font-size:13px">${eventGlyph(e.kind)}</span>
+      <div style="flex:1">
+        <div style="font-size:12px;letter-spacing:.3px">${head}</div>
+        ${e.gloss ? `<div style="color:var(--muted);font-style:italic;font-size:11px;margin-top:2px">${esc(e.gloss)}</div>` : ''}
+      </div></div>`;
+}
+
 // ─── RENDER: surfaces ──────────────────────────────────────────────────────
 function renderLive() {
   const m = liveMatch(state.data);
@@ -136,28 +166,30 @@ function renderLive() {
       </div>`;
     return;
   }
-  // Score-hero: scoreline big + central, leader's number in volt, a Watch Score
-  // supporting line, and a one-line KEY MOMENT (latest goal) beneath. No article.
+  // Score-hero pinned on top (tightened) + the live EVENTS FEED beneath it —
+  // same events + vocabulary as the web match page, newest-first, Up/Down scrolls.
   const hLead = (m.homeScore ?? 0) > (m.awayScore ?? 0);
   const aLead = (m.awayScore ?? 0) > (m.homeScore ?? 0);
-  const km = m.keyMoment;
+  const events = m.events || [];
   el.innerHTML = `
     <div class="shead">
       <span class="tag live">Live</span>
       <span class="live-clock">${esc(m.minute || m.statusShort || '')}</span>
     </div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin:26px 0 14px">
-      <div style="text-align:center;min-width:72px">${flagImg(m.home.flag, 'lg')}<div class="abbr" style="margin-top:4px">${esc(m.home.abbr)}</div></div>
-      <div style="font-size:50px;font-weight:800;letter-spacing:-2px;line-height:1">
-        <span style="${hLead ? 'color:var(--volt)' : ''}">${m.homeScore ?? 0}</span><span style="color:var(--muted);margin:0 6px">–</span><span style="${aLead ? 'color:var(--volt)' : ''}">${m.awayScore ?? 0}</span>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0 6px">
+      <div style="text-align:center;min-width:64px">${flagImg(m.home.flag, 'lg')}<div class="abbr" style="margin-top:2px">${esc(m.home.abbr)}</div></div>
+      <div style="font-size:40px;font-weight:800;letter-spacing:-2px;line-height:1">
+        <span style="${hLead ? 'color:var(--volt)' : ''}">${m.homeScore ?? 0}</span><span style="color:var(--muted);margin:0 5px">–</span><span style="${aLead ? 'color:var(--volt)' : ''}">${m.awayScore ?? 0}</span>
       </div>
-      <div style="text-align:center;min-width:72px">${flagImg(m.away.flag, 'lg')}<div class="abbr" style="margin-top:4px">${esc(m.away.abbr)}</div></div>
+      <div style="text-align:center;min-width:64px">${flagImg(m.away.flag, 'lg')}<div class="abbr" style="margin-top:2px">${esc(m.away.abbr)}</div></div>
     </div>
-    <div style="text-align:center;color:var(--muted);font-size:13px">
+    <div style="text-align:center;color:var(--muted);font-size:12px;margin-bottom:8px">
       Watch Score <b style="color:#fff">${m.watchScore != null ? m.watchScore : '—'}</b>
       ${m.watchTrend ? `<span class="trend ${esc(m.watchTrend)}">${trendGlyph(m.watchTrend)}</span>` : ''}
     </div>
-    ${km ? `<div style="text-align:center;margin-top:14px;font-size:13px;color:var(--volt)">&#9917; ${esc(km.text)}</div>` : ''}`;
+    ${events.length
+      ? `<div id="live-feed" style="overflow-y:auto;max-height:368px;text-align:left;padding:0 6px;border-top:1px solid rgba(255,255,255,.08)">${events.map(eventRow).join('')}</div>`
+      : '<div class="sub" style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">No events yet</div>'}`;
 }
 
 function renderSchedule() {
@@ -464,6 +496,10 @@ function toggleWithin(key) {
     // ArrowUp/Down (pinch) toggles Team <-> Player rankings.
     state.rankMode = state.rankMode === 'team' ? 'player' : 'team';
     renderRankings();
+  } else if (surf === 'live') {
+    // ArrowUp/Down scrolls the live events feed (no re-render — keeps position).
+    const feed = $('live-feed');
+    if (feed) feed.scrollBy({ top: key === 'ArrowUp' ? -72 : 72, behavior: 'smooth' });
   }
 }
 document.addEventListener('keydown', (e) => {

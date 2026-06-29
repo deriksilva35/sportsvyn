@@ -29,6 +29,7 @@
 import { sql } from '@/lib/db';
 import { readTodaysCard } from '@/app/app/data';
 import { getPlayerTopN } from '@/lib/rankings';
+import { deriveHeadlines } from '@/components/match/KeyMoments';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,26 +87,25 @@ export async function GET() {
       }
     }
 
-    // KEY MOMENT for live matches — the latest GOAL (not the literal latest
-    // event, which is often a substitution). is_current=true drops VAR-reversed
-    // goals. Prefers the AI `gloss` one-liner, else a templated line. Scoped to
-    // live ids only (cheap; nothing when no match is live).
-    const keyMomentByMatch = new Map();
+    // EVENTS FEED for live matches — the SAME timeline the web match page shows.
+    // The query mirrors getKeyMoments() (app/match/[slug]/page.js) field-for-
+    // field (it's local to the page, not exported), and the per-row headline is
+    // the web's EXACT deriveHeadlines() vocabulary — so glasses and web can
+    // never disagree. is_current=true drops VAR-reversed events. Live-only:
+    // nothing runs when no match is live (DB-only, rides poll-live writes).
+    const eventRowsByMatch = new Map();
     if (liveIds.length > 0) {
-      const goals = await sql`
-        SELECT DISTINCT ON (match_id)
-               match_id, minute, minute_extra, detail, player_name, gloss
+      const rows = await sql`
+        SELECT match_id, id, minute, minute_extra, event_type, detail, team_side,
+               player_name, assist_name, gloss
           FROM match_events
-         WHERE match_id = ANY(${liveIds}::int[])
-           AND is_current = true
-           AND event_type = 'Goal'
-           AND (detail IS NULL OR detail NOT IN ('Own Goal', 'Missed Penalty', 'Goal cancelled'))
+         WHERE match_id = ANY(${liveIds}::int[]) AND is_current = true
          ORDER BY match_id, minute DESC, minute_extra DESC NULLS LAST, id DESC
       `;
-      for (const g of goals) {
-        const min = g.minute_extra ? `${g.minute}+${g.minute_extra}'` : `${g.minute}'`;
-        const text = g.gloss || `${min} ${g.player_name ?? ''}${g.detail && g.detail !== 'Normal Goal' ? ` (${g.detail})` : ''}`.trim();
-        keyMomentByMatch.set(g.match_id, { minute: min, text });
+      for (const r of rows) {
+        if (!eventRowsByMatch.has(r.match_id)) eventRowsByMatch.set(r.match_id, []);
+        const bucket = eventRowsByMatch.get(r.match_id);
+        if (bucket.length < 50) bucket.push(r); // mirror getKeyMoments LIMIT 50
       }
     }
 
@@ -136,7 +136,24 @@ export async function GET() {
         out.statusShort = latest?.status_short ?? null;
         out.watchScore = latest?.composite != null ? Math.round(latest.composite * 10) / 10 : null;
         out.watchTrend = trendOf(live?.latest, live?.prev);
-        out.keyMoment = keyMomentByMatch.get(f.id) ?? null; // null pre-first-goal
+        // Full newest-first events feed, headlines via the web's deriveHeadlines
+        // (same vocabulary as the match page). [] pre-first-event (omit feed).
+        const evs = eventRowsByMatch.get(f.id) ?? [];
+        const headlines = deriveHeadlines(evs, {
+          homeName: f.home.abbreviation ?? f.home.name,
+          awayName: f.away.abbreviation ?? f.away.name,
+        });
+        out.events = evs.map((e) => {
+          const h = headlines.get(e.id) ?? { kind: 'sub', headline: '' };
+          return {
+            minute: e.minute_extra ? `${e.minute}+${e.minute_extra}'` : `${e.minute}'`,
+            kind: h.kind,                 // goal|yellow|red|sub|var|missed
+            headline: h.headline,         // locked web vocabulary
+            scorer: h.scorer ?? null,     // for the volt highlight on goal rows
+            gloss: (typeof e.gloss === 'string' && e.gloss.length > 0) ? e.gloss : null,
+            side: e.team_side,
+          };
+        });
       } else if (status === 'scheduled') {
         const ko = kickoffById.get(f.id);
         out.kickoff = ko != null ? new Date(ko).toISOString() : null; // ISO 8601 UTC
