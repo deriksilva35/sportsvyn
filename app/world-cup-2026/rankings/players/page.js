@@ -206,6 +206,9 @@ export default async function PlayerRankingsLeafPage() {
           <p>
             Each player{'’'}s score blends two layers. Production is deterministic from match events, weighting open-play goals over penalties, crediting assists, and docking red cards. Impact is a grounded read of the actual matches the player has been part of: was the goal decisive, did they carry the team, did the opposition resist. Production keeps the board honest; impact separates the hat-trick-in-a-rout from the late winner against a top side.
           </p>
+          <p>
+            <strong>Match stakes.</strong> Goals and assists are weighted by what the match had at stake. Strikes in knockout matches, and in group matches that still bore on qualification, count in full. Strikes in dead rubbers {'—'} group matches where both teams had already secured their place in the knockout round before kickoff {'—'} are weighted at 70%, because a goal that cannot change either side{'’'}s advancement is worth less to a tournament-impact ranking than one scored under live stakes. Stakes are derived structurally from the standings at kickoff, not from any judgment of effort or opponent strength; a team that could still reach the knockouts, including via a best-third place, counts as full stakes.
+          </p>
           <div className="layers">
             <span className="layer">PRODUCTION <span className="w">{prodWeightPct}%</span></span>
             <span className="layer">IMPACT <span className="w">{impactWeightPct}%</span></span>
