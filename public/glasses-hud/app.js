@@ -56,17 +56,23 @@ const SAMPLE_DATA = {
   ],
 };
 
-// PLACEHOLDER sample data — Bracket + Stats are NOT in /api/live yet (follow-up).
+// OFFLINE fallback only — shape mirrors /api/board's bracket { matches, teamRanks }.
+// Real data comes from /api/board; this renders something plausible when offline.
 const SAMPLE_BRACKET = {
-  convergence: [
-    { where: 'Semifinal · MetLife', a: 'France', b: 'Spain' },
-    { where: 'Semifinal · SoFi', a: 'Argentina', b: 'Brazil' },
+  matches: [
+    { match_number: 73, stage: 'round_of_32', status: 'final', home_score: 0, away_score: 1, home_penalties: null, away_penalties: null,
+      home: { resolved: true, name: 'South Africa', flag: 'https://flagcdn.com/za.svg' },
+      away: { resolved: true, name: 'Canada', flag: 'https://flagcdn.com/ca.svg' },
+      slot_home: { type: 'group_runner_up', label: '2A', match: null }, slot_away: { type: 'group_winner', label: '1B', match: null }, feeds_match: 89 },
+    { match_number: 75, stage: 'round_of_32', status: 'scheduled', home_score: null, away_score: null, home_penalties: null, away_penalties: null,
+      home: { resolved: true, name: 'Netherlands', flag: 'https://flagcdn.com/nl.svg' },
+      away: { resolved: true, name: 'Morocco', flag: 'https://flagcdn.com/ma.svg' },
+      slot_home: { type: 'group_winner', label: '1C', match: null }, slot_away: { type: 'group_runner_up', label: '2D', match: null }, feeds_match: 89 },
+    { match_number: 89, stage: 'round_of_16', status: 'scheduled', home_score: null, away_score: null, home_penalties: null, away_penalties: null,
+      home: { resolved: false, label: 'W73' }, away: { resolved: false, label: 'W75' },
+      slot_home: { type: 'winner_of', label: 'W73', match: 73 }, slot_away: { type: 'winner_of', label: 'W75', match: 75 }, feeds_match: 97 },
   ],
-  road: [
-    { rd: 'R16', opp: 'def. Morocco 2–0' },
-    { rd: 'QF', opp: 'def. England 1–0' },
-    { rd: 'SF', opp: 'vs Spain' },
-  ],
+  teamRanks: [ { name: 'Netherlands', rank: 5 }, { name: 'Morocco', rank: 7 }, { name: 'Canada', rank: 17 } ],
 };
 const SAMPLE_STATS = {
   goldenBoot: {
@@ -85,7 +91,9 @@ const state = {
   stale: false,
   pollId: null,
   boardPollId: null,
-  bracketMode: 'convergence', // convergence | road  (ArrowUp/Down/Enter toggles)
+  bracketMode: 0,      // 0 Next round · 1 Full tree · 2 Team road  (ArrowUp/Down cycles)
+  roadTeamIdx: 0,      // which alive team's road (Enter cycles, in mode 2)
+  rankMode: 'team',    // team | player  (ArrowUp/Down toggles on Rankings surface)
 };
 
 const $ = (id) => document.getElementById(id);
@@ -128,29 +136,28 @@ function renderLive() {
       </div>`;
     return;
   }
+  // Score-hero: scoreline big + central, leader's number in volt, a Watch Score
+  // supporting line, and a one-line KEY MOMENT (latest goal) beneath. No article.
   const hLead = (m.homeScore ?? 0) > (m.awayScore ?? 0);
   const aLead = (m.awayScore ?? 0) > (m.homeScore ?? 0);
+  const km = m.keyMoment;
   el.innerHTML = `
     <div class="shead">
       <span class="tag live">Live</span>
       <span class="live-clock">${esc(m.minute || m.statusShort || '')}</span>
     </div>
-    <div class="lh-teams">
-      <div class="lh-row ${hLead ? 'lead' : ''}">
-        ${flagImg(m.home.flag, 'lg')}
-        <div><div class="abbr">${esc(m.home.abbr)}</div><div class="name">${esc(m.home.name)}</div></div>
-        <div class="score">${m.homeScore ?? 0}</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin:26px 0 14px">
+      <div style="text-align:center;min-width:72px">${flagImg(m.home.flag, 'lg')}<div class="abbr" style="margin-top:4px">${esc(m.home.abbr)}</div></div>
+      <div style="font-size:50px;font-weight:800;letter-spacing:-2px;line-height:1">
+        <span style="${hLead ? 'color:var(--volt)' : ''}">${m.homeScore ?? 0}</span><span style="color:var(--muted);margin:0 6px">–</span><span style="${aLead ? 'color:var(--volt)' : ''}">${m.awayScore ?? 0}</span>
       </div>
-      <div class="lh-row ${aLead ? 'lead' : ''}">
-        ${flagImg(m.away.flag, 'lg')}
-        <div><div class="abbr">${esc(m.away.abbr)}</div><div class="name">${esc(m.away.name)}</div></div>
-        <div class="score">${m.awayScore ?? 0}</div>
-      </div>
+      <div style="text-align:center;min-width:72px">${flagImg(m.away.flag, 'lg')}<div class="abbr" style="margin-top:4px">${esc(m.away.abbr)}</div></div>
     </div>
-    <div class="lh-watch">
-      <div><div class="lbl">Watch Score</div><div class="big">${m.watchScore != null ? m.watchScore : '—'}</div></div>
-      ${m.watchTrend ? `<div class="trend ${esc(m.watchTrend)}">${trendGlyph(m.watchTrend)}</div>` : ''}
-    </div>`;
+    <div style="text-align:center;color:var(--muted);font-size:13px">
+      Watch Score <b style="color:#fff">${m.watchScore != null ? m.watchScore : '—'}</b>
+      ${m.watchTrend ? `<span class="trend ${esc(m.watchTrend)}">${trendGlyph(m.watchTrend)}</span>` : ''}
+    </div>
+    ${km ? `<div style="text-align:center;margin-top:14px;font-size:13px;color:var(--volt)">&#9917; ${esc(km.text)}</div>` : ''}`;
 }
 
 function renderSchedule() {
@@ -177,41 +184,187 @@ function renderSchedule() {
 }
 
 function renderRankings() {
-  const rows = (state.data.rankingsTop5 || []).map((r) => `
+  const isPlayer = state.rankMode === 'player';
+  const list = isPlayer ? (state.data.playerRankingsTop5 || []) : (state.data.rankingsTop5 || []);
+  const rows = list.map((r) => `
     <div class="rk-row">
       <span class="rk-rank">${r.rank}</span>
       ${flagImg(r.flag)}
-      <span class="rk-team">${esc(r.team)}</span>
+      <span class="rk-team">${esc(isPlayer ? r.player : r.team)}</span>
       <span class="rk-score">${r.score != null ? r.score : '—'}</span>
       <span class="rk-delta ${esc(r.delta)}">${deltaGlyph(r.delta)}</span>
     </div>`).join('');
   $('surf-rankings').innerHTML = `
-    <div class="shead"><span class="title">Power</span><span class="sub">Top 5</span></div>
+    <div class="shead"><span class="title">Power</span><span class="sub">${isPlayer ? 'Players' : 'Teams'} · Top 5 · ↑↓</span></div>
     ${rows || '<div class="lh-empty" style="margin:auto">No rankings</div>'}`;
 }
 
-function renderBracket() {
-  const real = state.board && state.board.bracket;
-  const b = real || SAMPLE_BRACKET;          // real when loaded; sample only offline
-  const conv = b.convergence || [];
-  const road = b.road || [];
-  let body;
-  if (state.bracketMode === 'convergence') {
-    body = conv.length
-      ? `<div class="bk-conv">${conv.map((c) => `
-      <div class="bk-meet"><div class="where">${esc(c.where)}</div>
-        <div class="bk-feed">${esc(c.a)} <span class="vs">v</span> ${esc(c.b)}</div></div>`).join('')}</div>`
-      : '<div class="lh-empty" style="margin:auto">Semifinals not set</div>';
-  } else {
-    body = road.length
-      ? `<div class="bk-road">${road.map((r) => `
-      <div class="bk-leg"><span class="rd">${esc(r.rd)}</span><span class="opp">${esc(r.opp)}</span></div>`).join('')}</div>`
-      : '<div class="lh-empty" style="margin:auto">No knockout results yet</div>';
+// ─── BRACKET: feeder resolution (build once, all 3 modes use it) ────────────
+const STAGE_ORDER = ['round_of_32', 'round_of_16', 'quarter', 'semi', 'final'];
+const STAGE_SHORT = { round_of_32: 'R32', round_of_16: 'R16', quarter: 'QF', semi: 'SF', third_place: '3rd', final: 'F' };
+const STAGE_LABEL = { round_of_32: 'Round of 32', round_of_16: 'Round of 16', quarter: 'Quarterfinals', semi: 'Semifinals', third_place: '3rd Place', final: 'Final' };
+
+function bracketData() {
+  const b = state.board && state.board.bracket;
+  const real = !!(b && Array.isArray(b.matches) && b.matches.length);
+  const src = real ? b : SAMPLE_BRACKET;
+  const matches = src.matches || [];
+  return { real, matches, teamRanks: src.teamRanks || [], byNum: new Map(matches.map((m) => [m.match_number, m])) };
+}
+
+// Decided winner of a final KO match (regulation/ET, then penalties), or null.
+function winnerOf(m) {
+  if (!m || m.status !== 'final' || !m.home.resolved || !m.away.resolved) return null;
+  const hs = m.home_score ?? 0, as = m.away_score ?? 0;
+  if (hs > as) return m.home;
+  if (as > hs) return m.away;
+  const hp = m.home_penalties, ap = m.away_penalties;
+  if (hp != null && ap != null && hp !== ap) return hp > ap ? m.home : m.away;
+  return null; // level + no shootout data -> undecided
+}
+
+// Resolve ONE level only: resolved team -> {team}; undecided winner_of whose
+// feeder is DECIDED -> {team}; feeder undecided but its two teams known ->
+// {pair} (both real teams, never a pick); deeper/unknown -> {label}.
+function resolveSlot(side, slot, byNum) {
+  if (side && side.resolved) return { kind: 'team', name: side.name, flag: side.flag };
+  if (slot && slot.type === 'winner_of' && slot.match != null) {
+    const fm = byNum.get(slot.match);
+    if (fm) {
+      const w = winnerOf(fm);
+      if (w) return { kind: 'team', name: w.name, flag: w.flag };
+      if (fm.home.resolved && fm.away.resolved) {
+        return { kind: 'pair', a: { name: fm.home.name, flag: fm.home.flag }, b: { name: fm.away.name, flag: fm.away.flag } };
+      }
+    }
   }
+  return { kind: 'label', label: (slot && slot.label) || (side && side.label) || 'TBD' };
+}
+const slotText  = (r) => r.kind === 'team' ? r.name : r.kind === 'pair' ? `${r.a.name} / ${r.b.name}` : r.label;
+const short     = (n) => (n || 'TBD').replace(/[^A-Za-z ]/g, '').slice(0, 3).toUpperCase();
+const slotShort = (r) => r.kind === 'team' ? short(r.name) : r.kind === 'pair' ? `${short(r.a.name)}/${short(r.b.name)}` : r.label;
+
+// Earliest round with an undecided slot — "the round currently being decided".
+function nextRoundStage(matches) {
+  for (const st of STAGE_ORDER) {
+    const ms = matches.filter((m) => m.stage === st);
+    if (ms.length && ms.some((m) => !m.home.resolved || !m.away.resolved)) return st;
+  }
+  for (const st of STAGE_ORDER) {
+    const ms = matches.filter((m) => m.stage === st);
+    if (ms.length && ms.some((m) => m.status !== 'final')) return st;
+  }
+  return 'final';
+}
+
+// Teams resolved into the bracket, minus those eliminated (lost a KO final),
+// ordered by team-power rank (alive favourites first).
+function aliveTeams(matches, teamRanks) {
+  const rankOf = new Map(teamRanks.map((t) => [t.name, t.rank]));
+  const inBracket = new Set(), eliminated = new Set();
+  for (const m of matches) {
+    if (m.home.resolved) inBracket.add(m.home.name);
+    if (m.away.resolved) inBracket.add(m.away.name);
+    const w = winnerOf(m);
+    if (w) eliminated.add(m.home.name === w.name ? m.away.name : m.home.name);
+  }
+  return [...inBracket].filter((n) => !eliminated.has(n))
+    .sort((a, b) => (rankOf.get(a) ?? 999) - (rankOf.get(b) ?? 999));
+}
+
+// One team's road: matches it's resolved in (results behind / next ahead), then
+// future rounds projected via feeds_match (opponent = feeder pair/label).
+function teamRoad(team, matches, byNum) {
+  const legs = [];
+  const mine = matches.filter((m) => (m.home.resolved && m.home.name === team) || (m.away.resolved && m.away.name === team))
+    .sort((a, b) => a.match_number - b.match_number);
+  let cur = null;
+  for (const m of mine) {
+    const isHome = m.home.resolved && m.home.name === team;
+    const opp = resolveSlot(isHome ? m.away : m.home, isHome ? m.slot_away : m.slot_home, byNum);
+    if (m.status === 'final') {
+      const my = isHome ? m.home_score : m.away_score, op = isHome ? m.away_score : m.home_score;
+      const won = winnerOf(m) && winnerOf(m).name === team;
+      legs.push({ rd: STAGE_SHORT[m.stage], opp: `${won ? 'def.' : 'lost'} ${slotText(opp)} ${my ?? 0}–${op ?? 0}`, cls: won ? 'win' : 'loss' });
+    } else {
+      legs.push({ rd: STAGE_SHORT[m.stage], opp: `vs ${slotText(opp)}`, cls: 'next' });
+    }
+    cur = m;
+  }
+  while (cur && cur.feeds_match != null) {
+    const nxt = byNum.get(cur.feeds_match);
+    if (!nxt) break;
+    const intoHome = nxt.slot_home && nxt.slot_home.match === cur.match_number;
+    const opp = resolveSlot(intoHome ? nxt.away : nxt.home, intoHome ? nxt.slot_away : nxt.slot_home, byNum);
+    legs.push({ rd: STAGE_SHORT[nxt.stage], opp: `vs ${slotText(opp)}`, cls: 'ahead' });
+    cur = nxt;
+  }
+  return legs;
+}
+
+// side cell for Next-round mode (jade when resolved to a real team)
+function nextSideHTML(r) {
+  if (r.kind === 'team') return `<span style="color:var(--jade);font-weight:600">${r.flag ? flagImg(r.flag) : ''}${esc(r.name)}</span>`;
+  return `<span style="color:var(--muted)">${esc(slotText(r))}</span>`;
+}
+
+function renderModeNext(matches, byNum) {
+  const stage = nextRoundStage(matches);
+  const ms = matches.filter((m) => m.stage === stage).sort((a, b) => a.match_number - b.match_number);
+  const rows = ms.map((m) => {
+    const h = resolveSlot(m.home, m.slot_home, byNum), a = resolveSlot(m.away, m.slot_away, byNum);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px">
+      <div style="flex:1;text-align:right">${nextSideHTML(h)}</div>
+      <span class="vs">v</span>
+      <div style="flex:1">${nextSideHTML(a)}</div></div>`;
+  }).join('');
+  return { body: rows || '<div class="lh-empty" style="margin:auto">No matches</div>', label: STAGE_LABEL[stage] || 'Next round' };
+}
+
+function renderModeTree(matches, byNum) {
+  const strips = STAGE_ORDER.filter((st) => matches.some((m) => m.stage === st)).map((st) => {
+    const ms = matches.filter((m) => m.stage === st).sort((a, b) => a.match_number - b.match_number);
+    const chips = ms.map((m) => {
+      const h = resolveSlot(m.home, m.slot_home, byNum), a = resolveSlot(m.away, m.slot_away, byNum);
+      const w = winnerOf(m);
+      const hv = w && h.kind === 'team' && w.name === h.name ? 'color:var(--jade)' : '';
+      const av = w && a.kind === 'team' && w.name === a.name ? 'color:var(--jade)' : '';
+      return `<span style="display:inline-block;white-space:nowrap;margin:2px 7px 2px 0;font-size:11px"><span style="${hv}">${esc(slotShort(h))}</span><span style="color:var(--muted)">·</span><span style="${av}">${esc(slotShort(a))}</span></span>`;
+    }).join('');
+    return `<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+      <span style="display:inline-block;width:34px;color:var(--volt);font-size:11px;font-weight:700">${STAGE_SHORT[st]}</span>${chips}</div>`;
+  }).join('');
+  return { body: `<div style="overflow:auto;max-height:470px">${strips}</div>`, label: 'Full tree' };
+}
+
+function renderModeRoad(matches, byNum, teamRanks) {
+  const alive = aliveTeams(matches, teamRanks);
+  if (!alive.length) return { body: '<div class="lh-empty" style="margin:auto">No teams yet</div>', label: 'Team road' };
+  const idx = clamp(state.roadTeamIdx, 0, alive.length - 1);
+  const team = alive[idx];
+  const legs = teamRoad(team, matches, byNum);
+  const col = (c) => c === 'win' ? 'var(--jade)' : c === 'loss' ? 'var(--terra)' : 'var(--muted)';
+  const rows = legs.map((l) => `<div class="bk-leg"><span class="rd">${esc(l.rd)}</span><span class="opp" style="color:${col(l.cls)}">${esc(l.opp)}</span></div>`).join('');
+  // Default = highest-ranked alive team; Enter cycles. A future "followed team"
+  // feature would seed state.roadTeamIdx from the user's follow right here.
+  return {
+    body: `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="color:var(--jade);font-weight:700">${esc(team)}</span>
+        <span style="color:var(--muted);font-size:11px;margin-left:auto">↵ ${idx + 1}/${alive.length}</span></div>
+      <div class="bk-road">${rows || '<div class="lh-empty">No road yet</div>'}</div>`,
+    label: 'Team road',
+  };
+}
+
+function renderBracket() {
+  const { real, matches, teamRanks, byNum } = bracketData();
+  const r = state.bracketMode === 0 ? renderModeNext(matches, byNum)
+          : state.bracketMode === 1 ? renderModeTree(matches, byNum)
+          :                           renderModeRoad(matches, byNum, teamRanks);
   $('surf-bracket').innerHTML = `
     <div class="shead"><span class="title">Bracket</span>
-      <span class="bk-mode">${state.bracketMode === 'convergence' ? 'Convergence' : 'Results'} · ↑↓</span></div>
-    ${body}
+      <span class="bk-mode">${esc(r.label)} · ↑↓</span></div>
+    ${r.body}
     ${real ? '' : '<div class="ph-note">offline · sample</div>'}`;
 }
 
@@ -295,10 +448,22 @@ function exitToBeat() {
   $('beat').classList.remove('hidden');
 }
 function toggleWithin(key) {
-  // Bracket: ArrowUp/Down or pinch toggles convergence <-> road.
-  if (SURFACES[state.surface] === 'bracket') {
-    state.bracketMode = state.bracketMode === 'convergence' ? 'road' : 'convergence';
+  const surf = SURFACES[state.surface];
+  if (surf === 'bracket') {
+    // ArrowUp/Down cycles the 3 modes (Next round → Full tree → Team road).
+    // Enter (pinch) in Team-road mode cycles to the next alive team by rank.
+    if (key === 'Enter' && state.bracketMode === 2) {
+      const { matches, teamRanks } = bracketData();
+      const n = aliveTeams(matches, teamRanks).length || 1;
+      state.roadTeamIdx = (state.roadTeamIdx + 1) % n;
+    } else {
+      state.bracketMode = (state.bracketMode + 1) % 3;
+    }
     renderBracket();
+  } else if (surf === 'rankings') {
+    // ArrowUp/Down (pinch) toggles Team <-> Player rankings.
+    state.rankMode = state.rankMode === 'team' ? 'player' : 'team';
+    renderRankings();
   }
 }
 document.addEventListener('keydown', (e) => {
