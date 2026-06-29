@@ -28,6 +28,7 @@
 
 import { sql } from '@/lib/db';
 import { readTodaysCard } from '@/app/app/data';
+import { getPlayerTopN } from '@/lib/rankings';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,6 +86,29 @@ export async function GET() {
       }
     }
 
+    // KEY MOMENT for live matches — the latest GOAL (not the literal latest
+    // event, which is often a substitution). is_current=true drops VAR-reversed
+    // goals. Prefers the AI `gloss` one-liner, else a templated line. Scoped to
+    // live ids only (cheap; nothing when no match is live).
+    const keyMomentByMatch = new Map();
+    if (liveIds.length > 0) {
+      const goals = await sql`
+        SELECT DISTINCT ON (match_id)
+               match_id, minute, minute_extra, detail, player_name, gloss
+          FROM match_events
+         WHERE match_id = ANY(${liveIds}::int[])
+           AND is_current = true
+           AND event_type = 'Goal'
+           AND (detail IS NULL OR detail NOT IN ('Own Goal', 'Missed Penalty', 'Goal cancelled'))
+         ORDER BY match_id, minute DESC, minute_extra DESC NULLS LAST, id DESC
+      `;
+      for (const g of goals) {
+        const min = g.minute_extra ? `${g.minute}+${g.minute_extra}'` : `${g.minute}'`;
+        const text = g.gloss || `${min} ${g.player_name ?? ''}${g.detail && g.detail !== 'Normal Goal' ? ` (${g.detail})` : ''}`.trim();
+        keyMomentByMatch.set(g.match_id, { minute: min, text });
+      }
+    }
+
     // Raw kickoff timestamps for scheduled matches (readTodaysCard only exposes
     // a PT label; the client formats to taste, so we return ISO 8601 UTC).
     const schedIds = fixtures.filter((f) => !f.isLive && !f.isFinal).map((f) => f.id);
@@ -112,6 +136,7 @@ export async function GET() {
         out.statusShort = latest?.status_short ?? null;
         out.watchScore = latest?.composite != null ? Math.round(latest.composite * 10) / 10 : null;
         out.watchTrend = trendOf(live?.latest, live?.prev);
+        out.keyMoment = keyMomentByMatch.get(f.id) ?? null; // null pre-first-goal
       } else if (status === 'scheduled') {
         const ko = kickoffById.get(f.id);
         out.kickoff = ko != null ? new Date(ko).toISOString() : null; // ISO 8601 UTC
@@ -142,9 +167,17 @@ export async function GET() {
       rank: r.rank, team: r.team, abbr: r.abbr, flag: r.flag, score: r.score, delta: r.delta,
     }));
 
-    return Response.json({ updatedAt, dateline: card.dateline, matches, rankingsTop5 }, { headers: CORS_HEADERS });
+    // Player-power top 5 — same published-edition → ranking_entries shape as the
+    // team query above (negligible added cost). Powers the Rankings Team↔Player toggle.
+    const players = await getPlayerTopN({ listSlug: 'player-power', leagueSlug: WC_LEAGUE_SLUG, limit: 5 });
+    const playerRankingsTop5 = players.map((r) => ({
+      rank: r.rank, player: r.player_name, abbr: r.team_abbr,
+      flag: r.team_flag_svg_path, score: r.score, delta: r.movement_label,
+    }));
+
+    return Response.json({ updatedAt, dateline: card.dateline, matches, rankingsTop5, playerRankingsTop5 }, { headers: CORS_HEADERS });
   } catch (err) {
     console.error('/api/live failed:', err);
-    return Response.json({ updatedAt, matches: [], rankingsTop5: [], error: 'unavailable' }, { status: 200, headers: CORS_HEADERS });
+    return Response.json({ updatedAt, matches: [], rankingsTop5: [], playerRankingsTop5: [], error: 'unavailable' }, { status: 200, headers: CORS_HEADERS });
   }
 }

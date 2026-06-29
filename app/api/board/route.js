@@ -16,6 +16,7 @@
  * with null payloads + an `error` flag so the HUD falls back to its sample.
  */
 
+import { sql } from '@/lib/db';
 import { getKnockoutBracket } from '@/lib/bracket';
 import { getScorers } from '@/lib/stats';
 
@@ -33,48 +34,50 @@ export async function OPTIONS() {
   return new Response(null, { status: 204, headers: CORS_HEADERS });
 }
 
-const STAGE_SHORT = {
-  round_of_32: 'R32',
-  round_of_16: 'R16',
-  quarter:     'QF',
-  semi:        'SF',
-  third_place: '3rd',
-  final:       'Final',
-};
-
-// A KO side is either a resolved team (use its name) or an unresolved slot
-// (use the bracket's own slot label, e.g. 'W97' / 'TBD') — never invented.
-const sideLabel = (s) => (s && s.resolved ? s.name : (s && s.label) || 'TBD');
-
 export async function GET() {
   const updatedAt = new Date().toISOString();
   try {
     const bmap = await getKnockoutBracket(WC_LEAGUE_SLUG);
-    const ko = [...bmap.values()];
 
-    // Convergence: the two semifinals (where the bracket converges toward the
-    // final). Resolved names or honest slot labels.
-    const convergence = ko
-      .filter((m) => m.stage === 'semi')
-      .sort((a, b) => a.match_number - b.match_number)
-      .map((m) => ({
-        where: m.venue ? `Semifinal · ${m.venue}` : 'Semifinal',
-        a: sideLabel(m.home),
-        b: sideLabel(m.away),
-      }));
+    // FULL lean bracket — every KO match with the fields the HUD's client-side
+    // feeder resolution needs (slot_*.match + feeds_match chain the tree). The
+    // client resolves undecided slots one level up (real feeder pairs) and
+    // labels beyond — see resolveSlot() in app.js. No matchups invented here.
+    const matches = [...bmap.values()].map((m) => ({
+      match_number:   m.match_number,
+      stage:          m.stage,
+      status:         m.status,
+      home_score:     m.home_score,
+      away_score:     m.away_score,
+      home_penalties: m.home_penalties,
+      away_penalties: m.away_penalties,
+      home: m.home.resolved
+        ? { resolved: true, name: m.home.name, flag: m.home.flag_svg_path }
+        : { resolved: false, label: m.home.label },
+      away: m.away.resolved
+        ? { resolved: true, name: m.away.name, flag: m.away.flag_svg_path }
+        : { resolved: false, label: m.away.label },
+      slot_home: m.slot_home ? { type: m.slot_home.type, label: m.slot_home.label, match: m.slot_home.match ?? null } : null,
+      slot_away: m.slot_away ? { type: m.slot_away.type, label: m.slot_away.label, match: m.slot_away.match ?? null } : null,
+      feeds_match: m.feeds_match ?? null,
+    }));
 
-    // Road so far: the most recent CONCLUDED knockout results (both teams
-    // resolved + a final score), newest round first.
-    const road = ko
-      .filter((m) => m.status === 'final' && m.home?.resolved && m.away?.resolved)
-      .sort((a, b) => b.match_number - a.match_number)
-      .slice(0, 4)
-      .map((m) => ({
-        rd: STAGE_SHORT[m.stage] || m.stage,
-        opp: `${m.home.name} ${m.home_score ?? 0}–${m.away_score ?? 0} ${m.away.name}`,
-      }));
+    // Team-power ranks (name → rank) so the Team-road mode can default to the
+    // highest-ranked team still alive and cycle alive teams by rank.
+    const trk = await sql`
+      SELECT e.rank, t.name
+        FROM ranking_entries e
+        JOIN ranking_editions ed ON ed.id = e.ranking_edition_id
+        JOIN ranking_lists   rl ON rl.id = ed.ranking_list_id
+        JOIN leagues         lg ON lg.id = rl.league_id
+        JOIN teams            t ON t.id = e.team_id
+       WHERE rl.slug = 'team-power' AND lg.slug = ${WC_LEAGUE_SLUG}
+         AND ed.is_current = true AND ed.status = 'published' AND e.entity_type = 'team'
+       ORDER BY e.rank ASC
+    `;
+    const teamRanks = trk.map((r) => ({ name: r.name, rank: r.rank }));
 
-    const bracket = { convergence, road };
+    const bracket = { matches, teamRanks };
 
     // Golden Boot: top-3 scorers, same rollup the Stats hub renders.
     const scorers = await getScorers(WC_LEAGUE_SLUG, 3);
