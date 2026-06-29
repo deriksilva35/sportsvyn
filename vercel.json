@@ -9,6 +9,7 @@
     { "path": "/api/cron/publish-player-edition", "schedule": "0 12 * * *" },
     { "path": "/api/cron/publish-team-edition",   "schedule": "30 12 * * *" },
     { "path": "/api/cron/resolve-bracket",        "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/prematch-analyst",       "schedule": "*/30 * * * *" }
+    { "path": "/api/cron/prematch-analyst",       "schedule": "*/30 * * * *" },
+    { "path": "/api/cron/map-ko-fixtures",        "schedule": "0 8 * * *" }
   ]
 }
