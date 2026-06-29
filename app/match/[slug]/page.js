@@ -56,6 +56,7 @@ async function getMatchBySlug(slug) {
     SELECT
       m.id, m.slug, m.kickoff_at, m.status, m.stage, m.group_code,
       m.home_team_id, m.away_team_id, m.home_score, m.away_score,
+      m.home_penalties, m.away_penalties,
       m.venue, m.external_ids,
       h.name                AS home_name,
       h.slug                AS home_slug,
@@ -412,6 +413,8 @@ export default async function MatchPage({ params }) {
               status_short: isFinal ? 'FT' : null,
               home_score: match.home_score,
               away_score: match.away_score,
+              home_penalties: match.home_penalties,
+              away_penalties: match.away_penalties,
               minute: null,
             }}
             homeName={match.home_name}

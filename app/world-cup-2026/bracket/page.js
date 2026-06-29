@@ -45,6 +45,7 @@ import {
   resolveCompetitionBySegment,
   requireBracketSurface,
 } from '@/lib/competition';
+import { penSuffix } from '@/lib/penalties';
 
 import './bracket.css';
 
@@ -164,6 +165,13 @@ function KnockoutCell({ match }) {
       </div>
       <KnockoutTeamRow side={match.home} score={match.home_score} status={match.status} />
       <KnockoutTeamRow side={match.away} score={match.away_score} status={match.status} />
+      {match.status === 'final'
+        && penSuffix(match.home_score, match.away_score, match.home_penalties, match.away_penalties)
+        && (
+          <div className="pens-suffix">
+            {penSuffix(match.home_score, match.away_score, match.home_penalties, match.away_penalties)}
+          </div>
+        )}
     </div>
   );
 }

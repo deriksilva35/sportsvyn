@@ -25,6 +25,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { coalesceClock } from '@/lib/liveHeroState';
+import { penSuffix } from '@/lib/penalties';
 
 const PERIOD_LABELS = {
   '1H':   '1st Half',
@@ -171,6 +172,13 @@ export default function LiveHero({
             <span className="sep">—</span>
             <span className={leading === 'away' ? 'leading' : undefined}>{away}</span>
           </div>
+          {/* Penalty-shootout score — only on a level final with both tallies
+              (penSuffix returns "" otherwise, which renders nothing). */}
+          {isFinalState && penSuffix(home, away, state.home_penalties, state.away_penalties) && (
+            <div className="pens-suffix">
+              {penSuffix(home, away, state.home_penalties, state.away_penalties)}
+            </div>
+          )}
           {/* Period line: at live we show "{minute}' · {period}" (e.g. "67' ·
               2nd Half"). At final there's no live minute clock — just the
               "Final" label (or "Final (AET)" / "Final (PEN)" when applicable).

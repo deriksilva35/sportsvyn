@@ -65,3 +65,15 @@ body {
 .team-name-followed {
   color: var(--volt) !important;
 }
+
+/* Penalty-shootout score subline — shared by the bracket cell (KnockoutCell)
+   and the match scoreline (LiveHero) so both surfaces read identically.
+   Rendered (via penSuffix) only on a level final with both shootout tallies. */
+.pens-suffix {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  margin-top: 2px;
+}
