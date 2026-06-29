@@ -26,6 +26,7 @@ import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import FlagSlot from '@/components/FlagSlot';
 import { getCurrentEdition, getRankingsForPage, getTotalFinalsCount } from '@/lib/rankings';
+import { getKnockoutPruneState } from '@/lib/rankings/knockoutState';
 import {
   resolveCompetitionBySegment,
   requireRankingsListSurface,
@@ -163,10 +164,11 @@ export default async function PowerRankingsLeafPage() {
   const leafMeta = getRankingListMetaForUrlLeaf(RANKING_URL_LEAF);
   if (!leafMeta) notFound();
 
-  const [edition, allRows, finalsCount] = await Promise.all([
+  const [edition, allRows, finalsCount, pruneState] = await Promise.all([
     getCurrentEdition({ listSlug: leafMeta.listSlug, leagueSlug: comp.slug }),
     getRankingsForPage({ listSlug: leafMeta.listSlug, leagueSlug: comp.slug, limit: 48 }),
     getTotalFinalsCount({ leagueSlug: comp.slug }),
+    getKnockoutPruneState({ leagueSlug: comp.slug }),
   ]);
   const showPoints = finalsCount <= 72;  // group stage only; knockouts drop pts
 
@@ -191,8 +193,21 @@ export default async function PowerRankingsLeafPage() {
     : `Edition ${edition.edition_number}`;
   const edWeightPct    = Math.round((edition.editorial_weight ?? 0) * 100);
 
-  const blurbed = allRows.filter((r) => r.rank <= 10);
-  const bare    = allRows.filter((r) => r.rank > 10);
+  // PRUNE (read-time, no recompute): round-size the board to the live knockout
+  // field — the round-of-32 teams (the shared "reached the knockouts" entry
+  // rule), minus any eliminated (loser of a completed KO match). That single
+  // condition self-sizes the board each round with no boundary logic: R32 (32)
+  // → as teams lose it shrinks → 16 → 8 → … Renumber 1..N contiguous, score
+  // unchanged. GUARD: before the bracket is drawn the R32 field is empty, so
+  // the board shows all 48 (the group-stage board) unchanged.
+  const r32Field = pruneState.r32FieldTeamIds;
+  const ranked = (r32Field.size > 0
+    ? allRows.filter((r) => r32Field.has(r.team_id) && !pruneState.eliminatedTeamIds.has(r.team_id))
+    : allRows
+  ).map((r, i) => ({ ...r, rank: i + 1 }));
+
+  const blurbed = ranked.filter((r) => r.rank <= 10);
+  const bare    = ranked.filter((r) => r.rank > 10);
 
   return (
     <>
@@ -208,7 +223,7 @@ export default async function PowerRankingsLeafPage() {
           <div className="meta-row">
             <span>By <span className="v">Derik Silva</span></span>
             <span>Updated <span className="v">{fmtUpdated(edition.published_at)}</span></span>
-            <span><span className="v">{allRows.length}</span> teams ranked</span>
+            <span><span className="v">{ranked.length}</span> teams ranked</span>
           </div>
         </header>
 
@@ -225,7 +240,7 @@ export default async function PowerRankingsLeafPage() {
 
         <div className="list-head">
           <h2>Team Power Rankings</h2>
-          <span className="count">TOP 10 ANNOTATED {'·'} 11-{allRows.length} LISTED</span>
+          <span className="count">TOP 10 ANNOTATED {'·'} 11-{ranked.length} LISTED</span>
         </div>
 
         {blurbed.map((row) => (

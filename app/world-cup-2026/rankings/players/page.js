@@ -19,6 +19,7 @@ import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import FlagSlot from '@/components/FlagSlot';
 import { getCurrentEdition, getPlayerRankingsForPage } from '@/lib/rankings';
+import { getKnockoutPruneState } from '@/lib/rankings/knockoutState';
 import {
   resolveCompetitionBySegment,
   requireRankingsListSurface,
@@ -134,9 +135,10 @@ export default async function PlayerRankingsLeafPage() {
   const leafMeta = getRankingListMetaForUrlLeaf(RANKING_URL_LEAF);
   if (!leafMeta) notFound();
 
-  const [edition, allRows] = await Promise.all([
+  const [edition, allRows, pruneState] = await Promise.all([
     getCurrentEdition({ listSlug: leafMeta.listSlug, leagueSlug: comp.slug }),
     getPlayerRankingsForPage({ listSlug: leafMeta.listSlug, leagueSlug: comp.slug, limit: 50 }),
+    getKnockoutPruneState({ leagueSlug: comp.slug }),
   ]);
 
   const hasRows = !!edition && allRows.length > 0;
@@ -180,8 +182,19 @@ export default async function PlayerRankingsLeafPage() {
   const prodWeightPct   = Math.round((edition.editorial_weight ?? 0) * 100);
   const impactWeightPct = Math.round((edition.sites_weight ?? 0) * 100);
 
-  const blurbed = allRows.filter((r) => r.rank <= 10);
-  const bare    = allRows.filter((r) => r.rank > 10);
+  // PRUNE (read-time, no recompute): hold the board to the FROZEN round-of-32
+  // team field for the whole tournament — a player STAYS even after his team is
+  // knocked out (frozen-field rule, not eliminated-pruned). Renumber 1..N
+  // contiguous, score unchanged. Guard: only filter once the R32 field is
+  // populated, so the board never blanks before the bracket is drawn.
+  const r32Field = pruneState.r32FieldTeamIds;
+  const ranked = (r32Field.size > 0
+    ? allRows.filter((r) => r.team_id != null && r32Field.has(r.team_id))
+    : allRows
+  ).map((r, i) => ({ ...r, rank: i + 1 }));
+
+  const blurbed = ranked.filter((r) => r.rank <= 10);
+  const bare    = ranked.filter((r) => r.rank > 10);
 
   return (
     <>
@@ -218,7 +231,7 @@ export default async function PlayerRankingsLeafPage() {
 
         <div className="list-head">
           <h2>Tournament MVP</h2>
-          <span className="count">TOP 10 ANNOTATED {'·'} 11-{allRows.length} LISTED</span>
+          <span className="count">TOP 10 ANNOTATED {'·'} 11-{ranked.length} LISTED</span>
         </div>
 
         {blurbed.map((row) => (
