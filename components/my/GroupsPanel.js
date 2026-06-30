@@ -27,10 +27,27 @@ export default function GroupsPanel({ groups, followedSet }) {
     <section className="panel panel-groups">
       <h2 className="phead">Your Groups</h2>
       <div className="pbody">
-        {entries.map(([letter, teams]) => (
+        {entries.map(([letter, teams]) => {
+          // "two of yours" annotation: only when this single group holds two or
+          // more followed teams. Derived from the same followedSet marker that
+          // tints names volt -- no new reader or prop. getFollowedGroups only
+          // ever returns group-stage standings (stage='group', group_code not
+          // null), so the label is always "Group {letter}" -- no knockout branch.
+          const followedInGroup = teams.reduce(
+            (n, t) => n + (followedSet?.has(t.team_id) ? 1 : 0),
+            0,
+          );
+          return (
           <div key={letter} className="grp-card">
             <div className="grp-card-head">
-              <span className="grp-letter">{letter}</span>
+              <span>
+                <span className="grp-letter">Group {letter}</span>
+                {followedInGroup >= 2 && (
+                  <span className="grp-card-note" style={{ textTransform: 'none' }}>
+                    {' '}two of yours
+                  </span>
+                )}
+              </span>
               <span className="grp-cols">
                 <span>W-D-L</span>
                 <span>GD</span>
@@ -64,7 +81,8 @@ export default function GroupsPanel({ groups, followedSet }) {
               })}
             </ul>
           </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
