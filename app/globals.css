@@ -6,6 +6,7 @@
   --color-graphite: #1A1A1A;
   --color-charcoal: #2A2A2A;
   --color-paper-warm: #F5F5F2;
+  --color-paper-dim: #C5C5C2;
   --color-volt: #D4FF00;
   --color-muted: #888888;
 
@@ -27,6 +28,7 @@
   --graphite: var(--color-graphite);
   --charcoal: var(--color-charcoal);
   --paper-warm: var(--color-paper-warm);
+  --paper-dim: var(--color-paper-dim);
   --volt: var(--color-volt);
   --muted: var(--color-muted);
   --jade: var(--color-jade);

@@ -28,7 +28,7 @@
 .my-eyebrow {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--muted);
+  color: var(--volt);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   margin-bottom: 10px;
@@ -166,7 +166,7 @@
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--volt);
+  color: var(--paper-dim);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -418,7 +418,7 @@
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
-  color: var(--volt);
+  color: var(--volt-dim);
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
