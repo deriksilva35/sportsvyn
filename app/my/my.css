@@ -280,10 +280,10 @@
 .sch-list-row:last-child { border-bottom: none; }
 .sch-list-link {
   display: grid;
-  grid-template-columns: 150px 1fr auto;
+  grid-template-columns: 92px 1fr auto;
   align-items: center;
   gap: 14px;
-  padding: 10px 0;
+  padding: 9px 0;
   color: var(--paper-warm);
   text-decoration: none;
 }
@@ -292,7 +292,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--muted);
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 .sch-list-teams {
