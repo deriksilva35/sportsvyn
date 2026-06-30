@@ -40,12 +40,33 @@ function NameSpan({ team, followedSet }) {
   );
 }
 
+// Knockout-stage label wording, mirroring the canonical map (lib/aiBrief.js
+// STAGE_LABELS). Group stage is synthesized from group_code. The group stage
+// is over, so in practice this resolves the round name (e.g. "Round of 32").
+const STAGE_LABELS = {
+  round_of_32: 'Round of 32',
+  round_of_16: 'Round of 16',
+  quarter:     'Quarterfinal',
+  semi:        'Semifinal',
+  third_place: 'Third-place playoff',
+  final:       'Final',
+};
+function roundLabel(stage, groupCode) {
+  if (stage === 'group') return groupCode ? `Group ${groupCode}` : 'Group Stage';
+  return STAGE_LABELS[stage] ?? null;
+}
+
 function RecentRow({ match, followedSet }) {
   const hs = match.home_score ?? 0;
   const as = match.away_score ?? 0;
+  const meta = [roundLabel(match.stage, match.group_code), 'Full time'].filter(Boolean).join(' · ');
+  const watch = match.watch_score != null ? match.watch_score.toFixed(1) : null;
   return (
     <a className="tn-row tn-row-recent" href={`/match/${match.slug}`}>
-      <div className="tn-row-label">Today, Final</div>
+      <div className="tn-row-head">
+        <span className="tn-row-label">{meta}</span>
+        {watch && <span className="tn-watch">Watch {watch}</span>}
+      </div>
       <div className="tn-row-teams">
         <span className="tn-team">
           <FlagSlot

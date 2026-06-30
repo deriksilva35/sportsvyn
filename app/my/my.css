@@ -212,7 +212,22 @@
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
-.tn-row-recent .tn-row-label { color: var(--volt); }
+.tn-row-recent .tn-row-label { color: var(--muted); }
+.tn-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tn-watch {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--volt);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
 .tn-row-teams {
   display: flex;
   align-items: center;
