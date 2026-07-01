@@ -2,23 +2,21 @@
  * /my (My Sportsvyn dashboard) — Phase 1.
  *
  * Server component, force-dynamic (reads auth() cookies, fans out one
- * DB query per BOUND panel per request). The server renders every bound
- * panel to an element and hands the { [id]: node } map plus the resolved
- * active layout to <DashboardCustomizer> (client), which owns normal-vs-
- * edit rendering, the Live Now float-to-top, and the .my-grid wrapper.
- * page.js no longer renders the grid itself.
+ * DB query per active panel per request). No client JS this phase;
+ * customize lives in Phase 2 once the write-action ships.
  *
  * Unauthenticated requests redirect to /signin with callbackUrl=/my
  * (no inline sign-in prompt here; /my is a logged-in surface by
  * design). Zero-follow state renders an empty card with a path to
  * /bracket to start building the dashboard.
  *
- * Render-all-bound: we render EVERY bound panel (not just the active
- * ones) so a panel the user removed stays rendered-but-hidden and
- * toggling it back on is instant. The one exception is the conditional
- * 'live', omitted from the map when it has no matches (LiveNow has no
- * self empty-state). getResolvedLayout supplies the ordered active list
- * as the customizer's initialActive.
+ * Panels are driven by the modular spine: getResolvedLayout resolves
+ * the user's 'my'-scope layout (DEFAULT_ACTIVE when no row) against the
+ * registry, PANEL_BINDINGS loads + renders each built panel. Render
+ * order floats active conditional panels that have data (Live Now in
+ * play) to the top, then the non-conditional panels in stored order.
+ * The CSS grid (my.css) handles span widths via each panel's own
+ * .panel-X wrapper; the page adds no inline grid-column.
  */
 
 import { redirect } from 'next/navigation';
@@ -31,7 +29,6 @@ import { PANEL_BINDINGS } from '@/lib/panelLoaders';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import Wordmark from '@/components/Wordmark';
-import DashboardCustomizer from './CustomizeClient';
 
 import './my.css';
 
@@ -102,53 +99,56 @@ export default async function MyPage() {
   }
 
   const ids = Array.from(followedSet);
-  const resolved = await getResolvedLayout(userId, 'my'); // ordered active list -> initialActive
-
-  // Render-all-bound: run EVERY bound panel's loader (not just the active ones)
-  // so a panel the user removed stays rendered-but-hidden and re-adding it is
-  // instant. The conditional 'live' is handled below (omitted when it has no
-  // data). Today boundIds === DEFAULT_ACTIVE, so this loads the same set as the
-  // active-only path did; the distinction only matters once a user customizes.
-  const boundIds = Object.keys(PANEL_BINDINGS);
-  const results = await Promise.all(boundIds.map((id) => PANEL_BINDINGS[id].load(ids)));
-  const loadedProps = {};
-  boundIds.forEach((id, i) => {
-    loadedProps[id] = results[i];
+  const resolved = await getResolvedLayout(userId, 'my'); // /my is the 'my' scope
+  const activeBound = resolved.filter((p) => PANEL_BINDINGS[p.id]); // only built panels render; unbuilt skipped
+  const results = await Promise.all(activeBound.map((p) => PANEL_BINDINGS[p.id].load(ids)));
+  const loaded = {};
+  activeBound.forEach((p, i) => {
+    loaded[p.id] = results[i];
   });
 
-  // Page-level dedup (server-side data op): drop the fixtures already surfaced
-  // in Today & Next's "next" list from Schedule so one match never renders twice.
-  // Reconciled here because the schedule loader returns the full list by design.
-  if (loadedProps.today && loadedProps.schedule) {
-    const todayNextIds = new Set((loadedProps.today.next ?? []).map((f) => f.id));
-    loadedProps.schedule.fixtures = loadedProps.schedule.fixtures.filter(
-      (f) => !todayNextIds.has(f.id),
-    );
+  // Page-level dedup: drop the fixtures already surfaced in Today & Next's
+  // "next" list from the Schedule panel so one match never renders twice on a
+  // screen. Cross-panel concern reconciled here (the schedule loader returns
+  // the full list by design). Skip when either panel is inactive -- schedule
+  // then shows all, which is correct.
+  if (loaded.today && loaded.schedule) {
+    const todayNextIds = new Set((loaded.today.next ?? []).map((f) => f.id));
+    loaded.schedule.fixtures = loaded.schedule.fixtures.filter((f) => !todayNextIds.has(f.id));
   }
 
-  // Build the { [id]: element } map the customizer places by id. Non-conditional
-  // panels always render; a conditional panel ('live') is omitted when it has no
-  // data, so the customizer treats it as not-showing (an empty LiveNow would
-  // leave a stray header -- it has no self empty-state). "Has data" mirrors the
-  // old float-gate: any loaded prop that is a non-empty array.
-  const panels = {};
-  for (const id of boundIds) {
-    const props = loadedProps[id];
-    if (PANELS[id].conditional) {
-      const hasData =
-        props && Object.values(props).some((v) => Array.isArray(v) && v.length > 0);
-      if (!hasData) continue;
-    }
-    const { Component } = PANEL_BINDINGS[id];
-    panels[id] = <Component key={id} {...props} followedSet={followedSet} />;
-  }
+  // Render order with live float-to-top: active conditional panels that HAVE
+  // data render first (in stored order), then all non-conditional active panels
+  // (in stored order). A conditional with no data renders nothing. Which panels
+  // are conditional comes from the registry flag, not a hardcoded id; a panel
+  // "has data" when its loaded props carry a non-empty array. This reproduces
+  // prod exactly: Live Now first when in play, absent otherwise, everything
+  // else in DEFAULT_ACTIVE order.
+  const hasData = (props) =>
+    props != null && Object.values(props).some((v) => Array.isArray(v) && v.length > 0);
+  const conditionalsWithData = activeBound.filter(
+    (p) => PANELS[p.id].conditional && hasData(loaded[p.id]),
+  );
+  const nonConditionals = activeBound.filter((p) => !PANELS[p.id].conditional);
+  const renderOrder = [...conditionalsWithData, ...nonConditionals];
 
   return (
     <>
       <SiteHeaderServer activeNav="my" />
       <main className="my-shell">
         <PageHeader followedCount={followedCount} />
-        <DashboardCustomizer panels={panels} initialActive={resolved} />
+        <div className="my-grid">
+          {renderOrder.map((p) => {
+            const { Component } = PANEL_BINDINGS[p.id];
+            return (
+              <Component
+                key={p.id}
+                {...loaded[p.id]}
+                followedSet={followedSet}
+              />
+            );
+          })}
+        </div>
       </main>
       <SiteFooter />
     </>
