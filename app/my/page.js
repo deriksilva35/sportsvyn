@@ -1,39 +1,34 @@
 /**
  * /my (My Sportsvyn dashboard) — Phase 1.
  *
- * Server component, force-dynamic (reads auth() cookies, fans out
- * five DB queries per request). No client JS this phase; customize
- * lives in Phase 2 once a prefs migration ships.
+ * Server component, force-dynamic (reads auth() cookies, fans out one
+ * DB query per active panel per request). No client JS this phase;
+ * customize lives in Phase 2 once the write-action ships.
  *
  * Unauthenticated requests redirect to /signin with callbackUrl=/my
  * (no inline sign-in prompt here; /my is a logged-in surface by
  * design). Zero-follow state renders an empty card with a path to
  * /bracket to start building the dashboard.
  *
- * Panel order in DOM: LiveNow (only when non-empty), TodayNext,
- * Schedule, Groups, Mentioned. The CSS grid (my.css) handles span
- * widths; the page does not reorder visually.
+ * Panels are driven by the modular spine: getResolvedLayout resolves
+ * the user's 'my'-scope layout (DEFAULT_ACTIVE when no row) against the
+ * registry, PANEL_BINDINGS loads + renders each built panel. Render
+ * order floats active conditional panels that have data (Live Now in
+ * play) to the top, then the non-conditional panels in stored order.
+ * The CSS grid (my.css) handles span widths via each panel's own
+ * .panel-X wrapper; the page adds no inline grid-column.
  */
 
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { getFollowedTeamIds } from '@/lib/follows';
-import {
-  getFollowedFixtures,
-  getTodayAndNext,
-  getFollowedGroups,
-  getMentionedReads,
-  getLiveNow,
-} from '@/lib/dashboard';
+import { getResolvedLayout } from '@/lib/dashboardLayout';
+import { PANELS } from '@/lib/panels';
+import { PANEL_BINDINGS } from '@/lib/panelLoaders';
 
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import Wordmark from '@/components/Wordmark';
-import TodayNextPanel from '@/components/my/TodayNextPanel';
-import SchedulePanel from '@/components/my/SchedulePanel';
-import GroupsPanel from '@/components/my/GroupsPanel';
-import MentionedPanel from '@/components/my/MentionedPanel';
-import LiveNowPanel from '@/components/my/LiveNowPanel';
 
 import './my.css';
 
@@ -104,20 +99,38 @@ export default async function MyPage() {
   }
 
   const ids = Array.from(followedSet);
-  const [todayAndNext, allFixtures, groups, reads, live] = await Promise.all([
-    getTodayAndNext(ids),
-    getFollowedFixtures(ids, { limit: 12 }),
-    getFollowedGroups(ids),
-    getMentionedReads(ids, { limit: 5 }),
-    getLiveNow(ids),
-  ]);
+  const resolved = await getResolvedLayout(userId, 'my'); // /my is the 'my' scope
+  const activeBound = resolved.filter((p) => PANEL_BINDINGS[p.id]); // only built panels render; unbuilt skipped
+  const results = await Promise.all(activeBound.map((p) => PANEL_BINDINGS[p.id].load(ids)));
+  const loaded = {};
+  activeBound.forEach((p, i) => {
+    loaded[p.id] = results[i];
+  });
 
-  // Dedup the two fixtures already in TodayNext.next from the
-  // Schedule panel so the same match doesn't render twice on one
-  // screen. Live matches stay in Schedule (TodayNext only carries
-  // scheduled rows by spec).
-  const todayNextIds = new Set(todayAndNext.next.map((f) => f.id));
-  const scheduleFixtures = allFixtures.filter((f) => !todayNextIds.has(f.id));
+  // Page-level dedup: drop the fixtures already surfaced in Today & Next's
+  // "next" list from the Schedule panel so one match never renders twice on a
+  // screen. Cross-panel concern reconciled here (the schedule loader returns
+  // the full list by design). Skip when either panel is inactive -- schedule
+  // then shows all, which is correct.
+  if (loaded.today && loaded.schedule) {
+    const todayNextIds = new Set((loaded.today.next ?? []).map((f) => f.id));
+    loaded.schedule.fixtures = loaded.schedule.fixtures.filter((f) => !todayNextIds.has(f.id));
+  }
+
+  // Render order with live float-to-top: active conditional panels that HAVE
+  // data render first (in stored order), then all non-conditional active panels
+  // (in stored order). A conditional with no data renders nothing. Which panels
+  // are conditional comes from the registry flag, not a hardcoded id; a panel
+  // "has data" when its loaded props carry a non-empty array. This reproduces
+  // prod exactly: Live Now first when in play, absent otherwise, everything
+  // else in DEFAULT_ACTIVE order.
+  const hasData = (props) =>
+    props != null && Object.values(props).some((v) => Array.isArray(v) && v.length > 0);
+  const conditionalsWithData = activeBound.filter(
+    (p) => PANELS[p.id].conditional && hasData(loaded[p.id]),
+  );
+  const nonConditionals = activeBound.filter((p) => !PANELS[p.id].conditional);
+  const renderOrder = [...conditionalsWithData, ...nonConditionals];
 
   return (
     <>
@@ -125,17 +138,16 @@ export default async function MyPage() {
       <main className="my-shell">
         <PageHeader followedCount={followedCount} />
         <div className="my-grid">
-          {live.length > 0 && (
-            <LiveNowPanel matches={live} followedSet={followedSet} />
-          )}
-          <TodayNextPanel
-            recent={todayAndNext.recent}
-            next={todayAndNext.next}
-            followedSet={followedSet}
-          />
-          <SchedulePanel fixtures={scheduleFixtures} followedSet={followedSet} />
-          <GroupsPanel groups={groups} followedSet={followedSet} />
-          <MentionedPanel reads={reads} followedSet={followedSet} />
+          {renderOrder.map((p) => {
+            const { Component } = PANEL_BINDINGS[p.id];
+            return (
+              <Component
+                key={p.id}
+                {...loaded[p.id]}
+                followedSet={followedSet}
+              />
+            );
+          })}
         </div>
       </main>
       <SiteFooter />
