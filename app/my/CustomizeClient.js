@@ -26,7 +26,7 @@
  * given an in-grid edit strip, and floated to the top when present.
  */
 
-import { useState, useRef, useTransition, cloneElement } from 'react';
+import { Fragment, useState, useRef, useTransition } from 'react';
 import { PANELS, GROUP_ORDER, GROUP_LABELS } from '@/lib/panels';
 import { saveUserLayout } from '@/app/actions/dashboard';
 
@@ -129,10 +129,13 @@ export default function DashboardCustomizer({ panels = {}, initialActive = [] })
         {renderList.map((p) => {
           const node = panels[p.id];
           // Normal mode, and conditional panels in any mode: place the node
-          // bare (it already carries its own .panel .panel-X wrapper). Inject
-          // a key without adding a DOM wrapper so the grid targets .panel-X.
+          // VERBATIM (never clone -- the node is a server-component element
+          // whose type is not in the client bundle, so cloneElement would read
+          // node.type === undefined and throw). A keyed Fragment supplies the
+          // React key and adds NO DOM node, so the node's own .panel .panel-X
+          // stays a direct child of .my-grid and the existing spans apply.
           if (!customize || isConditional(p.id)) {
-            return cloneElement(node, { key: p.id });
+            return <Fragment key={p.id}>{node}</Fragment>;
           }
           // Edit mode, non-conditional: wrap in .panel-slot and prepend the
           // .pedit strip. The slot becomes the grid item (see my.css span fix).
