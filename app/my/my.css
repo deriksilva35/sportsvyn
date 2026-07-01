@@ -539,3 +539,59 @@
   color: var(--live-red);
   padding: 0 4px;
 }
+
+/* =============================================================================
+   Customize UI (step 2). Client shell: app/my/CustomizeClient.js.
+   Target values from the locked mock; mock tokens translated to this repo's
+   names (--paper -> --paper-warm, --mono -> --font-mono, --display ->
+   --font-display, --serif -> --font-serif). Hyphens only, no em/en dashes.
+   ============================================================================= */
+
+.customize-btn{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:transparent;color:var(--volt);border:1px solid var(--volt-dim);border-radius:2px;padding:10px 16px;cursor:pointer;transition:all .12s;white-space:nowrap}
+.customize-btn:hover{background:rgba(212,255,0,.06);border-color:var(--volt)}
+.customize-btn.active{background:var(--volt);color:var(--ink);border-color:var(--volt);font-weight:500}
+.mode-note{font-family:var(--font-serif);font-style:italic;font-size:14px;color:var(--paper-dim);margin-top:16px;padding:12px 16px;background:var(--graphite);border:1px solid var(--rule-dark);border-left:2px solid var(--volt);border-radius:3px;display:none}
+.mode-note.show{display:block}
+.panel-slot{position:relative;min-width:0}
+.panel-slot.editing > .panel{border:1px dashed var(--volt-dim)}
+.pedit{display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(212,255,0,.05);border:1px solid var(--rule-dark);border-bottom:none}
+.pedit .grip{font-family:var(--font-mono);color:var(--muted);font-size:14px;cursor:grab;letter-spacing:-2px}
+.pedit .ebtn{font-family:var(--font-mono);font-size:11px;color:var(--paper-dim);background:transparent;border:1px solid var(--rule-dark);border-radius:2px;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pedit .ebtn:hover{border-color:var(--volt-dim);color:var(--paper-warm)}
+.pedit .ebtn.rm:hover{border-color:var(--terra);color:var(--terra)}
+.pedit .ebtn:disabled{opacity:.3;cursor:default}
+.pedit .spacer{flex:1}
+.pedit .mtag{font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;color:var(--volt-dim);border:1px solid var(--volt-dim);border-radius:2px;padding:1px 5px;text-transform:uppercase}
+.library{margin-top:16px;background:var(--graphite);border:1px solid var(--rule-dark);border-radius:4px;display:none}
+.library.show{display:block}
+.libhead{padding:14px 16px;border-bottom:1px solid var(--rule-dark);display:flex;justify-content:space-between;align-items:baseline}
+.libhead .t{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;color:var(--paper-warm);text-transform:uppercase}
+.libhead .c{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.libgroup{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;padding:14px 16px 6px}
+.librow{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;padding:12px 16px;border-top:1px solid var(--rule-dark)}
+.librow .ln{font-family:var(--font-display);font-style:italic;font-weight:900;font-size:16px;letter-spacing:-0.02em;color:var(--paper-warm)}
+.librow .ld{font-family:var(--font-serif);font-style:italic;font-size:13px;color:var(--muted);margin-top:3px}
+.mbadge{font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;color:var(--volt-dim);border:1px solid var(--volt-dim);border-radius:2px;padding:2px 6px;text-transform:uppercase;white-space:nowrap}
+.cbadge{font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;color:var(--muted);border:1px solid var(--rule-dark);border-radius:2px;padding:2px 6px;text-transform:uppercase;white-space:nowrap}
+.toggle{width:44px;height:26px;border-radius:13px;background:var(--charcoal);border:1px solid var(--rule-dark);cursor:pointer;position:relative;transition:background .15s;flex-shrink:0}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--paper-dim);transition:transform .15s,background .15s}
+.toggle.on{background:var(--volt)}
+.toggle.on::after{transform:translateX(18px);background:var(--ink)}
+.toggle.disabled{opacity:.35;cursor:default}
+
+/* Structural fix for the edit-mode wrapper (the one flagged risk).
+   In customize mode each NON-conditional panel is nested inside .panel-slot,
+   so the grid item becomes .panel-slot and the .panel-X sits one level down --
+   grid-column only applies to a direct grid child, so the existing
+   `.my-grid .panel-X` spans would go inert and every panel would collapse to
+   1 of 12. Re-apply the identical spans to the slot via :has() so widths match
+   normal mode exactly. Normal mode stays unwrapped and keeps the .panel-X
+   rules above. Conditional 'live' renders bare (no slot), so it is not listed
+   here -- it keeps its .panel-live span in both modes. */
+.my-grid .panel-slot:has(.panel-today-next) { grid-column: span 4; }
+.my-grid .panel-slot:has(.panel-schedule)   { grid-column: span 8; }
+.my-grid .panel-slot:has(.panel-groups)     { grid-column: span 5; }
+.my-grid .panel-slot:has(.panel-mentioned)  { grid-column: span 7; }
+@media (max-width: 899px) {
+  .my-grid .panel-slot { grid-column: 1 / -1; }
+}
