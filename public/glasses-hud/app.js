@@ -200,14 +200,21 @@ function renderSchedule() {
     if (m.status === 'live') { when = m.minute || 'LIVE'; st = 'Live'; stCls = 'live'; }
     else if (m.status === 'ft') { when = 'FT'; st = 'Full Time'; }
     else { when = k.when; st = k.sub || 'Scheduled'; }
-    const hWin = m.status !== 'scheduled' && (m.homeScore ?? 0) > (m.awayScore ?? 0);
-    const aWin = m.status !== 'scheduled' && (m.awayScore ?? 0) > (m.homeScore ?? 0);
+    // A level final decided on penalties: the shootout winner takes the .win
+    // highlight, and "(h-a pens)" folds into the status line (mirrors the web
+    // penSuffix + the bracket view's decidedWinner).
+    const lvl = m.status !== 'scheduled' && (m.homeScore ?? 0) === (m.awayScore ?? 0);
+    const hp = m.homePenalties, ap = m.awayPenalties;
+    const penDecided = lvl && hp != null && ap != null && hp !== ap;
+    const hWin = m.status !== 'scheduled' && ((m.homeScore ?? 0) > (m.awayScore ?? 0) || (penDecided && hp > ap));
+    const aWin = m.status !== 'scheduled' && ((m.awayScore ?? 0) > (m.homeScore ?? 0) || (penDecided && ap > hp));
+    const pens = penDecided ? `(${hp}-${ap} pens)` : '';
     const side = (s, win, score) => `
       <div class="sch-side ${win ? 'win' : ''}">${flagImg(s.flag)}<span class="abbr">${esc(s.abbr)}</span>
         <span class="sc">${score != null ? score : ''}</span></div>`;
     return `<div class="sch-row">
         <div class="pair">${side(m.home, hWin, m.homeScore)}${side(m.away, aWin, m.awayScore)}</div>
-        <div class="sch-meta"><div class="when">${esc(when)}</div><div class="st ${stCls}">${esc(st)}</div></div>
+        <div class="sch-meta"><div class="when">${esc(when)}</div><div class="st ${stCls}">${esc(st)}${pens ? ` · ${esc(pens)}` : ''}</div></div>
       </div>`;
   }).join('');
   $('surf-schedule').innerHTML = `

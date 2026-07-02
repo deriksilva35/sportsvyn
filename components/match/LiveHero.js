@@ -129,9 +129,15 @@ export default function LiveHero({
 
   const home = state.home_score ?? 0;
   const away = state.away_score ?? 0;
-  // Leading side derives from the score (live or final). Equal scores
-  // (or scoreless draws at FT) → no leading highlight on either side.
-  const leading = home > away ? 'home' : away > home ? 'away' : null;
+  // Leading side derives from the score (live or final). On a level FINAL that
+  // went to a shootout, the winner is the higher penalty tally (mirrors penSuffix
+  // and the bracket resolver). A level result with no/equal pens stays null (a
+  // true draw, or the partial-data guard) → no highlight on either side.
+  const hp = state.home_penalties, ap = state.away_penalties;
+  const leading = home > away ? 'home'
+    : away > home ? 'away'
+    : (hp != null && ap != null && hp !== ap) ? (hp > ap ? 'home' : 'away')
+    : null;
   const period = periodLabel(state.status_short);
   const isFinalState = state.status === 'final';
 

@@ -12,6 +12,7 @@
  */
 
 import FlagSlot from '@/components/FlagSlot';
+import { penSuffix } from '@/lib/penalties';
 
 const PT_TZ = 'America/Los_Angeles';
 
@@ -59,7 +60,10 @@ function roundLabel(stage, groupCode) {
 function RecentRow({ match, followedSet }) {
   const hs = match.home_score ?? 0;
   const as = match.away_score ?? 0;
-  const meta = [roundLabel(match.stage, match.group_code), 'Full time'].filter(Boolean).join(' · ');
+  // Shootout suffix folds into the meta line to keep the small row compact:
+  // "Round of 32 · Full time · (3-4 pens)". Empty string for non-shootouts.
+  const pens = penSuffix(match.home_score, match.away_score, match.home_penalties, match.away_penalties);
+  const meta = [roundLabel(match.stage, match.group_code), 'Full time', pens].filter(Boolean).join(' · ');
   const watch = match.watch_score != null ? match.watch_score.toFixed(1) : null;
   return (
     <a className="tn-row tn-row-recent" href={`/match/${match.slug}`}>

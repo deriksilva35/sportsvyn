@@ -127,6 +127,8 @@ export async function GET() {
         away: { name: f.away.name, abbr: f.away.abbreviation, flag: f.away.flag_svg_path },
         homeScore: f.home_score,
         awayScore: f.away_score,
+        homePenalties: f.home_penalties ?? null,
+        awayPenalties: f.away_penalties ?? null,
         status,
       };
       if (status === 'live') {

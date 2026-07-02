@@ -73,6 +73,15 @@
   color: var(--paper);
 }
 .sch-sc.lose { color: var(--muted); }
+/* Penalty-shootout suffix on a finished level match, e.g. "(3-4 pens)". Small,
+   muted, mono -- sits under the two matchup rows. */
+.sch-pens {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  margin-top: 2px;
+}
 
 /* Goalscorer lines under a card's matchup — only when goals exist. */
 .sch-goals {

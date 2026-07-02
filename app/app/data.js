@@ -82,6 +82,7 @@ export async function readTodaysCard() {
     SELECT
       m.id, m.slug, m.kickoff_at, m.status,
       m.home_score, m.away_score,
+      m.home_penalties, m.away_penalties,
       h.name AS home_name, h.abbreviation AS home_abbreviation, h.flag_svg_path AS home_flag,
       a.name AS away_name, a.abbreviation AS away_abbreviation, a.flag_svg_path AS away_flag
     FROM matches m
@@ -132,6 +133,8 @@ export async function readTodaysCard() {
     isFinal: r.status === 'final',
     home_score: r.home_score,
     away_score: r.away_score,
+    home_penalties: r.home_penalties,
+    away_penalties: r.away_penalties,
     watchScore: watchByMatch.get(r.id) ?? null,
   }));
 

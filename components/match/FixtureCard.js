@@ -25,6 +25,7 @@
 
 import KickoffTime from './KickoffTime';
 import FlagSlot from '../FlagSlot';
+import { penSuffix } from '@/lib/penalties';
 import './fixture-card.css';
 
 export function bucketOf(status) {
@@ -51,9 +52,17 @@ function loserClass(f, side) {
   if (f.status !== 'final') return '';
   const h = f.home_score ?? 0;
   const a = f.away_score ?? 0;
-  if (h === a) return '';
-  if (side === 'home' && a > h) return 'lose';
-  if (side === 'away' && h > a) return 'lose';
+  if (h !== a) {
+    if (side === 'home' && a > h) return 'lose';
+    if (side === 'away' && h > a) return 'lose';
+    return '';
+  }
+  // Level in regulation: the shootout loser is dimmed (mirror penSuffix/resolver).
+  const hp = f.home_penalties, ap = f.away_penalties;
+  if (hp != null && ap != null && hp !== ap) {
+    if (side === 'home' && ap > hp) return 'lose';
+    if (side === 'away' && hp > ap) return 'lose';
+  }
   return '';
 }
 
@@ -102,6 +111,9 @@ export default function FixtureCard({ f, followedSet }) {
       <div className="sch-matchup">
         <SideRow f={f} side="home" followedSet={followedSet} />
         <SideRow f={f} side="away" followedSet={followedSet} />
+        {f.status === 'final' && penSuffix(f.home_score, f.away_score, f.home_penalties, f.away_penalties) && (
+          <div className="sch-pens">{penSuffix(f.home_score, f.away_score, f.home_penalties, f.away_penalties)}</div>
+        )}
         {hasGoals && (
           <div className="sch-goals">
             <div className="sch-goals-col">
