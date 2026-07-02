@@ -19,7 +19,7 @@ import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import FlagSlot from '@/components/FlagSlot';
 import { getCurrentEdition, getPlayerRankingsForPage } from '@/lib/rankings';
-import { getKnockoutPruneState } from '@/lib/rankings/knockoutState';
+import { getKnockoutPruneState, progressionMultiplier } from '@/lib/rankings/knockoutState';
 import {
   resolveCompetitionBySegment,
   requireRankingsListSurface,
@@ -56,6 +56,13 @@ function fmtUpdated(d) {
   }).format(new Date(d)) + ' PT';
 }
 
+function exitLabel(round) {
+  if (round === 'round_of_32') return 'OUT R32';
+  if (round === 'round_of_16') return 'OUT R16';
+  if (round === 'quarter')     return 'OUT QF';
+  return null;
+}
+
 function MovementPill({ label }) {
   if (label === 'up')           return <span className="mvmt up">{'▲'} UP</span>;
   if (label === 'down')         return <span className="mvmt down">{'▼'} DOWN</span>;
@@ -89,7 +96,10 @@ function PlayerRankCard({ row }) {
         ) : null}
         <span className="rc-name">{row.player_name}</span>
         <span className="pos-chip" data-pos={row.player_position}>{row.player_position}</span>
-        <span className="rc-score">{fmtScore(row.score)}</span>
+        {row.exitRound ? (
+          <span className="prog-out" data-round={row.exitRound}>{exitLabel(row.exitRound)}</span>
+        ) : null}
+        <span className="rc-score">{fmtScore(row.displayScore)}</span>
         <MovementPill label={row.movement_label} />
       </div>
       <p className="rc-split">
@@ -119,10 +129,13 @@ function PlayerBareRow({ row }) {
       ) : null}
       <span className="b-name">{row.player_name}</span>
       <span className="pos-chip" data-pos={row.player_position}>{row.player_position}</span>
+      {row.exitRound ? (
+        <span className="prog-out" data-round={row.exitRound}>{exitLabel(row.exitRound)}</span>
+      ) : null}
       <span className="b-split">
         PR {fmtSubScore(row.production_score)} {'·'} IM {fmtSubScore(row.impact_score)}
       </span>
-      <span className="b-score">{fmtScore(row.score)}</span>
+      <span className="b-score">{fmtScore(row.displayScore)}</span>
       <MovementBare label={row.movement_label} />
     </a>
   );
@@ -187,11 +200,27 @@ export default async function PlayerRankingsLeafPage() {
   // knocked out (frozen-field rule, not eliminated-pruned). Renumber 1..N
   // contiguous, score unchanged. Guard: only filter once the R32 field is
   // populated, so the board never blanks before the bracket is drawn.
+  // Frozen-R32 prune (unchanged): hold the board to the R32 field. `pruned`
+  // stays in stored-rank order (the reader returns ORDER BY e.rank).
   const r32Field = pruneState.r32FieldTeamIds;
-  const ranked = (r32Field.size > 0
+  const { exitRoundByTeamId } = pruneState;
+  const pruned = r32Field.size > 0
     ? allRows.filter((r) => r.team_id != null && r32Field.has(r.team_id))
-    : allRows
-  ).map((r, i) => ({ ...r, rank: i + 1 }));
+    : allRows;
+
+  // Progression discount (read-time, AFTER the prune): displayScore = stored
+  // composite * team T (1.00 still-alive/SF+, down to 0.85 for an R32 exit).
+  // Re-sort by displayScore and renumber; the _ord tiebreak keeps a board with
+  // no eliminations byte-identical to the pre-discount order. Stored e.score is
+  // never mutated -- displayScore is a derived field the render reads.
+  const ranked = pruned
+    .map((r, i) => {
+      const exitRound = exitRoundByTeamId.get(r.team_id) ?? null;
+      const progressionT = progressionMultiplier(exitRound);
+      return { ...r, _ord: i, exitRound, progressionT, displayScore: r.score * progressionT };
+    })
+    .sort((a, b) => b.displayScore - a.displayScore || a._ord - b._ord)
+    .map((r, i) => ({ ...r, rank: i + 1 }));
 
   const blurbed = ranked.filter((r) => r.rank <= 10);
   const bare    = ranked.filter((r) => r.rank > 10);
@@ -220,12 +249,18 @@ export default async function PlayerRankingsLeafPage() {
             Each player{'’'}s score blends two layers. Production is deterministic from match events, weighting open-play goals over penalties, crediting assists, and docking red cards. Impact is a grounded read of the actual matches the player has been part of: was the goal decisive, did they carry the team, did the opposition resist. Production keeps the board honest; impact separates the hat-trick-in-a-rout from the late winner against a top side.
           </p>
           <p>
-            <strong>Match stakes.</strong> Goals and assists are weighted by what the match had at stake. Strikes in knockout matches, and in group matches that still bore on qualification, count in full. Strikes in dead rubbers {'—'} group matches where both teams had already secured their place in the knockout round before kickoff {'—'} are weighted at 70%, because a goal that cannot change either side{'’'}s advancement is worth less to a tournament-impact ranking than one scored under live stakes. Stakes are derived structurally from the standings at kickoff, not from any judgment of effort or opponent strength; a team that could still reach the knockouts, including via a best-third place, counts as full stakes.
+            <strong>Match stakes.</strong> Goals and assists are weighted by what the match had at stake. Strikes in knockout matches, and in group matches that still bore on qualification, count in full. Strikes in dead rubbers, group matches where both teams had already secured their place in the knockout round before kickoff, are weighted at 70%, because a goal that cannot change either side{'’'}s advancement is worth less to a tournament-impact ranking than one scored under live stakes. Stakes are derived structurally from the standings at kickoff, not from any judgment of effort or opponent strength; a team that could still reach the knockouts, including via a best-third place, counts as full stakes.
+          </p>
+          <p>
+            <strong>Progression.</strong> A tournament MVP is still at the tournament. Once a player{'’'}s team is knocked out, the score is scaled by how far the team went: a team beaten in the round of 32 is weighted below one that reached the round of 16, which sits below a quarterfinal exit, which sits below a team still playing. Teams still alive, and teams that reached the semifinals, carry full weight. This is a multiplier, not a deletion. A strong campaign on a beaten side still counts, and still ranks above weaker ones; it just stops sitting level with players whose tournament is still being written.
+          </p>
+          <p>
+            The multipliers: round of 32 exit, 0.85; round of 16, 0.90; quarterfinal, 0.95; semifinal or still playing, full.
           </p>
           <div className="layers">
             <span className="layer">PRODUCTION <span className="w">{prodWeightPct}%</span></span>
             <span className="layer">IMPACT <span className="w">{impactWeightPct}%</span></span>
-            <span className="layer off">STATURE {'—'} <span className="w">future</span></span>
+            <span className="layer off">STATURE <span className="w">future</span></span>
           </div>
         </div>
 

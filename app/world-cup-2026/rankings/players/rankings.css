@@ -269,3 +269,17 @@
 /* Player bare-row alignment: nudge the position chip so it doesn't
    collide with the flag at small widths. */
 .rankings-wrap .bare.pp .pos-chip { margin: 0 4px; }
+
+/* Progression-discount marker (OUT R32 / R16 / QF): a chip in the same
+   monospace house style as .pos-chip, in terra (the negative-delta token) to
+   read as "eliminated, discounted". Only rendered on rows whose team went out
+   before the quarterfinal. */
+.rankings-wrap .prog-out {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.08em; padding: 3px 6px;
+  border-radius: 2px; white-space: nowrap;
+  color: #B8410F;
+  border: 1px solid rgba(184,65,15,0.5);
+  background: rgba(184,65,15,0.06);
+}
