@@ -60,15 +60,27 @@ function roundLabel(stage, groupCode) {
 function RecentRow({ match, followedSet }) {
   const hs = match.home_score ?? 0;
   const as = match.away_score ?? 0;
+  const isLive = match.status === 'live';
+  const round = roundLabel(match.stage, match.group_code);
   // Shootout suffix folds into the meta line to keep the small row compact:
-  // "Round of 32 · Full time · (3-4 pens)". Empty string for non-shootouts.
+  // "Round of 32 · Full time · (3-4 pens)". Empty string for non-shootouts
+  // (and always empty while live -- pens only exist at final).
   const pens = penSuffix(match.home_score, match.away_score, match.home_penalties, match.away_penalties);
-  const meta = [roundLabel(match.stage, match.group_code), 'Full time', pens].filter(Boolean).join(' · ');
+  const finalMeta = [round, 'Full time', pens].filter(Boolean).join(' · ');
   const watch = match.watch_score != null ? match.watch_score.toFixed(1) : null;
   return (
-    <a className="tn-row tn-row-recent" href={`/match/${match.slug}`}>
+    <a className={`tn-row tn-row-recent${isLive ? ' tn-row-live' : ''}`} href={`/match/${match.slug}`}>
       <div className="tn-row-head">
-        <span className="tn-row-label">{meta}</span>
+        {isLive ? (
+          // House live treatment: the same pulsing dot (.ln-dot) + live-red used
+          // by Live Now / LiveHero, not a bespoke one.
+          <span className="tn-row-label tn-live-label">
+            <span className="ln-dot" aria-hidden="true" />
+            LIVE{round ? ` · ${round}` : ''}
+          </span>
+        ) : (
+          <span className="tn-row-label">{finalMeta}</span>
+        )}
         {watch && <span className="tn-watch">Watch {watch}</span>}
       </div>
       <div className="tn-row-teams">

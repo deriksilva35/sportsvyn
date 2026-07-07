@@ -141,12 +141,18 @@
 .my-grid .panel-schedule     { grid-column: span 8; }
 .my-grid .panel-groups       { grid-column: span 5; }
 .my-grid .panel-mentioned    { grid-column: span 7; }
+.my-grid .panel-rankings     { grid-column: span 4; }
+.my-grid .panel-goldenboot   { grid-column: span 4; }
+.my-grid .panel-watch        { grid-column: span 4; }
 @media (max-width: 899px) {
   .my-grid .panel-live,
   .my-grid .panel-today-next,
   .my-grid .panel-schedule,
   .my-grid .panel-groups,
-  .my-grid .panel-mentioned { grid-column: 1 / -1; }
+  .my-grid .panel-mentioned,
+  .my-grid .panel-rankings,
+  .my-grid .panel-goldenboot,
+  .my-grid .panel-watch { grid-column: 1 / -1; }
 }
 
 /* --- panel shell --- */
@@ -214,6 +220,14 @@
   text-transform: uppercase;
 }
 .tn-row-recent .tn-row-label { color: var(--muted); }
+/* Live today-slot: pulsing dot + live-red LIVE label (out-specifies the muted
+   .tn-row-recent .tn-row-label rule above via equal specificity + source order). */
+.tn-row-recent .tn-live-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--live-red);
+}
 .tn-row-head {
   display: flex;
   align-items: baseline;
@@ -759,6 +773,9 @@
 .my-grid .panel-slot:has(.panel-schedule)   { grid-column: span 8; }
 .my-grid .panel-slot:has(.panel-groups)     { grid-column: span 5; }
 .my-grid .panel-slot:has(.panel-mentioned)  { grid-column: span 7; }
+.my-grid .panel-slot:has(.panel-rankings)   { grid-column: span 4; }
+.my-grid .panel-slot:has(.panel-goldenboot) { grid-column: span 4; }
+.my-grid .panel-slot:has(.panel-watch)      { grid-column: span 4; }
 @media (max-width: 899px) {
   .my-grid .panel-slot { grid-column: 1 / -1; }
 }
