@@ -541,6 +541,160 @@
   padding: 0 4px;
 }
 
+/* --- shared: panel header action link --- */
+.phead-action {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--volt-dim);
+  text-decoration: none;
+  text-transform: none;
+}
+.phead-action:hover { color: var(--volt); }
+
+/* --- Rankings panel row (rank / flag / name / move / value) --- */
+.rk-row {
+  display: grid;
+  grid-template-columns: 20px 22px 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule-darker);
+  color: var(--paper-warm);
+  text-decoration: none;
+}
+.rk-row:last-child { border-bottom: none; }
+.rk-row:hover { background: rgba(212, 255, 0, 0.04); }
+.rk-pos {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+}
+.rk-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 14px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rk-row.dim .rk-name { color: var(--muted-light); }
+.rk-move { font-size: 8px; width: 8px; display: inline-block; }
+.rk-move.up { color: #2A8A4F; }
+.rk-move.down { color: #B8410F; }
+.rk-val {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--paper-dim);
+  text-align: right;
+}
+.rk-val.fav { color: var(--volt); }
+
+/* --- Golden Boot panel row (rank / name + sub / count) --- */
+.gb-row {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule-darker);
+  color: var(--paper-warm);
+  text-decoration: none;
+}
+.gb-row:last-child { border-bottom: none; }
+.gb-row:hover { background: rgba(212, 255, 0, 0.04); }
+.gb-pos {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+}
+.gb-main { display: flex; flex-direction: column; min-width: 0; }
+.gb-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gb-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.gb-count {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 900;
+  font-size: 18px;
+  color: var(--volt);
+}
+
+/* --- Watch Scores panel row (matchup / when / score) --- */
+.wb-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule-darker);
+  color: var(--paper-warm);
+  text-decoration: none;
+}
+.wb-row:last-child { border-bottom: none; }
+.wb-row:hover { background: rgba(212, 255, 0, 0.04); }
+.wb-teams {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  font-size: 13px;
+  min-width: 0;
+}
+.wb-v {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  font-style: normal;
+  color: var(--muted);
+  padding: 0 2px;
+}
+.wb-when {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.wb-score {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--paper-dim);
+  min-width: 28px;
+  text-align: right;
+}
+.wb-score.tn-watch { color: var(--volt); }  /* volt chip when a followed team is in the match */
+.wb-empty {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
 /* =============================================================================
    Customize UI (step 2). Client shell: app/my/CustomizeClient.js.
    Target values from the locked mock; mock tokens translated to this repo's
