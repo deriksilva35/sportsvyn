@@ -81,3 +81,54 @@ export async function unfollowTeam(teamId) {
   revalidatePath(`/team/${slug}`);
   return { ok: true, following: false };
 }
+
+// ============================================================================
+// Player follows — exact mirror of the team actions above.
+//   { ok: false, reason: 'unauthenticated' | 'player_not_found' }
+//   { ok: true,  following: true | false }
+// ============================================================================
+
+async function lookupPlayerSlug(playerId) {
+  if (!Number.isInteger(playerId) || playerId <= 0) return null;
+  const rows = await sql`SELECT slug FROM players WHERE id = ${playerId} LIMIT 1`;
+  return rows[0]?.slug ?? null;
+}
+
+export async function followPlayer(playerId) {
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  if (!Number.isInteger(playerId) || playerId <= 0) {
+    return { ok: false, reason: 'player_not_found' };
+  }
+
+  const slug = await lookupPlayerSlug(playerId);
+  if (!slug) return { ok: false, reason: 'player_not_found' };
+
+  await sql`
+    INSERT INTO user_player_follows (user_id, player_id)
+    VALUES (${userId}, ${playerId})
+    ON CONFLICT (user_id, player_id) DO NOTHING
+  `;
+  revalidatePath(`/player/${slug}`);
+  return { ok: true, following: true };
+}
+
+export async function unfollowPlayer(playerId) {
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  if (!Number.isInteger(playerId) || playerId <= 0) {
+    return { ok: false, reason: 'player_not_found' };
+  }
+
+  const slug = await lookupPlayerSlug(playerId);
+  if (!slug) return { ok: false, reason: 'player_not_found' };
+
+  await sql`
+    DELETE FROM user_player_follows
+     WHERE user_id = ${userId} AND player_id = ${playerId}
+  `;
+  revalidatePath(`/player/${slug}`);
+  return { ok: true, following: false };
+}

@@ -26,7 +26,9 @@ import { notFound } from 'next/navigation';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import BackToAppBar from '@/components/BackToAppBar';
 
+import { auth } from '@/auth';
 import { getPlayerBySlug, getPlayerGroupFixtures } from '@/lib/players';
+import { isFollowingPlayer } from '@/lib/follows';
 
 import PlayerHero from '@/components/player/PlayerHero';
 import PlayerBioGrid from '@/components/player/PlayerBioGrid';
@@ -53,6 +55,13 @@ export default async function PlayerPage({ params }) {
   const player = await getPlayerBySlug(slug);
   if (!player) notFound();
 
+  // Session-aware for the follow star (mirrors /team). Only the isAuthed
+  // boolean + seed value cross the server/client line; the session does not.
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  const isAuthed = !!session?.user;
+  const initialFollowing = await isFollowingPlayer(userId, player.id);
+
   const fixtures = await getPlayerGroupFixtures(player.team_id);
 
   return (
@@ -71,7 +80,7 @@ export default async function PlayerPage({ params }) {
           <span className="current">{player.full_name}</span>
         </div>
 
-        <PlayerHero player={player} />
+        <PlayerHero player={player} isAuthed={isAuthed} initialFollowing={initialFollowing} />
 
         {/* Bio grid renders only when at least one bio field is populated.
             Pre-backfill (today) → returns null, no header, no broken grid. */}

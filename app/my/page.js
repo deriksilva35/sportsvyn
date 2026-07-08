@@ -23,7 +23,7 @@
 
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getFollowedTeamIds } from '@/lib/follows';
+import { getFollowedTeamIds, getFollowedPlayerIds } from '@/lib/follows';
 import { getResolvedLayout } from '@/lib/dashboardLayout';
 import { PANELS } from '@/lib/panels';
 import { PANEL_BINDINGS } from '@/lib/panelLoaders';
@@ -41,7 +41,7 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-function PageHeader({ followedCount }) {
+function PageHeader({ teamCount = 0, playerCount = 0 }) {
   // The H1 reuses the macron pattern from components/Wordmark.js
   // (volt Y with an absolutely-positioned bar). Inline rather than
   // extending Wordmark because the prefix "MY " is dashboard-only
@@ -59,7 +59,10 @@ function PageHeader({ followedCount }) {
         <span>n</span>
       </h1>
       <div className="my-follow-count">
-        Following {followedCount} {followedCount === 1 ? 'team' : 'teams'}
+        Following {teamCount} {teamCount === 1 ? 'team' : 'teams'}
+        {playerCount > 0 && (
+          <> · {playerCount} {playerCount === 1 ? 'player' : 'players'}</>
+        )}
       </div>
     </header>
   );
@@ -68,10 +71,11 @@ function PageHeader({ followedCount }) {
 function EmptyState() {
   return (
     <section className="my-empty">
-      <h2 className="my-empty-headline">Follow teams and they build your dashboard.</h2>
+      <h2 className="my-empty-headline">Follow teams and players and they build your dashboard.</h2>
       <p className="my-empty-body">
-        Tap the star on any team to follow them. Their fixtures, group,
-        and coverage will gather here.
+        Tap the star on any team to follow them, and their fixtures, group, and
+        coverage gather here. Or follow a player from any player page to track
+        their output.
       </p>
       <a className="my-empty-cta" href="/world-cup-2026/bracket">Browse the bracket</a>
     </section>
@@ -85,15 +89,21 @@ export default async function MyPage() {
   }
   const userId = session.user.id;
 
-  const followedSet = await getFollowedTeamIds(userId);
-  const followedCount = followedSet.size;
+  const [followedSet, followedPlayerSet] = await Promise.all([
+    getFollowedTeamIds(userId),
+    getFollowedPlayerIds(userId),
+  ]);
+  const teamCount = followedSet.size;
+  const playerCount = followedPlayerSet.size;
 
-  if (followedCount === 0) {
+  // Gate on TOTAL follows: a player-only user (zero teams) passes and renders
+  // (their Your Players panel populates; team panels show their own empty states).
+  if (teamCount + playerCount === 0) {
     return (
       <>
         <SiteHeaderServer activeNav="my" />
         <main className="my-shell">
-          <PageHeader followedCount={0} />
+          <PageHeader teamCount={0} playerCount={0} />
           <EmptyState />
         </main>
         <SiteFooter />
@@ -102,6 +112,10 @@ export default async function MyPage() {
   }
 
   const ids = Array.from(followedSet);
+  const followedPlayerIds = Array.from(followedPlayerSet);
+  // Second arg to every loader. The five shipped loaders take only (followedIds)
+  // and ignore it; the players loader reads ctx.followedPlayerIds.
+  const ctx = { followedPlayerIds, followedPlayerSet };
   const resolved = await getResolvedLayout(userId, 'my'); // ordered active list -> initialActive
 
   // Render-all-bound: run EVERY bound panel's loader (not just the active ones)
@@ -110,7 +124,7 @@ export default async function MyPage() {
   // data). Today boundIds === DEFAULT_ACTIVE, so this loads the same set as the
   // active-only path did; the distinction only matters once a user customizes.
   const boundIds = Object.keys(PANEL_BINDINGS);
-  const results = await Promise.all(boundIds.map((id) => PANEL_BINDINGS[id].load(ids)));
+  const results = await Promise.all(boundIds.map((id) => PANEL_BINDINGS[id].load(ids, ctx)));
   const loadedProps = {};
   boundIds.forEach((id, i) => {
     loadedProps[id] = results[i];
@@ -140,14 +154,14 @@ export default async function MyPage() {
       if (!hasData) continue;
     }
     const { Component } = PANEL_BINDINGS[id];
-    panels[id] = <Component key={id} {...props} followedSet={followedSet} />;
+    panels[id] = <Component key={id} {...props} followedSet={followedSet} followedPlayerSet={followedPlayerSet} />;
   }
 
   return (
     <>
       <SiteHeaderServer activeNav="my" />
       <main className="my-shell">
-        <PageHeader followedCount={followedCount} />
+        <PageHeader teamCount={teamCount} playerCount={playerCount} />
         <DashboardCustomizer panels={panels} initialActive={resolved} />
       </main>
       <SiteFooter />

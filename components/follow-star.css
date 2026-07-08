@@ -1,0 +1,134 @@
+/* components/follow-star.css — shared FollowStar / PlayerFollowStar styling.
+ * Copied verbatim from app/team/[slug]/team.css (the team page keeps its own
+ * copy) so the player page gets the identical star without a cross-import.
+ * Imported by PlayerFollowStar.js. */
+
+.follow-star-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.follow-star-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  background: var(--ink);
+  color: var(--paper-warm);
+  border: 1px solid var(--charcoal);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.follow-star-btn:hover {
+  border-color: var(--volt-dim);
+  color: var(--paper-warm);
+}
+.follow-star-btn:focus-visible {
+  outline: 2px solid var(--volt);
+  outline-offset: 2px;
+}
+.follow-star-btn.is-following {
+  color: var(--volt);
+  border-color: var(--volt-dim);
+  background: rgba(212, 255, 0, 0.06);
+}
+.follow-star-btn.is-following:hover {
+  border-color: var(--volt);
+}
+
+.follow-star-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.follow-star-label {
+  line-height: 1;
+}
+
+.follow-star-prompt {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 12px 16px 12px 14px;
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  border-left: 3px solid var(--volt);
+  border-radius: 3px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: follow-star-slide-in 0.18s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .follow-star-prompt { animation: none; }
+}
+@keyframes follow-star-slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.follow-star-prompt-msg {
+  margin: 0;
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--paper-warm);
+  letter-spacing: 0.02em;
+}
+
+.follow-star-prompt-cta {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--volt);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.follow-star-prompt-cta:hover { text-decoration: underline; }
+.follow-star-prompt-cta:focus-visible {
+  outline: 2px solid var(--volt);
+  outline-offset: 2px;
+}
+
+.follow-star-prompt-dismiss {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.follow-star-prompt-dismiss:hover { color: var(--paper-warm); }
+.follow-star-prompt-dismiss:focus-visible {
+  outline: 2px solid var(--volt);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .follow-star-prompt {
+    left: 0;
+    right: 0;
+    max-width: none;
+    min-width: 0;
+  }
+}

@@ -87,6 +87,14 @@
   min-width: 0;
   padding-top: 4px;
 }
+/* Name + follow star cluster (mirrors TeamHero's .team-name-and-star). */
+.player-name-and-star {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
 .player-hero-name {
   font-family: var(--font-display);
   font-weight: 900;

@@ -14,6 +14,8 @@
  * not fabricated numbers).
  */
 
+import PlayerFollowStar from './PlayerFollowStar';
+
 function PlayerPhoto({ src, name }) {
   if (!src) {
     return (
@@ -42,7 +44,7 @@ const POSITION_LABEL = {
   ATT: 'Forward',
 };
 
-export default function PlayerHero({ player }) {
+export default function PlayerHero({ player, isAuthed = false, initialFollowing = false }) {
   const posLabel = POSITION_LABEL[player.position] ?? player.position ?? null;
   const teamHref = player.team_slug ? `/team/${player.team_slug}` : null;
 
@@ -51,7 +53,17 @@ export default function PlayerHero({ player }) {
       <PlayerPhoto src={player.photo_url_source} name={player.full_name} />
 
       <div className="player-hero-info">
-        <h1 className="player-hero-name">{player.full_name}</h1>
+        {/* Name + star share a flex cluster so the star can wrap below the H1
+            on narrow viewports (mirrors TeamHero's .team-name-and-star). */}
+        <div className="player-name-and-star">
+          <h1 className="player-hero-name">{player.full_name}</h1>
+          <PlayerFollowStar
+            playerId={player.id}
+            playerName={player.full_name}
+            isAuthed={isAuthed}
+            initialFollowing={initialFollowing}
+          />
+        </div>
 
         <div className="player-hero-affil-row">
           {player.flag_svg_path && (
