@@ -33,6 +33,7 @@ import { sweepStuckLive } from '@/lib/stuckLiveSweep';
 import { isDailyCapTripped, tripDailyCap } from '@/lib/cronCircuitBreaker';
 import { DailyCapError } from '@/lib/apiSports';
 import { freezeAndGradeLedger } from '@/lib/marketLedger';
+import { syncRecentFinalsPlayerStats } from '@/lib/playerStatsSync';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -142,11 +143,22 @@ export async function GET(request) {
     console.error('poll-live ledger sweep failed:', err);
   }
 
+  // PLAYER STATS: ingest / +24h re-sync per-player match stats for recent WC
+  // finals. Sibling to the ledger sweep; isolated so it can never break the
+  // poll. The query is a cheap no-op when no recent final is due.
+  let playerStats = null;
+  try {
+    playerStats = await syncRecentFinalsPlayerStats();
+  } catch (err) {
+    console.error('poll-live player-stats sweep failed:', err);
+  }
+
   return Response.json({
     polled: results.length,
     matches: results,
     sweep,
     ledger,
+    playerStats,
     breaker_tripped_mid_loop: trippedMidLoop,
   });
 }
