@@ -84,20 +84,30 @@ function BoardRow({ row }) {
   );
 }
 
-// Totals: market info only. Muted hyphen for model + gap; a MARKET chip.
+// Totals. MAIN line = market info (MARKET chip, dash model/gap). TAIL line
+// (1.5/3.5) = tagged: model %, gap, and the tag chip.
 function TotalsRow({ row }) {
   const matchLabel = `${row.home_abbr} v ${row.away_abbr} · ${fmtDatePt(row.kickoff_at)}`;
   const side = row.selection === 'over' ? `Over ${row.line} goals` : `Under ${row.line} goals`;
+  const isTail = row.kind === 'tail';
   return (
     <div className="brow">
       <span className="b-side">{side}<span className="sub">Total goals</span></span>
       <span className="b-match">{matchLabel}</span>
       <span className="b-num price">{fmtAmerican(row.american)}<span className="dec">{row.decimal != null ? row.decimal.toFixed(2) : ''}</span></span>
       <span className="b-pct">{row.market_pct.toFixed(1)}%</span>
-      <span className="b-pct model dash">-</span>
-      <span className="b-gap flat dash">-</span>
+      {isTail
+        ? <span className="b-pct model">{row.model_pct.toFixed(1)}%</span>
+        : <span className="b-pct model dash">-</span>}
+      {isTail
+        ? <span className={`b-gap ${TAG_GAP[row.tag]}`}>{`${row.gap >= 0 ? '+' : ''}${row.gap.toFixed(1)}`}</span>
+        : <span className="b-gap flat dash">-</span>}
       <span className="b-open">{sinceOpen(row.open_american, row.american)}</span>
-      <span className="b-tag"><span className="tag market">Market</span></span>
+      <span className="b-tag">
+        {isTail
+          ? <span className={`tag ${TAG_CHIP[row.tag]}`}>{TAG_LABEL[row.tag]}</span>
+          : <span className="tag market">Market</span>}
+      </span>
     </div>
   );
 }
@@ -126,8 +136,14 @@ function ScorerBlock({ group }) {
 }
 
 function LedgerRow({ r }) {
-  const number = r.selection_label === 'draw' ? 'Draw'
-    : `${r.selection_label === 'home' ? r.home_name : r.away_name} to win`;
+  let number;
+  if (r.market_type === 'total_goals') {
+    const [side, line] = r.selection_label.split('_');
+    number = `${side === 'over' ? 'Over' : 'Under'} ${line} goals`;
+  } else {
+    number = r.selection_label === 'draw' ? 'Draw'
+      : `${r.selection_label === 'home' ? r.home_name : r.away_name} to win`;
+  }
   const sub = `${STAGE_LABELS[r.stage] ?? ''} · ${r.home_abbr} v ${r.away_abbr}`;
   const resCls = r.result === 'hit' ? 'hit' : r.result === 'miss' ? 'miss' : 'pend';
   const resText = r.result === 'hit' ? 'Landed ✓' : r.result === 'miss' ? 'Missed ✗' : 'Open';
@@ -255,7 +271,7 @@ export default async function MarketPage() {
           <p><b>The model number.</b> Our probability is a Davidson three-outcome model driven by the Sportsvyn team power ratings alone. No form term, no host adjustment, no market input. The two parameters, k of {MODEL_PARAMS.k} and nu of {MODEL_PARAMS.nu}, were fit on 95 completed World Cup matches. It is our read of the game, computed before we ever look at the price.</p>
           <p><b>The tags.</b> Gap is our probability minus the market number. When the gap is 3.5 to 8 points in our favor the number is generous, and 3.5 to 8 points against us it is rich. Inside 3.5 points the price is fair and we leave it alone. One guard: above an 80 percent model probability we never call a number generous, because our calibration is unproven that high. The threshold is fixed and applies to every market on the board.</p>
           <p><b>The wide state.</b> Gaps beyond 8 points are disclosed as model-market disagreement, not value. At that distance our model is more often the limitation than the price, usually a stale or thin rating, so we flag the gap and trust it less, rather than dress it up as an edge.</p>
-          <p><b>What we cover.</b> Tags appear only where our model prices the market, which today is the match result. Totals are shown as de-vigged market information without a tag. Scorer prices are single-sided and shown as offered, so they still carry the book margin. Model coverage expands only by a stated projection and calibration, never by default.</p>
+          <p><b>What we cover.</b> Tags appear only where our model prices the market. The match result carries the Davidson model. Our totals model is calibrated at the tail lines (over/under 1.5 and 3.5), proven walk-forward; the main line is shown as market information because the model has no demonstrated edge there. Tail lines appear on the board only when the model has a read. Scorer prices are single-sided and shown as offered, so they still carry the book margin. Model coverage expands only by a stated projection and calibration, never by default.</p>
           <p><b>What this is not.</b> A generous tag is a statement about a price, not a prediction of an outcome. Most generous underdogs still lose; the claim is that they win more often than the price pays. Nothing on this page tells you what to do, sizes a stake, or links to a book. We publish the gaps and the ledger, and the ledger grades us.</p>
           <div className="chips">
             <span className="chip">Consensus <b>Median · 13 books · de-vigged</b></span>
