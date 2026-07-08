@@ -1,0 +1,84 @@
+/* app/market/market.css — /market (The Market: price read).
+ *
+ * Ported from the locked design mock
+ * (~/scratch/sportsvyn-market-price-read-mock.html), scoped under
+ * .market-page and remapped onto the app's brand tokens:
+ *   mock --paper -> --paper-warm, mock --cond -> --font-display (the app does
+ *   not load Saira Condensed), --display/--serif/--mono -> the app's
+ *   the app font vars. All colour tokens (volt, terra, jade, graphite,
+ *   charcoal, ink, paper-dim, muted, volt-dim) already exist globally.
+ *
+ * Slice 1+2 only: hero, section heads, tags (incl. the WIDE chip the mock
+ * predates), and The Board + Methodology. Today's Numbers cards and the
+ * Ledger are later slices and are intentionally not styled here.
+ */
+
+.market-page { max-width: 1100px; margin: 0 auto; padding: 36px 20px 80px; color: var(--paper-warm); }
+
+/* hero */
+.market-page .hero-kicker { font-family: var(--font-mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--volt); margin-bottom: 10px; }
+.market-page h1 { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.04em; line-height: .95; text-transform: uppercase; }
+.market-page .dek { font-family: var(--font-serif); font-style: italic; font-size: 17px; line-height: 1.55; color: var(--paper-dim); max-width: 640px; margin-top: 16px; }
+.market-page .dek b { color: var(--paper-warm); font-weight: 400; }
+.market-page .brandline { font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--charcoal); max-width: 640px; }
+
+/* section heads */
+.market-page .sec { margin-top: 52px; }
+.market-page .sechead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; gap: 12px; }
+.market-page .sechead .t { font-family: var(--font-mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--volt); }
+.market-page .sechead .n { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; text-align: right; }
+
+/* tags */
+.market-page .tag { font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 7px; border-radius: 2px; border: 1px solid; white-space: nowrap; }
+.market-page .tag.gen { color: var(--volt); border-color: color-mix(in srgb, var(--volt) 55%, transparent); background: color-mix(in srgb, var(--volt) 7%, transparent); }
+.market-page .tag.rich { color: var(--terra); border-color: color-mix(in srgb, var(--terra) 55%, transparent); background: color-mix(in srgb, var(--terra) 8%, transparent); }
+.market-page .tag.fair { color: var(--muted); border-color: var(--charcoal); }
+/* WIDE: the mock predates the wide rule. Paper-dim border, no fill — reads as a
+   neutral disclosure (disagreement, not value), distinct from the value tags. */
+.market-page .tag.wide { color: var(--paper-dim); border-color: var(--paper-dim); }
+
+/* the board */
+.market-page .board { background: var(--graphite); border: 1px solid var(--charcoal); border-radius: 4px; overflow: hidden; }
+.market-page .brow-head,
+.market-page .brow { display: grid; grid-template-columns: 1.5fr 1.1fr .8fr .55fr .55fr .6fr .8fr .7fr; gap: 12px; align-items: center; padding: 11px 16px; }
+.market-page .brow-head { font-family: var(--font-mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--charcoal); }
+.market-page .brow { border-bottom: 1px solid var(--charcoal); }
+.market-page .brow:last-child { border-bottom: none; }
+.market-page .b-side { font-family: var(--font-display); font-weight: 600; font-size: 15px; line-height: 1.1; }
+.market-page .b-side .sub { display: block; font-family: var(--font-mono); font-weight: 400; font-size: 8px; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
+.market-page .b-match { font-family: var(--font-mono); font-size: 10.5px; color: var(--paper-dim); }
+.market-page .b-num { font-family: var(--font-mono); font-size: 13px; text-align: right; }
+.market-page .b-num .dec { display: block; font-size: 9px; color: var(--muted); }
+.market-page .b-pct { font-family: var(--font-mono); font-size: 12px; text-align: right; color: var(--paper-dim); }
+.market-page .b-pct.model { color: var(--volt); }
+.market-page .b-gap { font-family: var(--font-mono); font-size: 12px; font-weight: 700; text-align: right; }
+.market-page .b-gap.pos { color: var(--volt); }
+.market-page .b-gap.neg { color: var(--terra); }
+.market-page .b-gap.flat { color: var(--muted); font-weight: 400; }
+.market-page .b-gap.wide { color: var(--paper-dim); }
+.market-page .b-open { font-family: var(--font-mono); font-size: 10px; text-align: right; color: var(--muted); }
+.market-page .b-tag { text-align: right; }
+
+/* methodology */
+.market-page .method { background: var(--graphite); border: 1px solid var(--charcoal); border-radius: 4px; padding: 22px 22px 20px; margin-top: 52px; }
+.market-page .method-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--volt); margin-bottom: 12px; }
+.market-page .method p { font-family: var(--font-serif); font-style: italic; font-size: 14.5px; line-height: 1.6; color: var(--paper-dim); max-width: 760px; margin-bottom: 12px; }
+.market-page .method p b { font-style: normal; font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--paper-warm); font-weight: 500; }
+.market-page .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--charcoal); }
+.market-page .chip { font-family: var(--font-mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--paper-dim); border: 1px solid var(--charcoal); border-radius: 2px; padding: 4px 8px; }
+.market-page .chip b { color: var(--volt); font-weight: 500; }
+
+.market-page .footnote { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .05em; color: var(--muted); line-height: 1.7; margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--charcoal); }
+.market-page .footnote b { color: var(--paper-dim); font-weight: 500; }
+
+@media (max-width: 899px) {
+  .market-page .brow-head { display: none; }
+  .market-page .brow { grid-template-columns: 1.4fr .9fr .7fr; grid-template-areas: "side price tag" "match gap gap"; }
+  .market-page .b-side { grid-area: side; }
+  .market-page .b-num.price { grid-area: price; }
+  .market-page .b-tag { grid-area: tag; }
+  .market-page .b-match { grid-area: match; }
+  .market-page .b-pct,
+  .market-page .b-open { display: none; }
+  .market-page .b-gap { grid-area: gap; text-align: left; }
+}
