@@ -28,7 +28,12 @@
  */
 
 import { getMatchesToRefreshOdds } from '@/lib/oddsMatches';
-import { upsertMatchWinnerOdds } from '@/lib/odds';
+import {
+  fetchAllMarketsForFixture,
+  upsertMatchWinnerOdds,
+  upsertTotalsOdds,
+  upsertScorerOdds,
+} from '@/lib/odds';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -71,7 +76,12 @@ export async function GET(request) {
       continue;
     }
     try {
-      const result = await upsertMatchWinnerOdds(m.id, apiId, { stampBaseline });
+      // ONE unfiltered fixture-odds call feeds all three markets (request
+      // count per fixture unchanged). Totals + scorers are info-only.
+      const markets = await fetchAllMarketsForFixture(apiId);
+      const result = await upsertMatchWinnerOdds(m.id, apiId, { stampBaseline, marketData: markets.matchWinner });
+      await upsertTotalsOdds(m.id, markets.totals);
+      await upsertScorerOdds(m.id, markets.scorers);
       if (result.priced) refreshed++;
       else skipped++;
     } catch (err) {

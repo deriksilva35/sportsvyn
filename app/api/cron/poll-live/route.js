@@ -32,6 +32,7 @@ import { captureLiveWatchScoreTick } from '@/lib/captureLiveWatchScore';
 import { sweepStuckLive } from '@/lib/stuckLiveSweep';
 import { isDailyCapTripped, tripDailyCap } from '@/lib/cronCircuitBreaker';
 import { DailyCapError } from '@/lib/apiSports';
+import { freezeAndGradeLedger } from '@/lib/marketLedger';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -75,9 +76,6 @@ export async function GET(request) {
 
   // STEP 3: normal poll loop.
   const matches = await getMatchesToPoll();
-  if (matches.length === 0) {
-    return Response.json({ polled: 0, matches: [], sweep });
-  }
 
   const results = [];
   let trippedMidLoop = false;
@@ -133,10 +131,22 @@ export async function GET(request) {
     }
   }
 
+  // LEDGER: freeze non-fair 1X2 tags at kickoff, grade at the whistle. Runs
+  // every tick, independent of the poll batch (status-based sweep), so a
+  // just-final match still grades and a missed-kickoff match still freezes
+  // (catch-up). Isolated so a ledger error never breaks the poll.
+  let ledger = null;
+  try {
+    ledger = await freezeAndGradeLedger();
+  } catch (err) {
+    console.error('poll-live ledger sweep failed:', err);
+  }
+
   return Response.json({
     polled: results.length,
     matches: results,
     sweep,
+    ledger,
     breaker_tripped_mid_loop: trippedMidLoop,
   });
 }

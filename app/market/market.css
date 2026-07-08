@@ -71,6 +71,47 @@
 .market-page .footnote { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .05em; color: var(--muted); line-height: 1.7; margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--charcoal); }
 .market-page .footnote b { color: var(--paper-dim); font-weight: 500; }
 
+/* totals info rows: muted MARKET chip + muted dash for model/gap */
+.market-page .tag.market { color: var(--muted); border-color: var(--charcoal); }
+.market-page .b-pct.dash, .market-page .b-gap.dash { color: var(--muted-dim); font-weight: 400; }
+
+/* scorer prices (single-sided, as offered) */
+.market-page .scorer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.market-page .scorer-block { background: var(--graphite); border: 1px solid var(--charcoal); border-radius: 4px; padding: 14px 16px; }
+.market-page .scorer-head { font-family: var(--font-display); font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--charcoal); padding-bottom: 8px; margin-bottom: 8px; }
+.market-page .scorer-when { font-family: var(--font-mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.market-page .scorer-src { font-family: var(--font-mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-dim); margin-bottom: 8px; }
+.market-page .scorer-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 10px; align-items: baseline; padding: 4px 0; }
+.market-page .sc-name { font-family: var(--font-serif); font-size: 13px; color: var(--paper-warm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.market-page .sc-price { font-family: var(--font-mono); font-size: 12px; color: var(--paper-warm); text-align: right; }
+.market-page .sc-impl { font-family: var(--font-mono); font-size: 11px; color: var(--muted); text-align: right; min-width: 42px; }
+.market-page .sc-open { font-family: var(--font-mono); font-size: 9px; color: var(--muted-dim); text-align: right; }
+
+/* the ledger */
+.market-page .ledstats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+.market-page .stat { background: var(--graphite); border: 1px solid var(--charcoal); border-radius: 4px; padding: 16px 18px; }
+.market-page .stat .v { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 34px; letter-spacing: -0.03em; }
+.market-page .stat .v .of { font-size: 16px; color: var(--muted); }
+.market-page .stat .l { font-family: var(--font-mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.market-page .stat.hit .v { color: var(--volt); }
+.market-page .ledger { background: var(--graphite); border: 1px solid var(--charcoal); border-radius: 4px; overflow: hidden; }
+.market-page .lrow-head,
+.market-page .lrow { display: grid; grid-template-columns: .9fr 1.5fr .6fr .6fr .6fr .5fr; gap: 12px; align-items: center; padding: 10px 16px; }
+.market-page .lrow-head { font-family: var(--font-mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--charcoal); }
+.market-page .lrow { border-bottom: 1px solid var(--charcoal); font-family: var(--font-mono); font-size: 11px; }
+.market-page .lrow:last-child { border-bottom: none; }
+.market-page .lrow .d { color: var(--muted); font-size: 10px; }
+.market-page .lrow .s { font-family: var(--font-display); font-weight: 600; font-size: 14px; }
+.market-page .lrow .s .sub { display: block; font-family: var(--font-mono); font-weight: 400; font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-top: 1px; }
+.market-page .lrow .num { text-align: right; }
+.market-page .res { font-weight: 700; text-align: right; }
+.market-page .res.hit { color: var(--jade); }
+.market-page .res.miss { color: var(--terra); }
+.market-page .res.pend { color: var(--muted); font-weight: 400; }
+.market-page .ledger-empty { background: var(--graphite); border: 1px solid var(--charcoal); border-radius: 4px; padding: 22px; }
+.market-page .ledger-empty p { font-family: var(--font-serif); font-style: italic; font-size: 15px; line-height: 1.55; color: var(--paper-dim); max-width: 640px; margin: 0; }
+.market-page .lednote { font-family: var(--font-serif); font-style: italic; font-size: 13px; line-height: 1.55; color: var(--muted); margin-top: 12px; max-width: 720px; }
+
 @media (max-width: 899px) {
   .market-page .brow-head { display: none; }
   .market-page .brow { grid-template-columns: 1.4fr .9fr .7fr; grid-template-areas: "side price tag" "match gap gap"; }
@@ -81,4 +122,9 @@
   .market-page .b-pct,
   .market-page .b-open { display: none; }
   .market-page .b-gap { grid-area: gap; text-align: left; }
+  .market-page .ledstats { grid-template-columns: 1fr; }
+  .market-page .lrow-head { display: none; }
+  .market-page .lrow { grid-template-columns: 1fr auto auto; }
+  .market-page .lrow .d,
+  .market-page .lrow .num.impl { display: none; }
 }
