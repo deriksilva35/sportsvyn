@@ -31,6 +31,7 @@ import {
   getGroupStandings,
   getGroupMatchdayProgress,
   getGroupStageProgress,
+  getKnockoutRoundProgress,
 } from '@/lib/bracket';
 import { getCurrentLiveMatches } from '@/lib/liveMatches';
 import { getWatchScoresForDate } from '@/lib/watchScore';
@@ -303,9 +304,20 @@ function SlateSection({ fixtures, watchScoreByMatchId, nextFixture, followedSet 
   );
 }
 
-function TournamentProgress({ groupProgress }) {
-  const played = groupProgress.final_group;
+// Knockout tiles, in bracket order. Counts come from getKnockoutRoundProgress
+// (real per-stage completed/total), NOT the old hardcoded zeros; QF + SF are
+// added (the prior strip jumped R16 -> Final).
+const KO_PROGRESS_TILES = [
+  { stage: 'round_of_32', label: 'R32' },
+  { stage: 'round_of_16', label: 'R16' },
+  { stage: 'quarter',     label: 'QF' },
+  { stage: 'semi',        label: 'SF' },
+  { stage: 'final',       label: 'Final' },
+];
+
+function TournamentProgress({ groupProgress, koProgress = {} }) {
   const matchdaysPlayed = groupProgress.min_matchdays_complete;
+  const groupComplete = matchdaysPlayed >= 3;
   return (
     <div className="dc-section">
       <div className="dc-section-label-row">
@@ -313,26 +325,22 @@ function TournamentProgress({ groupProgress }) {
         <a href="/world-cup-2026/bracket" className="dc-section-link">Full Bracket →</a>
       </div>
       <div className="dc-bracket-strip">
-        <div className={`dc-bracket-round${played === 0 ? '' : ' active'}`}>
+        <div className={`dc-bracket-round${matchdaysPlayed > 0 ? ' active' : ''}`}>
           <div className="dc-bracket-round-label">Group Stage</div>
-          <div className="dc-bracket-round-count">{matchdaysPlayed}</div>
+          <div className="dc-bracket-round-count">{groupComplete ? '3' : matchdaysPlayed}</div>
           <div className="dc-bracket-round-meta">of 3 matchdays</div>
         </div>
-        <div className="dc-bracket-round">
-          <div className="dc-bracket-round-label">R32</div>
-          <div className="dc-bracket-round-count">0</div>
-          <div className="dc-bracket-round-meta">begins Jun 28</div>
-        </div>
-        <div className="dc-bracket-round">
-          <div className="dc-bracket-round-label">R16</div>
-          <div className="dc-bracket-round-count">0</div>
-          <div className="dc-bracket-round-meta">begins Jul 4</div>
-        </div>
-        <div className="dc-bracket-round">
-          <div className="dc-bracket-round-label">Final</div>
-          <div className="dc-bracket-round-count">—</div>
-          <div className="dc-bracket-round-meta">Jul 19 · MetLife</div>
-        </div>
+        {KO_PROGRESS_TILES.map(({ stage, label }) => {
+          const p = koProgress[stage] ?? { total: 0, final: 0, live: 0 };
+          const started = p.final > 0 || p.live > 0;
+          return (
+            <div key={stage} className={`dc-bracket-round${started ? ' active' : ''}`}>
+              <div className="dc-bracket-round-label">{label}</div>
+              <div className="dc-bracket-round-count">{p.total > 0 ? p.final : '—'}</div>
+              <div className="dc-bracket-round-meta">{p.total > 0 ? `of ${p.total}` : 'pending'}</div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -958,6 +966,7 @@ export default async function HomePage() {
     groupStandings,
     matchdayMap,
     groupProgress,
+    koProgress,
     rankingTop5,
     playerTop5,
     publishedIntro,
@@ -973,6 +982,7 @@ export default async function HomePage() {
     getGroupStandings(),  // ordered standings rows (incl. points/wins/draws/losses/gf/ga/gd)
     getGroupMatchdayProgress(),
     getGroupStageProgress(),
+    getKnockoutRoundProgress(),
     getTopN({ listSlug: 'team-power', leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
     getPlayerTopN({ listSlug: 'player-power', leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
     getCurrentDailyCardIntro(ptDay),
@@ -1076,7 +1086,7 @@ export default async function HomePage() {
             followedSet={followedSet}
           />
 
-          <TournamentProgress groupProgress={groupProgress} />
+          <TournamentProgress groupProgress={groupProgress} koProgress={koProgress} />
 
           <TodaysReadsSection reads={todaysReads} followedSet={followedSet} />
 
