@@ -38,6 +38,7 @@ import { getWatchScoresForDate } from '@/lib/watchScore';
 import { getCurrentEdition, getTopN, getPlayerTopN } from '@/lib/rankings';
 import { getCurrentDailyCardIntro } from '@/lib/dailyCardIntro';
 import { getFollowedTeamIds } from '@/lib/follows';
+import { getMarketPanelData } from '@/lib/dashboard';
 import { auth } from '@/auth';
 import FixtureCard, { bucketOf } from '@/components/match/FixtureCard';
 import KickoffTime from '@/components/match/KickoffTime';
@@ -116,61 +117,11 @@ function Flag({ svgPath, size = 'inline' }) {
   );
 }
 
-// =============================================================================
-// THE MARKET — de-vig'd tournament-winner ladder reader (explainer only)
-//
-// Reads current tournament_winner odds_markets rows for the WC league.
-// De-vigs the implied probabilities so they sum to ~100% (the raw
-// implied probs include the bookmaker margin / "vig"; dividing each by
-// the sum normalizes them). Returns top N by de-vig.
-//
-// NO picks. The data feeds an explainer paragraph + a small ladder.
-// =============================================================================
-async function readTournamentWinnerLadder({ leagueSlug, limit = 5 }) {
-  const rows = await sql`
-    SELECT om.team_id,
-           t.name  AS team_name,
-           t.slug  AS team_slug,
-           t.flag_svg_path,
-           om.implied_probability::float AS implied_prob,
-           om.decimal_odds::float        AS decimal_odds,
-           om.num_books,
-           om.fetched_at
-      FROM odds_markets om
-      JOIN teams   t  ON t.id  = om.team_id
-      JOIN leagues lg ON lg.id = om.league_id
-     WHERE lg.slug          = ${leagueSlug}
-       AND om.market_type   = 'tournament_winner'
-       AND om.is_current    = true
-       AND om.team_id IS NOT NULL
-       AND om.implied_probability IS NOT NULL
-     ORDER BY om.implied_probability DESC
-  `;
-  if (rows.length === 0) return { rows: [], num_books: 0, fetched_at: null };
-
-  // De-vig: normalize so the implied probabilities sum to 1.
-  const sum = rows.reduce((acc, r) => acc + (r.implied_prob ?? 0), 0);
-  const devigged = rows.map((r) => ({
-    team_id: r.team_id,
-    team_name: r.team_name,
-    team_slug: r.team_slug,
-    flag_svg_path: r.flag_svg_path,
-    raw_implied: r.implied_prob,
-    devig_implied: sum > 0 ? r.implied_prob / sum : null,
-    decimal_odds: r.decimal_odds,
-  }));
-
-  // Sort by de-vig (same order as raw since divisor is constant, but
-  // explicit) and take the top N.
-  devigged.sort((a, b) => (b.devig_implied ?? 0) - (a.devig_implied ?? 0));
-
-  return {
-    rows: devigged.slice(0, limit),
-    num_books: rows[0].num_books ?? null,
-    fetched_at: rows[0].fetched_at ?? null,
-    total_teams_priced: rows.length,
-  };
-}
+// NOTE: the tournament-winner (futures) ladder reader was retired here — the
+// data provider has no outright/tournament-winner market, so the ladder was
+// permanently starved. The Market unit now reads the tagged board instead (see
+// MarketUnit + getMarketPanelData). lib/teams.js still has a market_scope=
+// 'futures' team-page block; that is a separate hygiene item, left untouched.
 
 // =============================================================================
 // Daily Card sections
@@ -384,63 +335,86 @@ function TodaysReadsSection({ reads, followedSet }) {
 }
 
 // =============================================================================
-// THE MARKET — explainer unit (replaces the Stage-1 shell)
+// THE MARKET — tagged-reads unit (reads the board, no futures)
 // =============================================================================
-// Need ~half a credible field priced before the ladder reads as a market.
-const MARKET_MIN_FIELD = 8;
+// Front-door slice of the /market board: up to 3 generous/rich reads. WIDE rows
+// (disclosures) never appear here — the front door shows value, not disagreement.
 
-function MarketUnit({ ladder }) {
-  // Thin field → fall back to the shell (a 1- or 2-team ladder isn't a ladder).
-  if (!ladder || ladder.rows.length < MARKET_MIN_FIELD) {
+// Dedupe key: totals collapse over/under of the SAME line into one read (a
+// mirror pair — one side generous, the other rich by the same magnitude), so we
+// key by match + line and keep the generous side. 1X2 selections stay distinct.
+function marketReadKey(r) {
+  if (r.market_type === 'total') {
+    const line = (r.selection_label.match(/([\d.]+)\s*goals/) || [])[1] ?? r.selection_label;
+    return `t:${r.match_id}:${line}`;
+  }
+  return `m:${r.match_id}:${r.selection_label}`;
+}
+
+function topMarketReads(rows) {
+  const seen = new Map();
+  for (const r of rows) {
+    if (r.tag !== 'generous' && r.tag !== 'rich') continue; // wide never shows here
+    const key = marketReadKey(r);
+    const existing = seen.get(key);
+    // Keep the generous side of a mirror pair; otherwise first-seen.
+    if (!existing || (r.tag === 'generous' && existing.tag !== 'generous')) seen.set(key, r);
+  }
+  return [...seen.values()]
+    .sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap))
+    .slice(0, 3);
+}
+
+function MarketUnit({ data }) {
+  const reads = topMarketReads(data?.rows ?? []);
+  const ledger = data?.ledger ?? null;
+
+  const footnote = (
+    <div className="dc-market-footnote">
+      De-vigged consensus read against our model. No picks, no books.{' '}
+      <a href="/market" className="dc-market-method">Full board →</a>
+    </div>
+  );
+
+  if (reads.length === 0) {
     return (
       <div className="dc-section">
         <div className="dc-section-label">The Market</div>
         <div className="dc-market">
-          <div className="dc-market-label">Market Explainer</div>
-          <div className="dc-market-body">
-            The bookmakers&rsquo; consensus reads the tournament before a ball
-            is kicked. Once odds publish for the 2026 field, this unit will
-            translate the live market into a plain-English read of where
-            the money sits.
-          </div>
-          <div className="dc-market-footnote">Coming this week · explain don&rsquo;t pick</div>
+          <p className="dc-mkt-empty">The board is quiet — no reads right now.</p>
+          {footnote}
         </div>
       </div>
     );
   }
 
-  // De-vigged top side anchors the headline sentence.
-  const leader = ladder.rows[0];
-  const leaderPct = (leader.devig_implied * 100).toFixed(1);
-
   return (
     <div className="dc-section">
       <div className="dc-section-label">The Market</div>
       <div className="dc-market">
-        <div className="dc-market-label">Market Explainer</div>
-        <p className="dc-market-body">
-          The bookmakers read {leader.team_name} as the favorite, with the
-          de-vigged market giving them roughly {leaderPct}% implied
-          probability to lift the trophy. Below them, the top of the
-          ladder runs:
-        </p>
-        <ol className="dc-market-ladder">
-          {ladder.rows.map((r, i) => (
-            <li key={r.team_id}>
-              <span className="dcml-pos">{i + 1}</span>
-              <Flag svgPath={r.flag_svg_path} size="tiny" />
-              <span className="dcml-name">{r.team_name}</span>
-              <span className="dcml-pct">{(r.devig_implied * 100).toFixed(1)}%</span>
+        <ul className="dc-mkt-reads">
+          {reads.map((r) => (
+            <li className="dc-mkt-read" key={r.key}>
+              <span className={`dc-mkt-tag ${r.tag === 'generous' ? 'gen' : 'rich'}`}>
+                {r.tag === 'generous' ? 'Generous' : 'Rich'}
+              </span>
+              <span className="dc-mkt-main">
+                <span className="dc-mkt-sel">{r.selection_label}</span>
+                <span className="dc-mkt-sub">{r.home_abbr} v {r.away_abbr} · {fmtPtDate(new Date(r.kickoff_at)).replace(',', '')}</span>
+              </span>
+              <span className="dc-mkt-nums">
+                {r.market_pct.toFixed(0)}%<span className="dc-mkt-arrow">→</span>{r.model_pct.toFixed(0)}%
+                <span className="dc-mkt-gap">{`${r.gap >= 0 ? '+' : ''}${r.gap.toFixed(1)}`}</span>
+              </span>
             </li>
           ))}
-        </ol>
-        <div className="dc-market-footnote">
-          Devig &middot; {ladder.total_teams_priced} teams priced
-          {ladder.num_books ? ` · ${ladder.num_books} books` : ''}
-          {' · '}
-          {/* TODO Stage 2.5: /methodology page lives here once written. */}
-          <a href="/methodology" className="dc-market-method">how we read the market →</a>
-        </div>
+        </ul>
+        {ledger && (
+          <div className="dc-mkt-ledger">
+            The ledger: {ledger.tagged} tagged, {ledger.landed} landed, prices implied {ledger.implied_expectation_pct}%
+          </div>
+        )}
+        {footnote}
       </div>
     </div>
   );
@@ -970,7 +944,7 @@ export default async function HomePage() {
     rankingTop5,
     playerTop5,
     publishedIntro,
-    marketLadder,
+    marketData,
     followedSet,
   ] = await Promise.all([
     readFixturesByPtDay({ leagueSlug: WC_LEAGUE_SLUG, ptStart: ptDay, ptEnd: ptDay2 }),
@@ -986,7 +960,7 @@ export default async function HomePage() {
     getTopN({ listSlug: 'team-power', leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
     getPlayerTopN({ listSlug: 'player-power', leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
     getCurrentDailyCardIntro(ptDay),
-    readTournamentWinnerLadder({ leagueSlug: WC_LEAGUE_SLUG, limit: 5 }),
+    getMarketPanelData(),
     getFollowedTeamIds(userId),
   ]);
 
@@ -1090,7 +1064,7 @@ export default async function HomePage() {
 
           <TodaysReadsSection reads={todaysReads} followedSet={followedSet} />
 
-          <MarketUnit ladder={marketLadder} />
+          <MarketUnit data={marketData} />
         </article>
 
         {/* SIDEBAR — right column on desktop, slots between Today's

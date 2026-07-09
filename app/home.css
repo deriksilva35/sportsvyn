@@ -586,45 +586,59 @@
   border-left: 3px solid var(--volt);
   padding: 16px 18px;
 }
-.dc-market-label {
-  font-family: var(--font-mono);
-  font-size: 10px; color: var(--volt);
-  letter-spacing: 0.24em; text-transform: uppercase;
-  margin-bottom: 8px;
-}
-.dc-market-body {
+/* tagged-reads unit (replaces the retired futures ladder) */
+.dc-mkt-empty {
   font-family: var(--font-serif);
   font-style: italic; font-size: 14px;
   color: var(--muted-light); line-height: 1.45;
   margin-bottom: 12px;
 }
-.dc-market-ladder {
+.dc-mkt-reads {
   list-style: none;
   margin: 0 0 12px 0; padding: 0;
 }
-.dc-market-ladder li {
+.dc-mkt-read {
   display: grid;
-  grid-template-columns: 18px 16px 1fr auto;
-  gap: 8px;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
   align-items: center;
-  padding: 6px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--rule-darker);
 }
-.dc-market-ladder li:last-child { border-bottom: none; }
-.dc-market-ladder .dcml-pos {
+.dc-mkt-read:last-child { border-bottom: none; }
+.dc-mkt-tag {
   font-family: var(--font-mono);
-  font-size: 10px; color: var(--muted-dim); font-weight: 700;
+  font-size: 8px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 6px; border-radius: 2px; border: 1px solid;
+  white-space: nowrap;
 }
-.dc-market-ladder .dcml-name {
+.dc-mkt-tag.gen  { color: var(--volt); border-color: color-mix(in srgb, var(--volt) 55%, transparent); background: color-mix(in srgb, var(--volt) 7%, transparent); }
+.dc-mkt-tag.rich { color: var(--terra); border-color: color-mix(in srgb, var(--terra) 55%, transparent); background: color-mix(in srgb, var(--terra) 8%, transparent); }
+.dc-mkt-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dc-mkt-sel {
   font-family: var(--font-display-condensed, var(--font-display));
   font-weight: 700; font-style: italic;
   font-size: 13px; text-transform: uppercase;
   color: var(--paper-warm); letter-spacing: 0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.dc-market-ladder .dcml-pct {
+.dc-mkt-sub {
   font-family: var(--font-mono);
-  font-size: 11px; font-weight: 700;
-  color: var(--volt); letter-spacing: 0.04em;
+  font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted-dim);
+}
+.dc-mkt-nums {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted); white-space: nowrap;
+  display: inline-flex; align-items: baseline; gap: 4px;
+}
+.dc-mkt-arrow { color: var(--muted-dim); margin: 0 1px; }
+.dc-mkt-gap { color: var(--paper-warm); font-weight: 700; }
+.dc-mkt-ledger {
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted-dim); margin-bottom: 10px;
 }
 .dc-market-footnote {
   font-family: var(--font-mono);
