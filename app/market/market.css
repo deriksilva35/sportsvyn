@@ -59,6 +59,19 @@
 .market-page .b-open { font-family: var(--font-mono); font-size: 10px; text-align: right; color: var(--muted); }
 .market-page .b-tag { text-align: right; }
 
+/* board filter row */
+.market-page .bfilter { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.market-page .pickselect { font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--paper-warm); background: var(--ink); border: 1px solid var(--charcoal); border-radius: 3px; padding: 8px 10px; cursor: pointer; max-width: 100%; }
+.market-page .pickselect:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+.market-page .pickselect.on { border-color: var(--volt); color: var(--volt); }
+.market-page .pickpill { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: var(--ink); border: 1px solid var(--charcoal); border-radius: 3px; padding: 8px 12px; cursor: pointer; }
+.market-page .pickpill:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+.market-page .pickpill.on { border-color: var(--volt); color: var(--volt); background: color-mix(in srgb, var(--volt) 6%, transparent); }
+.market-page .bupdated { margin-left: auto; font-family: var(--font-mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.market-page .bempty { justify-items: start; }
+.market-page .bempty span { grid-column: 1 / -1; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.market-page .blink { font-family: var(--font-mono); font-size: 11px; color: var(--volt); background: none; border: none; padding: 0; cursor: pointer; text-decoration: underline; }
+
 /* methodology */
 .market-page .method { background: var(--graphite); border: 1px solid var(--charcoal); border-radius: 4px; padding: 22px 22px 20px; margin-top: 52px; }
 .market-page .method-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--volt); margin-bottom: 12px; }
@@ -113,6 +126,10 @@
 .market-page .lednote { font-family: var(--font-serif); font-style: italic; font-size: 13px; line-height: 1.55; color: var(--muted); margin-top: 12px; max-width: 720px; }
 
 @media (max-width: 899px) {
+  /* Filter row wraps: the two selects share line 1 (full-width-ish),
+     the pill + updated stamp flow to line 2. */
+  .market-page .bfilter { gap: 8px; }
+  .market-page .bfilter .pickselect { flex: 1 1 44%; min-width: 0; }
   .market-page .brow-head { display: none; }
   .market-page .brow { grid-template-columns: 1.4fr .9fr .7fr; grid-template-areas: "side price tag" "match gap gap"; }
   .market-page .b-side { grid-area: side; }

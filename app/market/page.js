@@ -14,9 +14,10 @@
 
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import {
-  getModelBoard, getTotalsBoard, getScorerPrices, MODEL_PARAMS,
+  getModelBoard, getTotalsBoard, getScorerPrices, getBoardUpdatedAt, MODEL_PARAMS,
 } from '@/lib/matchProbability';
 import { getLedger } from '@/lib/marketLedger';
+import BoardSection from './BoardSection';
 import './market.css';
 
 export const dynamic = 'force-dynamic';
@@ -56,60 +57,15 @@ function sinceOpen(openAmerican, american) {
 }
 
 const TAG_CHIP = { generous: 'gen', rich: 'rich', fair: 'fair', wide: 'wide' };
-const TAG_LABEL = { generous: 'Generous', rich: 'Rich', fair: 'Fair', wide: 'Wide' };
-const TAG_GAP = { generous: 'pos', rich: 'neg', fair: 'flat', wide: 'wide' };
 
-function mwSideLabel(row) {
-  if (row.selection === 'home') return `${row.home_name} to win`;
-  if (row.selection === 'away') return `${row.away_name} to win`;
-  return 'Draw';
-}
-
-function BoardRow({ row }) {
-  const matchLabel = `${row.home_abbr} v ${row.away_abbr} · ${fmtDatePt(row.kickoff_at)}`;
-  const gapStr = `${row.gap >= 0 ? '+' : ''}${row.gap.toFixed(1)}`;
-  const sub = row.selection === 'draw'
-    ? `Match winner · ${row.home_abbr} v ${row.away_abbr}` : 'Match winner';
-  return (
-    <div className="brow">
-      <span className="b-side">{mwSideLabel(row)}<span className="sub">{sub}</span></span>
-      <span className="b-match">{matchLabel}</span>
-      <span className="b-num price">{fmtAmerican(row.american)}<span className="dec">{row.decimal != null ? row.decimal.toFixed(2) : ''}</span></span>
-      <span className="b-pct">{row.market_pct.toFixed(1)}%</span>
-      <span className="b-pct model">{row.model_pct.toFixed(1)}%</span>
-      <span className={`b-gap ${TAG_GAP[row.tag]}`}>{gapStr}</span>
-      <span className="b-open">{sinceOpen(row.open_american, row.american)}</span>
-      <span className="b-tag"><span className={`tag ${TAG_CHIP[row.tag]}`}>{TAG_LABEL[row.tag]}</span></span>
-    </div>
-  );
-}
-
-// Totals. MAIN line = market info (MARKET chip, dash model/gap). TAIL line
-// (1.5/3.5) = tagged: model %, gap, and the tag chip.
-function TotalsRow({ row }) {
-  const matchLabel = `${row.home_abbr} v ${row.away_abbr} · ${fmtDatePt(row.kickoff_at)}`;
-  const side = row.selection === 'over' ? `Over ${row.line} goals` : `Under ${row.line} goals`;
-  const isTail = row.kind === 'tail';
-  return (
-    <div className="brow">
-      <span className="b-side">{side}<span className="sub">Total goals</span></span>
-      <span className="b-match">{matchLabel}</span>
-      <span className="b-num price">{fmtAmerican(row.american)}<span className="dec">{row.decimal != null ? row.decimal.toFixed(2) : ''}</span></span>
-      <span className="b-pct">{row.market_pct.toFixed(1)}%</span>
-      {isTail
-        ? <span className="b-pct model">{row.model_pct.toFixed(1)}%</span>
-        : <span className="b-pct model dash">-</span>}
-      {isTail
-        ? <span className={`b-gap ${TAG_GAP[row.tag]}`}>{`${row.gap >= 0 ? '+' : ''}${row.gap.toFixed(1)}`}</span>
-        : <span className="b-gap flat dash">-</span>}
-      <span className="b-open">{sinceOpen(row.open_american, row.american)}</span>
-      <span className="b-tag">
-        {isTail
-          ? <span className={`tag ${TAG_CHIP[row.tag]}`}>{TAG_LABEL[row.tag]}</span>
-          : <span className="tag market">Market</span>}
-      </span>
-    </div>
-  );
+// "Updated Nm ago" for the filter-row stamp. Server-computed (page is dynamic).
+function fmtUpdated(iso) {
+  if (!iso) return null;
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 1) return 'Updated just now';
+  if (mins < 60) return `Updated ${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  return `Updated ${hrs}h ago`;
 }
 
 function ScorerBlock({ group }) {
@@ -199,14 +155,45 @@ function LedgerSection({ ledger }) {
 }
 
 export default async function MarketPage() {
-  const [board, totals, scorers, ledger] = await Promise.all([
+  const [board, totals, scorers, ledger, updatedAt] = await Promise.all([
     getModelBoard(),
     getTotalsBoard(),
     getScorerPrices(),
     getLedger(),
+    getBoardUpdatedAt(),
   ]);
   const stageForRound = board[0]?.stage ?? totals[0]?.stage ?? null;
   const round = stageForRound ? (STAGE_LABELS[stageForRound] ?? 'World Cup') : 'World Cup';
+
+  // Serialize board + totals into one client-filterable list; derive the match /
+  // team / market-type option sets from the data (never hardcoded). The client
+  // BoardSection filters this in the browser (no round trips).
+  const rows = [
+    ...board.map((r) => ({ ...r, _kind: 'mw', market_type: 'match_winner' })),
+    ...totals.map((r) => ({ ...r, _kind: 'total', market_type: 'total' })),
+  ];
+  const matchMap = new Map();
+  for (const r of board) {
+    if (!matchMap.has(r.match_id)) matchMap.set(r.match_id, { id: r.match_id, label: `${r.home_name} v ${r.away_name} · ${fmtDatePt(r.kickoff_at)}`, kickoff: r.kickoff_at });
+  }
+  for (const r of totals) {
+    if (!matchMap.has(r.match_id)) matchMap.set(r.match_id, { id: r.match_id, label: `${r.home_abbr} v ${r.away_abbr} · ${fmtDatePt(r.kickoff_at)}`, kickoff: r.kickoff_at });
+  }
+  const matchOptions = [...matchMap.values()].sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
+  const teamMap = new Map();
+  for (const r of board) {
+    if (!teamMap.has(r.home_abbr)) teamMap.set(r.home_abbr, { abbr: r.home_abbr, name: r.home_name });
+    if (!teamMap.has(r.away_abbr)) teamMap.set(r.away_abbr, { abbr: r.away_abbr, name: r.away_name });
+  }
+  for (const r of totals) {
+    if (!teamMap.has(r.home_abbr)) teamMap.set(r.home_abbr, { abbr: r.home_abbr, name: r.home_abbr });
+    if (!teamMap.has(r.away_abbr)) teamMap.set(r.away_abbr, { abbr: r.away_abbr, name: r.away_abbr });
+  }
+  const teamOptions = [...teamMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+  const marketOptions = [];
+  if (board.length > 0) marketOptions.push({ value: 'match_winner', label: 'Match winner' });
+  if (totals.length > 0) marketOptions.push({ value: 'total', label: 'Total goals' });
+  const updatedLabel = fmtUpdated(updatedAt);
 
   return (
     <>
@@ -224,26 +211,19 @@ export default async function MarketPage() {
             <span className="t">The Board</span>
             <span className="n">All {round.toLowerCase()} markets · median of 13 books, de-vigged</span>
           </div>
-          <div className="board">
-            <div className="brow-head">
-              <span>Side</span><span>Match</span>
-              <span style={{ textAlign: 'right' }}>Price</span>
-              <span style={{ textAlign: 'right' }}>Market</span>
-              <span style={{ textAlign: 'right' }}>Model</span>
-              <span style={{ textAlign: 'right' }}>Gap</span>
-              <span style={{ textAlign: 'right' }}>Since open</span>
-              <span style={{ textAlign: 'right' }}>Tag</span>
-            </div>
-            {board.length === 0 && totals.length === 0 && (
+          {rows.length === 0 ? (
+            <div className="board">
               <div className="brow"><span className="b-match">No priced markets right now.</span></div>
-            )}
-            {board.map((row) => (
-              <BoardRow key={`mw-${row.match_id}-${row.selection}`} row={row} />
-            ))}
-            {totals.map((row) => (
-              <TotalsRow key={`tot-${row.match_id}-${row.selection}`} row={row} />
-            ))}
-          </div>
+            </div>
+          ) : (
+            <BoardSection
+              rows={rows}
+              matchOptions={matchOptions}
+              teamOptions={teamOptions}
+              marketOptions={marketOptions}
+              updatedLabel={updatedLabel}
+            />
+          )}
         </section>
 
         {/* SCORER PRICES */}
