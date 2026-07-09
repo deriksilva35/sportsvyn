@@ -52,7 +52,7 @@ export default async function TopicDraftsPage({ searchParams }) {
 
   const drafts = await sql`
     SELECT id, prompt_text, article_type, status, generated_at,
-           current_content, resolved_entities, unresolved_entities, research_sources, editor_notes
+           current_content, ai_original, resolved_entities, unresolved_entities, research_sources, editor_notes
       FROM topic_drafts
      ORDER BY generated_at DESC
      LIMIT 50
@@ -118,6 +118,7 @@ function DraftDetail({ draft }) {
   const unresolved = Array.isArray(draft.unresolved_entities) ? draft.unresolved_entities : [];
   const sections = Array.isArray(c.sections) ? c.sections : [];
   const failed = draft.status === 'failed' || c.error;
+  const warnings = Array.isArray(draft.ai_original?.validation?.warnings) ? draft.ai_original.validation.warnings : [];
 
   return (
     <article>
@@ -137,6 +138,21 @@ function DraftDetail({ draft }) {
       {failed && (
         <div style={{ background: '#ffebe9', border: '1px solid #ff818266', borderRadius: 6, padding: '10px 12px', marginBottom: 16, fontSize: 13, color: '#cf222e' }}>
           Validation failed - not queued for review. {draft.editor_notes ?? ''}
+        </div>
+      )}
+
+      {warnings.length > 0 && (
+        <div style={{ background: '#fff8c5', border: '1px solid #d4a72c66', borderRadius: 6, padding: '10px 12px', marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#7d4e00', marginBottom: 6 }}>
+            Flagged terms ({warnings.length}) - warnings only, not blocking
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            {warnings.map((w, i) => (
+              <li key={i} style={{ fontSize: 13, marginBottom: 4, color: '#4d3800' }}>
+                <b>{w.term}</b> - {w.sentence}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

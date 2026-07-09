@@ -75,7 +75,7 @@ COMPARISON PIECES:
   When the topic compares two subjects, present BOTH cases from the numbers. Do not crown a winner unless the data in the envelope genuinely settles it. If the numbers are close, or measure different things, say so plainly and let the reader hold both cases.
 
 STRUCTURE:
-  1200 to 1800 words. A headline, a one-sentence dek, and three to six named body sections. Open with a concrete scene or a specific number that frames the piece. Each body section carries its own argument anchored to data. Close by naming the unresolved question the tournament itself will answer - an observable, not a prediction.
+  Target 1400-1700 words. A headline, a one-sentence dek, and three to six named body sections. Open with a concrete scene or a specific number that frames the piece. Each body section carries its own argument anchored to data. Close by naming the unresolved question the tournament itself will answer - an observable, not a prediction.
 
 STYLE RULES:
   Hyphens only. Never use an em dash or an en dash. No headings inside a section body. No bullet lists in prose. No second person. No rhetorical questions used as filler.
@@ -96,7 +96,7 @@ RESEARCH CONTEXT (synthesize, attribute, never quote unattributed):
 INTERNAL DATA ENVELOPE (Sportsvyn's own numbers - make these the spine of the piece):
 {{internal_envelope}}
 
-Write the draft per the system prompt. 1200 to 1800 words. Ground every evaluative claim in the envelope or in attributed research. Output STRICT JSON only.$USR$,
+Write the draft per the system prompt. Target 1400-1700 words. Ground every evaluative claim in the envelope or in attributed research. Output STRICT JSON only.$USR$,
   'claude-sonnet-4-6', 4000, 0.7, NULL, '1.0',
   true, 'migration_042', now(), now()
 );
