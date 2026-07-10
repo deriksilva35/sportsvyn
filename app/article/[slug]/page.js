@@ -5,6 +5,7 @@ import rehypeRaw from 'rehype-raw';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { getArticleBySlug } from '@/lib/articles';
+import { normalizeArticle } from '@/lib/articleReader';
 import './article.css';
 
 export const dynamic = 'force-dynamic';
@@ -16,41 +17,60 @@ export async function generateMetadata({ params }) {
   return { title: a.title, description: a.subtitle || undefined };
 }
 
-function readTime(body) {
-  const words = (body || '').replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 250));
-}
 function fmtDate(d) {
+  if (!d) return '';
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Byline: human authors get "By X"; auto-generated and AI-draft pieces get the
+// provenance treatment (label + optional review note), never a human byline.
+function Byline({ byline }) {
+  if (byline.kind === 'human') return <span className="by">{byline.label}</span>;
+  return (
+    <span className="prov">
+      <span className="prov-label">{byline.label}</span>
+      {byline.note ? <span className="prov-note">{byline.note}</span> : null}
+    </span>
+  );
 }
 
 export default async function ArticlePage({ params }) {
   const { slug } = await params;
   const a = await getArticleBySlug(slug);
+  // Published only. Drafts / previews-in-progress / unpublished all 404.
   if (!a || a.status !== 'published') notFound();
 
-  const kicker = [a.primary_tag_name, a.league_name].filter(Boolean).join(' · ');
+  const art = normalizeArticle(a);
 
   return (
     <>
       <SiteHeaderServer />
       <main className="article-wrap">
         <article className="article-col">
-          {kicker ? <span className="article-kicker">{kicker}</span> : null}
-          <h1 className="article-headline">{a.title}</h1>
-          {a.subtitle ? <p className="article-dek">{a.subtitle}</p> : null}
+          {art.kicker ? <span className="article-kicker">{art.kicker}</span> : null}
+          <h1 className="article-headline">{art.headline}</h1>
+          {art.dek ? <p className="article-dek">{art.dek}</p> : null}
           <div className="article-meta">
-            {a.author ? <span className="by">By {a.author}</span> : null}
-            {a.author ? <span className="dot">·</span> : null}
-            <span>{fmtDate(a.published_at)}</span>
+            <Byline byline={art.byline} />
             <span className="dot">·</span>
-            <span>{readTime(a.body)} min read</span>
+            <span>{fmtDate(art.publishedAt)}</span>
+            <span className="dot">·</span>
+            <span>{art.readMin} min read</span>
           </div>
-          <div className="a-body">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-              {a.body || ''}
-            </ReactMarkdown>
-          </div>
+
+          {art.kind === 'raw' ? (
+            // Legacy essay: self-contained markup (a-hero6 etc.). Verbatim pass-
+            // through - do NOT re-parse or double-wrap.
+            <div className="a-body" dangerouslySetInnerHTML={{ __html: art.rawHtml }} />
+          ) : (
+            // Preview prose + published topic-draft features (clean h2/p): the
+            // reader typography styles this semantic content.
+            <div className="a-body">
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                {art.body || ''}
+              </ReactMarkdown>
+            </div>
+          )}
         </article>
       </main>
       <SiteFooter />
