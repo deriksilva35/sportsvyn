@@ -17,7 +17,10 @@
 
 import { sql } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { runTopicDraft } from '@/lib/topicDraft';
+import { sectionsToHtml, uniqueArticleSlug } from '@/lib/articleReader';
+import PublishTopicDraftButton from '@/components/admin/PublishTopicDraftButton';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -53,6 +56,45 @@ async function discardTopicDraft(formData) {
   if (!Number.isInteger(id) || id <= 0) return;
   await sql`UPDATE topic_drafts SET status = 'discarded', updated_at = now() WHERE id = ${id} AND status <> 'published'`;
   revalidatePath('/admin/topic-drafts');
+}
+
+// Publish a pending_review / in_editing topic draft into a live article.
+// Flattens sections -> clean semantic HTML (h2/p, no inline styles, no legacy
+// classes); type 'feature', author 'Sportsvyn' with the AI-draft provenance
+// treatment (honest label, per the Tier rules - editor byline comes later).
+async function publishTopicDraft(formData) {
+  'use server';
+  assertAdminEnv();
+  const id = Number(formData.get('id'));
+  if (!Number.isInteger(id) || id <= 0) return;
+
+  const d = (await sql`
+    SELECT id, status, current_content FROM topic_drafts WHERE id = ${id} LIMIT 1
+  `)[0];
+  if (!d) return;
+  if (d.status !== 'pending_review' && d.status !== 'in_editing') return; // publish gate
+
+  const c = d.current_content ?? {};
+  const title = (c.headline ?? '').trim();
+  if (!title) return;
+  const bodyHtml = sectionsToHtml(c.sections);
+  const slug = await uniqueArticleSlug(title);
+  const wc = (await sql`SELECT id FROM leagues WHERE slug = 'fifa-wc-2026' LIMIT 1`)[0];
+
+  const art = (await sql`
+    INSERT INTO articles (slug, type, title, subtitle, body, status, author, league_id, published_at, created_at, updated_at)
+    VALUES (${slug}, 'feature', ${title}, ${c.dek ?? null}, ${bodyHtml}, 'published', 'Sportsvyn', ${wc?.id ?? null}, now(), now(), now())
+    RETURNING id, slug
+  `)[0];
+
+  await sql`
+    UPDATE topic_drafts
+       SET status = 'published', published_article_id = ${art.id}, last_edited_at = now(), updated_at = now()
+     WHERE id = ${id}
+  `;
+
+  revalidatePath('/admin/topic-drafts');
+  redirect(`/article/${art.slug}`);
 }
 
 // Status colors, legible on the dark surface (>= 0.65 luminance-equivalent).
@@ -206,11 +248,15 @@ function DraftDetail({ draft }) {
       )}
 
       <div style={{ marginTop: 24, display: 'flex', gap: 10, alignItems: 'center' }}>
-        <button type="button" disabled title="Blocked on the /article/[slug] route"
-                style={{ padding: '7px 14px', fontSize: 13, color: FAINT, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 6, cursor: 'not-allowed' }}>
-          Publish
-        </button>
-        <span style={{ fontSize: 11, color: SECONDARY }}>Publish blocked on the /article/[slug] route.</span>
+        {(draft.status === 'pending_review' || draft.status === 'in_editing') ? (
+          <PublishTopicDraftButton action={publishTopicDraft} id={draft.id} />
+        ) : (
+          <button type="button" disabled
+                  style={{ padding: '7px 14px', fontSize: 13, color: FAINT, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 6, cursor: 'not-allowed' }}>
+            Publish
+          </button>
+        )}
+        {draft.status === 'published' && <span style={{ fontSize: 11, color: SECONDARY }}>Published.</span>}
         {draft.status !== 'discarded' && draft.status !== 'published' && (
           <form action={discardTopicDraft} style={{ marginLeft: 'auto' }}>
             <input type="hidden" name="id" value={draft.id} />
