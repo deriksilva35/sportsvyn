@@ -19,3 +19,24 @@ Rules for any CC session running ON the droplet:
 
 Restart the droplet's Remote Control session for this repo with:
   tmux new -d -s cc-sportsvyn 'cd ~/projects/sportsvyn && claude --remote-control --name sportsvyn'
+
+## Migration numbering
+
+Migration numbers are assigned at transcription time as
+(highest existing file in migrations/) + 1. Never carry a number from a draft,
+scratch file, or prior session note - those rot as the tree advances. Scan the
+target objects against the migrations between the number you expect and the
+actual highest before applying; do not assume the repo matches the plan.
+
+## Gridiron datetime / timezone boundary (lib/gridiron/ingest.js)
+
+Provider datetimes for the NFL/CFB feeds pass through ONE module,
+lib/gridiron/ingest.js:
+- Raw `new Date(providerString)` on a provider datetime is FORBIDDEN outside
+  that module. Always call toUtc(dateTimeStr, dateTimeUtcField, provider).
+  SportsData strings are US-Eastern local with no offset ("2025-09-04T20:20:00")
+  and parse 4-5h wrong naively; BDL/CFBD are already UTC 'Z' but still route
+  through toUtc() so the boundary stays in one place.
+- Ad-hoc `AT TIME ZONE` SQL for provider time conversion is FORBIDDEN outside the
+  exported easternLocalToUtc() helper (the single sanctioned ET-local -> UTC
+  conversion, done DST-aware in Postgres).
