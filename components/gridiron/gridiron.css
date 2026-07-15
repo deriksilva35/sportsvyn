@@ -1,0 +1,190 @@
+/* Gridiron UI grammar — transcribed from docs/design/gridiron-ui-reference.md.
+   Consumes design-tokens v1.1 (scoped via [data-surface] on the page shell).
+   Components never carry theme conditionals; they read tokens. */
+
+.gi { min-height: 100%; font-family: var(--font-jetbrains-mono), monospace; }
+
+/* ---- local ink header shell (NOT the site header) ---- */
+.gi-head {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 28px;
+  padding: 14px 22px;
+  background: rgba(10, 10, 10, 0.96); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--charcoal);
+}
+.wordmark {
+  font-family: var(--font-saira), sans-serif; font-weight: 900; font-style: italic;
+  letter-spacing: -0.05em; line-height: 1; color: var(--paper);
+  text-transform: uppercase; display: inline-flex; align-items: baseline;
+  font-size: 22px; text-decoration: none;
+}
+.y-wrap { position: relative; color: var(--volt); display: inline-block; }
+.y-wrap .macron {
+  position: absolute; left: 0; top: -0.05em; width: 115%; height: 0.07em;
+  background: var(--volt); transform: translateX(-35%);
+}
+.gi-head-nav { display: flex; gap: 22px; }
+.gi-head-nav a {
+  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; position: relative; padding-bottom: 4px;
+}
+.gi-head-nav a.active { color: var(--paper); }
+.gi-head-nav a.active::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--volt);
+}
+.gi-head-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.gi-head-right a { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+.gi-member { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: var(--ink); background: var(--volt); padding: 4px 10px; }
+
+/* ---- sport sub-nav ---- */
+.gi-subnav {
+  display: flex; align-items: center; gap: 2px;
+  background: var(--ink); border-bottom: 1px solid var(--rule);
+  padding: 0 14px;
+}
+.gi-subnav a {
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; padding: 13px 16px; position: relative;
+}
+.gi-subnav a.active { color: var(--volt); }
+.gi-subnav a.active::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: 0; height: 2px; background: var(--volt); }
+.gi-season {
+  margin-left: auto; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--muted-dim); padding-right: 8px;
+}
+.gi-season b { color: var(--paper); font-weight: 500; }
+
+/* ---- layout ---- */
+.gi-wrap { max-width: 1120px; margin: 0 auto; padding: 22px 20px 80px; }
+
+/* ---- section kicker (ink) ---- */
+.gi-kicker { display: flex; align-items: center; gap: 14px; margin: 26px 0 14px; }
+.gi-kicker .k {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; color: var(--volt);
+}
+.gi-kicker .rule { flex: 1; height: 1px; background: var(--rule-dim); }
+.gi-kicker .cnt { font-size: 9px; color: var(--muted-dim); letter-spacing: 0.1em; }
+.gi-kicker .lnk { font-size: 10px; color: var(--muted); text-decoration: none; }
+.gi-kicker .lnk:hover { color: var(--volt); }
+
+/* ---- filter chips + date nav (/scores toolbar) ---- */
+.gi-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.gi-chip {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted); border: 1px solid var(--rule); background: transparent;
+  padding: 8px 16px; cursor: pointer;
+}
+.gi-chip.active { color: var(--ink); background: var(--volt); border-color: var(--volt); }
+.gi-chip.live.active { color: var(--paper); background: var(--live); border-color: var(--live); }
+.gi-datenav { display: inline-flex; align-items: center; border: 1px solid var(--rule); }
+.gi-datenav a, .gi-datenav span { padding: 8px 12px; font-size: 11px; color: var(--muted); text-decoration: none; }
+.gi-datenav .cur { color: var(--paper); }
+.gi-datenav .cur b { color: var(--volt); font-weight: 700; }
+
+/* ---- sport section header (/scores) ---- */
+.gi-sect { margin-top: 22px; }
+.gi-sect-h { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.gi-sect-h .nm { font-size: 10px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; color: var(--volt); }
+.gi-sect-h .cnt { font-size: 9px; color: var(--muted-dim); }
+.gi-sect-h .rule { flex: 1; height: 1px; background: var(--rule-dim); }
+.gi-empty {
+  border: 1px dashed var(--rule); padding: 18px; font-size: 11px; color: var(--muted-dim);
+  letter-spacing: 0.06em;
+}
+
+/* ---- game cards (two-up grid) ---- */
+.gi-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 720px) { .gi-cards { grid-template-columns: 1fr; } }
+.gi-card { border: 1px solid var(--rule); background: var(--graphite); }
+.gi-card:hover { border-color: var(--muted-dim); }
+.gi-card.expanded { grid-column: 1 / -1; border-color: var(--volt); }
+.gi-card-body { padding: 12px 14px; }
+.gi-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.gi-chev { color: var(--muted); font-size: 12px; transition: transform 0.15s; background: none; border: 0; cursor: pointer; }
+.gi-card.expanded .gi-chev { transform: rotate(180deg); color: var(--volt); }
+
+/* status */
+.gi-status { font-size: 11px; letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: 7px; }
+.gi-status.live { color: var(--live); font-weight: 700; }
+.gi-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live); animation: gi-pulse 1.6s infinite; }
+@keyframes gi-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.gi-final { font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--paper); background: var(--jade); padding: 3px 10px; }
+.gi-final.ot { background: var(--graphite-up); color: var(--jade); border: 1px solid var(--jade); }
+.gi-up { font-size: 12px; color: var(--paper-dim); }
+.gi-up .net { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted-dim); }
+
+/* team lines */
+.gi-team { display: flex; align-items: center; gap: 8px; font-size: 14px; padding: 3px 0; }
+.gi-team .rk { width: 24px; font-size: 10px; color: var(--volt); }
+.gi-team .nm { color: var(--paper); }
+.gi-team .rec { font-size: 10px; color: var(--muted-dim); }
+.gi-team .sc { margin-left: auto; font-size: 16px; text-align: right; color: var(--paper); }
+.gi-team.win .nm, .gi-team.win .sc { font-weight: 700; }
+.gi-team.lose .nm, .gi-team.lose .rk, .gi-team.lose .rec, .gi-team.lose .sc { color: var(--muted); }
+.gi-poss { color: var(--volt); font-size: 9px; }
+
+/* foot */
+.gi-card-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--rule-dim); }
+.gi-line { font-size: 10px; color: var(--muted); letter-spacing: 0.04em; }
+
+/* watch chip */
+.gi-watch { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.gi-watch .lbl { font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted-dim); }
+.gi-watch .val { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 20px; color: var(--paper); border-bottom: 3px solid var(--volt); line-height: 1.05; }
+.gi-watch.hot .val { color: var(--volt); }
+.gi-watch.dim .val { color: var(--muted); border-color: var(--charcoal); }
+
+/* expanded detail */
+.gi-detail { border-top: 1px solid var(--rule); }
+.gi-tabs { display: flex; align-items: center; gap: 0; background: var(--graphite); padding: 0 12px; }
+.gi-tab { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: none; border: 0; padding: 11px 14px; cursor: pointer; position: relative; }
+.gi-tab.active { color: var(--paper); }
+.gi-tab.active::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 0; height: 2px; background: var(--volt); }
+.gi-tabs .full { margin-left: auto; font-size: 10px; color: var(--muted); text-decoration: none; }
+.gi-tabs .full:hover { color: var(--volt); }
+.gi-pane { padding: 16px; font-size: 12px; color: var(--muted-dim); }
+.gi-pane .why-val { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 26px; color: var(--paper); }
+.gi-pane .why-read { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; color: var(--paper-dim); margin-top: 6px; }
+.gi-placeholder { font-size: 11px; letter-spacing: 0.06em; color: var(--muted-dim); }
+
+/* ---- drive strip ---- */
+.gi-drive { padding: 8px 0 2px; }
+.gi-drive svg { width: 100%; max-width: 320px; height: auto; display: block; }
+.gi-drive-cap { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-top: 5px; }
+.gi-drive-cap b { color: var(--volt); font-weight: 700; }
+.gi-drive-cap .fd { color: var(--paper-dim); }
+
+/* ---- paper-surface lede zone (Today pages) ---- */
+.gi-lede { background: var(--paper); color: var(--ink); padding: 40px 20px; border-bottom: 3px solid var(--volt); }
+.gi-lede-in { max-width: 1120px; margin: 0 auto; }
+.gi-lede .kick { display: flex; align-items: center; gap: 9px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-mut); margin-bottom: 14px; }
+.gi-lede .kick .sq { width: 14px; height: 14px; background: var(--volt); display: inline-block; }
+.gi-lede h1 { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 42px; line-height: 1.02; letter-spacing: -0.03em; color: var(--ink); margin: 0 0 16px; }
+.gi-lede p { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 18px; line-height: 1.5; color: var(--ink-soft); max-width: 620px; margin: 0; }
+.gi-lede .ph { display: inline-block; font-family: var(--font-jetbrains-mono), monospace; font-style: normal; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-dim); border: 1px solid var(--p-rule); padding: 2px 7px; margin-bottom: 12px; }
+
+/* ---- week (Today) ---- */
+.gi-day { margin-top: 20px; }
+.gi-day-h { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.gi-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 9px 12px; border: 1px solid var(--rule-dim); margin-bottom: 6px; background: var(--graphite); }
+.gi-row .mu { font-size: 13px; color: var(--paper); }
+.gi-row .mu .vs { color: var(--muted-dim); }
+.gi-row .rt { font-size: 12px; color: var(--muted); text-align: right; }
+.gi-row .rt .sc { color: var(--paper); }
+
+/* ---- standings rail ---- */
+.gi-standings { border-left: 1px solid var(--p-rule); padding-left: 18px; }
+.gi-div { margin-bottom: 18px; }
+.gi-div-h { font-family: var(--font-saira-cond), sans-serif; font-weight: 700; font-size: 10px; text-transform: uppercase; color: var(--ink); border-left: 3px solid var(--volt); padding-left: 8px; margin-bottom: 6px; letter-spacing: 0.04em; }
+.gi-strow { display: grid; grid-template-columns: 1fr auto; font-size: 12px; padding: 3px 0; color: var(--ink-soft); }
+.gi-strow .wl { color: var(--ink-mut); }
+
+/* two-column Today layout */
+.gi-today-grid { display: grid; grid-template-columns: 1fr 300px; gap: 30px; align-items: start; }
+@media (max-width: 860px) { .gi-today-grid { grid-template-columns: 1fr; } }
+
+/* ink instrument block sitting on a paper ground */
+.gi-instrument { padding: 16px 18px 20px; border: 1px solid var(--rule); }
+.gi-instrument-h { font-size: 10px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; color: var(--volt); margin-bottom: 4px; }
+.gi-instrument-sub { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-dim); margin-bottom: 8px; }
+.gi-rail-h { font-family: var(--font-saira-cond), sans-serif; font-weight: 700; font-size: 12px; text-transform: uppercase; color: var(--ink); letter-spacing: 0.02em; margin-bottom: 12px; }
