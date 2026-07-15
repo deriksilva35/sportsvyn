@@ -79,3 +79,47 @@ body {
   color: var(--muted);
   margin-top: 2px;
 }
+
+/* ============================================================================
+   Design tokens v1.1 + The Surface Rule  (docs/design/design-tokens-v1_1.md)
+   ADDITIVE + SCOPED: the v1.1 palette applies only under a [data-surface]
+   shell, so existing WC surfaces (which set no data-surface attribute) keep
+   the :root aliases above unchanged — including the pre-1.1 --volt-dim value.
+   New gridiron routes opt in via data-surface="ink" | "paper".
+   ========================================================================== */
+[data-surface] {
+  --ink: #0A0A0A;
+  --graphite: #1A1A1A;
+  --graphite-up: #242424;
+  --charcoal: #2A2A2A;
+  --rule: #2E2E2E;
+  --rule-dim: #1F1F1F;
+  --paper: #F5F5F2;
+  --paper-dim: #C5C5C2;
+  --muted: #888888;
+  --muted-dim: #5A5A5A;
+  --volt: #D4FF00;
+  --volt-dim: #8FAA00;
+  --live: #E63946;
+  --jade: #2A8A4F;
+  --terra: #B8410F;
+  --font-saira-cond: var(--font-saira-condensed), var(--font-saira), sans-serif;
+  --font-archivo-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Paper ground: adds the paper-surface text/structure ramp on top of the
+   shared palette. Data instruments inside a paper shell still opt back to ink
+   via their own data-surface="ink" wrapper. */
+[data-surface="ink"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+[data-surface="paper"] {
+  background: var(--paper);
+  color: var(--ink);
+  --ink-soft: #333330;
+  --ink-mut: #6B6B66;
+  --ink-dim: #9A9A94;
+  --p-rule: #DEDED8;
+  --p-rule-soft: #E8E8E2;
+}

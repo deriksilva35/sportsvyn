@@ -1,4 +1,4 @@
-import { Saira, Source_Serif_4, JetBrains_Mono } from "next/font/google";
+import { Saira, Saira_Condensed, Source_Serif_4, JetBrains_Mono, Archivo } from "next/font/google";
 import "./globals.css";
 
 const saira = Saira({
@@ -19,6 +19,24 @@ const sourceSerif = Source_Serif_4({
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  display: "swap",
+});
+
+// Added for the gridiron surfaces (design tokens v1.1). Additive: new CSS
+// variables on <html>; existing pages do not reference them, so they render
+// identically.
+const sairaCondensed = Saira_Condensed({
+  variable: "--font-saira-condensed",
+  weight: ["500", "600", "700"],
+  style: "normal",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const archivo = Archivo({
+  variable: "--font-archivo",
   weight: ["400", "500"],
   subsets: ["latin"],
   display: "swap",
@@ -44,7 +62,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${saira.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${saira.variable} ${sairaCondensed.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${archivo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
