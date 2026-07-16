@@ -58,7 +58,7 @@ export default function StartForm({ presets, canStart, used, limit, shell = fals
           {/* Path 2: in the native sim shell the upgrade flow leaves the sim, so it
               opens externally (target=_blank). The Mac session must route external
               links to Safari, not the webview — flagged in the app repo README. */}
-          <a href="/membership" {...(shell ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>Become a member →</a>
+          <a href="/membership" {...(shell ? { target: '_blank', rel: 'noopener noreferrer', 'data-external': '' } : {})}>Become a member →</a>
         </div>
       ) : (
         <div className="sim-controls">
