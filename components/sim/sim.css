@@ -1,0 +1,123 @@
+/* Mock draft sim — ink surface, reuses design-tokens v1.1 (data-surface="ink"|"paper")
+   and the gridiron grammar (mono data, Saira italic display, volt accents). */
+
+.sim { min-height: 100%; font-family: var(--font-jetbrains-mono), monospace; }
+.sim-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px 40px; }
+
+/* local ink header band */
+.sim-head { display: flex; align-items: center; gap: 20px; padding: 14px 22px; background: rgba(10,10,10,.96); border-bottom: 1px solid var(--charcoal); position: sticky; top: 0; z-index: 40; }
+.sim-head .tag { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.sim-head .tag b { color: var(--volt); font-weight: 700; }
+.sim-head .right { margin-left: auto; display: flex; gap: 14px; align-items: center; }
+.sim-head a { color: var(--muted); text-decoration: none; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+.sim-head a:hover { color: var(--volt); }
+
+/* footer / FFC attribution (license requirement) */
+.sim-foot { border-top: 1px solid var(--rule-dim); margin-top: 32px; padding: 16px 22px; font-size: 10px; letter-spacing: .04em; color: var(--muted-dim); text-align: center; }
+.sim-foot a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--volt); text-underline-offset: 2px; }
+
+/* ---- lobby ---- */
+.sim-kicker { font-size: 10px; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: var(--volt); margin-bottom: 12px; }
+.sim-pitch h1 { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 46px; line-height: 1.02; letter-spacing: -.03em; color: var(--paper); margin: 0 0 16px; }
+.sim-pitch p { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 18px; line-height: 1.5; color: var(--paper-dim); max-width: 620px; }
+.sim-ph { display: inline-block; font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-dim); border: 1px solid var(--rule); padding: 2px 7px; margin-bottom: 12px; }
+.sim-cta { display: inline-block; margin-top: 22px; background: var(--volt); color: var(--ink); font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; padding: 12px 22px; text-decoration: none; }
+
+.sim-used { font-size: 11px; letter-spacing: .06em; color: var(--muted); margin: 4px 0 20px; }
+.sim-used b { color: var(--paper); }
+
+.sim-presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.sim-preset { border: 1px solid var(--rule); background: var(--graphite); padding: 16px; cursor: pointer; }
+.sim-preset:hover { border-color: var(--muted-dim); }
+.sim-preset.sel { border-color: var(--volt); }
+.sim-preset .nm { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 18px; color: var(--paper); text-transform: uppercase; letter-spacing: -.02em; }
+.sim-preset .meta { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+
+.sim-controls { margin-top: 22px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.sim-controls label { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); }
+.sim-controls select, .sim-controls input[type=number] { background: var(--graphite); border: 1px solid var(--rule); color: var(--paper); font-family: inherit; font-size: 13px; padding: 8px 10px; }
+.sim-start { background: var(--volt); color: var(--ink); border: 0; font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; padding: 12px 24px; cursor: pointer; }
+.sim-start:disabled { opacity: .5; cursor: not-allowed; }
+.sim-toggle { display: inline-flex; gap: 6px; align-items: center; font-size: 11px; color: var(--muted); }
+
+/* upgrade slab (gate hit) — volt slab per the Daily Card fantasy corner */
+.sim-upgrade { margin-top: 20px; background: var(--volt); color: var(--ink); padding: 20px 22px; }
+.sim-upgrade h3 { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 22px; margin: 0 0 6px; }
+.sim-upgrade p { font-size: 12px; margin: 0 0 12px; max-width: 460px; }
+.sim-upgrade a { display: inline-block; background: var(--ink); color: var(--volt); font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; padding: 10px 18px; text-decoration: none; }
+
+/* ---- room: three zones ---- */
+.room { display: grid; grid-template-columns: 240px 1fr 320px; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .room { grid-template-columns: 1fr; } .room .zone.roster, .room .zone.feed { display: none; } .room.tab-roster .zone.roster, .room.tab-feed .zone.feed, .room.tab-avail .zone.avail { display: block; } }
+.zone { border: 1px solid var(--rule); background: var(--graphite); }
+.zone-h { font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--volt); padding: 12px 14px; border-bottom: 1px solid var(--rule-dim); }
+.zone-body { padding: 8px 10px; max-height: 70vh; overflow-y: auto; }
+
+/* mobile tab bar */
+.room-tabs { display: none; }
+@media (max-width: 900px) { .room-tabs { display: flex; gap: 0; margin-bottom: 10px; } .room-tabs button { flex: 1; background: var(--graphite); border: 1px solid var(--rule); color: var(--muted); font-family: inherit; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 10px; cursor: pointer; } .room-tabs button.on { color: var(--volt); border-color: var(--volt); } }
+
+/* on-the-clock banner */
+.on-clock { border: 1px solid var(--volt); background: rgba(212,255,0,.06); padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.on-clock .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--volt); animation: sim-pulse 1.4s infinite; }
+@keyframes sim-pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+.on-clock .txt { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--paper); }
+.on-clock .txt b { color: var(--volt); }
+.on-clock .timer { margin-left: auto; font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 22px; color: var(--paper); }
+.on-clock .timer.low { color: var(--live); }
+.on-clock.waiting { border-color: var(--rule); background: transparent; }
+.on-clock.waiting .dot { background: var(--muted); animation: none; }
+
+/* roster rows */
+.rslot { display: flex; align-items: baseline; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--rule-dim); font-size: 12px; }
+.rslot .lbl { width: 36px; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); }
+.rslot .nm { color: var(--paper); }
+.rslot .tm { color: var(--muted-dim); font-size: 10px; }
+.rslot.open .nm { color: var(--muted-dim); font-style: italic; }
+
+/* pick feed */
+.feed-row { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: baseline; padding: 6px 4px; border-bottom: 1px solid var(--rule-dim); }
+.feed-row .ov { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 15px; color: var(--muted); }
+.feed-row.user { background: rgba(212,255,0,.05); }
+.feed-row.user .ov { color: var(--volt); }
+.feed-row .nm { font-size: 13px; color: var(--paper); }
+.feed-row.ai .nm { color: var(--paper-dim); }
+.feed-row .pt { font-size: 10px; color: var(--muted-dim); }
+.feed-row .slot { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.feed-reveal { animation: sim-in .18s ease; }
+@keyframes sim-in { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; } }
+
+/* available players */
+.avail-tools { display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--rule-dim); }
+.avail-search { background: var(--ink); border: 1px solid var(--rule); color: var(--paper); font-family: inherit; font-size: 12px; padding: 8px 10px; }
+.avail-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+.avail-chips button { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--rule); padding: 5px 9px; cursor: pointer; }
+.avail-chips button.on { color: var(--ink); background: var(--volt); border-color: var(--volt); }
+.p-row { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: center; padding: 7px 4px; border-bottom: 1px solid var(--rule-dim); }
+.p-row .adp { font-size: 11px; color: var(--volt-dim); }
+.p-row .nm { font-size: 13px; color: var(--paper); }
+.p-row .rng { font-size: 9px; color: var(--muted-dim); }
+.p-row .draft { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: var(--volt); border: 0; padding: 5px 10px; cursor: pointer; }
+.p-row.armed { border: 1px solid var(--volt); background: rgba(212,255,0,.05); }
+.p-row .confirm { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: var(--volt); border: 0; padding: 5px 10px; cursor: pointer; }
+.p-row .cancel { font-size: 9px; color: var(--muted); background: transparent; border: 1px solid var(--rule); padding: 5px 8px; cursor: pointer; }
+.p-err { font-size: 10px; color: var(--terra); padding: 4px 6px; }
+
+/* ---- results stub ---- */
+.res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (max-width: 720px) { .res-grid { grid-template-columns: 1fr; } }
+.res-slot { display: flex; gap: 8px; align-items: baseline; padding: 7px 10px; border: 1px solid var(--rule-dim); background: var(--graphite); font-size: 13px; }
+.res-slot .lbl { width: 40px; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); }
+.res-slot .nm { color: var(--paper); }
+.ledger { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12px; }
+.ledger th { text-align: left; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-dim); padding: 6px 8px; border-bottom: 1px solid var(--rule); }
+.ledger td { padding: 6px 8px; border-bottom: 1px solid var(--rule-dim); color: var(--paper-dim); }
+.ledger td.val.pos { color: var(--volt); }
+.ledger td.val.neg { color: var(--terra); }
+.callouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; margin: 18px 0; }
+.callout { border: 1px solid var(--rule); background: var(--graphite); padding: 14px; }
+.callout .k { font-size: 9px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--volt); }
+.callout .nm { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 18px; color: var(--paper); margin-top: 6px; }
+.callout .sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
+.bye-warn { border-left: 3px solid var(--terra); padding: 8px 12px; margin: 12px 0; font-size: 11px; color: var(--paper-dim); }
+.read-ph { border: 1px dashed var(--rule); padding: 20px; margin: 18px 0; font-size: 11px; letter-spacing: .06em; color: var(--muted-dim); text-align: center; }
