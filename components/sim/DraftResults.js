@@ -23,7 +23,8 @@ const disp = (pk) => Math.round(pk.overallPick - pk.adpAtPick); // positive-good
 const nameOf = (pk) => (pk.synthetic ? `Replacement ${pk.slotPos}` : pk.playerName);
 
 export default function DraftResults({ data }) {
-  const { config, userPicks, rosterValueTotal, bestValue, biggestReach, pivot, byeStackWarnings } = data;
+  const { results, prose, proseSource } = data;
+  const { config, userPicks, grade, gradeScore, components, rosterValueTotal, bestValue, biggestReach, pivot, byeStackWarnings, draft } = results;
   const roster = buildRoster(userPicks, config.roster_slots);
   const ledger = [...userPicks].sort((a, b) => a.overallPick - b.overallPick);
   const totalDisplay = -rosterValueTotal; // rosterValueTotal is engine-signed; flip for display
@@ -31,6 +32,29 @@ export default function DraftResults({ data }) {
   return (
     <div>
       <div className="sim-kicker">Draft complete · {config.name}</div>
+
+      {/* grade block + transparency components */}
+      <div className="grade-block">
+        <div className="grade-letter">{grade}</div>
+        <div className="grade-meta"><span className="score">{gradeScore}</span><div className="lbl">Draft grade</div></div>
+        <div className="components">
+          <div className="c"><span>Value (paid vs market)</span><b>{components.valueScore}</b></div>
+          <div className="c"><span>Construction (what you built)</span><b>{components.constructionScore}</b></div>
+          <div className="c"><span>Weights</span><b>{Math.round(components.weights.value * 100)}/{Math.round(components.weights.construction * 100)}</b></div>
+          <div className="c"><span>Late starters · bye stacks</span><b>{components.lateStarters} · {components.byeStackCount}</b></div>
+        </div>
+      </div>
+
+      {/* THE READ — the one paper prose island on the ink results surface */}
+      <div className="read-prose" data-surface="paper">
+        <div className="k">The Read</div>
+        <p>{prose}</p>
+        <div className="src">{proseSource === 'ai' ? 'Generated read, editor rules applied' : 'Read (deterministic summary)'}</div>
+      </div>
+
+      <div style={{ margin: '4px 0 18px' }}>
+        <a className="share-btn" href={`/sim/draft/${draft.id}/card`} target="_blank" rel="noopener noreferrer">Share card ↗</a>
+      </div>
 
       <h2 style={{ fontFamily: 'var(--font-saira)', fontStyle: 'italic', fontWeight: 900, textTransform: 'uppercase', fontSize: 26, color: 'var(--paper)', margin: '0 0 14px' }}>Your Roster</h2>
       <div className="res-grid">
@@ -71,8 +95,6 @@ export default function DraftResults({ data }) {
           <tr><td colSpan={5} style={{ textAlign: 'right', color: 'var(--muted)' }}>Roster value total</td><td className={`val ${totalDisplay > 0 ? 'pos' : totalDisplay < 0 ? 'neg' : ''}`}>{totalDisplay > 0 ? `+${totalDisplay.toFixed(1)}` : totalDisplay.toFixed(1)}</td></tr>
         </tbody>
       </table>
-
-      <div className="read-ph">THE READ — grade + voice-bible prose ships next session.</div>
 
       <div style={{ display: 'flex', gap: 12, marginTop: 18 }}>
         <a className="sim-cta" href="/sim">Draft again</a>

@@ -5,7 +5,8 @@ import Wordmark from '@/components/gridiron/Wordmark';
 import Attribution from '@/components/sim/Attribution';
 import DraftRoom from '@/components/sim/DraftRoom';
 import DraftResults from '@/components/sim/DraftResults';
-import { getDraft, getDraftForRoom, getResults } from '@/lib/fantasy/drafts';
+import { getDraft, getDraftForRoom } from '@/lib/fantasy/drafts';
+import { getOrCreateRead } from '@/lib/fantasy/readWriter';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
@@ -39,7 +40,7 @@ export default async function DraftRoomPage({ params }) {
       />
     );
   } else if (status === 'completed') {
-    body = <DraftResults data={await getResults(draftId, userId)} />;
+    body = <DraftResults data={await getOrCreateRead(draftId, userId)} />;
   } else {
     body = (
       <div style={{ padding: '40px 0' }}>

@@ -121,3 +121,19 @@
 .callout .sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
 .bye-warn { border-left: 3px solid var(--terra); padding: 8px 12px; margin: 12px 0; font-size: 11px; color: var(--paper-dim); }
 .read-ph { border: 1px dashed var(--rule); padding: 20px; margin: 18px 0; font-size: 11px; letter-spacing: .06em; color: var(--muted-dim); text-align: center; }
+
+/* grade block */
+.grade-block { display: flex; align-items: center; gap: 20px; border: 1px solid var(--rule); background: var(--graphite); padding: 20px 22px; margin-bottom: 16px; }
+.grade-letter { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 72px; line-height: .9; color: var(--volt); letter-spacing: -.04em; }
+.grade-meta .score { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 26px; color: var(--paper); border-bottom: 3px solid var(--volt); display: inline-block; line-height: 1.1; }
+.grade-meta .lbl { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-dim); margin-top: 6px; }
+/* transparency components table */
+.components { margin-left: auto; font-size: 11px; color: var(--muted); }
+.components .c { display: flex; justify-content: space-between; gap: 18px; padding: 2px 0; }
+.components .c b { color: var(--paper); font-weight: 500; }
+/* prose island — the one PAPER block on the ink results surface (Surface Rule inverse) */
+.read-prose { background: var(--paper); color: var(--ink); padding: 22px 24px; margin: 16px 0; border-left: 4px solid var(--volt); }
+.read-prose .k { font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-mut); margin-bottom: 8px; }
+.read-prose p { font-family: var(--font-source-serif), serif; font-size: 16px; line-height: 1.6; color: var(--ink-soft); margin: 0; }
+.read-prose .src { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim); margin-top: 10px; }
+.share-btn { display: inline-block; background: var(--graphite); border: 1px solid var(--volt); color: var(--volt); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 10px 18px; text-decoration: none; }
