@@ -6,6 +6,8 @@
 // reads POSITIVE-GOOD: display = overall_pick - adp_at_pick (fell to you = +,
 // reach = - / terra).
 
+import ShareButton from './ShareButton';
+
 function expandSlots(rosterSlots) {
   const out = [];
   for (const [k, n] of Object.entries(rosterSlots)) for (let i = 0; i < n; i++) out.push(k);
@@ -53,7 +55,9 @@ export default function DraftResults({ data }) {
       </div>
 
       <div style={{ margin: '4px 0 18px' }}>
-        <a className="share-btn" href={`/sim/draft/${draft.id}/card`} target="_blank" rel="noopener noreferrer">Share card ↗</a>
+        {/* In the native sim shell this fires the share bridge (iOS share sheet);
+            on web it keeps the existing behavior — open the card in a new tab. */}
+        <ShareButton url={`/sim/draft/${draft.id}/card`} title={`My mock draft — grade ${grade}`}>Share card ↗</ShareButton>
       </div>
 
       <h2 style={{ fontFamily: 'var(--font-saira)', fontStyle: 'italic', fontWeight: 900, textTransform: 'uppercase', fontSize: 26, color: 'var(--paper)', margin: '0 0 14px' }}>Your Roster</h2>

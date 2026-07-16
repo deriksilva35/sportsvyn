@@ -3,6 +3,8 @@ import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import Attribution from '@/components/sim/Attribution';
 import StartForm from '@/components/sim/StartForm';
+import ShellPersist from '@/components/sim/ShellPersist';
+import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getPresets, getDraftsUsed, isMember, canStartDraft, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
@@ -11,12 +13,19 @@ import '@/components/sim/sim.css';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mock Draft Sim - Sportsvyn', robots: { index: false, follow: false } };
 
-export default async function SimLobby() {
+// Shell mode opts into viewport-fit:cover; non-shell emits the root viewport.
+export async function generateViewport({ searchParams }) {
+  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+}
+
+export default async function SimLobby({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
+  const isShell = await resolveShellMode((await searchParams) ?? {});
 
   return (
-    <div className="sim" data-surface="ink">
+    <div className={`sim${isShell ? ' sim--shell' : ''}`} data-surface="ink">
+      {isShell && <ShellPersist />}
       <header className="sim-head">
         <Wordmark href="/sim" />
         <span className="tag">Mock Draft <b>Sim</b></span>
@@ -38,7 +47,7 @@ export default async function SimLobby() {
             return (
               <section>
                 <div className="sim-kicker">Start a mock draft</div>
-                <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} />
+                <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} shell={isShell} />
               </section>
             );
           })()

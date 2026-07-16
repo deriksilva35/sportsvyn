@@ -137,3 +137,14 @@
 .read-prose p { font-family: var(--font-source-serif), serif; font-size: 16px; line-height: 1.6; color: var(--ink-soft); margin: 0; }
 .read-prose .src { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim); margin-top: 10px; }
 .share-btn { display: inline-block; background: var(--graphite); border: 1px solid var(--volt); color: var(--volt); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 10px 18px; text-decoration: none; }
+
+/* ---- sim-app native shell (chrome subtraction + safe area) ----
+   Applied only when the .sim--shell class is present (server sets it from the
+   ?shell=sim-app -> sv_shell cookie; see lib/shell/shell.js). Non-shell markup
+   is unchanged — no redesign, chrome subtraction only. The sticky top chrome is
+   .sim-head and there are no bottom-pinned bars, so the top inset lands on the
+   header and the bottom inset on the content wrap. */
+.sim--shell .sim-head { padding-top: calc(14px + env(safe-area-inset-top)); }
+.sim--shell .sim-head .tag { display: none; }          /* app IS the sim — drop the label chrome */
+.sim--shell .sim-head .wordmark { font-size: 17px; }    /* wordmark small */
+.sim--shell .sim-wrap { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }

@@ -9,7 +9,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { startDraft } from '@/app/actions/sim';
 
-export default function StartForm({ presets, canStart, used, limit }) {
+export default function StartForm({ presets, canStart, used, limit, shell = false }) {
   const router = useRouter();
   const [presetId, setPresetId] = useState(presets[0]?.id ?? null);
   const [seat, setSeat] = useState('random');
@@ -55,7 +55,10 @@ export default function StartForm({ presets, canStart, used, limit }) {
           <h3>You&apos;ve used your free drafts</h3>
           <p>Members get unlimited mock drafts, the full Read, and saved history. Upgrade to keep drafting.</p>
           {/* TODO(membership): membership page does not exist yet — placeholder href. */}
-          <a href="/membership">Become a member →</a>
+          {/* Path 2: in the native sim shell the upgrade flow leaves the sim, so it
+              opens externally (target=_blank). The Mac session must route external
+              links to Safari, not the webview — flagged in the app repo README. */}
+          <a href="/membership" {...(shell ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>Become a member →</a>
         </div>
       ) : (
         <div className="sim-controls">

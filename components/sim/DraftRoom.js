@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { makePick, timerAutoPick } from '@/app/actions/sim';
+import { sendHaptic } from '@/lib/shell/bridge';
 
 const SLOT_OF = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', PK: 'K', DEF: 'DST' };
 const POS_FILTERS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'];
@@ -74,10 +75,23 @@ export default function DraftRoom({ draftId, config, order, userTeamIndex, initi
   }
 
   async function confirm(player) {
+    sendHaptic('heavy'); // confirm pick — the committing action (no-op off-shell)
     setRevealing(true);
     const res = await makePick(draftId, player.ffcPlayerId);
     await applyResult(res);
   }
+
+  // on-the-clock: your turn arrives (false -> true) -> notify haptic.
+  const wasMyTurn = useRef(false);
+  useEffect(() => {
+    if (isMyTurn && !wasMyTurn.current) sendHaptic('notify');
+    wasMyTurn.current = isMyTurn;
+  }, [isMyTurn]);
+
+  // timer urgency: each second in the final 10 (matches the .low visual) -> tick.
+  useEffect(() => {
+    if (isMyTurn && clock != null && clock > 0 && clock <= 10) sendHaptic('tick');
+  }, [clock, isMyTurn]);
 
   // --- advisory timer: counts down on the user's turn; auto-picks on expiry ---
   // clock resets to timerSeconds after each turn (in applyResult) and at mount
@@ -168,7 +182,7 @@ export default function DraftRoom({ draftId, config, order, userTeamIndex, initi
                 <span><span className="nm">{p.name}</span> <span className="rng">{SLOT_OF[p.position] ?? p.position}{p.team ? `·${p.team}` : ''} · {r0(p.adpHigh)}-{r0(p.adpLow)}</span></span>
                 {isMyTurn && (armedId === p.ffcPlayerId
                   ? <span style={{ display: 'flex', gap: 4 }}><button className="confirm" onClick={() => confirm(p)}>Confirm</button><button className="cancel" onClick={() => { setArmedId(null); setErr(null); }}>✕</button></span>
-                  : <button className="draft" onClick={() => { setArmedId(p.ffcPlayerId); setErr(null); }}>Draft</button>)}
+                  : <button className="draft" onClick={() => { setArmedId(p.ffcPlayerId); setErr(null); sendHaptic('light'); }}>Draft</button>)}
               </div>
               {armedId === p.ffcPlayerId && err && <div className="p-err">{ERR[err.reason] ?? err.reason}</div>}
             </div>

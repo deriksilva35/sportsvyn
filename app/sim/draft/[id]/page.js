@@ -5,6 +5,8 @@ import Wordmark from '@/components/gridiron/Wordmark';
 import Attribution from '@/components/sim/Attribution';
 import DraftRoom from '@/components/sim/DraftRoom';
 import DraftResults from '@/components/sim/DraftResults';
+import ShellPersist from '@/components/sim/ShellPersist';
+import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getDraft, getDraftForRoom } from '@/lib/fantasy/drafts';
 import { getOrCreateRead } from '@/lib/fantasy/readWriter';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
@@ -14,12 +16,18 @@ import '@/components/sim/sim.css';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Draft Room - Sportsvyn', robots: { index: false, follow: false } };
 
-export default async function DraftRoomPage({ params }) {
+// Shell mode opts into viewport-fit:cover; non-shell emits the root viewport.
+export async function generateViewport({ searchParams }) {
+  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+}
+
+export default async function DraftRoomPage({ params, searchParams }) {
   const { id } = await params;
   const draftId = Number(id);
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) redirect(`/signin?callbackUrl=/sim/draft/${draftId}`);
+  const isShell = await resolveShellMode((await searchParams) ?? {});
 
   const base = await getDraft(draftId, userId);
   if (!base) notFound(); // not found OR not the user's draft
@@ -52,7 +60,8 @@ export default async function DraftRoomPage({ params }) {
   }
 
   return (
-    <div className="sim" data-surface="ink">
+    <div className={`sim${isShell ? ' sim--shell' : ''}`} data-surface="ink">
+      {isShell && <ShellPersist />}
       <header className="sim-head">
         <Wordmark href="/sim" />
         <span className="tag">Draft <b>Room</b></span>
