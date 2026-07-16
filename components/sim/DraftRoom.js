@@ -22,6 +22,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { makePick, timerAutoPick, setAutoDraft, fetchPlayerStats } from '@/app/actions/sim';
 import { getPlayerSeasonStatsFixture } from '@/lib/fantasy/statsFixture';
+import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { sendHaptic } from '@/lib/shell/bridge';
 
 const SLOT_OF = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', PK: 'K', DEF: 'DST' };
@@ -33,43 +34,6 @@ const ERR = {
 };
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 const r0 = (x) => (x == null ? '?' : Math.round(Number(x)));
-
-// Lineup order for the starter block. Counts stay CONFIG-DRIVEN (read off the
-// preset's roster_slots row); only the ORDER is canonical here, because jsonb key
-// order is an artifact of how the row was written, not a product decision. Any
-// slot the config carries that isn't listed still renders (config-driven-
-// everything: a new preset slot must never silently vanish from the roster).
-const STARTER_ORDER = ['QB', 'RB', 'WR', 'TE', 'FLEX', 'DST', 'K'];
-const BENCH = 'BN';
-
-function orderedSlots(rosterSlots) {
-  const out = [];
-  const push = (key, labeller) => {
-    const n = rosterSlots[key] ?? 0;
-    for (let i = 0; i < n; i++) out.push({ key, label: labeller(i, n), pick: null });
-  };
-  // Numbered only when the config gives more than one (RB1/RB2, but a lone TE).
-  const starter = (key) => (i, n) => (n > 1 ? `${key}${i + 1}` : key);
-  for (const key of STARTER_ORDER) push(key, starter(key));
-  for (const key of Object.keys(rosterSlots)) {
-    if (!STARTER_ORDER.includes(key) && key !== BENCH) push(key, starter(key));
-  }
-  push(BENCH, (i) => `BN${i + 1}`); // bench always last
-  return out;
-}
-
-// A drafted player fills the first eligible OPEN slot; overflow goes to bench.
-// rosterSlot on the pick is server truth (the engine assigned it), so this only
-// places what the engine already decided.
-function buildRoster(userPicks, rosterSlots) {
-  const slots = orderedSlots(rosterSlots);
-  for (const pk of [...userPicks].sort((a, b) => a.overallPick - b.overallPick)) {
-    const s = slots.find((x) => x.key === pk.rosterSlot && !x.pick)
-      || slots.find((x) => x.key === BENCH && !x.pick);
-    if (s) s.pick = pk;
-  }
-  return slots;
-}
 
 // ?statsfixture=1 - DEV flag routing the stat strip to invented sample data so
 // the UI can be built at real density before the backfill. Read lazily from the
