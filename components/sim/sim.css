@@ -118,6 +118,9 @@
 .p-num .val.pos { color: var(--volt); }
 .p-num .val.neg { color: var(--terra); }
 .p-num .val { font-size: 11px; }
+.p-num .ppg { font-size: 11px; color: var(--paper); }
+/* quick stats: last season's headline line, sitting with the name */
+.p-row .rng .q { color: var(--muted); }
 .p-act { display: flex; gap: 4px; }
 .p-row .adp { font-size: 11px; color: var(--volt-dim); }
 .p-row .nm { font-size: 13px; color: var(--paper); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -134,6 +137,10 @@
 .s-tot { display: flex; flex-direction: column; gap: 2px; }
 .s-tot b { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 18px; color: var(--paper); line-height: 1; }
 .s-tot i { font-size: 8px; font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-dim); }
+/* fantasy points: the headline number of the strip */
+.s-fpts b { color: var(--volt); font-size: 22px; }
+.s-note { font-size: 9px; line-height: 1.4; letter-spacing: .04em; color: var(--muted-dim); border-left: 2px solid var(--terra); padding: 4px 8px; margin-bottom: 10px; max-width: 460px; }
+.s-log td.fpts { color: var(--paper); }
 .s-scroll { max-height: 190px; overflow-y: auto; overflow-x: auto; }
 .s-log { width: 100%; border-collapse: collapse; font-size: 11px; }
 .s-log th { position: sticky; top: 0; background: var(--graphite); text-align: right; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); padding: 4px 6px; border-bottom: 1px solid var(--rule); }

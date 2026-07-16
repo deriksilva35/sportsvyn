@@ -16,7 +16,7 @@ import { revalidatePath } from 'next/cache';
 import {
   startDraftFor, makePickFor, timerAutoPickFor, abandonDraftFor, setAutoDraftFor,
 } from '@/lib/fantasy/drafts';
-import { getPlayerSeasonStats } from '@/lib/fantasy/playerStats';
+import { getPlayerSeasonStats, getPlayerSeasonSummaries } from '@/lib/fantasy/playerStats';
 
 async function currentUserId() {
   const session = await auth();
@@ -71,6 +71,15 @@ export async function fetchPlayerStats(ffcPlayerId) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
   return { ok: true, stats: await getPlayerSeasonStats(String(ffcPlayerId)) };
+}
+
+// Season fantasy summaries for the collapsed rows' quick stats, batched (one
+// call for the whole visible list, never one per row). Returns {} today.
+export async function fetchPlayerSummaries(ffcPlayerIds, scoringFormat) {
+  const userId = await currentUserId();
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ids = (ffcPlayerIds ?? []).map(String);
+  return { ok: true, summaries: await getPlayerSeasonSummaries(ids, scoringFormat) };
 }
 
 // Abandon an in-progress draft (frees the entitlement gate).

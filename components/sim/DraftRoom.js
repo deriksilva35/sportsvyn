@@ -20,8 +20,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { makePick, timerAutoPick, setAutoDraft, fetchPlayerStats } from '@/app/actions/sim';
-import { getPlayerSeasonStatsFixture } from '@/lib/fantasy/statsFixture';
+import { makePick, timerAutoPick, setAutoDraft, fetchPlayerStats, fetchPlayerSummaries } from '@/app/actions/sim';
+import { getPlayerSeasonStatsFixture, viewFor } from '@/lib/fantasy/statsFixture';
+import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/scoring';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { sendHaptic } from '@/lib/shell/bridge';
 
@@ -71,6 +72,7 @@ export default function DraftRoom({
   const [auto, setAuto] = useState(initialAuto === true);
   const [expandedId, setExpandedId] = useState(null);
   const [statsById, setStatsById] = useState({}); // id -> 'loading' | null | SeasonStats
+  const [summaries, setSummaries] = useState({}); // id -> season summary, for quick stats
 
   const currentOverall = picks.length + 1;
   const complete = currentOverall > order.length;
@@ -159,6 +161,32 @@ export default function DraftRoom({
     (async () => { await applyResult(await timerAutoPick(draftId)); })();
   }, [clock, canPick, currentOverall, timerSeconds, draftId, applyResult]);
 
+  // --- quick stats: ONE batched load for the whole pool, never one per row ---
+  // Runs once. Summaries are keyed by player id and stay valid as the available
+  // list shrinks, so there is nothing to refetch as picks come off the board.
+  // Both paths set state from an async callback, so the first client render
+  // still matches the server's (empty) one and hydration stays clean.
+  const summariesLoaded = useRef(false);
+  useEffect(() => {
+    if (summariesLoaded.current) return undefined;
+    summariesLoaded.current = true;
+    let cancelled = false;
+    (async () => {
+      if (isFixtureMode()) { // DEV path only - invented numbers, badged in the UI
+        const out = {};
+        for (const p of available) {
+          const s = getPlayerSeasonStatsFixture(p.ffcPlayerId, p.position, p.bye, config.scoring_format);
+          out[p.ffcPlayerId] = { ...seasonSummary(s.games, config.scoring_format), totals: s.totals };
+        }
+        if (!cancelled) setSummaries(out);
+        return;
+      }
+      const res = await fetchPlayerSummaries(available.map((p) => p.ffcPlayerId), config.scoring_format);
+      if (!cancelled && res.ok) setSummaries(res.summaries);
+    })();
+    return () => { cancelled = true; };
+  }, [available, config.scoring_format]);
+
   // --- stat strip: expand a row -> load that player's season ---
   async function toggleExpand(p) {
     const id = p.ffcPlayerId;
@@ -166,7 +194,7 @@ export default function DraftRoom({
     setExpandedId(next);
     if (next == null || statsById[id] !== undefined) return;
     if (isFixtureMode()) { // DEV path only - invented numbers, badged as such
-      setStatsById((m) => ({ ...m, [id]: getPlayerSeasonStatsFixture(id, p.position, p.bye) }));
+      setStatsById((m) => ({ ...m, [id]: getPlayerSeasonStatsFixture(id, p.position, p.bye, config.scoring_format) }));
       return;
     }
     setStatsById((m) => ({ ...m, [id]: 'loading' }));
@@ -243,6 +271,13 @@ export default function DraftRoom({
             const val = Math.round(currentOverall - Number(p.adp)); // positive-good: he fell to you
             const open = expandedId === p.ffcPlayerId;
             const stats = statsById[p.ffcPlayerId];
+            const slot = SLOT_OF[p.position] ?? p.position;
+            const sum = summaries[p.ffcPlayerId];
+            // Quick stats sit with the name; the full log is a tap away. K/DST
+            // points are partial (no distance tiers / points allowed), so their
+            // PPG is marked ~ rather than passed off as league-exact.
+            const quick = sum ? viewFor(p.position).quick(sum.totals) : null;
+            const approx = sum && !isExactlyScored(slot);
             return (
               <div key={p.ffcPlayerId} className={`p-item${open ? ' open' : ''}`}>
                 <div className={`p-row${armedId === p.ffcPlayerId ? ' armed' : ''}`}>
@@ -250,7 +285,16 @@ export default function DraftRoom({
                     <span className="ava">{initials(p.name)}</span>
                     <span className="p-id">
                       <span className="nm">{p.name}</span>
-                      <span className="rng">{SLOT_OF[p.position] ?? p.position}{p.team ? `·${p.team}` : ''} · {r0(p.adpHigh)}-{r0(p.adpLow)}</span>
+                      <span className="rng">
+                        {slot}{p.team ? `·${p.team}` : ''} · {r0(p.adpHigh)}-{r0(p.adpLow)}
+                        {quick && <span className="q"> · {quick.join(' · ')}</span>}
+                      </span>
+                    </span>
+                    <span className="p-num">
+                      <span className="ppg" title={approx ? 'Partial: kicker distance tiers and defensive points allowed are not in the data' : undefined}>
+                        {sum ? `${approx ? '~' : ''}${sum.ppg}` : '-'}
+                      </span>
+                      <span className="lbl">PPG</span>
                     </span>
                     <span className="p-num">
                       <span className="adp">{r0(p.adp)}</span>
@@ -266,7 +310,7 @@ export default function DraftRoom({
                     : <button className="draft" onClick={() => { setArmedId(p.ffcPlayerId); setErr(null); sendHaptic('light'); }}>Draft</button>)}
                 </div>
                 {armedId === p.ffcPlayerId && err && <div className="p-err">{ERR[err.reason] ?? err.reason}</div>}
-                {open && <StatStrip stats={stats} />}
+                {open && <StatStrip stats={stats} scoringFormat={config.scoring_format} />}
               </div>
             );
           })}
@@ -294,7 +338,7 @@ export default function DraftRoom({
 // Season totals + game log for an expanded player. `stats` is undefined (not
 // asked yet), 'loading', null (unknown - the honest state until the gridiron
 // backfill lands), or a SeasonStats object.
-function StatStrip({ stats }) {
+function StatStrip({ stats, scoringFormat }) {
   if (stats === undefined || stats === 'loading') return <div className="p-stats loading">Loading season…</div>;
   if (stats === null) {
     return (
@@ -303,24 +347,42 @@ function StatStrip({ stats }) {
       </div>
     );
   }
+  // Columns and points both derive from the same structured stat line, so the
+  // table and the total cannot disagree about what the player did.
+  const view = viewFor(stats.position);
+  const summary = seasonSummary(stats.games, scoringFormat);
+  const slot = SLOT_OF[stats.position] ?? stats.position;
+  const exact = isExactlyScored(slot);
   return (
     <div className="p-stats">
       <div className="s-totals">
         <span className="s-season">{stats.season}{stats.source === 'fixture' && <b className="s-fix">Fixture</b>}</span>
-        {stats.totals.map((t) => (
+        <span className="s-tot s-fpts">
+          <b>{summary.points}</b><i>{exact ? 'Fantasy pts' : 'Fantasy pts (partial)'}</i>
+        </span>
+        <span className="s-tot"><b>{exact ? summary.ppg : `~${summary.ppg}`}</b><i>Per game</i></span>
+        {view.totals(stats.totals).map((t) => (
           <span key={t.label} className="s-tot"><b>{t.value}</b><i>{t.label}</i></span>
         ))}
       </div>
+      {!exact && (
+        <div className="s-note">
+          Partial: kicker field goals score a flat 3 (no distance tiers) and defensive
+          points allowed are not in the data.
+        </div>
+      )}
       <div className="s-scroll">
         <table className="s-log">
           <thead>
-            <tr><th>WK</th>{stats.columns.map((c) => <th key={c}>{c}</th>)}</tr>
+            <tr><th>WK</th>{view.columns.map((c) => <th key={c}>{c}</th>)}<th>FPTS</th></tr>
           </thead>
           <tbody>
             {stats.games.map((g) => (
               <tr key={g.week}>
                 <td className="wk">{g.week}</td>
-                {g.values.map((v, i) => <td key={i}>{v}</td>)}
+                <td>{g.opp}</td>
+                {view.row(g.stats).map((v, i) => <td key={i}>{v}</td>)}
+                <td className="fpts">{fantasyPoints(g.stats, scoringFormat)}</td>
               </tr>
             ))}
           </tbody>
