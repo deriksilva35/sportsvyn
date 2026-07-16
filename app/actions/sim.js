@@ -14,8 +14,9 @@
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import {
-  startDraftFor, makePickFor, timerAutoPickFor, abandonDraftFor,
+  startDraftFor, makePickFor, timerAutoPickFor, abandonDraftFor, setAutoDraftFor,
 } from '@/lib/fantasy/drafts';
+import { getPlayerSeasonStats } from '@/lib/fantasy/playerStats';
 
 async function currentUserId() {
   const session = await auth();
@@ -49,6 +50,27 @@ export async function timerAutoPick(draftId) {
   const res = await timerAutoPickFor(userId, draftId);
   if (res.ok) revalidatePath(`/sim/${draftId}`);
   return res;
+}
+
+// Flip mid-draft AUTO on/off for the owning user's seat. Persists on
+// drafts.is_auto; the room then drives the EXISTING timerAutoPick engine path
+// for each of the user's turns. Gate accounting is untouched by design.
+export async function setAutoDraft(draftId, on) {
+  const userId = await currentUserId();
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const res = await setAutoDraftFor(userId, draftId, on);
+  if (res.ok) revalidatePath(`/sim/draft/${draftId}`);
+  return res;
+}
+
+// Season stats for one pool player. Returns { ok: true, stats: null } today:
+// there are no NFL stat rows in DEV (see lib/fantasy/playerStats.js). The room
+// renders an honest empty state; the wiring is real so the backfill session only
+// has to fill in getPlayerSeasonStats.
+export async function fetchPlayerStats(ffcPlayerId) {
+  const userId = await currentUserId();
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  return { ok: true, stats: await getPlayerSeasonStats(String(ffcPlayerId)) };
 }
 
 // Abandon an in-progress draft (frees the entitlement gate).
