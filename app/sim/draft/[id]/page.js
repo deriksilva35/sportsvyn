@@ -45,6 +45,7 @@ export default async function DraftRoomPage({ params, searchParams }) {
         initialPicks={room.picks}
         initialAvailable={room.available}
         timerSeconds={room.timerSeconds}
+        initialAuto={room.isAuto}
       />
     );
   } else if (status === 'completed') {

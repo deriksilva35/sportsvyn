@@ -46,16 +46,29 @@
 .sim-upgrade p { font-size: 12px; margin: 0 0 12px; max-width: 460px; }
 .sim-upgrade a { display: inline-block; background: var(--ink); color: var(--volt); font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; padding: 10px 18px; text-decoration: none; }
 
-/* ---- room: three zones ---- */
-.room { display: grid; grid-template-columns: 240px 1fr 320px; gap: 16px; align-items: start; }
+/* ---- room: three zones ----
+   LEFT roster (narrow) · CENTER available (widest, it carries the stat columns)
+   · RIGHT feed (slim ticker). DOM order is roster/avail/feed, so the columns need
+   no explicit placement; the header and tab bar span all three. */
+.room { display: grid; grid-template-columns: 240px 1fr 300px; gap: 16px; align-items: start; }
+.room-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; }
+.room-head .on-clock { flex: 1; margin-bottom: 0; }
 @media (max-width: 900px) { .room { grid-template-columns: 1fr; } .room .zone.roster, .room .zone.feed { display: none; } .room.tab-roster .zone.roster, .room.tab-feed .zone.feed, .room.tab-avail .zone.avail { display: block; } }
 .zone { border: 1px solid var(--rule); background: var(--graphite); }
 .zone-h { font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--volt); padding: 12px 14px; border-bottom: 1px solid var(--rule-dim); }
 .zone-body { padding: 8px 10px; max-height: 70vh; overflow-y: auto; }
 
-/* mobile tab bar */
+/* mobile tab bar: DOM order sets the tabs, Available / Roster / Feed */
 .room-tabs { display: none; }
-@media (max-width: 900px) { .room-tabs { display: flex; gap: 0; margin-bottom: 10px; } .room-tabs button { flex: 1; background: var(--graphite); border: 1px solid var(--rule); color: var(--muted); font-family: inherit; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 10px; cursor: pointer; } .room-tabs button.on { color: var(--volt); border-color: var(--volt); } }
+@media (max-width: 900px) { .room-tabs { grid-column: 1 / -1; display: flex; gap: 0; margin-bottom: 10px; } .room-tabs button { flex: 1; background: var(--graphite); border: 1px solid var(--rule); color: var(--muted); font-family: inherit; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 10px; cursor: pointer; } .room-tabs button.on { color: var(--volt); border-color: var(--volt); } }
+
+/* AUTO toggle: sits with the on-the-clock banner in the room header */
+.auto-toggle { display: inline-flex; align-items: center; gap: 8px; background: var(--graphite); border: 1px solid var(--rule); color: var(--muted); font-family: inherit; font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; padding: 12px 14px; cursor: pointer; }
+.auto-toggle .sw { width: 26px; height: 12px; border: 1px solid var(--muted-dim); position: relative; }
+.auto-toggle .sw::after { content: ''; position: absolute; top: 1px; left: 1px; width: 10px; height: 8px; background: var(--muted-dim); transition: transform .12s ease; }
+.auto-toggle.on { color: var(--volt); border-color: var(--volt); }
+.auto-toggle.on .sw { border-color: var(--volt); }
+.auto-toggle.on .sw::after { background: var(--volt); transform: translateX(12px); }
 
 /* on-the-clock banner */
 .on-clock { border: 1px solid var(--volt); background: rgba(212,255,0,.06); padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
@@ -93,12 +106,40 @@
 .avail-chips { display: flex; gap: 4px; flex-wrap: wrap; }
 .avail-chips button { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--rule); padding: 5px 9px; cursor: pointer; }
 .avail-chips button.on { color: var(--ink); background: var(--volt); border-color: var(--volt); }
-.p-row { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: center; padding: 7px 4px; border-bottom: 1px solid var(--rule-dim); }
+.p-item { border-bottom: 1px solid var(--rule-dim); }
+.p-item.open { background: rgba(255,255,255,.02); }
+.p-row { display: flex; gap: 8px; align-items: center; padding: 7px 4px; }
+/* the whole identity block is the expand target; the Draft button stays a sibling */
+.p-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: transparent; border: 0; padding: 0; text-align: left; font-family: inherit; cursor: pointer; }
+.p-row .ava { flex: none; width: 30px; height: 30px; display: grid; place-items: center; background: var(--ink); border: 1px solid var(--rule); font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .04em; color: var(--volt); }
+.p-id { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.p-num { flex: none; display: flex; flex-direction: column; align-items: flex-end; width: 40px; }
+.p-num .lbl { font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); }
+.p-num .val.pos { color: var(--volt); }
+.p-num .val.neg { color: var(--terra); }
+.p-num .val { font-size: 11px; }
+.p-act { display: flex; gap: 4px; }
 .p-row .adp { font-size: 11px; color: var(--volt-dim); }
-.p-row .nm { font-size: 13px; color: var(--paper); }
+.p-row .nm { font-size: 13px; color: var(--paper); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .p-row .rng { font-size: 9px; color: var(--muted-dim); }
 .p-row .draft { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: var(--volt); border: 0; padding: 5px 10px; cursor: pointer; }
 .p-row.armed { border: 1px solid var(--volt); background: rgba(212,255,0,.05); }
+
+/* stat strip: season totals + game log, revealed on row expand */
+.p-stats { padding: 10px 6px 14px; border-top: 1px solid var(--rule-dim); }
+.p-stats.empty, .p-stats.loading { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-dim); padding: 12px 8px; }
+.s-totals { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
+.s-season { font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-dim); }
+.s-fix { margin-left: 6px; font-size: 8px; font-weight: 700; letter-spacing: .12em; color: var(--ink); background: var(--terra); padding: 1px 5px; }
+.s-tot { display: flex; flex-direction: column; gap: 2px; }
+.s-tot b { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 18px; color: var(--paper); line-height: 1; }
+.s-tot i { font-size: 8px; font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-dim); }
+.s-scroll { max-height: 190px; overflow-y: auto; overflow-x: auto; }
+.s-log { width: 100%; border-collapse: collapse; font-size: 11px; }
+.s-log th { position: sticky; top: 0; background: var(--graphite); text-align: right; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); padding: 4px 6px; border-bottom: 1px solid var(--rule); }
+.s-log td { text-align: right; padding: 4px 6px; color: var(--paper-dim); border-bottom: 1px solid var(--rule-dim); white-space: nowrap; }
+.s-log th:first-child, .s-log td:first-child, .s-log th:nth-child(2), .s-log td:nth-child(2) { text-align: left; }
+.s-log td.wk { color: var(--muted); }
 .p-row .confirm { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: var(--volt); border: 0; padding: 5px 10px; cursor: pointer; }
 .p-row .cancel { font-size: 9px; color: var(--muted); background: transparent; border: 1px solid var(--rule); padding: 5px 8px; cursor: pointer; }
 .p-err { font-size: 10px; color: var(--terra); padding: 4px 6px; }
