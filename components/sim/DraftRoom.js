@@ -21,7 +21,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { makePick, timerAutoPick, setAutoDraft, fetchPlayerStats, fetchPlayerSummaries } from '@/app/actions/sim';
-import { getPlayerSeasonStatsFixture, viewFor } from '@/lib/fantasy/statsFixture';
+import { getPlayerSeasonStatsFixture } from '@/lib/fantasy/statsFixture';
+import { viewFor, sortsFor, sortPlayers } from '@/lib/fantasy/statView';
 import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/scoring';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { sendHaptic } from '@/lib/shell/bridge';
@@ -66,6 +67,7 @@ export default function DraftRoom({
   const [revealing, setRevealing] = useState(false);
   const [err, setErr] = useState(null);          // { id?, reason }
   const [filter, setFilter] = useState('ALL');
+  const [sort, setSort] = useState('adp');
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('avail');
   const [clock, setClock] = useState(timerSeconds ?? null);
@@ -202,10 +204,23 @@ export default function DraftRoom({
     setStatsById((m) => ({ ...m, [id]: res.ok ? res.stats : null }));
   }
 
-  const shown = useMemo(() => available
-    .filter((p) => filter === 'ALL' || (SLOT_OF[p.position] ?? p.position) === filter)
-    .filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => a.adp - b.adp), [available, filter, search]);
+  // Sort keys follow the position filter: stat sorts are only offered once the
+  // board is narrowed to a position, because ranking a mixed list by receptions
+  // would bury every QB under every WR. ADP/PPG/PTS compare across positions and
+  // are always offered. Stat sorts need loaded summaries, so they stay disabled
+  // (not hidden) until stats exist - discoverable, and honest about why.
+  const sortOpts = useMemo(() => sortsFor(filter), [filter]);
+  const statsReady = useMemo(() => Object.keys(summaries).length > 0, [summaries]);
+  // Derived, not stored: switching filters can strip the active key out from
+  // under the sort, and silently falling back beats a setState-in-effect.
+  const activeSort = sortOpts.some((o) => o.key === sort) && (sort === 'adp' || statsReady) ? sort : 'adp';
+
+  const shown = useMemo(() => {
+    const list = available
+      .filter((p) => filter === 'ALL' || (SLOT_OF[p.position] ?? p.position) === filter)
+      .filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()));
+    return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), summaries);
+  }, [available, filter, search, sortOpts, activeSort, summaries]);
 
   return (
     <div className={`room tab-${tab}`}>
@@ -263,6 +278,24 @@ export default function DraftRoom({
           <input className="avail-search" placeholder="Search players" value={search} onChange={(e) => setSearch(e.target.value)} />
           <div className="avail-chips">
             {POS_FILTERS.map((f) => <button key={f} className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>{f}</button>)}
+          </div>
+          <div className="avail-sort">
+            <span className="s-lbl">Sort</span>
+            {sortOpts.map((o) => {
+              const locked = o.key !== 'adp' && !statsReady;
+              return (
+                <button
+                  key={o.key}
+                  className={activeSort === o.key ? 'on' : ''}
+                  disabled={locked}
+                  title={locked ? 'Needs season stats, which land with the data backfill' : undefined}
+                  onClick={() => setSort(o.key)}
+                >
+                  {o.label}
+                </button>
+              );
+            })}
+            {filter === 'ALL' && <span className="s-hint">Pick a position for stat sorts</span>}
           </div>
         </div>
         <div className="zone-body">

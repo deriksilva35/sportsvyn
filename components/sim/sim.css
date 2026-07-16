@@ -106,6 +106,13 @@
 .avail-chips { display: flex; gap: 4px; flex-wrap: wrap; }
 .avail-chips button { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--rule); padding: 5px 9px; cursor: pointer; }
 .avail-chips button.on { color: var(--ink); background: var(--volt); border-color: var(--volt); }
+/* sort row: universal keys always, position stat keys when the board is filtered */
+.avail-sort { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.avail-sort .s-lbl { font-size: 8px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-dim); margin-right: 2px; }
+.avail-sort button { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--rule); padding: 4px 8px; cursor: pointer; }
+.avail-sort button.on { color: var(--volt); border-color: var(--volt); }
+.avail-sort button:disabled { opacity: .35; cursor: not-allowed; }
+.avail-sort .s-hint { font-size: 8px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-dim); }
 .p-item { border-bottom: 1px solid var(--rule-dim); }
 .p-item.open { background: rgba(255,255,255,.02); }
 .p-row { display: flex; gap: 8px; align-items: center; padding: 7px 4px; }
