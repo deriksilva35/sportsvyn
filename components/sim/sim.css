@@ -11,6 +11,15 @@
 .sim-head .right { margin-left: auto; display: flex; gap: 14px; align-items: center; }
 .sim-head a { color: var(--muted); text-decoration: none; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
 .sim-head a:hover { color: var(--volt); }
+/* The wordmark is the brand mark, not a nav link. The generic .sim-head a rule
+   above (1 class + 1 element) outspecifies .wordmark's own font-size (1 class)
+   and was crushing it to 11px - half the canonical 22px header size (see the
+   /scores gridiron header). At 11px the em-based macron (0.07em -> 0.77px at a
+   -0.05em top) collapses into sub-pixel rounding and reads as misaligned over
+   the Y. Restore the canonical size so the brand-locked macron renders crisp at
+   the header size, matching every other wordmark. Shell mode's 17px override
+   (3 classes) still wins over this (2 classes). */
+.sim-head .wordmark { font-size: 22px; }
 
 /* footer / FFC attribution (license requirement) */
 .sim-foot { border-top: 1px solid var(--rule-dim); margin-top: 32px; padding: 16px 22px; font-size: 10px; letter-spacing: .04em; color: var(--muted-dim); text-align: center; }
