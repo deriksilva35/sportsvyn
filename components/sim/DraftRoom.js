@@ -21,13 +21,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { makePick, timerAutoPick, setAutoDraft, fetchPlayerStats, fetchPlayerSummaries } from '@/app/actions/sim';
-import { getPlayerSeasonStatsFixture } from '@/lib/fantasy/statsFixture';
-import { viewFor, sortsFor, sortPlayers } from '@/lib/fantasy/statView';
+import {
+  viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers,
+} from '@/lib/fantasy/statView';
 import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/scoring';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { sendHaptic } from '@/lib/shell/bridge';
 
-const SLOT_OF = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', PK: 'K', DEF: 'DST' };
 const POS_FILTERS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'];
 const ERR = {
   illegal_pick: "Roster can't fit that pick", player_unavailable: 'Already drafted',
@@ -37,25 +37,8 @@ const ERR = {
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 const r0 = (x) => (x == null ? '?' : Math.round(Number(x)));
 
-// ?statsfixture=1 - DEV flag routing the stat strip to invented sample data so
-// the UI can be built at real density before the backfill. Read lazily from the
-// live URL inside the expand handler (browser-only, so no hydration concern and
-// no state to keep in sync).
-function isFixtureMode() {
-  try {
-    return new URLSearchParams(window.location.search).get('statsfixture') === '1';
-  } catch { return false; } // malformed URL - stay on the real path
-}
-
-// Volt initials on ink - the avatar chip. No photos: no licensed NFL headshot
-// source exists, and sim_player_pool.matched_player_id is NULL on every row, so
-// there is nothing to join to even if one did.
-function initials(name) {
-  const parts = String(name ?? '').trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '??';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
+// The avatar chip shows the player's POSITION (volt on ink). No photos: no
+// licensed NFL headshot source exists, so the position label is the identity cue.
 
 export default function DraftRoom({
   draftId, config, order, userTeamIndex, initialPicks, initialAvailable, timerSeconds, initialAuto,
@@ -67,6 +50,7 @@ export default function DraftRoom({
   const [revealing, setRevealing] = useState(false);
   const [err, setErr] = useState(null);          // { id?, reason }
   const [filter, setFilter] = useState('ALL');
+  const [team, setTeam] = useState('ALL');
   const [sort, setSort] = useState('adp');
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('avail');
@@ -174,15 +158,6 @@ export default function DraftRoom({
     summariesLoaded.current = true;
     let cancelled = false;
     (async () => {
-      if (isFixtureMode()) { // DEV path only - invented numbers, badged in the UI
-        const out = {};
-        for (const p of available) {
-          const s = getPlayerSeasonStatsFixture(p.ffcPlayerId, p.position, p.bye, config.scoring_format);
-          out[p.ffcPlayerId] = { ...seasonSummary(s.games, config.scoring_format), totals: s.totals };
-        }
-        if (!cancelled) setSummaries(out);
-        return;
-      }
       const res = await fetchPlayerSummaries(available.map((p) => p.ffcPlayerId), config.scoring_format);
       if (!cancelled && res.ok) setSummaries(res.summaries);
     })();
@@ -195,10 +170,6 @@ export default function DraftRoom({
     const next = expandedId === id ? null : id;
     setExpandedId(next);
     if (next == null || statsById[id] !== undefined) return;
-    if (isFixtureMode()) { // DEV path only - invented numbers, badged as such
-      setStatsById((m) => ({ ...m, [id]: getPlayerSeasonStatsFixture(id, p.position, p.bye, config.scoring_format) }));
-      return;
-    }
     setStatsById((m) => ({ ...m, [id]: 'loading' }));
     const res = await fetchPlayerStats(id);
     setStatsById((m) => ({ ...m, [id]: res.ok ? res.stats : null }));
@@ -215,12 +186,15 @@ export default function DraftRoom({
   // under the sort, and silently falling back beats a setState-in-effect.
   const activeSort = sortOpts.some((o) => o.key === sort) && (sort === 'adp' || statsReady) ? sort : 'adp';
 
+  // Team options come from the FULL initial pool, not the shrinking `available`
+  // set, so the dropdown is a stable 32-team list and a team does not vanish when
+  // its last player is drafted.
+  const teamOptions = useMemo(() => teamsInPool(initialAvailable), [initialAvailable]);
+
   const shown = useMemo(() => {
-    const list = available
-      .filter((p) => filter === 'ALL' || (SLOT_OF[p.position] ?? p.position) === filter)
-      .filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()));
+    const list = filterPlayers(available, { position: filter, team, search });
     return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), summaries);
-  }, [available, filter, search, sortOpts, activeSort, summaries]);
+  }, [available, filter, team, search, sortOpts, activeSort, summaries]);
 
   return (
     <div className={`room tab-${tab}`}>
@@ -279,6 +253,13 @@ export default function DraftRoom({
           <div className="avail-chips">
             {POS_FILTERS.map((f) => <button key={f} className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>{f}</button>)}
           </div>
+          <div className="avail-team">
+            <span className="s-lbl">Team</span>
+            <select className="team-select" value={team} onChange={(e) => setTeam(e.target.value)}>
+              <option value="ALL">All teams</option>
+              {teamOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
           <div className="avail-sort">
             <span className="s-lbl">Sort</span>
             {sortOpts.map((o) => {
@@ -304,7 +285,7 @@ export default function DraftRoom({
             const val = Math.round(currentOverall - Number(p.adp)); // positive-good: he fell to you
             const open = expandedId === p.ffcPlayerId;
             const stats = statsById[p.ffcPlayerId];
-            const slot = SLOT_OF[p.position] ?? p.position;
+            const slot = displayPosition(p.position);
             const sum = summaries[p.ffcPlayerId];
             // Quick stats sit with the name; the full log is a tap away. K/DST
             // points are partial (no distance tiers / points allowed), so their
@@ -315,7 +296,7 @@ export default function DraftRoom({
               <div key={p.ffcPlayerId} className={`p-item${open ? ' open' : ''}`}>
                 <div className={`p-row${armedId === p.ffcPlayerId ? ' armed' : ''}`}>
                   <button type="button" className="p-main" onClick={() => toggleExpand(p)} aria-expanded={open}>
-                    <span className="ava">{initials(p.name)}</span>
+                    <span className="ava" data-pos={slot}>{slot}</span>
                     <span className="p-id">
                       <span className="nm">{p.name}</span>
                       <span className="rng">
@@ -384,12 +365,12 @@ function StatStrip({ stats, scoringFormat }) {
   // table and the total cannot disagree about what the player did.
   const view = viewFor(stats.position);
   const summary = seasonSummary(stats.games, scoringFormat);
-  const slot = SLOT_OF[stats.position] ?? stats.position;
+  const slot = displayPosition(stats.position);
   const exact = isExactlyScored(slot);
   return (
     <div className="p-stats">
       <div className="s-totals">
-        <span className="s-season">{stats.season}{stats.source === 'fixture' && <b className="s-fix">Fixture</b>}</span>
+        <span className="s-season">{stats.season}</span>
         <span className="s-tot s-fpts">
           <b>{summary.points}</b><i>{exact ? 'Fantasy pts' : 'Fantasy pts (partial)'}</i>
         </span>

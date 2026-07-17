@@ -106,6 +106,13 @@
 .avail-chips { display: flex; gap: 4px; flex-wrap: wrap; }
 .avail-chips button { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--rule); padding: 5px 9px; cursor: pointer; }
 .avail-chips button.on { color: var(--ink); background: var(--volt); border-color: var(--volt); }
+/* team filter: composes with the position chips; does not enable stat sorts */
+.avail-team { display: flex; gap: 6px; align-items: center; }
+.avail-team .s-lbl { font-size: 8px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-dim); }
+.team-select { background: var(--ink); border: 1px solid var(--rule); color: var(--paper); font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .04em; padding: 5px 8px; cursor: pointer; }
+.team-select:focus { outline: none; border-color: var(--muted-dim); }
+/* a chosen team is an active filter: mark it volt like the position chips */
+.team-select:not([value="ALL"]) { color: var(--volt); border-color: var(--volt); }
 /* sort row: universal keys always, position stat keys when the board is filtered */
 .avail-sort { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 .avail-sort .s-lbl { font-size: 8px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-dim); margin-right: 2px; }
@@ -118,7 +125,8 @@
 .p-row { display: flex; gap: 8px; align-items: center; padding: 7px 4px; }
 /* the whole identity block is the expand target; the Draft button stays a sibling */
 .p-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: transparent; border: 0; padding: 0; text-align: left; font-family: inherit; cursor: pointer; }
-.p-row .ava { flex: none; width: 30px; height: 30px; display: grid; place-items: center; background: var(--ink); border: 1px solid var(--rule); font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .04em; color: var(--volt); }
+/* position chip: volt label on ink, mono. Sized for up to 3 chars (DST). */
+.p-row .ava { flex: none; width: 30px; height: 30px; display: grid; place-items: center; background: var(--ink); border: 1px solid var(--rule); font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; font-weight: 700; letter-spacing: .02em; color: var(--volt); }
 .p-id { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .p-num { flex: none; display: flex; flex-direction: column; align-items: flex-end; width: 40px; }
 .p-num .lbl { font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); }
@@ -140,7 +148,6 @@
 .p-stats.empty, .p-stats.loading { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-dim); padding: 12px 8px; }
 .s-totals { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
 .s-season { font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-dim); }
-.s-fix { margin-left: 6px; font-size: 8px; font-weight: 700; letter-spacing: .12em; color: var(--ink); background: var(--terra); padding: 1px 5px; }
 .s-tot { display: flex; flex-direction: column; gap: 2px; }
 .s-tot b { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 18px; color: var(--paper); line-height: 1; }
 .s-tot i { font-size: 8px; font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-dim); }
