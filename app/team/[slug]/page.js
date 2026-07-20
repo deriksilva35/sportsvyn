@@ -12,6 +12,7 @@
  * Next 16: params is Promise-shaped — must be awaited.
  */
 
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
 import Wordmark from '@/components/Wordmark';
@@ -108,7 +109,7 @@ export default async function TeamPage({ params }) {
 
       <main className="page-shell">
         <div className="breadcrumb">
-          <a href="/">Home</a>
+          <Link href="/">Home</Link>
           <span className="sep">/</span>
           <a href="/world-cup-2026/bracket">FIFA World Cup 2026</a>
           <span className="sep">/</span>
@@ -164,6 +165,8 @@ export default async function TeamPage({ params }) {
               <h4>About</h4>
               <a href="#">Methodology</a>
               <a href="#">Voice Bible</a>
+              <a href="/privacy">Privacy</a>
+              <a href="/terms">Terms</a>
             </div>
             <div className="footer-col">
               <h4>Follow</h4>

@@ -35,6 +35,8 @@ export default function SiteFooter() {
             <h4>About</h4>
             <a href="#">Methodology</a>
             <a href="#">Voice Bible</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
           </div>
           <div className="footer-col">
             <h4>Follow</h4>
