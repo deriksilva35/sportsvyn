@@ -119,5 +119,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     },
     providers,
     trustHost: true,
+    // Apple returns its OAuth result via a cross-site POST (response_mode=
+    // form_post). Auth.js already relaxes the state + nonce cookies to
+    // SameSite=None for form_post providers so the sign-in itself survives the
+    // cross-site callback — but it leaves the callback-url cookie at
+    // SameSite=Lax, so the browser drops it on Apple's POST and the finished
+    // sign-in falls back to '/' instead of the user's callbackUrl (in the
+    // Draftvyn shell: stranded on the homepage instead of /sim). Magic-link is
+    // unaffected — its callback is a same-site GET, so the Lax cookie rides
+    // along. Relax ONLY the callback-url cookie to None+Secure (deep-merged
+    // onto the default, so the __Secure- name and httpOnly stay intact) so the
+    // stored callbackUrl (e.g. /sim, or /sim?shell=sim-app) survives Apple's
+    // round trip and reaches the redirect callback. CSRF is still guarded by
+    // the untouched csrf-token + state cookies. Production only: SameSite=None
+    // requires Secure, which can't be set over local http, and Apple sign-in
+    // only runs on HTTPS anyway (local dev signs in with the magic link, which
+    // stays same-site + Lax).
+    ...(process.env.NODE_ENV === 'production'
+      ? {
+          cookies: {
+            callbackUrl: {
+              options: { sameSite: 'none', secure: true },
+            },
+          },
+        }
+      : {}),
   };
 });
