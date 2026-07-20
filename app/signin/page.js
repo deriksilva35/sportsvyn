@@ -24,6 +24,7 @@
 
 import Wordmark from '@/components/Wordmark';
 import SignInForm from './SignInForm';
+import AppleSignInButton from './AppleSignInButton';
 
 export const metadata = {
   title: 'Sign in — Sportsvyn',
@@ -40,13 +41,24 @@ export default async function SignInPage({ searchParams }) {
     <main className="max-w-md mx-auto py-24 px-6 text-center">
       <Wordmark sizeClassName="text-2xl sm:text-3xl" />
       <h1 className="font-display font-black text-3xl text-paper-warm mt-12">
-        Sign in to Sportsvyn
+        Sign in or create your account
       </h1>
       <p className="font-serif italic text-muted mt-4">
-        We&apos;ll send a one-click sign-in link to your inbox.
+        Use your Apple&nbsp;ID, or we&apos;ll email you a one-click sign-in link.
       </p>
 
-      <SignInForm initialError={initialError} callbackUrl={callbackUrl} />
+      <div className="mt-12 w-full">
+        <AppleSignInButton callbackUrl={callbackUrl} />
+
+        <div className="mt-8">
+          <div className="h-px bg-charcoal" />
+          <p className="font-mono text-[11px] uppercase tracking-widest text-muted mt-4">
+            or get a sign-in link by email
+          </p>
+        </div>
+
+        <SignInForm initialError={initialError} callbackUrl={callbackUrl} />
+      </div>
 
       <a
         href="/"

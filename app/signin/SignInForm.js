@@ -68,7 +68,7 @@ export default function SignInForm({ initialError = null, callbackUrl = '/' }) {
         : null;
 
   return (
-    <form onSubmit={handleSubmit} className="mt-12 w-full">
+    <form onSubmit={handleSubmit} className="mt-6 w-full">
       <label htmlFor="email" className="sr-only">
         Email address
       </label>
