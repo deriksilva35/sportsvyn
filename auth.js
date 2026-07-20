@@ -27,11 +27,82 @@ import NextAuth from 'next-auth';
 import PostgresAdapter from '@auth/pg-adapter';
 import { Pool } from '@neondatabase/serverless';
 import Resend from 'next-auth/providers/resend';
+import Apple from 'next-auth/providers/apple';
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from '@/lib/resend';
 import { buildMagicLinkEmail } from '@/lib/emails/magicLink';
+import { appleConfigured, getAppleClientSecret } from '@/lib/auth/appleClientSecret';
 
-export const { handlers, auth, signIn, signOut } = NextAuth(() => {
+// Async factory: Apple's clientSecret is a signed JWT we mint at config
+// time (getAppleClientSecret is memoized, so this awaits real work only on
+// the instance's first request). Every Auth.js call site already awaits this
+// factory, so returning a Promise here is supported. The Neon Pool stays
+// per-invocation for the reason documented above.
+export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+  const providers = [
+    Resend({
+      apiKey: process.env.RESEND_API_KEY,
+      from: EMAIL_FROM,
+      // Overriding sendVerificationRequest replaces Auth.js's default
+      // fetch('https://api.resend.com/emails', ...) entirely. We route
+      // through the existing lib/resend.js client so the magic-link
+      // email shares the same Resend account, replyTo, and house template
+      // shell (see lib/emails/magicLink.js) as the homepage signup
+      // confirmation. apiKey above remains set because the provider
+      // type definition declares it required even when sendVerification-
+      // Request is overridden.
+      async sendVerificationRequest({ identifier, url }) {
+        const { subject, html, text } = buildMagicLinkEmail({ url, identifier });
+        await resend.emails.send({
+          from: EMAIL_FROM,
+          to: identifier,
+          replyTo: EMAIL_REPLY_TO,
+          subject,
+          html,
+          text,
+        });
+      },
+    }),
+  ];
+
+  // Sign in with Apple, added only when all four Apple env vars are present
+  // (a preview deploy without them still serves magic-link sign-in).
+  //
+  // allowDangerousEmailAccountLinking: someone who first signed in via magic
+  // link, then chooses Apple with the SAME email, must land on their existing
+  // user row rather than hitting OAuthAccountNotLinked. Auth.js's default
+  // refuses cross-provider linking when not already signed in because a
+  // provider might assert an unverified email; here that risk does not apply —
+  // Apple verifies the address, and the magic-link account already proved the
+  // person controls that inbox. So linking by verified email is safe, and the
+  // adapter attaches the Apple account to the matched user (handle-login.js).
+  //
+  // Private-relay addresses (user chose Hide My Email) are just a normal new
+  // email: no existing row matches, so a fresh user is created with the relay
+  // address, which is the intended outcome. Apple returns the person's name
+  // only on first consent; the provider's profile() falls back to the email
+  // for the display name on every subsequent sign-in.
+  if (appleConfigured()) {
+    try {
+      const clientSecret = await getAppleClientSecret();
+      providers.push(
+        Apple({
+          clientId: process.env.APPLE_CLIENT_ID,
+          clientSecret,
+          allowDangerousEmailAccountLinking: true,
+        }),
+      );
+    } catch (err) {
+      // A bad/mis-stored Apple key must not take down the whole auth config
+      // (magic-link sign-in shares it). Omit Apple, log, keep serving email.
+      console.error(
+        '[auth] Sign in with Apple disabled — client secret signing failed:',
+        err?.message,
+      );
+    }
+  }
+
   return {
     adapter: PostgresAdapter(pool),
     pages: {
@@ -46,31 +117,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
       verifyRequest: '/signin/check-email',
       error: '/signin',
     },
-    providers: [
-      Resend({
-        apiKey: process.env.RESEND_API_KEY,
-        from: EMAIL_FROM,
-        // Overriding sendVerificationRequest replaces Auth.js's default
-        // fetch('https://api.resend.com/emails', ...) entirely. We route
-        // through the existing lib/resend.js client so the magic-link
-        // email shares the same Resend account, replyTo, and house template
-        // shell (see lib/emails/magicLink.js) as the homepage signup
-        // confirmation. apiKey above remains set because the provider
-        // type definition declares it required even when sendVerification-
-        // Request is overridden.
-        async sendVerificationRequest({ identifier, url }) {
-          const { subject, html, text } = buildMagicLinkEmail({ url, identifier });
-          await resend.emails.send({
-            from: EMAIL_FROM,
-            to: identifier,
-            replyTo: EMAIL_REPLY_TO,
-            subject,
-            html,
-            text,
-          });
-        },
-      }),
-    ],
+    providers,
     trustHost: true,
   };
 });
