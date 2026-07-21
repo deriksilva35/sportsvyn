@@ -6,11 +6,13 @@
  * /nfl, and /sim). Paper (light) surfaces use the dark ink-twin in legal.css
  * because these letters are paper-warm and would vanish on a light ground.
  *
- * Brand-locked macron geometry (matches the Derik-approved /scores header,
- * pixel-measured): w-[115%] of the Y advance, h-[0.07em], top-[-0.05em],
- * left-0 + -translate-x-[35%] italic optical shift -> center offset -0.328 of
- * the Y advance. Do NOT use left-1/2 (that lands the macron at +0.1725, the
- * wrong side of the italic Y).
+ * Brand-locked macron geometry (from the PNG exporter):
+ *   bar_left = y_left + 0.5*y_width - 0.35*bar_width,  bar_width = 115% of the Y.
+ * In CSS: left-1/2 (50% of the Y wrap) + -translate-x-[35%] (of the BAR's own
+ * width) + w-[115%], h-[0.07em], top-[-0.05em]. That lands the bar's LEFT EDGE at
+ * ~+0.10 of the Y width INSIDE the Y - the bar sits ON the Y, nudged slightly
+ * left for the italic. Use left-1/2, NOT left-0: left-0 drops the bar ~0.40 of a
+ * Y to the left, onto the V-Y boundary (the bug that kept reproducing).
  *
  * Sportsvyn brand wordmark -- "SPORTSVȲN" with a macron above the Y.
  *
@@ -50,7 +52,7 @@ export default function Wordmark({
             anchor — no regression there). */}
         <span
           aria-hidden="true"
-          className="absolute top-[-0.05em] left-0 -translate-x-[35%] w-[115%] h-[0.07em] bg-volt pointer-events-none"
+          className="absolute top-[-0.05em] left-1/2 -translate-x-[35%] w-[115%] h-[0.07em] bg-volt pointer-events-none"
         />
       </span>
       <span>N</span>

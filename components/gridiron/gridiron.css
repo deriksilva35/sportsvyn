@@ -19,8 +19,14 @@
   font-size: 22px; text-decoration: none;
 }
 .y-wrap { position: relative; color: var(--volt); display: inline-block; }
+/* Locked brand macron (from the PNG exporter): bar_left = y_left + 0.5*y_width -
+   0.35*bar_width, bar_width = 115% of the Y. In CSS: left:50% of the y-wrap, then
+   translateX(-35%) of the BAR's own width -> the bar's left edge lands +0.0975
+   (~+0.10) of the Y width INSIDE the Y, sitting ON the Y and nudged slightly left
+   for the italic. NOTE left:50%, not left:0 - left:0 drops the bar ~0.40 of a Y
+   left, onto the V-Y boundary (the long-standing bug). */
 .y-wrap .macron {
-  position: absolute; left: 0; top: -0.05em; width: 115%; height: 0.07em;
+  position: absolute; left: 50%; top: -0.05em; width: 115%; height: 0.07em;
   background: var(--volt); transform: translateX(-35%);
 }
 .gi-head-nav { display: flex; gap: 22px; }
