@@ -1,64 +1,48 @@
 /**
- * THE ONLY wordmark implementation for light-on-dark (ink) surfaces -- never
- * re-implement locally. Every ink-surface wordmark must render through this
- * component (or the CSS twin in components/gridiron/Wordmark.js, which is kept
- * byte-for-byte geometry-identical for the <a>-link app headers on /scores,
- * /nfl, and /sim). Paper (light) surfaces use the dark ink-twin in legal.css
- * because these letters are paper-warm and would vanish on a light ground.
+ * THE ONLY wordmark source -- never re-implement locally.
  *
- * Brand-locked macron geometry (from the PNG exporter):
- *   bar_left = y_left + 0.5*y_width - 0.35*bar_width,  bar_width = 115% of the Y.
- * In CSS: left-1/2 (50% of the Y wrap) + -translate-x-[35%] (of the BAR's own
- * width) + w-[115%], h-[0.07em], top-[-0.05em]. That lands the bar's LEFT EDGE at
- * ~+0.10 of the Y width INSIDE the Y - the bar sits ON the Y, nudged slightly
- * left for the italic. Use left-1/2, NOT left-0: left-0 drops the bar ~0.40 of a
- * Y to the left, onto the V-Y boundary (the bug that kept reproducing).
+ * The wordmark is the locked PNG brand asset
+ * (public/brand/sportsvynwordmarkwhite3000x600truealpha.png). The CSS/font-drawn
+ * version is RETIRED because browser font metrics do not scale linearly, so the
+ * macron drifted at different sizes and across environments -- unfixable in CSS
+ * (Jul 21 2026). Serving the export ends that class of bug: the macron is baked
+ * into the image at the locked position.
  *
- * Sportsvyn brand wordmark -- "SPORTSVȲN" with a macron above the Y.
+ * SIZING keeps the existing API: `sizeClassName` sets the font-size on the
+ * wrapper and the image is `height: LOCKUP_EM em`. The export is a LOCKUP, not a
+ * tight crop: its caps span only rows 90-223 of the 336px height (0.40), with the
+ * macron floating above and a full-width underline bar below. So height:1em would
+ * render the letters at 0.40x the old size. LOCKUP_EM = 1.8 puts the caps back at
+ * ~0.72 of the font-size (Saira's cap ratio), i.e. the same visual letter size the
+ * old font-drawn wordmark had -- the underline then hangs below as part of the mark.
+ * width:auto keeps the locked 1568x336 aspect; width/height attrs reserve space.
  *
- * The macron is rendered as a CSS-drawn bar (an absolutely-positioned
- * empty span using bg-current) rather than a Unicode combining
- * character, so its thickness, width, and offset are tunable
- * independently of the typeface.
+ * The white export is light-on-dark; every wordmark surface is ink. Paper (light)
+ * surfaces use the separate dark ink-twin in legal.css.
  *
- * Screen readers read the visible glyphs "SPORTSVYN" naturally; the
- * macron span is aria-hidden.
- *
- * Sizing:
- *   The default `sizeClassName` is the hero-tier scale used on the
- *   homepage. Callers on utility pages (/confirmed, etc.) pass a
- *   smaller scale. A dedicated prop is required because Tailwind
- *   emits same-family utilities (text-xs ... text-9xl) in spec order
- *   in the generated stylesheet, so a smaller class passed via the
- *   `className` slot won't override the larger default by virtue of
- *   className-string position alone.
+ * alt "SPORTSVYN" so screen readers announce the brand on the <h1>.
  */
+
+const SRC = '/brand/sportsvynwordmarkwhite3000x600truealpha.png';
+const NAT_W = 1568;
+const NAT_H = 336;
+const LOCKUP_EM = 1.8; // letters are 0.40 of the png height; 1.8em restores old cap-height
 
 export default function Wordmark({
   className = '',
   sizeClassName = 'text-5xl sm:text-6xl md:text-8xl',
 }) {
   return (
-    <h1
-      className={`font-display italic font-black text-paper-warm tracking-tighter leading-none whitespace-nowrap ${sizeClassName} ${className}`}
-    >
-      <span>SPORTSV</span>
-      <span className="relative inline-block text-volt">
-        Y
-        {/* Macron is decoration — make it non-interactive so taps that
-            land on the thin bar fall through to the wrapping <a> on
-            inline-crumb pages (team/player) and don't intercept clicks
-            anywhere else (SiteHeader pages don't wrap Wordmark in an
-            anchor — no regression there). */}
-        {/* translateX(-35%): Safari-calibrated against the locked brand PNG,
-            Jul 21 2026, chosen from the -35/-30/-25/-20/-15 strip. Do not adjust
-            without re-running calibration (/wordmark-cal, since removed). */}
-        <span
-          aria-hidden="true"
-          className="absolute top-[-0.05em] left-1/2 -translate-x-[35%] w-[115%] h-[0.07em] bg-volt pointer-events-none"
-        />
-      </span>
-      <span>N</span>
+    <h1 className={`leading-none whitespace-nowrap ${sizeClassName} ${className}`}>
+      <img
+        src={SRC}
+        alt="SPORTSVYN"
+        width={NAT_W}
+        height={NAT_H}
+        fetchPriority="high"
+        decoding="async"
+        style={{ height: `${LOCKUP_EM}em`, width: 'auto', display: 'inline-block', verticalAlign: 'baseline' }}
+      />
     </h1>
   );
 }
