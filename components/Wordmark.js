@@ -37,6 +37,10 @@
 export default function Wordmark({
   className = '',
   sizeClassName = 'text-5xl sm:text-6xl md:text-8xl',
+  // Macron horizontal shift (percent of the BAR's own width). Default is the
+  // locked value; overridable only so /wordmark-cal can render a calibration
+  // strip of candidates. left:50% anchor stays fixed; this is the translateX.
+  macronTx = '-35%',
 }) {
   return (
     <h1
@@ -52,7 +56,8 @@ export default function Wordmark({
             anchor — no regression there). */}
         <span
           aria-hidden="true"
-          className="absolute top-[-0.05em] left-1/2 -translate-x-[35%] w-[115%] h-[0.07em] bg-volt pointer-events-none"
+          className="absolute top-[-0.05em] left-1/2 w-[115%] h-[0.07em] bg-volt pointer-events-none"
+          style={{ transform: `translateX(${macronTx})` }}
         />
       </span>
       <span>N</span>
