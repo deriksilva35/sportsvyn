@@ -5,6 +5,7 @@ import Wordmark from '@/components/gridiron/Wordmark';
 import Attribution from '@/components/sim/Attribution';
 import DraftRoom from '@/components/sim/DraftRoom';
 import DraftResults from '@/components/sim/DraftResults';
+import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getDraft, getDraftForRoom } from '@/lib/fantasy/drafts';
@@ -61,8 +62,12 @@ export default async function DraftRoomPage({ params, searchParams }) {
     );
   }
 
+  // The bottom tab bar shows on the results / abandoned views, but NOT inside an
+  // active draft room - there the swipe pager's own dot/segment tabs own the bottom.
+  const showTabBar = status !== 'in_progress';
+
   return (
-    <div className={`sim${isShell ? ' sim--shell' : ''}`} data-surface="ink">
+    <div className={`sim${showTabBar ? ' sim--tabbar' : ''}${isShell ? ' sim--shell' : ''}`} data-surface="ink">
       {isShell && <ShellPersist />}
       <header className="sim-head">
         <Wordmark href="/sim" />
@@ -71,6 +76,7 @@ export default async function DraftRoomPage({ params, searchParams }) {
       </header>
       <main className="sim-wrap">{body}</main>
       <Attribution text={FFC_ATTRIBUTION.text} url={FFC_ATTRIBUTION.url} />
+      {showTabBar && <SimTabBar />}
     </div>
   );
 }

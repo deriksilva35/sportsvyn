@@ -124,7 +124,7 @@
 .room-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; }
 .room-head .on-clock { flex: 1; margin-bottom: 0; }
 .lastline { grid-column: 1 / -1; }
-.room-dots { display: none; }
+.room-seg { display: none; }
 .pager { display: contents; }
 .pager .page.pg-board { display: none; }        /* board is a mobile page only */
 .pager .page.pg-roster { grid-column: 1; }
@@ -144,10 +144,13 @@
 .lastline .pos { color: var(--volt); font-weight: 700; }
 
 /* dot-tabs (mobile): sync with the swipe, jump on tap; pick dot nudges on your turn */
-.dot { font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; font-weight: 600; letter-spacing: .12em; color: var(--muted-dim); cursor: pointer; background: none; border: none; padding: 2px 4px; }
-.dot.on { color: var(--volt); }
-.dot.nudge { animation: dot-nudge 1.2s infinite; }
-@keyframes dot-nudge { 50% { opacity: .3; } }
+/* room page tabs: full-width segmented thirds, bordered, volt-filled active,
+   inactive = graphite bg + muted text. Borders shared (no double seam). */
+.rseg { flex: 1; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); background: var(--graphite); border: 1px solid var(--rule); border-left: none; cursor: pointer; padding: 11px 0; }
+.rseg:first-child { border-left: 1px solid var(--rule); }
+.rseg.on { color: var(--ink); background: var(--volt); border-color: var(--volt); }
+.rseg.nudge:not(.on) { animation: seg-nudge 1.2s infinite; }
+@keyframes seg-nudge { 50% { color: var(--volt); } }
 
 /* BOARD grid: teams columns x rounds rows, all columns fit the width (no h-scroll).
    Column template is set inline from the team count. Position tints per the mock;
@@ -173,7 +176,7 @@
      the column width and its min-width:0 can then contain the pages to one viewport. */
   .room { display: flex; flex-direction: column; gap: 0; align-items: stretch; }
   .room-head { gap: 8px; }
-  .room-dots { display: flex; justify-content: center; gap: 22px; padding: 9px 0 calc(9px + env(safe-area-inset-bottom)); border-top: 1px solid var(--rule); order: 3; }
+  .room-seg { display: flex; order: 3; padding-bottom: env(safe-area-inset-bottom); }
   /* min-width:0 so the pager shrinks to the column width instead of expanding to
      its content's min-content (the board's nowrap cells / fixed pick columns),
      which would otherwise overflow the viewport and break scroll-snap. */
@@ -334,3 +337,47 @@
 .sim--shell .sim-head .tag { display: none; }          /* app IS the sim — drop the label chrome */
 .sim--shell .sim-head .wordmark { font-size: 17px; }    /* wordmark small */
 .sim--shell .sim-wrap { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+
+/* ---- app chrome: fixed bottom tab bar ----
+   Mobile web + native shell only (hidden on desktop). Ink surface, volt active
+   state, JetBrains Mono labels, safe-area padding. Rendered on the sim surfaces
+   that carry .sim--tabbar (lobby, history, account, results) - never inside an
+   active draft room, where the room's own segmented page tabs own the bottom. */
+.simtab { display: none; }
+.simtab-i { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 11px; color: var(--muted-dim); text-decoration: none; background: none; border: none; position: relative; }
+.simtab-i .ic { font-size: 16px; line-height: 1; }
+.simtab-i .lb { font-family: var(--font-jetbrains-mono), monospace; font-size: 8.5px; font-weight: 600; letter-spacing: .1em; }
+.simtab-i.on { color: var(--volt); }
+.simtab-i.soon { opacity: .55; cursor: default; }
+.simtab-i .soon-badge { position: absolute; top: 3px; right: 24%; font-family: var(--font-jetbrains-mono), monospace; font-size: 6.5px; font-weight: 700; letter-spacing: .04em; color: var(--ink); background: var(--volt); padding: 1px 3px; }
+@media (max-width: 900px) {
+  .simtab { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-width: 480px; margin: 0 auto; background: rgba(10,10,10,.98); border-top: 1px solid var(--rule); padding-bottom: env(safe-area-inset-bottom); }
+  .sim--tabbar .sim-wrap { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+}
+
+/* ---- history list ---- */
+.hist { list-style: none; margin: 8px 0 0; padding: 0; }
+.hist-empty { font-size: 12px; color: var(--muted); margin-top: 10px; }
+.hist-empty a { color: var(--volt); text-decoration: none; }
+.hist-row { border-bottom: 1px solid var(--rule-dim); }
+.hist-link { display: flex; align-items: center; gap: 12px; padding: 14px 4px; text-decoration: none; }
+.hist-link.is-abandoned { opacity: .5; }
+.hist-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.hist-nm { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 16px; color: var(--paper); text-transform: uppercase; letter-spacing: -.01em; }
+.hist-sub { font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.hist-right { flex: none; }
+.hist-grade { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 26px; color: var(--volt); line-height: 1; }
+.hist-status { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); }
+.hist-status.in_progress { color: var(--volt); }
+
+/* ---- account ---- */
+.acct { border: 1px solid var(--rule); margin-top: 8px; }
+.acct-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 14px; border-bottom: 1px solid var(--rule-dim); }
+.acct-row:last-child { border-bottom: none; }
+.acct-row .k { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-dim); }
+.acct-row .v { font-size: 13px; color: var(--paper); overflow: hidden; text-overflow: ellipsis; }
+.acct-upsell { background: var(--volt); color: var(--ink); padding: 14px; margin-top: 14px; }
+.acct-upsell .m1 { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 15px; }
+.acct-upsell .m2 { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; margin-top: 3px; letter-spacing: .02em; }
+.acct-signout { display: block; width: 100%; margin-top: 16px; background: var(--graphite); border: 1px solid var(--rule); color: var(--paper); font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 13px 0; cursor: pointer; }
+.acct-signout:hover { border-color: var(--volt); color: var(--volt); }

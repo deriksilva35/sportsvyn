@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import Attribution from '@/components/sim/Attribution';
 import StartForm from '@/components/sim/StartForm';
+import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getPresets, getDraftsUsed, isMember, canStartDraft, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
@@ -24,7 +25,7 @@ export default async function SimLobby({ searchParams }) {
   const isShell = await resolveShellMode((await searchParams) ?? {});
 
   return (
-    <div className={`sim${isShell ? ' sim--shell' : ''}`} data-surface="ink">
+    <div className={`sim${userId != null ? ' sim--tabbar' : ''}${isShell ? ' sim--shell' : ''}`} data-surface="ink">
       {isShell && <ShellPersist />}
       <header className="sim-head">
         <Wordmark href="/sim" />
@@ -54,6 +55,7 @@ export default async function SimLobby({ searchParams }) {
         )}
       </main>
       <Attribution text={FFC_ATTRIBUTION.text} url={FFC_ATTRIBUTION.url} />
+      {userId != null && <SimTabBar />}
     </div>
   );
 }

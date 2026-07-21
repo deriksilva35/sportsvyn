@@ -91,9 +91,13 @@ export default function DraftRoom({
   // Swipe pager: dots sync with scroll; taps jump. Default lands on PICK. The
   // pick dot pulses when it is the user's turn but they are on another page — a
   // nudge, never a yank (the banner already signals the turn).
+  // Tap-to-jump uses an INSTANT scroll, not smooth: scroll-snap-type: mandatory
+  // cancels a programmatic smooth scroll (the snap yanks it back to the current
+  // page mid-animation), so smooth would leave the pager stuck. 'auto' lands on
+  // the target snap point reliably. Swipes stay smooth (they are user-driven).
   const jump = useCallback((i) => {
     const el = pagerRef.current;
-    if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' });
+    if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'auto' });
     setPage(i);
   }, []);
   const onPagerScroll = useCallback(() => {
@@ -268,14 +272,15 @@ export default function DraftRoom({
         </div>
       )}
 
-      {/* mobile dot-tabs: sync with swipe, jump on tap. The PICK dot nudges (never
-          yanks) when it is the user's turn but they are looking at another page. */}
-      <div className="room-dots">
+      {/* mobile page tabs: full-width segmented thirds, sync with swipe + jump on
+          tap. The PICK segment nudges (never yanks) when it is the user's turn but
+          they are looking at another page. */}
+      <div className="room-seg">
         {PAGES.map((label, i) => (
           <button
             key={label}
             type="button"
-            className={`dot${page === i ? ' on' : ''}${i === 1 && canPick && page !== 1 ? ' nudge' : ''}`}
+            className={`rseg${page === i ? ' on' : ''}${i === 1 && canPick && page !== 1 ? ' nudge' : ''}`}
             onClick={() => jump(i)}
           >
             {label}
