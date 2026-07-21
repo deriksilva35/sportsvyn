@@ -21,9 +21,11 @@ import {
 
 const SEG_SCORING = SCORING_FORMATS.map((f) => ({ v: f, label: SCORING_LABEL[f] }));
 const SEG_CLOCK = CLOCK_OPTIONS.map((s) => ({ v: s, label: s == null ? 'NONE' : `${s}S` }));
-const STARTER_STEPS = [ // roster steppers, grouped as the console rows
-  [{ k: 'QB' }, { k: 'RB' }, { k: 'WR' }],
-  [{ k: 'TE' }, { k: 'FLEX' }, { k: 'DST' }, { k: 'K' }],
+// The 8 starter slot steppers, laid out as a 4-col x 2-row grid (label over
+// stepper). SUPERFLEX is a member unlock. Bench is a separate single-line row.
+const ROSTER_CELLS = [
+  { k: 'QB', label: 'QB' }, { k: 'RB', label: 'RB' }, { k: 'WR', label: 'WR' }, { k: 'TE', label: 'TE' },
+  { k: 'FLEX', label: 'FLX' }, { k: 'SUPERFLEX', label: 'SFLX' }, { k: 'DST', label: 'DST' }, { k: 'K', label: 'K' },
 ];
 
 function presetToConfig(p) {
@@ -110,9 +112,38 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
     });
   }
 
+  // One compact note line (replaces the volt member-pitch slab, which is dropped
+  // on this screen - the locked controls, the CUSTOM card, and the locked START
+  // button already carry the pitch). Errors win, then the gate, then the custom
+  // nearest-pool notice.
+  const note = err
+    ? err
+    : freeGated && !isCustom
+      ? `You've used your ${limit} free drafts. Members draft unlimited.`
+      : memberBlocked
+        ? 'Custom rosters, 14+ teams, and superflex are member features.'
+        : (isCustom && member && (locks.oversize || locks.superflex))
+          ? `Custom: ${[locks.oversize && `${N} teams`, locks.superflex && 'superflex'].filter(Boolean).join(' · ')}. ADP maps to the nearest market pool.`
+          : null;
+  const gated = (freeGated && !isCustom) || memberBlocked;
+
   return (
     <div className="setup">
-      <div className="setup-used"><b>{used ?? 0}</b> of {limit} free drafts used</div>
+      {/* header row: title + live summary (left), compact START (right) */}
+      <div className="setup-head">
+        <div className="setup-hl">
+          <div className="setup-title">New draft</div>
+          <div className="setup-sum">{N}-TEAM · {SCORING_LABEL[config.scoringFormat]} · {clockLabel} · {rounds} ROUNDS</div>
+        </div>
+        {freeGated && !isCustom ? (
+          <a className="startbtn top locked" href="/membership" {...(shell ? { target: '_blank', rel: 'noopener noreferrer', 'data-external': '' } : {})}>MEMBER →</a>
+        ) : memberBlocked ? (
+          <button className="startbtn top locked" type="button" onClick={() => setErr('Custom drafts are a member feature.')}>MEMBER →</button>
+        ) : (
+          <button className="startbtn top" type="button" onClick={go} disabled={pending}>{pending ? '…' : 'START →'}</button>
+        )}
+      </div>
+      {note && <div className={`setup-note${gated ? ' gated' : ''}`}>{note}</div>}
 
       {/* preset deck */}
       <div className="chiplab">Start from</div>
@@ -120,7 +151,7 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
         {presets.map((p) => (
           <button key={p.id} type="button" className={`pcard${selection === p.id ? ' on' : ''}`} onClick={() => choosePreset(p)}>
             <div className="pn">{p.name}</div>
-            <div className="pm">{p.teams_count} teams · {SCORING_LABEL[p.scoring_format] ?? p.scoring_format.toUpperCase()}<br />{p.pick_timer_seconds ? `${p.pick_timer_seconds}s clock` : 'No clock'}</div>
+            <div className="pm">{p.teams_count} teams · {SCORING_LABEL[p.scoring_format] ?? p.scoring_format.toUpperCase()} · {p.pick_timer_seconds ? `${p.pick_timer_seconds}s` : 'no clock'}</div>
           </button>
         ))}
         <button
@@ -134,8 +165,7 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
         </button>
       </div>
 
-      {/* console */}
-      <div className="chiplab">The console — edit anything</div>
+      {/* console (the internal scroll region when the viewport is too short) */}
       <div className="console">
         <div className="crow">
           <div className="ck">TEAMS</div>
@@ -156,24 +186,26 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
             <button key={String(o.v)} type="button" className={`copt${(config.clockSeconds ?? null) === o.v ? ' on' : ''}`} onClick={() => setClock(o.v)}>{o.label}</button>
           ))}</div>
         </div>
-        {STARTER_STEPS.map((group, gi) => (
-          <div className="crow" key={gi}>
-            <div className="ck">{group.map((g) => g.k === 'FLEX' ? 'FLX' : g.k === 'DST' ? 'D' : g.k).join('·')}</div>
-            <div className="cv">{group.map((g) => (
-              <LabeledStep key={g.k} label={g.k === 'FLEX' ? 'FLX' : g.k} value={config.rosterSlots[g.k] || 0}
-                onDec={() => stepSlot(g.k, -1)} onInc={() => stepSlot(g.k, 1)} />
-            ))}</div>
+        {/* roster: 8 starter steppers in one 4-col grid (two rows) */}
+        <div className="crow rostercrow">
+          <div className="ck">ROSTER</div>
+          <div className="rgrid">
+            {ROSTER_CELLS.map((c) => (
+              <LabeledStep
+                key={c.k}
+                label={c.label}
+                value={config.rosterSlots[c.k] || 0}
+                disabled={c.k === 'SUPERFLEX' && !member}
+                onDec={() => stepSlot(c.k, -1)}
+                onInc={() => stepSlot(c.k, 1)}
+              />
+            ))}
           </div>
-        ))}
+        </div>
         <div className="crow">
           <div className="ck">BENCH</div>
           <div className="cv">
             <Stepper value={config.rosterSlots.BN || 0} onDec={() => stepSlot('BN', -1)} onInc={() => stepSlot('BN', 1)} />
-            <span className="sflex">
-              <LabeledStep label="SFLEX" value={config.rosterSlots.SUPERFLEX || 0} disabled={!member}
-                onDec={() => stepSlot('SUPERFLEX', -1)} onInc={() => stepSlot('SUPERFLEX', 1)} />
-              {!member && <span className="lockmark" title="Members">▮</span>}
-            </span>
           </div>
         </div>
         <div className="crow">
@@ -194,34 +226,9 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
           </div>
         </div>
       </div>
+
       <div className="ticker">▸ {N}-TEAM · {SCORING_LABEL[config.scoringFormat]} · {clockLabel} · {tokens.join(' ')} · {rounds} ROUNDS</div>
-
-      {isCustom && !member && (
-        <div className="memnote">
-          <div className="m1">Your rules are a member thing.</div>
-          <div className="m2">CUSTOM ROSTERS · 14+ TEAMS · SUPERFLEX · THE SPORTSVYN BOARD</div>
-        </div>
-      )}
-      {isCustom && member && (locks.oversize || locks.superflex) && (
-        <div className="setup-note">Custom: {[locks.oversize && `${N} teams`, locks.superflex && 'superflex'].filter(Boolean).join(' · ')}. ADP maps to the nearest market pool.</div>
-      )}
-
-      {/* commit bar */}
-      <div className="commit">
-        <div className="csum"><b>{N}-TEAM · {SCORING_LABEL[config.scoringFormat]} · {clockLabel} · {rounds} ROUNDS</b></div>
-        {freeGated && !isCustom ? (
-          <div className="setup-upgrade">
-            <span>You&apos;ve used your {limit} free drafts.</span>
-            {/* TODO(membership): /membership does not exist yet. */}
-            <a href="/membership" {...(shell ? { target: '_blank', rel: 'noopener noreferrer', 'data-external': '' } : {})}>Become a member →</a>
-          </div>
-        ) : memberBlocked ? (
-          <button className="startbtn locked" type="button" onClick={() => setErr('Custom drafts are a member feature.')}>MEMBERS ONLY — CUSTOM</button>
-        ) : (
-          <button className="startbtn" type="button" onClick={go} disabled={pending}>{pending ? 'STARTING…' : 'START DRAFT →'}</button>
-        )}
-        {err && <div className="setup-err">{err}</div>}
-      </div>
+      <div className="setup-attr">ADP · <u>Fantasy Football Calculator</u></div>
     </div>
   );
 }

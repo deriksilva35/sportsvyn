@@ -28,7 +28,7 @@ export default async function SimLobby({ searchParams }) {
   const deleted = userId == null && params.deleted != null;
 
   return (
-    <div className={`sim${userId != null ? ' sim--tabbar' : ''}${isShell ? ' sim--shell' : ''}`} data-surface="ink">
+    <div className={`sim${userId != null ? ' sim--tabbar sim--setup' : ''}${isShell ? ' sim--shell' : ''}`} data-surface="ink">
       {isShell && <ShellPersist />}
       <header className="sim-head">
         <Wordmark href="/sim" />

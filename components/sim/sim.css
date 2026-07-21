@@ -56,62 +56,87 @@
 .sim-upgrade a { display: inline-block; background: var(--ink); color: var(--volt); font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; padding: 10px 18px; text-decoration: none; }
 
 /* ---- setup screen (lobby v2): preset deck + mono console + live ticker ----
-   Reads as the app screen on both phone and desktop: capped to a single mobile
-   column and centered. The console is the instrument — JetBrains Mono, every
-   parameter visible, ticker below. Editing any value flips the client selection
-   to CUSTOM (a member feature); the server re-validates regardless. */
+   Fixed one-viewport app screen on mobile/shell (NO page scroll): START is a
+   compact button top-right, the live summary sits under it, and the console is
+   the ONLY internal scroll region when the viewport is genuinely too short - the
+   header, presets, START, and ticker never move. Desktop keeps the natural
+   centered column; the height-lock is gated to <=900. */
 .setup { max-width: 480px; margin: 0 auto; }
-.setup-used { font-size: 11px; letter-spacing: .06em; color: var(--muted); margin: 2px 0 14px; }
-.setup-used b { color: var(--paper); }
-.chiplab { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; }
+.setup-head { display: flex; align-items: center; gap: 12px; padding: 4px 0 8px; }
+.setup-hl { flex: 1; min-width: 0; }
+.setup-title { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--volt); }
+.setup-sum { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.startbtn.top { flex: none; background: var(--volt); color: var(--ink); border: none; font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 15px; padding: 9px 16px; cursor: pointer; text-transform: uppercase; letter-spacing: .01em; text-decoration: none; white-space: nowrap; }
+.startbtn.top:disabled { opacity: .5; cursor: not-allowed; }
+.startbtn.top.locked { background: var(--graphite); color: var(--muted); border: 1px solid var(--rule); }
+.setup-note { font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; letter-spacing: .04em; color: var(--muted); padding: 0 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.setup-note.gated { color: var(--volt); }
+.setup-err { font-size: 10px; color: var(--terra); text-align: center; margin-top: 8px; letter-spacing: .04em; }
+.chiplab { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }
 
-.deck { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 6px; scroll-snap-type: x mandatory; }
-.pcard { flex: 0 0 158px; scroll-snap-align: start; background: var(--graphite); border: 1px solid var(--rule); padding: 13px 12px; cursor: pointer; position: relative; text-align: left; font-family: inherit; }
+.deck { display: flex; gap: 8px; overflow-x: auto; padding: 1px 1px 5px; scroll-snap-type: x mandatory; }
+.pcard { flex: 0 0 150px; scroll-snap-align: start; background: var(--graphite); border: 1px solid var(--rule); padding: 9px 11px; cursor: pointer; position: relative; text-align: left; font-family: inherit; }
 .pcard.on { border-color: var(--volt); box-shadow: inset 0 0 0 1px var(--volt); }
-.pcard .pn { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 15px; line-height: 1.1; color: var(--paper); text-transform: uppercase; }
-.pcard .pm { font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; font-weight: 500; color: var(--muted); margin-top: 6px; letter-spacing: .04em; line-height: 1.7; text-transform: uppercase; }
+.pcard .pn { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 14px; line-height: 1.1; color: var(--paper); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pcard .pm { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; font-weight: 500; color: var(--muted); margin-top: 4px; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pcard .cust { color: var(--volt); }
-.pcard .pl { position: absolute; top: 10px; right: 10px; }
-.pcard .lock { font-family: var(--font-jetbrains-mono), monospace; font-size: 8.5px; font-weight: 600; letter-spacing: .08em; color: var(--ink); background: var(--volt); padding: 2px 6px; }
+.pcard .pl { position: absolute; top: 8px; right: 8px; }
+.pcard .lock { font-family: var(--font-jetbrains-mono), monospace; font-size: 8px; font-weight: 600; letter-spacing: .08em; color: var(--ink); background: var(--volt); padding: 2px 5px; }
 
-.console { font-family: var(--font-jetbrains-mono), monospace; border: 1px solid var(--rule); }
-.console .crow { display: grid; grid-template-columns: 92px 1fr; border-bottom: 1px solid var(--rule); }
+.console { font-family: var(--font-jetbrains-mono), monospace; border: 1px solid var(--rule); margin-top: 6px; }
+/* minmax(0, 1fr) so the value track can shrink to the container instead of
+   expanding to its content's min-content (which overflows the fixed viewport). */
+.console .crow { display: grid; grid-template-columns: 78px minmax(0, 1fr); border-bottom: 1px solid var(--rule); }
 .console .crow:last-child { border-bottom: none; }
-.console .ck { padding: 12px 10px; font-size: 9.5px; font-weight: 600; letter-spacing: .1em; color: var(--muted); border-right: 1px solid var(--rule); display: flex; align-items: center; }
-.console .cv { padding: 8px 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-.copt { border: 1px solid var(--rule); background: var(--graphite); color: var(--muted); font-family: inherit; font-size: 10.5px; font-weight: 600; padding: 6px 9px; cursor: pointer; letter-spacing: .02em; }
+.console .cv { min-width: 0; }
+.console .ck { padding: 7px 9px; font-size: 9px; font-weight: 600; letter-spacing: .1em; color: var(--muted); border-right: 1px solid var(--rule); display: flex; align-items: center; }
+.console .cv { padding: 5px 9px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.copt { border: 1px solid var(--rule); background: var(--graphite); color: var(--muted); font-family: inherit; font-size: 10px; font-weight: 600; padding: 5px 8px; cursor: pointer; letter-spacing: .02em; }
 .copt.on { background: var(--volt); color: var(--ink); border-color: var(--volt); }
 .copt.locked { color: var(--muted-dim); cursor: not-allowed; }
 .copt.push { margin-left: auto; }
-.cstep { display: inline-flex; align-items: center; gap: 8px; }
-.cstep button { width: 30px; height: 28px; background: var(--graphite); border: 1px solid var(--rule); color: var(--volt); font-family: inherit; font-weight: 700; font-size: 15px; cursor: pointer; }
+.cstep { display: inline-flex; align-items: center; gap: 6px; }
+.cstep button { width: 26px; height: 24px; background: var(--graphite); border: 1px solid var(--rule); color: var(--volt); font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
 .cstep button:disabled { color: var(--muted-dim); cursor: not-allowed; }
-.cstep .cn { font-weight: 700; font-size: 16px; min-width: 24px; text-align: center; color: var(--paper); }
-.lstep { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; }
-.lstep .ll { font-size: 8px; font-weight: 600; letter-spacing: .1em; color: var(--muted-dim); }
+.cstep .cn { font-weight: 700; font-size: 14px; min-width: 20px; text-align: center; color: var(--paper); }
+/* roster: 8 label-over-stepper cells in one 4-col grid (two rows), full width */
+.rgrid { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 4px; padding: 8px 9px; }
+.rostercrow { grid-template-columns: 78px minmax(0, 1fr); }
+.rgrid .lstep { min-width: 0; }
+.lstep { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
+.lstep .ll { font-size: 7.5px; font-weight: 700; letter-spacing: .08em; color: var(--muted-dim); }
+.lstep .cstep { gap: 3px; }
+.lstep .cstep button { width: 22px; height: 22px; font-size: 13px; }
+.lstep .cstep .cn { font-size: 13px; min-width: 16px; }
 .lstep.off .ll, .lstep.off .cn { color: var(--muted-dim); }
-.sflex { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
-.sflex .lockmark { color: var(--volt); font-size: 8px; }
 .seatrow { gap: 12px; }
-.seatsel { background: var(--graphite); border: 1px solid var(--rule); color: var(--paper); font-family: inherit; font-size: 11px; letter-spacing: .04em; padding: 6px 8px; cursor: pointer; }
-.autolab { display: inline-flex; align-items: center; gap: 6px; font-size: 9.5px; font-weight: 600; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; cursor: pointer; }
-.ticker { background: var(--graphite); border: 1px solid var(--rule); border-top: none; padding: 9px 12px; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 500; color: var(--volt); letter-spacing: .05em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seatsel { background: var(--graphite); border: 1px solid var(--rule); color: var(--paper); font-family: inherit; font-size: 11px; letter-spacing: .04em; padding: 5px 8px; cursor: pointer; }
+.autolab { display: inline-flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 600; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; cursor: pointer; }
+.ticker { background: var(--graphite); border: 1px solid var(--rule); border-top: none; margin-top: 6px; padding: 7px 10px; font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; font-weight: 500; color: var(--volt); letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* compact FFC credit shown only on the mobile one-viewport screen (the full
+   .sim-foot attribution is hidden there); desktop keeps the .sim-foot footer. */
+.setup-attr { display: none; font-family: var(--font-jetbrains-mono), monospace; font-size: 8.5px; letter-spacing: .04em; color: var(--muted-dim); text-align: center; padding: 6px 0 2px; }
+.setup-attr u { text-decoration-color: var(--volt); }
 
-.memnote { margin-top: 14px; background: var(--volt); color: var(--ink); padding: 12px; }
-.memnote .m1 { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 14px; }
-.memnote .m2 { font-family: var(--font-jetbrains-mono), monospace; font-size: 10.5px; font-weight: 500; margin-top: 3px; letter-spacing: .02em; }
-.setup-note { margin-top: 12px; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .04em; color: var(--muted); }
-
-.commit { margin-top: 16px; }
-.csum { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; color: var(--muted); text-align: center; margin-bottom: 8px; letter-spacing: .04em; }
-.csum b { color: var(--paper); font-weight: 700; }
-.startbtn { display: block; width: 100%; background: var(--volt); color: var(--ink); border: none; font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 17px; padding: 13px 0; cursor: pointer; text-transform: uppercase; letter-spacing: .01em; }
-.startbtn:disabled { opacity: .5; cursor: not-allowed; }
-.startbtn.locked { background: var(--graphite); color: var(--muted); border: 1px solid var(--rule); }
-.setup-upgrade { display: flex; flex-direction: column; gap: 8px; background: var(--volt); color: var(--ink); padding: 14px; }
-.setup-upgrade span { font-size: 12px; font-weight: 600; }
-.setup-upgrade a { align-self: flex-start; background: var(--ink); color: var(--volt); font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; padding: 9px 16px; text-decoration: none; }
-.setup-err { font-size: 10px; color: var(--terra); text-align: center; margin-top: 8px; letter-spacing: .04em; }
+/* one-viewport lock: mobile/shell only. The .sim column fills the screen, the
+   console is the sole scroll region, nothing else moves. Desktop is untouched. */
+@media (max-width: 900px) {
+  .sim--setup { height: 100vh; height: 100svh; display: flex; flex-direction: column; overflow: hidden; }
+  .sim--setup .sim-head { flex: none; }
+  .sim--setup .sim-kicker { display: none; }
+  .sim--setup .sim-foot { display: none; }
+  /* width:100% + min-width:0 down the flex-column chain pins each level to the
+     viewport width (flex-stretch alone leaves a nested column child sized to its
+     content's min-content), so the console's minmax(0,1fr) tracks can contract
+     instead of overflowing under overflow:hidden. */
+  .sim--setup .sim-wrap { flex: 1; min-height: 0; width: 100%; min-width: 0; max-width: none; overflow: hidden; display: flex; flex-direction: column; padding: 6px 12px calc(52px + env(safe-area-inset-bottom)); }
+  .sim--setup .sim-wrap > section { flex: 1; min-height: 0; width: 100%; min-width: 0; display: flex; flex-direction: column; }
+  .sim--setup .setup { flex: 1; min-height: 0; width: 100%; min-width: 0; max-width: none; margin: 0; display: flex; flex-direction: column; }
+  .sim--setup .console { width: 100%; }
+  .sim--setup .setup-head, .sim--setup .setup-note, .sim--setup .chiplab, .sim--setup .deck, .sim--setup .ticker, .sim--setup .setup-attr { flex: none; }
+  .sim--setup .setup-attr { display: block; }
+  .sim--setup .console { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+}
 
 /* ---- room ----
    DESKTOP (>900px): the existing 3-column grid — roster | available | feed. The
