@@ -16,6 +16,7 @@ import { revalidatePath } from 'next/cache';
 import {
   startDraftFor, startCustomDraftFor, makePickFor, timerAutoPickFor, abandonDraftFor, setAutoDraftFor,
 } from '@/lib/fantasy/drafts';
+import { deleteAccountFor } from '@/lib/account';
 import { getPlayerSeasonStats, getPlayerSeasonSummaries } from '@/lib/fantasy/playerStats';
 
 async function currentUserId() {
@@ -92,6 +93,16 @@ export async function fetchPlayerSummaries(ffcPlayerIds, scoringFormat) {
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
   const ids = (ffcPlayerIds ?? []).map(String);
   return { ok: true, summaries: await getPlayerSeasonSummaries(ids, scoringFormat) };
+}
+
+// Permanently delete the signed-in user and ALL their data (App Store guideline
+// 5.1.1(v)). Session-resolved server-side; never trusts a client id. The client
+// signs out afterwards, which clears the now-orphaned session cookie. Idempotent.
+export async function deleteAccount() {
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  return deleteAccountFor(userId, session.user?.email ?? null);
 }
 
 // Abandon an in-progress draft (frees the entitlement gate).

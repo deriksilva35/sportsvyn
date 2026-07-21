@@ -22,7 +22,10 @@ export async function generateViewport({ searchParams }) {
 export default async function SimLobby({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const isShell = await resolveShellMode((await searchParams) ?? {});
+  const params = (await searchParams) ?? {};
+  const isShell = await resolveShellMode(params);
+  // Post-deletion landing: the delete-account flow signs out and redirects here.
+  const deleted = userId == null && params.deleted != null;
 
   return (
     <div className={`sim${userId != null ? ' sim--tabbar' : ''}${isShell ? ' sim--shell' : ''}`} data-surface="ink">
@@ -33,7 +36,14 @@ export default async function SimLobby({ searchParams }) {
       </header>
 
       <main className="sim-wrap">
-        {userId == null ? (
+        {deleted ? (
+          <section className="sim-pitch">
+            <div className="sim-kicker">Account deleted</div>
+            <h1>Your account was deleted</h1>
+            <p>Your account, drafts, and history have been permanently removed. Thanks for trying the sim.</p>
+            <a className="sim-cta" href="/signin?callbackUrl=/sim">Start over</a>
+          </section>
+        ) : userId == null ? (
           <section className="sim-pitch">
             <div className="sim-kicker">Fantasy · Mock Draft</div>
             <div className="sim-ph">Placeholder pitch copy</div>

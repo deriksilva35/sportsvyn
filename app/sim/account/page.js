@@ -5,6 +5,7 @@ import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import SimTabBar from '@/components/sim/SimTabBar';
 import SignOutButton from '@/components/sim/SignOutButton';
+import DeleteAccount from '@/components/sim/DeleteAccount';
 import ShellPersist from '@/components/sim/ShellPersist';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getDraftsUsed, isMember, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
@@ -51,6 +52,7 @@ export default async function SimAccount({ searchParams }) {
         )}
 
         <SignOutButton />
+        <DeleteAccount />
       </main>
 
       <SimTabBar />
