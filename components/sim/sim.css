@@ -12,14 +12,22 @@
 .sim-head a { color: var(--muted); text-decoration: none; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
 .sim-head a:hover { color: var(--volt); }
 /* The wordmark is the brand mark, not a nav link. The generic .sim-head a rule
-   above (1 class + 1 element) outspecifies .wordmark's own font-size (1 class)
-   and was crushing it to 11px - half the canonical 22px header size (see the
-   /scores gridiron header). At 11px the em-based macron (0.07em -> 0.77px at a
-   -0.05em top) collapses into sub-pixel rounding and reads as misaligned over
-   the Y. Restore the canonical size so the brand-locked macron renders crisp at
-   the header size, matching every other wordmark. Shell mode's 17px override
-   (3 classes) still wins over this (2 classes). */
-.sim-head .wordmark { font-size: 22px; }
+   above (1 class + 1 element) outspecifies .wordmark's own rules (1 class) on
+   TWO axes:
+   - font-size: it was crushing the wordmark to 11px - half the canonical 22px
+     header size (see the /scores gridiron header). At 11px the em-based macron
+     (0.07em -> 0.77px at a -0.05em top) collapses into sub-pixel rounding and
+     reads as misaligned over the Y.
+   - color: it also muted the letters to var(--muted) grey, overriding
+     .wordmark's color:var(--paper). The wordmark is never dimmed - restore the
+     brand paper (#F5F5F2). The .y-wrap keeps its own volt color (its rule beats
+     inheritance), so the Y + macron stay volt; only SPORTSV / N were grey.
+   This .sim-head .wordmark selector (2 classes) beats .sim-head a (1 class + 1
+   element) on both. Shell mode's 17px size override (3 classes) still wins the
+   size axis over this. The brand-locked macron geometry (left:0, translateX
+   -35%, w:115%, h:0.07em, top:-0.05em -> offset -0.328 of the Y advance) lives
+   in gridiron.css and is unchanged. */
+.sim-head .wordmark { font-size: 22px; color: var(--paper); }
 
 /* footer / FFC attribution (license requirement) */
 .sim-foot { border-top: 1px solid var(--rule-dim); margin-top: 32px; padding: 16px 22px; font-size: 10px; letter-spacing: .04em; color: var(--muted-dim); text-align: center; }
