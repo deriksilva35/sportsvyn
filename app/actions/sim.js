@@ -14,7 +14,7 @@
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import {
-  startDraftFor, makePickFor, timerAutoPickFor, abandonDraftFor, setAutoDraftFor,
+  startDraftFor, startCustomDraftFor, makePickFor, timerAutoPickFor, abandonDraftFor, setAutoDraftFor,
 } from '@/lib/fantasy/drafts';
 import { getPlayerSeasonStats, getPlayerSeasonSummaries } from '@/lib/fantasy/playerStats';
 
@@ -30,6 +30,18 @@ export async function startDraft(presetId, pickPosition, opts = {}) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
   const res = await startDraftFor(userId, presetId, pickPosition, opts);
+  if (res.ok) revalidatePath('/sim');
+  return res;
+}
+
+// Start a draft from a custom console config. The config is UNTRUSTED — the
+// flow-core validates every bound/enum and enforces the member gate server-side
+// (returns reason:'entitlement_custom' for non-members, 'invalid_config' with a
+// detail for a malformed config). pickPosition is 1..teams_count or 'random'.
+export async function startCustomDraft(config, pickPosition, opts = {}) {
+  const userId = await currentUserId();
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const res = await startCustomDraftFor(userId, config, pickPosition, opts);
   if (res.ok) revalidatePath('/sim');
   return res;
 }
