@@ -1,4 +1,17 @@
 /**
+ * THE ONLY wordmark implementation for light-on-dark (ink) surfaces -- never
+ * re-implement locally. Every ink-surface wordmark must render through this
+ * component (or the CSS twin in components/gridiron/Wordmark.js, which is kept
+ * byte-for-byte geometry-identical for the <a>-link app headers on /scores,
+ * /nfl, and /sim). Paper (light) surfaces use the dark ink-twin in legal.css
+ * because these letters are paper-warm and would vanish on a light ground.
+ *
+ * Brand-locked macron geometry (matches the Derik-approved /scores header,
+ * pixel-measured): w-[115%] of the Y advance, h-[0.07em], top-[-0.05em],
+ * left-0 + -translate-x-[35%] italic optical shift -> center offset -0.328 of
+ * the Y advance. Do NOT use left-1/2 (that lands the macron at +0.1725, the
+ * wrong side of the italic Y).
+ *
  * Sportsvyn brand wordmark -- "SPORTSVȲN" with a macron above the Y.
  *
  * The macron is rendered as a CSS-drawn bar (an absolutely-positioned
@@ -37,7 +50,7 @@ export default function Wordmark({
             anchor — no regression there). */}
         <span
           aria-hidden="true"
-          className="absolute top-[-0.05em] left-1/2 -translate-x-[35%] w-[115%] h-[0.07em] bg-volt pointer-events-none"
+          className="absolute top-[-0.05em] left-0 -translate-x-[35%] w-[115%] h-[0.07em] bg-volt pointer-events-none"
         />
       </span>
       <span>N</span>

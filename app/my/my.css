@@ -55,10 +55,13 @@
   display: inline-block;
   color: var(--volt);
 }
+/* Brand-locked macron: left:0 (NOT 50%) + translateX(-35%) -> center offset
+   -0.328 of the Y advance, matching the canonical Wordmark and the /scores
+   header. left:50% lands it at +0.1725 (wrong side of the italic Y). */
 .my-title-macron {
   position: absolute;
   top: -0.05em;
-  left: 50%;
+  left: 0;
   transform: translateX(-35%);
   width: 115%;
   height: 0.07em;
