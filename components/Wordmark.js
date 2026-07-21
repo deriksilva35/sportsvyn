@@ -37,10 +37,6 @@
 export default function Wordmark({
   className = '',
   sizeClassName = 'text-5xl sm:text-6xl md:text-8xl',
-  // Macron horizontal shift (percent of the BAR's own width). Default is the
-  // locked value; overridable only so /wordmark-cal can render a calibration
-  // strip of candidates. left:50% anchor stays fixed; this is the translateX.
-  macronTx = '-35%',
 }) {
   return (
     <h1
@@ -54,10 +50,12 @@ export default function Wordmark({
             inline-crumb pages (team/player) and don't intercept clicks
             anywhere else (SiteHeader pages don't wrap Wordmark in an
             anchor — no regression there). */}
+        {/* translateX(-35%): Safari-calibrated against the locked brand PNG,
+            Jul 21 2026, chosen from the -35/-30/-25/-20/-15 strip. Do not adjust
+            without re-running calibration (/wordmark-cal, since removed). */}
         <span
           aria-hidden="true"
-          className="absolute top-[-0.05em] left-1/2 w-[115%] h-[0.07em] bg-volt pointer-events-none"
-          style={{ transform: `translateX(${macronTx})` }}
+          className="absolute top-[-0.05em] left-1/2 -translate-x-[35%] w-[115%] h-[0.07em] bg-volt pointer-events-none"
         />
       </span>
       <span>N</span>
