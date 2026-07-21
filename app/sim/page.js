@@ -47,7 +47,7 @@ export default async function SimLobby({ searchParams }) {
             return (
               <section>
                 <div className="sim-kicker">Start a mock draft</div>
-                <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} shell={isShell} />
+                <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} />
               </section>
             );
           })()

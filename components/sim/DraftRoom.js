@@ -18,15 +18,19 @@
 // turns to the EXISTING timerAutoPick engine path - same engine, no new pick
 // logic here. OFF returns control on the next turn.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { makePick, timerAutoPick, setAutoDraft, fetchPlayerStats, fetchPlayerSummaries } from '@/app/actions/sim';
+import { SCORING_LABEL } from '@/lib/fantasy/config';
 import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers,
 } from '@/lib/fantasy/statView';
 import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/scoring';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
+import { buildBoard, boardName } from '@/lib/fantasy/board';
 import { sendHaptic } from '@/lib/shell/bridge';
+
+const PAGES = ['BOARD', 'PICK', 'ROSTER']; // swipe pager order; PICK is the default landing
 
 const POS_FILTERS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'];
 const ERR = {
@@ -41,7 +45,7 @@ const r0 = (x) => (x == null ? '?' : Math.round(Number(x)));
 // licensed NFL headshot source exists, so the position label is the identity cue.
 
 export default function DraftRoom({
-  draftId, config, order, userTeamIndex, initialPicks, initialAvailable, timerSeconds, initialAuto,
+  draftId, config, order, userTeamIndex, initialPicks, initialAvailable, timerSeconds, initialAuto, poolMapping,
 }) {
   const router = useRouter();
   const [picks, setPicks] = useState(initialPicks);
@@ -53,7 +57,8 @@ export default function DraftRoom({
   const [team, setTeam] = useState('ALL');
   const [sort, setSort] = useState('adp');
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState('avail');
+  const [page, setPage] = useState(1); // swipe pager index: 0 BOARD / 1 PICK / 2 ROSTER
+  const pagerRef = useRef(null);
   const [clock, setClock] = useState(timerSeconds ?? null);
   const [auto, setAuto] = useState(initialAuto === true);
   const [expandedId, setExpandedId] = useState(null);
@@ -68,6 +73,41 @@ export default function DraftRoom({
   const round = complete ? null : Math.ceil(currentOverall / config.teams_count);
   const userPicks = useMemo(() => picks.filter((p) => p.isUser), [picks]);
   const roster = useMemo(() => buildRoster(userPicks, config.roster_slots), [userPicks, config.roster_slots]);
+
+  // BOARD page: the whole snake grid, derived from live picks + config.
+  const board = useMemo(
+    () => buildBoard(config, picks, { userTeamIndex, currentOverall: complete ? null : currentOverall }),
+    [config, picks, userTeamIndex, complete, currentOverall],
+  );
+  // LAST pick strip: slot (round.pickInRound), team, name, position — updates every pick.
+  const last = picks[picks.length - 1] ?? null;
+  const lastLine = last ? {
+    slot: `${last.round}.${String(((last.overallPick - 1) % config.teams_count) + 1).padStart(2, '0')}`,
+    team: order[last.overallPick - 1] + 1,
+    name: last.synthetic ? `Replacement ${last.slotPos}` : last.playerName,
+    pos: last.slotPos, teamAbbr: last.team,
+  } : null;
+
+  // Swipe pager: dots sync with scroll; taps jump. Default lands on PICK. The
+  // pick dot pulses when it is the user's turn but they are on another page — a
+  // nudge, never a yank (the banner already signals the turn).
+  const jump = useCallback((i) => {
+    const el = pagerRef.current;
+    if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' });
+    setPage(i);
+  }, []);
+  const onPagerScroll = useCallback(() => {
+    const el = pagerRef.current;
+    if (!el) return;
+    const i = Math.round(el.scrollLeft / el.clientWidth);
+    setPage((prev) => (prev === i ? prev : i));
+  }, []);
+  // Land on PICK once mounted: set the pager scroll directly (no setState in the
+  // effect body). `page` already defaults to 1, and onPagerScroll keeps it synced.
+  useEffect(() => {
+    const el = pagerRef.current;
+    if (el) el.scrollLeft = el.clientWidth;
+  }, []);
 
   // --- apply an action result (staggered reveal) ---
   const applyResult = useCallback(async (res) => {
@@ -196,9 +236,10 @@ export default function DraftRoom({
     return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), summaries);
   }, [available, filter, team, search, sortOpts, activeSort, summaries]);
 
+  const rounds = board.rounds;
   return (
-    <div className={`room tab-${tab}`}>
-      {/* room header: on-the-clock + AUTO, spanning all three columns */}
+    <div className="room">
+      {/* PERSISTENT HEADER (all pages): clock banner + AUTO, then last-pick strip */}
       <div className="room-head">
         <div className={`on-clock${canPick ? '' : ' waiting'}`}>
           <span className="dot" />
@@ -221,34 +262,43 @@ export default function DraftRoom({
           </button>
         )}
       </div>
+      {lastLine && (
+        <div className="lastline">
+          <span className="lp">LAST</span>{lastLine.slot} · TEAM {lastLine.team} · <b>{lastLine.name}</b> <span className="pos">{lastLine.pos}</span>{lastLine.teamAbbr ? ` ${lastLine.teamAbbr}` : ''}
+        </div>
+      )}
 
-      <div className="room-tabs">
-        {['avail', 'roster', 'feed'].map((t) => (
-          <button key={t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>
-            {t === 'avail' ? 'Available' : t}
+      {/* mobile dot-tabs: sync with swipe, jump on tap. The PICK dot nudges (never
+          yanks) when it is the user's turn but they are looking at another page. */}
+      <div className="room-dots">
+        {PAGES.map((label, i) => (
+          <button
+            key={label}
+            type="button"
+            className={`dot${page === i ? ' on' : ''}${i === 1 && canPick && page !== 1 ? ' nudge' : ''}`}
+            onClick={() => jump(i)}
+          >
+            {label}
           </button>
         ))}
       </div>
 
-      {/* LEFT: roster in lineup order */}
-      <div className="zone roster">
-        <div className="zone-h">Your Roster · Seat {userTeamIndex + 1}</div>
-        <div className="zone-body">
-          {roster.map((s, i) => (
-            <div key={i} className={`rslot${s.pick ? '' : ' open'}`}>
-              <span className="lbl">{s.label}</span>
-              {s.pick
-                ? <><span className="nm">{s.pick.synthetic ? `Replacement ${s.pick.slotPos}` : s.pick.playerName}</span> {s.pick.team && <span className="tm">{s.pick.team}</span>}</>
-                : <span className="nm">{s.key === BENCH ? 'bench' : s.label}</span>}
+      <div className="pager" ref={pagerRef} onScroll={onPagerScroll}>
+        {/* BOARD page: full snake grid, all columns fit the viewport width */}
+        <section className="page zone pg-board">
+          <div className="plabel">The Board · whole draft</div>
+          {poolMapping && !poolMapping.exact && (
+            <div className="board-note">
+              ADP from the {poolMapping.poolTeams}-team {SCORING_LABEL[poolMapping.poolScoring] ?? String(poolMapping.poolScoring).toUpperCase()} market pool
             </div>
-          ))}
-        </div>
-      </div>
+          )}
+          <BoardGrid board={board} />
+        </section>
 
-      {/* CENTER: available players + stat strips */}
-      <div className="zone avail">
-        <div className="zone-h">Available</div>
-        <div className="avail-tools">
+        {/* PICK page: the available pane, moved wholesale (search / chips / sort / rows) */}
+        <section className="page zone pg-pick">
+          <div className="plabel">Available · {shown.length}</div>
+          <div className="avail-tools">
           <input className="avail-search" placeholder="Search players" value={search} onChange={(e) => setSearch(e.target.value)} />
           <div className="avail-chips">
             {POS_FILTERS.map((f) => <button key={f} className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>{f}</button>)}
@@ -329,10 +379,26 @@ export default function DraftRoom({
             );
           })}
           {!isMyTurn && !complete && <div className="p-err" style={{ color: 'var(--muted-dim)' }}>Waiting for AI…</div>}
-        </div>
+          </div>
+        </section>
+
+        {/* ROSTER page: current lineup-order roster, full page */}
+        <section className="page zone pg-roster">
+          <div className="plabel">My roster · Seat {userTeamIndex + 1} · {userPicks.length}/{rounds}</div>
+          <div className="zone-body">
+            {roster.map((s, i) => (
+              <div key={i} className={`rslot${s.pick ? '' : ' open'}`}>
+                <span className="lbl">{s.label}</span>
+                {s.pick
+                  ? <><span className="nm">{s.pick.synthetic ? `Replacement ${s.pick.slotPos}` : s.pick.playerName}</span> {s.pick.team && <span className="tm">{s.pick.team}</span>}</>
+                  : <span className="nm">{s.key === BENCH ? 'bench' : s.label}</span>}
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
 
-      {/* RIGHT: pick feed ticker, newest on top */}
+      {/* DESKTOP-only right column: pick feed ticker, newest on top (hidden on mobile) */}
       <div className="zone feed">
         <div className="zone-h">Pick Feed</div>
         <div className="zone-body">
@@ -345,6 +411,49 @@ export default function DraftRoom({
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Tint class for a board cell — only the four skill positions tint (per the
+// mock); K/DST/others stay neutral ink.
+const TINTED = new Set(['QB', 'RB', 'WR', 'TE']);
+function posClass(pos) { return TINTED.has(pos) ? pos : ''; }
+
+// The BOARD page: the whole snake draft as a teams x rounds grid. All columns fit
+// the viewport width (no horizontal scroll) — column count comes from config, so
+// a 14/16-team board narrows its cells rather than scrolling. Vertical scroll runs
+// through every round. Cells are populated from live pick state.
+function BoardGrid({ board }) {
+  const { teams, columns, rows } = board;
+  return (
+    <div className="bg2" style={{ gridTemplateColumns: `22px repeat(${teams}, minmax(0, 1fr))` }}>
+      <div className="bh corner" />
+      {columns.map((c) => (
+        <div key={c.teamIndex} className={`bh${c.isYou ? ' you' : ''}`}>{c.label}</div>
+      ))}
+      {rows.map((row) => (
+        <Fragment key={row.round}>
+          <div className="br">{row.round}</div>
+          {row.cells.map((cell) => <BoardCell key={cell.overall} cell={cell} />)}
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+function BoardCell({ cell }) {
+  if (cell.onClock) {
+    return <div className={`bc otc2${cell.mine ? ' mine' : ''}`}><span className="n">CLOCK</span></div>;
+  }
+  if (!cell.pick) {
+    return <div className={`bc empty${cell.mine ? ' mine' : ''}`}><span className="n">·</span></div>;
+  }
+  const pos = cell.pick.slotPos || cell.pick.position;
+  return (
+    <div className={`bc ${posClass(pos)}${cell.mine ? ' mine' : ''}`.trim()}>
+      <span className="p">{pos}</span>
+      <span className="n">{cell.pick.synthetic ? pos : boardName(cell.pick.playerName)}</span>
     </div>
   );
 }
