@@ -129,21 +129,11 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
 
   return (
     <div className="setup">
-      {/* header row: title + live summary (left), compact START (right) */}
+      {/* header: title + live summary. START moved to a full-width bottom bar. */}
       <div className="setup-head">
-        <div className="setup-hl">
-          <div className="setup-title">New draft</div>
-          <div className="setup-sum">{N}-TEAM · {SCORING_LABEL[config.scoringFormat]} · {clockLabel} · {rounds} ROUNDS</div>
-        </div>
-        {freeGated && !isCustom ? (
-          <a className="startbtn top locked" href="/membership" {...(shell ? { target: '_blank', rel: 'noopener noreferrer', 'data-external': '' } : {})}>MEMBER →</a>
-        ) : memberBlocked ? (
-          <button className="startbtn top locked" type="button" onClick={() => setErr('Custom drafts are a member feature.')}>MEMBER →</button>
-        ) : (
-          <button className="startbtn top" type="button" onClick={go} disabled={pending}>{pending ? '…' : 'START →'}</button>
-        )}
+        <div className="setup-title">New draft</div>
+        <div className="setup-sum">{N}-TEAM · {SCORING_LABEL[config.scoringFormat]} · {clockLabel} · {rounds} ROUNDS</div>
       </div>
-      {note && <div className={`setup-note${gated ? ' gated' : ''}`}>{note}</div>}
 
       {/* preset deck */}
       <div className="chiplab">Start from</div>
@@ -229,6 +219,19 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
 
       <div className="ticker">▸ {N}-TEAM · {SCORING_LABEL[config.scoringFormat]} · {clockLabel} · {tokens.join(' ')} · {rounds} ROUNDS</div>
       <div className="setup-attr">ADP · <u>Fantasy Football Calculator</u></div>
+
+      {/* full-width START bar, pinned to the bottom of the viewport (above the
+          tab bar); the gate note sits directly above it. */}
+      <div className="setup-foot">
+        {note && <div className={`setup-note${gated ? ' gated' : ''}`}>{note}</div>}
+        {freeGated && !isCustom ? (
+          <a className="startbtn bar locked" href="/membership" {...(shell ? { target: '_blank', rel: 'noopener noreferrer', 'data-external': '' } : {})}>BECOME A MEMBER →</a>
+        ) : memberBlocked ? (
+          <button className="startbtn bar locked" type="button" onClick={() => setErr('Custom drafts are a member feature.')}>MEMBERS ONLY — CUSTOM</button>
+        ) : (
+          <button className="startbtn bar" type="button" onClick={go} disabled={pending}>{pending ? 'STARTING…' : 'START DRAFT →'}</button>
+        )}
+      </div>
     </div>
   );
 }

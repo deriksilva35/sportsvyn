@@ -66,10 +66,12 @@
 .setup-hl { flex: 1; min-width: 0; }
 .setup-title { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--volt); }
 .setup-sum { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.startbtn.top { flex: none; background: var(--volt); color: var(--ink); border: none; font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 15px; padding: 9px 16px; cursor: pointer; text-transform: uppercase; letter-spacing: .01em; text-decoration: none; white-space: nowrap; }
-.startbtn.top:disabled { opacity: .5; cursor: not-allowed; }
-.startbtn.top.locked { background: var(--graphite); color: var(--muted); border: 1px solid var(--rule); }
-.setup-note { font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; letter-spacing: .04em; color: var(--muted); padding: 0 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* full-width START bar, pinned bottom (above the tab bar); gate note above it */
+.setup-foot { margin-top: 8px; }
+.startbtn.bar { display: block; width: 100%; background: var(--volt); color: var(--ink); border: none; font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 17px; padding: 13px 0; cursor: pointer; text-transform: uppercase; letter-spacing: .01em; text-align: center; text-decoration: none; }
+.startbtn.bar:disabled { opacity: .5; cursor: not-allowed; }
+.startbtn.bar.locked { background: var(--graphite); color: var(--muted); border: 1px solid var(--rule); }
+.setup-note { font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; letter-spacing: .04em; color: var(--muted); text-align: center; padding: 0 0 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .setup-note.gated { color: var(--volt); }
 .setup-err { font-size: 10px; color: var(--terra); text-align: center; margin-top: 8px; letter-spacing: .04em; }
 .chiplab { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }
@@ -132,10 +134,14 @@
   .sim--setup .sim-wrap { flex: 1; min-height: 0; width: 100%; min-width: 0; max-width: none; overflow: hidden; display: flex; flex-direction: column; padding: 6px 12px calc(52px + env(safe-area-inset-bottom)); }
   .sim--setup .sim-wrap > section { flex: 1; min-height: 0; width: 100%; min-width: 0; display: flex; flex-direction: column; }
   .sim--setup .setup { flex: 1; min-height: 0; width: 100%; min-width: 0; max-width: none; margin: 0; display: flex; flex-direction: column; }
-  .sim--setup .console { width: 100%; }
-  .sim--setup .setup-head, .sim--setup .setup-note, .sim--setup .chiplab, .sim--setup .deck, .sim--setup .ticker, .sim--setup .setup-attr { flex: none; }
+  .sim--setup .setup-head, .sim--setup .chiplab, .sim--setup .deck, .sim--setup .ticker, .sim--setup .setup-attr, .sim--setup .setup-foot { flex: none; }
   .sim--setup .setup-attr { display: block; }
-  .sim--setup .console { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  /* the console fills the height between the deck and the bottom bar, and its
+     rows flex-grow to DISTRIBUTE that height evenly (taller rows when there is
+     room). flex-shrink:0 on the rows means an over-tall config can't compress -
+     the console scrolls instead (the short-viewport fallback). */
+  .sim--setup .console { width: 100%; flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+  .sim--setup .console .crow { flex: 1 0 auto; }
 }
 
 /* ---- room ----
