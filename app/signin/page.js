@@ -60,6 +60,11 @@ export default async function SignInPage({ searchParams }) {
         <SignInForm initialError={initialError} callbackUrl={callbackUrl} />
       </div>
 
+      <p className="font-mono text-[11px] uppercase tracking-widest text-muted mt-8">
+        Membership?{' '}
+        <a href="/membership" className="underline hover:text-volt">See plans →</a>
+      </p>
+
       <a
         href="/"
         className="font-mono text-xs uppercase tracking-widest text-muted hover:text-volt mt-12 inline-block"

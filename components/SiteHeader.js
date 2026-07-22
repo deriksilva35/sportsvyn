@@ -54,7 +54,7 @@ function shortLabel(email) {
   return at > 0 ? email.slice(0, at) : email;
 }
 
-export default function SiteHeader({ activeNav = null, session = null }) {
+export default function SiteHeader({ activeNav = null, session = null, member = false }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -126,6 +126,9 @@ export default function SiteHeader({ activeNav = null, session = null }) {
               redirect to /signin?callbackUrl=/my, so the link is safe to
               show in nav for everyone (the signin funnel is intentional). */}
           <a href="/my" className={navClass(activeNav, 'my')}>My Sportsvyn</a>
+          {/* MEMBER upgrade link — hidden once you're a member. Same nav
+              treatment (JetBrains Mono, uppercase). */}
+          {!member && <a href="/membership" className={navClass(activeNav, 'membership')}>Member</a>}
         </div>
         <div className="header-cta">
           {rightCluster()}
@@ -153,6 +156,7 @@ export default function SiteHeader({ activeNav = null, session = null }) {
               resolves to the same surface). */}
           <a href="/" className={navClass(activeNav, 'daily-card')}>Daily Card</a>
           <a href="/my" className={navClass(activeNav, 'my')}>My Sportsvyn</a>
+          {!member && <a href="/membership" className={navClass(activeNav, 'membership')}>Member</a>}
           {rightCluster()}
         </nav>
       )}
