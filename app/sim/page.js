@@ -46,10 +46,10 @@ export default async function SimLobby({ searchParams }) {
         ) : userId == null ? (
           <section className="sim-pitch">
             <div className="sim-kicker">Fantasy · Mock Draft</div>
-            <div className="sim-ph">Placeholder pitch copy</div>
             <h1>Draft against the market, not a spreadsheet</h1>
-            <p>A full snake mock against AI opponents that reach and slide like a real room, graded on value versus live ADP. Three free drafts, no setup.</p>
+            <p>A full snake mock against AI opponents that reach and slide like a real room - every pick graded on value versus live ADP. Three free drafts, no setup. Members draft unlimited.</p>
             <a className="sim-cta" href="/signin?callbackUrl=/sim">Sign in to draft</a>
+            <p className="sim-cta-note">Sign in or create an account - Apple or email.</p>
           </section>
         ) : (
           await (async () => {
