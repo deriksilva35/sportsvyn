@@ -9,6 +9,8 @@ import DeleteAccount from '@/components/sim/DeleteAccount';
 import ShellPersist from '@/components/sim/ShellPersist';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getDraftsUsed, isMember, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
+import { getMembership } from '@/lib/membership';
+import { openBillingPortal } from '@/app/actions/membership';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
 
@@ -25,8 +27,13 @@ export default async function SimAccount({ searchParams }) {
   const isShell = await resolveShellMode((await searchParams) ?? {});
   if (userId == null) redirect('/signin?callbackUrl=/sim/account');
 
-  const [used, member] = await Promise.all([getDraftsUsed(userId), isMember(userId)]);
+  const [used, member, membership] = await Promise.all([
+    getDraftsUsed(userId), isMember(userId), getMembership(userId),
+  ]);
   const email = session.user?.email ?? '';
+  const renews = member && membership?.current_period_end
+    ? new Date(membership.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null;
 
   return (
     <div className={`sim sim--tabbar${isShell ? ' sim--shell' : ''}`} data-surface="ink">
@@ -40,15 +47,20 @@ export default async function SimAccount({ searchParams }) {
         <div className="sim-kicker">Account</div>
         <div className="acct">
           <div className="acct-row"><span className="k">Email</span><span className="v">{email}</span></div>
-          <div className="acct-row"><span className="k">Membership</span><span className="v">{member ? 'Member' : 'Free'}</span></div>
-          <div className="acct-row"><span className="k">Drafts</span><span className="v">{used} of {FREE_DRAFT_LIMIT} free used</span></div>
+          <div className="acct-row"><span className="k">Membership</span><span className="v">{member ? (renews ? `Member · renews ${renews}` : 'Member') : 'Free'}</span></div>
+          <div className="acct-row"><span className="k">Drafts</span><span className="v">{member ? 'Unlimited' : `${used} of ${FREE_DRAFT_LIMIT} free used`}</span></div>
         </div>
 
-        {!member && (
-          <div className="acct-upsell">
+        {member ? (
+          <form action={openBillingPortal}>
+            <button type="submit" className="acct-manage">Manage membership</button>
+          </form>
+        ) : (
+          <a href="/membership" className="acct-upsell acct-upsell--link">
             <div className="m1">Members get more.</div>
             <div className="m2">Unlimited drafts · custom rosters · 14+ teams · the Sportsvyn board.</div>
-          </div>
+            <div className="m3">See membership →</div>
+          </a>
         )}
 
         <SignOutButton />

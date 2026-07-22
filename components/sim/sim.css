@@ -467,6 +467,10 @@
 .acct-upsell { background: var(--volt); color: var(--ink); padding: 14px; margin-top: 14px; }
 .acct-upsell .m1 { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 15px; }
 .acct-upsell .m2 { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; margin-top: 3px; letter-spacing: .02em; }
+.acct-upsell--link { display: block; text-decoration: none; }
+.acct-upsell .m3 { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-top: 8px; }
+.acct-manage { width: 100%; margin-top: 14px; padding: 12px; background: transparent; color: var(--paper); border: 1px solid var(--rule); border-radius: 4px; font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+.acct-manage:hover { border-color: var(--volt); color: var(--volt); }
 .acct-signout { display: block; width: 100%; margin-top: 16px; background: var(--graphite); border: 1px solid var(--rule); color: var(--paper); font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 13px 0; cursor: pointer; }
 .acct-signout:hover { border-color: var(--volt); color: var(--volt); }
 /* delete account: findable but not prominent - dim terra, below sign out */

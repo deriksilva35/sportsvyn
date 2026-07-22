@@ -1,0 +1,159 @@
+/* /membership — INK product/checkout surface. House tokens from globals.css. */
+
+.mbr {
+  min-height: 100vh;
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  flex-direction: column;
+}
+
+.mbr-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--rule);
+}
+.mbr-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.mbr-tag b { color: var(--volt); font-weight: 500; }
+
+.mbr-wrap {
+  width: 100%;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 44px 24px 72px;
+  flex: 1 1 auto;
+}
+
+.mbr-kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--volt);
+  margin-bottom: 10px;
+}
+.mbr-h1 {
+  font-family: var(--font-saira-cond, var(--font-display));
+  font-weight: 700;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+.mbr-lede {
+  font-family: var(--font-archivo-sans);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--paper-dim);
+  max-width: 620px;
+  margin: 0 0 36px;
+}
+
+.mbr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.mbr-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--graphite);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 22px 20px;
+}
+.mbr-card--feature {
+  border-color: var(--volt-dim);
+  background: var(--graphite-up, #242424);
+}
+.mbr-badge {
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--volt);
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+.mbr-plan {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.mbr-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; }
+.mbr-amt {
+  font-family: var(--font-saira-cond, var(--font-display));
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.mbr-cad {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.mbr-blurb {
+  font-family: var(--font-archivo-sans);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--paper-dim);
+  margin: 6px 0 20px;
+  flex: 1 1 auto;
+}
+.mbr-cta {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background: var(--volt);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.mbr-cta:hover { background: var(--volt-dim); }
+
+.mbr-code {
+  margin: 32px 0 0;
+  padding: 14px 16px;
+  background: var(--graphite);
+  border-left: 2px solid var(--volt-dim);
+  border-radius: 4px;
+  font-family: var(--font-archivo-sans);
+  font-size: 14px;
+  color: var(--paper-dim);
+}
+.mbr-fine {
+  margin-top: 18px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted-dim, #5A5A5A);
+}
+.mbr-fine a { color: var(--muted); text-decoration: underline; }
+.mbr-fine a:hover { color: var(--volt); }
+
+@media (max-width: 720px) {
+  .mbr-grid { grid-template-columns: 1fr; }
+  .mbr-wrap { padding: 32px 18px 56px; }
+}
