@@ -206,6 +206,12 @@
 .rseg.nudge:not(.on) { animation: seg-nudge 1.2s infinite; }
 @keyframes seg-nudge { 50% { color: var(--volt); } }
 
+/* desktop LIST/BOARD view toggle: same segmented look as the mobile room tabs
+   (volt active) but compact, sitting on the right of the room header. Hidden on
+   mobile, where the swipe pager already carries BOARD/PICK/ROSTER. */
+.room-view { display: none; }
+.room-view .rseg { flex: 0 0 auto; padding: 8px 15px; }
+
 /* BOARD grid: teams columns x rounds rows, all columns fit the width (no h-scroll).
    Column template is set inline from the team count. Position tints per the mock;
    K/DST/others stay neutral ink. */
@@ -216,6 +222,7 @@
 .bg2 .bc { min-height: 34px; border-bottom: 1px solid #111; border-right: 1px solid #111; padding: 2px 1px; overflow: hidden; }
 .bg2 .bc .n { font-size: 7.5px; font-weight: 600; color: var(--paper); line-height: 1.2; display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .bg2 .bc .p { font-size: 6.5px; font-weight: 700; display: block; }
+.bg2 .bc .pk { display: none; }  /* overall-pick number: shown only in the desktop BOARD view */
 .bg2 .bc.QB { background: rgba(184,65,15,.28); } .bg2 .bc.QB .p { color: #E8865A; }
 .bg2 .bc.RB { background: rgba(42,138,79,.28); } .bg2 .bc.RB .p { color: #5BC98A; }
 .bg2 .bc.WR { background: rgba(138,147,216,.22); } .bg2 .bc.WR .p { color: #8A93D8; }
@@ -224,6 +231,33 @@
 .bg2 .bc.otc2 { background: rgba(230,57,70,.18); outline: 1.5px solid var(--live); outline-offset: -1.5px; animation: sim-pulse 1.2s infinite; }
 .bg2 .bc.otc2 .n { color: var(--live); font-size: 6.5px; }
 .bg2 .bc.empty .n { color: #2A2A26; }
+
+/* ---- desktop BOARD view (>900) ----
+   The LIST/BOARD header toggle appears, and when BOARD is active the full snake
+   grid takes the whole 3-column zone at full width (roster / available / feed are
+   hidden until the user toggles back to LIST). Same buildBoard() data and the same
+   BoardGrid/BoardCell as the mobile pager - only the cell SIZE differs, driven here
+   in CSS: bigger cells, the .pk pick number revealed, a sticky team-header row and
+   round rail. Scoped to >900 so the mobile pager is untouched. */
+@media (min-width: 901px) {
+  .room-view { display: inline-flex; }
+
+  .room--board .pager .page.pg-board { display: block; grid-column: 1 / -1; max-height: calc(100dvh - 150px); overflow: auto; }
+  .room--board .pager .page.pg-pick,
+  .room--board .pager .page.pg-roster,
+  .room--board .zone.feed { display: none; }
+  /* let the zone label scroll away so only the team row + round rail stay pinned */
+  .room--board .pg-board .plabel { position: static; }
+
+  .room--board .bg2 .bh { position: sticky; top: 0; z-index: 3; background: var(--graphite); font-size: 11px; padding: 9px 0; }
+  .room--board .bg2 .bh.corner { left: 0; z-index: 4; }
+  .room--board .bg2 .br { position: sticky; left: 0; z-index: 2; background: var(--graphite); font-size: 11px; }
+  .room--board .bg2 .bc { min-height: 56px; padding: 6px 7px; position: relative; }
+  .room--board .bg2 .bc .pk { display: block; position: absolute; top: 4px; right: 5px; font-size: 8.5px; font-weight: 700; color: var(--muted-dim); letter-spacing: .02em; }
+  .room--board .bg2 .bc .p { font-size: 9px; margin-bottom: 2px; }
+  .room--board .bg2 .bc .n,
+  .room--board .bg2 .bc.otc2 .n { font-size: 12.5px; }
+}
 
 @media (max-width: 900px) {
   /* align-items:stretch (the base .room grid sets it to start) so the pager fills

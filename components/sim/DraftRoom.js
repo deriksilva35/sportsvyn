@@ -58,6 +58,7 @@ export default function DraftRoom({
   const [sort, setSort] = useState('adp');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1); // swipe pager index: 0 BOARD / 1 PICK / 2 ROSTER
+  const [view, setView] = useState('list'); // desktop (>900) only: 'list' 3-col | 'board' full-width snake grid
   const pagerRef = useRef(null);
   const [clock, setClock] = useState(timerSeconds ?? null);
   const [auto, setAuto] = useState(initialAuto === true);
@@ -242,7 +243,7 @@ export default function DraftRoom({
 
   const rounds = board.rounds;
   return (
-    <div className="room">
+    <div className={`room${view === 'board' ? ' room--board' : ''}`}>
       {/* PERSISTENT HEADER (all pages): clock banner + AUTO, then last-pick strip */}
       <div className="room-head">
         <div className={`on-clock${canPick ? '' : ' waiting'}`}>
@@ -253,6 +254,11 @@ export default function DraftRoom({
               ? <>You&apos;re on the clock · <b>Pick {currentOverall}</b> · Round {round}</>
               : <>Team {onClockTeam + 1} on the clock · Pick {currentOverall}</>}</span>
           {timerSeconds != null && canPick && <span className={`timer${clock <= 10 ? ' low' : ''}`}>{Math.max(0, clock ?? 0)}</span>}
+        </div>
+        {/* desktop-only LIST/BOARD view toggle (mobile uses the swipe pager instead) */}
+        <div className="room-view" role="group" aria-label="Room view">
+          <button type="button" className={`rseg${view === 'list' ? ' on' : ''}`} onClick={() => setView('list')} aria-pressed={view === 'list'}>List</button>
+          <button type="button" className={`rseg${view === 'board' ? ' on' : ''}`} onClick={() => setView('board')} aria-pressed={view === 'board'}>Board</button>
         </div>
         {!complete && (
           <button
@@ -447,18 +453,24 @@ function BoardGrid({ board }) {
   );
 }
 
+// One cell, two sizes. The `.pk` overall-pick number and the fuller last name
+// are always in the DOM; CSS reveals + enlarges them only in the desktop BOARD
+// view (.room--board), and keeps the mobile pager cells compact. boardName's
+// generous cap lets desktop show the full last name while the mobile cell's
+// nowrap+ellipsis trims it to fit: one renderer, size handled in CSS.
 function BoardCell({ cell }) {
   if (cell.onClock) {
-    return <div className={`bc otc2${cell.mine ? ' mine' : ''}`}><span className="n">CLOCK</span></div>;
+    return <div className={`bc otc2${cell.mine ? ' mine' : ''}`}><span className="pk">{cell.overall}</span><span className="n">CLOCK</span></div>;
   }
   if (!cell.pick) {
-    return <div className={`bc empty${cell.mine ? ' mine' : ''}`}><span className="n">·</span></div>;
+    return <div className={`bc empty${cell.mine ? ' mine' : ''}`}><span className="pk">{cell.overall}</span><span className="n">·</span></div>;
   }
   const pos = cell.pick.slotPos || cell.pick.position;
   return (
     <div className={`bc ${posClass(pos)}${cell.mine ? ' mine' : ''}`.trim()}>
+      <span className="pk">{cell.overall}</span>
       <span className="p">{pos}</span>
-      <span className="n">{cell.pick.synthetic ? pos : boardName(cell.pick.playerName)}</span>
+      <span className="n">{cell.pick.synthetic ? pos : boardName(cell.pick.playerName, 14)}</span>
     </div>
   );
 }
