@@ -121,8 +121,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     }
   }
 
+  // CODE-ONLY sign-in: the emailed verification token must NOT be redeemable via
+  // URL. Auth.js's magic-link callback consumes tokens through the adapter's
+  // useVerificationToken; forcing it to return null disables that path entirely
+  // (an old /api/auth/callback/resend?token=... hits a dead end). The 6-digit code
+  // is the only redemption path — lib/auth/emailOtp.js consumes the token via
+  // direct SQL, so it is unaffected. createVerificationToken stays (the OTP's
+  // single-use cross-check reads the row it writes).
+  const baseAdapter = PostgresAdapter(pool);
+  const adapter = { ...baseAdapter, useVerificationToken: async () => null };
+
   return {
-    adapter: PostgresAdapter(pool),
+    adapter,
     pages: {
       // Custom branded surfaces. signIn replaces the default
       // /api/auth/signin HTML card; verifyRequest is the post-submit

@@ -3,19 +3,18 @@
 /**
  * SignInForm — the client island inside /signin.
  *
- * Two phases, one component (web AND shell — the code path is harmless on web
- * and keeps a single flow):
- *   1. email: sends the magic-link email (signIn('resend', redirect:false)).
- *   2. code:  after send, a 6-digit code field — "Or enter the code from the
- *             email here." Verified by the verifyEmailCode server action, which
- *             redeems the SAME token as the link (whichever is used first wins)
- *             and sets the session cookie. On success we navigate to callbackUrl
- *             entirely in-app — no email-link-opens-Safari detour (the reason
- *             this exists for the shell).
+ * CODE-ONLY, two phases, one component (web AND shell):
+ *   1. email: triggers the sign-in email (signIn('resend', redirect:false) — the
+ *             provider send flow still mints the token, but there is no usable
+ *             link; the email carries only a 6-digit code).
+ *   2. code:  a 6-digit code field, verified by the verifyEmailCode server action,
+ *             which redeems the token and sets the session cookie. On success we
+ *             navigate to callbackUrl entirely in-app — no email-link-opens-Safari
+ *             detour (there is no link at all now).
  *
  * Receives initialError + callbackUrl as PLAIN PROPS from the server page (no
  * useSearchParams — that triggered BAILOUT_TO_CLIENT_SIDE_RENDERING and emptied
- * the static HTML). The magic link keeps working unchanged.
+ * the static HTML).
  */
 
 import { useState } from 'react';
@@ -32,7 +31,7 @@ const ERROR_MESSAGES = {
 
 const CODE_ERRORS = {
   wrong:    'That code is not right. Check the email and try again.',
-  too_many: 'Too many tries. Send yourself a fresh link below.',
+  too_many: 'Too many tries. Send yourself a fresh code below.',
   expired:  'That code expired. Send a fresh one.',
   invalid:  'That code is not valid. Send a fresh one.',
 };
@@ -96,7 +95,7 @@ export default function SignInForm({ initialError = null, callbackUrl = '/' }) {
     return (
       <div className="mt-6 w-full">
         <p className="text-sm text-muted leading-snug">
-          Check your email for a sign-in link. Or enter the code from the email here.
+          We emailed you a 6-digit code. Enter it here.
         </p>
         <form onSubmit={handleVerify} className="mt-4">
           <label htmlFor="code" className="sr-only">6-digit code</label>
@@ -152,7 +151,7 @@ export default function SignInForm({ initialError = null, callbackUrl = '/' }) {
         disabled={submitting}
         className="mt-3 w-full px-4 py-3 bg-volt text-ink font-mono font-medium uppercase tracking-widest text-sm rounded hover:bg-volt/90 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {submitting ? 'Sending…' : 'Send sign-in link'}
+        {submitting ? 'Sending…' : 'Email me a code'}
       </button>
 
       <div className="mt-4 h-6 text-sm text-muted" aria-live="polite">

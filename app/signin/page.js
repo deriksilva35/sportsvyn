@@ -58,7 +58,7 @@ export default async function SignInPage({ searchParams }) {
         Sign in or create your account
       </h1>
       <p className="font-serif italic text-muted mt-4">
-        Use your Apple&nbsp;ID, or we&apos;ll email you a one-click sign-in link.
+        Use your Apple&nbsp;ID, or we&apos;ll email you a 6-digit sign-in code.
       </p>
 
       <div className="mt-12 w-full">
@@ -67,13 +67,8 @@ export default async function SignInPage({ searchParams }) {
         <div className="mt-8">
           <div className="h-px bg-charcoal" />
           <p className="font-mono text-[11px] uppercase tracking-widest text-muted mt-4">
-            or get a sign-in link by email
+            or get a sign-in code by email
           </p>
-          {isShell && (
-            <p className="text-[11px] text-muted mt-2 leading-snug">
-              Email links open in your browser - use Apple, or enter the emailed code to stay in the app.
-            </p>
-          )}
         </div>
 
         <SignInForm initialError={initialError} callbackUrl={callbackUrl} />
