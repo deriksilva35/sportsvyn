@@ -29,6 +29,7 @@ import {
 } from '@/lib/teams';
 import { getTeamSquad } from '@/lib/players';
 import { isFollowingTeam } from '@/lib/follows';
+import { NFL_NON_AFFILIATION } from '@/lib/legal';
 
 import TeamHero from '@/components/team/TeamHero';
 import SportsvynOutlook from '@/components/team/SportsvynOutlook';
@@ -175,6 +176,7 @@ export default async function TeamPage({ params }) {
             </div>
           </div>
         </div>
+        <p className="footer-fine">{NFL_NON_AFFILIATION}</p>
       </footer>
     </>
   );

@@ -190,6 +190,17 @@
 }
 .footer-col a:hover { color: var(--volt); }
 
+/* Non-affiliation fine print — full-width quiet line under the footer grid. */
+.footer-fine {
+  max-width: 1100px;
+  margin: 28px auto 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  color: var(--muted-dim);
+}
+
 /* ============ FOOTER MOBILE (<768px) ============
    Desktop is `grid-template-columns: 1fr auto` on .site-footer-inner —
    brand block left, link columns right. At narrow viewports, the auto

@@ -32,6 +32,7 @@
 /* footer / FFC attribution (license requirement) */
 .sim-foot { border-top: 1px solid var(--rule-dim); margin-top: 32px; padding: 16px 22px; font-size: 10px; letter-spacing: .04em; color: var(--muted-dim); text-align: center; }
 .sim-foot a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--volt); text-underline-offset: 2px; }
+.sim-foot-noaff { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .04em; color: var(--muted-dim); margin-top: 7px; line-height: 1.5; }
 
 /* ---- lobby ---- */
 .sim-kicker { font-size: 10px; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: var(--volt); margin-bottom: 12px; }

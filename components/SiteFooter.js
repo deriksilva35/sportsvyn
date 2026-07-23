@@ -11,6 +11,7 @@
  */
 
 import Wordmark from '@/components/Wordmark';
+import { NFL_NON_AFFILIATION } from '@/lib/legal';
 
 import './site-chrome.css';
 
@@ -45,6 +46,7 @@ export default function SiteFooter() {
           </div>
         </div>
       </div>
+      <p className="footer-fine">{NFL_NON_AFFILIATION}</p>
     </footer>
   );
 }
