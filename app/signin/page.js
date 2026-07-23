@@ -22,13 +22,21 @@
  * supporting line, mono back-link.
  */
 
+import Link from 'next/link';
 import Wordmark from '@/components/Wordmark';
 import SignInForm from './SignInForm';
 import AppleSignInButton from './AppleSignInButton';
+import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 
 export const metadata = {
   title: 'Sign in — Sportsvyn',
 };
+
+// In the Draftvyn shell, opt into viewport-fit:cover so env(safe-area-inset-*)
+// resolves; web returns the same base viewport (unchanged).
+export async function generateViewport({ searchParams }) {
+  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+}
 
 export default async function SignInPage({ searchParams }) {
   const params = await searchParams;
@@ -36,10 +44,16 @@ export default async function SignInPage({ searchParams }) {
     typeof params?.error === 'string' ? params.error : null;
   const callbackUrl =
     typeof params?.callbackUrl === 'string' ? params.callbackUrl : '/';
+  // Shell-aware (via ?shell=sim-app param, or the sv_shell cookie set on /sim).
+  // Web version is unaffected — isShell is false there.
+  const isShell = await resolveShellMode(params ?? {});
 
   return (
-    <main className="max-w-md mx-auto py-24 px-6 text-center">
-      <Wordmark sizeClassName="text-2xl sm:text-3xl" />
+    <main
+      className={`max-w-md mx-auto px-6 text-center ${isShell ? '' : 'py-24'}`}
+      style={isShell ? { paddingTop: 'calc(2.5rem + env(safe-area-inset-top))', paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))' } : undefined}
+    >
+      <Wordmark sizeClassName={isShell ? 'text-xl' : 'text-2xl sm:text-3xl'} />
       <h1 className="font-display font-black text-3xl text-paper-warm mt-12">
         Sign in or create your account
       </h1>
@@ -55,6 +69,11 @@ export default async function SignInPage({ searchParams }) {
           <p className="font-mono text-[11px] uppercase tracking-widest text-muted mt-4">
             or get a sign-in link by email
           </p>
+          {isShell && (
+            <p className="text-[11px] text-muted mt-2 leading-snug">
+              Email links open in your browser - use Apple to stay in the app.
+            </p>
+          )}
         </div>
 
         <SignInForm initialError={initialError} callbackUrl={callbackUrl} />
@@ -65,12 +84,16 @@ export default async function SignInPage({ searchParams }) {
         <a href="/membership" className="underline hover:text-volt">See plans →</a>
       </p>
 
-      <a
-        href="/"
-        className="font-mono text-xs uppercase tracking-widest text-muted hover:text-volt mt-12 inline-block"
-      >
-        ← sportsvyn.com
-      </a>
+      {/* Website escape hatch — hidden in the shell so /signin reads as the app
+          front door, not the website. */}
+      {!isShell && (
+        <Link
+          href="/"
+          className="font-mono text-xs uppercase tracking-widest text-muted hover:text-volt mt-12 inline-block"
+        >
+          ← sportsvyn.com
+        </Link>
+      )}
     </main>
   );
 }

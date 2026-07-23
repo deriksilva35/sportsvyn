@@ -24,6 +24,9 @@ export default async function SimLobby({ searchParams }) {
   const userId = session?.user?.id ?? null;
   const params = (await searchParams) ?? {};
   const isShell = await resolveShellMode(params);
+  // Carry shell context into /signin so it renders the app front door reliably
+  // (not dependent on the sv_shell cookie having been written yet).
+  const signinHref = `/signin?callbackUrl=/sim${isShell ? '&shell=sim-app' : ''}`;
   // Post-deletion landing: the delete-account flow signs out and redirects here.
   const deleted = userId == null && params.deleted != null;
 
@@ -41,14 +44,14 @@ export default async function SimLobby({ searchParams }) {
             <div className="sim-kicker">Account deleted</div>
             <h1>Your account was deleted</h1>
             <p>Your account, drafts, and history have been permanently removed. Thanks for trying the sim.</p>
-            <a className="sim-cta" href="/signin?callbackUrl=/sim">Start over</a>
+            <a className="sim-cta" href={signinHref}>Start over</a>
           </section>
         ) : userId == null ? (
           <section className="sim-pitch">
             <div className="sim-kicker">Fantasy · Mock Draft</div>
             <h1>Draft against the market, not a spreadsheet</h1>
             <p>A full snake mock against AI opponents that reach and slide like a real room - every pick graded on value versus live ADP. Three free drafts, no setup. Members draft unlimited.</p>
-            <a className="sim-cta" href="/signin?callbackUrl=/sim">Sign in to draft</a>
+            <a className="sim-cta" href={signinHref}>Sign in to draft</a>
             <p className="sim-cta-note">Sign in or create an account - Apple or email.</p>
           </section>
         ) : (
