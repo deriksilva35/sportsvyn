@@ -133,6 +133,17 @@
 }
 .mbr-cta:hover { background: var(--volt-dim); }
 
+.mbr-error {
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  background: rgba(230, 57, 70, 0.10);
+  border: 1px solid var(--live, #E63946);
+  border-radius: 6px;
+  font-family: var(--font-archivo-sans);
+  font-size: 14px;
+  color: var(--paper);
+}
+
 .mbr-code {
   margin: 32px 0 0;
   padding: 14px 16px;

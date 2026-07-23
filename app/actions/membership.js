@@ -35,7 +35,16 @@ export async function startCheckout(planKey) {
   if (!plan) redirect('/membership'); // unknown plan — bounce back
 
   const baseUrl = await originBaseUrl();
-  const checkout = await createCheckoutSession({ priceId: plan.priceId, userId, email, baseUrl });
+  // Never let a Stripe/config failure surface as the raw 500 error page — catch
+  // it and bounce back to /membership with a friendly banner. redirect() stays
+  // OUTSIDE the try (it signals via throw).
+  let checkout = null;
+  try {
+    checkout = await createCheckoutSession({ priceId: plan.priceId, userId, email, baseUrl });
+  } catch (err) {
+    console.error('[membership] checkout create failed:', err?.message);
+  }
+  if (!checkout?.url) redirect('/membership?error=checkout');
   redirect(checkout.url);
 }
 
@@ -49,9 +58,15 @@ export async function openBillingPortal() {
   if (!m?.stripe_customer_id) redirect('/membership'); // no customer yet — send to pricing
 
   const baseUrl = await originBaseUrl();
-  const portal = await createBillingPortalSession({
-    customerId: m.stripe_customer_id,
-    returnUrl: `${baseUrl}/sim/account`,
-  });
+  let portal = null;
+  try {
+    portal = await createBillingPortalSession({
+      customerId: m.stripe_customer_id,
+      returnUrl: `${baseUrl}/sim/account`,
+    });
+  } catch (err) {
+    console.error('[membership] portal create failed:', err?.message);
+  }
+  if (!portal?.url) redirect('/sim/account?error=portal');
   redirect(portal.url);
 }

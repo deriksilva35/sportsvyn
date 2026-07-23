@@ -17,7 +17,9 @@ export const metadata = {
   description: 'Unlimited drafts, custom rosters, and the Sportsvyn board.',
 };
 
-export default function MembershipPage() {
+export default async function MembershipPage({ searchParams }) {
+  const params = (await searchParams) ?? {};
+  const showError = params.error === 'checkout';
   return (
     <div className="mbr" data-surface="ink">
       <header className="mbr-head">
@@ -27,6 +29,11 @@ export default function MembershipPage() {
 
       <main className="mbr-wrap">
         <div className="mbr-kicker">Membership</div>
+        {showError && (
+          <div className="mbr-error" role="alert">
+            We couldn&rsquo;t start checkout just now. Please try again in a moment.
+          </div>
+        )}
         <h1 className="mbr-h1">Members get more.</h1>
         <p className="mbr-lede">
           Unlimited drafts. Custom rosters. 14+ teams and superflex. The Sportsvyn
