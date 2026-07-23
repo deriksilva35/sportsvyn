@@ -13,6 +13,7 @@
     { "path": "/api/cron/map-ko-fixtures",        "schedule": "0 8 * * *" },
     { "path": "/api/cron/gridiron-games",         "schedule": "*/5 * * * *" },
     { "path": "/api/cron/nfl-stats-sweep",        "schedule": "0 8 * * 2" },
-    { "path": "/api/cron/gridiron-teams",         "schedule": "0 7 * * 3" }
+    { "path": "/api/cron/gridiron-teams",         "schedule": "0 7 * * 3" },
+    { "path": "/api/cron/gridiron-odds",          "schedule": "*/15 * * * *" }
   ]
 }
