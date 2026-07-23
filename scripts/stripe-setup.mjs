@@ -1,18 +1,51 @@
-// scripts/stripe-setup.mjs — idempotent Stripe TEST-MODE object setup.
-// Creates/reuses: products + prices (monthly $19, annual $190, founding $99/yr),
-// a 100%-off forever coupon, and promotion code SPORTSVYN-FULL. Prints the
-// resulting price IDs (non-secret) so they can land in lib/stripe/plans.js.
-// Idempotent via price lookup_keys + a fixed coupon id + promo-code lookup.
-// Never prints the secret key. Re-runnable (test AND, later, live).
+// scripts/stripe-setup.mjs — idempotent Stripe object setup (products, prices,
+// 100%-off forever coupon, promotion code). Prints the resulting price IDs
+// (non-secret). Never prints a secret key.
 //
-// Run: node scripts/stripe-setup.mjs
+// TEST (default): reads STRIPE_SECRET_KEY (must be sk_test_); promo code defaults
+//   to SPORTSVYN-FULL.
+//     node scripts/stripe-setup.mjs
+// LIVE (--live): reads STRIPE_LIVE_SECRET_KEY (must be sk_live_); prints a LIVE
+//   banner + 5s delay; --promo-code <CODE> is REQUIRED (no default in live), and
+//   --max-redemptions <N> is optional. Uses the SAME lookup_keys as test —
+//   critical, because runtime price resolution (lib/stripe.js resolvePriceId)
+//   keys on them.
+//     node scripts/stripe-setup.mjs --live --promo-code FOUNDER100 --max-redemptions 1000
+//
+// Idempotent in both modes: products via metadata search, prices via lookup_keys,
+// coupon via fixed id, promo via code lookup — reuse if present.
 import { readFileSync } from 'node:fs';
 
-const env = readFileSync(new URL('../.env.local', import.meta.url), 'utf8');
-const KEY = (env.match(/^STRIPE_SECRET_KEY=(.*)$/m) || [])[1]?.trim().replace(/^["']|["']$/g, '');
-if (!KEY) { console.error('STRIPE_SECRET_KEY missing in .env.local'); process.exit(1); }
-if (!KEY.startsWith('sk_test_')) { console.error('REFUSE: STRIPE_SECRET_KEY is not a test key (sk_test_)'); process.exit(1); }
-console.log('mode: TEST (sk_test_)');
+const envText = readFileSync(new URL('../.env.local', import.meta.url), 'utf8');
+const readEnv = (name) => (envText.match(new RegExp('^' + name + '=(.*)$', 'm')) || [])[1]?.trim().replace(/^["']|["']$/g, '');
+
+const args = process.argv.slice(2);
+const LIVE = args.includes('--live');
+const argVal = (flag) => { const i = args.indexOf(flag); return i >= 0 ? args[i + 1] : undefined; };
+const promoCodeArg = argVal('--promo-code');
+const maxRedemptions = argVal('--max-redemptions');
+
+let KEY;
+let PROMO_CODE;
+if (LIVE) {
+  KEY = readEnv('STRIPE_LIVE_SECRET_KEY');
+  if (!KEY) { console.error('REFUSE: STRIPE_LIVE_SECRET_KEY missing in .env.local'); process.exit(1); }
+  if (!KEY.startsWith('sk_live_')) { console.error('REFUSE: STRIPE_LIVE_SECRET_KEY is not a live key (sk_live_)'); process.exit(1); }
+  if (!promoCodeArg) { console.error('REFUSE: --live requires --promo-code <CODE> (no default in live mode)'); process.exit(1); }
+  PROMO_CODE = promoCodeArg;
+  console.log('\n============================================================');
+  console.log('  !!  LIVE MODE — creating objects in the LIVE Stripe account');
+  console.log(`  promo code: ${PROMO_CODE}${maxRedemptions ? `   max_redemptions: ${maxRedemptions}` : '   (unlimited redemptions)'}`);
+  console.log('  Ctrl-C now to abort. Continuing in 5s...');
+  console.log('============================================================\n');
+  await new Promise((r) => setTimeout(r, 5000));
+} else {
+  KEY = readEnv('STRIPE_SECRET_KEY');
+  if (!KEY) { console.error('REFUSE: STRIPE_SECRET_KEY missing in .env.local'); process.exit(1); }
+  if (!KEY.startsWith('sk_test_')) { console.error('REFUSE: STRIPE_SECRET_KEY is not a test key (sk_test_)'); process.exit(1); }
+  PROMO_CODE = promoCodeArg ?? 'SPORTSVYN-FULL';
+  console.log('mode: TEST (sk_test_)');
+}
 
 const BASE = 'https://api.stripe.com/v1';
 // form-encode nested params: {a:{b:1}} -> a[b]=1
@@ -69,15 +102,17 @@ async function ensureCoupon() {
   return made.json;
 }
 
-async function ensurePromoCode(couponId, code) {
+async function ensurePromoCode(couponId, code, maxRedeem) {
   const found = await stripe('GET', `/promotion_codes?code=${encodeURIComponent(code)}&limit=1`);
   if (found.json?.data?.length) return found.json.data[0];
-  const made = await stripe('POST', '/promotion_codes', { coupon: couponId, code });
+  const params = { coupon: couponId, code };
+  if (maxRedeem) params.max_redemptions = maxRedeem;
+  const made = await stripe('POST', '/promotion_codes', params);
   if (made.status >= 300) throw new Error(`promo ${code}: ${JSON.stringify(made.json.error)}`);
   return made.json;
 }
 
-// --- products + prices ---
+// --- products + prices (IDENTICAL lookup_keys across test/live) ---
 const memberProduct = await ensureProduct('membership', 'Sportsvyn Membership');
 const foundingProduct = await ensureProduct('founding', 'Sportsvyn Founding Member');
 
@@ -87,10 +122,11 @@ const founding = await ensurePrice({ lookupKey: 'sportsvyn_founding', product: f
 
 // --- coupon + promo code ---
 const coupon = await ensureCoupon();
-const promo = await ensurePromoCode(coupon.id, 'SPORTSVYN-FULL');
+const promo = await ensurePromoCode(coupon.id, PROMO_CODE, maxRedemptions);
 
-console.log('\n=== RESULT (price IDs are non-secret) ===');
+console.log(`\n=== RESULT (${LIVE ? 'LIVE' : 'TEST'} — price IDs are non-secret) ===`);
 console.log(JSON.stringify({
+  mode: LIVE ? 'live' : 'test',
   products: { membership: memberProduct.id, founding: foundingProduct.id },
   prices: {
     monthly: { id: monthly.id, lookup_key: 'sportsvyn_monthly', amount: '$19/mo' },
@@ -98,6 +134,7 @@ console.log(JSON.stringify({
     founding: { id: founding.id, lookup_key: 'sportsvyn_founding', amount: '$99/yr' },
   },
   coupon: { id: coupon.id, percent_off: coupon.percent_off, duration: coupon.duration },
-  promotion_code: { code: promo.code, id: promo.id, active: promo.active },
+  promotion_code: { code: promo.code, id: promo.id, active: promo.active, max_redemptions: promo.max_redemptions ?? null },
 }, null, 2));
-console.log('\n>>> paste these price IDs into lib/stripe/plans.js');
+console.log('\n>>> Runtime resolves prices by lookup_key (lib/stripe.js), so no code edit is');
+console.log('    needed — just ensure these lookup_keys exist in whichever mode is deployed.');

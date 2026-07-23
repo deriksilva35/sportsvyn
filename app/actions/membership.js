@@ -13,7 +13,7 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
-import { createCheckoutSession, createBillingPortalSession } from '@/lib/stripe';
+import { createCheckoutSession, createBillingPortalSession, resolvePriceId } from '@/lib/stripe';
 import { getMembership } from '@/lib/membership';
 import { PLAN_BY_KEY } from '@/lib/stripe/plans';
 
@@ -35,12 +35,19 @@ export async function startCheckout(planKey) {
   if (!plan) redirect('/membership'); // unknown plan — bounce back
 
   const baseUrl = await originBaseUrl();
-  // Never let a Stripe/config failure surface as the raw 500 error page — catch
-  // it and bounce back to /membership with a friendly banner. redirect() stays
-  // OUTSIDE the try (it signals via throw).
+  // Resolve the price by its stable lookup_key at runtime (mode-agnostic: test
+  // key -> test price, live key -> live price; plans.js priceId literals are
+  // documentation/fallback only, never the runtime source of truth). Never let a
+  // Stripe/config/resolution failure surface as the raw 500 page — catch it and
+  // bounce back to the ?error= banner. redirect() stays OUTSIDE the try.
   let checkout = null;
   try {
-    checkout = await createCheckoutSession({ priceId: plan.priceId, userId, email, baseUrl });
+    const priceId = await resolvePriceId(plan.lookupKey);
+    if (!priceId) {
+      console.error(`[membership] no active price for lookup_key "${plan.lookupKey}"`);
+    } else {
+      checkout = await createCheckoutSession({ priceId, userId, email, baseUrl });
+    }
   } catch (err) {
     console.error('[membership] checkout create failed:', err?.message);
   }
