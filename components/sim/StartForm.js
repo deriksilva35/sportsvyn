@@ -13,6 +13,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import MembershipCard from './MembershipCard';
 import { startDraft, startCustomDraft } from '@/app/actions/sim';
 import {
   SCORING_FORMATS, SCORING_LABEL, CLOCK_OPTIONS, TEAMS_MIN, TEAMS_MAX, FREE_TEAMS_MAX,
@@ -125,7 +126,6 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
         : (isCustom && member && (locks.oversize || locks.superflex))
           ? `Custom: ${[locks.oversize && `${N} teams`, locks.superflex && 'superflex'].filter(Boolean).join(' · ')}. ADP maps to the nearest market pool.`
           : null;
-  const gated = (freeGated && !isCustom) || memberBlocked;
 
   return (
     <div className="setup">
@@ -223,13 +223,17 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
       {/* full-width START bar, pinned to the bottom of the viewport (above the
           tab bar); the gate note sits directly above it. */}
       <div className="setup-foot">
-        {note && <div className={`setup-note${gated ? ' gated' : ''}`}>{note}</div>}
         {freeGated && !isCustom ? (
-          <a className="startbtn bar locked" href="/membership" {...(shell ? { target: '_blank', rel: 'noopener noreferrer', 'data-external': '' } : {})}>BECOME A MEMBER →</a>
+          // Draft gate (out of free drafts) — inline conversion card, keeps context.
+          <MembershipCard variant="draft" shell={shell} />
         ) : memberBlocked ? (
-          <button className="startbtn bar locked" type="button" onClick={() => setErr('Custom drafts are a member feature.')}>MEMBERS ONLY — CUSTOM</button>
+          // Custom config lock — inline conversion card; secondary resets to a preset.
+          <MembershipCard variant="custom" shell={shell} onBackToPresets={() => choosePreset(presets[0])} />
         ) : (
-          <button className="startbtn bar" type="button" onClick={go} disabled={pending}>{pending ? 'STARTING…' : 'START DRAFT →'}</button>
+          <>
+            {note && <div className="setup-note">{note}</div>}
+            <button className="startbtn bar" type="button" onClick={go} disabled={pending}>{pending ? 'STARTING…' : 'START DRAFT →'}</button>
+          </>
         )}
       </div>
     </div>

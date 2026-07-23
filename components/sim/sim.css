@@ -81,6 +81,18 @@
 .startbtn.bar.locked { background: var(--graphite); color: var(--muted); border: 1px solid var(--rule); }
 .setup-note { font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; letter-spacing: .04em; color: var(--muted); text-align: center; padding: 0 0 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .setup-note.gated { color: var(--volt); }
+
+/* ---- membership conversion card (renders inline at the draft/custom gates) ---- */
+.mcard { background: var(--graphite); border: 1px solid var(--rule); border-top: 2px solid var(--volt); padding: 16px 16px 14px; text-align: left; }
+.mcard-eyebrow { font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 700; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--volt); margin-bottom: 8px; }
+.mcard-head { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 24px; line-height: 1.02; letter-spacing: -.01em; color: var(--paper); margin-bottom: 8px; }
+.mcard-body { font-family: var(--font-archivo-sans, sans-serif); font-size: 13px; line-height: 1.5; color: var(--paper-dim); margin: 0 0 12px; }
+.mcard-price { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .04em; color: var(--muted); margin-bottom: 12px; }
+.mcard-cta { display: block; width: 100%; background: var(--volt); color: var(--ink); border: none; font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 16px; padding: 12px 0; cursor: pointer; text-transform: uppercase; letter-spacing: .01em; text-align: center; text-decoration: none; }
+.mcard-cta:hover { background: var(--volt-dim); }
+.mcard-sec { display: block; width: 100%; background: none; border: none; margin-top: 9px; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-align: center; text-decoration: none; cursor: pointer; }
+.mcard-sec:hover { color: var(--volt); }
+.mcard-fine { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .06em; color: var(--muted-dim, #5A5A5A); text-align: center; margin-top: 10px; }
 .setup-err { font-size: 10px; color: var(--terra); text-align: center; margin-top: 8px; letter-spacing: .04em; }
 .chiplab { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }
 
