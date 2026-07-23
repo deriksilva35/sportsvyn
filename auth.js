@@ -31,6 +31,8 @@ import Apple from 'next-auth/providers/apple';
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from '@/lib/resend';
 import { buildMagicLinkEmail } from '@/lib/emails/magicLink';
 import { appleConfigured, getAppleClientSecret } from '@/lib/auth/appleClientSecret';
+import { sql } from '@/lib/db';
+import { generateCode, sha256, attachCode, CODE_TTL_SECONDS } from '@/lib/auth/emailOtp';
 
 // Async factory: Apple's clientSecret is a signed JWT we mint at config
 // time (getAppleClientSecret is memoized, so this awaits real work only on
@@ -44,6 +46,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     Resend({
       apiKey: process.env.RESEND_API_KEY,
       from: EMAIL_FROM,
+      // 10-minute token TTL — shared by the magic link AND the 6-digit code
+      // (they are the same verification token). Down from Auth.js's 24h default.
+      maxAge: CODE_TTL_SECONDS,
       // Overriding sendVerificationRequest replaces Auth.js's default
       // fetch('https://api.resend.com/emails', ...) entirely. We route
       // through the existing lib/resend.js client so the magic-link
@@ -52,8 +57,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
       // confirmation. apiKey above remains set because the provider
       // type definition declares it required even when sendVerification-
       // Request is overridden.
-      async sendVerificationRequest({ identifier, url }) {
-        const { subject, html, text } = buildMagicLinkEmail({ url, identifier });
+      //
+      // Additional redemption path: a 6-digit code bound to THIS token. We
+      // store its hash (and token_hash = sha256(rawToken+AUTH_SECRET), which
+      // equals verification_token.token) in email_otp, independent of the
+      // adapter's token insert. lib/auth/emailOtp.js verifies + consumes it.
+      async sendVerificationRequest({ identifier, url, token, expires }) {
+        const secret = process.env.AUTH_SECRET;
+        const code = generateCode();
+        await attachCode(sql, {
+          identifier,
+          tokenHash: sha256(token, secret),
+          codeHash: sha256(code, secret),
+          expires,
+        });
+        const { subject, html, text } = buildMagicLinkEmail({ url, identifier, code });
         await resend.emails.send({
           from: EMAIL_FROM,
           to: identifier,

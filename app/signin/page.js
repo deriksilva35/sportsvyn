@@ -71,7 +71,7 @@ export default async function SignInPage({ searchParams }) {
           </p>
           {isShell && (
             <p className="text-[11px] text-muted mt-2 leading-snug">
-              Email links open in your browser - use Apple to stay in the app.
+              Email links open in your browser - use Apple, or enter the emailed code to stay in the app.
             </p>
           )}
         </div>
