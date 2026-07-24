@@ -2,7 +2,7 @@
 // renders its own local ink shell. DEV reads only.
 import Wordmark from '@/components/gridiron/Wordmark';
 import Scoreboard from '@/components/gridiron/Scoreboard';
-import { getSlateByDate } from '@/lib/gridiron/readers';
+import { getSlateByDate, resolveScoresDate } from '@/lib/gridiron/readers';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import '@/components/gridiron/gridiron.css';
 
@@ -35,7 +35,9 @@ function label(iso) {
 
 export default async function ScoresPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
-  const date = DATE_RE.test(sp.date ?? '') ? sp.date : todayEtDate();
+  // Explicit ?date= navigation is respected; the no-param default resolves to
+  // today (if it has games) or the nearest day with a real slate.
+  const date = DATE_RE.test(sp.date ?? '') ? sp.date : await resolveScoresDate(todayEtDate());
   const slate = await getSlateByDate(date);
   const games = [...slate.byLeague.nfl, ...slate.byLeague.cfb];
   // One batch odds read for the whole slate (no per-card fan-out); attach to each game.
