@@ -1,19 +1,58 @@
-// Copy + config for MembershipCard — pure data (no JSX) so it is the single,
-// unit-testable source of the card's content. Hyphens only, no em/en dashes.
+// Copy + config for the membership funnel — pure data (no JSX), the single,
+// unit-testable source for /membership and MembershipCard. Hyphens only, no em/en
+// dashes. The pricing ladder: Draft Pass (one-time) -> Football Suite (annual) ->
+// Founding (annual). Plan keys match lib/stripe/plans.js.
 
-export const MEMBERSHIP_PRICE_LINE = '$19/mo - $190/yr - $99/yr founding';
+export const MEMBERSHIP_PRICE_LINE = '$9.99 Draft Pass - $59/yr Suite - $99/yr Founding';
+
+// Per-tier display copy for /membership, keyed by plan key.
+export const MEMBERSHIP_TIERS = {
+  draft_pass: {
+    tagline: "For people prepping like it's a second job.",
+    features: [
+      'Superflex and 2QB',
+      '14 to 16 teams',
+      'Custom rosters and scoring',
+      'Unlimited drafts',
+      'Full draft history',
+      'The Exposure Report',
+    ],
+    footnote: 'Through the Super Bowl.',
+  },
+  suite: {
+    tagline: 'Draft tools today. The Suite starts Week 1.',
+    features: [
+      'Everything in the Pass, unlocked now',
+      'The Waiver Read every Tuesday',
+      'The Usage Board every Wednesday',
+      'Watch Score on every game',
+      'Sleeper league sync',
+      'The Reads all season',
+    ],
+    footnote: 'Draft tools now, the Suite from Week 1.',
+  },
+  founding: {
+    tagline: 'This price exists because the publication is being built in front of you.',
+    features: [
+      'Everything in the Suite',
+      'Your rate locked for as long as you stay',
+    ],
+    footnote: 'Founding rate, locked for as long as you stay.',
+  },
+};
 
 export const MEMBERSHIP_CARD_VARIANTS = {
-  // Variant A — draft gate (out of the 3 free drafts).
+  // Variant A — draft gate (out of the 3 free weekly drafts). Leads with the Pass.
   draft: {
-    headline: "That's your three.",
-    body: 'Free accounts get three drafts. Members draft without limit - plus custom rosters, leagues past 12 teams, superflex, and a history that keeps every Read.',
+    headline: 'Three free drafts a week.',
+    body: "That's your three - they reset Monday. The Draft Pass unlocks unlimited drafts, custom rosters, superflex, 14 to 16 teams, full history, and the Exposure Report - through the Super Bowl.",
     secondary: { label: 'Your drafts', href: '/sim/history' },
   },
-  // Variant B — custom config lock.
+  // Variant B — custom config lock. Custom is a sim entitlement, so lead with the
+  // Pass too (the Pass is the cheapest thing that unlocks it).
   custom: {
-    headline: 'Custom is a member thing.',
-    body: 'Set your own roster slots, league size, and scoring. Members configure the room; free accounts draft the presets.',
+    headline: 'Custom needs the Draft Pass.',
+    body: 'Set your own roster slots, league size, superflex, and scoring. The Draft Pass unlocks the full console; free accounts draft the presets.',
     secondary: { label: 'Back to presets' }, // no href — uses the onBackToPresets callback
   },
 };

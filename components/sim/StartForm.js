@@ -120,7 +120,7 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
   const note = err
     ? err
     : freeGated && !isCustom
-      ? `You've used your ${limit} free drafts. Members draft unlimited.`
+      ? `That's your ${limit} free drafts for the week - resets Monday. Members draft unlimited.`
       : memberBlocked
         ? 'Custom rosters, 14+ teams, and superflex are member features.'
         : (isCustom && member && (locks.oversize || locks.superflex))

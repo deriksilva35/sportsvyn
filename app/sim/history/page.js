@@ -7,6 +7,9 @@ import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getDraftHistory } from '@/lib/fantasy/drafts';
+import { getEntitlements } from '@/lib/membership';
+import { getExposureReport } from '@/lib/sim/exposureReport';
+import ExposureReport from '@/components/sim/ExposureReport';
 import { SCORING_LABEL } from '@/lib/fantasy/config';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
@@ -35,7 +38,9 @@ export default async function SimHistory({ searchParams }) {
   const isShell = await resolveShellMode((await searchParams) ?? {});
   if (userId == null) redirect('/signin?callbackUrl=/sim/history');
 
-  const drafts = await getDraftHistory(userId);
+  const [drafts, ent] = await Promise.all([getDraftHistory(userId), getEntitlements(userId)]);
+  // Exposure Report: computed for sim-entitled users, locked preview for free.
+  const exposure = ent.sim ? await getExposureReport(userId) : null;
 
   return (
     <div className={`sim sim--tabbar${isShell ? ' sim--shell' : ''}`} data-surface="ink">
@@ -76,6 +81,8 @@ export default async function SimHistory({ searchParams }) {
             })}
           </ul>
         )}
+
+        <ExposureReport report={exposure} locked={!ent.sim} />
       </main>
 
       <SimTabBar />

@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MEMBERSHIP_PRICE_LINE, MEMBERSHIP_CARD_VARIANTS } from './membershipCopy.js';
+import { MEMBERSHIP_PRICE_LINE, MEMBERSHIP_CARD_VARIANTS, MEMBERSHIP_TIERS } from './membershipCopy.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 (function loadEnv(p) {
@@ -21,33 +21,46 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
   }
 })(path.resolve(__dirname, '..', '..', '.env.local'));
 
-// ---- Variant A (draft gate) ----
-test('draft variant: headline, body, secondary', () => {
+// ---- Variant A (draft gate) — leads with the Pass, weekly rhythm ----
+test('draft variant: weekly rhythm headline, leads with the Draft Pass', () => {
   const v = MEMBERSHIP_CARD_VARIANTS.draft;
-  assert.equal(v.headline, "That's your three.");
-  assert.match(v.body, /Free accounts get three drafts\. Members draft without limit/);
-  assert.match(v.body, /custom rosters, leagues past 12 teams, superflex/);
+  assert.equal(v.headline, 'Three free drafts a week.');
+  assert.match(v.body, /reset Monday/);
+  assert.match(v.body, /Draft Pass unlocks/);
+  assert.match(v.body, /Exposure Report/);
   assert.deepEqual(v.secondary, { label: 'Your drafts', href: '/sim/history' });
 });
 
-// ---- Variant B (custom config lock) ----
-test('custom variant: headline, body, secondary (Back to presets, no href)', () => {
+// ---- Variant B (custom config lock) — leads with the Pass (custom is sim) ----
+test('custom variant: leads with the Draft Pass, secondary Back to presets (no href)', () => {
   const v = MEMBERSHIP_CARD_VARIANTS.custom;
-  assert.equal(v.headline, 'Custom is a member thing.');
-  assert.match(v.body, /Set your own roster slots, league size, and scoring/);
-  assert.match(v.body, /Members configure the room; free accounts draft the presets/);
+  assert.equal(v.headline, 'Custom needs the Draft Pass.');
+  assert.match(v.body, /Set your own roster slots, league size, superflex, and scoring/);
+  assert.match(v.body, /Draft Pass unlocks the full console/);
   assert.equal(v.secondary.label, 'Back to presets');
   assert.equal(v.secondary.href, undefined); // uses onBackToPresets callback
 });
 
-test('price line is the three plans, hyphen-separated', () => {
-  assert.equal(MEMBERSHIP_PRICE_LINE, '$19/mo - $190/yr - $99/yr founding');
+test('price line is the three-tier ladder, hyphen-separated', () => {
+  assert.equal(MEMBERSHIP_PRICE_LINE, '$9.99 Draft Pass - $59/yr Suite - $99/yr Founding');
 });
 
-test('no em or en dashes anywhere in the card copy (hyphens only)', () => {
+test('tiers cover pass/suite/founding with taglines + features', () => {
+  for (const key of ['draft_pass', 'suite', 'founding']) {
+    const t = MEMBERSHIP_TIERS[key];
+    assert.ok(t.tagline && t.tagline.length > 0, `${key} tagline`);
+    assert.ok(Array.isArray(t.features) && t.features.length > 0, `${key} features`);
+  }
+  assert.match(MEMBERSHIP_TIERS.suite.features.join(' '), /Waiver Read.*Usage Board.*Watch Score/s);
+});
+
+test('no em or en dashes anywhere in the funnel copy (hyphens only)', () => {
   const strings = [MEMBERSHIP_PRICE_LINE];
   for (const v of Object.values(MEMBERSHIP_CARD_VARIANTS)) {
     strings.push(v.headline, v.body, v.secondary.label);
+  }
+  for (const t of Object.values(MEMBERSHIP_TIERS)) {
+    strings.push(t.tagline, t.footnote, ...t.features);
   }
   for (const s of strings) {
     assert.ok(!/[—–]/.test(s), `em/en dash found in: ${s}`);

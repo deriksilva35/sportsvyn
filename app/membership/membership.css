@@ -168,3 +168,10 @@
   .mbr-grid { grid-template-columns: 1fr; }
   .mbr-wrap { padding: 32px 18px 56px; }
 }
+
+/* feature list + footnote (3-tier ladder) */
+.mbr-feats { list-style: none; margin: 12px 0 0; padding: 0; }
+.mbr-feats li { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--paper-dim); padding: 4px 0 4px 16px; position: relative; letter-spacing: 0.01em; }
+.mbr-feats li::before { content: ""; position: absolute; left: 0; top: 9px; width: 6px; height: 6px; background: var(--volt); }
+.mbr-card--feature .mbr-feats li { color: var(--paper); }
+.mbr-foot { margin-top: 10px; font-size: 10px; letter-spacing: 0.04em; color: var(--muted-dim); font-family: var(--font-jetbrains-mono), monospace; }

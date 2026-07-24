@@ -80,15 +80,29 @@ async function ensureProduct(metaPlan, name) {
   return made.json;
 }
 
+// interval null -> a ONE-TIME price (no recurring), for the Draft Pass.
 async function ensurePrice({ lookupKey, product, unit_amount, interval }) {
   const found = await stripe('GET', `/prices?lookup_keys[]=${encodeURIComponent(lookupKey)}&active=true&limit=1`);
   if (found.json?.data?.length) return found.json.data[0];
-  const made = await stripe('POST', '/prices', {
-    product, unit_amount, currency: 'usd', recurring: { interval },
+  const params = {
+    product, unit_amount, currency: 'usd',
     lookup_key: lookupKey, transfer_lookup_key: 'true', nickname: lookupKey,
-  });
+  };
+  if (interval) params.recurring = { interval };
+  const made = await stripe('POST', '/prices', params);
   if (made.status >= 300) throw new Error(`price ${lookupKey}: ${JSON.stringify(made.json.error)}`);
   return made.json;
+}
+
+// Archive (never delete) a retired price by its lookup_key: set active=false.
+// Idempotent — a missing or already-archived price is a no-op.
+async function archivePriceByLookupKey(lookupKey) {
+  const found = await stripe('GET', `/prices?lookup_keys[]=${encodeURIComponent(lookupKey)}&active=true&limit=1`);
+  const price = found.json?.data?.[0];
+  if (!price) return { lookup_key: lookupKey, archived: false, note: 'no active price' };
+  const upd = await stripe('POST', `/prices/${price.id}`, { active: 'false' });
+  if (upd.status >= 300) throw new Error(`archive ${lookupKey}: ${JSON.stringify(upd.json.error)}`);
+  return { lookup_key: lookupKey, archived: true, id: price.id };
 }
 
 async function ensureCoupon() {
@@ -113,12 +127,21 @@ async function ensurePromoCode(couponId, code, maxRedeem) {
 }
 
 // --- products + prices (IDENTICAL lookup_keys across test/live) ---
-const memberProduct = await ensureProduct('membership', 'Sportsvyn Membership');
+// The 2026 ladder: Draft Pass (one-time) + Football Suite (annual) + Founding
+// (annual, unchanged). Monthly + the old $190 annual are archived, never deleted.
+const passProduct = await ensureProduct('pass', 'Sportsvyn Draft Pass');
+const suiteProduct = await ensureProduct('suite', 'Sportsvyn Football Suite');
 const foundingProduct = await ensureProduct('founding', 'Sportsvyn Founding Member');
 
-const monthly = await ensurePrice({ lookupKey: 'sportsvyn_monthly', product: memberProduct.id, unit_amount: 1900, interval: 'month' });
-const annual = await ensurePrice({ lookupKey: 'sportsvyn_annual', product: memberProduct.id, unit_amount: 19000, interval: 'year' });
+const draftPass = await ensurePrice({ lookupKey: 'sportsvyn_draft_pass_2026', product: passProduct.id, unit_amount: 999, interval: null }); // one-time
+const suite = await ensurePrice({ lookupKey: 'sportsvyn_suite', product: suiteProduct.id, unit_amount: 5900, interval: 'year' });
 const founding = await ensurePrice({ lookupKey: 'sportsvyn_founding', product: foundingProduct.id, unit_amount: 9900, interval: 'year' });
+
+// --- archive retired monthly + the old $190 annual (never delete) ---
+const archived = [];
+for (const lk of ['sportsvyn_monthly', 'sportsvyn_annual']) {
+  archived.push(await archivePriceByLookupKey(lk));
+}
 
 // --- coupon + promo code ---
 const coupon = await ensureCoupon();
@@ -127,12 +150,13 @@ const promo = await ensurePromoCode(coupon.id, PROMO_CODE, maxRedemptions);
 console.log(`\n=== RESULT (${LIVE ? 'LIVE' : 'TEST'} — price IDs are non-secret) ===`);
 console.log(JSON.stringify({
   mode: LIVE ? 'live' : 'test',
-  products: { membership: memberProduct.id, founding: foundingProduct.id },
+  products: { pass: passProduct.id, suite: suiteProduct.id, founding: foundingProduct.id },
   prices: {
-    monthly: { id: monthly.id, lookup_key: 'sportsvyn_monthly', amount: '$19/mo' },
-    annual: { id: annual.id, lookup_key: 'sportsvyn_annual', amount: '$190/yr' },
+    draft_pass: { id: draftPass.id, lookup_key: 'sportsvyn_draft_pass_2026', amount: '$9.99 one-time' },
+    suite: { id: suite.id, lookup_key: 'sportsvyn_suite', amount: '$59/yr' },
     founding: { id: founding.id, lookup_key: 'sportsvyn_founding', amount: '$99/yr' },
   },
+  archived,
   coupon: { id: coupon.id, percent_off: coupon.percent_off, duration: coupon.duration },
   promotion_code: { code: promo.code, id: promo.id, active: promo.active, max_redemptions: promo.max_redemptions ?? null },
 }, null, 2));

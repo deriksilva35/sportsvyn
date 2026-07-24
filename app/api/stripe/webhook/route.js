@@ -21,6 +21,8 @@ import {
 import {
   upsertMembershipForUser,
   updateMembershipBySubscription,
+  upsertPassForUser,
+  DRAFT_PASS_EXPIRES_AT,
 } from '@/lib/membership';
 
 export const runtime = 'nodejs';
@@ -47,13 +49,24 @@ export async function POST(req) {
       case 'checkout.session.completed': {
         const session = event.data.object;
         const userId = session.client_reference_id ? Number(session.client_reference_id) : null;
-        const subId =
-          typeof session.subscription === 'string'
-            ? session.subscription
-            : session.subscription?.id ?? null;
-        if (userId && subId) {
-          const sub = await retrieveSubscription(subId);
-          await upsertMembershipForUser(userId, membershipFieldsFromSubscription(sub));
+        const customerId =
+          typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
+        if (userId && session.mode === 'payment') {
+          // One-time Draft Pass: write a pass row with the fixed expiry. Idempotent
+          // (PK user_id; a Stripe redelivery restamps the same expiry).
+          await upsertPassForUser(userId, {
+            stripeCustomerId: customerId,
+            expiresAt: DRAFT_PASS_EXPIRES_AT,
+          });
+        } else {
+          const subId =
+            typeof session.subscription === 'string'
+              ? session.subscription
+              : session.subscription?.id ?? null;
+          if (userId && subId) {
+            const sub = await retrieveSubscription(subId);
+            await upsertMembershipForUser(userId, membershipFieldsFromSubscription(sub));
+          }
         }
         break;
       }

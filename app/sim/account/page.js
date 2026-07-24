@@ -48,7 +48,7 @@ export default async function SimAccount({ searchParams }) {
         <div className="acct">
           <div className="acct-row"><span className="k">Email</span><span className="v">{email}</span></div>
           <div className="acct-row"><span className="k">Membership</span><span className="v">{member ? (renews ? `Member · renews ${renews}` : 'Member') : 'Free'}</span></div>
-          <div className="acct-row"><span className="k">Drafts</span><span className="v">{member ? 'Unlimited' : `${used} of ${FREE_DRAFT_LIMIT} free used`}</span></div>
+          <div className="acct-row"><span className="k">Drafts</span><span className="v">{member ? 'Unlimited' : `${used} of ${FREE_DRAFT_LIMIT} free this week`}</span></div>
         </div>
 
         {member ? (

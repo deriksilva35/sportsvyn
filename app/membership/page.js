@@ -9,12 +9,13 @@
 import Wordmark from '@/components/gridiron/Wordmark';
 import { startCheckout } from '@/app/actions/membership';
 import { PLANS } from '@/lib/stripe/plans';
+import { MEMBERSHIP_TIERS } from '@/components/sim/membershipCopy';
 import '@/components/gridiron/gridiron.css';
 import './membership.css';
 
 export const metadata = {
-  title: 'Membership — Sportsvyn',
-  description: 'Unlimited drafts, custom rosters, and the Sportsvyn board.',
+  title: 'Membership - Sportsvyn',
+  description: 'Draft tools now, the Suite from Week 1. Draft Pass, Football Suite, or Founding.',
 };
 
 export default async function MembershipPage({ searchParams }) {
@@ -34,29 +35,37 @@ export default async function MembershipPage({ searchParams }) {
             We couldn&rsquo;t start checkout just now. Please try again in a moment.
           </div>
         )}
-        <h1 className="mbr-h1">Members get more.</h1>
+        <h1 className="mbr-h1">Draft tools now. The Suite from Week 1.</h1>
         <p className="mbr-lede">
-          Unlimited drafts. Custom rosters. 14+ teams and superflex. The Sportsvyn
-          board. Everything the free tier previews, unlocked.
+          Start with the Draft Pass for the tools, step up to the Football Suite for
+          the season, or lock the Founding rate. Everything the free tier previews,
+          unlocked.
         </p>
 
         <div className="mbr-grid">
-          {PLANS.map((p) => (
-            <form key={p.key} action={startCheckout.bind(null, p.key)} className={`mbr-card${p.key === 'founding' ? ' mbr-card--feature' : ''}`}>
-              {p.key === 'founding' && <div className="mbr-badge">Founding</div>}
-              <div className="mbr-plan">{p.label}</div>
-              <div className="mbr-price">
-                <span className="mbr-amt">{p.price}</span>
-                <span className="mbr-cad">{p.cadence}</span>
-              </div>
-              <div className="mbr-blurb">{p.blurb}</div>
-              <button type="submit" className="mbr-cta">Choose {p.label}</button>
-            </form>
-          ))}
+          {PLANS.map((p) => {
+            const tier = MEMBERSHIP_TIERS[p.key] ?? { tagline: '', features: [], footnote: '' };
+            return (
+              <form key={p.key} action={startCheckout.bind(null, p.key)} className={`mbr-card${p.featured ? ' mbr-card--feature' : ''}`}>
+                {p.featured && <div className="mbr-badge">The Suite</div>}
+                <div className="mbr-plan">{p.label}</div>
+                <div className="mbr-price">
+                  <span className="mbr-amt">{p.price}</span>
+                  <span className="mbr-cad">{p.cadence}</span>
+                </div>
+                <div className="mbr-blurb">{tier.tagline}</div>
+                <ul className="mbr-feats">
+                  {tier.features.map((f) => <li key={f}>{f}</li>)}
+                </ul>
+                <button type="submit" className="mbr-cta">Choose {p.label}</button>
+                {tier.footnote && <div className="mbr-foot">{tier.footnote}</div>}
+              </form>
+            );
+          })}
         </div>
 
         <p className="mbr-code">
-          Have a full-access code? Enter it at checkout — the code field is on the
+          Have a full-access code? Enter it at checkout - the code field is on the
           Stripe payment page, and a 100%-off code completes with no card.
         </p>
         <p className="mbr-fine">

@@ -24,7 +24,11 @@ async function originBaseUrl() {
   return `${proto}://${host}`;
 }
 
-// Start Stripe Checkout for a plan key ('monthly' | 'annual' | 'founding').
+// Start Stripe Checkout for a plan key ('draft_pass' | 'suite' | 'founding').
+// Mode follows the plan: the Draft Pass is one-time ('payment'), the rest are
+// subscriptions. Promo codes are allowed in both modes; a 100%-off code zeroes a
+// subscription card-free and (Stripe permitting) a payment total too — if payment
+// mode still requires a card, comps ride the subscription tiers.
 export async function startCheckout(planKey) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
@@ -46,7 +50,7 @@ export async function startCheckout(planKey) {
     if (!priceId) {
       console.error(`[membership] no active price for lookup_key "${plan.lookupKey}"`);
     } else {
-      checkout = await createCheckoutSession({ priceId, userId, email, baseUrl });
+      checkout = await createCheckoutSession({ priceId, userId, email, baseUrl, mode: plan.mode ?? 'subscription' });
     }
   } catch (err) {
     console.error('[membership] checkout create failed:', err?.message);
