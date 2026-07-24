@@ -9,10 +9,16 @@ import '@/components/gridiron/gridiron.css';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Scores - Sportsvyn', robots: { index: false, follow: false } };
 
-// Default demo day: a populated 2025 Saturday (CFB slate; NFL demos its empty-day
-// state since the NFL does not play early-season Saturdays).
-const DEFAULT_DATE = '2025-09-27';
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Today's calendar day in ET (the football day). Server-rendered under
+// force-dynamic, so this is the real current date.
+function todayEtDate() {
+  const p = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date()).reduce((a, x) => (a[x.type] = x.value, a), {});
+  return `${p.year}-${p.month}-${p.day}`;
+}
 
 function shiftDate(iso, days) {
   const [y, m, d] = iso.split('-').map(Number);
@@ -24,12 +30,12 @@ function label(iso) {
   const t = new Date(Date.UTC(y, m - 1, d));
   const wd = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][t.getUTCDay()];
   const mo = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][t.getUTCMonth()];
-  return { wd, md: `${mo} ${d}` };
+  return { wd, md: `${mo} ${d}`, year: y };
 }
 
 export default async function ScoresPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
-  const date = DATE_RE.test(sp.date ?? '') ? sp.date : DEFAULT_DATE;
+  const date = DATE_RE.test(sp.date ?? '') ? sp.date : todayEtDate();
   const slate = await getSlateByDate(date);
   const games = [...slate.byLeague.nfl, ...slate.byLeague.cfb];
   // One batch odds read for the whole slate (no per-card fan-out); attach to each game.
@@ -47,9 +53,9 @@ export default async function ScoresPage({ searchParams }) {
           <a className="active" href="/scores">SCORES</a>
           <a href="/nfl">NFL</a>
           <a href="/cfb">CFB</a>
-          <a href="#">SOCCER</a>
+          <a href="/world-cup-2026/bracket">SOCCER</a>
         </nav>
-        <div className="gi-head-right"><a href="#">MY SPORTSVYN</a><span className="gi-member">MEMBER</span></div>
+        <div className="gi-head-right"><a href="/my">MY SPORTSVYN</a><span className="gi-member">MEMBER</span></div>
       </header>
 
       <div className="gi-wrap">
@@ -62,7 +68,7 @@ export default async function ScoresPage({ searchParams }) {
         <div className="gi-toolbar">
           <div className="gi-datenav">
             <a href={`/scores?date=${shiftDate(date, -1)}`}>‹</a>
-            <span className="cur"><b>{lb.wd}</b> {lb.md} 2025</span>
+            <span className="cur"><b>{lb.wd}</b> {lb.md} {lb.year}</span>
             <a href={`/scores?date=${shiftDate(date, 1)}`}>›</a>
           </div>
         </div>

@@ -29,6 +29,7 @@ export default function SiteFooter() {
             <h4>Read</h4>
             <a href="#">Daily Card</a>
             <a href="/world-cup-2026/bracket">Bracket</a>
+            <a href="/sim">Mock Draft</a>
             <a href="#">Rankings</a>
             <a href="#">Stats</a>
           </div>

@@ -3,7 +3,8 @@
 // (the week slate) sitting on it, per the Surface Rule. Local ink header + sport
 // sub-nav; NO site header. DEV reads only.
 import Wordmark from '@/components/gridiron/Wordmark';
-import { getSeasonState, getCurrentWeek, getWeekSlate, getStandings } from '@/lib/gridiron/readers';
+import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate, getStandings } from '@/lib/gridiron/readers';
+import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import { normalizeTwoWayPct, isPreGame } from '@/lib/gridiron/oddsFormat';
 
@@ -27,11 +28,12 @@ function favoredTag(odds) {
 }
 const DAY_FULL = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
 
-export default async function TodayPage({ leagueSlug, leagueLabel, tabs, standingsPhase = 'REG', searchParams }) {
+export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, standingsPhase = 'REG', searchParams }) {
   const sp = (await searchParams) ?? {};
-  const state = await getSeasonState(leagueSlug);
-  const seasonYear = state?.seasonYear ?? 2025;
-  const cur = await getCurrentWeek(leagueSlug, seasonYear);
+  const seasonYear = resolveSeasonYear(new Date());
+  // Pin to the nearest UPCOMING week (the season opener during the offseason),
+  // not the prior season's final slate; fall back to the latest started week.
+  const cur = (await getNearestUpcomingWeek(leagueSlug, seasonYear)) ?? (await getCurrentWeek(leagueSlug, seasonYear));
   const phase = (sp.phase === 'POST' || sp.phase === 'REG') ? sp.phase : (cur?.seasonPhase ?? 'REG');
   const week = Number(sp.week) || cur?.week || 1;
 
@@ -51,23 +53,22 @@ export default async function TodayPage({ leagueSlug, leagueLabel, tabs, standin
           <a href="/scores">SCORES</a>
           <a className={leagueSlug === 'nfl' ? 'active' : ''} href="/nfl">NFL</a>
           <a className={leagueSlug === 'cfb' ? 'active' : ''} href="/cfb">CFB</a>
-          <a href="#">SOCCER</a>
+          <a href="/world-cup-2026/bracket">SOCCER</a>
         </nav>
-        <div className="gi-head-right"><a href="#">MY SPORTSVYN</a><span className="gi-member">MEMBER</span></div>
+        <div className="gi-head-right"><a href="/my">MY SPORTSVYN</a><span className="gi-member">MEMBER</span></div>
       </header>
 
       <nav className="gi-subnav">
-        {tabs.map((t, i) => <a key={t} className={i === 0 ? 'active' : ''} href="#">{t}</a>)}
-        <span className="gi-season">{state ? <>{state.seasonYear} SEASON · <b>{phase} WEEK {week}</b></> : `${leagueLabel} 2025`}</span>
+        {tabs.map((t) => <a key={t.label} className={t.active ? 'active' : ''} href={t.href}>{t.label}</a>)}
+        <span className="gi-season">{seasonYear} SEASON · <b>{phase === 'POST' ? 'POSTSEASON' : `WEEK ${week}`}</b></span>
       </nav>
 
-      {/* paper lede zone (placeholder editorial, clearly marked) */}
+      {/* paper lede zone — one honest line, fitted to the register */}
       <section className="gi-lede">
         <div className="gi-lede-in">
-          <div className="gi-ph-wrap"><span className="ph">Placeholder editorial</span></div>
-          <div className="kick"><span className="sq" />{leagueLabel} · {state?.label ?? '2025 SEASON'}</div>
+          <div className="kick"><span className="sq" />{leagueLabel} · {seasonYear} SEASON</div>
           <h1>The Week in {leagueLabel}</h1>
-          <p>Lede copy ships from the editorial pipeline. This paper-ground zone is the reading surface; the slate below is the ink instrument. Real 2025 results render underneath.</p>
+          <p>{lede}</p>
         </div>
       </section>
 
@@ -98,6 +99,9 @@ export default async function TodayPage({ leagueSlug, leagueLabel, tabs, standin
           {/* right: paper standings rail */}
           <aside className="gi-standings">
             <div className="gi-rail-h">{standingsPhase} Standings</div>
+            {standings.length === 0 && (
+              <div className="gi-strow"><span>Standings open once games go final.</span></div>
+            )}
             {standings.flatMap((conf) => conf.divisions.map((div) => {
               const heading = [conf.conference, div.division].filter(Boolean).join(' ');
               return (

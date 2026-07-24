@@ -38,11 +38,33 @@
  */
 
 import { useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import Link from 'next/link';
 import Wordmark from '@/components/Wordmark';
+import NavDropdown from '@/components/NavDropdown';
 
 import './site-chrome.css';
+
+// FOOTBALL + SOCCER menu contents. Routes are NOT renamed to /soccer/* — nav
+// labels only. World Cup lands on the bracket (the existing WC hub). Premier
+// League is a non-interactive "coming soon" item (no link, no dead href).
+const FOOTBALL_ITEMS = [
+  { label: 'Scores', href: '/scores' },
+  { label: 'NFL', href: '/nfl' },
+  { label: 'CFB', href: '/cfb' },
+];
+const SOCCER_ITEMS = [
+  { label: 'World Cup', href: '/world-cup-2026/bracket' },
+  { label: 'Schedule', href: '/schedule' },
+  { label: 'Rankings', href: '/world-cup-2026/rankings' },
+  { label: 'Stats', href: '/stats' },
+  { label: 'Premier League', comingSoon: true },
+];
+// Map the per-page activeNav keys onto the new top-level groups so existing call
+// sites (activeNav="bracket" etc.) still light the right tab.
+const FOOTBALL_ACTIVE = new Set(['football', 'scores', 'nfl', 'cfb']);
+const SOCCER_ACTIVE = new Set(['soccer', 'bracket', 'rankings', 'stats', 'schedule']);
 
 function navClass(activeNav, key) {
   return activeNav === key ? 'active' : undefined;
@@ -54,9 +76,8 @@ function shortLabel(email) {
   return at > 0 ? email.slice(0, at) : email;
 }
 
-export default function SiteHeader({ activeNav = null, session = null, member = false }) {
+export default function SiteHeader({ activeNav = null, session = null }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
   const isAuthed = !!session?.user;
   const label = isAuthed ? shortLabel(session.user.email) : '';
@@ -71,34 +92,22 @@ export default function SiteHeader({ activeNav = null, session = null, member = 
       ? `/signin?callbackUrl=${encodeURIComponent(pathname)}`
       : '/signin';
 
-  // Right-side cluster as a small render function so desktop + mobile
-  // drawer reuse identical markup (and stay in sync if the auth state
-  // changes between renders).
+  // Signed-in account items (used by the desktop dropdown + the mobile drawer).
+  const accountItems = [
+    { label: 'My Sportsvyn', href: '/my' },
+    { label: 'Membership', href: '/membership' },
+    { label: 'Sign Out', onClick: () => signOut({ redirectTo: '/' }) },
+  ];
+
+  // Desktop right cluster: the single volt CTA (both auth states) + either the
+  // account menu (signed in) or Sign In (signed out).
   function rightCluster() {
-    if (isAuthed) {
-      return (
-        <>
-          <span className="signin">{label}</span>
-          <button
-            type="button"
-            className="signin"
-            onClick={() => signOut({ redirectTo: '/' })}
-          >
-            Sign out
-          </button>
-        </>
-      );
-    }
     return (
       <>
-        <a href={signinHref} className="signin">Sign In</a>
-        <button
-          type="button"
-          className="member-btn"
-          onClick={() => router.push(signinHref)}
-        >
-          Become a Member
-        </button>
+        <a href="/sim" className="nav-cta">Mock Draft</a>
+        {isAuthed
+          ? <NavDropdown label={label} items={accountItems} align="right" />
+          : <a href={signinHref} className="signin">Sign In</a>}
       </>
     );
   }
@@ -107,28 +116,15 @@ export default function SiteHeader({ activeNav = null, session = null, member = 
     <>
       <header className="site-header">
         <div className="brand-row">
-          <a href="/" className="wordmark-home" aria-label="Sportsvyn home">
+          <Link href="/" className="wordmark-home" aria-label="Sportsvyn home">
             <Wordmark sizeClassName="text-[28px]" />
-          </a>
+          </Link>
         </div>
         <div className="nav">
-          <a href="/" className={navClass(activeNav, 'home')}>Home</a>
-          <a href="/schedule" className={navClass(activeNav, 'schedule')}>Schedule</a>
-          <a href="/world-cup-2026/bracket" className={navClass(activeNav, 'bracket')}>Bracket</a>
-          <a href="/world-cup-2026/rankings" className={navClass(activeNav, 'rankings')}>Rankings</a>
-          <a href="/stats" className={navClass(activeNav, 'stats')}>Stats</a>
+          <Link href="/" className={navClass(activeNav, 'home')}>Home</Link>
+          <NavDropdown label="Football" items={FOOTBALL_ITEMS} active={FOOTBALL_ACTIVE.has(activeNav)} />
+          <NavDropdown label="Soccer" items={SOCCER_ITEMS} active={SOCCER_ACTIVE.has(activeNav)} />
           <a href="/market" className={navClass(activeNav, 'market')}>Market</a>
-          {/* Reads dead-link still removed until that route ships.
-              Daily Card kept since href="/" resolves (links into the same
-              surface Daily Card lives on). */}
-          <a href="/" className={navClass(activeNav, 'daily-card')}>Daily Card</a>
-          {/* /my is gated server-side: unauthenticated visitors get a 307
-              redirect to /signin?callbackUrl=/my, so the link is safe to
-              show in nav for everyone (the signin funnel is intentional). */}
-          <a href="/my" className={navClass(activeNav, 'my')}>My Sportsvyn</a>
-          {/* MEMBER upgrade link — hidden once you're a member. Same nav
-              treatment (JetBrains Mono, uppercase). */}
-          {!member && <a href="/membership" className={navClass(activeNav, 'membership')}>Member</a>}
         </div>
         <div className="header-cta">
           {rightCluster()}
@@ -146,18 +142,34 @@ export default function SiteHeader({ activeNav = null, session = null, member = 
 
       {drawerOpen && (
         <nav className="mobile-drawer" aria-label="Mobile menu">
-          <a href="/" className={navClass(activeNav, 'home')}>Home</a>
-          <a href="/schedule" className={navClass(activeNav, 'schedule')}>Schedule</a>
-          <a href="/world-cup-2026/bracket" className={navClass(activeNav, 'bracket')}>Bracket</a>
-          <a href="/world-cup-2026/rankings" className={navClass(activeNav, 'rankings')}>Rankings</a>
-          <a href="/stats" className={navClass(activeNav, 'stats')}>Stats</a>
+          {/* Same condensation as desktop: HOME, then the two sport groups
+              flattened under muted group labels, MARKET, the volt CTA, and the
+              account block. The dropdowns collapse to labelled link lists on
+              mobile (no nested disclosure). */}
+          <Link href="/" className={navClass(activeNav, 'home')}>Home</Link>
+
+          <div className="drawer-group-label">Football</div>
+          {FOOTBALL_ITEMS.map((it) => <a key={it.label} href={it.href} className="drawer-sub">{it.label}</a>)}
+
+          <div className="drawer-group-label">Soccer</div>
+          {SOCCER_ITEMS.map((it) => (it.comingSoon
+            ? <span key={it.label} className="drawer-sub is-soon">{it.label}<span className="nav-dd-soon">coming soon</span></span>
+            : <a key={it.label} href={it.href} className="drawer-sub">{it.label}</a>))}
+
           <a href="/market" className={navClass(activeNav, 'market')}>Market</a>
-          {/* Reads dead-link still removed; Daily Card kept (href="/"
-              resolves to the same surface). */}
-          <a href="/" className={navClass(activeNav, 'daily-card')}>Daily Card</a>
-          <a href="/my" className={navClass(activeNav, 'my')}>My Sportsvyn</a>
-          {!member && <a href="/membership" className={navClass(activeNav, 'membership')}>Member</a>}
-          {rightCluster()}
+
+          <a href="/sim" className="nav-cta">Mock Draft</a>
+
+          {isAuthed ? (
+            <>
+              <div className="drawer-group-label">{label}</div>
+              {accountItems.map((it) => (it.onClick
+                ? <button key={it.label} type="button" className="drawer-sub signout" onClick={it.onClick}>{it.label}</button>
+                : <a key={it.label} href={it.href} className="drawer-sub">{it.label}</a>))}
+            </>
+          ) : (
+            <a href={signinHref} className="signin">Sign In</a>
+          )}
         </nav>
       )}
     </>

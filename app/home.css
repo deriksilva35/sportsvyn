@@ -1058,3 +1058,30 @@
   transition: color 0.12s ease;
 }
 .home-group-card-row a.team-link:hover { color: var(--volt); }
+
+/* sim promo doorway — ink block in the paper daily-card flow (Surface Rule) */
+.dc-sim-promo {
+  display: block; text-decoration: none;
+  background: var(--ink); color: var(--paper-warm);
+  border: 1px solid var(--rule-dark);
+  padding: 22px 24px; margin: 24px 0;
+}
+.dc-sim-promo:hover { border-color: var(--volt); }
+.dc-sim-kicker {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--volt); margin-bottom: 10px;
+}
+.dc-sim-head {
+  font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
+  text-transform: uppercase; font-size: 26px; line-height: 1.05; letter-spacing: -0.02em;
+  color: var(--paper-warm); margin-bottom: 10px;
+}
+.dc-sim-line {
+  font-family: var(--font-serif); font-style: italic; font-size: 15px; line-height: 1.5;
+  color: var(--muted-light); margin: 0 0 16px; max-width: 520px;
+}
+.dc-sim-cta {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink); background: var(--volt);
+  padding: 9px 16px; display: inline-block;
+}

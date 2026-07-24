@@ -13,13 +13,9 @@
  */
 
 import { auth } from '@/auth';
-import { isMember } from '@/lib/fantasy/drafts';
 import SiteHeader from '@/components/SiteHeader';
 
 export default async function SiteHeaderServer({ activeNav = null }) {
   const session = await auth();
-  // Only members hide the MEMBER upgrade link; signed-out visitors are
-  // non-members. One indexed lookup, and only when there's a user to check.
-  const member = session?.user?.id ? await isMember(session.user.id) : false;
-  return <SiteHeader session={session} activeNav={activeNav} member={member} />;
+  return <SiteHeader session={session} activeNav={activeNav} />;
 }

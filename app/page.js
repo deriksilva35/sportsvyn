@@ -42,6 +42,7 @@ import { getMarketPanelData } from '@/lib/dashboard';
 import { auth } from '@/auth';
 import FixtureCard, { bucketOf } from '@/components/match/FixtureCard';
 import KickoffTime from '@/components/match/KickoffTime';
+import SimPromoCard from '@/components/home/SimPromoCard';
 
 import './home.css';
 
@@ -1059,6 +1060,11 @@ export default async function HomePage() {
             nextFixture={nextFixture}
             followedSet={followedSet}
           />
+
+          {/* Sim doorway — placed right after today's slate: the reader has just
+              seen what's on today, and the sim is the alive thing to do next. An
+              ink block in the paper card flow, ahead of the quieter WC structure. */}
+          <SimPromoCard />
 
           <TournamentProgress groupProgress={groupProgress} koProgress={koProgress} />
 

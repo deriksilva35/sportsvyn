@@ -63,6 +63,42 @@
   padding: 10px 16px; border: none; cursor: pointer;
 }
 
+/* nav dropdowns (Football / Soccer / account) — WAI-ARIA menu button */
+.nav-dd { position: relative; display: inline-flex; }
+.nav-dd-btn {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted); background: none; border: none; cursor: pointer; padding: 0;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.nav-dd-btn:hover, .nav-dd.open .nav-dd-btn { color: var(--volt); }
+.nav-dd-btn.active { color: var(--paper-warm); }
+.nav-dd-caret { font-size: 8px; }
+.nav-dd-menu {
+  position: absolute; top: calc(100% + 14px); left: 0; z-index: 60;
+  min-width: 172px; background: var(--ink); border: 1px solid var(--rule-dark);
+  display: flex; flex-direction: column; padding: 6px 0;
+}
+.nav-dd-menu[data-align="right"] { left: auto; right: 0; }
+.nav-dd-item {
+  font-family: var(--font-saira-cond), sans-serif; font-weight: 600; font-size: 13px;
+  letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted);
+  text-decoration: none; background: none; border: none; text-align: left; cursor: pointer;
+  padding: 9px 16px; display: flex; align-items: center; justify-content: space-between; gap: 14px;
+}
+.nav-dd-item:hover { color: var(--volt); background: var(--graphite); }
+.nav-dd-item.is-soon, .nav-dd-item.is-soon:hover { color: var(--muted-dim); cursor: default; background: none; }
+.nav-dd-soon {
+  font-family: var(--font-saira-cond), sans-serif; font-weight: 500; font-size: 9px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-dim); white-space: nowrap;
+}
+/* the single volt CTA (Mock Draft) — geometry distinct from the text tabs */
+.site-header .nav-cta {
+  background: var(--volt); color: var(--ink); font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 10px 16px; border: none; cursor: pointer; text-decoration: none;
+}
+.site-header .nav-cta:hover { background: var(--volt-dim); }
+
 /* Hamburger button — hidden on desktop, revealed by the media query below */
 .hamburger-btn {
   display: none;
@@ -148,6 +184,27 @@
     letter-spacing: 0.18em; text-transform: uppercase;
     padding: 14px; border: none; cursor: pointer;
     width: 100%;
+  }
+  /* drawer: sport groups flattened under muted labels + the volt CTA */
+  .mobile-drawer .drawer-group-label {
+    padding: 16px 0 4px;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted-dim);
+  }
+  .mobile-drawer .drawer-sub {
+    padding: 11px 0 11px 14px; border-bottom: 1px solid var(--rule-darker);
+    font-family: var(--font-saira-cond), sans-serif; font-weight: 600; font-size: 14px;
+    letter-spacing: 0.03em; text-transform: uppercase; color: var(--muted);
+    text-decoration: none; background: none; border-left: 0; text-align: left; width: 100%;
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  }
+  .mobile-drawer .drawer-sub:hover { color: var(--volt); }
+  .mobile-drawer .drawer-sub.is-soon { color: var(--muted-dim); cursor: default; }
+  .mobile-drawer .nav-cta {
+    margin-top: 16px; background: var(--volt); color: var(--ink);
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase; padding: 14px; border: none;
+    text-decoration: none; text-align: center; display: block;
   }
 }
 
