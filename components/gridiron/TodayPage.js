@@ -4,11 +4,26 @@
 // sub-nav; NO site header. DEV reads only.
 import Wordmark from '@/components/gridiron/Wordmark';
 import { getSeasonState, getCurrentWeek, getWeekSlate, getStandings } from '@/lib/gridiron/readers';
+import { getH2hOdds } from '@/lib/gridiron/oddsReader';
+import { normalizeTwoWayPct, isPreGame } from '@/lib/gridiron/oddsFormat';
 
 function scoreline(g) {
   if (g.status === 'final') return { txt: `${g.awayScore}-${g.homeScore}`, cls: 'sc' };
   if (g.status === 'live') return { txt: 'LIVE', cls: '' };
   return { txt: new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' }).format(new Date(g.kickoffAt)) + ' ET', cls: '' };
+}
+
+// Cheap inline favored-side read for the slate row (scheduled games only): the
+// higher-probability team abbr + its de-vigged %, e.g. "KC 63%". A recessive tag,
+// not the full strip (that lives on the /scores card).
+function favoredTag(odds) {
+  if (!odds?.home || !odds?.away) return null;
+  const pct = normalizeTwoWayPct(odds.away.implied, odds.home.implied);
+  if (!pct) return null;
+  const homeFav = pct.b >= pct.a;
+  const side = homeFav ? odds.home : odds.away;
+  const p = homeFav ? pct.b : pct.a;
+  return `${side.abbr} ${Math.round(p)}%`;
 }
 const DAY_FULL = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
 
@@ -24,6 +39,8 @@ export default async function TodayPage({ leagueSlug, leagueLabel, tabs, standin
     getWeekSlate(leagueSlug, seasonYear, phase, week),
     getStandings(leagueSlug, seasonYear, standingsPhase),
   ]);
+  // One batch odds read for the whole week's slate (no per-row fan-out).
+  const oddsMap = await getH2hOdds(slate.byDay.flatMap((d) => d.games.map((g) => g.id)));
 
   return (
     <div className="gi" data-surface="paper">
@@ -66,9 +83,10 @@ export default async function TodayPage({ leagueSlug, leagueLabel, tabs, standin
                 <div className="gi-day-h">{DAY_FULL[d.weekday] ?? d.weekday}</div>
                 {d.games.map((g) => {
                   const s = scoreline(g);
+                  const fav = isPreGame(g.status) ? favoredTag(oddsMap.get(g.id)) : null;
                   return (
                     <div className="gi-row" key={g.id}>
-                      <span className="mu">{g.away.abbreviation || g.away.name} <span className="vs">at</span> {g.home.abbreviation || g.home.name}</span>
+                      <span className="mu">{g.away.abbreviation || g.away.name} <span className="vs">at</span> {g.home.abbreviation || g.home.name}{fav && <span className="fav"> · {fav}</span>}</span>
                       <span className="rt"><span className={s.cls}>{s.txt}</span></span>
                     </div>
                   );

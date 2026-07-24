@@ -145,6 +145,27 @@
 .gi-pane .why-read { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; color: var(--paper-dim); margin-top: 6px; }
 .gi-placeholder { font-size: 11px; letter-spacing: 0.06em; color: var(--muted-dim); }
 
+/* h2h odds strip (pre-game Why-Watch pane) — 2-way, ink surface */
+.gi-odds-h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+.gi-odds-h .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--paper); }
+.gi-odds-h .src { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dim); }
+.gi-odds-bar { display: flex; height: 8px; background: var(--charcoal); overflow: hidden; }
+.gi-odds-bar .seg { height: 100%; }
+.gi-odds-bar .seg.away { background: var(--muted-dim); }
+.gi-odds-bar .seg.home { background: var(--muted); }
+.gi-odds-bar .seg.fav { background: var(--volt); }
+.gi-odds-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.gi-odds-side { display: flex; flex-direction: column; gap: 3px; }
+.gi-odds-side:last-child { text-align: right; align-items: flex-end; }
+.gi-odds-side .abbr { font-size: 11px; letter-spacing: 0.08em; color: var(--muted); }
+.gi-odds-side.fav .abbr { color: var(--volt); }
+.gi-odds-side .pct { font-family: var(--font-jetbrains-mono), monospace; font-size: 22px; font-weight: 700; color: var(--paper); letter-spacing: -0.01em; line-height: 1.05; }
+.gi-odds-side .pct .mv { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; margin-left: 6px; letter-spacing: 0.02em; white-space: nowrap; }
+.gi-odds-side .pct .mv.up { color: var(--volt); }
+.gi-odds-side .pct .mv.down { color: var(--terra); }
+.gi-odds-side .am { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted-dim); }
+.gi-odds-fine { margin-top: 12px; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-dim); }
+
 /* ---- drive strip ---- */
 .gi-drive { padding: 8px 0 2px; }
 .gi-drive svg { width: 100%; max-width: 320px; height: auto; display: block; }
@@ -167,6 +188,7 @@
 .gi-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 9px 12px; border: 1px solid var(--rule-dim); margin-bottom: 6px; background: var(--graphite); }
 .gi-row .mu { font-size: 13px; color: var(--paper); }
 .gi-row .mu .vs { color: var(--muted-dim); }
+.gi-row .mu .fav { font-size: 11px; letter-spacing: 0.04em; color: var(--muted-dim); }
 .gi-row .rt { font-size: 12px; color: var(--muted); text-align: right; }
 .gi-row .rt .sc { color: var(--paper); }
 

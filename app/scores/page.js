@@ -3,6 +3,7 @@
 import Wordmark from '@/components/gridiron/Wordmark';
 import Scoreboard from '@/components/gridiron/Scoreboard';
 import { getSlateByDate } from '@/lib/gridiron/readers';
+import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import '@/components/gridiron/gridiron.css';
 
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,10 @@ export default async function ScoresPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
   const date = DATE_RE.test(sp.date ?? '') ? sp.date : DEFAULT_DATE;
   const slate = await getSlateByDate(date);
+  const games = [...slate.byLeague.nfl, ...slate.byLeague.cfb];
+  // One batch odds read for the whole slate (no per-card fan-out); attach to each game.
+  const oddsMap = await getH2hOdds(games.map((g) => g.id));
+  for (const g of games) g.odds = oddsMap.get(g.id) ?? null;
   const total = slate.byLeague.nfl.length + slate.byLeague.cfb.length;
   const lb = label(date);
 

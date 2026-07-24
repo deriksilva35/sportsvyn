@@ -8,6 +8,8 @@
 
 import { useState } from 'react';
 import DriveStrip from './DriveStrip';
+import OddsStrip from './OddsStrip';
+import { isPreGame } from '@/lib/gridiron/oddsFormat';
 
 const SPORTS = [
   { key: 'nfl', label: 'NFL' },
@@ -83,7 +85,14 @@ function Card({ g }) {
           <div className="gi-pane">
             {final || g.status === 'live'
               ? <span className="gi-placeholder">{tab === 'moments' ? 'Key Moments' : 'Play by Play'} — coming with live data (events / PBP ingest not wired yet).</span>
-              : <><div className="why-val">—</div><div className="why-read">Watch Score and the one-line read arrive with the live-data poller.</div></>}
+              : (
+                <>
+                  {isPreGame(g.status) && g.odds
+                    ? <OddsStrip odds={g.odds} />
+                    : <div className="why-val">—</div>}
+                  <div className="why-read">Watch Score and the one-line read arrive with the live-data poller.</div>
+                </>
+              )}
           </div>
         </div>
       )}
