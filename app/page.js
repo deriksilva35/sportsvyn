@@ -32,7 +32,9 @@ import {
   getGroupMatchdayProgress,
   getGroupStageProgress,
   getKnockoutRoundProgress,
+  getTournamentChampion,
 } from '@/lib/bracket';
+import { completedIntro, completedSignpost } from '@/components/home/tournamentCopy';
 import { getCurrentLiveMatches } from '@/lib/liveMatches';
 import { getWatchScoresForDate } from '@/lib/watchScore';
 import { getCurrentEdition, getTopN, getPlayerTopN } from '@/lib/rankings';
@@ -147,10 +149,11 @@ function DailyCardHeader({ ptDateLabel }) {
 // an editor approves a daily intro for the day.
 const PLACEHOLDER_INTRO = "Today’s card reads the tournament as it stands — what’s settled, what’s still open, and what’s worth your attention next.";
 
-function DailyCardIntro({ publishedIntro }) {
-  // Reads ONLY status='published' rows. Pending review / rejected stay
-  // off the homepage. Fallback when nothing is published yet.
-  const body = publishedIntro?.body ?? PLACEHOLDER_INTRO;
+function DailyCardIntro({ publishedIntro, champion }) {
+  // Editor-approved intro wins; then the data-driven completed-tournament read
+  // (champion read from the bracket); then the evergreen pre/mid fallback.
+  const body = publishedIntro?.body
+    ?? (champion ? completedIntro(champion.name) : PLACEHOLDER_INTRO);
   return <p className="dc-intro">{body}</p>;
 }
 
@@ -167,7 +170,19 @@ function DailyCardByline({ ptDateLabel }) {
 // Designed empty-state signpost — replaces the previous "deflated populated
 // section" pattern. Has its own treatment (volt-left bar, italic editorial
 // prose, factual next-fixture anchor) so it reads as intentional.
-function SlateSignpost({ nextFixture }) {
+function SlateSignpost({ nextFixture, champion }) {
+  // Completed tournament (champion decided in the data): the empty-slate box
+  // becomes the archive doorway — champion + "stays readable" → the bracket.
+  if (champion) {
+    return (
+      <div className="dc-section">
+        <a className="dc-slate-signpost dc-slate-signpost--done" href="/world-cup-2026/bracket">
+          <div className="dc-slate-signpost-label">Champions</div>
+          <div className="dc-slate-signpost-anchor">{completedSignpost(champion.name)}</div>
+        </a>
+      </div>
+    );
+  }
   // Anchor copy from the next real fixture if we have one; else a static
   // pre-tournament line.
   let anchor;
@@ -235,9 +250,9 @@ function SlateRow({ fixture, watchScore, followedSet }) {
   );
 }
 
-function SlateSection({ fixtures, watchScoreByMatchId, nextFixture, followedSet }) {
+function SlateSection({ fixtures, watchScoreByMatchId, nextFixture, followedSet, champion }) {
   if (fixtures.length === 0) {
-    return <SlateSignpost nextFixture={nextFixture} />;
+    return <SlateSignpost nextFixture={nextFixture} champion={champion} />;
   }
   return (
     <div className="dc-section">
@@ -947,6 +962,7 @@ export default async function HomePage() {
     publishedIntro,
     marketData,
     followedSet,
+    champion,
   ] = await Promise.all([
     readFixturesByPtDay({ leagueSlug: WC_LEAGUE_SLUG, ptStart: ptDay, ptEnd: ptDay2 }),
     getTodaysReads({ ptDay, limit: 4 }),
@@ -963,6 +979,7 @@ export default async function HomePage() {
     getCurrentDailyCardIntro(ptDay),
     getMarketPanelData(),
     getFollowedTeamIds(userId),
+    getTournamentChampion(),
   ]);
 
   // Attach goals once (same pattern /schedule uses) — only fires the
@@ -1045,7 +1062,7 @@ export default async function HomePage() {
         */}
         <article className="daily-card">
           <DailyCardHeader ptDateLabel={ptDateLabel} />
-          <DailyCardIntro publishedIntro={publishedIntro} />
+          <DailyCardIntro publishedIntro={publishedIntro} champion={champion} />
           <DailyCardByline ptDateLabel={ptDateLabel} />
 
           {/* The 3-day games block lives in the sidebar (Live & Next).
@@ -1059,6 +1076,7 @@ export default async function HomePage() {
             watchScoreByMatchId={watchScoreByMatchId}
             nextFixture={nextFixture}
             followedSet={followedSet}
+            champion={champion}
           />
 
           {/* Sim doorway — placed right after today's slate: the reader has just

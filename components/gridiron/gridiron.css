@@ -198,6 +198,8 @@
 .gi-div-h { font-family: var(--font-saira-cond), sans-serif; font-weight: 700; font-size: 10px; text-transform: uppercase; color: var(--ink); border-left: 3px solid var(--volt); padding-left: 8px; margin-bottom: 6px; letter-spacing: 0.04em; }
 .gi-strow { display: grid; grid-template-columns: 1fr auto; font-size: 12px; padding: 3px 0; color: var(--ink-soft); }
 .gi-strow .wl { color: var(--ink-mut); }
+/* empty standings rail — an intentional note, never a dead-looking hole */
+.gi-standings-empty { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; color: var(--ink-mut); padding: 4px 0 10px; }
 
 /* two-column Today layout */
 .gi-today-grid { display: grid; grid-template-columns: 1fr 300px; gap: 30px; align-items: start; }

@@ -30,12 +30,25 @@ const DAY_FULL = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursd
 
 export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, standingsPhase = 'REG', searchParams }) {
   const sp = (await searchParams) ?? {};
-  const seasonYear = resolveSeasonYear(new Date());
+  const now = new Date();
+  const seasonYear = resolveSeasonYear(now);
   // Pin to the nearest UPCOMING week (the season opener during the offseason),
   // not the prior season's final slate; fall back to the latest started week.
-  const cur = (await getNearestUpcomingWeek(leagueSlug, seasonYear)) ?? (await getCurrentWeek(leagueSlug, seasonYear));
+  const upcoming = await getNearestUpcomingWeek(leagueSlug, seasonYear);
+  const cur = upcoming ?? (await getCurrentWeek(leagueSlug, seasonYear));
   const phase = (sp.phase === 'POST' || sp.phase === 'REG') ? sp.phase : (cur?.seasonPhase ?? 'REG');
   const week = Number(sp.week) || cur?.week || 1;
+
+  // Liveness cue on the lede kicker: how far out the opener is, read from the
+  // nearest upcoming kickoff (data-driven, not a hardcoded date).
+  const daysOut = upcoming?.kickoffAt
+    ? Math.ceil((new Date(upcoming.kickoffAt).getTime() - now.getTime()) / 86400000)
+    : null;
+  const weeksOut = daysOut != null ? Math.round(daysOut / 7) : null;
+  const cue = daysOut == null || daysOut <= 0 ? null
+    : weeksOut >= 2 ? `${weeksOut} weeks out`
+      : daysOut > 1 ? `${daysOut} days out`
+        : 'kicks off tomorrow';
 
   const [slate, standings] = await Promise.all([
     getWeekSlate(leagueSlug, seasonYear, phase, week),
@@ -66,7 +79,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, s
       {/* paper lede zone — one honest line, fitted to the register */}
       <section className="gi-lede">
         <div className="gi-lede-in">
-          <div className="kick"><span className="sq" />{leagueLabel} · {seasonYear} SEASON</div>
+          <div className="kick"><span className="sq" />{leagueLabel} · {seasonYear} SEASON{cue ? ` · ${cue}` : ''}</div>
           <h1>The Week in {leagueLabel}</h1>
           <p>{lede}</p>
         </div>
@@ -100,7 +113,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, s
           <aside className="gi-standings">
             <div className="gi-rail-h">{standingsPhase} Standings</div>
             {standings.length === 0 && (
-              <div className="gi-strow"><span>Standings open once games go final.</span></div>
+              <div className="gi-standings-empty">Standings open once games go final.</div>
             )}
             {standings.flatMap((conf) => conf.divisions.map((div) => {
               const heading = [conf.conference, div.division].filter(Boolean).join(' ');

@@ -669,6 +669,14 @@
   font-size: 17px; line-height: 1.45;
   color: var(--paper-warm);
 }
+/* completed-tournament variant — the empty-slate box becomes a bracket doorway */
+a.dc-slate-signpost--done {
+  display: block; text-decoration: none; cursor: pointer;
+  border-left-color: var(--volt);
+  transition: border-color 120ms;
+}
+a.dc-slate-signpost--done:hover { border-left-width: 5px; }
+a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
 
 /* Daily-card footer (prev/next) */
 .dc-footer {
