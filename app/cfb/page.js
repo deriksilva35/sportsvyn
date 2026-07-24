@@ -10,7 +10,7 @@ const CFB_TABS = [
   { label: 'Today', href: '/cfb', active: true },
   { label: 'Scores & Schedule', href: '/scores' },
 ];
-const CFB_LEDE = 'Week 0 kicks August 29. The slate and the lines are already in.';
+const CFB_LEDE = 'The season opens August 29. The slate and the lines are already in.';
 
 export default async function CfbToday({ searchParams }) {
   return (
