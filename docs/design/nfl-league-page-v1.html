@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFL — Sportsvyn (mock v1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,600;0,700;1,800;1,900&family=Saira+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:ital,opsz,wght@1,8..60,400;1,8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#121212; --ink-3:#181818;
+    --volt:#D4FF00; --paper:#F5F5F2;
+    --ink-soft:#333330; --ink-mut:#6B6B66; --ink-dim:#9A9A94;
+    --p-rule:#DEDED8; --p-rule-soft:#E8E8E2;
+    --w-soft:#E8E8E4; --w-mut:#8A8A85; --w-dim:#5C5C58; --rule:#232320;
+    --jade:#2A8A4F; --terra:#B8410F; --live:#E63946;
+    --mono:'JetBrains Mono',monospace; --cond:'Saira Condensed',sans-serif;
+    --disp:'Saira',sans-serif; --serif:'Source Serif 4',serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--ink);color:var(--w-soft);font-family:var(--mono);font-size:14px}
+  a{color:inherit;text-decoration:none}
+
+  /* ── header ── */
+  .gi-head{display:flex;align-items:center;gap:28px;padding:18px 32px;border-bottom:1px solid var(--rule)}
+  .wm{font-family:var(--disp);font-style:italic;font-weight:900;font-size:22px;letter-spacing:-.05em;color:#fff;border-bottom:3px solid #fff;padding-bottom:4px}
+  .gi-nav{display:flex;gap:22px;font-family:var(--cond);font-size:13px;letter-spacing:.18em;color:var(--w-mut)}
+  .gi-nav .on{color:#fff}
+  .gi-right{margin-left:auto;display:flex;align-items:center;gap:16px;font-family:var(--cond);font-size:12px;letter-spacing:.16em;color:var(--w-mut)}
+  .member{background:var(--volt);color:var(--ink);padding:5px 12px;font-weight:600}
+  .subnav{display:flex;gap:26px;padding:14px 32px;border-bottom:1px solid var(--rule);font-family:var(--cond);font-size:12px;letter-spacing:.2em;color:var(--w-mut)}
+  .subnav .on{color:var(--volt);border-bottom:2px solid var(--volt);padding-bottom:12px;margin-bottom:-15px}
+  .subnav .meta{margin-left:auto;color:var(--w-dim)}
+
+  /* ── paper lede ── */
+  .lede{background:var(--paper);color:var(--ink);padding:44px 32px 40px;border-bottom:4px solid var(--volt)}
+  .lede-kick{display:flex;align-items:center;gap:8px;font-family:var(--cond);font-size:12px;letter-spacing:.22em;color:var(--ink-mut);margin-bottom:12px}
+  .lede-kick .sq{width:10px;height:10px;background:var(--volt)}
+  .lede h1{font-family:var(--disp);font-style:italic;font-weight:900;font-size:52px;letter-spacing:-.03em;line-height:.95}
+  .lede p{font-family:var(--serif);font-style:italic;font-size:19px;color:var(--ink-soft);margin-top:14px;max-width:640px}
+
+  /* ── body grid ── */
+  .body{display:grid;grid-template-columns:1fr 320px;gap:28px;padding:32px;max-width:1240px;margin:0 auto}
+  @media(max-width:860px){.body{grid-template-columns:1fr;padding:20px}.lede h1{font-size:38px}}
+
+  /* ── instrument shell ── */
+  .inst{background:var(--ink-2);border:1px solid var(--rule);margin-bottom:28px}
+  .inst-head{display:flex;align-items:center;gap:9px;padding:14px 18px;border-bottom:1px solid var(--rule)}
+  .inst-head .sq{width:9px;height:9px;background:var(--volt)}
+  .inst-head .t{font-family:var(--cond);font-size:12px;letter-spacing:.2em;color:#fff}
+  .inst-head .m{margin-left:auto;font-family:var(--cond);font-size:11px;letter-spacing:.14em;color:var(--w-dim)}
+  .inst-head .m a{color:var(--w-mut)}
+  .inst-body{padding:16px 18px}
+
+  /* blank state */
+  .blank{border:1px dashed var(--rule);padding:22px 20px;text-align:center}
+  .blank .when{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--w-mut)}
+  .blank .sub{font-family:var(--cond);font-size:11px;letter-spacing:.16em;color:var(--w-dim);margin-top:6px}
+
+  /* slate rows */
+  .g{display:flex;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px solid var(--ink-3)}
+  .g:last-child{border-bottom:none}
+  .g .day{width:44px;font-family:var(--cond);font-size:11px;letter-spacing:.14em;color:var(--w-dim)}
+  .g .tm{font-weight:700;color:#fff}
+  .g .at{color:var(--w-dim);font-weight:400}
+  .g .pct{color:var(--w-mut);font-size:12px}
+  .g .ko{margin-left:auto;color:var(--w-mut);font-size:12px}
+
+  /* fantasy board */
+  .fb-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  @media(max-width:640px){.fb-grid{grid-template-columns:1fr}}
+  .fb-col{padding:14px 18px}
+  .fb-col + .fb-col{border-left:1px solid var(--rule)}
+  @media(max-width:640px){.fb-col + .fb-col{border-left:none;border-top:1px solid var(--rule)}}
+  .fb-lab{font-family:var(--cond);font-size:11px;letter-spacing:.18em;color:var(--w-dim);margin-bottom:10px}
+  .fb-row{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--ink-3)}
+  .fb-row:last-child{border-bottom:none}
+  .fb-row .rk{width:16px;color:var(--w-dim);font-size:12px}
+  .fb-row .nm{font-weight:700;color:#fff}
+  .fb-row .pos{font-family:var(--cond);font-size:11px;letter-spacing:.12em;color:var(--w-dim)}
+  .fb-row .d{margin-left:auto;font-size:12px;font-weight:700}
+  .up{color:var(--volt)} .dn{color:var(--terra)}
+  .fb-foot{display:flex;align-items:center;gap:14px;padding:14px 18px;border-top:1px solid var(--rule)}
+  .fb-cta{background:var(--volt);color:var(--ink);font-family:var(--cond);font-size:13px;letter-spacing:.14em;font-weight:600;padding:10px 18px}
+  .fb-note{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--w-mut)}
+
+  /* market board */
+  .mv{display:flex;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid var(--ink-3)}
+  .mv:last-child{border-bottom:none}
+  .mv .pair{font-weight:700;color:#fff;width:120px}
+  .mv .line{color:var(--w-mut)}
+  .mv .arrow{color:var(--w-dim)}
+  .mv .now{color:#fff;font-weight:700}
+  .mv .chip{margin-left:auto;font-size:11px;font-weight:700}
+
+  /* mvp split */
+  .mvp-grid{display:grid;grid-template-columns:1fr 1fr}
+  @media(max-width:640px){.mvp-grid{grid-template-columns:1fr}}
+  .mvp-col{padding:16px 18px}
+  .mvp-col + .mvp-col{border-left:1px solid var(--rule)}
+  @media(max-width:640px){.mvp-col + .mvp-col{border-left:none;border-top:1px solid var(--rule)}}
+
+  /* the read */
+  .read-blank{padding:26px 20px;border:1px dashed var(--rule)}
+  .read-blank .h{font-family:var(--disp);font-style:italic;font-weight:800;font-size:20px;color:var(--w-dim);letter-spacing:-.02em}
+  .read-blank .s{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--w-mut);margin-top:8px}
+
+  /* rail */
+  .rail .inst{margin-bottom:24px}
+  .rail-empty{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--w-mut);padding:4px 0}
+  .tease{padding:18px;text-align:left}
+  .tease .lock{font-family:var(--cond);font-size:11px;letter-spacing:.2em;color:var(--ink);background:var(--volt);display:inline-block;padding:3px 8px;margin-bottom:10px;font-weight:600}
+  .tease .h{font-family:var(--disp);font-style:italic;font-weight:800;font-size:19px;color:#fff;letter-spacing:-.02em}
+  .tease .s{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--w-mut);margin-top:8px;line-height:1.5}
+  .tease .cta{display:inline-block;margin-top:12px;font-family:var(--cond);font-size:12px;letter-spacing:.16em;color:var(--volt);border-bottom:2px solid var(--volt);padding-bottom:2px}
+</style>
+</head>
+<body>
+
+<header class="gi-head">
+  <span class="wm">SPORTSVYN</span>
+  <nav class="gi-nav"><span>TODAY</span><span>SCORES</span><span class="on">NFL</span><span>CFB</span><span>SOCCER</span></nav>
+  <div class="gi-right"><span>MY SPORTSVYN</span><span class="member">MEMBER</span></div>
+</header>
+<div class="subnav">
+  <span class="on">TODAY</span><span>SCORES &amp; SCHEDULE</span>
+  <span class="meta">2026 SEASON · WEEK 1 · 7 WEEKS OUT</span>
+</div>
+
+<section class="lede">
+  <div class="lede-kick"><span class="sq"></span>NFL · 2026 SEASON · 7 WEEKS OUT</div>
+  <h1>THE WEEK IN NFL</h1>
+  <p>Season opens September 10. The slate, the lines, and the reads land here.</p>
+</section>
+
+<div class="body">
+  <main>
+
+    <!-- THE SLATE -->
+    <div class="inst">
+      <div class="inst-head"><span class="sq"></span><span class="t">THE SLATE · REG WEEK 1</span><span class="m">16 GAMES · <a href="#">FULL SCHEDULE →</a></span></div>
+      <div class="inst-body">
+        <div class="g"><span class="day">WED</span><span class="tm">NE <span class="at">at</span> SEA</span><span class="pct">SEA 64%</span><span class="ko">8:20 PM ET</span></div>
+        <div class="g"><span class="day">THU</span><span class="tm">SF <span class="at">at</span> LAR</span><span class="pct">LAR 63%</span><span class="ko">8:35 PM ET</span></div>
+        <div class="g"><span class="day">SUN</span><span class="tm">TB <span class="at">at</span> CIN</span><span class="pct">CIN 64%</span><span class="ko">1:00 PM ET</span></div>
+        <div class="g"><span class="day">SUN</span><span class="tm">NO <span class="at">at</span> DET</span><span class="pct">DET 74%</span><span class="ko">1:00 PM ET</span></div>
+        <div class="g"><span class="day">SUN</span><span class="tm">BAL <span class="at">at</span> IND</span><span class="pct">BAL 64%</span><span class="ko">1:00 PM ET</span></div>
+      </div>
+    </div>
+
+    <!-- THE FANTASY BOARD (alive now) -->
+    <div class="inst">
+      <div class="inst-head"><span class="sq"></span><span class="t">THE FANTASY BOARD</span><span class="m">DRAFT SEASON · LIVE ADP</span></div>
+      <div class="fb-grid">
+        <div class="fb-col">
+          <div class="fb-lab">ADP MOVERS · LAST 7 DAYS</div>
+          <div class="fb-row"><span class="rk">1</span><span class="nm">J. Gibbs</span><span class="pos">RB DET</span><span class="d up">▲ 4.2</span></div>
+          <div class="fb-row"><span class="rk">2</span><span class="nm">M. Nabers</span><span class="pos">WR NYG</span><span class="d up">▲ 3.1</span></div>
+          <div class="fb-row"><span class="rk">3</span><span class="nm">T. Etienne</span><span class="pos">RB JAX</span><span class="d dn">▼ 2.8</span></div>
+          <div class="fb-row"><span class="rk">4</span><span class="nm">D. London</span><span class="pos">WR ATL</span><span class="d up">▲ 2.5</span></div>
+        </div>
+        <div class="fb-col">
+          <div class="fb-lab">MOST DRAFTED · SPORTSVYN MOCKS</div>
+          <div class="fb-row"><span class="rk">1</span><span class="nm">B. Robinson</span><span class="pos">RB ATL</span><span class="d">RD 1</span></div>
+          <div class="fb-row"><span class="rk">2</span><span class="nm">C. Lamb</span><span class="pos">WR DAL</span><span class="d">RD 1</span></div>
+          <div class="fb-row"><span class="rk">3</span><span class="nm">P. Nacua</span><span class="pos">WR LAR</span><span class="d">RD 2</span></div>
+          <div class="fb-row"><span class="rk">4</span><span class="nm">B. Bowers</span><span class="pos">TE LV</span><span class="d">RD 3</span></div>
+        </div>
+      </div>
+      <div class="fb-foot">
+        <a class="fb-cta" href="#">START A DRAFT →</a>
+        <span class="fb-note">Full snake mocks vs AI rooms - every pick graded on live ADP. Three free drafts a week.</span>
+      </div>
+    </div>
+
+    <!-- THE MARKET BOARD (alive) -->
+    <div class="inst">
+      <div class="inst-head"><span class="sq"></span><span class="t">THE MARKET BOARD</span><span class="m">BIGGEST MOVES · THIS WEEK</span></div>
+      <div class="inst-body">
+        <div class="mv"><span class="pair">CIN vs TB</span><span class="line">CIN -3.5</span><span class="arrow">→</span><span class="now">-5.5</span><span class="chip up">▲ 2.0</span></div>
+        <div class="mv"><span class="pair">DET vs NO</span><span class="line">DET 71%</span><span class="arrow">→</span><span class="now">74%</span><span class="chip up">▲ 3.0</span></div>
+        <div class="mv"><span class="pair">SEA vs NE</span><span class="line">O/U 47.5</span><span class="arrow">→</span><span class="now">45.5</span><span class="chip dn">▼ 2.0</span></div>
+        <div style="padding-top:12px;font-family:var(--serif);font-style:italic;font-size:13px;color:var(--w-dim)">De-vigged consensus, tracked daily. No picks, no books.</div>
+      </div>
+    </div>
+
+    <!-- POWER RANKINGS (blank) -->
+    <div class="inst">
+      <div class="inst-head"><span class="sq"></span><span class="t">POWER RANKINGS</span><span class="m">SPORTSVYN COMPOSITE</span></div>
+      <div class="inst-body">
+        <div class="blank">
+          <div class="when">Rankings open after Week 1.</div>
+          <div class="sub">32 TEAMS · COMPOSITE + MOVEMENT · EVERY TUESDAY</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THE MVP RACE (blank, O/D split) -->
+    <div class="inst">
+      <div class="inst-head"><span class="sq"></span><span class="t">THE MVP RACE</span><span class="m">OFFENSE · DEFENSE</span></div>
+      <div class="mvp-grid">
+        <div class="mvp-col">
+          <div class="fb-lab">OFFENSIVE BOARD</div>
+          <div class="blank"><div class="when">The board opens with the season.</div><div class="sub">STAT CASE + MARKET READ</div></div>
+        </div>
+        <div class="mvp-col">
+          <div class="fb-lab">DEFENSIVE BOARD</div>
+          <div class="blank"><div class="when">The board opens with the season.</div><div class="sub">THE RACE NOBODY ELSE RUNS</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THE READ (blank) -->
+    <div class="inst">
+      <div class="inst-head"><span class="sq"></span><span class="t">THE READ</span><span class="m">EVERY WEEK</span></div>
+      <div class="inst-body">
+        <div class="read-blank">
+          <div class="h">The week's read lands here.</div>
+          <div class="s">One piece, every week of the season - what actually mattered, in the voice. Not a recap.</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <aside class="rail">
+    <div class="inst">
+      <div class="inst-head"><span class="sq"></span><span class="t">REG STANDINGS</span></div>
+      <div class="inst-body"><div class="rail-empty">Standings open once games go final.</div></div>
+    </div>
+
+    <div class="inst">
+      <div class="inst-head"><span class="sq"></span><span class="t">THE USAGE BOARD</span></div>
+      <div class="tease">
+        <span class="lock">FOOTBALL SUITE</span>
+        <div class="h">Who's actually on the field.</div>
+        <div class="s">Snap counts, role changes, and the read on what changed - every Wednesday from Week 1. Part of the Football Suite.</div>
+        <a class="cta" href="#">SEE PLANS →</a>
+      </div>
+    </div>
+
+    <div class="inst">
+      <div class="inst-head"><span class="sq"></span><span class="t">THE WAIVER READ</span></div>
+      <div class="tease">
+        <span class="lock">FOOTBALL SUITE</span>
+        <div class="h">QUIET · WARMING · STEAM</div>
+        <div class="s">Who's actually worth a claim, every Tuesday - with the why. Part of the Football Suite.</div>
+        <a class="cta" href="#">SEE PLANS →</a>
+      </div>
+    </div>
+  </aside>
+</div>
+
+</body>
+</html>
