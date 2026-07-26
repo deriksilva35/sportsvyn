@@ -21,11 +21,11 @@
 
 import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
-import { ingestSportOdds } from '@/lib/gridiron/oddsIngest';
+import { ingestSportOdds, ingestSportFutures } from '@/lib/gridiron/oddsIngest';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
-import { ODDS_TICK_MIN, ODDS_FINAL_WINDOW_HOURS } from '@/lib/pollers/cadence';
+import { ODDS_TICK_MIN, ODDS_FINAL_WINDOW_HOURS, isFuturesTick } from '@/lib/pollers/cadence';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -35,6 +35,30 @@ const LEAGUES = [
   { sport: 'cfb', slug: 'cfb', source: 'cfb-odds' },
 ];
 const SLUGS = LEAGUES.map((l) => l.slug);
+
+// Daily outrights sub-step: title futures per league -> odds_markets futures rows,
+// recorded as nfl-futures / cfb-futures. Runs only at the daily hour.
+async function runFuturesStep() {
+  const out = [];
+  for (const lg of LEAGUES) {
+    const source = `${lg.sport}-futures`;
+    const outcome = await withAdvisoryLock(source, async () => {
+      const res = await recordRun(sql, {
+        source,
+        kind: 'daily',
+        run: () => ingestSportFutures(sql, { sport: lg.sport, leagueSlug: lg.slug }),
+      });
+      if (!res.ok) {
+        await maybeAlert(sql, { source, subject: `[pollers] ${source} FAILED`, body: `source: ${source}\n\n${res.error}` });
+      }
+      return res;
+    });
+    out.push(outcome.locked
+      ? { source, decision: 'skipped-locked' }
+      : { source, ok: outcome.result.ok, id: outcome.result.id, upserted: outcome.result.summary?.upserted, unmatched: outcome.result.summary?.unmatched });
+  }
+  return out;
+}
 
 // True when any scheduled gridiron game kicks off in (now, now + hours].
 async function anyKickoffWithin(hours) {
@@ -57,6 +81,8 @@ export async function GET(request) {
   const topOfHour = now.getUTCMinutes() < ODDS_TICK_MIN;
   // Stamp the 24h movement baseline once/day at the 00:00-UTC tick.
   const stampBaseline = now.getUTCHours() === 0 && topOfHour;
+  // Futures run once/day (always a baseline/tight tick at that hour, never noop).
+  const isFuturesHour = isFuturesTick(now);
 
   const tight = await anyKickoffWithin(ODDS_FINAL_WINDOW_HOURS);
   let kind;
@@ -107,5 +133,7 @@ export async function GET(request) {
     }
   }
 
-  return Response.json({ kind, stampBaseline, decisions });
+  const futures = isFuturesHour ? await runFuturesStep() : null;
+
+  return Response.json({ kind, stampBaseline, decisions, futures });
 }

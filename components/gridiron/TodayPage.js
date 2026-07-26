@@ -3,10 +3,13 @@
 // (the week slate) sitting on it, per the Surface Rule. Local ink header + sport
 // sub-nav; NO site header. DEV reads only.
 import Wordmark from '@/components/gridiron/Wordmark';
-import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate, getStandings } from '@/lib/gridiron/readers';
+import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate, getStandings, getLeagueIdBySlug } from '@/lib/gridiron/readers';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
-import { getH2hOdds } from '@/lib/gridiron/oddsReader';
+import { getH2hOdds, getTitleContenders } from '@/lib/gridiron/oddsReader';
+import { getGlobalMostDrafted, getAdpMovers } from '@/lib/sim/fantasyBoard';
 import { normalizeTwoWayPct, isPreGame } from '@/lib/gridiron/oddsFormat';
+import PlayoffPicture from '@/components/gridiron/PlayoffPicture';
+import FantasyBoard from '@/components/gridiron/FantasyBoard';
 
 function scoreline(g) {
   if (g.status === 'final') return { txt: `${g.awayScore}-${g.homeScore}`, cls: 'sc' };
@@ -28,7 +31,7 @@ function favoredTag(odds) {
 }
 const DAY_FULL = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
 
-export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, standingsPhase = 'REG', searchParams }) {
+export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, contendersN = 12, standingsPhase = 'REG', searchParams }) {
   const sp = (await searchParams) ?? {};
   const now = new Date();
   const seasonYear = resolveSeasonYear(now);
@@ -56,6 +59,15 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, s
   ]);
   // One batch odds read for the whole week's slate (no per-row fan-out).
   const oddsMap = await getH2hOdds(slate.byDay.flatMap((d) => d.games.map((g) => g.id)));
+
+  // Instrument boards: the title-futures contenders (Playoff Picture) + the sim
+  // fantasy reads. Each renders its real read or its dormant frame.
+  const leagueId = await getLeagueIdBySlug(leagueSlug);
+  const [contenders, fantasy, adp] = await Promise.all([
+    leagueId ? getTitleContenders(leagueId, contendersN) : Promise.resolve([]),
+    getGlobalMostDrafted(10),
+    getAdpMovers(8),
+  ]);
 
   return (
     <div className="gi" data-surface="paper">
@@ -87,7 +99,8 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, s
 
       <div className="gi-wrap">
         <div className="gi-today-grid">
-          {/* left: ink instrument — the week slate grouped by day */}
+          {/* left column: the instrument stack (slate -> playoff picture -> fantasy) */}
+          <div className="gi-today-left">
           <section className="gi-instrument" data-surface="ink">
             <div className="gi-instrument-h">{leagueLabel} · {phase} Week {week}</div>
             <div className="gi-instrument-sub">{slate.total} games</div>
@@ -108,6 +121,10 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, s
               </div>
             ))}
           </section>
+
+          <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} />
+          <FantasyBoard adp={adp} mostDrafted={fantasy.mostDrafted} draftCount={fantasy.draftCount} />
+          </div>
 
           {/* right: paper standings rail */}
           <aside className="gi-standings">

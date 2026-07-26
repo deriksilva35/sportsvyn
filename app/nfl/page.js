@@ -20,6 +20,7 @@ export default async function NflToday({ searchParams }) {
       leagueLabel="NFL"
       lede={NFL_LEDE}
       tabs={NFL_TABS}
+      contendersN={12}
       standingsPhase="REG"
       searchParams={searchParams}
     />

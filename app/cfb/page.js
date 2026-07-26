@@ -19,6 +19,7 @@ export default async function CfbToday({ searchParams }) {
       leagueLabel="CFB"
       lede={CFB_LEDE}
       tabs={CFB_TABS}
+      contendersN={25}
       standingsPhase="REG"
       searchParams={searchParams}
     />

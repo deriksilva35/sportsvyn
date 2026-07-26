@@ -210,3 +210,34 @@
 .gi-instrument-h { font-size: 10px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; color: var(--volt); margin-bottom: 4px; }
 .gi-instrument-sub { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-dim); margin-bottom: 8px; }
 .gi-rail-h { font-family: var(--font-saira-cond), sans-serif; font-weight: 700; font-size: 12px; text-transform: uppercase; color: var(--ink); letter-spacing: 0.02em; margin-bottom: 12px; }
+
+/* ---- instrument stack (Today left column: slate -> playoff picture -> fantasy) ---- */
+.gi-today-left { display: flex; flex-direction: column; gap: 22px; }
+
+/* The Playoff Picture (preseason title-odds edition) */
+.gi-pp .gi-instrument-h { margin-bottom: 2px; }
+.gi-pp-kicker { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--volt); margin-bottom: 12px; }
+.gi-pp-blank { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; color: var(--muted); padding: 4px 0 8px; }
+.gi-pp-list { list-style: none; margin: 0; padding: 0; }
+.gi-pp-row { display: grid; grid-template-columns: 24px 1fr auto; align-items: baseline; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--rule-dim); }
+.gi-pp-rank { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; color: var(--muted-dim); }
+.gi-pp-team { font-size: 13px; color: var(--paper); letter-spacing: 0.02em; }
+.gi-pp-pct { font-family: var(--font-jetbrains-mono), monospace; font-size: 13px; font-weight: 700; color: var(--paper); text-align: right; }
+.gi-pp-mv { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; font-weight: 700; margin-left: 6px; white-space: nowrap; }
+.gi-pp-mv.up { color: var(--volt); }
+.gi-pp-mv.down { color: var(--terra); }
+.gi-pp-fine { margin-top: 10px; font-size: 9px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted-dim); }
+
+/* The Fantasy Board (ADP movers + most drafted; dormant halves allowed) */
+.gi-fb-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 10px; }
+@media (max-width: 560px) { .gi-fb-cols { grid-template-columns: 1fr; } }
+.gi-fb-h { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.gi-fb-blank { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 12px; color: var(--muted-dim); }
+.gi-fb-list { list-style: none; margin: 0; padding: 0; }
+.gi-fb-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--rule-dim); }
+.gi-fb-nm { font-size: 12px; color: var(--paper); }
+.gi-fb-nm em { font-family: var(--font-jetbrains-mono), monospace; font-style: normal; font-size: 9px; color: var(--muted-dim); margin-left: 4px; }
+.gi-fb-delta, .gi-fb-pct { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; font-weight: 700; }
+.gi-fb-delta.up { color: var(--volt); }
+.gi-fb-delta.down { color: var(--terra); }
+.gi-fb-pct { color: var(--muted); }
