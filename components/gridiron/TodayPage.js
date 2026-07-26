@@ -3,13 +3,16 @@
 // (the week slate) sitting on it, per the Surface Rule. Local ink header + sport
 // sub-nav; NO site header. DEV reads only.
 import Wordmark from '@/components/gridiron/Wordmark';
-import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate, getStandings, getLeagueIdBySlug } from '@/lib/gridiron/readers';
+import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate, getStandings, getLeagueIdBySlug, getEditorialBoard, getMarketMovers, getUpsetWatch } from '@/lib/gridiron/readers';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { getH2hOdds, getTitleContenders } from '@/lib/gridiron/oddsReader';
 import { getGlobalMostDrafted, getAdpMovers } from '@/lib/sim/fantasyBoard';
 import { normalizeTwoWayPct, isPreGame } from '@/lib/gridiron/oddsFormat';
 import PlayoffPicture from '@/components/gridiron/PlayoffPicture';
 import FantasyBoard from '@/components/gridiron/FantasyBoard';
+import EditorialBoard from '@/components/gridiron/EditorialBoard';
+import MarketBoard from '@/components/gridiron/MarketBoard';
+import { SuiteTeasers, UpsetWatch, TheRead } from '@/components/gridiron/RailCards';
 
 function scoreline(g) {
   if (g.status === 'final') return { txt: `${g.awayScore}-${g.homeScore}`, cls: 'sc' };
@@ -63,10 +66,16 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
   // Instrument boards: the title-futures contenders (Playoff Picture) + the sim
   // fantasy reads. Each renders its real read or its dormant frame.
   const leagueId = await getLeagueIdBySlug(leagueSlug);
-  const [contenders, fantasy, adp] = await Promise.all([
+  const isNfl = leagueSlug === 'nfl';
+  const [contenders, fantasy, adp, marketMovers, upsetDogs, boardA, boardB, boardC] = await Promise.all([
     leagueId ? getTitleContenders(leagueId, contendersN) : Promise.resolve([]),
     getGlobalMostDrafted(10),
     getAdpMovers(8),
+    getMarketMovers(leagueSlug, 4),
+    isNfl ? Promise.resolve([]) : getUpsetWatch(leagueSlug, 5),
+    getEditorialBoard(isNfl ? 'nfl-power' : 'cfb-top25', leagueSlug),
+    getEditorialBoard(isNfl ? 'nfl-mvp-offense' : 'cfb-heisman', leagueSlug),
+    isNfl ? getEditorialBoard('nfl-mvp-defense', leagueSlug) : Promise.resolve(null),
   ]);
 
   return (
@@ -122,15 +131,33 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
             ))}
           </section>
 
-          <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} />
-          <FantasyBoard adp={adp} mostDrafted={fantasy.mostDrafted} draftCount={fantasy.draftCount} />
+          {/* Instrument ordering per the locked mocks. NFL: Fantasy -> Market ->
+              Power -> MVP (O/D) -> Read. CFB: Market -> the 25 -> Heisman ->
+              Playoff Picture (market-derived) -> Read. */}
+          {isNfl ? (
+            <>
+              <FantasyBoard adp={adp} mostDrafted={fantasy.mostDrafted} draftCount={fantasy.draftCount} />
+              <MarketBoard movers={marketMovers} />
+              <EditorialBoard title="Power Rankings" board={boardA} />
+              <EditorialBoard title="NFL MVP · Offense" board={boardB} />
+              <EditorialBoard title="Defensive Player" board={boardC} />
+            </>
+          ) : (
+            <>
+              <MarketBoard movers={marketMovers} />
+              <EditorialBoard title="The Sportsvyn 25" board={boardA} />
+              <EditorialBoard title="The Heisman Board" board={boardB} />
+              <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} />
+            </>
+          )}
+          <TheRead league={leagueSlug} />
           </div>
 
-          {/* right: paper standings rail */}
+          {/* right rail: standings/conference races + suite teasers (NFL) / upset watch (CFB) */}
           <aside className="gi-standings">
-            <div className="gi-rail-h">{standingsPhase} Standings</div>
+            <div className="gi-rail-h">{isNfl ? `${standingsPhase} Standings` : 'Conference Races'}</div>
             {standings.length === 0 && (
-              <div className="gi-standings-empty">Standings open once games go final.</div>
+              <div className="gi-standings-empty">{isNfl ? 'Standings open once games go final.' : 'The races open once games go final.'}</div>
             )}
             {standings.flatMap((conf) => conf.divisions.map((div) => {
               const heading = [conf.conference, div.division].filter(Boolean).join(' ');
@@ -146,6 +173,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
                 </div>
               );
             }))}
+            {isNfl ? <SuiteTeasers /> : <UpsetWatch dogs={upsetDogs} />}
           </aside>
         </div>
       </div>
