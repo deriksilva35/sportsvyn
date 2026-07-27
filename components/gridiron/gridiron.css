@@ -288,3 +288,7 @@
 /* MVP boards side-by-side (per the mock), stacked on mobile */
 .gi-mvp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 @media (max-width: 720px) { .gi-mvp-grid { grid-template-columns: 1fr; } }
+
+/* editorial board footer (Sportsvyn 25 "Named and left off") */
+.gi-ed-footer { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; line-height: 1.55; color: var(--muted); margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule-dim); }
+.gi-ed-footer strong { color: var(--paper); font-style: normal; font-weight: 600; }

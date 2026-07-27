@@ -190,11 +190,11 @@ Seeded because preseason is the only moment a defensive board costs nothing. Nob
 
 # 3. The Sportsvyn 25
 
-Format note for the read: the 2026 field guarantees a place to each Power Four champion plus the highest-ranked Group of Six team, which is a change from the old top-five-conference-champions rule. Seed 12 below is that slot, not a projection of merit against the field.
+Twenty-five teams, ranked. Not a projected playoff field: the Playoff Picture next to it is market derived and runs twelve, and two twelves on one page would be a collision. This is the poll.
 
-Alabama is absent. Eleven wins, a 28-7 loss in Atlanta, a quarterfinal blowout, and no quarterback yet. The name is the only argument and we do not rank names.
+Ranks 16 to 20 carry the dark horse band. Every read below is anchored to a 2025 result or a stated offseason move; where neither existed the team is not on the board, which is the whole reason four teams that will appear in the AP preseason 25 do not appear in this one.
 
-## Top 12
+## The board
 
 **1. Ohio State.** An FPI of 28.7, the highest of 138 teams. Sayin completed 77 percent for more than 3,600 yards and Jeremiah Smith returns with Carnell Tate gone to the NFL.
 
@@ -202,49 +202,57 @@ Alabama is absent. Eleven wins, a 28-7 loss in Atlanta, a quarterfinal blowout, 
 
 **3. Notre Dame.** Carr's 9.4 yards per attempt tied for second nationally and broke the program's single-season passer rating record. He is the first returning starter Notre Dame has had since 2020.
 
-**4. Oregon.** Thirteen wins and a semifinal, and Moore came back rather than enter the draft after a 30-touchdown season. The November date with Ohio State is the whole schedule.
+**4. Oregon.** Thirteen wins, a semifinal, and fourth in the final AP poll at 13-2. Moore came back rather than enter the draft after a 30-touchdown season, and the November date in Columbus is the whole schedule.
 
 **5. Georgia.** 12-1 and an SEC title with a first-year starter who completed better than 70 percent and scored 31 times. Stockton is the least discussed quarterback of the top five.
 
 **6. Indiana.** The first 16-0 team in the sport's history is replacing the Heisman winner who made it possible. Hoover inherits the system, not the season.
 
-**7. Miami.** A ten seed that reached the title game, now handing the offense to a transfer who threw for nearly 4,000 yards and 34 touchdowns and won the ACC with Duke.
+**7. Miami.** Second in the final AP poll at 13-3 after reaching the title game as a ten seed, now handing the offense to a transfer who threw for nearly 4,000 yards and 34 touchdowns and won the ACC with Duke.
 
-**8. Ole Miss.** Chambliss won the job in Week 3, threw for nearly 4,000 yards, finished eighth in Heisman voting and litigated his way to a sixth year. He also lost his head coach to LSU.
+**8. Ole Miss.** Third in the final poll at 13-2. Chambliss won the job in Week 3, threw for nearly 4,000 yards, finished eighth in Heisman voting and litigated his way to a sixth year. He also lost his head coach to LSU.
 
-**9. Texas A&M.** The first playoff appearance in program history was last year. Reed returns, and so does the schedule that made it possible.
+**9. Texas A&M.** Eighth in the final poll after starting 11-0 and losing to Texas and then to Miami in the first round. Reed returns, and so does the schedule that made the 11-0 possible.
 
-**10. Texas Tech.** Twelve wins, a Big 12 title, and out without a postseason win. The two-deep is still the deepest in the conference and the quarterback room is not settled.
+**10. Texas Tech.** Twelve wins, a Big 12 title, and a 23-0 quarterfinal shutout on the way out. The two-deep is still the deepest in the conference and the quarterback room is not settled.
 
-**11. LSU.** Kiffin arrives with an almost entirely rebuilt roster and Leavitt at quarterback. Week 3 against Ole Miss is the game the whole season is priced around.
+**11. LSU.** Unranked in the final poll. Kiffin arrives with 41 transfers in and 38 out and Leavitt at quarterback, which is the least continuous roster anywhere in this top fifteen. Week 3 against Ole Miss is the game the season is built around.
 
-**12. Boise State.** The Group of Six seed. They have done this before, in 2024, and the conference realignment that stripped the Mountain West helps rather than hurts the path.
+**12. Alabama.** Ninth in the final poll, which is four spots higher than a 28-7 loss in Atlanta and a 38-3 quarterfinal deserved. They beat Oklahoma 34-24 on the road and have no settled quarterback. The name is the only argument left and we do not rank names.
 
-## Five dark horses
+**13. Oklahoma.** Thirteenth in the final poll at 10-3, and Mateer returns to a roster that added through the portal. The rushing volume is the differentiator; the SEC schedule is what turns every number into a résumé line.
 
-Ranks 16 to 20 on the seeded board.
+**14. Utah.** Fourteenth in the final poll at 11-2, closing with a 44-22 win over Nebraska in Las Vegas. The least discussed eleven-win team in the country.
 
-**Penn State.** Seven and six, and then most of an Iowa State roster arrived with Rocco Becht. The schedule is the softest of any team with real talent.
+**15. BYU.** Eleventh in the final poll. 11-1 in the regular season with the only loss to Texas Tech, then a second loss to Texas Tech in the Big 12 title game, then 25-21 over Georgia Tech in the Pop-Tarts Bowl. Bachmeier and LJ Martin both return.
 
-**USC.** Nine wins, Riley, and a roster nobody is putting inside the top fifteen. That combination has produced exactly one kind of season in his career and it has not happened yet at USC.
+## Dark horses, ranks 16 to 20
 
-**Oklahoma.** Mateer and a defense that travels. The SEC schedule is the argument against and it is also the only path to a résumé that survives one loss.
+**16. Penn State.** Seven and six, and then most of an Iowa State roster arrived with Rocco Becht. The schedule is the softest of any team with real talent.
 
-**BYU.** Eleven wins in back-to-back seasons and a Big 12 title game appearance. Five teams sit within a touchdown of them in the projections, which is the definition of a live conference.
+**17. USC.** Twentieth in the final poll with nine wins, Riley, and a roster nobody is putting inside the top fifteen. That combination has produced exactly one kind of season in his career and it has not happened yet at USC.
 
-**Hawai'i.** Nine wins, Alejado back, and two Power Four road games on the schedule. Winning one of them is a full playoff argument in a conference whose best teams left.
+**18. Michigan.** Twenty-first in the final poll, closing with a 41-27 loss to Texas in the Citrus Bowl. The gap between that and a playoff berth is one quarterback.
+
+**19. Virginia.** Sixteenth in the final poll at 11-3, with a 13-7 Gator Bowl win over Missouri. Eleven wins in the ACC and almost nobody outside Charlottesville noticed.
+
+**20. Hawai'i.** Nine wins, Alejado back, and two Power Four road games on the schedule. Winning one of them is a full playoff argument in a conference whose best teams left.
 
 ## Ranks 21 to 25
 
-**21. Alabama.** Eleven wins, a 28-7 loss in Atlanta, a quarterfinal blowout, and no settled quarterback. The name is the only argument and we do not rank names.
+**21. Vanderbilt.** Fifteenth in the final poll, ending on a 34-27 ReliaQuest Bowl loss to Iowa.
 
-**22. Tennessee.** [Rank only. No verified 2026 anchor.]
+**22. Iowa.** Seventeenth in the final poll, and the team that won that game.
 
-**23. Michigan.** [Rank only. No verified 2026 anchor.]
+**23. Tulane.** Eighteenth in the final poll and an eleven seed in the playoff, out 41-10 to Ole Miss. Jon Sumrall then left for Florida.
 
-**24. Clemson.** Seven and six, a new quarterback in Christopher Vizzina, and Chad Morris back to call it.
+**24. James Madison.** Nineteenth in the final poll and the twelve seed, out 51-34 to Oregon. The only Sun Belt team in the final 25.
 
-**25. Florida.** Jon Sumrall arrives from Tulane, where he built the roster that made the playoff field before he left it.
+**25. TCU.** Twenty-fifth in the final poll, now without Josh Hoover, who led the nation in passing and left for Indiana.
+
+## Named and left off
+
+Four teams that will sit inside the AP preseason 25 are absent here, on purpose. **Tennessee**, **Clemson**, **Florida** and **Auburn** all finished the 2025 season unranked. Clemson went 7-6 with a new quarterback in Vizzina. Florida and Auburn both fired their coaches. Preseason polls rank those four on history and recruiting; this board ranks the season that just happened and the roster that came out of it. When one of them earns a number in September it will enter with movement, which is more interesting than seeding it now.
 
 ---
 

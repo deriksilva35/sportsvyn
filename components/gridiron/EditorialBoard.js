@@ -4,6 +4,11 @@
 // dark-horse ranks; rank-only rows render without a read by design. No movement
 // chips (Edition 0 has no prior). Renders null when the board isn't seeded.
 
+// Render markdown **bold** inline (the footer's team names) -> <strong>.
+function inlineBold(text) {
+  return text.split('**').map((seg, i) => (i % 2 === 1 ? <strong key={i}>{seg}</strong> : seg));
+}
+
 export default function EditorialBoard({ title, board }) {
   if (!board || !board.entries.length) return null;
   const firstDH = board.entries.findIndex((e) => e.band === 'dark_horse');
@@ -29,6 +34,7 @@ export default function EditorialBoard({ title, board }) {
         <span className="gi-ed-kick">Preseason · Edition {board.editionNumber}</span>
       </div>
       <ol className="gi-ed-list">{rows}</ol>
+      {board.footer && <div className="gi-ed-footer">{inlineBold(board.footer)}</div>}
     </section>
   );
 }

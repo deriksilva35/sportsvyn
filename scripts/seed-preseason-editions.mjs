@@ -41,6 +41,7 @@ for (const b of boards) {
     const rd = e.read == null ? '[rank-only]' : `${e.read.slice(0, 58)}${e.read.length > 58 ? '…' : ''}`;
     console.log(`   ${String(e.rank).padStart(2)}${tag}  ${nm}  —  ${rd}`);
   }
+  if (b.footer) console.log(`   FOOTER (Named and left off): ${b.footer.slice(0, 90)}…`);
 }
 
 if (!APPLY) {
@@ -63,8 +64,8 @@ for (const b of boards) {
   await sql`DELETE FROM ranking_editions WHERE ranking_list_id = ${listId} AND edition_number = 0`;
   const edId = (await sql`
     INSERT INTO ranking_editions
-      (ranking_list_id, edition_number, edition_label, editorial_weight, sites_weight, user_weight, status, is_current, published_at)
-    VALUES (${listId}, 0, 'Preseason', 1.00, 0.00, 0.00, 'published', true, now())
+      (ranking_list_id, edition_number, edition_label, editorial_weight, sites_weight, user_weight, status, is_current, published_at, notes)
+    VALUES (${listId}, 0, 'Preseason', 1.00, 0.00, 0.00, 'published', true, now(), ${b.footer ?? null})
     RETURNING id`)[0].id;
 
   for (const e of b.entries) {
