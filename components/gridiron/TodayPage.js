@@ -138,19 +138,19 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
             <>
               <FantasyBoard adp={adp} mostDrafted={fantasy.mostDrafted} draftCount={fantasy.draftCount} />
               <MarketBoard movers={marketMovers} />
-              <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} />
-              <EditorialBoard title="Power Rankings" board={boardA} />
+              <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} limit={6} />
+              <EditorialBoard title="Power Rankings" board={boardA} preview href="/nfl/rankings?tab=power" />
               <div className="gi-mvp-grid">
-                <EditorialBoard title="NFL MVP · Offense" board={boardB} />
-                <EditorialBoard title="Defensive Player" board={boardC} />
+                <EditorialBoard title="NFL MVP · Offense" board={boardB} preview href="/nfl/rankings?tab=mvp-offense" />
+                <EditorialBoard title="Defensive Player" board={boardC} preview href="/nfl/rankings?tab=mvp-defense" />
               </div>
             </>
           ) : (
             <>
               <MarketBoard movers={marketMovers} />
-              <EditorialBoard title="The Sportsvyn 25" board={boardA} />
-              <EditorialBoard title="The Heisman Board" board={boardB} />
-              <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} />
+              <EditorialBoard title="The Sportsvyn 25" board={boardA} preview href="/cfb/rankings?tab=top25" />
+              <EditorialBoard title="The Heisman Board" board={boardB} preview href="/cfb/rankings?tab=heisman" />
+              <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} limit={6} href="/cfb/rankings?tab=playoff" />
             </>
           )}
           <TheRead league={leagueSlug} />

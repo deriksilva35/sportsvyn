@@ -6,9 +6,10 @@
 
 import { probDirection, formatSignedPct } from '@/lib/gridiron/oddsFormat';
 
-export default function PlayoffPicture({ contenders = [], leagueLabel = '' }) {
-  const has = contenders.length > 0;
-  const numBooks = has ? (contenders.find((c) => c.numBooks)?.numBooks ?? null) : null;
+export default function PlayoffPicture({ contenders = [], leagueLabel = '', limit = null, href = null }) {
+  const shown = limit ? contenders.slice(0, limit) : contenders;
+  const has = shown.length > 0;
+  const numBooks = has ? (shown.find((c) => c.numBooks)?.numBooks ?? null) : null;
 
   return (
     <section className="gi-instrument gi-pp" data-surface="ink">
@@ -20,7 +21,7 @@ export default function PlayoffPicture({ contenders = [], leagueLabel = '' }) {
       ) : (
         <>
           <ol className="gi-pp-list">
-            {contenders.map((c) => {
+            {shown.map((c) => {
               const dir = probDirection(c.moveProb);
               return (
                 <li key={c.rank} className="gi-pp-row">
@@ -39,6 +40,7 @@ export default function PlayoffPicture({ contenders = [], leagueLabel = '' }) {
           <div className="gi-pp-fine">
             De-vigged title odds{numBooks ? `, ${numBooks} books` : ''}. The projection turns results-driven after Week 1.
           </div>
+          {href && <a className="gi-ed-full" href={href}>Full board →</a>}
         </>
       )}
     </section>

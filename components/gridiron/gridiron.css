@@ -292,3 +292,17 @@
 /* editorial board footer (Sportsvyn 25 "Named and left off") */
 .gi-ed-footer { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; line-height: 1.55; color: var(--muted); margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule-dim); }
 .gi-ed-footer strong { color: var(--paper); font-style: normal; font-weight: 600; }
+
+/* editorial board preview (Today) + rankings hub tabs */
+.gi-ed-list--compact { padding: 12px 0 4px; }
+.gi-ed-row.compact { grid-template-columns: 26px 1fr; padding: 6px 0; }
+.gi-ed-more { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--rule-dim); }
+.gi-ed-teaser { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dim); }
+.gi-ed-full { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--volt); text-decoration: none; margin-left: auto; display: inline-block; }
+.gi-ed-full:hover { text-decoration: underline; }
+.gi-pp .gi-ed-full { margin-top: 10px; }
+.gi-rank-tabs { display: flex; gap: 2px; flex-wrap: wrap; border-bottom: 1px solid var(--p-rule); margin-bottom: 22px; }
+.gi-rank-tabs a { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mut); text-decoration: none; padding: 12px 16px; position: relative; }
+.gi-rank-tabs a.active { color: var(--ink); }
+.gi-rank-tabs a.active::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: -1px; height: 2px; background: var(--volt); }
+.gi-rank-body { max-width: 760px; }

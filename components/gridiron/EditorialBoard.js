@@ -1,18 +1,53 @@
 // components/gridiron/EditorialBoard.js — a hand-seeded Edition 0 board (Power
-// Rankings, MVP, Sportsvyn 25, Heisman). PRESEASON · EDITION N kicker, rank + name
-// (+ team tag for player boards) + serif read. A DARK HORSES band divides the
-// dark-horse ranks; rank-only rows render without a read by design. No movement
-// chips (Edition 0 has no prior). Renders null when the board isn't seeded.
+// Rankings, MVP, Sportsvyn 25, Heisman).
+//   preview: top 5 (compact, no reads) + a "+ N dark horses" teaser + "Full board
+//            ->" to the hub tab. No footer. Used on the Today page.
+//   full:    every row with its serif read, the DARK HORSES band, rank-only rows
+//            without a read, and the "Named and left off" footer. Used on the hub.
+// PRESEASON · EDITION N kicker; no movement chips (Edition 0 has no prior).
+
+import { previewEntries, darkHorseCount } from '@/lib/gridiron/rankingsHub';
 
 // Render markdown **bold** inline (the footer's team names) -> <strong>.
 function inlineBold(text) {
   return text.split('**').map((seg, i) => (i % 2 === 1 ? <strong key={i}>{seg}</strong> : seg));
 }
 
-export default function EditorialBoard({ title, board }) {
-  if (!board || !board.entries.length) return null;
-  const firstDH = board.entries.findIndex((e) => e.band === 'dark_horse');
+function Head({ title, editionNumber }) {
+  return (
+    <div className="gi-instrument-h gi-ed-h">
+      <span>{title}</span>
+      <span className="gi-ed-kick">Preseason · Edition {editionNumber}</span>
+    </div>
+  );
+}
 
+export default function EditorialBoard({ title, board, preview = false, href = null }) {
+  if (!board || !board.entries.length) return null;
+
+  if (preview) {
+    const top = previewEntries(board.entries, 5);
+    const dh = darkHorseCount(board.entries);
+    return (
+      <section className="gi-instrument gi-ed" data-surface="ink">
+        <Head title={title} editionNumber={board.editionNumber} />
+        <ol className="gi-ed-list gi-ed-list--compact">
+          {top.map((e) => (
+            <li key={e.rank} className="gi-ed-row compact">
+              <span className="gi-ed-rk">{e.rank}</span>
+              <span className="gi-ed-nm">{e.label}{e.teamTag && <span className="gi-ed-tag">{e.teamTag}</span>}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="gi-ed-more">
+          {dh > 0 && <span className="gi-ed-teaser">+ {dh} dark horses</span>}
+          {href && <a className="gi-ed-full" href={href}>Full board →</a>}
+        </div>
+      </section>
+    );
+  }
+
+  const firstDH = board.entries.findIndex((e) => e.band === 'dark_horse');
   const rows = [];
   board.entries.forEach((e, i) => {
     if (i === firstDH) rows.push(<li key="dh-band" className="gi-ed-band">Dark Horses</li>);
@@ -29,10 +64,7 @@ export default function EditorialBoard({ title, board }) {
 
   return (
     <section className="gi-instrument gi-ed" data-surface="ink">
-      <div className="gi-instrument-h gi-ed-h">
-        <span>{title}</span>
-        <span className="gi-ed-kick">Preseason · Edition {board.editionNumber}</span>
-      </div>
+      <Head title={title} editionNumber={board.editionNumber} />
       <ol className="gi-ed-list">{rows}</ol>
       {board.footer && <div className="gi-ed-footer">{inlineBold(board.footer)}</div>}
     </section>
