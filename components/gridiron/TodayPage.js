@@ -138,7 +138,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
             <>
               <FantasyBoard adp={adp} mostDrafted={fantasy.mostDrafted} draftCount={fantasy.draftCount} />
               <MarketBoard movers={marketMovers} />
-              <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} limit={6} />
+              <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} limit={6} href="/nfl/rankings?tab=playoff" />
               <EditorialBoard title="Power Rankings" board={boardA} preview href="/nfl/rankings?tab=power" />
               <div className="gi-mvp-grid">
                 <EditorialBoard title="NFL MVP · Offense" board={boardB} preview href="/nfl/rankings?tab=mvp-offense" />

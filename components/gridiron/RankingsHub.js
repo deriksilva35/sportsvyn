@@ -21,7 +21,7 @@ export default async function RankingsHub({ leagueSlug, leagueLabel, searchParam
     board = await getEditorialBoard(active.list, leagueSlug);
   } else if (active?.kind === 'market') {
     const leagueId = await getLeagueIdBySlug(leagueSlug);
-    contenders = leagueId ? await getTitleContenders(leagueId, 25) : [];
+    contenders = leagueId ? await getTitleContenders(leagueId, active.n ?? 25) : [];
   }
 
   return (
