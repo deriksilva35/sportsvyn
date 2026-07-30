@@ -55,4 +55,14 @@ export const MEMBERSHIP_CARD_VARIANTS = {
     body: 'Set your own roster slots, league size, superflex, and scoring. The Draft Pass unlocks the full console; free accounts draft the presets.',
     secondary: { label: 'Back to presets' }, // no href — uses the onBackToPresets callback
   },
+  // Variant C — tracker lock. Same `sim` entitlement as custom, so the Pass is
+  // again the cheapest unlock. The pitch is deliberately about the ROOM, not the
+  // feature list: this is the one mode that leaves the house and goes to a real
+  // draft table, and that is the whole reason to buy it. States what it does and
+  // stops - no urgency, no "don't get caught without it".
+  tracker: {
+    headline: 'Bring it to your draft.',
+    body: 'Tracker mode logs a real draft as it happens - every team, every pick, on your phone at the table. Your roster and the open slots stay in front of you, and the value on each pick is read against live ADP. The Draft Pass unlocks it.',
+    secondary: { label: 'Back to the sim' },
+  },
 };

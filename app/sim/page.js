@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import Attribution from '@/components/sim/Attribution';
 import StartForm from '@/components/sim/StartForm';
+import TrackerStart from '@/components/sim/TrackerStart';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
@@ -10,6 +11,7 @@ import { getPresets, getDraftsUsed, isMember, canStartDraft, FREE_DRAFT_LIMIT } 
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
+import '@/components/sim/tracker.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mock Draft Sim - Sportsvyn', robots: { index: false, follow: false } };
@@ -59,10 +61,16 @@ export default async function SimLobby({ searchParams }) {
             const [presets, used, member] = await Promise.all([getPresets(), getDraftsUsed(userId), isMember(userId)]);
             const gate = await canStartDraft(userId, member);
             return (
-              <section>
-                <div className="sim-kicker">Start a mock draft</div>
-                <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} />
-              </section>
+              <>
+                <section>
+                  <div className="sim-kicker">Start a mock draft</div>
+                  <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} />
+                </section>
+                {/* Tracker is the same `sim` entitlement as custom configs. This
+                    only decides what RENDERS; startTrackerDraftFor re-checks
+                    server-side either way. */}
+                <TrackerStart entitled={member} shell={isShell} />
+              </>
             );
           })()
         )}

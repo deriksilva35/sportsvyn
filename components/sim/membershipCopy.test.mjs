@@ -41,6 +41,29 @@ test('custom variant: leads with the Draft Pass, secondary Back to presets (no h
   assert.equal(v.secondary.href, undefined); // uses onBackToPresets callback
 });
 
+// ---- Variant C (tracker lock) — the room, not the feature list ----
+test('tracker variant: pitches the draft table, leads with the Draft Pass', () => {
+  const v = MEMBERSHIP_CARD_VARIANTS.tracker;
+  assert.equal(v.headline, 'Bring it to your draft.');
+  assert.match(v.body, /logs a real draft as it happens/);
+  assert.match(v.body, /every team, every pick/);
+  assert.match(v.body, /live ADP/);
+  assert.match(v.body, /Draft Pass unlocks it/);
+  assert.equal(v.secondary.label, 'Back to the sim');
+  assert.equal(v.secondary.href, undefined);
+});
+
+test('tracker copy states what it does and stops - no urgency, no fear', () => {
+  const { headline, body } = MEMBERSHIP_CARD_VARIANTS.tracker;
+  const text = `${headline} ${body}`;
+  for (const re of [
+    /\bdon['\u2019]?t (get|miss|be)\b/i, /\bbefore (it|they)\b/i, /\bhurry\b/i,
+    /\blast chance\b/i, /\bonly \d+\b/i, /\bnever again\b/i, /!/,
+  ]) {
+    assert.ok(!re.test(text), `urgency/fear pattern ${re} in tracker copy`);
+  }
+});
+
 test('price line is the three-tier ladder, hyphen-separated', () => {
   assert.equal(MEMBERSHIP_PRICE_LINE, '$9.99 Draft Pass - $59/yr Suite - $99/yr Founding');
 });

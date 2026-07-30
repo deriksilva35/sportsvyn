@@ -4,15 +4,18 @@ import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import Attribution from '@/components/sim/Attribution';
 import DraftRoom from '@/components/sim/DraftRoom';
+import TrackerRoom from '@/components/sim/TrackerRoom';
+import TrackerResults from '@/components/sim/TrackerResults';
 import DraftResults from '@/components/sim/DraftResults';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getDraft, getDraftForRoom } from '@/lib/fantasy/drafts';
-import { getOrCreateRead } from '@/lib/fantasy/readWriter';
+import { getOrCreateRead, getOrCreateTrackerRead } from '@/lib/fantasy/readWriter';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
+import '@/components/sim/tracker.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Draft Room - Sportsvyn', robots: { index: false, follow: false } };
@@ -34,6 +37,31 @@ export default async function DraftRoomPage({ params, searchParams }) {
   if (!base) notFound(); // not found OR not the user's draft
 
   const status = base.draft.status;
+  const isTrackerDraft = (base.draft.mode ?? 'sim') === 'tracker';
+
+  // A live tracker draft is its own full screen per the locked mock: it renders
+  // its own header (the wordmark still links to /sim, which is the escape hatch)
+  // and its own bottom tabs, so the sim chrome around it would be a second header
+  // and a second tab bar competing for the same thumb.
+  if (status === 'in_progress' && isTrackerDraft) {
+    const room = await getDraftForRoom(draftId, userId);
+    return (
+      <div className={`sim${isShell ? ' sim--shell' : ''}`} data-surface="ink">
+        {isShell && <ShellPersist />}
+        <TrackerRoom
+          draftId={draftId}
+          config={room.config}
+          order={room.order}
+          rounds={room.rounds}
+          userTeamIndex={room.userTeamIndex}
+          teamLabels={room.teamLabels}
+          initialPicks={room.picks}
+          initialAvailable={room.available}
+        />
+      </div>
+    );
+  }
+
   let body;
   if (status === 'in_progress') {
     const room = await getDraftForRoom(draftId, userId);
@@ -51,7 +79,10 @@ export default async function DraftRoomPage({ params, searchParams }) {
       />
     );
   } else if (status === 'completed') {
-    body = <DraftResults data={await getOrCreateRead(draftId, userId)} />;
+    // Tracker draws its own results: the value ledger and a grade-free Read.
+    body = isTrackerDraft
+      ? <TrackerResults data={await getOrCreateTrackerRead(draftId, userId)} />
+      : <DraftResults data={await getOrCreateRead(draftId, userId)} />;
   } else {
     body = (
       <div style={{ padding: '40px 0' }}>

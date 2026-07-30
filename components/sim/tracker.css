@@ -1,0 +1,147 @@
+/* components/sim/tracker.css — the tracker room, per the LOCKED mock
+   docs/design/draftvyn-tracker-mock-v1.html.
+
+   The mock declares its own :root palette; every one of those values already
+   exists as a design token in app/globals.css, so this file uses the tokens and
+   never redeclares a colour. Mapping, for anyone diffing against the mock:
+     --ink #0A0A0A -> var(--ink)        --volt #D4FF00 -> var(--volt)
+     --w-soft      -> var(--paper)      --w-mut        -> var(--muted)
+     --w-dim       -> var(--muted-dim)  --rule #232320 -> var(--rule-dim)
+     --jade/--terra -> var(--jade)/var(--terra)
+   The two mock-only shades (--ink-2 #121212 panel, --ink-3 #181818 hairline) have
+   no token, so they are declared locally, scoped to .trk.
+
+   Mobile-first and single-column by design: this is used one-handed, standing at
+   a draft table. It widens to a centred 480px column on desktop rather than
+   spreading into a layout the mock never specified. */
+
+.trk {
+  --trk-panel: #121212;   /* mock --ink-2 */
+  --trk-hair:  #181818;   /* mock --ink-3 */
+  min-height: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-jetbrains-mono), monospace;
+  display: flex;
+  flex-direction: column;
+  /* The bottom tab bar is fixed; reserve its height plus the home indicator. */
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
+}
+.trk-in { width: 100%; max-width: 480px; margin: 0 auto; flex: 1; }
+
+/* ---- header ---- */
+.trk-hd { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; border-bottom: 1px solid var(--rule-dim); }
+.trk-hd .mode { font-family: var(--font-saira-cond); font-size: 10px; letter-spacing: .2em; color: var(--ink); background: var(--volt); padding: 2px 7px; font-weight: 600; }
+.trk-hd .meta { margin-left: auto; font-family: var(--font-saira-cond); font-size: 11px; letter-spacing: .14em; color: var(--muted-dim); }
+.trk-hd .wordmark { font-size: 15px; }
+
+/* ---- on the clock ---- */
+.trk-otc { padding: 14px 16px; border-bottom: 1px solid var(--rule-dim); background: var(--trk-panel); }
+.trk-otc-row { display: flex; align-items: flex-end; }
+.trk-k { font-family: var(--font-saira-cond); font-size: 10px; letter-spacing: .24em; color: var(--muted-dim); }
+/* The on-the-clock name is the single largest thing on the screen: at a real
+   table you read it across the room. Volt for another manager, WHITE for your
+   own seat - the one distinction that must never be misread. */
+.trk-who { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 30px; letter-spacing: -.03em; color: var(--volt); line-height: 1.05; }
+.trk-who.me { color: #fff; }
+.trk-who .pick { font-family: var(--font-saira-cond); font-style: normal; font-weight: 500; font-size: 13px; letter-spacing: .14em; color: var(--muted); margin-left: 8px; }
+
+/* UNDO is ALWAYS visible - it is what replaces a confirm step. One tap commits,
+   one tap takes it back. */
+.trk-undo { margin-left: auto; font-family: var(--font-saira-cond); font-size: 11px; letter-spacing: .14em; color: var(--muted); border: 1px solid var(--rule-dim); padding: 7px 12px; background: none; cursor: pointer; white-space: nowrap; }
+.trk-undo b { color: var(--terra); font-weight: 700; }
+.trk-undo:disabled { opacity: .35; cursor: default; }
+.trk-lastpick { font-size: 11px; color: var(--muted-dim); padding-top: 7px; }
+.trk-lastpick b { color: var(--muted); font-weight: 700; }
+
+/* ---- search + position filters ---- */
+.trk-search { margin: 12px 16px 0; display: flex; align-items: center; gap: 8px; background: var(--trk-panel); border: 1px solid var(--rule-dim); padding: 12px 14px; }
+.trk-search .q { color: var(--muted-dim); }
+.trk-search input { background: none; border: none; outline: none; color: #fff; font-family: var(--font-jetbrains-mono), monospace; font-size: 15px; width: 100%; min-width: 0; }
+.trk-search input::placeholder { color: var(--muted-dim); }
+.trk-hint { font-family: var(--font-saira-cond); font-size: 10px; letter-spacing: .12em; color: var(--muted-dim); white-space: nowrap; }
+.trk-pos { display: flex; gap: 6px; padding: 10px 16px 4px; overflow-x: auto; }
+.trk-pos button { font-family: var(--font-saira-cond); font-size: 12px; letter-spacing: .14em; padding: 6px 12px; border: 1px solid var(--rule-dim); color: var(--muted); white-space: nowrap; background: none; cursor: pointer; }
+.trk-pos button.on { background: var(--volt); color: var(--ink); border-color: var(--volt); font-weight: 600; }
+
+/* ---- available list ---- */
+.trk-avail { padding: 6px 0 16px; }
+.trk-p { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--trk-hair); }
+.trk-p .adp { width: 44px; font-size: 12px; color: var(--muted-dim); text-align: right; flex: none; }
+.trk-p .nm { font-weight: 700; color: #fff; font-size: 15px; }
+.trk-p .tag { font-family: var(--font-saira-cond); font-size: 11px; letter-spacing: .1em; color: var(--muted-dim); }
+.trk-gap { font-size: 11px; font-weight: 700; margin-left: 2px; font-family: var(--font-jetbrains-mono), monospace; }
+.trk-gap.val { color: var(--jade); }
+.trk-gap.rch { color: var(--muted-dim); }
+.trk-p .go { margin-left: auto; background: var(--volt); color: var(--ink); font-family: var(--font-saira-cond); font-weight: 600; font-size: 13px; letter-spacing: .12em; padding: 10px 16px; border: none; cursor: pointer; flex: none; }
+.trk-p .go:disabled { opacity: .4; cursor: default; }
+/* The top row is what Enter commits. Highlighting it is not decoration - it is
+   the affordance that makes a keyboard commit safe. */
+.trk-p.top { background: rgba(212, 255, 0, .05); }
+.trk-p.top .nm { color: var(--volt); }
+.trk-empty { padding: 24px 16px; color: var(--muted-dim); font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; }
+
+/* ---- board ---- */
+.trk-rd { padding: 10px 16px 4px; font-family: var(--font-saira-cond); font-size: 11px; letter-spacing: .2em; color: var(--muted-dim); }
+.trk-b { display: flex; align-items: baseline; gap: 10px; padding: 8px 16px; border-bottom: 1px solid var(--trk-hair); }
+.trk-b .n { width: 30px; font-size: 11px; color: var(--muted-dim); text-align: right; flex: none; }
+.trk-b .team { font-family: var(--font-saira-cond); font-size: 12px; letter-spacing: .12em; color: var(--muted); width: 64px; flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trk-b .team.me { color: var(--volt); }
+.trk-b .nm { font-weight: 700; color: #fff; font-size: 14px; }
+.trk-b .pt { font-family: var(--font-saira-cond); font-size: 10px; letter-spacing: .1em; color: var(--muted-dim); }
+.trk-b .v { margin-left: auto; font-size: 11px; font-weight: 700; flex: none; }
+.trk-b .v.val { color: var(--jade); }
+.trk-b .v.rch { color: var(--terra); }
+.trk-b .v.even { color: var(--muted-dim); }
+.trk-b.now { background: rgba(212, 255, 0, .06); }
+.trk-b.now .nm { color: var(--volt); }
+.trk-b .dot { color: var(--volt); font-size: 10px; }
+.trk-b .pending { color: var(--muted-dim); font-weight: 400; }
+
+/* ---- my team + needs ---- */
+.trk-need { margin: 12px 16px; border: 1px solid var(--rule-dim); background: var(--trk-panel); padding: 14px; }
+.trk-need .k { font-family: var(--font-saira-cond); font-size: 10px; letter-spacing: .24em; color: var(--muted-dim); margin-bottom: 8px; }
+.trk-need .line { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13.5px; color: var(--paper); line-height: 1.5; }
+.trk-need .line b { color: var(--volt); font-style: normal; font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 12.5px; }
+.trk-ba { display: flex; align-items: center; gap: 10px; padding-top: 10px; }
+.trk-ba .nm { font-weight: 700; color: #fff; font-size: 14px; }
+.trk-ba .tag { font-family: var(--font-saira-cond); font-size: 11px; color: var(--muted-dim); }
+.trk-ba .gap { margin-left: auto; color: var(--jade); font-weight: 700; font-size: 12px; flex: none; }
+.trk-ba .gap.gone { color: var(--muted-dim); }
+
+.trk-sec { padding: 12px 16px 4px; font-family: var(--font-saira-cond); font-size: 11px; letter-spacing: .2em; color: var(--muted-dim); display: flex; }
+.trk-sec .r { margin-left: auto; color: var(--muted-dim); }
+.trk-slot { display: flex; align-items: baseline; gap: 12px; padding: 9px 16px; border-bottom: 1px solid var(--trk-hair); }
+.trk-slot .pos-t { font-family: var(--font-saira-cond); font-size: 11px; letter-spacing: .14em; color: var(--muted-dim); width: 44px; flex: none; }
+.trk-slot .nm { font-weight: 700; color: #fff; font-size: 14px; }
+.trk-slot .rdd { font-family: var(--font-saira-cond); font-size: 10px; color: var(--muted-dim); margin-left: auto; flex: none; }
+/* An open slot is a hole, not a player: serif italic in the dim ramp, with the
+   position tag lifted to volt so the eye finds what is missing. */
+.trk-slot.open .nm { color: var(--muted-dim); font-weight: 400; font-style: italic; font-family: var(--font-source-serif), serif; font-size: 13px; }
+.trk-slot.open .pos-t { color: var(--volt); }
+
+.trk-fine { font-size: 9.5px; color: var(--muted-dim); padding: 10px 16px 16px; line-height: 1.5; }
+.trk-fine a { color: var(--muted); }
+
+/* ---- bottom tabs ---- */
+.trk-tabs { display: flex; border-top: 1px solid var(--rule-dim); background: var(--ink); position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; padding-bottom: env(safe-area-inset-bottom); }
+.trk-tabs button { flex: 1; text-align: center; font-family: var(--font-saira-cond); font-size: 11px; letter-spacing: .18em; color: var(--muted-dim); padding: 14px 0 18px; background: none; border: none; cursor: pointer; }
+.trk-tabs button.on { color: var(--volt); border-top: 2px solid var(--volt); margin-top: -1px; }
+
+.trk-err { margin: 10px 16px 0; padding: 9px 12px; border: 1px solid var(--terra); color: var(--terra); font-size: 11px; letter-spacing: .04em; }
+
+/* ---- tracker entry card (sim lobby) ---- */
+.trk-start { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--rule-dim); }
+.trk-start-pitch { color: var(--paper-dim); font-size: 13px; line-height: 1.6; max-width: 52ch; margin: 6px 0 16px; }
+.trk-start-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.trk-start-row label, .trk-start-grid label { display: flex; flex-direction: column; gap: 5px; }
+.trk-start-row span, .trk-start-grid span { font-family: var(--font-saira-cond); font-size: 9.5px; font-weight: 700; letter-spacing: .12em; color: var(--muted-dim); }
+.trk-start select, .trk-start input {
+  background: #121212; border: 1px solid var(--rule-dim); color: var(--paper);
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 13px; padding: 8px 10px; min-width: 92px;
+}
+.trk-start input { min-width: 0; width: 100%; }
+.trk-start-names { background: none; border: none; color: var(--muted); font-family: var(--font-saira-cond); font-size: 11px; letter-spacing: .12em; cursor: pointer; padding: 4px 0 12px; }
+.trk-start-names:hover { color: var(--volt); }
+.trk-start-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.trk-start .sim-cta { margin-top: 6px; }
