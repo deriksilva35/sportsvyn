@@ -32,8 +32,17 @@ export default async function SimLobby({ searchParams }) {
   // Post-deletion landing: the delete-account flow signs out and redirects here.
   const deleted = userId == null && params.deleted != null;
 
+  // sim--stack: the signed-in lobby now hosts TWO products (mock-draft setup +
+  // tracker), and the <=900px one-viewport lock was written for exactly one
+  // section. Without it the two sections each take flex:1 of a locked 100vh
+  // column with overflow:hidden, splitting the screen and scrunching both with
+  // nowhere to scroll. The modifier relaxes the lock so the page scrolls and each
+  // section sizes to its content; desktop is untouched.
   return (
-    <div className={`sim${userId != null ? ' sim--tabbar sim--setup' : ''}${isShell ? ' sim--shell' : ''}`} data-surface="ink">
+    <div
+      className={`sim${userId != null ? ' sim--tabbar sim--setup sim--stack' : ''}${isShell ? ' sim--shell' : ''}`}
+      data-surface="ink"
+    >
       {isShell && <ShellPersist />}
       <header className="sim-head">
         <Wordmark href="/sim" />

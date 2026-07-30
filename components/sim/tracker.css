@@ -145,3 +145,41 @@
 .trk-start-names:hover { color: var(--volt); }
 .trk-start-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
 .trk-start .sim-cta { margin-top: 6px; }
+
+/* ---------------------------------------------------------------------------
+   PHONE WIDTH (390px class) — tracker setup card
+   ---------------------------------------------------------------------------
+   Follows the mock's frame grammar: big controls, ONE THING PER ROW. The default
+   layout above puts three selects side by side, which at 390px leaves ~366px of
+   content box for three 92px controls plus gaps and label text - technically
+   fitting, visibly scrunched, and with ~33px tap targets.
+
+   Below 560px every control becomes a full-width stacked row:
+     · no fixed widths, so nothing can overflow at any narrow viewport
+     · 44px minimum height (Apple's minimum tap target)
+     · 16px font on the actual inputs - under 16px iOS ZOOMS the whole page on
+       focus, which at a draft table is worse than the scrunch was
+   Desktop (>=561px) keeps the compact side-by-side row untouched. */
+@media (max-width: 560px) {
+  .trk-start-row { flex-direction: column; gap: 12px; }
+  .trk-start-row label { width: 100%; }
+
+  .trk-start select,
+  .trk-start input {
+    width: 100%;
+    min-width: 0;          /* releases the 92px floor that caused the squeeze */
+    min-height: 44px;
+    font-size: 16px;       /* >=16px: no iOS focus zoom */
+    padding: 10px 12px;
+  }
+
+  /* One seat name per row. auto-fill/minmax packed two cramped inputs per line
+     at this width; a name field wants the full measure. */
+  .trk-start-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  /* The names disclosure is a real control, not a caption - give it a target. */
+  .trk-start-names { min-height: 44px; display: flex; align-items: center; font-size: 12px; }
+
+  .trk-start .sim-cta { display: block; width: 100%; text-align: center; min-height: 48px; padding: 14px 22px; }
+  .trk-start-pitch { font-size: 14px; }
+}

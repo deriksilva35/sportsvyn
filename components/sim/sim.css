@@ -516,3 +516,47 @@
 .expo-vr { color: var(--paper-dim); }
 .expo-vv.val { color: var(--volt); }
 .expo-vv.reach { color: var(--terra); }
+
+/* ===========================================================================
+   PHONE WIDTH: the stacked lobby (mock-draft setup + tracker on one screen)
+   ===========================================================================
+   The one-viewport lock above assumes ONE <section> in .sim-wrap. The lobby now
+   renders two (StartForm, then TrackerStart), so under the lock each took
+   flex:1 of a 100vh overflow:hidden column - half a screen each, no scroll,
+   both scrunched. .sim--stack (set by app/sim/page.js whenever both render)
+   relaxes exactly the rules that assumed a single full-height child.
+
+   Everything else the lock does is deliberately LEFT ALONE: .sim-kicker and
+   .sim-foot stay hidden and .setup-attr stays visible, so the FFC licensed
+   attribution string keeps rendering exactly where it does today. */
+@media (max-width: 900px) {
+  .sim--setup.sim--stack { height: auto; min-height: 100vh; min-height: 100svh; overflow: visible; }
+  .sim--setup.sim--stack .sim-wrap {
+    display: block; overflow: visible;
+    padding: 6px 12px calc(72px + env(safe-area-inset-bottom));
+  }
+  .sim--setup.sim--stack .sim-wrap > section { display: block; flex: none; min-height: 0; }
+  .sim--setup.sim--stack .setup { display: block; flex: none; }
+  /* the console no longer needs to be the sole scroll region - the page scrolls */
+  .sim--setup.sim--stack .console { display: block; flex: none; overflow-y: visible; }
+  .sim--setup.sim--stack .console .crow { flex: none; }
+}
+
+/* Preset rail at phone width. The rail was already overflow-x:auto with snap;
+   what it lacked was an AFFORDANCE - the third card just ended at the container
+   edge and read as clipped rather than scrollable. A right-edge fade says "more
+   here", and proximity snapping (rather than mandatory) lets a partial card rest
+   in view instead of being yanked flush. Desktop is untouched. */
+@media (max-width: 900px) {
+  .deck {
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+  }
+  .deck::-webkit-scrollbar { display: none; }
+  /* 150px cards + 8px gaps in a ~366px content box shows 2 cards and a ~50px
+     peek of the third, which the fade above resolves into a scroll cue. */
+  .pcard { flex: 0 0 150px; }
+}
