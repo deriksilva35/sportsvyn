@@ -1,14 +1,34 @@
 'use client';
 
 // Sign-out control for the sim account page. Uses Auth.js's client signOut (the
-// same call SiteHeader uses), redirecting to the homepage after the session is
-// cleared. The sim had no sign-out surface before this.
+// same call SiteHeader uses).
+//
+// SHELL-AWARE LANDING. Signing out used to redirect to '/' unconditionally, which
+// inside the native container turned the app into the mobile website - the user
+// tapped "Sign out" in an app and landed on sportsvyn.com. In shell mode the
+// landing is the app's own front door instead: /sim signed-out, which is already
+// shell-framed and, post-3.1.1, purchase-suppressed.
+//
+// The ?shell=sim-app param is carried explicitly rather than leaning on the
+// sv_shell cookie. The cookie DOES survive sign-out - verified: Auth.js clears
+// only its own authjs.* cookies, and the signout response sets nothing for
+// sv_shell - but the param makes the landing correct even when the cookie is
+// absent (fresh webview session, cleared jar) and re-arms it via ShellPersist on
+// arrival. Belt and braces on the one surface where losing shell mode would also
+// lose purchase suppression.
+//
+// Web sign-out is unchanged: shell=false still lands on '/'.
 
 import { signOut } from 'next-auth/react';
+import { signOutTarget } from '@/lib/shell/signOutTarget';
 
-export default function SignOutButton() {
+export default function SignOutButton({ shell = false }) {
   return (
-    <button type="button" className="acct-signout" onClick={() => signOut({ redirectTo: '/' })}>
+    <button
+      type="button"
+      className="acct-signout"
+      onClick={() => signOut({ redirectTo: signOutTarget(shell) })}
+    >
       Sign out
     </button>
   );

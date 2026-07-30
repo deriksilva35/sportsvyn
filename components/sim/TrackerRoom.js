@@ -27,12 +27,13 @@
 // ONE-TAP COMMIT: there is no confirm step. UNDO is always on screen and is
 // repeatable, which is a better trade at a live table than doubling every tap.
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { logPick, undoLastPick } from '@/app/actions/sim';
 import Wordmark from '@/components/gridiron/Wordmark';
 import { filterPlayers, displayPosition } from '@/lib/fantasy/statView';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
+import { buildBoard, boardName } from '@/lib/fantasy/board';
 import { seatLabel, seatLabelShort, nextUserOverall, picksUntilUserTurn } from '@/lib/fantasy/tracker';
 import {
   valueGap, openStarterSlotsByPos, needsObservation, bestAvailableAtMyPick, slotLabel,
@@ -55,6 +56,33 @@ const shortName = (full) => {
   return parts.length < 2 ? (parts[0] ?? '') : `${parts[0][0]}. ${parts.slice(1).join(' ')}`;
 };
 
+// BOARD view preference. SESSION scope on purpose (sessionStorage, not local):
+// a view chosen at one draft table should not silently follow you into the next
+// one. LIST is the default and the server snapshot - at a table you are reading
+// the last few picks in order, not studying a grid.
+//
+// A tiny external store rather than component state because sessionStorage has no
+// same-tab change event: writes here notify subscribers directly, which is what
+// useSyncExternalStore needs to re-render.
+const BOARD_VIEW_KEY = 'trk-board-view';
+const boardViewStore = {
+  listeners: new Set(),
+  subscribe(cb) {
+    boardViewStore.listeners.add(cb);
+    return () => boardViewStore.listeners.delete(cb);
+  },
+  get() {
+    try {
+      return window.sessionStorage.getItem(BOARD_VIEW_KEY) === 'grid' ? 'grid' : 'list';
+    } catch { return 'list'; } // private mode / storage disabled
+  },
+  getServer() { return 'list'; },
+  set(v) {
+    try { window.sessionStorage.setItem(BOARD_VIEW_KEY, v); } catch { /* non-fatal */ }
+    boardViewStore.listeners.forEach((l) => l());
+  },
+};
+
 export default function TrackerRoom({
   draftId, config, order, userTeamIndex, teamLabels,
   initialPicks, initialAvailable, rounds,
@@ -68,6 +96,15 @@ export default function TrackerRoom({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const searchRef = useRef(null);
+  // BOARD tab view, read through useSyncExternalStore rather than an effect.
+  // sessionStorage IS an external store, and this is the API React provides for
+  // one: the server snapshot is always 'list', so SSR and the first client render
+  // agree (no hydration mismatch), and no setState happens in an effect body
+  // (which the react-hooks/set-state-in-effect rule rightly rejects).
+  const boardView = useSyncExternalStore(
+    boardViewStore.subscribe, boardViewStore.get, boardViewStore.getServer,
+  );
+  const chooseBoardView = useCallback((v) => boardViewStore.set(v), []);
 
   const teams = config.teams_count;
   const total = order.length;
@@ -234,19 +271,37 @@ export default function TrackerRoom({
         {/* ================= FRAME 2 · BOARD ================= */}
         {tab === 1 && (
           <>
-            <section className="trk-otc" style={{ paddingBottom: 10 }}>
+            <section className="trk-otc trk-otc--board">
               {/* Snake direction: odd rounds run left to right, even rounds right
                   to left. Stated explicitly because at a live table the direction
                   is the thing people lose track of. */}
               <div className="trk-k">
                 {complete ? `COMPLETE · ${total} PICKS` : `ROUND ${round} · SNAKE ${round % 2 === 1 ? '→' : '←'}`}
               </div>
+              <div className="trk-viewtog" role="group" aria-label="Board view">
+                {['list', 'grid'].map((v) => (
+                  <button
+                    key={v}
+                    className={boardView === v ? 'on' : ''}
+                    onClick={() => chooseBoardView(v)}
+                    aria-pressed={boardView === v}
+                  >{v.toUpperCase()}</button>
+                ))}
+              </div>
             </section>
-            <BoardList
-              picks={picks} order={order} teams={teams} rounds={rounds}
-              teamLabels={teamLabels} userTeamIndex={userTeamIndex}
-              currentOverall={complete ? null : currentOverall}
-            />
+            {boardView === 'list' ? (
+              <BoardList
+                picks={picks} order={order} teams={teams} rounds={rounds}
+                teamLabels={teamLabels} userTeamIndex={userTeamIndex}
+                currentOverall={complete ? null : currentOverall}
+              />
+            ) : (
+              <BoardGrid
+                config={config} picks={picks} teamLabels={teamLabels}
+                userTeamIndex={userTeamIndex}
+                currentOverall={complete ? null : currentOverall}
+              />
+            )}
           </>
         )}
 
@@ -359,6 +414,49 @@ function BoardList({ picks, order, teams, rounds, teamLabels, userTeamIndex, cur
     );
   }
   return <>{out}</>;
+}
+
+// GRID view: the full teams x rounds snake board, reusing the sim's own
+// buildBoard so the snake geometry has ONE definition across both products.
+// Seat labels become the column headers (at a live table the columns are people),
+// except your own, which stays YOU - see the note in board.js.
+//
+// Horizontal scroll at phone width with the same right-edge fade the preset rail
+// uses: a 12-team board cannot fit 390px, and a fade says "more columns" where a
+// hard edge reads as clipped.
+function BoardGrid({ config, picks, teamLabels, userTeamIndex, currentOverall }) {
+  const board = buildBoard(config, picks, { userTeamIndex, currentOverall, seatLabels: teamLabels });
+  return (
+    <div className="trk-grid-wrap">
+      <div className="trk-grid" style={{ '--cols': board.teams }}>
+        <div className="trk-grid-row trk-grid-head">
+          <span className="rd" />
+          {board.columns.map((c) => (
+            <span key={c.teamIndex} className={`hd${c.isYou ? ' me' : ''}`} title={c.label}>{c.label}</span>
+          ))}
+        </div>
+        {board.rows.map((r) => (
+          <div className="trk-grid-row" key={r.round}>
+            {/* Snake direction per row, so the eye follows the order of play. */}
+            <span className="rd">{r.round}<i>{r.round % 2 === 1 ? '→' : '←'}</i></span>
+            {r.cells.map((cell) => (
+              <span
+                key={cell.overall}
+                className={`cell${cell.mine ? ' mine' : ''}${cell.onClock ? ' now' : ''}${cell.empty ? ' empty' : ''}`}
+              >
+                {cell.pick ? (
+                  <>
+                    <b>{cell.pick.synthetic ? cell.pick.slotPos : boardName(cell.pick.playerName)}</b>
+                    <i>{cell.pick.slotPos ?? cell.pick.position}</i>
+                  </>
+                ) : cell.onClock ? <b className="dot">●</b> : null}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // The removed pick's pool fields, recovered from the pick row we already hold.

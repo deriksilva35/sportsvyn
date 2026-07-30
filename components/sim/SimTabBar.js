@@ -16,6 +16,12 @@ import { usePathname } from 'next/navigation';
 
 const TABS = [
   { key: 'draft', label: 'DRAFT', icon: '▦', href: '/sim' },
+  // TRACKER sits between DRAFT and HISTORY: the two live surfaces first, the
+  // archive after. Its href resolves resume-or-setup server-side (see
+  // app/sim/tracker/page.js) rather than here - the tab bar has no data access,
+  // and giving it a draft query would bill every sim page for it on every render.
+  // Icon stays in the existing register: geometric mono glyphs, one per tab.
+  { key: 'tracker', label: 'TRACKER', icon: '◍', href: '/sim/tracker' },
   { key: 'history', label: 'HISTORY', icon: '≡', href: '/sim/history' },
   { key: 'rankings', label: 'RANKINGS', icon: '▲', soon: true },
   { key: 'account', label: 'ACCOUNT', icon: '●', href: '/sim/account' },
@@ -25,9 +31,10 @@ export default function SimTabBar() {
   const pathname = usePathname() || '';
   const active =
     pathname === '/sim' ? 'draft'
-      : pathname.startsWith('/sim/history') ? 'history'
-        : pathname.startsWith('/sim/account') ? 'account'
-          : null; // results / other sim pages: no tab highlighted
+      : pathname.startsWith('/sim/tracker') ? 'tracker'
+        : pathname.startsWith('/sim/history') ? 'history'
+          : pathname.startsWith('/sim/account') ? 'account'
+            : null; // results / other sim pages: no tab highlighted
 
   return (
     <nav className="simtab" aria-label="Sim navigation">

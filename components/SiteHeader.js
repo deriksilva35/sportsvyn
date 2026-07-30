@@ -40,6 +40,7 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import { signOutTarget } from '@/lib/shell/signOutTarget';
 import Link from 'next/link';
 import Wordmark from '@/components/Wordmark';
 import NavDropdown from '@/components/NavDropdown';
@@ -97,7 +98,8 @@ export default function SiteHeader({ activeNav = null, session = null, shell = f
   const accountItems = [
     { label: 'My Sportsvyn', href: '/my' },
     ...(shell ? [] : [{ label: 'Membership', href: '/membership' }]),
-    { label: 'Sign Out', onClick: () => signOut({ redirectTo: '/' }) },
+    // Shell signs out to the app front door, not the website. See signOutTarget.
+    { label: 'Sign Out', onClick: () => signOut({ redirectTo: signOutTarget(shell) }) },
   ];
 
   // Desktop right cluster: the single volt CTA (both auth states) + either the

@@ -8,9 +8,10 @@
 
 import { useState, useTransition } from 'react';
 import { signOut } from 'next-auth/react';
+import { deleteAccountTarget } from '@/lib/shell/signOutTarget';
 import { deleteAccount } from '@/app/actions/sim';
 
-export default function DeleteAccount() {
+export default function DeleteAccount({ shell = false }) {
   const [confirming, setConfirming] = useState(false);
   const [pending, start] = useTransition();
   const [err, setErr] = useState(null);
@@ -21,7 +22,7 @@ export default function DeleteAccount() {
       const res = await deleteAccount();
       if (!res.ok) { setErr('Could not delete your account. Please try again.'); return; }
       // Session rows are gone; clear the cookie and land on the deleted state.
-      await signOut({ redirectTo: '/sim?deleted=1' });
+      await signOut({ redirectTo: deleteAccountTarget(shell) });
     });
   }
 

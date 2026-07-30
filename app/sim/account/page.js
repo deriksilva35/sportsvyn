@@ -78,8 +78,8 @@ export default async function SimAccount({ searchParams }) {
           </a>
         )}
 
-        <SignOutButton />
-        <DeleteAccount />
+        <SignOutButton shell={isShell} />
+        <DeleteAccount shell={isShell} />
       </main>
 
       <SimTabBar />

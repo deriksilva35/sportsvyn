@@ -170,3 +170,67 @@ test('the rail change is scoped to narrow widths (desktop untouched)', () => {
   // The desktop .deck rule must still be the mandatory-snap original.
   assert.match(SIM, /\.deck\s*\{[^}]*scroll-snap-type:\s*x mandatory/, 'desktop rail changed');
 });
+
+// ---------------------------------------------------------------------------
+// 4. Shell polish: TRACKER tab + BOARD grid view
+// ---------------------------------------------------------------------------
+
+test('the bottom nav carries TRACKER between DRAFT and HISTORY', () => {
+  const s = readFileSync(path.join(REPO, 'components/sim/SimTabBar.js'), 'utf8');
+  const keys = [...s.matchAll(/key:\s*'([a-z]+)'/g)].map((m) => m[1]);
+  assert.deepEqual(keys, ['draft', 'tracker', 'history', 'rankings', 'account']);
+  assert.match(s, /href:\s*'\/sim\/tracker'/, 'the tab must point at the tracker route');
+  assert.match(s, /startsWith\('\/sim\/tracker'\)/, 'the tab must highlight on its own route');
+});
+
+test('the tab bar still fits five tabs at phone width', () => {
+  const lb = /\.simtab-i \.lb \{([^}]*)\}/.exec(SIM);
+  assert.ok(lb, '.simtab-i .lb rule missing');
+  assert.match(lb[1], /white-space:\s*nowrap/, 'a wrapped label would push the bar taller');
+  const size = /font-size:\s*([\d.]+)px/.exec(lb[1]);
+  // 5 tabs at 320px = ~64px each; RANKINGS at <=9px measures under that.
+  assert.ok(Number(size[1]) <= 9, `label font ${size[1]}px is too large for five tabs`);
+});
+
+test('the tracker route resolves resume-or-setup server-side', () => {
+  const s = readFileSync(path.join(REPO, 'app/sim/tracker/page.js'), 'utf8');
+  assert.match(s, /getOpenTrackerDraft/, 'must look for an open draft');
+  assert.match(s, /redirect\(`\/sim\/draft\/\$\{open\.id\}`\)/, 'must resume it');
+  assert.match(s, /TrackerStart/, 'must fall through to setup');
+  // Resume must precede the entitlement read: a draft in progress is the user's
+  // regardless of what their membership looks like right now.
+  assert.ok(s.indexOf('getOpenTrackerDraft') < s.indexOf('isMember(userId)'),
+    'resume must come before the entitlement check');
+});
+
+test('the BOARD grid scrolls sideways with the same fade affordance', () => {
+  const wrap = /\.trk-grid-wrap \{([^}]*)\}/.exec(TRACKER);
+  assert.ok(wrap, '.trk-grid-wrap rule missing');
+  assert.match(wrap[1], /overflow-x:\s*auto/, 'a 12-team grid cannot fit 390px');
+  assert.match(wrap[1], /mask-image/, 'needs the same fade cue as the preset rail');
+});
+
+test('the grid round gutter is sticky while scrolling sideways', () => {
+  const rd = /\.trk-grid-row \.rd \{([^}]*)\}/.exec(TRACKER);
+  assert.ok(rd, '.trk-grid-row .rd rule missing');
+  assert.match(rd[1], /position:\s*sticky/, 'round number must stay visible across 12 columns');
+});
+
+test('the LIST|GRID toggle has a usable tap target', () => {
+  const btn = /\.trk-viewtog button \{([^}]*)\}/.exec(TRACKER);
+  assert.ok(btn, '.trk-viewtog button rule missing');
+  const m = /min-height:\s*(\d+)px/.exec(btn[1]);
+  assert.ok(m && Number(m[1]) >= 36, 'toggle tap target too small');
+});
+
+test('LIST stays the default board view, persisted for the session only', () => {
+  // Asserts the INVARIANT, not the mechanism: the default was originally
+  // useState('list') and is now the useSyncExternalStore server snapshot (the
+  // refactor was to satisfy react-hooks/set-state-in-effect). Either way the
+  // answer before any user choice must be 'list'.
+  const s = readFileSync(path.join(REPO, 'components/sim/TrackerRoom.js'), 'utf8');
+  assert.match(s, /getServer\(\)\s*\{\s*return 'list'/, 'the at-the-table view must be the default');
+  assert.match(s, /=== 'grid' \? 'grid' : 'list'/, 'anything but an explicit grid choice reads as list');
+  assert.match(s, /sessionStorage/, 'the toggle persists for the session only');
+  assert.ok(!/localStorage/.test(s), 'a board preference must not outlive the session');
+});

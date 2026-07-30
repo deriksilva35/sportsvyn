@@ -183,3 +183,58 @@
   .trk-start .sim-cta { display: block; width: 100%; text-align: center; min-height: 48px; padding: 14px 22px; }
   .trk-start-pitch { font-size: 14px; }
 }
+
+/* ---- BOARD tab: LIST | GRID toggle ---- */
+.trk-otc--board { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; }
+.trk-viewtog { margin-left: auto; display: flex; border: 1px solid var(--rule-dim); }
+.trk-viewtog button {
+  font-family: var(--font-saira-cond); font-size: 10px; letter-spacing: .14em;
+  color: var(--muted); background: none; border: none; padding: 8px 12px;
+  min-height: 36px; cursor: pointer;
+}
+.trk-viewtog button.on { background: var(--volt); color: var(--ink); font-weight: 600; }
+
+/* ---- GRID view: the full teams x rounds snake board ----
+   A 12-team board cannot fit a 390px screen, so the grid scrolls horizontally
+   inside its own container. Same right-edge fade the preset rail uses: a hard
+   edge reads as clipped, a fade reads as "more columns". */
+.trk-grid-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0 16px 8px;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent 100%);
+}
+.trk-grid-wrap::-webkit-scrollbar { display: none; }
+.trk-grid { display: table; border-collapse: collapse; min-width: 100%; }
+.trk-grid-row { display: flex; }
+/* Round gutter is sticky so you never lose which round you are reading while
+   scrolling sideways through 12 columns. */
+.trk-grid-row .rd {
+  position: sticky; left: 0; z-index: 2;
+  flex: 0 0 34px; background: var(--ink);
+  font-family: var(--font-saira-cond); font-size: 10px; letter-spacing: .1em;
+  color: var(--muted-dim); display: flex; align-items: center; justify-content: center; gap: 2px;
+  border-right: 1px solid var(--rule-dim);
+}
+.trk-grid-row .rd i { font-style: normal; color: var(--muted-dim); opacity: .7; }
+.trk-grid-head .hd {
+  flex: 0 0 76px; padding: 7px 6px;
+  font-family: var(--font-saira-cond); font-size: 10px; letter-spacing: .1em;
+  color: var(--muted); text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  border-bottom: 1px solid var(--rule-dim);
+}
+.trk-grid-head .hd.me { color: var(--volt); font-weight: 600; }
+.trk-grid .cell {
+  flex: 0 0 76px; min-height: 40px; padding: 5px 6px;
+  border-right: 1px solid var(--trk-hair); border-bottom: 1px solid var(--trk-hair);
+  display: flex; flex-direction: column; justify-content: center; gap: 1px; overflow: hidden;
+}
+.trk-grid .cell b { font-size: 11px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trk-grid .cell i { font-style: normal; font-family: var(--font-saira-cond); font-size: 9px; letter-spacing: .08em; color: var(--muted-dim); }
+.trk-grid .cell.mine { background: rgba(212, 255, 0, .04); }
+.trk-grid .cell.now { background: rgba(212, 255, 0, .12); box-shadow: inset 0 0 0 1px var(--volt); }
+.trk-grid .cell.now b { color: var(--volt); }
+.trk-grid .cell.empty { background: transparent; }
