@@ -3,16 +3,24 @@
 // probabilities off the h2h de-vig, "Not a play"), and The Read dormant frame.
 
 import { SUITE_TEASERS, UPSET_NOTE, READ_BLANK } from './leagueCopy';
+import { SHELL_LOCKED_NOTE } from '@/components/sim/membershipCopy';
 
-export function SuiteTeasers() {
+// SHELL (App Store 3.1.1): capacitor.config.ts allows navigation across
+// sportsvyn.com, so the league pages are reachable inside the native container
+// and their SEE PLANS teaser is a purchase path. In shell the teaser still names
+// the feature - that is editorial, not commerce - but the CTA is not rendered and
+// the plan-name lock chip becomes a neutral "Members".
+export function SuiteTeasers({ shell = false }) {
   return (
     <>
       {SUITE_TEASERS.map((t) => (
         <section key={t.headline} className="gi-rail-card gi-tease" data-surface="ink">
-          <span className="gi-tease-lock">{t.lock}</span>
+          <span className="gi-tease-lock">{shell ? 'MEMBERS' : t.lock}</span>
           <div className="gi-tease-h">{t.headline}</div>
-          <p className="gi-tease-s">{t.body}</p>
-          <a className="gi-tease-cta" href="/membership">SEE PLANS →</a>
+          <p className="gi-tease-s">{shell ? t.bodyShell : t.body}</p>
+          {shell
+            ? <p className="gi-tease-s gi-tease-note">{SHELL_LOCKED_NOTE}</p>
+            : <a className="gi-tease-cta" href="/membership">SEE PLANS →</a>}
         </section>
       ))}
     </>

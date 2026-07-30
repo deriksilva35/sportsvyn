@@ -51,7 +51,22 @@ export default async function SimAccount({ searchParams }) {
           <div className="acct-row"><span className="k">Drafts</span><span className="v">{member ? 'Unlimited' : `${used} of ${FREE_DRAFT_LIMIT} free this week`}</span></div>
         </div>
 
-        {member ? (
+        {/* SHELL (App Store 3.1.1): no purchase path and no billing management.
+            "Manage membership" opens Stripe's billing portal, which is an
+            external account-and-payment mechanism - out in the shell. The
+            non-member upsell links to the pricing page - also out. Both are
+            replaced by a neutral, factual line about where membership is
+            handled. Web is unchanged. */}
+        {isShell ? (
+          <div className="acct-upsell">
+            <div className="m1">{member ? 'Membership active.' : 'Free account.'}</div>
+            <div className="m2">
+              {member
+                ? 'Membership is managed on sportsvyn.com from any browser.'
+                : 'Unlimited drafts, custom rosters, 14+ teams, and the Sportsvyn board are part of the membership. Members sign in and it unlocks.'}
+            </div>
+          </div>
+        ) : member ? (
           <form action={openBillingPortal}>
             <button type="submit" className="acct-manage">Manage membership</button>
           </form>

@@ -79,10 +79,14 @@ export default async function SignInPage({ searchParams }) {
         <SignInForm initialError={initialError} callbackUrl={callbackUrl} />
       </div>
 
-      <p className="font-mono text-[11px] uppercase tracking-widest text-muted mt-8">
-        Membership?{' '}
-        <a href="/membership" className="underline hover:text-volt">See plans →</a>
-      </p>
+      {/* SHELL (App Store 3.1.1): the pricing page is a purchase path, so the
+          link is not rendered inside the app at all. Web unchanged. */}
+      {!isShell && (
+        <p className="font-mono text-[11px] uppercase tracking-widest text-muted mt-8">
+          Membership?{' '}
+          <a href="/membership" className="underline hover:text-volt">See plans →</a>
+        </p>
+      )}
 
       {/* Website escape hatch — hidden in the shell so /signin reads as the app
           front door, not the website. */}

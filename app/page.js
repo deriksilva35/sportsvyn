@@ -45,6 +45,7 @@ import { auth } from '@/auth';
 import FixtureCard, { bucketOf } from '@/components/match/FixtureCard';
 import KickoffTime from '@/components/match/KickoffTime';
 import SimPromoCard from '@/components/home/SimPromoCard';
+import { resolveShellMode } from '@/lib/shell/shell';
 
 import './home.css';
 
@@ -668,7 +669,21 @@ function MoreFromSportsvyn({ reads }) {
   );
 }
 
-function SubscribeBand() {
+// 3.1.1: the homepage is reachable inside the native container (capacitor
+// allowNavigation covers sportsvyn.com), and this band carries a price. In shell
+// the band states what is free and stops - no price, no "Founding Member" plan
+// name, no solicitation. Web is unchanged.
+function SubscribeBand({ shell = false }) {
+  if (shell) {
+    return (
+      <div className="subscribe-band">
+        <div className="sb-text">
+          The World Cup is free to read.
+          <em>The rest of the year is part of the Sportsvyn membership.</em>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="subscribe-band">
       <div className="sb-text">
@@ -929,6 +944,10 @@ function GamesSection({ headline, sub, modifier, count, fixtures }) {
 // MAIN PAGE
 // =============================================================================
 export default async function HomePage() {
+  // 3.1.1: the homepage is reachable inside the native container, and the
+  // subscribe band carries a price. Cookie-resolved (this page takes no
+  // searchParams).
+  const isShell = await resolveShellMode(null);
   const now = new Date();
   const ptDay = toPtIsoDate(now);
   const ptDateLabel = fmtPtDate(now);
@@ -1125,7 +1144,7 @@ export default async function HomePage() {
 
       {showMoreRail && <MoreFromSportsvyn reads={belowFeatured} />}
 
-      <SubscribeBand />
+      <SubscribeBand shell={isShell} />
 
       <SiteFooter />
     </>

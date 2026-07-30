@@ -4,6 +4,7 @@
 // entitlement). Presentational; entitlement is decided server-side. Hyphens only.
 
 import Link from 'next/link';
+import { SHELL_LOCKED_NOTE } from './membershipCopy';
 
 function leanLabel(lean, avgValue) {
   if (avgValue == null) return 'Not enough graded picks yet.';
@@ -12,8 +13,25 @@ function leanLabel(lean, avgValue) {
   return 'Even - your picks track ADP closely.';
 }
 
-export default function ExposureReport({ report = null, locked = false }) {
+export default function ExposureReport({ report = null, locked = false, shell = false }) {
   if (locked) {
+    // SHELL (App Store 3.1.1): name the feature, do not sell it. No plan name in
+    // the lock chip, no "unlocks with the Draft Pass", and no /membership CTA -
+    // the link is not rendered at all rather than hidden.
+    if (shell) {
+      return (
+        <section className="expo expo--locked" aria-label="Exposure Report (locked)" data-shell="1">
+          <div className="expo-h">
+            <span className="expo-kicker">Exposure Report</span>
+            <span className="expo-lock">Members</span>
+          </div>
+          <p className="expo-lock-copy">
+            See who you draft most, your average round on each, and whether you lean
+            value or reach against ADP - across every draft you run. {SHELL_LOCKED_NOTE}
+          </p>
+        </section>
+      );
+    }
     return (
       <section className="expo expo--locked" aria-label="Exposure Report (locked)">
         <div className="expo-h">

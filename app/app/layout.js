@@ -1,4 +1,5 @@
 import './app-shell.css';
+import NativeShellCookie from '@/components/shell/NativeShellCookie';
 
 export const metadata = {
   title: 'Sportsvyn — App',
@@ -17,5 +18,13 @@ export const viewport = {
 };
 
 export default function AppLayout({ children }) {
-  return <div className="sv-app">{children}</div>;
+  return (
+    <div className="sv-app">
+      {/* 3.1.1: marks the native container so server components across the whole
+          site suppress purchase paths. See the component for why /app needs this
+          (capacitor allowNavigation makes every sportsvyn.com page in-app). */}
+      <NativeShellCookie />
+      {children}
+    </div>
+  );
 }

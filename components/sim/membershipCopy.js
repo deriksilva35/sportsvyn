@@ -41,6 +41,38 @@ export const MEMBERSHIP_TIERS = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// SHELL (native app) COPY — App Store Guideline 3.1.1
+// ---------------------------------------------------------------------------
+// Inside the native container the app must contain NO purchase path and NO
+// solicitation to buy: no price, no plan names, no link to the pricing page, no
+// "see plans", no urgency. What is allowed is naming the feature and stating,
+// neutrally, that it belongs to an account level the user does not currently
+// have. That is a fact about their account, not an offer.
+//
+// These bodies are deliberately account-shaped ("Members sign in and it
+// unlocks") rather than commerce-shaped. The user still gets a truthful
+// explanation of why a control is inert, which is the honest minimum; they just
+// are not sold to. Web copy above is UNCHANGED.
+export const MEMBERSHIP_CARD_SHELL = {
+  draft: {
+    headline: 'Three free drafts a week.',
+    body: 'That is your three - they reset Monday. Unlimited drafts are part of the Sportsvyn membership. Members sign in and it unlocks.',
+  },
+  custom: {
+    headline: 'Custom is a membership feature.',
+    body: 'Your own roster slots, league size, superflex, and scoring are part of the Sportsvyn membership. Members sign in and it unlocks. Free accounts draft the presets.',
+  },
+  tracker: {
+    headline: 'Tracker mode is a membership feature.',
+    body: 'Tracker mode logs a real draft as it happens - every team, every pick, on your phone at the table. It is part of the Sportsvyn membership. Members sign in and it unlocks.',
+  },
+};
+
+// The neutral locked line reused by non-card surfaces (the Exposure Report
+// preview, the league rail teasers) in shell mode.
+export const SHELL_LOCKED_NOTE = 'Part of the Sportsvyn membership. Members sign in and it unlocks.';
+
 export const MEMBERSHIP_CARD_VARIANTS = {
   // Variant A — draft gate (out of the 3 free weekly drafts). Leads with the Pass.
   draft: {

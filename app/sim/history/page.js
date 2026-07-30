@@ -82,7 +82,7 @@ export default async function SimHistory({ searchParams }) {
           </ul>
         )}
 
-        <ExposureReport report={exposure} locked={!ent.sim} />
+        <ExposureReport report={exposure} locked={!ent.sim} shell={isShell} />
       </main>
 
       <SimTabBar />

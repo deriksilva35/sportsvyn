@@ -13,9 +13,15 @@
  */
 
 import { auth } from '@/auth';
+import { resolveShellMode } from '@/lib/shell/shell';
 import SiteHeader from '@/components/SiteHeader';
 
 export default async function SiteHeaderServer({ activeNav = null }) {
   const session = await auth();
-  return <SiteHeader session={session} activeNav={activeNav} />;
+  // 3.1.1: the account menu carries a Membership (pricing) link, and every page
+  // using this header is reachable inside the native container. Resolved from the
+  // sv_shell cookie here (no searchParams at this level) and prop-drilled, so the
+  // client header never has to guess and hydration stays clean.
+  const isShell = await resolveShellMode(null);
+  return <SiteHeader session={session} activeNav={activeNav} shell={isShell} />;
 }

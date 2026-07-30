@@ -36,6 +36,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { SHELL_COOKIE, SHELL_VALUE } from '@/lib/shell/constants';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { resolveCurrentEditionForFamily } from './lib/competition.js';
 
@@ -66,6 +67,30 @@ function safeEqual(a, b) {
 
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
+
+  // -------------------------------------------------------------------------
+  // 0. APP STORE 3.1.1 — the pricing page must not exist inside the native app.
+  //
+  //    This lives in the proxy rather than in the route so the route is NEVER
+  //    INVOKED. A redirect() inside app/membership/page.js works, but Next still
+  //    renders that page's metadata onto the redirect response - the shell was
+  //    getting a 307 whose <title> and <meta description> carried "Draft Pass,
+  //    Football Suite, or Founding". Blocking here returns a bare 307 with no
+  //    document at all. The route keeps its own redirect() as a second line of
+  //    defence in case the matcher is ever narrowed.
+  //
+  //    capacitor.config.ts allows navigation across sportsvyn.com, so a reviewer
+  //    can type this URL directly; suppressing the links to it is not enough.
+  // -------------------------------------------------------------------------
+  if (pathname === '/membership' || pathname.startsWith('/membership/')) {
+    if (request.cookies.get(SHELL_COOKIE)?.value === SHELL_VALUE) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = '/sim';
+      dest.search = '';
+      return NextResponse.redirect(dest, 307);
+    }
+    return NextResponse.next();
+  }
 
   // -------------------------------------------------------------------------
   // 1. Old canonical (permanent redirect, 308).
@@ -149,5 +174,8 @@ export const config = {
     '/power-rankings',
     '/world-cup',
     '/world-cup/:path*',
+    // App Store 3.1.1: the shell block above needs this route to reach the proxy.
+    '/membership',
+    '/membership/:path*',
   ],
 };

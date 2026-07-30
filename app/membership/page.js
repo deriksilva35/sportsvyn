@@ -4,14 +4,26 @@
  * plan is a form posting the startCheckout server action (bound to the plan key),
  * which creates a Stripe Checkout Session and redirects. Promo codes are entered
  * on Stripe's checkout page (allow_promotion_codes=true), so here we only note it.
+ *
+ * SHELL (App Store Guideline 3.1.1): this page IS the purchase mechanism, so it
+ * must not exist inside the native container. Suppressing the links that reach it
+ * is not sufficient - capacitor.config.ts sets allowNavigation to sportsvyn.com,
+ * so a reviewer can type the URL or follow a deep link. The route itself
+ * redirects to /sim before rendering anything, which means no price, no plan
+ * name, and no checkout form is ever constructed in the shell.
  */
 
+import { redirect } from 'next/navigation';
 import Wordmark from '@/components/gridiron/Wordmark';
 import { startCheckout } from '@/app/actions/membership';
 import { PLANS } from '@/lib/stripe/plans';
 import { MEMBERSHIP_TIERS } from '@/components/sim/membershipCopy';
+import { resolveShellMode } from '@/lib/shell/shell';
 import '@/components/gridiron/gridiron.css';
 import './membership.css';
+
+// The redirect reads the sv_shell cookie, so it must not be statically rendered.
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Membership - Sportsvyn',
@@ -20,6 +32,8 @@ export const metadata = {
 
 export default async function MembershipPage({ searchParams }) {
   const params = (await searchParams) ?? {};
+  // 3.1.1: never render the pricing page inside the native container.
+  if (await resolveShellMode(params)) redirect('/sim');
   const showError = params.error === 'checkout';
   return (
     <div className="mbr" data-surface="ink">

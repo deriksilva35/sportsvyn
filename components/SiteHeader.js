@@ -76,7 +76,7 @@ function shortLabel(email) {
   return at > 0 ? email.slice(0, at) : email;
 }
 
-export default function SiteHeader({ activeNav = null, session = null }) {
+export default function SiteHeader({ activeNav = null, session = null, shell = false }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
   const isAuthed = !!session?.user;
@@ -93,9 +93,10 @@ export default function SiteHeader({ activeNav = null, session = null }) {
       : '/signin';
 
   // Signed-in account items (used by the desktop dropdown + the mobile drawer).
+  // 3.1.1: no pricing-page entry inside the native container.
   const accountItems = [
     { label: 'My Sportsvyn', href: '/my' },
-    { label: 'Membership', href: '/membership' },
+    ...(shell ? [] : [{ label: 'Membership', href: '/membership' }]),
     { label: 'Sign Out', onClick: () => signOut({ redirectTo: '/' }) },
   ];
 

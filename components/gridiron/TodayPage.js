@@ -5,6 +5,7 @@
 import Wordmark from '@/components/gridiron/Wordmark';
 import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate, getStandings, getLeagueIdBySlug, getEditorialBoard, getMarketMovers, getUpsetWatch } from '@/lib/gridiron/readers';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
+import { resolveShellMode } from '@/lib/shell/shell';
 import { getH2hOdds, getTitleContenders } from '@/lib/gridiron/oddsReader';
 import { getGlobalMostDrafted, getAdpMovers } from '@/lib/sim/fantasyBoard';
 import { normalizeTwoWayPct, isPreGame } from '@/lib/gridiron/oddsFormat';
@@ -36,6 +37,10 @@ const DAY_FULL = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursd
 
 export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, contendersN = 12, standingsPhase = 'REG', searchParams }) {
   const sp = (await searchParams) ?? {};
+  // 3.1.1: the league pages are reachable inside the native container
+  // (capacitor allowNavigation covers sportsvyn.com), so the Suite teaser's
+  // SEE PLANS must not render there.
+  const isShell = await resolveShellMode(sp);
   const now = new Date();
   const seasonYear = resolveSeasonYear(now);
   // Pin to the nearest UPCOMING week (the season opener during the offseason),
@@ -176,7 +181,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
                 </div>
               );
             }))}
-            {isNfl ? <SuiteTeasers /> : <UpsetWatch dogs={upsetDogs} />}
+            {isNfl ? <SuiteTeasers shell={isShell} /> : <UpsetWatch dogs={upsetDogs} />}
           </aside>
         </div>
       </div>

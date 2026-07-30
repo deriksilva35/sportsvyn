@@ -15,6 +15,7 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { createCheckoutSession, createBillingPortalSession, resolvePriceId } from '@/lib/stripe';
 import { getMembership } from '@/lib/membership';
+import { resolveShellMode } from '@/lib/shell/shell';
 import { PLAN_BY_KEY } from '@/lib/stripe/plans';
 
 async function originBaseUrl() {
@@ -30,6 +31,12 @@ async function originBaseUrl() {
 // subscription card-free and (Stripe permitting) a payment total too — if payment
 // mode still requires a card, comps ride the subscription tiers.
 export async function startCheckout(planKey) {
+  // 3.1.1 BACKSTOP. The shell renders no path to this action, but an action is a
+  // POST endpoint: a stale client, a cached page, or a reviewer with devtools
+  // could still reach it. Refuse in the native container rather than trust that
+  // the UI is the only door. Bounces to /sim, which is where the shell lives.
+  if (await resolveShellMode(null)) redirect('/sim');
+
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const email = session?.user?.email ?? null;
@@ -61,6 +68,10 @@ export async function startCheckout(planKey) {
 
 // Open the Stripe Billing Portal (manage/cancel/update card) for the member.
 export async function openBillingPortal() {
+  // 3.1.1: the Stripe billing portal is an external account-and-payment
+  // mechanism. Same backstop as startCheckout.
+  if (await resolveShellMode(null)) redirect('/sim');
+
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (!userId) redirect('/signin?callbackUrl=/sim/account');
