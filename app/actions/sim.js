@@ -15,6 +15,7 @@ import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import {
   startDraftFor, startCustomDraftFor, makePickFor, timerAutoPickFor, abandonDraftFor, setAutoDraftFor,
+  startTrackerDraftFor, logPickFor, undoLastPickFor,
 } from '@/lib/fantasy/drafts';
 import { deleteAccountFor } from '@/lib/account';
 import { getPlayerSeasonStats, getPlayerSeasonSummaries } from '@/lib/fantasy/playerStats';
@@ -53,6 +54,39 @@ export async function makePick(draftId, ffcPlayerId) {
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
   const res = await makePickFor(userId, draftId, ffcPlayerId);
   if (res.ok) revalidatePath(`/sim/${draftId}`);
+  return res;
+}
+
+// ---- tracker mode (live in-person draft companion) ----
+
+// Start a tracker draft. Pass-gated with NO free trial: a non-entitled user gets
+// reason:'entitlement_tracker' for the conversion card. The config is UNTRUSTED
+// (validated server-side, same as a custom sim draft); teamLabels is optional but
+// must match teams_count if given.
+export async function startTrackerDraft(config, pickPosition, teamLabels = null) {
+  const userId = await currentUserId();
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const res = await startTrackerDraftFor(userId, config, pickPosition, teamLabels);
+  if (res.ok) revalidatePath('/sim');
+  return res;
+}
+
+// Log the pick for whichever seat is on the clock. Unlike makePick there is no AI
+// advance — the draft moves forward exactly one pick per call.
+export async function logPick(draftId, ffcPlayerId) {
+  const userId = await currentUserId();
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const res = await logPickFor(userId, draftId, ffcPlayerId);
+  if (res.ok) revalidatePath(`/sim/draft/${draftId}`);
+  return res;
+}
+
+// Undo the most recent logged pick. Repeatable. Tracker only.
+export async function undoLastPick(draftId) {
+  const userId = await currentUserId();
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const res = await undoLastPickFor(userId, draftId);
+  if (res.ok) revalidatePath(`/sim/draft/${draftId}`);
   return res;
 }
 
