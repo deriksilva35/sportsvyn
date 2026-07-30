@@ -241,6 +241,10 @@
 .gi-fb-delta.up { color: var(--volt); }
 .gi-fb-delta.down { color: var(--terra); }
 .gi-fb-pct { color: var(--muted); }
+/* FFC license credit — fine print under both columns, in the same recessive
+   register as the sim's .sim-foot. Required wherever ADP data renders. */
+.gi-fb-attr { margin-top: 14px; padding-top: 9px; border-top: 1px solid var(--rule-dim); font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: 0.04em; color: var(--muted-dim); }
+.gi-fb-attr a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--volt); text-underline-offset: 2px; }
 
 /* ---- editorial boards (Edition 0: Power, MVP, Sportsvyn 25, Heisman) ---- */
 .gi-ed-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }

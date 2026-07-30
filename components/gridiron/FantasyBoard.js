@@ -1,6 +1,14 @@
 // components/gridiron/FantasyBoard.js — ADP movers + most-drafted, each half showing
 // its real read when data exists, else its dormant frame (never mock data). ADP
 // movers need a second FFC snapshot; most-drafted is guarded against thin volume.
+//
+// The FFC credit is rendered HERE, not by the host page: this board is the surface
+// that shows the ADP data, so the license requirement travels with the component
+// and cannot be lost the next time the board is moved or reused. It renders
+// unconditionally — both halves are FFC-derived (movers directly, most-drafted via
+// each pick's adp_at_pick), and a credit that blinks out with the dormant frame is
+// a credit that is missing exactly when someone checks.
+import { FFC_ATTRIBUTION } from '@/lib/fantasy/attribution';
 
 const MIN_DRAFTS = 8; // below this, most-drafted is too thin to show as a real read
 
@@ -42,6 +50,9 @@ export default function FantasyBoard({ adp = null, mostDrafted = [], draftCount 
             <div className="gi-fb-blank">Most-drafted opens as the sim fills up.</div>
           )}
         </div>
+      </div>
+      <div className="gi-fb-attr">
+        {FFC_ATTRIBUTION.text} · <a href={FFC_ATTRIBUTION.url} target="_blank" rel="noopener noreferrer">{FFC_ATTRIBUTION.host}</a>
       </div>
     </section>
   );

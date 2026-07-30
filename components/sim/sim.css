@@ -136,10 +136,11 @@
 .seatsel { background: var(--graphite); border: 1px solid var(--rule); color: var(--paper); font-family: inherit; font-size: 11px; letter-spacing: .04em; padding: 5px 8px; cursor: pointer; }
 .autolab { display: inline-flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 600; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; cursor: pointer; }
 .ticker { background: var(--graphite); border: 1px solid var(--rule); border-top: none; margin-top: 6px; padding: 7px 10px; font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; font-weight: 500; color: var(--volt); letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* compact FFC credit shown only on the mobile one-viewport screen (the full
-   .sim-foot attribution is hidden there); desktop keeps the .sim-foot footer. */
+/* FFC credit shown only on the mobile one-viewport screen (the .sim-foot footer is
+   hidden there); desktop keeps .sim-foot. Carries the licensed string in full —
+   this is the sole credit on that viewport, so it is not a place to abbreviate. */
 .setup-attr { display: none; font-family: var(--font-jetbrains-mono), monospace; font-size: 8.5px; letter-spacing: .04em; color: var(--muted-dim); text-align: center; padding: 6px 0 2px; }
-.setup-attr u { text-decoration-color: var(--volt); }
+.setup-attr a { color: var(--muted-dim); text-decoration: underline; text-decoration-color: var(--volt); text-underline-offset: 2px; }
 
 /* Tablet/desktop setup: hold the kicker + form in ONE centered ~820px column so
    nothing strands. The old 480px form floated left-of-centre in a sea of empty

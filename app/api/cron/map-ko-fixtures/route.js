@@ -13,6 +13,10 @@
 import { mapKoFixtures } from '@/lib/mapKoFixtures';
 
 export const dynamic = 'force-dynamic';
+// Was unset (falling back to the platform default) — the only cron without an
+// explicit ceiling. A handful of API-Sports fixture lookups plus the mapping
+// upserts; 60 is generous for that and bounds a hung upstream call.
+export const maxDuration = 60;
 
 export async function GET(request) {
   const authHeader = request.headers.get('authorization');

@@ -19,6 +19,8 @@ import {
   SCORING_FORMATS, SCORING_LABEL, CLOCK_OPTIONS, TEAMS_MIN, TEAMS_MAX, FREE_TEAMS_MAX,
   SLOT_BOUNDS, deriveRounds, rosterTokens, configLocks,
 } from '@/lib/fantasy/config';
+// attribution.js, NOT ffc.js — ffc.js imports lib/db.js and this is a client bundle.
+import { FFC_ATTRIBUTION } from '@/lib/fantasy/attribution';
 
 const SEG_SCORING = SCORING_FORMATS.map((f) => ({ v: f, label: SCORING_LABEL[f] }));
 const SEG_CLOCK = CLOCK_OPTIONS.map((s) => ({ v: s, label: s == null ? 'NONE' : `${s}S` }));
@@ -218,7 +220,14 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
       </div>
 
       <div className="ticker">▸ {N}-TEAM · {SCORING_LABEL[config.scoringFormat]} · {clockLabel} · {tokens.join(' ')} · {rounds} ROUNDS</div>
-      <div className="setup-attr">ADP · <u>Fantasy Football Calculator</u></div>
+      {/* The one-viewport mobile lock hides .sim-foot, so THIS is the only FFC
+          credit on the setup screen at <=900px — it has to carry the licensed
+          string in full and link it, not abbreviate to "ADP · ...". The whole
+          phrase is the anchor (rather than a trailing host link) so the required
+          text stays on one line at 8.5px on a narrow phone. */}
+      <div className="setup-attr">
+        <a href={FFC_ATTRIBUTION.url} target="_blank" rel="noopener noreferrer">{FFC_ATTRIBUTION.text}</a>
+      </div>
 
       {/* full-width START bar, pinned to the bottom of the viewport (above the
           tab bar); the gate note sits directly above it. */}
