@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Draftvyn Tracker — design mock v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,600;0,700;1,800;1,900&family=Saira+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:ital,opsz,wght@1,8..60,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#121212; --ink-3:#181818;
+    --volt:#D4FF00; --paper:#F5F5F2;
+    --w-soft:#E8E8E4; --w-mut:#8A8A85; --w-dim:#5C5C58; --rule:#232320;
+    --jade:#2A8A4F; --terra:#B8410F;
+    --mono:'JetBrains Mono',monospace; --cond:'Saira Condensed',sans-serif;
+    --disp:'Saira',sans-serif; --serif:'Source Serif 4',serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#1c1c1a;font-family:var(--mono);color:var(--w-soft);padding:34px 20px;display:flex;gap:30px;flex-wrap:wrap;justify-content:center}
+  .frame{width:390px;background:var(--ink);border:1px solid #2e2e2b;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .frame-label{font-family:var(--cond);font-size:12px;letter-spacing:.2em;color:#7a7a74;text-align:center;margin-bottom:10px}
+  .col{display:flex;flex-direction:column;gap:10px}
+
+  /* header */
+  .hd{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--rule)}
+  .hd .wm{font-family:var(--disp);font-style:italic;font-weight:900;font-size:15px;letter-spacing:-.05em;color:#fff}
+  .hd .mode{font-family:var(--cond);font-size:10px;letter-spacing:.2em;color:var(--ink);background:var(--volt);padding:2px 7px;font-weight:600}
+  .hd .meta{margin-left:auto;font-family:var(--cond);font-size:11px;letter-spacing:.14em;color:var(--w-dim)}
+
+  /* on the clock */
+  .otc{padding:14px 16px;border-bottom:1px solid var(--rule);background:var(--ink-2)}
+  .otc .k{font-family:var(--cond);font-size:10px;letter-spacing:.24em;color:var(--w-dim)}
+  .otc .who{font-family:var(--disp);font-style:italic;font-weight:900;font-size:30px;letter-spacing:-.03em;color:var(--volt);line-height:1.05}
+  .otc .who.me{color:#fff}
+  .otc .who .pick{font-family:var(--cond);font-style:normal;font-weight:500;font-size:13px;letter-spacing:.14em;color:var(--w-mut);margin-left:8px}
+  .otc-row{display:flex;align-items:flex-end}
+  .undo{margin-left:auto;font-family:var(--cond);font-size:11px;letter-spacing:.14em;color:var(--w-mut);border:1px solid var(--rule);padding:7px 12px;background:none}
+  .undo b{color:var(--terra)}
+  .lastpick{font-size:11px;color:var(--w-dim);padding-top:7px}
+  .lastpick b{color:var(--w-mut);font-weight:700}
+
+  /* search + filters */
+  .search{margin:12px 16px 0;display:flex;align-items:center;gap:8px;background:var(--ink-2);border:1px solid var(--rule);padding:12px 14px}
+  .search .q{color:var(--w-dim)}
+  .search input{background:none;border:none;outline:none;color:#fff;font-family:var(--mono);font-size:15px;width:100%}
+  .search input::placeholder{color:var(--w-dim)}
+  .hint{font-family:var(--cond);font-size:10px;letter-spacing:.12em;color:var(--w-dim);white-space:nowrap}
+  .pos{display:flex;gap:6px;padding:10px 16px 4px;overflow-x:auto}
+  .pos span{font-family:var(--cond);font-size:12px;letter-spacing:.14em;padding:6px 12px;border:1px solid var(--rule);color:var(--w-mut);white-space:nowrap}
+  .pos .on{background:var(--volt);color:var(--ink);border-color:var(--volt);font-weight:600}
+
+  /* available list */
+  .avail{padding:6px 0 16px}
+  .p{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--ink-3)}
+  .p .adp{width:44px;font-size:12px;color:var(--w-dim);text-align:right}
+  .p .nm{font-weight:700;color:#fff;font-size:15px}
+  .p .tag{font-family:var(--cond);font-size:11px;letter-spacing:.1em;color:var(--w-dim)}
+  .p .gap{font-size:11px;font-weight:700;margin-left:2px}
+  .gap.val{color:var(--jade)} .gap.rch{color:var(--w-dim)}
+  .p .go{margin-left:auto;background:var(--volt);color:var(--ink);font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.12em;padding:10px 16px;border:none}
+  .p.top{background:rgba(212,255,0,.05)}
+  .p.top .nm{color:var(--volt)}
+
+  /* tabs bottom */
+  .tabs{display:flex;border-top:1px solid var(--rule);background:var(--ink)}
+  .tabs span{flex:1;text-align:center;font-family:var(--cond);font-size:11px;letter-spacing:.18em;color:var(--w-dim);padding:14px 0 18px}
+  .tabs .on{color:var(--volt);border-top:2px solid var(--volt);margin-top:-1px}
+
+  /* board frame */
+  .rd{padding:10px 16px 4px;font-family:var(--cond);font-size:11px;letter-spacing:.2em;color:var(--w-dim)}
+  .b{display:flex;align-items:baseline;gap:10px;padding:8px 16px;border-bottom:1px solid var(--ink-3)}
+  .b .n{width:30px;font-size:11px;color:var(--w-dim);text-align:right}
+  .b .team{font-family:var(--cond);font-size:12px;letter-spacing:.12em;color:var(--w-mut);width:64px}
+  .b .team.me{color:var(--volt)}
+  .b .nm{font-weight:700;color:#fff;font-size:14px}
+  .b .pt{font-family:var(--cond);font-size:10px;letter-spacing:.1em;color:var(--w-dim)}
+  .b .v{margin-left:auto;font-size:11px;font-weight:700}
+  .v.val{color:var(--jade)} .v.rch{color:var(--terra)} .v.even{color:var(--w-dim)}
+  .b.now{background:rgba(212,255,0,.06)}
+  .b.now .nm{color:var(--volt)}
+  .b.now .dot{color:var(--volt);font-size:10px}
+
+  /* my team frame */
+  .sec{padding:12px 16px 4px;font-family:var(--cond);font-size:11px;letter-spacing:.2em;color:var(--w-dim);display:flex}
+  .sec .r{margin-left:auto;color:var(--w-dim)}
+  .slot{display:flex;align-items:baseline;gap:12px;padding:9px 16px;border-bottom:1px solid var(--ink-3)}
+  .slot .pos-t{font-family:var(--cond);font-size:11px;letter-spacing:.14em;color:var(--w-dim);width:44px}
+  .slot .nm{font-weight:700;color:#fff;font-size:14px}
+  .slot .rdd{font-family:var(--cond);font-size:10px;color:var(--w-dim);margin-left:auto}
+  .slot.open .nm{color:var(--w-dim);font-weight:400;font-style:italic;font-family:var(--serif);font-size:13px}
+  .slot.open .pos-t{color:var(--volt)}
+  .need{margin:12px 16px;border:1px solid var(--rule);background:var(--ink-2);padding:14px}
+  .need .k{font-family:var(--cond);font-size:10px;letter-spacing:.24em;color:var(--w-dim);margin-bottom:8px}
+  .need .line{font-family:var(--serif);font-style:italic;font-size:13.5px;color:var(--w-soft);line-height:1.5}
+  .need .line b{color:var(--volt);font-style:normal;font-family:var(--mono);font-weight:700;font-size:12.5px}
+  .bapick{display:flex;align-items:center;gap:10px;padding-top:10px}
+  .bapick .nm{font-weight:700;color:#fff;font-size:14px}
+  .bapick .tag{font-family:var(--cond);font-size:11px;color:var(--w-dim)}
+  .bapick .gap{margin-left:auto;color:var(--jade);font-weight:700;font-size:12px}
+  .fine{font-size:9.5px;color:var(--w-dim);padding:10px 16px 16px;line-height:1.5}
+  .fine a{color:var(--w-mut)}
+</style>
+</head>
+<body>
+
+<!-- FRAME 1: PICK ENTRY -->
+<div>
+  <div class="frame-label">1 · PICK ENTRY (THE PRODUCT)</div>
+  <div class="frame">
+    <div class="hd"><span class="wm">DRAFTVYN</span><span class="mode">TRACKER</span><span class="meta">RD 3 · PICK 31/180</span></div>
+    <div class="otc">
+      <div class="otc-row">
+        <div>
+          <div class="k">ON THE CLOCK</div>
+          <div class="who">DAVE<span class="pick">3.07 · PICK 31</span></div>
+        </div>
+        <button class="undo"><b>↩</b> UNDO 30</button>
+      </div>
+      <div class="lastpick">30 · KYLE took <b>B. Bowers</b> TE · ADP 28.4</div>
+    </div>
+    <div class="search"><span class="q">⌕</span><input placeholder="Type a name…" value="ja"><span class="hint">↵ TOP</span></div>
+    <div class="pos"><span class="on">ALL</span><span>QB</span><span>RB</span><span>WR</span><span>TE</span><span>K</span><span>DST</span></div>
+    <div class="avail">
+      <div class="p top"><span class="adp">29.1</span><div><div class="nm">Ja'Marr Chase</div><div class="tag">WR CIN <span class="gap val">+1.9 VALUE</span></div></div><button class="go">DRAFT</button></div>
+      <div class="p"><span class="adp">33.6</span><div><div class="nm">Jahmyr Gibbs</div><div class="tag">RB DET <span class="gap val">+2.6</span></div></div><button class="go">DRAFT</button></div>
+      <div class="p"><span class="adp">41.2</span><div><div class="nm">Jaxon Smith-Njigba</div><div class="tag">WR SEA <span class="gap rch">-10.2</span></div></div><button class="go">DRAFT</button></div>
+      <div class="p"><span class="adp">48.8</span><div><div class="nm">Jayden Daniels</div><div class="tag">QB WSH <span class="gap rch">-17.8</span></div></div><button class="go">DRAFT</button></div>
+      <div class="p"><span class="adp">55.0</span><div><div class="nm">James Cook</div><div class="tag">RB BUF <span class="gap rch">-24.0</span></div></div><button class="go">DRAFT</button></div>
+    </div>
+    <div class="tabs"><span class="on">AVAILABLE</span><span>BOARD</span><span>MY TEAM</span></div>
+  </div>
+</div>
+
+<!-- FRAME 2: BOARD -->
+<div>
+  <div class="frame-label">2 · THE BOARD</div>
+  <div class="frame">
+    <div class="hd"><span class="wm">DRAFTVYN</span><span class="mode">TRACKER</span><span class="meta">RD 3 · PICK 31/180</span></div>
+    <div class="otc" style="padding-bottom:10px">
+      <div class="k">ROUND 3 · SNAKE ←</div>
+    </div>
+    <div class="rd">ROUND 3</div>
+    <div class="b"><span class="n">25</span><span class="team">MEG</span><div><span class="nm">P. Nacua</span> <span class="pt">WR LAR</span></div><span class="v val">+3.1</span></div>
+    <div class="b"><span class="n">26</span><span class="team me">YOU</span><div><span class="nm">B. Robinson</span> <span class="pt">RB ATL</span></div><span class="v even">+0.4</span></div>
+    <div class="b"><span class="n">27</span><span class="team">SARAH</span><div><span class="nm">D. London</span> <span class="pt">WR ATL</span></div><span class="v rch">-4.2</span></div>
+    <div class="b"><span class="n">28</span><span class="team">MIKE</span><div><span class="nm">T. McBride</span> <span class="pt">TE ARI</span></div><span class="v val">+2.0</span></div>
+    <div class="b"><span class="n">29</span><span class="team">JEN</span><div><span class="nm">K. Walker III</span> <span class="pt">RB SEA</span></div><span class="v even">-0.8</span></div>
+    <div class="b"><span class="n">30</span><span class="team">KYLE</span><div><span class="nm">B. Bowers</span> <span class="pt">TE LV</span></div><span class="v val">+1.6</span></div>
+    <div class="b now"><span class="n">31</span><span class="team">DAVE</span><div><span class="nm">on the clock</span> <span class="dot">●</span></div></div>
+    <div class="b"><span class="n">32</span><span class="team">ROB</span><div><span class="nm" style="color:var(--w-dim);font-weight:400">—</span></div></div>
+    <div class="rd">ROUND 2 · 24 PICKS ↑</div>
+    <div style="height:104px"></div>
+    <div class="tabs"><span>AVAILABLE</span><span class="on">BOARD</span><span>MY TEAM</span></div>
+  </div>
+</div>
+
+<!-- FRAME 3: MY TEAM + NEEDS -->
+<div>
+  <div class="frame-label">3 · MY TEAM + NEEDS</div>
+  <div class="frame">
+    <div class="hd"><span class="wm">DRAFTVYN</span><span class="mode">TRACKER</span><span class="meta">RD 3 · PICK 31/180</span></div>
+    <div class="need">
+      <div class="k">YOUR NEXT PICK · 3.10 (PICK 34) · 3 AWAY</div>
+      <div class="line">Two RB slots open and the room has taken 4 backs in a round - <b>RB</b> is the squeeze. Best available at your turn, by the market:</div>
+      <div class="bapick"><span class="nm">Jahmyr Gibbs</span><span class="tag">RB DET · ADP 33.6</span><span class="gap">+0.4 AT 34</span></div>
+      <div class="bapick"><span class="nm">Ja'Marr Chase</span><span class="tag">WR CIN · ADP 29.1</span><span class="gap" style="color:var(--w-dim)">-4.9 AT 34</span></div>
+    </div>
+    <div class="sec">ROSTER · STANDARD 12 PPR <span class="r">3 OF 15</span></div>
+    <div class="slot"><span class="pos-t">QB</span><span class="nm" style="color:var(--w-dim);font-style:italic;font-family:var(--serif);font-weight:400;font-size:13px">open</span></div>
+    <div class="slot"><span class="pos-t">RB</span><span class="nm">B. Robinson</span><span class="rdd">RD 2</span></div>
+    <div class="slot open"><span class="pos-t">RB</span><span class="nm">open</span></div>
+    <div class="slot"><span class="pos-t">WR</span><span class="nm">C. Lamb</span><span class="rdd">RD 1</span></div>
+    <div class="slot"><span class="pos-t">WR</span><span class="nm">M. Nabers</span><span class="rdd">RD 3</span></div>
+    <div class="slot open"><span class="pos-t">TE</span><span class="nm">open</span></div>
+    <div class="slot open"><span class="pos-t">FLEX</span><span class="nm">open</span></div>
+    <div class="slot open"><span class="pos-t">DST</span><span class="nm">open</span></div>
+    <div class="slot open"><span class="pos-t">K</span><span class="nm">open</span></div>
+    <div class="fine">Value shown is pick number vs live ADP - an observation, not a verdict. ADP data courtesy of <a href="#">Fantasy Football Calculator</a>.</div>
+    <div class="tabs"><span>AVAILABLE</span><span>BOARD</span><span class="on">MY TEAM</span></div>
+  </div>
+</div>
+
+</body>
+</html>
