@@ -12,7 +12,14 @@
  * with no rankings, no odds, no recent finals) without crashes and
  * without fabricated content.
  *
- * noindex remains active through the dev-data phase.
+ * INDEXABLE as of the noindex lift (policy: lib/seo/routes.js). This page had only
+ * a static `metadata` carrying the noindex flag and no title of its own, so all
+ * 1,340 match rows rendered as "Sportsvyn" — harmless while noindex was on, a
+ * duplicate-title signal across the site's largest URL block the moment it came
+ * off. generateMetadata below gives each fixture its own title and description,
+ * matching what /team/[slug] and /player/[slug] already do.
+ *
+ * Serves BOTH codes: soccer rows and gridiron (NFL/CFB) rows both resolve here.
  */
 
 import { notFound } from 'next/navigation';
@@ -40,9 +47,31 @@ import LiveWatchScore from '@/components/match/LiveWatchScore';
 
 import './match.css';
 
-export const metadata = {
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const match = await getMatchBySlug(slug);
+  if (!match) return { title: 'Match not found — Sportsvyn' };
+
+  const fixture = `${match.away_name} at ${match.home_name}`;
+  const kickoff = match.kickoff_at
+    ? new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York', month: 'short', day: 'numeric', year: 'numeric',
+    }).format(new Date(match.kickoff_at))
+    : null;
+
+  // The title states what the page IS at this moment, so a final and a scheduled
+  // fixture don't compete for the same string. Scores go in the description, not
+  // the title — a title that changes when the score changes churns in the index.
+  const title = match.status === 'final'
+    ? `${fixture} — Final${kickoff ? `, ${kickoff}` : ''} — Sportsvyn`
+    : `${fixture}${kickoff ? ` — ${kickoff}` : ''} — Sportsvyn`;
+
+  const description = match.status === 'final'
+    ? `Result, key moments, and the read: ${fixture}${kickoff ? ` on ${kickoff}` : ''}.`
+    : `Preview, form, and the numbers for ${fixture}${kickoff ? ` on ${kickoff}` : ''}.`;
+
+  return { title, description };
+}
 
 // Force dynamic SSR so AI gloss writes (and new match_events rows) flow
 // into the next request without rebuild. The render reads gloss off

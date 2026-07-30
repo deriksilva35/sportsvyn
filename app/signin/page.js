@@ -28,8 +28,13 @@ import SignInForm from './SignInForm';
 import AppleSignInButton from './AppleSignInButton';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 
+// noindex: an auth flow has nothing to rank and should never be a search result.
+// This was PUBLICLY INDEXABLE until the noindex-lift audit — it had no robots block
+// at all, so it was never covered by the blanket noindex it appeared to be under.
+// Policy: lib/seo/routes.js (NOINDEX_PREFIXES includes '/signin').
 export const metadata = {
   title: 'Sign in — Sportsvyn',
+  robots: { index: false, follow: false },
 };
 
 // In the Draftvyn shell, opt into viewport-fit:cover so env(safe-area-inset-*)

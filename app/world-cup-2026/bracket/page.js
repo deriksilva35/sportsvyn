@@ -51,8 +51,11 @@ import './bracket.css';
 
 const COMPETITION_URL_SLUG = 'world-cup-2026';
 
+// Indexable (policy: lib/seo/routes.js). Given a real title/description rather than
+// left to inherit the root layout's generic pair — this is a landing page now.
 export const metadata = {
-  robots: { index: false, follow: false },
+  title: 'World Cup 2026 Bracket — Sportsvyn',
+  description: 'The 2026 World Cup knockout bracket: every tie, as it resolves.',
 };
 
 export const dynamic = 'force-dynamic';

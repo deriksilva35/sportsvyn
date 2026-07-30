@@ -46,7 +46,6 @@ export async function generateMetadata({ params }) {
   return {
     title: `${player.full_name} — Sportsvyn`,
     description: `Identity, group-stage fixtures, and tournament profile for ${player.full_name}.`,
-    robots: { index: false, follow: false },
   };
 }
 

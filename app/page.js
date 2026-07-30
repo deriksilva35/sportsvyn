@@ -69,7 +69,9 @@ function ptDayLabel(ptDateStr) {
 }
 
 export const dynamic = 'force-dynamic';
-export const metadata = { robots: { index: false, follow: false } };
+// No page-level metadata: the homepage inherits the root layout's title
+// ("Sportsvyn") and description ("Sports editorial. Read the Game."), which is
+// exactly right for it. Indexable — policy lives in lib/seo/routes.js.
 
 const WC_LEAGUE_SLUG = 'fifa-wc-2026';
 

@@ -1,10 +1,11 @@
 // app/cfb/page.js — College Football Today shell. Public (linked from the FOOTBALL
-// nav) but kept noindex for now. Sub-nav lists only tabs whose route exists.
+// nav) and INDEXABLE. Sub-nav lists only tabs whose route exists.
+// Indexability policy lives in lib/seo/routes.js.
 import TodayPage from '@/components/gridiron/TodayPage';
 import '@/components/gridiron/gridiron.css';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'College Football - Sportsvyn', robots: { index: false, follow: false } };
+export const metadata = { title: 'College Football - Sportsvyn' };
 
 const CFB_TABS = [
   { label: 'Today', href: '/cfb', active: true },

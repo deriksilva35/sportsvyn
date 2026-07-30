@@ -15,8 +15,10 @@
 
 import Wordmark from '@/components/Wordmark';
 
+// noindex — see /signin. Also previously indexable with no robots block.
 export const metadata = {
   title: 'Check your email — Sportsvyn',
+  robots: { index: false, follow: false },
 };
 
 export default function CheckEmailPage() {

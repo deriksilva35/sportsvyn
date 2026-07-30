@@ -27,7 +27,6 @@ const COMPETITION_URL_SLUG = 'world-cup-2026';
 
 export const metadata = {
   title: 'Rankings · Sportsvyn',
-  robots: { index: false, follow: false },
 };
 
 export const dynamic = 'force-dynamic';

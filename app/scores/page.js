@@ -7,7 +7,7 @@ import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import '@/components/gridiron/gridiron.css';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Scores - Sportsvyn', robots: { index: false, follow: false } };
+export const metadata = { title: 'Scores - Sportsvyn' };
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 

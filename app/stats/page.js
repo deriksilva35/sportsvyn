@@ -35,7 +35,6 @@ const LEAGUE_SLUG = 'fifa-wc-2026';
 export const metadata = {
   title: 'Stats · Sportsvyn',
   description: 'Sortable WC stats: scorers, assists, goal contributions, and SV Points.',
-  robots: { index: false, follow: false },
 };
 
 export const dynamic = 'force-dynamic';

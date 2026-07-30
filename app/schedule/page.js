@@ -29,7 +29,6 @@ import './schedule.css';
 
 export const metadata = {
   title: 'Scores & Schedule — Sportsvyn',
-  robots: { index: false, follow: false },
 };
 
 export const dynamic = 'force-dynamic';

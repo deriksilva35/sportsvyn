@@ -31,6 +31,15 @@ function formatSource(s) {
   return capitalize(s.replace(/_/g, ' '));
 }
 
+// noindex. Every other app/admin page declares this; this one did not, so it was
+// the sole admin route with no robots block. proxy.js Basic Auth means a crawler
+// gets a 401 rather than content, but Disallow + noindex is the belt-and-braces the
+// rest of /admin already has. Policy: lib/seo/routes.js.
+export const metadata = {
+  title: 'Signups - Admin',
+  robots: { index: false, follow: false },
+};
+
 const SORT_ORDERS = {
   newest:     sql`created_at DESC`,
   oldest:     sql`created_at ASC`,
