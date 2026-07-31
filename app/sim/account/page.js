@@ -7,6 +7,7 @@ import SimTabBar from '@/components/sim/SimTabBar';
 import SignOutButton from '@/components/sim/SignOutButton';
 import DeleteAccount from '@/components/sim/DeleteAccount';
 import ShellPersist from '@/components/sim/ShellPersist';
+import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getDraftsUsed, isMember, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
 import { getMembership } from '@/lib/membership';
@@ -44,6 +45,7 @@ export default async function SimAccount({ searchParams }) {
       </header>
 
       <main className="sim-wrap">
+        <GetTheAppBanner shell={isShell} />
         <div className="sim-kicker">Account</div>
         <div className="acct">
           <div className="acct-row"><span className="k">Email</span><span className="v">{email}</span></div>

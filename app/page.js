@@ -45,6 +45,7 @@ import { auth } from '@/auth';
 import FixtureCard, { bucketOf } from '@/components/match/FixtureCard';
 import KickoffTime from '@/components/match/KickoffTime';
 import SimPromoCard from '@/components/home/SimPromoCard';
+import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode } from '@/lib/shell/shell';
 
 import './home.css';
@@ -1104,6 +1105,11 @@ export default async function HomePage() {
               seen what's on today, and the sim is the alive thing to do next. An
               ink block in the paper card flow, ahead of the quieter WC structure. */}
           <SimPromoCard />
+
+          {/* Get-the-app banner, directly under the doorway it belongs to: the
+              promo card sells the sim, this offers the same thing as an app. Dark
+              until APP_STORE_URL is set, and never rendered in shell. */}
+          <GetTheAppBanner shell={isShell} />
 
           <TournamentProgress groupProgress={groupProgress} koProgress={koProgress} />
 

@@ -5,6 +5,7 @@ import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
+import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getDraftHistory } from '@/lib/fantasy/drafts';
 import { getEntitlements } from '@/lib/membership';
@@ -51,6 +52,7 @@ export default async function SimHistory({ searchParams }) {
       </header>
 
       <main className="sim-wrap">
+        <GetTheAppBanner shell={isShell} />
         <div className="sim-kicker">Your drafts</div>
         {drafts.length === 0 ? (
           <p className="hist-empty">No drafts yet. <Link href="/sim">Start one →</Link></p>

@@ -17,6 +17,7 @@ import Wordmark from '@/components/gridiron/Wordmark';
 import Attribution from '@/components/sim/Attribution';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
+import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import TrackerStart from '@/components/sim/TrackerStart';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getOpenTrackerDraft, isMember } from '@/lib/fantasy/drafts';
@@ -56,6 +57,7 @@ export default async function TrackerTab({ searchParams }) {
       </header>
 
       <main className="sim-wrap">
+        <GetTheAppBanner shell={isShell} />
         {/* TrackerStart renders the gate card for non-members; the entitlement is
             re-checked server-side in startTrackerDraftFor either way. */}
         <TrackerStart entitled={member} shell={isShell} />

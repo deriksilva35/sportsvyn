@@ -6,6 +6,7 @@ import StartForm from '@/components/sim/StartForm';
 import TrackerStart from '@/components/sim/TrackerStart';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
+import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getPresets, getDraftsUsed, isMember, canStartDraft, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
@@ -50,6 +51,7 @@ export default async function SimLobby({ searchParams }) {
       </header>
 
       <main className="sim-wrap">
+        <GetTheAppBanner shell={isShell} />
         {deleted ? (
           <section className="sim-pitch">
             <div className="sim-kicker">Account deleted</div>

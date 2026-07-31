@@ -9,6 +9,7 @@ import TrackerResults from '@/components/sim/TrackerResults';
 import DraftResults from '@/components/sim/DraftResults';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
+import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getDraft, getDraftForRoom } from '@/lib/fantasy/drafts';
 import { getOrCreateRead, getOrCreateTrackerRead } from '@/lib/fantasy/readWriter';
@@ -105,7 +106,16 @@ export default async function DraftRoomPage({ params, searchParams }) {
         <span className="tag">Draft <b>Room</b></span>
         <div className="right"><a href="/sim">Lobby</a></div>
       </header>
-      <main className="sim-wrap">{body}</main>
+      {/* Same predicate as the tab bar, for the same reason: a live draft room is
+          a locked one-viewport console with a pick clock running, and chrome that
+          pushes it down or competes for the tap does not belong there. On the
+          results and abandoned views the page scrolls normally and the banner is
+          just the next block. The live TRACKER room returns earlier (above) and
+          never reaches this markup at all. */}
+      <main className="sim-wrap">
+        {showTabBar && <GetTheAppBanner shell={isShell} />}
+        {body}
+      </main>
       <Attribution text={FFC_ATTRIBUTION.text} url={FFC_ATTRIBUTION.url} />
       {showTabBar && <SimTabBar />}
     </div>

@@ -1,0 +1,129 @@
+/* Get-the-app banner — ink register, volt accent. Imported by AppBanner.js.
+
+   MOBILE-WEB ONLY, and hidden by DEFAULT. The base rule is display:none and the
+   media query turns it ON below 768px, rather than the other way round. That
+   ordering is the point: if this stylesheet ever loads late, loses the cascade,
+   or the media query is dropped, the failure mode is "no banner on desktop",
+   never "an app-install banner across a 1400px editorial page".
+
+   The banner carries data-surface="ink", so globals.css hands it the v1.1 ink
+   palette (--paper, --rule, --volt) wherever it lands: an ink block on the paper
+   homepage per the Surface Rule, and a bordered block on the already-ink sim
+   pages, where the hairline is what separates it from the surface behind it. */
+
+.appbanner { display: none; }
+
+@media (max-width: 767px) {
+  .appbanner {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 14px 0;
+    border: 1px solid var(--rule);
+    /* The volt accent: a single left rule. The bar is too short for a kicker,
+       and a volt-filled CTA here would out-shout the page's real CTA (START a
+       draft / Sign in), which is the thing we actually want tapped. */
+    border-left: 3px solid var(--volt);
+  }
+
+  .appbanner-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .appbanner-copy { flex: 1; min-width: 0; }
+
+  .appbanner-head {
+    display: block;
+    font-family: var(--font-saira), sans-serif;
+    font-style: italic;
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 14px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--paper);
+  }
+
+  .appbanner-line {
+    display: block;
+    font-family: var(--font-jetbrains-mono), monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--volt);
+    margin-top: 5px;
+  }
+
+  /* Apple badge lockup: white mark + white label on black, hairline-bordered so
+     a black pill reads against the near-black surface (same problem, same fix,
+     as the Continue with Apple button on /signin). */
+  .appbanner-badge {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: #000;
+    border: 1px solid var(--charcoal);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: #FFF;
+  }
+
+  .appbanner-badge svg { flex: 0 0 auto; }
+
+  .appbanner-badge-txt {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+  }
+
+  .appbanner-badge-txt .pre {
+    font-family: var(--font-jetbrains-mono), monospace;
+    font-size: 7px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #FFF;
+  }
+
+  .appbanner-badge-txt .store {
+    font-family: var(--font-saira), sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: -0.01em;
+    color: #FFF;
+    margin-top: 2px;
+  }
+
+  /* Dismiss: its own column with a full-height hit area, so closing the banner
+     can never be a mis-tap on the store link sitting beside it. 44px wide meets
+     the iOS minimum target without a padding hack. */
+  .appbanner-x {
+    flex: 0 0 44px;
+    border: 0;
+    border-left: 1px solid var(--rule);
+    background: transparent;
+    color: var(--muted);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .appbanner-x:hover { color: var(--paper); }
+
+  /* Narrow phones: the two-line badge label plus the headline overruns at 360px
+     and below, so the badge drops its text and keeps the logomark. The link is
+     still named by the headline and "Free on the App Store" directly above it. */
+  @media (max-width: 380px) {
+    .appbanner-badge-txt { display: none; }
+    .appbanner-badge { padding: 8px; }
+  }
+}
