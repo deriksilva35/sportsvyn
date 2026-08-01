@@ -9,11 +9,18 @@ export const MEMBERSHIP_PRICE_LINE = '$9.99 Draft Pass - $59/yr Suite - $99/yr F
 export const MEMBERSHIP_TIERS = {
   draft_pass: {
     tagline: "For people prepping like it's a second job.",
+    // ORDER IS THE POINT. The Tracker leads because it is the Pass's anchor
+    // feature and the only one that leaves the house: every other bullet is
+    // something you do alone against the sim, while the Tracker is what you open
+    // at a real table with people waiting. It was missing from this card
+    // entirely, which meant the card sold a practice tool and never mentioned the
+    // thing you actually draft with.
     features: [
+      'Draft Tracker - log your real draft live at the table',
+      'Unlimited drafts',
       'Superflex and 2QB',
       '14 to 16 teams',
       'Custom rosters and scoring',
-      'Unlimited drafts',
       'Full draft history',
       'The Exposure Report',
     ],
@@ -127,14 +134,22 @@ export const MEMBERSHIP_CARD_VARIANTS = {
   // Variant A — draft gate (out of the 3 free weekly drafts). Leads with the Pass.
   draft: {
     headline: 'Three free drafts a week.',
-    body: "That's your three - they reset Monday. The Draft Pass unlocks unlimited drafts, custom rosters, superflex, 14 to 16 teams, full history, and the Exposure Report - through the Super Bowl.",
+    // The Tracker leads the unlock list here for the same reason it leads the
+    // /membership card: it is the anchor feature, and this body previously ran
+    // through six sim features without naming it.
+    body: "That's your three - they reset Monday. The Draft Pass unlocks the Draft Tracker for your real draft at the table, plus unlimited drafts, custom rosters, superflex, 14 to 16 teams, full history, and the Exposure Report - through the Super Bowl.",
     secondary: { label: 'Your drafts', href: '/sim/history' },
   },
   // Variant B — custom config lock. Custom is a sim entitlement, so lead with the
   // Pass too (the Pass is the cheapest thing that unlocks it).
   custom: {
     headline: 'Custom needs the Draft Pass.',
-    body: 'Set your own roster slots, league size, superflex, and scoring. The Draft Pass unlocks the full console; free accounts draft the presets.',
+    // The worst offender before this pass: a reader hits the custom-config lock,
+    // is told the Pass buys "the full console", and never learns that the same
+    // Pass is what they would open at their actual draft. The console clause is
+    // kept verbatim - shellPurchase.test.mjs pins it as proof the 3.1.1 shell fix
+    // never leaked into web copy - and the Tracker is named alongside it.
+    body: 'Set your own roster slots, league size, superflex, and scoring. The Draft Pass unlocks the full console, and the Draft Tracker for the real draft at the table; free accounts draft the presets.',
     secondary: { label: 'Back to presets' }, // no href — uses the onBackToPresets callback
   },
   // Variant C — tracker lock. Same `sim` entitlement as custom, so the Pass is

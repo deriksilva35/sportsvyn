@@ -7,7 +7,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MEMBERSHIP_PRICE_LINE, MEMBERSHIP_CARD_VARIANTS, MEMBERSHIP_TIERS } from './membershipCopy.js';
+import {
+  MEMBERSHIP_PRICE_LINE, MEMBERSHIP_CARD_VARIANTS, MEMBERSHIP_TIERS,
+  MEMBERSHIP_CARD_SHELL, SHELL_LOCKED_NOTE,
+} from './membershipCopy.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 (function loadEnv(p) {
@@ -29,6 +32,11 @@ test('draft variant: weekly rhythm headline, leads with the Draft Pass', () => {
   assert.match(v.body, /Draft Pass unlocks/);
   assert.match(v.body, /Exposure Report/);
   assert.deepEqual(v.secondary, { label: 'Your drafts', href: '/sim/history' });
+  // The Tracker is the Pass's anchor feature and has to be named wherever the
+  // Pass is pitched - this body listed six sim features without it.
+  assert.match(v.body, /Draft Tracker/);
+  assert.ok(v.body.indexOf('Draft Tracker') < v.body.indexOf('unlimited drafts'),
+    'the Tracker should lead the unlock list, as it does on the /membership card');
 });
 
 // ---- Variant B (custom config lock) — leads with the Pass (custom is sim) ----
@@ -39,6 +47,20 @@ test('custom variant: leads with the Draft Pass, secondary Back to presets (no h
   assert.match(v.body, /Draft Pass unlocks the full console/);
   assert.equal(v.secondary.label, 'Back to presets');
   assert.equal(v.secondary.href, undefined); // uses onBackToPresets callback
+  // The custom lock was the worst place for the Tracker to be missing: the reader
+  // is told what the Pass buys, in a sentence that never mentioned the one
+  // feature they would use away from the sim.
+  assert.match(v.body, /Draft Tracker/);
+});
+
+test('the Pass is never pitched without naming the Tracker', () => {
+  // Applies to every variant that sells the Pass, so a fourth variant added later
+  // cannot reintroduce the omission this commit fixes.
+  for (const [key, v] of Object.entries(MEMBERSHIP_CARD_VARIANTS)) {
+    if (!/Draft Pass/.test(v.body)) continue;
+    assert.match(v.body, /Draft Tracker|Tracker mode|logs a real draft/,
+      `variant "${key}" pitches the Draft Pass without naming the Tracker`);
+  }
 });
 
 // ---- Variant C (tracker lock) — the room, not the feature list ----
@@ -75,6 +97,51 @@ test('tiers cover pass/suite/founding with taglines + features', () => {
     assert.ok(Array.isArray(t.features) && t.features.length > 0, `${key} features`);
   }
   assert.match(MEMBERSHIP_TIERS.suite.features.join(' '), /Waiver Read.*Usage Board.*Watch Score/s);
+});
+
+test('DRAFT PASS card: exact bullets, in order, Tracker first', () => {
+  // Pinned verbatim and in sequence. Order carries the argument - the Tracker is
+  // the anchor feature and the only one that leaves the house - so a reshuffle
+  // should have to be deliberate, not a merge artifact.
+  assert.deepEqual(MEMBERSHIP_TIERS.draft_pass.features, [
+    'Draft Tracker - log your real draft live at the table',
+    'Unlimited drafts',
+    'Superflex and 2QB',
+    '14 to 16 teams',
+    'Custom rosters and scoring',
+    'Full draft history',
+    'The Exposure Report',
+  ]);
+});
+
+test('DRAFT PASS card: the sub-line and footnote are unchanged', () => {
+  assert.equal(MEMBERSHIP_TIERS.draft_pass.tagline, "For people prepping like it's a second job.");
+  assert.equal(MEMBERSHIP_TIERS.draft_pass.footnote, 'Through the Super Bowl.');
+});
+
+// ---- SHELL GUARD ----------------------------------------------------------
+// The gate cards have shell-suppressed variants (App Store 3.1.1, commit
+// 76e18e0). Web copy and shell copy live in the same file, one export apart, so
+// the realistic failure is a web edit drifting into the shell object - which
+// would put a plan name or a feature pitch back inside the app. The bodies below
+// are pinned verbatim: this commit changed web copy only, and shell output is
+// byte-identical to what shipped.
+test('SHELL copy is byte-identical - a web copy edit must not reach the app', () => {
+  assert.deepEqual(MEMBERSHIP_CARD_SHELL, {
+    draft: {
+      headline: 'Three free drafts a week.',
+      body: 'That is your three - they reset Monday. Unlimited drafts are part of the Sportsvyn membership. Members sign in and it unlocks.',
+    },
+    custom: {
+      headline: 'Custom is a membership feature.',
+      body: 'Your own roster slots, league size, superflex, and scoring are part of the Sportsvyn membership. Members sign in and it unlocks. Free accounts draft the presets.',
+    },
+    tracker: {
+      headline: 'Tracker mode is a membership feature.',
+      body: 'Tracker mode logs a real draft as it happens - every team, every pick, on your phone at the table. It is part of the Sportsvyn membership. Members sign in and it unlocks.',
+    },
+  });
+  assert.equal(SHELL_LOCKED_NOTE, 'Part of the Sportsvyn membership. Members sign in and it unlocks.');
 });
 
 test('no em or en dashes anywhere in the funnel copy (hyphens only)', () => {
