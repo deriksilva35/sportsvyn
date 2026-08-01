@@ -20,6 +20,7 @@ import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import TrackerStart from '@/components/sim/TrackerStart';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import { appleIapEnabled } from '@/lib/appleIap';
 import { getOpenTrackerDraft, isMember } from '@/lib/fantasy/drafts';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
@@ -60,7 +61,7 @@ export default async function TrackerTab({ searchParams }) {
         <GetTheAppBanner shell={isShell} />
         {/* TrackerStart renders the gate card for non-members; the entitlement is
             re-checked server-side in startTrackerDraftFor either way. */}
-        <TrackerStart entitled={member} shell={isShell} />
+        <TrackerStart entitled={member} shell={isShell} iap={appleIapEnabled()} />
       </main>
 
       <Attribution text={FFC_ATTRIBUTION.text} url={FFC_ATTRIBUTION.url} />

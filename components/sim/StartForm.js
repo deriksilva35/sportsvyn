@@ -50,7 +50,7 @@ function sameConfig(a, b) {
   return true;
 }
 
-export default function StartForm({ presets, canStart, used, limit, member = false, shell = false }) {
+export default function StartForm({ presets, canStart, used, limit, member = false, shell = false, iap = false }) {
   const router = useRouter();
   const first = presets[0];
   const [config, setConfig] = useState(() => presetToConfig(first));
@@ -234,10 +234,10 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
       <div className="setup-foot">
         {freeGated && !isCustom ? (
           // Draft gate (out of free drafts) — inline conversion card, keeps context.
-          <MembershipCard variant="draft" shell={shell} />
+          <MembershipCard variant="draft" shell={shell} iap={iap} />
         ) : memberBlocked ? (
           // Custom config lock — inline conversion card; secondary resets to a preset.
-          <MembershipCard variant="custom" shell={shell} onBackToPresets={() => choosePreset(presets[0])} />
+          <MembershipCard variant="custom" shell={shell} iap={iap} onBackToPresets={() => choosePreset(presets[0])} />
         ) : (
           <>
             {note && <div className="setup-note">{note}</div>}

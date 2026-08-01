@@ -8,6 +8,7 @@ import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import { appleIapEnabled } from '@/lib/appleIap';
 import { getPresets, getDraftsUsed, isMember, canStartDraft, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
@@ -27,6 +28,10 @@ export default async function SimLobby({ searchParams }) {
   const userId = session?.user?.id ?? null;
   const params = (await searchParams) ?? {};
   const isShell = await resolveShellMode(params);
+  // Apple IAP buy path. Server-resolved (not NEXT_PUBLIC_, so flipping it is a
+  // pure env change) and threaded as a prop, the same way `shell` already flows.
+  // Off today; the gate cards stay suppressed until the IAP binary ships.
+  const iap = appleIapEnabled();
   // Carry shell context into /signin so it renders the app front door reliably
   // (not dependent on the sv_shell cookie having been written yet).
   const signinHref = `/signin?callbackUrl=/sim${isShell ? '&shell=sim-app' : ''}`;
@@ -75,12 +80,12 @@ export default async function SimLobby({ searchParams }) {
               <>
                 <section>
                   <div className="sim-kicker">Start a mock draft</div>
-                  <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} />
+                  <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap} />
                 </section>
                 {/* Tracker is the same `sim` entitlement as custom configs. This
                     only decides what RENDERS; startTrackerDraftFor re-checks
                     server-side either way. */}
-                <TrackerStart entitled={member} shell={isShell} />
+                <TrackerStart entitled={member} shell={isShell} iap={iap} />
               </>
             );
           })()

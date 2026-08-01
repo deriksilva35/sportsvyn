@@ -94,6 +94,21 @@
 .mcard-sec { display: block; width: 100%; background: none; border: none; margin-top: 9px; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-align: center; text-decoration: none; cursor: pointer; }
 .mcard-sec:hover { color: var(--volt); }
 .mcard-fine { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .06em; color: var(--muted-dim, #5A5A5A); text-align: center; margin-top: 10px; }
+
+/* ---- Apple IAP buy control (components/sim/PassBuy.js) ----
+   Rendered only in shell, only under APPLE_IAP_ENABLED, and only when the native
+   purchase bridge exists. It reuses the .mcard-cta geometry deliberately: this is
+   the same slot the web SEE PLANS button occupies, so the card keeps one shape
+   across web and app and only the destination changes (Stripe vs StoreKit). */
+.mcard-iap { margin-top: 2px; }
+.mcard-iap-price { display: flex; align-items: baseline; gap: 8px; font-family: var(--font-jetbrains-mono), monospace; margin-bottom: 10px; }
+.mcard-iap-price b { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 22px; color: var(--paper); letter-spacing: -.02em; }
+.mcard-iap-price span { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mcard-buy { display: block; width: 100%; background: var(--volt); color: var(--ink); border: none; font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 16px; padding: 12px 0; cursor: pointer; text-transform: uppercase; letter-spacing: .01em; text-align: center; }
+.mcard-buy:hover { background: var(--volt-dim); }
+.mcard-buy:disabled { opacity: .55; cursor: default; }
+.mcard-iap-msg { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .04em; color: var(--paper-dim); text-align: center; margin-top: 9px; }
+.mcard-iap-fine { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .06em; color: var(--muted-dim, #5A5A5A); text-align: center; margin-top: 8px; }
 .setup-err { font-size: 10px; color: var(--terra); text-align: center; margin-top: 8px; letter-spacing: .04em; }
 .chiplab { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }
 

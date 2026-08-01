@@ -33,7 +33,7 @@ const ERR = {
   unauthenticated: 'Please sign in',
 };
 
-export default function TrackerStart({ entitled, shell = false }) {
+export default function TrackerStart({ entitled, shell = false, iap = false }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [teams, setTeams] = useState(12);
@@ -47,7 +47,7 @@ export default function TrackerStart({ entitled, shell = false }) {
     return (
       <section className="trk-start">
         <div className="sim-kicker">Tracker mode</div>
-        <MembershipCard variant="tracker" shell={shell} onBackToPresets={() => router.push('/sim')} />
+        <MembershipCard variant="tracker" shell={shell} iap={iap} onBackToPresets={() => router.push('/sim')} />
       </section>
     );
   }

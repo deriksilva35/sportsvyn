@@ -73,6 +73,56 @@ export const MEMBERSHIP_CARD_SHELL = {
 // preview, the league rail teasers) in shell mode.
 export const SHELL_LOCKED_NOTE = 'Part of the Sportsvyn membership. Members sign in and it unlocks.';
 
+// ---------------------------------------------------------------------------
+// APPLE IAP COPY — App Store Guideline 3.1.1, the OTHER half
+// ---------------------------------------------------------------------------
+// The first rejection was "membership is purchasable outside the app". Removing
+// every purchase path did not clear it, because 3.1.1 also says the app must not
+// ACCESS content that is not buyable via IAP - and the app reads membership-gated
+// content. So the Pass has to be buyable in-app, which means that under the
+// APPLE_IAP_ENABLED flag the shell card does the opposite of the suppressed one:
+// it names the price and offers to sell.
+//
+// This is not a relaxation of 3.1.1. The price shown here is the IAP price, the
+// button calls StoreKit through the native bridge, and NOTHING here links to the
+// web. There is still no /membership link, no Stripe checkout, and no plan ladder
+// - one product, bought through Apple, at Apple's price.
+//
+// $9.99 must match the App Store Connect price tier for the product. The web
+// Draft Pass is the same $9.99 (MEMBERSHIP_PRICE_LINE above), so there is no
+// price disparity to explain to a reviewer.
+export const APPLE_PASS_PRICE = '$9.99';
+
+// Shell + IAP bodies. These REPLACE the neutral "members sign in and it unlocks"
+// line, which is actively wrong once you can buy the thing where you are standing.
+export const MEMBERSHIP_CARD_IAP = {
+  draft: {
+    body: 'That is your three - they reset Monday. The Draft Pass unlocks unlimited drafts, custom rosters, superflex, 14 to 16 teams, full history, and the Exposure Report, through the Super Bowl.',
+  },
+  custom: {
+    body: 'Set your own roster slots, league size, superflex, and scoring. The Draft Pass unlocks the full console; free accounts draft the presets.',
+  },
+  tracker: {
+    body: 'Tracker mode logs a real draft as it happens - every team, every pick, on your phone at the table. The Draft Pass unlocks it.',
+  },
+};
+
+// The buy control's own strings, including every terminal state of the purchase
+// flow. "Unlocking" is deliberately not "Unlocked": StoreKit returning success
+// means Apple took the money, but the entitlement lands when RevenueCat's webhook
+// reaches our server, which is fast but not synchronous.
+export const PASS_BUY = {
+  cta: 'Unlock the Draft Pass',
+  note: 'One time. Through the Super Bowl.',
+  buying: 'Opening App Store...',
+  unlocking: 'Purchased. Unlocking your account...',
+  cancelled: 'Purchase cancelled.',
+  pending: 'Waiting on approval. Your Pass unlocks once it clears.',
+  unavailable: 'The App Store is not reachable right now. Try again in a moment.',
+  failed: 'That purchase did not go through. Nothing was charged.',
+  restoreNote: 'Already bought it? It unlocks automatically once Apple confirms.',
+};
+
 export const MEMBERSHIP_CARD_VARIANTS = {
   // Variant A — draft gate (out of the 3 free weekly drafts). Leads with the Pass.
   draft: {

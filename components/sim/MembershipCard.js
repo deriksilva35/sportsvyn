@@ -26,10 +26,11 @@
 
 import Link from 'next/link';
 import {
-  MEMBERSHIP_PRICE_LINE, MEMBERSHIP_CARD_VARIANTS, MEMBERSHIP_CARD_SHELL,
+  MEMBERSHIP_PRICE_LINE, MEMBERSHIP_CARD_VARIANTS, MEMBERSHIP_CARD_SHELL, MEMBERSHIP_CARD_IAP,
 } from './membershipCopy';
+import PassBuy from './PassBuy';
 
-export default function MembershipCard({ variant = 'draft', shell = false, onBackToPresets }) {
+export default function MembershipCard({ variant = 'draft', shell = false, iap = false, onBackToPresets }) {
   const key = MEMBERSHIP_CARD_VARIANTS[variant] ? variant : 'draft';
   const v = MEMBERSHIP_CARD_VARIANTS[key];
 
@@ -42,11 +43,20 @@ export default function MembershipCard({ variant = 'draft', shell = false, onBac
 
   if (shell) {
     const s = MEMBERSHIP_CARD_SHELL[key];
+    // APPLE_IAP_ENABLED off (today, and for the whole life of the shipped 1.0(2)
+    // binary): the neutral locked card, unchanged. On: the same card plus an IAP
+    // buy control, and a body that stops saying "members sign in and it unlocks",
+    // which is wrong once you can buy it where you are standing. All three
+    // variants gate on the `sim` entitlement, which is exactly what the Pass
+    // grants, so every one of them is buyable - no per-variant carve-out.
+    // Even with the flag on, PassBuy renders NOTHING unless the native purchase
+    // bridge is present, so an old binary still shows the suppressed card.
     return (
-      <div className="mcard mcard--locked" data-variant={variant} data-shell="1">
+      <div className="mcard mcard--locked" data-variant={variant} data-shell="1" data-iap={iap ? '1' : undefined}>
         <div className="mcard-eyebrow">MEMBERSHIP</div>
         <div className="mcard-head">{s.headline}</div>
-        <p className="mcard-body">{s.body}</p>
+        <p className="mcard-body">{iap ? MEMBERSHIP_CARD_IAP[key].body : s.body}</p>
+        {iap ? <PassBuy /> : null}
         {secondary}
       </div>
     );
