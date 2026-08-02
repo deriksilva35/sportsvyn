@@ -7,6 +7,7 @@ import TrackerStart from '@/components/sim/TrackerStart';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
+import WelcomeSheet from '@/components/sim/WelcomeSheet';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
@@ -85,6 +86,12 @@ export default async function SimLobby({ searchParams }) {
             const gate = await canStartDraft(userId, member);
             return (
               <>
+                {/* First-launch sheet: shell + flag + NOT already entitled. Mounted
+                    here rather than at the top of the page because that is where
+                    `member` is resolved - hoisting it would have meant a second
+                    isMember() query for the same answer. Once per device; see
+                    WelcomeSheet for the storage contract. */}
+                {isShell && iap && !member && <WelcomeSheet />}
                 <section>
                   <div className="sim-kicker">Start a mock draft</div>
                   <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap} />

@@ -96,6 +96,14 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
   }
 
   const memberBlocked = isCustom && !member; // custom needs membership
+  // Is a gate actually blocking START right now? (go() already refuses on both,
+  // but until now START was never RENDERED on a blocked path, so it had no
+  // disabled state to show.)
+  const gateBlocked = (freeGated && !isCustom) || memberBlocked;
+  // The above-the-fold pitch: shell + APPLE_IAP_ENABLED + not already entitled.
+  // Deliberately NOT gated on `gateBlocked` - the whole point is that the price is
+  // visible before the user hits a wall.
+  const iapPitch = shell && iap && !member;
   function go() {
     if (freeGated && !isCustom) return; // preset path is out of free drafts
     if (memberBlocked) return;          // custom needs membership; START is disabled
@@ -156,6 +164,17 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
           {!member && <span className="pl lock">MEMBER</span>}
         </button>
       </div>
+
+      {/* ABOVE THE FOLD (shell + APPLE_IAP_ENABLED, non-members only).
+          The conversion card used to live in setup-foot, which on a phone sits
+          below the console and only appears once a gate is actually HIT - so a
+          free user never saw the price until they ran out of drafts. Here it sits
+          directly under the preset rail, so price and UNLOCK are visible on load.
+          `iapPitch` is false on web and with the flag off, where this renders
+          nothing and the markup below is byte-identical to what shipped. */}
+      {iapPitch && (
+        <MembershipCard variant={isCustom ? 'custom' : 'draft'} shell={shell} iap={iap} compact />
+      )}
 
       {/* console (the internal scroll region when the viewport is too short) */}
       <div className="console">
@@ -232,7 +251,20 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
       {/* full-width START bar, pinned to the bottom of the viewport (above the
           tab bar); the gate note sits directly above it. */}
       <div className="setup-foot">
-        {freeGated && !isCustom ? (
+        {/* With the compact card already above the fold, repeating the full card
+            down here would be the same offer twice on one screen. Instead the
+            foot keeps the note (which explains the gate in words) and the START
+            bar, disabled while a gate is actually blocking - previously START was
+            simply absent on the gated path, so it never needed the disabled
+            state. Web and flag-off keep the original two-card behaviour. */}
+        {iapPitch ? (
+          <>
+            {note && <div className="setup-note">{note}</div>}
+            <button className="startbtn bar" type="button" onClick={go} disabled={pending || gateBlocked}>
+              {pending ? 'STARTING…' : 'START DRAFT →'}
+            </button>
+          </>
+        ) : freeGated && !isCustom ? (
           // Draft gate (out of free drafts) — inline conversion card, keeps context.
           <MembershipCard variant="draft" shell={shell} iap={iap} />
         ) : memberBlocked ? (

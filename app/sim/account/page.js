@@ -9,6 +9,9 @@ import DeleteAccount from '@/components/sim/DeleteAccount';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import { appleIapConfig } from '@/lib/appleIap';
+import IapConfigure from '@/components/shell/IapConfigure';
+import PassBuy from '@/components/sim/PassBuy';
 import { getDraftsUsed, isMember, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
 import { getMembership } from '@/lib/membership';
 import { openBillingPortal } from '@/app/actions/membership';
@@ -31,6 +34,7 @@ export default async function SimAccount({ searchParams }) {
   const [used, member, membership] = await Promise.all([
     getDraftsUsed(userId), isMember(userId), getMembership(userId),
   ]);
+  const { enabled: iap, apiKey: rcKey, productId: rcProduct } = appleIapConfig();
   const email = session.user?.email ?? '';
   const renews = member && membership?.current_period_end
     ? new Date(membership.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -39,6 +43,9 @@ export default async function SimAccount({ searchParams }) {
   return (
     <div className={`sim sim--tabbar${isShell ? ' sim--shell' : ''}`} data-surface="ink">
       {isShell && <ShellPersist />}
+      {isShell && iap && userId != null && (
+        <IapConfigure userId={userId} apiKey={rcKey} productId={rcProduct} />
+      )}
       <header className="sim-head">
         <Wordmark href="/sim" />
         <span className="tag"><b>Account</b></span>
@@ -65,8 +72,20 @@ export default async function SimAccount({ searchParams }) {
             <div className="m2">
               {member
                 ? 'Membership is managed on sportsvyn.com from any browser.'
-                : 'Unlimited drafts, custom rosters, 14+ teams, and the Sportsvyn board are part of the membership. Members sign in and it unlocks.'}
+                : iap
+                  ? 'Unlimited drafts, the Draft Tracker, custom rosters, 14+ teams, and the Sportsvyn board.'
+                  : 'Unlimited drafts, custom rosters, 14+ teams, and the Sportsvyn board are part of the membership. Members sign in and it unlocks.'}
             </div>
+            {/* Buy from the account page too: this is where someone lands when
+                they go looking for "how do I upgrade", and with the flag off it
+                is unchanged - the neutral line above is all they get. Members
+                never see it; their box still points at the web for billing,
+                which is the 3.1.1-safe answer for MANAGING a subscription. */}
+            {!member && iap ? (
+              <div className="acct-iap">
+                <PassBuy />
+              </div>
+            ) : null}
           </div>
         ) : member ? (
           <form action={openBillingPortal}>

@@ -30,7 +30,7 @@ import {
 } from './membershipCopy';
 import PassBuy from './PassBuy';
 
-export default function MembershipCard({ variant = 'draft', shell = false, iap = false, onBackToPresets }) {
+export default function MembershipCard({ variant = 'draft', shell = false, iap = false, compact = false, onBackToPresets }) {
   const key = MEMBERSHIP_CARD_VARIANTS[variant] ? variant : 'draft';
   const v = MEMBERSHIP_CARD_VARIANTS[key];
 
@@ -51,6 +51,22 @@ export default function MembershipCard({ variant = 'draft', shell = false, iap =
     // grants, so every one of them is buyable - no per-variant carve-out.
     // Even with the flag on, PassBuy renders NOTHING unless the native purchase
     // bridge is present, so an old binary still shows the suppressed card.
+    // COMPACT — the above-the-fold slot on the DRAFT tab. Same card, stripped to
+    // the three things that have to be visible without scrolling: what is locked,
+    // the price, and the buy control. The explanatory body and the secondary nav
+    // are dropped rather than shrunk, because a paragraph that has to be read is
+    // not doing work above the fold; the full card still exists everywhere else.
+    // Compact is IAP-only: with the flag off there is nothing to put in it, so
+    // the caller falls through to the neutral locked card below.
+    if (iap && compact) {
+      return (
+        <div className="mcard mcard--locked mcard--compact" data-variant={variant} data-shell="1" data-iap="1">
+          <div className="mcard-eyebrow">MEMBERSHIP</div>
+          <div className="mcard-head">{s.headline}</div>
+          <PassBuy />
+        </div>
+      );
+    }
     return (
       <div className="mcard mcard--locked" data-variant={variant} data-shell="1" data-iap={iap ? '1' : undefined}>
         <div className="mcard-eyebrow">MEMBERSHIP</div>

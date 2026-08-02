@@ -112,12 +112,20 @@ test('with the flag off the shell card constructs NO purchase affordance', () =>
 
 test('PassBuy is the ONLY thing the flag adds (no second buy path)', () => {
   const card = stripComments(src('components/sim/MembershipCard.js'));
-  assert.equal((card.match(/<PassBuy/g) ?? []).length, 1,
-    'PassBuy should be rendered in exactly one place - the flag-gated shell slot');
-  // ...and that one place is inside the shell branch, not the web card.
-  assert.ok(!shellBranch(card).split('<PassBuy')[1]?.includes('mcard-cta'));
-  const web = card.slice(card.indexOf('return (', card.indexOf('}\n\n  return (')));
+  const branch = shellBranch(card);
+  // There are legitimately TWO usages now - the compact above-the-fold card and
+  // the full one - so the invariant is not a count. It is that EVERY usage lives
+  // inside the shell branch and behind the flag, and that the web card has none.
+  const total = (card.match(/<PassBuy/g) ?? []).length;
+  const inShell = (branch.match(/<PassBuy/g) ?? []).length;
+  assert.ok(total > 0, 'nothing renders the buy control');
+  assert.equal(inShell, total, 'a PassBuy escaped the shell branch');
+  const web = card.slice(card.indexOf(branch) + branch.length);
   assert.ok(!web.includes('<PassBuy'), 'the WEB card renders the IAP buy control');
+  // Each usage is reached only under `iap`: the compact card is behind
+  // `if (iap && compact)`, the full one behind the `iap ? ... : null` ternary.
+  assert.match(branch, /if \(iap && compact\)/, 'the compact card must be flag-gated');
+  assert.match(branch, /iap \? <PassBuy \/> : null/, 'the full card must be flag-gated');
 });
 
 // ---------------------------------------------------------------------------

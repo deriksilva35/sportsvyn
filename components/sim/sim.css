@@ -95,6 +95,61 @@
 .mcard-sec:hover { color: var(--volt); }
 .mcard-fine { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .06em; color: var(--muted-dim, #5A5A5A); text-align: center; margin-top: 10px; }
 
+/* ---- compact gate card (shell + IAP, above the fold on the DRAFT tab) ----
+   Same card, tightened: it sits between the preset rail and the console on a
+   phone, so every pixel it takes is one the config table loses. The volt top
+   border and eyebrow are kept because they are what make it read as the
+   membership card rather than another config row. */
+.mcard--compact { padding: 12px 14px 12px; margin: 10px 0 2px; }
+.mcard--compact .mcard-eyebrow { font-size: 10px; letter-spacing: .18em; margin-bottom: 5px; }
+.mcard--compact .mcard-head { font-size: 18px; line-height: 1.03; margin-bottom: 9px; }
+.mcard--compact .mcard-iap { margin-top: 0; }
+.mcard--compact .mcard-iap-price { margin-bottom: 8px; }
+.mcard--compact .mcard-iap-price b { font-size: 19px; }
+.mcard--compact .mcard-buy { font-size: 15px; padding: 10px 0; }
+.mcard--compact .mcard-iap-fine { display: none; }  /* the restore note belongs on the full card */
+
+/* ---- account page buy control, INSIDE the volt box ----
+   .acct-upsell is volt-on-ink inverted (volt background, ink text), so the buy
+   button has to invert with it or a volt button lands invisibly on volt. */
+.acct-iap { margin-top: 12px; border-top: 1px solid rgba(10,10,10,.22); padding-top: 12px; }
+.acct-iap .mcard-iap-price b { color: var(--ink); }
+.acct-iap .mcard-iap-price span { color: rgba(10,10,10,.7); }
+.acct-iap .mcard-buy { background: var(--ink); color: var(--volt); }
+.acct-iap .mcard-buy:hover { background: var(--graphite); }
+.acct-iap .mcard-iap-msg { color: rgba(10,10,10,.85); }
+.acct-iap .mcard-iap-fine { color: rgba(10,10,10,.6); }
+
+/* ---- first-launch welcome sheet (components/sim/WelcomeSheet.js) ----
+   Bottom sheet, not a centered modal: it is a phone surface and the actions want
+   to be under the thumb. viewport-fit safe-area padding because shell mode opts
+   into env(safe-area-inset-*). */
+.wsheet-scrim {
+  position: fixed; inset: 0; z-index: 120;
+  background: rgba(10,10,10,.72);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.wsheet {
+  width: 100%; max-width: 560px;
+  background: var(--graphite);
+  border-top: 3px solid var(--volt);
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  max-height: 88vh; overflow-y: auto;
+}
+.wsheet-kicker { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--volt); }
+.wsheet-head { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 28px; line-height: 1.02; letter-spacing: -.02em; color: var(--paper); margin: 8px 0 12px; }
+.wsheet-body { font-family: var(--font-archivo-sans, sans-serif); font-size: 13px; line-height: 1.55; color: var(--paper-dim); margin: 0 0 10px; }
+.wsheet-price { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--volt); margin: 4px 0 16px; }
+.wsheet-primary { display: block; width: 100%; background: var(--volt); color: var(--ink); border: none; font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 17px; text-transform: uppercase; letter-spacing: .01em; padding: 13px 0; cursor: pointer; }
+.wsheet-primary:hover { background: var(--volt-dim); }
+/* The buy control is SECONDARY here - the free tier is the front door, so it is
+   an outlined button under the primary rather than a second volt slab. */
+.wsheet-buy { margin-top: 10px; }
+.wsheet-buy .mcard-iap-price { display: none; }   /* the price line is already stated above */
+.wsheet-buy .mcard-buy { background: transparent; color: var(--volt); border: 1px solid var(--volt); font-size: 13px; padding: 11px 0; }
+.wsheet-buy .mcard-buy:hover { background: rgba(212,255,0,.1); }
+.wsheet-buy .mcard-iap-fine { display: none; }
+
 /* ---- Apple IAP buy control (components/sim/PassBuy.js) ----
    Rendered only in shell, only under APPLE_IAP_ENABLED, and only when the native
    purchase bridge exists. It reuses the .mcard-cta geometry deliberately: this is

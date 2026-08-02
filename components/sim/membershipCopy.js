@@ -130,6 +130,25 @@ export const PASS_BUY = {
   restoreNote: 'Already bought it? It unlocks automatically once Apple confirms.',
 };
 
+// First-launch welcome sheet (shell + APPLE_IAP_ENABLED only, once per device).
+// It has one job: say what you get for free, what the Pass adds, and what it
+// costs - then get out of the way. The primary action is START DRAFTING, not the
+// purchase, because the free tier is genuinely the front door and a sheet that
+// leads with "buy" on first launch reads as a paywall.
+//
+// The Tracker headlines the Pass line for the same reason it leads the
+// /membership card: it is the anchor feature and the only one that leaves the
+// house. Hyphens only, no em/en dashes.
+export const WELCOME = {
+  kicker: 'Welcome to Draftvyn',
+  headline: 'Draft against the market.',
+  free: 'Three free drafts a week, against AI rooms that reach and slide like real ones. Every pick graded on live ADP.',
+  pass: 'The Draft Pass adds the Draft Tracker - log your real draft live at the table - plus unlimited drafts, custom rosters, superflex, 14 to 16 teams, and the Exposure Report.',
+  price: '$9.99 one time. Through the Super Bowl.',
+  primary: 'Start drafting',
+  dismissLabel: 'Close',
+};
+
 export const MEMBERSHIP_CARD_VARIANTS = {
   // Variant A — draft gate (out of the 3 free weekly drafts). Leads with the Pass.
   draft: {
