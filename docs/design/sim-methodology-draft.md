@@ -40,15 +40,19 @@ constructionScore = clamp(100
 - **(b) Balance:** a bench more than 60% one position is penalized once.
 - **(c) Bye stacks:** each week where 3+ starters share a bye is penalized.
 
-## Bands (published, fixed)
+## Bands (published)
+
+Recalibrated 2026-08-02. Edges move only in a deliberate recalibration session
+(the formula never moves); see Calibration below for the previous ladder and why
+each edge changed.
 
 | Grade | min gradeScore | | Grade | min gradeScore |
 |---|---|---|---|---|
-| A  | 88 | | C+ | 56 |
-| A- | 82 | | C  | 48 |
-| B+ | 76 | | D  | 36 |
-| B  | 70 | | F  | < 36 |
-| B- | 63 | | | |
+| A  | 93 | | C+ | 59 |
+| A- | 86 | | C  | 51 |
+| B+ | 80 | | D  | 39 |
+| B  | 73 | | F  | < 39 |
+| B- | 66 | | | |
 
 ## Calibration
 
@@ -62,15 +66,65 @@ B-/C+ and A is at most 5% of auto-drafts.
 (mixed seats, `makeRng(5000+i)`), each graded; band edges adjusted until the
 targets were met.
 
-**Distribution (300 auto-drafts):** gradeScore min 24.1, p25 57.7, median 67.2,
-p75 74.7, max 96, mean 65.9.
+**Distribution (300 auto-drafts, 2026-08-02 pool):** gradeScore p25 59.4,
+median 70.4, p75 78.6.
+
+Both rows below are the same 300 drafts on the same pool - only the band ladder
+differs, since calibration never touches the formula.
 
 | Bands | median | A% | histogram (A / A- / B+ / B / B- / C+ / C / D / F) |
 |---|---|---|---|
-| Initial (naive) | B | 8.3% | 25 / 26 / 53 / 65 / 54 / 43 / 16 / 13 / 5 |
-| **Calibrated (shipped)** | **B-** | **4.7%** | 14 / 17 / 36 / 55 / 61 / 54 / 32 / 23 / 8 |
+| Previous ladder (88/82/76/70/63/56/48/36) | B (70.4) | 8.3% | 25 / 22 / 44 / 63 / 53 / 35 / 35 / 17 / 6 |
+| **Recalibrated (shipped)** | **B- (70.4)** | **3.7%** | 11 / 17 / 36 / 58 / 71 / 35 / 45 / 18 / 9 |
 
-The calibrated median is B- (B-/C+ zone) and A is 4.7% (<= 5%). Met.
+The first row reproduces the alert exactly - A 8.3%, median band B - which is the
+confirmation that this fixture is the pool the monitor was complaining about. The
+recalibrated median is B- (B-/C+ zone) and A is 3.7% (<= 5%). Met.
+
+### Recalibration, 2026-08-02
+
+The daily monitor breached the A ceiling three days running (7.3% / 6.0% / 8.3%)
+and the median tipped into B, which is the alert condition
+(`shouldAlertCalibration`, 3 consecutive readings over 5%). Grades had drifted
+generous against the stated principle.
+
+**The centre and the tail had moved by different amounts**, and that shaped the
+fix. Through the middle the pool sits about +3 higher than at first calibration
+(median 67.2 -> 70.4, p25 57.7 -> 59.4) as FFC's board consolidates through the
+summer: ADP tightens, auto-picks land nearer market, value subscores rise
+together. But at a fixed edge of 88 the A-rate went 4.7% -> 8.3%, far more than a
++3 level shift explains. A single uniform shift could not hold both claims - one
+big enough to fix the tail drags the median down its band, one that centres the
+median leaves the tail over the ceiling - so each claim was calibrated where it
+lives:
+
+| Edge | Old | New | Move | Why |
+|---|---|---|---|---|
+| A  | 88 | 93 | +5 | The ceiling is a claim about the tail, and the tail fattened more than the centre moved. 88 also sat on a dense cluster (~5 drafts per point at 88-89), so small board drift pushed several across at once; past 93 the corpus thins to ~1 draft per point, so the line sits somewhere stable. |
+| A- | 82 | 86 | +4 | Absorbs half the extra stretch created by lifting A more than B. Band width 6 -> 7. |
+| B+ | 76 | 80 | +4 | Absorbs the other half. Width stays 6. |
+| B  | 70 | 73 | +3 | Tracks the centre. The median (70.4) sat 0.4 ABOVE the old B edge, which is why one ordinary day tipped the median band into B and fired the alert. |
+| B- | 63 | 66 | +3 | Tracks the centre, and puts the median 4.4 into a 7-point band instead of on its ceiling. |
+| C+ | 56 | 59 | +3 | Same level shift below the median. |
+| C  | 48 | 51 | +3 | Same. |
+| D  | 36 | 39 | +3 | Same. |
+
+Band widths go 6/6/6/7/7/8/12 -> 7/6/7/7/7/8/12: the ladder stays legible and no
+band doubles.
+
+**Validation.** Checked against five real pool snapshots (2026-07-20 .. 08-02) in
+both row orderings (see below): A peaks at 3.7% and the median lands B-/C+ on
+every one. The 1.3-2.0pp of ceiling headroom is deliberate.
+
+**Row order is part of the corpus.** `createDraftState` sorts the pool by ADP with
+a *stable* sort, so players sharing an ADP are drafted in the order the rows
+arrive - and that alone moves the A-rate by up to 3pp on an identical pool. The
+checked-in fixture is therefore emitted in a defined order
+(`ORDER BY scoring_format, teams_count, adp, ffc_player_id`) so regeneration is
+reproducible; the live monitor queries without an ORDER BY, so its reading can
+differ from the fixture by about that much. The ceiling headroom above is sized to
+cover it. Making the engine's sort fully order-independent would change drafting
+behaviour, which is a formula change and out of bounds for a calibration session.
 
 ## Callouts
 
