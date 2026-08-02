@@ -28,17 +28,17 @@
 
 import { useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
-import { canPurchaseInApp, purchasePass } from '@/lib/shell/purchaseBridge';
+import { canPurchaseInApp, purchasePass, subscribePurchaseAvailability } from '@/lib/shell/purchaseBridge';
 import { APPLE_PASS_PRICE, PASS_BUY } from './membershipCopy';
 
-// The bridge is injected before first paint and never removed, so there is
-// nothing to subscribe to - the store is static for the life of the document.
-const subscribe = () => () => {};
+// Capacitor injects its bridge before our JS runs, so the plugin is normally
+// there at hydration - but a permanently suppressed card inside a build that CAN
+// buy is an invisible failure, so the subscription polls briefly and gives up.
 const noBridgeOnServer = () => false;
 
 export default function PassBuy() {
   const router = useRouter();
-  const hasBridge = useSyncExternalStore(subscribe, canPurchaseInApp, noBridgeOnServer);
+  const hasBridge = useSyncExternalStore(subscribePurchaseAvailability, canPurchaseInApp, noBridgeOnServer);
   // idle | buying | unlocking | cancelled | pending | unavailable | failed
   const [state, setState] = useState('idle');
 

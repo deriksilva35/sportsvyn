@@ -8,7 +8,8 @@ import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
-import { appleIapEnabled } from '@/lib/appleIap';
+import { appleIapConfig } from '@/lib/appleIap';
+import IapConfigure from '@/components/shell/IapConfigure';
 import { getPresets, getDraftsUsed, isMember, canStartDraft, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
@@ -30,8 +31,9 @@ export default async function SimLobby({ searchParams }) {
   const isShell = await resolveShellMode(params);
   // Apple IAP buy path. Server-resolved (not NEXT_PUBLIC_, so flipping it is a
   // pure env change) and threaded as a prop, the same way `shell` already flows.
-  // Off today; the gate cards stay suppressed until the IAP binary ships.
-  const iap = appleIapEnabled();
+  // `enabled` requires the flag AND a valid appl_ key, so a half-configured
+  // environment renders the suppressed card rather than a button that cannot work.
+  const { enabled: iap, apiKey: rcKey, productId: rcProduct } = appleIapConfig();
   // Carry shell context into /signin so it renders the app front door reliably
   // (not dependent on the sv_shell cookie having been written yet).
   const signinHref = `/signin?callbackUrl=/sim${isShell ? '&shell=sim-app' : ''}`;
@@ -50,6 +52,11 @@ export default async function SimLobby({ searchParams }) {
       data-surface="ink"
     >
       {isShell && <ShellPersist />}
+      {/* Configure RevenueCat only in shell, only with the buy path on, and only
+          once the user id is known - never anonymously (see IapConfigure). */}
+      {isShell && iap && userId != null && (
+        <IapConfigure userId={userId} apiKey={rcKey} productId={rcProduct} />
+      )}
       <header className="sim-head">
         <Wordmark href="/sim" />
         <span className="tag">Mock Draft <b>Sim</b></span>

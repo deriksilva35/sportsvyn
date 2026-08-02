@@ -24,7 +24,10 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { APPLE_IAP_ENABLED_ENV, appleIapEnabled } from '../../lib/appleIap.js';
+import {
+  APPLE_IAP_ENABLED_ENV, APPLE_RC_KEY_ENV, PASS_PRODUCT_ID_ENV,
+  DEFAULT_PASS_PRODUCT_ID, appleIapEnabled, appleIapConfig,
+} from '../../lib/appleIap.js';
 import {
   APPLE_PASS_PRICE, MEMBERSHIP_CARD_IAP, MEMBERSHIP_CARD_SHELL,
   MEMBERSHIP_CARD_VARIANTS, MEMBERSHIP_PRICE_LINE, PASS_BUY,
@@ -203,13 +206,70 @@ test('copy uses hyphens only - no em/en dashes (house rule)', () => {
 // Wiring
 // ---------------------------------------------------------------------------
 
+const CARD_HOSTS = ['app/sim/page.js', 'app/sim/tracker/page.js'];
+
 test('every page rendering a gate card resolves the flag server-side', () => {
-  const CARD_HOSTS = ['app/sim/page.js', 'app/sim/tracker/page.js'];
   for (const rel of CARD_HOSTS) {
     const s = stripComments(src(rel));
-    assert.match(s, /appleIapEnabled/, `${rel} renders a gate card without resolving APPLE_IAP_ENABLED`);
+    assert.match(s, /appleIapConfig/, `${rel} renders a gate card without resolving the IAP config`);
     assert.match(s, /iap=\{/, `${rel} does not thread the iap prop`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// Configuration wiring — the anonymous-id rule, enforced at the mount site
+// ---------------------------------------------------------------------------
+
+test('IapConfigure is NEVER mounted without a known user id', () => {
+  // If the SDK configures anonymously it invents an $RCAnonymousID, the purchase
+  // webhook arrives carrying it, and the server refuses the event by design -
+  // Apple has taken the money and there is no account to attribute it to.
+  for (const rel of CARD_HOSTS) {
+    const s = stripComments(src(rel));
+    assert.match(s, /<IapConfigure/, `${rel} never configures RevenueCat`);
+    for (const m of s.matchAll(/\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)<IapConfigure/g)) {
+      assert.match(m[1], /userId != null/, `${rel} mounts IapConfigure without a userId guard`);
+      assert.match(m[1], /isShell/, `${rel} mounts IapConfigure outside shell mode`);
+      assert.match(m[1], /iap/, `${rel} mounts IapConfigure with the buy path disabled`);
+    }
+  }
+});
+
+test('the configurator itself refuses to configure anonymously', () => {
+  const s = stripComments(src('lib/shell/purchaseBridge.js'));
+  const fn = s.slice(s.indexOf('export async function configurePurchases'));
+  assert.match(fn, /return 'no-user'/, 'configurePurchases has no missing-user path');
+  assert.ok(fn.indexOf("return 'no-user'") < fn.indexOf('.configure('),
+    'the user-id check must precede the configure call');
+  assert.match(fn, /logIn/, 'late sign-in must go through logIn');
+});
+
+test('the appl_ key is validated, so a bad key suppresses instead of breaking', () => {
+  // Fail closed: the flag on with a missing or wrong key must render the neutral
+  // card, never a button that dies inside StoreKit. The expensive mistake this
+  // catches is the SECRET key pasted into the public slot.
+  const base = { [APPLE_IAP_ENABLED_ENV]: '1' };
+  for (const bad of [undefined, '', '   ', 'sk_live_whatever', 'appl_', 'REPLACE_ME', 'goog_abcdefghij']) {
+    const cfg = appleIapConfig({ ...base, [APPLE_RC_KEY_ENV]: bad });
+    assert.equal(cfg.enabled, false, `key ${JSON.stringify(bad)} enabled the buy path`);
+    assert.equal(cfg.apiKey, null);
+  }
+  const good = appleIapConfig({ ...base, [APPLE_RC_KEY_ENV]: 'appl_AbCdEfGhIjKl' });
+  assert.equal(good.enabled, true);
+  assert.equal(good.apiKey, 'appl_AbCdEfGhIjKl');
+  // ...and the flag still governs: a perfect key with the flag off stays off.
+  assert.equal(appleIapConfig({ [APPLE_RC_KEY_ENV]: 'appl_AbCdEfGhIjKl' }).enabled, false);
+});
+
+test('the product id has ONE source, shared by the webhook and the bridge', () => {
+  // The client bridge cannot import lib/revenuecat.js (node:crypto), so the id
+  // lives in lib/appleIap.js and both sides read it from there. A second literal
+  // would silently sell the wrong product.
+  assert.equal(appleIapConfig({}).productId, DEFAULT_PASS_PRODUCT_ID);
+  assert.equal(appleIapConfig({ [PASS_PRODUCT_ID_ENV]: 'com.other.pass' }).productId, 'com.other.pass');
+  const bridge = stripComments(src('lib/shell/purchaseBridge.js'));
+  assert.match(bridge, /from '\.\.\/appleIap\.js'/, 'the bridge must import the shared product id');
+  assert.ok(!/com\.sportsvyn\.draftvyn/.test(bridge), 'the bridge hardcodes a product id');
 });
 
 test('the iap prop is threaded, never defaulted ON anywhere', () => {

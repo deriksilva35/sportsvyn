@@ -20,7 +20,8 @@ import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import TrackerStart from '@/components/sim/TrackerStart';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
-import { appleIapEnabled } from '@/lib/appleIap';
+import { appleIapConfig } from '@/lib/appleIap';
+import IapConfigure from '@/components/shell/IapConfigure';
 import { getOpenTrackerDraft, isMember } from '@/lib/fantasy/drafts';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
@@ -48,10 +49,14 @@ export default async function TrackerTab({ searchParams }) {
   if (open) redirect(`/sim/draft/${open.id}`);
 
   const member = await isMember(userId);
+  const { enabled: iap, apiKey: rcKey, productId: rcProduct } = appleIapConfig();
 
   return (
     <div className={`sim sim--tabbar${isShell ? ' sim--shell' : ''}`} data-surface="ink">
       {isShell && <ShellPersist />}
+      {isShell && iap && userId != null && (
+        <IapConfigure userId={userId} apiKey={rcKey} productId={rcProduct} />
+      )}
       <header className="sim-head">
         <Wordmark href="/sim" />
         <span className="tag">Draft <b>Tracker</b></span>
@@ -61,7 +66,7 @@ export default async function TrackerTab({ searchParams }) {
         <GetTheAppBanner shell={isShell} />
         {/* TrackerStart renders the gate card for non-members; the entitlement is
             re-checked server-side in startTrackerDraftFor either way. */}
-        <TrackerStart entitled={member} shell={isShell} iap={appleIapEnabled()} />
+        <TrackerStart entitled={member} shell={isShell} iap={iap} />
       </main>
 
       <Attribution text={FFC_ATTRIBUTION.text} url={FFC_ATTRIBUTION.url} />
