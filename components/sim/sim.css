@@ -164,6 +164,16 @@
 .mcard-buy:disabled { opacity: .55; cursor: default; }
 .mcard-iap-msg { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .04em; color: var(--paper-dim); text-align: center; margin-top: 9px; }
 .mcard-iap-fine { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .06em; color: var(--muted-dim, #5A5A5A); text-align: center; margin-top: 8px; }
+/* Restore Purchases — always visible, secondary to BUY. Apple requires a restore
+   path for a non-consumable, and a reviewer must be able to find it without
+   first provoking an error, so it is a permanent control rather than an
+   error-state affordance. */
+.mcard-restore { display: block; width: 100%; margin-top: 9px; background: transparent; border: 1px solid var(--rule); color: var(--muted); font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 10px 0; cursor: pointer; }
+.mcard-restore:hover { border-color: var(--volt); color: var(--volt); }
+.mcard-restore:disabled { opacity: .5; cursor: default; }
+.acct-iap .mcard-restore { border-color: rgba(10,10,10,.35); color: rgba(10,10,10,.75); }
+.acct-iap .mcard-restore:hover { border-color: var(--ink); color: var(--ink); }
+.wsheet-buy .mcard-restore { display: none; }  /* the sheet is onboarding, not support */
 .setup-err { font-size: 10px; color: var(--terra); text-align: center; margin-top: 8px; letter-spacing: .04em; }
 .chiplab { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }
 

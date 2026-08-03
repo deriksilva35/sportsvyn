@@ -21,14 +21,22 @@
 
 import { signOut } from 'next-auth/react';
 import { signOutTarget } from '@/lib/shell/signOutTarget';
+import { logOutPurchases } from '@/lib/shell/purchaseBridge';
 
 export default function SignOutButton({ shell = false }) {
+  async function handle() {
+    // Tell RevenueCat too, or the SDK keeps this user's appUserID cached in the
+    // webview. The next person to sign in on the same device would then transact
+    // under the PREVIOUS user's id until a fresh configure() ran - which, given
+    // the store transfers a non-consumable to whoever last claimed it, is how a
+    // Pass ends up on the wrong account. Best-effort and awaited only briefly:
+    // failing to log out of RevenueCat must never block signing out of Sportsvyn.
+    await logOutPurchases();
+    signOut({ redirectTo: signOutTarget(shell) });
+  }
+
   return (
-    <button
-      type="button"
-      className="acct-signout"
-      onClick={() => signOut({ redirectTo: signOutTarget(shell) })}
-    >
+    <button type="button" className="acct-signout" onClick={handle}>
       Sign out
     </button>
   );

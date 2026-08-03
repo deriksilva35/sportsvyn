@@ -14,6 +14,7 @@
  * HANDLED (see lib/revenuecat.js for why each set contains what it does):
  *   NON_RENEWING_PURCHASE / INITIAL_PURCHASE  -> grant the Pass
  *   CANCELLATION / REFUND / EXPIRATION        -> expire the Apple row
+ *   TRANSFER                                  -> reconcile BOTH named users
  *   anything else                             -> ledger it, 200, ignore
  *
  * STATUS CODES ARE RETRY INSTRUCTIONS. RevenueCat retries 500s with backoff and
@@ -28,8 +29,11 @@
 
 import {
   REVENUECAT_WEBHOOK_SECRET_ENV,
+  TRANSFER_EVENT_TYPE,
   webhookAuthorized,
   normalizeEvent,
+  transferPartyIds,
+  reconcileFromRevenueCat,
 } from '@/lib/revenuecat';
 import {
   grantApplePass,
@@ -52,6 +56,39 @@ export async function POST(req) {
     body = await req.json();
   } catch {
     return new Response('invalid JSON', { status: 400 });
+  }
+
+  // TRANSFER is handled BEFORE normalizeEvent, because it cannot survive it: the
+  // event carries no app_user_id and no product_id (verified on the real 08-03
+  // delivery), so normalization would reject it as unattributable. Both named
+  // parties are reconciled against RevenueCat's own subscriber state instead of
+  // guessing a direction from the payload - correct whichever way the receipt
+  // moved, and idempotent if the event is redelivered.
+  if (String(body?.event?.type ?? '').toUpperCase() === TRANSFER_EVENT_TYPE) {
+    const parties = transferPartyIds(body);
+    console.log(`[revenuecat webhook] TRANSFER, reconciling ${parties.length} party(ies): ${parties.join(', ') || 'none resolvable'}`);
+    const results = [];
+    for (const uid of parties) {
+      try {
+        const r = await reconcileFromRevenueCat(uid);
+        results.push({ userId: uid, ok: r.ok, action: r.plan?.action ?? null, error: r.error ?? null });
+        console.log(`[revenuecat webhook]   user=${uid} -> ${r.ok ? `${r.plan?.action} (wrote=${r.wrote})` : `ERROR ${r.error}`}`);
+      } catch (err) {
+        // One party failing must not abandon the other, and must not 500 the
+        // whole delivery - RevenueCat would retry a transfer we already half
+        // applied. Each side is independent and idempotent.
+        results.push({ userId: uid, ok: false, action: null, error: err?.message });
+        console.error(`[revenuecat webhook]   user=${uid} reconcile threw:`, err?.message);
+      }
+    }
+    // Ledger the event itself so the delivery is on record next to its effects.
+    try {
+      await recordIgnoredRevenueCatEvent({
+        id: body.event.id, type: TRANSFER_EVENT_TYPE, appUserId: null, userId: null,
+        productId: null, environment: body.event.environment ?? null,
+      });
+    } catch { /* the reconciles are the important part */ }
+    return Response.json({ received: true, transfer: results });
   }
 
   const n = normalizeEvent(body);

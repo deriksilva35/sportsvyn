@@ -120,14 +120,23 @@ export const MEMBERSHIP_CARD_IAP = {
 // reaches our server, which is fast but not synchronous.
 export const PASS_BUY = {
   cta: 'Unlock the Draft Pass',
+  retry: 'Try again',
+  restore: 'Restore purchase',
   note: 'One time. Through the Super Bowl.',
   buying: 'Opening App Store...',
-  unlocking: 'Purchased. Unlocking your account...',
+  restoring: 'Checking your purchases...',
+  unlocking: 'Confirmed. Unlocking...',
+  purchased: 'Purchased.',
+  restored: 'Restored. Your Pass is back.',
   cancelled: 'Purchase cancelled.',
   pending: 'Waiting on approval. Your Pass unlocks once it clears.',
   unavailable: 'The App Store is not reachable right now. Try again in a moment.',
-  failed: 'That purchase did not go through. Nothing was charged.',
-  restoreNote: 'Already bought it? It unlocks automatically once Apple confirms.',
+  notOwned: 'No previous purchase found on this Apple ID.',
+  failed: 'That did not go through. Nothing was charged.',
+  // Shown when the store succeeded but the account still reads as free after a
+  // refresh. It must NOT say "purchase failed" - the money may well have moved -
+  // and it must give an instruction rather than a spinner.
+  stalled: 'Your purchase went through but the account has not updated yet. Tap Restore purchase, or reopen the app.',
 };
 
 // First-launch welcome sheet (shell + APPLE_IAP_ENABLED only, once per device).
