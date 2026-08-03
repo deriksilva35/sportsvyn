@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sportsvyn — The Movement Board (mock v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Source+Serif+4:ital@1&family=JetBrains+Mono:wght@400;500&family=Saira+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --graphite:#1A1A1A; --graphite-up:#242424; --charcoal:#2A2A2A;
+    --paper:#F5F5F2; --paper-dim:#C5C5C2; --muted:#888888;
+    --volt:#D4FF00; --volt-hover:#BAE000; --volt-dim:#8FAA00;
+    --live:#E63946; --jade:#2A8A4F; --terra:#B8410F;
+    --font-display:'Saira','Arial Narrow',sans-serif;
+    --font-serif:'Source Serif 4',Georgia,serif;
+    --font-mono:'JetBrains Mono',ui-monospace,monospace;
+    --font-cond:'Saira Condensed','Arial Narrow',sans-serif;
+    --cols:28px 92px minmax(180px,1.4fr) 70px 62px 74px 62px 66px 92px 80px 70px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased}
+  body{background:var(--ink);color:var(--paper);font-family:var(--font-mono);line-height:1.5}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--volt);color:var(--ink)}
+
+  .wordmark{font-family:var(--font-display);font-weight:900;font-style:italic;letter-spacing:-0.05em;
+    line-height:1;font-size:26px;color:var(--paper);display:inline-flex;align-items:baseline}
+  .y-wrap{position:relative;color:var(--volt);display:inline-block}
+  .y-wrap .macron{position:absolute;left:0;top:-0.05em;width:115%;height:0.07em;background:var(--volt);transform:translateX(-35%)}
+  header.top{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:3px solid var(--volt)}
+  .top-inner{max-width:1320px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;gap:32px}
+  nav.main{display:flex;gap:24px;flex:1}
+  nav.main a{font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);padding:4px 0;transition:color .15s}
+  nav.main a:hover{color:var(--paper)}
+  nav.main a.active{color:var(--paper)}
+  nav.main a.active::after{content:'';display:block;height:2px;background:var(--volt);margin-top:5px}
+  .acct{width:30px;height:30px;border-radius:999px;border:1px solid var(--charcoal);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted)}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 24px}
+
+  .mockbar{background:#151505;border-bottom:1px solid var(--charcoal);padding:8px 0}
+  .mockbar .inner{max-width:1320px;margin:0 auto;padding:0 24px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .mockbar span.t{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--volt-dim);margin-right:8px}
+  .mockbar button{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
+    background:var(--ink);color:var(--paper-dim);border:1px solid var(--charcoal);border-radius:3px;padding:5px 11px;cursor:pointer}
+  .mockbar button.on{color:var(--volt);border-color:var(--volt-dim)}
+  .mockbar .divx{width:1px;height:16px;background:var(--charcoal);margin:0 6px}
+
+  .pagehead{padding:36px 0 14px;display:flex;justify-content:space-between;align-items:flex-end;gap:30px;flex-wrap:wrap}
+  .kicker{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--volt);margin-bottom:10px}
+  h1.title{font-family:var(--font-display);font-weight:900;font-style:italic;letter-spacing:-0.04em;font-size:52px;line-height:0.92;color:var(--paper)}
+  .subhead{font-family:var(--font-serif);font-style:italic;color:var(--muted);font-size:14px;margin-top:12px;max-width:600px;line-height:1.55}
+
+  .recstrip{display:flex;border:1px solid var(--charcoal);border-radius:3px;overflow:hidden;background:var(--graphite)}
+  .recstrip .cell{padding:13px 18px;border-right:1px solid var(--charcoal);text-align:center;min-width:104px}
+  .recstrip .cell:last-child{border-right:none}
+  .recstrip .k{font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .recstrip .v{font-family:var(--font-display);font-weight:900;font-style:italic;font-size:22px;line-height:1;color:var(--paper)}
+  .recstrip .v.pos{color:var(--volt)} .recstrip .v.neg{color:var(--terra)}
+  .recstrip .n{font-size:9px;color:var(--muted);letter-spacing:0.06em;margin-top:5px}
+
+  .prov{display:flex;gap:24px;flex-wrap:wrap;padding:12px 0 24px;border-bottom:1px solid var(--charcoal);margin-bottom:22px}
+  .prov div{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
+  .prov b{color:var(--paper-dim);font-weight:400}
+
+  .panel{background:var(--graphite);border:1px solid var(--charcoal);border-radius:3px;margin-bottom:26px}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px 14px;border-bottom:1px solid var(--charcoal);flex-wrap:wrap}
+  .panel-head .lbl{font-family:var(--font-cond);font-weight:600;font-size:16px;letter-spacing:0.14em;text-transform:uppercase;color:var(--paper);display:flex;align-items:center;gap:10px}
+  .panel-head .lbl .mono{font-family:var(--font-mono);font-weight:400;font-size:11px;letter-spacing:0.1em;color:var(--muted)}
+  .panel-note{font-family:var(--font-serif);font-style:italic;font-size:12.5px;color:var(--muted);line-height:1.5;max-width:430px}
+
+  .filters{display:flex;flex-wrap:wrap;gap:9px;align-items:center;padding:14px 20px}
+  .filters.row2{padding-top:0}
+  .flabel{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+  .chip{font-size:11.5px;letter-spacing:0.04em;color:var(--paper-dim);background:var(--ink);border:1px solid var(--charcoal);
+    border-radius:999px;padding:6px 13px;cursor:pointer;transition:.15s;white-space:nowrap;font-family:var(--font-mono)}
+  .chip:hover{background:var(--graphite-up)}
+  .chip.on{background:var(--volt);color:var(--ink);border-color:var(--volt);font-weight:500}
+  .sep{width:1px;height:18px;background:var(--charcoal);margin:0 3px}
+  .searchbox{flex:1;min-width:150px;background:var(--ink);border:1px solid var(--charcoal);border-radius:3px;
+    padding:7px 12px;color:var(--paper);font-family:var(--font-mono);font-size:12px}
+  .searchbox::placeholder{color:var(--muted)} .searchbox:focus{outline:none;border-color:var(--volt)}
+  .toggle{font-size:11px;letter-spacing:0.05em;color:var(--paper-dim);background:var(--ink);border:1px solid var(--charcoal);
+    border-radius:3px;padding:7px 12px;cursor:pointer;transition:.15s;font-family:var(--font-mono);text-transform:uppercase}
+  .toggle:hover{background:var(--graphite-up)}
+  .toggle.on{color:var(--volt);border-color:var(--volt-dim)}
+
+  .sheet-scroll{overflow-x:auto;scrollbar-width:thin}
+  .sheet{min-width:1140px}
+  .shead{display:grid;grid-template-columns:var(--cols);align-items:center;background:var(--ink);
+    border-top:1px solid var(--charcoal);border-bottom:1px solid var(--charcoal);
+    font-size:9px;letter-spacing:0.13em;text-transform:uppercase;color:var(--muted)}
+  .shead > div{padding:9px 10px;white-space:nowrap}
+  .shead .r{text-align:right}
+  .shead .sortable{cursor:pointer;user-select:none;transition:color .12s}
+  .shead .sortable:hover{color:var(--paper-dim)}
+  .shead .sortable.act{color:var(--volt)}
+  .shead .caret{font-size:8px;margin-left:3px}
+
+  .srow{display:grid;grid-template-columns:var(--cols);align-items:center;cursor:pointer;
+    border-bottom:1px solid #1f1f1f;transition:background .1s;animation:rise .3s cubic-bezier(0,0,0.2,1) both}
+  @keyframes rise{from{opacity:0}to{opacity:1}}
+  .srow:nth-child(even){background:rgba(255,255,255,0.014)}
+  .srow:hover{background:var(--graphite-up)}
+  .srow.steam{box-shadow:inset 2px 0 0 var(--volt)}
+  .srow.sliding{box-shadow:inset 2px 0 0 var(--terra)}
+  .srow > div{padding:11px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .srow .r{text-align:right}
+
+  .cell-star{cursor:pointer;color:var(--muted);display:flex;align-items:center;font-size:13px}
+  .cell-star.on{color:var(--volt)}
+
+  .band{font-size:9px;font-family:var(--font-cond);font-weight:600;letter-spacing:0.1em;
+    border-radius:2px;padding:3px 7px;display:inline-block;text-transform:uppercase}
+  .band.steam{background:var(--volt);color:var(--ink)}
+  .band.warming{background:transparent;color:var(--volt);border:1px solid var(--volt-dim)}
+  .band.quiet{background:transparent;color:var(--muted);border:1px solid var(--charcoal)}
+  .band.cooling{background:transparent;color:var(--terra);border:1px solid #5A2008}
+  .band.sliding{background:var(--terra);color:var(--paper)}
+  .band.none{background:transparent;color:var(--muted);border:1px dashed var(--charcoal)}
+
+  .cell-plr .nm{font-family:var(--font-cond);font-weight:600;font-size:15.5px;letter-spacing:0.01em;color:var(--paper);display:flex;align-items:center;gap:7px}
+  .cell-plr .rk{font-size:8.5px;font-family:var(--font-cond);font-weight:600;letter-spacing:0.1em;
+    background:var(--volt);color:var(--ink);border-radius:2px;padding:1px 5px;flex:none}
+  .cell-plr .pt{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:1px}
+  .num{font-family:var(--font-mono);font-size:13px;color:var(--paper)}
+  .num.dim{color:var(--muted)}
+  .num.na{color:#4A4A4A}
+  .delta{font-family:var(--font-mono);font-size:13px}
+  .delta.pos{color:var(--volt)} .delta.neg{color:var(--terra)} .delta.flat{color:var(--muted)}
+  .delta.big{font-size:15px;font-weight:500}
+
+  .rng{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+  .rng .lab{font-size:9.5px;color:var(--muted);letter-spacing:0.04em;font-family:var(--font-mono)}
+  .rng .track{width:80px;height:4px;background:var(--charcoal);border-radius:2px;position:relative}
+  .rng .track i{position:absolute;top:-2px;width:2px;height:8px;background:var(--volt)}
+  .rng.na .track{background:#161616}
+
+  .div-cell .v{font-family:var(--font-mono);font-size:13px;color:var(--paper-dim)}
+  .div-cell .v.na{color:#4A4A4A}
+  .drift{font-family:var(--font-mono);font-size:12.5px;text-align:right;color:var(--muted)}
+  .drift.up{color:var(--volt)} .drift.down{color:var(--terra)}
+  .drift.long{font-weight:500;font-size:13.5px}
+  .div-cell .v.gap{font-size:14px;font-weight:500;color:var(--volt)}
+  .cell-plr .inj{font-size:8.5px;font-family:var(--font-cond);font-weight:600;letter-spacing:0.1em;
+    border-radius:2px;padding:1px 5px;flex:none;border:1px solid var(--charcoal);color:var(--muted)}
+  .cell-plr .inj.q{color:#C8A227;border-color:#5A4A10}
+  .cell-plr .inj.d{color:var(--terra);border-color:#5A2008}
+  .cell-plr .inj.o{background:var(--terra);color:var(--paper);border-color:var(--terra)}
+  .cell-plr .ud{font-size:8.5px;font-family:var(--font-cond);font-weight:600;letter-spacing:0.1em;
+    border-radius:2px;padding:1px 5px;flex:none;border:1px dashed var(--volt-dim);color:var(--volt-dim)}
+  .div-cell em{display:block;font-style:normal;font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;color:#5A5A5A;margin-top:2px}
+
+  .sdetail{display:none;background:var(--ink);border-bottom:1px solid var(--charcoal);
+    padding:15px 20px 17px 134px;font-family:var(--font-serif);font-style:italic;font-size:14.5px;line-height:1.58;color:var(--paper-dim)}
+  .sdetail.open{display:block;animation:rise .2s ease both}
+  .sdetail .meta{font-family:var(--font-mono);font-style:normal;font-size:10px;letter-spacing:0.08em;
+    text-transform:uppercase;color:var(--muted);margin-top:11px;display:flex;gap:18px;flex-wrap:wrap}
+  .sdetail .meta b{color:var(--paper-dim);font-weight:400}
+
+  .empty{padding:44px 20px;text-align:center}
+  .empty .h{font-family:var(--font-cond);font-weight:600;font-size:15px;letter-spacing:0.14em;text-transform:uppercase;color:var(--paper-dim)}
+  .empty .p{font-family:var(--font-serif);font-style:italic;font-size:14px;color:var(--muted);margin-top:9px;max-width:440px;margin:9px auto 0;line-height:1.55}
+
+  .notice{display:flex;gap:12px;align-items:flex-start;padding:13px 20px;background:#131300;border-bottom:1px solid var(--charcoal)}
+  .notice .mk{width:12px;height:12px;background:var(--volt);flex:none;margin-top:3px}
+  .notice .tx{font-family:var(--font-serif);font-style:italic;font-size:13.5px;color:var(--paper-dim);line-height:1.5}
+
+  .method{border-top:1px solid var(--charcoal);padding:24px 0 60px;display:flex;gap:34px;flex-wrap:wrap;align-items:flex-start}
+  .method .blk{flex:1;min-width:250px}
+  .method h4{font-family:var(--font-cond);font-weight:600;font-size:13px;letter-spacing:0.16em;text-transform:uppercase;color:var(--paper-dim);margin-bottom:10px}
+  .method p{font-family:var(--font-serif);font-style:italic;font-size:13.5px;color:var(--muted);line-height:1.6}
+  .method .bands{display:flex;flex-direction:column;gap:7px;margin-top:4px}
+  .method .bl{display:flex;gap:10px;align-items:center;font-size:11px;color:var(--muted);letter-spacing:0.04em}
+  .attr{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#555;padding:0 0 40px}
+</style>
+</head>
+<body>
+
+<div class="mockbar"><div class="inner">
+  <span class="t">Mock v2 · sample data, rookie flags illustrative</span>
+  <button id="mDraft" class="on">Draft season</button>
+  <button id="mWaiver">In-season waiver</button>
+  <span class="divx"></span>
+  <button id="btnFull" class="on">Full history</button>
+  <button id="btnThin">Day 2 state</button>
+  <button id="btnNone">Day 1 state</button>
+</div></div>
+
+<header class="top"><div class="top-inner">
+  <div class="wordmark">SPORTSV<span class="y-wrap">Y<span class="macron"></span></span>N</div>
+  <nav class="main"><a href="#">Home</a><a href="#" class="active">Football</a><a href="#">Soccer</a><a href="#">Market</a></nav>
+  <div class="acct">D</div>
+</div></header>
+
+<div class="wrap">
+  <div class="pagehead">
+    <div>
+      <div class="kicker" id="pgKicker">NFL · Fantasy · ADP</div>
+      <h1 class="title">The Movement<br>Board</h1>
+      <p class="subhead" id="pgSub">Where drafters are actually taking players, and how that has changed. Not a ranking. Not a recommendation. A record of what the market is doing, updated every morning.</p>
+    </div>
+    <div class="recstrip" id="strip"></div>
+  </div>
+
+  <div class="prov" id="prov"></div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="lbl">The Board <span class="mono" id="rowcount"></span></div>
+      <div class="panel-note" id="panelNote"></div>
+    </div>
+
+    <div class="filters">
+      <span class="flabel">Pos</span>
+      <span class="chip on" data-pos="ALL">All</span>
+      <span class="chip" data-pos="QB">QB</span>
+      <span class="chip" data-pos="RB">RB</span>
+      <span class="chip" data-pos="WR">WR</span>
+      <span class="chip" data-pos="TE">TE</span>
+      <span class="sep"></span>
+      <span class="flabel" id="rndLab">Round</span>
+      <span id="rndChips"></span>
+      <span class="sep"></span>
+      <span class="flabel" id="clsLab">Class</span>
+      <span id="clsChips"></span>
+    </div>
+    <div class="filters row2" id="row2"></div>
+
+    <div id="noticeSlot"></div>
+
+    <div class="sheet-scroll"><div class="sheet">
+      <div class="shead" id="shead"></div>
+      <div id="rows"></div>
+    </div></div>
+  </div>
+
+  <div class="method">
+    <div class="blk">
+      <h4 id="mTitle"></h4>
+      <p id="mBody"></p>
+    </div>
+    <div class="blk">
+      <h4>Bands</h4>
+      <div class="bands" id="mBands"></div>
+      <p style="margin-top:11px" id="mBandNote"></p>
+    </div>
+    <div class="blk">
+      <h4 id="mThirdTitle"></h4>
+      <p id="mThirdBody"></p>
+    </div>
+  </div>
+
+  <div class="attr" id="attr"></div>
+</div>
+
+<script>
+// ---------- sample data ----------
+// DRAFT: adp = pick number, deltas positive = rising (drafted earlier),
+// drift = consecutive snapshots moving the same direction (signed)
+const DRAFT = [
+  {id:1,n:"Ja'Marr Chase",pos:"WR",tm:"CIN",rk:0,adp:1.6,open:1.4,d1:0.0,d3:-0.1,d7:-0.2,drift:0,lo:1.2,hi:1.8,sv:1.5,drafts:2801,
+   read:"The most stable price in the pool. Chase has been the first or second pick in every snapshot since it opened."},
+  {id:2,n:"Bijan Robinson",pos:"RB",tm:"ATL",rk:0,adp:2.4,open:2.1,d1:-0.1,d3:-0.2,d7:-0.3,drift:-2,lo:1.9,hi:2.6,sv:2.6,drafts:2799,
+   read:"Alternates with Chase at the top depending on format. In standard scoring he is the more common first pick; in full PPR he is not."},
+  {id:3,n:"Justin Jefferson",pos:"WR",tm:"MIN",rk:0,adp:4.1,open:3.8,d1:0.1,d3:-0.1,d7:-0.3,drift:0,lo:3.6,hi:4.3,sv:4.0,drafts:2795,
+   read:"Priced as a top-five pick in every format and every league size the pool covers."},
+  {id:4,n:"Jahmyr Gibbs",pos:"RB",tm:"DET",rk:0,adp:5.9,open:6.4,d1:0.2,d3:0.3,d7:0.6,drift:3,lo:5.7,hi:6.8,sv:5.6,drafts:2790,
+   read:"Effectively flat, though the direction has been consistent for three mornings. The movement is still inside what the pool produces on any given day."},
+  {id:5,n:"Saquon Barkley",pos:"RB",tm:"PHI",rk:0,adp:7.3,open:5.2,d1:-0.8,d3:-1.6,d7:-2.1,drift:-5,lo:5.1,hi:7.6,sv:7.8,drafts:2788,
+   read:"Five straight snapshots down with no reported change in his situation. Each move is small. The direction is not. Workload after a heavy season is the stated concern in public discussion, but the board only shows that the field is acting on it."},
+  {id:6,n:"CeeDee Lamb",pos:"WR",tm:"DAL",rk:0,adp:8.7,open:7.9,d1:-0.3,d3:-0.6,d7:-0.9,drift:-3,lo:7.7,hi:9.1,sv:8.9,drafts:2782,
+   read:"A first-round pick in every snapshot, drifting slightly toward the back of the round."},
+  {id:7,n:"Amon-Ra St. Brown",pos:"WR",tm:"DET",rk:0,adp:11.2,open:10.6,d1:-0.2,d3:-0.4,d7:-0.7,drift:-2,lo:10.4,hi:11.6,sv:11.4,drafts:2778,
+   read:"Stable inside the first round across all four scoring formats, which is rare for a target-volume receiver."},
+  {id:8,n:"Ashton Jeanty",pos:"RB",tm:"LV",rk:0,adp:12.1,open:15.4,d1:0.3,d3:1.1,d7:3.2,drift:4,lo:12.1,hi:16.0,sv:11.8,drafts:2774,
+   read:"Settled. Jeanty opened as a first-round pick and has stayed one, with a total range of under four picks across the full history."},
+  {id:9,n:"Malik Nabers",pos:"WR",tm:"NYG",rk:0,adp:14.8,open:9.2,d1:-1.1,d3:-3.4,d7:-5.6,drift:-6,lo:9.0,hi:14.8,sv:13.9,drafts:2688,
+   read:"Six straight snapshots down, and out of the first round in PPR for the first time. The slide began before the quarterback depth chart news and continued after it, which suggests the market was already moving for other reasons."},
+  {id:10,n:"Puka Nacua",pos:"WR",tm:"LAR",rk:0,adp:16.5,open:19.8,d1:0.9,d3:2.4,d7:3.4,drift:3,lo:16.2,hi:20.4,sv:15.9,drafts:2701,
+   read:"Nacua has crossed from the back of the second round into the front of it. The move is small in absolute terms but it changes which tier he is drafted from."},
+  {id:11,n:"Brock Bowers",pos:"TE",tm:"LV",rk:0,adp:18.2,open:26.7,d1:0.6,d3:2.1,d7:8.4,drift:11,lo:18.2,hi:27.9,sv:16.4,drafts:2712,
+   read:"Eleven consecutive snapshots in the same direction, the longest streak on the board. No single morning has moved him more than a pick. The only tight end taken inside the second round in any format."},
+  {id:12,n:"Brian Thomas Jr.",pos:"WR",tm:"JAX",rk:0,adp:19.6,open:17.2,d1:-0.9,d3:-1.9,d7:-2.6,drift:-4,lo:17.0,hi:20.1,sv:20.4,drafts:2685,
+   read:"Thomas has given back the ground he gained in early July. The board is close to where it opened."},
+  {id:13,n:"De'Von Achane",pos:"RB",tm:"MIA",rk:0,adp:20.3,open:13.9,d1:-2.2,d3:-4.1,d7:-6.4,drift:-7,lo:13.9,hi:21.0,sv:19.1,drafts:2690,
+   read:"A full round given back since the pool opened, seven snapshots without a single day up. The decline tracks a broader move away from the smaller back archetype across the top thirty."},
+  {id:14,n:"Drake London",pos:"WR",tm:"ATL",rk:0,adp:22.1,open:24.9,d1:0.4,d3:1.8,d7:2.9,drift:3,lo:21.8,hi:25.4,sv:21.6,drafts:2678,
+   read:"A modest gain that has held for three straight snapshots after two weeks of no movement at all."},
+  {id:15,n:"Christian McCaffrey",pos:"RB",tm:"SF",rk:0,adp:26.8,open:22.4,d1:-1.6,d3:-2.9,d7:-4.2,drift:-4,lo:22.1,hi:27.4,sv:28.9,drafts:2681,
+   read:"Drifting, not falling. The loss keeps him inside the same tier he opened in. Our drafters take him two picks later than the field, the widest gap among backs in the top thirty."},
+  {id:16,n:"Jaxon Smith-Njigba",pos:"WR",tm:"SEA",rk:0,adp:29.7,open:38.2,d1:1.8,d3:5.4,d7:12.6,drift:6,lo:29.7,hi:39.1,sv:28.2,drafts:2670,
+   read:"Six snapshots up and now inside the third round. The move has been steady rather than sharp, which is usually the field repricing rather than reacting."},
+  {id:17,n:"Bucky Irving",pos:"RB",tm:"TB",rk:0,adp:31.4,open:54.2,d1:2.8,d3:11.6,d7:23.1,drift:4,lo:31.4,hi:56.0,sv:34.8,drafts:2610,
+   read:"Half a round in three days and two full rounds since the pool opened. The three-day slope is steeper than the seven-day average, which means the move is accelerating rather than settling."},
+  {id:18,n:"Trey McBride",pos:"TE",tm:"ARI",rk:0,adp:34.8,open:41.6,d1:1.1,d3:3.6,d7:6.9,drift:5,lo:34.8,hi:42.4,sv:33.1,drafts:2664,
+   read:"The second tight end and the only other one taken inside the top forty. Five snapshots the same way puts him in front of two receivers he opened behind."},
+  {id:19,n:"Josh Allen",pos:"QB",tm:"BUF",rk:0,adp:38.6,open:44.2,d1:1.2,d3:3.1,d7:5.7,drift:4,lo:38.6,hi:45.1,sv:41.3,drafts:2652,
+   read:"The first quarterback off the board in PPR and the only one taken inside the top forty. Our drafters wait nearly three picks longer than the field, a gap that has held all summer."},
+  {id:20,n:"Omarion Hampton",pos:"RB",tm:"LAC",rk:1,adp:44.9,open:61.5,d1:1.4,d3:6.9,d7:16.2,drift:9,lo:44.9,hi:63.0,sv:47.1,drafts:2588,
+   read:"Nine consecutive snapshots up, never more than four picks at a time. That shape usually means the field is repricing rather than reacting to a single report."},
+  {id:21,n:"Jayden Daniels",pos:"QB",tm:"WAS",rk:0,adp:46.1,open:52.8,d1:1.9,d3:4.4,d7:6.8,drift:5,lo:46.1,hi:54.0,sv:48.7,drafts:2630,
+   read:"Daniels has closed most of the gap to Allen over the last two weeks. In 2QB formats he goes ahead of him."},
+  {id:22,n:"Lamar Jackson",pos:"QB",tm:"BAL",rk:0,adp:49.4,open:47.1,d1:-0.4,d3:-1.2,d7:-2.3,drift:-3,lo:46.8,hi:50.2,sv:50.8,drafts:2626,
+   read:"Flat to slightly down. Jackson is the third quarterback in most snapshots and the second in a handful."},
+  {id:23,n:"Nico Collins",pos:"WR",tm:"HOU",rk:0,adp:52.7,open:21.8,d1:-6.4,d3:-18.2,d7:-30.9,drift:-4,lo:21.8,hi:54.0,sv:49.2,drafts:2544,
+   read:"The steepest fall on the board and the only player to drop more than a round and a half in three days. The move is concentrated in the last four snapshots rather than spread across the history."},
+  {id:24,n:"Dalton Kincaid",pos:"TE",tm:"BUF",rk:0,adp:56.2,open:63.8,d1:0.8,d3:2.4,d7:5.1,drift:5,lo:56.2,hi:65.2,sv:58.4,drafts:2519,
+   read:"Small gains, five mornings running. The third tight end in most snapshots and the last one taken before a long gap at the position."},
+  {id:25,n:"Quinshon Judkins",pos:"RB",tm:"CLE",rk:1,adp:58.9,open:71.4,d1:1.1,d3:3.8,d7:9.2,drift:7,lo:58.9,hi:73.0,sv:61.7,drafts:2498,
+   read:"Seven snapshots the same way. None of them large. The backfield ahead of him has not changed, which makes the persistence more interesting than the size."},
+  {id:26,n:"George Pickens",pos:"WR",tm:"DAL",rk:0,adp:63.4,open:59.1,d1:-0.7,d3:-2.1,d7:-3.8,drift:-4,lo:58.6,hi:64.2,sv:65.9,drafts:2471,
+   read:"Slipping toward the back of the fifth round. Our drafters take him two and a half picks later than the field."},
+  {id:27,n:"Travis Hunter",pos:"WR",tm:"JAX",rk:1,adp:67.3,open:84.1,d1:4.2,d3:9.8,d7:14.9,drift:3,lo:67.3,hi:88.4,sv:73.6,drafts:2401,
+   read:"The widest divergence on the board. The field has moved Hunter nearly a full round in three days; our drafters still take him six picks later. Two-way usage remains the open question and the two populations are pricing that uncertainty differently."},
+  {id:28,n:"Emeka Egbuka",pos:"WR",tm:"TB",rk:1,adp:69.8,open:82.4,d1:1.2,d3:3.4,d7:8.1,drift:6,lo:69.8,hi:84.0,sv:72.1,drafts:2388,
+   read:"Six mornings up. Egbuka has not had a single day of large movement and has still gained a full round since the pool opened."},
+  {id:29,n:"Tetairoa McMillan",pos:"WR",tm:"CAR",rk:1,adp:71.9,open:88.3,d1:3.1,d3:7.4,d7:15.4,drift:9,lo:71.9,hi:91.0,sv:76.2,drafts:2380,
+   read:"Nine of the last ten snapshots up, driven by target share reporting rather than any change in the depth chart."},
+  {id:30,n:"Tyrone Tracy Jr.",pos:"RB",tm:"NYG",rk:0,adp:74.6,open:69.2,d1:-0.9,d3:-2.4,d7:-4.1,drift:-5,lo:68.8,hi:75.4,sv:77.9,drafts:2361,
+   read:"Five straight down. Small moves, one direction, and no reported change behind them."},
+  {id:31,n:"Jaylen Warren",pos:"RB",tm:"PIT",rk:0,adp:76.2,open:81.9,d1:0.6,d3:1.9,d7:4.2,drift:4,lo:76.2,hi:83.1,sv:74.8,drafts:2349,
+   read:"A slow climb through the seventh round with no single day of note."},
+  {id:32,n:"Keon Coleman",pos:"WR",tm:"BUF",rk:0,adp:79.3,open:74.6,d1:-0.8,d3:-2.2,d7:-3.9,drift:-3,lo:73.9,hi:80.1,sv:81.4,drafts:2331,
+   read:"Drifting back toward the eighth round after opening in the seventh."},
+  {id:33,n:"Colston Loveland",pos:"TE",tm:"CHI",rk:1,adp:81.5,open:96.2,d1:1.4,d3:4.1,d7:9.6,drift:8,lo:81.5,hi:98.4,sv:84.2,drafts:2318,
+   read:"Eight consecutive snapshots up. The fourth tight end taken and the first one drafted after the position's early cliff."},
+  {id:34,n:"Tee Higgins",pos:"WR",tm:"CIN",rk:0,adp:88.1,open:84.7,d1:-0.4,d3:-1.4,d7:-2.8,drift:-4,lo:83.9,hi:88.9,sv:90.6,drafts:2286,
+   read:"Small losses, four mornings running. Nothing in his situation has changed."},
+  {id:35,n:"Marvin Mims Jr.",pos:"WR",tm:"DEN",rk:0,adp:92.7,open:104.3,d1:1.1,d3:3.2,d7:7.4,drift:6,lo:92.7,hi:106.1,sv:95.3,drafts:2264,
+   read:"Six snapshots the same way. A quiet climb out of the ninth round."},
+  {id:36,n:"Cam Skattebo",pos:"RB",tm:"NYG",rk:1,adp:96.4,open:78.2,d1:-3.8,d3:-9.6,d7:-17.1,drift:-5,lo:78.2,hi:98.0,sv:92.7,drafts:2244,
+   read:"Out of the eighth round after opening in the seventh. The drop is concentrated in the last five snapshots and coincides with the backfield adding a veteran."},
+  {id:37,n:"Jalen McMillan",pos:"WR",tm:"TB",rk:0,adp:99.2,open:112.8,d1:0.9,d3:2.8,d7:6.9,drift:7,lo:99.2,hi:114.6,sv:102.4,drafts:2201,
+   read:"Seven mornings up, none of them by more than a pick and a half."},
+  {id:38,n:"Bhayshul Tuten",pos:"RB",tm:"JAX",rk:1,adp:101.3,open:118.4,d1:1.2,d3:3.6,d7:8.2,drift:6,lo:101.3,hi:120.2,sv:106.8,drafts:2184,
+   read:"A round and a half gained without a single day of large movement."},
+  {id:39,n:"Tank Bigsby",pos:"RB",tm:"JAX",rk:0,adp:104.8,open:98.6,d1:-0.7,d3:-2.1,d7:-4.4,drift:-5,lo:97.9,hi:105.6,sv:107.2,drafts:2166,
+   read:"Five snapshots down as the backfield around him has gotten more crowded."},
+  {id:40,n:"Tyler Allgeier",pos:"RB",tm:"ATL",rk:0,adp:110.4,open:106.1,d1:-0.3,d3:-1.2,d7:-2.6,drift:-3,lo:105.4,hi:111.2,sv:112.9,drafts:2131,
+   read:"Holding roughly where he opened, with a slight lean toward the tenth round."},
+  {id:41,n:"Roschon Johnson",pos:"RB",tm:"CHI",rk:0,adp:112.6,open:124.9,d1:0.8,d3:2.4,d7:5.8,drift:6,lo:112.6,hi:126.4,sv:116.1,drafts:2118,
+   read:"Six consecutive mornings up. A full round gained in picks that most drafters do not think about."},
+  {id:42,n:"Adonai Mitchell",pos:"WR",tm:"IND",rk:0,adp:116.9,open:109.4,d1:-0.6,d3:-1.8,d7:-3.9,drift:-4,lo:108.8,hi:117.6,sv:119.4,drafts:2094,
+   read:"Slipping quietly out of the ninth round."},
+  {id:43,n:"Isaac Guerendo",pos:"RB",tm:"SF",rk:0,adp:121.9,open:114.2,d1:-0.5,d3:-1.6,d7:-3.4,drift:-3,lo:113.8,hi:122.6,sv:124.8,drafts:2061,
+   read:"Down three mornings running with no news behind it."},
+  {id:44,n:"Jaylen Wright",pos:"RB",tm:"MIA",rk:0,adp:124.1,open:131.8,d1:0.7,d3:2.1,d7:4.6,drift:5,lo:124.1,hi:133.2,sv:127.3,drafts:2048,
+   read:"Five snapshots up. Round eleven to round eleven, but the direction has not wavered."},
+  {id:45,n:"Luke McCaffrey",pos:"WR",tm:"WAS",rk:0,adp:128.7,open:136.4,d1:0.6,d3:1.9,d7:4.1,drift:4,lo:128.7,hi:138.1,sv:132.6,drafts:2019,
+   read:"A slow climb through the eleventh round."},
+  {id:46,n:"Elic Ayomanor",pos:"WR",tm:"TEN",rk:1,adp:136.4,open:154.2,d1:1.4,d3:4.2,d7:9.8,drift:9,lo:136.4,hi:156.8,sv:141.9,drafts:1974,
+   read:"Nine straight mornings up. Round thirteen to round twelve, and then some. Nobody move is large enough to notice on its own."},
+  {id:47,n:"Ray Davis",pos:"RB",tm:"BUF",rk:0,adp:139.2,open:132.6,d1:-0.4,d3:-1.4,d7:-3.1,drift:-4,lo:131.9,hi:140.1,sv:142.4,drafts:1958,
+   read:"Four mornings down, giving back ground he took in July."},
+  {id:48,n:"Xavier Legette",pos:"WR",tm:"CAR",rk:0,adp:142.8,open:136.9,d1:-0.3,d3:-1.1,d7:-2.4,drift:-3,lo:136.2,hi:143.4,sv:146.1,drafts:1931,
+   read:"Drifting toward the back of the twelfth round."},
+  {id:49,n:"Dylan Sampson",pos:"RB",tm:"CLE",rk:1,adp:148.6,open:167.4,d1:1.6,d3:4.8,d7:11.2,drift:10,lo:148.6,hi:169.8,sv:154.2,drafts:1902,
+   read:"Ten consecutive snapshots up. He has moved from round fourteen to round thirteen and is close to round twelve, entirely through small daily gains."},
+  {id:50,n:"Braelon Allen",pos:"RB",tm:"NYJ",rk:0,adp:151.4,open:158.9,d1:0.5,d3:1.6,d7:3.8,drift:5,lo:151.4,hi:160.2,sv:null,drafts:241,
+   read:"Below the draft-count threshold for a Sportsvyn ADP reading. The market number is shown; ours is not, until he appears in enough of our drafts to mean something."},
+  {id:51,n:"Devaughn Vele",pos:"WR",tm:"NO",rk:0,adp:154.9,open:171.2,d1:0.6,d3:1.8,d7:5.4,drift:7,lo:154.9,hi:173.4,sv:null,drafts:198,
+   read:"Seven mornings the same direction in picks nobody discusses. Round fourteen to round thirteen. The Sportsvyn number is withheld until the sample supports it."},
+  {id:52,n:"Kimani Vidal",pos:"RB",tm:"LAC",rk:0,adp:158.7,open:174.6,d1:0.7,d3:2.2,d7:5.9,drift:8,lo:158.7,hi:176.8,sv:null,drafts:186,
+   read:"Eight snapshots up. No single day above a pick. A back who was undraftable in July is now taken in most twelve-team drafts."},
+  {id:53,n:"Jaylin Noel",pos:"WR",tm:"HOU",rk:1,adp:162.3,open:189.4,d1:1.1,d3:3.2,d7:7.9,drift:8,lo:162.3,hi:192.1,sv:null,drafts:174,
+   read:"Two and a half rounds gained since the pool opened, all of it in small increments. Eight mornings the same way."},
+  {id:54,n:"Ben Sinnott",pos:"TE",tm:"WAS",rk:0,adp:166.1,open:181.7,d1:0.6,d3:2.1,d7:5.2,drift:6,lo:166.1,hi:183.9,sv:null,drafts:161,
+   read:"Six consecutive snapshots up in a range where most players do not move at all."},
+  {id:55,n:"Jalen Coker",pos:"WR",tm:"CAR",rk:0,adp:168.2,open:178.4,d1:0.4,d3:1.4,d7:3.6,drift:5,lo:168.2,hi:180.1,sv:null,drafts:149,
+   read:"Five mornings up. Round fifteen to round fourteen."},
+  {id:56,n:"Kendre Miller",pos:"RB",tm:"NO",rk:0,adp:171.6,open:158.2,d1:-0.8,d3:-2.2,d7:-5.1,drift:-6,lo:157.8,hi:172.4,sv:null,drafts:142,
+   read:"Six straight mornings down. He opened inside round fourteen and is now barely drafted at all."},
+  {id:57,n:"Isaiah Bond",pos:"WR",tm:"CLE",rk:1,adp:174.9,open:196.8,d1:0.9,d3:2.6,d7:6.4,drift:7,lo:174.9,hi:199.2,sv:null,drafts:131,
+   read:"Seven snapshots the same direction at the very edge of the pool."},
+  {id:58,n:"Michael Wilson",pos:"WR",tm:"ARI",rk:0,adp:178.4,open:166.9,d1:-0.6,d3:-1.9,d7:-4.2,drift:-5,lo:166.2,hi:179.1,sv:null,drafts:118,
+   read:"Five mornings down. Falling out of the drafted range entirely in ten-team leagues."},
+  {id:59,n:"Ainias Smith",pos:"WR",tm:"PHI",rk:0,adp:186.2,open:201.4,d1:0.5,d3:1.6,d7:4.1,drift:6,lo:186.2,hi:203.8,sv:null,drafts:96,
+   read:"Six consecutive snapshots up, outside the drafted range in most leagues and moving anyway."},
+  {id:60,n:"Blake Corum",pos:"RB",tm:"LAR",rk:0,adp:191.7,open:208.6,d1:0.8,d3:2.4,d7:5.8,drift:5,lo:191.7,hi:210.4,sv:null,drafts:84,
+   read:"Five mornings up in picks that only sixteen-team leagues reach."},
+  {id:61,n:"Trey Sermon",pos:"RB",tm:"IND",rk:0,adp:198.3,open:194.1,d1:-0.2,d3:-0.8,d7:-1.9,drift:-2,lo:193.6,hi:199.1,sv:null,drafts:71,
+   read:"Barely moving in either direction at the back of the pool."},
+  {id:62,n:"Jha'Quan Jackson",pos:"WR",tm:"TEN",rk:0,adp:204.6,open:216.2,d1:0.4,d3:1.2,d7:3.4,drift:6,lo:204.6,hi:218.4,sv:null,drafts:58,
+   read:"Six snapshots up at pick two hundred. The move is a pick a day and it has not stopped."},
+  {id:63,n:"Malik Washington",pos:"WR",tm:"MIA",rk:0,adp:212.1,open:206.4,d1:-0.3,d3:-0.9,d7:-2.1,drift:-3,lo:205.8,hi:213.2,sv:null,drafts:44,
+   read:"Slipping out of the pool's meaningful range."}
+];
+
+// WAIVER: adp = rostered %, cost = final preseason ADP (null = undrafted),
+// sv = snap share %, tgt = target/touch share %, gap = cost rank minus current usage rank
+const WAIVER = [
+  {id:101,n:"Isaiah Bond",pos:"WR",tm:"CLE",rk:1,drift:5,adp:41.2,cost:null,d1:6.1,d3:18.4,d7:31.9,lo:4.8,hi:41.2,sv:78.4,tgt:24.1,gap:147,inj:null,
+   read:"Bond went undrafted in the pools we track and is now running a route on 78 percent of dropbacks. That is a top-thirty route rate at a cost of nothing. The roster percentage has followed the usage rather than led it, which is the order that usually holds."},
+  {id:102,n:"Tyrone Tracy Jr.",pos:"RB",tm:"NYG",rk:0,drift:6,adp:63.7,cost:151.4,d1:3.4,d3:12.1,d7:19.6,lo:38.2,hi:63.7,sv:71.4,tgt:18.9,gap:98,inj:null,
+   read:"Two straight games above fifteen carries and a red zone share that has doubled. He cost a last-round pick and is playing a top-twenty back's snap count. The add rate has been steady rather than spiking, which is what a workload change usually looks like from the outside."},
+  {id:103,n:"Jalen Coker",pos:"WR",tm:"CAR",rk:0,drift:4,adp:28.9,cost:168.2,d1:2.2,d3:7.8,d7:11.2,lo:19.4,hi:28.9,sv:64.6,tgt:19.4,gap:82,inj:"Q",
+   read:"Coker's snap share rose before his target share did. That gap is closing now and the roster percentage is moving with it. He carries a questionable designation into this week."},
+  {id:104,n:"Kimani Vidal",pos:"RB",tm:"LAC",rk:0,drift:2,adp:22.4,cost:174.9,d1:4.8,d3:9.9,d7:14.3,lo:8.1,hi:22.4,sv:29.8,tgt:11.2,gap:19,inj:null,
+   read:"A pure injury-replacement move. Vidal's rostered percentage tracks the news cycle almost exactly, with no usage change yet to confirm it. The board shows the market acting on an expectation rather than on evidence, and the gap is small because the snaps have not arrived."},
+  {id:105,n:"Dylan Sampson",pos:"RB",tm:"CLE",rk:1,drift:7,adp:17.9,cost:null,d1:2.4,d3:6.8,d7:9.1,lo:3.2,hi:17.9,sv:52.3,tgt:14.6,gap:112,inj:null,
+   read:"Undrafted and now splitting a backfield down the middle. Sampson has taken more than half the snaps in each of the last two weeks without a game above sixty yards, which is why the roster percentage is still under twenty."},
+  {id:106,n:"Ben Sinnott",pos:"TE",tm:"WAS",rk:0,drift:6,adp:9.7,cost:null,d1:1.9,d3:5.2,d7:7.6,lo:2.1,hi:9.7,sv:61.8,tgt:13.7,gap:94,inj:null,
+   read:"A quiet climb from nearly nothing. Sinnott has run more routes in each of the last three weeks without a single week of headline production. The usage is there; the box score has not caught up."},
+  {id:107,n:"Cade Otton",pos:"TE",tm:"TB",rk:0,drift:-4,adp:54.1,cost:112.6,d1:-0.9,d3:-2.6,d7:-3.8,lo:54.1,hi:58.4,sv:51.2,tgt:9.8,gap:-14,inj:null,
+   read:"Drifting down slowly. Otton has not lost snaps, but his target share has fallen for three straight weeks and the roster percentage is following at a lag."},
+  {id:108,n:"Rome Odunze",pos:"WR",tm:"CHI",rk:0,drift:-3,adp:71.8,cost:58.4,d1:-2.1,d3:-6.4,d7:-12.4,lo:71.8,hi:84.2,sv:66.9,tgt:15.1,gap:-31,inj:"Q",
+   read:"The steepest drop-rate on the board. Odunze's route participation has not changed; his targets have. Whether that is scheme or form is not something the board can tell you."},
+  {id:109,n:"Ray Davis",pos:"RB",tm:"BUF",rk:0,drift:-5,adp:14.6,cost:139.2,d1:-1.8,d3:-5.9,d7:-12.2,lo:14.6,hi:26.8,sv:11.4,tgt:4.2,gap:-46,inj:"D",
+   read:"Davis was added widely two weeks ago on a workload expectation that did not arrive. He is being dropped at roughly the rate he was added, and now carries a doubtful designation."},
+  {id:110,n:"Elic Ayomanor",pos:"WR",tm:"TEN",rk:1,drift:8,adp:11.3,cost:null,d1:1.1,d3:3.1,d7:4.4,lo:1.8,hi:11.3,sv:58.9,tgt:16.8,gap:88,inj:null,
+   read:"Undrafted, and now second on his team in routes run. The roster percentage has not moved much because the offense around him has produced very little."},
+  {id:111,n:"Jaylen Wright",pos:"RB",tm:"MIA",rk:0,drift:-4,adp:8.2,cost:126.7,d1:-0.6,d3:-2.1,d7:-4.1,lo:8.2,hi:19.4,sv:22.1,tgt:6.4,gap:-8,inj:"O",
+   read:"Ruled out this week. The roster percentage has been falling since the designation landed, and there is no usage signal underneath to argue with it."},
+  {id:112,n:"Bhayshul Tuten",pos:"RB",tm:"JAX",rk:1,drift:1,adp:4.2,cost:null,d1:0.4,d3:1.2,d7:-1.1,lo:2.6,hi:6.8,sv:31.4,tgt:8.9,gap:71,inj:null,
+   read:"Roughly a third of the snaps for four straight weeks with no trend in either direction. Undrafted, still barely rostered, and doing more than either of those facts suggests."}
+];
+
+// ---------- config ----------
+const CFG = {
+  draft: {
+    kicker:"NFL · Fantasy · ADP",
+    sub:"Where drafters are actually taking players, and how that has changed. Not a ranking. Not a recommendation. A record of what the market is doing, updated every morning.",
+    note:"Sorted by three-day movement. A positive number means the player is being drafted earlier than he was three days ago.",
+    valueLab:"ADP", valueFmt:v=>v.toFixed(1),
+    openLab:"Open", extraLab:"SV ADP", divLab:"Div",
+    unit:"picks",
+    prov:[["Snapshot","Aug 3, 2026 · 11:00 UTC"],["Pool","12-team PPR · 219 players"],["History","14 snapshots"],["Source","Fantasy Football Calculator"],["Sportsvyn ADP","2,847 drafts"]],
+    attr:"ADP data courtesy of Fantasy Football Calculator · Methodology published at /methodology",
+    mTitle:"What this measures",
+    mBody:"Average draft position is not a ranking and not an opinion. It is a record of where thousands of drafters have actually taken a player. Drift counts how many mornings in a row he has moved the same direction. A player crossing from the fourteenth round to the thirteenth is inside the noise on any single day. The same player doing it six days running is not. This board shows both and leaves the conclusion to you.",
+    mThirdTitle:"Sportsvyn ADP",
+    mThirdBody:"Where our own drafters take a player across every completed mock. Divergence is Sportsvyn ADP minus market ADP. A positive number means our drafters wait longer than the field does. Shown once a player has appeared in 250 drafts.",
+    bandNote:"Magnitude thresholds are expressed in rounds, not picks, so they hold their meaning when the league size changes. Persistence is counted in consecutive snapshots moving the same direction, which means the same thing at pick 20 and pick 200. A streak breaks the first morning a player moves the other way."
+  },
+  waiver: {
+    kicker:"NFL · Fantasy · Waivers",
+    sub:"Who is being added and dropped across the league, and how fast. Not a recommendation and not a bid price. A record of what managers are doing, updated every morning.",
+    note:"Sorted by three-day movement. A positive number means the player is on more rosters than he was three days ago.",
+    valueLab:"Rostered", valueFmt:v=>v.toFixed(1)+"%",
+    openLab:"Cost", extraLab:"Snap %", divLab:"Gap",
+    unit:"points",
+    prov:[["Snapshot","Oct 8, 2026 · 11:00 UTC"],["Week","Week 5"],["History","36 snapshots"],["Rosters","Sleeper"],["Usage","BallDontLie"],["Cost","Preseason ADP, Aug 31"]],
+    attr:"Roster data via Sleeper · Usage and injury data via BallDontLie · Preseason ADP via Fantasy Football Calculator · Methodology published at /methodology",
+    mTitle:"What this measures",
+    mBody:"Roster percentage is not advice and not a projection. It is a count of how many managers currently hold a player. When it climbs quickly, the league is reacting to something. This board shows the movement and the usage underneath it, and leaves the bid to you.",
+    mThirdTitle:"The Gap",
+    mThirdBody:"Cost is what a player went for in the last preseason draft snapshot, or UD if he went undrafted. Gap is that cost rank minus his current usage rank. A player who cost pick 150 and is playing a top-forty snap share has a gap of 110. It is a measurement, not a recommendation. A gap can open because a player is good or because a depth chart is thin and will refill, and the board cannot tell you which.",
+    bandNote:"Magnitude thresholds are percentage points of roster share over three days. Persistence is counted in consecutive snapshots moving the same direction. Both are fixed, published, and never tuned to produce a particular number of players in any band."
+  }
+};
+
+// The Gap thresholds - stated, published, never tuned to produce a row count
+const GAP_CEIL = 50;   // rostered % ceiling: must be widely available
+const GAP_MIN  = 60;   // minimum cost-rank-minus-usage-rank
+
+let mode='draft', hist='full';
+let sortKey='d3', sortDir=-1;
+let pos='ALL', cls='ALL', rnd='ALL', fmt='PPR', size=12;
+let moversOnly=false, watchOnly=false, q='';
+const watch=new Set([1,5,9]);
+const open=new Set();
+
+function rows(){ return mode==='draft' ? DRAFT : WAIVER; }
+function cfg(){ return CFG[mode]; }
+
+// round-based bands for draft; percentage-point bands for waiver
+function thresholds(){
+  if(mode==='draft') return {big:size/2, small:size/4};
+  return {big:10, small:4};
+}
+// Bands read on two axes: magnitude (how far in three days) and
+// persistence (how many consecutive snapshots the same direction).
+// Either can fire. Persistence is what catches late-round drift.
+const STREAK = 5;
+function band(d, drift){
+  if(d===null) return {c:'none',t:'—'};
+  const {big}=thresholds();
+  if(d >= big) return {c:'steam',t:'Steam'};
+  if(d <= -big) return {c:'sliding',t:'Sliding'};
+  if(drift >= STREAK && d > 0) return {c:'warming',t:'Climbing'};
+  if(drift <= -STREAK && d < 0) return {c:'cooling',t:'Fading'};
+  return {c:'quiet',t:'Quiet'};
+}
+function dcls(v){ return v>0.05?'pos':v<-0.05?'neg':'flat'; }
+function dfmt(v){ if(v===null) return '—'; return (v>0?'+':'')+v.toFixed(1); }
+
+function viewOf(p){
+  // in waiver mode "open" is Cost (preseason ADP) - it is a historical fact, not
+  // derived from snapshot depth, so it survives the thin/none states
+  const base = mode==='draft' ? p.open : (p.cost===undefined?null:p.cost);
+  const keep = mode==='waiver';
+  if(hist==='full') return {d1:p.d1,d3:p.d3,d7:p.d7,drift:p.drift,open:base,lo:p.lo,hi:p.hi,sv:p.sv,gap:p.gap};
+  if(hist==='thin') return {d1:p.d1,d3:null,d7:null,drift:null,open:base,lo:null,hi:null,sv:p.sv,gap:keep?p.gap:null};
+  return {d1:null,d3:null,d7:null,drift:null,open:keep?base:null,lo:null,hi:null,sv:keep?p.sv:null,gap:keep?p.gap:null};
+}
+
+function renderChrome(){
+  const c=cfg();
+  document.getElementById('pgKicker').textContent=c.kicker;
+  document.getElementById('pgSub').textContent=c.sub;
+  document.getElementById('panelNote').textContent=c.note;
+  document.getElementById('attr').textContent=c.attr;
+  document.getElementById('mTitle').textContent=c.mTitle;
+  document.getElementById('mBody').textContent=c.mBody;
+  document.getElementById('mThirdTitle').textContent=c.mThirdTitle;
+  document.getElementById('mThirdBody').textContent=c.mThirdBody;
+  document.getElementById('mBandNote').textContent=c.bandNote;
+
+  const prov=c.prov.slice();
+  prov[2]=[prov[2][0], hist==='full'?prov[2][1]:hist==='thin'?'2 snapshots':'1 snapshot'];
+  document.getElementById('prov').innerHTML=prov.map(p=>'<div>'+p[0]+' <b>'+p[1]+'</b></div>').join('');
+
+  const {big,small}=thresholds();
+  const mag = mode==='draft' ? 'half a round or more in three days' : big+' points or more in three days';
+  document.getElementById('mBands').innerHTML=
+    '<div class="bl"><span class="band steam">Steam</span> rose '+mag+'</div>'+
+    '<div class="bl"><span class="band warming">Climbing</span> rose '+STREAK+' snapshots running</div>'+
+    '<div class="bl"><span class="band quiet">Quiet</span> neither</div>'+
+    '<div class="bl"><span class="band cooling">Fading</span> fell '+STREAK+' snapshots running</div>'+
+    '<div class="bl"><span class="band sliding">Sliding</span> fell '+mag+'</div>';
+
+  const rndWrap = document.getElementById('rndChips');
+  const rndLab = document.getElementById('rndLab');
+  if(mode==='draft'){
+    rndLab.style.display=''; rndWrap.style.display='';
+    rndWrap.innerHTML = [['ALL','All'],['1-5','1-5'],['6-10','6-10'],['11+','11+']].map(o=>
+      '<span class="chip'+(rnd===o[0]?' on':'')+'" data-rnd="'+o[0]+'">'+o[1]+'</span>').join(' ');
+    document.querySelectorAll('[data-rnd]').forEach(c=>c.addEventListener('click',()=>{ rnd=c.dataset.rnd; render(); }));
+  } else { rndLab.style.display='none'; rndWrap.style.display='none'; }
+
+  const clsOpts = mode==='draft'
+    ? [['ALL','All'],['ROOKIE','Rookies'],['VET','Veterans']]
+    : [['ALL','All'],['GAP','The Gap'],['UD','Undrafted']];
+  document.getElementById('clsLab').textContent = mode==='draft' ? 'Class' : 'Filter';
+  document.getElementById('clsChips').innerHTML = clsOpts.map(o=>
+    '<span class="chip'+(cls===o[0]?' on':'')+'" data-cls="'+o[0]+'">'+o[1]+'</span>').join(' ');
+  document.querySelectorAll('[data-cls]').forEach(c=>c.addEventListener('click',()=>{ cls=c.dataset.cls; if(cls==='GAP'){sortKey='gap';sortDir=-1;} render(); }));
+
+  document.getElementById('shead').innerHTML=
+    '<div></div><div>Band</div><div>Player</div>'+
+    '<div class="r sortable" data-sort="adp">'+c.valueLab+'</div>'+
+    '<div class="r sortable" data-sort="open">'+c.openLab+'</div>'+
+    '<div class="r sortable'+(sortKey==='d3'?' act':'')+'" data-sort="d3">3d'+(sortKey==='d3'?'<span class="caret">'+(sortDir===-1?'▼':'▲')+'</span>':'')+'</div>'+
+    '<div class="r sortable'+(sortKey==='d7'?' act':'')+'" data-sort="d7">7d'+(sortKey==='d7'?'<span class="caret">'+(sortDir===-1?'▼':'▲')+'</span>':'')+'</div>'+
+    '<div class="r sortable'+(sortKey==='drift'?' act':'')+'" data-sort="drift">Drift'+(sortKey==='drift'?'<span class="caret">'+(sortDir===-1?'▼':'▲')+'</span>':'')+'</div>'+
+    '<div class="r">Range</div>'+
+    '<div class="r sortable" data-sort="sv">'+c.extraLab+'</div>'+
+    (mode==='waiver'
+      ? '<div class="r sortable'+(sortKey==='gap'?' act':'')+'" data-sort="gap">Gap'+(sortKey==='gap'?'<span class="caret">'+(sortDir===-1?'▼':'▲')+'</span>':'')+'</div>'
+      : '<div class="r">'+c.divLab+'</div>');
+  bindSort();
+
+  document.getElementById('row2').innerHTML = mode==='draft'
+    ? '<span class="flabel">Scoring</span>'+
+      ['PPR','HALF','STD','2QB'].map(f=>'<span class="chip'+(fmt===f?' on':'')+'" data-fmt="'+f+'">'+(f==='STD'?'Standard':f==='HALF'?'Half':f)+'</span>').join('')+
+      '<span class="sep"></span><span class="flabel">Size</span>'+
+      [8,10,12].map(s=>'<span class="chip'+(size===s?' on':'')+'" data-size="'+s+'">'+s+'</span>').join('')+
+      '<span class="sep"></span><input class="searchbox" id="q" placeholder="Search player or team" value="'+q+'">'+
+      '<button class="toggle'+(moversOnly?' on':'')+'" id="tMovers">Movers only</button>'+
+      '<button class="toggle'+(watchOnly?' on':'')+'" id="tWatch">Watchlist</button>'
+    : '<span class="flabel">Rostered</span>'+
+      ['ALL','UNDER 50','UNDER 25','UNDER 10'].map(r=>'<span class="chip'+(r==='ALL'?' on':'')+'">'+r+'</span>').join('')+
+      '<span class="sep"></span><input class="searchbox" id="q" placeholder="Search player or team" value="'+q+'">'+
+      '<button class="toggle'+(moversOnly?' on':'')+'" id="tMovers">Movers only</button>'+
+      '<button class="toggle'+(watchOnly?' on':'')+'" id="tWatch">Watchlist</button>';
+  bindRow2();
+}
+
+function renderStrip(){
+  const list=rows();
+  const up=list.reduce((a,b)=>b.d3>a.d3?b:a);
+  const dn=list.reduce((a,b)=>b.d3<a.d3?b:a);
+  const {big,small}=thresholds();
+  const steam=list.filter(p=>p.d3>=big).length;
+  const climbing=list.filter(p=>p.d3<big && p.d3>0 && p.drift>=STREAK).length;
+  const longest=list.reduce((a,b)=>Math.abs(b.drift)>Math.abs(a.drift)?b:a);
+  document.getElementById('strip').innerHTML=
+    '<div class="cell"><div class="k">Biggest riser</div><div class="v pos">+'+up.d3.toFixed(1)+'</div><div class="n">'+up.n+'</div></div>'+
+    '<div class="cell"><div class="k">Biggest faller</div><div class="v neg">'+dn.d3.toFixed(1)+'</div><div class="n">'+dn.n+'</div></div>'+
+    '<div class="cell"><div class="k">Steam</div><div class="v">'+steam+'</div><div class="n">of '+list.length+' tracked</div></div>'+
+    '<div class="cell"><div class="k">Climbing</div><div class="v">'+climbing+'</div><div class="n">'+STREAK+'+ snapshots</div></div>'+
+    '<div class="cell"><div class="k">Longest streak</div><div class="v pos">'+Math.abs(longest.drift)+'</div><div class="n">'+longest.n+'</div></div>';
+}
+
+function render(){
+  renderChrome(); renderStrip();
+  const c=cfg();
+  const notice=document.getElementById('noticeSlot');
+
+  if(hist==='none'){
+    notice.innerHTML='';
+    document.getElementById('rows').innerHTML=
+      '<div class="empty"><div class="h">Not enough history yet</div>'+
+      '<div class="p">The board opened this morning. Movement needs a second snapshot to measure, and the three-day column needs three. Both fill in on their own. Nothing is estimated in the meantime.</div></div>';
+    document.getElementById('rowcount').textContent=rows().length+' players';
+    return;
+  }
+  if(hist==='thin'){
+    notice.innerHTML='<div class="notice"><span class="mk"></span><span class="tx">Two snapshots of history. Overnight movement is live. The three-day column, range, and bands open on the third morning.</span></div>';
+  } else notice.innerHTML='';
+
+  let list=rows().slice();
+  if(pos!=='ALL') list=list.filter(p=>p.pos===pos);
+  if(mode==='draft' && rnd!=='ALL'){
+    const r=p=>Math.ceil(p.adp/size);
+    if(rnd==='1-5') list=list.filter(p=>r(p)<=5);
+    else if(rnd==='6-10') list=list.filter(p=>r(p)>=6&&r(p)<=10);
+    else list=list.filter(p=>r(p)>=11);
+  }
+  if(cls==='ROOKIE') list=list.filter(p=>p.rk===1);
+  if(cls==='VET') list=list.filter(p=>p.rk===0);
+  // The Gap: widely available, usage outrunning cost
+  if(cls==='GAP') list=list.filter(p=>p.adp<GAP_CEIL && p.gap>=GAP_MIN);
+  if(cls==='UD') list=list.filter(p=>p.cost===null);
+  if(q) list=list.filter(p=>(p.n+' '+p.tm).toLowerCase().includes(q.toLowerCase()));
+  if(watchOnly) list=list.filter(p=>watch.has(p.id));
+  if(moversOnly && hist==='full'){ const {big}=thresholds(); list=list.filter(p=>Math.abs(p.d3)>=big || Math.abs(p.drift)>=STREAK); }
+
+  list.sort((a,b)=>{
+    const va=viewOf(a),vb=viewOf(b); let x,y;
+    if(sortKey==='adp'){x=a.adp;y=b.adp;}
+    else if(sortKey==='open'){x=va.open??999;y=vb.open??999;}
+    else if(sortKey==='d3'){x=va.d3??-999;y=vb.d3??-999;}
+    else if(sortKey==='d7'){x=va.d7??-999;y=vb.d7??-999;}
+    else if(sortKey==='gap'){x=va.gap??-999;y=vb.gap??-999;}
+    else if(sortKey==='drift'){x=va.drift??-999;y=vb.drift??-999;}
+    else {x=va.sv??999;y=vb.sv??999;}
+    return (x-y)*sortDir;
+  });
+
+  document.getElementById('rowcount').textContent=list.length+' of '+rows().length+(cls==='ROOKIE'?' · rookies':'');
+
+  document.getElementById('rows').innerHTML=list.map(p=>{
+    const v=viewOf(p), b=band(v.d3, v.drift);
+    const {big}=thresholds();
+    const rowCls=v.d3===null?'':(v.d3>=big?' steam':v.d3<=-big?' sliding':'');
+    let rng;
+    if(v.lo===null){ rng='<div class="rng na"><span class="lab">—</span><span class="track"></span></div>'; }
+    else{
+      const pct=((p.adp-v.lo)/Math.max(0.1,(v.hi-v.lo)))*100;
+      rng='<div class="rng"><span class="lab">'+c.valueFmt(v.lo)+' – '+c.valueFmt(v.hi)+'</span>'+
+          '<span class="track"><i style="left:'+Math.max(0,Math.min(98,pct))+'%"></i></span></div>';
+    }
+    const dr = v.drift;
+    const driftCell = (dr===null || dr===0)
+      ? '<span class="drift">—</span>'
+      : '<span class="drift '+(dr>0?'up':'down')+(Math.abs(dr)>=STREAK?' long':'')+'">'+Math.abs(dr)+(dr>0?' ↑':' ↓')+'</span>';
+
+    let extra, div, openCell;
+    if(mode==='draft'){
+      extra=(v.sv===null)?'<span class="num na">—</span>':'<span class="num">'+v.sv.toFixed(1)+'</span>';
+      const dv=(v.sv===null)?null:(v.sv-p.adp);
+      div=(dv===null)?'<span class="v na">—</span>':'<span class="v">'+(dv>0?'+':'')+dv.toFixed(1)+'</span>';
+      openCell='<span class="num '+(v.open===null?'na':'dim')+'">'+(v.open===null?'—':c.valueFmt(v.open))+'</span>';
+    } else {
+      extra=(v.sv===null)?'<span class="num na">—</span>':'<span class="num">'+v.sv.toFixed(1)+'%</span>';
+      div=(v.gap===null)?'<span class="v na">—</span>'
+        :'<span class="v'+(v.gap>=GAP_MIN?' gap':'')+'">'+(v.gap>0?'+':'')+v.gap+'</span>';
+      openCell=(p.cost===null)
+        ? '<span class="ud">UD</span>'
+        : '<span class="num dim">'+p.cost.toFixed(1)+'</span>';
+    }
+    const injChip = (mode==='waiver' && p.inj)
+      ? '<span class="inj '+p.inj.toLowerCase()+'">'+p.inj+'</span>' : '';
+
+    return '<div class="srow'+rowCls+'" data-id="'+p.id+'">'+
+      '<div class="cell-star'+(watch.has(p.id)?' on':'')+'" data-star="'+p.id+'">'+(watch.has(p.id)?'★':'☆')+'</div>'+
+      '<div><span class="band '+b.c+'">'+b.t+'</span></div>'+
+      '<div class="cell-plr"><div class="nm">'+p.n+(p.rk?'<span class="rk">R</span>':'')+injChip+'</div><div class="pt">'+p.pos+' · '+p.tm+'</div></div>'+
+      '<div class="r"><span class="num">'+c.valueFmt(p.adp)+'</span></div>'+
+      '<div class="r">'+openCell+'</div>'+
+      '<div class="r"><span class="delta big '+(v.d3===null?'flat':dcls(v.d3))+'">'+dfmt(v.d3)+'</span></div>'+
+      '<div class="r"><span class="delta '+(v.d7===null?'flat':dcls(v.d7))+'">'+dfmt(v.d7)+'</span></div>'+
+      '<div class="r">'+driftCell+'</div>'+
+      '<div class="r">'+rng+'</div>'+
+      '<div class="r">'+extra+'</div>'+
+      '<div class="r div-cell">'+div+'</div>'+
+    '</div>'+
+    '<div class="sdetail'+(open.has(p.id)?' open':'')+'" data-d="'+p.id+'">'+p.read+
+      '<div class="meta">'+
+        '<span>24h <b>'+(v.d1===null?'—':dfmt(v.d1))+'</b></span>'+
+        (mode==='draft'?'<span>Format <b>'+fmt+' · '+size+'-team</b></span>':'<span>Week <b>5</b></span>')+
+        '<span>Snapshots <b>'+(hist==='full'?(mode==='draft'?14:36):2)+'</b></span>'+
+        (mode==='draft'
+          ? '<span>Sportsvyn drafts <b>'+p.drafts.toLocaleString()+'</b></span>'
+          : '<span>Target share <b>'+p.tgt.toFixed(1)+'%</b></span><span>Cost <b>'+(p.cost===null?'Undrafted':p.cost.toFixed(1))+'</b></span>'+
+            (p.inj?'<span>Status <b>'+({Q:'Questionable',D:'Doubtful',O:'Out'})[p.inj]+'</b></span>':''))+
+        (p.rk?'<span>Class <b>Rookie</b></span>':'')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function bindSort(){
+  document.querySelectorAll('#shead .sortable').forEach(h=>h.addEventListener('click',()=>{
+    const k=h.dataset.sort;
+    if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=(k==='adp'||k==='open'||k==='sv')?1:-1; }
+    render();
+  }));
+}
+function bindRow2(){
+  document.querySelectorAll('[data-fmt]').forEach(c=>c.addEventListener('click',()=>{ fmt=c.dataset.fmt; render(); }));
+  document.querySelectorAll('[data-size]').forEach(c=>c.addEventListener('click',()=>{ size=+c.dataset.size; render(); }));
+  const qq=document.getElementById('q');
+  if(qq) qq.addEventListener('input',e=>{ q=e.target.value; const p=e.target.selectionStart; render(); const n=document.getElementById('q'); if(n){n.focus();n.setSelectionRange(p,p);} });
+  const tm=document.getElementById('tMovers'); if(tm) tm.addEventListener('click',()=>{ moversOnly=!moversOnly; render(); });
+  const tw=document.getElementById('tWatch'); if(tw) tw.addEventListener('click',()=>{ watchOnly=!watchOnly; render(); });
+}
+
+document.getElementById('rows').addEventListener('click',e=>{
+  const st=e.target.closest('[data-star]');
+  if(st){ const id=+st.dataset.star; watch.has(id)?watch.delete(id):watch.add(id); render(); return; }
+  const row=e.target.closest('.srow');
+  if(row){ const id=+row.dataset.id; open.has(id)?open.delete(id):open.add(id); render(); }
+});
+document.querySelectorAll('[data-pos]').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('[data-pos]').forEach(x=>x.classList.remove('on')); c.classList.add('on'); pos=c.dataset.pos; render();
+}));
+['mDraft','mWaiver'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{
+  ['mDraft','mWaiver'].forEach(x=>document.getElementById(x).classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  mode = id==='mDraft'?'draft':'waiver'; open.clear(); cls='ALL'; pos='ALL'; rnd='ALL';
+  sortKey='d3'; sortDir=-1;
+  document.querySelectorAll('[data-pos]').forEach(x=>x.classList.toggle('on',x.dataset.pos==='ALL'));
+  render();
+}));
+['btnFull','btnThin','btnNone'].forEach(id=>document.getElementById(id).addEventListener('click',()=>{
+  ['btnFull','btnThin','btnNone'].forEach(x=>document.getElementById(x).classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  hist = id==='btnFull'?'full':id==='btnThin'?'thin':'none';
+  render();
+}));
+
+render();
+</script>
+</body>
+</html>

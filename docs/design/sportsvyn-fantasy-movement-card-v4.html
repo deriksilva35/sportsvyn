@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sportsvyn — Movement card · /nfl entry point (mock v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Source+Serif+4:ital@1&family=JetBrains+Mono:wght@400;500&family=Saira+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --graphite:#1A1A1A; --graphite-up:#242424; --charcoal:#2A2A2A;
+    --paper:#F5F5F2; --paper-dim:#C5C5C2; --muted:#888888;
+    --volt:#D4FF00; --volt-dim:#8FAA00; --terra:#B8410F;
+    --font-display:'Saira','Arial Narrow',sans-serif;
+    --font-serif:'Source Serif 4',Georgia,serif;
+    --font-mono:'JetBrains Mono',ui-monospace,monospace;
+    --font-cond:'Saira Condensed','Arial Narrow',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased}
+  body{background:var(--ink);color:var(--paper);font-family:var(--font-mono);line-height:1.5;padding:34px 24px}
+  a{color:inherit;text-decoration:none}
+
+  .mocknote{max-width:1180px;margin:0 auto 22px;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--volt-dim)}
+  .stage{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:start}
+  @media(max-width:980px){.stage{grid-template-columns:1fr}}
+  .colnote{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#555;margin-bottom:10px}
+
+  .card{background:var(--graphite);border:1px solid var(--charcoal);border-radius:3px;overflow:hidden}
+  .chead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 12px;border-bottom:1px solid var(--charcoal)}
+  .chead .lbl{font-family:var(--font-cond);font-weight:600;font-size:15px;letter-spacing:0.14em;text-transform:uppercase;color:var(--paper)}
+  .chead .sub{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+  .chead .all{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);transition:.15s;white-space:nowrap}
+  .chead .all:hover{color:var(--volt)}
+
+  .tabs{display:flex;border-bottom:1px solid var(--charcoal)}
+  .tabs div{flex:1;text-align:center;padding:9px 4px;font-size:9.5px;letter-spacing:0.13em;text-transform:uppercase;
+    color:var(--muted);cursor:pointer;border-right:1px solid var(--charcoal);transition:.15s}
+  .tabs div:last-child{border-right:none}
+  .tabs div:hover{background:var(--graphite-up)}
+  .tabs div.on{color:var(--ink);background:var(--volt);font-weight:500}
+
+  .row{display:grid;grid-template-columns:20px 1fr 54px 62px;align-items:center;gap:7px;
+    padding:10px 15px;border-bottom:1px solid #1f1f1f;transition:background .1s;cursor:pointer}
+  .row:last-of-type{border-bottom:none}
+  .row:hover{background:var(--graphite-up)}
+  .row.steam{box-shadow:inset 2px 0 0 var(--volt)}
+  .row.sliding{box-shadow:inset 2px 0 0 var(--terra)}
+  .rk{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+  .plr .nm{font-family:var(--font-cond);font-weight:600;font-size:14.5px;letter-spacing:0.01em;color:var(--paper);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
+  .plr .rkb{font-size:8px;font-family:var(--font-cond);font-weight:600;letter-spacing:0.1em;
+    background:var(--volt);color:var(--ink);border-radius:2px;padding:1px 4px;flex:none}
+  .plr .pt{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:1px}
+  .plr .inj{font-size:8px;font-family:var(--font-cond);font-weight:600;letter-spacing:0.1em;
+    border-radius:2px;padding:1px 4px;flex:none;border:1px solid var(--charcoal);color:var(--muted)}
+  .plr .inj.q{color:#C8A227;border-color:#5A4A10}
+  .plr .inj.d{color:var(--terra);border-color:#5A2008}
+  .plr .inj.o{background:var(--terra);color:var(--paper);border-color:var(--terra)}
+  .ud{font-family:var(--font-cond);font-weight:600;font-size:11px;letter-spacing:0.1em;
+    color:var(--volt-dim);border:1px dashed var(--volt-dim);border-radius:2px;padding:0 4px}
+  .adp{font-family:var(--font-mono);font-size:12px;color:var(--paper-dim);text-align:right}
+  .adp em{display:block;font-style:normal;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:#5A5A5A;margin-top:2px}
+  .d3{font-family:var(--font-mono);font-size:14px;font-weight:500;text-align:right}
+  .d3.pos{color:var(--volt)} .d3.neg{color:var(--terra)} .d3.flat{color:var(--muted)}
+  .d3 em{display:block;font-style:normal;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:#5A5A5A;margin-top:2px;font-weight:400}
+
+  .cfoot{padding:11px 15px;border-top:1px solid var(--charcoal);display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+  .cfoot .stamp{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#5A5A5A}
+  .cfoot .cta{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink);background:var(--volt);
+    padding:6px 12px;border-radius:2px;font-weight:500}
+
+  .empty{padding:32px 16px;text-align:center}
+  .empty .h{font-family:var(--font-cond);font-weight:600;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--paper-dim)}
+  .empty .p{font-family:var(--font-serif);font-style:italic;font-size:13.5px;color:var(--muted);margin:8px auto 0;line-height:1.55;max-width:290px}
+</style>
+</head>
+<body>
+
+<div class="mocknote">Mock v2 · entry-point card for the /nfl instrument column · sample data, rookie flags illustrative</div>
+
+<div class="stage">
+  <div>
+    <div class="colnote">A — draft season, live</div>
+    <div class="card">
+      <div class="chead">
+        <div><div class="lbl">Movement</div><div class="sub">Fantasy ADP · 12-team PPR</div></div>
+        <a href="#" class="all">Full board →</a>
+      </div>
+      <div class="tabs" id="tabsA">
+        <div class="on" data-t="up">Rising</div>
+        <div data-t="down">Falling</div>
+        <div data-t="climb">Climbing</div>
+      </div>
+      <div id="listA"></div>
+      <div class="cfoot"><span class="stamp">Snapshot Aug 3 · 11:00 UTC</span><a href="#" class="cta">Mock draft</a></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="colnote">B — in-season, same instrument</div>
+    <div class="card">
+      <div class="chead">
+        <div><div class="lbl">Movement</div><div class="sub">Waivers · Week 5</div></div>
+        <a href="#" class="all">Full board →</a>
+      </div>
+      <div class="tabs" id="tabsB">
+        <div class="on" data-t="up">Adding</div>
+        <div data-t="down">Dropping</div>
+        <div data-t="gap">The Gap</div>
+      </div>
+      <div id="listB"></div>
+      <div class="cfoot"><span class="stamp">Snapshot Oct 8 · 11:00 UTC</span><a href="#" class="cta">Waiver read</a></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="colnote">C — awaiting third snapshot</div>
+    <div class="card">
+      <div class="chead">
+        <div><div class="lbl">Movement</div><div class="sub">Fantasy ADP · 12-team PPR</div></div>
+        <a href="#" class="all">Full board →</a>
+      </div>
+      <div class="empty">
+        <div class="h">Opens Wednesday</div>
+        <div class="p">Three-day movement needs three snapshots. The board records one each morning and starts reading on the third.</div>
+      </div>
+      <div class="cfoot"><span class="stamp">Snapshot Aug 3 · 11:00 UTC</span><a href="#" class="cta">Mock draft</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const A={
+  up:[
+    {n:"Bucky Irving",pos:"RB",tm:"TB",rk:0,v:31.4,d:11.6},
+    {n:"Travis Hunter",pos:"WR",tm:"JAX",rk:1,v:67.3,d:9.8},
+    {n:"Tetairoa McMillan",pos:"WR",tm:"CAR",rk:1,v:71.9,d:7.4},
+    {n:"Omarion Hampton",pos:"RB",tm:"LAC",rk:1,v:44.9,d:6.9},
+    {n:"Jayden Daniels",pos:"QB",tm:"WAS",rk:0,v:46.1,d:4.4}
+  ],
+  down:[
+    {n:"Nico Collins",pos:"WR",tm:"HOU",rk:0,v:52.7,d:-18.2},
+    {n:"Cam Skattebo",pos:"RB",tm:"NYG",rk:1,v:96.4,d:-9.6},
+    {n:"De'Von Achane",pos:"RB",tm:"MIA",rk:0,v:20.3,d:-4.1},
+    {n:"Malik Nabers",pos:"WR",tm:"NYG",rk:0,v:14.8,d:-3.4},
+    {n:"Christian McCaffrey",pos:"RB",tm:"SF",rk:0,v:26.8,d:-2.9}
+  ],
+  // Climbing: small persistent moves, sorted by streak length. This is the
+  // tab that only earns its place once the pool goes deep.
+  climb:[
+    {n:"Brock Bowers",pos:"TE",tm:"LV",rk:0,v:18.2,d:2.1,drift:11},
+    {n:"Dylan Sampson",pos:"RB",tm:"CLE",rk:1,v:148.6,d:4.8,drift:10},
+    {n:"Elic Ayomanor",pos:"WR",tm:"TEN",rk:1,v:136.4,d:4.2,drift:9},
+    {n:"Jaylin Noel",pos:"WR",tm:"HOU",rk:1,v:162.3,d:3.2,drift:8},
+    {n:"Kimani Vidal",pos:"RB",tm:"LAC",rk:0,v:158.7,d:2.2,drift:8}
+  ]
+};
+const B={
+  up:[
+    {n:"Isaiah Bond",pos:"WR",tm:"CLE",rk:1,v:41.2,d:18.4,gap:147,cost:null},
+    {n:"Tyrone Tracy Jr.",pos:"RB",tm:"NYG",rk:0,v:63.7,d:12.1,gap:98,cost:151.4},
+    {n:"Kimani Vidal",pos:"RB",tm:"LAC",rk:0,v:22.4,d:9.9,gap:19,cost:174.9},
+    {n:"Jalen Coker",pos:"WR",tm:"CAR",rk:0,v:28.9,d:7.8,gap:82,cost:168.2,inj:"Q"},
+    {n:"Dylan Sampson",pos:"RB",tm:"CLE",rk:1,v:17.9,d:6.8,gap:112,cost:null}
+  ],
+  down:[
+    {n:"Rome Odunze",pos:"WR",tm:"CHI",rk:0,v:71.8,d:-6.4,gap:-31,cost:58.4,inj:"Q"},
+    {n:"Ray Davis",pos:"RB",tm:"BUF",rk:0,v:14.6,d:-5.9,gap:-46,cost:139.2,inj:"D"},
+    {n:"Cade Otton",pos:"TE",tm:"TB",rk:0,v:54.1,d:-2.6,gap:-14,cost:112.6},
+    {n:"Jaylen Wright",pos:"RB",tm:"MIA",rk:0,v:8.2,d:-2.1,gap:-8,cost:126.7,inj:"O"},
+    {n:"Luke McCaffrey",pos:"WR",tm:"WAS",rk:0,v:5.4,d:-1.4,gap:-3,cost:158.1}
+  ],
+  // The Gap: rostered under 50%, usage rank far ahead of draft cost rank, sorted by gap
+  gap:[
+    {n:"Isaiah Bond",pos:"WR",tm:"CLE",rk:1,v:41.2,d:18.4,gap:147,cost:null},
+    {n:"Dylan Sampson",pos:"RB",tm:"CLE",rk:1,v:17.9,d:6.8,gap:112,cost:null},
+    {n:"Ben Sinnott",pos:"TE",tm:"WAS",rk:0,v:9.7,d:5.2,gap:94,cost:null},
+    {n:"Elic Ayomanor",pos:"WR",tm:"TEN",rk:1,v:11.3,d:3.1,gap:88,cost:null},
+    {n:"Jalen Coker",pos:"WR",tm:"CAR",rk:0,v:28.9,d:7.8,gap:82,cost:168.2,inj:"Q"}
+  ]
+};
+
+function draw(el,data,tab,unit,big,vlab){
+  const isGap = tab==='gap';
+  const isClimb = tab==='climb';
+  document.getElementById(el).innerHTML=data[tab].map((p,i)=>{
+    const cls=p.d>=big?' steam':p.d<=-big?' sliding':'';
+    const dc=p.d>0.05?'pos':p.d<-0.05?'neg':'flat';
+    const s=p.d>0?'+':'';
+    // Gap tab swaps the value column to Cost and the delta column to Gap
+    const leftVal = isGap
+      ? (p.cost===null?'<span class="ud">UD</span>':p.cost.toFixed(1))
+      : (unit==='pct'?p.v.toFixed(1)+'%':p.v.toFixed(1));
+    const leftLab = isGap ? 'Cost' : vlab;
+    const rightCol = isGap
+      ? '<span class="d3 pos">+'+p.gap+'<em>Gap</em></span>'
+      : isClimb
+      ? '<span class="d3 pos">'+p.drift+' \u2191<em>Drift</em></span>'
+      : '<span class="d3 '+dc+'">'+s+p.d.toFixed(1)+'<em>3d</em></span>';
+    const inj = p.inj ? '<span class="inj '+p.inj.toLowerCase()+'">'+p.inj+'</span>' : '';
+    return '<div class="row'+((isGap||isClimb)?'':cls)+'">'+
+      '<span class="rk">'+(i+1)+'</span>'+
+      '<span class="plr"><span class="nm">'+p.n+(p.rk?'<span class="rkb">R</span>':'')+inj+'</span>'+
+      '<span class="pt">'+p.pos+' · '+p.tm+'</span></span>'+
+      '<span class="adp">'+leftVal+'<em>'+leftLab+'</em></span>'+
+      rightCol+
+    '</div>';
+  }).join('');
+}
+let tA='up',tB='up';
+function rA(){ draw('listA',A,tA,'pick',6,'ADP'); }
+function rB(){ draw('listB',B,tB,'pct',10,'Rost'); }
+document.querySelectorAll('#tabsA div').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('#tabsA div').forEach(x=>x.classList.remove('on')); t.classList.add('on'); tA=t.dataset.t; rA();
+}));
+document.querySelectorAll('#tabsB div').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('#tabsB div').forEach(x=>x.classList.remove('on')); t.classList.add('on'); tB=t.dataset.t; rB();
+}));
+rA(); rB();
+</script>
+</body>
+</html>
