@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Sportsvyn</title>
+  <!--
+    Bundled error page for the native shell.
+
+    WHY IT IS A LOCAL FILE AND NOT A ROUTE. Capacitor resolves this against the
+    LOCAL bundle, not the remote server:
+
+        errorPathURL = localURL.appendingPathComponent(errorPath)
+        - CAPInstanceConfiguration.swift
+
+    That is the whole point. It is shown when a navigation to sportsvyn.com has
+    already failed, so anything served from sportsvyn.com is exactly what cannot
+    be relied on to render it. It therefore inlines its own styles, loads no
+    fonts, and makes no network request until the reader asks for one.
+
+    WHAT IT REPLACES. With no errorPath configured, Capacitor's
+    didFailProvisionalNavigation only writes to the log, and the reader is left
+    on WebKit's own "couldn't load" page - unbranded, and with no way back other
+    than force-quitting the app.
+
+    CONSEQUENCE OF THE LOCAL RESOLUTION: this file only takes effect in a NEW
+    BINARY. It cannot ship as a web deploy.
+  -->
+  <style>
+    :root {
+      --ink: #0A0A0A; --paper: #F5F5F2; --muted: #888888;
+      --volt: #D4FF00; --rule: #2E2E2E;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%; margin: 0;
+      background: var(--ink); color: var(--paper);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap {
+      min-height: 100%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px calc(24px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
+      text-align: center;
+    }
+    .kicker {
+      font-size: 10px; font-weight: 700; letter-spacing: .22em;
+      text-transform: uppercase; color: var(--volt); margin-bottom: 14px;
+    }
+    h1 {
+      font-size: 26px; font-weight: 800; letter-spacing: -.01em;
+      margin: 0 0 12px; line-height: 1.15;
+    }
+    p {
+      font-size: 15px; line-height: 1.55; color: var(--muted);
+      margin: 0 0 26px; max-width: 300px;
+    }
+    button {
+      font: inherit; font-size: 13px; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--ink); background: var(--volt);
+      border: none; padding: 13px 26px; cursor: pointer;
+      -webkit-appearance: none; border-radius: 0;
+    }
+    button:active { opacity: .85; }
+    .alt {
+      margin-top: 16px; font-size: 12px; letter-spacing: .06em;
+      color: var(--muted); background: none; border: none;
+      text-transform: none; font-weight: 400; padding: 8px;
+    }
+    .note { margin-top: 22px; font-size: 11px; color: #5A5A5A; max-width: 280px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="kicker">Sportsvyn</div>
+    <h1>Lost the connection</h1>
+    <p>The app could not reach Sportsvyn. Your draft is saved - nothing is lost.</p>
+    <button type="button" id="retry">Try again</button>
+    <button type="button" class="alt" id="home">Back to the lobby</button>
+    <div class="note">Drafts are stored on the server, so reopening picks up exactly where you left off.</div>
+  </div>
+  <script>
+    // TWO WAYS OUT, and they are different on purpose.
+    //
+    // "Try again" retries the page the reader was actually on. If the failure was
+    // transient - a tunnel, a dropped handover - this returns them to their own
+    // draft room with no detour. history.back() is wrong here: the failed entry
+    // may still be the current one, and back can land on another dead document.
+    //
+    // "Back to the lobby" is the FALLBACK-TO-ENTRY: an absolute URL to the sim
+    // lobby, which re-enters through the server and rebuilds from the draft row.
+    // It is the escape hatch for a page that will not load no matter how often it
+    // is retried, and it is why this screen never dead-ends.
+    var ENTRY = 'https://sportsvyn.com/sim?shell=sim-app';
+
+    document.getElementById('retry').addEventListener('click', function () {
+      // location.reload() would re-request THIS local error file. The reader
+      // wants the page that failed, so go back to it explicitly when we can.
+      if (document.referrer && document.referrer.indexOf('sportsvyn.com') !== -1) {
+        window.location.replace(document.referrer);
+      } else {
+        window.location.replace(ENTRY);
+      }
+    });
+
+    document.getElementById('home').addEventListener('click', function () {
+      window.location.replace(ENTRY);
+    });
+  </script>
+</body>
+</html>
