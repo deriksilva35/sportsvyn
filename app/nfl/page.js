@@ -11,6 +11,7 @@ const NFL_TABS = [
   { label: 'Today', href: '/nfl', active: true },
   { label: 'Scores & Schedule', href: '/scores' },
   { label: 'Rankings', href: '/nfl/rankings' },
+  { label: 'Fantasy', href: '/nfl/fantasy' },
 ];
 const NFL_LEDE = 'Season opens September 10. The slate, the lines, and the reads land here.';
 

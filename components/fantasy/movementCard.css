@@ -1,0 +1,55 @@
+/* The /nfl entry card. Transcribed from the locked mock
+   (docs/design/sportsvyn-fantasy-movement-card-v4.html, panel A) against the
+   v1.1 tokens - the mock's :root block is its own standalone palette and is NOT
+   copied here; every colour below resolves through [data-surface="ink"].
+
+   Deliberate differences from the mock, each with a reason:
+     · No injury chips (.inj). The card reads ADP only; injury status is a
+       different feed and would be the one unsourced thing on the surface.
+     · No "UD" undrafted chip - that belongs to the in-season waivers variant
+       (panel B), which is not this instrument.
+     · The mock's border-radius:3px is dropped to sit square in the gridiron
+       instrument stack, which is square throughout. */
+
+.mc { border: 1px solid var(--rule); background: var(--graphite); }
+
+.mc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px 12px; border-bottom: 1px solid var(--charcoal); }
+.mc-lbl { font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--paper); }
+.mc-sub { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+.mc-all { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; text-decoration: none; transition: color .15s; }
+.mc-all:hover { color: var(--volt); }
+
+.mc-tabs { display: flex; border-bottom: 1px solid var(--charcoal); }
+.mc-tabs button { flex: 1; text-align: center; padding: 9px 4px; font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--muted); cursor: pointer; border: none; border-right: 1px solid var(--charcoal); background: transparent; transition: .15s; }
+.mc-tabs button:last-child { border-right: none; }
+.mc-tabs button:hover { background: var(--graphite-up); }
+.mc-tabs button.on { color: var(--ink); background: var(--volt); font-weight: 500; }
+
+.mc-row { display: grid; grid-template-columns: 20px 1fr 54px 62px; align-items: center; gap: 7px; padding: 10px 15px; border-bottom: 1px solid var(--rule-dim); }
+.mc-row:last-of-type { border-bottom: none; }
+.mc-row.steam { box-shadow: inset 2px 0 0 var(--volt); }
+.mc-row.sliding { box-shadow: inset 2px 0 0 var(--terra); }
+.mc-rk { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted); }
+.mc-nm { font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600; font-size: 14.5px; letter-spacing: .01em; color: var(--paper);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.mc-rkb { font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-size: 8px; font-weight: 600; letter-spacing: .1em; background: var(--volt); color: var(--ink); padding: 1px 4px; flex: none; }
+.mc-pt { display: block; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 1px; }
+.mc-adp { font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; color: var(--paper-dim); text-align: right; }
+.mc-adp em, .mc-d3 em { display: block; font-style: normal; font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); margin-top: 2px; font-weight: 400; }
+.mc-d3 { font-family: var(--font-jetbrains-mono), monospace; font-size: 14px; font-weight: 500; text-align: right; }
+.mc-d3.pos { color: var(--volt); }
+.mc-d3.neg { color: var(--terra); }
+.mc-d3.flat { color: var(--muted); }
+
+.mc-foot { padding: 11px 15px; border-top: 1px solid var(--charcoal); display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.mc-stamp { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); }
+.mc-cta { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); background: var(--volt); padding: 6px 12px; font-weight: 500; text-decoration: none; }
+
+.mc-empty { padding: 32px 16px; text-align: center; }
+.mc-empty .h { font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: var(--paper-dim); }
+.mc-empty .p { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13.5px; color: var(--muted); margin: 8px auto 0; line-height: 1.55; max-width: 290px; }
+.mc-flat { padding: 24px 16px; text-align: center; font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; color: var(--muted); }
+
+.mc-attr { padding: 0 15px 11px; font-family: var(--font-jetbrains-mono), monospace; font-size: 8.5px; letter-spacing: .08em; color: var(--muted-dim); }
+.mc-attr a { color: inherit; }

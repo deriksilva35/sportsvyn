@@ -7,13 +7,16 @@ import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate, getStandings, get
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { resolveShellMode } from '@/lib/shell/shell';
 import { getH2hOdds, getTitleContenders } from '@/lib/gridiron/oddsReader';
-import { getGlobalMostDrafted, getAdpMovers } from '@/lib/sim/fantasyBoard';
+import { getGlobalMostDrafted } from '@/lib/sim/fantasyBoard';
 import { normalizeTwoWayPct, isPreGame } from '@/lib/gridiron/oddsFormat';
 import PlayoffPicture from '@/components/gridiron/PlayoffPicture';
 import FantasyBoard from '@/components/gridiron/FantasyBoard';
 import EditorialBoard from '@/components/gridiron/EditorialBoard';
 import MarketBoard from '@/components/gridiron/MarketBoard';
 import { SuiteTeasers, UpsetWatch, TheRead } from '@/components/gridiron/RailCards';
+import MovementCard from '@/components/fantasy/MovementCard';
+import { getMovementCard } from '@/lib/fantasy/movement';
+import '@/components/fantasy/movementCard.css';
 
 function scoreline(g) {
   if (g.status === 'final') return { txt: `${g.awayScore}-${g.homeScore}`, cls: 'sc' };
@@ -72,15 +75,17 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
   // fantasy reads. Each renders its real read or its dormant frame.
   const leagueId = await getLeagueIdBySlug(leagueSlug);
   const isNfl = leagueSlug === 'nfl';
-  const [contenders, fantasy, adp, marketMovers, upsetDogs, boardA, boardB, boardC] = await Promise.all([
+  const [contenders, fantasy, marketMovers, upsetDogs, boardA, boardB, boardC, movement] = await Promise.all([
     leagueId ? getTitleContenders(leagueId, contendersN) : Promise.resolve([]),
     getGlobalMostDrafted(10),
-    getAdpMovers(8),
     getMarketMovers(leagueSlug, 4),
     isNfl ? Promise.resolve([]) : getUpsetWatch(leagueSlug, 5),
     getEditorialBoard(isNfl ? 'nfl-power' : 'cfb-top25', leagueSlug),
     getEditorialBoard(isNfl ? 'nfl-mvp-offense' : 'cfb-heisman', leagueSlug),
     isNfl ? getEditorialBoard('nfl-mvp-defense', leagueSlug) : Promise.resolve(null),
+    // NFL only: the FFC pool is NFL fantasy ADP, so there is nothing behind this
+    // card on /cfb and it must not render an empty frame there.
+    isNfl ? getMovementCard('ppr', 5) : Promise.resolve(null),
   ]);
 
   return (
@@ -141,7 +146,8 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
               Playoff Picture (market-derived) -> Read. */}
           {isNfl ? (
             <>
-              <FantasyBoard adp={adp} mostDrafted={fantasy.mostDrafted} draftCount={fantasy.draftCount} />
+              {movement ? <MovementCard card={movement} /> : null}
+              <FantasyBoard mostDrafted={fantasy.mostDrafted} draftCount={fantasy.draftCount} />
               <MarketBoard movers={marketMovers} />
               <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} limit={6} href="/nfl/rankings?tab=playoff" />
               <EditorialBoard title="Power Rankings" board={boardA} preview href="/nfl/rankings?tab=power" />

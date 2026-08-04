@@ -68,9 +68,9 @@ export async function GET(request) {
   if (!cronAuthorized(request)) return new Response('Unauthorized', { status: 401 });
 
   const now = new Date();
-  // snapshot_date is a UTC calendar day (the pool's natural-key component and what
-  // getAdpMovers diffs on); season year is the football season, so July onward is
-  // already the coming season's ADP board.
+  // snapshot_date is a UTC calendar day (the pool's natural-key component and the
+  // unit the movement board's history is counted in); season year is the football
+  // season, so July onward is already the coming season's ADP board.
   const snapshotDate = now.toISOString().slice(0, 10);
   const year = resolveSeasonYear(now);
 

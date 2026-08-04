@@ -1,0 +1,126 @@
+/* /nfl/fantasy — the ADP Movement Board. Ink surface per the Surface Rule; all
+   colour comes from the v1.1 tokens under [data-surface="ink"], so nothing here
+   redefines a palette. Transcribed from the locked mock
+   (docs/design/sportsvyn-fantasy-movement-board-v4.html) with three deliberate
+   differences, each from the build brief:
+     · NO watchlist star column - it needs persistence, deferred past v1. The
+       mock's grid opened with a 28px star cell; that column is simply gone.
+     · NO size chips - FFC publishes one league size per format, so format
+       implies size and a size selector would have no data behind it.
+     · Row detail carries the meta line only; the editorial read paragraph is an
+       editorial-pipeline question, not a board one. */
+
+.fb-wrap { max-width: 1240px; margin: 0 auto; padding: 26px 20px 60px; }
+
+/* ---- page head ---- */
+.fb-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 30px; flex-wrap: wrap; }
+.fb-kicker { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--volt); }
+.fb-title { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 52px; line-height: .94; letter-spacing: -.03em; color: var(--paper); margin: 10px 0 0; }
+.fb-sub { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 15px; line-height: 1.55; color: var(--paper-dim); margin: 14px 0 0; max-width: 560px; }
+
+/* record strip */
+.fb-strip { display: flex; gap: 26px; flex-wrap: wrap; }
+.fb-stat .k { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-dim); }
+.fb-stat .v { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 30px; line-height: 1; color: var(--paper); margin-top: 4px; }
+.fb-stat .v.volt { color: var(--volt); }
+.fb-stat .v.terra { color: var(--terra); }
+
+/* provenance line */
+.fb-prov { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 22px; padding: 11px 0; border-top: 1px solid var(--rule-dim); border-bottom: 1px solid var(--rule-dim);
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-dim); }
+.fb-prov b { color: var(--paper-dim); font-weight: 600; }
+
+/* ---- panel ---- */
+.fb-panel { margin-top: 22px; border: 1px solid var(--rule); background: var(--graphite); }
+.fb-panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; padding: 14px 20px; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+.fb-panel-head .lbl { font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .2em; text-transform: uppercase; color: var(--paper); }
+.fb-panel-head .mono { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .08em; color: var(--muted-dim); margin-left: 8px; text-transform: none; }
+.fb-panel-note { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 12.5px; color: var(--muted); max-width: 520px; }
+
+/* ---- filters ---- */
+.fb-filters { display: flex; gap: 7px; align-items: center; padding: 11px 20px; border-bottom: 1px solid var(--rule-dim); flex-wrap: wrap; }
+.fb-flabel { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-dim); margin-right: 3px; }
+.fb-chip { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--rule); padding: 5px 10px; cursor: pointer; background: transparent; }
+.fb-chip:hover { border-color: var(--muted-dim); color: var(--paper-dim); }
+.fb-chip.on { background: var(--volt); border-color: var(--volt); color: var(--ink); font-weight: 700; }
+.fb-sep { width: 1px; height: 16px; background: var(--rule); margin: 0 6px; }
+.fb-search { background: var(--ink); border: 1px solid var(--rule); color: var(--paper); font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; padding: 6px 10px; min-width: 190px; }
+.fb-search::placeholder { color: var(--muted-dim); }
+.fb-search:focus { outline: none; border-color: var(--volt); }
+
+/* ---- the volt-marked notice ---- */
+.fb-notice { display: flex; gap: 12px; align-items: flex-start; padding: 13px 20px; background: #131300; border-bottom: 1px solid var(--charcoal); }
+.fb-notice .mk { width: 12px; height: 12px; background: var(--volt); flex: none; margin-top: 3px; }
+.fb-notice .tx { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13.5px; color: var(--paper-dim); line-height: 1.5; }
+
+/* ---- the sheet ----
+   The mock's grid opened with a 28px star cell. v1 has no watchlist, so the
+   column is removed and the remaining widths are unchanged. */
+.fb-scroll { overflow-x: auto; scrollbar-width: thin; }
+.fb-sheet { min-width: 1112px; --fb-cols: 92px minmax(180px, 1.4fr) 70px 62px 74px 62px 66px 92px 80px 70px; }
+.fb-shead { display: grid; grid-template-columns: var(--fb-cols); align-items: center; background: var(--ink); border-bottom: 1px solid var(--rule);
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-dim); position: sticky; top: 0; z-index: 2; }
+.fb-shead > div { padding: 9px 10px; white-space: nowrap; }
+.fb-shead .r { text-align: right; }
+.fb-shead .sortable { cursor: pointer; user-select: none; background: none; border: none; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; width: 100%; text-align: right; padding: 0; }
+.fb-shead .sortable:hover { color: var(--paper-dim); }
+.fb-shead .sortable.act { color: var(--volt); }
+.fb-shead .caret { font-size: 8px; margin-left: 3px; }
+
+.fb-row { display: grid; grid-template-columns: var(--fb-cols); align-items: center; cursor: pointer; border-bottom: 1px solid var(--rule-dim); background: none; width: 100%; text-align: left; padding: 0; font: inherit; color: inherit; }
+.fb-row > div { padding: 9px 10px; }
+.fb-row:nth-child(even) { background: rgba(255,255,255,0.014); }
+.fb-row:hover { background: var(--graphite-up, #242424); }
+.fb-row.steam { box-shadow: inset 2px 0 0 var(--volt); }
+.fb-row.sliding { box-shadow: inset 2px 0 0 var(--terra); }
+.fb-row .r { text-align: right; }
+
+.fb-band { display: inline-block; font-family: var(--font-jetbrains-mono), monospace; font-size: 8.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 7px; }
+.fb-band.steam { background: var(--volt); color: var(--ink); }
+.fb-band.warming { background: transparent; color: var(--volt); border: 1px solid var(--volt-dim); }
+.fb-band.quiet { background: transparent; color: var(--muted); border: 1px solid var(--charcoal); }
+.fb-band.cooling { background: transparent; color: var(--terra); border: 1px solid #5A2008; }
+.fb-band.sliding { background: var(--terra); color: var(--paper); }
+.fb-band.none { background: transparent; color: var(--muted); border: 1px dashed var(--charcoal); }
+
+.fb-nm { font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600; font-size: 14px; letter-spacing: .01em; color: var(--paper); }
+.fb-pt { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); margin-top: 2px; }
+.fb-rk { display: inline-block; font-family: var(--font-jetbrains-mono), monospace; font-size: 8px; font-weight: 700; color: var(--volt); border: 1px solid var(--volt-dim); padding: 0 3px; margin-left: 6px; vertical-align: middle; }
+
+.fb-num { font-family: var(--font-jetbrains-mono), monospace; font-size: 12.5px; color: var(--paper); }
+.fb-num.dim { color: var(--muted); }
+.fb-delta { font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; }
+.fb-delta.big { font-size: 13.5px; font-weight: 700; }
+.fb-delta.pos { color: var(--volt); }
+.fb-delta.neg { color: var(--terra); }
+.fb-delta.flat { color: var(--muted-dim); }
+.fb-drift { font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; }
+.fb-drift.pos { color: var(--volt); }
+.fb-drift.neg { color: var(--terra); }
+.fb-rng { font-family: var(--font-jetbrains-mono), monospace; font-size: 10.5px; color: var(--muted); }
+.fb-dash { font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; color: var(--muted-dim); }
+
+/* row detail - meta line only in v1 */
+.fb-detail { display: none; padding: 0 10px 14px 102px; border-bottom: 1px solid var(--rule-dim); background: rgba(0,0,0,.16); }
+.fb-detail.open { display: block; }
+.fb-meta { display: flex; gap: 20px; flex-wrap: wrap; padding-top: 12px; font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-dim); }
+.fb-meta b { color: var(--paper-dim); font-weight: 600; }
+
+/* ---- empty state ---- */
+.fb-empty { padding: 44px 20px; text-align: center; }
+.fb-empty .h { font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--paper-dim); }
+.fb-empty .p { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 14px; color: var(--muted); max-width: 440px; margin: 9px auto 0; line-height: 1.55; }
+
+/* ---- methodology ---- */
+.fb-method { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 26px; margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--rule-dim); }
+.fb-method h4 { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--volt); margin: 0 0 9px; }
+.fb-method p { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; line-height: 1.6; color: var(--muted); margin: 0; }
+.fb-bands { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
+.fb-bl { display: flex; gap: 9px; align-items: center; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .04em; color: var(--muted); }
+.fb-attr { margin-top: 26px; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .08em; color: var(--muted-dim); }
+
+@media (max-width: 720px) {
+  .fb-title { font-size: 38px; }
+  .fb-wrap { padding: 20px 14px 46px; }
+  .fb-detail { padding-left: 20px; }
+}

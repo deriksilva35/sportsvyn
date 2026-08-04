@@ -54,6 +54,7 @@ const FOOTBALL_ITEMS = [
   { label: 'Scores', href: '/scores' },
   { label: 'NFL', href: '/nfl' },
   { label: 'CFB', href: '/cfb' },
+  { label: 'Fantasy', href: '/nfl/fantasy' },
 ];
 const SOCCER_ITEMS = [
   { label: 'World Cup', href: '/world-cup-2026/bracket' },
@@ -64,7 +65,7 @@ const SOCCER_ITEMS = [
 ];
 // Map the per-page activeNav keys onto the new top-level groups so existing call
 // sites (activeNav="bracket" etc.) still light the right tab.
-const FOOTBALL_ACTIVE = new Set(['football', 'scores', 'nfl', 'cfb']);
+const FOOTBALL_ACTIVE = new Set(['football', 'scores', 'nfl', 'cfb', 'fantasy']);
 const SOCCER_ACTIVE = new Set(['soccer', 'bracket', 'rankings', 'stats', 'schedule']);
 
 function navClass(activeNav, key) {
