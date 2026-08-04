@@ -31,7 +31,8 @@ import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 're
 import { useRouter } from 'next/navigation';
 import { logPick, undoLastPick } from '@/app/actions/sim';
 import Wordmark from '@/components/gridiron/Wordmark';
-import { filterPlayers, displayPosition } from '@/lib/fantasy/statView';
+import { filterPlayers, displayPosition, rookieIdSet } from '@/lib/fantasy/statView';
+import RookieChip from '@/components/fantasy/RookieChip';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
 import { seatLabel, seatLabelShort, nextUserOverall, picksUntilUserTurn } from '@/lib/fantasy/tracker';
@@ -43,6 +44,8 @@ import { sendHaptic } from '@/lib/shell/bridge';
 
 const TABS = ['AVAILABLE', 'BOARD', 'MY TEAM'];
 const POS_FILTERS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+// Class filter. Composes with position, same as the sim room.
+const CLASS_FILTERS = [['ALL', 'All'], ['ROOKIE', 'Rookies'], ['VET', 'Vets']];
 const ERR = {
   illegal_pick: "That roster can't fit the pick", player_unavailable: 'Already drafted',
   not_in_progress: 'Draft is over', not_tracker: 'Not a tracker draft',
@@ -92,6 +95,7 @@ export default function TrackerRoom({
   const [available, setAvailable] = useState(initialAvailable);
   const [tab, setTab] = useState(0);
   const [filter, setFilter] = useState('ALL');
+  const [cls, setCls] = useState('ALL');
   const [search, setSearch] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -114,14 +118,30 @@ export default function TrackerRoom({
   const isMySeat = onClockTeamIndex === userTeamIndex;
   const round = complete ? null : Math.ceil(currentOverall / teams);
 
+  // ROOKIE IDS. Same reasoning as the sim room: pick records come back through
+  // the engine, which is never told who is a rookie, so the ledger looks players
+  // up here. Seeded from the INITIAL props so it survives both directions of
+  // movement between the two lists.
+  //
+  // This is also what keeps UNDO honest. undoLastPick rebuilds the restored row
+  // from the removed pick's own columns, which carry no rookie flag - so a
+  // rookie put back on the board would silently lose his chip if the list read
+  // the flag off the row. It reads it from this set instead, which still holds
+  // the id. Pinned by a test.
+  const rookieIds = useMemo(
+    () => rookieIdSet(initialAvailable, initialPicks),
+    [initialAvailable, initialPicks],
+  );
+  const isRookieId = useCallback((id) => rookieIds.has(id), [rookieIds]);
+
   const userPicks = useMemo(() => picks.filter((p) => p.isUser), [picks]);
   const roster = useMemo(() => buildRoster(userPicks, config.roster_slots), [userPicks, config.roster_slots]);
 
   // Filtered board — reuses the sim's own filter so search/position behave
   // identically in both products.
   const shown = useMemo(
-    () => filterPlayers(available, { position: filter, team: 'ALL', search }),
-    [available, filter, search],
+    () => filterPlayers(available, { position: filter, team: 'ALL', search, cls }),
+    [available, filter, search, cls],
   );
 
   const last = picks[picks.length - 1] ?? null;
@@ -245,6 +265,11 @@ export default function TrackerRoom({
                 <button key={p} className={p === filter ? 'on' : ''} onClick={() => setFilter(p)}>{p}</button>
               ))}
             </div>
+            <div className="trk-pos trk-class">
+              {CLASS_FILTERS.map(([k, label]) => (
+                <button key={k} className={k === cls ? 'on' : ''} onClick={() => setCls(k)}>{label}</button>
+              ))}
+            </div>
             <div className="trk-avail">
               {shown.length === 0 && <div className="trk-empty">No player matches that.</div>}
               {shown.slice(0, 60).map((p, i) => {
@@ -254,7 +279,7 @@ export default function TrackerRoom({
                   <div key={p.ffcPlayerId} className={`trk-p${i === 0 ? ' top' : ''}`}>
                     <span className="adp">{Number(p.adp).toFixed(1)}</span>
                     <div>
-                      <div className="nm">{p.name}</div>
+                      <div className="nm">{p.name}<RookieChip rookie={isRookieId(p.ffcPlayerId)} /></div>
                       <div className="tag">
                         {pos}{p.team ? ` ${p.team}` : ''}
                         {g && <span className={`trk-gap ${g.cls}`}> {g.txt}{i === 0 && g.cls === 'val' ? ' VALUE' : ''}</span>}
@@ -324,7 +349,7 @@ export default function TrackerRoom({
                   <div className="trk-k" style={{ marginTop: 12 }}>BEST AVAILABLE AT YOUR TURN</div>
                   {bestAtMine.map((b) => (
                     <div className="trk-ba" key={b.ffcPlayerId}>
-                      <span className="nm">{b.name}</span>
+                      <span className="nm">{b.name}<RookieChip rookie={isRookieId(b.ffcPlayerId)} /></span>
                       <span className="tag">{displayPosition(b.position)}{b.team ? ` ${b.team}` : ''} · ADP {b.adp.toFixed(1)}</span>
                       <span className={`gap${b.likelyGone ? ' gone' : ''}`}>
                         {b.gap > 0 ? '+' : ''}{b.gap} AT {myNext}
@@ -342,7 +367,7 @@ export default function TrackerRoom({
             {roster.map((s, i) => (
               <div key={`${s.label}-${i}`} className={`trk-slot${s.pick ? '' : ' open'}`}>
                 <span className="pos-t">{s.key === BENCH ? s.label : s.key}</span>
-                <span className="nm">{s.pick ? s.pick.playerName : 'open'}</span>
+                <span className="nm">{s.pick ? s.pick.playerName : 'open'}{s.pick && <RookieChip rookie={isRookieId(s.pick.ffcPlayerId)} />}</span>
                 {s.pick && <span className="rdd">RD {s.pick.round}</span>}
               </div>
             ))}
@@ -391,7 +416,7 @@ function BoardList({ picks, order, teams, rounds, teamLabels, userTeamIndex, cur
           <div>
             {pick ? (
               <>
-                <span className="nm">{pick.synthetic ? `Replacement ${pick.slotPos}` : shortName(pick.playerName)}</span>{' '}
+                <span className="nm">{pick.synthetic ? `Replacement ${pick.slotPos}` : shortName(pick.playerName)}{!pick.synthetic && <RookieChip rookie={isRookieId(pick.ffcPlayerId)} />}</span>{' '}
                 <span className="pt">{pick.slotPos}{pick.team ? ` ${pick.team}` : ''}</span>
               </>
             ) : onClock ? (

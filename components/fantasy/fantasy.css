@@ -85,7 +85,7 @@
 
 .fb-nm { font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600; font-size: 14px; letter-spacing: .01em; color: var(--paper); }
 .fb-pt { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); margin-top: 2px; }
-.fb-rk { display: inline-block; font-family: var(--font-jetbrains-mono), monospace; font-size: 8px; font-weight: 700; color: var(--volt); border: 1px solid var(--volt-dim); padding: 0 3px; margin-left: 6px; vertical-align: middle; }
+/* .fb-rk lives in rookieChip.css, imported by the shared RookieChip component. */
 
 .fb-num { font-family: var(--font-jetbrains-mono), monospace; font-size: 12.5px; color: var(--paper); }
 .fb-num.dim { color: var(--muted); }

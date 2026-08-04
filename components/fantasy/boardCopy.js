@@ -11,6 +11,11 @@
 // or predicts anything.
 
 import { MIN_D3_HISTORY, MIN_D7_HISTORY, MIN_DRIFT_HISTORY, STREAK, SV_MIN_DRAFTS, BAND_MIN_DRAFTS } from '@/lib/fantasy/movement';
+// The licensed phrase has exactly ONE definition. Restating it here by hand is
+// how a credit drifts out of compliance the next time someone edits copy, and a
+// test in lib/fantasy/attribution.test.mjs fails the build if any surface does.
+// attribution.js (not ffc.js) because this module is imported by a client island.
+import { FFC_ATTRIBUTION } from '@/lib/fantasy/attribution';
 
 // The no-value marker. Not copy - the typographic absence of a number.
 export const EM_DASH = '—';
@@ -21,7 +26,7 @@ export const PAGE = {
   sub: 'Where drafters are actually taking players, and how that has changed. Not a ranking. Not a recommendation. A record of what the market is doing, updated every morning.',
   panelLabel: 'The Board',
   panelNote: 'Sorted by three-day movement. A positive number means the player is being drafted earlier than he was three days ago.',
-  attr: 'ADP data courtesy of Fantasy Football Calculator · Methodology published at /methodology',
+  attr: `${FFC_ATTRIBUTION.text} · Methodology published at /methodology`,
 };
 
 // Scoring formats. Size is NOT selectable - FFC publishes exactly one league
@@ -148,6 +153,10 @@ export function cardEmpty(snapshotCount) {
     body: `Three-day movement needs ${MIN_D3_HISTORY} snapshots and the board has ${snapshotCount}. It records one each morning, so it opens in ${mornings}. Nothing is estimated in the meantime.`,
   };
 }
+
+// The provenance line's source value. Derived from the constant for the same
+// reason as PAGE.attr above.
+export const PROV_SOURCE = FFC_ATTRIBUTION.text.replace(/^ADP data courtesy of /, '');
 
 export const PROV_LABELS = {
   snapshot: 'Snapshot', pool: 'Pool', history: 'History', source: 'Source', sv: 'Sportsvyn ADP',

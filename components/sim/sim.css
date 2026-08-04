@@ -415,6 +415,12 @@
 .avail-chips { display: flex; gap: 4px; flex-wrap: wrap; }
 .avail-chips button { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--rule); padding: 5px 9px; cursor: pointer; }
 .avail-chips button.on { color: var(--ink); background: var(--volt); border-color: var(--volt); }
+/* Class chips reuse .avail-chips exactly and need no modifier of their own:
+   .avail-tools is a COLUMN flex, so this group is already its own full-width
+   row under the position chips. An earlier version set a left border to read as
+   a separator, which only makes sense for side-by-side groups - stacked, it drew
+   a stray vertical rule down the left edge of the row. Kept as a hook only. */
+.avail-class { /* own row, inherits .avail-chips */ }
 /* team filter: composes with the position chips; does not enable stat sorts */
 .avail-team { display: flex; gap: 6px; align-items: center; }
 .avail-team .s-lbl { font-size: 8px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-dim); }

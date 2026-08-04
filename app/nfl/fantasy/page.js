@@ -21,7 +21,7 @@ import {
   MIN_D3_HISTORY, MIN_DRIFT_HISTORY, SV_MIN_DRAFTS,
 } from '@/lib/fantasy/movement';
 import {
-  PAGE, METHOD, PROV_LABELS, EMPTY, bandLegend, thinNotice,
+  PAGE, METHOD, PROV_LABELS, PROV_SOURCE, EMPTY, bandLegend, thinNotice,
 } from '@/components/fantasy/boardCopy';
 import '@/components/gridiron/gridiron.css';
 import '@/components/fantasy/fantasy.css';
@@ -70,7 +70,7 @@ export default async function FantasyMovementBoard({ searchParams }) {
     [PROV_LABELS.snapshot, board.latestSnapshot ?? EMPTY.head],
     [PROV_LABELS.pool, `${format} · ${size}-team · ${players.length} players`],
     [PROV_LABELS.history, `${board.snapshotCount} ${board.snapshotCount === 1 ? 'snapshot' : 'snapshots'}`],
-    [PROV_LABELS.source, 'Fantasy Football Calculator'],
+    [PROV_LABELS.source, PROV_SOURCE],
     [PROV_LABELS.sv, `${SV_MIN_DRAFTS} drafts to qualify`],
   ];
 

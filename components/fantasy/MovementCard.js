@@ -19,6 +19,7 @@
 
 import { useState } from 'react';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/attribution';
+import RookieChip from './RookieChip';
 import { CARD, cardEmpty } from './boardCopy';
 
 const fmt1 = (v) => (v == null ? null : v.toFixed(1));
@@ -33,7 +34,7 @@ function Row({ p, i, tab }) {
     <div className={`mc-row${accent}`}>
       <span className="mc-rk">{i + 1}</span>
       <span className="mc-plr">
-        <span className="mc-nm">{p.name}{p.isRookie ? <span className="mc-rkb">R</span> : null}</span>
+        <span className="mc-nm">{p.name}<RookieChip rookie={p.isRookie} /></span>
         <span className="mc-pt">{p.position} · {p.team ?? ''}</span>
       </span>
       <span className="mc-adp">{fmt1(p.adp)}<em>{CARD.colAdp}</em></span>

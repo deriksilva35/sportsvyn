@@ -23,16 +23,19 @@ import { useRouter } from 'next/navigation';
 import { makePick, timerAutoPick, setAutoDraft, fetchPlayerStats, fetchPlayerSummaries } from '@/app/actions/sim';
 import { SCORING_LABEL } from '@/lib/fantasy/config';
 import {
-  viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers,
+  viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
 } from '@/lib/fantasy/statView';
 import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/scoring';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
 import { sendHaptic } from '@/lib/shell/bridge';
+import RookieChip from '@/components/fantasy/RookieChip';
 
 const PAGES = ['BOARD', 'PICK', 'ROSTER']; // swipe pager order; PICK is the default landing
 
 const POS_FILTERS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+// Class filter. Composes with position and team rather than replacing them.
+const CLASS_FILTERS = [['ALL', 'All'], ['ROOKIE', 'Rookies'], ['VET', 'Vets']];
 const ERR = {
   illegal_pick: "Roster can't fit that pick", player_unavailable: 'Already drafted',
   not_your_turn: 'Not your turn', not_in_progress: 'Draft is over', no_legal_pick: 'No legal pick',
@@ -54,6 +57,7 @@ export default function DraftRoom({
   const [revealing, setRevealing] = useState(false);
   const [err, setErr] = useState(null);          // { id?, reason }
   const [filter, setFilter] = useState('ALL');
+  const [cls, setCls] = useState('ALL');
   const [team, setTeam] = useState('ALL');
   const [sort, setSort] = useState('adp');
   const [search, setSearch] = useState('');
@@ -72,6 +76,22 @@ export default function DraftRoom({
   const isMyTurn = !complete && !revealing && onClockTeam === userTeamIndex;
   const canPick = isMyTurn && !auto; // AUTO owns the seat while it is on
   const round = complete ? null : Math.ceil(currentOverall / config.teams_count);
+  // ROOKIE IDS, resolved once from what the server sent.
+  //
+  // The pick records that come back mid-draft do NOT carry the flag: they are
+  // built by the draft engine, which is deliberately never told which players
+  // are rookies. So the ledger and the feed look the player up here instead.
+  // Seeding from initialAvailable UNION initialPicks covers both cases - a
+  // player drafted during this session was in `available` when the page loaded,
+  // and one drafted before it arrives on `initialPicks` already flagged by the
+  // server. Built from the INITIAL props, not from `available`, because that
+  // list shrinks as players come off the board.
+  const rookieIds = useMemo(
+    () => rookieIdSet(initialAvailable, initialPicks),
+    [initialAvailable, initialPicks],
+  );
+  const isRookiePick = useCallback((pk) => !pk.synthetic && rookieIds.has(pk.ffcPlayerId), [rookieIds]);
+
   const userPicks = useMemo(() => picks.filter((p) => p.isUser), [picks]);
   const roster = useMemo(() => buildRoster(userPicks, config.roster_slots), [userPicks, config.roster_slots]);
 
@@ -237,9 +257,9 @@ export default function DraftRoom({
   const teamOptions = useMemo(() => teamsInPool(initialAvailable), [initialAvailable]);
 
   const shown = useMemo(() => {
-    const list = filterPlayers(available, { position: filter, team, search });
+    const list = filterPlayers(available, { position: filter, team, search, cls });
     return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), summaries);
-  }, [available, filter, team, search, sortOpts, activeSort, summaries]);
+  }, [available, filter, team, search, cls, sortOpts, activeSort, summaries]);
 
   const rounds = board.rounds;
   return (
@@ -314,6 +334,11 @@ export default function DraftRoom({
           <div className="avail-chips">
             {POS_FILTERS.map((f) => <button key={f} className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>{f}</button>)}
           </div>
+          <div className="avail-chips avail-class">
+            {CLASS_FILTERS.map(([k, label]) => (
+              <button key={k} className={cls === k ? 'on' : ''} onClick={() => setCls(k)}>{label}</button>
+            ))}
+          </div>
           <div className="avail-team">
             <span className="s-lbl">Team</span>
             <select className="team-select" value={team} onChange={(e) => setTeam(e.target.value)}>
@@ -359,7 +384,7 @@ export default function DraftRoom({
                   <button type="button" className="p-main" onClick={() => toggleExpand(p)} aria-expanded={open}>
                     <span className="ava" data-pos={slot}>{slot}</span>
                     <span className="p-id">
-                      <span className="nm">{p.name}</span>
+                      <span className="nm">{p.name}<RookieChip rookie={p.rookie} /></span>
                       <span className="rng">
                         {slot}{p.team ? `·${p.team}` : ''} · {r0(p.adpHigh)}-{r0(p.adpLow)}
                         {quick && <span className="q"> · {quick.join(' · ')}</span>}
@@ -401,7 +426,7 @@ export default function DraftRoom({
               <div key={i} className={`rslot${s.pick ? '' : ' open'}`}>
                 <span className="lbl">{s.label}</span>
                 {s.pick
-                  ? <><span className="nm">{s.pick.synthetic ? `Replacement ${s.pick.slotPos}` : s.pick.playerName}</span> {s.pick.team && <span className="tm">{s.pick.team}</span>}</>
+                  ? <><span className="nm">{s.pick.synthetic ? `Replacement ${s.pick.slotPos}` : s.pick.playerName}<RookieChip rookie={isRookiePick(s.pick)} /></span> {s.pick.team && <span className="tm">{s.pick.team}</span>}</>
                   : <span className="nm">{s.key === BENCH ? 'bench' : s.label}</span>}
               </div>
             ))}
@@ -416,7 +441,7 @@ export default function DraftRoom({
           {[...picks].reverse().map((pk, idx) => (
             <div key={pk.overallPick} className={`feed-row ${pk.isUser ? 'user' : 'ai'}${idx === 0 ? ' feed-reveal' : ''}`}>
               <span className="ov">{pk.overallPick}</span>
-              <span><span className="nm">{pk.synthetic ? `Replacement ${pk.slotPos}` : pk.playerName}</span> <span className="pt">{pk.slotPos}{pk.team ? `·${pk.team}` : ''}</span></span>
+              <span><span className="nm">{pk.synthetic ? `Replacement ${pk.slotPos}` : pk.playerName}<RookieChip rookie={isRookiePick(pk)} /></span> <span className="pt">{pk.slotPos}{pk.team ? `·${pk.team}` : ''}</span></span>
               <span className="slot">{pk.rosterSlot}</span>
             </div>
           ))}

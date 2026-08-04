@@ -14,6 +14,7 @@
 // it were a number.
 
 import { useMemo, useState } from 'react';
+import RookieChip from './RookieChip';
 import {
   PAGE, COLUMNS, POSITION_CHIPS, ROUND_CHIPS, CLASS_CHIPS, FORMAT_CHIPS,
   SEARCH_PLACEHOLDER, MOVERS_ONLY, EMPTY, EM_DASH,
@@ -139,7 +140,7 @@ export default function MovementBoard({ board, format }) {
               <button type="button" className={`fb-row ${p.band.key}`} onClick={() => setOpen(open === p.ffcPlayerId ? null : p.ffcPlayerId)}>
                 <div><span className={`fb-band ${p.band.key}`}>{p.band.label}</span></div>
                 <div>
-                  <div className="fb-nm">{p.name}{p.isRookie ? <span className="fb-rk">R</span> : null}</div>
+                  <div className="fb-nm">{p.name}<RookieChip rookie={p.isRookie} /></div>
                   <div className="fb-pt">{p.position} · {p.team ?? EM_DASH}</div>
                 </div>
                 <div className="r"><Cell value={fmtNum(p.adp)} /></div>

@@ -63,6 +63,10 @@
 .trk-pos { display: flex; gap: 6px; padding: 10px 16px 4px; overflow-x: auto; }
 .trk-pos button { font-family: var(--font-saira-cond); font-size: 12px; letter-spacing: .14em; padding: 6px 12px; border: 1px solid var(--rule-dim); color: var(--muted); white-space: nowrap; background: none; cursor: pointer; }
 .trk-pos button.on { background: var(--volt); color: var(--ink); border-color: var(--volt); font-weight: 600; }
+/* Class chips: the same control as .trk-pos, on its own scroll row so the two
+   groups read as two questions rather than one long strip of eleven chips. The
+   top padding is tightened because it sits directly under the position row. */
+.trk-pos.trk-class { padding-top: 4px; padding-bottom: 6px; }
 
 /* ---- available list ---- */
 .trk-avail { padding: 6px 0 16px; }

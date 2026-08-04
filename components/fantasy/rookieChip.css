@@ -1,0 +1,20 @@
+/* The R chip's one style rule, split out of fantasy.css so it can travel with
+   RookieChip.js rather than with the Movement Board's stylesheet. The sim and
+   tracker rooms load sim.css / tracker.css and never load fantasy.css, so a
+   chip whose style lived there would render unstyled in the draft room - the
+   exact drift the shared component exists to prevent.
+
+   The class name stays .fb-rk: it is already shipped on the Movement Board, and
+   renaming it would be churn with no reader-visible benefit. */
+
+.fb-rk {
+  display: inline-block;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--volt);
+  border: 1px solid var(--volt-dim);
+  padding: 0 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
