@@ -651,3 +651,24 @@
      peek of the third, which the fade above resolves into a scroll cue. */
   .pcard { flex: 0 0 150px; }
 }
+
+/* ---- draft-room error boundary (app/sim/draft/[id]/error.js) ----
+   Ink surface, same register as the room it replaces: one plain sentence, a way
+   back in, and a way out. No stack, no raw error text - the reference line is a
+   correlation id, which is what makes a report actionable without showing a
+   reader something they cannot act on. */
+.sim-err { max-width: 460px; margin: 12vh auto 0; text-align: center; }
+.sim-err h1 { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase;
+  font-size: 30px; line-height: 1.05; letter-spacing: -.02em; color: var(--paper); margin: 10px 0 0; }
+.sim-err p { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 15px; line-height: 1.55;
+  color: var(--paper-dim); margin: 14px 0 0; }
+.sim-err-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
+.sim-err-retry { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--rule);
+  padding: 11px 18px; cursor: pointer; }
+.sim-err-retry:hover { color: var(--paper-dim); border-color: var(--muted-dim); }
+.sim-err-lobby { display: inline-block; margin-top: 18px; font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); text-decoration: none; }
+.sim-err-lobby:hover { color: var(--volt); }
+.sim-err-ref { margin-top: 22px; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px;
+  letter-spacing: .08em; color: #5A5A5A; }
