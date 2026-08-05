@@ -319,6 +319,7 @@ export default function TrackerRoom({
                 picks={picks} order={order} teams={teams} rounds={rounds}
                 teamLabels={teamLabels} userTeamIndex={userTeamIndex}
                 currentOverall={complete ? null : currentOverall}
+                rookieIds={rookieIds}
               />
             ) : (
               <BoardGrid
@@ -392,7 +393,22 @@ export default function TrackerRoom({
 // The board: a linear pick list newest-round-first, per the mock. Only rounds that
 // have started (plus the one in progress) are rendered — an unstarted round is a
 // list of dashes and tells a live drafter nothing.
-function BoardList({ picks, order, teams, rounds, teamLabels, userTeamIndex, currentOverall }) {
+// BOARD LIST. Every value it renders arrives as a PROP - including rookieIds.
+//
+// It is declared at module scope, so it can see nothing inside TrackerRoom. An
+// earlier version called isRookieId() here, a useCallback declared inside the
+// component: that is a ReferenceError the moment any real pick renders, and it
+// took the whole board down in production. `no-undef` is now enabled repo-wide
+// (eslint.config.mjs) so the same reach cannot be committed again.
+//
+// The Set is defaulted rather than required: a board that renders with no chips
+// is correct-looking and harmless, whereas an undefined lookup is another crash.
+const NO_ROOKIES = new Set();
+
+function BoardList({
+  picks, order, teams, rounds, teamLabels, userTeamIndex, currentOverall,
+  rookieIds = NO_ROOKIES,
+}) {
   const byOverall = new Map(picks.map((p) => [p.overallPick, p]));
   const lastRound = currentOverall == null ? rounds : Math.ceil(currentOverall / teams);
   const out = [];
@@ -401,13 +417,58 @@ function BoardList({ picks, order, teams, rounds, teamLabels, userTeamIndex, cur
     const rows = [];
     for (let o = start; o < start + teams; o++) {
       if (o > order.length) break;
+      // ONE BAD ROW MUST NOT TAKE THE BOARD DOWN.
+      //
+      // This is absence over inference applied to rendering: a row we cannot
+      // draw shows a dash, the same marker a missing value gets everywhere else,
+      // and the other eleven picks in the round still draw. Before this, a single
+      // unrenderable row threw out of the whole component and the reader got a
+      // 500 for the entire board - which is exactly what happened in production.
+      //
+      // Scope, honestly: try/catch here catches throws while BUILDING the row -
+      // a bad field access, a helper that rejects a shape. It does NOT catch a
+      // throw inside a child component's own render, which only an error
+      // boundary can. It covers the class that actually bit us.
+      try {
+        rows.push(buildBoardRow({
+          o, byOverall, currentOverall, order, userTeamIndex, teamLabels, rookieIds,
+        }));
+      } catch {
+        rows.push(<UnrenderableRow key={o} overall={o} />);
+      }
+    }
+    out.push(
+      <div key={`r${r}`}>
+        <div className="trk-rd">ROUND {r}{r < lastRound ? ` · ${teams} PICKS` : ''}</div>
+        {rows}
+      </div>,
+    );
+  }
+  return <>{out}</>;
+}
+
+// A row that could not be drawn. It states that plainly rather than rendering a
+// blank: a silent gap reads as "nobody picked here", which is a different and
+// wrong claim. The pick number is still shown, because that much is always known.
+function UnrenderableRow({ overall }) {
+  return (
+    <div className="trk-b">
+      <span className="n">{overall}</span>
+      <span className="team">—</span>
+      <div><span className="nm pending">—</span></div>
+    </div>
+  );
+}
+
+function buildBoardRow({ o, byOverall, currentOverall, order, userTeamIndex, teamLabels, rookieIds }) {
+  {
       const pick = byOverall.get(o) ?? null;
       const onClock = currentOverall === o;
       const teamIndex = order[o - 1];
       const mine = teamIndex === userTeamIndex;
       const gap = pick ? valueGap(pick.overallPick, pick.adpAtPick) : null;
       const vCls = gap == null ? 'even' : (gap > 1 ? 'val' : (gap < -1 ? 'rch' : 'even'));
-      rows.push(
+      return (
         <div className={`trk-b${onClock ? ' now' : ''}`} key={o}>
           <span className="n">{o}</span>
           <span className={`team${mine ? ' me' : ''}`}>
@@ -416,7 +477,7 @@ function BoardList({ picks, order, teams, rounds, teamLabels, userTeamIndex, cur
           <div>
             {pick ? (
               <>
-                <span className="nm">{pick.synthetic ? `Replacement ${pick.slotPos}` : shortName(pick.playerName)}{!pick.synthetic && <RookieChip rookie={isRookieId(pick.ffcPlayerId)} />}</span>{' '}
+                <span className="nm">{pick.synthetic ? `Replacement ${pick.slotPos}` : shortName(pick.playerName)}{!pick.synthetic && <RookieChip rookie={rookieIds.has(pick.ffcPlayerId)} />}</span>{' '}
                 <span className="pt">{pick.slotPos}{pick.team ? ` ${pick.team}` : ''}</span>
               </>
             ) : onClock ? (
@@ -428,17 +489,9 @@ function BoardList({ picks, order, teams, rounds, teamLabels, userTeamIndex, cur
           {pick && gap != null && (
             <span className={`v ${vCls}`}>{gap > 0 ? '+' : ''}{gap}</span>
           )}
-        </div>,
+        </div>
       );
-    }
-    out.push(
-      <div key={`r${r}`}>
-        <div className="trk-rd">ROUND {r}{r < lastRound ? ` · ${teams} PICKS` : ''}</div>
-        {rows}
-      </div>,
-    );
   }
-  return <>{out}</>;
 }
 
 // GRID view: the full teams x rounds snake board, reusing the sim's own
