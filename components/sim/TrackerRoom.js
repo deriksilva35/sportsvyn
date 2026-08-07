@@ -31,7 +31,8 @@ import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 're
 import { useRouter } from 'next/navigation';
 import { logPick, undoLastPick } from '@/app/actions/sim';
 import Wordmark from '@/components/gridiron/Wordmark';
-import { filterPlayers, displayPosition, rookieIdSet } from '@/lib/fantasy/statView';
+import { filterPlayers, displayPosition, rookieIdSet, sortsFor, sortPlayers } from '@/lib/fantasy/statView';
+import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
 import RookieChip from '@/components/fantasy/RookieChip';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
@@ -46,6 +47,10 @@ const TABS = ['AVAILABLE', 'BOARD', 'MY TEAM'];
 const POS_FILTERS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'];
 // Class filter. Composes with position, same as the sim room.
 const CLASS_FILTERS = [['ALL', 'All'], ['ROOKIE', 'Rookies'], ['VET', 'Vets']];
+// The tracker had no sort control at all - the board was always ADP order. Only
+// the two cross-position sorts are offered here: stat sorts need loaded season
+// summaries, which this room does not fetch.
+const TRK_SORTS = ['adp', 'myteam'];
 const ERR = {
   illegal_pick: "That roster can't fit the pick", player_unavailable: 'Already drafted',
   not_in_progress: 'Draft is over', not_tracker: 'Not a tracker draft',
@@ -96,6 +101,7 @@ export default function TrackerRoom({
   const [tab, setTab] = useState(0);
   const [filter, setFilter] = useState('ALL');
   const [cls, setCls] = useState('ALL');
+  const [sort, setSort] = useState('adp'); // default stays ADP; My Team is opt-in
   const [search, setSearch] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -139,15 +145,31 @@ export default function TrackerRoom({
 
   // Filtered board — reuses the sim's own filter so search/position behave
   // identically in both products.
-  const shown = useMemo(
-    () => filterPlayers(available, { position: filter, team: 'ALL', search, cls }),
-    [available, filter, search, cls],
-  );
 
   const last = picks[picks.length - 1] ?? null;
 
   // ---- needs (MY TEAM frame) ----
   const myNext = complete ? null : nextUserOverall(order, userTeamIndex, currentOverall - 1);
+
+  // MY TEAM valuation - the same computeSeatValuation the sim room uses, so the
+  // two products cannot disagree about what a player is worth to a roster.
+  const seatValuation = useMemo(() => computeSeatValuation({
+    rosterSlots: config.roster_slots,
+    rounds,
+    allPicks: picks,
+    seatPicks: userPicks,
+    available,
+    myNextOverall: myNext,
+  }), [config.roster_slots, rounds, picks, userPicks, available, myNext]);
+
+  const sortOpts = useMemo(() => sortsFor('ALL').filter((o) => TRK_SORTS.includes(o.key)), []);
+  const activeSort = sort === 'myteam' && myNext == null ? 'adp' : sort;
+  const seatSort = activeSort === 'myteam';
+
+  const shown = useMemo(() => {
+    const list = filterPlayers(available, { position: filter, team: 'ALL', search, cls });
+    return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), {}, seatValuation);
+  }, [available, filter, search, cls, sortOpts, activeSort, seatValuation]);
   const away = complete ? null : picksUntilUserTurn(order, userTeamIndex, currentOverall);
   const openSlots = useMemo(() => openStarterSlotsByPos(roster), [roster]);
   const observation = useMemo(
@@ -270,11 +292,30 @@ export default function TrackerRoom({
                 <button key={k} className={k === cls ? 'on' : ''} onClick={() => setCls(k)}>{label}</button>
               ))}
             </div>
+            {/* Sort. New control in this room - the tracker board was always ADP
+                order. My Team is disabled rather than hidden once the seat has
+                no pick left: the reason it cannot run is worth saying. */}
+            <div className="trk-pos trk-sort">
+              <span className="trk-sortlbl">Sort</span>
+              {sortOpts.map((o) => {
+                const locked = o.seat && myNext == null;
+                return (
+                  <button
+                    key={o.key}
+                    className={activeSort === o.key ? 'on' : ''}
+                    disabled={locked}
+                    title={locked ? 'Opens once you have another pick coming' : undefined}
+                    onClick={() => setSort(o.key)}
+                  >{o.label}</button>
+                );
+              })}
+            </div>
             <div className="trk-avail">
               {shown.length === 0 && <div className="trk-empty">No player matches that.</div>}
               {shown.slice(0, 60).map((p, i) => {
                 const g = gapChip(valueGap(currentOverall, p.adp));
                 const pos = displayPosition(p.position);
+                const seatRead = seatValuation.get(p.ffcPlayerId) ?? null;
                 return (
                   <div key={p.ffcPlayerId} className={`trk-p${i === 0 ? ' top' : ''}`}>
                     <span className="adp">{Number(p.adp).toFixed(1)}</span>
@@ -283,6 +324,19 @@ export default function TrackerRoom({
                       <div className="tag">
                         {pos}{p.team ? ` ${p.team}` : ''}
                         {g && <span className={`trk-gap ${g.cls}`}> {g.txt}{i === 0 && g.cls === 'val' ? ' VALUE' : ''}</span>}
+                        {/* Two facts, never the composite - see seatValuation.js. */}
+                        {seatSort && seatRead && (
+                          <>
+                            {seatRead.gap != null && (
+                              <span className={`trk-gap ${seatRead.gap > 0 ? 'val' : 'rch'}`}>
+                                {' '}{seatRead.gap > 0 ? '+' : ''}{seatRead.gap} AT {myNext}
+                              </span>
+                            )}
+                            <span className={`trk-slotstate ${seatRead.slot}`}>
+                              {' '}{pos} · {seatRead.slot}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                     <button className="go" onClick={() => commit(p)} disabled={busy || complete}>DRAFT</button>

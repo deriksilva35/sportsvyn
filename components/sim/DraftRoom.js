@@ -25,6 +25,8 @@ import { SCORING_LABEL } from '@/lib/fantasy/config';
 import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
 } from '@/lib/fantasy/statView';
+import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
+import { nextUserOverall } from '@/lib/fantasy/tracker';
 import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/scoring';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
@@ -249,17 +251,49 @@ export default function DraftRoom({
   const statsReady = useMemo(() => Object.keys(summaries).length > 0, [summaries]);
   // Derived, not stored: switching filters can strip the active key out from
   // under the sort, and silently falling back beats a setState-in-effect.
-  const activeSort = sortOpts.some((o) => o.key === sort) && (sort === 'adp' || statsReady) ? sort : 'adp';
+  // MY TEAM valuation. Recomputed whenever picks or the board change, which is
+  // once per pick - both inputs move together. ~200 available x one needWeight
+  // each, and needWeight is O(1) plus a slice of the last RUN_WINDOW picks, so
+  // this is a sub-millisecond pass; measured, see the commit.
+  //
+  // myNextOverall is derived here rather than threaded from the server because
+  // it changes on every pick, and the server value would be a snapshot from page
+  // load. Null once the seat has no picks left - the sort then has nothing to
+  // say and every value is null, which sorts as ADP.
+  const myNextOverall = useMemo(
+    () => nextUserOverall(order, userTeamIndex, picks.length),
+    [order, userTeamIndex, picks.length],
+  );
+  const seatValuation = useMemo(() => computeSeatValuation({
+    rosterSlots: config.roster_slots,
+    rounds: board.rounds,
+    allPicks: picks,
+    seatPicks: userPicks,
+    available,
+    myNextOverall,
+  }), [config.roster_slots, board.rounds, picks, userPicks, available, myNextOverall]);
+
+  const activeSort = (() => {
+    const opt = sortOpts.find((o) => o.key === sort);
+    if (!opt) return 'adp';
+    if (opt.seat) return myNextOverall == null ? 'adp' : sort;
+    return sort === 'adp' || statsReady ? sort : 'adp';
+  })();
 
   // Team options come from the FULL initial pool, not the shrinking `available`
   // set, so the dropdown is a stable 32-team list and a team does not vanish when
   // its last player is drafted.
   const teamOptions = useMemo(() => teamsInPool(initialAvailable), [initialAvailable]);
 
+  // Whether the two seat facts are on screen. They ride with the sort that used
+  // them: showing a roster read while the board is ordered by ADP would imply a
+  // relationship the order does not have.
+  const seatSort = activeSort === 'myteam';
+
   const shown = useMemo(() => {
     const list = filterPlayers(available, { position: filter, team, search, cls });
-    return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), summaries);
-  }, [available, filter, team, search, cls, sortOpts, activeSort, summaries]);
+    return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), summaries, seatValuation);
+  }, [available, filter, team, search, cls, sortOpts, activeSort, summaries, seatValuation]);
 
   const rounds = board.rounds;
   return (
@@ -349,13 +383,17 @@ export default function DraftRoom({
           <div className="avail-sort">
             <span className="s-lbl">Sort</span>
             {sortOpts.map((o) => {
-              const locked = o.key !== 'adp' && !statsReady;
+              // My Team needs a next pick, not season stats. Gating it on
+              // statsReady would disable it for the whole of a live draft.
+              const locked = o.seat ? myNextOverall == null : (o.key !== 'adp' && !statsReady);
               return (
                 <button
                   key={o.key}
                   className={activeSort === o.key ? 'on' : ''}
                   disabled={locked}
-                  title={locked ? 'Needs season stats, which land with the data backfill' : undefined}
+                  title={locked
+                    ? (o.seat ? 'Opens once you have another pick coming' : 'Needs season stats, which land with the data backfill')
+                    : undefined}
                   onClick={() => setSort(o.key)}
                 >
                   {o.label}
@@ -377,6 +415,7 @@ export default function DraftRoom({
             // points are partial (no distance tiers / points allowed), so their
             // PPG is marked ~ rather than passed off as league-exact.
             const quick = sum ? viewFor(p.position).quick(sum.totals) : null;
+            const seatRead = seatValuation.get(p.ffcPlayerId) ?? null;
             const approx = sum && !isExactlyScored(slot);
             return (
               <div key={p.ffcPlayerId} className={`p-item${open ? ' open' : ''}`}>
@@ -388,6 +427,24 @@ export default function DraftRoom({
                       <span className="rng">
                         {slot}{p.team ? `·${p.team}` : ''} · {r0(p.adpHigh)}-{r0(p.adpLow)}
                         {quick && <span className="q"> · {quick.join(' · ')}</span>}
+                        {/* MY TEAM sort shows the TWO FACTS behind the order and
+                            never the composite that produced it: the market gap
+                            at your next pick, and how your roster can absorb the
+                            position right now. The score stays in the
+                            comparator - printing it would be handing back a
+                            number we invented on the reader's behalf. */}
+                        {seatSort && seatRead && (
+                          <>
+                            {seatRead.gap != null && (
+                              <span className={`p-seatgap ${seatRead.gap > 0 ? 'val' : 'rch'}`}>
+                                {' · '}{seatRead.gap > 0 ? '+' : ''}{seatRead.gap} at {myNextOverall}
+                              </span>
+                            )}
+                            <span className={`p-seatslot ${seatRead.slot}`}>
+                              {' · '}{slot} · {seatRead.slot}
+                            </span>
+                          </>
+                        )}
                       </span>
                     </span>
                     <span className="p-num">

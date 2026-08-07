@@ -672,3 +672,15 @@
 .sim-err-lobby:hover { color: var(--volt); }
 .sim-err-ref { margin-top: 22px; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px;
   letter-spacing: .08em; color: #5A5A5A; }
+
+/* ---- My Team sort: the TWO FACTS behind the order ----
+   Never the composite. The gap borrows the same value/reach colouring the room
+   already uses for pick value; the slot state is recessive text, because it is
+   context for the gap rather than a number in its own right. */
+.p-seatgap { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .04em; }
+.p-seatgap.val { color: var(--volt); }
+.p-seatgap.rch { color: var(--terra); }
+.p-seatslot { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-dim); }
+.p-seatslot.open { color: var(--volt-dim); }
+.p-seatslot.flex { color: var(--muted); }
+.p-seatslot.full { color: var(--muted-dim); }
