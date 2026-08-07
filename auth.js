@@ -25,6 +25,7 @@
 
 import NextAuth from 'next-auth';
 import PostgresAdapter from '@auth/pg-adapter';
+import { fireWelcomeEmail } from './lib/auth/welcomeEmail.js';
 import { Pool } from '@neondatabase/serverless';
 import Resend from 'next-auth/providers/resend';
 import Apple from 'next-auth/providers/apple';
@@ -133,6 +134,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
 
   return {
     adapter,
+    // ONE HOOK, EVERY AUTH PATH. Auth.js fires createUser from the adapter, so
+    // this runs for magic link and Sign in with Apple alike - and for anything
+    // added later - without either provider knowing an email exists.
+    //
+    // NOT AWAITED, deliberately. fireWelcomeEmail starts the send and returns;
+    // the signup commits without waiting on a mail vendor, and a Resend outage
+    // can never turn into a failed account creation. Failures are recorded in
+    // sync_runs, not retried inline. Gated off unless WELCOME_EMAIL_ENABLED=1.
+    events: {
+      createUser({ user }) { fireWelcomeEmail(user); },
+    },
     pages: {
       // Custom branded surfaces. signIn replaces the default
       // /api/auth/signin HTML card; verifyRequest is the post-submit
