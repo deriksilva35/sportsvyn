@@ -253,4 +253,6 @@
 .trk-slotstate { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .08em;
   text-transform: uppercase; color: var(--muted-dim); }
 .trk-slotstate.open { color: var(--volt-dim); }
+/* Deferred: open, but not yet its turn. Muted, not hidden. */
+.trk-slotstate.open.deferred { color: var(--muted-dim); }
 .trk-slotstate.flex { color: var(--muted); }

@@ -271,7 +271,12 @@ export default function DraftRoom({
     seatPicks: userPicks,
     available,
     myNextOverall,
-  }), [config.roster_slots, board.rounds, picks, userPicks, available, myNextOverall]);
+    // Round context for the deferral rule: a position's open slot waits until
+    // the market says its turn has come. See seatValuation.js.
+    currentOverall,
+    teamsCount: config.teams_count,
+  }), [config.roster_slots, board.rounds, picks, userPicks, available, myNextOverall,
+    currentOverall, config.teams_count]);
 
   const activeSort = (() => {
     const opt = sortOpts.find((o) => o.key === sort);
@@ -440,7 +445,11 @@ export default function DraftRoom({
                                 {' · '}{seatRead.gap > 0 ? '+' : ''}{seatRead.gap} at {myNextOverall}
                               </span>
                             )}
-                            <span className={`p-seatslot ${seatRead.slot}`}>
+                            {/* A deferred row keeps its 'open' tag - the slot IS
+                                open - but renders muted, so a defense sitting
+                                below a flex-eligible WR reads as intended rather
+                                than as a bug. */}
+                            <span className={`p-seatslot ${seatRead.slot}${seatRead.deferred ? ' deferred' : ''}`}>
                               {' · '}{slot} · {seatRead.slot}
                             </span>
                           </>

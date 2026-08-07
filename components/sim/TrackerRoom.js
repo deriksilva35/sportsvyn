@@ -160,7 +160,11 @@ export default function TrackerRoom({
     seatPicks: userPicks,
     available,
     myNextOverall: myNext,
-  }), [config.roster_slots, rounds, picks, userPicks, available, myNext]);
+    // Round context for the deferral rule - see seatValuation.js.
+    currentOverall,
+    teamsCount: config.teams_count,
+  }), [config.roster_slots, rounds, picks, userPicks, available, myNext,
+    currentOverall, config.teams_count]);
 
   const sortOpts = useMemo(() => sortsFor('ALL').filter((o) => TRK_SORTS.includes(o.key)), []);
   const activeSort = sort === 'myteam' && myNext == null ? 'adp' : sort;
@@ -332,7 +336,8 @@ export default function TrackerRoom({
                                 {' '}{seatRead.gap > 0 ? '+' : ''}{seatRead.gap} AT {myNext}
                               </span>
                             )}
-                            <span className={`trk-slotstate ${seatRead.slot}`}>
+                            {/* Deferred keeps the tag, loses the emphasis. */}
+                            <span className={`trk-slotstate ${seatRead.slot}${seatRead.deferred ? ' deferred' : ''}`}>
                               {' '}{pos} · {seatRead.slot}
                             </span>
                           </>
