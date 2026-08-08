@@ -190,32 +190,46 @@ export default function TrackerRoom({
     if (busy || complete) return;
     setBusy(true); setErr(null);
     sendHaptic('heavy'); // the committing action
-    const res = await logPick(draftId, player.ffcPlayerId);
-    if (!res.ok) { setErr(res.reason); setBusy(false); return; }
-    setAvailable((av) => av.filter((p) => p.ffcPlayerId !== res.pick.ffcPlayerId));
-    setPicks((ps) => [...ps, { ...res.pick, isUser: res.isOwnSeat }]);
-    setSearch(''); // clear for the next entry; the field keeps focus
-    setBusy(false);
-    if (res.status === 'completed') router.refresh(); // server re-renders as results
+    // try/finally, not a bare await: `busy` disables every DRAFT button, so a
+    // THROWN action would strand this room exactly the way a rejection stranded
+    // the sim room - buttons gone, nothing to tap to recover. Rejections already
+    // cleared it; this closes the other half.
+    try {
+      const res = await logPick(draftId, player.ffcPlayerId);
+      if (!res.ok) { setErr(res.reason); return; }
+      setAvailable((av) => av.filter((p) => p.ffcPlayerId !== res.pick.ffcPlayerId));
+      setPicks((ps) => [...ps, { ...res.pick, isUser: res.isOwnSeat }]);
+      setSearch(''); // clear for the next entry; the field keeps focus
+      if (res.status === 'completed') router.refresh(); // server re-renders as results
+    } catch {
+      setErr('network');
+    } finally {
+      setBusy(false);
+    }
   }, [busy, complete, draftId, router]);
 
   const undo = useCallback(async () => {
     if (busy || picks.length === 0) return;
     setBusy(true); setErr(null);
     sendHaptic('notify');
-    const res = await undoLastPick(draftId);
-    if (!res.ok) { setErr(res.reason); setBusy(false); return; }
-    // Put the player back on the board. The row is rebuilt from the removed pick
-    // rather than refetched: the pool is immutable for the life of a draft, so the
-    // fields the list renders are all carried on the pick itself.
-    const back = {
-      ffcPlayerId: res.undone.ffcPlayerId, name: res.undone.playerName,
-      position: res.undone.position, team: undoneTeamOf(picks, res.undone.ffcPlayerId),
-      adp: undoneAdpOf(picks, res.undone.ffcPlayerId),
-    };
-    setPicks((ps) => ps.filter((p) => p.overallPick !== res.undone.overallPick));
-    setAvailable((av) => [...av, back].sort((a, b) => Number(a.adp) - Number(b.adp)));
-    setBusy(false);
+    try {
+      const res = await undoLastPick(draftId);
+      if (!res.ok) { setErr(res.reason); return; }
+      // Put the player back on the board. The row is rebuilt from the removed
+      // pick rather than refetched: the pool is immutable for the life of a
+      // draft, so the fields the list renders are all carried on the pick.
+      const back = {
+        ffcPlayerId: res.undone.ffcPlayerId, name: res.undone.playerName,
+        position: res.undone.position, team: undoneTeamOf(picks, res.undone.ffcPlayerId),
+        adp: undoneAdpOf(picks, res.undone.ffcPlayerId),
+      };
+      setPicks((ps) => ps.filter((p) => p.overallPick !== res.undone.overallPick));
+      setAvailable((av) => [...av, back].sort((a, b) => Number(a.adp) - Number(b.adp)));
+    } catch {
+      setErr('network');
+    } finally {
+      setBusy(false);
+    }
   }, [busy, picks, draftId]);
 
   // Enter commits the TOP row — the one the list highlights in volt. Guarded on

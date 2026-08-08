@@ -26,6 +26,7 @@ import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
 } from '@/lib/fantasy/statView';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
+import { flagsAfterResult, flagsAfterArm } from '@/lib/fantasy/roomFlags';
 import { nextUserOverall } from '@/lib/fantasy/tracker';
 import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/scoring';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
@@ -138,7 +139,17 @@ export default function DraftRoom({
 
   // --- apply an action result (staggered reveal) ---
   const applyResult = useCallback(async (res) => {
-    if (!res.ok) { setErr({ reason: res.reason }); setArmedId(null); return; }
+    // A REJECTION MUST HAND THE ROOM BACK. `revealing` feeds isMyTurn, so
+    // returning early without lowering it told the room it was somebody else's
+    // turn: the banner switched to third person about the user's own seat, every
+    // Draft button vanished, and the error banner became undismissable because
+    // dismissing it required arming a row whose button had just gone. Only a
+    // force-quit cleared it. flagsAfterResult owns the contract now.
+    if (!res.ok) {
+      const f = flagsAfterResult(res);
+      setErr(f.err); setArmedId(f.armedId); setRevealing(f.revealing);
+      return;
+    }
     setArmedId(null); setErr(null); setRevealing(true);
     const newIds = new Set(res.picksMade.map((p) => p.ffcPlayerId));
     setAvailable((av) => av.filter((p) => !newIds.has(p.ffcPlayerId)));
@@ -154,8 +165,18 @@ export default function DraftRoom({
   async function confirm(player) {
     sendHaptic('heavy'); // confirm pick - the committing action (no-op off-shell)
     setRevealing(true);
-    const res = await makePick(draftId, player.ffcPlayerId);
-    await applyResult(res);
+    try {
+      await applyResult(await makePick(draftId, player.ffcPlayerId));
+    } catch {
+      // A THROWN action wedges exactly like a rejection used to: revealing was
+      // raised before the await, so a dropped connection would strand the room
+      // in the same not-your-turn state. The finally is what makes that
+      // impossible rather than unlikely.
+      const f = flagsAfterResult({ ok: false, reason: 'network' });
+      setErr(f.err); setArmedId(f.armedId);
+    } finally {
+      setRevealing(false);
+    }
   }
 
   // --- AUTO toggle ---
@@ -473,7 +494,10 @@ export default function DraftRoom({
                   </button>
                   {canPick && (armedId === p.ffcPlayerId
                     ? <span className="p-act"><button className="confirm" onClick={() => confirm(p)}>Confirm</button><button className="cancel" onClick={() => { setArmedId(null); setErr(null); }}>✕</button></span>
-                    : <button className="draft" onClick={() => { setArmedId(p.ffcPlayerId); setErr(null); sendHaptic('light'); }}>Draft</button>)}
+                    : <button className="draft" onClick={() => {
+                      const f = flagsAfterArm(p.ffcPlayerId);
+                      setArmedId(f.armedId); setErr(f.err); sendHaptic('light');
+                    }}>Draft</button>)}
                 </div>
                 {armedId === p.ffcPlayerId && err && <div className="p-err">{ERR[err.reason] ?? err.reason}</div>}
                 {open && <StatStrip stats={stats} scoringFormat={config.scoring_format} />}

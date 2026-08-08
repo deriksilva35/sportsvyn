@@ -686,4 +686,6 @@
    rather than hidden - the row still explains its own position in the order. */
 .p-seatslot.open.deferred { color: var(--muted-dim); }
 .p-seatslot.flex { color: var(--muted); }
+/* Bench is playable but not a starting slot - recessive of the three. */
+.p-seatslot.bench { color: var(--muted-dim); }
 .p-seatslot.full { color: var(--muted-dim); }

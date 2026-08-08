@@ -256,3 +256,4 @@
 /* Deferred: open, but not yet its turn. Muted, not hidden. */
 .trk-slotstate.open.deferred { color: var(--muted-dim); }
 .trk-slotstate.flex { color: var(--muted); }
+.trk-slotstate.bench { color: var(--muted-dim); }
