@@ -11,10 +11,15 @@
 import { cookies } from 'next/headers';
 import { sql } from '@/lib/db';
 import { redeemEmailCode } from '@/lib/auth/emailOtp';
+import { firstSeenContext, resolveSurface, AUTH_EMAIL } from '@/lib/auth/firstSeen';
 
 export async function verifyEmailCode(email, code) {
   const secret = process.env.AUTH_SECRET;
-  const res = await redeemEmailCode(sql, { email, code, secret });
+  // Resolved HERE, where a request context exists, and handed down. This action
+  // is the magic-link creation path, so the auth axis is fixed; only the surface
+  // has to be looked up. resolveSurface never throws.
+  const ctx = firstSeenContext(AUTH_EMAIL, await resolveSurface());
+  const res = await redeemEmailCode(sql, { email, code, secret, firstSeenContext: ctx });
   if (!res.ok) return { ok: false, reason: res.reason, remaining: res.remaining };
 
   const secure = process.env.NODE_ENV === 'production';

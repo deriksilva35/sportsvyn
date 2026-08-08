@@ -26,6 +26,7 @@
 import NextAuth from 'next-auth';
 import PostgresAdapter from '@auth/pg-adapter';
 import { fireWelcomeEmail } from './lib/auth/welcomeEmail.js';
+import { firstSeenContext, resolveSurface, markFirstSeen, AUTH_APPLE } from './lib/auth/firstSeen.js';
 import { Pool } from '@neondatabase/serverless';
 import Resend from 'next-auth/providers/resend';
 import Apple from 'next-auth/providers/apple';
@@ -143,7 +144,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     // can never turn into a failed account creation. Failures are recorded in
     // sync_runs, not retried inline. Gated off unless WELCOME_EMAIL_ENABLED=1.
     events: {
-      createUser({ user }) { fireWelcomeEmail(user); },
+      // The ADAPTER path - Sign in with Apple. The magic-link flow does NOT
+      // reach here (it writes its own user row in lib/auth/emailOtp.js), which
+      // is why both sites are wired separately and why hooking only this one
+      // meant the first production magic-link signup got no mail at all.
+      async createUser({ user }) {
+        fireWelcomeEmail(user);
+        // Stamped AFTER creation rather than in the insert, because the adapter
+        // owns that statement. markFirstSeen writes only where the column IS
+        // NULL, so this cannot overwrite provenance and cannot run twice to any
+        // different effect. Awaited so the write lands inside the request, but
+        // wrapped: an account without a label is a gap in analytics, an account
+        // that failed to create is a lost user.
+        try {
+          const ctx = firstSeenContext(AUTH_APPLE, await resolveSurface());
+          await markFirstSeen(sql, user?.id, ctx);
+        } catch (e) {
+          console.error('[first-seen] adapter path', { message: e?.message });
+        }
+      },
     },
     pages: {
       // Custom branded surfaces. signIn replaces the default
