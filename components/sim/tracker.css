@@ -257,3 +257,4 @@
 .trk-slotstate.open.deferred { color: var(--muted-dim); }
 .trk-slotstate.flex { color: var(--muted); }
 .trk-slotstate.bench { color: var(--muted-dim); }
+.trk-slotstate.bench.deferred { color: var(--muted-dim); opacity: .75; }

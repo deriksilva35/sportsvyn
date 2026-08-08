@@ -688,4 +688,7 @@
 .p-seatslot.flex { color: var(--muted); }
 /* Bench is playable but not a starting slot - recessive of the three. */
 .p-seatslot.bench { color: var(--muted-dim); }
+/* A second K or DST on the bench: honest tag, muted like a deferred row. The
+   pick stays available - the sort just stops recommending it. */
+.p-seatslot.bench.deferred { color: var(--muted-dim); opacity: .75; }
 .p-seatslot.full { color: var(--muted-dim); }

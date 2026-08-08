@@ -351,7 +351,7 @@ export default function TrackerRoom({
                               </span>
                             )}
                             {/* Deferred keeps the tag, loses the emphasis. */}
-                            <span className={`trk-slotstate ${seatRead.slot}${seatRead.deferred ? ' deferred' : ''}`}>
+                            <span className={`trk-slotstate ${seatRead.slot}${seatRead.deferred || seatRead.streamer ? ' deferred' : ''}`}>
                               {' '}{pos} · {seatRead.slot}
                             </span>
                           </>

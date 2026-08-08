@@ -470,7 +470,7 @@ export default function DraftRoom({
                                 open - but renders muted, so a defense sitting
                                 below a flex-eligible WR reads as intended rather
                                 than as a bug. */}
-                            <span className={`p-seatslot ${seatRead.slot}${seatRead.deferred ? ' deferred' : ''}`}>
+                            <span className={`p-seatslot ${seatRead.slot}${seatRead.deferred || seatRead.streamer ? ' deferred' : ''}`}>
                               {' · '}{slot} · {seatRead.slot}
                             </span>
                           </>
