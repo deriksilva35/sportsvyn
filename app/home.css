@@ -1093,3 +1093,58 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
   text-transform: uppercase; color: var(--ink); background: var(--volt);
   padding: 9px 16px; display: inline-block;
 }
+
+
+/* ============================ FOOTBALL DAILY CARD ==========================
+   The tournament homepage was a 2/3 + 1/3 grid: card left, live scores and
+   standings right, bracket wall below. None of the right-rail units have a
+   football equivalent yet, and an empty 360px column is worse than no column,
+   so the football card collapses the grid to one and reads top to bottom.
+   The grid rules above are left untouched - they still describe the WC layout
+   for anything that renders it. */
+.home-main--football {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 900px;
+  row-gap: 0;
+}
+.home-main--football > .daily-card { grid-column: 1; grid-row: auto; }
+
+/* ---- season strip ----
+   Two dates, stated once, at the foot of the card. An INK band on the paper
+   page per the Surface Rule, so volt can be used as rule material here without
+   ever becoming volt text on paper. Static by design: a countdown is a second
+   thing to be wrong every morning, and the reader can subtract. */
+.dc-season {
+  display: flex;
+  gap: 0;
+  margin-top: 34px;
+  border-top: 3px solid var(--volt);
+  background: var(--ink);
+}
+.dc-season-item {
+  flex: 1 1 0;
+  padding: 14px 18px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-jetbrains-mono), monospace;
+}
+.dc-season-item + .dc-season-item { border-left: 1px solid var(--charcoal); }
+.dc-season-label {
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.dc-season-date {
+  margin-left: auto;
+  font-size: 13px;
+  letter-spacing: .06em;
+  color: var(--paper);
+}
+
+@media (max-width: 900px) {
+  .home-main--football { padding-left: 20px; padding-right: 20px; }
+  .dc-season { flex-direction: column; }
+  .dc-season-item + .dc-season-item { border-left: none; border-top: 1px solid var(--charcoal); }
+}
