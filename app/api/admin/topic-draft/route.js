@@ -1,5 +1,12 @@
 /**
- * POST /api/admin/topic-draft  { prompt }
+ * POST /api/admin/topic-draft  { prompt, league? }
+ *
+ * `league` is one of lib/topicDraftLeagues.js's slugs and defaults to the World
+ * Cup, which is what every existing caller of this route was implicitly asking
+ * for - so a script written before migration 060 keeps producing exactly the
+ * draft it produced before. An unrecognised league is a 400, not a fallback:
+ * silently writing a World Cup draft for a caller that asked for the NFL is the
+ * kind of wrong that only shows up after publication.
  *
  * Programmatic trigger for the prompt-attached topic_draft pipeline. Auth gate
  * copies the cron routes' shape (Bearer token -> 401), but keyed on ADMIN_SECRET
@@ -13,6 +20,7 @@
  */
 
 import { runTopicDraft } from '@/lib/topicDraft';
+import { TOPIC_DRAFT_LEAGUE_SLUGS, WC_LEAGUE_SLUG } from '@/lib/topicDraftLeagues';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -30,12 +38,18 @@ export async function POST(request) {
   const prompt = (body?.prompt ?? '').toString().trim();
   if (!prompt) return Response.json({ error: 'prompt required' }, { status: 400 });
 
+  const league = (body?.league ?? WC_LEAGUE_SLUG).toString();
+  if (!TOPIC_DRAFT_LEAGUE_SLUGS.includes(league)) {
+    return Response.json({ error: `unknown league: ${league}`, allowed: TOPIC_DRAFT_LEAGUE_SLUGS }, { status: 400 });
+  }
+
   try {
-    const r = await runTopicDraft(prompt);
+    const r = await runTopicDraft(prompt, { leagueSlug: league });
     return Response.json({
       ok: r.ok,
       draft_id: r.draftId,
       status: r.status,
+      league,
       article_type: r.plan?.article_type ?? null,
       resolved_entities: r.resolved,
       unresolved_entities: r.unresolved,

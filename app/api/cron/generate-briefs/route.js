@@ -30,6 +30,25 @@
  *   - Writes ONLY to match_briefs.
  *   - Zero references to match_drafts, aiDraft, Tavily, or any editorial
  *     coverage flag. Tier 2 has its own separate cron path (not built).
+ *
+ * LEAGUE ALLOWLIST. The candidate predicate had no league filter, which was
+ * correct while `matches` held nothing but soccer and became a live hazard the
+ * moment it did not. PROD now carries 285 final NFL games and 934 final CFB
+ * games, and a full 2026 schedule on top; the first real gridiron kickoff (CFB
+ * Week 0, Aug 29) would put a football game inside the 6-hour window and this
+ * cron would brief it within two minutes.
+ *
+ * It would not crash - aiBrief always produces a renderable row - and that is
+ * the problem. assembleEnvelopeFromDb reads match_events, match_lineups and
+ * match_statistics, which have ZERO gridiron rows, so the model would receive a
+ * score, two team names, and three empty arrays, and the deterministic fallback
+ * would write a brief with nothing in it. A thin brief that renders is worse
+ * than no brief: it looks like coverage.
+ *
+ * The allowlist is explicit and positive rather than a "not nfl, not cfb"
+ * exclusion, so a league added later is silently OUT until somebody decides it
+ * is in. Gridiron briefs are a designed build for when live play-by-play exists
+ * for those leagues, not something this sweep should back into.
  */
 
 import { sql } from '@/lib/db';
@@ -39,6 +58,15 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 const PER_SWEEP_CAP = 5;
+
+// Every league whose matches carry the event/lineup/statistic rows the Tier 1
+// envelope reads. Adding a slug here is a statement that its data exists.
+export const BRIEF_LEAGUE_SLUGS = [
+  'fifa-wc-2026',
+  'international-friendlies',
+  'concacaf-gold-cup',
+  'africa-cup-of-nations',
+];
 
 export async function GET(request) {
   const authHeader = request.headers.get('authorization');
@@ -52,7 +80,9 @@ export async function GET(request) {
   const candidates = await sql`
     SELECT m.id, m.slug
       FROM matches m
-     WHERE m.status = 'final'
+      JOIN leagues l ON l.id = m.league_id
+     WHERE l.slug = ANY(${BRIEF_LEAGUE_SLUGS}::text[])
+       AND m.status = 'final'
        AND m.kickoff_at > now() - interval '6 hours'
        AND NOT EXISTS (
          SELECT 1 FROM match_briefs b

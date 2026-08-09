@@ -2,11 +2,18 @@
  * /admin/topic-drafts - prompt-attached AI draft admin surface.
  *
  * Proxy-gated (same as the other /admin pages); Server Actions re-assert the
- * admin env fail-closed. A textarea + Generate runs lib/topicDraft.js; drafts
- * appear in a status-ordered list with a PROMPTED - AI DRAFT badge and the
- * original prompt shown above the draft. Review is READ-ONLY for v1: no diff
- * view, no inline editing. Publish is disabled (blocked on the /article/[slug]
- * route). Discard (status -> discarded) is the only mutation on a draft.
+ * admin env fail-closed. A league picker + a textarea + Generate runs
+ * lib/topicDraft.js; drafts appear in a status-ordered list with a
+ * PROMPTED - AI DRAFT badge and the original prompt shown above the draft.
+ * Review is read-only here: no diff view, no inline editing. Discard
+ * (status -> discarded) and Publish are the mutations on a draft.
+ *
+ * LEAGUE IS CHOSEN BEFORE GENERATION, NOT AFTER (migration 060). It drives the
+ * envelope readers, three placeholders in the stored prompt, and the league_id
+ * stamped at publish - so it cannot be inferred from the prose afterwards, and
+ * it is stored on the row rather than re-derived. The publish path used to
+ * hardcode 'fifa-wc-2026'; a football article published through it would have
+ * been tagged World Cup and would never have appeared in Today's Reads.
  *
  * Contrast: this is a review surface for article prose, so it runs on the dark
  * Sportsvyn surface with paper-warm text. Locked tokens - draft body, dek, and
@@ -19,7 +26,8 @@ import { sql } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { runTopicDraft } from '@/lib/topicDraft';
-import { sectionsToHtml, uniqueArticleSlug } from '@/lib/articleReader';
+import { TOPIC_DRAFT_LEAGUES, TOPIC_DRAFT_LEAGUE_SLUGS, WC_LEAGUE_SLUG } from '@/lib/topicDraftLeagues';
+import { publishTopicDraft } from '@/lib/articleReader';
 import PublishTopicDraftButton from '@/components/admin/PublishTopicDraftButton';
 
 export const dynamic = 'force-dynamic';
@@ -45,7 +53,12 @@ async function generateTopicDraft(formData) {
   assertAdminEnv();
   const prompt = (formData.get('prompt') ?? '').toString().trim();
   if (!prompt) return;
-  await runTopicDraft(prompt);
+  // Whitelisted here rather than trusted from the form: a hand-posted league
+  // would otherwise reach the FK as a bad slug, or worse, resolve to a league
+  // the envelope readers know nothing about.
+  const league = (formData.get('league') ?? '').toString();
+  if (!TOPIC_DRAFT_LEAGUE_SLUGS.includes(league)) return;
+  await runTopicDraft(prompt, { leagueSlug: league });
   revalidatePath('/admin/topic-drafts');
 }
 
@@ -62,39 +75,19 @@ async function discardTopicDraft(formData) {
 // Flattens sections -> clean semantic HTML (h2/p, no inline styles, no legacy
 // classes); type 'feature', author 'Sportsvyn' with the AI-draft provenance
 // treatment (honest label, per the Tier rules - editor byline comes later).
-async function publishTopicDraft(formData) {
+//
+// The work is in lib/articleReader.publishTopicDraft. A Server Action cannot be
+// called from a script or a test, so leaving the body here meant the single most
+// consequential step in the pipeline was the only one nothing could exercise.
+// This is the thin caller: admin gate, then revalidate and go read the piece.
+async function publishTopicDraftAction(formData) {
   'use server';
   assertAdminEnv();
-  const id = Number(formData.get('id'));
-  if (!Number.isInteger(id) || id <= 0) return;
-
-  const d = (await sql`
-    SELECT id, status, current_content FROM topic_drafts WHERE id = ${id} LIMIT 1
-  `)[0];
-  if (!d) return;
-  if (d.status !== 'pending_review' && d.status !== 'in_editing') return; // publish gate
-
-  const c = d.current_content ?? {};
-  const title = (c.headline ?? '').trim();
-  if (!title) return;
-  const bodyHtml = sectionsToHtml(c.sections);
-  const slug = await uniqueArticleSlug(title);
-  const wc = (await sql`SELECT id FROM leagues WHERE slug = 'fifa-wc-2026' LIMIT 1`)[0];
-
-  const art = (await sql`
-    INSERT INTO articles (slug, type, title, subtitle, body, status, author, league_id, published_at, created_at, updated_at)
-    VALUES (${slug}, 'feature', ${title}, ${c.dek ?? null}, ${bodyHtml}, 'published', 'Sportsvyn', ${wc?.id ?? null}, now(), now(), now())
-    RETURNING id, slug
-  `)[0];
-
-  await sql`
-    UPDATE topic_drafts
-       SET status = 'published', published_article_id = ${art.id}, last_edited_at = now(), updated_at = now()
-     WHERE id = ${id}
-  `;
-
+  const r = await publishTopicDraft(Number(formData.get('id')));
   revalidatePath('/admin/topic-drafts');
-  redirect(`/article/${art.slug}`);
+  revalidatePath('/');
+  if (!r.ok) return;
+  redirect(`/article/${r.slug}`);
 }
 
 // Status colors, legible on the dark surface (>= 0.65 luminance-equivalent).
@@ -108,7 +101,7 @@ export default async function TopicDraftsPage({ searchParams }) {
   const selectedId = Number(sp.id) || null;
 
   const drafts = await sql`
-    SELECT id, prompt_text, article_type, status, generated_at,
+    SELECT id, prompt_text, league_slug, article_type, status, generated_at,
            current_content, ai_original, resolved_entities, unresolved_entities, research_sources, editor_notes
       FROM topic_drafts
      ORDER BY generated_at DESC
@@ -125,6 +118,27 @@ export default async function TopicDraftsPage({ searchParams }) {
       </p>
 
       <form action={generateTopicDraft} style={{ margin: '16px 0 28px' }}>
+        {/* League first, and required. It is not a filter on the output - it
+            picks which readers build the envelope and which words the prompt
+            uses, so it has to be decided before the model runs, not after. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <label htmlFor="td-league" style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: SECONDARY }}>
+            League
+          </label>
+          <select
+            id="td-league"
+            name="league"
+            defaultValue={WC_LEAGUE_SLUG}
+            style={{ padding: '7px 10px', fontSize: 13, border: `1px solid ${BORDER}`, borderRadius: 6, background: CARD, color: PROSE, fontFamily: 'inherit' }}
+          >
+            {TOPIC_DRAFT_LEAGUE_SLUGS.map((s) => (
+              <option key={s} value={s} style={{ background: '#141311', color: PROSE }}>
+                {TOPIC_DRAFT_LEAGUES[s].label}
+              </option>
+            ))}
+          </select>
+          <span style={{ color: SECONDARY, fontSize: 12 }}>Drives the envelope, the prompt, and the league the article publishes under.</span>
+        </div>
         <textarea
           name="prompt"
           className="td-textarea"
@@ -155,6 +169,12 @@ export default async function TopicDraftsPage({ searchParams }) {
                 <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{c.headline ?? d.prompt_text.slice(0, 60)}</div>
                 <div style={{ fontSize: 11, color: STATUS_COLOR[d.status] ?? SECONDARY, marginTop: 4, fontWeight: 600 }}>
                   {d.status.replace('_', ' ')}{d.article_type ? ` · ${d.article_type}` : ''}
+                </div>
+                {/* The league the draft will publish under, on the row rather
+                    than only in the detail pane - it is the one property that
+                    cannot be corrected after the fact. */}
+                <div style={{ fontSize: 10, color: SECONDARY, marginTop: 3, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                  {TOPIC_DRAFT_LEAGUES[d.league_slug]?.label ?? d.league_slug}
                 </div>
               </a>
             );
@@ -187,6 +207,9 @@ function DraftDetail({ draft }) {
         </span>
         <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLOR[draft.status] ?? SECONDARY }}>{draft.status.replace('_', ' ')}</span>
         {draft.article_type && <span style={{ fontSize: 11, color: SECONDARY }}>{draft.article_type}</span>}
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: PROSE, border: `1px solid ${BORDER}`, padding: '3px 7px', borderRadius: 3 }}>
+          {TOPIC_DRAFT_LEAGUES[draft.league_slug]?.label ?? draft.league_slug}
+        </span>
       </div>
 
       <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 6, padding: '10px 12px', marginBottom: 16 }}>
@@ -249,7 +272,11 @@ function DraftDetail({ draft }) {
 
       <div style={{ marginTop: 24, display: 'flex', gap: 10, alignItems: 'center' }}>
         {(draft.status === 'pending_review' || draft.status === 'in_editing') ? (
-          <PublishTopicDraftButton action={publishTopicDraft} id={draft.id} />
+          <PublishTopicDraftButton
+            action={publishTopicDraftAction}
+            id={draft.id}
+            leagueLabel={TOPIC_DRAFT_LEAGUES[draft.league_slug]?.label ?? draft.league_slug}
+          />
         ) : (
           <button type="button" disabled
                   style={{ padding: '7px 14px', fontSize: 13, color: FAINT, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 6, cursor: 'not-allowed' }}>
