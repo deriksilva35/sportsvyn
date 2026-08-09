@@ -96,9 +96,11 @@
 .gi-card { border: 1px solid var(--rule); background: var(--graphite); }
 .gi-card:hover { border-color: var(--muted-dim); }
 .gi-card.expanded { grid-column: 1 / -1; border-color: var(--volt); }
-.gi-card-body { padding: 12px 14px; }
-.gi-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.gi-chev { color: var(--muted); font-size: 12px; transition: transform 0.15s; background: none; border: 0; cursor: pointer; }
+.gi-card-body { padding: 10px 13px 9px; cursor: pointer; }
+.gi-card-body:focus-visible { outline: 2px solid var(--volt); outline-offset: -2px; }
+.gi-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+.gi-chev { color: var(--muted-dim); font-size: 11px; transition: transform 0.15s; line-height: 1; }
+.gi-card-body:hover .gi-chev { color: var(--muted); }
 .gi-card.expanded .gi-chev { transform: rotate(180deg); color: var(--volt); }
 
 /* status */
@@ -120,39 +122,61 @@
 .gi-up { font-size: 12px; color: var(--paper-dim); }
 .gi-up .net { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted-dim); }
 
-/* team lines */
-.gi-team { display: flex; align-items: center; gap: 8px; font-size: 14px; padding: 3px 0; }
-.gi-team .rk { width: 24px; font-size: 10px; color: var(--volt); }
-.gi-team .nm { color: var(--paper); }
-.gi-team .rec { font-size: 10px; color: var(--muted-dim); }
-.gi-team .sc { margin-left: auto; font-size: 16px; text-align: right; color: var(--paper); }
-.gi-team.win .nm, .gi-team.win .sc { font-weight: 700; }
-.gi-team.lose .nm, .gi-team.lose .rk, .gi-team.lose .rec, .gi-team.lose .sc { color: var(--muted); }
+/* team lines
+   The abbreviation is an IDENTIFIER, so it takes the identifier typeface -
+   mono, muted, fixed width so the names line up under each other. The name is
+   the name. There is no rank column (it never had a value) and no conference
+   column (it rendered "NFC" twice in an all-NFC game).
+   Winner full white, loser muted: a finished card should answer "who won"
+   before it answers "what was the score". */
+.gi-team { display: flex; align-items: baseline; gap: 9px; font-size: 14px; padding: 2px 0; }
+.gi-team .abbr {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px; letter-spacing: 0.1em; color: var(--muted-dim);
+  width: 34px; flex: 0 0 34px;
+}
+.gi-team .nm { color: var(--paper-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gi-team .sc {
+  margin-left: auto; padding-left: 10px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 17px; text-align: right; color: var(--paper-dim); font-variant-numeric: tabular-nums;
+}
+.gi-team.win .nm, .gi-team.win .sc { color: var(--paper); font-weight: 700; }
+.gi-team.lose .nm, .gi-team.lose .sc, .gi-team.lose .abbr { color: var(--muted); }
 .gi-poss { color: var(--volt); font-size: 9px; }
 
-/* foot */
-.gi-card-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--rule-dim); }
-.gi-line { font-size: 10px; color: var(--muted); letter-spacing: 0.04em; }
+/* foot
+   One line: the mechanical scope on the left, the human name for the game and
+   its city on the right. The Watch unit that used to sit here is GONE - Watch
+   Score is a soccer instrument and it rendered a permanent em-dash on every
+   gridiron row, which reads as broken rather than as not-applicable. */
+.gi-card-foot { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--rule-dim); }
+.gi-line { font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; color: var(--muted); letter-spacing: 0.08em; white-space: nowrap; }
+.gi-line-alt { font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; color: var(--muted-dim); letter-spacing: 0.06em; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* watch chip */
-.gi-watch { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 1px; }
-.gi-watch .lbl { font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted-dim); }
-.gi-watch .val { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 20px; color: var(--paper); border-bottom: 3px solid var(--volt); line-height: 1.05; }
-.gi-watch.hot .val { color: var(--volt); }
-.gi-watch.dim .val { color: var(--muted); border-color: var(--charcoal); }
+/* expanded detail
+   The tab grammar (Key Moments / Play by Play / a dead "Full match page" link)
+   is retired. It promised three things that did not exist and pointed at a
+   fourth - there is no gridiron match page - so the expand now shows the one
+   thing we actually store: the line score. */
+.gi-detail { border-top: 1px solid var(--rule); padding: 12px 13px 13px; background: var(--ink); }
 
-/* expanded detail */
-.gi-detail { border-top: 1px solid var(--rule); }
-.gi-tabs { display: flex; align-items: center; gap: 0; background: var(--graphite); padding: 0 12px; }
-.gi-tab { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: none; border: 0; padding: 11px 14px; cursor: pointer; position: relative; }
-.gi-tab.active { color: var(--paper); }
-.gi-tab.active::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 0; height: 2px; background: var(--volt); }
-.gi-tabs .full { margin-left: auto; font-size: 10px; color: var(--muted); text-decoration: none; }
-.gi-tabs .full:hover { color: var(--volt); }
-.gi-pane { padding: 16px; font-size: 12px; color: var(--muted-dim); }
-.gi-pane .why-val { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 26px; color: var(--paper); }
-.gi-pane .why-read { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; color: var(--paper-dim); margin-top: 6px; }
-.gi-placeholder { font-size: 11px; letter-spacing: 0.06em; color: var(--muted-dim); }
+/* quarter grid - a real table, mono, tabular figures so columns align */
+.gi-ls { width: 100%; border-collapse: collapse; font-family: var(--font-jetbrains-mono), monospace; font-variant-numeric: tabular-nums; }
+.gi-ls th, .gi-ls td { padding: 5px 0; text-align: center; font-size: 12px; font-weight: 400; }
+.gi-ls thead th { font-size: 9px; letter-spacing: 0.16em; color: var(--muted-dim); border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+.gi-ls th.tm { text-align: left; font-size: 10px; letter-spacing: 0.1em; color: var(--muted); width: 20%; }
+.gi-ls tbody td { color: var(--paper-dim); }
+.gi-ls td.tot, .gi-ls thead th.tot { color: var(--paper); font-weight: 700; border-left: 1px solid var(--rule); width: 16%; }
+.gi-ls tbody tr + tr th, .gi-ls tbody tr + tr td { border-top: 1px solid var(--rule-dim); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* pre-game facts - what a game that has not kicked off can honestly say */
+.gi-facts { display: grid; gap: 6px; margin: 0 0 2px; }
+.gi-facts > div { display: flex; align-items: baseline; gap: 10px; }
+.gi-facts dt { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-dim); width: 62px; flex: 0 0 62px; }
+.gi-facts dd { margin: 0; font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; color: var(--paper-dim); }
+.gi-facts + .gi-odds-h { margin-top: 14px; }
 
 /* h2h odds strip (pre-game Why-Watch pane) — 2-way, ink surface */
 .gi-odds-h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
