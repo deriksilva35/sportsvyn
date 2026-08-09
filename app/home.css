@@ -1143,8 +1143,40 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
   color: var(--paper);
 }
 
+/* ---- ranking boards (NFL Power / CFB Top 25, Top 5 each) ----
+   Two EditorialBoard previews side by side. The boards are ink blocks - each
+   section carries its own data-surface="ink" - so this rule owns only the
+   layout and the base type, never their colour.
+
+   THE FONT IS NOT DECORATION HERE. Inside the gridiron routes the board sits
+   under a .gi wrapper that sets JetBrains Mono, and .gi-ed-nm deliberately
+   declares no family of its own so it inherits it. On the paper card there is
+   no .gi ancestor, so without this the SAME instrument would render in the
+   card's serif on the homepage and in mono everywhere else. One rendering
+   everywhere; the wrapper supplies what .gi supplied.
+
+   Equal columns via minmax(0, 1fr): a bare 1fr floors at the content's
+   min-content width, and a long team name would push one board wider than the
+   other. */
+.dc-boards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 24px;
+  font-family: var(--font-jetbrains-mono), monospace;
+}
+/* One league dark: the survivor takes the width rather than sitting beside a
+   hole. The section renders nothing at all when both are dark. */
+.dc-boards--solo { grid-template-columns: minmax(0, 1fr); }
+
 @media (max-width: 900px) {
   .home-main--football { padding-left: 20px; padding-right: 20px; }
   .dc-season { flex-direction: column; }
   .dc-season-item + .dc-season-item { border-left: none; border-top: 1px solid var(--charcoal); }
+}
+
+/* Stack the boards a little before the card itself narrows - two 5-row boards
+   side by side get cramped well above the 900px card breakpoint. */
+@media (max-width: 760px) {
+  .dc-boards { grid-template-columns: minmax(0, 1fr); gap: 14px; }
 }

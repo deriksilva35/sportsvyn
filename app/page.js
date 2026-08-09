@@ -33,6 +33,10 @@ import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import MovementCard from '@/components/fantasy/MovementCard';
 import { getMovementCard } from '@/lib/fantasy/movement';
 import '@/components/fantasy/movementCard.css';
+import EditorialBoard from '@/components/gridiron/EditorialBoard';
+import { getEditorialBoard } from '@/lib/gridiron/readers';
+import { boardHref } from '@/lib/gridiron/rankingsHub';
+import '@/components/gridiron/gridiron.css';
 import { resolveShellMode } from '@/lib/shell/shell';
 
 import './home.css';
@@ -105,6 +109,48 @@ function DailyCardByline({ ptDateLabel }) {
 
 
 
+
+
+// Two Top 5 ranking boards, side by side. These are the SAME instrument the
+// /nfl and /cfb Today pages render - EditorialBoard in its `preview` mode, fed
+// by the same getEditorialBoard reader - not a homepage copy of one. Passing
+// `preview` gets the top 5, the "+ N dark horses" teaser and the "Full board ->"
+// link; the component supplies its own data-surface="ink", so each board is an
+// ink block on the paper card with no extra wrapper.
+//
+// A league with no published current edition renders NOTHING rather than an
+// empty cell: the filter below mirrors EditorialBoard's own null guard, so if
+// one league goes dark the other takes the full width instead of sitting beside
+// a hole. Both dark and the whole section is absent.
+//
+// NO MOVEMENT DELTAS. Every current edition is Edition 0, which by definition
+// has no prior to move against - all 57 rows carry rank_movement NULL, and the
+// reader does not even select the column. Rendering a delta here would mean
+// inventing one.
+//
+// THE TITLES ARE THE BOARDS' OWN NAMES. Each is ranking_lists.name plus the
+// slice this preview shows, so the link out lands on a page headed the same
+// thing the reader just clicked. "The Sportsvyn 25" in particular is not a
+// generic CFB poll - calling it "CFB Top 25" here and "The Sportsvyn 25" on
+// /cfb would make one board read as two.
+const HOME_BOARDS = [
+  { key: 'nfl', title: 'NFL Power Rankings · Top 5', href: boardHref('nfl', 'power') },
+  { key: 'cfb', title: 'The Sportsvyn 25 · Top 5', href: boardHref('cfb', 'top25') },
+];
+
+function RankingBoardsSection({ boards }) {
+  const live = HOME_BOARDS
+    .map((b) => ({ ...b, board: boards?.[b.key] ?? null }))
+    .filter((b) => b.board?.entries?.length);
+  if (live.length === 0) return null;
+  return (
+    <div className={`dc-boards${live.length === 1 ? ' dc-boards--solo' : ''}`}>
+      {live.map((b) => (
+        <EditorialBoard key={b.key} title={b.title} board={b.board} preview href={b.href} />
+      ))}
+    </div>
+  );
+}
 
 
 function TodaysReadsSection({ reads, followedSet }) {
@@ -221,12 +267,17 @@ export default async function HomePage() {
   // and the daily-card intro - are gone from this page. The tournament is
   // finished; those units would render frozen July data under today's date.
   // Their modules are untouched and still serve the /world-cup-2026 routes.
-  const [todaysReads, followedSet, movement] = await Promise.all([
+  const [todaysReads, followedSet, movement, nflBoard, cfbBoard] = await Promise.all([
     getTodaysReads({ ptDay, limit: 4, leagueSlugs: FOOTBALL_READS_SLUGS }),
     getFollowedTeamIds(userId),
     // Same call the /nfl entry card makes. Null rather than a thrown page if
     // the pool read fails - the card is one unit on the page, not the page.
     getMovementCard('ppr', 5).catch(() => null),
+    // The same two reads the /nfl and /cfb Today pages make. Caught
+    // independently: one league's board failing must not take the other's
+    // down, and neither may take the page down.
+    getEditorialBoard('nfl-power', 'nfl').catch(() => null),
+    getEditorialBoard('cfb-top25', 'cfb').catch(() => null),
   ]);
 
 
@@ -257,6 +308,11 @@ export default async function HomePage() {
               own FFC attribution. Null on a pool failure rather than an empty
               frame. */}
           {movement ? <MovementCard card={movement} /> : null}
+
+          {/* Both leagues' Top 5, side by side on desktop and stacked on
+              phones. Same instrument as the /nfl and /cfb Today pages, in
+              preview mode, each linking out to its own full board. */}
+          <RankingBoardsSection boards={{ nfl: nflBoard, cfb: cfbBoard }} />
 
           {/* Renders nothing at all when there are no reads for the day - no
               placeholder, no deflated section. */}
