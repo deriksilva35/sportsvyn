@@ -44,6 +44,20 @@ function Status({ g }) {
   return <span className="gi-up">{fmtTime(g.kickoffAt)}<span className="net"> · TBD</span></span>;
 }
 
+// PRESEASON MARKER. A 24-17 preseason final looks exactly like a 24-17 real one,
+// and the row's own FINAL chip is jade - the same affirmation a Week 1 result
+// gets. So the phase is stated on the row itself, next to the status, rather
+// than only in the small print at the foot of the card.
+//
+// Deliberately MUTED and mono: it is a qualifier on the result, not a second
+// piece of news, so it must not compete with the score for attention. Rendered
+// for PRE only - REG and POST rows are untouched, because "REG" on every row in
+// September is noise that teaches the reader to stop seeing the badge.
+function PhaseBadge({ phase }) {
+  if (phase !== 'PRE') return null;
+  return <span className="gi-phase-pre" title="Preseason">PRE</span>;
+}
+
 function Card({ g }) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState('moments');
@@ -55,7 +69,10 @@ function Card({ g }) {
     <div className={`gi-card ${open ? 'expanded' : ''}`}>
       <div className="gi-card-body">
         <div className="gi-card-top">
-          <Status g={g} />
+          <span className="gi-status-group">
+            <Status g={g} />
+            <PhaseBadge phase={g.seasonPhase} />
+          </span>
           <button className="gi-chev" onClick={() => setOpen((v) => !v)} aria-label="expand">▾</button>
         </div>
         <TeamLine t={g.away} score={aw} isWinner={awayWin} isLoser={homeWin} final={final} />
