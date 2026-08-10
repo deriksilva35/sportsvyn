@@ -20,6 +20,7 @@ import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import TrackerStart from '@/components/sim/TrackerStart';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import { shellSigninHref } from '@/lib/shell/signinHref';
 import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
 import { getOpenTrackerDraft, isMember } from '@/lib/fantasy/drafts';
@@ -40,7 +41,7 @@ export default async function TrackerTab({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode(params);
-  if (userId == null) redirect(`/signin?callbackUrl=/sim/tracker${isShell ? '&shell=sim-app' : ''}`);
+  if (userId == null) redirect(shellSigninHref('/sim/tracker', isShell));
 
   // Resume takes precedence over everything, including the entitlement check: a
   // draft already in progress belongs to the user regardless of what their

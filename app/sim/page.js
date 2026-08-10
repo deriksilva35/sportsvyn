@@ -9,6 +9,7 @@ import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import WelcomeSheet from '@/components/sim/WelcomeSheet';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import { shellSigninHref } from '@/lib/shell/signinHref';
 import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
 import { getPresets, getDraftsUsed, isMember, canStartDraft, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
@@ -36,8 +37,16 @@ export default async function SimLobby({ searchParams }) {
   // environment renders the suppressed card rather than a button that cannot work.
   const { enabled: iap, apiKey: rcKey, productId: rcProduct } = appleIapConfig();
   // Carry shell context into /signin so it renders the app front door reliably
-  // (not dependent on the sv_shell cookie having been written yet).
-  const signinHref = `/signin?callbackUrl=/sim${isShell ? '&shell=sim-app' : ''}`;
+  // (not dependent on the sv_shell cookie having been written yet), AND inside
+  // the callbackUrl value so it survives Sign in with Apple.
+  //
+  // Apple posts its result back cross-site (response_mode=form_post), which
+  // drops the SameSite=Lax sv_shell cookie - so the createUser hook could never
+  // tell a shell signup from a web one and labelled every Apple account
+  // apple:web. auth.js already relaxes the callback-url cookie to
+  // SameSite=None+Secure exactly so it survives that POST, so putting the
+  // marker INSIDE the callbackUrl is what carries the surface across.
+  const signinHref = shellSigninHref('/sim', isShell);
   // Post-deletion landing: the delete-account flow signs out and redirects here.
   const deleted = userId == null && params.deleted != null;
 

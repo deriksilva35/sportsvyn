@@ -149,7 +149,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
       // is why both sites are wired separately and why hooking only this one
       // meant the first production magic-link signup got no mail at all.
       async createUser({ user }) {
-        fireWelcomeEmail(user);
+        // AWAITED. fireWelcomeEmail registers the send with after(), so this
+        // returns as soon as the work is scheduled rather than when the mail is
+        // out - the signup still does not block on a vendor. Awaiting matters
+        // for the fallback path: outside a request scope the entry point does
+        // the work inline, and a bare call there would be the same floating
+        // promise that lost user 19's email on 2026-08-09.
+        await fireWelcomeEmail(user);
         // Stamped AFTER creation rather than in the insert, because the adapter
         // owns that statement. markFirstSeen writes only where the column IS
         // NULL, so this cannot overwrite provenance and cannot run twice to any
