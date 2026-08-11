@@ -1,5 +1,6 @@
 import { sql } from '@/lib/db';
 import TableControls from './TableControls';
+import { welcomeLedgerSummary } from '@/lib/auth/welcomeEmail';
 
 /**
  * Admin signups view — Session 3d.
@@ -62,12 +63,77 @@ function formatCreatedAt(date) {
   return `${get('month')} ${get('day')}, ${get('hour')}:${get('minute')} ${get('dayPeriod')}`;
 }
 
+
+// The welcome-email ledger, summarised.
+//
+// STUCK and MISSING are the two rows that matter and they mean different
+// things. STUCK is a send that opened and never closed - the mail may or may
+// not have gone out, and alreadySent() refuses to retry it, so it needs a human
+// decision. MISSING is a user with no ledger row at all, which after the
+// before-send inversion should only ever be an account predating the hook;
+// anything newer means the hook did not fire, which is the original defect.
+//
+// Both are shown as counts first because the useful daily question is "is it
+// zero", and only expanded when it is not.
+function WelcomeLedger({ ledger }) {
+  const stuck = ledger.stuck ?? [];
+  const missing = ledger.missing ?? [];
+  const clean = stuck.length === 0 && missing.length === 0;
+  return (
+    <section className="max-w-7xl mx-auto mt-8 border border-charcoal p-4">
+      <div className="flex items-baseline gap-4 flex-wrap">
+        <span className="font-mono text-xs uppercase tracking-widest text-muted">Welcome email</span>
+        {ledger.byOutcome.map((o) => (
+          <span key={o.outcome} className="font-mono text-xs text-paper-warm">
+            {o.outcome} <b className="text-volt">{o.n}</b>
+          </span>
+        ))}
+        <span className={`font-mono text-xs ml-auto ${clean ? 'text-muted' : 'text-terra'}`}>
+          {clean ? 'no gaps' : `${stuck.length} stuck · ${missing.length} missing`}
+        </span>
+      </div>
+
+      {stuck.length > 0 && (
+        <div className="mt-3">
+          <div className="font-mono text-[11px] uppercase tracking-widest text-terra">
+            Stuck at sending over {ledger.stuckAfterMinutes} min - may or may not have been delivered
+          </div>
+          <ul className="mt-1 font-mono text-xs text-paper-warm">
+            {stuck.map((r) => (
+              <li key={r.id}>#{r.id} user {r.user_id} opened {formatCreatedAt(r.started_at)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {missing.length > 0 && (
+        <div className="mt-3">
+          <div className="font-mono text-[11px] uppercase tracking-widest text-terra">
+            Users with no ledger row - the hook did not run
+          </div>
+          <ul className="mt-1 font-mono text-xs text-paper-warm">
+            {missing.map((u) => (
+              <li key={u.id}>user {u.id} {u.email} created {formatCreatedAt(u.created_at)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default async function SignupsPage({ searchParams }) {
   const params = (await searchParams) ?? {};
   const tier = params.tier ?? 'all';
   const confirmed = params.confirmed ?? 'all';
   const sort = params.sort ?? 'newest';
   const orderBy = SORT_ORDERS[sort] ?? SORT_ORDERS.newest;
+
+  // The welcome-email ledger, read alongside the signup list because they are
+  // the same question from two directions: who arrived, and did we manage to
+  // say hello. Nothing read this table before, and the cost of that was four
+  // days of not noticing a user had been missed.
+  const ledger = await welcomeLedgerSummary().catch(() => null);
 
   const rows = await sql`
     SELECT *
@@ -94,6 +160,8 @@ export default async function SignupsPage({ searchParams }) {
           {rows.length} {rows.length === 1 ? 'signup' : 'signups'}
         </p>
       </header>
+
+      {ledger && <WelcomeLedger ledger={ledger} />}
 
       <div className="max-w-7xl mx-auto mt-8">
         <TableControls
