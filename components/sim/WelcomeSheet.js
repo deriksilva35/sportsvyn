@@ -27,9 +27,10 @@
 // degrades to a plain "here is what you get, start drafting" card rather than
 // offering a button that cannot work.
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import PassBuy from './PassBuy';
 import { WELCOME } from './membershipCopy';
+import { sheetShown, sheetDismissed } from '@/app/actions/welcomeSheet';
 
 export const WELCOME_KEY = 'draftvyn_welcomed';
 export const WELCOME_VALUE = '1';
@@ -60,7 +61,20 @@ const welcomedOnServer = () => true;
 export default function WelcomeSheet() {
   const welcomed = useSyncExternalStore(subscribe, isWelcomed, welcomedOnServer);
 
-  function dismiss() {
+  // LEDGERED, because this is the first screen a new account sees and until now
+  // nothing recorded whether it appeared or how it was got rid of. A ref rather
+  // than state: the row id is never rendered, and setting state from an effect
+  // is a lint error in this repo for good reasons.
+  const rowRef = useRef(null);
+  useEffect(() => {
+    if (welcomed) return;
+    // Floating on purpose and safe here: sheetShown swallows everything and
+    // returns null, and nothing downstream waits on it. The sheet must paint
+    // whether or not the ledger is reachable.
+    sheetShown().then((id) => { rowRef.current = id; }).catch(() => {});
+  }, [welcomed]);
+
+  function dismiss(via) {
     try {
       window.localStorage.setItem(WELCOME_KEY, WELCOME_VALUE);
     } catch {
@@ -68,6 +82,12 @@ export default function WelcomeSheet() {
       // session - a dismiss that visibly does nothing is worse than one that
       // does not stick.
     }
+    // WHICH control closed it is the interesting part: "pressed Start drafting"
+    // and "tapped the backdrop to make it go away" are different facts about the
+    // same dismissal, and only one of them says the copy worked. Fired before
+    // the state flips so the sheet closes at the same speed either way.
+    const id = rowRef.current;
+    if (id != null) sheetDismissed(id, via).catch(() => {});
     window.dispatchEvent(new Event(DISMISS_EVENT));
   }
 
@@ -79,8 +99,8 @@ export default function WelcomeSheet() {
       role="dialog"
       aria-modal="true"
       aria-label={WELCOME.kicker}
-      onClick={dismiss}
-      onKeyDown={(e) => { if (e.key === 'Escape') dismiss(); }}
+      onClick={() => dismiss('backdrop')}
+      onKeyDown={(e) => { if (e.key === 'Escape') dismiss('escape'); }}
     >
       {/* Stop taps inside the sheet from reaching the scrim's dismiss. */}
       <div className="wsheet" data-surface="ink" onClick={(e) => e.stopPropagation()}>
@@ -90,14 +110,14 @@ export default function WelcomeSheet() {
         <p className="wsheet-body">{WELCOME.pass}</p>
         <div className="wsheet-price">{WELCOME.price}</div>
 
-        <button type="button" className="wsheet-primary" onClick={dismiss}>
+        <button type="button" className="wsheet-primary" onClick={() => dismiss('primary')}>
           {WELCOME.primary}
         </button>
 
         {/* Secondary. Dismissing on a completed purchase is deliberate: PassBuy
             refreshes the page on success, and leaving the sheet up over an
             unlocking account would be the last thing anyone wants to look at. */}
-        <div className="wsheet-buy" onClick={dismiss}>
+        <div className="wsheet-buy" onClick={() => dismiss('purchase')}>
           <PassBuy />
         </div>
       </div>

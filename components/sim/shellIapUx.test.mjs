@@ -126,16 +126,26 @@ test('ONCE PER DEVICE: every exit path writes the key before closing', () => {
   // The failure that matters is an onboarding sheet that comes back. There is one
   // dismiss() and every exit routes through it - primary button, the buy wrapper,
   // the scrim, and Escape - so there is no path that closes without persisting.
+  //
+  // The signature gained a `via` argument when the sheet was ledgered (each exit
+  // now reports WHICH control closed it), so the hooks are arrow-wrapped rather
+  // than bare references. The contract is unchanged and is asserted below on the
+  // behaviour rather than the shape: four exits, all persisting first.
   const s = stripComments(src('components/sim/WelcomeSheet.js'));
-  const fn = s.slice(s.indexOf('function dismiss()'), s.indexOf('if (welcomed) return null;'));
+  const fn = s.slice(s.indexOf('function dismiss(via)'), s.indexOf('if (welcomed) return null;'));
   assert.match(fn, /setItem\(WELCOME_KEY, WELCOME_VALUE\)/, 'dismiss must persist');
   assert.ok(fn.indexOf('setItem') < fn.indexOf('dispatchEvent'),
     'the key must be written BEFORE the state flips');
-  for (const hook of [/onClick=\{dismiss\}/, /onKeyDown=.*Escape.*dismiss/s]) {
-    assert.match(s, hook, `missing an exit path wired to dismiss: ${hook}`);
+  // The ledger write sits between them and must not be able to delay either.
+  assert.match(fn, /sheetDismissed\(id, via\)\.catch\(\(\) => \{\}\)/,
+    'the ledger write is fire-and-forget - a dismiss must never wait on a network call');
+
+  const exits = ['primary', 'backdrop', 'escape', 'purchase'];
+  for (const via of exits) {
+    assert.ok(s.includes(`dismiss('${via}')`), `missing an exit path: ${via}`);
   }
-  assert.equal((s.match(/onClick=\{dismiss\}/g) ?? []).length, 3,
-    'scrim, primary button and buy wrapper should all dismiss');
+  assert.equal((s.match(/dismiss\('/g) ?? []).length, exits.length,
+    'exactly four exits: scrim, Escape, primary button and buy wrapper');
 });
 
 test('a returning device is never shown the sheet again (storage contract)', () => {

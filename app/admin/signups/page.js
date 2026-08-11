@@ -1,6 +1,7 @@
 import { sql } from '@/lib/db';
 import TableControls from './TableControls';
 import { welcomeLedgerSummary } from '@/lib/auth/welcomeEmail';
+import { welcomeSheetSummary } from '@/lib/auth/welcomeSheetLedger';
 
 /**
  * Admin signups view — Session 3d.
@@ -122,6 +123,53 @@ function WelcomeLedger({ ledger }) {
   );
 }
 
+
+// The first-launch sheet's ledger.
+//
+// NEVER DISMISSED is the number this was built for. The sheet is modal, it is
+// the first thing a new account sees, and 11 of 14 app arrivals never reached a
+// draft. A row that opened and never closed means the sheet went up and the
+// session ended with it still there - which is exactly the shape a stall would
+// take, and was previously indistinguishable from nothing happening at all.
+//
+// The dismissal breakdown is the other half: "pressed Start drafting" and
+// "tapped the backdrop to make it go away" are different facts about the same
+// dismissal, and only one of them says the copy did its job.
+function SheetLedger({ sheet }) {
+  const open = sheet.neverDismissed ?? [];
+  return (
+    <section className="max-w-7xl mx-auto mt-4 border border-charcoal p-4">
+      <div className="flex items-baseline gap-4 flex-wrap">
+        <span className="font-mono text-xs uppercase tracking-widest text-muted">First-launch sheet</span>
+        <span className="font-mono text-xs text-paper-warm">
+          shown <b className="text-volt">{sheet.shown}</b> to {sheet.users} {sheet.users === 1 ? 'user' : 'users'}
+        </span>
+        {sheet.byControl.map((c) => (
+          <span key={c.via} className="font-mono text-xs text-paper-warm">
+            {c.via} <b className="text-volt">{c.n}</b>
+          </span>
+        ))}
+        <span className={`font-mono text-xs ml-auto ${open.length ? 'text-terra' : 'text-muted'}`}>
+          {open.length ? `${open.length} never dismissed` : 'all dismissed'}
+        </span>
+      </div>
+
+      {open.length > 0 && (
+        <div className="mt-3">
+          <div className="font-mono text-[11px] uppercase tracking-widest text-terra">
+            Opened over {sheet.openAfterMinutes} min ago and never closed - the session ended on this screen
+          </div>
+          <ul className="mt-1 font-mono text-xs text-paper-warm">
+            {open.map((r) => (
+              <li key={r.id}>#{r.id} user {r.user_id} shown {formatCreatedAt(r.started_at)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default async function SignupsPage({ searchParams }) {
   const params = (await searchParams) ?? {};
   const tier = params.tier ?? 'all';
@@ -134,6 +182,9 @@ export default async function SignupsPage({ searchParams }) {
   // say hello. Nothing read this table before, and the cost of that was four
   // days of not noticing a user had been missed.
   const ledger = await welcomeLedgerSummary().catch(() => null);
+  // The first-launch sheet, read beside it: the email answers "did we say
+  // hello", this answers "did the first screen let them past".
+  const sheet = await welcomeSheetSummary().catch(() => null);
 
   const rows = await sql`
     SELECT *
@@ -162,6 +213,7 @@ export default async function SignupsPage({ searchParams }) {
       </header>
 
       {ledger && <WelcomeLedger ledger={ledger} />}
+      {sheet && <SheetLedger sheet={sheet} />}
 
       <div className="max-w-7xl mx-auto mt-8">
         <TableControls
