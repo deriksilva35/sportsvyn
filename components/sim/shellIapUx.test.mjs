@@ -140,12 +140,12 @@ test('ONCE PER DEVICE: every exit path writes the key before closing', () => {
   assert.match(fn, /sheetDismissed\(id, via\)\.catch\(\(\) => \{\}\)/,
     'the ledger write is fire-and-forget - a dismiss must never wait on a network call');
 
-  const exits = ['primary', 'backdrop', 'escape', 'purchase'];
+  const exits = ['primary', 'tracker', 'backdrop', 'escape'];
   for (const via of exits) {
     assert.ok(s.includes(`dismiss('${via}')`), `missing an exit path: ${via}`);
   }
   assert.equal((s.match(/dismiss\('/g) ?? []).length, exits.length,
-    'exactly four exits: scrim, Escape, primary button and buy wrapper');
+    'exactly four exits: primary, the tracker link, the scrim and Escape');
 });
 
 test('a returning device is never shown the sheet again (storage contract)', () => {
@@ -157,7 +157,11 @@ test('a returning device is never shown the sheet again (storage contract)', () 
   assert.match(s, /if \(welcomed\) return null;/);
   // Storage access is guarded - Safari private mode throws rather than returning
   // null, and that must not take the lobby down.
-  assert.equal((s.match(/try \{/g) ?? []).length, 2, 'both the read and the write must be guarded');
+  // Three guards now: the storage read, the storage write, and the scroll the
+  // tracker link performs - a missing anchor must not turn a dismissal into a
+  // dead tap.
+  assert.equal((s.match(/try \{/g) ?? []).length, 3,
+    'the storage read, the storage write and the tracker scroll must all be guarded');
 });
 
 test('the sheet is shell + flag + NON-member, and mounted where member is known', () => {
@@ -171,16 +175,52 @@ test('the sheet is shell + flag + NON-member, and mounted where member is known'
   }
 });
 
-test('welcome copy leads with the free tier and headlines the Tracker', () => {
-  // The primary action is START DRAFTING, not buy: a first-launch sheet that
-  // leads with a purchase reads as a paywall over a product with a real free tier.
-  assert.match(WELCOME.primary, /start drafting/i);
-  assert.match(WELCOME.free, /[Tt]hree free drafts a week/);
-  assert.match(WELCOME.pass, /Draft Tracker/);
-  assert.ok(WELCOME.pass.indexOf('Draft Tracker') < WELCOME.pass.indexOf('unlimited drafts'),
-    'the Tracker should headline what the Pass unlocks');
-  assert.match(WELCOME.price, /\$9\.99/);
-  assert.match(WELCOME.price, /Super Bowl/);
+test('welcome copy is TWO PRODUCTS, each with an instruction', () => {
+  // This test used to assert the sheet "leads with the free tier and headlines
+  // the Tracker inside the Pass sentence". It passed while the sheet spent more
+  // words on the Draft Pass than on the thing it was selling, ended on a volt
+  // price with a buy button under it, and gave the Tracker one clause. Fourteen
+  // app arrivals, eleven of whom never drafted, is what prompted looking at it.
+  //
+  // The sheet is now one screen with a half per product, and the thing each half
+  // has to end in is WHAT TO TAP - the measured problem is not that people
+  // decline, it is that they arrive and do nothing.
+  assert.match(WELCOME.mock, /START DRAFT/, 'the mock half names the control');
+  assert.match(WELCOME.mock, /[Tt]hree free drafts a week/, 'and the free tier');
+  assert.match(WELCOME.tracker, /enter picks as they happen/, 'the tracker half says what you DO');
+  assert.match(WELCOME.tracker, /at the table/, 'and where');
+
+  // The Pass is ONE LINE and it is context, not the ask.
+  assert.match(WELCOME.pass, /\$9\.99/);
+  assert.match(WELCOME.pass, /Super Bowl/);
+  assert.ok(WELCOME.pass.split('.').filter((x) => x.trim()).length <= 2,
+    'one line, not a paragraph');
+  assert.ok(WELCOME.pass.length < WELCOME.mock.length && WELCOME.pass.length < WELCOME.tracker.length,
+    'the price line must be shorter than either product it sits under');
+
+  // The primary is an action on the free product, not a purchase.
+  assert.match(WELCOME.primary, /mock draft/i);
+  assert.ok(!/\$|buy|pass|unlock/i.test(WELCOME.primary), 'the primary button sells nothing');
+  assert.match(WELCOME.trackerLink, /Tracker/);
+
+  // And the retired keys are actually gone rather than left dangling.
+  for (const dead of ['headline', 'free', 'price']) {
+    assert.equal(WELCOME[dead], undefined, `WELCOME.${dead} should be retired`);
+  }
+});
+
+test('THERE IS NO PURCHASE CONTROL ON THE SHEET', () => {
+  // Buying moved to the MembershipCard and the tracker gate, where somebody has
+  // actually reached for something. A first-launch modal is the worst place to
+  // ask: the user has not seen the product yet.
+  const s = stripComments(src('components/sim/WelcomeSheet.js'));
+  assert.ok(!/PassBuy/.test(s), 'no buy button');
+  assert.ok(!/wsheet-buy/.test(s));
+  // COMMENTS STRIPPED FIRST. This assertion is about RULES, and the replacement
+  // rules explain themselves by naming the ones they retired - so scanning raw
+  // CSS would fail on its own subject's prose.
+  const css = src('components/sim/sim.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.ok(!/\.wsheet-buy|\.wsheet-price/.test(css), 'and no orphan styles left behind');
 });
 
 test('welcome copy uses hyphens only - no em/en dashes (house rule)', () => {

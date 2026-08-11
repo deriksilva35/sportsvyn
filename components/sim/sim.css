@@ -137,18 +137,40 @@
   max-height: 88vh; overflow-y: auto;
 }
 .wsheet-kicker { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--volt); }
-.wsheet-head { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 28px; line-height: 1.02; letter-spacing: -.02em; color: var(--paper); margin: 8px 0 12px; }
+/* TWO HALVES, one per product. Each is headed and self-contained, so the sheet
+   reads as "here are the two things this app does" rather than as one pitch
+   that happens to mention a second feature. The old .wsheet-head (a single
+   28px italic headline) is retired with the copy it carried. */
+.wsheet-half { margin-top: 14px; }
+.wsheet-half + .wsheet-half { padding-top: 14px; border-top: 1px solid var(--charcoal); }
+.wsheet-half-h {
+  font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
+  text-transform: uppercase; font-size: 17px; line-height: 1.05; letter-spacing: -.01em;
+  color: var(--paper); margin-bottom: 5px;
+}
+/* One line, not a paragraph, and NOT volt: the Pass is context here, not the
+   call to action. The old .wsheet-price was volt and sat directly above the
+   button, which made the price read as the thing being agreed to. */
+.wsheet-pass {
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 10.5px; line-height: 1.5;
+  letter-spacing: .02em; color: var(--muted); margin: 16px 0 14px;
+  padding-top: 12px; border-top: 1px solid var(--charcoal);
+}
 .wsheet-body { font-family: var(--font-archivo-sans, sans-serif); font-size: 13px; line-height: 1.55; color: var(--paper-dim); margin: 0 0 10px; }
-.wsheet-price { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--volt); margin: 4px 0 16px; }
 .wsheet-primary { display: block; width: 100%; background: var(--volt); color: var(--ink); border: none; font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 17px; text-transform: uppercase; letter-spacing: .01em; padding: 13px 0; cursor: pointer; }
 .wsheet-primary:hover { background: var(--volt-dim); }
 /* The buy control is SECONDARY here - the free tier is the front door, so it is
    an outlined button under the primary rather than a second volt slab. */
-.wsheet-buy { margin-top: 10px; }
-.wsheet-buy .mcard-iap-price { display: none; }   /* the price line is already stated above */
-.wsheet-buy .mcard-buy { background: transparent; color: var(--volt); border: 1px solid var(--volt); font-size: 13px; padding: 11px 0; }
-.wsheet-buy .mcard-buy:hover { background: rgba(212,255,0,.1); }
-.wsheet-buy .mcard-iap-fine { display: none; }
+/* QUIET SECONDARY. A second loud button would make the sheet a choice between
+   two unknowns; the mock is the one that needs no setup, so it keeps the weight
+   and this is a text link that happens to be a button. */
+.wsheet-secondary {
+  display: block; width: 100%; margin-top: 12px; background: none; border: 0; cursor: pointer;
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  padding: 6px 0; text-decoration: underline; text-underline-offset: 3px;
+}
+.wsheet-secondary:hover { color: var(--paper); }
 
 /* ---- Apple IAP buy control (components/sim/PassBuy.js) ----
    Rendered only in shell, only under APPLE_IAP_ENABLED, and only when the native
@@ -173,7 +195,6 @@
 .mcard-restore:disabled { opacity: .5; cursor: default; }
 .acct-iap .mcard-restore { border-color: rgba(10,10,10,.35); color: rgba(10,10,10,.75); }
 .acct-iap .mcard-restore:hover { border-color: var(--ink); color: var(--ink); }
-.wsheet-buy .mcard-restore { display: none; }  /* the sheet is onboarding, not support */
 .setup-err { font-size: 10px; color: var(--terra); text-align: center; margin-top: 8px; letter-spacing: .04em; }
 .chiplab { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }
 
@@ -692,3 +713,12 @@
    pick stays available - the sort just stops recommending it. */
 .p-seatslot.bench.deferred { color: var(--muted-dim); opacity: .75; }
 .p-seatslot.full { color: var(--muted-dim); }
+
+/* Tracker setup hints. Every field is asked BEFORE the user has seen what the
+   Tracker does, so each says what it is FOR - and, in both cases, that nothing
+   chosen here is final. The most common reason not to start a setup form is not
+   knowing whether you can change your mind. */
+.trk-hint {
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; line-height: 1.5;
+  letter-spacing: .03em; color: var(--muted-dim); margin: 6px 0 2px;
+}

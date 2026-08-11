@@ -148,13 +148,28 @@ export const PASS_BUY = {
 // The Tracker headlines the Pass line for the same reason it leads the
 // /membership card: it is the anchor feature and the only one that leaves the
 // house. Hyphens only, no em/en dashes.
+// The first-launch sheet. ONE SCREEN, TWO PRODUCTS, and that ordering is the
+// whole content decision.
+//
+// The previous version led with the free tier, then spent more words on the
+// Draft Pass than on the thing it was selling, then stated a price - so a new
+// account's first screen was mostly about paying. The Tracker, which is the
+// harder product to discover and the reason somebody would ever pay, was one
+// clause inside the Pass sentence.
+//
+// Now each product gets its own half and its own instruction, the Pass is a
+// single line rather than a paragraph, and there is no purchase control on the
+// sheet at all. Buying stays on the MembershipCard and the tracker gate, where
+// the user has actually reached for something.
 export const WELCOME = {
   kicker: 'Welcome to Draftvyn',
-  headline: 'Draft against the market.',
-  free: 'Three free drafts a week, against AI rooms that reach and slide like real ones. Every pick graded on live ADP.',
-  pass: 'The Draft Pass adds the Draft Tracker - log your real draft live at the table - plus unlimited drafts, custom rosters, superflex, 14 to 16 teams, and the Exposure Report.',
-  price: '$9.99 one time. Through the Super Bowl.',
-  primary: 'Start drafting',
+  mockHead: 'Mock draft',
+  mock: 'Pick a preset, tap START DRAFT. Full snake mock against AI rooms that reach and slide like real ones - every pick graded on live ADP. Three free drafts a week.',
+  trackerHead: 'Draft Tracker',
+  tracker: 'Draft night, logged live. Name the teams in your league, set your roster and slot, then enter picks as they happen at the table - the board tracks value while you draft.',
+  pass: 'The Draft Pass unlocks the Tracker, unlimited drafts, and custom leagues - $9.99 through the Super Bowl.',
+  primary: 'Start a mock draft',
+  trackerLink: 'Set up the Tracker',
   dismissLabel: 'Close',
 };
 

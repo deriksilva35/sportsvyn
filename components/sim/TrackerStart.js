@@ -43,10 +43,19 @@ export default function TrackerStart({ entitled, shell = false, iap = false }) {
   const [showNames, setShowNames] = useState(false);
   const [err, setErr] = useState(null);
 
+  // THE ANCHOR IS ON BOTH BRANCHES. The welcome sheet's "Set up the Tracker"
+  // link scrolls here, and the people it is aimed at are precisely the ones who
+  // land in THIS branch - a new account owns no Pass. Putting the id only on the
+  // entitled return would have made the link a dead tap for everybody it was
+  // written for.
   if (!entitled) {
     return (
-      <section className="trk-start">
+      <section className="trk-start" id="tracker-start">
         <div className="sim-kicker">Tracker mode</div>
+        <p className="trk-start-pitch">
+          Draft night, logged live. Name the teams in your league, set your roster and slot,
+          then enter picks as they happen at the table - the board tracks value while you draft.
+        </p>
         <MembershipCard variant="tracker" shell={shell} iap={iap} onBackToPresets={() => router.push('/sim')} />
       </section>
     );
@@ -70,13 +79,17 @@ export default function TrackerStart({ entitled, shell = false, iap = false }) {
   }
 
   return (
-    <section className="trk-start">
+    <section className="trk-start" id="tracker-start">
       <div className="sim-kicker">Tracker mode</div>
       <p className="trk-start-pitch">
         Bring it to your draft. Log every team&apos;s pick as it happens and keep your roster,
         your open slots, and the value on each pick in front of you.
       </p>
 
+      {/* INLINE HINTS. Every field here is asked BEFORE the user has seen what
+          the Tracker does, so each one says what it is for rather than just what
+          it is - a new account should not have to guess whether TEAMS means the
+          league size or the names, or whether the seat can be changed later. */}
       <div className="trk-start-row">
         <label>
           <span>TEAMS</span>
@@ -103,10 +116,14 @@ export default function TrackerStart({ entitled, shell = false, iap = false }) {
         </label>
       </div>
 
+      <div className="trk-hint">How many seats, how it scores, and where you pick - all editable on draft night.</div>
+
       <button type="button" className="trk-start-names" onClick={() => setShowNames((v) => !v)}>
         {showNames ? '- hide team names' : '+ add team names (optional)'}
       </button>
       {showNames && (
+        <>
+        <div className="trk-hint">Name the teams in your league (editable on draft night).</div>
         <div className="trk-start-grid">
           {Array.from({ length: teams }, (_, i) => (
             <label key={i}>
@@ -121,6 +138,7 @@ export default function TrackerStart({ entitled, shell = false, iap = false }) {
             </label>
           ))}
         </div>
+        </>
       )}
 
       {err && <div className="trk-err">{ERR[err] ?? err}</div>}

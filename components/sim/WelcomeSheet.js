@@ -2,6 +2,18 @@
 
 // components/sim/WelcomeSheet.js — the first-launch sheet, ONCE per device.
 //
+// ONE SCREEN, TWO PRODUCTS. The previous version led with the free tier, spent
+// more words on the Draft Pass than on the thing it was selling, and ended on a
+// price with a buy button under it - so the first screen a new account saw was
+// mostly about paying, and the Tracker (the harder product to discover, and the
+// reason anyone would pay) was one clause inside the Pass sentence.
+//
+// Each product now gets its own half and its own INSTRUCTION - what to tap, in
+// order - because the measured problem is not that people decline, it is that
+// they arrive and do nothing. The Pass is one line. There is no purchase
+// control here at all: buying lives on the MembershipCard and the tracker gate,
+// where somebody has actually reached for something.
+//
 // Rendered only by the /sim lobby, and only when the server has already decided
 // this is shell + APPLE_IAP_ENABLED + a signed-in NON-member. Three separate
 // suppressions, each for its own reason:
@@ -22,15 +34,19 @@
 // effect removes it. Same reasoning as components/appstore/AppBanner.js, and it
 // avoids the setState-in-effect this repo lints as an error.
 //
-// PassBuy is the secondary action, and it renders NOTHING without the native
-// purchase bridge (old binary, plain browser). That is deliberate: the sheet then
-// degrades to a plain "here is what you get, start drafting" card rather than
-// offering a button that cannot work.
+// THE SECONDARY IS A ROUTE, NOT A PURCHASE. "Set up the Tracker" dismisses and
+// scrolls to TrackerStart, and reports itself as its own control - so the ledger
+// can distinguish "went to mock" from "went to tracker" from "made it go away",
+// which is the question the sheet exists to answer.
 
 import { useEffect, useRef, useSyncExternalStore } from 'react';
-import PassBuy from './PassBuy';
 import { WELCOME } from './membershipCopy';
 import { sheetShown, sheetDismissed } from '@/app/actions/welcomeSheet';
+
+// The TrackerStart section's anchor. The secondary link dismisses and scrolls
+// there rather than navigating - the sheet sits ON the lobby, so the thing it
+// points at is already on screen behind it.
+export const TRACKER_ANCHOR = 'tracker-start';
 
 export const WELCOME_KEY = 'draftvyn_welcomed';
 export const WELCOME_VALUE = '1';
@@ -91,6 +107,15 @@ export default function WelcomeSheet() {
     window.dispatchEvent(new Event(DISMISS_EVENT));
   }
 
+  // Dismiss, then take them to the thing they asked for. The scroll is guarded:
+  // a missing anchor must not turn a dismissal into a dead tap.
+  function toTracker() {
+    dismiss('tracker');
+    try {
+      document.getElementById(TRACKER_ANCHOR)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch { /* the sheet still closed, which is the part that matters */ }
+  }
+
   if (welcomed) return null;
 
   return (
@@ -105,21 +130,30 @@ export default function WelcomeSheet() {
       {/* Stop taps inside the sheet from reaching the scrim's dismiss. */}
       <div className="wsheet" data-surface="ink" onClick={(e) => e.stopPropagation()}>
         <div className="wsheet-kicker">{WELCOME.kicker}</div>
-        <h2 className="wsheet-head">{WELCOME.headline}</h2>
-        <p className="wsheet-body">{WELCOME.free}</p>
-        <p className="wsheet-body">{WELCOME.pass}</p>
-        <div className="wsheet-price">{WELCOME.price}</div>
+
+        {/* Two halves, each headed, each ending in what to tap. The mock comes
+            first because it is the thing a new account can do in ten seconds
+            with no setup; the Tracker is the reason to come back. */}
+        <div className="wsheet-half">
+          <div className="wsheet-half-h">{WELCOME.mockHead}</div>
+          <p className="wsheet-body">{WELCOME.mock}</p>
+        </div>
+        <div className="wsheet-half">
+          <div className="wsheet-half-h">{WELCOME.trackerHead}</div>
+          <p className="wsheet-body">{WELCOME.tracker}</p>
+        </div>
+
+        <div className="wsheet-pass">{WELCOME.pass}</div>
 
         <button type="button" className="wsheet-primary" onClick={() => dismiss('primary')}>
           {WELCOME.primary}
         </button>
 
-        {/* Secondary. Dismissing on a completed purchase is deliberate: PassBuy
-            refreshes the page on success, and leaving the sheet up over an
-            unlocking account would be the last thing anyone wants to look at. */}
-        <div className="wsheet-buy" onClick={() => dismiss('purchase')}>
-          <PassBuy />
-        </div>
+        {/* Quiet by design: a second loud button would make this a choice
+            between two unknowns, and the mock is the one that needs no setup. */}
+        <button type="button" className="wsheet-secondary" onClick={toTracker}>
+          {WELCOME.trackerLink}
+        </button>
       </div>
     </div>
   );
