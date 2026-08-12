@@ -22,6 +22,7 @@ import DriveStrip from './DriveStrip';
 import OddsStrip from './OddsStrip';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { lineScoreGrid, ABSENT } from '@/lib/gridiron/lineScore';
+import { distinctLabel } from '@/lib/gridiron/labels';
 
 const SPORTS = [
   { key: 'nfl', label: 'NFL' },
@@ -57,16 +58,6 @@ function TeamLine({ t, score, isWinner, isLoser, final }) {
       <span className="sc">{score ?? ABSENT}</span>
     </div>
   );
-}
-
-// The provider's prose week is only worth showing when it says something the
-// mechanical "PRE W1" does not. "Week 1" alongside "PRE W1" is the same fact
-// twice; "Hall of Fame Weekend" and "Wild Card" are names a reader recognises
-// and a week number cannot carry.
-function distinctLabel(g) {
-  const l = g.weekLabel;
-  if (!l) return null;
-  return /^week\s+\d+$/i.test(l.trim()) ? null : l;
 }
 
 function Status({ g }) {
@@ -125,7 +116,7 @@ function LineScore({ g }) {
 // where, and what it is called. Plus the odds strip where a market exists -
 // which for preseason it never does, by ruling.
 function PreGamePane({ g }) {
-  const label = distinctLabel(g);
+  const label = distinctLabel(g.weekLabel);
   const place = g.venueCity || g.venue;
   return (
     <>
@@ -182,7 +173,7 @@ function Card({ g }) {
         <div className="gi-card-foot">
           <span className="gi-line">{g.leagueSlug.toUpperCase()} · {g.seasonPhase} W{g.week}</span>
           <span className="gi-line-alt">
-            {[distinctLabel(g), g.venueCity].filter(Boolean).join(' · ')}
+            {[distinctLabel(g.weekLabel), g.venueCity].filter(Boolean).join(' · ')}
           </span>
         </div>
       </div>
@@ -190,6 +181,13 @@ function Card({ g }) {
       {open && (
         <div className="gi-detail">
           {hasLine ? <LineScore g={g} /> : <PreGamePane g={g} />}
+          {/* The expand stays LINE-SCORE-ONLY. It is a glance, and it now has
+              somewhere to go: one link, at the bottom, to the page that holds
+              the scoring summary and the player lines. NFL only - there is no
+              /cfb/game route, and a link to a 404 is worse than no link. */}
+          {g.leagueSlug === 'nfl' ? (
+            <a className="gi-full" href={`/nfl/game/${g.slug}`}>Full game →</a>
+          ) : null}
         </div>
       )}
     </div>

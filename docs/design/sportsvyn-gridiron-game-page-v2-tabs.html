@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sportsvyn - Gridiron Game Page v2 - Tabbed (Design Lock Mock)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,600;0,700;1,900&family=Saira+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:ital,opsz,wght@1,8..60,400;1,8..60,500&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     SPORTSVYN GRIDIRON GAME PAGE v2 (TABBED) - DESIGN LOCK MOCK
+     Surface: INK (data surface). Volt as material only.
+     Data honesty: every section on this page maps to a PROVEN
+     source. Sections without data DO NOT RENDER - no placeholders.
+       line score        matches.line_scores (stored)
+       records           getStandings() local, REG-filtered
+       the brief         Tier 1 pipeline (labeled Auto-generated)
+       scoring summary   /games/events (proven PRE + REG)
+       player lines      /games/statistics/players (proven PRE + REG)
+       team box score    /games/statistics/teams (REG ONLY - absent
+                         on preseason pages, see addendum below)
+     ============================================================ */
+  :root{
+    --ink:#0A0A0A; --ink-2:#111111; --ink-3:#161616;
+    --line:#232323; --line-soft:#1B1B1B;
+    --volt:#D4FF00; --jade:#2A8A4F; --terra:#B8410F; --live:#E63946;
+    --txt:#F2F2EE; --mut:#8A8A84; --mut-2:#5E5E58;
+    --mono:'JetBrains Mono',monospace;
+    --disp:'Saira',sans-serif;
+    --cond:'Saira Condensed',sans-serif;
+    --serif:'Source Serif 4',serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--ink);color:var(--txt);font-family:var(--mono);font-size:14px;line-height:1.5}
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px 96px}
+  a{color:inherit}
+
+  /* ---- site nav (context only) ---- */
+  .nav{display:flex;gap:22px;padding:18px 16px 12px;border-bottom:1px solid var(--line);
+       font-family:var(--cond);font-weight:600;letter-spacing:.14em;font-size:13px;color:var(--mut);
+       max-width:760px;margin:0 auto;overflow-x:auto;white-space:nowrap}
+  .nav b{color:var(--txt);font-weight:600;border-bottom:2px solid var(--volt);padding-bottom:6px}
+
+  /* ---- breadcrumb / back ---- */
+  .crumb{padding:16px 0 0;font-size:11px;letter-spacing:.12em;color:var(--mut-2)}
+  .crumb a{text-decoration:none;color:var(--mut)}
+  .crumb a:hover{color:var(--txt)}
+
+  /* ============================================================
+     HEADER BAND - the game, stated once
+     ============================================================ */
+  .head{padding:22px 0 0}
+  .chips{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .chip{font-size:10px;letter-spacing:.14em;padding:4px 9px;font-weight:700}
+  .chip.final{background:var(--jade);color:#fff}
+  .chip.pre{border:1px solid var(--mut-2);color:var(--mut)}
+  .chip.live{background:var(--live);color:#fff;animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.65}}
+
+  .teamrow{display:grid;grid-template-columns:44px 1fr auto;align-items:baseline;gap:12px;padding:5px 0}
+  .abbr{font-size:12px;color:var(--mut-2);letter-spacing:.1em}
+  .tname{font-family:var(--disp);font-weight:700;font-size:clamp(20px,5.4vw,28px);letter-spacing:.01em;line-height:1.15}
+  .score{font-family:var(--disp);font-weight:700;font-size:clamp(26px,6.5vw,34px);font-variant-numeric:tabular-nums}
+  .loser .tname,.loser .score{color:var(--mut)}
+  .rec{font-size:11px;color:var(--mut-2);margin-left:10px;letter-spacing:.08em;font-family:var(--mono);font-weight:400}
+  .headfoot{display:flex;justify-content:space-between;gap:12px;margin-top:14px;padding-top:12px;
+            border-top:1px solid var(--line-soft);font-size:11px;letter-spacing:.1em;color:var(--mut-2);flex-wrap:wrap}
+  .headfoot .r{color:var(--mut-2)}
+
+  /* ---- section scaffolding ---- */
+  section{margin-top:40px}
+  .kick{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
+  .kick h2{font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.22em;color:var(--volt)}
+  .kick .sub{font-size:10px;letter-spacing:.12em;color:var(--mut-2)}
+  .kick .rule{flex:1;height:1px;background:var(--line-soft);transform:translateY(-3px)}
+
+
+  /* ---- game tab rail ---- */
+  .gtabs{display:flex;gap:2px;margin-top:36px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--ink);z-index:5}
+  .gtab{font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.16em;color:var(--mut);
+        background:none;border:none;padding:12px 16px 10px;cursor:pointer;border-bottom:2px solid transparent}
+  .gtab.on{color:var(--txt);border-bottom-color:var(--volt)}
+  .gtab:focus-visible{outline:2px solid var(--volt);outline-offset:-2px}
+  .panel{display:none}
+  .panel.on{display:block}
+
+  /* ============================================================
+     LINE SCORE - already stored, already shipped in the card
+     ============================================================ */
+  .ls{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  .ls th{font-weight:500;font-size:11px;color:var(--mut-2);padding:6px 0;text-align:right;letter-spacing:.1em}
+  .ls td{padding:8px 0;text-align:right;font-size:14px;border-top:1px solid var(--line-soft)}
+  .ls .t{text-align:left;color:var(--mut);font-size:12px;letter-spacing:.1em}
+  .ls .tot{border-left:1px solid var(--line);padding-left:14px;font-weight:700;color:var(--txt)}
+  .ls th.tot{color:var(--mut)}
+  .ls .win td{color:var(--txt)}
+  .ls .lose td{color:var(--mut)}
+  .ls .lose td.tot{color:var(--mut)}
+
+  /* ============================================================
+     THE BRIEF - the read leads. Tier 1, honestly labeled.
+     ============================================================ */
+  .brief{border-left:3px solid var(--volt);padding:4px 0 4px 18px}
+  .brief p{font-family:var(--serif);font-style:italic;font-size:16.5px;line-height:1.65;color:var(--txt);margin-bottom:1em;max-width:60ch}
+  .brief p:last-of-type{margin-bottom:0}
+  .brief .tag{display:inline-block;margin-top:12px;font-family:var(--mono);font-style:normal;font-size:10px;
+              letter-spacing:.14em;color:var(--mut-2)}
+
+  /* ============================================================
+     SCORING SUMMARY - /games/events. The signature element:
+     a drive of type down the page, running score as the spine.
+     ============================================================ */
+  .qtr{margin-top:22px}
+  .qtr:first-of-type{margin-top:0}
+  .qlabel{font-size:10px;letter-spacing:.2em;color:var(--mut-2);margin-bottom:10px}
+  .ev{display:grid;grid-template-columns:40px 1fr 84px;gap:12px;padding:12px 0;border-top:1px solid var(--line-soft);align-items:start}
+  .ev:last-child{border-bottom:1px solid var(--line-soft)}
+  .ev .type{font-size:10px;font-weight:700;letter-spacing:.1em;padding-top:2px}
+  .ev .type.td{color:var(--volt)}
+  .ev .type.fg{color:var(--mut)}
+  .ev .body .team{font-size:11px;color:var(--mut-2);letter-spacing:.1em}
+  .ev .body .play{font-size:13.5px;line-height:1.5;color:var(--txt);margin-top:3px}
+  .ev .body .clock{font-size:10px;color:var(--mut-2);margin-top:4px;letter-spacing:.08em}
+  .ev .run{text-align:right;font-variant-numeric:tabular-nums;font-size:13px;color:var(--mut);padding-top:2px;line-height:1.5}
+  .ev .run b{color:var(--txt);font-weight:700}
+
+  /* ============================================================
+     PLAYER LINES - /games/statistics/players
+     Groups render only when the group happened. Tables, mono.
+     ============================================================ */
+  .teamtabs{display:flex;gap:8px;margin-bottom:18px}
+  .ttab{font-family:var(--cond);font-weight:600;letter-spacing:.14em;font-size:12px;padding:8px 14px;
+        border:1px solid var(--line);color:var(--mut);cursor:pointer;background:none}
+  .ttab.on{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+  .ttab:focus-visible{outline:2px solid var(--volt);outline-offset:2px}
+  .grp{margin-top:20px}
+  .grp h3{font-size:11px;letter-spacing:.18em;color:var(--mut);font-weight:500;margin-bottom:8px}
+  .st{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+  .st th{font-weight:500;font-size:10px;letter-spacing:.1em;color:var(--mut-2);text-align:right;padding:5px 0 5px 12px}
+  .st th.p, .st td.p{text-align:left;padding-left:0}
+  .st td{padding:7px 0 7px 12px;text-align:right;border-top:1px solid var(--line-soft);color:var(--txt)}
+  .st td.p{color:var(--txt)}
+  .st .lead td{color:var(--txt)}
+  .st .lead td.p::after{content:"";display:inline-block;width:5px;height:5px;background:var(--volt);margin-left:8px;transform:translateY(-2px)}
+  .note{margin-top:14px;font-size:11px;color:var(--mut-2);line-height:1.6;max-width:58ch}
+
+  /* ============================================================
+     WEEK 1 ADDENDUM - the team box score block. NOT rendered on
+     preseason pages (provider serves REG only). Shown here so the
+     full design is locked in one pass.
+     ============================================================ */
+  .addendum{margin-top:64px;border:1px dashed var(--line);padding:22px 18px}
+  .addendum .why{font-size:10px;letter-spacing:.14em;color:var(--mut-2);margin-bottom:18px;line-height:1.7}
+  .tb{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+  .tb th{font-weight:500;font-size:10px;letter-spacing:.1em;color:var(--mut-2);padding:6px 0;text-align:right}
+  .tb th.l{text-align:left}
+  .tb td{padding:8px 0;border-top:1px solid var(--line-soft);text-align:right}
+  .tb td.l{text-align:left;color:var(--mut);font-size:12px;letter-spacing:.04em}
+  .tb .split{color:var(--mut)}
+
+  footer{margin-top:72px;padding-top:18px;border-top:1px solid var(--line);
+         font-size:10px;letter-spacing:.1em;color:var(--mut-2);line-height:1.8}
+
+  @media (max-width:560px){
+    .ev{grid-template-columns:32px 1fr 72px;gap:8px}
+    .st{font-size:12px}
+    .st th, .st td{padding-left:8px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .chip.live{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Site">
+  <span>TODAY</span><b>SCORES</b><span>NFL</span><span>CFB</span><span>SOCCER</span><span>MY&nbsp;SPORTSVYN</span>
+</nav>
+
+<div class="wrap">
+
+  <div class="crumb"><a href="#">&#8249; Scores · Thu Aug 6</a></div>
+
+  <!-- ============ HEADER ============ -->
+  <header class="head">
+    <div class="chips">
+      <span class="chip final">FINAL</span>
+      <span class="chip pre">PRE</span>
+    </div>
+
+    <div class="teamrow">
+      <span class="abbr">CAR</span>
+      <span class="tname">Carolina Panthers <span class="rec">1-0</span></span>
+      <span class="score">33</span>
+    </div>
+    <div class="teamrow loser">
+      <span class="abbr">ARI</span>
+      <span class="tname">Arizona Cardinals <span class="rec">0-1</span></span>
+      <span class="score">30</span>
+    </div>
+
+    <div class="headfoot">
+      <span>NFL · PRE W0</span>
+      <span class="r">Hall of Fame Weekend · Tom Benson Hall of Fame Stadium · Canton</span>
+    </div>
+  </header>
+
+  <!-- ============ LINE SCORE ============ -->
+  <section aria-label="Line score">
+    <div class="kick"><h2>LINE SCORE</h2><div class="rule"></div></div>
+    <table class="ls">
+      <thead><tr><th class="t"></th><th>1</th><th>2</th><th>3</th><th>4</th><th class="tot">T</th></tr></thead>
+      <tbody>
+        <tr class="win"><td class="t">CAR</td><td>0</td><td>17</td><td>0</td><td>16</td><td class="tot">33</td></tr>
+        <tr class="lose"><td class="t">ARI</td><td>0</td><td>17</td><td>3</td><td>10</td><td class="tot">30</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+
+  <!-- ============ GAME TABS ============ -->
+  <div class="gtabs" role="tablist" aria-label="Game sections">
+    <button class="gtab on" role="tab" aria-selected="true" data-p="brief">THE BRIEF</button>
+    <button class="gtab" role="tab" aria-selected="false" data-p="scoring">SCORING</button>
+    <button class="gtab" role="tab" aria-selected="false" data-p="players">PLAYER LINES</button>
+    <button class="gtab" role="tab" aria-selected="false" data-p="teambox">TEAM BOX</button>
+  </div>
+
+  <!-- ============ THE BRIEF - the read leads ============ -->
+  <div class="panel on" id="p-brief"><section aria-label="The brief">
+    <div class="kick"><h2>THE BRIEF</h2><div class="rule"></div></div>
+    <div class="brief">
+      <p>Canton got a scoreless first quarter and then thirty-four points of second-quarter football. Carolina and Arizona traded seventeen apiece before the break, and the difference arrived late: sixteen fourth-quarter points for the Panthers against ten for the Cardinals, a 33-30 finish in a game both staffs treated as a long look at the back of the roster.</p>
+      <p>Corey Kiner opened the scoring on a one-yard push at 14:55 of the second, the front end of a night where every touchdown came from players fighting for September. Carolina leaves 1-0 in the only column that does not count yet.</p>
+      <span class="tag">AUTO-GENERATED FROM MATCH DATA · 22:41 ET</span>
+    </div>
+  </section></div>
+
+  <!-- ============ SCORING SUMMARY ============ -->
+  <div class="panel" id="p-scoring"><section aria-label="Scoring summary">
+    <div class="kick"><h2>SCORING SUMMARY</h2><span class="sub">12 SCORING PLAYS</span><div class="rule"></div></div>
+
+    <div class="qtr">
+      <div class="qlabel">Q2</div>
+      <div class="ev">
+        <span class="type td">TD</span>
+        <div class="body">
+          <div class="team">ARI · ARIZONA CARDINALS</div>
+          <div class="play">Corey Kiner 1 Yd Rush (Chad Ryland Kick)</div>
+          <div class="clock">14:55</div>
+        </div>
+        <div class="run">CAR 0<br><b>ARI 7</b></div>
+      </div>
+      <div class="ev">
+        <span class="type td">TD</span>
+        <div class="body">
+          <div class="team">CAR · CAROLINA PANTHERS</div>
+          <div class="play">AJ Dillon 1 Yd Rush (Ryan Fitzgerald Kick)</div>
+          <div class="clock">10:56</div>
+        </div>
+        <div class="run"><b>CAR 7</b><br>ARI 7</div>
+      </div>
+      <div class="ev">
+        <span class="type td">TD</span>
+        <div class="body">
+          <div class="team">ARI · ARIZONA CARDINALS</div>
+          <div class="play">Simi Fehoko 5 Yd pass from Carson Beck (Chad Ryland Kick)</div>
+          <div class="clock">6:12</div>
+        </div>
+        <div class="run">CAR 7<br><b>ARI 14</b></div>
+      </div>
+      <div class="ev">
+        <span class="type fg">FG</span>
+        <div class="body">
+          <div class="team">ARI · ARIZONA CARDINALS</div>
+          <div class="play">Chad Ryland 41 Yd Field Goal</div>
+          <div class="clock">2:03</div>
+        </div>
+        <div class="run">CAR 7<br><b>ARI 17</b></div>
+      </div>
+      <div class="ev">
+        <span class="type td">TD</span>
+        <div class="body">
+          <div class="team">CAR · CAROLINA PANTHERS</div>
+          <div class="play">Trevor Etienne 12 Yd Rush (Ryan Fitzgerald Kick)</div>
+          <div class="clock">0:41</div>
+        </div>
+        <div class="run"><b>CAR 14</b><br>ARI 17</div>
+      </div>
+      <div class="ev">
+        <span class="type fg">FG</span>
+        <div class="body">
+          <div class="team">CAR · CAROLINA PANTHERS</div>
+          <div class="play">Ryan Fitzgerald 52 Yd Field Goal</div>
+          <div class="clock">0:00</div>
+        </div>
+        <div class="run"><b>CAR 17</b><br>ARI 17</div>
+      </div>
+    </div>
+
+    <div class="qtr">
+      <div class="qlabel">Q3</div>
+      <div class="ev">
+        <span class="type fg">FG</span>
+        <div class="body">
+          <div class="team">ARI · ARIZONA CARDINALS</div>
+          <div class="play">Chad Ryland 38 Yd Field Goal</div>
+          <div class="clock">7:44</div>
+        </div>
+        <div class="run">CAR 17<br><b>ARI 20</b></div>
+      </div>
+    </div>
+
+    <div class="qtr">
+      <div class="qlabel">Q4</div>
+      <div class="ev">
+        <span class="type td">TD</span>
+        <div class="body">
+          <div class="team">CAR · CAROLINA PANTHERS</div>
+          <div class="play">Jalen Coker 23 Yd pass from Jack Plummer (Ryan Fitzgerald Kick)</div>
+          <div class="clock">12:19</div>
+        </div>
+        <div class="run"><b>CAR 24</b><br>ARI 20</div>
+      </div>
+      <div class="ev">
+        <span class="type td">TD</span>
+        <div class="body">
+          <div class="team">ARI · ARIZONA CARDINALS</div>
+          <div class="play">Xavier Weaver 9 Yd pass from Clifton McDowell (Chad Ryland Kick)</div>
+          <div class="clock">8:03</div>
+        </div>
+        <div class="run">CAR 24<br><b>ARI 27</b></div>
+      </div>
+      <div class="ev">
+        <span class="type fg">FG</span>
+        <div class="body">
+          <div class="team">CAR · CAROLINA PANTHERS</div>
+          <div class="play">Ryan Fitzgerald 44 Yd Field Goal</div>
+          <div class="clock">4:56</div>
+        </div>
+        <div class="run"><b>CAR 27</b><br>ARI 27</div>
+      </div>
+      <div class="ev">
+        <span class="type fg">FG</span>
+        <div class="body">
+          <div class="team">ARI · ARIZONA CARDINALS</div>
+          <div class="play">Chad Ryland 29 Yd Field Goal</div>
+          <div class="clock">1:12</div>
+        </div>
+        <div class="run">CAR 27<br><b>ARI 30</b></div>
+      </div>
+      <div class="ev">
+        <span class="type td">TD</span>
+        <div class="body">
+          <div class="team">CAR · CAROLINA PANTHERS</div>
+          <div class="play">Jimmy Horn Jr. 31 Yd pass from Jack Plummer (Kick failed)</div>
+          <div class="clock">0:22</div>
+        </div>
+        <div class="run"><b>CAR 33</b><br>ARI 30</div>
+      </div>
+    </div>
+  </section></div>
+
+  <!-- ============ PLAYER LINES ============ -->
+  <div class="panel" id="p-players"><section aria-label="Player statistics">
+    <div class="kick"><h2>PLAYER LINES</h2><div class="rule"></div></div>
+
+    
+    <div class="grp" style="margin-top:0">
+      <h3>FANTASY · PPR</h3>
+      <table class="st">
+        <thead><tr><th class="p">PLAYER</th><th style="text-align:left;padding-left:12px">LINE</th><th>FPTS</th></tr></thead>
+        <tbody>
+          <tr class="lead"><td class="p">Jalen Coker</td><td style="text-align:left;padding-left:12px;color:var(--mut);font-size:12px">5 rec, 84 yds, TD</td><td>19.4</td></tr>
+          <tr><td class="p">Jack Plummer</td><td style="text-align:left;padding-left:12px;color:var(--mut);font-size:12px">14/21, 203 yds, 2 TD · 3 att, 12 yds</td><td>18.3</td></tr>
+          <tr><td class="p">Jimmy Horn Jr.</td><td style="text-align:left;padding-left:12px;color:var(--mut);font-size:12px">3 rec, 61 yds, TD</td><td>15.1</td></tr>
+          <tr><td class="p">Trevor Etienne</td><td style="text-align:left;padding-left:12px;color:var(--mut);font-size:12px">11 att, 58 yds, TD · 2 rec, 11 yds</td><td>15.0</td></tr>
+          <tr><td class="p">Corey Kiner</td><td style="text-align:left;padding-left:12px;color:var(--mut);font-size:12px">9 att, 41 yds, TD · 1 rec, 6 yds</td><td>11.7</td></tr>
+        </tbody>
+      </table>
+      <p class="note" style="margin-top:8px">Both squads, ranked by PPR points - computed from the stat lines below, published methodology, nothing hand-entered. Scoring toggle (PPR / Half / Standard) follows the Draftvyn presets.</p>
+    </div>
+
+    <div class="teamtabs" role="tablist" aria-label="Team">
+      <button class="ttab on" role="tab" aria-selected="true">CAR</button>
+      <button class="ttab" role="tab" aria-selected="false">ARI</button>
+    </div>
+
+    <div class="grp">
+      <h3>PASSING</h3>
+      <table class="st">
+        <thead><tr><th class="p">PLAYER</th><th>C/ATT</th><th>YDS</th><th>AVG</th><th>TD</th><th>INT</th><th>RTG</th><th>FPTS</th></tr></thead>
+        <tbody>
+          <tr class="lead"><td class="p">Jack Plummer</td><td>14/21</td><td>203</td><td>9.7</td><td>2</td><td>0</td><td>118.9</td><td>9.3</td></tr>
+          <tr><td class="p">Hendon Hooker</td><td>8/12</td><td>74</td><td>6.2</td><td>0</td><td>1</td><td>61.1</td><td>1.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grp">
+      <h3>RUSHING</h3>
+      <table class="st">
+        <thead><tr><th class="p">PLAYER</th><th>ATT</th><th>YDS</th><th>AVG</th><th>TD</th><th>LONG</th><th>FPTS</th></tr></thead>
+        <tbody>
+          <tr class="lead"><td class="p">Trevor Etienne</td><td>11</td><td>58</td><td>5.3</td><td>1</td><td>14</td><td>11.8</td></tr>
+          <tr><td class="p">AJ Dillon</td><td>9</td><td>34</td><td>3.8</td><td>1</td><td>9</td><td>9.4</td></tr>
+          <tr><td class="p">Jack Plummer</td><td>3</td><td>12</td><td>4.0</td><td>0</td><td>7</td><td>1.2</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grp">
+      <h3>RECEIVING</h3>
+      <table class="st">
+        <thead><tr><th class="p">PLAYER</th><th>REC</th><th>YDS</th><th>AVG</th><th>TD</th><th>LONG</th><th>FPTS</th></tr></thead>
+        <tbody>
+          <tr class="lead"><td class="p">Jalen Coker</td><td>5</td><td>84</td><td>16.8</td><td>1</td><td>23</td><td>19.4</td></tr>
+          <tr><td class="p">Jimmy Horn Jr.</td><td>3</td><td>61</td><td>20.3</td><td>1</td><td>31</td><td>15.1</td></tr>
+          <tr><td class="p">Dan Chisena</td><td>4</td><td>47</td><td>11.8</td><td>0</td><td>18</td><td>8.7</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grp">
+      <h3>KICKING</h3>
+      <table class="st">
+        <thead><tr><th class="p">PLAYER</th><th>FG</th><th>LONG</th><th>XP</th><th>PTS</th></tr></thead>
+        <tbody>
+          <tr><td class="p">Ryan Fitzgerald</td><td>2/2</td><td>52</td><td>3/4</td><td>9</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">Stat groups appear only when something happened in them - a night with no interceptions has no interceptions table. Defense, returns, and punting collapse behind "All groups" on load; the volt tick marks the game leader in each table. FPTS is the player's PPR line for this game, from the published methodology.</p>
+  </section></div>
+
+  <!-- ============ WEEK 1 ADDENDUM ============ -->
+  <div class="panel" id="p-teambox"><div class="addendum">
+    <div class="why">TEAM BOX SCORE - JOINS AT REG WEEK 1. ON PRESEASON PAGES THIS ENTIRE TAB IS ABSENT FROM THE RAIL - SHOWN IN THIS MOCK FOR THE DESIGN LOCK ONLY. THE PROVIDER DOES NOT SERVE TEAM TOTALS FOR PRESEASON GAMES, SO THIS SECTION IS ABSENT FROM PRESEASON PAGES ENTIRELY - NO EMPTY FRAME. LOCKED HERE SO THE FULL PAGE IS ONE DESIGN PASS. VALUES BELOW FROM THE 2024 W1 CONTROL GAME.</div>
+    <div class="kick"><h2>TEAM BOX SCORE</h2><div class="rule"></div></div>
+    <table class="tb">
+      <thead><tr><th class="l"></th><th>BAL</th><th>KC</th></tr></thead>
+      <tbody>
+        <tr><td class="l">FIRST DOWNS</td><td>24</td><td>21</td></tr>
+        <tr><td class="l">TOTAL YARDS</td><td>452</td><td>353</td></tr>
+        <tr><td class="l">PASSING</td><td>273</td><td>281</td></tr>
+        <tr><td class="l">RUSHING</td><td>179</td><td>72</td></tr>
+        <tr><td class="l">YARDS / PLAY</td><td>6.4</td><td>10.0</td></tr>
+        <tr><td class="l">3RD DOWN</td><td class="split">7-12</td><td class="split">4-9</td></tr>
+        <tr><td class="l">RED ZONE</td><td class="split">2-4</td><td class="split">1-3</td></tr>
+        <tr><td class="l">TURNOVERS</td><td>1</td><td>1</td></tr>
+        <tr><td class="l">PENALTIES</td><td class="split">5-40</td><td class="split">6-45</td></tr>
+        <tr><td class="l">POSSESSION</td><td class="split">33:43</td><td class="split">26:17</td></tr>
+      </tbody>
+    </table>
+  </div></div>
+
+  <footer>
+    SPORTSVYN IS NOT AFFILIATED WITH, ENDORSED BY, OR SPONSORED BY THE NATIONAL FOOTBALL LEAGUE, ITS TEAMS, OR ITS PLAYERS.
+  </footer>
+
+</div>
+
+<script>
+  document.querySelectorAll('.gtab').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.gtab').forEach(function(x){x.classList.remove('on');x.setAttribute('aria-selected','false')});
+      document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on')});
+      b.classList.add('on'); b.setAttribute('aria-selected','true');
+      document.getElementById('p-'+b.dataset.p).classList.add('on');
+      window.scrollTo({top: document.querySelector('.gtabs').offsetTop, behavior:'instant'});
+    });
+  });
+</script>
+</body>
+</html>

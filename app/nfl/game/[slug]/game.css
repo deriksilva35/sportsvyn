@@ -1,0 +1,212 @@
+/* Gridiron game page - transcribed from
+   docs/design/sportsvyn-gridiron-game-page-v2-tabs.html (design lock).
+
+   Ink surface, mono data, volt as MATERIAL: it is the tab underline, the left
+   rule on the brief, the leader tick and the active team chip. It is never
+   decoration and never a fill behind prose.
+
+   Colours come from the [data-surface] token block in app/globals.css rather
+   than from the mock's local :root, which is the same palette by a different
+   route. Fonts come from the next/font variables in app/layout.js - all four
+   families the lock names are already loaded for the rest of the site. */
+
+.ggame {
+  --gg-mono: var(--font-jetbrains-mono), monospace;
+  --gg-disp: var(--font-saira), sans-serif;
+  --gg-cond: var(--font-saira-cond);
+  --gg-serif: var(--font-source-serif), serif;
+  font-family: var(--gg-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+.gg-wrap { max-width: 760px; margin: 0 auto; padding: 0 16px 96px; }
+.gg-sr {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
+.gg-crumb { padding: 16px 0 0; font-size: 11px; letter-spacing: 0.12em; color: var(--muted-dim); }
+.gg-crumb a { color: var(--muted); text-decoration: none; }
+.gg-crumb a:hover { color: var(--paper); }
+
+/* ---- header band: the game, stated once ---- */
+.gg-head { padding: 22px 0 0; }
+.gg-chips { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.gg-chip { font-size: 10px; letter-spacing: 0.14em; padding: 4px 9px; font-weight: 700; }
+.gg-chip.final { background: var(--jade); color: #fff; }
+.gg-chip.pre { border: 1px solid var(--muted-dim); color: var(--muted); }
+.gg-chip.time { border: 1px solid var(--rule); color: var(--muted); font-weight: 400; }
+.gg-chip.live { background: var(--live); color: #fff; animation: gg-pulse 1.6s ease-in-out infinite; }
+@keyframes gg-pulse { 50% { opacity: 0.65; } }
+
+.gg-teamrow {
+  display: grid; grid-template-columns: 44px 1fr auto;
+  align-items: baseline; gap: 12px; padding: 5px 0;
+}
+.gg-teamrow .abbr { font-size: 12px; color: var(--muted-dim); letter-spacing: 0.1em; }
+.gg-teamrow .tname {
+  font-family: var(--gg-disp); font-weight: 700;
+  font-size: clamp(20px, 5.4vw, 28px); letter-spacing: 0.01em; line-height: 1.15;
+}
+.gg-teamrow .score {
+  font-family: var(--gg-disp); font-weight: 700;
+  font-size: clamp(26px, 6.5vw, 34px); font-variant-numeric: tabular-nums;
+}
+.gg-teamrow.loser .tname, .gg-teamrow.loser .score { color: var(--muted); }
+
+.gg-headfoot {
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule-dim);
+  font-size: 11px; letter-spacing: 0.1em; color: var(--muted-dim);
+}
+
+/* ---- section scaffolding ---- */
+.gg-sect { margin-top: 40px; }
+.gg-kick { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+.gg-kick h2 {
+  font-family: var(--gg-cond); font-weight: 600; font-size: 13px;
+  letter-spacing: 0.22em; color: var(--volt);
+}
+.gg-kick .sub { font-size: 10px; letter-spacing: 0.12em; color: var(--muted-dim); }
+.gg-kick .rule { flex: 1; height: 1px; background: var(--rule-dim); transform: translateY(-3px); }
+
+/* ---- tab rail ---- */
+.gg-tabs {
+  display: flex; gap: 2px; margin-top: 36px; border-bottom: 1px solid var(--rule);
+  position: sticky; top: 0; background: var(--ink); z-index: 5; overflow-x: auto;
+}
+.gg-tab {
+  font-family: var(--gg-cond); font-weight: 600; font-size: 13px; letter-spacing: 0.16em;
+  color: var(--muted); background: none; border: none; padding: 12px 16px 10px;
+  cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
+}
+.gg-tab.on { color: var(--paper); border-bottom-color: var(--volt); }
+.gg-tab:focus-visible { outline: 2px solid var(--volt); outline-offset: -2px; }
+.gg-panel { display: none; }
+.gg-panel.on { display: block; margin-top: 28px; }
+
+/* ---- line score ---- */
+.gg-ls { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.gg-ls th {
+  font-weight: 500; font-size: 11px; color: var(--muted-dim);
+  padding: 6px 0; text-align: right; letter-spacing: 0.1em;
+}
+.gg-ls td { padding: 8px 0; text-align: right; font-size: 14px; border-top: 1px solid var(--rule-dim); }
+.gg-ls th.t { text-align: left; color: var(--muted); font-size: 12px; letter-spacing: 0.1em; font-weight: 500; }
+.gg-ls .tot { border-left: 1px solid var(--rule); padding-left: 14px; font-weight: 700; color: var(--paper); }
+.gg-ls th.tot { color: var(--muted); }
+
+/* ---- the brief ---- */
+.gg-brief { border-left: 3px solid var(--volt); padding: 4px 0 4px 18px; }
+.gg-brief p {
+  font-family: var(--gg-serif); font-style: italic; font-size: 16.5px;
+  line-height: 1.65; color: var(--paper); margin-bottom: 1em; max-width: 60ch;
+}
+.gg-brief p:last-of-type { margin-bottom: 0; }
+.gg-brief .tag {
+  display: inline-block; margin-top: 12px; font-family: var(--gg-mono);
+  font-style: normal; font-size: 10px; letter-spacing: 0.14em; color: var(--muted-dim);
+}
+
+/* ---- scoring summary: type down the page, running score as the spine ---- */
+.gg-qtr { margin-top: 22px; }
+.gg-qtr:first-of-type { margin-top: 0; }
+.gg-qlabel { font-size: 10px; letter-spacing: 0.2em; color: var(--muted-dim); margin-bottom: 10px; }
+.gg-ev {
+  display: grid; grid-template-columns: 40px 1fr 84px; gap: 12px;
+  padding: 12px 0; border-top: 1px solid var(--rule-dim); align-items: start;
+}
+.gg-ev:last-child { border-bottom: 1px solid var(--rule-dim); }
+.gg-ev .type { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; padding-top: 2px; }
+.gg-ev .type.td { color: var(--volt); }
+.gg-ev .type.fg { color: var(--muted); }
+.gg-ev .body .team { font-size: 11px; color: var(--muted-dim); letter-spacing: 0.1em; }
+.gg-ev .body .play { font-size: 13.5px; line-height: 1.5; color: var(--paper); margin-top: 3px; }
+.gg-ev .body .clock { font-size: 10px; color: var(--muted-dim); margin-top: 4px; letter-spacing: 0.08em; }
+.gg-ev .run {
+  text-align: right; font-variant-numeric: tabular-nums; font-size: 13px;
+  color: var(--muted); padding-top: 2px; line-height: 1.5;
+}
+.gg-ev .run .lead { color: var(--paper); font-weight: 700; }
+
+/* ---- player lines ---- */
+.gg-grp { margin-top: 20px; }
+.gg-lead-grp { margin-top: 0; }
+.gg-grp h3 {
+  font-size: 11px; letter-spacing: 0.18em; color: var(--muted);
+  font-weight: 500; margin-bottom: 8px;
+}
+.gg-grp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.gg-fmt { display: flex; gap: 2px; margin-bottom: 8px; }
+.gg-fmt-b {
+  font-family: var(--gg-cond); font-weight: 600; font-size: 10px; letter-spacing: 0.12em;
+  padding: 4px 9px; border: 1px solid var(--rule); background: none;
+  color: var(--muted); cursor: pointer;
+}
+.gg-fmt-b.on { background: var(--volt); color: var(--ink); border-color: var(--volt); }
+.gg-fmt-b:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+
+.gg-teamtabs { display: flex; gap: 8px; margin: 22px 0 18px; }
+.gg-ttab {
+  font-family: var(--gg-cond); font-weight: 600; letter-spacing: 0.14em; font-size: 12px;
+  padding: 8px 14px; border: 1px solid var(--rule); color: var(--muted);
+  cursor: pointer; background: none;
+}
+.gg-ttab.on { background: var(--volt); color: var(--ink); border-color: var(--volt); }
+.gg-ttab:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+
+.gg-st { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+.gg-st th {
+  font-weight: 500; font-size: 10px; letter-spacing: 0.1em;
+  color: var(--muted-dim); text-align: right; padding: 5px 0 5px 12px;
+}
+.gg-st th.p, .gg-st td.p { text-align: left; padding-left: 0; }
+.gg-st th.l, .gg-st td.l { text-align: left; padding-left: 12px; }
+.gg-st td { padding: 7px 0 7px 12px; text-align: right; border-top: 1px solid var(--rule-dim); color: var(--paper); }
+.gg-st td.l { color: var(--muted); font-size: 12px; }
+/* The volt tick: the game leader in this table, marked in material rather than
+   in a word. */
+.gg-st .lead td.p::after {
+  content: ""; display: inline-block; width: 5px; height: 5px;
+  background: var(--volt); margin-left: 8px; transform: translateY(-2px);
+}
+
+.gg-more {
+  margin-top: 18px; font-family: var(--gg-cond); font-weight: 600; font-size: 11px;
+  letter-spacing: 0.14em; padding: 8px 14px; border: 1px solid var(--rule);
+  background: none; color: var(--muted); cursor: pointer;
+}
+.gg-more:hover { color: var(--paper); border-color: var(--muted-dim); }
+.gg-more:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+
+.gg-note { margin-top: 14px; font-size: 11px; color: var(--muted-dim); line-height: 1.6; max-width: 58ch; }
+
+/* ---- team box (REG only) ---- */
+.gg-tb { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+.gg-tb th { font-weight: 500; font-size: 10px; letter-spacing: 0.1em; color: var(--muted-dim); padding: 6px 0; text-align: right; }
+.gg-tb th.l { text-align: left; }
+.gg-tb td { padding: 8px 0; border-top: 1px solid var(--rule-dim); text-align: right; }
+.gg-tb td.l { text-align: left; color: var(--muted); font-size: 12px; letter-spacing: 0.04em; }
+
+/* ---- scheduled games ---- */
+.gg-facts { display: grid; gap: 10px; }
+.gg-facts div { display: flex; gap: 14px; align-items: baseline; }
+.gg-facts dt { font-size: 10px; letter-spacing: 0.14em; color: var(--muted-dim); min-width: 60px; }
+.gg-facts dd { font-size: 14px; color: var(--paper); }
+
+.gg-foot {
+  margin-top: 72px; padding-top: 18px; border-top: 1px solid var(--rule);
+  font-size: 10px; letter-spacing: 0.1em; color: var(--muted-dim); line-height: 1.8;
+}
+
+@media (max-width: 560px) {
+  .gg-ev { grid-template-columns: 32px 1fr 72px; gap: 8px; }
+  .gg-st { font-size: 12px; }
+  .gg-st th, .gg-st td { padding-left: 8px; }
+  .gg-grp-head { flex-direction: column; align-items: flex-start; gap: 2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gg-chip.live { animation: none; }
+}

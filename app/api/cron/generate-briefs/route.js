@@ -26,47 +26,79 @@
  *      and gets retried on the next sweep.
  *
  * Tier-1-only contract (spec brand-safety commitment #2):
- *   - Imports ONLY generateBriefFromDb from lib/aiBrief.js.
+ *   - Imports ONLY brief generators (lib/aiBrief.js for soccer,
+ *     lib/gridiron/gameBrief.js for the NFL).
  *   - Writes ONLY to match_briefs.
  *   - Zero references to match_drafts, aiDraft, Tavily, or any editorial
  *     coverage flag. Tier 2 has its own separate cron path (not built).
  *
  * LEAGUE ALLOWLIST. The candidate predicate had no league filter, which was
  * correct while `matches` held nothing but soccer and became a live hazard the
- * moment it did not. PROD now carries 285 final NFL games and 934 final CFB
- * games, and a full 2026 schedule on top; the first real gridiron kickoff (CFB
- * Week 0, Aug 29) would put a football game inside the 6-hour window and this
- * cron would brief it within two minutes.
+ * moment it did not. PROD carries 285 final NFL games and 934 final CFB games,
+ * and a full 2026 schedule on top; the first real gridiron kickoff (CFB Week 0,
+ * Aug 29) would put a football game inside the 6-hour window.
  *
- * It would not crash - aiBrief always produces a renderable row - and that is
- * the problem. assembleEnvelopeFromDb reads match_events, match_lineups and
- * match_statistics, which have ZERO gridiron rows, so the model would receive a
- * score, two team names, and three empty arrays, and the deterministic fallback
- * would write a brief with nothing in it. A thin brief that renders is worse
- * than no brief: it looks like coverage.
+ * It would not have crashed - aiBrief always produces a renderable row - and
+ * that was the problem. assembleEnvelopeFromDb reads match_events,
+ * match_lineups and match_statistics, which have ZERO gridiron rows, so the
+ * model would have received a score, two team names, and three empty arrays,
+ * and the deterministic fallback would have written a brief with nothing in it.
+ * A thin brief that renders is worse than no brief: it looks like coverage.
  *
- * The allowlist is explicit and positive rather than a "not nfl, not cfb"
- * exclusion, so a league added later is silently OUT until somebody decides it
- * is in. Gridiron briefs are a designed build for when live play-by-play exists
- * for those leagues, not something this sweep should back into.
+ * WHAT CHANGED FOR THE NFL: a gridiron envelope now exists, built from stored
+ * scoring plays and player lines rather than from three empty soccer tables. So
+ * 'nfl' joins the allowlist and gets routed to it. CFB does not - its feed
+ * serves no scoring plays, so its envelope would still be the thin one.
+ *
+ * The allowlist stays explicit and positive rather than a "not cfb" exclusion,
+ * so a league added later is silently OUT until somebody decides it is in.
+ *
+ * SEPARATELY GATED. GRIDIRON_BRIEFS_ENABLED must be '1' for a football game to
+ * be a candidate at all. Shipping the code and turning the writer on are two
+ * decisions, and only one of them is a deploy.
  */
 
 import { sql } from '@/lib/db';
 import { generateBriefFromDb } from '@/lib/aiBrief';
+import { generateGameBrief } from '@/lib/gridiron/gameBrief';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 const PER_SWEEP_CAP = 5;
 
-// Every league whose matches carry the event/lineup/statistic rows the Tier 1
-// envelope reads. Adding a slug here is a statement that its data exists.
+// Every league whose matches carry the rows a Tier 1 envelope reads. Adding a
+// slug here is a statement that its data exists.
+//
+// 'nfl' JOINS ON EVIDENCE, not on schedule. It reads a different envelope
+// (lib/gridiron/gameBrief.js) built from gridiron_game_events and
+// gridiron_player_lines - real scoring plays and real player lines, both proven
+// against served preseason payloads.
+//
+// 'cfb' STAYS OUT. The college feed has no scoring-play source, so its envelope
+// would be a score and two team names: the empty-brief failure this allowlist
+// was created to prevent, on 934 final games.
 export const BRIEF_LEAGUE_SLUGS = [
   'fifa-wc-2026',
   'international-friendlies',
   'concacaf-gold-cup',
   'africa-cup-of-nations',
+  'nfl',
 ];
+
+// Which envelope a league's games get. Soccer is the default because it is what
+// every other slug above is.
+const GRIDIRON_SLUGS = new Set(['nfl']);
+
+// The enablement switch. Off by default: an unset variable must never mean
+// "start writing", and the environment where this is first true is a decision
+// somebody makes, not a side effect of a deploy.
+const gridironBriefsEnabled = () => process.env.GRIDIRON_BRIEFS_ENABLED === '1';
+
+/** The slugs eligible on THIS sweep, after the enablement switch. */
+export function activeLeagueSlugs(enabled) {
+  return enabled ? BRIEF_LEAGUE_SLUGS : BRIEF_LEAGUE_SLUGS.filter((s) => !GRIDIRON_SLUGS.has(s));
+}
 
 export async function GET(request) {
   const authHeader = request.headers.get('authorization');
@@ -77,11 +109,13 @@ export async function GET(request) {
     return new Response('Unauthorized', { status: 401 });
   }
 
+  const slugs = activeLeagueSlugs(gridironBriefsEnabled());
+
   const candidates = await sql`
-    SELECT m.id, m.slug
+    SELECT m.id, m.slug, l.slug AS league_slug
       FROM matches m
       JOIN leagues l ON l.id = m.league_id
-     WHERE l.slug = ANY(${BRIEF_LEAGUE_SLUGS}::text[])
+     WHERE l.slug = ANY(${slugs}::text[])
        AND m.status = 'final'
        AND m.kickoff_at > now() - interval '6 hours'
        AND NOT EXISTS (
@@ -96,7 +130,19 @@ export async function GET(request) {
 
   for (const m of candidates) {
     try {
-      const brief = await generateBriefFromDb(m.id);
+      const brief = GRIDIRON_SLUGS.has(m.league_slug)
+        ? await generateGameBrief(m.id)
+        : await generateBriefFromDb(m.id);
+
+      // A gridiron game whose detail fetch has not landed yet has no scoring
+      // plays to describe. generateGameBrief returns null rather than briefing
+      // a score, and the candidate stays in the set for the next sweep - which
+      // is what happens for the few minutes between a game going final and its
+      // final detail fetch.
+      if (!brief) {
+        results.push({ match_id: m.id, slug: m.slug, outcome: 'skipped-no-data' });
+        continue;
+      }
 
       const inserted = await sql`
         INSERT INTO match_briefs (
@@ -150,6 +196,7 @@ export async function GET(request) {
     candidates: candidates.length,
     inserted: results.filter((r) => r.outcome === 'inserted').length,
     skipped_conflict: results.filter((r) => r.outcome === 'skipped-conflict').length,
+    skipped_no_data: results.filter((r) => r.outcome === 'skipped-no-data').length,
     errors: results.filter((r) => r.outcome === 'error').length,
     results,
   });

@@ -160,6 +160,11 @@
    fourth - there is no gridiron match page - so the expand now shows the one
    thing we actually store: the line score. */
 .gi-detail { border-top: 1px solid var(--rule); padding: 12px 13px 13px; background: var(--ink); }
+.gi-full {
+  display: inline-block; margin-top: 12px; font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--volt); text-decoration: none;
+}
+.gi-full:hover { text-decoration: underline; }
 
 /* quarter grid - a real table, mono, tabular figures so columns align */
 .gi-ls { width: 100%; border-collapse: collapse; font-family: var(--font-jetbrains-mono), monospace; font-variant-numeric: tabular-nums; }

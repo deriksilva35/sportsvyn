@@ -19,10 +19,25 @@
  * off. generateMetadata below gives each fixture its own title and description,
  * matching what /team/[slug] and /player/[slug] already do.
  *
- * Serves BOTH codes: soccer rows and gridiron (NFL/CFB) rows both resolve here.
+ * Serves BOTH codes: soccer rows and gridiron (NFL/CFB) rows both resolve here -
+ * with ONE exception. An NFL slug is redirected to /nfl/game/[slug], which is
+ * that game's real page. This route's furniture is soccer's: a lineups pitch, a
+ * Watch Score, form guides built from soccer results. Rendering a football game
+ * inside it produced a page of instruments that did not apply, and every link
+ * anyone has already shared points here.
+ *
+ * The redirect is a 308, not the 301 in the brief. permanentRedirect is what a
+ * Server Component can emit, and 308 is its permanent form - same cacheable
+ * "this moved" to a crawler, with the method preserved. A literal 301 would
+ * need a next.config rule, and config cannot see which league a slug belongs
+ * to.
+ *
+ * CFB stays here. There is no /cfb/game route: the college feed serves no
+ * scoring plays and no player lines, so a game page for it would be a header
+ * and a line score - less than this route already shows.
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { sql } from '@/lib/db';
 import SiteHeaderServer from '@/components/SiteHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
@@ -87,6 +102,7 @@ async function getMatchBySlug(slug) {
       m.home_team_id, m.away_team_id, m.home_score, m.away_score,
       m.home_penalties, m.away_penalties,
       m.venue, m.external_ids,
+      l.slug                AS league_slug,
       h.name                AS home_name,
       h.slug                AS home_slug,
       h.abbreviation        AS home_abbreviation,
@@ -98,6 +114,7 @@ async function getMatchBySlug(slug) {
       a.flag_color_primary  AS away_flag_color,
       a.flag_svg_path       AS away_flag_svg
     FROM matches m
+    LEFT JOIN leagues l ON l.id = m.league_id
     LEFT JOIN teams h ON h.id = m.home_team_id
     LEFT JOIN teams a ON a.id = m.away_team_id
     WHERE m.slug = ${slug}
@@ -364,6 +381,10 @@ export default async function MatchPage({ params }) {
   const { slug } = await params;
   const match = await getMatchBySlug(slug);
   if (!match) notFound();
+  // Before any of the soccer readers run. permanentRedirect throws, so nothing
+  // below is reached, and no gridiron game pays for eleven queries it will
+  // never render.
+  if (match.league_slug === 'nfl') permanentRedirect(`/nfl/game/${slug}`);
 
   const [watchScore, broadcasters, preview, homeForm, awayForm, winProbability, brief, oddsDetail, lineups, keyMoments, matchStatistics] = await Promise.all([
     getWatchScore(match.id),

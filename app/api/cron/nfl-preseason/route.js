@@ -13,9 +13,17 @@
  *   cold       nothing hot, synced recently -> no request, no row
  *   capped     the day's request count has hit DAILY_REQUEST_CAP -> refuse
  *
- * ONE REQUEST PER SWEEP, ALWAYS. The provider's /games takes a date, so a
- * 16-game Saturday costs exactly what a 3-game Thursday costs. Per-game polling
- * would multiply the budget by the slate size for no extra information.
+ * ONE REQUEST PER SWEEP FOR THE SCORES, ALWAYS. The provider's /games takes a
+ * date, so a 16-game Saturday costs exactly what a 3-game Thursday costs.
+ * Per-game polling would multiply the budget by the slate size for no extra
+ * information.
+ *
+ * GAME DETAIL IS THE EXCEPTION, and it is priced as one. The scoring summary
+ * and player lines behind /nfl/game/[slug] are per-game and two requests each,
+ * so they run on their own ten-minute cadence (detailTargets), at most four
+ * games a sweep, and only for games that are actually live - plus exactly one
+ * fetch when a game flips to final, which is the version that stays on the page.
+ * Sat 22 Aug prices at 1,328 requests all in; see DAILY_REQUEST_CAP.
  *
  * THE BUDGET IS LEDGERED, NOT ESTIMATED. Every sweep that spends a request
  * writes a sync_runs row carrying `requests`, and the next sweep counts today's
@@ -35,7 +43,8 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { importApiSportsGames } from '@/lib/gridiron/apiSportsImport';
-import { sweepDecision, slateDateEt, DAILY_REQUEST_CAP } from '@/lib/pollers/preseasonWindow';
+import { sweepDecision, slateDateEt, detailTargets, DAILY_REQUEST_CAP } from '@/lib/pollers/preseasonWindow';
+import { fetchGameDetail } from '@/lib/gridiron/gameDetail';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -68,10 +77,43 @@ async function lastSyncAt() {
 // else until there is a reason to spend a request.
 async function todaysPreseason(dateEt) {
   return sql`
-    SELECT m.kickoff_at AS "kickoffAt", m.status
+    SELECT m.id, m.kickoff_at AS "kickoffAt", m.status,
+           m.metadata->'detail'->>'at'                       AS "detailAt",
+           (m.metadata->'detail'->>'final')::boolean         AS "detailFinal"
       FROM matches m JOIN leagues l ON l.id = m.league_id
      WHERE l.slug = 'nfl' AND m.season_phase = 'PRE'
        AND (m.kickoff_at AT TIME ZONE 'America/New_York')::date = ${dateEt}::date`;
+}
+
+/**
+ * The per-game detail pass. Runs AFTER the score sweep, on the freshly-written
+ * statuses, so a game that flipped to final this minute gets its final fetch
+ * this minute rather than next.
+ *
+ * Every fetch is individually guarded. fetchGameDetail already swallows a
+ * per-endpoint failure into its summary, so this catch is for the row read
+ * around it - and either way one game's bad night must not cost the other nine
+ * theirs, nor abort the sweep that already spent its score request.
+ */
+async function detailPass({ dateEt, budgetLeft }) {
+  if (budgetLeft <= 0) return { requests: 0, games: 0, skipped: 'no-budget' };
+  const games = await todaysPreseason(dateEt);
+  const targets = detailTargets({ games, now: new Date() });
+  let requests = 0;
+  const done = [];
+  for (const t of targets) {
+    // Two requests a game. Stop before overrunning the cap rather than after.
+    if (requests + 2 > budgetLeft) break;
+    try {
+      const res = await fetchGameDetail(t.id);
+      requests += res.requests ?? 0;
+      done.push({ id: t.id, final: t.final, events: res.events, lines: res.playerLines, errors: res.errors });
+    } catch (err) {
+      console.error(`nfl-preseason: detail fetch failed for match ${t.id} -`, err);
+      done.push({ id: t.id, final: t.final, error: String(err?.message ?? err) });
+    }
+  }
+  return { requests, games: done.length, targets: targets.length, done };
 }
 
 export async function GET(request) {
@@ -113,6 +155,20 @@ export async function GET(request) {
   }
 
   const res = outcome.result;
+
+  // The detail pass rides the same invocation and is ledgered into the same
+  // day's count, because it draws on the same budget.
+  const detail = await detailPass({
+    dateEt,
+    budgetLeft: DAILY_REQUEST_CAP - (spent + 1),
+  });
+  if (detail.requests > 0) {
+    await recordDecision(sql, {
+      source: SOURCE, kind: 'detail', ok: true,
+      summary: { dateEt, requests: detail.requests, games: detail.games, done: detail.done },
+    });
+  }
+
   const unknown = res.summary?.unknownStatus ?? 0;
   const unresolved = res.summary?.unresolvedTeams ?? 0;
   if (!res.ok || unknown > 0 || unresolved > 0) {
@@ -125,6 +181,7 @@ export async function GET(request) {
 
   return Response.json({
     dateEt, decision: decision.reason, ok: res.ok, id: res.id,
-    requestsToday: spent + 1, cap: DAILY_REQUEST_CAP, summary: res.summary,
+    requestsToday: spent + 1 + detail.requests, cap: DAILY_REQUEST_CAP,
+    summary: res.summary, detail,
   });
 }

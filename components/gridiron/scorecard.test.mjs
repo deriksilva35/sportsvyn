@@ -16,6 +16,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Pure and dependency-free, so it imports straight in - unlike the component
+// that uses it, which is a client module behind the @/ alias.
+import { distinctLabel } from '../../lib/gridiron/labels.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..');
@@ -92,14 +95,27 @@ test('the winner is white and the loser is muted', () => {
 
 test('the foot keeps the scope and adds the name and the city', () => {
   assert.match(card, /\{g\.leagueSlug\.toUpperCase\(\)\} · \{g\.seasonPhase\} W\{g\.week\}/, 'NFL · PRE W0 stays');
-  assert.match(card, /\[distinctLabel\(g\), g\.venueCity\]\.filter\(Boolean\)\.join\(' · '\)/);
+  assert.match(card, /\[distinctLabel\(g\.weekLabel\), g\.venueCity\]\.filter\(Boolean\)\.join\(' · '\)/);
 });
 
 test('a mechanical "Week 1" label is suppressed; a real name is not', () => {
   // Showing "Week 1" beside "PRE W1" is the same fact twice. "Hall of Fame
   // Weekend" and "Wild Card" are names a week number cannot carry.
-  const fn = card.slice(card.indexOf('function distinctLabel'), card.indexOf('function Status'));
-  assert.match(fn, /\/\^week\\s\+\\d\+\$\/i\.test/);
+  //
+  // The rule moved out of this component when /nfl/game/[slug] needed the same
+  // one for its header foot. It is asserted here against the real function
+  // rather than against the card's source, because a second copy that drifted
+  // would still have matched a regex over this file.
+  assert.match(card, /import \{ distinctLabel \} from '@\/lib\/gridiron\/labels'/,
+    'one definition, imported - not reimplemented per surface');
+  assert.equal(distinctLabel('Week 1'), null);
+  assert.equal(distinctLabel('week 12'), null);
+  assert.equal(distinctLabel('  Week 3  '), null, 'whitespace does not smuggle it through');
+  assert.equal(distinctLabel('Hall of Fame Weekend'), 'Hall of Fame Weekend');
+  assert.equal(distinctLabel('Wild Card'), 'Wild Card');
+  assert.equal(distinctLabel('Week 1 Special'), 'Week 1 Special', 'only the bare form is suppressed');
+  assert.equal(distinctLabel(null), null);
+  assert.equal(distinctLabel(''), null);
 });
 
 test('the reader surfaces the fields the foot and the pane need', () => {
