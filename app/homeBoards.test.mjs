@@ -78,40 +78,51 @@ test('each board read is caught independently and cannot fail the page', () => {
 
 test('a dark league yields no empty cell, and two dark leagues yield no section', () => {
   // The filter mirrors EditorialBoard's own guard (it returns null for an empty
-  // board), so the grid never holds a cell the component refused to fill.
+  // board), so nothing renders a slot the component refused to fill.
   assert.match(page, /\.filter\(\(b\) => b\.board\?\.entries\?\.length\)/,
-    'only boards with entries reach the grid');
+    'only boards with entries render');
   assert.match(page, /if \(live\.length === 0\) return null/,
     'both dark -> the section is absent, not an empty frame');
-  assert.match(page, /live\.length === 1 \? ' dc-boards--solo' : ''/,
-    'one dark -> the survivor takes the full width');
-  assert.match(css, /\.dc-boards--solo \{ grid-template-columns: minmax\(0, 1fr\); \}/,
-    'and the solo modifier must exist in the stylesheet');
+  // The solo modifier is retired with the two-up grid. The boards now STACK in
+  // the right rail, so a surviving board already occupies the full column
+  // width and there is no half-empty row for it to grow into.
+  assert.ok(!/dc-boards--solo/.test(page), 'no width modifier - stacked boards are already full width');
 });
 
 // ---------------------------------------------------------------------------
 // Placement and layout
 // ---------------------------------------------------------------------------
 
-test('the boards sit after the Movement Card and before Today’s Reads', () => {
+test('THE BOARDS MOVED TO THE RAIL, below the slate', () => {
+  // They used to sit inside the Daily Card, two-up, between the Movement Card
+  // and Today's Reads. The homepage went two-column, and the rail is where the
+  // instruments live now: today's games first, because it is the most
+  // perishable thing on the page, then the two standings reads.
   const at = (needle) => {
     const i = page.indexOf(needle);
     assert.ok(i > -1, `${needle} must be on the page`);
     return i;
   };
-  const movement = at('<MovementCard');
-  const boards = at('<RankingBoardsSection');
+  const card = at('<article className="daily-card">');
+  const rail = at('<aside className="right-rail home-rail">');
+  const slate = at('<TodaysGames');
+  const boards = at('<RailBoards');
+  assert.ok(card < rail, 'the card leads the DOM, so the phone stack puts it first');
+  assert.ok(rail < slate && slate < boards, 'inside the rail: slate, then boards');
+  // And they are out of the card entirely.
   const reads = at('<TodaysReadsSection');
-  assert.ok(movement < boards, 'the Movement Card leads');
-  assert.ok(boards < reads, 'the boards come before the reads');
+  assert.ok(reads < rail, 'Today\'s Reads is still card content, and the rail follows the card');
 });
 
-test('two equal columns on desktop, stacked on phones', () => {
-  assert.match(css, /\.dc-boards \{[^}]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/,
-    'equal columns - a bare 1fr floors at min-content and a long team name would widen one board');
-  const stack = css.slice(css.indexOf('@media (max-width: 760px)'));
-  assert.match(stack.slice(0, 200), /\.dc-boards \{ grid-template-columns: minmax\(0, 1fr\)/,
-    'the boards stack before the card itself narrows');
+test('stacked in a 340px rail, not two-up', () => {
+  // Side by side inside the rail would give each board about 165px, narrower
+  // than a team name plus a record.
+  assert.ok(!/dc-boards/.test(page), 'the two-up grid is gone from the page');
+  assert.match(css, /\.home-rail \{[\s\S]*?flex-direction: column;/,
+    'the rail stacks its units');
+  assert.match(css, /\.home-main--football \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) 340px;/);
+  // The 760px rule still governs the units themselves once stacked.
+  assert.match(css, /@media \(max-width: 760px\)/);
 });
 
 test('the board inherits mono, as it does under the .gi shell', () => {

@@ -3,7 +3,7 @@
 // the FULL board: editorial boards via getEditorialBoard, the CFB Playoff Picture
 // via the same market-derived title-odds reader.
 
-import Wordmark from '@/components/gridiron/Wordmark';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { getEditorialBoard, getLeagueIdBySlug } from '@/lib/gridiron/readers';
 import { getTitleContenders } from '@/lib/gridiron/oddsReader';
 import { RANKING_TABS, resolveActiveTab } from '@/lib/gridiron/rankingsHub';
@@ -26,17 +26,7 @@ export default async function RankingsHub({ leagueSlug, leagueLabel, searchParam
 
   return (
     <div className="gi" data-surface="paper">
-      <header className="gi-head">
-        <Wordmark href={`/${leagueSlug}`} />
-        <nav className="gi-head-nav">
-          <a href="/nfl">TODAY</a>
-          <a href="/scores">SCORES</a>
-          <a className={leagueSlug === 'nfl' ? 'active' : ''} href="/nfl">NFL</a>
-          <a className={leagueSlug === 'cfb' ? 'active' : ''} href="/cfb">CFB</a>
-          <a href="/world-cup-2026/bracket">SOCCER</a>
-        </nav>
-        <div className="gi-head-right"><a href="/my">MY SPORTSVYN</a><span className="gi-member">MEMBER</span></div>
-      </header>
+      <GlobalHeaderServer activeNav={leagueSlug} />
 
       <nav className="gi-subnav">
         <a href={`/${leagueSlug}`}>Today</a>

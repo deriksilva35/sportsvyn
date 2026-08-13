@@ -12,7 +12,7 @@
  * Today's Numbers (curated cards) and the per-row written reads are later slices.
  */
 
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import {
   getModelBoard, getTotalsBoard, getScorerPrices, getBoardUpdatedAt, MODEL_PARAMS,
 } from '@/lib/matchProbability';
@@ -197,7 +197,7 @@ export default async function MarketPage() {
 
   return (
     <>
-      <SiteHeaderServer activeNav="market" />
+      <GlobalHeaderServer activeNav="market" />
       <main className="market-page">
 
         <div className="hero-kicker">The Market · {round}</div>

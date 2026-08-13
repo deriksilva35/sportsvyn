@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
 import Wordmark from '@/components/Wordmark';
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import BackToAppBar from '@/components/BackToAppBar';
 import {
   getTeamBySlug,
@@ -105,7 +105,7 @@ export default async function TeamPage({ params }) {
   return (
     <>
       <BackToAppBar />
-      <SiteHeaderServer />
+      <GlobalHeaderServer />
 
       <main className="page-shell">
         <div className="breadcrumb">

@@ -28,7 +28,7 @@ import { getResolvedLayout } from '@/lib/dashboardLayout';
 import { PANELS } from '@/lib/panels';
 import { PANEL_BINDINGS } from '@/lib/panelLoaders';
 
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import Wordmark from '@/components/Wordmark';
 import DashboardCustomizer from './CustomizeClient';
@@ -101,7 +101,7 @@ export default async function MyPage() {
   if (teamCount + playerCount === 0) {
     return (
       <>
-        <SiteHeaderServer activeNav="my" />
+        <GlobalHeaderServer activeNav="my" />
         <main className="my-shell">
           <PageHeader teamCount={0} playerCount={0} />
           <EmptyState />
@@ -159,7 +159,7 @@ export default async function MyPage() {
 
   return (
     <>
-      <SiteHeaderServer activeNav="my" />
+      <GlobalHeaderServer activeNav="my" />
       <main className="my-shell">
         <PageHeader teamCount={teamCount} playerCount={playerCount} />
         <DashboardCustomizer panels={panels} initialActive={resolved} />

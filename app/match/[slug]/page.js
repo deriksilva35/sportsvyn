@@ -39,7 +39,7 @@
 
 import { notFound, permanentRedirect } from 'next/navigation';
 import { sql } from '@/lib/db';
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import MatchMetaStrip from '@/components/match/MatchMetaStrip';
 import TeamsHeader from '@/components/match/TeamsHeader';
@@ -431,7 +431,7 @@ export default async function MatchPage({ params }) {
 
   return (
     <>
-      <SiteHeaderServer />
+      <GlobalHeaderServer />
 
       <main className="match-page">
         <div className="breadcrumb">

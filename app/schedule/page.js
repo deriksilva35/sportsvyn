@@ -15,7 +15,7 @@
  */
 
 import { auth } from '@/auth';
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import {
   readFixturesByPtDay,
@@ -86,7 +86,7 @@ export default async function SchedulePage({ searchParams }) {
 
   return (
     <>
-      <SiteHeaderServer activeNav="schedule" />
+      <GlobalHeaderServer activeNav="schedule" />
       <main className="schedule-wrap">
         <ScheduleClient
           fixtures={fixturesWithGoals}

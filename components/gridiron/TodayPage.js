@@ -2,7 +2,7 @@
 // Today shells. Paper ground (data-surface="paper") with an ink instrument block
 // (the week slate) sitting on it, per the Surface Rule. Local ink header + sport
 // sub-nav; NO site header. DEV reads only.
-import Wordmark from '@/components/gridiron/Wordmark';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate, getStandings, getLeagueIdBySlug, getEditorialBoard, getMarketMovers, getUpsetWatch } from '@/lib/gridiron/readers';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { resolveShellMode } from '@/lib/shell/shell';
@@ -90,17 +90,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
 
   return (
     <div className="gi" data-surface="paper">
-      <header className="gi-head">
-        <Wordmark href={`/${leagueSlug}`} />
-        <nav className="gi-head-nav">
-          <a href="/nfl">TODAY</a>
-          <a href="/scores">SCORES</a>
-          <a className={leagueSlug === 'nfl' ? 'active' : ''} href="/nfl">NFL</a>
-          <a className={leagueSlug === 'cfb' ? 'active' : ''} href="/cfb">CFB</a>
-          <a href="/world-cup-2026/bracket">SOCCER</a>
-        </nav>
-        <div className="gi-head-right"><a href="/my">MY SPORTSVYN</a><span className="gi-member">MEMBER</span></div>
-      </header>
+      <GlobalHeaderServer activeNav={leagueSlug} />
 
       <nav className="gi-subnav">
         {tabs.map((t) => <a key={t.label} className={t.active ? 'active' : ''} href={t.href}>{t.label}</a>)}

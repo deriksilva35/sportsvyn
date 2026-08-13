@@ -13,7 +13,7 @@
 // force-dynamic because the board reflects the morning's snapshot and the
 // running draft corpus; a statically cached copy would go stale by a day.
 
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import MovementBoard from '@/components/fantasy/MovementBoard';
 import {
@@ -76,7 +76,7 @@ export default async function FantasyMovementBoard({ searchParams }) {
 
   return (
     <div data-surface="ink">
-      <SiteHeaderServer activeNav="fantasy" />
+      <GlobalHeaderServer activeNav="fantasy" />
       <div className="fb-wrap">
         <div className="fb-head">
           <div>

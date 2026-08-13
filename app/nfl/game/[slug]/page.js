@@ -23,7 +23,7 @@ import { lineScoreGrid } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
 import { getBriefForMatch } from '@/lib/gridiron/gameBrief';
 import GameTabs from '@/components/gridiron/GameTabs';
-import Wordmark from '@/components/gridiron/Wordmark';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import '@/components/gridiron/gridiron.css';
 import './game.css';
 
@@ -94,14 +94,7 @@ export default async function GamePage({ params }) {
 
   return (
     <div className="gi ggame" data-surface="ink">
-      <header className="gi-head">
-        <Wordmark />
-        <nav className="gi-head-nav">
-          <Link href="/scores">Scores</Link>
-          <Link href="/nfl" className="active">NFL</Link>
-          <Link href="/cfb">CFB</Link>
-        </nav>
-      </header>
+      <GlobalHeaderServer activeNav="nfl" />
 
       <div className="gg-wrap">
         <div className="gg-crumb">

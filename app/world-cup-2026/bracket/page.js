@@ -27,7 +27,7 @@
 
 import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import BracketTabBar from '@/components/bracket/BracketTabBar';
 import {
@@ -225,7 +225,7 @@ export default async function BracketPage() {
 
   return (
     <>
-      <SiteHeaderServer activeNav="bracket" />
+      <GlobalHeaderServer activeNav="bracket" />
 
       <main className="bracket-page">
         <div className="breadcrumb">

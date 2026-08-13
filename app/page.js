@@ -21,7 +21,7 @@
  * deflated frames. Today's Reads is the live example: empty means absent.
  */
 
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 
 import { toPtIsoDate } from '@/lib/scheduleData';
@@ -34,7 +34,8 @@ import MovementCard from '@/components/fantasy/MovementCard';
 import { getMovementCard } from '@/lib/fantasy/movement';
 import '@/components/fantasy/movementCard.css';
 import EditorialBoard from '@/components/gridiron/EditorialBoard';
-import { getEditorialBoard } from '@/lib/gridiron/readers';
+import TodaysGames from '@/components/home/TodaysGames';
+import { getEditorialBoard, getSlateByDate } from '@/lib/gridiron/readers';
 import { boardHref } from '@/lib/gridiron/rankingsHub';
 import '@/components/gridiron/gridiron.css';
 import { resolveShellMode } from '@/lib/shell/shell';
@@ -138,17 +139,27 @@ const HOME_BOARDS = [
   { key: 'cfb', title: 'The Sportsvyn 25 · Top 5', href: boardHref('cfb', 'top25') },
 ];
 
-function RankingBoardsSection({ boards }) {
+/**
+ * The two boards, now STACKED IN THE RAIL rather than side by side in the card.
+ *
+ * They are the same instrument in the same preview mode - only the column
+ * changed. Side by side inside a 360px rail would give each board about 165px,
+ * which is narrower than a team name plus a record.
+ *
+ * A board with no entries does not render, and if both are dark the section
+ * returns null rather than leaving two headings over nothing.
+ */
+function RailBoards({ boards }) {
   const live = HOME_BOARDS
     .map((b) => ({ ...b, board: boards?.[b.key] ?? null }))
     .filter((b) => b.board?.entries?.length);
   if (live.length === 0) return null;
   return (
-    <div className={`dc-boards${live.length === 1 ? ' dc-boards--solo' : ''}`}>
+    <>
       {live.map((b) => (
         <EditorialBoard key={b.key} title={b.title} board={b.board} preview href={b.href} />
       ))}
-    </div>
+    </>
   );
 }
 
@@ -267,7 +278,20 @@ export default async function HomePage() {
   // and the daily-card intro - are gone from this page. The tournament is
   // finished; those units would render frozen July data under today's date.
   // Their modules are untouched and still serve the /world-cup-2026 routes.
-  const [todaysReads, followedSet, movement, nflBoard, cfbBoard] = await Promise.all([
+  // The sidebar's slate is EASTERN, not Pacific. The page's own date label is
+  // PT (the Daily Card is written on Derik's clock), but a football day is an
+  // ET day everywhere else in this codebase - /scores, the pollers, the week
+  // resolver - and a 10pm PT Thursday kickoff is already Friday in PT. Reading
+  // the slate in PT would have shown tomorrow's games under today's heading for
+  // three hours every evening.
+  const etDay = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(now);
+  const etLabel = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric',
+  }).format(now);
+
+  const [todaysReads, followedSet, movement, nflBoard, cfbBoard, slate] = await Promise.all([
     getTodaysReads({ ptDay, limit: 4, leagueSlugs: FOOTBALL_READS_SLUGS }),
     getFollowedTeamIds(userId),
     // Same call the /nfl entry card makes. Null rather than a thrown page if
@@ -278,19 +302,26 @@ export default async function HomePage() {
     // down, and neither may take the page down.
     getEditorialBoard('nfl-power', 'nfl').catch(() => null),
     getEditorialBoard('cfb-top25', 'cfb').catch(() => null),
+    // One read for both leagues. Null on failure: the sidebar loses a unit, the
+    // page does not lose a column.
+    getSlateByDate(etDay).catch(() => null),
   ]);
 
 
   return (
     <>
-      <SiteHeaderServer activeNav="home" />
+      <GlobalHeaderServer activeNav="home" />
 
+      {/* TWO COLUMNS AGAIN. The football homepage ran full width because the
+          World Cup rail's units - live scores, group standings, tournament
+          rankings - had no football equivalent, and an empty rail is worse than
+          no rail. All three now exist: a gridiron slate, an NFL power board and
+          the Sportsvyn 25. The rail comes back because it has something to say.
+
+          DOM ORDER IS THE MOBILE STACK: card, then sidebar. Below 1024px the
+          grid collapses and the sidebar falls under the card rather than above
+          it, which keeps the Daily Card the first thing on a phone. */}
       <main className="home-main home-main--football">
-        {/* SINGLE COLUMN. The World Cup homepage was a 2/3 + 1/3 grid whose
-            right rail carried live scores, group standings and tournament
-            rankings. None of those have a football equivalent today, and an
-            empty rail is worse than no rail, so the card runs full width and
-            the page reads top to bottom. */}
         <article className="daily-card">
           <DailyCardHeader ptDateLabel={ptDateLabel} />
           <DailyCardByline ptDateLabel={ptDateLabel} />
@@ -309,17 +340,19 @@ export default async function HomePage() {
               frame. */}
           {movement ? <MovementCard card={movement} /> : null}
 
-          {/* Both leagues' Top 5, side by side on desktop and stacked on
-              phones. Same instrument as the /nfl and /cfb Today pages, in
-              preview mode, each linking out to its own full board. */}
-          <RankingBoardsSection boards={{ nfl: nflBoard, cfb: cfbBoard }} />
-
           {/* Renders nothing at all when there are no reads for the day - no
               placeholder, no deflated section. */}
           <TodaysReadsSection reads={todaysReads} followedSet={followedSet} />
 
           <SeasonStrip />
         </article>
+
+        <aside className="right-rail home-rail">
+          {/* Absent entirely on an empty day - TodaysGames returns null and the
+              rail closes up. No frame, no "no games today". */}
+          <TodaysGames slate={slate} label={etLabel} />
+          <RailBoards boards={{ nfl: nflBoard, cfb: cfbBoard }} />
+        </aside>
       </main>
 
       <SubscribeBand shell={isShell} />

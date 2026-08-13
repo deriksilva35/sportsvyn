@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { getArticleBySlug } from '@/lib/articles';
 import { normalizeArticle } from '@/lib/articleReader';
@@ -44,7 +44,7 @@ export default async function ArticlePage({ params }) {
 
   return (
     <>
-      <SiteHeaderServer />
+      <GlobalHeaderServer />
       <main className="article-wrap">
         <article className="article-col">
           {art.kicker ? <span className="article-kicker">{art.kicker}</span> : null}

@@ -22,7 +22,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import FlagSlot from '@/components/FlagSlot';
 import { getCurrentEdition, getRankingsForPage, getTotalFinalsCount } from '@/lib/rankings';
@@ -175,7 +175,7 @@ export default async function PowerRankingsLeafPage() {
   if (!edition || allRows.length === 0) {
     return (
       <>
-        <SiteHeaderServer activeNav="rankings" />
+        <GlobalHeaderServer activeNav="rankings" />
         <main className="rankings-wrap">
           <header className="hero">
             <div className="kicker">Power Rankings</div>
@@ -211,7 +211,7 @@ export default async function PowerRankingsLeafPage() {
 
   return (
     <>
-      <SiteHeaderServer activeNav="rankings" />
+      <GlobalHeaderServer activeNav="rankings" />
       <main className="rankings-wrap">
 
         <header className="hero">

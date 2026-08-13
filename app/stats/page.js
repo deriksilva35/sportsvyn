@@ -15,7 +15,7 @@
  * Same rule the /bracket and /world-cup-2026/* routes follow.
  */
 
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import {
   getOverview,
@@ -63,7 +63,7 @@ export default async function StatsPage({ searchParams }) {
 
   return (
     <>
-      <SiteHeaderServer activeNav="stats" />
+      <GlobalHeaderServer activeNav="stats" />
 
       <header className="stats-hero">
         <div className="stats-wrap">

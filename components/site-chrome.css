@@ -231,7 +231,9 @@
   font-size: 9px; color: var(--muted-dim);
   letter-spacing: 0.2em; text-transform: uppercase;
 }
-.footer-links { display: grid; grid-template-columns: repeat(3, auto); gap: 40px; }
+/* Four columns now that Soccer has its own - the global nav no longer carries
+   the World Cup surfaces, so the footer is the map. */
+.footer-links { display: grid; grid-template-columns: repeat(4, auto); gap: 40px; }
 .footer-col h4 {
   font-family: var(--font-mono);
   font-size: 9px; color: var(--volt);
@@ -282,7 +284,86 @@
     gap: 28px;
   }
   .footer-links {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 16px;
   }
+}
+
+/* ============================================================================
+   GLOBAL HEADER - the one header, sitewide.
+   ============================================================================
+   Adds the site-level behaviour the ink gridiron bar never had (auth state, a
+   volt CTA, a mobile drawer) on top of .gi-head's existing look, which is
+   inherited rather than re-declared: components/gridiron/gridiron.css owns the
+   bar, the nav links and the volt active underline, and this file owns what is
+   new. Two copies of a sticky ink bar would be two places to drift.
+
+   The header is INK on every route including the paper ones, and that is the
+   point of unifying: chrome that changes shape between the Daily Card and a box
+   score reads as two different websites. */
+
+.gh { gap: 22px; }
+
+/* The bar must survive a narrow phone without the wordmark shrinking or the
+   nav wrapping into two rows, so the nav is the thing that scrolls. */
+.gh-nav { overflow-x: auto; scrollbar-width: none; }
+.gh-nav::-webkit-scrollbar { display: none; }
+.gh-nav a { white-space: nowrap; }
+.gh-nav a:hover { color: var(--paper); }
+
+.gh-right { gap: 16px; }
+.gh-right a:hover { color: var(--paper); }
+
+/* The funnel, in volt, in both auth states. The only element on the bar a
+   first-time visitor can act on. */
+.gh-cta {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink) !important; background: var(--volt);
+  padding: 7px 13px; text-decoration: none; white-space: nowrap;
+}
+.gh-cta:hover { color: var(--ink) !important; opacity: 0.88; }
+.gh-signin {
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; white-space: nowrap;
+}
+.gh-signin:hover { color: var(--paper); }
+.gh-account { display: inline-flex; align-items: center; gap: 10px; }
+
+/* ---- mobile drawer ----
+   Carried over from the retiring paper header. The ink bar had no mobile
+   treatment at all - it scrolled sideways and the account menu went with it -
+   so unifying on its look without this would have been a regression on phones,
+   which is where the app traffic is. */
+.gh-burger {
+  display: none; margin-left: auto; background: none; border: none; cursor: pointer;
+  padding: 6px 2px; flex-direction: column; gap: 4px;
+}
+.gh-burger span { display: block; width: 20px; height: 2px; background: var(--paper); }
+.gh-burger:focus-visible { outline: 2px solid var(--volt); outline-offset: 3px; }
+
+.gh-drawer {
+  display: none; position: sticky; top: 56px; z-index: 39;
+  background: var(--ink); border-bottom: 1px solid var(--charcoal);
+  padding: 10px 22px 18px;
+  flex-direction: column; gap: 2px;
+}
+.gh-drawer a, .gh-drawer button {
+  font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; padding: 11px 0;
+  background: none; border: none; text-align: left; cursor: pointer;
+}
+.gh-drawer a.active { color: var(--paper); }
+.gh-drawer .gh-cta { align-self: flex-start; margin-top: 8px; color: var(--ink) !important; }
+.gh-drawer-label {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--charcoal);
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted-dim);
+}
+.gh-drawer-sub { padding-left: 12px !important; font-size: 12px !important; }
+.gh-signout { color: var(--terra) !important; }
+
+@media (max-width: 900px) {
+  .gh-nav, .gh-right { display: none; }
+  .gh-burger { display: flex; }
+  .gh-drawer { display: flex; }
 }

@@ -1,6 +1,6 @@
 // app/scores/page.js — the Scoreboard (ink surface). Unlinked from existing nav;
 // renders its own local ink shell. DEV reads only.
-import Wordmark from '@/components/gridiron/Wordmark';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import Scoreboard from '@/components/gridiron/Scoreboard';
 import { getSlateByDate, resolveScoresDate } from '@/lib/gridiron/readers';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
@@ -48,17 +48,7 @@ export default async function ScoresPage({ searchParams }) {
 
   return (
     <div className="gi" data-surface="ink">
-      <header className="gi-head">
-        <Wordmark />
-        <nav className="gi-head-nav">
-          <a href="/nfl">TODAY</a>
-          <a className="active" href="/scores">SCORES</a>
-          <a href="/nfl">NFL</a>
-          <a href="/cfb">CFB</a>
-          <a href="/world-cup-2026/bracket">SOCCER</a>
-        </nav>
-        <div className="gi-head-right"><a href="/my">MY SPORTSVYN</a><span className="gi-member">MEMBER</span></div>
-      </header>
+      <GlobalHeaderServer activeNav="scores" />
 
       <div className="gi-wrap">
         <div className="gi-kicker">

@@ -23,7 +23,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import BackToAppBar from '@/components/BackToAppBar';
 
 import { auth } from '@/auth';
@@ -66,7 +66,7 @@ export default async function PlayerPage({ params }) {
   return (
     <>
       <BackToAppBar />
-      <SiteHeaderServer />
+      <GlobalHeaderServer />
 
       <main className="page-shell">
         <div className="breadcrumb">

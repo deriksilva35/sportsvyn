@@ -15,7 +15,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import FlagSlot from '@/components/FlagSlot';
 import { getCurrentEdition, getPlayerRankingsForPage } from '@/lib/rankings';
@@ -159,7 +159,7 @@ export default async function PlayerRankingsLeafPage() {
   if (!hasRows) {
     return (
       <>
-        <SiteHeaderServer activeNav="rankings" />
+        <GlobalHeaderServer activeNav="rankings" />
         <main className="rankings-wrap">
           <header className="hero">
             <div className="kicker">Tournament MVP</div>
@@ -227,7 +227,7 @@ export default async function PlayerRankingsLeafPage() {
 
   return (
     <>
-      <SiteHeaderServer activeNav="rankings" />
+      <GlobalHeaderServer activeNav="rankings" />
       <main className="rankings-wrap">
 
         <header className="hero">

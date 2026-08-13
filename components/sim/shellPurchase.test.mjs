@@ -147,7 +147,7 @@ test('every surface that links to /membership is shell-gated', () => {
   const LINKERS = [
     'components/sim/MembershipCard.js',
     'components/sim/ExposureReport.js',
-    'components/SiteHeader.js',
+    'components/GlobalHeader.js',
     'components/gridiron/RailCards.js',
     'app/signin/page.js',
     'app/sim/account/page.js',

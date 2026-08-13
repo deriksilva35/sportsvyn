@@ -10,6 +10,7 @@
  * now share the corrected target.
  */
 
+import Link from 'next/link';
 import Wordmark from '@/components/Wordmark';
 import { NFL_NON_AFFILIATION } from '@/lib/legal';
 
@@ -25,13 +26,28 @@ export default function SiteFooter() {
           <p className="copyright">© 2026 Sportsvyn · Considered Network</p>
         </div>
         <div className="footer-links">
+          {/* THE DEAD SLOTS ARE WIRED. Daily Card, Rankings and Stats sat on
+              href="#" while the routes behind them existed, and the global-nav
+              unification took the last link to /schedule and /stats with it -
+              both were reachable only from the retiring header. A route with no
+              way in is not a decision anyone made, so the footer is where they
+              land. Market moves here for the same reason: it dropped out of the
+              top-level nav and had only the /my panel link left. */}
           <div className="footer-col">
             <h4>Read</h4>
-            <a href="#">Daily Card</a>
-            <a href="/nfl/fantasy">Fantasy</a>
-            <a href="/sim">Mock Draft</a>
-            <a href="#">Rankings</a>
-            <a href="#">Stats</a>
+            <Link href="/">Daily Card</Link>
+            <Link href="/scores">Scores</Link>
+            <Link href="/nfl/fantasy">Fantasy</Link>
+            <Link href="/sim">Mock Draft</Link>
+            <Link href="/nfl/rankings">Rankings</Link>
+            <Link href="/market">Market</Link>
+          </div>
+          <div className="footer-col">
+            <h4>Soccer</h4>
+            <Link href="/world-cup-2026/bracket">World Cup</Link>
+            <Link href="/schedule">Schedule</Link>
+            <Link href="/world-cup-2026/rankings">Rankings</Link>
+            <Link href="/stats">Stats</Link>
           </div>
           <div className="footer-col">
             <h4>About</h4>

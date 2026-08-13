@@ -1,4 +1,4 @@
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { getPublishedArticles, countPublishedArticles, deriveByline } from '@/lib/articleReader';
 import './articles.css';
@@ -34,7 +34,7 @@ export default async function ArticlesArchive({ searchParams }) {
 
   return (
     <>
-      <SiteHeaderServer />
+      <GlobalHeaderServer />
       <main className="arch-wrap">
         <header className="arch-head">
           <span className="arch-kicker">Sportsvyn</span>

@@ -1103,11 +1103,112 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
    The grid rules above are left untouched - they still describe the WC layout
    for anything that renders it. */
 .home-main--football {
-  grid-template-columns: minmax(0, 1fr);
-  max-width: 900px;
+  /* TWO COLUMNS AGAIN. This block used to collapse the grid to one and cap the
+     page at 900px, because the World Cup rail's units had no football
+     equivalent and an empty 360px column is worse than no column. Three now
+     exist - the gridiron slate, the NFL power board, the Sportsvyn 25 - so the
+     football page reads on the same 2/3 + 1/3 the WC layout established. */
+  grid-template-columns: minmax(0, 1fr) 340px;
+  max-width: 1240px;
   row-gap: 0;
 }
-.home-main--football > .daily-card { grid-column: 1; grid-row: auto; }
+.home-main--football > .daily-card { grid-column: 1; grid-row: 1; }
+.home-main--football > .home-rail  { grid-column: 2; grid-row: 1; }
+
+/* The rail collapses at 1024px, which is where .home-main's own columns give
+   way - a 340px rail beside the card leaves the main column under 400px on a
+   tablet, and the Daily Card's prose does not survive that. The 760px
+   breakpoint the boards carry is about the UNITS inside the column, and it
+   keeps working once they are stacked. */
+@media (max-width: 1024px) {
+  .home-main--football {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 900px;
+  }
+  .home-main--football > .daily-card,
+  .home-main--football > .home-rail { grid-column: 1; grid-row: auto; }
+}
+
+/* DOM order is card -> rail, so the phone stack puts the Daily Card first and
+   the games below it. That is the right order: somebody who opened the
+   homepage came for the card. */
+.home-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+@media (max-width: 1024px) {
+  .home-rail { margin-top: 36px; }
+}
+
+/* ---- TODAY'S GAMES ----
+   An INK instrument on the paper page, per the Surface Rule. The scorecard row
+   in miniature: same status vocabulary as /scores, a third the width. */
+.tg {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-jetbrains-mono), monospace;
+  padding: 16px 16px 8px;
+}
+.tg-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  border-bottom: 1px solid var(--charcoal); padding-bottom: 10px;
+}
+.tg-h {
+  font-family: var(--font-saira-cond);
+  font-weight: 600; font-size: 13px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--volt);
+}
+.tg-n { font-size: 11px; color: var(--muted-dim); font-variant-numeric: tabular-nums; }
+.tg-day {
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted-dim); padding: 9px 0 3px;
+}
+.tg-rows { display: flex; flex-direction: column; }
+
+.tg-row {
+  display: block; padding: 11px 0;
+  border-top: 1px solid var(--rule-dim); text-decoration: none; color: inherit;
+}
+.tg-row:first-child { border-top: none; }
+.tg-row--link:hover .tg-abbr { color: var(--volt); }
+
+.tg-status { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+.tg-live {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.12em; color: var(--live);
+}
+.tg-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--live);
+  animation: tg-pulse 1.6s ease-in-out infinite;
+}
+@keyframes tg-pulse { 50% { opacity: 0.35; } }
+.tg-final { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; color: var(--jade); }
+.tg-time { font-size: 10px; letter-spacing: 0.08em; color: var(--muted); }
+.tg-pre {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted-dim);
+  border: 1px solid var(--charcoal); padding: 2px 5px;
+}
+
+.tg-teams { display: flex; flex-direction: column; gap: 3px; }
+.tg-team {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+}
+.tg-abbr { font-size: 12px; letter-spacing: 0.08em; color: var(--paper); }
+.tg-score {
+  font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--paper);
+}
+/* Only a FINAL promotes a winner. A leader at halftime has not won anything. */
+.tg-team.lose .tg-abbr, .tg-team.lose .tg-score { color: var(--muted); }
+
+.tg-all {
+  display: block; padding: 12px 0 10px; margin-top: 2px;
+  border-top: 1px solid var(--charcoal);
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none;
+}
+.tg-all:hover { color: var(--volt); }
 
 /* ---- season strip ----
    Two dates, stated once, at the foot of the card. An INK band on the paper

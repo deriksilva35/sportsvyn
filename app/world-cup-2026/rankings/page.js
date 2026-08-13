@@ -16,7 +16,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import SiteHeaderServer from '@/components/SiteHeaderServer';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import {
   resolveCompetitionBySegment,
@@ -109,7 +109,7 @@ export default async function RankingsHubPage() {
 
   return (
     <>
-      <SiteHeaderServer activeNav="rankings" />
+      <GlobalHeaderServer activeNav="rankings" />
       <main style={wrapStyle}>
         <div style={kickerStyle}>Rankings {'·'} {comp.name}</div>
         <h1 style={titleStyle}>
