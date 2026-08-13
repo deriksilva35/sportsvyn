@@ -20,6 +20,31 @@ Rules for any CC session running ON the droplet:
 Restart the droplet's Remote Control session for this repo with:
   tmux new -d -s cc-sportsvyn 'cd ~/projects/sportsvyn && claude --remote-control --name sportsvyn'
 
+## Commit hygiene: what never gets staged, and what scripts/ is for
+
+THE NEVER-STAGE LIST is short and it is about generated or secret files, not
+about directories:
+  package-lock.json   regenerated on Linux here; differs from the Mac lockfile
+  .env / .env.local   scp'd in, gitignored
+  node_modules        Linux-native on this host
+  next.config.mjs     per Derik's standing instruction
+  ios/                per Derik's standing instruction
+
+`scripts/` IS NOT ON THAT LIST and never has been - 44 .mjs files are tracked
+there already. Committing an ops script is the normal case, not an exception.
+What stays OUT of git is the throwaway: one-shot probes, verification queries
+and apply-scripts belong in the session scratchpad, because a script written to
+answer one question on one evening rots into a trap the moment the schema moves.
+The test is reuse, not size: if it will be run again on a future slate, it
+belongs in scripts/; if it answered today's question, it does not.
+
+ANY SCRIPT IN scripts/ THAT REACHES PROD MUST READ ITS CREDENTIAL FROM THE
+ENVIRONMENT. `neon(process.env.PROD_DATABASE_URL)`, never an inline connection
+string, and never a URL pasted into a default argument. Source with
+`set -a && . ./.env.local && set +a` and let the process inherit it; no secret
+on a command line, ever. A committed script with a credential in it is a leak
+that survives every future clone.
+
 ## Migration numbering
 
 Migration numbers are assigned at transcription time as
