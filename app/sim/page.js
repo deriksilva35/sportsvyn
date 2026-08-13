@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import Attribution from '@/components/sim/Attribution';
 import StartForm from '@/components/sim/StartForm';
+import LiveDraftCard from '@/components/sim/LiveDraftCard';
 import TrackerStart from '@/components/sim/TrackerStart';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
@@ -12,7 +13,7 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
-import { getPresets, getDraftsUsed, isMember, canStartDraft, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
+import { getPresets, getDraftsUsed, isMember, canStartDraft, getOpenSimDraft, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
@@ -91,7 +92,10 @@ export default async function SimLobby({ searchParams }) {
           </section>
         ) : (
           await (async () => {
-            const [presets, used, member] = await Promise.all([getPresets(), getDraftsUsed(userId), isMember(userId)]);
+            // The open-draft read rides the same round trip as the other three.
+            const [presets, used, member, openDraft] = await Promise.all([
+              getPresets(), getDraftsUsed(userId), isMember(userId), getOpenSimDraft(userId),
+            ]);
             const gate = await canStartDraft(userId, member);
             return (
               <>
@@ -101,6 +105,9 @@ export default async function SimLobby({ searchParams }) {
                     isMember() query for the same answer. Once per device; see
                     WelcomeSheet for the storage contract. */}
                 {isShell && iap && !member && <WelcomeSheet />}
+                {/* ABOVE THE DECK, because a draft you are already in outranks
+                    starting another one. Renders nothing when there is none. */}
+                <LiveDraftCard draft={openDraft} member={member} />
                 <section>
                   <div className="sim-kicker">Start a mock draft</div>
                   <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap} />

@@ -393,12 +393,33 @@
 }
 
 /* AUTO toggle: sits with the on-the-clock banner in the room header */
-.auto-toggle { display: inline-flex; align-items: center; gap: 8px; background: var(--graphite); border: 1px solid var(--rule); color: var(--muted); font-family: inherit; font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; padding: 12px 14px; cursor: pointer; }
-.auto-toggle .sw { width: 26px; height: 12px; border: 1px solid var(--muted-dim); position: relative; }
-.auto-toggle .sw::after { content: ''; position: absolute; top: 1px; left: 1px; width: 10px; height: 8px; background: var(--muted-dim); transition: transform .12s ease; }
-.auto-toggle.on { color: var(--volt); border-color: var(--volt); }
-.auto-toggle.on .sw { border-color: var(--volt); }
-.auto-toggle.on .sw::after { background: var(--volt); transform: translateX(12px); }
+/* AUTO DRAFT.
+   Volt FILL rather than volt text on graphite. The old treatment was a muted
+   grey chip reading "Auto" with a small switch - the same visual weight as the
+   List/Board segmented control beside it, which is a view preference, while
+   this hands the seat to the engine for the rest of the draft. It was easy to
+   miss, and a control that decides the outcome of the session should not be
+   quieter than one that decides which panel you are looking at.
+
+   The switch stays: fill says "this is the important control", the switch says
+   "and it has two states". Removing it would make an ON toggle look like a
+   button you had not pressed yet. Same placement, same action. */
+.auto-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--volt); border: 1px solid var(--volt); color: var(--ink);
+  font-family: inherit; font-size: 10px; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; padding: 12px 14px; cursor: pointer;
+  white-space: nowrap;
+}
+.auto-toggle:hover { filter: brightness(1.06); }
+.auto-toggle:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+.auto-toggle .sw { width: 26px; height: 12px; border: 1px solid var(--ink); position: relative; }
+.auto-toggle .sw::after { content: ''; position: absolute; top: 1px; left: 1px; width: 10px; height: 8px; background: var(--ink); transition: transform .12s ease; }
+/* ON is the LIVE state, not a brighter version of the same thing: the seat is
+   being drafted for right now, and it reads as an alarm you can switch off. */
+.auto-toggle.on { background: var(--live); border-color: var(--live); color: #fff; }
+.auto-toggle.on .sw { border-color: #fff; }
+.auto-toggle.on .sw::after { background: #fff; transform: translateX(12px); }
 
 /* on-the-clock banner */
 .on-clock { border: 1px solid var(--volt); background: rgba(212,255,0,.06); padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
@@ -721,4 +742,60 @@
 .trk-hint {
   font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; line-height: 1.5;
   letter-spacing: .03em; color: var(--muted-dim); margin: 6px 0 2px;
+}
+
+/* ============================================================================
+   LIVE DRAFT CARD - the way back into a draft you are already in.
+   ============================================================================
+   Sits above the preset deck, because a room you are IN outranks starting
+   another one. Ink block, volt RESUME: the only volt-filled control on the
+   lobby, so the eye lands on the thing that already has your picks in it
+   rather than on a card that would start over. */
+.livedraft {
+  background: var(--graphite);
+  border: 1px solid var(--volt);
+  padding: 14px 16px 12px;
+  margin-bottom: 22px;
+}
+.ld-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  margin-bottom: 10px;
+}
+.ld-kick {
+  font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--volt);
+}
+.ld-when {
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim);
+  white-space: nowrap;
+}
+.ld-body { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.ld-where { min-width: 0; }
+.ld-name {
+  display: block; font-family: var(--font-saira), sans-serif; font-weight: 700;
+  font-size: 17px; color: var(--paper);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ld-state {
+  display: block; margin-top: 3px;
+  font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.ld-state b { color: var(--paper); font-weight: 700; }
+.ld-resume {
+  flex: 0 0 auto;
+  background: var(--volt); color: var(--ink); text-decoration: none;
+  font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  padding: 13px 22px;
+}
+.ld-resume:hover { filter: brightness(1.06); }
+.ld-resume:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+.ld-note {
+  margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--rule);
+  font-size: 11px; line-height: 1.5; color: var(--muted-dim);
+}
+
+@media (max-width: 420px) {
+  .ld-body { flex-direction: column; align-items: stretch; gap: 12px; }
+  .ld-resume { text-align: center; }
 }

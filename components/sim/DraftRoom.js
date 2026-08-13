@@ -36,6 +36,11 @@ import RookieChip from '@/components/fantasy/RookieChip';
 
 const PAGES = ['BOARD', 'PICK', 'ROSTER']; // swipe pager order; PICK is the default landing
 
+// One sentence, stated as the consequence rather than the mechanism. "Enable
+// auto-draft?" describes a setting; this describes what happens to the draft
+// the person is currently in. Hyphens only.
+export const AUTO_CONFIRM = 'Let the room make your picks? Auto Draft fills every remaining round for you.';
+
 const POS_FILTERS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'];
 // Class filter. Composes with position and team rather than replacing them.
 const CLASS_FILTERS = [['ALL', 'All'], ['ROOKIE', 'Rookies'], ['VET', 'Vets']];
@@ -179,12 +184,21 @@ export default function DraftRoom({
     }
   }
 
-  // --- AUTO toggle ---
+  // --- AUTO DRAFT toggle ---
   // ON: persist, then the effect below drives the user's turns through the
   // existing engine path (including the current pick if the clock is running).
   // OFF: the effect stops firing, so control returns on the next turn.
+  //
+  // TURNING IT ON ASKS FIRST; TURNING IT OFF DOES NOT. There was no
+  // confirmation at all, and the control has just been made louder - volt fill,
+  // the full words AUTO DRAFT - so a curious tap now hands the whole seat to
+  // the engine in one press. That is not a small action: the room drafts every
+  // remaining round for you, and what comes out is a completed draft nobody
+  // made a choice in. Turning it back OFF is the opposite - it returns control,
+  // costs nothing, and must stay a single tap.
   async function toggleAuto() {
     const next = !auto;
+    if (next && !window.confirm(AUTO_CONFIRM)) return;
     setAuto(next);
     if (next) sendHaptic('notify'); // a state change the user should feel in-app
     const res = await setAutoDraft(draftId, next);
@@ -348,7 +362,7 @@ export default function DraftRoom({
             aria-pressed={auto}
             title={auto ? 'Auto-draft is making your picks' : 'Let the draft engine make your picks'}
           >
-            <span className="sw" />Auto
+            <span className="sw" />Auto Draft
           </button>
         )}
       </div>
