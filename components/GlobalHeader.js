@@ -102,7 +102,7 @@ export default function GlobalHeader({
         </nav>
 
         <div className="gi-head-right gh-right">
-          <Link href="/my">MY SPORTSVYN</Link>
+          <Link href="/my" className="gh-my">MY SPORTSVYN</Link>
           {/* The funnel. It is the one thing on this bar a first-time visitor
               can act on, so it keeps the volt and it keeps its place in both
               auth states. */}

@@ -134,9 +134,12 @@ function DailyCardByline({ ptDateLabel }) {
 // thing the reader just clicked. "The Sportsvyn 25" in particular is not a
 // generic CFB poll - calling it "CFB Top 25" here and "The Sportsvyn 25" on
 // /cfb would make one board read as two.
+// Name and slice are SEPARATE. Concatenated into one string they wrapped
+// mid-phrase in the rail ("THE SPORTSVYN 25 · TOP / 5"), which reads as a title
+// that ran out of room rather than as a label somebody chose.
 const HOME_BOARDS = [
-  { key: 'nfl', title: 'NFL Power Rankings · Top 5', href: boardHref('nfl', 'power') },
-  { key: 'cfb', title: 'The Sportsvyn 25 · Top 5', href: boardHref('cfb', 'top25') },
+  { key: 'nfl', title: 'NFL Power Rankings', slice: 'Top 5', href: boardHref('nfl', 'power') },
+  { key: 'cfb', title: 'The Sportsvyn 25', slice: 'Top 5', href: boardHref('cfb', 'top25') },
 ];
 
 /**
@@ -157,7 +160,7 @@ function RailBoards({ boards }) {
   return (
     <>
       {live.map((b) => (
-        <EditorialBoard key={b.key} title={b.title} board={b.board} preview href={b.href} />
+        <EditorialBoard key={b.key} title={b.title} slice={b.slice} board={b.board} preview href={b.href} />
       ))}
     </>
   );

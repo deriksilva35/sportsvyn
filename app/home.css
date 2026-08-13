@@ -1167,40 +1167,52 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
 }
 .tg-rows { display: flex; flex-direction: column; }
 
+/* ONE ROW PER GAME. A three-column grid, not a stack: when | badge | matchup,
+   all on one baseline. Six games plus the heading come to roughly 260px, which
+   leaves a phone screen with room to spare - the previous stacked version ran
+   about five lines per game and pushed the boards below two folds. */
 .tg-row {
-  display: block; padding: 11px 0;
-  border-top: 1px solid var(--rule-dim); text-decoration: none; color: inherit;
+  display: grid;
+  grid-template-columns: 58px 26px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  padding: 9px 0;
+  border-top: 1px solid var(--rule-dim);
+  text-decoration: none; color: inherit;
+  white-space: nowrap;
 }
 .tg-row:first-child { border-top: none; }
-.tg-row--link:hover .tg-abbr { color: var(--volt); }
+.tg-row--link:hover .tg-side { color: var(--volt); }
 
-.tg-status { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
-.tg-live {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 9px; font-weight: 700; letter-spacing: 0.12em; color: var(--live);
+/* One fact at a time: kickoff before, LIVE during, FINAL after. */
+.tg-when {
+  font-size: 10px; letter-spacing: 0.06em; color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
+.tg-when.live { color: var(--live); font-weight: 700; letter-spacing: 0.1em; }
+.tg-when.final { color: var(--jade); font-weight: 700; letter-spacing: 0.1em; }
 .tg-dot {
-  width: 5px; height: 5px; border-radius: 50%; background: var(--live);
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--live); margin-right: 4px;
   animation: tg-pulse 1.6s ease-in-out infinite;
 }
 @keyframes tg-pulse { 50% { opacity: 0.35; } }
-.tg-final { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; color: var(--jade); }
-.tg-time { font-size: 10px; letter-spacing: 0.08em; color: var(--muted); }
-.tg-pre {
-  font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted-dim);
-  border: 1px solid var(--charcoal); padding: 2px 5px;
+
+.tg-badge {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--muted-dim); text-align: center;
 }
 
-.tg-teams { display: flex; flex-direction: column; gap: 3px; }
-.tg-team {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+.tg-match {
+  font-size: 12px; letter-spacing: 0.04em; color: var(--paper);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden; text-overflow: ellipsis;
 }
-.tg-abbr { font-size: 12px; letter-spacing: 0.08em; color: var(--paper); }
-.tg-score {
-  font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--paper);
-}
-/* Only a FINAL promotes a winner. A leader at halftime has not won anything. */
-.tg-team.lose .tg-abbr, .tg-team.lose .tg-score { color: var(--muted); }
+.tg-side b { font-weight: 700; margin-left: 5px; }
+.tg-at { color: var(--muted-dim); margin: 0 6px; }
+/* Only a FINAL dims a side. A team trailing at halftime has not lost. */
+.tg-side.dim, .tg-side.dim b { color: var(--muted); }
+.tg-side.win b { color: var(--volt); }
 
 .tg-all {
   display: block; padding: 12px 0 10px; margin-top: 2px;

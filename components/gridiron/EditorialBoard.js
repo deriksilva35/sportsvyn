@@ -13,16 +13,30 @@ function inlineBold(text) {
   return text.split('**').map((seg, i) => (i % 2 === 1 ? <strong key={i}>{seg}</strong> : seg));
 }
 
-function Head({ title, editionNumber }) {
+/**
+ * The board's own heading.
+ *
+ * `slice` IS A SEPARATE LINE, not part of the title, because the two are
+ * different facts: which board this is, and how much of it you are looking at.
+ * Glued together as "The Sportsvyn 25 · Top 5" they wrapped mid-phrase in a
+ * narrow column - a phone rail broke it as "THE SPORTSVYN 25 · TOP / 5", which
+ * reads as a title that ran out of room rather than as a deliberate label.
+ * Callers that pass no slice (the league Today pages, the rankings hub) render
+ * exactly as before.
+ */
+function Head({ title, slice, editionNumber }) {
   return (
     <div className="gi-instrument-h gi-ed-h">
-      <span>{title}</span>
+      <span className="gi-ed-name">
+        <span className="gi-ed-title">{title}</span>
+        {slice ? <span className="gi-ed-slice">{slice}</span> : null}
+      </span>
       <span className="gi-ed-kick">Preseason · Edition {editionNumber}</span>
     </div>
   );
 }
 
-export default function EditorialBoard({ title, board, preview = false, href = null }) {
+export default function EditorialBoard({ title, slice = null, board, preview = false, href = null }) {
   if (!board || !board.entries.length) return null;
 
   if (preview) {
@@ -30,7 +44,7 @@ export default function EditorialBoard({ title, board, preview = false, href = n
     const dh = darkHorseCount(board.entries);
     return (
       <section className="gi-instrument gi-ed" data-surface="ink">
-        <Head title={title} editionNumber={board.editionNumber} />
+        <Head title={title} slice={slice} editionNumber={board.editionNumber} />
         <ol className="gi-ed-list gi-ed-list--compact">
           {top.map((e) => (
             <li key={e.rank} className="gi-ed-row compact">
@@ -64,7 +78,7 @@ export default function EditorialBoard({ title, board, preview = false, href = n
 
   return (
     <section className="gi-instrument gi-ed" data-surface="ink">
-      <Head title={title} editionNumber={board.editionNumber} />
+      <Head title={title} slice={slice} editionNumber={board.editionNumber} />
       <ol className="gi-ed-list">{rows}</ol>
       {board.footer && <div className="gi-ed-footer">{inlineBold(board.footer)}</div>}
     </section>

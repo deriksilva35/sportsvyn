@@ -55,16 +55,106 @@ test('NFL ROWS LINK, CFB ROWS DO NOT - there is no /cfb/game', () => {
 });
 
 test('a game that has not kicked off shows a TIME, never a 0-0', () => {
-  assert.match(games, /\{played \? \(g\.awayScore \?\? ABSENT\) : ''\}/);
-  assert.match(games, /\{!played \? <span className="tg-time">\{fmtTime\(g\.kickoffAt\)\}<\/span> : null\}/);
+  assert.match(games, /\{played \? <b>\{g\.awayScore \?\? ABSENT\}<\/b> : null\}/);
+  assert.match(games, /\{!played \? fmtTime\(g\.kickoffAt\) : null\}/);
   assert.match(games, /import \{ ABSENT \} from '@\/lib\/gridiron\/lineScore'/,
     'one absence glyph across the gridiron surface');
+});
+
+test('ONE LINE PER GAME - the row has no block children at all', () => {
+  // The first version stacked a status <div> over a teams <div> holding two
+  // more <div>s. That is three block elements and therefore three lines however
+  // it is styled: on a phone each game stood about five lines tall and six
+  // games did not fit a screen. No CSS fixes that - the structure had to change.
+  // The row CONTAINER is a <div> for CFB (no game page to link to) and a <Link>
+  // for NFL. What must contain no block element is the BODY - that is what was
+  // stacking.
+  const body = games.slice(games.indexOf('const body = ('), games.indexOf('return g.leagueSlug'));
+  assert.ok(!/<div/.test(body), 'every element inside a row is an inline span');
+  const row = body;
+  assert.match(row, /<span className=\{`tg-when/);
+  assert.match(row, /<span className="tg-badge">/);
+  assert.match(row, /<span className="tg-match">/);
+  // when | badge | matchup, on one baseline.
+  assert.match(css, /\.tg-row \{[\s\S]*?display: grid;[\s\S]*?grid-template-columns: 58px 26px minmax\(0, 1fr\);/);
+  assert.match(css, /\.tg-row \{[\s\S]*?white-space: nowrap;/, 'a row never wraps');
+});
+
+test('the WHEN column carries ONE fact at a time', () => {
+  // A time next to a finished game is noise; a score next to a game that has
+  // not kicked off is a lie.
+  const row = games.slice(games.indexOf('function Row('), games.indexOf('export default function'));
+  assert.match(row, /\{live \? <><span className="tg-dot" \/>LIVE<\/> : null\}/);
+  assert.match(row, /\{final \? 'FINAL' : null\}/);
+  assert.match(row, /\{!played \? fmtTime\(g\.kickoffAt\) : null\}/);
 });
 
 test('only a FINAL promotes a winner', () => {
   // A leader at halftime has not won anything.
   assert.match(games, /const homeWin = final && g\.homeScore > g\.awayScore/);
   assert.match(games, /const awayWin = final && g\.awayScore > g\.homeScore/);
+  assert.match(css, /\.tg-side\.dim, \.tg-side\.dim b \{ color: var\(--muted\); \}/);
+});
+
+// ---------------------------------------------------------------------------
+// The phone. Every rule below shipped broken once.
+// ---------------------------------------------------------------------------
+
+test('THE MOBILE RULES ARE PARENT-SCOPED, because import order is not a mechanism', () => {
+  // .gh-right and .gi-head-right are both (0,1,0) and live in DIFFERENT CSS
+  // chunks, so the winner was decided by whichever chunk the route loaded last.
+  // It shipped losing: the served sheet had .gh-nav,.gh-right{display:none} at
+  // byte 10153 and .gi-head-right{display:flex} at 11232, so the header never
+  // collapsed at any width - the nav crushed the wordmark to a sliver and
+  // truncated TODAY to "TC". `.gh .gh-nav` is (0,2,0) and wins in any order.
+  const chrome = src('components/site-chrome.css');
+  const mobile = chrome.slice(chrome.indexOf('@media (max-width: 900px)'));
+  for (const sel of ['.gh .gh-nav', '.gh .gh-burger', '.gh .wordmark',
+    '.gh .gh-right .gh-my', '.gh .gh-right .gh-signin', '.gh .gh-right .gh-account']) {
+    assert.ok(mobile.includes(sel), `${sel} must be parent-scoped`);
+  }
+  // The unscoped forms must be gone - they are the ones that lost.
+  assert.ok(!/^\s*\.gh-nav, \.gh-right \{ display: none/m.test(chrome));
+});
+
+test('THE CTA SURVIVES THE COLLAPSE - the funnel does not shrink on phones', () => {
+  // Hiding .gh-right wholesale would have taken MOCK DRAFT with it. The
+  // container stays; its other children go.
+  const chrome = src('components/site-chrome.css');
+  const mobile = chrome.slice(chrome.indexOf('@media (max-width: 900px)'));
+  assert.ok(!/\.gh \.gh-right \{ display: none/.test(mobile), 'the container is not hidden');
+  assert.ok(!/\.gh-cta[^{]*\{[^}]*display: none/.test(mobile), 'and neither is the CTA');
+  assert.match(mobile, /\.gh \.wordmark \{ flex: 0 0 auto;/,
+    'the wordmark is an img with width:auto - a flex parent under pressure squeezes it to a sliver');
+});
+
+test('NOTHING TRUNCATES: every hidden label is in the drawer', () => {
+  const drawer = header.slice(header.indexOf('{drawerOpen && ('));
+  for (const label of ['TODAY', 'SCORES', 'NFL', 'CFB', 'SOCCER']) {
+    assert.ok(header.includes(`label: '${label}'`) || drawer.includes(label), `${label} reachable`);
+  }
+  assert.match(drawer, /MY SPORTSVYN/, 'the label hidden from the bar is in the drawer');
+  assert.match(drawer, /SIGN IN/);
+  assert.match(drawer, /\{NAV\.map/, 'and the whole nav, not a subset');
+});
+
+test('A BOARD TITLE NEVER BREAKS MID-PHRASE', () => {
+  // "The Sportsvyn 25 · Top 5" wrapped as "THE SPORTSVYN 25 · TOP / 5" in the
+  // rail, which reads as a title that ran out of room rather than a label
+  // somebody chose. Name and slice are two facts on two lines.
+  const board = stripComments(src('components/gridiron/EditorialBoard.js'));
+  assert.match(board, /function Head\(\{ title, slice, editionNumber \}\)/);
+  assert.match(board, /<span className="gi-ed-title">\{title\}<\/span>/);
+  assert.match(board, /\{slice \? <span className="gi-ed-slice">\{slice\}<\/span> : null\}/);
+  const grid = src('components/gridiron/gridiron.css');
+  assert.match(grid, /\.gi-ed-slice \{[^}]*white-space: nowrap;/, '"Top / 5" is not a thing');
+  assert.match(grid, /\.gi-ed-title \{ display: block;/);
+  // The homepage passes them separately; the league pages pass no slice and are
+  // therefore unchanged.
+  assert.match(home, /title: 'The Sportsvyn 25', slice: 'Top 5'/);
+  assert.match(home, /slice=\{b\.slice\}/);
+  const today = stripComments(src('components/gridiron/TodayPage.js'));
+  assert.ok(!/slice=/.test(today), 'league Today pages are untouched');
 });
 
 test('the slate is read on the EASTERN day, not the page\'s Pacific one', () => {
@@ -169,7 +259,9 @@ test('the mobile drawer survived the merge', () => {
   assert.match(header, /className="gh-burger"/);
   assert.match(header, /\{drawerOpen && \(/);
   const chrome = src('components/site-chrome.css');
-  assert.match(chrome, /@media \(max-width: 900px\) \{\s*\n\s*\.gh-nav, \.gh-right \{ display: none; \}/);
+  // Parent-scoped now - see the mobile-rules test for why the unscoped form
+  // could not be relied on.
+  assert.match(chrome, /@media \(max-width: 900px\) \{\s*\n\s*\.gh \.gh-nav \{ display: none; \}/);
 });
 
 test('/membership stays shell-gated in the new header', () => {

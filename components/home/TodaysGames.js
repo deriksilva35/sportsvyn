@@ -27,31 +27,46 @@ const fmtTime = (d) => new Intl.DateTimeFormat('en-US', {
   timeZone: ET, hour: 'numeric', minute: '2-digit',
 }).format(new Date(d));
 
+/**
+ * ONE LINE PER GAME.
+ *
+ *   7:00 PM   PRE   DET @ CIN
+ *   FINAL     PRE   DET 17 @ CIN 20
+ *
+ * The first version stacked a status block over a two-row team block, which is
+ * three block elements and therefore three lines however it is styled - on a
+ * phone each game stood about five lines tall and six games did not fit a
+ * screen. No CSS fixes that; the structure had to change.
+ *
+ * The WHEN column carries one fact at a time: the kickoff before the game, the
+ * live marker during it, FINAL after. A time next to a finished game is noise,
+ * and a score next to a game that has not kicked off is a lie.
+ */
 function Row({ g }) {
   const final = g.status === 'final';
   const live = g.status === 'live';
   const played = final || live;
   const homeWin = final && g.homeScore > g.awayScore;
   const awayWin = final && g.awayScore > g.homeScore;
+  const abbr = (t) => t?.abbreviation ?? t?.name ?? 'TBD';
 
   const body = (
     <>
-      <div className="tg-status">
-        {live ? <span className="tg-live"><span className="tg-dot" />LIVE</span> : null}
-        {final ? <span className="tg-final">FINAL</span> : null}
-        {!played ? <span className="tg-time">{fmtTime(g.kickoffAt)}</span> : null}
-        {g.seasonPhase === 'PRE' ? <span className="tg-pre">PRE</span> : null}
-      </div>
-      <div className="tg-teams">
-        <div className={`tg-team${awayWin ? ' win' : ''}${homeWin ? ' lose' : ''}`}>
-          <span className="tg-abbr">{g.away?.abbreviation ?? g.away?.name ?? 'TBD'}</span>
-          <span className="tg-score">{played ? (g.awayScore ?? ABSENT) : ''}</span>
-        </div>
-        <div className={`tg-team${homeWin ? ' win' : ''}${awayWin ? ' lose' : ''}`}>
-          <span className="tg-abbr">{g.home?.abbreviation ?? g.home?.name ?? 'TBD'}</span>
-          <span className="tg-score">{played ? (g.homeScore ?? ABSENT) : ''}</span>
-        </div>
-      </div>
+      <span className={`tg-when${live ? ' live' : ''}${final ? ' final' : ''}`}>
+        {live ? <><span className="tg-dot" />LIVE</> : null}
+        {final ? 'FINAL' : null}
+        {!played ? fmtTime(g.kickoffAt) : null}
+      </span>
+      <span className="tg-badge">{g.seasonPhase === 'PRE' ? 'PRE' : ''}</span>
+      <span className="tg-match">
+        <span className={`tg-side${awayWin ? ' win' : ''}${homeWin ? ' dim' : ''}`}>
+          {abbr(g.away)}{played ? <b>{g.awayScore ?? ABSENT}</b> : null}
+        </span>
+        <span className="tg-at">@</span>
+        <span className={`tg-side${homeWin ? ' win' : ''}${awayWin ? ' dim' : ''}`}>
+          {abbr(g.home)}{played ? <b>{g.homeScore ?? ABSENT}</b> : null}
+        </span>
+      </span>
     </>
   );
 

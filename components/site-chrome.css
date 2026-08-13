@@ -362,8 +362,42 @@
 .gh-drawer-sub { padding-left: 12px !important; font-size: 12px !important; }
 .gh-signout { color: var(--terra) !important; }
 
+/* ---- the mobile collapse ----
+   EVERY SELECTOR HERE IS PARENT-SCOPED, and that is load-bearing rather than
+   tidy. .gh-right and .gi-head-right are both single classes (0,1,0), they live
+   in DIFFERENT CSS chunks, and the winner is therefore decided by whichever
+   chunk the route happens to load last. It shipped losing: in the served
+   stylesheet .gh-nav,.gh-right{display:none} sat at byte 10153 and
+   .gi-head-right{display:flex} at byte 11232, so the header never collapsed at
+   any width - the nav and the right cluster stayed in the bar, crushed the
+   wordmark to a sliver and truncated TODAY to "TC".
+
+   `.gh .gh-nav` is (0,2,0) and beats the base rule no matter what order the
+   chunks arrive in. Import order is not a mechanism; specificity is.
+
+   NOTHING TRUNCATES. Below this width the bar is three things that always fit -
+   wordmark, the volt CTA, hamburger - and everything else is in the drawer.
+   A label clipped to two letters is worse than a label you tapped once to see. */
 @media (max-width: 900px) {
-  .gh-nav, .gh-right { display: none; }
-  .gh-burger { display: flex; }
+  .gh .gh-nav { display: none; }
+  /* The right cluster STAYS as a flex box but loses everything except the
+     volt CTA. Hiding the container would take MOCK DRAFT with it, and the CTA
+     is the one thing on this bar a first-time visitor can act on - it is the
+     funnel, and the funnel does not get smaller on the device most of the
+     traffic arrives on. MY SPORTSVYN and SIGN IN are one tap away in the
+     drawer, which is where a label that cannot fit whole belongs. */
+  .gh .gh-right .gh-my,
+  .gh .gh-right .gh-signin,
+  .gh .gh-right .gh-account { display: none; }
+  .gh .gh-right { margin-left: auto; gap: 0; }
+  .gh .gh-burger { display: flex; }
   .gh-drawer { display: flex; }
+
+  /* The bar keeps its three survivors in a fixed order and none of them may be
+     squeezed: the wordmark is an <img> with width:auto, so a flex parent under
+     pressure compresses it into the sliver the field report describes. */
+  .gh { gap: 12px; padding: 12px 16px; }
+  .gh .wordmark { flex: 0 0 auto; font-size: 19px; }
+  .gh .gh-cta { flex: 0 0 auto; margin-left: auto; }
+  .gh .gh-burger { flex: 0 0 auto; margin-left: 0; }
 }

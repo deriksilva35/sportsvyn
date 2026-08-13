@@ -167,10 +167,15 @@ test('the tab keys the links carry are real tabs on those hubs', () => {
 // ---------------------------------------------------------------------------
 
 test('"Top 5" in the title is what the component renders', () => {
-  // The titles promise five rows. previewEntries is what delivers them, and
-  // EditorialBoard hardcodes the 5 - so the promise and the slice must agree.
-  assert.match(page, /title: 'NFL Power Rankings · Top 5'/);
-  assert.match(page, /title: 'The Sportsvyn 25 · Top 5'/);
+  // The slice label promises five rows. previewEntries is what delivers them,
+  // and EditorialBoard hardcodes the 5 - so the promise and the slice agree.
+  //
+  // The label used to be glued onto the title ("NFL Power Rankings · Top 5")
+  // and wrapped mid-phrase in the narrow rail. It is its own prop and its own
+  // line now; the promise it makes is unchanged, so this test still checks it.
+  assert.match(page, /title: 'NFL Power Rankings', slice: 'Top 5'/);
+  assert.match(page, /title: 'The Sportsvyn 25', slice: 'Top 5'/);
+  assert.match(page, /slice=\{b\.slice\}/, 'and the slice actually reaches the component');
   const board = stripComments(src('components/gridiron/EditorialBoard.js'));
   assert.match(board, /previewEntries\(board\.entries, 5\)/, 'preview mode slices to five');
   // PROD shapes: nfl-power is 32 entries with 5 dark horses, cfb-top25 is 25
@@ -189,13 +194,13 @@ test('each board is called what the page it links to calls it', () => {
   // ranking_lists.name, which is also the hub's tab label.
   const cfbTab = RANKING_TABS.cfb.find((t) => t.key === 'top25');
   assert.equal(cfbTab.label, 'The Sportsvyn 25', 'the hub tab names the board');
-  assert.match(page, new RegExp(`title: '${cfbTab.label} · Top 5'`),
+  assert.match(page, new RegExp(`title: '${cfbTab.label}', slice: 'Top 5'`),
     'and the homepage preview must use that same name - if the hub renames the board, rename it here too');
   // The NFL tab label is deliberately shorter ("Power Rankings") because it
   // already sits under /nfl/rankings; unqualified on the homepage it would not
   // say which league, so that one carries ranking_lists.name in full.
   assert.equal(RANKING_TABS.nfl.find((t) => t.key === 'power').label, 'Power Rankings');
-  assert.match(page, /title: 'NFL Power Rankings · Top 5'/);
+  assert.match(page, /title: 'NFL Power Rankings', slice: 'Top 5'/);
 });
 
 test('no movement deltas are rendered, because there are none to render', () => {

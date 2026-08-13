@@ -246,6 +246,14 @@
 /* ink instrument block sitting on a paper ground */
 .gi-instrument { padding: 16px 18px 20px; border: 1px solid var(--rule); }
 .gi-instrument-h { font-size: 10px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; color: var(--volt); margin-bottom: 4px; }
+/* The board name and the slice it is showing are two facts on two lines.
+   Concatenated ("The Sportsvyn 25 · Top 5") they wrapped mid-phrase in a narrow
+   column - a phone rail broke it as "THE SPORTSVYN 25 · TOP / 5", which reads
+   as a title that ran out of room rather than a label somebody chose. The name
+   keeps its own line and is allowed to wrap between WORDS; the slice never
+   breaks, because "Top / 5" is not a thing. */
+.gi-ed-title { display: block; letter-spacing: 0.16em; }
+.gi-ed-slice { display: block; white-space: nowrap; letter-spacing: 0.16em; color: var(--volt-dim); margin-top: 2px; }
 .gi-instrument-sub { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-dim); margin-bottom: 8px; }
 .gi-rail-h { font-family: var(--font-saira-cond), sans-serif; font-weight: 700; font-size: 12px; text-transform: uppercase; color: var(--ink); letter-spacing: 0.02em; margin-bottom: 12px; }
 
@@ -285,7 +293,10 @@
 .gi-fb-attr a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--volt); text-underline-offset: 2px; }
 
 /* ---- editorial boards (Edition 0: Power, MVP, Sportsvyn 25, Heisman) ---- */
-.gi-ed-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.gi-ed-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+/* min-width:0 lets the name column shrink instead of forcing the edition kicker
+   off the end of a 340px rail. The kicker already carries its own nowrap. */
+.gi-ed-name { min-width: 0; }
 .gi-ed-kick { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--volt); white-space: nowrap; }
 .gi-ed-list { list-style: none; margin: 0; padding: 12px 0 2px; }
 .gi-ed-band { font-family: var(--font-saira-cond), sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted-dim); border-top: 1px solid var(--volt); padding: 14px 0 4px; margin-top: 6px; }
