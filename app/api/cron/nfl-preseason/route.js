@@ -43,7 +43,7 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { importApiSportsGames } from '@/lib/gridiron/apiSportsImport';
-import { sweepDecision, slateDateEt, detailTargets, DAILY_REQUEST_CAP } from '@/lib/pollers/preseasonWindow';
+import { sweepDecision, slateDateEt, slateDatesForProvider, detailTargets, DAILY_REQUEST_CAP } from '@/lib/pollers/preseasonWindow';
 import { fetchGameDetail } from '@/lib/gridiron/gameDetail';
 
 export const dynamic = 'force-dynamic';
@@ -120,7 +120,13 @@ export async function GET(request) {
   if (!cronAuthorized(request)) return new Response('Unauthorized', { status: 401 });
 
   const now = new Date();
+  // TWO CLOCKS, DELIBERATELY. dateEt keys OUR rows - matches are grouped by ET
+  // day, the same way /scores groups them. providerDates keys the PROVIDER's
+  // slate, which is indexed by UTC date, and one ET evening spans two of them.
+  // Feeding the ET day to both is the defect that made the 8pm and 9pm ET
+  // kickoffs invisible on 13 Aug.
   const dateEt = slateDateEt(now);
+  const providerDates = slateDatesForProvider(now);
 
   const [games, spent, lastSync] = await Promise.all([
     todaysPreseason(dateEt), requestsToday(), lastSyncAt(),
@@ -146,7 +152,7 @@ export async function GET(request) {
   const outcome = await withAdvisoryLock(SOURCE, async () => recordRun(sql, {
     source: SOURCE,
     kind: decision.reason,
-    run: () => importApiSportsGames({ leagueSlug: 'nfl', season: SEASON, date: dateEt }),
+    run: () => importApiSportsGames({ leagueSlug: 'nfl', season: SEASON, date: providerDates }),
   }));
 
   if (outcome.locked) {
@@ -180,7 +186,7 @@ export async function GET(request) {
   }
 
   return Response.json({
-    dateEt, decision: decision.reason, ok: res.ok, id: res.id,
+    dateEt, providerDates, decision: decision.reason, ok: res.ok, id: res.id,
     requestsToday: spent + 1 + detail.requests, cap: DAILY_REQUEST_CAP,
     summary: res.summary, detail,
   });
