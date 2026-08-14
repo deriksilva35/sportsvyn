@@ -41,13 +41,21 @@
   .prow .nm{font-weight:500;}
   .prow .tm{color:var(--mut); font-size:12px; margin-left:8px;}
   .prow .ck{color:var(--volt); font-weight:700; opacity:0; font-size:16px;}
+  /* The resume: who this player IS, independent of the week being guessed.
+     Muted and secondary - it is context for the name, never a hint. */
+  .prow .pinfo{display:flex; flex-direction:column; min-width:0;}
+  .res{display:block; font-size:11px; color:var(--mut); margin-top:2px; line-height:1.2;}
+  .row .res{display:inline; margin-left:8px;}
   .prow.sel .ck{opacity:1;}
 
-  .slots{display:flex; gap:6px; margin-bottom:12px;}
-  .slot{flex:1; text-align:center; background:var(--ink-3); border:1px dashed var(--line); border-radius:8px; padding:8px 4px; min-height:58px;}
+  /* SIX slots share a 390px phone: the gap, padding and label all shrink so the
+     row stays one line. min-width:0 lets flex children actually compress -
+     without it the default min-width:auto floors each slot at its content. */
+  .slots{display:flex; gap:4px; margin-bottom:12px;}
+  .slot{flex:1 1 0; min-width:0; text-align:center; background:var(--ink-3); border:1px dashed var(--line); border-radius:8px; padding:7px 2px; min-height:58px;}
   .slot.filled{border-style:solid; border-color:var(--volt);}
-  .slot .lab{font-family:'Saira Condensed',sans-serif; font-weight:600; font-size:11px; letter-spacing:.1em; color:var(--mut);}
-  .slot .who{font-size:11px; margin-top:5px; line-height:1.25; word-break:break-word;}
+  .slot .lab{font-family:'Saira Condensed',sans-serif; font-weight:600; font-size:10px; letter-spacing:.04em; color:var(--mut);}
+  .slot .who{font-size:10px; margin-top:4px; line-height:1.2; word-break:break-word;}
 
   .btn{display:block; width:100%; font-family:'Saira',sans-serif; font-style:italic; font-weight:900; letter-spacing:-0.02em; font-size:20px; background:var(--volt); color:var(--ink); border:none; border-radius:10px; padding:14px; cursor:pointer;}
   .btn:disabled{background:var(--ink-3); color:var(--mut); cursor:not-allowed;}
@@ -85,13 +93,13 @@
       <h2>The rules</h2>
       <p class="body">
         Somewhere in NFL history, one week has been chosen. You don't know the season. You don't know the week.<br><br>
-        Draft five: <b>QB · RB · WR · TE · FLEX</b>. Every player offered actually played that week — but that doesn't mean they played well.<br><br>
+        Draft six: <b>QB · RB · WR · TE · FLEX · FLEX</b>. Every player offered actually played that week — but that doesn't mean they played well.<br><br>
         You get <b>one attempt</b> and <b>2:00</b> on the clock from the moment you see the pool. Your score is their real fantasy points from that actual week, worst pick dropped. After you lock, guess the season and week for a bonus.
       </p>
     </div>
 
     <button class="btn" onclick="startDraft()">START THE CLOCK</button>
-    <p class="disc">⚠ Paper test build. Point values are approximate placeholders — verify against PROD stats before running with contestants.</p>
+    <p class="disc">⚠ Paper test build. Point values are real: verified PPR scoring from the actual week.</p>
   </div>
 
   <!-- ============ DRAFT ============ -->
@@ -182,52 +190,56 @@ const ANSWER_STORY = "Miami 70, Denver 20 — the most points by any team in ove
 
 const PLAYERS = [
   /* QB (8) */
-  {pos:"QB", nm:"Patrick Mahomes",   tm:"KC",  pts:25.9},
-  {pos:"QB", nm:"Tua Tagovailoa",    tm:"MIA", pts:28.4},
-  {pos:"QB", nm:"Josh Allen",        tm:"BUF", pts:17.8},
-  {pos:"QB", nm:"Kirk Cousins",      tm:"MIN", pts:24.6},
-  {pos:"QB", nm:"Justin Fields",     tm:"CHI", pts:8.1},
-  {pos:"QB", nm:"Brock Purdy",       tm:"SF",  pts:16.9},
-  {pos:"QB", nm:"Jared Goff",        tm:"DET", pts:13.7},
-  {pos:"QB", nm:"Russell Wilson",    tm:"DEN", pts:21.2},
+  {pos:"QB", nm:"Patrick Mahomes",   tm:"KC",  pts:25.7, res:"NFL MVP · Super Bowl champ"},
+  {pos:"QB", nm:"Tua Tagovailoa",    tm:"MIA", pts:28.4, res:"Pro Bowl QB"},
+  {pos:"QB", nm:"Josh Allen",        tm:"BUF", pts:22.3, res:"Pro Bowl QB"},
+  {pos:"QB", nm:"Kirk Cousins",      tm:"MIN", pts:26.7, res:"veteran Pro Bowl QB"},
+  {pos:"QB", nm:"Justin Fields",     tm:"CHI", pts:11.7, res:"1st-round dual-threat QB"},
+  {pos:"QB", nm:"Brock Purdy",       tm:"SF",  pts:20.3, res:"Mr. Irrelevant, 2022"},
+  {pos:"QB", nm:"Jared Goff",        tm:"DET", pts:19.0, res:"Super Bowl starter"},
+  {pos:"QB", nm:"Russell Wilson",    tm:"DEN", pts:15.2, res:"Super Bowl champion"},
   /* RB (10) */
-  {pos:"RB", nm:"De'Von Achane",     tm:"MIA", pts:51.3},
-  {pos:"RB", nm:"Raheem Mostert",    tm:"MIA", pts:30.6},
-  {pos:"RB", nm:"Christian McCaffrey",tm:"SF", pts:21.8},
-  {pos:"RB", nm:"Kyren Williams",    tm:"LAR", pts:19.4},
-  {pos:"RB", nm:"Tony Pollard",      tm:"DAL", pts:13.9},
-  {pos:"RB", nm:"James Cook",        tm:"BUF", pts:13.2},
-  {pos:"RB", nm:"Bijan Robinson",    tm:"ATL", pts:11.6},
-  {pos:"RB", nm:"Derrick Henry",     tm:"TEN", pts:9.8},
-  {pos:"RB", nm:"Joe Mixon",         tm:"CIN", pts:9.1},
-  {pos:"RB", nm:"Travis Etienne",    tm:"JAX", pts:8.4},
+  {pos:"RB", nm:"De'Von Achane",     tm:"MIA", pts:51.3, res:"Texas A&M speedster"},
+  {pos:"RB", nm:"Raheem Mostert",    tm:"MIA", pts:45.2, res:"journeyman veteran RB"},
+  {pos:"RB", nm:"Christian McCaffrey",tm:"SF", pts:22.9, res:"All-Pro · OPOY"},
+  {pos:"RB", nm:"Kyren Williams",    tm:"LAR", pts:8.5,  res:"Rams lead back"},
+  {pos:"RB", nm:"Tony Pollard",      tm:"DAL", pts:15.1, res:"Pro Bowl RB"},
+  {pos:"RB", nm:"James Cook",        tm:"BUF", pts:13.2, res:"Bills lead back"},
+  {pos:"RB", nm:"Bijan Robinson",    tm:"ATL", pts:10.0, res:"top-10 draft pick"},
+  {pos:"RB", nm:"Josh Jacobs",       tm:"LV",  pts:11.0, res:"NFL rushing champion"},
+  {pos:"RB", nm:"Joe Mixon",         tm:"CIN", pts:14.0, res:"Pro Bowl RB"},
+  {pos:"RB", nm:"Travis Etienne",    tm:"JAX", pts:17.8, res:"1st-round RB"},
   /* WR (12) */
-  {pos:"WR", nm:"Keenan Allen",      tm:"LAC", pts:39.5},
-  {pos:"WR", nm:"Justin Jefferson",  tm:"MIN", pts:27.9},
-  {pos:"WR", nm:"Stefon Diggs",      tm:"BUF", pts:24.3},
-  {pos:"WR", nm:"Tyreek Hill",       tm:"MIA", pts:22.0},
-  {pos:"WR", nm:"A.J. Brown",        tm:"PHI", pts:16.4},
-  {pos:"WR", nm:"Puka Nacua",        tm:"LAR", pts:15.2},
-  {pos:"WR", nm:"Ja'Marr Chase",     tm:"CIN", pts:14.1},
-  {pos:"WR", nm:"DK Metcalf",        tm:"SEA", pts:13.0},
-  {pos:"WR", nm:"Amon-Ra St. Brown", tm:"DET", pts:12.4},
-  {pos:"WR", nm:"Brandon Aiyuk",     tm:"SF",  pts:11.8},
-  {pos:"WR", nm:"CeeDee Lamb",       tm:"DAL", pts:10.2},
-  {pos:"WR", nm:"Garrett Wilson",    tm:"NYJ", pts:7.9},
+  {pos:"WR", nm:"Keenan Allen",      tm:"LAC", pts:43.5, res:"6x Pro Bowl WR"},
+  {pos:"WR", nm:"Justin Jefferson",  tm:"MIN", pts:27.9, res:"OPOY · All-Pro WR"},
+  {pos:"WR", nm:"Stefon Diggs",      tm:"BUF", pts:19.1, res:"Pro Bowl WR"},
+  {pos:"WR", nm:"Tyreek Hill",       tm:"MIA", pts:30.7, res:"All-Pro · SB champion"},
+  {pos:"WR", nm:"A.J. Brown",        tm:"PHI", pts:22.1, res:"Pro Bowl WR"},
+  {pos:"WR", nm:"Puka Nacua",        tm:"LAR", pts:12.2, res:"rookie receptions record"},
+  {pos:"WR", nm:"Ja'Marr Chase",     tm:"CIN", pts:26.1, res:"Offensive Rookie of Year"},
+  {pos:"WR", nm:"DK Metcalf",        tm:"SEA", pts:17.2, res:"Pro Bowl WR"},
+  {pos:"WR", nm:"Amon-Ra St. Brown", tm:"DET", pts:19.6, res:"All-Pro WR"},
+  {pos:"WR", nm:"Brandon Aiyuk",     tm:"SF",  pts:7.3,  res:"1st-round WR"},
+  {pos:"WR", nm:"CeeDee Lamb",       tm:"DAL", pts:9.3,  res:"All-Pro WR"},
+  {pos:"WR", nm:"Garrett Wilson",    tm:"NYJ", pts:9.8,  res:"Offensive Rookie of Year"},
   /* TE (6) */
-  {pos:"TE", nm:"Travis Kelce",      tm:"KC",  pts:17.6},
-  {pos:"TE", nm:"T.J. Hockenson",    tm:"MIN", pts:14.9},
-  {pos:"TE", nm:"Sam LaPorta",       tm:"DET", pts:13.8},
-  {pos:"TE", nm:"Mark Andrews",      tm:"BAL", pts:10.7},
-  {pos:"TE", nm:"Evan Engram",       tm:"JAX", pts:8.8},
-  {pos:"TE", nm:"George Kittle",     tm:"SF",  pts:6.6},
+  {pos:"TE", nm:"Travis Kelce",      tm:"KC",  pts:19.9, res:"All-Pro · SB champion"},
+  {pos:"TE", nm:"T.J. Hockenson",    tm:"MIN", pts:13.8, res:"Pro Bowl TE"},
+  {pos:"TE", nm:"Sam LaPorta",       tm:"DET", pts:22.4, res:"Pro Bowl TE"},
+  {pos:"TE", nm:"Mark Andrews",      tm:"BAL", pts:7.5,  res:"Pro Bowl TE"},
+  {pos:"TE", nm:"Evan Engram",       tm:"JAX", pts:13.7, res:"Pro Bowl TE"},
+  {pos:"TE", nm:"George Kittle",     tm:"SF",  pts:16.0, res:"All-Pro TE"},
 ];
 /* ⚠⚠ END RELAY BLOCK ⚠⚠ */
 
-const SLOTS = ["QB","RB","WR","TE","FLEX"];
+const SLOTS = ["QB","RB","WR","TE","FLEX","FLEX2"];
 const FLEX_OK = ["RB","WR","TE"];
+/* Both flex slots read FLEX to the player - FLEX2 is only an internal key, so
+   the two are interchangeable on screen exactly as they are in the rules. */
+const SLOT_LABEL = s => s === "FLEX2" ? "FLEX" : s;
+const isFlex = s => s === "FLEX" || s === "FLEX2";
 const CLOCK_SECONDS = 120;
-let picks = {QB:null, RB:null, WR:null, TE:null, FLEX:null};
+let picks = {QB:null, RB:null, WR:null, TE:null, FLEX:null, FLEX2:null};
 let activeTab = "QB";
 let timeLeft = CLOCK_SECONDS;
 let timerId = null;
@@ -251,12 +263,12 @@ function startDraft(){
 function renderTabs(){
   $("postab").innerHTML = SLOTS.map(s=>{
     const filled = picks[s]? "✓" : "·";
-    return `<button class="${activeTab===s?"on":""}" onclick="setTab('${s}')">${s} <span class="n">${filled}</span></button>`;
+    return `<button class="${activeTab===s?"on":""}" onclick="setTab('${s}')">${SLOT_LABEL(s)} <span class="n">${filled}</span></button>`;
   }).join("");
 }
 function setTab(s){ activeTab=s; renderTabs(); renderPool(); }
 function eligible(p, slot){
-  if(slot==="FLEX") return FLEX_OK.includes(p.pos) && !isPicked(p);
+  if(isFlex(slot)) return FLEX_OK.includes(p.pos) && !isPicked(p);
   return p.pos===slot && !isPicked(p);
 }
 function isPicked(p){ return Object.values(picks).some(x=>x && x.nm===p.nm); }
@@ -265,7 +277,7 @@ function renderPool(){
   $("pool").innerHTML = list.map(p=>{
     const sel = picks[activeTab] && picks[activeTab].nm===p.nm;
     return `<div class="prow ${sel?"sel":""}" onclick="pick('${p.nm.replace(/'/g,"\\'")}')">
-      <span><span class="nm">${p.nm}</span><span class="tm">${p.tm} · ${p.pos}</span></span>
+      <span class="pinfo"><span class="pline"><span class="nm">${p.nm}</span><span class="tm">${p.tm} · ${p.pos}</span></span><span class="res">${p.res||""}</span></span>
       <span class="ck">✓</span></div>`;
   }).join("");
 }
@@ -284,7 +296,7 @@ function renderSlots(){
   $("slots").innerHTML = SLOTS.map(s=>{
     const p = picks[s];
     return `<div class="slot ${p?"filled":""}" onclick="setTab('${s}')">
-      <div class="lab">${s}</div>
+      <div class="lab">${SLOT_LABEL(s)}</div>
       <div class="who">${p ? p.nm : "—"}</div></div>`;
   }).join("");
 }
@@ -309,8 +321,12 @@ function scoreLineup(sel){
   const scored = sel.filter(Boolean).map(p=>({...p}));
   if(scored.length===0) return {total:0, dropped:null, rows:[]};
   let worst = scored.reduce((a,b)=> a.pts<=b.pts ? a : b);
-  const total = scored.reduce((s,p)=>s+p.pts,0) - (scored.length===5 ? worst.pts : 0);
-  return {total: Math.round(total*10)/10, dropped: scored.length===5 ? worst : null, rows: scored};
+  /* Drop-worst still drops EXACTLY ONE - the lowest of the six. A partial
+     lineup (the clock ran out) drops nothing, because dropping from four
+     would reward not finishing. */
+  const full = scored.length === SLOTS.length;
+  const total = scored.reduce((s,p)=>s+p.pts,0) - (full ? worst.pts : 0);
+  return {total: Math.round(total*10)/10, dropped: full ? worst : null, rows: scored};
 }
 function perfectLineup(){
   const by = pos => PLAYERS.filter(p=>p.pos===pos).sort((a,b)=>b.pts-a.pts);
@@ -318,10 +334,17 @@ function perfectLineup(){
   /* brute force: small pool, exact answer */
   const QBs=by("QB").slice(0,3), RBs=by("RB").slice(0,4), WRs=by("WR").slice(0,4), TEs=by("TE").slice(0,3);
   const FLX=PLAYERS.filter(p=>FLEX_OK.includes(p.pos)).sort((a,b)=>b.pts-a.pts).slice(0,6);
-  for(const q of QBs) for(const r of RBs) for(const w of WRs) for(const t of TEs) for(const f of FLX){
-    if([r,w,t].some(x=>x.nm===f.nm)) continue;
-    const res = scoreLineup([q,r,w,t,f]);
-    if(!best || res.total>best.res.total) best={lineup:[q,r,w,t,f], res};
+  for(const q of QBs) for(const r of RBs) for(const w of WRs) for(const t of TEs){
+    /* TWO flexes from the same candidate set. j starts at i+1 so a pair is
+       considered once rather than twice: flex1/flex2 are unordered, and
+       counting both orders would not change the total but would double the
+       work and make the "exact" claim harder to reason about. */
+    for(let i=0;i<FLX.length;i++) for(let j=i+1;j<FLX.length;j++){
+      const f1=FLX[i], f2=FLX[j];
+      if([r,w,t].some(x=>x.nm===f1.nm||x.nm===f2.nm)) continue;
+      const res = scoreLineup([q,r,w,t,f1,f2]);
+      if(!best || res.total>best.res.total) best={lineup:[q,r,w,t,f1,f2], res};
+    }
   }
   return best;
 }
@@ -359,13 +382,13 @@ function reveal(){
     const p = picks[s];
     if(!p) return `<div class="row"><span>${s} — empty</span><span class="pts terra">0.0</span></div>`;
     const isDrop = mine.dropped && mine.dropped.nm===p.nm;
-    return `<div class="row ${isDrop?"drop":""}"><span>${s} · ${p.nm} <span class="mut">${p.tm}</span></span><span class="pts">${p.pts.toFixed(1)}</span></div>`;
+    return `<div class="row ${isDrop?"drop":""}"><span>${SLOT_LABEL(s)} · ${p.nm} <span class="mut">${p.tm}</span><span class="res">${p.res||""}</span></span><span class="pts">${p.pts.toFixed(1)}</span></div>`;
   }).join("");
 
   $("perfScore").textContent = perf.res.total.toFixed(1);
   $("perfBreakdown").innerHTML = perf.lineup.map((p,i)=>{
     const isDrop = perf.res.dropped && perf.res.dropped.nm===p.nm;
-    return `<div class="row ${isDrop?"drop":""}"><span>${SLOTS[i]} · ${p.nm} <span class="mut">${p.tm}</span></span><span class="pts">${p.pts.toFixed(1)}</span></div>`;
+    return `<div class="row ${isDrop?"drop":""}"><span>${SLOT_LABEL(SLOTS[i])} · ${p.nm} <span class="mut">${p.tm}</span><span class="res">${p.res||""}</span></span><span class="pts">${p.pts.toFixed(1)}</span></div>`;
   }).join("");
 
   $("fullBoard").innerHTML = ["QB","RB","WR","TE"].map(pos=>{
