@@ -11,6 +11,10 @@
  *   · customer.subscription.updated     -> update status/price/period by sub id
  *   · customer.subscription.deleted     -> same path; status=canceled re-locks gate
  * Other event types are acknowledged with 200 and ignored.
+ *
+ * TEST-MODE EVENTS ARE IGNORED unless STRIPE_ALLOW_TEST_EVENTS=true. One
+ * endpoint URL serves both Stripe modes, so without this a test checkout writes
+ * a real membership row in production. See the guard below.
  */
 
 import {
@@ -42,6 +46,33 @@ export async function POST(req) {
     event = JSON.parse(rawBody);
   } catch {
     return new Response('invalid JSON', { status: 400 });
+  }
+
+  // TEST EVENTS DO NOT WRITE TO AN ENVIRONMENT THAT DID NOT ASK FOR THEM.
+  //
+  // There is ONE registered endpoint URL and both Stripe modes point at it:
+  // https://sportsvyn.com/api/stripe/webhook is enabled in test AND live. So a
+  // test-mode checkout - a developer walking the flow with a 4242 card - fires
+  // a signed, valid webhook straight at production, and upsertMembershipForUser
+  // happily writes a real membership row for whatever client_reference_id it
+  // carries. The signature check cannot catch that: the event IS authentic. It
+  // is simply from the wrong world.
+  //
+  // event.livemode is Stripe's own answer to which world, and it is on every
+  // event. An environment opts IN to test traffic with STRIPE_ALLOW_TEST_EVENTS;
+  // production never sets it, so the absence of a variable is the guard. That
+  // direction matters - a guard that has to be switched ON in production is one
+  // deploy away from being off.
+  //
+  // ACKNOWLEDGED, NOT REJECTED. A 200 tells Stripe the event was delivered so it
+  // stops retrying; a 4xx would leave test events retrying against production
+  // for days. And it is LOGGED rather than dropped in silence, because "nothing
+  // happened" and "we deliberately ignored it" look identical in a database and
+  // only one of them is fine.
+  const allowTest = process.env.STRIPE_ALLOW_TEST_EVENTS === 'true';
+  if (!event.livemode && !allowTest) {
+    console.log('[stripe-webhook] ignored test-mode event', { id: event.id, type: event.type });
+    return Response.json({ ignored: 'test event', id: event.id, type: event.type });
   }
 
   try {
