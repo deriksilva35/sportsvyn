@@ -79,7 +79,8 @@ async function todaysPreseason(dateEt) {
   return sql`
     SELECT m.id, m.kickoff_at AS "kickoffAt", m.status,
            m.metadata->'detail'->>'at'                       AS "detailAt",
-           (m.metadata->'detail'->>'final')::boolean         AS "detailFinal"
+           (m.metadata->'detail'->>'final')::boolean         AS "detailFinal",
+           m.metadata->'detail'->>'final_seen_at'            AS "finalSeenAt"
       FROM matches m JOIN leagues l ON l.id = m.league_id
      WHERE l.slug = 'nfl' AND m.season_phase = 'PRE'
        AND (m.kickoff_at AT TIME ZONE 'America/New_York')::date = ${dateEt}::date`;

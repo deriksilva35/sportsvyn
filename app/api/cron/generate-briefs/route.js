@@ -89,6 +89,8 @@ export const BRIEF_LEAGUE_SLUGS = [
 // Which envelope a league's games get. Soccer is the default because it is what
 // every other slug above is.
 const GRIDIRON_SLUGS = new Set(['nfl']);
+// The same set as a plain array, for the SQL predicate below.
+const GRIDIRON_LIST = [...GRIDIRON_SLUGS];
 
 // The enablement switch. Off by default: an unset variable must never mean
 // "start writing", and the environment where this is first true is a decision
@@ -118,6 +120,18 @@ export async function GET(request) {
      WHERE l.slug = ANY(${slugs}::text[])
        AND m.status = 'final'
        AND m.kickoff_at > now() - interval '6 hours'
+       -- THE BRIEF WAITS FOR THE POST-WHISTLE DATA. A gridiron game is only a
+       -- candidate once its final-flip detail fetch has landed; soccer rows
+       -- carry no detail key and are unaffected by the IS NOT TRUE form.
+       --
+       -- Brief #184 is why. TEN at SF flipped final and the cron found it two
+       -- minutes later, before the detail fetch had run - so the model was
+       -- handed an event spine ending at 16-10 and published "19-10" and
+       -- "three field goals" about a 19-13 game in which Slye kicked four. The
+       -- data was not wrong; it was early, and nothing in the predicate could
+       -- tell the difference.
+       AND NOT (l.slug = ANY(${GRIDIRON_LIST}::text[])
+                AND (m.metadata->'detail'->>'final')::boolean IS NOT TRUE)
        AND NOT EXISTS (
          SELECT 1 FROM match_briefs b
           WHERE b.match_id = m.id AND b.kind = 'auto'
