@@ -23,6 +23,10 @@
  */
 import { neon } from '@neondatabase/serverless';
 import { appendFileSync } from 'node:fs';
+// The cap is IMPORTED, never copied. A watcher that quotes its own number
+// drifts silently the first time the real one is re-priced, and then reports a
+// budget that is wrong in the reassuring direction.
+import { DAILY_REQUEST_CAP } from '../lib/pollers/preseasonWindow.js';
 
 const sql = neon(process.env.PROD_DATABASE_URL);
 // PARAMETERISED BY ENV so the same script covers any slate - it was written for
@@ -180,7 +184,7 @@ while (Date.now() < DEADLINE) {
         SELECT COALESCE(sum((summary->>'requests')::int), 0)::int n FROM sync_runs
          WHERE source = 'nfl-preseason'
            AND started_at >= date_trunc('day', now() AT TIME ZONE 'America/New_York') AT TIME ZONE 'America/New_York'`;
-      log(`budget: ${spent[0].n} / 1400 requests today`);
+      log(`budget: ${spent[0].n} / ${DAILY_REQUEST_CAP} requests today`);
     } catch { /* next time */ }
   }
 
