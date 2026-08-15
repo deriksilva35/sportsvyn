@@ -38,7 +38,7 @@ import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
-import { ensurePuzzleDay } from '@/lib/daily/create';
+import { ensurePuzzleDay, resumeIndex, careerIndex } from '@/lib/daily/create';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -57,8 +57,22 @@ export async function GET(request) {
     source: SOURCE,
     kind: 'create',
     run: async () => {
+      // BUILD THE TWO SHARED INDEXES ONCE, AND ONLY IF A DAY ACTUALLY NEEDS
+      // BUILDING. The resume index parses a 7MB CSV and the career index
+      // aggregates the whole corpus; ensurePuzzleDay returns early for a day
+      // that already exists, so on the ordinary tick - where both rows are
+      // already there - neither is worth paying for. This existence probe is
+      // an optimisation only: ensurePuzzleDay re-checks under ON CONFLICT DO
+      // NOTHING, so the race guard does not rest on what we read here.
+      const have = new Set((await sql`
+        SELECT to_char(puzzle_date, 'YYYY-MM-DD') AS d
+          FROM puzzle_days WHERE puzzle_date = ANY(${targets}::date[])`).map((r) => r.d));
+      const shared = targets.some((t) => !have.has(t))
+        ? { resumeByPlayer: await resumeIndex(), careerByPlayer: await careerIndex() }
+        : {};
+
       const made = [];
-      for (const d of targets) made.push(await ensurePuzzleDay(d));
+      for (const d of targets) made.push(await ensurePuzzleDay(d, shared));
       return {
         targets,
         created: made.filter((m) => m.created).map((m) => m.puzzle_date),
