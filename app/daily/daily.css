@@ -1,0 +1,64 @@
+/* app/daily/daily.css - The Daily. Ink ground, volt as material only. */
+.daily { min-height: 100dvh; background: #0A0A0A; color: #F5F5F2; display: flex; flex-direction: column; }
+.daily-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #1E1E1C; }
+.daily-head .tag { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #8A8A86; }
+.daily-head .tag b { color: #F5F5F2; font-weight: 700; }
+.daily-main { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: 20px 16px 56px; }
+
+.mod { display: flex; flex-direction: column; gap: 14px; }
+.mod-title { font-size: 26px; line-height: 1.12; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+.mod-lede { margin: 0; color: #C9C9C4; line-height: 1.5; }
+.mod-list { margin: 0; padding-left: 18px; color: #C9C9C4; line-height: 1.7; }
+.mod-list b { color: #F5F5F2; }
+.mod-foot { margin: 6px 0 0; color: #8A8A86; font-size: 13px; }
+.muted { color: #8A8A86; font-size: 13px; }
+.err { color: #FF6B6B; font-size: 14px; margin: 0; }
+
+.btn { appearance: none; border: 1px solid #2A2A28; background: #141412; color: #F5F5F2;
+  padding: 12px 16px; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn--volt { background: #D4FF00; border-color: #D4FF00; color: #0A0A0A; }
+.btn--lock { position: sticky; bottom: 10px; z-index: 2; }
+
+/* clock - a progress bar, not a rule */
+.clock-row { display: flex; align-items: center; gap: 12px; }
+.clock { font-variant-numeric: tabular-nums; font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.clock--low { color: #D4FF00; }
+.clock-bar { flex: 1; height: 4px; background: #1E1E1C; border-radius: 2px; overflow: hidden; }
+.clock-bar i { display: block; height: 100%; background: #D4FF00; transition: width .25s linear; }
+
+.slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.slot { position: relative; display: flex; flex-direction: column; gap: 3px; align-items: flex-start;
+  padding: 10px; border: 1px solid #2A2A28; border-radius: 10px; background: #121210; color: inherit;
+  font: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.slot--active { border-color: #D4FF00; }
+.slot--filled { background: #17170F; }
+.slot-tag { font-size: 10px; letter-spacing: .14em; color: #8A8A86; }
+.slot-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%; }
+.slot--filled .slot-name { color: #F5F5F2; }
+.slot:not(.slot--filled) .slot-name { color: #55554F; }
+.slot-x { position: absolute; top: 4px; right: 7px; color: #8A8A86; font-size: 15px; line-height: 1; }
+
+.pool { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.plyr { display: grid; grid-template-columns: 34px 1fr; grid-template-rows: auto auto; gap: 0 10px;
+  padding: 9px 10px; border: 1px solid #1E1E1C; border-radius: 9px; background: #101010; color: inherit;
+  font: inherit; text-align: left; cursor: pointer; }
+.plyr--used { opacity: .35; }
+.plyr-pos { grid-row: 1 / span 2; align-self: center; font-size: 10px; letter-spacing: .1em; color: #8A8A86; }
+.plyr-name { font-size: 14px; font-weight: 600; }
+.plyr-resume { font-size: 11px; color: #8A8A86; }
+
+.score-row { display: flex; align-items: baseline; gap: 14px; }
+.score-big { font-size: 52px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.score-meta { display: flex; flex-direction: column; gap: 2px; }
+.band { display: inline-block; padding: 3px 9px; border-radius: 999px; background: #D4FF00; color: #0A0A0A;
+  font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+
+.guess { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; border-top: 1px solid #1E1E1C; }
+.guess-lede { margin: 0; color: #C9C9C4; font-size: 14px; }
+.guess-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.guess-row select { background: #141412; color: #F5F5F2; border: 1px solid #2A2A28; border-radius: 9px;
+  padding: 10px; font: inherit; }
+
+@media (max-width: 400px) { .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
