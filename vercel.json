@@ -16,6 +16,7 @@
     { "path": "/api/cron/gridiron-teams",         "schedule": "0 7 * * 3" },
     { "path": "/api/cron/gridiron-odds",          "schedule": "*/15 * * * *" },
     { "path": "/api/cron/adp-snapshot",           "schedule": "0 11 * * *" },
-    { "path": "/api/cron/nfl-preseason",          "schedule": "* * * * *" }
+    { "path": "/api/cron/nfl-preseason",          "schedule": "* * * * *" },
+    { "path": "/api/cron/daily-puzzle",           "schedule": "13 9 * * *" }
   ]
 }
