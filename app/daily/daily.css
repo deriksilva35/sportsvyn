@@ -62,3 +62,16 @@
   padding: 10px; font: inherit; }
 
 @media (max-width: 400px) { .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* reveal */
+.mod-sub { font-size: 18px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+.mod--dnf { border-left: 3px solid #8A8A86; padding-left: 12px; }
+.brk { width: 100%; border-collapse: collapse; font-size: 14px; }
+.brk td { padding: 7px 0; border-bottom: 1px solid #1A1A18; vertical-align: baseline; }
+.brk-slot { width: 62px; font-size: 10px; letter-spacing: .12em; color: #8A8A86; }
+.brk-name { color: #F5F5F2; }
+.brk-pts { width: 62px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.brk--dropped td { color: #55554F; text-decoration: line-through; }
+.brk--dropped .brk-pts { color: #55554F; }
+.brk--full { max-height: none; }
+.mod--about a { color: #D4FF00; }

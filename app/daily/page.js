@@ -92,6 +92,26 @@ export default async function DailyPage({ searchParams }) {
 
   const view = await entryView(Number(userId), date);
 
+  // DNF: started, never locked, clock spent. The attempt is consumed - the
+  // board was seen - so the page must not offer START again. It says what
+  // happened rather than handing back a board that can no longer be submitted.
+  if (view.dnf) {
+    return (
+      <div className="daily" data-surface="ink">
+        <header className="daily-head"><Wordmark href="/" /><span className="tag">The <b>Daily</b></span></header>
+        <main className="daily-main">
+          <section className="mod mod--dnf">
+            <h1 className="mod-title">Ran out of clock</h1>
+            <p className="mod-lede">
+              You opened today&rsquo;s board but never locked a lineup, so there&rsquo;s no score.
+              One board a day &mdash; the answer and the perfect lineup unlock at midnight ET.
+            </p>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="daily" data-surface="ink">
       <header className="daily-head">
