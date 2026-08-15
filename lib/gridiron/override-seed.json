@@ -12,7 +12,10 @@
       "generational suffix - note normalizeName strips jr|sr|ii|iii|iv but NOT V (William Fuller V, David Sills V)"
     ],
     "how_to_use": "nflverse_name is UNRESOLVED on purpose. Stage 3 fills it and a human confirms; nothing here is a verified mapping. teams/seasons are the disambiguating evidence - they come from the stat rows, not from nfl_players.team_id, which holds a retired player's LAST team.",
-    "not_covered": "Four residual AMBIGUOUS cases are not in this list because they match too many rather than too few - chiefly Michael Carter (RB) vs Michael Carter II (CB), same team and years, which normalizeName collapses by stripping the II."
+    "not_covered": "Four residual AMBIGUOUS cases are not in this list because they match too many rather than too few - chiefly Michael Carter (RB) vs Michael Carter II (CB), same team and years, which normalizeName collapses by stripping the II.",
+    "candidates_filled": "2026-08-15 - best match per entry, UNCONFIRMED. resolved:false on every row; the matcher ignores this file until a human sets resolved:true.",
+    "how_candidates_were_found": "joined roster_YYYY -> players.csv BY GSIS (never by name: 4% of roster rows carry a different name than players.csv, e.g. roster_2020 says \"Nick Westbrook\" where players.csv says \"Nick Westbrook-Ikhine\"), then scored BDL name against EVERY known spelling plus team overlap and career bounds.",
+    "confirmed": "2026-08-15 - all 38 rows reviewed and approved by Derik; resolved:true. The matcher now honours them as rule 1."
   },
   "entries": [
     {
@@ -34,8 +37,15 @@
       ],
       "season_count": 7,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Robbie Chosen",
+      "resolved": true,
+      "nflverse_gsis": "00-0032688",
+      "nflverse_position": "WR",
+      "nflverse_career": "2016-2025",
+      "nflverse_also_known_as": [
+        "Robby Anderson"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "hollywood brown",
@@ -55,8 +65,14 @@
       ],
       "season_count": 6,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Marquise Brown",
+      "resolved": true,
+      "nflverse_gsis": "00-0035662",
+      "nflverse_position": "WR",
+      "nflverse_career": "2019-2026",
+      "nflverse_also_known_as": [],
+      "confidence": "manual-verified",
+      "note": "verified: teams BAL/ARI/KC and career both match; nflverse has no Hollywood spelling"
     },
     {
       "normalized": "scotty miller",
@@ -76,8 +92,13 @@
       ],
       "season_count": 6,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Scott Miller",
+      "resolved": true,
+      "nflverse_gsis": "00-0035298",
+      "nflverse_position": "WR",
+      "nflverse_career": "2019-2026",
+      "nflverse_also_known_as": [],
+      "confidence": "medium"
     },
     {
       "normalized": "william fuller v",
@@ -96,8 +117,13 @@
       ],
       "season_count": 6,
       "has_suffix": true,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Will Fuller",
+      "resolved": true,
+      "nflverse_gsis": "00-0033127",
+      "nflverse_position": "WR",
+      "nflverse_career": "2016-2021",
+      "nflverse_also_known_as": [],
+      "confidence": "medium"
     },
     {
       "normalized": "ben watson",
@@ -115,8 +141,13 @@
       ],
       "season_count": 4,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Benjamin Watson",
+      "resolved": true,
+      "nflverse_gsis": "00-0022943",
+      "nflverse_position": "TE",
+      "nflverse_career": "2004-2019",
+      "nflverse_also_known_as": [],
+      "confidence": "medium"
     },
     {
       "normalized": "joshua palmer",
@@ -132,8 +163,13 @@
       ],
       "season_count": 4,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Josh Palmer",
+      "resolved": true,
+      "nflverse_gsis": "00-0036988",
+      "nflverse_position": "WR",
+      "nflverse_career": "2021-2026",
+      "nflverse_also_known_as": [],
+      "confidence": "medium"
     },
     {
       "normalized": "kenny gainwell",
@@ -149,8 +185,15 @@
       ],
       "season_count": 4,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Kenny Gainwell",
+      "resolved": true,
+      "nflverse_gsis": "00-0036919",
+      "nflverse_position": "RB",
+      "nflverse_career": "2021-2026",
+      "nflverse_also_known_as": [
+        "Kenneth Gainwell"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "dee eskridge",
@@ -165,8 +208,15 @@
       ],
       "season_count": 3,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Dee Eskridge",
+      "resolved": true,
+      "nflverse_gsis": "00-0036620",
+      "nflverse_position": "WR",
+      "nflverse_career": "2021-2025",
+      "nflverse_also_known_as": [
+        "D'Wayne Eskridge"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "deonte harty",
@@ -181,8 +231,15 @@
       ],
       "season_count": 3,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Deonte Harty",
+      "resolved": true,
+      "nflverse_gsis": "00-0035215",
+      "nflverse_position": "WR",
+      "nflverse_career": "2019-2024",
+      "nflverse_also_known_as": [
+        "Deonte Harris"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "jeff wilson",
@@ -198,8 +255,15 @@
       ],
       "season_count": 3,
       "has_suffix": true,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Jeff Wilson",
+      "resolved": true,
+      "nflverse_gsis": "00-0034115",
+      "nflverse_position": "RB",
+      "nflverse_career": "2018-2025",
+      "nflverse_also_known_as": [
+        "Jeffery Wilson"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "jody fortson",
@@ -214,8 +278,16 @@
       ],
       "season_count": 3,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Joseph Fortson",
+      "resolved": true,
+      "nflverse_gsis": "00-0035547",
+      "nflverse_position": "TE",
+      "nflverse_career": "2019-2024",
+      "nflverse_also_known_as": [
+        "Jody Fortson",
+        "Joe Fortson"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "joshua perkins",
@@ -231,8 +303,15 @@
       ],
       "season_count": 3,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Josh Perkins",
+      "resolved": true,
+      "nflverse_gsis": "00-0032599",
+      "nflverse_position": "TE",
+      "nflverse_career": "2016-2021",
+      "nflverse_also_known_as": [
+        "Joshua Perkins"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "michael badgley",
@@ -248,8 +327,15 @@
       ],
       "season_count": 3,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Mike Badgley",
+      "resolved": true,
+      "nflverse_gsis": "00-0034084",
+      "nflverse_position": "K",
+      "nflverse_career": "2018-2025",
+      "nflverse_also_known_as": [
+        "Michael Badgley"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "pj walker",
@@ -264,8 +350,15 @@
       ],
       "season_count": 3,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "PJ Walker",
+      "resolved": true,
+      "nflverse_gsis": "00-0033275",
+      "nflverse_position": "QB",
+      "nflverse_career": "2017-2023",
+      "nflverse_also_known_as": [
+        "Phillip Walker"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "tyron billy johnson",
@@ -283,8 +376,13 @@
       ],
       "season_count": 3,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Tyron Johnson",
+      "resolved": true,
+      "nflverse_gsis": "00-0035457",
+      "nflverse_position": "WR",
+      "nflverse_career": "2019-2023",
+      "nflverse_also_known_as": [],
+      "confidence": "high"
     },
     {
       "normalized": "cedrick wilson",
@@ -299,8 +397,16 @@
       ],
       "season_count": 2,
       "has_suffix": true,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Cedrick Wilson Jr.",
+      "resolved": true,
+      "nflverse_gsis": "00-0034418",
+      "nflverse_position": "WR",
+      "nflverse_career": "2018-2026",
+      "nflverse_also_known_as": [
+        "Ced Wilson",
+        "Cedrick Wilson"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "chig okonkwo",
@@ -314,8 +420,15 @@
       ],
       "season_count": 2,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Chig Okonkwo",
+      "resolved": true,
+      "nflverse_gsis": "00-0037809",
+      "nflverse_position": "TE",
+      "nflverse_career": "2022-2026",
+      "nflverse_also_known_as": [
+        "Chigoziem Okonkwo"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "chris herndon",
@@ -330,8 +443,15 @@
       ],
       "season_count": 2,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Chris Herndon",
+      "resolved": true,
+      "nflverse_gsis": "00-0034766",
+      "nflverse_position": "TE",
+      "nflverse_career": "2018-2021",
+      "nflverse_also_known_as": [
+        "Christopher Herndon"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "david sills v",
@@ -345,8 +465,13 @@
       ],
       "season_count": 2,
       "has_suffix": true,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "David Sills",
+      "resolved": true,
+      "nflverse_gsis": "00-0035359",
+      "nflverse_position": "WR",
+      "nflverse_career": "2019-2026",
+      "nflverse_also_known_as": [],
+      "confidence": "high"
     },
     {
       "normalized": "drew ogletree",
@@ -360,8 +485,13 @@
       ],
       "season_count": 2,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Andrew Ogletree",
+      "resolved": true,
+      "nflverse_gsis": "00-0037292",
+      "nflverse_position": "TE",
+      "nflverse_career": "2022-2026",
+      "nflverse_also_known_as": [],
+      "confidence": "low"
     },
     {
       "normalized": "gabe davis",
@@ -375,8 +505,15 @@
       ],
       "season_count": 2,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Gabe Davis",
+      "resolved": true,
+      "nflverse_gsis": "00-0036196",
+      "nflverse_position": "WR",
+      "nflverse_career": "2020-2025",
+      "nflverse_also_known_as": [
+        "Gabriel Davis"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "lachlan edwards",
@@ -390,8 +527,15 @@
       ],
       "season_count": 2,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Lachlan Edwards",
+      "resolved": true,
+      "nflverse_gsis": "00-0032449",
+      "nflverse_position": "P",
+      "nflverse_career": "2016-2021",
+      "nflverse_also_known_as": [
+        "Lac Edwards"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "michael woods",
@@ -405,8 +549,13 @@
       ],
       "season_count": 2,
       "has_suffix": true,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Mike Woods",
+      "resolved": true,
+      "nflverse_gsis": "00-0037300",
+      "nflverse_position": "WR",
+      "nflverse_career": "2022-2025",
+      "nflverse_also_known_as": [],
+      "confidence": "low"
     },
     {
       "normalized": "bam knight",
@@ -419,8 +568,15 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Bam Knight",
+      "resolved": true,
+      "nflverse_gsis": "00-0037157",
+      "nflverse_position": "RB",
+      "nflverse_career": "2022-2026",
+      "nflverse_also_known_as": [
+        "Zonovan Knight"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "bisi johnson",
@@ -433,8 +589,15 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Bisi Johnson",
+      "resolved": true,
+      "nflverse_gsis": "00-0035006",
+      "nflverse_position": "WR",
+      "nflverse_career": "2019-2022",
+      "nflverse_also_known_as": [
+        "Olabisi Johnson"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "boobie dixon",
@@ -447,8 +610,13 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Anthony Dixon",
+      "resolved": true,
+      "nflverse_gsis": "00-0027772",
+      "nflverse_position": "RB",
+      "nflverse_career": "2010-2015",
+      "nflverse_also_known_as": [],
+      "confidence": "low"
     },
     {
       "normalized": "daniel herron",
@@ -462,8 +630,13 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Dan Herron",
+      "resolved": true,
+      "nflverse_gsis": "00-0029588",
+      "nflverse_position": "RB",
+      "nflverse_career": "2012-2015",
+      "nflverse_also_known_as": [],
+      "confidence": "medium"
     },
     {
       "normalized": "john samuel shenker",
@@ -476,8 +649,15 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "John Shenker",
+      "resolved": true,
+      "nflverse_gsis": "00-0038920",
+      "nflverse_position": "TE",
+      "nflverse_career": "2023-2024",
+      "nflverse_also_known_as": [
+        "John Samuel Shenker"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "jonathan hilliman",
@@ -490,8 +670,13 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Jon Hilliman",
+      "resolved": true,
+      "nflverse_gsis": "00-0035013",
+      "nflverse_position": "RB",
+      "nflverse_career": "2019-2019",
+      "nflverse_also_known_as": [],
+      "confidence": "medium"
     },
     {
       "normalized": "matt mcgloin",
@@ -504,8 +689,15 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Matt McGloin",
+      "resolved": true,
+      "nflverse_gsis": "00-0030419",
+      "nflverse_position": "QB",
+      "nflverse_career": "2013-2017",
+      "nflverse_also_known_as": [
+        "Matthew McGloin"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "mike vick",
@@ -518,8 +710,15 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Mike Vick",
+      "resolved": true,
+      "nflverse_gsis": "00-0020245",
+      "nflverse_position": "QB",
+      "nflverse_career": "2001-2015",
+      "nflverse_also_known_as": [
+        "Michael Vick"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "nick westbrook ikhine",
@@ -532,8 +731,15 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Nick Westbrook-Ikhine",
+      "resolved": true,
+      "nflverse_gsis": "00-0036182",
+      "nflverse_position": "WR",
+      "nflverse_career": "2020-2026",
+      "nflverse_also_known_as": [
+        "Nick Westbrook"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "parker romo",
@@ -546,8 +752,13 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "John Parker Romo",
+      "resolved": true,
+      "nflverse_gsis": "00-0037542",
+      "nflverse_position": "K",
+      "nflverse_career": "2023-2025",
+      "nflverse_also_known_as": [],
+      "confidence": "low"
     },
     {
       "normalized": "stephen hauschka",
@@ -560,8 +771,15 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Steven Hauschka",
+      "resolved": true,
+      "nflverse_gsis": "00-0025944",
+      "nflverse_position": "K",
+      "nflverse_career": "2008-2020",
+      "nflverse_also_known_as": [
+        "Stephen Hauschka"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "stevie johnson",
@@ -574,8 +792,13 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Steve Johnson",
+      "resolved": true,
+      "nflverse_gsis": "00-0026364",
+      "nflverse_position": "WR",
+      "nflverse_career": "2008-2016",
+      "nflverse_also_known_as": [],
+      "confidence": "medium"
     },
     {
       "normalized": "tim wright",
@@ -588,8 +811,13 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Timothy Wright",
+      "resolved": true,
+      "nflverse_gsis": "00-0029910",
+      "nflverse_position": "TE",
+      "nflverse_career": "2013-2016",
+      "nflverse_also_known_as": [],
+      "confidence": "medium"
     },
     {
       "normalized": "trevor graham",
@@ -602,8 +830,15 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Trevor Graham",
+      "resolved": true,
+      "nflverse_gsis": "00-0029660",
+      "nflverse_position": "WR",
+      "nflverse_career": "2012-2015",
+      "nflverse_also_known_as": [
+        "T.J. Graham"
+      ],
+      "confidence": "high"
     },
     {
       "normalized": "walter powell",
@@ -616,8 +851,15 @@
       ],
       "season_count": 1,
       "has_suffix": false,
-      "nflverse_name": null,
-      "resolved": false
+      "nflverse_name": "Walt Powell",
+      "resolved": true,
+      "nflverse_gsis": "00-0031268",
+      "nflverse_position": "WR",
+      "nflverse_career": "2014-2017",
+      "nflverse_also_known_as": [
+        "Walter Powell"
+      ],
+      "confidence": "high"
     }
   ]
 }
