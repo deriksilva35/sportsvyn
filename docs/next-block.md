@@ -76,6 +76,25 @@ raising the cap to ~2,400 (still under the 2,880 runaway line).
 
 ---
 
+## Close port 3010 after the playtest
+
+**Opened:** 15 Aug 2026, for Derik's Daily playthrough on the droplet.
+
+`next start -p 3010 -H 0.0.0.0` is bound to all interfaces under tmux `devrig`,
+with a keepalive loop. For the duration it exposes **an unauthenticated server
+against DEV data** to anyone who finds the IP and port — no basic auth, no
+allowlist, and the Daily's own gate only protects the puzzle, not the box.
+
+Acceptable for one evening, and stated once rather than assumed. **Kill the
+tmux session when the playthrough is done** — that is the whole close, since
+nothing was opened in a firewall to undo:
+
+    tmux kill-session -t devrig
+
+If a longer-lived DEV surface is ever wanted, tunnel it (ngrok is already on the
+box, currently serving an Expo dev server on 8081) rather than binding a port —
+a tunnel is revocable and does not survive a reboot by accident.
+
 ## Also open, not scheduled
 
 - **Count-claim gate is ADVISORY** (`COUNT_CLAIMS_BLOCKING = false`, flipped
