@@ -20,7 +20,7 @@ import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { syncNflGames, syncCfbGames } from '@/lib/gridiron/sync';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
-import { isLiveWindow } from '@/lib/pollers/liveWindow';
+import { liveWindowDetail } from '@/lib/pollers/liveWindow';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision, lastGamesRunAt, probeCfbdBudget } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
@@ -52,7 +52,13 @@ export async function GET(request) {
     const leagueId = await leagueIdBySlug(lg.slug);
     if (leagueId == null) { decisions.push({ source: lg.source, decision: 'no-league-row' }); continue; }
 
-    const live = await isLiveWindow(sql, leagueId, now);
+    // liveWindowDetail rather than isLiveWindow so the TBD-placeholder count
+    // reaches the decision record. From late September most of a CFB Saturday
+    // carries a midnight-ET placeholder; without this the rule would do its
+    // work invisibly and a quiet poller would look identical to a broken one.
+    const { live, considered, tbdExcluded } = await liveWindowDetail(sql, leagueId, now, {
+      log: (msg, ctx) => console.log(`[gridiron-games] ${msg}`, JSON.stringify(ctx)),
+    });
     let kind;
     if (live) {
       kind = 'live-poll';
@@ -62,9 +68,14 @@ export async function GET(request) {
       kind = elapsedMin >= BASELINE_INTERVAL_MIN ? 'baseline' : 'noop';
     }
 
+    // tbd_excluded rides on the recorded decision too, not just the console
+    // line: a console log is gone in a fortnight and the question this answers
+    // ("was the poller quiet because nothing was on, or because we excluded 42
+    // placeholders?") gets asked weeks later against sync_runs.
+    const windowCtx = { considered, tbd_excluded: tbdExcluded };
     if (kind === 'noop') {
-      if (recordNoop) await recordDecision(sql, { source: lg.source, kind: 'noop', summary: { season } });
-      decisions.push({ source: lg.source, decision: 'noop', season });
+      if (recordNoop) await recordDecision(sql, { source: lg.source, kind: 'noop', summary: { season, ...windowCtx } });
+      decisions.push({ source: lg.source, decision: 'noop', season, ...windowCtx });
       continue;
     }
 
@@ -87,10 +98,10 @@ export async function GET(request) {
     });
 
     if (outcome.locked) {
-      await recordDecision(sql, { source: lg.source, kind: 'skipped-locked', summary: { season } });
-      decisions.push({ source: lg.source, decision: 'skipped-locked' });
+      await recordDecision(sql, { source: lg.source, kind: 'skipped-locked', summary: { season, ...windowCtx } });
+      decisions.push({ source: lg.source, decision: 'skipped-locked', ...windowCtx });
     } else {
-      decisions.push({ source: lg.source, decision: kind, ok: outcome.result.ok, id: outcome.result.id });
+      decisions.push({ source: lg.source, decision: kind, ok: outcome.result.ok, id: outcome.result.id, ...windowCtx });
     }
   }
 
