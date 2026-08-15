@@ -35,9 +35,14 @@ const sql = neon(process.env.PROD_DATABASE_URL);
 const SLATE = process.env.WATCH_SLATE ?? '2026-08-13';
 const LOG = process.env.WATCH_LOG ?? `/home/derik/watch-logs/slate-${SLATE}.log`;
 const nextDay = (d) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + 1); return x.toISOString().slice(0, 10); };
-const WINDOW_OPEN = `${SLATE}T22:00:00Z`;                       // 6pm ET
-const WATCH_FROM = Date.parse(`${SLATE}T22:45:00Z`);            // 6:45pm ET, kickoff - 15
-const DEADLINE = Date.parse(`${nextDay(SLATE)}T07:00:00Z`);     // 3am ET, hard stop
+// THE DEFAULTS ARE AN EVENING SLATE, WHICH IS NOT EVERY SLATE. Thursday and
+// Friday both kicked at 7pm ET, so these were written as constants. Saturday
+// 15 Aug kicks at 1pm ET across a seven-hour spread, and the 22:00Z default
+// would have opened the watch four hours after the first whistle. Overridable
+// so a slate's real shape can be passed in rather than assumed.
+const WINDOW_OPEN = process.env.WATCH_OPEN_UTC ?? `${SLATE}T22:00:00Z`;      // 6pm ET
+const WATCH_FROM = Date.parse(process.env.WATCH_FROM_UTC ?? `${SLATE}T22:45:00Z`); // kickoff - 15
+const DEADLINE = Date.parse(process.env.WATCH_DEADLINE_UTC ?? `${nextDay(SLATE)}T07:00:00Z`);
 const POLL_MS = 60_000;
 
 const et = (d) => new Intl.DateTimeFormat('en-US', {
@@ -118,6 +123,13 @@ while (Date.now() < DEADLINE) {
     // first time the feed says final, and never retracted by a flap.
     if (!p.seen && cur.seen) log(`FINAL-SEEN ${k.padEnd(43)} stamped ${cur.seen}  (status now ${cur.status})`);
     if (p.seen && cur.seen && p.seen !== cur.seen) log(`*** STAMP MOVED on ${k}: ${p.seen} -> ${cur.seen}  (set-once VIOLATED)`);
+    // STAMP LOST - the failure that actually happened on 14 Aug, and the one
+    // STAMP MOVED structurally cannot see. That alarm compares two non-null
+    // readings; the real defect wiped the stamp to NULL (gameDetail.js wrote
+    // metadata.detail wholesale and a shallow jsonb || deleted the sibling
+    // key). A null read never paired with anything, so the night reported zero
+    // violations while the stamp was being destroyed on every detail fetch.
+    if (p.seen && !cur.seen) log(`*** STAMP LOST on ${k}: ${p.seen} -> NULL  (WIPED - a684bc5 REGRESSED)`);
     if (!p.fin && cur.fin) {
       log(`FINAL-FETCH ${k.padEnd(42)} claimed  events=${cur.ev} lines=${cur.ln}`);
       if (!firstAt.finalFetch) { firstAt.finalFetch = Date.now(); log('*** PATH 2 CONFIRMED: the post-whistle fetch fired.'); }
