@@ -45,6 +45,36 @@ string, and never a URL pasted into a default argument. Source with
 on a command line, ever. A committed script with a credential in it is a leak
 that survives every future clone.
 
+## jsonb `||` is SHALLOW, and it appends to arrays
+
+Two production defects this month, both from the same operator:
+
+  **final_seen_at wiped, 14 Aug.** `gameDetail.js` wrote
+  `metadata || '{"detail":{at,final}}'`. The merge is one level deep, so the
+  whole `detail` object was replaced and the `final_seen_at` a *different*
+  writer had nested into it was deleted on every detail fetch. The slate lost
+  its flap immunity and nobody noticed, because the alarm compared two non-null
+  readings and a wipe-to-null never pairs.
+
+  **A 65th board entry, 15 Aug.** The Daily's close job tried
+  `board || jsonb_build_object('__perfect', ...)`. `board` is an ARRAY, and
+  `array || object` APPENDS:
+
+      '[{"id":1}]'::jsonb || '{"__perfect":{...}}'::jsonb
+        -> [{"id":1},{"__perfect":{...}}]
+
+  The perfect lineup — carrying every player's score — would have become a
+  player row. Caught before shipping only because the shape was checked.
+
+THE RULE. Merging into a NESTED key means writing the nesting out explicitly:
+
+    metadata || jsonb_build_object('detail',
+      COALESCE(metadata->'detail','{}'::jsonb) || <incoming>::jsonb)
+
+and if a sibling key must survive an incoming write that could carry it,
+re-assert it after the merge. Never `||` an object onto a value you have not
+confirmed is an object — check the shape, or give it its own column.
+
 ## Migration numbering
 
 Migration numbers are assigned at transcription time as
