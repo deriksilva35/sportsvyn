@@ -15,12 +15,13 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SLOTS, CLOCK_MS, slotAccepts, nextOpenSlot } from '@/lib/daily/play';
 
-const SLOTS = ['QB', 'RB', 'WR', 'TE', 'FLEX', 'FLEX2'];
+// play.js is pure and importable here on purpose: the slot list, the clock
+// length and the eligibility rule are ONE definition shared with the server
+// that enforces them. They were duplicated in this file and a drift between
+// the two copies would be a fairness bug that only shows up in production.
 const SLOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLEX', FLEX2: 'FLEX' };
-const FLEX_OK = new Set(['RB', 'WR', 'TE']);
-const accepts = (slot, pos) => (slot.startsWith('FLEX') ? FLEX_OK.has(pos) : slot === pos);
-const CLOCK_MS = 120_000;
 
 const mmss = (ms) => {
   const s = Math.max(0, Math.ceil(ms / 1000));
@@ -106,6 +107,24 @@ export default function DailyRoom({ puzzleDate, initialEntry }) {
   const picked = useMemo(() => new Set(Object.values(lineup).filter(Boolean)), [lineup]);
   const filledCount = SLOTS.filter((s) => lineup[s] != null).length;
 
+  // AUTO-ADVANCE. Computed from the NEXT lineup, not the current one, so the
+  // slot just filled is never a candidate. Both writes happen outside the
+  // setState updater - a setActive() inside one would fire twice under
+  // StrictMode's double-invoke and could skip a slot.
+  function pick(id) {
+    const next = { ...lineup, [active]: id };
+    setLineup(next);
+    setActive(nextOpenSlot(active, next));
+  }
+
+  // Clearing a slot moves focus INTO it: emptying a slot is how a player says
+  // "this is the one I want to redo", and making them tap it again afterwards
+  // is the same wasted tap auto-advance exists to remove.
+  function clear(slot) {
+    setLineup((l) => { const n = { ...l }; delete n[slot]; return n; });
+    setActive(slot);
+  }
+
   // ---- ENTERED -------------------------------------------------------------
   if (entry && !board) {
     return (
@@ -170,7 +189,7 @@ export default function DailyRoom({ puzzleDate, initialEntry }) {
               onClick={() => setActive(s)}>
               <span className="slot-tag">{SLOT_LABEL[s]}</span>
               <span className="slot-name">{p ? p.name : 'empty'}</span>
-              {p && <span className="slot-x" onClick={(e) => { e.stopPropagation(); setLineup((l) => { const n = { ...l }; delete n[s]; return n; }); }}>×</span>}
+              {p && <span className="slot-x" onClick={(e) => { e.stopPropagation(); clear(s); }}>×</span>}
             </button>
           );
         })}
@@ -184,10 +203,10 @@ export default function DailyRoom({ puzzleDate, initialEntry }) {
       </button>
 
       <div className="pool">
-        {board.filter((p) => accepts(active, p.pos)).map((p) => (
+        {board.filter((p) => slotAccepts(active, p.pos)).map((p) => (
           <button key={p.id} className={`plyr${picked.has(p.id) ? ' plyr--used' : ''}`}
             disabled={picked.has(p.id) || late}
-            onClick={() => setLineup((l) => ({ ...l, [active]: p.id }))}>
+            onClick={() => pick(p.id)}>
             <span className="plyr-pos">{p.pos}</span>
             <span className="plyr-name">{p.name}</span>
             {p.resume && <span className="plyr-resume">{p.resume}</span>}
