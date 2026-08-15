@@ -1,0 +1,623 @@
+{
+  "_provenance": {
+    "what": "BDL player names with 2015-2024 stat rows that find NO match in the nflverse roster by normalized name. Seed for the stage-3 manual override table.",
+    "produced_by": "the ten-season exit-gate join (BDL nfl_player_game_stats -> nflverse roster_YYYY.csv via lib/gridiron/nameMatch.js normalizeName)",
+    "generated": "2026-08-15",
+    "seasons": "2015-2024",
+    "population": "OFFENSIVE PRODUCERS ONLY - players with pass_att, rush_att, rec or fga > 0 in that season. Defensive-only misses are excluded: the puzzle does not draw from them.",
+    "scale": "38 distinct players out of 6,278 offensive producers (1.5%). The other 98.5% resolve on name alone or on stat-row team.",
+    "known_classes": [
+      "legal name change (Robbie Chosen = Robby Anderson, Hollywood Brown = Marquise Brown, Deonte Harty = Deonte Harris, Tyron Billy-Johnson = Tyron Johnson)",
+      "nickname or formal-name variant, in BOTH directions (Mike Vick, Ben Watson, Matt McGloin, Daniel Herron, Boobie Dixon)",
+      "generational suffix - note normalizeName strips jr|sr|ii|iii|iv but NOT V (William Fuller V, David Sills V)"
+    ],
+    "how_to_use": "nflverse_name is UNRESOLVED on purpose. Stage 3 fills it and a human confirms; nothing here is a verified mapping. teams/seasons are the disambiguating evidence - they come from the stat rows, not from nfl_players.team_id, which holds a retired player's LAST team.",
+    "not_covered": "Four residual AMBIGUOUS cases are not in this list because they match too many rather than too few - chiefly Michael Carter (RB) vs Michael Carter II (CB), same team and years, which normalizeName collapses by stripping the II."
+  },
+  "entries": [
+    {
+      "normalized": "robbie chosen",
+      "bdl_name": "Robbie Chosen",
+      "teams": [
+        "NYJ",
+        "CAR",
+        "ARI"
+      ],
+      "seasons": [
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022
+      ],
+      "season_count": 7,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "hollywood brown",
+      "bdl_name": "Hollywood Brown",
+      "teams": [
+        "BAL",
+        "ARI",
+        "KC"
+      ],
+      "seasons": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "season_count": 6,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "scotty miller",
+      "bdl_name": "Scotty Miller",
+      "teams": [
+        "TB",
+        "ATL",
+        "PIT"
+      ],
+      "seasons": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "season_count": 6,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "william fuller v",
+      "bdl_name": "William Fuller V",
+      "teams": [
+        "HOU",
+        "MIA"
+      ],
+      "seasons": [
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021
+      ],
+      "season_count": 6,
+      "has_suffix": true,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "ben watson",
+      "bdl_name": "Ben Watson",
+      "teams": [
+        "NO",
+        "BAL",
+        "NE"
+      ],
+      "seasons": [
+        2015,
+        2017,
+        2018,
+        2019
+      ],
+      "season_count": 4,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "joshua palmer",
+      "bdl_name": "Joshua Palmer",
+      "teams": [
+        "LAC"
+      ],
+      "seasons": [
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "season_count": 4,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "kenny gainwell",
+      "bdl_name": "Kenny Gainwell",
+      "teams": [
+        "PHI"
+      ],
+      "seasons": [
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "season_count": 4,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "dee eskridge",
+      "bdl_name": "Dee Eskridge",
+      "teams": [
+        "SEA"
+      ],
+      "seasons": [
+        2021,
+        2022,
+        2023
+      ],
+      "season_count": 3,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "deonte harty",
+      "bdl_name": "Deonte Harty",
+      "teams": [
+        "NO"
+      ],
+      "seasons": [
+        2019,
+        2020,
+        2021
+      ],
+      "season_count": 3,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "jeff wilson",
+      "bdl_name": "Jeff Wilson Jr.",
+      "teams": [
+        "SF",
+        "MIA"
+      ],
+      "seasons": [
+        2020,
+        2021,
+        2022
+      ],
+      "season_count": 3,
+      "has_suffix": true,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "jody fortson",
+      "bdl_name": "Jody Fortson",
+      "teams": [
+        "KC"
+      ],
+      "seasons": [
+        2021,
+        2022,
+        2024
+      ],
+      "season_count": 3,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "joshua perkins",
+      "bdl_name": "Joshua Perkins",
+      "teams": [
+        "ATL",
+        "PHI"
+      ],
+      "seasons": [
+        2016,
+        2018,
+        2019
+      ],
+      "season_count": 3,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "michael badgley",
+      "bdl_name": "Michael Badgley",
+      "teams": [
+        "LAC",
+        "DET"
+      ],
+      "seasons": [
+        2018,
+        2019,
+        2023
+      ],
+      "season_count": 3,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "pj walker",
+      "bdl_name": "PJ Walker",
+      "teams": [
+        "CAR"
+      ],
+      "seasons": [
+        2020,
+        2021,
+        2022
+      ],
+      "season_count": 3,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "tyron billy johnson",
+      "bdl_name": "Tyron Billy-Johnson",
+      "teams": [
+        "LAC",
+        "JAX",
+        "LV",
+        "HOU"
+      ],
+      "seasons": [
+        2020,
+        2021,
+        2022
+      ],
+      "season_count": 3,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "cedrick wilson",
+      "bdl_name": "Cedrick Wilson Jr.",
+      "teams": [
+        "DAL",
+        "MIA"
+      ],
+      "seasons": [
+        2019,
+        2023
+      ],
+      "season_count": 2,
+      "has_suffix": true,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "chig okonkwo",
+      "bdl_name": "Chig Okonkwo",
+      "teams": [
+        "TEN"
+      ],
+      "seasons": [
+        2022,
+        2023
+      ],
+      "season_count": 2,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "chris herndon",
+      "bdl_name": "Chris Herndon",
+      "teams": [
+        "NYJ",
+        "MIN"
+      ],
+      "seasons": [
+        2020,
+        2021
+      ],
+      "season_count": 2,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "david sills v",
+      "bdl_name": "David Sills V",
+      "teams": [
+        "NYG"
+      ],
+      "seasons": [
+        2021,
+        2022
+      ],
+      "season_count": 2,
+      "has_suffix": true,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "drew ogletree",
+      "bdl_name": "Drew Ogletree",
+      "teams": [
+        "IND"
+      ],
+      "seasons": [
+        2023,
+        2024
+      ],
+      "season_count": 2,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "gabe davis",
+      "bdl_name": "Gabe Davis",
+      "teams": [
+        "BUF"
+      ],
+      "seasons": [
+        2020,
+        2021
+      ],
+      "season_count": 2,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "lachlan edwards",
+      "bdl_name": "Lachlan Edwards",
+      "teams": [
+        "NYJ"
+      ],
+      "seasons": [
+        2016,
+        2017
+      ],
+      "season_count": 2,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "michael woods",
+      "bdl_name": "Michael Woods II",
+      "teams": [
+        "CLE"
+      ],
+      "seasons": [
+        2022,
+        2024
+      ],
+      "season_count": 2,
+      "has_suffix": true,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "bam knight",
+      "bdl_name": "Bam Knight",
+      "teams": [
+        "NYJ"
+      ],
+      "seasons": [
+        2022
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "bisi johnson",
+      "bdl_name": "Bisi Johnson",
+      "teams": [
+        "MIN"
+      ],
+      "seasons": [
+        2020
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "boobie dixon",
+      "bdl_name": "Boobie Dixon",
+      "teams": [
+        "BUF"
+      ],
+      "seasons": [
+        2015
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "daniel herron",
+      "bdl_name": "Daniel Herron",
+      "teams": [
+        "BUF",
+        "IND"
+      ],
+      "seasons": [
+        2015
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "john samuel shenker",
+      "bdl_name": "John Samuel Shenker",
+      "teams": [
+        "LV"
+      ],
+      "seasons": [
+        2024
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "jonathan hilliman",
+      "bdl_name": "Jonathan Hilliman",
+      "teams": [
+        "NYG"
+      ],
+      "seasons": [
+        2019
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "matt mcgloin",
+      "bdl_name": "Matt McGloin",
+      "teams": [
+        "LV"
+      ],
+      "seasons": [
+        2015
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "mike vick",
+      "bdl_name": "Mike Vick",
+      "teams": [
+        "PIT"
+      ],
+      "seasons": [
+        2015
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "nick westbrook ikhine",
+      "bdl_name": "Nick Westbrook-Ikhine",
+      "teams": [
+        "TEN"
+      ],
+      "seasons": [
+        2020
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "parker romo",
+      "bdl_name": "Parker Romo",
+      "teams": [
+        "MIN"
+      ],
+      "seasons": [
+        2024
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "stephen hauschka",
+      "bdl_name": "Stephen Hauschka",
+      "teams": [
+        "SEA"
+      ],
+      "seasons": [
+        2015
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "stevie johnson",
+      "bdl_name": "Stevie Johnson",
+      "teams": [
+        "LAC"
+      ],
+      "seasons": [
+        2015
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "tim wright",
+      "bdl_name": "Tim Wright",
+      "teams": [
+        "DET"
+      ],
+      "seasons": [
+        2015
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "trevor graham",
+      "bdl_name": "Trevor Graham",
+      "teams": [
+        "NO"
+      ],
+      "seasons": [
+        2015
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    },
+    {
+      "normalized": "walter powell",
+      "bdl_name": "Walter Powell",
+      "teams": [
+        "BUF"
+      ],
+      "seasons": [
+        2016
+      ],
+      "season_count": 1,
+      "has_suffix": false,
+      "nflverse_name": null,
+      "resolved": false
+    }
+  ]
+}
