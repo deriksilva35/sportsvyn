@@ -18,9 +18,10 @@
 import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.PROD_DATABASE_URL);
-const SLATE = '2026-08-13';
-const WINDOW_OPEN = '2026-08-13T22:00:00Z';         // 6pm ET, before the first kickoff
-const DEADLINE = Date.parse('2026-08-14T06:30:00Z'); // 2:30am ET, hard stop
+const SLATE = process.env.WATCH_SLATE ?? '2026-08-13';
+const nextDay = (d) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + 1); return x.toISOString().slice(0, 10); };
+const WINDOW_OPEN = `${SLATE}T22:00:00Z`;                        // 6pm ET
+const DEADLINE = Date.parse(`${nextDay(SLATE)}T06:30:00Z`);      // 2:30am ET, hard stop
 const POLL_MS = 60_000;
 
 const et = (d) => new Intl.DateTimeFormat('en-US', {
@@ -39,7 +40,7 @@ let firstFinal = null;
 // IDLE UNTIL THE WINDOW OPENS. Armed a day early, so it waits rather than
 // spending ~1,300 pointless polls on an empty Wednesday night. One quiet check
 // an hour keeps it honest about still being alive.
-const WATCH_FROM = Date.parse('2026-08-13T22:45:00Z');   // 6:45pm ET, kickoff - 15
+const WATCH_FROM = Date.parse(`${SLATE}T22:45:00Z`);   // 6:45pm ET, kickoff - 15
 emit('WATCH ARMED for the Thursday slate (6 games, 7:00-9:00pm ET).');
 if (Date.now() < WATCH_FROM) {
   emit(`Idling until ${et(WATCH_FROM)} ET, then polling PROD every 60s.`);
@@ -55,6 +56,7 @@ while (Date.now() < DEADLINE) {
     games = await sql`
       SELECT m.id, m.slug, m.status, m.home_score h, m.away_score a,
              (m.metadata->'detail'->>'final')::boolean AS detail_final,
+             m.metadata->'detail'->>'final_seen_at'     AS final_seen_at,
              (SELECT count(*)::int FROM gridiron_game_events e WHERE e.match_id = m.id)  AS ev,
              (SELECT count(*)::int FROM gridiron_player_lines l WHERE l.match_id = m.id) AS ln,
              (SELECT count(*)::int FROM match_briefs b WHERE b.match_id = m.id AND b.kind = 'auto') AS brief
@@ -72,7 +74,7 @@ while (Date.now() < DEADLINE) {
   for (const g of games) {
     const k = short(g.slug);
     const p = prev.get(k);
-    const cur = { status: g.status, ev: g.ev, ln: g.ln, brief: g.brief, fin: !!g.detail_final };
+    const cur = { status: g.status, ev: g.ev, ln: g.ln, brief: g.brief, fin: !!g.detail_final, seen: g.final_seen_at ?? null };
     if (!p) { prev.set(k, cur); continue; }
 
     if (p.status !== cur.status) {
@@ -85,10 +87,20 @@ while (Date.now() < DEADLINE) {
         }
       } else emit(`STATUS    ${k} -> ${cur.status}`);
     }
-    // PATH 1: detail landing while the game is live is the live-fetch working.
-    if (cur.ev > p.ev || cur.ln > p.ln) {
-      emit(`DETAIL    ${k} (${cur.status}) events ${p.ev}->${cur.ev}  lines ${p.ln}->${cur.ln}`);
-    }
+    // TIGHTENED. A line-count bump carries almost no information - three games
+    // kicking together produced ~70 notifications an hour on Thursday, and
+    // monitors that flood get stopped, which costs the feed. What survives:
+    // the FIRST detail for a game (proves the fetch reached it) and any change
+    // in the EVENT count (a score actually happened). Routine growth is in the
+    // disk record, which keeps everything.
+    const firstDetail = p.ev === 0 && p.ln === 0 && (cur.ev > 0 || cur.ln > 0);
+    if (firstDetail) emit(`DETAIL    ${k} (${cur.status}) FIRST  events=${cur.ev} lines=${cur.ln}`);
+    else if (cur.ev > p.ev) emit(`SCORE     ${k} (${cur.status}) events ${p.ev}->${cur.ev}  lines=${cur.ln}`);
+
+    // The stamp - the behaviour tonight exists to prove.
+    if (!p.seen && cur.seen) emit(`FINAL-SEEN ${k} stamped ${cur.seen} (status now ${cur.status})`);
+    if (p.seen && cur.seen && p.seen !== cur.seen) emit(`*** STAMP MOVED ${k}: ${p.seen} -> ${cur.seen}  SET-ONCE VIOLATED`);
+
     // PATH 2: the one-time post-whistle fetch.
     if (!p.fin && cur.fin) emit(`FINAL-FETCH ${k} claimed  events=${cur.ev} lines=${cur.ln}`);
     prev.set(k, cur);
@@ -101,12 +113,13 @@ while (Date.now() < DEADLINE) {
        WHERE source = 'nfl-preseason' AND kind = 'detail' AND started_at > ${WINDOW_OPEN}
        ORDER BY id`;
     if (runs.length > seenDetailRuns) {
+      // Only sweeps carrying a FAILURE are events. The routine ledger line
+      // duplicates what the DETAIL/SCORE lines already say.
       for (const r of runs.slice(seenDetailRuns)) {
         const s = r.summary ?? {};
-        emit(`SWEEP #${r.id} ${et(r.started_at)} requests=${s.requests} games=${s.games}`);
         for (const d of s.done ?? []) {
-          if (d.error) emit(`  SWEEP ERROR match ${d.id}: ${d.error}`);
-          else if (d.errors?.length) emit(`  SWEEP PARTIAL match ${d.id}: ${JSON.stringify(d.errors)}`);
+          if (d.error) emit(`SWEEP ERROR   #${r.id} match ${d.id}: ${d.error}`);
+          else if (d.errors?.length) emit(`SWEEP PARTIAL #${r.id} match ${d.id}: ${JSON.stringify(d.errors)}`);
         }
       }
       seenDetailRuns = runs.length;
@@ -123,7 +136,10 @@ while (Date.now() < DEADLINE) {
     for (const b of briefs) {
       if (seenBriefs.has(b.id)) continue;
       seenBriefs.add(b.id);
-      emit(`BRIEF #${b.id} ${short(b.slug)} status=${b.validation_status}`);
+      const g2 = prev.get(short(b.slug));
+      const lat = g2?.seen ? Math.round((Date.now() - new Date(g2.seen).getTime()) / 60000) : null;
+      emit(`BRIEF #${b.id} ${short(b.slug)} status=${b.validation_status}`
+        + (lat != null ? `  (~${lat} min after first observed final)` : ''));
       emit(`  "${b.headline}"`);
     }
   } catch { /* covered by the next poll */ }

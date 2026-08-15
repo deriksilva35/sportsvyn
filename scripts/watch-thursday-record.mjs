@@ -25,11 +25,19 @@ import { neon } from '@neondatabase/serverless';
 import { appendFileSync } from 'node:fs';
 
 const sql = neon(process.env.PROD_DATABASE_URL);
-const LOG = process.env.WATCH_LOG ?? '/home/derik/watch-logs/thursday-2026-08-13.log';
-const SLATE = '2026-08-13';
-const WINDOW_OPEN = '2026-08-13T22:00:00Z';            // 6pm ET
-const WATCH_FROM = Date.parse('2026-08-13T22:45:00Z'); // 6:45pm ET, kickoff - 15
-const DEADLINE = Date.parse('2026-08-14T07:00:00Z');   // 3am ET, hard stop
+// PARAMETERISED BY ENV so the same script covers any slate - it was written for
+// one Thursday and immediately needed for the Friday after, which is the whole
+// argument for it living in scripts/ rather than a scratchpad.
+//
+// SLATE is the ET calendar day. Everything else derives from it, in UTC,
+// because that is the clock the host and Date.parse actually read: an ET
+// evening's window opens at 22:00Z the same day and closes at 07:00Z the next.
+const SLATE = process.env.WATCH_SLATE ?? '2026-08-13';
+const LOG = process.env.WATCH_LOG ?? `/home/derik/watch-logs/slate-${SLATE}.log`;
+const nextDay = (d) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + 1); return x.toISOString().slice(0, 10); };
+const WINDOW_OPEN = `${SLATE}T22:00:00Z`;                       // 6pm ET
+const WATCH_FROM = Date.parse(`${SLATE}T22:45:00Z`);            // 6:45pm ET, kickoff - 15
+const DEADLINE = Date.parse(`${nextDay(SLATE)}T07:00:00Z`);     // 3am ET, hard stop
 const POLL_MS = 60_000;
 
 const et = (d) => new Intl.DateTimeFormat('en-US', {
@@ -73,6 +81,7 @@ while (Date.now() < DEADLINE) {
     games = await sql`
       SELECT m.id, m.slug, m.status, m.home_score h, m.away_score a,
              (m.metadata->'detail'->>'final')::boolean AS detail_final,
+             m.metadata->'detail'->>'final_seen_at'     AS final_seen_at,
              (SELECT count(*)::int FROM gridiron_game_events e WHERE e.match_id = m.id)  AS ev,
              (SELECT count(*)::int FROM gridiron_player_lines l WHERE l.match_id = m.id) AS ln,
              (SELECT count(*)::int FROM match_briefs b WHERE b.match_id = m.id AND b.kind = 'auto') AS brief
@@ -90,7 +99,7 @@ while (Date.now() < DEADLINE) {
 
   for (const g of games) {
     const k = short(g.slug);
-    const cur = { status: g.status, ev: g.ev, ln: g.ln, brief: g.brief, fin: !!g.detail_final };
+    const cur = { status: g.status, ev: g.ev, ln: g.ln, brief: g.brief, fin: !!g.detail_final, seen: g.final_seen_at ?? null };
     const p = prev.get(k);
     if (!p) { prev.set(k, cur); log(`BASELINE  ${k.padEnd(44)} ${cur.status} ev=${cur.ev} ln=${cur.ln} brief=${cur.brief}`); continue; }
 
@@ -105,6 +114,10 @@ while (Date.now() < DEADLINE) {
         log('*** PATH 1 CONFIRMED: detail landed while a game was LIVE.');
       }
     }
+    // The stamp is the behaviour tonight exists to prove: written once, the
+    // first time the feed says final, and never retracted by a flap.
+    if (!p.seen && cur.seen) log(`FINAL-SEEN ${k.padEnd(43)} stamped ${cur.seen}  (status now ${cur.status})`);
+    if (p.seen && cur.seen && p.seen !== cur.seen) log(`*** STAMP MOVED on ${k}: ${p.seen} -> ${cur.seen}  (set-once VIOLATED)`);
     if (!p.fin && cur.fin) {
       log(`FINAL-FETCH ${k.padEnd(42)} claimed  events=${cur.ev} lines=${cur.ln}`);
       if (!firstAt.finalFetch) { firstAt.finalFetch = Date.now(); log('*** PATH 2 CONFIRMED: the post-whistle fetch fired.'); }
@@ -138,7 +151,11 @@ while (Date.now() < DEADLINE) {
     for (const b of briefs) {
       if (seenBriefs.has(b.id)) continue;
       seenBriefs.add(b.id);
-      log(`BRIEF #${b.id} ${short(b.slug)} status=${b.validation_status} at ${et(b.generated_at)}`);
+      // Final-to-brief latency is the ordering fix's own report card.
+      const g2 = prev.get(short(b.slug));
+      const lat = g2?.seen ? Math.round((new Date(b.generated_at) - new Date(g2.seen)) / 60000) : null;
+      log(`BRIEF #${b.id} ${short(b.slug)} status=${b.validation_status} at ${et(b.generated_at)}`
+        + (lat != null ? `  (${lat} min after first observed final)` : ''));
       log(`   "${b.headline}"`);
       if (!firstAt.brief) { firstAt.brief = Date.now(); log('*** PATH 3 CONFIRMED: the brief cron swept a gridiron game.'); }
     }
