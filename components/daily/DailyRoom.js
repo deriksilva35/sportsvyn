@@ -137,6 +137,9 @@ export default function DailyRoom({ puzzleDate, initialEntry }) {
             <span className="muted">{entry.entrants} {entry.entrants === 1 ? 'entry' : 'entries'} today</span>
           </div>
         </div>
+        {entry.guessed && entry.guessSeason != null && (
+          <p className="muted">You guessed {entry.guessSeason} &middot; Week {entry.guessWeek}</p>
+        )}
         {entry.bonusPct > 0 && (
           <p className="muted">Base {entry.baseScore} · guess bonus +{Math.round(entry.bonusPct * 100)}%</p>
         )}
@@ -159,7 +162,7 @@ export default function DailyRoom({ puzzleDate, initialEntry }) {
         <ul className="mod-list">
           <li><b>Sixty-four players</b> from one real week of NFL history.</li>
           <li><b>Six slots:</b> QB, RB, WR, TE and two FLEX (RB/WR/TE).</li>
-          <li><b>Two minutes</b> from the moment you start. The clock is server-side.</li>
+          <li><b>Three minutes</b> from the moment you start. The clock is server-side.</li>
           <li><b>Your worst pick is dropped</b> — five of six count.</li>
           <li>Name the season and week afterwards for a bonus.</li>
         </ul>
@@ -175,6 +178,9 @@ export default function DailyRoom({ puzzleDate, initialEntry }) {
   const late = left <= 0;
   return (
     <section className="mod mod--play">
+      {/* PINNED HEAD: clock, slots, lock. Everything a player needs to see the
+          state of the round stays on screen; only the pool moves. */}
+      <div className="play-head">
       <div className="clock-row">
         <div className={`clock${left < 30_000 ? ' clock--low' : ''}`}>{mmss(left)}</div>
         <div className="clock-bar"><i style={{ width: `${Math.max(0, Math.min(100, (left / CLOCK_MS) * 100))}%` }} /></div>
@@ -201,8 +207,9 @@ export default function DailyRoom({ puzzleDate, initialEntry }) {
         onClick={() => lock(lineup)}>
         {busy ? 'Locking…' : late ? 'Out of time' : filledCount < 6 ? `${6 - filledCount} to fill` : 'Lock it in'}
       </button>
+      </div>
 
-      <div className="pool">
+      <div className="pool pool--scroll">
         {board.filter((p) => slotAccepts(active, p.pos)).map((p) => (
           <button key={p.id} className={`plyr${picked.has(p.id) ? ' plyr--used' : ''}`}
             disabled={picked.has(p.id) || late}

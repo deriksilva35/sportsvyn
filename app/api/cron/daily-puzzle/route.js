@@ -3,7 +3,7 @@
  *
  * THE PREMISE: the answers are public record. A board with Peyton Manning and
  * Todd Gurley on it is 2015-2016 to anyone who follows football, and the box
- * score is a search away. THE CLOCK IS THE GAME — two minutes, enforced
+ * score is a search away. THE CLOCK IS THE GAME — three minutes, enforced
  * server-side. Nothing here is hidden in the belief that hiding it stops a
  * determined person; it is hidden so the puzzle stays honest for the people
  * playing it straight.

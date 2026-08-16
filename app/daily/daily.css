@@ -18,7 +18,6 @@
   padding: 12px 16px; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer; }
 .btn:disabled { opacity: .45; cursor: default; }
 .btn--volt { background: #D4FF00; border-color: #D4FF00; color: #0A0A0A; }
-.btn--lock { position: sticky; bottom: 10px; z-index: 2; }
 
 /* clock - a progress bar, not a rule */
 .clock-row { display: flex; align-items: center; gap: 12px; }
@@ -39,6 +38,30 @@
 .slot--filled .slot-name { color: #F5F5F2; }
 .slot:not(.slot--filled) .slot-name { color: #55554F; }
 .slot-x { position: absolute; top: 4px; right: 7px; color: #8A8A86; font-size: 15px; line-height: 1; }
+
+/* ONE SCROLL CONTAINER, AND ONLY THE POOL MOVES.
+ *
+ * The playtest caught this as an inconsistency rather than a layout bug: at QB
+ * the twelve rows fit, the page did not overflow, and the sticky Lock button
+ * looked pinned. At WR the twenty-four rows pushed the document past the
+ * viewport and the WHOLE PAGE scrolled - clock, slots and Lock included. Same
+ * screen, two different behaviours, decided by how many players share a
+ * position. A player mid-round should never have to scroll back up to find the
+ * clock or the button that ends the round.
+ *
+ * So the play surface is pinned to the viewport and the pool is the only thing
+ * with overflow. :has() scopes it to the playing state - the pitch, rules,
+ * entered and reveal screens are ordinary documents and should keep scrolling
+ * normally, and this island does not know which state the page shell is in.
+ *
+ * min-height:0 on every flex ancestor is load-bearing: a flex item defaults to
+ * min-height:auto, which refuses to shrink below its content, and the pool
+ * would grow the page instead of scrolling inside it. */
+.daily:has(.mod--play) { height: 100dvh; min-height: 0; overflow: hidden; }
+.daily:has(.mod--play) .daily-main { display: flex; min-height: 0; padding-bottom: 12px; }
+.mod--play { flex: 1; width: 100%; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.play-head { flex: 0 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.pool--scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 
 /* THE POOL - one line per player, and the line height is the whole design.
  *

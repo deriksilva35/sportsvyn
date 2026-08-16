@@ -32,7 +32,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'The Daily - Sportsvyn',
-  description: 'One board. Six slots. Two minutes.',
+  description: 'One board. Six slots. Three minutes.',
 };
 
 export async function generateViewport({ searchParams }) {
@@ -56,7 +56,7 @@ export default async function DailyPage({ searchParams }) {
         <header className="daily-head"><Wordmark href="/" /><span className="tag">The <b>Daily</b></span></header>
         <main className="daily-main">
           <section className="mod mod--pitch">
-            <h1 className="mod-title">One board. Six slots. Two minutes.</h1>
+            <h1 className="mod-title">One board. Six slots. Three minutes.</h1>
             <p className="mod-lede">
               Every day, sixty-four real performances from one real week of NFL history.
               Build the best six-man lineup you can before the clock runs out.
