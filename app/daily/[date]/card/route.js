@@ -10,6 +10,7 @@
 // THROWS on a glyph with no matching font - so a card that renders is Saira,
 // not a silent fallback.
 
+import { readFileSync } from 'node:fs';
 import { ImageResponse } from 'next/og';
 import { revealView } from '@/lib/daily/close';
 
@@ -24,7 +25,13 @@ export async function GET(_req, { params }) {
   const v = await revealView(date);
   if (v.state !== 'revealed') return new Response('Not found', { status: 404 });
 
-  const saira = await fetch(new URL('./Saira-BlackItalic.woff', import.meta.url)).then((r) => r.arrayBuffer());
+  // READ, DO NOT FETCH. new URL(..., import.meta.url) is the right way to point
+  // at the traced asset - it lands at .next/server/assets/Saira-*.woff in a
+  // production build - but this route runs in the NODE runtime, and Node's
+  // fetch has no file: scheme. It fails with "not implemented... yet...", which
+  // surfaces as a bare 500 on the card and nowhere else. readFileSync takes the
+  // same file: URL directly and keeps the asset tracing intact.
+  const saira = readFileSync(new URL('./Saira-BlackItalic.woff', import.meta.url));
   const S = { display: 'flex', fontFamily: 'Saira', fontStyle: 'italic', color: PAPER };
 
   return new ImageResponse(
