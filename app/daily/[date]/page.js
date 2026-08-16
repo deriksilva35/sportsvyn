@@ -79,7 +79,9 @@ export default async function DailyReveal({ params, searchParams }) {
                 {v.you.picks.map((p) => (
                   <tr key={p.slot} className={p.dropped ? 'brk--dropped' : ''}>
                     <td className="brk-slot">{p.slot.replace('FLEX2', 'FLEX')}</td>
-                    <td className="brk-name">{p.name}</td>
+                    <td className="brk-name">{p.name}
+                      {p.line && <span className="brk-line">{p.line}</span>}
+                    </td>
                     <td className="brk-pts">{fmt(p.points)}</td>
                   </tr>
                 ))}
@@ -105,7 +107,9 @@ export default async function DailyReveal({ params, searchParams }) {
               {(v.perfect?.picks ?? []).map((p) => (
                 <tr key={p.slot} className={p.dropped ? 'brk--dropped' : ''}>
                   <td className="brk-slot">{p.slot.replace('FLEX2', 'FLEX')}</td>
-                  <td className="brk-name">{p.name} <span className="muted">{p.team}</span></td>
+                  <td className="brk-name">{p.name} <span className="muted">{p.team}</span>
+                    {p.line && <span className="brk-line">{p.line}</span>}
+                  </td>
                   <td className="brk-pts">{fmt(p.points)}</td>
                 </tr>
               ))}
@@ -120,7 +124,9 @@ export default async function DailyReveal({ params, searchParams }) {
               {v.board.map((p) => (
                 <tr key={p.id}>
                   <td className="brk-slot">{p.pos}</td>
-                  <td className="brk-name">{p.name} <span className="muted">{p.team}</span></td>
+                  <td className="brk-name">{p.name} <span className="muted">{p.team}</span>
+                    {p.line && <span className="brk-line">{p.line}</span>}
+                  </td>
                   <td className="brk-pts">{fmt(p.points)}</td>
                 </tr>
               ))}

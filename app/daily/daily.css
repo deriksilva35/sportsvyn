@@ -95,5 +95,17 @@
 .brk-pts { width: 62px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
 .brk--dropped td { color: #55554F; text-decoration: line-through; }
 .brk--dropped .brk-pts { color: #55554F; }
+
+/* THE BOX-SCORE LINE, reveal only. The reveal is not density-constrained the
+   way the play pool is - nobody is racing a clock here - so it gets its own
+   row under the name at a readable size rather than competing for the name's.
+ * INLINE-BLOCK IS LOAD-BEARING, not a shrug at display:block. A dropped pick
+   strikes its whole cell through, and text-decoration propagates to in-flow
+   descendants where a child CANNOT cancel it - `text-decoration: none` here
+   would do nothing. Decoration does not cross into an ATOMIC inline-level box,
+   so inline-block escapes the strike; width:100% keeps it on its own line. */
+.brk-line { display: inline-block; width: 100%; margin-top: 3px;
+  font-size: 11px; color: #8A8A86; font-variant-numeric: tabular-nums; }
+.brk--dropped .brk-line { color: #55554F; }
 .brk--full { max-height: none; }
 .mod--about a { color: #D4FF00; }
