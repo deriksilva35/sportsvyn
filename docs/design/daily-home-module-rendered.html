@@ -1,0 +1,168 @@
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Daily homepage module - rendered states</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@500;700&family=JetBrains+Mono:wght@400;700&family=Source+Serif+4:ital,wght@1,400;1,500&family=Archivo:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--graphite:#1A1A1A;--rule-dark:#2E2E2E;--rule-darker:#1F1F1F;
+--paper-warm:#F5F5F2;--muted:#888;--muted-light:#C5C5C2;--volt:#D4FF00;
+--font-display:'Saira',sans-serif;--font-saira-cond:'Saira Condensed',sans-serif;
+--font-mono:'JetBrains Mono',monospace;--font-serif:'Source Serif 4',Georgia,serif;}
+*{box-sizing:border-box}
+body{margin:0;background:#4A4A46;font-family:Archivo,system-ui;padding:26px}
+.wrap{max-width:1320px;margin:0 auto}
+.cap{font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+ background:var(--volt);color:#111;display:inline-block;padding:6px 11px;margin:26px 0 10px}
+.pane{background:var(--graphite);border:1px solid var(--rule-dark);padding:24px}
+.two{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.ph{width:390px;flex:0 0 390px}
+.dk{flex:1 1 620px;min-width:520px}
+.n{background:#141412;color:#E8E8E2;border-left:4px solid var(--volt);padding:14px 16px;
+ font-family:var(--font-mono);font-size:12px;line-height:1.6;margin:0 0 8px}
+.n b{color:var(--volt)} .n code{color:#D4FF00}
+.daily-card{background:var(--graphite);border:1px solid var(--rule-dark);padding:26px}
+.dc-header{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:16px;
+ border-bottom:1px solid var(--rule-dark);margin-bottom:20px}
+.dc-title-row{display:flex;align-items:baseline;gap:14px}
+.dc-title{font-family:var(--font-display);font-weight:900;font-style:italic;text-transform:uppercase;
+ font-size:28px;line-height:1;letter-spacing:-.03em;color:var(--paper-warm)}
+.dc-title .accent{color:var(--volt)}
+.dc-header-meta-group{display:flex;align-items:center;gap:12px}
+.dc-meta{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+.dc-author{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.18em;
+ text-transform:uppercase;margin-bottom:24px}
+.dc-author .author{color:var(--paper-warm)}.dc-author .sep{color:var(--rule-dark);margin:0 8px}
+.dc-sim-promo{display:block;text-decoration:none;background:var(--ink);color:var(--paper-warm);
+ border:1px solid var(--rule-dark);padding:22px 24px;margin:24px 0}
+.dc-sim-kicker{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--volt);margin-bottom:10px}
+.dc-sim-head{font-family:var(--font-display);font-style:italic;font-weight:900;text-transform:uppercase;
+ font-size:26px;line-height:1.05;letter-spacing:-.02em;color:var(--paper-warm);margin-bottom:10px}
+.dc-sim-line{font-family:var(--font-serif);font-style:italic;font-size:15px;line-height:1.5;color:var(--muted-light);margin:0 0 16px;max-width:520px}
+.dc-sim-cta{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.12em;
+ text-transform:uppercase;color:var(--ink);background:var(--volt);padding:9px 16px;display:inline-block}
+/* ======================= THE DAILY — homepage module =======================
+   An ink block on the Daily Card (Surface Rule: instruments render ink and sit
+   as blocks on the card). Volt is MATERIAL only - the 14px eyebrow square, the
+   4px left bar, the ink-on-volt chips, the 2px link underline and the score-bar
+   fill. It is never body text.
+
+   The paper treatment is mocked and banked in
+   docs/design/daily-home-module-v1.html for the surface migration after
+   preseason Week 1. Nothing below assumes it. */
+.dly {
+  display: block; background: #121210;
+  border: 1px solid var(--rule-dark); border-left: 4px solid var(--volt);
+  padding: 20px 22px 22px; margin: 0 0 24px;
+}
+.dly-eyebrow { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+.dly-sq { width: 14px; height: 14px; background: var(--volt); flex: 0 0 14px; }
+.dly-kick {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--volt);
+}
+.dly-ed {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted); margin-left: auto;
+}
+.dly-hook {
+  font-family: var(--font-display), sans-serif; font-style: italic; font-weight: 900;
+  text-transform: uppercase; font-size: 26px; line-height: 1.04; letter-spacing: -0.03em;
+  color: var(--paper-warm); margin: 0 0 9px;
+}
+.dly-sub {
+  font-family: var(--font-serif); font-style: italic; font-size: 15px; line-height: 1.5;
+  color: var(--muted-light); margin: 0 0 16px; max-width: 52ch;
+}
+.dly-cta {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink); background: var(--volt);
+  padding: 11px 20px; display: inline-block; text-decoration: none;
+}
+.dly-cta:hover { background: #C2EA00; }
+.dly-foot {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); margin-top: 13px;
+}
+
+/* receipt */
+.dly-rcpt { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 6px; }
+.dly-score {
+  font-family: var(--font-mono); font-weight: 700; font-size: 46px; line-height: 0.92;
+  letter-spacing: -0.03em; color: var(--paper-warm); font-variant-numeric: tabular-nums;
+}
+.dly-of {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); padding-bottom: 7px;
+}
+.dly-bandwrap { padding-bottom: 6px; }
+.dly-chip {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink); background: var(--volt);
+  padding: 5px 10px; display: inline-block;
+}
+.dly-chip--quiet {
+  background: transparent; color: var(--muted-light);
+  border: 1px solid var(--rule-dark);
+}
+.dly-meta {
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--muted-light);
+  line-height: 1.9; margin-top: 4px;
+}
+.dly-meta .k {
+  color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 10px; margin-right: 6px;
+}
+.dly-meta .dly-meta-gap { margin-left: 18px; }
+.dly-rule { height: 1px; background: var(--rule-dark); margin: 14px 0 0; }
+
+/* revealed */
+.dly-ans { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.dly-yr {
+  font-family: var(--font-display), sans-serif; font-style: italic; font-weight: 900;
+  font-size: 40px; line-height: 1; letter-spacing: -0.04em; color: var(--paper-warm);
+}
+.dly-wk {
+  font-family: var(--font-saira-cond, var(--font-display)); font-weight: 700; font-size: 18px;
+  text-transform: uppercase; letter-spacing: 0.02em; color: var(--muted);
+}
+.dly-vs { display: flex; gap: 26px; flex-wrap: wrap; margin: 14px 0 2px; }
+.dly-cell .n {
+  font-family: var(--font-mono); font-weight: 700; font-size: 25px; line-height: 1;
+  color: var(--paper-warm); font-variant-numeric: tabular-nums;
+}
+.dly-cell .k {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted); margin-top: 5px;
+}
+.dly-cell--dim .n { color: var(--muted-light); }
+.dly-bar { height: 6px; background: var(--rule-dark); margin: 14px 0 4px; position: relative; }
+.dly-bar i { position: absolute; inset: 0 auto 0 0; background: var(--volt); }
+.dly-link {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--paper-warm); text-decoration: none;
+  border-bottom: 2px solid var(--volt); padding-bottom: 2px;
+  display: inline-block; margin-top: 15px;
+}
+.dly-link:hover { color: var(--volt); }
+
+@media (max-width: 520px) {
+  .dly { padding: 18px 16px 20px; }
+  .dly-hook { font-size: 23px; }
+  .dly-score { font-size: 40px; }
+  .dly-yr { font-size: 34px; }
+  .dly-vs { gap: 18px; }
+  .dly-meta .dly-meta-gap { margin-left: 0; display: block; }
+}
+
+</style>
+<div class="wrap">
+<div class='n'><b>RENDERED FROM THE REAL COMPONENT.</b> Every block below is markup captured from <code>next start</code> serving the actual homepage, not a mock. States 1 and 2 are today's real DEV data. State 3 was captured by running the real closeDay() against DEV and then reverting revealed/perfect - the entry row was never touched. This is an HTML capture, not a raster screenshot: there is no browser on this box, so I am not calling it one.</div>
+<div class="cap">IN CONTEXT - byline, then THE DAILY, then Draftvyn</div>
+<div class="two"><div class="ph"><article class="daily-card"><div class="dc-header"><div class="dc-title-row"><div class="dc-title">The Daily <span class="accent">Card</span></div></div><div class="dc-header-meta-group"><div class="dc-meta">Sun, Aug 16</div></div></div><div class="dc-author"><span>By</span> <span class="author">Derik Silva</span><span class="sep">·</span><span>Sun, Aug 16</span></div><section class="dly" data-surface="ink" data-state="play"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">Today’s Board</span><span class="dly-ed">Edition No. <!-- -->001</span></div><h3 class="dly-hook">One board. Six slots. Three minutes.</h3><p class="dly-sub">Sixty-four real performances from one real week of NFL history. Build the best six-man lineup you can before the clock runs out. Your worst pick is dropped.</p><a class="dly-cta" href="/signin?callbackUrl=%2Fdaily">Play today’s board</a><div class="dly-foot">Closes midnight ET · One board a day · PPR, drop worst</div></section><a class="dc-sim-promo" href="/sim" data-surface="ink"><div class="dc-sim-kicker">Fantasy</div><div class="dc-sim-head">Draft against the market, not a spreadsheet.</div><p class="dc-sim-line">Full snake mocks vs AI rooms that reach and slide - every pick graded on live ADP. Three free drafts a week.</p><span class="dc-sim-cta">Start a draft<!-- --> →</span></a></article></div><div class="dk"><article class="daily-card"><div class="dc-header"><div class="dc-title-row"><div class="dc-title">The Daily <span class="accent">Card</span></div></div><div class="dc-header-meta-group"><div class="dc-meta">Sun, Aug 16</div></div></div><div class="dc-author"><span>By</span> <span class="author">Derik Silva</span><span class="sep">·</span><span>Sun, Aug 16</span></div><section class="dly" data-surface="ink" data-state="play"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">Today’s Board</span><span class="dly-ed">Edition No. <!-- -->001</span></div><h3 class="dly-hook">One board. Six slots. Three minutes.</h3><p class="dly-sub">Sixty-four real performances from one real week of NFL history. Build the best six-man lineup you can before the clock runs out. Your worst pick is dropped.</p><a class="dly-cta" href="/signin?callbackUrl=%2Fdaily">Play today’s board</a><div class="dly-foot">Closes midnight ET · One board a day · PPR, drop worst</div></section><a class="dc-sim-promo" href="/sim" data-surface="ink"><div class="dc-sim-kicker">Fantasy</div><div class="dc-sim-head">Draft against the market, not a spreadsheet.</div><p class="dc-sim-line">Full snake mocks vs AI rooms that reach and slide - every pick graded on live ADP. Three free drafts a week.</p><span class="dc-sim-cta">Start a draft<!-- --> →</span></a></article></div></div>
+<div class="cap">STATE 1 - NOT PLAYED (anonymous visitor; PLAY goes to the signin round-trip)</div>
+<div class="two"><div class="ph"><div class="pane"><section class="dly" data-surface="ink" data-state="play"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">Today’s Board</span><span class="dly-ed">Edition No. <!-- -->001</span></div><h3 class="dly-hook">One board. Six slots. Three minutes.</h3><p class="dly-sub">Sixty-four real performances from one real week of NFL history. Build the best six-man lineup you can before the clock runs out. Your worst pick is dropped.</p><a class="dly-cta" href="/signin?callbackUrl=%2Fdaily">Play today’s board</a><div class="dly-foot">Closes midnight ET · One board a day · PPR, drop worst</div></section></div></div><div class="dk"><div class="pane"><section class="dly" data-surface="ink" data-state="play"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">Today’s Board</span><span class="dly-ed">Edition No. <!-- -->001</span></div><h3 class="dly-hook">One board. Six slots. Three minutes.</h3><p class="dly-sub">Sixty-four real performances from one real week of NFL history. Build the best six-man lineup you can before the clock runs out. Your worst pick is dropped.</p><a class="dly-cta" href="/signin?callbackUrl=%2Fdaily">Play today’s board</a><div class="dly-foot">Closes midnight ET · One board a day · PPR, drop worst</div></section></div></div></div>
+<div class="cap">STATE 2 - RECEIPT (played, day still open)</div>
+<div class="two"><div class="ph"><div class="pane"><section class="dly" data-surface="ink" data-state="receipt"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">Today’s Board</span><span class="dly-ed">Edition No. <!-- -->001</span></div><div class="dly-rcpt"><div class="dly-score">74.3</div><div class="dly-of">your score</div><div class="dly-bandwrap"><span class="dly-chip">Top 5%</span></div></div><div class="dly-meta"><span class="k">You guessed</span> <!-- -->2018<!-- --> · Wk <!-- -->10</div><div class="dly-rule"></div><div class="dly-foot">The answer and the perfect lineup unlock at midnight ET</div></section></div></div><div class="dk"><div class="pane"><section class="dly" data-surface="ink" data-state="receipt"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">Today’s Board</span><span class="dly-ed">Edition No. <!-- -->001</span></div><div class="dly-rcpt"><div class="dly-score">74.3</div><div class="dly-of">your score</div><div class="dly-bandwrap"><span class="dly-chip">Top 5%</span></div></div><div class="dly-meta"><span class="k">You guessed</span> <!-- -->2018<!-- --> · Wk <!-- -->10</div><div class="dly-rule"></div><div class="dly-foot">The answer and the perfect lineup unlock at midnight ET</div></section></div></div></div>
+<div class="cap">STATE 3 - REVEALED, played</div>
+<div class="two"><div class="ph"><div class="pane"><section class="dly" data-surface="ink" data-state="revealed"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">Today’s Board</span><span class="dly-ed">Edition No. <!-- -->001</span></div><div class="dly-ans"><span class="dly-yr">2017</span><span class="dly-wk">Week <!-- -->13</span><span class="dly-chip dly-chip--tier">STARTER</span></div><div class="dly-vs"><div class="dly-cell"><div class="n">74.3</div><div class="k">your score</div></div><div class="dly-cell dly-cell--dim"><div class="n">131.1</div><div class="k">perfect lineup</div></div><div class="dly-cell"><div class="n">57<!-- -->%</div><div class="k">of perfect</div></div></div><div class="dly-bar"><i style="width:57%"></i></div><a class="dly-link" href="/daily/2026-08-16">See the perfect lineup and the whole board →</a></section></div></div><div class="dk"><div class="pane"><section class="dly" data-surface="ink" data-state="revealed"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">Today’s Board</span><span class="dly-ed">Edition No. <!-- -->001</span></div><div class="dly-ans"><span class="dly-yr">2017</span><span class="dly-wk">Week <!-- -->13</span><span class="dly-chip dly-chip--tier">STARTER</span></div><div class="dly-vs"><div class="dly-cell"><div class="n">74.3</div><div class="k">your score</div></div><div class="dly-cell dly-cell--dim"><div class="n">131.1</div><div class="k">perfect lineup</div></div><div class="dly-cell"><div class="n">57<!-- -->%</div><div class="k">of perfect</div></div></div><div class="dly-bar"><i style="width:57%"></i></div><a class="dly-link" href="/daily/2026-08-16">See the perfect lineup and the whole board →</a></section></div></div></div>
+<div class="cap">STATE 3b - REVEALED, never played (same day, different reader)</div>
+<div class="two"><div class="ph"><div class="pane"><section class="dly" data-surface="ink" data-state="revealed"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">Today’s Board</span><span class="dly-ed">Edition No. <!-- -->001</span></div><div class="dly-ans"><span class="dly-yr">2017</span><span class="dly-wk">Week <!-- -->13</span></div><p class="dly-sub">Today’s board is closed. The perfect lineup scored <!-- -->131.1<!-- -->.</p><a class="dly-link" href="/daily/2026-08-16">See the perfect lineup and the whole board →</a></section></div></div><div class="dk"><div class="pane"><section class="dly" data-surface="ink" data-state="revealed"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">Today’s Board</span><span class="dly-ed">Edition No. <!-- -->001</span></div><div class="dly-ans"><span class="dly-yr">2017</span><span class="dly-wk">Week <!-- -->13</span></div><p class="dly-sub">Today’s board is closed. The perfect lineup scored <!-- -->131.1<!-- -->.</p><a class="dly-link" href="/daily/2026-08-16">See the perfect lineup and the whole board →</a></section></div></div></div>
+</div>

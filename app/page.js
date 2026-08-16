@@ -28,6 +28,8 @@ import { toPtIsoDate } from '@/lib/scheduleData';
 import { getTodaysReads, FOOTBALL_READS_SLUGS } from '@/lib/articles';
 import { getFollowedTeamIds } from '@/lib/follows';
 import { auth } from '@/auth';
+import DailyModule from '@/components/home/DailyModule';
+import { getDailyHome } from '@/lib/daily/entries';
 import SimPromoCard from '@/components/home/SimPromoCard';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import MovementCard from '@/components/fantasy/MovementCard';
@@ -294,7 +296,7 @@ export default async function HomePage() {
     timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric',
   }).format(now);
 
-  const [todaysReads, followedSet, movement, nflBoard, cfbBoard, slate] = await Promise.all([
+  const [todaysReads, followedSet, movement, nflBoard, cfbBoard, slate, dailyHome] = await Promise.all([
     getTodaysReads({ ptDay, limit: 4, leagueSlugs: FOOTBALL_READS_SLUGS }),
     getFollowedTeamIds(userId),
     // Same call the /nfl entry card makes. Null rather than a thrown page if
@@ -308,6 +310,10 @@ export default async function HomePage() {
     // One read for both leagues. Null on failure: the sidebar loses a unit, the
     // page does not lose a column.
     getSlateByDate(etDay).catch(() => null),
+    // The Daily's own state. Null on any failure AND on a day with no board -
+    // the module is one unit on the page, never the page, and an absent Daily
+    // must not take the homepage down.
+    getDailyHome(userId).catch(() => null),
   ]);
 
 
@@ -328,6 +334,15 @@ export default async function HomePage() {
         <article className="daily-card">
           <DailyCardHeader ptDateLabel={ptDateLabel} />
           <DailyCardByline ptDateLabel={ptDateLabel} />
+
+          {/* THE DAILY LEADS. It is the only module on this page that EXPIRES:
+              Draftvyn is a standing invitation, Today's Reads is durable, the
+              season strip is a calendar. A card that renames itself every day
+              opens with the thing that is only true today. It is also the only
+              module whose state CHANGES for a returning reader, so the top slot
+              does work on the second visit instead of repeating an ad.
+              Renders nothing at all before the day opens. */}
+          <DailyModule view={dailyHome} isShell={isShell} signedIn={userId != null} />
 
           {/* Draftvyn leads. It is the alive product: the thing a reader can
               do right now, in about ten minutes, rather than read about. The

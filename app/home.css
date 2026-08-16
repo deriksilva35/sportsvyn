@@ -1293,3 +1293,117 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
 @media (max-width: 760px) {
   .dc-boards { grid-template-columns: minmax(0, 1fr); gap: 14px; }
 }
+
+/* ======================= THE DAILY — homepage module =======================
+   An ink block on the Daily Card (Surface Rule: instruments render ink and sit
+   as blocks on the card). Volt is MATERIAL only - the 14px eyebrow square, the
+   4px left bar, the ink-on-volt chips, the 2px link underline and the score-bar
+   fill. It is never body text.
+
+   The paper treatment is mocked and banked in
+   docs/design/daily-home-module-v1.html for the surface migration after
+   preseason Week 1. Nothing below assumes it. */
+.dly {
+  display: block; background: #121210;
+  border: 1px solid var(--rule-dark); border-left: 4px solid var(--volt);
+  padding: 20px 22px 22px; margin: 0 0 24px;
+}
+.dly-eyebrow { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+.dly-sq { width: 14px; height: 14px; background: var(--volt); flex: 0 0 14px; }
+.dly-kick {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--volt);
+}
+.dly-ed {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted); margin-left: auto;
+}
+.dly-hook {
+  font-family: var(--font-display), sans-serif; font-style: italic; font-weight: 900;
+  text-transform: uppercase; font-size: 26px; line-height: 1.04; letter-spacing: -0.03em;
+  color: var(--paper-warm); margin: 0 0 9px;
+}
+.dly-sub {
+  font-family: var(--font-serif); font-style: italic; font-size: 15px; line-height: 1.5;
+  color: var(--muted-light); margin: 0 0 16px; max-width: 52ch;
+}
+.dly-cta {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink); background: var(--volt);
+  padding: 11px 20px; display: inline-block; text-decoration: none;
+}
+.dly-cta:hover { background: #C2EA00; }
+.dly-foot {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); margin-top: 13px;
+}
+
+/* receipt */
+.dly-rcpt { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 6px; }
+.dly-score {
+  font-family: var(--font-mono); font-weight: 700; font-size: 46px; line-height: 0.92;
+  letter-spacing: -0.03em; color: var(--paper-warm); font-variant-numeric: tabular-nums;
+}
+.dly-of {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); padding-bottom: 7px;
+}
+.dly-bandwrap { padding-bottom: 6px; }
+.dly-chip {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink); background: var(--volt);
+  padding: 5px 10px; display: inline-block;
+}
+.dly-chip--quiet {
+  background: transparent; color: var(--muted-light);
+  border: 1px solid var(--rule-dark);
+}
+.dly-meta {
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--muted-light);
+  line-height: 1.9; margin-top: 4px;
+}
+.dly-meta .k {
+  color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 10px; margin-right: 6px;
+}
+.dly-meta .dly-meta-gap { margin-left: 18px; }
+.dly-rule { height: 1px; background: var(--rule-dark); margin: 14px 0 0; }
+
+/* revealed */
+.dly-ans { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.dly-yr {
+  font-family: var(--font-display), sans-serif; font-style: italic; font-weight: 900;
+  font-size: 40px; line-height: 1; letter-spacing: -0.04em; color: var(--paper-warm);
+}
+.dly-wk {
+  font-family: var(--font-saira-cond, var(--font-display)); font-weight: 700; font-size: 18px;
+  text-transform: uppercase; letter-spacing: 0.02em; color: var(--muted);
+}
+.dly-vs { display: flex; gap: 26px; flex-wrap: wrap; margin: 14px 0 2px; }
+.dly-cell .n {
+  font-family: var(--font-mono); font-weight: 700; font-size: 25px; line-height: 1;
+  color: var(--paper-warm); font-variant-numeric: tabular-nums;
+}
+.dly-cell .k {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted); margin-top: 5px;
+}
+.dly-cell--dim .n { color: var(--muted-light); }
+.dly-bar { height: 6px; background: var(--rule-dark); margin: 14px 0 4px; position: relative; }
+.dly-bar i { position: absolute; inset: 0 auto 0 0; background: var(--volt); }
+.dly-link {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--paper-warm); text-decoration: none;
+  border-bottom: 2px solid var(--volt); padding-bottom: 2px;
+  display: inline-block; margin-top: 15px;
+}
+.dly-link:hover { color: var(--volt); }
+
+@media (max-width: 520px) {
+  .dly { padding: 18px 16px 20px; }
+  .dly-hook { font-size: 23px; }
+  .dly-score { font-size: 40px; }
+  .dly-yr { font-size: 34px; }
+  .dly-vs { gap: 18px; }
+  .dly-meta .dly-meta-gap { margin-left: 0; display: block; }
+}

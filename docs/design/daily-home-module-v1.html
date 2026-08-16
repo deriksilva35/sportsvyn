@@ -1,0 +1,514 @@
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Daily — homepage module mock v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@500;700&family=JetBrains+Mono:wght@400;700&family=Source+Serif+4:ital,wght@1,400;1,500&family=Archivo:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ink:#0A0A0A; --graphite:#1A1A1A; --rule:#2E2E2E; --rule-dim:#1F1F1F;
+  --paper:#F5F5F2; --paper-warm:#F5F5F2; --muted:#888; --muted-light:#C5C5C2;
+  --volt:#D4FF00;
+  --ink-soft:#333330; --ink-mut:#6B6B66; --ink-dim:#9A9A94;
+  --p-rule:#DEDED8; --p-rule-soft:#E8E8E2;
+  --jade:#2A8A4F;
+  --f-disp:'Saira',sans-serif; --f-cond:'Saira Condensed',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,monospace;
+  --f-serif:'Source Serif 4',Georgia,serif; --f-sans:'Archivo',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#6E6E68;font-family:var(--f-sans);-webkit-font-smoothing:antialiased}
+
+/* ---------- mock chrome (not part of the design) ---------- */
+.doc{max-width:1400px;margin:0 auto;padding:28px 20px 80px}
+.note{background:#141412;color:#E8E8E2;border-left:4px solid var(--volt);
+  padding:16px 18px;margin:0 0 22px;font-family:var(--f-mono);font-size:12.5px;line-height:1.65}
+.note b{color:var(--volt)}
+.note h2{font-family:var(--f-disp);font-style:italic;font-weight:900;text-transform:uppercase;
+  font-size:19px;letter-spacing:-.02em;margin:0 0 10px;color:#fff}
+.lbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+  color:#1A1A18;background:var(--volt);display:inline-block;padding:6px 11px;margin:34px 0 12px}
+.lbl--alt{background:#141412;color:#D4FF00}
+.row{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start}
+
+/* ================= PAPER GROUND — the Surface Rule target ================= */
+.paper{background:var(--paper);padding:0}
+.phone{width:390px;flex:0 0 390px}
+.desk{flex:1 1 660px;min-width:520px}
+
+.hdrband{background:var(--ink);padding:13px 16px;border-bottom:3px solid var(--volt);
+  display:flex;align-items:baseline;justify-content:space-between}
+.wordmark{font-family:var(--f-disp);font-weight:900;font-style:italic;letter-spacing:-.05em;
+  line-height:1;color:var(--paper);text-transform:uppercase;display:inline-flex;align-items:baseline;font-size:20px}
+.y-wrap{position:relative;color:var(--volt);display:inline-block}
+.y-wrap .macron{position:absolute;left:0;top:-.05em;width:115%;height:.07em;background:var(--volt);transform:translateX(-35%)}
+.hdrnav{font-family:var(--f-mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+
+.card{padding:22px 18px 34px}
+.desk .card{padding:30px 34px 44px}
+.dcHead{display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:14px;border-bottom:1px solid var(--p-rule);margin-bottom:16px}
+.dcTitle{font-family:var(--f-disp);font-weight:900;font-style:italic;text-transform:uppercase;
+  font-size:26px;line-height:1;letter-spacing:-.03em;color:var(--ink)}
+.desk .dcTitle{font-size:32px}
+.dcMeta{font-family:var(--f-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-mut)}
+.dcAuthor{font-family:var(--f-mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink-mut);margin-bottom:22px}
+.dcAuthor .a{color:var(--ink)}
+.dcAuthor .s{color:var(--p-rule);margin:0 8px}
+
+/* ---------------- THE DAILY MODULE (paper) ---------------- */
+/* v1.2 module grammar on paper: 4px volt left bar, 14px volt square before the
+   ink kicker, hairline rule box, ink-on-volt chip for the one action. NO volt
+   text anywhere. */
+.dly{border:1px solid var(--p-rule);border-left:4px solid var(--volt);
+  background:#FBFBF9;padding:18px 18px 20px;margin:0 0 26px}
+.desk .dly{padding:22px 24px 24px}
+.dly-eyebrow{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.dly-sq{width:14px;height:14px;background:var(--volt);flex:0 0 14px}
+.dly-kick{font-family:var(--f-mono);font-size:10px;font-weight:700;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--ink)}
+.dly-ed{font-family:var(--f-mono);font-size:10px;letter-spacing:.18em;color:var(--ink-dim);margin-left:auto}
+.dly-hook{font-family:var(--f-disp);font-weight:900;font-style:italic;text-transform:uppercase;
+  font-size:27px;line-height:1.02;letter-spacing:-.03em;color:var(--ink);margin:0 0 9px}
+.desk .dly-hook{font-size:33px}
+.dly-sub{font-family:var(--f-serif);font-style:italic;font-size:15px;line-height:1.5;
+  color:var(--ink-soft);margin:0 0 16px;max-width:46ch}
+.dly-cta{font-family:var(--f-mono);font-size:11px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink);background:var(--volt);
+  padding:11px 20px;display:inline-block;text-decoration:none;border:0}
+.dly-cta:hover{background:#C2EA00}
+.dly-foot{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-dim);margin-top:13px}
+
+/* state 2 — the receipt */
+.rcpt{display:flex;align-items:flex-end;gap:16px;margin:2px 0 12px}
+.rcpt-score{font-family:var(--f-mono);font-weight:700;font-size:46px;line-height:.92;
+  letter-spacing:-.03em;color:var(--ink);font-variant-numeric:tabular-nums}
+.desk .rcpt-score{font-size:54px}
+.rcpt-of{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-dim);padding-bottom:7px}
+.chip{font-family:var(--f-mono);font-size:10px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink);background:var(--volt);padding:5px 10px;display:inline-block}
+.chip--quiet{background:transparent;color:var(--ink-soft);border:1px solid var(--p-rule)}
+.rcpt-meta{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.02em;color:var(--ink-soft);
+  line-height:1.75;margin-top:4px}
+.rcpt-meta .k{color:var(--ink-dim);letter-spacing:.14em;text-transform:uppercase;font-size:10px}
+.dly-rule{height:1px;background:var(--p-rule);margin:14px 0}
+.countdown{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-mut);display:flex;align-items:center;gap:8px}
+.countdown b{color:var(--ink);font-weight:700}
+.tick{width:6px;height:6px;background:var(--jade);border-radius:50%;display:inline-block}
+
+/* state 3 — the reveal / share bait */
+.ans{display:flex;align-items:baseline;gap:10px;margin:0 0 10px}
+.ans-yr{font-family:var(--f-disp);font-weight:900;font-style:italic;font-size:40px;line-height:1;
+  letter-spacing:-.04em;color:var(--ink)}
+.desk .ans-yr{font-size:48px}
+.ans-wk{font-family:var(--f-cond);font-weight:700;font-size:19px;text-transform:uppercase;
+  letter-spacing:.02em;color:var(--ink-mut)}
+.vs{display:flex;gap:26px;margin:14px 0 2px;flex-wrap:wrap}
+.vs-cell .n{font-family:var(--f-mono);font-weight:700;font-size:26px;color:var(--ink);
+  font-variant-numeric:tabular-nums;line-height:1}
+.vs-cell .k{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink-dim);margin-top:5px}
+.vs-cell--dim .n{color:var(--ink-mut)}
+.bar{height:6px;background:var(--p-rule-soft);margin:14px 0 4px;position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--volt)}
+.linkline{font-family:var(--f-mono);font-size:11px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink);text-decoration:none;
+  border-bottom:2px solid var(--volt);padding-bottom:2px;display:inline-block;margin-top:14px}
+
+/* ---------------- surrounding real modules (context) ---------------- */
+.simp{display:block;text-decoration:none;background:var(--ink);color:var(--paper-warm);
+  border:1px solid var(--rule);padding:20px 22px;margin:0 0 24px}
+.simp-k{font-family:var(--f-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--volt);margin-bottom:10px}
+.simp-h{font-family:var(--f-disp);font-style:italic;font-weight:900;text-transform:uppercase;
+  font-size:24px;line-height:1.05;letter-spacing:-.02em;margin-bottom:10px}
+.desk .simp-h{font-size:26px}
+.simp-l{font-family:var(--f-serif);font-style:italic;font-size:14.5px;line-height:1.5;
+  color:var(--muted-light);margin:0 0 15px;max-width:52ch}
+.simp-c{font-family:var(--f-mono);font-size:11px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink);background:var(--volt);padding:9px 16px;display:inline-block}
+.sect{margin:0 0 24px}
+.sect-l{font-family:var(--f-mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--ink);margin-bottom:11px;padding-bottom:7px;border-bottom:1px solid var(--p-rule);
+  display:flex;align-items:center;gap:8px}
+.sect-l .sq{width:14px;height:14px;background:var(--volt);flex:0 0 14px}
+.read{padding:11px 0;border-bottom:1px solid var(--p-rule-soft)}
+.read:last-child{border-bottom:none}
+.read h4{font-family:var(--f-disp);font-style:italic;font-weight:900;text-transform:uppercase;
+  font-size:16px;line-height:1.12;letter-spacing:-.02em;margin:0 0 5px;color:var(--ink)}
+.read p{font-family:var(--f-serif);font-style:italic;font-size:13.5px;line-height:1.45;
+  color:var(--ink-soft);margin:0}
+.read .tag{font-family:var(--f-mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink-dim)}
+
+/* ---------------- ink-ground variant (what production is TODAY) ---------- */
+.inkcard{background:var(--graphite);border:1px solid var(--rule);padding:22px 18px 30px}
+.desk .inkcard{padding:30px 34px 40px}
+.inkcard .dcTitle{color:var(--paper-warm)}
+.inkcard .dcTitle .ac{color:var(--volt)}
+.inkcard .dcHead{border-bottom-color:var(--rule)}
+.inkcard .dcMeta,.inkcard .dcAuthor{color:var(--muted)}
+.inkcard .dcAuthor .a{color:var(--paper-warm)}
+.dly--ink{background:#121210;border:1px solid var(--rule);border-left:4px solid var(--volt)}
+.dly--ink .dly-kick{color:var(--volt)}
+.dly--ink .dly-hook{color:var(--paper-warm)}
+.dly--ink .dly-sub{color:var(--muted-light)}
+.dly--ink .dly-ed,.dly--ink .dly-foot{color:var(--muted)}
+.dly--ink .rcpt-score,.dly--ink .ans-yr,.dly--ink .vs-cell .n{color:var(--paper-warm)}
+.dly--ink .rcpt-meta{color:var(--muted-light)}
+.dly--ink .rcpt-of,.dly--ink .vs-cell .k,.dly--ink .rcpt-meta .k{color:var(--muted)}
+.dly--ink .ans-wk,.dly--ink .countdown{color:var(--muted)}
+.dly--ink .countdown b{color:var(--paper-warm)}
+.dly--ink .dly-rule{background:var(--rule)}
+.dly--ink .bar{background:var(--rule)}
+.dly--ink .linkline{color:var(--paper-warm)}
+.dly--ink .chip--quiet{color:var(--muted-light);border-color:var(--rule)}
+</style>
+
+<div class="doc">
+
+<div class="note">
+  <h2>The Daily — homepage module, mock v1</h2>
+  <b>READ THIS FIRST — two things I found that change what you're judging.</b><br><br>
+
+  <b>1. Production is not paper.</b> The brief and design-tokens-v1.1 both say the
+  Daily Card homepage is a PAPER surface. The live page is not: <code>.daily-card</code>
+  is <code>background: var(--graphite)</code> (home.css:406) and sportsvyn.com/ serves
+  five <code>data-surface="ink"</code> and zero paper. So the paper mock below is the
+  Surface Rule TARGET, not what this module would drop into today. I've mocked the
+  ink ground too, at the bottom, so the hierarchy call is judgeable against what's
+  actually live. If paper is imminent, judge the top. If not, judge the bottom.<br><br>
+
+  <b>2. Name collision.</b> The page is titled "The Daily <i>Card</i>". The game is
+  "The Daily". A module reading THE DAILY inside a page reading The Daily Card is
+  two different things wearing one word. Worth resolving before build — the mock
+  uses "THE DAILY" in the eyebrow so you can see the clash rather than have me
+  paper over it.<br><br>
+
+  <b>Rules followed:</b> no volt text on paper anywhere. Volt appears only as the
+  14px eyebrow square, the 4px module left bar, ink-on-volt chips (PLAY, tier), the
+  2px link underline, and the score bar fill. Wordmark is ink-band only. Saira 900
+  italic for hooks, JetBrains Mono for every number, Source Serif italic for prose.<br><br>
+
+  <b>Position — my proposal, argued:</b> directly under the byline, ABOVE Draftvyn.
+  Your instinct is right and here is the reason to hold it: the Daily is the only
+  module on the page that EXPIRES. Draftvyn is a standing invitation ("three free
+  drafts a week"); Today's Reads is durable; the season strip is a calendar. A page
+  that renames itself daily should lead with the thing that is only true today. It
+  also has the only state that CHANGES for a returning reader — the receipt — which
+  makes the top slot do work on the second visit instead of repeating an ad.<br><br>
+
+  <b>Edition number:</b> shown as 001. Derived from days since the first PROD board
+  (2026-08-16), not stored, so it needs no column.
+</div>
+
+<div class="lbl">STATE 1 — NOT PLAYED &nbsp;·&nbsp; 390px, in context</div>
+<div class="row">
+  <div class="phone paper">
+    <div class="hdrband">
+      <a class="wordmark">SPORTSV<span class="y-wrap">Y<span class="macron"></span></span>N</a>
+      <span class="hdrnav">FOOTBALL</span>
+    </div>
+    <div class="card">
+      <div class="dcHead"><div class="dcTitle">The Daily Card</div></div>
+      <div class="dcAuthor">By <span class="a">Derik Silva</span><span class="s">·</span>Sun, Aug 16</div>
+
+      <div class="dly">
+        <div class="dly-eyebrow">
+          <span class="dly-sq"></span>
+          <span class="dly-kick">The Daily</span>
+          <span class="dly-ed">Edition No. 001</span>
+        </div>
+        <h3 class="dly-hook">One board.<br>Six slots.<br>Three minutes.</h3>
+        <p class="dly-sub">Sixty-four real performances from one real week of NFL history. Build the best six you can before the clock runs out.</p>
+        <a class="dly-cta" href="#">Play today&rsquo;s board</a>
+        <div class="dly-foot">Closes midnight ET · One board a day</div>
+      </div>
+
+      <a class="simp" href="#">
+        <div class="simp-k">Fantasy</div>
+        <div class="simp-h">Draft against the market, not a spreadsheet.</div>
+        <p class="simp-l">Full snake mocks vs AI rooms that reach and slide - every pick graded on live ADP. Three free drafts a week.</p>
+        <span class="simp-c">Start a draft →</span>
+      </a>
+
+      <div class="sect">
+        <div class="sect-l"><span class="sq"></span>Today&rsquo;s Reads</div>
+        <div class="read"><span class="tag">NFL</span><h4>The Bears found a quarterback in the fourth quarter</h4><p>Two Case Keenum touchdowns and a defense that never gave the ball back.</p></div>
+        <div class="read"><span class="tag">Fantasy</span><h4>Nobody wants the third running back</h4><p>ADP says the position is dead. The board says otherwise.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="desk paper">
+    <div class="hdrband">
+      <a class="wordmark">SPORTSV<span class="y-wrap">Y<span class="macron"></span></span>N</a>
+      <span class="hdrnav">SCORES · FANTASY · RANKINGS · THE DAILY</span>
+    </div>
+    <div class="card">
+      <div class="dcHead">
+        <div class="dcTitle">The Daily Card</div>
+        <div class="dcMeta">Sun, Aug 16</div>
+      </div>
+      <div class="dcAuthor">By <span class="a">Derik Silva</span><span class="s">·</span>Sun, Aug 16</div>
+
+      <div class="dly">
+        <div class="dly-eyebrow">
+          <span class="dly-sq"></span>
+          <span class="dly-kick">The Daily</span>
+          <span class="dly-ed">Edition No. 001</span>
+        </div>
+        <h3 class="dly-hook">One board. Six slots. Three minutes.</h3>
+        <p class="dly-sub">Sixty-four real performances from one real week of NFL history. Build the best six-man lineup you can before the clock runs out. Your worst pick is dropped.</p>
+        <a class="dly-cta" href="#">Play today&rsquo;s board</a>
+        <div class="dly-foot">Closes midnight ET · One board a day · PPR, drop worst</div>
+      </div>
+
+      <a class="simp" href="#">
+        <div class="simp-k">Fantasy</div>
+        <div class="simp-h">Draft against the market, not a spreadsheet.</div>
+        <p class="simp-l">Full snake mocks vs AI rooms that reach and slide - every pick graded on live ADP. Three free drafts a week.</p>
+        <span class="simp-c">Start a draft →</span>
+      </a>
+
+      <div class="sect">
+        <div class="sect-l"><span class="sq"></span>Today&rsquo;s Reads</div>
+        <div class="read"><span class="tag">NFL</span><h4>The Bears found a quarterback in the fourth quarter</h4><p>Two Case Keenum touchdowns and a defense that never gave the ball back.</p></div>
+        <div class="read"><span class="tag">Fantasy</span><h4>Nobody wants the third running back</h4><p>ADP says the position is dead. The board says otherwise.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="lbl">STATE 2 — PLAYED, PRE-CLOSE &nbsp;·&nbsp; the receipt</div>
+<div class="row">
+  <div class="phone paper">
+    <div class="card" style="padding-top:26px">
+      <div class="dly">
+        <div class="dly-eyebrow">
+          <span class="dly-sq"></span>
+          <span class="dly-kick">The Daily</span>
+          <span class="dly-ed">Edition No. 001</span>
+        </div>
+        <div class="rcpt">
+          <div class="rcpt-score">102.5</div>
+          <div class="rcpt-of">your score</div>
+        </div>
+        <div><span class="chip">Top 25%</span></div>
+        <div class="rcpt-meta">
+          <span class="k">You guessed</span> &nbsp;2018 · Wk 10
+        </div>
+        <div class="dly-rule"></div>
+        <div class="countdown"><span class="tick"></span> Answer unlocks in <b>6h 41m</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="desk paper">
+    <div class="card" style="padding-top:26px">
+      <div class="dly">
+        <div class="dly-eyebrow">
+          <span class="dly-sq"></span>
+          <span class="dly-kick">The Daily</span>
+          <span class="dly-ed">Edition No. 001</span>
+        </div>
+        <div class="rcpt">
+          <div class="rcpt-score">102.5</div>
+          <div class="rcpt-of">your score</div>
+          <div style="padding-bottom:6px"><span class="chip">Top 25%</span></div>
+        </div>
+        <div class="rcpt-meta">
+          <span class="k">You guessed</span> &nbsp;2018 · Wk 10 &nbsp;&nbsp;
+          <span class="k">Entries today</span> &nbsp;1,204
+        </div>
+        <div class="dly-rule"></div>
+        <div class="countdown"><span class="tick"></span> The answer and the perfect lineup unlock in <b>6h 41m</b> · midnight ET</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="lbl">STATE 3 — REVEALED &nbsp;·&nbsp; the share bait</div>
+<div class="row">
+  <div class="phone paper">
+    <div class="card" style="padding-top:26px">
+      <div class="dly">
+        <div class="dly-eyebrow">
+          <span class="dly-sq"></span>
+          <span class="dly-kick">The Daily</span>
+          <span class="dly-ed">Edition No. 001</span>
+        </div>
+        <div class="ans">
+          <div class="ans-yr">2018</div>
+          <div class="ans-wk">Week 10</div>
+        </div>
+        <div><span class="chip">Pro Bowler</span></div>
+        <div class="vs">
+          <div class="vs-cell"><div class="n">102.5</div><div class="k">you</div></div>
+          <div class="vs-cell vs-cell--dim"><div class="n">122.9</div><div class="k">perfect</div></div>
+          <div class="vs-cell"><div class="n">83%</div><div class="k">of perfect</div></div>
+        </div>
+        <div class="bar"><i style="width:83%"></i></div>
+        <div class="rcpt-meta"><span class="k">You guessed</span> &nbsp;2018 · Wk 10 &nbsp;<span class="chip--quiet chip">season right</span></div>
+        <a class="linkline" href="#">See the perfect lineup →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="desk paper">
+    <div class="card" style="padding-top:26px">
+      <div class="dly">
+        <div class="dly-eyebrow">
+          <span class="dly-sq"></span>
+          <span class="dly-kick">The Daily</span>
+          <span class="dly-ed">Edition No. 001</span>
+        </div>
+        <div class="ans">
+          <div class="ans-yr">2018</div>
+          <div class="ans-wk">Week 10</div>
+          <div style="margin-left:8px"><span class="chip">Pro Bowler</span></div>
+        </div>
+        <div class="vs">
+          <div class="vs-cell"><div class="n">102.5</div><div class="k">your score</div></div>
+          <div class="vs-cell vs-cell--dim"><div class="n">122.9</div><div class="k">perfect lineup</div></div>
+          <div class="vs-cell"><div class="n">83%</div><div class="k">of perfect</div></div>
+          <div class="vs-cell"><div class="n">Top 25%</div><div class="k">band</div></div>
+        </div>
+        <div class="bar"><i style="width:83%"></i></div>
+        <div class="rcpt-meta"><span class="k">You guessed</span> &nbsp;2018 · Wk 10 &nbsp;<span class="chip chip--quiet">season right, week wrong</span></div>
+        <a class="linkline" href="#">See the perfect lineup and the whole board →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note" style="margin-top:40px">
+  <b>State-3 note:</b> the reveal state deliberately does NOT restate the hook or
+  offer a button. There is nothing to play until midnight, and a dead CTA on the
+  first module of the homepage is worse than none. The one action is the link to
+  the full reveal, carrying the 2px volt underline. Tomorrow it flips back to
+  state 1 with the edition number incremented — the module is a three-position
+  switch, never four.
+</div>
+
+<div class="lbl lbl--alt">SAME THREE STATES ON THE INK GROUND — what production looks like TODAY</div>
+<div class="row">
+  <div class="phone">
+    <div class="hdrband">
+      <a class="wordmark">SPORTSV<span class="y-wrap">Y<span class="macron"></span></span>N</a>
+      <span class="hdrnav">FOOTBALL</span>
+    </div>
+    <div class="inkcard">
+      <div class="dcHead"><div class="dcTitle">The Daily <span class="ac">Card</span></div></div>
+      <div class="dcAuthor">By <span class="a">Derik Silva</span><span class="s">·</span>Sun, Aug 16</div>
+
+      <div class="dly dly--ink">
+        <div class="dly-eyebrow"><span class="dly-sq"></span><span class="dly-kick">The Daily</span><span class="dly-ed">Edition No. 001</span></div>
+        <h3 class="dly-hook">One board.<br>Six slots.<br>Three minutes.</h3>
+        <p class="dly-sub">Sixty-four real performances from one real week of NFL history.</p>
+        <a class="dly-cta" href="#">Play today&rsquo;s board</a>
+        <div class="dly-foot">Closes midnight ET</div>
+      </div>
+
+      <div class="dly dly--ink">
+        <div class="dly-eyebrow"><span class="dly-sq"></span><span class="dly-kick">The Daily</span><span class="dly-ed">Edition No. 001</span></div>
+        <div class="rcpt"><div class="rcpt-score">102.5</div><div class="rcpt-of">your score</div></div>
+        <div><span class="chip">Top 25%</span></div>
+        <div class="rcpt-meta"><span class="k">You guessed</span> &nbsp;2018 · Wk 10</div>
+        <div class="dly-rule"></div>
+        <div class="countdown"><span class="tick"></span> Answer unlocks in <b>6h 41m</b></div>
+      </div>
+
+      <div class="dly dly--ink">
+        <div class="dly-eyebrow"><span class="dly-sq"></span><span class="dly-kick">The Daily</span><span class="dly-ed">Edition No. 001</span></div>
+        <div class="ans"><div class="ans-yr">2018</div><div class="ans-wk">Week 10</div></div>
+        <div><span class="chip">Pro Bowler</span></div>
+        <div class="vs">
+          <div class="vs-cell"><div class="n">102.5</div><div class="k">you</div></div>
+          <div class="vs-cell vs-cell--dim"><div class="n">122.9</div><div class="k">perfect</div></div>
+          <div class="vs-cell"><div class="n">83%</div><div class="k">of perfect</div></div>
+        </div>
+        <div class="bar"><i style="width:83%"></i></div>
+        <a class="linkline" href="#">See the perfect lineup →</a>
+      </div>
+
+      <a class="simp" href="#">
+        <div class="simp-k">Fantasy</div>
+        <div class="simp-h">Draft against the market, not a spreadsheet.</div>
+        <p class="simp-l">Full snake mocks vs AI rooms that reach and slide - every pick graded on live ADP.</p>
+        <span class="simp-c">Start a draft →</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="desk">
+    <div class="inkcard">
+      <div class="dcHead">
+        <div class="dcTitle">The Daily <span class="ac">Card</span></div>
+        <div class="dcMeta">Sun, Aug 16</div>
+      </div>
+      <div class="dcAuthor">By <span class="a">Derik Silva</span><span class="s">·</span>Sun, Aug 16</div>
+
+      <div class="dly dly--ink">
+        <div class="dly-eyebrow"><span class="dly-sq"></span><span class="dly-kick">The Daily</span><span class="dly-ed">Edition No. 001</span></div>
+        <h3 class="dly-hook">One board. Six slots. Three minutes.</h3>
+        <p class="dly-sub">Sixty-four real performances from one real week of NFL history. Build the best six-man lineup you can before the clock runs out.</p>
+        <a class="dly-cta" href="#">Play today&rsquo;s board</a>
+        <div class="dly-foot">Closes midnight ET · One board a day · PPR, drop worst</div>
+      </div>
+
+      <div class="dly dly--ink">
+        <div class="dly-eyebrow"><span class="dly-sq"></span><span class="dly-kick">The Daily</span><span class="dly-ed">Edition No. 001</span></div>
+        <div class="rcpt">
+          <div class="rcpt-score">102.5</div><div class="rcpt-of">your score</div>
+          <div style="padding-bottom:6px"><span class="chip">Top 25%</span></div>
+        </div>
+        <div class="rcpt-meta"><span class="k">You guessed</span> &nbsp;2018 · Wk 10 &nbsp;&nbsp;<span class="k">Entries today</span> &nbsp;1,204</div>
+        <div class="dly-rule"></div>
+        <div class="countdown"><span class="tick"></span> The answer and the perfect lineup unlock in <b>6h 41m</b> · midnight ET</div>
+      </div>
+
+      <div class="dly dly--ink">
+        <div class="dly-eyebrow"><span class="dly-sq"></span><span class="dly-kick">The Daily</span><span class="dly-ed">Edition No. 001</span></div>
+        <div class="ans">
+          <div class="ans-yr">2018</div><div class="ans-wk">Week 10</div>
+          <div style="margin-left:8px"><span class="chip">Pro Bowler</span></div>
+        </div>
+        <div class="vs">
+          <div class="vs-cell"><div class="n">102.5</div><div class="k">your score</div></div>
+          <div class="vs-cell vs-cell--dim"><div class="n">122.9</div><div class="k">perfect lineup</div></div>
+          <div class="vs-cell"><div class="n">83%</div><div class="k">of perfect</div></div>
+          <div class="vs-cell"><div class="n">Top 25%</div><div class="k">band</div></div>
+        </div>
+        <div class="bar"><i style="width:83%"></i></div>
+        <a class="linkline" href="#">See the perfect lineup and the whole board →</a>
+      </div>
+
+      <a class="simp" href="#">
+        <div class="simp-k">Fantasy</div>
+        <div class="simp-h">Draft against the market, not a spreadsheet.</div>
+        <p class="simp-l">Full snake mocks vs AI rooms that reach and slide - every pick graded on live ADP. Three free drafts a week.</p>
+        <span class="simp-c">Start a draft →</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="note" style="margin-top:40px">
+  <b>Open questions for markup:</b><br>
+  1. THE DAILY vs The Daily Card — resolve the name, or rename the eyebrow.<br>
+  2. Entries-today count: shown on desktop only in state 2. On day one that number
+     is small and small numbers read as empty. Suppress below a floor, or drop it?<br>
+  3. Countdown: live-ticking client island, or a static "unlocks at midnight ET"?
+     A ticking clock on a paper editorial page is a strong choice either way.<br>
+  4. State 3 shows "season right, week wrong" as a quiet chip. That is one more
+     thing than you asked for — cut it if the tier badge should carry the moment
+     alone.<br>
+  5. Does the module survive on the sport Today pages too, or homepage only?
+</div>
+
+</div>
