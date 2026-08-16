@@ -55,19 +55,35 @@ export default async function DailyPage({ searchParams }) {
       <div className="daily" data-surface="ink">
         <header className="daily-head"><Wordmark href="/" /><span className="tag">The <b>Daily</b></span></header>
         <main className="daily-main">
-          <section className="mod mod--pitch">
-            <h1 className="mod-title">One board. Six slots. Three minutes.</h1>
-            <p className="mod-lede">
-              Every day, sixty-four real performances from one real week of NFL history.
-              Build the best six-man lineup you can before the clock runs out.
-              Your worst pick is dropped. Guess the week for a bonus.
+          {/* THE HERO - the app mock's "When are you?" pattern. One hook in
+              display type, one context line, the PLAY primary. This screen's
+              single hero and single primary (v1.2 s4, s5). */}
+          <section className="hero">
+            <div className="hero-eyebrow">The Daily &middot; same board for everyone</div>
+            <div className="hero-q">When are<br />you?</div>
+            <p className="hero-line">
+              Sixty-four real performances from one real week of NFL history.
+              {/* {' '} explicitly: JSX collapsed the space after </b> and it
+                  shipped as "3:00clock". A literal space next to an element
+                  boundary is not something to trust to whitespace handling. */}
+              One attempt &middot; <b>3:00</b>{' '}on the clock &middot; closes midnight ET
             </p>
-            <ul className="mod-list">
-              <li>PPR scoring, computed from box-score lines by the same module the draft sim uses.</li>
-              <li>Everyone gets the same board. The clock starts when you do.</li>
-              <li>Closes at midnight ET, then the answer and the perfect lineup.</li>
-            </ul>
-            <a className="btn btn--volt" href={shellSigninHref('/daily', isShell)}>Play today&rsquo;s Daily</a>
+            <a className="btn--volt" href={shellSigninHref('/daily', isShell)}>Play today&rsquo;s Daily</a>
+          </section>
+
+          <section className="mod">
+            <h2 className="eyebrow">How it works</h2>
+            <div>
+              <div className="row"><span>The board</span><span className="r">64 players</span></div>
+              <div className="row"><span>Your lineup</span><span className="r">QB &middot; RB &middot; WR &middot; TE &middot; 2 FLEX</span></div>
+              <div className="row"><span>The clock</span><span className="r">3:00, server-side</span></div>
+              <div className="row"><span>Scoring</span><span className="r">PPR, worst pick dropped</span></div>
+              <div className="row"><span>Bonus</span><span className="r">Name the season and week</span></div>
+            </div>
+            <p className="muted">
+              Scored by the same module the draft sim uses. Everyone gets the same board;
+              the clock starts when you do.
+            </p>
           </section>
         </main>
       </div>
@@ -80,8 +96,8 @@ export default async function DailyPage({ searchParams }) {
         <header className="daily-head"><Wordmark href="/" /><span className="tag">The <b>Daily</b></span></header>
         <main className="daily-main">
           <section className="mod">
-            <h1 className="mod-title">Not yet</h1>
-            <p className="mod-lede">Today&rsquo;s board isn&rsquo;t up. It lands at midnight ET.</p>
+            <h2 className="eyebrow">Today&rsquo;s board</h2>
+            <p className="mod-lede">Not up yet. It lands at midnight ET.</p>
           </section>
         </main>
       </div>
@@ -101,7 +117,8 @@ export default async function DailyPage({ searchParams }) {
         <header className="daily-head"><Wordmark href="/" /><span className="tag">The <b>Daily</b></span></header>
         <main className="daily-main">
           <section className="mod mod--dnf">
-            <h1 className="mod-title">Ran out of clock</h1>
+            <h2 className="eyebrow">Today&rsquo;s board &mdash; no score</h2>
+            <p className="mod-title" style={{ fontSize: '20px' }}>Ran out of clock</p>
             <p className="mod-lede">
               You opened today&rsquo;s board but never locked a lineup, so there&rsquo;s no score.
               One board a day &mdash; the answer and the perfect lineup unlock at midnight ET.

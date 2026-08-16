@@ -1,134 +1,327 @@
-/* app/daily/daily.css - The Daily. Ink ground, volt as material only. */
-.daily { min-height: 100dvh; background: #0A0A0A; color: #F5F5F2; display: flex; flex-direction: column; }
-.daily-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #1E1E1C; }
-.daily-head .tag { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #8A8A86; }
-.daily-head .tag b { color: #F5F5F2; font-weight: 700; }
-.daily-main { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: 20px 16px 56px; }
+/* app/daily/daily.css - The Daily. Ink ground; the game is an instrument.
+ *
+ * v1.0.1 POLISH PASS, built to Design Tokens v1.2 - The Module Grammar, with
+ * docs/design/draftvyn-unified-app-mock-v0_1.html as the reference
+ * implementation. v1.2 is the carpentry layer over v1.1's materials: every
+ * screen is a stack of modules, every module declares its job with an eyebrow
+ * tag, numbers are the texture, and each screen gets AT MOST ONE hero.
+ *
+ * TOKEN NOTE: --line is #2A2A2A, from the app mock. The gridiron game-page mock
+ * carries #232323 under the same name; the app mock wins, per v1.2 §10.
+ *
+ * NO EMOJI on these four surfaces. v1.2 §7 counts emoji glyphs among what makes
+ * the app feel alive, and the mock uses them - but only in chrome: nav, sport
+ * pills, the streak. Derik's ruling for the game itself is typographic, and
+ * nothing here is chrome.
+ */
 
-.mod { display: flex; flex-direction: column; gap: 14px; }
-.mod-title { font-size: 26px; line-height: 1.12; font-weight: 800; margin: 0; letter-spacing: -.01em; }
-.mod-lede { margin: 0; color: #C9C9C4; line-height: 1.5; }
-.mod-list { margin: 0; padding-left: 18px; color: #C9C9C4; line-height: 1.7; }
-.mod-list b { color: #F5F5F2; }
-.mod-foot { margin: 6px 0 0; color: #8A8A86; font-size: 13px; }
-.muted { color: #8A8A86; font-size: 13px; }
-.err { color: #FF6B6B; font-size: 14px; margin: 0; }
+.daily {
+  --d-ink: #0A0A0A; --d-ink-2: #141414; --d-ink-3: #1E1E1E;
+  --d-line: #2A2A2A; --d-volt: #D4FF00; --d-paper: #F5F5F2;
+  --d-jade: #2A8A4F; --d-terra: #B8410F; --d-live: #E63946; --d-mut: #8A8A85;
+  --d-disp: var(--font-saira, 'Saira'), sans-serif;
+  --d-cond: var(--font-saira-condensed, 'Saira Condensed'), sans-serif;
+  --d-mono: var(--font-jetbrains-mono, 'JetBrains Mono'), ui-monospace, monospace;
 
-.btn { appearance: none; border: 1px solid #2A2A28; background: #141412; color: #F5F5F2;
-  padding: 12px 16px; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer; }
+  min-height: 100dvh; background: var(--d-ink); color: var(--d-paper);
+  display: flex; flex-direction: column;
+  font-family: var(--d-mono); font-size: 13px; line-height: 1.5;
+}
+.daily-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid var(--d-line);
+}
+.daily-head .tag {
+  font-family: var(--d-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+}
+.daily-head .tag b { color: var(--d-paper); font-weight: 600; }
+.daily-main { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: 14px 14px 56px; }
+
+/* ---- §1 THE MODULE ------------------------------------------------------
+ * One module = one job. Ground one step lighter than the surface, 1px --line,
+ * radius 12, padding 14, 12px stack gap. A module never contains another. */
+.mod {
+  background: var(--d-ink-2); border: 1px solid var(--d-line);
+  border-radius: 12px; padding: 14px; margin-bottom: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+/* EYEBROW REQUIRED. Without one it is the hero, or it is wrong (§1). */
+.eyebrow, .mod-sub {
+  font-family: var(--d-cond); font-weight: 600; font-size: 11px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--d-mut);
+  margin: 0;
+}
+.eyebrow .ctx { color: var(--d-mut); opacity: .75; }
+.mod-title {
+  font-family: var(--d-disp); font-style: italic; font-weight: 900;
+  text-transform: uppercase; font-size: 26px; line-height: 1.05;
+  letter-spacing: -.04em; margin: 0;
+}
+.mod-lede { margin: 0; color: #CFCFC9; font-size: 12px; line-height: 1.55; }
+.mod-foot, .muted { margin: 0; color: var(--d-mut); font-size: 11px; }
+.err { color: var(--d-live); font-size: 12px; margin: 0; }
+
+/* ---- §4 BUTTONS - TWO VOICES ONLY --------------------------------------
+ * Primary: one per screen, maximum. Ghost: everything else. No third style. */
+.btn--volt {
+  display: block; width: 100%; text-align: center;
+  font-family: var(--d-disp); font-style: italic; font-weight: 900;
+  font-size: 19px; letter-spacing: -.02em;
+  background: var(--d-volt); color: var(--d-ink);
+  border: none; border-radius: 10px; padding: 13px; cursor: pointer;
+  text-decoration: none;
+}
+.btn--volt:disabled { opacity: .45; cursor: default; }
+.btn--done { background: var(--d-ink-3); color: var(--d-jade); border: 1px solid var(--d-jade); font-size: 15px; }
+.btn {
+  display: block; width: 100%; text-align: center;
+  font-family: var(--d-cond); font-weight: 600; font-size: 12px;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: var(--d-ink-3); color: var(--d-paper);
+  border: 1px solid var(--d-line); border-radius: 9px; padding: 11px;
+  cursor: pointer; text-decoration: none;
+}
 .btn:disabled { opacity: .45; cursor: default; }
-.btn--volt { background: #D4FF00; border-color: #D4FF00; color: #0A0A0A; }
 
-/* clock - a progress bar, not a rule */
-.clock-row { display: flex; align-items: center; gap: 12px; }
-.clock { font-variant-numeric: tabular-nums; font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
-.clock--low { color: #D4FF00; }
-.clock-bar { flex: 1; height: 4px; background: #1E1E1C; border-radius: 2px; overflow: hidden; }
-.clock-bar i { display: block; height: 100%; background: #D4FF00; transition: width .25s linear; }
+/* ---- §5 THE HERO - one per screen, if any ------------------------------- */
+.hero {
+  background: linear-gradient(160deg, #1a2000 0%, var(--d-ink-2) 55%);
+  border: 1px solid #3a4400; border-radius: 14px;
+  padding: 18px 16px; margin-bottom: 12px;
+}
+.hero-eyebrow {
+  font-family: var(--d-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+  font-variant-numeric: tabular-nums;
+}
+.hero-q {
+  font-family: var(--d-disp); font-style: italic; font-weight: 900;
+  font-size: 30px; letter-spacing: -.04em; line-height: 1.05; margin: 8px 0 4px;
+}
+.hero-line { font-size: 12px; color: var(--d-mut); margin: 0 0 12px; line-height: 1.5; }
+.hero-line b { color: var(--d-volt); font-variant-numeric: tabular-nums; font-weight: 700; }
 
-.slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.slot { position: relative; display: flex; flex-direction: column; gap: 3px; align-items: flex-start;
-  padding: 10px; border: 1px solid #2A2A28; border-radius: 10px; background: #121210; color: inherit;
-  font: inherit; text-align: left; cursor: pointer; min-width: 0; }
-.slot--active { border-color: #D4FF00; }
-.slot--filled { background: #17170F; }
-.slot-tag { font-size: 10px; letter-spacing: .14em; color: #8A8A86; }
-.slot-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 100%; }
-.slot--filled .slot-name { color: #F5F5F2; }
-.slot:not(.slot--filled) .slot-name { color: #55554F; }
-.slot-x { position: absolute; top: 4px; right: 7px; color: #8A8A86; font-size: 15px; line-height: 1; }
+/* ---- §2 ROWS - THE DATA VOICE ------------------------------------------
+ * Rows, not tables and not bullet lists. Label left, value right, value in
+ * mono 700 tabular ALWAYS. Hairline separators, none on the last. */
+.row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 6px 0; border-bottom: 1px solid var(--d-line);
+  font-variant-numeric: tabular-nums;
+}
+.row:last-child { border-bottom: none; }
+.row .r { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row .r--volt { color: var(--d-volt); }
+.row .r--mut { color: var(--d-mut); }
+.row-label { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.row-slot {
+  font-family: var(--d-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+}
+.row-name { overflow: hidden; text-overflow: ellipsis; }
+.row-line { font-size: 11px; color: var(--d-mut); font-variant-numeric: tabular-nums; }
+/* DROP-WORST: struck and 45%. Excluded, not deleted - the reader sees the math. */
+.row--dropped { opacity: .45; }
+.row--dropped .row-name, .row--dropped .r { text-decoration: line-through; }
+/* Decoration propagates to in-flow descendants and a child cannot cancel it;
+   it does NOT cross into an atomic inline-level box, so the stat line escapes. */
+.row--dropped .row-line { display: inline-block; text-decoration: none; }
 
-/* ONE SCROLL CONTAINER, AND ONLY THE POOL MOVES.
- *
- * The playtest caught this as an inconsistency rather than a layout bug: at QB
- * the twelve rows fit, the page did not overflow, and the sticky Lock button
- * looked pinned. At WR the twenty-four rows pushed the document past the
- * viewport and the WHOLE PAGE scrolled - clock, slots and Lock included. Same
- * screen, two different behaviours, decided by how many players share a
- * position. A player mid-round should never have to scroll back up to find the
- * clock or the button that ends the round.
- *
- * So the play surface is pinned to the viewport and the pool is the only thing
- * with overflow. :has() scopes it to the playing state - the pitch, rules,
- * entered and reveal screens are ordinary documents and should keep scrolling
- * normally, and this island does not know which state the page shell is in.
- *
- * min-height:0 on every flex ancestor is load-bearing: a flex item defaults to
- * min-height:auto, which refuses to shrink below its content, and the pool
- * would grow the page instead of scrolling inside it. */
+/* THE LONG LIST. v1.2 s1 permits one designated module to scroll internally,
+   and the whole board is it - but only where a nested scroller is pleasant.
+   AT 390px IT RUNS AS THE PAGE. A 420px box inside a scrolling page shows ten
+   of sixty-four rows and traps the thumb: overscroll-behavior:contain stops
+   the page continuing when the box bottoms out, so the reader has to lift and
+   re-place their finger outside it. The reveal is a leisurely read with no
+   clock on it; a long page costs nothing there, and scroll-trapping costs
+   real irritation. On a pointer device the wheel makes the cap a benefit
+   rather than a tax - it keeps the methodology module reachable - so the cap
+   comes back with the width. */
+.list--long { max-height: none; }
+@media (min-width: 640px) {
+  .list--long { max-height: 460px; overflow-y: auto; overscroll-behavior: contain; }
+}
+
+/* ---- §3 PILLS AND BADGES ------------------------------------------------ */
+.tierbadge {
+  display: inline-block; font-family: var(--d-cond); font-weight: 600;
+  font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  border: 1px solid currentColor; border-radius: 99px; padding: 3px 10px;
+}
+/* Colour carries rank. THE LADDER IS volt / jade / paper / muted / terra,
+   ratified 16 Aug: v1.2 s3 named four colours for five tiers and STARTER's
+   muted rung was the open question. It is spec now, not an interpolation. */
+.tier--hof { color: var(--d-volt); }
+.tier--mvp { color: var(--d-jade); }
+.tier--pb  { color: var(--d-paper); }
+.tier--st  { color: var(--d-mut); }
+.tier--ps  { color: var(--d-terra); }
+
+.chiprow { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  font-family: var(--d-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--d-mut);
+  border: 1px solid var(--d-line); border-radius: 99px; padding: 4px 10px;
+}
+.chip--on { color: var(--d-jade); border-color: currentColor; }
+.chip--off { color: var(--d-terra); border-color: currentColor; }
+
+/* ============================ THE DRAFT SCREEN ============================
+ * ONE SCROLL CONTAINER, AND ONLY THE POOL MOVES - unchanged by this pass. At
+ * QB twelve rows fit and the page did not overflow; at WR twenty-four rows
+ * scrolled the clock and the Lock button off screen. :has() scopes it to the
+ * playing state. min-height:0 on every flex ancestor is load-bearing: a flex
+ * item defaults to min-height:auto and would grow the page instead of
+ * scrolling inside it. */
 .daily:has(.mod--play) { height: 100dvh; min-height: 0; overflow: hidden; }
 .daily:has(.mod--play) .daily-main { display: flex; min-height: 0; padding-bottom: 12px; }
-.mod--play { flex: 1; width: 100%; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
-.play-head { flex: 0 0 auto; display: flex; flex-direction: column; gap: 12px; }
-.pool--scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.mod--play {
+  flex: 1; width: 100%; min-height: 0; display: flex; flex-direction: column; gap: 10px;
+  background: none; border: 0; border-radius: 0; padding: 0; margin: 0;
+}
+.play-head { flex: 0 0 auto; display: flex; flex-direction: column; gap: 10px; }
+
+/* THE CLOCK IS THE HERO of this screen, and the bar belongs to it - one
+   container, one border, one radius, so they read as a single instrument
+   rather than a number floating over a rule. Volt is legitimate here under
+   §2's "volt reserved for THE number on the screen": on the draft screen the
+   clock IS that number, and it is the only volt number present. */
+.clock-inst {
+  background: var(--d-ink-2); border: 1px solid var(--d-line);
+  border-radius: 12px; padding: 10px 14px 12px;
+}
+.clock-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.clock {
+  font-family: var(--d-disp); font-style: italic; font-weight: 900;
+  font-size: 46px; line-height: 1; letter-spacing: -.05em;
+  color: var(--d-volt); font-variant-numeric: tabular-nums;
+}
+.clock-note {
+  font-family: var(--d-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+  text-align: right;
+}
+.clock-bar { height: 4px; background: var(--d-ink-3); border-radius: 2px; overflow: hidden; margin-top: 9px; }
+.clock-bar i { display: block; height: 100%; background: var(--d-volt); transition: width .25s linear; }
+/* WARN AT 20s, live-red on both the number and its bar. */
+.clock-inst--low .clock { color: var(--d-live); }
+.clock-inst--low .clock-bar i { background: var(--d-live); }
+
+/* SLOTS AS SELECTOR PILLS (§3). Active takes the mock's .sp.on - volt fill,
+   ink text - because it is the control deciding which pool you are looking at.
+   A filled slot keeps a volt BORDER, so "done" and "looking at" never collapse
+   into the same signal. Fills are for active selectors only (§3). */
+.slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.slot {
+  position: relative; display: flex; flex-direction: column; gap: 1px; align-items: flex-start;
+  padding: 6px 11px; border: 1px solid var(--d-line); border-radius: 99px;
+  background: var(--d-ink-3); color: inherit; font: inherit; text-align: left;
+  cursor: pointer; min-width: 0;
+}
+.slot-tag {
+  font-family: var(--d-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+}
+.slot-name {
+  font-size: 12px; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; max-width: 100%; color: var(--d-paper);
+}
+.slot:not(.slot--filled) .slot-name { color: #55554F; }
+.slot--filled { border-color: var(--d-volt); }
+.slot--active { background: var(--d-volt); border-color: var(--d-volt); }
+.slot--active .slot-tag { color: rgba(10, 10, 10, .7); }
+.slot--active .slot-name { color: var(--d-ink); }
+.slot--active:not(.slot--filled) .slot-name { color: rgba(10, 10, 10, .5); }
+.slot-x { position: absolute; top: 2px; right: 9px; color: var(--d-mut); font-size: 14px; line-height: 1; }
+.slot--active .slot-x { color: rgba(10, 10, 10, .6); }
 
 /* THE POOL - one line per player, and the line height is the whole design.
  *
- * The playtest verdict was that the interface ate the clock, and the pool was
- * most of it: at the old two-line row the pitch was 56px (9+9 padding, 2
- * border, a 14px name and an 11px resume at line-height normal, plus a 6px
- * gap), so a 24-deep receiver list ran to three and a half screens of thumb.
+ * TWO LINES CANNOT REACH THE DENSITY TARGET; that is arithmetic, not taste.
+ * Even at 4px padding and 1.15 line-height two legible lines floor near 42px
+ * pitch. The resume on the name's line gets ~30px - 1.83x the rows per screen
+ * - and this pass does not spend that back.
  *
- * TWO LINES CANNOT REACH THE DENSITY TARGET - that is arithmetic, not taste.
- * Even at 4px padding and 1.15 line-height, two legible lines floor at ~42px
- * pitch, which is 1.3x. Putting the resume ON the name's line is the only way
- * past it: 5+5 padding, 2 border, one 13px line at 1.2 (15.6px) and a 3px gap
- * is a 30.6px pitch - 1.83x the rows per screen.
- *
- * THE COST, STATED: the tap target drops from ~50px to ~28px, under the 44px
- * touch guideline. Density and thumb accuracy trade directly against each
- * other here and there is no setting that wins both; this errs toward density
- * because scrolling was the reported thief. If the next playtest produces
- * mistaps, the padding is the dial - every 1px of it is 2px of pitch.
- *
- * The resume is the element that truncates, never the name, so a long row
- * degrades from the tail rather than losing the player's identity. */
-.pool { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
-.plyr { display: flex; align-items: baseline; gap: 8px; line-height: 1.2;
-  padding: 5px 9px; border: 1px solid #1E1E1C; border-radius: 7px; background: #101010; color: inherit;
-  font: inherit; text-align: left; cursor: pointer; }
+ * THE NAME TRUNCATES, THE NUMBER NEVER DOES. PPG is the column being scanned,
+ * so it is fixed-width, right-aligned and tabular, and the name gives way
+ * first. The split is PRESENTATIONAL: DailyRoom slices the resume string it was
+ * already sent, so no field was added to the wire to make this work. */
+.pool--scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.pool { display: flex; flex-direction: column; }
+.plyr {
+  display: flex; align-items: baseline; gap: 8px; line-height: 1.2;
+  padding: 6px 4px; border: 0; border-bottom: 1px solid var(--d-line);
+  background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.plyr:last-child { border-bottom: none; }
 .plyr--used { opacity: .35; }
-.plyr-pos { flex: 0 0 22px; font-size: 10px; letter-spacing: .1em; color: #8A8A86; }
-.plyr-name { flex: 0 0 auto; font-size: 13px; font-weight: 600; white-space: nowrap; }
-.plyr-resume { flex: 1 1 auto; min-width: 0; text-align: right; font-size: 10px; color: #8A8A86;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.plyr-pos {
+  flex: 0 0 22px; font-family: var(--d-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: .1em; color: var(--d-mut);
+}
+.plyr-name {
+  flex: 1 1 auto; min-width: 0; font-size: 13px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.plyr-rest {
+  flex: 0 1 auto; min-width: 0; font-size: 10px; color: var(--d-mut);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right;
+}
+.plyr-ppg {
+  flex: 0 0 60px; text-align: right; font-size: 12px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
 
-.score-row { display: flex; align-items: baseline; gap: 14px; }
-.score-big { font-size: 52px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
-.score-meta { display: flex; flex-direction: column; gap: 2px; }
-.band { display: inline-block; padding: 3px 9px; border-radius: 999px; background: #D4FF00; color: #0A0A0A;
-  font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+/* ============================== THE RECEIPT =============================== */
+.score-row { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.score-big {
+  font-family: var(--d-mono); font-weight: 700; font-size: 46px; line-height: .92;
+  letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+}
+.score-meta { display: flex; flex-direction: column; gap: 5px; padding-bottom: 4px; }
 
-.guess { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; border-top: 1px solid #1E1E1C; }
-.guess-lede { margin: 0; color: #C9C9C4; font-size: 14px; }
+/* ============================== THE REVEAL ================================ */
+.dh-answer {
+  font-family: var(--d-disp); font-style: italic; font-weight: 900;
+  font-size: 38px; line-height: 1; letter-spacing: -.05em; margin: 8px 0 2px;
+}
+.dh-answer .wk { color: var(--d-mut); }
+/* The score/perfect pair with the tier badge between them. */
+.pair { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+.pair-cell .n {
+  font-family: var(--d-mono); font-weight: 700; font-size: 30px; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.pair-cell .k {
+  font-family: var(--d-cond); font-weight: 600; font-size: 9px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--d-mut); margin-top: 4px;
+}
+.pair-cell--dim .n { color: var(--d-mut); }
+.mod--dnf { border-left: 3px solid var(--d-mut); }
+.mod--about a { color: var(--d-volt); }
+
+/* guess form - a module's controls, not a third button voice */
 .guess-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.guess-row select { background: #141412; color: #F5F5F2; border: 1px solid #2A2A28; border-radius: 9px;
-  padding: 10px; font: inherit; }
+.guess-row select {
+  background: var(--d-ink-3); color: var(--d-paper); border: 1px solid var(--d-line);
+  border-radius: 9px; padding: 10px; font: inherit; flex: 1 1 40%;
+}
 
-@media (max-width: 400px) { .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 400px) {
+  .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .clock { font-size: 40px; }
+  .hero-q { font-size: 27px; }
+  .dh-answer { font-size: 31px; }
+  .plyr-ppg { flex-basis: 54px; }
+  .score-big { font-size: 40px; }
+}
 
-/* reveal */
-.mod-sub { font-size: 18px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
-.mod--dnf { border-left: 3px solid #8A8A86; padding-left: 12px; }
-.brk { width: 100%; border-collapse: collapse; font-size: 14px; }
-.brk td { padding: 7px 0; border-bottom: 1px solid #1A1A18; vertical-align: baseline; }
-.brk-slot { width: 62px; font-size: 10px; letter-spacing: .12em; color: #8A8A86; }
-.brk-name { color: #F5F5F2; }
-.brk-pts { width: 62px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
-.brk--dropped td { color: #55554F; text-decoration: line-through; }
-.brk--dropped .brk-pts { color: #55554F; }
-
-/* THE BOX-SCORE LINE, reveal only. The reveal is not density-constrained the
-   way the play pool is - nobody is racing a clock here - so it gets its own
-   row under the name at a readable size rather than competing for the name's.
- * INLINE-BLOCK IS LOAD-BEARING, not a shrug at display:block. A dropped pick
-   strikes its whole cell through, and text-decoration propagates to in-flow
-   descendants where a child CANNOT cancel it - `text-decoration: none` here
-   would do nothing. Decoration does not cross into an ATOMIC inline-level box,
-   so inline-block escapes the strike; width:100% keeps it on its own line. */
-.brk-line { display: inline-block; width: 100%; margin-top: 3px;
-  font-size: 11px; color: #8A8A86; font-variant-numeric: tabular-nums; }
-.brk--dropped .brk-line { color: #55554F; }
-.brk--full { max-height: none; }
-.mod--about a { color: #D4FF00; }
+/* Column header for the pool. Pinned with the head so it does not scroll away
+   from the numbers it names. */
+.pool-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 4px 4px 6px; border-bottom: 1px solid var(--d-line);
+  font-family: var(--d-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+}

@@ -11,6 +11,7 @@ import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { revealView } from '@/lib/daily/close';
+import { tierClass } from '@/lib/daily/reveal';
 import '../daily.css';
 
 export const dynamic = 'force-dynamic';
@@ -50,14 +51,32 @@ export default async function DailyReveal({ params, searchParams }) {
       </header>
       <main className="daily-main">
 
-        <section className="mod">
-          <h1 className="mod-title">{v.season} · Week {v.week}</h1>
-          <p className="mod-lede">That&rsquo;s the week. Perfect lineup was <b>{fmt(v.perfect?.total)}</b>.</p>
+        {/* THE HERO, and the only one on this screen (v1.2 s5). This is the
+            surface people screenshot, so the answer is the display statement
+            and everything else is a module beneath it. */}
+        <section className="hero">
+          <div className="hero-eyebrow">The answer &middot; {date}</div>
+          <div className="dh-answer">{v.season} <span className="wk">&middot; Week {v.week}</span></div>
+          <div className="pair">
+            <div className="pair-cell">
+              <div className="n">{fmt(v.perfect?.total)}</div>
+              <div className="k">perfect lineup</div>
+            </div>
+            {v.you && !v.you.dnf && (
+              <>
+                <span className={`tierbadge ${tierClass(v.you.tier?.label)}`}>{v.you.tier?.label}</span>
+                <div className="pair-cell pair-cell--dim">
+                  <div className="n">{fmt(v.you.score)}</div>
+                  <div className="k">your score &middot; {v.you.tier?.pct}%</div>
+                </div>
+              </>
+            )}
+          </div>
         </section>
 
         {v.you?.dnf && (
           <section className="mod mod--dnf">
-            <h2 className="mod-sub">Ran out of clock</h2>
+            <h2 className="eyebrow">Your entry &mdash; no score</h2>
             <p className="mod-lede">
               You opened the board but never locked a lineup, so there&rsquo;s no score for today.
               The answer is below all the same.
@@ -67,75 +86,73 @@ export default async function DailyReveal({ params, searchParams }) {
 
         {v.you && !v.you.dnf && (
           <section className="mod mod--you">
-            <div className="score-row">
-              <div className="score-big">{fmt(v.you.score)}</div>
-              <div className="score-meta">
-                <span className="band">{v.you.tier?.label}</span>
-                <span className="muted">{v.you.tier?.pct}% of perfect · {v.you.entrants} entries</span>
-              </div>
+            <h2 className="eyebrow">Your lineup <span className="ctx">&mdash; {v.you.entrants} {v.you.entrants === 1 ? 'entry' : 'entries'}</span></h2>
+            <div>
+              {v.you.picks.map((p) => (
+                <div key={p.slot} className={`row${p.dropped ? ' row--dropped' : ''}`}>
+                  <span className="row-label">
+                    <span className="row-slot">{p.slot.replace('FLEX2', 'FLEX')}</span>
+                    <span className="row-name">{p.name}</span>
+                    {p.line && <span className="row-line">{p.line}</span>}
+                  </span>
+                  <span className="r">{fmt(p.points)}</span>
+                </div>
+              ))}
             </div>
-            <table className="brk">
-              <tbody>
-                {v.you.picks.map((p) => (
-                  <tr key={p.slot} className={p.dropped ? 'brk--dropped' : ''}>
-                    <td className="brk-slot">{p.slot.replace('FLEX2', 'FLEX')}</td>
-                    <td className="brk-name">{p.name}
-                      {p.line && <span className="brk-line">{p.line}</span>}
-                    </td>
-                    <td className="brk-pts">{fmt(p.points)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="muted">Struck row is your dropped pick — five of six count.</p>
+            <p className="muted">Struck row is your dropped pick &mdash; five of six count.</p>
             {v.you.guess && (
-              <p className="muted">
-                You guessed {v.you.guess.guessedSeason} Week {v.you.guess.guessedWeek} —{' '}
-                {v.you.guess.seasonRight && v.you.guess.weekRight ? 'both right'
-                  : v.you.guess.seasonRight ? 'season right'
-                  : v.you.guess.weekRight ? 'week right' : 'neither'}
-                {v.you.guess.bonusPct > 0 && ` · +${Math.round(v.you.guess.bonusPct * 100)}%`}
-              </p>
+              <div className="chiprow">
+                <span className="chip">Guessed {v.you.guess.guessedSeason} &middot; Wk {v.you.guess.guessedWeek}</span>
+                <span className={`chip ${v.you.guess.seasonRight ? 'chip--on' : 'chip--off'}`}>
+                  Season {v.you.guess.seasonRight ? 'right' : 'wrong'}
+                </span>
+                <span className={`chip ${v.you.guess.weekRight ? 'chip--on' : 'chip--off'}`}>
+                  Week {v.you.guess.weekRight ? 'right' : 'wrong'}
+                </span>
+                {v.you.guess.bonusPct > 0 && (
+                  <span className="chip chip--on">+{Math.round(v.you.guess.bonusPct * 100)}% bonus</span>
+                )}
+              </div>
             )}
           </section>
         )}
 
         <section className="mod">
-          <h2 className="mod-sub">The perfect lineup</h2>
-          <table className="brk">
-            <tbody>
-              {(v.perfect?.picks ?? []).map((p) => (
-                <tr key={p.slot} className={p.dropped ? 'brk--dropped' : ''}>
-                  <td className="brk-slot">{p.slot.replace('FLEX2', 'FLEX')}</td>
-                  <td className="brk-name">{p.name} <span className="muted">{p.team}</span>
-                    {p.line && <span className="brk-line">{p.line}</span>}
-                  </td>
-                  <td className="brk-pts">{fmt(p.points)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <h2 className="eyebrow">The perfect lineup <span className="ctx">&mdash; {fmt(v.perfect?.total)}</span></h2>
+          <div>
+            {(v.perfect?.picks ?? []).map((p) => (
+              <div key={p.slot} className={`row${p.dropped ? ' row--dropped' : ''}`}>
+                <span className="row-label">
+                  <span className="row-slot">{p.slot.replace('FLEX2', 'FLEX')} &middot; {p.team}</span>
+                  <span className="row-name">{p.name}</span>
+                  {p.line && <span className="row-line">{p.line}</span>}
+                </span>
+                <span className="r">{fmt(p.points)}</span>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="mod">
-          <h2 className="mod-sub">The whole board</h2>
-          <table className="brk brk--full">
-            <tbody>
-              {v.board.map((p) => (
-                <tr key={p.id}>
-                  <td className="brk-slot">{p.pos}</td>
-                  <td className="brk-name">{p.name} <span className="muted">{p.team}</span>
-                    {p.line && <span className="brk-line">{p.line}</span>}
-                  </td>
-                  <td className="brk-pts">{fmt(p.points)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <h2 className="eyebrow">The whole board <span className="ctx">&mdash; all {v.board.length}, by score</span></h2>
+          {/* The designated long-list module: the one module permitted to
+              scroll internally on mobile (v1.2 s1). */}
+          <div className="list--long">
+            {v.board.map((p) => (
+              <div key={p.id} className="row">
+                <span className="row-label">
+                  <span className="row-slot">{p.pos} &middot; {p.team}</span>
+                  <span className="row-name">{p.name}</span>
+                  {p.line && <span className="row-line">{p.line}</span>}
+                </span>
+                <span className="r">{fmt(p.points)}</span>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="mod mod--about">
-          <h2 className="mod-sub">How this is scored</h2>
+          <h2 className="eyebrow">How this is scored</h2>
           <p className="mod-lede">
             PPR, computed by the same module the draft sim uses: 1 point per 25 passing yards,
             4 per passing touchdown, −2 per interception, 1 per 10 rushing or receiving yards,
