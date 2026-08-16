@@ -52,11 +52,17 @@ export async function GET(_req, { params }) {
           ))}
         </div>
 
-        <div style={{ ...S, marginTop: 'auto', alignItems: 'baseline', gap: 24 }}>
+        {/* OWN ROWS, NOT A SHARED BASELINE. These were a flex row with
+            alignItems:'baseline', which reads fine until you do the arithmetic:
+            904px of usable width against a 150px-italic total and a 38px label
+            that together want more than that. The label wrapped and ran back
+            across the number on every three-digit score - which is every score.
+            Stacked, the width of one can never affect the other. */}
+        <div style={{ ...S, marginTop: 'auto', flexDirection: 'column' }}>
           <div style={{ ...S, fontSize: 150, lineHeight: 1, color: VOLT }}>{fmt(v.perfect?.total)}</div>
-          <div style={{ ...S, fontSize: 38, color: MUT }}>PERFECT · PPR, DROP WORST</div>
+          <div style={{ ...S, fontSize: 38, color: MUT, marginTop: 14 }}>PERFECT · PPR, DROP WORST</div>
         </div>
-        <div style={{ ...S, fontSize: 28, color: MUT, marginTop: 26 }}>sportsvyn.com/daily</div>
+        <div style={{ ...S, fontSize: 28, color: MUT, marginTop: 30 }}>sportsvyn.com/daily</div>
       </div>
     ),
     { width: 1080, height: 1920, fonts: [{ name: 'Saira', data: saira, style: 'italic', weight: 900 }] },
