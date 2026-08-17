@@ -166,30 +166,52 @@ export default function GlobalHeader({
 /**
  * The app container's wordmark: centred, not a link.
  *
- * ASSET NOTE - READ BEFORE SWAPPING. The brief asks for a DRAFTVYN wordmark and
- * public/brand has exactly one file, the SPORTSVYN lockup. There is no DRAFTVYN
- * PNG in this repo. Rather than invent one, this ships the real asset we own;
- * dropping the DRAFTVYN true-alpha export into public/brand and changing SRC
- * below is the whole swap.
+ * THE APP IS DRAFTVYN. The bundle is com.sportsvyn.draftvyn and the App Store
+ * listing is the sim, so the container wears the product's own mark rather than
+ * the publication's.
  *
- * PLAIN <img>, MATCHING components/gridiron/Wordmark.js. The brief said
- * next/image, but the established wordmark rule is a plain tag with the locked
- * 1568x336 aspect and an em-based height, because the export is a LOCKUP whose
- * caps are only 0.40 of the png height - next/image's layout handling fights
- * that rather than helping it. One divergence from the brief, stated rather
- * than silent.
+ * EVERY CONSTANT BELOW WAS MEASURED FROM THIS FILE, not inherited. The two
+ * exports came off different pipelines and they do not share geometry:
+ *
+ *                    SPORTSVYN            DRAFTVYN
+ *   file             1568x336             1500x300
+ *   caps             133px = 0.3958       125px = 0.4167
+ *   structure        macron+caps+rule     macron+caps, NO underline
+ *   ink box          full width, bottom   x 293..1213, y 82..233
+ *                    flush                (39% of the width is padding)
+ *
+ * Note the SPORTSVYN filename says 3000x600 and the file is 1568x336 - which is
+ * why these are measured rather than read off a name.
+ *
+ * WHY 1.71em AND NOT 1.8em. The header was built around a cap height of
+ * 0.3958 x 1.8em = 0.7125em. Draftvyn's caps are a larger fraction of its box,
+ * so the same 1.8em would set the type visibly bigger. 0.7125 / 0.4167 = 1.71em
+ * reproduces the cap height exactly: 12.11px at this header's 17px font size,
+ * against Sportsvyn's 12.11px. The MARK will read lighter regardless, because
+ * this lockup has no underline - that is the mark being different, not the
+ * sizing being wrong.
+ *
+ * THE HORIZONTAL PADDING IS HARMLESS HERE and would not be elsewhere: 293px
+ * left and 286px right of empty pixels make the element ~60% wider than the
+ * visible mark. In a centred header with nothing beside it that costs nothing,
+ * and the padding is near-symmetric so the mark still centres true. Anywhere
+ * this mark sits NEXT to something, measure again.
+ *
+ * PLAIN <img>, MATCHING components/gridiron/Wordmark.js - ratified. The
+ * established wordmark rule is a plain tag with a locked aspect and an em-based
+ * height; next/image's layout handling fights a lockup rather than helping it.
  */
 function AppWordmark() {
   return (
-    <span className="gh-app-mark" aria-label="SPORTSVYN">
+    <span className="gh-app-mark" aria-label="DRAFTVYN">
       <img
-        src="/brand/sportsvynwordmarkwhite3000x600truealpha.png"
-        alt="SPORTSVYN"
-        width={1568}
-        height={336}
+        src="/brand/draftvynwordmarkwhite1500x300transparent.png"
+        alt="DRAFTVYN"
+        width={1500}
+        height={300}
         fetchPriority="high"
         decoding="async"
-        style={{ height: '1.8em', width: 'auto', display: 'block' }}
+        style={{ height: '1.71em', width: 'auto', display: 'block' }}
       />
     </span>
   );
