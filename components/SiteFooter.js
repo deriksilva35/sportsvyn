@@ -12,11 +12,28 @@
 
 import Link from 'next/link';
 import Wordmark from '@/components/Wordmark';
+import HideInShell from '@/components/shell/HideInShell';
 import { NFL_NON_AFFILIATION } from '@/lib/legal';
 
 import './site-chrome.css';
 
+/**
+ * NOT RENDERED IN THE APP CONTAINER. It is the largest web artifact left in the
+ * shell - a full column of site navigation and legal, sitting above a tab bar
+ * that already owns navigation. Wrapped here rather than at each of the twenty
+ * call sites, so no page can forget.
+ *
+ * PRIVACY AND TERMS MOVED TO PROFILE rather than disappearing. The App Store
+ * expects legal to be reachable in-app, and two ghost links in the account
+ * section is the native pattern for it.
+ */
 export default function SiteFooter() {
+  return (
+    <HideInShell>{siteFooterMarkup()}</HideInShell>
+  );
+}
+
+function siteFooterMarkup() {
   return (
     <footer className="site-footer">
       <div className="site-footer-inner">

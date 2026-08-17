@@ -122,6 +122,21 @@ export default async function AccountPage({ searchParams }) {
           </div>
         </section>
 
+        {/* LEGAL, REACHABLE IN-APP. The site footer carries Privacy and Terms
+            on the web and the footer is not rendered in the container - so
+            without this the two documents would be reachable only by typing a
+            URL the app has no bar to type it in. The App Store expects both
+            in-app, and two quiet links in the account section is the native
+            pattern for it. Rendered on the web too: a second path to the legal
+            pages costs nothing and the account page is where people look. */}
+        <section className="acct-mod">
+          <h2 className="acct-eyebrow">Legal</h2>
+          <div className="acct-rows">
+            <a className="acct-row acct-row--link" href="/privacy"><span>Privacy</span><span className="acct-r">&rarr;</span></a>
+            <a className="acct-row acct-row--link" href="/terms"><span>Terms</span><span className="acct-r">&rarr;</span></a>
+          </div>
+        </section>
+
         <section className="acct-mod">
           {/* The same component the sim uses, so there is exactly one sign-out
               path and it is the one that also logs out of RevenueCat. */}

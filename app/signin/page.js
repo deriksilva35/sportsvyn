@@ -21,6 +21,13 @@
  * the small utility-page scale, font-display headline, serif-italic
  * supporting line, mono back-link.
  */
+// DEBT, LOGGED RATHER THAN CHURNED (Aug chrome sweep): this page renders
+// components/Wordmark, while every ink header renders
+// components/gridiron/Wordmark and the app container renders a third in
+// GlobalHeader. Three implementations of one mark. This one is already
+// shell-aware (it varies its size class) so nothing is broken, and
+// consolidating it is a polish-pass item, not worth the churn mid-block.
+
 
 import Link from 'next/link';
 import Wordmark from '@/components/Wordmark';

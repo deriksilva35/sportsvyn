@@ -17,6 +17,26 @@
 // Returning null costs one function call, so hosts can mount this unconditionally
 // and let the module decide.
 
+// ============================================================================
+// THIS IS THE REFERENCE IMPLEMENTATION FOR SHELL-AWARE CHROME. Copy it.
+// ============================================================================
+// The August chrome sweep checked every piece of web furniture that reaches
+// the app container. The site footer had no shell handling at all, the
+// subscribe band rendered a trimmed variant that was still web furniture, and
+// the sim's tab bar stacked underneath the app's. This component was the only
+// one that already got it right.
+//
+// WHAT IT DOES THAT THE OTHERS DID NOT: it takes `shell` as a prop resolved by
+// the SERVER (lib/shell/shell.js), and it decides by RETURNING NULL rather
+// than by rendering a smaller version of itself. A component that renders
+// something different in the container is still a component the container has
+// to make room for; one that returns null is not there.
+//
+// The other correct shape is components/shell/HideInShell, for chrome whose
+// call sites are prerendered - a server-side shell read would call cookies()
+// and turn a static page dynamic. Use this one where the page is already
+// dynamic and has the prop; use that one where it is not.
+
 import { appStoreUrl, shouldShowAppBanner } from '@/lib/appBanner';
 import AppBanner from './AppBanner';
 

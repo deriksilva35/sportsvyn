@@ -235,16 +235,12 @@ function TodaysReadsSection({ reads, followedSet }) {
 // about a tournament that finished in July, and the price line carried an em
 // dash against this build's hyphens-only rule.
 function SubscribeBand({ shell = false }) {
-  if (shell) {
-    return (
-      <div className="subscribe-band">
-        <div className="sb-text">
-          The Daily Card is free to read.
-          <em>The rest of the year is part of the Sportsvyn membership.</em>
-        </div>
-      </div>
-    );
-  }
+  // NOTHING IN THE CONTAINER. This used to render a text-only variant in the
+  // shell - the pitch without the email form - which was still web furniture:
+  // an install IS the subscription intent, and the membership has its own
+  // surface in PROFILE. A band explaining the offer to somebody who already
+  // took it is a row of pixels asking them to do what they did.
+  if (shell) return null;
   return (
     <div className="subscribe-band">
       <div className="sb-text">
