@@ -811,3 +811,11 @@
   color: var(--muted); text-decoration: none;
 }
 .appcrumb:hover { color: var(--paper); }
+
+/* The preset that mirrors the ranked format. Marked, not shouted: it is one of
+   five on the rail and the label is what does the work. */
+.pcard--ranked { border-color: var(--volt); }
+.pm--ranked {
+  color: var(--volt); font-size: 9px; letter-spacing: .06em; text-transform: uppercase;
+  margin-top: 2px;
+}

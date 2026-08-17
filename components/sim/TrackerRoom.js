@@ -265,7 +265,7 @@ export default function TrackerRoom({
               tracker home; without this the room would be the trapdoor the
               resume card was trying to avoid. END TRACKING is still the only
               exit that FORGETS the room - this one just leaves it running. */}
-          <a className="appcrumb trk-crumb" href="/sim/tracker">&larr; Tracker home</a>
+          <a className="appcrumb trk-crumb" href="/sim/tracker?home=1">&larr; Tracker home</a>
           <span className="mode">TRACKER</span>
           <span className="meta">
             {complete ? `COMPLETE · ${total} PICKS` : `RD ${round} · PICK ${currentOverall}/${total}`}

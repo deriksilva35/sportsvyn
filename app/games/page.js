@@ -22,7 +22,8 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { gamesLobby } from '@/lib/games/read';
-import { normalizePane, PANES, PANE_LABEL } from '@/lib/games/lobby';
+import { normalizePane } from '@/lib/games/lobby';
+import PaneTabs from '@/components/games/PaneTabs';
 import { tierClass } from '@/lib/daily/reveal';
 import './games.css';
 
@@ -48,8 +49,6 @@ export default async function GamesPage({ searchParams }) {
   const userId = session?.user?.id ?? null;
   const v = await gamesLobby(userId).catch(() => null);
 
-  const href = (p) => (p === 'games' ? '/games' : `/games?pane=${p}`);
-
   return (
     <>
       <GlobalHeaderServer activeNav="games" />
@@ -60,13 +59,13 @@ export default async function GamesPage({ searchParams }) {
           <p className="lob-sub">One account. One handle. Every board.</p>
         </header>
 
-        <nav className="ptabs" aria-label="Games sections">
-          {PANES.map((p) => (
-            <a key={p} href={href(p)} className={`pt${p === pane ? ' pt--on' : ''}`}>
-              {PANE_LABEL[p]}
-            </a>
-          ))}
-        </nav>
+        {/* A CLIENT SWITCHER OVER SERVER PANES. The panes remain URL params and
+            remain server-rendered - that is what makes each one's payload
+            independently leak-testable, and it is not negotiable. What changed
+            is that these are next/link soft navigations rather than <a> tags,
+            so the outgoing pane stays painted until the incoming one arrives
+            instead of the browser tearing the document down between them. */}
+        <PaneTabs pane={pane} />
 
         {!v && (
           <section className="mod">

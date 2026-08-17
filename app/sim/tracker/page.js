@@ -27,7 +27,7 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
-import { getOpenTrackerDraft, isMember } from '@/lib/fantasy/drafts';
+import { getOpenTrackerDraft, isMember, trackerResumeCard } from '@/lib/fantasy/drafts';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
@@ -67,8 +67,25 @@ export default async function TrackerTab({ searchParams }) {
   //
   // Resume outranks the entitlement check, as before: a draft in progress
   // belongs to the user whatever their membership looks like right now.
+  // THE TAB RESUMES; THE BREADCRUMB DOES NOT LOOP.
+  //
+  // The redirect made "Tracker home" a dead link: tapping it from inside the
+  // room landed here, and here sent you straight back. A no-op, and the room
+  // had no way out at all.
+  //
+  // ?home=1 IS THE DIFFERENCE BETWEEN THE TWO ARRIVALS. Tapping the TRACKER tab
+  // means "take me to my draft" and still resumes. Tapping the breadcrumb means
+  // "I want the rules, the setup, the history" and must actually leave - so it
+  // suppresses the resume and the page renders home with a Resume card on top.
+  // In-room -> home -> resume round-trips, and the card is the way back.
+  const goHome = params.home === '1';
   const open = await getOpenTrackerDraft(userId);
-  if (open) redirect(`/sim/draft/${open.id}`);
+  if (open && !goHome) redirect(`/sim/draft/${open.id}`);
+
+  // The card needs to say WHERE in the draft, or "Resume" is just a word. Round
+  // and pick are derived from the pick count rather than stored - the same
+  // derivation the room uses, so the card and the room cannot disagree.
+  const resume = open ? await trackerResumeCard(open.id) : null;
 
   const [member, historyRows] = await Promise.all([
     isMember(userId),
@@ -97,6 +114,23 @@ export default async function TrackerTab({ searchParams }) {
 
       <main className="sim-wrap">
         <GetTheAppBanner shell={isShell} />
+
+        {/* THE OPEN ROOM LEADS, when you arrived here deliberately. This is
+            what makes the breadcrumb a real exit rather than a loop: you can
+            reach the rules and the history without ending the draft, and get
+            back in one tap. */}
+        {resume && (
+          <section className="sim-mod trk-resume">
+            <div className="sim-kicker">You are tracking a draft</div>
+            <p className="trk-lede">
+              Round {resume.round}, pick {resume.pickInRound} &mdash; {resume.picks} in.
+              Nothing expires and nothing is on a clock.
+            </p>
+            <a className="btn btn--volt" href={`/sim/draft/${resume.id}`}>
+              Resume &mdash; Rd {resume.round} Pick {resume.pickInRound} &rarr;
+            </a>
+          </section>
+        )}
 
         {/* WHAT THIS IS, before what it costs. The tracker is the one product
             here that has to be explained rather than recognised: "draft sim" is

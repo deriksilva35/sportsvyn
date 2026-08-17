@@ -211,8 +211,17 @@ test('AN ACTIVE TRACKER ROOM SURVIVES A TAB-AWAY - the tab returns you INTO it',
 test('THE ROOM CARRIES THE WAY BACK OUT, which is what lets the tab bring you in', () => {
   // Without this the room is the trapdoor the resume card was trying to avoid.
   const s = readFileSync(path.join(REPO, 'components/sim/TrackerRoom.js'), 'utf8');
-  assert.match(s, /href="\/sim\/tracker"/, 'a breadcrumb back to the tracker home');
+  // ?home=1 IS LOAD-BEARING. Without it the breadcrumb lands on a page that
+  // resumes straight back into the room - which is exactly the dead link a
+  // device pass found. The param is how the tab's arrival and the
+  // breadcrumb's arrival are told apart.
+  assert.match(s, /href="\/sim\/tracker\?home=1"/, 'the breadcrumb must suppress the resume');
   assert.match(s, /Tracker home/);
+  const page = readFileSync(path.join(REPO, 'app/sim/tracker/page.js'), 'utf8');
+  assert.match(page, /params\.home === '1'/, 'and the page must honour it');
+  assert.match(page, /if \(open && !goHome\)/, 'resume only when NOT arriving from the room');
+  assert.match(page, /Resume &mdash; Rd \{resume\.round\} Pick \{resume\.pickInRound\}/,
+    'and the card is the way back');
 });
 
 test('THE ROOM\'S VIEW SWITCHER STACKS ABOVE THE APP BAR, not under it', () => {

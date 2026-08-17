@@ -151,3 +151,9 @@
 /* Tier badges wrap rather than squeezing the label: on a phone a reader with
    four tiers gets two lines, not four unreadable chips. */
 .tierline { display: inline-flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+
+/* THE TAPPED TAB, while its pane is in flight. Deliberately the only thing that
+   changes: dimming the pane to signal loading would reintroduce exactly the
+   flash this replaced. The outgoing pane stays fully painted. */
+.pt--load { opacity: .55; }
+.ptabs[data-pending] { cursor: progress; }

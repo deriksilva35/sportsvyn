@@ -22,6 +22,12 @@ import {
 // attribution.js, NOT ffc.js — ffc.js imports lib/db.js and this is a client bundle.
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/attribution';
 
+// Presets that mirror a ranked contest, by name. A name rather than an id
+// because ids differ between databases - DEV's row is 1902 and PROD's will be
+// its own - and this only decides a label. The values are asserted against
+// DRAFT_CONFIG in lib/draft/preset.test.mjs, which is where drift would bite.
+const RANKED_PRESETS = new Set(['The Weekly Six']);
+
 const SEG_SCORING = SCORING_FORMATS.map((f) => ({ v: f, label: SCORING_LABEL[f] }));
 const SEG_CLOCK = CLOCK_OPTIONS.map((s) => ({ v: s, label: s == null ? 'NONE' : `${s}S` }));
 // The 8 starter slot steppers, laid out as a 4-col x 2-row grid (label over
@@ -149,9 +155,14 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
       <div className="chiplab">Start from</div>
       <div className="deck">
         {presets.map((p) => (
-          <button key={p.id} type="button" className={`pcard${selection === p.id ? ' on' : ''}`} onClick={() => choosePreset(p)}>
+          <button key={p.id} type="button" className={`pcard${selection === p.id ? ' on' : ''}${RANKED_PRESETS.has(p.name) ? ' pcard--ranked' : ''}`} onClick={() => choosePreset(p)}>
             <div className="pn">{p.name}</div>
             <div className="pm">{p.teams_count} teams · {SCORING_LABEL[p.scoring_format] ?? p.scoring_format.toUpperCase()} · {p.pick_timer_seconds ? `${p.pick_timer_seconds}s` : 'no clock'}</div>
+            {/* THE CONNECTION HAS TO BE EXPLICIT or the preset is just another
+                shape on the rail. This one exists so the practice range can
+                rehearse the format The Draft actually settles - naming it is
+                the entire reason it earns a chip. */}
+            {RANKED_PRESETS.has(p.name) && <div className="pm pm--ranked">the ranked format, unranked</div>}
           </button>
         ))}
         <button
