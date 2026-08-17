@@ -192,15 +192,25 @@ test('the tab bar still fits five tabs at phone width', () => {
   assert.ok(Number(size[1]) <= 9, `label font ${size[1]}px is too large for five tabs`);
 });
 
-test('the tracker route resolves resume-or-setup server-side', () => {
+test('THE TRACKER TAB IS A HOME, not a trapdoor into an open room', () => {
+  // This asserted a redirect into the open draft. Ruled otherwise: a reader who
+  // taps TRACKER to check the rules, or to look at last week's board, was being
+  // thrown into a live draft with no way to have meant anything else. The room
+  // is still first on the page and one tap away - but it is a card now.
   const s = readFileSync(path.join(REPO, 'app/sim/tracker/page.js'), 'utf8');
-  assert.match(s, /getOpenTrackerDraft/, 'must look for an open draft');
-  assert.match(s, /redirect\(`\/sim\/draft\/\$\{open\.id\}`\)/, 'must resume it');
-  assert.match(s, /TrackerStart/, 'must fall through to setup');
-  // Resume must precede the entitlement read: a draft in progress is the user's
-  // regardless of what their membership looks like right now.
-  assert.ok(s.indexOf('getOpenTrackerDraft') < s.indexOf('isMember(userId)'),
-    'resume must come before the entitlement check');
+  assert.match(s, /getOpenTrackerDraft/, 'must still look for an open draft');
+  assert.equal(/redirect\(`\/sim\/draft\/\$\{open\.id\}`\)/.test(s), false,
+    'the tab must not bounce into the room');
+  assert.match(s, /Re-enter the room/, 'the open room must lead, as a card');
+  assert.match(s, /TrackerStart/, 'setup lives here');
+  assert.match(s, /What the tracker is/, 'and the explanation, which is the one product here that needs one');
+  assert.match(s, /YourDrafts/, 'its own history, under its own setup');
+});
+
+test('THE PRACTICE PAGE NO LONGER STARTS A TRACKER - two flows, two homes', () => {
+  const s = readFileSync(path.join(REPO, 'app/sim/page.js'), 'utf8');
+  assert.equal(/TrackerStart/.test(s), false, 'the setup moved to the tracker tab');
+  assert.match(s, /Tracking a real draft\?/, 'one link out is enough');
 });
 
 test('the BOARD grid scrolls sideways with the same fade affordance', () => {

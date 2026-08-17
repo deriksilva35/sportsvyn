@@ -19,6 +19,9 @@ import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import TrackerStart from '@/components/sim/TrackerStart';
+import YourDrafts from '@/components/sim/YourDrafts';
+import { getDraftHistory } from '@/lib/fantasy/drafts';
+import { splitDrafts } from '@/lib/fantasy/yourDrafts';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { appleIapConfig } from '@/lib/appleIap';
@@ -43,13 +46,20 @@ export default async function TrackerTab({ searchParams }) {
   const isShell = await resolveShellMode(params);
   if (userId == null) redirect(shellSigninHref('/sim/tracker', isShell));
 
-  // Resume takes precedence over everything, including the entitlement check: a
-  // draft already in progress belongs to the user regardless of what their
-  // membership looks like right now.
+  // A CARD, NOT A REDIRECT. This used to bounce straight into an open room,
+  // which made the tab a trapdoor rather than a destination: a reader who
+  // tapped TRACKER to check the rules, or to look at last week's board, was
+  // thrown into a live draft with no way to have meant anything else. The room
+  // is still one tap away and still the first thing on the page - but it is now
+  // a choice. Resume still outranks the entitlement check either way: a draft
+  // in progress belongs to the user whatever their membership looks like now.
   const open = await getOpenTrackerDraft(userId);
-  if (open) redirect(`/sim/draft/${open.id}`);
 
-  const member = await isMember(userId);
+  const [member, historyRows] = await Promise.all([
+    isMember(userId),
+    getDraftHistory(userId).catch(() => []),
+  ]);
+  const yourDrafts = splitDrafts(historyRows);
   const { enabled: iap, apiKey: rcKey, productId: rcProduct } = appleIapConfig();
 
   return (
@@ -65,9 +75,46 @@ export default async function TrackerTab({ searchParams }) {
 
       <main className="sim-wrap">
         <GetTheAppBanner shell={isShell} />
+
+        {/* THE OPEN ROOM LEADS. A draft you are physically in the middle of, at
+            a table, with people waiting, outranks every other thing on this
+            page. Absent entirely when there is none. */}
+        {open && (
+          <section className="sim-mod trk-resume">
+            <div className="sim-kicker">You are tracking a draft</div>
+            <p className="trk-lede">
+              Room {open.id} is still open. Pick up where you left off &mdash; nothing
+              expires and nothing is on a clock.
+            </p>
+            <a className="btn btn--volt" href={`/sim/draft/${open.id}`}>Re-enter the room &rarr;</a>
+          </section>
+        )}
+
+        {/* WHAT THIS IS, before what it costs. The tracker is the one product
+            here that has to be explained rather than recognised: "draft sim" is
+            self-evident and "track a real draft" is not. */}
+        <section className="sim-mod">
+          <div className="sim-kicker">What the tracker is</div>
+          <p className="trk-lede">
+            You are drafting somewhere else &mdash; a league site, a room, a bar &mdash; and
+            you enter each pick here as it happens. The tracker keeps the board, tells you
+            what is left, and grades your roster the same way a mock does.
+          </p>
+          <div className="trk-rows">
+            <div className="row"><span>No clock</span><span className="r">Runs as long as your draft does</span></div>
+            <div className="row"><span>Every seat</span><span className="r">You enter all of them, not just yours</span></div>
+            <div className="row"><span>Leave and return</span><span className="r">The room waits</span></div>
+          </div>
+        </section>
+
         {/* TrackerStart renders the gate card for non-members; the entitlement is
             re-checked server-side in startTrackerDraftFor either way. */}
         <TrackerStart entitled={member} shell={isShell} iap={iap} />
+
+        {/* ITS OWN HISTORY, under its own setup. Making a reader cross to
+            PROFILE to find last Tuesday's room would be the two-homes problem
+            again, one level down. PROFILE still carries all three buckets. */}
+        <YourDrafts split={yourDrafts} only="tracker" />
       </main>
 
       <Attribution text={FFC_ATTRIBUTION.text} url={FFC_ATTRIBUTION.url} />

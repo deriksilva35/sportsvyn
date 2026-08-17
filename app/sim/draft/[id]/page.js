@@ -113,6 +113,19 @@ export default async function DraftRoomPage({ params, searchParams }) {
           just the next block. The live TRACKER room returns earlier (above) and
           never reaches this markup at all. */}
       <main className="sim-wrap">
+        {/* BACK, WITHIN THE SECTION. The tab bar switches sections; this walks
+            back inside one. A results board is a sub-surface of the tab that
+            owns it - Practice for a mock, Tracker for a tracked room - and
+            before this the only way out of one was the browser's back button,
+            which the app container does not have.
+
+            Suppressed on the live room for the same reason the tab bar is:
+            showTabBar is false there. */}
+        {showTabBar && (
+          <a className="appcrumb" href={isTrackerDraft ? '/sim/tracker' : '/sim'}>
+            &larr; {isTrackerDraft ? 'Tracker' : 'Practice'}
+          </a>
+        )}
         {showTabBar && <GetTheAppBanner shell={isShell} />}
         {body}
       </main>

@@ -11,8 +11,10 @@
 // honest, non-navigating "coming August" tab rather than a link into the unlinked
 // /nfl dev shell.
 
+import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { isShellClient } from '@/lib/shell/appTabs';
 
 const TABS = [
   { key: 'draft', label: 'DRAFT', icon: '▦', href: '/sim' },
@@ -27,14 +29,29 @@ const TABS = [
   { key: 'account', label: 'ACCOUNT', icon: '●', href: '/sim/account' },
 ];
 
+// TWO BOTTOM BARS IS ONE TOO MANY. The app container now carries a global tab
+// bar (components/shell/AppTabBar), and this one stacked directly on top of it
+// on every /sim screen - a defect introduced by adding the app bar, caught in
+// the chrome sweep. In the container the global bar wins: it owns PRACTICE and
+// TRACKER, and history is moving to PROFILE, so nothing here is unreachable
+// without it. On the WEB this bar is unchanged and still the only sim nav.
+const subscribe = () => () => {};
+const getSnapshot = () => isShellClient({
+  cookie: document.cookie, search: window.location.search,
+});
+const getServerSnapshot = () => false;
+
 export default function SimTabBar() {
   const pathname = usePathname() || '';
+  const inShell = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const active =
     pathname === '/sim' ? 'draft'
       : pathname.startsWith('/sim/tracker') ? 'tracker'
         : pathname.startsWith('/sim/history') ? 'history'
           : pathname.startsWith('/sim/account') ? 'account'
             : null; // results / other sim pages: no tab highlighted
+
+  if (inShell) return null;
 
   return (
     <nav className="simtab" aria-label="Sim navigation">

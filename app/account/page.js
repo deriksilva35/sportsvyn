@@ -25,6 +25,9 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
+import YourDrafts from '@/components/sim/YourDrafts';
+import { getDraftHistory } from '@/lib/fantasy/drafts';
+import { splitDrafts } from '@/lib/fantasy/yourDrafts';
 import SignOutButton from '@/components/sim/SignOutButton';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getMembership } from '@/lib/membership';
@@ -49,10 +52,14 @@ export default async function AccountPage({ searchParams }) {
   const isShell = await resolveShellMode((await searchParams) ?? {});
   // Neither read may cost the page: a membership lookup that fails reads as
   // "not a member", which is the safe direction for a status line.
-  const [member, membership] = await Promise.all([
+  const [member, membership, draftRows] = await Promise.all([
     isMember(userId).catch(() => false),
     getMembership(userId).catch(() => null),
+    // Caught to an empty list: a history read must never be able to cost
+    // somebody their account page, which is also where sign-out lives.
+    getDraftHistory(userId).catch(() => []),
   ]);
+  const yourDrafts = splitDrafts(draftRows);
 
   const email = session.user?.email ?? '';
   const renews = member && membership?.current_period_end
@@ -98,6 +105,13 @@ export default async function AccountPage({ searchParams }) {
             </a>
           )}
         </section>
+
+        {/* YOUR DRAFTS. The brief's rule is that nothing should be reachable
+            only by remembering a URL, and before this an unfinished mock was
+            exactly that once its resume card scrolled off Practice. Renders
+            nothing at all for a reader with no drafts - a heading over an empty
+            list reads as a feature that failed to load. */}
+        <YourDrafts split={yourDrafts} />
 
         <section className="acct-mod">
           <h2 className="acct-eyebrow">Elsewhere</h2>

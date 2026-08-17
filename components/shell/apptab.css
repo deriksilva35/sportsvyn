@@ -41,3 +41,52 @@ body:has(.apptab) { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
    the Daily mid-round forfeits the attempt. See components/shell/ClockOwned. */
 html[data-clock] .apptab { display: none; }
 html[data-clock] body:has(.apptab) { padding-bottom: 0; }
+
+/* ---------------------------------------------------------------------------
+   THE APP HEADER. Rendered instead of the web header when the shell marker is
+   present - see components/GlobalHeader.js for why replaced rather than
+   trimmed. The wordmark, centred, and nothing else.
+   --------------------------------------------------------------------------- */
+.gh--app {
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px 16px;
+  /* THE STATUS BAR IS ABOVE THIS. Without the inset the wordmark sits under the
+     clock and the notch on every device that has one. */
+  padding-top: calc(10px + env(safe-area-inset-top));
+  background: #0A0A0A; border-bottom: 1px solid #232323;
+  font-size: 17px;   /* drives the 1.8em lockup height, per the wordmark rule */
+}
+.gh--app .gh-app-mark { display: block; }
+
+/* ---------------------------------------------------------------------------
+   YOUR DRAFTS - the history rows on PROFILE and the Tracker tab.
+   --------------------------------------------------------------------------- */
+.yd-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 2px; border-bottom: 1px solid #232323;
+  text-decoration: none; color: inherit;
+}
+.yd-row:last-child { border-bottom: 0; }
+.yd-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.yd-label { font-weight: 700; font-size: 14px; }
+.yd-meta { font-size: 11px; color: #8A8A86; font-variant-numeric: tabular-nums; }
+.yd-grade {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-weight: 700; font-size: 13px; color: #D4FF00;
+}
+.yd-act {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #8A8A86;
+  white-space: nowrap;
+}
+
+/* THE BACK BREADCRUMB, the reveal's pattern (.crumb in daily.css) made
+   available to the sim surfaces, which do not load that stylesheet. The tab bar
+   switches SECTIONS; this walks back within one. */
+.appcrumb {
+  display: inline-block; padding: 12px 2px 10px;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: #8A8A86; text-decoration: none;
+}
+.appcrumb:hover { color: #F5F5F2; }

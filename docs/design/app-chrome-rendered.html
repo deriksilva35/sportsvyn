@@ -1,0 +1,108 @@
+<!doctype html><meta charset="utf-8"><title>App chrome pass</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>/* components/shell/apptab.css - the app container's bottom tab bar.
+   Per docs/design/draftvyn-unified-app-mock-v0_2.html: ink, volt active state,
+   emoji glyphs, safe-area padding. Only ever loaded when the shell marker is
+   present, so nothing here can reach a web browser. */
+
+.apptab {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  display: flex;
+  max-width: 480px; margin: 0 auto;
+  background: #0D0D0D;
+  border-top: 1px solid #232323;
+  padding: 8px 4px 10px;
+  /* THE MOCK'S 10px BOTTOM PADDING IS THE MINIMUM, not the total. On a device
+     with a home indicator the inset is added to it; on one without, env()
+     resolves to 0 and the mock's value is what shows. */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+}
+
+.apptab-i {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 4px 0; text-decoration: none; color: #8A8A86;
+  /* 44px MINIMUM TARGET including the padding above - four tabs across a 320px
+     screen is 80px wide each, so width is never the constraint; height is. */
+  min-height: 44px; justify-content: center;
+}
+.apptab-i .ic { font-size: 18px; line-height: 1; }
+.apptab-i .lb {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 9px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; white-space: nowrap;
+}
+.apptab-i.on { color: #D4FF00; }
+
+/* THE PAGE MUST NOT END UNDER THE BAR. Applied to the body rather than to each
+   surface, because the bar is global and every surface would otherwise have to
+   remember - and the one that forgot would hide its own last row. */
+body:has(.apptab) { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
+
+/* THE CHROME-ISOLATION LAW. Any surface with a clock running owns its screen:
+   a tab bar under a live round is an invitation to leave mid-round, and leaving
+   the Daily mid-round forfeits the attempt. See components/shell/ClockOwned. */
+html[data-clock] .apptab { display: none; }
+html[data-clock] body:has(.apptab) { padding-bottom: 0; }
+
+/* ---------------------------------------------------------------------------
+   THE APP HEADER. Rendered instead of the web header when the shell marker is
+   present - see components/GlobalHeader.js for why replaced rather than
+   trimmed. The wordmark, centred, and nothing else.
+   --------------------------------------------------------------------------- */
+.gh--app {
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px 16px;
+  /* THE STATUS BAR IS ABOVE THIS. Without the inset the wordmark sits under the
+     clock and the notch on every device that has one. */
+  padding-top: calc(10px + env(safe-area-inset-top));
+  background: #0A0A0A; border-bottom: 1px solid #232323;
+  font-size: 17px;   /* drives the 1.8em lockup height, per the wordmark rule */
+}
+.gh--app .gh-app-mark { display: block; }
+
+/* ---------------------------------------------------------------------------
+   YOUR DRAFTS - the history rows on PROFILE and the Tracker tab.
+   --------------------------------------------------------------------------- */
+.yd-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 2px; border-bottom: 1px solid #232323;
+  text-decoration: none; color: inherit;
+}
+.yd-row:last-child { border-bottom: 0; }
+.yd-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.yd-label { font-weight: 700; font-size: 14px; }
+.yd-meta { font-size: 11px; color: #8A8A86; font-variant-numeric: tabular-nums; }
+.yd-grade {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-weight: 700; font-size: 13px; color: #D4FF00;
+}
+.yd-act {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #8A8A86;
+  white-space: nowrap;
+}
+
+/* THE BACK BREADCRUMB, the reveal's pattern (.crumb in daily.css) made
+   available to the sim surfaces, which do not load that stylesheet. The tab bar
+   switches SECTIONS; this walks back within one. */
+.appcrumb {
+  display: inline-block; padding: 12px 2px 10px;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: #8A8A86; text-decoration: none;
+}
+.appcrumb:hover { color: #F5F5F2; }
+
+body{margin:0;background:#161616;color:#E9E9E9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.wrap{max-width:1500px;margin:0 auto;padding:28px 20px 60px}
+h1{font-size:26px;margin:0 0 4px}.lede{color:#9A9A9A;font-size:13px;margin:0 0 26px;line-height:1.6;max-width:860px}.lede b{color:#D8FF3E}
+.caps{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px;align-items:start}
+.cap h2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:#D8FF3E;margin:0 0 4px}
+.cap .note{font-size:12px;color:#8A8A8A;margin:0 0 10px;line-height:1.5}
+.frame{width:390px;max-width:100%;border:1px solid #2E2E2E;border-radius:14px;overflow:hidden;background:#0A0A0A}
+body:has(.apptab){padding-bottom:0}</style>
+<div class="wrap"><h1>App chrome — the shell pass</h1>
+<p class="lede">Rendered from the shipped <b>APP_TABS</b> data, the real stylesheet and the real
+<b>activeTabFor()</b>. <b>The wordmark is the SPORTSVYN asset</b> — there is no DRAFTVYN PNG in
+public/brand; dropping one in and changing one line is the whole swap.</p>
+<div class="caps"><section class="cap"><h2>APP HEADER</h2><p class="note">Replaces the web header entirely in the shell: wordmark centred, no burger, no MOCK DRAFT, no account dropdown. NOT a link — home is a tab.</p><div class="frame"><header class="gh gh--app" style="padding-top:10px"><span class="gh-app-mark"><img src="/brand/sportsvynwordmarkwhite3000x600truealpha.png" alt="SPORTSVYN" style="height:1.8em;width:auto;display:block"></span></header></div></section><section class="cap"><h2>GAMES tab</h2><p class="note">Every game surface lights GAMES — the lobby is their front door.</p><div class="frame"><header class="gh gh--app" style="padding-top:10px"><span class="gh-app-mark"><img src="/brand/sportsvynwordmarkwhite3000x600truealpha.png" alt="SPORTSVYN" style="height:1.8em;width:auto;display:block"></span></header><div style="padding:40px 14px;color:#8A8A86;font-size:12px">/games · /daily · /weekly · /draft</div><nav class="apptab" style="position:static;max-width:none"><a class="apptab-i on"><span class="ic">🎮</span><span class="lb">Games</span></a><a class="apptab-i"><span class="ic">🎲</span><span class="lb">Practice</span></a><a class="apptab-i"><span class="ic">📡</span><span class="lb">Tracker</span></a><a class="apptab-i"><span class="ic">👤</span><span class="lb">Profile</span></a></nav></div></section><section class="cap"><h2>PRACTICE tab</h2><p class="note">The sim. Its own five-tab bar is now suppressed in-shell — two bottom bars was a defect the sweep caught.</p><div class="frame"><header class="gh gh--app" style="padding-top:10px"><span class="gh-app-mark"><img src="/brand/sportsvynwordmarkwhite3000x600truealpha.png" alt="SPORTSVYN" style="height:1.8em;width:auto;display:block"></span></header><div style="padding:40px 14px;color:#8A8A86;font-size:12px">/sim</div><nav class="apptab" style="position:static;max-width:none"><a class="apptab-i"><span class="ic">🎮</span><span class="lb">Games</span></a><a class="apptab-i on"><span class="ic">🎲</span><span class="lb">Practice</span></a><a class="apptab-i"><span class="ic">📡</span><span class="lb">Tracker</span></a><a class="apptab-i"><span class="ic">👤</span><span class="lb">Profile</span></a></nav></div></section><section class="cap"><h2>TRACKER tab</h2><p class="note">Matched before /sim, or the tracker lights PRACTICE forever.</p><div class="frame"><header class="gh gh--app" style="padding-top:10px"><span class="gh-app-mark"><img src="/brand/sportsvynwordmarkwhite3000x600truealpha.png" alt="SPORTSVYN" style="height:1.8em;width:auto;display:block"></span></header><div style="padding:40px 14px;color:#8A8A86;font-size:12px">/sim/tracker</div><nav class="apptab" style="position:static;max-width:none"><a class="apptab-i"><span class="ic">🎮</span><span class="lb">Games</span></a><a class="apptab-i"><span class="ic">🎲</span><span class="lb">Practice</span></a><a class="apptab-i on"><span class="ic">📡</span><span class="lb">Tracker</span></a><a class="apptab-i"><span class="ic">👤</span><span class="lb">Profile</span></a></nav></div></section><section class="cap"><h2>PROFILE tab</h2><p class="note">Account, membership, and now Your Drafts.</p><div class="frame"><header class="gh gh--app" style="padding-top:10px"><span class="gh-app-mark"><img src="/brand/sportsvynwordmarkwhite3000x600truealpha.png" alt="SPORTSVYN" style="height:1.8em;width:auto;display:block"></span></header><div style="padding:40px 14px;color:#8A8A86;font-size:12px">/account</div><nav class="apptab" style="position:static;max-width:none"><a class="apptab-i"><span class="ic">🎮</span><span class="lb">Games</span></a><a class="apptab-i"><span class="ic">🎲</span><span class="lb">Practice</span></a><a class="apptab-i"><span class="ic">📡</span><span class="lb">Tracker</span></a><a class="apptab-i on"><span class="ic">👤</span><span class="lb">Profile</span></a></nav></div></section><section class="cap"><h2>BACK BREADCRUMB</h2><p class="note">Sub-surfaces below a tab home. The bar switches sections; this walks back within one.</p><div class="frame"><header class="gh gh--app" style="padding-top:10px"><span class="gh-app-mark"><img src="/brand/sportsvynwordmarkwhite3000x600truealpha.png" alt="SPORTSVYN" style="height:1.8em;width:auto;display:block"></span></header><div style="padding:8px 14px"><a class="appcrumb">&larr; Practice</a></div><div style="padding:20px 14px;color:#8A8A86;font-size:12px">a results board</div><nav class="apptab" style="position:static;max-width:none"><a class="apptab-i"><span class="ic">🎮</span><span class="lb">Games</span></a><a class="apptab-i on"><span class="ic">🎲</span><span class="lb">Practice</span></a><a class="apptab-i"><span class="ic">📡</span><span class="lb">Tracker</span></a><a class="apptab-i"><span class="ic">👤</span><span class="lb">Profile</span></a></nav></div></section><section class="cap"><h2>YOUR DRAFTS</h2><p class="note">On PROFILE: unfinished mocks, tracked drafts, completed mocks. Nothing reachable only by remembering a URL.</p><div class="frame"><header class="gh gh--app" style="padding-top:10px"><span class="gh-app-mark"><img src="/brand/sportsvynwordmarkwhite3000x600truealpha.png" alt="SPORTSVYN" style="height:1.8em;width:auto;display:block"></span></header><div style="padding:12px"><h2 class="acct-eyebrow" style="font-family:ui-monospace;font-size:11px;letter-spacing:.1em;color:#8A8A86;text-transform:uppercase;margin:0 0 6px">Unfinished mocks</h2><a class="yd-row"><span class="yd-main"><span class="yd-label">Standard 12 PPR</span><span class="yd-meta">pick 4 · 9 picks · Aug 14</span></span><span class="yd-act">Resume &rarr;</span></a><h2 class="acct-eyebrow" style="font-family:ui-monospace;font-size:11px;letter-spacing:.1em;color:#8A8A86;text-transform:uppercase;margin:14px 0 6px">Tracked drafts</h2><a class="yd-row"><span class="yd-main"><span class="yd-label">12-team PPR</span><span class="yd-meta">pick 7 · 192 picks · Aug 10</span></span><span class="yd-act">Re-enter &rarr;</span></a><h2 class="acct-eyebrow" style="font-family:ui-monospace;font-size:11px;letter-spacing:.1em;color:#8A8A86;text-transform:uppercase;margin:14px 0 6px">Completed mocks</h2><a class="yd-row"><span class="yd-main"><span class="yd-label">10-Team Half</span><span class="yd-meta">pick 2 · 160 picks · Aug 3</span></span><span class="yd-grade">B+</span><span class="yd-act">See the board &rarr;</span></a></div><nav class="apptab" style="position:static;max-width:none"><a class="apptab-i"><span class="ic">🎮</span><span class="lb">Games</span></a><a class="apptab-i"><span class="ic">🎲</span><span class="lb">Practice</span></a><a class="apptab-i"><span class="ic">📡</span><span class="lb">Tracker</span></a><a class="apptab-i on"><span class="ic">👤</span><span class="lb">Profile</span></a></nav></div></section><section class="cap"><h2>NO CLOCK, NO SUPPRESSION</h2><p class="note">A TRACKER room has no clock and keeps the bar — it runs for hours and is exactly where you need to leave and return. Only a TIMED room hides it.</p><div class="frame"><header class="gh gh--app" style="padding-top:10px"><span class="gh-app-mark"><img src="/brand/sportsvynwordmarkwhite3000x600truealpha.png" alt="SPORTSVYN" style="height:1.8em;width:auto;display:block"></span></header><div style="padding:40px 14px;color:#8A8A86;font-size:12px">/sim/draft/123 — tracker room</div><nav class="apptab" style="position:static;max-width:none"><a class="apptab-i"><span class="ic">🎮</span><span class="lb">Games</span></a><a class="apptab-i"><span class="ic">🎲</span><span class="lb">Practice</span></a><a class="apptab-i on"><span class="ic">📡</span><span class="lb">Tracker</span></a><a class="apptab-i"><span class="ic">👤</span><span class="lb">Profile</span></a></nav></div></section></div></div>

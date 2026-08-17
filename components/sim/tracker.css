@@ -258,3 +258,14 @@
 .trk-slotstate.flex { color: var(--muted); }
 .trk-slotstate.bench { color: var(--muted-dim); }
 .trk-slotstate.bench.deferred { color: var(--muted-dim); opacity: .75; }
+
+/* THE TRACKER TAB'S OWN HOME - explanation, resume card, setup, history.
+   See app/sim/tracker/page.js for why this stopped being a redirect. */
+.trk-lede { font-size: 13px; line-height: 1.55; color: var(--muted); margin: 6px 0 10px; }
+.trk-rows .row {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 7px 0; border-bottom: 1px solid var(--rule-dim); font-size: 12px;
+}
+.trk-rows .row:last-child { border-bottom: 0; }
+.trk-rows .row .r { color: var(--muted); text-align: right; }
+.trk-resume { border-color: var(--volt); }

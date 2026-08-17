@@ -76,6 +76,26 @@ export default function GlobalHeader({
     ? { label: it.label, onClick: handleSignOut }
     : { label: it.label, href: it.href }));
 
+  // ---- THE APP HEADER ------------------------------------------------------
+  // IN THE CONTAINER, THE WEB HEADER IS REPLACED RATHER THAN TRIMMED. The
+  // burger opens a drawer duplicating navigation the tab bar already owns; MY
+  // SPORTSVYN and MOCK DRAFT are funnel links for a first-time WEB visitor, and
+  // nobody inside the app is one; the account dropdown is what PROFILE is. Left
+  // in place they would be four ways to reach two destinations, three of them
+  // worse than the tab bar underneath.
+  //
+  // SO: the wordmark, centred, and nothing else. The tab bar IS the nav.
+  //
+  // NOT A LINK. On the web the wordmark goes home; here HOME is a tab, and a
+  // header that navigates on tap competes with the bar for the same job.
+  if (shell) {
+    return (
+      <header className="gh gh--app">
+        <AppWordmark />
+      </header>
+    );
+  }
+
   return (
     <>
       <header className="gi-head gh">
@@ -140,5 +160,37 @@ export default function GlobalHeader({
         </nav>
       )}
     </>
+  );
+}
+
+/**
+ * The app container's wordmark: centred, not a link.
+ *
+ * ASSET NOTE - READ BEFORE SWAPPING. The brief asks for a DRAFTVYN wordmark and
+ * public/brand has exactly one file, the SPORTSVYN lockup. There is no DRAFTVYN
+ * PNG in this repo. Rather than invent one, this ships the real asset we own;
+ * dropping the DRAFTVYN true-alpha export into public/brand and changing SRC
+ * below is the whole swap.
+ *
+ * PLAIN <img>, MATCHING components/gridiron/Wordmark.js. The brief said
+ * next/image, but the established wordmark rule is a plain tag with the locked
+ * 1568x336 aspect and an em-based height, because the export is a LOCKUP whose
+ * caps are only 0.40 of the png height - next/image's layout handling fights
+ * that rather than helping it. One divergence from the brief, stated rather
+ * than silent.
+ */
+function AppWordmark() {
+  return (
+    <span className="gh-app-mark" aria-label="SPORTSVYN">
+      <img
+        src="/brand/sportsvynwordmarkwhite3000x600truealpha.png"
+        alt="SPORTSVYN"
+        width={1568}
+        height={336}
+        fetchPriority="high"
+        decoding="async"
+        style={{ height: '1.8em', width: 'auto', display: 'block' }}
+      />
+    </span>
   );
 }

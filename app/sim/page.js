@@ -4,7 +4,6 @@ import Wordmark from '@/components/gridiron/Wordmark';
 import Attribution from '@/components/sim/Attribution';
 import StartForm from '@/components/sim/StartForm';
 import LiveDraftCard from '@/components/sim/LiveDraftCard';
-import TrackerStart from '@/components/sim/TrackerStart';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
@@ -112,10 +111,15 @@ export default async function SimLobby({ searchParams }) {
                   <div className="sim-kicker">Start a mock draft</div>
                   <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap} />
                 </section>
-                {/* Tracker is the same `sim` entitlement as custom configs. This
-                    only decides what RENDERS; startTrackerDraftFor re-checks
-                    server-side either way. */}
-                <TrackerStart entitled={member} shell={isShell} iap={iap} />
+                {/* THE TRACKER SETUP MOVED TO ITS OWN TAB. Two flows, two
+                    homes: this page starts a mock against AI, /sim/tracker
+                    tracks a real draft at a real table. They shared a screen
+                    while the tracker was new, and the result was one page
+                    asking a reader to decide which product they were in before
+                    it would let them start anything. One link out is enough. */}
+                <a className="sim-trklink" href="/sim/tracker">
+                  Tracking a real draft? &rarr;
+                </a>
               </>
             );
           })()

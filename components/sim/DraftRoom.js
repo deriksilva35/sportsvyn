@@ -18,15 +18,18 @@
 // turns to the EXISTING timerAutoPick engine path - same engine, no new pick
 // logic here. OFF returns control on the next turn.
 
-// THE APP TAB BAR IS ALREADY ABSENT HERE, and not by a flag: a draft room is
-// clock-owned from first render to last, so lib/shell/appTabs.js suppresses
-// /sim/draft/[id] by route. ClockOwned exists for surfaces like /daily where
-// only ONE of several states has a clock. Nothing to do in this file.
+// THE APP TAB BAR HIDES HERE ONLY WHEN THERE IS A CLOCK TO PROTECT.
+// timerSeconds is null for an untimed mock, and an untimed mock has nothing to
+// protect - so it keeps the bar like any other screen. The ranked room's 30s
+// clock, and any timed practice mock, raise the flag. See lib/shell/appTabs.js
+// for why this moved off the route: the tracker room shares this URL and has no
+// clock at all.
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { makePick, timerAutoPick, setAutoDraft, fetchPlayerStats, fetchPlayerSummaries } from '@/app/actions/sim';
 import { SCORING_LABEL } from '@/lib/fantasy/config';
+import ClockOwned from '@/components/shell/ClockOwned';
 import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
 } from '@/lib/fantasy/statView';
@@ -343,6 +346,10 @@ export default function DraftRoom({
   const rounds = board.rounds;
   return (
     <div className={`room${view === 'board' ? ' room--board' : ''}`}>
+      {/* A TIMED ROOM OWNS THE SCREEN. Untimed mocks keep the tab bar - there
+          is no clock to protect - and the tracker room, which shares this
+          route, never renders this component at all. */}
+      {timerSeconds != null && <ClockOwned />}
       {/* PERSISTENT HEADER (all pages): clock banner + AUTO, then last-pick strip */}
       <div className="room-head">
         <div className={`on-clock${canPick ? '' : ' waiting'}`}>
