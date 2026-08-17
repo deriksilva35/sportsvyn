@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
+import HideInShell from '@/components/shell/HideInShell';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
@@ -46,10 +47,17 @@ export default async function SimHistory({ searchParams }) {
   return (
     <div className={`sim sim--tabbar${isShell ? ' sim--shell' : ''}`} data-surface="ink">
       {isShell && <ShellPersist />}
-      <header className="sim-head">
-        <Wordmark href="/sim" />
-        <span className="tag">Draft <b>History</b></span>
-      </header>
+      {/* THE CONTAINER HAS ONE HEADER, and it is not this one. This renders
+          the SPORTSVYN gridiron wordmark, which is right on the web and wrong
+          in an app whose bundle is com.sportsvyn.draftvyn - it is why two tabs
+          showed one brand and two showed another. components/shell/AppHeader
+          replaces it in the shell; on the web nothing changes. */}
+      <HideInShell>
+        <header className="sim-head">
+          <Wordmark href="/sim" />
+          <span className="tag">Draft <b>History</b></span>
+        </header>
+      </HideInShell>
 
       <main className="sim-wrap">
         {/* History is a sub-surface of Practice. See the note in

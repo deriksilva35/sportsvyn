@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
+import HideInShell from '@/components/shell/HideInShell';
 import SimTabBar from '@/components/sim/SimTabBar';
 import SignOutButton from '@/components/sim/SignOutButton';
 import DeleteAccount from '@/components/sim/DeleteAccount';
@@ -46,10 +47,17 @@ export default async function SimAccount({ searchParams }) {
       {isShell && iap && userId != null && (
         <IapConfigure userId={userId} apiKey={rcKey} productId={rcProduct} />
       )}
-      <header className="sim-head">
-        <Wordmark href="/sim" />
-        <span className="tag"><b>Account</b></span>
-      </header>
+      {/* THE CONTAINER HAS ONE HEADER, and it is not this one. This renders
+          the SPORTSVYN gridiron wordmark, which is right on the web and wrong
+          in an app whose bundle is com.sportsvyn.draftvyn - it is why two tabs
+          showed one brand and two showed another. components/shell/AppHeader
+          replaces it in the shell; on the web nothing changes. */}
+      <HideInShell>
+        <header className="sim-head">
+          <Wordmark href="/sim" />
+          <span className="tag"><b>Account</b></span>
+        </header>
+      </HideInShell>
 
       <main className="sim-wrap">
         <GetTheAppBanner shell={isShell} />

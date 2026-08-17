@@ -2,6 +2,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
+import HideInShell from '@/components/shell/HideInShell';
 import Attribution from '@/components/sim/Attribution';
 import DraftRoom from '@/components/sim/DraftRoom';
 import TrackerRoom from '@/components/sim/TrackerRoom';
@@ -101,11 +102,18 @@ export default async function DraftRoomPage({ params, searchParams }) {
   return (
     <div className={`sim${showTabBar ? ' sim--tabbar' : ''}${isShell ? ' sim--shell' : ''}`} data-surface="ink">
       {isShell && <ShellPersist />}
-      <header className="sim-head">
-        <Wordmark href="/sim" />
-        <span className="tag">Draft <b>Room</b></span>
-        <div className="right"><a href="/sim">Lobby</a></div>
-      </header>
+      {/* THE CONTAINER HAS ONE HEADER, and it is not this one. This renders
+          the SPORTSVYN gridiron wordmark, which is right on the web and wrong
+          in an app whose bundle is com.sportsvyn.draftvyn - it is why two tabs
+          showed one brand and two showed another. components/shell/AppHeader
+          replaces it in the shell; on the web nothing changes. */}
+      <HideInShell>
+        <header className="sim-head">
+          <Wordmark href="/sim" />
+          <span className="tag">Draft <b>Room</b></span>
+          <div className="right"><a href="/sim">Lobby</a></div>
+        </header>
+      </HideInShell>
       {/* Same predicate as the tab bar, for the same reason: a live draft room is
           a locked one-viewport console with a pick clock running, and chrome that
           pushes it down or competes for the tap does not belong there. On the

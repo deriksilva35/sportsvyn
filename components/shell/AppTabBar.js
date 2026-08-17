@@ -30,6 +30,17 @@ import { APP_TABS, activeTabFor, routeSuppressed, isShellClient } from '@/lib/sh
 // to do it. This is React's own primitive for reading a value that lives
 // outside React - here, the cookie - with an explicit SERVER snapshot of false
 // so the markup a web browser receives is empty and hydration matches it.
+// The room's own declaration, if there is one. Subscribed rather than read
+// once: the attribute is set by an effect, so it lands AFTER the bar's first
+// render and a one-shot read would miss it.
+const subscribeTab = (cb) => {
+  const o = new MutationObserver(cb);
+  o.observe(document.documentElement, { attributes: true, attributeFilter: ['data-tab'] });
+  return () => o.disconnect();
+};
+const getTab = () => document.documentElement.getAttribute('data-tab');
+const getServerTab = () => null;
+
 const subscribe = () => () => {};
 // The DECISION is isShellClient in lib/shell/appTabs.js, pure and tested. This
 // only fetches the two strings it needs from the document.
@@ -41,10 +52,11 @@ const getServerSnapshot = () => false;
 export default function AppTabBar() {
   const pathname = usePathname() || '';
   const inShell = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const declared = useSyncExternalStore(subscribeTab, getTab, getServerTab);
 
   if (!inShell) return null;
   if (routeSuppressed(pathname)) return null;
-  const active = activeTabFor(pathname);
+  const active = activeTabFor(pathname, declared);
 
   return (
     <nav className="apptab" aria-label="App navigation">

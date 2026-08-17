@@ -54,7 +54,11 @@ html[data-clock] body:has(.apptab) { padding-bottom: 0; }
      clock and the notch on every device that has one. */
   padding-top: calc(10px + env(safe-area-inset-top));
   background: #0A0A0A; border-bottom: 1px solid #232323;
-  font-size: 17px;   /* drives the 1.8em lockup height, per the wordmark rule */
+  /* Drives the lockup height in components/shell/AppHeader. The DRAFTVYN
+     export is mostly padding - its ink is 152 of 300 rows against the Sportsvyn
+     mark's 285 of 336 - so a cap height matched to the web header's read
+     undersized on a phone. 2.12em puts the caps at 15.0px here. */
+  font-size: 17px;
 }
 .gh--app .gh-app-mark { display: block; }
 

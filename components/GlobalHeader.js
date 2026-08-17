@@ -76,25 +76,13 @@ export default function GlobalHeader({
     ? { label: it.label, onClick: handleSignOut }
     : { label: it.label, href: it.href }));
 
-  // ---- THE APP HEADER ------------------------------------------------------
-  // IN THE CONTAINER, THE WEB HEADER IS REPLACED RATHER THAN TRIMMED. The
-  // burger opens a drawer duplicating navigation the tab bar already owns; MY
-  // SPORTSVYN and MOCK DRAFT are funnel links for a first-time WEB visitor, and
-  // nobody inside the app is one; the account dropdown is what PROFILE is. Left
-  // in place they would be four ways to reach two destinations, three of them
-  // worse than the tab bar underneath.
-  //
-  // SO: the wordmark, centred, and nothing else. The tab bar IS the nav.
-  //
-  // NOT A LINK. On the web the wordmark goes home; here HOME is a tab, and a
-  // header that navigates on tap competes with the bar for the same job.
-  if (shell) {
-    return (
-      <header className="gh gh--app">
-        <AppWordmark />
-      </header>
-    );
-  }
+  // THE APP HEADER MOVED TO THE ROOT LAYOUT. It used to render here, which
+  // meant it only appeared on pages importing GlobalHeaderServer - and every
+  // /sim page renders its own header instead, so the container showed two
+  // different wordmarks depending on which tab you were on. One header
+  // decision now lives in components/shell/AppHeader, mounted beside the tab
+  // bar; this component's only job in the container is to get out of the way.
+  if (shell) return null;
 
   return (
     <>
@@ -160,59 +148,5 @@ export default function GlobalHeader({
         </nav>
       )}
     </>
-  );
-}
-
-/**
- * The app container's wordmark: centred, not a link.
- *
- * THE APP IS DRAFTVYN. The bundle is com.sportsvyn.draftvyn and the App Store
- * listing is the sim, so the container wears the product's own mark rather than
- * the publication's.
- *
- * EVERY CONSTANT BELOW WAS MEASURED FROM THIS FILE, not inherited. The two
- * exports came off different pipelines and they do not share geometry:
- *
- *                    SPORTSVYN            DRAFTVYN
- *   file             1568x336             1500x300
- *   caps             133px = 0.3958       125px = 0.4167
- *   structure        macron+caps+rule     macron+caps, NO underline
- *   ink box          full width, bottom   x 293..1213, y 82..233
- *                    flush                (39% of the width is padding)
- *
- * Note the SPORTSVYN filename says 3000x600 and the file is 1568x336 - which is
- * why these are measured rather than read off a name.
- *
- * WHY 1.71em AND NOT 1.8em. The header was built around a cap height of
- * 0.3958 x 1.8em = 0.7125em. Draftvyn's caps are a larger fraction of its box,
- * so the same 1.8em would set the type visibly bigger. 0.7125 / 0.4167 = 1.71em
- * reproduces the cap height exactly: 12.11px at this header's 17px font size,
- * against Sportsvyn's 12.11px. The MARK will read lighter regardless, because
- * this lockup has no underline - that is the mark being different, not the
- * sizing being wrong.
- *
- * THE HORIZONTAL PADDING IS HARMLESS HERE and would not be elsewhere: 293px
- * left and 286px right of empty pixels make the element ~60% wider than the
- * visible mark. In a centred header with nothing beside it that costs nothing,
- * and the padding is near-symmetric so the mark still centres true. Anywhere
- * this mark sits NEXT to something, measure again.
- *
- * PLAIN <img>, MATCHING components/gridiron/Wordmark.js - ratified. The
- * established wordmark rule is a plain tag with a locked aspect and an em-based
- * height; next/image's layout handling fights a lockup rather than helping it.
- */
-function AppWordmark() {
-  return (
-    <span className="gh-app-mark" aria-label="DRAFTVYN">
-      <img
-        src="/brand/draftvynwordmarkwhite1500x300transparent.png"
-        alt="DRAFTVYN"
-        width={1500}
-        height={300}
-        fetchPriority="high"
-        decoding="async"
-        style={{ height: '1.71em', width: 'auto', display: 'block' }}
-      />
-    </span>
   );
 }

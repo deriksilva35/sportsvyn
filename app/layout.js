@@ -1,6 +1,7 @@
 import { Saira, Saira_Condensed, Source_Serif_4, JetBrains_Mono, Archivo } from "next/font/google";
 import "./globals.css";
 import AppTabBar from '@/components/shell/AppTabBar';
+import AppHeader from '@/components/shell/AppHeader';
 import '@/components/shell/apptab.css';
 
 const saira = Saira({
@@ -78,6 +79,10 @@ export default function RootLayout({ children }) {
       className={`${saira.variable} ${sairaCondensed.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${archivo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* HEADER ABOVE, TAB BAR BELOW, one gate on both. Mounted here rather
+            than inside GlobalHeader because the /sim routes never render that
+            component - see components/shell/AppHeader. */}
+        <AppHeader />
         {children}
         <AppTabBar />
       </body>

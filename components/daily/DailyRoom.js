@@ -16,7 +16,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SLOTS, CLOCK_MS, slotAccepts, nextOpenSlot } from '@/lib/daily/play';
-import ClockOwned from '@/components/shell/ClockOwned';
+import RoomScope from '@/components/shell/RoomScope';
 
 // play.js is pure and importable here on purpose: the slot list, the clock
 // length and the eligibility rule are ONE definition shared with the server
@@ -218,8 +218,11 @@ export default function DailyRoom({ puzzleDate, initialEntry, podium = null, ove
       {/* CHROME-ISOLATION LAW: this is the only one of the three states with a
           clock, so the app's tab bar hides here and nowhere else. Leaving the
           Daily mid-round consumes the attempt - the board was seen - so a tab
-          bar under a running clock is a trap, not navigation. */}
-      <ClockOwned />
+          bar under a running clock is a trap, not navigation.
+
+          No `tab`: /daily lights GAMES from the path already, and a room only
+          needs to declare a section when its route cannot say. */}
+      <RoomScope timed />
       {/* PINNED HEAD: clock, slots, lock. Everything a player needs to see the
           state of the round stays on screen; only the pool moves. */}
       <div className="play-head">

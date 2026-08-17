@@ -27,6 +27,8 @@
 // ONE-TAP COMMIT: there is no confirm step. UNDO is always on screen and is
 // repeatable, which is a better trade at a live table than doubling every tap.
 
+import RoomScope from '@/components/shell/RoomScope';
+import HideInShell from '@/components/shell/HideInShell';
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { logPick, undoLastPick } from '@/app/actions/sim';
@@ -245,9 +247,19 @@ export default function TrackerRoom({
 
   return (
     <div className="trk">
+      {/* A ROOM ENTERED FROM THE TRACKER TAB BELONGS TO THE TRACKER TAB. The
+          route is shared with the practice sim, so the path cannot say so - and
+          without this, starting a tracker room lit PRACTICE. No `timed`: a
+          tracker draft has no clock and must keep its way out. */}
+      <RoomScope tab="tracker" />
       <div className="trk-in">
         <header className="trk-hd">
-          <Wordmark href="/sim" />
+          {/* THE LAST SPORTSVYN MARK IN THE CONTAINER. The tracker room draws
+              its own header per the locked mock, and it was showing the
+              publication's wordmark inside an app called Draftvyn. The app
+              header above supplies the mark in the shell; on the web this room
+              keeps its own, because there is no app header there. */}
+          <HideInShell><Wordmark href="/sim" /></HideInShell>
           <span className="mode">TRACKER</span>
           <span className="meta">
             {complete ? `COMPLETE · ${total} PICKS` : `RD ${round} · PICK ${currentOverall}/${total}`}

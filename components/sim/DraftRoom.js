@@ -29,7 +29,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useRouter } from 'next/navigation';
 import { makePick, timerAutoPick, setAutoDraft, fetchPlayerStats, fetchPlayerSummaries } from '@/app/actions/sim';
 import { SCORING_LABEL } from '@/lib/fantasy/config';
-import ClockOwned from '@/components/shell/ClockOwned';
+import RoomScope from '@/components/shell/RoomScope';
 import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
 } from '@/lib/fantasy/statView';
@@ -346,10 +346,11 @@ export default function DraftRoom({
   const rounds = board.rounds;
   return (
     <div className={`room${view === 'board' ? ' room--board' : ''}`}>
-      {/* A TIMED ROOM OWNS THE SCREEN. Untimed mocks keep the tab bar - there
-          is no clock to protect - and the tracker room, which shares this
-          route, never renders this component at all. */}
-      {timerSeconds != null && <ClockOwned />}
+      {/* THIS IS THE PRACTICE SECTION, and it owns the screen only when a clock
+          is running. An untimed mock keeps the tab bar - there is nothing to
+          protect - and the tracker room, which shares this route, declares
+          itself differently. */}
+      <RoomScope tab="practice" timed={timerSeconds != null} />
       {/* PERSISTENT HEADER (all pages): clock banner + AUTO, then last-pick strip */}
       <div className="room-head">
         <div className={`on-clock${canPick ? '' : ' waiting'}`}>

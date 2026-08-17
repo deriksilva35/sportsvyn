@@ -1,6 +1,7 @@
 // app/sim/page.js — the sim lobby. Unlinked from existing nav; noindex.
 import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
+import HideInShell from '@/components/shell/HideInShell';
 import Attribution from '@/components/sim/Attribution';
 import StartForm from '@/components/sim/StartForm';
 import LiveDraftCard from '@/components/sim/LiveDraftCard';
@@ -67,10 +68,17 @@ export default async function SimLobby({ searchParams }) {
       {isShell && iap && userId != null && (
         <IapConfigure userId={userId} apiKey={rcKey} productId={rcProduct} />
       )}
-      <header className="sim-head">
-        <Wordmark href="/sim" />
-        <span className="tag">Mock Draft <b>Sim</b></span>
-      </header>
+      {/* THE CONTAINER HAS ONE HEADER, and it is not this one. This renders
+          the SPORTSVYN gridiron wordmark, which is right on the web and wrong
+          in an app whose bundle is com.sportsvyn.draftvyn - it is why two tabs
+          showed one brand and two showed another. components/shell/AppHeader
+          replaces it in the shell; on the web nothing changes. */}
+      <HideInShell>
+        <header className="sim-head">
+          <Wordmark href="/sim" />
+          <span className="tag">Mock Draft <b>Sim</b></span>
+        </header>
+      </HideInShell>
 
       <main className="sim-wrap">
         <GetTheAppBanner shell={isShell} />
