@@ -35,30 +35,14 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { signOutTarget } from '@/lib/shell/signOutTarget';
+import { logOutPurchases } from '@/lib/shell/purchaseBridge';
+import { NAV, resolveActive, accountMenu, signinHrefFor } from '@/lib/nav';
 import Link from 'next/link';
 import Wordmark from '@/components/gridiron/Wordmark';
 import NavDropdown from '@/components/NavDropdown';
 
 import './site-chrome.css';
 import '@/components/gridiron/gridiron.css';
-
-// The global layer. Five destinations, no dropdowns: a top-level menu that
-// needs a disclosure to tell you what a site contains is a site that has not
-// decided.
-export const NAV = [
-  { key: 'today', label: 'TODAY', href: '/' },
-  { key: 'scores', label: 'SCORES', href: '/scores' },
-  { key: 'nfl', label: 'NFL', href: '/nfl' },
-  { key: 'cfb', label: 'CFB', href: '/cfb' },
-  { key: 'soccer', label: 'SOCCER', href: '/world-cup-2026/bracket' },
-];
-
-// activeNav keys that predate this header, mapped onto the five above so the
-// seventeen existing call sites keep lighting the right tab.
-const ALIAS = {
-  home: 'today', bracket: 'soccer', rankings: 'soccer', stats: 'soccer',
-  schedule: 'soccer', fantasy: 'nfl', market: 'nfl', football: 'nfl',
-};
 
 function shortLabel(email) {
   if (!email || typeof email !== 'string') return '';
@@ -73,20 +57,24 @@ export default function GlobalHeader({
   const pathname = usePathname();
   const isAuthed = !!session?.user;
   const label = isAuthed ? shortLabel(session.user.email) : '';
-  const active = ALIAS[activeNav] ?? activeNav;
+  const active = resolveActive(activeNav);
+  const signinHref = signinHrefFor(pathname);
 
-  // Where the reader is, preserved through the magic-link round trip, with a
-  // guard against ?callbackUrl=/signin looping back on itself.
-  const signinHref = pathname && !pathname.startsWith('/signin')
-    ? `/signin?callbackUrl=${encodeURIComponent(pathname)}`
-    : '/signin';
+  // SIGN OUT ALSO LOGS OUT OF REVENUECAT. The sim's SignOutButton has always
+  // done this; the header did not, so signing out from the chrome left the
+  // SDK holding the previous user's appUserID in the webview. The next person
+  // to sign in on the same device would transact under it until a fresh
+  // configure() ran - and because the store transfers a non-consumable to
+  // whoever last claimed it, that is exactly how a Pass lands on the wrong
+  // account. Best-effort and never allowed to block the sign-out itself.
+  async function handleSignOut() {
+    try { await logOutPurchases(); } catch { /* never block sign-out */ }
+    signOut({ redirectTo: signOutTarget(shell) });
+  }
 
-  const accountItems = [
-    { label: 'My Sportsvyn', href: '/my' },
-    // 3.1.1: no pricing entry inside the native container.
-    ...(shell ? [] : [{ label: 'Membership', href: '/membership' }]),
-    { label: 'Sign Out', onClick: () => signOut({ redirectTo: signOutTarget(shell) }) },
-  ];
+  const accountItems = accountMenu({ shell }).map((it) => (it.action === 'signout'
+    ? { label: it.label, onClick: handleSignOut }
+    : { label: it.label, href: it.href }));
 
   return (
     <>

@@ -129,9 +129,13 @@ test('THE CTA SURVIVES THE COLLAPSE - the funnel does not shrink on phones', () 
 });
 
 test('NOTHING TRUNCATES: every hidden label is in the drawer', () => {
+  // The nav list moved to lib/nav.js so it could be unit tested on its own -
+  // see lib/nav.test.mjs, which exists because The Daily shipped unreachable.
+  // This still asserts the DRAWER renders the whole list rather than a subset.
+  const nav = src('lib/nav.js');
   const drawer = header.slice(header.indexOf('{drawerOpen && ('));
-  for (const label of ['TODAY', 'SCORES', 'NFL', 'CFB', 'SOCCER']) {
-    assert.ok(header.includes(`label: '${label}'`) || drawer.includes(label), `${label} reachable`);
+  for (const label of ['TODAY', 'THE DAILY', 'SCORES', 'NFL', 'CFB', 'SOCCER']) {
+    assert.ok(nav.includes(`label: '${label}'`) || drawer.includes(label), `${label} reachable`);
   }
   assert.match(drawer, /MY SPORTSVYN/, 'the label hidden from the bar is in the drawer');
   assert.match(drawer, /SIGN IN/);
@@ -225,7 +229,7 @@ test('THE WORDMARK ALWAYS GOES HOME', () => {
 test('TODAY MEANS THE DAILY CARD, not the NFL page', () => {
   // It pointed at /nfl from all three gridiron call sites, so on /cfb the
   // "today" link took you to the other league.
-  assert.match(header, /\{ key: 'today', label: 'TODAY', href: '\/' \}/);
+  assert.match(src('lib/nav.js'), /\{ key: 'today', label: 'TODAY', href: '\/' \}/);
   for (const rel of ['components/gridiron/TodayPage.js', 'components/gridiron/RankingsHub.js', 'app/scores/page.js']) {
     const s = stripComments(src(rel));
     assert.ok(!/>TODAY</.test(s), `${rel} no longer hardcodes its own TODAY link`);
@@ -265,7 +269,9 @@ test('the mobile drawer survived the merge', () => {
 });
 
 test('/membership stays shell-gated in the new header', () => {
-  assert.match(header, /\.\.\.\(shell \? \[\] : \[\{ label: 'Membership', href: '\/membership' \}\]\)/);
+  // Moved into accountMenu() in lib/nav.js, where lib/nav.test.mjs asserts the
+  // behaviour directly rather than by matching source text.
+  assert.match(src('lib/nav.js'), /shell \? \[\] : \[\{ key: 'membership'/);
 });
 
 test('section sub-navs are NOT unified away', () => {

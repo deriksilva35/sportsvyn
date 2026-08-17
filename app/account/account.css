@@ -1,0 +1,73 @@
+/* /account - ink, v1.2 module grammar.
+ *
+ * Tokens mirror docs/design/draftvyn-unified-app-mock-v0_1.html: --line at
+ * #2A2A2A, module ground one step lighter than the surface, radius 12,
+ * padding 14, 12px stack gap. Eyebrow on every module (v1.2 s1); rows for the
+ * data (s2); one ghost button per module and no second primary (s4). No hero -
+ * zero heroes is fine, and an account page has no spotlight moment.
+ */
+
+.acct {
+  --a-ink: #0A0A0A; --a-ink-2: #141414; --a-ink-3: #1E1E1E;
+  --a-line: #2A2A2A; --a-volt: #D4FF00; --a-paper: #F5F5F2;
+  --a-jade: #2A8A4F; --a-mut: #8A8A85;
+  --a-disp: var(--font-saira, 'Saira'), sans-serif;
+  --a-cond: var(--font-saira-condensed, 'Saira Condensed'), sans-serif;
+  --a-mono: var(--font-jetbrains-mono, 'JetBrains Mono'), ui-monospace, monospace;
+
+  background: var(--a-ink); color: var(--a-paper);
+  font-family: var(--a-mono); font-size: 13px; line-height: 1.5;
+  min-height: 70vh;
+  max-width: 620px; margin: 0 auto; padding: 20px 14px 64px;
+}
+
+.acct-mod {
+  background: var(--a-ink-2); border: 1px solid var(--a-line);
+  border-radius: 12px; padding: 14px; margin-bottom: 12px;
+}
+.acct-eyebrow {
+  font-family: var(--a-cond); font-weight: 600; font-size: 11px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--a-mut);
+  margin: 0 0 8px;
+}
+.acct-email {
+  font-family: var(--a-disp); font-style: italic; font-weight: 900;
+  font-size: 24px; line-height: 1.1; letter-spacing: -.03em;
+  word-break: break-all;
+}
+
+.acct-rows { display: flex; flex-direction: column; }
+.acct-row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 8px 0; border-bottom: 1px solid var(--a-line);
+  font-variant-numeric: tabular-nums; color: var(--a-paper); text-decoration: none;
+}
+.acct-row:last-child { border-bottom: none; }
+.acct-r { font-weight: 700; color: var(--a-paper); white-space: nowrap; }
+.acct-r--on { color: var(--a-jade); }
+.acct-row--link { color: var(--a-paper); }
+.acct-row--link:hover { color: var(--a-volt); }
+.acct-row--link:hover .acct-r { color: var(--a-volt); }
+
+/* Ghost - the only secondary voice (v1.2 s4). */
+.acct-ghost {
+  display: block; width: 100%; text-align: center; margin-top: 10px;
+  font-family: var(--a-cond); font-weight: 600; font-size: 12px;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: var(--a-ink-3); color: var(--a-paper);
+  border: 1px solid var(--a-line); border-radius: 9px; padding: 11px;
+  text-decoration: none;
+}
+.acct-ghost:hover { border-color: var(--a-volt); }
+
+/* SignOutButton ships its own class from the sim. Dressed here to the same
+   ghost voice rather than restyled into a third button. */
+.acct .acct-signout {
+  display: block; width: 100%; text-align: center;
+  font-family: var(--a-cond); font-weight: 600; font-size: 12px;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: var(--a-ink-3); color: var(--a-paper);
+  border: 1px solid var(--a-line); border-radius: 9px; padding: 12px;
+  cursor: pointer;
+}
+.acct .acct-signout:hover { border-color: var(--a-volt); color: var(--a-volt); }
