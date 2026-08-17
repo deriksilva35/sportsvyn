@@ -41,7 +41,7 @@ const mmss = (ms) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
-export default function DailyRoom({ puzzleDate, initialEntry }) {
+export default function DailyRoom({ puzzleDate, initialEntry, podium = null, overall = null, claim = null }) {
   const [entry, setEntry] = useState(initialEntry ?? null);
   const [board, setBoard] = useState(null);
   const [startedAt, setStartedAt] = useState(null);
@@ -170,6 +170,9 @@ export default function DailyRoom({ puzzleDate, initialEntry }) {
             <button className="btn" onClick={() => setGuessOpen(true)}>Guess the week for a bonus →</button>
           )}
         </section>
+        {/* Overall only. No podium here: yesterday's answer is one tap away on
+            the reveal, and the receipt screen's job is your own result. */}
+        {overall}
       </>
     );
   }
@@ -194,6 +197,15 @@ export default function DailyRoom({ puzzleDate, initialEntry }) {
             {busy ? 'Starting…' : 'Start the clock'}
           </button>
         </section>
+        {claim && (
+          <section className="mod">
+            <h2 className="eyebrow">Claim your handle</h2>
+            <p className="mod-lede">One time, then it is how you appear on every board.</p>
+            {claim}
+          </section>
+        )}
+        {podium}
+        {overall}
       </>
     );
   }

@@ -356,3 +356,42 @@
 .daily-shell:has(.mod--play) .daily-head { display: flex; }
 /* The pin measures the shell now that the shell is what fills the viewport. */
 .daily-shell:has(.mod--play) { height: 100dvh; min-height: 0; overflow: hidden; }
+
+/* ============================ LEADERBOARDS ================================
+ * Row grammar per v1.2 s2. The rank column is fixed and tabular so names start
+ * at the same x on every row; the name is what truncates, never the score. */
+.lb-left { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.lb-rank {
+  flex: 0 0 22px; font-variant-numeric: tabular-nums; color: var(--d-mut);
+  font-size: 11px; text-align: right;
+}
+.lb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* An unclaimed account reads as a blank, not as a person: muted, no badge
+   weight. The claim screen is the argument for fixing it. */
+.lb-name--anon { color: var(--d-mut); }
+.row--me { background: #17170F; margin: 0 -14px; padding-left: 14px; padding-right: 14px; }
+.row--me .lb-name { color: var(--d-volt); }
+.row--dnf { opacity: .5; }
+.lb-hof { color: var(--d-volt); }
+.lb-mvp { color: var(--d-jade); }
+
+/* ============================ HANDLE CLAIM ================================ */
+.hin {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--d-ink-3); border: 1px solid var(--d-line);
+  border-radius: 10px; padding: 11px 13px; margin: 4px 0 8px;
+}
+.hin .at { color: var(--d-mut); font-size: 16px; }
+.hin input {
+  flex: 1; min-width: 0; background: none; border: none; color: var(--d-paper);
+  font: inherit; font-size: 16px; outline: none;
+}
+.hin--ok { border-color: var(--d-jade); }
+.hin--bad { border-color: var(--d-terra); }
+.avail {
+  font-family: var(--d-cond); font-weight: 600; font-size: 11px;
+  letter-spacing: .1em; text-transform: uppercase; min-height: 16px;
+}
+.avail--ok { color: var(--d-jade); }
+.avail--bad { color: var(--d-terra); }
+.avail--wait { color: var(--d-mut); }

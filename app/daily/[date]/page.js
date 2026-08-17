@@ -12,6 +12,10 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { revealView } from '@/lib/daily/close';
 import { tierClass } from '@/lib/daily/reveal';
+import { dayBoard } from '@/lib/daily/boards';
+import { DayBoardModule } from '@/components/daily/Leaderboard';
+import HandleClaim from '@/components/daily/HandleClaim';
+import { sql } from '@/lib/db';
 import '../daily.css';
 
 export const dynamic = 'force-dynamic';
@@ -40,6 +44,10 @@ export default async function DailyReveal({ params, searchParams }) {
   const userId = session?.user?.id ?? null;
 
   const v = await revealView(date, userId == null ? null : Number(userId));
+  // The day is closed by the time this renders, so its board is public.
+  const board = await dayBoard(date, userId, 25).catch(() => null);
+  const me = userId == null ? null
+    : await sql`SELECT handle FROM users WHERE id = ${userId}`.then((r) => r[0] ?? null).catch(() => null);
   if (v.state === 'missing') notFound();
   if (v.state === 'open') redirect('/daily');
 
@@ -112,6 +120,21 @@ export default async function DailyReveal({ params, searchParams }) {
                 )}
               </div>
             )}
+          </section>
+        )}
+
+        <DayBoardModule board={board} userId={userId == null ? null : Number(userId)} />
+
+        {/* The claim is re-offered here and only here: this is the moment the
+            unclaimed reader has just seen their own row sitting grey among the
+            handles, which is the only honest time to ask. */}
+        {me && !me.handle && (
+          <section className="mod">
+            <h2 className="eyebrow">Claim your handle</h2>
+            <p className="mod-lede">
+              You appear as a Player number on every board until you pick one.
+            </p>
+            <HandleClaim compact />
           </section>
         )}
 

@@ -26,6 +26,10 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { todayEt, getDay, entryView } from '@/lib/daily/entries';
+import { podium, overall } from '@/lib/daily/boards';
+import { PodiumModule, OverallModule } from '@/components/daily/Leaderboard';
+import HandleClaim from '@/components/daily/HandleClaim';
+import { sql } from '@/lib/db';
 import DailyRoom from '@/components/daily/DailyRoom';
 import './daily.css';
 
@@ -114,6 +118,13 @@ export default async function DailyPage({ searchParams }) {
   if (state === 'closed') redirect(`/daily/${date}`);   // the reveal owns a closed day
 
   const view = await entryView(Number(userId), date);
+  // Both boards are revealed-day reads (see boards.js) - neither can carry
+  // today. Caught to null: a leaderboard is one module, never the page.
+  const [podiumBoard, overallTable, me] = await Promise.all([
+    podium(userId).catch(() => null),
+    overall(userId, 10).catch(() => null),
+    sql`SELECT handle FROM users WHERE id = ${userId}`.then((r) => r[0] ?? null).catch(() => null),
+  ]);
 
   // DNF: started, never locked, clock spent. The attempt is consumed - the
   // board was seen - so the page must not offer START again. It says what
@@ -148,7 +159,14 @@ export default async function DailyPage({ searchParams }) {
         <span className="tag">The <b>Daily</b></span>
       </header>
       <main className="daily-main">
-        <DailyRoom puzzleDate={date} initialEntry={view.entry} closesAt={String(view.entry?.closesAt ?? '')} />
+        <DailyRoom
+          puzzleDate={date}
+          initialEntry={view.entry}
+          closesAt={String(view.entry?.closesAt ?? '')}
+          podium={view.entry ? null : <PodiumModule board={podiumBoard} userId={Number(userId)} />}
+          overall={<OverallModule table={overallTable} userId={Number(userId)} />}
+          claim={me && !me.handle ? <HandleClaim /> : null}
+        />
       </main>
       </div>
     </div>

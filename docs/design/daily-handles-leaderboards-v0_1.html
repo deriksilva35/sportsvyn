@@ -1,0 +1,441 @@
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Daily — handles + leaderboards v0.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1E1E1E; --line:#2A2A2A;
+  --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --terra:#B8410F;
+  --live:#E63946; --mut:#8A8A85;
+  --disp:'Saira',sans-serif; --cond:'Saira Condensed',sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#3A3A36;color:var(--paper);font-family:var(--mono);font-size:13px;line-height:1.5;padding:24px}
+.wrap{max-width:1340px;margin:0 auto}
+.cap{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  background:var(--volt);color:#111;display:inline-block;padding:7px 12px;margin:30px 0 10px}
+.note{background:#0F0F0E;border-left:4px solid var(--volt);padding:16px 18px;margin:0 0 12px;
+  font-size:12.5px;line-height:1.7;color:#DADAD4}
+.note b{color:var(--volt)} .note h3{font-family:var(--cond);font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;font-size:12px;color:var(--paper);margin:14px 0 6px}
+.note h3:first-child{margin-top:0}
+.note code{color:var(--volt);font-size:11.5px}
+.note table{border-collapse:collapse;margin:8px 0;font-size:11.5px;width:100%}
+.note td,.note th{border-bottom:1px solid #262624;padding:5px 10px 5px 0;text-align:left;vertical-align:top}
+.note th{color:var(--mut);font-family:var(--cond);letter-spacing:.1em;text-transform:uppercase;font-size:10px}
+.two{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.ph{width:390px;flex:0 0 390px}
+.dk{flex:1 1 620px;min-width:560px}
+.dev{background:var(--ink);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.hd{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);
+  font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.hd b{color:var(--paper);font-weight:600}
+.screen{padding:14px}
+
+/* ---- v1.2 grammar ---- */
+.mod{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.eyebrow{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:8px}
+.eyebrow .ctx{opacity:.72}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:6px 0;
+  border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.row:last-child{border-bottom:none}
+.row .r{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.r--mut{color:var(--mut)} .r--volt{color:var(--volt)}
+.rank{display:inline-block;width:20px;color:var(--mut);font-size:11px}
+.hand{overflow:hidden;text-overflow:ellipsis}
+.me{background:#17170F;margin:0 -14px;padding-left:14px;padding-right:14px}
+.me .hand{color:var(--volt)}
+.anon{color:var(--mut)}
+.tierbadge{display:inline-block;font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;border:1px solid currentColor;border-radius:99px;padding:2px 8px;margin-left:6px}
+.t-hof{color:var(--volt)} .t-mvp{color:var(--jade)} .t-pb{color:var(--paper)}
+.t-st{color:var(--mut)} .t-ps{color:var(--terra)}
+.btn--volt{display:block;width:100%;text-align:center;font-family:var(--disp);font-style:italic;font-weight:900;
+  font-size:19px;letter-spacing:-.02em;background:var(--volt);color:var(--ink);border:none;border-radius:10px;padding:13px}
+.btn--volt:disabled{opacity:.45}
+.btn{display:block;width:100%;text-align:center;font-family:var(--cond);font-weight:600;font-size:12px;
+  letter-spacing:.1em;text-transform:uppercase;background:var(--ink-3);color:var(--paper);
+  border:1px solid var(--line);border-radius:9px;padding:11px;margin-top:8px}
+.hero{background:linear-gradient(160deg,#1a2000 0%,var(--ink-2) 55%);border:1px solid #3a4400;
+  border-radius:14px;padding:18px 16px;margin-bottom:12px}
+.hero-eyebrow{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--mut)}
+.hero-q{font-family:var(--disp);font-style:italic;font-weight:900;font-size:30px;letter-spacing:-.04em;
+  line-height:1.05;margin:8px 0 4px}
+.hero-line{font-size:12px;color:var(--mut);margin-bottom:12px}
+.hero-line b{color:var(--volt);font-weight:700}
+.score-big{font-family:var(--mono);font-weight:700;font-size:44px;line-height:.92;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums}
+.score-row{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.score-meta{display:flex;flex-direction:column;gap:5px;padding-bottom:4px}
+
+/* handle claim */
+.hin{display:flex;align-items:center;gap:8px;background:var(--ink-3);border:1px solid var(--line);
+  border-radius:10px;padding:11px 13px;margin:4px 0 8px}
+.hin .at{color:var(--mut);font-size:16px}
+.hin input{flex:1;background:none;border:none;color:var(--paper);font:inherit;font-size:16px;outline:none}
+.hin--ok{border-color:var(--jade)} .hin--bad{border-color:var(--terra)}
+.avail{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.avail--ok{color:var(--jade)} .avail--bad{color:var(--terra)} .avail--wait{color:var(--mut)}
+.rules-min{font-size:11px;color:var(--mut);line-height:1.7;margin-top:2px}
+.dnf{opacity:.5}
+</style>
+
+<div class="wrap">
+
+<div class="note">
+<h3>What this is</h3>
+Handles and leaderboards, mocked for markup. No build. v1.2 grammar throughout,
+ink. Every proposal below is argued rather than asserted, and the one thing I
+would call a hard finding is in <b>THE LEAK LAW</b> — it changes how the overall
+board must be computed, not just how it looks.
+
+<h3>1 · Handle constraints — proposed</h3>
+<table>
+<tr><th>Rule</th><th>Proposal</th><th>Why</th></tr>
+<tr><td>Length</td><td>3–15</td><td>3 lets initials work; 15 is what fits the leaderboard row at 390px beside a score and a badge without truncating.</td></tr>
+<tr><td>Charset</td><td><code>a–z 0–9 _</code>, must start alphanumeric, no trailing or doubled underscore</td><td>No unicode. Homoglyph impersonation on a leaderboard is a real problem and a denylist cannot fix it; refusing the alphabet can.</td></tr>
+<tr><td>Case</td><td>Store as typed, unique on <code>lower(handle)</code></td><td>Display keeps the intent (<code>RedZone_Ray</code>); uniqueness ignores it, so nobody claims <code>Ray</code> and <code>ray</code>. Note: <code>citext</code> is NOT installed on this database — I checked — so it is a functional unique index, not an extension.</td></tr>
+<tr><td>Reserved</td><td>admin, mod, staff, support, help, api, official, sportsvyn, draftvyn, daily, deleted, null, anonymous</td><td>Impersonating the house is the one identity attack worth blocking up front.</td></tr>
+<tr><td>Profanity</td><td>Denylist at claim + report-and-rename after</td><td>No cleverness, deliberately. Automated matching produces the Scunthorpe problem and still misses; a list plus a manual override table is the same posture the nflverse name matcher already uses, and it fails toward a human rather than toward a wrong guess.</td></tr>
+<tr><td>Rename</td><td>Once per 30 days, from /account</td><td>A leaderboard is a record of who did what. Free renames make last week's board unreadable and let someone swap into a name a rival just abandoned. 30 days is long enough to make that pointless and short enough to fix a regretted handle.</td></tr>
+</table>
+
+<h3>2 · Where it stores — proposed: a column, not a profile table</h3>
+<code>users.handle text</code>, <code>users.handle_changed_at timestamptz</code>,
+plus <code>CREATE UNIQUE INDEX ON users (lower(handle))</code> and a small
+<code>handle_history(user_id, handle, claimed_at, released_at)</code> for
+moderation and for refusing an instant re-claim of a just-abandoned name.
+<br><br>
+<b>Argued against a profile table:</b> it is one string. A separate table means
+a join on every leaderboard row for that string, and the uniqueness constraint
+— the only part that is actually hard — belongs on the same row as the
+identity it makes unique. If a profile grows an avatar, a bio and notification
+prefs later, THAT is when a table earns its join; adding it now is a join we
+pay for on every board render in exchange for nothing.
+
+<h3>3 · Season points — argued, and the raw-score option is measurably wrong</h3>
+I measured the ceiling of all 174 weeks in the corpus (top five PPR
+performances, the shape the board rewards):
+<table>
+<tr><th>min</th><th>p10</th><th>median</th><th>p90</th><th>max</th></tr>
+<tr><td>127.0</td><td>153.9</td><td>170.9</td><td>193.9</td><td>233.5</td></tr>
+</table>
+<b>An 84% spread from the easiest week to the richest, and 40 points between
+p10 and p90.</b> So SUM OF DAILY SCORES is out: it would rank partly on which
+days you happened to show up, and two players of identical skill would separate
+by dozens of points on draw luck alone.
+<br><br>
+AVERAGE PERCENT OF PERFECT fixes difficulty but breaks the product: one player
+with one lucky day tops a board of people who have shown up for a month, and
+any minimum-games threshold is an arbitrary cliff.
+<br><br>
+<b>PROPOSAL — tier points, summed:</b>
+HALL OF FAME 5 · MVP 4 · PRO BOWLER 3 · STARTER 2 · PRACTICE SQUAD 1 · DNF 0 ·
+missed day 0. Tiebreak on cumulative percent-of-perfect, then on days played.
+<br>
+It normalises difficulty for free, because the tier ladder is already a RATIO of
+the day's perfect. It is an integer, which screenshots and reads at a glance
+("41 pts, 3 HOF"). It rewards showing up, which is the entire point of a daily.
+And it keeps a newcomer's gap finite and legible — five points a day, not
+"catch up 900 raw points".
+<br><br>
+<b>Missed days score zero, with no penalty and no exclusion,</b> and the row
+shows <code>played 12/17</code> so the zero is legible rather than mysterious.
+Excluding missed days would quietly convert the board into an average and
+re-open the one-lucky-day problem.
+<br><br>
+<b>SEASON-SCOPED, not all-time.</b> A board that never resets is unwinnable by
+November and stops being a reason to come back — and this product is already
+seasonal, so the NFL season boundary is a reset the reader expects rather than
+one we invented. Career HOF/MVP counts stay all-time on the profile, which is
+where a permanent record belongs.
+
+<h3>4 · THE LEAK LAW — this one is a finding, not a preference</h3>
+Your rule is "no other player's score for an OPEN day appears anywhere". The
+non-obvious consequence: <b>the overall standings must be computed through the
+last CLOSED day, not through today.</b>
+<br><br>
+If today's entry contributed to season points, then the OVERALL module on the
+entered screen moves the moment a rival locks — and anyone watching a total go
+from 38 to 42 has just learned that player took an MVP today. The leaderboard
+becomes a side channel for exactly the number the leak rule protects. Every
+board below is therefore labelled <code>THROUGH YESTERDAY</code>, and that label
+is load-bearing rather than decorative.
+
+<h3>5 · Anonymous fallback — <i>not</i> "Player #id"</h3>
+<code>Player #37</code> publishes the user count and the signup order, and it is
+enumerable: watch the board for a week and you learn roughly how many people
+this thing has. On a product with two-digit user numbers that is a number worth
+not printing.
+<br><br>
+<b>Proposal: <code>Player 7f3a</code></b> — four hex characters of
+HMAC(user_id, server secret). Stable across days so a rival is recognisable
+week to week, non-enumerable, and it leaks neither count nor join order. Shown
+in muted grey with no badge styling, so an unclaimed name reads as a blank
+rather than as a person. The claim screen exists to replace it, and the board
+is the argument for claiming.
+</div>
+
+<div class="cap">1 · HANDLE CLAIM — one-time, post-signin, pre-first-entry</div>
+<div class="two">
+  <div class="ph"><div class="dev">
+    <div class="hd">The <b>Daily</b></div>
+    <div class="screen">
+      <div class="hero">
+        <div class="hero-eyebrow">One time only</div>
+        <div class="hero-q">Claim your<br>handle.</div>
+        <div class="hero-line">It is how you appear on every leaderboard. You can change it once every 30 days.</div>
+        <div class="hin hin--ok">
+          <span class="at">@</span><input value="redzone_ray" readonly>
+        </div>
+        <div class="avail avail--ok">Available</div>
+        <div class="rules-min">3–15 characters · letters, numbers and underscore</div>
+        <div style="height:12px"></div>
+        <button class="btn--volt">Claim @redzone_ray</button>
+      </div>
+      <div class="mod">
+        <div class="eyebrow">Until you claim one</div>
+        <div class="row"><span>You appear as</span><span class="r anon">Player 7f3a</span></div>
+        <div class="row"><span>Your scores</span><span class="r">still count</span></div>
+        <div class="row"><span>Change later</span><span class="r r--mut">Account &rarr;</span></div>
+      </div>
+      <button class="btn">Skip for now</button>
+    </div>
+  </div></div>
+
+  <div class="dk"><div class="dev">
+    <div class="hd">The <b>Daily</b> &middot; states</div>
+    <div class="screen">
+      <div class="mod">
+        <div class="eyebrow">Availability states <span class="ctx">&mdash; all four</span></div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px">
+          <div><div class="hin"><span class="at">@</span><input value="ra" readonly></div>
+            <div class="avail avail--bad">Too short &mdash; 3 characters minimum</div></div>
+          <div><div class="hin hin--bad"><span class="at">@</span><input value="Red Zone Ray!" readonly></div>
+            <div class="avail avail--bad">Letters, numbers and underscore only</div></div>
+          <div><div class="hin hin--bad"><span class="at">@</span><input value="sportsvyn" readonly></div>
+            <div class="avail avail--bad">Reserved</div></div>
+          <div><div class="hin"><span class="at">@</span><input value="redzone_ray" readonly></div>
+            <div class="avail avail--wait">Checking&hellip;</div></div>
+        </div>
+        <div class="rules-min" style="margin-top:12px">
+          Availability is checked on the server on a debounce, and re-checked on submit &mdash;
+          the check is advisory, the unique index is the truth.
+        </div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<div class="cap">2a · RULES SCREEN — podium + overall, before you play</div>
+<div class="two">
+  <div class="ph"><div class="dev">
+    <div class="hd">The <b>Daily</b></div>
+    <div class="screen">
+      <div class="mod">
+        <div class="eyebrow">How it works</div>
+        <div class="row"><span>The board</span><span class="r">64 players</span></div>
+        <div class="row"><span>The clock</span><span class="r">3:00, server-side</span></div>
+        <div class="row"><span>Scoring</span><span class="r">PPR, worst pick dropped</span></div>
+        <div style="height:10px"></div>
+        <button class="btn--volt">Start the clock</button>
+      </div>
+
+      <div class="mod">
+        <div class="eyebrow">Yesterday&rsquo;s podium <span class="ctx">&mdash; 2017 Wk 13</span></div>
+        <div class="row"><span><span class="rank">1</span><span class="hand">@fourthandshort</span><span class="tierbadge t-hof">HOF</span></span><span class="r r--volt">138.4</span></div>
+        <div class="row"><span><span class="rank">2</span><span class="hand">@pylon</span><span class="tierbadge t-mvp">MVP</span></span><span class="r">129.7</span></div>
+        <div class="row"><span><span class="rank">3</span><span class="hand">@audible</span><span class="tierbadge t-mvp">MVP</span></span><span class="r">124.0</span></div>
+        <div class="row"><span><span class="rank">4</span><span class="hand anon">Player 7f3a</span><span class="tierbadge t-pb">PB</span></span><span class="r">118.2</span></div>
+        <div class="row"><span><span class="rank">5</span><span class="hand">@coverzero</span><span class="tierbadge t-pb">PB</span></span><span class="r">115.9</span></div>
+        <div class="row me"><span><span class="rank">12</span><span class="hand">@redzone_ray</span><span class="tierbadge t-st">ST</span></span><span class="r">96.5</span></div>
+      </div>
+
+      <div class="mod">
+        <div class="eyebrow">Overall <span class="ctx">&mdash; through yesterday</span></div>
+        <div class="row"><span><span class="rank">1</span><span class="hand">@pylon</span></span><span class="r">54 <span class="r--mut">pts</span></span></div>
+        <div class="row"><span><span class="rank">2</span><span class="hand">@fourthandshort</span></span><span class="r">51 <span class="r--mut">pts</span></span></div>
+        <div class="row"><span><span class="rank">3</span><span class="hand">@audible</span></span><span class="r">47 <span class="r--mut">pts</span></span></div>
+        <div class="row me"><span><span class="rank">9</span><span class="hand">@redzone_ray</span></span><span class="r">31 <span class="r--mut">pts</span></span></div>
+        <button class="btn">Full standings &rarr;</button>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="dk"><div class="dev">
+    <div class="hd">The <b>Daily</b> &middot; overall, expanded</div>
+    <div class="screen">
+      <div class="mod">
+        <div class="eyebrow">Overall <span class="ctx">&mdash; through yesterday &middot; 17 days played</span></div>
+        <div class="row" style="border-bottom:1px solid var(--line);padding-bottom:8px">
+          <span style="font-family:var(--cond);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)">Handle</span>
+          <span style="font-family:var(--cond);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)">Pts &middot; HOF &middot; MVP &middot; Played &middot; Streak</span>
+        </div>
+        <div class="row"><span><span class="rank">1</span><span class="hand">@pylon</span></span><span class="r">54 &middot; <span class="t-hof" style="color:var(--volt)">2</span> &middot; <span style="color:var(--jade)">6</span> &middot; <span class="r--mut">16/17</span> &middot; 9</span></div>
+        <div class="row"><span><span class="rank">2</span><span class="hand">@fourthandshort</span></span><span class="r">51 &middot; <span style="color:var(--volt)">3</span> &middot; <span style="color:var(--jade)">3</span> &middot; <span class="r--mut">15/17</span> &middot; 4</span></div>
+        <div class="row"><span><span class="rank">3</span><span class="hand">@audible</span></span><span class="r">47 &middot; <span style="color:var(--volt)">1</span> &middot; <span style="color:var(--jade)">5</span> &middot; <span class="r--mut">17/17</span> &middot; 17</span></div>
+        <div class="row"><span><span class="rank">4</span><span class="hand">@coverzero</span></span><span class="r">44 &middot; 0 &middot; <span style="color:var(--jade)">5</span> &middot; <span class="r--mut">16/17</span> &middot; 2</span></div>
+        <div class="row"><span><span class="rank">5</span><span class="hand anon">Player 7f3a</span></span><span class="r">39 &middot; 0 &middot; <span style="color:var(--jade)">3</span> &middot; <span class="r--mut">14/17</span> &middot; 1</span></div>
+        <div class="row"><span><span class="rank">6</span><span class="hand">@slantroute</span></span><span class="r">36 &middot; <span style="color:var(--volt)">1</span> &middot; 1 &middot; <span class="r--mut">13/17</span> &middot; 0</span></div>
+        <div class="row"><span><span class="rank">7</span><span class="hand">@thirddown</span></span><span class="r">34 &middot; 0 &middot; 2 &middot; <span class="r--mut">14/17</span> &middot; 6</span></div>
+        <div class="row"><span><span class="rank">8</span><span class="hand">@gunslinger</span></span><span class="r">33 &middot; 0 &middot; 2 &middot; <span class="r--mut">15/17</span> &middot; 1</span></div>
+        <div class="row me"><span><span class="rank">9</span><span class="hand">@redzone_ray</span></span><span class="r">31 &middot; 0 &middot; 1 &middot; <span class="r--mut">12/17</span> &middot; 3</span></div>
+        <div class="row"><span><span class="rank">10</span><span class="hand">@nickelback</span></span><span class="r">29 &middot; 0 &middot; 1 &middot; <span class="r--mut">13/17</span> &middot; 0</span></div>
+        <div class="rules-min" style="margin-top:10px">
+          Tier points: HOF 5 &middot; MVP 4 &middot; PB 3 &middot; ST 2 &middot; PS 1 &middot; DNF and missed days 0.
+          Ties break on cumulative percent of perfect, then days played.
+        </div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<div class="cap">2b · ENTERED — the receipt, then overall. No today scores anywhere.</div>
+<div class="two">
+  <div class="ph"><div class="dev">
+    <div class="hd">The <b>Daily</b></div>
+    <div class="screen">
+      <div class="mod">
+        <div class="eyebrow">Today&rsquo;s board <span class="ctx">&mdash; your entry</span></div>
+        <div class="score-row">
+          <div class="score-big">102.5</div>
+          <div class="score-meta"><span class="tierbadge t-pb">Top 25%</span></div>
+        </div>
+        <div class="row"><span>Your guess</span><span class="r">2018 &middot; Wk 10</span></div>
+        <div class="row"><span>Answer unlocks</span><span class="r r--mut">Midnight ET</span></div>
+      </div>
+      <div class="mod">
+        <div class="eyebrow">Overall <span class="ctx">&mdash; through yesterday</span></div>
+        <div class="row"><span><span class="rank">1</span><span class="hand">@pylon</span></span><span class="r">54 <span class="r--mut">pts</span></span></div>
+        <div class="row"><span><span class="rank">2</span><span class="hand">@fourthandshort</span></span><span class="r">51 <span class="r--mut">pts</span></span></div>
+        <div class="row"><span><span class="rank">3</span><span class="hand">@audible</span></span><span class="r">47 <span class="r--mut">pts</span></span></div>
+        <div class="row me"><span><span class="rank">9</span><span class="hand">@redzone_ray</span></span><span class="r">31 <span class="r--mut">pts</span></span></div>
+        <button class="btn">Full standings &rarr;</button>
+      </div>
+      <div class="note" style="margin:0;font-size:11.5px">
+        <b>Note the absence.</b> No today column, no rank movement, no
+        &ldquo;you are up 3 places&rdquo;. All three would encode a score for an
+        open day. The board is frozen at yesterday until midnight, then it moves
+        once.
+      </div>
+    </div>
+  </div></div>
+
+  <div class="dk"><div class="dev">
+    <div class="hd">The <b>Daily</b> &middot; entered, desktop</div>
+    <div class="screen">
+      <div class="mod">
+        <div class="eyebrow">Today&rsquo;s board <span class="ctx">&mdash; your entry</span></div>
+        <div class="score-row">
+          <div class="score-big">102.5</div>
+          <div class="score-meta"><span class="tierbadge t-pb">Top 25%</span><span style="color:var(--mut);font-size:11px">1,204 entries today</span></div>
+        </div>
+        <div class="row"><span>Your guess</span><span class="r">2018 &middot; Wk 10</span></div>
+        <div class="row"><span>Answer and standings update</span><span class="r r--mut">Midnight ET</span></div>
+      </div>
+      <div class="mod">
+        <div class="eyebrow">Overall <span class="ctx">&mdash; through yesterday &middot; you are 9th of 214</span></div>
+        <div class="row"><span><span class="rank">1</span><span class="hand">@pylon</span></span><span class="r">54 &middot; <span class="r--mut">16/17 played</span></span></div>
+        <div class="row"><span><span class="rank">2</span><span class="hand">@fourthandshort</span></span><span class="r">51 &middot; <span class="r--mut">15/17 played</span></span></div>
+        <div class="row"><span><span class="rank">3</span><span class="hand">@audible</span></span><span class="r">47 &middot; <span class="r--mut">17/17 played</span></span></div>
+        <div class="row"><span><span class="rank">4</span><span class="hand">@coverzero</span></span><span class="r">44 &middot; <span class="r--mut">16/17 played</span></span></div>
+        <div class="row me"><span><span class="rank">9</span><span class="hand">@redzone_ray</span></span><span class="r">31 &middot; <span class="r--mut">12/17 played</span></span></div>
+        <button class="btn">Full standings &rarr;</button>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<div class="cap">2c · REVEAL — today's leaderboard, between your lineup and the perfect</div>
+<div class="two">
+  <div class="ph"><div class="dev">
+    <div class="hd">The <b>Daily</b> &middot; 2026-08-16</div>
+    <div class="screen">
+      <div class="hero">
+        <div class="hero-eyebrow">The answer &middot; 2026-08-16</div>
+        <div style="font-family:var(--disp);font-style:italic;font-weight:900;font-size:34px;letter-spacing:-.05em;margin:8px 0 2px">2017 <span style="color:var(--mut)">&middot; Week 13</span></div>
+        <div style="display:flex;gap:14px;align-items:center;margin-top:10px;flex-wrap:wrap">
+          <div><div style="font-weight:700;font-size:26px">131.1</div><div style="font-family:var(--cond);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)">perfect</div></div>
+          <span class="tierbadge t-pb">Pro Bowler</span>
+          <div><div style="font-weight:700;font-size:26px;color:var(--mut)">102.5</div><div style="font-family:var(--cond);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)">you &middot; 78%</div></div>
+        </div>
+      </div>
+
+      <div class="mod">
+        <div class="eyebrow">Your lineup</div>
+        <div class="row"><span>QB &middot; Tom Brady</span><span class="r">5.3</span></div>
+        <div class="row"><span>WR &middot; Brandon Marshall</span><span class="r">26.6</span></div>
+        <div class="row"><span>&hellip;</span><span class="r r--mut"></span></div>
+      </div>
+
+      <div class="mod">
+        <div class="eyebrow">Today&rsquo;s leaderboard <span class="ctx">&mdash; 1,204 entries</span></div>
+        <div class="row"><span><span class="rank">1</span><span class="hand">@fourthandshort</span><span class="tierbadge t-hof">HOF</span></span><span class="r r--volt">128.9</span></div>
+        <div class="row"><span><span class="rank">2</span><span class="hand">@pylon</span><span class="tierbadge t-mvp">MVP</span></span><span class="r">121.4</span></div>
+        <div class="row"><span><span class="rank">3</span><span class="hand">@audible</span><span class="tierbadge t-mvp">MVP</span></span><span class="r">119.8</span></div>
+        <div class="row"><span><span class="rank">4</span><span class="hand anon">Player 7f3a</span><span class="tierbadge t-pb">PB</span></span><span class="r">112.0</span></div>
+        <div class="row"><span><span class="rank">5</span><span class="hand">@coverzero</span><span class="tierbadge t-pb">PB</span></span><span class="r">108.6</span></div>
+        <div class="row" style="opacity:.55"><span><span class="rank">&hellip;</span></span><span class="r"></span></div>
+        <div class="row me"><span><span class="rank">31</span><span class="hand">@redzone_ray</span><span class="tierbadge t-pb">PB</span></span><span class="r">102.5</span></div>
+        <div class="row dnf"><span><span class="rank">&mdash;</span><span class="hand">@slantroute</span><span class="tierbadge t-ps">DNF</span></span><span class="r r--mut">no score</span></div>
+        <button class="btn">All 1,204 &rarr;</button>
+      </div>
+
+      <div class="mod">
+        <div class="eyebrow">The perfect lineup <span class="ctx">&mdash; 131.1</span></div>
+        <div class="row"><span>QB &middot; Matthew Stafford</span><span class="r">24.9</span></div>
+        <div class="row"><span>&hellip;</span><span class="r r--mut"></span></div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="dk"><div class="dev">
+    <div class="hd">The <b>Daily</b> &middot; leaderboard, top 25 + your row</div>
+    <div class="screen">
+      <div class="mod">
+        <div class="eyebrow">Today&rsquo;s leaderboard <span class="ctx">&mdash; top 25 of 1,204 &middot; day closed</span></div>
+        <div class="row"><span><span class="rank">1</span><span class="hand">@fourthandshort</span><span class="tierbadge t-hof">HOF</span></span><span class="r r--volt">128.9 <span class="r--mut">98%</span></span></div>
+        <div class="row"><span><span class="rank">2</span><span class="hand">@pylon</span><span class="tierbadge t-mvp">MVP</span></span><span class="r">121.4 <span class="r--mut">93%</span></span></div>
+        <div class="row"><span><span class="rank">3</span><span class="hand">@audible</span><span class="tierbadge t-mvp">MVP</span></span><span class="r">119.8 <span class="r--mut">91%</span></span></div>
+        <div class="row"><span><span class="rank">4</span><span class="hand anon">Player 7f3a</span><span class="tierbadge t-pb">PB</span></span><span class="r">112.0 <span class="r--mut">85%</span></span></div>
+        <div class="row"><span><span class="rank">5</span><span class="hand">@coverzero</span><span class="tierbadge t-pb">PB</span></span><span class="r">108.6 <span class="r--mut">83%</span></span></div>
+        <div class="row"><span><span class="rank">6</span><span class="hand">@thirddown</span><span class="tierbadge t-pb">PB</span></span><span class="r">106.1 <span class="r--mut">81%</span></span></div>
+        <div class="row"><span><span class="rank">7</span><span class="hand">@gunslinger</span><span class="tierbadge t-pb">PB</span></span><span class="r">104.9 <span class="r--mut">80%</span></span></div>
+        <div class="row" style="opacity:.55"><span><span class="rank">&hellip;</span><span class="hand r--mut">ranks 8 to 30</span></span><span class="r"></span></div>
+        <div class="row me"><span><span class="rank">31</span><span class="hand">@redzone_ray</span><span class="tierbadge t-pb">PB</span></span><span class="r">102.5 <span class="r--mut">78%</span></span></div>
+        <div class="rules-min" style="margin-top:10px">
+          Your row is pinned when you fall outside the visible slice, so the module always
+          answers &ldquo;where did I come&rdquo; without loading 1,204 rows on a phone.
+          DNFs are listed unranked at the foot &mdash; the attempt was consumed, so hiding
+          them would misreport the field.
+        </div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<div class="note" style="margin-top:34px">
+<h3>Open questions for markup</h3>
+1. <b>Skip on the claim screen</b> &mdash; I included one. A forced handle before
+   the first entry is a wall in front of the thing they came for, and
+   <code>Player 7f3a</code> is a working identity. Cut it if you want handles
+   mandatory.<br>
+2. <b>Podium depth on the rules screen</b> &mdash; top 5 as specified, plus your
+   own row pinned. The pinned row is an addition; it is also the only part a
+   twelfth-place player cares about.<br>
+3. <b>Streak</b> &mdash; shown in the expanded overall. It is a fifth column on a
+   390px row, so on mobile it is absent. Worth deciding whether streak is a
+   leaderboard column or a profile stat.<br>
+4. <b>DNF display</b> &mdash; listed unranked at the foot of today's board.
+   Alternative is omitting them, which makes 1,204 entries and 1,180 rows
+   disagree with no explanation.<br>
+5. <b>Season boundary</b> &mdash; NFL season, so the reset is early September.
+   That means the first season is a stub of a few weeks. Start the clock at the
+   real boundary, or run the first &ldquo;season&rdquo; long through to next
+   September?<br>
+6. <b>Handle prefix</b> &mdash; I rendered <code>@handle</code> throughout. It
+   reads as a social handle, which may be more promise than we want to make.
+</div>
+
+</div>

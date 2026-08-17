@@ -13,6 +13,8 @@
 import { readFileSync } from 'node:fs';
 import { ImageResponse } from 'next/og';
 import { revealView } from '@/lib/daily/close';
+import { sql } from '@/lib/db';
+import { displayName } from '@/lib/daily/handles';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +26,20 @@ export async function GET(_req, { params }) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return new Response('Not found', { status: 404 });
   const v = await revealView(date);
   if (v.state !== 'revealed') return new Response('Not found', { status: 404 });
+
+  // THE CARD IS PUBLIC AND UNSCOPED - it exists to be shared with people who
+  // have not played - so it names the DAY'S WINNER, never the viewer. There is
+  // no session here to scope to, and inventing one would make the card
+  // per-reader and uncacheable for no gain.
+  const winner = await sql`
+    SELECT u.id, u.handle, e.score
+      FROM puzzle_entries e
+      JOIN puzzle_days d ON d.puzzle_date = e.puzzle_date AND d.revealed
+      JOIN users u ON u.id = e.user_id
+     WHERE e.puzzle_date = ${date} AND e.locked_at IS NOT NULL AND e.score IS NOT NULL
+     ORDER BY e.score DESC, u.id ASC LIMIT 1`
+    .then((r) => r[0] ?? null).catch(() => null);
+  const winnerName = winner ? displayName({ id: winner.id, handle: winner.handle }) : null;
 
   // READ, DO NOT FETCH. new URL(..., import.meta.url) is the right way to point
   // at the traced asset - it lands at .next/server/assets/Saira-*.woff in a
