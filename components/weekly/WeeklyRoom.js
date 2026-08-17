@@ -1,0 +1,215 @@
+'use client';
+
+/**
+ * components/weekly/WeeklyRoom.js - the Weekly's builder.
+ *
+ * THIS IS THE DAILY'S DRAFT UI WITH THE CLOCK REMOVED AND SAVE-ON-CHANGE ADDED.
+ * Same slots bar, same position tabs, same PPG pool rows, same pick and clear
+ * behaviour, same CSS classes - the scope law for this build was ADAPT, DON'T
+ * CONSTRUCT, so anything below that differs from components/daily/DailyRoom.js
+ * has to say why. There are exactly three differences and each is annotated:
+ *
+ *   1. NO CLOCK, A DEADLINE. The Daily's hero instrument is a 3:00 countdown
+ *      the round is built around. Five days is not an instrument - it is a
+ *      date. It reads as a line, not a bar, and it does not turn red.
+ *   2. SAVE ON CHANGE, NO LOCK BUTTON. The Daily has one irreversible submit;
+ *      the Weekly has no submit at all. Whatever is saved when Thursday
+ *      arrives is the entry, so a "lock it in" button would be a lie - it
+ *      would imply an un-locked-in state that scores differently. It does not.
+ *   3. NO AUTO-ADVANCE PAST A FULL LINEUP. Auto-advance exists to save taps in
+ *      a sprint. Here it still moves to the next EMPTY slot, but a builder
+ *      with all six filled stays where it is rather than cycling.
+ *
+ * NOTHING HERE IS LOAD-BEARING FOR FAIRNESS. The server re-reads locks_at on
+ * every save and refuses a late one; this countdown is a courtesy.
+ */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SLOTS } from '@/lib/weekly/rules';
+import { nextOpenSlot } from '@/lib/daily/play';
+import { timeToLock, poolRows } from '@/lib/weekly/view';
+
+const SLOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLEX', FLEX2: 'FLEX' };
+const POOL_LABEL = {
+  QB: 'Quarterbacks', RB: 'Running backs', WR: 'Receivers', TE: 'Tight ends',
+  FLEX: 'Flex - RB / WR / TE', FLEX2: 'Flex - RB / WR / TE',
+};
+
+// Identical to the Daily's, and deliberately duplicated rather than exported:
+// it is presentation of a string this component happens to receive, not a rule.
+const ppgOf = (r) => (r ? String(r).split(' · ')[0].replace(/\s*PPG$/, '') : '');
+const restOf = (r) => (r ? String(r).split(' · ').slice(1).join(' · ') : '');
+
+// THE POOL IS SORTED BY PPG, in poolRows() over in view.js where a test can
+// reach it. That is the one place the Daily's pool UI could not be adopted
+// unchanged - see the note on poolRows for why 1,269 players breaks what works
+// fine at 64.
+
+// DEBOUNCE, NOT THROTTLE. A player filling six slots in ten seconds should
+// produce one write, not six; the trailing edge is the one that matters
+// because it is the only one that reflects the finished lineup.
+const SAVE_DEBOUNCE_MS = 700;
+
+function deadlineLine(t) {
+  if (!t || t.locked) return 'Locked';
+  if (t.days >= 1) return `${t.days}d ${t.hours}h to lock`;
+  if (t.hours >= 1) return `${t.hours}h ${t.mins}m to lock`;
+  return `${t.mins}m to lock`;
+}
+
+export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAtLabel = null }) {
+  const [lineup, setLineup] = useState(initialLineup ?? {});
+  const [active, setActive] = useState('QB');
+  const [save, setSave] = useState('clean');   // clean | saving | saved | error
+  const [locked, setLocked] = useState(false);
+  const [err, setErr] = useState(null);
+  const [left, setLeft] = useState(() => timeToLock(contest?.locks_at));
+  const timer = useRef(null);
+  const pending = useRef(null);
+
+  // ---- the deadline --------------------------------------------------------
+  // One tick a second is plenty for a countdown measured in days, and unlike
+  // the Daily's 250ms bar there is nothing here that animates between seconds.
+  useEffect(() => {
+    const tick = () => setLeft(timeToLock(contest?.locks_at));
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, [contest?.locks_at]);
+
+  const flush = useCallback(async (payload) => {
+    setSave('saving'); setErr(null);
+    const res = await fetch('/api/weekly/save', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ lineup: payload }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (res.ok) { setSave('saved'); return; }
+    setSave('error');
+    // A 409 means the week locked underneath us - which happens to anyone with
+    // the tab open at kickoff. It is not an error to apologise for; it is the
+    // deadline arriving, so the surface changes rather than showing a message.
+    if (res.status === 409) { setLocked(true); return; }
+    setErr(j.errors?.join(' · ') ?? j.error ?? 'Could not save.');
+  }, []);
+
+  // Debounced write on every lineup change. The ref carries the latest payload
+  // so a rapid sequence of picks collapses to one request with the last state.
+  const queue = useCallback((next) => {
+    pending.current = next;
+    setSave('saving');
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => { flush(pending.current); }, SAVE_DEBOUNCE_MS);
+  }, [flush]);
+
+  // A pick made and the tab closed inside the debounce window would be lost.
+  // Flushing on unmount and on hide costs nothing and closes that hole.
+  useEffect(() => {
+    const bail = () => {
+      if (timer.current && pending.current) {
+        clearTimeout(timer.current);
+        navigator.sendBeacon?.('/api/weekly/save',
+          new Blob([JSON.stringify({ lineup: pending.current })], { type: 'application/json' }));
+      }
+    };
+    document.addEventListener('visibilitychange', bail);
+    return () => { document.removeEventListener('visibilitychange', bail); bail(); };
+  }, []);
+
+  const picked = useMemo(() => new Set(Object.values(lineup).filter(Boolean)), [lineup]);
+  const filledCount = SLOTS.filter((s) => lineup[s] != null).length;
+
+  // Memoised on the active slot: re-sorting 1,269 rows on every change of
+  // state - and there is one on every pick - is work with a visible cost.
+  const rows = useMemo(() => poolRows(board, active), [board, active]);
+
+  function pick(id) {
+    if (locked) return;
+    const next = { ...lineup, [active]: id };
+    setLineup(next);
+    // Difference 3: a full lineup stays put instead of cycling back to QB.
+    if (SLOTS.some((s) => next[s] == null)) setActive(nextOpenSlot(active, next));
+    queue(next);
+  }
+
+  function clear(slot) {
+    if (locked) return;
+    const next = { ...lineup }; delete next[slot];
+    setLineup(next);
+    setActive(slot);
+    queue(next);
+  }
+
+  const saveLabel = { clean: locksAtLabel ?? ' ', saving: 'Saving…', saved: 'Saved', error: 'Not saved' }[save];
+
+  return (
+    <section className="mod mod--play">
+      <div className="play-head">
+
+        {/* Difference 1: a deadline line where the Daily has its clock. Same
+            slot in the layout, same pinned position, no bar and no red. */}
+        <div className="wk-deadline">
+          <div className="wk-deadline-row">
+            <div className="wk-when">{deadlineLine(left)}</div>
+            <div className="clock-note">
+              {filledCount} of 6 filled<br />PPR · drop worst
+            </div>
+          </div>
+          <div className={`wk-save wk-save--${save}`}>{saveLabel}</div>
+        </div>
+
+        <div className="slots">
+          {SLOTS.map((s) => {
+            const id = lineup[s];
+            const p = id ? board.find((b) => b.id === id) : null;
+            return (
+              <button key={s} type="button"
+                className={`slot${active === s ? ' slot--active' : ''}${p ? ' slot--filled' : ''}`}
+                onClick={() => setActive(s)}>
+                <span className="slot-tag">{SLOT_LABEL[s]}</span>
+                <span className="slot-name">{p ? p.name : 'empty'}</span>
+                {p && !locked && (
+                  <span className="slot-x" onClick={(e) => { e.stopPropagation(); clear(s); }}>×</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {err && <p className="err">{err}</p>}
+        {locked && (
+          <p className="wk-locked-note">
+            The week has locked. Your lineup is in as it stands.
+          </p>
+        )}
+
+        {/* Difference 2: no lock button. This line is the whole submit model,
+            stated where the Daily's primary would be so nobody hunts for one. */}
+        {!locked && (
+          <p className="wk-autosave">
+            Every change saves. Whatever is here at kickoff is your entry.
+          </p>
+        )}
+
+        <div className="pool-head">
+          <span>{POOL_LABEL[active]}</span>
+          <span>PPG</span>
+        </div>
+      </div>
+
+      <div className="pool pool--scroll">
+        {rows.map((p) => (
+          <button key={p.id} type="button"
+            className={`plyr${picked.has(p.id) ? ' plyr--used' : ''}`}
+            disabled={picked.has(p.id) || locked}
+            onClick={() => pick(p.id)}>
+            <span className="plyr-pos">{p.pos}</span>
+            <span className="plyr-name">{p.name}</span>
+            <span className="plyr-rest">{restOf(p.resume)}</span>
+            <span className="plyr-ppg">{ppgOf(p.resume)}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
