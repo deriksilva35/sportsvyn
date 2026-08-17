@@ -23,7 +23,9 @@
   --d-cond: var(--font-saira-condensed, 'Saira Condensed'), sans-serif;
   --d-mono: var(--font-jetbrains-mono, 'JetBrains Mono'), ui-monospace, monospace;
 
-  min-height: 100dvh; background: var(--d-ink); color: var(--d-paper);
+  /* min-height lives on .daily-shell now - carrying it here too would stack
+     with the shell's and put the page a header's height over the viewport. */
+  background: var(--d-ink); color: var(--d-paper);
   display: flex; flex-direction: column;
   font-family: var(--d-mono); font-size: 13px; line-height: 1.5;
 }
@@ -325,3 +327,32 @@
   font-family: var(--d-cond); font-weight: 600; font-size: 9px;
   letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
 }
+
+/* ================= WHICH HEADER, AND WHEN =================================
+ * RULING 17 Aug: the site comes back everywhere except the live timed round.
+ * The pitch, the entered receipt and the reveal all carry the global header
+ * and its drawer; only the round itself keeps the minimal daily-head, because
+ * the clock owns that screen and a nav bar on it is an invitation to leave
+ * mid-round.
+ *
+ * DONE IN CSS, WITH NO NEW ISLAND. The playing state is decided client-side -
+ * the board arrives from POST /api/daily/start - so the header cannot be
+ * chosen on the server. Rather than lift that state up or add a second
+ * island, both heads render and :has(.mod--play) picks one. It is the same
+ * mechanism the sticky container already keys on, so there is one source of
+ * truth for "is a round in progress" rather than two that can disagree.
+ *
+ * THE TIMED ROUND'S LAYOUT IS UNCHANGED. During play the global header is
+ * display:none, so it occupies no space and .daily is still the only thing in
+ * the viewport - the 100dvh pin, the single scroll region and the pinned head
+ * all behave exactly as before. */
+.daily-shell { display: flex; flex-direction: column; min-height: 100dvh; background: #0A0A0A; }
+.daily-shell > .daily { flex: 1 1 auto; min-height: 0; }
+
+/* Off by default: outside a round, the global header is the header. */
+.daily-head { display: none; }
+
+.daily-shell:has(.mod--play) .gh { display: none; }
+.daily-shell:has(.mod--play) .daily-head { display: flex; }
+/* The pin measures the shell now that the shell is what fills the viewport. */
+.daily-shell:has(.mod--play) { height: 100dvh; min-height: 0; overflow: hidden; }

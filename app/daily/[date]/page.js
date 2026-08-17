@@ -8,7 +8,7 @@
 
 import { notFound, redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import Wordmark from '@/components/gridiron/Wordmark';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { revealView } from '@/lib/daily/close';
 import { tierClass } from '@/lib/daily/reveal';
@@ -44,11 +44,9 @@ export default async function DailyReveal({ params, searchParams }) {
   if (v.state === 'open') redirect('/daily');
 
   return (
-    <div className="daily" data-surface="ink">
-      <header className="daily-head">
-        <Wordmark href="/" />
-        <span className="tag">The <b>Daily</b> · {date}</span>
-      </header>
+    <div className="daily-shell">
+      <GlobalHeaderServer activeNav="daily" />
+      <div className="daily" data-surface="ink">
       <main className="daily-main">
 
         {/* THE HERO, and the only one on this screen (v1.2 s5). This is the
@@ -174,6 +172,7 @@ export default async function DailyReveal({ params, searchParams }) {
         </section>
 
       </main>
+      </div>
     </div>
   );
 }

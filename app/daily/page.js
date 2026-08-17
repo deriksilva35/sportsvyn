@@ -22,6 +22,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
+import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { todayEt, getDay, entryView } from '@/lib/daily/entries';
@@ -52,7 +53,9 @@ export default async function DailyPage({ searchParams }) {
   // encoded callbackUrl or the Apple round trip loses it.
   if (userId == null) {
     return (
-      <div className="daily" data-surface="ink">
+      <div className="daily-shell">
+        <GlobalHeaderServer activeNav="daily" />
+        <div className="daily" data-surface="ink">
         <header className="daily-head"><Wordmark href="/" /><span className="tag">The <b>Daily</b></span></header>
         <main className="daily-main">
           {/* THE HERO - the app mock's "When are you?" pattern. One hook in
@@ -86,13 +89,16 @@ export default async function DailyPage({ searchParams }) {
             </p>
           </section>
         </main>
+        </div>
       </div>
     );
   }
 
   if (state === 'missing' || state === 'pending') {
     return (
-      <div className="daily" data-surface="ink">
+      <div className="daily-shell">
+        <GlobalHeaderServer activeNav="daily" />
+        <div className="daily" data-surface="ink">
         <header className="daily-head"><Wordmark href="/" /><span className="tag">The <b>Daily</b></span></header>
         <main className="daily-main">
           <section className="mod">
@@ -100,6 +106,7 @@ export default async function DailyPage({ searchParams }) {
             <p className="mod-lede">Not up yet. It lands at midnight ET.</p>
           </section>
         </main>
+        </div>
       </div>
     );
   }
@@ -113,7 +120,9 @@ export default async function DailyPage({ searchParams }) {
   // happened rather than handing back a board that can no longer be submitted.
   if (view.dnf) {
     return (
-      <div className="daily" data-surface="ink">
+      <div className="daily-shell">
+        <GlobalHeaderServer activeNav="daily" />
+        <div className="daily" data-surface="ink">
         <header className="daily-head"><Wordmark href="/" /><span className="tag">The <b>Daily</b></span></header>
         <main className="daily-main">
           <section className="mod mod--dnf">
@@ -125,12 +134,15 @@ export default async function DailyPage({ searchParams }) {
             </p>
           </section>
         </main>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="daily" data-surface="ink">
+    <div className="daily-shell">
+      <GlobalHeaderServer activeNav="daily" />
+      <div className="daily" data-surface="ink">
       <header className="daily-head">
         <Wordmark href="/" />
         <span className="tag">The <b>Daily</b></span>
@@ -138,6 +150,7 @@ export default async function DailyPage({ searchParams }) {
       <main className="daily-main">
         <DailyRoom puzzleDate={date} initialEntry={view.entry} closesAt={String(view.entry?.closesAt ?? '')} />
       </main>
+      </div>
     </div>
   );
 }
