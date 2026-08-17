@@ -18,6 +18,11 @@
 // turns to the EXISTING timerAutoPick engine path - same engine, no new pick
 // logic here. OFF returns control on the next turn.
 
+// THE APP TAB BAR IS ALREADY ABSENT HERE, and not by a flag: a draft room is
+// clock-owned from first render to last, so lib/shell/appTabs.js suppresses
+// /sim/draft/[id] by route. ClockOwned exists for surfaces like /daily where
+// only ONE of several states has a clock. Nothing to do in this file.
+
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { makePick, timerAutoPick, setAutoDraft, fetchPlayerStats, fetchPlayerSummaries } from '@/app/actions/sim';

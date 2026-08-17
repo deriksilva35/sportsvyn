@@ -1,5 +1,7 @@
 import { Saira, Saira_Condensed, Source_Serif_4, JetBrains_Mono, Archivo } from "next/font/google";
 import "./globals.css";
+import AppTabBar from '@/components/shell/AppTabBar';
+import '@/components/shell/apptab.css';
 
 const saira = Saira({
   variable: "--font-saira",
@@ -58,13 +60,27 @@ export const viewport = {
   initialScale: 1,
 };
 
+/**
+ * THE APP TAB BAR GATES ITSELF, ON THE CLIENT, and that is a deliberate
+ * second choice. The obvious version reads resolveShellMode() here and renders
+ * nothing on the web - but resolveShellMode reads cookies(), and cookies() in
+ * the ROOT layout makes every page in the app dynamic. It did: /privacy,
+ * /terms and /signin/check-email all went from prerendered to server-rendered
+ * on the build that tried it, to gate one bar that only the container ever
+ * sees. So the gate moved into the component, which reads the same cookie in
+ * an effect and renders null without it. Web output is unchanged; the static
+ * pages stay static.
+ */
 export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
       className={`${saira.variable} ${sairaCondensed.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${archivo.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <AppTabBar />
+      </body>
     </html>
   );
 }

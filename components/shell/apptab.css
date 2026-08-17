@@ -1,0 +1,43 @@
+/* components/shell/apptab.css - the app container's bottom tab bar.
+   Per docs/design/draftvyn-unified-app-mock-v0_2.html: ink, volt active state,
+   emoji glyphs, safe-area padding. Only ever loaded when the shell marker is
+   present, so nothing here can reach a web browser. */
+
+.apptab {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  display: flex;
+  max-width: 480px; margin: 0 auto;
+  background: #0D0D0D;
+  border-top: 1px solid #232323;
+  padding: 8px 4px 10px;
+  /* THE MOCK'S 10px BOTTOM PADDING IS THE MINIMUM, not the total. On a device
+     with a home indicator the inset is added to it; on one without, env()
+     resolves to 0 and the mock's value is what shows. */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+}
+
+.apptab-i {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 4px 0; text-decoration: none; color: #8A8A86;
+  /* 44px MINIMUM TARGET including the padding above - four tabs across a 320px
+     screen is 80px wide each, so width is never the constraint; height is. */
+  min-height: 44px; justify-content: center;
+}
+.apptab-i .ic { font-size: 18px; line-height: 1; }
+.apptab-i .lb {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 9px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; white-space: nowrap;
+}
+.apptab-i.on { color: #D4FF00; }
+
+/* THE PAGE MUST NOT END UNDER THE BAR. Applied to the body rather than to each
+   surface, because the bar is global and every surface would otherwise have to
+   remember - and the one that forgot would hide its own last row. */
+body:has(.apptab) { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
+
+/* THE CHROME-ISOLATION LAW. Any surface with a clock running owns its screen:
+   a tab bar under a live round is an invitation to leave mid-round, and leaving
+   the Daily mid-round forfeits the attempt. See components/shell/ClockOwned. */
+html[data-clock] .apptab { display: none; }
+html[data-clock] body:has(.apptab) { padding-bottom: 0; }
