@@ -192,19 +192,40 @@ test('the tab bar still fits five tabs at phone width', () => {
   assert.ok(Number(size[1]) <= 9, `label font ${size[1]}px is too large for five tabs`);
 });
 
-test('THE TRACKER TAB IS A HOME, not a trapdoor into an open room', () => {
-  // This asserted a redirect into the open draft. Ruled otherwise: a reader who
-  // taps TRACKER to check the rules, or to look at last week's board, was being
-  // thrown into a live draft with no way to have meant anything else. The room
-  // is still first on the page and one tap away - but it is a card now.
+test('AN ACTIVE TRACKER ROOM SURVIVES A TAB-AWAY - the tab returns you INTO it', () => {
+  // THE DRAFT-NIGHT BUG. I replaced this redirect with a resume card so the tab
+  // could not throw a reader into a live draft. On a phone that reads as losing
+  // the session: tab to the Daily mid-round, come back, and the tracker shows a
+  // setup screen. A commissioner two hours in does not read that as "one tap
+  // away", they read it as gone.
   const s = readFileSync(path.join(REPO, 'app/sim/tracker/page.js'), 'utf8');
-  assert.match(s, /getOpenTrackerDraft/, 'must still look for an open draft');
-  assert.equal(/redirect\(`\/sim\/draft\/\$\{open\.id\}`\)/.test(s), false,
-    'the tab must not bounce into the room');
-  assert.match(s, /Re-enter the room/, 'the open room must lead, as a card');
+  assert.match(s, /getOpenTrackerDraft/, 'must look for an open draft');
+  assert.match(s, /redirect\(`\/sim\/draft\/\$\{open\.id\}`\)/,
+    'an active room must be returned to, not advertised');
+  // The home screen still exists - it is what renders when there is no room.
   assert.match(s, /TrackerStart/, 'setup lives here');
-  assert.match(s, /What the tracker is/, 'and the explanation, which is the one product here that needs one');
-  assert.match(s, /YourDrafts/, 'its own history, under its own setup');
+  assert.match(s, /What the tracker is/, 'and the explanation');
+  assert.match(s, /YourDrafts/, 'and its history');
+});
+
+test('THE ROOM CARRIES THE WAY BACK OUT, which is what lets the tab bring you in', () => {
+  // Without this the room is the trapdoor the resume card was trying to avoid.
+  const s = readFileSync(path.join(REPO, 'components/sim/TrackerRoom.js'), 'utf8');
+  assert.match(s, /href="\/sim\/tracker"/, 'a breadcrumb back to the tracker home');
+  assert.match(s, /Tracker home/);
+});
+
+test('THE ROOM\'S VIEW SWITCHER STACKS ABOVE THE APP BAR, not under it', () => {
+  // .trk-tabs is fixed at bottom:0 z-index 50 and .apptab is the same position
+  // at 60, so the switcher was BURIED - which on a device reads as the room
+  // losing its tabs. The offset applies only when the bar is actually present.
+  const css = readFileSync(path.join(REPO, 'components/shell/apptab.css'), 'utf8');
+  assert.match(css, /html\[data-appbar\] \.trk-tabs \{ bottom: var\(--sv-appbar-h\)/,
+    'the room bar must sit above the app bar');
+  assert.match(css, /--sv-appbar-h/, 'the app bar must publish its own height');
+  const bar = readFileSync(path.join(REPO, 'components/shell/AppTabBar.js'), 'utf8');
+  assert.match(bar, /setAttribute\('data-appbar'/, 'declared by the bar, not assumed by the room');
+  assert.match(bar, /removeAttribute\('data-appbar'/, 'and cleared, or the web room offsets for nothing');
 });
 
 test('THE PRACTICE PAGE NO LONGER STARTS A TRACKER - two flows, two homes', () => {

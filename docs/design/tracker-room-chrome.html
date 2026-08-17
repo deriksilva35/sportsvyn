@@ -1,3 +1,128 @@
+<!doctype html><meta charset="utf-8"><title>Tracker room chrome</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>/* components/shell/apptab.css - the app container's bottom tab bar.
+   Per docs/design/draftvyn-unified-app-mock-v0_2.html: ink, volt active state,
+   emoji glyphs, safe-area padding. Only ever loaded when the shell marker is
+   present, so nothing here can reach a web browser. */
+
+/* THE BAR'S OWN HEIGHT, published so a room can sit above it rather than under
+   it. 44px of target + 8px top padding + 10px bottom = 62px, plus the inset. */
+:root { --sv-appbar-h: calc(62px + env(safe-area-inset-bottom)); }
+
+.apptab {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  display: flex;
+  max-width: 480px; margin: 0 auto;
+  background: #0D0D0D;
+  border-top: 1px solid #232323;
+  padding: 8px 4px 10px;
+  /* THE MOCK'S 10px BOTTOM PADDING IS THE MINIMUM, not the total. On a device
+     with a home indicator the inset is added to it; on one without, env()
+     resolves to 0 and the mock's value is what shows. */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+}
+
+.apptab-i {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 4px 0; text-decoration: none; color: #8A8A86;
+  /* 44px MINIMUM TARGET including the padding above - four tabs across a 320px
+     screen is 80px wide each, so width is never the constraint; height is. */
+  min-height: 44px; justify-content: center;
+}
+.apptab-i .ic { font-size: 18px; line-height: 1; }
+.apptab-i .lb {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 9px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; white-space: nowrap;
+}
+.apptab-i.on { color: #D4FF00; }
+
+/* THE PAGE MUST NOT END UNDER THE BAR. Applied to the body rather than to each
+   surface, because the bar is global and every surface would otherwise have to
+   remember - and the one that forgot would hide its own last row. */
+body:has(.apptab) { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
+
+/* ===========================================================================
+   A ROOM'S OWN BOTTOM BAR STACKS ABOVE THE APP BAR, it does not fight it.
+   ---------------------------------------------------------------------------
+   THE BUG THIS FIXES: the tracker room's view switcher (.trk-tabs) is
+   position:fixed at bottom:0 with z-index 50, and .apptab is the same position
+   at z-index 60. The switcher was never removed - it was BURIED. On a real
+   phone that reads as "the room lost its tabs", which is exactly what it looked
+   like.
+
+   STACKED RATHER THAN MOVED INTO THE HEAD, and that was a judgement call. Two
+   bars cost ~110px of a 390px-wide phone's height, which is real. But
+   AVAILABLE / BOARD / MY TEAM is the control a commissioner hits every thirty
+   seconds for two hours, and the head already carries the on-clock banner and
+   the last-pick strip. Thumb reach beats vertical space for a control used that
+   often; the pool scrolls underneath both bars.
+
+   The offset applies only when the app bar is actually present - AppTabBar
+   stamps data-appbar on <html> - so the web room is untouched.
+   =========================================================================== */
+html[data-appbar] .trk-tabs { bottom: var(--sv-appbar-h); z-index: 55; }
+/* And the page must clear BOTH bars, not just one. */
+html[data-appbar] body:has(.apptab) .trk-in { padding-bottom: var(--sv-appbar-h); }
+
+/* THE CHROME-ISOLATION LAW. Any surface with a clock running owns its screen:
+   a tab bar under a live round is an invitation to leave mid-round, and leaving
+   the Daily mid-round forfeits the attempt. See components/shell/ClockOwned. */
+html[data-clock] .apptab { display: none; }
+html[data-clock] body:has(.apptab) { padding-bottom: 0; }
+
+/* ---------------------------------------------------------------------------
+   THE APP HEADER. Rendered instead of the web header when the shell marker is
+   present - see components/GlobalHeader.js for why replaced rather than
+   trimmed. The wordmark, centred, and nothing else.
+   --------------------------------------------------------------------------- */
+.gh--app {
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px 16px;
+  /* THE STATUS BAR IS ABOVE THIS. Without the inset the wordmark sits under the
+     clock and the notch on every device that has one. */
+  padding-top: calc(10px + env(safe-area-inset-top));
+  background: #0A0A0A; border-bottom: 1px solid #232323;
+  /* Drives the lockup height in components/shell/AppHeader. The DRAFTVYN
+     export is mostly padding - its ink is 152 of 300 rows against the Sportsvyn
+     mark's 285 of 336 - so a cap height matched to the web header's read
+     undersized on a phone. 2.12em puts the caps at 15.0px here. */
+  font-size: 17px;
+}
+.gh--app .gh-app-mark { display: block; }
+
+/* ---------------------------------------------------------------------------
+   YOUR DRAFTS - the history rows on PROFILE and the Tracker tab.
+   --------------------------------------------------------------------------- */
+.yd-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 2px; border-bottom: 1px solid #232323;
+  text-decoration: none; color: inherit;
+}
+.yd-row:last-child { border-bottom: 0; }
+.yd-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.yd-label { font-weight: 700; font-size: 14px; }
+.yd-meta { font-size: 11px; color: #8A8A86; font-variant-numeric: tabular-nums; }
+.yd-grade {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-weight: 700; font-size: 13px; color: #D4FF00;
+}
+.yd-act {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #8A8A86;
+  white-space: nowrap;
+}
+
+/* THE BACK BREADCRUMB, the reveal's pattern (.crumb in daily.css) made
+   available to the sim surfaces, which do not load that stylesheet. The tab bar
+   switches SECTIONS; this walks back within one. */
+.appcrumb {
+  display: inline-block; padding: 12px 2px 10px;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: #8A8A86; text-decoration: none;
+}
+.appcrumb:hover { color: #F5F5F2; }
 /* components/sim/tracker.css — the tracker room, per the LOCKED mock
    docs/design/draftvyn-tracker-mock-v1.html.
 
@@ -273,3 +398,31 @@
 /* The room's way back to the tracker home. Sits in the room head beside the
    mark; END TRACKING remains the only exit that forgets the room. */
 .trk-crumb { padding: 4px 2px; font-size: 10px; letter-spacing: .1em; }
+
+body{margin:0;background:#161616;color:#E9E9E9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.wrap{max-width:1400px;margin:0 auto;padding:28px 20px 60px}
+h1{font-size:26px;margin:0 0 4px}.lede{color:#9A9A9A;font-size:13px;margin:0 0 26px;line-height:1.6;max-width:900px}.lede b{color:#D8FF3E}
+.caps{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:22px;align-items:start}
+.cap h2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:#D8FF3E;margin:0 0 4px}
+.cap .note{font-size:12px;color:#8A8A8A;margin:0 0 10px;line-height:1.5}
+.frame{width:390px;max-width:100%;height:560px;border:1px solid #2E2E2E;border-radius:14px;overflow:hidden;background:#0A0A0A}
+.frame.rel{position:relative}
+.frame .apptab{position:absolute}
+.frame.appbar .trk-tabs{position:absolute;bottom:var(--sv-appbar-h);z-index:55}
+.frame:not(.appbar) .trk-tabs{position:absolute;bottom:0}
+.frame .trk-in{overflow:auto;height:100%}
+</style>
+<div class="wrap"><h1>Tracker room — the switcher, and where it sits</h1>
+<p class="lede">Rendered from the real stylesheets. The switcher was never removed &mdash;
+<b>.trk-tabs</b> is fixed at bottom:0 with z-index 50 and <b>.apptab</b> is the same position at 60,
+so the app bar covered it. It stacks above now, offset by the bar's published height.</p>
+<div class="caps"><section class="cap"><h2>BEFORE — the bug</h2><p class="note">The switcher is fixed at bottom:0 z-50 and the app bar at z-60. It was never removed; it was buried. On a phone: "the room lost its tabs."</p>
+<div class="frame rel"><header class="gh gh--app" style="padding-top:10px"><span class="gh-app-mark"><img src="/brand/draftvynwordmarkwhite1500x300transparent.png" alt="DRAFTVYN" style="height:2.12em;width:auto;display:block"></span></header><header style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #232323">
+<span style="font-family:ui-monospace;font-size:10px;letter-spacing:.1em;color:#D4FF00">TRACKER</span>
+<a class="appcrumb trk-crumb" style="margin-left:auto">&larr; Tracker home</a></header><div class="trk-in" style="padding-bottom:0"><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 1</span><span style="color:#8A8A86">RB · ADP 3.0</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 2</span><span style="color:#8A8A86">RB · ADP 6.1</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 3</span><span style="color:#8A8A86">RB · ADP 9.2</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 4</span><span style="color:#8A8A86">RB · ADP 12.3</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 5</span><span style="color:#8A8A86">RB · ADP 15.4</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 6</span><span style="color:#8A8A86">RB · ADP 18.5</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 7</span><span style="color:#8A8A86">RB · ADP 21.6</span></div></div><div style="position:absolute;left:0;right:0;bottom:0"><nav class="apptab"><a class="apptab-i"><span class="ic">🎮</span><span class="lb">Games</span></a><a class="apptab-i"><span class="ic">🎲</span><span class="lb">Practice</span></a><a class="apptab-i on"><span class="ic">📡</span><span class="lb">Tracker</span></a><a class="apptab-i"><span class="ic">👤</span><span class="lb">Profile</span></a></nav></div></div></section><section class="cap"><h2>AFTER — stacked</h2><p class="note">Switcher above, app bar below. Chosen over moving it to the head: AVAILABLE/BOARD/MY TEAM is hit every thirty seconds for two hours, and thumb reach beats vertical space for a control used that often.</p>
+<div class="frame rel appbar"><header class="gh gh--app" style="padding-top:10px"><span class="gh-app-mark"><img src="/brand/draftvynwordmarkwhite1500x300transparent.png" alt="DRAFTVYN" style="height:2.12em;width:auto;display:block"></span></header><header style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #232323">
+<span style="font-family:ui-monospace;font-size:10px;letter-spacing:.1em;color:#D4FF00">TRACKER</span>
+<a class="appcrumb trk-crumb" style="margin-left:auto">&larr; Tracker home</a></header><div class="trk-in"><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 1</span><span style="color:#8A8A86">RB · ADP 3.0</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 2</span><span style="color:#8A8A86">RB · ADP 6.1</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 3</span><span style="color:#8A8A86">RB · ADP 9.2</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 4</span><span style="color:#8A8A86">RB · ADP 12.3</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 5</span><span style="color:#8A8A86">RB · ADP 15.4</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 6</span><span style="color:#8A8A86">RB · ADP 18.5</span></div><div style="display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #232323;font-size:13px"><span>Player 7</span><span style="color:#8A8A86">RB · ADP 21.6</span></div></div><div class="trk-tabs"><button class="on">AVAILABLE</button><button class="">BOARD</button><button class="">MY TEAM</button></div><nav class="apptab"><a class="apptab-i"><span class="ic">🎮</span><span class="lb">Games</span></a><a class="apptab-i"><span class="ic">🎲</span><span class="lb">Practice</span></a><a class="apptab-i on"><span class="ic">📡</span><span class="lb">Tracker</span></a><a class="apptab-i"><span class="ic">👤</span><span class="lb">Profile</span></a></nav></div></section><section class="cap"><h2>THE TAB LIGHTS TRACKER</h2><p class="note">The room declares its section, so a room entered from TRACKER stays in TRACKER — the route alone says /sim.</p>
+<div class="frame rel appbar"><header class="gh gh--app" style="padding-top:10px"><span class="gh-app-mark"><img src="/brand/draftvynwordmarkwhite1500x300transparent.png" alt="DRAFTVYN" style="height:2.12em;width:auto;display:block"></span></header><header style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #232323">
+<span style="font-family:ui-monospace;font-size:10px;letter-spacing:.1em;color:#D4FF00">TRACKER</span>
+<a class="appcrumb trk-crumb" style="margin-left:auto">&larr; Tracker home</a></header><div class="trk-in" style="min-height:120px"></div><div class="trk-tabs"><button class="">AVAILABLE</button><button class="on">BOARD</button><button class="">MY TEAM</button></div><nav class="apptab"><a class="apptab-i"><span class="ic">🎮</span><span class="lb">Games</span></a><a class="apptab-i"><span class="ic">🎲</span><span class="lb">Practice</span></a><a class="apptab-i on"><span class="ic">📡</span><span class="lb">Tracker</span></a><a class="apptab-i"><span class="ic">👤</span><span class="lb">Profile</span></a></nav></div></section></div></div>

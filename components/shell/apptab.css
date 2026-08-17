@@ -3,6 +3,10 @@
    emoji glyphs, safe-area padding. Only ever loaded when the shell marker is
    present, so nothing here can reach a web browser. */
 
+/* THE BAR'S OWN HEIGHT, published so a room can sit above it rather than under
+   it. 44px of target + 8px top padding + 10px bottom = 62px, plus the inset. */
+:root { --sv-appbar-h: calc(62px + env(safe-area-inset-bottom)); }
+
 .apptab {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
   display: flex;
@@ -35,6 +39,29 @@
    surface, because the bar is global and every surface would otherwise have to
    remember - and the one that forgot would hide its own last row. */
 body:has(.apptab) { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
+
+/* ===========================================================================
+   A ROOM'S OWN BOTTOM BAR STACKS ABOVE THE APP BAR, it does not fight it.
+   ---------------------------------------------------------------------------
+   THE BUG THIS FIXES: the tracker room's view switcher (.trk-tabs) is
+   position:fixed at bottom:0 with z-index 50, and .apptab is the same position
+   at z-index 60. The switcher was never removed - it was BURIED. On a real
+   phone that reads as "the room lost its tabs", which is exactly what it looked
+   like.
+
+   STACKED RATHER THAN MOVED INTO THE HEAD, and that was a judgement call. Two
+   bars cost ~110px of a 390px-wide phone's height, which is real. But
+   AVAILABLE / BOARD / MY TEAM is the control a commissioner hits every thirty
+   seconds for two hours, and the head already carries the on-clock banner and
+   the last-pick strip. Thumb reach beats vertical space for a control used that
+   often; the pool scrolls underneath both bars.
+
+   The offset applies only when the app bar is actually present - AppTabBar
+   stamps data-appbar on <html> - so the web room is untouched.
+   =========================================================================== */
+html[data-appbar] .trk-tabs { bottom: var(--sv-appbar-h); z-index: 55; }
+/* And the page must clear BOTH bars, not just one. */
+html[data-appbar] body:has(.apptab) .trk-in { padding-bottom: var(--sv-appbar-h); }
 
 /* THE CHROME-ISOLATION LAW. Any surface with a clock running owns its screen:
    a tab bar under a live round is an invitation to leave mid-round, and leaving

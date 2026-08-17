@@ -260,6 +260,12 @@ export default function TrackerRoom({
               header above supplies the mark in the shell; on the web this room
               keeps its own, because there is no app header there. */}
           <HideInShell><Wordmark href="/sim" /></HideInShell>
+          {/* THE WAY BACK OUT, and the reason the tab is allowed to bring you
+              straight in. The rules, the setup and the history live on the
+              tracker home; without this the room would be the trapdoor the
+              resume card was trying to avoid. END TRACKING is still the only
+              exit that FORGETS the room - this one just leaves it running. */}
+          <a className="appcrumb trk-crumb" href="/sim/tracker">&larr; Tracker home</a>
           <span className="mode">TRACKER</span>
           <span className="meta">
             {complete ? `COMPLETE · ${total} PICKS` : `RD ${round} · PICK ${currentOverall}/${total}`}

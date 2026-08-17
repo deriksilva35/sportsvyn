@@ -47,14 +47,28 @@ export default async function TrackerTab({ searchParams }) {
   const isShell = await resolveShellMode(params);
   if (userId == null) redirect(shellSigninHref('/sim/tracker', isShell));
 
-  // A CARD, NOT A REDIRECT. This used to bounce straight into an open room,
-  // which made the tab a trapdoor rather than a destination: a reader who
-  // tapped TRACKER to check the rules, or to look at last week's board, was
-  // thrown into a live draft with no way to have meant anything else. The room
-  // is still one tap away and still the first thing on the page - but it is now
-  // a choice. Resume still outranks the entitlement check either way: a draft
-  // in progress belongs to the user whatever their membership looks like now.
+  // BACK INTO THE ROOM, and my card was the wrong fix for the trapdoor.
+  //
+  // I replaced this redirect with a resume card so the tab could not throw a
+  // reader into a live draft. On a phone that reads as LOSING THE SESSION: tab
+  // to the Daily mid-round, come back, and the tracker shows a setup screen.
+  // A commissioner two hours into draft night does not read that as "your room
+  // is one tap away", they read it as gone.
+  //
+  // AN ACTIVE ROOM PERSISTS UNTIL IT IS EXPLICITLY ENDED. The tab returns you
+  // into it; the home screen below renders only when there is none. The
+  // trapdoor is solved the other way round instead - the room carries a
+  // "Tracker home" breadcrumb, so the rules and the setup stay reachable FROM
+  // the room, and END TRACKING is the only exit that forgets it.
+  //
+  // The session was never client-only: getOpenTrackerDraft reads a drafts row
+  // with status 'in_progress', so it already survives an app kill, a dead
+  // battery and a two-hour draft. The bug was this page declining to use it.
+  //
+  // Resume outranks the entitlement check, as before: a draft in progress
+  // belongs to the user whatever their membership looks like right now.
   const open = await getOpenTrackerDraft(userId);
+  if (open) redirect(`/sim/draft/${open.id}`);
 
   const [member, historyRows] = await Promise.all([
     isMember(userId),
@@ -83,20 +97,6 @@ export default async function TrackerTab({ searchParams }) {
 
       <main className="sim-wrap">
         <GetTheAppBanner shell={isShell} />
-
-        {/* THE OPEN ROOM LEADS. A draft you are physically in the middle of, at
-            a table, with people waiting, outranks every other thing on this
-            page. Absent entirely when there is none. */}
-        {open && (
-          <section className="sim-mod trk-resume">
-            <div className="sim-kicker">You are tracking a draft</div>
-            <p className="trk-lede">
-              Room {open.id} is still open. Pick up where you left off &mdash; nothing
-              expires and nothing is on a clock.
-            </p>
-            <a className="btn btn--volt" href={`/sim/draft/${open.id}`}>Re-enter the room &rarr;</a>
-          </section>
-        )}
 
         {/* WHAT THIS IS, before what it costs. The tracker is the one product
             here that has to be explained rather than recognised: "draft sim" is

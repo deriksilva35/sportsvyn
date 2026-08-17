@@ -19,7 +19,7 @@
  * prints it and asks the path which tab is lit.
  */
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { APP_TABS, activeTabFor, routeSuppressed, isShellClient } from '@/lib/shell/appTabs';
@@ -53,6 +53,18 @@ export default function AppTabBar() {
   const pathname = usePathname() || '';
   const inShell = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const declared = useSyncExternalStore(subscribeTab, getTab, getServerTab);
+
+  // STAMPED SO ROOMS CAN STACK ABOVE IT. A room's own bottom bar is fixed at
+  // bottom:0 too, and without this it renders underneath - which is how the
+  // tracker room appeared to lose its view switcher. Declared by the bar itself
+  // rather than assumed by each room, so a room cannot offset for a bar that is
+  // not there.
+  useEffect(() => {
+    const el = document.documentElement;
+    if (!inShell) { el.removeAttribute('data-appbar'); return undefined; }
+    el.setAttribute('data-appbar', '1');
+    return () => el.removeAttribute('data-appbar');
+  }, [inShell]);
 
   if (!inShell) return null;
   if (routeSuppressed(pathname)) return null;
