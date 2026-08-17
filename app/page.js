@@ -30,9 +30,11 @@ import { getFollowedTeamIds } from '@/lib/follows';
 import { auth } from '@/auth';
 import DailyModule from '@/components/home/DailyModule';
 import WeeklyModule from '@/components/home/WeeklyModule';
+import DraftModule from '@/components/home/DraftModule';
 import YesterdayStrip from '@/components/home/YesterdayStrip';
 import { getDailyHome, getYesterday } from '@/lib/daily/entries';
 import { getWeeklyHome } from '@/lib/weekly/entries';
+import { getDraftHome } from '@/lib/draft/entry';
 import SimPromoCard from '@/components/home/SimPromoCard';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import MovementCard from '@/components/fantasy/MovementCard';
@@ -300,7 +302,7 @@ export default async function HomePage() {
   }).format(now);
 
   const [todaysReads, followedSet, movement, nflBoard, cfbBoard, slate, dailyHome, yesterday,
-    weeklyHome] = await Promise.all([
+    weeklyHome, draftHome] = await Promise.all([
     getTodaysReads({ ptDay, limit: 4, leagueSlugs: FOOTBALL_READS_SLUGS }),
     getFollowedTeamIds(userId),
     // Same call the /nfl entry card makes. Null rather than a thrown page if
@@ -325,6 +327,8 @@ export default async function HomePage() {
     // also the correct answer before the first board exists - which is what PROD
     // returns today. A missing contests table renders no module, not a 500.
     getWeeklyHome(userId).catch(() => null),
+    // The Draft's own state. Same posture as every other unit on this page.
+    getDraftHome(userId).catch(() => null),
   ]);
 
 
@@ -367,6 +371,12 @@ export default async function HomePage() {
               Renders nothing at all until a board exists, which is every day
               before the first Tuesday of the season. */}
           <WeeklyModule view={weeklyHome} isShell={isShell} signedIn={userId != null} />
+
+          {/* The Draft sits last of the three, because it is the one with the
+              longest commitment: the Daily is three minutes, the Weekly is six
+              taps, this is eight rounds on a clock. Lead with what costs least
+              to start. Renders nothing until a room exists. */}
+          <DraftModule view={draftHome} isShell={isShell} signedIn={userId != null} />
 
           {/* The homepage is the publication's door; /games is the arcade's.
               One quiet link between them rather than a second lobby here. */}

@@ -1,0 +1,2034 @@
+<!doctype html><meta charset="utf-8"><title>The Draft — every state</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+/* app/daily/daily.css - The Daily. Ink ground; the game is an instrument.
+ *
+ * v1.0.1 POLISH PASS, built to Design Tokens v1.2 - The Module Grammar, with
+ * docs/design/draftvyn-unified-app-mock-v0_1.html as the reference
+ * implementation. v1.2 is the carpentry layer over v1.1's materials: every
+ * screen is a stack of modules, every module declares its job with an eyebrow
+ * tag, numbers are the texture, and each screen gets AT MOST ONE hero.
+ *
+ * TOKEN NOTE: --line is #2A2A2A, from the app mock. The gridiron game-page mock
+ * carries #232323 under the same name; the app mock wins, per v1.2 §10.
+ *
+ * NO EMOJI on these four surfaces. v1.2 §7 counts emoji glyphs among what makes
+ * the app feel alive, and the mock uses them - but only in chrome: nav, sport
+ * pills, the streak. Derik's ruling for the game itself is typographic, and
+ * nothing here is chrome.
+ */
+
+/* THE WEEKLY SHARES THIS SCOPE ON PURPOSE. Its builder is the Daily's draft UI
+   with the clock removed, and its reveal is the Daily's reveal with a different
+   hero - so it inherits the tokens and every component class below rather than
+   restating them. A divergence between the two surfaces should have to be
+   written down, and this makes writing one the harder path. */
+.daily, .weekly {
+  --d-ink: #0A0A0A; --d-ink-2: #141414; --d-ink-3: #1E1E1E;
+  --d-line: #2A2A2A; --d-volt: #D4FF00; --d-paper: #F5F5F2;
+  --d-jade: #2A8A4F; --d-terra: #B8410F; --d-live: #E63946; --d-mut: #8A8A85;
+  --d-disp: var(--font-saira, 'Saira'), sans-serif;
+  --d-cond: var(--font-saira-condensed, 'Saira Condensed'), sans-serif;
+  --d-mono: var(--font-jetbrains-mono, 'JetBrains Mono'), ui-monospace, monospace;
+
+  /* min-height lives on .daily-shell now - carrying it here too would stack
+     with the shell's and put the page a header's height over the viewport. */
+  background: var(--d-ink); color: var(--d-paper);
+  display: flex; flex-direction: column;
+  font-family: var(--d-mono); font-size: 13px; line-height: 1.5;
+}
+.daily-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid var(--d-line);
+}
+.daily-head .tag {
+  font-family: var(--d-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+}
+.daily-head .tag b { color: var(--d-paper); font-weight: 600; }
+.daily-main { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: 14px 14px 56px; }
+
+/* ---- §1 THE MODULE ------------------------------------------------------
+ * One module = one job. Ground one step lighter than the surface, 1px --line,
+ * radius 12, padding 14, 12px stack gap. A module never contains another. */
+.mod {
+  background: var(--d-ink-2); border: 1px solid var(--d-line);
+  border-radius: 12px; padding: 14px; margin-bottom: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+/* EYEBROW REQUIRED. Without one it is the hero, or it is wrong (§1). */
+.eyebrow, .mod-sub {
+  font-family: var(--d-cond); font-weight: 600; font-size: 11px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--d-mut);
+  margin: 0;
+}
+.eyebrow .ctx { color: var(--d-mut); opacity: .75; }
+.mod-title {
+  font-family: var(--d-disp); font-style: italic; font-weight: 900;
+  text-transform: uppercase; font-size: 26px; line-height: 1.05;
+  letter-spacing: -.04em; margin: 0;
+}
+.mod-lede { margin: 0; color: #CFCFC9; font-size: 12px; line-height: 1.55; }
+.mod-foot, .muted { margin: 0; color: var(--d-mut); font-size: 11px; }
+.err { color: var(--d-live); font-size: 12px; margin: 0; }
+
+/* ---- §4 BUTTONS - TWO VOICES ONLY --------------------------------------
+ * Primary: one per screen, maximum. Ghost: everything else. No third style. */
+.btn--volt {
+  display: block; width: 100%; text-align: center;
+  font-family: var(--d-disp); font-style: italic; font-weight: 900;
+  font-size: 19px; letter-spacing: -.02em;
+  background: var(--d-volt); color: var(--d-ink);
+  border: none; border-radius: 10px; padding: 13px; cursor: pointer;
+  text-decoration: none;
+}
+.btn--volt:disabled { opacity: .45; cursor: default; }
+.btn--done { background: var(--d-ink-3); color: var(--d-jade); border: 1px solid var(--d-jade); font-size: 15px; }
+.btn {
+  display: block; width: 100%; text-align: center;
+  font-family: var(--d-cond); font-weight: 600; font-size: 12px;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: var(--d-ink-3); color: var(--d-paper);
+  border: 1px solid var(--d-line); border-radius: 9px; padding: 11px;
+  cursor: pointer; text-decoration: none;
+}
+.btn:disabled { opacity: .45; cursor: default; }
+
+/* ---- §5 THE HERO - one per screen, if any ------------------------------- */
+.hero {
+  background: linear-gradient(160deg, #1a2000 0%, var(--d-ink-2) 55%);
+  border: 1px solid #3a4400; border-radius: 14px;
+  padding: 18px 16px; margin-bottom: 12px;
+}
+.hero-eyebrow {
+  font-family: var(--d-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+  font-variant-numeric: tabular-nums;
+}
+.hero-q {
+  font-family: var(--d-disp); font-style: italic; font-weight: 900;
+  font-size: 30px; letter-spacing: -.04em; line-height: 1.05; margin: 8px 0 4px;
+}
+.hero-line { font-size: 12px; color: var(--d-mut); margin: 0 0 12px; line-height: 1.5; }
+.hero-line b { color: var(--d-volt); font-variant-numeric: tabular-nums; font-weight: 700; }
+
+/* ---- §2 ROWS - THE DATA VOICE ------------------------------------------
+ * Rows, not tables and not bullet lists. Label left, value right, value in
+ * mono 700 tabular ALWAYS. Hairline separators, none on the last. */
+.row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 6px 0; border-bottom: 1px solid var(--d-line);
+  font-variant-numeric: tabular-nums;
+}
+.row:last-child { border-bottom: none; }
+.row .r { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row .r--volt { color: var(--d-volt); }
+.row .r--mut { color: var(--d-mut); }
+.row-label { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.row-slot {
+  font-family: var(--d-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+}
+.row-name { overflow: hidden; text-overflow: ellipsis; }
+.row-line { font-size: 11px; color: var(--d-mut); font-variant-numeric: tabular-nums; }
+/* DROP-WORST: struck and 45%. Excluded, not deleted - the reader sees the math. */
+.row--dropped { opacity: .45; }
+.row--dropped .row-name, .row--dropped .r { text-decoration: line-through; }
+/* Decoration propagates to in-flow descendants and a child cannot cancel it;
+   it does NOT cross into an atomic inline-level box, so the stat line escapes. */
+.row--dropped .row-line { display: inline-block; text-decoration: none; }
+
+/* THE LONG LIST. v1.2 s1 permits one designated module to scroll internally,
+   and the whole board is it - but only where a nested scroller is pleasant.
+   AT 390px IT RUNS AS THE PAGE. A 420px box inside a scrolling page shows ten
+   of sixty-four rows and traps the thumb: overscroll-behavior:contain stops
+   the page continuing when the box bottoms out, so the reader has to lift and
+   re-place their finger outside it. The reveal is a leisurely read with no
+   clock on it; a long page costs nothing there, and scroll-trapping costs
+   real irritation. On a pointer device the wheel makes the cap a benefit
+   rather than a tax - it keeps the methodology module reachable - so the cap
+   comes back with the width. */
+.list--long { max-height: none; }
+@media (min-width: 640px) {
+  .list--long { max-height: 460px; overflow-y: auto; overscroll-behavior: contain; }
+}
+
+/* ---- §3 PILLS AND BADGES ------------------------------------------------ */
+.tierbadge {
+  display: inline-block; font-family: var(--d-cond); font-weight: 600;
+  font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  border: 1px solid currentColor; border-radius: 99px; padding: 3px 10px;
+}
+/* Colour carries rank. THE LADDER IS volt / jade / paper / muted / terra,
+   ratified 16 Aug: v1.2 s3 named four colours for five tiers and STARTER's
+   muted rung was the open question. It is spec now, not an interpolation. */
+.tier--hof { color: var(--d-volt); }
+.tier--mvp { color: var(--d-jade); }
+.tier--pb  { color: var(--d-paper); }
+.tier--st  { color: var(--d-mut); }
+.tier--ps  { color: var(--d-terra); }
+
+.chiprow { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  font-family: var(--d-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--d-mut);
+  border: 1px solid var(--d-line); border-radius: 99px; padding: 4px 10px;
+}
+.chip--on { color: var(--d-jade); border-color: currentColor; }
+.chip--off { color: var(--d-terra); border-color: currentColor; }
+
+/* ============================ THE DRAFT SCREEN ============================
+ * ONE SCROLL CONTAINER, AND ONLY THE POOL MOVES - unchanged by this pass. At
+ * QB twelve rows fit and the page did not overflow; at WR twenty-four rows
+ * scrolled the clock and the Lock button off screen. :has() scopes it to the
+ * playing state. min-height:0 on every flex ancestor is load-bearing: a flex
+ * item defaults to min-height:auto and would grow the page instead of
+ * scrolling inside it. */
+.daily:has(.mod--play) { height: 100dvh; min-height: 0; overflow: hidden; }
+.daily:has(.mod--play) .daily-main { display: flex; min-height: 0; padding-bottom: 12px; }
+.mod--play {
+  flex: 1; width: 100%; min-height: 0; display: flex; flex-direction: column; gap: 10px;
+  background: none; border: 0; border-radius: 0; padding: 0; margin: 0;
+}
+.play-head { flex: 0 0 auto; display: flex; flex-direction: column; gap: 10px; }
+
+/* THE CLOCK IS THE HERO of this screen, and the bar belongs to it - one
+   container, one border, one radius, so they read as a single instrument
+   rather than a number floating over a rule. Volt is legitimate here under
+   §2's "volt reserved for THE number on the screen": on the draft screen the
+   clock IS that number, and it is the only volt number present. */
+.clock-inst {
+  background: var(--d-ink-2); border: 1px solid var(--d-line);
+  border-radius: 12px; padding: 10px 14px 12px;
+}
+.clock-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.clock {
+  font-family: var(--d-disp); font-style: italic; font-weight: 900;
+  font-size: 46px; line-height: 1; letter-spacing: -.05em;
+  color: var(--d-volt); font-variant-numeric: tabular-nums;
+}
+.clock-note {
+  font-family: var(--d-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+  text-align: right;
+}
+.clock-bar { height: 4px; background: var(--d-ink-3); border-radius: 2px; overflow: hidden; margin-top: 9px; }
+.clock-bar i { display: block; height: 100%; background: var(--d-volt); transition: width .25s linear; }
+/* WARN AT 20s, live-red on both the number and its bar. */
+.clock-inst--low .clock { color: var(--d-live); }
+.clock-inst--low .clock-bar i { background: var(--d-live); }
+
+/* SLOTS AS SELECTOR PILLS (§3). Active takes the mock's .sp.on - volt fill,
+   ink text - because it is the control deciding which pool you are looking at.
+   A filled slot keeps a volt BORDER, so "done" and "looking at" never collapse
+   into the same signal. Fills are for active selectors only (§3). */
+.slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.slot {
+  position: relative; display: flex; flex-direction: column; gap: 1px; align-items: flex-start;
+  padding: 6px 11px; border: 1px solid var(--d-line); border-radius: 99px;
+  background: var(--d-ink-3); color: inherit; font: inherit; text-align: left;
+  cursor: pointer; min-width: 0;
+}
+.slot-tag {
+  font-family: var(--d-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+}
+.slot-name {
+  font-size: 12px; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; max-width: 100%; color: var(--d-paper);
+}
+.slot:not(.slot--filled) .slot-name { color: #55554F; }
+.slot--filled { border-color: var(--d-volt); }
+.slot--active { background: var(--d-volt); border-color: var(--d-volt); }
+.slot--active .slot-tag { color: rgba(10, 10, 10, .7); }
+.slot--active .slot-name { color: var(--d-ink); }
+.slot--active:not(.slot--filled) .slot-name { color: rgba(10, 10, 10, .5); }
+.slot-x { position: absolute; top: 2px; right: 9px; color: var(--d-mut); font-size: 14px; line-height: 1; }
+.slot--active .slot-x { color: rgba(10, 10, 10, .6); }
+
+/* THE POOL - one line per player, and the line height is the whole design.
+ *
+ * TWO LINES CANNOT REACH THE DENSITY TARGET; that is arithmetic, not taste.
+ * Even at 4px padding and 1.15 line-height two legible lines floor near 42px
+ * pitch. The resume on the name's line gets ~30px - 1.83x the rows per screen
+ * - and this pass does not spend that back.
+ *
+ * THE NAME TRUNCATES, THE NUMBER NEVER DOES. PPG is the column being scanned,
+ * so it is fixed-width, right-aligned and tabular, and the name gives way
+ * first. The split is PRESENTATIONAL: DailyRoom slices the resume string it was
+ * already sent, so no field was added to the wire to make this work. */
+.pool--scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.pool { display: flex; flex-direction: column; }
+.plyr {
+  display: flex; align-items: baseline; gap: 8px; line-height: 1.2;
+  padding: 6px 4px; border: 0; border-bottom: 1px solid var(--d-line);
+  background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.plyr:last-child { border-bottom: none; }
+.plyr--used { opacity: .35; }
+.plyr-pos {
+  flex: 0 0 22px; font-family: var(--d-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: .1em; color: var(--d-mut);
+}
+.plyr-name {
+  flex: 1 1 auto; min-width: 0; font-size: 13px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.plyr-rest {
+  flex: 0 1 auto; min-width: 0; font-size: 10px; color: var(--d-mut);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right;
+}
+.plyr-ppg {
+  flex: 0 0 60px; text-align: right; font-size: 12px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================== THE RECEIPT =============================== */
+.score-row { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.score-big {
+  font-family: var(--d-mono); font-weight: 700; font-size: 46px; line-height: .92;
+  letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+}
+.score-meta { display: flex; flex-direction: column; gap: 5px; padding-bottom: 4px; }
+
+/* ============================== THE REVEAL ================================ */
+.dh-answer {
+  font-family: var(--d-disp); font-style: italic; font-weight: 900;
+  font-size: 38px; line-height: 1; letter-spacing: -.05em; margin: 8px 0 2px;
+}
+.dh-answer .wk { color: var(--d-mut); }
+/* The score/perfect pair with the tier badge between them. */
+.pair { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+.pair-cell .n {
+  font-family: var(--d-mono); font-weight: 700; font-size: 30px; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.pair-cell .k {
+  font-family: var(--d-cond); font-weight: 600; font-size: 9px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--d-mut); margin-top: 4px;
+}
+.pair-cell--dim .n { color: var(--d-mut); }
+.mod--dnf { border-left: 3px solid var(--d-mut); }
+.mod--about a { color: var(--d-volt); }
+
+/* guess form - a module's controls, not a third button voice */
+.guess-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.guess-row select {
+  background: var(--d-ink-3); color: var(--d-paper); border: 1px solid var(--d-line);
+  border-radius: 9px; padding: 10px; font: inherit; flex: 1 1 40%;
+}
+
+@media (max-width: 400px) {
+  .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .clock { font-size: 40px; }
+  .hero-q { font-size: 27px; }
+  .dh-answer { font-size: 31px; }
+  .plyr-ppg { flex-basis: 54px; }
+  .score-big { font-size: 40px; }
+}
+
+/* Column header for the pool. Pinned with the head so it does not scroll away
+   from the numbers it names. */
+.pool-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 4px 4px 6px; border-bottom: 1px solid var(--d-line);
+  font-family: var(--d-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--d-mut);
+}
+
+/* ================= WHICH HEADER, AND WHEN =================================
+ * RULING 17 Aug: the site comes back everywhere except the live timed round.
+ * The pitch, the entered receipt and the reveal all carry the global header
+ * and its drawer; only the round itself keeps the minimal daily-head, because
+ * the clock owns that screen and a nav bar on it is an invitation to leave
+ * mid-round.
+ *
+ * DONE IN CSS, WITH NO NEW ISLAND. The playing state is decided client-side -
+ * the board arrives from POST /api/daily/start - so the header cannot be
+ * chosen on the server. Rather than lift that state up or add a second
+ * island, both heads render and :has(.mod--play) picks one. It is the same
+ * mechanism the sticky container already keys on, so there is one source of
+ * truth for "is a round in progress" rather than two that can disagree.
+ *
+ * THE TIMED ROUND'S LAYOUT IS UNCHANGED. During play the global header is
+ * display:none, so it occupies no space and .daily is still the only thing in
+ * the viewport - the 100dvh pin, the single scroll region and the pinned head
+ * all behave exactly as before. */
+.daily-shell { display: flex; flex-direction: column; min-height: 100dvh; background: #0A0A0A; }
+.daily-shell > .daily { flex: 1 1 auto; min-height: 0; }
+
+/* Off by default: outside a round, the global header is the header. */
+.daily-head { display: none; }
+
+.daily-shell:has(.mod--play) .gh { display: none; }
+.daily-shell:has(.mod--play) .daily-head { display: flex; }
+/* The pin measures the shell now that the shell is what fills the viewport. */
+.daily-shell:has(.mod--play) { height: 100dvh; min-height: 0; overflow: hidden; }
+
+/* ============================ LEADERBOARDS ================================
+ * Row grammar per v1.2 s2. The rank column is fixed and tabular so names start
+ * at the same x on every row; the name is what truncates, never the score. */
+.lb-left { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.lb-rank {
+  flex: 0 0 22px; font-variant-numeric: tabular-nums; color: var(--d-mut);
+  font-size: 11px; text-align: right;
+}
+.lb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* An unclaimed account reads as a blank, not as a person: muted, no badge
+   weight. The claim screen is the argument for fixing it. */
+.lb-name--anon { color: var(--d-mut); }
+.row--me { background: #17170F; margin: 0 -14px; padding-left: 14px; padding-right: 14px; }
+.row--me .lb-name { color: var(--d-volt); }
+.row--dnf { opacity: .5; }
+.lb-hof { color: var(--d-volt); }
+.lb-mvp { color: var(--d-jade); }
+
+/* ============================ HANDLE CLAIM ================================ */
+.hin {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--d-ink-3); border: 1px solid var(--d-line);
+  border-radius: 10px; padding: 11px 13px; margin: 4px 0 8px;
+}
+.hin .at { color: var(--d-mut); font-size: 16px; }
+.hin input {
+  flex: 1; min-width: 0; background: none; border: none; color: var(--d-paper);
+  font: inherit; font-size: 16px; outline: none;
+}
+.hin--ok { border-color: var(--d-jade); }
+.hin--bad { border-color: var(--d-terra); }
+.avail {
+  font-family: var(--d-cond); font-weight: 600; font-size: 11px;
+  letter-spacing: .1em; text-transform: uppercase; min-height: 16px;
+}
+.avail--ok { color: var(--d-jade); }
+.avail--bad { color: var(--d-terra); }
+.avail--wait { color: var(--d-mut); }
+
+/* ===========================================================================
+   THE WEEKLY - the deltas, and only the deltas.
+   ---------------------------------------------------------------------------
+   Everything else the Weekly renders (.mod, .row, .slots, .slot, .pool, .plyr,
+   .tierbadge, .hero, .score-big) is the Daily's, shared through the token
+   scope at the top of this file. What follows is the short list of things the
+   Weekly has that the Daily does not, which is the list a reviewer should be
+   able to read in full to know how far the two surfaces have diverged.
+   =========================================================================== */
+
+/* A DEADLINE IS NOT AN INSTRUMENT. The Daily's .clock-inst is the hero of its
+   screen - big numerals, a progress bar, a red state at 0:20 - because three
+   minutes is the game. Five days is a date you plan around, so this occupies
+   the same pinned slot at a fraction of the weight, with no bar to fill and
+   no red to reach. */
+.wk-deadline {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 12px; margin-bottom: 10px;
+  border: 1px solid var(--d-line); border-radius: 10px;
+  background: var(--d-card);
+}
+.wk-deadline-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.wk-when {
+  font-family: var(--d-mono, ui-monospace, monospace);
+  font-size: 20px; font-weight: 700; letter-spacing: -.01em; color: var(--d-paper);
+}
+
+/* THE SAVE STATE IS THE ONLY FEEDBACK THIS BUILDER GIVES, so it holds its
+   line height in every state - including 'clean', which renders the lock
+   stamp rather than collapsing. A row that appears and disappears under the
+   deadline would shift the slots bar on every pick. */
+.wk-save { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; min-height: 14px; }
+.wk-save--clean  { color: var(--d-mut); }
+.wk-save--saving { color: var(--d-mut); }
+.wk-save--saved  { color: var(--d-jade, #4ADE80); }
+.wk-save--error  { color: var(--d-live, #EF4444); font-weight: 700; }
+
+/* Where the Daily puts its LOCK IT IN primary. The Weekly has no submit, and
+   the absence needs saying out loud - otherwise the screen reads as one where
+   the player forgot to press something. */
+.wk-autosave, .wk-locked-note {
+  font-size: 12px; line-height: 1.45; color: var(--d-mut);
+  margin: 8px 0 10px; text-align: center;
+}
+.wk-locked-note { color: var(--d-paper); font-weight: 600; }
+
+/* THE BREADCRUMB. Quiet by construction - it sits above the answer hero on the
+   most-linked surface on the site, and its whole job is to be findable without
+   being the thing you look at. Hit target is 44px tall including the padding,
+   because it is the one link on this screen a thumb reaches for. */
+.crumb {
+  display: inline-block; padding: 12px 2px 10px;
+  font-family: var(--d-mono, ui-monospace, monospace);
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--d-mut); text-decoration: none;
+}
+.crumb:hover { color: var(--d-paper); }
+
+/* THE WEEKLY'S POOL SEARCH. Pinned with the head so it does not scroll away
+   from the rows it filters - the same reason .pool-head is pinned. */
+.wk-find { position: relative; margin: 8px 0 2px; }
+.wk-find-in {
+  width: 100%; box-sizing: border-box;
+  padding: 10px 34px 10px 12px;
+  background: var(--d-card); color: var(--d-paper);
+  border: 1px solid var(--d-line); border-radius: 10px;
+  /* 16px MINIMUM, non-negotiable on iOS: anything smaller makes Safari zoom the
+     whole page on focus, and the reader lands in a board they then have to
+     pinch back out of. */
+  font-size: 16px; font-family: inherit;
+}
+.wk-find-in::placeholder { color: var(--d-mut); }
+.wk-find-in:focus { outline: none; border-color: var(--d-volt); }
+.wk-find-x {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  width: 32px; height: 32px; line-height: 1;
+  background: none; border: 0; color: var(--d-mut); font-size: 20px; cursor: pointer;
+}
+.wk-find-n { color: var(--d-mut); font-weight: 400; }
+.wk-find-none { padding: 18px 12px; color: var(--d-mut); font-size: 13px; line-height: 1.5; }
+
+/* WHERE THE CTA WOULD BE, before a board exists. Deliberately NOT a button: it
+   is information, and a button-shaped thing that cannot be pressed teaches a
+   reader that this page's buttons do not work. */
+.wk-soon {
+  display: inline-block; padding: 12px 18px;
+  border: 1px dashed var(--d-line); border-radius: 10px;
+  font-family: var(--d-mono, ui-monospace, monospace);
+  font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--d-mut);
+}
+
+/* The share action reuses the breadcrumb's voice - both are quiet links that
+   must not compete with the answer hero between them. */
+.crumb--share { display: block; margin-bottom: 4px; }
+
+/* The Draft's own deltas. Everything else is the Weekly's, shared through the
+   `.daily, .weekly` token scope in app/daily/daily.css - see that file's header
+   for why a divergence has to be written down. */
+
+/* THE SEAT GRID. Twelve targets on a phone means a 4-wide grid at 44px+, which
+   is the same thumb rule the slots bar follows. Notes wrap under the number
+   rather than beside it, so seat 1 and seat 12 do not become taller cells and
+   ripple the grid. */
+.seats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px;
+}
+.seat {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; min-height: 56px; padding: 8px 4px;
+  background: var(--d-card); color: var(--d-paper);
+  border: 1px solid var(--d-line); border-radius: 10px; cursor: pointer;
+  font-family: inherit;
+}
+.seat--on { border-color: var(--d-volt); color: var(--d-volt); }
+.seat-n { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.seat-note {
+  font-size: 9px; line-height: 1.15; text-align: center; color: var(--d-mut);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.seat--on .seat-note { color: var(--d-volt); opacity: .8; }
+
+/* A started player in the settled roster. Best ball picks the six for you, so
+   the only thing the list has to say is which ones counted. */
+.row--started { font-weight: 700; }
+.row--started .r { color: var(--d-volt); }
+
+/* app/home.css — Sportsvyn δ (Bracket Wall) homepage.
+   Ported from ~/Downloads/sportsvyn-homepage-delta-bracket.html. CSS
+   variables (--ink, --graphite, --volt etc.) resolve via globals.css.
+   Site header / footer styles intentionally omitted — handled by the
+   shared SiteHeader / SiteFooter components. */
+
+/* MAIN GRID
+   Stage-2 layout: the left column now contains BOTH the daily card AND
+   the bracket wall. This lets the rail (in the right column) be as tall
+   as the LEFT COLUMN STACK rather than the daily card alone — so a
+   short daily-card (empty slate, hidden reads, etc.) never leaves a
+   "dead ink" band beside the sticky rail. */
+.home-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  /* column-gap stays at 48px (between Today's Card and sidebar). row-gap
+     held at 0 so the daily-card → bracket-wall stacking on desktop
+     keeps its prior spacing (bracket-wall brings its own margin-top
+     and border-top); without the row-gap-0 the new direct-child
+     grid layout would add 48px on top of that. Mobile @media below
+     resets to a sane 32px row-gap once we collapse to one column. */
+  column-gap: 48px;
+  row-gap: 0;
+  padding: 36px 48px 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-left: 48px;
+  align-items: start;
+}
+
+/* Explicit grid placement on desktop — the DOM source order is
+   daily-card → right-rail → bracket-wall (so mobile stacks as
+   "card → games → power → bracket"). These rules re-pin the same
+   three children to the approved 2/3 + 1/3 layout: card top-left,
+   sidebar full-height right, bracket below card. */
+.home-main > .daily-card           { grid-column: 1; grid-row: 1; }
+.home-main > .right-rail           { grid-column: 2; grid-row: 1 / span 2; }
+.home-main > .bracket-wall-section { grid-column: 1; grid-row: 2; }
+
+/* Pre-3c-mobile-fix .home-main-left wrapper no longer renders, but
+   the rule stays (harmless) so existing search/diff is small. */
+.home-main-left {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* GAMES BAND — games-first lead at the TOP of the left column
+   (.home-main-left). The right column sidebar rides up alongside it
+   from row 1. Card visuals come from components/match/fixture-card.css
+   via the FixtureCard import; this block styles the section headers,
+   feed wrapper, empty state, the "Full schedule →" link, and a
+   context-scoped card reflow that stacks meta UNDER matchup at any
+   viewport width (the inner 2/3 column is too narrow for the default
+   side-by-side meta panel — see the .home-games-band .sch-* rules
+   further down). */
+.home-games-band {
+  padding-top: 4px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--rule-dark);
+  margin-bottom: 28px;
+  min-width: 0;
+}
+.home-games-section { margin-top: 22px; }
+.home-games-section:first-child { margin-top: 0; }
+.home-games-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.home-games-headline {
+  font-family: var(--font-cond, var(--font-mono));
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper-warm);
+}
+.home-games-headline.live { color: var(--live-red); }
+.home-games-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.home-games-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--rule-dark);
+}
+.home-games-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.home-games-feed {
+  /* No flex/grid wrapper — FixtureCard cards stack vertically with
+     their own margin-bottom (.sch-card has margin-bottom: 10px in
+     fixture-card.css). Matches /schedule's feed visually. */
+}
+.home-games-empty {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--muted);
+  padding: 18px 0 4px;
+}
+.home-games-quiet {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--muted);
+  padding: 6px 0 12px;
+}
+
+/* ─── SIDEBAR — LIVE & NEXT UNIT (.sg-*) ───────────────────────────────
+   Lives in the right rail above Power Rankings. Hero on top (live or
+   next-up), collapsible compact list below, "Full schedule →" footer. */
+
+.sg-card {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 18px 18px 16px;
+  margin-bottom: 18px;
+}
+
+/* HERO — shared chrome */
+.sg-hero {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+}
+.sg-hero:hover .sg-hero-name { color: var(--volt); }
+
+/* Live hero — pulse + LIVE word above the teams */
+.sg-hero-live { padding-top: 2px; }
+.sg-hero-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.sg-pulse {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--live-red);
+  animation: sch-pulse 1.6s ease-in-out infinite;
+}
+.sg-live-word {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--live-red);
+}
+
+/* Next-up hero — quiet kicker above the teams */
+.sg-hero-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--volt);
+  margin-bottom: 8px;
+}
+
+/* Shared teams block inside the hero */
+.sg-hero-teams { display: flex; flex-direction: column; gap: 6px; }
+.sg-hero-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.sg-hero-row .flag-inline-svg {
+  width: 22px; height: 16px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+.sg-hero-name {
+  font-family: var(--font-cond, var(--font-mono));
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  color: var(--paper-warm);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color .12s;
+}
+.sg-hero-score {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Next-up meta line (kickoff + venue) */
+.sg-hero-meta {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sg-hero-venue { color: var(--muted-dim, var(--muted)); }
+
+/* LIVE WATCH SCORE — number + track bar */
+.sg-ws {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-dark);
+}
+.sg-ws-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.sg-ws-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sg-ws-value {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  color: var(--volt);
+  font-variant-numeric: tabular-nums;
+}
+.sg-ws-track {
+  height: 4px;
+  background: var(--rule-dark);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.sg-ws-fill {
+  display: block;
+  height: 100%;
+  background: var(--volt);
+}
+
+/* Empty-state line when the 3-day window is somehow dry */
+.sg-quiet {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 4px 0 6px;
+}
+
+/* TOGGLE — native <details>, no client JS needed */
+.sg-toggle {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-dark);
+}
+.sg-toggle summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--paper-dim, var(--muted));
+  padding: 4px 0;
+}
+.sg-toggle summary::-webkit-details-marker { display: none; }
+.sg-toggle summary:hover { color: var(--volt); }
+.sg-toggle-show, .sg-toggle-hide { flex: 1; }
+.sg-toggle[open] .sg-toggle-show { display: none; }
+.sg-toggle:not([open]) .sg-toggle-hide { display: none; }
+.sg-toggle-caret {
+  font-size: 11px;
+  transition: transform .15s;
+}
+.sg-toggle[open] .sg-toggle-caret { transform: rotate(180deg); }
+
+/* Day group inside the toggle list */
+.sg-list { margin-top: 8px; }
+.sg-day:not(:first-child) { margin-top: 14px; }
+.sg-day-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* Compact row — mini-flag + abbr v abbr + kickoff time */
+.sg-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border-top: 1px solid var(--rule-darker);
+  text-decoration: none;
+  color: inherit;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  transition: color .12s;
+}
+.sg-day:first-child .sg-row:first-of-type { border-top: 0; }
+.sg-row:hover { color: var(--volt); }
+.sg-row .flag-tiny-svg {
+  width: 14px; height: 10px;
+  border-radius: 1px;
+  flex: 0 0 auto;
+}
+.sg-abbr {
+  color: var(--paper-warm);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.sg-vs { color: var(--muted); }
+.sg-row-time {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+/* Footer link */
+.sg-full {
+  display: inline-block;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule-dark);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--paper-warm);
+  text-decoration: none;
+  transition: color .12s;
+  width: 100%;
+}
+.sg-full:hover { color: var(--volt); }
+.home-games-full {
+  display: inline-block;
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-warm);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-dark);
+  padding-bottom: 4px;
+  transition: color .15s, border-color .15s;
+}
+.home-games-full:hover { color: var(--volt); border-color: var(--volt); }
+
+/* Context-scoped card reflow — STACKS meta below matchup at every
+   viewport width INSIDE the homepage games band only. The card's
+   default rules in components/match/fixture-card.css still hold for
+   /schedule (side-by-side meta). We're not editing the default; we're
+   adding a context override that only matches under .home-games-band.
+   Selectors mirror what fixture-card.css applies at @media ≤820px so
+   the column-narrow case behaves identically to the mobile case. */
+.home-games-band .sch-card {
+  grid-template-columns: 1fr;
+}
+.home-games-band .sch-meta {
+  border-left: none;
+  border-top: 1px solid var(--charcoal);
+  padding: 14px 18px;
+}
+.home-games-band .sch-matchup { padding: 14px 18px; }
+.home-games-band .sch-row { gap: 11px; }
+.home-games-band .sch-row .flag { width: 26px; height: 19px; }
+.home-games-band .sch-nm { font-size: 18px; }
+.home-games-band .sch-sc { font-size: 18px; }
+.home-games-band .sch-goals { padding-left: 37px; gap: 4px 14px; }
+.home-games-band .sch-goal { font-size: 10px; }
+
+@media (max-width: 1024px) {
+  .home-games-band { margin-bottom: 20px; }
+  .home-games-section { margin-top: 18px; }
+  .home-games-headline { font-size: 14px; letter-spacing: 0.12em; }
+}
+@media (max-width: 767px) {
+  .home-games-band { padding-top: 4px; padding-bottom: 20px; margin-bottom: 18px; }
+  .home-games-head { gap: 8px; margin-bottom: 10px; }
+  .home-games-sub { display: none; }   /* keep headers compact on phone */
+  .home-games-section { margin-top: 16px; }
+}
+
+/* DAILY CARD */
+.daily-card {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 32px 36px;
+}
+.dc-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--rule-dark);
+  margin-bottom: 24px;
+}
+.dc-title-row { display: flex; align-items: baseline; gap: 14px; }
+.dc-title {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 32px; line-height: 1;
+  letter-spacing: -0.03em; color: var(--paper-warm);
+}
+.dc-title .accent { color: var(--volt); }
+.dc-header-meta-group { display: flex; align-items: center; gap: 12px; }
+.dc-meta {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.dc-header-link {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--paper-warm);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--rule-dark);
+  padding: 8px 12px;
+  transition: border-color 120ms, color 120ms;
+}
+.dc-header-link:hover { border-color: var(--volt); color: var(--volt); }
+
+.dc-intro {
+  font-family: var(--font-serif);
+  font-style: italic; font-size: 22px;
+  line-height: 1.4; color: var(--paper-warm);
+  margin-bottom: 28px; max-width: 720px;
+}
+.dc-intro .accent { color: var(--volt); }
+.dc-author {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: 28px;
+}
+.dc-author .author { color: var(--paper-warm); }
+.dc-author .sep { color: var(--rule-dark); margin: 0 8px; }
+
+.dc-section { margin-bottom: 28px; }
+.dc-section-label {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--volt);
+  letter-spacing: 0.26em; text-transform: uppercase;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.dc-section-label-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.dc-section-label-row .dc-section-label {
+  margin-bottom: 0; padding-bottom: 0; border-bottom: none;
+}
+.dc-section-link {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--paper-warm);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  text-decoration: none; transition: color 120ms;
+}
+.dc-section-link:hover { color: var(--volt); }
+
+/* Slate rows */
+.dc-match-row {
+  display: grid; grid-template-columns: 1fr auto auto;
+  gap: 16px; align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.dc-match-row:last-child { border-bottom: none; }
+.dc-match-teams {
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 700; font-style: italic;
+  font-size: 14px; text-transform: uppercase;
+  color: var(--paper-warm); letter-spacing: 0.01em;
+  display: flex; align-items: center;
+}
+.dc-match-time {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+.dc-match-ws {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  font-size: 18px; color: var(--volt);
+}
+.dc-match-empty {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 14px 0;
+}
+.dc-live-tag {
+  color: var(--terra);
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 0.18em;
+  margin-left: 10px;
+  text-transform: uppercase;
+}
+
+/* Tournament progress strip */
+.dc-bracket-strip {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 12px; margin-top: 4px;
+}
+.dc-bracket-round {
+  text-align: center; padding: 14px 8px 12px;
+  border: 1px solid var(--rule-darker);
+  background: var(--ink);
+}
+.dc-bracket-round.active { border-color: var(--volt); }
+.dc-bracket-round-label {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.dc-bracket-round.active .dc-bracket-round-label { color: var(--volt); }
+.dc-bracket-round-count {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  font-size: 36px; line-height: 0.9;
+  color: var(--paper-warm);
+  margin-bottom: 4px;
+}
+.dc-bracket-round.active .dc-bracket-round-count { color: var(--volt); }
+.dc-bracket-round-meta {
+  font-family: var(--font-mono);
+  font-size: 8px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+
+/* Today's Reads rows */
+.dc-read-row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule-darker);
+  display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center;
+  text-decoration: none;
+}
+.dc-read-row:last-child { border-bottom: none; }
+.dr-kicker {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--volt);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.dr-headline {
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 700; font-style: italic;
+  font-size: 16px; text-transform: uppercase;
+  color: var(--paper-warm); letter-spacing: 0.01em;
+  line-height: 1.1;
+}
+.dr-read-time {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+
+/* THE MARKET (explainer, never a pick — wired to tournament_winner odds) */
+.dc-market {
+  background: var(--ink);
+  border: 1px solid var(--rule-dark);
+  border-left: 3px solid var(--volt);
+  padding: 16px 18px;
+}
+/* tagged-reads unit (replaces the retired futures ladder) */
+.dc-mkt-empty {
+  font-family: var(--font-serif);
+  font-style: italic; font-size: 14px;
+  color: var(--muted-light); line-height: 1.45;
+  margin-bottom: 12px;
+}
+.dc-mkt-reads {
+  list-style: none;
+  margin: 0 0 12px 0; padding: 0;
+}
+.dc-mkt-read {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.dc-mkt-read:last-child { border-bottom: none; }
+.dc-mkt-tag {
+  font-family: var(--font-mono);
+  font-size: 8px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 6px; border-radius: 2px; border: 1px solid;
+  white-space: nowrap;
+}
+.dc-mkt-tag.gen  { color: var(--volt); border-color: color-mix(in srgb, var(--volt) 55%, transparent); background: color-mix(in srgb, var(--volt) 7%, transparent); }
+.dc-mkt-tag.rich { color: var(--terra); border-color: color-mix(in srgb, var(--terra) 55%, transparent); background: color-mix(in srgb, var(--terra) 8%, transparent); }
+.dc-mkt-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dc-mkt-sel {
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 700; font-style: italic;
+  font-size: 13px; text-transform: uppercase;
+  color: var(--paper-warm); letter-spacing: 0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dc-mkt-sub {
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted-dim);
+}
+.dc-mkt-nums {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted); white-space: nowrap;
+  display: inline-flex; align-items: baseline; gap: 4px;
+}
+.dc-mkt-arrow { color: var(--muted-dim); margin: 0 1px; }
+.dc-mkt-gap { color: var(--paper-warm); font-weight: 700; }
+.dc-mkt-ledger {
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted-dim); margin-bottom: 10px;
+}
+.dc-market-footnote {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted-dim);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+.dc-market-method {
+  color: var(--muted); text-decoration: none;
+  border-bottom: 1px solid var(--rule-dark);
+}
+.dc-market-method:hover { color: var(--volt); border-bottom-color: var(--volt); }
+
+/* SLATE EMPTY-STATE SIGNPOST (Stage 2 — designed empty state) */
+.dc-slate-signpost {
+  border-left: 3px solid var(--rule-dark);
+  background: var(--ink);
+  padding: 16px 18px 18px;
+}
+.dc-slate-signpost-label {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.dc-slate-signpost-anchor {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 17px; line-height: 1.45;
+  color: var(--paper-warm);
+}
+/* completed-tournament variant — the empty-slate box becomes a bracket doorway */
+a.dc-slate-signpost--done {
+  display: block; text-decoration: none; cursor: pointer;
+  border-left-color: var(--volt);
+  transition: border-color 120ms;
+}
+a.dc-slate-signpost--done:hover { border-left-width: 5px; }
+a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
+
+/* Daily-card footer (prev/next) */
+.dc-footer {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule-dark);
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+/* RIGHT RAIL */
+.right-rail { position: sticky; top: 24px; }
+.sidebar-zone-header {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--volt);
+  letter-spacing: 0.28em; text-transform: uppercase;
+  padding-bottom: 12px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--volt);
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.sidebar-zone-header .meta {
+  color: var(--muted-dim);
+  letter-spacing: 0.18em;
+  font-size: 9px;
+}
+.sidebar-block {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  transition: border-color 120ms;
+}
+.sidebar-block.live { border-color: var(--terra); }
+.sidebar-block .sb-label {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--volt);
+  letter-spacing: 0.24em; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.sidebar-block.live .sb-label { color: var(--terra); }
+.sidebar-block .sb-title {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 16px; line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--paper-warm);
+  margin-bottom: 8px;
+}
+.sidebar-block .sb-meta {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  line-height: 1.4;
+  /* Time string ("12:00 PM PT") must never clip from a parent overflow:
+     keep it on one line so it overflows visibly rather than getting
+     silently truncated to "00 PM PT". The 11-char string + uppercase +
+     letter-spacing fits comfortably even in a 320px-wide mobile column. */
+  white-space: nowrap;
+}
+.sidebar-block .sb-meta .volt { color: var(--volt); }
+
+.sidebar-list {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+.sidebar-list .sl-label {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--volt);
+  letter-spacing: 0.24em; text-transform: uppercase;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.sl-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule-darker);
+  display: grid; grid-template-columns: 14px 1fr auto;
+  gap: 8px; align-items: center;
+  text-decoration: none;
+}
+.sl-item:last-child { border-bottom: none; }
+.sl-item .pos {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted-dim); font-weight: 700;
+}
+.sl-item .name {
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 700; font-style: italic;
+  font-size: 12px; text-transform: uppercase;
+  color: var(--paper-warm); letter-spacing: 0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: flex; align-items: center; gap: 5px;
+}
+.sl-item .val {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--paper-warm); font-weight: 700;
+}
+.sl-item .val.volt { color: var(--volt); }
+.move-up   { color: var(--volt); }
+.move-down { color: var(--terra); }
+.move-flat { color: var(--muted-dim); }
+
+.sl-empty {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 10px 0;
+}
+
+/* "View full rankings →" — sidebar-list footer link. Mono-caps to match
+   the .sl-label family, muted by default, volt on hover. Top border
+   separates it from the last .sl-item (which kills its own bottom rule).
+   Scoped to .sidebar-list so it doesn't bleed into other surfaces. */
+.sidebar-list .sl-more {
+  display: block;
+  padding: 10px 0 2px;
+  border-top: 1px solid var(--rule-darker);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.sidebar-list .sl-more:hover { color: var(--volt); }
+
+.fr-item {
+  padding: 10px 0; border-bottom: 1px solid var(--rule-darker);
+  display: block; text-decoration: none;
+}
+.fr-item:last-child { border-bottom: none; }
+.fr-kicker {
+  font-family: var(--font-mono);
+  font-size: 8px; color: var(--volt);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.fr-headline {
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 900; font-style: italic;
+  font-size: 14px; line-height: 1.1;
+  color: var(--paper-warm); text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+/* Inline tiny flag — used in lists + slate rows */
+.flag-inline-svg {
+  display: inline-block;
+  width: 16px; height: 11px;
+  margin-right: 6px;
+  background-size: cover; background-position: center;
+  border: 1px solid var(--rule-darker);
+  vertical-align: middle;
+}
+.flag-tiny-svg {
+  display: inline-block;
+  width: 14px; height: 10px;
+  background-size: cover; background-position: center;
+  border: 1px solid var(--rule-darker);
+  vertical-align: middle;
+}
+.flag-inline-empty { background: var(--charcoal); }
+
+/* ============ BRACKET WALL (group-stage, now INSIDE .home-main-left) ============
+   The Stage-1 version was a full-bleed section AFTER .home-main (with
+   80px horizontal padding + ink contrast band). Stage 2 nests it inside
+   the left grid column so the rail's height is bounded by the LEFT
+   COLUMN STACK (daily-card + bracket-wall). Visual separation from the
+   daily-card above is now carried by margin-top + border-top + a
+   subtle inset, NOT a full-width contrast band. */
+.bracket-wall-section {
+  padding: 32px 0 24px;
+  background: transparent;
+  border-top: 1px solid var(--rule-dark);
+  margin-top: 32px;
+}
+.bracket-wall-inner {
+  max-width: none;
+  margin: 0;
+  padding-left: 0;
+}
+.bw-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rule-dark);
+}
+.bw-title-row { display: flex; align-items: baseline; gap: 16px; }
+.bw-title {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 36px; line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--paper-warm);
+}
+.bw-title .accent { color: var(--volt); }
+.bw-stage {
+  font-family: var(--font-mono);
+  font-size: 11px; color: var(--volt);
+  letter-spacing: 0.22em; text-transform: uppercase;
+}
+.bw-link {
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--paper-warm);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--rule-dark);
+  padding: 10px 16px;
+  transition: border-color 120ms, color 120ms;
+}
+.bw-link:hover { border-color: var(--volt); color: var(--volt); }
+
+/* Group-stage 12-card grid — homepage variant. Same shape as /bracket
+   but rendered inside the bracket-wall section's chrome. */
+.home-groups-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.home-group-card {
+  background: var(--graphite);
+  border: 1px solid var(--rule-dark);
+  padding: 14px 16px;
+}
+.home-group-card-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--rule-darker);
+}
+.home-group-card-label {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  font-size: 22px;
+  color: var(--volt);
+  letter-spacing: -0.02em;
+}
+.home-group-card-meta {
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--muted);
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.home-group-card-row {
+  display: grid; grid-template-columns: 20px 1fr 24px;
+  gap: 8px; align-items: center;
+  padding: 5px 0;
+  font-family: var(--font-display-condensed, var(--font-display));
+  font-weight: 700; font-style: italic;
+  font-size: 13px; text-transform: uppercase;
+  color: var(--paper-warm); letter-spacing: 0.01em;
+  min-width: 0; /* allow ellipsis on the name cell */
+}
+.home-group-card-row .flag-inline-svg { margin-right: 0; }
+
+/* Long-name guard. Cards run ~135px content wide on desktop; with the
+   24px points column the name slot is ~80px. Names like "Bosnia &
+   Herzegovina" / "Cape Verde Islands" must truncate cleanly rather
+   than wrap and break row alignment. Applies to both the <a> (linked)
+   and <span> (no slug) variants. */
+.home-group-card-row > a,
+.home-group-card-row > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Per-team points cell. Mono numerals (read cleaner upright than the
+   italic display family used for the team name), right-aligned, same
+   paper-warm color as the row. Intentionally NOT volt-tinted — every
+   team will have points within a few days and a leader-tint would lose
+   meaning fast. */
+.home-group-card-pts {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-style: normal;
+  font-size: 12px;
+  text-align: right;
+  color: var(--paper-warm);
+  letter-spacing: 0;
+}
+
+/* MORE FROM SPORTSVYN — section AFTER .home-main, full-bleed.
+   Stage-2 rename: this used to be .below-bw-rail (nested under the
+   bracket-wall section); now bracket-wall lives in the grid and this
+   rail stands on its own below .home-main. */
+.more-from-section {
+  padding: 64px 48px 40px;
+  background: var(--ink);
+  border-top: 1px solid var(--rule-darker);
+  margin-top: 64px;
+}
+.more-from-inner {
+  max-width: 1400px;
+  margin: 0;
+  padding-left: 48px;
+}
+.more-from-title {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 22px;
+  color: var(--paper-warm);
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+
+/* Subscribe band */
+.subscribe-band {
+  background: var(--volt);
+  color: var(--ink);
+  padding: 36px 48px;
+  margin: 60px 0 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: center;
+  max-width: 1400px;
+}
+.subscribe-band .sb-text {
+  font-family: var(--font-display);
+  font-weight: 900; font-style: italic;
+  text-transform: uppercase;
+  font-size: 28px;
+  letter-spacing: -0.02em; line-height: 1;
+  color: var(--ink);
+}
+.subscribe-band .sb-text em {
+  font-style: italic; color: var(--ink);
+  opacity: 0.75; font-weight: 400;
+  font-size: 17px; text-transform: none;
+  display: block; margin-top: 10px;
+  font-family: var(--font-serif);
+  letter-spacing: 0;
+}
+.subscribe-band .sb-button {
+  background: var(--ink); color: var(--volt);
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  padding: 18px 28px;
+  border: none; cursor: pointer;
+  text-decoration: none;
+}
+
+/* Mobile */
+@media (max-width: 1024px) {
+  /* Collapse to a single column and let DOM source order (daily-card →
+     sidebar → bracket-wall) be the stack. Reset the desktop explicit
+     placement so each child auto-places into its own row. */
+  .home-main {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 24px 20px 0;
+    padding-left: 20px;
+  }
+  .home-main > .daily-card,
+  .home-main > .right-rail,
+  .home-main > .bracket-wall-section {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  .right-rail { position: static; }
+}
+@media (max-width: 767px) {
+  .daily-card { padding: 20px 18px; }
+  .dc-title { font-size: 24px; }
+  .dc-intro { font-size: 18px; }
+  .dc-bracket-strip { grid-template-columns: repeat(2, 1fr); }
+  .home-groups-grid { grid-template-columns: 1fr; }
+  .bracket-wall-section { padding: 48px 20px 32px; }
+  .bracket-wall-inner { padding-left: 0; }
+  .bw-title { font-size: 26px; }
+  .bw-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .subscribe-band { grid-template-columns: 1fr; padding: 24px 20px; }
+}
+
+/* Team-name link inside .home-group-card-row — inherit color, no
+   underline, volt on hover. Mirrors the .team-link styling on /bracket
+   so the click affordance reads the same in both surfaces. */
+.home-group-card-row a.team-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.12s ease;
+}
+.home-group-card-row a.team-link:hover { color: var(--volt); }
+
+/* sim promo doorway — ink block in the paper daily-card flow (Surface Rule) */
+.dc-sim-promo {
+  display: block; text-decoration: none;
+  background: var(--ink); color: var(--paper-warm);
+  border: 1px solid var(--rule-dark);
+  padding: 22px 24px; margin: 24px 0;
+}
+.dc-sim-promo:hover { border-color: var(--volt); }
+.dc-sim-kicker {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--volt); margin-bottom: 10px;
+}
+.dc-sim-head {
+  font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
+  text-transform: uppercase; font-size: 26px; line-height: 1.05; letter-spacing: -0.02em;
+  color: var(--paper-warm); margin-bottom: 10px;
+}
+.dc-sim-line {
+  font-family: var(--font-serif); font-style: italic; font-size: 15px; line-height: 1.5;
+  color: var(--muted-light); margin: 0 0 16px; max-width: 520px;
+}
+.dc-sim-cta {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink); background: var(--volt);
+  padding: 9px 16px; display: inline-block;
+}
+
+
+/* ============================ FOOTBALL DAILY CARD ==========================
+   The tournament homepage was a 2/3 + 1/3 grid: card left, live scores and
+   standings right, bracket wall below. None of the right-rail units have a
+   football equivalent yet, and an empty 360px column is worse than no column,
+   so the football card collapses the grid to one and reads top to bottom.
+   The grid rules above are left untouched - they still describe the WC layout
+   for anything that renders it. */
+.home-main--football {
+  /* TWO COLUMNS AGAIN. This block used to collapse the grid to one and cap the
+     page at 900px, because the World Cup rail's units had no football
+     equivalent and an empty 360px column is worse than no column. Three now
+     exist - the gridiron slate, the NFL power board, the Sportsvyn 25 - so the
+     football page reads on the same 2/3 + 1/3 the WC layout established. */
+  grid-template-columns: minmax(0, 1fr) 340px;
+  max-width: 1240px;
+  row-gap: 0;
+}
+.home-main--football > .daily-card { grid-column: 1; grid-row: 1; }
+.home-main--football > .home-rail  { grid-column: 2; grid-row: 1; }
+
+/* The rail collapses at 1024px, which is where .home-main's own columns give
+   way - a 340px rail beside the card leaves the main column under 400px on a
+   tablet, and the Daily Card's prose does not survive that. The 760px
+   breakpoint the boards carry is about the UNITS inside the column, and it
+   keeps working once they are stacked. */
+@media (max-width: 1024px) {
+  .home-main--football {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 900px;
+  }
+  .home-main--football > .daily-card,
+  .home-main--football > .home-rail { grid-column: 1; grid-row: auto; }
+}
+
+/* DOM order is card -> rail, so the phone stack puts the Daily Card first and
+   the games below it. That is the right order: somebody who opened the
+   homepage came for the card. */
+.home-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+@media (max-width: 1024px) {
+  .home-rail { margin-top: 36px; }
+}
+
+/* ---- TODAY'S GAMES ----
+   An INK instrument on the paper page, per the Surface Rule. The scorecard row
+   in miniature: same status vocabulary as /scores, a third the width. */
+.tg {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-jetbrains-mono), monospace;
+  padding: 16px 16px 8px;
+}
+.tg-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  border-bottom: 1px solid var(--charcoal); padding-bottom: 10px;
+}
+.tg-h {
+  font-family: var(--font-saira-cond);
+  font-weight: 600; font-size: 13px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--volt);
+}
+.tg-n { font-size: 11px; color: var(--muted-dim); font-variant-numeric: tabular-nums; }
+.tg-day {
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted-dim); padding: 9px 0 3px;
+}
+.tg-rows { display: flex; flex-direction: column; }
+
+/* ONE ROW PER GAME. A three-column grid, not a stack: when | badge | matchup,
+   all on one baseline. Six games plus the heading come to roughly 260px, which
+   leaves a phone screen with room to spare - the previous stacked version ran
+   about five lines per game and pushed the boards below two folds. */
+.tg-row {
+  display: grid;
+  grid-template-columns: 58px 26px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  padding: 9px 0;
+  border-top: 1px solid var(--rule-dim);
+  text-decoration: none; color: inherit;
+  white-space: nowrap;
+}
+.tg-row:first-child { border-top: none; }
+.tg-row--link:hover .tg-side { color: var(--volt); }
+
+/* One fact at a time: kickoff before, LIVE during, FINAL after. */
+.tg-when {
+  font-size: 10px; letter-spacing: 0.06em; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.tg-when.live { color: var(--live); font-weight: 700; letter-spacing: 0.1em; }
+.tg-when.final { color: var(--jade); font-weight: 700; letter-spacing: 0.1em; }
+.tg-dot {
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--live); margin-right: 4px;
+  animation: tg-pulse 1.6s ease-in-out infinite;
+}
+@keyframes tg-pulse { 50% { opacity: 0.35; } }
+
+.tg-badge {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--muted-dim); text-align: center;
+}
+
+.tg-match {
+  font-size: 12px; letter-spacing: 0.04em; color: var(--paper);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.tg-side b { font-weight: 700; margin-left: 5px; }
+.tg-at { color: var(--muted-dim); margin: 0 6px; }
+/* Only a FINAL dims a side. A team trailing at halftime has not lost. */
+.tg-side.dim, .tg-side.dim b { color: var(--muted); }
+.tg-side.win b { color: var(--volt); }
+
+.tg-all {
+  display: block; padding: 12px 0 10px; margin-top: 2px;
+  border-top: 1px solid var(--charcoal);
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none;
+}
+.tg-all:hover { color: var(--volt); }
+
+/* ---- season strip ----
+   Two dates, stated once, at the foot of the card. An INK band on the paper
+   page per the Surface Rule, so volt can be used as rule material here without
+   ever becoming volt text on paper. Static by design: a countdown is a second
+   thing to be wrong every morning, and the reader can subtract. */
+.dc-season {
+  display: flex;
+  gap: 0;
+  margin-top: 34px;
+  border-top: 3px solid var(--volt);
+  background: var(--ink);
+}
+.dc-season-item {
+  flex: 1 1 0;
+  padding: 14px 18px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-jetbrains-mono), monospace;
+}
+.dc-season-item + .dc-season-item { border-left: 1px solid var(--charcoal); }
+.dc-season-label {
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.dc-season-date {
+  margin-left: auto;
+  font-size: 13px;
+  letter-spacing: .06em;
+  color: var(--paper);
+}
+
+/* ---- ranking boards (NFL Power / CFB Top 25, Top 5 each) ----
+   Two EditorialBoard previews side by side. The boards are ink blocks - each
+   section carries its own data-surface="ink" - so this rule owns only the
+   layout and the base type, never their colour.
+
+   THE FONT IS NOT DECORATION HERE. Inside the gridiron routes the board sits
+   under a .gi wrapper that sets JetBrains Mono, and .gi-ed-nm deliberately
+   declares no family of its own so it inherits it. On the paper card there is
+   no .gi ancestor, so without this the SAME instrument would render in the
+   card's serif on the homepage and in mono everywhere else. One rendering
+   everywhere; the wrapper supplies what .gi supplied.
+
+   Equal columns via minmax(0, 1fr): a bare 1fr floors at the content's
+   min-content width, and a long team name would push one board wider than the
+   other. */
+.dc-boards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 24px;
+  font-family: var(--font-jetbrains-mono), monospace;
+}
+/* One league dark: the survivor takes the width rather than sitting beside a
+   hole. The section renders nothing at all when both are dark. */
+.dc-boards--solo { grid-template-columns: minmax(0, 1fr); }
+
+@media (max-width: 900px) {
+  .home-main--football { padding-left: 20px; padding-right: 20px; }
+  .dc-season { flex-direction: column; }
+  .dc-season-item + .dc-season-item { border-left: none; border-top: 1px solid var(--charcoal); }
+}
+
+/* Stack the boards a little before the card itself narrows - two 5-row boards
+   side by side get cramped well above the 900px card breakpoint. */
+@media (max-width: 760px) {
+  .dc-boards { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+}
+
+/* ======================= THE DAILY — homepage module =======================
+   An ink block on the Daily Card (Surface Rule: instruments render ink and sit
+   as blocks on the card). Volt is MATERIAL only - the 14px eyebrow square, the
+   4px left bar, the ink-on-volt chips, the 2px link underline and the score-bar
+   fill. It is never body text.
+
+   The paper treatment is mocked and banked in
+   docs/design/daily-home-module-v1.html for the surface migration after
+   preseason Week 1. Nothing below assumes it. */
+.dly {
+  display: block; background: #121210;
+  border: 1px solid var(--rule-dark); border-left: 4px solid var(--volt);
+  padding: 20px 22px 22px; margin: 0 0 24px;
+}
+.dly-eyebrow { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+.dly-sq { width: 14px; height: 14px; background: var(--volt); flex: 0 0 14px; }
+.dly-kick {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--volt);
+}
+.dly-ed {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted); margin-left: auto;
+}
+.dly-hook {
+  font-family: var(--font-display), sans-serif; font-style: italic; font-weight: 900;
+  text-transform: uppercase; font-size: 26px; line-height: 1.04; letter-spacing: -0.03em;
+  color: var(--paper-warm); margin: 0 0 9px;
+}
+.dly-sub {
+  font-family: var(--font-serif); font-style: italic; font-size: 15px; line-height: 1.5;
+  color: var(--muted-light); margin: 0 0 16px; max-width: 52ch;
+}
+.dly-cta {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink); background: var(--volt);
+  padding: 11px 20px; display: inline-block; text-decoration: none;
+}
+.dly-cta:hover { background: #C2EA00; }
+.dly-foot {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); margin-top: 13px;
+}
+
+/* receipt */
+.dly-rcpt { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 6px; }
+.dly-score {
+  font-family: var(--font-mono); font-weight: 700; font-size: 46px; line-height: 0.92;
+  letter-spacing: -0.03em; color: var(--paper-warm); font-variant-numeric: tabular-nums;
+}
+.dly-of {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); padding-bottom: 7px;
+}
+.dly-bandwrap { padding-bottom: 6px; }
+.dly-chip {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink); background: var(--volt);
+  padding: 5px 10px; display: inline-block;
+}
+.dly-chip--quiet {
+  background: transparent; color: var(--muted-light);
+  border: 1px solid var(--rule-dark);
+}
+.dly-meta {
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--muted-light);
+  line-height: 1.9; margin-top: 4px;
+}
+.dly-meta .k {
+  color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 10px; margin-right: 6px;
+}
+.dly-meta .dly-meta-gap { margin-left: 18px; }
+.dly-rule { height: 1px; background: var(--rule-dark); margin: 14px 0 0; }
+
+/* revealed */
+.dly-ans { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.dly-yr {
+  font-family: var(--font-display), sans-serif; font-style: italic; font-weight: 900;
+  font-size: 40px; line-height: 1; letter-spacing: -0.04em; color: var(--paper-warm);
+}
+.dly-wk {
+  font-family: var(--font-saira-cond, var(--font-display)); font-weight: 700; font-size: 18px;
+  text-transform: uppercase; letter-spacing: 0.02em; color: var(--muted);
+}
+.dly-vs { display: flex; gap: 26px; flex-wrap: wrap; margin: 14px 0 2px; }
+.dly-cell .n {
+  font-family: var(--font-mono); font-weight: 700; font-size: 25px; line-height: 1;
+  color: var(--paper-warm); font-variant-numeric: tabular-nums;
+}
+.dly-cell .k {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted); margin-top: 5px;
+}
+.dly-cell--dim .n { color: var(--muted-light); }
+.dly-bar { height: 6px; background: var(--rule-dark); margin: 14px 0 4px; position: relative; }
+.dly-bar i { position: absolute; inset: 0 auto 0 0; background: var(--volt); }
+.dly-link {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--paper-warm); text-decoration: none;
+  border-bottom: 2px solid var(--volt); padding-bottom: 2px;
+  display: inline-block; margin-top: 15px;
+}
+.dly-link:hover { color: var(--volt); }
+
+@media (max-width: 520px) {
+  .dly { padding: 18px 16px 20px; }
+  .dly-hook { font-size: 23px; }
+  .dly-score { font-size: 40px; }
+  .dly-yr { font-size: 34px; }
+  .dly-vs { gap: 18px; }
+  .dly-meta .dly-meta-gap { margin-left: 0; display: block; }
+}
+
+/* ================== YESTERDAY'S ANSWER — the strip ========================
+   Sits directly under the Daily module. Deliberately quieter than it: the
+   module above is the thing to DO today, this is the thing that HAPPENED.
+   Same volt-as-material rules - the eyebrow square, a hairline left rule, no
+   volt body text and no second primary. Three rows, then one link out. */
+.ystr {
+  display: block; background: #101010;
+  border: 1px solid var(--rule-darker); border-left: 3px solid var(--rule-dark);
+  padding: 14px 16px 15px; margin: -12px 0 24px;
+}
+.ystr-head { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.ystr-sq { width: 10px; height: 10px; background: var(--volt); flex: 0 0 10px; }
+.ystr-kick {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
+}
+.ystr-ed {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--muted); margin-left: auto;
+}
+.ystr-answer { display: flex; align-items: baseline; gap: 9px; margin-bottom: 9px; }
+.ystr-yr {
+  font-family: var(--font-display), sans-serif; font-style: italic; font-weight: 900;
+  font-size: 24px; line-height: 1; letter-spacing: -.03em; color: var(--paper-warm);
+}
+.ystr-wk {
+  font-family: var(--font-saira-cond, var(--font-display)); font-weight: 700;
+  font-size: 14px; text-transform: uppercase; letter-spacing: .02em; color: var(--muted);
+}
+.ystr-rows { display: flex; flex-direction: column; }
+.ystr-row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 5px 0; border-bottom: 1px solid var(--rule-darker);
+  font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.ystr-row:last-child { border-bottom: none; }
+.ystr-row .k {
+  font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+}
+.ystr-row .v { color: var(--paper-warm); font-weight: 700; white-space: nowrap; }
+.ystr-row .dim { color: var(--muted); font-weight: 400; }
+.ystr-row .tierbadge {
+  display: inline-block; margin-left: 7px;
+  font-family: var(--font-saira-cond, var(--font-display)); font-weight: 600;
+  font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+  border: 1px solid currentColor; border-radius: 99px; padding: 2px 7px;
+}
+.tier--hof { color: var(--volt); }  .tier--mvp { color: var(--jade); }
+.tier--pb  { color: var(--paper-warm); }
+.tier--st  { color: var(--muted); }  .tier--ps { color: var(--terra); }
+.ystr-link {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--paper-warm); text-decoration: none;
+  border-bottom: 2px solid var(--volt); padding-bottom: 2px;
+  display: inline-block; margin-top: 12px;
+}
+.ystr-link:hover { color: var(--volt); }
+
+/* The one link from the publication's door to the arcade's. Ghost voice, no
+   volt text - it is a way out, not a second call to action. */
+.dc-allgames {
+  display: inline-block; margin: -12px 0 24px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none;
+  border-bottom: 2px solid var(--rule-dark); padding-bottom: 3px;
+}
+.dc-allgames:hover { color: var(--paper-warm); border-bottom-color: var(--volt); }
+
+/* THE WEEKLY'S MODULE REUSES EVERY .dly CLASS - see components/home/
+   WeeklyModule.js. This is the only addition: the Daily's .dly-score prints a
+   finished score, and the Weekly's building state prints "4/6", where the
+   denominator must not compete with the numerator for the eye. */
+.dly-of-six { font-size: .5em; opacity: .5; font-weight: 600; letter-spacing: -.01em; }
+
+body{margin:0;background:#161616;color:#E9E9E9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1600px;margin:0 auto;padding:28px 20px 60px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.02em}
+.lede{color:#9A9A9A;font-size:13px;margin:0 0 26px;line-height:1.6;max-width:900px}
+.lede b{color:#D8FF3E}
+.caps{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:22px;align-items:start}
+.cap h2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:#D8FF3E;margin:0 0 4px}
+.cap .note{font-size:12px;color:#8A8A8A;margin:0 0 10px;line-height:1.5}
+.frame{width:390px;max-width:100%;border:1px solid #2E2E2E;border-radius:14px;overflow:hidden;background:#0A0A0A}
+.frame .daily-main{max-height:none} .frame .daily-card{margin:0;padding:14px}
+</style>
+<div class="wrap">
+<h1>The Draft — every state, at 390px</h1>
+<p class="lede">Served HTML from the real pages. A ranked entry was claimed through
+<b>POST /api/draft/start</b>, drafted to completion (8 picks, all 8 bridged ffc&rarr;nfl, zero unmatched),
+then settled against <b>real 2025 Week 1 box scores</b>. Nothing here is a mock.</p>
+<div class="caps"><section class="cap"><h2>1 · PRE-BOARD</h2><p class="note">Before rooms open. The full pitch, waiting line where the CTA sits — same ruling as /weekly.</p><div class="frame"><div class="weekly" data-surface="ink"><main class="daily-main"><section class="hero"><div class="hero-eyebrow">The Draft · ranked</div><div class="hero-q">Eight rounds.<br/>No bench.</div><p class="hero-line">Draft against the room · <b>best ball</b>· results Tuesday morning</p><div class="wk-soon">Rooms open Tuesday morning</div></section><section class="mod"><h2 class="eyebrow">How it works</h2><div><div class="row"><span>The room</span><span class="r">12<!-- --> teams, snake</span></div><div class="row"><span>Your roster</span><span class="r">QB · 2 RB · 3 WR · TE · FLEX</span></div><div class="row"><span>The clock</span><span class="r">30<!-- -->s per pick</span></div><div class="row"><span>Scoring</span><span class="r">Best ball, PPR, drop worst</span></div><div class="row"><span>Drafts until</span><span class="r">First kickoff</span></div><div class="row"><span>Results</span><span class="r">Tuesday morning</span></div></div><p class="muted">Best ball means you never set a lineup: your best six score automatically from what your players actually did. Every pick counts, so there is no bench to hide a miss on. One ranked draft a week — results land <b>Tuesday morning</b>, and a settled week does not move again.</p></section></main></div></div></section><section class="cap"><h2>2 · SIGNED OUT</h2><p class="note">The pitch with a way in.</p><div class="frame"><div class="weekly" data-surface="ink"><main class="daily-main"><section class="hero"><div class="hero-eyebrow">The Draft · ranked</div><div class="hero-q">Eight rounds.<br/>No bench.</div><p class="hero-line">12<!-- --> teams · <b>30<!-- -->s</b>a pick · best ball · results Tuesday morning</p><a class="btn--volt" href="/signin?callbackUrl=%2Fdraft">Take a seat</a></section><section class="mod"><h2 class="eyebrow">How it works</h2><div><div class="row"><span>The room</span><span class="r">12<!-- --> teams, snake</span></div><div class="row"><span>Your roster</span><span class="r">QB · 2 RB · 3 WR · TE · FLEX</span></div><div class="row"><span>The clock</span><span class="r">30<!-- -->s per pick</span></div><div class="row"><span>Scoring</span><span class="r">Best ball, PPR, drop worst</span></div><div class="row"><span>Drafts until</span><span class="r">Wed, Aug 19, 2:16 PM ET</span></div><div class="row"><span>Results</span><span class="r">Tuesday morning</span></div></div><p class="muted">Best ball means you never set a lineup: your best six score automatically from what your players actually did. Every pick counts, so there is no bench to hide a miss on. One ranked draft a week — results land <b>Tuesday morning</b>, and a settled week does not move again.</p></section></main></div></div></section><section class="cap"><h2>3 · SEAT SELECT</h2><p class="note">The front door. One decision on the screen — the only pre-draft lever a ranked player gets. Start is consumed and says so.</p><div class="frame"><div class="weekly" data-surface="ink"><main class="daily-main"><section class="hero"><div class="hero-eyebrow">The Draft · Week <!-- -->1</div><div class="hero-q">Eight rounds.<br/>No bench.</div><p class="hero-line">Best ball · locks <!-- -->Wed, Aug 19, 2:16 PM ET<!-- -->· results Tuesday morning</p></section><section class="mod"><h2 class="eyebrow">Pick your seat</h2><p class="mod-lede">12<!-- --> teams · <!-- -->8<!-- --> rounds · <!-- -->30<!-- -->s per pick. Snake order, so your seat decides every pick you get.</p><div class="seats"><button type="button" class="seat" aria-pressed="false"><span class="seat-n">1</span><span class="seat-note">First overall, longest wait</span></button><button type="button" class="seat" aria-pressed="false"><span class="seat-n">2</span></button><button type="button" class="seat" aria-pressed="false"><span class="seat-n">3</span></button><button type="button" class="seat" aria-pressed="false"><span class="seat-n">4</span></button><button type="button" class="seat" aria-pressed="false"><span class="seat-n">5</span></button><button type="button" class="seat" aria-pressed="false"><span class="seat-n">6</span></button><button type="button" class="seat" aria-pressed="false"><span class="seat-n">7</span></button><button type="button" class="seat" aria-pressed="false"><span class="seat-n">8</span></button><button type="button" class="seat" aria-pressed="false"><span class="seat-n">9</span></button><button type="button" class="seat" aria-pressed="false"><span class="seat-n">10</span></button><button type="button" class="seat" aria-pressed="false"><span class="seat-n">11</span></button><button type="button" class="seat" aria-pressed="false"><span class="seat-n">12</span><span class="seat-note">Back-to-back at the turn</span></button></div></section><section class="mod"><button class="btn btn--volt" disabled="">Choose a seat</button><p class="wk-autosave">One ranked draft a week. Opening the room uses it — there is no restart.</p></section><section class="mod"><h2 class="eyebrow">How it works</h2><div><div class="row"><span>The room</span><span class="r">12<!-- --> teams, snake</span></div><div class="row"><span>Your roster</span><span class="r">QB · 2 RB · 3 WR · TE · FLEX</span></div><div class="row"><span>The clock</span><span class="r">30<!-- -->s per pick</span></div><div class="row"><span>Scoring</span><span class="r">Best ball, PPR, drop worst</span></div><div class="row"><span>Drafts until</span><span class="r">Wed, Aug 19, 2:16 PM ET</span></div><div class="row"><span>Results</span><span class="r">Tuesday morning</span></div></div><p class="muted">Best ball means you never set a lineup: your best six score automatically from what your players actually did. Every pick counts, so there is no bench to hide a miss on. One ranked draft a week — results land <b>Tuesday morning</b>, and a settled week does not move again.</p></section></main></div></div></section><section class="cap"><h2>4 · DRAFTING</h2><p class="note">The room is live. This page never renders the draft — the sim room IS the surface, so this is a link into it.</p><div class="frame"><div class="weekly" data-surface="ink"><main class="daily-main"><section class="mod mod--entered"><h2 class="eyebrow">Your room is open</h2><p class="mod-lede">You are drafting from pick <!-- -->4<!-- -->. The clock only runs while you are in the room — pick up where you left off.</p><a class="btn btn--volt" href="/sim/draft/3874">Back to the room →</a></section><section class="mod"><h2 class="eyebrow">How it works</h2><div><div class="row"><span>The room</span><span class="r">12<!-- --> teams, snake</span></div><div class="row"><span>Your roster</span><span class="r">QB · 2 RB · 3 WR · TE · FLEX</span></div><div class="row"><span>The clock</span><span class="r">30<!-- -->s per pick</span></div><div class="row"><span>Scoring</span><span class="r">Best ball, PPR, drop worst</span></div><div class="row"><span>Drafts until</span><span class="r">Wed, Aug 19, 2:16 PM ET</span></div><div class="row"><span>Results</span><span class="r">Tuesday morning</span></div></div><p class="muted">Best ball means you never set a lineup: your best six score automatically from what your players actually did. Every pick counts, so there is no bench to hide a miss on. One ranked draft a week — results land <b>Tuesday morning</b>, and a settled week does not move again.</p></section></main></div></div></section><section class="cap"><h2>5 · WAITING</h2><p class="note">Eight real picks, all bridged. Nothing left to do — best ball sets the lineup.</p><div class="frame"><div class="weekly" data-surface="ink"><main class="daily-main"><section class="mod mod--entered"><h2 class="eyebrow">Week <!-- -->1<!-- --> <span class="ctx">— drafted</span></h2><p class="mod-lede">8<!-- -->picks in. There is nothing else to do — best ball sets your lineup for you.</p><div><div class="row"><span><span class="slot-tag">R<!-- -->1</span> <!-- -->Ja&#x27;Marr Chase</span><span class="r r--mut">WR</span></div><div class="row"><span><span class="slot-tag">R<!-- -->2</span> <!-- -->Rashee Rice</span><span class="r r--mut">WR</span></div><div class="row"><span><span class="slot-tag">R<!-- -->3</span> <!-- -->Garrett Wilson</span><span class="r r--mut">WR</span></div><div class="row"><span><span class="slot-tag">R<!-- -->4</span> <!-- -->Bucky Irving</span><span class="r r--mut">RB</span></div><div class="row"><span><span class="slot-tag">R<!-- -->5</span> <!-- -->Jameson Williams</span><span class="r r--mut">WR</span></div><div class="row"><span><span class="slot-tag">R<!-- -->6</span> <!-- -->Jadarian Price</span><span class="r r--mut">RB</span></div><div class="row"><span><span class="slot-tag">R<!-- -->7</span> <!-- -->Jayden Daniels</span><span class="r r--mut">QB</span></div><div class="row"><span><span class="slot-tag">R<!-- -->8</span> <!-- -->George Kittle</span><span class="r r--mut">TE</span></div><div class="row"><span>Locks</span><span class="r">Wed, Aug 19, 2:16 PM ET</span></div><div class="row"><span>Results</span><span class="r r--mut">Tuesday morning</span></div></div><a class="ghost" href="/sim/draft/3874">See the full draft board →</a></section></main></div></div></section><section class="cap"><h2>6 · LOCKED</h2><p class="note">Kickoff passed. No button: nothing to do.</p><div class="frame"><div class="weekly" data-surface="ink"><main class="daily-main"><section class="mod mod--entered"><h2 class="eyebrow">Week <!-- -->1<!-- --> <span class="ctx">— locked</span></h2><p class="mod-lede">Your <!-- -->8<!-- --> picks are in. Best ball scores your best six once every game is final.</p><div><div class="row"><span><span class="slot-tag">R<!-- -->1</span> <!-- -->Ja&#x27;Marr Chase</span><span class="r r--mut">WR</span></div><div class="row"><span><span class="slot-tag">R<!-- -->2</span> <!-- -->Rashee Rice</span><span class="r r--mut">WR</span></div><div class="row"><span><span class="slot-tag">R<!-- -->3</span> <!-- -->Garrett Wilson</span><span class="r r--mut">WR</span></div><div class="row"><span><span class="slot-tag">R<!-- -->4</span> <!-- -->Bucky Irving</span><span class="r r--mut">RB</span></div><div class="row"><span><span class="slot-tag">R<!-- -->5</span> <!-- -->Jameson Williams</span><span class="r r--mut">WR</span></div><div class="row"><span><span class="slot-tag">R<!-- -->6</span> <!-- -->Jadarian Price</span><span class="r r--mut">RB</span></div><div class="row"><span><span class="slot-tag">R<!-- -->7</span> <!-- -->Jayden Daniels</span><span class="r r--mut">QB</span></div><div class="row"><span><span class="slot-tag">R<!-- -->8</span> <!-- -->George Kittle</span><span class="r r--mut">TE</span></div><div class="row"><span>Results</span><span class="r r--mut">Tuesday morning</span></div></div></section></main></div></div></section><section class="cap"><h2>7 · SETTLED</h2><p class="note">Real 2025 Week 1 box scores. Best six scored 76.2 of a 146.2 perfect; the bench shows the points the draft didn&#x27;t need.</p><div class="frame"><div class="weekly" data-surface="ink"><main class="daily-main"><section class="hero"><div class="hero-eyebrow">The Draft · final</div><div class="hero-q">2025<!-- --> · Week <!-- -->1</div><p class="hero-line">Your best six scored <b>76.2</b> · <!-- -->52.1<!-- -->% of perfect</p></section><section class="mod mod--entered"><h2 class="eyebrow">Your draft <span class="ctx">— started six in bold</span></h2><div class="score-row"><div class="score-big">76.2</div><div class="score-meta"><span class="tierbadge tier--ps">PRACTICE SQUAD</span><span class="muted">perfect was <!-- -->146.2</span></div></div><div><div class="row row--started"><span><span class="slot-tag">R<!-- -->1</span> <!-- -->Ja&#x27;Marr Chase<span class="muted"> · <!-- -->WR</span></span><span class="r">4.6</span></div><div class="row"><span><span class="slot-tag">R<!-- -->2</span> <!-- -->Rashee Rice<span class="muted"> · <!-- -->WR</span></span><span class="r">0</span></div><div class="row row--started"><span><span class="slot-tag">R<!-- -->3</span> <!-- -->Garrett Wilson<span class="muted"> · <!-- -->WR</span></span><span class="r">22.5</span></div><div class="row row--started"><span><span class="slot-tag">R<!-- -->4</span> <!-- -->Bucky Irving<span class="muted"> · <!-- -->RB</span></span><span class="r">14.5</span></div><div class="row row--started"><span><span class="slot-tag">R<!-- -->5</span> <!-- -->Jameson Williams<span class="muted"> · <!-- -->WR</span></span><span class="r">6.6</span></div><div class="row"><span><span class="slot-tag">R<!-- -->6</span> <!-- -->Jadarian Price<span class="muted"> · <!-- -->RB</span></span><span class="r">0</span></div><div class="row row--started"><span><span class="slot-tag">R<!-- -->7</span> <!-- -->Jayden Daniels<span class="muted"> · <!-- -->QB</span></span><span class="r">20.1</span></div><div class="row row--started"><span><span class="slot-tag">R<!-- -->8</span> <!-- -->George Kittle<span class="muted"> · <!-- -->TE</span></span><span class="r">12.5</span></div></div></section><section class="mod"><h2 class="eyebrow">The perfect lineup <span class="ctx">— <!-- -->146.2</span></h2><div><div class="row"><span><span class="slot-tag">QB</span> <!-- -->Josh Allen<span class="muted"> · <!-- -->BUF</span></span><span class="r">38.8</span></div><div class="row"><span><span class="slot-tag">RB</span> <!-- -->Derrick Henry<span class="muted"> · <!-- -->BAL</span></span><span class="r">29.2</span></div><div class="row"><span><span class="slot-tag">WR</span> <!-- -->Zay Flowers<span class="muted"> · <!-- -->BAL</span></span><span class="r">28.1</span></div><div class="row"><span><span class="slot-tag">TE</span> <!-- -->Juwan Johnson<span class="muted"> · <!-- -->NO</span></span><span class="r">15.6</span></div><div class="row"><span><span class="slot-tag">FLEX</span> <!-- -->Keon Coleman<span class="muted"> · <!-- -->BUF</span></span><span class="r">25.2</span></div><div class="row"><span><span class="slot-tag">FLEX</span> <!-- -->Quentin Johnston<span class="muted"> · <!-- -->LAC</span></span><span class="r">24.9</span></div></div></section><p class="muted">Settled from final box scores. A settled week is final — later stat corrections do not move it.</p></main></div></div></section><section class="cap"><h2>8 · HOMEPAGE MODULE</h2><p class="note">The Weekly&#x27;s module markup reused. &#x27;Waiting&#x27; state, with the pick count.</p><div class="frame"><article class="daily-card"><section class="dly" data-surface="ink" data-state="waiting"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">The Draft</span><span class="dly-ed">Week <!-- -->1</span></div><div class="dly-rcpt"><div class="dly-score">8</div><div class="dly-of">picks in</div></div><p class="dly-sub">Drafted. Nothing else to do — best ball sets your lineup from what your players actually do.</p><a class="dly-link" href="/draft">See your draft →</a><div class="dly-foot">Locks <!-- -->Wed 2:16 PM ET<!-- --> · Results Tuesday morning</div></section></article></div></section></div></div>

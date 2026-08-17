@@ -1,0 +1,30 @@
+/* The Draft's own deltas. Everything else is the Weekly's, shared through the
+   `.daily, .weekly` token scope in app/daily/daily.css - see that file's header
+   for why a divergence has to be written down. */
+
+/* THE SEAT GRID. Twelve targets on a phone means a 4-wide grid at 44px+, which
+   is the same thumb rule the slots bar follows. Notes wrap under the number
+   rather than beside it, so seat 1 and seat 12 do not become taller cells and
+   ripple the grid. */
+.seats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px;
+}
+.seat {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; min-height: 56px; padding: 8px 4px;
+  background: var(--d-card); color: var(--d-paper);
+  border: 1px solid var(--d-line); border-radius: 10px; cursor: pointer;
+  font-family: inherit;
+}
+.seat--on { border-color: var(--d-volt); color: var(--d-volt); }
+.seat-n { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.seat-note {
+  font-size: 9px; line-height: 1.15; text-align: center; color: var(--d-mut);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.seat--on .seat-note { color: var(--d-volt); opacity: .8; }
+
+/* A started player in the settled roster. Best ball picks the six for you, so
+   the only thing the list has to say is which ones counted. */
+.row--started { font-weight: 700; }
+.row--started .r { color: var(--d-volt); }
