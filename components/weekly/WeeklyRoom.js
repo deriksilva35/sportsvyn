@@ -10,8 +10,8 @@
  * has to say why. There are exactly three differences and each is annotated:
  *
  *   1. NO CLOCK, A DEADLINE. The Daily's hero instrument is a 3:00 countdown
- *      the round is built around. Five days is not an instrument - it is a
- *      date. It reads as a line, not a bar, and it does not turn red.
+ *      the round is built around. A deadline days out is not an instrument -
+ *      it is a date. It reads as a line, not a bar, and it does not turn red.
  *   2. SAVE ON CHANGE, NO LOCK BUTTON. The Daily has one irreversible submit;
  *      the Weekly has no submit at all. Whatever is saved when Thursday
  *      arrives is the entry, so a "lock it in" button would be a lie - it
@@ -63,6 +63,7 @@ export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAt
   const [save, setSave] = useState('clean');   // clean | saving | saved | error
   const [locked, setLocked] = useState(false);
   const [err, setErr] = useState(null);
+  const [query, setQuery] = useState('');
   const [left, setLeft] = useState(() => timeToLock(contest?.locks_at));
   const timer = useRef(null);
   const pending = useRef(null);
@@ -119,9 +120,10 @@ export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAt
   const picked = useMemo(() => new Set(Object.values(lineup).filter(Boolean)), [lineup]);
   const filledCount = SLOTS.filter((s) => lineup[s] != null).length;
 
-  // Memoised on the active slot: re-sorting 1,269 rows on every change of
-  // state - and there is one on every pick - is work with a visible cost.
-  const rows = useMemo(() => poolRows(board, active), [board, active]);
+  // Memoised on the active slot AND the query: re-filtering and re-sorting
+  // 1,269 rows on every change of state - and there is one on every pick and
+  // every keystroke - is work with a visible cost.
+  const rows = useMemo(() => poolRows(board, active, query), [board, active, query]);
 
   function pick(id) {
     if (locked) return;
@@ -129,6 +131,10 @@ export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAt
     setLineup(next);
     // Difference 3: a full lineup stays put instead of cycling back to QB.
     if (SLOTS.some((s) => next[s] == null)) setActive(nextOpenSlot(active, next));
+    // THE QUERY CLEARS ON A PICK. Auto-advance moves to the next empty slot,
+    // and a leftover "kelce" on the WR tab would show an empty pool - which
+    // reads as a broken board, not as a filter still being applied.
+    setQuery('');
     queue(next);
   }
 
@@ -191,13 +197,49 @@ export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAt
           </p>
         )}
 
+        {/* THE SEARCH FIELD, and it is here rather than on the Daily on
+            purpose. The Daily's board is 64 players and the scan under a
+            three-minute clock IS that game; a filter would be a cheat code for
+            it. The Weekly's board is 1,269 players with four days to think, so
+            hunting for a name is friction with nothing to protect. */}
+        <div className="wk-find">
+          <input
+            className="wk-find-in"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={`Find a ${active.startsWith('FLEX') ? 'player' : active}…`}
+            aria-label={`Search ${POOL_LABEL[active]}`}
+            enterKeyHint="search"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
+          />
+          {query && (
+            <button type="button" className="wk-find-x" onClick={() => setQuery('')}
+              aria-label="Clear search">×</button>
+          )}
+        </div>
+
         <div className="pool-head">
-          <span>{POOL_LABEL[active]}</span>
+          <span>
+            {POOL_LABEL[active]}
+            {/* The count is the feedback that the filter did something. Without
+                it a query matching nothing is indistinguishable from a board
+                that failed to load. */}
+            {query && <span className="wk-find-n"> · {rows.length} {rows.length === 1 ? 'match' : 'matches'}</span>}
+          </span>
           <span>PPG</span>
         </div>
       </div>
 
       <div className="pool pool--scroll">
+        {query && rows.length === 0 && (
+          <p className="wk-find-none">
+            No {POOL_LABEL[active].toLowerCase()} matching &ldquo;{query}&rdquo;.
+            {' '}The filter only searches the tab you are on.
+          </p>
+        )}
         {rows.map((p) => (
           <button key={p.id} type="button"
             className={`plyr${picked.has(p.id) ? ' plyr--used' : ''}`}

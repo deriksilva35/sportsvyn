@@ -57,6 +57,14 @@ export default async function DailyReveal({ params, searchParams }) {
       <div className="daily" data-surface="ink">
       <main className="daily-main">
 
+        {/* BACK TO THE ARCADE. A reveal is the most-linked surface on the site -
+            share cards, the lobby's answer pane, yesterday's strip all land
+            here - so it is the page a reader is most likely to arrive at from
+            outside with no idea what else exists. A ghost link, not a button:
+            this screen already has its one hero, and a breadcrumb that competes
+            with the answer would be a second one (v1.2 s5). */}
+        <a className="crumb" href="/games">&larr; Games</a>
+
         {/* THE HERO, and the only one on this screen (v1.2 s5). This is the
             surface people screenshot, so the answer is the display statement
             and everything else is a module beneath it. */}

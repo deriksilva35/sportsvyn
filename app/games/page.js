@@ -126,22 +126,12 @@ function GamesPane({ v }) {
         <a className="ghost" href="/sim">Start a mock &rarr;</a>
       </section>
 
-      {v.season && (
-        <section className="mod">
-          <div className="mod-head">
-            <h2 className="eyebrow">
-              Your season{v.season.handle ? ` — ${v.season.handle}` : ''}
-            </h2>
-            {v.seasonKey && <span className="pill">{v.seasonKey}</span>}
-          </div>
-          <div className="grid2">
-            <div className="stat"><div className="eyebrow">Season pts</div><div className="n">{v.season.points}</div></div>
-            <div className="stat"><div className="eyebrow">Streak</div><div className="n">{v.streak}</div></div>
-            <div className="stat"><div className="eyebrow">Played</div><div className="n">{v.season.played}/{v.season.daysPlayable}</div></div>
-            <div className="stat"><div className="eyebrow">Pick &rsquo;em</div><div className="n muted">&mdash;</div></div>
-          </div>
-        </section>
-      )}
+      {/* GATED ON THE RECORD ITSELF, not on v.season. seasonStrip() returns
+          null until the reader has a STANDING, so gating on it hid the whole
+          module from exactly the readers it is most useful to: anyone who has
+          played a day or two and has no ranked position yet. The record exists
+          the moment a revealed day does. */}
+      <YourStats v={v} />
     </>
   );
 }
@@ -225,31 +215,125 @@ function AnswerPane({ v }) {
   );
 }
 
-function HistoryPane({ v }) {
+/**
+ * YOUR RECORD - through revealed days only, INCLUDING your own open day.
+ *
+ * Every other surface lets the reader see their own in-flight result, because
+ * it is theirs. These are standings: a number that moved when you locked this
+ * morning would disagree with the leaderboard one pane away, and "played 12/11"
+ * reads as the page being unable to count. See lib/games/personal.js.
+ */
+function YourStats({ v }) {
+  const s = v.stats;
+  if (!s) return null;
+  const tiers = Object.entries(s.tiers).filter(([, n]) => n > 0);
   return (
     <section className="mod">
-      <div className="mod-head"><h2 className="eyebrow">Every edition</h2></div>
+      <div className="mod-head">
+        <h2 className="eyebrow">
+          Your record{v.season?.handle ? ` — ${v.season.handle}` : ''}
+        </h2>
+        {v.seasonKey && <span className="pill">{v.seasonKey}</span>}
+      </div>
+
+      <div className="grid2">
+        <div className="stat"><div className="eyebrow">Played</div><div className="n">{s.played}/{s.playable}</div></div>
+        <div className="stat">
+          <div className="eyebrow">Avg of perfect</div>
+          <div className="n">{s.avgPct != null ? `${s.avgPct}%` : <span className="muted">&mdash;</span>}</div>
+        </div>
+        <div className="stat"><div className="eyebrow">Season pts</div><div className="n">{v.season?.points ?? 0}</div></div>
+        <div className="stat"><div className="eyebrow">Streak</div><div className="n">{s.streak}</div></div>
+      </div>
+
       <div>
-        {v.history.map((h) => (
-          <div className={`row${h.sealed ? ' row--sealed' : ''}`} key={h.date}>
-            <span className="hist-ed">{h.label}</span>
-            {h.sealed ? (
-              <>
-                {/* A sealed row proves a day EXISTS without saying anything
-                    about it. No season, no week, no score - that is the whole
-                    point of the row. */}
-                <span className="muted">&mdash; sealed &mdash;</span>
-                <span className="v muted">open</span>
-              </>
-            ) : (
-              <>
-                <span>{h.season} · Wk {h.week}</span>
-                <span className="v">{h.top ? `${h.top.name} ${h.top.score}` : '—'}</span>
-                <span className="muted">{h.perfect}</span>
-              </>
-            )}
+        <div className="row">
+          <span>Best score</span>
+          <span className="v">
+            {s.best
+              ? <>{s.best.score}{s.best.edition && <span className="muted"> · Ed. {s.best.edition}</span>}</>
+              : <span className="muted">&mdash;</span>}
+          </span>
+        </div>
+        <div className="row">
+          <span>Guesses</span>
+          <span className="v">
+            {s.guess.guessed === 0
+              ? <span className="muted">none yet</span>
+              : (
+                <>
+                  {s.guess.exact} exact
+                  <span className="muted"> · {s.guess.seasonRight} season only · {s.guess.missed} missed</span>
+                </>
+              )}
+          </span>
+        </div>
+        {/* Tiers with a zero count are ABSENT rather than shown as 0. A row of
+            empty badges reads as a scorecard of failures; the ones you earned
+            read as a collection. */}
+        {tiers.length > 0 && (
+          <div className="row">
+            <span>Tiers</span>
+            <span className="v tierline">
+              {tiers.map(([label, n]) => (
+                <span className={`badge ${tierClass(label)}`} key={label}>{label} ×{n}</span>
+              ))}
+            </span>
           </div>
-        ))}
+        )}
+      </div>
+    </section>
+  );
+}
+
+function HistoryPane({ v }) {
+  // The column only exists when there is a reader to own it. Driven by the
+  // presence of `you` on the rows themselves, not by a separate flag, so the
+  // header and the cells cannot disagree about whether the column is there.
+  const hasYou = v.history.some((h) => h.you !== undefined);
+  return (
+    <section className="mod">
+      <div className="mod-head">
+        <h2 className="eyebrow">Every edition</h2>
+        {hasYou && <span className="pill">Your score, revealed days</span>}
+      </div>
+      <div>
+        {v.history.map((h) => {
+          const inner = h.sealed ? (
+            <>
+              {/* A sealed row proves a day EXISTS without saying anything
+                  about it. No season, no week, no score - that is the whole
+                  point of the row. */}
+              <span className="muted">&mdash; sealed &mdash;</span>
+              <span className="v muted">open</span>
+            </>
+          ) : (
+            <>
+              <span>{h.season} · Wk {h.week}</span>
+              <span className="v">{h.top ? `${h.top.name} ${h.top.score}` : '—'}</span>
+              <span className="muted">{h.perfect}</span>
+              {h.you !== undefined && (
+                <span className="hist-you">
+                  {h.you.played ? (
+                    <>
+                      {h.you.score}
+                      {h.you.tier && <span className={`badge ${tierClass(h.you.tier)}`}>{h.you.tier}</span>}
+                    </>
+                  ) : <span className="muted">&mdash;</span>}
+                </span>
+              )}
+            </>
+          );
+          // A SEALED ROW IS NOT A LINK. There is nothing at the other end yet,
+          // and a link to a page that redirects back is worse than no link.
+          return h.sealed
+            ? <div className="row row--sealed" key={h.date}><span className="hist-ed">{h.label}</span>{inner}</div>
+            : (
+              <a className="row row--link" key={h.date} href={h.href}>
+                <span className="hist-ed">{h.label}</span>{inner}
+              </a>
+            );
+        })}
       </div>
     </section>
   );

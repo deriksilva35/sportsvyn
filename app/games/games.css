@@ -128,3 +128,26 @@
   .gname { font-size: 17px; }
   .gicon { width: 44px; height: 44px; font-size: 21px; }
 }
+
+/* ---------------------------------------------------------------------------
+   PERSONAL HISTORY - the YOU column and the record module.
+   --------------------------------------------------------------------------- */
+
+/* THE YOU COLUMN sits at the end of the row and is the only cell that changes
+   between readers. It gets its own start-aligned block rather than joining the
+   flow, so a row with a tier badge and a row with an em-dash have the same
+   height and the column does not ripple down the list. */
+.hist-you {
+  display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;
+  min-width: 108px; font-variant-numeric: tabular-nums; font-weight: 700;
+}
+
+/* A HISTORY ROW IS A LINK, so it needs the affordance a <div> never had -
+   without changing the row's own geometry, because the sealed rows beside it
+   are still <div>s and the two must line up exactly. */
+.row--link { text-decoration: none; color: inherit; cursor: pointer; }
+.row--link:hover { background: rgba(255,255,255,.04); }
+
+/* Tier badges wrap rather than squeezing the label: on a phone a reader with
+   four tiers gets two lines, not four unreadable chips. */
+.tierline { display: inline-flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }

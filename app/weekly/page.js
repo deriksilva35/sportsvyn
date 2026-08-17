@@ -11,7 +11,7 @@
  * the Daily worth naming. The Daily withholds its board until POST /start
  * stamps a clock, because opening the page must not start the round. The
  * Weekly has no round to start: the board is public from Tuesday, everyone
- * sees the same one for five days, and there is nothing to withhold. So it
+ * sees the same one from Tuesday until kickoff, and there is nothing to hide.
  * ships with the page instead of arriving from an endpoint.
  *
  * SETTLED IS FINAL. The reveal below reads the settled contest row; it does
@@ -33,7 +33,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'The Weekly - Sportsvyn',
-  description: 'One board. Six slots. Five days to decide.',
+  description: 'One board. Six slots. Open until the first kickoff.',
 };
 
 export async function generateViewport({ searchParams }) {
@@ -71,6 +71,26 @@ function Shell({ children }) {
  * signed-out pitch and the signed-in rules, because those are two different
  * readers and only one of them ever sees the other surface.
  */
+/**
+ * THE PITCH HERO. Shared by the signed-out reader and the pre-board state,
+ * because they are the same reader with the same question - "what is this?" -
+ * and only the last line differs. `action` is whatever belongs where the button
+ * goes: a real CTA when there is a board, an honest date when there is not.
+ */
+function Pitch({ action }) {
+  return (
+    <section className="hero">
+      <div className="hero-eyebrow">The Weekly &middot; same board for everyone</div>
+      <div className="hero-q">Six slots.<br />No clock.</div>
+      <p className="hero-line">
+        One board of this week&rsquo;s actives &middot; edit until{' '}
+        <b>first kickoff</b> &middot; results Tuesday morning
+      </p>
+      {action}
+    </section>
+  );
+}
+
 function Rules({ contest }) {
   return (
     <section className="mod">
@@ -78,7 +98,7 @@ function Rules({ contest }) {
       <div>
         <div className="row"><span>The board</span><span className="r">This week&rsquo;s actives</span></div>
         <div className="row"><span>Your lineup</span><span className="r">QB &middot; RB &middot; WR &middot; TE &middot; 2 FLEX</span></div>
-        <div className="row"><span>Edit until</span><span className="r">{etStamp(contest?.locks_at) ?? 'first kickoff'}</span></div>
+        <div className="row"><span>Edit until</span><span className="r">{etStamp(contest?.locks_at) ?? 'First kickoff'}</span></div>
         <div className="row"><span>Scoring</span><span className="r">PPR, worst pick dropped</span></div>
         <div className="row"><span>Results</span><span className="r">Tuesday morning</span></div>
       </div>
@@ -106,13 +126,22 @@ export default async function WeeklyPage({ searchParams }) {
   const state = weeklyState({ contest, entry });
 
   // ---- NO BOARD ------------------------------------------------------------
+  //
+  // THE FULL PITCH, NOT A SENTENCE. This state shipped as one line of text on a
+  // black screen, and it is the state a stranger following a link before the
+  // season is MOST likely to land in - the one moment the page has to explain
+  // itself, spent saying "not yet". A reader who arrives pre-board should leave
+  // knowing what the game is and when to come back, which costs nothing but the
+  // markup that already exists two branches down.
+  //
+  // The waiting line sits exactly where the CTA sits in every other state, so
+  // the eye lands on the answer to "can I play" in the same place either way.
+  // Same treatment will apply to /pickem and /draft before their first boards.
   if (state === 'none') {
     return (
       <Shell>
-        <section className="mod">
-          <h2 className="eyebrow">This week&rsquo;s board</h2>
-          <p className="mod-lede">Not up yet. Boards open Tuesday morning.</p>
-        </section>
+        <Pitch action={<div className="wk-soon">Boards open Tuesday morning</div>} />
+        <Rules contest={null} />
       </Shell>
     );
   }
@@ -123,17 +152,11 @@ export default async function WeeklyPage({ searchParams }) {
   if (userId == null) {
     return (
       <Shell>
-        <section className="hero">
-          <div className="hero-eyebrow">The Weekly &middot; same board for everyone</div>
-          <div className="hero-q">Five days.<br />Six slots.</div>
-          <p className="hero-line">
-            One board of this week&rsquo;s actives &middot; edit until{' '}
-            <b>first kickoff</b> &middot; results Tuesday morning
-          </p>
+        <Pitch action={(
           <a className="btn--volt" href={shellSigninHref('/weekly', isShell)}>
             Build this week&rsquo;s lineup
           </a>
-        </section>
+        )} />
         <Rules contest={contest} />
       </Shell>
     );

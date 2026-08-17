@@ -6,7 +6,7 @@
  * builder's countdown has no standing - same posture as the Daily's clock.
  *
  * PARTIAL SAVES ARE THE NORMAL CASE. This endpoint is called on every pick
- * across five days, so most calls carry an incomplete lineup. Completeness is
+ * from Tuesday to kickoff, so most calls carry an incomplete lineup. It is
  * asked at settle.
  */
 import { auth } from '@/auth';

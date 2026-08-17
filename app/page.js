@@ -361,7 +361,7 @@ export default async function HomePage() {
           {/* THE WEEKLY SITS BENEATH THE DAILY AND ITS ANSWER, in that order,
               because that is the order the reader's attention is free in: the
               thing that expires TONIGHT, the thing that happened YESTERDAY,
-              then the thing with five days left on it. Same reasoning that put
+              then the thing that runs until kickoff. Same reasoning that put
               the Daily first - lead with what is only true today.
 
               Renders nothing at all until a board exists, which is every day

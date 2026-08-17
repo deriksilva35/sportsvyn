@@ -1,3 +1,6 @@
+<!doctype html><meta charset="utf-8"><title>Four items — rendered</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
 /* app/daily/daily.css - The Daily. Ink ground; the game is an instrument.
  *
  * v1.0.1 POLISH PASS, built to Design Tokens v1.2 - The Module Grammar, with
@@ -491,3 +494,174 @@
   font-family: var(--d-mono, ui-monospace, monospace);
   font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--d-mut);
 }
+
+/* /games - the lobby. Ink, v1.2 grammar, tokens and component shapes lifted
+   from docs/design/sportsvyn-games-lobby-mock-v0_1.html, which is the spec.
+   The same styles serve the app's Games tab (app mock v0.2) - one surface. */
+
+.lob {
+  --l-ink: #0A0A0A; --l-ink2: #141414; --l-ink3: #1E1E1E; --l-line: #2A2A2A;
+  --l-volt: #D4FF00; --l-paper: #F5F5F2; --l-jade: #2A8A4F; --l-terra: #B8410F;
+  --l-mut: #8A8A85;
+  --l-disp: var(--font-saira, 'Saira'), sans-serif;
+  --l-cond: var(--font-saira-condensed, 'Saira Condensed'), sans-serif;
+  --l-mono: var(--font-jetbrains-mono, 'JetBrains Mono'), ui-monospace, monospace;
+
+  background: var(--l-ink); color: var(--l-paper);
+  font-family: var(--l-mono); font-size: 14px; line-height: 1.5;
+  max-width: 960px; margin: 0 auto; padding: 22px 16px 60px;
+}
+.lob-head { padding: 4px 2px 0; margin-bottom: 14px; }
+.lob-title {
+  font-family: var(--l-disp); font-style: italic; font-weight: 900;
+  font-size: 34px; letter-spacing: -.04em; line-height: 1.02; margin: 0;
+}
+.lob-sub { color: #CFCFC9; font-size: 13px; margin: 4px 0 0; }
+
+/* in-page panes. URL links styled as tabs; volt UNDERLINE on active, matching
+   the mock and the house tab grammar - fills are for selector pills. */
+.ptabs {
+  display: flex; gap: 6px; border-bottom: 1px solid var(--l-line);
+  overflow-x: auto; margin-bottom: 14px; scrollbar-width: none;
+}
+.ptabs::-webkit-scrollbar { display: none; }
+.pt {
+  font-family: var(--l-cond); font-weight: 600; letter-spacing: .1em; font-size: 12px;
+  text-transform: uppercase; color: var(--l-mut); text-decoration: none;
+  border-bottom: 2px solid transparent; padding: 8px 12px 10px; white-space: nowrap;
+}
+.pt--on { color: var(--l-volt); border-bottom-color: var(--l-volt); }
+.pt:hover { color: var(--l-paper); }
+
+/* the 2x2 grid */
+.ggrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.gcard {
+  background: var(--l-ink2); border: 1px solid var(--l-line); border-radius: 14px;
+  padding: 18px 14px; display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 8px; text-decoration: none; color: inherit;
+}
+.gcard--live { background: linear-gradient(165deg, #1a2000 0%, var(--l-ink2) 60%); border-color: #3a4400; }
+.gicon {
+  width: 52px; height: 52px; border-radius: 12px; background: var(--l-ink3);
+  border: 1px solid var(--l-line); display: flex; align-items: center;
+  justify-content: center; font-size: 24px;
+}
+.gname {
+  font-family: var(--l-disp); font-style: italic; font-weight: 900;
+  font-size: 20px; letter-spacing: -.03em;
+}
+/* min-height keeps the four buttons on one line however long a blurb runs. */
+.gdesc { color: var(--l-mut); font-size: 11.5px; line-height: 1.45; min-height: 48px; }
+.gbtn {
+  display: block; width: 100%; font-family: var(--l-disp); font-style: italic;
+  font-weight: 900; letter-spacing: -.01em; font-size: 14px;
+  background: var(--l-volt); color: var(--l-ink); border-radius: 9px; padding: 11px 8px;
+}
+.gbtn--ghost { background: var(--l-ink3); color: var(--l-mut); border: 1px solid var(--l-line); }
+.gfoot { font-size: 10.5px; color: var(--l-mut); font-variant-numeric: tabular-nums; min-height: 14px; }
+
+/* modules */
+.lob .mod {
+  background: var(--l-ink2); border: 1px solid var(--l-line);
+  border-radius: 12px; padding: 16px; margin-bottom: 12px;
+}
+.lob .mod-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 10px; }
+.lob .eyebrow {
+  font-family: var(--l-cond); font-weight: 600; text-transform: uppercase;
+  letter-spacing: .14em; font-size: 11px; color: var(--l-mut); margin: 0;
+}
+.lob .pill {
+  font-family: var(--l-cond); font-weight: 600; letter-spacing: .08em; font-size: 11px;
+  border: 1px solid var(--l-line); background: var(--l-ink3); border-radius: 99px;
+  padding: 4px 11px; color: var(--l-mut); white-space: nowrap;
+}
+.lob .row {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--l-line);
+  font-variant-numeric: tabular-nums;
+}
+.lob .row:last-child { border-bottom: none; }
+.lob .row .v { font-weight: 700; white-space: nowrap; }
+.lob .muted { color: var(--l-mut); }
+.lob .volt { color: var(--l-volt); }
+.lob .rank { display: inline-block; width: 22px; color: var(--l-mut); font-size: 11px; }
+.lob .lb-left { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.row--me { background: #17170F; margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+.row--sealed { opacity: .55; }
+.hist-ed { font-family: var(--l-cond); font-weight: 600; letter-spacing: .1em; font-size: 11px; text-transform: uppercase; }
+
+.ghost {
+  display: inline-block; margin-top: 10px;
+  font-family: var(--l-cond); font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; font-size: 12px;
+  background: var(--l-ink3); color: var(--l-paper);
+  border: 1px solid var(--l-line); border-radius: 8px; padding: 9px 14px; text-decoration: none;
+}
+.ghost:hover { border-color: var(--l-volt); }
+.lob-links { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.stat { background: var(--l-ink3); border: 1px solid var(--l-line); border-radius: 9px; padding: 10px; }
+.stat .n { font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+.ans {
+  font-family: var(--l-disp); font-style: italic; font-weight: 900;
+  font-size: 30px; letter-spacing: -.04em; margin: 4px 0 10px;
+}
+.lob .badge {
+  display: inline-block; margin-left: 6px;
+  font-family: var(--l-cond); font-weight: 600; letter-spacing: .1em; font-size: 11px;
+  text-transform: uppercase; border: 1px solid currentColor; border-radius: 99px; padding: 3px 10px;
+}
+.lob .tier--hof { color: var(--l-volt); } .lob .tier--mvp { color: var(--l-jade); }
+.lob .tier--pb { color: var(--l-paper); } .lob .tier--st { color: var(--l-mut); }
+.lob .tier--ps { color: var(--l-terra); }
+
+.lob-foot { color: var(--l-mut); font-size: 11px; line-height: 1.5; margin-top: 18px; }
+
+@media (max-width: 400px) {
+  .lob-title { font-size: 28px; }
+  .gdesc { min-height: 56px; font-size: 11px; }
+  .gname { font-size: 17px; }
+  .gicon { width: 44px; height: 44px; font-size: 21px; }
+}
+
+/* ---------------------------------------------------------------------------
+   PERSONAL HISTORY - the YOU column and the record module.
+   --------------------------------------------------------------------------- */
+
+/* THE YOU COLUMN sits at the end of the row and is the only cell that changes
+   between readers. It gets its own start-aligned block rather than joining the
+   flow, so a row with a tier badge and a row with an em-dash have the same
+   height and the column does not ripple down the list. */
+.hist-you {
+  display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;
+  min-width: 108px; font-variant-numeric: tabular-nums; font-weight: 700;
+}
+
+/* A HISTORY ROW IS A LINK, so it needs the affordance a <div> never had -
+   without changing the row's own geometry, because the sealed rows beside it
+   are still <div>s and the two must line up exactly. */
+.row--link { text-decoration: none; color: inherit; cursor: pointer; }
+.row--link:hover { background: rgba(255,255,255,.04); }
+
+/* Tier badges wrap rather than squeezing the label: on a phone a reader with
+   four tiers gets two lines, not four unreadable chips. */
+.tierline { display: inline-flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+
+body{margin:0;background:#161616;color:#E9E9E9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1600px;margin:0 auto;padding:28px 20px 60px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.02em}
+.lede{color:#9A9A9A;font-size:13px;margin:0 0 26px;line-height:1.6;max-width:900px}
+.lede b{color:#D8FF3E}
+.caps{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:22px;align-items:start}
+.cap h2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:#D8FF3E;margin:0 0 4px}
+.cap .note{font-size:12px;color:#8A8A8A;margin:0 0 10px;line-height:1.5}
+.frame{width:390px;max-width:100%;border:1px solid #2E2E2E;border-radius:14px;overflow:hidden;background:#0A0A0A}
+.frame .daily-main,.frame .lob{max-height:none}
+</style>
+<div class="wrap">
+<h1>Four items — rendered at 390px</h1>
+<p class="lede">Served HTML from the real pages, against the <b>real 2026 Week 1 board</b> — 272 games ingested from
+BDL, 1,269-player pool, opens Tue Sep 8 9:00 AM ET, locks Wed Sep 9 8:20 PM ET. Nothing here is a mock.</p>
+<div class="caps"><section class="cap"><h2>1 · BACK NAVIGATION</h2><p class="note">A ghost breadcrumb above the answer hero on /daily/[date]. The share card is a 1080×1920 PNG — it has no DOM to hold a link.</p><div class="frame"><div class="daily" data-surface="ink"><main class="daily-main"><a class="crumb" href="/games">← Games</a><section class="hero"><div class="hero-eyebrow">The answer · <!-- -->2026-08-15</div><div class="dh-answer">2015<!-- --> <span class="wk">· Week <!-- -->17</span></div><div class="pair"><div class="pair-cell"><div class="n">122.9</div><div class="k">perfect lineup</div></div></div></section></main></div></div></section><section class="cap"><h2>2a · HISTORY, YOUR COLUMN</h2><p class="note">Each revealed edition carries your score and tier. Rows link to the reveal; sealed rows do not.</p><div class="frame"><main class="lob" data-surface="ink"><section class="mod"><div class="mod-head"><h2 class="eyebrow">Every edition</h2><span class="pill">Your score, revealed days</span></div><div><div class="row row--sealed"><span class="hist-ed">Ed. 003</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><div class="row row--sealed"><span class="hist-ed">Ed. 002</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><div class="row row--sealed"><span class="hist-ed">Ed. 001</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><a class="row row--link" href="/daily/2026-08-15"><span class="hist-ed">2026-08-15</span><span>2015<!-- --> · Wk <!-- -->17</span><span class="v">Player e740 102.5</span><span class="muted">122.9</span><span class="hist-you"><span class="muted">—</span></span></a></div></section></main></div></section><section class="cap"><h2>2a · HISTORY, SIGNED OUT</h2><p class="note">The column is absent, not empty —  is undefined so it never reaches the wire.</p><div class="frame"><main class="lob" data-surface="ink"><section class="mod"><div class="mod-head"><h2 class="eyebrow">Every edition</h2></div><div><div class="row row--sealed"><span class="hist-ed">Ed. 003</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><div class="row row--sealed"><span class="hist-ed">Ed. 002</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><div class="row row--sealed"><span class="hist-ed">Ed. 001</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><a class="row row--link" href="/daily/2026-08-15"><span class="hist-ed">2026-08-15</span><span>2015<!-- --> · Wk <!-- -->17</span><span class="v">Player e740 102.5</span><span class="muted">122.9</span></a></div></section></main></div></section><section class="cap"><h2>2b · YOUR RECORD</h2><p class="note">Played, avg pct-of-perfect, best score with its edition, tier counts, guess record, streak. Revealed days only — including your own open day.</p><div class="frame"><main class="lob" data-surface="ink"><section class="mod"><div class="mod-head"><h2 class="eyebrow">Your record</h2><span class="pill">2025-26</span></div><div class="grid2"><div class="stat"><div class="eyebrow">Played</div><div class="n">0<!-- -->/<!-- -->1</div></div><div class="stat"><div class="eyebrow">Avg of perfect</div><div class="n"><span class="muted">—</span></div></div><div class="stat"><div class="eyebrow">Season pts</div><div class="n">0</div></div><div class="stat"><div class="eyebrow">Streak</div><div class="n">0</div></div></div><div><div class="row"><span>Best score</span><span class="v"><span class="muted">—</span></span></div><div class="row"><span>Guesses</span><span class="v"><span class="muted">none yet</span></span></div></div></section></main></div></section><section class="cap"><h2>3 · POOL SEARCH</h2><p class="note">Filter above the builder&#x27;s pool, scoped to the active tab. Real 2026 Week 1 board, 1,269 players.</p><div class="frame"><div class="weekly" data-surface="ink"><main class="daily-main"><section class="mod mod--play"><div class="play-head"><div class="wk-deadline"><div class="wk-deadline-row"><div class="wk-when">23d 9h to lock</div><div class="clock-note">0<!-- --> of 6 filled<br/>PPR · drop worst</div></div><div class="wk-save wk-save--clean">Wed, Sep 9, 8:20 PM ET</div></div><div class="slots"><button type="button" class="slot slot--active"><span class="slot-tag">QB</span><span class="slot-name">empty</span></button><button type="button" class="slot"><span class="slot-tag">RB</span><span class="slot-name">empty</span></button><button type="button" class="slot"><span class="slot-tag">WR</span><span class="slot-name">empty</span></button><button type="button" class="slot"><span class="slot-tag">TE</span><span class="slot-name">empty</span></button><button type="button" class="slot"><span class="slot-tag">FLEX</span><span class="slot-name">empty</span></button><button type="button" class="slot"><span class="slot-tag">FLEX</span><span class="slot-name">empty</span></button></div><p class="wk-autosave">Every change saves. Whatever is here at kickoff is your entry.</p><div class="wk-find"><input class="wk-find-in" type="search" placeholder="Find a QB…" aria-label="Search Quarterbacks" enterKeyHint="search" autoComplete="off" autoCorrect="off" spellCheck="false" value=""/></div><div class="pool-head"><span>Quarterbacks</span><span>PPG</span></div></div><div class="pool pool--scroll"><button type="button" class="plyr"><span class="plyr-pos">QB</span><span class="plyr-name">Josh Allen</span><span class="plyr-rest">126 g · Wyoming · R1 #7</span><span class="plyr-ppg">22.2</span></button><button type="button" class="plyr"><span class="plyr-pos">QB</span><span class="plyr-name">Patrick Mahomes</span><span class="plyr-rest">126 g · Texas Tech · R1 #10</span><span class="plyr-ppg">21.4</span></button><button type="button" class="plyr"><span class="plyr-pos">QB</span><span class="plyr-name">Lamar Jackson</span><span class="plyr-rest">116 g · Louisville · R1 #32</span><span class="plyr-ppg">20.2</span></button><button type="button" class="plyr"><span class="plyr-pos">QB</span><span class="plyr-name">Deshaun Watson</span><span class="plyr-rest">73 g · Clemson · R1 #12</span><span class="plyr-ppg">19.5</span></button><button type="button" class="plyr"><span class="plyr-pos">QB</span><span class="plyr-name">Joe Burrow</span><span class="plyr-rest">77 g · LSU · R1 #1</span><span class="plyr-ppg">19.3</span></button><button type="button" class="plyr"><span class="plyr-pos">QB</span><span class="plyr-name">Jayden Daniels</span><span class="plyr-rest">24 g · LSU · R1 #2</span><span class="plyr-ppg">19.3</span></button><button type="button" class="plyr"><span class="plyr-pos">QB</span><span class="plyr-name">Kyler Murray</span><span class="plyr-rest">87 g · Oklahoma · R1 #1</span><span class="plyr-ppg">19.2</span></button><button type="button" class="plyr"><span class="plyr-pos">QB</span><span class="plyr-name">Jalen Hurts</span><span class="plyr-rest">92 g · Oklahoma · R2 #53</span><span class="plyr-ppg">19.1</span></button><button type="button" class="plyr"><span class="plyr-pos">QB</span><span class="plyr-name">Justin Herbert</span><span class="plyr-rest">95 g · Oregon · R1 #6</span><span class="plyr-ppg">18.7</span></button><button type="button" class="plyr"><span class="plyr-pos">QB</span><span class="plyr-name">Dak Prescott</span><span class="plyr-rest">139 g · Mississippi State · R4 #135</span><span class="plyr-ppg">18.5</span></button><div style="padding:14px;color:#8A8A8A;font-size:12px;text-align:center">… 143 more of 153 on this tab</div></div></section><section class="mod"><h2 class="eyebrow">How it works</h2><div><div class="row"><span>The board</span><span class="r">This week’s actives</span></div><div class="row"><span>Your lineup</span><span class="r">QB · RB · WR · TE · 2 FLEX</span></div><div class="row"><span>Edit until</span><span class="r">Wed, Sep 9, 8:20 PM ET</span></div><div class="row"><span>Scoring</span><span class="r">PPR, worst pick dropped</span></div><div class="row"><span>Results</span><span class="r">Tuesday morning</span></div></div><p class="muted">Every change saves — there is no submit. Whatever is in your six slots at the first kickoff is your entry. Scores settle once the last game is final, which is why results land <b>Tuesday morning</b> rather than Monday night, and a settled week does not move again.</p></section></main></div></div></section><section class="cap"><h2>4 · PRE-BOARD PITCH</h2><p class="note">Was one sentence on black. Now the full pitch, with the waiting line exactly where the CTA sits.</p><div class="frame"><div class="weekly" data-surface="ink"><main class="daily-main"><section class="hero"><div class="hero-eyebrow">The Weekly · same board for everyone</div><div class="hero-q">Six slots.<br/>No clock.</div><p class="hero-line">One board of this week’s actives · edit until<!-- --> <b>first kickoff</b>· results Tuesday morning</p><div class="wk-soon">Boards open Tuesday morning</div></section><section class="mod"><h2 class="eyebrow">How it works</h2><div><div class="row"><span>The board</span><span class="r">This week’s actives</span></div><div class="row"><span>Your lineup</span><span class="r">QB · RB · WR · TE · 2 FLEX</span></div><div class="row"><span>Edit until</span><span class="r">First kickoff</span></div><div class="row"><span>Scoring</span><span class="r">PPR, worst pick dropped</span></div><div class="row"><span>Results</span><span class="r">Tuesday morning</span></div></div><p class="muted">Every change saves — there is no submit. Whatever is in your six slots at the first kickoff is your entry. Scores settle once the last game is final, which is why results land <b>Tuesday morning</b> rather than Monday night, and a settled week does not move again.</p></section></main></div></div></section></div></div>

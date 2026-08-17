@@ -7,7 +7,7 @@
 //
 // SERVER COMPONENT, NO CLOCK - and the argument is stronger here than on the
 // Daily's module. The Daily declined a ticking clock because a static line says
-// it as well; the Weekly's deadline is FIVE DAYS away, so a second-by-second
+// it as well; the Weekly's deadline is DAYS away, so a second-by-second
 // countdown on the homepage would be an animation of nothing.
 
 import { shellSigninHref } from '@/lib/shell/signinHref';
@@ -35,7 +35,7 @@ export default function WeeklyModule({ view, isShell = false, signedIn = false }
     return (
       <section className="dly" data-surface="ink" data-state="play">
         {eyebrow}
-        <h3 className="dly-hook">Six slots. Five days to decide.</h3>
+        <h3 className="dly-hook">Six slots. No clock.</h3>
         <p className="dly-sub">
           One board of this week&rsquo;s actives, the same for everyone. Edit as often as
           you like until the first kickoff. Your worst pick is dropped.
