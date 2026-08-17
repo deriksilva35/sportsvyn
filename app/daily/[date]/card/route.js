@@ -78,6 +78,13 @@ export async function GET(_req, { params }) {
           <div style={{ ...S, fontSize: 150, lineHeight: 1, color: VOLT }}>{fmt(v.perfect?.total)}</div>
           <div style={{ ...S, fontSize: 38, color: MUT, marginTop: 14 }}>PERFECT · PPR, DROP WORST</div>
         </div>
+        {winnerName && (
+          <div style={{ ...S, alignItems: 'baseline', gap: 14, marginTop: 22 }}>
+            <div style={{ ...S, fontSize: 30, color: MUT }}>TOP TODAY</div>
+            <div style={{ ...S, fontSize: 40, color: PAPER }}>{winnerName}</div>
+            <div style={{ ...S, fontSize: 40, color: VOLT }}>{fmt(winner.score)}</div>
+          </div>
+        )}
         <div style={{ ...S, fontSize: 28, color: MUT, marginTop: 30 }}>sportsvyn.com/daily</div>
       </div>
     ),
