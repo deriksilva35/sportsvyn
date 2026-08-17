@@ -1407,3 +1407,61 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
   .dly-vs { gap: 18px; }
   .dly-meta .dly-meta-gap { margin-left: 0; display: block; }
 }
+
+/* ================== YESTERDAY'S ANSWER — the strip ========================
+   Sits directly under the Daily module. Deliberately quieter than it: the
+   module above is the thing to DO today, this is the thing that HAPPENED.
+   Same volt-as-material rules - the eyebrow square, a hairline left rule, no
+   volt body text and no second primary. Three rows, then one link out. */
+.ystr {
+  display: block; background: #101010;
+  border: 1px solid var(--rule-darker); border-left: 3px solid var(--rule-dark);
+  padding: 14px 16px 15px; margin: -12px 0 24px;
+}
+.ystr-head { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.ystr-sq { width: 10px; height: 10px; background: var(--volt); flex: 0 0 10px; }
+.ystr-kick {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
+}
+.ystr-ed {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--muted); margin-left: auto;
+}
+.ystr-answer { display: flex; align-items: baseline; gap: 9px; margin-bottom: 9px; }
+.ystr-yr {
+  font-family: var(--font-display), sans-serif; font-style: italic; font-weight: 900;
+  font-size: 24px; line-height: 1; letter-spacing: -.03em; color: var(--paper-warm);
+}
+.ystr-wk {
+  font-family: var(--font-saira-cond, var(--font-display)); font-weight: 700;
+  font-size: 14px; text-transform: uppercase; letter-spacing: .02em; color: var(--muted);
+}
+.ystr-rows { display: flex; flex-direction: column; }
+.ystr-row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 5px 0; border-bottom: 1px solid var(--rule-darker);
+  font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.ystr-row:last-child { border-bottom: none; }
+.ystr-row .k {
+  font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+}
+.ystr-row .v { color: var(--paper-warm); font-weight: 700; white-space: nowrap; }
+.ystr-row .dim { color: var(--muted); font-weight: 400; }
+.ystr-row .tierbadge {
+  display: inline-block; margin-left: 7px;
+  font-family: var(--font-saira-cond, var(--font-display)); font-weight: 600;
+  font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+  border: 1px solid currentColor; border-radius: 99px; padding: 2px 7px;
+}
+.tier--hof { color: var(--volt); }  .tier--mvp { color: var(--jade); }
+.tier--pb  { color: var(--paper-warm); }
+.tier--st  { color: var(--muted); }  .tier--ps { color: var(--terra); }
+.ystr-link {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--paper-warm); text-decoration: none;
+  border-bottom: 2px solid var(--volt); padding-bottom: 2px;
+  display: inline-block; margin-top: 12px;
+}
+.ystr-link:hover { color: var(--volt); }
