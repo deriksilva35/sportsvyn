@@ -1,0 +1,158 @@
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Games lobby - four panes</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--font-saira:'Saira';--font-saira-condensed:'Saira Condensed';--font-jetbrains-mono:'JetBrains Mono';}
+*{box-sizing:border-box}body{margin:0;background:#3A3A36;font-family:'JetBrains Mono';padding:24px}
+.wrap{max-width:1360px;margin:0 auto}
+.cap{font-family:'Saira Condensed';font-weight:600;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+ background:#D4FF00;color:#111;display:inline-block;padding:7px 12px;margin:26px 0 10px}
+.n{background:#0F0F0E;border-left:4px solid #D4FF00;padding:14px 16px;margin:0 0 10px;color:#DADAD4;font-size:12px;line-height:1.6}
+.n b{color:#D4FF00}
+.two{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.ph{width:390px;flex:0 0 390px}.dk{flex:1 1 640px;min-width:600px}
+.dev{background:#0A0A0A;border:1px solid #2A2A2A;border-radius:18px;overflow:hidden;max-height:900px;overflow-y:auto}
+/* /games - the lobby. Ink, v1.2 grammar, tokens and component shapes lifted
+   from docs/design/sportsvyn-games-lobby-mock-v0_1.html, which is the spec.
+   The same styles serve the app's Games tab (app mock v0.2) - one surface. */
+
+.lob {
+  --l-ink: #0A0A0A; --l-ink2: #141414; --l-ink3: #1E1E1E; --l-line: #2A2A2A;
+  --l-volt: #D4FF00; --l-paper: #F5F5F2; --l-jade: #2A8A4F; --l-terra: #B8410F;
+  --l-mut: #8A8A85;
+  --l-disp: var(--font-saira, 'Saira'), sans-serif;
+  --l-cond: var(--font-saira-condensed, 'Saira Condensed'), sans-serif;
+  --l-mono: var(--font-jetbrains-mono, 'JetBrains Mono'), ui-monospace, monospace;
+
+  background: var(--l-ink); color: var(--l-paper);
+  font-family: var(--l-mono); font-size: 14px; line-height: 1.5;
+  max-width: 960px; margin: 0 auto; padding: 22px 16px 60px;
+}
+.lob-head { padding: 4px 2px 0; margin-bottom: 14px; }
+.lob-title {
+  font-family: var(--l-disp); font-style: italic; font-weight: 900;
+  font-size: 34px; letter-spacing: -.04em; line-height: 1.02; margin: 0;
+}
+.lob-sub { color: #CFCFC9; font-size: 13px; margin: 4px 0 0; }
+
+/* in-page panes. URL links styled as tabs; volt UNDERLINE on active, matching
+   the mock and the house tab grammar - fills are for selector pills. */
+.ptabs {
+  display: flex; gap: 6px; border-bottom: 1px solid var(--l-line);
+  overflow-x: auto; margin-bottom: 14px; scrollbar-width: none;
+}
+.ptabs::-webkit-scrollbar { display: none; }
+.pt {
+  font-family: var(--l-cond); font-weight: 600; letter-spacing: .1em; font-size: 12px;
+  text-transform: uppercase; color: var(--l-mut); text-decoration: none;
+  border-bottom: 2px solid transparent; padding: 8px 12px 10px; white-space: nowrap;
+}
+.pt--on { color: var(--l-volt); border-bottom-color: var(--l-volt); }
+.pt:hover { color: var(--l-paper); }
+
+/* the 2x2 grid */
+.ggrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.gcard {
+  background: var(--l-ink2); border: 1px solid var(--l-line); border-radius: 14px;
+  padding: 18px 14px; display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 8px; text-decoration: none; color: inherit;
+}
+.gcard--live { background: linear-gradient(165deg, #1a2000 0%, var(--l-ink2) 60%); border-color: #3a4400; }
+.gicon {
+  width: 52px; height: 52px; border-radius: 12px; background: var(--l-ink3);
+  border: 1px solid var(--l-line); display: flex; align-items: center;
+  justify-content: center; font-size: 24px;
+}
+.gname {
+  font-family: var(--l-disp); font-style: italic; font-weight: 900;
+  font-size: 20px; letter-spacing: -.03em;
+}
+/* min-height keeps the four buttons on one line however long a blurb runs. */
+.gdesc { color: var(--l-mut); font-size: 11.5px; line-height: 1.45; min-height: 48px; }
+.gbtn {
+  display: block; width: 100%; font-family: var(--l-disp); font-style: italic;
+  font-weight: 900; letter-spacing: -.01em; font-size: 14px;
+  background: var(--l-volt); color: var(--l-ink); border-radius: 9px; padding: 11px 8px;
+}
+.gbtn--ghost { background: var(--l-ink3); color: var(--l-mut); border: 1px solid var(--l-line); }
+.gfoot { font-size: 10.5px; color: var(--l-mut); font-variant-numeric: tabular-nums; min-height: 14px; }
+
+/* modules */
+.lob .mod {
+  background: var(--l-ink2); border: 1px solid var(--l-line);
+  border-radius: 12px; padding: 16px; margin-bottom: 12px;
+}
+.lob .mod-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 10px; }
+.lob .eyebrow {
+  font-family: var(--l-cond); font-weight: 600; text-transform: uppercase;
+  letter-spacing: .14em; font-size: 11px; color: var(--l-mut); margin: 0;
+}
+.lob .pill {
+  font-family: var(--l-cond); font-weight: 600; letter-spacing: .08em; font-size: 11px;
+  border: 1px solid var(--l-line); background: var(--l-ink3); border-radius: 99px;
+  padding: 4px 11px; color: var(--l-mut); white-space: nowrap;
+}
+.lob .row {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--l-line);
+  font-variant-numeric: tabular-nums;
+}
+.lob .row:last-child { border-bottom: none; }
+.lob .row .v { font-weight: 700; white-space: nowrap; }
+.lob .muted { color: var(--l-mut); }
+.lob .volt { color: var(--l-volt); }
+.lob .rank { display: inline-block; width: 22px; color: var(--l-mut); font-size: 11px; }
+.lob .lb-left { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.row--me { background: #17170F; margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+.row--sealed { opacity: .55; }
+.hist-ed { font-family: var(--l-cond); font-weight: 600; letter-spacing: .1em; font-size: 11px; text-transform: uppercase; }
+
+.ghost {
+  display: inline-block; margin-top: 10px;
+  font-family: var(--l-cond); font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; font-size: 12px;
+  background: var(--l-ink3); color: var(--l-paper);
+  border: 1px solid var(--l-line); border-radius: 8px; padding: 9px 14px; text-decoration: none;
+}
+.ghost:hover { border-color: var(--l-volt); }
+.lob-links { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.stat { background: var(--l-ink3); border: 1px solid var(--l-line); border-radius: 9px; padding: 10px; }
+.stat .n { font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+.ans {
+  font-family: var(--l-disp); font-style: italic; font-weight: 900;
+  font-size: 30px; letter-spacing: -.04em; margin: 4px 0 10px;
+}
+.lob .badge {
+  display: inline-block; margin-left: 6px;
+  font-family: var(--l-cond); font-weight: 600; letter-spacing: .1em; font-size: 11px;
+  text-transform: uppercase; border: 1px solid currentColor; border-radius: 99px; padding: 3px 10px;
+}
+.lob .tier--hof { color: var(--l-volt); } .lob .tier--mvp { color: var(--l-jade); }
+.lob .tier--pb { color: var(--l-paper); } .lob .tier--st { color: var(--l-mut); }
+.lob .tier--ps { color: var(--l-terra); }
+
+.lob-foot { color: var(--l-mut); font-size: 11px; line-height: 1.5; margin-top: 18px; }
+
+@media (max-width: 400px) {
+  .lob-title { font-size: 28px; }
+  .gdesc { min-height: 56px; font-size: 11px; }
+  .gname { font-size: 17px; }
+  .gicon { width: 44px; height: 44px; font-size: 21px; }
+}
+</style>
+<div class='wrap'>
+<div class='n'><b>RENDERED FROM THE REAL PAGE.</b> Every pane below is markup captured from <code>next start</code> serving /games against DEV, with the shipped games.css. Panes are URL params, so each was fetched independently - which is also how the leak test reads them.</div>
+<div class='cap'>GAMES</div>
+<div class='two'><div class='ph'><div class='dev'><main class="lob" data-surface="ink"><header class="lob-head"><h1 class="lob-title">Game day, every day.</h1><p class="lob-sub">One account. One handle. Every board.</p></header><nav class="ptabs" aria-label="Games sections"><a href="/games" class="pt pt--on">Games</a><a href="/games?pane=leaderboards" class="pt">Leaderboards</a><a href="/games?pane=answer" class="pt">Latest answer</a><a href="/games?pane=history" class="pt">History</a></nav><div class="ggrid"><a class="gcard gcard--live" href="/daily"><span class="gicon" aria-hidden="true">🗓</span><span class="gname">The Daily</span><span class="gdesc">One board. Six slots. Three minutes.</span><span class="gbtn">PLAY ED. 002</span><span class="gfoot">streak 1 · closes midnight ET</span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">✅</span><span class="gname">Pick ’em</span><span class="gdesc">Call the winners. NFL and college.</span><span class="gbtn gbtn--ghost">Opens Aug 25</span><span class="gfoot"> </span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">📋</span><span class="gname">The Weekly</span><span class="gdesc">One lineup a week, from the real slate.</span><span class="gbtn gbtn--ghost">Opens Sep 8</span><span class="gfoot"> </span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">🎯</span><span class="gname">The Draft</span><span class="gdesc">Six rounds against the room.</span><span class="gbtn gbtn--ghost">Opens Sep 8</span><span class="gfoot"> </span></a></div><section class="mod"><div class="mod-head"><h2 class="eyebrow">Practice range</h2><span class="pill">Unranked · unlimited</span></div><div class="row"><span>Full mock drafts against the same AI rooms The Draft uses. No clock, graded on live ADP.</span></div><a class="ghost" href="/sim">Start a mock →</a></section><section class="mod"><div class="mod-head"><h2 class="eyebrow">Your season<!-- --> — Player e740</h2><span class="pill">2025-26</span></div><div class="grid2"><div class="stat"><div class="eyebrow">Season pts</div><div class="n">3</div></div><div class="stat"><div class="eyebrow">Streak</div><div class="n">1</div></div><div class="stat"><div class="eyebrow">Played</div><div class="n">1<!-- -->/<!-- -->1</div></div><div class="stat"><div class="eyebrow">Pick ’em</div><div class="n muted">—</div></div></div></section><p class="lob-foot">One account · one handle · one leaderboard spine. Pick ’em and The Weekly settle on real games; the Daily settles on history. Not affiliated with the NFL. nflverse data CC-BY-4.0.</p></main></div></div><div class='dk'><div class='dev'><main class="lob" data-surface="ink"><header class="lob-head"><h1 class="lob-title">Game day, every day.</h1><p class="lob-sub">One account. One handle. Every board.</p></header><nav class="ptabs" aria-label="Games sections"><a href="/games" class="pt pt--on">Games</a><a href="/games?pane=leaderboards" class="pt">Leaderboards</a><a href="/games?pane=answer" class="pt">Latest answer</a><a href="/games?pane=history" class="pt">History</a></nav><div class="ggrid"><a class="gcard gcard--live" href="/daily"><span class="gicon" aria-hidden="true">🗓</span><span class="gname">The Daily</span><span class="gdesc">One board. Six slots. Three minutes.</span><span class="gbtn">PLAY ED. 002</span><span class="gfoot">streak 1 · closes midnight ET</span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">✅</span><span class="gname">Pick ’em</span><span class="gdesc">Call the winners. NFL and college.</span><span class="gbtn gbtn--ghost">Opens Aug 25</span><span class="gfoot"> </span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">📋</span><span class="gname">The Weekly</span><span class="gdesc">One lineup a week, from the real slate.</span><span class="gbtn gbtn--ghost">Opens Sep 8</span><span class="gfoot"> </span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">🎯</span><span class="gname">The Draft</span><span class="gdesc">Six rounds against the room.</span><span class="gbtn gbtn--ghost">Opens Sep 8</span><span class="gfoot"> </span></a></div><section class="mod"><div class="mod-head"><h2 class="eyebrow">Practice range</h2><span class="pill">Unranked · unlimited</span></div><div class="row"><span>Full mock drafts against the same AI rooms The Draft uses. No clock, graded on live ADP.</span></div><a class="ghost" href="/sim">Start a mock →</a></section><section class="mod"><div class="mod-head"><h2 class="eyebrow">Your season<!-- --> — Player e740</h2><span class="pill">2025-26</span></div><div class="grid2"><div class="stat"><div class="eyebrow">Season pts</div><div class="n">3</div></div><div class="stat"><div class="eyebrow">Streak</div><div class="n">1</div></div><div class="stat"><div class="eyebrow">Played</div><div class="n">1<!-- -->/<!-- -->1</div></div><div class="stat"><div class="eyebrow">Pick ’em</div><div class="n muted">—</div></div></div></section><p class="lob-foot">One account · one handle · one leaderboard spine. Pick ’em and The Weekly settle on real games; the Daily settles on history. Not affiliated with the NFL. nflverse data CC-BY-4.0.</p></main></div></div></div>
+<div class='cap'>LEADERBOARDS</div>
+<div class='two'><div class='ph'><div class='dev'><main class="lob" data-surface="ink"><header class="lob-head"><h1 class="lob-title">Game day, every day.</h1><p class="lob-sub">One account. One handle. Every board.</p></header><nav class="ptabs" aria-label="Games sections"><a href="/games" class="pt">Games</a><a href="/games?pane=leaderboards" class="pt pt--on">Leaderboards</a><a href="/games?pane=answer" class="pt">Latest answer</a><a href="/games?pane=history" class="pt">History</a></nav><section class="mod"><div class="mod-head"><h2 class="eyebrow">Overall</h2><span class="pill">through <!-- -->2026-08-15</span></div><div><div class="row"><span class="lb-left"><span class="rank">1</span>Player e740</span><span class="v">3<!-- --> <span class="muted">pts</span></span></div></div></section><section class="mod"><div class="mod-head"><h2 class="eyebrow">Pick ’em — season</h2></div><div class="row"><span class="muted">Populates at first settle · Aug 29</span></div></section><section class="mod"><div class="mod-head"><h2 class="eyebrow">The Weekly — season</h2></div><div class="row"><span class="muted">Opens with NFL Week 1 · Sep 15</span></div></section><section class="mod"><div class="mod-head"><h2 class="eyebrow">The Draft — season</h2></div><div class="row"><span class="muted">First settle with Week 1 · Sep 15</span></div></section><p class="lob-foot">One account · one handle · one leaderboard spine. Pick ’em and The Weekly settle on real games; the Daily settles on history. Not affiliated with the NFL. nflverse data CC-BY-4.0.</p></main></div></div><div class='dk'><div class='dev'><main class="lob" data-surface="ink"><header class="lob-head"><h1 class="lob-title">Game day, every day.</h1><p class="lob-sub">One account. One handle. Every board.</p></header><nav class="ptabs" aria-label="Games sections"><a href="/games" class="pt">Games</a><a href="/games?pane=leaderboards" class="pt pt--on">Leaderboards</a><a href="/games?pane=answer" class="pt">Latest answer</a><a href="/games?pane=history" class="pt">History</a></nav><section class="mod"><div class="mod-head"><h2 class="eyebrow">Overall</h2><span class="pill">through <!-- -->2026-08-15</span></div><div><div class="row"><span class="lb-left"><span class="rank">1</span>Player e740</span><span class="v">3<!-- --> <span class="muted">pts</span></span></div></div></section><section class="mod"><div class="mod-head"><h2 class="eyebrow">Pick ’em — season</h2></div><div class="row"><span class="muted">Populates at first settle · Aug 29</span></div></section><section class="mod"><div class="mod-head"><h2 class="eyebrow">The Weekly — season</h2></div><div class="row"><span class="muted">Opens with NFL Week 1 · Sep 15</span></div></section><section class="mod"><div class="mod-head"><h2 class="eyebrow">The Draft — season</h2></div><div class="row"><span class="muted">First settle with Week 1 · Sep 15</span></div></section><p class="lob-foot">One account · one handle · one leaderboard spine. Pick ’em and The Weekly settle on real games; the Daily settles on history. Not affiliated with the NFL. nflverse data CC-BY-4.0.</p></main></div></div></div>
+<div class='cap'>LATEST ANSWER</div>
+<div class='two'><div class='ph'><div class='dev'><main class="lob" data-surface="ink"><header class="lob-head"><h1 class="lob-title">Game day, every day.</h1><p class="lob-sub">One account. One handle. Every board.</p></header><nav class="ptabs" aria-label="Games sections"><a href="/games" class="pt">Games</a><a href="/games?pane=leaderboards" class="pt">Leaderboards</a><a href="/games?pane=answer" class="pt pt--on">Latest answer</a><a href="/games?pane=history" class="pt">History</a></nav><section class="mod"><div class="mod-head"><h2 class="eyebrow">Latest answer<!-- --> · <!-- -->2026-08-15</h2></div><div class="ans">2015<!-- --> <span class="muted">· Week <!-- -->17</span></div><div><div class="row"><span>Perfect lineup</span><span class="v volt">122.9</span></div><div class="row"><span>You</span><span class="v">102.5<span class="badge tier--pb">PRO BOWLER</span><span class="muted"> <!-- -->83<!-- -->%</span></span></div><div class="row"><span>Top score</span><span class="v">Player e740<!-- --> · <!-- -->102.5</span></div></div><div class="lob-links"><a class="ghost" href="/daily/2026-08-15">The full board →</a><a class="ghost" href="/daily/2026-08-15/card">Share card →</a></div></section><p class="lob-foot">One account · one handle · one leaderboard spine. Pick ’em and The Weekly settle on real games; the Daily settles on history. Not affiliated with the NFL. nflverse data CC-BY-4.0.</p></main></div></div><div class='dk'><div class='dev'><main class="lob" data-surface="ink"><header class="lob-head"><h1 class="lob-title">Game day, every day.</h1><p class="lob-sub">One account. One handle. Every board.</p></header><nav class="ptabs" aria-label="Games sections"><a href="/games" class="pt">Games</a><a href="/games?pane=leaderboards" class="pt">Leaderboards</a><a href="/games?pane=answer" class="pt pt--on">Latest answer</a><a href="/games?pane=history" class="pt">History</a></nav><section class="mod"><div class="mod-head"><h2 class="eyebrow">Latest answer<!-- --> · <!-- -->2026-08-15</h2></div><div class="ans">2015<!-- --> <span class="muted">· Week <!-- -->17</span></div><div><div class="row"><span>Perfect lineup</span><span class="v volt">122.9</span></div><div class="row"><span>You</span><span class="v">102.5<span class="badge tier--pb">PRO BOWLER</span><span class="muted"> <!-- -->83<!-- -->%</span></span></div><div class="row"><span>Top score</span><span class="v">Player e740<!-- --> · <!-- -->102.5</span></div></div><div class="lob-links"><a class="ghost" href="/daily/2026-08-15">The full board →</a><a class="ghost" href="/daily/2026-08-15/card">Share card →</a></div></section><p class="lob-foot">One account · one handle · one leaderboard spine. Pick ’em and The Weekly settle on real games; the Daily settles on history. Not affiliated with the NFL. nflverse data CC-BY-4.0.</p></main></div></div></div>
+<div class='cap'>HISTORY</div>
+<div class='two'><div class='ph'><div class='dev'><main class="lob" data-surface="ink"><header class="lob-head"><h1 class="lob-title">Game day, every day.</h1><p class="lob-sub">One account. One handle. Every board.</p></header><nav class="ptabs" aria-label="Games sections"><a href="/games" class="pt">Games</a><a href="/games?pane=leaderboards" class="pt">Leaderboards</a><a href="/games?pane=answer" class="pt">Latest answer</a><a href="/games?pane=history" class="pt pt--on">History</a></nav><section class="mod"><div class="mod-head"><h2 class="eyebrow">Every edition</h2></div><div><div class="row row--sealed"><span class="hist-ed">Ed. 003</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><div class="row row--sealed"><span class="hist-ed">Ed. 002</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><div class="row row--sealed"><span class="hist-ed">Ed. 001</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><div class="row"><span class="hist-ed">2026-08-15</span><span>2015<!-- --> · Wk <!-- -->17</span><span class="v">Player e740 102.5</span><span class="muted">122.9</span></div></div></section><p class="lob-foot">One account · one handle · one leaderboard spine. Pick ’em and The Weekly settle on real games; the Daily settles on history. Not affiliated with the NFL. nflverse data CC-BY-4.0.</p></main></div></div><div class='dk'><div class='dev'><main class="lob" data-surface="ink"><header class="lob-head"><h1 class="lob-title">Game day, every day.</h1><p class="lob-sub">One account. One handle. Every board.</p></header><nav class="ptabs" aria-label="Games sections"><a href="/games" class="pt">Games</a><a href="/games?pane=leaderboards" class="pt">Leaderboards</a><a href="/games?pane=answer" class="pt">Latest answer</a><a href="/games?pane=history" class="pt pt--on">History</a></nav><section class="mod"><div class="mod-head"><h2 class="eyebrow">Every edition</h2></div><div><div class="row row--sealed"><span class="hist-ed">Ed. 003</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><div class="row row--sealed"><span class="hist-ed">Ed. 002</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><div class="row row--sealed"><span class="hist-ed">Ed. 001</span><span class="muted">— sealed —</span><span class="v muted">open</span></div><div class="row"><span class="hist-ed">2026-08-15</span><span>2015<!-- --> · Wk <!-- -->17</span><span class="v">Player e740 102.5</span><span class="muted">122.9</span></div></div></section><p class="lob-foot">One account · one handle · one leaderboard spine. Pick ’em and The Weekly settle on real games; the Daily settles on history. Not affiliated with the NFL. nflverse data CC-BY-4.0.</p></main></div></div></div>
+<div class='cap'>GAMES - signed out</div>
+<div class='two'><div class='ph'><div class='dev'><main class="lob" data-surface="ink"><header class="lob-head"><h1 class="lob-title">Game day, every day.</h1><p class="lob-sub">One account. One handle. Every board.</p></header><nav class="ptabs" aria-label="Games sections"><a href="/games" class="pt pt--on">Games</a><a href="/games?pane=leaderboards" class="pt">Leaderboards</a><a href="/games?pane=answer" class="pt">Latest answer</a><a href="/games?pane=history" class="pt">History</a></nav><div class="ggrid"><a class="gcard gcard--live" href="/daily"><span class="gicon" aria-hidden="true">🗓</span><span class="gname">The Daily</span><span class="gdesc">One board. Six slots. Three minutes.</span><span class="gbtn">PLAY ED. 002</span><span class="gfoot">closes midnight ET</span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">✅</span><span class="gname">Pick ’em</span><span class="gdesc">Call the winners. NFL and college.</span><span class="gbtn gbtn--ghost">Opens Aug 25</span><span class="gfoot"> </span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">📋</span><span class="gname">The Weekly</span><span class="gdesc">One lineup a week, from the real slate.</span><span class="gbtn gbtn--ghost">Opens Sep 8</span><span class="gfoot"> </span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">🎯</span><span class="gname">The Draft</span><span class="gdesc">Six rounds against the room.</span><span class="gbtn gbtn--ghost">Opens Sep 8</span><span class="gfoot"> </span></a></div><section class="mod"><div class="mod-head"><h2 class="eyebrow">Practice range</h2><span class="pill">Unranked · unlimited</span></div><div class="row"><span>Full mock drafts against the same AI rooms The Draft uses. No clock, graded on live ADP.</span></div><a class="ghost" href="/sim">Start a mock →</a></section><p class="lob-foot">One account · one handle · one leaderboard spine. Pick ’em and The Weekly settle on real games; the Daily settles on history. Not affiliated with the NFL. nflverse data CC-BY-4.0.</p></main></div></div><div class='dk'><div class='dev'><main class="lob" data-surface="ink"><header class="lob-head"><h1 class="lob-title">Game day, every day.</h1><p class="lob-sub">One account. One handle. Every board.</p></header><nav class="ptabs" aria-label="Games sections"><a href="/games" class="pt pt--on">Games</a><a href="/games?pane=leaderboards" class="pt">Leaderboards</a><a href="/games?pane=answer" class="pt">Latest answer</a><a href="/games?pane=history" class="pt">History</a></nav><div class="ggrid"><a class="gcard gcard--live" href="/daily"><span class="gicon" aria-hidden="true">🗓</span><span class="gname">The Daily</span><span class="gdesc">One board. Six slots. Three minutes.</span><span class="gbtn">PLAY ED. 002</span><span class="gfoot">closes midnight ET</span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">✅</span><span class="gname">Pick ’em</span><span class="gdesc">Call the winners. NFL and college.</span><span class="gbtn gbtn--ghost">Opens Aug 25</span><span class="gfoot"> </span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">📋</span><span class="gname">The Weekly</span><span class="gdesc">One lineup a week, from the real slate.</span><span class="gbtn gbtn--ghost">Opens Sep 8</span><span class="gfoot"> </span></a><a class="gcard" href="/games" aria-disabled="true"><span class="gicon" aria-hidden="true">🎯</span><span class="gname">The Draft</span><span class="gdesc">Six rounds against the room.</span><span class="gbtn gbtn--ghost">Opens Sep 8</span><span class="gfoot"> </span></a></div><section class="mod"><div class="mod-head"><h2 class="eyebrow">Practice range</h2><span class="pill">Unranked · unlimited</span></div><div class="row"><span>Full mock drafts against the same AI rooms The Draft uses. No clock, graded on live ADP.</span></div><a class="ghost" href="/sim">Start a mock →</a></section><p class="lob-foot">One account · one handle · one leaderboard spine. Pick ’em and The Weekly settle on real games; the Daily settles on history. Not affiliated with the NFL. nflverse data CC-BY-4.0.</p></main></div></div></div>
+</div>

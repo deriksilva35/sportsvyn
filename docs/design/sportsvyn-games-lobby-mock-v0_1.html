@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Sportsvyn — The Games (lobby mock v0.1)</title>
+<!-- LOCKED SPEC. Approved by Derik 17 Aug 2026 and transcribed here from the
+     relay because it previously existed only in chat - the app mock v0_1 was
+     lost the same way and cost a round trip. If a mock is the spec, it lives
+     in the repo. -->
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0A0A0A;--ink2:#141414;--ink3:#1E1E1E;--volt:#D4FF00;--paper:#F5F5F2;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;--mut:#8A8A85;--line:#2A2A2A;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--ink);color:var(--paper);font-family:'JetBrains Mono',monospace;font-size:14px;}
+  .band{background:#0D0D0D;border-bottom:3px solid var(--volt);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;}
+  .wordmark{font-family:'Saira',sans-serif;font-style:italic;font-weight:900;letter-spacing:-0.05em;font-size:22px;}
+  .wordmark .y{color:var(--volt);}
+  .nav{display:flex;gap:16px;font-family:'Saira Condensed',sans-serif;font-weight:600;letter-spacing:.12em;font-size:12px;color:var(--mut);}
+  .nav .on{color:var(--volt);}
+  .wrap{max-width:960px;margin:0 auto;padding:22px 16px 80px;display:grid;grid-template-columns:1fr;gap:14px;}
+  @media(min-width:760px){.wrap{grid-template-columns:1.6fr 1fr;}.span2{grid-column:1/-1;}}
+  .tag{font-family:'Saira Condensed',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--mut);}
+  .mod{background:var(--ink2);border:1px solid var(--line);border-radius:12px;padding:16px;}
+  .mod .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .sub{color:#CFCFC9;font-size:13px;line-height:1.5;}
+  .ghost{display:inline-block;font-family:'Saira Condensed',sans-serif;font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:12px;background:var(--ink3);color:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 14px;text-decoration:none;}
+  .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;align-items:center;gap:10px;}
+  .row:last-child{border:none;}
+  .row .v{font-weight:700;white-space:nowrap;}
+  .mut{color:var(--mut);} .volt{color:var(--volt);}
+  .pill{font-family:'Saira Condensed',sans-serif;font-weight:600;letter-spacing:.08em;font-size:11px;border:1px solid var(--line);background:var(--ink3);border-radius:99px;padding:4px 11px;}
+  .badge{font-family:'Saira Condensed',sans-serif;font-weight:600;letter-spacing:.1em;font-size:11px;text-transform:uppercase;border:1px solid currentColor;border-radius:99px;padding:3px 10px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+  .stat{background:var(--ink3);border:1px solid var(--line);border-radius:9px;padding:10px;}
+  .stat .n{font-weight:700;font-size:18px;}
+  .footer-note{color:var(--mut);font-size:11px;line-height:1.5;grid-column:1/-1;}
+  .ggrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .gcard{background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:18px 14px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;}
+  .gcard.glive{background:linear-gradient(165deg,#1a2000 0%,var(--ink2) 60%);border-color:#3a4400;}
+  .gicon{width:52px;height:52px;border-radius:12px;background:var(--ink3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:24px;}
+  .gname{font-family:'Saira',sans-serif;font-style:italic;font-weight:900;font-size:20px;letter-spacing:-0.03em;}
+  .gdesc{color:var(--mut);font-size:11.5px;line-height:1.45;min-height:48px;}
+  .gbtn{display:block;width:100%;font-family:'Saira',sans-serif;font-style:italic;font-weight:900;letter-spacing:-0.01em;font-size:14px;background:var(--volt);color:var(--ink);border-radius:9px;padding:11px 8px;text-decoration:none;}
+  .gbtn.ghosted{background:var(--ink3);color:var(--mut);border:1px solid var(--line);}
+  .gfoot{font-size:10.5px;color:var(--mut);font-variant-numeric:tabular-nums;}
+  .ptabs{display:flex;gap:6px;border-bottom:1px solid var(--line);overflow-x:auto;}
+  .pt{font-family:'Saira Condensed',sans-serif;font-weight:600;letter-spacing:.1em;font-size:12px;background:none;color:var(--mut);border:none;border-bottom:2px solid transparent;padding:8px 12px 10px;white-space:nowrap;}
+  .pt.on{color:var(--volt);border-bottom-color:var(--volt);}
+</style></head><body>
+<div class="band"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div>
+<div class="nav"><span>TODAY</span><span class="on">GAMES</span><span>SCORES</span><span>NFL</span><span>CFB</span><span>&#9776;</span></div></div>
+<div class="wrap">
+  <div class="span2" style="padding:4px 2px 0;">
+    <div style="font-family:'Saira',sans-serif;font-style:italic;font-weight:900;font-size:34px;letter-spacing:-0.04em;line-height:1.02;">Game day, every day.</div>
+    <div class="sub" style="margin-top:4px;">One account. One handle. Every board.</div></div>
+  <div class="span2 ptabs"><button class="pt on">GAMES</button><button class="pt">LEADERBOARDS</button><button class="pt">LATEST ANSWER</button><button class="pt">HISTORY</button></div>
+  <div class="span2">
+  <div class="ggrid">
+    <div class="gcard glive"><div class="gicon">&#128197;</div><div class="gname">The Daily</div>
+      <div class="gdesc">One hidden week of NFL history &mdash; same board for everyone, 3:00 on the clock</div>
+      <a class="gbtn" href="#">PLAY ED. 002</a><div class="gfoot">streak 3 &middot; closes midnight ET</div></div>
+    <div class="gcard glive"><div class="gicon">&#9989;</div><div class="gname">Pick 'em</div>
+      <div class="gdesc">Pick every winner, NFL + Top 25 CFB &mdash; each game locks at kickoff</div>
+      <a class="gbtn" href="#">WEEK 0 BOARD</a><div class="gfoot">0 of 9 picked &middot; first lock Thu 8 PM ET</div></div>
+    <div class="gcard"><div class="gicon">&#128203;</div><div class="gname">The Weekly</div>
+      <div class="gdesc">Your best lineup for the real week &mdash; edit until Thursday kickoff</div>
+      <a class="gbtn ghosted" href="#">OPENS SEP 8</a><div class="gfoot">reveal Tue after MNF</div></div>
+    <div class="gcard"><div class="gicon">&#127919;</div><div class="gname">The Draft</div>
+      <div class="gdesc">Draft your six vs the room &mdash; pick your seat, beat the board, score on real games</div>
+      <a class="gbtn ghosted" href="#">OPENS SEP 8</a><div class="gfoot">practice free anytime &middot; 30s picks when ranked</div></div>
+  </div>
+  <div class="mod" style="margin-top:12px;"><div class="head"><span class="tag">PRACTICE RANGE</span><span class="pill">UNRANKED &middot; UNLIMITED</span></div>
+    <div class="row"><span>Full mock drafts vs AI rooms &mdash; the same rooms The Draft uses, no clock, graded on live ADP</span><a class="ghost" href="#">START A MOCK &rarr;</a></div></div>
+  <div class="mod" style="margin-top:12px;"><div class="head"><span class="tag">YOUR SEASON &mdash; @derik</span><span class="pill">2026&ndash;27</span></div>
+    <div class="grid2"><div class="stat"><div class="tag">SEASON PTS</div><div class="n">2</div></div>
+      <div class="stat"><div class="tag">STREAK</div><div class="n">3</div></div>
+      <div class="stat"><div class="tag">TIERS</div><div class="n">1 ST &middot; 1 PS</div></div>
+      <div class="stat"><div class="tag">PICK'EM</div><div class="n mut">&mdash;</div></div></div></div>
+  </div>
+  <div class="footer-note">One account &middot; one handle &middot; one leaderboard spine. Pick 'em and The Weekly settle on real games; the Daily settles on history. Not affiliated with the NFL. nflverse data CC-BY-4.0.</div>
+</div></body></html>

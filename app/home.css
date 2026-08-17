@@ -1465,3 +1465,14 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
   display: inline-block; margin-top: 12px;
 }
 .ystr-link:hover { color: var(--volt); }
+
+/* The one link from the publication's door to the arcade's. Ghost voice, no
+   volt text - it is a way out, not a second call to action. */
+.dc-allgames {
+  display: inline-block; margin: -12px 0 24px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none;
+  border-bottom: 2px solid var(--rule-dark); padding-bottom: 3px;
+}
+.dc-allgames:hover { color: var(--paper-warm); border-bottom-color: var(--volt); }

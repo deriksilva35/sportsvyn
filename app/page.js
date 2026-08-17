@@ -350,6 +350,9 @@ export default async function HomePage() {
           {/* Yesterday sits directly beneath today: the thing to DO, then the
               thing that HAPPENED. Absent entirely until a day has revealed. */}
           <YesterdayStrip view={yesterday} />
+          {/* The homepage is the publication's door; /games is the arcade's.
+              One quiet link between them rather than a second lobby here. */}
+          <a className="dc-allgames" href="/games">All games &rarr;</a>
 
           {/* Draftvyn leads. It is the alive product: the thing a reader can
               do right now, in about ten minutes, rather than read about. The
