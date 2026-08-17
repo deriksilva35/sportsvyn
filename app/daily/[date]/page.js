@@ -88,6 +88,15 @@ export default async function DailyReveal({ params, searchParams }) {
           </div>
         </section>
 
+        {/* THE CARD LIVES HERE NOW. It is a PNG built for unfurls and texts, so
+            it is an ACTION on the page that owns the content rather than a
+            destination of its own - the lobby used to link straight at it and
+            drop a reader on a bare image. `download` because tapping it should
+            hand you the file, not navigate you into it. */}
+        <a className="crumb crumb--share" href={`/daily/${date}/card`} download={`sportsvyn-daily-${date}.png`}>
+          Share card &darr;
+        </a>
+
         {v.you?.dnf && (
           <section className="mod mod--dnf">
             <h2 className="eyebrow">Your entry &mdash; no score</h2>

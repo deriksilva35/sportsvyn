@@ -491,3 +491,7 @@
   font-family: var(--d-mono, ui-monospace, monospace);
   font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--d-mut);
 }
+
+/* The share action reuses the breadcrumb's voice - both are quiet links that
+   must not compete with the answer hero between them. */
+.crumb--share { display: block; margin-bottom: 4px; }

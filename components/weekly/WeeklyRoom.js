@@ -13,8 +13,8 @@
  *      the round is built around. A deadline days out is not an instrument -
  *      it is a date. It reads as a line, not a bar, and it does not turn red.
  *   2. SAVE ON CHANGE, NO LOCK BUTTON. The Daily has one irreversible submit;
- *      the Weekly has no submit at all. Whatever is saved when Thursday
- *      arrives is the entry, so a "lock it in" button would be a lie - it
+ *      the Weekly has no submit at all. Whatever is saved when the first
+ *      kickoff arrives is the entry, so a "lock it in" button would be a lie - it
  *      would imply an un-locked-in state that scores differently. It does not.
  *   3. NO AUTO-ADVANCE PAST A FULL LINEUP. Auto-advance exists to save taps in
  *      a sprint. Here it still moves to the next EMPTY slot, but a builder

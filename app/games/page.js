@@ -207,9 +207,15 @@ function AnswerPane({ v }) {
           </div>
         )}
       </div>
+      {/* ONE LINK, AND IT GOES TO THE REVEAL. This used to offer "Share card →"
+          pointing at /daily/[date]/card, which is a 1080x1920 PNG from next/og -
+          a reader who tapped it landed on a bare image with no chrome, no
+          breadcrumb and no way back. The card is for unfurls and texts, which is
+          a job it does without anyone visiting it directly; the reveal carries
+          the same content in DOM, plus the board and a way out. The card stays
+          reachable from there as an action. */}
       <div className="lob-links">
         <a className="ghost" href={y.href}>The full board &rarr;</a>
-        <a className="ghost" href={`${y.href}/card`}>Share card &rarr;</a>
       </div>
     </section>
   );
