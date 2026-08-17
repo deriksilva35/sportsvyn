@@ -1,3 +1,7 @@
+<!doctype html>
+<meta charset="utf-8"><title>The Weekly on the homepage — four states</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
 /* app/home.css — Sportsvyn δ (Bracket Wall) homepage.
    Ported from ~/Downloads/sportsvyn-homepage-delta-bracket.html. CSS
    variables (--ink, --graphite, --volt etc.) resolve via globals.css.
@@ -1482,3 +1486,42 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
    finished score, and the Weekly's building state prints "4/6", where the
    denominator must not compete with the numerator for the eye. */
 .dly-of-six { font-size: .5em; opacity: .5; font-weight: 600; letter-spacing: -.01em; }
+
+body{margin:0;background:#161616;color:#E9E9E9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1500px;margin:0 auto;padding:28px 20px 60px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.02em}
+.lede{color:#9A9A9A;font-size:13px;margin:0 0 26px;line-height:1.6;max-width:860px}
+.lede b{color:#D8FF3E}
+.caps{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px;align-items:start}
+.cap h2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:#D8FF3E;margin:0 0 4px}
+.cap .note{font-size:12px;color:#8A8A8A;margin:0 0 10px;line-height:1.5}
+.frame{width:390px;max-width:100%;border:1px solid #2E2E2E;border-radius:14px;overflow:hidden}
+.frame .daily-card{margin:0;padding:14px}
+</style>
+<div class="wrap">
+  <h1>The Weekly on the homepage — four states</h1>
+  <p class="lede">
+    Served HTML from the real homepage at <b>390px</b>. Every class here is the Daily module's —
+    two modules stacked on one card that styled themselves differently would read as two products.
+    Captured by driving one DEV contest open &rarr; partially saved &rarr; locked &rarr; settled on
+    real 2025&nbsp;Week&nbsp;1 box scores, then deleting the seed.
+  </p>
+  <div class="caps">
+  <section class="cap">
+    <h2>1 · PLAY</h2><p class="note">No entry yet. The hook, one button, the deadline. Identical signed in and signed out.</p>
+    <div class="frame"><article class="daily-card"><section class="dly" data-surface="ink" data-state="play"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">The Weekly</span><span class="dly-ed">Week <!-- -->1</span></div><h3 class="dly-hook">Six slots. Five days to decide.</h3><p class="dly-sub">One board of this week’s actives, the same for everyone. Edit as often as you like until the first kickoff. Your worst pick is dropped.</p><a class="dly-cta" href="/weekly">Build your lineup</a><div class="dly-foot">Locks <!-- -->Thu 9:07 AM ET<!-- --> · Results Tuesday morning · PPR, drop worst</div></section></article></div>
+  </section>
+  <section class="cap">
+    <h2>2 · BUILDING</h2><p class="note">Two of six in. The number is what is STILL EMPTY — there is no score until Tuesday.</p>
+    <div class="frame"><article class="daily-card"><section class="dly" data-surface="ink" data-state="building"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">The Weekly</span><span class="dly-ed">Week <!-- -->1</span></div><div class="dly-rcpt"><div class="dly-score">2<span class="dly-of-six">/6</span></div><div class="dly-of">slots filled</div></div><p class="dly-sub">4 still to fill. Every change saves as you make it.</p><a class="dly-cta" href="/weekly">Finish your lineup</a><div class="dly-foot">Locks <!-- -->Thu 9:07 AM ET<!-- --> · Results Tuesday morning</div></section></article></div>
+  </section>
+  <section class="cap">
+    <h2>3 · LOCKED</h2><p class="note">The state the Daily cannot have: committed, in flight, unscoreable. No button.</p>
+    <div class="frame"><article class="daily-card"><section class="dly" data-surface="ink" data-state="locked"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">The Weekly</span><span class="dly-ed">Week <!-- -->1</span></div><h3 class="dly-hook">Your lineup is locked.</h3><p class="dly-sub">6 of 6 slots are in and the games are under way. Scores settle once the last game is final.</p><a class="dly-link" href="/weekly">See your lineup →</a><div class="dly-foot">Results Tuesday morning</div></section></article></div>
+  </section>
+  <section class="cap">
+    <h2>4 · SETTLED</h2><p class="note">Real 2025 Week 1. Your score against the perfect, on the Daily&#x27;s tier ladder.</p>
+    <div class="frame"><article class="daily-card"><section class="dly" data-surface="ink" data-state="settled"><div class="dly-eyebrow"><span class="dly-sq" aria-hidden="true"></span><span class="dly-kick">The Weekly</span><span class="dly-ed">Week <!-- -->1</span></div><div class="dly-ans"><span class="dly-yr">2025</span><span class="dly-chip dly-chip--tier">PRACTICE SQUAD</span></div><div class="dly-vs"><div class="dly-cell"><div class="n">47.1</div><div class="k">your score</div></div><div class="dly-cell dly-cell--dim"><div class="n">146.2</div><div class="k">perfect lineup</div></div><div class="dly-cell"><div class="n">32<!-- -->%</div><div class="k">of perfect</div></div></div><div class="dly-bar"><i style="width:32%"></i></div><a class="dly-link" href="/weekly">See the perfect lineup and your six →</a></section></article></div>
+  </section>
+  </div>
+</div>

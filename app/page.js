@@ -29,8 +29,10 @@ import { getTodaysReads, FOOTBALL_READS_SLUGS } from '@/lib/articles';
 import { getFollowedTeamIds } from '@/lib/follows';
 import { auth } from '@/auth';
 import DailyModule from '@/components/home/DailyModule';
+import WeeklyModule from '@/components/home/WeeklyModule';
 import YesterdayStrip from '@/components/home/YesterdayStrip';
 import { getDailyHome, getYesterday } from '@/lib/daily/entries';
+import { getWeeklyHome } from '@/lib/weekly/entries';
 import SimPromoCard from '@/components/home/SimPromoCard';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import MovementCard from '@/components/fantasy/MovementCard';
@@ -297,7 +299,8 @@ export default async function HomePage() {
     timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric',
   }).format(now);
 
-  const [todaysReads, followedSet, movement, nflBoard, cfbBoard, slate, dailyHome, yesterday] = await Promise.all([
+  const [todaysReads, followedSet, movement, nflBoard, cfbBoard, slate, dailyHome, yesterday,
+    weeklyHome] = await Promise.all([
     getTodaysReads({ ptDay, limit: 4, leagueSlugs: FOOTBALL_READS_SLUGS }),
     getFollowedTeamIds(userId),
     // Same call the /nfl entry card makes. Null rather than a thrown page if
@@ -318,6 +321,10 @@ export default async function HomePage() {
     // Yesterday's answer. A revealed day is public, so this needs no auth and
     // has no leak surface; it is caught to null like every other unit.
     getYesterday(userId).catch(() => null),
+    // The Weekly's own state. Caught to null like every other unit, and null is
+    // also the correct answer before the first board exists - which is what PROD
+    // returns today. A missing contests table renders no module, not a 500.
+    getWeeklyHome(userId).catch(() => null),
   ]);
 
 
@@ -350,6 +357,17 @@ export default async function HomePage() {
           {/* Yesterday sits directly beneath today: the thing to DO, then the
               thing that HAPPENED. Absent entirely until a day has revealed. */}
           <YesterdayStrip view={yesterday} />
+
+          {/* THE WEEKLY SITS BENEATH THE DAILY AND ITS ANSWER, in that order,
+              because that is the order the reader's attention is free in: the
+              thing that expires TONIGHT, the thing that happened YESTERDAY,
+              then the thing with five days left on it. Same reasoning that put
+              the Daily first - lead with what is only true today.
+
+              Renders nothing at all until a board exists, which is every day
+              before the first Tuesday of the season. */}
+          <WeeklyModule view={weeklyHome} isShell={isShell} signedIn={userId != null} />
+
           {/* The homepage is the publication's door; /games is the arcade's.
               One quiet link between them rather than a second lobby here. */}
           <a className="dc-allgames" href="/games">All games &rarr;</a>
