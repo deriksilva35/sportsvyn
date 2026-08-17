@@ -39,6 +39,21 @@
   --muted-light: var(--color-muted-light);
   --muted-dim: var(--color-muted-dim);
   --volt-dim: var(--color-volt-dim);
+  /* THESE SEVEN WERE ONLY ON [data-surface], AND THE CHROME IS NOT INSIDE ONE.
+     The global header and footer render above every page's data-surface
+     element, so var(--paper) resolved to nothing there and fell back to
+     the property's initial value. For a colour that is transparent - which
+     is how the mobile burger shipped invisible: present, sized and tappable,
+     with three transparent bars. Hover and active states on the nav were
+     silently dead for the same reason. [data-surface] keeps its copy for
+     scoping; :root is where a global token belongs. */
+  --graphite-up: #242424;
+  --rule: #2E2E2E;
+  --rule-dim: #1F1F1F;
+  --paper: #F5F5F2;
+  --live: #E63946;
+  --font-saira-cond: var(--font-saira-condensed), var(--font-saira), sans-serif;
+  --font-archivo-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Brand font tokens — @theme inline so they reference layout.js CSS variables */

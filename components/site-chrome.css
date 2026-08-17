@@ -338,7 +338,10 @@
   display: none; margin-left: auto; background: none; border: none; cursor: pointer;
   padding: 6px 2px; flex-direction: column; gap: 4px;
 }
-.gh-burger span { display: block; width: 20px; height: 2px; background: var(--paper); }
+/* LITERAL FALLBACK, deliberately. This element must be visible on a phone
+   even if a token ever goes missing again - an invisible hamburger is a site
+   with no navigation, and it shipped that way once. */
+.gh-burger span { display: block; width: 20px; height: 2px; background: var(--paper, #F5F5F2); }
 .gh-burger:focus-visible { outline: 2px solid var(--volt); outline-offset: 3px; }
 
 .gh-drawer {
