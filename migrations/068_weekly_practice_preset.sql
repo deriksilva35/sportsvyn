@@ -17,12 +17,13 @@
 -- lib/draft/preset.test.mjs reads this row and asserts it against DRAFT_CONFIG.
 -- If the ranked format changes and this does not, that test fails.
 --
--- 8 ROUNDS, NOT 6. Recorded because the brief that asked for this preset
--- described the ranked format as six rounds (QB/RB/WR/TE/FLEX/FLEX2). The
--- contest that is actually live on DEV and PROD - and frozen into
--- contests.meta.config - is eight: QB 1, RB 2, WR 3, TE 1, FLEX 1. The preset
--- follows the shipped contest, since a practice format that differs from the
--- ranked one would be the opposite of rehearsal.
+-- 8 ROUNDS, NOT 6 - RULED. An early spec described the ranked format as six
+-- rounds, matching the six-slot lineup. They are different numbers:
+-- 8 picks feed a best-6; the lineup grammar is scoring law, not draft law.
+-- The draft is deliberately larger than the lineup, and that gap is the
+-- construction game. See lib/draft/contest.js for the full reasoning; this
+-- preset follows the shipped contest, since a practice format that differs
+-- from the ranked one would be the opposite of rehearsal.
 
 INSERT INTO draft_configs (user_id, name, teams_count, scoring_format, roster_slots,
                            pick_timer_seconds, is_preset, source)
