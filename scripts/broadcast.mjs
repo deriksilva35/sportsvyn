@@ -142,19 +142,52 @@ function render({ unsubscribeUrl }) {
     postal,
   ].join('\n\n');
 
-  const html = '<!doctype html><html><body style="margin:0;background:#0A0A0A;color:#F5F5F2;'
-    + "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;padding:24px;\">"
-    + '<div style="max-width:520px;margin:0 auto;">'
-    + '<div style="font-size:10px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;'
-    + 'color:#D4FF00;margin-bottom:18px;">Draftvyn</div>'
-    + BODY_LINES.map((l) => `<p style="font-size:15px;line-height:1.6;margin:0 0 14px;">${l}</p>`).join('')
-    + `<p style="margin:24px 0;"><a href="${CTA_URL}" style="display:inline-block;background:#D4FF00;`
-    + `color:#0A0A0A;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.06em;`
-    + `padding:13px 22px;border-radius:8px;">${CTA_LABEL}</a></p>`
+  // ==========================================================================
+  // BULLETPROOF-DARK, after Spark stripped the first draft to white-on-white
+  // ==========================================================================
+  // The first HTML put the background on <body> and the CTA on a styled <a>.
+  // Apple Mail rendered it perfectly; Spark desktop stripped the body style,
+  // leaving near-white text on a white page and the button degraded to
+  // underlined text. Body styles are the FIRST thing clients strip, so:
+  //
+  //   - the background lives on a wrapper TABLE CELL, twice: bgcolor="" (the
+  //     HTML attribute - survives style-stripping) AND inline background-color
+  //     (wins where both are honoured). <body> carries it too, as a third coat,
+  //     not as the load-bearing one.
+  //   - EVERY text element declares its own inline color. Nothing inherits,
+  //     because inheritance is only as strong as the ancestor that gets kept.
+  //   - the CTA is a table cell with bgcolor + padding, wrapping an <a> that
+  //     carries its own color and no underline. A cell with a background
+  //     attribute is the one button construction every client leaves alone.
+  //
+  // Kept DARK by ruling (it is the brand). The pass bar in Spark is LEGIBLE,
+  // not pixel-perfect: if a client still forces white, the bgcolor attribute is
+  // what it honours, and if it strips even that, the per-element colors go down
+  // with the background rather than one surviving without the other.
+  const F = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+  const html = '<!doctype html><html><head><meta name="color-scheme" content="dark">'
+    + '<meta name="supported-color-schemes" content="dark"></head>'
+    + '<body style="margin:0;padding:0;background-color:#0A0A0A;" bgcolor="#0A0A0A">'
+    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" '
+    + 'bgcolor="#0A0A0A" style="background-color:#0A0A0A;"><tr>'
+    + '<td align="center" bgcolor="#0A0A0A" style="background-color:#0A0A0A;padding:24px;">'
+    + '<table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" '
+    + 'style="max-width:520px;width:100%;"><tr><td>'
+    + `<div style="font-family:${F};font-size:10px;font-weight:700;letter-spacing:.28em;`
+    + 'text-transform:uppercase;color:#D4FF00;margin:0 0 18px;">Draftvyn</div>'
+    + BODY_LINES.map((l) =>
+      `<p style="font-family:${F};font-size:15px;line-height:1.6;color:#F5F5F2;margin:0 0 14px;">${l}</p>`).join('')
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;"><tr>'
+    + '<td bgcolor="#D4FF00" style="background-color:#D4FF00;border-radius:8px;">'
+    + `<a href="${CTA_URL}" style="display:inline-block;font-family:${F};color:#0A0A0A;`
+    + 'text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.06em;'
+    + `padding:13px 22px;">${CTA_LABEL}</a>`
+    + '</td></tr></table>'
     + '<hr style="border:0;border-top:1px solid #232323;margin:24px 0;">'
-    + '<p style="font-size:12px;color:#8A8A86;line-height:1.6;margin:0;">'
-    + `<a href="${unsubscribeUrl}" style="color:#8A8A86;">Unsubscribe</a><br>${postal}`
-    + '</p></div></body></html>';
+    + `<p style="font-family:${F};font-size:12px;color:#8A8A86;line-height:1.6;margin:0;">`
+    + `<a href="${unsubscribeUrl}" style="color:#8A8A86;">Unsubscribe</a><br>`
+    + `<span style="color:#8A8A86;">${postal}</span>`
+    + '</p></td></tr></table></td></tr></table></body></html>';
 
   assertHyphens(SUBJECT, text, html);
   return { text, html };
