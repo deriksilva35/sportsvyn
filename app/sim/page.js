@@ -8,7 +8,6 @@ import LiveDraftCard from '@/components/sim/LiveDraftCard';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
-import WelcomeSheet from '@/components/sim/WelcomeSheet';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { appleIapConfig } from '@/lib/appleIap';
@@ -18,6 +17,7 @@ import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
 import '@/components/sim/tracker.css';
+import OnboardingGate from '@/components/onboarding/OnboardingGate';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mock Draft Sim - Sportsvyn', robots: { index: false, follow: false } };
@@ -63,6 +63,9 @@ export default async function SimLobby({ searchParams }) {
       data-surface="ink"
     >
       {isShell && <ShellPersist />}
+      {/* The sim draws its own header, so it mounts the sheet itself - see
+          the note in GlobalHeaderServer. */}
+      <OnboardingGate />
       {/* Configure RevenueCat only in shell, only with the buy path on, and only
           once the user id is known - never anonymously (see IapConfigure). */}
       {isShell && iap && userId != null && (
@@ -91,11 +94,22 @@ export default async function SimLobby({ searchParams }) {
           </section>
         ) : userId == null ? (
           <section className="sim-pitch">
+            {/* THE ASK IS IDENTITY, NOT ACCESS. "Sign in to draft" read as a
+                toll on the thing they came for, and it is not even true any
+                more - drafts are free and unlimited. What signing in actually
+                buys is a NAME: a handle that carries your score across every
+                game, rather than appearing as Player 3f9c on a public board.
+                The headline and the free-unlimited line are kept; only the ask
+                is reframed. */}
             <div className="sim-kicker">Fantasy · Mock Draft</div>
             <h1>Draft against the market, not a spreadsheet</h1>
             <p>A full snake mock against AI opponents that reach and slide like a real room - every pick graded on value versus live ADP. Free and unlimited, no setup.</p>
-            <a className="sim-cta" href={signinHref}>Sign in to draft</a>
-            <p className="sim-cta-note">Sign in or create an account - Apple or email.</p>
+            <a className="sim-cta" href={signinHref}>Claim your handle</a>
+            <p className="sim-cta-note">
+              An account takes a moment and costs nothing. It gets you a handle -
+              the name beside your score on every board, in every game - and it
+              keeps your drafts, your history and your streak.
+            </p>
           </section>
         ) : (
           await (async () => {
@@ -106,12 +120,12 @@ export default async function SimLobby({ searchParams }) {
             const gate = await canStartDraft(userId, member);
             return (
               <>
-                {/* First-launch sheet: shell + flag + NOT already entitled. Mounted
-                    here rather than at the top of the page because that is where
-                    `member` is resolved - hoisting it would have meant a second
-                    isMember() query for the same answer. Once per device; see
-                    WelcomeSheet for the storage contract. */}
-                {isShell && iap && !member && <WelcomeSheet />}
+                {/* WELCOMESHEET RETIRED. It was a product pitch shown once per
+                    device to non-members, and both halves of that premise died:
+                    the paywall is gone so "non-member" is everybody, and the
+                    first-open surface is now OnboardingSheet - which asks for
+                    something rather than selling something. Its best line is
+                    salvaged into the signed-out hero above. */}
                 {/* ABOVE THE DECK, because a draft you are already in outranks
                     starting another one. Renders nothing when there is none. */}
                 <LiveDraftCard draft={openDraft} member={member} />

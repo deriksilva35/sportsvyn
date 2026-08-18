@@ -101,11 +101,23 @@ function render({ unsubscribeUrl }) {
 // SUPPRESSION IS A WHERE CLAUSE, not a filter applied afterwards. An opted-out
 // address should never be loaded into a variable that a later bug could send to.
 async function recipients() {
+  // CONTACT ADDRESS WINS WHEN PRESENT. contact_email is what somebody typed
+  // into a box that said we would email them; users.email may be an Apple relay
+  // alias that forwards only while Apple says so - and for thirty of these
+  // accounts it is exactly that. See migration 069 for why the two are separate
+  // columns rather than one mutable field.
+  //
+  // SUPPRESSION AND EXCLUSION KEY ON THE USER, NOT THE ADDRESS. An opt-out is a
+  // person's decision, so it must survive them changing where mail goes; and
+  // the owner exclusion has to catch Derik's accounts whichever address they
+  // would be reached at today.
   const rows = await sql`
-    SELECT id, email FROM users
-     WHERE email IS NOT NULL
+    SELECT id, COALESCE(contact_email, email) AS email
+      FROM users
+     WHERE COALESCE(contact_email, email) IS NOT NULL
        AND email_opted_out_at IS NULL
        AND NOT (email = ANY(${OWNER_ADDRESSES}))
+       AND NOT (COALESCE(contact_email, '') = ANY(${OWNER_ADDRESSES}))
      ORDER BY id`;
   const filtered = ONLY ? rows.filter((r) => r.email === ONLY) : rows;
   return LIMIT ? filtered.slice(0, LIMIT) : filtered;

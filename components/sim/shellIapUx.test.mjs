@@ -164,15 +164,18 @@ test('a returning device is never shown the sheet again (storage contract)', () 
     'the storage read, the storage write and the tracker scroll must all be guarded');
 });
 
-test('the sheet is shell + flag + NON-member, and mounted where member is known', () => {
+test('WELCOMESHEET IS RETIRED - it mounts nowhere at all now', () => {
+  // INVERTED, NOT DELETED. This asserted the sheet was mounted under
+  // shell + iap + !member. Both halves of its premise died: the paywall is gone
+  // so "!member" is everybody, and the first-open surface is now the onboarding
+  // sheet, which asks for a handle rather than selling a Pass.
+  //
+  // The component file survives on purpose - deleting it would take its
+  // localStorage contract and its copy with it, and one of those lines became
+  // the signed-out hero's. It is unmounted, not erased.
   const s = stripComments(src('app/sim/page.js'));
-  const guards = guardsFor(s, 'WelcomeSheet');
-  assert.ok(guards.length > 0, 'the lobby never mounts the welcome sheet');
-  for (const g of guards) {
-    assert.match(g, /isShell/, 'sheet mounted outside shell');
-    assert.match(g, /iap/, 'sheet mounted with the buy path off');
-    assert.match(g, /!member/, 'sheet mounted for someone who may already own the Pass');
-  }
+  assert.equal(guardsFor(s, 'WelcomeSheet').length, 0, 'the lobby must not mount it');
+  assert.equal(/<WelcomeSheet/.test(s), false);
 });
 
 test('welcome copy is TWO PRODUCTS, each with an instruction', () => {
@@ -239,8 +242,10 @@ test('NONE of the three surfaces can render on web or with the flag off', () => 
   // One consolidated check: every mount site of the three new surfaces carries
   // both an `iap` and a shell condition. A new surface added later without them
   // fails here.
+  // WelcomeSheet dropped from this list: it is retired and mounts nowhere, so
+  // "every mount site is guarded" is vacuously true and the assertion above
+  // (zero mount sites) is the stronger statement.
   const SITES = [
-    ['app/sim/page.js', 'WelcomeSheet'],
     ['app/sim/account/page.js', 'IapConfigure'],
     ['app/sim/page.js', 'IapConfigure'],
     ['app/sim/tracker/page.js', 'IapConfigure'],

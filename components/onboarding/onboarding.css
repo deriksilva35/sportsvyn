@@ -1,0 +1,58 @@
+/* components/onboarding/onboarding.css — the first-open sheet.
+   Loaded only where the sheet mounts, so nothing here reaches a page that
+   never shows it. */
+
+.onb-scrim {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(0, 0, 0, .72);
+  /* Above the app tab bar AND clear of the home indicator: the sheet is modal,
+     so the bar underneath is unreachable and must not appear tappable. */
+  padding: 16px 12px calc(16px + env(safe-area-inset-bottom));
+}
+@media (min-width: 520px) { .onb-scrim { align-items: center; } }
+
+.onb {
+  width: 100%; max-width: 460px;
+  background: #0D0D0D; border: 1px solid #2E2E2E; border-radius: 16px;
+  padding: 20px 18px calc(18px + env(safe-area-inset-bottom));
+  color: #F5F5F2;
+}
+
+/* Three marks, not a percentage. The reader can see the whole flow is short. */
+.onb-rail { display: flex; gap: 5px; margin-bottom: 16px; }
+.onb-rail i { flex: 1; height: 3px; border-radius: 2px; background: #2E2E2E; }
+.onb-rail i.on { background: #D4FF00; }
+
+.onb-kicker {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: #8A8A86; margin-bottom: 6px;
+}
+.onb-h { font-size: 22px; line-height: 1.2; letter-spacing: -.02em; margin: 0 0 8px; }
+.onb-lede { font-size: 13px; line-height: 1.55; color: #8A8A86; margin: 0 0 14px; }
+
+.onb-in {
+  width: 100%; box-sizing: border-box; padding: 12px;
+  background: #141414; color: #F5F5F2;
+  border: 1px solid #2E2E2E; border-radius: 10px;
+  /* 16px MINIMUM on iOS or Safari zooms the page on focus - and this sheet is
+     the very first thing a new reader touches. */
+  font-size: 16px; font-family: inherit;
+}
+.onb-in:focus { outline: none; border-color: #D4FF00; }
+.onb-err { color: #EF4444; font-size: 12px; margin: 8px 0 0; }
+
+/* EQUAL WEIGHT IS THE WHOLE POINT of this row. Skip is the same element, the
+   same size and the same row as the affirmative - not a grey link beneath a
+   volt button. Email and name are genuinely optional, and a layout that says
+   otherwise is the layout lying. */
+.onb-row { display: flex; gap: 10px; margin-top: 16px; }
+.onb-btn {
+  flex: 1; min-height: 46px; padding: 12px;
+  background: transparent; color: #F5F5F2;
+  border: 1px solid #2E2E2E; border-radius: 10px;
+  font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.onb-btn--go { background: #D4FF00; color: #0A0A0A; border-color: #D4FF00; }
+.onb-btn:disabled { opacity: .5; cursor: default; }

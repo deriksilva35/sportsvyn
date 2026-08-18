@@ -19,6 +19,7 @@ import { auth } from '@/auth';
 import { resolveShellMode } from '@/lib/shell/shell';
 import { getEntitlements } from '@/lib/membership';
 import GlobalHeader from '@/components/GlobalHeader';
+import OnboardingGate from '@/components/onboarding/OnboardingGate';
 
 export default async function GlobalHeaderServer({ activeNav = null }) {
   const session = await auth();
@@ -31,11 +32,22 @@ export default async function GlobalHeaderServer({ activeNav = null }) {
     userId ? getEntitlements(userId).catch(() => null) : Promise.resolve(null),
   ]);
   return (
-    <GlobalHeader
-      session={session}
-      activeNav={activeNav}
-      shell={isShell}
-      isMember={!!ent?.sim}
-    />
+    <>
+      <GlobalHeader
+        session={session}
+        activeNav={activeNav}
+        shell={isShell}
+        isMember={!!ent?.sim}
+      />
+      {/* THE SHEET RIDES WITH THE CHROME. Mounting it in the ROOT LAYOUT would
+          be tidier, but OnboardingGate calls auth() and cookies() in a root
+          layout turns every prerendered page dynamic - /privacy and /terms
+          included, which is the same trap the app tab bar hit. This component
+          is already async, already resolves the session, and already renders on
+          every chrome-bearing surface, so the sheet costs one indexed read on
+          pages that are dynamic anyway. The five /sim pages draw their own
+          header and mount it separately. */}
+      <OnboardingGate />
+    </>
   );
 }

@@ -18,6 +18,7 @@ import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
 import '@/components/sim/tracker.css';
+import OnboardingGate from '@/components/onboarding/OnboardingGate';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Draft Room - Sportsvyn', robots: { index: false, follow: false } };
@@ -50,6 +51,9 @@ export default async function DraftRoomPage({ params, searchParams }) {
     return (
       <div className={`sim${isShell ? ' sim--shell' : ''}`} data-surface="ink">
         {isShell && <ShellPersist />}
+        {/* The sim draws its own header, so it mounts the sheet itself - see
+            the note in GlobalHeaderServer. */}
+        <OnboardingGate />
         <TrackerRoom
           draftId={draftId}
           config={room.config}

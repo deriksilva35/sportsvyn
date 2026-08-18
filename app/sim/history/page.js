@@ -15,6 +15,7 @@ import ExposureReport from '@/components/sim/ExposureReport';
 import { SCORING_LABEL } from '@/lib/fantasy/config';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
+import OnboardingGate from '@/components/onboarding/OnboardingGate';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Draft History - Sportsvyn', robots: { index: false, follow: false } };
@@ -50,6 +51,9 @@ export default async function SimHistory({ searchParams }) {
   return (
     <div className={`sim sim--tabbar${isShell ? ' sim--shell' : ''}`} data-surface="ink">
       {isShell && <ShellPersist />}
+      {/* The sim draws its own header, so it mounts the sheet itself - see
+          the note in GlobalHeaderServer. */}
+      <OnboardingGate />
       {/* THE CONTAINER HAS ONE HEADER, and it is not this one. This renders
           the SPORTSVYN gridiron wordmark, which is right on the web and wrong
           in an app whose bundle is com.sportsvyn.draftvyn - it is why two tabs

@@ -18,6 +18,7 @@ import { getMembership } from '@/lib/membership';
 import { openBillingPortal } from '@/app/actions/membership';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
+import OnboardingGate from '@/components/onboarding/OnboardingGate';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Account - Sportsvyn', robots: { index: false, follow: false } };
@@ -44,6 +45,9 @@ export default async function SimAccount({ searchParams }) {
   return (
     <div className={`sim sim--tabbar${isShell ? ' sim--shell' : ''}`} data-surface="ink">
       {isShell && <ShellPersist />}
+      {/* The sim draws its own header, so it mounts the sheet itself - see
+          the note in GlobalHeaderServer. */}
+      <OnboardingGate />
       {isShell && iap && userId != null && (
         <IapConfigure userId={userId} apiKey={rcKey} productId={rcProduct} />
       )}
