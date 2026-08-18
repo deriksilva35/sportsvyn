@@ -82,6 +82,12 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
               and underscores.
             </p>
             <HandleClaim onDone={() => setStep(2)} />
+            {/* THE CONTRACT, stated where the ask is. Step 1 is the one step
+                with no Skip and no backdrop dismiss - the trigger is
+                `handle IS NULL`, so a dismissal would simply return on the next
+                open and read as a bug rather than a choice. A required field is
+                easier to accept when its cost is named out loud. */}
+            <p className="onb-note">You will pick this once - it takes ten seconds.</p>
           </>
         )}
 
@@ -95,7 +101,12 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
             <p className="onb-lede">
               {step2?.mode === 'confirm'
                 ? 'We will only use it for results and things that change - never for anything you did not ask for.'
-                : 'You signed in with a private Apple address, which we cannot read. If you want results and board news, give us one that reaches you. Entirely optional.'}
+                // THE OLD LINE SAID "which we cannot read" AND THAT WAS FALSE.
+                // An Apple relay address forwards perfectly well and we mail 30
+                // of them today - the reason to ask is preference and
+                // durability, not our inability. Copy that invents a technical
+                // excuse is worse than copy that asks plainly.
+                : 'You signed in with a private Apple relay address. That works fine - but if you would rather hear from us directly, drop a real one here. Entirely optional.'}
             </p>
             <input
               className="onb-in"

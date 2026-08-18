@@ -56,3 +56,7 @@
 }
 .onb-btn--go { background: #D4FF00; color: #0A0A0A; border-color: #D4FF00; }
 .onb-btn:disabled { opacity: .5; cursor: default; }
+
+/* The step-1 contract line. Quieter than the lede - it is a reassurance, not
+   an instruction, and it sits under the control it describes. */
+.onb-note { font-size: 11px; color: #8A8A86; margin: 10px 0 0; }
