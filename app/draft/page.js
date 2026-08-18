@@ -15,6 +15,7 @@ import Wordmark from '@/components/gridiron/Wordmark';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
+import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { draftState, draftSettledView, seatOptions } from '@/lib/draft/view';
 import { draftState as readDraftState } from '@/lib/draft/entry';
 import { DRAFT_CONFIG, DRAFT_ROUNDS } from '@/lib/draft/contest';
@@ -81,6 +82,8 @@ export default async function DraftPage({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode((await searchParams) ?? {});
+  // Signed out in the container: the sign-in form, not this page's hero.
+  requireSignInInShell({ isShell, userId, dest: '/draft' });
 
   // A missing contests table must ghost, not 500 - the lobby's posture.
   const st = await readDraftState(userId).catch(() => ({ contest: null, entry: null, draft: null }));

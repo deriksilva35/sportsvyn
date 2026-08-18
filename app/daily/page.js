@@ -25,6 +25,7 @@ import Wordmark from '@/components/gridiron/Wordmark';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
+import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { todayEt, getDay, entryView } from '@/lib/daily/entries';
 import { podium, overall } from '@/lib/daily/boards';
 import { PodiumModule, OverallModule } from '@/components/daily/Leaderboard';
@@ -48,6 +49,8 @@ export default async function DailyPage({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode((await searchParams) ?? {});
+  // Signed out in the container: the sign-in form, not this page's hero.
+  requireSignInInShell({ isShell, userId, dest: '/daily' });
 
   const date = await todayEt();
   const { state } = await getDay(date);

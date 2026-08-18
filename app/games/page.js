@@ -21,6 +21,7 @@ import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { gamesLobby } from '@/lib/games/read';
 import { normalizePane } from '@/lib/games/lobby';
 import PaneTabs from '@/components/games/PaneTabs';
@@ -47,6 +48,9 @@ export default async function GamesPage({ searchParams }) {
   const pane = normalizePane(sp.pane);
   const session = await auth();
   const userId = session?.user?.id ?? null;
+  // GAMES WAS THE ODD ONE: no signed-out branch at all, so a stranger in the
+  // container got the lobby - four cards, none of them playable. Same rule.
+  requireSignInInShell({ isShell: await resolveShellMode(sp), userId, dest: '/games' });
   const v = await gamesLobby(userId).catch(() => null);
 
   return (

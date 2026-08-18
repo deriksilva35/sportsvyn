@@ -69,7 +69,19 @@ export default async function SignInPage({ searchParams }) {
       <h1 className="font-display font-black text-3xl text-paper-warm mt-12">
         Sign in or create your account
       </h1>
-      <p className="font-serif italic text-muted mt-4">
+      {/* ONE LINE OF IDENTITY, SHELL ONLY. In the container this screen is now
+          the launch surface - the App Store listing did the selling, so there is
+          no hero in front of it any more - and a bare form is a form with no
+          reason attached. It is the hero's identity line and nothing else: what
+          signing in gets you, not a pitch for the product they already
+          installed. The web still arrives here from a hero that said all this,
+          so repeating it there would be the same sentence twice. */}
+      {isShell && (
+        <p className="font-serif italic text-paper-warm mt-4">
+          Pick a handle &mdash; the name beside your score in every game.
+        </p>
+      )}
+      <p className={`font-serif italic text-muted ${isShell ? 'mt-2' : 'mt-4'}`}>
         Use your Apple&nbsp;ID, or we&apos;ll email you a 6-digit sign-in code.
       </p>
 

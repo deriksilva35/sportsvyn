@@ -23,6 +23,7 @@ import Wordmark from '@/components/gridiron/Wordmark';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
+import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { currentContest, getEntry } from '@/lib/weekly/entries';
 import { weeklyState, settledView, lineupRows } from '@/lib/weekly/view';
 import { tierClass } from '@/lib/daily/reveal';
@@ -116,6 +117,8 @@ export default async function WeeklyPage({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode((await searchParams) ?? {});
+  // Signed out in the container: the sign-in form, not this page's hero.
+  requireSignInInShell({ isShell, userId, dest: '/weekly' });
 
   // A missing contests table (067 unapplied) must ghost, not 500 - same posture
   // as the lobby's card reads.

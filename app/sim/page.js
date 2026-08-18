@@ -9,6 +9,7 @@ import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
@@ -32,6 +33,9 @@ export default async function SimLobby({ searchParams }) {
   const userId = session?.user?.id ?? null;
   const params = (await searchParams) ?? {};
   const isShell = await resolveShellMode(params);
+  // IN THE CONTAINER, SIGNED OUT, THE ANSWER IS THE SIGN-IN FORM. Ahead of the
+  // lobby read below, because a redirect makes every query under it wasted.
+  requireSignInInShell({ isShell, userId, dest: '/sim' });
   // Apple IAP buy path. Server-resolved (not NEXT_PUBLIC_, so flipping it is a
   // pure env change) and threaded as a prop, the same way `shell` already flows.
   // `enabled` requires the flag AND a valid appl_ key, so a half-configured
