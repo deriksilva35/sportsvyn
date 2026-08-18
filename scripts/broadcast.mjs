@@ -27,12 +27,22 @@
 //   DATABASE_URL="$PROD_DATABASE_URL" node scripts/broadcast.mjs
 //   ... --send                                 # live, with a prompt
 //
-// Usage: node scripts/broadcast.mjs [--send] [--limit N] [--to email]
+// Usage: node scripts/broadcast.mjs [--send] [--limit N] [--to owner-address]
+//
+// --to REPURPOSED, 18 Aug: it used to filter the roster, which made it useless
+// for its actual job - a test send to Derik - because owner addresses are
+// excluded from the roster by design, so --to <owner> matched nothing. It is
+// now a TEST SEND: the identical rendered mail to exactly one address, which
+// must be on the owner list (validateTestRecipient refuses anything else, so
+// the override can never become a side door for mailing a user). Ledgered with
+// kind 'test' and test: true so it never reads as broadcast history, and no
+// typed count - the count is 1 by construction.
 
 import readline from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { sql } from '../lib/db.js';
 import { unsubscribeUrlFor, unsubscribeHeaders } from '../lib/auth/welcomeEmail.js';
+import { databaseFingerprint, assertLiveTarget, validateTestRecipient } from '../lib/email/broadcastRules.js';
 
 const args = process.argv.slice(2);
 const LIVE = args.includes('--send');
@@ -174,8 +184,7 @@ async function recipients() {
        AND NOT (email = ANY(${OWNER_ADDRESSES}))
        AND NOT (COALESCE(contact_email, '') = ANY(${OWNER_ADDRESSES}))
      ORDER BY id`;
-  const filtered = ONLY ? rows.filter((r) => r.email === ONLY) : rows;
-  return LIMIT ? filtered.slice(0, LIMIT) : filtered;
+  return LIMIT ? rows.slice(0, LIMIT) : rows;
 }
 
 // ---------------------------------------------------------------------------
@@ -205,16 +214,61 @@ const recordFinish = (rowId, summary, err = null) => sql`
    WHERE id = ${rowId}`;
 
 // ---------------------------------------------------------------------------
+// THE TEST SEND - one owner address, the identical mail, ledgered as a test.
+// ---------------------------------------------------------------------------
+async function testSend(address) {
+  // The unsubscribe link is SIGNED FOR A REAL USER ROW, because the test's
+  // whole point is that every part of the mail is the part a recipient gets -
+  // a placeholder token would leave the one click Gmail actually scrutinises
+  // untested. Owner addresses are users too (they are excluded from the
+  // roster, not from the table), so the row exists to sign for.
+  const [u] = await sql`
+    SELECT id FROM users
+     WHERE email = ${address} OR contact_email = ${address}
+     ORDER BY id LIMIT 1`;
+  if (!u) throw new Error(`no user row for ${address} - the unsubscribe link needs one to sign for`);
+
+  const url = await unsubscribeUrlFor(u.id);
+  const mail = render({ unsubscribeUrl: url });
+
+  const rowId = (await sql`
+    INSERT INTO sync_runs (source, kind, started_at, ok, summary)
+    VALUES (${SOURCE}, 'test', now(), true,
+            ${JSON.stringify({ userId: u.id, to: address, test: true, outcome: 'sending' })}::jsonb)
+    RETURNING id`)[0].id;
+  try {
+    const { resend, EMAIL_FROM } = await import('../lib/resend.js');
+    const res = await resend.emails.send({
+      from: EMAIL_FROM, to: address, subject: SUBJECT,
+      html: mail.html, text: mail.text, headers: unsubscribeHeaders(url),
+    });
+    const id = res?.data?.id ?? null;
+    if (res?.error) throw new Error(res.error?.message ?? JSON.stringify(res.error));
+    await recordFinish(rowId, { userId: u.id, to: address, test: true, outcome: 'test-sent', id });
+    console.log(`\n  TEST SEND ACCEPTED. to=${address} resend id=${id}`);
+    console.log('  Ledgered as kind=test - not broadcast history.\n');
+  } catch (e) {
+    await recordFinish(rowId, { userId: u.id, to: address, test: true, outcome: 'failed' }, String(e?.message ?? e));
+    throw e;
+  }
+}
+
+// ---------------------------------------------------------------------------
 async function main() {
-  const list = await recipients();
-  const fingerprint = String(process.env.DATABASE_URL || '').includes('winter-dawn') ? 'PROD' : 'DEV';
+  // A typo'd --to fails HERE, before anything is queried or rendered.
+  const testTo = ONLY == null ? null : validateTestRecipient(ONLY, OWNER_ADDRESSES);
+  const list = testTo ? [] : await recipients();
+  const fingerprint = databaseFingerprint(process.env.DATABASE_URL);
 
   console.log(`\n  target database : ${fingerprint}`);
   console.log(`  mode            : ${LIVE ? 'LIVE SEND' : 'DRY RUN (no mail will be sent)'}`);
   console.log(`  postal address  : ${POSTAL ?? 'NOT SET - blocks a live send'}`);
   console.log(`  subject         : ${SUBJECT}`);
-  console.log(`\n  RECIPIENTS: ${list.length}`);
-  for (const r of list) console.log(`    ${String(r.id).padStart(4)}  ${r.email}`);
+  if (testTo) console.log(`  TEST SEND to    : ${testTo} (owner list) - roster ignored`);
+  if (!testTo) {
+    console.log(`\n  RECIPIENTS: ${list.length}`);
+    for (const r of list) console.log(`    ${String(r.id).padStart(4)}  ${r.email}`);
+  }
 
   const sample = render({ unsubscribeUrl: await unsubscribeUrlFor(list[0]?.id ?? 0) });
   console.log('\n  ---- RENDERED (text) ----');
@@ -228,9 +282,17 @@ async function main() {
   }
 
   // ---- live send, and every gate has to be open --------------------------
+  // TARGET FIRST. This refusal exists because a run without the
+  // DATABASE_URL="$PROD_DATABASE_URL" prefix silently targets DEV - seen in a
+  // dry run that printed RECIPIENTS: 1. It guards BOTH live paths: the test
+  // send's ledger row and signed unsubscribe token are only meaningful on the
+  // database the webhook and the unsubscribe endpoint actually read.
+  assertLiveTarget(fingerprint);
   if (!POSTAL) throw new Error('EMAIL_POSTAL_ADDRESS is required for a live send (CAN-SPAM).');
   if (SUBJECT.includes('PLACEHOLDER')) throw new Error('the copy is still the placeholder - not sending.');
   // The dash check runs inside render(), which every send path calls.
+
+  if (testTo) return testSend(testTo);
 
   const rl = readline.createInterface({ input: stdin, output: stdout });
   const typed = await rl.question(`  Type the recipient count (${list.length}) to send: `);
