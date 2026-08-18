@@ -121,3 +121,20 @@
   font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
 }
 .onb .btn--volt:disabled { background: #2E2E2E; color: #6A6A68; cursor: default; }
+
+/* Step 4's toggle - a labelled checkbox row, native control kept because the
+   OS prompt that follows is native too and a custom switch promising a system
+   dialog reads as two different products. */
+.onb-toggle {
+  display: flex; align-items: center; gap: 10px;
+  margin: 14px 0 4px; padding: 12px 14px;
+  border: 1px solid #232323; border-radius: 10px;
+  font-size: 14px; color: #F5F5F2;
+}
+.onb-toggle input { width: 18px; height: 18px; accent-color: #D4FF00; }
+
+/* The one-time post-entry nudge (components/push/AnswerNudge). Lives here
+   because it borrows the sheet's button pair - one look for one decision,
+   wherever it is asked. */
+.push-nudge { border: 1px solid #232323; border-radius: 12px; padding: 16px; }
+.push-nudge-q { font-size: 15px; color: #F5F5F2; margin: 0 0 12px; font-weight: 600; }

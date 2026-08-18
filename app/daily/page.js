@@ -32,6 +32,7 @@ import { PodiumModule, OverallModule } from '@/components/daily/Leaderboard';
 import HandleClaim from '@/components/daily/HandleClaim';
 import { sql } from '@/lib/db';
 import DailyRoom from '@/components/daily/DailyRoom';
+import AnswerNudge from '@/components/push/AnswerNudge';
 import './daily.css';
 
 export const dynamic = 'force-dynamic';
@@ -126,7 +127,7 @@ export default async function DailyPage({ searchParams }) {
   const [podiumBoard, overallTable, me] = await Promise.all([
     podium(userId).catch(() => null),
     overall(userId, 10).catch(() => null),
-    sql`SELECT handle FROM users WHERE id = ${userId}`.then((r) => r[0] ?? null).catch(() => null),
+    sql`SELECT handle, push_choice FROM users WHERE id = ${userId}`.then((r) => r[0] ?? null).catch(() => null),
   ]);
 
   // DNF: started, never locked, clock spent. The attempt is consumed - the
@@ -169,6 +170,7 @@ export default async function DailyPage({ searchParams }) {
           podium={view.entry ? null : <PodiumModule board={podiumBoard} userId={Number(userId)} />}
           overall={<OverallModule table={overallTable} userId={Number(userId)} />}
           claim={me && !me.handle ? <HandleClaim /> : null}
+          nudge={<AnswerNudge offer={me != null && me.push_choice == null} />}
         />
       </main>
       </div>

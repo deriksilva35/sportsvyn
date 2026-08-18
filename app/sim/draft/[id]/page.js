@@ -19,6 +19,7 @@ import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
 import '@/components/sim/tracker.css';
 import OnboardingGate from '@/components/onboarding/OnboardingGate';
+import PushReRegister from '@/components/push/PushReRegister';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Draft Room - Sportsvyn', robots: { index: false, follow: false } };
@@ -54,6 +55,7 @@ export default async function DraftRoomPage({ params, searchParams }) {
         {/* The sim draws its own header, so it mounts the sheet itself - see
             the note in GlobalHeaderServer. */}
         <OnboardingGate />
+      <PushReRegister />
         <TrackerRoom
           draftId={draftId}
           config={room.config}

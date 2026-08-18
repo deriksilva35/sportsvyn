@@ -19,6 +19,7 @@ import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
 import '@/components/sim/tracker.css';
 import OnboardingGate from '@/components/onboarding/OnboardingGate';
+import PushReRegister from '@/components/push/PushReRegister';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mock Draft Sim - Sportsvyn', robots: { index: false, follow: false } };
@@ -70,6 +71,7 @@ export default async function SimLobby({ searchParams }) {
       {/* The sim draws its own header, so it mounts the sheet itself - see
           the note in GlobalHeaderServer. */}
       <OnboardingGate />
+      <PushReRegister />
       {/* Configure RevenueCat only in shell, only with the buy path on, and only
           once the user id is known - never anonymously (see IapConfigure). */}
       {isShell && iap && userId != null && (

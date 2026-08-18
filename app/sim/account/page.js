@@ -10,6 +10,8 @@ import DeleteAccount from '@/components/sim/DeleteAccount';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import NotificationsRow from '@/components/push/NotificationsRow';
+import { sql } from '@/lib/db';
 import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
 import { getDraftsUsed, isMember, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
@@ -18,6 +20,7 @@ import { openBillingPortal } from '@/app/actions/membership';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
 import OnboardingGate from '@/components/onboarding/OnboardingGate';
+import PushReRegister from '@/components/push/PushReRegister';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Account - Sportsvyn', robots: { index: false, follow: false } };
@@ -32,8 +35,9 @@ export default async function SimAccount({ searchParams }) {
   const isShell = await resolveShellMode((await searchParams) ?? {});
   if (userId == null) redirect('/signin?callbackUrl=/sim/account');
 
-  const [used, member, membership] = await Promise.all([
+  const [used, member, membership, me] = await Promise.all([
     getDraftsUsed(userId), isMember(userId), getMembership(userId),
+    sql`SELECT push_choice FROM users WHERE id = ${Number(userId)}`.then((r) => r[0] ?? null).catch(() => null),
   ]);
   const { enabled: iap, apiKey: rcKey, productId: rcProduct } = appleIapConfig();
   const email = session.user?.email ?? '';
@@ -47,6 +51,7 @@ export default async function SimAccount({ searchParams }) {
       {/* The sim draws its own header, so it mounts the sheet itself - see
           the note in GlobalHeaderServer. */}
       <OnboardingGate />
+      <PushReRegister />
       {isShell && iap && userId != null && (
         <IapConfigure userId={userId} apiKey={rcKey} productId={rcProduct} />
       )}
@@ -71,6 +76,9 @@ export default async function SimAccount({ searchParams }) {
           {/* Unlimited for everyone now - see FREE_DRAFT_LIMIT. The COUNT is still
               worth showing; the cap is not, because there is not one. */}
           <div className="acct-row"><span className="k">Drafts</span><span className="v">{used} run &middot; unlimited</span></div>
+          {/* Renders only where the push plugin exists - web and the v1.1
+              binary see nothing. The road back for every NOT NOW. */}
+          <NotificationsRow choice={me?.push_choice ?? null} />
         </div>
 
         {/* SHELL (App Store 3.1.1): no purchase path and no billing management.

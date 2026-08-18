@@ -77,3 +77,33 @@ export async function completeOnboarding() {
     return { ok: false, reason: 'could not save' };
   }
 }
+
+/**
+ * Record the push pre-warm choice - 'enabled' | 'not-now' | 'denied'.
+ *
+ * WHY 'denied' IS A VALUE: an explicit yes on our screen followed by a no on
+ * the OS prompt must not be recorded as 'enabled' (the device cannot receive)
+ * NOR left null (the one-time nudge would re-ask someone who has answered
+ * twice). It is its own fact; the profile row is the road back for it too.
+ *
+ * push_prompted_at is set-once - it records the FIRST time our screen was
+ * answered; push_choice moves with the latest answer (the profile row lets
+ * people change their mind).
+ */
+export async function savePushChoice(choice) {
+  const userId = await currentUserId();
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  if (!['enabled', 'not-now', 'denied'].includes(choice)) {
+    return { ok: false, reason: 'bad choice' };
+  }
+  try {
+    await sql`
+      UPDATE users
+         SET push_choice = ${choice},
+             push_prompted_at = COALESCE(push_prompted_at, now())
+       WHERE id = ${userId}`;
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: 'could not save' };
+  }
+}

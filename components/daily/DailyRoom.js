@@ -42,7 +42,7 @@ const mmss = (ms) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
-export default function DailyRoom({ puzzleDate, initialEntry, podium = null, overall = null, claim = null }) {
+export default function DailyRoom({ puzzleDate, initialEntry, podium = null, overall = null, claim = null, nudge = null }) {
   const [entry, setEntry] = useState(initialEntry ?? null);
   const [board, setBoard] = useState(null);
   const [startedAt, setStartedAt] = useState(null);
@@ -146,6 +146,9 @@ export default function DailyRoom({ puzzleDate, initialEntry, podium = null, ove
   if (entry && !board) {
     return (
       <>
+        {/* The one-time push pre-warm, server-gated on push_choice IS NULL and
+            feature-gated on the plugin. Renders nothing for almost everyone. */}
+        {nudge}
         <section className="mod mod--entered">
           <h2 className="eyebrow">Today&rsquo;s board <span className="ctx">&mdash; your entry</span></h2>
           <div className="score-row">

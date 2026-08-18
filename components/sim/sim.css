@@ -609,6 +609,10 @@
 .acct { border: 1px solid var(--rule); margin-top: 8px; }
 .acct-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 14px; border-bottom: 1px solid var(--rule-dim); }
 .acct-row:last-child { border-bottom: none; }
+/* The Notifications row's action - a link-weight button, because the row grid
+   is label/value and a full button in the value slot would outshout Sign Out. */
+.acct-link { background: none; border: none; padding: 0; color: var(--volt, #D4FF00); font: inherit; cursor: pointer; }
+.acct-link:disabled { opacity: .6; cursor: default; }
 .acct-row .k { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-dim); }
 .acct-row .v { font-size: 13px; color: var(--paper); overflow: hidden; text-overflow: ellipsis; }
 .acct-upsell { background: var(--volt); color: var(--ink); padding: 14px; margin-top: 14px; }

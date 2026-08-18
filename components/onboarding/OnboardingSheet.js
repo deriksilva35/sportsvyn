@@ -30,7 +30,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import HandleClaim from '@/components/daily/HandleClaim';
-import { saveContactEmail, saveName, completeOnboarding } from '@/app/actions/onboarding';
+import { saveContactEmail, saveName, completeOnboarding, savePushChoice } from '@/app/actions/onboarding';
+import { canOfferPush, enablePush } from '@/lib/push/client';
 
 export default function OnboardingSheet({ step2, initialName = '' }) {
   const [step, setStep] = useState(1);
@@ -38,6 +39,15 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
   const [name, setName] = useState(initialName ?? '');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  // STEP 4 EXISTS ONLY WHERE IT CAN BE DELIVERED ON. canOfferPush()
+  // feature-detects the Capacitor push plugin: the v1.2 binary has it, the
+  // v1.1 binary and every browser do not - and a pre-warm screen whose ENABLE
+  // cannot produce an OS prompt would be a promise the surface cannot keep.
+  // Evaluated once on mount; the plugin does not appear mid-session.
+  const [offerPush] = useState(() => canOfferPush());
+  const totalSteps = offerPush ? 4 : 3;
+  // Pre-checked by ruling: the toggle arrives ON, and ENABLE acts on it.
+  const [wantsPush, setWantsPush] = useState(true);
   const router = useRouter();
 
   async function finish() {
@@ -61,6 +71,36 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
     setBusy(true);
     await saveName(name).catch(() => null);
     setBusy(false);
+    if (offerPush) setStep(4); else finish();
+  }
+
+  // Step 3's Skip must ALSO pass through step 4 - skipping your name is not
+  // an answer about notifications.
+  function afterName() {
+    if (offerPush) setStep(4); else finish();
+  }
+
+  // ---- STEP 4 · PUSH (the pre-warm) --------------------------------------
+  // OUR SCREEN FIRST, THE OS PROMPT ONLY ON EXPLICIT YES. The OS prompt is a
+  // one-shot Apple owns; NOT NOW spends nothing and never blocks. The choice
+  // is recorded server-side either way (push_choice), so the one-time nudge
+  // and the profile row know who has already answered.
+  async function submitPush() {
+    if (!wantsPush) { await submitPushSkip(); return; }
+    setBusy(true);
+    const got = await enablePush();
+    // 'denied' is recorded as denied, not as enabled - the device cannot
+    // receive, and recording otherwise would hide exactly the people the
+    // profile row's road-back exists for.
+    await savePushChoice(got === 'granted' ? 'enabled' : got === 'denied' ? 'denied' : 'not-now').catch(() => null);
+    setBusy(false);
+    finish();
+  }
+
+  async function submitPushSkip() {
+    setBusy(true);
+    await savePushChoice('not-now').catch(() => null);
+    setBusy(false);
     finish();
   }
 
@@ -68,13 +108,13 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
     <div className="onb-scrim" role="dialog" aria-modal="true" aria-label="Set up your account">
       <div className="onb">
         <div className="onb-rail" aria-hidden="true">
-          {[1, 2, 3].map((n) => <i key={n} className={n <= step ? 'on' : undefined} />)}
+          {Array.from({ length: totalSteps }, (_, i) => i + 1).map((n) => <i key={n} className={n <= step ? 'on' : undefined} />)}
         </div>
 
         {/* ---- STEP 1 · HANDLE (required) ------------------------------ */}
         {step === 1 && (
           <>
-            <div className="onb-kicker">Step 1 of 3</div>
+            <div className="onb-kicker">Step 1 of {totalSteps}</div>
             <h2 className="onb-h">Pick your handle</h2>
             <p className="onb-lede">
               This is your leaderboard name. It shows next to your score on every
@@ -94,7 +134,7 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
         {/* ---- STEP 2 · EMAIL (optional) ------------------------------- */}
         {step === 2 && (
           <>
-            <div className="onb-kicker">Step 2 of 3</div>
+            <div className="onb-kicker">Step 2 of {totalSteps}</div>
             <h2 className="onb-h">
               {step2?.mode === 'confirm' ? 'Is this the best address for you?' : 'Where should we reach you?'}
             </h2>
@@ -137,7 +177,7 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
         {/* ---- STEP 3 · NAME (optional) -------------------------------- */}
         {step === 3 && (
           <>
-            <div className="onb-kicker">Step 3 of 3</div>
+            <div className="onb-kicker">Step 3 of {totalSteps}</div>
             <h2 className="onb-h">What should we call you?</h2>
             <p className="onb-lede">
               Only used where a real name reads better than a handle. Nobody else
@@ -153,11 +193,38 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
               aria-label="Your name"
             />
             <div className="onb-row">
-              <button type="button" className="onb-btn" onClick={finish} disabled={busy}>
+              <button type="button" className="onb-btn" onClick={afterName} disabled={busy}>
                 Skip
               </button>
               <button type="button" className="onb-btn onb-btn--go" onClick={submitName} disabled={busy}>
-                {busy ? 'Saving…' : 'Done'}
+                {busy ? 'Saving…' : offerPush ? 'Next' : 'Done'}
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ---- STEP 4 · NOTIFICATIONS (shell with plugin only) ---------- */}
+        {step === 4 && (
+          <>
+            <div className="onb-kicker">Step 4 of {totalSteps}</div>
+            <h2 className="onb-h">Know when the board drops</h2>
+            <p className="onb-lede">
+              Get notified when the board goes live and when the answer drops.
+            </p>
+            <label className="onb-toggle">
+              <input
+                type="checkbox"
+                checked={wantsPush}
+                onChange={(e) => setWantsPush(e.target.checked)}
+              />
+              <span>Board live &amp; answer revealed</span>
+            </label>
+            <div className="onb-row">
+              <button type="button" className="onb-btn" onClick={submitPushSkip} disabled={busy}>
+                Not now
+              </button>
+              <button type="button" className="onb-btn onb-btn--go" onClick={submitPush} disabled={busy}>
+                {busy ? 'Setting up…' : 'Enable'}
               </button>
             </div>
           </>

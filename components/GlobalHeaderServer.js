@@ -20,6 +20,7 @@ import { resolveShellMode } from '@/lib/shell/shell';
 import { getEntitlements } from '@/lib/membership';
 import GlobalHeader from '@/components/GlobalHeader';
 import OnboardingGate from '@/components/onboarding/OnboardingGate';
+import PushReRegister from '@/components/push/PushReRegister';
 
 export default async function GlobalHeaderServer({ activeNav = null }) {
   const session = await auth();
@@ -48,6 +49,7 @@ export default async function GlobalHeaderServer({ activeNav = null }) {
           pages that are dynamic anyway. The five /sim pages draw their own
           header and mount it separately. */}
       <OnboardingGate />
+      <PushReRegister />
     </>
   );
 }
