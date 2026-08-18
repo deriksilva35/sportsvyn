@@ -18,7 +18,7 @@ import { useState } from 'react';
 import { canOfferPush, enablePush } from '@/lib/push/client';
 import { savePushChoice } from '@/app/actions/onboarding';
 
-export default function NotificationsRow({ choice = null }) {
+export default function NotificationsRow({ choice = null, variant = 'sim' }) {
   const [state, setState] = useState(choice);       // null | not-now | denied | enabled
   const [busy, setBusy] = useState(false);
   const [settingsHint, setSettingsHint] = useState(false);
@@ -39,20 +39,39 @@ export default function NotificationsRow({ choice = null }) {
     setBusy(false);
   }
 
+  const value = state === 'enabled' ? (
+    'On - board live & answers'
+  ) : settingsHint || state === 'denied' ? (
+    'Off - enable in iOS Settings'
+  ) : (
+    <button type="button" className="acct-link" onClick={enable} disabled={busy}>
+      {busy ? 'Setting up…' : 'Turn on'}
+    </button>
+  );
+
+  // TWO MARKUP SHAPES, ONE BEHAVIOUR. /account (the PROFILE tab) and
+  // /sim/account style their rows differently (.acct-r vs .k/.v), and this
+  // component must read as native on both - Derik's device pass found the
+  // /sim/account-only placement one tap too deep to ever be discovered, so
+  // the PROFILE tab now carries its own full section.
+  if (variant === 'account') {
+    return (
+      <section className="acct-mod">
+        <h2 className="acct-eyebrow">Notifications</h2>
+        <div className="acct-rows">
+          <div className="acct-row">
+            <span>Board live &amp; answer drops</span>
+            <span className={`acct-r${state === 'enabled' ? ' acct-r--on' : ''}`}>{value}</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <div className="acct-row">
       <span className="k">Notifications</span>
-      <span className="v">
-        {state === 'enabled' ? (
-          'On - board live & answers'
-        ) : settingsHint || state === 'denied' ? (
-          'Off - enable in iOS Settings'
-        ) : (
-          <button type="button" className="acct-link" onClick={enable} disabled={busy}>
-            {busy ? 'Setting up…' : 'Turn on'}
-          </button>
-        )}
-      </span>
+      <span className="v">{value}</span>
     </div>
   );
 }

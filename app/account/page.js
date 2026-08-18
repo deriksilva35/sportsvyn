@@ -29,6 +29,8 @@ import YourDrafts from '@/components/sim/YourDrafts';
 import { getDraftHistory } from '@/lib/fantasy/drafts';
 import { splitDrafts } from '@/lib/fantasy/yourDrafts';
 import SignOutButton from '@/components/sim/SignOutButton';
+import NotificationsRow from '@/components/push/NotificationsRow';
+import { sql } from '@/lib/db';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getMembership } from '@/lib/membership';
 import { isMember } from '@/lib/fantasy/drafts';
@@ -52,9 +54,10 @@ export default async function AccountPage({ searchParams }) {
   const isShell = await resolveShellMode((await searchParams) ?? {});
   // Neither read may cost the page: a membership lookup that fails reads as
   // "not a member", which is the safe direction for a status line.
-  const [member, membership, draftRows] = await Promise.all([
+  const [member, membership, me, draftRows] = await Promise.all([
     isMember(userId).catch(() => false),
     getMembership(userId).catch(() => null),
+    sql`SELECT push_choice FROM users WHERE id = ${Number(userId)}`.then((r) => r[0] ?? null).catch(() => null),
     // Caught to an empty list: a history read must never be able to cost
     // somebody their account page, which is also where sign-out lives.
     getDraftHistory(userId).catch(() => []),
@@ -78,6 +81,15 @@ export default async function AccountPage({ searchParams }) {
           <h1 className="acct-eyebrow">Signed in as</h1>
           <div className="acct-email">{email || 'your account'}</div>
         </section>
+
+        {/* THE PUSH DOOR FOR EVERY PRE-v1.2 ACCOUNT. The onboarding sheet only
+            fires on a null handle, so the ~60 existing users will never see
+            step 4 - this section is their only road to notifications, which is
+            why it sits second on the PROFILE tab rather than inside
+            /sim/account (found undiscoverable on Derik's device pass).
+            Renders nothing without the push plugin: web and v1.1 see no
+            section at all. */}
+        <NotificationsRow variant="account" choice={me?.push_choice ?? null} />
 
         <section className="acct-mod">
           <h2 className="acct-eyebrow">Membership</h2>

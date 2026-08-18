@@ -71,3 +71,9 @@
   cursor: pointer;
 }
 .acct .acct-signout:hover { border-color: var(--a-volt); color: var(--a-volt); }
+
+/* The Notifications section's action (components/push/NotificationsRow,
+   variant="account") - link-weight, volt, same reasoning as sim.css's copy:
+   a full button in a value slot would outshout Sign Out. */
+.acct-link { background: none; border: none; padding: 0; color: #D4FF00; font: inherit; cursor: pointer; }
+.acct-link:disabled { opacity: .6; cursor: default; }
