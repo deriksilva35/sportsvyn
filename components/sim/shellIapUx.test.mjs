@@ -186,7 +186,9 @@ test('welcome copy is TWO PRODUCTS, each with an instruction', () => {
   // has to end in is WHAT TO TAP - the measured problem is not that people
   // decline, it is that they arrive and do nothing.
   assert.match(WELCOME.mock, /START DRAFT/, 'the mock half names the control');
-  assert.match(WELCOME.mock, /[Tt]hree free drafts a week/, 'and the free tier');
+  // Was /three free drafts a week/. Still names the free tier - it is just
+  // unlimited now, which is a better thing to arrive to.
+  assert.match(WELCOME.mock, /[Ff]ree and unlimited/, 'and the free tier');
   assert.match(WELCOME.tracker, /enter picks as they happen/, 'the tracker half says what you DO');
   assert.match(WELCOME.tracker, /at the table/, 'and where');
 

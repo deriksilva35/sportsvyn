@@ -25,17 +25,22 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 })(path.resolve(__dirname, '..', '..', '.env.local'));
 
 // ---- Variant A (draft gate) — leads with the Pass, weekly rhythm ----
-test('draft variant: weekly rhythm headline, leads with the Draft Pass', () => {
+test('draft variant: sells what is STILL paid, not the wall that went away', () => {
+  // This asserted 'Three free drafts a week.' and /reset Monday/. Both described
+  // a limit that no longer exists - mocks are free and unlimited - so the card
+  // has to lead with what membership actually prices instead.
   const v = MEMBERSHIP_CARD_VARIANTS.draft;
-  assert.equal(v.headline, 'Three free drafts a week.');
-  assert.match(v.body, /reset Monday/);
+  assert.equal(v.headline, 'Custom rooms, tracker mode.');
+  assert.match(v.body, /free and unlimited/);
+  assert.equal(/reset Monday/.test(v.body), false, 'no weekly wall to reset');
+  assert.equal(/three/i.test(v.body), false, 'and no three of anything');
   assert.match(v.body, /Draft Pass unlocks/);
   assert.match(v.body, /Exposure Report/);
   assert.deepEqual(v.secondary, { label: 'Your drafts', href: '/sim/history' });
   // The Tracker is the Pass's anchor feature and has to be named wherever the
   // Pass is pitched - this body listed six sim features without it.
   assert.match(v.body, /Draft Tracker/);
-  assert.ok(v.body.indexOf('Draft Tracker') < v.body.indexOf('unlimited drafts'),
+  assert.ok(v.body.indexOf('Draft Tracker') < v.body.indexOf('custom rosters'),
     'the Tracker should lead the unlock list, as it does on the /membership card');
 });
 
@@ -129,8 +134,11 @@ test('DRAFT PASS card: the sub-line and footnote are unchanged', () => {
 test('SHELL copy is byte-identical - a web copy edit must not reach the app', () => {
   assert.deepEqual(MEMBERSHIP_CARD_SHELL, {
     draft: {
-      headline: 'Three free drafts a week.',
-      body: 'That is your three - they reset Monday. Unlimited drafts are part of the Sportsvyn membership. Members sign in and it unlocks.',
+      // DELIBERATELY CHANGED. This test exists so a web copy edit cannot reach
+      // the app by accident; the app's copy moved here on purpose, because the
+      // three-a-week wall it described is gone.
+      headline: 'Custom rooms, tracker mode.',
+      body: 'Mock drafts are free and unlimited. Custom rosters, 14 to 16 teams, superflex and tracker mode are part of the Sportsvyn membership. Members sign in and it unlocks.',
     },
     custom: {
       headline: 'Custom is a membership feature.',
@@ -165,4 +173,53 @@ test('members bypass the draft gate — canStartDraft(member=true) is always ok'
   // memberBlocked in StartForm is `isCustom && !member`, so member => never blocked;
   // freeGated derives from canStart (above) => never true for a member. Both card
   // triggers require a non-member. Server-side entitlement stays the source of truth.
+});
+
+// ---------------------------------------------------------------------------
+// NO "THREE FREE DRAFTS" ANYWHERE
+// ---------------------------------------------------------------------------
+// The wall is gone for the 2026 season and the copy has to go with it. A
+// surface still promising three a week is worse than one promising nothing:
+// it caps a product that is not capped, and it is the first thing a new user
+// reads on the sim's own pitch.
+
+test('NO SHIPPED SURFACE STILL SELLS A THREE-DRAFT LIMIT', async () => {
+  const { readFileSync, readdirSync, statSync } = await import('node:fs');
+  const path = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+  const walk = (dir, out = []) => {
+    for (const f of readdirSync(dir)) {
+      const p = path.join(dir, f);
+      if (f === 'node_modules' || f === '.next' || f === '.git') continue;
+      if (statSync(p).isDirectory()) walk(p, out);
+      else if (/\.(js|jsx|md)$/.test(f) && !/\.test\./.test(f)) out.push(p);
+    }
+    return out;
+  };
+
+  const BANNED = [
+    /three free drafts/i,
+    /3 free drafts/i,
+    /free drafts for the week/i,
+    /\bof 3 free\b/i,
+  ];
+  const hits = [];
+  for (const dir of ['app', 'components', 'lib']) {
+    for (const file of walk(path.join(REPO, dir))) {
+      const text = readFileSync(file, 'utf8');
+      for (const re of BANNED) {
+        if (re.test(text)) hits.push(`${path.relative(REPO, file)} :: ${re}`);
+      }
+    }
+  }
+  assert.deepEqual(hits, [], `copy still sells a limit that no longer exists:\n${hits.join('\n')}`);
+});
+
+test('the constant says unlimited, and the gate agrees', async () => {
+  const { FREE_DRAFT_LIMIT, canStartDraft } = await import('../../lib/fantasy/drafts.js');
+  assert.equal(FREE_DRAFT_LIMIT, 0, '0 = no limit');
+  const gate = await canStartDraft(999999, true);
+  assert.equal(gate.ok, true);
 });

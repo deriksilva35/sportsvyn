@@ -66,7 +66,7 @@ export default function LiveDraftCard({ draft, member = false }) {
           has already spent one of three whether or not it is ever finished -
           which is the honest reason to go back rather than start another. */}
       {!member ? (
-        <p className="ld-note">This draft is already using one of your three free drafts. Finishing it costs nothing more.</p>
+        <p className="ld-note">Pick up where you left off - mock drafts are free and unlimited.</p>
       ) : null}
     </section>
   );

@@ -74,12 +74,17 @@ test('a missing config degrades to a card that still works', () => {
   assert.match(card, /\{round \? <>Round <b>\{round\}<\/b> · <\/> : null\}/);
 });
 
-test('FREE USERS ARE TOLD WHAT THE OPEN ROOM COSTS', () => {
-  // getDraftsUsed counts in_progress alongside completed, so an abandoned draft
-  // has already spent one of three. Invisible AND billed is the worst pair.
+test('THE OPEN ROOM COSTS NOTHING, and the card says so', () => {
+  // This asserted the room told free users it was spending one of their three.
+  // There is no longer anything to spend - mocks are free and unlimited - so a
+  // note about the cost would be inventing a price.
+  //
+  // getDraftsUsed still counts in_progress alongside completed, because the
+  // account page reports a tally; it just no longer gates anything.
   assert.match(drafts, /WHERE user_id = \$\{userId\} AND status IN \('completed', 'in_progress'\)/);
-  assert.match(card, /\{!member \?/, 'members are not shown a credit note');
-  assert.match(card, /This draft is already using one of your three free drafts\. Finishing it costs nothing more\./);
+  assert.match(card, /\{!member \?/, 'the note is still free-user only');
+  assert.match(card, /free and unlimited/);
+  assert.equal(/three free drafts/i.test(card), false, 'no wall to warn about');
   assert.ok(!/[—–]/.test(card), 'hyphens only');
 });
 

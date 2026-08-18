@@ -7,7 +7,10 @@ test('sim promo copy: shape', () => {
   assert.equal(SIM_PROMO.kicker, 'Fantasy');
   assert.match(SIM_PROMO.headline, /Draft against the market, not a spreadsheet\./);
   assert.match(SIM_PROMO.line, /graded on live ADP/);
-  assert.match(SIM_PROMO.line, /Three free drafts a week/);
+  // Was /Three free drafts a week/. The wall is gone for the 2026 season, so
+  // the promo has to stop advertising one.
+  assert.match(SIM_PROMO.line, /Free and unlimited/);
+  assert.equal(/three free/i.test(SIM_PROMO.line), false);
   assert.equal(SIM_PROMO.cta, 'Start a draft');
 });
 

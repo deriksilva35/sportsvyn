@@ -68,7 +68,9 @@ test('every web variant has a shell counterpart (no variant can leak unshielded)
 
 test('WEB copy is unchanged and still sells (the fix must not leak into web)', () => {
   assert.equal(MEMBERSHIP_PRICE_LINE, '$9.99 Draft Pass - $59/yr Suite - $99/yr Founding');
-  assert.equal(MEMBERSHIP_CARD_VARIANTS.draft.headline, 'Three free drafts a week.');
+  // The web card now leads with what membership still prices, since the
+  // three-a-week wall it used to headline no longer exists.
+  assert.equal(MEMBERSHIP_CARD_VARIANTS.draft.headline, 'Custom rooms, tracker mode.');
   assert.match(MEMBERSHIP_CARD_VARIANTS.custom.body, /Draft Pass unlocks the full console/);
   assert.equal(MEMBERSHIP_CARD_VARIANTS.tracker.headline, 'Bring it to your draft.');
 });

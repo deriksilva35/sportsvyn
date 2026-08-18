@@ -63,8 +63,8 @@ export const MEMBERSHIP_TIERS = {
 // are not sold to. Web copy above is UNCHANGED.
 export const MEMBERSHIP_CARD_SHELL = {
   draft: {
-    headline: 'Three free drafts a week.',
-    body: 'That is your three - they reset Monday. Unlimited drafts are part of the Sportsvyn membership. Members sign in and it unlocks.',
+    headline: 'Custom rooms, tracker mode.',
+    body: 'Mock drafts are free and unlimited. Custom rosters, 14 to 16 teams, superflex and tracker mode are part of the Sportsvyn membership. Members sign in and it unlocks.',
   },
   custom: {
     headline: 'Custom is a membership feature.',
@@ -104,7 +104,7 @@ export const APPLE_PASS_PRICE = '$9.99';
 // line, which is actively wrong once you can buy the thing where you are standing.
 export const MEMBERSHIP_CARD_IAP = {
   draft: {
-    body: 'That is your three - they reset Monday. The Draft Pass unlocks unlimited drafts, custom rosters, superflex, 14 to 16 teams, full history, and the Exposure Report, through the Super Bowl.',
+    body: 'Mock drafts are free and unlimited. The Draft Pass unlocks the Draft Tracker, custom rosters, superflex, 14 to 16 teams, full history, and the Exposure Report, through the Super Bowl.',
   },
   custom: {
     body: 'Set your own roster slots, league size, superflex, and scoring. The Draft Pass unlocks the full console; free accounts draft the presets.',
@@ -164,7 +164,7 @@ export const PASS_BUY = {
 export const WELCOME = {
   kicker: 'Welcome to Draftvyn',
   mockHead: 'Mock draft',
-  mock: 'Pick a preset, tap START DRAFT. Full snake mock against AI rooms that reach and slide like real ones - every pick graded on live ADP. Three free drafts a week.',
+  mock: 'Pick a preset, tap START DRAFT. Full snake mock against AI rooms that reach and slide like real ones - every pick graded on live ADP. Free and unlimited.',
   trackerHead: 'Draft Tracker',
   tracker: 'Draft night, logged live. Name the teams in your league, set your roster and slot, then enter picks as they happen at the table - the board tracks value while you draft.',
   pass: 'The Draft Pass unlocks the Tracker, unlimited drafts, and custom leagues - $9.99 through the Super Bowl.',
@@ -174,13 +174,14 @@ export const WELCOME = {
 };
 
 export const MEMBERSHIP_CARD_VARIANTS = {
-  // Variant A — draft gate (out of the 3 free weekly drafts). Leads with the Pass.
+  // Variant A - retained for the custom-config gate. The weekly draft wall it
+  // was written for no longer exists; mocks are free and unlimited.
   draft: {
-    headline: 'Three free drafts a week.',
+    headline: 'Custom rooms, tracker mode.',
     // The Tracker leads the unlock list here for the same reason it leads the
     // /membership card: it is the anchor feature, and this body previously ran
     // through six sim features without naming it.
-    body: "That's your three - they reset Monday. The Draft Pass unlocks the Draft Tracker for your real draft at the table, plus unlimited drafts, custom rosters, superflex, 14 to 16 teams, full history, and the Exposure Report - through the Super Bowl.",
+    body: "Mock drafts are free and unlimited. The Draft Pass unlocks the Draft Tracker for your real draft at the table, plus custom rosters, superflex, 14 to 16 teams, full history, and the Exposure Report - through the Super Bowl.",
     secondary: { label: 'Your drafts', href: '/sim/history' },
   },
   // Variant B — custom config lock. Custom is a sim entitlement, so lead with the

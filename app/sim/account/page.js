@@ -65,7 +65,9 @@ export default async function SimAccount({ searchParams }) {
         <div className="acct">
           <div className="acct-row"><span className="k">Email</span><span className="v">{email}</span></div>
           <div className="acct-row"><span className="k">Membership</span><span className="v">{member ? (renews ? `Member · renews ${renews}` : 'Member') : 'Free'}</span></div>
-          <div className="acct-row"><span className="k">Drafts</span><span className="v">{member ? 'Unlimited' : `${used} of ${FREE_DRAFT_LIMIT} free this week`}</span></div>
+          {/* Unlimited for everyone now - see FREE_DRAFT_LIMIT. The COUNT is still
+              worth showing; the cap is not, because there is not one. */}
+          <div className="acct-row"><span className="k">Drafts</span><span className="v">{used} run &middot; unlimited</span></div>
         </div>
 
         {/* SHELL (App Store 3.1.1): no purchase path and no billing management.

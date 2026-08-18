@@ -105,13 +105,17 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
   // Is a gate actually blocking START right now? (go() already refuses on both,
   // but until now START was never RENDERED on a blocked path, so it had no
   // disabled state to show.)
+  // freeGated survives ONLY as a server-refusal echo. There is no weekly draft
+  // wall any more (see FREE_DRAFT_LIMIT), so the server never returns
+  // 'entitlement' for a preset - but the client should still show something
+  // honest if a future gate reappears rather than silently doing nothing.
   const gateBlocked = (freeGated && !isCustom) || memberBlocked;
   // The above-the-fold pitch: shell + APPLE_IAP_ENABLED + not already entitled.
   // Deliberately NOT gated on `gateBlocked` - the whole point is that the price is
   // visible before the user hits a wall.
   const iapPitch = shell && iap && !member;
   function go() {
-    if (freeGated && !isCustom) return; // preset path is out of free drafts
+    if (freeGated && !isCustom) return; // only reachable if the server refuses
     if (memberBlocked) return;          // custom needs membership; START is disabled
     setErr(null);
     start(async () => {
@@ -136,7 +140,7 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
   const note = err
     ? err
     : freeGated && !isCustom
-      ? `That's your ${limit} free drafts for the week - resets Monday. Members draft unlimited.`
+      ? 'The room turned that down. Try again in a moment.'
       : memberBlocked
         ? 'Custom rosters, 14+ teams, and superflex are member features.'
         : (isCustom && member && (locks.oversize || locks.superflex))

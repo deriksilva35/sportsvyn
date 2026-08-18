@@ -147,7 +147,7 @@ export default function TrackerStart({ entitled, shell = false, iap = false }) {
         {pending ? 'STARTING…' : 'START TRACKING'}
       </button>
       <p className="sim-cta-note">
-        No clock and no AI - you record every pick. Tracked drafts do not use your free drafts.
+        No clock and no AI - you record every pick.
       </p>
     </section>
   );

@@ -5,6 +5,6 @@
 export const SIM_PROMO = {
   kicker: 'Fantasy',
   headline: 'Draft against the market, not a spreadsheet.',
-  line: 'Full snake mocks vs AI rooms that reach and slide - every pick graded on live ADP. Three free drafts a week.',
+  line: 'Full snake mocks vs AI rooms that reach and slide - every pick graded on live ADP. Free and unlimited.',
   cta: 'Start a draft',
 };
