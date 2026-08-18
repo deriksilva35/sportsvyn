@@ -14,7 +14,6 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import MembershipCard from './MembershipCard';
 import { startDraft, startCustomDraft } from '@/app/actions/sim';
 import {
   SCORING_FORMATS, SCORING_LABEL, CLOCK_OPTIONS, TEAMS_MIN, TEAMS_MAX, FREE_TEAMS_MAX,
@@ -118,7 +117,8 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
   // The above-the-fold pitch: shell + APPLE_IAP_ENABLED + not already entitled.
   // Deliberately NOT gated on `gateBlocked` - the whole point is that the price is
   // visible before the user hits a wall.
-  const iapPitch = shell && iap && !member;
+  // iapPitch is retired with the conversion card it gated - nothing in this
+  // component renders a price any more.
   function go() {
     if (freeGated && !isCustom) return; // only reachable if the server refuses
     if (memberBlocked) return;          // custom needs membership; START is disabled
@@ -177,24 +177,19 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
         <button
           type="button"
           className={`pcard cust${isCustom ? ' on' : ''}`}
-          onClick={() => (member ? setSelection('custom') : setErr('Custom drafts are a member feature.'))}
+          onClick={() => setSelection('custom')}
         >
           <div className="pn cust">CUSTOM</div>
           <div className="pm cust">Your rules</div>
-          {!member && <span className="pl lock">MEMBER</span>}
+          {/* The MEMBER lock chip is gone with the gate: the console is free,
+              and a padlock on an unlocked door is worse than no padlock. */}
         </button>
       </div>
 
-      {/* ABOVE THE FOLD (shell + APPLE_IAP_ENABLED, non-members only).
-          The conversion card used to live in setup-foot, which on a phone sits
-          below the console and only appears once a gate is actually HIT - so a
-          free user never saw the price until they ran out of drafts. Here it sits
-          directly under the preset rail, so price and UNLOCK are visible on load.
-          `iapPitch` is false on web and with the flag off, where this renders
-          nothing and the markup below is byte-identical to what shipped. */}
-      {iapPitch && (
-        <MembershipCard variant={isCustom ? 'custom' : 'draft'} shell={shell} iap={iap} compact />
-      )}
+      {/* THE CONVERSION CARD IS GONE. It sat under the preset rail so that
+          "price and UNLOCK are visible on load" - which is precisely what it
+          must no longer be, in a shell where every feature it priced is free.
+          It was the first thing a new app user saw. */}
 
       {/* console (the internal scroll region when the viewport is too short) */}
       <div className="console">
@@ -202,7 +197,8 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
           <div className="ck">TEAMS</div>
           <div className="cv">
             <Stepper value={N} onDec={() => stepTeams(-1)} onInc={() => stepTeams(1)} atMin={N <= TEAMS_MIN} atMax={N >= teamsMax} />
-            {!member && <span className="copt locked push">UP TO 16</span>}
+            {/* "UP TO 16" was a locked teaser for non-members. The stepper
+                goes to 16 for everybody now, so the chip described nothing. */}
           </div>
         </div>
         <div className="crow">
@@ -277,25 +273,16 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
             bar, disabled while a gate is actually blocking - previously START was
             simply absent on the gated path, so it never needed the disabled
             state. Web and flag-off keep the original two-card behaviour. */}
-        {iapPitch ? (
-          <>
-            {note && <div className="setup-note">{note}</div>}
-            <button className="startbtn bar" type="button" onClick={go} disabled={pending || gateBlocked}>
-              {pending ? 'STARTING…' : 'START DRAFT →'}
-            </button>
-          </>
-        ) : freeGated && !isCustom ? (
-          // Draft gate (out of free drafts) — inline conversion card, keeps context.
-          <MembershipCard variant="draft" shell={shell} iap={iap} />
-        ) : memberBlocked ? (
-          // Custom config lock — inline conversion card; secondary resets to a preset.
-          <MembershipCard variant="custom" shell={shell} iap={iap} onBackToPresets={() => choosePreset(presets[0])} />
-        ) : (
-          <>
-            {note && <div className="setup-note">{note}</div>}
-            <button className="startbtn bar" type="button" onClick={go} disabled={pending}>{pending ? 'STARTING…' : 'START DRAFT →'}</button>
-          </>
-        )}
+        {/* ONE PATH NOW. This was a ternary: the shell's IAP branch showed the
+            note plus a START bar disabled while a gate blocked, and the web
+            branch showed one of two conversion cards instead. The cards are
+            gone and no gate blocks, so both arms had collapsed to the same
+            markup - keeping the fork would have implied a difference that no
+            longer exists. */}
+        {note && <div className="setup-note">{note}</div>}
+        <button className="startbtn bar" type="button" onClick={go} disabled={pending}>
+          {pending ? 'STARTING…' : 'START DRAFT →'}
+        </button>
       </div>
     </div>
   );

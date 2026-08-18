@@ -37,17 +37,13 @@ beforeEach(() => { delete globalThis.window; });
 // 1. DRAFT tab — the card above the fold
 // ---------------------------------------------------------------------------
 
-test('the above-the-fold card is shell + flag + NON-member only', () => {
+test('THE ABOVE-THE-FOLD CARD IS GONE - it was the first thing a new app user saw', () => {
+  // INVERTED. This asserted the conversion card rendered above the console
+  // "so price and UNLOCK are visible on load" - which is exactly what it must
+  // no longer be, in a shell where everything it priced is free.
   const s = stripComments(src('components/sim/StartForm.js'));
-  assert.match(s, /const iapPitch = shell && iap && !member;/,
-    'the pitch must require shell, the flag, and a non-member');
-  // It renders BEFORE the console, which is the whole point - the old card sat in
-  // setup-foot, below the config table, on a phone.
-  const pitchAt = s.indexOf('iapPitch && (');
-  const consoleAt = s.indexOf('className="console"');
-  assert.ok(pitchAt > 0 && pitchAt < consoleAt, 'the card must render above the console');
-  assert.match(s, /<MembershipCard variant=\{isCustom \? 'custom' : 'draft'\} shell=\{shell\} iap=\{iap\} compact/,
-    'the above-fold slot must use the compact card');
+  assert.equal(/iapPitch/.test(s), false, 'the pitch flag is retired');
+  assert.equal(/<MembershipCard/.test(s), false, 'no conversion card renders here');
 });
 
 test('the pitch is NOT gated on having already hit a wall', () => {
@@ -59,23 +55,24 @@ test('the pitch is NOT gated on having already hit a wall', () => {
     `iapPitch must not depend on the gate state: ${line}`);
 });
 
-test('with the pitch shown, START is rendered but DISABLED while gated', () => {
-  // The old code never rendered START on a gated path, so it had no disabled
-  // state. Now it does, and a clickable START that silently does nothing would be
-  // worse than the card it replaced.
+test('START IS NEVER GATE-DISABLED, because no gate blocks it', () => {
+  // INVERTED. START used to render disabled while a gate blocked. Both gates
+  // (freeGated, memberBlocked) are permanently false, so a disabled START would
+  // now be a control that can never re-enable.
   const s = stripComments(src('components/sim/StartForm.js'));
-  assert.match(s, /const gateBlocked = \(freeGated && !isCustom\) \|\| memberBlocked;/);
-  assert.match(s, /disabled=\{pending \|\| gateBlocked\}/, 'START must be disabled while a gate blocks it');
+  assert.match(s, /disabled=\{pending\}/, 'START disables only while starting');
+  assert.equal(/disabled=\{pending \|\| gateBlocked\}/.test(s), false);
 });
 
-test('web and flag-off keep the original two-card foot', () => {
+test('THE FOOT HAS ONE PATH - the two conversion cards are gone from web too', () => {
+  // INVERTED. The foot used to fork: the shell showed a disabled START, the web
+  // showed one of two conversion cards. Both cards priced free features, so
+  // neither survives on either platform, and the fork collapsed with them.
   const s = stripComments(src('components/sim/StartForm.js'));
   const foot = s.slice(s.indexOf('className="setup-foot"'));
-  assert.match(foot, /iapPitch \?/, 'the foot must branch on the pitch');
-  assert.match(foot, /freeGated && !isCustom \?[\s\S]{0,200}<MembershipCard variant="draft"/,
-    'the flag-off draft gate card must survive');
-  assert.match(foot, /memberBlocked \?[\s\S]{0,240}<MembershipCard variant="custom"/,
-    'the flag-off custom lock card must survive');
+  assert.equal(/<MembershipCard/.test(foot), false, 'no cards in the foot');
+  assert.equal(/iapPitch \?/.test(foot), false, 'and nothing to branch on');
+  assert.match(foot, /START DRAFT/, 'the START bar is what is left');
 });
 
 test('the compact card carries price + buy and drops the prose', () => {
@@ -92,7 +89,10 @@ test('the compact card carries price + buy and drops the prose', () => {
 
 test('the account buy box is non-member + flag only; members keep web billing', () => {
   const s = stripComments(src('app/sim/account/page.js'));
-  assert.match(s, /\{!member && iap \? \(/, 'the account buy box must require a non-member and the flag');
+  // INVERTED: the buy box is gone. It rendered the price, UNLOCK THE DRAFT PASS
+  // and RESTORE PURCHASE to non-members - which is everybody now.
+  assert.equal(/<PassBuy/.test(s), false, 'no buy box in the shell account screen');
+  assert.equal(/\{!member && iap \? \(/.test(s), false, 'and no branch that would render one');
   // Members must still be told membership is handled on the web - that is the
   // 3.1.1-safe answer for MANAGING an existing subscription, and it must not be
   // replaced by a buy button.
@@ -258,7 +258,11 @@ test('NONE of the three surfaces can render on web or with the flag off', () => 
       assert.match(g, /isShell/, `${rel}:${tag} is not shell-gated`);
     }
   }
-  // The account buy box and the StartForm pitch are ternaries rather than mounts.
-  assert.match(stripComments(src('app/sim/account/page.js')), /\{!member && iap \?/);
-  assert.match(stripComments(src('components/sim/StartForm.js')), /const iapPitch = shell && iap && !member;/);
+  // The account buy box and the StartForm pitch used to be ternaries checked
+  // here. Both are removed, so the assertion inverts: neither may render at
+  // all, on any platform. IapConfigure stays and stays guarded - it configures
+  // RevenueCat for entitlement READS, which two live passes still depend on,
+  // and configuring an SDK is not a paywall.
+  assert.equal(/<PassBuy/.test(stripComments(src('app/sim/account/page.js'))), false);
+  assert.equal(/iapPitch/.test(stripComments(src('components/sim/StartForm.js'))), false);
 });

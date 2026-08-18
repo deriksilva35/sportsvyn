@@ -5,7 +5,13 @@
 .onb-scrim {
   position: fixed; inset: 0; z-index: 200;
   display: flex; align-items: flex-end; justify-content: center;
-  background: rgba(0, 0, 0, .72);
+  /* NEARLY OPAQUE, AND BLURRED. At .72 the tab bar, the pool rows and the
+     board behind it all read through, which made the sheet look like a
+     misplaced card rather than a step you have to complete. It is a required
+     step; the background should not offer itself as an alternative. */
+  background: rgba(6, 6, 6, .97);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   /* Above the app tab bar AND clear of the home indicator: the sheet is modal,
      so the bar underneath is unreachable and must not appear tappable. */
   padding: 16px 12px calc(16px + env(safe-area-inset-bottom));
@@ -60,3 +66,58 @@
 /* The step-1 contract line. Quieter than the lede - it is a reassurance, not
    an instruction, and it sits under the control it describes. */
 .onb-note { font-size: 11px; color: #8A8A86; margin: 10px 0 0; }
+
+/* ===========================================================================
+   THE CLAIM UI, STYLED HERE - the cause, not the instance.
+   ---------------------------------------------------------------------------
+   HandleClaim renders .hin / .at / .avail / .btn--volt, and every one of those
+   is defined in app/daily/daily.css. That was fine while the component only
+   ever appeared on /daily and /daily/[date], which import it. The onboarding
+   sheet mounts GLOBALLY - on /sim, /games and everywhere else the chrome
+   renders - and none of those pages import the Daily's stylesheet, so the
+   claim UI arrived as a bare unstyled input and a plain button.
+
+   THE FIX IS NOT TO IMPORT daily.css EVERYWHERE. That drags a whole surface's
+   stylesheet onto every page to borrow four rules, and couples the sheet to a
+   file it has no other relationship with. A component that mounts globally has
+   to carry its own appearance; these rules are scoped under .onb so they
+   restyle the claim only inside the sheet and leave the Daily's own rendering
+   untouched.
+   =========================================================================== */
+
+/* The input, as an input: bordered, bold, obviously fillable, with the @ as a
+   fixed prefix rather than something the reader has to type. */
+.onb .hin {
+  display: flex; align-items: center; gap: 2px;
+  background: #141414; border: 1px solid #2E2E2E; border-radius: 10px;
+  padding: 0 12px; margin-top: 4px;
+}
+.onb .hin:focus-within { border-color: #D4FF00; }
+.onb .hin .at { color: #8A8A86; font-size: 17px; font-weight: 700; }
+.onb .hin input {
+  flex: 1; min-width: 0; background: none; border: 0; outline: none;
+  color: #F5F5F2; font-family: inherit; font-weight: 700;
+  /* 16px MINIMUM or iOS zooms the page on focus - and this is the first field
+     a new reader ever touches. */
+  font-size: 17px; padding: 13px 0;
+}
+.onb .hin input::placeholder { color: #4A4A48; font-weight: 400; }
+.onb .hin--ok  { border-color: #4ADE80; }
+.onb .hin--bad { border-color: #EF4444; }
+
+/* Availability line: reserves its height so the button never jumps as you type. */
+.onb .avail { font-size: 12px; min-height: 16px; margin-top: 6px; }
+.onb .avail--ok   { color: #4ADE80; }
+.onb .avail--bad  { color: #EF4444; }
+.onb .avail--wait { color: #8A8A86; }
+.onb .muted { font-size: 11px; color: #8A8A86; margin-top: 4px; }
+
+/* The claim button: a real full-width control, volt on ink, visibly dead until
+   the handle is actually available. */
+.onb .btn--volt {
+  display: block; width: 100%; min-height: 48px;
+  background: #D4FF00; color: #0A0A0A;
+  border: 0; border-radius: 10px;
+  font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.onb .btn--volt:disabled { background: #2E2E2E; color: #6A6A68; cursor: default; }

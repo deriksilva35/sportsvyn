@@ -12,7 +12,6 @@ import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
-import PassBuy from '@/components/sim/PassBuy';
 import { getDraftsUsed, isMember, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
 import { getMembership } from '@/lib/membership';
 import { openBillingPortal } from '@/app/actions/membership';
@@ -95,11 +94,12 @@ export default async function SimAccount({ searchParams }) {
                 is unchanged - the neutral line above is all they get. Members
                 never see it; their box still points at the web for billing,
                 which is the 3.1.1-safe answer for MANAGING a subscription. */}
-            {!member && iap ? (
-              <div className="acct-iap">
-                <PassBuy />
-              </div>
-            ) : null}
+            {/* PassBuy REMOVED FROM THE SHELL. It rendered the price, UNLOCK
+                THE DRAFT PASS and RESTORE PURCHASE to non-members - which is
+                now everybody, in front of features that are free. The component
+                and its RevenueCat wiring stay in the tree untouched: two live
+                passes still resolve, and Apple requires a restore path to exist
+                for an app that HAS purchases. This one no longer does. */}
           </div>
         ) : member ? (
           <form action={openBillingPortal}>

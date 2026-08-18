@@ -13,7 +13,6 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import MembershipCard from './MembershipCard';
 import { startTrackerDraft } from '@/app/actions/sim';
 import { SCORING_FORMATS, SCORING_LABEL, TEAMS_MIN, TEAMS_MAX } from '@/lib/fantasy/config';
 
@@ -51,18 +50,13 @@ export default function TrackerStart({ entitled, shell = false, iap = false }) {
   // land in THIS branch - a new account owns no Pass. Putting the id only on the
   // entitled return would have made the link a dead tap for everybody it was
   // written for.
-  if (!entitled) {
-    return (
-      <section className="trk-start" id="tracker-start">
-        <div className="sim-kicker">Tracker mode</div>
-        <p className="trk-start-pitch">
-          Draft night, logged live. Name the teams in your league, set your roster and slot,
-          then enter picks as they happen at the table - the board tracks value while you draft.
-        </p>
-        <MembershipCard variant="tracker" shell={shell} iap={iap} onBackToPresets={() => router.push('/sim')} />
-      </section>
-    );
-  }
+  // THE WALL IS GONE. This returned MembershipCard variant="tracker" to anyone
+  // without a Pass - a price, an UNLOCK button and a RESTORE PURCHASE row in
+  // front of a feature that is now free. `entitled` is still accepted as a prop
+  // so every call site keeps compiling, and lib/membership.js still resolves it
+  // for the account badge; it simply no longer decides anything here.
+  //
+  // The page goes straight to setup for everybody.
 
   const setName = (i, v) => setNames((n) => ({ ...n, [i]: v }));
 
