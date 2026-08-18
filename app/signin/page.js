@@ -78,7 +78,7 @@ export default async function SignInPage({ searchParams }) {
           so repeating it there would be the same sentence twice. */}
       {isShell && (
         <p className="font-serif italic text-paper-warm mt-4">
-          Pick a handle &mdash; the name beside your score in every game.
+          Pick a handle - the name beside your score in every game.
         </p>
       )}
       <p className={`font-serif italic text-muted ${isShell ? 'mt-2' : 'mt-4'}`}>
