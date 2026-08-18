@@ -43,7 +43,7 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { importApiSportsGames } from '@/lib/gridiron/apiSportsImport';
-import { sweepDecision, slateDateEt, slateDatesForProvider, detailTargets, DAILY_REQUEST_CAP } from '@/lib/pollers/preseasonWindow';
+import { sweepDecision, slateDateEt, slateDatesForProvider, providerDatesForGames, detailTargets, DAILY_REQUEST_CAP } from '@/lib/pollers/preseasonWindow';
 import { fetchGameDetail } from '@/lib/gridiron/gameDetail';
 
 export const dynamic = 'force-dynamic';
@@ -127,13 +127,27 @@ export async function GET(request) {
   // Feeding the ET day to both is the defect that made the 8pm and 9pm ET
   // kickoffs invisible on 13 Aug.
   const dateEt = slateDateEt(now);
-  const providerDates = slateDatesForProvider(now);
 
   const [games, spent, lastSync] = await Promise.all([
     todaysPreseason(dateEt), requestsToday(), lastSyncAt(),
   ]);
 
   const decision = sweepDecision({ games, now, requestsToday: spent, lastSyncAt: lastSync });
+
+  // DATES DERIVED FROM THE KICKOFFS WE ALREADY HAVE, not guessed from the
+  // calendar. The blind two-date sweep asked for the ET day and the next one on
+  // every tick, which is one wasted request per sweep on a normal evening and
+  // the difference between fitting the cap and blowing it on a ten-game
+  // Saturday. providerDatesForGames usually returns ONE date, and returns two
+  // only when the slate genuinely straddles midnight UTC.
+  //
+  // THE BLIND SWEEP IS THE FALLBACK, not the default: if we somehow have no
+  // kickoffs in window but are polling anyway, asking for both dates is better
+  // than asking for none and going dark. sweepDecision refuses on 'no-games'
+  // before this matters, so in practice the fallback is unreachable - it is
+  // here so a future caller that skips that check cannot go blind.
+  const derived = providerDatesForGames({ games, now });
+  const providerDates = derived.length ? derived : slateDatesForProvider(now);
 
   if (!decision.poll) {
     // A refusal on budget is the one non-poll worth a row every time - it is the
