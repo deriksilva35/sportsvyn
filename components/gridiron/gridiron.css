@@ -359,3 +359,54 @@
 .gi-rank-tabs a.active { color: var(--ink); }
 .gi-rank-tabs a.active::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: -1px; height: 2px; background: var(--volt); }
 .gi-rank-body { max-width: 760px; }
+
+/* ---------------------------------------------------------------------------
+   WEB CROSS-NAV between the Scoreboard and the Movement Board (v0.3). One
+   small mono link in each page's own kicker grammar - the shell never renders
+   it (the SportsvynSegment owns that hop there).
+   --------------------------------------------------------------------------- */
+.gi-cross {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; white-space: nowrap;
+}
+.gi-cross:hover { color: var(--volt); }
+.fb-kicker .gi-cross { margin-left: 14px; }
+
+/* ---------------------------------------------------------------------------
+   SCOREBOARD PHONE PASS (v0.3 mock, LIVE pane grammar). EVERYTHING mobile
+   lives inside this one query - above 640px not a single rule here applies,
+   which is the whole desktop-unchanged guarantee.
+   --------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  /* The date rail and the filter chips become horizontal scroll strips: one
+     row each, overflow scrolls, no wrapping into a two-line toolbar. */
+  .gi-toolbar {
+    flex-wrap: nowrap; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    margin-left: -16px; margin-right: -16px; padding: 0 16px 4px;
+  }
+  .gi-toolbar::-webkit-scrollbar { display: none; }
+  .gi-toolbar > * { flex: 0 0 auto; }
+  .gi-datenav a, .gi-datenav span { padding: 10px 14px; /* 44px targets */ }
+
+  /* THE CARD REFOLDS: matchup lines first, status/chevron under them, meta
+     foot last. Same DOM, flex order only - the desktop card is untouched. */
+  .gi-card-body { display: flex; flex-direction: column; }
+  .gi-team { order: 1; }
+  .gi-card-top { order: 2; margin-bottom: 0; margin-top: 7px; }
+  .gi-card-foot { order: 3; }
+
+  /* The expand's tables scroll inside the card, never the page. */
+  .gi-detail { overflow-x: auto; }
+
+  /* "Full game" is the box-score path - at phone width it reads as the
+     card's one button, not a trailing text link. */
+  .gi-full {
+    display: block; text-align: center;
+    background: var(--volt); color: var(--ink);
+    font-weight: 700; text-decoration: none;
+    padding: 11px 0; margin-top: 10px; min-height: 44px;
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  }
+}

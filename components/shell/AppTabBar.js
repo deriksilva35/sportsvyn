@@ -76,6 +76,7 @@ export default function AppTabBar() {
         <Link
           key={t.key}
           href={t.href}
+          data-key={t.key}
           className={`apptab-i${active === t.key ? ' on' : ''}`}
           aria-current={active === t.key ? 'page' : undefined}
         >

@@ -13,7 +13,11 @@
 // force-dynamic because the board reflects the morning's snapshot and the
 // running draft corpus; a statically cached copy would go stale by a day.
 
+import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
+import SportsvynSegment from '@/components/shell/SportsvynSegment';
+import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import { requireSignInInShell } from '@/lib/shell/signedOut';
 import SiteFooter from '@/components/SiteFooter';
 import MovementBoard from '@/components/fantasy/MovementBoard';
 import {
@@ -28,6 +32,13 @@ import '@/components/fantasy/fantasy.css';
 
 export const dynamic = 'force-dynamic';
 
+// v0.3: this board is also half of the app's SPORTSVYN tab. Shell mode gets
+// the safe-area viewport and the segment; the web page is unchanged, public
+// and indexable (the metadata below deliberately has no robots override).
+export async function generateViewport({ searchParams }) {
+  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+}
+
 export const metadata = {
   title: 'The Movement Board - NFL Fantasy ADP - Sportsvyn',
   description:
@@ -38,6 +49,11 @@ const FALLBACK_FORMAT = 'ppr';
 
 export default async function FantasyMovementBoard({ searchParams }) {
   const params = (await searchParams) ?? {};
+  const isShell = await resolveShellMode(params);
+  // Same sign-in law as every tab: in-shell signed-out lands on the form.
+  // Placed before the three board reads - a redirect must not pay for them.
+  const session = await auth();
+  requireSignInInShell({ isShell, userId: session?.user?.id ?? null, dest: '/nfl/fantasy' });
   const raw = Array.isArray(params.format) ? params.format[0] : params.format;
   const format = sizeForFormat(raw) ? raw : FALLBACK_FORMAT;
 
@@ -77,10 +93,16 @@ export default async function FantasyMovementBoard({ searchParams }) {
   return (
     <div data-surface="ink">
       <GlobalHeaderServer activeNav="fantasy" />
+      {isShell && <SportsvynSegment active="fantasy" />}
       <div className="fb-wrap">
         <div className="fb-head">
           <div>
-            <div className="fb-kicker">{PAGE.kicker}</div>
+            <div className="fb-kicker">
+              {PAGE.kicker}
+              {/* Web cross-nav to the scoreboard; the shell's segment owns
+                  this hop, so it is web-only - same rule as /scores. */}
+              {!isShell && <a className="gi-cross" href="/scores">Scoreboard &rarr;</a>}
+            </div>
             <h1 className="fb-title">{PAGE.title[0]}<br />{PAGE.title[1]}</h1>
             <p className="fb-sub">{PAGE.sub}</p>
           </div>

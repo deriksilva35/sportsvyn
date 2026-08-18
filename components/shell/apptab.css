@@ -24,7 +24,9 @@
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 4px 0; text-decoration: none; color: #8A8A86;
   /* 44px MINIMUM TARGET including the padding above - four tabs across a 320px
-     screen is 80px wide each, so width is never the constraint; height is. */
+     screen is 80px wide each (GAMES / PRACTICE / TRACKER / SPORTSVYN since
+     v0.3 - Profile moved to the header chip), so width is never the
+     constraint; height is. */
   min-height: 44px; justify-content: center;
 }
 .apptab-i .ic { font-size: 18px; line-height: 1; }
@@ -88,6 +90,60 @@ html[data-clock] body:has(.apptab) { padding-bottom: 0; }
   font-size: 17px;
 }
 .gh--app .gh-app-mark { display: block; }
+
+/* THE SPORTSVYN TAB'S Y-MONOGRAM. The icon slot everywhere else holds an
+   emoji; this one holds the brand's own letterform (Y with macron), so it is
+   set in the brand's own face - Saira 900 italic - not the emoji font. Sized
+   up slightly because a letterform at emoji-size reads lighter than an emoji. */
+.apptab-i[data-key="sportsvyn"] .ic {
+  font-family: var(--font-saira), sans-serif;
+  font-style: italic; font-weight: 900;
+  font-size: 19px; line-height: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   THE PROFILE CHIP (v0.3) - Profile left the bar for the header's right edge.
+   The header stays centred on the wordmark; the chip is absolutely placed so
+   adding it cannot shift the mark. Handle-less accounts show the generic mark
+   - transient by construction, the onboarding gate closes it.
+   --------------------------------------------------------------------------- */
+.gh--app { position: relative; }
+.gh-app-me {
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(calc(-50% + env(safe-area-inset-top) / 2));
+  display: flex; align-items: center; gap: 6px;
+  text-decoration: none; color: #8A8A86;
+  min-height: 44px; /* same target rule as the tabs */
+}
+.gh-app-me .in {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #1A1A1A; border: 1px solid #232323;
+  color: #D4FF00; font-weight: 700; font-size: 12px; text-transform: uppercase;
+}
+.gh-app-me .hn {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 10px; letter-spacing: .04em; max-width: 84px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+   THE SPORTSVYN SEGMENT (shell only) - LIVE SCORES / FANTASY, the mock's volt
+   pill. Server-rendered only when shell mode resolves, so web HTML never
+   carries it; see components/shell/SportsvynSegment.
+   --------------------------------------------------------------------------- */
+.svseg {
+  display: flex; gap: 6px; padding: 10px 16px 2px;
+  max-width: 480px; margin: 0 auto;
+}
+.svseg a {
+  flex: 1; text-align: center; text-decoration: none;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  padding: 9px 0; border: 1px solid #232323; border-radius: 999px;
+  color: #8A8A86; background: none; min-height: 36px;
+}
+.svseg a.on { color: #0A0A0A; background: #D4FF00; border-color: #D4FF00; font-weight: 700; }
 
 /* ---------------------------------------------------------------------------
    YOUR DRAFTS - the history rows on PROFILE and the Tracker tab.

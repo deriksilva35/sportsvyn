@@ -1,6 +1,16 @@
-// app/scores/page.js — the Scoreboard (ink surface). Unlinked from existing nav;
-// renders its own local ink shell. DEV reads only.
+// app/scores/page.js — the Scoreboard (ink surface). Reads whatever
+// DATABASE_URL points at - on Vercel that is PROD. (An earlier note here
+// claimed this page read development data; it predated the env split and was
+// stale the day it deployed.)
+//
+// v0.3: this page is ALSO the Draftvyn app's SPORTSVYN tab. One implementation
+// - the shell gets a viewport, a sign-in gate and the LIVE SCORES / FANTASY
+// segment; the web gets the same page without them, public and indexable.
+import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
+import SportsvynSegment from '@/components/shell/SportsvynSegment';
+import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import { requireSignInInShell } from '@/lib/shell/signedOut';
 import Scoreboard from '@/components/gridiron/Scoreboard';
 import { getSlateByDate, resolveScoresDate } from '@/lib/gridiron/readers';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
@@ -8,6 +18,12 @@ import '@/components/gridiron/gridiron.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Scores - Sportsvyn' };
+
+// Shell mode opts into viewport-fit:cover so the safe-area insets resolve;
+// the web keeps the root viewport. Same contract as every /sim page.
+export async function generateViewport({ searchParams }) {
+  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+}
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -35,6 +51,11 @@ function label(iso) {
 
 export default async function ScoresPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
+  const isShell = await resolveShellMode(sp);
+  // In the container, signed out means the sign-in form - same law as every
+  // tab. The web branch of this page stays public; the guard is shell-only.
+  const session = await auth();
+  requireSignInInShell({ isShell, userId: session?.user?.id ?? null, dest: '/scores' });
   // Explicit ?date= navigation is respected; the no-param default resolves to
   // today (if it has games) or the nearest day with a real slate.
   const date = DATE_RE.test(sp.date ?? '') ? sp.date : await resolveScoresDate(todayEtDate());
@@ -49,12 +70,17 @@ export default async function ScoresPage({ searchParams }) {
   return (
     <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav="scores" />
+      {isShell && <SportsvynSegment active="scores" />}
 
       <div className="gi-wrap">
         <div className="gi-kicker">
           <span className="k">Scoreboard</span>
           <span className="cnt">{total} games</span>
           <span className="rule" />
+          {/* WEB CROSS-NAV to the board's sibling surface. Web only: in the
+              shell the segment above owns this hop, and two controls for one
+              hop is one too many. */}
+          {!isShell && <a className="gi-cross" href="/nfl/fantasy">Movement Board &rarr;</a>}
         </div>
 
         <div className="gi-toolbar">

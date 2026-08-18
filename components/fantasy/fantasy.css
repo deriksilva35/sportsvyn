@@ -124,3 +124,51 @@
   .fb-wrap { padding: 20px 14px 46px; }
   .fb-detail { padding-left: 20px; }
 }
+
+/* ---------------------------------------------------------------------------
+   MOVEMENT BOARD PHONE PASS (v0.3 mock, FANTASY pane grammar). One media
+   query holds every mobile rule - above 640px none of this exists, which is
+   the desktop-unchanged guarantee.
+
+   THE SHEET'S ANSWER AT 390px: the PLAYER cell pins sticky-left and the
+   numeric columns scroll under it. The BAND column hides - its information
+   does not leave: the band paints an inset bar on the leading edge of the
+   sticky cell instead (the row already carries .steam/.sliding as a class),
+   which is the mock's grammar and costs 88px the numbers need.
+   --------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  /* Filters become one-line scroll strips, same treatment as /scores. */
+  .fb-filters {
+    flex-wrap: nowrap; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .fb-filters::-webkit-scrollbar { display: none; }
+  .fb-filters > * { flex: 0 0 auto; }
+  .fb-search { min-width: 150px; }
+
+  /* Narrower tracks with the band column collapsed. The sheet still overflows
+     - that is the point - but by 470px, not 1020. */
+  .fb-sheet { min-width: 780px; --fb-cols: minmax(148px, 1fr) 62px 56px 68px 58px 60px 84px 72px 64px; }
+  .fb-shead > div:first-child, .fb-row > div:first-child { display: none; }
+
+  /* THE STICKY PLAYER CELL. Opaque backgrounds are load-bearing: a sticky
+     cell over scrolling numbers with the row's translucent zebra would show
+     the digits sliding beneath the names. Solid graphite, always. */
+  .fb-shead > div:nth-child(2), .fb-row > div:nth-child(2) {
+    position: sticky; left: 0; z-index: 1;
+    background: var(--graphite);
+    box-shadow: 6px 0 8px -6px rgba(0,0,0,.55);
+  }
+  .fb-shead > div:nth-child(2) { background: var(--ink); }
+  .fb-row:hover > div:nth-child(2) { background: var(--graphite-up, #242424); }
+
+  /* The band's inset bar, riding the sticky cell's leading edge. */
+  .fb-row > div:nth-child(2) { border-left: 3px solid transparent; }
+  .fb-row.steam > div:nth-child(2) { border-left-color: var(--volt); }
+  .fb-row.sliding > div:nth-child(2) { border-left-color: var(--terra); }
+
+  /* The serif detail row stays readable in the viewport instead of stretching
+     the sheet's full 780px: pin it left and cap it at the screen. */
+  .fb-detail { padding: 0 14px 14px; position: sticky; left: 0; max-width: calc(100vw - 30px); }
+  .fb-meta { flex-wrap: wrap; gap: 10px 16px; }
+}

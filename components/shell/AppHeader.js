@@ -23,7 +23,8 @@
  * dynamic. See components/shell/AppTabBar.js.
  */
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import Link from 'next/link';
 import { isShellClient } from '@/lib/shell/appTabs';
 
 const subscribe = () => () => {};
@@ -34,6 +35,25 @@ const getServerSnapshot = () => false;
 
 export default function AppHeader() {
   const inShell = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  // THE PROFILE CHIP'S ONE FACT. Fetched after mount rather than server-passed,
+  // because this component lives in the ROOT layout and the root layout must
+  // never call auth()/cookies() - the /privacy-goes-dynamic trap, twice now.
+  // Shell-gated so the web never spends the request. null = signed out or
+  // handle-less; both render the generic mark, and the generic mark is
+  // transient by construction - the onboarding gate closes handle-less and the
+  // launch flow closes signed-out.
+  const [handle, setHandle] = useState(null);
+  useEffect(() => {
+    if (!inShell) return;
+    let dead = false;
+    fetch('/api/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (!dead && j?.handle) setHandle(j.handle); })
+      .catch(() => {});
+    return () => { dead = true; };
+  }, [inShell]);
+
   if (!inShell) return null;
   return (
     <header className="gh gh--app">
@@ -50,6 +70,13 @@ export default function AppHeader() {
           style={{ height: '2.12em', width: 'auto', display: 'block' }}
         />
       </span>
+      {/* PROFILE LIVES HERE NOW, not on the bar - the v0.3 trade that freed
+          the fourth tab for SPORTSVYN. Absolutely placed so the wordmark stays
+          centred whether or not a handle has loaded. */}
+      <Link href="/account" className="gh-app-me" aria-label="Your account">
+        <span className="in" aria-hidden="true">{handle ? handle[0] : '@'}</span>
+        {handle && <span className="hn">@{handle}</span>}
+      </Link>
     </header>
   );
 }
