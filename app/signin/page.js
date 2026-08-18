@@ -90,8 +90,8 @@ export default async function SignInPage({ searchParams }) {
           link is not rendered inside the app at all. Web unchanged. */}
       {!isShell && (
         <p className="font-mono text-[11px] uppercase tracking-widest text-muted mt-8">
-          Membership?{' '}
-          <a href="/membership" className="underline hover:text-volt">See plans →</a>
+          Everything is free this season.{' '}
+          <a href="/membership" className="underline hover:text-volt">What that means →</a>
         </p>
       )}
 

@@ -101,7 +101,7 @@ export default async function AccountPage({ searchParams }) {
           {/* 3.1.1: no pricing entry inside the native container. */}
           {!isShell && (
             <a className="acct-ghost" href="/membership">
-              {member ? 'Manage membership' : 'See what a membership gets you'} &rarr;
+              {member ? 'Manage membership' : 'What is free this season'} &rarr;
             </a>
           )}
         </section>

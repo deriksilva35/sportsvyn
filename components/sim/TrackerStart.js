@@ -23,7 +23,10 @@ import { SCORING_FORMATS, SCORING_LABEL, TEAMS_MIN, TEAMS_MAX } from '@/lib/fant
 const DEFAULT_SLOTS = { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, K: 1, DST: 1, BN: 6 };
 
 const ERR = {
-  entitlement_tracker: 'Tracker mode needs the Draft Pass',
+  // Unreachable since the teardown - the server no longer returns this reason.
+  // Kept so an older client that still sends it gets a sentence rather than a
+  // blank, and reworded so the sentence is not a lie if it ever renders.
+  entitlement_tracker: 'Tracker mode is unavailable right now.',
   labels_length: 'One name per team, or leave them all blank',
   labels_not_array: 'Team names could not be read',
   invalid_config: 'Check the league settings',

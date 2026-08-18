@@ -103,7 +103,7 @@ export default async function SimAccount({ searchParams }) {
           </form>
         ) : (
           <a href="/membership" className="acct-upsell acct-upsell--link">
-            <div className="m1">Members get more.</div>
+            <div className="m1">Everything is free this season.</div>
             <div className="m2">Unlimited drafts · custom rosters · 14+ teams · the Sportsvyn board.</div>
             <div className="m3">See membership →</div>
           </a>

@@ -45,9 +45,12 @@ test('draft variant: sells what is STILL paid, not the wall that went away', () 
 });
 
 // ---- Variant B (custom config lock) — leads with the Pass (custom is sim) ----
-test('custom variant: leads with the Draft Pass, secondary Back to presets (no href)', () => {
+test('custom variant: says custom is free, secondary Back to presets (no href)', () => {
+  // Was 'Custom needs the Draft Pass.' - it does not, for the 2026 season. The
+  // card itself is unreachable now (the server no longer refuses custom), but
+  // its copy must not claim a price that does not exist if it ever renders.
   const v = MEMBERSHIP_CARD_VARIANTS.custom;
-  assert.equal(v.headline, 'Custom needs the Draft Pass.');
+  assert.equal(v.headline, 'Custom is free this season.');
   assert.match(v.body, /Set your own roster slots, league size, superflex, and scoring/);
   assert.match(v.body, /Draft Pass unlocks the full console/);
   assert.equal(v.secondary.label, 'Back to presets');

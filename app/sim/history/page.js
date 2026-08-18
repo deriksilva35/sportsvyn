@@ -42,7 +42,10 @@ export default async function SimHistory({ searchParams }) {
 
   const [drafts, ent] = await Promise.all([getDraftHistory(userId), getEntitlements(userId)]);
   // Exposure Report: computed for sim-entitled users, locked preview for free.
-  const exposure = ent.sim ? await getExposureReport(userId) : null;
+  // THE EXPOSURE REPORT IS FREE FOR THE 2026 SEASON. It rendered a locked
+  // preview for anyone without `sim`; it is the fifth gate, and it was not on
+  // the teardown list until the recon found it.
+  const exposure = await getExposureReport(userId);
 
   return (
     <div className={`sim sim--tabbar${isShell ? ' sim--shell' : ''}`} data-surface="ink">
@@ -96,7 +99,7 @@ export default async function SimHistory({ searchParams }) {
           </ul>
         )}
 
-        <ExposureReport report={exposure} locked={!ent.sim} shell={isShell} />
+        <ExposureReport report={exposure} locked={false} shell={isShell} />
       </main>
 
       <SimTabBar />

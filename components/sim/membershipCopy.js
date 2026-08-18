@@ -187,7 +187,7 @@ export const MEMBERSHIP_CARD_VARIANTS = {
   // Variant B — custom config lock. Custom is a sim entitlement, so lead with the
   // Pass too (the Pass is the cheapest thing that unlocks it).
   custom: {
-    headline: 'Custom needs the Draft Pass.',
+    headline: 'Custom is free this season.',
     // The worst offender before this pass: a reader hits the custom-config lock,
     // is told the Pass buys "the full console", and never learns that the same
     // Pass is what they would open at their actual draft. The console clause is

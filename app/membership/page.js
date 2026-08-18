@@ -1,9 +1,20 @@
 /**
- * /membership — the checkout/pitch surface. INK product surface (data-surface=
- * "ink"), house typography. Not a PAPER editorial page. Server component: each
- * plan is a form posting the startCheckout server action (bound to the plan key),
- * which creates a Stripe Checkout Session and redirects. Promo codes are entered
- * on Stripe's checkout page (allow_promotion_codes=true), so here we only note it.
+ * /membership — now a NOTICE, not a checkout.
+ *
+ * Everything this page used to price is free for the 2026 season, so the plan
+ * grid, the Stripe checkout forms and the tier copy are gone from it.
+ *
+ * THE ROUTE STAYS, and that was the choice over a 404. It is in sitemap.xml at
+ * priority 0.6, linked from six surfaces (nav, /signin, /account, /sim/account,
+ * the exposure report, the rail cards), and the App Store listing may reference
+ * it. A 404 on a linked, indexed route is a worse signal than an honest page,
+ * and this is one file to revert when pricing returns.
+ *
+ * THE PLUMBING BEHIND IT IS UNTOUCHED: lib/stripe/plans.js, the checkout action,
+ * both webhooks and the memberships table all still exist. Two live passes
+ * (expiring 2027-02-16) still resolve; deleting purchase code while somebody
+ * holds an entitlement is how you break their account, not how you stop
+ * charging.
  *
  * SHELL (App Store Guideline 3.1.1): this page IS the purchase mechanism, so it
  * must not exist inside the native container. Suppressing the links that reach it
@@ -15,9 +26,6 @@
 
 import { redirect } from 'next/navigation';
 import Wordmark from '@/components/gridiron/Wordmark';
-import { startCheckout } from '@/app/actions/membership';
-import { PLANS } from '@/lib/stripe/plans';
-import { MEMBERSHIP_TIERS } from '@/components/sim/membershipCopy';
 import { resolveShellMode } from '@/lib/shell/shell';
 import '@/components/gridiron/gridiron.css';
 import './membership.css';
@@ -27,14 +35,17 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Membership - Sportsvyn',
-  description: 'Draft tools now, the Suite from Week 1. Draft Pass, Football Suite, or Founding.',
+  description: 'Everything on Sportsvyn is free for the 2026 season.',
 };
 
 export default async function MembershipPage({ searchParams }) {
   const params = (await searchParams) ?? {};
-  // 3.1.1: never render the pricing page inside the native container.
+  // 3.1.1 STILL APPLIES even with nothing to buy: the rule is about the native
+  // container never reaching a purchase surface, and this route is still that
+  // route in every reviewer's notes and every deep link. Redirecting costs
+  // nothing and keeps the guarantee unconditional.
   if (await resolveShellMode(params)) redirect('/sim');
-  const showError = params.error === 'checkout';
+
   return (
     <div className="mbr" data-surface="ink">
       <header className="mbr-head">
@@ -44,48 +55,22 @@ export default async function MembershipPage({ searchParams }) {
 
       <main className="mbr-wrap">
         <div className="mbr-kicker">Membership</div>
-        {showError && (
-          <div className="mbr-error" role="alert">
-            We couldn&rsquo;t start checkout just now. Please try again in a moment.
-          </div>
-        )}
-        <h1 className="mbr-h1">Draft tools now. The Suite from Week 1.</h1>
+        <h1 className="mbr-h1">Everything is free for the 2026 season.</h1>
         <p className="mbr-lede">
-          Start with the Draft Pass for the tools, step up to the Football Suite for
-          the season, or lock the Founding rate. Everything the free tier previews,
-          unlocked.
+          Mock drafts, the custom console, 14 and 16-team rooms, superflex, the Draft
+          Tracker and the Exposure Report are all free with an account. So are The
+          Daily, The Weekly, Pick &rsquo;em and The Draft. There is nothing to buy
+          here right now.
         </p>
-
-        <div className="mbr-grid">
-          {PLANS.map((p) => {
-            const tier = MEMBERSHIP_TIERS[p.key] ?? { tagline: '', features: [], footnote: '' };
-            return (
-              <form key={p.key} action={startCheckout.bind(null, p.key)} className={`mbr-card${p.featured ? ' mbr-card--feature' : ''}`}>
-                {p.featured && <div className="mbr-badge">The Suite</div>}
-                <div className="mbr-plan">{p.label}</div>
-                <div className="mbr-price">
-                  <span className="mbr-amt">{p.price}</span>
-                  <span className="mbr-cad">{p.cadence}</span>
-                </div>
-                <div className="mbr-blurb">{tier.tagline}</div>
-                <ul className="mbr-feats">
-                  {tier.features.map((f) => <li key={f}>{f}</li>)}
-                </ul>
-                <button type="submit" className="mbr-cta">Choose {p.label}</button>
-                {tier.footnote && <div className="mbr-foot">{tier.footnote}</div>}
-              </form>
-            );
-          })}
+        <p className="mbr-lede">
+          If you already hold a Draft Pass it keeps working and nothing changes for
+          you &mdash; you are simply no longer paying for anything anyone else is not
+          also getting.
+        </p>
+        <div className="mbr-links">
+          <a className="mbr-back" href="/sim">Start a mock draft &rarr;</a>
+          <a className="mbr-back" href="/games">See the games &rarr;</a>
         </div>
-
-        <p className="mbr-code">
-          Have a full-access code? Enter it at checkout - the code field is on the
-          Stripe payment page, and a 100%-off code completes with no card.
-        </p>
-        <p className="mbr-fine">
-          Secure checkout by Stripe. Cancel anytime from your account. By subscribing
-          you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.
-        </p>
       </main>
     </div>
   );

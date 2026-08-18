@@ -13,6 +13,13 @@ function leanLabel(lean, avgValue) {
   return 'Even - your picks track ADP closely.';
 }
 
+/**
+ * `locked` IS NOW ALWAYS FALSE from app/sim/history - the Exposure Report is
+ * free for the 2026 season. The branch is kept rather than deleted because the
+ * component is the only thing that knows how to present a locked state, and
+ * re-deriving that from scratch if pricing returns would cost more than the
+ * dead code does. It is unreachable, not wrong.
+ */
 export default function ExposureReport({ report = null, locked = false, shell = false }) {
   if (locked) {
     // SHELL (App Store 3.1.1): name the feature, do not sell it. No plan name in

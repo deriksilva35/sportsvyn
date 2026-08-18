@@ -125,9 +125,14 @@ test('/membership route redirects in shell before rendering anything', () => {
   const s = src('app/membership/page.js');
   assert.match(s, /resolveShellMode/, '/membership must resolve shell mode');
   assert.match(s, /redirect\('\/sim'\)/, '/membership must redirect in shell');
-  // The guard has to come before the plan rendering, or a price is constructed.
-  assert.ok(s.indexOf('resolveShellMode') < s.indexOf('PLANS.map'),
-    'the shell redirect must precede any plan render');
+  // The guard used to have to precede PLANS.map. There is no plan grid any more
+  // - /membership is a notice - so the assertion is now that nothing
+  // purchasable is constructed there AT ALL, which is strictly stronger.
+  assert.equal(/PLANS\.map/.test(s), false, 'no plan grid to protect');
+  assert.equal(/startCheckout/.test(s), false, 'no checkout form to protect');
+  // The redirect still runs before any render, and 3.1.1 is unconditional.
+  assert.ok(s.indexOf('resolveShellMode') < s.indexOf('return ('),
+    'the shell redirect must still precede the render');
   assert.match(s, /export const dynamic = 'force-dynamic'/, 'cookie read requires dynamic');
 });
 

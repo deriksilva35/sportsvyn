@@ -2,7 +2,8 @@
 
 // Setup screen (lobby v2). A preset DECK over a JetBrains-Mono CONSOLE with a
 // live config ticker. Presets seed the console; editing ANY console value flips
-// the selection to CUSTOM, which is a member feature. Free users run a preset
+// the selection to CUSTOM. Everything is free for the 2026 season; free users
+// run a preset
 // as-is; members edit anything. The console is always explorable, but the START
 // bar reflects the real gate: the 3-free limit for presets, membership for custom.
 //
@@ -31,7 +32,7 @@ const RANKED_PRESETS = new Set(['The Weekly Six']);
 const SEG_SCORING = SCORING_FORMATS.map((f) => ({ v: f, label: SCORING_LABEL[f] }));
 const SEG_CLOCK = CLOCK_OPTIONS.map((s) => ({ v: s, label: s == null ? 'NONE' : `${s}S` }));
 // The 8 starter slot steppers, laid out as a 4-col x 2-row grid (label over
-// stepper). SUPERFLEX is a member unlock. Bench is a separate single-line row.
+// stepper). Bench is a separate single-line row.
 const ROSTER_CELLS = [
   { k: 'QB', label: 'QB' }, { k: 'RB', label: 'RB' }, { k: 'WR', label: 'WR' }, { k: 'TE', label: 'TE' },
   { k: 'FLEX', label: 'FLX' }, { k: 'SUPERFLEX', label: 'SFLX' }, { k: 'DST', label: 'DST' }, { k: 'K', label: 'K' },
@@ -83,7 +84,11 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
   }
   function choosePreset(p) { setSelection(p.id); setConfig(presetToConfig(p)); setErr(null); }
 
-  const teamsMax = member ? TEAMS_MAX : FREE_TEAMS_MAX; // >12 is a member unlock
+  // FREE FOR THE 2026 SEASON. These three were `member ?` ternaries; they are
+  // hardwired rather than unpicked because they are render paths whose shape is
+  // worth keeping if pricing ever returns - and one place to flip beats three.
+  // The server no longer gates any of them either (see drafts.js).
+  const teamsMax = TEAMS_MAX;
   function stepTeams(d) {
     const v = Math.max(TEAMS_MIN, Math.min(teamsMax, N + d));
     if (v !== N) { const c = { ...config, teamsCount: v }; if (seat !== 'random' && Number(seat) > v) setSeat('random'); apply(c); }
@@ -92,7 +97,7 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
   function setClock(v) { apply({ ...config, clockSeconds: v }); }
   function stepSlot(k, d) {
     const [lo, hiBase] = SLOT_BOUNDS[k];
-    const hi = k === 'SUPERFLEX' && !member ? 0 : hiBase; // superflex is a member unlock
+    const hi = hiBase;                                   // superflex is free now
     const cur = config.rosterSlots[k] || 0;
     const v = Math.max(lo, Math.min(hi, cur + d));
     if (v === cur) return;
@@ -101,7 +106,7 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
     apply({ ...config, rosterSlots: slots });
   }
 
-  const memberBlocked = isCustom && !member; // custom needs membership
+  const memberBlocked = false;              // custom is free for the 2026 season
   // Is a gate actually blocking START right now? (go() already refuses on both,
   // but until now START was never RENDERED on a blocked path, so it had no
   // disabled state to show.)
@@ -142,7 +147,7 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
     : freeGated && !isCustom
       ? 'The room turned that down. Try again in a moment.'
       : memberBlocked
-        ? 'Custom rosters, 14+ teams, and superflex are member features.'
+        ? null
         : (isCustom && member && (locks.oversize || locks.superflex))
           ? `Custom: ${[locks.oversize && `${N} teams`, locks.superflex && 'superflex'].filter(Boolean).join(' · ')}. ADP maps to the nearest market pool.`
           : null;
@@ -221,7 +226,7 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
                 key={c.k}
                 label={c.label}
                 value={config.rosterSlots[c.k] || 0}
-                disabled={c.k === 'SUPERFLEX' && !member}
+                disabled={false}
                 onDec={() => stepSlot(c.k, -1)}
                 onInc={() => stepSlot(c.k, 1)}
               />

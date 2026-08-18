@@ -14,7 +14,7 @@
  * So in shell mode this renders a NEUTRAL LOCKED STATE and the purchase surface
  * is not merely hidden by CSS - it is never constructed:
  *   · no price line          (MEMBERSHIP_PRICE_LINE is not read at all)
- *   · no SEE PLANS CTA       (no /membership Link is rendered)
+ *   · no pricing CTA         (no /membership Link is rendered)
  *   · no plan names          (shell copy says "the Sportsvyn membership")
  *   · no external link out   (the old shell branch OPENED /membership in a new
  *                             tab, which is precisely the steering 3.1.1 bans)
@@ -84,7 +84,7 @@ export default function MembershipCard({ variant = 'draft', shell = false, iap =
       <div className="mcard-head">{v.headline}</div>
       <p className="mcard-body">{v.body}</p>
       <div className="mcard-price">{MEMBERSHIP_PRICE_LINE}</div>
-      <Link href="/membership" className="mcard-cta">SEE PLANS</Link>
+      <Link href="/membership" className="mcard-cta">WHAT IS FREE</Link>
       {secondary}
       <div className="mcard-fine">Cancel anytime from your account.</div>
     </div>

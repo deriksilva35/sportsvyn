@@ -42,7 +42,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
   const sp = (await searchParams) ?? {};
   // 3.1.1: the league pages are reachable inside the native container
   // (capacitor allowNavigation covers sportsvyn.com), so the Suite teaser's
-  // SEE PLANS must not render there.
+  // the pricing CTA must not render there.
   const isShell = await resolveShellMode(sp);
   const now = new Date();
   const seasonYear = resolveSeasonYear(now);

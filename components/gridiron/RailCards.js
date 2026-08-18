@@ -1,5 +1,5 @@
 // components/gridiron/RailCards.js — league-page rail cards: Suite teasers (NFL,
-// FOOTBALL SUITE lock chip + SEE PLANS -> /membership), Upset Watch (CFB, live dog
+// FOOTBALL SUITE lock chip + a /membership link), Upset Watch (CFB, live dog
 // probabilities off the h2h de-vig, "Not a play"), and The Read dormant frame.
 
 import { SUITE_TEASERS, UPSET_NOTE, READ_BLANK } from './leagueCopy';
@@ -7,7 +7,7 @@ import { SHELL_LOCKED_NOTE } from '@/components/sim/membershipCopy';
 
 // SHELL (App Store 3.1.1): capacitor.config.ts allows navigation across
 // sportsvyn.com, so the league pages are reachable inside the native container
-// and their SEE PLANS teaser is a purchase path. In shell the teaser still names
+// and their teaser used to be a purchase path. In shell the teaser still names
 // the feature - that is editorial, not commerce - but the CTA is not rendered and
 // the plan-name lock chip becomes a neutral "Members".
 export function SuiteTeasers({ shell = false }) {
@@ -20,7 +20,7 @@ export function SuiteTeasers({ shell = false }) {
           <p className="gi-tease-s">{shell ? t.bodyShell : t.body}</p>
           {shell
             ? <p className="gi-tease-s gi-tease-note">{SHELL_LOCKED_NOTE}</p>
-            : <a className="gi-tease-cta" href="/membership">SEE PLANS →</a>}
+            : <a className="gi-tease-cta" href="/membership">FREE THIS SEASON →</a>}
         </section>
       ))}
     </>
