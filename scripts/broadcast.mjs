@@ -75,6 +75,15 @@ const OWNER_ADDRESSES = [
   'derik@theskry.com',
 ];
 
+// ---------------------------------------------------------------------------
+// THE FOUNDER'S VERIFY COPY. The exclusion list did its job perfectly on the
+// first real send - and the founder learned the send happened by asking why
+// his inbox was empty. Exclusion keeps test accounts OUT OF THE AUDIENCE;
+// this puts one copy of every live send IN FRONT OF THE OWNER'S EYES,
+// always, ledgered as 'owner-verify' and never counted in the recipient
+// total or the audience telemetry. Two different jobs, two mechanisms.
+const OWNER_VERIFY_ADDRESS = 'deriksilva@gmail.com';
+
 // A postal address is required by CAN-SPAM in every commercial message. From the
 // environment because it is a real-world fact about the business, not a
 // constant, and because a placeholder committed to the repo WOULD get sent.
@@ -341,6 +350,27 @@ async function main() {
 
   const { resend } = await import('../lib/resend.js');
   const { EMAIL_FROM } = await import('../lib/resend.js');
+
+  // The verify copy goes FIRST: if the audience send is about to break, the
+  // owner's inbox is the first place that shows it. Signed for user 1's real
+  // row so the unsubscribe link is live, exactly like a recipient's.
+  try {
+    const [vu] = await sql`SELECT id FROM users WHERE email = ${OWNER_VERIFY_ADDRESS} ORDER BY id LIMIT 1`;
+    const vUrl = await unsubscribeUrlFor(vu?.id ?? 0);
+    const vMail = render({ unsubscribeUrl: vUrl });
+    const vRes = await resend.emails.send({
+      from: EMAIL_FROM, to: OWNER_VERIFY_ADDRESS, subject: SUBJECT,
+      html: vMail.html, text: vMail.text, headers: unsubscribeHeaders(vUrl),
+    });
+    await sql`
+      INSERT INTO sync_runs (source, kind, started_at, finished_at, ok, summary)
+      VALUES (${SOURCE}, 'owner-verify', now(), now(), ${!vRes?.error},
+              ${JSON.stringify({ to: OWNER_VERIFY_ADDRESS, ownerVerify: true, outcome: vRes?.error ? 'failed' : 'sent', id: vRes?.data?.id ?? null })}::jsonb)`;
+    console.log(`  owner verify copy -> ${OWNER_VERIFY_ADDRESS} (${vRes?.error ? 'FAILED' : 'sent'}, uncounted)`);
+  } catch (e) {
+    console.log(`  owner verify copy FAILED: ${String(e?.message ?? e)} - audience send continues`);
+  }
+
   let sent = 0; let skipped = 0; let failed = 0;
   for (const r of list) {
     if (await alreadySent(r.id)) { skipped += 1; continue; }
@@ -359,7 +389,7 @@ async function main() {
       failed += 1;
     }
   }
-  console.log(`\n  sent ${sent} · skipped ${skipped} (already sent) · failed ${failed}\n`);
+  console.log(`\n  sent ${sent} + owner copy · skipped ${skipped} (already sent) · failed ${failed}\n`);
 }
 
 await main();
