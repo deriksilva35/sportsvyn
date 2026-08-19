@@ -46,7 +46,10 @@ export async function GET(request) {
   if (!due.length) {
     // Sampled, like the other pollers: one row an hour rather than 96 a day.
     const now = new Date();
-    if (now.getUTCMinutes() < 15) await recordDecision(sql, { source: SOURCE, kind: 'noop', summary: {} });
+    // pushArmed rides every sampled row so a dark gate is DIAGNOSABLE from the
+    // ledger - the night of Aug 19 the hooks silently no-oped for a whole
+    // reveal window and nothing recorded why.
+    if (now.getUTCMinutes() < 15) await recordDecision(sql, { source: SOURCE, kind: 'noop', summary: { pushArmed: pushEnabled() } });
     return Response.json({ decision: 'noop', due: 0 });
   }
 
@@ -56,6 +59,7 @@ export async function GET(request) {
     run: async () => {
       const closed = [];
       for (const d of due) closed.push(await closeDay(d.puzzle_date));
+      const pushArmed = pushEnabled();
       // PUSH HOOK: "the answer is up" - only for days that ACTUALLY closed on
       // this tick. closeDay returns { revealed: true } for a fresh close and
       // { alreadyRevealed: true } for a rerun; the rerun must not re-announce
@@ -64,7 +68,7 @@ export async function GET(request) {
         const dates = closed.filter((c) => c?.revealed === true).map((c) => c.puzzle_date);
         await notifyDailyRevealed(dates).catch(() => {});
       }
-      return { closed };
+      return { closed, pushArmed };
     },
   }));
 
