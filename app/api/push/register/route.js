@@ -30,12 +30,18 @@ export async function POST(request) {
   const token = String(body?.token ?? '').trim();
   if (!TOKEN_RE.test(token)) return Response.json({ error: 'bad token' }, { status: 400 });
   const platform = 'ios'; // the only client; the column exists for the day that changes
+  // The client's VERIFIED checkPermissions result (072). Constrained to the
+  // states the plugin can actually report; anything else stores as null -
+  // unknown is honest, an invented state is not.
+  const permission = ['granted', 'denied', 'prompt', 'prompt-with-rationale']
+    .includes(body?.permission) ? body.permission : null;
 
   await sql`
-    INSERT INTO device_tokens (token, user_id, platform)
-    VALUES (${token}, ${Number(userId)}, ${platform})
+    INSERT INTO device_tokens (token, user_id, platform, permission)
+    VALUES (${token}, ${Number(userId)}, ${platform}, ${permission})
     ON CONFLICT (token) DO UPDATE
-      SET user_id = EXCLUDED.user_id, last_seen_at = now(), revoked_at = NULL`;
+      SET user_id = EXCLUDED.user_id, last_seen_at = now(), revoked_at = NULL,
+          permission = EXCLUDED.permission`;
 
   return Response.json({ ok: true });
 }
