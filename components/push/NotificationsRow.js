@@ -68,19 +68,37 @@ export default function NotificationsRow({ choice = null, variant = 'sim' }) {
     setBusy(false);
   }
 
-  const label = perm === 'checking' ? '…'
-    : on ? 'On - board live & answers'
+  // ==========================================================================
+  // A SWITCH, NOT A VERB. "On - ... · Turn off" read as prose; Derik's device
+  // pass could not tell state from action. The switch's POSITION is the state
+  // and flipping it is the action - the state line underneath is muted mono
+  // context, never an instruction. While the native prompt is up the switch
+  // half-dims WITHOUT flipping: it only lands ON when the grant survives the
+  // re-read, because a switch that flips before the OS answers is the same
+  // lie the static text told.
+  // ==========================================================================
+  const stateLine = perm === 'checking' ? '…'
+    : on ? 'On'
       : stale ? 'Off - needs re-enable'
         : perm === 'denied' && serverChoice === 'denied' ? 'Off - enable in iOS Settings'
           : 'Off';
 
   const control = (
-    <button type="button" className="acct-link" onClick={toggle} disabled={busy || perm === 'checking'}>
-      {busy ? 'Working…' : on ? 'Turn off' : 'Turn on'}
-    </button>
+    <span className="pushsw-wrap">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        aria-label="Board live & answer drops notifications"
+        className={`pushsw${on ? ' on' : ''}${busy ? ' busy' : ''}`}
+        onClick={toggle}
+        disabled={busy || perm === 'checking'}
+      >
+        <span className="knob" />
+      </button>
+      <span className="pushsw-state">{stateLine}</span>
+    </span>
   );
-
-  const value = <>{label} · {control}</>;
 
   if (variant === 'account') {
     return (
@@ -89,7 +107,7 @@ export default function NotificationsRow({ choice = null, variant = 'sim' }) {
         <div className="acct-rows">
           <div className="acct-row">
             <span>Board live &amp; answer drops</span>
-            <span className={`acct-r${on ? ' acct-r--on' : ''}`}>{value}</span>
+            <span className="acct-r">{control}</span>
           </div>
         </div>
       </section>
@@ -98,8 +116,8 @@ export default function NotificationsRow({ choice = null, variant = 'sim' }) {
 
   return (
     <div className="acct-row">
-      <span className="k">Notifications</span>
-      <span className="v">{value}</span>
+      <span className="k">Board live &amp; answer drops</span>
+      <span className="v">{control}</span>
     </div>
   );
 }
