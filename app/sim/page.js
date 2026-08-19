@@ -1,4 +1,5 @@
 // app/sim/page.js — the sim lobby. Unlinked from existing nav; noindex.
+import Link from 'next/link';
 import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import HideInShell from '@/components/shell/HideInShell';
@@ -132,6 +133,17 @@ export default async function SimLobby({ searchParams }) {
                     first-open surface is now OnboardingSheet - which asks for
                     something rather than selling something. Its best line is
                     salvaged into the signed-out hero above. */}
+                {/* THE DAILY'S DOOR ON PRACTICE (v0.3 polish). One compact band,
+                    not a hero - Practice is still this page's job - but it is
+                    the app's most-visited screen and The Daily turns over at
+                    midnight, so the band is the difference between a game that
+                    exists and a game that gets found. Above everything,
+                    volt-forward, one line. */}
+                <Link className="sim-dailyband" href="/daily">
+                  <span className="sdb-kick">The Daily</span>
+                  <span className="sdb-line">Today&rsquo;s board is live. Three minutes, best six.</span>
+                  <span className="sdb-cta">Play &rarr;</span>
+                </Link>
                 {/* ABOVE THE DECK, because a draft you are already in outranks
                     starting another one. Renders nothing when there is none. */}
                 <LiveDraftCard draft={openDraft} member={member} />
@@ -146,7 +158,7 @@ export default async function SimLobby({ searchParams }) {
                     asking a reader to decide which product they were in before
                     it would let them start anything. One link out is enough. */}
                 <a className="sim-trklink" href="/sim/tracker">
-                  Tracking a real draft? &rarr;
+                  Track a real draft with The Tracker &rarr;
                 </a>
               </>
             );

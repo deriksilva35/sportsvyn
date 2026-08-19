@@ -318,8 +318,12 @@ function HistoryPane({ v }) {
             </>
           ) : (
             <>
-              <span>{h.season} · Wk {h.week}</span>
-              <span className="v">{h.top ? `${h.top.name} ${h.top.score}` : '—'}</span>
+              {/* NOWRAP AS A CLASS, not a hope: "2018 · Wk 10" was breaking
+                  across three lines in a cramped left column while the row had
+                  free width. The id block (edition + era) stacks cleanly; the
+                  era line never breaks mid-token. */}
+              <span className="hist-when">{h.season} · Wk {h.week}</span>
+              <span className="v hist-win">{h.top ? `${h.top.name} ${h.top.score}` : '—'}</span>
               <span className="muted">{h.perfect}</span>
               {h.you !== undefined && (
                 <span className="hist-you">
@@ -338,7 +342,7 @@ function HistoryPane({ v }) {
           return h.sealed
             ? <div className="row row--sealed" key={h.date}><span className="hist-ed">{h.label}</span>{inner}</div>
             : (
-              <a className="row row--link" key={h.date} href={h.href}>
+              <a className="row row--hist row--link" key={h.date} href={h.href}>
                 <span className="hist-ed">{h.label}</span>{inner}
               </a>
             );

@@ -365,12 +365,17 @@
 /* ============================ LEADERBOARDS ================================
  * Row grammar per v1.2 s2. The rank column is fixed and tabular so names start
  * at the same x on every row; the name is what truncates, never the score. */
-.lb-left { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.lb-left { display: flex; align-items: baseline; gap: 7px; min-width: 0; flex: 1 1 auto; }
 .lb-rank {
   flex: 0 0 22px; font-variant-numeric: tabular-nums; color: var(--d-mut);
   font-size: 11px; text-align: right;
 }
-.lb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* THE NAME GETS THE FREE WIDTH (v0.3 polish): "@hurley3..." at eight chars
+   with the row mostly empty was the name column refusing space it had. flex: 1
+   hands it the slack; handles are 3-15 chars and all 15 render before the
+   ellipsis earns its keep. Anonymous rows ("Player e7a2") ride the same rule -
+   untruncated at any real width. */
+.lb-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* An unclaimed account reads as a blank, not as a person: muted, no badge
    weight. The claim screen is the argument for fixing it. */
 .lb-name--anon { color: var(--d-mut); }

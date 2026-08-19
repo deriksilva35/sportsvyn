@@ -240,7 +240,10 @@ test('THE ROOM\'S VIEW SWITCHER STACKS ABOVE THE APP BAR, not under it', () => {
 test('THE PRACTICE PAGE NO LONGER STARTS A TRACKER - two flows, two homes', () => {
   const s = readFileSync(path.join(REPO, 'app/sim/page.js'), 'utf8');
   assert.equal(/TrackerStart/.test(s), false, 'the setup moved to the tracker tab');
-  assert.match(s, /Tracking a real draft\?/, 'one link out is enough');
+  // Copy amended 19 Aug to NAME the feature; the claim is unchanged - one
+  // link out to /sim/tracker, no setup form on this page.
+  assert.match(s, /Track a real draft with The Tracker/, 'one link out is enough');
+  assert.match(s, /href="\/sim\/tracker"/);
 });
 
 test('the BOARD grid scrolls sideways with the same fade affordance', () => {

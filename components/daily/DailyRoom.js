@@ -271,7 +271,20 @@ export default function DailyRoom({ puzzleDate, initialEntry, podium = null, ove
       </div>
 
       <div className="pool pool--scroll">
-        {board.filter((p) => slotAccepts(active, p.pos)).map((p) => (
+        {/* PPG DESCENDING (v0.3 polish) - the displayed stat is the sort. The
+            order this replaces was the seeded SELECTION shuffle leaking into
+            display: buildBoard shuffles to choose WHICH 16 make the board, and
+            the pool just inherited that order. Display-only and answer-safe:
+            the resume PPG is career context, the hidden week's points are the
+            score, and one does not rank the other. Ties break on id so two
+            renders of one board never disagree. */}
+        {board.filter((p) => slotAccepts(active, p.pos))
+          .sort((a, b) => {
+            const av = parseFloat(ppgOf(a.resume)); const bv = parseFloat(ppgOf(b.resume));
+            return (Number.isFinite(bv) ? bv : -1) - (Number.isFinite(av) ? av : -1)
+              || String(a.id).localeCompare(String(b.id));
+          })
+          .map((p) => (
           <button key={p.id} className={`plyr${picked.has(p.id) ? ' plyr--used' : ''}`}
             disabled={picked.has(p.id) || late}
             onClick={() => pick(p.id)}>

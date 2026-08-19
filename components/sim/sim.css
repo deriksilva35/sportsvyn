@@ -823,3 +823,31 @@
   color: var(--volt); font-size: 9px; letter-spacing: .06em; text-transform: uppercase;
   margin-top: 2px;
 }
+
+/* THE DAILY BAND on Practice (v0.3 polish) - one compact volt-forward line
+   above the deck. A band, deliberately not a hero: Practice keeps the page. */
+.sim-dailyband {
+  display: flex; align-items: center; gap: 10px;
+  margin: 0 0 14px; padding: 11px 14px;
+  border: 1px solid var(--volt, #D4FF00); border-radius: 10px;
+  background: linear-gradient(90deg, rgba(212,255,0,.10), rgba(212,255,0,.02));
+  text-decoration: none; color: inherit; min-height: 44px;
+}
+.sim-dailyband .sdb-kick {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--volt, #D4FF00); white-space: nowrap;
+}
+.sim-dailyband .sdb-line {
+  flex: 1; min-width: 0; font-size: 13px; color: var(--paper, #F5F5F2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sim-dailyband .sdb-cta {
+  font-weight: 800; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink, #0A0A0A); background: var(--volt, #D4FF00);
+  padding: 7px 12px; border-radius: 7px; white-space: nowrap;
+}
+@media (max-width: 420px) {
+  /* The sentence yields before the button does - the band stays one line. */
+  .sim-dailyband .sdb-line { font-size: 12px; }
+}
