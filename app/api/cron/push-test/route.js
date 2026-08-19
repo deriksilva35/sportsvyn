@@ -30,12 +30,14 @@ import { apnsConfig, sendToToken, alertPayload } from '@/lib/push/apns';
 import { copyFor } from '@/lib/push/copy';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 const OWNER_EMAILS = [
   'deriksilva@gmail.com',
   'derik@safetymanagers.com',
   'derik@sportsvyn.com',
   'deriksilva@compsysllc.com',
+  'derik@theskry.com',
 ];
 
 export async function POST(request) {

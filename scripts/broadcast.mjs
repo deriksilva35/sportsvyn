@@ -69,6 +69,10 @@ const OWNER_ADDRESSES = [
   // which is the argument for reading it every time rather than trusting the
   // count.
   'deriksilva@compsysllc.com',
+  // Seventh, 19 Aug: the recreated Skry-identity account (user 74, Derik's
+  // push device #1). Found the same way as the sixth - by a list somewhere
+  // refusing it - which is the dry-run-roster argument restated.
+  'derik@theskry.com',
 ];
 
 // A postal address is required by CAN-SPAM in every commercial message. From the
