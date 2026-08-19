@@ -137,19 +137,56 @@
    which is the mock's grammar and costs 88px the numbers need.
    --------------------------------------------------------------------------- */
 @media (max-width: 640px) {
-  /* Filters become one-line scroll strips, same treatment as /scores. */
+  /* Filters become one-line scroll strips, same treatment as /scores - with a
+     FADE EDGE instead of a clipped half-label: the mask tells the thumb there
+     is more, where a chip cut mid-word told it something was broken. The
+     trailing padding gives the last chip somewhere whole to stop. */
   .fb-filters {
     flex-wrap: nowrap; overflow-x: auto;
     -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    padding-right: 34px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
   }
   .fb-filters::-webkit-scrollbar { display: none; }
   .fb-filters > * { flex: 0 0 auto; }
   .fb-search { min-width: 150px; }
 
-  /* Narrower tracks with the band column collapsed. The sheet still overflows
-     - that is the point - but by 470px, not 1020. */
-  .fb-sheet { min-width: 780px; --fb-cols: minmax(148px, 1fr) 62px 56px 68px 58px 60px 84px 72px 64px; }
+  /* ==========================================================================
+     THE COLUMN MATH (v0.3 polish). The first cut gave the player cell
+     minmax(148px, 1fr) - and 1fr of a 780px sheet is not a column, it is a
+     landlord: on the device it swallowed the width and the 3d SORT column was
+     born clipped. The rule now:
+
+       PLAYER caps at 43vw (never past 176px), so at 390px the first FOUR
+       columns - player 168 + adp 58 + open 52 + 3d 64 = 342 - fit inside the
+       ~360px the wrap leaves, and a 360px SE still clears it (155 + 174 =
+       329 vs 330). The sort column is always fully on screen; 7d / Drift /
+       Range / SV / Div live behind the swipe, by design.
+
+     Names truncate rather than wrap ("Oronde Gadsden" fits; "Marvin
+     Harrison Jr." ellipses), which needs min-width: 0 on the grid cell -
+     without it the name's intrinsic width re-inflates the track. */
+  .fb-sheet { min-width: 690px; --fb-cols: min(43vw, 176px) 58px 52px 64px 60px 62px 84px 70px 62px; }
   .fb-shead > div:first-child, .fb-row > div:first-child { display: none; }
+  .fb-row > div:nth-child(2) { min-width: 0; }
+  .fb-nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* DENSITY: the desktop sheet's rhythm, not the first cut's air - vertical
+     padding 9px -> 6px buys roughly a fifth more rows per screen. Numbers
+     tuck tighter to their right edge (10px -> 6px), which with the 64px track
+     is what lets +25.8 render whole instead of truncating. */
+  .fb-shead > div, .fb-row > div { padding: 6px 6px; }
+  .fb-delta, .fb-drift, .fb-rng { white-space: nowrap; }
+
+  /* THE SHEET IS ITS OWN SCROLLPORT. position:sticky pins to the nearest
+     scrolling ancestor, and .fb-scroll is that ancestor - so as long as the
+     PAGE scrolled vertically, sticky-top could never hold the header past row
+     10. Capping the sheet's height moves the vertical scroll inside the same
+     box the horizontal one lives in, and both axes' sticky rails work:
+     labels hold the top, players hold the left. */
+  .fb-scroll { max-height: min(72dvh, 640px); overflow: auto; }
+  .fb-shead { top: 0; }
 
   /* THE STICKY PLAYER CELL. Opaque backgrounds are load-bearing: a sticky
      cell over scrolling numbers with the row's translucent zebra would show
@@ -159,7 +196,9 @@
     background: var(--graphite);
     box-shadow: 6px 0 8px -6px rgba(0,0,0,.55);
   }
-  .fb-shead > div:nth-child(2) { background: var(--ink); }
+  /* The corner cell rides BOTH rails - above the number columns scrolling
+     under it sideways AND above the player cells scrolling under it upward. */
+  .fb-shead > div:nth-child(2) { background: var(--ink); z-index: 3; }
   .fb-row:hover > div:nth-child(2) { background: var(--graphite-up, #242424); }
 
   /* The band's inset bar, riding the sticky cell's leading edge. */
@@ -168,7 +207,15 @@
   .fb-row.sliding > div:nth-child(2) { border-left-color: var(--terra); }
 
   /* The serif detail row stays readable in the viewport instead of stretching
-     the sheet's full 780px: pin it left and cap it at the screen. */
+     the sheet's full width: pin it left and cap it at the screen. */
   .fb-detail { padding: 0 14px 14px; position: sticky; left: 0; max-width: calc(100vw - 30px); }
   .fb-meta { flex-wrap: wrap; gap: 10px 16px; }
+
+  /* THE PREAMBLE SHRINKS SO THE BOARD STARTS SOONER. The stat band and three
+     provenance lines spent ~40% of the first screen before a single player
+     row; the numbers stay, the air goes. */
+  .fb-head { gap: 14px; }
+  .fb-strip { gap: 16px; }
+  .fb-stat .v { font-size: 22px; }
+  .fb-prov { margin-top: 12px; padding: 7px 0; gap: 6px 14px; }
 }
