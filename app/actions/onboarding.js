@@ -79,7 +79,9 @@ export async function completeOnboarding() {
 }
 
 /**
- * Record the push pre-warm choice - 'enabled' | 'not-now' | 'denied'.
+ * Record the push pre-warm choice - 'enabled' | 'not-now' | 'denied' |
+ * 'disabled' ('disabled' = an explicit turn-OFF from the account row; distinct
+ * from 'not-now' so a deliberate off is never re-nudged as an unanswered).
  *
  * WHY 'denied' IS A VALUE: an explicit yes on our screen followed by a no on
  * the OS prompt must not be recorded as 'enabled' (the device cannot receive)
@@ -93,7 +95,7 @@ export async function completeOnboarding() {
 export async function savePushChoice(choice) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
-  if (!['enabled', 'not-now', 'denied'].includes(choice)) {
+  if (!['enabled', 'not-now', 'denied', 'disabled'].includes(choice)) {
     return { ok: false, reason: 'bad choice' };
   }
   try {
