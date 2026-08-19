@@ -428,3 +428,14 @@
 .ldg-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .ldg-card { height: 120px; border: 1px solid #232323; background: #121212; border-radius: 4px; }
 @media (max-width: 720px) { .ldg-cards { grid-template-columns: 1fr; } }
+
+/* Date-rail pending affordance (DateRail). Same-route param navigation never
+   remounts loading.js - the segment does not change - so the tapped arrow
+   dims and the rail reports busy while the new slate streams in. */
+.gi-datenav a.pend, .gi-datenav.pend .cur { opacity: .45; transition: opacity .12s; }
+.gi-datejump { position: relative; }
+.gi-datejump input[type="date"] {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; border: 0; padding: 0; margin: 0; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+}

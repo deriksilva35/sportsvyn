@@ -18,7 +18,9 @@
 // the way to one.
 
 import { useState } from 'react';
+import Link from 'next/link';
 import DriveStrip from './DriveStrip';
+import { scoresHref } from '@/lib/gridiron/scoresNav';
 import OddsStrip from './OddsStrip';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { lineScoreGrid, ABSENT } from '@/lib/gridiron/lineScore';
@@ -186,7 +188,7 @@ function Card({ g }) {
               the scoring summary and the player lines. NFL only - there is no
               /cfb/game route, and a link to a 404 is worse than no link. */}
           {g.leagueSlug === 'nfl' ? (
-            <a className="gi-full" href={`/nfl/game/${g.slug}`}>Full game →</a>
+            <Link className="gi-full" href={`/nfl/game/${g.slug}`}>Full game →</Link>
           ) : null}
         </div>
       )}
@@ -212,21 +214,26 @@ function Section({ sport, games, liveOnly }) {
   );
 }
 
-export default function Scoreboard({ byLeague }) {
-  const [filter, setFilter] = useState('all');   // all | nfl | cfb
-  const [liveOnly, setLiveOnly] = useState(false);
-  const visible = SPORTS.filter((s) => filter === 'all' || filter === s.key);
+// FILTERS ARE URL STATE (fix B), threaded from the page. They were useState
+// here, which reset to ALL on every navigation - a date change wiped the CFB
+// filter because the two features each held half the state. The chips are
+// Links built by scoresHref, so every chip carries the date and every date
+// arrow carries the chip; the reverse direction is the same one rule.
+export default function Scoreboard({ byLeague, date, sport = 'all', live = false }) {
+  const visible = SPORTS.filter((s) => sport === 'all' || sport === s.key);
+  const chip = (want) => scoresHref(date, { sport: want, live });
 
   return (
     <div>
       <div className="gi-toolbar">
-        <button className={`gi-chip ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All</button>
-        <button className={`gi-chip ${filter === 'nfl' ? 'active' : ''}`} onClick={() => setFilter('nfl')}>NFL</button>
-        <button className={`gi-chip ${filter === 'cfb' ? 'active' : ''}`} onClick={() => setFilter('cfb')}>CFB</button>
-        <button className={`gi-chip live ${liveOnly ? 'active' : ''}`} onClick={() => setLiveOnly((v) => !v)}>Live only</button>
+        <Link className={`gi-chip ${sport === 'all' ? 'active' : ''}`} href={chip('all')}>All</Link>
+        <Link className={`gi-chip ${sport === 'nfl' ? 'active' : ''}`} href={chip('nfl')}>NFL</Link>
+        <Link className={`gi-chip ${sport === 'cfb' ? 'active' : ''}`} href={chip('cfb')}>CFB</Link>
+        <Link className={`gi-chip live ${live ? 'active' : ''}`}
+          href={scoresHref(date, { sport, live: !live })}>Live only</Link>
       </div>
 
-      {visible.map((s) => <Section key={s.key} sport={s} games={byLeague[s.key] ?? []} liveOnly={liveOnly} />)}
+      {visible.map((s) => <Section key={s.key} sport={s} games={byLeague[s.key] ?? []} liveOnly={live} />)}
 
       {/* DriveStrip is built + ready but renders nowhere until live rows exist.
           Hidden demo so the component is exercised by the build. */}

@@ -138,7 +138,9 @@ test('a soccer slug at the gridiron route is a 404, not a redirect loop', () => 
 
 test('the scorecard gains ONE link, and only where the page exists', () => {
   assert.match(board, /g\.leagueSlug === 'nfl' \?/);
-  assert.match(board, /href=\{`\/nfl\/game\/\$\{g\.slug\}`\}>Full game →<\/a>/);
+  // </Link> since the soft-nav conversion - a plain </a> was the WKWebView
+  // teardown glitch. The claim (one link, NFL-gated) is unchanged.
+  assert.match(board, /href=\{`\/nfl\/game\/\$\{g\.slug\}`\}>Full game →<\/Link>/);
   // The expand itself is unchanged: line score, or the pre-game facts.
   assert.match(board, /\{hasLine \? <LineScore g=\{g\} \/> : <PreGamePane g=\{g\} \/>\}/);
 });

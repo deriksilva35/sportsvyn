@@ -12,7 +12,10 @@ import SportsvynSegment from '@/components/shell/SportsvynSegment';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import Scoreboard from '@/components/gridiron/Scoreboard';
-import { getSlateByDate, resolveScoresDate } from '@/lib/gridiron/readers';
+import Link from 'next/link';
+import DateRail from '@/components/gridiron/DateRail';
+import { getSlateByDate, resolveScoresDate, scoresDateRange } from '@/lib/gridiron/readers';
+import { parseScoresParams } from '@/lib/gridiron/scoresNav';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import '@/components/gridiron/gridiron.css';
 
@@ -59,7 +62,12 @@ export default async function ScoresPage({ searchParams }) {
   // Explicit ?date= navigation is respected; the no-param default resolves to
   // today (if it has games) or the nearest day with a real slate.
   const date = DATE_RE.test(sp.date ?? '') ? sp.date : await resolveScoresDate(todayEtDate());
-  const slate = await getSlateByDate(date);
+  // FILTERS ARE URL STATE NOW (fix B). They were component state inside
+  // Scoreboard, so ANY navigation - date change, back button - reset them to
+  // ALL. A filter that survives navigation has to live in the URL, and once
+  // it does, every link on the page carries it via scoresHref.
+  const { sport, live } = parseScoresParams(sp);
+  const [slate, range] = await Promise.all([getSlateByDate(date), scoresDateRange()]);
   const games = [...slate.byLeague.nfl, ...slate.byLeague.cfb];
   // One batch odds read for the whole slate (no per-card fan-out); attach to each game.
   const oddsMap = await getH2hOdds(games.map((g) => g.id));
@@ -80,18 +88,23 @@ export default async function ScoresPage({ searchParams }) {
           {/* WEB CROSS-NAV to the board's sibling surface. Web only: in the
               shell the segment above owns this hop, and two controls for one
               hop is one too many. */}
-          {!isShell && <a className="gi-cross" href="/nfl/fantasy">Movement Board &rarr;</a>}
+          {!isShell && <Link className="gi-cross" href="/nfl/fantasy">Movement Board &rarr;</Link>}
         </div>
 
         <div className="gi-toolbar">
-          <div className="gi-datenav">
-            <a href={`/scores?date=${shiftDate(date, -1)}`}>‹</a>
-            <span className="cur"><b>{lb.wd}</b> {lb.md} {lb.year}</span>
-            <a href={`/scores?date=${shiftDate(date, 1)}`}>›</a>
-          </div>
+          <DateRail
+            date={date}
+            label={lb}
+            prev={shiftDate(date, -1)}
+            next={shiftDate(date, 1)}
+            min={range.min}
+            max={range.max}
+            sport={sport}
+            live={live}
+          />
         </div>
 
-        <Scoreboard byLeague={slate.byLeague} />
+        <Scoreboard byLeague={slate.byLeague} date={date} sport={sport} live={live} />
       </div>
     </div>
   );
