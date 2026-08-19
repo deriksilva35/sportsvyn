@@ -1,6 +1,11 @@
 /**
- * POST /api/admin/push-test - one real push, THROUGH THIS RUNTIME, to an
+ * POST /api/cron/push-test - one real push, THROUGH THIS RUNTIME, to an
  * owner device.
+ *
+ * UNDER /api/cron, NOT /api/admin, and the reason is a header collision:
+ * proxy.js demands Basic auth on /api/admin/* using the SAME Authorization
+ * header the Bearer check reads - a request cannot carry both. The cron
+ * family's contract IS Bearer CRON_SECRET, so this lives with its auth.
  *
  * WHY IT EXISTS: the droplet proved the sender code against APNs, but the
  * cron hooks run in VERCEL, and Vercel's env spent a night dark while its
