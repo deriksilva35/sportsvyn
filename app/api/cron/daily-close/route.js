@@ -20,7 +20,7 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { closeDay } from '@/lib/daily/close';
-import { pushEnabled } from '@/lib/push/apns';
+import { pushEnabled, gateReport } from '@/lib/push/apns';
 import { notifyDailyLive, notifyDailyRevealed } from '@/lib/push/notify';
 
 export const dynamic = 'force-dynamic';
@@ -49,7 +49,15 @@ export async function GET(request) {
     // pushArmed rides every sampled row so a dark gate is DIAGNOSABLE from the
     // ledger - the night of Aug 19 the hooks silently no-oped for a whole
     // reveal window and nothing recorded why.
-    if (now.getUTCMinutes() < 15) await recordDecision(sql, { source: SOURCE, kind: 'noop', summary: { pushArmed: pushEnabled() } });
+    // A DARK GATE NAMES ITS FAILING FACT (gateReport - booleans and lengths,
+    // never values). Only attached while dark: an armed gate needs one bit.
+    if (now.getUTCMinutes() < 15) {
+      const armed = pushEnabled();
+      await recordDecision(sql, {
+        source: SOURCE, kind: 'noop',
+        summary: { pushArmed: armed, ...(armed ? {} : { gate: gateReport() }) },
+      });
+    }
     return Response.json({ decision: 'noop', due: 0 });
   }
 
