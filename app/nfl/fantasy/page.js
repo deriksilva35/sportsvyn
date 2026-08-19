@@ -93,7 +93,7 @@ export default async function FantasyMovementBoard({ searchParams }) {
   return (
     <div data-surface="ink">
       <GlobalHeaderServer activeNav="fantasy" />
-      {isShell && <SportsvynSegment active="fantasy" />}
+      {isShell && <SportsvynSegment />}
       <div className="fb-wrap">
         <div className="fb-head">
           <div>

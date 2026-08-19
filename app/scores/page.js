@@ -70,7 +70,7 @@ export default async function ScoresPage({ searchParams }) {
   return (
     <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav="scores" />
-      {isShell && <SportsvynSegment active="scores" />}
+      {isShell && <SportsvynSegment />}
 
       <div className="gi-wrap">
         <div className="gi-kicker">

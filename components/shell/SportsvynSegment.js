@@ -1,24 +1,38 @@
+'use client';
+
 // components/shell/SportsvynSegment.js - LIVE SCORES / FANTASY, in the shell.
 //
-// SERVER COMPONENT, RENDERED ONLY WHEN THE PAGE'S resolveShellMode SAYS SHELL.
-// That gate lives at the CALL SITE ({isShell && <SportsvynSegment .../>}), not
-// in here, because these pages already resolve shell mode for their viewport -
-// a second resolution inside the component would be a second cookie read for
-// an answer the page holds. The consequence the ruling asked for falls out:
-// web HTML carries no segment markup at all, not a hidden one.
+// CLIENT COMPONENT WITH <Link>, and both halves are the fix for the same
+// device glitch:
 //
-// WHY THE SHELL NEEDS THIS AND THE WEB DOES NOT: on the web these two pages
-// are nav destinations (SCORES and NFL are both in lib/nav.js). In the
-// container the pair shares ONE tab, and the tab lands on /scores - without a
-// switch inside the surface, the movement board would be reachable only by
-// knowing the URL, which is the exact defect the v0.2 chrome pass fixed for
-// Your Drafts.
+//   <Link>, NOT <a>. The first version shipped plain anchors - a full document
+//   navigation per tap. WKWebView tore the page down, the root layout's
+//   chrome (client-gated header, tab bar, profile chip) vanished and popped
+//   back at hydration, and the page shifted ~54px when the header mounted.
+//   This exact bug was solved once already in /games' PaneTabs; the segment
+//   shipped without inheriting the lesson. Soft nav keeps the layout mounted
+//   and the outgoing page painted until the incoming one arrives.
+//
+//   THE PILL IS OPTIMISTIC. usePathname updates the moment navigation is
+//   COMMITTED client-side, before the new page streams in - so the tapped
+//   pill lights immediately rather than after the ~350ms server render, which
+//   read as the tap not taking. No server `active` prop: the path is the one
+//   source of truth and it cannot disagree with the route.
+//
+// THE SHELL GATE STAYS AT THE CALL SITE ({isShell && ...} in each page),
+// server-side - web HTML carries no segment markup at all. That contract is
+// unchanged and tested; this component renders wherever it is mounted.
 
-export default function SportsvynSegment({ active }) {
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+export default function SportsvynSegment() {
+  const pathname = usePathname() || '';
+  const active = pathname.startsWith('/nfl') ? 'fantasy' : 'scores';
   return (
     <nav className="svseg" aria-label="Sportsvyn sections">
-      <a href="/scores" className={active === 'scores' ? 'on' : ''}>Live Scores</a>
-      <a href="/nfl/fantasy" className={active === 'fantasy' ? 'on' : ''}>Fantasy</a>
+      <Link href="/scores" className={active === 'scores' ? 'on' : ''}>Live Scores</Link>
+      <Link href="/nfl/fantasy" className={active === 'fantasy' ? 'on' : ''}>Fantasy</Link>
     </nav>
   );
 }

@@ -410,3 +410,21 @@
     font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   LOADING SILHOUETTES (app/scores/loading.js, app/nfl/fantasy/loading.js).
+   Static shapes on the ink surface - the page's bones while force-dynamic
+   reads run. Shared here because both skeletons already import this file.
+   --------------------------------------------------------------------------- */
+.ldg-kicker { width: 120px; height: 12px; background: #1A1A1A; border-radius: 4px; margin: 26px 0 10px; }
+.ldg-title { width: 240px; height: 40px; background: #1A1A1A; border-radius: 6px; margin-bottom: 16px; }
+.ldg-band { display: flex; gap: 16px; margin-bottom: 14px; }
+.ldg-stat { width: 64px; height: 34px; background: #161616; border-radius: 6px; }
+.ldg-strip { height: 34px; background: #141414; border-radius: 8px; margin-bottom: 10px; }
+.ldg-strip--short { width: 70%; }
+.ldg-sheet { border: 1px solid #232323; border-radius: 8px; overflow: hidden; }
+.ldg-row { height: 40px; border-bottom: 1px solid #1C1C1C; background: #121212; }
+.ldg-row:nth-child(even) { background: #141414; }
+.ldg-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.ldg-card { height: 120px; border: 1px solid #232323; background: #121212; border-radius: 4px; }
+@media (max-width: 720px) { .ldg-cards { grid-template-columns: 1fr; } }
