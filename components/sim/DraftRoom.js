@@ -32,7 +32,7 @@ import { SCORING_LABEL } from '@/lib/fantasy/config';
 import RoomScope from '@/components/shell/RoomScope';
 import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
-  POS_FILTERS, CLASS_FILTERS,
+  POS_FILTERS, CLASS_FILTERS, fmt1, signed1,
 } from '@/lib/fantasy/statView';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
 import { valueGap } from '@/lib/fantasy/needs';
@@ -504,19 +504,23 @@ export default function DraftRoom({
                         )}
                       </span>
                     </span>
-                    <span className="p-num">
-                      <span className="ppg" title={approx ? 'Partial: kicker distance tiers and defensive points allowed are not in the data' : undefined}>
-                        {sum ? `${approx ? '~' : ''}${sum.ppg}` : '-'}
+                    {/* The shared column grid (numcols.css): fixed ch widths,
+                        one decimal, ADP an integer by design - it is a rank. */}
+                    <span className="ncols">
+                      <span className="ncol">
+                        <span className={`v${sum ? '' : ' empty'}`} title={approx ? 'Partial: kicker distance tiers and defensive points allowed are not in the data' : undefined}>
+                          {sum ? `${approx ? '~' : ''}${fmt1(sum.ppg)}` : '-'}
+                        </span>
+                        <span className="lbl">PPG</span>
                       </span>
-                      <span className="lbl">PPG</span>
-                    </span>
-                    <span className="p-num">
-                      <span className="adp">{r0(p.adp)}</span>
-                      <span className="lbl">ADP</span>
-                    </span>
-                    <span className="p-num">
-                      <span className={`val ${val >= 0 ? 'pos' : 'neg'}`}>{val >= 0 ? `+${val}` : val}</span>
-                      <span className="lbl">VAL</span>
+                      <span className="ncol">
+                        <span className="v dim">{r0(p.adp)}</span>
+                        <span className="lbl">ADP</span>
+                      </span>
+                      <span className="ncol">
+                        <span className={`v ${val >= 0 ? 'pos' : 'neg'}`}>{signed1(val)}</span>
+                        <span className="lbl">VAL</span>
+                      </span>
                     </span>
                   </button>
                   {canPick && (armedId === p.ffcPlayerId

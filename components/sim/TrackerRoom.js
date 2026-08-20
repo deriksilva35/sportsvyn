@@ -35,7 +35,7 @@ import { logPick, undoLastPick, fetchPlayerSummaries } from '@/app/actions/sim';
 import Wordmark from '@/components/gridiron/Wordmark';
 import {
   filterPlayers, displayPosition, rookieIdSet, sortsFor, sortPlayers,
-  viewFor, teamsInPool, POS_FILTERS, CLASS_FILTERS,
+  viewFor, teamsInPool, POS_FILTERS, CLASS_FILTERS, fmt1, signed1,
 } from '@/lib/fantasy/statView';
 import { isExactlyScored } from '@/lib/fantasy/scoring';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
@@ -61,7 +61,6 @@ const ERR = {
   no_picks: 'Nothing to undo',
 };
 // Value chip: positive = the player fell past his ADP to this pick.
-const gapChip = (gap) => (gap == null ? null : { cls: gap > 0 ? 'val' : 'rch', txt: `${gap > 0 ? '+' : ''}${gap}` });
 const shortName = (full) => {
   const parts = String(full ?? '').trim().split(/\s+/);
   return parts.length < 2 ? (parts[0] ?? '') : `${parts[0][0]}. ${parts.slice(1).join(' ')}`;
@@ -387,7 +386,6 @@ export default function TrackerRoom({
             <div className="trk-avail">
               {shown.length === 0 && <div className="trk-empty">No player matches that.</div>}
               {shown.slice(0, 60).map((p, i) => {
-                const g = gapChip(valueGap(currentOverall, p.adp));
                 const pos = displayPosition(p.position);
                 const seatRead = seatValuation.get(p.ffcPlayerId) ?? null;
                 const sum = summaries[p.ffcPlayerId];
@@ -398,13 +396,14 @@ export default function TrackerRoom({
                 const valNum = valueGap(currentOverall, p.adp); // canonical form - inline arithmetic forbidden by test
                 return (
                   <div key={p.ffcPlayerId} className={`trk-p${i === 0 ? ' top' : ''}`}>
-                    <span className="adp">{Number(p.adp).toFixed(1)}</span>
+                    <span className="nrail">{Number(p.adp).toFixed(1)}</span>
                     <div>
                       <div className="nm">{p.name}<RookieChip rookie={isRookieId(p.ffcPlayerId)} /></div>
+                      {/* Tag line: position/team + stat line ONLY. The VAL
+                          column owns the gap number - one number, one home. */}
                       <div className="tag">
                         {pos}{p.team ? ` ${p.team}` : ''}
                         {quick && <span className="trk-quick"> · {quick.join(' · ')}</span>}
-                        {g && <span className={`trk-gap ${g.cls}`}> {g.txt}{i === 0 && g.cls === 'val' ? ' VALUE' : ''}</span>}
                         {/* Two facts, never the composite - see seatValuation.js. */}
                         {seatSort && seatRead && (
                           <>
@@ -421,13 +420,12 @@ export default function TrackerRoom({
                         )}
                       </div>
                     </div>
-                    {/* PPG / ADP / VAL, the Mock's columns. The DRAFT button
-                        wins the width fight on phone - columns compress before
-                        anything wraps (see tracker.css). */}
-                    <span className="trk-nums">
-                      <span className="trk-num"><span className="v">{sum ? `${approx ? '~' : ''}${sum.ppg}` : '-'}</span><span className="lbl">PPG</span></span>
-                      <span className="trk-num"><span className="v">{Math.round(Number(p.adp))}</span><span className="lbl">ADP</span></span>
-                      <span className="trk-num"><span className={`v ${valNum >= 0 ? 'pos' : 'neg'}`}>{valNum >= 0 ? `+${valNum}` : valNum}</span><span className="lbl">VAL</span></span>
+                    {/* The shared column grid (numcols.css): fixed ch widths,
+                        one decimal, ADP an integer by design - it is a rank. */}
+                    <span className="ncols">
+                      <span className="ncol"><span className={`v${sum ? '' : ' empty'}`}>{sum ? `${approx ? '~' : ''}${fmt1(sum.ppg)}` : '-'}</span><span className="lbl">PPG</span></span>
+                      <span className="ncol"><span className="v dim">{Math.round(Number(p.adp))}</span><span className="lbl">ADP</span></span>
+                      <span className="ncol"><span className={`v ${valNum >= 0 ? 'pos' : 'neg'}`}>{signed1(valNum)}</span><span className="lbl">VAL</span></span>
                     </span>
                     <button className="go" onClick={() => commit(p)} disabled={busy || complete}>DRAFT</button>
                   </div>

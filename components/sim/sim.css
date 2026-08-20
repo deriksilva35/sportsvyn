@@ -1,5 +1,6 @@
 /* Mock draft sim — ink surface, reuses design-tokens v1.1 (data-surface="ink"|"paper")
    and the gridiron grammar (mono data, Saira italic display, volt accents). */
+@import './numcols.css'; /* the shared PPG/ADP/VAL column grid - both rooms */
 
 .sim { min-height: 100%; font-family: var(--font-jetbrains-mono), monospace; }
 .sim-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px 40px; }
@@ -485,16 +486,11 @@
 /* position chip: volt label on ink, mono. Sized for up to 3 chars (DST). */
 .p-row .ava { flex: none; width: 30px; height: 30px; display: grid; place-items: center; background: var(--ink); border: 1px solid var(--rule); font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; font-weight: 700; letter-spacing: .02em; color: var(--volt); }
 .p-id { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
-.p-num { flex: none; display: flex; flex-direction: column; align-items: flex-end; width: 40px; }
-.p-num .lbl { font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); }
-.p-num .val.pos { color: var(--volt); }
-.p-num .val.neg { color: var(--terra); }
-.p-num .val { font-size: 11px; }
-.p-num .ppg { font-size: 11px; color: var(--paper); }
+/* PPG / ADP / VAL are .ncols/.ncol - the grid lives in numcols.css, shared
+   with the Tracker; sizing them here is forbidden by test. */
 /* quick stats: last season's headline line, sitting with the name */
 .p-row .rng .q { color: var(--muted); }
 .p-act { display: flex; gap: 4px; }
-.p-row .adp { font-size: 11px; color: var(--volt-dim); }
 .p-row .nm { font-size: 13px; color: var(--paper); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .p-row .rng { font-size: 9px; color: var(--muted-dim); }
 .p-row .draft { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: var(--volt); border: 0; padding: 5px 10px; cursor: pointer; }
