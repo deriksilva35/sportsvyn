@@ -26,6 +26,7 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { currentContest, getEntry } from '@/lib/weekly/entries';
 import { weeklyState, settledView, lineupRows } from '@/lib/weekly/view';
+import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
 import { tierClass } from '@/lib/daily/reveal';
 import WeeklyRoom from '@/components/weekly/WeeklyRoom';
 import '../daily/daily.css';
@@ -243,8 +244,18 @@ export default async function WeeklyPage({ searchParams }) {
   }
 
   // ---- LOCKED: in flight ---------------------------------------------------
+  // THE WINDOW HAS NUMBERS NOW (v0.2 live totals): the same poolWithScores the
+  // settle uses, read mid-flight. The total is ALL SIX, before drop-worst -
+  // live is a sum, not a verdict (see lib/weekly/live.js for why dropping a
+  // player who has not kicked off would read as the site benching him).
   if (state === 'locked') {
     const filled = entry ? Object.values(entry.lineup ?? {}).filter(Boolean).length : 0;
+    const live = entry
+      ? await (async () => {
+        const { scored, playedIds } = await liveScoredBoard(contest);
+        return liveEntryRows({ lineup: entry.lineup ?? {}, scored, playedIds });
+      })().catch(() => null)
+      : null;
     return (
       <Shell>
         <section className="mod mod--entered">
@@ -256,23 +267,32 @@ export default async function WeeklyPage({ searchParams }) {
               <p className="mod-lede">
                 Your lineup is in. {filled} of 6 slots filled.
               </p>
-              {/* lineupRows, NOT Object.entries(lineup). The lineup is jsonb, so
-                  its keys come back in whatever order they were written, and the
-                  first render of this block listed QB, RB, TE, WR, FLEX, FLEX2 -
-                  a lineup card that shows the slots out of order every time the
-                  player happened to fill TE before WR. lineupRows walks SLOTS,
-                  which is the one definition of the order. */}
+              {live && (
+                <div className="score-row">
+                  <div className="score-big">{live.total}</div>
+                  <div className="score-meta">
+                    <span className="muted">
+                      live &middot; {live.playedCount} of {live.slots} played &middot; before drop-worst
+                    </span>
+                  </div>
+                </div>
+              )}
+              {/* lineupRows walked SLOTS for order; the live rows walk the same
+                  SLOTS, so the order law holds and points ride along. */}
               <div>
-                {lineupRows(entry.lineup, board).map((p) => (
+                {(live?.rows ?? lineupRows(entry.lineup, board)).map((p) => (
                   <div className="row" key={p.slot}>
                     <span>
                       <span className="slot-tag">{p.slot === 'FLEX2' ? 'FLEX' : p.slot}</span>{' '}
                       {p.name ?? <span className="muted">empty</span>}
+                      {p.team && <span className="muted"> · {p.team}</span>}
                     </span>
-                    <span className="r r--mut">{p.team ?? ''}</span>
+                    <span className={`r${p.played ? '' : ' r--mut'}`}>
+                      {p.id == null ? '' : p.played ? p.points : '—'}
+                    </span>
                   </div>
                 ))}
-                <div className="row"><span>Results</span><span className="r r--mut">Tuesday morning</span></div>
+                <div className="row"><span>Results</span><span className="r r--mut">Tuesday morning &middot; drop-worst applies at settle</span></div>
               </div>
             </>
           ) : (

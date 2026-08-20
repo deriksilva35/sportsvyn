@@ -16,6 +16,7 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
+import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
 import { draftState, draftSettledView, seatOptions } from '@/lib/draft/view';
 import { draftState as readDraftState } from '@/lib/draft/entry';
 import { DRAFT_CONFIG, DRAFT_ROUNDS } from '@/lib/draft/contest';
@@ -196,6 +197,16 @@ export default async function DraftPage({ searchParams }) {
   // ---- LOCKED --------------------------------------------------------------
   if (state === 'locked') {
     const roster = entry?.meta?.roster ?? [];
+    // LIVE BEST-6 (v0.2 live totals): best ball over LIVE scores - the best
+    // six AS OF NOW, which can differ from the final six; the label carries
+    // it. Same read the Weekly's window uses; drop-worst waits for settle.
+    const live = roster.length
+      ? await (async () => {
+        const { scored, playedIds } = await liveScoredBoard(contest);
+        return liveEntryRows({ roster, scored, playedIds });
+      })().catch(() => null)
+      : null;
+    const liveIds = new Set((live?.rows ?? []).map((r) => r.id).filter(Boolean));
     return (
       <Shell>
         <section className="mod mod--entered">
@@ -206,14 +217,24 @@ export default async function DraftPage({ searchParams }) {
                 Your {roster.length} picks are in. Best ball scores your best six once
                 every game is final.
               </p>
+              {live && (
+                <div className="score-row">
+                  <div className="score-big">{live.total}</div>
+                  <div className="score-meta">
+                    <span className="muted">
+                      live best six &middot; {live.playedCount} of {live.slots} played &middot; before drop-worst
+                    </span>
+                  </div>
+                </div>
+              )}
               <div>
                 {roster.map((r) => (
-                  <div className="row" key={r.ffc ?? r.id}>
+                  <div className={`row${liveIds.size && !liveIds.has(r.id) ? ' row--dropped' : ''}`} key={r.ffc ?? r.id}>
                     <span><span className="slot-tag">R{r.round}</span> {r.name}</span>
                     <span className="r r--mut">{r.pos}</span>
                   </div>
                 ))}
-                <div className="row"><span>Results</span><span className="r r--mut">Tuesday morning</span></div>
+                <div className="row"><span>Results</span><span className="r r--mut">Tuesday morning &middot; drop-worst applies at settle</span></div>
               </div>
             </>
           ) : (
