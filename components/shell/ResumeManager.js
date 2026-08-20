@@ -27,15 +27,17 @@
 // payload's url and flags the activation so the staleness rule stands down.
 // The reader chose a destination; the default must not race them for it.
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isShellClient } from '@/lib/shell/appTabs';
 import { resumeDecision } from '@/lib/shell/resumeRule';
 
 const TS_KEY = 'sv-bg-at';
+const LOG_KEY = 'sv-resume-log';
 
 export default function ResumeManager() {
   const router = useRouter();
+  const [debug, setDebug] = useState(null);
 
   useEffect(() => {
     if (!isShellClient({ cookie: document.cookie, search: window.location.search })) return undefined;
@@ -51,41 +53,85 @@ export default function ResumeManager() {
         return v ? Number(v) : null;
       } catch { return null; }
     };
+    // THE DEBUG SURFACE (temporary, owner-facing): every evaluation writes its
+    // inputs and verdict to data attributes on <html> and to sessionStorage,
+    // and ?debug=resume renders the log as an on-screen strip - a device's
+    // state becomes readable instead of guessed.
+    const log = (src, gapMs, dest) => {
+      const line = `${src} gap=${gapMs == null ? 'none' : Math.round(gapMs / 1000) + 's'} -> ${dest ?? 'stay'} @${new Date().toISOString().slice(11, 19)}`;
+      try {
+        const el = document.documentElement;
+        el.setAttribute('data-resume-last', line);
+        sessionStorage.setItem(LOG_KEY, `${line}\n${(sessionStorage.getItem(LOG_KEY) ?? '').slice(0, 400)}`);
+      } catch { /* private mode */ }
+      if (new URLSearchParams(window.location.search).get('debug') === 'resume') {
+        setDebug(line);
+      }
+    };
 
-    const onActive = () => {
+    const evaluate = (src) => {
       const at = readStamp();
+      const gapMs = at == null ? null : Date.now() - at;
       const dest = resumeDecision({
-        gapMs: at == null ? null : Date.now() - at,
+        gapMs,
         dataTab: document.documentElement.getAttribute('data-tab'),
         deepLinkPending,
         pathname: window.location.pathname + window.location.search,
       });
       deepLinkPending = false;
-      // Re-stamp so a second activation without an intervening background
-      // (some iOS versions double-fire) reads as fresh, not cold.
-      stamp();
+      stamp();  // re-arm: a second activation without a background reads fresh
+      log(src, gapMs, dest);
       if (dest) router.push(dest);
     };
 
-    // ---- event sources ----
+    // ========================================================================
+    // MOUNT IS AN ACTIVATION TOO - the fix for "still lands on Mock"
+    // ========================================================================
+    // The first version only evaluated on EVENTS (appStateChange /
+    // visibilitychange). A launch that RELOADS the document on its old URL -
+    // WKWebView evicting the page and restoring it on foreground, or
+    // restoration bypassing /app entirely - fires no activation event at all:
+    // the page loads already-visible and the manager sat silent. Mount now
+    // evaluates once, and the stamp discipline below keeps it honest:
+    // pagehide stamps BEFORE every document teardown, so a mid-session hard
+    // navigation arrives with a seconds-old stamp and reads fresh (stay put),
+    // while an eviction-reload arrives with the backgrounding stamp and reads
+    // stale (go home), and a true cold start has no stamp at all (go home -
+    // the belt to the /app 307's suspenders).
+    evaluate('mount');
+
     const cleanups = [];
+
+    // pagehide covers BOTH backgrounding and document teardown in WKWebView,
+    // and fires more reliably than visibilitychange on process eviction.
+    const onHide = () => stamp();
+    window.addEventListener('pagehide', onHide);
+    cleanups.push(() => window.removeEventListener('pagehide', onHide));
+
+    // BFCACHE RESTORATION (the classic WKWebView trap): a page restored with
+    // persisted=true re-runs NO effects and fires NO visibilitychange - this
+    // event is the only signal it happened.
+    const onShow = (e) => { if (e.persisted) evaluate('pageshow'); };
+    window.addEventListener('pageshow', onShow);
+    cleanups.push(() => window.removeEventListener('pageshow', onShow));
 
     const appPlugin = window.Capacitor?.Plugins?.App;
     if (appPlugin?.addListener) {
       const sub = appPlugin.addListener('appStateChange', ({ isActive }) => {
-        if (isActive) onActive(); else stamp();
+        if (isActive) evaluate('appState'); else stamp();
       });
       cleanups.push(() => sub?.remove?.());
-    } else {
-      const onVis = () => {
-        if (document.visibilityState === 'hidden') stamp(); else onActive();
-      };
-      document.addEventListener('visibilitychange', onVis);
-      cleanups.push(() => document.removeEventListener('visibilitychange', onVis));
     }
+    // visibilitychange runs REGARDLESS of the plugin now: on devices where
+    // both exist the double evaluation is harmless (the first re-stamps, so
+    // the second reads a zero gap and stays), and on binaries without
+    // @capacitor/app it is the only foreground signal.
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') stamp(); else evaluate('visibility');
+    };
+    document.addEventListener('visibilitychange', onVis);
+    cleanups.push(() => document.removeEventListener('visibilitychange', onVis));
 
-    // Push-tap deep link: the payload's url is the winner (see lib/push/copy -
-    // every event carries an in-app path).
     const push = window.Capacitor?.Plugins?.PushNotifications;
     if (push?.addListener) {
       const sub = push.addListener('pushNotificationActionPerformed', (action) => {
@@ -99,5 +145,12 @@ export default function ResumeManager() {
     return () => { for (const c of cleanups) c(); };
   }, [router]);
 
-  return null;
+  if (!debug) return null;
+  return (
+    <div style={{
+      position: 'fixed', bottom: 70, left: 8, right: 8, zIndex: 999,
+      background: '#000c', color: '#D4FF00', font: '10px monospace',
+      padding: '6px 8px', borderRadius: 6, pointerEvents: 'none',
+    }}>{debug}</div>
+  );
 }
