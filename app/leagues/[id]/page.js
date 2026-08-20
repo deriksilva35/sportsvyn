@@ -27,6 +27,7 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { leagueDetail, leaguePreview, leagueMemberIds } from '@/lib/leagues/core';
 import { LEAGUE_TABS, parseLeagueTab, leagueHref } from '@/lib/leagues/nav';
+import { firstLockLabel, FIRST_LOCK_FALLBACK } from '@/lib/pickem/read';
 import { lastRevealedDate, dayBoard, overall } from '@/lib/daily/boards';
 import { CodeChip, CopyLinkButton, JoinLeagueButton } from '@/components/leagues/LeagueChrome';
 import '../../games/games.css';
@@ -44,9 +45,12 @@ export async function generateMetadata({ params }) {
   return { title: lg ? `${lg.name} - Leagues - Sportsvyn` : 'Leagues - Sportsvyn' };
 }
 
-// GHOST PANEL COPY - verbatim from mock v0_1 (the file landed; reconciled).
+// GHOST PANEL COPY - verbatim from mock v0_1 (the file landed; reconciled),
+// EXCEPT Pick'em's when-line: the mock's hardcoded Thursday was wrong (no
+// game exists that day) and died with the first-kickoff ruling. It is filled
+// per-request from the contest's snapshotted locks_at via firstLockLabel().
 const GHOSTS = {
-  pickem: { big: "Pick'em lights up with the board", when: 'first lock · Thu Aug 27, 8:00 PM ET' },
+  pickem: { big: "Pick'em lights up with the board", when: null },
   weekly: { big: 'The Weekly board lights up at first kickoff', when: 'Thu Sep 10' },
   draft: { big: 'The Draft settles here after first kickoff', when: 'draft opens Sep 8 · locks Wed Sep 9, 8:20 PM ET' },
   season: { big: 'Cross-game standings arrive with the season', when: 'every game, one ladder' },
@@ -101,6 +105,10 @@ export default async function LeaguePage({ params, searchParams }) {
 
   // ---- MEMBER: frame 2 ----------------------------------------------------
   const memberIds = await leagueMemberIds(leagueId).catch(() => []);
+  // Pick'em's lock line, derived from the contest when a board exists -
+  // caught to the sanctioned fallback like every ghost read.
+  const pickemLock = await firstLockLabel().catch(() => FIRST_LOCK_FALLBACK);
+  const pickemLockDate = pickemLock.replace(/^\w+ /, '').split(',')[0];
   const revealedDate = tab === 'daily' ? await lastRevealedDate().catch(() => null) : null;
   const [daily, season] = tab === 'daily'
     ? await Promise.all([
@@ -137,7 +145,9 @@ export default async function LeaguePage({ params, searchParams }) {
               aria-current={tab === t.key ? 'page' : undefined}
             >
               {t.label}
-              {t.ghost && t.date && <span className="lg-tab-date">{t.date}</span>}
+              {t.ghost && t.date && (
+                <span className="lg-tab-date">{t.key === 'pickem' ? pickemLockDate : t.date}</span>
+              )}
             </Link>
           ))}
         </nav>
@@ -201,7 +211,7 @@ export default async function LeaguePage({ params, searchParams }) {
         {tab !== 'daily' && (
           <section className="lg-ghostpanel">
             <div className="big">{GHOSTS[tab]?.big}</div>
-            <div className="when">{GHOSTS[tab]?.when}</div>
+            <div className="when">{tab === 'pickem' ? `first lock · ${pickemLock}` : GHOSTS[tab]?.when}</div>
           </section>
         )}
       </main>

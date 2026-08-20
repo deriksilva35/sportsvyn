@@ -70,6 +70,10 @@
       "schedule": "13 9 * * *"
     },
     {
+      "path": "/api/cron/pickem-board",
+      "schedule": "23 13 * * *"
+    },
+    {
       "path": "/api/cron/daily-close",
       "schedule": "*/15 * * * *"
     },
