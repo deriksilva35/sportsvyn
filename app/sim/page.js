@@ -151,15 +151,10 @@ export default async function SimLobby({ searchParams }) {
                   <div className="sim-kicker">Start a mock draft</div>
                   <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap} />
                 </section>
-                {/* THE TRACKER SETUP MOVED TO ITS OWN TAB. Two flows, two
-                    homes: this page starts a mock against AI, /sim/tracker
-                    tracks a real draft at a real table. They shared a screen
-                    while the tracker was new, and the result was one page
-                    asking a reader to decide which product they were in before
-                    it would let them start anything. One link out is enough. */}
-                <a className="sim-trklink" href="/sim/tracker">
-                  Track a real draft with The Tracker &rarr;
-                </a>
+                {/* The tracker link moved INTO StartForm (v0.3.1): it now
+                    carries the live config as a handoff, and only the form
+                    knows the live config. One link out is still the law -
+                    it just learned to pack a bag. */}
               </>
             );
           })()

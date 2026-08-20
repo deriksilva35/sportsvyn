@@ -20,6 +20,7 @@ import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import TrackerStart from '@/components/sim/TrackerStart';
+import { parseTrackerHandoff } from '@/lib/fantasy/handoff';
 import YourDrafts from '@/components/sim/YourDrafts';
 import { getDraftHistory } from '@/lib/fantasy/drafts';
 import { splitDrafts } from '@/lib/fantasy/yourDrafts';
@@ -157,7 +158,10 @@ export default async function TrackerTab({ searchParams }) {
 
         {/* TrackerStart renders the gate card for non-members; the entitlement is
             re-checked server-side in startTrackerDraftFor either way. */}
-        <TrackerStart entitled={member} shell={isShell} iap={iap} />
+        {/* The Mock handoff rides the URL; parseTrackerHandoff is
+            all-or-nothing, so `initial` is either a complete config or null
+            and the console falls back to the 15-round default. */}
+        <TrackerStart entitled={member} shell={isShell} iap={iap} initial={parseTrackerHandoff(params)} />
 
         {/* ITS OWN HISTORY, under its own setup. Making a reader cross to
             PROFILE to find last Tuesday's room would be the two-homes problem

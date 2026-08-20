@@ -14,11 +14,17 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { startTrackerDraft } from '@/app/actions/sim';
-import { SCORING_FORMATS, SCORING_LABEL, TEAMS_MIN, TEAMS_MAX } from '@/lib/fantasy/config';
+import {
+  SCORING_FORMATS, SCORING_LABEL, TEAMS_MIN, TEAMS_MAX,
+  SLOT_BOUNDS, ROSTER_CELLS, deriveRounds,
+} from '@/lib/fantasy/config';
 
-// The shipped standard shape. A tracker draft mirrors a real league, but the
-// roster is the part people change least, so this is the default rather than a
-// full console. Rounds = 15.
+// The most common real-league shape - QB1 RB2 WR2 TE1 FLX1 DST1 K1 + 6 bench
+// = 15 rounds. It used to be a HARDCODED assumption ("the roster is the part
+// people change least"); v0.3.1 ruled that a tracker mirrors a REAL league and
+// real leagues vary, so this is now the console's STARTING POINT, fully
+// editable below - and pre-filled by the Mock handoff when one is riding the
+// URL.
 const DEFAULT_SLOTS = { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, K: 1, DST: 1, BN: 6 };
 
 const ERR = {
@@ -35,12 +41,27 @@ const ERR = {
   unauthenticated: 'Please sign in',
 };
 
-export default function TrackerStart({ entitled, shell = false, iap = false }) {
+export default function TrackerStart({ entitled, shell = false, iap = false, initial = null }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [teams, setTeams] = useState(12);
-  const [scoring, setScoring] = useState('ppr');
+  // `initial` is the Mock handoff (already validated server-side by
+  // parseTrackerHandoff - all-or-nothing, so its presence means every field
+  // is usable). The seat is never carried: picking it is this screen's job.
+  const [teams, setTeams] = useState(initial?.teamsCount ?? 12);
+  const [scoring, setScoring] = useState(initial?.scoringFormat ?? 'ppr');
   const [seat, setSeat] = useState(1);
+  const [slots, setSlots] = useState(() => ({ ...(initial?.rosterSlots ?? DEFAULT_SLOTS) }));
+  const rounds = deriveRounds(slots);
+
+  function stepSlot(k, d) {
+    const [lo, hi] = SLOT_BOUNDS[k];
+    setSlots((cur) => {
+      const next = Math.min(hi, Math.max(lo, (cur[k] || 0) + d));
+      const out = { ...cur };
+      if (next > 0) out[k] = next; else delete out[k];
+      return out;
+    });
+  }
   const [names, setNames] = useState({});      // teamIndex -> label
   const [showNames, setShowNames] = useState(false);
   const [err, setErr] = useState(null);
@@ -66,7 +87,7 @@ export default function TrackerStart({ entitled, shell = false, iap = false }) {
     // and normalizeTeamLabels collapses it to null server-side anyway.
     const arr = Array.from({ length: teams }, (_, i) => names[i] ?? '');
     const labels = arr.some((s) => s.trim().length > 0) ? arr : null;
-    const config = { teamsCount: teams, scoringFormat: scoring, clockSeconds: null, rosterSlots: DEFAULT_SLOTS };
+    const config = { teamsCount: teams, scoringFormat: scoring, clockSeconds: null, rosterSlots: slots };
 
     startTransition(async () => {
       const res = await startTrackerDraft(config, seat, labels);
@@ -114,6 +135,42 @@ export default function TrackerStart({ entitled, shell = false, iap = false }) {
       </div>
 
       <div className="trk-hint">How many seats, how it scores, and where you pick - all editable on draft night.</div>
+
+      {/* THE ROSTER CONSOLE (v0.3.1) - the same cells the Mock renders, from
+          the same ROSTER_CELLS definition, because a tracker mirrors a REAL
+          league and real leagues are not all QB1/RB2/WR2. Locked once the
+          draft starts: rounds derive from this and the grid is built from
+          rounds, so a mid-draft change would reshape the board under
+          everyone's picks. Set it before the first card goes up. */}
+      <div className="console trk-console">
+      <div className="crow rostercrow trk-roster">
+        <div className="ck">ROSTER</div>
+        <div className="rgrid">
+          {ROSTER_CELLS.map((c) => (
+            <span className="lstep" key={c.k}>
+              <span className="ll">{c.label}</span>
+              <span className="cstep">
+                <button type="button" onClick={() => stepSlot(c.k, -1)} disabled={(slots[c.k] || 0) <= SLOT_BOUNDS[c.k][0]} aria-label={`fewer ${c.label}`}>−</button>
+                <span className="cn">{slots[c.k] || 0}</span>
+                <button type="button" onClick={() => stepSlot(c.k, 1)} disabled={(slots[c.k] || 0) >= SLOT_BOUNDS[c.k][1]} aria-label={`more ${c.label}`}>+</button>
+              </span>
+            </span>
+          ))}
+        </div>
+      </div>
+      <div className="crow trk-roster">
+        <div className="ck">BENCH</div>
+        <div className="cv">
+          <span className="cstep">
+            <button type="button" onClick={() => stepSlot('BN', -1)} disabled={(slots.BN || 0) <= 0} aria-label="fewer bench">−</button>
+            <span className="cn">{slots.BN || 0}</span>
+            <button type="button" onClick={() => stepSlot('BN', 1)} disabled={(slots.BN || 0) >= SLOT_BOUNDS.BN[1]} aria-label="more bench">+</button>
+          </span>
+        </div>
+      </div>
+      </div>
+      <div className="setup-sum trk-sum">{teams}-TEAM · {SCORING_LABEL[scoring]} · {rounds} ROUNDS</div>
+      <div className="trk-hint">Match your league&apos;s lineup - rounds follow the roster. Locked once the draft starts.</div>
 
       <button type="button" className="trk-start-names" onClick={() => setShowNames((v) => !v)}>
         {showNames ? '- hide team names' : '+ add team names (optional)'}

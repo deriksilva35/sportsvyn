@@ -273,3 +273,9 @@
 /* The room's way back to the tracker home. Sits in the room head beside the
    mark; END TRACKING remains the only exit that forgets the room. */
 .trk-crumb { padding: 4px 2px; font-size: 10px; letter-spacing: .1em; }
+
+/* The roster console on tracker setup (v0.3.1) - the Mock's console grammar
+   (sim.css .console/.crow/.rgrid) inside the tracker card, with the card's
+   spacing. The summary line sits outside the frame like the Mock's ticker. */
+.trk-console { margin-top: 10px; }
+.trk-sum { margin-top: 8px; }

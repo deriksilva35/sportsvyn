@@ -240,10 +240,13 @@ test('THE ROOM\'S VIEW SWITCHER STACKS ABOVE THE APP BAR, not under it', () => {
 test('THE PRACTICE PAGE NO LONGER STARTS A TRACKER - two flows, two homes', () => {
   const s = readFileSync(path.join(REPO, 'app/sim/page.js'), 'utf8');
   assert.equal(/TrackerStart/.test(s), false, 'the setup moved to the tracker tab');
-  // Copy amended 19 Aug to NAME the feature; the claim is unchanged - one
-  // link out to /sim/tracker, no setup form on this page.
-  assert.match(s, /Track a real draft with The Tracker/, 'one link out is enough');
-  assert.match(s, /href="\/sim\/tracker"/);
+  // The link itself moved INTO StartForm (v0.3.1) so it can carry the live
+  // config as a handoff. The claim survives relocated: one link out, and it
+  // lives with the state it carries.
+  const form = readFileSync(path.join(REPO, 'components/sim/StartForm.js'), 'utf8');
+  assert.match(form, /Track a real draft with The Tracker/, 'one link out is enough');
+  assert.match(form, /trackerHandoffHref\(config\)/, 'and it packs the live config');
+  assert.equal(/sim-trklink/.test(s), false, 'the static page link must not double it');
 });
 
 test('the BOARD grid scrolls sideways with the same fade affordance', () => {
