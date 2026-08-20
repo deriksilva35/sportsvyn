@@ -28,7 +28,6 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { leagueDetail, leaguePreview, leagueMemberIds } from '@/lib/leagues/core';
 import { LEAGUE_TABS, parseLeagueTab, leagueHref } from '@/lib/leagues/nav';
 import { lastRevealedDate, dayBoard, overall } from '@/lib/daily/boards';
-import { tierClass } from '@/lib/daily/reveal';
 import { CodeChip, CopyLinkButton, JoinLeagueButton } from '@/components/leagues/LeagueChrome';
 import '../../games/games.css';
 import '../leagues.css';
@@ -45,13 +44,12 @@ export async function generateMetadata({ params }) {
   return { title: lg ? `${lg.name} - Leagues - Sportsvyn` : 'Leagues - Sportsvyn' };
 }
 
-// GHOST PANEL COPY - faithful to the block's dates; the mock's verbatim
-// lines reconcile when the file lands (it never reached the droplet).
+// GHOST PANEL COPY - verbatim from mock v0_1 (the file landed; reconciled).
 const GHOSTS = {
-  pickem: { line: "Pick 'em opens Aug 27 - straight picks, every game, every week.", date: 'AUG 27' },
-  weekly: { line: 'The Weekly locks Sep 10 - six slots, no clock. Your league board lights at first kickoff.', date: 'SEP 10' },
-  draft: { line: 'The Draft locks Sep 10 - eight rounds, best ball, thirty-second clock.', date: 'SEP 10' },
-  season: { line: 'The season rollup lands with the first settled week - every game, one table.', date: null },
+  pickem: { big: "Pick'em lights up with the board", when: 'first lock · Thu Aug 27, 8:00 PM ET' },
+  weekly: { big: 'The Weekly board lights up at first kickoff', when: 'Thu Sep 10' },
+  draft: { big: 'The Draft settles here after first kickoff', when: 'draft opens Sep 8 · locks Wed Sep 9, 8:20 PM ET' },
+  season: { big: 'Cross-game standings arrive with the season', when: 'every game, one ladder' },
 };
 
 export default async function LeaguePage({ params, searchParams }) {
@@ -78,22 +76,23 @@ export default async function LeaguePage({ params, searchParams }) {
       <>
         <GlobalHeaderServer activeNav="games" />
         <main className="lob" data-surface="ink">
-          <section className="mod mod--invite lg-hero">
-            <div className="eyebrow">You&rsquo;re invited</div>
+          <Link className="appcrumb" href="/leagues">&larr; Leagues</Link>
+          <section className="lg-preview-hero">
+            <div className="eb">You&rsquo;re invited</div>
             <h1 className="lg-hero-name">{preview.name}</h1>
-            <p className="muted">
+            <p className="ctx">
               {preview.members} {preview.members === 1 ? 'member' : 'members'} &middot; The
-              Daily &middot; Pick &rsquo;em &middot; The Weekly &middot; The Draft
+              Daily, Pick&rsquo;em, The Weekly, The Draft
             </p>
             {uid == null ? (
               <a className="lg-join-primary" href={shellSigninHref(dest, isShell)}>Sign in to join</a>
             ) : (
-              <JoinLeagueButton leagueId={leagueId} />
+              <JoinLeagueButton leagueId={leagueId} name={preview.name} />
             )}
-            <p className="muted lg-hero-sub">
-              Boards are members-only. Join and tonight&rsquo;s Daily counts.
-            </p>
           </section>
+          <p className="muted lg-hero-sub">
+            Boards are members-only. Join and tonight&rsquo;s Daily counts.
+          </p>
         </main>
         <SiteFooter />
       </>
@@ -117,9 +116,11 @@ export default async function LeaguePage({ params, searchParams }) {
         <Link className="appcrumb" href="/leagues">&larr; Leagues</Link>
 
         <header className="lg-head">
-          <h1 className="lg-name">{league.name}</h1>
-          <div className="lg-head-row">
-            <span className="pill">{league.members.length} {league.members.length === 1 ? 'member' : 'members'}</span>
+          <div className="lg-titlerow">
+            <h1 className="lg-name">{league.name}</h1>
+            <span className="memberpill">{league.members.length} {league.members.length === 1 ? 'member' : 'members'}</span>
+          </div>
+          <div className="lg-meta">
             <CodeChip code={league.join_code} />
             <CopyLinkButton code={league.join_code} />
           </div>
@@ -152,11 +153,10 @@ export default async function LeaguePage({ params, searchParams }) {
               </div>
               {daily?.top?.length ? (
                 daily.top.map((r, i) => (
-                  <div className={`row${i === 0 ? ' row--lead' : ''}${r.userId === uid ? ' row--me' : ''}`} key={r.userId}>
+                  <div className={`row${i === 0 ? ' row--lead' : ''}`} key={r.userId}>
                     <span className="lb-left">
                       <span className="rank">{r.rank ?? '—'}</span>
                       <span className={r.userId === uid ? 'volt' : ''}>{r.name}</span>
-                      {r.tier && <span className={`badge ${tierClass(r.tier)}`}>{r.tier}</span>}
                     </span>
                     <span className="v">{r.dnf ? <span className="muted">dnf</span> : r.score}</span>
                   </div>
@@ -177,11 +177,14 @@ export default async function LeaguePage({ params, searchParams }) {
                 </h2>
               </div>
               {season?.top?.length ? (
-                season.top.map((r, i) => (
-                  <div className={`row${i === 0 ? ' row--lead' : ''}${r.userId === uid ? ' row--me' : ''}`} key={r.userId}>
+                season.top.map((r) => (
+                  <div className="row" key={r.userId}>
                     <span className="lb-left">
                       <span className="rank">{r.rank}</span>
                       <span className={r.userId === uid ? 'volt' : ''}>{r.name}</span>
+                      {r.best && (
+                        <span className={`lg-tier${r.best === 'MVP' || r.best === 'HALL OF FAME' ? ' lg-tier--jade' : ''}`}>{r.best}</span>
+                      )}
                     </span>
                     <span className="v">{r.points} <span className="muted">pts</span></span>
                   </div>
@@ -196,12 +199,9 @@ export default async function LeaguePage({ params, searchParams }) {
         )}
 
         {tab !== 'daily' && (
-          <section className="mod lg-ghost">
-            <div className="mod-head">
-              <h2 className="eyebrow">{LEAGUE_TABS.find((t) => t.key === tab)?.label}</h2>
-              {GHOSTS[tab]?.date && <span className="pill">{GHOSTS[tab].date}</span>}
-            </div>
-            <div className="row"><span className="muted">{GHOSTS[tab]?.line}</span></div>
+          <section className="lg-ghostpanel">
+            <div className="big">{GHOSTS[tab]?.big}</div>
+            <div className="when">{GHOSTS[tab]?.when}</div>
           </section>
         )}
       </main>

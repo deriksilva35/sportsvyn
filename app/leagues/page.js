@@ -65,7 +65,7 @@ export default async function LeaguesPage({ searchParams }) {
       ? await dayBoard(revealedDate, uid, 1, { memberIds: members }).catch(() => null)
       : null;
     const lead = board?.top?.find((r) => !r.dnf) ?? null;
-    headlines.set(lg.id, lead ? `The Daily · ${lead.name} leads · ${lead.score}` : null);
+    headlines.set(lg.id, lead ? <>{lead.name} leads &middot; <b>{lead.score}</b></> : null);
   }
 
   return (
@@ -109,20 +109,18 @@ export default async function LeaguesPage({ searchParams }) {
             )}
 
             {leagues.map((lg) => (
-              <Link className="mod lg-door" key={lg.id} href={leagueHref(lg.id)}>
-                <div className="mod-head">
-                  <h2 className="eyebrow">{lg.name}</h2>
-                  <span className="pill">{lg.members} {lg.members === 1 ? 'member' : 'members'}</span>
+              <Link className="lg-door" key={lg.id} href={leagueHref(lg.id)}>
+                <div className="lg-door-top">
+                  <span className="lg-door-name">{lg.name}</span>
+                  <span className="memberpill">{lg.members} {lg.members === 1 ? 'member' : 'members'}</span>
                 </div>
-                <div className="row">
-                  <span className="muted">Join code</span>
-                  <span className="v lg-code">{lg.join_code}</span>
+                <div className="lg-door-headline">
+                  <span className="lbl">The Daily</span>
+                  <span className="lead-line">{headlines.get(lg.id) ?? <span className="muted">fills as members play</span>}</span>
                 </div>
-                <div className="row">
-                  <span className="muted">
-                    {headlines.get(lg.id) ?? 'The Daily · fills as members play'}
-                  </span>
-                  <span className="v lg-open">Open &rarr;</span>
+                <div className="lg-door-go">
+                  <span>Join code&nbsp; <span className="lg-code">{lg.join_code}</span></span>
+                  <span className="arrow">Open &rarr;</span>
                 </div>
               </Link>
             ))}

@@ -19,11 +19,12 @@ export function CodeChip({ code }) {
   return (
     <button
       type="button"
-      className="lg-chip lg-chip--code"
+      className="lg-codechip"
       onClick={async () => { if (await copy(code)) { setDone(true); setTimeout(() => setDone(false), 1500); } }}
       aria-label={`Copy join code ${code}`}
     >
-      {done ? 'copied' : code}
+      <span>Join code</span>
+      <b>{done ? 'copied' : code}</b>
     </button>
   );
 }
@@ -34,7 +35,7 @@ export function CopyLinkButton({ code }) {
   return (
     <button
       type="button"
-      className="lg-chip"
+      className="lg-invitebtn"
       onClick={async () => { if (await copy(leagueShareLink(code))) { setDone(true); setTimeout(() => setDone(false), 1500); } }}
     >
       {done ? 'Link copied' : 'Copy link'}
@@ -44,7 +45,7 @@ export function CopyLinkButton({ code }) {
 
 /** Frame 3's single primary action. Post-join: the league page, DAILY tab,
  * as a member - refresh() re-renders the server view with the membership. */
-export function JoinLeagueButton({ leagueId }) {
+export function JoinLeagueButton({ leagueId, name = null }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const router = useRouter();
@@ -62,7 +63,7 @@ export function JoinLeagueButton({ leagueId }) {
           router.refresh();
         }}
       >
-        {busy ? 'Joining…' : 'Join the league'}
+        {busy ? 'Joining…' : `Join ${name ?? 'the league'}`}
       </button>
       {err && <p className="err">{err}</p>}
     </>
