@@ -18,7 +18,8 @@ import LeagueForms from '@/components/leagues/LeagueForms';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
-import { myLeagues, leagueMemberIds } from '@/lib/leagues/core';
+import { myLeagues, leagueMemberIds, leagueByCode } from '@/lib/leagues/core';
+import JoinPrompt from '@/components/leagues/JoinPrompt';
 import { currentContest } from '@/lib/weekly/entries';
 import { weeklyBoardTable } from '@/lib/weekly/live';
 import '../games/games.css';
@@ -39,10 +40,21 @@ export default async function LeaguesPage({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode(sp);
-  requireSignInInShell({ isShell, userId, dest: '/leagues' });
+  // THE SHARE TARGET: /leagues?join=CODE is what actually rides a group chat.
+  // The dest must CARRY the code through the sign-in law, or a signed-out
+  // friend tapping the link would authenticate into a page that forgot why
+  // they came.
+  const joinRaw = Array.isArray(sp.join) ? sp.join[0] : sp.join;
+  const joinDest = joinRaw ? `/leagues?join=${encodeURIComponent(joinRaw)}` : '/leagues';
+  requireSignInInShell({ isShell, userId, dest: joinDest });
 
   const uid = userId == null ? null : Number(userId);
   const leagues = uid == null ? [] : await myLeagues(uid).catch(() => []);
+  // The code-holder's preview: name + member count, never a null page. A dud
+  // code renders a sentence, because a share target that 404s punishes the
+  // FRIEND for the member's typo.
+  const invite = joinRaw ? await leagueByCode(joinRaw).catch(() => null) : null;
+  const alreadyIn = invite != null && leagues.some((l) => l.id === invite.id);
   const contest = await currentContest().catch(() => null);
 
   // One board read per league the reader is in - small N by construction.
@@ -62,12 +74,23 @@ export default async function LeaguesPage({ searchParams }) {
           <p className="lob-sub">Your people, one board. Share the code, own the season.</p>
         </header>
 
+        {/* The invitation card leads whenever a code rides the URL - it is
+            the whole reason this page load exists. */}
+        {joinRaw && (
+          <JoinPrompt
+            invite={invite ? { name: invite.name, members: invite.members, code: invite.join_code } : null}
+            signedIn={uid != null}
+            alreadyIn={alreadyIn}
+            signinHref={shellSigninHref(joinDest, isShell)}
+          />
+        )}
+
         {uid == null ? (
           <section className="mod">
             <p className="muted">
               A league is a board of just your people - every game, one code.
             </p>
-            <a className="ghost" href={shellSigninHref('/leagues', isShell)}>Sign in to start one &rarr;</a>
+            <a className="ghost" href={shellSigninHref(joinDest, isShell)}>Sign in to start one &rarr;</a>
           </section>
         ) : (
           <>

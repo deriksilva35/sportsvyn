@@ -23,6 +23,7 @@ import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { gamesLobby } from '@/lib/games/read';
+import { myLeagues } from '@/lib/leagues/core';
 import { normalizePane } from '@/lib/games/lobby';
 import PaneTabs from '@/components/games/PaneTabs';
 import { tierClass } from '@/lib/daily/reveal';
@@ -52,6 +53,9 @@ export default async function GamesPage({ searchParams }) {
   // container got the lobby - four cards, none of them playable. Same rule.
   requireSignInInShell({ isShell: await resolveShellMode(sp), userId, dest: '/games' });
   const v = await gamesLobby(userId).catch(() => null);
+  // YOUR LEAGUES (v0.2 door): the member's leagues on the lobby, or the
+  // create/join CTA when none. Caught to [] like every lobby read.
+  const leagues = userId == null ? [] : await myLeagues(Number(userId)).catch(() => []);
 
   return (
     <>
@@ -77,7 +81,7 @@ export default async function GamesPage({ searchParams }) {
           </section>
         )}
 
-        {v && pane === 'games' && <GamesPane v={v} />}
+        {v && pane === 'games' && <GamesPane v={v} leagues={leagues} signedIn={userId != null} />}
         {v && pane === 'leaderboards' && <BoardsPane v={v} />}
         {v && pane === 'answer' && <AnswerPane v={v} />}
         {v && pane === 'history' && <HistoryPane v={v} />}
@@ -93,7 +97,7 @@ export default async function GamesPage({ searchParams }) {
   );
 }
 
-function GamesPane({ v }) {
+function GamesPane({ v, leagues = [], signedIn = false }) {
   return (
     <>
       <div className="ggrid">
@@ -128,6 +132,36 @@ function GamesPane({ v }) {
         </div>
         <a className="ghost" href="/sim">Start a mock &rarr;</a>
       </section>
+
+      {/* YOUR LEAGUES - the door to the social spine. Lists the member's
+          leagues; a signed-in reader with none gets the one-line pitch and
+          the same route. Signed-out readers see nothing here - the lobby
+          pitch machinery already owns that conversation. */}
+      {signedIn && (
+        <section className="mod">
+          <div className="mod-head">
+            <h2 className="eyebrow">Your leagues</h2>
+            {leagues.length > 0 && <span className="pill">{leagues.length}</span>}
+          </div>
+          {leagues.length === 0 ? (
+            <div className="row">
+              <span className="muted">
+                Your people, one board - create a league and share the code.
+              </span>
+            </div>
+          ) : (
+            leagues.map((lg) => (
+              <div className="row" key={lg.id}>
+                <span>{lg.name}</span>
+                <span className="v muted">{lg.members} {lg.members === 1 ? 'member' : 'members'}</span>
+              </div>
+            ))
+          )}
+          <a className="ghost" href="/leagues">
+            {leagues.length === 0 ? 'Start a league →' : 'Open your leagues →'}
+          </a>
+        </section>
+      )}
 
       {/* GATED ON THE RECORD ITSELF, not on v.season. seasonStrip() returns
           null until the reader has a STANDING, so gating on it hid the whole

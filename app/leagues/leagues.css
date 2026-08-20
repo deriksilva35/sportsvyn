@@ -14,3 +14,9 @@
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-weight: 700; letter-spacing: .18em; color: #D4FF00;
 }
+
+/* The invitation card - volt-edged because it is the page's one job when a
+   code rides the URL. */
+.mod--invite { border: 1px solid #D4FF00; }
+.lg-invite-name { font-size: 20px; font-weight: 800; color: #F5F5F2; margin: 4px 0 12px; }
+.lg-join { display: inline-block; }
