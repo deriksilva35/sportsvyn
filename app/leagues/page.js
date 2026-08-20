@@ -1,14 +1,10 @@
 /**
  * /leagues - your leagues: create, join, and each league's Weekly board.
  *
- * LAUNCH SCOPE (spec v0.2 cut line): create/join/member-list + the
- * WEEKLY-scoped board. Other game scopes and the season rollup fast-follow -
- * the Weekly is the game people join a league FOR on Sep 8.
- *
- * SEALED-UNTIL-LOCK INHERITS FOR FREE: the league board is weeklyBoardTable
- * with a member scope, and that function returns null pre-lock before it
- * reads a single entry - so a league page before Thursday shows WHO is in
- * (names are public to members) and no numbers, which is exactly the law.
+ * THE CARD IS A DOOR, NOT A DASHBOARD (mock v0_1 frame 1): name, count,
+ * code, and ONE headline - the latest revealed Daily leader among members.
+ * The boards themselves live on /leagues/[id], where the tab rail holds
+ * every game in calendar order.
  */
 
 import { auth } from '@/auth';
@@ -20,9 +16,9 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { myLeagues, leagueMemberIds, leagueByCode } from '@/lib/leagues/core';
 import JoinPrompt from '@/components/leagues/JoinPrompt';
-import { currentContest } from '@/lib/weekly/entries';
-import { weeklyBoardTable } from '@/lib/weekly/live';
-import { lastRevealedDate, dayBoard, overall } from '@/lib/daily/boards';
+import Link from 'next/link';
+import { lastRevealedDate, dayBoard } from '@/lib/daily/boards';
+import { leagueHref } from '@/lib/leagues/nav';
 import '../games/games.css';
 import './leagues.css';
 
@@ -56,24 +52,20 @@ export default async function LeaguesPage({ searchParams }) {
   // FRIEND for the member's typo.
   const invite = joinRaw ? await leagueByCode(joinRaw).catch(() => null) : null;
   const alreadyIn = invite != null && leagues.some((l) => l.id === invite.id);
-  const contest = await currentContest().catch(() => null);
 
-  // One read-set per league the reader is in - small N by construction.
-  // THE DAILY VIEW IS PULLED FORWARD (build-order amendment): the Daily is
-  // live NOW, so a league is playable on day one instead of dark until
-  // Sep 10. Sealed rules are N/A here by construction - both reads filter on
-  // puzzle_days.revealed inside lib/daily/boards, and the member scope can
-  // narrow but never widen that law.
+  // THE CARD IS A DOOR, NOT A DASHBOARD (mock v0_1 frame 1): one headline
+  // per league - the latest revealed Daily leader among members, read through
+  // the same scoped dayBoard, top row only. The boards themselves live on
+  // /leagues/[id].
   const revealedDate = await lastRevealedDate().catch(() => null);
-  const boards = new Map();
+  const headlines = new Map();
   for (const lg of leagues) {
     const members = await leagueMemberIds(lg.id).catch(() => []);
-    const [table, daily, season] = await Promise.all([
-      weeklyBoardTable(contest, uid, { memberIds: members }).catch(() => null),
-      revealedDate ? dayBoard(revealedDate, uid, 5, { memberIds: members }).catch(() => null) : null,
-      overall(uid, 5, null, { memberIds: members }).catch(() => null),
-    ]);
-    boards.set(lg.id, { table, daily, season });
+    const board = revealedDate
+      ? await dayBoard(revealedDate, uid, 1, { memberIds: members }).catch(() => null)
+      : null;
+    const lead = board?.top?.find((r) => !r.dnf) ?? null;
+    headlines.set(lg.id, lead ? `The Daily · ${lead.name} leads · ${lead.score}` : null);
   }
 
   return (
@@ -116,75 +108,24 @@ export default async function LeaguesPage({ searchParams }) {
               </section>
             )}
 
-            {leagues.map((lg) => {
-              const { table, daily, season } = boards.get(lg.id) ?? {};
-              return (
-                <section className="mod" key={lg.id}>
-                  <div className="mod-head">
-                    <h2 className="eyebrow">{lg.name}</h2>
-                    <span className="pill">{lg.members} {lg.members === 1 ? 'member' : 'members'}</span>
-                  </div>
-                  {/* The code IS the invitation - shown to members, mono so it
-                      reads unambiguously off a phone screen in a group chat. */}
-                  <div className="row">
-                    <span className="muted">Join code</span>
-                    <span className="v lg-code">{lg.join_code}</span>
-                  </div>
-                  {/* THE DAILY ROW - the latest revealed edition among the
-                      members, then season tiers. Empty states say when, not
-                      nothing. */}
-                  {daily?.top?.length ? (
-                    <div>
-                      <div className="row"><span className="muted">The Daily</span><span className="muted">{daily.date} &middot; perfect {daily.perfect ?? '—'}</span></div>
-                      {daily.top.map((r) => (
-                        <div className={`row${r.userId === uid ? ' row--me' : ''}`} key={`d${r.userId}`}>
-                          <span className="lb-left"><span className="rank">{r.rank ?? '—'}</span>{r.name}</span>
-                          <span className="v">{r.dnf ? <span className="muted">dnf</span> : r.score}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="row">
-                      <span className="muted">The Daily board fills as members play &middot; reveals at midnight ET</span>
-                    </div>
-                  )}
-                  {season?.top?.length ? (
-                    <div>
-                      <div className="row"><span className="muted">Daily season</span><span className="muted">through {season.through}</span></div>
-                      {season.top.map((r) => (
-                        <div className={`row${r.userId === uid ? ' row--me' : ''}`} key={`s${r.userId}`}>
-                          <span className="lb-left"><span className="rank">{r.rank}</span>{r.name}</span>
-                          <span className="v">{r.points} <span className="muted">pts</span></span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                  {table ? (
-                    <div>
-                      <div className="row"><span className="muted">The Weekly</span><span className="muted">{table.through}</span></div>
-                      {table.top.map((r) => (
-                        <div className={`row${r.userId === uid ? ' row--me' : ''}`} key={r.userId}>
-                          <span className="lb-left"><span className="rank">{r.rank}</span>{r.name}</span>
-                          <span className="v">{r.points} <span className="muted">pts</span></span>
-                        </div>
-                      ))}
-                      {table.self && (
-                        <div className="row row--me">
-                          <span className="lb-left"><span className="rank">{table.self.rank}</span>{table.self.name}</span>
-                          <span className="v">{table.self.points} <span className="muted">pts</span></span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="row">
-                      <span className="muted">
-                        The Weekly board lights up at first kickoff &middot; Sep 10
-                      </span>
-                    </div>
-                  )}
-                </section>
-              );
-            })}
+            {leagues.map((lg) => (
+              <Link className="mod lg-door" key={lg.id} href={leagueHref(lg.id)}>
+                <div className="mod-head">
+                  <h2 className="eyebrow">{lg.name}</h2>
+                  <span className="pill">{lg.members} {lg.members === 1 ? 'member' : 'members'}</span>
+                </div>
+                <div className="row">
+                  <span className="muted">Join code</span>
+                  <span className="v lg-code">{lg.join_code}</span>
+                </div>
+                <div className="row">
+                  <span className="muted">
+                    {headlines.get(lg.id) ?? 'The Daily · fills as members play'}
+                  </span>
+                  <span className="v lg-open">Open &rarr;</span>
+                </div>
+              </Link>
+            ))}
           </>
         )}
       </main>

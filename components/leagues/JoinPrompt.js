@@ -34,8 +34,9 @@ export default function JoinPrompt({ invite, signedIn, alreadyIn, signinHref }) 
     const res = await joinLeagueAction(fd).catch(() => ({ ok: false, reason: 'Could not join' }));
     setBusy(false);
     if (!res.ok) { setErr(res.reason); return; }
-    // Drop the ?join param so refresh/back does not re-prompt.
-    router.replace('/leagues');
+    // Land on the LEAGUE PAGE as a member (DAILY tab is the default) - the
+    // invitation's promise is the board, not the index.
+    router.replace(`/leagues/${res.leagueId}`);
     router.refresh();
   }
 

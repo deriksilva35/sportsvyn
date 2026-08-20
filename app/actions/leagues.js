@@ -9,7 +9,7 @@
  */
 
 import { auth } from '@/auth';
-import { createLeague, joinLeague } from '@/lib/leagues/core';
+import { createLeague, joinLeague, joinLeagueById } from '@/lib/leagues/core';
 
 async function uid() {
   const session = await auth();
@@ -32,6 +32,16 @@ export async function joinLeagueAction(formData) {
   if (userId == null) return { ok: false, reason: 'Sign in first' };
   try {
     return await joinLeague(userId, formData.get('code'));
+  } catch {
+    return { ok: false, reason: 'Could not join' };
+  }
+}
+
+export async function joinLeagueByIdAction(leagueId) {
+  const userId = await uid();
+  if (userId == null) return { ok: false, reason: 'Sign in first' };
+  try {
+    return await joinLeagueById(userId, Number(leagueId));
   } catch {
     return { ok: false, reason: 'Could not join' };
   }

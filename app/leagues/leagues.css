@@ -20,3 +20,76 @@
 .mod--invite { border: 1px solid #D4FF00; }
 .lg-invite-name { font-size: 20px; font-weight: 800; color: #F5F5F2; margin: 4px 0 12px; }
 .lg-join { display: inline-block; }
+
+/* ---------------------------------------------------------------------------
+   v0_1 RESTRUCTURE - the card is a door; the page has the boards.
+   --------------------------------------------------------------------------- */
+
+/* Frame 1: the door. The whole card navigates; Open → is the affordance. */
+.lg-door { display: block; text-decoration: none; color: inherit; }
+.lg-door:hover .lg-open { color: #D4FF00; }
+.lg-open {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #8A8A86;
+}
+
+/* Frame 2: the league page header. */
+.lg-head { margin: 6px 0 14px; }
+.lg-name {
+  font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
+  text-transform: uppercase; font-size: 34px; line-height: 1; letter-spacing: -.02em;
+  color: #F5F5F2; margin: 0 0 10px;
+}
+.lg-head-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lg-chip {
+  background: #121212; border: 1px solid #232323; border-radius: 999px;
+  padding: 6px 12px; color: #F5F5F2; font-size: 11px; cursor: pointer;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  letter-spacing: .06em;
+}
+.lg-chip--code { color: #D4FF00; letter-spacing: .18em; font-weight: 700; }
+.lg-chip:active { background: #1A1A1A; }
+
+/* The tab rail - one-line scroll strip at phone width, fade edge per the
+   house chip-strip grammar. */
+.lg-tabs {
+  display: flex; gap: 6px; margin: 0 0 16px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  padding-right: 30px;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+}
+.lg-tabs::-webkit-scrollbar { display: none; }
+.lg-tab {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+  text-decoration: none; border: 1px solid #232323; border-radius: 999px;
+  padding: 8px 14px; color: #8A8A86; font-size: 12px; font-weight: 700;
+  min-height: 36px;
+}
+.lg-tab.on { background: #D4FF00; border-color: #D4FF00; color: #0A0A0A; }
+.lg-tab.ghost:not(.on) { border-style: dashed; opacity: .75; }
+.lg-tab-date {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 9px; letter-spacing: .1em; opacity: .8;
+}
+
+/* Board rows: the leader's volt wash; your own handle in volt via .volt. */
+.row--lead { background: linear-gradient(90deg, rgba(212,255,0,.08), transparent); }
+
+/* Ghost panels - dashed border per mock treatment. */
+.lg-ghost { border-style: dashed; }
+
+/* Frame 3: the invitation hero. */
+.lg-hero { text-align: center; padding: 28px 16px; }
+.lg-hero-name {
+  font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
+  text-transform: uppercase; font-size: 30px; color: #F5F5F2; margin: 8px 0 6px;
+}
+.lg-hero-sub { margin-top: 12px; font-size: 12px; }
+.lg-join-primary {
+  display: inline-block; margin-top: 14px; background: #D4FF00; color: #0A0A0A;
+  border: none; border-radius: 9px; padding: 13px 26px; font-weight: 800;
+  font-size: 14px; letter-spacing: .04em; text-transform: uppercase;
+  cursor: pointer; text-decoration: none; min-height: 44px;
+}
+.lg-join-primary:disabled { opacity: .6; }
