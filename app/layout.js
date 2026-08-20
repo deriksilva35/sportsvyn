@@ -2,6 +2,7 @@ import { Saira, Saira_Condensed, Source_Serif_4, JetBrains_Mono, Archivo } from 
 import "./globals.css";
 import AppTabBar from '@/components/shell/AppTabBar';
 import AppHeader from '@/components/shell/AppHeader';
+import ResumeManager from '@/components/shell/ResumeManager';
 import '@/components/shell/apptab.css';
 
 const saira = Saira({
@@ -83,6 +84,9 @@ export default function RootLayout({ children }) {
             than inside GlobalHeader because the /sim routes never render that
             component - see components/shell/AppHeader. */}
         <AppHeader />
+        {/* Shell-only, self-gating like the header and bar: owns where an app
+            ACTIVATION lands (the opens that never load a document). */}
+        <ResumeManager />
         {children}
         <AppTabBar />
       </body>
