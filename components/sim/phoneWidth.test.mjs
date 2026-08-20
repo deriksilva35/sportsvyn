@@ -280,3 +280,40 @@ test('LIST stays the default board view, persisted for the session only', () => 
   assert.match(s, /sessionStorage/, 'the toggle persists for the session only');
   assert.ok(!/localStorage/.test(s), 'a board preference must not outlive the session');
 });
+
+// ---------------------------------------------------------------------------
+// tracker <-> mock parity: one source for filters, stats, sorts
+// ---------------------------------------------------------------------------
+
+test('the filter definitions live in statView - neither room hand-writes them', () => {
+  const sv = readFileSync(path.join(REPO, 'lib/fantasy/statView.js'), 'utf8');
+  assert.match(sv, /export const POS_FILTERS/);
+  assert.match(sv, /export const CLASS_FILTERS/);
+  for (const rel of ['components/sim/DraftRoom.js', 'components/sim/TrackerRoom.js']) {
+    const t = readFileSync(path.join(REPO, rel), 'utf8');
+    assert.ok(!/const POS_FILTERS = \[/.test(t), `${rel} hand-writes POS_FILTERS`);
+    assert.ok(!/const CLASS_FILTERS = \[/.test(t), `${rel} hand-writes CLASS_FILTERS`);
+  }
+});
+
+test('the tracker reads stats through the SHARED formatter - the one-source law', () => {
+  const t = readFileSync(path.join(REPO, 'components/sim/TrackerRoom.js'), 'utf8');
+  assert.match(t, /viewFor\(p\.position\)\.quick\(sum\.totals\)/, 'the Mock\'s exact quick-line call');
+  assert.match(t, /fetchPlayerSummaries/, 'the shared summaries action, not a new query');
+  assert.match(t, /isExactlyScored/, 'the ~ rule for K/DST rides along');
+  assert.ok(!/sim_player_pool/.test(t), 'no stats query joins through sim_player_pool');
+});
+
+test('the tracker offers the FULL sort row with the Mock\'s gating + helper', () => {
+  const t = readFileSync(path.join(REPO, 'components/sim/TrackerRoom.js'), 'utf8');
+  assert.match(t, /sortsFor\(filter\)/, 'position-scoped stat sorts ride the filter');
+  assert.ok(!/TRK_SORTS/.test(t), 'the two-sort restriction is retired');
+  assert.match(t, /Pick a position for stat sorts/);
+  assert.match(t, /Needs season stats/, 'stat sorts locked until summaries land');
+  assert.match(t, /All teams/, 'the team filter completes the stack');
+});
+
+test('tracker pills render uppercase - the Mock\'s treatment, via css', () => {
+  const css = readFileSync(path.join(REPO, 'components/sim/tracker.css'), 'utf8');
+  assert.match(css, /\.trk-pos button[^}]*text-transform: uppercase/s);
+});

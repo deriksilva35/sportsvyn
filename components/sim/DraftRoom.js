@@ -32,6 +32,7 @@ import { SCORING_LABEL } from '@/lib/fantasy/config';
 import RoomScope from '@/components/shell/RoomScope';
 import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
+  POS_FILTERS, CLASS_FILTERS,
 } from '@/lib/fantasy/statView';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
 import { flagsAfterResult, flagsAfterArm } from '@/lib/fantasy/roomFlags';
@@ -49,9 +50,7 @@ const PAGES = ['BOARD', 'PICK', 'ROSTER']; // swipe pager order; PICK is the def
 // the person is currently in. Hyphens only.
 export const AUTO_CONFIRM = 'Let the room make your picks? Auto Draft fills every remaining round for you.';
 
-const POS_FILTERS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'];
 // Class filter. Composes with position and team rather than replacing them.
-const CLASS_FILTERS = [['ALL', 'All'], ['ROOKIE', 'Rookies'], ['VET', 'Vets']];
 const ERR = {
   illegal_pick: "Roster can't fit that pick", player_unavailable: 'Already drafted',
   not_your_turn: 'Not your turn', not_in_progress: 'Draft is over', no_legal_pick: 'No legal pick',

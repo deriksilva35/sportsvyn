@@ -279,3 +279,29 @@
    spacing. The summary line sits outside the frame like the Mock's ticker. */
 .trk-console { margin-top: 10px; }
 .trk-sum { margin-top: 8px; }
+
+/* MOCK PARITY (v0.3.1): the quick stat line, the number columns, the team
+   select, and the uppercase pill law the Mock's chips already obey. */
+.trk-pos button, .trk-sortlbl { text-transform: uppercase; }
+.trk-quick { color: var(--muted-dim, #5A5A56); }
+.trk-teamsel {
+  background: var(--graphite, #1C1C1C); border: 1px solid var(--rule, #2A2A2A);
+  border-radius: 8px; color: var(--paper, #F5F5F2); font: inherit;
+  font-size: 12px; padding: 6px 8px; text-transform: uppercase;
+}
+.trk-nums { display: flex; gap: 10px; flex: 0 1 auto; min-width: 0; }
+.trk-num { display: flex; flex-direction: column; align-items: flex-end; min-width: 0; }
+.trk-num .v { font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.trk-num .v.pos { color: var(--volt, #D4FF00); }
+.trk-num .v.neg { color: var(--terra, #E0602A); }
+.trk-num .lbl { font-size: 8px; letter-spacing: .1em; color: var(--muted-dim, #5A5A56); text-transform: uppercase; }
+.s-hint { font-size: 10px; color: var(--muted-dim, #5A5A56); align-self: center; }
+/* THE BUTTON WINS THE WIDTH FIGHT: the row is flex; DRAFT never shrinks,
+   the columns do, and at the bitter end the quick line truncates - nothing
+   wraps. */
+.trk-p .go { flex: none; }
+@media (max-width: 420px) {
+  .trk-nums { gap: 6px; }
+  .trk-num .v { font-size: 12px; }
+  .trk-p .tag { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

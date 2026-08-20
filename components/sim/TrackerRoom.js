@@ -29,11 +29,15 @@
 
 import RoomScope from '@/components/shell/RoomScope';
 import HideInShell from '@/components/shell/HideInShell';
-import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
-import { logPick, undoLastPick } from '@/app/actions/sim';
+import { logPick, undoLastPick, fetchPlayerSummaries } from '@/app/actions/sim';
 import Wordmark from '@/components/gridiron/Wordmark';
-import { filterPlayers, displayPosition, rookieIdSet, sortsFor, sortPlayers } from '@/lib/fantasy/statView';
+import {
+  filterPlayers, displayPosition, rookieIdSet, sortsFor, sortPlayers,
+  viewFor, teamsInPool, POS_FILTERS, CLASS_FILTERS,
+} from '@/lib/fantasy/statView';
+import { isExactlyScored } from '@/lib/fantasy/scoring';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
 import RookieChip from '@/components/fantasy/RookieChip';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
@@ -46,13 +50,10 @@ import { FFC_ATTRIBUTION } from '@/lib/fantasy/attribution';
 import { sendHaptic } from '@/lib/shell/bridge';
 
 const TABS = ['AVAILABLE', 'BOARD', 'MY TEAM'];
-const POS_FILTERS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'];
 // Class filter. Composes with position, same as the sim room.
-const CLASS_FILTERS = [['ALL', 'All'], ['ROOKIE', 'Rookies'], ['VET', 'Vets']];
 // The tracker had no sort control at all - the board was always ADP order. Only
 // the two cross-position sorts are offered here: stat sorts need loaded season
 // summaries, which this room does not fetch.
-const TRK_SORTS = ['adp', 'myteam'];
 const ERR = {
   illegal_pick: "That roster can't fit the pick", player_unavailable: 'Already drafted',
   not_in_progress: 'Draft is over', not_tracker: 'Not a tracker draft',
@@ -104,6 +105,22 @@ export default function TrackerRoom({
   const [filter, setFilter] = useState('ALL');
   const [cls, setCls] = useState('ALL');
   const [sort, setSort] = useState('adp'); // default stays ADP; My Team is opt-in
+  const [team, setTeam] = useState('ALL');
+  // Season summaries, the Mock's pattern verbatim: one shot, shared action,
+  // stat sorts stay disabled until they land.
+  const [summaries, setSummaries] = useState({});
+  const summariesLoaded = useRef(false);
+  useEffect(() => {
+    if (summariesLoaded.current) return undefined;
+    summariesLoaded.current = true;
+    let cancelled = false;
+    (async () => {
+      const res = await fetchPlayerSummaries(initialAvailable.map((p) => p.ffcPlayerId), config.scoring_format);
+      if (!cancelled && res.ok) setSummaries(res.summaries);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [search, setSearch] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -168,14 +185,24 @@ export default function TrackerRoom({
   }), [config.roster_slots, rounds, picks, userPicks, available, myNext,
     currentOverall, config.teams_count]);
 
-  const sortOpts = useMemo(() => sortsFor('ALL').filter((o) => TRK_SORTS.includes(o.key)), []);
-  const activeSort = sort === 'myteam' && myNext == null ? 'adp' : sort;
+  // FULL MOCK PARITY: position-scoped stat sorts ride the position filter,
+  // exactly sortsFor's contract - the old two-sort allowlist is retired.
+  const sortOpts = useMemo(() => sortsFor(filter), [filter]);
+  const statsReady = useMemo(() => Object.keys(summaries).length > 0, [summaries]);
+  const teamOptions = useMemo(() => teamsInPool(initialAvailable), [initialAvailable]);
+  const activeSort = useMemo(() => {
+    const opt = sortOpts.find((o) => o.key === sort);
+    if (!opt) return 'adp';
+    if (opt.seat) return myNext == null ? 'adp' : sort;
+    if (sort !== 'adp' && !statsReady) return 'adp';
+    return sort;
+  }, [sort, sortOpts, myNext, statsReady]);
   const seatSort = activeSort === 'myteam';
 
   const shown = useMemo(() => {
-    const list = filterPlayers(available, { position: filter, team: 'ALL', search, cls });
-    return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), {}, seatValuation);
-  }, [available, filter, search, cls, sortOpts, activeSort, seatValuation]);
+    const list = filterPlayers(available, { position: filter, team, search, cls });
+    return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), summaries, seatValuation);
+  }, [available, filter, search, cls, sortOpts, activeSort, seatValuation, summaries, team]);
   const away = complete ? null : picksUntilUserTurn(order, userTeamIndex, currentOverall);
   const openSlots = useMemo(() => openStarterSlotsByPos(roster), [roster]);
   const observation = useMemo(
@@ -328,23 +355,34 @@ export default function TrackerRoom({
                 <button key={k} className={k === cls ? 'on' : ''} onClick={() => setCls(k)}>{label}</button>
               ))}
             </div>
+            {/* Team filter - the Mock's filter stack, completed. */}
+            <div className="trk-pos trk-team">
+              <span className="trk-sortlbl">Team</span>
+              <select className="trk-teamsel" value={team} onChange={(e) => setTeam(e.target.value)}>
+                <option value="ALL">All teams</option>
+                {teamOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
             {/* Sort. New control in this room - the tracker board was always ADP
                 order. My Team is disabled rather than hidden once the seat has
                 no pick left: the reason it cannot run is worth saying. */}
             <div className="trk-pos trk-sort">
               <span className="trk-sortlbl">Sort</span>
               {sortOpts.map((o) => {
-                const locked = o.seat && myNext == null;
+                const locked = o.seat ? myNext == null : (o.key !== 'adp' && !statsReady);
                 return (
                   <button
                     key={o.key}
                     className={activeSort === o.key ? 'on' : ''}
                     disabled={locked}
-                    title={locked ? 'Opens once you have another pick coming' : undefined}
+                    title={locked
+                      ? (o.seat ? 'Opens once you have another pick coming' : 'Needs season stats, which land with the data backfill')
+                      : undefined}
                     onClick={() => setSort(o.key)}
                   >{o.label}</button>
                 );
               })}
+              {filter === 'ALL' && <span className="s-hint">Pick a position for stat sorts</span>}
             </div>
             <div className="trk-avail">
               {shown.length === 0 && <div className="trk-empty">No player matches that.</div>}
@@ -352,6 +390,12 @@ export default function TrackerRoom({
                 const g = gapChip(valueGap(currentOverall, p.adp));
                 const pos = displayPosition(p.position);
                 const seatRead = seatValuation.get(p.ffcPlayerId) ?? null;
+                const sum = summaries[p.ffcPlayerId];
+                // The Mock's quick line + columns, through the SAME shared
+                // formatter (viewFor().quick) and the same ~ rule for K/DST.
+                const quick = sum ? viewFor(p.position).quick(sum.totals) : null;
+                const approx = sum && !isExactlyScored(pos);
+                const valNum = Math.round(currentOverall - Number(p.adp));
                 return (
                   <div key={p.ffcPlayerId} className={`trk-p${i === 0 ? ' top' : ''}`}>
                     <span className="adp">{Number(p.adp).toFixed(1)}</span>
@@ -359,6 +403,7 @@ export default function TrackerRoom({
                       <div className="nm">{p.name}<RookieChip rookie={isRookieId(p.ffcPlayerId)} /></div>
                       <div className="tag">
                         {pos}{p.team ? ` ${p.team}` : ''}
+                        {quick && <span className="trk-quick"> · {quick.join(' · ')}</span>}
                         {g && <span className={`trk-gap ${g.cls}`}> {g.txt}{i === 0 && g.cls === 'val' ? ' VALUE' : ''}</span>}
                         {/* Two facts, never the composite - see seatValuation.js. */}
                         {seatSort && seatRead && (
@@ -376,6 +421,14 @@ export default function TrackerRoom({
                         )}
                       </div>
                     </div>
+                    {/* PPG / ADP / VAL, the Mock's columns. The DRAFT button
+                        wins the width fight on phone - columns compress before
+                        anything wraps (see tracker.css). */}
+                    <span className="trk-nums">
+                      <span className="trk-num"><span className="v">{sum ? `${approx ? '~' : ''}${sum.ppg}` : '-'}</span><span className="lbl">PPG</span></span>
+                      <span className="trk-num"><span className="v">{Math.round(Number(p.adp))}</span><span className="lbl">ADP</span></span>
+                      <span className="trk-num"><span className={`v ${valNum >= 0 ? 'pos' : 'neg'}`}>{valNum >= 0 ? `+${valNum}` : valNum}</span><span className="lbl">VAL</span></span>
+                    </span>
                     <button className="go" onClick={() => commit(p)} disabled={busy || complete}>DRAFT</button>
                   </div>
                 );
