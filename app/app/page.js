@@ -14,6 +14,7 @@
 
 import { auth } from '@/auth';
 import { resolveShellMode } from '@/lib/shell/shell';
+import { redirect } from 'next/navigation';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import AppShellClient from './app-shell';
 import {
@@ -55,11 +56,27 @@ export default async function AppShellPage({ searchParams }) {
   // container should still open on an editorial shell at all is a product call,
   // not a redirect.
   const session = await auth();
-  requireSignInInShell({
-    isShell: await resolveShellMode((await searchParams) ?? {}),
-    userId: session?.user?.id ?? null,
-    dest: '/games',
-  });
+  const userId = session?.user?.id ?? null;
+  const isShell = await resolveShellMode((await searchParams) ?? {});
+  requireSignInInShell({ isShell, userId, dest: '/games' });
+
+  // ==========================================================================
+  // THE APP OPENS ON GAMES (v0.3.1) - signed-in too, not just post-sign-in
+  // ==========================================================================
+  // capacitor.config.ts loads THIS route on every cold start and every
+  // resumed-session relaunch; it is the container's front door and nothing
+  // else. The launch-flow fix sent signed-OUT readers to sign-in (returning
+  // to /games after auth), but a signed-IN launch still landed on the
+  // editorial deck - a surface with no tab bar and no game. The ruling: the
+  // app opens on GAMES, whoever you are. Both redirects resolve the same
+  // product sentence: launch -> (sign in if needed) -> the games.
+  //
+  // WEB UNCHANGED: /app is also a real URL, and a browser visitor who
+  // navigates to it still gets the deck - the redirect is shell-gated.
+  // PUSH DEEP-LINKS UNAFFECTED: a push tap navigates AFTER launch as its own
+  // navigation to the payload's url; this fires only on the /app document
+  // itself.
+  if (isShell && userId != null) redirect('/games');
 
   const [todaysCard, power, playerPot, watch, read, stats, schedule] = await Promise.all([
     readTodaysCard(),

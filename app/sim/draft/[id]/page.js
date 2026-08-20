@@ -137,7 +137,7 @@ export default async function DraftRoomPage({ params, searchParams }) {
             showTabBar is false there. */}
         {showTabBar && (
           <a className="appcrumb" href={isTrackerDraft ? '/sim/tracker' : '/sim'}>
-            &larr; {isTrackerDraft ? 'Tracker' : 'Practice'}
+            &larr; {isTrackerDraft ? 'Tracker' : 'Mock'}
           </a>
         )}
         {showTabBar && <GetTheAppBanner shell={isShell} />}

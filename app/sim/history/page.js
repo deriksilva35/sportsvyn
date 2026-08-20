@@ -72,7 +72,7 @@ export default async function SimHistory({ searchParams }) {
         {/* History is a sub-surface of Practice. See the note in
             app/sim/draft/[id]/page.js: the tab bar switches sections, the
             breadcrumb walks back within one. */}
-        <a className="appcrumb" href="/sim">&larr; Practice</a>
+        <a className="appcrumb" href="/sim">&larr; Mock</a>
         <GetTheAppBanner shell={isShell} />
         <div className="sim-kicker">Your drafts</div>
         {drafts.length === 0 ? (

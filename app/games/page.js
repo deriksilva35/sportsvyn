@@ -117,7 +117,7 @@ function GamesPane({ v }) {
 
       <section className="mod">
         <div className="mod-head">
-          <h2 className="eyebrow">Practice range</h2>
+          <h2 className="eyebrow">Mock drafts</h2>
           <span className="pill">Unranked · unlimited</span>
         </div>
         <div className="row">
