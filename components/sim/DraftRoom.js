@@ -35,6 +35,7 @@ import {
   POS_FILTERS, CLASS_FILTERS,
 } from '@/lib/fantasy/statView';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
+import { valueGap } from '@/lib/fantasy/needs';
 import { flagsAfterResult, flagsAfterArm } from '@/lib/fantasy/roomFlags';
 import { nextUserOverall } from '@/lib/fantasy/tracker';
 import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/scoring';
@@ -458,7 +459,7 @@ export default function DraftRoom({
         <div className="zone-body">
           {err && !err.id && <div className="p-err">{ERR[err.reason] ?? err.reason}</div>}
           {shown.slice(0, 120).map((p) => {
-            const val = Math.round(currentOverall - Number(p.adp)); // positive-good: he fell to you
+            const val = valueGap(currentOverall, p.adp); // positive-good: he fell to you - canonical form, inline arithmetic forbidden by test
             const open = expandedId === p.ffcPlayerId;
             const stats = statsById[p.ffcPlayerId];
             const slot = displayPosition(p.position);

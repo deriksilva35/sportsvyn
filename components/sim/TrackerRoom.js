@@ -44,7 +44,7 @@ import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
 import { seatLabel, seatLabelShort, nextUserOverall, picksUntilUserTurn } from '@/lib/fantasy/tracker';
 import {
-  valueGap, openStarterSlotsByPos, needsObservation, bestAvailableAtMyPick, slotLabel,
+  valueGap, openStarterSlotsByPos, needsObservation, bestAvailableAtMyPick, slotLabel, cappedPositions,
 } from '@/lib/fantasy/needs';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/attribution';
 import { sendHaptic } from '@/lib/shell/bridge';
@@ -210,7 +210,7 @@ export default function TrackerRoom({
     [openSlots, picks],
   );
   const bestAtMine = useMemo(
-    () => bestAvailableAtMyPick(available, myNext, 2),
+    () => bestAvailableAtMyPick(available, myNext, 2, { capped: cappedPositions(config.roster_slots, userPicks) }),
     [available, myNext],
   );
 
@@ -395,7 +395,7 @@ export default function TrackerRoom({
                 // formatter (viewFor().quick) and the same ~ rule for K/DST.
                 const quick = sum ? viewFor(p.position).quick(sum.totals) : null;
                 const approx = sum && !isExactlyScored(pos);
-                const valNum = Math.round(currentOverall - Number(p.adp));
+                const valNum = valueGap(currentOverall, p.adp); // canonical form - inline arithmetic forbidden by test
                 return (
                   <div key={p.ffcPlayerId} className={`trk-p${i === 0 ? ' top' : ''}`}>
                     <span className="adp">{Number(p.adp).toFixed(1)}</span>
