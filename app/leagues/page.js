@@ -22,6 +22,7 @@ import { myLeagues, leagueMemberIds, leagueByCode } from '@/lib/leagues/core';
 import JoinPrompt from '@/components/leagues/JoinPrompt';
 import { currentContest } from '@/lib/weekly/entries';
 import { weeklyBoardTable } from '@/lib/weekly/live';
+import { lastRevealedDate, dayBoard, overall } from '@/lib/daily/boards';
 import '../games/games.css';
 import './leagues.css';
 
@@ -57,12 +58,22 @@ export default async function LeaguesPage({ searchParams }) {
   const alreadyIn = invite != null && leagues.some((l) => l.id === invite.id);
   const contest = await currentContest().catch(() => null);
 
-  // One board read per league the reader is in - small N by construction.
+  // One read-set per league the reader is in - small N by construction.
+  // THE DAILY VIEW IS PULLED FORWARD (build-order amendment): the Daily is
+  // live NOW, so a league is playable on day one instead of dark until
+  // Sep 10. Sealed rules are N/A here by construction - both reads filter on
+  // puzzle_days.revealed inside lib/daily/boards, and the member scope can
+  // narrow but never widen that law.
+  const revealedDate = await lastRevealedDate().catch(() => null);
   const boards = new Map();
   for (const lg of leagues) {
     const members = await leagueMemberIds(lg.id).catch(() => []);
-    const table = await weeklyBoardTable(contest, uid, { memberIds: members }).catch(() => null);
-    boards.set(lg.id, table);
+    const [table, daily, season] = await Promise.all([
+      weeklyBoardTable(contest, uid, { memberIds: members }).catch(() => null),
+      revealedDate ? dayBoard(revealedDate, uid, 5, { memberIds: members }).catch(() => null) : null,
+      overall(uid, 5, null, { memberIds: members }).catch(() => null),
+    ]);
+    boards.set(lg.id, { table, daily, season });
   }
 
   return (
@@ -106,7 +117,7 @@ export default async function LeaguesPage({ searchParams }) {
             )}
 
             {leagues.map((lg) => {
-              const table = boards.get(lg.id);
+              const { table, daily, season } = boards.get(lg.id) ?? {};
               return (
                 <section className="mod" key={lg.id}>
                   <div className="mod-head">
@@ -119,6 +130,35 @@ export default async function LeaguesPage({ searchParams }) {
                     <span className="muted">Join code</span>
                     <span className="v lg-code">{lg.join_code}</span>
                   </div>
+                  {/* THE DAILY ROW - the latest revealed edition among the
+                      members, then season tiers. Empty states say when, not
+                      nothing. */}
+                  {daily?.top?.length ? (
+                    <div>
+                      <div className="row"><span className="muted">The Daily</span><span className="muted">{daily.date} &middot; perfect {daily.perfect ?? '—'}</span></div>
+                      {daily.top.map((r) => (
+                        <div className={`row${r.userId === uid ? ' row--me' : ''}`} key={`d${r.userId}`}>
+                          <span className="lb-left"><span className="rank">{r.rank ?? '—'}</span>{r.name}</span>
+                          <span className="v">{r.dnf ? <span className="muted">dnf</span> : r.score}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="row">
+                      <span className="muted">The Daily board fills as members play &middot; reveals at midnight ET</span>
+                    </div>
+                  )}
+                  {season?.top?.length ? (
+                    <div>
+                      <div className="row"><span className="muted">Daily season</span><span className="muted">through {season.through}</span></div>
+                      {season.top.map((r) => (
+                        <div className={`row${r.userId === uid ? ' row--me' : ''}`} key={`s${r.userId}`}>
+                          <span className="lb-left"><span className="rank">{r.rank}</span>{r.name}</span>
+                          <span className="v">{r.points} <span className="muted">pts</span></span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                   {table ? (
                     <div>
                       <div className="row"><span className="muted">The Weekly</span><span className="muted">{table.through}</span></div>
