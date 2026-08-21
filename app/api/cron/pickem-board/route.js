@@ -26,6 +26,8 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { ensurePickemBoard } from '@/lib/pickem/create';
+import { pushEnabled } from '@/lib/push/apns';
+import { notifyPickemOpen } from '@/lib/push/notify';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -53,6 +55,12 @@ export async function GET(request) {
       subject: '[pickem] board creation FAILED',
       body: String(res.error ?? 'unknown error'),
     });
+  }
+  // PUSH HOOK: the one fire that CREATES announces the board. Send-once
+  // inside notifyEvent makes this safe even if a later fire somehow reported
+  // created again; caught so a push hiccup cannot fail the creation run.
+  if (res.ok && res.summary?.created && pushEnabled()) {
+    await notifyPickemOpen(res.summary.id).catch(() => {});
   }
   return Response.json({ ok: res.ok, ...res.summary });
 }

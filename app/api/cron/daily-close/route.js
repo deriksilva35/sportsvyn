@@ -21,7 +21,7 @@ import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { closeDay } from '@/lib/daily/close';
 import { pushEnabled, gateReport } from '@/lib/push/apns';
-import { notifyDailyLive, notifyDailyRevealed } from '@/lib/push/notify';
+import { notifyDailyLive, notifyDailyRevealed, notifyPickemReminder } from '@/lib/push/notify';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -37,6 +37,11 @@ export async function GET(request) {
   // a tick where nothing is due to close. Gated so the disabled path costs
   // nothing; send-once inside notifyEvent makes the every-tick call safe.
   if (pushEnabled()) await notifyDailyLive().catch(() => {});
+  // Same tick carries the Pick 'em lock reminder - keyed to the board's
+  // first kickoff inside a 2h window, send-once on the board id. Here for
+  // the same reason notifyDailyLive is: this is the house 15-minute tick,
+  // and the row (the contest), not a clock, decides.
+  if (pushEnabled()) await notifyPickemReminder().catch(() => {});
 
   const due = await sql`
     SELECT puzzle_date FROM puzzle_days

@@ -26,6 +26,8 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { settleDuePickem, stalePickemBoards } from '@/lib/pickem/settle';
+import { pushEnabled } from '@/lib/push/apns';
+import { notifyPickemSettled } from '@/lib/push/notify';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -60,6 +62,12 @@ export async function GET(request) {
         ...stale.map((s) => `contest ${s.id}: unsettled ${new Date(s.settles_at).toISOString()} + 48h - a game may never turn final`),
       ].filter(Boolean).join('\n'),
     });
+  }
+  // PUSH HOOK: results, for the boards THIS fire graded. Send-once keys on
+  // the board id; caught so push can never un-settle a settle.
+  const settled = (summary.results ?? []).filter((r) => r.settled).map((r) => r.contestId);
+  if (settled.length && pushEnabled()) {
+    await notifyPickemSettled(settled).catch(() => {});
   }
   return Response.json({ ok: res.ok, ...summary });
 }
