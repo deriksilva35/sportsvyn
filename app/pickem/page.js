@@ -71,11 +71,20 @@ export default async function PickemPage({ searchParams }) {
               <span className="pk-mono">{view.contest.sport.toUpperCase()} &middot; {view.contest.gamesCount} games</span>
             </div>
             <h1>{view.record.wins}-{view.record.losses}.</h1>
-            {/* Board rank + "best pick" need the FIELD's entries - Relay 3's
-                data. The receipt ships record-only until then. */}
-            <div className="pk-ctx">
-              {view.progress.picked} picked &middot; {view.games.filter((g) => g.nopick).length} no-pick
-            </div>
+            {/* The field facts (Relay 3): rank over settled scores, and the
+                rarest correct pick - aggregate counts only, nobody's board. */}
+            {view.receipt ? (
+              <div className="pk-ctx">
+                Board rank <b>{view.receipt.rank}</b> of {view.receipt.field}
+                {view.receipt.best && (
+                  <> &middot; best pick {view.receipt.best.name} ({view.receipt.best.pct}% of field)</>
+                )}
+              </div>
+            ) : (
+              <div className="pk-ctx">
+                {view.progress.picked} picked &middot; {view.games.filter((g) => g.nopick).length} no-pick
+              </div>
+            )}
           </section>
         )}
       </main>
