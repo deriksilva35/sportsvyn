@@ -475,7 +475,7 @@ export default function DraftRoom({
                 <div className={`p-row${armedId === p.ffcPlayerId ? ' armed' : ''}`}>
                   <button type="button" className="p-main" onClick={() => toggleExpand(p)} aria-expanded={open}>
                     <span className="ava" data-pos={slot}>{slot}</span>
-                    <span className="p-id">
+                    <span className="p-id ncell">
                       <span className="nm">{p.name}<RookieChip rookie={p.rookie} /></span>
                       <span className="rng">
                         {slot}{p.team ? `·${p.team}` : ''} · {r0(p.adpHigh)}-{r0(p.adpLow)}

@@ -397,7 +397,7 @@ export default function TrackerRoom({
                 return (
                   <div key={p.ffcPlayerId} className={`trk-p${i === 0 ? ' top' : ''}`}>
                     <span className="nrail">{Number(p.adp).toFixed(1)}</span>
-                    <div>
+                    <div className="ncell">
                       <div className="nm">{p.name}<RookieChip rookie={isRookieId(p.ffcPlayerId)} /></div>
                       {/* Tag line: position/team + stat line ONLY. The VAL
                           column owns the gap number - one number, one home. */}

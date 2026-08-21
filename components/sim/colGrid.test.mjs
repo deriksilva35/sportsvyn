@@ -30,10 +30,14 @@ test('one decimal everywhere: the formatters, exactly', () => {
 
 test('the grid is defined ONCE, in numcols.css, and nowhere else', () => {
   const grid = src('components/sim/numcols.css');
-  assert.match(grid, /\.ncol \{ width: 6\.5ch/, 'fixed ch width - content cannot size it');
+  assert.match(grid, /\.ncol \{ width: 6ch/, 'fixed ch width - content cannot size it');
   assert.match(grid, /\.nrail \{[\s\S]*?width: 5\.5ch/, 'the rail is fixed too');
   assert.match(grid, /font-variant-numeric: tabular-nums/);
-  assert.ok(!/min-width: 0/.test(grid), 'no shrink escape hatch inside the grid');
+  // The shrink prohibition scopes to the COLUMNS - .ncell is the sanctioned
+  // shrink point and carries min-width:0 by design.
+  for (const m of grid.matchAll(/\.(ncols?|nrail)[^{]*\{([^}]*)\}/g)) {
+    assert.ok(!/min-width/.test(m[2]), `no shrink escape hatch inside ${m[0].slice(0, 20)}`);
+  }
   assert.match(src('components/sim/sim.css'), /@import '\.\/numcols\.css'/,
     'sim.css carries the one import both rooms ride');
   for (const rel of ['components/sim/sim.css', 'components/sim/tracker.css']) {
@@ -60,6 +64,23 @@ test('the tag line lost the VAL duplicate - the column owns the number', () => {
   // The seat-valuation detail line keeps ITS numbers (gap AT the user's next
   // pick + slot state) - different facts, still one home each.
   assert.match(t, /seatRead\.gap > 0 \? '\+' : ''/, 'the MY TEAM detail line survives');
+});
+
+test('the name cell never wraps - one line, ellipsis, shared definition', () => {
+  const grid = src('components/sim/numcols.css');
+  // The shrink enabler lives on the CELL; the grid itself stays unshrinkable
+  // (the no-min-width pin above scopes to .ncol/.nrail rules, and .ncell is
+  // the sanctioned exception by name).
+  assert.match(grid, /\.ncell \{ flex: 1 1 auto; min-width: 0; \}/);
+  assert.match(grid, /\.ncell \.nm, \.ncell \.tag, \.ncell \.rng \{\n  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;/,
+    'name and tag lines truncate, never wrap');
+  assert.match(src('components/sim/TrackerRoom.js'), /className="ncell"/);
+  assert.match(src('components/sim/DraftRoom.js'), /className="p-id ncell"/);
+  // The R badge rides INSIDE the nowrap name span in both rooms - it cannot
+  // orphan onto its own line.
+  for (const rel of ROOMS) {
+    assert.match(src(rel), /className="nm">\{p\.name\}<RookieChip/, `${rel}: chip inside the name`);
+  }
 });
 
 test('ADP stays an integer - it is a rank, not a measurement', () => {

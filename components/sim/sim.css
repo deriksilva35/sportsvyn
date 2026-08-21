@@ -491,7 +491,8 @@
 /* quick stats: last season's headline line, sitting with the name */
 .p-row .rng .q { color: var(--muted); }
 .p-act { display: flex; gap: 4px; }
-.p-row .nm { font-size: 13px; color: var(--paper); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* .nm/.rng truncation is the shared .ncell law (numcols.css) - font only here. */
+.p-row .nm { font-size: 13px; color: var(--paper); }
 .p-row .rng { font-size: 9px; color: var(--muted-dim); }
 .p-row .draft { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: var(--volt); border: 0; padding: 5px 10px; cursor: pointer; }
 .p-row.armed { border: 1px solid var(--volt); background: rgba(212,255,0,.05); }

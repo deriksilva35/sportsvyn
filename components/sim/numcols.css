@@ -10,18 +10,34 @@
  * A missing value renders '-' centered, holding the column width.
  */
 .ncols { display: flex; gap: 8px; flex: none; }
-.ncol { width: 6.5ch; display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
+/* 6ch fits -112.6 exactly under tabular-nums; the common single-digit VAL
+   leaves slack. Every ch reclaimed here is a ch the name keeps on a phone. */
+.ncol { width: 6ch; display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
 .ncol .v {
   font-weight: 700; font-size: 12px; text-align: right; white-space: nowrap;
-  color: var(--paper, #F5F5F2);
+  line-height: 1.4; color: var(--paper, #F5F5F2);
 }
 .ncol .v.dim { color: var(--volt-dim, #93A87C); }
 .ncol .v.pos { color: var(--volt, #D4FF00); }
 .ncol .v.neg { color: var(--terra, #E0602A); }
+/* The empty state shares .v's line box (line-height above), so the dash sits
+   on the values' baseline and the label tucks under at the same offset as
+   every populated column - no floating. */
 .ncol .v.empty { text-align: center; color: var(--muted-dim, #5A5A56); }
 .ncol .lbl {
-  font-size: 8px; letter-spacing: .1em; text-align: right;
+  font-size: 8px; letter-spacing: .1em; text-align: right; line-height: 1.2;
   color: var(--muted-dim, #5A5A56); text-transform: uppercase;
+}
+
+/* THE NAME CELL - the nothing-wraps law's other half. This is the ONE flex
+ * child allowed to shrink (min-width:0 is the shrink enabler; the
+ * prohibition inside the grid above stands). Name and tag/stat lines are
+ * one line each, ellipsized - on a 390px phone '1478 RUSH · 79 R…' is
+ * correct, the columns carry the numbers that matter. The R badge is an
+ * inline span INSIDE the nowrap name, so it can never orphan. */
+.ncell { flex: 1 1 auto; min-width: 0; }
+.ncell .nm, .ncell .tag, .ncell .rng {
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 /* The sort-value rail left of the name - fixed too, so names start at the
@@ -33,4 +49,6 @@
 
 @media (max-width: 420px) {
   .ncols { gap: 6px; }
+  /* '108.3' is 5ch exactly under tabular-nums - the phone rail runs flush. */
+  .nrail { width: 5ch; }
 }

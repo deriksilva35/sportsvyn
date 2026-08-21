@@ -293,8 +293,14 @@
    with the Mock; sizing them here is forbidden by test. */
 .s-hint { font-size: 10px; color: var(--muted-dim, #5A5A56); align-self: center; }
 /* THE BUTTON WINS THE WIDTH FIGHT: the row is flex; DRAFT and the fixed
-   columns never shrink - the quick line truncates. Nothing wraps. */
+   columns never shrink - the name cell (.ncell, numcols.css) is the one
+   child that gives, and it gives by ellipsis. Nothing wraps, any width. */
 .trk-p .go { flex: none; }
+/* Phone: every reclaimed px goes to the name cell, so ellipsis stays the
+   exception. Row chrome tightens HERE (this is row layout, not the grid -
+   numcols.css owns the column widths). */
 @media (max-width: 420px) {
-  .trk-p .tag { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .trk-p { gap: 8px; padding: 11px 12px; }
+  .trk-p .nm { font-size: 14px; }
+  .trk-p .go { padding: 10px 12px; }
 }
