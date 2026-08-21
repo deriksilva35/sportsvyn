@@ -78,6 +78,10 @@
       "schedule": "0 6-20 * * 0,1"
     },
     {
+      "path": "/api/cron/weekly-board",
+      "schedule": "24 13 * * *"
+    },
+    {
       "path": "/api/cron/daily-close",
       "schedule": "*/15 * * * *"
     },
