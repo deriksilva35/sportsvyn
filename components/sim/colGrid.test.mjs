@@ -66,20 +66,55 @@ test('the tag line lost the VAL duplicate - the column owns the number', () => {
   assert.match(t, /seatRead\.gap > 0 \? '\+' : ''/, 'the MY TEAM detail line survives');
 });
 
-test('the name cell never wraps - one line, ellipsis, shared definition', () => {
+test('the deck never wraps - one line each, ellipsis, shared definition', () => {
   const grid = src('components/sim/numcols.css');
-  // The shrink enabler lives on the CELL; the grid itself stays unshrinkable
-  // (the no-min-width pin above scopes to .ncol/.nrail rules, and .ncell is
+  // The shrink enabler lives on the DECK; the grid itself stays unshrinkable
+  // (the no-min-width pin above scopes to .ncol/.nrail rules, and .ndeck is
   // the sanctioned exception by name).
-  assert.match(grid, /\.ncell \{ flex: 1 1 auto; min-width: 0; \}/);
-  assert.match(grid, /\.ncell \.nm, \.ncell \.tag, \.ncell \.rng \{\n  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;/,
+  assert.match(grid, /\.ndeck \{ flex: 1 1 auto; min-width: 0;/);
+  assert.match(grid, /\.ndeck \.nm, \.ndeck \.tag, \.ndeck \.rng \{\n  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;/,
     'name and tag lines truncate, never wrap');
-  assert.match(src('components/sim/TrackerRoom.js'), /className="ncell"/);
-  assert.match(src('components/sim/DraftRoom.js'), /className="p-id ncell"/);
   // The R badge rides INSIDE the nowrap name span in both rooms - it cannot
   // orphan onto its own line.
   for (const rel of ROOMS) {
     assert.match(src(rel), /className="nm">\{p\.name\}<RookieChip/, `${rel}: chip inside the name`);
+  }
+});
+
+test('the restack: name owns line 1, columns live on line 2, values only', () => {
+  for (const rel of ROOMS) {
+    const t = src(rel);
+    const row = t.slice(t.indexOf('className="ndeck"'));
+    const line1 = row.slice(row.indexOf('className="nline1"'), row.indexOf('className="nline2"'));
+    assert.match(line1, /className="nm"/, `${rel}: the name rides line 1`);
+    assert.ok(!line1.includes('ncols'), `${rel}: no column intrusion on the name line`);
+    const line2 = row.slice(row.indexOf('className="nline2"'), row.indexOf('</button>'));
+    assert.match(line2, /className="ncols"/, `${rel}: the grid rides line 2`);
+    // Values only - the per-value label sub-line is deleted from the rows.
+    for (const lbl of ['PPG', 'ADP', 'VAL']) {
+      assert.ok(!t.includes(`"lbl">${lbl}`), `${rel}: row ${lbl} label must live in the header`);
+    }
+  }
+});
+
+test('one header row seats the labels over the columns by shared geometry', () => {
+  const grid = src('components/sim/numcols.css');
+  assert.match(grid, /\.nhead \.ncols \{ margin-left: auto; \}/);
+  assert.match(grid, /\.nghost \{ visibility: hidden; \}/,
+    'the phantom button reserves the real button column');
+  const trk = src('components/sim/TrackerRoom.js');
+  assert.match(trk, /className="trk-p nhead" aria-hidden="true"/,
+    'tracker header wears the row container class - same gap, same padding');
+  assert.match(trk, /className="go nghost">DRAFT</);
+  const mock = src('components/sim/DraftRoom.js');
+  assert.match(mock, /className="p-row nhead" aria-hidden="true"/);
+  assert.match(mock, /className="draft nghost">Draft</);
+  // The header's label cells ARE .ncol cells - same width var, cannot drift.
+  for (const rel of ROOMS) {
+    const t = src(rel);
+    const head = t.slice(t.indexOf('nhead'), t.indexOf('nghost'));
+    assert.match(head, /className="ncol">PPG<[\s\S]*className="ncol">ADP<[\s\S]*className="ncol">VAL</,
+      `${rel}: labels are ncol cells in PPG/ADP/VAL order`);
   }
 });
 

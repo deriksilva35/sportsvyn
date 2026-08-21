@@ -384,6 +384,18 @@ export default function TrackerRoom({
               {filter === 'ALL' && <span className="s-hint">Pick a position for stat sorts</span>}
             </div>
             <div className="trk-avail">
+              {/* Labels live HERE, once - the rows carry values only. The
+                  header wears the row's own container class so gap and
+                  padding match, and the hidden DRAFT phantom reserves the
+                  button column, seating the labels over their columns. */}
+              <div className="trk-p nhead" aria-hidden="true">
+                <span className="ncols">
+                  <span className="ncol">PPG</span>
+                  <span className="ncol">ADP</span>
+                  <span className="ncol">VAL</span>
+                </span>
+                <span className="go nghost">DRAFT</span>
+              </div>
               {shown.length === 0 && <div className="trk-empty">No player matches that.</div>}
               {shown.slice(0, 60).map((p, i) => {
                 const pos = displayPosition(p.position);
@@ -396,37 +408,41 @@ export default function TrackerRoom({
                 const valNum = valueGap(currentOverall, p.adp); // canonical form - inline arithmetic forbidden by test
                 return (
                   <div key={p.ffcPlayerId} className={`trk-p${i === 0 ? ' top' : ''}`}>
-                    <span className="nrail">{Number(p.adp).toFixed(1)}</span>
-                    <div className="ncell">
-                      <div className="nm">{p.name}<RookieChip rookie={isRookieId(p.ffcPlayerId)} /></div>
-                      {/* Tag line: position/team + stat line ONLY. The VAL
-                          column owns the gap number - one number, one home. */}
-                      <div className="tag">
-                        {pos}{p.team ? ` ${p.team}` : ''}
-                        {quick && <span className="trk-quick"> · {quick.join(' · ')}</span>}
-                        {/* Two facts, never the composite - see seatValuation.js. */}
-                        {seatSort && seatRead && (
-                          <>
-                            {seatRead.gap != null && (
-                              <span className={`trk-gap ${seatRead.gap > 0 ? 'val' : 'rch'}`}>
-                                {' '}{seatRead.gap > 0 ? '+' : ''}{seatRead.gap} AT {myNext}
+                    {/* Two decks: line 1 gives the name the full width, line 2
+                        is the tag against the fixed columns (numcols.css). */}
+                    <div className="ndeck">
+                      <div className="nline1">
+                        <span className="nrail">{Number(p.adp).toFixed(1)}</span>
+                        <div className="nm">{p.name}<RookieChip rookie={isRookieId(p.ffcPlayerId)} /></div>
+                      </div>
+                      <div className="nline2">
+                        {/* Tag line: position/team + stat line ONLY. The VAL
+                            column owns the gap number - one number, one home. */}
+                        <div className="tag">
+                          {pos}{p.team ? ` ${p.team}` : ''}
+                          {quick && <span className="trk-quick"> · {quick.join(' · ')}</span>}
+                          {/* Two facts, never the composite - see seatValuation.js. */}
+                          {seatSort && seatRead && (
+                            <>
+                              {seatRead.gap != null && (
+                                <span className={`trk-gap ${seatRead.gap > 0 ? 'val' : 'rch'}`}>
+                                  {' '}{seatRead.gap > 0 ? '+' : ''}{seatRead.gap} AT {myNext}
+                                </span>
+                              )}
+                              {/* Deferred keeps the tag, loses the emphasis. */}
+                              <span className={`trk-slotstate ${seatRead.slot}${seatRead.deferred || seatRead.streamer ? ' deferred' : ''}`}>
+                                {' '}{pos} · {seatRead.slot}
                               </span>
-                            )}
-                            {/* Deferred keeps the tag, loses the emphasis. */}
-                            <span className={`trk-slotstate ${seatRead.slot}${seatRead.deferred || seatRead.streamer ? ' deferred' : ''}`}>
-                              {' '}{pos} · {seatRead.slot}
-                            </span>
-                          </>
-                        )}
+                            </>
+                          )}
+                        </div>
+                        <span className="ncols">
+                          <span className="ncol"><span className={`v${sum ? '' : ' empty'}`}>{sum ? `${approx ? '~' : ''}${fmt1(sum.ppg)}` : '-'}</span></span>
+                          <span className="ncol"><span className="v dim">{Math.round(Number(p.adp))}</span></span>
+                          <span className="ncol"><span className={`v ${valNum >= 0 ? 'pos' : 'neg'}`}>{signed1(valNum)}</span></span>
+                        </span>
                       </div>
                     </div>
-                    {/* The shared column grid (numcols.css): fixed ch widths,
-                        one decimal, ADP an integer by design - it is a rank. */}
-                    <span className="ncols">
-                      <span className="ncol"><span className={`v${sum ? '' : ' empty'}`}>{sum ? `${approx ? '~' : ''}${fmt1(sum.ppg)}` : '-'}</span><span className="lbl">PPG</span></span>
-                      <span className="ncol"><span className="v dim">{Math.round(Number(p.adp))}</span><span className="lbl">ADP</span></span>
-                      <span className="ncol"><span className={`v ${valNum >= 0 ? 'pos' : 'neg'}`}>{signed1(valNum)}</span><span className="lbl">VAL</span></span>
-                    </span>
                     <button className="go" onClick={() => commit(p)} disabled={busy || complete}>DRAFT</button>
                   </div>
                 );

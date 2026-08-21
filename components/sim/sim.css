@@ -485,7 +485,7 @@
 .p-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: transparent; border: 0; padding: 0; text-align: left; font-family: inherit; cursor: pointer; }
 /* position chip: volt label on ink, mono. Sized for up to 3 chars (DST). */
 .p-row .ava { flex: none; width: 30px; height: 30px; display: grid; place-items: center; background: var(--ink); border: 1px solid var(--rule); font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; font-weight: 700; letter-spacing: .02em; color: var(--volt); }
-.p-id { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+/* The name/tag stack is the shared .ndeck (numcols.css). */
 /* PPG / ADP / VAL are .ncols/.ncol - the grid lives in numcols.css, shared
    with the Tracker; sizing them here is forbidden by test. */
 /* quick stats: last season's headline line, sitting with the name */

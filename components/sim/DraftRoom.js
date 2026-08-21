@@ -457,6 +457,17 @@ export default function DraftRoom({
           </div>
         </div>
         <div className="zone-body">
+          {/* One header row of labels; the rows carry values only. Same
+              container class as a row, hidden Draft phantom for the button
+              column - the labels are seated by geometry, not padding. */}
+          <div className="p-row nhead" aria-hidden="true">
+            <span className="ncols">
+              <span className="ncol">PPG</span>
+              <span className="ncol">ADP</span>
+              <span className="ncol">VAL</span>
+            </span>
+            <span className="draft nghost">Draft</span>
+          </div>
           {err && !err.id && <div className="p-err">{ERR[err.reason] ?? err.reason}</div>}
           {shown.slice(0, 120).map((p) => {
             const val = valueGap(currentOverall, p.adp); // positive-good: he fell to you - canonical form, inline arithmetic forbidden by test
@@ -475,51 +486,54 @@ export default function DraftRoom({
                 <div className={`p-row${armedId === p.ffcPlayerId ? ' armed' : ''}`}>
                   <button type="button" className="p-main" onClick={() => toggleExpand(p)} aria-expanded={open}>
                     <span className="ava" data-pos={slot}>{slot}</span>
-                    <span className="p-id ncell">
-                      <span className="nm">{p.name}<RookieChip rookie={p.rookie} /></span>
-                      <span className="rng">
-                        {slot}{p.team ? `·${p.team}` : ''} · {r0(p.adpHigh)}-{r0(p.adpLow)}
-                        {quick && <span className="q"> · {quick.join(' · ')}</span>}
-                        {/* MY TEAM sort shows the TWO FACTS behind the order and
-                            never the composite that produced it: the market gap
-                            at your next pick, and how your roster can absorb the
-                            position right now. The score stays in the
-                            comparator - printing it would be handing back a
-                            number we invented on the reader's behalf. */}
-                        {seatSort && seatRead && (
-                          <>
-                            {seatRead.gap != null && (
-                              <span className={`p-seatgap ${seatRead.gap > 0 ? 'val' : 'rch'}`}>
-                                {' · '}{seatRead.gap > 0 ? '+' : ''}{seatRead.gap} at {myNextOverall}
+                    {/* Two decks (numcols.css): the badge anchors the left like
+                        the button anchors the right; line 1 is the name at
+                        full width, line 2 the stat line against the fixed
+                        columns - values only, labels live in the header. */}
+                    <span className="ndeck">
+                      <span className="nline1">
+                        <span className="nm">{p.name}<RookieChip rookie={p.rookie} /></span>
+                      </span>
+                      <span className="nline2">
+                        <span className="rng">
+                          {slot}{p.team ? `·${p.team}` : ''} · {r0(p.adpHigh)}-{r0(p.adpLow)}
+                          {quick && <span className="q"> · {quick.join(' · ')}</span>}
+                          {/* MY TEAM sort shows the TWO FACTS behind the order and
+                              never the composite that produced it: the market gap
+                              at your next pick, and how your roster can absorb the
+                              position right now. The score stays in the
+                              comparator - printing it would be handing back a
+                              number we invented on the reader's behalf. */}
+                          {seatSort && seatRead && (
+                            <>
+                              {seatRead.gap != null && (
+                                <span className={`p-seatgap ${seatRead.gap > 0 ? 'val' : 'rch'}`}>
+                                  {' · '}{seatRead.gap > 0 ? '+' : ''}{seatRead.gap} at {myNextOverall}
+                                </span>
+                              )}
+                              {/* A deferred row keeps its 'open' tag - the slot IS
+                                  open - but renders muted, so a defense sitting
+                                  below a flex-eligible WR reads as intended rather
+                                  than as a bug. */}
+                              <span className={`p-seatslot ${seatRead.slot}${seatRead.deferred || seatRead.streamer ? ' deferred' : ''}`}>
+                                {' · '}{slot} · {seatRead.slot}
                               </span>
-                            )}
-                            {/* A deferred row keeps its 'open' tag - the slot IS
-                                open - but renders muted, so a defense sitting
-                                below a flex-eligible WR reads as intended rather
-                                than as a bug. */}
-                            <span className={`p-seatslot ${seatRead.slot}${seatRead.deferred || seatRead.streamer ? ' deferred' : ''}`}>
-                              {' · '}{slot} · {seatRead.slot}
-                            </span>
-                          </>
-                        )}
-                      </span>
-                    </span>
-                    {/* The shared column grid (numcols.css): fixed ch widths,
-                        one decimal, ADP an integer by design - it is a rank. */}
-                    <span className="ncols">
-                      <span className="ncol">
-                        <span className={`v${sum ? '' : ' empty'}`} title={approx ? 'Partial: kicker distance tiers and defensive points allowed are not in the data' : undefined}>
-                          {sum ? `${approx ? '~' : ''}${fmt1(sum.ppg)}` : '-'}
+                            </>
+                          )}
                         </span>
-                        <span className="lbl">PPG</span>
-                      </span>
-                      <span className="ncol">
-                        <span className="v dim">{r0(p.adp)}</span>
-                        <span className="lbl">ADP</span>
-                      </span>
-                      <span className="ncol">
-                        <span className={`v ${val >= 0 ? 'pos' : 'neg'}`}>{signed1(val)}</span>
-                        <span className="lbl">VAL</span>
+                        <span className="ncols">
+                          <span className="ncol">
+                            <span className={`v${sum ? '' : ' empty'}`} title={approx ? 'Partial: kicker distance tiers and defensive points allowed are not in the data' : undefined}>
+                              {sum ? `${approx ? '~' : ''}${fmt1(sum.ppg)}` : '-'}
+                            </span>
+                          </span>
+                          <span className="ncol">
+                            <span className="v dim">{r0(p.adp)}</span>
+                          </span>
+                          <span className="ncol">
+                            <span className={`v ${val >= 0 ? 'pos' : 'neg'}`}>{signed1(val)}</span>
+                          </span>
+                        </span>
                       </span>
                     </span>
                   </button>
