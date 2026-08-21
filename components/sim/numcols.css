@@ -59,8 +59,20 @@
   font-size: 9px; font-weight: 700; letter-spacing: .1em;
   color: var(--muted-dim, #5A5A56); text-transform: uppercase;
 }
-/* Doubled class outranks the room row's own padding at equal cascade. */
-.nhead.nhead { padding-top: 5px; padding-bottom: 5px; }
+/* Doubled class outranks the room row's own padding at equal cascade.
+ *
+ * STICKY, ALWAYS VISIBLE: the header pins to the top of whatever scrolls it -
+ * mock desktop's .zone-body, mock phone's pager page, the tracker's page
+ * scroll - so mid-list rows are never bare unlabeled numbers (the 30e997f
+ * regression). Rooms may retarget the two custom properties ONLY:
+ * --nhead-top when another sticky element already owns the scroller's top
+ * edge, --nhead-bg to match the panel surface (opaque - rows must not ghost
+ * through). Position, stickiness and geometry are NOT overridable per room. */
+.nhead.nhead {
+  position: sticky; top: var(--nhead-top, 0px); z-index: 5;
+  background: var(--nhead-bg, var(--ink, #0A0A0A));
+  padding-top: 5px; padding-bottom: 5px;
+}
 .nghost { visibility: hidden; }
 
 @media (max-width: 420px) {

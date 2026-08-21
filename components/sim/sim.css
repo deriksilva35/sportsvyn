@@ -303,6 +303,9 @@
 .zone, .page.zone { border: 1px solid var(--rule); background: var(--graphite); }
 .zone-h { font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--volt); padding: 12px 14px; border-bottom: 1px solid var(--rule-dim); }
 .zone-body { padding: 8px 10px; max-height: 70vh; overflow-y: auto; }
+/* The sticky column header rides this scroller - surface color only, the
+   rule itself lives in numcols.css. */
+.zone-body .nhead { --nhead-bg: var(--graphite); }
 /* sticky page label (doubles as the column header on desktop) */
 .plabel { position: sticky; top: 0; z-index: 2; background: var(--graphite); padding: 12px 14px 8px; font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--volt); border-bottom: 1px solid var(--rule-dim); }
 .board-note { font-size: 9px; letter-spacing: .04em; color: var(--muted); padding: 6px 12px; border-bottom: 1px solid var(--rule-dim); }
@@ -390,6 +393,10 @@
   .pager .page.pg-board { display: flex; }
   .pager .page .plabel { background: var(--ink); }
   .pager .page .zone-body { max-height: none; }
+  /* On the pager the PAGE is the scroller and .plabel (~32px: 20px padding +
+     11px line + border) already owns its top edge - the column header stacks
+     directly beneath. Offset + surface only; the sticky rule is shared. */
+  .pager .page .nhead { --nhead-top: 32px; --nhead-bg: var(--ink); }
   .zone.feed { display: none; }              /* the BOARD page replaces the feed on mobile */
 }
 

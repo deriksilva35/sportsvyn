@@ -102,6 +102,18 @@ test('one header row seats the labels over the columns by shared geometry', () =
   assert.match(grid, /\.nhead \.ncols \{ margin-left: auto; \}/);
   assert.match(grid, /\.nghost \{ visibility: hidden; \}/,
     'the phantom button reserves the real button column');
+  // STICKY, in the shared rule only: pinned to its scroller with an opaque
+  // surface, so labels stay visible down the whole list. Rooms may retarget
+  // the two custom properties; the position itself is not per-room.
+  assert.match(grid, /position: sticky; top: var\(--nhead-top, 0px\); z-index: 5;/);
+  assert.match(grid, /background: var\(--nhead-bg, var\(--ink, #0A0A0A\)\);/);
+  for (const rel of ['components/sim/sim.css', 'components/sim/tracker.css']) {
+    const t = src(rel);
+    for (const m of t.matchAll(/\.nhead[^{]*\{([^}]*)\}/g)) {
+      assert.ok(!/position|width|padding/.test(m[1]),
+        `${rel}: room .nhead rules may set --nhead-* vars only`);
+    }
+  }
   const trk = src('components/sim/TrackerRoom.js');
   assert.match(trk, /className="trk-p nhead" aria-hidden="true"/,
     'tracker header wears the row container class - same gap, same padding');
