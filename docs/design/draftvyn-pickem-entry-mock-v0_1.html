@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draftvyn - Pick'em entry mock v0.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,600;1,900&family=Saira+Condensed:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1C1C1C; --line:#2A2A2A;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --jade-bright:#3FBF6F;
+    --terra:#B8410F; --terra-bright:#E0602A; --live:#E63946; --muted:#8A8A85; --dim:#5A5A56;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  body{background:#050505;color:var(--paper);font-family:'Saira',sans-serif;padding:28px 16px 60px;}
+  .stage{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;align-items:flex-start;}
+  .frame-label{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted);margin:0 0 8px 4px;}
+  .frame-note{font-size:12px;color:var(--dim);margin:8px 4px 0;max-width:390px;line-height:1.5;}
+  .phone{width:390px;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:800px;}
+
+  .appbar{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--line);}
+  .wordmark{font-family:'Saira';font-style:italic;font-weight:900;font-size:21px;letter-spacing:-.05em;}
+  .wordmark .y{color:var(--volt);position:relative;}
+  .wordmark .y::after{content:"";position:absolute;left:12%;right:12%;top:-3px;height:3px;background:var(--volt);}
+  .acct{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:12px;color:var(--muted);}
+  .avatar{width:26px;height:26px;border-radius:50%;background:var(--ink-3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'Saira';font-weight:900;font-style:italic;font-size:12px;color:var(--volt);}
+
+  .tabbar{margin-top:auto;background:#0D0D0D;border-top:1px solid var(--line);display:flex;padding:10px 0 22px;}
+  .tabbar a{flex:1;text-align:center;text-decoration:none;color:var(--muted);font-family:'Saira Condensed';font-weight:600;font-size:9px;letter-spacing:.10em;}
+  .tabbar a span{display:block;font-size:17px;margin-bottom:3px;}
+  .tabbar a.active{color:var(--volt);}
+
+  .screen{padding:18px;display:flex;flex-direction:column;gap:12px;}
+  .crumb{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--muted);text-decoration:none;}
+
+  /* hero */
+  .hero{background:linear-gradient(160deg,#1a2000,var(--ink-2));border:1px solid #2A3300;border-radius:14px;padding:18px;}
+  .hero .eb{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--muted);display:flex;justify-content:space-between;}
+  .hero .eb .mono{font-family:'JetBrains Mono';letter-spacing:0;text-transform:none;}
+  .hero h1{font-family:'Saira';font-style:italic;font-weight:900;font-size:29px;letter-spacing:-.04em;line-height:1.05;margin:8px 0 4px;}
+  .hero .ctx{font-family:'JetBrains Mono';font-size:12px;color:var(--muted);}
+  .hero .ctx b{color:var(--paper);}
+
+  /* progress */
+  .progress{display:flex;align-items:center;gap:10px;}
+  .progress .bar{flex:1;height:4px;background:var(--ink-3);border-radius:99px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:62.5%;background:var(--volt);}
+  .progress .n{font-family:'JetBrains Mono';font-weight:700;font-size:12px;color:var(--paper);white-space:nowrap;}
+  .progress .n small{color:var(--muted);font-weight:400;}
+
+  /* game module */
+  .game{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 12px 10px;}
+  .game .eb{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:10px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:9px;}
+  .game .eb .t{font-family:'JetBrains Mono';letter-spacing:0;}
+  .sides{display:flex;gap:8px;}
+  .side{flex:1;background:var(--ink-3);border:1px solid var(--line);border-radius:9px;padding:10px 10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;}
+  .side .nm{font-family:'JetBrains Mono';font-size:13px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .side .tag{font-family:'Saira Condensed';font-weight:600;font-size:9px;letter-spacing:.08em;color:var(--dim);flex:none;}
+  .side.on{background:var(--volt);border-color:var(--volt);}
+  .side.on .nm{color:var(--ink);}
+  .side.on .tag{color:rgba(10,10,10,.6);}
+
+  /* locked / result variants */
+  .side.pick{border-color:#4A4A00;background:#1a1d00;}
+  .side.pick .nm{color:var(--volt);}
+  .side.win{border-color:var(--jade);background:rgba(42,138,79,.12);}
+  .side.win .nm{color:var(--jade-bright);}
+  .side.loss{border-color:var(--terra);background:rgba(184,65,15,.10);}
+  .side.loss .nm{color:var(--terra-bright);}
+  .side.dim .nm{color:var(--dim);}
+  .res{font-family:'JetBrains Mono';font-weight:700;font-size:12px;flex:none;}
+  .res.w{color:var(--jade-bright);}
+  .res.l{color:var(--terra-bright);}
+  .res.live{color:var(--live);}
+  .score{font-family:'JetBrains Mono';font-weight:700;font-size:12px;color:var(--paper);flex:none;}
+
+  .savebar{font-family:'JetBrains Mono';font-size:11px;color:var(--dim);text-align:center;}
+  .savebar b{color:var(--jade-bright);font-weight:700;}
+
+  /* record strip */
+  .record{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;align-items:baseline;justify-content:space-between;}
+  .record .eb{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--muted);}
+  .record .big{font-family:'JetBrains Mono';font-weight:700;font-size:22px;font-variant-numeric:tabular-nums;}
+  .record .big small{font-size:12px;color:var(--muted);font-weight:400;}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- FRAME 1: OPEN, PICKING -->
+  <div>
+    <p class="frame-label">1 - /pickem open (Tue Aug 25 - Sat noon) - tap sides</p>
+    <div class="phone">
+      <div class="appbar">
+        <div class="wordmark">DRAFTV<span class="y">Y</span>N</div>
+        <div class="acct"><div class="avatar">S</div>@sportsvyn_og</div>
+      </div>
+      <div class="screen">
+        <a class="crumb">← Games</a>
+        <div class="hero">
+          <div class="eb"><span>Pick'em - Board 1</span><span class="mono">CFB · 8 games</span></div>
+          <h1>Eight games. Call the winners.</h1>
+          <div class="ctx">Locks Sat Aug 29, noon ET · <b>1d 14h 22m</b></div>
+        </div>
+        <div class="progress">
+          <div class="bar"><i id="pbar"></i></div>
+          <div class="n"><span id="pn">5</span><small>/8 picked</small></div>
+        </div>
+
+        <div class="game"><div class="eb"><span>Sat</span><span class="t">12:00 PM ET</span></div>
+          <div class="sides" data-g><div class="side on"><span class="nm">North Carolina</span><span class="tag">AWAY</span></div><div class="side"><span class="nm">TCU</span><span class="tag">HOME</span></div></div></div>
+        <div class="game"><div class="eb"><span>Sat</span><span class="t">3:00 PM ET</span></div>
+          <div class="sides" data-g><div class="side"><span class="nm">San José State</span><span class="tag">AWAY</span></div><div class="side on"><span class="nm">USC</span><span class="tag">HOME</span></div></div></div>
+        <div class="game"><div class="eb"><span>Sat</span><span class="t">3:30 PM ET</span></div>
+          <div class="sides" data-g><div class="side"><span class="nm">NC State</span><span class="tag">AWAY</span></div><div class="side on"><span class="nm">Virginia</span><span class="tag">HOME</span></div></div></div>
+        <div class="game"><div class="eb"><span>Sat</span><span class="t">5:30 PM ET</span></div>
+          <div class="sides" data-g><div class="side"><span class="nm">Jacksonville St</span><span class="tag">AWAY</span></div><div class="side on"><span class="nm">N Dakota St</span><span class="tag">HOME</span></div></div></div>
+        <div class="game"><div class="eb"><span>Sat</span><span class="t">6:30 PM ET</span></div>
+          <div class="sides" data-g><div class="side"><span class="nm">Sacramento St</span><span class="tag">AWAY</span></div><div class="side"><span class="nm">E Michigan</span><span class="tag">HOME</span></div></div></div>
+        <div class="game"><div class="eb"><span>Sat</span><span class="t">7:00 PM ET</span></div>
+          <div class="sides" data-g><div class="side"><span class="nm">New Mexico St</span><span class="tag">AWAY</span></div><div class="side on"><span class="nm">Florida St</span><span class="tag">HOME</span></div></div></div>
+        <div class="game"><div class="eb"><span>Sat</span><span class="t">7:00 PM ET</span></div>
+          <div class="sides" data-g><div class="side"><span class="nm">Hawai'i</span><span class="tag">AWAY</span></div><div class="side"><span class="nm">Stanford</span><span class="tag">HOME</span></div></div></div>
+        <div class="game"><div class="eb"><span>Sat</span><span class="t">10:00 PM ET</span></div>
+          <div class="sides" data-g><div class="side"><span class="nm">Memphis</span><span class="tag">AWAY</span></div><div class="side"><span class="nm">UNLV</span><span class="tag">HOME</span></div></div></div>
+
+        <div class="savebar">Saved · edit any pick until lock</div>
+      </div>
+      <div class="tabbar">
+        <a class="active"><span>🎮</span>GAMES</a><a><span>🎲</span>MOCK</a><a><span>📡</span>TRACKER</a><a><span>Ȳ</span>SPORTSVYN</a>
+      </div>
+    </div>
+    <p class="frame-note">Tap a side to pick - volt fill is the selection. Save on change, no submit button. Progress bar tracks 8. Countdown in the hero.</p>
+  </div>
+
+  <!-- FRAME 2: LOCKED / LIVE -->
+  <div>
+    <p class="frame-label">2 - locked, Saturday live - picks grading in</p>
+    <div class="phone">
+      <div class="appbar">
+        <div class="wordmark">DRAFTV<span class="y">Y</span>N</div>
+        <div class="acct"><div class="avatar">S</div>@sportsvyn_og</div>
+      </div>
+      <div class="screen">
+        <a class="crumb">← Games</a>
+        <div class="record">
+          <div><div class="eb">Your board · locked</div></div>
+          <div class="big">3-1 <small>· 4 pending</small></div>
+        </div>
+
+        <div class="game"><div class="eb"><span>Final</span><span class="t">TCU 31-17</span></div>
+          <div class="sides"><div class="side loss"><span class="nm">North Carolina</span><span class="res l">L</span></div><div class="side dim"><span class="nm">TCU</span></div></div></div>
+        <div class="game"><div class="eb"><span>Final</span><span class="t">USC 45-13</span></div>
+          <div class="sides"><div class="side dim"><span class="nm">San José State</span></div><div class="side win"><span class="nm">USC</span><span class="res w">W</span></div></div></div>
+        <div class="game"><div class="eb"><span>Final</span><span class="t">UVA 24-20</span></div>
+          <div class="sides"><div class="side dim"><span class="nm">NC State</span></div><div class="side win"><span class="nm">Virginia</span><span class="res w">W</span></div></div></div>
+        <div class="game"><div class="eb"><span>Final</span><span class="t">NDSU 28-10</span></div>
+          <div class="sides"><div class="side dim"><span class="nm">Jacksonville St</span></div><div class="side win"><span class="nm">N Dakota St</span><span class="res w">W</span></div></div></div>
+        <div class="game"><div class="eb"><span style="color:var(--live);">● Live · Q3</span><span class="t">SAC 14-17 EMU</span></div>
+          <div class="sides"><div class="side pick"><span class="nm">Sacramento St</span><span class="res live">Q3</span></div><div class="side dim"><span class="nm">E Michigan</span></div></div></div>
+        <div class="game"><div class="eb"><span>7:00 PM ET</span><span class="t">Kicks in 0:41</span></div>
+          <div class="sides"><div class="side pick"><span class="nm">Florida St</span></div><div class="side dim"><span class="nm">New Mexico St</span></div></div></div>
+        <div class="game"><div class="eb"><span>7:00 PM ET</span></div>
+          <div class="sides"><div class="side pick"><span class="nm">Stanford</span></div><div class="side dim"><span class="nm">Hawai'i</span></div></div></div>
+        <div class="game"><div class="eb"><span>10:00 PM ET</span></div>
+          <div class="sides"><div class="side pick"><span class="nm">Memphis</span></div><div class="side dim"><span class="nm">UNLV</span></div></div></div>
+      </div>
+      <div class="tabbar">
+        <a class="active"><span>🎮</span>GAMES</a><a><span>🎲</span>MOCK</a><a><span>📡</span>TRACKER</a><a><span>Ȳ</span>SPORTSVYN</a>
+      </div>
+    </div>
+    <p class="frame-note">Post-lock the sides stop being buttons. Your pick holds a volt tint until graded, then flips jade W / terra L; the side you passed dims. Record strip sums live.</p>
+  </div>
+
+  <!-- FRAME 3: SETTLED -->
+  <div>
+    <p class="frame-label">3 - settled Sunday - the receipt</p>
+    <div class="phone" style="min-height:520px;">
+      <div class="appbar">
+        <div class="wordmark">DRAFTV<span class="y">Y</span>N</div>
+        <div class="acct"><div class="avatar">S</div>@sportsvyn_og</div>
+      </div>
+      <div class="screen">
+        <a class="crumb">← Games</a>
+        <div class="hero">
+          <div class="eb"><span>Pick'em - Board 1 · settled</span><span class="mono">CFB Aug 29</span></div>
+          <h1>6-2.</h1>
+          <div class="ctx">Board rank <b>3</b> of 14 · best pick Virginia (38% of field)</div>
+        </div>
+        <div class="record">
+          <div><div class="eb">Board 2 · NFL Week 1</div></div>
+          <div class="big" style="font-size:14px;color:var(--muted);font-weight:400;">Opens Tue Sep 8</div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <a class="active"><span>🎮</span>GAMES</a><a><span>🎲</span>MOCK</a><a><span>📡</span>TRACKER</a><a><span>Ȳ</span>SPORTSVYN</a>
+      </div>
+    </div>
+    <p class="frame-note">Settled hero = the record as THE number. "Best pick" = your correct pick fewest others made (needs field data - Relay 3). Next-board line keeps the loop.</p>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('[data-g]').forEach(g=>{
+    g.querySelectorAll('.side').forEach(s=>s.addEventListener('click',()=>{
+      const was=s.classList.contains('on');
+      g.querySelectorAll('.side').forEach(x=>x.classList.remove('on'));
+      if(!was)s.classList.add('on');
+      const n=document.querySelectorAll('[data-g] .side.on').length;
+      const pn=document.getElementById('pn'),pb=document.getElementById('pbar');
+      if(pn)pn.textContent=n; if(pb)pb.style.width=(n/8*100)+'%';
+    }));
+  });
+</script>
+</body>
+</html>

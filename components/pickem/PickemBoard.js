@@ -1,0 +1,157 @@
+'use client';
+
+// components/pickem/PickemBoard.js - the LIVING board (mock frames 1+2,
+// merged per the per-game-lock ruling): un-kicked games are tappable side
+// pairs, kicked games are sealed rows grading in, one page all Saturday.
+//
+// The client clock here is DISPLAY ONLY - it decides what looks tappable and
+// what the countdown reads. The save's authority is the server's clock
+// against the snapshot kickoff (lib/pickem/entry); a stale client that taps
+// a just-kicked game gets 'game_locked' back and the row seals itself.
+
+import { useEffect, useMemo, useState } from 'react';
+import { savePickAction } from '@/app/actions/pickem';
+
+const ET_TIME = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit',
+});
+const ET_DAY = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short' });
+
+function countdownTo(iso, now) {
+  const ms = new Date(iso).getTime() - now;
+  if (ms <= 0) return null;
+  const m = Math.floor(ms / 60000);
+  const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60;
+  return d > 0 ? `${d}d ${h}h ${mm}m` : h > 0 ? `${h}h ${mm}m` : `${mm}m`;
+}
+
+export default function PickemBoard({ view, signedIn, signinHref }) {
+  const { contest, games: initialGames } = view;
+  // Optimistic overlay: matchId -> side. The server payload stays the truth
+  // for everything else.
+  const [mine, setMine] = useState({});
+  const [savedTick, setSavedTick] = useState(false);
+  const [lockedMsg, setLockedMsg] = useState(null);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const games = useMemo(() => initialGames.map((g) => ({
+    ...g,
+    kicked: g.kicked || new Date(g.kickoff_at).getTime() <= now,
+    my_side: mine[g.match_id] ?? g.my_side,
+  })), [initialGames, mine, now]);
+
+  const picked = games.filter((g) => g.my_side != null).length;
+  const total = games.length;
+  const wins = games.filter((g) => g.graded === 'W').length;
+  const losses = games.filter((g) => g.graded === 'L').length;
+  const pending = games.filter((g) => g.status !== 'final').length;
+  const anyKicked = games.some((g) => g.kicked);
+  const nextKick = games.find((g) => !g.kicked)?.kickoff_at ?? null;
+  const cd = nextKick ? countdownTo(nextKick, now) : null;
+
+  async function tap(g, side) {
+    if (!signedIn || g.kicked) return;
+    const was = g.my_side;
+    setMine((m) => ({ ...m, [g.match_id]: side === was ? was : side }));
+    setLockedMsg(null);
+    const res = await savePickAction(contest.id, g.match_id, side)
+      .catch(() => ({ ok: false, reason: 'network' }));
+    if (!res.ok) {
+      setMine((m) => ({ ...m, [g.match_id]: was ?? undefined }));
+      if (res.reason === 'game_locked') {
+        setLockedMsg(`${g.away} @ ${g.home} kicked - that pick is sealed`);
+        setNow(Date.now());
+      }
+      return;
+    }
+    setSavedTick(true);
+    setTimeout(() => setSavedTick(false), 1600);
+  }
+
+  return (
+    <>
+      <section className="pk-hero">
+        <div className="pk-eb">
+          <span>Pick&rsquo;em &mdash; Board {contest.week != null ? '1' : ''}</span>
+          <span className="pk-mono">{contest.sport.toUpperCase()} &middot; {total} games</span>
+        </div>
+        <h1>{anyKicked ? 'Grading in.' : `${total === 8 ? 'Eight' : total} games. Call the winners.`}</h1>
+        <div className="pk-ctx">
+          Locks per game at kickoff
+          {cd && <> &middot; next kick <b>{cd}</b></>}
+        </div>
+      </section>
+
+      {anyKicked && (
+        <section className="pk-record">
+          <div className="pk-eb">Your board {nextKick == null ? '· locked' : ''}</div>
+          <div className="pk-big">{wins}-{losses} <small>&middot; {pending} pending</small></div>
+        </section>
+      )}
+
+      <div className="pk-progress" aria-label={`${picked} of ${total} picked`}>
+        <div className="pk-bar"><i style={{ width: `${(picked / Math.max(total, 1)) * 100}%` }} /></div>
+        <div className="pk-n">{picked}<small>/{total} picked</small></div>
+      </div>
+
+      {lockedMsg && <p className="pk-lockedmsg">{lockedMsg}</p>}
+
+      {games.map((g) => {
+        const kickedAtMs = new Date(g.kickoff_at).getTime() <= now;
+        const eyebrowLeft = g.status === 'final' ? 'Final'
+          : g.status === 'live' ? '● Live'
+            : `${ET_DAY.format(new Date(g.kickoff_at))}`;
+        const eyebrowRight = g.status === 'final' || g.status === 'live'
+          ? (g.home_score != null ? `${g.away_score}-${g.home_score}` : '')
+          : `${ET_TIME.format(new Date(g.kickoff_at))} ET`;
+        return (
+          <div className="pk-game" key={g.match_id}>
+            <div className={`pk-eb${g.status === 'live' ? ' live' : ''}`}>
+              <span>{eyebrowLeft}</span><span className="pk-mono">{eyebrowRight}</span>
+            </div>
+            <div className="pk-sides">
+              {['away', 'home'].map((side) => {
+                const name = side === 'home' ? g.home : g.away;
+                const isMine = g.my_side === side;
+                let cls = 'pk-side';
+                if (!g.kicked && !kickedAtMs) {
+                  if (isMine) cls += ' on';
+                } else if (isMine) {
+                  cls += g.graded === 'W' ? ' win' : g.graded === 'L' ? ' loss' : ' pick';
+                } else {
+                  cls += ' dim';
+                }
+                const sealed = g.kicked || kickedAtMs || !signedIn;
+                return (
+                  <button
+                    key={side}
+                    type="button"
+                    className={cls}
+                    disabled={sealed}
+                    onClick={() => tap(g, side)}
+                  >
+                    <span className="pk-nm">{name}</span>
+                    {!sealed && <span className="pk-tag">{side.toUpperCase()}</span>}
+                    {isMine && g.graded === 'W' && <span className="pk-res w">W</span>}
+                    {isMine && g.graded === 'L' && <span className="pk-res l">L</span>}
+                    {isMine && g.status === 'live' && <span className="pk-res live">LIVE</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+
+      {signedIn ? (
+        <p className="pk-savebar">{savedTick ? <b>Saved</b> : 'Saved'} &middot; edit any pick until its kickoff</p>
+      ) : (
+        <a className="pk-signin" href={signinHref}>Sign in to make your picks &rarr;</a>
+      )}
+    </>
+  );
+}

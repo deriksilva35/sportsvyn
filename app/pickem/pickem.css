@@ -1,0 +1,87 @@
+/* app/pickem/pickem.css - the living board in v1.2 grammar, from
+   draftvyn-pickem-entry-mock-v0_1 (frames 1+2 merged per the per-game-lock
+   ruling; frame 3 is the settled receipt). */
+
+.pk-eb {
+  font-family: var(--font-saira-cond, var(--font-saira)), sans-serif;
+  font-weight: 600; text-transform: uppercase; letter-spacing: .12em;
+  font-size: 10.5px; color: var(--muted, #8A8A85);
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.pk-eb.live > span:first-child { color: var(--live, #E63946); text-transform: none; }
+.pk-mono { font-family: var(--font-jetbrains-mono), monospace; letter-spacing: 0; text-transform: none; }
+
+.pk-hero {
+  background: linear-gradient(160deg, #1a2000, #141414);
+  border: 1px solid #2A3300; border-radius: 14px; padding: 18px;
+}
+.pk-hero h1 {
+  font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
+  font-size: 29px; letter-spacing: -.04em; line-height: 1.05; margin: 8px 0 4px;
+  color: var(--paper, #F5F5F2);
+}
+.pk-hero .pk-ctx { font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; color: var(--muted, #8A8A85); }
+.pk-hero .pk-ctx b { color: var(--paper, #F5F5F2); }
+
+.pk-progress { display: flex; align-items: center; gap: 10px; }
+.pk-bar { flex: 1; height: 4px; background: #1C1C1C; border-radius: 99px; overflow: hidden; }
+.pk-bar i { display: block; height: 100%; background: var(--volt, #D4FF00); transition: width .2s; }
+.pk-n { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 12px; white-space: nowrap; }
+.pk-n small { color: var(--muted, #8A8A85); font-weight: 400; }
+
+.pk-game { background: #141414; border: 1px solid var(--rule, #2A2A2A); border-radius: 12px; padding: 12px 12px 10px; }
+.pk-game .pk-eb { font-size: 10px; margin-bottom: 9px; }
+.pk-sides { display: flex; gap: 8px; }
+.pk-side {
+  flex: 1; background: #1C1C1C; border: 1px solid var(--rule, #2A2A2A); border-radius: 9px;
+  padding: 10px; cursor: pointer; display: flex; align-items: center;
+  justify-content: space-between; gap: 6px; font-family: inherit; text-align: left;
+}
+.pk-side:disabled { cursor: default; }
+.pk-side .pk-nm {
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 13px; font-weight: 700;
+  color: var(--paper, #F5F5F2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pk-side .pk-tag {
+  font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600;
+  font-size: 9px; letter-spacing: .08em; color: var(--muted-dim, #5A5A56); flex: none;
+}
+.pk-side.on { background: var(--volt, #D4FF00); border-color: var(--volt, #D4FF00); }
+.pk-side.on .pk-nm { color: var(--ink, #0A0A0A); }
+.pk-side.on .pk-tag { color: rgba(10, 10, 10, .6); }
+/* sealed variants - mock frame 2 verbatim */
+.pk-side.pick { border-color: #4A4A00; background: #1a1d00; }
+.pk-side.pick .pk-nm { color: var(--volt, #D4FF00); }
+.pk-side.win { border-color: #2A8A4F; background: rgba(42, 138, 79, .12); }
+.pk-side.win .pk-nm { color: #3FBF6F; }
+.pk-side.loss { border-color: #B8410F; background: rgba(184, 65, 15, .10); }
+.pk-side.loss .pk-nm { color: #E0602A; }
+.pk-side.dim .pk-nm { color: var(--muted-dim, #5A5A56); }
+.pk-res { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 12px; flex: none; }
+.pk-res.w { color: #3FBF6F; }
+.pk-res.l { color: #E0602A; }
+.pk-res.live { color: var(--live, #E63946); font-size: 9px; }
+
+.pk-savebar { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted-dim, #5A5A56); text-align: center; }
+.pk-savebar b { color: #3FBF6F; font-weight: 700; }
+.pk-lockedmsg { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: #E0602A; text-align: center; }
+.pk-signin {
+  display: block; text-align: center; background: var(--volt, #D4FF00); color: var(--ink, #0A0A0A);
+  font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .01em; font-size: 16px;
+  padding: 12px 0; text-decoration: none; border-radius: 8px;
+}
+
+.pk-record { background: #141414; border: 1px solid var(--rule, #2A2A2A); border-radius: 12px; padding: 14px; display: flex; align-items: baseline; justify-content: space-between; }
+.pk-big { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; color: var(--paper, #F5F5F2); }
+.pk-big small { font-size: 12px; color: var(--muted, #8A8A85); font-weight: 400; }
+
+/* settled receipt (frame 3) */
+.pk-receipt h1 { font-size: 44px; margin: 10px 0 6px; }
+
+/* ghost / pre-open */
+.pk-ghost { background: #141414; border: 1px solid var(--rule, #2A2A2A); border-radius: 12px; padding: 26px 18px; text-align: center; }
+.pk-ghost .big { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 22px; color: var(--paper, #F5F5F2); }
+.pk-ghost .when { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted-dim, #5A5A56); margin-top: 8px; }
+
+.pk-main { display: flex; flex-direction: column; gap: 12px; }
