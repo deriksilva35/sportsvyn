@@ -500,3 +500,48 @@
 /* The share action reuses the breadcrumb's voice - both are quiet links that
    must not compete with the answer hero between them. */
 .crumb--share { display: block; margin-bottom: 4px; }
+
+/* ---- frame 2 (games-experience mock, history amendment): the page around
+   the game. Hook/pulse grammar is shared from components/games/chrome.css. */
+.dhero {
+  background: linear-gradient(160deg, #1a2000, #141414);
+  border: 1px solid #2A3300; border-radius: 14px; padding: 20px 16px; margin-bottom: 12px;
+}
+.dhero-ed { display: flex; justify-content: space-between; align-items: baseline; }
+.dhero-mono { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted, #8A8A85); }
+.dhero-h1 {
+  font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
+  font-size: 30px; letter-spacing: -.04em; line-height: 1.03; margin: 10px 0 6px;
+  color: var(--paper, #F5F5F2);
+}
+.dhero-sub { font-family: var(--font-jetbrains-mono), monospace; font-size: 12.5px; color: var(--muted, #8A8A85); line-height: 1.55; }
+.dhero-sub b { color: var(--paper, #F5F5F2); }
+.dhero-play {
+  display: block; width: 100%; text-align: center; background: var(--volt, #D4FF00);
+  border: 0; border-radius: 11px; color: var(--ink, #0A0A0A); cursor: pointer;
+  font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
+  letter-spacing: -.02em; font-size: 17px; padding: 14px 0; margin-top: 14px;
+}
+.dhero-play:disabled { opacity: .6; cursor: default; }
+.dhero-play small {
+  display: block; font-family: var(--font-jetbrains-mono), monospace; font-style: normal;
+  font-weight: 400; font-size: 10px; letter-spacing: 0; color: rgba(10, 10, 10, .65); margin-top: 2px;
+}
+.dsteps { display: flex; gap: 8px; margin-bottom: 12px; }
+.dstep { flex: 1; background: #141414; border: 1px solid var(--rule, #2A2A2A); border-radius: 11px; padding: 11px 10px; }
+.dstep .n { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 19px; color: var(--volt, #D4FF00); }
+.dstep .t { font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 10.5px; margin: 4px 0 3px; }
+.dstep .d { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; color: var(--muted, #8A8A85); line-height: 1.45; }
+.dstatrow { display: flex; gap: 8px; margin-bottom: 12px; }
+.dstat { flex: 1; background: #141414; border: 1px solid var(--rule, #2A2A2A); border-radius: 11px; padding: 11px 12px; }
+.dstat .lbl { font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: .10em; font-size: 9.5px; color: var(--muted, #8A8A85); }
+.dstat .val { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 18px; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.dstat .val small { font-size: 10px; color: var(--muted, #8A8A85); font-weight: 400; }
+.dyesterday {
+  display: flex; align-items: center; gap: 10px; background: #141414;
+  border: 1px solid var(--rule, #2A2A2A); border-radius: 11px; padding: 10px 12px;
+  margin-bottom: 12px; text-decoration: none; color: inherit;
+}
+.dy-k { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 12px; color: var(--muted-dim, #5A5A56); text-transform: uppercase; flex: none; }
+.dyesterday .gpulse { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dy-more { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted, #8A8A85); flex: none; }

@@ -26,8 +26,10 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
-import { todayEt, getDay, entryView } from '@/lib/daily/entries';
-import { podium, overall } from '@/lib/daily/boards';
+import { todayEt, getDay, entryView, getYesterday } from '@/lib/daily/entries';
+import { podium, overall, bestDay } from '@/lib/daily/boards';
+import { editionLabel, editionNo } from '@/lib/daily/homeModule';
+import { Pulse } from '@/components/games/chrome';
 import { PodiumModule, OverallModule } from '@/components/daily/Leaderboard';
 import HandleClaim from '@/components/daily/HandleClaim';
 import { sql } from '@/lib/db';
@@ -54,7 +56,7 @@ export default async function DailyPage({ searchParams }) {
   requireSignInInShell({ isShell, userId, dest: '/daily' });
 
   const date = await todayEt();
-  const { state } = await getDay(date);
+  const { state, day } = await getDay(date);
 
   // SIGNED OUT: the pitch. shellSigninHref rather than a bare string from day
   // one - inside the native container the ?shell= marker has to ride inside the
@@ -124,11 +126,38 @@ export default async function DailyPage({ searchParams }) {
   const view = await entryView(Number(userId), date);
   // Both boards are revealed-day reads (see boards.js) - neither can carry
   // today. Caught to null: a leaderboard is one module, never the page.
-  const [podiumBoard, overallTable, me] = await Promise.all([
+  const [podiumBoard, overallTable, me, best, y] = await Promise.all([
     podium(userId).catch(() => null),
     overall(userId, 10).catch(() => null),
     sql`SELECT handle, push_choice FROM users WHERE id = ${userId}`.then((r) => r[0] ?? null).catch(() => null),
+    bestDay(userId).catch(() => null),
+    getYesterday(userId).catch(() => null),
   ]);
+
+  // Frame 2's stat row - TWO stats (streak is phase 3; an empty slot beats a
+  // faked one). Rank from the same revealed-only overall the board renders.
+  const myRank = overallTable?.self?.rank
+    ?? overallTable?.top?.find((r) => Number(r.userId) === Number(userId))?.rank ?? null;
+  const statRow = (myRank != null || best != null) ? (
+    <div className="dstatrow">
+      {myRank != null && (
+        <div className="dstat"><div className="lbl">Season rank</div><div className="val">{myRank} <small>of {overallTable?.players ?? '—'}</small></div></div>
+      )}
+      {best != null && (
+        <div className="dstat"><div className="lbl">Best day</div><div className="val">{best}</div></div>
+      )}
+    </div>
+  ) : null;
+
+  // Yesterday's winner line - the social proof the mock asks for, from the
+  // revealed edition, linking the full board.
+  const yesterdayLine = y?.winner ? (
+    <a className="dyesterday" href={y.href}>
+      <span className="dy-k">Yesterday</span>
+      <Pulse><b>{y.winner.name} took №{y.edition}</b> &middot; {y.winner.score} vs perfect {y.perfect ?? '—'}</Pulse>
+      <span className="dy-more">full board &rarr;</span>
+    </a>
+  ) : null;
 
   // DNF: started, never locked, clock spent. The attempt is consumed - the
   // board was seen - so the page must not offer START again. It says what
@@ -167,6 +196,10 @@ export default async function DailyPage({ searchParams }) {
           puzzleDate={date}
           initialEntry={view.entry}
           closesAt={String(view.entry?.closesAt ?? '')}
+          editionLabel={editionLabel(editionNo(date))}
+          revealsAt={day?.closes_at ? String(new Date(day.closes_at).toISOString()) : null}
+          statRow={statRow}
+          yesterdayLine={yesterdayLine}
           podium={view.entry ? null : <PodiumModule board={podiumBoard} userId={Number(userId)} />}
           overall={<OverallModule table={overallTable} userId={Number(userId)} />}
           claim={me && !me.handle ? <HandleClaim /> : null}

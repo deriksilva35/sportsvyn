@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draftvyn - Games experience mock v0.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,600;1,900&family=Saira+Condensed:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1C1C1C; --line:#2A2A2A;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --jade-bright:#3FBF6F;
+    --terra:#B8410F; --terra-bright:#E0602A; --live:#E63946; --muted:#8A8A85; --dim:#5A5A56;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  body{background:#050505;color:var(--paper);font-family:'Saira',sans-serif;padding:28px 16px 60px;}
+  .stage{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;align-items:flex-start;}
+  .frame-label{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted);margin:0 0 8px 4px;}
+  .frame-note{font-size:12px;color:var(--dim);margin:8px 4px 0;max-width:390px;line-height:1.5;}
+  .phone{width:390px;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:800px;}
+  .appbar{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--line);}
+  .wordmark{font-family:'Saira';font-style:italic;font-weight:900;font-size:21px;letter-spacing:-.05em;}
+  .wordmark .y{color:var(--volt);position:relative;}
+  .wordmark .y::after{content:"";position:absolute;left:12%;right:12%;top:-3px;height:3px;background:var(--volt);}
+  .acct{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:12px;color:var(--muted);}
+  .avatar{width:26px;height:26px;border-radius:50%;background:var(--ink-3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'Saira';font-weight:900;font-style:italic;font-size:12px;color:var(--volt);}
+  .tabbar{margin-top:auto;background:#0D0D0D;border-top:1px solid var(--line);display:flex;padding:10px 0 22px;}
+  .tabbar a{flex:1;text-align:center;text-decoration:none;color:var(--muted);font-family:'Saira Condensed';font-weight:600;font-size:9px;letter-spacing:.10em;}
+  .tabbar a span{display:block;font-size:17px;margin-bottom:3px;}
+  .tabbar a.active{color:var(--volt);}
+  .screen{padding:18px;display:flex;flex-direction:column;gap:12px;}
+  .screen-title{font-family:'Saira';font-style:italic;font-weight:900;font-size:34px;letter-spacing:-.04em;line-height:1.02;}
+  .screen-sub{font-family:'JetBrains Mono';font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:6px;}
+  .eyebrow{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--muted);}
+
+  /* ---------- FRAME 1: game cards v2 ---------- */
+  .gcard{position:relative;background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:16px 14px 14px;overflow:hidden;}
+  .gcard.play{border-color:#3a4400;background:linear-gradient(150deg,#151a00 0%,var(--ink-2) 55%);}
+  .gcard .toprow{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .gcard .gname{font-family:'Saira';font-style:italic;font-weight:900;font-size:23px;letter-spacing:-.035em;}
+  .gcard .hook{font-family:'JetBrains Mono';font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:4px;}
+  .gcard .hook b{color:var(--paper);font-weight:700;}
+  .metarow{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap;}
+  .chip{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.08em;color:var(--muted);background:var(--ink-3);border:1px solid var(--line);border-radius:99px;padding:3px 10px;}
+  .chip.hot{color:var(--ink);background:var(--volt);border-color:var(--volt);}
+  .chip.new{color:var(--jade-bright);border-color:var(--jade);}
+  .chip.live{color:var(--live);border-color:#5a1a1f;}
+  .gcard .foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:11px;border-top:1px solid var(--line);}
+  .gcard.play .foot{border-top-color:#2a3300;}
+  .gcard .pulse{font-family:'JetBrains Mono';font-size:11.5px;color:var(--dim);}
+  .gcard .pulse b{color:var(--paper);font-weight:700;}
+  .gcard .cta{font-family:'Saira';font-style:italic;font-weight:900;font-size:14px;letter-spacing:-.02em;color:var(--ink);background:var(--volt);border-radius:9px;padding:8px 16px;}
+  .gcard .cta.ghosted{background:var(--ink-3);color:var(--muted);border:1px solid var(--line);font-family:'Saira Condensed';font-style:normal;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;}
+  .gcard .num{position:absolute;right:-6px;top:-18px;font-family:'Saira';font-style:italic;font-weight:900;font-size:92px;letter-spacing:-.06em;color:rgba(245,245,242,.045);pointer-events:none;}
+  .gcard.play .num{color:rgba(212,255,0,.07);}
+
+  /* ---------- FRAME 2: Daily hero ---------- */
+  .dhero{background:linear-gradient(160deg,#1a2000,var(--ink-2));border:1px solid #2A3300;border-radius:14px;padding:20px 16px;}
+  .dhero .ed{display:flex;justify-content:space-between;align-items:baseline;}
+  .dhero .ed .mono{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);}
+  .dhero h1{font-family:'Saira';font-style:italic;font-weight:900;font-size:30px;letter-spacing:-.04em;line-height:1.03;margin:10px 0 6px;}
+  .dhero .sub{font-family:'JetBrains Mono';font-size:12.5px;color:var(--muted);line-height:1.55;}
+  .dhero .sub b{color:var(--paper);}
+  .playbtn{display:block;text-align:center;background:var(--volt);border-radius:11px;color:var(--ink);font-family:'Saira';font-style:italic;font-weight:900;letter-spacing:-.02em;font-size:17px;padding:14px 0;margin-top:14px;}
+  .playbtn small{display:block;font-family:'JetBrains Mono';font-style:normal;font-weight:400;font-size:10px;letter-spacing:0;color:rgba(10,10,10,.65);margin-top:2px;}
+  .steps{display:flex;gap:8px;}
+  .step{flex:1;background:var(--ink-2);border:1px solid var(--line);border-radius:11px;padding:11px 10px;}
+  .step .n{font-family:'Saira';font-style:italic;font-weight:900;font-size:19px;color:var(--volt);}
+  .step .t{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;margin:4px 0 3px;}
+  .step .d{font-family:'JetBrains Mono';font-size:10px;color:var(--muted);line-height:1.45;}
+  .statrow{display:flex;gap:8px;}
+  .stat{flex:1;background:var(--ink-2);border:1px solid var(--line);border-radius:11px;padding:11px 12px;}
+  .stat .lbl{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.10em;font-size:9.5px;color:var(--muted);}
+  .stat .val{font-family:'JetBrains Mono';font-weight:700;font-size:18px;margin-top:3px;font-variant-numeric:tabular-nums;}
+  .stat .val small{font-size:10px;color:var(--muted);font-weight:400;}
+  .stat .val.flame{color:var(--volt);}
+
+  /* ---------- FRAME 3: leaderboard v2 ---------- */
+  .podium{display:flex;gap:8px;align-items:flex-end;}
+  .pod{flex:1;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 8px 10px;text-align:center;}
+  .pod .pavatar{width:38px;height:38px;border-radius:50%;background:var(--ink-3);border:1px solid var(--line);margin:0 auto 7px;display:flex;align-items:center;justify-content:center;font-family:'Saira';font-weight:900;font-style:italic;font-size:15px;}
+  .pod.first{background:linear-gradient(165deg,#1a2000,var(--ink-2));border-color:#3a4400;padding-top:18px;}
+  .pod.first .pavatar{width:46px;height:46px;border-color:var(--volt);color:var(--volt);}
+  .pod .ph{font-family:'JetBrains Mono';font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pod .pv{font-family:'JetBrains Mono';font-weight:700;font-size:16px;margin-top:2px;}
+  .pod .rk{font-family:'Saira';font-style:italic;font-weight:900;font-size:13px;color:var(--dim);margin-bottom:5px;}
+  .pod.first .rk{color:var(--volt);}
+  .tierchip{display:inline-block;font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;font-size:8.5px;letter-spacing:.07em;border:1px solid currentColor;border-radius:99px;padding:1px 7px;margin-top:5px;}
+  .tc-mvp{color:var(--jade-bright);} .tc-pb{color:var(--paper);} .tc-hof{color:var(--volt);}
+  .lrow{display:flex;align-items:center;gap:10px;background:var(--ink-2);border:1px solid var(--line);border-radius:11px;padding:10px 12px;}
+  .lrow .rank{font-family:'Saira';font-style:italic;font-weight:900;font-size:15px;color:var(--dim);width:22px;}
+  .lrow .lavatar{width:28px;height:28px;border-radius:50%;background:var(--ink-3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'Saira';font-weight:900;font-style:italic;font-size:11px;flex:none;}
+  .lrow .who{flex:1;min-width:0;}
+  .lrow .h{font-family:'JetBrains Mono';font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lrow .sub2{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);margin-top:1px;}
+  .lrow .mv{font-family:'JetBrains Mono';font-size:11px;font-weight:700;flex:none;}
+  .mv.up{color:var(--jade-bright);} .mv.dn{color:var(--terra-bright);} .mv.fl{color:var(--dim);}
+  .lrow .pts{font-family:'JetBrains Mono';font-weight:700;font-size:15px;flex:none;font-variant-numeric:tabular-nums;}
+  .lrow .pts small{font-size:10px;color:var(--muted);font-weight:400;}
+  .lrow.you{border-color:#3a4400;background:linear-gradient(90deg,rgba(212,255,0,.07),var(--ink-2) 60%);position:sticky;bottom:0;}
+  .lrow.you .rank{color:var(--volt);}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- FRAME 1: LOBBY -->
+  <div>
+    <p class="frame-label">1 - games lobby v2 - every card sells its game</p>
+    <div class="phone">
+      <div class="appbar">
+        <div class="wordmark">DRAFTV<span class="y">Y</span>N</div>
+        <div class="acct"><div class="avatar">S</div>@sportsvyn_og</div>
+      </div>
+      <div class="screen">
+        <div>
+          <div class="screen-title">Games</div>
+          <div class="screen-sub">One handle. Four ways to win the week.</div>
+        </div>
+
+        <div class="gcard play">
+          <div class="num">01</div>
+          <div class="toprow"><div class="gname">THE DAILY</div><span class="chip hot">Play now</span></div>
+          <div class="hook">Draft <b>six players</b> from today's board. Highest score when the sim reveals at <b>midnight ET</b> wins the day.</div>
+          <div class="metarow"><span class="chip">2 min</span><span class="chip">every day</span><span class="chip">reveals midnight</span></div>
+          <div class="foot">
+            <div class="pulse"><b>5 playing</b> · yesterday's perfect 137.3</div>
+            <div class="cta">PLAY №006</div>
+          </div>
+        </div>
+
+        <div class="gcard">
+          <div class="num">02</div>
+          <div class="toprow"><div class="gname">PICK'EM</div><span class="chip new">New · opens Tue</span></div>
+          <div class="hook">Call the winner of <b>every college game</b> on the Saturday board. Most right answers takes it.</div>
+          <div class="metarow"><span class="chip">1 min</span><span class="chip">weekly</span><span class="chip">locks per game</span></div>
+          <div class="foot">
+            <div class="pulse">Board 1 · <b>8 games</b> · Sat Aug 29</div>
+            <div class="cta ghosted">Opens Aug 25</div>
+          </div>
+        </div>
+
+        <div class="gcard">
+          <div class="num">03</div>
+          <div class="toprow"><div class="gname">THE WEEKLY</div></div>
+          <div class="hook">Roster <b>any six NFL players</b>. Real-game scoring, best five count. Edit until Sunday's first kickoff.</div>
+          <div class="metarow"><span class="chip">90 sec</span><span class="chip">every NFL week</span></div>
+          <div class="foot">
+            <div class="pulse">Season opens with <b>Week 1</b></div>
+            <div class="cta ghosted">Opens Sep 8</div>
+          </div>
+        </div>
+
+        <div class="gcard">
+          <div class="num">04</div>
+          <div class="toprow"><div class="gname">THE DRAFT</div></div>
+          <div class="hook">Snake draft vs <b>a full AI room</b>. Pick your seat, beat the clock, your eight picks fight all week.</div>
+          <div class="metarow"><span class="chip">10 min</span><span class="chip">weekly · ranked</span></div>
+          <div class="foot">
+            <div class="pulse">One ranked entry per week</div>
+            <div class="cta ghosted">Opens Sep 8</div>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <a class="active"><span>🎮</span>GAMES</a><a><span>🎲</span>MOCK</a><a><span>📡</span>TRACKER</a><a><span>Ȳ</span>SPORTSVYN</a>
+      </div>
+    </div>
+    <p class="frame-note">Each card = name, one-sentence hook with the key nouns bold, meta chips (time cost, cadence, lock rule), and a pulse line with live numbers. The playable game gets the volt treatment + ghost numeral. Time cost answers "is this worth opening" before the tap.</p>
+  </div>
+
+  <!-- FRAME 2: DAILY -->
+  <div>
+    <p class="frame-label">2 - the daily - explains itself, then gets out of the way</p>
+    <div class="phone">
+      <div class="appbar">
+        <div class="wordmark">DRAFTV<span class="y">Y</span>N</div>
+        <div class="acct"><div class="avatar">S</div>@sportsvyn_og</div>
+      </div>
+      <div class="screen">
+        <div class="dhero">
+          <div class="ed"><span class="eyebrow">The Daily · Edition №006</span><span class="mono">reveals in 9h 12m</span></div>
+          <h1>Six picks.<br>One perfect board.</h1>
+          <div class="sub">Draft six from today's player board. At <b>midnight ET</b> the sim runs, every score reveals, and the day gets a winner.</div>
+          <a class="playbtn">DRAFT YOUR SIX<small>takes about 2 minutes</small></a>
+        </div>
+
+        <div class="steps">
+          <div class="step"><div class="n">1</div><div class="t">Draft</div><div class="d">Six players, any position mix</div></div>
+          <div class="step"><div class="n">2</div><div class="t">Reveal</div><div class="d">Sim runs at midnight ET</div></div>
+          <div class="step"><div class="n">3</div><div class="t">Climb</div><div class="d">Daily tiers feed the season board</div></div>
+        </div>
+
+        <div class="statrow">
+          <div class="stat"><div class="lbl">Your streak</div><div class="val flame">4 <small>days</small></div></div>
+          <div class="stat"><div class="lbl">Season rank</div><div class="val">1 <small>of 11</small></div></div>
+          <div class="stat"><div class="lbl">Best day</div><div class="val">112.7</div></div>
+        </div>
+
+        <div class="lrow">
+          <div class="rank" style="width:auto;font-size:12px;">YESTERDAY</div>
+          <div class="who"><div class="h">@theskry took №005</div><div class="sub2">120.7 vs perfect 137.3</div></div>
+          <div class="pts" style="font-size:12px;color:var(--muted);font-weight:400;">full board →</div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <a class="active"><span>🎮</span>GAMES</a><a><span>🎲</span>MOCK</a><a><span>📡</span>TRACKER</a><a><span>Ȳ</span>SPORTSVYN</a>
+      </div>
+    </div>
+    <p class="frame-note">Hero: what it is, when it reveals, how long it takes - then the primary. Steps row teaches the loop once (collapsible after first play). Streak + rank + best day give the return visit a reason. Yesterday's winner line makes it social.</p>
+  </div>
+
+  <!-- FRAME 3: LEADERBOARD -->
+  <div>
+    <p class="frame-label">3 - season board v2 - a prize, not a table</p>
+    <div class="phone" style="min-height:760px;">
+      <div class="appbar">
+        <div class="wordmark">DRAFTV<span class="y">Y</span>N</div>
+        <div class="acct"><div class="avatar">S</div>@sportsvyn_og</div>
+      </div>
+      <div class="screen">
+        <div>
+          <div class="screen-title" style="font-size:27px;">Daily Season</div>
+          <div class="screen-sub" style="margin-top:3px;">Tier points through №005 · Aug 20</div>
+        </div>
+
+        <div class="podium">
+          <div class="pod"><div class="rk">2</div><div class="pavatar">T</div><div class="ph">@theskry</div><div class="pv">9</div><span class="tierchip tc-pb">Pro Bowl</span></div>
+          <div class="pod first"><div class="rk">1</div><div class="pavatar">S</div><div class="ph">@sportsvyn_og</div><div class="pv">14</div><span class="tierchip tc-hof">Hall of Fame</span></div>
+          <div class="pod"><div class="rk">3</div><div class="pavatar">H</div><div class="ph">@homey3838</div><div class="pv">6</div><span class="tierchip tc-pb">Pro Bowl</span></div>
+        </div>
+
+        <div class="lrow"><div class="rank">4</div><div class="lavatar">G</div><div class="who"><div class="h">@geausjeaux</div><div class="sub2">3 days played</div></div><span class="mv up">▲2</span><div class="pts">5<small> pts</small></div></div>
+        <div class="lrow"><div class="rank">5</div><div class="lavatar">H</div><div class="who"><div class="h">@hurley3594</div><div class="sub2">2 days played</div></div><span class="mv dn">▼1</span><div class="pts">4<small> pts</small></div></div>
+        <div class="lrow"><div class="rank">6</div><div class="lavatar">M</div><div class="who"><div class="h">@mattyice</div><div class="sub2">1 day played</div></div><span class="mv fl">-</span><div class="pts">2<small> pts</small></div></div>
+        <div class="lrow"><div class="rank">7</div><div class="lavatar">B</div><div class="who"><div class="h">@bgw_22</div><div class="sub2">1 day played</div></div><span class="mv fl">-</span><div class="pts">1<small> pts</small></div></div>
+
+        <div class="lrow you"><div class="rank">1</div><div class="lavatar" style="border-color:var(--volt);color:var(--volt);">S</div><div class="who"><div class="h">@sportsvyn_og · you</div><div class="sub2">4 days · MVP twice</div></div><span class="mv up">▲</span><div class="pts">14<small> pts</small></div></div>
+      </div>
+      <div class="tabbar">
+        <a class="active"><span>🎮</span>GAMES</a><a><span>🎲</span>MOCK</a><a><span>📡</span>TRACKER</a><a><span>Ȳ</span>SPORTSVYN</a>
+      </div>
+    </div>
+    <p class="frame-note">Top three get a podium with tier chips - the thing you're playing FOR is visible. Rows carry avatars, days-played context, and movement arrows vs yesterday. Your row pins sticky at the bottom in volt wash wherever you rank.</p>
+  </div>
+
+</div>
+</body>
+</html>

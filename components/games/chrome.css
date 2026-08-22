@@ -1,0 +1,22 @@
+/* components/games/chrome.css - the shared games grammar (frame 1/2 of the
+   games-experience mock). One definition for both the lobby and the Daily. */
+
+.ghook {
+  display: block;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12.5px; color: var(--muted, #8A8A85); line-height: 1.5; margin-top: 4px;
+}
+.ghook b { color: var(--paper, #F5F5F2); font-weight: 700; }
+
+.gmetarow { display: flex; gap: 6px; margin-top: 11px; flex-wrap: wrap; }
+.gchip {
+  font-family: var(--font-saira-cond, var(--font-saira)), sans-serif;
+  font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: .08em;
+  color: var(--muted, #8A8A85); background: #1C1C1C;
+  border: 1px solid var(--rule, #2A2A2A); border-radius: 99px; padding: 3px 10px;
+}
+.gchip--hot { color: var(--ink, #0A0A0A); background: var(--volt, #D4FF00); border-color: var(--volt, #D4FF00); }
+.gchip--new { color: #3FBF6F; border-color: #2A8A4F; background: transparent; }
+
+.gpulse { font-family: var(--font-jetbrains-mono), monospace; font-size: 11.5px; color: var(--muted-dim, #5A5A56); }
+.gpulse b { color: var(--paper, #F5F5F2); font-weight: 700; }

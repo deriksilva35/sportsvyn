@@ -40,9 +40,24 @@ const restOf = (resume) => (resume ? String(resume).split(' · ').slice(1).join(
 const mmss = (ms) => {
   const s = Math.max(0, Math.ceil(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+/** 'reveals in 9h 12m' - a display countdown to the day's close; the server
+ * clock owns the actual close, this only reads it out. */
+function RevealCountdown({ at }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const iv = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(iv);
+  }, []);
+  const ms = new Date(at).getTime() - now;
+  if (!Number.isFinite(ms) || ms <= 0) return null;
+  const m = Math.floor(ms / 60000);
+  const h = Math.floor(m / 60);
+  return <span className="dhero-mono">reveals in {h > 0 ? `${h}h ${m % 60}m` : `${m}m`}</span>;
 };
 
-export default function DailyRoom({ puzzleDate, initialEntry, podium = null, overall = null, claim = null, nudge = null }) {
+export default function DailyRoom({ puzzleDate, initialEntry, podium = null, overall = null, claim = null, nudge = null, editionLabel = null, revealsAt = null, statRow = null, yesterdayLine = null }) {
   const [entry, setEntry] = useState(initialEntry ?? null);
   const [board, setBoard] = useState(null);
   const [startedAt, setStartedAt] = useState(null);
@@ -181,26 +196,40 @@ export default function DailyRoom({ puzzleDate, initialEntry, podium = null, ove
     );
   }
 
-  // ---- RULES ---------------------------------------------------------------
-  // One tight module, eyebrow HOW IT WORKS, rows rather than a wall of bold
-  // sentences. The PLAY primary is the screen's single primary (v1.2 s4).
+  // ---- THE PAGE AROUND THE GAME (games-experience mock frame 2, with the
+  // history amendment). The hero says what it is, when it reveals, what it
+  // costs - then the one primary, which IS the start button. The steps row
+  // teaches the loop; ALWAYS SHOWN in v1 (the app has no UI-pref persistence
+  // pattern to ride, and a taught loop beats a saved byte at this cohort
+  // size). The picker and clock below this branch are untouched.
   if (!board) {
     return (
       <>
-        <section className="mod">
-          <h2 className="eyebrow">How it works</h2>
-          <div>
-            <div className="row"><span>The board</span><span className="r">64 players</span></div>
-            <div className="row"><span>Your lineup</span><span className="r">QB · RB · WR · TE · 2 FLEX</span></div>
-            <div className="row"><span>The clock</span><span className="r">3:00, server-side</span></div>
-            <div className="row"><span>Scoring</span><span className="r">PPR, worst pick dropped</span></div>
-            <div className="row"><span>Bonus</span><span className="r">Name the season and week</span></div>
+        <section className="dhero">
+          <div className="dhero-ed">
+            <span className="eyebrow">The Daily{editionLabel ? ` · Edition №${editionLabel}` : ''}</span>
+            {revealsAt && <RevealCountdown at={revealsAt} />}
           </div>
+          <h1 className="dhero-h1">Six picks.<br />One week of history.</h1>
+          <p className="dhero-sub">
+            Every board is a real week pulled from NFL history. Draft six, the sim
+            replays the week at <b>midnight ET</b>, and every score reveals.
+          </p>
           {err && <p className="err">{err}</p>}
-          <button className="btn--volt" onClick={start} disabled={busy}>
-            {busy ? 'Starting…' : 'Start the clock'}
+          <button className="dhero-play" onClick={start} disabled={busy}>
+            {busy ? 'Starting…' : 'DRAFT YOUR SIX'}
+            <small>takes about 2 minutes</small>
           </button>
         </section>
+
+        <div className="dsteps">
+          <div className="dstep"><div className="n">1</div><div className="t">Draft</div><div className="d">Six players, any position mix</div></div>
+          <div className="dstep"><div className="n">2</div><div className="t">Reveal</div><div className="d">Sim replays the week at midnight ET</div></div>
+          <div className="dstep"><div className="n">3</div><div className="t">Guess</div><div className="d">Name the season for a bonus</div></div>
+        </div>
+
+        {statRow}
+        {yesterdayLine}
         {claim && (
           <section className="mod">
             <h2 className="eyebrow">Claim your handle</h2>

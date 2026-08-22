@@ -37,31 +37,43 @@
 .pt:hover { color: var(--l-paper); }
 
 /* the 2x2 grid */
-.ggrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+/* Cards v2 (games-experience mock frame 1): full-width stacked, each one
+   sells its game - name + chip, hook, meta chips, pulse + cta. The shared
+   hook/chip/pulse grammar lives in components/games/chrome.css. */
+.ggrid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; }
 .gcard {
+  position: relative; overflow: hidden;
   background: var(--l-ink2); border: 1px solid var(--l-line); border-radius: 14px;
-  padding: 18px 14px; display: flex; flex-direction: column; align-items: center;
-  text-align: center; gap: 8px; text-decoration: none; color: inherit;
+  padding: 16px 14px 14px; display: flex; flex-direction: column;
+  text-decoration: none; color: inherit;
 }
-.gcard--live { background: linear-gradient(165deg, #1a2000 0%, var(--l-ink2) 60%); border-color: #3a4400; }
-.gicon {
-  width: 52px; height: 52px; border-radius: 12px; background: var(--l-ink3);
-  border: 1px solid var(--l-line); display: flex; align-items: center;
-  justify-content: center; font-size: 24px;
+.gcard--live { background: linear-gradient(150deg, #151a00 0%, var(--l-ink2) 55%); border-color: #3a4400; }
+.gnum {
+  position: absolute; right: -6px; top: -18px; pointer-events: none;
+  font-family: var(--l-disp); font-style: italic; font-weight: 900;
+  font-size: 92px; letter-spacing: -.06em; color: rgba(245, 245, 242, .045);
 }
+.gcard--live .gnum { color: rgba(212, 255, 0, .07); }
+.gtoprow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .gname {
   font-family: var(--l-disp); font-style: italic; font-weight: 900;
-  font-size: 20px; letter-spacing: -.03em;
+  font-size: 23px; letter-spacing: -.035em;
 }
-/* min-height keeps the four buttons on one line however long a blurb runs. */
-.gdesc { color: var(--l-mut); font-size: 11.5px; line-height: 1.45; min-height: 48px; }
+.gcardfoot {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--l-line);
+}
+.gcard--live .gcardfoot { border-top-color: #2a3300; }
 .gbtn {
-  display: block; width: 100%; font-family: var(--l-disp); font-style: italic;
-  font-weight: 900; letter-spacing: -.01em; font-size: 14px;
-  background: var(--l-volt); color: var(--l-ink); border-radius: 9px; padding: 11px 8px;
+  flex: none; font-family: var(--l-disp); font-style: italic;
+  font-weight: 900; letter-spacing: -.02em; font-size: 14px;
+  background: var(--l-volt); color: var(--l-ink); border-radius: 9px; padding: 8px 16px;
 }
-.gbtn--ghost { background: var(--l-ink3); color: var(--l-mut); border: 1px solid var(--l-line); }
-.gfoot { font-size: 10.5px; color: var(--l-mut); font-variant-numeric: tabular-nums; min-height: 14px; }
+.gbtn--ghost {
+  background: var(--l-ink3); color: var(--l-mut); border: 1px solid var(--l-line);
+  font-family: var(--l-cond); font-style: normal; font-weight: 600;
+  font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+}
 
 /* modules */
 .lob .mod {

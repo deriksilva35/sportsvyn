@@ -26,6 +26,7 @@ import { gamesLobby } from '@/lib/games/read';
 import { myLeagues } from '@/lib/leagues/core';
 import { normalizePane } from '@/lib/games/lobby';
 import PaneTabs from '@/components/games/PaneTabs';
+import { Hook, MetaChips, Pulse } from '@/components/games/chrome';
 import { tierClass } from '@/lib/daily/reveal';
 import './games.css';
 
@@ -39,10 +40,9 @@ export async function generateViewport({ searchParams }) {
   return simViewport(await resolveShellMode((await searchParams) ?? {}));
 }
 
-// Emoji are correct HERE and wrong on the game surfaces themselves. v1.2 s7
-// counts them among what makes the app feel alive, and the mocks use them in
-// exactly one place: chrome. A lobby card is chrome.
-const ICON = { daily: '🗓', pickem: '✅', weekly: '📋', draft: '🎯' };
+// The emoji icons retired with the legibility pass: the mock's ghost
+// numeral (gnum) carries the card's identity now, and the words do the
+// selling.
 
 export default async function GamesPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
@@ -108,13 +108,36 @@ function GamesPane({ v, leagues = [], signedIn = false }) {
             href={c.state === 'ghost' ? '/games' : c.href}
             aria-disabled={c.state === 'ghost' ? 'true' : undefined}
           >
-            <span className="gicon" aria-hidden="true">{ICON[c.key]}</span>
-            <span className="gname">{c.name}</span>
-            <span className="gdesc">{c.blurb}</span>
-            <span className={`gbtn${c.state === 'ghost' ? ' gbtn--ghost' : ''}`}>
-              {c.state === 'ghost' ? c.opensLabel : (c.cta ?? 'Play')}
+            <span className="gnum" aria-hidden="true">{c.num}</span>
+            <span className="gtoprow">
+              <span className="gname">{c.name}</span>
+              {/* Status chip: volt for the playable game, jade NEW for
+                  Pick 'em pre-first-settle. Flip-on-open law untouched -
+                  the chip reads state, never the clock. */}
+              {c.key === 'daily' && c.state !== 'ghost' && <span className="gchip gchip--hot">Play now</span>}
+              {c.key === 'pickem' && (
+                <span className="gchip gchip--new">{c.state === 'ghost' ? 'New · opens Aug 25' : 'New'}</span>
+              )}
             </span>
-            <span className="gfoot">{c.foot ?? c.closesLabel ?? ' '}</span>
+            <Hook text={c.hook} />
+            <MetaChips chips={c.chips} />
+            <span className="gcardfoot">
+              <Pulse>
+                {c.key === 'daily' && (
+                  <><b>{c.pulse?.playing ?? 0} playing</b>{c.pulse?.perfect != null && <> &middot; yesterday&rsquo;s perfect {c.pulse.perfect}</>}</>
+                )}
+                {c.key === 'pickem' && (c.pulse
+                  ? <>Board 1 &middot; <b>{c.pulse.games} games</b>{c.pulse.next && <> &middot; locks {c.pulse.next}</>}</>
+                  : <>Board 1 &middot; Sat Aug 29</>)}
+                {c.key === 'weekly' && (c.state === 'ghost'
+                  ? <>Season opens with <b>Week 1</b></>
+                  : (c.closesLabel ?? ' '))}
+                {c.key === 'draft' && <>One ranked entry per week</>}
+              </Pulse>
+              <span className={`gbtn${c.state === 'ghost' ? ' gbtn--ghost' : ''}`}>
+                {c.state === 'ghost' ? c.opensLabel : (c.cta ?? 'Play')}
+              </span>
+            </span>
           </a>
         ))}
       </div>
