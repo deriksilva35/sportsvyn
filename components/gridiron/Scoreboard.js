@@ -23,7 +23,7 @@ import DriveStrip from './DriveStrip';
 import { scoresHref } from '@/lib/gridiron/scoresNav';
 import OddsStrip from './OddsStrip';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
-import { lineScoreGrid, ABSENT } from '@/lib/gridiron/lineScore';
+import { lineScoreGrid, liveChip, ABSENT } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
 
 const SPORTS = [
@@ -63,7 +63,19 @@ function TeamLine({ t, score, isWinner, isLoser, final }) {
 }
 
 function Status({ g }) {
-  if (g.status === 'live') return <span className="gi-status live"><span className="gi-dot" />LIVE</span>;
+  if (g.status === 'live') {
+    // Where in the game, beside LIVE - the one formatter (lineScore.js owns
+    // it, the numcols law). A snapshot of the last poll, rendered plainly:
+    // no ticking, it moves when the poll does. PRE badge unchanged - it
+    // answers 'what kind of game', this answers 'where in it'.
+    const chip = liveChip(g.liveState);
+    return (
+      <span className="gi-status live">
+        <span className="gi-dot" />LIVE
+        {chip && <span className="gi-qc">{chip}</span>}
+      </span>
+    );
+  }
   if (g.status === 'final') {
     const ot = Array.isArray(g.lineScores?.home) && g.lineScores.home[4] != null;
     return <span className={`gi-final ${ot ? 'ot' : ''}`}>{ot ? 'F/OT' : 'FINAL'}</span>;

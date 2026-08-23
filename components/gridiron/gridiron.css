@@ -106,6 +106,8 @@
 /* status */
 .gi-status { font-size: 11px; letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: 7px; }
 .gi-status.live { color: var(--live); font-weight: 700; }
+/* where in the game - mono snapshot beside LIVE, muted so the dot keeps rank */
+.gi-qc { font-family: var(--font-jetbrains-mono), monospace; font-size: 10.5px; font-weight: 400; letter-spacing: 0; color: var(--paper-dim); font-variant-numeric: tabular-nums; }
 .gi-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live); animation: gi-pulse 1.6s infinite; }
 @keyframes gi-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 .gi-final { font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--paper); background: var(--jade); padding: 3px 10px; }
@@ -167,12 +169,15 @@
 .gi-full:hover { text-decoration: underline; }
 
 /* quarter grid - a real table, mono, tabular figures so columns align */
+/* THE QUARTER GRID STOPS DISTRIBUTING: fixed narrow ch columns (the numcols
+   pattern - content-independent, tabular), right-clustered as a group behind
+   the team column's flex. T keeps its rule but sits with the pack. */
 .gi-ls { width: 100%; border-collapse: collapse; font-family: var(--font-jetbrains-mono), monospace; font-variant-numeric: tabular-nums; }
-.gi-ls th, .gi-ls td { padding: 5px 0; text-align: center; font-size: 12px; font-weight: 400; }
+.gi-ls th, .gi-ls td { padding: 5px 0; text-align: right; font-size: 12px; font-weight: 400; width: 4ch; }
 .gi-ls thead th { font-size: 9px; letter-spacing: 0.16em; color: var(--muted-dim); border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
-.gi-ls th.tm { text-align: left; font-size: 10px; letter-spacing: 0.1em; color: var(--muted); width: 20%; }
+.gi-ls th.tm { text-align: left; font-size: 10px; letter-spacing: 0.1em; color: var(--muted); width: auto; }
 .gi-ls tbody td { color: var(--paper-dim); }
-.gi-ls td.tot, .gi-ls thead th.tot { color: var(--paper); font-weight: 700; border-left: 1px solid var(--rule); width: 16%; }
+.gi-ls td.tot, .gi-ls thead th.tot { color: var(--paper); font-weight: 700; border-left: 1px solid var(--rule); width: 5ch; padding-left: 8px; }
 .gi-ls tbody tr + tr th, .gi-ls tbody tr + tr td { border-top: 1px solid var(--rule-dim); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
