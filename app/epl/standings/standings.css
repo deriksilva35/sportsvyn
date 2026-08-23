@@ -1,0 +1,70 @@
+/* app/epl/standings/standings.css - the league table.
+   NUMCOLS DISCIPLINE on every number column: fixed ch widths, tabular nums,
+   right-aligned - the table cannot re-flow as scores grow into two digits. */
+
+.ep-table { border: 1px solid var(--rule); background: var(--graphite); }
+.ep-row {
+  display: flex; align-items: center; gap: 6px; padding: 9px 12px;
+  border-bottom: 1px solid var(--rule-dim); position: relative;
+}
+.ep-row:last-child { border-bottom: 0; }
+.ep-row--h {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--muted-dim); background: var(--ink);
+}
+
+.ep-rank {
+  flex: none; width: 3ch; text-align: right;
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 12px;
+  font-variant-numeric: tabular-nums; color: var(--muted);
+}
+.ep-club {
+  flex: 1 1 auto; min-width: 0; font-size: 14px; color: var(--paper);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ep-n {
+  flex: none; width: 3ch; text-align: right;
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 12px;
+  font-variant-numeric: tabular-nums; color: var(--paper-dim);
+}
+.ep-n.wide { width: 4ch; }
+.ep-n.pts { width: 4ch; color: var(--paper); font-weight: 700; }
+.ep-row--h .ep-n, .ep-row--h .ep-rank { color: var(--muted-dim); font-size: 9px; font-weight: 400; }
+
+/* form: five letters, newest last */
+.ep-form, .ep-form-h { flex: none; width: 11ch; display: flex; gap: 3px; justify-content: flex-end; }
+.ep-form-h { justify-content: flex-end; }
+.ep-f {
+  font-family: var(--font-jetbrains-mono), monospace; font-style: normal;
+  font-size: 9px; font-weight: 700; width: 14px; height: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 3px; color: var(--ink);
+}
+.ep-f--w { background: var(--jade); }
+.ep-f--d { background: var(--muted-dim); }
+.ep-f--l { background: var(--terra); color: var(--paper); }
+
+/* the European / relegation rail - a 2px edge, the league's own words behind it */
+.ep-row.rail-ucl::before, .ep-row.rail-uel::before, .ep-row.rail-drop::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+}
+.ep-row.rail-ucl::before { background: var(--volt); }
+.ep-row.rail-uel::before { background: var(--jade); }
+.ep-row.rail-drop::before { background: var(--terra); }
+
+.ep-key {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px;
+  letter-spacing: .08em; color: var(--muted-dim); margin-top: 10px;
+}
+.ep-swatch { width: 10px; height: 2px; display: inline-block; margin-left: 8px; }
+.ep-swatch.rail-ucl { background: var(--volt); }
+.ep-swatch.rail-uel { background: var(--jade); }
+.ep-swatch.rail-drop { background: var(--terra); }
+
+@media (max-width: 620px) {
+  /* GF/GA go first - GD and PTS are what a phone reader is here for. */
+  .ep-row > .ep-n.wide:nth-of-type(-n+2) { display: none; }
+  .ep-form, .ep-form-h { display: none; }
+}

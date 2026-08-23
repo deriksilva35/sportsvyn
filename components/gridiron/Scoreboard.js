@@ -20,16 +20,16 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import DriveStrip from './DriveStrip';
-import { scoresHref } from '@/lib/gridiron/scoresNav';
+import { scoresHref, SPORT_CHIPS } from '@/lib/gridiron/scoresNav';
+import { soccerLiveChip } from '@/lib/soccer/liveChip';
 import OddsStrip from './OddsStrip';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { lineScoreGrid, liveChip, ABSENT } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
 
-const SPORTS = [
-  { key: 'nfl', label: 'NFL' },
-  { key: 'cfb', label: 'CFB' },
-];
+// The section list IS the chip list - one definition (scoresNav), so a
+// league can never appear as a filter with no section or the reverse.
+const SPORTS = SPORT_CHIPS;
 
 function fmtTime(iso) {
   try {
@@ -208,19 +208,78 @@ function Card({ g }) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// THE SOCCER CARD. A different game, and the differences are the point:
+//
+// A DRAW IS A RESULT, NOT A FAILURE TO WIN. The gridiron card dims the loser
+// and brightens the winner; 2-2 has neither, so nobody dims - both sides read
+// equal, which is what the scoreline means.
+//
+// NO LINE SCORE, so no expand: soccer has halves, not quarters, and a
+// two-column half table is a worse version of the scoreline already shown.
+// The card is a link straight to the match page instead.
+//
+// The minute rides beside LIVE from lib/soccer/liveChip - a poll snapshot,
+// rendered plainly.
+// ---------------------------------------------------------------------------
+function SoccerCard({ g }) {
+  const final = g.status === 'final';
+  const live = g.status === 'live';
+  const chip = live ? soccerLiveChip(g.liveState) : null;
+  const draw = (final || live) && g.homeScore != null && g.homeScore === g.awayScore;
+  const side = (t, score, otherScore) => {
+    // Dim ONLY a decided loser. A draw dims neither; a live match dims
+    // nobody, because it is not over.
+    const lost = final && !draw && score != null && otherScore != null && score < otherScore;
+    return (
+      <div className={`gi-team${lost ? ' loser' : ''}`}>
+        <span className="nm">{t?.name ?? 'TBD'}</span>
+        <span className="sc">{score ?? ABSENT}</span>
+      </div>
+    );
+  };
+  return (
+    <div className="gi-card gi-card--soccer">
+      <div className="gi-card-h">
+        {live ? (
+          <span className="gi-status live">
+            <span className="gi-dot" />LIVE
+            {chip && <span className="gi-qc">{chip}</span>}
+          </span>
+        ) : final ? (
+          <span className="gi-final">FT</span>
+        ) : (
+          <span className="gi-up">{fmtTime(g.kickoffAt)}</span>
+        )}
+      </div>
+      <Link className="gi-soccer-teams" href={`/match/${g.slug}`}>
+        {side(g.away, g.awayScore, g.homeScore)}
+        {side(g.home, g.homeScore, g.awayScore)}
+      </Link>
+      {g.venue ? <div className="gi-card-f">{g.venue}</div> : null}
+    </div>
+  );
+}
+
 function Section({ sport, games, liveOnly }) {
   const shown = liveOnly ? games.filter((g) => g.status === 'live') : games;
+  // PER-SPORT CARD, SHARED SHELL. The codes' cards disagree about what a game
+  // IS - quarters and a line score vs halves and a running minute, a loser to
+  // dim vs a draw that dims nobody - so the CARD forks and everything around
+  // it (toolbar, sections, the never-vanish empty state, date rail) stays one
+  // implementation. The gridiron Card below is untouched by this relay.
+  const CardFor = sport.key === 'epl' ? SoccerCard : Card;
   return (
     <div className="gi-sect">
       <div className="gi-sect-h">
         <span className="nm">{sport.label}</span>
-        <span className="cnt">{shown.length} {shown.length === 1 ? 'game' : 'games'}</span>
+        <span className="cnt">{shown.length} {shown.length === 1 ? (sport.key === 'epl' ? 'match' : 'game') : (sport.key === 'epl' ? 'matches' : 'games')}</span>
         <span className="rule" />
       </div>
       {shown.length === 0 ? (
         <div className="gi-empty">No {sport.label} {liveOnly ? 'live now' : 'on this day'} · sections keep their place, never vanish →</div>
       ) : (
-        <div className="gi-cards">{shown.map((g) => <Card key={g.id} g={g} />)}</div>
+        <div className="gi-cards">{shown.map((g) => <CardFor key={g.id} g={g} />)}</div>
       )}
     </div>
   );
@@ -239,8 +298,9 @@ export default function Scoreboard({ byLeague, date, sport = 'all', live = false
     <div>
       <div className="gi-toolbar">
         <Link className={`gi-chip ${sport === 'all' ? 'active' : ''}`} href={chip('all')}>All</Link>
-        <Link className={`gi-chip ${sport === 'nfl' ? 'active' : ''}`} href={chip('nfl')}>NFL</Link>
-        <Link className={`gi-chip ${sport === 'cfb' ? 'active' : ''}`} href={chip('cfb')}>CFB</Link>
+        {SPORT_CHIPS.map((s) => (
+          <Link key={s.key} className={`gi-chip ${sport === s.key ? 'active' : ''}`} href={chip(s.key)}>{s.label}</Link>
+        ))}
         <Link className={`gi-chip live ${live ? 'active' : ''}`}
           href={scoresHref(date, { sport, live: !live })}>Live only</Link>
       </div>

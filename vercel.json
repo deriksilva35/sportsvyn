@@ -86,6 +86,10 @@
       "schedule": "25 13 * * *"
     },
     {
+      "path": "/api/cron/epl-standings",
+      "schedule": "26 13 * * *"
+    },
+    {
       "path": "/api/cron/daily-close",
       "schedule": "*/15 * * * *"
     },

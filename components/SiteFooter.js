@@ -63,6 +63,7 @@ function siteFooterMarkup() {
             {/* The World Cup links retired with the tournament (final
                 19 Jul); the routes still serve for anyone holding a link. */}
             <h4>Soccer</h4>
+            <Link href="/epl/standings">Premier League</Link>
             <Link href="/schedule">Schedule</Link>
             <Link href="/stats">Stats</Link>
           </div>

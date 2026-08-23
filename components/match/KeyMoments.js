@@ -398,7 +398,14 @@ export default function KeyMoments({
         </div>
         <div className="commentary-header-meta">Latest first · Auto-updates</div>
       </div>
-      <div className="key-moments-ai-marker">Live Notes · Auto-Generated</div>
+      {/* THE MARKER FOLLOWS THE GLOSS, NOT THE SECTION. It labels AI-written
+          notes; a league whose gloss is gated off (EPL - see
+          lib/soccer/contentGate) renders structured provider rows only, and
+          calling those auto-generated would be a false disclosure in the one
+          direction that matters. */}
+      {rows.some((r) => r.gloss) && (
+        <div className="key-moments-ai-marker">Live Notes · Auto-Generated</div>
+      )}
 
       <div className="km">
         {rows.map((r, i) => {

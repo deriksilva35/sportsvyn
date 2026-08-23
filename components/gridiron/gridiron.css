@@ -444,3 +444,19 @@
   opacity: 0; border: 0; padding: 0; margin: 0; cursor: pointer;
   -webkit-appearance: none; appearance: none;
 }
+
+/* ---- the soccer card (EPL relay 2). Shares the shell's .gi-card frame;
+   what differs is a two-row scoreline with no expand and no winner tint -
+   a draw dims nobody. */
+.gi-card--soccer .gi-soccer-teams { display: block; text-decoration: none; color: inherit; }
+.gi-card--soccer .gi-team {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding: 5px 0;
+}
+.gi-card--soccer .gi-team .nm { font-size: 14px; color: var(--paper); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gi-card--soccer .gi-team .sc {
+  font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 16px;
+  font-variant-numeric: tabular-nums; flex: none;
+}
+/* The ONLY dim is a decided loser - never a draw, never a live side. */
+.gi-card--soccer .gi-team.loser .nm, .gi-card--soccer .gi-team.loser .sc { color: var(--muted); }
