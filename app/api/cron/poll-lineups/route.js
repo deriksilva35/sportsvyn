@@ -33,7 +33,7 @@
  */
 
 import { sql } from '@/lib/db';
-import { CONTENT_EXCLUDED_SQL } from '@/lib/soccer/contentGate';
+import { POLL_EXCLUDED_SQL } from '@/lib/soccer/contentGate';
 import { syncMatchLineups } from '@/lib/lineups';
 
 export const dynamic = 'force-dynamic';
@@ -67,10 +67,15 @@ export async function GET(request) {
            m.external_ids->>'api_sports' AS api_sports_id
     FROM matches m
     JOIN leagues l ON l.id = m.league_id
+    -- THE POLL GATE, not the content gate: an XI fetch is a provider request,
+    -- not model spend, so EPL belongs IN this sweep (the lineups pitch had no
+    -- data source while it sat behind the content list). The list is empty
+    -- today; the position is kept so re-gating a league is one entry.
+    --
     -- THE GATE WRAPS BOTH WINDOWS. AND binds tighter than OR, so an
-    -- unparenthesised gate would have covered window (A) only and let every
-    -- just-kicked EPL fixture straight through (B).
-    WHERE l.slug <> ALL(${CONTENT_EXCLUDED_SQL})
+    -- unparenthesised gate would cover window (A) only and let every
+    -- just-kicked fixture straight through (B).
+    WHERE l.slug <> ALL(${POLL_EXCLUDED_SQL}::text[])
       AND ((
         m.status = 'scheduled'
         AND m.kickoff_at > now()
