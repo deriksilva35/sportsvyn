@@ -27,6 +27,7 @@ import { myLeagues } from '@/lib/leagues/core';
 import { normalizePane } from '@/lib/games/lobby';
 import PaneTabs from '@/components/games/PaneTabs';
 import { Hook, MetaChips, Pulse } from '@/components/games/chrome';
+import SeasonBoard from '@/components/games/SeasonBoard';
 import { tierClass } from '@/lib/daily/reveal';
 import './games.css';
 
@@ -82,7 +83,7 @@ export default async function GamesPage({ searchParams }) {
         )}
 
         {v && pane === 'games' && <GamesPane v={v} leagues={leagues} signedIn={userId != null} />}
-        {v && pane === 'leaderboards' && <BoardsPane v={v} />}
+        {v && pane === 'leaderboards' && <BoardsPane v={v} userId={userId} />}
         {v && pane === 'answer' && <AnswerPane v={v} />}
         {v && pane === 'history' && <HistoryPane v={v} />}
 
@@ -196,7 +197,7 @@ function GamesPane({ v, leagues = [], signedIn = false }) {
   );
 }
 
-function BoardsPane({ v }) {
+function BoardsPane({ v, userId = null }) {
   return (
     <>
       {v.boards.map((b) => (
@@ -207,7 +208,14 @@ function BoardsPane({ v }) {
               <span className="pill">through {b.table.through}</span>
             )}
           </div>
-          {b.state === 'live' ? (
+          {b.state !== 'live' ? (
+            <div className="row"><span className="muted">{b.populatesLabel}</span></div>
+          ) : b.key === 'overall' ? (
+            // Frame 3: the Daily season board is a prize, not a table -
+            // podium, movement, the viewer pinned. One component, shared
+            // with the league scope.
+            <SeasonBoard table={b.table} userId={userId} />
+          ) : (
             <div>
               {b.table.top.map((r) => (
                 <div className="row" key={r.userId}>
@@ -222,8 +230,6 @@ function BoardsPane({ v }) {
                 </div>
               )}
             </div>
-          ) : (
-            <div className="row"><span className="muted">{b.populatesLabel}</span></div>
           )}
         </section>
       ))}

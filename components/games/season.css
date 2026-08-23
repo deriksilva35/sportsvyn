@@ -1,0 +1,56 @@
+/* components/games/season.css - frame 3's grammar, one definition for the
+   global and league-scoped season boards. Tier chip COLORS come from the
+   existing tier-- classes (config-fed) - only chip geometry lives here. */
+
+.sb { display: flex; flex-direction: column; gap: 8px; }
+
+.sb-podium { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 4px; }
+.sb-pod {
+  flex: 1; background: #141414; border: 1px solid var(--rule, #2A2A2A);
+  border-radius: 12px; padding: 12px 8px 10px; text-align: center; min-width: 0;
+}
+.sb-pod.first {
+  background: linear-gradient(165deg, #1a2000, #141414);
+  border-color: #3a4400; padding-top: 18px;
+}
+.sb-rk { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 13px; color: var(--muted-dim, #5A5A56); margin-bottom: 5px; }
+.sb-pod.first .sb-rk { color: var(--volt, #D4FF00); }
+.sb-ava {
+  width: 38px; height: 38px; border-radius: 50%; background: #1C1C1C;
+  border: 1px solid var(--rule, #2A2A2A); margin: 0 auto 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-saira), sans-serif; font-weight: 900; font-style: italic; font-size: 15px;
+}
+.sb-pod.first .sb-ava { width: 46px; height: 46px; }
+.sb-ava.me { border-color: var(--volt, #D4FF00); color: var(--volt, #D4FF00); }
+.sb-pod .sb-h { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-pv { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 16px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.sb-tier {
+  display: inline-block; font-family: var(--font-saira-cond, var(--font-saira)), sans-serif;
+  font-weight: 600; text-transform: uppercase; font-size: 8.5px; letter-spacing: .07em;
+  border: 1px solid currentColor; border-radius: 99px; padding: 1px 7px; margin-top: 5px;
+}
+
+.sb-row {
+  display: flex; align-items: center; gap: 10px; background: #141414;
+  border: 1px solid var(--rule, #2A2A2A); border-radius: 11px; padding: 10px 12px;
+}
+.sb-rank { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 15px; color: var(--muted-dim, #5A5A56); width: 22px; flex: none; }
+.sb-ava.sm { width: 28px; height: 28px; font-size: 11px; margin: 0; flex: none; }
+.sb-who { flex: 1; min-width: 0; }
+.sb-who .sb-h { display: block; font-family: var(--font-jetbrains-mono), monospace; font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-sub { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; color: var(--muted-dim, #5A5A56); margin-top: 1px; }
+.sb-mv { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; font-weight: 700; flex: none; }
+.sb-mv.up { color: #3FBF6F; }
+.sb-mv.dn { color: #E0602A; }
+.sb-mv.fl { color: var(--muted-dim, #5A5A56); }
+/* points: the numcols discipline - fixed ch, right-aligned, tabular */
+.sb-pts { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 15px; flex: none; width: 7ch; text-align: right; font-variant-numeric: tabular-nums; }
+.sb-pts small { font-size: 10px; color: var(--muted, #8A8A85); font-weight: 400; }
+
+.sb-row.you {
+  border-color: #3a4400;
+  background: linear-gradient(90deg, rgba(212, 255, 0, .07), #141414 60%);
+  position: sticky; bottom: 8px;
+}
+.sb-row.you .sb-rank { color: var(--volt, #D4FF00); }

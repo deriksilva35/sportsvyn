@@ -30,6 +30,7 @@ import { LEAGUE_TABS, parseLeagueTab, leagueHref } from '@/lib/leagues/nav';
 import { firstLockLabel, FIRST_LOCK_FALLBACK } from '@/lib/pickem/read';
 import { lastRevealedDate, dayBoard, overall } from '@/lib/daily/boards';
 import { CodeChip, CopyLinkButton, JoinLeagueButton } from '@/components/leagues/LeagueChrome';
+import SeasonBoard from '@/components/games/SeasonBoard';
 import '../../games/games.css';
 import '../leagues.css';
 
@@ -187,18 +188,10 @@ export default async function LeaguePage({ params, searchParams }) {
                 </h2>
               </div>
               {season?.top?.length ? (
-                season.top.map((r) => (
-                  <div className="row" key={r.userId}>
-                    <span className="lb-left">
-                      <span className="rank">{r.rank}</span>
-                      <span className={r.userId === uid ? 'volt' : ''}>{r.name}</span>
-                      {r.best && (
-                        <span className={`lg-tier${r.best === 'MVP' || r.best === 'HALL OF FAME' ? ' lg-tier--jade' : ''}`}>{r.best}</span>
-                      )}
-                    </span>
-                    <span className="v">{r.points} <span className="muted">pts</span></span>
-                  </div>
-                ))
+                // The SAME season board the lobby renders, member-scoped: a
+                // 2-member league gets a 2-card podium, never a ghost third
+                // (one definition, both scopes - pinned).
+                <SeasonBoard table={season} userId={uid} />
               ) : (
                 <div className="row">
                   <span className="muted">Fills as members play &middot; reveals at midnight ET</span>
