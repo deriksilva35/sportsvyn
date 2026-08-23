@@ -292,8 +292,15 @@ test('EVERY ROUTE THE OLD NAV CARRIED STILL HAS A WAY IN', () => {
   // /schedule and /stats had ZERO link sites outside the retiring header, and
   // /market dropped to a single panel link on /my. The footer is where they
   // land. A route with no way in is not a decision anyone made.
-  for (const href of ['/schedule', '/stats', '/market', '/world-cup-2026/bracket',
-    '/world-cup-2026/rankings', '/nfl/fantasy', '/nfl/rankings', '/scores', '/sim', '/']) {
+  //
+  // THE WORLD CUP ROUTES ARE THE EXCEPTION, AND THEY PROVE THE RULE: their
+  // delisting IS a decision someone made (EPL relay 1, 23 Aug - the
+  // tournament ended 19 Jul and soccer's front door is no longer a bracket).
+  // The routes still SERVE for anyone holding a link; they are simply not
+  // advertised. Everything else here would be an accident, which is what
+  // this pin exists to catch.
+  for (const href of ['/schedule', '/stats', '/market',
+    '/nfl/fantasy', '/nfl/rankings', '/scores', '/sim', '/']) {
     assert.ok(footer.includes(`href="${href}"`), `${href} must be reachable from the footer`);
   }
 });

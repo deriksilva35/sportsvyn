@@ -60,10 +60,10 @@ function siteFooterMarkup() {
             <Link href="/market">Market</Link>
           </div>
           <div className="footer-col">
+            {/* The World Cup links retired with the tournament (final
+                19 Jul); the routes still serve for anyone holding a link. */}
             <h4>Soccer</h4>
-            <Link href="/world-cup-2026/bracket">World Cup</Link>
             <Link href="/schedule">Schedule</Link>
-            <Link href="/world-cup-2026/rankings">Rankings</Link>
             <Link href="/stats">Stats</Link>
           </div>
           <div className="footer-col">

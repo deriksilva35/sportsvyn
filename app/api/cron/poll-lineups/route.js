@@ -33,6 +33,7 @@
  */
 
 import { sql } from '@/lib/db';
+import { CONTENT_EXCLUDED_SQL } from '@/lib/soccer/contentGate';
 import { syncMatchLineups } from '@/lib/lineups';
 
 export const dynamic = 'force-dynamic';
@@ -65,19 +66,24 @@ export async function GET(request) {
            m.kickoff_at,
            m.external_ids->>'api_sports' AS api_sports_id
     FROM matches m
-    WHERE (
-      m.status = 'scheduled'
-      AND m.kickoff_at > now()
-      AND m.kickoff_at < now() + interval '12 hours'
-    ) OR (
-      m.status IN ('scheduled', 'live')
-      AND m.kickoff_at <= now()
-      AND m.kickoff_at > now() - interval '30 minutes'
-      AND NOT EXISTS (
-        SELECT 1 FROM match_lineups ml
-        WHERE ml.match_id = m.id AND ml.is_current = true
-      )
-    )
+    JOIN leagues l ON l.id = m.league_id
+    -- THE GATE WRAPS BOTH WINDOWS. AND binds tighter than OR, so an
+    -- unparenthesised gate would have covered window (A) only and let every
+    -- just-kicked EPL fixture straight through (B).
+    WHERE l.slug <> ALL(${CONTENT_EXCLUDED_SQL})
+      AND ((
+        m.status = 'scheduled'
+        AND m.kickoff_at > now()
+        AND m.kickoff_at < now() + interval '12 hours'
+      ) OR (
+        m.status IN ('scheduled', 'live')
+        AND m.kickoff_at <= now()
+        AND m.kickoff_at > now() - interval '30 minutes'
+        AND NOT EXISTS (
+          SELECT 1 FROM match_lineups ml
+          WHERE ml.match_id = m.id AND ml.is_current = true
+        )
+      ))
     ORDER BY m.kickoff_at
   `;
 
