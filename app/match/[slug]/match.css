@@ -1926,3 +1926,26 @@
   .ws-footer { padding: 10px 16px; }
 }
 
+
+/* THE ROW SCROLLS; NOTHING SAID SO. The five labels have never fit a phone
+   and the bar has scrolled horizontally since it was built - but a hard clip
+   through the middle of "Odds & Projections" reads as broken text, not as
+   "there is more to the right". Same fade the tracker's grid and the preset
+   rail use: the edge dissolves instead of cutting. Nothing about the scroll
+   behaviour changes - this is the affordance it was missing.
+
+   Applied only where the overflow actually happens (the tabs fit above it),
+   and only to the mask, so no label is ever ellipsised away: the whole label
+   stays readable once scrolled to, which is why this beats truncation. */
+@media (max-width: 720px) {
+  .tab-bar {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+  }
+  /* At the far right there is nothing more to promise - drop the fade so the
+     last tab is not permanently dimmed. */
+  .tab-bar.at-end {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}

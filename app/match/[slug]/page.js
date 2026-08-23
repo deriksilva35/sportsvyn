@@ -41,6 +41,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { sql } from '@/lib/db';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
+import { contentAllowedForLeague } from '@/lib/soccer/contentGate';
 import MatchMetaStrip from '@/components/match/MatchMetaStrip';
 import TeamsHeader from '@/components/match/TeamsHeader';
 import MatchTabBar from '@/components/match/MatchTabBar';
@@ -103,6 +104,8 @@ async function getMatchBySlug(slug) {
       m.home_penalties, m.away_penalties,
       m.venue, m.external_ids,
       l.slug                AS league_slug,
+      l.name                AS league_name,
+      m.week                AS week,
       h.name                AS home_name,
       h.slug                AS home_slug,
       h.abbreviation        AS home_abbreviation,
@@ -386,6 +389,22 @@ export default async function MatchPage({ params }) {
   // never render.
   if (match.league_slug === 'nfl') permanentRedirect(`/nfl/game/${slug}`);
 
+  // The crumb's destination, from the league itself: each competition's own
+  // index, with the scoreboard as the honest fallback for one that has none.
+  const LEAGUE_INDEX = {
+    'fifa-wc-2026': '/world-cup-2026/bracket',
+    epl: '/epl/standings',
+    cfb: '/scores?sport=cfb',
+  };
+  const leagueHref = LEAGUE_INDEX[match.league_slug] ?? '/scores';
+
+  // GATED PANELS DO NOT RENDER AT ALL. A league whose model spend is switched
+  // off (lib/soccer/contentGate) can never receive analyst copy, a preview or
+  // a watch score - so promising them is a lie with a deadline that never
+  // arrives. The distinction the pins hold: GATED means the section is
+  // ABSENT; merely EMPTY means an honest empty state is fine.
+  const aiAllowed = contentAllowedForLeague(match.league_slug);
+
   const [watchScore, broadcasters, preview, homeForm, awayForm, winProbability, brief, oddsDetail, lineups, keyMoments, matchStatistics] = await Promise.all([
     getWatchScore(match.id),
     getBroadcasters(match.id, 'US'),
@@ -437,7 +456,13 @@ export default async function MatchPage({ params }) {
         <div className="breadcrumb">
           <a href="/">Home</a>
           <span className="sep">/</span>
-          <a href="/world-cup-2026/bracket">FIFA World Cup 2026</a>
+          {/* THE CRUMB IS THE MATCH'S OWN LEAGUE. It was hardcoded because
+              when this page was written there was exactly one competition on
+              the platform and the bracket was its index - a true statement
+              that quietly became a lie the moment a second league arrived,
+              because nothing in the markup was reading the row it described.
+              Derived now, and pinned. */}
+          <a href={leagueHref}>{match.league_name ?? 'Football'}</a>
           <span className="sep">/</span>
           <span className="current">{match.home_name} vs {match.away_name}</span>
         </div>
@@ -488,12 +513,18 @@ export default async function MatchPage({ params }) {
         >
           <div className="preview-twocol">
             <div className="preview-twocol-left">
-              <PreviewLeft preview={preview} match={match} />
+              {/* GATED = ABSENT. The analyst pass cannot run for this league,
+                  so 'copy lands here when the analyst pass runs' is a promise
+                  with no delivery date. */}
+              {aiAllowed ? <PreviewLeft preview={preview} match={match} /> : null}
             </div>
             <div className="preview-twocol-right">
-              <WatchScoreVertical score={watchScore} />
+              {aiAllowed ? <WatchScoreVertical score={watchScore} /> : null}
               <WinProbability probability={visibleWinProb} homeName={match.home_name} awayName={match.away_name} />
-              <EdgePick pick={null} />
+              {aiAllowed ? <EdgePick pick={null} /> : null}
+              {/* EMPTY, NOT GATED: broadcasters come from a provider read that
+                  is switched on - it simply has no US listing for this
+                  fixture yet, and saying so is honest. */}
               <WhereToWatch broadcasters={broadcasters} />
             </div>
           </div>

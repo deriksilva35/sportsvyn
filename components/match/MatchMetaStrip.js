@@ -33,10 +33,16 @@ const STAGE_DISPLAY = {
 };
 
 export default function MatchMetaStrip({ match }) {
+  // A LEAGUE SEASON HAS MATCHWEEKS, NOT STAGES. The tournament vocabulary
+  // above is the World Cup's, and its 'Friendly' default was true when every
+  // stage-less row on the platform WAS a friendly - so an EPL fixture, which
+  // carries a week and no stage, inherited the wrong word. Week first, stage
+  // second, and the friendly default keeps the rows it was written for
+  // (stage-less AND week-less).
   const stageLabel = match?.stage
     ? (STAGE_DISPLAY[match.stage] ?? match.stage) +
       (match.group_code ? ` · Group ${match.group_code}` : '')
-    : 'Friendly';
+    : (match?.week != null ? `Matchweek ${match.week}` : 'Friendly');
 
   return (
     <div className="match-meta-strip">
