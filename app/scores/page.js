@@ -14,8 +14,8 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import Scoreboard from '@/components/gridiron/Scoreboard';
 import Link from 'next/link';
 import DateRail from '@/components/gridiron/DateRail';
-import { getSlateByDate, resolveScoresDate, scoresDateRange } from '@/lib/gridiron/readers';
-import { parseScoresParams } from '@/lib/gridiron/scoresNav';
+import { getSlateByDate, resolveScoresDate, scoresDateRange, priorDateHasLive } from '@/lib/gridiron/readers';
+import { parseScoresParams, defaultScoresDate } from '@/lib/gridiron/scoresNav';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import '@/components/gridiron/gridiron.css';
 
@@ -59,9 +59,14 @@ export default async function ScoresPage({ searchParams }) {
   // tab. The web branch of this page stays public; the guard is shell-only.
   const session = await auth();
   requireSignInInShell({ isShell, userId: session?.user?.id ?? null, dest: '/scores' });
-  // Explicit ?date= navigation is respected; the no-param default resolves to
-  // today (if it has games) or the nearest day with a real slate.
-  const date = DATE_RE.test(sp.date ?? '') ? sp.date : await resolveScoresDate(todayEtDate());
+  // Explicit ?date= navigation is respected, always and untouched. The
+  // no-param default walks the SPORTS-DAY law first (defaultScoresDate: roll
+  // back before 06:00 ET or while a prior-date game is still live), then
+  // resolves to a day that actually has a slate.
+  const date = DATE_RE.test(sp.date ?? '') ? sp.date : await (async () => {
+    const priorHasLive = await priorDateHasLive(todayEtDate()).catch(() => false);
+    return resolveScoresDate(defaultScoresDate(new Date(), { priorHasLive }));
+  })();
   // FILTERS ARE URL STATE NOW (fix B). They were component state inside
   // Scoreboard, so ANY navigation - date change, back button - reset them to
   // ALL. A filter that survives navigation has to live in the URL, and once

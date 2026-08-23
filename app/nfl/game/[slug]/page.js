@@ -19,7 +19,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getGamePage, scoringByQuarter, linesByGroup, fantasyLeaders, SCORING_FORMATS } from '@/lib/gridiron/gameDetail';
-import { lineScoreGrid } from '@/lib/gridiron/lineScore';
+import { lineScoreGrid, liveChip } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
 import { getBriefForMatch } from '@/lib/gridiron/gameBrief';
 import GameTabs from '@/components/gridiron/GameTabs';
@@ -104,7 +104,14 @@ export default async function GamePage({ params }) {
         <header className="gg-head">
           <div className="gg-chips">
             {final ? <span className="gg-chip final">FINAL</span> : null}
-            {live ? <span className="gg-chip live">LIVE</span> : null}
+            {/* Where in the game, the ONE formatter (lineScore.js) - the same
+                chip the scoreboard card wears, per the one-definition law
+                this page originally escaped by being missed in recon. */}
+            {live ? (
+              <span className="gg-chip live">
+                LIVE{liveChip(game.liveState) ? <span className="gi-qc"> {liveChip(game.liveState)}</span> : null}
+              </span>
+            ) : null}
             {!final && !live && game.kickoffAt
               ? <span className="gg-chip time">{fmtKick(game.kickoffAt)} ET</span> : null}
             {game.seasonPhase === 'PRE' ? <span className="gg-chip pre">PRE</span> : null}

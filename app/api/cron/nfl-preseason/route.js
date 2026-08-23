@@ -43,7 +43,7 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { importApiSportsGames } from '@/lib/gridiron/apiSportsImport';
-import { sweepDecision, slateDateEt, slateDatesForProvider, providerDatesForGames, detailTargets, DAILY_REQUEST_CAP } from '@/lib/pollers/preseasonWindow';
+import { sweepDecision, slateDateEt, pollSlateDatesEt, slateDatesForProvider, providerDatesForGames, detailTargets, DAILY_REQUEST_CAP } from '@/lib/pollers/preseasonWindow';
 import { fetchGameDetail } from '@/lib/gridiron/gameDetail';
 
 export const dynamic = 'force-dynamic';
@@ -96,9 +96,11 @@ async function todaysPreseason(dateEt) {
  * around it - and either way one game's bad night must not cost the other nine
  * theirs, nor abort the sweep that already spent its score request.
  */
-async function detailPass({ dateEt, budgetLeft }) {
+async function detailPass({ dates, budgetLeft }) {
   if (budgetLeft <= 0) return { requests: 0, games: 0, skipped: 'no-budget' };
-  const games = await todaysPreseason(dateEt);
+  // Same sports-day union as the score sweep: a straggler's post-final detail
+  // fetch must not be orphaned by the calendar rolling under it.
+  const games = (await Promise.all(dates.map((d) => todaysPreseason(d)))).flat();
   const targets = detailTargets({ games, now: new Date() });
   let requests = 0;
   const done = [];
@@ -128,9 +130,14 @@ export async function GET(request) {
   // kickoffs invisible on 13 Aug.
   const dateEt = slateDateEt(now);
 
-  const [games, spent, lastSync] = await Promise.all([
-    todaysPreseason(dateEt), requestsToday(), lastSyncAt(),
+  // THE SPORTS-DAY LAW: before 06:00 ET the prior date's games ride along, so
+  // a Saturday straggler still live past midnight keeps its poller (the
+  // 23 Aug freeze: DAL@ARI in Q4, window rolled, board froze at 24-6).
+  const slateDates = pollSlateDatesEt(now);
+  const [gamesByDate, spent, lastSync] = await Promise.all([
+    Promise.all(slateDates.map((d) => todaysPreseason(d))), requestsToday(), lastSyncAt(),
   ]);
+  const games = gamesByDate.flat();
 
   const decision = sweepDecision({ games, now, requestsToday: spent, lastSyncAt: lastSync });
 
@@ -180,7 +187,7 @@ export async function GET(request) {
   // The detail pass rides the same invocation and is ledgered into the same
   // day's count, because it draws on the same budget.
   const detail = await detailPass({
-    dateEt,
+    dates: slateDates,
     budgetLeft: DAILY_REQUEST_CAP - (spent + 1),
   });
   if (detail.requests > 0) {
