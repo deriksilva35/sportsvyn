@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sportsvyn - EPL Match Center mock v0.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,600;1,900&family=Saira+Condensed:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1C1C1C; --line:#2A2A2A;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --jade-bright:#3FBF6F;
+    --terra:#B8410F; --terra-bright:#E0602A; --live:#E63946; --muted:#8A8A85; --dim:#5A5A56;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  body{background:#050505;color:var(--paper);font-family:'Saira',sans-serif;padding:28px 16px 60px;}
+  .stage{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;align-items:flex-start;}
+  .frame-label{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted);margin:0 0 8px 4px;}
+  .frame-note{font-size:12px;color:var(--dim);margin:8px 4px 0;max-width:390px;line-height:1.5;}
+  .phone{width:390px;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:820px;}
+  .appbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 11px;border-bottom:1px solid var(--line);}
+  .wordmark{font-family:'Saira';font-style:italic;font-weight:900;font-size:19px;letter-spacing:-.05em;}
+  .wordmark .y{color:var(--volt);position:relative;}
+  .wordmark .y::after{content:"";position:absolute;left:12%;right:12%;top:-3px;height:3px;background:var(--volt);}
+  .acct{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);}
+  .crumb{font-family:'JetBrains Mono';font-size:10.5px;color:var(--dim);}
+  .crumb b{color:var(--muted);}
+  .screen{padding:16px;display:flex;flex-direction:column;gap:12px;}
+  .eyebrow{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline;}
+  .eyebrow .mono{font-family:'JetBrains Mono';letter-spacing:0;text-transform:none;font-size:10.5px;}
+
+  /* ---------- score header ---------- */
+  .ghead{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:14px 14px 12px;}
+  .gstat{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:11px;}
+  .livedot{width:7px;height:7px;border-radius:50%;background:var(--live);}
+  .livetxt{font-family:'Saira Condensed';font-weight:600;letter-spacing:.1em;font-size:11px;color:var(--live);}
+  .minchip{font-family:'JetBrains Mono';font-weight:700;font-size:13px;color:var(--volt);font-variant-numeric:tabular-nums;}
+  .vs{display:flex;align-items:center;justify-content:space-between;}
+  .side{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .crest{width:38px;height:38px;border-radius:9px;background:var(--ink-3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'Saira';font-weight:900;font-style:italic;font-size:14px;}
+  .cname{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);}
+  .scorebig{font-family:'Saira';font-style:italic;font-weight:900;font-size:38px;letter-spacing:-.03em;color:var(--paper);padding:0 14px;}
+  .scorebig .dash{color:var(--dim);font-size:26px;margin:0 2px;}
+  .venue{text-align:center;font-family:'JetBrains Mono';font-size:9.5px;color:var(--dim);margin-top:10px;}
+
+  /* ---------- stat compare bar ---------- */
+  .statbar{background:var(--ink-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;}
+  .srow{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+  .srow:last-child{margin-bottom:0;}
+  .srow .v{font-family:'JetBrains Mono';font-weight:700;font-size:12px;width:32px;text-align:center;flex:none;}
+  .srow .lbl{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:9px;color:var(--muted);width:70px;text-align:center;flex:none;}
+  .srow .bar{flex:1;height:5px;background:var(--ink-3);border-radius:99px;overflow:hidden;display:flex;}
+  .srow .bar i{display:block;height:100%;}
+  .srow .bar .home{background:var(--volt);}
+  .srow .bar .away{background:#3a3a3a;margin-left:auto;}
+
+  /* ---------- timeline ---------- */
+  .tl{background:var(--ink-2);border:1px solid var(--line);border-radius:11px;overflow:hidden;}
+  .tlrow{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid #1e1e1e;}
+  .tlrow:last-child{border-bottom:0;}
+  .tlrow.goal{background:linear-gradient(90deg,rgba(212,255,0,.06),var(--ink-2) 60%);}
+  .tlmin{font-family:'JetBrains Mono';font-weight:700;font-size:11px;color:var(--dim);width:34px;flex:none;text-align:right;}
+  .tlicon{width:20px;flex:none;text-align:center;font-size:13px;}
+  .tlbody{flex:1;min-width:0;}
+  .tlname{font-family:'JetBrains Mono';font-weight:700;font-size:12.5px;}
+  .goal .tlname{color:var(--volt);}
+  .tlsub{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);margin-top:1px;}
+  .tlside{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;font-size:9px;letter-spacing:.06em;color:var(--muted);flex:none;}
+
+  /* ---------- pitch / lineups ---------- */
+  .pitch{position:relative;background:linear-gradient(180deg,#0d1a0d,#0a140a);border:1px solid #1e2e1e;border-radius:12px;padding:16px 10px;min-height:180px;}
+  .pcircle{position:absolute;left:50%;top:50%;width:64px;height:64px;border:1px solid rgba(245,245,242,.08);border-radius:50%;transform:translate(-50%,-50%);}
+  .pline{position:absolute;left:8%;right:8%;top:50%;height:1px;background:rgba(245,245,242,.08);}
+  .prow{display:flex;justify-content:space-around;position:relative;z-index:1;margin-bottom:20px;}
+  .prow:last-child{margin-bottom:0;}
+  .pp{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .pdot{width:26px;height:26px;border-radius:50%;background:var(--ink-3);border:1.5px solid var(--volt);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-weight:700;font-size:10px;color:var(--volt);}
+  .pdot.away{border-color:var(--muted);color:var(--paper);}
+  .pnm{font-family:'JetBrains Mono';font-size:8px;color:var(--muted);white-space:nowrap;}
+  .formrow{display:flex;justify-content:space-between;padding:0 4px;margin-top:8px;}
+  .formtag{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:9.5px;color:var(--muted);}
+  .formtag b{color:var(--paper);}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:16px;border-bottom:1px solid var(--line);}
+  .tabs button{background:none;border:0;color:var(--muted);font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.1em;font-size:11.5px;padding:0 0 9px;cursor:pointer;border-bottom:2px solid transparent;}
+  .tabs button.on{color:var(--volt);border-bottom-color:var(--volt);}
+  .pane{display:none;flex-direction:column;gap:10px;}
+  .pane.on{display:flex;}
+
+  /* ---------- post-match ---------- */
+  .fthead{text-align:center;padding:6px 0 2px;}
+  .ftlbl{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- FRAME 1: LIVE MATCH CENTER -->
+  <div>
+    <p class="frame-label">1 - live match center - minute, score, timeline</p>
+    <div class="phone">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+        <div class="crumb">Premier League <b>·</b> Matchweek 2</div>
+
+        <div class="ghead">
+          <div class="gstat"><span class="livedot"></span><span class="livetxt">LIVE</span><span class="minchip">67'</span></div>
+          <div class="vs">
+            <div class="side"><div class="crest">NEW</div><div class="cname">Newcastle</div></div>
+            <div class="scorebig">2<span class="dash">–</span>1</div>
+            <div class="side"><div class="crest">LIV</div><div class="cname">Liverpool</div></div>
+          </div>
+          <div class="venue">St James' Park · Newcastle</div>
+        </div>
+
+        <div class="statbar">
+          <div class="srow"><span class="v">58%</span><span class="lbl">Possession</span><span class="v">42%</span></div>
+          <div class="srow" style="margin:-5px 0 9px;"><span></span><span></span><span class="bar"><i class="home" style="width:58%"></i><i class="away" style="width:42%"></i></span></div>
+          <div class="srow"><span class="v">9</span><span class="lbl">Shots</span><span class="v">6</span></div>
+          <div class="srow"><span class="v">4</span><span class="lbl">On target</span><span class="v">3</span></div>
+          <div class="srow"><span class="v">1.8</span><span class="lbl">xG</span><span class="v">1.1</span></div>
+          <div class="srow"><span class="v">3</span><span class="lbl">Corners</span><span class="v">5</span></div>
+        </div>
+
+        <div class="tabs">
+          <button class="on" data-t="timeline">Timeline</button>
+          <button data-t="lineups">Lineups</button>
+          <button data-t="stats">Full stats</button>
+        </div>
+
+        <div class="pane on" data-p="timeline">
+          <div class="tl">
+            <div class="tlrow"><span class="tlmin">67'</span><span class="tlicon">⏱</span><div class="tlbody"><div class="tlname">Live now</div></div></div>
+            <div class="tlrow"><span class="tlmin">74'</span><span class="tlicon">🟨</span><div class="tlbody"><div class="tlname">Van Dijk</div><div class="tlsub">Booked</div></div><span class="tlside">LIV</span></div>
+            <div class="tlrow"><span class="tlmin">67'</span><span class="tlicon">🔁</span><div class="tlbody"><div class="tlname">Gordon <span style="color:var(--dim)">→ Murphy</span></div></div><span class="tlside">NEW</span></div>
+            <div class="tlrow goal"><span class="tlmin">52'</span><span class="tlicon">⚽</span><div class="tlbody"><div class="tlname">Isak</div><div class="tlsub">Penalty</div></div><span class="tlside">NEW</span></div>
+            <div class="tlrow"><span class="tlmin">45'</span><span class="tlicon">⏱</span><div class="tlbody"><div class="tlname">Half time · NEW 1–0 LIV</div></div></div>
+            <div class="tlrow goal"><span class="tlmin">23'</span><span class="tlicon">⚽</span><div class="tlbody"><div class="tlname">Isak</div><div class="tlsub">Assist: Gordon</div></div><span class="tlside">NEW</span></div>
+          </div>
+        </div>
+
+        <div class="pane" data-p="lineups">
+          <div class="formrow"><span class="formtag">Newcastle <b>4-3-3</b></span><span class="formtag">Liverpool <b>4-2-3-1</b></span></div>
+          <div class="pitch">
+            <div class="pcircle"></div>
+            <div class="pline"></div>
+            <div class="prow"><div class="pp"><div class="pdot">9</div><div class="pnm">Isak</div></div></div>
+            <div class="prow"><div class="pp"><div class="pdot">11</div><div class="pnm">Gordon</div></div><div class="pp"><div class="pdot">8</div><div class="pnm">Bruno G.</div></div><div class="pp"><div class="pdot">7</div><div class="pnm">Murphy</div></div></div>
+            <div class="prow"><div class="pp"><div class="pdot">6</div><div class="pnm">Guimarães</div></div><div class="pp"><div class="pdot">39</div><div class="pnm">Tonali</div></div></div>
+            <div class="prow"><div class="pp"><div class="pdot">1</div><div class="pnm">Pope</div></div></div>
+          </div>
+          <div class="pitch">
+            <div class="pcircle"></div>
+            <div class="pline"></div>
+            <div class="prow"><div class="pp"><div class="pdot away">11</div><div class="pnm">Salah</div></div></div>
+            <div class="prow"><div class="pp"><div class="pdot away">10</div><div class="pnm">Szoboszlai</div></div><div class="pp"><div class="pdot away">20</div><div class="pnm">Díaz</div></div><div class="pp"><div class="pdot away">7</div><div class="pnm">Núñez</div></div></div>
+            <div class="prow"><div class="pp"><div class="pdot away">3</div><div class="pnm">Mac Allister</div></div><div class="pp"><div class="pdot away">4</div><div class="pnm">Endō</div></div></div>
+            <div class="prow"><div class="pp"><div class="pdot away">1</div><div class="pnm">Alisson</div></div></div>
+          </div>
+        </div>
+
+        <div class="pane" data-p="stats"></div>
+      </div>
+    </div>
+    <p class="frame-note">Minute chip counts UP (67') beside LIVE - the soccer sibling to the gridiron quarter chip, same honest-snapshot law. Stat bars are provider fields (possession, shots, xG, corners) - no invented metric. Timeline reads newest-first with icon + scorer + assist; goals wash volt.</p>
+  </div>
+
+  <!-- FRAME 2: POST-MATCH -->
+  <div>
+    <p class="frame-label">2 - full time - same components, final state</p>
+    <div class="phone" style="min-height:640px;">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+        <div class="crumb">Premier League <b>·</b> Matchweek 1</div>
+        <div class="ghead">
+          <div class="fthead"><span class="ftlbl">Full time</span></div>
+          <div class="vs">
+            <div class="side"><div class="crest">NEW</div><div class="cname">Newcastle</div></div>
+            <div class="scorebig">2<span class="dash">–</span>2</div>
+            <div class="side"><div class="crest">LIV</div><div class="cname">Liverpool</div></div>
+          </div>
+          <div class="venue">St James' Park · Newcastle</div>
+        </div>
+
+        <div class="statbar">
+          <div class="srow"><span class="v">54%</span><span class="lbl">Possession</span><span class="v">46%</span></div>
+          <div class="srow" style="margin:-5px 0 9px;"><span></span><span></span><span class="bar"><i class="home" style="width:54%"></i><i class="away" style="width:46%"></i></span></div>
+          <div class="srow"><span class="v">13</span><span class="lbl">Shots</span><span class="v">11</span></div>
+          <div class="srow"><span class="v">5</span><span class="lbl">On target</span><span class="v">6</span></div>
+          <div class="srow"><span class="v">2.1</span><span class="lbl">xG</span><span class="v">2.4</span></div>
+        </div>
+
+        <div class="eyebrow"><span>Full timeline</span></div>
+        <div class="tl">
+          <div class="tlrow goal"><span class="tlmin">90+9'</span><span class="tlicon">⚽</span><div class="tlbody"><div class="tlname">Szoboszlai</div><div class="tlsub">Assist: Salah</div></div><span class="tlside">LIV</span></div>
+          <div class="tlrow goal"><span class="tlmin">61'</span><span class="tlicon">⚽</span><div class="tlbody"><div class="tlname">Isak</div><div class="tlsub">Penalty</div></div><span class="tlside">NEW</span></div>
+          <div class="tlrow goal"><span class="tlmin">58'</span><span class="tlicon">⚽</span><div class="tlbody"><div class="tlname">Núñez</div></div><span class="tlside">LIV</span></div>
+          <div class="tlrow goal"><span class="tlmin">23'</span><span class="tlicon">⚽</span><div class="tlbody"><div class="tlname">Isak</div><div class="tlsub">Assist: Gordon</div></div><span class="tlside">NEW</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="frame-note">No minute chip, no LIVE dot - "Full time" replaces both. Stats and timeline persist as the box score. Same tl/statbar components as frame 1; nothing rebuilt for the final state.</p>
+  </div>
+
+</div>
+<script>
+  document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+    const wrap=b.closest('.screen');
+    wrap.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    wrap.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.dataset.p===b.dataset.t));
+  }));
+</script>
+</body>
+</html>

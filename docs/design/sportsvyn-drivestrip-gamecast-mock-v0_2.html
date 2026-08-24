@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sportsvyn - DriveStrip + Gamecast mock v0.2</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,600;1,900&family=Saira+Condensed:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1C1C1C; --line:#2A2A2A;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --jade-bright:#3FBF6F;
+    --terra:#B8410F; --terra-bright:#E0602A; --live:#E63946; --muted:#8A8A85; --dim:#5A5A56;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  body{background:#050505;color:var(--paper);font-family:'Saira',sans-serif;padding:28px 16px 60px;}
+  .stage{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;align-items:flex-start;}
+  .frame-label{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted);margin:0 0 8px 4px;}
+  .frame-note{font-size:12px;color:var(--dim);margin:8px 4px 0;max-width:390px;line-height:1.5;}
+  .phone{width:390px;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:820px;}
+  .appbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 11px;border-bottom:1px solid var(--line);}
+  .wordmark{font-family:'Saira';font-style:italic;font-weight:900;font-size:19px;letter-spacing:-.05em;}
+  .wordmark .y{color:var(--volt);position:relative;}
+  .wordmark .y::after{content:"";position:absolute;left:12%;right:12%;top:-3px;height:3px;background:var(--volt);}
+  .acct{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);}
+  .screen{padding:16px;display:flex;flex-direction:column;gap:12px;}
+  .eyebrow{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline;}
+  .eyebrow .mono{font-family:'JetBrains Mono';letter-spacing:0;text-transform:none;font-size:10.5px;}
+
+  /* ---------- score header ---------- */
+  .ghead{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+  .gstat{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+  .livedot{width:7px;height:7px;border-radius:50%;background:var(--live);}
+  .livetxt{font-family:'Saira Condensed';font-weight:600;letter-spacing:.1em;font-size:11px;color:var(--live);}
+  .qchip{font-family:'JetBrains Mono';font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .trow{display:flex;align-items:center;justify-content:space-between;padding:4px 0;}
+  .trow .tm{display:flex;align-items:center;gap:9px;font-family:'JetBrains Mono';font-size:15px;}
+  .trow .ab{font-size:11px;color:var(--dim);width:32px;}
+  .trow .sc{font-family:'JetBrains Mono';font-weight:700;font-size:19px;font-variant-numeric:tabular-nums;}
+  .poss{width:7px;height:7px;border-radius:50%;background:var(--volt);flex:none;}
+  .poss.off{background:transparent;}
+
+  /* ---------- THE DRIVE STRIP ---------- */
+  .strip{background:linear-gradient(150deg,#141a00,var(--ink-2) 60%);border:1px solid #3a4400;border-radius:12px;padding:13px 14px 12px;}
+  .strip .top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:11px;}
+  .strip .dd{font-family:'Saira';font-style:italic;font-weight:900;font-size:22px;letter-spacing:-.03em;color:var(--volt);}
+  .strip .at{font-family:'JetBrains Mono';font-size:12px;color:var(--muted);}
+  .strip .at b{color:var(--paper);font-weight:700;}
+
+  /* field */
+  .field{position:relative;height:52px;background:var(--ink-3);border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+  .fzone{position:absolute;top:0;bottom:0;width:9.09%;background:rgba(212,255,0,.10);}
+  .fzone.l{left:0;border-right:1px solid #3a4400;}
+  .fzone.r{right:0;border-left:1px solid #3a4400;}
+  .fzone span{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-90deg);font-family:'Saira Condensed';font-weight:600;font-size:8px;letter-spacing:.1em;color:rgba(212,255,0,.5);white-space:nowrap;}
+  /* every 10 yards: a full line with its number; every 5: a short tick */
+  .ftick{position:absolute;top:0;bottom:0;width:1px;background:#2b2b2b;}
+  .ftick.five{top:auto;height:6px;bottom:0;background:#232323;}
+  .ftick.mid{background:#3a3a3a;}
+  .fnum{position:absolute;top:3px;transform:translateX(-50%);font-family:'JetBrains Mono';font-size:8px;color:#4d4d4d;font-variant-numeric:tabular-nums;}
+  .fhash{position:absolute;height:1px;width:3px;background:#262626;}
+  .fdrive{position:absolute;top:16px;height:20px;background:rgba(212,255,0,.20);border-left:2px solid var(--volt);}
+  .fball{position:absolute;top:12px;width:3px;height:28px;background:var(--volt);box-shadow:0 0 8px rgba(212,255,0,.7);}
+  .fball::after{content:"";position:absolute;top:-5px;left:-3px;border-left:4.5px solid transparent;border-right:4.5px solid transparent;border-top:5px solid var(--volt);}
+  .ftogo{position:absolute;top:12px;width:2px;height:28px;background:rgba(245,245,242,.6);}
+  .flabel{position:absolute;bottom:-15px;font-family:'JetBrains Mono';font-size:8.5px;color:var(--dim);}
+
+  .strip .foot{display:flex;align-items:center;justify-content:space-between;margin-top:22px;font-family:'JetBrains Mono';font-size:11px;color:var(--muted);}
+  .strip .foot b{color:var(--paper);font-weight:700;}
+  .wp{display:flex;align-items:center;gap:7px;}
+  .wpbar{width:74px;height:4px;background:var(--ink-3);border-radius:99px;overflow:hidden;}
+  .wpbar i{display:block;height:100%;background:var(--volt);width:63%;}
+
+  /* last play */
+  .lastplay{background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
+  .lastplay .lbl{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.11em;font-size:9.5px;color:var(--muted);}
+  .lastplay .txt{font-family:'JetBrains Mono';font-size:12.5px;line-height:1.5;margin-top:4px;}
+  .lastplay .txt b{color:var(--volt);font-weight:700;}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:16px;border-bottom:1px solid var(--line);padding-bottom:0;}
+  .tabs button{background:none;border:0;color:var(--muted);font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.1em;font-size:11.5px;padding:0 0 9px;cursor:pointer;border-bottom:2px solid transparent;}
+  .tabs button.on{color:var(--volt);border-bottom-color:var(--volt);}
+  .pane{display:none;flex-direction:column;gap:9px;}
+  .pane.on{display:flex;}
+
+  /* ---------- drive chart ---------- */
+  .drive{background:var(--ink-2);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .drive .dh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;background:var(--ink-3);}
+  .drive .dh .who{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:12px;font-weight:700;}
+  .drive .dh .tag{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;font-size:9px;letter-spacing:.08em;border:1px solid currentColor;border-radius:99px;padding:2px 8px;}
+  .tag.td{color:var(--volt);} .tag.fg{color:var(--jade-bright);} .tag.punt{color:var(--muted);} .tag.to{color:var(--terra-bright);}
+  .drive .dsub{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);padding:7px 12px 0;}
+  .drive .plays{padding:4px 12px 10px;}
+  .play{display:flex;gap:9px;padding:6px 0;border-bottom:1px solid #1e1e1e;}
+  .play:last-child{border-bottom:0;}
+  .play .dn{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);width:62px;flex:none;padding-top:1px;}
+  .play .pt{font-family:'JetBrains Mono';font-size:11.5px;line-height:1.45;flex:1;}
+  .play .pt b{color:var(--paper);font-weight:700;}
+  .play.score .pt{color:var(--volt);}
+  .play .yd{font-family:'JetBrains Mono';font-size:11px;font-weight:700;flex:none;width:34px;text-align:right;}
+  .yd.pos{color:var(--jade-bright);} .yd.neg{color:var(--terra-bright);} .yd.zero{color:var(--dim);}
+
+  /* ---------- play feed ---------- */
+  .pfrow{display:flex;gap:10px;background:var(--ink-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;}
+  .pfrow .clk{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);width:52px;flex:none;}
+  .pfrow .bd{flex:1;min-width:0;}
+  .pfrow .dd2{font-family:'JetBrains Mono';font-size:10px;color:var(--muted);}
+  .pfrow .tx{font-family:'JetBrains Mono';font-size:11.5px;line-height:1.45;margin-top:2px;}
+  .pfrow.scored{border-color:#3a4400;background:linear-gradient(90deg,rgba(212,255,0,.07),var(--ink-2) 55%);}
+  .pfrow.scored .tx{color:var(--volt);}
+  .qdiv{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:10px;color:var(--dim);display:flex;align-items:center;gap:9px;margin:3px 0;}
+  .qdiv::after{content:"";flex:1;height:1px;background:var(--line);}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- FRAME 1: LIVE GAMECAST -->
+  <div>
+    <p class="frame-label">1 - live gamecast - the strip is the hero</p>
+    <div class="phone">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+        <div class="ghead">
+          <div class="gstat"><span class="livedot"></span><span class="livetxt">LIVE</span><span class="qchip">Q3 · 6:47</span></div>
+          <div class="trow"><div class="tm"><span class="ab">DAL</span><span class="poss off"></span>Cowboys</div><div class="sc">17</div></div>
+          <div class="trow"><div class="tm"><span class="ab">PHI</span><span class="poss"></span>Eagles</div><div class="sc">20</div></div>
+        </div>
+
+        <div class="strip">
+          <div class="top">
+            <div class="dd">2nd &amp; 7</div>
+            <div class="at">at <b>DAL 34</b> · PHI ball</div>
+          </div>
+          <div class="field">
+
+            <div class="fzone l"><span>PHI</span></div><div class="fzone r"><span>DAL</span></div>
+            <div class="ftick" style="left:16.67%"></div>
+            <span class="fnum" style="left:16.67%">10</span>
+            <div class="ftick" style="left:25.00%"></div>
+            <span class="fnum" style="left:25.00%">20</span>
+            <div class="ftick" style="left:33.33%"></div>
+            <span class="fnum" style="left:33.33%">30</span>
+            <div class="ftick" style="left:41.67%"></div>
+            <span class="fnum" style="left:41.67%">40</span>
+            <div class="ftick mid" style="left:50.00%"></div>
+            <span class="fnum" style="left:50.00%">50</span>
+            <div class="ftick" style="left:58.33%"></div>
+            <span class="fnum" style="left:58.33%">40</span>
+            <div class="ftick" style="left:66.67%"></div>
+            <span class="fnum" style="left:66.67%">30</span>
+            <div class="ftick" style="left:75.00%"></div>
+            <span class="fnum" style="left:75.00%">20</span>
+            <div class="ftick" style="left:83.33%"></div>
+            <span class="fnum" style="left:83.33%">10</span>
+            <div class="ftick five" style="left:12.50%"></div>
+            <div class="ftick five" style="left:20.83%"></div>
+            <div class="ftick five" style="left:29.17%"></div>
+            <div class="ftick five" style="left:37.50%"></div>
+            <div class="ftick five" style="left:45.83%"></div>
+            <div class="ftick five" style="left:54.17%"></div>
+            <div class="ftick five" style="left:62.50%"></div>
+            <div class="ftick five" style="left:70.83%"></div>
+            <div class="ftick five" style="left:79.17%"></div>
+            <div class="ftick five" style="left:87.50%"></div>
+            <div class="fhash" style="left:9.17%;top:20px"></div>
+            <div class="fhash" style="left:9.17%;top:34px"></div>
+            <div class="fhash" style="left:10.00%;top:20px"></div>
+            <div class="fhash" style="left:10.00%;top:34px"></div>
+            <div class="fhash" style="left:10.83%;top:20px"></div>
+            <div class="fhash" style="left:10.83%;top:34px"></div>
+            <div class="fhash" style="left:11.67%;top:20px"></div>
+            <div class="fhash" style="left:11.67%;top:34px"></div>
+            <div class="fhash" style="left:13.33%;top:20px"></div>
+            <div class="fhash" style="left:13.33%;top:34px"></div>
+            <div class="fhash" style="left:14.17%;top:20px"></div>
+            <div class="fhash" style="left:14.17%;top:34px"></div>
+            <div class="fhash" style="left:15.00%;top:20px"></div>
+            <div class="fhash" style="left:15.00%;top:34px"></div>
+            <div class="fhash" style="left:15.83%;top:20px"></div>
+            <div class="fhash" style="left:15.83%;top:34px"></div>
+            <div class="fhash" style="left:17.50%;top:20px"></div>
+            <div class="fhash" style="left:17.50%;top:34px"></div>
+            <div class="fhash" style="left:18.33%;top:20px"></div>
+            <div class="fhash" style="left:18.33%;top:34px"></div>
+            <div class="fhash" style="left:19.17%;top:20px"></div>
+            <div class="fhash" style="left:19.17%;top:34px"></div>
+            <div class="fhash" style="left:20.00%;top:20px"></div>
+            <div class="fhash" style="left:20.00%;top:34px"></div>
+            <div class="fhash" style="left:21.67%;top:20px"></div>
+            <div class="fhash" style="left:21.67%;top:34px"></div>
+            <div class="fhash" style="left:22.50%;top:20px"></div>
+            <div class="fhash" style="left:22.50%;top:34px"></div>
+            <div class="fhash" style="left:23.33%;top:20px"></div>
+            <div class="fhash" style="left:23.33%;top:34px"></div>
+            <div class="fhash" style="left:24.17%;top:20px"></div>
+            <div class="fhash" style="left:24.17%;top:34px"></div>
+            <div class="fhash" style="left:25.83%;top:20px"></div>
+            <div class="fhash" style="left:25.83%;top:34px"></div>
+            <div class="fhash" style="left:26.67%;top:20px"></div>
+            <div class="fhash" style="left:26.67%;top:34px"></div>
+            <div class="fhash" style="left:27.50%;top:20px"></div>
+            <div class="fhash" style="left:27.50%;top:34px"></div>
+            <div class="fhash" style="left:28.33%;top:20px"></div>
+            <div class="fhash" style="left:28.33%;top:34px"></div>
+            <div class="fhash" style="left:30.00%;top:20px"></div>
+            <div class="fhash" style="left:30.00%;top:34px"></div>
+            <div class="fhash" style="left:30.83%;top:20px"></div>
+            <div class="fhash" style="left:30.83%;top:34px"></div>
+            <div class="fhash" style="left:31.67%;top:20px"></div>
+            <div class="fhash" style="left:31.67%;top:34px"></div>
+            <div class="fhash" style="left:32.50%;top:20px"></div>
+            <div class="fhash" style="left:32.50%;top:34px"></div>
+            <div class="fhash" style="left:34.17%;top:20px"></div>
+            <div class="fhash" style="left:34.17%;top:34px"></div>
+            <div class="fhash" style="left:35.00%;top:20px"></div>
+            <div class="fhash" style="left:35.00%;top:34px"></div>
+            <div class="fhash" style="left:35.83%;top:20px"></div>
+            <div class="fhash" style="left:35.83%;top:34px"></div>
+            <div class="fhash" style="left:36.67%;top:20px"></div>
+            <div class="fhash" style="left:36.67%;top:34px"></div>
+            <div class="fhash" style="left:38.33%;top:20px"></div>
+            <div class="fhash" style="left:38.33%;top:34px"></div>
+            <div class="fhash" style="left:39.17%;top:20px"></div>
+            <div class="fhash" style="left:39.17%;top:34px"></div>
+            <div class="fhash" style="left:40.00%;top:20px"></div>
+            <div class="fhash" style="left:40.00%;top:34px"></div>
+            <div class="fhash" style="left:40.83%;top:20px"></div>
+            <div class="fhash" style="left:40.83%;top:34px"></div>
+            <div class="fhash" style="left:42.50%;top:20px"></div>
+            <div class="fhash" style="left:42.50%;top:34px"></div>
+            <div class="fhash" style="left:43.33%;top:20px"></div>
+            <div class="fhash" style="left:43.33%;top:34px"></div>
+            <div class="fhash" style="left:44.17%;top:20px"></div>
+            <div class="fhash" style="left:44.17%;top:34px"></div>
+            <div class="fhash" style="left:45.00%;top:20px"></div>
+            <div class="fhash" style="left:45.00%;top:34px"></div>
+            <div class="fhash" style="left:46.67%;top:20px"></div>
+            <div class="fhash" style="left:46.67%;top:34px"></div>
+            <div class="fhash" style="left:47.50%;top:20px"></div>
+            <div class="fhash" style="left:47.50%;top:34px"></div>
+            <div class="fhash" style="left:48.33%;top:20px"></div>
+            <div class="fhash" style="left:48.33%;top:34px"></div>
+            <div class="fhash" style="left:49.17%;top:20px"></div>
+            <div class="fhash" style="left:49.17%;top:34px"></div>
+            <div class="fhash" style="left:50.83%;top:20px"></div>
+            <div class="fhash" style="left:50.83%;top:34px"></div>
+            <div class="fhash" style="left:51.67%;top:20px"></div>
+            <div class="fhash" style="left:51.67%;top:34px"></div>
+            <div class="fhash" style="left:52.50%;top:20px"></div>
+            <div class="fhash" style="left:52.50%;top:34px"></div>
+            <div class="fhash" style="left:53.33%;top:20px"></div>
+            <div class="fhash" style="left:53.33%;top:34px"></div>
+            <div class="fhash" style="left:55.00%;top:20px"></div>
+            <div class="fhash" style="left:55.00%;top:34px"></div>
+            <div class="fhash" style="left:55.83%;top:20px"></div>
+            <div class="fhash" style="left:55.83%;top:34px"></div>
+            <div class="fhash" style="left:56.67%;top:20px"></div>
+            <div class="fhash" style="left:56.67%;top:34px"></div>
+            <div class="fhash" style="left:57.50%;top:20px"></div>
+            <div class="fhash" style="left:57.50%;top:34px"></div>
+            <div class="fhash" style="left:59.17%;top:20px"></div>
+            <div class="fhash" style="left:59.17%;top:34px"></div>
+            <div class="fhash" style="left:60.00%;top:20px"></div>
+            <div class="fhash" style="left:60.00%;top:34px"></div>
+            <div class="fhash" style="left:60.83%;top:20px"></div>
+            <div class="fhash" style="left:60.83%;top:34px"></div>
+            <div class="fhash" style="left:61.67%;top:20px"></div>
+            <div class="fhash" style="left:61.67%;top:34px"></div>
+            <div class="fhash" style="left:63.33%;top:20px"></div>
+            <div class="fhash" style="left:63.33%;top:34px"></div>
+            <div class="fhash" style="left:64.17%;top:20px"></div>
+            <div class="fhash" style="left:64.17%;top:34px"></div>
+            <div class="fhash" style="left:65.00%;top:20px"></div>
+            <div class="fhash" style="left:65.00%;top:34px"></div>
+            <div class="fhash" style="left:65.83%;top:20px"></div>
+            <div class="fhash" style="left:65.83%;top:34px"></div>
+            <div class="fhash" style="left:67.50%;top:20px"></div>
+            <div class="fhash" style="left:67.50%;top:34px"></div>
+            <div class="fhash" style="left:68.33%;top:20px"></div>
+            <div class="fhash" style="left:68.33%;top:34px"></div>
+            <div class="fhash" style="left:69.17%;top:20px"></div>
+            <div class="fhash" style="left:69.17%;top:34px"></div>
+            <div class="fhash" style="left:70.00%;top:20px"></div>
+            <div class="fhash" style="left:70.00%;top:34px"></div>
+            <div class="fhash" style="left:71.67%;top:20px"></div>
+            <div class="fhash" style="left:71.67%;top:34px"></div>
+            <div class="fhash" style="left:72.50%;top:20px"></div>
+            <div class="fhash" style="left:72.50%;top:34px"></div>
+            <div class="fhash" style="left:73.33%;top:20px"></div>
+            <div class="fhash" style="left:73.33%;top:34px"></div>
+            <div class="fhash" style="left:74.17%;top:20px"></div>
+            <div class="fhash" style="left:74.17%;top:34px"></div>
+            <div class="fhash" style="left:75.83%;top:20px"></div>
+            <div class="fhash" style="left:75.83%;top:34px"></div>
+            <div class="fhash" style="left:76.67%;top:20px"></div>
+            <div class="fhash" style="left:76.67%;top:34px"></div>
+            <div class="fhash" style="left:77.50%;top:20px"></div>
+            <div class="fhash" style="left:77.50%;top:34px"></div>
+            <div class="fhash" style="left:78.33%;top:20px"></div>
+            <div class="fhash" style="left:78.33%;top:34px"></div>
+            <div class="fhash" style="left:80.00%;top:20px"></div>
+            <div class="fhash" style="left:80.00%;top:34px"></div>
+            <div class="fhash" style="left:80.83%;top:20px"></div>
+            <div class="fhash" style="left:80.83%;top:34px"></div>
+            <div class="fhash" style="left:81.67%;top:20px"></div>
+            <div class="fhash" style="left:81.67%;top:34px"></div>
+            <div class="fhash" style="left:82.50%;top:20px"></div>
+            <div class="fhash" style="left:82.50%;top:34px"></div>
+            <div class="fhash" style="left:84.17%;top:20px"></div>
+            <div class="fhash" style="left:84.17%;top:34px"></div>
+            <div class="fhash" style="left:85.00%;top:20px"></div>
+            <div class="fhash" style="left:85.00%;top:34px"></div>
+            <div class="fhash" style="left:85.83%;top:20px"></div>
+            <div class="fhash" style="left:85.83%;top:34px"></div>
+            <div class="fhash" style="left:86.67%;top:20px"></div>
+            <div class="fhash" style="left:86.67%;top:34px"></div>
+            <div class="fhash" style="left:88.33%;top:20px"></div>
+            <div class="fhash" style="left:88.33%;top:34px"></div>
+            <div class="fhash" style="left:89.17%;top:20px"></div>
+            <div class="fhash" style="left:89.17%;top:34px"></div>
+            <div class="fhash" style="left:90.00%;top:20px"></div>
+            <div class="fhash" style="left:90.00%;top:34px"></div>
+            <div class="fhash" style="left:90.83%;top:20px"></div>
+            <div class="fhash" style="left:90.83%;top:34px"></div>
+            <div class="fdrive" style="left:29.17%;width:34.17%"></div>
+            <div class="ftogo" style="left:69.17%"></div>
+            <div class="fball" style="left:63.33%"></div>
+          </div>
+          <div class="foot">
+            <span>Drive: <b>7 plays, 41 yds</b> · 3:12</span>
+            <span class="wp">PHI win <b style="color:var(--paper)">63%</b><span class="wpbar"><i></i></span></span>
+          </div>
+        </div>
+
+        <div class="lastplay">
+          <div class="lbl">Last play</div>
+          <div class="txt"><b>J. Hurts</b> pass short right to A. Brown for 8 yards, tackled by T. Diggs at DAL 34</div>
+        </div>
+
+        <div class="tabs">
+          <button class="on" data-t="drives">Drives</button>
+          <button data-t="plays">All plays</button>
+          <button data-t="stats">Stats</button>
+        </div>
+
+        <div class="pane on" data-p="drives">
+          <div class="drive">
+            <div class="dh"><div class="who"><span style="color:var(--volt)">●</span>PHI</div><span class="tag td">In progress</span></div>
+            <div class="dsub">7 plays · 41 yds · 3:12 · started PHI 25</div>
+            <div class="plays">
+              <div class="play"><span class="dn">2nd &amp; 7</span><span class="pt">Hurts pass short right to <b>A. Brown</b></span><span class="yd pos">+8</span></div>
+              <div class="play"><span class="dn">1st &amp; 10</span><span class="pt">Barkley rush left guard</span><span class="yd pos">+3</span></div>
+              <div class="play"><span class="dn">3rd &amp; 4</span><span class="pt">Hurts pass deep middle to <b>D. Smith</b></span><span class="yd pos">+22</span></div>
+            </div>
+          </div>
+          <div class="drive">
+            <div class="dh"><div class="who">DAL</div><span class="tag punt">Punt</span></div>
+            <div class="dsub">3 plays · 4 yds · 1:38 · started DAL 18</div>
+          </div>
+          <div class="drive">
+            <div class="dh"><div class="who">PHI</div><span class="tag td">Touchdown</span></div>
+            <div class="dsub">9 plays · 74 yds · 4:51 · started PHI 26</div>
+          </div>
+          <div class="drive">
+            <div class="dh"><div class="who">DAL</div><span class="tag to">Interception</span></div>
+            <div class="dsub">5 plays · 31 yds · 2:14 · started DAL 30</div>
+          </div>
+        </div>
+
+        <div class="pane" data-p="plays">
+          <div class="qdiv">Q3</div>
+          <div class="pfrow"><span class="clk">6:47</span><div class="bd"><div class="dd2">2nd &amp; 7 at DAL 34 · PHI</div><div class="tx">Hurts pass short right to A. Brown for 8 yards</div></div></div>
+          <div class="pfrow"><span class="clk">7:24</span><div class="bd"><div class="dd2">1st &amp; 10 at DAL 42 · PHI</div><div class="tx">Barkley rush left guard for 3 yards</div></div></div>
+          <div class="pfrow scored"><span class="clk">9:02</span><div class="bd"><div class="dd2">2nd &amp; 6 at DAL 12 · PHI</div><div class="tx">Hurts pass to Goedert for 12 yards, TOUCHDOWN</div></div></div>
+          <div class="pfrow"><span class="clk">10:15</span><div class="bd"><div class="dd2">3rd &amp; 4 at PHI 48 · PHI</div><div class="tx">Hurts pass deep middle to D. Smith for 22 yards</div></div></div>
+        </div>
+
+        <div class="pane" data-p="stats"></div>
+      </div>
+    </div>
+    <p class="frame-note">Strip = down &amp; distance in Saira volt, ball marker + to-go line on a numbered 100-yard field (every 10 yards lined and numbered, 5s ticked, hash rows between), drive summary and win probability beneath. Possession dot rides the score header. Last play sits under the strip - the sentence the strip can't say.</p>
+  </div>
+
+  <!-- FRAME 2: POST-GAME -->
+  <div>
+    <p class="frame-label">2 - post-game - same component, drive chart mode</p>
+    <div class="phone" style="min-height:700px;">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+        <div class="ghead">
+          <div class="gstat"><span class="livetxt" style="color:var(--muted)">FINAL</span></div>
+          <div class="trow"><div class="tm"><span class="ab">DAL</span>Cowboys</div><div class="sc" style="color:var(--dim)">17</div></div>
+          <div class="trow"><div class="tm"><span class="ab">PHI</span>Eagles</div><div class="sc">27</div></div>
+        </div>
+
+        <div class="eyebrow"><span>Drive chart</span><span class="mono">21 drives</span></div>
+
+        <div class="drive">
+          <div class="dh"><div class="who">PHI</div><span class="tag td">Touchdown</span></div>
+          <div class="dsub">9 plays · 74 yds · 4:51 · Q4 2:08</div>
+          <div class="plays">
+            <div class="play score"><span class="dn">1st &amp; G</span><span class="pt"><b>Barkley</b> rush right, TOUCHDOWN</span><span class="yd pos">+4</span></div>
+            <div class="play"><span class="dn">2nd &amp; 6</span><span class="pt">Hurts pass to Goedert</span><span class="yd pos">+12</span></div>
+            <div class="play"><span class="dn">2nd &amp; 11</span><span class="pt">Barkley rush up middle</span><span class="yd neg">-1</span></div>
+          </div>
+        </div>
+        <div class="drive">
+          <div class="dh"><div class="who">DAL</div><span class="tag to">Downs</span></div>
+          <div class="dsub">6 plays · 28 yds · 2:44 · Q4 6:59</div>
+        </div>
+        <div class="drive">
+          <div class="dh"><div class="who">PHI</div><span class="tag fg">Field goal</span></div>
+          <div class="dsub">11 plays · 52 yds · 5:33 · Q3 1:12</div>
+        </div>
+        <div class="drive">
+          <div class="dh"><div class="who">DAL</div><span class="tag punt">Punt</span></div>
+          <div class="dsub">3 plays · 4 yds · 1:38 · Q3 6:47</div>
+        </div>
+      </div>
+    </div>
+    <p class="frame-note">No field, no win-prob rail - the strip retires at final and the chart is the whole story. Drives collapse to a header line; tap expands the plays. Same components, different mode.</p>
+  </div>
+
+  <!-- FRAME 3: STRIP STATES -->
+  <div>
+    <p class="frame-label">3 - the strip's other states</p>
+    <div class="phone" style="min-height:700px;">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+        <div class="eyebrow"><span>Between drives</span></div>
+        <div class="strip" style="background:var(--ink-2);border-color:var(--line);">
+          <div class="top"><div class="dd" style="color:var(--muted);font-size:19px;">Kickoff</div><div class="at">PHI receives</div></div>
+          <div class="field">
+            <div class="fzone l"><span>PHI</span></div><div class="fzone r"><span>DAL</span></div>
+            <div class="ftick" style="left:16.67%"></div>
+            <span class="fnum" style="left:16.67%">10</span>
+            <div class="ftick" style="left:25.00%"></div>
+            <span class="fnum" style="left:25.00%">20</span>
+            <div class="ftick" style="left:33.33%"></div>
+            <span class="fnum" style="left:33.33%">30</span>
+            <div class="ftick" style="left:41.67%"></div>
+            <span class="fnum" style="left:41.67%">40</span>
+            <div class="ftick mid" style="left:50.00%"></div>
+            <span class="fnum" style="left:50.00%">50</span>
+            <div class="ftick" style="left:58.33%"></div>
+            <span class="fnum" style="left:58.33%">40</span>
+            <div class="ftick" style="left:66.67%"></div>
+            <span class="fnum" style="left:66.67%">30</span>
+            <div class="ftick" style="left:75.00%"></div>
+            <span class="fnum" style="left:75.00%">20</span>
+            <div class="ftick" style="left:83.33%"></div>
+            <span class="fnum" style="left:83.33%">10</span>
+            <div class="ftick five" style="left:12.50%"></div>
+            <div class="ftick five" style="left:20.83%"></div>
+            <div class="ftick five" style="left:29.17%"></div>
+            <div class="ftick five" style="left:37.50%"></div>
+            <div class="ftick five" style="left:45.83%"></div>
+            <div class="ftick five" style="left:54.17%"></div>
+            <div class="ftick five" style="left:62.50%"></div>
+            <div class="ftick five" style="left:70.83%"></div>
+            <div class="ftick five" style="left:79.17%"></div>
+            <div class="ftick five" style="left:87.50%"></div>
+            <div class="fhash" style="left:9.17%;top:20px"></div>
+            <div class="fhash" style="left:9.17%;top:34px"></div>
+            <div class="fhash" style="left:10.00%;top:20px"></div>
+            <div class="fhash" style="left:10.00%;top:34px"></div>
+            <div class="fhash" style="left:10.83%;top:20px"></div>
+            <div class="fhash" style="left:10.83%;top:34px"></div>
+            <div class="fhash" style="left:11.67%;top:20px"></div>
+            <div class="fhash" style="left:11.67%;top:34px"></div>
+            <div class="fhash" style="left:13.33%;top:20px"></div>
+            <div class="fhash" style="left:13.33%;top:34px"></div>
+            <div class="fhash" style="left:14.17%;top:20px"></div>
+            <div class="fhash" style="left:14.17%;top:34px"></div>
+            <div class="fhash" style="left:15.00%;top:20px"></div>
+            <div class="fhash" style="left:15.00%;top:34px"></div>
+            <div class="fhash" style="left:15.83%;top:20px"></div>
+            <div class="fhash" style="left:15.83%;top:34px"></div>
+            <div class="fhash" style="left:17.50%;top:20px"></div>
+            <div class="fhash" style="left:17.50%;top:34px"></div>
+            <div class="fhash" style="left:18.33%;top:20px"></div>
+            <div class="fhash" style="left:18.33%;top:34px"></div>
+            <div class="fhash" style="left:19.17%;top:20px"></div>
+            <div class="fhash" style="left:19.17%;top:34px"></div>
+            <div class="fhash" style="left:20.00%;top:20px"></div>
+            <div class="fhash" style="left:20.00%;top:34px"></div>
+            <div class="fhash" style="left:21.67%;top:20px"></div>
+            <div class="fhash" style="left:21.67%;top:34px"></div>
+            <div class="fhash" style="left:22.50%;top:20px"></div>
+            <div class="fhash" style="left:22.50%;top:34px"></div>
+            <div class="fhash" style="left:23.33%;top:20px"></div>
+            <div class="fhash" style="left:23.33%;top:34px"></div>
+            <div class="fhash" style="left:24.17%;top:20px"></div>
+            <div class="fhash" style="left:24.17%;top:34px"></div>
+            <div class="fhash" style="left:25.83%;top:20px"></div>
+            <div class="fhash" style="left:25.83%;top:34px"></div>
+            <div class="fhash" style="left:26.67%;top:20px"></div>
+            <div class="fhash" style="left:26.67%;top:34px"></div>
+            <div class="fhash" style="left:27.50%;top:20px"></div>
+            <div class="fhash" style="left:27.50%;top:34px"></div>
+            <div class="fhash" style="left:28.33%;top:20px"></div>
+            <div class="fhash" style="left:28.33%;top:34px"></div>
+            <div class="fhash" style="left:30.00%;top:20px"></div>
+            <div class="fhash" style="left:30.00%;top:34px"></div>
+            <div class="fhash" style="left:30.83%;top:20px"></div>
+            <div class="fhash" style="left:30.83%;top:34px"></div>
+            <div class="fhash" style="left:31.67%;top:20px"></div>
+            <div class="fhash" style="left:31.67%;top:34px"></div>
+            <div class="fhash" style="left:32.50%;top:20px"></div>
+            <div class="fhash" style="left:32.50%;top:34px"></div>
+            <div class="fhash" style="left:34.17%;top:20px"></div>
+            <div class="fhash" style="left:34.17%;top:34px"></div>
+            <div class="fhash" style="left:35.00%;top:20px"></div>
+            <div class="fhash" style="left:35.00%;top:34px"></div>
+            <div class="fhash" style="left:35.83%;top:20px"></div>
+            <div class="fhash" style="left:35.83%;top:34px"></div>
+            <div class="fhash" style="left:36.67%;top:20px"></div>
+            <div class="fhash" style="left:36.67%;top:34px"></div>
+            <div class="fhash" style="left:38.33%;top:20px"></div>
+            <div class="fhash" style="left:38.33%;top:34px"></div>
+            <div class="fhash" style="left:39.17%;top:20px"></div>
+            <div class="fhash" style="left:39.17%;top:34px"></div>
+            <div class="fhash" style="left:40.00%;top:20px"></div>
+            <div class="fhash" style="left:40.00%;top:34px"></div>
+            <div class="fhash" style="left:40.83%;top:20px"></div>
+            <div class="fhash" style="left:40.83%;top:34px"></div>
+            <div class="fhash" style="left:42.50%;top:20px"></div>
+            <div class="fhash" style="left:42.50%;top:34px"></div>
+            <div class="fhash" style="left:43.33%;top:20px"></div>
+            <div class="fhash" style="left:43.33%;top:34px"></div>
+            <div class="fhash" style="left:44.17%;top:20px"></div>
+            <div class="fhash" style="left:44.17%;top:34px"></div>
+            <div class="fhash" style="left:45.00%;top:20px"></div>
+            <div class="fhash" style="left:45.00%;top:34px"></div>
+            <div class="fhash" style="left:46.67%;top:20px"></div>
+            <div class="fhash" style="left:46.67%;top:34px"></div>
+            <div class="fhash" style="left:47.50%;top:20px"></div>
+            <div class="fhash" style="left:47.50%;top:34px"></div>
+            <div class="fhash" style="left:48.33%;top:20px"></div>
+            <div class="fhash" style="left:48.33%;top:34px"></div>
+            <div class="fhash" style="left:49.17%;top:20px"></div>
+            <div class="fhash" style="left:49.17%;top:34px"></div>
+            <div class="fhash" style="left:50.83%;top:20px"></div>
+            <div class="fhash" style="left:50.83%;top:34px"></div>
+            <div class="fhash" style="left:51.67%;top:20px"></div>
+            <div class="fhash" style="left:51.67%;top:34px"></div>
+            <div class="fhash" style="left:52.50%;top:20px"></div>
+            <div class="fhash" style="left:52.50%;top:34px"></div>
+            <div class="fhash" style="left:53.33%;top:20px"></div>
+            <div class="fhash" style="left:53.33%;top:34px"></div>
+            <div class="fhash" style="left:55.00%;top:20px"></div>
+            <div class="fhash" style="left:55.00%;top:34px"></div>
+            <div class="fhash" style="left:55.83%;top:20px"></div>
+            <div class="fhash" style="left:55.83%;top:34px"></div>
+            <div class="fhash" style="left:56.67%;top:20px"></div>
+            <div class="fhash" style="left:56.67%;top:34px"></div>
+            <div class="fhash" style="left:57.50%;top:20px"></div>
+            <div class="fhash" style="left:57.50%;top:34px"></div>
+            <div class="fhash" style="left:59.17%;top:20px"></div>
+            <div class="fhash" style="left:59.17%;top:34px"></div>
+            <div class="fhash" style="left:60.00%;top:20px"></div>
+            <div class="fhash" style="left:60.00%;top:34px"></div>
+            <div class="fhash" style="left:60.83%;top:20px"></div>
+            <div class="fhash" style="left:60.83%;top:34px"></div>
+            <div class="fhash" style="left:61.67%;top:20px"></div>
+            <div class="fhash" style="left:61.67%;top:34px"></div>
+            <div class="fhash" style="left:63.33%;top:20px"></div>
+            <div class="fhash" style="left:63.33%;top:34px"></div>
+            <div class="fhash" style="left:64.17%;top:20px"></div>
+            <div class="fhash" style="left:64.17%;top:34px"></div>
+            <div class="fhash" style="left:65.00%;top:20px"></div>
+            <div class="fhash" style="left:65.00%;top:34px"></div>
+            <div class="fhash" style="left:65.83%;top:20px"></div>
+            <div class="fhash" style="left:65.83%;top:34px"></div>
+            <div class="fhash" style="left:67.50%;top:20px"></div>
+            <div class="fhash" style="left:67.50%;top:34px"></div>
+            <div class="fhash" style="left:68.33%;top:20px"></div>
+            <div class="fhash" style="left:68.33%;top:34px"></div>
+            <div class="fhash" style="left:69.17%;top:20px"></div>
+            <div class="fhash" style="left:69.17%;top:34px"></div>
+            <div class="fhash" style="left:70.00%;top:20px"></div>
+            <div class="fhash" style="left:70.00%;top:34px"></div>
+            <div class="fhash" style="left:71.67%;top:20px"></div>
+            <div class="fhash" style="left:71.67%;top:34px"></div>
+            <div class="fhash" style="left:72.50%;top:20px"></div>
+            <div class="fhash" style="left:72.50%;top:34px"></div>
+            <div class="fhash" style="left:73.33%;top:20px"></div>
+            <div class="fhash" style="left:73.33%;top:34px"></div>
+            <div class="fhash" style="left:74.17%;top:20px"></div>
+            <div class="fhash" style="left:74.17%;top:34px"></div>
+            <div class="fhash" style="left:75.83%;top:20px"></div>
+            <div class="fhash" style="left:75.83%;top:34px"></div>
+            <div class="fhash" style="left:76.67%;top:20px"></div>
+            <div class="fhash" style="left:76.67%;top:34px"></div>
+            <div class="fhash" style="left:77.50%;top:20px"></div>
+            <div class="fhash" style="left:77.50%;top:34px"></div>
+            <div class="fhash" style="left:78.33%;top:20px"></div>
+            <div class="fhash" style="left:78.33%;top:34px"></div>
+            <div class="fhash" style="left:80.00%;top:20px"></div>
+            <div class="fhash" style="left:80.00%;top:34px"></div>
+            <div class="fhash" style="left:80.83%;top:20px"></div>
+            <div class="fhash" style="left:80.83%;top:34px"></div>
+            <div class="fhash" style="left:81.67%;top:20px"></div>
+            <div class="fhash" style="left:81.67%;top:34px"></div>
+            <div class="fhash" style="left:82.50%;top:20px"></div>
+            <div class="fhash" style="left:82.50%;top:34px"></div>
+            <div class="fhash" style="left:84.17%;top:20px"></div>
+            <div class="fhash" style="left:84.17%;top:34px"></div>
+            <div class="fhash" style="left:85.00%;top:20px"></div>
+            <div class="fhash" style="left:85.00%;top:34px"></div>
+            <div class="fhash" style="left:85.83%;top:20px"></div>
+            <div class="fhash" style="left:85.83%;top:34px"></div>
+            <div class="fhash" style="left:86.67%;top:20px"></div>
+            <div class="fhash" style="left:86.67%;top:34px"></div>
+            <div class="fhash" style="left:88.33%;top:20px"></div>
+            <div class="fhash" style="left:88.33%;top:34px"></div>
+            <div class="fhash" style="left:89.17%;top:20px"></div>
+            <div class="fhash" style="left:89.17%;top:34px"></div>
+            <div class="fhash" style="left:90.00%;top:20px"></div>
+            <div class="fhash" style="left:90.00%;top:34px"></div>
+            <div class="fhash" style="left:90.83%;top:20px"></div>
+            <div class="fhash" style="left:90.83%;top:34px"></div>
+          </div>
+          <div class="foot" style="margin-top:22px;"><span>Last: <b>DAL field goal</b>, 8 plays</span><span class="wp">PHI win <b style="color:var(--paper)">58%</b><span class="wpbar"><i style="width:58%"></i></span></span></div>
+        </div>
+
+        <div class="eyebrow" style="margin-top:6px;"><span>Halftime</span></div>
+        <div class="strip" style="background:var(--ink-2);border-color:var(--line);">
+          <div class="top"><div class="dd" style="color:var(--muted);font-size:19px;">Halftime</div><div class="at">DAL 10 · PHI 13</div></div>
+          <div class="foot" style="margin-top:2px;"><span>PHI receives to open Q3</span><span class="wp">PHI win <b style="color:var(--paper)">61%</b><span class="wpbar"><i style="width:61%"></i></span></span></div>
+        </div>
+
+        <div class="eyebrow" style="margin-top:6px;"><span>Data not yet arrived (honest gap)</span></div>
+        <div class="strip" style="background:var(--ink-2);border-color:var(--line);border-style:dashed;">
+          <div class="top"><div class="dd" style="color:var(--dim);font-size:17px;">Play data pending</div></div>
+          <div class="foot" style="margin-top:2px;color:var(--dim);"><span>Score and clock are live above</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="frame-note">The strip never guesses. No possession data = it says so and the score header carries on. Halftime and between-drives drop the field rather than draw a stale ball.</p>
+  </div>
+
+</div>
+<script>
+  document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+    const wrap=b.closest('.screen');
+    wrap.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    wrap.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.dataset.p===b.dataset.t));
+  }));
+</script>
+</body>
+</html>

@@ -388,6 +388,9 @@ export default async function MatchPage({ params }) {
   // below is reached, and no gridiron game pays for eleven queries it will
   // never render.
   if (match.league_slug === 'nfl') permanentRedirect(`/nfl/game/${slug}`);
+  // EPL has its own match center (the league furniture this page lacks); the
+  // same 308 the NFL redirect uses, so shared links keep working.
+  if (match.league_slug === 'epl') permanentRedirect(`/epl/match/${slug}`);
 
   // The crumb's destination, from the league itself: each competition's own
   // index, with the scoreboard as the honest fallback for one that has none.

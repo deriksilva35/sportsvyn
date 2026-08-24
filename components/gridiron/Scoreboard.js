@@ -252,7 +252,9 @@ function SoccerCard({ g }) {
           <span className="gi-up">{fmtTime(g.kickoffAt)}</span>
         )}
       </div>
-      <Link className="gi-soccer-teams" href={`/match/${g.slug}`}>
+      {/* Straight to the league's own match center - /match would only 308
+          here anyway, and a card should not spend a redirect. */}
+      <Link className="gi-soccer-teams" href={`/epl/match/${g.slug}`}>
         {side(g.away, g.awayScore, g.homeScore)}
         {side(g.home, g.homeScore, g.awayScore)}
       </Link>
