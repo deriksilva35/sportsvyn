@@ -3,6 +3,7 @@ import "./globals.css";
 import AppTabBar from '@/components/shell/AppTabBar';
 import AppHeader from '@/components/shell/AppHeader';
 import ResumeManager from '@/components/shell/ResumeManager';
+import { Analytics } from '@vercel/analytics/next';
 import '@/components/shell/apptab.css';
 
 const saira = Saira({
@@ -89,6 +90,14 @@ export default function RootLayout({ children }) {
         <ResumeManager />
         {children}
         <AppTabBar />
+        {/* WEB ANALYTICS. The project-level feature was already provisioned;
+            what was missing was the client script, so nine days of App Store
+            launch traffic went unmeasured - join-link arrivals, /pickem
+            interest and lobby engagement all invisible. Aggregate and
+            cookieless by design: pageview, route, referrer, country, device.
+            No user id, no handle, no session id rides this - see the
+            analytics pin. */}
+        <Analytics />
       </body>
     </html>
   );
