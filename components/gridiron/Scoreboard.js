@@ -233,11 +233,20 @@ function SoccerCard({ g }) {
     const lost = final && !draw && score != null && otherScore != null && score < otherScore;
     return (
       <div className={`gi-team${lost ? ' loser' : ''}`}>
+        {/* The club code, left of the name - gridiron's BUF/TEN pattern in
+            soccer's own markup. Sourced from teams.abbreviation, which
+            squadImport fills from the provider's `code` (all 20 EPL clubs
+            carry one); no new derivation. */}
+        <span className="abbr">{t?.abbreviation ?? ''}</span>
         <span className="nm">{t?.name ?? 'TBD'}</span>
         <span className="sc">{score ?? ABSENT}</span>
       </div>
     );
   };
+  // League · matchweek left, venue right - the two-piece row gridiron
+  // renders as 'NFL · PRE W2' / city. Every field already rides the DTO.
+  const compLabel = [g.leagueName, g.week != null ? `Matchweek ${g.week}` : null]
+    .filter(Boolean).join(' · ');
   return (
     <div className="gi-card gi-card--soccer">
       <div className="gi-card-h">
@@ -258,7 +267,12 @@ function SoccerCard({ g }) {
         {side(g.away, g.awayScore, g.homeScore)}
         {side(g.home, g.homeScore, g.awayScore)}
       </Link>
-      {g.venue ? <div className="gi-card-f">{g.venue}</div> : null}
+      {(compLabel || g.venue) && (
+        <div className="gi-soccer-meta">
+          <span className="comp">{compLabel}</span>
+          {g.venue && <span className="venue">{g.venue}</span>}
+        </div>
+      )}
     </div>
   );
 }
