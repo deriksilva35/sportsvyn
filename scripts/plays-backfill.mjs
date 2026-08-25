@@ -10,16 +10,30 @@
 //   node scripts/plays-backfill.mjs --slug nfl-2025-reg-w1-dal-phi
 //   node scripts/plays-backfill.mjs --slug cfb-2025-reg-w16-army-navy --prod
 //
-// --prod points DATABASE_URL at PROD_DATABASE_URL for this process only. Without
-// it the script writes to the dev branch, which is the safe default.
-
-import { importPlaysFor } from '../lib/gridiron/playsImport.js';
+// ============================================================================
+// EVERY IMPORT IN THIS FILE IS DYNAMIC, AND THAT IS NOT A STYLE CHOICE.
+// ============================================================================
+// ES module imports are HOISTED: they are resolved and evaluated before any
+// top-level statement runs. lib/db.js reads process.env.DATABASE_URL once, at
+// module-evaluation time. So a static `import { importPlaysFor } from ...` at
+// the top of this file pulls in lib/db.js and freezes the connection BEFORE the
+// `--prod` assignment below has executed.
+//
+// That is not theoretical. The first version of this script had exactly that
+// shape, reported "PROD, 6 games ... done: 1048 plays" - and wrote all 1,048
+// rows to the DEV branch, leaving PROD empty. It failed silently and in the
+// SAFE direction only by luck; the same bug with the flags reversed writes dev
+// data into production.
+//
+// So: set the environment first, import second, and never add a static import
+// to this file. A test pins that.
 
 const args = process.argv.slice(2);
 const has = (f) => args.includes(f);
 const valuesOf = (flag) => args.reduce((acc, a, i) => (args[i - 1] === flag ? [...acc, a] : acc), []);
 
-if (has('--prod')) {
+const wantProd = has('--prod');
+if (wantProd) {
   if (!process.env.PROD_DATABASE_URL) {
     console.error('--prod given but PROD_DATABASE_URL is not set in the environment');
     process.exit(1);
@@ -33,10 +47,17 @@ if (!slugs.length) {
   process.exit(1);
 }
 
-// Imported AFTER DATABASE_URL is settled - lib/db.js reads it at module load.
+// --- everything below is loaded AFTER DATABASE_URL is settled ---------------
 const { sql } = await import('../lib/db.js');
+const { importPlaysFor } = await import('../lib/gridiron/playsImport.js');
 
-const target = has('--prod') ? 'PROD' : 'dev';
+// The target is ASSERTED, not assumed. If the resolved connection is not the
+// one the flags asked for, stop before writing anything.
+if (wantProd && process.env.DATABASE_URL !== process.env.PROD_DATABASE_URL) {
+  console.error('refusing: --prod given but DATABASE_URL is not PROD_DATABASE_URL');
+  process.exit(1);
+}
+const target = wantProd ? 'PROD' : 'dev';
 console.log(`plays-backfill -> ${target}, ${slugs.length} game(s)`);
 
 let totalPlays = 0, totalDrives = 0;
@@ -61,4 +82,13 @@ for (const slug of slugs) {
     console.error(`  FAIL  ${slug}: ${e.message}`);
   }
 }
-console.log(`done: ${totalPlays} plays, ${totalDrives} drives`);
+
+// READ THE ROWS BACK THROUGH THE SAME CONNECTION THAT WROTE THEM. A write
+// reported as successful against the wrong database is the failure this script
+// has already had once; a read-back is the cheapest thing that would have
+// caught it.
+if (!has('--dry')) {
+  const [back] = await sql`SELECT count(*)::int n FROM plays`;
+  console.log(`done: ${totalPlays} plays, ${totalDrives} drives`);
+  console.log(`read-back on ${target}: ${back.n} rows now in plays`);
+}
