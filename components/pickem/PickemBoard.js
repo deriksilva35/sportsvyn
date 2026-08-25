@@ -10,12 +10,23 @@
 // a just-kicked game gets 'game_locked' back and the row seals itself.
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { savePickAction } from '@/app/actions/pickem';
+
+// Where a board game's "Game" affordance points. Keyed by the contest's own
+// sport so a future NFL board cannot silently link college routes.
+const GAME_ROUTE = { cfb: '/cfb/game', nfl: '/nfl/game' };
 
 const ET_TIME = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit',
 });
 const ET_DAY = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short' });
+
+/** A board game's page, or null when we have no route for its sport. */
+function gameHref(contest, g) {
+  const base = GAME_ROUTE[contest?.sport];
+  return base && g?.slug ? `${base}/${g.slug}` : null;
+}
 
 function countdownTo(iso, now) {
   const ms = new Date(iso).getTime() - now;
@@ -110,8 +121,28 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
           : `${ET_TIME.format(new Date(g.kickoff_at))} ET`;
         return (
           <div className="pk-game" key={g.match_id}>
+            {/* THE LINK LIVES IN THE HEADER, NEVER AROUND THE PICKS.
+                .pk-eb and .pk-sides are SIBLINGS - the anchor is not an
+                ancestor of the pick buttons, so a pick tap has no anchor to
+                navigate; and nothing on .pk-game or .pk-eb carries an onClick,
+                so the link's own tap has no handler to bubble into. The
+                separation is structural, not a z-index or a stopPropagation
+                that the next edit could undo. The 9px .pk-eb margin-bottom
+                keeps the two tap targets physically apart as well. */}
             <div className={`pk-eb${g.status === 'live' ? ' live' : ''}`}>
-              <span>{eyebrowLeft}</span><span className="pk-mono">{eyebrowRight}</span>
+              <span>{eyebrowLeft}</span>
+              <span className="pk-ebr">
+                <span className="pk-mono">{eyebrowRight}</span>
+                {gameHref(contest, g) && (
+                  <Link
+                    className="pk-gamelink"
+                    href={gameHref(contest, g)}
+                    aria-label={`${g.away} at ${g.home} game page`}
+                  >
+                    Game &rarr;
+                  </Link>
+                )}
+              </span>
             </div>
             <div className="pk-sides">
               {['away', 'home'].map((side) => {

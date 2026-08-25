@@ -136,11 +136,18 @@ test('a soccer slug at the gridiron route is a 404, not a redirect loop', () => 
   assert.match(page, /if \(!game \|\| game\.leagueSlug !== 'nfl'\) notFound\(\)/);
 });
 
-test('the scorecard gains ONE link, and only where the page exists', () => {
-  assert.match(board, /g\.leagueSlug === 'nfl' \?/);
+test('the scorecard gains ONE link, per league, where the page exists', () => {
+  // WAS "only where the page exists", meaning NFL - CFB had no route and a
+  // link to a 404 is worse than no link. /cfb/game now exists, so the gate is
+  // a per-league MAP rather than an nfl equality: each code owns a sibling
+  // route, and a league with no route still gets no link.
+  assert.match(board, /const GAME_ROUTE = \{ nfl: '\/nfl\/game', cfb: '\/cfb\/game' \}/);
+  assert.match(board, /\{GAME_ROUTE\[g\.leagueSlug\] \?/);
   // </Link> since the soft-nav conversion - a plain </a> was the WKWebView
-  // teardown glitch. The claim (one link, NFL-gated) is unchanged.
-  assert.match(board, /href=\{`\/nfl\/game\/\$\{g\.slug\}`\}>Full game →<\/Link>/);
+  // teardown glitch. The claim (one link, route-gated) is unchanged.
+  assert.match(board, /href=\{`\$\{GAME_ROUTE\[g\.leagueSlug\]\}\/\$\{g\.slug\}`\}>Full game →<\/Link>/);
+  // Still exactly one link in the expand.
+  assert.equal((board.match(/className="gi-full"/g) ?? []).length, 1);
   // The expand itself is unchanged: line score, or the pre-game facts.
   assert.match(board, /\{hasLine \? <LineScore g=\{g\} \/> : <PreGamePane g=\{g\} \/>\}/);
 });

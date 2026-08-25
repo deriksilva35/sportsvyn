@@ -21,6 +21,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import DriveStrip from './DriveStrip';
 import { scoresHref, SPORT_CHIPS } from '@/lib/gridiron/scoresNav';
+
+// Where a gridiron card's "Full game" link points, per league. A map rather
+// than a conditional: each code owns a sibling route, and a fourth would
+// otherwise mean remembering to edit an if-chain.
+const GAME_ROUTE = { nfl: '/nfl/game', cfb: '/cfb/game' };
 import { soccerLiveChip } from '@/lib/soccer/liveChip';
 import OddsStrip from './OddsStrip';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
@@ -197,10 +202,13 @@ function Card({ g }) {
           {hasLine ? <LineScore g={g} /> : <PreGamePane g={g} />}
           {/* The expand stays LINE-SCORE-ONLY. It is a glance, and it now has
               somewhere to go: one link, at the bottom, to the page that holds
-              the scoring summary and the player lines. NFL only - there is no
-              /cfb/game route, and a link to a 404 is worse than no link. */}
-          {g.leagueSlug === 'nfl' ? (
-            <Link className="gi-full" href={`/nfl/game/${g.slug}`}>Full game →</Link>
+              the rest. BOTH CODES NOW - /cfb/game/[slug] exists, so the old
+              "NFL only, a link to a 404 is worse than no link" gate is gone
+              along with the 404 it was protecting against. Each league gets its
+              own route, which is why this reads the league rather than
+              assuming one. */}
+          {GAME_ROUTE[g.leagueSlug] ? (
+            <Link className="gi-full" href={`${GAME_ROUTE[g.leagueSlug]}/${g.slug}`}>Full game →</Link>
           ) : null}
         </div>
       )}

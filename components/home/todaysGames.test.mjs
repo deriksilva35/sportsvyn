@@ -48,10 +48,14 @@ test('LIVE GAMES SORT FIRST ACROSS BOTH LEAGUES, not within each', () => {
   assert.match(reader, /ORDER BY \(m\.status = 'live'\) DESC/, 'and the reader keeps its own ordering');
 });
 
-test('NFL ROWS LINK, CFB ROWS DO NOT - there is no /cfb/game', () => {
-  assert.match(games, /g\.leagueSlug === 'nfl'\s*\n?\s*\? <Link className="tg-row tg-row--link" href=\{`\/nfl\/game\/\$\{g\.slug\}`\}/);
-  assert.match(games, /: <div className="tg-row">\{body\}<\/div>/);
-  assert.ok(!/cfb\/game/.test(games), 'no link to a route that does not exist');
+test('BOTH GRIDIRON CODES LINK; anything without a route stays a plain row', () => {
+  // WAS "CFB ROWS DO NOT - there is no /cfb/game". There is now, so the claim
+  // inverts: the row links whenever its league HAS a route, and the fallback
+  // <div> is what protects the leagues that still do not (soccer).
+  assert.match(games, /const route = \{ nfl: '\/nfl\/game', cfb: '\/cfb\/game' \}\[g\.leagueSlug\]/);
+  assert.match(games, /route\s*\n?\s*\? <Link className="tg-row tg-row--link" href=\{`\$\{route\}\/\$\{g\.slug\}`\}/);
+  assert.match(games, /: <div className="tg-row">\{body\}<\/div>/,
+    'a league with no game route must still render, just not as a link');
 });
 
 test('a game that has not kicked off shows a TIME, never a 0-0', () => {
@@ -66,10 +70,13 @@ test('ONE LINE PER GAME - the row has no block children at all', () => {
   // more <div>s. That is three block elements and therefore three lines however
   // it is styled: on a phone each game stood about five lines tall and six
   // games did not fit a screen. No CSS fixes that - the structure had to change.
-  // The row CONTAINER is a <div> for CFB (no game page to link to) and a <Link>
-  // for NFL. What must contain no block element is the BODY - that is what was
+  // The row CONTAINER is a <Link> for either gridiron code and a <div> for
+  // anything with no game route. What must contain no block element is the BODY - that is what was
   // stacking.
-  const body = games.slice(games.indexOf('const body = ('), games.indexOf('return g.leagueSlug'));
+  // Slice ends at the route lookup that follows the body - the old marker
+  // ('return g.leagueSlug') stopped existing when CFB gained a route, and a
+  // slice that misses its end silently tests the whole rest of the file.
+  const body = games.slice(games.indexOf('const body = ('), games.indexOf('const route ='));
   assert.ok(!/<div/.test(body), 'every element inside a row is an inline span');
   const row = body;
   assert.match(row, /<span className=\{`tg-when/);

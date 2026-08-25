@@ -14,9 +14,12 @@
  * (ORDER BY (status='live') DESC). This component does not re-sort, so the
  * ordering the scoreboard uses and the ordering here cannot drift.
  *
- * NFL ROWS LINK TO THE GAME PAGE. CFB ROWS DO NOT, because /cfb/game does not
- * exist - the college feed serves no scoring plays and no player lines, so
- * there is nothing behind a link. A dead link is worse than a plain row.
+ * BOTH GRIDIRON CODES LINK TO THEIR GAME PAGE. That was NFL-only while
+ * /cfb/game did not exist; it does now. The old reasoning - "the college feed
+ * serves no scoring plays and no player lines, so there is nothing behind a
+ * link" - stopped being true when the drive chart landed: a CFB page carries a
+ * score header, a line score and every drive of the game. Soccer rows stay
+ * plain, since this component has no route for them.
  */
 
 import Link from 'next/link';
@@ -70,8 +73,11 @@ function Row({ g }) {
     </>
   );
 
-  return g.leagueSlug === 'nfl'
-    ? <Link className="tg-row tg-row--link" href={`/nfl/game/${g.slug}`}>{body}</Link>
+  // Both gridiron codes have a game page now; anything else (soccer) still
+  // renders as a plain row here rather than guessing a route for it.
+  const route = { nfl: '/nfl/game', cfb: '/cfb/game' }[g.leagueSlug];
+  return route
+    ? <Link className="tg-row tg-row--link" href={`${route}/${g.slug}`}>{body}</Link>
     : <div className="tg-row">{body}</div>;
 }
 

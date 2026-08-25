@@ -32,9 +32,13 @@
  * need a next.config rule, and config cannot see which league a slug belongs
  * to.
  *
- * CFB stays here. There is no /cfb/game route: the college feed serves no
- * scoring plays and no player lines, so a game page for it would be a header
- * and a line score - less than this route already shows.
+ * CFB NO LONGER STAYS HERE. It used to, on the reasoning that a college game
+ * page would be "a header and a line score - less than this route already
+ * shows". That reasoning inverted twice over: the drive chart gave CFB
+ * something substantial of its own, and this route was never neutral ground -
+ * it is the SOCCER match page, so a football game rendered here wore
+ * tournament furniture that does not apply to it. It gets the same 308 as
+ * the other two.
  */
 
 import { notFound, permanentRedirect } from 'next/navigation';
@@ -388,6 +392,10 @@ export default async function MatchPage({ params }) {
   // below is reached, and no gridiron game pays for eleven queries it will
   // never render.
   if (match.league_slug === 'nfl') permanentRedirect(`/nfl/game/${slug}`);
+  // CFB reached this page and rendered SOCCER furniture on a football game -
+  // worse than having no page at all, because it looked like a real one. Same
+  // 308 the other two get, so anything already shared keeps working.
+  if (match.league_slug === 'cfb') permanentRedirect(`/cfb/game/${slug}`);
   // EPL has its own match center (the league furniture this page lacks); the
   // same 308 the NFL redirect uses, so shared links keep working.
   if (match.league_slug === 'epl') permanentRedirect(`/epl/match/${slug}`);

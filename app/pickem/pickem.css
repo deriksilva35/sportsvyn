@@ -85,3 +85,17 @@
 .pk-ghost .when { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted-dim, #5A5A56); margin-top: 8px; }
 
 .pk-main { display: flex; flex-direction: column; gap: 12px; }
+
+/* The game-page affordance in a board row's header. It sits in .pk-eb, a
+   SIBLING of .pk-sides, so it can never be inside a pick button's hit area -
+   see the comment in PickemBoard.js. Padded to a real tap target and pulled
+   back with a negative margin so adding it does not shift the eyebrow's
+   baseline. */
+.pk-ebr { display: flex; align-items: baseline; gap: 10px; }
+.pk-gamelink {
+  font-family: var(--font-saira-cond, var(--font-saira)), sans-serif;
+  font-weight: 600; text-transform: uppercase; letter-spacing: .08em;
+  font-size: 10px; color: var(--volt, #D4FF00); text-decoration: none;
+  padding: 6px 8px; margin: -6px -8px -6px 0; border-radius: 6px;
+}
+.pk-gamelink:active { background: rgba(212, 255, 0, .12); }
