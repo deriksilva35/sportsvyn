@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sportsvyn Admin - mock v0.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,600;1,900&family=Saira+Condensed:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1C1C1C; --line:#2A2A2A;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --jade-bright:#3FBF6F;
+    --terra:#B8410F; --muted:#8A8A85; --dim:#5A5A56;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  body{background:#050505;color:var(--paper);font-family:'Saira',sans-serif;}
+  .note{padding:14px 20px;font-family:'JetBrains Mono';font-size:12px;color:var(--dim);border-bottom:1px solid var(--line);}
+
+  .shell{display:flex;min-height:100vh;}
+  .rail{width:210px;flex:none;background:var(--ink-2);border-right:1px solid var(--line);padding:22px 0;}
+  .rail .brand{padding:0 20px 20px;font-family:'Saira';font-style:italic;font-weight:900;font-size:19px;letter-spacing:-.04em;border-bottom:1px solid var(--line);margin-bottom:16px;}
+  .rail .brand .y{color:var(--volt);}
+  .rail .tag{display:block;font-family:'JetBrains Mono';font-size:10px;color:var(--dim);margin-top:2px;}
+  .rail a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:var(--muted);text-decoration:none;font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:12px;border-left:2px solid transparent;}
+  .rail a.on{color:var(--volt);border-left-color:var(--volt);background:rgba(212,255,0,.05);}
+  .rail a .ic{width:16px;text-align:center;font-size:13px;}
+
+  .main{flex:1;padding:26px 30px;max-width:1180px;}
+  .pagehead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px;}
+  .pagehead h1{font-family:'Saira';font-style:italic;font-weight:900;font-size:28px;letter-spacing:-.03em;}
+  .pagehead .sub{font-family:'JetBrains Mono';font-size:12px;color:var(--dim);}
+
+  .statgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px;}
+  .stat{background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:14px 15px;}
+  .stat .lbl{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.09em;font-size:9.5px;color:var(--muted);}
+  .stat .v{font-family:'JetBrains Mono';font-weight:700;font-size:23px;margin-top:5px;font-variant-numeric:tabular-nums;}
+  .stat .d{font-family:'JetBrains Mono';font-size:10px;color:var(--jade-bright);margin-top:2px;}
+
+  .panel{background:var(--ink-2);border:1px solid var(--line);border-radius:11px;margin-bottom:20px;overflow:hidden;}
+  .panel .ph{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line);}
+  .panel .ph h2{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.1em;font-size:12.5px;}
+  .panel .ph .ct{font-family:'JetBrains Mono';font-size:10.5px;color:var(--dim);}
+
+  .gtabs{display:flex;gap:2px;padding:0 16px;background:var(--ink-3);}
+  .gtabs button{background:none;border:0;color:var(--muted);font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11px;padding:9px 12px;cursor:pointer;border-bottom:2px solid transparent;}
+  .gtabs button.on{color:var(--volt);border-bottom-color:var(--volt);}
+
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.07em;font-size:9.5px;color:var(--dim);padding:9px 16px;border-bottom:1px solid var(--line);}
+  th.num,td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  td{font-family:'JetBrains Mono';font-size:12.5px;padding:9px 16px;border-bottom:1px solid #1e1e1e;color:var(--paper);}
+  tr:last-child td{border-bottom:0;}
+  tr:hover td{background:rgba(212,255,0,.03);}
+  .handle{color:var(--volt);cursor:pointer;}
+  .chip{display:inline-block;font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;font-size:9px;letter-spacing:.06em;border:1px solid currentColor;border-radius:99px;padding:2px 8px;}
+  .chip.daily{color:var(--volt);} .chip.mock{color:var(--jade-bright);} .chip.pickem{color:#8ab4ff;} .chip.tracker{color:var(--muted);}
+  .muted{color:var(--dim);}
+
+  .searchbar{display:flex;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);}
+  .searchbar input{flex:1;background:var(--ink-3);border:1px solid var(--line);border-radius:8px;color:var(--paper);font-family:'JetBrains Mono';font-size:13px;padding:9px 12px;}
+  .searchbar button{background:var(--volt);border:0;border-radius:8px;color:var(--ink);font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11px;padding:0 16px;cursor:pointer;}
+
+  .userhead{display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--line);}
+  .avatar{width:40px;height:40px;border-radius:50%;background:var(--ink-3);border:1px solid var(--volt);display:flex;align-items:center;justify-content:center;font-family:'Saira';font-weight:900;font-style:italic;color:var(--volt);flex:none;}
+  .uh-name{font-family:'Saira';font-style:italic;font-weight:900;font-size:18px;}
+  .uh-meta{font-family:'JetBrains Mono';font-size:11px;color:var(--dim);margin-top:2px;}
+
+  .comingsoon{padding:30px 16px;text-align:center;}
+  .comingsoon .t{font-family:'Saira';font-style:italic;font-weight:900;font-size:17px;color:var(--muted);}
+  .comingsoon .d{font-family:'JetBrains Mono';font-size:11.5px;color:var(--dim);margin-top:6px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.5;}
+  .comingsoon .badge{display:inline-block;margin-top:10px;font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:9.5px;color:var(--terra);border:1px solid var(--terra);border-radius:99px;padding:3px 10px;}
+
+  .footnote{font-family:'JetBrains Mono';font-size:10.5px;color:var(--dim);padding:0 16px 14px;line-height:1.6;}
+</style>
+</head>
+<body>
+<p class="note">ADMIN PANEL MOCK v0.1 - gated to Derik's account only (phase 3 access decision: not built for anyone else yet). Rail nav is illustrative; this mock renders the OVERVIEW + GAMES ACTIVITY + USER LOOKUP views (phase 1, real data) and the PAGE VIEWS panel as its designed empty/coming-soon state (phase 2, not built).</p>
+
+<div class="shell">
+  <div class="rail">
+    <div class="brand">SPORTSV<span class="y">Y</span>N<span class="tag">ADMIN</span></div>
+    <a class="on"><span class="ic">◆</span>Overview</a>
+    <a><span class="ic">◆</span>Games Activity</a>
+    <a><span class="ic">◆</span>User Lookup</a>
+    <a><span class="ic">◆</span>Page Views</a>
+    <a><span class="ic">◆</span>Leagues</a>
+    <a><span class="ic">◆</span>Push &amp; Email</a>
+  </div>
+
+  <div class="main">
+    <div class="pagehead">
+      <div>
+        <h1>Overview</h1>
+        <div class="sub">Mon Aug 24, 2026 · signed in as @sportsvyn_og</div>
+      </div>
+      <div class="sub">Last synced 2 min ago</div>
+    </div>
+
+    <div class="statgrid">
+      <div class="stat"><div class="lbl">Total users</div><div class="v">128</div><div class="d">+10 today</div></div>
+      <div class="stat"><div class="lbl">Active today</div><div class="v">23</div></div>
+      <div class="stat"><div class="lbl">Daily entrants</div><div class="v">4</div><div class="d muted" style="color:var(--dim)">of 128</div></div>
+      <div class="stat"><div class="lbl">Mocks started</div><div class="v">21</div><div class="d">67% complete</div></div>
+      <div class="stat"><div class="lbl">Leagues</div><div class="v">1</div><div class="d muted" style="color:var(--dim)">2 members</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><h2>Recent activity, all games</h2><span class="ct">last 24h</span></div>
+      <table>
+        <tr><th>Time</th><th>User</th><th>Game</th><th>Action</th><th class="num">Result</th></tr>
+        <tr><td>2:41 PM</td><td class="handle">@theskry</td><td><span class="chip pickem">PICK'EM</span></td><td>viewed board</td><td class="num muted">-</td></tr>
+        <tr><td>1:58 PM</td><td class="handle">@hurley3594</td><td><span class="chip mock">MOCK</span></td><td>completed draft</td><td class="num">15 picks</td></tr>
+        <tr><td>1:12 PM</td><td class="handle">@sportsvyn_og</td><td><span class="chip tracker">TRACKER</span></td><td>opened room 176</td><td class="num muted">-</td></tr>
+        <tr><td>11:47 AM</td><td class="handle">@geausjeaux</td><td><span class="chip daily">DAILY</span></td><td>entered ed. 007</td><td class="num">pending</td></tr>
+        <tr><td>10:03 AM</td><td class="handle">@bgw_22</td><td><span class="chip mock">MOCK</span></td><td>started draft</td><td class="num muted">6/15</td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><h2>Games activity</h2></div>
+      <div class="gtabs">
+        <button class="on">All</button><button>Daily</button><button>Mock</button>
+        <button>Tracker</button><button>Pick'em</button>
+      </div>
+      <table>
+        <tr><th>User</th><th>Game</th><th>Started</th><th>Status</th><th class="num">Score / Progress</th></tr>
+        <tr><td class="handle">@sportsvyn_og</td><td><span class="chip daily">DAILY</span></td><td>Aug 23, 9:14 PM</td><td>Revealed</td><td class="num">140.0</td></tr>
+        <tr><td class="handle">@theskry</td><td><span class="chip daily">DAILY</span></td><td>Aug 23, 6:02 PM</td><td>Revealed</td><td class="num">118.7</td></tr>
+        <tr><td class="handle">@hurley3594</td><td><span class="chip mock">MOCK</span></td><td>Aug 24, 1:40 PM</td><td>Completed</td><td class="num">15/15</td></tr>
+        <tr><td class="handle">@bgw_22</td><td><span class="chip mock">MOCK</span></td><td>Aug 24, 10:03 AM</td><td>In progress</td><td class="num">6/15</td></tr>
+        <tr><td class="handle">@sportsvyn_og</td><td><span class="chip tracker">TRACKER</span></td><td>Aug 24, 1:12 PM</td><td>Active</td><td class="num muted">room 176</td></tr>
+        <tr><td class="handle">@mattyice</td><td><span class="chip daily">DAILY</span></td><td>Aug 22, 8:55 PM</td><td>Revealed</td><td class="num">96.4</td></tr>
+      </table>
+      <div class="footnote">Reads existing entry/room/pick tables directly - no new tracking. Filter by game, date range, or user (search below).</div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><h2>User lookup</h2></div>
+      <div class="searchbar">
+        <input placeholder="Search by handle or email...">
+        <button>Search</button>
+      </div>
+      <div class="userhead">
+        <div class="avatar">T</div>
+        <div>
+          <div class="uh-name">@theskry</div>
+          <div class="uh-meta">joined Aug 20 · apple:shell · 14 sessions · last active 2:41 PM today</div>
+        </div>
+      </div>
+      <table>
+        <tr><th>Game</th><th>Activity</th><th class="num">Total</th></tr>
+        <tr><td><span class="chip daily">DAILY</span></td><td>2 entries, 1 revealed</td><td class="num">118.7 best</td></tr>
+        <tr><td><span class="chip pickem">PICK'EM</span></td><td>viewed board (not yet open)</td><td class="num muted">-</td></tr>
+        <tr><td><span class="chip mock">MOCK</span></td><td>0 drafts</td><td class="num muted">-</td></tr>
+        <tr><td>Leagues</td><td>LACES OUT (joined Aug 20)</td><td class="num muted">-</td></tr>
+      </table>
+      <div class="footnote">One user, every game, one view - the cross-game read the ad-hoc usage checks have been doing by hand all week.</div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><h2>Page views, by user</h2><span class="ct">phase 2</span></div>
+      <div class="comingsoon">
+        <div class="t">Not built yet</div>
+        <div class="d">Requires a new identified-pageview log (write path + retention policy) - a
+        separate build from this panel. Vercel Analytics remains the anonymous
+        aggregate source until this ships.</div>
+        <span class="badge">Retention policy: undecided</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
