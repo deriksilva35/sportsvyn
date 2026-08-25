@@ -23,8 +23,12 @@ import { lineScoreGrid, liveChip } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
 import { getBriefForMatch } from '@/lib/gridiron/gameBrief';
 import GameTabs from '@/components/gridiron/GameTabs';
+import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
+import { gamecastFor } from '@/lib/gridiron/playsImport';
+import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/lib/gridiron/driveStrip';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import '@/components/gridiron/gridiron.css';
+import '@/components/gridiron/drivestrip.css';
 import './game.css';
 
 export const dynamic = 'force-dynamic';
@@ -53,8 +57,9 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function GamePage({ params }) {
+export default async function GamePage({ params, searchParams }) {
   const { slug } = await params;
+  const sp = (await searchParams) ?? {};
   const game = await getGamePage(slug);
   // A soccer slug reaching a gridiron route is a 404, not a redirect loop back
   // to /match: getGamePage only resolves rows in the two gridiron leagues.
@@ -65,6 +70,34 @@ export default async function GamePage({ params }) {
   const grid = lineScoreGrid(game);
   const quarters = scoringByQuarter(game);
   const brief = await getBriefForMatch(game.id);
+
+  // ---- DriveStrip ---------------------------------------------------------
+  // ?asOf=N replays a completed game as it stood after N plays. It proves the
+  // VISUAL component against real data and nothing whatever about live polling
+  // - see simulateAsOf().
+  const gamecast = await gamecastFor(game.id);
+  const rawAsOf = Array.isArray(sp.asOf) ? sp.asOf[0] : sp.asOf;
+  const asOf = rawAsOf != null && /^\d+$/.test(String(rawAsOf)) ? Number(rawAsOf) : null;
+  const sim = simulateAsOf(gamecast?.plays ?? [], asOf);
+  const driveRows = buildDriveChart(sim.plays, {
+    drives: gamecast?.drives ?? [],
+    homeTeamId: game.home?.id,
+    teamAbbr: gamecast?.teamAbbr ?? new Map(),
+    // Only a simulated cut has a drive still in progress; a real final does not.
+    inProgressDriveId: sim.simulated ? (sim.plays.at(-1)?.driveId ?? null) : null,
+  });
+  const currentDrive = driveRows[0] ?? null;
+  const stripLastPlay = lastLivePlay(sim.plays);
+  // A simulated cut is shown as the game stood THEN, so it renders live even
+  // though the row's own status says final. Unsimulated, the status rules.
+  const stripState = gamecastState({
+    status: sim.simulated ? 'live' : game.status,
+    playCount: sim.plays.length,
+    lastPlay: stripLastPlay,
+  });
+  const defenseAbbr = currentDrive
+    ? (currentDrive.offenseIsHome ? game.away?.abbreviation : game.home?.abbreviation)
+    : null;
 
   const teams = [game.away, game.home].filter((t) => t?.id);
   const teamTables = teams.map((t) => ({ team: t, tables: linesByGroup(game, t.id) }));
@@ -147,6 +180,31 @@ export default async function GamePage({ params }) {
                 ))}
               </tbody>
             </table>
+          </section>
+        ) : null}
+
+        {/* THE DRIVESTRIP. Renders nothing at all when no plays are stored -
+            the honest gap is a state of the strip, not of the page, and a game
+            with no feed simply does not grow a section. */}
+        {gamecast?.plays?.length ? (
+          <section className="gg-sect" aria-label="Drive chart">
+            <div className="gg-kick"><h2>DRIVES</h2><div className="rule" /></div>
+            <DriveStrip
+              state={stripState}
+              lastPlay={stripLastPlay}
+              drive={currentDrive}
+              homeAbbr={game.home?.abbreviation}
+              awayAbbr={game.away?.abbreviation}
+              offenseAbbr={currentDrive?.offenseAbbr}
+              defenseAbbr={defenseAbbr}
+              simulated={sim.simulated}
+            />
+            {stripState.mode !== 'final' && <LastPlay play={stripLastPlay} />}
+            <DriveChart
+              rows={driveRows}
+              teamAbbr={gamecast.teamAbbr}
+              homeTeamId={game.home?.id}
+            />
           </section>
         ) : null}
 

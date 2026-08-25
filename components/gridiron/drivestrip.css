@@ -1,0 +1,155 @@
+/* components/gridiron/drivestrip.css - transcribed from
+   docs/design/sportsvyn-drivestrip-gamecast-mock-v0_2.html.
+
+   NO HORIZONTAL POSITIONS LIVE HERE. Every left/width on the field is an inline
+   style computed by lib/gridiron/driveStrip.js, because a yard line's position
+   is a fact about the field, not a styling choice. This file owns colour,
+   height and typography only. */
+
+.ds-strip {
+  background: linear-gradient(150deg, #141a00, var(--ink-2, #141414) 60%);
+  border: 1px solid #3a4400; border-radius: 12px; padding: 13px 14px 12px;
+  margin-bottom: 12px;
+}
+.ds-strip.quietbg { background: var(--ink-2, #141414); border-color: var(--line, #2a2a2a); }
+.ds-strip.pending {
+  background: var(--ink-2, #141414); border-color: var(--line, #2a2a2a); border-style: dashed;
+}
+
+.ds-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 11px; }
+.ds-dd {
+  font-style: italic; font-weight: 900; font-size: 22px; letter-spacing: -0.03em;
+  color: var(--volt, #d4ff00);
+}
+.ds-dd.quiet { color: var(--muted, #8a8a85); font-size: 18px; }
+.ds-strip.pending .ds-dd.quiet { color: var(--dim, #5a5a56); font-size: 17px; }
+.ds-at { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: var(--muted, #8a8a85); }
+.ds-at b { color: var(--paper, #f5f5f2); font-weight: 700; }
+
+.ds-field {
+  position: relative; height: 52px; background: var(--ink-3, #1c1c1c);
+  border: 1px solid var(--line, #2a2a2a); border-radius: 6px; overflow: hidden;
+}
+.ds-zone { position: absolute; top: 0; bottom: 0; background: rgba(212, 255, 0, 0.1); }
+.ds-zone.l { left: 0; border-right: 1px solid #3a4400; }
+.ds-zone.r { right: 0; border-left: 1px solid #3a4400; }
+.ds-zone span {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  font-family: 'Saira Condensed', sans-serif; font-weight: 600; font-size: 8px;
+  letter-spacing: 0.1em; color: rgba(212, 255, 0, 0.5); white-space: nowrap;
+}
+.ds-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: #2b2b2b; }
+.ds-tick.five { top: auto; height: 6px; bottom: 0; background: #232323; }
+.ds-tick.mid { background: #3a3a3a; }
+.ds-num {
+  position: absolute; top: 3px; transform: translateX(-50%); font-style: normal;
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 8px;
+  color: #4d4d4d; font-variant-numeric: tabular-nums;
+}
+.ds-hash { position: absolute; height: 1px; width: 3px; background: #262626; }
+.ds-span {
+  position: absolute; top: 16px; height: 20px;
+  background: rgba(212, 255, 0, 0.2); border-left: 2px solid var(--volt, #d4ff00);
+}
+.ds-ball {
+  position: absolute; top: 12px; width: 3px; height: 28px;
+  background: var(--volt, #d4ff00); box-shadow: 0 0 8px rgba(212, 255, 0, 0.7);
+}
+.ds-ball::after {
+  content: ""; position: absolute; top: -5px; left: -3px;
+  border-left: 4.5px solid transparent; border-right: 4.5px solid transparent;
+  border-top: 5px solid var(--volt, #d4ff00);
+}
+.ds-togo { position: absolute; top: 12px; width: 2px; height: 28px; background: rgba(245, 245, 242, 0.6); }
+
+.ds-foot {
+  display: flex; align-items: center; justify-content: space-between; margin-top: 14px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px;
+  color: var(--muted, #8a8a85); gap: 10px;
+}
+.ds-strip.pending .ds-foot, .ds-strip.quietbg .ds-foot { margin-top: 2px; color: var(--dim, #5a5a56); }
+.ds-foot b { color: var(--paper, #f5f5f2); font-weight: 700; }
+.ds-sim {
+  font-family: 'Saira Condensed', sans-serif; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; font-size: 9px; color: #b8410f;
+  border: 1px solid #b8410f; border-radius: 99px; padding: 2px 8px;
+}
+
+.ds-lastplay {
+  background: var(--ink-2, #141414); border: 1px solid var(--line, #2a2a2a);
+  border-radius: 10px; padding: 10px 12px; margin-bottom: 12px;
+}
+.ds-lastplay .lbl {
+  font-family: 'Saira Condensed', sans-serif; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.11em; font-size: 9.5px; color: var(--muted, #8a8a85);
+}
+.ds-lastplay .txt {
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px;
+  line-height: 1.5; margin-top: 4px;
+}
+
+.ds-eyebrow {
+  font-family: 'Saira Condensed', sans-serif; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.12em; font-size: 10.5px; color: var(--muted, #8a8a85);
+  display: flex; justify-content: space-between; align-items: baseline; margin: 6px 0 9px;
+}
+.ds-eyebrow .mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0;
+  text-transform: none; font-size: 10.5px; color: var(--dim, #5a5a56);
+}
+
+/* The chart's drive card. Distinct from .ds-span (the field's travelled
+   stripe) - one class for two things would have made the field's absolute
+   positioning leak into every card in the chart. */
+.ds-chart .ds-drive {
+  background: var(--ink-2, #141414); border: 1px solid var(--line, #2a2a2a);
+  border-radius: 10px; overflow: hidden; margin-bottom: 9px;
+}
+.ds-chart .dh {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 9px 12px; background: var(--ink-3, #1c1c1c);
+}
+.ds-chart .who {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 700;
+}
+.ds-chart .who .dot { color: var(--volt, #d4ff00); }
+.ds-chart .tag {
+  font-family: 'Saira Condensed', sans-serif; font-weight: 600; text-transform: uppercase;
+  font-size: 9px; letter-spacing: 0.08em; border: 1px solid currentColor;
+  border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+}
+.ds-chart .tag.td { color: var(--volt, #d4ff00); }
+.ds-chart .tag.fg { color: #3fbf6f; }
+.ds-chart .tag.punt { color: var(--muted, #8a8a85); }
+.ds-chart .tag.to { color: #e0602a; }
+.ds-chart .dsub {
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+  color: var(--dim, #5a5a56); padding: 7px 12px 0;
+}
+.ds-chart .plays { padding: 4px 12px 10px; }
+.ds-chart .play { display: flex; gap: 9px; padding: 6px 0; border-bottom: 1px solid #1e1e1e; }
+.ds-chart .play:last-child { border-bottom: 0; }
+.ds-chart .play .dn {
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+  color: var(--dim, #5a5a56); width: 62px; flex: none; padding-top: 1px;
+}
+.ds-chart .play .pt {
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11.5px;
+  line-height: 1.45; flex: 1; min-width: 0;
+}
+.ds-chart .play.score .pt { color: var(--volt, #d4ff00); }
+.ds-chart .play .yd {
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px;
+  font-weight: 700; flex: none; width: 34px; text-align: right;
+}
+.ds-chart .yd.pos { color: #3fbf6f; }
+.ds-chart .yd.neg { color: #e0602a; }
+.ds-chart .yd.zero { color: var(--dim, #5a5a56); }
+
+.ds-empty {
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11.5px;
+  color: var(--dim, #5a5a56); padding: 18px 12px; text-align: center;
+  border: 1px dashed var(--line, #2a2a2a); border-radius: 10px;
+}
