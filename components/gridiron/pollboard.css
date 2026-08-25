@@ -1,0 +1,45 @@
+/* components/gridiron/pollboard.css - the .rrow grammar from
+   sportsvyn-ncaa-rankings-mock-v0_1.html, renamed .pb-* so it cannot collide
+   with the editorial board's .gi-ed-* rows on the same hub. */
+.pb { display: flex; flex-direction: column; gap: 8px; }
+.pb-eyebrow {
+  font-family: 'Saira Condensed', sans-serif; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .12em; font-size: 10.5px; color: var(--muted, #8A8A85);
+  display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;
+}
+.pb-eyebrow .mono {
+  font-family: var(--font-jetbrains-mono), monospace; letter-spacing: 0;
+  text-transform: none; font-size: 10.5px;
+}
+.pb-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--ink-2, #141414); border: 1px solid var(--rule, #2A2A2A);
+  border-radius: 9px; padding: 9px 12px;
+}
+.pb-row.mover-up { border-left: 2px solid var(--jade-bright, #3FBF6F); }
+.pb-row.mover-down { border-left: 2px solid var(--terra-bright, #E0602A); }
+.pb-rn {
+  font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
+  font-size: 16px; color: var(--volt, #D4FF00); width: 28px; flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.pb-nm { flex: 1; min-width: 0; }
+.pb-t { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 13px; }
+.pb-c {
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 10px;
+  color: var(--muted-dim, #5A5A56); margin-top: 2px; display: flex; gap: 8px;
+}
+.pb-up { color: var(--jade-bright, #3FBF6F); }
+.pb-down { color: var(--terra-bright, #E0602A); }
+.pb-new { color: var(--volt, #D4FF00); font-weight: 700; }
+.pb-prev { color: var(--muted-dim, #5A5A56); }
+.pb-v {
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 11px;
+  color: var(--muted, #8A8A85); text-align: right; flex: none; line-height: 1.5;
+}
+.pb-v b { color: var(--paper, #F5F5F2); font-weight: 700; }
+.pb-empty {
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 12px;
+  color: var(--muted-dim, #5A5A56); padding: 26px 16px; text-align: center;
+  border: 1px dashed var(--rule, #2A2A2A); border-radius: 12px;
+}

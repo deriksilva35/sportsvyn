@@ -58,6 +58,10 @@
       "schedule": "0 7 * * 3"
     },
     {
+      "path": "/api/cron/cfb-rankings",
+      "schedule": "15 14 * * 1,2"
+    },
+    {
       "path": "/api/cron/gridiron-odds",
       "schedule": "*/15 * * * *"
     },

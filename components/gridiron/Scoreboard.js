@@ -28,6 +28,7 @@ import { scoresHref, SPORT_CHIPS } from '@/lib/gridiron/scoresNav';
 const GAME_ROUTE = { nfl: '/nfl/game', cfb: '/cfb/game' };
 import { soccerLiveChip } from '@/lib/soccer/liveChip';
 import OddsStrip from './OddsStrip';
+import RankBadge from './RankBadge';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { lineScoreGrid, liveChip, ABSENT } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
@@ -61,6 +62,7 @@ function TeamLine({ t, score, isWinner, isLoser, final }) {
   return (
     <div className={`gi-team ${final && isWinner ? 'win' : ''} ${final && isLoser ? 'lose' : ''}`}>
       {abbr ? <span className="abbr">{abbr}</span> : <span className="abbr" />}
+      <RankBadge rank={t.apRank} />
       <span className="nm">{name}</span>
       <span className="sc">{score ?? ABSENT}</span>
     </div>

@@ -30,6 +30,8 @@ import { distinctLabel } from '@/lib/gridiron/labels';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/lib/gridiron/driveStrip';
+import { apRankMap, currentApWeek, latestPollSeason, AP_POLL } from '@/lib/cfb/rankings';
+import RankBadge from '@/components/gridiron/RankBadge';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import '@/components/gridiron/gridiron.css';
 import '@/components/gridiron/drivestrip.css';
@@ -77,6 +79,12 @@ export default async function CfbGamePage({ params, searchParams }) {
   const final = game.status === 'final';
   const live = game.status === 'live';
   const grid = lineScoreGrid(game);
+  // AP badges. The rank shown is the CURRENT poll's, not the poll as it stood
+  // when the game was played - a historical game page carries today's ranking,
+  // which is the same thing every scoreboard does.
+  const apSeason = await latestPollSeason(AP_POLL);
+  const apWeek = apSeason ? await currentApWeek(apSeason) : null;
+  const apRanks = await apRankMap({ season: apSeason, week: apWeek });
 
   // ---- DriveStrip ---------------------------------------------------------
   const gamecast = await gamecastFor(game.id);
@@ -126,8 +134,8 @@ export default async function CfbGamePage({ params, searchParams }) {
               ? <span className="gg-chip time">{fmtKick(game.kickoffAt)} ET</span> : null}
           </div>
 
-          <TeamRow t={game.away} score={game.awayScore} loser={winner === 'home'} show={final || live} />
-          <TeamRow t={game.home} score={game.homeScore} loser={winner === 'away'} show={final || live} />
+          <TeamRow t={game.away} score={game.awayScore} loser={winner === 'home'} show={final || live} rank={apRanks.get(game.away?.id) ?? null} />
+          <TeamRow t={game.home} score={game.homeScore} loser={winner === 'away'} show={final || live} rank={apRanks.get(game.home?.id) ?? null} />
 
           <div className="gg-headfoot">
             <span>CFB · {game.seasonPhase} W{game.week}</span>
@@ -211,10 +219,11 @@ export default async function CfbGamePage({ params, searchParams }) {
 // whose brief was explicitly not to touch it. If a third gridiron surface ever
 // wants them, that is the moment to extract - three callers is a component,
 // two is a coincidence.
-function TeamRow({ t, score, loser, show }) {
+function TeamRow({ t, score, loser, show, rank }) {
   return (
     <div className={`gg-teamrow${loser ? ' loser' : ''}`}>
       <span className="abbr">{t?.abbreviation ?? ''}</span>
+      <RankBadge rank={rank} size="big" />
       <span className="tname">{t?.name ?? 'TBD'}</span>
       {/* No score column before kickoff. A 0 next to a team that has not played
           is not a low score, it is a wrong one. */}

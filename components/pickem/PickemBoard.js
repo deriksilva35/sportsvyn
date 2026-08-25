@@ -11,6 +11,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import RankBadge from '@/components/gridiron/RankBadge';
 import { savePickAction } from '@/app/actions/pickem';
 
 // Where a board game's "Game" affordance points. Keyed by the contest's own
@@ -165,6 +166,7 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
                     disabled={sealed}
                     onClick={() => tap(g, side)}
                   >
+                    <RankBadge rank={side === 'home' ? g.home_rank : g.away_rank} />
                     <span className="pk-nm">{name}</span>
                     {!sealed && <span className="pk-tag">{side.toUpperCase()}</span>}
                     {isMine && g.graded === 'W' && <span className="pk-res w">W</span>}

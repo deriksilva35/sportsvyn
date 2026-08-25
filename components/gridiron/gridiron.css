@@ -478,3 +478,15 @@
 }
 .gi-soccer-meta .comp { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gi-soccer-meta .venue { flex: none; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* THE AP RANK BADGE (components/gridiron/RankBadge.js), per
+   sportsvyn-ncaa-rankings-mock-v0_1.html. Volt fill, black numeral, inline
+   before the team name so it reads as part of the name rather than a stat. */
+.rk {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-jetbrains-mono), monospace; font-weight: 700;
+  font-size: 10px; color: var(--ink, #0A0A0A); background: var(--volt, #D4FF00);
+  border-radius: 4px; padding: 1px 5px; margin-right: 6px; line-height: 1.5;
+  flex: none;
+}
+.rk-big { font-size: 12px; padding: 2px 7px; border-radius: 5px; }
