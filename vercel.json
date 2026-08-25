@@ -6,6 +6,10 @@
       "schedule": "* * * * *"
     },
     {
+      "path": "/api/cron/plays-live",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/cron/refresh-odds",
       "schedule": "0 * * * *"
     },

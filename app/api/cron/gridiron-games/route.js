@@ -99,6 +99,11 @@ export async function GET(request) {
           source: `${lg.source}-kickoff`,
           subject: `[pollers] ${lg.source} REFUSED ${refused.length} kickoff revision(s) as ET/UTC drift`,
           body: refusalAlertBody({ source: lg.source, refusals: refused }),
+          // The kept/refused/delta per game rides the ALERT row too, not just
+          // the email. A forensic read weeks later opens the alert first; it
+          // should not have to find the sync run that triggered it to learn
+          // which games were held.
+          detail: refused,
         });
         console.warn(`[gridiron-games] kickoff drift refused`, JSON.stringify(refused));
       }
