@@ -24,7 +24,13 @@
   font-variant-numeric: tabular-nums;
 }
 .pb-nm { flex: 1; min-width: 0; }
-.pb-t { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 13px; }
+.pb-t {
+  font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 13px;
+  /* EXPLICIT, not inherited. The surface attribute on the section is the real
+     fix; this is the second lock, so a future wrapper that loses the attribute
+     cannot make the team name vanish again. */
+  color: var(--paper, #F5F5F2);
+}
 .pb-c {
   font-family: var(--font-jetbrains-mono), monospace; font-size: 10px;
   color: var(--muted-dim, #5A5A56); margin-top: 2px; display: flex; gap: 8px;
