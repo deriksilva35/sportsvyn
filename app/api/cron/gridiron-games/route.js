@@ -24,6 +24,7 @@ import { liveWindowDetail } from '@/lib/pollers/liveWindow';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision, lastGamesRunAt, probeCfbdBudget } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
+import { refusalAlertBody } from '@/lib/gridiron/kickoffGuard';
 import { BASELINE_INTERVAL_MIN, LIVE_INTERVAL_MIN } from '@/lib/pollers/cadence';
 
 export const dynamic = 'force-dynamic';
@@ -87,6 +88,20 @@ export async function GET(request) {
         run: () => lg.run(leagueId, season),
       });
       const unknown = res.summary?.unknownStatus ?? 0;
+      // KICKOFF DRIFT IS ITS OWN ALARM, not a line inside the generic one. A
+      // refusal means we are deliberately serving a value the provider
+      // disagrees with, which someone has to see the same day - and the alert
+      // has to NAME the games, because releasing a genuine reschedule means
+      // knowing which row to touch.
+      const refused = res.summary?.kickoffRefused ?? [];
+      if (refused.length) {
+        await maybeAlert(sql, {
+          source: `${lg.source}-kickoff`,
+          subject: `[pollers] ${lg.source} REFUSED ${refused.length} kickoff revision(s) as ET/UTC drift`,
+          body: refusalAlertBody({ source: lg.source, refusals: refused }),
+        });
+        console.warn(`[gridiron-games] kickoff drift refused`, JSON.stringify(refused));
+      }
       if (!res.ok || unknown > 0) {
         await maybeAlert(sql, {
           source: lg.source,
