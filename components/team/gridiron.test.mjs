@@ -47,10 +47,35 @@ test('PILLS: gridiron renders only sections that exist; soccer keeps all seven',
 });
 
 test('SCHEDULE HEADING: a season is not a tournament, and soccer still is one', () => {
-  assert.equal(scheduleHeadingFor('nfl', 2026), '2026 Season');
-  assert.equal(scheduleHeadingFor('cfb', 2025), '2025 Season');
-  assert.equal(scheduleHeadingFor('nfl', null), 'Season', 'no year, no invented year');
-  assert.equal(scheduleHeadingFor('fifa-wc-2026', 2026), 'Full Tournament');
+  assert.deepEqual(scheduleHeadingFor('nfl', 2026), { lead: '2026', accent: 'Season' });
+  assert.deepEqual(scheduleHeadingFor('cfb', 2025), { lead: '2025', accent: 'Season' });
+  assert.deepEqual(scheduleHeadingFor('nfl', null), { lead: '', accent: 'Season' },
+    'no year, no invented year');
+});
+
+test('SOCCER PASSES NO HEADING AT ALL - the regression a text check missed', () => {
+  // Returning the literal 'Full Tournament' rendered the identical words while
+  // silently dropping <span class="accent"> from around "Tournament", because a
+  // truthy heading skips Schedule's fallback. Only a MARKUP diff caught it, so
+  // the pin is on the markup.
+  for (const lg of ['fifa-wc-2026', 'international-friendlies', null, undefined]) {
+    assert.equal(scheduleHeadingFor(lg, 2026), null, `${lg} must not pass a heading`);
+  }
+  const sched = src('components/team/Schedule.js')
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
+  // The soccer branch is the original line, accent span intact.
+  assert.match(sched, /: <h2 className="section-head-title">Full <span className="accent">Tournament<\/span><\/h2>/);
+  // And the gridiron branch accents its tail the way every other head does.
+  assert.match(sched, /heading\.lead[\s\S]*?<span className="accent">\{heading\.accent\}<\/span>/);
+});
+
+test('every section head on this page accents its tail', () => {
+  // Power Ranking / Over Time, Tournament / to Date, Top / Performers, The / 95.
+  // A flat gridiron heading would have been the only unaccented one.
+  for (const f of ['components/team/Trajectory.js', 'components/team/TeamStatsGrid.js',
+                   'components/team/TopPlayers.js', 'components/team/GridironRoster.js']) {
+    assert.match(src(f), /section-head-title"[\s\S]{0,120}?<span className="accent">/, f);
+  }
 });
 
 test('HT/WT convert from stored metric to US display', () => {

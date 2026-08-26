@@ -50,10 +50,26 @@ export function anchorPillsFor(leagueSlug) {
   ];
 }
 
-/** "Full Tournament" is not what an NFL season is called. */
+/**
+ * "Full Tournament" is not what an NFL season is called.
+ *
+ * SOCCER GETS NULL, NOT THE STRING IT ALREADY RENDERS. Returning the literal
+ * 'Full Tournament' looked harmless - the visible text was identical - but it
+ * pushed soccer down the passed-heading branch and out of Schedule's fallback,
+ * which is where the markup lives:
+ *     Full <span class="accent">Tournament</span>   ->   Full Tournament
+ * Same words, and "Tournament" silently lost its accent colour on every World
+ * Cup team page. Null keeps soccer on the original branch, byte for byte.
+ *
+ * The gridiron heading is a PAIR rather than a string for the same reason:
+ * every other section head on this page is "lead + accented tail" (Power
+ * Ranking / Over Time, Tournament / to Date, The / 95), so a flat string would
+ * have been the only unaccented heading on the page.
+ */
 export function scheduleHeadingFor(leagueSlug, seasonYear) {
-  if (!isGridiron(leagueSlug)) return 'Full Tournament';
-  return seasonYear ? `${seasonYear} Season` : 'Season';
+  if (!isGridiron(leagueSlug)) return null;
+  return seasonYear ? { lead: String(seasonYear), accent: 'Season' }
+                    : { lead: '', accent: 'Season' };
 }
 
 // ---------------------------------------------------------------- display

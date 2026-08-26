@@ -64,11 +64,13 @@ export default function Schedule({ matches, teamId, heading }) {
       <div className="section-head">
         <div className="section-head-left">
           <span className="section-head-num">§ Schedule</span>
-          {/* "Full Tournament" is not what an NFL season is called. The
-              heading is passed in per league; omitted, it is exactly what it
-              always was, so soccer is unchanged. */}
+          {/* "Full Tournament" is not what an NFL season is called. Gridiron
+              passes a {lead, accent} pair; soccer passes NOTHING and falls
+              through to the line below, which is the original markup untouched.
+              Passing soccer its own text as a string instead would render the
+              same words with "Tournament" no longer accented. */}
           {heading
-            ? <h2 className="section-head-title">{heading}</h2>
+            ? <h2 className="section-head-title">{heading.lead}{heading.lead && ' '}<span className="accent">{heading.accent}</span></h2>
             : <h2 className="section-head-title">Full <span className="accent">Tournament</span></h2>}
         </div>
       </div>
