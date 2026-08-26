@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sportsvyn - Team page mock v0.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,600;1,900&family=Saira+Condensed:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1C1C1C; --line:#2A2A2A;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --jade-bright:#3FBF6F;
+    --terra:#B8410F; --terra-bright:#E0602A; --muted:#888888; --dim:#5A5A5A;
+    --paper-dim:#C5C5C2;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  body{background:#050505;color:var(--paper);font-family:'Saira',sans-serif;padding:28px 16px 60px;}
+  .stage{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;align-items:flex-start;}
+  .frame-label{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted);margin:0 0 8px 4px;}
+  .frame-note{font-size:12px;color:var(--dim);margin:8px 4px 0;max-width:390px;line-height:1.5;}
+  .phone{width:390px;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:820px;}
+  .appbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 11px;border-bottom:1px solid var(--line);}
+  .wordmark{font-family:'Saira';font-style:italic;font-weight:900;font-size:19px;letter-spacing:-.05em;}
+  .wordmark .y{color:var(--volt);}
+  .acct{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);}
+  .screen{padding:16px;display:flex;flex-direction:column;gap:14px;}
+
+  .crumb{font-family:'JetBrains Mono';font-size:10.5px;color:var(--dim);}
+  .crumb b{color:var(--muted);font-weight:400;}
+  .crumb .wrong{color:var(--terra-bright);text-decoration:line-through;}
+
+  .hero{background:linear-gradient(150deg,#181a00,var(--ink-2) 55%);border:1px solid var(--line);border-radius:14px;padding:18px;}
+  .hero .lg{width:44px;height:44px;border-radius:10px;background:var(--ink-3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'Saira';font-weight:900;font-style:italic;font-size:15px;margin-bottom:12px;}
+  .hero h1{font-family:'Saira';font-style:italic;font-weight:900;font-size:24px;letter-spacing:-.03em;}
+  .hero .sub{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);margin-top:4px;}
+  .hero .facts{display:flex;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+  .hero .f{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);}
+  .hero .f b{display:block;color:var(--paper);font-size:13px;font-weight:700;}
+
+  .pillrow{display:flex;gap:6px;overflow-x:auto;}
+  .pill{flex:none;font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11px;color:var(--paper);background:var(--ink-2);border:1px solid var(--line);border-radius:99px;padding:7px 14px;}
+  .pill.on{background:var(--volt);border-color:var(--volt);color:var(--ink);}
+
+  .sechead{display:flex;justify-content:space-between;align-items:baseline;}
+  .sechead h2{font-family:'Saira';font-style:italic;font-weight:900;font-size:19px;letter-spacing:-.03em;}
+  .sechead .ct{font-family:'JetBrains Mono';font-size:11px;color:var(--dim);}
+
+  .grp{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;color:var(--volt);padding:10px 2px 6px;border-top:1px solid var(--line);margin-top:2px;}
+  .grp:first-child{border-top:0;margin-top:0;}
+  .grp .n{color:var(--dim);font-weight:400;margin-left:6px;}
+  .grp.unlisted{color:var(--muted);}
+
+  .rhead{display:flex;align-items:center;gap:10px;padding:0 2px 6px;font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:9px;color:var(--dim);}
+  .rhead .rail{width:26px;flex:none;}
+  .rhead .deck{flex:1;}
+  .rhead .cols{display:flex;gap:10px;}
+  .rhead .col{width:34px;text-align:right;flex:none;}
+
+  .rrow{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid #1e1e1e;}
+  .rrow .rail{width:26px;flex:none;font-family:'JetBrains Mono';font-weight:700;font-size:13px;color:var(--dim);text-align:center;}
+  .rrow .deck{flex:1;min-width:0;}
+  .rrow .nm{font-family:'JetBrains Mono';font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;}
+  .rrow .tag{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);margin-top:1px;}
+  .rrow .cols{display:flex;gap:10px;font-family:'JetBrains Mono';font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .rrow .col{width:34px;text-align:right;flex:none;}
+  .rookie{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;font-size:8px;letter-spacing:.06em;color:var(--jade-bright);border:1px solid var(--jade);border-radius:99px;padding:1px 6px;}
+
+  .schedhead{font-family:'JetBrains Mono';font-size:11px;color:var(--dim);}
+  .schedhead .fix{color:var(--jade-bright);}
+  .srow{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #1e1e1e;font-family:'JetBrains Mono';font-size:12px;}
+  .srow .opp{color:var(--paper);}
+  .srow .wk{color:var(--dim);}
+
+  .emptystate{border:1px dashed var(--line);border-radius:10px;padding:20px;text-align:center;font-family:'JetBrains Mono';font-size:11.5px;color:var(--dim);}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div>
+    <p class="frame-label">1 - hero: real breadcrumb, no dead pills</p>
+    <div class="phone" style="min-height:520px;">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+        <div class="crumb">Home / <span class="wrong">FIFA World Cup 2026</span> <b>→ NFL</b> / Teams / Kansas City Chiefs</div>
+
+        <div class="hero">
+          <div class="lg">KC</div>
+          <h1>Kansas City Chiefs</h1>
+          <div class="sub">AFC West · Arrowhead Stadium</div>
+          <div class="facts">
+            <div class="f">Roster<b>95</b></div>
+            <div class="f">Record<b>—</b></div>
+            <div class="f">Founded<b>1960</b></div>
+          </div>
+        </div>
+
+        <div class="pillrow">
+          <span class="pill on">Recent + Next</span>
+          <span class="pill">Roster</span>
+          <span class="pill">Schedule</span>
+          <span class="pill">Articles</span>
+        </div>
+      </div>
+    </div>
+    <p class="frame-note">Breadcrumb no longer claims the Chiefs are in the World Cup - real league, real link. Anchor rail drops to FOUR pills that actually go somewhere (Team Stats / Top Players / Trajectory removed - no gridiron data source exists for any of them). Soccer team pages keep their own five pills, untouched.</p>
+  </div>
+
+  <div>
+    <p class="frame-label">2 - roster - numcols grammar, real data shape</p>
+    <div class="phone" style="min-height:820px;">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+        <div class="sechead"><h2>Roster</h2><span class="ct">95 players</span></div>
+
+        <div class="rhead"><span class="rail">#</span><span class="deck">Player</span><div class="cols"><span class="col">HT</span><span class="col">WT</span></div></div>
+
+        <div class="grp">Offense <span class="n">48</span></div>
+        <div class="rrow"><span class="rail">15</span>
+          <div class="deck"><div class="nm">Patrick Mahomes</div><div class="tag">QB · Texas Tech · yr9</div></div>
+          <div class="cols"><span class="col">6'2"</span><span class="col">225</span></div>
+        </div>
+        <div class="rrow"><span class="rail">28</span>
+          <div class="deck"><div class="nm">Isiah Pacheco</div><div class="tag">RB · Rutgers · yr4</div></div>
+          <div class="cols"><span class="col">5'10"</span><span class="col">216</span></div>
+        </div>
+
+        <div class="grp">Defense <span class="n">45</span></div>
+        <div class="rrow"><span class="rail">5</span>
+          <div class="deck"><div class="nm">Mansoor Delane<span class="rookie">R</span></div><div class="tag">CB · LSU · yr1</div></div>
+          <div class="cols"><span class="col">6'0"</span><span class="col">190</span></div>
+        </div>
+        <div class="rrow"><span class="rail">8</span>
+          <div class="deck"><div class="nm">Kristian Fulton</div><div class="tag">CB · LSU · yr6</div></div>
+          <div class="cols"><span class="col">5'11"</span><span class="col">197</span></div>
+        </div>
+        <div class="rrow"><span class="rail">17</span>
+          <div class="deck"><div class="nm">Alohi Gilman</div><div class="tag">S · Notre Dame · yr7</div></div>
+          <div class="cols"><span class="col">5'10"</span><span class="col">201</span></div>
+        </div>
+
+        <div class="grp">Special Teams <span class="n">2</span></div>
+        <div class="rrow"><span class="rail">7</span>
+          <div class="deck"><div class="nm">Harrison Butker</div><div class="tag">K · Georgia Tech · yr9</div></div>
+          <div class="cols"><span class="col">6'4"</span><span class="col">196</span></div>
+        </div>
+
+        <div class="grp unlisted">Unlisted <span class="n">379 league-wide</span></div>
+        <div class="rrow"><span class="rail">—</span>
+          <div class="deck"><div class="nm" style="color:var(--muted);">D. Whitfield</div><div class="tag">Position not reported · Ole Miss</div></div>
+          <div class="cols"><span class="col">—</span><span class="col">—</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="frame-note">Rail = jersey (was ADP), name line carries a ROOKIE chip on yr1 players (existing badge pattern, reused). HT/WT shown in ft-in/lbs for a US audience - stored as cm/kg per migration 076, converted at display. PROPOSAL, confirm: "Unlisted" group renders players with no position_group rather than hiding them - 379 exist league-wide, real people on real rosters.</p>
+  </div>
+
+  <div>
+    <p class="frame-label">3 - schedule de-tournamented, articles honest-empty</p>
+    <div class="phone" style="min-height:560px;">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+        <div class="sechead"><h2>Schedule</h2></div>
+        <div class="schedhead">was: "Full Tournament" → now: <span class="fix">"2026 Season"</span></div>
+        <div class="srow"><span class="wk">Wk 1</span><span class="opp">@ Chargers</span></div>
+        <div class="srow"><span class="wk">Wk 2</span><span class="opp">vs Eagles</span></div>
+        <div class="srow"><span class="wk">Wk 3</span><span class="opp">@ Giants</span></div>
+
+        <div class="sechead" style="margin-top:6px;"><h2>Articles</h2></div>
+        <div class="emptystate">No articles yet for this team.<br>Sportsvyn's editorial coverage is soccer-only today.</div>
+      </div>
+    </div>
+    <p class="frame-note">Schedule heading stops calling an NFL season a tournament - copy fix only, row styling unexamined/unchanged pending its own look. Articles renders an HONEST empty state rather than a blank section or invented content - true for all 275 gridiron team pages today, matching the census finding rather than hiding it.</p>
+  </div>
+
+</div>
+</body>
+</html>

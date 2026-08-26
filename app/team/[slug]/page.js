@@ -38,6 +38,8 @@ import RecentNext from '@/components/team/RecentNext';
 import TeamStatsGrid from '@/components/team/TeamStatsGrid';
 import TopPlayers from '@/components/team/TopPlayers';
 import SquadList from '@/components/team/SquadList';
+import GridironRoster from '@/components/team/GridironRoster';
+import { isGridiron, breadcrumbFor, anchorPillsFor, scheduleHeadingFor } from '@/components/team/gridiron';
 import Trajectory from '@/components/team/Trajectory';
 import Schedule from '@/components/team/Schedule';
 import Articles from '@/components/team/Articles';
@@ -102,16 +104,31 @@ export default async function TeamPage({ params }) {
 
   const nextInfo = nextMatchOpponentInfo(next, team.id);
 
+  // League-aware chrome. Every one of these falls back to the soccer value, so
+  // a World Cup team page renders exactly what it rendered before.
+  const gridiron = isGridiron(team.leagueSlug ?? team.league_slug);
+  const crumb = breadcrumbFor(team.leagueSlug ?? team.league_slug);
+  const pills = anchorPillsFor(team.leagueSlug ?? team.league_slug);
+    // The season comes from the schedule itself - `team` carries no season, so
+  // the heading read a bare "Season". Newest season the team actually has
+  // matches in.
+  const seasonYear = matches?.reduce((y, m) => Math.max(y, Number(m.season_year) || 0), 0) || null;
+  const scheduleHeading = scheduleHeadingFor(team.leagueSlug ?? team.league_slug, seasonYear);
+
   return (
     <>
       <BackToAppBar />
       <GlobalHeaderServer />
 
       <main className="page-shell">
+        {/* LEAGUE-AWARE. This was hardcoded to the World Cup on every team
+            page, so all 275 gridiron pages told the reader the Chiefs play in
+            it. Soccer's crumb is unchanged - breadcrumbFor falls back to the
+            same label and href it always had. */}
         <div className="breadcrumb">
           <Link href="/">Home</Link>
           <span className="sep">/</span>
-          <a href="/world-cup-2026/bracket">FIFA World Cup 2026</a>
+          <a href={crumb.href}>{crumb.label}</a>
           <span className="sep">/</span>
           <a href="#">Teams</a>
           <span className="sep">/</span>
@@ -122,14 +139,13 @@ export default async function TeamPage({ params }) {
         <SportsvynOutlook team={team} odds={odds} nextMatch={nextInfo} />
         <FormStrip matches={matches} teamId={team.id} stats={stats} />
 
+        {/* Four of these pointed at sections gridiron does not render, so a
+            third of the rail went nowhere on every NFL and CFB page. Per
+            league now; soccer's seven are byte-identical. */}
         <nav className="anchor-pills">
-          <a href="#matches" className="anchor-pill">Recent + Next</a>
-          <a href="#stats" className="anchor-pill">Team Stats</a>
-          <a href="#players" className="anchor-pill">Top Players</a>
-          <a href="#squad" className="anchor-pill">Squad</a>
-          <a href="#trajectory" className="anchor-pill">Trajectory</a>
-          <a href="#schedule" className="anchor-pill">Schedule</a>
-          <a href="#articles" className="anchor-pill">Articles</a>
+          {pills.map((p) => (
+            <a key={p.href} href={p.href} className="anchor-pill">{p.label}</a>
+          ))}
         </nav>
 
         <RecentNext
@@ -138,11 +154,16 @@ export default async function TeamPage({ params }) {
           next={next}
           nextBroadcasters={broadcasters}
         />
-        <TeamStatsGrid stats={stats} />
-        <TopPlayers players={players} />
-        <SquadList players={squad} teamName={team.name} />
-        <Trajectory entries={trajectory} />
-        <Schedule matches={matches} teamId={team.id} />
+        {/* The four gridiron-absent sections stop rendering rather than
+            rendering empty - GATED = ABSENT. Their readers return nothing for
+            gridiron anyway; this stops the page reserving space for them. */}
+        {!gridiron && <TeamStatsGrid stats={stats} />}
+        {!gridiron && <TopPlayers players={players} />}
+        {gridiron
+          ? <GridironRoster players={squad} />
+          : <SquadList players={squad} teamName={team.name} />}
+        {!gridiron && <Trajectory entries={trajectory} />}
+        <Schedule matches={matches} teamId={team.id} heading={scheduleHeading} />
         <Articles team={team} />
       </main>
 

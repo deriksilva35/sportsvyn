@@ -1205,3 +1205,35 @@
   }
 }
 
+
+/* ---- Gridiron roster (components/team/GridironRoster.js) -------------------
+   Reuses numcols.css's .nrail / .ndeck / .nline1 / .nline2 / .ncols / .ncol
+   rather than hand-rolling a second column system - the fixed 6ch tabular
+   columns and the shrink-point discipline already exist and are already
+   phone-tested. Only the roster-specific paint lives here. */
+.gr-head, .gr-row { display: flex; align-items: center; gap: 10px; }
+.gr-head {
+  font-family: var(--font-saira-cond), sans-serif; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .08em; font-size: 9px;
+  color: var(--muted-dim); padding: 0 2px 6px;
+}
+.gr-row { padding: 8px 2px; border-bottom: 1px solid var(--rule-dim); }
+.gr-nm { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 13px; }
+.gr-tag {
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 10px;
+  color: var(--muted-dim);
+}
+.gr-rookie {
+  font-family: var(--font-saira-cond), sans-serif; font-weight: 600;
+  text-transform: uppercase; font-size: 8px; letter-spacing: .06em;
+  color: var(--jade-bright); border: 1px solid var(--jade);
+  border-radius: 99px; padding: 1px 6px; margin-left: 6px;
+}
+.gr-grp {
+  font-family: var(--font-saira-cond), sans-serif; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .1em; font-size: 10.5px;
+  color: var(--volt); padding: 12px 2px 6px; border-top: 1px solid var(--rule);
+  margin-top: 2px;
+}
+.gr-grp.unlisted { color: var(--muted); }
+.gr-grp .n { color: var(--muted-dim); font-weight: 400; margin-left: 6px; }

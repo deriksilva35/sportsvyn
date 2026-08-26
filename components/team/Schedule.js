@@ -57,14 +57,19 @@ function ScheduleRow({ match, teamId }) {
   );
 }
 
-export default function Schedule({ matches, teamId }) {
+export default function Schedule({ matches, teamId, heading }) {
   if (!matches?.length) return null;
   return (
     <section className="page-section" id="schedule">
       <div className="section-head">
         <div className="section-head-left">
           <span className="section-head-num">§ Schedule</span>
-          <h2 className="section-head-title">Full <span className="accent">Tournament</span></h2>
+          {/* "Full Tournament" is not what an NFL season is called. The
+              heading is passed in per league; omitted, it is exactly what it
+              always was, so soccer is unchanged. */}
+          {heading
+            ? <h2 className="section-head-title">{heading}</h2>
+            : <h2 className="section-head-title">Full <span className="accent">Tournament</span></h2>}
         </div>
       </div>
       <div className="schedule-list">
