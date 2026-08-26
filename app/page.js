@@ -42,7 +42,8 @@ import { getMovementCard } from '@/lib/fantasy/movement';
 import '@/components/fantasy/movementCard.css';
 import EditorialBoard from '@/components/gridiron/EditorialBoard';
 import TodaysGames from '@/components/home/TodaysGames';
-import { getEditorialBoard, getSlateByDate } from '@/lib/gridiron/readers';
+import { getEditorialBoard, getSlateByDate, getNearestUpcomingWeek } from '@/lib/gridiron/readers';
+import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { boardHref } from '@/lib/gridiron/rankingsHub';
 import '@/components/gridiron/gridiron.css';
 import { resolveShellMode } from '@/lib/shell/shell';
@@ -83,18 +84,27 @@ function DailyCardHeader({ ptDateLabel }) {
 }
 
 
-// Two dates, stated once. Deliberately STATIC - a countdown would be a second
-// thing to be wrong every day, and the reader can subtract. Volt is the rule
-// material only; the text is paper-on-ink, never volt on paper.
-const SEASON_DATES = [
-  { label: 'CFB Week 0', date: 'Aug 29' },
-  { label: 'NFL Week 1', date: 'Sep 10' },
-];
-
-function SeasonStrip() {
+// Two dates, stated once. The DATES are deliberately static - a countdown would
+// be a second thing to be wrong every day, and the reader can subtract - but
+// the WEEK NUMBERS are not, and used to be.
+//
+// This strip said "CFB Week 0" for Aug 29. The schedule says that Saturday is
+// season 2026, REG, WEEK 1 - and that week 1 runs Aug 29 through Sep 7, ten
+// days and 99 games. "Week 0" was copy somebody typed, and copy cannot be
+// right about a number the database owns. It is the same class as a hardcoded
+// kickoff: correct on the day it was written, silently wrong afterwards.
+//
+// The label is now derived and the date is still stated. If the derivation
+// finds nothing, the strip renders the date without a week number rather than
+// inventing one.
+function SeasonStrip({ cfbWeek = null, nflWeek = null }) {
+  const dates = [
+    { label: cfbWeek != null ? `CFB Week ${cfbWeek}` : 'CFB', date: 'Aug 29' },
+    { label: nflWeek != null ? `NFL Week ${nflWeek}` : 'NFL', date: 'Sep 10' },
+  ];
   return (
     <div className="dc-season" data-surface="ink">
-      {SEASON_DATES.map((d) => (
+      {dates.map((d) => (
         <div className="dc-season-item" key={d.label}>
           <span className="dc-season-label">{d.label}</span>
           <span className="dc-season-date">{d.date}</span>
@@ -327,6 +337,16 @@ export default async function HomePage() {
     getDraftHome(userId).catch(() => null),
   ]);
 
+  // THE WEEK NUMBERS ON THE SEASON STRIP ARE DERIVED, never typed. The strip
+  // read "CFB Week 0" for Aug 29 while the schedule said week 1; a number the
+  // database owns must not be restated as copy. Null on failure, and the strip
+  // then shows the date with no week rather than a wrong one.
+  const seasonYear = resolveSeasonYear(now);
+  const [cfbNext, nflNext] = await Promise.all([
+    getNearestUpcomingWeek('cfb', seasonYear).catch(() => null),
+    getNearestUpcomingWeek('nfl', seasonYear).catch(() => null),
+  ]);
+
 
   return (
     <>
@@ -396,7 +416,7 @@ export default async function HomePage() {
               placeholder, no deflated section. */}
           <TodaysReadsSection reads={todaysReads} followedSet={followedSet} />
 
-          <SeasonStrip />
+          <SeasonStrip cfbWeek={cfbNext?.week ?? null} nflWeek={nflNext?.week ?? null} />
         </article>
 
         <aside className="right-rail home-rail">
