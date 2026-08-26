@@ -18,6 +18,10 @@ export default function robots() {
       allow: '/',
       disallow: NOINDEX_PREFIXES.flatMap((p) => [p, `${p}/`]),
     },
+    // /sitemap.xml is now a sitemap INDEX (app/sitemap.xml/route.js), not a
+    // urlset - the children live at /sitemap/<surface>-<n>.xml. The address is
+    // deliberately unchanged: it is what crawlers already hold, and an index is
+    // a valid response to a request for a sitemap.
     sitemap: absolute('/sitemap.xml'),
   };
 }
