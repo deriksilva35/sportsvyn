@@ -133,15 +133,16 @@ test('UNLISTED appears only when THAT team has one - not league-wide', () => {
   assert.equal(g.count, 2, "this team's own count, not 379");
 });
 
-test('roster rows are UNLINKED - there are no gridiron player pages', () => {
-  // Comments stripped: the file's own header explains that soccer rows link to
-  // /player/{slug} in order to say this one does NOT, and a raw grep reads that
-  // promise-of-absence as the thing itself.
+test('roster rows LINK to the player page - the inversion', () => {
+  // This test used to pin ZERO links, because there was no gridiron player page
+  // and a link would have been a promise to a 404. /player/[slug] now renders
+  // one, so the pin inverts: every row must carry the link. Same promise, after
+  // rather than before.
   const c = src('components/team/GridironRoster.js')
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-  assert.doesNotMatch(c, /href=/, 'no link may be rendered from a roster row');
-  assert.doesNotMatch(c, /\/player\//);
-  // Soccer's squad keeps its links.
+  assert.match(c, /<a className="gr-row" href=\{`\/player\/\$\{p\.slug\}`\}>/);
+  assert.doesNotMatch(c, /<div className="gr-row">/);
+  // Soccer's squad keeps its own links, unchanged.
   assert.match(src('components/team/SquadList.js'), /href=\{`\/player\/\$\{player\.slug\}`\}/);
 });
 

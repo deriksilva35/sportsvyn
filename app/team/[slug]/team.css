@@ -1237,3 +1237,9 @@
 }
 .gr-grp.unlisted { color: var(--muted); }
 .gr-grp .n { color: var(--muted-dim); font-weight: 400; margin-left: 6px; }
+
+/* The roster row became an anchor when /player/[slug] learned to render a
+   gridiron player. It is a link that must not look like one: the row already
+   reads as a row, and 95 underlined names would be a wall of blue-ish text. */
+a.gr-row{color:inherit;text-decoration:none}
+a.gr-row:hover .gr-nm{color:var(--volt)}

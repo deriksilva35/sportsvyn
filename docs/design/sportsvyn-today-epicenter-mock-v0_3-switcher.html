@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sportsvyn · Today v0_3 · Bands + chips, Today / My Sportsvyn switcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@600&family=Source+Serif+4:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1C1C1C; --line:#2A2A2A;
+  --paper:#F5F5F2; --paper-dim:#C5C5C2; --muted:#8A8A85;
+  --volt:#D4FF00; --volt-deep:#1a2000; --jade:#2A8A4F; --terra:#B8410F; --live:#E63946;
+  --display:'Saira',sans-serif; --cond:'Saira Condensed',sans-serif;
+  --serif:'Source Serif 4',serif; --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ink);color:var(--paper);-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+.mockbar{position:sticky;top:0;z-index:60;text-align:center;padding:7px;background:rgba(10,10,10,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+.mockbar b{color:var(--volt);font-weight:500}
+
+nav{display:flex;align-items:center;gap:26px;padding:16px 32px;border-bottom:3px solid var(--volt);max-width:1280px;margin:0 auto;width:100%}
+.wordmark{font-family:var(--display);font-style:italic;font-weight:900;font-size:22px;letter-spacing:-0.05em;text-transform:uppercase}
+.wordmark .y{color:var(--volt);position:relative}
+.wordmark .y::before{content:"";position:absolute;left:-6%;top:-0.06em;width:112%;height:.08em;background:var(--volt)}
+nav .links{display:flex;gap:20px;font-family:var(--cond);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim)}
+nav .links .on{color:var(--volt)}
+nav .spacer{flex:1}
+nav .acct{font-family:var(--cond);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+.wrap{max-width:1280px;margin:0 auto;padding:20px 32px 60px}
+
+/* ===== THE MODE SWITCHER - top center, two pills ===== */
+.modeswitch{display:flex;justify-content:center;margin:6px 0 4px}
+.modewrap{display:flex;gap:4px;background:var(--ink-2);border:1px solid var(--line);border-radius:99px;padding:4px}
+.mode{font-family:var(--display);font-style:italic;font-weight:900;font-size:15px;letter-spacing:-0.02em;text-transform:uppercase;color:var(--paper-dim);background:transparent;border:none;border-radius:99px;padding:10px 30px;cursor:pointer;transition:all .12s}
+.mode:hover{color:var(--paper)}
+.mode.on{background:var(--volt);color:var(--ink)}
+.modesub{text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:8px 0 14px}
+
+/* ===== TODAY VIEW ===== */
+.view{display:none}
+.view.on{display:block}
+
+/* filter chips - b's, controlling c's bands */
+.tuner{display:flex;justify-content:center;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.spill{font-family:var(--cond);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--paper-dim);background:var(--ink-3);border:1px solid var(--line);border-radius:99px;padding:8px 18px;cursor:pointer;transition:all .12s;user-select:none;font-variant-numeric:tabular-nums}
+.spill:hover{border-color:var(--muted)}
+.spill.on{background:var(--volt);color:var(--ink);border-color:var(--volt);font-weight:600}
+.spill.soon{color:var(--muted);cursor:default;display:flex;gap:7px;align-items:center}
+.spill.soon i{font-style:normal;font-size:8px;letter-spacing:.12em;border:1px solid var(--line);border-radius:99px;padding:1px 6px}
+.spill .ct{font-size:10px;opacity:.7;margin-left:5px}
+.regline{text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:8px 0 16px}
+.regline .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--jade);margin-right:7px;vertical-align:1px}
+
+/* editorial spine */
+.readband{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+.readband .kick{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--volt);text-transform:uppercase;margin-bottom:6px}
+.readband h2{font-family:var(--display);font-style:italic;font-weight:900;font-size:24px;letter-spacing:-0.04em;line-height:1.1;text-transform:uppercase}
+.readband .by{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-top:8px}
+.readband .go{font-family:var(--cond);font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--ink-3);color:var(--paper);border:1px solid var(--line);border-radius:9px;padding:12px 20px;cursor:pointer;white-space:nowrap}
+
+/* bands - c's carpentry */
+.bandhead{display:flex;align-items:baseline;gap:14px;padding:14px 0 10px;border-top:2px solid var(--volt)}
+.bandhead.sub{border-top:1px solid var(--line)}
+.bandhead h2{font-family:var(--display);font-style:italic;font-weight:900;font-size:22px;letter-spacing:-0.04em;text-transform:uppercase}
+.bandhead h2 .lg{color:var(--volt)}
+.bandhead .ctx{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;font-variant-numeric:tabular-nums}
+.bandhead .spacer{flex:1}
+.bandhead .more{font-family:var(--cond);font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;cursor:pointer}
+.band{transition:opacity .15s;margin-bottom:6px}
+.band.off{display:none}
+.bmods{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.bmods.four{grid-template-columns:repeat(4,1fr)}
+@media(max-width:960px){.bmods,.bmods.four{grid-template-columns:1fr}.readband{grid-template-columns:1fr}}
+
+.gcard{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.gcard.hot{background:linear-gradient(160deg,var(--volt-deep),var(--ink-2));border-color:#2c3600}
+.gcard .eb{font-family:var(--cond);font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;display:flex;gap:8px;align-items:center}
+.newpill{font-family:var(--cond);font-size:9px;letter-spacing:.1em;color:var(--ink);background:var(--volt);border-radius:99px;padding:1px 8px}
+.gcard h3{font-family:var(--display);font-style:italic;font-weight:900;font-size:19px;letter-spacing:-0.03em;margin:6px 0 4px}
+.gcard .st{font-family:var(--mono);font-size:10px;color:var(--paper-dim);font-variant-numeric:tabular-nums;line-height:1.55;margin-bottom:10px}
+.gbtn{font-family:var(--cond);font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:var(--ink-3);color:var(--paper);border:1px solid var(--line);border-radius:9px;padding:8px 13px;cursor:pointer;width:100%}
+.gbtn.play{background:var(--volt);color:var(--ink);border-color:var(--volt);font-family:var(--display);font-style:italic;font-weight:900;font-size:13px;letter-spacing:-0.01em}
+.gbtn.ghosted{color:var(--muted)}
+
+.mod{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:14px}
+.mod .eb{font-family:var(--cond);font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;display:flex;justify-content:space-between;margin-bottom:10px}
+.mod .eb .ctx{font-family:var(--mono);font-size:9px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.row:last-of-type{border-bottom:none}
+.row .l{display:flex;align-items:center;gap:10px;font-family:var(--display);font-style:italic;font-weight:900;font-size:15px;letter-spacing:-0.02em}
+.row .pos{font-family:var(--mono);font-style:normal;font-weight:400;font-size:11px;color:var(--muted);width:16px;text-align:center}
+.row .v{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--paper-dim)}
+.row .v.dn{color:var(--terra)}
+.row .sub{font-family:var(--mono);font-style:normal;font-weight:400;font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.ghostcta{display:block;width:100%;text-align:center;font-family:var(--cond);font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--ink-3);color:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px;margin-top:12px;cursor:pointer}
+
+.srow{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.srow:last-of-type{border-bottom:none}
+.when{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;line-height:1.5;font-variant-numeric:tabular-nums}
+.mu{font-family:var(--display);font-style:italic;font-weight:900;font-size:14px;letter-spacing:-0.02em}
+.mu .at{color:var(--muted);font-family:var(--mono);font-style:normal;font-weight:400;font-size:10px}
+.stag{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase}
+.fin{font-family:var(--mono);font-size:12px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.fin .s2{display:block;font-size:8px;font-weight:400;color:var(--muted);letter-spacing:.1em}
+.onboard{font-family:var(--cond);font-size:8px;letter-spacing:.08em;color:var(--volt);border:1px solid color-mix(in srgb,var(--volt) 40%,transparent);border-radius:99px;padding:1px 7px;text-transform:uppercase;margin-left:6px}
+
+.mvrow{display:grid;grid-template-columns:20px 1fr auto auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.mvrow:last-of-type{border-bottom:none}
+.mvrow .n{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center}
+.mvrow .nm{font-family:var(--display);font-style:italic;font-weight:900;font-size:14px;letter-spacing:-0.02em}
+.mvrow .nm .tg{display:block;font-family:var(--mono);font-style:normal;font-weight:400;font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+.rchip{font-family:var(--cond);font-size:8px;color:var(--ink);background:var(--paper-dim);border-radius:99px;padding:1px 6px;vertical-align:2px;margin-left:5px}
+.mvrow .adp{font-family:var(--mono);font-size:12px;color:var(--paper-dim);text-align:right}
+.mvrow .adp .u{display:block;font-size:8px;color:var(--muted);letter-spacing:.1em}
+.mvrow .d{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--jade);text-align:right}
+
+.arow{padding:10px 0;border-bottom:1px solid var(--line)}
+.arow:last-of-type{border-bottom:none}
+.arow .kick{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--volt);opacity:.75;text-transform:uppercase;margin-bottom:4px}
+.arow h4{font-family:var(--display);font-style:italic;font-weight:900;font-size:15px;letter-spacing:-0.02em;line-height:1.15}
+
+.emptystate{text-align:center;font-family:var(--serif);font-style:italic;font-size:14px;color:var(--muted);padding:30px;display:none}
+.emptystate.show{display:block}
+
+/* ===== MY SPORTSVYN VIEW - the customizable dashboard loads here ===== */
+.msvhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.msvhead .note{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--muted)}
+.custbtn{font-family:var(--cond);font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--ink-3);color:var(--volt);border:1px solid color-mix(in srgb,var(--volt) 45%,transparent);border-radius:99px;padding:9px 18px;cursor:pointer}
+.custbtn.on{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+.msvgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;align-items:start}
+.panel{grid-column:span 4}
+.panel.w6{grid-column:span 6}
+@media(max-width:960px){.panel,.panel.w6{grid-column:span 12}}
+.editing .mod{border-style:dashed;border-color:color-mix(in srgb,var(--volt) 45%,transparent)}
+.pedit{display:none;align-items:center;gap:6px;padding:0 0 10px}
+.editing .pedit{display:flex}
+.pedit .grip{font-family:var(--mono);color:var(--muted);font-size:13px;cursor:grab;letter-spacing:-2px}
+.pedit .ebtn{font-family:var(--mono);font-size:11px;color:var(--paper-dim);background:transparent;border:1px solid var(--line);border-radius:99px;width:24px;height:24px;cursor:pointer}
+.pedit .ebtn:hover{border-color:var(--volt)}
+.pedit .spacer{flex:1}
+.pedit .mtag{font-family:var(--cond);font-size:8px;letter-spacing:.1em;color:var(--volt);opacity:.8;border:1px solid color-mix(in srgb,var(--volt) 40%,transparent);border-radius:99px;padding:1px 7px;text-transform:uppercase}
+.addpanel{grid-column:span 4;border:1px dashed var(--line);border-radius:12px;min-height:120px;display:none;align-items:center;justify-content:center;font-family:var(--cond);font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;cursor:pointer}
+.editing .addpanel{display:flex}
+.addpanel:hover{border-color:var(--volt);color:var(--volt)}
+</style>
+</head>
+<body>
+
+<div class="mockbar">TODAY EPICENTER · <b>v0_3</b> · C'S BANDS + B'S CHIPS · CENTERED TODAY / MY SPORTSVYN SWITCHER - BOTH MODES LIVE, CLICK EVERYTHING</div>
+
+<nav>
+  <div class="wordmark">SPORTSV<span class="y">Y</span>N</div>
+  <div class="links"><span class="on">Today</span><span>Games</span><span>Scores</span><span>NFL</span><span>CFB</span><span>Soccer</span></div>
+  <div class="spacer"></div>
+  <div class="acct">Mock Draft · Member · deriksilva</div>
+</nav>
+
+<div class="wrap">
+
+  <!-- THE SWITCHER: top center, two pills -->
+  <div class="modeswitch">
+    <div class="modewrap">
+      <button class="mode on" data-view="today">Today</button>
+      <button class="mode" data-view="msv">My Sportsvyn</button>
+    </div>
+  </div>
+  <div class="modesub" id="modesub">Wed, Aug 26 · The network's front page, tuned to your leagues</div>
+
+  <!-- ============ TODAY ============ -->
+  <div class="view on" id="view-today">
+
+    <div class="tuner">
+      <button class="spill on" data-band="cfb">CFB <span class="ct">Wk 0 · Sat</span></button>
+      <button class="spill on" data-band="nfl">NFL <span class="ct">Wk 1 · Sep 10</span></button>
+      <button class="spill on" data-band="epl">EPL <span class="ct">MW 2 · Sat</span></button>
+      <button class="spill" data-band="wc">World Cup <span class="ct">archive</span></button>
+      <button class="spill soon">MLB <i>2027</i></button>
+    </div>
+    <div class="regline"><span class="dot"></span>Saved to your account · one registry with My Sportsvyn</div>
+
+    <!-- editorial spine: always on -->
+    <div class="readband">
+      <div>
+        <div class="kick">The Daily Card · Free to read</div>
+        <h2>Week 0 is a rehearsal nobody admits is a rehearsal</h2>
+        <div class="by">By Derik Silva · Wed, Aug 26 · 4 min read</div>
+      </div>
+      <button class="go">Read the card →</button>
+    </div>
+
+    <!-- games band: always on -->
+    <div class="band">
+      <div class="bandhead">
+        <h2>The Games</h2>
+        <span class="ctx">One account, one handle, every board</span>
+        <span class="spacer"></span>
+        <span class="more">Games hub →</span>
+      </div>
+      <div class="bmods four">
+        <div class="gcard hot">
+          <div class="eb">Edition No. 011 · Closes midnight ET</div>
+          <h3>The Daily</h3>
+          <div class="st">Yesterday's perfect 146 · top 102</div>
+          <button class="gbtn play">Play Ed. 011</button>
+        </div>
+        <div class="gcard">
+          <div class="eb">Board 1 <span class="newpill">New</span></div>
+          <h3>Pick 'em</h3>
+          <div class="st">8 games · locks Sat Aug 29, noon ET</div>
+          <button class="gbtn">1/8 picked · Finish board</button>
+        </div>
+        <div class="gcard">
+          <div class="eb">Season game</div>
+          <h3>The Weekly</h3>
+          <div class="st">Six NFL players, best five count</div>
+          <button class="gbtn ghosted">Opens Sep 8</button>
+        </div>
+        <div class="gcard">
+          <div class="eb">Season game</div>
+          <h3>The Draft</h3>
+          <div class="st">Eight picks feed a best six</div>
+          <button class="gbtn ghosted">Opens Sep 8</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CFB band first: game week -->
+    <div class="band" data-band="cfb">
+      <div class="bandhead sub">
+        <h2><span class="lg">CFB</span> · Week 0</h2>
+        <span class="ctx">First kickoff Sat 12:00p ET · Game week</span>
+        <span class="spacer"></span>
+        <span class="more">CFB hub →</span>
+      </div>
+      <div class="bmods">
+        <div class="mod">
+          <div class="eb">Saturday's slate <span class="ctx">Board 1 marked</span></div>
+          <div class="srow"><div class="when">Sat<br>12:00p</div><div><div class="mu">N. Carolina <span class="at">at</span> TCU<span class="onboard">Board 1</span></div><div class="stag">Wk 0</div></div><div class="fin"><span class="s2">Locks noon</span></div></div>
+          <div class="srow"><div class="when">Sat<br>3:30p</div><div><div class="mu">Kansas St <span class="at">vs</span> Iowa St<span class="onboard">Board 1</span></div><div class="stag">Wk 0 · Dublin</div></div><div class="fin"><span class="s2">Preview</span></div></div>
+          <div class="srow"><div class="when">Sat<br>7:00p</div><div><div class="mu">Idaho St <span class="at">at</span> UNLV<span class="onboard">Board 1</span></div><div class="stag">Wk 0</div></div><div class="fin"><span class="s2">Preview</span></div></div>
+          <button class="ghostcta">All 8 board games →</button>
+        </div>
+        <div class="mod">
+          <div class="eb">The Sportsvyn 25 <span class="ctx">Preseason · Ed. 0</span></div>
+          <div class="row"><div class="l"><span class="pos">1</span>Ohio State</div><div class="v sub">AP 2</div></div>
+          <div class="row"><div class="l"><span class="pos">2</span>Texas</div><div class="v sub">AP 1</div></div>
+          <div class="row"><div class="l"><span class="pos">3</span>Notre Dame</div><div class="v sub">AP 5</div></div>
+          <div class="row"><div class="l"><span class="pos">4</span>Oregon</div><div class="v sub">AP 4</div></div>
+          <div class="row"><div class="l"><span class="pos">5</span>Georgia</div><div class="v sub">AP 3</div></div>
+          <button class="ghostcta">Rankings hub: 5 boards →</button>
+        </div>
+        <div class="mod">
+          <div class="eb">Latest CFB</div>
+          <div class="arow"><div class="kick">Rankings</div><h4>The Sportsvyn 25 is not the AP, on purpose</h4></div>
+          <div class="arow"><div class="kick">Pick 'em</div><h4>Board 1: eight games, eight honest calls</h4></div>
+          <div class="arow"><div class="kick">Week 0</div><h4>Dublin at 8am local is a real home game for nobody</h4></div>
+          <button class="ghostcta">All CFB articles →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NFL band -->
+    <div class="band" data-band="nfl">
+      <div class="bandhead sub">
+        <h2><span class="lg">NFL</span> · 13 days out</h2>
+        <span class="ctx">Week 1 kicks Sep 10</span>
+        <span class="spacer"></span>
+        <span class="more">NFL hub →</span>
+      </div>
+      <div class="bmods">
+        <div class="mod">
+          <div class="eb">Power Rankings <span class="ctx">Preseason · Ed. 0</span></div>
+          <div class="row"><div class="l"><span class="pos">1</span>Los Angeles Rams</div><div class="v sub">-</div></div>
+          <div class="row"><div class="l"><span class="pos">2</span>Seattle Seahawks</div><div class="v sub">-</div></div>
+          <div class="row"><div class="l"><span class="pos">3</span>Buffalo Bills</div><div class="v sub">-</div></div>
+          <div class="row"><div class="l"><span class="pos">4</span>Baltimore Ravens</div><div class="v sub">-</div></div>
+          <div class="row"><div class="l"><span class="pos">5</span>Denver Broncos</div><div class="v sub">-</div></div>
+          <button class="ghostcta">Full board + dark horses →</button>
+        </div>
+        <div class="mod">
+          <div class="eb">ADP Movement <span class="ctx">12-team PPR</span></div>
+          <div class="mvrow"><div class="n">1</div><div class="nm">Mike Washington Jr.<span class="rchip">R</span><span class="tg">RB · LV</span></div><div class="adp">146.7<span class="u">ADP</span></div><div class="d">▲ +10.6</div></div>
+          <div class="mvrow"><div class="n">2</div><div class="nm">Jonathon Brooks<span class="tg">RB · CAR</span></div><div class="adp">95.5<span class="u">ADP</span></div><div class="d">▲ +6.3</div></div>
+          <div class="mvrow"><div class="n">3</div><div class="nm">Jonah Coleman<span class="rchip">R</span><span class="tg">RB · DEN</span></div><div class="adp">151.1<span class="u">ADP</span></div><div class="d">▲ +5.7</div></div>
+          <button class="ghostcta">Full movement board →</button>
+        </div>
+        <div class="mod">
+          <div class="eb">Draft season</div>
+          <div class="arow"><div class="kick">Fantasy</div><h4>Draft against the market, not a spreadsheet</h4></div>
+          <div class="arow"><div class="kick">Mock</div><h4>Full snake mocks vs AI rooms that reach and slide</h4></div>
+          <button class="ghostcta">Start a mock draft →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EPL band -->
+    <div class="band" data-band="epl">
+      <div class="bandhead sub">
+        <h2><span class="lg">EPL</span> · Matchweek 2</h2>
+        <span class="ctx">Saturday 10:00a ET</span>
+        <span class="spacer"></span>
+        <span class="more">EPL hub →</span>
+      </div>
+      <div class="bmods">
+        <div class="mod">
+          <div class="eb">Results + fixtures</div>
+          <div class="srow"><div class="when">Sun<br>Final</div><div><div class="mu">Fulham <span class="at">2-3</span> Chelsea</div><div class="stag">MW 1</div></div><div class="fin">2-3<span class="s2">FT</span></div></div>
+          <div class="srow"><div class="when">Sat<br>10:00a</div><div><div class="mu">Man City <span class="at">at</span> Brighton</div><div class="stag">MW 2</div></div><div class="fin"><span class="s2">Preview</span></div></div>
+          <div class="srow"><div class="when">Sat<br>12:30p</div><div><div class="mu">Arsenal <span class="at">at</span> Leeds</div><div class="stag">MW 2</div></div><div class="fin"><span class="s2">Preview</span></div></div>
+          <button class="ghostcta">Full schedule →</button>
+        </div>
+        <div class="mod">
+          <div class="eb">Table <span class="ctx">After MW 1</span></div>
+          <div class="row"><div class="l"><span class="pos">1</span>Chelsea</div><div class="v">3</div></div>
+          <div class="row"><div class="l"><span class="pos">2</span>Arsenal</div><div class="v">3</div></div>
+          <div class="row"><div class="l"><span class="pos">3</span>Man City</div><div class="v">3</div></div>
+          <div class="row"><div class="l"><span class="pos">18</span><span style="color:var(--paper-dim)">Fulham</span></div><div class="v dn">0</div></div>
+          <button class="ghostcta">Full table →</button>
+        </div>
+        <div class="mod">
+          <div class="eb">Latest EPL</div>
+          <div class="arow"><div class="kick">Recap</div><h4>Fulham 2-3 Chelsea: a matchweek 1 that meant something</h4></div>
+          <div class="arow"><div class="kick">Preview</div><h4>Brighton's press vs City's first real test</h4></div>
+          <button class="ghostcta">All EPL articles →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WC archive band: off by default -->
+    <div class="band off" data-band="wc">
+      <div class="bandhead sub">
+        <h2><span class="lg">World Cup</span> · The archive</h2>
+        <span class="ctx">2026 · Kept, not deleted</span>
+        <span class="spacer"></span>
+        <span class="more">The tournament →</span>
+      </div>
+      <div class="bmods">
+        <div class="mod">
+          <div class="eb">The essays</div>
+          <div class="arow"><div class="kick">Essay</div><h4>2026 World Cup rules: the laws</h4></div>
+          <button class="ghostcta">All 129 pieces →</button>
+        </div>
+        <div class="mod">
+          <div class="eb">The bracket</div>
+          <div class="row"><div class="l">Final + full path</div><div class="v sub">View</div></div>
+          <button class="ghostcta">Open the bracket →</button>
+        </div>
+        <div class="mod">
+          <div class="eb">Golden Boot race</div>
+          <div class="row"><div class="l">Final standings</div><div class="v sub">View</div></div>
+          <button class="ghostcta">The race, kept →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="emptystate" id="empty">Nothing tuned in. Flip a league back on above - Today only goes quiet if you tell it to.</div>
+  </div>
+
+  <!-- ============ MY SPORTSVYN ============ -->
+  <div class="view" id="view-msv">
+    <div class="msvhead">
+      <div class="note">Your board, your modules, your order - the full registry, fully yours.</div>
+      <button class="custbtn" id="cust">⚙ Customize</button>
+    </div>
+    <div class="msvgrid" id="msvgrid">
+      <div class="panel">
+        <div class="mod">
+          <div class="pedit"><span class="grip">⠿⠿</span><span class="mtag">Module</span><span class="spacer"></span><button class="ebtn">−</button></div>
+          <div class="eb">My teams · Chiefs <span class="ctx">Next</span></div>
+          <div class="srow"><div class="when">Sep 10<br>8:20p</div><div><div class="mu">Chiefs <span class="at">at</span> Chargers</div><div class="stag">NFL · Wk 1</div></div><div class="fin"><span class="s2">13 days</span></div></div>
+          <div class="srow"><div class="when">Sep 21<br>1:00p</div><div><div class="mu">Eagles <span class="at">at</span> Chiefs</div><div class="stag">NFL · Wk 2</div></div><div class="fin"><span class="s2">Home</span></div></div>
+          <button class="ghostcta">Chiefs page →</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="mod">
+          <div class="pedit"><span class="grip">⠿⠿</span><span class="mtag">Module</span><span class="spacer"></span><button class="ebtn">−</button></div>
+          <div class="eb">My games <span class="ctx">This week</span></div>
+          <div class="row"><div class="l">Daily streak</div><div class="v">4</div></div>
+          <div class="row"><div class="l">Pick 'em Board 1</div><div class="v">1/8</div></div>
+          <div class="row"><div class="l">LACES OUT rank</div><div class="v">2nd</div></div>
+          <button class="ghostcta">Games hub →</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="mod">
+          <div class="pedit"><span class="grip">⠿⠿</span><span class="mtag">Module</span><span class="spacer"></span><button class="ebtn">−</button></div>
+          <div class="eb">My league · LACES OUT <span class="ctx">3 members</span></div>
+          <div class="row"><div class="l"><span class="pos">1</span>@hurley3594</div><div class="v">2</div></div>
+          <div class="row"><div class="l"><span class="pos">2</span>@sportsvyn_og</div><div class="v">0</div></div>
+          <div class="row"><div class="l"><span class="pos">3</span>@theskry</div><div class="v">0</div></div>
+          <button class="ghostcta">League page →</button>
+        </div>
+      </div>
+      <div class="panel w6">
+        <div class="mod">
+          <div class="pedit"><span class="grip">⠿⠿</span><span class="mtag">Module</span><span class="spacer"></span><button class="ebtn">−</button></div>
+          <div class="eb">ADP Movement <span class="ctx">12-team PPR</span></div>
+          <div class="mvrow"><div class="n">1</div><div class="nm">Mike Washington Jr.<span class="rchip">R</span><span class="tg">RB · LV</span></div><div class="adp">146.7<span class="u">ADP</span></div><div class="d">▲ +10.6</div></div>
+          <div class="mvrow"><div class="n">2</div><div class="nm">Jonathon Brooks<span class="tg">RB · CAR</span></div><div class="adp">95.5<span class="u">ADP</span></div><div class="d">▲ +6.3</div></div>
+          <button class="ghostcta">Full movement board →</button>
+        </div>
+      </div>
+      <div class="panel w6">
+        <div class="mod">
+          <div class="pedit"><span class="grip">⠿⠿</span><span class="mtag">Module</span><span class="spacer"></span><button class="ebtn">−</button></div>
+          <div class="eb">Following <span class="ctx">Articles</span></div>
+          <div class="arow"><div class="kick">CFB · Rankings</div><h4>The Sportsvyn 25 is not the AP, on purpose</h4></div>
+          <div class="arow"><div class="kick">NFL · Fantasy</div><h4>Draft against the market, not a spreadsheet</h4></div>
+          <button class="ghostcta">All articles →</button>
+        </div>
+      </div>
+      <div class="addpanel">+ Add a module</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// mode switcher
+const modes=[...document.querySelectorAll('.mode')];
+const subs={today:'Wed, Aug 26 · The network’s front page, tuned to your leagues',
+            msv:'Your dashboard · Full module registry, per-account layout'};
+modes.forEach(m=>m.addEventListener('click',()=>{
+  modes.forEach(x=>x.classList.toggle('on',x===m));
+  document.getElementById('view-today').classList.toggle('on',m.dataset.view==='today');
+  document.getElementById('view-msv').classList.toggle('on',m.dataset.view==='msv');
+  document.getElementById('modesub').textContent=subs[m.dataset.view];
+}));
+// league chips -> band visibility (b's chips driving c's bands)
+const pills=[...document.querySelectorAll('.spill[data-band]')];
+function apply(){
+  const on=new Set(pills.filter(p=>p.classList.contains('on')).map(p=>p.dataset.band));
+  document.querySelectorAll('.band[data-band]').forEach(b=>b.classList.toggle('off',!on.has(b.dataset.band)));
+  document.getElementById('empty').classList.toggle('show',on.size===0);
+}
+pills.forEach(p=>p.addEventListener('click',()=>{p.classList.toggle('on');apply();}));
+apply();
+// my sportsvyn customize
+document.getElementById('cust').addEventListener('click',e=>{
+  e.target.classList.toggle('on');
+  document.getElementById('msvgrid').classList.toggle('editing');
+});
+</script>
+</body>
+</html>

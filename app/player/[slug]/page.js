@@ -35,6 +35,19 @@ import PlayerBioGrid from '@/components/player/PlayerBioGrid';
 import PlayerMatchLog from '@/components/player/PlayerMatchLog';
 import DormantSection from '@/components/player/DormantSection';
 
+// GRIDIRON ARM. /player/[slug] already RESOLVED gridiron rows before this
+// change - getPlayerBySlug has no league filter - so 29,721 NFL and CFB player
+// pages were live, and every one of them rendered a World Cup breadcrumb over
+// seven dormant soccer sections offering "Tournament Stats". This gates the
+// render by league rather than adding sibling routes: the URLs are already
+// indexed, and a player page is the same skeleton in different columns.
+import { isGridiron, playerCrumb, playerPills, emptyLogLine } from '@/components/player/gridironPlayer';
+import GridironHero from '@/components/player/GridironHero';
+import GridironTeamNext from '@/components/player/GridironTeamNext';
+import { SeasonTotals, GameLog, EmptyLog } from '@/components/player/GridironStats';
+import { columnsFor, seasonTotals, gameLog, bdlIdOf } from '@/lib/gridiron/playerStats';
+import { getTeamMatches } from '@/lib/teams';
+
 import './player.css';
 
 export const dynamic = 'force-dynamic';
@@ -49,10 +62,96 @@ export async function generateMetadata({ params }) {
   };
 }
 
+const LEAGUE_LABEL = { nfl: 'NFL', cfb: 'CFB' };
+
+/**
+ * The gridiron render. Kept whole and separate from the soccer arm below so the
+ * soccer path is byte-for-byte the function it always was - the team page's
+ * lesson was that a shared component edited "generically" is where soccer
+ * regressions come from.
+ */
+async function GridironPlayer({ player, crumb }) {
+  const columns = columnsFor(player.position, player.position_group);
+  const bdlId = bdlIdOf(player);
+
+  // CFB HAS NO STATS UNTIL RELAY C, and a lineman has no counting stats in any
+  // league - both land on the same zero-row path, which is correct.
+  const canHaveStats = player.league_slug === 'nfl' && bdlId != null && columns != null;
+  const [seasons, games, teamMatches] = await Promise.all([
+    canHaveStats ? seasonTotals(bdlId, columns).catch(() => []) : Promise.resolve([]),
+    canHaveStats ? gameLog(bdlId, columns, { limit: 4 }).catch(() => []) : Promise.resolve([]),
+    player.team_id != null ? getTeamMatches(player.team_id).catch(() => []) : Promise.resolve([]),
+  ]);
+
+  const hasStats = seasons.length > 0;
+  const now = Date.now();
+  const next = teamMatches
+    .filter((m) => m.status === 'scheduled' && new Date(m.kickoff_at).getTime() >= now)
+    .slice(0, 2)
+    .map((m) => ({ ...m, us_id: player.team_id }));
+  const latestSeason = seasons[0]?.season ?? null;
+
+  return (
+    <main className="page-shell">
+      <div className="breadcrumb">
+        {crumb.map((c, i) => (
+          <span key={c.label}>
+            {i > 0 && <span className="sep">/</span>}
+            {c.current ? <span className="current">{c.label}</span> : <a href={c.href}>{c.label}</a>}
+          </span>
+        ))}
+      </div>
+
+      <GridironHero player={player} />
+
+      <nav className="anchor-pills gp-pills">
+        {playerPills({ hasStats }).map((p) => (
+          <a key={p.href} href={p.href} className="anchor-pill">{p.label}</a>
+        ))}
+      </nav>
+
+      <div className="gp-grid">
+        {hasStats ? (
+          <>
+            <SeasonTotals seasons={seasons} columns={columns} />
+            <GameLog games={games} columns={columns}
+              seasonLabel={latestSeason ? `${latestSeason} · Last ${games.length}` : ''} />
+          </>
+        ) : (
+          <EmptyLog line={emptyLogLine({
+            leagueSlug: player.league_slug,
+            experienceYears: player.experience_years,
+            seasonYear: next[0]?.season_year ?? null,
+          })} />
+        )}
+
+        {next.length > 0 && (
+          <GridironTeamNext
+            teamName={player.team_name}
+            teamSlug={player.team_slug}
+            games={next}
+            leagueLabel={LEAGUE_LABEL[player.league_slug] ?? ''}
+          />
+        )}
+      </div>
+    </main>
+  );
+}
+
 export default async function PlayerPage({ params }) {
   const { slug } = await params;
   const player = await getPlayerBySlug(slug);
   if (!player) notFound();
+
+  if (isGridiron(player.league_slug)) {
+    return (
+      <>
+        <BackToAppBar />
+        <GlobalHeaderServer />
+        <GridironPlayer player={player} crumb={playerCrumb(player.league_slug, player.full_name)} />
+      </>
+    );
+  }
 
   // Session-aware for the follow star (mirrors /team). Only the isAuthed
   // boolean + seed value cross the server/client line; the session does not.

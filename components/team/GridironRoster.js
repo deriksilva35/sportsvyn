@@ -7,9 +7,12 @@
 // sibling-not-extension call the live_state formatter and the soccer scoreboard
 // card were built under.
 //
-// ROWS ARE UNLINKED, DELIBERATELY. Soccer rows link to /player/{slug}; there
-// are no gridiron player pages, so a link would be a promise to a 404. Deferred
-// per ruling, and pinned by test so it cannot be added by reflex later.
+// ROWS LINK, as of the player-page relay. They were unlinked for exactly as
+// long as there was nothing to link to: /player/[slug] now renders a real
+// gridiron page - hero, bio, and stats where they exist - so the link is a
+// promise the app keeps. The test that pinned zero links is inverted to pin
+// that every row HAS one; the two commits are the same promise, before and
+// after.
 
 import { groupRoster, heightImperial, weightImperial, tagLine } from './gridiron';
 
@@ -21,7 +24,7 @@ function RosterRow({ p }) {
   // room's existing rookie pattern, reused rather than reinvented.
   const rookie = p.experience_years === 1;
   return (
-    <div className="gr-row">
+    <a className="gr-row" href={`/player/${p.slug}`}>
       <span className="nrail">{num != null ? num : '—'}</span>
       <div className="ndeck">
         <div className="nline1">
@@ -38,7 +41,7 @@ function RosterRow({ p }) {
         <span className="ncol">{ht ?? '—'}</span>
         <span className="ncol">{wt ?? '—'}</span>
       </div>
-    </div>
+    </a>
   );
 }
 

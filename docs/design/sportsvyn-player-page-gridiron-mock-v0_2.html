@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sportsvyn · Gridiron player page mock v0_2 · four states, CFB stats added</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@600&family=Source+Serif+4:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1C1C1C; --line:#2A2A2A;
+  --paper:#F5F5F2; --paper-dim:#C5C5C2; --muted:#8A8A85;
+  --volt:#D4FF00; --volt-deep:#1a2000; --jade:#2A8A4F; --terra:#B8410F;
+  --display:'Saira',sans-serif; --cond:'Saira Condensed',sans-serif;
+  --serif:'Source Serif 4',serif; --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ink);color:var(--paper);-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+.mockbar{position:sticky;top:0;z-index:60;display:flex;justify-content:center;gap:8px;align-items:center;padding:8px;background:rgba(10,10,10,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.mockbar .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+.mtab{font-family:var(--cond);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--paper-dim);background:var(--ink-3);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
+.mtab.on{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+
+nav{display:flex;align-items:center;gap:26px;padding:16px 32px;border-bottom:3px solid var(--volt);max-width:1180px;margin:0 auto;width:100%}
+.wordmark{font-family:var(--display);font-style:italic;font-weight:900;font-size:22px;letter-spacing:-0.05em;text-transform:uppercase}
+.wordmark .y{color:var(--volt);position:relative}
+.wordmark .y::before{content:"";position:absolute;left:-6%;top:-0.06em;width:112%;height:.08em;background:var(--volt)}
+nav .links{display:flex;gap:20px;font-family:var(--cond);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim)}
+nav .spacer{flex:1}
+nav .acct{font-family:var(--cond);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+.wrap{max-width:1180px;margin:0 auto;padding:18px 32px 60px}
+.state{display:none}
+.state.on{display:block}
+
+.crumb{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:18px}
+.crumb a{color:var(--paper-dim);border-bottom:1px solid var(--line)}
+.crumb .sep{margin:0 8px;color:var(--line)}
+
+.hero{position:relative;background:linear-gradient(160deg,var(--volt-deep),var(--ink-2));border:1px solid #2c3600;border-radius:14px;padding:30px 34px;overflow:hidden;margin-bottom:14px}
+.hero .num{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-family:var(--display);font-style:italic;font-weight:900;font-size:190px;line-height:1;letter-spacing:-0.06em;color:transparent;-webkit-text-stroke:2px color-mix(in srgb,var(--volt) 34%,transparent);user-select:none}
+.hero .num .hash{font-size:.42em;vertical-align:.62em;letter-spacing:0}
+.hero .eb{font-family:var(--cond);font-size:11px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.hero h1{font-family:var(--display);font-style:italic;font-weight:900;font-size:52px;letter-spacing:-0.05em;line-height:1;text-transform:uppercase;margin:10px 0 14px;position:relative;max-width:70%}
+.hero .tagline{display:flex;gap:8px;flex-wrap:wrap;position:relative}
+.tchip{font-family:var(--cond);font-size:11px;letter-spacing:.1em;color:var(--paper-dim);background:var(--ink-3);border:1px solid var(--line);border-radius:99px;padding:5px 14px;text-transform:uppercase;font-variant-numeric:tabular-nums}
+.tchip.team{color:var(--volt);border-color:color-mix(in srgb,var(--volt) 40%,transparent);cursor:pointer}
+.tchip.rook{color:var(--ink);background:var(--paper-dim);border-color:var(--paper-dim)}
+.biostrip{display:flex;gap:26px;margin-top:18px;position:relative;flex-wrap:wrap}
+.bio{font-variant-numeric:tabular-nums}
+.bio .k{font-family:var(--cond);font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px}
+.bio .v{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--paper)}
+
+.pillrail{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
+.apill{font-family:var(--cond);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--paper-dim);background:var(--ink-3);border:1px solid var(--line);border-radius:99px;padding:7px 16px;cursor:pointer}
+.apill:hover{border-color:var(--volt);color:var(--paper)}
+
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;align-items:start}
+.mod{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:14px;grid-column:span 6}
+.mod.full{grid-column:span 12}
+@media(max-width:900px){.mod,.mod.full{grid-column:span 12}.hero h1{max-width:100%;font-size:38px}.hero .num{font-size:120px;opacity:.5}}
+.mod .eb{font-family:var(--cond);font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;display:flex;justify-content:space-between;margin-bottom:8px}
+.mod .eb .ctx{font-family:var(--mono);font-size:9px}
+
+.shead,.srow{display:grid;grid-template-columns:64px 1fr repeat(4,66px);gap:8px;align-items:center;padding:7px 0;font-variant-numeric:tabular-nums}
+.shead{border-bottom:1px solid var(--line)}
+.shead span{font-family:var(--cond);font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;text-align:right}
+.shead span:first-child,.shead span:nth-child(2){text-align:left}
+.srow{border-bottom:1px solid var(--line)}
+.srow:last-of-type{border-bottom:none}
+.srow .yr{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.srow .lab{font-family:var(--display);font-style:italic;font-weight:900;font-size:14px;letter-spacing:-0.02em}
+.srow .lab .sub{display:block;font-family:var(--mono);font-style:normal;font-weight:400;font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
+.srow .n{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--paper-dim);text-align:right}
+.srow .n.hi{color:var(--volt)}
+.srow.career{border-top:2px solid var(--line);border-bottom:none}
+.srow.career .lab{color:var(--paper)}
+.srow.career .n{color:var(--paper)}
+.ghostcta{display:block;width:100%;text-align:center;font-family:var(--cond);font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--ink-3);color:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px;margin-top:12px;cursor:pointer}
+
+.emptyline{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--muted);padding:16px 4px;line-height:1.55}
+
+.trow{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.trow:last-of-type{border-bottom:none}
+.trow .when{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;line-height:1.5;font-variant-numeric:tabular-nums}
+.trow .mu{font-family:var(--display);font-style:italic;font-weight:900;font-size:14px;letter-spacing:-0.02em}
+.trow .mu .at{color:var(--muted);font-family:var(--mono);font-style:normal;font-weight:400;font-size:10px}
+.trow .meta{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;text-align:right}
+
+.buildnote{max-width:1180px;margin:26px auto 0;padding:0 32px}
+.buildnote .in{border:1px dashed var(--line);border-radius:12px;padding:14px 16px;font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--muted)}
+.buildnote b{color:var(--paper-dim);font-weight:500}
+</style>
+</head>
+<body>
+
+<div class="mockbar">
+  <span class="lbl">States:</span>
+  <button class="mtab on" data-s="nfl">NFL + stats</button>
+  <button class="mtab" data-s="cfbstats">CFB + stats (post-import)</button>
+  <button class="mtab" data-s="rook">NFL no stats</button>
+  <button class="mtab" data-s="cfb">CFB pre-import / no rows</button>
+</div>
+
+<nav>
+  <div class="wordmark">SPORTSV<span class="y">Y</span>N</div>
+  <div class="links"><span>Today</span><span>Games</span><span>Scores</span><span>NFL</span><span>CFB</span><span>Soccer</span></div>
+  <div class="spacer"></div>
+  <div class="acct">My Sportsvyn · deriksilva</div>
+</nav>
+
+<div class="wrap">
+
+  <!-- ============ STATE 1: NFL veteran with stats ============ -->
+  <div class="state on" id="s-nfl">
+    <div class="crumb"><a href="#">Home</a><span class="sep">/</span><a href="#">NFL</a><span class="sep">/</span><a href="#">Players</a><span class="sep">/</span>Travis Kelce</div>
+    <div class="hero">
+      <div class="num"><span class="hash">#</span>87</div>
+      <div class="eb">NFL · Tight End</div>
+      <h1>Travis Kelce</h1>
+      <div class="tagline">
+        <span class="tchip team">Kansas City Chiefs →</span>
+        <span class="tchip">TE · Offense</span>
+        <span class="tchip">Yr 13</span>
+      </div>
+      <div class="biostrip">
+        <div class="bio"><span class="k">Height</span><span class="v">6-5</span></div>
+        <div class="bio"><span class="k">Weight</span><span class="v">250 lbs</span></div>
+        <div class="bio"><span class="k">College</span><span class="v">Cincinnati</span></div>
+        <div class="bio"><span class="k">Jersey</span><span class="v">#87</span></div>
+      </div>
+    </div>
+    <div class="pillrail"><span class="apill">Season Totals</span><span class="apill">Game Log</span><span class="apill">Team</span></div>
+    <div class="grid">
+      <div class="mod">
+        <div class="eb">Season totals <span class="ctx">Receiving · 2018-2025</span></div>
+        <div class="shead"><span>Season</span><span></span><span>Tgt</span><span>Rec</span><span>Yds</span><span>TD</span></div>
+        <div class="srow"><span class="yr">2025</span><span class="lab"></span><span class="n">121</span><span class="n">93</span><span class="n">1,014</span><span class="n">5</span></div>
+        <div class="srow"><span class="yr">2024</span><span class="lab"></span><span class="n">133</span><span class="n">97</span><span class="n">823</span><span class="n">3</span></div>
+        <div class="srow"><span class="yr">2023</span><span class="lab"></span><span class="n">121</span><span class="n">93</span><span class="n">984</span><span class="n">5</span></div>
+        <div class="srow"><span class="yr">2022</span><span class="lab"></span><span class="n">152</span><span class="n hi">110</span><span class="n hi">1,338</span><span class="n hi">12</span></div>
+        <div class="srow career"><span class="yr"></span><span class="lab">Career<span class="sub">2018-2025 span held</span></span><span class="n">1,043</span><span class="n">814</span><span class="n">9,109</span><span class="n">58</span></div>
+        <button class="ghostcta">All eight seasons →</button>
+      </div>
+      <div class="mod">
+        <div class="eb">Game log <span class="ctx">2025 · Last 4</span></div>
+        <div class="shead"><span>Wk</span><span>Game</span><span>Tgt</span><span>Rec</span><span>Yds</span><span>TD</span></div>
+        <div class="srow"><span class="yr">18</span><span class="lab">at DEN<span class="sub">W 27-24</span></span><span class="n">8</span><span class="n">6</span><span class="n">71</span><span class="n">1</span></div>
+        <div class="srow"><span class="yr">17</span><span class="lab">vs LV<span class="sub">W 31-13</span></span><span class="n">7</span><span class="n">5</span><span class="n">58</span><span class="n">0</span></div>
+        <div class="srow"><span class="yr">16</span><span class="lab">at HOU<span class="sub">L 20-23</span></span><span class="n">11</span><span class="n">9</span><span class="n">104</span><span class="n">0</span></div>
+        <div class="srow"><span class="yr">15</span><span class="lab">vs LAC<span class="sub">W 24-17</span></span><span class="n">6</span><span class="n">4</span><span class="n">39</span><span class="n">1</span></div>
+        <button class="ghostcta">Full 2025 log →</button>
+      </div>
+      <div class="mod full">
+        <div class="eb">Kansas City Chiefs <span class="ctx">Next up</span></div>
+        <div class="trow"><div class="when">Sep 10<br>8:20p</div><div class="mu">Chiefs <span class="at">at</span> Chargers</div><div class="meta">NFL · Wk 1</div></div>
+        <div class="trow"><div class="when">Sep 21<br>1:00p</div><div class="mu">Eagles <span class="at">at</span> Chiefs</div><div class="meta">NFL · Wk 2</div></div>
+        <button class="ghostcta">Team page: full roster + schedule →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STATE 2: CFB with stats - defensive player ============ -->
+  <div class="state" id="s-cfbstats">
+    <div class="crumb"><a href="#">Home</a><span class="sep">/</span><a href="#">CFB</a><span class="sep">/</span><a href="#">Players</a><span class="sep">/</span>Josh Jenkins</div>
+    <div class="hero">
+      <div class="num"><span class="hash">#</span>44</div>
+      <div class="eb">CFB · Linebacker</div>
+      <h1>Josh Jenkins</h1>
+      <div class="tagline">
+        <span class="tchip team">Southern →</span>
+        <span class="tchip">LB · Defense</span>
+        <span class="tchip">Yr 3</span>
+      </div>
+      <div class="biostrip">
+        <div class="bio"><span class="k">Height</span><span class="v">6-1</span></div>
+        <div class="bio"><span class="k">Weight</span><span class="v">228 lbs</span></div>
+        <div class="bio"><span class="k">Jersey</span><span class="v">#44</span></div>
+      </div>
+    </div>
+    <div class="pillrail"><span class="apill">Season Totals</span><span class="apill">Game Log</span><span class="apill">Team</span></div>
+    <div class="grid">
+      <div class="mod">
+        <div class="eb">Season totals <span class="ctx">Defense · 2024-2025</span></div>
+        <div class="shead"><span>Season</span><span></span><span>Tkl</span><span>TFL</span><span>Sacks</span><span>INT</span></div>
+        <div class="srow"><span class="yr">2025</span><span class="lab"></span><span class="n hi">74</span><span class="n">8.5</span><span class="n">3.0</span><span class="n">2</span></div>
+        <div class="srow"><span class="yr">2024</span><span class="lab"></span><span class="n">51</span><span class="n">4.0</span><span class="n">1.0</span><span class="n">0</span></div>
+        <div class="srow career"><span class="yr"></span><span class="lab">Career<span class="sub">2024-2025</span></span><span class="n">125</span><span class="n">12.5</span><span class="n">4.0</span><span class="n">2</span></div>
+        <button class="ghostcta">Full category breakdown →</button>
+      </div>
+      <div class="mod">
+        <div class="eb">Game log <span class="ctx">2025 · Last 4</span></div>
+        <div class="shead"><span>Wk</span><span>Game</span><span>Tkl</span><span>TFL</span><span>Sacks</span><span>INT</span></div>
+        <div class="srow"><span class="yr">12</span><span class="lab">at Jackson St<span class="sub">L 17-24</span></span><span class="n">9</span><span class="n">1.5</span><span class="n">1.0</span><span class="n">0</span></div>
+        <div class="srow"><span class="yr">11</span><span class="lab">vs Alcorn St<span class="sub">W 31-14</span></span><span class="n">7</span><span class="n">1.0</span><span class="n">0.0</span><span class="n">1</span></div>
+        <div class="srow"><span class="yr">10</span><span class="lab">vs Grambling<span class="sub">W 27-20</span></span><span class="n">11</span><span class="n">2.0</span><span class="n">0.5</span><span class="n">0</span></div>
+        <div class="srow"><span class="yr">9</span><span class="lab">at TX Southern<span class="sub">W 21-10</span></span><span class="n">6</span><span class="n">0.5</span><span class="n">0.0</span><span class="n">0</span></div>
+        <button class="ghostcta">Full 2025 log →</button>
+      </div>
+      <div class="mod full">
+        <div class="eb">Southern <span class="ctx">Next up</span></div>
+        <div class="trow"><div class="when">Sat<br>7:00p</div><div class="mu">Southern <span class="at">at</span> Jackson St</div><div class="meta">CFB · Wk 1</div></div>
+        <button class="ghostcta">Team page: full roster + schedule →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STATE 3: NFL rookie, no stats yet ============ -->
+  <div class="state" id="s-rook">
+    <div class="crumb"><a href="#">Home</a><span class="sep">/</span><a href="#">NFL</a><span class="sep">/</span><a href="#">Players</a><span class="sep">/</span>Mike Washington Jr.</div>
+    <div class="hero">
+      <div class="num"><span class="hash">#</span>28</div>
+      <div class="eb">NFL · Running Back</div>
+      <h1>Mike Washington Jr.</h1>
+      <div class="tagline">
+        <span class="tchip team">Las Vegas Raiders →</span>
+        <span class="tchip">RB · Offense</span>
+        <span class="tchip rook">Rookie</span>
+      </div>
+      <div class="biostrip">
+        <div class="bio"><span class="k">Height</span><span class="v">6-0</span></div>
+        <div class="bio"><span class="k">Weight</span><span class="v">212 lbs</span></div>
+        <div class="bio"><span class="k">College</span><span class="v">Texas Tech</span></div>
+        <div class="bio"><span class="k">Jersey</span><span class="v">#28</span></div>
+      </div>
+    </div>
+    <div class="pillrail"><span class="apill">Team</span></div>
+    <div class="grid">
+      <div class="mod full">
+        <div class="eb">Game log</div>
+        <div class="emptyline">No NFL games yet - 2026 is the rookie season. The log starts when the season does.</div>
+      </div>
+      <div class="mod full">
+        <div class="eb">Las Vegas Raiders <span class="ctx">Next up</span></div>
+        <div class="trow"><div class="when">Sep 10<br>4:05p</div><div class="mu">Raiders <span class="at">at</span> Patriots</div><div class="meta">NFL · Wk 1</div></div>
+        <button class="ghostcta">Team page: full roster + schedule →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STATE 4: CFB no stat rows (pre-import, or no snaps) ============ -->
+  <div class="state" id="s-cfb">
+    <div class="crumb"><a href="#">Home</a><span class="sep">/</span><a href="#">CFB</a><span class="sep">/</span><a href="#">Players</a><span class="sep">/</span>Trey Holly</div>
+    <div class="hero">
+      <div class="num"><span class="hash">#</span>3</div>
+      <div class="eb">CFB · Running Back</div>
+      <h1>Trey Holly</h1>
+      <div class="tagline">
+        <span class="tchip team">Southern →</span>
+        <span class="tchip">RB · Offense</span>
+        <span class="tchip">Yr 2</span>
+      </div>
+      <div class="biostrip">
+        <div class="bio"><span class="k">Height</span><span class="v">5-10</span></div>
+        <div class="bio"><span class="k">Weight</span><span class="v">205 lbs</span></div>
+        <div class="bio"><span class="k">Jersey</span><span class="v">#3</span></div>
+      </div>
+    </div>
+    <div class="pillrail"><span class="apill">Team</span></div>
+    <div class="grid">
+      <div class="mod full">
+        <div class="eb">Game log</div>
+        <div class="emptyline">No recorded games yet. The log starts when the season does.</div>
+      </div>
+      <div class="mod full">
+        <div class="eb">Southern <span class="ctx">Next up</span></div>
+        <div class="trow"><div class="when">Sat<br>7:00p</div><div class="mu">Southern <span class="at">at</span> Jackson St</div><div class="meta">CFB · Wk 1</div></div>
+        <button class="ghostcta">Team page: full roster + schedule →</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="buildnote">
+  <div class="in">
+    <b>BUILD NOTES v0_2, carried into the relays:</b><br>
+    · Hero numeral: outlined volt stroke, never filled - texture, not THE number (v1.2). No photo, no placeholder - brand law.<br>
+    · Stat columns are POSITION-GROUP AWARE ACROSS BOTH CODES from one column vocabulary: QB pass, RB rush, WR/TE receiving, K kicking, LB/DB/DL defense (Tkl/TFL/Sacks/INT). Same table grammar, different columns - the fork is data, not layout.<br>
+    · NFL totals = SUM over nfl_player_game_stats at read time via the bdl bridge. CFB totals = relay C's import: ONE league-wide /stats/player/season call per season, LONG-to-wide pivot at import (store wide, render dumb), ids join free per recon. CFB game logs = /games/players per completed week, rides an existing weekly cadence - no new always-on poller.<br>
+    · CFB decimals are real (8.5 TFL, 0.5 sacks) - columns that can be halves render one decimal, whole-number columns never do.<br>
+    · Empty state is one serif line, never a scaffolded empty table. Same line whether the cause is pre-import or genuinely zero snaps - the reader doesn't need our pipeline status.<br>
+    · CFB bio strip has NO college cell (team is the college). Rookie chip = experience_years 1.<br>
+    · Anchor pills render only sections that exist per player. Dormant soccer sections never render for gridiron. Soccer pages byte-identical, soccer-half pins on every test.<br>
+    · HT/WT ft-in/lbs via the team-page converter, display-only.<br>
+    · ALL STAT VALUES IN THIS MOCK ARE SHAPED, NOT REAL - build from real queries, never from these numbers, and none of these values may appear in fixtures.
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.mtab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.mtab').forEach(x=>x.classList.toggle('on',x===t));
+  document.querySelectorAll('.state').forEach(s=>s.classList.toggle('on',s.id==='s-'+t.dataset.s));
+}));
+</script>
+</body>
+</html>
