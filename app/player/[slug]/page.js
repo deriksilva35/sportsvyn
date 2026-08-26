@@ -46,6 +46,7 @@ import GridironHero from '@/components/player/GridironHero';
 import GridironTeamNext from '@/components/player/GridironTeamNext';
 import { SeasonTotals, GameLog, EmptyLog } from '@/components/player/GridironStats';
 import { columnsFor, seasonTotals, gameLog, bdlIdOf } from '@/lib/gridiron/playerStats';
+import { cfbColumnsFor, cfbSeasonTotals } from '@/lib/cfb/seasonStats';
 import { getTeamMatches } from '@/lib/teams';
 
 import './player.css';
@@ -71,15 +72,28 @@ const LEAGUE_LABEL = { nfl: 'NFL', cfb: 'CFB' };
  * regressions come from.
  */
 async function GridironPlayer({ player, crumb }) {
-  const columns = columnsFor(player.position, player.position_group);
+  // THE COLUMN VOCABULARY FORKS BY CODE, and it is a data fact rather than a
+  // design one: nfl_player_game_stats has never held a tackles column, so NFL
+  // defense reads Sacks/INT/FR/TD, while CFBD does carry tackles and TFL, so
+  // CFB defense reads Tkl/TFL/Sacks/INT. Same table grammar either way.
+  const isCfb = player.league_slug === 'cfb';
+  const columns = isCfb
+    ? cfbColumnsFor(player.position, player.position_group)
+    : columnsFor(player.position, player.position_group);
   const bdlId = bdlIdOf(player);
 
-  // CFB HAS NO STATS UNTIL RELAY C, and a lineman has no counting stats in any
-  // league - both land on the same zero-row path, which is correct.
-  const canHaveStats = player.league_slug === 'nfl' && bdlId != null && columns != null;
+  // A lineman has no counting stats in either league and lands on the zero-row
+  // path with everyone else who has not played - which is correct, and is why
+  // the empty line says nothing about which of those two it is.
+  const canHaveStats = columns != null
+    && (isCfb ? player.id != null : player.league_slug === 'nfl' && bdlId != null);
   const [seasons, games, teamMatches] = await Promise.all([
-    canHaveStats ? seasonTotals(bdlId, columns).catch(() => []) : Promise.resolve([]),
-    canHaveStats ? gameLog(bdlId, columns, { limit: 4 }).catch(() => []) : Promise.resolve([]),
+    !canHaveStats ? Promise.resolve([])
+      : isCfb ? cfbSeasonTotals(player.id, columns).catch(() => [])
+              : seasonTotals(bdlId, columns).catch(() => []),
+    // CFB game logs are not imported yet, so the log stays absent rather than
+    // being faked from season totals.
+    canHaveStats && !isCfb ? gameLog(bdlId, columns, { limit: 4 }).catch(() => []) : Promise.resolve([]),
     player.team_id != null ? getTeamMatches(player.team_id).catch(() => []) : Promise.resolve([]),
   ]);
 
@@ -105,7 +119,7 @@ async function GridironPlayer({ player, crumb }) {
       <GridironHero player={player} />
 
       <nav className="anchor-pills gp-pills">
-        {playerPills({ hasStats }).map((p) => (
+        {playerPills({ hasStats, hasLog: games.length > 0 }).map((p) => (
           <a key={p.href} href={p.href} className="anchor-pill">{p.label}</a>
         ))}
       </nav>
@@ -114,8 +128,10 @@ async function GridironPlayer({ player, crumb }) {
         {hasStats ? (
           <>
             <SeasonTotals seasons={seasons} columns={columns} />
-            <GameLog games={games} columns={columns}
-              seasonLabel={latestSeason ? `${latestSeason} · Last ${games.length}` : ''} />
+            {games.length > 0 && (
+              <GameLog games={games} columns={columns}
+                seasonLabel={latestSeason ? `${latestSeason} · Last ${games.length}` : ''} />
+            )}
           </>
         ) : (
           <EmptyLog line={emptyLogLine({

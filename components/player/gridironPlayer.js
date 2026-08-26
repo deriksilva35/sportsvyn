@@ -98,11 +98,14 @@ export function bioCells({ heightCm, weightKg, college, jersey }) {
  * A player with no stat rows gets a single Team pill - not three pills, two of
  * which scroll to an apology.
  */
-export function playerPills({ hasStats }) {
-  return hasStats
-    ? [{ href: '#totals', label: 'Season Totals' }, { href: '#gamelog', label: 'Game Log' },
-       { href: '#team', label: 'Team' }]
-    : [{ href: '#team', label: 'Team' }];
+export function playerPills({ hasStats, hasLog = hasStats }) {
+  const pills = [];
+  if (hasStats) pills.push({ href: '#totals', label: 'Season Totals' });
+  // A CFB player has season totals but no game log until those are imported.
+  // The pill follows the section, not the league.
+  if (hasLog) pills.push({ href: '#gamelog', label: 'Game Log' });
+  pills.push({ href: '#team', label: 'Team' });
+  return pills;
 }
 
 /**
