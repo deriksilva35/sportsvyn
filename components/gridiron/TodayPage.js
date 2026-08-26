@@ -89,7 +89,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
   ]);
 
   return (
-    <div className="gi" data-surface="paper">
+    <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav={leagueSlug} />
 
       <nav className="gi-subnav">

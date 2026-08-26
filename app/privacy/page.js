@@ -22,7 +22,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div data-surface="paper" className="legal-page">
+    <div data-surface="ink" className="legal-page">
       <header className="legal-header">
         <div className="legal-header-inner">
           <Link href="/" className="legal-wordmark" aria-label="Sportsvyn home">

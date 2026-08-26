@@ -128,6 +128,31 @@ body {
 [data-surface="ink"] {
   background: var(--ink);
   color: var(--paper);
+  /* THE FIVE PAPER-ONLY TOKENS, GIVEN INK VALUES.
+     These were defined ONLY under [data-surface="paper"], so flipping a shell
+     to ink left 19 call sites referencing undefined vars. That fails
+     ASYMMETRICALLY and therefore invisibly: `color` is inherited, so text
+     silently falls back to the parent and still looks right, while `border`
+     and `background` are not inherited and drop to initial - the declaration
+     vanishes. A naive flip would have deleted four borders and a background
+     (including .gi-rank-tabs' rule, the tab rail on both rankings hubs) while
+     the page still looked finished.
+     Defined here rather than retargeting the 19 call sites: five lines instead
+     of nineteen edits, no churn in .read-prose / .gi-lede / legal.css, and the
+     rules keep working on either surface. */
+  --ink-soft: var(--paper-dim);
+  --ink-mut: var(--muted);
+  /* --muted, NOT --muted-dim. The name-symmetric mapping inverted the ROLE:
+     on paper --ink-dim #9A9A94 was the LIGHTEST of the three greys, the most
+     recessive against a light ground; on ink --muted-dim #5A5A5A is the
+     DARKEST, so the most-recessive paper token would have become the least
+     visible ink one - 2.87:1, below AA, on three 9px text sites where
+     large-text relief does not apply. Paper had three grey steps; ink's usable
+     range above the AA line affords two, so --ink-mut and --ink-dim collapse
+     to the same value here. */
+  --ink-dim: var(--muted);
+  --p-rule: var(--rule);
+  --p-rule-soft: var(--rule-dim);
 }
 [data-surface="paper"] {
   background: var(--paper);

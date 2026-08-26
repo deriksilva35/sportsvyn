@@ -39,7 +39,7 @@ export default async function RankingsHub({ leagueSlug, leagueLabel, searchParam
   }
 
   return (
-    <div className="gi" data-surface="paper">
+    <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav={leagueSlug} />
 
       <nav className="gi-subnav">

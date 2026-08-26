@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sportsvyn - Rank badges + NCAA Rankings mock v0.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,600;1,900&family=Saira+Condensed:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1C1C1C; --line:#2A2A2A;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --jade-bright:#3FBF6F;
+    --terra:#B8410F; --terra-bright:#E0602A; --live:#E63946; --muted:#8A8A85; --dim:#5A5A56;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  body{background:#050505;color:var(--paper);font-family:'Saira',sans-serif;padding:28px 16px 60px;}
+  .stage{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;align-items:flex-start;}
+  .frame-label{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted);margin:0 0 8px 4px;}
+  .frame-note{font-size:12px;color:var(--dim);margin:8px 4px 0;max-width:390px;line-height:1.5;}
+  .phone{width:390px;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:640px;}
+  .appbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 11px;border-bottom:1px solid var(--line);}
+  .wordmark{font-family:'Saira';font-style:italic;font-weight:900;font-size:19px;letter-spacing:-.05em;}
+  .wordmark .y{color:var(--volt);position:relative;}
+  .wordmark .y::after{content:"";position:absolute;left:12%;right:12%;top:-3px;height:3px;background:var(--volt);}
+  .acct{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);}
+  .screen{padding:16px;display:flex;flex-direction:column;gap:12px;}
+  .eyebrow{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline;}
+  .eyebrow .mono{font-family:'JetBrains Mono';letter-spacing:0;text-transform:none;font-size:10.5px;}
+
+  /* the badge itself - the one thing reused everywhere */
+  .rk{display:inline-flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-weight:700;font-size:10px;color:var(--ink);background:var(--volt);border-radius:4px;padding:1px 5px;margin-right:6px;line-height:1.5;vertical-align:1px;}
+  .rk.big{font-size:12px;padding:2px 7px;border-radius:5px;}
+
+  /* scoreboard card */
+  .gcard{background:var(--ink-2);border:1px solid var(--line);border-radius:11px;padding:12px 13px;}
+  .grow{display:flex;align-items:center;justify-content:space-between;padding:4px 0;}
+  .gteam{display:flex;align-items:center;font-family:'JetBrains Mono';font-size:14px;}
+  .gab{color:var(--dim);font-size:11px;width:34px;flex:none;}
+  .gsc{font-family:'JetBrains Mono';font-weight:700;font-size:17px;}
+  .gmeta{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:flex;justify-content:space-between;}
+
+  /* cfb game page header */
+  .ghead{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center;}
+  .ghead .chip{display:inline-block;font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 10px;margin-bottom:12px;}
+  .ghead .vs{display:flex;align-items:center;justify-content:center;gap:18px;}
+  .ghead .tm{font-family:'Saira';font-style:italic;font-weight:900;font-size:19px;letter-spacing:-.03em;}
+  .ghead .at{font-family:'JetBrains Mono';font-size:12px;color:var(--dim);}
+
+  /* pickem row */
+  .pkgame{background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;}
+  .pkeb{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.09em;font-size:9.5px;color:var(--dim);display:flex;justify-content:space-between;margin-bottom:8px;}
+  .pksides{display:flex;gap:7px;}
+  .pkside{flex:1;background:var(--ink-3);border:1px solid var(--line);border-radius:7px;padding:8px 9px;font-family:'JetBrains Mono';font-size:12px;font-weight:700;display:flex;align-items:center;}
+
+  /* rankings page */
+  .rtabs{display:flex;gap:6px;}
+  .rtab{flex:1;text-align:center;font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.07em;font-size:10.5px;color:var(--muted);background:var(--ink-3);border:1px solid var(--line);border-radius:8px;padding:9px 4px;cursor:pointer;}
+  .rtab.on{color:var(--ink);background:var(--volt);border-color:var(--volt);}
+  .rtab.soon{color:var(--dim);}
+  .rtab .sw{display:block;font-family:'JetBrains Mono';font-size:8px;color:var(--dim);margin-top:2px;text-transform:none;letter-spacing:0;}
+  .rtab.on .sw{color:rgba(10,10,10,.6);}
+
+  .rrow{display:flex;align-items:center;gap:10px;background:var(--ink-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;}
+  .rrow .rn{font-family:'Saira';font-style:italic;font-weight:900;font-size:16px;color:var(--volt);width:24px;flex:none;}
+  .rrow .rnm{flex:1;min-width:0;}
+  .rrow .rt{font-family:'JetBrains Mono';font-weight:700;font-size:13px;}
+  .rrow .rc{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);margin-top:1px;}
+  .rrow .rv{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);text-align:right;flex:none;}
+  .rrow .rv b{color:var(--paper);font-weight:700;}
+  .rrow.mover-up{border-left:2px solid var(--jade-bright);}
+
+  .soonpanel{border:1px dashed var(--line);border-radius:12px;padding:30px 18px;text-align:center;}
+  .soonpanel .t{font-family:'Saira';font-style:italic;font-weight:900;font-size:19px;color:var(--muted);}
+  .soonpanel .d{font-family:'JetBrains Mono';font-size:11.5px;color:var(--dim);margin-top:8px;line-height:1.55;max-width:300px;margin-left:auto;margin-right:auto;}
+  .soonpanel .badge{display:inline-block;margin-top:12px;font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:9.5px;color:var(--volt);border:1px solid var(--volt);border-radius:99px;padding:3px 10px;}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- FRAME 1: badge insertion points -->
+  <div>
+    <p class="frame-label">1 - badge insertion points (AP only, per the ruling)</p>
+    <div class="phone" style="min-height:auto;">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+
+        <div class="eyebrow"><span>Scoreboard card</span></div>
+        <div class="gcard">
+          <div class="grow"><div class="gteam"><span class="gab">SJSU</span>San José State</div><div class="gsc">-</div></div>
+          <div class="grow"><div class="gteam"><span class="gab">USC</span><span class="rk">14</span>USC</div><div class="gsc">-</div></div>
+          <div class="gmeta"><span>Sat Aug 29, 7:00 PM ET</span><span>Los Angeles</span></div>
+        </div>
+
+        <div class="eyebrow" style="margin-top:4px;"><span>CFB game page header</span></div>
+        <div class="ghead">
+          <span class="chip">Sat, Aug 29 · 7:00 PM ET</span>
+          <div class="vs">
+            <div class="tm">San José State</div>
+            <div class="at">at</div>
+            <div class="tm"><span class="rk big">14</span>USC</div>
+          </div>
+        </div>
+
+        <div class="eyebrow" style="margin-top:4px;"><span>Pick'em board row</span></div>
+        <div class="pkgame">
+          <div class="pkeb"><span>Sat</span><span>7:00 PM ET</span></div>
+          <div class="pksides">
+            <div class="pkside">San José State</div>
+            <div class="pkside"><span class="rk">14</span>USC</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <p class="frame-note">One badge component, three insertion points. Volt fill, black numeral, sits inline before the team name so it reads as part of the name rather than a separate stat. Unranked teams get nothing - no badge is the default, not a "-" or an empty slot.</p>
+  </div>
+
+  <!-- FRAME 2: NCAA Rankings page -->
+  <div>
+    <p class="frame-label">2 - NCAA Rankings - AP + Coaches, Sportsvyn 25 teased</p>
+    <div class="phone" style="min-height:820px;">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+        <div>
+          <div style="font-family:'Saira';font-style:italic;font-weight:900;font-size:28px;letter-spacing:-.03em;">NCAA Rankings</div>
+          <div style="font-family:'JetBrains Mono';font-size:11.5px;color:var(--dim);margin-top:3px;">Week 1 · 2026 season</div>
+        </div>
+
+        <div class="rtabs">
+          <div class="rtab on">AP Top 25</div>
+          <div class="rtab">Coaches Poll</div>
+          <div class="rtab soon">Sportsvyn 25<span class="sw">v2</span></div>
+        </div>
+
+        <div class="eyebrow"><span>AP Top 25</span><span class="mono">released Sun, Aug 24</span></div>
+
+        <div class="rrow">
+          <div class="rn">1</div>
+          <div class="rnm"><div class="rt">Ohio State</div><div class="rc">Big Ten · 0-0</div></div>
+          <div class="rv">1483 pts<br><b>62</b> 1st</div>
+        </div>
+        <div class="rrow">
+          <div class="rn">2</div>
+          <div class="rnm"><div class="rt">Texas</div><div class="rc">SEC · 0-0</div></div>
+          <div class="rv">1401 pts</div>
+        </div>
+        <div class="rrow">
+          <div class="rn">3</div>
+          <div class="rnm"><div class="rt">Penn State</div><div class="rc">Big Ten · 0-0</div></div>
+          <div class="rv">1358 pts</div>
+        </div>
+        <div class="rrow mover-up">
+          <div class="rn">14</div>
+          <div class="rnm"><div class="rt">USC</div><div class="rc">Big Ten · 0-0</div></div>
+          <div class="rv">612 pts</div>
+        </div>
+        <div class="rrow">
+          <div class="rn">15</div>
+          <div class="rnm"><div class="rt">Tennessee</div><div class="rc">SEC · 0-0</div></div>
+          <div class="rv">598 pts</div>
+        </div>
+
+        <div style="text-align:center;padding:8px 0;"><span style="font-family:'JetBrains Mono';font-size:10.5px;color:var(--dim);">showing 5 of 25 · scroll for full poll</span></div>
+
+        <div class="eyebrow" style="margin-top:2px;"><span>Sportsvyn 25</span><span class="mono">v2</span></div>
+        <div class="soonpanel">
+          <div class="t">Our own board is coming</div>
+          <div class="d">Sportsvyn's own criteria, our own Top 25 - a third column next to AP and Coaches, not a copy of either.</div>
+          <span class="badge">In development</span>
+        </div>
+
+      </div>
+    </div>
+    <p class="frame-note">Tabs switch the visible poll - AP active by default (it's the one that drives Pick'em). Coaches Poll tab renders the same row grammar with its own numbers. Sportsvyn 25 tab is ghosted per the standing law - present, honest, not yet real. Movement bar (green left edge) only appears once a prior week exists to diff against - week 1 shows none.</p>
+  </div>
+
+</div>
+</body>
+</html>
