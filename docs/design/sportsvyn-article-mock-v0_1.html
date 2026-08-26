@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sportsvyn - Article page mock v0.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,600;1,900&family=Saira+Condensed:wght@600&family=Source+Serif+4:ital@1&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1C1C1C; --line:#2A2A2A;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --jade-bright:#3FBF6F;
+    --terra:#B8410F; --terra-bright:#E0602A; --muted:#888888; --dim:#5A5A5A;
+    --paper-dim:#C5C5C2;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  body{background:#050505;color:var(--paper);font-family:'Saira',sans-serif;padding:28px 16px 60px;}
+  .stage{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;align-items:flex-start;}
+  .frame-label{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted);margin:0 0 8px 4px;}
+  .frame-note{font-size:12px;color:var(--dim);margin:8px 4px 0;max-width:390px;line-height:1.5;}
+  .phone{width:390px;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:820px;}
+  .appbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 11px;border-bottom:1px solid var(--line);}
+  .wordmark{font-family:'Saira';font-style:italic;font-weight:900;font-size:19px;letter-spacing:-.05em;}
+  .wordmark .y{color:var(--volt);}
+  .acct{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);}
+  .screen{padding:18px;display:flex;flex-direction:column;gap:16px;}
+
+  .crumb{font-family:'JetBrains Mono';font-size:10.5px;color:var(--dim);}
+  .eyebrow{display:inline-block;font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.1em;font-size:10px;color:var(--volt);background:rgba(212,255,0,.08);border:1px solid rgba(212,255,0,.3);border-radius:99px;padding:3px 10px;width:fit-content;}
+  h1.hd{font-family:'Saira';font-style:italic;font-weight:900;font-size:26px;letter-spacing:-.03em;line-height:1.08;}
+  .byline{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono';font-size:10.5px;color:var(--muted);}
+  .byline .chip{border:1px solid var(--line);border-radius:99px;padding:2px 8px;color:var(--dim);}
+
+  /* prose - carries the drop cap forward exactly */
+  .prose{font-family:'Source Serif 4';font-style:italic;font-size:15.5px;line-height:1.65;color:var(--paper-dim);}
+  .prose p{margin-bottom:14px;}
+  .prose p:first-of-type::first-letter{
+    font-family:'Saira';font-style:italic;font-weight:900;font-size:68px;
+    color:var(--volt);float:left;line-height:.82;margin:2px 8px 0 0;
+  }
+  .prose b, .prose strong{color:var(--paper);font-weight:700;font-style:normal;}
+  .pullquote{border-left:3px solid var(--volt);padding:4px 0 4px 16px;font-family:'Saira';font-style:italic;font-weight:600;font-size:17px;color:var(--paper);line-height:1.4;margin:6px 0;}
+
+  .metarow{display:flex;gap:8px;padding-top:4px;}
+  .mchip{font-family:'JetBrains Mono';font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:4px 10px;}
+
+  /* the infographic - a-fig grammar, values/colors carry meaning */
+  .fig{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:15px 16px 16px;}
+  .fig-eb{font-family:'Saira Condensed';font-weight:600;text-transform:uppercase;letter-spacing:.1em;font-size:10px;color:var(--muted);margin-bottom:12px;}
+  .fig-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .fig-lbl{font-family:'JetBrains Mono';font-size:10.5px;color:var(--paper-dim);width:78px;flex:none;}
+  .fig-bar{flex:1;height:16px;border-radius:3px;overflow:hidden;display:flex;background:var(--ink-3);}
+  .seg{height:100%;background:var(--ink-3);border-top:1px solid var(--line);}
+  .seg.v{background:var(--volt);}
+  .seg.m{background:var(--muted);}
+  .ht{width:2px;background:var(--dim);flex:none;}
+  .brk{width:6px;background:var(--ink);flex:none;}
+  .fig-cap{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);margin-top:6px;line-height:1.5;}
+  .fig-legend{display:flex;gap:16px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line);}
+  .leg{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono';font-size:10px;color:var(--muted);}
+  .sw{width:9px;height:9px;border-radius:2px;flex:none;}
+  .sw.v{background:var(--volt);} .sw.m{background:var(--muted);}
+
+  .tokennote{background:var(--ink-2);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-family:'JetBrains Mono';font-size:10px;color:var(--dim);line-height:1.55;}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- FRAME 1: standard article - the 126-article case -->
+  <div>
+    <p class="frame-label">1 - standard article (126 of 129) - markdown prose</p>
+    <div class="phone">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+        <div class="crumb">← Articles</div>
+        <span class="eyebrow">Preview · NFL</span>
+        <h1 class="hd">Five things that decide the Week 1 opener</h1>
+        <div class="byline">By Sportsvyn Staff <span class="chip">6 min read</span> <span class="chip">Aug 24</span></div>
+
+        <div class="prose">
+          <p>Every season opener carries more noise than signal, and this one is no exception. Here is what actually moves the needle before kickoff, stripped of the parts that only sound important.</p>
+          <div class="pullquote">"The trench battles decide this before either quarterback throws a pass."</div>
+          <p>The offensive line question isn't new, but it's sharper now that two starters are questionable. <b>Depth matters more in September than in December</b> — there's no time to install a plan B.</p>
+        </div>
+
+        <div class="metarow"><span class="mchip">Share</span><span class="mchip">Save</span></div>
+      </div>
+    </div>
+    <p class="frame-note">Drop cap carries forward EXACTLY as it ships today - volt Saira italic 68px, already on-brand. Serif italic body at --paper-dim (11.44:1, already verified tonight). Eyebrow + byline chips are the one new app-grammar touch - JetBrains Mono, pill borders, matching the rest of the site's chip language. Pull-quote gets a volt rule, no color change to meaning.</p>
+  </div>
+
+  <!-- FRAME 2: the essay - the 1-article infographic case -->
+  <div>
+    <p class="frame-label">2 - the essay (1 of 129) - infographic intact</p>
+    <div class="phone" style="min-height:900px;">
+      <div class="appbar"><div class="wordmark">SPORTSV<span class="y">Y</span>N</div><div class="acct">@sportsvyn_og</div></div>
+      <div class="screen">
+        <div class="crumb">← Articles</div>
+        <span class="eyebrow" style="color:var(--terra-bright);background:rgba(184,65,15,.1);border-color:rgba(184,65,15,.4);">Essay · World Cup 2026</span>
+        <h1 class="hd">The Laws: what actually governs a World Cup match</h1>
+        <div class="byline">By Sportsvyn Staff <span class="chip">12 min read</span></div>
+
+        <div class="prose">
+          <p>Football's rulebook is short by design, but the parts everyone argues about are the parts nobody reads. Here is what the Laws of the Game actually say, ranked by how often they get invoked.</p>
+        </div>
+
+        <div class="fig">
+          <div class="fig-eb">Rule invocations by category · 2022 tournament</div>
+          <div class="fig-row"><span class="fig-lbl">Offside</span>
+            <div class="fig-bar"><span class="seg v" style="width:58%"></span><span class="brk"></span><span class="seg m" style="width:34%"></span></div>
+          </div>
+          <div class="fig-row"><span class="fig-lbl">Handball</span>
+            <div class="fig-bar"><span class="seg v" style="width:31%"></span><span class="brk"></span><span class="seg m" style="width:52%"></span></div>
+          </div>
+          <div class="fig-row"><span class="fig-lbl">Advantage</span>
+            <div class="fig-bar"><span class="seg v" style="width:44%"></span><span class="ht"></span><span class="seg m" style="width:19%"></span></div>
+          </div>
+          <div class="fig-cap">Segments show share of VAR reviews (volt) vs on-field calls (grey) that stood on review. Widths are the data - not decorative.</div>
+          <div class="fig-legend">
+            <div class="leg"><span class="sw v"></span>VAR-confirmed</div>
+            <div class="leg"><span class="sw m"></span>On-field stood</div>
+          </div>
+        </div>
+
+        <div class="prose"><p>What the chart makes visible is how rarely the two disagree at the highest level — the controversy is louder than the data.</p></div>
+
+        <div class="tokennote">MOCK NOTE: bar/legend colors here are placeholders (volt/muted) matching the CURRENT six local a-* tokens' intent. Real mapped values need CC's computed-contrast pass before shipping, same discipline as tonight's ink-dim fix. Do not ship these exact hexes without verification.</div>
+      </div>
+    </div>
+    <p class="frame-note">This is the one artifact carrying real risk. Segment widths and colors encode data, exactly as flagged in recon - a migration must preserve what the chart MEANS, not just restyle it. Legend swatches key to the bars by color, so both must map together or the chart becomes unreadable.</p>
+  </div>
+
+</div>
+</body>
+</html>
