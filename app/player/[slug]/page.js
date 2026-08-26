@@ -47,6 +47,7 @@ import GridironTeamNext from '@/components/player/GridironTeamNext';
 import { SeasonTotals, GameLog, EmptyLog } from '@/components/player/GridironStats';
 import { columnsFor, seasonTotals, gameLog, bdlIdOf } from '@/lib/gridiron/playerStats';
 import { cfbColumnsFor, cfbSeasonTotals } from '@/lib/cfb/seasonStats';
+import { cfbGameLog } from '@/lib/cfb/gameStats';
 import { getTeamMatches } from '@/lib/teams';
 
 import './player.css';
@@ -91,9 +92,11 @@ async function GridironPlayer({ player, crumb }) {
     !canHaveStats ? Promise.resolve([])
       : isCfb ? cfbSeasonTotals(player.id, columns).catch(() => [])
               : seasonTotals(bdlId, columns).catch(() => []),
-    // CFB game logs are not imported yet, so the log stays absent rather than
-    // being faked from season totals.
-    canHaveStats && !isCfb ? gameLog(bdlId, columns, { limit: 4 }).catch(() => []) : Promise.resolve([]),
+    // The log is its own table in both codes, never derived from season totals -
+    // one source of truth per number.
+    !canHaveStats ? Promise.resolve([])
+      : isCfb ? cfbGameLog(player.id, columns, { limit: 4 }).catch(() => [])
+              : gameLog(bdlId, columns, { limit: 4 }).catch(() => []),
     player.team_id != null ? getTeamMatches(player.team_id).catch(() => []) : Promise.resolve([]),
   ]);
 
