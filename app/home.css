@@ -1603,3 +1603,33 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
 .emptystate{text-align:center;font-family:var(--font-serif,serif);font-style:italic;font-size:14px;
   color:var(--muted);padding:30px;display:none}
 .emptystate.show{display:block}
+
+/* --- the week slate: live rows, and the chip dot ---------------------------
+   The srow base is already defined above. These are the states the week module
+   adds: a live row, a win/dim pair on a final, and the tuner's live dot.
+   The dot is the ONE place volt is used as a status rather than a rule. */
+
+.srow--link { color: inherit; text-decoration: none; }
+.srow--link:hover .mu { color: var(--volt); }
+
+.srow .when.live { color: var(--live, #E63946); }
+.sdot {
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--live, #E63946); margin-right: 5px; vertical-align: 1px;
+  animation: sdot-pulse 2s ease-in-out infinite;
+}
+@keyframes sdot-pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+/* A reader who has asked for less motion gets a steady dot, not none - the dot
+   is information, the pulse is decoration. */
+@media (prefers-reduced-motion: reduce) { .sdot { animation: none } }
+
+.srow .mu .win { color: var(--paper); }
+.srow .mu .dim { color: var(--muted); }
+
+.chipdot {
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--live, #E63946); margin-right: 6px; vertical-align: 1px;
+  animation: sdot-pulse 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .chipdot { animation: none } }
+.spill.on .chipdot { background: var(--ink); }

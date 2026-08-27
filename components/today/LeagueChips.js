@@ -56,6 +56,10 @@ export default function LeagueChips({ leagues, initialOn, signedIn = false }) {
             className={`spill${on.has(l.id) ? ' on' : ''}`}
             aria-pressed={on.has(l.id)}
             onClick={() => toggle(l.id)}>
+            {/* The live dot only appears when that league has a game on right
+                now - it is the signal query's own bool_or, not a guess from a
+                kickoff time. */}
+            {l.live ? <span className="chipdot" aria-label="live" /> : null}
             {l.label}{l.note ? <span className="ct">{l.note}</span> : null}
           </button>
         ))}

@@ -11,6 +11,7 @@
 // the ruled behaviour, not a hole: no empty frame, no "coming soon".
 
 import { BandHead } from './Band';
+import WeekSlate from './WeekSlate';
 
 function Mod({ title, ctx, children, cta, ctaHref }) {
   return (
@@ -31,39 +32,6 @@ function Rows({ rows }) {
   ));
 }
 
-const KO = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit',
-});
-
-/**
- * Slate rows, with the Board-1 badge decided by SET MEMBERSHIP against
- * currentPickemBoard().board - no second query, and no badge invented for a
- * game that merely looks like a board game.
- */
-function SlateRows({ games, boardIds }) {
-  return games.map((g) => {
-    const onBoard = boardIds?.has(g.id);
-    const isFinal = g.status === 'final';
-    const time = KO.format(new Date(g.kickoffAt)).replace(' ', '').toLowerCase();
-    return (
-      <div className="srow" key={g.id}>
-        <div className="when">{g.etWeekday}<br />{isFinal ? 'Final' : time}</div>
-        <div>
-          <div className="mu">
-            {g.away?.abbreviation ?? g.away?.name} <span className="at">at</span> {g.home?.abbreviation ?? g.home?.name}
-            {onBoard ? <span className="onboard">Board 1</span> : null}
-          </div>
-          <div className="stag">{g.week != null ? `Wk ${g.week}` : g.leagueName}</div>
-        </div>
-        <div className="fin">
-          {isFinal ? `${g.awayScore}-${g.homeScore}` : null}
-          <span className="s2">{isFinal ? 'FT' : 'Preview'}</span>
-        </div>
-      </div>
-    );
-  });
-}
-
 function ArticleRows({ reads }) {
   return reads.map((a) => (
     <div className="arow" key={a.slug}>
@@ -73,18 +41,16 @@ function ArticleRows({ reads }) {
   ));
 }
 
-export function GridironBand({ id, label, week, context, slate, boardIds, board, boardTitle,
-  boardCtx, boardCta, boardHref, movement, reads, hubHref, hubLabel }) {
+export function GridironBand({ id, label, week, context, weekSlate, boardIds, board, boardTitle,
+  boardCtx, boardCta, boardHref, movement, reads, hubHref, hubLabel, scoresHref }) {
   return (
     <>
       <BandHead label={label} week={week} context={context} moreHref={hubHref} moreLabel={hubLabel} />
       <div className="bmods">
-        {slate?.length ? (
-          <Mod title="The slate" ctx={boardIds?.size ? 'Board 1 marked' : null}
-               cta="Full schedule" ctaHref={hubHref}>
-            <SlateRows games={slate} boardIds={boardIds} />
-          </Mod>
-        ) : null}
+        {/* THE WEEK SLATE LEADS. It replaced a today-only slate: on a Thursday
+            that module was empty for CFB and the band opened with a ranking,
+            which is the least perishable thing in it. */}
+        <WeekSlate slate={weekSlate} boardIds={boardIds} scoresHref={scoresHref} label={label} />
         {board?.length ? (
           <Mod title={boardTitle} ctx={boardCtx} cta={boardCta} ctaHref={boardHref}>
             <Rows rows={board} />
@@ -101,27 +67,16 @@ export function GridironBand({ id, label, week, context, slate, boardIds, board,
   );
 }
 
-export function EplBand({ context, fixtures, table, reads }) {
+export function EplBand({ context, weekSlate, table, reads, week }) {
   return (
     <>
-      <BandHead label="EPL" context={context} moreHref="/epl/standings" moreLabel="EPL hub" />
+      <BandHead label="EPL" week={week} context={context}
+        moreHref="/epl/standings" moreLabel="EPL hub" />
       <div className="bmods">
-        {fixtures?.length ? (
-          <Mod title="Results + fixtures" cta="Full schedule" ctaHref="/scores?sport=epl">
-            {fixtures.map((f) => (
-              <div className="srow" key={f.id}>
-                <div className="when">{f.when.day}<br />{f.when.time}</div>
-                <div>
-                  <div className="mu">{f.away} <span className="at">at</span> {f.home}</div>
-                </div>
-                <div className="fin">
-                  {f.isFinal ? `${f.awayScore}-${f.homeScore}` : null}
-                  <span className="s2">{f.isFinal ? 'FT' : 'Preview'}</span>
-                </div>
-              </div>
-            ))}
-          </Mod>
-        ) : null}
+        {/* ONE MODULE, NOT TWO SIBLINGS. "Results + fixtures" was a separate
+            unit reading a separate query; it IS this module now - the same
+            matchweek window, the same srow grammar as the gridiron bands. */}
+        <WeekSlate slate={weekSlate} scoresHref="/scores?sport=epl" label="EPL" />
         {table?.length ? (
           <Mod title="Table" cta="Full table" ctaHref="/epl/standings">
             <Rows rows={table} />

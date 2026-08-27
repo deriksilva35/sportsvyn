@@ -9,6 +9,7 @@
 // both shipped and both looked correct.
 
 import { test } from 'node:test';
+import { rowState } from '../../lib/today/slateRow.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -59,8 +60,15 @@ test('BOTH GRIDIRON CODES LINK; anything without a route stays a plain row', () 
 });
 
 test('a game that has not kicked off shows a TIME, never a 0-0', () => {
+  // Asserted through rowState now rather than against an inline expression:
+  // the live/final decision moved to lib/today/slateRow.js when the Today band
+  // gained a week module that had to answer the same questions. Behaviour is
+  // unchanged; the test is better, because it exercises the rule instead of the
+  // spelling of one line.
+  const pre = rowState({ status: 'scheduled', kickoffAt: '2026-08-29T16:00:00Z' });
+  assert.equal(pre.played, false, 'no score is printed before kickoff');
+  assert.match(pre.when, /^\d{1,2}:\d{2}(am|pm)$/);
   assert.match(games, /\{played \? <b>\{g\.awayScore \?\? ABSENT\}<\/b> : null\}/);
-  assert.match(games, /\{!played \? fmtTime\(g\.kickoffAt\) : null\}/);
   assert.match(games, /import \{ ABSENT \} from '@\/lib\/gridiron\/lineScore'/,
     'one absence glyph across the gridiron surface');
 });
@@ -89,17 +97,26 @@ test('ONE LINE PER GAME - the row has no block children at all', () => {
 
 test('the WHEN column carries ONE fact at a time', () => {
   // A time next to a finished game is noise; a score next to a game that has
-  // not kicked off is a lie.
+  // not kicked off is a lie. One fact, three states.
+  const ko = '2026-08-29T16:00:00Z';
+  assert.equal(rowState({ status: 'live', kickoffAt: ko }).when, 'LIVE');
+  assert.equal(rowState({ status: 'final', kickoffAt: ko }).when, 'FINAL');
+  assert.match(rowState({ status: 'scheduled', kickoffAt: ko }).when, /^\d{1,2}:\d{2}(am|pm)$/);
+  // The row still lays those out; it no longer decides them.
   const row = games.slice(games.indexOf('function Row('), games.indexOf('export default function'));
   assert.match(row, /\{live \? <><span className="tg-dot" \/>LIVE<\/> : null\}/);
   assert.match(row, /\{final \? 'FINAL' : null\}/);
-  assert.match(row, /\{!played \? fmtTime\(g\.kickoffAt\) : null\}/);
+  assert.match(row, /\{!played \? when : null\}/);
 });
 
 test('only a FINAL promotes a winner', () => {
   // A leader at halftime has not won anything.
-  assert.match(games, /const homeWin = final && g\.homeScore > g\.awayScore/);
-  assert.match(games, /const awayWin = final && g\.awayScore > g\.homeScore/);
+  const leading = rowState({ status: 'live', awayScore: 21, homeScore: 3 });
+  assert.equal(leading.awayWin, false, 'a 21-3 lead in the third quarter is not a win');
+  assert.equal(leading.homeWin, false);
+  const done = rowState({ status: 'final', awayScore: 21, homeScore: 3 });
+  assert.equal(done.awayWin, true);
+  assert.equal(done.homeWin, false);
   assert.match(css, /\.tg-side\.dim, \.tg-side\.dim b \{ color: var\(--muted\); \}/);
 });
 

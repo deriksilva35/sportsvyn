@@ -54,6 +54,7 @@ import GamesBand from '@/components/today/GamesBand';
 import { GridironBand, EplBand, ArchiveBand } from '@/components/today/LeagueBands';
 import { LEAGUES, rankLeagues, contextLine, leagueById } from '@/lib/today/leagues';
 import { gatherSignals } from '@/lib/today/signals';
+import { weekSlate } from '@/lib/today/weekSlate';
 import { getResolvedLayout } from '@/lib/dashboardLayout';
 import { pickemCardData } from '@/lib/pickem/entry';
 import { currentPickemBoard } from '@/lib/pickem/entry';
@@ -379,12 +380,26 @@ export default async function HomePage() {
     getTodaysReads({ ptDay, limit: 3, leagueSlugs: ['epl'] }).catch(() => []),
   ]);
 
+  // THE WEEK SLATES. One read per league, each deriving its own week span -
+  // never a calendar week (CFB week 1 runs Aug 29 to Sep 7).
+  const [cfbWeekSlate, nflWeekSlate, eplWeekSlate] = await Promise.all([
+    weekSlate('cfb', { now }).catch(() => null),
+    weekSlate('nfl', { now }).catch(() => null),
+    weekSlate('epl', { now }).catch(() => null),
+  ]);
+  const slateOfLeague = { cfb: cfbWeekSlate, nfl: nflWeekSlate, epl: eplWeekSlate };
+
   const order = rankLeagues(signals);
   const signalOf = (id) => signals.find((s) => s.id === id) ?? {};
   // A signed-out reader gets the defaults; getResolvedLayout already returns
   // them for a null userId, so there is no branch here.
   const tunedOn = new Set(tunedLayout.map((e) => e.id));
-  const boardIds = new Set((board?.board ?? []).map((g) => g.id));
+  // THE BOARD KEYS ON match_id, NOT id. Mapping g.id produced a Set of one
+  // undefined, so the badge never rendered - invisible in relay 1 because the
+  // CFB slate was empty on a Thursday and there was nothing to badge. It would
+  // have surfaced on Saturday as a module claiming "Board 1 marked" over six
+  // unbadged rows. Tested now against the board's real shape.
+  const boardIds = new Set((board?.board ?? []).map((g) => g.match_id ?? g.id).filter((v) => v != null));
   const slateFor = (lg) => (slate?.byLeague?.[lg] ?? []);
   const rowsFromBoard = (b, n = 5) => (b?.entries ?? []).slice(0, n)
     .map((e) => ({ key: e.rank, pos: e.rank, label: e.label, value: e.teamTag ?? '—', dim: true }));
@@ -403,8 +418,9 @@ export default async function HomePage() {
             id={id} label={isCfb ? 'CFB' : 'NFL'}
             week={(isCfb ? cfbNext : nflNext)?.week ?? null}
             context={ctx}
-            slate={slateFor(id)}
+            weekSlate={slateOfLeague[id]}
             boardIds={isCfb ? boardIds : null}
+            scoresHref={isCfb ? '/scores?sport=cfb' : '/scores?sport=nfl'}
             board={rowsFromBoard(isCfb ? cfbBoard : nflBoard)}
             boardTitle={isCfb ? 'The Sportsvyn 25' : 'Power Rankings'}
             boardCtx={(isCfb ? cfbBoard : nflBoard)?.editionLabel ?? null}
@@ -419,7 +435,8 @@ export default async function HomePage() {
     if (id === 'epl') {
       return (
         <Band id={id} off={off} key={id}>
-          <EplBand context={ctx} fixtures={eplFixtures} table={eplRows} reads={eplReads} />
+          <EplBand context={ctx} weekSlate={eplWeekSlate} week={eplWeekSlate?.week ?? null}
+            table={eplRows} reads={eplReads} />
         </Band>
       );
     }
@@ -430,8 +447,9 @@ export default async function HomePage() {
   const chipLeagues = order.map((id) => {
     const l = leagueById(id);
     const sig = signalOf(id);
-    return { id, label: l.label, note: l.archive ? 'archive'
-      : sig.playsToday ? 'today' : sig.daysToNext != null ? `${sig.daysToNext}d` : null };
+    return { id, label: l.label, live: !!sig.isLive, note: l.archive ? 'archive'
+      : sig.isLive ? 'live' : sig.playsToday ? 'today'
+      : sig.daysToNext != null ? `${sig.daysToNext}d` : null };
   });
 
 

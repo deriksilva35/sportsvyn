@@ -24,11 +24,10 @@
 
 import Link from 'next/link';
 import { ABSENT } from '@/lib/gridiron/lineScore';
-
-const ET = 'America/New_York';
-const fmtTime = (d) => new Intl.DateTimeFormat('en-US', {
-  timeZone: ET, hour: 'numeric', minute: '2-digit',
-}).format(new Date(d));
+// The live/final/scheduled decision moved to lib/today/slateRow.js when the
+// Today band gained a week-slate module that had to answer the same questions.
+// Two renderers, ONE decision-maker - see that file's header.
+import { rowState } from '@/lib/today/slateRow';
 
 /**
  * ONE LINE PER GAME.
@@ -46,11 +45,7 @@ const fmtTime = (d) => new Intl.DateTimeFormat('en-US', {
  * and a score next to a game that has not kicked off is a lie.
  */
 function Row({ g }) {
-  const final = g.status === 'final';
-  const live = g.status === 'live';
-  const played = final || live;
-  const homeWin = final && g.homeScore > g.awayScore;
-  const awayWin = final && g.awayScore > g.homeScore;
+  const { live, final, played, homeWin, awayWin, isPreseason, when } = rowState(g);
   const abbr = (t) => t?.abbreviation ?? t?.name ?? 'TBD';
 
   const body = (
@@ -58,9 +53,9 @@ function Row({ g }) {
       <span className={`tg-when${live ? ' live' : ''}${final ? ' final' : ''}`}>
         {live ? <><span className="tg-dot" />LIVE</> : null}
         {final ? 'FINAL' : null}
-        {!played ? fmtTime(g.kickoffAt) : null}
+        {!played ? when : null}
       </span>
-      <span className="tg-badge">{g.seasonPhase === 'PRE' ? 'PRE' : ''}</span>
+      <span className="tg-badge">{isPreseason ? 'PRE' : ''}</span>
       <span className="tg-match">
         <span className={`tg-side${awayWin ? ' win' : ''}${homeWin ? ' dim' : ''}`}>
           {abbr(g.away)}{played ? <b>{g.awayScore ?? ABSENT}</b> : null}
