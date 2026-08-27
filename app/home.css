@@ -1482,3 +1482,132 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
    finished score, and the Weekly's building state prints "4/6", where the
    denominator must not compete with the numerator for the eye. */
 .dly-of-six { font-size: .5em; opacity: .5; font-weight: 600; letter-spacing: -.01em; }
+
+/* ==========================================================================
+   TODAY: THE BAND LAYOUT (mock v0_3)
+
+   From sportsvyn-today-epicenter-mock-v0_3-switcher.html. Tokens throughout -
+   the mock's literal hex are the app's own token values, so they resolve to
+   var(--volt), var(--ink-2) and so on rather than being copied in.
+   ========================================================================== */
+
+.today-shell{max-width:1280px;margin:0 auto;padding:20px 32px 60px;display:block}
+
+/* --- the mode switcher: top centre, two pills --- */
+.modeswitch{display:flex;justify-content:center;margin:6px 0 4px}
+.modewrap{display:flex;gap:4px;background:var(--ink-2);border:1px solid var(--rule);
+  border-radius:99px;padding:4px}
+.mode{font-family:var(--font-display,inherit);font-style:italic;font-weight:900;font-size:15px;
+  letter-spacing:-0.02em;text-transform:uppercase;color:var(--paper-dim);background:transparent;
+  border:none;border-radius:99px;padding:10px 30px;cursor:pointer;transition:all .12s}
+.mode:hover{color:var(--paper)}
+.mode.on{background:var(--volt);color:var(--ink)}
+.modesub{text-align:center;font-family:var(--font-mono,monospace);font-size:9px;letter-spacing:.14em;
+  color:var(--muted);text-transform:uppercase;margin:8px 0 14px}
+
+/* --- the tuner --- */
+.tuner{display:flex;justify-content:center;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.spill{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--paper-dim);
+  background:var(--ink-3);border:1px solid var(--rule);border-radius:99px;padding:8px 18px;
+  cursor:pointer;transition:all .12s;user-select:none;font-variant-numeric:tabular-nums}
+.spill:hover{border-color:var(--muted)}
+.spill.on{background:var(--volt);color:var(--ink);border-color:var(--volt);font-weight:600}
+/* Dead by design: the SOON chip states a year and has no handler. */
+.spill.soon{color:var(--muted);cursor:default;display:flex;gap:7px;align-items:center}
+.spill.soon i{font-style:normal;font-size:8px;letter-spacing:.12em;border:1px solid var(--rule);
+  border-radius:99px;padding:1px 6px}
+.spill .ct{font-size:10px;opacity:.7;margin-left:5px}
+.regline{text-align:center;font-family:var(--font-mono,monospace);font-size:9px;letter-spacing:.12em;
+  color:var(--muted);text-transform:uppercase;margin:8px 0 16px}
+.regline .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--jade,#2A8A4F);
+  margin-right:7px;vertical-align:1px}
+
+/* --- the editorial spine --- */
+.readband{background:var(--ink-2);border:1px solid var(--rule);border-radius:12px;padding:18px 20px;
+  margin-bottom:14px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+.readband .kick{font-family:var(--font-mono,monospace);font-size:10px;letter-spacing:.14em;
+  color:var(--volt);text-transform:uppercase;margin-bottom:6px}
+.readband h2{font-family:var(--font-display,inherit);font-style:italic;font-weight:900;font-size:24px;
+  letter-spacing:-0.04em;line-height:1.1;text-transform:uppercase}
+.readband .go{font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--ink-3);
+  color:var(--paper);border:1px solid var(--rule);border-radius:9px;padding:12px 20px;white-space:nowrap}
+
+/* --- the bands --- */
+.bandhead{display:flex;align-items:baseline;gap:14px;padding:14px 0 10px;border-top:2px solid var(--volt)}
+.bandhead.sub{border-top:1px solid var(--rule)}
+.bandhead h2{font-family:var(--font-display,inherit);font-style:italic;font-weight:900;font-size:22px;
+  letter-spacing:-0.04em;text-transform:uppercase}
+.bandhead h2 .lg{color:var(--volt)}
+.bandhead .ctx{font-family:var(--font-mono,monospace);font-size:10px;letter-spacing:.1em;color:var(--muted);
+  text-transform:uppercase;font-variant-numeric:tabular-nums}
+.bandhead .spacer{flex:1}
+.bandhead .more{font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.band{transition:opacity .15s;margin-bottom:6px}
+.band.off{display:none}
+.bmods{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.bmods.four{grid-template-columns:repeat(4,1fr)}
+@media(max-width:960px){
+  .bmods,.bmods.four{grid-template-columns:1fr}
+  .readband{grid-template-columns:1fr}
+  .today-shell{padding:16px 16px 48px}
+}
+
+.gcard{background:var(--ink-2);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;
+  display:flex;flex-direction:column}
+.gcard.hot{background:linear-gradient(160deg,var(--volt-deep,#1a2000),var(--ink-2));border-color:#2c3600}
+.gcard .eb{font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;
+  display:flex;gap:8px;align-items:center}
+.newpill{font-size:9px;letter-spacing:.1em;color:var(--ink);background:var(--volt);border-radius:99px;padding:1px 8px}
+.gcard h3{font-family:var(--font-display,inherit);font-style:italic;font-weight:900;font-size:19px;
+  letter-spacing:-0.03em;margin:6px 0 4px}
+.gcard .st{font-family:var(--font-mono,monospace);font-size:10px;color:var(--paper-dim);
+  font-variant-numeric:tabular-nums;line-height:1.55;margin-bottom:10px;flex:1}
+.gbtn{display:block;text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--ink-3);color:var(--paper);border:1px solid var(--rule);border-radius:9px;padding:8px 13px}
+.gbtn.play{background:var(--volt);color:var(--ink);border-color:var(--volt);
+  font-family:var(--font-display,inherit);font-style:italic;font-weight:900;font-size:13px;letter-spacing:-0.01em}
+.gbtn.ghosted{color:var(--muted)}
+
+.mod{background:var(--ink-2);border:1px solid var(--rule);border-radius:12px;padding:14px}
+.mod .eb{font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;
+  display:flex;justify-content:space-between;margin-bottom:10px}
+.mod .eb .ctx{font-family:var(--font-mono,monospace);font-size:9px}
+.mod .row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;
+  border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+.mod .row:last-of-type{border-bottom:none}
+.mod .row .l{display:flex;align-items:center;gap:10px;font-family:var(--font-display,inherit);
+  font-style:italic;font-weight:900;font-size:15px;letter-spacing:-0.02em}
+.mod .row .pos{font-family:var(--font-mono,monospace);font-style:normal;font-weight:400;font-size:11px;
+  color:var(--muted);width:16px;text-align:center}
+.mod .row .v{font-family:var(--font-mono,monospace);font-weight:700;font-size:13px;color:var(--paper-dim)}
+.mod .row .v.sub{font-weight:400;font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.mod .row .v.dn{color:var(--terra,#B8410F)}
+.ghostcta{display:block;width:100%;text-align:center;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;background:var(--ink-3);color:var(--paper);border:1px solid var(--rule);
+  border-radius:9px;padding:10px;margin-top:12px}
+
+.srow{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:9px 0;
+  border-bottom:1px solid var(--rule)}
+.srow:last-of-type{border-bottom:none}
+.srow .when{font-family:var(--font-mono,monospace);font-size:9px;color:var(--muted);text-transform:uppercase;
+  line-height:1.5;font-variant-numeric:tabular-nums}
+.srow .mu{font-family:var(--font-display,inherit);font-style:italic;font-weight:900;font-size:14px;letter-spacing:-0.02em}
+.srow .mu .at{color:var(--muted);font-family:var(--font-mono,monospace);font-style:normal;font-weight:400;font-size:10px}
+.srow .stag{font-family:var(--font-mono,monospace);font-size:9px;color:var(--muted);text-transform:uppercase}
+.srow .fin{font-family:var(--font-mono,monospace);font-size:12px;font-weight:700;text-align:right;
+  font-variant-numeric:tabular-nums}
+.srow .fin .s2{display:block;font-size:8px;font-weight:400;color:var(--muted);letter-spacing:.1em}
+.onboard{font-size:8px;letter-spacing:.08em;color:var(--volt);
+  border:1px solid color-mix(in srgb, var(--volt) 40%, transparent);border-radius:99px;padding:1px 7px;
+  text-transform:uppercase;margin-left:6px}
+
+.arow{padding:10px 0;border-bottom:1px solid var(--rule)}
+.arow:last-of-type{border-bottom:none}
+.arow .kick{font-family:var(--font-mono,monospace);font-size:9px;letter-spacing:.12em;color:var(--volt);
+  opacity:.75;text-transform:uppercase;margin-bottom:4px}
+.arow h4{font-family:var(--font-display,inherit);font-style:italic;font-weight:900;font-size:15px;
+  letter-spacing:-0.02em;line-height:1.15}
+
+.emptystate{text-align:center;font-family:var(--font-serif,serif);font-style:italic;font-size:14px;
+  color:var(--muted);padding:30px;display:none}
+.emptystate.show{display:block}

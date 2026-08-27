@@ -47,6 +47,18 @@ import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { boardHref } from '@/lib/gridiron/rankingsHub';
 import '@/components/gridiron/gridiron.css';
 import { resolveShellMode } from '@/lib/shell/shell';
+import ModeSwitch from '@/components/today/ModeSwitch';
+import LeagueChips from '@/components/today/LeagueChips';
+import Band, { BandHead } from '@/components/today/Band';
+import GamesBand from '@/components/today/GamesBand';
+import { GridironBand, EplBand, ArchiveBand } from '@/components/today/LeagueBands';
+import { LEAGUES, rankLeagues, contextLine, leagueById } from '@/lib/today/leagues';
+import { gatherSignals } from '@/lib/today/signals';
+import { getResolvedLayout } from '@/lib/dashboardLayout';
+import { pickemCardData } from '@/lib/pickem/entry';
+import { currentPickemBoard } from '@/lib/pickem/entry';
+import { getEplStandings } from '@/lib/soccer/standings';
+import { eplBandFixtures } from '@/lib/soccer/fixtures';
 
 import './home.css';
 
@@ -347,84 +359,125 @@ export default async function HomePage() {
     getNearestUpcomingWeek('nfl', seasonYear).catch(() => null),
   ]);
 
+  // ---- THE BANDS -------------------------------------------------------
+  // Order is COMPUTED every render, never a constant: rankLeagues over signals
+  // read from `matches`. Every unit below is an existing reader; the carpentry
+  // changed, the reads did not.
+  const [signals, tunedLayout, pickem, board, eplTable, eplFixtures,
+    cfbReads, nflReads, eplReads] = await Promise.all([
+    gatherSignals({ now }).catch(() => []),
+    getResolvedLayout(userId, 'today').catch(() => []),
+    pickemCardData(userId).catch(() => null),
+    currentPickemBoard({ now }).catch(() => null),
+    getEplStandings().catch(() => null),
+    eplBandFixtures({ now }).catch(() => []),
+    // CONDITIONAL ARTICLE MODULES. All 129 published articles carry a soccer
+    // league, so these return [] today and the modules are absent - the ruled
+    // behaviour, not a hole.
+    getTodaysReads({ ptDay, limit: 3, leagueSlugs: ['cfb'] }).catch(() => []),
+    getTodaysReads({ ptDay, limit: 3, leagueSlugs: ['nfl'] }).catch(() => []),
+    getTodaysReads({ ptDay, limit: 3, leagueSlugs: ['epl'] }).catch(() => []),
+  ]);
+
+  const order = rankLeagues(signals);
+  const signalOf = (id) => signals.find((s) => s.id === id) ?? {};
+  // A signed-out reader gets the defaults; getResolvedLayout already returns
+  // them for a null userId, so there is no branch here.
+  const tunedOn = new Set(tunedLayout.map((e) => e.id));
+  const boardIds = new Set((board?.board ?? []).map((g) => g.id));
+  const slateFor = (lg) => (slate?.byLeague?.[lg] ?? []);
+  const rowsFromBoard = (b, n = 5) => (b?.entries ?? []).slice(0, n)
+    .map((e) => ({ key: e.rank, pos: e.rank, label: e.label, value: e.teamTag ?? '—', dim: true }));
+  const eplRows = (eplTable?.rows ?? []).slice(0, 4)
+    .map((r) => ({ key: r.rank, pos: r.rank, label: r.team, value: r.points }));
+
+  const bandFor = (id) => {
+    const sig = signalOf(id);
+    const ctx = contextLine(sig);
+    const off = !tunedOn.has(id);
+    if (id === 'cfb' || id === 'nfl') {
+      const isCfb = id === 'cfb';
+      return (
+        <Band id={id} off={off} key={id}>
+          <GridironBand
+            id={id} label={isCfb ? 'CFB' : 'NFL'}
+            week={(isCfb ? cfbNext : nflNext)?.week ?? null}
+            context={ctx}
+            slate={slateFor(id)}
+            boardIds={isCfb ? boardIds : null}
+            board={rowsFromBoard(isCfb ? cfbBoard : nflBoard)}
+            boardTitle={isCfb ? 'The Sportsvyn 25' : 'Power Rankings'}
+            boardCtx={(isCfb ? cfbBoard : nflBoard)?.editionLabel ?? null}
+            boardCta={isCfb ? 'Rankings hub' : 'Full board'}
+            boardHref={isCfb ? '/cfb/rankings' : '/nfl'}
+            movement={!isCfb && movement ? <div className="mod"><MovementCard card={movement} /></div> : null}
+            reads={isCfb ? cfbReads : nflReads}
+            hubHref={isCfb ? '/cfb' : '/nfl'} hubLabel={isCfb ? 'CFB hub' : 'NFL hub'} />
+        </Band>
+      );
+    }
+    if (id === 'epl') {
+      return (
+        <Band id={id} off={off} key={id}>
+          <EplBand context={ctx} fixtures={eplFixtures} table={eplRows} reads={eplReads} />
+        </Band>
+      );
+    }
+    return <Band id={id} off={off} key={id}><ArchiveBand /></Band>;
+  };
+
+  // Chips display in ranker order too, so the rail and the bands agree.
+  const chipLeagues = order.map((id) => {
+    const l = leagueById(id);
+    const sig = signalOf(id);
+    return { id, label: l.label, note: l.archive ? 'archive'
+      : sig.playsToday ? 'today' : sig.daysToNext != null ? `${sig.daysToNext}d` : null };
+  });
+
 
   return (
     <>
       <GlobalHeaderServer activeNav="home" />
 
-      {/* TWO COLUMNS AGAIN. The football homepage ran full width because the
-          World Cup rail's units - live scores, group standings, tournament
-          rankings - had no football equivalent, and an empty rail is worse than
-          no rail. All three now exist: a gridiron slate, an NFL power board and
-          the Sportsvyn 25. The rail comes back because it has something to say.
+      {/* THE BAND LAYOUT replaces the two-column main/rail carpentry. The rail
+          existed because the page had units with nowhere else to go; every one
+          of them is now inside the band for the league it belongs to, which is
+          where a reader looks for it. */}
+      <main className="page-shell today-shell">
+        <ModeSwitch />
+        <div className="modesub">{etLabel} · The network&rsquo;s front page, tuned to your leagues</div>
 
-          DOM ORDER IS THE MOBILE STACK: card, then sidebar. Below 1024px the
-          grid collapses and the sidebar falls under the card rather than above
-          it, which keeps the Daily Card the first thing on a phone. */}
-      <main className="home-main home-main--football">
-        <article className="daily-card">
-          <DailyCardHeader ptDateLabel={ptDateLabel} />
-          <DailyCardByline ptDateLabel={ptDateLabel} />
+        {/* The tuner drives the bands below. Signed out it still works, for the
+            length of the visit, and says so. */}
+        <LeagueChips leagues={chipLeagues} initialOn={[...tunedOn]} signedIn={userId != null} />
 
-          {/* THE DAILY LEADS. It is the only module on this page that EXPIRES:
-              Draftvyn is a standing invitation, Today's Reads is durable, the
-              season strip is a calendar. A card that renames itself every day
-              opens with the thing that is only true today. It is also the only
-              module whose state CHANGES for a returning reader, so the top slot
-              does work on the second visit instead of repeating an ad.
-              Renders nothing at all before the day opens. */}
-          <DailyModule view={dailyHome} isShell={isShell} signedIn={userId != null} />
-          {/* Yesterday sits directly beneath today: the thing to DO, then the
-              thing that HAPPENED. Absent entirely until a day has revealed. */}
-          <YesterdayStrip view={yesterday} />
+        {/* THE EDITORIAL SPINE AND THE GAMES NEVER FILTER. A reader who has
+            turned EPL off has said nothing about whether they want the Daily. */}
+        <section className="readband">
+          <div>
+            <div className="kick">The Daily Card · Free to read</div>
+            <h2>{ptDateLabel}</h2>
+            <DailyCardByline ptDateLabel={ptDateLabel} />
+          </div>
+          <a className="go" href="/daily">Read the card &rarr;</a>
+        </section>
 
-          {/* THE WEEKLY SITS BENEATH THE DAILY AND ITS ANSWER, in that order,
-              because that is the order the reader's attention is free in: the
-              thing that expires TONIGHT, the thing that happened YESTERDAY,
-              then the thing that runs until kickoff. Same reasoning that put
-              the Daily first - lead with what is only true today.
+        <Band id={null}>
+          <BandHead top label="The Games" context="One account, one handle, every board"
+            moreHref="/games" moreLabel="Games hub" />
+          <GamesBand daily={dailyHome} yesterday={yesterday} pickem={pickem}
+            weekly={weeklyHome} draft={draftHome} />
+        </Band>
 
-              Renders nothing at all until a board exists, which is every day
-              before the first Tuesday of the season. */}
-          <WeeklyModule view={weeklyHome} isShell={isShell} signedIn={userId != null} />
+        {/* Bands in ranker order - computed from `matches` every render. */}
+        {order.map((id) => bandFor(id))}
 
-          {/* The Draft sits last of the three, because it is the one with the
-              longest commitment: the Daily is three minutes, the Weekly is six
-              taps, this is eight rounds on a clock. Lead with what costs least
-              to start. Renders nothing until a room exists. */}
-          <DraftModule view={draftHome} isShell={isShell} signedIn={userId != null} />
+        <div className="emptystate" id="today-empty">
+          Nothing tuned in. Flip a league back on above &mdash; Today only goes quiet if you tell it to.
+        </div>
 
-          {/* The homepage is the publication's door; /games is the arcade's.
-              One quiet link between them rather than a second lobby here. */}
-          <a className="dc-allgames" href="/games">All games &rarr;</a>
-
-          {/* Draftvyn leads. It is the alive product: the thing a reader can
-              do right now, in about ten minutes, rather than read about. The
-              promo card sells the sim and the banner offers the same thing as
-              an app, so they sit adjacent as one unit. Both are ink blocks on
-              the paper card, per the Surface Rule. */}
-          <SimPromoCard />
-          <GetTheAppBanner shell={isShell} />
-
-          {/* The Movement Board's own entry card, same wiring as /nfl: one
-              getMovementCard read, sliced from the same board, carrying its
-              own FFC attribution. Null on a pool failure rather than an empty
-              frame. */}
-          {movement ? <MovementCard card={movement} /> : null}
-
-          {/* Renders nothing at all when there are no reads for the day - no
-              placeholder, no deflated section. */}
-          <TodaysReadsSection reads={todaysReads} followedSet={followedSet} />
-
-          <SeasonStrip cfbWeek={cfbNext?.week ?? null} nflWeek={nflNext?.week ?? null} />
-        </article>
-
-        <aside className="right-rail home-rail">
-          {/* Absent entirely on an empty day - TodaysGames returns null and the
-              rail closes up. No frame, no "no games today". */}
-          <TodaysGames slate={slate} label={etLabel} />
-          <RailBoards boards={{ nfl: nflBoard, cfb: cfbBoard }} />
-        </aside>
+        <SimPromoCard />
+        <GetTheAppBanner shell={isShell} />
       </main>
 
       <SubscribeBand shell={isShell} />

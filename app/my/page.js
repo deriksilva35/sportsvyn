@@ -32,6 +32,9 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import Wordmark from '@/components/Wordmark';
 import DashboardCustomizer from './CustomizeClient';
+// The switcher sits on BOTH modes - it is how a reader gets back to Today now
+// that the account menu no longer carries a My Sportsvyn link.
+import ModeSwitch from '@/components/today/ModeSwitch';
 
 import './my.css';
 
@@ -102,6 +105,7 @@ export default async function MyPage() {
     return (
       <>
         <GlobalHeaderServer activeNav="my" />
+      <ModeSwitch />
         <main className="my-shell">
           <PageHeader teamCount={0} playerCount={0} />
           <EmptyState />
@@ -160,6 +164,7 @@ export default async function MyPage() {
   return (
     <>
       <GlobalHeaderServer activeNav="my" />
+      <ModeSwitch />
       <main className="my-shell">
         <PageHeader teamCount={teamCount} playerCount={playerCount} />
         <DashboardCustomizer panels={panels} initialActive={resolved} />

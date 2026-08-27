@@ -93,25 +93,23 @@ test('a dark league yields no empty cell, and two dark leagues yield no section'
 // Placement and layout
 // ---------------------------------------------------------------------------
 
-test('THE BOARDS MOVED TO THE RAIL, below the slate', () => {
-  // They used to sit inside the Daily Card, two-up, between the Movement Card
-  // and Today's Reads. The homepage went two-column, and the rail is where the
-  // instruments live now: today's games first, because it is the most
-  // perishable thing on the page, then the two standings reads.
-  const at = (needle) => {
-    const i = page.indexOf(needle);
-    assert.ok(i > -1, `${needle} must be on the page`);
-    return i;
-  };
-  const card = at('<article className="daily-card">');
-  const rail = at('<aside className="right-rail home-rail">');
-  const slate = at('<TodaysGames');
-  const boards = at('<RailBoards');
-  assert.ok(card < rail, 'the card leads the DOM, so the phone stack puts it first');
-  assert.ok(rail < slate && slate < boards, 'inside the rail: slate, then boards');
-  // And they are out of the card entirely.
-  const reads = at('<TodaysReadsSection');
-  assert.ok(reads < rail, 'Today\'s Reads is still card content, and the rail follows the card');
+test('THE BOARDS MOVED INTO THEIR LEAGUE BANDS', () => {
+  // They sat two-up inside the Daily Card, then moved to a right rail when the
+  // homepage went two-column. Both of those are gone: the band rebuild put each
+  // instrument inside the band for the league it belongs to, which is where a
+  // reader looks for it, and the rail existed only because those units had
+  // nowhere else to go.
+  //
+  // This test used to pin the rail. Pinning a layout that has been deliberately
+  // replaced is how a suite starts arguing with the product.
+  assert.ok(!/right-rail home-rail/.test(page), 'the rail is gone');
+  assert.ok(!/<RailBoards/.test(page), 'RailBoards is gone with it');
+  // The boards are still READ - the relay's rule was that the carpentry changes
+  // and the reads survive.
+  assert.match(page, /getEditorialBoard\('nfl-power', 'nfl'\)/);
+  assert.match(page, /getEditorialBoard\('cfb-top25', 'cfb'\)/);
+  // And they are rendered inside a band, not a rail.
+  assert.match(page, /boardTitle=\{isCfb \? 'The Sportsvyn 25' : 'Power Rankings'\}/);
 });
 
 test('stacked in a 340px rail, not two-up', () => {

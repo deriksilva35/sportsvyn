@@ -181,19 +181,27 @@ test('the slate is read on the EASTERN day, not the page\'s Pacific one', () => 
 // The homepage layout
 // ---------------------------------------------------------------------------
 
-test('the rail carries the slate and BOTH boards, stacked', () => {
-  assert.match(home, /<aside className="right-rail home-rail">/);
-  assert.match(home, /<TodaysGames slate=\{slate\} label=\{etLabel\} \/>/);
-  assert.match(home, /<RailBoards boards=\{\{ nfl: nflBoard, cfb: cfbBoard \}\} \/>/);
-  // Side by side inside a 340px rail gives each board about 165px, which is
-  // narrower than a team name plus a record.
-  assert.ok(!/dc-boards/.test(home), 'the two-up grid is gone from the card');
+test('THE SLATE MOVED INTO THE LEAGUE BANDS', () => {
+  // The rail is gone - see app/homeBoards.test.mjs. getSlateByDate is still the
+  // read; it is now sliced per league and rendered inside that league's band,
+  // with the Board-1 badge decided by set membership against the live board.
+  assert.ok(!/right-rail home-rail/.test(home), 'the rail is gone');
+  assert.match(home, /getSlateByDate\(etDay\)/, 'the slate read survives');
+  assert.match(home, /const slateFor = \(lg\) => \(slate\?\.byLeague\?\.\[lg\] \?\? \[\]\)/);
+  assert.ok(!/dc-boards/.test(home), 'the two-up grid is gone too');
 });
 
-test('DOM ORDER IS THE MOBILE STACK: card first, rail second', () => {
-  const card = home.indexOf('<article className="daily-card">');
-  const rail = home.indexOf('<aside className="right-rail home-rail">');
-  assert.ok(card > -1 && rail > card, 'somebody who opened the homepage came for the card');
+test('DOM ORDER IS THE MOBILE STACK: switcher, tuner, spine, games, bands', () => {
+  // The phone gets the same order as the desktop, top to bottom, because the
+  // bands ARE the stack - there is no second column to reflow.
+  const at = (n) => { const i = home.indexOf(n); assert.ok(i > -1, `${n} must be present`); return i; };
+  const sw = at('<ModeSwitch />');
+  const chips = at('<LeagueChips');
+  const spine = at('className="readband"');
+  const games = at('<GamesBand');
+  const bands = at('{order.map((id) => bandFor(id))}');
+  assert.ok(sw < chips && chips < spine && spine < games && games < bands,
+    'switcher -> tuner -> spine -> games -> league bands');
 });
 
 test('the rail collapses at 1024px, where the grid itself gives way', () => {
