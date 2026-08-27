@@ -85,12 +85,46 @@ test('full names, with the abbreviation as a mono prefix', () => {
   assert.match(rule, /flex: 0 0 34px/, 'fixed width so names align down the card');
 });
 
-test('the winner is white and the loser is muted', () => {
-  assert.match(css, /\.gi-team\.win \.nm, \.gi-team\.win \.sc \{ color: var\(--paper\); font-weight: 700; \}/);
-  assert.match(css, /\.gi-team\.lose \.nm, \.gi-team\.lose \.sc, \.gi-team\.lose \.abbr \{ color: var\(--muted\); \}/);
+// v1.2 RESTYLE. This test used to read "the winner is white and the loser is
+// muted", and BOTH halves of that were retired by ruling: the winning SCORE
+// goes volt and nothing else moves. Three signals (white name, white score,
+// dimmed opponent) were all saying the one thing the volt score now says
+// alone, and together they made a finished card louder than a live one.
+//
+// WHAT THIS TEST IS ACTUALLY FOR SURVIVES THE RESTYLE UNCHANGED: a winner is
+// only ever promoted on a FINAL, and a tie promotes nobody.
+test('the winning score goes volt, and only on a final', () => {
+  assert.match(css, /\.gi-team\.win \.sc \{ color: var\(--volt\); \}/);
+  // The retired treatments must be GONE, not merely overridden further down.
+  assert.ok(!/\.gi-team\.win \.nm/.test(css), 'the winner NAME is no longer promoted');
+  assert.ok(!/\.gi-team\.lose /.test(css), 'and the loser is no longer dimmed');
   // Only once the game is final - a scheduled 0-0 has no winner to promote.
   assert.match(card, /final && isWinner \? 'win' : ''/);
   assert.match(card, /final && isLoser \? 'lose' : ''/);
+});
+
+// A TIE IS POSSIBLE IN THE NFL and nothing guarded it before this relay - the
+// old scheme happened to render it correctly, which is not the same as being
+// pinned. Now that a single volt score is the whole "who won" signal, a tie
+// that lit one side would be a lie about the result rather than a dim shade of
+// one, so the derivation is asserted directly.
+test('a tied final promotes neither side', () => {
+  const fn = card.slice(card.indexOf('function Card('), card.indexOf('THE WHOLE CARD IS THE CONTROL'));
+  assert.match(fn, /const homeWin = final && hw > aw, awayWin = final && aw > hw;/,
+    'strict > on both sides is what makes 17-17 promote nobody');
+  // Neither strict comparison can hold when the scores are equal.
+  const [hw, aw, final] = [17, 17, true];
+  assert.equal(final && hw > aw, false);
+  assert.equal(final && aw > hw, false);
+});
+
+// The three things a score can be. Each is a class the row could not derive
+// from `score` alone, which is why they are props rather than CSS.
+test('a live score is live-red and an absent score is a muted dash', () => {
+  assert.match(css, /\.gi-team \.sc\.live \{ color: var\(--live\); \}/);
+  assert.match(css, /\.gi-team \.sc\.none \{ color: var\(--muted\); font-weight: 400; \}/);
+  assert.match(card, /score == null \? ' none' : ''/, 'null is absent, not zero');
+  assert.match(card, /live \? ' live' : ''/);
 });
 
 test('the foot keeps the scope and adds the name and the city', () => {

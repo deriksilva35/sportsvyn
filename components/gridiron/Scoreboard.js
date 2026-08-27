@@ -56,15 +56,21 @@ function fmtTime(iso) {
 // the identifier typeface) and the full name is the name. The winner's name and
 // score go full white; the loser drops to muted, so a glance at a finished card
 // answers "who won" before it answers "what was the score".
-function TeamLine({ t, score, isWinner, isLoser, final }) {
+function TeamLine({ t, score, isWinner, isLoser, final, live = false }) {
   const abbr = t.abbreviation || null;
   const name = t.name || t.label || 'TBD';
+  // TWO HOOKS THE ROW COULD NOT DERIVE FOR ITSELF. A score is live-red while
+  // the game is running and muted while it is still a placeholder dash, and
+  // neither fact is visible from `score` alone - null is not "unplayed" (a
+  // scoreless live game is 0, not null) and a number is not "live". CSS cannot
+  // select on content, so both arrive as classes or not at all.
+  const scoreClass = `sc${live ? ' live' : ''}${score == null ? ' none' : ''}`;
   return (
     <div className={`gi-team ${final && isWinner ? 'win' : ''} ${final && isLoser ? 'lose' : ''}`}>
       {abbr ? <span className="abbr">{abbr}</span> : <span className="abbr" />}
       <RankBadge rank={t.apRank} />
       <span className="nm">{name}</span>
-      <span className="sc">{score ?? ABSENT}</span>
+      <span className={scoreClass}>{score ?? ABSENT}</span>
     </div>
   );
 }
@@ -78,8 +84,14 @@ function Status({ g }) {
     const chip = liveChip(g.liveState);
     return (
       <span className="gi-status live">
-        <span className="gi-dot" />LIVE
+        <span className="gi-dot" />
+        {/* THE CLOCK LEADS AND 'LIVE' BECOMES A PILL - the v1.2 inversion. The
+            quarter and clock are the news on a running game; LIVE is the
+            category. The chip keeps its data and its formatter (lineScore.js
+            still owns it) and wears the new skin. Bare text cannot be a pill,
+            hence the span. */}
         {chip && <span className="gi-qc">{chip}</span>}
+        <span className="gi-livepill">LIVE</span>
       </span>
     );
   }
@@ -185,8 +197,8 @@ function Card({ g }) {
           </span>
           <span className="gi-chev" aria-hidden="true">▾</span>
         </div>
-        <TeamLine t={g.away} score={aw} isWinner={awayWin} isLoser={homeWin} final={final} />
-        <TeamLine t={g.home} score={hw} isWinner={homeWin} isLoser={awayWin} final={final} />
+        <TeamLine t={g.away} score={aw} isWinner={awayWin} isLoser={homeWin} final={final} live={g.status === 'live'} />
+        <TeamLine t={g.home} score={hw} isWinner={homeWin} isLoser={awayWin} final={final} live={g.status === 'live'} />
         {/* The Watch unit is gone. Watch Score is a soccer instrument - there is
             no gridiron composite and never was one on this card, so it rendered
             a permanent placeholder on every row forever, which does not read as
@@ -231,6 +243,16 @@ function Card({ g }) {
 //
 // The minute rides beside LIVE from lib/soccer/liveChip - a poll snapshot,
 // rendered plainly.
+//
+// NO WINNER-VOLT HERE, BY RULING (v1.2 restyle). The gridiron card lights the
+// winning score volt on a final; this card does not, and that is deliberate
+// rather than unfinished. A draw is a result, not a failure to win - 2-2 has no
+// winner to light, and a scheme that can only say "someone won" would have to
+// say nothing at all about the most ordinary soccer scoreline. Dimming a
+// decided loser says the same thing in the one direction that survives a draw.
+// The SHELL restyle (radius, border, foot rule, state pills) applies to both
+// codes; scoreline semantics stay forked, which is what the Card-level fork is
+// for.
 // ---------------------------------------------------------------------------
 function SoccerCard({ g }) {
   const final = g.status === 'final';
@@ -262,8 +284,13 @@ function SoccerCard({ g }) {
       <div className="gi-card-h">
         {live ? (
           <span className="gi-status live">
-            <span className="gi-dot" />LIVE
+            <span className="gi-dot" />
+            {/* The minute leads and LIVE is a pill, same as gridiron: state
+                pills are SHELL, and the shell is shared. What stays forked is
+                what the chip SAYS - soccerLiveChip renders a running minute,
+                not a quarter and a clock. */}
             {chip && <span className="gi-qc">{chip}</span>}
+            <span className="gi-livepill">LIVE</span>
           </span>
         ) : final ? (
           <span className="gi-final">FT</span>
@@ -303,7 +330,7 @@ function Section({ sport, games, liveOnly }) {
         <span className="rule" />
       </div>
       {shown.length === 0 ? (
-        <div className="gi-empty">No {sport.label} {liveOnly ? 'live now' : 'on this day'} · sections keep their place, never vanish →</div>
+        <div className="gi-empty gi-empty--slate">No {sport.label} {liveOnly ? 'live now' : 'on this day'} · sections keep their place, never vanish →</div>
       ) : (
         <div className="gi-cards">{shown.map((g) => <CardFor key={g.id} g={g} />)}</div>
       )}
@@ -328,7 +355,7 @@ export default function Scoreboard({ byLeague, date, sport = 'all', live = false
           <Link key={s.key} className={`gi-chip ${sport === s.key ? 'active' : ''}`} href={chip(s.key)}>{s.label}</Link>
         ))}
         <Link className={`gi-chip live ${live ? 'active' : ''}`}
-          href={scoresHref(date, { sport, live: !live })}>Live only</Link>
+          href={scoresHref(date, { sport, live: !live })}><span className="gi-dot" />Live only</Link>
       </div>
 
       {visible.map((s) => <Section key={s.key} sport={s} games={byLeague[s.key] ?? []} liveOnly={live} />)}

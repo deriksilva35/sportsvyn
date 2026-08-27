@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Scores - Mock v0.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1E1E1E;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --terra:#B8410F; --live:#E63946;
+    --mut:#8A8A85; --line:#2A2A2A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  body{background:var(--ink); color:var(--paper); font-family:'JetBrains Mono',monospace; font-size:13px;
+       display:flex; justify-content:center; min-height:100vh;}
+  .page{width:100%; max-width:1180px; padding:24px 18px 60px;}
+
+  .tag{font-family:'Saira Condensed',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.14em; font-size:10px; color:var(--mut);}
+  .volt{color:var(--volt);} .mut{color:var(--mut);} .livec{color:var(--live);}
+
+  /* page head */
+  .phead{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:16px;}
+  .phead .h{font-family:'Saira Condensed',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.14em; font-size:12px;}
+  .phead .h .n{color:var(--mut); margin-left:8px; text-transform:none; letter-spacing:0;}
+  .phead a{color:var(--mut); text-decoration:none; font-family:'Saira Condensed',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.12em; font-size:11px;}
+
+  /* date pager - status pill grammar */
+  .pager{display:inline-flex; align-items:center; gap:2px; background:var(--ink-3); border:1px solid var(--line); border-radius:99px; padding:4px 6px; margin-bottom:12px;}
+  .pager .arr{background:none; border:none; color:var(--mut); font-size:14px; padding:2px 10px; cursor:pointer;}
+  .pager .d{font-variant-numeric:tabular-nums; font-size:12px; padding:0 6px;}
+  .pager .d b{color:var(--volt); font-weight:700;}
+
+  /* filter chips - v1.2 selector pills */
+  .chips{display:flex; gap:6px; margin-bottom:22px; flex-wrap:wrap;}
+  .ch{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; font-size:12px; text-transform:uppercase;
+      border:1px solid var(--line); background:var(--ink-3); color:var(--paper); border-radius:99px; padding:6px 14px; cursor:pointer;}
+  .ch.on{background:var(--volt); color:var(--ink); border-color:var(--volt);}
+  .ch .dot{display:inline-block; width:6px; height:6px; border-radius:99px; background:var(--live); margin-right:6px; vertical-align:middle;}
+
+  /* league band head - front page grammar */
+  .bandhead{display:flex; align-items:baseline; gap:10px; border-bottom:1px solid var(--line); padding-bottom:6px; margin:22px 0 12px;}
+  .bandhead .b{font-family:'Saira Condensed',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.14em; font-size:11px; color:var(--volt);}
+  .bandhead .c{font-size:10px; color:var(--mut);}
+
+  /* game cards - module shells */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:12px;}
+  .g{background:var(--ink-2); border:1px solid var(--line); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:8px;}
+  .g .top{display:flex; align-items:center; gap:8px;}
+  .g .time{font-variant-numeric:tabular-nums; font-weight:700; font-size:13px;}
+  .g .statepill{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; text-transform:uppercase; font-size:9px;
+                border:1px solid currentColor; border-radius:99px; padding:2px 8px; color:var(--mut);}
+  .g .statepill.live{color:var(--live);}
+  .g .row{display:flex; justify-content:space-between; align-items:baseline; padding:5px 0; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums;}
+  .g .row:last-of-type{border:none;}
+  .g .row .code{color:var(--mut); font-size:10px; width:34px; display:inline-block;}
+  .g .row .sc{font-weight:700;}
+  .g .row .sc.win{color:var(--volt);}
+  .g .row .sc.live{color:var(--live);}
+  .g .foot{display:flex; justify-content:space-between; font-size:10px; color:var(--mut); border-top:1px solid var(--line); padding-top:8px; margin-top:2px;}
+  .g .livedot{display:inline-block; width:6px; height:6px; border-radius:99px; background:var(--live); margin-right:6px; vertical-align:middle;}
+
+  /* empty state - keeps its place */
+  .emptyband{border:1px dashed var(--line); border-radius:12px; padding:16px; color:var(--mut); font-size:12px;}
+  .emptyband a{color:var(--mut);}
+
+  .note{font-size:10px; color:var(--mut); line-height:1.6; margin-top:26px; border-top:1px solid var(--line); padding-top:12px; max-width:820px;}
+
+  @media (max-width:430px){ .grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="phead">
+    <div class="h">SCOREBOARD <span class="n">4 games</span></div>
+    <a href="#">MOVEMENT BOARD &rarr;</a>
+  </div>
+
+  <div class="pager">
+    <button class="arr">&lsaquo;</button>
+    <span class="d"><b>THU</b> Aug 27 2026</span>
+    <button class="arr">&rsaquo;</button>
+  </div>
+
+  <div class="chips">
+    <button class="ch on">ALL</button>
+    <button class="ch">NFL</button>
+    <button class="ch">CFB</button>
+    <button class="ch">EPL</button>
+    <button class="ch"><span class="dot"></span>LIVE ONLY</button>
+  </div>
+
+  <div class="bandhead"><span class="b">NFL</span><span class="c">4 games</span></div>
+  <div class="grid">
+
+    <!-- LIVE state (synthetic for grammar - tonight's real render is scheduled until 7 ET) -->
+    <div class="g">
+      <div class="top">
+        <span class="livedot"></span>
+        <span class="time livec">Q2 8:14</span>
+        <span class="statepill live">LIVE</span>
+        <span class="statepill">PRE</span>
+      </div>
+      <div class="row"><span><span class="code">PIT</span>Pittsburgh Steelers</span><span class="sc live">10</span></div>
+      <div class="row"><span><span class="code">BUF</span>Buffalo Bills</span><span class="sc live">7</span></div>
+      <div class="foot"><span>NFL - PRE W3</span><span>Orchard Park</span></div>
+    </div>
+
+    <!-- SCHEDULED state -->
+    <div class="g">
+      <div class="top">
+        <span class="time">8:00 PM ET</span>
+        <span class="statepill">PRE</span>
+      </div>
+      <div class="row"><span><span class="code">NE</span>New England Patriots</span><span class="sc mut">-</span></div>
+      <div class="row"><span><span class="code">CLE</span>Cleveland Browns</span><span class="sc mut">-</span></div>
+      <div class="foot"><span>NFL - PRE W3</span><span>Cleveland</span></div>
+    </div>
+
+    <div class="g">
+      <div class="top">
+        <span class="time">8:00 PM ET</span>
+        <span class="statepill">PRE</span>
+      </div>
+      <div class="row"><span><span class="code">SF</span>San Francisco 49ers</span><span class="sc mut">-</span></div>
+      <div class="row"><span><span class="code">LV</span>Las Vegas Raiders</span><span class="sc mut">-</span></div>
+      <div class="foot"><span>NFL - PRE W3</span><span>Las Vegas</span></div>
+    </div>
+
+    <!-- FINAL state (synthetic for grammar) -->
+    <div class="g">
+      <div class="top">
+        <span class="time mut">FINAL</span>
+        <span class="statepill">PRE</span>
+      </div>
+      <div class="row"><span><span class="code">LAR</span>Los Angeles Rams</span><span class="sc win">24</span></div>
+      <div class="row"><span><span class="code">LAC</span>Los Angeles Chargers</span><span class="sc">17</span></div>
+      <div class="foot"><span>NFL - PRE W3</span><span>Inglewood</span></div>
+    </div>
+
+  </div>
+
+  <div class="bandhead"><span class="b">CFB</span><span class="c">0 games</span></div>
+  <div class="emptyband">No CFB on this day - sections keep their place, never vanish <a href="#">&rarr;</a></div>
+
+  <div class="bandhead"><span class="b">EPL</span><span class="c">0 matches</span></div>
+  <div class="emptyband">No EPL on this day - sections keep their place, never vanish <a href="#">&rarr;</a></div>
+
+  <div class="note">
+    MOCK v0.1 NOTES - CSS-level restyle of /scores to v1.2 grammar, structure unchanged: same date pager position, same filter set, same league sections with keep-their-place empty states. Changes: filter chips and LIVE ONLY to radius-99 selector pills (volt active, live dot on LIVE ONLY); date pager to status-pill shell; league section heads to front-page band-head grammar with volt league name (eyebrow amendment); game cards to 12px module shells with 99px state pills (PRE / LIVE); winner score volt on finals, live scores live-red, tabular-nums throughout. The LIVE and FINAL cards here are synthetic to demonstrate all three states - today's real 12:13 PM render is four scheduled cards. Soccer cards keep their own forked internals (matchweek, FT/minute chip) inside the same shell - fork stays at Card level. Hyphens only.
+  </div>
+
+</div>
+</body>
+</html>
