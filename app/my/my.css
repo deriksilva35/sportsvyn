@@ -116,37 +116,33 @@
   border-color: var(--volt-dim);
 }
 
+/* THE GRID IS CONTENT-SIZED NOW, not a 12-column layout with per-panel spans.
+   It was `repeat(12, 1fr)` plus one `grid-column: span N` rule per panel id -
+   .panel-live, .panel-today-next, .panel-goldenboot and so on. Phase 1 renamed
+   the panels and gave them a .mod shell, so NONE of those id selectors matched
+   any more and every panel fell back to `grid-column: auto` - one column out of
+   twelve. That is the truncation: My Fantasy clipped off the right edge and
+   single-word-per-line wrapping, and in customize mode .panel-slot inherited
+   the same 1/12 width so the control strip overlapped its neighbours.
+
+   auto-fill + minmax needs no per-id rules at all, which is why the whole block
+   below it is gone rather than renamed: a layout that has to be taught every
+   panel's name is a layout that breaks the next time a panel is added. */
 .my-grid {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 14px;
   align-items: start;
 }
-@media (max-width: 899px) {
+
+/* THE MOCK IS THE AUTHORITY AT 430px AND UNDER: one column, exactly as drawn. */
+@media (max-width: 430px) {
   .my-grid { grid-template-columns: 1fr; }
 }
-.my-grid .panel-live         { grid-column: span 4; }
-.my-grid .panel-today-next   { grid-column: span 4; }
-.my-grid .panel-schedule     { grid-column: span 8; }
-.my-grid .panel-groups       { grid-column: span 5; }
-.my-grid .panel-mentioned    { grid-column: span 7; }
-.my-grid .panel-rankings     { grid-column: span 4; }
-.my-grid .panel-goldenboot   { grid-column: span 4; }
-.my-grid .panel-watch        { grid-column: span 4; }
-.my-grid .panel-players      { grid-column: span 4; }
-.my-grid .panel-market       { grid-column: span 4; }
-@media (max-width: 899px) {
-  .my-grid .panel-live,
-  .my-grid .panel-today-next,
-  .my-grid .panel-schedule,
-  .my-grid .panel-groups,
-  .my-grid .panel-mentioned,
-  .my-grid .panel-rankings,
-  .my-grid .panel-goldenboot,
-  .my-grid .panel-watch,
-  .my-grid .panel-players,
-  .my-grid .panel-market { grid-column: 1 / -1; }
-}
+
+/* The hero is not a panel - it spans the full width at every breakpoint and
+   cannot be reordered or removed. One primary per screen. */
+.my-shell .hero { grid-column: 1 / -1; }
 
 .my-shell .flag {
   display: inline-block;
@@ -204,27 +200,14 @@
 .toggle.on::after{transform:translateX(18px);background:var(--ink)}
 .toggle.disabled{opacity:.35;cursor:default}
 
-/* Structural fix for the edit-mode wrapper (the one flagged risk).
-   In customize mode each NON-conditional panel is nested inside .panel-slot,
-   so the grid item becomes .panel-slot and the .panel-X sits one level down --
-   grid-column only applies to a direct grid child, so the existing
-   `.my-grid .panel-X` spans would go inert and every panel would collapse to
-   1 of 12. Re-apply the identical spans to the slot via :has() so widths match
-   normal mode exactly. Normal mode stays unwrapped and keeps the .panel-X
-   rules above. Conditional 'live' renders bare (no slot), so it is not listed
-   here -- it keeps its .panel-live span in both modes. */
-.my-grid .panel-slot:has(.panel-today-next) { grid-column: span 4; }
-.my-grid .panel-slot:has(.panel-schedule)   { grid-column: span 8; }
-.my-grid .panel-slot:has(.panel-groups)     { grid-column: span 5; }
-.my-grid .panel-slot:has(.panel-mentioned)  { grid-column: span 7; }
-.my-grid .panel-slot:has(.panel-rankings)   { grid-column: span 4; }
-.my-grid .panel-slot:has(.panel-goldenboot) { grid-column: span 4; }
-.my-grid .panel-slot:has(.panel-watch)      { grid-column: span 4; }
-.my-grid .panel-slot:has(.panel-players)    { grid-column: span 4; }
-.my-grid .panel-slot:has(.panel-market)     { grid-column: span 4; }
-@media (max-width: 899px) {
-  .my-grid .panel-slot { grid-column: 1 / -1; }
-}
+/* THE SLOT IS JUST A GRID ITEM NOW. These were nine `:has(.panel-X)` rules
+   re-applying the old 12-column spans to the customize wrapper, so edit mode
+   matched normal mode. With auto-fill there are no spans to re-apply and no
+   panel names to know - the slot sizes itself like any other card, in both
+   modes, which is what made customize mode collide in the first place. */
+.my-grid .panel-slot { display: block; min-width: 0; }
+/* The control strip lives INSIDE the card rather than floating over it. */
+.my-grid .panel-slot .pedit { margin-bottom: 8px; }
 
 
 /* ==========================================================================
@@ -298,3 +281,10 @@
 
 /* The gridiron player hero's name line, now that it carries a follow star. */
 .gp-nameline{display:flex;align-items:center;gap:12px;position:relative}
+
+/* The two classes CustomizeClient emitted with no definition at all. An
+   undefined class is not an error - it simply has no layout, which is why this
+   went unseen: `togglable` marked a library row as clickable and `customize`
+   wrapped the whole edit surface. Both now say what they meant. */
+.my-shell .customize { display: block; }
+.my-shell .togglable { cursor: pointer; }

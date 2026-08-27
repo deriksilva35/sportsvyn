@@ -195,7 +195,22 @@ export function RankingsPanel({ poll }) {
 
 // ------------------------------------------------------- schedule / players
 
-export function SchedulePanel({ games }) {
+/**
+ * THREE STATES, NOT TWO.
+ *
+ * "You follow nobody" and "the teams you follow have nothing scheduled" are
+ * different facts, and collapsing them told a user with three World Cup follows
+ * that they had never followed anyone. followCount comes from the page, which
+ * already resolves it for the header.
+ */
+export function SchedulePanel({ games, followCount = 0 }) {
+  if (!games?.length && followCount > 0) {
+    return (
+      <Mod tag="Your Schedule" cta="Browse teams" ctaHref="/scores">
+        <p className="empty">No upcoming games for teams you follow.</p>
+      </Mod>
+    );
+  }
   if (!games?.length) {
     return (
       <Mod tag="Your Schedule">
