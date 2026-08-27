@@ -26,6 +26,9 @@ import GameTabs from '@/components/gridiron/GameTabs';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/lib/gridiron/driveStrip';
+import OddsStrip from '@/components/gridiron/OddsStrip';
+import { isPreGame } from '@/lib/gridiron/oddsFormat';
+import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import '@/components/gridiron/gridiron.css';
 import '@/components/gridiron/drivestrip.css';
@@ -68,6 +71,10 @@ export default async function GamePage({ params, searchParams }) {
   const final = game.status === 'final';
   const live = game.status === 'live';
   const grid = lineScoreGrid(game);
+  // One batch read keyed by match id - the same reader /scores uses.
+  const odds = isPreGame(game.status)
+    ? (await getH2hOdds([game.id]).catch(() => new Map())).get(game.id) ?? null
+    : null;
   const quarters = scoringByQuarter(game);
   const brief = await getBriefForMatch(game.id);
 
@@ -207,6 +214,15 @@ export default async function GamePage({ params, searchParams }) {
             />
           </section>
         ) : null}
+
+        {/* THE MARKET'S READ, pre-kickoff only. The component already
+            existed and already rendered on the /scores card's expanded pane;
+            the game page - the surface with the most room for it - had no
+            market module at all. Same guard as the card: isPreGame gates it,
+            which is freeze-at-kickoff by construction because the ingest only
+            joins scheduled matches. Renders null when there is no clean
+            two-sided read: absence over inference. */}
+        {isPreGame(game.status) && odds ? <OddsStrip odds={odds} /> : null}
 
         {panels.length ? (
           <GameTabs

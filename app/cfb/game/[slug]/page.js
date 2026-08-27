@@ -32,6 +32,9 @@ import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/lib/gridiron/driveStrip';
 import { apRankMap, currentApWeek, latestPollSeason, AP_POLL } from '@/lib/cfb/rankings';
 import RankBadge from '@/components/gridiron/RankBadge';
+import OddsStrip from '@/components/gridiron/OddsStrip';
+import { isPreGame } from '@/lib/gridiron/oddsFormat';
+import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import '@/components/gridiron/gridiron.css';
 import '@/components/gridiron/drivestrip.css';
@@ -79,6 +82,10 @@ export default async function CfbGamePage({ params, searchParams }) {
   const final = game.status === 'final';
   const live = game.status === 'live';
   const grid = lineScoreGrid(game);
+  // One batch read keyed by match id - the same reader /scores uses.
+  const odds = isPreGame(game.status)
+    ? (await getH2hOdds([game.id]).catch(() => new Map())).get(game.id) ?? null
+    : null;
   // AP badges. The rank shown is the CURRENT poll's, not the poll as it stood
   // when the game was played - a historical game page carries today's ranking,
   // which is the same thing every scoreboard does.
@@ -142,6 +149,15 @@ export default async function CfbGamePage({ params, searchParams }) {
             {foot ? <span className="r">{foot}</span> : null}
           </div>
         </header>
+
+        {/* THE MARKET'S READ, pre-kickoff only. The component already existed
+            and already rendered on the /scores card's expanded pane; the game
+            page - the surface with the most room for it - had no market module
+            at all. Same guard as the card: isPreGame gates it, which is
+            freeze-at-kickoff by construction because the ingest only joins
+            scheduled matches. Renders null when there is no clean two-sided
+            read: absence over inference. */}
+        {isPreGame(game.status) && odds ? <OddsStrip odds={odds} /> : null}
 
         {grid ? (
           <section className="gg-sect" aria-label="Line score">

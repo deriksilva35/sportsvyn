@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>The Market - Mock v0.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:ital@1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1E1E1E;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --terra:#B8410F; --live:#E63946;
+    --mut:#8A8A85; --line:#2A2A2A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  body{background:var(--ink); color:var(--paper); font-family:'JetBrains Mono',monospace; font-size:13px;
+       display:flex; justify-content:center; min-height:100vh;}
+  .page{width:100%; max-width:1180px; padding:24px 18px 60px;}
+
+  .tag{font-family:'Saira Condensed',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.14em; font-size:10px; color:var(--mut);}
+  .volt{color:var(--volt);} .jade{color:var(--jade);} .terra{color:var(--terra);} .mut{color:var(--mut);}
+
+  .kicker{font-family:'Saira Condensed',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.14em; font-size:11px; color:var(--mut); margin-bottom:6px;}
+  .h1{font-family:'Saira',sans-serif; font-style:italic; font-weight:900; font-size:44px; letter-spacing:-0.04em; line-height:1.0; margin-bottom:10px;}
+  .stance{font-family:'Source Serif 4',serif; font-style:italic; font-size:15px; color:var(--mut); max-width:640px; line-height:1.6; margin-bottom:18px;}
+  .meta{font-size:10px; color:var(--mut); margin-bottom:18px; font-variant-numeric:tabular-nums;}
+
+  .chips{display:flex; gap:6px; margin-bottom:24px; flex-wrap:wrap;}
+  .ch{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; font-size:12px; text-transform:uppercase;
+      border:1px solid var(--line); background:var(--ink-3); color:var(--paper); border-radius:99px; padding:6px 14px; cursor:pointer;}
+  .ch.on{background:var(--volt); color:var(--ink); border-color:var(--volt);}
+
+  .bandhead{display:flex; align-items:baseline; gap:10px; border-bottom:1px solid var(--line); padding-bottom:6px; margin:26px 0 12px;}
+  .bandhead .b{font-family:'Saira Condensed',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.14em; font-size:11px; color:var(--volt);}
+  .bandhead .c{font-size:10px; color:var(--mut);}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(360px, 1fr)); gap:12px;}
+  .g{background:var(--ink-2); border:1px solid var(--line); border-radius:12px; padding:14px;}
+  .g .top{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+  .g .match{font-weight:700;}
+  .g .when{font-size:10px; color:var(--mut); font-variant-numeric:tabular-nums;}
+
+  .mrow{display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:6px 0; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums;}
+  .mrow:last-of-type{border:none;}
+  .mrow .lbl{color:var(--mut); font-size:10px; width:52px; flex-shrink:0; text-transform:uppercase;}
+  .mrow .sel{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .mrow .px{font-weight:700; flex-shrink:0;}
+  .mrow .imp{color:var(--mut); font-size:11px; flex-shrink:0; width:48px; text-align:right;}
+  .mrow .mv{font-size:10px; flex-shrink:0; width:44px; text-align:right;}
+
+  .tagpill{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; text-transform:uppercase; font-size:9px;
+           border:1px solid currentColor; border-radius:99px; padding:2px 8px;}
+  .tagpill.fair{color:var(--mut);}
+  .tagpill.generous{color:var(--jade);}
+  .tagpill.rich{color:var(--terra);}
+  .tagpill.wide{color:var(--paper);}
+
+  .g .modelline{display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line); padding-top:8px; margin-top:4px; font-size:10px; color:var(--mut); font-variant-numeric:tabular-nums;}
+
+  /* futures */
+  .frow{display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums;}
+  .frow:last-child{border:none;}
+  .frow .r{font-weight:700;}
+
+  /* ledger */
+  .lrow{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums;}
+  .lrow:last-child{border:none;}
+  .lrow .l{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .lrow .sub{font-size:10px; color:var(--mut); margin-top:1px;}
+  .lrow .res{flex-shrink:0; font-size:11px;}
+  .scorepill{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; font-size:11px;
+             background:var(--ink-3); border:1px solid var(--line); border-radius:99px; padding:4px 11px;}
+
+  .note{font-size:10px; color:var(--mut); line-height:1.6; margin-top:26px; border-top:1px solid var(--line); padding-top:12px; max-width:860px;}
+  @media (max-width:430px){ .grid{grid-template-columns:1fr;} .h1{font-size:32px;} }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="kicker">NFL &middot; CFB &middot; EPL &middot; LINES</div>
+  <div class="h1">THE MARKET</div>
+  <div class="stance">Where the market is actually pricing games, and how that has changed. Not a pick. Not a recommendation. A record of what the books are doing - and where our numbers disagree.</div>
+  <div class="meta">SNAPSHOT 2026-08-28 &middot; MEDIAN OF 7 BOOKS, DE-VIGGED &middot; UPDATED EVERY 15 MIN</div>
+
+  <div class="chips">
+    <button class="ch on">ALL</button>
+    <button class="ch">NFL</button>
+    <button class="ch">CFB</button>
+    <button class="ch">EPL</button>
+    <button class="ch">MOVERS ONLY</button>
+  </div>
+
+  <div class="bandhead"><span class="b">CFB</span><span class="c">Week 1 &middot; board games first</span></div>
+  <div class="grid">
+
+    <div class="g">
+      <div class="top">
+        <span class="match">UNC at TCU</span>
+        <span class="when">SAT 12:00 PM ET</span>
+      </div>
+      <div class="mrow"><span class="lbl">ML</span><span class="sel">TCU</span><span class="px">-285</span><span class="imp">72.4%</span><span class="mv jade">&#9650;1.8</span></div>
+      <div class="mrow"><span class="lbl"></span><span class="sel">UNC</span><span class="px">+230</span><span class="imp">27.6%</span><span class="mv terra">&#9660;1.8</span></div>
+      <div class="mrow"><span class="lbl">SPREAD</span><span class="sel">TCU -7.5</span><span class="px">-110</span><span class="imp"></span><span class="mv mut">&#9650;0.5</span></div>
+      <div class="mrow"><span class="lbl">TOTAL</span><span class="sel">O/U 51.5</span><span class="px">-108</span><span class="imp"></span><span class="mv mut">-</span></div>
+      <div class="modelline"><span>MODEL TCU 68.1% &middot; GAP -4.3</span><span class="tagpill fair">FAIR</span></div>
+    </div>
+
+    <div class="g">
+      <div class="top">
+        <span class="match">JXST at NDSU</span>
+        <span class="when">SAT 5:30 PM ET</span>
+      </div>
+      <div class="mrow"><span class="lbl">ML</span><span class="sel">NDSU</span><span class="px">-340</span><span class="imp">76.1%</span><span class="mv terra">&#9660;2.2</span></div>
+      <div class="mrow"><span class="lbl"></span><span class="sel">JXST</span><span class="px">+275</span><span class="imp">23.9%</span><span class="mv jade">&#9650;2.2</span></div>
+      <div class="mrow"><span class="lbl">SPREAD</span><span class="sel">NDSU -9.5</span><span class="px">-112</span><span class="imp"></span><span class="mv terra">&#9660;1.0</span></div>
+      <div class="mrow"><span class="lbl">TOTAL</span><span class="sel">O/U 44.5</span><span class="px">-110</span><span class="imp"></span><span class="mv mut">&#9650;0.5</span></div>
+      <div class="modelline"><span>MODEL NDSU 84.7% &middot; GAP +8.6</span><span class="tagpill generous">GENEROUS</span></div>
+    </div>
+
+  </div>
+
+  <div class="bandhead"><span class="b">NFL</span><span class="c">Preseason W3 &middot; futures below</span></div>
+  <div class="grid">
+
+    <div class="g">
+      <div class="top">
+        <span class="match">SEA at TEN</span>
+        <span class="when">SUN 1:00 PM ET</span>
+      </div>
+      <div class="mrow"><span class="lbl">ML</span><span class="sel">SEA</span><span class="px">-170</span><span class="imp">62.9%</span><span class="mv mut">-</span></div>
+      <div class="mrow"><span class="lbl"></span><span class="sel">TEN</span><span class="px">+145</span><span class="imp">37.1%</span><span class="mv mut">-</span></div>
+      <div class="mrow"><span class="lbl">SPREAD</span><span class="sel">SEA -3.5</span><span class="px">-110</span><span class="imp"></span><span class="mv jade">&#9650;0.5</span></div>
+      <div class="mrow"><span class="lbl">TOTAL</span><span class="sel">O/U 42.5</span><span class="px">-105</span><span class="imp"></span><span class="mv mut">-</span></div>
+      <div class="modelline"><span>MODEL SEA 59.0% &middot; GAP -3.9</span><span class="tagpill rich">RICH</span></div>
+    </div>
+
+    <div class="g">
+      <div class="top">
+        <span class="match">DET at NO</span>
+        <span class="when">SUN 4:25 PM ET</span>
+      </div>
+      <div class="mrow"><span class="lbl">ML</span><span class="sel">DET</span><span class="px">-285</span><span class="imp">74.0%</span><span class="mv jade">&#9650;3.1</span></div>
+      <div class="mrow"><span class="lbl"></span><span class="sel">NO</span><span class="px">+240</span><span class="imp">26.0%</span><span class="mv terra">&#9660;3.1</span></div>
+      <div class="mrow"><span class="lbl">SPREAD</span><span class="sel">DET -6.5</span><span class="px">-108</span><span class="imp"></span><span class="mv jade">&#9650;1.0</span></div>
+      <div class="mrow"><span class="lbl">TOTAL</span><span class="sel">O/U 47.5</span><span class="px">-110</span><span class="imp"></span><span class="mv terra">&#9660;1.0</span></div>
+      <div class="modelline"><span>MODEL DET 81.2% &middot; GAP +7.2</span><span class="tagpill wide">WIDE</span></div>
+    </div>
+
+  </div>
+
+  <div class="bandhead"><span class="b">EPL</span><span class="c">Matchweek 3 &middot; three-way</span></div>
+  <div class="grid">
+
+    <div class="g">
+      <div class="top">
+        <span class="match">Chelsea at Fulham</span>
+        <span class="when">SAT 10:00 AM ET</span>
+      </div>
+      <div class="mrow"><span class="lbl">1X2</span><span class="sel">Fulham</span><span class="px">+330</span><span class="imp">22.6%</span><span class="mv terra">&#9660;0.9</span></div>
+      <div class="mrow"><span class="lbl"></span><span class="sel">Draw</span><span class="px">+270</span><span class="imp">26.0%</span><span class="mv mut">-</span></div>
+      <div class="mrow"><span class="lbl"></span><span class="sel">Chelsea</span><span class="px">-125</span><span class="imp">51.4%</span><span class="mv jade">&#9650;0.9</span></div>
+      <div class="mrow"><span class="lbl">TOTAL</span><span class="sel">O/U 2.5</span><span class="px">-115</span><span class="imp"></span><span class="mv mut">-</span></div>
+      <div class="modelline"><span>MODEL CHE 48.9% &middot; DRAW 27.2% &middot; GAP -2.5</span><span class="tagpill fair">FAIR</span></div>
+    </div>
+
+  </div>
+
+  <div class="bandhead"><span class="b">FUTURES</span><span class="c">Championship winners &middot; top 5 shown</span></div>
+  <div class="grid">
+    <div class="g">
+      <div class="top"><span class="match">NFL &middot; Super Bowl</span><span class="when">32 priced</span></div>
+      <div class="frow"><span>Detroit Lions</span><span class="r">+650 <span class="mut">12.1%</span></span></div>
+      <div class="frow"><span>Buffalo Bills</span><span class="r">+700 <span class="mut">11.4%</span></span></div>
+      <div class="frow"><span>Baltimore Ravens</span><span class="r">+750 <span class="mut">10.8%</span></span></div>
+      <div class="frow"><span>Kansas City Chiefs</span><span class="r">+900 <span class="mut">9.2%</span></span></div>
+      <div class="frow"><span>Philadelphia Eagles</span><span class="r">+950 <span class="mut">8.8%</span></span></div>
+    </div>
+    <div class="g">
+      <div class="top"><span class="match">CFB &middot; National Championship</span><span class="when">138 priced</span></div>
+      <div class="frow"><span>Ohio State</span><span class="r">+500 <span class="mut">14.5%</span></span></div>
+      <div class="frow"><span>Texas</span><span class="r">+600 <span class="mut">12.6%</span></span></div>
+      <div class="frow"><span>Georgia</span><span class="r">+700 <span class="mut">11.1%</span></span></div>
+      <div class="frow"><span>Oregon</span><span class="r">+900 <span class="mut">9.0%</span></span></div>
+      <div class="frow"><span>Penn State</span><span class="r">+1000 <span class="mut">8.3%</span></span></div>
+    </div>
+  </div>
+
+  <div class="bandhead"><span class="b">THE LEDGER</span><span class="c">We keep score on ourselves</span></div>
+  <div class="grid">
+    <div class="g" style="grid-column:1/-1;">
+      <div class="top"><span class="match">Graded calls</span><span class="scorepill">GENEROUS <b class="jade">4-2</b> &middot; RICH <b class="terra">2-4</b></span></div>
+      <div class="lrow">
+        <div class="l">NDSU ML -340 <span class="tagpill generous">GENEROUS</span><div class="sub">frozen Ed. 012 &middot; model 84.7 vs market 76.1</div></div>
+        <div class="res mut">grades Sat</div>
+      </div>
+      <div class="lrow">
+        <div class="l">SEA ML -170 <span class="tagpill rich">RICH</span><div class="sub">frozen Ed. 012 &middot; model 59.0 vs market 62.9</div></div>
+        <div class="res mut">grades Sun</div>
+      </div>
+      <div class="lrow">
+        <div class="l">MCI ML -190 <span class="tagpill fair">FAIR</span><div class="sub">frozen Ed. 011 &middot; graded &middot; MCI won 2-1</div></div>
+        <div class="res jade">&#10003; call held</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    MOCK v0.1 NOTES - Full Phase A+B end state on one page. PHASE A ships: header + stance copy, league chips + MOVERS ONLY, per-game cards (ML/1X2 with implied %, spread, total, 24h movement in jade/terra with glyphs in the movement column), futures cards, board games sorted first in CFB. PHASE B adds: the modelline (MODEL x% - GAP) with tag pills FAIR muted / GENEROUS jade / RICH terra / WIDE paper, and THE LEDGER band with graded calls and the running score pill. Phase A renders cards WITHOUT the modelline and WITHOUT the ledger band - sections keep their place law does NOT apply to Phase B elements pre-Phase B; they are absent, not empty. EPL is three-outcome (1X2, draw is a priced selection, "a draw is a result" law carries); gridiron is two-outcome ML. All prices synthetic but shaped from real PROD rows (SEA 62.9/TEN 37.1 and DET 74.0/NO 26.0 are the recon's real de-vig examples). One volt per screen: none - volt is structural only here (band heads, active chip); prices carry no volt because the board recommends nothing. Movement window is the denormalized 24h stamp. Hyphens only.
+  </div>
+
+</div>
+</body>
+</html>

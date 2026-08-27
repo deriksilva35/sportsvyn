@@ -1,5 +1,5 @@
 /**
- * /api/cron/gridiron-odds — The Odds API market poller (NFL + CFB). Fires every 15
+ * /api/cron/gridiron-odds — The Odds API market poller (NFL + CFB + EPL). Fires every 15
  * min. Pre-kickoff only, freeze-at-kickoff by construction (only status='scheduled'
  * matches are join targets). Smart tick, evaluated once for both sports:
  *   · any scheduled gridiron game kicks off within ODDS_FINAL_WINDOW_HOURS (6h)
@@ -30,17 +30,30 @@ import { ODDS_TICK_MIN, ODDS_FINAL_WINDOW_HOURS, isFuturesTick } from '@/lib/pol
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+// EPL JOINED THIS CRON, and nothing was renamed. "gridiron-odds" names the
+// FEED (The Odds API), not the sport; the two source ids 'nfl-odds'/'cfb-odds'
+// are identities in sync_runs with months of history behind them, and renaming
+// to buy tidiness would orphan every one of those rows.
+//
+// FUTURES IS A SUBSET, not the same list. The Odds API's only football
+// outrights are the two championship winners; there is no EPL key in
+// SPORT_FUTURES_KEYS, and iterating this list blindly in the daily step would
+// throw 'unknown sport' once a day forever.
 const LEAGUES = [
-  { sport: 'nfl', slug: 'nfl', source: 'nfl-odds' },
-  { sport: 'cfb', slug: 'cfb', source: 'cfb-odds' },
+  { sport: 'nfl', slug: 'nfl', source: 'nfl-odds', futures: true },
+  { sport: 'cfb', slug: 'cfb', source: 'cfb-odds', futures: true },
+  { sport: 'epl', slug: 'epl', source: 'epl-odds', futures: false },
 ];
+const FUTURES_LEAGUES = LEAGUES.filter((l) => l.futures);
+// Drives the tight-window test: an EPL kickoff inside the window now earns the
+// 15-minute cadence exactly as a gridiron one does.
 const SLUGS = LEAGUES.map((l) => l.slug);
 
 // Daily outrights sub-step: title futures per league -> odds_markets futures rows,
 // recorded as nfl-futures / cfb-futures. Runs only at the daily hour.
 async function runFuturesStep() {
   const out = [];
-  for (const lg of LEAGUES) {
+  for (const lg of FUTURES_LEAGUES) {
     const source = `${lg.sport}-futures`;
     const outcome = await withAdvisoryLock(source, async () => {
       const res = await recordRun(sql, {
