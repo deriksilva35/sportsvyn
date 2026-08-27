@@ -72,7 +72,7 @@ const LEAGUE_LABEL = { nfl: 'NFL', cfb: 'CFB' };
  * lesson was that a shared component edited "generically" is where soccer
  * regressions come from.
  */
-async function GridironPlayer({ player, crumb }) {
+async function GridironPlayer({ player, crumb, isAuthed = false, initialFollowing = false }) {
   // THE COLUMN VOCABULARY FORKS BY CODE, and it is a data fact rather than a
   // design one: nfl_player_game_stats has never held a tackles column, so NFL
   // defense reads Sacks/INT/FR/TD, while CFBD does carry tackles and TFL, so
@@ -119,7 +119,7 @@ async function GridironPlayer({ player, crumb }) {
         ))}
       </div>
 
-      <GridironHero player={player} />
+      <GridironHero player={player} isAuthed={isAuthed} initialFollowing={initialFollowing} />
 
       <nav className="anchor-pills gp-pills">
         {playerPills({ hasStats, hasLog: games.length > 0 }).map((p) => (
@@ -163,11 +163,21 @@ export default async function PlayerPage({ params }) {
   if (!player) notFound();
 
   if (isGridiron(player.league_slug)) {
+    // The follow state the soccer arm already resolves - the gridiron arm now
+    // needs it too, because its hero grew a star.
+    const gSession = await auth();
+    const gUserId = gSession?.user?.id ?? null;
+    const gFollowing = await isFollowingPlayer(gUserId, player.id);
     return (
       <>
         <BackToAppBar />
         <GlobalHeaderServer />
-        <GridironPlayer player={player} crumb={playerCrumb(player.league_slug, player.full_name)} />
+        <GridironPlayer
+          player={player}
+          crumb={playerCrumb(player.league_slug, player.full_name)}
+          isAuthed={gUserId != null}
+          initialFollowing={gFollowing}
+        />
       </>
     );
   }

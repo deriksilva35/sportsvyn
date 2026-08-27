@@ -8,8 +8,13 @@
 // A player with no jersey number simply has no numeral; nothing takes its place.
 
 import { heroEyebrow, heroChips, bioCells } from './gridironPlayer';
+// THE FOLLOW STAR THE GRIDIRON ARM NEVER HAD. user_player_follows FKs to
+// players(id) with no league column, so the soccer component works here
+// unchanged - 29,721 pages shipped with no way to follow them, and this is the
+// smallest honest fix. Soccer's PlayerHero is untouched.
+import PlayerFollowStar from './PlayerFollowStar';
 
-export default function GridironHero({ player }) {
+export default function GridironHero({ player, isAuthed = false, initialFollowing = false }) {
   const eyebrow = heroEyebrow(player.league_slug, player.position);
   const chips = heroChips({
     position: player.position,
@@ -30,7 +35,15 @@ export default function GridironHero({ player }) {
         <div className="gp-num" aria-hidden="true"><span className="gp-hash">#</span>{jersey}</div>
       )}
       {eyebrow && <div className="gp-eb">{eyebrow}</div>}
-      <h1 className="gp-name">{player.full_name}</h1>
+      <div className="gp-nameline">
+        <h1 className="gp-name">{player.full_name}</h1>
+        <PlayerFollowStar
+          playerId={player.id}
+          playerName={player.full_name}
+          isAuthed={isAuthed}
+          initialFollowing={initialFollowing}
+        />
+      </div>
       <div className="gp-tagline">
         {player.team_slug && (
           <a className="gp-chip team" href={`/team/${player.team_slug}`}>{player.team_name} →</a>

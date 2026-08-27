@@ -1,13 +1,3 @@
-/* =============================================================================
-   /my (My Sportsvyn dashboard) styles. Phase 1.
-   Mockup-name tokens (--ink, --volt, --paper-warm, --graphite, --charcoal,
-   --rule-dark, --rule-darker, --muted, --muted-dim) live in globals.css.
-   Reuses .team-name-followed from globals.css for volt names; defines no
-   new color tokens.
-   ============================================================================= */
-
-/* --- shell + page header --- */
-
 .my-shell {
   width: 100%;
   max-width: min(1100px, 100%);
@@ -77,8 +67,6 @@
   text-transform: uppercase;
 }
 
-/* --- empty state --- */
-
 .my-empty {
   background: var(--graphite);
   border: 1px solid var(--rule-dark);
@@ -128,8 +116,6 @@
   border-color: var(--volt-dim);
 }
 
-/* --- panel grid --- */
-
 .my-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -162,38 +148,6 @@
   .my-grid .panel-market { grid-column: 1 / -1; }
 }
 
-/* --- panel shell --- */
-
-.panel {
-  background: var(--graphite);
-  border: 1px solid var(--rule-dark);
-  border-radius: 3px;
-  padding: 16px 18px 18px;
-  min-width: 0;
-}
-.phead {
-  margin: 0 0 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--rule-darker);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--paper-dim);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.pbody {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 0;
-}
-
-/* --- flag sizing scoped to this route --- */
-
 .my-shell .flag {
   display: inline-block;
   flex-shrink: 0;
@@ -205,636 +159,6 @@
 .my-shell .flag-sm { width: 22px; height: 14px; }
 .my-shell .flag-md { width: 28px; height: 18px; }
 .my-shell .flag-lg { width: 40px; height: 26px; }
-
-/* --- Today and Next panel --- */
-
-.tn-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--rule-darker);
-  color: var(--paper-warm);
-  text-decoration: none;
-}
-.tn-row:last-child { border-bottom: none; }
-.tn-row:hover { background: rgba(212, 255, 0, 0.04); }
-.tn-row-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-.tn-row-recent .tn-row-label { color: var(--muted); }
-/* Live today-slot: pulsing dot + live-red LIVE label (out-specifies the muted
-   .tn-row-recent .tn-row-label rule above via equal specificity + source order). */
-.tn-row-recent .tn-live-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--live-red);
-}
-.tn-row-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-}
-.tn-watch {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--volt);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.tn-row-teams {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 800;
-  font-size: 16px;
-  color: var(--paper-warm);
-}
-.tn-team {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.tn-score {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 900;
-  color: var(--volt);
-  font-size: 16px;
-  padding: 0 4px;
-}
-.tn-vs {
-  color: var(--muted);
-  font-style: normal;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 0 2px;
-}
-.tn-empty {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.04em;
-}
-
-/* --- Schedule panel --- */
-
-.sch-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.sch-list-row {
-  border-bottom: 1px solid var(--rule-darker);
-}
-.sch-list-row:last-child { border-bottom: none; }
-.sch-list-link {
-  display: grid;
-  grid-template-columns: 92px 1fr auto;
-  align-items: center;
-  gap: 14px;
-  padding: 9px 0;
-  color: var(--paper-warm);
-  text-decoration: none;
-}
-.sch-list-link:hover { background: rgba(212, 255, 0, 0.04); }
-.sch-list-when {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-.sch-list-teams {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 800;
-  font-size: 14px;
-  color: var(--paper-warm);
-  min-width: 0;
-}
-.sch-list-vs {
-  color: var(--muted);
-  font-style: normal;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 0 2px;
-}
-.sch-list-group {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--volt);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border: 1px solid var(--rule-dark);
-}
-.sch-empty {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-}
-@media (max-width: 599px) {
-  .sch-list-link {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-  .sch-list-group { justify-self: start; }
-}
-
-/* --- Groups panel --- */
-
-.grp-card {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--rule-darker);
-}
-.grp-card:last-child { border-bottom: none; }
-.grp-card-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-.grp-letter {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 900;
-  font-size: 16px;
-  color: var(--volt);
-  letter-spacing: -0.02em;
-}
-.grp-cols { display: inline-flex; gap: 18px; }
-.grp-cols span { min-width: 28px; text-align: right; }
-.grp-rows {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.grp-row {
-  display: grid;
-  grid-template-columns: 22px 1fr 50px 32px 32px;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--paper-warm);
-}
-.grp-pos { color: var(--muted-dim); }
-.grp-name {
-  color: var(--paper-warm);
-  text-decoration: none;
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 13px;
-  text-transform: none;
-  letter-spacing: 0;
-}
-.grp-name:hover { text-decoration: underline; }
-.grp-num { text-align: right; color: var(--muted-light); }
-.grp-pts {
-  text-align: right;
-  font-weight: 700;
-  color: var(--paper-warm);
-}
-.grp-empty {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-}
-
-/* --- Mentioned panel --- */
-
-.mn-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.mn-row {
-  border-bottom: 1px solid var(--rule-darker);
-}
-.mn-row:last-child { border-bottom: none; }
-.mn-link {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto auto;
-  gap: 2px 14px;
-  padding: 12px 0;
-  color: var(--paper-warm);
-  text-decoration: none;
-}
-.mn-link:hover { background: rgba(212, 255, 0, 0.04); }
-.mn-kicker {
-  grid-column: 1;
-  grid-row: 1;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--volt-dim);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-.mn-title {
-  grid-column: 1;
-  grid-row: 2;
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 800;
-  font-size: 16px;
-  line-height: 1.2;
-  color: var(--paper-warm);
-}
-.mn-chip {
-  grid-column: 1;
-  grid-row: 3;
-  justify-self: start;
-  align-self: center;
-  margin-top: 5px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--volt);
-  border: 1px solid var(--volt-dim);
-  padding: 3px 8px;
-}
-.mn-read-time {
-  grid-column: 2;
-  grid-row: 1 / 4;
-  align-self: center;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-.mn-empty {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-}
-
-/* --- Live Now panel --- */
-
-.ln-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--live-red);
-  box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.6);
-  animation: ln-pulse 1.6s ease-out infinite;
-}
-@keyframes ln-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.5); }
-  70%  { box-shadow: 0 0 0 8px rgba(230, 57, 70, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ln-dot { animation: none; }
-}
-.panel-live .phead { color: var(--live-red); }
-.ln-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.ln-row {
-  border-bottom: 1px solid var(--rule-darker);
-}
-.ln-row:last-child { border-bottom: none; }
-.ln-link {
-  display: block;
-  padding: 10px 0;
-  color: var(--paper-warm);
-  text-decoration: none;
-}
-.ln-link:hover { background: rgba(212, 255, 0, 0.04); }
-.ln-teams {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 800;
-  font-size: 16px;
-}
-.ln-team {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.ln-score {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 900;
-  color: var(--live-red);
-  padding: 0 4px;
-}
-
-/* --- shared: panel header action link --- */
-.phead-action {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  color: var(--volt-dim);
-  text-decoration: none;
-  text-transform: none;
-}
-.phead-action:hover { color: var(--volt); }
-
-/* --- Rankings panel row (rank / flag / name / move / value) --- */
-.rk-row {
-  display: grid;
-  grid-template-columns: 20px 22px 1fr auto auto;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--rule-darker);
-  color: var(--paper-warm);
-  text-decoration: none;
-}
-.rk-row:last-child { border-bottom: none; }
-.rk-row:hover { background: rgba(212, 255, 0, 0.04); }
-.rk-pos {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--muted);
-  text-align: right;
-}
-.rk-name {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 14px;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.rk-row.dim .rk-name { color: var(--muted-light); }
-.rk-move { font-size: 8px; width: 8px; display: inline-block; }
-.rk-move.up { color: #2A8A4F; }
-.rk-move.down { color: #B8410F; }
-.rk-val {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--paper-dim);
-  text-align: right;
-}
-.rk-val.fav { color: var(--volt); }
-
-/* --- Golden Boot panel row (rank / name + sub / count) --- */
-.gb-row {
-  display: grid;
-  grid-template-columns: 20px 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--rule-darker);
-  color: var(--paper-warm);
-  text-decoration: none;
-}
-.gb-row:last-child { border-bottom: none; }
-.gb-row:hover { background: rgba(212, 255, 0, 0.04); }
-.gb-pos {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--muted);
-  text-align: right;
-}
-.gb-main { display: flex; flex-direction: column; min-width: 0; }
-.gb-name {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 800;
-  font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.gb-sub {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-.gb-count {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 900;
-  font-size: 18px;
-  color: var(--volt);
-}
-/* Your Players right cell: G-A headline + minutes/apps sub-line. */
-.yp-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--volt);
-  text-align: right;
-  white-space: nowrap;
-}
-.yp-stat-sub {
-  margin-top: 2px;
-  font-size: 8px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-/* ── The Market panel ──────────────────────────────────────────────────────
-   Tag chips copied from app/market/[…]/market.css (its .market-page scope can't
-   be reached from /my); kept visually identical. */
-.panel-market .tag {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 3px 7px;
-  border-radius: 2px;
-  border: 1px solid;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.panel-market .tag.gen  { color: var(--volt); border-color: color-mix(in srgb, var(--volt) 55%, transparent); background: color-mix(in srgb, var(--volt) 7%, transparent); }
-.panel-market .tag.rich { color: var(--terra); border-color: color-mix(in srgb, var(--terra) 55%, transparent); background: color-mix(in srgb, var(--terra) 8%, transparent); }
-.panel-market .tag.wide { color: var(--paper-dim); border-color: var(--paper-dim); }
-
-.mkt-row {
-  padding: 9px 0;
-  border-top: 1px solid var(--rule-dark);
-}
-.mkt-row:first-child { border-top: none; padding-top: 2px; }
-.mkt-row.is-followed { background: color-mix(in srgb, var(--volt) 5%, transparent); }
-.mkt-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.mkt-sel {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--paper-warm);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.mkt-row.is-followed .mkt-sel { color: var(--volt); }
-/* WIDE rows are disclosures, not value — read them quieter. */
-.mkt-row.is-wide .mkt-sel { color: var(--paper-dim); font-weight: 400; }
-.mkt-sub {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 4px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-}
-.mkt-match {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--muted);
-  min-width: 0;
-}
-.mkt-flag {
-  width: 14px;
-  height: 10px;
-  flex-shrink: 0;
-  background-size: cover;
-  background-position: center;
-  border-radius: 1px;
-}
-.mkt-vs { color: var(--paper-dim); }
-.mkt-match .is-vt { color: var(--volt); }
-.mkt-nums {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.mkt-price { color: var(--paper-warm); font-weight: 700; }
-.mkt-pcts { color: var(--muted); }
-.mkt-arrow { color: var(--paper-dim); margin: 0 2px; }
-.mkt-gap { color: var(--paper-warm); font-weight: 700; }
-.mkt-row.is-wide .mkt-price,
-.mkt-row.is-wide .mkt-gap { color: var(--muted); font-weight: 400; }
-.mkt-foot {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--charcoal);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--paper-dim);
-}
-
-/* --- Watch Scores panel row (matchup / when / score) --- */
-.wb-row {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--rule-darker);
-  color: var(--paper-warm);
-  text-decoration: none;
-}
-.wb-row:last-child { border-bottom: none; }
-.wb-row:hover { background: rgba(212, 255, 0, 0.04); }
-.wb-teams {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 800;
-  font-size: 13px;
-  min-width: 0;
-}
-.wb-v {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  font-style: normal;
-  color: var(--muted);
-  padding: 0 2px;
-}
-.wb-when {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.wb-score {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--paper-dim);
-  min-width: 28px;
-  text-align: right;
-}
-.wb-score.tn-watch { color: var(--volt); }  /* volt chip when a followed team is in the match */
-.wb-empty {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-}
-
-/* =============================================================================
-   Customize UI (step 2). Client shell: app/my/CustomizeClient.js.
-   Target values from the locked mock; mock tokens translated to this repo's
-   names (--paper -> --paper-warm, --mono -> --font-mono, --display ->
-   --font-display, --serif -> --font-serif). Hyphens only, no em/en dashes.
-   ============================================================================= */
 
 .customize-btn{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:transparent;color:var(--volt);border:1px solid var(--volt-dim);border-radius:2px;padding:10px 16px;cursor:pointer;transition:all .12s;white-space:nowrap}
 .customize-btn:hover{background:rgba(212,255,0,.06);border-color:var(--volt)}
@@ -901,3 +225,76 @@
 @media (max-width: 899px) {
   .my-grid .panel-slot { grid-column: 1 / -1; }
 }
+
+
+/* ==========================================================================
+   MY SPORTSVYN - MOCK v0_2 GRAMMAR
+
+   This replaces the WC-era tn-row / my-panel vocabulary. /my now shares the
+   front page's module grammar: a bordered ink .mod card, an eyebrow, and rows
+   with a label left and a value right. The two surfaces had the same tokens
+   and different carpentry; now they have both.
+
+   THE v1.2 AMENDMENT MOCK v0_2 INTRODUCES
+   ---------------------------------------
+   MODULE EYEBROWS RENDER VOLT on ink surfaces. Scope is deliberately narrow:
+     · eyebrows INSIDE modules  -> volt          (.mod .tag, below)
+     · page-level tags          -> stay muted    (header subtitle, date)
+     · the hero eyebrow         -> its own dark-volt tone on the gradient
+     · volt text on paper       -> still forbidden per v1.1, unchanged
+   Future ink modules follow this. It is an amendment to v1.2, not a local
+   override, which is why it is recorded here rather than inline.
+   ========================================================================== */
+
+.my-shell .mod{background:var(--ink-2);border:1px solid var(--rule);border-radius:12px;
+  padding:14px;margin-bottom:12px}
+.my-shell .mod .tag{display:block;margin-bottom:9px;color:var(--volt);
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+
+.my-shell .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  padding:7px 0;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+.my-shell .row:last-of-type{border-bottom:none}
+.my-shell .row .l{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.my-shell .row .r{font-weight:700;flex-shrink:0;font-family:var(--font-mono,monospace)}
+.my-shell .sub{font-size:10px;color:var(--muted);margin-top:1px;
+  font-family:var(--font-mono,monospace)}
+.my-shell .mut{color:var(--muted)}
+.my-shell .volt{color:var(--volt)}
+.my-shell .jade{color:var(--jade,#2A8A4F)}
+.my-shell .livec{color:var(--live,#E63946)}
+
+/* THE HERO: one per screen, and only while a board has unpicked games. */
+.my-shell .hero{background:linear-gradient(160deg,var(--volt-deep,#1a2000) 0%,var(--ink-2) 55%);
+  border:1px solid #3a4400;border-radius:14px;padding:18px 16px;margin-bottom:12px}
+/* The hero eyebrow keeps its own dark tone rather than taking the module volt -
+   it sits on a volt-ish gradient, and full volt on that ground is unreadable. */
+.my-shell .hero .hero-tag{color:#9ab000}
+.my-shell .hero .q{font-family:var(--font-display,inherit);font-style:italic;font-weight:900;
+  font-size:29px;letter-spacing:-0.04em;line-height:1.05;margin:8px 0 4px}
+.my-shell .hero .ctx{font-family:var(--font-mono,monospace);font-variant-numeric:tabular-nums;
+  font-size:12px;color:var(--muted);margin-bottom:12px}
+.my-shell .play{display:block;width:100%;text-align:center;text-decoration:none;
+  font-family:var(--font-display,inherit);font-style:italic;font-weight:900;font-size:18px;
+  letter-spacing:-0.02em;background:var(--volt);color:var(--ink);border:none;
+  border-radius:10px;padding:13px}
+
+/* Ghost CTA - the module's secondary, never volt-filled. */
+.my-shell .cta2{display:block;width:100%;text-align:center;text-decoration:none;
+  font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:var(--ink-3);
+  color:var(--paper);border:1px solid var(--rule);border-radius:9px;padding:11px;margin-top:10px}
+
+/* v1.2 selector pills, small - the same radius-99 grammar as the front page. */
+.my-shell .chips{display:flex;gap:6px;margin-bottom:10px}
+.my-shell .ch{font-size:11px;letter-spacing:.08em;border:1px solid var(--rule);
+  background:var(--ink-3);color:var(--paper);border-radius:99px;padding:4px 11px;cursor:pointer}
+.my-shell .ch.on{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+
+.my-shell .livedot{display:inline-block;width:6px;height:6px;border-radius:99px;
+  background:var(--live,#E63946);margin-right:5px;vertical-align:middle}
+.my-shell .empty{color:var(--muted);padding:4px 0 2px;font-family:var(--font-mono,monospace)}
+.my-shell .promptline{color:var(--muted);line-height:1.55;padding:2px 0}
+.my-shell .statepill{font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  border:1px solid currentColor;border-radius:99px;padding:2px 8px}
+
+/* The gridiron player hero's name line, now that it carries a follow star. */
+.gp-nameline{display:flex;align-items:center;gap:12px;position:relative}

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>My Sportsvyn - Mock v0.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1E1E1E;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --terra:#B8410F; --live:#E63946;
+    --mut:#8A8A85; --line:#2A2A2A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  body{background:var(--ink); color:var(--paper); font-family:'JetBrains Mono',monospace; font-size:13px;
+       display:flex; justify-content:center; min-height:100vh;}
+  .page{width:100%; max-width:430px; padding:16px 14px 60px;}
+
+  .brand{font-family:'Saira',sans-serif; font-style:italic; font-weight:900; letter-spacing:-0.05em; line-height:1;}
+  .tag{font-family:'Saira Condensed',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.14em; font-size:10px; color:var(--mut);}
+  .volt{color:var(--volt);} .jade{color:var(--jade);} .terra{color:var(--terra);} .mut{color:var(--mut);} .livec{color:var(--live);}
+
+  /* header + mode switcher (matches shipped front-page switcher) */
+  .apphead{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .apphead .brand{font-size:22px;}
+  .switch{display:flex; justify-content:center; gap:6px; margin-bottom:16px;}
+  .sw{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; text-transform:uppercase; font-size:12px;
+      border:1px solid var(--line); background:var(--ink-3); color:var(--paper); border-radius:99px; padding:7px 16px; cursor:pointer; text-decoration:none;}
+  .sw.on{background:var(--volt); color:var(--ink); border-color:var(--volt);}
+
+  /* module */
+  .mod{background:var(--ink-2); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px;}
+  .mod .tag{display:block; margin-bottom:9px; color:var(--volt);}
+
+  /* rows */
+  .row{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:7px 0; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums;}
+  .row:last-child{border:none;}
+  .row .l{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .row .r{font-weight:700; flex-shrink:0;}
+  .sub{font-size:10px; color:var(--mut); margin-top:1px;}
+
+  /* hero */
+  .hero{background:linear-gradient(160deg,#1a2000 0%, var(--ink-2) 55%); border:1px solid #3a4400; border-radius:14px; padding:18px 16px; margin-bottom:12px;}
+  .hero .q{font-family:'Saira',sans-serif; font-style:italic; font-weight:900; font-size:29px; letter-spacing:-0.04em; line-height:1.05; margin:8px 0 4px;}
+  .hero .ctx{font-variant-numeric:tabular-nums; font-size:12px; color:var(--mut); margin-bottom:12px;}
+  .play{display:block; width:100%; font-family:'Saira',sans-serif; font-style:italic; font-weight:900; font-size:18px; letter-spacing:-0.02em;
+        background:var(--volt); color:var(--ink); border:none; border-radius:10px; padding:13px; cursor:pointer; text-align:center; text-decoration:none;}
+
+  /* ghost CTA */
+  .cta2{display:block; width:100%; text-align:center; font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.1em; text-transform:uppercase; font-size:12px;
+        background:var(--ink-3); color:var(--paper); border:1px solid var(--line); border-radius:9px; padding:11px; cursor:pointer; margin-top:10px; text-decoration:none;}
+
+  /* filter chips (v1.2 selector pills, small) */
+  .chips{display:flex; gap:6px; margin-bottom:10px;}
+  .ch{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; font-size:11px;
+      border:1px solid var(--line); background:var(--ink-3); color:var(--paper); border-radius:99px; padding:4px 11px; cursor:pointer;}
+  .ch.on{background:var(--volt); color:var(--ink); border-color:var(--volt);}
+
+  .lockglyph{color:var(--mut); font-size:11px;}
+  .livedot{display:inline-block; width:6px; height:6px; border-radius:99px; background:var(--live); margin-right:5px; vertical-align:middle;}
+  .empty{color:var(--mut); padding:4px 0 2px;}
+  .promptline{color:var(--mut); line-height:1.55; padding:2px 0;}
+
+  .statepill{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; text-transform:uppercase; font-size:10px;
+             border:1px solid currentColor; border-radius:99px; padding:2px 8px;}
+
+  .note{font-size:10px; color:var(--mut); line-height:1.6; margin-top:18px; border-top:1px solid var(--line); padding-top:12px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="apphead">
+    <div>
+      <div class="brand">SPORTSVYN</div>
+      <div class="tag">my sportsvyn</div>
+    </div>
+    <div class="tag" style="font-variant-numeric:tabular-nums;">WED AUG 26</div>
+  </div>
+
+  <div class="switch">
+    <a class="sw" href="#">Today</a>
+    <a class="sw on" href="#">My Sportsvyn</a>
+  </div>
+
+  <!-- HERO: the one urgency moment. Renders only while an open board has unpicked games. -->
+  <div class="hero">
+    <div class="tag" style="color:#9ab000;">PICK'EM - BOARD 1 LOCKS SAT 12:00 PM ET</div>
+    <div class="q">7 picks left.</div>
+    <div class="ctx">1 of 8 made &middot; first kickoff in 2d 16h</div>
+    <a class="play" href="#">FINISH YOUR PICKS</a>
+  </div>
+
+  <!-- MY CONTESTS -->
+  <div class="mod">
+    <span class="tag">MY CONTESTS - ALL FOUR GAMES</span>
+    <div class="row">
+      <div class="l">The Daily<div class="sub">Ed. 010 &middot; played</div></div>
+      <div class="r volt">118.4</div>
+    </div>
+    <div class="row">
+      <div class="l">Pick'em<div class="sub">Board 1 &middot; locks Sat 12:00 PM ET</div></div>
+      <div class="r">1/8 <span class="mut">picked</span></div>
+    </div>
+    <div class="row">
+      <div class="l">The Weekly<div class="sub">opens Mon Sep 8</div></div>
+      <div class="r"><span class="statepill mut">SOON</span></div>
+    </div>
+    <div class="row">
+      <div class="l">The Draft<div class="sub">opens Mon Sep 8</div></div>
+      <div class="r"><span class="statepill mut">SOON</span></div>
+    </div>
+  </div>
+
+  <!-- MY PICK'EM -->
+  <div class="mod">
+    <span class="tag">MY PICK'EM - BOARD 1 &middot; 8 GAMES</span>
+    <div class="row">
+      <div class="l">UNC at TCU<div class="sub">your pick: TCU</div></div>
+      <div class="r jade">TCU</div>
+    </div>
+    <div class="row">
+      <div class="l">SJSU at USC<div class="sub">locks Sat 12:00 PM ET</div></div>
+      <div class="r mut">- -</div>
+    </div>
+    <div class="row">
+      <div class="l">NCSU at UVA<div class="sub">locks Sat 12:00 PM ET</div></div>
+      <div class="r mut">- -</div>
+    </div>
+    <div class="row">
+      <div class="l">HAW at STAN<div class="sub">locks Sat 7:30 PM ET</div></div>
+      <div class="r mut">- -</div>
+    </div>
+    <div class="row">
+      <div class="l mut">+ 4 more unpicked</div>
+      <div class="r"></div>
+    </div>
+    <a class="cta2" href="#">OPEN THE BOARD &rarr;</a>
+  </div>
+
+  <!-- MY FANTASY -->
+  <div class="mod">
+    <span class="tag">MY FANTASY - RECENT DRAFTS</span>
+    <div class="row">
+      <div class="l">Mock &middot; 12-team PPR<div class="sub">Aug 24</div></div>
+      <div class="r">Best-6 <b>61.2</b></div>
+    </div>
+    <div class="row">
+      <div class="l">Mock &middot; 10-team Half<div class="sub">Aug 21</div></div>
+      <div class="r">Best-6 <b>57.8</b></div>
+    </div>
+    <div class="row">
+      <div class="l">Mock &middot; 12-team PPR<div class="sub">Aug 19</div></div>
+      <div class="r">Best-6 <b>64.0</b></div>
+    </div>
+    <a class="cta2" href="#">OPEN TRACKER &rarr;</a>
+  </div>
+
+  <!-- TODAY & NEXT -->
+  <div class="mod">
+    <span class="tag">TODAY &amp; NEXT - ACROSS YOUR LEAGUES</span>
+    <div class="row">
+      <div class="l">CFB &middot; UNC at TCU<div class="sub">Sat 12:00 PM ET &middot; on the board</div></div>
+      <div class="r mut">SAT</div>
+    </div>
+    <div class="row">
+      <div class="l">NFL &middot; DAL at LAC <span class="statepill mut" style="font-size:9px;">PRE</span><div class="sub">preseason wk 3</div></div>
+      <div class="r mut">THU</div>
+    </div>
+    <div class="row">
+      <div class="l">EPL &middot; Chelsea at Fulham<div class="sub">matchweek 3</div></div>
+      <div class="r mut">SAT</div>
+    </div>
+  </div>
+
+  <!-- LIVE NOW (empty state - the honest Wednesday render) -->
+  <div class="mod">
+    <span class="tag">LIVE NOW</span>
+    <div class="empty">No live games right now.</div>
+  </div>
+
+  <!-- WATCH SCORES (filterable) -->
+  <div class="mod">
+    <span class="tag">WATCH SCORES - SATURDAY SLATE</span>
+    <div class="chips">
+      <button class="ch on">ALL</button>
+      <button class="ch">CFB</button>
+      <button class="ch">NFL</button>
+      <button class="ch">EPL</button>
+    </div>
+    <div class="row">
+      <div class="l"><span class="livedot"></span>Chelsea at Fulham<div class="sub">EPL &middot; 63'</div></div>
+      <div class="r livec">2-1</div>
+    </div>
+    <div class="row">
+      <div class="l">UNC at TCU<div class="sub">CFB &middot; 12:00 PM ET</div></div>
+      <div class="r mut">12:00</div>
+    </div>
+    <div class="row">
+      <div class="l">JXST at NDSU<div class="sub">CFB &middot; 3:30 PM ET</div></div>
+      <div class="r mut">3:30</div>
+    </div>
+    <div class="row">
+      <div class="l">Arsenal at Leeds<div class="sub">EPL &middot; FT</div></div>
+      <div class="r">1-0</div>
+    </div>
+    <a class="cta2" href="#">FULL SCOREBOARD &rarr;</a>
+  </div>
+
+  <!-- AP TOP 25 -->
+  <div class="mod">
+    <span class="tag">AP TOP 25 - WEEK 1</span>
+    <div class="row"><div class="l"><span class="mut">1</span>&nbsp; Texas</div><div class="r mut">1,552</div></div>
+    <div class="row"><div class="l"><span class="mut">2</span>&nbsp; Penn State</div><div class="r mut">1,547</div></div>
+    <div class="row"><div class="l"><span class="mut">3</span>&nbsp; Ohio State</div><div class="r mut">1,472</div></div>
+    <div class="row"><div class="l"><span class="mut">4</span>&nbsp; Clemson</div><div class="r mut">1,380</div></div>
+    <div class="row"><div class="l"><span class="mut">5</span>&nbsp; Georgia</div><div class="r mut">1,356</div></div>
+    <div class="row"><div class="l mut">Movement begins wk 2</div><div class="r"></div></div>
+    <a class="cta2" href="#">ALL RANKINGS &rarr;</a>
+  </div>
+
+  <!-- YOUR SCHEDULE (followed teams state) -->
+  <div class="mod">
+    <span class="tag">YOUR SCHEDULE - TEAMS YOU FOLLOW</span>
+    <div class="row">
+      <div class="l">TCU<div class="sub">CFB &middot; vs UNC &middot; on the board</div></div>
+      <div class="r mut">SAT 12:00</div>
+    </div>
+    <div class="row">
+      <div class="l">Cowboys<div class="sub">NFL &middot; at LAC <span class="statepill mut" style="font-size:9px;">PRE</span></div></div>
+      <div class="r mut">THU 8:00</div>
+    </div>
+    <div class="row">
+      <div class="l">Chelsea<div class="sub">EPL &middot; at Fulham &middot; matchweek 3</div></div>
+      <div class="r mut">SAT 10:00</div>
+    </div>
+  </div>
+
+  <!-- YOUR PLAYERS (zero-follow prompt state) -->
+  <div class="mod">
+    <span class="tag">YOUR PLAYERS</span>
+    <div class="promptline">Follow players to see their lines land here every week. Every player page has a follow button.</div>
+    <a class="cta2" href="#">BROWSE PLAYERS &rarr;</a>
+  </div>
+
+  <a class="cta2" href="#" style="margin-top:2px;">CUSTOMIZE THIS BOARD &rarr;</a>
+
+  <div class="note">
+    MOCK v0.2 NOTES - Change from v0.1: module eyebrow tags render volt (was muted). Scope: eyebrows INSIDE modules only - page-level tags (header subtitle, date) stay muted, hero eyebrow keeps its dark-volt gradient tone. If locked, this is a v1.2 grammar amendment for ink data surfaces and future modules follow it; volt text on paper remains forbidden per v1.1. Default panel order: hero (conditional), contests, pickem, fantasy, today, live, watch, rankings, schedule, players. Hero renders only while an open board has unpicked games; otherwise no hero. Live Now shows its honest Wednesday empty state. Watch Scores shows a Saturday render with one live row; a Wednesday render would be all-scheduled. Schedule shows the followed state; Players shows the zero-follow prompt state. Numbers keep semantic color; the one volt NUMBER on screen stays the Daily score. All rows tabular-nums. Hyphens only.
+  </div>
+
+</div>
+</body>
+</html>

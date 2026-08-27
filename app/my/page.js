@@ -32,6 +32,7 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import Wordmark from '@/components/Wordmark';
 import DashboardCustomizer from './CustomizeClient';
+import PickemHero from '@/components/my/PickemHero';
 // The switcher sits on BOTH modes - it is how a reader gets back to Today now
 // that the account menu no longer carries a My Sportsvyn link.
 import ModeSwitch from '@/components/today/ModeSwitch';
@@ -119,7 +120,9 @@ export default async function MyPage() {
   const followedPlayerIds = Array.from(followedPlayerSet);
   // Second arg to every loader. The five shipped loaders take only (followedIds)
   // and ignore it; the players loader reads ctx.followedPlayerIds.
-  const ctx = { followedPlayerIds, followedPlayerSet };
+  // userId rides ctx now: the contest, pickem, fantasy, schedule and players
+  // loaders are all per-user, where the WC panels were league-wide reads.
+  const ctx = { userId, followedPlayerIds, followedPlayerSet };
   const resolved = await getResolvedLayout(userId, 'my'); // ordered active list -> initialActive
 
   // Render-all-bound: run EVERY bound panel's loader (not just the active ones)
@@ -134,15 +137,11 @@ export default async function MyPage() {
     loadedProps[id] = results[i];
   });
 
-  // Page-level dedup (server-side data op): drop the fixtures already surfaced
-  // in Today & Next's "next" list from Schedule so one match never renders twice.
-  // Reconciled here because the schedule loader returns the full list by design.
-  if (loadedProps.today && loadedProps.schedule) {
-    const todayNextIds = new Set((loadedProps.today.next ?? []).map((f) => f.id));
-    loadedProps.schedule.fixtures = loadedProps.schedule.fixtures.filter(
-      (f) => !todayNextIds.has(f.id),
-    );
-  }
+  // THE CROSS-PANEL DEDUP IS GONE with the shapes it reconciled. It subtracted
+  // Today & Next's `next` fixture ids from Schedule's `fixtures`; neither field
+  // exists now - Today & Next returns the next games across leagues, Schedule
+  // returns one row per FOLLOWED TEAM. A team you follow playing in the next
+  // three games is not a duplicate, it is the point of the panel.
 
   // Build the { [id]: element } map the customizer places by id. Non-conditional
   // panels always render; a conditional panel ('live') is omitted when it has no
@@ -167,6 +166,11 @@ export default async function MyPage() {
       <ModeSwitch />
       <main className="my-shell">
         <PageHeader teamCount={teamCount} playerCount={playerCount} />
+        {/* THE ONE URGENCY MOMENT, and it is conditional: it renders only while
+            an open board still has unpicked games. Above the customizer because
+            it is not a panel - it cannot be removed or reordered, and there is
+            exactly one primary button on this screen. */}
+        <PickemHero card={loadedProps.contests?.pickem ?? null} />
         <DashboardCustomizer panels={panels} initialActive={resolved} />
       </main>
       <SiteFooter />
