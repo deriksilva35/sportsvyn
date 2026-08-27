@@ -1,0 +1,42 @@
+/* components/today/modeswitch.css - the Today / My Sportsvyn switcher.
+ *
+ * IMPORTED BY THE COMPONENT, not by a page, and that is the whole point of
+ * this file existing. These rules started life in app/home.css, which `/`
+ * imports and `/my` does not - so the switcher rendered as pills on Today and
+ * as two raw text links on My Sportsvyn. Nothing on DEV could see it: /my
+ * redirects to /signin when signed out, so every served check of that route
+ * compared two redirect stubs and proved nothing.
+ *
+ * A component that carries its own stylesheet cannot be dressed on one route
+ * and undressed on another, and the alternative - the same block pasted into
+ * home.css and my.css - is two things to keep in step for as long as both
+ * exist.
+ */
+
+.modeswitch { display: flex; justify-content: center; margin: 6px 0 4px; }
+
+.modewrap {
+  display: flex; gap: 4px;
+  background: var(--ink-2); border: 1px solid var(--rule);
+  border-radius: 99px; padding: 4px;
+}
+
+.mode {
+  font-family: var(--font-display, inherit);
+  font-style: italic; font-weight: 900; font-size: 15px;
+  letter-spacing: -0.02em; text-transform: uppercase;
+  color: var(--paper-dim); background: transparent;
+  border: none; border-radius: 99px; padding: 10px 30px;
+  cursor: pointer; transition: all .12s;
+  text-decoration: none;
+}
+.mode:hover { color: var(--paper); }
+.mode.on { background: var(--volt); color: var(--ink); }
+
+/* The dateline under the switcher. It sits on Today only, but it is the
+   switcher's own sub-line and travels with it rather than with the page. */
+.modesub {
+  text-align: center; font-family: var(--font-mono, monospace);
+  font-size: 9px; letter-spacing: .14em; color: var(--muted);
+  text-transform: uppercase; margin: 8px 0 14px;
+}

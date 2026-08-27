@@ -17,6 +17,9 @@ import { usePathname } from 'next/navigation';
 // MODES and isActive live in lib/today/modes.js, JSX-free, so they can be
 // tested without the test runner having to parse a component.
 import { MODES, isActive } from '@/lib/today/modes';
+// The switcher's own stylesheet travels WITH the component, so it cannot be
+// styled on one route and bare on another - see the file header.
+import './modeswitch.css';
 
 export { MODES, isActive };
 

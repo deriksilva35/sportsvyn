@@ -1493,17 +1493,9 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
 
 .today-shell{max-width:1280px;margin:0 auto;padding:20px 32px 60px;display:block}
 
-/* --- the mode switcher: top centre, two pills --- */
-.modeswitch{display:flex;justify-content:center;margin:6px 0 4px}
-.modewrap{display:flex;gap:4px;background:var(--ink-2);border:1px solid var(--rule);
-  border-radius:99px;padding:4px}
-.mode{font-family:var(--font-display,inherit);font-style:italic;font-weight:900;font-size:15px;
-  letter-spacing:-0.02em;text-transform:uppercase;color:var(--paper-dim);background:transparent;
-  border:none;border-radius:99px;padding:10px 30px;cursor:pointer;transition:all .12s}
-.mode:hover{color:var(--paper)}
-.mode.on{background:var(--volt);color:var(--ink)}
-.modesub{text-align:center;font-family:var(--font-mono,monospace);font-size:9px;letter-spacing:.14em;
-  color:var(--muted);text-transform:uppercase;margin:8px 0 14px}
+/* The mode switcher's styles live in components/today/modeswitch.css, imported
+   by the component itself. They were here, and `/my` does not import this
+   file - which is exactly how the switcher shipped unstyled on that route. */
 
 /* --- the tuner --- */
 .tuner{display:flex;justify-content:center;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
