@@ -41,7 +41,12 @@ test('the grid is defined ONCE, in numcols.css, and nowhere else', () => {
   assert.match(src('components/sim/sim.css'), /@import '\.\/numcols\.css'/,
     'sim.css carries the one import both rooms ride');
   for (const rel of ['components/sim/sim.css', 'components/sim/tracker.css']) {
-    const t = src(rel);
+    // COMMENTS STRIPPED FIRST. This guard scans for `.nhead ... { ... }` and
+    // rejects any position/width/padding inside. A comment that MENTIONS
+    // .nhead - explaining, say, why an offset was removed - puts the scan into
+    // prose, and the next `{` it finds is a real rule whose body then reads as
+    // a violation. The rule is right; reading it out of raw source was not.
+    const t = src(rel).replace(/\/\*[\s\S]*?\*\//g, '');
     assert.ok(!/\.ncol[\s.{]*\{[^}]*width/.test(t), `${rel} must not re-size the grid`);
     assert.ok(!/trk-num|p-num \{/.test(t), `${rel} still carries the old per-room columns`);
   }
@@ -108,7 +113,12 @@ test('one header row seats the labels over the columns by shared geometry', () =
   assert.match(grid, /position: sticky; top: var\(--nhead-top, 0px\); z-index: 5;/);
   assert.match(grid, /background: var\(--nhead-bg, var\(--ink, #0A0A0A\)\);/);
   for (const rel of ['components/sim/sim.css', 'components/sim/tracker.css']) {
-    const t = src(rel);
+    // COMMENTS STRIPPED FIRST. This guard scans for `.nhead ... { ... }` and
+    // rejects any position/width/padding inside. A comment that MENTIONS
+    // .nhead - explaining, say, why an offset was removed - puts the scan into
+    // prose, and the next `{` it finds is a real rule whose body then reads as
+    // a violation. The rule is right; reading it out of raw source was not.
+    const t = src(rel).replace(/\/\*[\s\S]*?\*\//g, '');
     for (const m of t.matchAll(/\.nhead[^{]*\{([^}]*)\}/g)) {
       assert.ok(!/position|width|padding/.test(m[1]),
         `${rel}: room .nhead rules may set --nhead-* vars only`);

@@ -393,10 +393,33 @@
   .pager .page.pg-board { display: flex; }
   .pager .page .plabel { background: var(--ink); }
   .pager .page .zone-body { max-height: none; }
-  /* On the pager the PAGE is the scroller and .plabel (~32px: 20px padding +
-     11px line + border) already owns its top edge - the column header stacks
-     directly beneath. Offset + surface only; the sticky rule is shared. */
-  .pager .page .nhead { --nhead-top: 32px; --nhead-bg: var(--ink); }
+  /* ONE STICKY ELEMENT PER SCROLLER, and the column header is the one that
+     earns it.
+
+     This was `--nhead-top: 32px` - the column header pinned 32px down, that
+     number being a hand-measurement of .plabel ("~32px: 20px padding + 11px
+     line + border", by its own comment). On the pager the PAGE is the
+     scroller, so .plabel and .nhead are both sticky inside it and the header's
+     offset had to equal the label's rendered height EXACTLY. It did not: rows
+     scrolled through the gap between them and rendered half-clipped above the
+     band, while full rows hid behind it.
+
+     An approximation of another element's height is not a layout - it is a
+     number that was right once. Same failure family as the 12-column grid
+     that named panels by id: a rule that has to be taught the shape of
+     something else breaks when that shape changes.
+
+     So the label stops being sticky here and scrolls away with the controls
+     above it, leaving the column header as the only pinned thing in the
+     scroller. Nothing to offset, nothing to measure, and no gap that can open
+     because there is no second sticky edge to disagree with. The label is
+     still read on the way past, and the header - which is what a scrolling
+     reader actually needs, since VAL is named nowhere else - stays. */
+  .pager .page .plabel { position: static; }
+  .pager .page .nhead { --nhead-top: 0px; --nhead-bg: var(--ink); }
+  /* No row may sit half-visible under the pinned header: the scroller reserves
+     the header's own height for anything scrolled to. */
+  .pager .page .p-row { scroll-margin-top: 34px; }
   .zone.feed { display: none; }              /* the BOARD page replaces the feed on mobile */
 }
 
