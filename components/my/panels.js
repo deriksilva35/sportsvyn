@@ -6,6 +6,7 @@
 
 import { Mod, Row, Prompt, StatePill } from './Mod';
 import { rowState } from '@/lib/today/slateRow';
+import { topMovers } from '@/lib/fantasy/movement';
 import { lockLabel, shortLockLabel } from '@/lib/pickem/read';
 
 const LG = { cfb: 'CFB', nfl: 'NFL', epl: 'EPL' };
@@ -123,6 +124,61 @@ export function FantasyPanel({ drafts }) {
         />
       ))}
       <a className="cta2" href="/sim/account">Exposure report &rarr;</a>
+    </Mod>
+  );
+}
+
+// ---------------------------------------------------------------- movers
+
+/**
+ * ADP MOVERS - the pulse, not the instrument.
+ *
+ * ONE VALUE COLUMN: the 3-day move, which is the board's own headline number.
+ * ADP, OPEN, 7D and DRIFT stay on the board. A module that reproduced all five
+ * would be a worse board, not a better module - so this links to the real one.
+ *
+ * THE EYEBROW CARRIES THE SNAPSHOT DATE, which is how a stale panel stays
+ * honest. Snapshots land each morning; when today's has not run this renders
+ * the latest one and SAYS which it is rather than presenting yesterday as now.
+ * The date arrives as a bare YYYY-MM-DD, so it is read at noon UTC - parsing it
+ * at midnight would land the previous evening in America/New_York and print the
+ * wrong day.
+ *
+ * THE DEAD BAND IS THE BOARD'S, not a new one: MovementBoard and MovementCard
+ * both treat |d3| <= 0.05 as flat, and a fourth surface inventing its own
+ * threshold is how two pages come to disagree about which way a player moved.
+ *
+ * EXPLAIN, DO NOT PICK: the eyebrow names the pool and the window, the band
+ * chip names what the market is doing. Nothing here tells anyone to draft
+ * anybody.
+ */
+export function MoversPanel({ card }) {
+  const movers = topMovers(card, 5);
+  if (!movers.length) {
+    return (
+      <Mod tag="ADP Movers">
+        <Prompt line="No movement yet - the board needs a few days of snapshots."
+          cta="Open the movement board" ctaHref="/nfl/fantasy" />
+      </Mod>
+    );
+  }
+  const when = card?.latestSnapshot
+    ? SHORT.format(new Date(`${card.latestSnapshot}T12:00:00Z`)).toUpperCase()
+    : null;
+  const pool = `${String(card.format ?? 'ppr').toUpperCase()} ${card.size ?? 12}`;
+  return (
+    <Mod tag={`ADP Movers - ${pool}${when ? ` - ${when}` : ''}`}
+      cta="Full board" ctaHref="/nfl/fantasy">
+      {movers.map((p) => (
+        <Row key={p.ffcPlayerId}
+          label={<>{p.name}
+            {p.band ? <> <StatePill>{p.band.label}</StatePill></> : null}
+            {p.isRookie ? <> <StatePill>R</StatePill></> : null}</>}
+          sub={`${p.position ?? '-'} \u00b7 ${p.team ?? 'FA'} \u00b7 ADP ${p.adp?.toFixed(1) ?? '-'}`}
+          value={`${p.d3 > 0 ? '+' : ''}${p.d3.toFixed(1)}`}
+          valueClass={p.d3 > 0.05 ? 'jade' : p.d3 < -0.05 ? 'terra' : 'mut'}
+        />
+      ))}
     </Mod>
   );
 }

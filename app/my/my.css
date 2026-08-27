@@ -252,6 +252,7 @@
 .my-shell .mut{color:var(--muted)}
 .my-shell .volt{color:var(--volt)}
 .my-shell .jade{color:var(--jade,#2A8A4F)}
+.my-shell .terra{color:var(--terra,#B8410F)}
 .my-shell .livec{color:var(--live,#E63946)}
 
 /* THE HERO: one per screen, and only while a board has unpicked games. */
