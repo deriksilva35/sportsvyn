@@ -144,7 +144,12 @@ test('NOTHING TRUNCATES: every hidden label is in the drawer', () => {
   for (const label of ['TODAY', 'GAMES', 'SCORES', 'NFL', 'CFB', 'SOCCER']) {
     assert.ok(nav.includes(`label: '${label}'`) || drawer.includes(label), `${label} reachable`);
   }
-  assert.match(drawer, /MY SPORTSVYN/, 'the label hidden from the bar is in the drawer');
+  // MY SPORTSVYN USED TO BE PINNED HERE, because the desktop bar hid it and the
+  // drawer was where it stayed reachable. It is now in neither: the
+  // Today/My Sportsvyn switcher at the top of both surfaces is the way between
+  // them, and a second link in the drawer is the duplicate route the switcher
+  // exists to remove. Asserting its ABSENCE, so it cannot drift back in.
+  assert.doesNotMatch(drawer, /MY SPORTSVYN/, 'the switcher owns this route now');
   assert.match(drawer, /SIGN IN/);
   assert.match(drawer, /\{NAV\.map/, 'and the whole nav, not a subset');
 });

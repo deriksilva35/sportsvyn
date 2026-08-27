@@ -98,7 +98,11 @@ export default function GlobalHeader({
         </nav>
 
         <div className="gi-head-right gh-right">
-          <Link href="/my" className="gh-my">MY SPORTSVYN</Link>
+          {/* MY SPORTSVYN LEFT THE HEADER. The Today/My Sportsvyn switcher at
+              the top of both surfaces is the way between them now, and a
+              second, quieter link to the same dashboard is exactly the kind of
+              duplicate route the switcher exists to remove. The locked mock's
+              nav shows it gone; this is that. */}
           {/* The funnel. It is the one thing on this bar a first-time visitor
               can act on, so it keeps the volt and it keeps its place in both
               auth states. */}
@@ -131,7 +135,7 @@ export default function GlobalHeader({
               {n.label}
             </Link>
           ))}
-          <Link href="/my">MY SPORTSVYN</Link>
+          {/* Gone from the drawer too - see the desktop bar above. */}
           <Link href="/sim" className="gh-cta">MOCK DRAFT</Link>
           {isAuthed ? (
             <>
