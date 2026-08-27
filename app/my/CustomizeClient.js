@@ -29,6 +29,9 @@
 import { Fragment, useState, useRef, useTransition } from 'react';
 import { PANELS, GROUP_ORDER, GROUP_LABELS } from '@/lib/panels';
 import { saveUserLayout } from '@/app/actions/dashboard';
+// Both reorder paths call these, so arrows and drag cannot diverge at the save
+// layer - see lib/my/reorder.js.
+import { swapAdjacent, moveToIndex } from '@/lib/my/reorder';
 
 const PANEL_COUNT = Object.keys(PANELS).length;
 
@@ -60,20 +63,46 @@ export default function DashboardCustomizer({ panels = {}, initialActive = [] })
   // working order). Swaps the two entries in place in the full active array so
   // conditional entries keep their slots (their array position is irrelevant --
   // the render floats them regardless).
+  const isVisible = (id) => !isConditional(id) && id in panels;
+
   function move(id, dir) {
-    setActive((prev) => {
-      const visible = prev.filter((p) => !isConditional(p.id) && p.id in panels);
-      const pos = visible.findIndex((p) => p.id === id);
-      if (pos < 0) return prev;
-      const target = pos + dir;
-      if (target < 0 || target >= visible.length) return prev;
-      const a = prev.indexOf(visible[pos]);
-      const b = prev.indexOf(visible[target]);
-      const next = [...prev];
-      [next[a], next[b]] = [next[b], next[a]];
-      return next;
-    });
+    setActive((prev) => swapAdjacent(prev, id, dir, isVisible));
   }
+
+  // ---- DRAG, POINTER ONLY -------------------------------------------------
+  // SUPPLEMENTS the arrows, never replaces them: arrows stay the touch and
+  // keyboard path. Touch drag is deliberately NOT wired - a scrolling page and
+  // a drag gesture fight over the same finger, and losing that fight means the
+  // page will not scroll in customize mode.
+  //
+  // The handle is the only grab target. Cards contain links and buttons, and a
+  // whole-card drag would swallow every one of them.
+  const [dragId, setDragId] = useState(null);
+  const [overId, setOverId] = useState(null);
+
+  function onHandleDown(e, id) {
+    // Left button / primary pointer only; and never a touch pointer.
+    if (e.pointerType === 'touch' || (e.button != null && e.button !== 0)) return;
+    e.preventDefault();
+    setDragId(id);
+  }
+
+  function onCardEnter(id) {
+    if (dragId && id !== dragId) setOverId(id);
+  }
+
+  function onDrop() {
+    if (dragId && overId && dragId !== overId) {
+      setActive((prev) => {
+        const target = visibleIds(prev).indexOf(overId);
+        return target < 0 ? prev : moveToIndex(prev, dragId, target, isVisible);
+      });
+    }
+    setDragId(null);
+    setOverId(null);
+  }
+
+  const visibleIds = (list) => list.filter((p) => isVisible(p.id)).map((p) => p.id);
 
   // Turn a panel on (append at end, no w -- we never invent a default) or off.
   function setPanel(id, on) {
@@ -125,7 +154,9 @@ export default function DashboardCustomizer({ panels = {}, initialActive = [] })
 
       {customize && <div className="mode-note show">{MODE_NOTE}</div>}
 
-      <div className="my-grid">
+      {/* A release ANYWHERE ends the drag. Without this a pointerup outside any
+          card leaves the lifted state stuck and the next click reorders. */}
+      <div className="my-grid" onPointerUp={onDrop} onPointerLeave={onDrop}>
         {renderList.map((p) => {
           const node = panels[p.id];
           // Normal mode, and conditional panels in any mode: place the node
@@ -142,9 +173,20 @@ export default function DashboardCustomizer({ panels = {}, initialActive = [] })
           const i = nonCondPresent.findIndex((x) => x.id === p.id);
           const name = PANELS[p.id]?.name ?? p.id;
           return (
-            <div key={p.id} className="panel-slot editing">
+            <div
+              key={p.id}
+              className={`panel-slot editing${dragId === p.id ? ' dragging' : ''}${overId === p.id ? ' dropzone' : ''}`}
+              onPointerEnter={() => onCardEnter(p.id)}
+              onPointerUp={onDrop}
+            >
               <div className="pedit">
-                <span className="grip" aria-hidden="true">::</span>
+                {/* The grab target, and the only one. */}
+                <span
+                  className="grip"
+                  role="button"
+                  aria-label={`Drag ${name} to reorder`}
+                  onPointerDown={(e) => onHandleDown(e, p.id)}
+                >::</span>
                 <button
                   type="button"
                   className="ebtn"

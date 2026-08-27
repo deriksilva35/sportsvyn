@@ -27,15 +27,20 @@ const customizer = src('app/my/CustomizeClient.js');
 
 const emittedClasses = (js) => {
   const out = new Set();
-  for (const m of js.matchAll(/className=["`]([^"`{]+)["`]/g)) {
-    m[1].split(/\s+/).filter(Boolean).forEach((c) => out.add(c));
-  }
+  const take = (str) => str.split(/\s+/).filter(Boolean).forEach((c) => out.add(c));
+  for (const m of js.matchAll(/className=["`]([^"`{]+)["`]/g)) take(m[1]);
+  // TEMPLATE LITERALS: only the STRING segments are class names. The ${...}
+  // parts are JavaScript - `${dragId === p.id ? ' dragging' : ''}` - and
+  // harvesting identifiers out of them reported `drag`, `id` and `over` as
+  // undefined classes that were never emitted. Strip the expressions, keep
+  // their string literals, then read what is left.
   for (const m of js.matchAll(/className=\{`([^`]+)`\}/g)) {
-    (m[1].match(/[a-z][a-z0-9-]+/g) ?? []).forEach((c) => out.add(c));
+    const tpl = m[1];
+    for (const lit of tpl.match(/'[^']*'/g) ?? []) take(lit.slice(1, -1));
+    take(tpl.replace(/\$\{[^}]*\}/g, ' '));
   }
   return out;
 };
-
 // A real selector, not a substring: `.c` must not be satisfied by `.customize`.
 const hasDefinition = (c) =>
   new RegExp(`\\.${c.replace(/[-]/g, '\\-')}(?![a-zA-Z0-9_-])`).test(css);
@@ -86,6 +91,33 @@ test('the customize slot is a plain grid item, not a re-spanned wrapper', () => 
   assert.match(css, /\.my-grid \.panel-slot \{ display: block; min-width: 0; \}/);
   // The chrome sits inside the card.
   assert.match(css, /\.my-grid \.panel-slot \.pedit \{ margin-bottom: 8px; \}/);
+});
+
+test('SUB-LINES ELLIPSIZE - the parent rule never applied to them', () => {
+  // .l carries overflow/nowrap/ellipsis, but .sub is a BLOCK CHILD of it, and a
+  // parent's text-overflow does not apply to a block child's own overflow. So
+  // every sub-line in every panel clipped bare: "locks Sat Aug 29, noor", with
+  // nothing to signal that anything was missing. That reads as wrong data
+  // rather than a narrow column.
+  const sub = css.slice(css.indexOf('.my-shell .sub{'), css.indexOf('}', css.indexOf('.my-shell .sub{')));
+  assert.match(sub, /overflow:hidden/);
+  assert.match(sub, /text-overflow:ellipsis/);
+  assert.match(sub, /white-space:nowrap/);
+});
+
+test('the lock sub-line is stated short, and still says the load-bearing part', () => {
+  // "Sat Aug 29, noon ET" -> "Sat noon ET". The DATE is on the board this row
+  // sends you to; the day and the time are what a reader needs in a dashboard
+  // row. Same formatter, same noon/midnight handling.
+  const read = src('lib/pickem/read.js');
+  assert.match(read, /export function shortLockLabel\(locksAt\)/);
+  assert.match(read, /return `\$\{parts\.weekday\} \$\{clock\} ET`;/);
+  // lockLabel itself is untouched - the board still spells the date out.
+  assert.match(read, /return `\$\{parts\.weekday\} \$\{parts\.month\} \$\{parts\.day\}, \$\{clock\} ET`;/);
+  // The dashboard rows use the short one.
+  const panels = src('components/my/panels.js');
+  assert.match(panels, /Board 1 - locks \$\{shortLockLabel\(pickem\.nextKickoff\)\}/);
+  assert.match(panels, /locks \$\{shortLockLabel\(g\.kickoff_at\)\}/);
 });
 
 test('YOUR SCHEDULE HAS THREE STATES, not two', () => {

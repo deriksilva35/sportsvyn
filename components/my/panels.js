@@ -6,7 +6,7 @@
 
 import { Mod, Row, Prompt, StatePill } from './Mod';
 import { rowState } from '@/lib/today/slateRow';
-import { lockLabel } from '@/lib/pickem/read';
+import { lockLabel, shortLockLabel } from '@/lib/pickem/read';
 
 const LG = { cfb: 'CFB', nfl: 'NFL', epl: 'EPL' };
 const side = (g) => `${g.away?.abbreviation ?? g.away?.name} at ${g.home?.abbreviation ?? g.home?.name}`;
@@ -32,7 +32,7 @@ export function ContestsPanel({ daily, yesterday, pickem, weekly, draft }) {
       />
       <Row
         label="Pick'em"
-        sub={pickem ? `Board 1 - locks ${lockLabel(pickem.nextKickoff)}` : 'No open board'}
+        sub={pickem ? `Board 1 - locks ${shortLockLabel(pickem.nextKickoff)}` : 'No open board'}
         value={pickem ? <>{pickem.picked}/{pickem.total} <span className="mut">picked</span></> : '-'}
       />
       <Row label="The Weekly" sub={weekly ? 'open' : 'opens Mon Sep 8'}
@@ -77,7 +77,7 @@ export function PickemPanel({ view }) {
           <Row key={g.match_id}
             label={`${g.away} at ${g.home}`}
             sub={picked ? `your pick: ${pickedName}`
-              : locked ? 'locked - no pick' : `locks ${lockLabel(g.kickoff_at)}`}
+              : locked ? 'locked - no pick' : `locks ${shortLockLabel(g.kickoff_at)}`}
             value={picked ? pickedName : locked ? 'LOCKED' : '- -'}
             valueClass={picked ? 'jade' : 'mut'}
           />

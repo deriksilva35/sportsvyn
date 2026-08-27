@@ -240,7 +240,15 @@
 .my-shell .row .l{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .my-shell .row .r{font-weight:700;flex-shrink:0;font-family:var(--font-mono,monospace)}
 .my-shell .sub{font-size:10px;color:var(--muted);margin-top:1px;
-  font-family:var(--font-mono,monospace)}
+  font-family:var(--font-mono,monospace);
+  /* ELLIPSIS BELONGS HERE, NOT ONLY ON .l. The parent .l carries
+     overflow/nowrap/ellipsis, but .sub is a BLOCK CHILD of it - a parent's
+     text-overflow never applies to a block child's own overflow, so every
+     sub-line in every panel clipped bare mid-word. It read
+     "locks Sat Aug 29, noor" with no ellipsis to say anything was missing,
+     which is worse than truncation: it looks like the data is wrong rather
+     than the column narrow. */
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .my-shell .mut{color:var(--muted)}
 .my-shell .volt{color:var(--volt)}
 .my-shell .jade{color:var(--jade,#2A8A4F)}
@@ -288,3 +296,14 @@
    wrapped the whole edit surface. Both now say what they meant. */
 .my-shell .customize { display: block; }
 .my-shell .togglable { cursor: pointer; }
+
+/* ---- customize: pointer drag ------------------------------------------------
+   Drag SUPPLEMENTS the arrows; it never replaces them. Arrows remain the touch
+   and keyboard path, and touch drag is deliberately unwired - a scrolling page
+   and a drag gesture compete for the same finger. */
+.my-grid .panel-slot .grip { cursor: grab; touch-action: none; user-select: none; }
+.my-grid .panel-slot.dragging { opacity: .55; transform: scale(.99); }
+.my-grid .panel-slot.dragging .grip { cursor: grabbing; }
+/* The insertion indicator: a volt edge on the card you would drop onto. Volt
+   is the rule material here, not text - consistent with v1.1. */
+.my-grid .panel-slot.dropzone { box-shadow: inset 3px 0 0 0 var(--volt); border-radius: 12px; }
