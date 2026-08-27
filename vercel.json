@@ -112,10 +112,6 @@
     {
       "path": "/api/cron/draft-settle",
       "schedule": "0 10-21 * * 2"
-    },
-    {
-      "path": "/api/cron/gridiron-props",
-      "schedule": "0 13,17,21,23 * * *"
     }
   ]
 }
