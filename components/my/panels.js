@@ -6,6 +6,7 @@
 
 import { Mod, Row, Prompt, StatePill } from './Mod';
 import { rowState } from '@/lib/today/slateRow';
+import SlateRow from '@/components/slate/SlateRow';
 import { topMovers } from '@/lib/fantasy/movement';
 import { lockLabel, shortLockLabel } from '@/lib/pickem/read';
 
@@ -74,13 +75,29 @@ export function PickemPanel({ view }) {
         const picked = !!g.my_side;
         const locked = !!g.kicked;
         const pickedName = g.my_side === 'home' ? g.home : g.away;
+        // THE PICK'EM BOARD CARRIES ITS OWN SHAPE, so it is adapted rather
+        // than the component being bent to fit it: this view returns team
+        // NAMES as strings and a `kicked` flag, not the game DTO rowState
+        // reads. Status is always 'scheduled' - a locked pick is not a final
+        // score, and letting SlateRow think otherwise would make it render a
+        // scoreline out of two nulls.
+        //
+        // THE PANEL'S OWN DATA SURVIVES INTACT, which was the ruling: the lock
+        // time and the pick still occupy the meta line and the state column.
+        // The srow gives them a matchup in display type; it does not take the
+        // Pick'em context away.
+        const asGame = {
+          id: g.match_id,
+          away: { abbreviation: g.away },
+          home: { abbreviation: g.home },
+          kickoffAt: g.kickoff_at,
+          status: 'scheduled',
+        };
         return (
-          <Row key={g.match_id}
-            label={`${g.away} at ${g.home}`}
-            sub={picked ? `your pick: ${pickedName}`
+          <SlateRow key={g.match_id} g={asGame} href={null}
+            tag={picked ? `your pick: ${pickedName}`
               : locked ? 'locked - no pick' : `locks ${shortLockLabel(g.kickoff_at)}`}
-            value={picked ? pickedName : locked ? 'LOCKED' : '- -'}
-            valueClass={picked ? 'jade' : 'mut'}
+            state={picked ? pickedName : locked ? 'LOCKED' : '- -'}
           />
         );
       })}
@@ -185,18 +202,24 @@ export function MoversPanel({ card }) {
 
 // ------------------------------------------------------------- today / live
 
-/** PRE is visible and labelled, never hidden - the front page's law. */
+/**
+ * THE FRONT PAGE'S ROW, ON THE DASHBOARD.
+ *
+ * This was a mono Row: league dot, a mono sub-line, a right-hand value. It
+ * rendered the same games the front page's This Week band rendered, in a
+ * different dialect - so "PIT at BUF" was display type on one surface and a
+ * data row on the other, for one reader in one session.
+ *
+ * A MATCHUP IS DISPLAY TYPE; A DATA ROW IS DATA. The mono grammar stays
+ * everywhere it belongs - contests, fantasy, rankings, movers, players are
+ * data rows and keep it. Games get the srow.
+ *
+ * PRE STILL SHOWS, and it did not need special handling here: SlateRow builds
+ * its own meta line from rowState, which is the same isPreseason this function
+ * used to read. The law survives the swap because the decision never moved.
+ */
 function GameRow({ g }) {
-  const { isPreseason, when, live } = rowState(g);
-  return (
-    <Row
-      label={<>{LG[g.leagueSlug] ?? g.leagueSlug} &middot; {side(g)}
-        {isPreseason ? <> <StatePill>PRE</StatePill></> : null}</>}
-      sub={live ? 'in play' : when}
-      value={live ? <><span className="livedot" />LIVE</> : dayOf(g.kickoffAt)}
-      valueClass={live ? 'livec' : 'mut'}
-    />
-  );
+  return <SlateRow g={g} tag={`${LG[g.leagueSlug] ?? g.leagueSlug}${g.week != null ? ` · Wk ${g.week}` : ''}`} />;
 }
 
 export function TodayNextPanel({ games }) {

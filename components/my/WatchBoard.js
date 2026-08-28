@@ -15,7 +15,7 @@
 'use client';
 
 import { useState } from 'react';
-import { rowState } from '@/lib/today/slateRow';
+import SlateRow from '@/components/slate/SlateRow';
 
 const LG = { cfb: 'CFB', nfl: 'NFL', epl: 'EPL' };
 const CHIPS = [['all', 'ALL'], ['cfb', 'CFB'], ['nfl', 'NFL'], ['epl', 'EPL']];
@@ -37,21 +37,14 @@ export default function WatchBoard({ games = [] }) {
       </div>
       {shown.length === 0
         ? <p className="empty">Nothing on the slate for that league.</p>
-        : shown.map((g) => {
-          const { live, final, played, when } = rowState(g);
-          return (
-            <div className="row" key={g.id}>
-              <div className="l">
-                {live ? <span className="livedot" /> : null}
-                {g.away?.abbreviation ?? g.away?.name} at {g.home?.abbreviation ?? g.home?.name}
-                <div className="sub">{LG[g.leagueSlug] ?? g.leagueSlug} &middot; {when}</div>
-              </div>
-              <div className={`r${live ? ' livec' : final ? '' : ' mut'}`}>
-                {played ? `${g.awayScore ?? '-'}-${g.homeScore ?? '-'}` : when}
-              </div>
-            </div>
-          );
-        })}
+        : shown.map((g) => (
+          // THE SAME ROW THE FRONT PAGE USES. This hand-rolled a matchup line,
+          // a live dot and a score column - all three of which SlateRow already
+          // owns, and owned differently enough that the two surfaces disagreed
+          // on type. The chips, the cap and the empty state above are this
+          // panel's own and are untouched; only the ROW converged.
+          <SlateRow key={g.id} g={g} tag={LG[g.leagueSlug] ?? g.leagueSlug} />
+        ))}
       <a className="cta2" href="/scores">Full scoreboard &rarr;</a>
     </section>
   );

@@ -1,50 +1,19 @@
 // components/today/WeekSlate.js - the league's week, first module in its band.
 //
-// THE ROW GRAMMAR IS THE MOCK'S srow: when / matchup / state. The live and
-// final DECISIONS come from lib/today/slateRow.js, which TodaysGames also uses
+// THE ROW GRAMMAR IS THE MOCK'S srow, and it now lives in
+// components/slate/SlateRow.js so /my can speak it too. The live and final
+// DECISIONS still come from lib/today/slateRow.js, which TodaysGames also uses
 // - two presentations, one decision-maker, so a game cannot read LIVE in the
-// band and scheduled in the rail on the same screen.
+// band and scheduled in the rail on the same screen. State in lib/, shape in
+// components/slate/, and neither one guesses at the other's job.
 //
 // CAPPED AT SIX with a link to the full scoreboard. CFB week 1 is 99 games;
 // a band module that tried to be a scoreboard would be a worse scoreboard than
 // the scoreboard.
 
-import Link from 'next/link';
-import { rowState, orderSlate, SLATE_ROW_CAP } from '@/lib/today/slateRow';
+import SlateRow from '@/components/slate/SlateRow';
+import { orderSlate, SLATE_ROW_CAP } from '@/lib/today/slateRow';
 
-const GAME_ROUTE = { nfl: '/nfl/game', cfb: '/cfb/game' };
-const abbr = (t) => t?.abbreviation ?? t?.name ?? 'TBD';
-
-function SlateRow({ g, onBoard }) {
-  const { live, final, played, homeWin, awayWin, isPreseason, when, day } = rowState(g);
-  const body = (
-    <>
-      <div className={`when${live ? ' live' : ''}`}>
-        {day}<br />
-        {live ? <><span className="sdot" />LIVE</> : when}
-      </div>
-      <div>
-        <div className="mu">
-          <span className={awayWin ? 'win' : homeWin ? 'dim' : undefined}>{abbr(g.away)}</span>
-          {' '}<span className="at">at</span>{' '}
-          <span className={homeWin ? 'win' : awayWin ? 'dim' : undefined}>{abbr(g.home)}</span>
-          {onBoard ? <span className="onboard">Board 1</span> : null}
-        </div>
-        <div className="stag">
-          {isPreseason ? 'PRE · ' : ''}{g.week != null ? `Wk ${g.week}` : ''}
-        </div>
-      </div>
-      <div className="fin">
-        {played ? `${g.awayScore ?? '—'}-${g.homeScore ?? '—'}` : null}
-        <span className="s2">{live ? 'Live' : final ? 'FT' : 'Preview'}</span>
-      </div>
-    </>
-  );
-  const route = GAME_ROUTE[g.leagueSlug];
-  return route
-    ? <Link className="srow srow--link" href={`${route}/${g.slug}`}>{body}</Link>
-    : <div className="srow">{body}</div>;
-}
 
 export default function WeekSlate({ slate, boardIds, scoresHref, label }) {
   if (!slate?.games?.length) return null;

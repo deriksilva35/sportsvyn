@@ -1578,20 +1578,12 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
   text-transform:uppercase;background:var(--ink-3);color:var(--paper);border:1px solid var(--rule);
   border-radius:9px;padding:10px;margin-top:12px}
 
-.srow{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:9px 0;
-  border-bottom:1px solid var(--rule)}
-.srow:last-of-type{border-bottom:none}
-.srow .when{font-family:var(--font-mono,monospace);font-size:9px;color:var(--muted);text-transform:uppercase;
-  line-height:1.5;font-variant-numeric:tabular-nums}
-.srow .mu{font-family:var(--font-display,inherit);font-style:italic;font-weight:900;font-size:14px;letter-spacing:-0.02em}
-.srow .mu .at{color:var(--muted);font-family:var(--font-mono,monospace);font-style:normal;font-weight:400;font-size:10px}
-.srow .stag{font-family:var(--font-mono,monospace);font-size:9px;color:var(--muted);text-transform:uppercase}
-.srow .fin{font-family:var(--font-mono,monospace);font-size:12px;font-weight:700;text-align:right;
-  font-variant-numeric:tabular-nums}
-.srow .fin .s2{display:block;font-size:8px;font-weight:400;color:var(--muted);letter-spacing:.1em}
-.onboard{font-size:8px;letter-spacing:.08em;color:var(--volt);
-  border:1px solid color-mix(in srgb, var(--volt) 40%, transparent);border-radius:99px;padding:1px 7px;
-  text-transform:uppercase;margin-left:6px}
+/* THE srow GRAMMAR MOVED to components/slate/slateRow.css, which the SlateRow
+   component imports. It was reachable only from app/page.js while it lived
+   here, and /my needed the same grammar - so it moved rather than being copied,
+   because two definitions of one grammar is what this convergence exists to
+   prevent. The declarations were relocated verbatim; the front page's render is
+   pinned at zero tag and zero text diffs across the move. */
 
 .arow{padding:10px 0;border-bottom:1px solid var(--rule)}
 .arow:last-of-type{border-bottom:none}
@@ -1609,22 +1601,7 @@ a.dc-slate-signpost--done .dc-slate-signpost-label { color: var(--volt); }
    adds: a live row, a win/dim pair on a final, and the tuner's live dot.
    The dot is the ONE place volt is used as a status rather than a rule. */
 
-.srow--link { color: inherit; text-decoration: none; }
-.srow--link:hover .mu { color: var(--volt); }
-
-.srow .when.live { color: var(--live, #E63946); }
-.sdot {
-  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
-  background: var(--live, #E63946); margin-right: 5px; vertical-align: 1px;
-  animation: sdot-pulse 2s ease-in-out infinite;
-}
-@keyframes sdot-pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
-/* A reader who has asked for less motion gets a steady dot, not none - the dot
-   is information, the pulse is decoration. */
-@media (prefers-reduced-motion: reduce) { .sdot { animation: none } }
-
-.srow .mu .win { color: var(--paper); }
-.srow .mu .dim { color: var(--muted); }
+/* srow live/final states moved with the base - see components/slate/. */
 
 .chipdot {
   display: inline-block; width: 5px; height: 5px; border-radius: 50%;
