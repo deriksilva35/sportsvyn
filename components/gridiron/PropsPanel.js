@@ -10,7 +10,7 @@
 // far above 100. A reader assuming these were de-vigged would draw a false
 // conclusion from true numbers.
 
-export default function PropsPanel({ card }) {
+export default function PropsPanel({ card, leagueSlug }) {
   if (!card?.rows?.length) return null;
   const american = (n) => (n == null ? '—' : n > 0 ? `+${n}` : `${n}`);
   return (
@@ -34,6 +34,13 @@ export default function PropsPanel({ card }) {
           so these do not sum to 100.
         </div>
       ) : null}
+      {/* FULL MARKET. The board's filter is URL state (?f=), which already
+          exists for the chips - so this deep-links to the reader's own league
+          rather than dropping them at the top of a three-league page. No new
+          plumbing: the param the chips already write is the param this reads. */}
+      <a className="gi-market-cta" href={leagueSlug ? `/market?f=${leagueSlug}` : '/market'}>
+        Full market &rarr;
+      </a>
     </section>
   );
 }

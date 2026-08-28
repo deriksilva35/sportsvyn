@@ -221,7 +221,13 @@ export default async function MarketPage({ searchParams }) {
     <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav="market" />
       <div className="mk-wrap">
-        <div className="kicker">NFL · CFB · EPL · Lines</div>
+        <div className="mk-head">
+          <div className="kicker">NFL · CFB · EPL · Lines</div>
+          {/* THE REVERSE DOOR. /scores points here; this points back. A
+              cross-link that only runs one way teaches readers the two boards
+              are a hierarchy rather than siblings. */}
+          <Link className="gi-cross" href="/scores">Scoreboard &rarr;</Link>
+        </div>
         <h1 className="h1">The Market</h1>
         <p className="stance">
           Where the market is actually pricing games, and how that has changed. Not a pick.

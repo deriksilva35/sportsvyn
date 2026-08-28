@@ -27,7 +27,7 @@ function Side({ side, pct, fav }) {
   );
 }
 
-export default function OddsStrip({ odds }) {
+export default function OddsStrip({ odds, leagueSlug }) {
   if (!odds || !odds.home || !odds.away) return null;
   // Order away | home to match the card's away-over-home team lines.
   const pct = normalizeTwoWayPct(odds.away.implied, odds.home.implied);
@@ -56,6 +56,13 @@ export default function OddsStrip({ odds }) {
         {books != null ? `Consensus of ${books} book${books === 1 ? '' : 's'}` : 'Market consensus'}
         {updated ? ` · updated ${updated}` : ''}
       </div>
+      {/* FULL MARKET. The board's filter is URL state (?f=), which already
+          exists for the chips - so this deep-links to the reader's own league
+          rather than dropping them at the top of a three-league page. No new
+          plumbing: the param the chips already write is the param this reads. */}
+      <a className="gi-market-cta" href={leagueSlug ? `/market?f=${leagueSlug}` : '/market'}>
+        Full market &rarr;
+      </a>
     </div>
   );
 }

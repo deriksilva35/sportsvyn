@@ -609,3 +609,13 @@
 .gi-props-row .imp { color: var(--muted); font-size: 11px; flex: 0 0 48px; text-align: right; }
 .gi-props-more { font-size: 10px; color: var(--muted); padding-top: 8px; margin-top: 2px; border-top: 1px solid var(--rule); }
 .gi-props-note { font-size: 10px; color: var(--muted-dim); line-height: 1.5; margin-top: 8px; }
+
+/* The ghost door out of a game's market modules into the full board. Ghost,
+   not solid: it is a way out, not the thing the reader came for. */
+.gi-market-cta {
+  display: inline-block; margin-top: 10px;
+  font-family: var(--font-saira-cond); font-size: 10px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none;
+}
+.gi-market-cta:hover { color: var(--volt); }

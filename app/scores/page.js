@@ -93,6 +93,11 @@ export default async function ScoresPage({ searchParams }) {
           {/* WEB CROSS-NAV to the board's sibling surface. Web only: in the
               shell the segment above owns this hop, and two controls for one
               hop is one too many. */}
+          {/* TWO DISTINCT BOARDS, TWO LABELLED DOORS. The Movement Board is
+              ADP - what drafters are doing. The Market is prices - what books
+              are doing. The names are confusable enough that one unlabelled
+              link was sending readers to the wrong one, so both are named. */}
+          {!isShell && <Link className="gi-cross" href="/market">The Market &rarr;</Link>}
           {!isShell && <Link className="gi-cross" href="/nfl/fantasy">Movement Board &rarr;</Link>}
         </div>
 

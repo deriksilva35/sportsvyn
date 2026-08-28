@@ -125,3 +125,7 @@
 .mk-wrap .propnote {
   font-size: 10px; color: var(--muted-dim); line-height: 1.5; margin-top: 8px;
 }
+
+/* The page head's reverse door sits on the kicker's line, right-aligned -
+   the same shape /scores uses for its two cross-links. */
+.mk-wrap .mk-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }

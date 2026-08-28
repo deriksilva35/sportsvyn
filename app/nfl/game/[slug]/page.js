@@ -229,8 +229,8 @@ export default async function GamePage({ params, searchParams }) {
             which is freeze-at-kickoff by construction because the ingest only
             joins scheduled matches. Renders null when there is no clean
             two-sided read: absence over inference. */}
-        {isPreGame(game.status) && odds ? <OddsStrip odds={odds} /> : null}
-        {isPreGame(game.status) && propsCard ? <PropsPanel card={propsCard} /> : null}
+        {isPreGame(game.status) && odds ? <OddsStrip odds={odds} leagueSlug="nfl" /> : null}
+        {isPreGame(game.status) && propsCard ? <PropsPanel card={propsCard} leagueSlug="nfl" /> : null}
 
         {panels.length ? (
           <GameTabs
