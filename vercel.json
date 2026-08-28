@@ -116,6 +116,10 @@
     {
       "path": "/api/cron/gridiron-props",
       "schedule": "0 13,17,21,23 * * *"
+    },
+    {
+      "path": "/api/cron/epl-player-stats",
+      "schedule": "30 20,2 * * *"
     }
   ]
 }
