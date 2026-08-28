@@ -13,6 +13,7 @@
 import Link from 'next/link';
 import { MARKET_GROUPS } from '@/lib/market/propsBoard';
 import { hiddenFields } from '@/lib/market/marketUrl';
+import GameFilter from './GameFilter';
 
 const LEAGUES = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['epl', 'EPL']];
 
@@ -33,7 +34,6 @@ export default function PropsFilters({ state, games, hrefFor, view, urlState }) 
   // set is a param the reader silently loses on submit - the same loss as a
   // hand-built href, arriving through a different door. hiddenFields derives
   // them from the live state rather than from a list someone maintains.
-  const gameHidden = hiddenFields(urlState, ['game']);
   const searchHidden = hiddenFields(urlState, ['q']);
   return (
     <>
@@ -48,32 +48,10 @@ export default function PropsFilters({ state, games, hrefFor, view, urlState }) 
         items={[['all', 'All'], ...MARKET_GROUPS.map((g) => [g.key, g.label])]}
         active={state.group} hrefFor={(k) => hrefFor({ g: k })} />
 
-      {/* THE GAME DROPDOWN. A select rather than chips because 33 games is not
-          a chip row, and a GET form rather than an onChange handler because
-          this surface has no client components and does not need one - the
-          submit button is the reader's own Enter, and every option is a real
-          value the server reads back off the URL. */}
-      <div className="pb-frow">
-        <span className="flbl">Game</span>
-        <form action="/market" method="get" className="pb-gameform">
-          <input type="hidden" name="tab" value="props" />
-          {gameHidden.filter(([k]) => k !== 'tab').map(([k, v]) => (
-            <input key={k} type="hidden" name={k} value={v} />
-          ))}
-          <select name="game" className="gsel" defaultValue={state.game ?? ''} aria-label="Filter to one game">
-            <option value="">All games</option>
-            {games.map((g) => (
-              <option key={g.matchId} value={g.matchId}>
-                {g.label}
-              </option>
-            ))}
-          </select>
-          <button type="submit" className="ch">Go</button>
-        </form>
-        {state.game ? (
-          <Link className="ch" href={hrefFor({ game: null })}>Clear game</Link>
-        ) : null}
-      </div>
+      {/* THE GAME DROPDOWN, now shared with the LINES tab - one control, not a
+          copy that would drift. */}
+      <GameFilter tab="props" urlState={urlState} games={games}
+        current={state.game} hrefFor={hrefFor} />
 
       <div className="pb-frow">
         <span className="flbl">Show</span>

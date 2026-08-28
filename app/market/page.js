@@ -37,8 +37,9 @@ import PropsBoard from '@/components/market/PropsBoard';
 import PropsTable from '@/components/market/PropsTable';
 import PropsFilters from '@/components/market/PropsFilters';
 import { LinesTable, FuturesTable } from '@/components/market/LineTable';
+import GameFilter from '@/components/market/GameFilter';
 import {
-  flattenLines, flattenFutures, sortRows, teamShort,
+  flattenLines, flattenFutures, sortRows, teamShort, linesGames,
   LINES_COLUMNS, FUTURES_COLUMNS, LINES_PAGE, FUTURES_PAGE,
 } from '@/lib/market/lineTables';
 import { propsBoard, propsGames, shortName } from '@/lib/market/propsBoard';
@@ -269,13 +270,26 @@ export default async function MarketPage({ searchParams }) {
   const shown = new Map();
   for (const s of leagues) {
     const list = byLeague.get(s) ?? [];
-    shown.set(s, filter === 'movers' ? list.filter(hasMovement) : list);
+    const moved = filter === 'movers' ? list.filter(hasMovement) : list;
+    // A GAME SELECTION NARROWS THE CARDS AS WELL AS THE TABLE. The table half
+    // shipped with the lines-table relay; without this the dropdown would work
+    // in one view and silently do nothing in the other - which is worse than
+    // not offering it, because the control would look like it had failed.
+    shown.set(s, boardState.game ? moved.filter((c) => c.matchId === Number(boardState.game)) : moved);
   }
   const total = [...shown.values()].reduce((a, l) => a + l.length, 0);
+  // A SELECTED GAME BELONGS TO EXACTLY ONE LEAGUE, so the other bands are not
+  // empty results - they are questions nobody asked. Printing "No priced NFL
+  // markets right now" underneath a chosen CFB game would report an absence
+  // this filter invented rather than one the market has. The surviving band
+  // keeps its own count, which is honestly 1.
+  const cardBands = boardState.game
+    ? leagues.filter((s) => (shown.get(s) ?? []).length) : leagues;
   const snap = stamp(snapAt);
 
   // FLATTENED FROM THE READS THE CARDS ALREADY USE - no new queries and no new
   // numbers, so the table cannot disagree with the cards beside it.
+  const lineGameOptions = tab === 'lines' ? linesGames(byLeague, { boardIds, leagues: MARKET_LEAGUES }) : [];
   const linesSort = typeof sp.sort === 'string' ? sp.sort : 'game';
   const futuresSort = typeof sp.sort === 'string' ? sp.sort : 'implied';
   const allLines = tab === 'lines' && view === 'table'
@@ -338,11 +352,20 @@ export default async function MarketPage({ searchParams }) {
               <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={href({ view: null })}>Cards</Link>
               <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={href({ view: 'table' })}>Table</Link>
             </div>
+            <GameFilter tab="lines" urlState={urlState} games={lineGameOptions}
+              current={boardState.game} hrefFor={href} />
             {view === 'table' ? (
               <LinesTable rows={linesRows} total={linesTotal} columns={LINES_COLUMNS}
                 sort={linesSort} dir={boardState.dir || undefined}
                 hrefFor={href} />
-            ) : leagues.map((s) => (
+            ) : cardBands.length === 0 ? (
+              // The league chip and the game dropdown can be set to disagree -
+              // a CFB game with the NFL chip on. Say which one is hiding it
+              // rather than leaving a blank page to be read as no prices.
+              <div className="emptyband">
+                That game is not in the selected league. <Link href={href({ f: null })}>Show all leagues</Link>.
+              </div>
+            ) : cardBands.map((s) => (
               <Band key={s} slug={s} cards={shown.get(s) ?? []} boardIds={boardIds} books={books} />
             ))}
           </>
@@ -374,6 +397,9 @@ export default async function MarketPage({ searchParams }) {
               <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={href({ view: null })}>Cards</Link>
               <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={href({ view: 'table' })}>Table</Link>
             </div>
+            {/* NO GAME DROPDOWN ON FUTURES, and not as an oversight: a title
+                market has no game to be filtered to. A control that could
+                only ever empty the tab is worse than an absent one. */}
             {view === 'table' ? (
               <FuturesTable rows={futuresRows} total={futuresTotal} columns={FUTURES_COLUMNS}
                 sort={futuresSort} dir={boardState.dir || undefined}
