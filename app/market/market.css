@@ -113,3 +113,15 @@
 .mk-wrap .jade { color: var(--jade, #2A8A4F); }
 .mk-wrap .terra { color: var(--terra, #B8410F); }
 .mk-wrap .mut { color: var(--muted); }
+
+/* Props: the counted overflow and the non-exclusivity note. Both are the card
+   telling the truth about itself - what it did not show, and what its numbers
+   are not. Muted, because neither is news; they are the terms the numbers
+   should be read under. */
+.mk-wrap .overflow {
+  font-size: 10px; color: var(--muted); padding-top: 8px; margin-top: 2px;
+  border-top: 1px solid var(--rule); font-variant-numeric: tabular-nums;
+}
+.mk-wrap .propnote {
+  font-size: 10px; color: var(--muted-dim); line-height: 1.5; margin-top: 8px;
+}

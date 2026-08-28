@@ -593,3 +593,19 @@
   flex: none;
 }
 .rk-big { font-size: 12px; padding: 2px 7px; border-radius: 5px; }
+
+/* ---- player props (game pages). Same column rhythm as the market board's
+   mrow so the two surfaces read as one grammar: market, selection, price,
+   implied. Fixed-width outer columns, the name flexes. */
+.gi-props { border: 1px solid var(--rule); border-radius: 12px; background: var(--graphite); padding: 14px; margin-top: 12px; }
+.gi-props-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.gi-props-h .lbl { font-family: var(--font-saira-cond); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--volt); }
+.gi-props-h .src { font-size: 9.5px; color: var(--muted-dim); letter-spacing: 0.06em; }
+.gi-props-row { display: flex; align-items: baseline; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
+.gi-props-row:last-of-type { border-bottom: none; }
+.gi-props-row .mk { font-size: 10px; color: var(--muted); text-transform: uppercase; flex: 0 0 74px; }
+.gi-props-row .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.gi-props-row .px { font-weight: 700; flex: none; font-family: var(--font-jetbrains-mono), monospace; }
+.gi-props-row .imp { color: var(--muted); font-size: 11px; flex: 0 0 48px; text-align: right; }
+.gi-props-more { font-size: 10px; color: var(--muted); padding-top: 8px; margin-top: 2px; border-top: 1px solid var(--rule); }
+.gi-props-note { font-size: 10px; color: var(--muted-dim); line-height: 1.5; margin-top: 8px; }

@@ -33,6 +33,8 @@ import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/li
 import { apRankMap, currentApWeek, latestPollSeason, AP_POLL } from '@/lib/cfb/rankings';
 import RankBadge from '@/components/gridiron/RankBadge';
 import OddsStrip from '@/components/gridiron/OddsStrip';
+import PropsPanel from '@/components/gridiron/PropsPanel';
+import { propsSlate } from '@/lib/market/reads';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -85,6 +87,11 @@ export default async function CfbGamePage({ params, searchParams }) {
   // One batch read keyed by match id - the same reader /scores uses.
   const odds = isPreGame(game.status)
     ? (await getH2hOdds([game.id]).catch(() => new Map())).get(game.id) ?? null
+    : null;
+  // Props are scoped to the game week and the board, so most games have none -
+  // PropsPanel renders null rather than an empty shell.
+  const propsCard = isPreGame(game.status)
+    ? (await propsSlate({ matchIds: [game.id] }).catch(() => []))[0] ?? null
     : null;
   // AP badges. The rank shown is the CURRENT poll's, not the poll as it stood
   // when the game was played - a historical game page carries today's ranking,
@@ -158,6 +165,7 @@ export default async function CfbGamePage({ params, searchParams }) {
             scheduled matches. Renders null when there is no clean two-sided
             read: absence over inference. */}
         {isPreGame(game.status) && odds ? <OddsStrip odds={odds} /> : null}
+        {isPreGame(game.status) && propsCard ? <PropsPanel card={propsCard} /> : null}
 
         {grid ? (
           <section className="gg-sect" aria-label="Line score">

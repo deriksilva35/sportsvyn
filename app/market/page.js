@@ -29,7 +29,7 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import Link from 'next/link';
 import {
   pricedSlate, futuresBoards, bookCounts, latestSnapshotAt, boardMatchIds,
-  hasMovement, MARKET_LEAGUES,
+  hasMovement, propsSlate, MARKET_LEAGUES,
 } from '@/lib/market/reads';
 import './market.css';
 
@@ -124,6 +124,49 @@ function Card({ card, onBoard }) {
   );
 }
 
+/**
+ * A PROPS CARD, in the board's own mrow grammar. Same five columns, so the two
+ * bands read as one page rather than two features.
+ *
+ * THE NON-EXCLUSIVITY NOTE IS NOT DECORATION. Anytime prices are stored raw and
+ * single-sided because several players score in one game - the outcomes are not
+ * mutually exclusive and the field sums far above 100 (577% on a live NFL card).
+ * A reader who assumes these are de-vigged probabilities would draw a false
+ * conclusion from true numbers, so the card says so where the numbers are.
+ */
+export function PropsCard({ card, onBoard }) {
+  const away = card.away.abbreviation || card.away.name || 'TBD';
+  const home = card.home.abbreviation || card.home.name || 'TBD';
+  return (
+    <div className="g">
+      <div className="top">
+        <span className="match">
+          {away} at {home}
+          {onBoard ? <> <span className="boardpill">Board</span></> : null}
+        </span>
+        <span className="when">{card.kickoffAt ? WHEN.format(new Date(card.kickoffAt)).toUpperCase() : 'TBD'}</span>
+      </div>
+      {card.rows.map((r) => (
+        <Row key={`${r.marketType}:${r.label}`}
+          label={r.marketLabel}
+          sel={`${r.label}${r.value ? ` ${r.value}` : ''}`}
+          price={american(r.american)}
+          implied={r.impliedPct == null ? '' : pct(r.impliedPct)}
+          move={r.moveProb} />
+      ))}
+      {card.overflow > 0 ? (
+        <div className="overflow">+{card.overflow} more priced</div>
+      ) : null}
+      {card.hasAnytime ? (
+        <div className="propnote">
+          Anytime prices are as offered, not de-vigged - several players can score,
+          so these do not sum to 100.
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function Band({ slug, cards, boardIds, books }) {
   const n = books.get(slug);
   const note = [
@@ -152,9 +195,12 @@ export default async function MarketPage({ searchParams }) {
   const raw = typeof sp.f === 'string' ? sp.f : 'all';
   const filter = CHIPS.some(([k]) => k === raw) ? raw : 'all';
 
-  const [byLeague, futures, books, snapAt, boardIds] = await Promise.all([
+  const [byLeague, futures, books, snapAt, boardIds, props] = await Promise.all([
     pricedSlate(), futuresBoards(), bookCounts(), latestSnapshotAt(), boardMatchIds(),
+    propsSlate().catch(() => []),
   ]);
+  // BOARD GAMES FIRST here too - the same editorial rule the CFB band uses.
+  props.sort((a, b) => (boardIds.has(b.matchId) ? 1 : 0) - (boardIds.has(a.matchId) ? 1 : 0));
 
   // BOARD GAMES FIRST, WITHIN CFB — the only editorial ordering on the page.
   // Everything else is kickoff order, because a record of what the market is
@@ -198,6 +244,20 @@ export default async function MarketPage({ searchParams }) {
         {leagues.map((s) => (
           <Band key={s} slug={s} cards={shown.get(s) ?? []} boardIds={boardIds} books={books} />
         ))}
+
+        {props.length && (filter === 'all' || filter === 'movers') ? (
+          <section>
+            <div className="bandhead">
+              <span className="b">Player props</span>
+              <span className="c">{props.length} game{props.length === 1 ? '' : 's'} priced · board games first</span>
+            </div>
+            <div className="grid">
+              {props.map((c) => (
+                <PropsCard key={c.matchId} card={c} onBoard={boardIds.has(c.matchId)} />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {filter === 'all' || filter === 'movers' ? (
           <section>

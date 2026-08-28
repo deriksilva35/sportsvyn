@@ -22,6 +22,7 @@
 import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { ingestSportOdds, ingestSportFutures } from '@/lib/gridiron/oddsIngest';
+import { zeroMatchAlert } from '@/lib/gridiron/propsIngest';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
@@ -120,6 +121,20 @@ export async function GET(request) {
         kind,
         run: () => ingestSportOdds(sql, { sport: lg.sport, leagueSlug: lg.slug, stampBaseline }),
       });
+      // ZERO-MATCH GUARD - see zeroMatchAlert. The first EPL tick fetched 20
+      // events, matched 0, and reported ok; this is what makes that loud.
+      if (res.ok) {
+        const zero = zeroMatchAlert({
+          events: res.summary?.events ?? 0,
+          matched: res.summary?.matched ?? 0,
+          source: lg.source,
+        });
+        if (zero) {
+          await maybeAlert(sql, {
+            source: lg.source, subject: `[pollers] ${lg.source} MATCHED NOTHING`, body: zero,
+          });
+        }
+      }
       if (!res.ok) {
         await maybeAlert(sql, {
           source: lg.source,

@@ -27,6 +27,8 @@ import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/lib/gridiron/driveStrip';
 import OddsStrip from '@/components/gridiron/OddsStrip';
+import PropsPanel from '@/components/gridiron/PropsPanel';
+import { propsSlate } from '@/lib/market/reads';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -74,6 +76,11 @@ export default async function GamePage({ params, searchParams }) {
   // One batch read keyed by match id - the same reader /scores uses.
   const odds = isPreGame(game.status)
     ? (await getH2hOdds([game.id]).catch(() => new Map())).get(game.id) ?? null
+    : null;
+  // Props are scoped to the game week and the board, so most games have none -
+  // PropsPanel renders null rather than an empty shell.
+  const propsCard = isPreGame(game.status)
+    ? (await propsSlate({ matchIds: [game.id] }).catch(() => []))[0] ?? null
     : null;
   const quarters = scoringByQuarter(game);
   const brief = await getBriefForMatch(game.id);
@@ -223,6 +230,7 @@ export default async function GamePage({ params, searchParams }) {
             joins scheduled matches. Renders null when there is no clean
             two-sided read: absence over inference. */}
         {isPreGame(game.status) && odds ? <OddsStrip odds={odds} /> : null}
+        {isPreGame(game.status) && propsCard ? <PropsPanel card={propsCard} /> : null}
 
         {panels.length ? (
           <GameTabs

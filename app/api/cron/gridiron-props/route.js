@@ -33,7 +33,7 @@
 
 import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
-import { ingestSportProps, keyAlert } from '@/lib/gridiron/propsIngest';
+import { ingestSportProps, keyAlert, zeroMatchAlert } from '@/lib/gridiron/propsIngest';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
@@ -65,6 +65,18 @@ export async function GET(request) {
           body: `source: ${lg.source}\n\n${res.error}`,
         });
         return res;
+      }
+      // ZERO-MATCH GUARD. Props scope games locally, so "scoped" is the
+      // event count that matters: games we intended to price.
+      const zero = zeroMatchAlert({
+        events: res.summary?.scoped ?? 0,
+        matched: res.summary?.called ?? 0,
+        source: lg.source,
+      });
+      if (zero) {
+        await maybeAlert(sql, {
+          source: lg.source, subject: `[pollers] ${lg.source} MATCHED NOTHING`, body: zero,
+        });
       }
       // THE KEY / BUDGET GUARD, on every successful run.
       const warn = keyAlert(res.summary?.budget);
