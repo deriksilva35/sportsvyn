@@ -14,6 +14,13 @@
  * shows; it only appears inside the Capacitor WebView. No hydration mismatch
  * because both server and first client render return null.
  *
+ * HIDDEN AT A TAB ROOT. The four Sportsvyn tabs are the app's own top level;
+ * a back button there either exits the app or does nothing visible, and both
+ * are worse than no button. The bar renders on pages REACHED FROM a tab - a
+ * game page, a player, a team - and disappears the moment you are back at one
+ * of the four. The root list is imported from the segment rather than
+ * duplicated, so adding a fifth tab cannot leave a stale back button behind.
+ *
  * Layout: a position:fixed bar at top:0 (always reachable) plus an in-flow
  * spacer of equal height as the next element, so the page's SiteHeaderServer
  * (rendered right after this component) flows below the bar instead of under
@@ -22,11 +29,14 @@
  */
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { TAB_ROOTS } from '@/lib/shell/sportsvynTabs';
 
 const BAR_HEIGHT = '44px';
 
 export default function BackToAppBar() {
   const [inApp, setInApp] = useState(false);
+  const pathname = usePathname() || '';
 
   useEffect(() => {
     setInApp(
@@ -36,6 +46,8 @@ export default function BackToAppBar() {
   }, []);
 
   if (!inApp) return null;
+  // At a tab root there is nowhere to go back TO inside the app.
+  if (TAB_ROOTS.has(pathname)) return null;
 
   function goBack() {
     if (typeof window === 'undefined') return;

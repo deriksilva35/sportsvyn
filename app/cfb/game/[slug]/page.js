@@ -37,6 +37,7 @@ import PropsPanel from '@/components/gridiron/PropsPanel';
 import { propsSlate } from '@/lib/market/reads';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
+import BackToAppBar from '@/components/BackToAppBar';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import '@/components/gridiron/gridiron.css';
 import '@/components/gridiron/drivestrip.css';
@@ -129,6 +130,7 @@ export default async function CfbGamePage({ params, searchParams }) {
 
   return (
     <div className="gi ggame" data-surface="ink">
+      <BackToAppBar />
       <GlobalHeaderServer activeNav="cfb" />
 
       <div className="gg-wrap">

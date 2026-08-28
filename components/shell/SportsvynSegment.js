@@ -1,6 +1,6 @@
 'use client';
 
-// components/shell/SportsvynSegment.js - LIVE SCORES / FANTASY, in the shell.
+// components/shell/SportsvynSegment.js - the Sportsvyn area's four tabs.
 //
 // CLIENT COMPONENT WITH <Link>, and both halves are the fix for the same
 // device glitch:
@@ -25,14 +25,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { TABS, activeTab } from '@/lib/shell/sportsvynTabs';
 
 export default function SportsvynSegment() {
   const pathname = usePathname() || '';
-  const active = pathname.startsWith('/nfl') ? 'fantasy' : 'scores';
+  const active = activeTab(pathname);
   return (
     <nav className="svseg" aria-label="Sportsvyn sections">
-      <Link href="/scores" className={active === 'scores' ? 'on' : ''}>Live Scores</Link>
-      <Link href="/nfl/fantasy" className={active === 'fantasy' ? 'on' : ''}>Fantasy</Link>
+      {TABS.map((t) => (
+        <Link key={t.key} href={t.href} className={active === t.key ? 'on' : ''}>{t.label}</Link>
+      ))}
     </nav>
   );
 }

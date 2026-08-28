@@ -26,6 +26,8 @@
  */
 
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
+import SportsvynSegment from '@/components/shell/SportsvynSegment';
+import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import Link from 'next/link';
 import {
   pricedSlate, futuresBoards, bookCounts, latestSnapshotAt, boardMatchIds,
@@ -44,6 +46,13 @@ import { marketHref, nextDir, hiddenFields } from '@/lib/market/marketUrl';
 import './market.css';
 
 export const dynamic = 'force-dynamic';
+
+// Shell mode opts into viewport-fit:cover so the safe-area insets resolve;
+// the web keeps the root viewport. Same contract as /scores and every /sim page.
+export async function generateViewport({ searchParams }) {
+  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+}
+
 export const metadata = {
   title: 'The Market - Sportsvyn',
   description: 'Where the market is actually pricing NFL, CFB and Premier League games, and how that has changed. Consensus lines across books, de-vigged.',
@@ -196,6 +205,9 @@ function Band({ slug, cards, boardIds, books }) {
 
 export default async function MarketPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
+  // THE SHELL GATE STAYS AT THE CALL SITE, server-side: web HTML carries no
+  // segment markup at all. Same contract the other three tabs already keep.
+  const isShell = await resolveShellMode(sp);
   const raw = typeof sp.f === 'string' ? sp.f : 'all';
   const filter = CHIPS.some(([k]) => k === raw) ? raw : 'all';
   const rawTab = typeof sp.tab === 'string' ? sp.tab : DEFAULT_TAB;
@@ -277,6 +289,7 @@ export default async function MarketPage({ searchParams }) {
   return (
     <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav="market" />
+      {isShell && <SportsvynSegment />}
       <div className="mk-wrap">
         <div className="mk-head">
           <div className="kicker">NFL · CFB · EPL · Lines</div>

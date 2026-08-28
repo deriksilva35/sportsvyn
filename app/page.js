@@ -47,6 +47,7 @@ import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { boardHref } from '@/lib/gridiron/rankingsHub';
 import '@/components/gridiron/gridiron.css';
 import { resolveShellMode } from '@/lib/shell/shell';
+import SportsvynSegment from '@/components/shell/SportsvynSegment';
 import ModeSwitch from '@/components/today/ModeSwitch';
 import LeagueChips from '@/components/today/LeagueChips';
 import Band, { BandHead } from '@/components/today/Band';
@@ -456,6 +457,7 @@ export default async function HomePage() {
   return (
     <>
       <GlobalHeaderServer activeNav="home" />
+      {isShell && <SportsvynSegment />}
 
       {/* THE BAND LAYOUT replaces the two-column main/rail carpentry. The rail
           existed because the page had units with nowhere else to go; every one
