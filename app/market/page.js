@@ -40,6 +40,7 @@ import {
   LINES_COLUMNS, FUTURES_COLUMNS, LINES_PAGE, FUTURES_PAGE,
 } from '@/lib/market/lineTables';
 import { propsBoard, propsGames, shortName } from '@/lib/market/propsBoard';
+import { marketHref, nextDir, hiddenFields } from '@/lib/market/marketUrl';
 import './market.css';
 
 export const dynamic = 'force-dynamic';
@@ -86,47 +87,15 @@ const pct = (n) => (n == null ? '' : `${n.toFixed(1)}%`);
  *
  * The default tab is omitted from the URL so /market stays /market.
  */
-/**
- * Every board control keeps every other control's state. A reader who has
- * filtered to CFB, sorted by implied % and searched "Palmer" and then taps
- * MOVERS ONLY keeps all three - one control silently resetting the others is
- * the bug the /scores toolbar had while its filters lived in component state.
+/*
+ * THREE HAND-BUILT HREF HELPERS LIVED HERE and are gone. Each knew about a
+ * different subset of the page's state, so a sort header on the LINES table
+ * dropped ?view=table and returned the reader to the cards - invisible on
+ * PROPS only because table is that tab's unmarked default. Every control now
+ * goes through lib/market/marketUrl.js, which starts from the CURRENT state
+ * and lets a control change only its own parameter. A second hand-built href
+ * is how this class recurs, so there is deliberately nowhere left to add one.
  */
-function boardHref(state, tab, view, patch) {
-  const next = {
-    f: state.league, g: state.group, sort: state.sort, dir: state.dir,
-    q: state.q, game: state.game, view: view === 'charts' ? 'charts' : null,
-    board: state.boardOnly ? '1' : null, movers: state.moversOnly ? '1' : null,
-    ...patch,
-  };
-  const qs = [`tab=${tab}`];
-  if (next.view === 'charts') qs.push('view=charts');
-  if (next.f && next.f !== 'all') qs.push(`f=${next.f}`);
-  if (next.g && next.g !== 'all') qs.push(`g=${next.g}`);
-  if (next.game) qs.push(`game=${next.game}`);
-  if (next.sort && next.sort !== 'move') qs.push(`sort=${next.sort}`);
-  if (next.dir) qs.push(`dir=${next.dir}`);
-  if (next.q) qs.push(`q=${encodeURIComponent(next.q)}`);
-  if (next.board) qs.push('board=1');
-  if (next.movers) qs.push('movers=1');
-  return `/market?${qs.join('&')}`;
-}
-
-/** The CARDS/TABLE toggle on LINES and FUTURES, keeping filter and game. */
-function viewHref(filter, tab, view, game) {
-  const qs = [`tab=${tab}`];
-  if (view) qs.push(`view=${view}`);
-  if (filter && filter !== 'all') qs.push(`f=${filter}`);
-  if (game) qs.push(`game=${game}`);
-  return `/market?${qs.join('&')}`;
-}
-
-function marketHref(filter, tab) {
-  const q = [];
-  if (filter && filter !== 'all') q.push(`f=${filter}`);
-  if (tab && tab !== DEFAULT_TAB) q.push(`tab=${tab}`);
-  return q.length ? `/market?${q.join('&')}` : '/market';
-}
 
 /**
  * THE MOVEMENT GLYPH. Three states, and the third is the one that matters:
@@ -241,6 +210,23 @@ export default async function MarketPage({ searchParams }) {
   // (?view=table is marked). Each tab's unmarked URL renders exactly what it
   // rendered before its second view existed, which is what makes every shipped
   // link safe.
+  // THE WHOLE URL STATE, IN ONE OBJECT. Every control builds its href from
+  // this and changes only its own key, so nothing can be dropped by a helper
+  // that did not know about it.
+  const urlState = {
+    tab,
+    view: typeof sp.view === 'string' ? sp.view : null,
+    f: typeof sp.f === 'string' ? sp.f : null,
+    g: typeof sp.g === 'string' ? sp.g : null,
+    game: typeof sp.game === 'string' && sp.game !== '' ? sp.game : null,
+    sort: typeof sp.sort === 'string' ? sp.sort : null,
+    dir: sp.dir === 'asc' || sp.dir === 'desc' ? sp.dir : null,
+    q: typeof sp.q === 'string' ? sp.q : null,
+    board: sp.board === '1' ? '1' : null,
+    movers: sp.movers === '1' ? '1' : null,
+  };
+  const href = (patch) => marketHref(urlState, patch);
+
   const view = tab === 'props'
     ? (sp.view === 'charts' ? 'charts' : 'table')
     : (sp.view === 'table' ? 'table' : 'cards');
@@ -310,7 +296,7 @@ export default async function MarketPage({ searchParams }) {
 
         <div className="tabs">
           {TABS.map(([k, label]) => (
-            <Link key={k} className={`tab ${tab === k ? 'on' : ''}`} href={marketHref(filter, k)}>{label}</Link>
+            <Link key={k} className={`tab ${tab === k ? 'on' : ''}`} href={href({ tab: k })}>{label}</Link>
           ))}
         </div>
 
@@ -321,7 +307,7 @@ export default async function MarketPage({ searchParams }) {
         {tab === 'props' ? null : (
           <div className="chips">
             {CHIPS.map(([k, label]) => (
-              <Link key={k} className={`ch ${filter === k ? 'on' : ''}`} href={marketHref(k, tab)}>{label}</Link>
+              <Link key={k} className={`ch ${filter === k ? 'on' : ''}`} href={href({ f: k })}>{label}</Link>
             ))}
           </div>
         )}
@@ -336,13 +322,13 @@ export default async function MarketPage({ searchParams }) {
           <>
             <div className="pb-frow">
               <span className="flbl">View</span>
-              <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={viewHref(filter, tab, null, boardState.game)}>Cards</Link>
-              <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={viewHref(filter, tab, 'table', boardState.game)}>Table</Link>
+              <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={href({ view: null })}>Cards</Link>
+              <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={href({ view: 'table' })}>Table</Link>
             </div>
             {view === 'table' ? (
               <LinesTable rows={linesRows} total={linesTotal} columns={LINES_COLUMNS}
                 sort={linesSort} dir={boardState.dir || undefined}
-                hrefFor={(patch) => boardHref(boardState, tab, view, patch)} />
+                hrefFor={href} />
             ) : leagues.map((s) => (
               <Band key={s} slug={s} cards={shown.get(s) ?? []} boardIds={boardIds} books={books} />
             ))}
@@ -353,17 +339,17 @@ export default async function MarketPage({ searchParams }) {
             retired with it - one props presentation, not two. */}
         {tab === 'props' && board ? (
           <section>
-            <PropsFilters state={boardState} games={games} view={view}
-              hrefFor={(patch) => boardHref(boardState, tab, view, patch)} />
+            <PropsFilters state={boardState} games={games} view={view} urlState={urlState}
+              hrefFor={href} />
             {board.rows.length === 0 ? (
               <div className="emptyband">No priced props match those filters.</div>
             ) : view === 'charts' ? (
               <PropsBoard rows={board.rows} total={board.total} state={boardState} chromeless
-                hrefFor={(patch) => boardHref(boardState, tab, view, patch)} />
+                hrefFor={href} />
             ) : (
               <PropsTable rows={board.rows} total={board.total}
                 sort={boardState.sort} dir={boardState.dir || undefined}
-                hrefFor={(patch) => boardHref(boardState, tab, view, patch)} />
+                hrefFor={href} />
             )}
           </section>
         ) : null}
@@ -372,14 +358,14 @@ export default async function MarketPage({ searchParams }) {
           <section>
             <div className="pb-frow">
               <span className="flbl">View</span>
-              <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={viewHref(filter, tab, null, null)}>Cards</Link>
-              <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={viewHref(filter, tab, 'table', null)}>Table</Link>
+              <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={href({ view: null })}>Cards</Link>
+              <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={href({ view: 'table' })}>Table</Link>
             </div>
             {view === 'table' ? (
               <FuturesTable rows={futuresRows} total={futuresTotal} columns={FUTURES_COLUMNS}
                 sort={futuresSort} dir={boardState.dir || undefined}
                 counts={futures.map((f) => ({ leagueSlug: f.leagueSlug, priced: f.priced }))}
-                hrefFor={(patch) => boardHref(boardState, tab, view, patch)} />
+                hrefFor={href} />
             ) : (
             <>
             <div className="bandhead">

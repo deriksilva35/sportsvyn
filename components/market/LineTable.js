@@ -13,6 +13,7 @@
 // buttonable and identical on reload.
 
 import Link from 'next/link';
+import { nextDir } from '@/lib/market/marketUrl';
 
 const WHEN = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit',
@@ -35,7 +36,10 @@ function Head({ columns, sort, dir, hrefFor }) {
       <tr>
         {columns.map((c) => {
           const on = sort === c.key;
-          const next = on && dir === 'desc' ? 'asc' : on ? 'desc' : null;
+          // THE DIRECTION TOGGLE LIVES IN THE HELPER, not in two table
+          // components that could disagree: the active column flips, a new
+          // column takes its own sensible default.
+          const next = nextDir(c.key, sort, dir);
           return (
             <th key={c.key} className={`${c.align === 'l' ? 'l' : ''}${on ? ' sorted' : ''}`}>
               <Link href={hrefFor({ sort: c.key, dir: next })}>

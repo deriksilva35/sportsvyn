@@ -12,6 +12,7 @@
 
 import Link from 'next/link';
 import { MARKET_GROUPS } from '@/lib/market/propsBoard';
+import { hiddenFields } from '@/lib/market/marketUrl';
 
 const LEAGUES = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['epl', 'EPL']];
 
@@ -27,7 +28,13 @@ function Chips({ label, items, active, hrefFor, children }) {
   );
 }
 
-export default function PropsFilters({ state, games, hrefFor, view }) {
+export default function PropsFilters({ state, games, hrefFor, view, urlState }) {
+  // A FORM POSTS ONLY ITS NAMED FIELDS, so any param missing from the hidden
+  // set is a param the reader silently loses on submit - the same loss as a
+  // hand-built href, arriving through a different door. hiddenFields derives
+  // them from the live state rather than from a list someone maintains.
+  const gameHidden = hiddenFields(urlState, ['game']);
+  const searchHidden = hiddenFields(urlState, ['q']);
   return (
     <>
       <Chips label="League" items={LEAGUES} active={state.league} hrefFor={(k) => hrefFor({ f: k })}>
@@ -50,9 +57,9 @@ export default function PropsFilters({ state, games, hrefFor, view }) {
         <span className="flbl">Game</span>
         <form action="/market" method="get" className="pb-gameform">
           <input type="hidden" name="tab" value="props" />
-          {view === 'charts' ? <input type="hidden" name="view" value="charts" /> : null}
-          {state.group !== 'all' ? <input type="hidden" name="g" value={state.group} /> : null}
-          {state.q ? <input type="hidden" name="q" value={state.q} /> : null}
+          {gameHidden.filter(([k]) => k !== 'tab').map(([k, v]) => (
+            <input key={k} type="hidden" name={k} value={v} />
+          ))}
           <select name="game" className="gsel" defaultValue={state.game ?? ''} aria-label="Filter to one game">
             <option value="">All games</option>
             {games.map((g) => (
@@ -76,9 +83,9 @@ export default function PropsFilters({ state, games, hrefFor, view }) {
           href={hrefFor({ movers: state.moversOnly ? null : '1' })}>Movers only</Link>
         <form className="pb-search" action="/market" method="get">
           <input type="hidden" name="tab" value="props" />
-          {view === 'charts' ? <input type="hidden" name="view" value="charts" /> : null}
-          {state.league !== 'all' ? <input type="hidden" name="f" value={state.league} /> : null}
-          {state.game ? <input type="hidden" name="game" value={state.game} /> : null}
+          {searchHidden.filter(([k]) => k !== 'tab').map(([k, v]) => (
+            <input key={k} type="hidden" name={k} value={v} />
+          ))}
           <input name="q" defaultValue={state.q} placeholder="Search player or team"
             aria-label="Search player or team" />
         </form>
