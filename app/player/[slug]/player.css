@@ -549,3 +549,46 @@
 .gp-cta{display:block;width:100%;text-align:center;font-size:11px;letter-spacing:.12em;
   text-transform:uppercase;background:var(--ink-3);color:var(--paper);border:1px solid var(--rule);
   border-radius:9px;padding:10px;margin-top:12px}
+
+/* ---- the game chart (mock v0.5 grammar, threshold line deliberately absent)
+   Bars are one game each, newest first, value above and opponent below. The
+   dashed line and the .over brightness step from the mock are the props
+   board's devices - they compare production to a PRICE, and this page has no
+   price on it. Height is scaled to the player's own best game in the window. */
+.gp-chartwrap { margin: 6px 0 22px; }
+.gp-chart-lab {
+  font-family: var(--font-mono, monospace); font-size: 9px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+}
+.gp-chart {
+  position: relative; display: flex; align-items: flex-end; gap: 4px;
+  height: 64px; padding-top: 10px; overflow-x: auto; scrollbar-width: none;
+}
+.gp-chart::-webkit-scrollbar { display: none; }
+.gp-bar {
+  position: relative; width: 30px; flex: 0 0 30px;
+  background: var(--graphite-up); border: 1px solid var(--rule);
+  border-bottom: 2px solid var(--muted); border-radius: 3px 3px 0 0;
+  display: flex; justify-content: center;
+}
+.gp-bar .v {
+  position: absolute; top: -13px; font-size: 10px; font-weight: 700;
+  font-variant-numeric: tabular-nums; color: var(--paper);
+}
+.gp-bar .op {
+  position: absolute; bottom: -14px; font-size: 8px; color: var(--muted);
+  letter-spacing: .03em; white-space: nowrap;
+}
+/* The rookie rule's label - which level these bars are, when it is not this one. */
+.gp-chart-level { font-size: 10px; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
+
+/* The season selector. Present only when more than one season has rows -
+   a single-season player gets no control to press. */
+.gp-seasons { display: flex; gap: 6px; flex-wrap: wrap; margin: 2px 0 10px; }
+.gp-seasons a {
+  font-family: var(--font-mono, monospace); font-size: 10px; letter-spacing: .08em;
+  color: var(--muted); text-decoration: none; border: 1px solid var(--rule);
+  border-radius: 99px; padding: 3px 10px; font-variant-numeric: tabular-nums;
+}
+.gp-seasons a.on { color: var(--ink); background: var(--volt); border-color: var(--volt); }
+.gp-seasons a:hover { border-color: var(--muted-dim); }

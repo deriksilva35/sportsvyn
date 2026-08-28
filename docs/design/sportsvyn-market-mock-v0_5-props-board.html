@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>The Market - Props Board - Mock v0.5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:ital@1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1E1E1E;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --terra:#B8410F; --live:#E63946;
+    --mut:#8A8A85; --line:#2A2A2A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  body{background:var(--ink); color:var(--paper); font-family:'JetBrains Mono',monospace; font-size:13px;
+       display:flex; justify-content:center; min-height:100vh;}
+  .page{width:100%; max-width:1180px; padding:24px 18px 60px;}
+
+  .volt{color:var(--volt);} .jade{color:var(--jade);} .terra{color:var(--terra);} .mut{color:var(--mut);}
+
+  .kicker{font-family:'Saira Condensed',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.14em; font-size:11px; color:var(--mut); margin-bottom:6px; display:flex; justify-content:space-between; align-items:baseline;}
+  .kicker a{color:var(--mut); text-decoration:none;}
+  .h1{font-family:'Saira',sans-serif; font-style:italic; font-weight:900; font-size:44px; letter-spacing:-0.04em; line-height:1.0; margin-bottom:10px;}
+  .stance{font-family:'Source Serif 4',serif; font-style:italic; font-size:15px; color:var(--mut); max-width:640px; line-height:1.6; margin-bottom:16px;}
+  .meta{font-size:10px; color:var(--mut); margin-bottom:18px; font-variant-numeric:tabular-nums;}
+
+  /* tabs */
+  .tabs{display:flex; gap:6px; border-bottom:1px solid var(--line); margin-bottom:18px;}
+  .tab{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.1em; font-size:12px; text-transform:uppercase;
+       background:none; border:none; color:var(--mut); padding:8px 14px 10px; cursor:pointer; position:relative;}
+  .tab.on{color:var(--volt);}
+  .tab.on::after{content:''; position:absolute; left:10px; right:10px; bottom:-1px; height:2px; background:var(--volt);}
+
+  /* filter stack - movement board grammar */
+  .frow{display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+  .flbl{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.12em; font-size:10px; text-transform:uppercase; color:var(--mut); width:52px;}
+  .ch{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; font-size:11px; text-transform:uppercase;
+      border:1px solid var(--line); background:var(--ink-3); color:var(--paper); border-radius:99px; padding:5px 12px; cursor:pointer;}
+  .ch.on{background:var(--volt); color:var(--ink); border-color:var(--volt);}
+  .search{background:var(--ink-3); border:1px solid var(--line); border-radius:99px; color:var(--paper);
+          font-family:'JetBrains Mono',monospace; font-size:12px; padding:7px 14px; width:260px;}
+  .search::placeholder{color:var(--mut);}
+
+  /* board table */
+  .board{background:var(--ink-2); border:1px solid var(--line); border-radius:12px; padding:4px 14px; margin-top:14px;}
+  .bhead{display:grid; grid-template-columns:minmax(220px,1.4fr) 90px 70px 64px 56px 56px; gap:10px;
+         font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.12em; font-size:9px; text-transform:uppercase; color:var(--mut);
+         padding:10px 0 8px; border-bottom:1px solid var(--line);}
+  .bhead .r{text-align:right;}
+  .prow{display:grid; grid-template-columns:minmax(220px,1.4fr) 90px 70px 64px 56px 56px; gap:10px; align-items:baseline;
+        padding:9px 0; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums;}
+  .prow:last-child{border:none;}
+  .prow .who{min-width:0;}
+  .prow .nm{font-family:'Saira',sans-serif; font-style:italic; font-weight:900; font-size:14px; letter-spacing:-0.02em;}
+  .prow .nm a{color:inherit; text-decoration:none; border-bottom:1px solid transparent;}
+  .prow .nm a:hover{border-bottom-color:var(--volt);}
+  .prow .gm{font-size:10px; color:var(--mut); margin-top:1px;}
+  .prow .ctx{font-size:10px; color:var(--mut); margin-top:3px; line-height:1.5;}
+  .prow .ctx b{color:var(--paper); font-weight:700;}
+
+  /* game chart - mini bar chart, one bar per game, newest first; the line cuts across */
+  .chart{position:relative; display:flex; align-items:flex-end; gap:4px; height:64px; margin-top:8px; padding-top:10px;}
+  .bar{position:relative; width:30px; background:var(--ink-3); border:1px solid var(--line); border-bottom:2px solid var(--mut); border-radius:3px 3px 0 0; display:flex; justify-content:center;}
+  .bar.over{background:color-mix(in srgb, var(--paper) 14%, var(--ink-3)); border-color:color-mix(in srgb, var(--paper) 30%, var(--line));}
+  .bar .v{position:absolute; top:-13px; font-size:10px; font-weight:700; font-variant-numeric:tabular-nums;}
+  .bar .op{position:absolute; bottom:-14px; font-size:8px; color:var(--mut); letter-spacing:.03em; white-space:nowrap;}
+  .thline{position:absolute; left:0; right:44px; border-top:1px dashed color-mix(in srgb, var(--volt) 55%, transparent); z-index:2;}
+  .thline .tl{position:absolute; right:-42px; top:-7px; font-size:9px; color:var(--volt); font-variant-numeric:tabular-nums;}
+  .chartwrap{margin-top:6px; margin-bottom:16px;}
+  .stripmore{background:none; border:none; color:var(--mut); font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer; padding:3px 0; display:block; margin-top:16px;}
+  .stripmore:hover{color:var(--volt);}
+
+  /* expanded season chart */
+  .xlog{grid-column:1/-1; border-top:1px dashed var(--line); margin-top:8px; padding-top:8px;}
+  .xlog .xh{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.12em; font-size:9px; text-transform:uppercase; color:var(--mut); margin-bottom:6px;}
+  .xlog .chart{height:76px;}
+  .xlog .bar{width:22px;}
+  .xlog .xfoot{font-size:9px; color:var(--mut); margin-top:22px;}
+  .xlog .xfoot a{color:var(--mut);}
+  .prow .mkt{font-size:10px; color:var(--mut); text-transform:uppercase;}
+  .prow .sel{font-size:12px;}
+  .prow .r{text-align:right; font-weight:700;}
+  .prow .imp{text-align:right; color:var(--mut); font-size:11px; font-weight:400;}
+  .prow .mv{text-align:right; font-size:11px;}
+  .boardpill{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; font-size:9px; text-transform:uppercase;
+             color:var(--volt); border:1px solid var(--volt); border-radius:99px; padding:1px 7px; margin-left:6px; vertical-align:middle;}
+  .asoff{font-size:9px; color:var(--mut); text-align:right;}
+
+  .foot{font-size:10px; color:var(--mut); padding:12px 0 10px; line-height:1.6;}
+  .more{display:block; width:100%; text-align:center; font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.1em; text-transform:uppercase; font-size:12px;
+        background:var(--ink-3); color:var(--paper); border:1px solid var(--line); border-radius:9px; padding:11px; cursor:pointer; margin-top:12px; text-decoration:none;}
+
+  .note{font-size:10px; color:var(--mut); line-height:1.6; margin-top:26px; border-top:1px solid var(--line); padding-top:12px; max-width:880px;}
+  @media (max-width:700px){
+    .bhead{display:none;}
+    .prow{grid-template-columns:1fr auto; grid-template-areas:"who px" "who imp";}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="kicker"><span>NFL &middot; CFB &middot; EPL &middot; PRICES</span><a href="#">SCOREBOARD &rarr;</a></div>
+  <div class="h1">THE MARKET</div>
+  <div class="stance">Where the market is actually pricing games and players, and how that has changed. Not a pick. Not a recommendation. A record of what the books are doing - with our own numbers for context.</div>
+  <div class="meta">SNAPSHOT 2026-08-28 &middot; MEDIAN OF 10 BOOKS &middot; O/U DE-VIGGED &middot; ANYTIME AS OFFERED</div>
+
+  <div class="tabs">
+    <button class="tab">LINES</button>
+    <button class="tab on">PROPS</button>
+    <button class="tab">FUTURES</button>
+  </div>
+
+  <div class="frow">
+    <span class="flbl">LEAGUE</span>
+    <button class="ch on">ALL</button>
+    <button class="ch">NFL</button>
+    <button class="ch">CFB</button>
+    <button class="ch">EPL</button>
+  </div>
+  <div class="frow">
+    <span class="flbl">MARKET</span>
+    <button class="ch on">ALL</button>
+    <button class="ch">PASS TDS</button>
+    <button class="ch">PASS YDS</button>
+    <button class="ch">RUSH YDS</button>
+    <button class="ch">RECS</button>
+    <button class="ch">ANYTIME TD</button>
+    <button class="ch">SCORER</button>
+  </div>
+  <div class="frow">
+    <span class="flbl">SORT</span>
+    <button class="ch on">24H MOVE</button>
+    <button class="ch">IMPLIED %</button>
+    <button class="ch">KICKOFF</button>
+    <input class="search" placeholder="Search player or team">
+    <button class="ch">BOARD GAMES</button>
+    <button class="ch">MOVERS ONLY</button>
+  </div>
+
+  <div class="board">
+    <div class="bhead">
+      <span>PLAYER &middot; GAME &middot; THE STATS</span>
+      <span>MARKET</span>
+      <span>LINE</span>
+      <span class="r">PRICE</span>
+      <span class="r">IMP%</span>
+      <span class="r">24H</span>
+    </div>
+
+    <div class="prow" style="grid-template-rows:auto;">
+      <div class="who">
+        <div class="nm"><a href="#">Patrick Mahomes</a></div>
+        <div class="gm">KC at LAC &middot; NFL &middot; SUN 9/13 1:00 PM</div>
+        <div class="ctx">2025: cleared 1.5 pass TDs in <b>11 of 17</b> &middot; 2.1/game</div>
+        <div class="chartwrap">
+          <div class="chart">
+            <div class="thline" style="bottom:18px;"><span class="tl">1.5</span></div>
+            <div class="bar over" style="height:36px;"><span class="v">3</span><span class="op">DEN</span></div>
+            <div class="bar over" style="height:24px;"><span class="v">2</span><span class="op">@PIT</span></div>
+            <div class="bar over" style="height:24px;"><span class="v">2</span><span class="op">HOU</span></div>
+            <div class="bar" style="height:12px;"><span class="v">1</span><span class="op">@CLE</span></div>
+            <div class="bar over" style="height:24px;"><span class="v">2</span><span class="op">LAC</span></div>
+            <div class="bar" style="height:12px;"><span class="v">1</span><span class="op">@BUF</span></div>
+            <div class="bar over" style="height:36px;"><span class="v">3</span><span class="op">LV</span></div>
+            <div class="bar over" style="height:24px;"><span class="v">2</span><span class="op">@DEN</span></div>
+            <div class="bar" style="height:2px;"><span class="v">0</span><span class="op">CIN</span></div>
+            <div class="bar over" style="height:24px;"><span class="v">2</span><span class="op">@TB</span></div>
+          </div>
+          <button class="stripmore">FULL SEASON &darr;</button>
+        </div>
+      </div>
+      <div><div class="mkt">PASS TDS</div><div class="sel">Over</div></div>
+      <div class="sel">1.5</div>
+      <div class="r">-142</div>
+      <div class="imp">57.9%</div>
+      <div class="mv jade">&#9650;2.1</div>
+      <div class="xlog">
+        <div class="xh">2025 SEASON &middot; PASS TDS PER GAME &middot; TODAY'S LINE DRAWN AT 1.5</div>
+        <div class="chart">
+          <div class="thline" style="bottom:21px;"><span class="tl">1.5</span></div>
+          <div class="bar over" style="height:42px;"><span class="v">3</span><span class="op">DEN</span></div>
+          <div class="bar over" style="height:28px;"><span class="v">2</span><span class="op">@PIT</span></div>
+          <div class="bar over" style="height:28px;"><span class="v">2</span><span class="op">HOU</span></div>
+          <div class="bar" style="height:14px;"><span class="v">1</span><span class="op">@CLE</span></div>
+          <div class="bar over" style="height:28px;"><span class="v">2</span><span class="op">LAC</span></div>
+          <div class="bar" style="height:14px;"><span class="v">1</span><span class="op">@BUF</span></div>
+          <div class="bar over" style="height:42px;"><span class="v">3</span><span class="op">LV</span></div>
+          <div class="bar over" style="height:28px;"><span class="v">2</span><span class="op">@DEN</span></div>
+          <div class="bar" style="height:2px;"><span class="v">0</span><span class="op">CIN</span></div>
+          <div class="bar over" style="height:28px;"><span class="v">2</span><span class="op">@TB</span></div>
+          <div class="bar" style="height:14px;"><span class="v">1</span><span class="op">NYJ</span></div>
+          <div class="bar over" style="height:56px;"><span class="v">4</span><span class="op">@SF</span></div>
+          <div class="bar" style="height:14px;"><span class="v">1</span><span class="op">BAL</span></div>
+          <div class="bar over" style="height:28px;"><span class="v">2</span><span class="op">@NO</span></div>
+          <div class="bar over" style="height:42px;"><span class="v">3</span><span class="op">LAC</span></div>
+          <div class="bar" style="height:14px;"><span class="v">1</span><span class="op">CIN</span></div>
+          <div class="bar over" style="height:28px;"><span class="v">2</span><span class="op">@BAL</span></div>
+        </div>
+        <div class="xfoot">Bars are pass TDs per game, newest first. The dashed line is today's 1.5; the lines offered on those days may have differed. <a href="#">Full player page &rarr;</a></div>
+      </div>
+    </div>
+
+    <div class="prow">
+      <div class="who">
+        <div class="nm"><a href="#">Benjamin Hall</a> <span class="boardpill">BOARD</span></div>
+        <div class="gm">UNC at TCU &middot; CFB &middot; SAT 12:00 PM</div>
+        <div class="ctx">2025: under 1.5 recs in <b>9 of 13</b> &middot; 1.2/game</div>
+        <div class="chartwrap">
+          <div class="chart">
+            <div class="thline" style="bottom:18px;"><span class="tl">1.5</span></div>
+            <div class="bar" style="height:12px;"><span class="v">1</span><span class="op">BOWL</span></div>
+            <div class="bar" style="height:2px;"><span class="v">0</span><span class="op">@CIN</span></div>
+            <div class="bar over" style="height:24px;"><span class="v">2</span><span class="op">HOU</span></div>
+            <div class="bar" style="height:12px;"><span class="v">1</span><span class="op">@BAY</span></div>
+            <div class="bar" style="height:12px;"><span class="v">1</span><span class="op">UCF</span></div>
+            <div class="bar over" style="height:36px;"><span class="v">3</span><span class="op">@ARK</span></div>
+            <div class="bar" style="height:12px;"><span class="v">1</span><span class="op">SMU</span></div>
+            <div class="bar" style="height:2px;"><span class="v">0</span><span class="op">@KSU</span></div>
+            <div class="bar" style="height:12px;"><span class="v">1</span><span class="op">COLO</span></div>
+            <div class="bar over" style="height:24px;"><span class="v">2</span><span class="op">ASU</span></div>
+          </div>
+          <button class="stripmore">FULL SEASON &darr;</button>
+        </div>
+      </div>
+      <div><div class="mkt">RECS</div><div class="sel">Under</div></div>
+      <div class="sel">1.5</div>
+      <div class="r">-200</div>
+      <div class="imp">62.7%</div>
+      <div class="mv mut">-</div>
+    </div>
+
+    <div class="prow">
+      <div class="who">
+        <div class="nm"><a href="#">Demond June</a> <span class="boardpill">BOARD</span></div>
+        <div class="gm">UNC at TCU &middot; CFB &middot; SAT 12:00 PM</div>
+        <div class="ctx">2025: over 30.5 rush in <b>10 of 12</b> &middot; 61.4/game</div>
+        <div class="chartwrap">
+          <div class="chart">
+            <div class="thline" style="bottom:14px;"><span class="tl">30.5</span></div>
+            <div class="bar over" style="height:33px;"><span class="v">74</span><span class="op">BOWL</span></div>
+            <div class="bar over" style="height:40px;"><span class="v">88</span><span class="op">@CIN</span></div>
+            <div class="bar over" style="height:23px;"><span class="v">52</span><span class="op">HOU</span></div>
+            <div class="bar" style="height:10px;"><span class="v">22</span><span class="op">@BAY</span></div>
+            <div class="bar over" style="height:46px;"><span class="v">103</span><span class="op">UCF</span></div>
+            <div class="bar over" style="height:18px;"><span class="v">41</span><span class="op">@ARK</span></div>
+            <div class="bar over" style="height:30px;"><span class="v">66</span><span class="op">SMU</span></div>
+            <div class="bar" style="height:13px;"><span class="v">29</span><span class="op">@KSU</span></div>
+            <div class="bar over" style="height:40px;"><span class="v">88</span><span class="op">COLO</span></div>
+            <div class="bar over" style="height:26px;"><span class="v">57</span><span class="op">ASU</span></div>
+          </div>
+          <button class="stripmore">FULL SEASON &darr;</button>
+        </div>
+      </div>
+      <div><div class="mkt">RUSH YDS</div><div class="sel">Over</div></div>
+      <div class="sel">30.5</div>
+      <div class="r">-114</div>
+      <div class="imp">50.1%</div>
+      <div class="mv terra">&#9660;0.8</div>
+    </div>
+
+    <div class="prow">
+      <div class="who">
+        <div class="nm"><a href="#">Erling Haaland</a></div>
+        <div class="gm">MCI at CRY &middot; EPL &middot; FRI 3:00 PM</div>
+        <div class="ctx">2026-27: scored in <b>2 of 2</b> &middot; 25-26: 21 in 31 <span style="opacity:.7">&middot; game chart coming for EPL</span></div>
+      </div>
+      <div><div class="mkt">SCORER</div><div class="sel">Anytime</div></div>
+      <div class="sel">-</div>
+      <div class="r">-120</div>
+      <div class="asoff">as offered</div>
+      <div class="mv jade">&#9650;3.4</div>
+    </div>
+
+    <div class="prow">
+      <div class="who">
+        <div class="nm"><a href="#">Jeremy Payne</a> <span class="boardpill">BOARD</span></div>
+        <div class="gm">UNC at TCU &middot; CFB &middot; SAT 12:00 PM</div>
+        <div class="ctx">2025: TD in <b>8 of 13</b> games</div>
+        <div class="chartwrap">
+          <div class="chart">
+            <div class="thline" style="bottom:9px;"><span class="tl">0.5</span></div>
+            <div class="bar over" style="height:18px;"><span class="v">1</span><span class="op">BOWL</span></div>
+            <div class="bar over" style="height:36px;"><span class="v">2</span><span class="op">@CIN</span></div>
+            <div class="bar" style="height:2px;"><span class="v">0</span><span class="op">HOU</span></div>
+            <div class="bar over" style="height:18px;"><span class="v">1</span><span class="op">@BAY</span></div>
+            <div class="bar over" style="height:18px;"><span class="v">1</span><span class="op">UCF</span></div>
+            <div class="bar" style="height:2px;"><span class="v">0</span><span class="op">@ARK</span></div>
+            <div class="bar over" style="height:18px;"><span class="v">1</span><span class="op">SMU</span></div>
+            <div class="bar" style="height:2px;"><span class="v">0</span><span class="op">@KSU</span></div>
+            <div class="bar over" style="height:36px;"><span class="v">2</span><span class="op">COLO</span></div>
+            <div class="bar over" style="height:18px;"><span class="v">1</span><span class="op">ASU</span></div>
+          </div>
+          <button class="stripmore">FULL SEASON &darr;</button>
+        </div>
+      </div>
+      <div><div class="mkt">ANYTIME TD</div><div class="sel">Yes</div></div>
+      <div class="sel">-</div>
+      <div class="r">-206</div>
+      <div class="asoff">as offered</div>
+      <div class="mv mut">-</div>
+    </div>
+
+    <div class="foot">Anytime prices are as offered, not de-vigged - several players can score, so these do not sum to 100. Stat lines are our own game logs speaking; the price is the market's answer. We show both. What you do with the distance between them is yours.</div>
+  </div>
+
+  <a class="more" href="#">SHOWING 5 OF 214 &middot; LOAD MORE</a>
+
+  <div class="note">
+    MOCK v0.5 NOTES - Changes from v0.4: DEFAULT CHART IS LAST 10 GAMES (was 5); FULL SEASON expands past that. EVERY market type carries the chart - counting stats included: Payne's Anytime TD charts 0/1/2 TDs against 0.5, Hall's Recs against 1.5 - a zero renders as a floor sliver so absence is visible. PLAYER NAMES ARE LINKS to their player pages (volt underline on hover); the player page gains its own GAME LOG section in the build - full per-game stats for every season we hold, the chart's big sibling. CHART COVERAGE RULE: every player whose vendor name links to a player row with game logs gets a chart, every market. The honest gaps, named: (1) EPL has no player-game-stats ingest yet - Haaland's row states "game chart coming for EPL" rather than inventing one; (2) unlinked vendor names get context-free rows until the name-linking pass lands; (3) rookies' charts draw on prior-level logs (an NFL rookie charts his final college season, labeled with the school) - RULING PROPOSED, confirm at lock. Players with fewer than 10 logged games chart what exists. All v0.4 rules carry: bars newest first, today's line dashed volt with value at right edge, brightness step not verdict color, honesty foot (lines offered then may have differed), absent-not-invented, observation-only voice, tabs LINES/PROPS/FUTURES (+LEDGER Phase B), Movement Board filter grammar, de-vig treatments side by side, BOARD pills. New market keys: player_pass_tds + vendor-priced siblings per recon. Hyphens only.
+  </div>
+
+</div>
+</body>
+</html>

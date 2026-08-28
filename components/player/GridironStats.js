@@ -61,7 +61,11 @@ export function SeasonTotals({ seasons, columns }) {
   );
 }
 
-export function GameLog({ games, columns, seasonLabel }) {
+/**
+ * @param seasons  every season with rows, for the selector. One season means
+ *                 no selector: a control with a single option is furniture.
+ */
+export function GameLog({ games, columns, seasonLabel, seasons = [], activeSeason = null, hrefFor }) {
   if (!games?.length) return null;
   return (
     <section className="gp-mod" id="gamelog">
@@ -69,6 +73,13 @@ export function GameLog({ games, columns, seasonLabel }) {
         <span>Game log</span>
         <span className="gp-ctx">{seasonLabel}</span>
       </div>
+      {seasons.length > 1 && hrefFor ? (
+        <div className="gp-seasons">
+          {seasons.map((y) => (
+            <a key={y} href={hrefFor(y)} className={y === activeSeason ? 'on' : undefined}>{y}</a>
+          ))}
+        </div>
+      ) : null}
       <Head columns={columns} first="Wk" second="Game" />
       {games.map((g, i) => (
         <div className="gp-srow" key={`${g.season}-${g.week}-${i}`} style={gridStyle(columns.length)}>

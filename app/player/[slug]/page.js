@@ -45,7 +45,8 @@ import { isGridiron, playerCrumb, playerPills, emptyLogLine } from '@/components
 import GridironHero from '@/components/player/GridironHero';
 import GridironTeamNext from '@/components/player/GridironTeamNext';
 import { SeasonTotals, GameLog, EmptyLog } from '@/components/player/GridironStats';
-import { columnsFor, seasonTotals, gameLog, bdlIdOf } from '@/lib/gridiron/playerStats';
+import { columnsFor, seasonTotals, gameLog, bdlIdOf, chartsFor } from '@/lib/gridiron/playerStats';
+import GameCharts from '@/components/player/GameCharts';
 import { cfbColumnsFor, cfbSeasonTotals } from '@/lib/cfb/seasonStats';
 import { cfbGameLog } from '@/lib/cfb/gameStats';
 import { getTeamMatches } from '@/lib/teams';
@@ -72,7 +73,7 @@ const LEAGUE_LABEL = { nfl: 'NFL', cfb: 'CFB' };
  * lesson was that a shared component edited "generically" is where soccer
  * regressions come from.
  */
-async function GridironPlayer({ player, crumb, isAuthed = false, initialFollowing = false }) {
+async function GridironPlayer({ player, crumb, isAuthed = false, initialFollowing = false, season = null }) {
   // THE COLUMN VOCABULARY FORKS BY CODE, and it is a data fact rather than a
   // design one: nfl_player_game_stats has never held a tackles column, so NFL
   // defense reads Sacks/INT/FR/TD, while CFBD does carry tackles and TFL, so
@@ -88,19 +89,36 @@ async function GridironPlayer({ player, crumb, isAuthed = false, initialFollowin
   // the empty line says nothing about which of those two it is.
   const canHaveStats = columns != null
     && (isCfb ? player.id != null : player.league_slug === 'nfl' && bdlId != null);
-  const [seasons, games, teamMatches] = await Promise.all([
+  const [seasons, teamMatches] = await Promise.all([
     !canHaveStats ? Promise.resolve([])
       : isCfb ? cfbSeasonTotals(player.id, columns).catch(() => [])
               : seasonTotals(bdlId, columns).catch(() => []),
-    // The log is its own table in both codes, never derived from season totals -
-    // one source of truth per number.
-    !canHaveStats ? Promise.resolve([])
-      : isCfb ? cfbGameLog(player.id, columns, { limit: 4 }).catch(() => [])
-              : gameLog(bdlId, columns, { limit: 4 }).catch(() => []),
     player.team_id != null ? getTeamMatches(player.team_id).catch(() => []) : Promise.resolve([]),
   ]);
 
+  // THE LOG IS SEASON-SCOPED NOW, not a four-row preview. Which season: the
+  // one asked for if it has rows, else the most recent that does. A ?season=
+  // pointing at a year the player never played falls back rather than
+  // rendering an empty section - the URL is a request, not an assertion.
+  const seasonYears = seasons.map((r) => r.season).filter((y) => y != null);
+  const wanted = Number(season);
+  const shownSeason = seasonYears.includes(wanted) ? wanted : (seasonYears[0] ?? null);
+  // The log is its own table in both codes, never derived from season totals -
+  // one source of truth per number.
+  const games = !canHaveStats || shownSeason == null ? []
+    : isCfb ? await cfbGameLog(player.id, columns, { season: shownSeason }).catch(() => [])
+            : await gameLog(bdlId, columns, { season: shownSeason }).catch(() => []);
+
   const hasStats = seasons.length > 0;
+  // THE ROOKIE RULE. When the season being charted belongs to a different level
+  // than the player's current one, the chart says so with the team and season
+  // rather than presenting college production as a professional record. The
+  // season row carries the team it was played for, which is the honest label.
+  const shownRow = seasons.find((r) => r.season === shownSeason) ?? null;
+  const shownTeam = shownRow?.team_name ?? shownRow?.team ?? null;
+  const levelNote = shownTeam && player.team_name && shownTeam !== player.team_name
+    ? `${shownSeason} with ${shownTeam} — the most recent season on record.`
+    : null;
   const now = Date.now();
   const next = teamMatches
     .filter((m) => m.status === 'scheduled' && new Date(m.kickoff_at).getTime() >= now)
@@ -131,9 +149,18 @@ async function GridironPlayer({ player, crumb, isAuthed = false, initialFollowin
         {hasStats ? (
           <>
             <SeasonTotals seasons={seasons} columns={columns} />
+            {/* CHART ABOVE TABLE: the shape first, then the numbers behind it.
+                Capped at two families by chartsFor - a glance holds two. */}
+            {games.length > 0 && (
+              <GameCharts games={games} charts={chartsFor(columns)}
+                seasonLabel={shownSeason ? `${shownSeason} · ${games.length} games` : ''}
+                levelNote={levelNote} />
+            )}
             {games.length > 0 && (
               <GameLog games={games} columns={columns}
-                seasonLabel={latestSeason ? `${latestSeason} · Last ${games.length}` : ''} />
+                seasons={seasonYears} activeSeason={shownSeason}
+                hrefFor={(y) => `?season=${y}#gamelog`}
+                seasonLabel={shownSeason ? `${shownSeason} · ${games.length} games` : ''} />
             )}
           </>
         ) : (
@@ -157,8 +184,12 @@ async function GridironPlayer({ player, crumb, isAuthed = false, initialFollowin
   );
 }
 
-export default async function PlayerPage({ params }) {
+export default async function PlayerPage({ params, searchParams }) {
   const { slug } = await params;
+  // The season selector is URL state, so a chosen season survives a share, a
+  // back button and a reload. The gridiron arm reads it; the soccer arm below
+  // never sees it and is byte-for-byte the function it was.
+  const sp = (await searchParams) ?? {};
   const player = await getPlayerBySlug(slug);
   if (!player) notFound();
 
@@ -177,6 +208,7 @@ export default async function PlayerPage({ params }) {
           crumb={playerCrumb(player.league_slug, player.full_name)}
           isAuthed={gUserId != null}
           initialFollowing={gFollowing}
+          season={typeof sp.season === 'string' ? sp.season : null}
         />
       </>
     );
