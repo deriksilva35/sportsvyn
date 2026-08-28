@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>The Market - Props Table - Mock v0.7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --ink-2:#141414; --ink-3:#1E1E1E;
+    --volt:#D4FF00; --paper:#F5F5F2; --jade:#2A8A4F; --terra:#B8410F; --live:#E63946;
+    --mut:#8A8A85; --line:#2A2A2A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--ink); color:var(--paper); font-family:'JetBrains Mono',monospace; font-size:12px;
+       display:flex; justify-content:center; min-height:100vh;}
+  .page{width:100%; max-width:1180px; padding:24px 18px 60px;}
+  .volt{color:var(--volt);} .jade{color:var(--jade);} .terra{color:var(--terra);} .mut{color:var(--mut);}
+
+  .tabs{display:flex; gap:6px; border-bottom:1px solid var(--line); margin-bottom:16px;}
+  .tab{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.1em; font-size:12px; text-transform:uppercase;
+       background:none; border:none; color:var(--mut); padding:8px 14px 10px; cursor:pointer; position:relative;}
+  .tab.on{color:var(--volt);}
+  .tab.on::after{content:''; position:absolute; left:10px; right:10px; bottom:-1px; height:2px; background:var(--volt);}
+
+  .frow{display:flex; align-items:center; gap:8px; margin-bottom:9px; flex-wrap:wrap;}
+  .flbl{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.12em; font-size:10px; text-transform:uppercase; color:var(--mut); width:52px;}
+  .ch{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; font-size:11px; text-transform:uppercase;
+      border:1px solid var(--line); background:var(--ink-3); color:var(--paper); border-radius:99px; padding:5px 12px; cursor:pointer;}
+  .ch.on{background:var(--volt); color:var(--ink); border-color:var(--volt);}
+  .gsel{background:var(--ink-3); border:1px solid var(--line); border-radius:99px; color:var(--paper); font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.06em; font-size:11px; text-transform:uppercase; padding:6px 12px; cursor:pointer;}
+  .search{background:var(--ink-3); border:1px solid var(--line); border-radius:99px; color:var(--paper);
+          font-family:'JetBrains Mono',monospace; font-size:12px; padding:6px 14px; width:240px;}
+  .viewtog{margin-left:auto; display:flex; gap:4px;}
+
+  /* the table */
+  .tbl{background:var(--ink-2); border:1px solid var(--line); border-radius:12px; margin-top:12px; overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums;}
+  th{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.1em; font-size:9px; text-transform:uppercase; color:var(--mut);
+     text-align:right; padding:10px 10px 8px; border-bottom:1px solid var(--line); white-space:nowrap; cursor:pointer;}
+  th:hover{color:var(--paper);}
+  th.l{text-align:left;}
+  th.sorted{color:var(--volt);}
+  th .arr{font-size:8px;}
+  td{padding:7px 10px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap;}
+  tr:last-child td{border:none;}
+  td.l{text-align:left;}
+  .nm{font-family:'Saira',sans-serif; font-style:italic; font-weight:900; font-size:13px; letter-spacing:-0.02em;}
+  .nm a{color:inherit; text-decoration:none; border-bottom:1px solid transparent;}
+  .nm a:hover{border-bottom-color:var(--volt);}
+  .gm{color:var(--mut); font-size:10px;}
+  .mkt{color:var(--mut); font-size:10px; text-transform:uppercase;}
+  .px{font-weight:700;}
+  .asoff{color:var(--mut); font-size:9px;}
+  .hit{font-size:11px;}
+  .hit b{color:var(--paper);}
+  .boardpill{font-family:'Saira Condensed',sans-serif; font-weight:600; letter-spacing:.08em; font-size:8px; text-transform:uppercase;
+             color:var(--volt); border:1px solid var(--volt); border-radius:99px; padding:1px 6px; margin-left:5px; vertical-align:middle;}
+  .foot{font-size:10px; color:var(--mut); padding:12px 14px; line-height:1.6;}
+  .note{font-size:10px; color:var(--mut); line-height:1.6; margin-top:22px; border-top:1px solid var(--line); padding-top:12px; max-width:880px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="tabs">
+    <button class="tab">LINES</button>
+    <button class="tab on">PROPS</button>
+    <button class="tab">FUTURES</button>
+  </div>
+
+  <div class="frow">
+    <span class="flbl">LEAGUE</span>
+    <button class="ch on">ALL</button><button class="ch">NFL</button><button class="ch">CFB</button><button class="ch">EPL</button>
+    <div class="viewtog">
+      <button class="ch on">TABLE</button>
+      <button class="ch">CHARTS</button>
+    </div>
+  </div>
+  <div class="frow">
+    <span class="flbl">MARKET</span>
+    <button class="ch on">ALL</button><button class="ch">PASS</button><button class="ch">RUSH</button><button class="ch">RECS</button>
+    <button class="ch">ANYTIME TD</button><button class="ch">SCORER</button><button class="ch">SHOTS</button><button class="ch">ASSISTS</button>
+  </div>
+  <div class="frow">
+    <span class="flbl">GAME</span>
+    <select class="gsel">
+      <option>All games</option>
+      <option>CFB &middot; UNC at TCU &middot; Sat 12:00</option>
+      <option>CFB &middot; SJSU at USC &middot; Sat 3:00</option>
+      <option>NFL &middot; NE at SEA &middot; Wed 8:20</option>
+      <option>NFL &middot; DEN at KC &middot; Mon 8:15</option>
+      <option>EPL &middot; MCI at CRY &middot; Fri 3:00</option>
+    </select>
+  </div>
+  <div class="frow">
+    <span class="flbl">SHOW</span>
+    <button class="ch">BOARD GAMES</button>
+    <button class="ch">MOVERS ONLY</button>
+    <input class="search" placeholder="Search player or team">
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead>
+        <tr>
+          <th class="l">PLAYER</th>
+          <th class="l">GAME</th>
+          <th class="l">MARKET</th>
+          <th>LINE</th>
+          <th>PRICE</th>
+          <th>IMP%</th>
+          <th class="sorted">24H <span class="arr">&#9660;</span></th>
+          <th>HIT</th>
+          <th>AVG</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="l"><span class="nm"><a href="#">B. Smith</a></span></td>
+          <td class="l gm">DEN at KC &middot; MON 8:15</td>
+          <td class="l mkt">Anytime TD</td>
+          <td class="mut">-</td>
+          <td class="px">+450</td>
+          <td class="asoff">as offered</td>
+          <td class="jade">&#9650;5.7</td>
+          <td class="hit"><b>1</b>/15</td>
+          <td class="mut">0.1</td>
+        </tr>
+        <tr>
+          <td class="l"><span class="nm"><a href="#">E. Demercado</a></span></td>
+          <td class="l gm">DEN at KC &middot; MON 8:15</td>
+          <td class="l mkt">Anytime TD</td>
+          <td class="mut">-</td>
+          <td class="px">+425</td>
+          <td class="asoff">as offered</td>
+          <td class="jade">&#9650;4.8</td>
+          <td class="hit"><b>1</b>/11</td>
+          <td class="mut">0.1</td>
+        </tr>
+        <tr>
+          <td class="l"><span class="nm"><a href="#">S. Darnold</a></span></td>
+          <td class="l gm">NE at SEA &middot; WED 8:20</td>
+          <td class="l mkt">Pass TDs O</td>
+          <td>1.5</td>
+          <td class="px">+104</td>
+          <td>46.1%</td>
+          <td class="terra">&#9660;2.1</td>
+          <td class="hit"><b>9</b>/20</td>
+          <td class="mut">1.5</td>
+        </tr>
+        <tr>
+          <td class="l"><span class="nm"><a href="#">C. Simms</a></span><span class="boardpill">BOARD</span></td>
+          <td class="l gm">SJSU at USC &middot; SAT 3:00</td>
+          <td class="l mkt">Anytime TD</td>
+          <td class="mut">-</td>
+          <td class="px">-115</td>
+          <td class="asoff">as offered</td>
+          <td class="jade">&#9650;4.5</td>
+          <td class="hit"><b>0</b>/1</td>
+          <td class="mut">0.0</td>
+        </tr>
+        <tr>
+          <td class="l"><span class="nm"><a href="#">E. Haaland</a></span></td>
+          <td class="l gm">MCI at CRY &middot; FRI 3:00</td>
+          <td class="l mkt">Scorer</td>
+          <td class="mut">-</td>
+          <td class="px">-120</td>
+          <td class="asoff">as offered</td>
+          <td class="jade">&#9650;3.4</td>
+          <td class="hit"><b>2</b>/2</td>
+          <td class="mut">1.0</td>
+        </tr>
+        <tr>
+          <td class="l"><span class="nm">N. Ramirez</span></td>
+          <td class="l gm">FUL at SUN &middot; SAT 10:00</td>
+          <td class="l mkt">Shots O</td>
+          <td>2.5</td>
+          <td class="px">+435</td>
+          <td class="asoff">as offered</td>
+          <td class="mut">-</td>
+          <td class="mut">-</td>
+          <td class="mut">-</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="foot">Showing 40 of 3,156 &middot; HIT is games clearing today's line (season) &middot; AVG is per game &middot; as-offered prices are not de-vigged &middot; unlinked players carry no stats - our gap, not theirs. Not a pick. Not a recommendation.</div>
+  </div>
+
+  <div class="note">
+    MOCK v0.7 NOTES - Adds the GAME dropdown: a select in its own filter row, options grouped by league and ordered by kickoff, "All games" default. Selecting a game filters the table to every priced selection on that match, across all markets; the league chips follow (picking a CFB game sets league context). URL state ?game={match-id} so a game's full props sheet is linkable - and the game-page ghost links can later deep-link to their own game. Board games sort first in the dropdown. Everything else per v0.6 - The TABLE view: default view of the PROPS tab, with CHARTS (the shipped v0_5 board) as the alternate via the TABLE/CHARTS toggle (URL state, ?view=charts; table is the unmarked default). One row per selection, dense mono: PLAYER (Saira italic link + BOARD pill), GAME, MARKET, LINE, PRICE, IMP% (or "as offered"), 24H (jade/terra glyph), HIT (season games clearing today's line, b/total), AVG (per game). EVERY column header sorts - click toggles asc/desc, active header volt with arrow; sort is client-side over the loaded page. Filters shared with the charts view and DEDUPED: the page-level ?f chip row is retired on the PROPS tab (the LEAGUE filter row is the one control); LINES and FUTURES keep the page-level chips. Unlinked rows: dashes in HIT/AVG, same sort behavior (dash sorts last within its direction, never demoted by default sort). Foot carries the column definitions + the stance. Movement Board table grammar is the precedent. Hyphens only.
+  </div>
+
+</div>
+</body>
+</html>
