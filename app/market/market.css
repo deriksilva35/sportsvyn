@@ -147,3 +147,94 @@
   content: ''; position: absolute; left: 10px; right: 10px; bottom: -1px;
   height: 2px; background: var(--volt);
 }
+
+/* ---- the full props board (mock v0.5). The threshold line lives HERE and not
+   on the player page: a dashed line compares production to a PRICE, and this
+   is the only surface where a price exists. The .over brightness step comes
+   with it - over is a property of a line. */
+.mk-wrap .pb-frow { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.mk-wrap .pb-frow .flbl {
+  font-family: var(--font-saira-cond); font-weight: 600; letter-spacing: .12em;
+  font-size: 10px; text-transform: uppercase; color: var(--muted); width: 52px; flex: 0 0 52px;
+}
+.mk-wrap .pb-search input {
+  background: var(--graphite-up); border: 1px solid var(--rule); border-radius: 99px;
+  color: var(--paper); font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px; padding: 7px 14px; width: 240px; max-width: 100%;
+}
+.mk-wrap .pb-search input::placeholder { color: var(--muted); }
+
+.mk-wrap .pb-board {
+  background: var(--graphite); border: 1px solid var(--rule);
+  border-radius: 12px; padding: 4px 14px; margin-top: 14px;
+}
+.mk-wrap .pb-head, .mk-wrap .pb-row {
+  display: grid; grid-template-columns: minmax(200px, 1.4fr) 92px 62px 62px 56px 52px;
+  gap: 10px; font-variant-numeric: tabular-nums;
+}
+.mk-wrap .pb-head {
+  font-family: var(--font-saira-cond); font-weight: 600; letter-spacing: .12em;
+  font-size: 9px; text-transform: uppercase; color: var(--muted);
+  padding: 10px 0 8px; border-bottom: 1px solid var(--rule);
+}
+.mk-wrap .pb-head .r, .mk-wrap .pb-row .px,
+.mk-wrap .pb-row .imp, .mk-wrap .pb-row .asoff, .mk-wrap .pb-row .mv { text-align: right; }
+.mk-wrap .pb-row { align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.mk-wrap .pb-row:last-of-type { border-bottom: none; }
+.mk-wrap .pb-row .who { min-width: 0; }
+.mk-wrap .pb-row .nm {
+  font-family: var(--font-display, inherit); font-style: italic; font-weight: 900;
+  font-size: 14px; letter-spacing: -.02em;
+}
+.mk-wrap .pb-row .nm a { color: inherit; text-decoration: none; border-bottom: 1px solid transparent; }
+.mk-wrap .pb-row .nm a:hover { border-bottom-color: var(--volt); }
+.mk-wrap .pb-row .gm { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.mk-wrap .pb-row .ctx { font-size: 10px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+.mk-wrap .pb-row .mkt .k { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+.mk-wrap .pb-row .mkt .s { font-size: 12px; }
+.mk-wrap .pb-row .ln { font-size: 12px; }
+.mk-wrap .pb-row .px { font-weight: 700; }
+.mk-wrap .pb-row .imp { color: var(--muted); font-size: 11px; }
+.mk-wrap .pb-row .asoff { font-size: 9px; color: var(--muted); }
+.mk-wrap .pb-row .boardpill {
+  font-family: var(--font-saira-cond); font-weight: 600; letter-spacing: .08em;
+  font-size: 9px; text-transform: uppercase; color: var(--volt);
+  border: 1px solid var(--volt); border-radius: 99px; padding: 1px 7px;
+  margin-left: 6px; vertical-align: middle;
+}
+
+.mk-wrap .pb-chartwrap { margin: 10px 0 20px; }
+.mk-wrap .pb-chart { position: relative; display: flex; align-items: flex-end; gap: 4px; height: 64px; padding-top: 10px; }
+.mk-wrap .pb-thline {
+  position: absolute; left: 0; right: 30px; z-index: 2;
+  border-top: 1px dashed color-mix(in srgb, var(--volt) 55%, transparent);
+}
+.mk-wrap .pb-thline .tl {
+  position: absolute; right: -28px; top: -7px; font-size: 9px;
+  color: var(--volt); font-variant-numeric: tabular-nums;
+}
+.mk-wrap .pb-bar {
+  position: relative; width: 30px; flex: 0 0 30px;
+  background: var(--graphite-up); border: 1px solid var(--rule);
+  border-bottom: 2px solid var(--muted); border-radius: 3px 3px 0 0;
+  display: flex; justify-content: center;
+}
+.mk-wrap .pb-bar.over {
+  background: color-mix(in srgb, var(--paper) 14%, var(--graphite-up));
+  border-color: color-mix(in srgb, var(--paper) 30%, var(--rule));
+}
+.mk-wrap .pb-bar .v { position: absolute; top: -13px; font-size: 10px; font-weight: 700; color: var(--paper); font-variant-numeric: tabular-nums; }
+.mk-wrap .pb-bar .op { position: absolute; bottom: -14px; font-size: 8px; color: var(--muted); white-space: nowrap; }
+.mk-wrap .pb-full {
+  display: inline-block; font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px; color: var(--muted); text-decoration: none; margin-top: 18px;
+}
+.mk-wrap .pb-full:hover { color: var(--volt); }
+.mk-wrap .pb-foot { font-size: 10px; color: var(--muted); padding: 12px 0 10px; line-height: 1.6; }
+.mk-wrap .pb-more { font-size: 10px; color: var(--muted); margin-top: 12px; text-align: center; }
+
+@media (max-width: 700px) {
+  .mk-wrap .pb-head { display: none; }
+  .mk-wrap .pb-row { grid-template-columns: 1fr auto auto; }
+  .mk-wrap .pb-row .ln, .mk-wrap .pb-row .imp, .mk-wrap .pb-row .asoff { display: none; }
+}

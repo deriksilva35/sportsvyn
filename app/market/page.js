@@ -29,8 +29,10 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import Link from 'next/link';
 import {
   pricedSlate, futuresBoards, bookCounts, latestSnapshotAt, boardMatchIds,
-  hasMovement, propsSlate, MARKET_LEAGUES,
+  hasMovement, MARKET_LEAGUES,
 } from '@/lib/market/reads';
+import PropsBoard from '@/components/market/PropsBoard';
+import { propsBoard, shortName } from '@/lib/market/propsBoard';
 import './market.css';
 
 export const dynamic = 'force-dynamic';
@@ -77,6 +79,28 @@ const pct = (n) => (n == null ? '' : `${n.toFixed(1)}%`);
  *
  * The default tab is omitted from the URL so /market stays /market.
  */
+/**
+ * Every board control keeps every other control's state. A reader who has
+ * filtered to CFB, sorted by implied % and searched "Palmer" and then taps
+ * MOVERS ONLY keeps all three - one control silently resetting the others is
+ * the bug the /scores toolbar had while its filters lived in component state.
+ */
+function boardHref(state, tab, patch) {
+  const next = {
+    f: state.league, g: state.group, s: state.sort, q: state.q,
+    board: state.boardOnly ? '1' : null, movers: state.moversOnly ? '1' : null,
+    ...patch,
+  };
+  const qs = [`tab=${tab}`];
+  if (next.f && next.f !== 'all') qs.push(`f=${next.f}`);
+  if (next.g && next.g !== 'all') qs.push(`g=${next.g}`);
+  if (next.s && next.s !== 'move') qs.push(`s=${next.s}`);
+  if (next.q) qs.push(`q=${encodeURIComponent(next.q)}`);
+  if (next.board) qs.push('board=1');
+  if (next.movers) qs.push('movers=1');
+  return `/market?${qs.join('&')}`;
+}
+
 function marketHref(filter, tab) {
   const q = [];
   if (filter && filter !== 'all') q.push(`f=${filter}`);
@@ -112,6 +136,26 @@ function Row({ label, sel, price, implied, move }) {
   );
 }
 
+/**
+ * A selection's club, at column width. The abbreviation is an identifier the
+ * teams table already holds; deriving one from the name would invent a code
+ * the rest of the app does not use.
+ */
+function teamShort(label, card) {
+  if (label === 'Draw') return label;
+  for (const side of [card.home, card.away]) {
+    const name = side?.name;
+    if (!name || !side.abbreviation) continue;
+    // EXACT, THEN PREFIX. NFL and EPL agree with the vendor on club names, so
+    // exact carries them. CFB does not: we store "TCU" where the book writes
+    // "TCU Horned Frogs", the same mismatch resolveTeamId meets on the ingest
+    // side and solves the same way. Whole-word prefix only, so "Ohio" cannot
+    // claim "Ohio State".
+    if (label === name || label.startsWith(`${name} `)) return side.abbreviation;
+  }
+  return label;
+}
+
 function Card({ card, onBoard }) {
   const away = card.away.abbreviation || card.away.name || 'TBD';
   const home = card.home.abbreviation || card.home.name || 'TBD';
@@ -127,66 +171,32 @@ function Card({ card, onBoard }) {
         <span className="when">{card.kickoffAt ? WHEN.format(new Date(card.kickoffAt)).toUpperCase() : 'TBD'}</span>
       </div>
 
+      {/* SHORT NAMES, THE ONE EDIT TO A HOMED TAB - and the SOURCE matters.
+          Full club names truncate to nonsense in this column at phone width, a
+          live defect today. The fix is the TEAM'S OWN ABBREVIATION from the
+          teams table, not a name-shortening rule: the props board's
+          first-initial-plus-surname is right for people and produces garbage
+          for clubs ("TCU Horned Frogs" -> "T. Frogs"). Two different kinds of
+          name, two different sources. A club with no abbreviation keeps its
+          full name, and Draw is neither team. */}
       {card.h2h.map((s, i) => (
         <Row key={s.label}
           label={i === 0 ? (card.threeWay ? '1X2' : 'ML') : ''}
-          sel={s.label} price={american(s.american)} implied={pct(s.impliedPct)} move={s.moveProb} />
+          sel={teamShort(s.label, card)}
+          price={american(s.american)} implied={pct(s.impliedPct)} move={s.moveProb} />
       ))}
 
       {/* The spread's own price is near-constant at -110; the LINE is the news,
           so the line is the selection and the juice is the price. Soccer's is
           an Asian handicap and reads the same way. */}
       {spread ? (
-        <Row label="Spread" sel={`${spread.label} ${spread.value ?? ''}`.trim()}
+        <Row label="Spread" sel={`${teamShort(spread.label, card)} ${spread.value ?? ''}`.trim()}
           price={american(spread.american)} implied="" move={spread.moveProb} />
       ) : null}
 
       {over ? (
         <Row label="Total" sel={`O/U ${over.value ?? ''}`.trim()}
           price={american(over.american)} implied="" move={over.moveProb} />
-      ) : null}
-    </div>
-  );
-}
-
-/**
- * A PROPS CARD, in the board's own mrow grammar. Same five columns, so the two
- * bands read as one page rather than two features.
- *
- * THE NON-EXCLUSIVITY NOTE IS NOT DECORATION. Anytime prices are stored raw and
- * single-sided because several players score in one game - the outcomes are not
- * mutually exclusive and the field sums far above 100 (577% on a live NFL card).
- * A reader who assumes these are de-vigged probabilities would draw a false
- * conclusion from true numbers, so the card says so where the numbers are.
- */
-export function PropsCard({ card, onBoard }) {
-  const away = card.away.abbreviation || card.away.name || 'TBD';
-  const home = card.home.abbreviation || card.home.name || 'TBD';
-  return (
-    <div className="g">
-      <div className="top">
-        <span className="match">
-          {away} at {home}
-          {onBoard ? <> <span className="boardpill">Board</span></> : null}
-        </span>
-        <span className="when">{card.kickoffAt ? WHEN.format(new Date(card.kickoffAt)).toUpperCase() : 'TBD'}</span>
-      </div>
-      {card.rows.map((r) => (
-        <Row key={`${r.marketType}:${r.label}`}
-          label={r.marketLabel}
-          sel={`${r.label}${r.value ? ` ${r.value}` : ''}`}
-          price={american(r.american)}
-          implied={r.impliedPct == null ? '' : pct(r.impliedPct)}
-          move={r.moveProb} />
-      ))}
-      {card.overflow > 0 ? (
-        <div className="overflow">+{card.overflow} more priced</div>
-      ) : null}
-      {card.hasAnytime ? (
-        <div className="propnote">
-          Anytime prices are as offered, not de-vigged - several players can score,
-          so these do not sum to 100.
-        </div>
       ) : null}
     </div>
   );
@@ -222,21 +232,21 @@ export default async function MarketPage({ searchParams }) {
   const rawTab = typeof sp.tab === 'string' ? sp.tab : DEFAULT_TAB;
   const tab = TABS.some(([k]) => k === rawTab) ? rawTab : DEFAULT_TAB;
 
-  const [byLeague, futures, books, snapAt, boardIds, props] = await Promise.all([
+  // BOARD STATE IS ALL URL STATE, so a board a reader has narrowed is a board
+  // they can share. Nothing here is component state.
+  const boardState = {
+    league: filter === 'movers' ? 'all' : filter,
+    group: typeof sp.g === 'string' ? sp.g : 'all',
+    sort: typeof sp.s === 'string' ? sp.s : 'move',
+    q: typeof sp.q === 'string' ? sp.q : '',
+    boardOnly: sp.board === '1',
+    moversOnly: sp.movers === '1' || filter === 'movers',
+  };
+
+  const [byLeague, futures, books, snapAt, boardIds, board] = await Promise.all([
     pricedSlate(), futuresBoards(), bookCounts(), latestSnapshotAt(), boardMatchIds(),
-    propsSlate().catch(() => []),
+    tab === 'props' ? propsBoard(boardState).catch(() => ({ rows: [], total: 0 })) : Promise.resolve(null),
   ]);
-  // BOARD GAMES FIRST here too - the same editorial rule the CFB band uses.
-  props.sort((a, b) => (boardIds.has(b.matchId) ? 1 : 0) - (boardIds.has(a.matchId) ? 1 : 0));
-  // THE CHIP HAS TO MEAN THE SAME THING ON EVERY TAB. The shipped props band
-  // ignored ?f= because it only ever rendered on the unfiltered view; under
-  // tabs a reader can hold CFB and switch to PROPS, and an active CFB chip
-  // above three leagues' rows is a control that lies. This is the one content
-  // behaviour the move had to add rather than relocate, and it adds nothing
-  // the chip did not already promise on LINES.
-  const shownProps = MARKET_LEAGUES.includes(filter)
-    ? props.filter((c) => c.leagueSlug === filter)
-    : props;
 
   // BOARD GAMES FIRST, WITHIN CFB — the only editorial ordering on the page.
   // Everything else is kickoff order, because a record of what the market is
@@ -295,18 +305,12 @@ export default async function MarketPage({ searchParams }) {
           <Band key={s} slug={s} cards={shown.get(s) ?? []} boardIds={boardIds} books={books} />
         )) : null}
 
-        {tab === 'props' && shownProps.length ? (
-          <section>
-            <div className="bandhead">
-              <span className="b">Player props</span>
-              <span className="c">{shownProps.length} game{shownProps.length === 1 ? '' : 's'} priced · board games first</span>
-            </div>
-            <div className="grid">
-              {shownProps.map((c) => (
-                <PropsCard key={c.matchId} card={c} onBoard={boardIds.has(c.matchId)} />
-              ))}
-            </div>
-          </section>
+        {/* THE FULL BOARD replaces the five-card band. The band's PropsCard is
+            retired with it - one props presentation, not two. */}
+        {tab === 'props' && board ? (
+          <PropsBoard rows={board.rows} total={board.total} state={boardState}
+            leagueChips={[['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['epl', 'EPL']]}
+            hrefFor={(patch) => boardHref(boardState, tab, patch)} />
         ) : null}
 
         {tab === 'futures' ? (
