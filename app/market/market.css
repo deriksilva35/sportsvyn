@@ -129,3 +129,21 @@
 /* The page head's reverse door sits on the kicker's line, right-aligned -
    the same shape /scores uses for its two cross-links. */
 .mk-wrap .mk-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+
+/* The tab row, in the mock's grammar: the active tab is volt with a volt
+   underline that sits ON the row's own border, so the selected board reads as
+   the sheet in front rather than as a highlighted word. */
+.mk-wrap .tabs {
+  display: flex; gap: 6px; border-bottom: 1px solid var(--rule); margin-bottom: 18px;
+}
+.mk-wrap .tab {
+  font-family: var(--font-saira-cond); font-weight: 600; letter-spacing: .1em;
+  font-size: 12px; text-transform: uppercase; text-decoration: none;
+  color: var(--muted); padding: 8px 14px 10px; position: relative;
+}
+.mk-wrap .tab:hover { color: var(--paper); }
+.mk-wrap .tab.on { color: var(--volt); }
+.mk-wrap .tab.on::after {
+  content: ''; position: absolute; left: 10px; right: 10px; bottom: -1px;
+  height: 2px; background: var(--volt);
+}

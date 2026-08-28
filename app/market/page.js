@@ -42,6 +42,19 @@ export const metadata = {
 const LEAGUE_LABEL = { nfl: 'NFL', cfb: 'CFB', epl: 'EPL' };
 const CHIPS = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['epl', 'EPL'], ['movers', 'Movers only']];
 
+/**
+ * THE THREE BOARDS THIS PAGE HOLDS.
+ *
+ * Until now all three rendered stacked on one scroll, which worked while props
+ * was a five-card band and stops working the moment it becomes a full board.
+ * Tabs give each one a home without changing what any of them says.
+ *
+ * LEDGER IS PHASE B AND IS ABSENT, NOT DISABLED. A greyed-out tab promises a
+ * feature; no tab promises nothing, which is the truth.
+ */
+const TABS = [['lines', 'Lines'], ['props', 'Props'], ['futures', 'Futures']];
+const DEFAULT_TAB = 'lines';
+
 const WHEN = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit',
 });
@@ -55,8 +68,20 @@ function stamp(d) {
 const american = (n) => (n == null ? '—' : n > 0 ? `+${n}` : `${n}`);
 const pct = (n) => (n == null ? '' : `${n.toFixed(1)}%`);
 
-function marketHref(filter) {
-  return filter === 'all' ? '/market' : `/market?f=${filter}`;
+/**
+ * BOTH AXES SURVIVE EVERY LINK. The league filter and the tab are independent -
+ * a reader on PROPS who picks CFB stays on PROPS, and the tab row keeps
+ * whatever filter is already applied. Building each href from both is what
+ * stops one control silently resetting the other, which is the same fix the
+ * /scores toolbar needed when its filters lived in component state.
+ *
+ * The default tab is omitted from the URL so /market stays /market.
+ */
+function marketHref(filter, tab) {
+  const q = [];
+  if (filter && filter !== 'all') q.push(`f=${filter}`);
+  if (tab && tab !== DEFAULT_TAB) q.push(`tab=${tab}`);
+  return q.length ? `/market?${q.join('&')}` : '/market';
 }
 
 /**
@@ -194,6 +219,8 @@ export default async function MarketPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
   const raw = typeof sp.f === 'string' ? sp.f : 'all';
   const filter = CHIPS.some(([k]) => k === raw) ? raw : 'all';
+  const rawTab = typeof sp.tab === 'string' ? sp.tab : DEFAULT_TAB;
+  const tab = TABS.some(([k]) => k === rawTab) ? rawTab : DEFAULT_TAB;
 
   const [byLeague, futures, books, snapAt, boardIds, props] = await Promise.all([
     pricedSlate(), futuresBoards(), bookCounts(), latestSnapshotAt(), boardMatchIds(),
@@ -201,6 +228,15 @@ export default async function MarketPage({ searchParams }) {
   ]);
   // BOARD GAMES FIRST here too - the same editorial rule the CFB band uses.
   props.sort((a, b) => (boardIds.has(b.matchId) ? 1 : 0) - (boardIds.has(a.matchId) ? 1 : 0));
+  // THE CHIP HAS TO MEAN THE SAME THING ON EVERY TAB. The shipped props band
+  // ignored ?f= because it only ever rendered on the unfiltered view; under
+  // tabs a reader can hold CFB and switch to PROPS, and an active CFB chip
+  // above three leagues' rows is a control that lies. This is the one content
+  // behaviour the move had to add rather than relocate, and it adds nothing
+  // the chip did not already promise on LINES.
+  const shownProps = MARKET_LEAGUES.includes(filter)
+    ? props.filter((c) => c.leagueSlug === filter)
+    : props;
 
   // BOARD GAMES FIRST, WITHIN CFB — the only editorial ordering on the page.
   // Everything else is kickoff order, because a record of what the market is
@@ -237,35 +273,43 @@ export default async function MarketPage({ searchParams }) {
           {snap ? `SNAPSHOT ${snap} · ` : ''}CONSENSUS ACROSS BOOKS, DE-VIGGED · UPDATED EVERY 15 MIN
         </div>
 
-        <div className="chips">
-          {CHIPS.map(([k, label]) => (
-            <Link key={k} className={`ch ${filter === k ? 'on' : ''}`} href={marketHref(k)}>{label}</Link>
+        <div className="tabs">
+          {TABS.map(([k, label]) => (
+            <Link key={k} className={`tab ${tab === k ? 'on' : ''}`} href={marketHref(filter, k)}>{label}</Link>
           ))}
         </div>
 
-        {filter === 'movers' && total === 0 ? (
+        <div className="chips">
+          {CHIPS.map(([k, label]) => (
+            <Link key={k} className={`ch ${filter === k ? 'on' : ''}`} href={marketHref(k, tab)}>{label}</Link>
+          ))}
+        </div>
+
+        {/* LINES — the shipped board, MOVED not edited. Every element below is
+            the markup it always was; only its address changed. */}
+        {tab === 'lines' && filter === 'movers' && total === 0 ? (
           <div className="emptyband">Nothing has moved in the last 24 hours.</div>
         ) : null}
 
-        {leagues.map((s) => (
+        {tab === 'lines' ? leagues.map((s) => (
           <Band key={s} slug={s} cards={shown.get(s) ?? []} boardIds={boardIds} books={books} />
-        ))}
+        )) : null}
 
-        {props.length && (filter === 'all' || filter === 'movers') ? (
+        {tab === 'props' && shownProps.length ? (
           <section>
             <div className="bandhead">
               <span className="b">Player props</span>
-              <span className="c">{props.length} game{props.length === 1 ? '' : 's'} priced · board games first</span>
+              <span className="c">{shownProps.length} game{shownProps.length === 1 ? '' : 's'} priced · board games first</span>
             </div>
             <div className="grid">
-              {props.map((c) => (
+              {shownProps.map((c) => (
                 <PropsCard key={c.matchId} card={c} onBoard={boardIds.has(c.matchId)} />
               ))}
             </div>
           </section>
         ) : null}
 
-        {filter === 'all' || filter === 'movers' ? (
+        {tab === 'futures' ? (
           <section>
             <div className="bandhead">
               <span className="b">Futures</span>

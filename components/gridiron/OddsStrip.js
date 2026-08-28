@@ -59,8 +59,10 @@ export default function OddsStrip({ odds, leagueSlug }) {
       {/* FULL MARKET. The board's filter is URL state (?f=), which already
           exists for the chips - so this deep-links to the reader's own league
           rather than dropping them at the top of a three-league page. No new
-          plumbing: the param the chips already write is the param this reads. */}
-      <a className="gi-market-cta" href={leagueSlug ? `/market?f=${leagueSlug}` : '/market'}>
+          plumbing: the param the chips already write is the param this reads.
+          NOW ALSO TAB-TARGETED: a reader arriving from a game's market module
+          wants the PROPS board, not the lines board they just left. */}
+      <a className="gi-market-cta" href={leagueSlug ? `/market?tab=props&f=${leagueSlug}` : '/market?tab=props'}>
         Full market &rarr;
       </a>
     </div>
