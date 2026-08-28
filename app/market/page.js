@@ -34,6 +34,11 @@ import {
 import PropsBoard from '@/components/market/PropsBoard';
 import PropsTable from '@/components/market/PropsTable';
 import PropsFilters from '@/components/market/PropsFilters';
+import { LinesTable, FuturesTable } from '@/components/market/LineTable';
+import {
+  flattenLines, flattenFutures, sortRows, teamShort,
+  LINES_COLUMNS, FUTURES_COLUMNS, LINES_PAGE, FUTURES_PAGE,
+} from '@/lib/market/lineTables';
 import { propsBoard, propsGames, shortName } from '@/lib/market/propsBoard';
 import './market.css';
 
@@ -107,6 +112,15 @@ function boardHref(state, tab, view, patch) {
   return `/market?${qs.join('&')}`;
 }
 
+/** The CARDS/TABLE toggle on LINES and FUTURES, keeping filter and game. */
+function viewHref(filter, tab, view, game) {
+  const qs = [`tab=${tab}`];
+  if (view) qs.push(`view=${view}`);
+  if (filter && filter !== 'all') qs.push(`f=${filter}`);
+  if (game) qs.push(`game=${game}`);
+  return `/market?${qs.join('&')}`;
+}
+
 function marketHref(filter, tab) {
   const q = [];
   if (filter && filter !== 'all') q.push(`f=${filter}`);
@@ -140,26 +154,6 @@ function Row({ label, sel, price, implied, move }) {
       <Move v={move} />
     </div>
   );
-}
-
-/**
- * A selection's club, at column width. The abbreviation is an identifier the
- * teams table already holds; deriving one from the name would invent a code
- * the rest of the app does not use.
- */
-function teamShort(label, card) {
-  if (label === 'Draw') return label;
-  for (const side of [card.home, card.away]) {
-    const name = side?.name;
-    if (!name || !side.abbreviation) continue;
-    // EXACT, THEN PREFIX. NFL and EPL agree with the vendor on club names, so
-    // exact carries them. CFB does not: we store "TCU" where the book writes
-    // "TCU Horned Frogs", the same mismatch resolveTeamId meets on the ingest
-    // side and solves the same way. Whole-word prefix only, so "Ohio" cannot
-    // claim "Ohio State".
-    if (label === name || label.startsWith(`${name} `)) return side.abbreviation;
-  }
-  return label;
 }
 
 function Card({ card, onBoard }) {
@@ -242,7 +236,14 @@ export default async function MarketPage({ searchParams }) {
   // they can share. Nothing here is component state.
   // TABLE IS THE DEFAULT VIEW, so it carries no param and every existing props
   // deep link lands on it. Charts is the marked alternate.
-  const view = sp.view === 'charts' ? 'charts' : 'table';
+  // TWO DEFAULTS, DELIBERATELY OPPOSITE. On PROPS the table is the default
+  // (?view=charts is marked); on LINES and FUTURES the CARDS are the default
+  // (?view=table is marked). Each tab's unmarked URL renders exactly what it
+  // rendered before its second view existed, which is what makes every shipped
+  // link safe.
+  const view = tab === 'props'
+    ? (sp.view === 'charts' ? 'charts' : 'table')
+    : (sp.view === 'table' ? 'table' : 'cards');
   const boardState = {
     league: filter === 'movers' ? 'all' : filter,
     game: typeof sp.game === 'string' && sp.game !== '' ? sp.game : null,
@@ -274,6 +275,18 @@ export default async function MarketPage({ searchParams }) {
   }
   const total = [...shown.values()].reduce((a, l) => a + l.length, 0);
   const snap = stamp(snapAt);
+
+  // FLATTENED FROM THE READS THE CARDS ALREADY USE - no new queries and no new
+  // numbers, so the table cannot disagree with the cards beside it.
+  const linesSort = typeof sp.sort === 'string' ? sp.sort : 'game';
+  const futuresSort = typeof sp.sort === 'string' ? sp.sort : 'implied';
+  const allLines = tab === 'lines' && view === 'table'
+    ? flattenLines(byLeague, { boardIds, leagues, game: boardState.game }) : [];
+  const linesTotal = allLines.length;
+  const linesRows = sortRows(allLines, LINES_COLUMNS, linesSort, boardState.dir, 'game').slice(0, LINES_PAGE);
+  const allFutures = tab === 'futures' && view === 'table' ? flattenFutures(futures) : [];
+  const futuresTotal = allFutures.length;
+  const futuresRows = sortRows(allFutures, FUTURES_COLUMNS, futuresSort, boardState.dir, 'implied').slice(0, FUTURES_PAGE);
 
   return (
     <div className="gi" data-surface="ink">
@@ -319,9 +332,22 @@ export default async function MarketPage({ searchParams }) {
           <div className="emptyband">Nothing has moved in the last 24 hours.</div>
         ) : null}
 
-        {tab === 'lines' ? leagues.map((s) => (
-          <Band key={s} slug={s} cards={shown.get(s) ?? []} boardIds={boardIds} books={books} />
-        )) : null}
+        {tab === 'lines' ? (
+          <>
+            <div className="pb-frow">
+              <span className="flbl">View</span>
+              <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={viewHref(filter, tab, null, boardState.game)}>Cards</Link>
+              <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={viewHref(filter, tab, 'table', boardState.game)}>Table</Link>
+            </div>
+            {view === 'table' ? (
+              <LinesTable rows={linesRows} total={linesTotal} columns={LINES_COLUMNS}
+                sort={linesSort} dir={boardState.dir || undefined}
+                hrefFor={(patch) => boardHref(boardState, tab, view, patch)} />
+            ) : leagues.map((s) => (
+              <Band key={s} slug={s} cards={shown.get(s) ?? []} boardIds={boardIds} books={books} />
+            ))}
+          </>
+        ) : null}
 
         {/* THE FULL BOARD replaces the five-card band. The band's PropsCard is
             retired with it - one props presentation, not two. */}
@@ -344,6 +370,18 @@ export default async function MarketPage({ searchParams }) {
 
         {tab === 'futures' ? (
           <section>
+            <div className="pb-frow">
+              <span className="flbl">View</span>
+              <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={viewHref(filter, tab, null, null)}>Cards</Link>
+              <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={viewHref(filter, tab, 'table', null)}>Table</Link>
+            </div>
+            {view === 'table' ? (
+              <FuturesTable rows={futuresRows} total={futuresTotal} columns={FUTURES_COLUMNS}
+                sort={futuresSort} dir={boardState.dir || undefined}
+                counts={futures.map((f) => ({ leagueSlug: f.leagueSlug, priced: f.priced }))}
+                hrefFor={(patch) => boardHref(boardState, tab, view, patch)} />
+            ) : (
+            <>
             <div className="bandhead">
               <span className="b">Futures</span>
               <span className="c">Championship winners · top 5 shown</span>
@@ -364,6 +402,8 @@ export default async function MarketPage({ searchParams }) {
                 </div>
               ))}
             </div>
+            </>
+            )}
           </section>
         ) : null}
 
