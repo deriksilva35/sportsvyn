@@ -130,8 +130,17 @@ export async function GET(request) {
           source: lg.source,
         });
         if (zero) {
+          // ITS OWN SOURCE KEY, AND THAT IS NOT COSMETIC. maybeAlert
+          // rate-limits by SOURCE: a different payload inside the window
+          // returns rate_limited and writes NO ledger row at all. Sharing the
+          // league's source meant a CREDIT/KEY WARNING 40 minutes earlier
+          // silently swallowed the zero-match alert - observed in production
+          // on 28 Aug, nfl-props scoped 13 / called 0 with no row emitted.
+          // A distinct source gives this condition its own window.
           await maybeAlert(sql, {
-            source: lg.source, subject: `[pollers] ${lg.source} MATCHED NOTHING`, body: zero,
+            source: `${lg.source}-zeromatch`,
+            subject: `[pollers] ${lg.source} MATCHED NOTHING`,
+            body: zero,
           });
         }
       }
