@@ -32,7 +32,9 @@ import {
   hasMovement, MARKET_LEAGUES,
 } from '@/lib/market/reads';
 import PropsBoard from '@/components/market/PropsBoard';
-import { propsBoard, shortName } from '@/lib/market/propsBoard';
+import PropsTable from '@/components/market/PropsTable';
+import PropsFilters from '@/components/market/PropsFilters';
+import { propsBoard, propsGames, shortName } from '@/lib/market/propsBoard';
 import './market.css';
 
 export const dynamic = 'force-dynamic';
@@ -85,16 +87,20 @@ const pct = (n) => (n == null ? '' : `${n.toFixed(1)}%`);
  * MOVERS ONLY keeps all three - one control silently resetting the others is
  * the bug the /scores toolbar had while its filters lived in component state.
  */
-function boardHref(state, tab, patch) {
+function boardHref(state, tab, view, patch) {
   const next = {
-    f: state.league, g: state.group, s: state.sort, q: state.q,
+    f: state.league, g: state.group, sort: state.sort, dir: state.dir,
+    q: state.q, game: state.game, view: view === 'charts' ? 'charts' : null,
     board: state.boardOnly ? '1' : null, movers: state.moversOnly ? '1' : null,
     ...patch,
   };
   const qs = [`tab=${tab}`];
+  if (next.view === 'charts') qs.push('view=charts');
   if (next.f && next.f !== 'all') qs.push(`f=${next.f}`);
   if (next.g && next.g !== 'all') qs.push(`g=${next.g}`);
-  if (next.s && next.s !== 'move') qs.push(`s=${next.s}`);
+  if (next.game) qs.push(`game=${next.game}`);
+  if (next.sort && next.sort !== 'move') qs.push(`sort=${next.sort}`);
+  if (next.dir) qs.push(`dir=${next.dir}`);
   if (next.q) qs.push(`q=${encodeURIComponent(next.q)}`);
   if (next.board) qs.push('board=1');
   if (next.movers) qs.push('movers=1');
@@ -234,18 +240,24 @@ export default async function MarketPage({ searchParams }) {
 
   // BOARD STATE IS ALL URL STATE, so a board a reader has narrowed is a board
   // they can share. Nothing here is component state.
+  // TABLE IS THE DEFAULT VIEW, so it carries no param and every existing props
+  // deep link lands on it. Charts is the marked alternate.
+  const view = sp.view === 'charts' ? 'charts' : 'table';
   const boardState = {
     league: filter === 'movers' ? 'all' : filter,
+    game: typeof sp.game === 'string' && sp.game !== '' ? sp.game : null,
+    dir: sp.dir === 'asc' || sp.dir === 'desc' ? sp.dir : null,
     group: typeof sp.g === 'string' ? sp.g : 'all',
-    sort: typeof sp.s === 'string' ? sp.s : 'move',
+    sort: typeof sp.sort === 'string' ? sp.sort : (typeof sp.s === 'string' ? sp.s : 'move'),
     q: typeof sp.q === 'string' ? sp.q : '',
     boardOnly: sp.board === '1',
     moversOnly: sp.movers === '1' || filter === 'movers',
   };
 
-  const [byLeague, futures, books, snapAt, boardIds, board] = await Promise.all([
+  const [byLeague, futures, books, snapAt, boardIds, board, games] = await Promise.all([
     pricedSlate(), futuresBoards(), bookCounts(), latestSnapshotAt(), boardMatchIds(),
     tab === 'props' ? propsBoard(boardState).catch(() => ({ rows: [], total: 0 })) : Promise.resolve(null),
+    tab === 'props' ? propsGames().catch(() => []) : Promise.resolve([]),
   ]);
 
   // BOARD GAMES FIRST, WITHIN CFB — the only editorial ordering on the page.
@@ -289,11 +301,17 @@ export default async function MarketPage({ searchParams }) {
           ))}
         </div>
 
-        <div className="chips">
-          {CHIPS.map(([k, label]) => (
-            <Link key={k} className={`ch ${filter === k ? 'on' : ''}`} href={marketHref(k, tab)}>{label}</Link>
-          ))}
-        </div>
+        {/* FILTER DEDUPE: the page-level chip row retires on PROPS, where the
+            LEAGUE filter row is the single control. Two rows both writing ?f=
+            was a control that could disagree with itself on screen. LINES and
+            FUTURES keep it - it is the only control they have. */}
+        {tab === 'props' ? null : (
+          <div className="chips">
+            {CHIPS.map(([k, label]) => (
+              <Link key={k} className={`ch ${filter === k ? 'on' : ''}`} href={marketHref(k, tab)}>{label}</Link>
+            ))}
+          </div>
+        )}
 
         {/* LINES — the shipped board, MOVED not edited. Every element below is
             the markup it always was; only its address changed. */}
@@ -308,9 +326,20 @@ export default async function MarketPage({ searchParams }) {
         {/* THE FULL BOARD replaces the five-card band. The band's PropsCard is
             retired with it - one props presentation, not two. */}
         {tab === 'props' && board ? (
-          <PropsBoard rows={board.rows} total={board.total} state={boardState}
-            leagueChips={[['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['epl', 'EPL']]}
-            hrefFor={(patch) => boardHref(boardState, tab, patch)} />
+          <section>
+            <PropsFilters state={boardState} games={games} view={view}
+              hrefFor={(patch) => boardHref(boardState, tab, view, patch)} />
+            {board.rows.length === 0 ? (
+              <div className="emptyband">No priced props match those filters.</div>
+            ) : view === 'charts' ? (
+              <PropsBoard rows={board.rows} total={board.total} state={boardState} chromeless
+                hrefFor={(patch) => boardHref(boardState, tab, view, patch)} />
+            ) : (
+              <PropsTable rows={board.rows} total={board.total}
+                sort={boardState.sort} dir={boardState.dir || undefined}
+                hrefFor={(patch) => boardHref(boardState, tab, view, patch)} />
+            )}
+          </section>
         ) : null}
 
         {tab === 'futures' ? (

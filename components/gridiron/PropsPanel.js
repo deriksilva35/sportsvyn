@@ -10,7 +10,7 @@
 // far above 100. A reader assuming these were de-vigged would draw a false
 // conclusion from true numbers.
 
-export default function PropsPanel({ card, leagueSlug }) {
+export default function PropsPanel({ card, leagueSlug, matchId }) {
   if (!card?.rows?.length) return null;
   const american = (n) => (n == null ? '—' : n > 0 ? `+${n}` : `${n}`);
   return (
@@ -38,9 +38,11 @@ export default function PropsPanel({ card, leagueSlug }) {
           exists for the chips - so this deep-links to the reader's own league
           rather than dropping them at the top of a three-league page. No new
           plumbing: the param the chips already write is the param this reads.
-          NOW ALSO TAB-TARGETED: a reader arriving from a game's market module
-          wants the PROPS board, not the lines board they just left. */}
-      <a className="gi-market-cta" href={leagueSlug ? `/market?tab=props&f=${leagueSlug}` : '/market?tab=props'}>
+          NOW THE GAME'S OWN SHEET: a reader arriving from a game's market
+          module wants THAT game's props, not the whole board filtered to its
+          league. ?game= is the narrower, truer destination; the league link
+          remains the fallback when no match id is to hand. */}
+      <a className="gi-market-cta" href={matchId ? `/market?tab=props&game=${matchId}` : (leagueSlug ? `/market?tab=props&f=${leagueSlug}` : '/market?tab=props')}>
         Full market &rarr;
       </a>
     </section>

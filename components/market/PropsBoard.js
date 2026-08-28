@@ -120,7 +120,39 @@ function Chips({ label, items, active, hrefFor }) {
   );
 }
 
-export default function PropsBoard({ rows, total, state, hrefFor, leagueChips }) {
+export default function PropsBoard({ rows, total, state, hrefFor, leagueChips, chromeless = false }) {
+  // CHROMELESS: the filter stack moved to PropsFilters so the table and the
+  // charts share one control surface. The charts BODY below is untouched -
+  // this is the extraction discipline again, a move rather than an edit.
+  if (chromeless) {
+    return (
+      <>
+        {rows.length === 0 ? (
+          <div className="emptyband">No priced props match those filters.</div>
+        ) : (
+          <div className="pb-board">
+            {/* The column header row stays: the charts view's BODY must remain
+                byte-equivalent to the board that shipped, and this is part of
+                it. Only the filter stack moved out. */}
+            <div className="pb-head">
+              <span>Player · game · the stats</span>
+              <span>Market</span><span>Line</span>
+              <span className="r">Price</span><span className="r">Imp%</span><span className="r">24h</span>
+            </div>
+            {rows.map((r) => <Row key={`${r.matchId}|${r.marketType}|${r.selection}|${r.side ?? ''}`} r={r} />)}
+            <p className="pb-foot">
+              Anytime and one-sided prices are as offered, not de-vigged - several players can
+              score, so those do not sum to 100. Stat lines are our own game logs speaking; the
+              price is the market&apos;s answer. We show both.
+            </p>
+          </div>
+        )}
+        {total > rows.length ? (
+          <p className="pb-more">Showing {rows.length} of {total} priced selections.</p>
+        ) : null}
+      </>
+    );
+  }
   return (
     <section>
       <Chips label="League" items={leagueChips} active={state.league} hrefFor={(k) => hrefFor({ f: k })} />

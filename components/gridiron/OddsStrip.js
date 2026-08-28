@@ -27,7 +27,7 @@ function Side({ side, pct, fav }) {
   );
 }
 
-export default function OddsStrip({ odds, leagueSlug }) {
+export default function OddsStrip({ odds, leagueSlug, matchId }) {
   if (!odds || !odds.home || !odds.away) return null;
   // Order away | home to match the card's away-over-home team lines.
   const pct = normalizeTwoWayPct(odds.away.implied, odds.home.implied);
@@ -60,9 +60,11 @@ export default function OddsStrip({ odds, leagueSlug }) {
           exists for the chips - so this deep-links to the reader's own league
           rather than dropping them at the top of a three-league page. No new
           plumbing: the param the chips already write is the param this reads.
-          NOW ALSO TAB-TARGETED: a reader arriving from a game's market module
-          wants the PROPS board, not the lines board they just left. */}
-      <a className="gi-market-cta" href={leagueSlug ? `/market?tab=props&f=${leagueSlug}` : '/market?tab=props'}>
+          NOW THE GAME'S OWN SHEET: a reader arriving from a game's market
+          module wants THAT game's props, not the whole board filtered to its
+          league. ?game= is the narrower, truer destination; the league link
+          remains the fallback when no match id is to hand. */}
+      <a className="gi-market-cta" href={matchId ? `/market?tab=props&game=${matchId}` : (leagueSlug ? `/market?tab=props&f=${leagueSlug}` : '/market?tab=props')}>
         Full market &rarr;
       </a>
     </div>

@@ -238,3 +238,59 @@
   .mk-wrap .pb-row { grid-template-columns: 1fr auto auto; }
   .mk-wrap .pb-row .ln, .mk-wrap .pb-row .imp, .mk-wrap .pb-row .asoff { display: none; }
 }
+
+/* ---- the props TABLE (mock v0.7). Movement Board table grammar: dense mono,
+   tabular figures, every header a sort link. Horizontal scroll at phone width
+   rather than dropping columns - a column you cannot see is a number you
+   cannot check, and this table's whole job is letting a reader check. */
+.mk-wrap .pb-viewtog { margin-left: auto; display: flex; gap: 4px; }
+.mk-wrap .pb-gameform { display: flex; gap: 6px; align-items: center; }
+.mk-wrap .gsel {
+  background: var(--graphite-up); border: 1px solid var(--rule); border-radius: 99px;
+  color: var(--paper); font-family: var(--font-saira-cond); font-weight: 600;
+  letter-spacing: .06em; font-size: 11px; text-transform: uppercase;
+  padding: 6px 12px; cursor: pointer; max-width: 340px;
+}
+.mk-wrap .pb-gameform button { cursor: pointer; }
+
+.mk-wrap .pt-wrap {
+  background: var(--graphite); border: 1px solid var(--rule);
+  border-radius: 12px; margin-top: 12px; overflow-x: auto;
+}
+.mk-wrap table.pt { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.mk-wrap table.pt th {
+  font-family: var(--font-saira-cond); font-weight: 600; letter-spacing: .1em;
+  font-size: 9px; text-transform: uppercase; color: var(--muted);
+  text-align: right; padding: 10px 10px 8px; border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+.mk-wrap table.pt th a { color: inherit; text-decoration: none; }
+.mk-wrap table.pt th a:hover { color: var(--paper); }
+.mk-wrap table.pt th.l { text-align: left; }
+.mk-wrap table.pt th.sorted, .mk-wrap table.pt th.sorted a { color: var(--volt); }
+.mk-wrap table.pt th .arr { font-size: 8px; margin-left: 3px; }
+.mk-wrap table.pt td {
+  padding: 7px 10px; border-bottom: 1px solid var(--rule);
+  text-align: right; white-space: nowrap; font-size: 12px;
+}
+.mk-wrap table.pt tr:last-child td { border-bottom: none; }
+.mk-wrap table.pt td.l { text-align: left; }
+.mk-wrap table.pt .nm {
+  font-family: var(--font-display, inherit); font-style: italic; font-weight: 900;
+  font-size: 13px; letter-spacing: -.02em;
+}
+.mk-wrap table.pt .nm a { color: inherit; text-decoration: none; border-bottom: 1px solid transparent; }
+.mk-wrap table.pt .nm a:hover { border-bottom-color: var(--volt); }
+.mk-wrap table.pt .gm { color: var(--muted); font-size: 10px; }
+.mk-wrap table.pt .mkt { color: var(--muted); font-size: 10px; text-transform: uppercase; }
+.mk-wrap table.pt .px { font-weight: 700; }
+.mk-wrap table.pt .asoff { color: var(--muted); font-size: 9px; }
+.mk-wrap table.pt .hit { font-size: 11px; }
+.mk-wrap table.pt .hit b { color: var(--paper); }
+.mk-wrap table.pt .boardpill {
+  font-family: var(--font-saira-cond); font-weight: 600; letter-spacing: .08em;
+  font-size: 8px; text-transform: uppercase; color: var(--volt);
+  border: 1px solid var(--volt); border-radius: 99px; padding: 1px 6px;
+  margin-left: 5px; vertical-align: middle;
+}
+.mk-wrap .pt-foot { font-size: 10px; color: var(--muted); padding: 12px 14px; line-height: 1.6; }
