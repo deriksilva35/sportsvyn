@@ -106,10 +106,30 @@
   background: var(--ink-2, #141414); border: 1px solid var(--line, #2a2a2a);
   border-radius: 10px; overflow: hidden; margin-bottom: 9px;
 }
+/* THE HEADER IS ALSO THE SUMMARY. A <summary> defaults to display:list-item
+   with a marker glyph the browser owns and styles differently in every engine,
+   so both are turned off and the caret below is ours - the same construction
+   .sg-toggle uses on the home page, not a second grammar for the same job. */
 .ds-chart .dh {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding: 9px 12px; background: var(--ink-3, #1c1c1c);
 }
+.ds-chart summary.dh { cursor: pointer; list-style: none; }
+.ds-chart summary.dh::-webkit-details-marker { display: none; }
+.ds-chart summary.dh:hover { background: #232323; }
+/* The caret is the LAST item and the tag floats left of it, so the row reads
+   who · result · disclosure. margin-left:auto would fight justify-content;
+   the tag is optional, so the caret cannot rely on being the second child. */
+.ds-chart .dchev {
+  color: var(--muted-dim, #5a5a56); font-size: 11px; line-height: 1;
+  transition: transform 0.15s; margin-left: auto; flex: none;
+}
+.ds-chart summary.dh:hover .dchev { color: var(--muted, #8a8a85); }
+.ds-chart details[open] > summary.dh .dchev {
+  transform: rotate(180deg); color: var(--volt, #d4ff00);
+}
+/* An open drive's header keeps its seam with the plays below it. */
+.ds-chart details[open] > summary.dh { border-bottom: 1px solid var(--line, #2a2a2a); }
 .ds-chart .who {
   display: flex; align-items: center; gap: 8px;
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 700;
@@ -129,24 +149,59 @@
   color: var(--dim, #5a5a56); padding: 7px 12px 0;
 }
 .ds-chart .plays { padding: 4px 12px 10px; }
-.ds-chart .play { display: flex; gap: 9px; padding: 6px 0; border-bottom: 1px solid #1e1e1e; }
+/* THREE COLUMNS, AND ONLY THE MIDDLE ONE IS ALLOWED TO GIVE.
+   The delta used to sit at the right edge of a row whose text WRAPPED beneath
+   it, so a two-line play put "+20" beside line one and nothing beside line
+   two - it read as floating, and on a narrow screen the wrapped text ran under
+   the card's overflow:hidden and was sliced mid-word ("ATTEMP", "RUS").
+   baseline alignment ties the delta to the first line of text; the ellipsis
+   below means there is only ever one. */
+.ds-chart .play {
+  display: flex; gap: 9px; padding: 6px 0; border-bottom: 1px solid #1e1e1e;
+  align-items: baseline;
+}
 .ds-chart .play:last-child { border-bottom: 0; }
 .ds-chart .play .dn {
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
-  color: var(--dim, #5a5a56); width: 62px; flex: none; padding-top: 1px;
+  color: var(--dim, #5a5a56); width: 62px; flex: none;
 }
+/* min-width:0 IS THE LOAD-BEARING LINE, and it is the .lineup-toggle lesson
+   restated: a flex child will not shrink past its min-content width without
+   it, so the long play text would push the row wider than the card instead of
+   truncating inside it. nowrap + overflow + ellipsis then do the truncation
+   HONESTLY - one line, one ellipsis, never a word cut in half. */
 .ds-chart .play .pt {
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11.5px;
-  line-height: 1.45; flex: 1; min-width: 0;
+  line-height: 1.45; flex: 1 1 auto; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .ds-chart .play.score .pt { color: var(--volt, #d4ff00); }
+/* RESERVED, NEVER SHARED. flex:none + a fixed width means the delta column
+   exists whether or not this play has a number in it, so the right edge of
+   the chart is a straight line down every row. 38px holds "-100" at 11px
+   mono with room to spare; tabular-nums keeps the digits from dancing between
+   rows as the drive updates. */
 .ds-chart .play .yd {
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px;
-  font-weight: 700; flex: none; width: 34px; text-align: right;
+  font-weight: 700; flex: none; width: 38px; text-align: right;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .ds-chart .yd.pos { color: #3fbf6f; }
 .ds-chart .yd.neg { color: #e0602a; }
 .ds-chart .yd.zero { color: var(--dim, #5a5a56); }
+
+/* THE APP IS THE PRIMARY SURFACE FOR THIS COMPONENT, so the narrow case is
+   tuned rather than tolerated. At 375px the three fixed columns and their
+   gaps were eating 118px of ~327px usable, leaving the play text under half
+   the row. Tightening the down-and-distance column and the gaps - neither of
+   which needs the space, "1st & 10" is 45px at 10px mono - hands ~30px back
+   to the text. 420px matches the breakpoint the gridiron cards already use. */
+@media (max-width: 420px) {
+  .ds-chart .plays { padding-left: 10px; padding-right: 10px; }
+  .ds-chart .play { gap: 7px; }
+  .ds-chart .play .dn { width: 52px; }
+  .ds-chart .play .yd { width: 34px; }
+}
 
 .ds-empty {
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11.5px;

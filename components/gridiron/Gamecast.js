@@ -162,31 +162,70 @@ export function DriveChart({ rows, expandFirst = true, teamAbbr = new Map(), hom
       {rows.map((d, i) => {
         const defenseAbbr = [...teamAbbr.entries()]
           .find(([id]) => id !== d.offenseTeamId)?.[1] ?? null;
-        return (
-          <div className="ds-drive" key={d.driveId}>
-            <div className="dh">
-              <div className="who">
-                {i === 0 && <span className="dot">●</span>}{d.offenseAbbr ?? '—'}
-              </div>
-              {/* An untagged drive shows NO tag rather than a guessed one - see
-                  bdlDriveResult()'s conservative fallthrough. */}
-              {d.result && <span className={`tag ${TAG_CLASS[d.result] ?? 'punt'}`}>{d.result}</span>}
+
+        // THE DRIVE BEING WATCHED IS NOT A DISCLOSURE. It is the newest drive
+        // and it has not finished, so it carries no result tag (or the
+        // simulator's 'In progress'). Folding it away would hide the only part
+        // of the chart that is still moving, so it renders open, always, with
+        // no summary to click. Every drive that HAS a result is history and
+        // collapses.
+        const isLive = (expandFirst ? i === 0 : false)
+          && (d.result == null || d.result === 'In progress');
+
+        const head = (
+          <>
+            <div className="who">
+              {i === 0 && <span className="dot">●</span>}{d.offenseAbbr ?? '—'}
             </div>
+            {/* An untagged drive shows NO tag rather than a guessed one - see
+                bdlDriveResult()'s conservative fallthrough. */}
+            {d.result && <span className={`tag ${TAG_CLASS[d.result] ?? 'punt'}`}>{d.result}</span>}
+          </>
+        );
+        const body = (
+          <>
             <div className="dsub">{driveSubLine(d, defenseAbbr)}</div>
-            {(expandFirst ? i === 0 : false) && (
-              <div className="plays">
-                {d.plays.map((p) => (
-                  <div className={`play${p.scoring ? ' score' : ''}`} key={p.providerPlayId}>
-                    <span className="dn">{downDistanceLabel(p.down, p.distance, p.yardsToGoal) ?? '—'}</span>
-                    <span className="pt">{p.text}</span>
-                    <span className={`yd ${p.yardsGained > 0 ? 'pos' : p.yardsGained < 0 ? 'neg' : 'zero'}`}>
-                      {p.yardsGained == null ? '—' : `${p.yardsGained > 0 ? '+' : ''}${p.yardsGained}`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+            <div className="plays">
+              {d.plays.map((p) => (
+                <div className={`play${p.scoring ? ' score' : ''}`} key={p.providerPlayId}>
+                  <span className="dn">{downDistanceLabel(p.down, p.distance, p.yardsToGoal) ?? '—'}</span>
+                  {/* THE FULL TEXT SURVIVES THE ELLIPSIS. One line is the row
+                      grammar, but a 184-character play truncated at ~32 on a
+                      375px screen would otherwise be unreadable and
+                      unrecoverable. title costs no client boundary and no
+                      bytes worth counting, and it is what a native tooltip and
+                      a screen reader both already know how to surface. */}
+                  <span className="pt" title={p.text}>{p.text}</span>
+                  <span className={`yd ${p.yardsGained > 0 ? 'pos' : p.yardsGained < 0 ? 'neg' : 'zero'}`}>
+                    {p.yardsGained == null ? '—' : `${p.yardsGained > 0 ? '+' : ''}${p.yardsGained}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        );
+
+        if (isLive) {
+          return (
+            <div className="ds-drive is-live" key={d.driveId}>
+              <div className="dh">{head}</div>
+              {body}
+            </div>
+          );
+        }
+        // NATIVE <details>, NO CLIENT BOUNDARY. The whole gamecast is a server
+        // component by ruling, and a disclosure is the one interaction the
+        // platform already does - open/closed state, keyboard, and the
+        // accessible name all come free. A 'use client' here would drag the
+        // client package in for a triangle.
+        return (
+          <details className="ds-drive" key={d.driveId}>
+            <summary className="dh">
+              {head}
+              <span className="dchev" aria-hidden="true">▾</span>
+            </summary>
+            {body}
+          </details>
         );
       })}
     </div>
