@@ -105,10 +105,13 @@ export default async function GamePage({ params, searchParams }) {
   const stripLastPlay = lastLivePlay(sim.plays);
   // A simulated cut is shown as the game stood THEN, so it renders live even
   // though the row's own status says final. Unsimulated, the status rules.
+  // liveState only on a real cut - see the CFB page's note. A simulated
+  // replay must not inherit the clock as it stands now.
   const stripState = gamecastState({
     status: sim.simulated ? 'live' : game.status,
     playCount: sim.plays.length,
     lastPlay: stripLastPlay,
+    liveState: sim.simulated ? null : game.liveState,
   });
   const defenseAbbr = currentDrive
     ? (currentDrive.offenseIsHome ? game.away?.abbreviation : game.home?.abbreviation)

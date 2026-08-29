@@ -114,10 +114,17 @@ export default async function CfbGamePage({ params, searchParams }) {
   });
   const currentDrive = driveRows[0] ?? null;
   const stripLastPlay = lastLivePlay(sim.plays);
+  // liveState IS PASSED, and only when the cut is real. It is what makes the
+  // halftime branch (driveStrip.js:105) reachable at all - without it that
+  // branch reads two undefined fields and can never fire, so the strip would
+  // draw a stale ball through the interval. A SIMULATED cut deliberately does
+  // not get it: the replay shows the game as it stood at play N, and the
+  // clock we hold describes now, not then.
   const stripState = gamecastState({
     status: sim.simulated ? 'live' : game.status,
     playCount: sim.plays.length,
     lastPlay: stripLastPlay,
+    liveState: sim.simulated ? null : game.liveState,
   });
   const defenseAbbr = currentDrive
     ? (currentDrive.offenseIsHome ? game.away?.abbreviation : game.home?.abbreviation)
