@@ -230,6 +230,11 @@
 .gi-card-foot { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--rule); }
 .gi-line { font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; color: var(--muted); letter-spacing: 0.08em; white-space: nowrap; }
 .gi-line-alt { font-family: var(--font-jetbrains-mono), monospace; font-size: 9.5px; color: var(--muted-dim); letter-spacing: 0.06em; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The network is a fact about the broadcast, not a recommendation to watch it,
+   so it takes the line's own weight rather than volt. It reads one step
+   brighter than the league and week beside it because it is the part a reader
+   is actually scanning for. */
+.gi-net { color: var(--paper-dim); }
 
 /* expanded detail
    The tab grammar (Key Moments / Play by Play / a dead "Full match page" link)

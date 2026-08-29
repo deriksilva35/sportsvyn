@@ -204,7 +204,17 @@ function Card({ g }) {
             a permanent placeholder on every row forever, which does not read as
             "not applicable", it reads as broken. */}
         <div className="gi-card-foot">
-          <span className="gi-line">{g.leagueSlug.toUpperCase()} · {g.seasonPhase} W{g.week}</span>
+          {/* THE NETWORK JOINS THE IDENTIFIER LINE, not a row of its own. It is
+              the same kind of fact as the league and the week - where and when
+              this game is, stated once. ABSENT STAYS ABSENT: a game with no US
+              listing renders the line it always did, with nothing appended and
+              no separator left dangling. We hold outlets for CFB today and for
+              nothing else, so an NFL card is unchanged by construction rather
+              than by a league check. */}
+          <span className="gi-line">
+            {g.leagueSlug.toUpperCase()} · {g.seasonPhase} W{g.week}
+            {g.network ? <> · <span className="gi-net">{g.network}</span></> : null}
+          </span>
           <span className="gi-line-alt">
             {[distinctLabel(g.weekLabel), g.venueCity].filter(Boolean).join(' · ')}
           </span>

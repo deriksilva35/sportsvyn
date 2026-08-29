@@ -32,7 +32,11 @@ export const maxDuration = 60;
 
 const LEAGUES = [
   { slug: 'nfl', source: 'nfl-games', run: (leagueId, season) => syncNflGames(leagueId, season), cfbd: false },
-  { slug: 'cfb', source: 'cfb-games', run: (leagueId, season) => syncCfbGames(leagueId, season), cfbd: true },
+  // BROADCASTS ON THE BASELINE ONLY. Who is carrying a game is set days ahead
+  // and does not change while it is being played; asking again every 5 minutes
+  // would buy nothing and spend two provider calls a tick to buy it.
+  { slug: 'cfb', source: 'cfb-games', cfbd: true,
+    run: (leagueId, season, kind) => syncCfbGames(leagueId, season, { broadcasts: kind === 'baseline' }) },
 ];
 
 async function leagueIdBySlug(slug) {
@@ -85,7 +89,7 @@ export async function GET(request) {
         source: lg.source,
         kind,
         budget: lg.cfbd ? probeCfbdBudget : null,
-        run: () => lg.run(leagueId, season),
+        run: () => lg.run(leagueId, season, kind),
       });
       const unknown = res.summary?.unknownStatus ?? 0;
       // KICKOFF DRIFT IS ITS OWN ALARM, not a line inside the generic one. A
