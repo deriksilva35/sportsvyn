@@ -63,6 +63,47 @@ export async function weeksToImport(season, { limit = MAX_WEEKS } = {}) {
      LIMIT ${limit}`;
 }
 
+/**
+ * SLATE-DAY WEEKS: those with a final game whose box score we do NOT hold.
+ *
+ * weeksToImport above is the SETTLING pass - it re-reads the newest weeks
+ * whether or not anything changed, which is right on Monday when a week is
+ * still topping up. Running that hourly would spend three provider calls an
+ * hour forever to re-learn a settled week.
+ *
+ * This is the other question: is there a game that finished and has no rows?
+ * On a quiet Tuesday the answer is no and the tick costs ZERO calls. On a
+ * Saturday evening it names exactly the week that just produced a final, which
+ * is how a box score reaches the page the same day the game ended.
+ *
+ * THE WEEK IT RETURNS IS CFBD'S WEEK, because matches.week is what
+ * syncCfbGames wrote straight from the provider's g.week. It is never a
+ * contest/ISO key - importCfbWeek now refuses those outright, and this is the
+ * derivation that keeps it from ever seeing one.
+ */
+export async function weeksMissingStats(season, { limit = MAX_WEEKS } = {}) {
+  return sql`
+    SELECT m.season_phase, m.week,
+           count(*)::int AS finals_missing
+      FROM matches m
+      JOIN leagues lg ON lg.id = m.league_id
+     WHERE lg.slug = 'cfb' AND m.season_year = ${season} AND m.status = 'final'
+       AND NOT EXISTS (SELECT 1 FROM cfb_player_game_stats s WHERE s.match_id = m.id)
+     GROUP BY m.season_phase, m.week
+     ORDER BY max(m.kickoff_at) DESC
+     LIMIT ${limit}`;
+}
+
+/**
+ * ONE settling pass a week, not twenty-four. The cron now fires hourly, so
+ * "is it Monday" would run the full three-week re-read every hour of Monday -
+ * 72 provider calls to re-learn a settled week. The settling pass is Monday at
+ * 14:00 UTC, which is the slot this job has always had (it was 14:30 when the
+ * cron itself was weekly); every other fire is the cheap catch-up.
+ */
+export const isSettlingPass = (now = new Date()) =>
+  now.getUTCDay() === 1 && now.getUTCHours() === 14;
+
 export async function GET(request) {
   if (!cronAuthorized(request)) return new Response('Unauthorized', { status: 401 });
 
@@ -71,8 +112,16 @@ export async function GET(request) {
     source: SOURCE,
     kind: 'import',
     run: async () => {
-      const weeks = await weeksToImport(season);
-      if (!weeks.length) return { season, weeks: 0, reason: 'no-final-games' };
+      // MONDAY SETTLES, EVERY OTHER FIRE CATCHES UP. The settling pass
+      // re-reads the newest weeks whether or not they changed; the slate-day
+      // pass names only weeks holding a final we have no rows for, so an
+      // off-day tick costs zero provider calls.
+      const settling = isSettlingPass();
+      const weeks = settling ? await weeksToImport(season) : await weeksMissingStats(season);
+      if (!weeks.length) {
+        return { season, weeks: 0, settling,
+          reason: settling ? 'no-final-games' : 'nothing-missing' };
+      }
       // The two maps are read ONCE and passed in: three weeks would otherwise
       // re-read a 26,700-row roster three times for no new information.
       const roster = await rosterMap();
@@ -87,7 +136,7 @@ export async function GET(request) {
         per.push({ week: w.week, phase: w.season_phase, seasonType: r.seasonType,
           inserted: r.inserted, updated: r.updated, noGame: r.noGame, noPlayer: r.noPlayer });
       }
-      return { season, weeks: weeks.length, requests, inserted, updated, per };
+      return { season, weeks: weeks.length, settling, requests, inserted, updated, per };
     },
   }));
 

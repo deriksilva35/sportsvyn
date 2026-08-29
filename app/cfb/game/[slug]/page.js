@@ -12,14 +12,20 @@
  * populated on 1,822 CFB rows), the DriveStrip and drive chart (CFBD's
  * /live/plays feeds table 074), and the pre-game facts.
  *
- * WHAT IT DOES NOT RENDER, and why that is correct rather than missing: the
- * NFL page's four tabs - THE BRIEF, SCORING, PLAYER LINES, TEAM BOX - are fed
- * by tables the API-Sports gridiron importer populates for the NFL alone.
- * College has zero rows in match_briefs, gridiron_game_events and
- * gridiron_player_lines, and no metadata.team_box. A tab rail over four empty
- * panels would be a promise the data cannot keep, so there is no tab rail. If
- * those feeds ever cover college, the tabs are a deliberate follow-up here -
- * not an oversight to be discovered later.
+ * IT NOW RENDERS A BOX SCORE, and the note that used to sit here is gone.
+ * The note argued that a tab rail could not be
+ * honoured, because college had zero rows in match_briefs,
+ * gridiron_game_events and gridiron_player_lines. All three statements are still true and all three are
+ * now beside the point: the CFB box score does not live in those tables. It
+ * lives in cfb_player_game_stats (migration 078), written by the weekly CFBD
+ * importer, and as of 29 Aug it is populated same-day - UNC @ TCU landed
+ * within ~35 minutes of the provider calling the game complete. The note was
+ * correct when written and became stale when 078 shipped; leaving it would
+ * have argued against a tab whose data was already sitting in the database.
+ *
+ * THE NFL'S RULE STILL HOLDS, and it is the reason there is one tab and not
+ * four: a tab exists only when its data does. No box score, no PLAYER LINES
+ * tab - not an empty frame.
  */
 
 import { notFound } from 'next/navigation';
@@ -34,6 +40,8 @@ import { apRankMap, currentApWeek, latestPollSeason, AP_POLL } from '@/lib/cfb/r
 import RankBadge from '@/components/gridiron/RankBadge';
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
+import GameTabs from '@/components/gridiron/GameTabs';
+import { cfbBoxScore } from '@/lib/cfb/boxScore';
 import { propsSlate } from '@/lib/market/reads';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
@@ -129,6 +137,26 @@ export default async function CfbGamePage({ params, searchParams }) {
   const defenseAbbr = currentDrive
     ? (currentDrive.offenseIsHome ? game.away?.abbreviation : game.home?.abbreviation)
     : null;
+
+  // ---- BOX SCORE ----------------------------------------------------------
+  // OUR TABLE, NOT THE PROVIDER. cfbBoxScore reads cfb_player_game_stats and
+  // nothing else; the weekly importer owns the write. It returns null when we
+  // hold no rows, which is what makes the NFL's tab rule work unchanged here:
+  // no data, no tab.
+  const box = await cfbBoxScore(game.id).catch(() => null);
+  // The team order is the scoreboard's - away first - so the team toggle reads
+  // the same direction as the header above it.
+  const boxTeams = (box?.teams ?? [])
+    .map((t) => {
+      const side = [game.away, game.home].find((g) => g && (g.name === t.name || g.shortName === t.name));
+      return { id: side?.id ?? t.name, abbr: side?.abbreviation ?? t.name, tables: t.tables };
+    })
+    .sort((a) => (a.id === game.away?.id ? -1 : 1));
+  const panels = boxTeams.length ? [{ key: 'players', label: 'PLAYER LINES' }] : [];
+  // CFB HAS NO FANTASY SCORING IN THIS PRODUCT. GameTabs renders the leaders
+  // block only when a format has rows, so three empty lists is the honest way
+  // to say "no fantasy here" without a second component.
+  const noLeaders = { ppr: [], 'half-ppr': [], standard: [] };
 
   const winner = final
     ? (game.homeScore > game.awayScore ? 'home' : game.awayScore > game.homeScore ? 'away' : null)
@@ -234,6 +262,17 @@ export default async function CfbGamePage({ params, searchParams }) {
             </div>
           )}
         </section>
+
+        {/* THE BOX SCORE, and the NFL's own rail rendering it. GameTabs is
+            reused rather than reimplemented: it already owns the team toggle,
+            the primary/secondary group split and the "all groups" control, and
+            it renders the leaders block only when a format has rows - so the
+            three empty lists above are what say "no fantasy in college"
+            without a second component or a league conditional inside one.
+            The rail appears only when boxTeams has something in it. */}
+        {panels.length ? (
+          <GameTabs panels={panels} nodes={{}} leaders={noLeaders} teams={boxTeams} />
+        ) : null}
 
         <GameFacts game={game} final={final} />
 

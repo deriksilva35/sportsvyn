@@ -49,11 +49,20 @@ test('the CFB page renders what CFB has, and does not fake what it lacks', () =>
   for (const present of ['lineScoreGrid', 'liveChip', 'DriveStrip', 'DriveChart', 'GameFacts']) {
     assert.match(code, new RegExp(present), `${present} must render`);
   }
-  // The four NFL-only panels have zero CFB rows; a tab rail over them would be
-  // a promise the data cannot keep.
-  for (const absent of ['GameTabs', 'BriefPanel', 'ScoringPanel', 'TeamBoxPanel', 'fantasyLeaders']) {
+  // GameTabs MOVED FROM absent TO present, 29 Aug. It used to be listed here
+  // because all four NFL panels had zero CFB rows. Three of them still do -
+  // match_briefs, gridiron_game_events and metadata.team_box are NFL-only - but
+  // the box score is not one of them: it lives in cfb_player_game_stats (078)
+  // and is populated same-day. So the rail is legitimate, and the rule this
+  // test actually defends is unchanged: the page must not render a panel whose
+  // data does not exist.
+  for (const absent of ['BriefPanel', 'ScoringPanel', 'TeamBoxPanel', 'fantasyLeaders']) {
     assert.doesNotMatch(code, new RegExp(absent), `${absent} must NOT render for CFB`);
   }
+  // And the rail is conditional on the data, never unconditional.
+  assert.match(code, /GameTabs/, 'the box-score rail renders');
+  assert.match(code, /panels\.length \? \(/, 'but only when there is a panel to show');
+  assert.match(code, /const panels = boxTeams\.length \?/, 'and a panel only when a team has tables');
 });
 
 test('the footer names the NCAA, not the NFL', () => {
