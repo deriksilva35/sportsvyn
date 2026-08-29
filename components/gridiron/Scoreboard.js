@@ -204,19 +204,18 @@ function Card({ g }) {
             a permanent placeholder on every row forever, which does not read as
             "not applicable", it reads as broken. */}
         <div className="gi-card-foot">
-          {/* THE NETWORK JOINS THE IDENTIFIER LINE, not a row of its own. It is
-              the same kind of fact as the league and the week - where and when
-              this game is, stated once. ABSENT STAYS ABSENT: a game with no US
-              listing renders the line it always did, with nothing appended and
-              no separator left dangling. We hold outlets for CFB today and for
-              nothing else, so an NFL card is unchanged by construction rather
-              than by a league check. */}
-          <span className="gi-line">
-            {g.leagueSlug.toUpperCase()} · {g.seasonPhase} W{g.week}
-            {g.network ? <> · <span className="gi-net">{g.network}</span></> : null}
-          </span>
+          <span className="gi-line">{g.leagueSlug.toUpperCase()} · {g.seasonPhase} W{g.week}</span>
+          {/* THE NETWORK TAKES THE SECOND SLOT, replacing the city rather than
+              sitting beside it. Both answer "where", and the network is the one
+              a reader is scanning for on a card they are deciding whether to
+              open; the stadium's city is the one they can infer from the home
+              club. ABSENT STAYS ABSENT: no listing and the slot renders exactly
+              what it always did, so a card we have no outlet for is unchanged
+              rather than emptied. */}
           <span className="gi-line-alt">
-            {[distinctLabel(g.weekLabel), g.venueCity].filter(Boolean).join(' · ')}
+            {g.network
+              ? <span className="gi-net">{g.network}</span>
+              : [distinctLabel(g.weekLabel), g.venueCity].filter(Boolean).join(' · ')}
           </span>
         </div>
       </div>

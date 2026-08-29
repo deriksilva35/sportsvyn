@@ -31,7 +31,8 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 const LEAGUES = [
-  { slug: 'nfl', source: 'nfl-games', run: (leagueId, season) => syncNflGames(leagueId, season), cfbd: false },
+  { slug: 'nfl', source: 'nfl-games', cfbd: false,
+    run: (leagueId, season, kind) => syncNflGames(leagueId, season, { broadcasts: kind === 'baseline' }) },
   // BROADCASTS ON THE BASELINE ONLY. Who is carrying a game is set days ahead
   // and does not change while it is being played; asking again every 5 minutes
   // would buy nothing and spend two provider calls a tick to buy it.
