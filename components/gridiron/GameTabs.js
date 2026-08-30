@@ -36,7 +36,7 @@ const fmtPts = (n) => (n == null ? '' : n.toFixed(1));
  *   positional. An array would have silently paired the wrong panel with the
  *   wrong tab the first time a game had a brief but no scoring plays.
  */
-export default function GameTabs({ panels, nodes, leaders, teams }) {
+export default function GameTabs({ panels, nodes, leaders, teams, boxLabel = null }) {
   const [active, setActive] = useState(panels[0]?.key);
   const [format, setFormat] = useState('ppr');
   const [team, setTeam] = useState(teams[0]?.id);
@@ -67,7 +67,19 @@ export default function GameTabs({ panels, nodes, leaders, teams }) {
         <div key={p.key} className={`gg-panel${active === p.key ? ' on' : ''}`} role="tabpanel">
           {p.key === 'players' ? (
             <section aria-label="Player statistics">
-              <div className="gg-kick"><h2>PLAYER LINES</h2><div className="rule" /></div>
+              {/* WHAT THIS BOX SCORE IS. A live one has to say so - every
+                  number in it is going to change - and a bridge one has to say
+                  what is still missing, or four groups read as the whole
+                  night's work. A settled final carries no caveat at all: the
+                  absence of the badge is the claim. The reader decides which;
+                  this only draws it. */}
+              <div className="gg-kick">
+                <h2>PLAYER LINES</h2>
+                {boxLabel ? (
+                  <span className={`gg-boxstate${boxLabel.live ? ' live' : ''}`}>{boxLabel.text}</span>
+                ) : null}
+                <div className="rule" />
+              </div>
 
               {leaders[format]?.length ? (
                 <div className="gg-grp gg-lead-grp">
@@ -171,7 +183,18 @@ function StatTable({ table, format }) {
         <tbody>
           {rows.map((r, n) => (
             <tr key={r.name} className={table.showFpts && n === 0 ? 'lead' : ''}>
-              <td className="p">{r.name}</td>
+              {/* IDENTICAL GRAMMAR, LINKED OR NOT. A player whose profile we
+                  hold gets an anchor; one we do not get the same name in the
+                  same place with no marker, no footnote and no grey. The link
+                  is a convenience, not a status. */}
+              <td className="p">
+                {r.slug ? <a className="gg-pl" href={`/player/${r.slug}`}>{r.name}</a> : r.name}
+                {r.position || r.jersey ? (
+                  <span className="gg-pmeta">
+                    {[r.position, r.jersey != null ? `#${r.jersey}` : null].filter(Boolean).join(' ')}
+                  </span>
+                ) : null}
+              </td>
               {r.cells.map((c, j) => <td key={table.headings[j]}>{c}</td>)}
               {table.showFpts ? <td>{fmtPts(r.pts[format])}</td> : null}
             </tr>

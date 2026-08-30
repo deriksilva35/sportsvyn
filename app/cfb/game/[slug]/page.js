@@ -42,7 +42,7 @@ import { getTeamRecordChip } from '@/lib/standings/read';
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
 import GameTabs from '@/components/gridiron/GameTabs';
-import { cfbBoxScore } from '@/lib/cfb/boxScore';
+import { cfbBoxScoreFor, boxScoreLabel } from '@/lib/cfb/boxScore';
 import { propsSlate } from '@/lib/market/reads';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
@@ -146,11 +146,18 @@ export default async function CfbGamePage({ params, searchParams }) {
     : null;
 
   // ---- BOX SCORE ----------------------------------------------------------
-  // OUR TABLE, NOT THE PROVIDER. cfbBoxScore reads cfb_player_game_stats and
-  // nothing else; the weekly importer owns the write. It returns null when we
-  // hold no rows, which is what makes the NFL's tab rule work unchanged here:
-  // no data, no tab.
-  const box = await cfbBoxScore(game.id).catch(() => null);
+  // OUR TABLES, NOT THE PROVIDER, AND THE PAGE DOES NOT CHOOSE BETWEEN THEM.
+  // cfbBoxScoreFor is handed the status and hands back rows plus the state that
+  // produced them - live overlay, complete import, or the bridge snapshot in
+  // the gap between the whistle and the import. Every decision about which
+  // table answers lives in that reader; this page only renders what it gets,
+  // which is the whole point of source-per-game-state.
+  //
+  // THE TAB RULE IS UNCHANGED IN FORM AND WIDER IN EFFECT: no rows, no tab -
+  // but "rows" now means EITHER table, so the tab appears during the game
+  // instead of only after it.
+  const box = await cfbBoxScoreFor(game.id, game.status).catch(() => null);
+  const boxLabel = boxScoreLabel(box?.state);
   // The team order is the scoreboard's - away first - so the team toggle reads
   // the same direction as the header above it.
   const boxTeams = (box?.teams ?? [])
@@ -278,7 +285,7 @@ export default async function CfbGamePage({ params, searchParams }) {
             without a second component or a league conditional inside one.
             The rail appears only when boxTeams has something in it. */}
         {panels.length ? (
-          <GameTabs panels={panels} nodes={{}} leaders={noLeaders} teams={boxTeams} />
+          <GameTabs panels={panels} nodes={{}} leaders={noLeaders} teams={boxTeams} boxLabel={boxLabel} />
         ) : null}
 
         <GameFacts game={game} final={final} />

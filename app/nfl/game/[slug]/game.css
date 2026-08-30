@@ -222,3 +222,32 @@
   color: var(--ink-3, #8a8f98);
   white-space: nowrap;
 }
+
+/* WHAT THIS BOX SCORE IS, beside the section head.
+   THE LIVE BADGE BORROWS THE SCOREBOARD'S PILL GRAMMAR verbatim - a hairline
+   pill in var(--live), the same shape .gi-livepill draws on a card - because a
+   reader who has learnt what live looks like on the scoreboard should not have
+   to learn it again one tap deeper. The bridge label is NOT a pill: it is a
+   sentence, in the muted voice the page uses for caveats, because "complete box
+   score pending" is an explanation and a pill is a state. */
+.gg-boxstate {
+  flex: none; font-size: 10px; letter-spacing: 0.12em;
+  color: var(--muted-dim); white-space: nowrap;
+}
+.gg-boxstate.live {
+  font-family: var(--font-saira-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.5;
+  border: 1px solid currentColor; border-radius: 99px; padding: 2px 8px;
+  color: var(--live);
+}
+
+/* The player cell: a name, and under it the identity the feed hands over free.
+   The link is styled as the name itself - underline on hover only - so a
+   linked row and an unlinked one read identically at rest, which is the whole
+   rule. */
+.gg-st td.p .gg-pl { color: inherit; text-decoration: none; }
+.gg-st td.p .gg-pl:hover { text-decoration: underline; }
+.gg-st td.p .gg-pmeta {
+  display: block; font-size: 9px; letter-spacing: 0.06em;
+  color: var(--muted-dim); margin-top: 1px;
+}
