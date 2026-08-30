@@ -109,7 +109,7 @@ export default async function StandingsPage({
 
         <p className="st-note">
           Ordered by win percentage, then wins, then losses. That is a readable
-          default, not a tiebreak — head-to-head, common games and conference
+          default, not a tiebreak - head-to-head, common games and conference
           record decide real ties, and the league publishes those.
         </p>
       </div>

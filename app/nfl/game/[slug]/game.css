@@ -41,18 +41,61 @@
 .gg-chip.live { background: var(--live); color: #fff; animation: gg-pulse 1.6s ease-in-out infinite; }
 @keyframes gg-pulse { 50% { opacity: 0.65; } }
 
+/* THE HEADER ROW IS A FLEX LINE, AND IT USED TO BE A THREE-COLUMN GRID.
+   That grid - `grid-template-columns: 44px 1fr auto` - auto-placed whatever
+   children it was given, so its layout was decided by the CHILD COUNT rather
+   than by any rule. Three children landed correctly; a fourth wrapped onto a
+   second implicit row and took the score with it. Adding the record chip made
+   every row four children, and a ranked row five, which is why the badge
+   stretched across the 1fr column, the score dropped under the name, and the
+   chip sat in a different place on a ranked row than an unranked one. Nothing
+   in the CSS had changed - the grid was silently depending on a child count
+   that the markup was free to change.
+
+   FLEX NAMES EVERY CHILD'S BEHAVIOUR INSTEAD. Each fixed part declares
+   flex:none, the name is the only thing allowed to give way (min-width:0 plus
+   ellipsis), and the score is pushed right with margin-left:auto. A child
+   added or removed tomorrow cannot re-place the others.
+
+   BOX MATH AT 375, worst case on the board - "North Dakota State", ranked #14,
+   1-0, scoring 42:
+     375 - 32 (.gg-wrap padding 0 16px) = 343 usable
+     rank badge .rk-big  12px mono, 2px7px padding, 6px margin  ~= 30
+     gap                                                            8
+     abbr "NDSU"         12px, 0.1em tracking                   ~= 34
+     gap                                                            8
+     record "1-0"        11px mono                              ~= 22
+     gap                                                            8
+     score "42"          clamp(26px,6.5vw,34px) -> 24.4px at 375 ~= 30
+     ------------------------------------------------------------------
+     fixed total                                                  140
+     name gets 343 - 140 = 203px, and "North Dakota State" at
+     clamp(20px,5.4vw,28px) -> 20.25px Saira is ~186px. It FITS, with 17px
+     spare - and if it did not, it would ellipsis rather than wrap, because it
+     is the only child that can shrink. */
 .gg-teamrow {
-  display: grid; grid-template-columns: 44px 1fr auto;
-  align-items: baseline; gap: 12px; padding: 5px 0;
+  display: flex; align-items: baseline; gap: 8px; padding: 5px 0;
+  flex-wrap: nowrap;
 }
-.gg-teamrow .abbr { font-size: 12px; color: var(--muted-dim); letter-spacing: 0.1em; }
+.gg-teamrow .rk, .gg-teamrow .abbr, .gg-teamrow .gg-rec, .gg-teamrow .score { flex: none; }
+.gg-teamrow .abbr {
+  font-size: 12px; color: var(--muted-dim); letter-spacing: 0.1em;
+  min-width: 34px;
+}
 .gg-teamrow .tname {
   font-family: var(--gg-disp); font-weight: 700;
   font-size: clamp(20px, 5.4vw, 28px); letter-spacing: 0.01em; line-height: 1.15;
+  /* THE ONLY CHILD THAT GIVES WAY. min-width:0 is the half people forget: a
+     flex item will not shrink below its content width without it, and the row
+     overflows instead of ellipsising. */
+  flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .gg-teamrow .score {
   font-family: var(--gg-disp); font-weight: 700;
   font-size: clamp(26px, 6.5vw, 34px); font-variant-numeric: tabular-nums;
+  /* RIGHT-ALIGNED ON THE SAME LINE AS THE NAME, both rows, always. */
+  margin-left: auto; text-align: right;
 }
 .gg-teamrow.loser .tname, .gg-teamrow.loser .score { color: var(--muted); }
 
@@ -216,7 +259,6 @@
    flex:none so a long team name shrinks before the chip does. */
 .ggame .gg-teamrow .gg-rec {
   flex: none;
-  margin-left: 8px;
   font: 500 11px/1 var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   letter-spacing: .02em;
   color: var(--ink-3, #8a8f98);

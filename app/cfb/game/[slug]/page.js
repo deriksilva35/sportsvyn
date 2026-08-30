@@ -42,6 +42,7 @@ import { getTeamRecordChip } from '@/lib/standings/read';
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
 import GameTabs from '@/components/gridiron/GameTabs';
+import { parseGameTab } from '@/lib/gridiron/gameTabsNav';
 import { cfbBoxScoreFor, boxScoreLabel } from '@/lib/cfb/boxScore';
 import { propsSlate } from '@/lib/market/reads';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
@@ -166,7 +167,16 @@ export default async function CfbGamePage({ params, searchParams }) {
       return { id: side?.id ?? t.name, abbr: side?.abbreviation ?? t.name, tables: t.tables };
     })
     .sort((a) => (a.id === game.away?.id ? -1 : 1));
-  const panels = boxTeams.length ? [{ key: 'players', label: 'PLAYER LINES' }] : [];
+  // THE RAIL'S PANELS, in the order they are read. Drives first because that
+  // is what a game in progress is about; the box score is the second question.
+  const panels = [
+    { key: 'drives', label: 'DRIVES' },
+    boxTeams.length ? { key: 'players', label: 'PLAYER LINES' } : null,
+  ].filter(Boolean);
+  // ONE PARSER, and it is handed the keys this game actually has - a ?tab=
+  // naming a panel that does not exist here falls to the default rather than
+  // selecting nothing. See lib/gridiron/gameTabsNav.js.
+  const activeTab = parseGameTab(sp, panels.map((p) => p.key));
   // CFB HAS NO FANTASY SCORING IN THIS PRODUCT. GameTabs renders the leaders
   // block only when a format has rows, so three empty lists is the honest way
   // to say "no fantasy here" without a second component.
@@ -176,6 +186,43 @@ export default async function CfbGamePage({ params, searchParams }) {
     ? (game.homeScore > game.awayScore ? 'home' : game.awayScore > game.homeScore ? 'away' : null)
     : null;
   const foot = [distinctLabel(game.weekLabel), game.venue, game.venueCity].filter(Boolean).join(' · ');
+
+  // PRESENT-BUT-EMPTY, NEVER HIDDEN. The ruling for this route: a CFB
+  // game that has no plays yet still grows a DRIVES section saying so.
+  // The NFL page hides the section entirely when the feed is empty; this
+  // one does not, because a Pick'em entrant tapping through before
+  // kickoff must be told the drive chart exists and is waiting, not left
+  // to conclude the page is broken. The honest gap is rendered, not
+  // omitted - the same three-state law the strip itself obeys.
+  const drivesNode = (
+    <section className="gg-sect" aria-label="Drive chart">
+      <div className="gg-kick"><h2>DRIVES</h2><div className="rule" /></div>
+      {sim.plays.length ? (
+        <>
+          <DriveStrip
+            state={stripState}
+            lastPlay={stripLastPlay}
+            drive={currentDrive}
+            homeAbbr={game.home?.abbreviation}
+            awayAbbr={game.away?.abbreviation}
+            offenseAbbr={currentDrive?.offenseAbbr}
+            defenseAbbr={defenseAbbr}
+            simulated={sim.simulated}
+          />
+          {stripState.mode !== 'final' && <LastPlay play={stripLastPlay} />}
+          <DriveChart rows={driveRows} teamAbbr={gamecast.teamAbbr} homeTeamId={game.home?.id} />
+        </>
+      ) : (
+        <div className="ds-empty">
+          {live
+            ? 'Play data pending - the score and clock above are live.'
+            : final
+              ? 'No play-by-play stored for this game.'
+              : 'Drive chart appears once the game kicks off.'}
+        </div>
+      )}
+    </section>
+  );
 
   return (
     <div className="gi ggame" data-surface="ink">
@@ -242,51 +289,35 @@ export default async function CfbGamePage({ params, searchParams }) {
           </section>
         ) : null}
 
-        {/* PRESENT-BUT-EMPTY, NEVER HIDDEN. The ruling for this route: a CFB
-            game that has no plays yet still grows a DRIVES section saying so.
-            The NFL page hides the section entirely when the feed is empty; this
-            one does not, because a Pick'em entrant tapping through before
-            kickoff must be told the drive chart exists and is waiting, not left
-            to conclude the page is broken. The honest gap is rendered, not
-            omitted - the same three-state law the strip itself obeys. */}
-        <section className="gg-sect" aria-label="Drive chart">
-          <div className="gg-kick"><h2>DRIVES</h2><div className="rule" /></div>
-          {sim.plays.length ? (
-            <>
-              <DriveStrip
-                state={stripState}
-                lastPlay={stripLastPlay}
-                drive={currentDrive}
-                homeAbbr={game.home?.abbreviation}
-                awayAbbr={game.away?.abbreviation}
-                offenseAbbr={currentDrive?.offenseAbbr}
-                defenseAbbr={defenseAbbr}
-                simulated={sim.simulated}
-              />
-              {stripState.mode !== 'final' && <LastPlay play={stripLastPlay} />}
-              <DriveChart rows={driveRows} teamAbbr={gamecast.teamAbbr} homeTeamId={game.home?.id} />
-            </>
-          ) : (
-            <div className="ds-empty">
-              {live
-                ? 'Play data pending - the score and clock above are live.'
-                : final
-                  ? 'No play-by-play stored for this game.'
-                  : 'Drive chart appears once the game kicks off.'}
-            </div>
-          )}
-        </section>
+        {/* THE RAIL, DIRECTLY UNDER THE LINE SCORE. Drives and the box score
+            are two views of the same game, so they SWAP rather than stack:
+            stacked, a reader on a phone scrolls past a full drive chart to
+            reach a stat line, and neither section is ever the one they wanted
+            first. GameTabs already owns a rail, and reusing it means the NFL
+            page inherits this the moment it declares the same panels.
 
-        {/* THE BOX SCORE, and the NFL's own rail rendering it. GameTabs is
-            reused rather than reimplemented: it already owns the team toggle,
-            the primary/secondary group split and the "all groups" control, and
-            it renders the leaders block only when a format has rows - so the
-            three empty lists above are what say "no fantasy in college"
-            without a second component or a league conditional inside one.
-            The rail appears only when boxTeams has something in it. */}
-        {panels.length ? (
-          <GameTabs panels={panels} nodes={{}} leaders={noLeaders} teams={boxTeams} boxLabel={boxLabel} />
-        ) : null}
+            DRIVES IS ALWAYS A PANEL, and that is deliberate against the letter
+            of "a tab only when its content has rows". The drives section has
+            three states and renders an honest line in the empty one - "Drive
+            chart appears once the game kicks off" - and hiding the tab would
+            delete that sentence for every scheduled game. PLAYER LINES is the
+            tab the rule was written for, and it obeys it exactly: no box
+            score, no tab.
+
+            ONE PANEL MEANS NO RAIL. A tab strip with a single tab is furniture
+            pretending to be a control, so the section renders bare, exactly as
+            it did before this rail existed. */}
+        {panels.length > 1 ? (
+          <GameTabs
+            panels={panels}
+            nodes={{ drives: drivesNode }}
+            leaders={noLeaders}
+            teams={boxTeams}
+            boxLabel={boxLabel}
+            initial={activeTab}
+            basePath={`/cfb/game/${game.slug}`}
+          />
+        ) : drivesNode}
 
         <GameFacts game={game} final={final} />
 
@@ -306,10 +337,14 @@ export default async function CfbGamePage({ params, searchParams }) {
 // wants them, that is the moment to extract - three callers is a component,
 // two is a coincidence.
 function TeamRow({ t, score, loser, show, rank, record = null }) {
+  // ORDER IS LAYOUT HERE, so it is written once and not rearranged
+  // casually: badge, abbreviation, name, record, then the score pushed to
+  // the right edge by margin-left:auto. Every part but the name is
+  // flex:none; the name is the only child that gives way.
   return (
     <div className={`gg-teamrow${loser ? ' loser' : ''}`}>
-      <span className="abbr">{t?.abbreviation ?? ''}</span>
       <RankBadge rank={rank} size="big" />
+      <span className="abbr">{t?.abbreviation ?? ''}</span>
       <span className="tname">{t?.name ?? 'TBD'}</span>
       {/* A chip may only claim knowledge. Records carry no kickoff, so this
           renders pre-game, live and final alike - unlike the market strip. */}

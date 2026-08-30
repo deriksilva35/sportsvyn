@@ -59,10 +59,13 @@ test('the CFB page renders what CFB has, and does not fake what it lacks', () =>
   for (const absent of ['BriefPanel', 'ScoringPanel', 'TeamBoxPanel', 'fantasyLeaders']) {
     assert.doesNotMatch(code, new RegExp(absent), `${absent} must NOT render for CFB`);
   }
-  // And the rail is conditional on the data, never unconditional.
+  // And the rail is conditional on the data, never unconditional. D8 turned
+  // the rail into DRIVES + PLAYER LINES, so the expression moved; the RULE it
+  // defends did not. PLAYER LINES is still gated on a box score existing, and
+  // the rail itself now needs two panels to be worth drawing.
   assert.match(code, /GameTabs/, 'the box-score rail renders');
-  assert.match(code, /panels\.length \? \(/, 'but only when there is a panel to show');
-  assert.match(code, /const panels = boxTeams\.length \?/, 'and a panel only when a team has tables');
+  assert.match(code, /panels\.length > 1 \? \(/, 'but only when there is more than one panel');
+  assert.match(code, /boxTeams\.length \? \{ key: 'players'/, 'and PLAYER LINES only when a team has tables');
 });
 
 test('the footer names the NCAA, not the NFL', () => {

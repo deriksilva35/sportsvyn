@@ -21,6 +21,7 @@
  */
 
 import { useState } from 'react';
+import { gameTabHref } from '@/lib/gridiron/gameTabsNav';
 
 const FORMATS = [
   { key: 'ppr', label: 'PPR' },
@@ -36,8 +37,10 @@ const fmtPts = (n) => (n == null ? '' : n.toFixed(1));
  *   positional. An array would have silently paired the wrong panel with the
  *   wrong tab the first time a game had a brief but no scoring plays.
  */
-export default function GameTabs({ panels, nodes, leaders, teams, boxLabel = null }) {
-  const [active, setActive] = useState(panels[0]?.key);
+export default function GameTabs({
+  panels, nodes, leaders, teams, boxLabel = null, initial = null, basePath = null,
+}) {
+  const [active, setActive] = useState(initial ?? panels[0]?.key);
   const [format, setFormat] = useState('ppr');
   const [team, setTeam] = useState(teams[0]?.id);
   const [allGroups, setAllGroups] = useState(false);
@@ -56,7 +59,18 @@ export default function GameTabs({ panels, nodes, leaders, teams, boxLabel = nul
             role="tab"
             aria-selected={active === p.key}
             className={`gg-tab${active === p.key ? ' on' : ''}`}
-            onClick={() => setActive(p.key)}
+            onClick={() => {
+              setActive(p.key);
+              // THE URL FOLLOWS THE TAB so a shared link opens where the
+              // sharer was looking. replaceState, not a navigation: the
+              // panels are already in the document and re-fetching the page
+              // to change which one is visible would be absurd. The href
+              // comes from the ONE builder - see lib/gridiron/gameTabsNav.js.
+              if (basePath && typeof window !== 'undefined') {
+                window.history.replaceState(null, '',
+                  gameTabHref(basePath, p.key, panels.map((x) => x.key)));
+              }
+            }}
           >
             {p.label}
           </button>

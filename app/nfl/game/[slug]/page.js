@@ -271,6 +271,8 @@ export default async function GamePage({ params, searchParams }) {
 }
 
 function TeamRow({ t, score, loser, show, record = null }) {
+  // Same order as the CFB row, minus the badge the NFL has no poll for:
+  // abbreviation, name, record, then the score at the right edge.
   return (
     <div className={`gg-teamrow${loser ? ' loser' : ''}`}>
       <span className="abbr">{t?.abbreviation ?? ''}</span>
