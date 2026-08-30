@@ -120,6 +120,14 @@
     {
       "path": "/api/cron/epl-player-stats",
       "schedule": "30 20,2 * * *"
+    },
+    {
+      "path": "/api/cron/standings-cfb",
+      "schedule": "20 * * * *"
+    },
+    {
+      "path": "/api/cron/standings-nfl",
+      "schedule": "21 * * * *"
     }
   ]
 }
