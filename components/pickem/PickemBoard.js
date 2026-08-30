@@ -12,6 +12,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import RankBadge from '@/components/gridiron/RankBadge';
+import { spreadParts } from '@/lib/standings/view';
+import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { savePickAction } from '@/app/actions/pickem';
 
 // Where a board game's "Game" affordance points. Keyed by the contest's own
@@ -133,6 +135,23 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
             <div className={`pk-eb${g.status === 'live' ? ' live' : ''}`}>
               <span>{eyebrowLeft}</span>
               <span className="pk-ebr">
+                {/* THE LINE, ONCE PER CARD AND NAMED. isPreGame at the render
+                    as well as at the fetch: the spread vanishes the moment a
+                    game kicks, because a pre-kickoff line beside a live score
+                    is a number that stopped being true. Records do NOT vanish -
+                    they are not market data and have no kickoff. */}
+                {(() => {
+                  if (!isPreGame(g.status)) return null;
+                  const p = spreadParts({ spreadHome: g.spread_home, homeAbbr: g.home, awayAbbr: g.away });
+                  if (!p) return null;
+                  // The NAME truncates, the NUMBER does not - see spreadParts.
+                  return (
+                    <span className="pk-spread">
+                      <span className="pk-spread-t">{p.fav}</span>
+                      <span className="pk-spread-n">{'\u00a0'}{p.mag}</span>
+                    </span>
+                  );
+                })()}
                 <span className="pk-mono">{eyebrowRight}</span>
                 {gameHref(contest, g) && (
                   <Link
@@ -168,6 +187,11 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
                   >
                     <RankBadge rank={side === 'home' ? g.home_rank : g.away_rank} />
                     <span className="pk-nm">{name}</span>
+                    {/* A CHIP MAY ONLY CLAIM KNOWLEDGE - no record, no chip,
+                        never an invented dash or a 0-0 built from absence. */}
+                    {(side === 'home' ? g.home_record : g.away_record) ? (
+                      <span className="pk-rec">{side === 'home' ? g.home_record : g.away_record}</span>
+                    ) : null}
                     {!sealed && <span className="pk-tag">{side.toUpperCase()}</span>}
                     {isMine && g.graded === 'W' && <span className="pk-res w">W</span>}
                     {isMine && g.graded === 'L' && <span className="pk-res l">L</span>}

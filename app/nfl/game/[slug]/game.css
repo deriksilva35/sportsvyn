@@ -210,3 +210,15 @@
 @media (prefers-reduced-motion: reduce) {
   .gg-chip.live { animation: none; }
 }
+
+/* The record chip beside a team's name in the game header. Muted and mono, so
+   it reads as metadata next to the name rather than competing with it, and
+   flex:none so a long team name shrinks before the chip does. */
+.ggame .gg-teamrow .gg-rec {
+  flex: none;
+  margin-left: 8px;
+  font: 500 11px/1 var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  letter-spacing: .02em;
+  color: var(--ink-3, #8a8f98);
+  white-space: nowrap;
+}

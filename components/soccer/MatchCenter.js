@@ -118,6 +118,9 @@ export default function MatchCenter({ header, compare, timeline, lineups, fullSt
           <div className="mc-side">
             <div className="mc-crest">{header.homeAbbr}</div>
             <div className="mc-cname">{header.homeName}</div>
+            {/* A POSITION, NOT A RECORD - the soccer grammar. Absent when we
+                hold no table for the season, never a dash. */}
+            {header.homeRank ? <div className="mc-rank">{header.homeRank}</div> : null}
           </div>
           <div className="mc-scorebig">
             {header.homeScore ?? '–'}<span className="mc-dash">–</span>{header.awayScore ?? '–'}
@@ -125,6 +128,7 @@ export default function MatchCenter({ header, compare, timeline, lineups, fullSt
           <div className="mc-side">
             <div className="mc-crest">{header.awayAbbr}</div>
             <div className="mc-cname">{header.awayName}</div>
+            {header.awayRank ? <div className="mc-rank">{header.awayRank}</div> : null}
           </div>
         </div>
         {header.venue && <div className="mc-venue">{header.venue}</div>}

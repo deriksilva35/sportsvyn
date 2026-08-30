@@ -32,6 +32,7 @@ import { propsSlate } from '@/lib/market/reads';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import BackToAppBar from '@/components/BackToAppBar';
+import { getTeamRecordChip } from '@/lib/standings/read';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import '@/components/gridiron/gridiron.css';
 import '@/components/gridiron/drivestrip.css';
@@ -85,6 +86,12 @@ export default async function GamePage({ params, searchParams }) {
     : null;
   const quarters = scoringByQuarter(game);
   const brief = await getBriefForMatch(game.id);
+  // REG-only by construction (getTeamRecord filters season_type), nullable,
+  // and caught: a missing standings row must not break a game page.
+  const [homeRecord, awayRecord] = await Promise.all([
+    getTeamRecordChip('nfl', game.home?.id, game.seasonYear),
+    getTeamRecordChip('nfl', game.away?.id, game.seasonYear),
+  ]);
 
   // ---- DriveStrip ---------------------------------------------------------
   // ?asOf=N replays a completed game as it stood after N plays. It proves the
@@ -169,8 +176,8 @@ export default async function GamePage({ params, searchParams }) {
             {game.seasonPhase === 'PRE' ? <span className="gg-chip pre">PRE</span> : null}
           </div>
 
-          <TeamRow t={game.away} score={game.awayScore} loser={winner === 'home'} show={final || live} />
-          <TeamRow t={game.home} score={game.homeScore} loser={winner === 'away'} show={final || live} />
+          <TeamRow record={awayRecord} t={game.away} score={game.awayScore} loser={winner === 'home'} show={final || live} />
+          <TeamRow record={homeRecord} t={game.home} score={game.homeScore} loser={winner === 'away'} show={final || live} />
 
           <div className="gg-headfoot">
             <span>{game.leagueSlug.toUpperCase()} · {game.seasonPhase} W{game.week}</span>
@@ -263,11 +270,14 @@ export default async function GamePage({ params, searchParams }) {
   );
 }
 
-function TeamRow({ t, score, loser, show }) {
+function TeamRow({ t, score, loser, show, record = null }) {
   return (
     <div className={`gg-teamrow${loser ? ' loser' : ''}`}>
       <span className="abbr">{t?.abbreviation ?? ''}</span>
       <span className="tname">{t?.name ?? 'TBD'}</span>
+      {/* A chip may only claim knowledge. Records carry no kickoff, so this
+          renders pre-game, live and final alike - unlike the market strip. */}
+      {record ? <span className="gg-rec">{record}</span> : null}
       {/* No score column before kickoff. A 0 next to a team that has not played
           is not a low score, it is a wrong one. */}
       <span className="score">{show ? score : ''}</span>

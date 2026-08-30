@@ -78,3 +78,7 @@
 .mc-flbl { flex: 1; font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 9px; color: var(--muted, #8A8A85); text-align: center; }
 
 .mc-empty { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted-dim, #5A5A56); border: 1px dashed var(--rule, #2A2A2A); border-radius: 10px; padding: 16px; margin-top: 12px; }
+
+/* Table position under the club name. Dimmer than the name it sits beneath -
+   it is context, not identity - and centred with it. */
+.mc-rank { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; color: var(--muted-2, #6A6A66); text-align: center; margin-top: 3px; letter-spacing: .04em; }

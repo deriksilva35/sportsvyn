@@ -68,9 +68,25 @@ test('the page never renders a score for a game that has not been played', () =>
   assert.match(page, /\{show \? score : ''\}/);
 });
 
-test('NO RECORD CHIPS. The header states the game, and preseason has no record', () => {
-  assert.ok(!/\brec\b|record/i.test(page.replace(/recordDecision/g, '')),
-    'the lock draws them; the brief rules them out for these pages');
+test('THE RECORD CHIP IS REGULAR-SEASON OR NOTHING', () => {
+  // THIS RULE REPLACES "NO RECORD CHIPS", and the reason the old rule existed
+  // is the reason this one is safe. The lock banned a chip here because
+  // PRESEASON HAS NO RECORD and a 1-2 beside a team in August is a lie. That
+  // hazard is now closed at the reader instead of at the surface:
+  // getTeamRecord filters season_type = 'regular', recordChip returns null on
+  // an absent or 0-0 row, and getTeamRecordChip composes exactly those two. A
+  // preseason page therefore still renders no chip - which is what the lock
+  // was protecting - while a Week 9 page can say 6-2.
+  //
+  // The guard is that the page goes through that helper. A page that queries
+  // team_records itself, or formats a record inline, is a preseason record
+  // waiting to ship, so both are forbidden here.
+  assert.match(page, /import \{ getTeamRecordChip \} from '@\/lib\/standings\/read'/);
+  assert.match(page, /getTeamRecordChip\('nfl'/);
+  assert.ok(!/team_records/.test(page), 'the page must not query team_records itself');
+  assert.ok(!/formatRecord/.test(page), 'the page must not format a record inline');
+  // And the chip renders only when there is one - never a dash, never 0-0.
+  assert.match(page, /\{record \? <span className="gg-rec">/);
 });
 
 // ---------------------------------------------------------------------------

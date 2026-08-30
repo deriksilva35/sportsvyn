@@ -20,6 +20,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { sql } from '@/lib/db';
+import { eplPositionChips } from '@/lib/standings/read';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { soccerLiveChip } from '@/lib/soccer/liveChip';
@@ -40,7 +41,8 @@ async function getMatch(slug) {
            m.venue, m.metadata->'live_state' AS live_state,
            l.name AS league_name,
            h.name AS home_name, h.abbreviation AS home_abbr,
-           a.name AS away_name, a.abbreviation AS away_abbr
+           a.name AS away_name, a.abbreviation AS away_abbr,
+           h.id AS home_team_id, a.id AS away_team_id
       FROM matches m
       JOIN leagues l ON l.id = m.league_id
       LEFT JOIN teams h ON h.id = m.home_team_id
@@ -67,11 +69,12 @@ export default async function EplMatchPage({ params }) {
   const m = await getMatch(slug);
   if (!m) notFound();
 
-  const [stats, events, lineups] = await Promise.all([
+  const [stats, events, lineups, chips] = await Promise.all([
     sql`SELECT team_side, stats FROM match_statistics WHERE match_id = ${m.id} AND is_current`,
     sql`SELECT id, minute, minute_extra, event_type, detail, team_side, player_name, assist_name, is_current
           FROM match_events WHERE match_id = ${m.id} AND is_current ORDER BY minute ASC, id ASC`,
     sql`SELECT team_side, formation, players FROM match_lineups WHERE match_id = ${m.id} AND is_current`,
+    eplPositionChips(),
   ]);
 
   const byside = (rows, key) => ({
@@ -108,6 +111,10 @@ export default async function EplMatchPage({ params }) {
               homeAbbr: m.home_abbr ?? (m.home_name ?? '').slice(0, 3).toUpperCase(),
               awayAbbr: m.away_abbr ?? (m.away_name ?? '').slice(0, 3).toUpperCase(),
               homeName: m.home_name, awayName: m.away_name,
+              // The SAME stored table /epl/standings reads (ruling 2c keeps
+              // EPL on the document until the league_tables migration).
+              homeRank: chips.get(m.home_team_id) ?? null,
+              awayRank: chips.get(m.away_team_id) ?? null,
               homeScore: m.home_score, awayScore: m.away_score,
               venue: m.venue,
             }}

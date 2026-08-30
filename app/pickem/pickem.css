@@ -99,3 +99,48 @@
   padding: 6px 8px; margin: -6px -8px -6px 0; border-radius: 6px;
 }
 .pk-gamelink:active { background: rgba(212, 255, 0, .12); }
+
+/* THE RECORD CHIP AND THE LINE, added 31 Aug.
+   Both are small and muted on purpose: the two team names are the decision,
+   and a record that competes with the name for weight makes the card harder
+   to read, not easier. */
+.pk-rec {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px; color: var(--dim, #5a5a56); margin-left: 6px;
+  font-variant-numeric: tabular-nums; white-space: nowrap; flex: none;
+}
+.pk-spread {
+  display: inline-flex; align-items: baseline; min-width: 0;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px; color: var(--muted, #8a8a85); margin-right: 8px;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+  /* Shrinks before the kickoff time does; never grows past its content. */
+  flex: 0 1 auto;
+}
+/* THE NAME GIVES WAY, THE NUMBER NEVER DOES. "North Dako... -6.5" still says
+   who and exactly how much; "North Dakota State -6..." says nothing. */
+.pk-spread-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.pk-spread-n { flex: none; }
+
+/* 375px BOX MATH, and why nothing here needs a breakpoint.
+   Viewport 375 - 32 page padding = 343 usable inside .pk-game.
+   The eyebrow row is one flex line: left label ("Sat" / "Final" / "● Live")
+   ~46px, then the right group = spread ("TCU -6.5" at 10px mono, 8 chars,
+   ~48px) + 8px gap + time ("7:00 PM ET" ~62px) + 10px + "Game ->" ~52px
+   = ~180px. 46 + 180 = 226 of 343. 117px spare.
+   THAT 117px IS THE SPREAD'S HEADROOM AND IT IS NOT ENOUGH FOR EVERY NAME.
+   The card names the favourite with the same string it shows on the pick
+   button - "North Dakota State", not "NDSU", because one card must not speak
+   two vocabularies - and at 10px mono that is ~108px of name before the
+   number. 48 + 108 = 156 > 117, so the longest names WOULD overflow. They do
+   not, because .pk-spread is a two-part box: .pk-spread-t ellipsises and
+   .pk-spread-n is flex:none. The line always shows the full number and as
+   much of the name as the row can hold, and the time and Game link never
+   move.
+   A pick button is (343 - 9 gap) / 2 = 167px inside 10px padding = 147px of
+   content. Rank badge 18 + name (flex, shrinks) + record chip ~30px + 6px
+   margin. The record is flex:none so the NAME absorbs every shortfall, which
+   is why a long name truncates and the record never wraps under it. */
+/* On the selected (volt) side the chip has to invert with everything else, or
+   a dim grey sits on a bright ground and disappears. */
+.pk-side.on .pk-rec { color: rgba(10, 10, 10, .55); }

@@ -11,6 +11,7 @@ const CFB_TABS = [
   { label: 'Today', href: '/cfb', active: true },
   { label: 'Scores & Schedule', href: '/scores' },
   { label: 'Rankings', href: '/cfb/rankings' },
+  { label: 'Standings', href: '/cfb/standings' },
 ];
 const CFB_LEDE = 'The season opens August 29. The slate and the lines are already in.';
 

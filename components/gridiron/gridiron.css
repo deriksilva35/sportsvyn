@@ -624,3 +624,13 @@
   color: var(--muted); text-decoration: none;
 }
 .gi-market-cta:hover { color: var(--volt); }
+
+/* THE RECORD CHIP on a scoreboard row. Muted and mono: it sits between the
+   team name and the score, and must never compete with either. Records are not
+   market data - no kickoff guard, so this renders in every game state. */
+.gi-rec {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px; color: var(--muted-dim, #5a5a56);
+  font-variant-numeric: tabular-nums; white-space: nowrap; flex: none;
+  margin-left: 6px;
+}

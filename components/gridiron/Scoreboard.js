@@ -56,7 +56,7 @@ function fmtTime(iso) {
 // the identifier typeface) and the full name is the name. The winner's name and
 // score go full white; the loser drops to muted, so a glance at a finished card
 // answers "who won" before it answers "what was the score".
-function TeamLine({ t, score, isWinner, isLoser, final, live = false }) {
+function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = null }) {
   const abbr = t.abbreviation || null;
   const name = t.name || t.label || 'TBD';
   // TWO HOOKS THE ROW COULD NOT DERIVE FOR ITSELF. A score is live-red while
@@ -70,6 +70,10 @@ function TeamLine({ t, score, isWinner, isLoser, final, live = false }) {
       {abbr ? <span className="abbr">{abbr}</span> : <span className="abbr" />}
       <RankBadge rank={t.apRank} />
       <span className="nm">{name}</span>
+      {/* A CHIP MAY ONLY CLAIM KNOWLEDGE. No record, no chip - never a dash
+          standing in for one. Records are not market data and carry no
+          kickoff, so unlike the odds strip this renders in EVERY game state. */}
+      {record ? <span className="gi-rec">{record}</span> : null}
       <span className={scoreClass}>{score ?? ABSENT}</span>
     </div>
   );
@@ -163,7 +167,7 @@ function PreGamePane({ g }) {
   );
 }
 
-function Card({ g }) {
+function Card({ g, records }) {
   const [open, setOpen] = useState(false);
   const final = g.status === 'final';
   const hw = g.homeScore, aw = g.awayScore;
@@ -197,8 +201,8 @@ function Card({ g }) {
           </span>
           <span className="gi-chev" aria-hidden="true">▾</span>
         </div>
-        <TeamLine t={g.away} score={aw} isWinner={awayWin} isLoser={homeWin} final={final} live={g.status === 'live'} />
-        <TeamLine t={g.home} score={hw} isWinner={homeWin} isLoser={awayWin} final={final} live={g.status === 'live'} />
+        <TeamLine t={g.away} score={aw} isWinner={awayWin} isLoser={homeWin} final={final} live={g.status === 'live'} record={records?.get?.(g.away?.id) ?? null} />
+        <TeamLine t={g.home} score={hw} isWinner={homeWin} isLoser={awayWin} final={final} live={g.status === 'live'} record={records?.get?.(g.home?.id) ?? null} />
         {/* The Watch unit is gone. Watch Score is a soccer instrument - there is
             no gridiron composite and never was one on this card, so it rendered
             a permanent placeholder on every row forever, which does not read as
@@ -263,12 +267,16 @@ function Card({ g }) {
 // codes; scoreline semantics stay forked, which is what the Card-level fork is
 // for.
 // ---------------------------------------------------------------------------
-function SoccerCard({ g }) {
+function SoccerCard({ g, records }) {
   const final = g.status === 'final';
   const live = g.status === 'live';
   const chip = live ? soccerLiveChip(g.liveState) : null;
   const draw = (final || live) && g.homeScore != null && g.homeScore === g.awayScore;
   const side = (t, score, otherScore) => {
+    // THE SOCCER CHIP IS A POSITION, NOT A RECORD. "3rd" is what a supporter
+    // says; nobody describes a club as 5-2-1. recordChipMap() already speaks
+    // that grammar, so the card just renders the string it is handed.
+    const chipText = records?.get?.(t?.id) ?? null;
     // Dim ONLY a decided loser. A draw dims neither; a live match dims
     // nobody, because it is not over.
     const lost = final && !draw && score != null && otherScore != null && score < otherScore;
@@ -280,6 +288,7 @@ function SoccerCard({ g }) {
             carry one); no new derivation. */}
         <span className="abbr">{t?.abbreviation ?? ''}</span>
         <span className="nm">{t?.name ?? 'TBD'}</span>
+        {chipText ? <span className="gi-rec">{chipText}</span> : null}
         <span className="sc">{score ?? ABSENT}</span>
       </div>
     );
@@ -323,7 +332,7 @@ function SoccerCard({ g }) {
   );
 }
 
-function Section({ sport, games, liveOnly }) {
+function Section({ sport, games, liveOnly, records }) {
   const shown = liveOnly ? games.filter((g) => g.status === 'live') : games;
   // PER-SPORT CARD, SHARED SHELL. The codes' cards disagree about what a game
   // IS - quarters and a line score vs halves and a running minute, a loser to
@@ -341,7 +350,7 @@ function Section({ sport, games, liveOnly }) {
       {shown.length === 0 ? (
         <div className="gi-empty gi-empty--slate">No {sport.label} {liveOnly ? 'live now' : 'on this day'} · sections keep their place, never vanish →</div>
       ) : (
-        <div className="gi-cards">{shown.map((g) => <CardFor key={g.id} g={g} />)}</div>
+        <div className="gi-cards">{shown.map((g) => <CardFor key={g.id} g={g} records={records} />)}</div>
       )}
     </div>
   );
@@ -352,7 +361,7 @@ function Section({ sport, games, liveOnly }) {
 // filter because the two features each held half the state. The chips are
 // Links built by scoresHref, so every chip carries the date and every date
 // arrow carries the chip; the reverse direction is the same one rule.
-export default function Scoreboard({ byLeague, date, sport = 'all', live = false }) {
+export default function Scoreboard({ byLeague, date, sport = 'all', live = false, records = new Map() }) {
   const visible = SPORTS.filter((s) => sport === 'all' || sport === s.key);
   const chip = (want) => scoresHref(date, { sport: want, live });
 
@@ -367,7 +376,7 @@ export default function Scoreboard({ byLeague, date, sport = 'all', live = false
           href={scoresHref(date, { sport, live: !live })}><span className="gi-dot" />Live only</Link>
       </div>
 
-      {visible.map((s) => <Section key={s.key} sport={s} games={byLeague[s.key] ?? []} liveOnly={live} />)}
+      {visible.map((s) => <Section key={s.key} sport={s} games={byLeague[s.key] ?? []} liveOnly={live} records={records} />)}
 
       {/* DriveStrip is built + ready but renders nowhere until live rows exist.
           Hidden demo so the component is exercised by the build. */}

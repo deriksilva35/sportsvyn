@@ -38,6 +38,7 @@ import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/lib/gridiron/driveStrip';
 import { apRankMap, currentApWeek, latestPollSeason, AP_POLL } from '@/lib/cfb/rankings';
 import RankBadge from '@/components/gridiron/RankBadge';
+import { getTeamRecordChip } from '@/lib/standings/read';
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
 import GameTabs from '@/components/gridiron/GameTabs';
@@ -108,6 +109,12 @@ export default async function CfbGamePage({ params, searchParams }) {
   const apSeason = await latestPollSeason(AP_POLL);
   const apWeek = apSeason ? await currentApWeek(apSeason) : null;
   const apRanks = await apRankMap({ season: apSeason, week: apWeek });
+  // REG-only by construction (getTeamRecord filters season_type), nullable,
+  // and caught: a missing standings row must not break a game page.
+  const [homeRecord, awayRecord] = await Promise.all([
+    getTeamRecordChip('cfb', game.home?.id, game.seasonYear),
+    getTeamRecordChip('cfb', game.away?.id, game.seasonYear),
+  ]);
 
   // ---- DriveStrip ---------------------------------------------------------
   const gamecast = await gamecastFor(game.id);
@@ -185,8 +192,8 @@ export default async function CfbGamePage({ params, searchParams }) {
               ? <span className="gg-chip time">{fmtKick(game.kickoffAt)} ET</span> : null}
           </div>
 
-          <TeamRow t={game.away} score={game.awayScore} loser={winner === 'home'} show={final || live} rank={apRanks.get(game.away?.id) ?? null} />
-          <TeamRow t={game.home} score={game.homeScore} loser={winner === 'away'} show={final || live} rank={apRanks.get(game.home?.id) ?? null} />
+          <TeamRow record={awayRecord} t={game.away} score={game.awayScore} loser={winner === 'home'} show={final || live} rank={apRanks.get(game.away?.id) ?? null} />
+          <TeamRow record={homeRecord} t={game.home} score={game.homeScore} loser={winner === 'away'} show={final || live} rank={apRanks.get(game.home?.id) ?? null} />
 
           <div className="gg-headfoot">
             <span>CFB · {game.seasonPhase} W{game.week}</span>
@@ -291,12 +298,15 @@ export default async function CfbGamePage({ params, searchParams }) {
 // whose brief was explicitly not to touch it. If a third gridiron surface ever
 // wants them, that is the moment to extract - three callers is a component,
 // two is a coincidence.
-function TeamRow({ t, score, loser, show, rank }) {
+function TeamRow({ t, score, loser, show, rank, record = null }) {
   return (
     <div className={`gg-teamrow${loser ? ' loser' : ''}`}>
       <span className="abbr">{t?.abbreviation ?? ''}</span>
       <RankBadge rank={rank} size="big" />
       <span className="tname">{t?.name ?? 'TBD'}</span>
+      {/* A chip may only claim knowledge. Records carry no kickoff, so this
+          renders pre-game, live and final alike - unlike the market strip. */}
+      {record ? <span className="gg-rec">{record}</span> : null}
       {/* No score column before kickoff. A 0 next to a team that has not played
           is not a low score, it is a wrong one. */}
       <span className="score">{show ? score : ''}</span>
