@@ -578,9 +578,34 @@
 .components .c { display: flex; justify-content: space-between; gap: 18px; padding: 2px 0; }
 .components .c b { color: var(--paper); font-weight: 500; }
 /* prose island — the one PAPER block on the ink results surface (Surface Rule inverse) */
-.read-prose { background: var(--paper); color: var(--ink); padding: 22px 24px; margin: 16px 0; border-left: 4px solid var(--volt); }
+/* THE READ, as an ink module. v1.3 retired paper, and this card was the last
+   light ground in the product - it used to be background:var(--paper) with
+   color:var(--ink) behind a data-surface="paper" wrapper.
+
+   THE FALLBACKS ON --ink-2 AND --line ARE LOAD-BEARING, NOT DECORATION.
+   Neither token is defined globally: both live only inside
+   app/admin/console/console.css, which no route outside /admin/console
+   imports. Written bare, `background: var(--ink-2)` resolves to nothing and
+   background falls to its initial value - transparent - so this card would
+   have vanished into the page while every one of its four rules still read as
+   correct. That is the same initial-value trap the surface flip hit and the
+   article-token cleanup hit; it fails invisibly because colour inherits and
+   background does not. The values here are console.css's own, so promoting
+   either token to :root later changes nothing about how this renders.
+   (25 other --ink-2 and 21 other --line call sites across home.css and
+   player.css are written bare today and are NOT resolving - reported, out of
+   scope for a deletion relay.)
+
+   THE BODY IS FULL PAPER-WARM, not a muted ramp. It is the one piece of
+   editorial prose on a page of numbers, and muting it would rank it below the
+   grade table it exists to explain. The label and source line stay recessive. */
+.read-prose {
+  background: var(--ink-2, #141414); color: var(--paper-warm);
+  padding: 22px 24px; margin: 16px 0; border-radius: 12px;
+  border: 1px solid var(--line, #2a2a2a); border-left: 4px solid var(--volt);
+}
 .read-prose .k { font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-mut); margin-bottom: 8px; }
-.read-prose p { font-family: var(--font-source-serif), serif; font-size: 16px; line-height: 1.6; color: var(--ink-soft); margin: 0; }
+.read-prose p { font-family: var(--font-source-serif), serif; font-size: 16px; line-height: 1.6; color: var(--paper-warm); margin: 0; }
 .read-prose .src { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim); margin-top: 10px; }
 .share-btn { display: inline-block; background: var(--graphite); border: 1px solid var(--volt); color: var(--volt); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 10px 18px; text-decoration: none; }
 

@@ -1,7 +1,5 @@
 // components/gridiron/TodayPage.js — shared server render for the /nfl and /cfb
-// Today shells. Paper ground (data-surface="paper") with an ink instrument block
-// (the week slate) sitting on it, per the Surface Rule. Local ink header + sport
-// sub-nav; NO site header. DEV reads only.
+// Today shells. Local ink header + sport sub-nav; NO site header. DEV reads only.
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate, getStandings, getLeagueIdBySlug, getEditorialBoard, getMarketMovers, getUpsetWatch } from '@/lib/gridiron/readers';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';

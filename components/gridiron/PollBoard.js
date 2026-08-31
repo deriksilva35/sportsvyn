@@ -11,28 +11,16 @@
  * de-duplicates - two rows show #14 and the sequence jumps to #16, because
  * that is what the poll says.
  */
-/**
- * SURFACE NOTE. The hub shell is data-surface="paper", which sets
- * `color: var(--ink)` - dark text for a light page. These rows paint a DARK
- * background, so the section MUST declare data-surface="ink" or every piece of
- * inherited text renders dark-on-dark and disappears. That is precisely what
- * shipped: team names were invisible while the points column survived, because
- * .pb-v sets its colour explicitly and .pb-t did not. EditorialBoard and
- * PlayoffPicture both declare their own surface; this was the one board that
- * forgot, and a dark background without the matching surface is the bug.
- */
 export default function PollBoard({ poll }) {
   if (!poll?.rows?.length) {
     return (
-      <div className="pb-empty" data-surface="ink">
+      <div className="pb-empty">
         No {poll?.name ?? 'poll'} stored yet. It appears here once the week&rsquo;s poll is published.
       </div>
     );
   }
   return (
-    /* data-surface="ink" IS LOAD-BEARING, not decoration - see the note above
-       the component. */
-    <section className="pb gi-instrument" aria-label={poll.name} data-surface="ink">
+    <section className="pb gi-instrument" aria-label={poll.name}>
       <div className="pb-eyebrow">
         <span>{poll.name}</span>
         <span className="mono">Week {poll.week} · {poll.season} season</span>

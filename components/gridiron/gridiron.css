@@ -296,12 +296,27 @@
 .gi-drive-cap b { color: var(--volt); font-weight: 700; }
 .gi-drive-cap .fd { color: var(--paper-dim); }
 
-/* ---- paper-surface lede zone (Today pages) ---- */
-.gi-lede { background: var(--paper); color: var(--ink); padding: 40px 20px; border-bottom: 3px solid var(--volt); }
+/* ---- lede zone (Today pages, standings) ----
+   THIS BAND WAS THE LAST PAPER GROUND IN THE PRODUCT, and it had stopped
+   working. It painted background:var(--paper) while its three text tokens
+   resolved from the ANCESTOR [data-surface="ink"] shell - .gi-lede is not
+   itself a [data-surface] element, so it inherited the INK values of the paper
+   ramp and rendered them on a LIGHT band:
+       .gi-lede p     --ink-soft -> #C5C5C2 on #F5F5F2 = 1.58:1  invisible
+       .gi-lede .kick --ink-mut  -> #888888 on #F5F5F2 = 3.25:1  below AA
+       .gi-lede .ph   --ink-dim  -> #888888 on #F5F5F2 = 3.25:1  below AA
+   Live on /nfl, /cfb and both standings pages. It is the mirror of the trap
+   documented in globals.css: there, flipping a shell to ink left tokens
+   undefined; here, the shell flipped and the band did not, so correctly
+   defined tokens landed on the wrong ground.
+   Ink now, in the established module grammar - --graphite against the page's
+   --ink, delimited by the volt rule it always had. The three ramp tokens need
+   no change; they were right all along and simply had nowhere correct to sit. */
+.gi-lede { background: var(--graphite); color: var(--paper); padding: 40px 20px; border-bottom: 3px solid var(--volt); }
 .gi-lede-in { max-width: 1120px; margin: 0 auto; }
 .gi-lede .kick { display: flex; align-items: center; gap: 9px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-mut); margin-bottom: 14px; }
 .gi-lede .kick .sq { width: 14px; height: 14px; background: var(--volt); display: inline-block; }
-.gi-lede h1 { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 42px; line-height: 1.02; letter-spacing: -0.03em; color: var(--ink); margin: 0 0 16px; }
+.gi-lede h1 { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 42px; line-height: 1.02; letter-spacing: -0.03em; color: var(--paper); margin: 0 0 16px; }
 .gi-lede p { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 18px; line-height: 1.5; color: var(--ink-soft); max-width: 620px; margin: 0; }
 .gi-lede .ph { display: inline-block; font-family: var(--font-jetbrains-mono), monospace; font-style: normal; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-dim); border: 1px solid var(--p-rule); padding: 2px 7px; margin-bottom: 12px; }
 

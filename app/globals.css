@@ -100,7 +100,7 @@ body {
    ADDITIVE + SCOPED: the v1.1 palette applies only under a [data-surface]
    shell, so existing WC surfaces (which set no data-surface attribute) keep
    the :root aliases above unchanged — including the pre-1.1 --volt-dim value.
-   New gridiron routes opt in via data-surface="ink" | "paper".
+   New gridiron routes opt in via data-surface="ink" - the only value.
    ========================================================================== */
 [data-surface] {
   --ink: #0A0A0A;
@@ -122,9 +122,8 @@ body {
   --font-archivo-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Paper ground: adds the paper-surface text/structure ramp on top of the
-   shared palette. Data instruments inside a paper shell still opt back to ink
-   via their own data-surface="ink" wrapper. */
+/* Ink ground: the only ground. Adds the text/structure ramp on top of the
+   shared palette above. */
 [data-surface="ink"] {
   background: var(--ink);
   color: var(--paper);
@@ -154,12 +153,14 @@ body {
   --p-rule: var(--rule);
   --p-rule-soft: var(--rule-dim);
 }
-[data-surface="paper"] {
-  background: var(--paper);
-  color: var(--ink);
-  --ink-soft: #333330;
-  --ink-mut: #6B6B66;
-  --ink-dim: #9A9A94;
-  --p-rule: #DEDED8;
-  --p-rule-soft: #E8E8E2;
-}
+/* [data-surface="paper"] IS GONE, v1.3. Every route is ink; the last paper
+   ground was one prose card on the sim results page. The five tokens it used
+   to define are NOT deleted with it - they are consumed at 20 sites in
+   gridiron.css, legal.css and sim.css and keep resolving through the ink block
+   above, which is why this deletion is nine lines and not twenty edits.
+
+   THE [data-surface] BLOCK ABOVE STAYS SEPARATE FROM [data-surface="ink"], on
+   purpose. It is the SHARED palette, and it is also the only thing that makes
+   --volt-dim resolve to #8FAA00 inside a surface and #B8DD00 outside one.
+   Folding the two together would silently repaint every ink surface's volt-dim
+   at ~29 call sites. That collapse is its own decision and its own relay. */

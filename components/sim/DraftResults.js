@@ -47,8 +47,10 @@ export default function DraftResults({ data }) {
         </div>
       </div>
 
-      {/* THE READ — the one paper prose island on the ink results surface */}
-      <div className="read-prose" data-surface="paper">
+      {/* THE READ. It was the one paper island in the product; v1.3 retired
+          paper entirely, so it is an ink module now like every other card on
+          this page. */}
+      <div className="read-prose">
         <div className="k">The Read</div>
         <p>{prose}</p>
         <div className="src">{proseSource === 'ai' ? 'Generated read, editor rules applied' : 'Read (deterministic summary)'}</div>
