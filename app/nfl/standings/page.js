@@ -19,14 +19,6 @@ export const metadata = {
   description: 'NFL standings by conference and division: record, division and conference marks, points for and against, and current streak.',
 };
 
-const TABS = [
-  { label: 'Today', href: '/nfl' },
-  { label: 'Scores & Schedule', href: '/scores' },
-  { label: 'Rankings', href: '/nfl/rankings' },
-  { label: 'Standings', href: '/nfl/standings', active: true },
-  { label: 'Fantasy', href: '/nfl/fantasy' },
-];
-
 export default async function NflStandings() {
   const season = resolveSeasonYear(new Date());
   // Read once here purely to decide whether the seed column means anything;
@@ -39,7 +31,6 @@ export default async function NflStandings() {
       leagueSlug="nfl"
       leagueLabel="NFL"
       season={season}
-      tabs={TABS}
       groupBy={['conference', 'division']}
       columns={nflColumns(rows)}
       note="Regular season, by conference and division. Preseason records are stored but never shown here."

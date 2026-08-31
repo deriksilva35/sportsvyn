@@ -21,13 +21,15 @@ import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import BackToAppBar from '@/components/BackToAppBar';
+import LeagueHeader from '@/components/league/LeagueHeader';
+import '@/components/league/league.css';
 import { getLeagueRecords } from '@/lib/standings/read';
 import { groupRecords } from '@/lib/standings/view';
 import '@/components/gridiron/gridiron.css';
 import './standings.css';
 
 export default async function StandingsPage({
-  leagueSlug, leagueLabel, season, tabs, groupBy, columns, classification = null,
+  leagueSlug, leagueLabel, season, groupBy, columns, classification = null,
   divisionToggle = null, note,
 }) {
   const rows = await getLeagueRecords(leagueSlug, season, { classification }).catch(() => []);
@@ -38,12 +40,13 @@ export default async function StandingsPage({
       <BackToAppBar />
       <GlobalHeaderServer activeNav={leagueSlug} />
 
-      <nav className="gi-subnav">
-        {tabs.map((t) => (
-          <a key={t.label} className={t.active ? 'active' : ''} href={t.href}>{t.label}</a>
-        ))}
-        <span className="gi-season">{season} SEASON · <b>STANDINGS</b></span>
-      </nav>
+      {/* ONE HEADER, EVERY LEAGUE PAGE. The title stays the league; this
+          page's pill is the filled one. */}
+      <LeagueHeader
+        label={leagueLabel}
+        leagueSlug={leagueSlug}
+        pathname={`/${leagueSlug}/standings`}
+      />
 
       <section className="gi-lede">
         <div className="gi-lede-in">

@@ -1,5 +1,5 @@
 // app/cfb/page.js — College Football Today shell. Public (linked from the FOOTBALL
-// nav) and INDEXABLE. Sub-nav lists only tabs whose route exists.
+// nav) and INDEXABLE. Its destinations are the selector pills in LeagueHeader.
 // Indexability policy lives in lib/seo/routes.js.
 import TodayPage from '@/components/gridiron/TodayPage';
 import '@/components/gridiron/gridiron.css';
@@ -7,19 +7,11 @@ import '@/components/gridiron/gridiron.css';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'College Football - Sportsvyn' };
 
-const CFB_TABS = [
-  { label: 'Today', href: '/cfb', active: true },
-  { label: 'Scores & Schedule', href: '/scores' },
-  { label: 'Rankings', href: '/cfb/rankings' },
-  { label: 'Standings', href: '/cfb/standings' },
-];
-
 export default async function CfbToday({ searchParams }) {
   return (
     <TodayPage
       leagueSlug="cfb"
       leagueLabel="CFB"
-      tabs={CFB_TABS}
       searchParams={searchParams}
     />
   );

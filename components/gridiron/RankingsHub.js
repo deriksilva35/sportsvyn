@@ -4,6 +4,8 @@
 // via the same market-derived title-odds reader.
 
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
+import LeagueHeader from '@/components/league/LeagueHeader';
+import '@/components/league/league.css';
 import { getEditorialBoard, getLeagueIdBySlug } from '@/lib/gridiron/readers';
 import { getTitleContenders } from '@/lib/gridiron/oddsReader';
 import { RANKING_TABS, resolveActiveTab } from '@/lib/gridiron/rankingsHub';
@@ -42,12 +44,14 @@ export default async function RankingsHub({ leagueSlug, leagueLabel, searchParam
     <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav={leagueSlug} />
 
-      <nav className="gi-subnav">
-        <a href={`/${leagueSlug}`}>Today</a>
-        <a href="/scores">Scores &amp; Schedule</a>
-        <a className="active" href={`/${leagueSlug}/rankings`}>Rankings</a>
-        <span className="gi-season">{leagueLabel} · RANKINGS</span>
-      </nav>
+      {/* ONE HEADER, EVERY LEAGUE PAGE. This hub used to hand-write three of
+          the league's destinations, which is how a reader who tapped Rankings
+          lost the way to Standings. */}
+      <LeagueHeader
+        label={leagueLabel}
+        leagueSlug={leagueSlug}
+        pathname={`/${leagueSlug}/rankings`}
+      />
 
       <div className="gi-wrap">
         <div className="gi-rank-tabs" role="tablist">

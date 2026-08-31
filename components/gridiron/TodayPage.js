@@ -20,7 +20,7 @@ import { GAME_META, GAME_ORDER } from '@/lib/games/lobby';
 import { gamesLobby } from '@/lib/games/read';
 import '@/components/league/league.css';
 
-export default async function TodayPage({ leagueSlug, leagueLabel, tabs, searchParams }) {
+export default async function TodayPage({ leagueSlug, leagueLabel, searchParams }) {
   const sp = (await searchParams) ?? {};
   // 3.1.1: the league pages are reachable inside the native container
   // (capacitor allowNavigation covers sportsvyn.com), so the Suite teaser's
@@ -70,11 +70,6 @@ export default async function TodayPage({ leagueSlug, leagueLabel, tabs, searchP
     <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav={leagueSlug} />
 
-      <nav className="gi-subnav">
-        {tabs.map((t) => <a key={t.label} className={t.active ? 'active' : ''} href={t.href}>{t.label}</a>)}
-        <span className="gi-season">{seasonYear} SEASON · <b>{phase === 'POST' ? 'POSTSEASON' : `WEEK ${week}`}</b></span>
-      </nav>
-
       {/* THE v1.3 LANDING, above everything that predates it. Nothing below is
           retired this relay - relay B owns the retirements, and a dark gap
           between the two would be worse than a long page. */}
@@ -84,6 +79,8 @@ export default async function TodayPage({ leagueSlug, leagueLabel, tabs, searchP
         phase={phase}
         date={allGames[0]?.kickoffAt ?? null}
         games={allGames}
+        leagueSlug={leagueSlug}
+        pathname={`/${leagueSlug}`}
       />
       <RankRail
         chips={chips}

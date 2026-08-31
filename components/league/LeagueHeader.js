@@ -14,12 +14,17 @@
 // announcing that nothing is happening, which is the one thing that colour
 // must never say.
 
+import Link from 'next/link';
 import { landingEyebrow, livePill } from '@/lib/gridiron/leagueLanding';
+import { navPills } from '@/lib/gridiron/leagueNav';
 
-export default function LeagueHeader({ label, week, phase, date, games }) {
+export default function LeagueHeader({ label, week, phase, date, games, leagueSlug, pathname }) {
   const eyebrow = landingEyebrow({ week, phase, date });
   const live = livePill(games);
-  return (
+  // THE PILLS COME FROM THE ROUTE, not from a prop each page remembers to set.
+  // One list, one resolver - see lib/gridiron/leagueNav.js.
+  const pills = leagueSlug ? navPills(leagueSlug, pathname) : [];
+  const head = (
     <header className="lgh">
       <div className="lgh-l">
         {eyebrow ? <div className="lgh-eye">{eyebrow}</div> : null}
@@ -31,5 +36,25 @@ export default function LeagueHeader({ label, week, phase, date, games }) {
         </span>
       ) : null}
     </header>
+  );
+
+  return (
+    <>
+      {head}
+      {pills.length ? (
+        <nav className="lgn" aria-label={`${label} sections`}>
+          {pills.map((p) => (
+            <Link
+              key={p.key}
+              href={p.href}
+              className={`lgn-p${p.current ? ' on' : ''}${p.outlined ? ' out' : ''}`}
+              aria-current={p.current ? 'page' : undefined}
+            >
+              {p.label}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
+    </>
   );
 }

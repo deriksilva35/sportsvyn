@@ -157,3 +157,31 @@
 .lgm-read { display: block; padding: 10px 0; border-bottom: 1px solid var(--rule-dim); text-decoration: none; }
 .lgm-rt { display: block; font-family: var(--font-saira), sans-serif; font-weight: 700; font-size: 15px; color: var(--paper); line-height: 1.25; }
 .lgm-rd { display: block; font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+/* ---- selector pills (v0.5: the sub-nav, folded into the header) ---------
+   THE SUB-NAV BAR IS GONE. It was a bottom-bordered tab strip whose
+   destinations were written out in four different files and had already
+   drifted - the rankings hub offered three doors, the CFB landing four, the
+   NFL landing five - so a reader who tapped Rankings lost the way to
+   Standings. One list feeds these now.
+
+   THREE STATES, AND NO PILL WEARS TWO. Quiet is the default. Scores carries
+   the volt OUTLINE as the most-tapped door. The current page's pill is volt
+   FILLED. The mock draws the outline with :first-child, which would put both
+   on Scores while you are standing on /scores - the resolver drops the outline
+   there instead, so the outline always means "not here, and worth a tap". */
+.lgn {
+  display: flex; gap: 6px; overflow-x: auto; flex-wrap: nowrap;
+  padding: 8px 16px 2px; scroll-snap-type: x proximity;
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.lgn::-webkit-scrollbar { display: none; }
+.lgn-p {
+  flex: none; scroll-snap-align: start; white-space: nowrap; text-decoration: none;
+  font-family: var(--font-saira-cond); font-weight: 600; font-size: 12px;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--paper); background: var(--ink-3);
+  border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px;
+}
+.lgn-p.out { border-color: var(--volt); color: var(--volt); }
+.lgn-p.on { background: var(--volt); color: var(--ink); border-color: var(--volt); }

@@ -16,6 +16,8 @@
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SportsvynSegment from '@/components/shell/SportsvynSegment';
+import LeagueHeader from '@/components/league/LeagueHeader';
+import '@/components/league/league.css';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import SiteFooter from '@/components/SiteFooter';
@@ -94,6 +96,10 @@ export default async function FantasyMovementBoard({ searchParams }) {
     <div data-surface="ink">
       <GlobalHeaderServer activeNav="fantasy" />
       {isShell && <SportsvynSegment />}
+      {/* ONE HEADER, EVERY LEAGUE PAGE. This is an NFL surface, so it carries
+          the league's own destinations with Fantasy filled - /scores, /market
+          and /stats stay network surfaces and get none. */}
+      <LeagueHeader label="NFL" leagueSlug="nfl" pathname="/nfl/fantasy" />
       <div className="fb-wrap">
         <div className="fb-head">
           <div>

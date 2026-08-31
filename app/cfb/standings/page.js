@@ -19,13 +19,6 @@ export const metadata = {
   description: 'College football standings by conference: overall, conference, home, away and neutral-site records.',
 };
 
-const TABS = [
-  { label: 'Today', href: '/cfb' },
-  { label: 'Scores & Schedule', href: '/scores' },
-  { label: 'Rankings', href: '/cfb/rankings' },
-  { label: 'Standings', href: '/cfb/standings', active: true },
-];
-
 export default async function CfbStandings({ searchParams }) {
   const sp = (await searchParams) ?? {};
   const raw = Array.isArray(sp.division) ? sp.division[0] : sp.division;
@@ -37,7 +30,6 @@ export default async function CfbStandings({ searchParams }) {
       leagueSlug="cfb"
       leagueLabel="College Football"
       season={season}
-      tabs={TABS}
       groupBy={['conference']}
       columns={CFB_COLUMNS}
       classification={isFcs ? 'fcs' : 'fbs'}

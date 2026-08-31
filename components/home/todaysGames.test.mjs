@@ -305,6 +305,8 @@ test('the mobile drawer survived the merge', () => {
   assert.match(chrome, /@media \(max-width: 900px\) \{\s*\n\s*\.gh \.gh-nav \{ display: none; \}/);
 });
 
+const navMod = await import('../../lib/gridiron/leagueNav.js');
+
 test('/membership stays shell-gated in the new header', () => {
   // Moved into accountMenu() in lib/nav.js, where lib/nav.test.mjs asserts the
   // behaviour directly rather than by matching source text.
@@ -312,13 +314,22 @@ test('/membership stays shell-gated in the new header', () => {
 });
 
 test('section sub-navs are NOT unified away', () => {
-  // A league's Today / Scores & Schedule / Rankings / Fantasy strip answers a
-  // different question, and flattening it would remove the site's only sense
-  // of place.
-  const today = stripComments(src('components/gridiron/TodayPage.js'));
-  assert.match(today, /<nav className="gi-subnav">/);
-  const hub = stripComments(src('components/gridiron/RankingsHub.js'));
-  assert.match(hub, /<nav className="gi-subnav">/);
+  // A league's own destinations answer a different question from the global
+  // header's, and flattening them into it would remove the site's only sense
+  // of place. THAT RULE IS INTACT; only its shape changed.
+  //
+  // v0.5 folded the .gi-subnav BAR into the league header as selector pills -
+  // moved, not removed, and moved into one component instead of four
+  // hand-written copies that had already drifted apart. So this now asserts
+  // that every league surface still offers the league's own destinations, and
+  // that they come from the single list rather than from each page.
+  const { LEAGUE_NAV } = navMod;
+  assert.ok(LEAGUE_NAV.length >= 5, 'a league must keep its own set of doors');
+  for (const f of ['components/gridiron/TodayPage.js', 'components/gridiron/RankingsHub.js',
+                   'components/standings/StandingsPage.js']) {
+    assert.match(stripComments(src(f)), /<LeagueHeader/, `${f} must still offer the league nav`);
+  }
+  assert.match(stripComments(src('components/league/LeagueHeader.js')), /navPills\(/);
 });
 
 // ---------------------------------------------------------------------------

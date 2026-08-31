@@ -35,22 +35,12 @@
 .gi-member { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: var(--ink); background: var(--volt); padding: 4px 10px; }
 
 /* ---- sport sub-nav ---- */
-.gi-subnav {
-  display: flex; align-items: center; gap: 2px;
-  background: var(--ink); border-bottom: 1px solid var(--rule);
-  padding: 0 14px;
-}
-.gi-subnav a {
-  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--muted); text-decoration: none; padding: 13px 16px; position: relative;
-}
-.gi-subnav a.active { color: var(--volt); }
-.gi-subnav a.active::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: 0; height: 2px; background: var(--volt); }
-.gi-season {
-  margin-left: auto; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--muted-dim); padding-right: 8px;
-}
-.gi-season b { color: var(--paper); font-weight: 500; }
+/* .gi-subnav / .gi-season DELETED, v0.5. The league sub-nav bar is gone: its
+   destinations are the selector pills in LeagueHeader, fed by the one list in
+   lib/gridiron/leagueNav.js. It was a bottom-bordered tab strip whose contents
+   were hand-written in four files and had already drifted - three doors on the
+   rankings hub, four on the CFB landing, five on the NFL one. Deleted rather
+   than left dormant: a rule nothing renders is a rule somebody re-mounts. */
 
 /* ---- layout ---- */
 .gi-wrap { max-width: 1120px; margin: 0 auto; padding: 22px 20px 80px; }
