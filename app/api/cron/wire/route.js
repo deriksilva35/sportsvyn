@@ -119,11 +119,19 @@ async function tick() {
   // and the wire is worth more with a few checked takes than with many
   // unchecked ones. A rejection is ledgered with its reason and the item keeps
   // its headline, which is a complete item on its own.
-  const takes = { tried: 0, wrote: 0, rejected: {} };
+  // BOUNDED BY THE CLOCK, NOT JUST BY COUNT. Eight model calls at a few
+  // seconds each ran the whole tick past its limit: the 15:52 run was killed
+  // with finished_at null, so the ledger could not even record why. The rider
+  // now stops when the tick's budget is spent and reports how many it skipped,
+  // which turns a dead tick into a short one.
+  const TAKE_BUDGET_MS = 25000;
+  const takeDeadline = Date.now() + TAKE_BUDGET_MS;
+  const takes = { tried: 0, wrote: 0, skipped: 0, rejected: {} };
   try {
     const { takeCandidates, buildEnvelope, generateTake, writeTake, takePrompt } = await import('@/lib/wire/take');
     const prompt = await takePrompt();
-    for (const c of await takeCandidates({ limit: 8 })) {
+    for (const c of await takeCandidates({ limit: 4 })) {
+      if (Date.now() > takeDeadline) { takes.skipped += 1; continue; }
       const env = await buildEnvelope(c, { season });
       if (!env) { takes.rejected.empty_envelope = (takes.rejected.empty_envelope ?? 0) + 1; continue; }
       takes.tried += 1;
