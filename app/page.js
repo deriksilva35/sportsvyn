@@ -289,7 +289,7 @@ export default async function HomePage() {
   // 3.1.1: the homepage is reachable inside the native container, and the
   // subscribe band carries a price. Cookie-resolved (this page takes no
   // searchParams).
-  const isShell = await resolveShellMode(null);
+  const isShell = await resolveShellMode();
   const now = new Date();
   const ptDay = toPtIsoDate(now);
   const ptDateLabel = fmtPtDate(now);

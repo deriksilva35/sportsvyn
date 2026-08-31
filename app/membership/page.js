@@ -44,7 +44,7 @@ export default async function MembershipPage({ searchParams }) {
   // container never reaching a purchase surface, and this route is still that
   // route in every reviewer's notes and every deep link. Redirecting costs
   // nothing and keeps the guarantee unconditional.
-  if (await resolveShellMode(params)) redirect('/sim');
+  if (await resolveShellMode()) redirect('/sim');
 
   return (
     <div className="mbr" data-surface="ink">

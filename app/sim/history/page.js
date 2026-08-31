@@ -21,8 +21,8 @@ import PushReRegister from '@/components/push/PushReRegister';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Draft History - Sportsvyn', robots: { index: false, follow: false } };
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 function fmtDate(d) {
@@ -39,7 +39,7 @@ function label(d) {
 export default async function SimHistory({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const isShell = await resolveShellMode((await searchParams) ?? {});
+  const isShell = await resolveShellMode();
   if (userId == null) redirect('/signin?callbackUrl=/sim/history');
 
   const [drafts, ent] = await Promise.all([getDraftHistory(userId), getEntitlements(userId)]);

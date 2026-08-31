@@ -26,15 +26,15 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mock Draft Sim - Sportsvyn', robots: { index: false, follow: false } };
 
 // Shell mode opts into viewport-fit:cover; non-shell emits the root viewport.
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export default async function SimLobby({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const params = (await searchParams) ?? {};
-  const isShell = await resolveShellMode(params);
+  const isShell = await resolveShellMode();
   // IN THE CONTAINER, SIGNED OUT, THE ANSWER IS THE SIGN-IN FORM. Ahead of the
   // lobby read below, because a redirect makes every query under it wasted.
   requireSignInInShell({ isShell, userId, dest: '/sim' });

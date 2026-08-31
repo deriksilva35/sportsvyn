@@ -36,8 +36,8 @@ export const dynamic = 'force-dynamic';
 // v0.3: this board is also half of the app's SPORTSVYN tab. Shell mode gets
 // the safe-area viewport and the segment; the web page is unchanged, public
 // and indexable (the metadata below deliberately has no robots override).
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export const metadata = {
@@ -50,7 +50,7 @@ const FALLBACK_FORMAT = 'ppr';
 
 export default async function FantasyMovementBoard({ searchParams }) {
   const params = (await searchParams) ?? {};
-  const isShell = await resolveShellMode(params);
+  const isShell = await resolveShellMode();
   // UNFORCED, v0.6. This is a LEAGUE ROUTE - it wears the league header and
   // sits behind the Fantasy pill - and the ruling is that every league route
   // opens signed-out in the shell. The Movement Board is a board of numbers,

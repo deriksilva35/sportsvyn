@@ -44,14 +44,14 @@ export const metadata = {
   description: 'One board. Six slots. Three minutes.',
 };
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export default async function DailyPage({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const isShell = await resolveShellMode((await searchParams) ?? {});
+  const isShell = await resolveShellMode();
   // Signed out in the container: the sign-in form, not this page's hero.
   requireSignInInShell({ isShell, userId, dest: '/daily' });
 

@@ -50,8 +50,8 @@ export const dynamic = 'force-dynamic';
 
 // Shell mode opts into viewport-fit:cover so the safe-area insets resolve;
 // the web keeps the root viewport. Same contract as /scores and every /sim page.
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export const metadata = {
@@ -213,7 +213,7 @@ function Band({ slug, cards, boardIds, books }) {
 export async function MarketView({ sp, pinned = null, leagueHeader = null }) {
   // THE SHELL GATE STAYS AT THE CALL SITE, server-side: web HTML carries no
   // segment markup at all. Same contract the other three tabs already keep.
-  const isShell = await resolveShellMode(sp);
+  const isShell = await resolveShellMode();
   const raw = typeof sp.f === 'string' ? sp.f : 'all';
   // THE PIN DECIDES THE LEAGUE; the URL still decides everything else. 'movers'
   // is not a league, so a pinned board can still be narrowed to movers.

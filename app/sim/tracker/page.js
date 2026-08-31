@@ -39,15 +39,15 @@ import PushReRegister from '@/components/push/PushReRegister';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Tracker - Sportsvyn', robots: { index: false, follow: false } };
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export default async function TrackerTab({ searchParams }) {
   const params = (await searchParams) ?? {};
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const isShell = await resolveShellMode(params);
+  const isShell = await resolveShellMode();
   if (userId == null) redirect(shellSigninHref('/sim/tracker', isShell));
 
   // BACK INTO THE ROOM, and my card was the wrong fix for the trapdoor.

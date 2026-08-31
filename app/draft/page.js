@@ -31,8 +31,8 @@ export const metadata = {
   description: 'Eight rounds against the room. Best ball, one week.',
 };
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 const ET = { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
@@ -82,7 +82,7 @@ function Rules({ contest }) {
 export default async function DraftPage({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const isShell = await resolveShellMode((await searchParams) ?? {});
+  const isShell = await resolveShellMode();
   // Signed out in the container: the sign-in form, not this page's hero.
   requireSignInInShell({ isShell, userId, dest: '/draft' });
 

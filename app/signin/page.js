@@ -46,8 +46,8 @@ export const metadata = {
 
 // In the Draftvyn shell, opt into viewport-fit:cover so env(safe-area-inset-*)
 // resolves; web returns the same base viewport (unchanged).
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export default async function SignInPage({ searchParams }) {
@@ -58,7 +58,7 @@ export default async function SignInPage({ searchParams }) {
     typeof params?.callbackUrl === 'string' ? params.callbackUrl : '/';
   // Shell-aware (via ?shell=sim-app param, or the sv_shell cookie set on /sim).
   // Web version is unaffected — isShell is false there.
-  const isShell = await resolveShellMode(params ?? {});
+  const isShell = await resolveShellMode();
 
   return (
     <main

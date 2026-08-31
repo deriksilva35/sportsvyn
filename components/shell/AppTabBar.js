@@ -44,9 +44,7 @@ const getServerTab = () => null;
 const subscribe = () => () => {};
 // The DECISION is isShellClient in lib/shell/appTabs.js, pure and tested. This
 // only fetches the two strings it needs from the document.
-const getSnapshot = () => isShellClient({
-  cookie: document.cookie, search: window.location.search,
-});
+const getSnapshot = () => isShellClient({ cookie: document.cookie });
 const getServerSnapshot = () => false;
 
 export default function AppTabBar() {

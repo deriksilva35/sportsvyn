@@ -26,7 +26,7 @@ export default async function GlobalHeaderServer({ activeNav = null }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const [isShell, ent] = await Promise.all([
-    resolveShellMode(null),
+    resolveShellMode(),
     // A membership read must never be able to cost a header. Signed-out users
     // skip it entirely; a failure reads as "not a member", which is the safe
     // direction for a badge.

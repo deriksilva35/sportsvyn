@@ -20,8 +20,8 @@ import '../daily.css';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export async function generateMetadata({ params }) {

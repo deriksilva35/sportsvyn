@@ -25,9 +25,7 @@ import { useSyncExternalStore } from 'react';
 import { isShellClient } from '@/lib/shell/appTabs';
 
 const subscribe = () => () => {};
-const getSnapshot = () => isShellClient({
-  cookie: document.cookie, search: window.location.search,
-});
+const getSnapshot = () => isShellClient({ cookie: document.cookie });
 const getServerSnapshot = () => false;
 
 export default function HideInShell({ children }) {

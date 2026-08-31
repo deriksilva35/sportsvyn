@@ -37,8 +37,8 @@ export const metadata = {
   description: 'Game day, every day. One account. One handle. Every board.',
 };
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 // The emoji icons retired with the legibility pass: the mock's ghost
@@ -52,7 +52,7 @@ export default async function GamesPage({ searchParams }) {
   const userId = session?.user?.id ?? null;
   // GAMES WAS THE ODD ONE: no signed-out branch at all, so a stranger in the
   // container got the lobby - four cards, none of them playable. Same rule.
-  requireSignInInShell({ isShell: await resolveShellMode(sp), userId, dest: '/games' });
+  requireSignInInShell({ isShell: await resolveShellMode(), userId, dest: '/games' });
   const v = await gamesLobby(userId).catch(() => null);
   // YOUR LEAGUES (v0.2 door): the member's leagues on the lobby, or the
   // create/join CTA when none. Caught to [] like every lobby read.

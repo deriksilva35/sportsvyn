@@ -35,7 +35,7 @@ export async function startCheckout(planKey) {
   // POST endpoint: a stale client, a cached page, or a reviewer with devtools
   // could still reach it. Refuse in the native container rather than trust that
   // the UI is the only door. Bounces to /sim, which is where the shell lives.
-  if (await resolveShellMode(null)) redirect('/sim');
+  if (await resolveShellMode()) redirect('/sim');
 
   const session = await auth();
   const userId = session?.user?.id ?? null;
@@ -70,7 +70,7 @@ export async function startCheckout(planKey) {
 export async function openBillingPortal() {
   // 3.1.1: the Stripe billing portal is an external account-and-payment
   // mechanism. Same backstop as startCheckout.
-  if (await resolveShellMode(null)) redirect('/sim');
+  if (await resolveShellMode()) redirect('/sim');
 
   const session = await auth();
   const userId = session?.user?.id ?? null;

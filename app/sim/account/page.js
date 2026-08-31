@@ -25,14 +25,14 @@ import PushReRegister from '@/components/push/PushReRegister';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Account - Sportsvyn', robots: { index: false, follow: false } };
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export default async function SimAccount({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const isShell = await resolveShellMode((await searchParams) ?? {});
+  const isShell = await resolveShellMode();
   if (userId == null) redirect('/signin?callbackUrl=/sim/account');
 
   const [used, member, membership, me] = await Promise.all([

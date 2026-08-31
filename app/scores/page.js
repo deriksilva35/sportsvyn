@@ -23,8 +23,8 @@ export const metadata = { title: 'Scores - Sportsvyn' };
 
 // Shell mode opts into viewport-fit:cover so the safe-area insets resolve;
 // the web keeps the root viewport. Same contract as every /sim page.
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -66,7 +66,7 @@ function label(iso) {
  */
 export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
 
-  const isShell = await resolveShellMode(sp);
+  const isShell = await resolveShellMode();
   // NO SHELL GATE ON THIS BOARD, IN ANY OF ITS WEARINGS.
   //
   // RULED IN TWO STEPS, and the second step exists because the first was made

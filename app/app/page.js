@@ -57,7 +57,7 @@ export default async function AppShellPage({ searchParams }) {
   // not a redirect.
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const isShell = await resolveShellMode((await searchParams) ?? {});
+  const isShell = await resolveShellMode();
   requireSignInInShell({ isShell, userId, dest: '/games' });
 
   // ==========================================================================

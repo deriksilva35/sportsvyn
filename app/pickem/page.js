@@ -32,8 +32,8 @@ import './pickem.css';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export const metadata = { title: "Pick 'em - Sportsvyn" };
@@ -42,7 +42,7 @@ export default async function PickemPage({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const sp = (await searchParams) ?? {};
-  const isShell = await resolveShellMode(sp);
+  const isShell = await resolveShellMode();
   requireSignInInShell({ isShell, userId, dest: '/pickem' });
 
   const uid = userId == null ? null : Number(userId);

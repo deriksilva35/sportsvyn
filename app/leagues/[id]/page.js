@@ -36,8 +36,8 @@ import '../leagues.css';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export async function generateMetadata({ params }) {
@@ -66,7 +66,7 @@ export default async function LeaguePage({ params, searchParams }) {
 
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const isShell = await resolveShellMode(sp);
+  const isShell = await resolveShellMode();
   const dest = leagueHref(leagueId, tab);
   requireSignInInShell({ isShell, userId, dest });
 

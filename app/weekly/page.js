@@ -38,8 +38,8 @@ export const metadata = {
   description: 'One board. Six slots. Open until the first kickoff.',
 };
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 const ET = { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
@@ -117,7 +117,7 @@ function Rules({ contest }) {
 export default async function WeeklyPage({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const isShell = await resolveShellMode((await searchParams) ?? {});
+  const isShell = await resolveShellMode();
   // Signed out in the container: the sign-in form, not this page's hero.
   requireSignInInShell({ isShell, userId, dest: '/weekly' });
 

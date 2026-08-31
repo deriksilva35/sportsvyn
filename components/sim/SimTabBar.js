@@ -36,9 +36,7 @@ const TABS = [
 // TRACKER, and history is moving to PROFILE, so nothing here is unreachable
 // without it. On the WEB this bar is unchanged and still the only sim nav.
 const subscribe = () => () => {};
-const getSnapshot = () => isShellClient({
-  cookie: document.cookie, search: window.location.search,
-});
+const getSnapshot = () => isShellClient({ cookie: document.cookie });
 const getServerSnapshot = () => false;
 
 export default function SimTabBar() {

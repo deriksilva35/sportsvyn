@@ -28,15 +28,15 @@ export const metadata = {
   description: 'Your people, one board. Create a league, share the code.',
 };
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export default async function LeaguesPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const isShell = await resolveShellMode(sp);
+  const isShell = await resolveShellMode();
   // THE SHARE TARGET: /leagues?join=CODE is what actually rides a group chat.
   // The dest must CARRY the code through the sign-in law, or a signed-out
   // friend tapping the link would authenticate into a page that forgot why

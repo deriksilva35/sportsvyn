@@ -42,8 +42,8 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export default async function AccountPage({ searchParams }) {
@@ -51,7 +51,7 @@ export default async function AccountPage({ searchParams }) {
   const userId = session?.user?.id ?? null;
   if (userId == null) redirect('/signin?callbackUrl=/account');
 
-  const isShell = await resolveShellMode((await searchParams) ?? {});
+  const isShell = await resolveShellMode();
   // Neither read may cost the page: a membership lookup that fails reads as
   // "not a member", which is the safe direction for a status line.
   const [member, membership, me, draftRows] = await Promise.all([

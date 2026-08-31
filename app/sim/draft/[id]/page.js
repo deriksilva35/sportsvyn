@@ -25,8 +25,8 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Draft Room - Sportsvyn', robots: { index: false, follow: false } };
 
 // Shell mode opts into viewport-fit:cover; non-shell emits the root viewport.
-export async function generateViewport({ searchParams }) {
-  return simViewport(await resolveShellMode((await searchParams) ?? {}));
+export async function generateViewport() {
+  return simViewport(await resolveShellMode());
 }
 
 export default async function DraftRoomPage({ params, searchParams }) {
@@ -35,7 +35,7 @@ export default async function DraftRoomPage({ params, searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) redirect(`/signin?callbackUrl=/sim/draft/${draftId}`);
-  const isShell = await resolveShellMode((await searchParams) ?? {});
+  const isShell = await resolveShellMode();
 
   const base = await getDraft(draftId, userId);
   if (!base) notFound(); // not found OR not the user's draft

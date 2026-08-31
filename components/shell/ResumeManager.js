@@ -40,7 +40,7 @@ export default function ResumeManager() {
   const [debug, setDebug] = useState(null);
 
   useEffect(() => {
-    if (!isShellClient({ cookie: document.cookie, search: window.location.search })) return undefined;
+    if (!isShellClient({ cookie: document.cookie })) return undefined;
 
     let deepLinkPending = false;
 
