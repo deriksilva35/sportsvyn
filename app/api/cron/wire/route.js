@@ -39,6 +39,15 @@ const WINDOW_MIN = 15;
 
 export async function GET(request) {
   if (!cronAuthorized(request)) return new Response('Unauthorized', { status: 401 });
+  // THE LEDGER TIMES THE TICK, NOT A WRAPPER. The first version ran every lane
+  // and THEN called recordRun with a no-op, so started_at and finished_at were
+  // six milliseconds apart for work that takes about four seconds. ok, summary
+  // and error were right; the timing was meaningless. The work goes inside.
+  const out = await recordRun(sql, { source: 'wire', kind: 'wire', run: () => tick() });
+  return NextResponse.json(out?.summary ?? out ?? { ok: false });
+}
+
+async function tick() {
   const started = new Date();
   const per = [];
   const errors = [];
@@ -54,7 +63,6 @@ export async function GET(request) {
   };
 
   const season = resolveSeasonYear(started);
-  const ledger = { per, errors };
 
   // ---- lane 1: our own numbers -------------------------------------------
   await run('line', () => lineMoves({ now: started }));
@@ -106,9 +114,32 @@ export async function GET(request) {
   const clubWritten = await emit(clubRows);
   per.push({ lane: 'club', feeds: feeds.length, found: clubRows.length, written: clubWritten, down: clubDown.length });
 
+  // ---- the take, a rider on the same tick ---------------------------------
+  // BOUNDED PER TICK. Eight items is a handful of model calls a quarter hour,
+  // and the wire is worth more with a few checked takes than with many
+  // unchecked ones. A rejection is ledgered with its reason and the item keeps
+  // its headline, which is a complete item on its own.
+  const takes = { tried: 0, wrote: 0, rejected: {} };
+  try {
+    const { takeCandidates, buildEnvelope, generateTake, writeTake, takePrompt } = await import('@/lib/wire/take');
+    const prompt = await takePrompt();
+    for (const c of await takeCandidates({ limit: 8 })) {
+      const env = await buildEnvelope(c, { season });
+      if (!env) { takes.rejected.empty_envelope = (takes.rejected.empty_envelope ?? 0) + 1; continue; }
+      takes.tried += 1;
+      const r = await generateTake(c, env, { prompt });
+      if (r.ok) { await writeTake(c.id, r.text); takes.wrote += 1; }
+      else { takes.rejected[r.reason] = (takes.rejected[r.reason] ?? 0) + 1; }
+    }
+  } catch (e) {
+    errors.push(`take: ${String(e?.message ?? e).slice(0, 120)}`);
+  }
+  per.push({ lane: 'take', ...takes });
+
   const swept = await sweep().catch(() => 0);
   const summary = { per, swept, downFeeds: clubDown, errors };
   const ok = errors.length === 0;
+  summary.ok = ok;
 
   // A FEED SHAPE THAT STOPPED PARSING IS THE ALARM WORTH RAISING. One club
   // going quiet is ordinary; a third of them at once means the pattern moved.
@@ -121,10 +152,9 @@ export async function GET(request) {
     }).catch(() => {});
   }
 
-  await recordRun(sql, {
-    source: 'wire', kind: 'wire',
-    run: async () => { if (!ok) throw new Error(errors.join(' | ')); return summary; },
-  }).catch(() => {});
-
-  return NextResponse.json({ ok, per, swept, downFeeds: clubDown, errors });
+  // A LANE FAILING IS A FAILED TICK. recordRun marks the row ok only when run()
+  // returns, so throwing here is what makes the ledger tell the truth - and the
+  // summary is attached either way by the catch above.
+  if (!ok) { const e = new Error(errors.join(' | ')); e.summary = summary; throw e; }
+  return summary;
 }

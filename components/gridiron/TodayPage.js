@@ -9,6 +9,9 @@ import StandingsSnapshot from '@/components/league/StandingsSnapshot';
 import MarketModule from '@/components/league/MarketModule';
 import WeekLeaders from '@/components/league/WeekLeaders';
 import ReadsModule from '@/components/league/ReadsModule';
+import WireModule from '@/components/wire/WireModule';
+import { wireTeaser } from '@/lib/wire/read';
+import '@/components/wire/wire.css';
 import { standingsSnapshot, marketRows, weekLeaders, leagueReads } from '@/lib/gridiron/landingModules';
 import RankRail from '@/components/league/RankRail';
 import GamesStrip from '@/components/league/GamesStrip';
@@ -49,7 +52,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, searchParams 
   const { currentApWeek, latestPollSeason, AP_POLL } = await import('@/lib/cfb/rankings');
   const apSeason = isNfl ? null : await latestPollSeason(AP_POLL).catch(() => null);
   const apWeek = apSeason ? await currentApWeek(apSeason).catch(() => null) : null;
-  const [railRows, lobby, recordChips, snapshot, market, leaders, reads] = await Promise.all([
+  const [railRows, lobby, recordChips, snapshot, market, leaders, reads, wire] = await Promise.all([
     railFor(leagueSlug, { season: seasonYear, apWeek }),
     gamesLobby(userId ?? null).catch(() => null),
     loadRecordChips(),
@@ -57,6 +60,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, searchParams 
     marketRows(leagueSlug),
     weekLeaders(leagueSlug, seasonYear, week),
     leagueReads(leagueSlug),
+    wireTeaser(leagueSlug).catch(() => ({ items: [], newest: null })),
   ]);
   const chips = railChips(railRows);
   const lobbyCards = Object.fromEntries((lobby?.cards ?? []).filter(Boolean).map((c) => [c.key, c]));
@@ -94,6 +98,15 @@ export default async function TodayPage({ leagueSlug, leagueLabel, searchParams 
         label={leagueLabel}
         games={allGames}
         records={recordChips}
+      />
+
+      {/* THE WIRE SITS BETWEEN THE SCORES AND THE STANDINGS: what just
+          happened, after what the games did and before what they add up to. */}
+      <WireModule
+        leagueSlug={leagueSlug}
+        items={wire.items}
+        newest={wire.newest}
+        now={now}
       />
 
       <StandingsSnapshot
