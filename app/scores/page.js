@@ -15,8 +15,7 @@ import Scoreboard from '@/components/gridiron/Scoreboard';
 import Link from 'next/link';
 import DateRail from '@/components/gridiron/DateRail';
 import { getSlateByDate, resolveScoresDate, scoresDateRange, priorDateHasLive } from '@/lib/gridiron/readers';
-import { recordChipMap } from '@/lib/standings/read';
-import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
+import { loadRecordChips } from '@/lib/gridiron/recordsLoader';
 import { parseScoresParams, defaultScoresDate } from '@/lib/gridiron/scoresNav';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import '@/components/gridiron/gridiron.css';
@@ -74,11 +73,10 @@ export default async function ScoresPage({ searchParams }) {
   // ALL. A filter that survives navigation has to live in the URL, and once
   // it does, every link on the page carries it via scoresHref.
   const { sport, live } = parseScoresParams(sp);
-  // RECORDS FOR EVERY CARD ON THE SLATE, one read for all three leagues.
-  // .catch is not needed - recordChipMap swallows its own failures and returns
-  // whatever it could build, because a chip must never take a scoreboard down.
+  // RECORDS FOR EVERY CARD ON THE SLATE, one read for all three leagues,
+  // through the loader the league landings share - see recordsLoader.js.
   const [slate, range, records] = await Promise.all([
-    getSlateByDate(date), scoresDateRange(), recordChipMap(resolveSeasonYear(new Date())),
+    getSlateByDate(date), scoresDateRange(), loadRecordChips(),
   ]);
   const games = [...slate.byLeague.nfl, ...slate.byLeague.cfb];
   // One batch odds read for the whole slate (no per-card fan-out); attach to each game.

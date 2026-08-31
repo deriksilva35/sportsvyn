@@ -1,5 +1,6 @@
 // components/gridiron/TodayPage.js — shared server render for the /nfl and /cfb
 // Today shells. Local ink header + sport sub-nav; NO site header. DEV reads only.
+import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate, getStandings, getLeagueIdBySlug, getEditorialBoard, getMarketMovers, getUpsetWatch } from '@/lib/gridiron/readers';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
@@ -13,6 +14,16 @@ import EditorialBoard from '@/components/gridiron/EditorialBoard';
 import MarketBoard from '@/components/gridiron/MarketBoard';
 import { SuiteTeasers, UpsetWatch, TheRead } from '@/components/gridiron/RailCards';
 import MovementCard from '@/components/fantasy/MovementCard';
+import LeagueHeader from '@/components/league/LeagueHeader';
+import RankRail from '@/components/league/RankRail';
+import GamesStrip from '@/components/league/GamesStrip';
+import LeagueScores from '@/components/league/LeagueScores';
+import { railFor } from '@/lib/gridiron/leagueRail';
+import { railChips, stripTiles } from '@/lib/gridiron/leagueLanding';
+import { loadRecordChips } from '@/lib/gridiron/recordsLoader';
+import { GAME_META, GAME_ORDER } from '@/lib/games/lobby';
+import { gamesLobby } from '@/lib/games/read';
+import '@/components/league/league.css';
 import { getMovementCard } from '@/lib/fantasy/movement';
 import '@/components/fantasy/movementCard.css';
 
@@ -42,6 +53,11 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
   // (capacitor allowNavigation covers sportsvyn.com), so the Suite teaser's
   // the pricing CTA must not render there.
   const isShell = await resolveShellMode(sp);
+  // THE VIEWER, for the games strip only. A signed-out reader still sees every
+  // tile and its lock - those are true for everybody - but no volt button,
+  // because the action is not available to them yet.
+  const session = await auth().catch(() => null);
+  const userId = session?.user?.id ?? null;
   const now = new Date();
   const seasonYear = resolveSeasonYear(now);
   // Pin to the nearest UPCOMING week (the season opener during the offseason),
@@ -86,6 +102,26 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
     isNfl ? getMovementCard('ppr', 5) : Promise.resolve(null),
   ]);
 
+  // ---- v1.3 LEAGUE LANDING ------------------------------------------------
+  // Each read is caught to its own empty value: the rail, the strip and the
+  // record chips are all decoration on top of a screen that must render
+  // without them. None of the three may take the landing down.
+  const { apRankMap: _apUnused, currentApWeek, latestPollSeason, AP_POLL } = await import('@/lib/cfb/rankings');
+  const apSeason = isNfl ? null : await latestPollSeason(AP_POLL).catch(() => null);
+  const apWeek = apSeason ? await currentApWeek(apSeason).catch(() => null) : null;
+  const [railRows, lobby, recordChips] = await Promise.all([
+    railFor(leagueSlug, { season: seasonYear, apWeek }),
+    gamesLobby(userId ?? null).catch(() => null),
+    loadRecordChips(),
+  ]);
+  const chips = railChips(railRows);
+  const lobbyCards = Object.fromEntries((lobby?.cards ?? []).filter(Boolean).map((c) => [c.key, c]));
+  const tiles = stripTiles({
+    leagueSlug, meta: GAME_META, order: GAME_ORDER, cards: lobbyCards, signedIn: userId != null,
+  });
+  // Every game on the week, flattened, for the scores module and the live pill.
+  const allGames = slate.byDay.flatMap((d) => d.games);
+
   return (
     <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav={leagueSlug} />
@@ -96,6 +132,30 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
       </nav>
 
       {/* paper lede zone — one honest line, fitted to the register */}
+      {/* THE v1.3 LANDING, above everything that predates it. Nothing below is
+          retired this relay - relay B owns the retirements, and a dark gap
+          between the two would be worse than a long page. */}
+      <LeagueHeader
+        label={leagueLabel}
+        week={week}
+        phase={phase}
+        date={allGames[0]?.kickoffAt ?? null}
+        games={allGames}
+      />
+      <RankRail
+        chips={chips}
+        title={isNfl ? 'Sportsvyn Power Rankings' : 'AP Top 25'}
+        allHref={isNfl ? '/nfl/rankings?tab=power' : '/cfb/rankings'}
+        allLabel={isNfl ? 'All 32 →' : 'All 25 →'}
+      />
+      <GamesStrip tiles={tiles} signedIn={userId != null} />
+      <LeagueScores
+        leagueSlug={leagueSlug}
+        label={leagueLabel}
+        games={allGames}
+        records={recordChips}
+      />
+
       <section className="gi-lede">
         <div className="gi-lede-in">
           <div className="kick"><span className="sq" />{leagueLabel} · {seasonYear} SEASON{cue ? ` · ${cue}` : ''}</div>
