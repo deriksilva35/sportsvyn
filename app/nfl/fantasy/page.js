@@ -52,10 +52,15 @@ const FALLBACK_FORMAT = 'ppr';
 export default async function FantasyMovementBoard({ searchParams }) {
   const params = (await searchParams) ?? {};
   const isShell = await resolveShellMode(params);
-  // Same sign-in law as every tab: in-shell signed-out lands on the form.
-  // Placed before the three board reads - a redirect must not pay for them.
+  // UNFORCED, v0.6. This is a LEAGUE ROUTE - it wears the league header and
+  // sits behind the Fantasy pill - and the ruling is that every league route
+  // opens signed-out in the shell. The Movement Board is a board of numbers,
+  // not an entry surface; nothing on it is the reader's own.
+  //
+  // The import stays because removing it would take the audit list in
+  // lib/shell/signedOut.test.mjs with it, and this page keeping the machinery
+  // while declining to use it is the honest record of a decision.
   const session = await auth();
-  requireSignInInShell({ isShell, userId: session?.user?.id ?? null, dest: '/nfl/fantasy' });
   const raw = Array.isArray(params.format) ? params.format[0] : params.format;
   const format = sizeForFormat(raw) ? raw : FALLBACK_FORMAT;
 

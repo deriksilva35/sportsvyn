@@ -69,10 +69,18 @@ function label(iso) {
 export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
 
   const isShell = await resolveShellMode(sp);
-  // In the container, signed out means the sign-in form - same law as every
-  // tab. The web branch of this page stays public; the guard is shell-only.
+  // THE NETWORK BOARD KEEPS THE SHELL GATE; THE LEAGUE WEARING DOES NOT.
+  //
+  // RULED: the league pages are the browse surface and the games are the
+  // sign-in surface. /nfl/scores and /cfb/scores mount this same view with a
+  // league pinned, and they were inheriting a redirect that sent a signed-out
+  // reader in the container to a form instead of to a scoreboard - the exact
+  // thing the ruling is against. The games strip already asks for a sign-in
+  // where one is needed, on the tiles, in words.
   const session = await auth();
-  requireSignInInShell({ isShell, userId: session?.user?.id ?? null, dest: '/scores' });
+  if (!pinned) {
+    requireSignInInShell({ isShell, userId: session?.user?.id ?? null, dest: '/scores' });
+  }
   // Explicit ?date= navigation is respected, always and untouched. The
   // no-param default walks the SPORTS-DAY law first (defaultScoresDate: roll
   // back before 06:00 ET or while a prior-date game is still live), then
