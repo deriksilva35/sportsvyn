@@ -26,7 +26,10 @@ function Tile({ tile, signedIn, wide }) {
       <div className="lgt-eye">{card?.name ?? tile.label}</div>
       <div className="lgt-st">{card?.blurb ?? ''}</div>
       {num ? (
-        <div className="lgt-num">{num.value}<span className="lgt-unit">{num.unit}</span></div>
+        <div className="lgt-num">
+          {num.value}
+          {num.unit ? <span className="lgt-unit">{num.unit}</span> : null}
+        </div>
       ) : null}
       {/* THE LOCK IS TRUE FOR EVERYBODY, so it renders signed out too. */}
       {card?.closesLabel || card?.opensLabel ? (

@@ -14,7 +14,7 @@
 //      thing that actually happened: a shell branch that still linked out.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -155,11 +155,16 @@ test('every surface that links to /membership is shell-gated', () => {
     'components/sim/MembershipCard.js',
     'components/sim/ExposureReport.js',
     'components/GlobalHeader.js',
-    'components/gridiron/RailCards.js',
+    // components/gridiron/RailCards.js was on this list until v1.3 relay B
+    // retired it. Deleting a surface is the strongest form of "link removed
+    // entirely" - the guard below pins that it stays deleted.
     'app/signin/page.js',
     'app/sim/account/page.js',
   ];
   for (const rel of LINKERS) {
+    // A STALE ENTRY MUST FAIL LOUDLY. This list is an audit, and an audit that
+    // silently skips a file it can no longer read audits nothing.
+    assert.ok(existsSync(path.join(REPO, rel)), `${rel} is on the audit list but does not exist`);
     const s = src(rel);
     if (!s.includes('/membership')) continue; // link removed entirely — fine
     assert.ok(/\bshell\b|\bisShell\b/.test(s), `${rel} links to /membership with no shell gate`);
@@ -176,23 +181,22 @@ test('the native container actually sets the shell cookie', () => {
   assert.match(layout, /NativeShellCookie/, '/app layout must mount it');
 });
 
-test('league rail teasers name no purchasable plan in shell', () => {
-  // "Football Suite" is a plan name. The lock chip and the body both carried it;
-  // both must be neutral in the shell branch.
-  const { SUITE_TEASERS } = JSON.parse(JSON.stringify({ SUITE_TEASERS: null })); // placeholder
-  const copy = src('components/gridiron/leagueCopy.js');
-  assert.match(copy, /bodyShell/, 'teasers need an explicit shell body');
-  // Every bodyShell must be free of plan names and prices.
-  for (const m of copy.matchAll(/bodyShell:\s*(['"])((?:\\.|(?!\1).)*)\1/g)) {
-    const text = m[2];
-    for (const re of [...PLAN_NAME_PATTERNS, ...PRICE_PATTERNS, ...SOLICIT_PATTERNS]) {
-      assert.ok(!re.test(text), `bodyShell matches ${re}: ${text}`);
-    }
+test('THE RETIRED RAIL SURFACES STAY RETIRED', () => {
+  // THIS REPLACES "league rail teasers name no purchasable plan in shell".
+  // That test read RailCards.js and leagueCopy.js to prove their shell branches
+  // named no plan and no price. v1.3 relay B deleted both - the league landing
+  // replaced the teaser rail entirely - so the copy it policed no longer
+  // exists on any surface.
+  //
+  // The rule has not gone anywhere; it is enforced on every REMAINING linker by
+  // the audit above. What this pins is that the deleted pair cannot quietly
+  // return: SUITE_TEASERS carried plan names and a lock chip, and re-adding
+  // that file without a shell branch is exactly the regression the original
+  // test was written against.
+  for (const gone of ['components/gridiron/RailCards.js', 'components/gridiron/leagueCopy.js']) {
+    assert.equal(existsSync(path.join(REPO, gone)), false,
+      `${gone} was retired in v1.3; reinstating it needs its shell gate back first`);
   }
-  const rail = src('components/gridiron/RailCards.js');
-  assert.match(rail, /shell \? t\.bodyShell : t\.body/, 'rail must use bodyShell in shell');
-  assert.match(rail, /shell \? 'MEMBERS' : t\.lock/, 'lock chip must be neutral in shell');
-  assert.ok(SUITE_TEASERS === null); // keeps the placeholder honest/unused
 });
 
 test('the proxy blocks /membership before the route renders', () => {

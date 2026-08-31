@@ -2,19 +2,14 @@
 // Today shells. Local ink header + sport sub-nav; NO site header. DEV reads only.
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
-import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate, getStandings, getLeagueIdBySlug, getEditorialBoard, getMarketMovers, getUpsetWatch } from '@/lib/gridiron/readers';
+import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate } from '@/lib/gridiron/readers';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
-import { resolveShellMode } from '@/lib/shell/shell';
-import { getH2hOdds, getTitleContenders } from '@/lib/gridiron/oddsReader';
-import { getGlobalMostDrafted } from '@/lib/sim/fantasyBoard';
-import { normalizeTwoWayPct, isPreGame } from '@/lib/gridiron/oddsFormat';
-import PlayoffPicture from '@/components/gridiron/PlayoffPicture';
-import FantasyBoard from '@/components/gridiron/FantasyBoard';
-import EditorialBoard from '@/components/gridiron/EditorialBoard';
-import MarketBoard from '@/components/gridiron/MarketBoard';
-import { SuiteTeasers, UpsetWatch, TheRead } from '@/components/gridiron/RailCards';
-import MovementCard from '@/components/fantasy/MovementCard';
 import LeagueHeader from '@/components/league/LeagueHeader';
+import StandingsSnapshot from '@/components/league/StandingsSnapshot';
+import MarketModule from '@/components/league/MarketModule';
+import WeekLeaders from '@/components/league/WeekLeaders';
+import ReadsModule from '@/components/league/ReadsModule';
+import { standingsSnapshot, marketRows, weekLeaders, leagueReads } from '@/lib/gridiron/landingModules';
 import RankRail from '@/components/league/RankRail';
 import GamesStrip from '@/components/league/GamesStrip';
 import LeagueScores from '@/components/league/LeagueScores';
@@ -24,35 +19,12 @@ import { loadRecordChips } from '@/lib/gridiron/recordsLoader';
 import { GAME_META, GAME_ORDER } from '@/lib/games/lobby';
 import { gamesLobby } from '@/lib/games/read';
 import '@/components/league/league.css';
-import { getMovementCard } from '@/lib/fantasy/movement';
-import '@/components/fantasy/movementCard.css';
 
-function scoreline(g) {
-  if (g.status === 'final') return { txt: `${g.awayScore}-${g.homeScore}`, cls: 'sc' };
-  if (g.status === 'live') return { txt: 'LIVE', cls: '' };
-  return { txt: new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' }).format(new Date(g.kickoffAt)) + ' ET', cls: '' };
-}
-
-// Cheap inline favored-side read for the slate row (scheduled games only): the
-// higher-probability team abbr + its de-vigged %, e.g. "KC 63%". A recessive tag,
-// not the full strip (that lives on the /scores card).
-function favoredTag(odds) {
-  if (!odds?.home || !odds?.away) return null;
-  const pct = normalizeTwoWayPct(odds.away.implied, odds.home.implied);
-  if (!pct) return null;
-  const homeFav = pct.b >= pct.a;
-  const side = homeFav ? odds.home : odds.away;
-  const p = homeFav ? pct.b : pct.a;
-  return `${side.abbr} ${Math.round(p)}%`;
-}
-const DAY_FULL = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
-
-export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, contendersN = 12, standingsPhase = 'REG', searchParams }) {
+export default async function TodayPage({ leagueSlug, leagueLabel, tabs, searchParams }) {
   const sp = (await searchParams) ?? {};
   // 3.1.1: the league pages are reachable inside the native container
   // (capacitor allowNavigation covers sportsvyn.com), so the Suite teaser's
   // the pricing CTA must not render there.
-  const isShell = await resolveShellMode(sp);
   // THE VIEWER, for the games strip only. A signed-out reader still sees every
   // tile and its lock - those are true for everybody - but no volt button,
   // because the action is not available to them yet.
@@ -67,52 +39,24 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
   const phase = (sp.phase === 'POST' || sp.phase === 'REG') ? sp.phase : (cur?.seasonPhase ?? 'REG');
   const week = Number(sp.week) || cur?.week || 1;
 
-  // Liveness cue on the lede kicker: how far out the opener is, read from the
-  // nearest upcoming kickoff (data-driven, not a hardcoded date).
-  const daysOut = upcoming?.kickoffAt
-    ? Math.ceil((new Date(upcoming.kickoffAt).getTime() - now.getTime()) / 86400000)
-    : null;
-  const weeksOut = daysOut != null ? Math.round(daysOut / 7) : null;
-  const cue = daysOut == null || daysOut <= 0 ? null
-    : weeksOut >= 2 ? `${weeksOut} weeks out`
-      : daysOut > 1 ? `${daysOut} days out`
-        : 'kicks off tomorrow';
-
-  const [slate, standings] = await Promise.all([
-    getWeekSlate(leagueSlug, seasonYear, phase, week),
-    getStandings(leagueSlug, seasonYear, standingsPhase),
-  ]);
-  // One batch odds read for the whole week's slate (no per-row fan-out).
-  const oddsMap = await getH2hOdds(slate.byDay.flatMap((d) => d.games.map((g) => g.id)));
-
-  // Instrument boards: the title-futures contenders (Playoff Picture) + the sim
-  // fantasy reads. Each renders its real read or its dormant frame.
-  const leagueId = await getLeagueIdBySlug(leagueSlug);
-  const isNfl = leagueSlug === 'nfl';
-  const [contenders, fantasy, marketMovers, upsetDogs, boardA, boardB, boardC, movement] = await Promise.all([
-    leagueId ? getTitleContenders(leagueId, contendersN) : Promise.resolve([]),
-    getGlobalMostDrafted(10),
-    getMarketMovers(leagueSlug, 4),
-    isNfl ? Promise.resolve([]) : getUpsetWatch(leagueSlug, 5),
-    getEditorialBoard(isNfl ? 'nfl-power' : 'cfb-top25', leagueSlug),
-    getEditorialBoard(isNfl ? 'nfl-mvp-offense' : 'cfb-heisman', leagueSlug),
-    isNfl ? getEditorialBoard('nfl-mvp-defense', leagueSlug) : Promise.resolve(null),
-    // NFL only: the FFC pool is NFL fantasy ADP, so there is nothing behind this
-    // card on /cfb and it must not render an empty frame there.
-    isNfl ? getMovementCard('ppr', 5) : Promise.resolve(null),
-  ]);
+  const slate = await getWeekSlate(leagueSlug, seasonYear, phase, week);
 
   // ---- v1.3 LEAGUE LANDING ------------------------------------------------
   // Each read is caught to its own empty value: the rail, the strip and the
   // record chips are all decoration on top of a screen that must render
   // without them. None of the three may take the landing down.
-  const { apRankMap: _apUnused, currentApWeek, latestPollSeason, AP_POLL } = await import('@/lib/cfb/rankings');
+  const isNfl = leagueSlug === 'nfl';
+  const { currentApWeek, latestPollSeason, AP_POLL } = await import('@/lib/cfb/rankings');
   const apSeason = isNfl ? null : await latestPollSeason(AP_POLL).catch(() => null);
   const apWeek = apSeason ? await currentApWeek(apSeason).catch(() => null) : null;
-  const [railRows, lobby, recordChips] = await Promise.all([
+  const [railRows, lobby, recordChips, snapshot, market, leaders, reads] = await Promise.all([
     railFor(leagueSlug, { season: seasonYear, apWeek }),
     gamesLobby(userId ?? null).catch(() => null),
     loadRecordChips(),
+    standingsSnapshot(leagueSlug, seasonYear, { userId }),
+    marketRows(leagueSlug),
+    weekLeaders(leagueSlug, seasonYear, week),
+    leagueReads(leagueSlug),
   ]);
   const chips = railChips(railRows);
   const lobbyCards = Object.fromEntries((lobby?.cards ?? []).filter(Boolean).map((c) => [c.key, c]));
@@ -131,7 +75,6 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
         <span className="gi-season">{seasonYear} SEASON · <b>{phase === 'POST' ? 'POSTSEASON' : `WEEK ${week}`}</b></span>
       </nav>
 
-      {/* paper lede zone — one honest line, fitted to the register */}
       {/* THE v1.3 LANDING, above everything that predates it. Nothing below is
           retired this relay - relay B owns the retirements, and a dark gap
           between the two would be worse than a long page. */}
@@ -156,89 +99,18 @@ export default async function TodayPage({ leagueSlug, leagueLabel, lede, tabs, c
         records={recordChips}
       />
 
-      <section className="gi-lede">
-        <div className="gi-lede-in">
-          <div className="kick"><span className="sq" />{leagueLabel} · {seasonYear} SEASON{cue ? ` · ${cue}` : ''}</div>
-          <h1>The Week in {leagueLabel}</h1>
-          <p>{lede}</p>
-        </div>
-      </section>
-
-      <div className="gi-wrap">
-        <div className="gi-today-grid">
-          {/* left column: the instrument stack (slate -> playoff picture -> fantasy) */}
-          <div className="gi-today-left">
-          <section className="gi-instrument" data-surface="ink">
-            <div className="gi-instrument-h">{leagueLabel} · {phase} Week {week}</div>
-            <div className="gi-instrument-sub">{slate.total} games</div>
-            {slate.byDay.length === 0 && <div className="gi-empty">No games for this week.</div>}
-            {slate.byDay.map((d) => (
-              <div className="gi-day" key={d.etDay}>
-                <div className="gi-day-h">{DAY_FULL[d.weekday] ?? d.weekday}</div>
-                {d.games.map((g) => {
-                  const s = scoreline(g);
-                  const fav = isPreGame(g.status) ? favoredTag(oddsMap.get(g.id)) : null;
-                  return (
-                    <div className="gi-row" key={g.id}>
-                      <span className="mu">{g.away.abbreviation || g.away.name} <span className="vs">at</span> {g.home.abbreviation || g.home.name}{fav && <span className="fav"> · {fav}</span>}</span>
-                      <span className="rt"><span className={s.cls}>{s.txt}</span></span>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </section>
-
-          {/* Instrument ordering per the locked mocks. NFL: Fantasy -> Market ->
-              Power -> MVP (O/D) -> Read. CFB: Market -> the 25 -> Heisman ->
-              Playoff Picture (market-derived) -> Read. */}
-          {isNfl ? (
-            <>
-              {movement ? <MovementCard card={movement} /> : null}
-              <FantasyBoard mostDrafted={fantasy.mostDrafted} draftCount={fantasy.draftCount} />
-              <MarketBoard movers={marketMovers} />
-              <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} limit={6} href="/nfl/rankings?tab=playoff" />
-              <EditorialBoard title="Power Rankings" board={boardA} preview href="/nfl/rankings?tab=power" />
-              <div className="gi-mvp-grid">
-                <EditorialBoard title="NFL MVP · Offense" board={boardB} preview href="/nfl/rankings?tab=mvp-offense" />
-                <EditorialBoard title="Defensive Player" board={boardC} preview href="/nfl/rankings?tab=mvp-defense" />
-              </div>
-            </>
-          ) : (
-            <>
-              <MarketBoard movers={marketMovers} />
-              <EditorialBoard title="The Sportsvyn 25" board={boardA} preview href="/cfb/rankings?tab=top25" />
-              <EditorialBoard title="The Heisman Board" board={boardB} preview href="/cfb/rankings?tab=heisman" />
-              <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} limit={6} href="/cfb/rankings?tab=playoff" />
-            </>
-          )}
-          <TheRead league={leagueSlug} />
-          </div>
-
-          {/* right rail: standings/conference races + suite teasers (NFL) / upset watch (CFB) */}
-          <aside className="gi-standings">
-            <div className="gi-rail-h">{isNfl ? `${standingsPhase} Standings` : 'Conference Races'}</div>
-            {standings.length === 0 && (
-              <div className="gi-standings-empty">{isNfl ? 'Standings open once games go final.' : 'The races open once games go final.'}</div>
-            )}
-            {standings.flatMap((conf) => conf.divisions.map((div) => {
-              const heading = [conf.conference, div.division].filter(Boolean).join(' ');
-              return (
-                <div className="gi-div" key={heading}>
-                  <div className="gi-div-h">{heading}</div>
-                  {div.teams.map((t) => (
-                    <div className="gi-strow" key={t.id}>
-                      <span>{t.abbreviation || t.name}</span>
-                      <span className="wl">{t.wins}-{t.losses}{t.ties ? `-${t.ties}` : ''}</span>
-                    </div>
-                  ))}
-                </div>
-              );
-            }))}
-            {isNfl ? <SuiteTeasers shell={isShell} /> : <UpsetWatch dogs={upsetDogs} />}
-          </aside>
-        </div>
-      </div>
+      <StandingsSnapshot
+        snapshot={snapshot}
+        leagueSlug={leagueSlug}
+        href={`/${leagueSlug}/standings`}
+      />
+      <MarketModule
+        rows={market}
+        href={`/market?league=${leagueSlug}`}
+        statuses={new Map(allGames.map((g) => [g.id, g.status]))}
+      />
+      <WeekLeaders leaders={leaders} href="/stats" />
+      <ReadsModule reads={reads} />
     </div>
   );
 }

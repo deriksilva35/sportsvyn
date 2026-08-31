@@ -13,17 +13,13 @@ const CFB_TABS = [
   { label: 'Rankings', href: '/cfb/rankings' },
   { label: 'Standings', href: '/cfb/standings' },
 ];
-const CFB_LEDE = 'The season opens August 29. The slate and the lines are already in.';
 
 export default async function CfbToday({ searchParams }) {
   return (
     <TodayPage
       leagueSlug="cfb"
       leagueLabel="CFB"
-      lede={CFB_LEDE}
       tabs={CFB_TABS}
-      contendersN={25}
-      standingsPhase="REG"
       searchParams={searchParams}
     />
   );

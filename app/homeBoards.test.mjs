@@ -49,11 +49,16 @@ test('the homepage renders the real EditorialBoard, not a homepage variant', () 
 test('the boards are fed by the same reader the league pages use', () => {
   assert.match(page, /getEditorialBoard\('nfl-power', 'nfl'\)/, 'NFL Power Rankings');
   assert.match(page, /getEditorialBoard\('cfb-top25', 'cfb'\)/, 'CFB Top 25');
-  // Same reader, same list slugs, same league slugs as the Today pages - so a
-  // change to any one of those moves both surfaces together.
-  const today = stripComments(src('components/gridiron/TodayPage.js'));
-  assert.match(today, /getEditorialBoard\(isNfl \? 'nfl-power' : 'cfb-top25', leagueSlug\)/,
-    'if the Today page changes its list slugs, this test names the homepage as the other caller');
+  // THE OTHER CALLER MOVED. This used to name the Today page, which read both
+  // slugs through getEditorialBoard. v1.3 relay B replaced that page's boards:
+  // nfl-power is now the league landing's RAIL, read through leagueRail.js, and
+  // the CFB rail reads the AP poll instead of cfb-top25.
+  //
+  // The rule is unchanged - two surfaces must not drift about which list they
+  // mean - so it now pins the slug against its real co-consumer.
+  const rail = stripComments(src('lib/gridiron/leagueRail.js'));
+  assert.match(rail, /rl\.slug = 'nfl-power'/,
+    'the landing rail and the homepage must name the same power-rankings list');
 });
 
 test('the stylesheet the component needs is actually loaded', () => {

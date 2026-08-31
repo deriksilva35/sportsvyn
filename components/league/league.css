@@ -107,3 +107,53 @@
   border: 1px solid var(--line); border-radius: 99px; padding: 4px 10px; text-decoration: none;
 }
 .lgsc-all:hover { color: var(--paper); }
+
+/* ---- the bottom-half modules (relay B) ---------------------------------- */
+.lgm { padding: 0 16px 20px; }
+.lgm-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.lgm-h h2 {
+  font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--volt); margin: 0;
+}
+/* GHOST LINKS, NOT PRIMARIES. The games strip owns the only volt button on the
+   screen; every module tail is a quiet outline. */
+.lgm-all {
+  flex: none; font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 99px; padding: 4px 10px; text-decoration: none;
+}
+.lgm-all:hover { color: var(--paper); }
+
+.lgm-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.lgm-tbl th, .lgm-tbl td { padding: 7px 6px; border-bottom: 1px solid var(--rule-dim); text-align: right; }
+.lgm-tbl th.l, .lgm-tbl td.l { text-align: left; }
+.lgm-tbl thead th {
+  font-family: var(--font-saira-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--muted-dim);
+}
+.lgm-tbl tbody th { font-weight: 400; display: flex; align-items: baseline; gap: 8px; }
+.lgm-ab { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .1em; color: var(--muted-dim); min-width: 34px; }
+.lgm-nm { color: var(--paper); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lgm-tbl td.n { font-family: var(--font-jetbrains-mono), monospace; font-variant-numeric: tabular-nums; color: var(--paper-dim); }
+.lgm-tbl td.n.up { color: var(--jade); }
+.lgm-tbl td.n.down { color: var(--terra); }
+
+.lgm-rows { display: flex; flex-direction: column; gap: 1px; }
+.lgm-row {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--rule-dim); font-size: 12px;
+}
+.lgm-fx, .lgm-cat { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted); flex: none; min-width: 92px; }
+.lgm-cat { letter-spacing: .1em; font-size: 9px; text-transform: uppercase; }
+.lgm-sp { font-family: var(--font-saira-cond); font-weight: 700; font-size: 13px; color: var(--paper); flex: 1 1 auto; min-width: 0; }
+.lgm-tot { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; color: var(--muted-dim); flex: none; }
+.lgm-who { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--paper); }
+.lgm-pl { color: inherit; text-decoration: none; }
+.lgm-pl:hover { text-decoration: underline; }
+.lgm-tm { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; color: var(--muted-dim); margin-left: 6px; }
+.lgm-yd { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 13px; color: var(--paper); flex: none; font-variant-numeric: tabular-nums; }
+.lgm-unit { font-size: 9px; font-weight: 400; color: var(--muted); margin-left: 4px; }
+
+.lgm-read { display: block; padding: 10px 0; border-bottom: 1px solid var(--rule-dim); text-decoration: none; }
+.lgm-rt { display: block; font-family: var(--font-saira), sans-serif; font-weight: 700; font-size: 15px; color: var(--paper); line-height: 1.25; }
+.lgm-rd { display: block; font-family: var(--font-source-serif), serif; font-style: italic; font-size: 13px; color: var(--muted); margin-top: 3px; }
