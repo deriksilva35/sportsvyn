@@ -123,11 +123,58 @@ test('.read-prose is an ink module, and its ground actually resolves', () => {
   assert.match(sim, /\.read-prose p \{[^}]*color: var\(--paper-warm\)/, 'the prose is full paper-warm');
 });
 
-test('--ink-2 and --line are still not global - the fallbacks are load-bearing', () => {
-  // If someone promotes them to :root, this fails and the fallbacks above can
-  // be dropped. Until then it documents WHY they are written that way.
-  const defined = CSS.filter((f) => /--(ink-2|line)\s*:/.test(stripCss(readFileSync(f, 'utf8'))));
-  assert.deepEqual(defined.map(rel), ['app/admin/console/console.css']);
+test('THE MODULE RAMP IS GLOBAL NOW, and the console still agrees with it', () => {
+  // --ink-2 / --ink-3 / --line lived only in the admin console's .adm block
+  // while 46 bare call sites in home.css and player.css asked for them and got
+  // nothing. They are :root tokens now. The console keeps its own copies -
+  // .adm is a transcribed mock and stays self-contained - so the risk is not
+  // absence any more, it is DRIFT: two definitions that stop agreeing.
+  const RAMP = { '--ink-2': '#141414', '--ink-3': '#1c1c1c', '--line': '#2a2a2a' };
+  const root = GLOBALS.slice(GLOBALS.indexOf(':root {'), GLOBALS.indexOf('\n}', GLOBALS.indexOf(':root {')));
+  const adm = readFileSync(path.join(REPO, 'app/admin/console/console.css'), 'utf8');
+  for (const [tok, hex] of Object.entries(RAMP)) {
+    const g = new RegExp(`${tok}:\\s*(#[0-9a-fA-F]{6})`).exec(root);
+    assert.ok(g, `${tok} must be defined at :root`);
+    assert.equal(g[1].toLowerCase(), hex, `${tok} at :root`);
+    const c = new RegExp(`${tok}:\\s*(#[0-9a-fA-F]{6})`).exec(adm);
+    assert.ok(c, `${tok} must still be defined in console.css`);
+    assert.equal(c[1].toLowerCase(), hex, `${tok} in console.css drifted from :root`);
+  }
+});
+
+test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
+  // THE POINT OF THE PROMOTION, and the number is smaller and more specific
+  // than the census claimed. That census said "46", counting every line
+  // mentioning the token - including the fallback form var(--ink-2, #141414),
+  // which was never broken, and comment prose. The real figure is 18: bare
+  // var(--token) uses OUTSIDE the admin console, which defines all three in
+  // its own .adm block and was therefore always fine.
+  //
+  // These 18 asked for a background or a border and got the initial value.
+  // A background that resolves to transparent is invisible on a dark page -
+  // the module simply had no ground, and nothing looked broken enough to
+  // report.
+  const EXPECTED = {
+    'app/home.css': 8,                      // .readband .gcard .gcard.hot .mod
+    'app/my/my.css': 4,
+    'app/player/[slug]/player.css': 4,      // .gp-hero .gp-mod
+    'components/gridiron/gridiron.css': 1,
+    'components/today/modeswitch.css': 1,
+  };
+  const found = {};
+  for (const f of CSS) {
+    if (rel(f) === 'app/admin/console/console.css') continue;   // defines its own
+    const n = [...stripCss(readFileSync(f, 'utf8')).matchAll(/var\(--(ink-2|ink-3|line)\)/g)].length;
+    if (n) found[rel(f)] = n;
+  }
+  assert.deepEqual(found, EXPECTED,
+    'a new bare call site is fine now that the tokens are global - update the count deliberately');
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 18);
+  // and all three resolve, which is what makes those 18 correct rather than
+  // merely present.
+  for (const t of ['--ink-2', '--ink-3', '--line']) {
+    assert.match(GLOBALS, new RegExp(`${t}: #`), `${t} must be a :root token`);
+  }
 });
 
 // THE FIVE REMAINING PAPER BACKGROUNDS, EACH ARGUED. None is a GROUND - they

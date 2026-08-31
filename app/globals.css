@@ -52,6 +52,20 @@
   --rule-dim: #1F1F1F;
   --paper: #F5F5F2;
   --live: #E63946;
+  /* THE v1.2 MODULE RAMP, PROMOTED. These three were written into the admin
+     console's own .adm block and never anywhere else, while 46 call sites
+     across home.css and player.css used them BARE - .readband, .gcard, .mod
+     and .gp-mod all asked for a background that resolved to nothing and fell
+     to transparent. The same asymmetric failure as every other undefined-token
+     bug in this file: colour inherits and looks plausible, background does not
+     and simply vanishes, so the modules were unstyled on a page that still
+     looked finished.
+     Values are console.css's verbatim, so nothing about /admin/console moves;
+     it keeps its own copies (a test asserts the two agree) because .adm is a
+     transcribed mock that must stay self-contained. */
+  --ink-2: #141414;
+  --ink-3: #1C1C1C;
+  --line: #2A2A2A;
   --font-saira-cond: var(--font-saira-condensed), var(--font-saira), sans-serif;
   --font-archivo-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 }
