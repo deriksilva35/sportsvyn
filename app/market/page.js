@@ -204,13 +204,21 @@ function Band({ slug, cards, boardIds, books }) {
   );
 }
 
-export default async function MarketPage({ searchParams }) {
-  const sp = (await searchParams) ?? {};
+/**
+ * THE BOARD, once, worn two ways - the same arrangement /scores keeps.
+ * /market is the network surface; /nfl/market and /cfb/market are this
+ * component with `pinned` set, under the league header and without the league
+ * chips. MOVERS ONLY survives the pin because it is state, not a league.
+ */
+export async function MarketView({ sp, pinned = null }) {
   // THE SHELL GATE STAYS AT THE CALL SITE, server-side: web HTML carries no
   // segment markup at all. Same contract the other three tabs already keep.
   const isShell = await resolveShellMode(sp);
   const raw = typeof sp.f === 'string' ? sp.f : 'all';
-  const filter = CHIPS.some(([k]) => k === raw) ? raw : 'all';
+  // THE PIN DECIDES THE LEAGUE; the URL still decides everything else. 'movers'
+  // is not a league, so a pinned board can still be narrowed to movers.
+  const urlFilter = CHIPS.some(([k]) => k === raw) ? raw : 'all';
+  const filter = pinned && urlFilter !== 'movers' ? pinned : urlFilter;
   const rawTab = typeof sp.tab === 'string' ? sp.tab : DEFAULT_TAB;
   const tab = TABS.some(([k]) => k === rawTab) ? rawTab : DEFAULT_TAB;
 
@@ -302,7 +310,7 @@ export default async function MarketPage({ searchParams }) {
 
   return (
     <div className="gi" data-surface="ink">
-      <GlobalHeaderServer activeNav="market" />
+      {pinned ? null : <GlobalHeaderServer activeNav="market" />}
       {isShell && <SportsvynSegment />}
       <div className="mk-wrap">
         <div className="mk-head">
@@ -331,9 +339,11 @@ export default async function MarketPage({ searchParams }) {
             LEAGUE filter row is the single control. Two rows both writing ?f=
             was a control that could disagree with itself on screen. LINES and
             FUTURES keep it - it is the only control they have. */}
+        {/* PINNED HIDES THE LEAGUE CHIPS but keeps MOVERS ONLY - it is state,
+            not a league, and it is as useful inside /nfl as outside it. */}
         {tab === 'props' ? null : (
           <div className="chips">
-            {CHIPS.map(([k, label]) => (
+            {CHIPS.filter(([k]) => !pinned || k === 'movers').map(([k, label]) => (
               <Link key={k} className={`ch ${filter === k ? 'on' : ''}`} href={href({ f: k })}>{label}</Link>
             ))}
           </div>
@@ -441,4 +451,9 @@ export default async function MarketPage({ searchParams }) {
       </div>
     </div>
   );
+}
+
+
+export default async function MarketPage({ searchParams }) {
+  return MarketView({ sp: (await searchParams) ?? {} });
 }

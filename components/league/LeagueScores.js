@@ -27,15 +27,19 @@ export default function LeagueScores({ leagueSlug, label, games, records, cap = 
       <div className="lgsc-h">
         <h2>{unit === 'day' ? 'Today' : 'This week'}</h2>
         {overflow ? (
-          <Link className="lgsc-all" href={`/scores?league=${leagueSlug}`}>
+          <Link className="lgsc-all" href={`/${leagueSlug}/scores`}>
             All {total} games →
           </Link>
         ) : null}
       </div>
+      {/* PINNED: this module is already one league by construction, so the
+          ALL · NFL · CFB · EPL chips would be a way out of the page dressed as
+          a filter. */}
       <Scoreboard
         byLeague={{ [leagueSlug]: shown }}
         sport={leagueSlug}
         records={records}
+        pinned
       />
     </section>
   );

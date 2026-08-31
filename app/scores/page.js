@@ -53,8 +53,21 @@ function label(iso) {
   return { wd, md: `${mo} ${d}`, year: y };
 }
 
-export default async function ScoresPage({ searchParams }) {
-  const sp = (await searchParams) ?? {};
+/**
+ * THE BOARD, once, worn two ways.
+ *
+ * /scores is the NETWORK surface: three codes at once, under the global
+ * header, with the league chips that let a reader move between them.
+ * /nfl/scores and /cfb/scores are the SAME component with `pinned` set - the
+ * league header above it, the league chips gone. Inside a league the league
+ * never disappears, and a chip row offering EPL from under an NFL title would
+ * be a way out of the place the reader is standing in.
+ *
+ * PINNED IS ONE PROP, not a fork. Everything below reads `sport`, which the
+ * pin simply decides instead of the URL.
+ */
+export async function ScoresView({ sp, pinned = null }) {
+
   const isShell = await resolveShellMode(sp);
   // In the container, signed out means the sign-in form - same law as every
   // tab. The web branch of this page stays public; the guard is shell-only.
@@ -72,7 +85,9 @@ export default async function ScoresPage({ searchParams }) {
   // Scoreboard, so ANY navigation - date change, back button - reset them to
   // ALL. A filter that survives navigation has to live in the URL, and once
   // it does, every link on the page carries it via scoresHref.
-  const { sport, live } = parseScoresParams(sp);
+  const parsed = parseScoresParams(sp);
+  const sport = pinned ?? parsed.sport;
+  const { live } = parsed;
   // RECORDS FOR EVERY CARD ON THE SLATE, one read for all three leagues,
   // through the loader the league landings share - see recordsLoader.js.
   const [slate, range, records] = await Promise.all([
@@ -87,7 +102,7 @@ export default async function ScoresPage({ searchParams }) {
 
   return (
     <div className="gi" data-surface="ink">
-      <GlobalHeaderServer activeNav="scores" />
+      {pinned ? null : <GlobalHeaderServer activeNav="scores" />}
       {isShell && <SportsvynSegment />}
 
       <div className="gi-wrap">
@@ -102,8 +117,8 @@ export default async function ScoresPage({ searchParams }) {
               ADP - what drafters are doing. The Market is prices - what books
               are doing. The names are confusable enough that one unlabelled
               link was sending readers to the wrong one, so both are named. */}
-          {!isShell && <Link className="gi-cross" href="/market">The Market &rarr;</Link>}
-          {!isShell && <Link className="gi-cross" href="/nfl/fantasy">Movement Board &rarr;</Link>}
+          {!isShell && !pinned && <Link className="gi-cross" href="/market">The Market &rarr;</Link>}
+          {!isShell && !pinned && <Link className="gi-cross" href="/nfl/fantasy">Movement Board &rarr;</Link>}
         </div>
 
         <div className="gi-toolbar">
@@ -119,8 +134,13 @@ export default async function ScoresPage({ searchParams }) {
           />
         </div>
 
-        <Scoreboard byLeague={slate.byLeague} date={date} sport={sport} live={live} records={records} />
+        <Scoreboard byLeague={slate.byLeague} date={date} sport={sport} live={live} records={records} pinned={Boolean(pinned)} />
       </div>
     </div>
   );
+}
+
+
+export default async function ScoresPage({ searchParams }) {
+  return ScoresView({ sp: (await searchParams) ?? {} });
 }

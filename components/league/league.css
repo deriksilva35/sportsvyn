@@ -172,7 +172,10 @@
    there instead, so the outline always means "not here, and worth a tap". */
 .lgn {
   display: flex; gap: 6px; overflow-x: auto; flex-wrap: nowrap;
-  padding: 8px 16px 2px; scroll-snap-type: x proximity;
+  /* 14px BELOW THE PILLS. The rail's volt eyebrow was touching them: the row
+     ended at 2px and .lgr-h added none of its own, so two different controls
+     read as one block. 8px above (clearing the title) + 14px below. */
+  padding: 8px 16px 14px; scroll-snap-type: x proximity;
   -ms-overflow-style: none; scrollbar-width: none;
 }
 .lgn::-webkit-scrollbar { display: none; }

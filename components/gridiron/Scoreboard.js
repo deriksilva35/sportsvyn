@@ -361,17 +361,25 @@ function Section({ sport, games, liveOnly, records }) {
 // filter because the two features each held half the state. The chips are
 // Links built by scoresHref, so every chip carries the date and every date
 // arrow carries the chip; the reverse direction is the same one rule.
-export default function Scoreboard({ byLeague, date, sport = 'all', live = false, records = new Map() }) {
+export default function Scoreboard({ byLeague, date, sport = 'all', live = false, records = new Map(), pinned = false }) {
   const visible = SPORTS.filter((s) => sport === 'all' || sport === s.key);
   const chip = (want) => scoresHref(date, { sport: want, live });
 
   return (
     <div>
+      {/* THE LEAGUE CHIPS DISAPPEAR WHEN THE LEAGUE IS PINNED. Inside /nfl the
+          reader is standing in a place, and a row offering ALL · CFB · EPL is a
+          way out of it dressed as a filter. LIVE ONLY stays either way: it is
+          STATE, not a league, and it is as useful pinned as unpinned. */}
       <div className="gi-toolbar">
-        <Link className={`gi-chip ${sport === 'all' ? 'active' : ''}`} href={chip('all')}>All</Link>
-        {SPORT_CHIPS.map((s) => (
-          <Link key={s.key} className={`gi-chip ${sport === s.key ? 'active' : ''}`} href={chip(s.key)}>{s.label}</Link>
-        ))}
+        {pinned ? null : (
+          <>
+            <Link className={`gi-chip ${sport === 'all' ? 'active' : ''}`} href={chip('all')}>All</Link>
+            {SPORT_CHIPS.map((s) => (
+              <Link key={s.key} className={`gi-chip ${sport === s.key ? 'active' : ''}`} href={chip(s.key)}>{s.label}</Link>
+            ))}
+          </>
+        )}
         <Link className={`gi-chip live ${live ? 'active' : ''}`}
           href={scoresHref(date, { sport, live: !live })}><span className="gi-dot" />Live only</Link>
       </div>

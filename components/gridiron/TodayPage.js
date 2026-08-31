@@ -103,10 +103,15 @@ export default async function TodayPage({ leagueSlug, leagueLabel, searchParams 
       />
       <MarketModule
         rows={market}
-        href={`/market?league=${leagueSlug}`}
+        href={`/${leagueSlug}/market`}
         statuses={new Map(allGames.map((g) => [g.id, g.status]))}
       />
-      <WeekLeaders leaders={leaders} href="/stats" />
+      {/* THE LEADERS TAIL POINTS AT THE LEAGUE'S OWN STANDINGS, not /stats.
+          /stats is the World Cup stats page (hardcoded to fifa-wc-2026), so an
+          "All stats →" from an NFL module was sending readers to soccer
+          scoring leaders. It points there again when a gridiron stats surface
+          exists. */}
+      <WeekLeaders leaders={leaders} href={`/${leagueSlug}/standings`} />
       <ReadsModule reads={reads} />
     </div>
   );
