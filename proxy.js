@@ -190,10 +190,29 @@ export async function proxy(request) {
   }
 
   // -------------------------------------------------------------------------
-  // 4. Admin auth gate (unchanged from prior shape).
-  //    Anything not handled above falls into this block, which the matcher
-  //    restricts to /admin/* and /api/admin/* via config.matcher below.
+  // 4. Admin auth gate.
+  //
+  //    IT USED TO SAY "anything not handled above falls into this block, which
+  //    the matcher restricts to /admin/* and /api/admin/*". THAT SENTENCE STOPS
+  //    BEING TRUE THE MOMENT ANY CLAUSE WIDENS THE MATCHER, and the shell
+  //    clauses below widen it to '/:path*'. Falling through was safe only while
+  //    every matched path was an admin path.
+  //
+  //    Measured, not reasoned about: with the shell clause added and this guard
+  //    absent, GET /nfl?shell=sim-app returned 401 with a Basic realm challenge.
+  //    Every page on the site, for anyone carrying the param - and after Phase
+  //    B, for every request from inside the container.
+  //
+  //    So the gate now names its own scope instead of inheriting it from the
+  //    matcher. A future clause can widen the matcher again without turning the
+  //    whole site into an admin route.
   // -------------------------------------------------------------------------
+  const isAdminPath = pathname === '/admin' || pathname.startsWith('/admin/')
+    || pathname === '/api/admin' || pathname.startsWith('/api/admin/');
+  if (!isAdminPath) {
+    return withCookie(NextResponse.next());
+  }
+
   const expectedUser = process.env.ADMIN_USERNAME;
   const expectedSecret = process.env.ADMIN_SECRET;
 
