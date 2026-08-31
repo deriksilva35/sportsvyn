@@ -1,7 +1,20 @@
 /**
- * proxy.js: Sportsvyn proxy. Two responsibilities live here, in order:
+ * proxy.js: Sportsvyn proxy. Three responsibilities live here, in order:
  *
- *   1. Competition-namespacing REDIRECTS.
+ *   0. SHELL MODE, SET ONCE.
+ *      ?shell=sim-app arrives on the container's first hit and is
+ *      turned into the sv_shell cookie here. Before this, shell mode
+ *      was answered in two places - the param, which every page had
+ *      to remember to thread through resolveShellMode, and the
+ *      cookie, which two CLIENT effects wrote after their page had
+ *      already rendered once. 41 call sites had to get it right and
+ *      app/page.js passed null on purpose, so the homepage rendered
+ *      web chrome inside the container. The param is now WRITE-ONLY:
+ *      signinHref, SHELL_SIGNOUT_TARGET and lib/auth/firstSeen still
+ *      emit it to carry mode across an auth redirect, and this file
+ *      is its only reader.
+ *
+ *   2. Competition-namespacing REDIRECTS.
  *      Old canonical paths (/bracket, /power-rankings) issue 308
  *      (Permanent Redirect) to their dated namespaced canonicals. The
  *      evergreen alias family (/world-cup/<sub>) issues 307 (Temporary
@@ -10,7 +23,7 @@
  *      target moves between editions (the 2030 cycle will repoint
  *      these aliases to /world-cup-2030/<sub>).
  *
- *   2. Admin auth gate (existing).
+ *   3. Admin auth gate (existing).
  *      Basic Auth on /admin/* and /api/admin/*, constant-time
  *      comparison, fail-closed when ADMIN_USERNAME or ADMIN_SECRET
  *      are missing.
@@ -36,7 +49,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { SHELL_COOKIE, SHELL_VALUE } from '@/lib/shell/constants';
+import { SHELL_COOKIE, SHELL_VALUE, SHELL_PARAM } from '@/lib/shell/constants';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { resolveCurrentEditionForFamily } from './lib/competition.js';
 
@@ -69,7 +82,40 @@ export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   // -------------------------------------------------------------------------
-  // 0. APP STORE 3.1.1 — the pricing page must not exist inside the native app.
+  // 0. SHELL MODE, RESOLVED ONCE, BEFORE ANYTHING ELSE READS IT.
+  //
+  //    The param counts as shell mode HERE even though the cookie does not
+  //    exist yet, and that is deliberate: the container's very first hit
+  //    carries the param and nothing else, and the 3.1.1 block below has to
+  //    treat that request as being in the shell. Resolving it before the
+  //    block - rather than only writing a cookie for the NEXT request - is
+  //    what makes /membership?shell=sim-app safe on a cold open.
+  //
+  //    Every response this function can return gets the cookie attached at the
+  //    bottom, redirects included, so a first hit that is also a redirect
+  //    still lands in shell mode.
+  // -------------------------------------------------------------------------
+  const cookieSaysShell = request.cookies.get(SHELL_COOKIE)?.value === SHELL_VALUE;
+  const paramSaysShell = request.nextUrl.searchParams.get(SHELL_PARAM) === SHELL_VALUE;
+  const inShell = cookieSaysShell || paramSaysShell;
+  const needsCookie = paramSaysShell && !cookieSaysShell;
+
+  // A SESSION COOKIE - no max-age, no expires. Both client setters chose that
+  // deliberately and moving the write here must not quietly upgrade it: a web
+  // reader who opens a ?shell=sim-app link should not be stuck chromeless
+  // after closing the tab, while the native webview's session is long-lived,
+  // which is exactly where we want it to persist.
+  const withCookie = (res) => {
+    if (needsCookie) {
+      res.cookies.set({
+        name: SHELL_COOKIE, value: SHELL_VALUE, path: '/', sameSite: 'lax',
+      });
+    }
+    return res;
+  };
+
+  // -------------------------------------------------------------------------
+  // 1. APP STORE 3.1.1 — the pricing page must not exist inside the native app.
   //
   //    This lives in the proxy rather than in the route so the route is NEVER
   //    INVOKED. A redirect() inside app/membership/page.js works, but Next still
@@ -83,26 +129,26 @@ export async function proxy(request) {
   //    can type this URL directly; suppressing the links to it is not enough.
   // -------------------------------------------------------------------------
   if (pathname === '/membership' || pathname.startsWith('/membership/')) {
-    if (request.cookies.get(SHELL_COOKIE)?.value === SHELL_VALUE) {
+    if (inShell) {
       const dest = request.nextUrl.clone();
       dest.pathname = '/sim';
       dest.search = '';
-      return NextResponse.redirect(dest, 307);
+      return withCookie(NextResponse.redirect(dest, 307));
     }
-    return NextResponse.next();
+    return withCookie(NextResponse.next());
   }
 
   // -------------------------------------------------------------------------
-  // 1. Old canonical (permanent redirect, 308).
+  // 2. Old canonical (permanent redirect, 308).
   // -------------------------------------------------------------------------
   if (Object.prototype.hasOwnProperty.call(PERMANENT_REDIRECTS, pathname)) {
     const dest = request.nextUrl.clone();
     dest.pathname = PERMANENT_REDIRECTS[pathname];
-    return NextResponse.redirect(dest, 308);
+    return withCookie(NextResponse.redirect(dest, 308));
   }
 
   // -------------------------------------------------------------------------
-  // 2. Evergreen alias (temporary redirect, 307). /world-cup/<sub> forwards
+  // 3. Evergreen alias (temporary redirect, 307). /world-cup/<sub> forwards
   //    to /<currentEdition.urlSlug>/<sub>. If no current edition exists
   //    (data-config gap) we fall through and let Next render the natural
   //    404 rather than synthesizing one here.
@@ -113,20 +159,20 @@ export async function proxy(request) {
     if (comp?.urlSlug) {
       const dest = request.nextUrl.clone();
       dest.pathname = `/${comp.urlSlug}${sub}`;
-      return NextResponse.redirect(dest, 307);
+      return withCookie(NextResponse.redirect(dest, 307));
     }
-    return NextResponse.next();
+    return withCookie(NextResponse.next());
   }
 
   // Bare /world-cup (no subpath). Phase 3 does not define a redirect for
   // this; Phase 4 may add a thin overview page or alias it. Until then,
   // pass through and let Next render the natural 404.
   if (pathname === '/world-cup') {
-    return NextResponse.next();
+    return withCookie(NextResponse.next());
   }
 
   // -------------------------------------------------------------------------
-  // 3. Admin auth gate (unchanged from prior shape).
+  // 4. Admin auth gate (unchanged from prior shape).
   //    Anything not handled above falls into this block, which the matcher
   //    restricts to /admin/* and /api/admin/* via config.matcher below.
   // -------------------------------------------------------------------------
@@ -159,7 +205,7 @@ export async function proxy(request) {
     return challenge();
   }
 
-  return NextResponse.next();
+  return withCookie(NextResponse.next());
 }
 
 export const config = {
@@ -177,5 +223,19 @@ export const config = {
     // App Store 3.1.1: the shell block above needs this route to reach the proxy.
     '/membership',
     '/membership/:path*',
+    // SHELL MODE, SET ONCE - and NEAR-INERT BY CONSTRUCTION. `has` alone would
+    // run the proxy on every request of a container session; `missing` alone
+    // would run it on every request from every web reader. Both together mean
+    // it runs on the FIRST hit that carries the param and never again.
+    //
+    // THE LITERALS CANNOT BE INTERPOLATED. Next statically analyses this object
+    // at build time, so an interpolated SHELL_PARAM is ignored - leaving a
+    // matcher that matches nothing and a cookie that is never set, silently.
+    // proxyConfig.test.mjs pins these three strings to their constants.
+    {
+      source: '/:path*',
+      has: [{ type: 'query', key: 'shell', value: 'sim-app' }],
+      missing: [{ type: 'cookie', key: 'sv_shell', value: 'sim-app' }],
+    },
   ],
 };
