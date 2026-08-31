@@ -6,11 +6,9 @@
 // v0.3: this page is ALSO the Draftvyn app's SPORTSVYN tab. One implementation
 // - the shell gets a viewport, a sign-in gate and the LIVE SCORES / FANTASY
 // segment; the web gets the same page without them, public and indexable.
-import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SportsvynSegment from '@/components/shell/SportsvynSegment';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
-import { requireSignInInShell } from '@/lib/shell/signedOut';
 import Scoreboard from '@/components/gridiron/Scoreboard';
 import Link from 'next/link';
 import DateRail from '@/components/gridiron/DateRail';
@@ -69,18 +67,25 @@ function label(iso) {
 export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
 
   const isShell = await resolveShellMode(sp);
-  // THE NETWORK BOARD KEEPS THE SHELL GATE; THE LEAGUE WEARING DOES NOT.
+  // NO SHELL GATE ON THIS BOARD, IN ANY OF ITS WEARINGS.
   //
-  // RULED: the league pages are the browse surface and the games are the
-  // sign-in surface. /nfl/scores and /cfb/scores mount this same view with a
-  // league pinned, and they were inheriting a redirect that sent a signed-out
-  // reader in the container to a form instead of to a scoreboard - the exact
-  // thing the ruling is against. The games strip already asks for a sign-in
-  // where one is needed, on the tiles, in words.
-  const session = await auth();
-  if (!pinned) {
-    requireSignInInShell({ isShell, userId: session?.user?.id ?? null, dest: '/scores' });
-  }
+  // RULED IN TWO STEPS, and the second step exists because the first was made
+  // on a bad measurement. The league wearings (/nfl/scores, /cfb/scores) were
+  // unforced first: they were inheriting a redirect that sent a signed-out
+  // reader in the container to a form instead of to a scoreboard. The network
+  // wearing kept its gate at that point because a status-code sweep read
+  // /scores as already open and there seemed to be nothing to decide.
+  //
+  // IT WAS NOT OPEN. A redirect() thrown inside a streamed Suspense boundary
+  // cannot set a status - the headers are already flushed - so Next serves 200
+  // and carries the redirect as a <meta http-equiv="refresh"> in the body. The
+  // gate was firing the whole time and the instrument could not see it.
+  //
+  // Measured correctly, the line is the one already ruled: the game tabs ask
+  // who you are, the browse tabs do not. /market sits beside this board in the
+  // same tab and opens; a scoreboard is the most public thing on the site, and
+  // there is nothing on it that belongs to the reader. The games strip still
+  // asks for a sign-in where one is needed, on the tiles, in words.
   // Explicit ?date= navigation is respected, always and untouched. The
   // no-param default walks the SPORTS-DAY law first (defaultScoresDate: roll
   // back before 06:00 ET or while a prior-date game is still live), then

@@ -19,7 +19,6 @@ import SportsvynSegment from '@/components/shell/SportsvynSegment';
 import LeagueHeader from '@/components/league/LeagueHeader';
 import '@/components/league/league.css';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
-import { requireSignInInShell } from '@/lib/shell/signedOut';
 import SiteFooter from '@/components/SiteFooter';
 import MovementBoard from '@/components/fantasy/MovementBoard';
 import {
