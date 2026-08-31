@@ -1,34 +1,34 @@
 'use client';
 
-// components/shell/NativeShellCookie.js — marks the request stream as "inside the
-// native container" so SERVER components can suppress purchase paths.
+// components/shell/NativeShellCookie.js — the FALLBACK that marks the request
+// stream as "inside the native container". It is no longer the primary path.
 //
-// WHY THIS EXISTS (App Store Guideline 3.1.1)
-// -------------------------------------------
-// The shipped binary loads https://sportsvyn.com/app (capacitor.config.ts) with
-// allowNavigation: ['sportsvyn.com']. That means a reviewer inside the app can
-// reach ANY page on the site - the pricing page, the homepage price band, the
-// league rail teasers - not just the routes the app links to.
+// *** DO NOT DELETE THIS FILE YET. The condition for deleting it is named at
+// the bottom of this comment and has not been met. ***
 //
-// resolveShellMode() only returned true for ?shell=sim-app or the sv_shell cookie,
-// and /app set NEITHER. So every server-side 3.1.1 suppression keyed on shell mode
-// would have been INERT inside the very binary Apple rejected. This closes that:
-// on mount inside a Capacitor webview, write the same sv_shell cookie the sim
-// wrapper uses, so every subsequent server render on any sportsvyn.com route sees
-// shell mode and suppresses commerce.
+// WHAT MOVED. proxy.js now sets sv_shell before anything renders, from two
+// signals: ?shell=sim-app on the URL, and SHELL_UA_TOKEN in the User-Agent
+// (capacitor.config.ts appends it). The App Store 3.1.1 rationale this file
+// used to carry — capacitor allowNavigation makes every sportsvyn.com page
+// reachable in-app, so every server-side suppression has to see shell mode on
+// pages the app never links to — now lives in proxy.js, where the decision is.
 //
-// GATED ON window.Capacitor, deliberately. /app is also a real web URL; a browser
-// visitor must NOT get the cookie, or the website would silently lose its own
-// purchase paths. The detection mirrors components/BackToAppBar.js, which is the
-// existing native-container feature-detect in this codebase.
+// WHY IT STAYS ANYWAY. appendUserAgent is baked into the binary. Every copy
+// already on a phone was built without it, sends a plain webview UA, matches
+// nothing in the proxy, and would lose shell mode entirely — every 3.1.1
+// suppression inert in the exact binary Apple already rejected once — if this
+// were deleted today. So it keeps running, unchanged, for those copies.
 //
-// Session cookie (no max-age): the native webview session is long-lived, which is
-// what we want; a browser that somehow set it recovers by closing the tab.
+// IT IS A NO-OP ON A CURRENT BINARY. The proxy sets the cookie on the first
+// request, so the early return below fires and nothing happens: no write, and
+// critically no reload. On an old binary it behaves exactly as it always did.
 //
-// LIMIT, stated honestly: this is a CLIENT effect, so the very first server render
-// of /app itself happens before the cookie exists. That is safe only because /app
-// contains no purchase path of its own (verified: no membership link, no price, no
-// checkout in app/app/*). Any future commerce added to /app must not rely on this.
+// THE CONDITION FOR DELETING IT, stated so nobody has to reconstruct it: when
+// a binary carrying SHELL_UA_TOKEN has SHIPPED and the older copies are no
+// longer a supported install base. Not when the token is committed — it is
+// committed now and that changes nothing on a phone. Until then this file and
+// the proxy overlap on purpose, and the overlap is free because the cookie
+// check makes the second one silent.
 
 import { useEffect } from 'react';
 import { SHELL_COOKIE, SHELL_VALUE } from '@/lib/shell/constants';
@@ -38,10 +38,15 @@ export default function NativeShellCookie() {
     const isNative = typeof window !== 'undefined'
       && !!(window.Capacitor?.isNativePlatform?.() ?? window.Capacitor);
     if (!isNative) return;
+    // THE EARLY RETURN IS WHAT MAKES THIS A NO-OP on a binary the proxy can
+    // recognise: the cookie is already there, so no write and - the part that
+    // matters - no reload. A reload here on top of a proxy that had already
+    // done the job would be a visible flash on every cold open.
     if (document.cookie.includes(`${SHELL_COOKIE}=${SHELL_VALUE}`)) return;
     document.cookie = `${SHELL_COOKIE}=${SHELL_VALUE}; path=/; samesite=lax`;
-    // The shell's own first paint rendered pre-cookie. Refresh once so any
-    // server-rendered chrome on this page re-resolves with shell mode on.
+    // Only reached on a binary predating SHELL_UA_TOKEN. That copy's first
+    // paint rendered pre-cookie, so refresh once and let the server-rendered
+    // chrome re-resolve with shell mode on.
     window.location.reload();
   }, []);
   return null;

@@ -12,7 +12,10 @@
  *      web chrome inside the container. The param is now WRITE-ONLY:
  *      signinHref, SHELL_SIGNOUT_TARGET and lib/auth/firstSeen still
  *      emit it to carry mode across an auth redirect, and this file
- *      is its only reader.
+ *      is its only reader. The container also marks its own User-Agent
+ *      (capacitor.config.ts appends SHELL_UA_TOKEN), which is the only
+ *      signal /app has - it loads with no query string and is also a
+ *      real web page - and that is read here too.
  *
  *   2. Competition-namespacing REDIRECTS.
  *      Old canonical paths (/bracket, /power-rankings) issue 308
@@ -49,7 +52,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { SHELL_COOKIE, SHELL_VALUE, SHELL_PARAM } from '@/lib/shell/constants';
+import { SHELL_COOKIE, SHELL_VALUE, SHELL_PARAM, SHELL_UA_TOKEN } from '@/lib/shell/constants';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { resolveCurrentEditionForFamily } from './lib/competition.js';
 
@@ -97,8 +100,23 @@ export async function proxy(request) {
   // -------------------------------------------------------------------------
   const cookieSaysShell = request.cookies.get(SHELL_COOKIE)?.value === SHELL_VALUE;
   const paramSaysShell = request.nextUrl.searchParams.get(SHELL_PARAM) === SHELL_VALUE;
-  const inShell = cookieSaysShell || paramSaysShell;
-  const needsCookie = paramSaysShell && !cookieSaysShell;
+  // THE CONTAINER'S OWN MARK. capacitor.config.ts appends SHELL_UA_TOKEN to
+  // the webview's User-Agent, which is the only thing in a request from /app
+  // that identifies it: the binary loads /app with no query string, and /app is
+  // also a real web page, so nothing else in the request can tell them apart.
+  //
+  // WITHOUT THIS, /app's cold open could not be closed by a proxy at all - only
+  // by NativeShellCookie's client-side detect-and-reload, which by definition
+  // runs after the render it was needed for. With it, sv_shell is set before
+  // anything renders, on /app and on every sportsvyn.com page the container can
+  // reach through allowNavigation.
+  //
+  // INERT UNTIL A BINARY CARRYING THE TOKEN SHIPS. An installed copy built
+  // before it sends a plain webview UA, matches nothing here, and keeps the
+  // client-side path - which still works. Nothing regresses while both exist.
+  const uaSaysShell = (request.headers.get('user-agent') ?? '').includes(SHELL_UA_TOKEN);
+  const inShell = cookieSaysShell || paramSaysShell || uaSaysShell;
+  const needsCookie = (paramSaysShell || uaSaysShell) && !cookieSaysShell;
 
   // A SESSION COOKIE - no max-age, no expires. Both client setters chose that
   // deliberately and moving the write here must not quietly upgrade it: a web
@@ -235,6 +253,15 @@ export const config = {
     {
       source: '/:path*',
       has: [{ type: 'query', key: 'shell', value: 'sim-app' }],
+      missing: [{ type: 'cookie', key: 'sv_shell', value: 'sim-app' }],
+    },
+    // THE SAME RULE FOR THE CONTAINER'S OWN MARK. /app arrives with no param,
+    // so the param clause above would never fire for the shipped binary; this
+    // one matches on the User-Agent token instead, with the same `missing`
+    // cookie condition, so it is equally inert after the first hit.
+    {
+      source: '/:path*',
+      has: [{ type: 'header', key: 'user-agent', value: '(.*)SportsvynApp/1(.*)' }],
       missing: [{ type: 'cookie', key: 'sv_shell', value: 'sim-app' }],
     },
   ],
