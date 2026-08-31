@@ -164,7 +164,7 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     // landing was written against tokens that already resolved. This entry is
     // the guard working as intended - a new bare use is fine now, but it has
     // to be counted on purpose rather than drift in.
-    'components/league/league.css': 8,
+    'components/league/league.css': 13,
     // The wire, added after the promotion and therefore never broken either.
     'components/wire/wire.css': 6,
   };
@@ -176,8 +176,8 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   }
   assert.deepEqual(found, EXPECTED,
     'a new bare call site is fine now that the tokens are global - update the count deliberately');
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 32,
-    '18 were broken before the promotion; 14 were written after it');
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 37,
+    '18 were broken before the promotion; 19 were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.
   for (const t of ['--ink-2', '--ink-3', '--line']) {

@@ -17,7 +17,9 @@
 import Link from 'next/link';
 import { landingEyebrow, livePill } from '@/lib/gridiron/leagueLanding';
 import { navPills } from '@/lib/gridiron/leagueNav';
-import { resolveLeagueWeek } from '@/lib/gridiron/leagueWeek';
+import { resolveLeagueWeek, resolveEplWeek } from '@/lib/gridiron/leagueWeek';
+import { switcherRows } from '@/lib/gridiron/leagueSwitch';
+import LeagueSwitcher from '@/components/league/LeagueSwitcher';
 
 export default async function LeagueHeader({
   label, week, phase, date, games, leagueSlug, pathname,
@@ -36,15 +38,33 @@ export default async function LeagueHeader({
   // THE PILLS COME FROM THE ROUTE, not from a prop each page remembers to set.
   // One list, one resolver - see lib/gridiron/leagueNav.js.
   const pills = leagueSlug ? navPills(leagueSlug, pathname) : [];
+
+  // THE SHEET'S ROWS ARE RESOLVED HERE, ON THE SERVER. Each carries its own
+  // live week, so the switcher answers "what is happening over there" before
+  // the reader commits to the tap. Each eyebrow is caught on its own: a league
+  // whose week cannot be derived shows its name and nothing else, which is the
+  // same degradation the header's own eyebrow makes.
+  let rows = [];
+  if (leagueSlug) {
+    rows = switcherRows(pathname, leagueSlug);
+    const eyebrows = await Promise.all(rows.map(async (r) => {
+      try {
+        if (r.slug === 'epl') return (await resolveEplWeek()).label;
+        const wk = await resolveLeagueWeek(r.slug);
+        return landingEyebrow({ week: wk.week, phase: wk.phase, date: wk.date });
+      } catch { return null; }
+    }));
+    rows = rows.map((r, i) => ({ ...r, eyebrow: eyebrows[i] }));
+  }
   const head = (
     <header className="lgh">
       <div className="lgh-l">
         {eyebrow ? <div className="lgh-eye">{eyebrow}</div> : null}
-        {/* THE TITLE IS THE WAY HOME. On a sub-page it is the only one-tap
-            route back to the landing; on the landing it links to itself, which
-            is harmless and keeps one rule instead of two. */}
+        {/* THE TITLE OPENS THE SWITCHER, and the way home moved inside it -
+            the sheet's current-league row carries the link to /{league}. One
+            tap target rather than a split hitbox. */}
         {leagueSlug
-          ? <a className="lgh-h1" href={`/${leagueSlug}`}>{label}</a>
+          ? <LeagueSwitcher label={label} rows={rows} />
           : <h1 className="lgh-h1">{label}</h1>}
       </div>
       {live ? (
