@@ -66,7 +66,7 @@ function label(iso) {
  * PINNED IS ONE PROP, not a fork. Everything below reads `sport`, which the
  * pin simply decides instead of the URL.
  */
-export async function ScoresView({ sp, pinned = null }) {
+export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
 
   const isShell = await resolveShellMode(sp);
   // In the container, signed out means the sign-in form - same law as every
@@ -102,7 +102,12 @@ export async function ScoresView({ sp, pinned = null }) {
 
   return (
     <div className="gi" data-surface="ink">
-      {pinned ? null : <GlobalHeaderServer activeNav="scores" />}
+      {/* THE WORDMARK BAND RENDERS ON EVERY ROUTE. It was gated on the pin,
+          which meant the league wearings of this board had no global header at
+          all - no wordmark, no way out to the rest of the site. The league
+          header goes UNDER it, not instead of it. */}
+      <GlobalHeaderServer activeNav="scores" />
+      {leagueHeader ?? null}
       {isShell && <SportsvynSegment />}
 
       <div className="gi-wrap">

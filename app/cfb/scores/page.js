@@ -17,10 +17,11 @@ export const metadata = { title: 'CFB Scores - Sportsvyn' };
 
 export default async function CFBScores({ searchParams }) {
   const sp = (await searchParams) ?? {};
-  return (
-    <>
-      <LeagueHeader label="CFB" leagueSlug="cfb" pathname="/cfb/scores" />
-      {await ScoresView({ sp, pinned: 'cfb' })}
-    </>
-  );
+  // The view renders the wordmark band and then this, so the order on screen is
+  // global header, league header, page - the same as every other league route.
+  return ScoresView({
+    sp,
+    pinned: 'cfb',
+    leagueHeader: await LeagueHeader({ label: 'CFB', leagueSlug: 'cfb', pathname: '/cfb/scores' }),
+  });
 }

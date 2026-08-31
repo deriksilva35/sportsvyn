@@ -17,9 +17,21 @@
 import Link from 'next/link';
 import { landingEyebrow, livePill } from '@/lib/gridiron/leagueLanding';
 import { navPills } from '@/lib/gridiron/leagueNav';
+import { resolveLeagueWeek } from '@/lib/gridiron/leagueWeek';
 
-export default function LeagueHeader({ label, week, phase, date, games, leagueSlug, pathname }) {
-  const eyebrow = landingEyebrow({ week, phase, date });
+export default async function LeagueHeader({
+  label, week, phase, date, games, leagueSlug, pathname,
+}) {
+  // THE WEEK LINE RESOLVES ITSELF when the caller has not already done the
+  // work. The landing has - it read the slate for its own modules - so it
+  // passes what it holds; every other league route passes nothing and gets the
+  // same line rather than a bare title.
+  let w = week; let ph = phase; let d = date;
+  if (w === undefined && leagueSlug) {
+    const r = await resolveLeagueWeek(leagueSlug);
+    w = r.week; ph = r.phase; d = r.date;
+  }
+  const eyebrow = landingEyebrow({ week: w, phase: ph, date: d });
   const live = livePill(games);
   // THE PILLS COME FROM THE ROUTE, not from a prop each page remembers to set.
   // One list, one resolver - see lib/gridiron/leagueNav.js.
@@ -28,7 +40,12 @@ export default function LeagueHeader({ label, week, phase, date, games, leagueSl
     <header className="lgh">
       <div className="lgh-l">
         {eyebrow ? <div className="lgh-eye">{eyebrow}</div> : null}
-        <h1 className="lgh-h1">{label}</h1>
+        {/* THE TITLE IS THE WAY HOME. On a sub-page it is the only one-tap
+            route back to the landing; on the landing it links to itself, which
+            is harmless and keeps one rule instead of two. */}
+        {leagueSlug
+          ? <a className="lgh-h1" href={`/${leagueSlug}`}>{label}</a>
+          : <h1 className="lgh-h1">{label}</h1>}
       </div>
       {live ? (
         <span className="lgh-live" aria-label={`${live} games live now`}>

@@ -12,10 +12,11 @@ export const metadata = { title: 'CFB Market - Sportsvyn' };
 
 export default async function CFBMarket({ searchParams }) {
   const sp = (await searchParams) ?? {};
-  return (
-    <>
-      <LeagueHeader label="CFB" leagueSlug="cfb" pathname="/cfb/market" />
-      {await MarketView({ sp, pinned: 'cfb' })}
-    </>
-  );
+  // The view renders the wordmark band and then this, so the order on screen is
+  // global header, league header, page - the same as every other league route.
+  return MarketView({
+    sp,
+    pinned: 'cfb',
+    leagueHeader: await LeagueHeader({ label: 'CFB', leagueSlug: 'cfb', pathname: '/cfb/market' }),
+  });
 }

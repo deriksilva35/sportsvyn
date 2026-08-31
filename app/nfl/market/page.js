@@ -12,10 +12,11 @@ export const metadata = { title: 'NFL Market - Sportsvyn' };
 
 export default async function NFLMarket({ searchParams }) {
   const sp = (await searchParams) ?? {};
-  return (
-    <>
-      <LeagueHeader label="NFL" leagueSlug="nfl" pathname="/nfl/market" />
-      {await MarketView({ sp, pinned: 'nfl' })}
-    </>
-  );
+  // The view renders the wordmark band and then this, so the order on screen is
+  // global header, league header, page - the same as every other league route.
+  return MarketView({
+    sp,
+    pinned: 'nfl',
+    leagueHeader: await LeagueHeader({ label: 'NFL', leagueSlug: 'nfl', pathname: '/nfl/market' }),
+  });
 }

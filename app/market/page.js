@@ -210,7 +210,7 @@ function Band({ slug, cards, boardIds, books }) {
  * component with `pinned` set, under the league header and without the league
  * chips. MOVERS ONLY survives the pin because it is state, not a league.
  */
-export async function MarketView({ sp, pinned = null }) {
+export async function MarketView({ sp, pinned = null, leagueHeader = null }) {
   // THE SHELL GATE STAYS AT THE CALL SITE, server-side: web HTML carries no
   // segment markup at all. Same contract the other three tabs already keep.
   const isShell = await resolveShellMode(sp);
@@ -310,7 +310,12 @@ export async function MarketView({ sp, pinned = null }) {
 
   return (
     <div className="gi" data-surface="ink">
-      {pinned ? null : <GlobalHeaderServer activeNav="market" />}
+      {/* THE WORDMARK BAND RENDERS ON EVERY ROUTE. It was gated on the pin,
+          which meant the league wearings of this board had no global header at
+          all - no wordmark, no way out to the rest of the site. The league
+          header goes UNDER it, not instead of it. */}
+      <GlobalHeaderServer activeNav="market" />
+      {leagueHeader ?? null}
       {isShell && <SportsvynSegment />}
       <div className="mk-wrap">
         <div className="mk-head">

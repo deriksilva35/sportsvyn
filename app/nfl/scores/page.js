@@ -17,10 +17,11 @@ export const metadata = { title: 'NFL Scores - Sportsvyn' };
 
 export default async function NFLScores({ searchParams }) {
   const sp = (await searchParams) ?? {};
-  return (
-    <>
-      <LeagueHeader label="NFL" leagueSlug="nfl" pathname="/nfl/scores" />
-      {await ScoresView({ sp, pinned: 'nfl' })}
-    </>
-  );
+  // The view renders the wordmark band and then this, so the order on screen is
+  // global header, league header, page - the same as every other league route.
+  return ScoresView({
+    sp,
+    pinned: 'nfl',
+    leagueHeader: await LeagueHeader({ label: 'NFL', leagueSlug: 'nfl', pathname: '/nfl/scores' }),
+  });
 }
