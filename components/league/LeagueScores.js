@@ -18,7 +18,7 @@ import Link from 'next/link';
 import Scoreboard from '@/components/gridiron/Scoreboard';
 import { scoresSlice, leagueUnit, moduleHeading } from '@/lib/gridiron/leagueLanding';
 
-export default function LeagueScores({ leagueSlug, label, games, records, cap = 6, initialTz = null, now = new Date() }) {
+export default function LeagueScores({ leagueSlug, label, games, records, cap = 6, initialTz = null, now = new Date(), signedIn = false }) {
   const { shown, total, overflow } = scoresSlice(games, cap);
   if (!shown.length) return null;
   const unit = leagueUnit(leagueSlug);
@@ -51,6 +51,7 @@ export default function LeagueScores({ leagueSlug, label, games, records, cap = 
         records={records}
         pinned
         initialTz={initialTz}
+        signedIn={signedIn}
       />
     </section>
   );

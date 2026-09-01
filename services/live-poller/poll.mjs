@@ -7,6 +7,8 @@ import { mapLiveStatus, liveState } from '../../lib/live/vocabulary.js';
 import { writeLive, scoreChanged } from '../../lib/live/write.js';
 import { toScoreRow } from '../../lib/live/scoreEvent.js';
 import { emit } from '../../lib/wire/emit.js';
+import { transitionsFor } from '../../lib/push/transitions.js';
+import { dispatch } from '../../lib/push/dispatch.js';
 
 const CFBD = 'https://apinext.collegefootballdata.com';
 const BDL = 'https://api.balldontlie.io';
@@ -108,12 +110,12 @@ export function scopeToStatus(upd) {
  * provider starts returning more.
  */
 export async function pollOnce(sql, {
-  league, providerKey, fetcher, normalise, now = new Date(), dryRun = false,
+  league, providerKey, fetcher, normalise, now = new Date(), dryRun = false, push = true,
 }) {
   const out = {
     league, considered: 0, matched: 0, unmatched: 0, written: 0,
     scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [],
-    latencies: [], wouldWrite: [],
+    latencies: [], wouldWrite: [], pushes: [], pushErrors: [], pushAuthFailure: false,
   };
 
   const candidates = await sql`
@@ -163,6 +165,27 @@ export async function pollOnce(sql, {
     if (!after) continue;
     out.written += 1;
     if (after.status === 'final' && m.status !== 'final') out.finals += 1;
+
+    // THE PUSH RIDER. It is handed the transition this poll just made and asks
+    // no provider anything - the loop that noticed is the loop that sends,
+    // which is the whole reason an alert can be a minute old instead of five.
+    //
+    // ITS FAILURE IS CONTAINED. A notification is a courtesy on top of a
+    // scoreboard; losing one must never cost the write that the board, the
+    // Wire and the settle all depend on.
+    if (!dryRun && push) {
+      const evs = transitionsFor(
+        { ...m, live_state: null },
+        { ...after, live_state: upd.liveState },
+      );
+      for (const t of evs) {
+        try {
+          const r = await dispatch(sql, { match: { ...m, ...after }, event: t.event, state: t.state });
+          out.pushes.push({ event: t.event, sent: r.sent, skipped: r.skipped, failed: r.failed });
+          if (r.authFailure) out.pushAuthFailure = true;
+        } catch (e) { out.pushErrors.push(String(e?.message ?? e).slice(0, 120)); }
+      }
+    }
 
     // AN EVENT ONLY FOR A GAME BEING PLAYED. A final has its own emitter, and a
     // scheduled game has no score to report.

@@ -42,6 +42,8 @@ import { getTeamRecordChip } from '@/lib/standings/read';
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
 import GameTabs from '@/components/gridiron/GameTabs';
+import AlertBell from '@/components/alerts/AlertBell';
+import { auth } from '@/auth';
 import { parseGameTab } from '@/lib/gridiron/gameTabsNav';
 import { cfbBoxScoreFor, boxScoreLabel } from '@/lib/cfb/boxScore';
 import { propsSlate } from '@/lib/market/reads';
@@ -87,6 +89,9 @@ export default async function CfbGamePage({ params, searchParams }) {
   const { slug } = await params;
   const sp = (await searchParams) ?? {};
   const game = await getGamePage(slug);
+  // FOR THE ALERT BELL ONLY. The page itself is open to everyone; this decides
+  // whether the sheet shows toggles or a sign-in.
+  const viewerId = (await auth().catch(() => null))?.user?.id ?? null;
   // The mirror of the NFL route's guard, pointing the other way. getGamePage
   // resolves both gridiron leagues, so without this an NFL slug would render
   // here too and the two routes would both answer for the same game.
@@ -252,6 +257,16 @@ export default async function CfbGamePage({ params, searchParams }) {
           <div className="gg-headfoot">
             <span>CFB · {game.seasonPhase} W{game.week}</span>
             {foot ? <span className="r">{foot}</span> : null}
+            {/* THE SAME BELL AS THE CARD, in the larger of its two sizes. One
+                control for one idea: a reader who set alerts from the
+                scoreboard opens the same sheet here and sees the state they
+                left. */}
+            <AlertBell compact={false} signedIn={viewerId != null} match={{
+              id: game.id, slug: game.slug, leagueSlug: game.leagueSlug,
+              homeAbbr: game.home?.abbreviation ?? '', awayAbbr: game.away?.abbreviation ?? '',
+              homeTeamId: game.home?.id ?? null, homeSlug: game.home?.slug ?? null,
+              kickoffAt: game.kickoffAt,
+            }} />
           </div>
         </header>
 

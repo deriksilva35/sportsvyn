@@ -36,6 +36,7 @@ import { kickoffParts, groupByDay } from '@/lib/gridiron/kickoff';
 import { tzOrUtc } from '@/lib/gridiron/viewerTz';
 import { useViewerTz } from './useViewerTz';
 import TzCookie from './TzCookie';
+import AlertBell from '@/components/alerts/AlertBell';
 
 // The section list IS the chip list - one definition (scoresNav), so a
 // league can never appear as a filter with no section or the reverse.
@@ -216,7 +217,19 @@ function PreGamePane({ g, tz }) {
   );
 }
 
-function Card({ g, records, tz, withDay = true }) {
+// WHAT THE BELL NEEDS, and nothing more. The sheet renders a matchup, a
+// kickoff and two links; handing it the whole game object would let it grow a
+// dependency on a field the card happens to carry today.
+function alertMatch(g) {
+  return {
+    id: g.id, slug: g.slug, leagueSlug: g.leagueSlug,
+    homeAbbr: g.home?.abbreviation ?? '', awayAbbr: g.away?.abbreviation ?? '',
+    homeTeamId: g.home?.id ?? null, homeSlug: g.home?.slug ?? null,
+    kickoffAt: g.kickoffAt,
+  };
+}
+
+function Card({ g, records, tz, withDay = true, signedIn = false }) {
   const [open, setOpen] = useState(false);
   const final = g.status === 'final';
   const hw = g.homeScore, aw = g.awayScore;
@@ -270,6 +283,11 @@ function Card({ g, records, tz, withDay = true }) {
               ? <span className="gi-net">{g.network}</span>
               : [distinctLabel(g.weekLabel), g.venueCity].filter(Boolean).join(' · ')}
           </span>
+          {/* THE BELL SITS IN THE FOOT, RIGHT-ALIGNED (margin-left:auto on the
+              pill). Its click stops propagating: the whole card is the expand
+              control, and a reader reaching for Alerts must not also open the
+              line score underneath it. */}
+          <AlertBell match={alertMatch(g)} signedIn={signedIn} />
         </div>
       </div>
 
@@ -316,6 +334,10 @@ function Card({ g, records, tz, withDay = true }) {
 // codes; scoreline semantics stay forked, which is what the Card-level fork is
 // for.
 // ---------------------------------------------------------------------------
+// NO BELL ON THE SOCCER CARD THIS RELAY. The alert vocabulary is gridiron -
+// quarters, a close-game rule written in Q4 and eight points - and a bell that
+// opened a sheet offering "End of each quarter" on a football match would be
+// worse than no bell. It gets its own rules or it gets none.
 function SoccerCard({ g, records, tz, withDay = true }) {
   const final = g.status === 'final';
   const live = g.status === 'live';
@@ -383,7 +405,7 @@ function SoccerCard({ g, records, tz, withDay = true }) {
   );
 }
 
-function Section({ sport, games, liveOnly, records, tz }) {
+function Section({ sport, games, liveOnly, records, tz, signedIn }) {
   const shown = liveOnly ? games.filter((g) => g.status === 'live') : games;
   // PER-SPORT CARD, SHARED SHELL. The codes' cards disagree about what a game
   // IS - quarters and a line score vs halves and a running minute, a loser to
@@ -420,12 +442,12 @@ function Section({ sport, games, liveOnly, records, tz }) {
           <div className="gi-day" key={d.key ?? 'undated'}>
             {d.heading ? <h3 className="gi-day-h">{d.heading}</h3> : null}
             <div className="gi-cards">
-              {d.games.map((g) => <CardFor key={g.id} g={g} records={records} tz={tz} withDay={false} />)}
+              {d.games.map((g) => <CardFor key={g.id} g={g} records={records} tz={tz} withDay={false} signedIn={signedIn} />)}
             </div>
           </div>
         ))
       ) : (
-        <div className="gi-cards">{shown.map((g) => <CardFor key={g.id} g={g} records={records} tz={tz} />)}</div>
+        <div className="gi-cards">{shown.map((g) => <CardFor key={g.id} g={g} records={records} tz={tz} signedIn={signedIn} />)}</div>
       )}
     </div>
   );
@@ -436,7 +458,7 @@ function Section({ sport, games, liveOnly, records, tz }) {
 // filter because the two features each held half the state. The chips are
 // Links built by scoresHref, so every chip carries the date and every date
 // arrow carries the chip; the reverse direction is the same one rule.
-export default function Scoreboard({ byLeague, date, sport = 'all', live = false, records = new Map(), pinned = false, initialTz = null }) {
+export default function Scoreboard({ byLeague, date, sport = 'all', live = false, records = new Map(), pinned = false, initialTz = null, signedIn = false }) {
   const visible = SPORTS.filter((s) => sport === 'all' || sport === s.key);
   // ONE READ OF THE READER'S ZONE FOR THE WHOLE BOARD, threaded down. Asking
   // per card would give every card its own subscription to answer a question
@@ -469,7 +491,7 @@ export default function Scoreboard({ byLeague, date, sport = 'all', live = false
           href={scoresHref(date, { sport, live: !live })}><span className="gi-dot" />Live only</Link>
       </div>
 
-      {visible.map((s) => <Section key={s.key} sport={s} games={byLeague[s.key] ?? []} liveOnly={live} records={records} tz={tz} />)}
+      {visible.map((s) => <Section key={s.key} sport={s} games={byLeague[s.key] ?? []} liveOnly={live} records={records} tz={tz} signedIn={signedIn} />)}
 
       {/* DriveStrip is built + ready but renders nowhere until live rows exist.
           Hidden demo so the component is exercised by the build. */}

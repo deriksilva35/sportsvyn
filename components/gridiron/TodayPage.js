@@ -102,6 +102,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, searchParams 
         records={recordChips}
         initialTz={viewerTz}
         now={now}
+        signedIn={userId != null}
       />
 
       {/* THE WIRE SITS BETWEEN THE SCORES AND THE STANDINGS: what just

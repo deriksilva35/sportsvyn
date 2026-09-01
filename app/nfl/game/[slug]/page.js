@@ -23,6 +23,8 @@ import { lineScoreGrid, liveChip } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
 import { getBriefForMatch } from '@/lib/gridiron/gameBrief';
 import GameTabs from '@/components/gridiron/GameTabs';
+import AlertBell from '@/components/alerts/AlertBell';
+import { auth } from '@/auth';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/lib/gridiron/driveStrip';
@@ -68,6 +70,9 @@ export default async function GamePage({ params, searchParams }) {
   const { slug } = await params;
   const sp = (await searchParams) ?? {};
   const game = await getGamePage(slug);
+  // FOR THE ALERT BELL ONLY. The page itself is open to everyone; this decides
+  // whether the sheet shows toggles or a sign-in.
+  const viewerId = (await auth().catch(() => null))?.user?.id ?? null;
   // A soccer slug reaching a gridiron route is a 404, not a redirect loop back
   // to /match: getGamePage only resolves rows in the two gridiron leagues.
   if (!game || game.leagueSlug !== 'nfl') notFound();
@@ -182,6 +187,16 @@ export default async function GamePage({ params, searchParams }) {
           <div className="gg-headfoot">
             <span>{game.leagueSlug.toUpperCase()} · {game.seasonPhase} W{game.week}</span>
             {foot ? <span className="r">{foot}</span> : null}
+            {/* THE SAME BELL AS THE CARD, in the larger of its two sizes. One
+                control for one idea: a reader who set alerts from the
+                scoreboard opens the same sheet here and sees the state they
+                left. */}
+            <AlertBell compact={false} signedIn={viewerId != null} match={{
+              id: game.id, slug: game.slug, leagueSlug: game.leagueSlug,
+              homeAbbr: game.home?.abbreviation ?? '', awayAbbr: game.away?.abbreviation ?? '',
+              homeTeamId: game.home?.id ?? null, homeSlug: game.home?.slug ?? null,
+              kickoffAt: game.kickoffAt,
+            }} />
           </div>
         </header>
 

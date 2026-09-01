@@ -10,6 +10,7 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SportsvynSegment from '@/components/shell/SportsvynSegment';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { readViewerTz } from '@/lib/gridiron/serverTz';
+import { auth } from '@/auth';
 import Scoreboard from '@/components/gridiron/Scoreboard';
 import Link from 'next/link';
 import DateRail from '@/components/gridiron/DateRail';
@@ -104,9 +105,12 @@ export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
   const { live } = parsed;
   // RECORDS FOR EVERY CARD ON THE SLATE, one read for all three leagues,
   // through the loader the league landings share - see recordsLoader.js.
-  const [slate, range, records, viewerTz] = await Promise.all([
-    getSlateByDate(date), scoresDateRange(), loadRecordChips(), readViewerTz(),
+  const [slate, range, records, viewerTz, session] = await Promise.all([
+    getSlateByDate(date), scoresDateRange(), loadRecordChips(), readViewerTz(), auth().catch(() => null),
   ]);
+  // FOR THE BELL ONLY. The board itself is open to everyone (ruled); this
+  // decides whether the alerts sheet shows toggles or a sign-in.
+  const viewerId = session?.user?.id ?? null;
   const games = [...slate.byLeague.nfl, ...slate.byLeague.cfb];
   // One batch odds read for the whole slate (no per-card fan-out); attach to each game.
   const oddsMap = await getH2hOdds(games.map((g) => g.id));
@@ -153,7 +157,7 @@ export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
           />
         </div>
 
-        <Scoreboard byLeague={slate.byLeague} date={date} sport={sport} live={live} records={records} pinned={Boolean(pinned)} initialTz={viewerTz} />
+        <Scoreboard byLeague={slate.byLeague} date={date} sport={sport} live={live} records={records} pinned={Boolean(pinned)} initialTz={viewerTz} signedIn={Boolean(viewerId)} />
       </div>
     </div>
   );

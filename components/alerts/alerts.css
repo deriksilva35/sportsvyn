@@ -1,0 +1,113 @@
+/* components/alerts/alerts.css — the bell pill and its sheet.
+   Shares the league switcher's sheet grammar on purpose: ink-2 ground, 1px
+   line, 14px radius. One sheet in this app, not two that nearly match. */
+
+/* ---- the pill ------------------------------------------------------------
+   99px so it is a capsule at any height, and OUTLINE rather than filled: it is
+   a control on a card that already has a score on it, and a filled pill would
+   compete with the number the card exists to show. */
+.al-pill {
+  margin-left: auto;                    /* right-aligned in the card foot */
+  flex: none;
+  padding: 3px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-saira-cond);
+  font-size: 10px; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.al-pill:hover { color: var(--paper); border-color: var(--muted-dim); }
+.al-pill:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+/* ON is stated three ways - dot, colour, border - because a colour alone is
+   not a state a colour-blind reader can read. */
+.al-pill.on { color: var(--volt); border-color: var(--volt); }
+.al-pill--lg { padding: 5px 14px; font-size: 11px; }
+
+/* ---- the sheet ---------------------------------------------------------- */
+.al-back {
+  position: fixed; inset: 0; z-index: 40;
+  border: 0; padding: 0; cursor: pointer;
+  background: rgba(10, 10, 10, 0.65);
+}
+.al-sheet {
+  position: fixed; z-index: 41;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 32px));
+  max-height: min(86vh, 720px); overflow-y: auto;
+  background: var(--ink-2, #141414);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 16px;
+}
+.al-hd { display: flex; align-items: flex-start; gap: 10px; }
+.al-h1 {
+  margin: 0; flex: 1 1 auto; min-width: 0;
+  font-family: var(--font-saira); font-weight: 900; font-style: italic;
+  font-size: 22px; line-height: 1.1; color: var(--paper);
+}
+.al-x {
+  flex: none; width: 28px; height: 28px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer;
+}
+.al-x:hover { color: var(--paper); }
+.al-eye {
+  margin-top: 4px;
+  font-family: var(--font-saira-cond); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--volt);
+}
+.al-note { margin: 12px 0 14px; font-size: 11px; line-height: 1.5; color: var(--muted); }
+
+/* ---- rows --------------------------------------------------------------- */
+.al-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
+.al-row + .al-row { border-top: 1px solid var(--rule); }
+.al-row--master {
+  background: var(--ink-3, #1c1c1c);
+  margin: 0 -16px; padding: 12px 16px; border-radius: 10px;
+}
+.al-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.al-title { font-family: var(--font-saira); font-size: 15px; font-weight: 600; color: var(--paper); }
+.al-trig {
+  font-family: var(--font-jetbrains-mono); font-size: 10px; line-height: 1.4; color: var(--muted);
+}
+.al-lat { font-size: 10px; color: var(--muted-dim); }
+
+/* MASTER OFF DIMS RATHER THAN HIDES. The rows keep their state and the reader
+   can see what they will get back when they turn it on again. */
+.al-rows { margin-top: 4px; }
+.al-dim { opacity: 0.4; }
+
+/* ---- the toggle: 44x26 -------------------------------------------------- */
+.al-tg {
+  flex: none; width: 44px; height: 26px; border-radius: 99px;
+  border: 1px solid var(--rule); background: var(--ink-3, #1c1c1c);
+  padding: 0; cursor: pointer; position: relative; transition: background 120ms, border-color 120ms;
+}
+.al-tg:disabled { cursor: default; }
+.al-tg:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+.al-knob {
+  position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--muted); transition: transform 120ms, background 120ms;
+}
+.al-tg.on { background: var(--volt); border-color: var(--volt); }
+.al-tg.on .al-knob { transform: translateX(18px); background: var(--ink, #0a0a0a); }
+
+/* ---- signed out + foot -------------------------------------------------- */
+.al-signin { padding: 4px 0 8px; }
+.al-cta {
+  display: block; text-align: center; margin-top: 10px; padding: 11px 16px;
+  background: var(--volt); color: var(--ink, #0a0a0a); border-radius: 10px;
+  font-family: var(--font-saira-cond); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase; text-decoration: none;
+}
+.al-err { margin: 10px 0 0; font-size: 11px; line-height: 1.45; color: var(--live, #ff4d4d); }
+.al-foot {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule);
+  font-family: var(--font-saira-cond); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.10em; text-transform: uppercase;
+}
+.al-teamlink { color: var(--volt); text-decoration: none; }
+.al-scope { color: var(--muted-dim); }
