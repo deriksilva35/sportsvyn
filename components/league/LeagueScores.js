@@ -18,22 +18,24 @@ import Link from 'next/link';
 import Scoreboard from '@/components/gridiron/Scoreboard';
 import { scoresSlice, leagueUnit, moduleHeading } from '@/lib/gridiron/leagueLanding';
 
-export default function LeagueScores({ leagueSlug, label, games, records, cap = 6, initialTz = null }) {
+export default function LeagueScores({ leagueSlug, label, games, records, cap = 6, initialTz = null, now = new Date() }) {
   const { shown, total, overflow } = scoresSlice(games, cap);
   if (!shown.length) return null;
   const unit = leagueUnit(leagueSlug);
   return (
     <section className="lgsc" aria-label={`${label} scores`}>
       <div className="lgsc-h">
-        {/* "TODAY" HAS TO BE TRUE, AND IT WAS NOT. The heading read the
-            LEAGUE'S unit - CFB counts a day - while being handed the whole
-            week's slate, so a CFB landing titled four days of football
-            "Today". The unit is a statement about how a code's schedule is
-            shaped; the heading is a statement about what is on this screen,
-            and only the second one can honestly title it. moduleHeading
-            degrades to "This week" the moment the games span more than one
-            day, whatever the league's unit says. */}
-        <h2>{moduleHeading(unit, shown)}</h2>
+        {/* "TODAY" HAS TO BE TRUE, and it took two passes to make it so. It
+            first read the LEAGUE'S unit - CFB counts a day - while being handed
+            the whole week's slate, so a CFB landing titled four days of
+            football "Today". Fixing that made the heading ask the GAMES, which
+            was right and still not enough: one day on screen is not the same
+            claim as today, and /cfb went on reading "Today" over six cards
+            dated Thu Sep 3, on Sep 1. So the heading takes the CLOCK too, in
+            the reader's own zone - Today, Tomorrow, the named day, or This
+            week - and it is the same tz and the same day grammar the sticky
+            headers below use, so the two cannot word a day differently. */}
+        <h2>{moduleHeading(unit, shown, initialTz ?? undefined, now)}</h2>
         {overflow ? (
           <Link className="lgsc-all" href={`/${leagueSlug}/scores`}>
             All {total} games →

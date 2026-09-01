@@ -101,6 +101,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, searchParams 
         games={allGames}
         records={recordChips}
         initialTz={viewerTz}
+        now={now}
       />
 
       {/* THE WIRE SITS BETWEEN THE SCORES AND THE STANDINGS: what just
