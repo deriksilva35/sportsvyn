@@ -19,6 +19,7 @@ import LeagueScores from '@/components/league/LeagueScores';
 import { railFor } from '@/lib/gridiron/leagueRail';
 import { railChips, stripTiles } from '@/lib/gridiron/leagueLanding';
 import { loadRecordChips } from '@/lib/gridiron/recordsLoader';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 import { GAME_META, GAME_ORDER } from '@/lib/games/lobby';
 import { gamesLobby } from '@/lib/games/read';
 import '@/components/league/league.css';
@@ -62,6 +63,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, searchParams 
     leagueReads(leagueSlug),
     wireTeaser(leagueSlug).catch(() => ({ items: [], newest: null })),
   ]);
+  const viewerTz = await readViewerTz();
   const chips = railChips(railRows);
   const lobbyCards = Object.fromEntries((lobby?.cards ?? []).filter(Boolean).map((c) => [c.key, c]));
   const tiles = stripTiles({
@@ -98,6 +100,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, searchParams 
         label={leagueLabel}
         games={allGames}
         records={recordChips}
+        initialTz={viewerTz}
       />
 
       {/* THE WIRE SITS BETWEEN THE SCORES AND THE STANDINGS: what just

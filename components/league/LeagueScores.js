@@ -16,16 +16,24 @@
 
 import Link from 'next/link';
 import Scoreboard from '@/components/gridiron/Scoreboard';
-import { scoresSlice, leagueUnit } from '@/lib/gridiron/leagueLanding';
+import { scoresSlice, leagueUnit, moduleHeading } from '@/lib/gridiron/leagueLanding';
 
-export default function LeagueScores({ leagueSlug, label, games, records, cap = 6 }) {
+export default function LeagueScores({ leagueSlug, label, games, records, cap = 6, initialTz = null }) {
   const { shown, total, overflow } = scoresSlice(games, cap);
   if (!shown.length) return null;
   const unit = leagueUnit(leagueSlug);
   return (
     <section className="lgsc" aria-label={`${label} scores`}>
       <div className="lgsc-h">
-        <h2>{unit === 'day' ? 'Today' : 'This week'}</h2>
+        {/* "TODAY" HAS TO BE TRUE, AND IT WAS NOT. The heading read the
+            LEAGUE'S unit - CFB counts a day - while being handed the whole
+            week's slate, so a CFB landing titled four days of football
+            "Today". The unit is a statement about how a code's schedule is
+            shaped; the heading is a statement about what is on this screen,
+            and only the second one can honestly title it. moduleHeading
+            degrades to "This week" the moment the games span more than one
+            day, whatever the league's unit says. */}
+        <h2>{moduleHeading(unit, shown)}</h2>
         {overflow ? (
           <Link className="lgsc-all" href={`/${leagueSlug}/scores`}>
             All {total} games →
@@ -40,6 +48,7 @@ export default function LeagueScores({ leagueSlug, label, games, records, cap = 
         sport={leagueSlug}
         records={records}
         pinned
+        initialTz={initialTz}
       />
     </section>
   );

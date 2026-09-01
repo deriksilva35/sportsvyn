@@ -164,8 +164,11 @@ test('the scorecard gains ONE link, per league, where the page exists', () => {
   assert.match(board, /href=\{`\$\{GAME_ROUTE\[g\.leagueSlug\]\}\/\$\{g\.slug\}`\}>Full game →<\/Link>/);
   // Still exactly one link in the expand.
   assert.equal((board.match(/className="gi-full"/g) ?? []).length, 1);
-  // The expand itself is unchanged: line score, or the pre-game facts.
-  assert.match(board, /\{hasLine \? <LineScore g=\{g\} \/> : <PreGamePane g=\{g\} \/>\}/);
+  // The expand itself is unchanged: line score, or the pre-game facts. The
+  // pane now also takes tz - it renders a kickoff, and the reader's zone is
+  // resolved once at the board and threaded down rather than re-read per pane.
+  // The claim here is the BRANCH, not the props.
+  assert.match(board, /\{hasLine \? <LineScore g=\{g\} \/> : <PreGamePane g=\{g\} tz=\{tz\} \/>\}/);
 });
 
 // ---------------------------------------------------------------------------

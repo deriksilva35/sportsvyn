@@ -75,7 +75,13 @@ test('the empty rank column and the doubled conference are gone', () => {
 // ---------------------------------------------------------------------------
 
 test('full names, with the abbreviation as a mono prefix', () => {
-  assert.match(card, /const name = t\.name \|\| t\.label \|\| 'TBD'/,
+  // THE TAIL OF THIS CHAIN USED TO BE 'TBD' and was ruled out: that string
+  // claims the opponent is undetermined, and it fired on a team row we failed
+  // to join. The abbreviation is still an identity so it takes the last place,
+  // and with neither the slot is empty - a card that cannot name a side says so
+  // by saying nothing. The claim THIS test makes is unchanged: the NAME is the
+  // name, and the abbreviation is not standing in for it while one exists.
+  assert.match(card, /const name = t\.name \|\| t\.label \|\| t\.abbreviation \|\| ''/,
     'the NAME is the name - the abbreviation is no longer standing in for it');
   assert.match(card, /<span className="abbr">\{abbr\}<\/span>/);
   assert.match(card, /<span className="nm">\{name\}<\/span>/);
@@ -177,7 +183,10 @@ test('THE WHOLE CARD IS THE CONTROL, not a 12px caret', () => {
 
 test('the expand shows the line score when there is one, facts when there is not', () => {
   assert.match(card, /const hasLine = Array\.isArray\(g\.lineScores\?\.home\)/);
-  assert.match(card, /\{hasLine \? <LineScore g=\{g\} \/> : <PreGamePane g=\{g\} \/>\}/);
+  // PreGamePane gained a tz prop in v0.7 - it renders a kickoff, and the
+  // reader's timezone is resolved once at the board and threaded down rather
+  // than re-read by every pane. The branch this test is about is unchanged.
+  assert.match(card, /\{hasLine \? <LineScore g=\{g\} \/> : <PreGamePane g=\{g\} tz=\{tz\} \/>\}/);
 });
 
 test('the component CONSUMES the pure grid rather than re-deriving it', () => {

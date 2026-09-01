@@ -9,6 +9,7 @@
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SportsvynSegment from '@/components/shell/SportsvynSegment';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 import Scoreboard from '@/components/gridiron/Scoreboard';
 import Link from 'next/link';
 import DateRail from '@/components/gridiron/DateRail';
@@ -103,8 +104,8 @@ export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
   const { live } = parsed;
   // RECORDS FOR EVERY CARD ON THE SLATE, one read for all three leagues,
   // through the loader the league landings share - see recordsLoader.js.
-  const [slate, range, records] = await Promise.all([
-    getSlateByDate(date), scoresDateRange(), loadRecordChips(),
+  const [slate, range, records, viewerTz] = await Promise.all([
+    getSlateByDate(date), scoresDateRange(), loadRecordChips(), readViewerTz(),
   ]);
   const games = [...slate.byLeague.nfl, ...slate.byLeague.cfb];
   // One batch odds read for the whole slate (no per-card fan-out); attach to each game.
@@ -152,7 +153,7 @@ export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
           />
         </div>
 
-        <Scoreboard byLeague={slate.byLeague} date={date} sport={sport} live={live} records={records} pinned={Boolean(pinned)} />
+        <Scoreboard byLeague={slate.byLeague} date={date} sport={sport} live={live} records={records} pinned={Boolean(pinned)} initialTz={viewerTz} />
       </div>
     </div>
   );

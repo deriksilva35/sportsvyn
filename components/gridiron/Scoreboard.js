@@ -32,17 +32,38 @@ import RankBadge from './RankBadge';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { lineScoreGrid, liveChip, ABSENT } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
+import { kickoffParts, groupByDay } from '@/lib/gridiron/kickoff';
+import { tzOrUtc } from '@/lib/gridiron/viewerTz';
+import { useViewerTz } from './useViewerTz';
+import TzCookie from './TzCookie';
 
 // The section list IS the chip list - one definition (scoresNav), so a
 // league can never appear as a filter with no section or the reverse.
 const SPORTS = SPORT_CHIPS;
 
-function fmtTime(iso) {
-  try {
-    return new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit',
-    }).format(new Date(iso)) + ' ET';
-  } catch { return ''; }
+// WHAT A PRE-GAME CARD SAYS ABOUT WHEN. Day of week, date, time - "Thu Sep 10
+// · 5:20 PM" - in the READER'S zone, formatted by lib/gridiron/kickoff.
+//
+// IT USED TO SAY "5:20 PM ET", AND BOTH HALVES WERE WRONG FOR MOST READERS.
+// The zone was hardcoded to America/New_York, so a reader in Denver got a time
+// they had to convert on every card; and the day was missing entirely, so on a
+// week-unit list running Thursday to Monday the card gave a time with no day
+// attached - a number nobody can act on. There is no 'ET' literal anywhere in
+// this file now, and a test forbids one coming back.
+//
+// THE DAY IS DROPPED INSIDE A GROUPED DAY. When the list carries a "Thursday ·
+// Sep 10" header, every card under it repeating "Thu Sep 10" is the same fact
+// three times on one screen, so the group passes withDay={false}.
+function Kickoff({ iso, tz, withDay = true }) {
+  const parts = kickoffParts(iso, tzOrUtc(tz));
+  if (!parts) return null;
+  return (
+    <time dateTime={typeof iso === 'string' ? iso : undefined}>
+      {withDay ? <span className="gi-kday">{parts.day}</span> : null}
+      {withDay ? ' · ' : null}
+      {parts.time}
+    </time>
+  );
 }
 
 // THE ROW WAS THREE PROBLEMS. It showed the abbreviation as the team's name,
@@ -58,7 +79,17 @@ function fmtTime(iso) {
 // answers "who won" before it answers "what was the score".
 function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = null }) {
   const abbr = t.abbreviation || null;
-  const name = t.name || t.label || 'TBD';
+  // A FAILED JOIN RENDERS AN ABSENCE, NOT A CLAIM. This said 'TBD', which is a
+  // statement that the opponent is undetermined - and it fired not on an
+  // undetermined opponent but on a team row we did not manage to join. The
+  // abbreviation is still an identity and is the honest fallback; with neither,
+  // the slot is empty, because a card that cannot name a side should say so by
+  // saying nothing.
+  //
+  // RULED: a genuinely undetermined playoff opponent is a future problem with a
+  // provider flag behind it, and when it arrives it earns its own honest label
+  // rather than inheriting this one.
+  const name = t.name || t.label || t.abbreviation || '';
   // TWO HOOKS THE ROW COULD NOT DERIVE FOR ITSELF. A score is live-red while
   // the game is running and muted while it is still a placeholder dash, and
   // neither fact is visible from `score` alone - null is not "unplayed" (a
@@ -79,7 +110,7 @@ function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = n
   );
 }
 
-function Status({ g }) {
+function Status({ g, tz, withDay = true }) {
   if (g.status === 'live') {
     // Where in the game, beside LIVE - the one formatter (lineScore.js owns
     // it, the numcols law). A snapshot of the last poll, rendered plainly:
@@ -103,7 +134,25 @@ function Status({ g }) {
     const ot = Array.isArray(g.lineScores?.home) && g.lineScores.home[4] != null;
     return <span className={`gi-final ${ot ? 'ot' : ''}`}>{ot ? 'F/OT' : 'FINAL'}</span>;
   }
-  return <span className="gi-up">{fmtTime(g.kickoffAt)}<span className="net"> · TBD</span></span>;
+  // THE NETWORK, OR NOTHING - never "TBD".
+  //
+  // DIAGNOSED BEFORE IT WAS FIXED, because the string could have come from the
+  // provider. It did not: it was a hardcoded literal right here, ` · TBD`,
+  // printed on every pre-game card regardless of what we knew. The data was
+  // never the problem - 248 of 272 upcoming NFL games carry a primary US
+  // broadcaster, and NE at SEA has carried NBC the whole time. This line simply
+  // never read g.network, while the card foot twelve lines below always did.
+  //
+  // DASH LAW. An unknown outlet omits the segment and the foot reads the time
+  // alone. "TBD" is a claim that a decision is pending, which we are in no
+  // position to make: we do not know whether the game is unlisted, or listed
+  // somewhere we do not ingest, or genuinely undecided.
+  return (
+    <span className="gi-up">
+      <Kickoff iso={g.kickoffAt} tz={tz} withDay={withDay} />
+      {g.network ? <span className="net"> · {g.network}</span> : null}
+    </span>
+  );
 }
 
 // PRESEASON MARKER. A 24-17 preseason final looks exactly like a 24-17 real one,
@@ -152,13 +201,13 @@ function LineScore({ g }) {
 // What a game that has not kicked off can honestly say about itself: when,
 // where, and what it is called. Plus the odds strip where a market exists -
 // which for preseason it never does, by ruling.
-function PreGamePane({ g }) {
+function PreGamePane({ g, tz }) {
   const label = distinctLabel(g.weekLabel);
   const place = g.venueCity || g.venue;
   return (
     <>
       <dl className="gi-facts">
-        <div><dt>Kickoff</dt><dd>{fmtTime(g.kickoffAt)}</dd></div>
+        <div><dt>Kickoff</dt><dd><Kickoff iso={g.kickoffAt} tz={tz} /></dd></div>
         {place ? <div><dt>Venue</dt><dd>{g.venue && g.venueCity ? `${g.venue}, ${g.venueCity}` : place}</dd></div> : null}
         {label ? <div><dt>Round</dt><dd>{label}</dd></div> : null}
       </dl>
@@ -167,7 +216,7 @@ function PreGamePane({ g }) {
   );
 }
 
-function Card({ g, records }) {
+function Card({ g, records, tz, withDay = true }) {
   const [open, setOpen] = useState(false);
   const final = g.status === 'final';
   const hw = g.homeScore, aw = g.awayScore;
@@ -196,7 +245,7 @@ function Card({ g, records }) {
       >
         <div className="gi-card-top">
           <span className="gi-status-group">
-            <Status g={g} />
+            <Status g={g} tz={tz} withDay={withDay} />
             <PhaseBadge phase={g.seasonPhase} />
           </span>
           <span className="gi-chev" aria-hidden="true">▾</span>
@@ -226,7 +275,7 @@ function Card({ g, records }) {
 
       {open && (
         <div className="gi-detail">
-          {hasLine ? <LineScore g={g} /> : <PreGamePane g={g} />}
+          {hasLine ? <LineScore g={g} /> : <PreGamePane g={g} tz={tz} />}
           {/* The expand stays LINE-SCORE-ONLY. It is a glance, and it now has
               somewhere to go: one link, at the bottom, to the page that holds
               the rest. BOTH CODES NOW - /cfb/game/[slug] exists, so the old
@@ -267,7 +316,7 @@ function Card({ g, records }) {
 // codes; scoreline semantics stay forked, which is what the Card-level fork is
 // for.
 // ---------------------------------------------------------------------------
-function SoccerCard({ g, records }) {
+function SoccerCard({ g, records, tz, withDay = true }) {
   const final = g.status === 'final';
   const live = g.status === 'live';
   const chip = live ? soccerLiveChip(g.liveState) : null;
@@ -287,7 +336,9 @@ function SoccerCard({ g, records }) {
             squadImport fills from the provider's `code` (all 20 EPL clubs
             carry one); no new derivation. */}
         <span className="abbr">{t?.abbreviation ?? ''}</span>
-        <span className="nm">{t?.name ?? 'TBD'}</span>
+        {/* Same ruling as the gridiron row: the abbreviation, then nothing.
+            Never 'TBD', which claims a decision we have not been told about. */}
+        <span className="nm">{t?.name ?? t?.abbreviation ?? ''}</span>
         {chipText ? <span className="gi-rec">{chipText}</span> : null}
         <span className="sc">{score ?? ABSENT}</span>
       </div>
@@ -313,7 +364,7 @@ function SoccerCard({ g, records }) {
         ) : final ? (
           <span className="gi-final">FT</span>
         ) : (
-          <span className="gi-up">{fmtTime(g.kickoffAt)}</span>
+          <span className="gi-up"><Kickoff iso={g.kickoffAt} tz={tz} withDay={withDay} /></span>
         )}
       </div>
       {/* Straight to the league's own match center - /match would only 308
@@ -332,7 +383,7 @@ function SoccerCard({ g, records }) {
   );
 }
 
-function Section({ sport, games, liveOnly, records }) {
+function Section({ sport, games, liveOnly, records, tz }) {
   const shown = liveOnly ? games.filter((g) => g.status === 'live') : games;
   // PER-SPORT CARD, SHARED SHELL. The codes' cards disagree about what a game
   // IS - quarters and a line score vs halves and a running minute, a loser to
@@ -340,6 +391,11 @@ function Section({ sport, games, liveOnly, records }) {
   // it (toolbar, sections, the never-vanish empty state, date rail) stays one
   // implementation. The gridiron Card below is untouched by this relay.
   const CardFor = sport.key === 'epl' ? SoccerCard : Card;
+  // THE GROUPING IS DECIDED IN THE PURE MODULE (lib/gridiron/kickoff), which is
+  // why "which day is this game on" can be tested without rendering anything -
+  // and it matters here, because the answer is NOT the ISO string's date. A
+  // Thursday 8:20pm Eastern kickoff is 00:20 UTC on Friday.
+  const days = groupByDay(shown, tzOrUtc(tz));
   return (
     <div className="gi-sect">
       <div className="gi-sect-h">
@@ -349,8 +405,27 @@ function Section({ sport, games, liveOnly, records }) {
       </div>
       {shown.length === 0 ? (
         <div className="gi-empty gi-empty--slate">No {sport.label} {liveOnly ? 'live now' : 'on this day'} · sections keep their place, never vanish →</div>
+      ) : days.length > 1 ? (
+        // MORE THAN ONE DAY ON SCREEN, SO THE DAYS GET HEADERS. A week-unit
+        // list ran Thursday to Monday as one undifferentiated column of cards;
+        // the header is what turns it back into a schedule.
+        //
+        // GROUPED ONLY WHEN THERE IS SOMETHING TO GROUP. On /scores, which is
+        // one day by construction, a lone "Sunday · Sep 13" header over the
+        // whole list is a label for the thing the date rail directly above it
+        // already says. So a single-day list renders exactly as it did, and the
+        // cards keep their own day - the branch is on what is on screen, not on
+        // which surface is rendering.
+        days.map((d) => (
+          <div className="gi-day" key={d.key ?? 'undated'}>
+            {d.heading ? <h3 className="gi-day-h">{d.heading}</h3> : null}
+            <div className="gi-cards">
+              {d.games.map((g) => <CardFor key={g.id} g={g} records={records} tz={tz} withDay={false} />)}
+            </div>
+          </div>
+        ))
       ) : (
-        <div className="gi-cards">{shown.map((g) => <CardFor key={g.id} g={g} records={records} />)}</div>
+        <div className="gi-cards">{shown.map((g) => <CardFor key={g.id} g={g} records={records} tz={tz} />)}</div>
       )}
     </div>
   );
@@ -361,12 +436,22 @@ function Section({ sport, games, liveOnly, records }) {
 // filter because the two features each held half the state. The chips are
 // Links built by scoresHref, so every chip carries the date and every date
 // arrow carries the chip; the reverse direction is the same one rule.
-export default function Scoreboard({ byLeague, date, sport = 'all', live = false, records = new Map(), pinned = false }) {
+export default function Scoreboard({ byLeague, date, sport = 'all', live = false, records = new Map(), pinned = false, initialTz = null }) {
   const visible = SPORTS.filter((s) => sport === 'all' || sport === s.key);
+  // ONE READ OF THE READER'S ZONE FOR THE WHOLE BOARD, threaded down. Asking
+  // per card would give every card its own subscription to answer a question
+  // that is the same for all of them.
+  //
+  // initialTz is the SERVER's read of the sv_tz cookie. With it, the server
+  // renders the reader's own zone and hydration changes nothing; without it (a
+  // cold visit) the board renders UTC unlabelled and corrects on this tick.
+  const tz = useViewerTz(initialTz);
   const chip = (want) => scoresHref(date, { sport: want, live });
 
   return (
     <div>
+      {/* Writes sv_tz once so the NEXT server render is already right. */}
+      <TzCookie />
       {/* THE LEAGUE CHIPS DISAPPEAR WHEN THE LEAGUE IS PINNED. Inside /nfl the
           reader is standing in a place, and a row offering ALL · CFB · EPL is a
           way out of it dressed as a filter. LIVE ONLY stays either way: it is
@@ -384,7 +469,7 @@ export default function Scoreboard({ byLeague, date, sport = 'all', live = false
           href={scoresHref(date, { sport, live: !live })}><span className="gi-dot" />Live only</Link>
       </div>
 
-      {visible.map((s) => <Section key={s.key} sport={s} games={byLeague[s.key] ?? []} liveOnly={live} records={records} />)}
+      {visible.map((s) => <Section key={s.key} sport={s} games={byLeague[s.key] ?? []} liveOnly={live} records={records} tz={tz} />)}
 
       {/* DriveStrip is built + ready but renders nowhere until live rows exist.
           Hidden demo so the component is exercised by the build. */}

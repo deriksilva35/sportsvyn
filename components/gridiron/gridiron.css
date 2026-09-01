@@ -639,3 +639,32 @@
   font-variant-numeric: tabular-nums; white-space: nowrap; flex: none;
   margin-left: 6px;
 }
+
+/* ---- day headers on a multi-day list (v0.7) --------------------------------
+   A week-unit list ran Thursday to Monday as one undifferentiated column of
+   cards. The header is what turns it back into a schedule.
+
+   STICKY, because the header's whole job is to answer "which day am I looking
+   at" while the reader is deep in a Sunday of sixteen cards - a header that has
+   scrolled away answers it for nobody.
+
+   IT SITS BELOW THE SECTION HEAD, not at 0. .gi-sect-h is the sport's own
+   heading and scrolls normally; pinning the day at the very top would park it
+   over the section title. The 8px is the day header's own breathing room, not a
+   measurement of anything above it.
+
+   THE BACKGROUND IS OPAQUE ON PURPOSE. A sticky element over a scrolling column
+   of cards with a transparent ground renders the cards THROUGH the text. */
+.gi-day + .gi-day { margin-top: 18px; }
+.gi-day-h {
+  position: sticky; top: 8px; z-index: 2;
+  margin: 0 0 10px; padding: 7px 10px;
+  font-family: var(--font-saira-cond); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--paper);
+  background: var(--graphite-up); border: 1px solid var(--rule); border-radius: 8px;
+}
+
+/* THE DAY ON A CARD, muted beside the time it qualifies. The time is the news;
+   the day is which news. Dropped entirely inside a grouped day, where the
+   header above already carries it. */
+.gi-up .gi-kday { color: var(--muted); font-weight: 600; }
