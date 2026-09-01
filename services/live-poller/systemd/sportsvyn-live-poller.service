@@ -1,0 +1,50 @@
+# sportsvyn-live-poller.service
+#
+# INSTALL (on the droplet, as root):
+#   cp services/live-poller/systemd/sportsvyn-live-poller.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now sportsvyn-live-poller
+#   journalctl -u sportsvyn-live-poller -f
+#
+# EnvironmentFile IS THE PROJECT'S OWN .env.local, not a copy. A second copy of
+# a credential is a second thing to rotate and a second thing to leak, and the
+# one that gets forgotten is always the copy. systemd parses KEY=value lines,
+# which is the shape that file already has.
+
+[Unit]
+Description=Sportsvyn live score poller (30s, NFL + CFB)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=derik
+WorkingDirectory=/home/derik/projects/sportsvyn
+EnvironmentFile=/home/derik/projects/sportsvyn/.env.local
+ExecStart=/usr/bin/env node services/live-poller/index.mjs
+
+# RESTART ALWAYS, AND THE QUOTA COUNTER IS PERSISTED BECAUSE OF THIS LINE. A
+# crash loop with an in-memory tally would spend a month's provider budget in an
+# afternoon and the cap would never see it. RestartSec keeps a fast crash loop
+# from becoming a fast request loop.
+Restart=always
+RestartSec=10
+
+# The loop is one process holding an advisory lock; a second copy would find the
+# lock held and idle, but it would still read the slate every 30 seconds for
+# nothing.
+StartLimitIntervalSec=0
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sportsvyn-live
+
+# It writes to one database over HTTPS and reads two provider APIs. Nothing here
+# needs to write to the filesystem.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=
+
+[Install]
+WantedBy=multi-user.target
