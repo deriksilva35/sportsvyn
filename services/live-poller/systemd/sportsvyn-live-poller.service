@@ -5,6 +5,16 @@
 #   systemctl daemon-reload && systemctl enable --now sportsvyn-live-poller
 #   journalctl -u sportsvyn-live-poller -f
 #
+# INSTALLED AS A --user UNIT INSTEAD, 1 Sep 2026, because this box has no
+# passwordless sudo and a system unit needs root. Same file, three differences,
+# and `loginctl enable-linger derik` (which a user may do for itself) is what
+# makes it survive logout and reboot:
+#   cp .../sportsvyn-live-poller.service ~/.config/systemd/user/
+#   sed -i 's/^User=derik$/# user unit/;s/multi-user.target/default.target/' ...
+#   systemctl --user daemon-reload && systemctl --user enable --now sportsvyn-live-poller
+# Promote it to a system unit whenever root is at hand; nothing in the process
+# depends on which it is.
+#
 # EnvironmentFile IS THE PROJECT'S OWN .env.local, not a copy. A second copy of
 # a credential is a second thing to rotate and a second thing to leak, and the
 # one that gets forgotten is always the copy. systemd parses KEY=value lines,
@@ -14,13 +24,22 @@
 Description=Sportsvyn live score poller (30s, NFL + CFB)
 After=network-online.target
 Wants=network-online.target
+# StartLimitIntervalSec belongs in [Unit], not [Service] - systemd logs
+# "Unknown key name" and IGNORES it there, which means a rate limit you believe
+# you set and do not have. 0 disables the limit: a poller that systemd gives up
+# restarting is a poller that is silently off all slate.
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
 User=derik
 WorkingDirectory=/home/derik/projects/sportsvyn
 EnvironmentFile=/home/derik/projects/sportsvyn/.env.local
-ExecStart=/usr/bin/env node services/live-poller/index.mjs
+# THE ABSOLUTE PATH, NOT `env node`. node here is nvm-installed under the
+# user's home and is not on systemd's PATH - `/usr/bin/env node` exits 127
+# ("No such file or directory") the moment the unit starts, which is how this
+# was found. Pin the interpreter; an nvm upgrade is a deliberate edit here.
+ExecStart=/home/derik/.nvm/versions/node/v22.23.1/bin/node services/live-poller/index.mjs
 
 # RESTART ALWAYS, AND THE QUOTA COUNTER IS PERSISTED BECAUSE OF THIS LINE. A
 # crash loop with an in-memory tally would spend a month's provider budget in an
@@ -28,11 +47,6 @@ ExecStart=/usr/bin/env node services/live-poller/index.mjs
 # from becoming a fast request loop.
 Restart=always
 RestartSec=10
-
-# The loop is one process holding an advisory lock; a second copy would find the
-# lock held and idle, but it would still read the slate every 30 seconds for
-# nothing.
-StartLimitIntervalSec=0
 
 StandardOutput=journal
 StandardError=journal
