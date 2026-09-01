@@ -360,6 +360,11 @@
 .bg2 .bc.otc2 { background: rgba(230,57,70,.18); outline: 1.5px solid var(--live); outline-offset: -1.5px; animation: sim-pulse 1.2s infinite; }
 .bg2 .bc.otc2 .n { color: var(--live); font-size: 6.5px; }
 .bg2 .bc.empty .n { color: #2A2A26; }
+/* An unmade keeper's cell: owned, not yet committed. Dimmed under its position
+   tint with a dashed inset rule, so it reads apart from a made pick (full) and
+   from the live CLOCK cell (red pulse). The KEEPER tag rides the .p line. */
+.bg2 .bc.kp { opacity: .55; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.bg2 .bc.kp .n { color: var(--muted); font-style: italic; }
 
 /* ---- desktop BOARD view (>900) ----
    The LIST/BOARD header toggle appears, and when BOARD is active the full snake
@@ -479,6 +484,8 @@
 .rslot .nm { color: var(--paper); }
 .rslot .tm { color: var(--muted-dim); font-size: 10px; }
 .rslot.open .nm { color: var(--muted-dim); font-style: italic; }
+/* A kept player not yet committed: his slot, his name, muted until the commit. */
+.rslot.kept .nm { color: var(--muted); }
 /* Minors: the devy shelf under the drafted roster. Muted throughout - it is
    not a slot and never fills. */
 .rminors-h { margin-top: 14px; padding: 6px 4px 4px; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-dim); border-bottom: 1px solid var(--rule-dim); }

@@ -19,6 +19,7 @@ const strip = stripComments(src('components/sim/MyLeagues.js'));
 const start = stripComments(src('components/sim/LeagueStart.js'));
 const actions = stripComments(src('app/actions/sim.js'));
 const room = stripComments(src('components/sim/DraftRoom.js'));
+const css = src('components/sim/sim.css');
 
 test('MyLeagues has no /sim/league/ link and no route for one exists', () => {
   assert.equal((strip.match(/sim\/league\//g) ?? []).length, 0, 'no link into /sim/league/');
@@ -39,4 +40,27 @@ test('room: minors render as a muted section under the roster; a nameless entry 
   assert.match(room, /className="rminors-h">Minors · \{/);
   assert.match(room, /m\.name \?\? `\$\{m\.position\} · Devy`/);
   assert.match(room, /m\.alsoKeeper \? <span className="tm"> · kept<\/span> : null/);
+});
+
+// ---- Stage 5: the room renders the shelf ----------------------------------
+test('board: an unmade keeper cell renders muted with a KEEPER tag, outranks CLOCK, and a committed keeper keeps its marker', () => {
+  const fn = room.slice(room.indexOf('function BoardCell'));
+  const at = (n) => { const i = fn.indexOf(n); assert.ok(i > -1, `${n} present`); return i; };
+  assert.ok(at('if (cell.keeper && !cell.pick)') < at('if (cell.onClock)'), 'keeper branch precedes the clock branch');
+  assert.ok(at('if (cell.onClock)') < at('if (!cell.pick)'), 'clock precedes empty');
+  assert.match(fn, /className=\{`bc kp \$\{posClass\(kpos\)\}/);
+  assert.match(fn, /\{kpos\} · KEEPER/);
+  assert.match(fn, /cell\.pick\.isKeeper \? ' · KEPT' : ''/);
+  assert.match(css, /\.bg2 \.bc\.kp \{ opacity: \.55;/);
+});
+
+test('roster: kept players render pre-commit as kept · R<n>, counted apart from drafted; pending list drops a landed overall', () => {
+  assert.match(room, /buildRoster\(userPicks, config\.roster_slots, myPendingKeepers\)/);
+  assert.match(room, /\{draftedCount\} drafted \+ \{keptCount\} kept/);
+  assert.match(room, /kept · R\{s\.kept\.round\}/);
+  assert.match(room, /kept · R\{s\.pick\.round\}/);
+  assert.match(room, /\(upcomingKeepers \?\? \[\]\)\.filter\(\(k\) => !made\.has\(k\.overall\)\)/);
+  assert.match(room, /keepers: pendingKeepers/);
+  // The pick tab is untouched: nothing offers a pending keeper (available is server-filtered).
+  assert.equal((room.match(/pendingKeepers/g) ?? []).length, 5, 'declared once, filtered into myPendingKeepers (2), board ctx + deps (2) - nothing else');
 });

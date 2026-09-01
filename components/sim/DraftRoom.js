@@ -65,6 +65,7 @@ const r0 = (x) => (x == null ? '?' : Math.round(Number(x)));
 
 export default function DraftRoom({
   draftId, config, order, userTeamIndex, initialPicks, initialAvailable, timerSeconds, initialAuto, poolMapping, minors = [],
+  upcomingKeepers = [],
 }) {
   const router = useRouter();
   const [picks, setPicks] = useState(initialPicks);
@@ -109,12 +110,29 @@ export default function DraftRoom({
   const isRookiePick = useCallback((pk) => !pk.synthetic && rookieIds.has(pk.ffcPlayerId), [rookieIds]);
 
   const userPicks = useMemo(() => picks.filter((p) => p.isUser), [picks]);
-  const roster = useMemo(() => buildRoster(userPicks, config.roster_slots), [userPicks, config.roster_slots]);
+  // THE SHELF, LIVE. upcomingKeepers is the server's list of keepers not yet
+  // committed at page load; a keeper whose overall has since landed in `picks`
+  // is a pick now and leaves the list, so the board cell and the roster row flip
+  // without a refetch. Nothing here can be offered or picked - the pick tab
+  // never sees these.
+  const pendingKeepers = useMemo(() => {
+    const made = new Set(picks.map((p) => p.overallPick));
+    return (upcomingKeepers ?? []).filter((k) => !made.has(k.overall));
+  }, [picks, upcomingKeepers]);
+  const myPendingKeepers = useMemo(
+    () => pendingKeepers.filter((k) => k.teamSlot === userTeamIndex + 1), [pendingKeepers, userTeamIndex]);
+  const roster = useMemo(
+    () => buildRoster(userPicks, config.roster_slots, myPendingKeepers), [userPicks, config.roster_slots, myPendingKeepers]);
+  // Kept is counted apart from drafted: a keeper was never a decision made in
+  // this room. Committed keepers are picks flagged isKeeper; pending ones are
+  // on the shelf. Drafted is what the user actually chose here.
+  const keptCount = userPicks.filter((p) => p.isKeeper).length + myPendingKeepers.length;
+  const draftedCount = userPicks.length - userPicks.filter((p) => p.isKeeper).length;
 
   // BOARD page: the whole snake grid, derived from live picks + config.
   const board = useMemo(
-    () => buildBoard(config, picks, { userTeamIndex, currentOverall: complete ? null : currentOverall }),
-    [config, picks, userTeamIndex, complete, currentOverall],
+    () => buildBoard(config, picks, { userTeamIndex, currentOverall: complete ? null : currentOverall, keepers: pendingKeepers }),
+    [config, picks, userTeamIndex, complete, currentOverall, pendingKeepers],
   );
   // LAST pick strip: slot (round.pickInRound), team, name, position — updates every pick.
   const last = picks[picks.length - 1] ?? null;
@@ -555,14 +573,18 @@ export default function DraftRoom({
 
         {/* ROSTER page: current lineup-order roster, full page */}
         <section className="page zone pg-roster">
-          <div className="plabel">My roster · Seat {userTeamIndex + 1} · {userPicks.length}/{rounds}</div>
+          <div className="plabel">My roster · Seat {userTeamIndex + 1} · {keptCount > 0
+            ? <>{draftedCount} drafted + {keptCount} kept · {userPicks.length + myPendingKeepers.length}/{rounds}</>
+            : <>{userPicks.length}/{rounds}</>}</div>
           <div className="zone-body">
             {roster.map((s, i) => (
-              <div key={i} className={`rslot${s.pick ? '' : ' open'}`}>
+              <div key={i} className={`rslot${s.pick ? '' : s.kept ? ' kept' : ' open'}`}>
                 <span className="lbl">{s.label}</span>
                 {s.pick
-                  ? <><span className="nm">{s.pick.synthetic ? `Replacement ${s.pick.slotPos}` : s.pick.playerName}<RookieChip rookie={isRookiePick(s.pick)} /></span> {s.pick.team && <span className="tm">{s.pick.team}</span>}</>
-                  : <span className="nm">{s.key === BENCH ? 'bench' : s.label}</span>}
+                  ? <><span className="nm">{s.pick.synthetic ? `Replacement ${s.pick.slotPos}` : s.pick.playerName}<RookieChip rookie={isRookiePick(s.pick)} /></span> {s.pick.team && <span className="tm">{s.pick.team}</span>}{s.pick.isKeeper && <span className="tm"> · kept · R{s.pick.round}</span>}</>
+                  : s.kept
+                    ? <><span className="nm">{s.kept.name}</span> {s.kept.team && <span className="tm">{s.kept.team}</span>}<span className="tm"> · kept · R{s.kept.round}</span></>
+                    : <span className="nm">{s.key === BENCH ? 'bench' : s.label}</span>}
               </div>
             ))}
             {/* MINORS: the league's devy shelf, held outside the draft. Muted
@@ -634,6 +656,20 @@ function BoardGrid({ board }) {
 // generous cap lets desktop show the full last name while the mobile cell's
 // nowrap+ellipsis trims it to fit: one renderer, size handled in CSS.
 function BoardCell({ cell }) {
+  // AN UNMADE KEEPER OWNS THE CELL. Muted, tagged KEEPER, and it outranks the
+  // clock: nobody can pick there, so a CLOCK on it would be a lie the engine
+  // corrects a moment later by committing him. When the commit lands the cell
+  // is a pick and renders full, keeping the KEPT marker.
+  if (cell.keeper && !cell.pick) {
+    const kpos = cell.keeper.slotPos || cell.keeper.position;
+    return (
+      <div className={`bc kp ${posClass(kpos)}${cell.mine ? ' mine' : ''}`.trim()}>
+        <span className="pk">{cell.overall}</span>
+        <span className="p">{kpos} · KEEPER</span>
+        <span className="n">{boardName(cell.keeper.name, 14)}</span>
+      </div>
+    );
+  }
   if (cell.onClock) {
     return <div className={`bc otc2${cell.mine ? ' mine' : ''}`}><span className="pk">{cell.overall}</span><span className="n">CLOCK</span></div>;
   }
@@ -644,7 +680,7 @@ function BoardCell({ cell }) {
   return (
     <div className={`bc ${posClass(pos)}${cell.mine ? ' mine' : ''}`.trim()}>
       <span className="pk">{cell.overall}</span>
-      <span className="p">{pos}</span>
+      <span className="p">{pos}{cell.pick.isKeeper ? ' · KEPT' : ''}</span>
       <span className="n">{cell.pick.synthetic ? pos : boardName(cell.pick.playerName, 14)}</span>
     </div>
   );
