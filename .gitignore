@@ -55,3 +55,4 @@ scripts/spike-odds-find.mjs
 scripts/spike-odds.mjs
 scripts/inspect-prod-rankings.mjs
 scripts/port-rankings-dev-to-prod.mjs
+.fantrax-probe/

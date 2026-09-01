@@ -35,7 +35,18 @@ test('IT SITS ABOVE THE DECK, because a room you are in outranks starting anothe
 });
 
 test('the read rides the existing round trip, not a fourth query', () => {
-  assert.match(lobby, /const \[presets, used, member, openDraft\] = await Promise\.all\(\[\s*\n?\s*getPresets\(\), getDraftsUsed\(userId\), isMember\(userId\), getOpenSimDraft\(userId\),/);
+  // RE-PINNED 2026-09-01. This matched the four-way destructure exactly, so it
+  // failed the day a FIFTH read (getMyLeagues, the imported-league strip) joined
+  // the same Promise.all - which is precisely the behaviour the test wants:
+  // one round trip, however many readers ride it. The claim is now stated as
+  // "openDraft sits in the Promise.all with the other three", not "there are
+  // exactly four".
+  const m = lobby.match(/const \[([^\]]+)\] = await Promise\.all\(\[([\s\S]*?)\]\);/);
+  assert.ok(m, 'one Promise.all destructure on the lobby');
+  const names = m[1].split(',').map((x) => x.trim());
+  assert.ok(names.includes('openDraft'), 'openDraft is a member of it');
+  assert.match(m[2], /getPresets\(\), getDraftsUsed\(userId\), isMember\(userId\), getOpenSimDraft\(userId\),/);
+  assert.equal((lobby.match(/await getOpenSimDraft\(/g) ?? []).length, 0, 'never awaited on its own');
 });
 
 test('the reader is scoped to SIM, IN PROGRESS, and to the owner', () => {

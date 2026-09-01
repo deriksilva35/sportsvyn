@@ -14,7 +14,7 @@
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import {
-  startDraftFor, startCustomDraftFor, makePickFor, timerAutoPickFor, abandonDraftFor, setAutoDraftFor,
+  startDraftFor, startCustomDraftFor, startLeagueDraftFor, makePickFor, timerAutoPickFor, abandonDraftFor, setAutoDraftFor,
   startTrackerDraftFor, logPickFor, undoLastPickFor,
 } from '@/lib/fantasy/drafts';
 import { deleteAccountFor } from '@/lib/account';
@@ -44,6 +44,17 @@ export async function startCustomDraft(config, pickPosition, opts = {}) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
   const res = await startCustomDraftFor(userId, config, pickPosition, opts);
+  if (res.ok) revalidatePath('/sim');
+  return res;
+}
+
+// Start an imported league's draft. The seat is the config's own (isMine),
+// so there is no pickPosition to take; the flow-core refuses a config that is
+// not this user's or not a league ('league_not_found').
+export async function startLeagueDraft(configId, opts = {}) {
+  const userId = await currentUserId();
+  if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const res = await startLeagueDraftFor(userId, Number(configId), opts);
   if (res.ok) revalidatePath('/sim');
   return res;
 }

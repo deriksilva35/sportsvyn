@@ -14,7 +14,8 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
-import { getPresets, getDraftsUsed, isMember, canStartDraft, getOpenSimDraft, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
+import { getPresets, getDraftsUsed, isMember, canStartDraft, getOpenSimDraft, getMyLeagues, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
+import MyLeagues from '@/components/sim/MyLeagues';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
@@ -121,8 +122,13 @@ export default async function SimLobby({ searchParams }) {
         ) : (
           await (async () => {
             // The open-draft read rides the same round trip as the other three.
-            const [presets, used, member, openDraft] = await Promise.all([
+            const [presets, used, member, openDraft, myLeagues] = await Promise.all([
               getPresets(), getDraftsUsed(userId), isMember(userId), getOpenSimDraft(userId),
+              // SCOPED BY user_id AND source, in its own query. getPresets
+              // filters on is_preset alone with no user scoping, so putting an
+              // imported league through it would show one reader's league to
+              // everybody. The presets query is untouched.
+              getMyLeagues(userId),
             ]);
             const gate = await canStartDraft(userId, member);
             return (
@@ -147,6 +153,9 @@ export default async function SimLobby({ searchParams }) {
                 {/* ABOVE THE DECK, because a draft you are already in outranks
                     starting another one. Renders nothing when there is none. */}
                 <LiveDraftCard draft={openDraft} member={member} />
+                {/* ABOVE THE PRACTICE DECK: a real league outranks a rehearsal.
+                    Renders nothing when the reader has imported none. */}
+                <MyLeagues leagues={myLeagues} />
                 <section>
                   <div className="sim-kicker">Start a mock draft</div>
                   <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap} />

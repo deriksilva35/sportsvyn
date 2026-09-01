@@ -64,7 +64,7 @@ const r0 = (x) => (x == null ? '?' : Math.round(Number(x)));
 // licensed NFL headshot source exists, so the position label is the identity cue.
 
 export default function DraftRoom({
-  draftId, config, order, userTeamIndex, initialPicks, initialAvailable, timerSeconds, initialAuto, poolMapping,
+  draftId, config, order, userTeamIndex, initialPicks, initialAvailable, timerSeconds, initialAuto, poolMapping, minors = [],
 }) {
   const router = useRouter();
   const [picks, setPicks] = useState(initialPicks);
@@ -565,6 +565,21 @@ export default function DraftRoom({
                   : <span className="nm">{s.key === BENCH ? 'bench' : s.label}</span>}
               </div>
             ))}
+            {/* MINORS: the league's devy shelf, held outside the draft. Muted
+                because nothing here is a pick - no cap, no slot, no clock. A
+                nameless entry is a college player neither id table knows, and
+                it is shown as what IS known: the position, tagged Devy. */}
+            {minors?.length > 0 && (
+              <>
+                <div className="rminors-h">Minors · {minors.length}</div>
+                {minors.map((m) => (
+                  <div key={m.fantraxId} className="rslot rminor">
+                    <span className="lbl">{m.position}</span>
+                    <span className="nm">{m.name ?? `${m.position} · Devy`}{m.alsoKeeper ? <span className="tm"> · kept</span> : null}</span>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </section>
       </div>

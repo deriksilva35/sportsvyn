@@ -84,6 +84,7 @@ export default async function DraftRoomPage({ params, searchParams }) {
         timerSeconds={room.timerSeconds}
         initialAuto={room.isAuto}
         poolMapping={room.poolMapping}
+        minors={room.minors}
       />
     );
   } else if (status === 'completed') {

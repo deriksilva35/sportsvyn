@@ -40,6 +40,16 @@
 .sim-pitch h1 { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 46px; line-height: 1.02; letter-spacing: -.03em; color: var(--paper); margin: 0 0 16px; }
 .sim-pitch p { font-family: var(--font-source-serif), serif; font-style: italic; font-size: 18px; line-height: 1.5; color: var(--paper-dim); max-width: 620px; }
 .sim-cta { display: inline-block; margin-top: 22px; background: var(--volt); color: var(--ink); font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; padding: 12px 22px; text-decoration: none; }
+/* My leagues: the imported-league cards above the practice deck. A card is a
+   statement (name, shape, keepers, draft date) and one action. */
+.sim-myleagues { margin: 0 0 22px; }
+.sml-card { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name start" "meta start" "when start"; align-items: center; column-gap: 14px; row-gap: 2px; padding: 12px 14px; border: 1px solid var(--rule-dim); background: var(--graphite); }
+.sml-name { grid-area: name; color: var(--paper); font-weight: 700; font-size: 14px; }
+.sml-meta { grid-area: meta; color: var(--muted); font-size: 11px; letter-spacing: .04em; }
+.sml-when { grid-area: when; color: var(--muted-dim); font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; }
+.sml-start { grid-area: start; background: var(--volt); color: var(--ink); border: 0; font-weight: 700; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 10px 14px; cursor: pointer; }
+.sml-start:disabled { opacity: .6; cursor: default; }
+.sml-err { grid-column: 1 / -1; color: var(--muted); font-size: 11px; }
 .sim-cta-note { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .04em; color: var(--muted); margin-top: 12px; }
 
 .sim-used { font-size: 11px; letter-spacing: .06em; color: var(--muted); margin: 4px 0 20px; }
@@ -469,6 +479,10 @@
 .rslot .nm { color: var(--paper); }
 .rslot .tm { color: var(--muted-dim); font-size: 10px; }
 .rslot.open .nm { color: var(--muted-dim); font-style: italic; }
+/* Minors: the devy shelf under the drafted roster. Muted throughout - it is
+   not a slot and never fills. */
+.rminors-h { margin-top: 14px; padding: 6px 4px 4px; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-dim); border-bottom: 1px solid var(--rule-dim); }
+.rslot.rminor .nm { color: var(--muted); }
 
 /* pick feed */
 .feed-row { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: baseline; padding: 6px 4px; border-bottom: 1px solid var(--rule-dim); }
