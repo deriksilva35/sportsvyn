@@ -55,8 +55,26 @@
 .al-x:hover { color: var(--paper); }
 .al-eye {
   margin-top: 4px;
+  display: flex; align-items: baseline; gap: 10px;
   font-family: var(--font-saira-cond); font-size: 10px; font-weight: 600;
   letter-spacing: 0.14em; text-transform: uppercase; color: var(--volt);
+}
+
+/* SAVED FADES RATHER THAN STAYING. It acknowledges one write; a badge that
+   persisted would become furniture and stop meaning "that one took". Mono and
+   muted so it reads as a receipt and not as a second heading. */
+.al-saved {
+  font-family: var(--font-jetbrains-mono); font-size: 9px; font-weight: 400;
+  letter-spacing: 0.06em; text-transform: none; color: var(--muted);
+  animation: al-fade 2.4s ease-out forwards;
+}
+@keyframes al-fade {
+  0% { opacity: 0; } 12% { opacity: 1; } 62% { opacity: 1; } 100% { opacity: 0; }
+}
+/* Motion is decoration; a reader who asked for less of it still gets the word,
+   it simply stays put. */
+@media (prefers-reduced-motion: reduce) {
+  .al-saved { animation: none; opacity: 1; }
 }
 .al-note { margin: 12px 0 14px; font-size: 11px; line-height: 1.5; color: var(--muted); }
 
@@ -78,6 +96,17 @@
    can see what they will get back when they turn it on again. */
 .al-rows { margin-top: 4px; }
 .al-dim { opacity: 0.4; }
+
+/* FINAL ONLY DIMS THE FOUR IT SILENCES, at the same 40% and for the same
+   reason. The row stays TAPPABLE - dimming says "this is doing nothing", where
+   disabling would say "you cannot change this", and turning one on is exactly
+   how a reader leaves Final only. */
+.al-row.al-silenced { opacity: 0.4; }
+
+/* AN ERROR BELONGS TO THE ROW THAT FAILED. One red line under the sheet cannot
+   say which toggle did not take, so the reader turns the wrong one back off. */
+.al-rowerr { font-size: 10px; line-height: 1.4; color: var(--live, #ff4d4d); }
+.al-rowerr--master { margin: 10px 0 0; }
 
 /* ---- the toggle: 44x26 -------------------------------------------------- */
 .al-tg {
@@ -102,7 +131,16 @@
   font-family: var(--font-saira-cond); font-size: 12px; font-weight: 700;
   letter-spacing: 0.10em; text-transform: uppercase; text-decoration: none;
 }
-.al-err { margin: 10px 0 0; font-size: 11px; line-height: 1.45; color: var(--live, #ff4d4d); }
+/* DONE, NOT SAVE. Every row is written on change; this only closes. */
+.al-done {
+  display: block; width: 100%; margin-top: 12px; padding: 11px 16px;
+  border: 1px solid var(--rule); border-radius: 10px;
+  background: var(--ink-3, #1c1c1c); color: var(--paper);
+  font-family: var(--font-saira-cond); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase; cursor: pointer;
+}
+.al-done:hover { border-color: var(--muted-dim); }
+.al-done:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
 .al-foot {
   display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
   margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule);

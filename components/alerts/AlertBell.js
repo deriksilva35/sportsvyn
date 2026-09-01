@@ -19,7 +19,8 @@ import { DEFAULTS } from '@/lib/push/prefs';
 import { dayHeading, kickoffParts } from '@/lib/gridiron/kickoff';
 import { useViewerTz } from '@/components/gridiron/useViewerTz';
 import { tzOrUtc } from '@/lib/gridiron/viewerTz';
-import { subscribeThisBrowser } from './subscribe';
+import { enableAlerts } from './enable';
+import { SILENCED_BY_FINAL_ONLY, silencedByFinalOnly, applyRowToggle } from '@/lib/push/sheetRules';
 import './alerts.css';
 
 // The five rows, in the order the sheet draws them. Data, not markup, so the
@@ -50,7 +51,10 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
   const [open, setOpen] = useState(false);
   const [prefs, setPrefs] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
+  // ERRORS BELONG TO THE ROW THAT FAILED. One red line under the sheet cannot
+  // say which toggle did not take, so the reader turns the wrong one back off.
+  const [rowError, setRowError] = useState(null);
+  const [saved, setSaved] = useState(false);
   const triggerRef = useRef(null);
   const sheetRef = useRef(null);
   const tz = useViewerTz();
@@ -86,23 +90,41 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [open, close]);
 
-  const save = async (next) => {
+  // ROWS SAVE ON CHANGE. No Save button to forget, so the sheet's only exit is
+  // Done and there is no state that exists on screen and not on the server.
+  const save = async (next, rowKey) => {
     setPrefs(next);
-    setBusy(true); setError(null);
+    setBusy(true); setRowError(null); setSaved(false);
     try {
       // TURNING SOMETHING ON IS THE TAP THE PROMPT FOLLOWS. Only here, and only
-      // when the reader has actually asked for an alert.
-      if (next.master && Object.keys(DEFAULTS).some((k) => k !== 'master' && k !== 'final_only' && next[k])) {
-        const r = await subscribeThisBrowser();
-        if (!r.ok) setError(r.error);
+      // when the reader has actually asked for an alert. enableAlerts picks the
+      // transport from the environment, so the shell never sees a browser
+      // message and the browser never reaches for a plugin.
+      const asked = next.master
+        && Object.keys(DEFAULTS).some((k) => k !== 'master' && next[k]);
+      if (asked) {
+        const r = await enableAlerts();
+        if (!r.ok) { setRowError({ key: rowKey, message: r.error }); setBusy(false); return; }
       }
-      await fetch('/api/push/prefs', {
+      const res = await fetch('/api/push/prefs', {
         method: 'PUT', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ scope: 'match', scopeId: match.id, ...next }),
       });
-    } catch (e) { setError(String(e?.message ?? e)); }
-    finally { setBusy(false); }
+      if (!res.ok) {
+        setRowError({ key: rowKey, message: 'That did not save. Check your connection and try again.' });
+        return;
+      }
+      setSaved(true);
+    } catch {
+      setRowError({ key: rowKey, message: 'That did not save. Check your connection and try again.' });
+    } finally { setBusy(false); }
   };
+
+  // FINAL ONLY IS A SILENCER, AND TOUCHING WHAT IT SILENCES TURNS IT OFF.
+  // Otherwise a reader taps Score changes, watches the toggle move, and gets
+  // nothing - the row says on and the game says silent. Master and Final only
+  // can never both read as "everything on".
+  const setRow = (key, value) => save(applyRowToggle(p, key, value), key);
 
   const p = prefs ?? DEFAULTS;
   // A CHIP MAY ONLY CLAIM KNOWLEDGE: the pill lights only when we have read the
@@ -132,7 +154,12 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
               <button type="button" className="al-x" aria-label="Close" onClick={close}>×</button>
             </div>
             <div className="al-eye">
-              Alerts{day ? ` · ${day}` : ''}{kick ? ` · ${kick.time}` : ''}
+              <span>Alerts{day ? ` · ${day}` : ''}{kick ? ` · ${kick.time}` : ''}</span>
+              {/* SAVED FADES. It is an acknowledgement, not a status: a badge
+                  that stayed would become part of the furniture and stop
+                  meaning "that one took". Keyed on the write so each save
+                  restarts the animation. */}
+              {saved ? <span className="al-saved" key={String(saved)}>Saved</span> : null}
             </div>
 
             {!signedIn ? (
@@ -154,24 +181,36 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
                     <span className="al-trig">Master · off silences everything below</span>
                   </div>
                   <Toggle on={p.master} label="Alerts for this game" disabled={busy}
-                    onChange={(v) => save({ ...p, master: v })} />
+                    onChange={(v) => save({ ...p, master: v }, 'master')} />
                 </div>
 
                 <div className={`al-rows${p.master ? '' : ' al-dim'}`}>
-                  {ROWS.map((r) => (
-                    <div className="al-row" key={r.key}>
-                      <div className="al-txt">
-                        <span className="al-title">{r.title}</span>
-                        <span className="al-trig">{r.trigger}</span>
-                        {r.latency ? <span className="al-lat">{r.latency}</span> : null}
+                  {ROWS.map((r) => {
+                    const silenced = silencedByFinalOnly(p, r.key);
+                    return (
+                      <div className={`al-row${silenced ? ' al-silenced' : ''}`} key={r.key}>
+                        <div className="al-txt">
+                          <span className="al-title">{r.title}</span>
+                          <span className="al-trig">
+                            {silenced ? 'Silenced by Final only' : r.trigger}
+                          </span>
+                          {r.latency && !silenced ? <span className="al-lat">{r.latency}</span> : null}
+                          {rowError?.key === r.key
+                            ? <span className="al-rowerr">{rowError.message}</span> : null}
+                        </div>
+                        {/* A SILENCED ROW STAYS TAPPABLE. Dimming says "this is
+                            doing nothing"; disabling would say "you cannot
+                            change this", and turning it on is precisely how a
+                            reader gets out of Final only. */}
+                        <Toggle on={Boolean(p[r.key])} label={r.title} disabled={busy || !p.master}
+                          onChange={(v) => setRow(r.key, v)} />
                       </div>
-                      <Toggle on={Boolean(p[r.key])} label={r.title} disabled={busy || !p.master}
-                        onChange={(v) => save({ ...p, [r.key]: v })} />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
-                {error ? <p className="al-err">{error}</p> : null}
+                {rowError && rowError.key === 'master'
+                  ? <p className="al-rowerr al-rowerr--master">{rowError.message}</p> : null}
 
                 <div className="al-foot">
                   <a className="al-teamlink" href={`/${match.leagueSlug}/team/${match.homeSlug ?? ''}`}>
@@ -179,6 +218,10 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
                   </a>
                   <span className="al-scope">Applies to this game</span>
                 </div>
+                {/* DONE, NOT SAVE. Every row is already written; this only
+                    closes the sheet, and calling it Save would imply the taps
+                    before it had not counted. */}
+                <button type="button" className="al-done" onClick={close}>Done</button>
               </>
             )}
           </div>
