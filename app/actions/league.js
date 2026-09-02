@@ -1,16 +1,16 @@
 'use server';
 
 /**
- * Server Actions for LEAGUE SHARING (085) - membership, invites, franchises,
- * the league's mocks list.
+ * Server Actions for LEAGUE SHARING (085) - membership, invites, franchises.
  *
  * Same law as app/actions/sim.js: the session is resolved INSIDE the action,
  * never trusted from the client, and every write delegates to lib/fantasy/
  * leagueShare.js, which takes the user id explicitly and is tested against the
  * database. Nothing here touches draft_configs or draft_config_keepers - the
  * league's FACTS have one writer (lib/fantrax/import.js) and it is not a
- * server action. Members write their own membership row and their own runs'
- * hidden flag; owners additionally mint/revoke codes and kick.
+ * server action. Members write their own membership row; owners additionally
+ * mint/revoke codes and kick. RUNS ARE PRIVATE (2 Sep): there is no action on
+ * a run here - the hide flag went with the shared list it was an escape from.
  */
 
 import { auth } from '@/auth';
@@ -19,7 +19,6 @@ import {
   createInvite as createInviteFor, revokeInvites as revokeInvitesFor,
   redeemInvite as redeemInviteFor, claimFranchise as claimFranchiseFor,
   leaveLeague as leaveLeagueFor, kickMember as kickMemberFor,
-  setRunHidden as setRunHiddenFor,
 } from '@/lib/fantasy/leagueShare';
 
 async function currentUserId() {
@@ -80,15 +79,6 @@ export async function kickMember(configId, targetUserId) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
   const res = await kickMemberFor(userId, Number(configId), Number(targetUserId));
-  if (res.ok) revalidatePath('/sim');
-  return res;
-}
-
-// Your own run, on or off the league's list.
-export async function setRunHidden(draftId, hidden) {
-  const userId = await currentUserId();
-  if (userId == null) return { ok: false, reason: 'unauthenticated' };
-  const res = await setRunHiddenFor(userId, Number(draftId), hidden === true);
   if (res.ok) revalidatePath('/sim');
   return res;
 }

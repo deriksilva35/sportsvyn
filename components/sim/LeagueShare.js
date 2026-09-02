@@ -1,7 +1,7 @@
 'use client';
 
 // components/sim/LeagueShare.js - the league card's second half (085): who is
-// in, the invite, the league's mocks.
+// in, the invite, your own mocks of this league.
 //
 // THE OWNER SHARES, MEMBERS ARRIVE. Share (owner only) mints one live code
 // and shows it as a copyable link - /join/CODE is what rides the group chat.
@@ -9,14 +9,17 @@
 // Every member sees the roster of people with their franchises; a member can
 // leave (their franchise frees), the owner can kick.
 //
-// THE MOCKS LIST is the league's last ten COMPLETED runs - who, as which
-// franchise, when, their first three picks. A run that is not over or was
-// abandoned is not on it. "Hide" is per-run and yours alone; a hidden run
-// still shows to you, marked, so "show" has somewhere to live.
+// RUNS ARE PRIVATE (ruling reversed 2 Sep). YOUR MOCKS is your own last ten
+// COMPLETED runs of this league - as which franchise, when, your first three
+// picks, each a link to its results. Nobody else's runs appear here, in any
+// state, and the owner sees no more than a member does. `mocks` arrives
+// already scoped to the viewer (myLeagueRuns); this component never had a
+// second member's row to hide, so the per-run Hide/Show that shipped with the
+// shared list is gone with it.
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { createInvite, revokeInvites, leaveLeague, kickMember, setRunHidden } from '@/app/actions/league';
+import { createInvite, revokeInvites, leaveLeague, kickMember } from '@/app/actions/league';
 
 const SITE = 'https://sportsvyn.com';
 export const joinHref = (code) => `${SITE}/join/${code}`;
@@ -106,21 +109,15 @@ export default function LeagueShare({ configId, role, members = [], invite = nul
           </div>
 
           <div className="lgs-mocks">
-            <div className="lgs-l">LEAGUE MOCKS</div>
+            <div className="lgs-l">YOUR MOCKS</div>
             {mocks.length === 0 ? (
-              <div className="lgs-h">No completed mocks yet. Finish one and it shows here.</div>
+              <div className="lgs-h">No completed mocks of this league yet. Finish one and it shows here - to you only.</div>
             ) : (
               <ul>
                 {mocks.map((r) => (
-                  <li key={r.draftId} className={`lgs-run${r.hidden ? ' hidden' : ''}`}>
-                    <span className="lgs-who">{r.userName ?? r.handle ?? `user ${r.userId}`}</span>
-                    <span className="lgs-team">as {r.franchise ? `${r.seat} · ${r.franchise}` : `seat ${r.seat}`} · {when(r.completedAt)}</span>
+                  <li key={r.draftId} className="lgs-run">
+                    <a className="lgs-team" href={`/sim/draft/${r.draftId}`}>as {r.franchise ? `${r.seat} · ${r.franchise}` : `seat ${r.seat}`} · {when(r.completedAt)}</a>
                     <span className="lgs-picks">{(r.firstPicks ?? []).map((p) => p.name).join(', ')}</span>
-                    {r.mine && (
-                      <button type="button" className="lgs-btn" disabled={pending} onClick={() => run(() => setRunHidden(r.draftId, !r.hidden))}>
-                        {r.hidden ? 'Show' : 'Hide'}
-                      </button>
-                    )}
                   </li>
                 ))}
               </ul>

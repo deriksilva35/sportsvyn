@@ -82,3 +82,7 @@ That must equal the BINARY's bundle id. The droplet's stale
 capacitor.config.ts says com.sportsvyn.app - if the real project's bundle
 id differs from com.sportsvyn.draftvyn, the topic constant is the one
 line to fix, and pushes 400 with BadTopic until it is.
+
+## Queued beside push registration: Universal Links for /join/{code}
+
+A league invite link (`https://sportsvyn.com/join/{code}`) tapped from a group chat opens in Safari, not the app, BY DESIGN until Universal Links ship with the next Draftvyn binary: an AASA file served at `/.well-known/apple-app-site-association` (paths `/join/*`) plus the Associated Domains entitlement (`applinks:sportsvyn.com`). No web change now; the join page already works signed-out in Safari and carries the code through sign-in (2 Sep).

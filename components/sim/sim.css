@@ -969,7 +969,6 @@
 .lgs-handle { color: var(--muted-dim); font-weight: 400; }
 .lgs-team { grid-column: 1; color: var(--muted); font-family: var(--font-jetbrains-mono), monospace; font-size: 10.5px; }
 .lgs-picks { grid-column: 1; color: var(--muted-dim); font-size: 11px; }
-.lgs-run.hidden { opacity: .5; }
 .lgs-err { color: var(--muted); font-size: 11px; }
 
 .jc { display: flex; flex-direction: column; gap: 8px; max-width: 560px; }

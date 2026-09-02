@@ -88,7 +88,7 @@ export default async function TrackerTab({ searchParams }) {
   // The card needs to say WHERE in the draft, or "Resume" is just a word. Round
   // and pick are derived from the pick count rather than stored - the same
   // derivation the room uses, so the card and the room cannot disagree.
-  const resume = open ? await trackerResumeCard(open.id) : null;
+  const resume = open ? await trackerResumeCard(open.id, userId) : null;
 
   const [member, historyRows] = await Promise.all([
     isMember(userId),
