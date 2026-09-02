@@ -515,6 +515,15 @@
    a separator, which only makes sense for side-by-side groups - stacked, it drew
    a stray vertical rule down the left edge of the row. Kept as a hook only. */
 .avail-class { /* own row, inherits .avail-chips */ }
+/* THE LEAGUE TOGGLE reads as a switch rather than a fourth class chip: pushed to
+   the far end of the row with an auto margin, and lit in TERRA rather than VOLT
+   when on. Volt is the room's "this filter is active" colour and every chip in
+   both rows uses it; giving the toggle the same lit state would say "one more
+   chip", when what it actually does is change which board is on screen. */
+.avail-class .ncaa-toggle { margin-left: auto; }
+.avail-chips button.ncaa-toggle.on {
+  color: var(--paper); background: var(--terra, #E0602A); border-color: var(--terra, #E0602A);
+}
 /* team filter: composes with the position chips; does not enable stat sorts */
 .avail-team { display: flex; gap: 6px; align-items: center; }
 .avail-team .s-lbl { font-size: 8px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-dim); }

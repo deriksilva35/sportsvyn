@@ -32,7 +32,7 @@ import { SCORING_LABEL } from '@/lib/fantasy/config';
 import RoomScope from '@/components/shell/RoomScope';
 import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
-  POS_FILTERS, CLASS_FILTERS, NCAA_FILTER, fmt1, signed1, adpRange,
+  POS_FILTERS, CLASS_FILTERS, COLLEGE_DEFAULT_SORT, fmt1, signed1, adpRange,
 } from '@/lib/fantasy/statView';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
 import { lineTwoTokens, seatSortHint } from '@/lib/fantasy/lineTwo';
@@ -58,6 +58,12 @@ const ERR = {
   not_your_turn: 'Not your turn', not_in_progress: 'Draft is over', no_legal_pick: 'No legal pick',
   not_found_or_not_owner: 'Not your draft', unauthenticated: 'Please sign in',
 };
+// The board renders at most this many rows. It has always been 120; what is new
+// is that the count beside "Available" now says so when it bites. The NFL half
+// is 417 rows and the cap was reached there too, but the college half is 927 and
+// a label reading "Available · 927" over 120 rendered rows is the kind of small
+// lie that sends a reader looking for a player the list will never show.
+const ROW_CAP = 120;
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 const r0 = (x) => (x == null ? '?' : Math.round(Number(x)));
 
@@ -76,6 +82,7 @@ export default function DraftRoom({
   const [err, setErr] = useState(null);          // { id?, reason }
   const [filter, setFilter] = useState('ALL');
   const [cls, setCls] = useState('ALL');
+  const [college, setCollege] = useState(false);
   const [team, setTeam] = useState('ALL');
   const [sort, setSort] = useState('adp');
   const [search, setSearch] = useState('');
@@ -309,7 +316,7 @@ export default function DraftRoom({
   // would bury every QB under every WR. ADP/PPG/PTS compare across positions and
   // are always offered. Stat sorts need loaded summaries, so they stay disabled
   // (not hidden) until stats exist - discoverable, and honest about why.
-  const sortOpts = useMemo(() => sortsFor(filter), [filter]);
+  const sortOpts = useMemo(() => sortsFor(filter, { college }), [filter, college]);
   const statsReady = useMemo(() => Object.keys(summaries).length > 0, [summaries]);
   // Derived, not stored: switching filters can strip the active key out from
   // under the sort, and silently falling back beats a setState-in-effect.
@@ -357,16 +364,17 @@ export default function DraftRoom({
   // relationship the order does not have.
   const seatSort = activeSort === 'myteam';
 
-  // THE COLLEGE VIEW. One flag, derived from the chip, because every difference
-  // it makes is a difference of the whole view: which columns the header names,
-  // which two facts a row prints, and which sorts are on offer. A row-by-row
-  // test would let a college row appear under an NFL header.
-  const collegeView = filter === NCAA_FILTER;
+  // THE COLLEGE VIEW. One flag, because every difference it makes is a difference
+  // of the WHOLE view: which columns the header names, which facts a row prints,
+  // and which sorts are on offer. A row-by-row test would let a college row
+  // appear under an NFL header. The position filter is deliberately NOT part of
+  // it - that axis stays live in both views.
+  const collegeView = college;
 
   const shown = useMemo(() => {
-    const list = filterPlayers(available, { position: filter, team, search, cls });
+    const list = filterPlayers(available, { position: filter, team, search, cls, league: college ? 'ncaaf' : 'nfl' });
     return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), summaries, seatValuation);
-  }, [available, filter, team, search, cls, sortOpts, activeSort, summaries, seatValuation]);
+  }, [available, filter, team, search, cls, college, sortOpts, activeSort, summaries, seatValuation]);
 
   const rounds = board.rounds;
   return (
@@ -440,7 +448,12 @@ export default function DraftRoom({
 
         {/* PICK page: the available pane, moved wholesale (search / chips / sort / rows) */}
         <section className="page zone pg-pick">
-          <div className="plabel">Available · {shown.length}</div>
+          {/* THE COUNT IS THE COUNT OF ROWS ON SCREEN. When the cap bites it says
+              both numbers rather than the larger one alone - "120 of 927" is
+              true, "927" over 120 rows is not. Both read from ROW_CAP and from
+              the same `shown`, so they cannot drift apart. */}
+          <div className="plabel">Available · {shown.length > ROW_CAP
+            ? `${ROW_CAP} of ${shown.length}` : shown.length}</div>
           <div className="avail-tools">
           <input className="avail-search" placeholder="Search players" value={search} onChange={(e) => setSearch(e.target.value)} />
           <div className="avail-chips">
@@ -450,6 +463,24 @@ export default function DraftRoom({
             {CLASS_FILTERS.map(([k, label]) => (
               <button key={k} className={cls === k ? 'on' : ''} onClick={() => setCls(k)}>{label}</button>
             ))}
+            {/* THE LEAGUE TOGGLE, beside the class row rather than in the
+                position row. A league is not a position: in the position row it
+                was mutually exclusive with QB/RB/WR/TE, so choosing it gave up
+                position filtering over 927 rows. Here both axes stay live and
+                "college QBs by NCAAF ADP" is two taps.
+                THE SORT FOLLOWS THE VIEW. Entering the college view lands on
+                NCAAF ADP - the order the reader came for - and leaving returns
+                to ADP, because the sort that was chosen for one board is not
+                offered on the other and a stale key would silently fall back. */}
+            <button
+              className={`ncaa-toggle${college ? ' on' : ''}`}
+              aria-pressed={college}
+              onClick={() => {
+                const next = !college;
+                setCollege(next);
+                setSort(next ? COLLEGE_DEFAULT_SORT : 'adp');
+              }}
+            >NCAA</button>
           </div>
           <div className="avail-team">
             <span className="s-lbl">Team</span>
@@ -512,7 +543,7 @@ export default function DraftRoom({
             <span className="draft nghost">Draft</span>
           </div>
           {err && !err.id && <div className="p-err">{ERR[err.reason] ?? err.reason}</div>}
-          {shown.slice(0, 120).map((p) => {
+          {shown.slice(0, ROW_CAP).map((p) => {
             const val = valueGap(currentOverall, p.adp); // positive-good: he fell to you - canonical form, inline arithmetic forbidden by test
             const open = expandedId === p.ffcPlayerId;
             const stats = statsById[p.ffcPlayerId];
