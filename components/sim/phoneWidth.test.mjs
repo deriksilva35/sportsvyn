@@ -298,7 +298,16 @@ test('the filter definitions live in statView - neither room hand-writes them', 
 
 test('the tracker reads stats through the SHARED formatter - the one-source law', () => {
   const t = readFileSync(path.join(REPO, 'components/sim/TrackerRoom.js'), 'utf8');
-  assert.match(t, /viewFor\(p\.position\)\.quick\(sum\.totals\)/, 'the Mock\'s exact quick-line call');
+  // RE-PINNED 2 Sep 2026. This asserted the tracker contained the literal call
+  //   viewFor(p.position).quick(sum.totals)
+  // which was the one-source law read one level too shallow: BOTH rooms carried
+  // that expression inline, and because it was two copies it was wrong in two
+  // places. Guarded on `sum` rather than on `sum.totals`, it threw a TypeError
+  // on every college row that had a PPG. The expression now lives once, in
+  // statView.quickTokens, and both rooms call it - which is MORE shared than
+  // this test asked for, not less. Pinned at its new home.
+  assert.match(t, /const quick = quickTokens\(sum, p\.position\);/, 'the shared quick-token function');
+  assert.ok(!/viewFor\(p\.position\)\.quick\(/.test(t), 'and the tracker no longer formats it itself');
   assert.match(t, /fetchPlayerSummaries/, 'the shared summaries action, not a new query');
   assert.match(t, /isExactlyScored/, 'the ~ rule for K/DST rides along');
   assert.ok(!/sim_player_pool/.test(t), 'no stats query joins through sim_player_pool');

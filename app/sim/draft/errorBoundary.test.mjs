@@ -116,6 +116,47 @@ test('the caught error is logged in full, and shown in none', () => {
   assert.ok(!jsx.includes('error.message'), 'no raw error text in the UI');
 });
 
+test('the caught error also reaches the SERVER, or it is invisible to us', () => {
+  const code = stripComments(src(BOUNDARY));
+  // A console line is the reader's copy. This is ours. Without it a room render
+  // error is invisible: the boundary only catches CLIENT re-renders, so the page
+  // serves 200 and the server logs read clean while the room is unusable.
+  // Measured 2 Sep 2026 - a TypeError took down 101 of the first 120 rows of the
+  // college board, and Vercel's runtime errors reported none in the window.
+  assert.match(code, /fetch\('\/api\/client-error'/, 'the boundary must report to the server');
+  assert.match(code, /keepalive: true/,
+    'the report must survive the reader leaving a screen that just broke');
+  // Best-effort, always: a failed report must not become a second error screen.
+  assert.match(code, /\.catch\(\(\) => \{\}\)/, 'the fetch swallows its own failure');
+  // The same four facts the console line carries.
+  const report = code.slice(code.indexOf('const report ='), code.indexOf('console.error'));
+  for (const field of ['message', 'digest', 'stack', 'path']) {
+    assert.ok(report.includes(field), `the report must carry ${field}`);
+  }
+});
+
+test('the receiving route writes where failures are already looked for, and trusts nothing', () => {
+  const route = stripComments(src('app/api/client-error/route.js'));
+  // sync_runs is the house ledger - the same table that surfaced the
+  // adp-snapshot cron throwing for a day. ok=false so it reads as a failure.
+  assert.match(route, /INSERT INTO sync_runs/);
+  assert.match(route, /'client-error', 'room-render'/);
+  assert.match(route, /false,/, 'the row must be marked not-ok');
+  // Signed-in only: the room is behind auth, so a real report has a session.
+  assert.match(route, /const session = await auth\(\)/);
+  assert.match(route, /if \(!userId\) return new Response\(null, \{ status: 204 \}\)/);
+  // Every client-supplied string is capped before it reaches the database.
+  assert.match(route, /const cap = \(v, n\) => \(v == null \? null : String\(v\)\.slice\(0, n\)\)/);
+  for (const f of ['message', 'digest', 'path', 'stack', 'userAgent']) {
+    assert.match(route, new RegExp(`${f}: cap\\(`), `${f} must be capped`);
+  }
+  // It never throws back at a screen that is already showing an error.
+  assert.match(route, /\} catch \{/, 'the handler swallows its own failure');
+  assert.ok(route.trimEnd().endsWith('return new Response(null, { status: 204 });\n}')
+    || /return new Response\(null, \{ status: 204 \}\);\s*\}\s*$/.test(route),
+    'it always answers 204');
+});
+
 test('the screen offers a way back IN and a way OUT', () => {
   const code = stripComments(src(BOUNDARY));
   assert.match(code, /href=\{roomHref\}/, 'primary action must re-enter the room');

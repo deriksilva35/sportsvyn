@@ -35,7 +35,7 @@ import { logPick, undoLastPick, fetchPlayerSummaries } from '@/app/actions/sim';
 import Wordmark from '@/components/gridiron/Wordmark';
 import {
   filterPlayers, displayPosition, rookieIdSet, sortsFor, sortPlayers,
-  viewFor, teamsInPool, POS_FILTERS, CLASS_FILTERS, fmt1, signed1,
+  viewFor, teamsInPool, POS_FILTERS, CLASS_FILTERS, fmt1, signed1, quickTokens,
 } from '@/lib/fantasy/statView';
 import { isExactlyScored } from '@/lib/fantasy/scoring';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
@@ -410,7 +410,9 @@ export default function TrackerRoom({
                 const sum = summaries[p.ffcPlayerId];
                 // The Mock's quick line + columns, through the SAME shared
                 // formatter (viewFor().quick) and the same ~ rule for K/DST.
-                const quick = sum ? viewFor(p.position).quick(sum.totals) : null;
+                // One expression, one home: statView.quickTokens. It guards on `totals`
+                // rather than on the summary, because a college summary has none - see there.
+                const quick = quickTokens(sum, p.position);
                 const approx = sum && !isExactlyScored(pos);
                 const valNum = valueGap(currentOverall, p.adp); // canonical form - inline arithmetic forbidden by test
                 return (

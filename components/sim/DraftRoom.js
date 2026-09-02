@@ -32,7 +32,7 @@ import { SCORING_LABEL } from '@/lib/fantasy/config';
 import RoomScope from '@/components/shell/RoomScope';
 import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
-  POS_FILTERS, CLASS_FILTERS, COLLEGE_DEFAULT_SORT, fmt1, signed1, adpRange,
+  POS_FILTERS, CLASS_FILTERS, COLLEGE_DEFAULT_SORT, fmt1, signed1, adpRange, quickTokens,
 } from '@/lib/fantasy/statView';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
 import { lineTwoTokens, seatSortHint } from '@/lib/fantasy/lineTwo';
@@ -553,7 +553,9 @@ export default function DraftRoom({
             // Quick stats sit with the name; the full log is a tap away. K/DST
             // points are partial (no distance tiers / points allowed), so their
             // PPG is marked ~ rather than passed off as league-exact.
-            const quick = sum ? viewFor(p.position).quick(sum.totals) : null;
+            // One expression, one home: statView.quickTokens. It guards on `totals`
+            // rather than on the summary, because a college summary has none - see there.
+            const quick = quickTokens(sum, p.position);
             const seatRead = seatValuation.get(p.ffcPlayerId) ?? null;
             const approx = sum && !isExactlyScored(slot);
             return (

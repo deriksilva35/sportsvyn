@@ -67,12 +67,32 @@ export default function DraftRoomError({ error, reset }) {
     // FULL detail here, none of it on screen. digest is what Next stamps on the
     // server-side log line for the same failure, so a report carrying the
     // reference below can be tied back to the stack we actually captured.
-    console.error('[sim:draft] room render failed', {
+    const report = {
       message: error?.message,
       digest: error?.digest,
       stack: error?.stack,
       path: typeof window === 'undefined' ? null : window.location.pathname,
-    });
+    };
+    console.error('[sim:draft] room render failed', report);
+    // AND SOMEWHERE WE CAN SEE IT. The console line above is the reader's copy;
+    // this is ours. Before it existed, a room render error was invisible to us
+    // entirely - the boundary only catches CLIENT re-renders, so the page served
+    // 200 and the server logs read clean while the room was unusable. Measured
+    // 2 Sep 2026: a TypeError took down 101 of the first 120 rows of the college
+    // board and Vercel's runtime errors reported none in range.
+    //
+    // keepalive, so the report survives the reader navigating away from a screen
+    // that just broke - which is the likeliest next thing they do. Fire and
+    // forget, and the catch is deliberate: a failed report must never turn the
+    // error screen into a worse error screen.
+    try {
+      fetch('/api/client-error', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(report),
+        keepalive: true,
+      }).catch(() => {});
+    } catch { /* reporting is best-effort, always */ }
   }, [error]);
 
   return (
