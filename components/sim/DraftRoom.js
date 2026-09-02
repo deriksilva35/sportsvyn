@@ -35,6 +35,7 @@ import {
   POS_FILTERS, CLASS_FILTERS, fmt1, signed1, adpRange,
 } from '@/lib/fantasy/statView';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
+import { lineTwoTokens } from '@/lib/fantasy/lineTwo';
 import { valueGap } from '@/lib/fantasy/needs';
 import { flagsAfterResult, flagsAfterArm } from '@/lib/fantasy/roomFlags';
 import { nextUserOverall } from '@/lib/fantasy/tracker';
@@ -515,36 +516,43 @@ export default function DraftRoom({
                       </span>
                       <span className="nline2">
                         <span className="rng">
-                          {slot}{p.team ? `·${p.team}` : ''}
                           {/* The ADP window and its separator come and go
                               TOGETHER: a Fantrax pool has no window, and
-                              "WR·CIN · ?-?" on every row was the orphan. */}
-                          {range && ` · ${range}`}
-                          {/* One token per stat, so line 2 drops a fact whole
-                              rather than cutting "42 SACKS" to "42 …". */}
-                          {quick && quick.map((q) => <span className="q" key={q}>· {q}</span>)}
-                          {/* MY TEAM sort shows the TWO FACTS behind the order and
+                              "WR·CIN · ?-?" on every row was the orphan.
+                              One token per stat, so line 2 drops a fact whole
+                              rather than cutting "42 SACKS" to "42 …".
+                              MY TEAM sort shows the TWO FACTS behind the order and
                               never the composite that produced it: the market gap
                               at your next pick, and how your roster can absorb the
                               position right now. The score stays in the
                               comparator - printing it would be handing back a
-                              number we invented on the reader's behalf. */}
-                          {seatSort && seatRead && (
-                            <>
-                              {seatRead.gap != null && (
-                                <span className={`p-seatgap ${seatRead.gap > 0 ? 'val' : 'rch'}`}>
-                                  {' · '}{seatRead.gap > 0 ? '+' : ''}{seatRead.gap} at {myNextOverall}
+                              number we invented on the reader's behalf.
+                              ORDER is lineTwo.js's: under seatSort those two facts
+                              ride AHEAD of the stats, so the token a narrow row
+                              drops is a REC count and never the reason the row
+                              is where it is. */}
+                          {lineTwoTokens({ pos: slot, team: p.team, range, quick, seatSort, seatRead, nextOverall: myNextOverall }).map((t) => {
+                            if (t.kind === 'tag') return t.text;
+                            if (t.kind === 'gap') {
+                              return (
+                                <span className={`p-seatgap ${seatRead.gap > 0 ? 'val' : 'rch'}`} key="gap">
+                                  {' · '}{t.text}
                                 </span>
-                              )}
-                              {/* A deferred row keeps its 'open' tag - the slot IS
-                                  open - but renders muted, so a defense sitting
-                                  below a flex-eligible WR reads as intended rather
-                                  than as a bug. */}
-                              <span className={`p-seatslot ${seatRead.slot}${seatRead.deferred || seatRead.streamer ? ' deferred' : ''}`}>
-                                {' · '}{slot} · {seatRead.slot}
-                              </span>
-                            </>
-                          )}
+                              );
+                            }
+                            // A deferred row keeps its 'open' tag - the slot IS
+                            // open - but renders muted, so a defense sitting
+                            // below a flex-eligible WR reads as intended rather
+                            // than as a bug.
+                            if (t.kind === 'slot') {
+                              return (
+                                <span className={`p-seatslot ${seatRead.slot}${t.muted ? ' deferred' : ''}`} key="slot">
+                                  {' · '}{t.text}
+                                </span>
+                              );
+                            }
+                            return <span className="q" key={t.text}>· {t.text}</span>;
+                          })}
                         </span>
                         <span className="ncols">
                           <span className="ncol">

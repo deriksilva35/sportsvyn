@@ -39,6 +39,7 @@ import {
 } from '@/lib/fantasy/statView';
 import { isExactlyScored } from '@/lib/fantasy/scoring';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
+import { lineTwoTokens } from '@/lib/fantasy/lineTwo';
 import RookieChip from '@/components/fantasy/RookieChip';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
@@ -423,22 +424,29 @@ export default function TrackerRoom({
                         {/* Tag line: position/team + stat line ONLY. The VAL
                             column owns the gap number - one number, one home. */}
                         <div className="tag">
-                          {pos}{p.team ? ` ${p.team}` : ''}
-                          {quick && quick.map((q) => <span className="trk-quick" key={q}>· {q}</span>)}
-                          {/* Two facts, never the composite - see seatValuation.js. */}
-                          {seatSort && seatRead && (
-                            <>
-                              {seatRead.gap != null && (
-                                <span className={`trk-gap ${seatRead.gap > 0 ? 'val' : 'rch'}`}>
+                          {/* Two facts, never the composite - see seatValuation.js.
+                              ORDER is lineTwo.js's, shared with the Mock: under
+                              seatSort the read rides ahead of the stats so the
+                              one-line clip drops a REC count, not the reason. */}
+                          {lineTwoTokens({ pos, team: p.team, quick, seatSort, seatRead, nextOverall: myNext }).map((t) => {
+                            if (t.kind === 'tag') return `${pos}${p.team ? ` ${p.team}` : ''}`;
+                            if (t.kind === 'gap') {
+                              return (
+                                <span className={`trk-gap ${seatRead.gap > 0 ? 'val' : 'rch'}`} key="gap">
                                   {' '}{seatRead.gap > 0 ? '+' : ''}{seatRead.gap} AT {myNext}
                                 </span>
-                              )}
-                              {/* Deferred keeps the tag, loses the emphasis. */}
-                              <span className={`trk-slotstate ${seatRead.slot}${seatRead.deferred || seatRead.streamer ? ' deferred' : ''}`}>
-                                {' '}{pos} · {seatRead.slot}
-                              </span>
-                            </>
-                          )}
+                              );
+                            }
+                            // Deferred keeps the tag, loses the emphasis.
+                            if (t.kind === 'slot') {
+                              return (
+                                <span className={`trk-slotstate ${seatRead.slot}${t.muted ? ' deferred' : ''}`} key="slot">
+                                  {' '}{pos} · {seatRead.slot}
+                                </span>
+                              );
+                            }
+                            return <span className="trk-quick" key={t.text}>· {t.text}</span>;
+                          })}
                         </div>
                         <span className="ncols">
                           <span className="ncol"><span className={`v${sum ? '' : ' empty'}`}>{sum ? `${approx ? '~' : ''}${fmt1(sum.ppg)}` : '-'}</span></span>
