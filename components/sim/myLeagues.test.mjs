@@ -25,9 +25,20 @@ test('MyLeagues has no /sim/league/ link and no route for one exists', () => {
   assert.equal((strip.match(/sim\/league\//g) ?? []).length, 0, 'no link into /sim/league/');
   assert.equal((strip.match(/<Link/g) ?? []).length, 0, 'the card is not a link at all');
   assert.ok(!existsSync(path.join(REPO, 'app/sim/league')), 'no app/sim/league route');
-  // 084: the card hands the strip its size, the reader's own team (isMine) and
-  // (ruling 2 Sep) each franchise's keeper count for the pills.
-  assert.match(strip, /<LeagueStart\s+configId=\{l\.id\}\s+teamsCount=\{l\.teams_count\}\s+defaultSeat=\{\(l\.teams \?\? \[\]\)\.find\(\(t\) => t\.isMine === true\)\?\.slot \?\? null\}\s+keptBySeat=\{l\.kept_by_seat \?\? null\}/);
+  // 084: the card hands the strip its size, the reader's own team and (ruling
+  // 2 Sep) each franchise's keeper count for the pills.
+  // RE-PINNED (085, league sharing): this pinned defaultSeat={(l.teams ?? [])
+  // .find((t) => t.isMine === true)?.slot ?? null} - the IMPORTER's team, read
+  // off the config's jsonb, which is the same seat for everyone who can see
+  // the card. A shared card has members, and a member's default is the
+  // franchise THEY claimed (draft_config_members.fantrax_team_id), resolved
+  // server-side by defaultSeatFor into l.default_seat: the claimed column, or
+  // the owner's isMine seat, or null for an unclaimed member.
+  assert.match(strip, /<LeagueStart\s+configId=\{l\.id\}\s+teamsCount=\{l\.teams_count\}\s+defaultSeat=\{l\.default_seat \?\? null\}\s+keptBySeat=\{l\.kept_by_seat \?\? null\}/);
+  assert.doesNotMatch(strip, /isMine === true/, 'the card no longer derives the seat from the importer\'s flag');
+  // The second half of the card (085): members, the invite, the league's mocks.
+  assert.match(strip, /<LeagueShare\s+configId=\{l\.id\}\s+role=\{l\.role\}\s+members=\{l\.members \?\? \[\]\}\s+invite=\{l\.invite \?\? null\}\s+mocks=\{l\.mocks \?\? \[\]\}\s+myUserId=\{userId\}/);
+  assert.match(src('app/sim/page.js'), /<MyLeagues leagues=\{myLeagues\} userId=\{userId\} \/>/);
 });
 
 test('LeagueStart calls the server action and lands in the room route; the default seat is sent as NO seat', () => {
@@ -90,9 +101,21 @@ test('flow-core (seat = franchise): the column is the league\'s, keepers load wi
   assert.match(core, /leagueSeats\(config\.teams\)/);
   assert.match(seed, /export function leagueSeats\(teams\)/);
   // The seat is range-checked and defaults to the reader's own team; user_seat = the franchise, always written.
-  assert.match(core, /let seat = mine\.slot;/);
+  // RE-PINNED (085): this pinned `let seat = mine.slot;` - the importer's isMine
+  // team as everyone's default. The default is now the CALLER's franchise
+  // (defaultSeatFor: claimed column -> owner's isMine -> null), and a null
+  // default with no opts.seat is still 'no_seat'.
+  assert.match(core, /const dflt = defaultSeatFor\(config, membership/);
+  assert.match(core, /if \(dflt == null && opts\.seat == null\) return \{ ok: false, reason: 'no_seat' \};/);
+  assert.match(core, /let seat = dflt;/);
+  assert.doesNotMatch(core, /let seat = mine\.slot;/);
   assert.match(core, /if \(!Number\.isInteger\(s\) \|\| s < 1 \|\| s > config\.teams_count\) return \{ ok: false, reason: 'bad_seat' \};/);
-  assert.match(core, /finalizeStart\(config, seat, \{ \.\.\.opts, franchise: true \}/);
+  // RE-PINNED (085): this pinned finalizeStart(config, seat, ...) - the config
+  // as loaded, whose user_id is the IMPORTER. finalizeStart writes that column
+  // as the run's owner, so a member's run landed on the owner's account; the
+  // caller is spread over it now, as the preset path has always done.
+  assert.match(core, /finalizeStart\(\{ \.\.\.config, user_id: userId \}, seat, \{ \.\.\.opts, franchise: true \}/);
+  assert.doesNotMatch(core, /finalizeStart\(config, seat, /);
   assert.match(core, /const userSeat = opts\.franchise === true \? pos : null;/);
   assert.match(core, /INSERT INTO drafts \(user_id, config_id, status, pick_position, user_seat, is_auto,/);
   // The room: the franchise is the team at pick_position; its minors, its name.

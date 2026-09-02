@@ -155,7 +155,7 @@ export default async function SimLobby({ searchParams }) {
                 <LiveDraftCard draft={openDraft} member={member} />
                 {/* ABOVE THE PRACTICE DECK: a real league outranks a rehearsal.
                     Renders nothing when the reader has imported none. */}
-                <MyLeagues leagues={myLeagues} />
+                <MyLeagues leagues={myLeagues} userId={userId} />
                 <section>
                   <div className="sim-kicker">Start a mock draft</div>
                   <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap} />

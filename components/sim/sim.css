@@ -941,5 +941,51 @@
 .seatpill.on { background: var(--volt); color: var(--ink); border-color: var(--volt); font-weight: 700; }
 .seatpill:disabled { opacity: .6; cursor: default; }
 .seatstrip-h { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .03em; color: var(--muted-dim); }
-.sml-card { grid-template-areas: "name start" "meta start" "when start" "seats seats"; }
+.sml-card { grid-template-areas: "name start" "meta start" "when start" "seats seats" "share share"; }
 .sml-card .seatstrip { grid-area: seats; }
+
+/* ============================================================================
+   LEAGUE SHARING (085) - the card's second half: members, invite, mocks. And
+   the claim screen behind /join/{code}.
+   ============================================================================ */
+.sml-card .lgs { grid-area: share; }
+.lgs { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.lgs-toggle { background: transparent; border: 0; padding: 0; color: var(--muted); font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .04em; cursor: pointer; text-align: left; }
+.lgs-toggle:hover { color: var(--paper); }
+.lgs-body { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--rule-dim); padding-top: 10px; }
+.lgs-l { font-family: var(--font-saira-cond); font-size: 9.5px; font-weight: 700; letter-spacing: .12em; color: var(--muted-dim); margin-bottom: 4px; }
+.lgs-h { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .03em; color: var(--muted-dim); }
+.lgs-code-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lgs-code { font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; color: var(--volt); letter-spacing: .04em; word-break: break-all; }
+.lgs-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.lgs-btn { height: 24px; padding: 0 8px; border: 1px solid var(--rule-dim); background: transparent; color: var(--paper); font-family: var(--font-jetbrains-mono), monospace; font-size: 10.5px; letter-spacing: .04em; cursor: pointer; }
+.lgs-btn:hover { border-color: var(--muted); }
+.lgs-btn.danger { color: var(--muted); }
+.lgs-btn:disabled { opacity: .6; cursor: default; }
+.lgs ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.lgs-m, .lgs-run { display: grid; grid-template-columns: 1fr auto; column-gap: 10px; row-gap: 1px; align-items: center; font-size: 12px; }
+.lgs-m .lgs-btn, .lgs-run .lgs-btn { grid-column: 2; grid-row: 1 / span 2; }
+.lgs-who { color: var(--paper); font-weight: 600; }
+.lgs-handle { color: var(--muted-dim); font-weight: 400; }
+.lgs-team { grid-column: 1; color: var(--muted); font-family: var(--font-jetbrains-mono), monospace; font-size: 10.5px; }
+.lgs-picks { grid-column: 1; color: var(--muted-dim); font-size: 11px; }
+.lgs-run.hidden { opacity: .5; }
+.lgs-err { color: var(--muted); font-size: 11px; }
+
+.jc { display: flex; flex-direction: column; gap: 8px; max-width: 560px; }
+.jc-name { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 28px; line-height: 1.05; letter-spacing: -.03em; color: var(--paper); margin: 0; }
+.jc-meta { color: var(--muted); font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .04em; margin: 0; }
+.jc-hint { color: var(--paper-dim); font-size: 13px; margin: 0 0 6px; }
+.jc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px; }
+.jc-team { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; text-align: left; padding: 10px 12px; border: 1px solid var(--rule-dim); background: var(--graphite); color: var(--paper); cursor: pointer; }
+.jc-team:hover:not(:disabled) { border-color: var(--volt); }
+.jc-team.taken { opacity: .55; cursor: default; }
+.jc-team.mine { border-color: var(--volt); cursor: default; }
+.jc-slot { grid-row: 1 / span 2; font-family: var(--font-jetbrains-mono), monospace; font-size: 14px; color: var(--muted); }
+.jc-team-name { font-weight: 700; font-size: 13px; }
+.jc-holder { color: var(--muted-dim); font-family: var(--font-jetbrains-mono), monospace; font-size: 10.5px; letter-spacing: .03em; }
+.jc-team.mine .jc-holder { color: var(--volt); }
+.jc-err { color: var(--muted); font-size: 12px; margin: 0; }
+.jc-foot { margin-top: 8px; }
+.jc-noteam { background: transparent; border: 1px solid var(--rule-dim); color: var(--muted); padding: 8px 12px; font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; cursor: pointer; }
+.jc-refusal { color: var(--paper-dim); font-size: 14px; }

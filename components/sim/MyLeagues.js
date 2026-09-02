@@ -9,9 +9,10 @@
 // most readers have not asked for.
 
 import LeagueStart from './LeagueStart';
+import LeagueShare from './LeagueShare';
 import { dayHeading, kickoffParts } from '@/lib/gridiron/kickoff';
 
-export default function MyLeagues({ leagues, tz = null }) {
+export default function MyLeagues({ leagues, tz = null, userId = null }) {
   if (!leagues?.length) return null;
   return (
     <section className="sim-myleagues">
@@ -30,13 +31,24 @@ export default function MyLeagues({ leagues, tz = null }) {
             </span>
             {day ? <span className="sml-when">Draft {day}{at ? ` · ${at.time}` : ''}</span> : null}
             {/* The real start action, not a link: see LeagueStart. The default
-                seat is your own team (isMine); the strip lets this run play any
-                franchise, each pill carrying that team's keeper count. */}
+                seat is YOUR franchise - the one you claimed (085), or for the
+                owner the imported isMine team; an unclaimed member has none
+                and the strip opens on seat 1. Each pill carries that team's
+                keeper count. */}
             <LeagueStart
               configId={l.id}
               teamsCount={l.teams_count}
-              defaultSeat={(l.teams ?? []).find((t) => t.isMine === true)?.slot ?? null}
+              defaultSeat={l.default_seat ?? null}
               keptBySeat={l.kept_by_seat ?? null}
+            />
+            {/* Who is in, the invite (owner), the league's mocks. */}
+            <LeagueShare
+              configId={l.id}
+              role={l.role}
+              members={l.members ?? []}
+              invite={l.invite ?? null}
+              mocks={l.mocks ?? []}
+              myUserId={userId}
             />
           </div>
         );
