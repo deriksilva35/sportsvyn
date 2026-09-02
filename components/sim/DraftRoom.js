@@ -32,7 +32,7 @@ import { SCORING_LABEL } from '@/lib/fantasy/config';
 import RoomScope from '@/components/shell/RoomScope';
 import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
-  POS_FILTERS, CLASS_FILTERS, fmt1, signed1,
+  POS_FILTERS, CLASS_FILTERS, fmt1, signed1, adpRange,
 } from '@/lib/fantasy/statView';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
 import { valueGap } from '@/lib/fantasy/needs';
@@ -493,6 +493,7 @@ export default function DraftRoom({
             const stats = statsById[p.ffcPlayerId];
             const slot = displayPosition(p.position);
             const sum = summaries[p.ffcPlayerId];
+            const range = adpRange(p.adpHigh, p.adpLow);
             // Quick stats sit with the name; the full log is a tap away. K/DST
             // points are partial (no distance tiers / points allowed), so their
             // PPG is marked ~ rather than passed off as league-exact.
@@ -514,7 +515,11 @@ export default function DraftRoom({
                       </span>
                       <span className="nline2">
                         <span className="rng">
-                          {slot}{p.team ? `·${p.team}` : ''} · {r0(p.adpHigh)}-{r0(p.adpLow)}
+                          {slot}{p.team ? `·${p.team}` : ''}
+                          {/* The ADP window and its separator come and go
+                              TOGETHER: a Fantrax pool has no window, and
+                              "WR·CIN · ?-?" on every row was the orphan. */}
+                          {range && ` · ${range}`}
                           {quick && <span className="q"> · {quick.join(' · ')}</span>}
                           {/* MY TEAM sort shows the TWO FACTS behind the order and
                               never the composite that produced it: the market gap
