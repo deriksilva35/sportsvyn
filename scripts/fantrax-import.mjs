@@ -162,9 +162,11 @@ if (FULL) {
   const opts = { snapshotDate: today, scoringFormat: scoring.format, teamsCount, slots };
   const held = heldByLeague(info.playerInfo);
   const { rows: nfl, draftable, excluded } = toPoolRows(nflAdp, buildCrosswalk(playerIds), { ...opts, exclude: held });
-  const { rows: col, skipped } = toCollegePoolRows(ncaafAdp, buildCrosswalk(ncaafIds), opts);
+  // THE SAME `held` MAP FOR BOTH HALVES. A devy player on somebody's minors
+  // shelf is not draftable, and playerInfo carries all 35 of them - measured.
+  const { rows: col, skipped, excluded: colExcluded } = toCollegePoolRows(ncaafAdp, buildCrosswalk(ncaafIds), { ...opts, exclude: held });
   console.log(`\nwould write snapshot ${today}:  nfl ${nfl.length} (of ${draftable} draftable, ${excluded} already rostered)` +
-    `   ncaaf ${col.length} (${skipped.length} undraftable positions)`);
+    `   ncaaf ${col.length} (${skipped.length - colExcluded} undraftable positions, ${colExcluded} already rostered)`);
   if (col.length) {
     console.log(`  college placements ${col[0].adp}..${col[col.length - 1].adp}; top of that board:`);
     for (const r of col.filter((x) => x.position !== 'DEF').slice(0, 5)) {
