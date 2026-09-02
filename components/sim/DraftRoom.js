@@ -35,7 +35,7 @@ import {
   POS_FILTERS, CLASS_FILTERS, fmt1, signed1, adpRange,
 } from '@/lib/fantasy/statView';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
-import { lineTwoTokens } from '@/lib/fantasy/lineTwo';
+import { lineTwoTokens, seatSortHint } from '@/lib/fantasy/lineTwo';
 import { valueGap } from '@/lib/fantasy/needs';
 import { flagsAfterResult, flagsAfterArm } from '@/lib/fantasy/roomFlags';
 import { nextUserOverall } from '@/lib/fantasy/tracker';
@@ -472,7 +472,11 @@ export default function DraftRoom({
                 </button>
               );
             })}
-            {filter === 'ALL' && <span className="s-hint">Pick a position for stat sorts</span>}
+            {/* Under MY TEAM the rows carry the gap as a bare number; the pick
+                it is measured at is the same on every row, so it is said here,
+                once. */}
+            {seatSort && <span className="s-hint">{seatSortHint(myNextOverall)}</span>}
+            {filter === 'ALL' && !seatSort && <span className="s-hint">Pick a position for stat sorts</span>}
           </div>
         </div>
         <div className="zone-body">
@@ -531,7 +535,7 @@ export default function DraftRoom({
                               ride AHEAD of the stats, so the token a narrow row
                               drops is a REC count and never the reason the row
                               is where it is. */}
-                          {lineTwoTokens({ pos: slot, team: p.team, range, quick, seatSort, seatRead, nextOverall: myNextOverall }).map((t) => {
+                          {lineTwoTokens({ pos: slot, team: p.team, range, quick, seatSort, seatRead }).map((t) => {
                             if (t.kind === 'tag') return t.text;
                             if (t.kind === 'gap') {
                               return (

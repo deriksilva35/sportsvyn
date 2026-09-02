@@ -39,7 +39,7 @@ import {
 } from '@/lib/fantasy/statView';
 import { isExactlyScored } from '@/lib/fantasy/scoring';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
-import { lineTwoTokens } from '@/lib/fantasy/lineTwo';
+import { lineTwoTokens, seatSortHint } from '@/lib/fantasy/lineTwo';
 import RookieChip from '@/components/fantasy/RookieChip';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
@@ -386,7 +386,9 @@ export default function TrackerRoom({
                   >{o.label}</button>
                 );
               })}
-              {filter === 'ALL' && <span className="s-hint">Pick a position for stat sorts</span>}
+              {/* The gap's reference pick, said once - the rows carry the number. */}
+              {seatSort && <span className="s-hint">{seatSortHint(myNext)}</span>}
+              {filter === 'ALL' && !seatSort && <span className="s-hint">Pick a position for stat sorts</span>}
             </div>
             <div className="trk-avail">
               {/* Labels live HERE, once - the rows carry values only. The
@@ -428,12 +430,12 @@ export default function TrackerRoom({
                               ORDER is lineTwo.js's, shared with the Mock: under
                               seatSort the read rides ahead of the stats so the
                               one-line clip drops a REC count, not the reason. */}
-                          {lineTwoTokens({ pos, team: p.team, quick, seatSort, seatRead, nextOverall: myNext }).map((t) => {
+                          {lineTwoTokens({ pos, team: p.team, quick, seatSort, seatRead }).map((t) => {
                             if (t.kind === 'tag') return `${pos}${p.team ? ` ${p.team}` : ''}`;
                             if (t.kind === 'gap') {
                               return (
                                 <span className={`trk-gap ${seatRead.gap > 0 ? 'val' : 'rch'}`} key="gap">
-                                  {' '}{seatRead.gap > 0 ? '+' : ''}{seatRead.gap} AT {myNext}
+                                  {' '}{t.text}
                                 </span>
                               );
                             }
@@ -441,7 +443,7 @@ export default function TrackerRoom({
                             if (t.kind === 'slot') {
                               return (
                                 <span className={`trk-slotstate ${seatRead.slot}${t.muted ? ' deferred' : ''}`} key="slot">
-                                  {' '}{pos} · {seatRead.slot}
+                                  {' '}{t.text}
                                 </span>
                               );
                             }

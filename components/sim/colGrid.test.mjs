@@ -66,9 +66,13 @@ test('both rooms render through the shared classes and formatters', () => {
 test('the tag line lost the VAL duplicate - the column owns the number', () => {
   const t = src('components/sim/TrackerRoom.js');
   assert.ok(!/gapChip/.test(t), 'the tag-line gap chip is gone, definition included');
-  // The seat-valuation detail line keeps ITS numbers (gap AT the user's next
-  // pick + slot state) - different facts, still one home each.
-  assert.match(t, /seatRead\.gap > 0 \? '\+' : ''/, 'the MY TEAM detail line survives');
+  // The seat-valuation detail line keeps ITS numbers (gap + slot state) -
+  // different facts, still one home each.
+  // RE-PINNED (lineTwo copy, 2 Sep 2026): this matched the tracker's own
+  // `seatRead.gap > 0 ? '+' : ''`; the signed gap is now built once in
+  // lib/fantasy/lineTwo.js and the tracker renders the token's text.
+  assert.match(t, /className=\{`trk-gap \$\{seatRead\.gap > 0 \? 'val' : 'rch'\}`\}/, 'the MY TEAM detail line survives');
+  assert.match(t, /lineTwoTokens\(\{ pos, team: p\.team, quick, seatSort, seatRead \}\)/, '...fed by the shared token order');
 });
 
 test('the deck never wraps - the name ellipsizes, line 2 drops facts whole, shared definition', () => {
