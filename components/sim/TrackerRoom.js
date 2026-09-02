@@ -42,6 +42,7 @@ import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
 import RookieChip from '@/components/fantasy/RookieChip';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
+import { dstShortName } from '@/lib/fantasy/dstName';
 import { seatLabel, seatLabelShort, nextUserOverall, picksUntilUserTurn } from '@/lib/fantasy/tracker';
 import {
   valueGap, openStarterSlotsByPos, needsObservation, bestAvailableAtMyPick, slotLabel, cappedPositions,
@@ -61,7 +62,10 @@ const ERR = {
   no_picks: 'Nothing to undo',
 };
 // Value chip: positive = the player fell past his ADP to this pick.
+// A defense keeps its club: "Texans D/ST", never "H. Texans D/ST".
 const shortName = (full) => {
+  const dst = dstShortName(full);
+  if (dst) return dst;
   const parts = String(full ?? '').trim().split(/\s+/);
   return parts.length < 2 ? (parts[0] ?? '') : `${parts[0][0]}. ${parts.slice(1).join(' ')}`;
 };
@@ -420,7 +424,7 @@ export default function TrackerRoom({
                             column owns the gap number - one number, one home. */}
                         <div className="tag">
                           {pos}{p.team ? ` ${p.team}` : ''}
-                          {quick && <span className="trk-quick"> · {quick.join(' · ')}</span>}
+                          {quick && quick.map((q) => <span className="trk-quick" key={q}>· {q}</span>)}
                           {/* Two facts, never the composite - see seatValuation.js. */}
                           {seatSort && seatRead && (
                             <>

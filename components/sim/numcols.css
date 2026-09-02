@@ -10,9 +10,13 @@
  *
  * THE ROW IS TWO DECKS (the full-name restack): line 1 is rail + name at
  * full width - every name in the pool fits at 390px, ellipsis is the law
- * of last resort - and line 2 is the tag/stat line truncating against the
- * fixed columns. The action button rides OUTSIDE the deck, a sibling on
- * the right, so the row's align-items centers it across both lines.
+ * of last resort - and line 2 is the tag/stat line fitting against the
+ * fixed columns BY WHOLE FACTS: each stat is its own nowrap token and a
+ * token that does not fit is dropped entire, never cut. An ellipsis on
+ * line 2 left "DST·HOU · 42 …" on every defense (2 Sep 2026): the number
+ * survived, its label did not, and a number with no label is furniture.
+ * The action button rides OUTSIDE the deck, a sibling on the right, so the
+ * row's align-items centers it across both lines.
  *
  * LABELS LIVE IN THE HEADER, not the rows: one .nhead per list, rendered
  * in the room's own row container class so it inherits the exact gap and
@@ -48,10 +52,22 @@
 .nline1 .nm { flex: 1 1 auto; }
 .nline2 { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .nline2 .tag, .nline2 .rng { flex: 1 1 auto; }
-.ndeck .nm, .ndeck .tag, .ndeck .rng {
+.ndeck .nm {
   display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   min-width: 0;
 }
+/* LINE 2 DROPS FACTS WHOLE. A wrapping flex row exactly one line tall: the
+ * tokens that fit stay on the line, the rest wrap onto a second line the
+ * height clips away. Every child is a nowrap token; contiguous text (the
+ * POS·TEAM tag and its ADP window) is one anonymous token. No ellipsis. */
+.ndeck .tag, .ndeck .rng {
+  display: flex; flex-wrap: wrap; align-content: flex-start; align-items: baseline;
+  column-gap: .3em; overflow: hidden; line-height: 1.4; height: 1.4em;
+  white-space: nowrap; min-width: 0;
+}
+/* Tokens share the line's baseline; a larger-font token (the MY TEAM gap)
+ * keeps its own line box short so it cannot overrun the one-line clip. */
+.ndeck .tag > *, .ndeck .rng > * { flex: none; white-space: nowrap; line-height: 1; }
 
 /* The header row: label-styled .ncol cells over the value columns. */
 .nhead .ncols { margin-left: auto; }

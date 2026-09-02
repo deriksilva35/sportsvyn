@@ -520,7 +520,9 @@ export default function DraftRoom({
                               TOGETHER: a Fantrax pool has no window, and
                               "WR·CIN · ?-?" on every row was the orphan. */}
                           {range && ` · ${range}`}
-                          {quick && <span className="q"> · {quick.join(' · ')}</span>}
+                          {/* One token per stat, so line 2 drops a fact whole
+                              rather than cutting "42 SACKS" to "42 …". */}
+                          {quick && quick.map((q) => <span className="q" key={q}>· {q}</span>)}
                           {/* MY TEAM sort shows the TWO FACTS behind the order and
                               never the composite that produced it: the market gap
                               at your next pick, and how your roster can absorb the

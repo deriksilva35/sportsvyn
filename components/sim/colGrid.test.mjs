@@ -71,14 +71,27 @@ test('the tag line lost the VAL duplicate - the column owns the number', () => {
   assert.match(t, /seatRead\.gap > 0 \? '\+' : ''/, 'the MY TEAM detail line survives');
 });
 
-test('the deck never wraps - one line each, ellipsis, shared definition', () => {
+test('the deck never wraps - the name ellipsizes, line 2 drops facts whole, shared definition', () => {
   const grid = src('components/sim/numcols.css');
   // The shrink enabler lives on the DECK; the grid itself stays unshrinkable
   // (the no-min-width pin above scopes to .ncol/.nrail rules, and .ndeck is
   // the sanctioned exception by name).
   assert.match(grid, /\.ndeck \{ flex: 1 1 auto; min-width: 0;/);
-  assert.match(grid, /\.ndeck \.nm, \.ndeck \.tag, \.ndeck \.rng \{\n  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;/,
-    'name and tag lines truncate, never wrap');
+  // RE-PINNED (DST names, 2 Sep 2026). This pinned `.ndeck .nm, .ndeck .tag,
+  // .ndeck .rng { display: block; overflow: hidden; text-overflow: ellipsis;
+  // white-space: nowrap;` - one ellipsis law for all three lines. On line 2
+  // the ellipsis cut a stat mid-token: every defense read "DST·HOU · 42 …",
+  // a number whose label was the part that got trimmed. The name keeps the
+  // ellipsis (a cut name is still that name); line 2 is a one-line-tall
+  // wrapping flex row whose tokens are whole facts, and the fact that does
+  // not fit is dropped, not cut. No text-overflow on line 2 at all.
+  assert.match(grid, /\.ndeck \.nm \{\n  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;/,
+    'the name truncates, never wraps');
+  assert.match(grid, /\.ndeck \.tag, \.ndeck \.rng \{\n  display: flex; flex-wrap: wrap; align-content: flex-start; align-items: baseline;\n  column-gap: \.3em; overflow: hidden; line-height: 1\.4; height: 1\.4em;/,
+    'line 2 is one line tall and fits by whole tokens');
+  assert.match(grid, /\.ndeck \.tag > \*, \.ndeck \.rng > \* \{ flex: none; white-space: nowrap; line-height: 1; \}/);
+  const line2Rule = grid.slice(grid.indexOf('.ndeck .tag, .ndeck .rng {'), grid.indexOf('.ndeck .tag > *'));
+  assert.doesNotMatch(line2Rule, /text-overflow/, 'no ellipsis on line 2');
   // The R badge rides INSIDE the nowrap name span in both rooms - it cannot
   // orphan onto its own line.
   for (const rel of ROOMS) {
