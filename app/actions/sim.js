@@ -19,6 +19,7 @@ import {
 } from '@/lib/fantasy/drafts';
 import { deleteAccountFor } from '@/lib/account';
 import { getPlayerSeasonStats, getPlayerSeasonSummaries } from '@/lib/fantasy/playerStats';
+import { getCollegeSeasonSummaries } from '@/lib/fantasy/collegeStats';
 
 async function currentUserId() {
   const session = await auth();
@@ -140,7 +141,17 @@ export async function fetchPlayerSummaries(ffcPlayerIds, scoringFormat) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
   const ids = (ffcPlayerIds ?? []).map(String);
-  return { ok: true, summaries: await getPlayerSeasonSummaries(ids, scoringFormat) };
+  // TWO ROSTERS, ONE MAP. NFL identity resolves through
+  // sim_player_pool.matched_player_id -> nfl_players; college identity cannot
+  // (nameMatch is scoped to league='nfl', because college players matched NFL
+  // ids on name alone) and resolves against players + cfb_player_game_stats
+  // instead. Each function ignores ids that are not its own, so the two never
+  // write the same key and the merge order does not matter.
+  const [nfl, college] = await Promise.all([
+    getPlayerSeasonSummaries(ids, scoringFormat),
+    getCollegeSeasonSummaries(ids, scoringFormat),
+  ]);
+  return { ok: true, summaries: { ...nfl, ...college } };
 }
 
 // Permanently delete the signed-in user and ALL their data (App Store guideline

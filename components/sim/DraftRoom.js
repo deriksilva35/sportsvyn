@@ -32,7 +32,7 @@ import { SCORING_LABEL } from '@/lib/fantasy/config';
 import RoomScope from '@/components/shell/RoomScope';
 import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
-  POS_FILTERS, CLASS_FILTERS, fmt1, signed1, adpRange,
+  POS_FILTERS, CLASS_FILTERS, NCAA_FILTER, fmt1, signed1, adpRange,
 } from '@/lib/fantasy/statView';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
 import { lineTwoTokens, seatSortHint } from '@/lib/fantasy/lineTwo';
@@ -357,6 +357,12 @@ export default function DraftRoom({
   // relationship the order does not have.
   const seatSort = activeSort === 'myteam';
 
+  // THE COLLEGE VIEW. One flag, derived from the chip, because every difference
+  // it makes is a difference of the whole view: which columns the header names,
+  // which two facts a row prints, and which sorts are on offer. A row-by-row
+  // test would let a college row appear under an NFL header.
+  const collegeView = filter === NCAA_FILTER;
+
   const shown = useMemo(() => {
     const list = filterPlayers(available, { position: filter, team, search, cls });
     return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), summaries, seatValuation);
@@ -483,11 +489,25 @@ export default function DraftRoom({
           {/* One header row of labels; the rows carry values only. Same
               container class as a row, hidden Draft phantom for the button
               column - the labels are seated by geometry, not padding. */}
+          {/* VAL AND THE SEAT READ ARE ABSENT ON THE COLLEGE BOARD, AND THE
+              HEADER SAYS SO. VAL is the gap between a player's price and this
+              pick; the college price is quoted in a different market, so the
+              subtraction has two denominators and any number it produced would
+              be arithmetic on unlike things. A blank cell in a VAL column reads
+              as missing data - a stated absence reads as a decision, which is
+              what it is. The column is not rendered at all rather than rendered
+              empty. */}
+          {collegeView && (
+            <div className="s-hint p-collegenote">
+              College ADP is a separate market — no VAL, and no seat read, on these rows.
+            </div>
+          )}
           <div className="p-row nhead" aria-hidden="true">
             <span className="ncols">
               <span className="ncol">PPG</span>
-              <span className="ncol">ADP</span>
-              <span className="ncol">VAL</span>
+              {collegeView
+                ? <span className="ncol">NCAAF</span>
+                : <><span className="ncol">ADP</span><span className="ncol">VAL</span></>}
             </span>
             <span className="draft nghost">Draft</span>
           </div>
@@ -535,7 +555,7 @@ export default function DraftRoom({
                               ride AHEAD of the stats, so the token a narrow row
                               drops is a REC count and never the reason the row
                               is where it is. */}
-                          {lineTwoTokens({ pos: slot, team: p.team, range, quick, seatSort, seatRead }).map((t) => {
+                          {lineTwoTokens({ pos: slot, team: p.team, range, quick, seatSort, seatRead, league: p.league }).map((t) => {
                             if (t.kind === 'tag') return t.text;
                             if (t.kind === 'gap') {
                               return (
@@ -559,17 +579,38 @@ export default function DraftRoom({
                           })}
                         </span>
                         <span className="ncols">
+                          {/* PPG IS SEASON-STAMPED FOR A COLLEGE ROW, in the
+                              title, because the number beside it on an NFL row
+                              is a different year: NFL PPG is 2025 REG and the
+                              college log ends at the 2025 season with 2026
+                              barely begun. Same house arithmetic either way -
+                              seasonSummary over a game log - so the scales are
+                              comparable and only the year differs.
+                              AN UNRESOLVED PLAYER RENDERS NOTHING. Not a zero:
+                              a Fantrax "Cook, Cameron" does not reach a CFBD
+                              roster that says "Cam Cook", and 0.0 would read as
+                              a man who played and was useless. */}
                           <span className="ncol">
-                            <span className={`v${sum ? '' : ' empty'}`} title={approx ? 'Partial: kicker distance tiers and defensive points allowed are not in the data' : undefined}>
-                              {sum ? `${approx ? '~' : ''}${fmt1(sum.ppg)}` : '-'}
+                            <span className={`v${sum ? '' : ' empty'}`} title={sum && collegeView
+                              ? `${sum.season} college season${sum.school ? ` · ${sum.school}` : ''} · ${sum.games} games`
+                              : (approx ? 'Partial: kicker distance tiers and defensive points allowed are not in the data' : undefined)}>
+                              {sum ? `${approx && !collegeView ? '~' : ''}${fmt1(sum.ppg)}` : '-'}
                             </span>
                           </span>
-                          <span className="ncol">
-                            <span className="v dim">{r0(p.adp)}</span>
-                          </span>
-                          <span className="ncol">
-                            <span className={`v ${val >= 0 ? 'pos' : 'neg'}`}>{signed1(val)}</span>
-                          </span>
+                          {collegeView ? (
+                            <span className="ncol">
+                              <span className="v dim">{p.ncaafAdp == null ? '-' : fmt1(p.ncaafAdp)}</span>
+                            </span>
+                          ) : (
+                            <>
+                              <span className="ncol">
+                                <span className="v dim">{r0(p.adp)}</span>
+                              </span>
+                              <span className="ncol">
+                                <span className={`v ${val >= 0 ? 'pos' : 'neg'}`}>{signed1(val)}</span>
+                              </span>
+                            </>
+                          )}
                         </span>
                       </span>
                     </span>
