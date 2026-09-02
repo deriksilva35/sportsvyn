@@ -54,7 +54,10 @@ export async function startCustomDraft(config, pickPosition, opts = {}) {
 export async function startLeagueDraft(configId, opts = {}) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
-  const res = await startLeagueDraftFor(userId, Number(configId), opts);
+  // opts.seat (084): the seat tapped on the card, 1..teams_count, this run only.
+  // Whitelisted, not spread: the flow-core's opts are ours to name, not the wire's.
+  const clean = { auto: opts?.auto === true, ...(opts?.seat != null ? { seat: Number(opts.seat) } : {}) };
+  const res = await startLeagueDraftFor(userId, Number(configId), clean);
   if (res.ok) revalidatePath('/sim');
   return res;
 }

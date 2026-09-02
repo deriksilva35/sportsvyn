@@ -29,8 +29,14 @@ export default function MyLeagues({ leagues, tz = null }) {
               {l.keeper_count > 0 ? ` · ${l.keeper_count} keepers` : ''}
             </span>
             {day ? <span className="sml-when">Draft {day}{at ? ` · ${at.time}` : ''}</span> : null}
-            {/* The real start action, not a link: see LeagueStart. */}
-            <LeagueStart configId={l.id} />
+            {/* The real start action, not a link: see LeagueStart. The default
+                seat is the imported one (isMine); the strip lets this run sit
+                anywhere. */}
+            <LeagueStart
+              configId={l.id}
+              teamsCount={l.teams_count}
+              defaultSeat={(l.teams ?? []).find((t) => t.isMine === true)?.slot ?? null}
+            />
           </div>
         );
       })}

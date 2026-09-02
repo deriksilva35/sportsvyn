@@ -924,3 +924,22 @@
   /* The sentence yields before the button does - the band stays one line. */
   .sim-dailyband .sdb-line { font-size: 12px; }
 }
+
+/* ============================================================================
+   SEAT STRIP (084) - pick your seat, this run only. Shared by the league card
+   and the Tracker setup. Pills read as a draft order; the imported default
+   carries a hairline so a tap away from it is a visible decision.
+   ============================================================================ */
+.seatstrip { display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1; margin: 6px 0 2px; }
+.seatstrip-l { font-family: var(--font-saira-cond); font-size: 9.5px; font-weight: 700; letter-spacing: .12em; color: var(--muted-dim); }
+.seatstrip-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.seatpill {
+  min-width: 26px; height: 24px; padding: 0 6px; border: 1px solid var(--rule-dim); background: transparent;
+  color: var(--muted); font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; cursor: pointer;
+}
+.seatpill.dflt { border-color: var(--muted); }
+.seatpill.on { background: var(--volt); color: var(--ink); border-color: var(--volt); font-weight: 700; }
+.seatpill:disabled { opacity: .6; cursor: default; }
+.seatstrip-h { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .03em; color: var(--muted-dim); }
+.sml-card { grid-template-areas: "name start" "meta start" "when start" "seats seats"; }
+.sml-card .seatstrip { grid-area: seats; }

@@ -14,6 +14,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { startTrackerDraft } from '@/app/actions/sim';
+import SeatStrip from './SeatStrip';
 import {
   SCORING_FORMATS, SCORING_LABEL, TEAMS_MIN, TEAMS_MAX,
   SLOT_BOUNDS, ROSTER_CELLS, deriveRounds,
@@ -126,13 +127,18 @@ export default function TrackerStart({ entitled, shell = false, iap = false, ini
             {SCORING_FORMATS.map((f) => <option key={f} value={f}>{SCORING_LABEL[f]}</option>)}
           </select>
         </label>
-        <label>
-          <span>YOUR SEAT</span>
-          <select value={seat} onChange={(e) => setSeat(Number(e.target.value))}>
-            {Array.from({ length: teams }, (_, i) => i + 1).map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
-        </label>
       </div>
+      {/* THE SEAT IS A STRIP, the same control the league card uses (084).
+          THE LABEL IS A TRANSCRIPTION FACT, NOT A PREFERENCE (ruling, 2 Sep):
+          the tracker mirrors a real draft, so this is where you actually sit
+          in it - which is why it does not say "this run only" like the Mock. */}
+      <SeatStrip
+        teams={teams}
+        seat={seat}
+        onChange={setSeat}
+        label="YOUR COLUMN ON THE BOARD"
+        hint="Pick where your live league drafts from."
+      />
 
       <div className="trk-hint">How many seats, how it scores, and where you pick - all editable on draft night.</div>
 
