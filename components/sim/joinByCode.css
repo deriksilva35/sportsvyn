@@ -1,0 +1,18 @@
+/* components/sim/joinByCode.css - the code field, on the lobby and on the shell's
+   sign-in screen. Its own file because /signin does not carry sim.css. Tokens
+   are the site's (globals.css); the mono is the sim's. */
+.jbc { display: flex; flex-direction: column; gap: 6px; }
+.jbc--empty { padding: 12px 14px; border: 1px solid var(--rule-dim, #2a2a2a); background: var(--graphite, #161616); margin: 0 0 14px; }
+.jbc--row { margin-top: 8px; }
+.jbc--signin { margin-top: 2.5rem; text-align: left; }
+.jbc-lead { color: var(--paper-dim, #cfcfcf); font-size: 13px; margin: 0 0 4px; }
+.jbc-l { color: var(--muted, #8a8a8a); font-family: var(--font-jetbrains-mono), monospace; font-size: 10.5px; letter-spacing: .08em; }
+.jbc-row { display: flex; gap: 6px; align-items: stretch; }
+.jbc-in { flex: 1 1 auto; min-width: 0; padding: 9px 12px; border: 1px solid var(--rule-dim, #2a2a2a); background: var(--ink, #0b0b0b); color: var(--paper, #f4f1ea);
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 16px; letter-spacing: .18em; text-transform: uppercase; }
+.jbc-in::placeholder { letter-spacing: .02em; text-transform: none; color: var(--muted-dim, #666); }
+.jbc-in:focus { outline: none; border-color: var(--volt, #d6ff3a); }
+.jbc-go { flex: 0 0 auto; padding: 9px 16px; border: 1px solid var(--volt, #d6ff3a); background: var(--volt, #d6ff3a); color: #0b0b0b; font-weight: 800; font-size: 13px; cursor: pointer; }
+.jbc-go:disabled { opacity: .5; cursor: default; }
+.jbc-err { color: var(--paper-dim, #cfcfcf); font-size: 12px; margin: 0; }
+.jbc-h { color: var(--muted, #8a8a8a); font-size: 12px; margin: 0; }

@@ -16,6 +16,7 @@ import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
 import { getPresets, getDraftsUsed, isMember, canStartDraft, getOpenSimDraft, getMyLeagues, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
 import MyLeagues from '@/components/sim/MyLeagues';
+import JoinByCode from '@/components/sim/JoinByCode';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
@@ -118,6 +119,10 @@ export default async function SimLobby({ searchParams }) {
               the name beside your score on every board, in every game - and it
               keeps your drafts, your history and your streak.
             </p>
+            {/* A friend's code, signed out: /join/{code} carries it through
+                sign-in (the shell never renders this hero - its signed-out
+                surface is /signin, which has the same field). */}
+            <JoinByCode variant="signin" />
           </section>
         ) : (
           await (async () => {
@@ -156,6 +161,11 @@ export default async function SimLobby({ searchParams }) {
                 {/* ABOVE THE PRACTICE DECK: a real league outranks a rehearsal.
                     Renders nothing when the reader has imported none. */}
                 <MyLeagues leagues={myLeagues} userId={userId} />
+                {/* NO LEAGUE YET: the join-by-code band takes the slot. In a
+                    group chat the code is what gets typed; the link opens
+                    Safari from the app until Universal Links ship. With
+                    leagues, MyLeagues carries the same field as a small row. */}
+                {myLeagues.length === 0 && <JoinByCode variant="empty" />}
                 <section>
                   <div className="sim-kicker">Start a mock draft</div>
                   <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap} />

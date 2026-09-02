@@ -15,16 +15,10 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { redeemInvite } from '@/app/actions/league';
+import { REFUSALS } from '@/lib/fantasy/inviteCode';
 
-const REFUSALS = {
-  invalid_code: 'That link does not match a league. Ask for a fresh one.',
-  revoked: 'This link was turned off by the league owner. Ask for a fresh one.',
-  expired: 'This link expired. Ask the league owner for a fresh one.',
-  full: 'This link has been used up. Ask the league owner for a fresh one.',
-  franchise_taken: 'Somebody claimed that team a moment ago. Pick another, or join without one.',
-  no_such_franchise: 'That team is not in this league.',
-  unauthenticated: 'Please sign in.',
-};
+// The refusal wording is lib/fantasy/inviteCode.js's REFUSALS - the lobby's code
+// field says the same words inline, from the same object.
 
 export default function JoinClaim({ code, preview }) {
   const router = useRouter();

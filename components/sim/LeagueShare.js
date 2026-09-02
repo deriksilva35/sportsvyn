@@ -4,8 +4,11 @@
 // in, the invite, your own mocks of this league.
 //
 // THE OWNER SHARES, MEMBERS ARRIVE. Share (owner only) mints one live code
-// and shows it as a copyable link - /join/CODE is what rides the group chat.
-// New code retires the old link; Revoke closes the door with no replacement.
+// and shows THE CODE first, big, with the link second ("or share the link"):
+// in a group chat the eight characters are what people actually type - into
+// the lobby's Join a league field, inside the app - while the link opens
+// Safari until Universal Links ship. A Copy button each. New code retires the
+// old one; Revoke closes the door with no replacement.
 // Every member sees the roster of people with their franchises; a member can
 // leave (their franchise frees), the owner can kick.
 //
@@ -21,8 +24,12 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createInvite, revokeInvites, leaveLeague, kickMember } from '@/app/actions/league';
 
+import { joinPath } from '@/lib/fantasy/inviteCode';
+
+// Absolute ONLY for the copyable link text - what rides a chat needs an
+// origin. Nothing navigates to it; the app's own road is the relative joinPath.
 const SITE = 'https://sportsvyn.com';
-export const joinHref = (code) => `${SITE}/join/${code}`;
+export const joinHref = (code) => `${SITE}${joinPath(code)}`;
 
 function when(ts) {
   if (!ts) return '';
@@ -35,7 +42,7 @@ export default function LeagueShare({ configId, role, members = [], invite = nul
   const [pending, start] = useTransition();
   const [err, setErr] = useState(null);
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(null); // 'code' | 'link' | null
   const owner = role === 'owner';
 
   function run(fn) {
@@ -47,8 +54,8 @@ export default function LeagueShare({ configId, role, members = [], invite = nul
     });
   }
 
-  async function copy(text) {
-    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }
+  async function copy(which, text) {
+    try { await navigator.clipboard.writeText(text); setCopied(which); setTimeout(() => setCopied(null), 1500); }
     catch { setErr('copy_failed'); }
   }
 
@@ -63,15 +70,20 @@ export default function LeagueShare({ configId, role, members = [], invite = nul
         <div className="lgs-body">
           {owner && (
             <div className="lgs-invite">
-              <div className="lgs-l">INVITE LINK</div>
+              <div className="lgs-l">LEAGUE CODE</div>
               {invite ? (
                 <>
                   <div className="lgs-code-row">
-                    <code className="lgs-code">{joinHref(invite.code)}</code>
-                    <button type="button" className="lgs-btn" onClick={() => copy(joinHref(invite.code))}>{copied ? 'Copied' : 'Copy'}</button>
+                    <code className="lgs-code lgs-code--big">{invite.code}</code>
+                    <button type="button" className="lgs-btn" onClick={() => copy('code', invite.code)}>{copied === 'code' ? 'Copied' : 'Copy code'}</button>
                   </div>
                   <div className="lgs-h">
-                    Code {invite.code} · {invite.uses}/{invite.maxUses} used · good until {when(invite.expiresAt)}
+                    Friends type it under <b>Join a league</b> in the app · {invite.uses}/{invite.maxUses} used · good until {when(invite.expiresAt)}
+                  </div>
+                  <div className="lgs-l lgs-l--or">OR SHARE THE LINK</div>
+                  <div className="lgs-code-row">
+                    <code className="lgs-code">{joinHref(invite.code)}</code>
+                    <button type="button" className="lgs-btn" onClick={() => copy('link', joinHref(invite.code))}>{copied === 'link' ? 'Copied' : 'Copy link'}</button>
                   </div>
                   <div className="lgs-actions">
                     <button type="button" className="lgs-btn" disabled={pending} onClick={() => run(() => createInvite(configId))}>New code</button>
@@ -81,7 +93,7 @@ export default function LeagueShare({ configId, role, members = [], invite = nul
               ) : (
                 <div className="lgs-actions">
                   <button type="button" className="lgs-btn" disabled={pending} onClick={() => run(() => createInvite(configId))}>Share this league</button>
-                  <span className="lgs-h">One link, 14 days, up to 12 joins. Each friend claims their own team.</span>
+                  <span className="lgs-h">One code, 14 days, up to 12 joins. Each friend types it in the app and claims their own team.</span>
                 </div>
               )}
             </div>

@@ -34,6 +34,8 @@ import Wordmark from '@/components/Wordmark';
 import SignInForm from './SignInForm';
 import AppleSignInButton from './AppleSignInButton';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import JoinByCode from '@/components/sim/JoinByCode';
+import { codeFromCallback } from '@/lib/fantasy/inviteCode';
 
 // noindex: an auth flow has nothing to rank and should never be a search result.
 // This was PUBLICLY INDEXABLE until the noindex-lift audit — it had no robots block
@@ -59,6 +61,9 @@ export default async function SignInPage({ searchParams }) {
   // Shell-aware (via ?shell=sim-app param, or the sv_shell cookie set on /sim).
   // Web version is unaffected — isShell is false there.
   const isShell = await resolveShellMode();
+  // A league code riding the callbackUrl (/join/CODE…): say so, so a reader
+  // who typed it a moment ago sees it survived the turn to this screen.
+  const joinCode = codeFromCallback(callbackUrl);
 
   return (
     <main
@@ -97,6 +102,18 @@ export default async function SignInPage({ searchParams }) {
 
         <SignInForm initialError={initialError} callbackUrl={callbackUrl} />
       </div>
+
+      {joinCode && (
+        <p className="font-mono text-[11px] uppercase tracking-widest text-volt mt-8" data-join-code={joinCode}>
+          League code {joinCode} comes with you - sign in and pick your team.
+        </p>
+      )}
+      {/* SHELL, SIGNED OUT: this screen is the whole app, so a friend's code
+          has to be typeable HERE. Submit goes through /join/{code}, which
+          sends the reader straight back to this form with the code in the
+          callbackUrl (the line above) - no Safari, no second path. The web's
+          signed-out /sim hero carries the same field. */}
+      {isShell && !joinCode && <JoinByCode variant="signin" />}
 
       {/* SHELL (App Store 3.1.1): the pricing page is a purchase path, so the
           link is not rendered inside the app at all. Web unchanged. */}

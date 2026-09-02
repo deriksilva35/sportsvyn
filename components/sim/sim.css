@@ -957,6 +957,8 @@
 .lgs-h { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .03em; color: var(--muted-dim); }
 .lgs-code-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .lgs-code { font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; color: var(--volt); letter-spacing: .04em; word-break: break-all; }
+.lgs-code--big { font-size: 22px; letter-spacing: .22em; color: var(--paper); font-weight: 700; }
+.lgs-l--or { margin-top: 8px; }
 .lgs-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 .lgs-btn { height: 24px; padding: 0 8px; border: 1px solid var(--rule-dim); background: transparent; color: var(--paper); font-family: var(--font-jetbrains-mono), monospace; font-size: 10.5px; letter-spacing: .04em; cursor: pointer; }
 .lgs-btn:hover { border-color: var(--muted); }

@@ -1,7 +1,8 @@
 'use server';
 
 /**
- * Server Actions for LEAGUE SHARING (085) - membership, invites, franchises.
+ * Server Actions for LEAGUE SHARING (085) - membership, invites, franchises,
+ * and the lobby's code preview (a read).
  *
  * Same law as app/actions/sim.js: the session is resolved INSIDE the action,
  * never trusted from the client, and every write delegates to lib/fantasy/
@@ -19,6 +20,7 @@ import {
   createInvite as createInviteFor, revokeInvites as revokeInvitesFor,
   redeemInvite as redeemInviteFor, claimFranchise as claimFranchiseFor,
   leaveLeague as leaveLeagueFor, kickMember as kickMemberFor,
+  invitePreview,
 } from '@/lib/fantasy/leagueShare';
 
 async function currentUserId() {
@@ -42,6 +44,18 @@ export async function revokeInvites(configId) {
   const res = await revokeInvitesFor(userId, Number(configId));
   if (res.ok) revalidatePath('/sim');
   return res;
+}
+
+// The lobby's code field: A READ, the same invitePreview the /join page renders
+// from, so the field can say "expired" inline instead of bouncing the reader to
+// a refusal page. It never joins - the redeem is JoinClaim's tap, below, and
+// only that. Signed out is fine here (a preview needs no membership); the
+// field then sends the reader through /join/{code}, which carries the code
+// into sign-in. Returns only what the field needs: ok, reason, the league name.
+export async function previewInvite(code) {
+  const userId = await currentUserId();
+  const p = await invitePreview(String(code ?? ''), userId);
+  return { ok: p.ok === true, reason: p.ok ? null : p.reason, league: p.league?.name ?? null, alreadyMember: p.alreadyMember === true };
 }
 
 // The friend's tap: join (idempotent) and, when a franchise was tapped, claim

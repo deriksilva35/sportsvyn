@@ -4,12 +4,15 @@
 // is the practice range; this is the reader's actual draft, with their actual
 // keepers in it.
 //
-// RENDERS NOTHING WHEN THERE ARE NONE. A frame reading "no leagues yet" on the
-// app's most-visited screen would be a permanent advertisement for a feature
-// most readers have not asked for.
+// RENDERS NOTHING WHEN THERE ARE NONE - the lobby (app/sim/page.js) puts the
+// JOIN-BY-CODE band in this slot instead, because a reader with no league of
+// their own is exactly the reader holding a friend's code. With leagues, the
+// same field sits as a small persistent row under the cards: a second league's
+// code has somewhere to go without hunting.
 
 import LeagueStart from './LeagueStart';
 import LeagueShare from './LeagueShare';
+import JoinByCode from './JoinByCode';
 import { dayHeading, kickoffParts } from '@/lib/gridiron/kickoff';
 
 export default function MyLeagues({ leagues, tz = null, userId = null }) {
@@ -53,6 +56,9 @@ export default function MyLeagues({ leagues, tz = null, userId = null }) {
           </div>
         );
       })}
+      {/* The persistent entry: a code typed here goes the same road as a
+          tapped link (/join/{code}). */}
+      <JoinByCode variant="row" />
     </section>
   );
 }
