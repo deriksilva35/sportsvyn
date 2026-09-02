@@ -7,12 +7,13 @@
 // surface, and a card that navigated to one would be a dead link on the app's
 // most-visited screen.
 //
-// THE SEAT IS THIS RUN'S (084). The strip opens on the seat the commissioner
-// gave you (defaultSeat, the teams entry marked isMine); tap another and the
-// draft seats you there for this run only - the league's record is untouched,
-// and the keepers' cells follow their owners to wherever they sit. The default
-// is sent as no seat at all, so a run from your own seat is byte-for-byte the
-// start it was before the picker existed.
+// THE SEAT IS A FRANCHISE (ruling 2 Sep). The strip opens on your own team
+// (defaultSeat, the teams entry marked isMine); tap another and you play THAT
+// team this run - its column, its keepers on your roster tab - while your real
+// team drafts as a bot at its own column. The board never moves: every keeper
+// sits in its owner's real column in every run. The default is sent as no seat
+// at all, so a run as your own team is byte-for-byte the start it was before
+// the picker existed.
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -27,7 +28,7 @@ const REASONS = {
   entitlement: 'The room turned that down. Try again in a moment.',
 };
 
-export default function LeagueStart({ configId, teamsCount = 0, defaultSeat = null }) {
+export default function LeagueStart({ configId, teamsCount = 0, defaultSeat = null, keptBySeat = null }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState(null);
@@ -56,7 +57,9 @@ export default function LeagueStart({ configId, teamsCount = 0, defaultSeat = nu
           defaultSeat={defaultSeat}
           onChange={setSeat}
           disabled={pending}
-          hint="Draft from any spot - this run only."
+          label="YOUR TEAM"
+          hint="Draft as any team - this run only."
+          counts={keptBySeat}
         />
       ) : null}
       <button type="button" className="sml-start" onClick={go} disabled={pending}>

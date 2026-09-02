@@ -65,7 +65,7 @@ const r0 = (x) => (x == null ? '?' : Math.round(Number(x)));
 
 export default function DraftRoom({
   draftId, config, order, userTeamIndex, initialPicks, initialAvailable, timerSeconds, initialAuto, poolMapping, minors = [],
-  upcomingKeepers = [],
+  upcomingKeepers = [], franchise = null,
 }) {
   const router = useRouter();
   const [picks, setPicks] = useState(initialPicks);
@@ -573,7 +573,11 @@ export default function DraftRoom({
 
         {/* ROSTER page: current lineup-order roster, full page */}
         <section className="page zone pg-roster">
-          <div className="plabel">My roster · Seat {userTeamIndex + 1} · {keptCount > 0
+          {/* SEAT = FRANCHISE (ruling 2 Sep): this roster is the team at this
+              column - its keepers, its picks. The name says whose, and "your
+              team" marks the run where it is the reader's own. */}
+          <div className="plabel">My roster · Seat {userTeamIndex + 1}{franchise?.name
+            ? <> · {franchise.name}{franchise.isMine ? ' (your team)' : ''}</> : null} · {keptCount > 0
             ? <>{draftedCount} drafted + {keptCount} kept · {userPicks.length + myPendingKeepers.length}/{rounds}</>
             : <>{userPicks.length}/{rounds}</>}</div>
           <div className="zone-body">

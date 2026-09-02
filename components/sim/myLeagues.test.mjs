@@ -25,8 +25,9 @@ test('MyLeagues has no /sim/league/ link and no route for one exists', () => {
   assert.equal((strip.match(/sim\/league\//g) ?? []).length, 0, 'no link into /sim/league/');
   assert.equal((strip.match(/<Link/g) ?? []).length, 0, 'the card is not a link at all');
   assert.ok(!existsSync(path.join(REPO, 'app/sim/league')), 'no app/sim/league route');
-  // 084: the card hands the strip its size and the imported seat (isMine).
-  assert.match(strip, /<LeagueStart\s+configId=\{l\.id\}\s+teamsCount=\{l\.teams_count\}\s+defaultSeat=\{\(l\.teams \?\? \[\]\)\.find\(\(t\) => t\.isMine === true\)\?\.slot \?\? null\}/);
+  // 084: the card hands the strip its size, the reader's own team (isMine) and
+  // (ruling 2 Sep) each franchise's keeper count for the pills.
+  assert.match(strip, /<LeagueStart\s+configId=\{l\.id\}\s+teamsCount=\{l\.teams_count\}\s+defaultSeat=\{\(l\.teams \?\? \[\]\)\.find\(\(t\) => t\.isMine === true\)\?\.slot \?\? null\}\s+keptBySeat=\{l\.kept_by_seat \?\? null\}/);
 });
 
 test('LeagueStart calls the server action and lands in the room route; the default seat is sent as NO seat', () => {
@@ -44,44 +45,69 @@ test('LeagueStart calls the server action and lands in the room route; the defau
   assert.match(actions, /startLeagueDraftFor\(userId, Number\(configId\), clean\)/);
 });
 
-test('084 seat strip: one control on both start surfaces; the league default is marked, the tracker names the column', () => {
+test('seat strip: the league card alone; a pill is a franchise with its keeper count; the tracker keeps its plain seat field', () => {
   const stripSrc = stripComments(src('components/sim/SeatStrip.js'));
   const tracker = stripComments(src('components/sim/TrackerStart.js'));
   assert.match(stripSrc, /role="radiogroup"/);
   assert.match(stripSrc, /className=\{`seatpill\$\{on \? ' on' : ''\}\$\{dflt \? ' dflt' : ''\}`\}/);
+  // A pill says what taking that team hands you: "12 · 4 kept".
+  assert.match(stripSrc, /\{counts \? `\$\{s\} · \$\{counts\[s - 1\] \?\? 0\} kept` : s\}/);
   assert.match(start, /<SeatStrip\s+teams=\{teamsCount\}\s+seat=\{seat\}\s+defaultSeat=\{defaultSeat\}/);
-  assert.match(start, /hint="Draft from any spot - this run only\."/);
+  // RE-PINNED (ruling 2 Sep, seat = franchise): this pinned hint="Draft from
+  // any spot - this run only." - a chair. The seat is a team now, and the copy
+  // says so; the pills carry the league's per-team keeper counts.
+  assert.match(start, /label="YOUR TEAM"/);
+  assert.match(start, /hint="Draft as any team - this run only\."/);
+  assert.match(start, /counts=\{keptBySeat\}/);
+  assert.doesNotMatch(start, /any spot/);
   assert.match(start, /Start draft · seat \$\{seat\}/);
-  assert.match(tracker, /<SeatStrip\s+teams=\{teams\}\s+seat=\{seat\}\s+onChange=\{setSeat\}/);
-  // RE-PINNED (ruling 2 Sep): this pinned hint="Your column on the board - this
-  // run only." The tracker's seat is a transcription fact - where you sit in
-  // your real league's draft - not a preference, so the label says so and
-  // "this run only" belongs to Mock alone.
-  assert.match(tracker, /label="YOUR COLUMN ON THE BOARD"/);
-  assert.match(tracker, /hint="Pick where your live league drafts from\."/);
-  assert.doesNotMatch(tracker, /this run only/, 'the tracker never says this run only');
-  assert.doesNotMatch(tracker, /<select value=\{seat\}/, 'the tracker\'s seat <select> is gone');
+  // RE-PINNED TWICE (ruling 2 Sep, tracker picker removed). 084 put the strip
+  // on the tracker and pinned `<select value={seat}` GONE; the label ruling
+  // then pinned "YOUR COLUMN ON THE BOARD". Both are void: the tracker seat is
+  // a transcription fact, so it is the plain YOUR SEAT select in the setup row
+  // again (as at 78f402b), and the strip is the league card's alone.
+  assert.doesNotMatch(tracker, /SeatStrip/, 'no seat picker on the tracker');
+  assert.doesNotMatch(tracker, /YOUR COLUMN ON THE BOARD|this run only|Draft as any team/);
+  assert.match(tracker, /<span>YOUR SEAT<\/span>\s*<select value=\{seat\} onChange=\{\(e\) => setSeat\(Number\(e\.target\.value\)\)\}>/);
   assert.match(tracker, /startTrackerDraft\(config, seat, labels\)/, 'the tracker still sends the seat as pickPosition');
+  assert.equal((src('components/sim/SeatStrip.js').match(/Tracker/g) ?? []).length, 1, 'SeatStrip names the Tracker once - to say it is not there');
   assert.match(css, /\.seatpill\.on \{ background: var\(--volt\);/);
   assert.match(css, /\.seatpill\.dflt \{ border-color: var\(--muted\); \}/);
 });
 
-test('084 flow-core: default seat is the imported one, a chosen seat is range-checked, user_seat records only a choice, keepers load by the draft\'s seat', () => {
+test('flow-core (seat = franchise): the column is the league\'s, keepers load with no run argument, the roster and minors follow the franchise', () => {
   const core = stripComments(src('lib/fantasy/drafts.js'));
-  assert.match(core, /let seat = mine\.slot; let chosenSeat = false;/);
+  const seed = stripComments(src('lib/fantrax/keeperSeed.js'));
+  // RE-PINNED (ruling 2 Sep). This pinned the per-run seating: runSeats(config.teams, seat),
+  // loadKeepers(config, pos|draft.pick_position) x6 and 0 seatless loads, chosenSeat,
+  // minors by isMine (the reader's, because the seat could be borrowed). All of that
+  // moved keepers between columns per run. Now: the OLD derivation is ABSENT -
+  assert.doesNotMatch(seed, /runSeats/, 'no per-run seating in keeperSeed');
+  assert.doesNotMatch(core, /runSeats/, 'no per-run seating in the flow-core');
+  assert.doesNotMatch(core, /chosenSeat/);
+  assert.equal((core.match(/loadKeepers\(config, /g) ?? []).length, 0, 'no keeper load takes a seat');
+  assert.equal((core.match(/await loadKeepers\(config\)/g) ?? []).length, 6, 'every keeper load is the league\'s map');
+  assert.match(core, /leagueSeats\(config\.teams\)/);
+  assert.match(seed, /export function leagueSeats\(teams\)/);
+  // The seat is range-checked and defaults to the reader's own team; user_seat = the franchise, always written.
+  assert.match(core, /let seat = mine\.slot;/);
   assert.match(core, /if \(!Number\.isInteger\(s\) \|\| s < 1 \|\| s > config\.teams_count\) return \{ ok: false, reason: 'bad_seat' \};/);
-  assert.match(core, /finalizeStart\(config, seat, \{ \.\.\.opts, chosenSeat \}/);
-  assert.match(core, /const userSeat = opts\.chosenSeat === true \? pos : null;/);
+  assert.match(core, /finalizeStart\(config, seat, \{ \.\.\.opts, franchise: true \}/);
+  assert.match(core, /const userSeat = opts\.franchise === true \? pos : null;/);
   assert.match(core, /INSERT INTO drafts \(user_id, config_id, status, pick_position, user_seat, is_auto,/);
-  // Every keeper load derives from the run's seat - none from the config alone.
-  assert.equal((core.match(/loadKeepers\(config\)/g) ?? []).length, 0, 'no seatless keeper load');
-  assert.equal((core.match(/loadKeepers\(config, (draft\.pick_position|pos)\)/g) ?? []).length, 6);
-  assert.match(core, /runSeats\(config\.teams, seat\)/);
-  // Minors are the reader's (isMine), not the seat's - the seat may be borrowed this run.
-  assert.match(core, /find\(\(t\) => t\.isMine === true\)\?\.minors \?\? \[\]/);
-  assert.doesNotMatch(core, /t\.slot === draft\.pick_position\)\?\.minors/);
+  // The room: the franchise is the team at pick_position; its minors, its name.
+  assert.match(core, /const franchise = \(config\.teams \?\? \[\]\)\.find\(\(t\) => Number\(t\.slot\) === draft\.pick_position\) \?\? null;/);
+  assert.match(core, /const minors = franchise\?\.minors \?\? \[\];/);
+  assert.doesNotMatch(core, /isMine === true\)\?\.minors/, 'minors are the franchise\'s, not the reader\'s');
+  // The roster tab follows the franchise: pending keepers in the YOU column, and the header names the team.
+  assert.match(room, /pendingKeepers\.filter\(\(k\) => k\.teamSlot === userTeamIndex \+ 1\)/);
+  assert.match(room, /My roster · Seat \{userTeamIndex \+ 1\}\{franchise\?\.name/);
+  assert.match(room, /franchise\.isMine \? ' \(your team\)' : ''/);
+  assert.match(src('app/sim/draft/[id]/page.js'), /franchise=\{room\.franchise \?\? null\}/);
   // The tracker's seat is always chosen, so it writes user_seat = pick_position.
   assert.match(core, /INSERT INTO drafts \(user_id, config_id, status, pick_position, user_seat, is_auto, mode, team_labels,/);
+  // The leagues list carries each franchise's keeper count for the pills.
+  assert.match(core, /kept_by_seat: l\.keeper_count > 0 \? keptBySeat\(/);
   // Import: owner written, provider seating checked, one keeper per owner per round.
   const imp = stripComments(src('lib/fantrax/import.js'));
   assert.match(imp, /INSERT INTO draft_config_keepers \(config_id, fantrax_team_id, team_slot, round, pick_in_round,/);

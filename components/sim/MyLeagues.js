@@ -30,12 +30,13 @@ export default function MyLeagues({ leagues, tz = null }) {
             </span>
             {day ? <span className="sml-when">Draft {day}{at ? ` · ${at.time}` : ''}</span> : null}
             {/* The real start action, not a link: see LeagueStart. The default
-                seat is the imported one (isMine); the strip lets this run sit
-                anywhere. */}
+                seat is your own team (isMine); the strip lets this run play any
+                franchise, each pill carrying that team's keeper count. */}
             <LeagueStart
               configId={l.id}
               teamsCount={l.teams_count}
               defaultSeat={(l.teams ?? []).find((t) => t.isMine === true)?.slot ?? null}
+              keptBySeat={l.kept_by_seat ?? null}
             />
           </div>
         );
