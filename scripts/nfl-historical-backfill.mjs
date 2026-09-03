@@ -36,7 +36,11 @@ const args = process.argv.slice(2);
 const season = Number(args.find((a) => /^\d{4}$/.test(a)));
 const stage = (args.find((a) => a.startsWith('--stage='))?.split('=')[1] ?? 'all').toLowerCase();
 
-if (!Number.isInteger(season) || season < 2010 || season > 2030) {
+// FLOOR IS 2002, MEASURED. balldontlie's own /nfl/v1/stats returns real rows back
+// to 2002 (probed live: 1990/1995/1999/2000/2001 come back empty, 2002 does not);
+// this used to read `< 2010`, a stale bound from before that probe, and it refused
+// 2002-2009 outright rather than reporting a source limit that wasn't real.
+if (!Number.isInteger(season) || season < 2002 || season > 2030) {
   console.error('usage: node scripts/nfl-historical-backfill.mjs <season> [--stage=games|stats|all]');
   process.exit(1);
 }
