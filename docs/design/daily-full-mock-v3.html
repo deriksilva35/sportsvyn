@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Daily - full mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,600;1,900&family=Saira+Condensed:wght@600;700&family=JetBrains+Mono:wght@400;700&family=Source+Serif+4:ital,wght@1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--volt-dim:#1a2000;--paper:#F5F5F2;--paper-dim:#B8B8B3;--muted:#8A8A85;--muted-dim:#5A5A56;--jade:#2A8A4F;--terra:#B8410F;--display:'Saira',sans-serif;--cond:'Saira Condensed',sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:#000}
+body{background:var(--ink);color:var(--paper);font-family:var(--display);-webkit-font-smoothing:antialiased}
+.phone{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:40px;background:var(--ink)}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;text-align:left}
+.hdr{display:flex;align-items:baseline;justify-content:space-between;padding:16px 16px 4px}
+.hdr .ed{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.hdr .clock{font-family:var(--mono);font-size:12px;color:var(--volt)}
+.yr{padding:2px 16px 6px}
+.yr h1{font-style:italic;font-weight:900;font-size:46px;letter-spacing:-.05em;line-height:.92}
+.yr .sub{margin-top:5px;font-size:13px;color:var(--paper-dim);line-height:1.45}
+.warn{margin:8px 16px 0;font-family:var(--mono);font-size:11px;color:var(--terra);line-height:1.5}
+.prog{padding:10px 12px 4px}
+.rrow{display:flex;gap:3px}
+.pip{flex:1;min-width:0;height:52px;border:1px solid var(--line);border-radius:8px;background:var(--ink-2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0 1px}
+.pip .em{font-size:17px;line-height:1;filter:grayscale(1) opacity(.5)}
+.pip .dot{width:22px;height:22px;flex:none;border-radius:99px;background:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--cond);font-weight:700;font-size:9px;letter-spacing:.02em;color:var(--paper);line-height:1}
+.pip.full{background:var(--volt);border-color:var(--volt)}
+.pip.full .em{filter:none}
+.pip.full .dot{background:var(--ink);color:#fff}
+.prog .cap{margin-top:7px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.needline{padding:10px 16px 2px;font-size:13px;color:var(--paper-dim);line-height:1.4}
+.needline b{color:var(--volt);font-weight:600}
+.secl{padding:14px 16px 7px;display:flex;align-items:baseline;justify-content:space-between}
+.secl b{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--volt)}
+.secl span{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:0 12px 16px}
+.tc{text-align:center;border:1px solid var(--line);border-radius:11px;background:var(--ink-2);padding:10px 3px}
+.tc b{display:block;font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:.03em}
+.tc small{display:block;margin-top:3px;font-family:var(--mono);font-size:9px;color:var(--volt)}
+.tc.used{opacity:.24;pointer-events:none}
+.tc.used small{color:var(--muted-dim)}
+.tc.used b{text-decoration:line-through}
+.tc:active{border-color:var(--volt)}
+.back{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;z-index:10}
+.back.on{display:block}
+.sheet{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(100% - 24px);max-width:366px;background:var(--ink-3);border:2px solid var(--volt);border-radius:16px;z-index:11;display:none;max-height:76vh;overflow:auto}
+.sheet.on{display:block}
+.sh{position:sticky;top:0;background:var(--volt);color:var(--ink);padding:11px 14px;border-radius:14px 14px 0 0}
+.sh b{display:block;font-style:italic;font-weight:900;font-size:20px;letter-spacing:-.03em}
+.sh span{display:block;margin-top:2px;font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.pr{display:flex;align-items:center;gap:9px;padding:9px 14px;border-top:1px solid var(--line);width:100%}
+.pr .pos{flex:none;width:44px;font-size:9px;font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.08em;color:var(--muted)}
+.pr .nm{flex:1 1 auto;min-width:0}
+.pr .nm b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr .nm small{display:block;margin-top:2px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.pr .tk{flex:none;font-family:var(--cond);font-weight:600;font-size:9px;letter-spacing:.10em;color:var(--volt);border:1px solid var(--volt);border-radius:99px;padding:4px 9px}
+.pr.gone{opacity:.3;pointer-events:none}
+.pr.gone .tk{border-color:var(--line);color:var(--muted-dim)}
+.slotq{padding:14px;border-top:1px solid var(--line)}
+.slotq p{font-size:13px;color:var(--paper-dim);margin-bottom:10px}
+.slotq p b{color:var(--volt)}
+.slotbtns{display:flex;gap:7px;flex-wrap:wrap}
+.sb{flex:1;min-width:74px;text-align:center;border:1px solid var(--volt);border-radius:9px;padding:11px 6px;font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.06em;color:var(--volt)}
+.toast{position:fixed;left:12px;right:12px;bottom:16px;max-width:366px;margin:0 auto;background:var(--volt);color:var(--ink);border-radius:12px;padding:12px 14px;z-index:12;display:none}
+.toast.on{display:block}
+.toast b{font-style:italic;font-weight:900;font-size:16px}
+.toast p{margin-top:3px;font-family:var(--mono);font-size:11px}
+.scr{display:none}.scr.on{display:block}
+.grade{margin:0 12px 12px;border:1px solid var(--line);border-radius:14px;background:var(--ink-2);overflow:hidden}
+.grade .top{background:var(--volt);color:var(--ink);padding:13px 14px;display:flex;align-items:baseline;justify-content:space-between}
+.grade .top b{font-style:italic;font-weight:900;font-size:19px;letter-spacing:-.03em}
+.grade .top span{font-family:var(--mono);font-weight:700;font-size:13px}
+.sbr{padding:9px 12px;border-top:1px solid var(--line)}
+.sbr .top2{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sbr .pos{font-family:var(--cond);font-weight:700;font-size:10px;letter-spacing:.08em;color:var(--muted);min-width:30px}
+.sbr .vd{font-family:var(--cond);font-weight:600;font-size:9px;letter-spacing:.10em;text-transform:uppercase;border:1px solid;border-radius:99px;padding:2px 7px}
+.sbr.hit .vd{color:var(--jade);border-color:var(--jade)}
+.sbr.miss .vd{color:var(--terra);border-color:var(--terra)}
+.sbr.ahead .vd{color:var(--volt);border-color:var(--volt)}
+.sbr.ahead .dif{color:var(--volt)}
+.sbr .dif{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--terra)}
+.sbr.hit .dif{color:var(--jade)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.bx{border:1px solid var(--line);border-radius:9px;padding:8px 9px;background:var(--ink)}
+.bx .lb{display:none}
+.bx .nm{margin-top:3px;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bx .mt{margin-top:1px;font-family:var(--mono);font-size:9px;color:var(--muted-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bx .pt{margin-top:4px;font-family:var(--mono);font-weight:700;font-size:16px}
+.bx.you{border-color:var(--volt)}.bx.you .pt{color:var(--volt)}
+.bx.best .pt{color:var(--jade)}
+.colhead{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:9px 12px;background:var(--ink-2);border-bottom:1px solid var(--line)}
+.colhead div{font-family:var(--cond);font-weight:700;font-size:10px;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:5px 0;border-radius:7px}
+.colhead .cy{color:var(--ink);background:var(--volt)}
+.colhead .cb{color:var(--jade);border:1px solid var(--jade)}
+.bx.same{border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:78px}
+.bx.same .tick{font-family:var(--mono);font-size:22px;color:var(--jade)}
+.bx.same .sm{margin-top:3px;font-family:var(--cond);font-weight:600;font-size:9px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
+.sbr.hit .bx.you{border-color:var(--jade)}
+.sbr.hit .bx.you .pt{color:var(--jade)}
+.sbr .swap{margin-top:5px;font-family:var(--mono);font-size:10px;color:var(--muted-dim)}
+.mathline{margin:0 12px 12px;padding:11px 13px;border:1px dashed var(--line);border-radius:11px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7}
+.mathline b{color:var(--terra);font-weight:700}
+.perf{margin:0 12px 12px;border:1px solid var(--line);border-radius:11px;background:var(--ink-2);padding:11px 13px}
+.perf b{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--jade);display:block;margin-bottom:5px}
+.perf p{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.6}
+.story{margin:0 12px 12px;border:1px solid var(--line);border-left:3px solid var(--volt);border-radius:11px;background:var(--ink-2);padding:13px 14px}
+.story b{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--volt);display:block;margin-bottom:6px}
+.story p{font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:14px;line-height:1.5;color:var(--paper-dim)}
+.btn{display:block;width:calc(100% - 24px);text-align:center;font-style:italic;font-weight:900;font-size:16px;color:var(--ink);background:var(--volt);border-radius:10px;padding:13px;margin:14px 12px 0}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--paper);font-style:normal;font-family:var(--cond);font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.mid{padding:40px 16px 0;text-align:center}
+.mid .kick{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--volt)}
+.mid h2{margin-top:10px;font-style:italic;font-weight:900;font-size:40px;letter-spacing:-.05em;line-height:.95}
+.mid .big{margin-top:18px;font-family:var(--mono);font-weight:700;font-size:46px;color:var(--volt)}
+.mid .lab{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px}
+.lb{margin:26px 12px 0;border:1px solid var(--line);border-radius:14px;background:var(--ink-2);overflow:hidden}
+.lb .lh{padding:11px 14px;border-bottom:1px solid var(--line);font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+.lr{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--line)}
+.lr:first-of-type{border-top:0}
+.lr .rk{flex:none;width:26px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.lr .who{flex:1 1 auto;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lr .sc{flex:none;font-family:var(--mono);font-size:13px;font-weight:700}
+.lr.you{background:var(--volt-dim)}.lr.you .who{color:var(--volt);font-weight:600}.lr.you .rk{color:var(--volt)}
+.share{margin:20px 12px 0;border:1px solid var(--line);border-radius:14px;background:var(--ink-2);padding:15px 14px}
+.share .g{font-family:var(--mono);font-size:18px;letter-spacing:.09em;line-height:1.5}
+.share .cap{margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.55}
+.note{margin-top:30px;padding:14px 16px 30px;font-size:11px;color:var(--muted-dim);line-height:1.55;border-top:1px dashed var(--line)}
+
+/* COMPACT REVEAL - eight rows on one screen */
+.grade .top{padding:10px 13px}
+.grade .top b{font-size:17px}
+.grade .top span{font-size:12px}
+.colhead{padding:6px 10px}
+.colhead div{font-size:9px;padding:3px 0}
+.sbr{padding:6px 10px}
+.sbr .top2{margin-bottom:4px;gap:7px}
+.sbr .pos{font-size:9px;min-width:26px}
+.sbr .vd{font-size:8px;padding:1px 6px}
+.sbr .dif{font-size:10px}
+.two{gap:5px}
+.bx{padding:6px 8px;border-radius:8px}
+.bx .nm{margin-top:0;font-size:12px}
+.bx .mt{font-size:8px}
+.bx .pt{margin-top:2px;font-size:14px}
+.bx.same{min-height:0;padding:8px}
+.bx.same .tick{font-size:16px}
+.bx.same .sm{margin-top:1px;font-size:8px}
+.sbr .swap{margin-top:3px;font-size:9px}
+.mathline{padding:8px 12px;font-size:10px;line-height:1.5;margin-bottom:8px}
+.perf{padding:9px 12px;margin-bottom:8px}
+.perf p{font-size:10px;line-height:1.5}
+.story{padding:10px 12px;margin-bottom:8px}
+.story p{font-size:12px;line-height:1.4}
+.btn{padding:11px;font-size:15px;margin-top:8px}
+
+/* ===== home ===== */
+.hm{padding:0 12px}
+.hmhdr{padding:20px 16px 10px}
+.hmhdr h1{font-style:italic;font-weight:900;font-size:38px;letter-spacing:-.05em;line-height:.95}
+.hmhdr .sub{margin-top:5px;font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.hero{border:1px solid #2a3300;border-radius:14px;background:linear-gradient(160deg,var(--volt-dim),var(--ink-2));padding:15px 14px;margin-bottom:10px}
+.hero .eb{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.hero .eb b{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--volt)}
+.hero .eb span{font-family:var(--mono);font-size:11px;color:var(--paper-dim)}
+.hero h2{font-style:italic;font-weight:900;font-size:30px;letter-spacing:-.04em;line-height:1}
+.hero p{margin-top:7px;font-size:13px;color:var(--paper-dim);line-height:1.45}
+.mod{border:1px solid var(--line);border-radius:13px;background:var(--ink-2);padding:13px 14px;margin-bottom:10px}
+.mod .mh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+.mod .mh b{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--volt)}
+.mod .mh span{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.pchips{display:flex;flex-wrap:wrap;gap:5px}
+.pchip{font-family:var(--mono);font-size:10px;border:1px solid var(--line);border-radius:99px;padding:4px 9px;color:var(--muted)}
+.pchip.on{border-color:var(--volt);color:var(--volt)}
+.arow{display:flex;align-items:baseline;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.arow:first-of-type{border-top:0}
+.arow .d{flex:none;font-family:var(--mono);font-size:11px;color:var(--muted);width:52px}
+.arow .y{flex:1 1 auto;font-size:13px}
+.arow .s{flex:none;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--volt)}
+.arow .s.none{color:var(--muted-dim);font-weight:400}
+.ghost{display:block;width:100%;text-align:center;font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px;margin-top:9px}
+/* ===== leaderboards ===== */
+.lbtabs{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding:10px 12px 4px}
+.lbtabs::-webkit-scrollbar{display:none}
+.lbtab{flex:none;font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);border-radius:99px;padding:6px 12px;color:var(--muted);white-space:nowrap}
+.lbtab.on{background:var(--volt);border-color:var(--volt);color:var(--ink)}
+.lbnote{padding:8px 16px 4px;font-family:var(--mono);font-size:10px;color:var(--muted-dim);line-height:1.5}
+
+/* setup sheet */
+.setup{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(100% - 24px);max-width:366px;
+  background:var(--ink-2);border:1px solid var(--line);border-radius:16px;z-index:11;display:none;max-height:86vh;overflow:auto}
+.setup.on{display:block}
+.setup .sth{padding:18px 16px 6px;text-align:center}
+.setup .sth h2{font-style:italic;font-weight:900;font-size:26px;letter-spacing:-.04em}
+.setup .sth p{margin-top:4px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.grp{padding:12px 16px 0}
+.grp .gl{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{flex:1 1 auto;min-width:72px;text-align:center;border:1px solid var(--line);border-radius:9px;background:var(--ink);
+  padding:10px 8px;font-family:var(--cond);font-weight:600;font-size:12px;letter-spacing:.04em;color:var(--paper-dim)}
+.opt.on{border-color:var(--volt);color:var(--volt);background:var(--volt-dim)}
+.opt.era{flex:0 0 calc(33.33% - 4px);min-width:0}
+.grp .hint{margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--muted-dim);line-height:1.5}
+.setup .sfoot{padding:14px 16px 18px}
+.setup .cancel{display:block;width:100%;text-align:center;margin-top:9px;font-family:var(--cond);font-weight:600;
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+/* rules */
+.rules{padding:34px 16px 0}
+.rules .kick{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--volt)}
+.rules h2{margin-top:9px;font-style:italic;font-weight:900;font-size:36px;letter-spacing:-.05em;line-height:.98}
+.rl{display:flex;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.rl:first-of-type{margin-top:16px}
+.rl .n{flex:none;width:26px;height:26px;border-radius:99px;border:1px solid var(--volt);color:var(--volt);
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:11px}
+.rl .t{flex:1 1 auto}
+.rl .t b{display:block;font-size:15px;font-weight:600;margin-bottom:3px}
+.rl .t p{font-size:13px;color:var(--muted);line-height:1.45}
+.rnote{margin-top:14px;padding:11px 13px;border:1px dashed var(--line);border-radius:11px;
+  font-family:var(--mono);font-size:11px;color:var(--muted-dim);line-height:1.6}
+</style></head><body><div class="phone">
+
+<!-- ============ HOME ============ -->
+<div class="scr on" id="s-home">
+  <div class="hmhdr"><h1>The Daily</h1><div class="sub">No. 020 &middot; Thursday Sep 3</div></div>
+  <div class="hm">
+    <div class="hero">
+      <div class="eb"><b>Today's board</b><span id="h-streak">13 day streak</span></div>
+      <h2 id="h-title">Eight slots.<br>Twelve teams.</h2>
+      <p id="h-sub">One season, one board, everybody gets the same twelve. Four teams go unused.</p>
+      <button class="btn" id="go-daily" style="margin:12px 0 0;width:100%">Play</button>
+    </div>
+
+    <div class="mod">
+      <div class="mh"><b>Practice</b><span>unranked</span></div>
+      <div class="pchips">
+        <span class="pchip" data-era="1980s">1980s</span><span class="pchip" data-era="1990s">1990s</span>
+        <span class="pchip" data-era="2000s">2000s</span><span class="pchip on" data-era="2010s">2010s</span>
+        <span class="pchip" data-era="2020s">2020s</span>
+      </div>
+      <div class="pchips" style="margin-top:6px">
+        <span class="pchip">10 teams</span><span class="pchip on">12 teams</span><span class="pchip">16 teams</span>
+        <span class="pchip on">Full roster</span><span class="pchip">Offence only</span>
+      </div>
+      <button class="ghost" id="go-practice">Set up a board &rarr;</button>
+    </div>
+
+    <div class="mod">
+      <div class="mh"><b>Archive</b><span>past editions</span></div>
+      <div class="arow"><span class="d">Sep 2</span><span class="y">No. 019 &middot; 2009</span><span class="s">91%</span></div>
+      <div class="arow"><span class="d">Sep 1</span><span class="y">No. 018 &middot; 1994</span><span class="s">78%</span></div>
+      <div class="arow"><span class="d">Aug 31</span><span class="y">No. 017 &middot; 2021</span><span class="s">88%</span></div>
+      <div class="arow"><span class="d">Aug 30</span><span class="y">No. 016 &middot; 1985</span><span class="s none">not played</span></div>
+      <div class="arow"><span class="d">Aug 29</span><span class="y">No. 015 &middot; 2003</span><span class="s">96%</span></div>
+    </div>
+
+    <div class="mod" style="margin-bottom:24px">
+      <div class="mh"><b>Leaderboards</b><span>you: #34</span></div>
+      <div class="arow"><span class="d">Main</span><span class="y">88.4% &middot; 7.4 of 8 avg</span><span class="s">#34</span></div>
+      <div class="arow"><span class="d">Streak</span><span class="y">13 current &middot; 13 longest</span><span class="s">#9</span></div>
+      <button class="ghost" id="go-lb">All boards &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ BOARD ============ -->
+<div class="scr" id="s-board">
+  <header class="hdr"><span class="ed" id="b-ed">The Daily &middot; No. 020</span><span class="clock" id="clock">0:00</span></header>
+  <div class="yr"><h1 id="b-year">2017</h1><div class="sub" id="b-sub">Twelve teams. Eight slots. Open a team and you must take someone - there is no backing out.</div></div>
+  <div class="warn" id="warn">Open a team and you must take someone. No backing out.</div>
+  <div class="prog"><div class="rrow" id="pips"></div><div class="cap"><span id="filled">0 of 8 filled</span><span id="teamsleft">12 teams left</span></div></div>
+  <div class="needline" id="needline"></div>
+  <div class="secl"><b>Teams</b><span id="unused">4 go unused</span></div>
+  <div class="chips" id="chips"></div>
+  <button class="btn" id="finish" style="display:none">See your grade</button>
+  <button class="btn ghost" id="b-home" style="margin-top:8px">Home</button>
+</div>
+
+<!-- ============ GRADE ============ -->
+<div class="scr" id="s-grade">
+  <header class="hdr"><span class="ed" id="g-ed">The Daily &middot; No. 020</span><span class="clock" id="clock2"></span></header>
+  <div class="grade"><div class="top"><b id="g-year">2017</b><span id="gtot"></span></div>
+    <div class="colhead"><div class="cy">You</div><div class="cb">Best roster</div></div><div id="grows"></div></div>
+  <div class="mathline" id="mathline"></div>
+  <div class="perf"><b>The best roster this board allowed</b><p id="perfline"></p></div>
+  <div class="story"><b>About your board</b><p id="gstory"></p></div>
+  <button class="btn ghost" id="tomid">Leaderboard opens at midnight &rarr;</button>
+  <button class="btn ghost" id="g-home" style="margin-top:8px">Home</button>
+</div>
+
+<!-- ============ MIDNIGHT ============ -->
+<div class="scr" id="s-mid">
+  <div class="mid"><div class="kick">The board is closed</div><h2>No. 020<br>is settled</h2><div class="big" id="mrank">-</div><div class="lab" id="mlab"></div></div>
+  <div class="lb"><div class="lh"><span>Today</span><span id="mfield"></span></div><div id="lbrows"></div></div>
+  <div class="share"><div class="g" id="glyph"></div><div class="cap" id="scap"></div></div>
+  <button class="btn">Share</button>
+  <button class="btn ghost" id="m-lb" style="margin-top:8px">All leaderboards</button>
+  <button class="btn ghost" id="m-home" style="margin-top:8px">Home</button>
+</div>
+
+<!-- ============ LEADERBOARDS ============ -->
+<div class="scr" id="s-lb">
+  <div class="hmhdr"><h1>Boards</h1><div class="sub">Only the Daily counts</div></div>
+  <div class="lbtabs" id="lbtabs"></div>
+  <div class="lbnote" id="lbnote"></div>
+  <div class="lb" style="margin:8px 12px 0"><div class="lh"><span id="lbh1">Rank</span><span id="lbh2"></span></div><div id="lbbody"></div></div>
+  <button class="btn ghost" id="lb-home" style="margin-top:14px">Home</button>
+</div>
+
+<div class="scr" id="s-rules">
+  <div class="rules">
+    <div class="kick" id="r-kick">The Daily &middot; No. 020</div>
+    <h2 id="r-year">2017</h2>
+    <div class="rl"><span class="n">1</span><div class="t"><b>Open a team, take a player</b><p>Twelve team cards. Tap one and you are committed - you must take somebody from it, and then that team is spent.</p></div></div>
+    <div class="rl"><span class="n">2</span><div class="t"><b>You choose the slot</b><p>Take a back and decide whether he fills RB or FLEX. The slot locks with the pick.</p></div></div>
+    <div class="rl"><span class="n">3</span><div class="t"><b id="r-slots">Eight slots, four teams unused</b><p id="r-slotsub">Choosing which teams to skip is part of it. Scoring is season fantasy points, PPR.</p></div></div>
+    <div class="rl"><span class="n">4</span><div class="t"><b>You are graded against the board</b><p>Not against a season all-star team - against the best roster these twelve teams could actually have produced, one player per team.</p></div></div>
+    <div class="rnote" id="r-note">The clock starts when you tap Start.</div>
+    <button class="btn" id="r-start" style="margin:16px 0 0;width:100%">Start</button>
+    <button class="btn ghost" id="r-back" style="margin-top:8px;width:100%">Back</button>
+  </div>
+</div>
+
+<div class="setup" id="setup">
+  <div class="sth"><h2>Set up your board</h2><p>Practice only. Nothing here counts.</p></div>
+  <div class="grp"><div class="gl">Era</div><div class="opts" id="o-era"></div></div>
+  <div class="grp"><div class="gl">Teams</div><div class="opts" id="o-teams"></div><div class="hint">Fewer teams is harder - less to choose from, same eight slots.</div></div>
+  <div class="grp"><div class="gl">Roster</div><div class="opts" id="o-roster"></div></div>
+  <div class="grp"><div class="gl">Difficulty</div><div class="opts" id="o-diff"></div><div class="hint" id="diffhint">Standard keeps one standout per team. Deep pool lets stacked teams appear, so a single card can hold two players you want.</div></div>
+  <div class="sfoot"><button class="btn" id="setup-go" style="width:100%">Start board</button>
+  <button class="cancel" id="setup-x">Cancel</button></div>
+</div>
+
+<div class="back" id="back"></div>
+<div class="sheet" id="sheet"><div id="sheetin"></div></div>
+<div class="toast" id="toast"></div>
+
+<div class="note">
+FULL MOCK v3 &middot; THE FLOW YOU ASKED FOR. Practice now opens a SET UP YOUR BOARD sheet - era, team count, roster shape, difficulty - and Start takes you through. Both routes, Daily and practice, land on a RULES CARD before anything begins: four numbered lines (open a team and you are committed, you choose the slot, how many slots and how many teams go unused, and what you are actually graded against), plus one line stating whether the board is ranked. THE CLOCK DOES NOT START UNTIL YOU TAP START on that card, so reading the rules costs nothing. ONE BOARD SHAPE, EVERY ERA: eight slots (QB/RB/RB/WR/WR/FLEX/FLEX/K), twelve teams, four go unused, always - no team ever explains a missing slot on the rules card, because no board has one to explain.
+</div>
+</div>
+
+<script>
+const FLEXOK=['RB','WR','TE'];
+const T80=[
+ {ab:'HOU',rec:'11-5',p:[['RB','Earl Campbell','1,934 rush - 13 TD',287],['QB','Ken Stabler','3,202 yds - 13 TD - 28 INT',122],['WR','Mike Renfro','459 yds - 1 TD',87],['TE','Dave Casper','526 yds - 3 TD',105]]},
+ {ab:'DET',rec:'9-7',p:[['RB','Billy Sims','1,303 rush - 13 TD - 51 rec',339],['QB','Gary Danielson','3,223 yds - 13 TD',194],['WR','Freddie Scott','834 yds - 4 TD',160],['K','Eddie Murray','27/42 FG',116]]},
+ {ab:'CHI',rec:'7-9',p:[['RB','Walter Payton','1,460 rush - 6 TD - 46 rec',271],['QB','Vince Evans','2,039 yds - 306 rush',172],['WR','James Scott','696 yds - 3 TD',124],['K','Bob Thomas','13/18 FG',74]]},
+ {ab:'BUF',rec:'11-5',p:[['RB','Joe Cribbs','1,185 rush - 11 TD - 52 rec',284],['WR','Jerry Butler','832 yds - 6 TD',176],['QB','Joe Ferguson','2,805 yds - 20 TD',156],['K','Nick Mike-Mayer','13/23 FG',76]]},
+ {ab:'SD',rec:'11-5',p:[['WR','John Jefferson','82 rec - 1,340 yds - 13 TD',294],['RB','Chuck Muncie','659 rush - 4 TD',137],['TE','Greg McCrary','106 yds - 2 TD',34],['K','Rolf Benirschke','24/36 FG',118]]},
+ {ab:'CLE',rec:'11-5',p:[['QB','Brian Sipe','4,132 yds - 30 TD',269],['RB','Mike Pruitt','1,034 rush - 63 rec',250],['TE','Ozzie Newsome','594 yds - 3 TD',128],['K','Don Cockroft','16/26 FG',87]]},
+ {ab:'MIN',rec:'9-7',p:[['WR','Ahmad Rashad','1,095 yds - 5 TD',209],['QB','Tommy Kramer','3,582 yds - 19 TD',191],['TE','Joe Senser','447 yds - 7 TD',129],['K','Rick Danmeier','16/26 FG',81]]},
+ {ab:'DAL',rec:'12-4',p:[['RB','Tony Dorsett','1,185 rush - 11 TD',245],['QB','Danny White','3,287 yds - 28 TD',211],['TE','Billy Joe DuPree','312 yds - 7 TD',102],['K','Rafael Septien','11/17 FG',92]]},
+ {ab:'SEA',rec:'4-12',p:[['WR','Steve Largent','1,064 yds - 6 TD',208],['QB','Jim Zorn','3,346 yds - 214 rush',189],['RB','Jim Jodat','632 rush - 5 TD',144],['K','Efren Herrera','20/31 FG',93]]},
+ {ab:'GB',rec:'5-10-1',p:[['WR','James Lofton','1,226 yds - 4 TD',218],['RB','Eddie Lee Ivery','831 rush - 50 rec',205],['QB','Lynn Dickey','3,529 yds - 15 TD',152],['TE','Paul Coffman','496 yds - 3 TD',110]]},
+ {ab:'NE',rec:'10-6',p:[['WR','Stanley Morgan','991 yds - 6 TD',180],['TE','Russ Francis','664 yds - 8 TD',155],['QB','Steve Grogan','2,475 yds - 18 TD',144],['K','John Smith','26/34 FG',129]]},
+ {ab:'SF',rec:'6-10',p:[['RB','Earl Cooper','83 rec - 720 rush - 9 TD',266],['WR','Dwight Clark','82 rec - 991 yds',229],['QB','Joe Montana','1,795 yds - 15 TD',133],['K','Ray Wersching','15/19 FG',78]]}
+];
+
+const T17=[
+ {ab:'LAR',rec:'11-5',p:[['RB','Todd Gurley','2,093 total - 19 TD',383],['QB','Jared Goff','3,804 yds - 28 TD',290],['WR','Robert Woods','781 yds - 5 TD',151],['DEF','Los Angeles','48 sacks - 18 TO',129]]},
+ {ab:'SEA',rec:'9-7',p:[['QB','Russell Wilson','3,983 yds - 34 TD - 586 rush',412],['RB','Mike Davis','240 yds - 0 TD',52],['WR','Tyler Lockett','555 yds - 2 TD',110],['TE','Jimmy Graham','520 yds - 10 TD',171]]},
+ {ab:'NO',rec:'11-5',p:[['RB','Alvin Kamara','1,554 total - 14 TD',341],['QB','Drew Brees','4,334 yds - 23 TD',300],['WR','Ted Ginn Jr.','787 yds - 4 TD',143],['TE','Coby Fleener','295 yds - 2 TD',62]]},
+ {ab:'PIT',rec:'13-3',p:[['RB',"Le'Veon Bell",'1,946 total - 11 TD',341],['QB','Ben Roethlisberger','4,251 yds - 28 TD',322],['TE','Jesse James','372 yds - 3 TD',94],['DEF','Pittsburgh','56 sacks - 22 TO',149]]},
+ {ab:'KC',rec:'10-6',p:[['RB','Kareem Hunt','1,782 total - 11 TD',295],['QB','Alex Smith','4,042 yds - 26 TD',309],['WR','Chris Conley','334 yds - 0 TD',68],['TE','Demetrius Harris','128 yds - 1 TD',40]]},
+ {ab:'JAX',rec:'10-6',p:[['RB','Leonard Fournette','1,342 total - 10 TD',233],['DEF','Jacksonville','55 sacks - 33 TO',194],['QB','Blake Bortles','3,687 yds - 21 TD',277],['WR','Marqise Lee','702 yds - 3 TD',131]]},
+ {ab:'ATL',rec:'10-6',p:[['WR','Julio Jones','1,444 yds - 3 TD',253],['QB','Matt Ryan','4,095 yds - 20 TD',283],['RB','Devonta Freeman','1,182 total - 8 TD',215],['K','Matt Bryant','34/39 FG',143]]},
+ {ab:'MIN',rec:'13-3',p:[['WR','Adam Thielen','1,276 yds - 4 TD',232],['QB','Case Keenum','3,547 yds - 22 TD',274],['RB','Latavius Murray','842 yds - 8 TD',176],['DEF','Minnesota','37 sacks - 19 TO',161]]},
+ {ab:'NE',rec:'13-3',p:[['TE','Rob Gronkowski','1,084 yds - 8 TD',238],['QB','Tom Brady','4,577 yds - 32 TD',381],['RB','Dion Lewis','896 yds - 6 TD',214],['K','Stephen Gostkowski','27/32 FG',156]]},
+ {ab:'CAR',rec:'11-5',p:[['QB','Cam Newton','3,302 yds - 22 TD - 754 rush',350],['K','Graham Gano','29/30 FG',167],['WR','Devin Funchess','840 yds - 8 TD',171],['RB','Jonathan Stewart','680 yds - 6 TD',122]]},
+ {ab:'NYG',rec:'3-13',p:[['TE','Evan Engram','722 yds - 6 TD',175],['QB','Eli Manning','3,468 yds - 19 TD',245],['WR','Sterling Shepard','731 yds - 2 TD',134],['RB','Orleans Darkwa','751 yds - 5 TD',131],['K','Aldrick Rosas','18/25 FG',89]]},
+ {ab:'CLE',rec:'0-16',p:[['QB','DeShone Kizer','2,894 yds - 11 TD',214],['RB','Isaiah Crowell','1,006 total - 2 TD',151],['TE','David Njoku','386 yds - 4 TD',95],['DEF','Cleveland','34 sacks - 13 TO',82],['K','Zane Gonzalez','15/20 FG',75]]}
+];
+// ONE BOARD SHAPE, EVERY ERA (ruling): QB/RB/RB/WR/WR/FLEX/FLEX/K. No DEF slot -
+// no source this codebase holds reaches back far enough for team defence, in
+// any era, so a DEF-tagged player (some 2017 teams still carry one, above,
+// exactly as footballdb-era and BDL-era rows do in the real corpus) simply has
+// no legal slot and shows NO SLOT in the team sheet - the same honest dead-end
+// any other unfillable player gets, not a special case.
+const BOARDS={
+ daily:{year:'2017',teams:T17,slots:['QB','RB','RB','WR','WR','FLEX','FLEX','K'],ed:'The Daily &middot; No. 020',ranked:true,
+   sub:'Twelve teams. Eight slots. Open a team and you must take someone - there is no backing out.'},
+ p1980:{year:'1980',teams:T80,slots:['QB','RB','RB','WR','WR','FLEX','FLEX','K'],ed:'Practice &middot; 1980s',ranked:false,
+   sub:'Twelve teams. Eight slots. Open a team and you must take someone - there is no backing out.'}
+};
+let B=null,SLOTS=[],TEAMS=[],roster=[],used=new Set(),openTeam=null,t0=null,tick=null;
+
+function startBoard(key){
+  B=BOARDS[key];SLOTS=B.slots.slice();
+  TEAMS=B.teams.map(t=>({...t}));
+  for(let i=TEAMS.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[TEAMS[i],TEAMS[j]]=[TEAMS[j],TEAMS[i]];}
+  roster=SLOTS.map(p=>({pos:p,pick:null}));used=new Set();t0=null;clearInterval(tick);
+  document.getElementById('clock').textContent='0:00';
+  document.getElementById('b-ed').innerHTML=B.ed;document.getElementById('g-ed').innerHTML=B.ed;
+  document.getElementById('b-year').textContent=B.year;document.getElementById('g-year').textContent=B.year;
+  document.getElementById('b-sub').textContent=B.sub;
+  document.getElementById('unused').textContent=(TEAMS.length-SLOTS.length)+' go unused';
+  render();show('s-board');
+}
+function legalSlots(pos){const out=[];roster.forEach((r,i)=>{if(r.pick)return;if(r.pos===pos)out.push(i);else if(r.pos==='FLEX'&&FLEXOK.includes(pos))out.push(i);});return out;}
+function anyLegal(t){return t.p.some(p=>legalSlots(p[0]).length>0);}
+function startClock(){if(t0)return;t0=Date.now();tick=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);document.getElementById('clock').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');},1000);}
+const EM={QB:'\u{1F3AF}',RB:'\u{1F3C3}',WR:'\u{1F932}',TE:'\u{1F9BE}',FLEX:'\u{1F504}',K:'\u{1F45F}',DEF:'\u{1F6E1}'};
+const INI={QB:'QB',RB:'RB',WR:'WR',TE:'TE',FLEX:'FX',K:'K',DEF:'DEF'};
+function render(){
+  document.getElementById('pips').innerHTML=roster.map(r=>
+    '<div class="pip '+(r.pick?'full':'')+'" title="'+r.pos+(r.pick?' - '+r.pick.name:'')+'">'+
+    '<span class="em">'+EM[r.pos]+'</span><span class="dot">'+INI[r.pos]+'</span></div>').join('');
+  const n=roster.filter(r=>r.pick).length;
+  document.getElementById('filled').textContent=n+' of '+SLOTS.length+' filled';
+  document.getElementById('teamsleft').textContent=(TEAMS.length-used.size)+' teams left';
+  const need=[...new Set(roster.filter(r=>!r.pick).map(r=>r.pos))];
+  document.getElementById('needline').innerHTML=n===SLOTS.length?'Roster complete.':'Still need <b>'+need.join(' &middot; ')+'</b>';
+  document.getElementById('chips').innerHTML=TEAMS.map((t,i)=>{const dead=used.has(i)||!anyLegal(t);
+    return '<button class="tc '+(dead?'used':'')+'" data-t="'+i+'"><b>'+t.ab+'</b><small>'+t.rec+'</small></button>';}).join('');
+  document.querySelectorAll('.tc').forEach(b=>b.onclick=()=>open_(+b.dataset.t));
+  document.getElementById('finish').style.display=(n===SLOTS.length)?'block':'none';
+  document.getElementById('warn').textContent=n===SLOTS.length?SLOTS.length+' slots filled.':'Open a team and you must take someone. No backing out.';
+}
+function open_(i){startClock();openTeam=i;const t=TEAMS[i];const ORD={QB:0,RB:1,WR:2,TE:3,DEF:4,K:5};
+  const shown=t.p.map((p,j)=>({p,j})).sort((a,b)=>(ORD[a.p[0]]??9)-(ORD[b.p[0]]??9));
+  document.getElementById('sheetin').innerHTML='<div class="sh"><b>'+t.ab+' &middot; '+t.rec+'</b><span>you must take one player</span></div>'+
+   shown.map(({p,j})=>{const gone=legalSlots(p[0]).length===0;
+    return '<button class="pr '+(gone?'gone':'')+'" data-p="'+j+'"><span class="pos">'+(EM[p[0]]||'')+' '+p[0]+'</span><span class="nm"><b>'+p[1]+'</b><small>'+p[2]+'</small></span><span class="tk">'+(gone?'NO SLOT':'TAKE')+'</span></button>';}).join('');
+  document.querySelectorAll('#sheetin .pr').forEach(b=>b.onclick=()=>choose(+b.dataset.p));
+  document.getElementById('sheet').classList.add('on');document.getElementById('back').classList.add('on');}
+function choose(j){const t=TEAMS[openTeam],p=t.p[j],slots=legalSlots(p[0]);
+  if(slots.length===1){commit(j,slots[0]);return;}
+  document.getElementById('sheetin').innerHTML='<div class="sh"><b>'+p[1]+'</b><span>'+t.ab+' &middot; '+p[2]+'</span></div>'+
+   '<div class="slotq"><p>Where does he go? <b>This locks the slot and spends '+t.ab+'.</b></p><div class="slotbtns">'+
+   slots.map(s=>'<button class="sb" data-s="'+s+'">'+roster[s].pos+'</button>').join('')+'</div></div>';
+  document.querySelectorAll('.sb').forEach(b=>b.onclick=()=>commit(j,+b.dataset.s));}
+function commit(j,slot){const t=TEAMS[openTeam],p=t.p[j];
+  roster[slot].pick={name:p[1],ab:t.ab,pts:p[3],pos:p[0],meta:p[2]};used.add(openTeam);
+  document.getElementById('sheet').classList.remove('on');document.getElementById('back').classList.remove('on');render();
+  const el=document.getElementById('toast');el.innerHTML='<b>'+p[1]+'</b><p>'+roster[slot].pos+' locked &middot; '+t.ab+' spent</p>';
+  el.classList.add('on');setTimeout(()=>el.classList.remove('on'),1500);}
+/* NO BACKDROP ESCAPE ONCE A TEAM IS OPEN (ruling: commit-on-open, no close).
+   The overlay only ever closes the SETUP sheet, which is a practice config
+   panel with its own explicit Cancel and nothing at stake - never the team
+   sheet or the slot-choice sheet, both of which are mid-commitment. */
+document.getElementById('back').onclick=()=>{
+  if(document.getElementById('sheet').classList.contains('on'))return;
+  document.getElementById('setup').classList.remove('on');document.getElementById('back').classList.remove('on');};
+
+function slotTeamValue(){const val=[];for(let s=0;s<SLOTS.length;s++){val[s]=[];for(let t=0;t<TEAMS.length;t++){let b=null;
+  TEAMS[t].p.forEach(p=>{const ok=(SLOTS[s]==='FLEX')?FLEXOK.includes(p[0]):p[0]===SLOTS[s];if(ok&&(!b||p[3]>b.pts))b={name:p[1],pts:p[3],meta:p[2],ab:TEAMS[t].ab};});
+  val[s][t]=b;}}return val;}
+function optimalRoster(){const val=slotTeamValue(),S=SLOTS.length,N=TEAMS.length,m=new Map();
+ function go(s,mask){if(s===S)return{pts:0,pick:[]};const k=s+'|'+mask;if(m.has(k))return m.get(k);let best={pts:-1,pick:[]};
+ for(let t=0;t<N;t++){if(mask&(1<<t))continue;const v=val[s][t];if(!v)continue;const sub=go(s+1,mask|(1<<t));
+  if(v.pts+sub.pts>best.pts)best={pts:v.pts+sub.pts,pick:[{slot:s,team:t,p:v}].concat(sub.pick)};}
+ m.set(k,best);return best;}return go(0,0);}
+
+document.getElementById('finish').onclick=()=>{
+  clearInterval(tick);const secs=Math.floor((Date.now()-t0)/1000);
+  const tstr=Math.floor(secs/60)+':'+String(secs%60).padStart(2,'0');
+  document.getElementById('clock2').textContent=tstr;
+  const untouched=TEAMS.filter((t,i)=>!used.has(i)).map(t=>t.ab);
+  const opt=optimalRoster();
+  const optArr=opt.pick.map(x=>({name:x.p.name,ab:x.p.ab,pts:x.p.pts,meta:x.p.meta,slot:SLOTS[x.slot]}));
+  const mineArr=roster.map(r=>({name:r.pick.name,ab:r.pick.ab,pts:r.pick.pts,meta:r.pick.meta,slot:r.pos}));
+  const optNames=new Set(optArr.map(p=>p.name));
+  // Unmatched picks are paired by VALUE, never by list order. Pairing in order put a
+  // 245-point back opposite a 229-point receiver and called it a miss, which is
+  // arithmetic nonsense - the player scored more. Both sides sort descending, so the
+  // biggest thing you left on the board reads against the biggest thing you took.
+  const leftMine=mineArr.filter(p=>!optNames.has(p.name)).sort((a,b)=>b.pts-a.pts);
+  const mineNames=new Set(mineArr.map(p=>p.name));
+  const leftOpt=optArr.filter(p=>!mineNames.has(p.name)).sort((a,b)=>b.pts-a.pts);
+  const matched=optArr.filter(b=>mineNames.has(b.name));
+  const rows=matched.map(b=>{const held=mineArr.find(p=>p.name===b.name);
+    return{you:held,best:b,hit:true,swap:false,moved:held.slot!==b.slot?held.slot:null};})
+   .concat(leftOpt.map((b,i)=>({you:leftMine[i]||null,best:b,hit:false,swap:true,moved:null})));
+  const mine=mineArr.reduce((s,p)=>s+p.pts,0),perfect=opt.pts,pct=Math.round(mine/perfect*100);
+  document.getElementById('grows').innerHTML=rows.map(r=>{const d=r.hit?0:(r.best.pts-(r.you?r.you.pts:0));
+    const ahead=(!r.hit&&d<0);
+    const bx=(p,cls)=>p?'<div class="bx '+cls+'"><div class="nm">'+p.name+'</div><div class="mt">'+p.ab+' &middot; '+p.meta+'</div><div class="pt">'+p.pts+'</div></div>'
+      :'<div class="bx '+cls+'"><div class="nm" style="color:var(--muted-dim)">nobody</div><div class="mt">&nbsp;</div><div class="pt" style="color:var(--muted-dim)">0</div></div>';
+    const right=r.hit?'<div class="bx same"><div class="tick">✓</div><div class="sm">same pick</div></div>':bx(r.best,'best');
+    const verd=r.hit?'MATCHED':(ahead?'YOU WERE AHEAD':'MISSED');
+    const dif=r.hit?'✓':(ahead?'+'+Math.abs(d):'-'+d);
+    const poslab=r.hit?r.best.slot:'SWAP';
+    return '<div class="sbr '+(r.hit?'hit':(ahead?'ahead':'miss'))+'"><div class="top2"><span class="pos">'+poslab+
+      '</span><span class="vd">'+verd+'</span><span class="dif">'+dif+'</span></div>'+
+      '<div class="two">'+bx(r.you,'you')+right+'</div>'+
+      (r.moved?'<div class="swap">You had him at '+r.moved+'. Same player, same points - it counts.</div>':'')+'</div>';}).join('');
+  document.getElementById('gtot').innerHTML=mine.toLocaleString()+' pts &middot; '+pct+'% of '+perfect.toLocaleString();
+  const hits=rows.filter(r=>r.hit).length;
+  document.getElementById('mathline').innerHTML=(perfect-mine)===0?'You matched the best roster this board allowed.'
+    :hits+' of '+SLOTS.length+' matched &middot; '+(perfect-mine).toLocaleString()+' points left on the board.';
+  document.getElementById('perfline').innerHTML=optArr.map(p=>p.ab).join(' &middot; ')+
+    '<br>'+SLOTS.length+' teams, '+SLOTS.length+' players, '+perfect.toLocaleString()+' points. No team appears twice.';
+  const glyph=rows.map(r=>r.hit?'\u{1F7E9}':'⬛').join('');
+  let story='You opened '+used.size+' of the twelve teams in '+tstr+'. ';
+  if(untouched.length)story+='You never opened '+untouched.join(', ')+'. ';
+  const missed=rows.filter(r=>!r.hit).sort((x,y)=>y.best.pts-x.best.pts)[0];
+  story+=missed?'The biggest name left on the board was '+missed.best.name+' ('+missed.best.ab+'), worth '+missed.best.pts+'.':'You took every player the best roster did.';
+  document.getElementById('gstory').textContent=story;
+  document.getElementById('glyph').textContent=glyph;
+  document.getElementById('scap').innerHTML=(B.ranked?'The Daily No. 020':'Practice')+' &middot; '+B.year+'<br>'+mine.toLocaleString()+' pts &middot; '+pct+'% &middot; '+tstr+'<br>sportsvyn.com/daily';
+  const rank=Math.max(1,Math.round((100-pct)*3.4)+2);
+  document.getElementById('mrank').textContent='#'+rank;
+  document.getElementById('mlab').textContent='of 214 players today &middot; top '+Math.max(1,Math.round(rank/214*100))+'%';
+  document.getElementById('mfield').textContent='214 played';
+  let rowsl=[['1','malloy','2,412'],['2','kdot','2,377'],['3','ThatOprah','2,290']].map(r=>
+    '<div class="lr"><span class="rk">'+r[0]+'</span><span class="who">'+r[1]+'</span><span class="sc">'+r[2]+'</span></div>').join('');
+  rowsl+='<div class="lr you"><span class="rk">'+rank+'</span><span class="who">you</span><span class="sc">'+mine.toLocaleString()+'</span></div>';
+  document.getElementById('lbrows').innerHTML=rowsl;
+  document.getElementById('tomid').style.display=B.ranked?'block':'none';
+  show('s-grade');};
+
+/* ===== leaderboards ===== */
+const LB={
+ main:{tab:'Main',note:'Average percentage over your last 30 Dailies. Minimum ten played to appear - one great board does not crown you, and your bad days count. Matched-slot average shown alongside because percentage compresses.',h1:'Player',h2:'avg % · slots',
+  rows:[['1','malloy','94.1% · 7.2'],['2','ThatOprah','92.8% · 7.0'],['3','kdot','91.6% · 6.9'],['4','theskry','90.2% · 6.7'],['34','you','88.4% · 6.4',1]]},
+ today:{tab:'Today',note:'Raw points. Everyone had the same twelve teams, so the number means the same thing for all of them. Resets at midnight.',h1:'Player',h2:'points',
+  rows:[['1','malloy','2,412'],['2','kdot','2,377'],['3','ThatOprah','2,290'],['4','hurley3594','2,251'],['12','you','2,195',1]]},
+ streak:{tab:'Streak',note:'Where volume lives. Current streak first, longest as the tiebreak. Showing up is its own skill.',h1:'Player',h2:'current · best',
+  rows:[['1','ThatOprah','31 · 31'],['2','malloy','28 · 28'],['3','ForTheWin','19 · 22'],['9','you','13 · 13',1]]},
+ perfect:{tab:'Perfect',note:'Boards where you matched the best roster the draw allowed. Rare on purpose.',h1:'Player',h2:'perfect boards',
+  rows:[['1','malloy','4'],['2','kdot','2'],['3','ThatOprah','2'],['3','Tod','1'],['-','you','0',1]]},
+ played:{tab:'Played',note:'Pure volume. No judgment, just how many boards you have finished.',h1:'Player',h2:'boards',
+  rows:[['1','ThatOprah','31'],['2','malloy','30'],['3','kdot','27'],['7','you','19',1]]},
+ best:{tab:'Best board',note:'Your single highest percentage, with the day and the season it came from.',h1:'Player',h2:'best · board',
+  rows:[['1','malloy','100% · Aug 24, 1998'],['2','kdot','100% · Sep 1, 1994'],['3','ThatOprah','98% · Aug 19, 2012'],['14','you','96% · Aug 29, 2003',1]]}
+};
+function drawLB(k){const b=LB[k];
+ document.getElementById('lbtabs').innerHTML=Object.keys(LB).map(x=>'<button class="lbtab '+(x===k?'on':'')+'" data-k="'+x+'">'+LB[x].tab+'</button>').join('');
+ document.querySelectorAll('.lbtab').forEach(t=>t.onclick=()=>drawLB(t.dataset.k));
+ document.getElementById('lbnote').textContent=b.note;
+ document.getElementById('lbh1').textContent=b.h1;document.getElementById('lbh2').textContent=b.h2;
+ document.getElementById('lbbody').innerHTML=b.rows.map(r=>'<div class="lr'+(r[3]?' you':'')+'"><span class="rk">'+r[0]+'</span><span class="who">'+r[1]+'</span><span class="sc">'+r[2]+'</span></div>').join('');}
+
+function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
+const CFG={era:'1980s',teams:'12',roster:'Full',diff:'Standard'};
+const OPTS={era:[['1980s','1980s'],['1990s','1990s'],['2000s','2000s'],['2010s','2010s'],['2020s','2020s'],['Any','Any']],
+ teams:[['10','10 teams'],['12','12 teams'],['16','16 teams']],
+ roster:[['Full','Full roster'],['Offence','Offence only']],
+ diff:[['Standard','Standard'],['Deep','Deep pool']]};
+function drawSetup(){Object.keys(OPTS).forEach(k=>{
+ document.getElementById('o-'+k).innerHTML=OPTS[k].map(([v,l])=>
+  '<button class="opt '+(k==='era'?'era ':'')+(CFG[k]===v?'on':'')+'" data-k="'+k+'" data-v="'+v+'">'+l+'</button>').join('');});
+ document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{CFG[b.dataset.k]=b.dataset.v;drawSetup();});}
+function openSetup(){drawSetup();document.getElementById('setup').classList.add('on');document.getElementById('back').classList.add('on');}
+function closeSetup(){document.getElementById('setup').classList.remove('on');document.getElementById('back').classList.remove('on');}
+document.getElementById('setup-x').onclick=closeSetup;
+document.getElementById('setup-go').onclick=()=>{closeSetup();toRules(CFG.era==='1980s'?'p1980':'daily');};
+
+let pendingKey=null;
+function toRules(key){pendingKey=key;const b=BOARDS[key];
+ document.getElementById('r-kick').innerHTML=b.ed;
+ document.getElementById('r-year').textContent=b.year;
+ const n=b.slots.length;
+ document.getElementById('r-slots').textContent='Eight slots, '+(12-n)+' teams unused';
+ document.getElementById('r-slotsub').textContent='Choosing which teams to skip is part of it. Scoring is season fantasy points, PPR.';
+ document.getElementById('r-note').textContent=b.ranked
+  ? 'The clock starts when you tap Start. One attempt - this board is ranked.'
+  : 'The clock starts when you tap Start. Practice is unranked and touches no leaderboard.';
+ show('s-rules');}
+document.getElementById('r-start').onclick=()=>{startBoard(pendingKey);startClock();};
+document.getElementById('r-back').onclick=()=>show('s-home');
+document.getElementById('go-daily').onclick=()=>toRules('daily');
+document.getElementById('go-practice').onclick=openSetup;
+document.querySelectorAll('.pchip').forEach(c=>c.onclick=openSetup);
+document.getElementById('go-lb').onclick=()=>{drawLB('main');show('s-lb');};
+document.getElementById('m-lb').onclick=()=>{drawLB('main');show('s-lb');};
+['b-home','g-home','m-home','lb-home'].forEach(id=>document.getElementById(id).onclick=()=>show('s-home'));
+document.getElementById('tomid').onclick=()=>show('s-mid');
+</script></body></html>
