@@ -1,5 +1,5 @@
 /**
- * /daily/board — the season-roster board's own surface (Step 3).
+ * /daily/board — the season-roster board's own surface (Step 3/4).
  *
  * A NEW, SEPARATE ROUTE, NOT A REPLACEMENT OF /daily. The existing /daily
  * page is a different, already-live game (lib/daily/play.js: guess a mystery

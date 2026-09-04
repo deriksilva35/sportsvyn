@@ -1,17 +1,19 @@
 'use client';
 
 /**
- * components/daily/season/SeasonBoard.js — the season-roster board's surface:
- * rules card, then the board screen. Per docs/design/daily-full-mock-v3.html.
+ * components/daily/season/SeasonBoard.js — the season-roster board's
+ * surface: rules card, board screen, grade. Per
+ * docs/design/daily-full-mock-v3.html.
  *
  * NOT THE EXISTING /daily WEEK-GAME. lib/daily/play.js's SLOTS (6, drop-the-
  * worst PPR scoring, a season/week guess bonus) is a DIFFERENT game this file
  * does not touch. This one is the twelve-team, eight-slot roster board
- * (Step 2/3): QB/RB/RB/WR/WR/FLEX/FLEX/K, graded against the solver's
- * ceiling. All state logic lives in lib/daily/seasonBoardPlay.js (pure,
- * tested); this file is rendering and the two pieces of local UI state that
- * module deliberately has no opinion on - which screen is showing, and
- * whether a chosen player still needs a slot picked for them.
+ * (Step 2/3/4): QB/RB/RB/WR/WR/FLEX/FLEX/K, graded against the solver's
+ * ceiling (lib/daily/seasonBoardGrade.js). All state logic lives in
+ * lib/daily/seasonBoardPlay.js and seasonBoardGrade.js (pure, tested); this
+ * file is rendering plus the local UI state those modules deliberately have
+ * no opinion on - which screen is showing, and whether a chosen player still
+ * needs a slot picked for them.
  *
  * COMMIT-ON-OPEN, NO CLOSE (ruling), enforced structurally, not just by
  * omission: the backdrop and the sheet itself carry NO onClick that could
@@ -19,13 +21,25 @@
  * way out of `sheetState !== 'closed'` is finishPick(), which requires a
  * fully-formed slot index - there is no code path that clears sheetState
  * without one.
+ *
+ * THE SHEET IS A PORTAL TO document.body, not rendered in normal flow.
+ * position:fixed centering (left:50%;top:50%;transform:translate(-50%,-50%))
+ * is relative to the nearest ancestor with a CSS transform/filter/perspective
+ * if one exists ANYWHERE up the tree, not the viewport - a common shell-
+ * chrome pattern in this app. Rendered in place, that turns a centered modal
+ * into whatever the nearest transformed ancestor's box happens to produce,
+ * which reads as "a drawer" rather than a centered sheet. A portal to
+ * document.body sidesteps the whole class of bug rather than hunting for the
+ * one ancestor responsible.
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   initBoardPlay, teamIsDead, isRosterComplete, filledCount, teamsLeft,
   pickOutcome, commitPick,
 } from '@/lib/daily/seasonBoardPlay';
+import { gradeBoard, boardStory } from '@/lib/daily/seasonBoardGrade';
 import './seasonBoard.css';
 
 const DOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FX', K: 'K' };
@@ -41,24 +55,24 @@ function mmss(ms) {
  * @param teams     [{ key, abbr, record, card:[{position, name, meta, points}] }]
  * @param slots     ['QB','RB','RB','WR','WR','FLEX','FLEX','K'] - see boardShape.js
  * @param ranked    true for the Daily itself, false for practice
- * @param onFinish  (playState) => void - called once the roster completes and
- *                  "See your grade" is pressed. Grading/reveal is a later
- *                  step; this component's job ends at a complete roster.
  */
-export default function SeasonBoard({ edition, year, teams, slots, ranked, onFinish }) {
-  const [screen, setScreen] = useState('rules'); // 'rules' | 'board'
+export default function SeasonBoard({ edition, year, teams, slots, ranked }) {
+  const [screen, setScreen] = useState('rules'); // 'rules' | 'board' | 'grade'
   const [play, setPlay] = useState(() => initBoardPlay(teams, slots));
   // sheetState: 'closed' | { mode:'team', teamKey } | { mode:'slot', teamKey, player, slotIndexes }
   const [sheetState, setSheetState] = useState('closed');
   const [toast, setToast] = useState(null);
   const [startedAt, setStartedAt] = useState(null);
   const [nowMs, setNowMs] = useState(null);
+  const [finishedMs, setFinishedMs] = useState(null);
+  // Lazy initializer, not an effect: SSR has no `document` (null, safely),
+  // and the client's first render (hydration) runs this function fresh, so
+  // document.body is picked up without a setState-in-effect render cascade.
+  const [mountNode] = useState(() => (typeof document !== 'undefined' ? document.body : null));
   const tickRef = useRef(null);
 
   // THE CLOCK STARTS ON THE RULES CARD'S START, NOT ON THE FIRST TAP. Idempotent:
-  // once startedAt is set, calling this again (there is no second call site,
-  // but the guard is the honest way to say "this may only ever happen once")
-  // does nothing.
+  // once startedAt is set, calling this again does nothing.
   const startClock = () => {
     if (startedAt) return;
     const t0 = Date.now();
@@ -93,6 +107,12 @@ export default function SeasonBoard({ edition, year, teams, slots, ranked, onFin
     setTimeout(() => setToast(null), 1500);
   };
 
+  const handleFinish = () => {
+    clearInterval(tickRef.current);
+    setFinishedMs(Date.now());
+    setScreen('grade');
+  };
+
   const complete = isRosterComplete(play);
   const filled = filledCount(play);
   const left = teamsLeft(play);
@@ -100,10 +120,24 @@ export default function SeasonBoard({ edition, year, teams, slots, ranked, onFin
 
   if (screen === 'rules') {
     return (
-      <RulesCard
-        edition={edition} year={year} slotCount={slots.length} teamCount={teams.length}
-        ranked={ranked} onStart={handleStart}
-      />
+      <div className="sbd">
+        <RulesCard
+          edition={edition} year={year} slotCount={slots.length} teamCount={teams.length}
+          ranked={ranked} onStart={handleStart}
+        />
+      </div>
+    );
+  }
+
+  if (screen === 'grade') {
+    const grade = gradeBoard(play, teams, slots);
+    // finishedMs is always set by handleFinish() before screen flips to
+    // 'grade' - there is no other path here, so no impure now-fallback.
+    const clockLabel = mmss(finishedMs - startedAt);
+    return (
+      <div className="sbd">
+        <GradeScreen edition={edition} year={year} grade={grade} play={play} teams={teams} clockLabel={clockLabel} ranked={ranked} />
+      </div>
     );
   }
 
@@ -118,7 +152,7 @@ export default function SeasonBoard({ edition, year, teams, slots, ranked, onFin
       <div className="sbd-yr">
         <h1>{year}</h1>
         <div className="sbd-sub">
-          Twelve teams. {slots.length === 8 ? 'Eight' : slots.length} slots. Open a team and you must take someone -
+          Twelve teams. Eight slots. Open a team and you must take someone -
           there is no backing out.
         </div>
       </div>
@@ -163,10 +197,10 @@ export default function SeasonBoard({ edition, year, teams, slots, ranked, onFin
       </div>
 
       {complete ? (
-        <button type="button" className="sbd-btn" onClick={() => onFinish?.(play)}>See your grade</button>
+        <button type="button" className="sbd-btn" onClick={handleFinish}>See your grade</button>
       ) : null}
 
-      {sheetState !== 'closed' ? (
+      {sheetState !== 'closed' && mountNode ? createPortal(
         <>
           {/* NO onClick HERE. The backdrop is inert while a team is open or a
               slot choice is pending - that omission IS the "no way out" rule. */}
@@ -184,14 +218,16 @@ export default function SeasonBoard({ edition, year, teams, slots, ranked, onFin
               />
             )}
           </div>
-        </>
+        </>,
+        mountNode,
       ) : null}
 
-      {toast ? (
+      {toast && mountNode ? createPortal(
         <div className="sbd-toast">
           <b>{toast.name}</b>
           <p>{toast.slot} locked · {toast.abbr} spent</p>
-        </div>
+        </div>,
+        mountNode,
       ) : null}
     </div>
   );
@@ -201,7 +237,7 @@ function TeamSheet({ team, play, onChoose }) {
   return (
     <div>
       <div className="sbd-sh">
-        <b>{team.abbr} · {team.record}</b>
+        <b>{team.abbr} · {team.record ?? '—'}</b>
         <span>you must take one player</span>
       </div>
       {team.card.map((p, i) => {
@@ -286,6 +322,118 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart }) {
       </div>
 
       <button type="button" className="sbd-btn" style={{ marginTop: 16 }} onClick={onStart}>Start</button>
+    </div>
+  );
+}
+
+/**
+ * The grade (Part A / Step 4). Set-match already happened in gradeBoard() -
+ * this component only formats what it is handed. Column order (You left,
+ * Best roster right) and row order (matched rows first, in the solver's own
+ * slot order, then swap rows) match the mock exactly.
+ */
+function GradeScreen({ edition, year, grade, play, teams, clockLabel, ranked }) {
+  if (!grade.ok) {
+    return <div style={{ padding: 24 }}>This board has no feasible grade: {grade.reason}.</div>;
+  }
+  const story = boardStory(grade, play.used.size, teams.length, clockLabel);
+
+  return (
+    <>
+      <header className="sbd-hdr">
+        <span className="sbd-ed">{edition}</span>
+        <span className="sbd-clock">{clockLabel}</span>
+      </header>
+
+      <div className="sbd-grade">
+        <div className="sbd-grade-top">
+          <b>{year}</b>
+          <span>{grade.mine.toLocaleString()} pts · {grade.pct}% of {grade.perfect.toLocaleString()}</span>
+        </div>
+        <div className="sbd-colhead">
+          <div className="sbd-cy">You</div>
+          <div className="sbd-cb">Best roster</div>
+        </div>
+        {grade.rows.map((r, i) => <GradeRow key={i} row={r} />)}
+      </div>
+
+      <div className="sbd-mathline">
+        {grade.pointsLeft === 0
+          ? 'You matched the best roster this board allowed.'
+          : <>{grade.matchedCount} of {grade.slotCount} matched · <b>{grade.pointsLeft.toLocaleString()}</b> points left on the board.</>}
+      </div>
+
+      <div className="sbd-perf">
+        <b>The best roster this board allowed</b>
+        <p>
+          {grade.bestRosterAbbrs.join(' · ')}
+          <br />{grade.slotCount} teams, {grade.slotCount} players, {grade.perfect.toLocaleString()} points. No team appears twice.
+        </p>
+      </div>
+
+      <div className="sbd-story">
+        <b>About your board</b>
+        <p>{story}</p>
+      </div>
+
+      <div className="sbd-share">
+        <div className="sbd-g">{grade.glyph}</div>
+        <div className="sbd-cap">
+          {ranked ? edition : 'Practice'} · {year}<br />
+          {grade.mine.toLocaleString()} pts · {grade.pct}% · {clockLabel}<br />
+          sportsvyn.com/daily
+        </div>
+      </div>
+    </>
+  );
+}
+
+function GradeRow({ row }) {
+  const cls = row.hit ? 'sbd-hit' : row.ahead ? 'sbd-ahead' : 'sbd-miss';
+  const verdict = row.hit ? 'MATCHED' : row.ahead ? 'YOU WERE AHEAD' : 'MISSED';
+  const diff = row.hit ? '✓' : row.ahead
+    ? `+${Math.round(Math.abs(row.you.points - row.best.points) * 10) / 10}`
+    : `-${Math.round((row.best.points - (row.you?.points ?? 0)) * 10) / 10}`;
+  const poslab = row.hit ? row.best.slot : 'SWAP';
+
+  return (
+    <div className={`sbd-sbr ${cls}`}>
+      <div className="sbd-top2">
+        <span className="sbd-pos">{poslab}</span>
+        <span className="sbd-vd">{verdict}</span>
+        <span className="sbd-dif">{diff}</span>
+      </div>
+      <div className="sbd-two">
+        <GradeBox p={row.you} cls="sbd-you" />
+        {row.hit ? (
+          <div className="sbd-bx sbd-same">
+            <div className="sbd-tick">✓</div>
+            <div className="sbd-sm">same pick</div>
+          </div>
+        ) : <GradeBox p={row.best} cls="sbd-best" />}
+      </div>
+      {row.moved ? (
+        <div className="sbd-swap">You had him at {row.moved}. Same player, same points - it counts.</div>
+      ) : null}
+    </div>
+  );
+}
+
+function GradeBox({ p, cls }) {
+  if (!p) {
+    return (
+      <div className={`sbd-bx ${cls}`}>
+        <div className="sbd-nm" style={{ color: 'var(--muted-dim, #5A5A56)' }}>nobody</div>
+        <div className="sbd-mt">&nbsp;</div>
+        <div className="sbd-pt" style={{ color: 'var(--muted-dim, #5A5A56)' }}>0</div>
+      </div>
+    );
+  }
+  return (
+    <div className={`sbd-bx ${cls}`}>
+      <div className="sbd-nm">{p.name}</div>
+      <div className="sbd-mt">{p.abbr} · {p.meta}</div>
+      <div className="sbd-pt">{p.points}</div>
     </div>
   );
 }

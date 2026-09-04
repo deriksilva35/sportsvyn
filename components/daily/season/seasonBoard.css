@@ -1,5 +1,6 @@
 /* components/daily/season/seasonBoard.css — the season-roster board's own
-   surface (rules card + board screen), per docs/design/daily-full-mock-v3.html.
+   surface (rules card, board screen, grade), per
+   docs/design/daily-full-mock-v3.html.
 
    EVERY CLASS IS sbd- PREFIXED (season board daily) so nothing here can
    collide with the EXISTING /daily week-game's own daily.css - this is a
@@ -7,18 +8,36 @@
 
    --volt/--ink/--paper/--jade/--terra are the site's own global tokens
    (see app/daily/daily.css's own var(--volt, #D4FF00) usage) - not redefined
-   here, just consumed, so this stays in the same palette as the rest of the
-   app without a second source of truth for the colors. */
+   here, just consumed. FONTS ARE THE POLISH-PASS FIX: the mock's body sets
+   font-family:var(--display) (Saira) once and everything cascades from it;
+   this file has no body to set, so .sbd itself carries that default and
+   every element the mock gives a SPECIFIC family (--cond, --mono) repeats
+   it explicitly. var(--font-display) and var(--font-saira-cond) are the
+   site's own existing aliases (app/globals.css) for exactly the mock's
+   --display/--cond - not reinvented here. var(--font-mono) is likewise
+   already aliased to JetBrains Mono site-wide.
+
+   ONE KNOWN GAP, not silently worked around: next/font loads Saira at
+   weight 900 ONLY (app/layout.js) - the mock's own Google Fonts link pulls
+   400/600/900. Regular-weight body copy that the mock rendered in true
+   Saira (.yr .sub, .rl .t p, .pr .nm small's sibling b, etc.) has no 400
+   file to fall back to on this site and renders in the system sans instead,
+   same as every other page already does (see app/daily/daily.css's own
+   Saira usage, confined to italic-900 display text only). Only the
+   italic-900 headlines/buttons and the condensed-weight labels get an
+   explicit family below, matching what the site can actually render. */
+
+.sbd { font-family: var(--font-display), sans-serif; }
 
 .sbd-hdr { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 16px 4px; }
-.sbd-hdr .sbd-ed { font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted, #8A8A85); }
-.sbd-hdr .sbd-clock { font-family: var(--font-mono, ui-monospace, monospace); font-size: 12px; color: var(--volt, #D4FF00); }
+.sbd-hdr .sbd-ed { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted, #8A8A85); }
+.sbd-hdr .sbd-clock { font-family: var(--font-mono); font-size: 12px; color: var(--volt, #D4FF00); }
 
 .sbd-yr { padding: 2px 16px 6px; }
-.sbd-yr h1 { font-style: italic; font-weight: 900; font-size: 46px; letter-spacing: -.05em; line-height: .92; color: var(--paper, #F5F5F2); margin: 0; }
+.sbd-yr h1 { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 46px; letter-spacing: -.05em; line-height: .92; color: var(--paper, #F5F5F2); margin: 0; }
 .sbd-yr .sbd-sub { margin-top: 5px; font-size: 13px; color: var(--paper-dim, #B8B8B3); line-height: 1.45; }
 
-.sbd-warn { margin: 8px 16px 0; font-family: var(--font-mono, ui-monospace, monospace); font-size: 11px; color: var(--terra, #B8410F); line-height: 1.5; }
+.sbd-warn { margin: 8px 16px 0; font-family: var(--font-mono); font-size: 11px; color: var(--terra, #B8410F); line-height: 1.5; }
 
 .sbd-prog { padding: 10px 12px 4px; }
 .sbd-rrow { display: flex; gap: 3px; }
@@ -34,25 +53,25 @@
    cell) states without a second color rule. */
 .sbd-pip .sbd-dot {
   width: 22px; height: 22px; flex: none; border-radius: 99px; background: var(--ink, #0A0A0A);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center; font-family: var(--font-saira-cond);
   font-weight: 700; font-size: 9px; letter-spacing: .02em; color: #fff; line-height: 1;
 }
-.sbd-prog .sbd-cap { margin-top: 7px; display: flex; justify-content: space-between; font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; color: var(--muted, #8A8A85); }
+.sbd-prog .sbd-cap { margin-top: 7px; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); }
 
 .sbd-needline { padding: 10px 16px 2px; font-size: 13px; color: var(--paper-dim, #B8B8B3); line-height: 1.4; }
 .sbd-needline b { color: var(--volt, #D4FF00); font-weight: 600; }
 
 .sbd-secl { padding: 14px 16px 7px; display: flex; align-items: baseline; justify-content: space-between; }
-.sbd-secl b { font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--volt, #D4FF00); }
-.sbd-secl span { font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; color: var(--muted, #8A8A85); }
+.sbd-secl b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--volt, #D4FF00); }
+.sbd-secl span { font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); }
 
 .sbd-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; padding: 0 12px 16px; }
 .sbd-tc {
   text-align: center; border: 1px solid var(--line, #2A2A2A); border-radius: 11px; background: var(--ink-2, #141414);
   padding: 10px 3px; color: var(--paper, #F5F5F2); font: inherit; cursor: pointer;
 }
-.sbd-tc b { display: block; font-weight: 700; font-size: 15px; letter-spacing: .03em; }
-.sbd-tc small { display: block; margin-top: 3px; font-family: var(--font-mono, ui-monospace, monospace); font-size: 9px; color: var(--volt, #D4FF00); }
+.sbd-tc b { display: block; font-family: var(--font-saira-cond); font-weight: 700; font-size: 15px; letter-spacing: .03em; }
+.sbd-tc small { display: block; margin-top: 3px; font-family: var(--font-mono); font-size: 9px; color: var(--volt, #D4FF00); }
 /* DEAD: already used, OR nothing on the card fits anything still open.
    pointer-events:none is load-bearing, not decorative - this is the actual
    mechanism that makes a dead chip un-openable, not just visually muted. */
@@ -62,24 +81,33 @@
 .sbd-tc:active { border-color: var(--volt, #D4FF00); }
 
 .sbd-back { position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 10; }
+/* CENTERED MODAL, NOT A BOTTOM DRAWER. max-width:366px matches the mock
+   exactly (previously 420px - drifted, now corrected). Rendered through a
+   React portal to document.body (see SeasonBoard.js) rather than in normal
+   flow - position:fixed inside a component tree sitting under ANY ancestor
+   with a CSS transform (a common pattern in this app's shell chrome) stops
+   being viewport-relative and starts behaving like position:absolute on
+   that ancestor instead, which is exactly what reads as "a drawer" rather
+   than a centered sheet. Portaling to body is the robust fix regardless of
+   which ancestor turns out to be the culprit. */
 .sbd-sheet {
-  position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%); width: calc(100% - 24px); max-width: 420px;
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%); width: calc(100% - 24px); max-width: 366px;
   background: var(--ink-3, #1C1C1C); border: 2px solid var(--volt, #D4FF00); border-radius: 16px; z-index: 11;
   max-height: 76vh; overflow: auto;
 }
 .sbd-sh { position: sticky; top: 0; background: var(--volt, #D4FF00); color: var(--ink, #0A0A0A); padding: 11px 14px; border-radius: 14px 14px 0 0; }
-.sbd-sh b { display: block; font-style: italic; font-weight: 900; font-size: 20px; letter-spacing: -.03em; }
-.sbd-sh span { display: block; margin-top: 2px; font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+.sbd-sh b { display: block; font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 20px; letter-spacing: -.03em; }
+.sbd-sh span { display: block; margin-top: 2px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
 
 .sbd-pr {
   display: flex; align-items: center; gap: 9px; padding: 9px 14px; border-top: 1px solid var(--line, #2A2A2A);
   width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; font: inherit; cursor: pointer; text-align: left;
 }
-.sbd-pr .sbd-pos { flex: none; width: 44px; font-weight: 600; font-size: 10px; letter-spacing: .08em; color: var(--muted, #8A8A85); }
+.sbd-pr .sbd-pos { flex: none; width: 44px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .08em; color: var(--muted, #8A8A85); }
 .sbd-pr .sbd-nm { flex: 1 1 auto; min-width: 0; }
 .sbd-pr .sbd-nm b { display: block; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--paper, #F5F5F2); }
-.sbd-pr .sbd-nm small { display: block; margin-top: 2px; font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; color: var(--muted, #8A8A85); }
-.sbd-pr .sbd-tk { flex: none; font-weight: 600; font-size: 9px; letter-spacing: .10em; color: var(--volt, #D4FF00); border: 1px solid var(--volt, #D4FF00); border-radius: 99px; padding: 4px 9px; }
+.sbd-pr .sbd-nm small { display: block; margin-top: 2px; font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); }
+.sbd-pr .sbd-tk { flex: none; font-family: var(--font-saira-cond); font-weight: 600; font-size: 9px; letter-spacing: .10em; color: var(--volt, #D4FF00); border: 1px solid var(--volt, #D4FF00); border-radius: 99px; padding: 4px 9px; }
 /* A player with NO legal slot: greyed and inert (pointer-events:none), same
    mechanism as a dead team chip - "no way to pick this" is enforced here,
    not merely implied by graying it out. */
@@ -92,40 +120,95 @@
 .sbd-slotbtns { display: flex; gap: 7px; flex-wrap: wrap; }
 .sbd-slotbtn {
   flex: 1; min-width: 74px; text-align: center; border: 1px solid var(--volt, #D4FF00); border-radius: 9px;
-  padding: 11px 6px; font-weight: 700; font-size: 13px; letter-spacing: .06em; color: var(--volt, #D4FF00);
-  background: none; cursor: pointer; font-family: inherit;
+  padding: 11px 6px; font-family: var(--font-saira-cond); font-weight: 700; font-size: 13px; letter-spacing: .06em; color: var(--volt, #D4FF00);
+  background: none; cursor: pointer;
 }
 
 .sbd-toast {
-  position: fixed; left: 12px; right: 12px; bottom: 16px; max-width: 420px; margin: 0 auto;
+  position: fixed; left: 12px; right: 12px; bottom: 16px; max-width: 366px; margin: 0 auto;
   background: var(--volt, #D4FF00); color: var(--ink, #0A0A0A); border-radius: 12px; padding: 12px 14px; z-index: 12;
 }
-.sbd-toast b { font-style: italic; font-weight: 900; font-size: 16px; }
-.sbd-toast p { margin: 3px 0 0; font-family: var(--font-mono, ui-monospace, monospace); font-size: 11px; }
+.sbd-toast b { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 16px; }
+.sbd-toast p { margin: 3px 0 0; font-family: var(--font-mono); font-size: 11px; }
 
 .sbd-btn {
-  display: block; width: 100%; text-align: center; font-style: italic; font-weight: 900; font-size: 16px;
+  display: block; width: 100%; text-align: center; font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 16px;
   color: var(--ink, #0A0A0A); background: var(--volt, #D4FF00); border: 0; border-radius: 10px; padding: 13px; cursor: pointer;
 }
 .sbd-btn.sbd-ghost {
-  background: none; border: 1px solid var(--line, #2A2A2A); color: var(--paper, #F5F5F2); font-style: normal;
+  background: none; border: 1px solid var(--line, #2A2A2A); color: var(--paper, #F5F5F2); font-family: var(--font-saira-cond); font-style: normal;
   font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
 }
 
 /* rules card */
 .sbd-rules { padding: 34px 16px 24px; }
-.sbd-rules .sbd-kick { font-weight: 600; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--volt, #D4FF00); }
-.sbd-rules h2 { margin-top: 9px; font-style: italic; font-weight: 900; font-size: 36px; letter-spacing: -.05em; line-height: .98; color: var(--paper, #F5F5F2); }
+.sbd-rules .sbd-kick { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--volt, #D4FF00); }
+.sbd-rules h2 { margin-top: 9px; font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 36px; letter-spacing: -.05em; line-height: .98; color: var(--paper, #F5F5F2); }
 .sbd-rl { display: flex; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line, #2A2A2A); }
 .sbd-rl:first-of-type { margin-top: 16px; }
 .sbd-rl .sbd-n {
   flex: none; width: 26px; height: 26px; border-radius: 99px; border: 1px solid var(--volt, #D4FF00); color: var(--volt, #D4FF00);
-  display: flex; align-items: center; justify-content: center; font-family: var(--font-mono, ui-monospace, monospace); font-weight: 700; font-size: 11px;
+  display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; font-size: 11px;
 }
 .sbd-rl .sbd-t { flex: 1 1 auto; }
 .sbd-rl .sbd-t b { display: block; font-size: 15px; font-weight: 600; margin-bottom: 3px; color: var(--paper, #F5F5F2); }
 .sbd-rl .sbd-t p { font-size: 13px; color: var(--muted, #8A8A85); line-height: 1.45; margin: 0; }
 .sbd-rnote {
   margin-top: 14px; padding: 11px 13px; border: 1px dashed var(--line, #2A2A2A); border-radius: 11px;
-  font-family: var(--font-mono, ui-monospace, monospace); font-size: 11px; color: var(--muted-dim, #5A5A56); line-height: 1.6;
+  font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim, #5A5A56); line-height: 1.6;
 }
+
+/* ===== grade (Part A) - per the mock's .grade/.sbr/.two/.bx family,
+   COMPACT REVEAL sizing (the mock's own second, denser pass for these same
+   selectors, since eight rows have to read on one screen without excess
+   scrolling) applied directly rather than layered as a later override. ===== */
+.sbd-grade { margin: 0 12px 12px; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); overflow: hidden; }
+.sbd-grade-top { background: var(--volt, #D4FF00); color: var(--ink, #0A0A0A); padding: 10px 13px; display: flex; align-items: baseline; justify-content: space-between; }
+.sbd-grade-top b { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 17px; letter-spacing: -.03em; }
+.sbd-grade-top span { font-family: var(--font-mono); font-weight: 700; font-size: 12px; }
+
+.sbd-colhead { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 10px; background: var(--ink-2, #141414); border-bottom: 1px solid var(--line, #2A2A2A); }
+.sbd-colhead div { font-family: var(--font-saira-cond); font-weight: 700; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; text-align: center; padding: 3px 0; border-radius: 7px; }
+.sbd-colhead .sbd-cy { color: var(--ink, #0A0A0A); background: var(--volt, #D4FF00); }
+.sbd-colhead .sbd-cb { color: var(--jade, #2A8A4F); border: 1px solid var(--jade, #2A8A4F); }
+
+.sbd-sbr { padding: 6px 10px; border-top: 1px solid var(--line, #2A2A2A); }
+.sbd-sbr .sbd-top2 { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
+.sbd-sbr .sbd-pos { font-family: var(--font-saira-cond); font-weight: 700; font-size: 9px; letter-spacing: .08em; color: var(--muted, #8A8A85); min-width: 26px; }
+.sbd-sbr .sbd-vd { font-family: var(--font-saira-cond); font-weight: 600; font-size: 8px; letter-spacing: .10em; text-transform: uppercase; border: 1px solid; border-radius: 99px; padding: 1px 6px; }
+.sbd-sbr.sbd-hit .sbd-vd { color: var(--jade, #2A8A4F); border-color: var(--jade, #2A8A4F); }
+.sbd-sbr.sbd-miss .sbd-vd { color: var(--terra, #B8410F); border-color: var(--terra, #B8410F); }
+.sbd-sbr.sbd-ahead .sbd-vd { color: var(--volt, #D4FF00); border-color: var(--volt, #D4FF00); }
+.sbd-sbr.sbd-ahead .sbd-dif { color: var(--volt, #D4FF00); }
+.sbd-sbr .sbd-dif { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--terra, #B8410F); }
+.sbd-sbr.sbd-hit .sbd-dif { color: var(--jade, #2A8A4F); }
+
+.sbd-two { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.sbd-bx { border: 1px solid var(--line, #2A2A2A); border-radius: 8px; padding: 6px 8px; background: var(--ink, #0A0A0A); }
+.sbd-bx .sbd-nm { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--paper, #F5F5F2); }
+.sbd-bx .sbd-mt { margin-top: 1px; font-family: var(--font-mono); font-size: 8px; color: var(--muted-dim, #5A5A56); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sbd-bx .sbd-pt { margin-top: 2px; font-family: var(--font-mono); font-weight: 700; font-size: 14px; color: var(--paper, #F5F5F2); }
+.sbd-bx.sbd-you { border-color: var(--volt, #D4FF00); }
+.sbd-bx.sbd-you .sbd-pt { color: var(--volt, #D4FF00); }
+.sbd-bx.sbd-best .sbd-pt { color: var(--jade, #2A8A4F); }
+.sbd-sbr.sbd-hit .sbd-bx.sbd-you { border-color: var(--jade, #2A8A4F); }
+.sbd-sbr.sbd-hit .sbd-bx.sbd-you .sbd-pt { color: var(--jade, #2A8A4F); }
+.sbd-bx.sbd-same { border-style: dashed; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; padding: 8px; }
+.sbd-bx.sbd-same .sbd-tick { font-family: var(--font-mono); font-size: 16px; color: var(--jade, #2A8A4F); }
+.sbd-bx.sbd-same .sbd-sm { margin-top: 1px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 8px; letter-spacing: .10em; text-transform: uppercase; color: var(--muted, #8A8A85); }
+.sbd-sbr .sbd-swap { margin-top: 3px; font-family: var(--font-mono); font-size: 9px; color: var(--muted-dim, #5A5A56); }
+
+.sbd-mathline { margin: 0 12px 12px; padding: 8px 12px; border: 1px dashed var(--line, #2A2A2A); border-radius: 11px; font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); line-height: 1.5; }
+.sbd-mathline b { color: var(--terra, #B8410F); font-weight: 700; }
+
+.sbd-perf { margin: 0 12px 12px; border: 1px solid var(--line, #2A2A2A); border-radius: 11px; background: var(--ink-2, #141414); padding: 9px 12px; }
+.sbd-perf b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--jade, #2A8A4F); display: block; margin-bottom: 5px; }
+.sbd-perf p { font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); line-height: 1.5; margin: 0; }
+
+.sbd-story { margin: 0 12px 12px; border: 1px solid var(--line, #2A2A2A); border-left: 3px solid var(--volt, #D4FF00); border-radius: 11px; background: var(--ink-2, #141414); padding: 10px 12px; }
+.sbd-story b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--volt, #D4FF00); display: block; margin-bottom: 6px; }
+.sbd-story p { font-family: var(--font-source-serif), Georgia, serif; font-style: italic; font-size: 12px; line-height: 1.4; color: var(--paper-dim, #B8B8B3); margin: 0; }
+
+.sbd-share { margin: 20px 12px 0; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); padding: 15px 14px; }
+.sbd-share .sbd-g { font-family: var(--font-mono); font-size: 18px; letter-spacing: .09em; line-height: 1.5; }
+.sbd-share .sbd-cap { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--muted, #8A8A85); line-height: 1.55; }
