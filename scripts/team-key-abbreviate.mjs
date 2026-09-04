@@ -2,23 +2,17 @@
 // scripts/team-key-abbreviate.mjs — resolve nfl_player_season_totals.team_key
 // from a raw team NAME string to teams.abbreviation, for footballdb rows.
 //
+// REDUCED TO A THIN CALLER (ruling). The canonical-form decision itself now
+// lives in exactly one place, lib/footballdb/teamKey.js's canonicalTeamKey()
+// - scripts/footballdb-import.mjs calls it BEFORE building its INSERT ...
+// ON CONFLICT key, so a fresh ingest never needs this script at all anymore.
+// What THIS script is still for: reconciling team_key on rows an ingest
+// already wrote BEFORE canonicalTeamKey() existed (its own name-matching
+// logic used to live here, inline - now it just calls the shared function).
+//
 // BDL rows never need this: scripts/bdl-season-totals-backfill.mjs computes
 // team_key straight from teams.abbreviation via the real team_id FK on
 // nfl_player_game_stats, so it always resolves, never a string match.
-//
-// FOOTBALLDB ROWS ONLY HAVE A RAW STRING ("Green Bay Packers", "Houston
-// Oilers") - there is no existing join to teams for these (grepped
-// lib/footballdb/identity.js: team is explicitly "never the join key
-// itself"; there is no nfl_teams table, no lineage table). This script
-// builds the only join that CAN exist: an exact, case-insensitive match of
-// the raw team_key string against teams.name. A CURRENT franchise whose name
-// never changed (Green Bay Packers, Dallas Cowboys, ...) matches and gets
-// its abbreviation. A row naming a HISTORICAL identity a current teams row
-// does not carry (Houston Oilers, St. Louis/Phoenix Cardinals, Baltimore
-// Colts, San Diego/LA-era Chargers, Oakland/LA-era Raiders, Washington
-// Redskins, St. Louis-era Rams) does NOT match - and is left exactly as it
-// is, unresolved, reported below. Per ruling: report the misses, never
-// invent a lineage table to paper over them.
 //
 // Usage:
 //   set -a && . ./.env.local && set +a
@@ -27,6 +21,7 @@
 
 import crypto from 'node:crypto';
 import { sql } from '../lib/db.js';
+import { canonicalTeamKey } from '../lib/footballdb/teamKey.js';
 
 const apply = process.argv.includes('--apply');
 
@@ -40,6 +35,7 @@ console.log('='.repeat(74));
 
 const teams = await sql`SELECT t.name, t.abbreviation FROM teams t JOIN leagues l ON l.id = t.league_id WHERE l.slug = 'nfl'`;
 const byName = new Map(teams.map((t) => [t.name.toLowerCase(), t.abbreviation]));
+const resolver = (name) => byName.get(name.toLowerCase()) ?? null;
 
 const rows = await sql`
   SELECT id, team_key FROM nfl_player_season_totals
@@ -48,8 +44,8 @@ const rows = await sql`
 const resolved = [];
 const missedByKey = new Map();
 for (const r of rows) {
-  const abbr = byName.get(r.team_key.toLowerCase());
-  if (abbr) resolved.push({ id: r.id, team_key: r.team_key, abbr });
+  const key = canonicalTeamKey(r.team_key, resolver);
+  if (key !== r.team_key) resolved.push({ id: r.id, team_key: r.team_key, abbr: key });
   else missedByKey.set(r.team_key, (missedByKey.get(r.team_key) ?? 0) + 1);
 }
 

@@ -25,8 +25,8 @@ import { fileURLToPath } from 'node:url';
 import { sql } from '../lib/db.js';
 import { readWorkbook, readAboutLines } from '../lib/footballdb/xlsxReader.js';
 import { toSeasonRows, teamCountFromAbout } from '../lib/footballdb/parse.js';
-import { loadCandidateIndex, resolveIdentity, createPlayer, inferPosition } from '../lib/footballdb/identity.js';
-import { normalizeName } from '../lib/gridiron/nameMatch.js';
+import { loadCandidateIndex, resolveAndPersistIdentity, inferPosition } from '../lib/footballdb/identity.js';
+import { canonicalTeamKey } from '../lib/footballdb/teamKey.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WORKBOOK_DIR = path.join(__dirname, '..', '.data', 'footballdb', 'NFL_Player_Stats_1980-1999');
@@ -49,6 +49,20 @@ console.log(`FINGERPRINT   ${fingerprint}`);
 console.log(`SEASONS  ${seasons[0]}-${seasons.at(-1)} (${seasons.length})`);
 console.log(`WRITES   ${apply ? 'YES — --apply given' : 'NO — dry run'}`);
 console.log('='.repeat(74));
+
+// ONE CANONICAL team_key, PRODUCED BEFORE THE CONFLICT KEY IS BUILT
+// (ruling). A resolver built once (teams.name -> teams.abbreviation, nfl
+// league, case-insensitive - the same join scripts/team-key-abbreviate.mjs
+// used) and handed to lib/footballdb/teamKey.js's canonicalTeamKey(), the
+// ONE function that decides team_key's stored shape. Doing this HERE, before
+// every INSERT ... ON CONFLICT (nfl_player_id, season_year, team_key),
+// is what makes a re-run idempotent against whatever a prior run (or
+// scripts/team-key-abbreviate.mjs) already wrote - the old bug was building
+// the conflict key from the raw name every time, missing a row someone else
+// had already abbreviated in place.
+const nflTeams = await sql`SELECT t.name, t.abbreviation FROM teams t JOIN leagues l ON l.id = t.league_id WHERE l.slug = 'nfl'`;
+const teamByName = new Map(nflTeams.map((t) => [t.name.toLowerCase(), t.abbreviation]));
+const teamResolver = (name) => teamByName.get(name.toLowerCase()) ?? null;
 
 const totals = { rows: 0, exact: 0, created: 0, ambiguous: 0, defenseOnly: 0, gamesConflict: 0 };
 const allAmbiguous = [];
@@ -78,31 +92,30 @@ for (const year of seasons) {
     const position = inferPosition(r);
     if (position == null) { defenseOnly += 1; continue; } // no slot in QB/RB/WR/TE/FLEX/PK/DEF
 
-    const resolved = resolveIdentity(r.rawName, position, candidateIndex);
+    // ONE FUNCTION DOES THE RESOLVE AND THE WRITE IT IMPLIES
+    // (lib/footballdb/identity.js's resolveAndPersistIdentity) - ambiguous
+    // is STORED, never ATTACHED (ruling): a brand-new nfl_players row is
+    // minted for it, never one of the 2+ colliding candidateIds, matched_by
+    // 'created-ambiguous' marking it as neither a confident match nor an
+    // ordinary creation. See that function's own comment for why this mints
+    // a NEW player per ambiguous row even across seasons, rather than
+    // reusing one - Marcus Allen (Los Angeles Raiders) collides in 13
+    // different seasons in this corpus, and merging those without real
+    // matching evidence would be exactly the guess this system refuses.
+    const resolved = await resolveAndPersistIdentity(sql, r.rawName, position, candidateIndex, { apply });
+    const { nflPlayerId, matchedBy } = resolved;
+
     if (resolved.outcome === 'ambiguous') {
       ambiguous += 1;
       ambiguousRows.push({ year, rawName: r.rawName, team: r.team, candidateIds: resolved.candidateIds });
-      continue;
-    }
-
-    let nflPlayerId = resolved.nflPlayerId;
-    if (resolved.outcome === 'created') {
+    } else if (resolved.outcome === 'created') {
       created += 1;
-      if (apply) {
-        nflPlayerId = await createPlayer(sql, r.rawName, position);
-        // Newly created players must be visible to LATER rows in this same
-        // season (a name appearing on both Rushing and Defense, unlikely but
-        // not impossible) and to subsequent seasons in this run.
-        const norm = normalizeName(r.rawName);
-        if (!candidateIndex.has(norm)) candidateIndex.set(norm, []);
-        candidateIndex.get(norm).push({ id: nflPlayerId, position });
-      }
     } else {
       exact += 1;
     }
 
     written.push({
-      nflPlayerId, season_year: year, team_key: r.team, position: resolved.position ?? position,
+      nflPlayerId, season_year: year, team_key: canonicalTeamKey(r.team, teamResolver), position: resolved.position ?? position,
       games: r.games ?? null, pass_cmp: r.passCmp ?? null, pass_att: r.passAtt ?? null,
       pass_yds: r.passYds ?? null, pass_td: r.passTd ?? null, pass_int: r.passInt ?? null,
       rush_att: r.rushAtt ?? null, rush_yds: r.rushYds ?? null, rush_td: r.rushTd ?? null,
@@ -111,7 +124,7 @@ for (const year of seasons) {
       rec_long: r.recLong ?? null,
       fgm: r.fgm ?? null, fga: r.fga ?? null, fg_long: r.fgLong ?? null, xp: r.xp ?? null,
       sacks: r.sacks ?? null, def_int: r.defInt ?? null, def_td: r.defTd ?? null,
-      matched_by: resolved.outcome, raw_name: r.rawName,
+      matched_by: matchedBy, raw_name: r.rawName,
     });
   }
 
@@ -151,8 +164,8 @@ for (const year of seasons) {
     `created=${created} (${pct(created, written.length)})  ambiguous=${ambiguous}  ` +
     `defenseOnly(no slot, not written)=${defenseOnly}  gamesConflict=${gamesConflict}`);
   if (ambiguousRows.length) {
-    console.log('   AMBIGUOUS (refused, not written):');
-    for (const a of ambiguousRows) console.log(`      ${a.rawName} (${a.team}) -> nfl_players ids ${JSON.stringify(a.candidateIds)}`);
+    console.log('   AMBIGUOUS (stored under a brand-new player, never attached):');
+    for (const a of ambiguousRows) console.log(`      ${a.rawName} (${a.team}) -> never attached to existing nfl_players ids ${JSON.stringify(a.candidateIds)}`);
   }
 
   totals.rows += seasonRows.length; totals.exact += exact; totals.created += created;

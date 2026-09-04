@@ -1,0 +1,80 @@
+-- ============================================================================
+-- 093_footballdb_position_touches_recompute.sql — every footballdb-only
+-- identity's stored position recomputed under the touches law (ruling).
+--
+-- NUMBER ASSIGNED AT TRANSCRIPTION TIME: 092 is the highest in the tree, so
+-- this is 093. Scanned the target first: nfl_player_season_totals exists
+-- (087-092 applied).
+--
+-- THE SERVED PATH READS THE STORED position COLUMN, NEVER inferPosition() AT
+-- READ TIME (confirmed this relay: app/daily/board/page.js:169 and
+-- lib/daily/seasonBoardEditions.js:166 both SELECT position straight off
+-- nfl_player_season_totals; lib/daily/boardGenerator.js's buildCard() and
+-- cardsBySeasonTeam() filter on that same r.position value, never recompute
+-- it). Every position-inference law change this session (the original
+-- magnitude-and-attempts-floor fix, then the touches amendment) changed what
+-- a FUTURE ingest writes - neither one retroactively touched a single row
+-- already sitting in the table. Confirmed live on PROD: Harvey Williams 1995
+-- is still stored position='QB' (the exact original defect this whole effort
+-- exists to fix), because PROD has received none of this session's
+-- footballdb writes at all.
+--
+-- THIS MIGRATION CARRIES NO DDL - same shape as 089's own precedent. The
+-- computation needs lib/daily/inferPosition.js's actual JS law (SCORING
+-- constants, the QB largest-of-three gate, the RB/WR touches comparison) -
+-- duplicating that logic in raw SQL would fork the ONE PLACE this law lives.
+-- The real data operation is scripts/footballdb-position-recompute.mjs
+-- (dry-run by default, --apply to write, reads DATABASE_URL from the
+-- environment like every other script here). This file is the record of
+-- WHY and WHEN, not the mechanism.
+--
+-- SCOPE: source='footballdb' AND the matched nfl_players row has
+-- bdl_player_id IS NULL - not every footballdb row. Found live, before
+-- writing anything: resolveIdentity()'s 'exact' outcome always inherits the
+-- MATCHED PLAYER'S OWN nfl_players.position, uniformly across every one of
+-- that player's stored seasons (confirmed: Harvey Williams shows 'QB' on
+-- all 11 of his rows) - a real BDL-era player (bdl_player_id NOT NULL) who
+-- also has older footballdb rows carries a GENUINE, never-inferred position
+-- there, and must never be touched. matched_by itself cannot tell the two
+-- cases apart any more: every footballdb-only identity this corpus has ever
+-- created has, by now, been re-ingested since creation, and each re-match
+-- overwrites matched_by from 'created' to 'exact' - only bdl_player_id still
+-- distinguishes "real position" from "originally inferred, now stale." See
+-- scripts/footballdb-position-recompute.mjs's own header for the measured
+-- counts.
+--
+-- THE ONE DELETION 093 PERFORMS (ruling). Recomputing under the amended
+-- (no-touches-but-a-real-pass-attempt -> QB) law still left 17 rows with no
+-- qualifying position - not a gap in the law, but rows that are not season
+-- lines at all: passAtt, rushAtt, rec, AND fga all zero or null, nothing
+-- read by this ingest happened on the row. A formal 0-for-0 Passing-tab
+-- entry for a punter (Dave Jennings, Ray Guy, John Kidd, Bobby Hoying, ...),
+-- a Kicking-tab row for a kicker who attempted no field goal that season
+-- (Ted Thompson, Rolf Benirschke, Kerry Brady, Carlos Huerta, Chris Jacke,
+-- George Yarno) - each exists only because an OLDER, broken position law
+-- gave it a skill position (mostly 'QB') it never qualified for under any
+-- law since. scripts/footballdb-position-recompute.mjs's STEP 1 selects and
+-- prints these by id/name/season/team, then deletes by id, BEFORE the STEP 2
+-- position recompute runs - the same script, same order, on PROD as on DEV,
+-- so PROD behaves identically. NOTHING WITH ANY NONZERO TRACKED STAT IS EVER
+-- DELETED - a row with real production always survives, even when its
+-- position changes. Measured on DEV: exactly 17 rows, all 17 confirmed zero/
+-- null across passAtt, rushAtt, rec, and fga before deletion.
+-- ============================================================================
+COMMENT ON COLUMN nfl_player_season_totals.position IS
+  'The position this row is drafted at on a board card. For source=''bdl'' rows this is always a real nfl_players.position, joined at rollup time - never inferred. For source=''footballdb'' rows with no source position, this is lib/daily/inferPosition.js''s law (QB: 100+ pass attempts AND passing the largest of the three scoring components; RB: rushAtt > rec; WR: rec >= rushAtt, TE folded in; PK: FG attempts present and nothing else) computed AT INGEST TIME by scripts/footballdb-import.mjs - the served path (app/daily/board/page.js, lib/daily/seasonBoardEditions.js) reads this column directly and never recomputes it, so a law change here needs its own recompute pass (093''s own scripts/footballdb-position-recompute.mjs) to reach data already stored, not just future ingests.';
+
+-- ---------------------------------------------------------------------------
+-- VERIFY (DEV first, then PROD, after scripts/footballdb-position-recompute.mjs --apply):
+--   SELECT raw_name, team_key, position FROM nfl_player_season_totals
+--     WHERE season_year = 1995 AND raw_name = 'Harvey Williams';
+--     -- expect: position = 'RB' (255 rush att > 54 rec), not 'QB'
+--   scripts/footballdb-position-recompute.mjs's own WHERE clause is
+--   source='footballdb' - a BDL row is never even read by it. Spot check
+--   after --apply: SELECT count(*) FROM nfl_player_season_totals WHERE
+--   source='bdl'; the count is identical before and after this runs.
+--   SELECT count(*) FROM nfl_player_season_totals WHERE source='footballdb'
+--     AND position IS NULL; -- expect 0 after --apply (the 17 empty rows are
+--     deleted, not stored null - the NOT NULL constraint on position was
+--     never touched, and needed no touching)
+-- ---------------------------------------------------------------------------
