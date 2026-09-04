@@ -243,9 +243,20 @@ export default async function CfbGamePage({ params, searchParams }) {
           <div className="gg-chips">
             {final ? <span className="gg-chip final">FINAL</span> : null}
             {live ? (
-              <span className="gg-chip live">
-                LIVE{liveChip(game.liveState) ? <span className="gi-qc"> {liveChip(game.liveState)}</span> : null}
-              </span>
+              <>
+                {/* THE CHIP IS A SIBLING, NOT A CHILD OF THE PILL. .gg-chip.live
+                    is a SOLID fill (background: var(--live), color: #fff) - the
+                    filled-pill skin this header uses for its state badges, unlike
+                    the card's outline-pill .gi-livepill. .gi-qc's own color is
+                    ALSO var(--live), so nesting it inside the filled pill put
+                    live-red text on a live-red background: present in the DOM
+                    (curl found it), invisible on the page. Pulling it out here
+                    keeps LIVE as its own solid pill and renders the chip in its
+                    intended live-red mono against the header's own background -
+                    same grammar the card already gets right, LIVE pill then chip. */}
+                <span className="gg-chip live">LIVE</span>
+                {liveChip(game.liveState) ? <span className="gi-qc">{liveChip(game.liveState)}</span> : null}
+              </>
             ) : null}
             {!final && !live && game.kickoffAt
               ? <span className="gg-chip time">{fmtKick(game.kickoffAt)} ET</span> : null}

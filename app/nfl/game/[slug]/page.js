@@ -170,11 +170,18 @@ export default async function GamePage({ params, searchParams }) {
             {final ? <span className="gg-chip final">FINAL</span> : null}
             {/* Where in the game, the ONE formatter (lineScore.js) - the same
                 chip the scoreboard card wears, per the one-definition law
-                this page originally escaped by being missed in recon. */}
+                this page originally escaped by being missed in recon.
+                THE CHIP IS A SIBLING, NOT A CHILD OF THE PILL - see the CFB
+                game page's identical fix for why: .gg-chip.live is a SOLID
+                fill (color: #fff on var(--live) background), and .gi-qc's own
+                color is ALSO var(--live), so nesting it inside the pill put
+                live-red text on a live-red background. Present in the DOM,
+                invisible on the page. */}
             {live ? (
-              <span className="gg-chip live">
-                LIVE{liveChip(game.liveState) ? <span className="gi-qc"> {liveChip(game.liveState)}</span> : null}
-              </span>
+              <>
+                <span className="gg-chip live">LIVE</span>
+                {liveChip(game.liveState) ? <span className="gi-qc">{liveChip(game.liveState)}</span> : null}
+              </>
             ) : null}
             {!final && !live && game.kickoffAt
               ? <span className="gg-chip time">{fmtKick(game.kickoffAt)} ET</span> : null}
