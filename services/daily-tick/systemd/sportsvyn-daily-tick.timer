@@ -1,0 +1,21 @@
+# sportsvyn-daily-tick.timer - fires sportsvyn-daily-tick.service every 5
+# minutes, beside sportsvyn-live-poller's own 30s internal cadence. See
+# sportsvyn-daily-tick.service's own header for install steps.
+#
+# UTC THROUGHOUT, no ET/DST logic here or in index.mjs - only the DATA
+# (live_notify_at, closes_at, both computed by easternLocalToUtc at board-
+# creation time) carries the ET boundary. A 5-minute cadence means the real
+# fire time for a push can lag its stored boundary by up to 5 minutes; the
+# spec's own hour (10:00 AM ET, midnight ET) was never meant to the second.
+
+[Unit]
+Description=Run sportsvyn-daily-tick every 5 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

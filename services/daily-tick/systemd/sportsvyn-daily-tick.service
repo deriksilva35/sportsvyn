@@ -1,0 +1,49 @@
+# sportsvyn-daily-tick.service
+#
+# INSTALL (--user unit, same reason and same three-line conversion as
+# sportsvyn-live-poller.service - this box has no passwordless sudo):
+#   cp services/daily-tick/systemd/sportsvyn-daily-tick.service ~/.config/systemd/user/
+#   cp services/daily-tick/systemd/sportsvyn-daily-tick.timer ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   # NOT enabled here - HOLDING for Derik's GO (5b Part F3), after his phone
+#   # confirms the C1 proof push:
+#   systemctl --user enable --now sportsvyn-daily-tick.timer
+#   journalctl --user -u sportsvyn-daily-tick -f
+#
+# A TIMER + ONESHOT SERVICE, NOT A LOOP - unlike sportsvyn-live-poller
+# (a long-running process with its own 30s internal loop), this one exits
+# after each tick; the timer unit is what owns the 5-minute cadence, and
+# systemd's own timer accounting survives a droplet reboot better than an
+# in-process setInterval would.
+#
+# EnvironmentFile IS THE PROJECT'S OWN .env.local - PUSH_ENABLED, the APNs
+# key path, and PROD_DATABASE_URL all come from it, same reasoning as
+# sportsvyn-live-poller.service: a second copy of a credential is a second
+# thing to leak. index.mjs itself sets DATABASE_URL from PROD_DATABASE_URL
+# before any import can see the wrong one (see its own header).
+
+[Unit]
+Description=Sportsvyn Daily v2 edition tick (create board, fire daily-live/daily-revealed)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+# user unit: already runs as derik
+WorkingDirectory=/home/derik/projects/sportsvyn
+EnvironmentFile=/home/derik/projects/sportsvyn/.env.local
+ExecStart=/home/derik/.nvm/versions/node/v22.23.1/bin/node services/daily-tick/index.mjs
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sportsvyn-daily-tick
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=
+
+[Install]
+WantedBy=default.target

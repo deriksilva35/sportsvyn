@@ -35,9 +35,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import Link from 'next/link';
 import {
   initBoardPlay, teamIsDead, isRosterComplete, filledCount, teamsLeft,
-  pickOutcome, commitPick,
+  pickOutcome, commitPick, startClock as canStartClock,
 } from '@/lib/daily/seasonBoardPlay';
 import { gradeBoard, boardStory } from '@/lib/daily/seasonBoardGrade';
 import './seasonBoard.css';
@@ -62,10 +63,23 @@ function mmss(ms) {
  * @param teams     [{ key, abbr, record, card:[{position, name, meta, points}] }]
  * @param slots     ['QB','RB','RB','WR','WR','FLEX','FLEX','K'] - see boardShape.js
  * @param ranked    true for the Daily itself, false for practice
+ * @param userId    signed-in user id, or null - gates the clock (5b). Only
+ *                  meaningful on the edition path; the preview passes null
+ *                  and never renders a rules card that needs it, since
+ *                  practice has no sign-in requirement of its own.
+ * @param signInHref  when set (edition path, signed out), the rules card
+ *                    shows a sign-in link in place of Start.
+ * @param initialPlay/initialGrade/initialClockLabel  A3: a returning user
+ *   who already has a run for this board lands straight on their STORED
+ *   grade - these three, passed together, skip 'rules'/'board' entirely.
  */
-export default function SeasonBoard({ edition, year, teams, slots, ranked }) {
-  const [screen, setScreen] = useState('rules'); // 'rules' | 'board' | 'grade'
-  const [play, setPlay] = useState(() => initBoardPlay(teams, slots));
+export default function SeasonBoard({
+  edition, year, teams, slots, ranked, userId = null, signInHref = null,
+  initialPlay = null, initialGrade = null, initialClockLabel = null, streak = null,
+  closesAt = null, todayRows = null,
+}) {
+  const [screen, setScreen] = useState(initialGrade ? 'grade' : 'rules'); // 'rules' | 'board' | 'grade'
+  const [play, setPlay] = useState(() => initialPlay ?? initBoardPlay(teams, slots));
   // sheetState: 'closed' | { mode:'team', teamKey } | { mode:'slot', teamKey, player, slotIndexes }
   const [sheetState, setSheetState] = useState('closed');
   const [toast, setToast] = useState(null);
@@ -80,7 +94,7 @@ export default function SeasonBoard({ edition, year, teams, slots, ranked }) {
 
   // THE CLOCK STARTS ON THE RULES CARD'S START, NOT ON THE FIRST TAP. Idempotent:
   // once startedAt is set, calling this again does nothing.
-  const startClock = () => {
+  const beginTimer = () => {
     if (startedAt) return;
     const t0 = Date.now();
     setStartedAt(t0);
@@ -89,7 +103,15 @@ export default function SeasonBoard({ edition, year, teams, slots, ranked }) {
   };
   useEffect(() => () => clearInterval(tickRef.current), []);
 
-  const handleStart = () => { startClock(); setScreen('board'); };
+  // THE CLOCK CANNOT START SIGNED OUT (ruling, 5b) - the rules card already
+  // renders sign-in in place of Start when signedOut, so onStart should be
+  // unreachable here signed out; canStartClock(userId) is the pure gate
+  // this only defers to, not a second decision of its own.
+  const handleStart = () => {
+    if (!canStartClock(userId).ok) return;
+    beginTimer();
+    setScreen('board');
+  };
 
   const openTeam = (team) => {
     if (teamIsDead(play, team)) return; // a dead chip has pointer-events:none too - this is the belt under the suspenders
@@ -130,20 +152,29 @@ export default function SeasonBoard({ edition, year, teams, slots, ranked }) {
       <div className="sbd">
         <RulesCard
           edition={edition} year={year} slotCount={slots.length} teamCount={teams.length}
-          ranked={ranked} onStart={handleStart}
+          ranked={ranked} onStart={handleStart} signInHref={signInHref}
         />
       </div>
     );
   }
 
   if (screen === 'grade') {
-    const grade = gradeBoard(play, teams, slots);
+    // A RETURNING USER (initialGrade set) lands here with no play-through
+    // in THIS render at all - startedAt/finishedMs are both still null, so
+    // the stored grade and its own stored elapsed-time label are used
+    // as-is, never gradeBoard()/mmss(finishedMs-startedAt) against state
+    // that was never populated this render.
+    const grade = initialGrade ?? gradeBoard(play, teams, slots);
     // finishedMs is always set by handleFinish() before screen flips to
-    // 'grade' - there is no other path here, so no impure now-fallback.
-    const clockLabel = mmss(finishedMs - startedAt);
+    // 'grade' on a live play-through - there is no other path there, so no
+    // impure now-fallback.
+    const clockLabel = initialGrade ? initialClockLabel : mmss(finishedMs - startedAt);
     return (
       <div className="sbd">
-        <GradeScreen edition={edition} year={year} grade={grade} play={play} teams={teams} clockLabel={clockLabel} ranked={ranked} />
+        <GradeScreen
+          edition={edition} year={year} grade={grade} play={play} teams={teams} clockLabel={clockLabel} ranked={ranked}
+          streak={streak} closesAt={closesAt} todayRows={todayRows} userId={userId}
+        />
       </div>
     );
   }
@@ -284,8 +315,15 @@ function SlotChoiceSheet({ team, player, slotIndexes, slots, onPick }) {
  * The rules card. Four numbered lines, then the ranked-or-not line. THE
  * CLOCK STARTS HERE, not on the first team tap - onStart is the only thing
  * that calls startClock.
+ *
+ * SIGN-IN IN PLACE OF START (5b, edition path only): when signInHref is
+ * set, the card renders exactly as before through every rule line, and
+ * ONLY the button at the bottom changes - a sign-in link, dest back to
+ * /daily/board, instead of Start. The clock cannot start signed out
+ * (lib/daily/seasonBoardPlay.js's startClock), and this is the reason it's
+ * unreachable: there is no Start button to tap.
  */
-function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart }) {
+function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signInHref }) {
   const unused = teamCount - slotCount;
   return (
     <div className="sbd-rules">
@@ -322,12 +360,18 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart }) {
       </div>
 
       <div className="sbd-rnote">
-        {ranked
-          ? 'The clock starts when you tap Start. One attempt - this board is ranked.'
-          : 'The clock starts when you tap Start. Practice is unranked and touches no leaderboard.'}
+        {signInHref
+          ? 'Sign in to start the clock. One attempt - this board is ranked.'
+          : ranked
+            ? 'The clock starts when you tap Start. One attempt - this board is ranked.'
+            : 'The clock starts when you tap Start. Practice is unranked and touches no leaderboard.'}
       </div>
 
-      <button type="button" className="sbd-btn" style={{ marginTop: 16 }} onClick={onStart}>Start</button>
+      {signInHref ? (
+        <a className="sbd-btn" style={{ marginTop: 16, textDecoration: 'none', textAlign: 'center' }} href={signInHref}>Sign in to play</a>
+      ) : (
+        <button type="button" className="sbd-btn" style={{ marginTop: 16 }} onClick={onStart}>Start</button>
+      )}
     </div>
   );
 }
@@ -338,16 +382,46 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart }) {
  * Best roster right) and row order (matched rows first, in the solver's own
  * slot order, then swap rows) match the mock exactly.
  */
-function GradeScreen({ edition, year, grade, play, teams, clockLabel, ranked }) {
+function GradeScreen({
+  edition, year, grade, play, teams, clockLabel, ranked, streak,
+  closesAt = null, todayRows = null, userId = null,
+}) {
+  // THE HOOK COMES BEFORE THE EARLY RETURN - React's own rule, and an
+  // eslint error otherwise (a conditional useState call). copied/setCopied
+  // is unused on the infeasible-grade path, harmlessly.
+  const [copied, setCopied] = useState(false);
   if (!grade.ok) {
     return <div style={{ padding: 24 }}>This board has no feasible grade: {grade.reason}.</div>;
   }
   const story = boardStory(grade, play.used.size, teams.length, clockLabel);
+  // D2: the glyph row, score, pct and streak, as text - the copy-to-
+  // clipboard target. Streak is OMITTED, never shown as 0 or "-", when the
+  // caller has no streak context (practice, or a page that never computed
+  // one) - a missing fact is left out, not guessed at.
+  const shareText = [
+    grade.glyph,
+    `${ranked ? edition : 'Practice'} · ${year}`,
+    `${grade.mine.toLocaleString()} pts · ${grade.pct}%${streak != null ? ` · streak ${streak}` : ''}`,
+    'sportsvyn.com/daily/board',
+  ].join('\n');
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard permission denied or unavailable - the text is still
+      // visible on screen to select by hand, so this fails silently.
+    }
+  };
 
   return (
     <>
       <header className="sbd-hdr">
         <span className="sbd-ed">{edition}</span>
+        {/* STREAK, IN THE HEADER, NEVER BURIED (spec §6) - only for ranked
+            play with a real streak; practice/preview show the clock alone. */}
+        {ranked && streak != null ? <span className="sbd-streak">🔥 {streak} day{streak === 1 ? '' : 's'}</span> : null}
         <span className="sbd-clock">{clockLabel}</span>
       </header>
 
@@ -382,14 +456,44 @@ function GradeScreen({ edition, year, grade, play, teams, clockLabel, ranked }) 
         <p>{story}</p>
       </div>
 
+      {/* D1: BEFORE CLOSE, THE TODAY BOARD IS NOT RENDERED ANYWHERE - just
+          this line, ET and the viewer's own local time (Intl handles the
+          zone, never a hand-rolled offset). AFTER CLOSE (todayRows passed),
+          the real Today board renders in its place, your row highlighted. */}
+      {todayRows == null ? (
+        closesAt ? (
+          <div className="sbd-mid-wait">
+            Leaderboard at midnight ·{' '}
+            {new Date(closesAt).toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' })} ET
+            {' '}({new Date(closesAt).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })} your time)
+          </div>
+        ) : null
+      ) : (
+        <div className="sbd-lb">
+          <div className="sbd-lb-h"><span>Today</span><span>{todayRows.length} played</span></div>
+          {todayRows.map((r) => (
+            <div key={r.userId} className={`sbd-lr${userId != null && Number(r.userId) === Number(userId) ? ' sbd-lr--you' : ''}`}>
+              <span className="sbd-lr-rk">{r.rank}</span>
+              <span className="sbd-lr-who">{r.handle}</span>
+              <span className="sbd-lr-sc">{r.primary.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="sbd-share">
         <div className="sbd-g">{grade.glyph}</div>
         <div className="sbd-cap">
           {ranked ? edition : 'Practice'} · {year}<br />
           {grade.mine.toLocaleString()} pts · {grade.pct}% · {clockLabel}<br />
-          sportsvyn.com/daily
+          sportsvyn.com/daily/board
         </div>
+        <button type="button" className="sbd-copy" onClick={handleCopy}>{copied ? 'Copied' : 'Copy'}</button>
       </div>
+
+      {/* E3: the one leaderboards hook this relay adds - the rest of the
+          spec's home screen (section 6) is not built here. */}
+      <Link className="sbd-lbd-link" href="/daily/leaderboards">See the leaderboards →</Link>
     </>
   );
 }

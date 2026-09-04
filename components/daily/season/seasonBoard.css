@@ -32,6 +32,22 @@
 .sbd-hdr { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 16px 4px; }
 .sbd-hdr .sbd-ed { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted, #8A8A85); }
 .sbd-hdr .sbd-clock { font-family: var(--font-mono); font-size: 12px; color: var(--volt, #D4FF00); }
+.sbd-hdr .sbd-streak { font-family: var(--font-mono); font-size: 11px; color: var(--paper-dim, #B8B8B3); }
+
+.sbd-mid-wait { margin: 16px 12px 0; padding: 11px 13px; border: 1px dashed var(--line, #2A2A2A); border-radius: 11px; font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim, #5A5A56); line-height: 1.6; }
+
+/* THE TODAY BOARD (D1, post-close) - same .lb/.lr shape as docs/design/
+   daily-full-mock-v3.html's own #s-mid screen, adapted to the sbd- prefix. */
+.sbd-lb { margin: 20px 12px 0; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); overflow: hidden; }
+.sbd-lb-h { padding: 11px 14px; border-bottom: 1px solid var(--line, #2A2A2A); font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted, #8A8A85); display: flex; justify-content: space-between; }
+.sbd-lr { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--line, #2A2A2A); }
+.sbd-lr:first-of-type { border-top: 0; }
+.sbd-lr-rk { flex: none; width: 26px; font-family: var(--font-mono); font-size: 12px; color: var(--muted, #8A8A85); }
+.sbd-lr-who { flex: 1 1 auto; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sbd-lr-sc { flex: none; font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
+.sbd-lr--you { background: var(--volt-dim, rgba(212,255,0,.12)); }
+.sbd-lr--you .sbd-lr-who { color: var(--volt, #D4FF00); font-weight: 600; }
+.sbd-lr--you .sbd-lr-rk { color: var(--volt, #D4FF00); }
 
 .sbd-yr { padding: 2px 16px 6px; }
 .sbd-yr h1 { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 46px; letter-spacing: -.05em; line-height: .92; color: var(--paper, #F5F5F2); margin: 0; }
@@ -218,3 +234,9 @@
 .sbd-share { margin: 20px 12px 0; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); padding: 15px 14px; }
 .sbd-share .sbd-g { font-family: var(--font-mono); font-size: 18px; letter-spacing: .09em; line-height: 1.5; }
 .sbd-share .sbd-cap { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--muted, #8A8A85); line-height: 1.55; }
+.sbd-copy {
+  margin-top: 10px; font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  color: var(--volt, #D4FF00); background: transparent; border: 1px solid var(--volt, #D4FF00);
+  border-radius: 8px; padding: 6px 12px; cursor: pointer;
+}
+.sbd-lbd-link { display: block; text-align: center; margin: 16px 12px 24px; font-size: 13px; font-weight: 700; color: var(--volt, #D4FF00); text-decoration: none; }
