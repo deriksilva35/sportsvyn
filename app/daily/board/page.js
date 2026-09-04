@@ -10,51 +10,76 @@
  * not make - it exists so the mechanic can be verified at a served surface
  * without touching the live game underneath /daily.
  *
- * THE GUARDING BRANCH (5a): no ?season -> today's real, FROZEN, STORED
- * edition via ensureBoardForDate() (lib/daily/seasonBoardEditions.js) -
- * `boardId` is passed down, because that id is what a run submission
- * (app/api/daily/board/run) references. ?season=YYYY -> the PREVIEW path,
- * UNCHANGED from Step 3/4: a fresh board generated in-request, never written
- * to daily_boards, so `boardId` is never passed. A run can only ever be
- * inserted against a real daily_boards.id (the table's own FK), so a preview
- * session has no id to submit against - there is nothing further this route
- * needs to do to keep a preview run from writing; the id it would need
- * simply does not exist for that path.
+ * SIGN-IN, THE SAME WAY /daily GATES ITSELF: requireSignInInShell redirects
+ * a signed-out reader to sign-in ONLY inside the native container - the web
+ * is deliberately unchanged (lib/shell/signedOut.js's own doctrine), so a
+ * signed-out web visitor still sees this route exactly as before.
+ *
+ * THE EPOCH GATE (5a): no real edition exists before DAILY_V2_EPOCH
+ * (2026-09-08) - isEditionLive() decides this, PURELY, off editionDate alone.
+ * Before the epoch, a plain visit falls through to the SAME preview path an
+ * explicit ?season=2023 request uses, and ensureBoardForDate is never
+ * called - no daily_boards row is created for a date the product has not
+ * actually launched on.
+ *
+ * THE GUARDING BRANCH: no ?season, on or after the epoch -> today's real,
+ * FROZEN, STORED edition via ensureBoardForDate() (lib/daily/
+ * seasonBoardEditions.js) - `boardId` is passed down, because that id is
+ * what a run submission (app/api/daily/board/run) references. ?season=YYYY,
+ * OR no ?season before the epoch -> the PREVIEW path: a fresh board
+ * generated in-request, never written to daily_boards, so `boardId` is never
+ * passed. A run can only ever be inserted against a real daily_boards.id
+ * (the table's own FK), so a preview session has no id to submit against -
+ * there is nothing further this route needs to do to keep a preview run from
+ * writing; the id it would need simply does not exist for that path.
  *
  * No win-loss source exists for any season (Step 2 finding) - team chips
  * show no record on either path, because there is nothing real to put there.
  */
 
+import { auth } from '@/auth';
+import { resolveShellMode } from '@/lib/shell/shell';
+import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { sql } from '@/lib/db';
 import { generateBoard } from '@/lib/daily/boardGenerator';
 import { makeRng } from '@/lib/daily/pool';
 import { SLOTS } from '@/lib/daily/boardShape';
 import { todayEt } from '@/lib/daily/entries';
-import { ensureBoardForDate, metaFor } from '@/lib/daily/seasonBoardEditions';
+import { ensureBoardForDate, isEditionLive, metaFor } from '@/lib/daily/seasonBoardEditions';
 import SeasonBoard from '@/components/daily/season/SeasonBoard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function SeasonBoardPage({ searchParams }) {
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  const isShell = await resolveShellMode();
+  requireSignInInShell({ isShell, userId, dest: '/daily/board' });
+
   const sp = await searchParams;
   const seasonParam = Number(sp?.season) || null;
 
   if (!seasonParam) {
     const editionDate = await todayEt();
-    const board = await ensureBoardForDate(sql, editionDate);
-    return (
-      <SeasonBoard
-        edition={`The Daily · ${editionDate}`}
-        year={String(board.season_year)}
-        teams={board.board}
-        slots={SLOTS}
-        ranked
-        boardId={board.id}
-      />
-    );
+    if (isEditionLive(editionDate)) {
+      const board = await ensureBoardForDate(sql, editionDate);
+      return (
+        <SeasonBoard
+          edition={`The Daily · ${editionDate}`}
+          year={String(board.season_year)}
+          teams={board.board}
+          slots={SLOTS}
+          ranked
+          boardId={board.id}
+        />
+      );
+    }
+    // BEFORE THE EPOCH: fall through to the preview path below exactly as an
+    // explicit ?season=2023 request would - no ensureBoardForDate call, no
+    // daily_boards row.
   }
 
-  const season = seasonParam;
+  const season = seasonParam ?? 2023;
   const rows = await sql`
     SELECT team_key, position, raw_name, pass_yds, pass_td, pass_int, rush_yds, rush_td,
            rec, rec_yds, rec_td, fumbles_lost, fgm, fga, xp, sacks, def_int, def_td
