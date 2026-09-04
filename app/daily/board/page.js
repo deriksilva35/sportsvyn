@@ -1,5 +1,5 @@
 /**
- * /daily/board — the season-roster board's own surface (Step 3/4).
+ * /daily/board — the season-roster board's own surface (Step 3/4/5a).
  *
  * A NEW, SEPARATE ROUTE, NOT A REPLACEMENT OF /daily. The existing /daily
  * page is a different, already-live game (lib/daily/play.js: guess a mystery
@@ -7,44 +7,54 @@
  * This route is the twelve-team, eight-slot season-roster board Step 2 built
  * the generator and solver for. Whether this eventually REPLACES /daily or
  * lives alongside it as its own mode is a product decision this route does
- * not make - it exists so Step 3's mechanic can be verified at a served
- * surface without touching the live game underneath /daily.
+ * not make - it exists so the mechanic can be verified at a served surface
+ * without touching the live game underneath /daily.
  *
- * SERVER COMPONENT, force-dynamic: draws a fresh board on every request from
- * real nfl_player_season_totals rows via lib/daily/boardGenerator.js (Step 2,
- * pure) - the same module the acceptance report (scripts/board-measurements-
- * report.mjs) already exercises against real data. No win-loss source exists
- * for any season (Step 2 finding), so rule (d) stays dropped here too - team
- * chips show no record, because there is nothing real to put there.
+ * THE GUARDING BRANCH (5a): no ?season -> today's real, FROZEN, STORED
+ * edition via ensureBoardForDate() (lib/daily/seasonBoardEditions.js) -
+ * `boardId` is passed down, because that id is what a run submission
+ * (app/api/daily/board/run) references. ?season=YYYY -> the PREVIEW path,
+ * UNCHANGED from Step 3/4: a fresh board generated in-request, never written
+ * to daily_boards, so `boardId` is never passed. A run can only ever be
+ * inserted against a real daily_boards.id (the table's own FK), so a preview
+ * session has no id to submit against - there is nothing further this route
+ * needs to do to keep a preview run from writing; the id it would need
+ * simply does not exist for that path.
  *
- * ?season=YYYY picks the season; defaults to 2023 (full real TE coverage,
- * used throughout Step 2's own measurements) so a plain visit to this route
- * always has something to show.
+ * No win-loss source exists for any season (Step 2 finding) - team chips
+ * show no record on either path, because there is nothing real to put there.
  */
 
 import { sql } from '@/lib/db';
 import { generateBoard } from '@/lib/daily/boardGenerator';
 import { makeRng } from '@/lib/daily/pool';
 import { SLOTS } from '@/lib/daily/boardShape';
+import { todayEt } from '@/lib/daily/entries';
+import { ensureBoardForDate, metaFor } from '@/lib/daily/seasonBoardEditions';
 import SeasonBoard from '@/components/daily/season/SeasonBoard';
 
 export const dynamic = 'force-dynamic';
 
-function metaFor(r) {
-  switch (r.position) {
-    case 'QB': return `${r.pass_yds ?? 0} yds · ${r.pass_td ?? 0} TD`;
-    case 'RB': return `${r.rush_yds ?? 0} rush · ${r.rush_td ?? 0} TD`;
-    case 'WR':
-    case 'TE': return `${r.rec ?? 0} rec · ${r.rec_yds ?? 0} yds · ${r.rec_td ?? 0} TD`;
-    case 'PK': return `${r.fgm ?? 0}/${r.fga ?? 0} FG`;
-    default: return '';
-  }
-}
-
 export default async function SeasonBoardPage({ searchParams }) {
   const sp = await searchParams;
-  const season = Number(sp?.season) || 2023;
+  const seasonParam = Number(sp?.season) || null;
 
+  if (!seasonParam) {
+    const editionDate = await todayEt();
+    const board = await ensureBoardForDate(sql, editionDate);
+    return (
+      <SeasonBoard
+        edition={`The Daily · ${editionDate}`}
+        year={String(board.season_year)}
+        teams={board.board}
+        slots={SLOTS}
+        ranked
+        boardId={board.id}
+      />
+    );
+  }
+
+  const season = seasonParam;
   const rows = await sql`
     SELECT team_key, position, raw_name, pass_yds, pass_td, pass_int, rush_yds, rush_td,
            rec, rec_yds, rec_td, fumbles_lost, fgm, fga, xp, sacks, def_int, def_td
@@ -52,7 +62,9 @@ export default async function SeasonBoardPage({ searchParams }) {
 
   // Seeded from the season alone, not Date.now() - deterministic per
   // request, matching pool.js's seedFor() convention (a board is a function
-  // of its seed, not of when the page happened to load).
+  // of its seed, not of when the page happened to load). PREVIEW ONLY -
+  // never written to daily_boards, never scored server-side, no run can
+  // reference it (see the guarding-branch note above).
   const draw = generateBoard(rows, makeRng(`board-preview-${season}`));
   if (!draw.ok) {
     return (

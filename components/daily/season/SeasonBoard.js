@@ -163,9 +163,7 @@ export default function SeasonBoard({ edition, year, teams, slots, ranked }) {
           there is no backing out.
         </div>
       </div>
-      <div className="sbd-warn">
-        {complete ? `${slots.length} slots filled.` : 'Open a team and you must take someone. No backing out.'}
-      </div>
+      {complete ? <div className="sbd-warn">{slots.length} slots filled.</div> : null}
 
       <div className="sbd-prog">
         <div className="sbd-rrow">
