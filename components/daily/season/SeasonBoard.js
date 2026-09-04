@@ -44,6 +44,13 @@ import './seasonBoard.css';
 
 const DOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FX', K: 'K' };
 
+// THE POSITION GLYPHS - a slot's identity on the board, so the same glyph
+// carries through everywhere that slot is shown: the progress row AND the
+// grade rows (ruling). Verbatim codepoints from docs/design/daily-full-
+// mock-v3.html's own EM map: QB target, RB runner, WR hands, FLEX cycle,
+// K shoe. No TE entry - this board's shape has no TE slot, only FLEX.
+const SLOT_EMOJI = { QB: '\u{1F3AF}', RB: '\u{1F3C3}', WR: '\u{1F932}', FLEX: '\u{1F504}', K: '\u{1F45F}' };
+
 function mmss(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -164,6 +171,7 @@ export default function SeasonBoard({ edition, year, teams, slots, ranked }) {
         <div className="sbd-rrow">
           {play.roster.map((r, i) => (
             <div key={i} className={`sbd-pip${r.pick ? ' sbd-full' : ''}`} title={r.pick ? `${r.pos} - ${r.pick.player.name}` : r.pos}>
+              <span className="sbd-em">{SLOT_EMOJI[r.pos] ?? ''}</span>
               <span className="sbd-dot">{DOT_LABEL[r.pos] ?? r.pos}</span>
             </div>
           ))}
@@ -245,7 +253,7 @@ function TeamSheet({ team, play, onChoose }) {
         return (
           <button key={i} type="button" className={`sbd-pr${gone ? ' sbd-gone' : ''}`}
             disabled={gone} onClick={() => onChoose(p)}>
-            <span className="sbd-pos">{p.position}</span>
+            <span className="sbd-pos">{SLOT_EMOJI[p.position] ?? ''} {p.position}</span>
             <span className="sbd-nm"><b>{p.name}</b><small>{p.meta}</small></span>
             <span className="sbd-tk">{gone ? 'NO SLOT' : 'TAKE'}</span>
           </button>
@@ -394,12 +402,16 @@ function GradeRow({ row }) {
   const diff = row.hit ? '✓' : row.ahead
     ? `+${Math.round(Math.abs(row.you.points - row.best.points) * 10) / 10}`
     : `-${Math.round((row.best.points - (row.you?.points ?? 0)) * 10) / 10}`;
-  const poslab = row.hit ? row.best.slot : 'SWAP';
+  // ALWAYS your own slot, never the literal string "SWAP" - the verdict
+  // pill already says whether it matched, so this row's position label can
+  // just say which of YOUR eight slots it is (ruling): the same identity
+  // the roster row already showed for this pick, glyph included.
+  const poslab = row.you?.slot ?? row.best.slot;
 
   return (
     <div className={`sbd-sbr ${cls}`}>
       <div className="sbd-top2">
-        <span className="sbd-pos">{poslab}</span>
+        <span className="sbd-pos">{SLOT_EMOJI[poslab] ?? ''} {poslab}</span>
         <span className="sbd-vd">{verdict}</span>
         <span className="sbd-dif">{diff}</span>
       </div>

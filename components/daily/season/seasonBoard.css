@@ -47,6 +47,12 @@
   justify-content: center; gap: 3px; padding: 0 1px;
 }
 .sbd-pip.sbd-full { background: var(--volt, #D4FF00); border-color: var(--volt, #D4FF00); }
+/* THE POSITION GLYPH - faded until the slot fills, then full color, same
+   as the mock. This sat above the fixed black circle in the mock and was
+   missing entirely from the first pass - the circle alone is not "the same
+   treatment as the roster row" the grade rows now have to match. */
+.sbd-pip .sbd-em { font-size: 17px; line-height: 1; filter: grayscale(1) opacity(.5); }
+.sbd-pip.sbd-full .sbd-em { filter: none; }
 /* THE FIXED BLACK CIRCLE. Always background:var(--ink), always white text -
    the ONE thing on this row that does not change when the cell fills, so the
    position label stays legible on both the empty (dark cell) and full (volt
