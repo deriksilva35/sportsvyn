@@ -11,9 +11,11 @@
 // what a FUTURE footballdb ingest writes; neither one retroactively touched
 // a row already sitting in the table. This script is that retroactive pass.
 //
-// SCOPE: source='footballdb' AND the MATCHED PLAYER HAS bdl_player_id IS
-// NULL - not "every footballdb row," and not matched_by. Two things this
-// relay found, read-only, before writing anything:
+// SCOPE (widened, migrations/094): source='footballdb' AND (the matched
+// player has bdl_player_id IS NULL, OR the matched player's OWN position is
+// UNK/null/empty) - not "every footballdb row," and not matched_by. A REAL
+// stored position (on a bdl_player_id NOT NULL row, whether a skill position
+// or a non-skill one like DE/CB/G) is ground truth and is NEVER recomputed.
 //
 //   1. resolveIdentity()'s 'exact' outcome always inherits the MATCHED
 //      PLAYER'S OWN nfl_players.position (never re-infers) - confirmed live:
@@ -24,22 +26,24 @@
 //   2. matched_by ITSELF DOES NOT DISTINGUISH "real BDL position" FROM
 //      "originally inferred, now stale" - every footballdb-only player this
 //      corpus ever CREATED has, by now, been re-ingested at least once since
-//      creation (this session ran the full 1980-2001 range three times), and
-//      each re-run's exact match to that SAME player OVERWRITES matched_by
-//      from 'created' to 'exact'. The 'created' marker from years ago is
-//      gone; only bdl_player_id still tells the two cases apart.
+//      creation, and each re-match OVERWRITES matched_by from 'created' to
+//      'exact'. Only bdl_player_id still tells the two cases apart.
+//   3. A "real BDL player" is not always a real POSITION (094's own
+//      finding): BDL can carry bdl_player_id for a RETIRED player it knows
+//      existed but never tracked a position for - Jerry Rice, on DEV,
+//      showed position='UNK' with bdl_player_id=22049 present, silently
+//      excluding him from BOARD_POSITIONS on every one of his 17 seasons
+//      since the corpus existed. UNK/null/empty are not positions, so a
+//      row inheriting one is treated exactly like an unmatched row -
+//      inferred from its own stats under the current law, same as any
+//      footballdb-only identity.
 //
-// So: bdl_player_id NOT NULL means a real BDL-era player whose position is
-// genuine ground truth (2,002-2025 rollup, scripts/bdl-season-totals-
-// backfill.mjs, never inferred) - NEVER recomputed, regardless of matched_by.
-// bdl_player_id IS NULL means a footballdb-only identity whose position has
-// ALWAYS been inferPosition()'s guess, from whichever law was current when
-// that identity was first created - exactly the rows this recompute exists
-// to bring current. Confirmed by measurement before this script existed:
-// of 20,170 footballdb rows, 3,768 join a real BDL player (bdl_player_id NOT
-// NULL) and were excluded from every count below; 16,402 (16,262 currently
-// matched_by='exact' + 140 'created-ambiguous') are footballdb-only and in
-// scope.
+// NOT IN SCOPE, ON PURPOSE (094's own header): a footballdb row whose
+// matched player carries a REAL non-skill position (DE, CB, G, LS, ...) -
+// an offensive stat line on a lineman/defender is very likely a WRONG
+// identity, not a stale position - the identity-resolution law leaking
+// through 'exact', not something this recompute is built to fix. Left
+// alone here; measured and reported for a later relay.
 //
 // Usage:
 //   set -a && . ./.env.local && set +a
@@ -76,7 +80,8 @@ const forDeleteCheck = await sql`
   SELECT t.id, t.raw_name, t.season_year, t.team_key
     FROM nfl_player_season_totals t
     JOIN nfl_players p ON p.id = t.nfl_player_id
-   WHERE t.source = 'footballdb' AND p.bdl_player_id IS NULL
+   WHERE t.source = 'footballdb'
+     AND (p.bdl_player_id IS NULL OR p.position IS NULL OR p.position IN ('UNK', ''))
      AND COALESCE(t.pass_att, 0) = 0 AND COALESCE(t.rush_att, 0) = 0
      AND COALESCE(t.rec, 0) = 0 AND COALESCE(t.fga, 0) = 0`;
 
@@ -95,14 +100,16 @@ if (apply && forDeleteCheck.length) {
 
 // ---------------------------------------------------------------------------
 // STEP 2 — RECOMPUTE POSITION under the current inferPosition() law for
-// every row still standing (source=footballdb, bdl_player_id IS NULL).
+// every row still standing (source=footballdb, bdl_player_id IS NULL OR the
+// matched player's own position is UNK/null/empty).
 // ---------------------------------------------------------------------------
 const rows = await sql`
   SELECT t.id, t.position, t.pass_att, t.pass_yds, t.pass_td, t.pass_int,
          t.rush_att, t.rush_yds, t.rush_td, t.rec, t.rec_yds, t.rec_td, t.fgm, t.fga
     FROM nfl_player_season_totals t
     JOIN nfl_players p ON p.id = t.nfl_player_id
-   WHERE t.source = 'footballdb' AND p.bdl_player_id IS NULL`;
+   WHERE t.source = 'footballdb'
+     AND (p.bdl_player_id IS NULL OR p.position IS NULL OR p.position IN ('UNK', ''))`;
 
 const before = {};
 const after = {};

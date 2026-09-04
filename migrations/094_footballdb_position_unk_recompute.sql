@@ -1,0 +1,64 @@
+-- ============================================================================
+-- 094_footballdb_position_unk_recompute.sql — a stored position is ground
+-- truth only when it is a real position (ruling). UNK/null/empty extended
+-- into the 093 recompute scope.
+--
+-- NUMBER ASSIGNED AT TRANSCRIPTION TIME: 093 is the highest in the tree, so
+-- this is 094. Scanned the target first: nfl_player_season_totals exists
+-- (087-093 applied).
+--
+-- THE GAP 093 LEFT: its scope was source='footballdb' AND the matched
+-- nfl_players row has bdl_player_id IS NULL - a real BDL-era player's
+-- position was treated as ground truth, full stop, never recomputed. That
+-- premise breaks for a RETIRED player BDL still carries a row for but never
+-- tracked a real position on: BDL knows Jerry Rice existed (bdl_player_id
+-- present) and does not know what he played (position='UNK') - confirmed
+-- live on DEV. A footballdb row inheriting that 'UNK' (or a null/empty
+-- position) through the 'exact' match path is stuck outside BOARD_POSITIONS
+-- forever, on every one of that player's seasons, silently - the generator
+-- has never been able to draw him onto any card, corpus-wide, for as long
+-- as this ingest has existed.
+--
+-- SCOPE, WIDENED: source='footballdb' AND (bdl_player_id IS NULL OR the
+-- linked nfl_players.position IS NULL OR IN ('UNK', '')). A REAL BDL
+-- position (QB, RB, WR, TE, K, and the full non-skill set: DE, DT, LB, CB,
+-- S, DB, G, OT, OG, C, LS, P, ...) still means "never touched, ground
+-- truth" - only the three non-answers (UNK, null, empty) now route through
+-- inferPosition() exactly like an unmatched row does.
+--
+-- MEASURED BEFORE WRITING ANYTHING (read-only, PROD): PROD carries ZERO
+-- footballdb rows whose linked position is UNK/null/empty - this specific
+-- defect, as far as could be found, exists on DEV, not PROD. Confirmed via
+-- the same nfl_players.bdl_player_id=22049 Jerry Rice identity on both:
+-- DEV shows position='UNK', PROD shows position='WR'. This migration and
+-- its recompute script still apply cleanly to PROD (they will simply find
+-- and touch 0 rows there for the UNK/null/empty half of the widened scope) -
+-- nothing about the fix depends on the defect being present.
+--
+-- A SEPARATE, KNOWN, NOT-YET-FIXED LEAK: 345 footballdb rows (PROD) join a
+-- nfl_players row carrying a REAL non-skill position (DE, CB, G, LS, ...) -
+-- an offensive footballdb stat line attached to what is very likely a WRONG
+-- identity (a modern same-name player the 'exact' match picked up instead
+-- of minting a new one). These never reach a card (BOARD_POSITIONS excludes
+-- every non-skill position too), so they wait for their own relay - this
+-- migration does not touch them, on purpose, because "real position, wrong
+-- identity" is the ambiguity law leaking through 'exact', not a position-law
+-- gap this recompute is built to close.
+--
+-- THIS MIGRATION CARRIES NO DDL, same shape as 089 and 093's own precedent.
+-- The real data operation is scripts/footballdb-position-recompute.mjs's
+-- widened scope query.
+-- ============================================================================
+COMMENT ON COLUMN nfl_player_season_totals.position IS
+  'The position this row is drafted at on a board card. A REAL stored position (on the linked nfl_players row, or footballdb''s own inference) is ground truth and is never touched. UNK/null/empty (094''s own ruling: a BDL record can carry a retired player''s identity with no known position - "BDL knows the player exists and does not know what they played") routes through lib/daily/inferPosition.js exactly like an unmatched row would. A REAL non-skill position (DE, CB, G, LS, ...) still means ground truth even though the row itself carries an offensive stat line - that is a SEPARATE, deliberately unfixed identity-leak case (094''s own header), not a position-law gap.';
+
+-- ---------------------------------------------------------------------------
+-- VERIFY (DEV first, then PROD, after scripts/footballdb-position-recompute.mjs --apply):
+--   SELECT raw_name, team_key, position FROM nfl_player_season_totals
+--     WHERE season_year = 1995 AND raw_name = 'Jerry Rice';
+--     -- expect: position = 'WR' (122 rec, 1848 yds > any other component)
+--   SELECT count(*) FROM nfl_player_season_totals t JOIN nfl_players p
+--     ON p.id = t.nfl_player_id WHERE t.source='footballdb'
+--     AND (p.position IS NULL OR p.position IN ('UNK',''));
+--     -- expect: 0 after --apply
+-- ---------------------------------------------------------------------------
