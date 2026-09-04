@@ -18,8 +18,9 @@ import Link from 'next/link';
 import { todayEt } from '@/lib/daily/entries';
 import { displayName } from '@/lib/daily/handles';
 import { sql } from '@/lib/db';
-import { ensureBoardForDate, isEditionLive } from '@/lib/daily/seasonBoardEditions';
+import { ensureBoardForDate, isEditionLive, effectiveEpoch } from '@/lib/daily/seasonBoardEditions';
 import { LEADERBOARDS } from '@/lib/daily/seasonBoardLeaderboards';
+import { DAILY_V2_PATH } from '@/lib/daily/boardShape';
 import { auth } from '@/auth';
 import './leaderboards.css';
 
@@ -34,7 +35,7 @@ export default async function LeaderboardsPage({ searchParams }) {
   const userId = session?.user?.id ?? null;
 
   const editionDate = await todayEt();
-  const todayBoard = isEditionLive(editionDate) ? await ensureBoardForDate(sql, editionDate) : null;
+  const todayBoard = isEditionLive(editionDate, effectiveEpoch()) ? await ensureBoardForDate(sql, editionDate) : null;
 
   let rows = [];
   if (tab === 'today') {
@@ -51,7 +52,7 @@ export default async function LeaderboardsPage({ searchParams }) {
     <div className="lbd" data-surface="ink">
       <header className="lbd-hdr">
         <h1>Leaderboards</h1>
-        {showPlay ? <Link className="lbd-play" href="/daily/board">Play today&rsquo;s board</Link> : null}
+        {showPlay ? <Link className="lbd-play" href={DAILY_V2_PATH}>Play today&rsquo;s board</Link> : null}
       </header>
 
       <nav className="lbd-tabs" aria-label="Leaderboard boards">

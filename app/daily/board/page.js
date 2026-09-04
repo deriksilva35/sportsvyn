@@ -46,9 +46,9 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { sql } from '@/lib/db';
 import { generateBoard } from '@/lib/daily/boardGenerator';
 import { makeRng } from '@/lib/daily/pool';
-import { SLOTS } from '@/lib/daily/boardShape';
+import { SLOTS, DAILY_V2_PATH } from '@/lib/daily/boardShape';
 import { todayEt } from '@/lib/daily/entries';
-import { ensureBoardForDate, isEditionLive, metaFor } from '@/lib/daily/seasonBoardEditions';
+import { ensureBoardForDate, isEditionLive, effectiveEpoch, metaFor } from '@/lib/daily/seasonBoardEditions';
 import { regradeStoredRun } from '@/lib/daily/seasonBoardRuns';
 import { todayLeaderboard, streakLeaderboard } from '@/lib/daily/seasonBoardLeaderboards';
 import SeasonBoard from '@/components/daily/season/SeasonBoard';
@@ -74,7 +74,7 @@ export default async function SeasonBoardPage({ searchParams }) {
 
   if (!seasonParam) {
     const editionDate = await todayEt();
-    if (isEditionLive(editionDate)) {
+    if (isEditionLive(editionDate, effectiveEpoch())) {
       const board = await ensureBoardForDate(sql, editionDate);
       const edition = `The Daily · ${editionDate}`;
       const year = String(board.season_year);
@@ -85,7 +85,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         return (
           <SeasonBoard
             edition={edition} year={year} teams={board.board} slots={SLOTS} ranked
-            signInHref={shellSigninHref('/daily/board', isShell)}
+            signInHref={shellSigninHref(DAILY_V2_PATH, isShell)}
           />
         );
       }

@@ -41,6 +41,12 @@ import {
   pickOutcome, commitPick, startClock as canStartClock,
 } from '@/lib/daily/seasonBoardPlay';
 import { gradeBoard, boardStory } from '@/lib/daily/seasonBoardGrade';
+import { DAILY_V2_PATH } from '@/lib/daily/boardShape';
+
+// THE ONE PLACE THE DOMAIN-QUALIFIED SHARE URL IS BUILT (relay 5b item 7) -
+// DAILY_V2_PATH is the same constant lib/push/copy.js's url fields use, so
+// there is exactly one '/daily/board' literal in the whole v2 surface.
+const SHARE_URL = `sportsvyn.com${DAILY_V2_PATH}`;
 import './seasonBoard.css';
 
 const DOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FX', K: 'K' };
@@ -402,7 +408,7 @@ function GradeScreen({
     grade.glyph,
     `${ranked ? edition : 'Practice'} · ${year}`,
     `${grade.mine.toLocaleString()} pts · ${grade.pct}%${streak != null ? ` · streak ${streak}` : ''}`,
-    'sportsvyn.com/daily/board',
+    SHARE_URL,
   ].join('\n');
   const handleCopy = async () => {
     try {
@@ -486,7 +492,7 @@ function GradeScreen({
         <div className="sbd-cap">
           {ranked ? edition : 'Practice'} · {year}<br />
           {grade.mine.toLocaleString()} pts · {grade.pct}% · {clockLabel}<br />
-          sportsvyn.com/daily/board
+          {SHARE_URL}
         </div>
         <button type="button" className="sbd-copy" onClick={handleCopy}>{copied ? 'Copied' : 'Copy'}</button>
       </div>
