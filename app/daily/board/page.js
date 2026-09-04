@@ -51,6 +51,7 @@ import { todayEt } from '@/lib/daily/entries';
 import { ensureBoardForDate, isEditionLive, effectiveEpoch, metaFor } from '@/lib/daily/seasonBoardEditions';
 import { regradeStoredRun } from '@/lib/daily/seasonBoardRuns';
 import { todayLeaderboard, streakLeaderboard } from '@/lib/daily/seasonBoardLeaderboards';
+import { displayTeamCode } from '@/lib/footballdb/historicalTeamDisplay';
 import SeasonBoard from '@/components/daily/season/SeasonBoard';
 
 export const dynamic = 'force-dynamic';
@@ -185,11 +186,14 @@ export default async function SeasonBoardPage({ searchParams }) {
 
   // The generator's card entries carry the raw season_totals fields plus
   // `points` (buildCard already scored them); shape them into what
-  // SeasonBoard needs to render, and nothing more - team_key is already the
-  // abbreviation Step 2's team-key resolution produced.
+  // SeasonBoard needs to render, and nothing more. team_key is a real
+  // abbreviation where scripts/team-key-abbreviate.mjs resolved one - where
+  // it did not (a footballdb team with no current-franchise match, e.g.
+  // "Oakland Raiders" - migration 089's own ruling), displayTeamCode()
+  // turns it into a short display code (position-inference relay, item 5).
   const teams = draw.teams.map((t) => ({
     key: t.key,
-    abbr: t.key,
+    abbr: displayTeamCode(t.key),
     record: null, // no win-loss source exists for any season (Step 2 finding) - never fabricated
     card: t.card.map((p) => ({
       position: p.position,
