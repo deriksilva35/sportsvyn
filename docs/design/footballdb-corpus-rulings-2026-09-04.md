@@ -93,3 +93,53 @@ GO'd steps; PROD updated via migrations only (no PROD ingest yet).
 - The 345-row non-skill-position identity leak on PROD — sized, not
   fixed, its own future relay
 - sportsvyn-daily-tick.timer — confirmed disabled/inactive throughout
+
+## Droplet services and DATABASE_URL
+
+Three real, separate defects surfaced this weekend from the same root
+cause (a droplet service pointing part of itself at DEV while believing
+it was on PROD) and its aftermath. Recorded as they actually were, not
+as one story:
+
+- **(a) The Wire dropped, silently, since Aug 20.** lib/wire/emit.js
+  imports the shared lib/db.js client (DATABASE_URL), not the live-poller's
+  own PROD-scoped one built from PROD_DATABASE_URL — so with
+  EnvironmentFile pointing DATABASE_URL at DEV, every emit() call queried
+  a database with no news_items table at all, and failed. Fixed by
+  979801b (services/_preload/prod-db.mjs, loaded via `node --import`
+  before any entrypoint's own imports can resolve — the fix for every
+  droplet service, not just this one). First real news_items row after
+  the fix: 2026-09-05T00:33:36Z ("SJSU 10, EMU 13 · Q3 11:53").
+
+- **(b) Game alerts never fired at all — two separate causes, not one.**
+  push_sends held zero rows, ever, before today, and 979801b alone did
+  not fix it (dispatch.js's own sql was always passed in explicitly from
+  the live-poller's PROD client, never through the shared lib/db.js, so
+  it was never subject to (a)'s bug in the first place):
+    1. audienceFor() (lib/push/dispatch.js) required a team-follow just to
+       enter its candidate set — a saved match-scoped alert_prefs row was
+       only ever a bonus LEFT JOIN on top of a follower row, so a user
+       with match-scoped prefs and no follow could never be dispatched to,
+       no matter how the flags were set. Fixed by 36e5ede (audienceFor()
+       UNION: followers of either side, OR a saved match-scoped row on its
+       own; the alert sheet also renders OFF for match scope with nothing
+       saved, never claiming a push the system would not attempt).
+    2. Even with (1) fixed, pushPayload() (lib/push/payload.js)
+       destructures camelCase homeAbbr/awayAbbr/leagueSlug, but the
+       live-poller's own query selected them snake_case
+       (home_abbr/away_abbr/league_slug) — every real dispatch() call hit
+       pushPayload()'s missing-field guard and returned null before ever
+       reaching the send loop, silently: no log line, no thrown error, no
+       push_sends row. Fixed by 52d8e67 (services/live-poller/poll.mjs
+       maps the fields at the dispatch() call site).
+    First automatic push_sends row (poller-generated, not a manual test):
+    2026-09-05T17:12:58Z, match 20686 (East Carolina at Alabama),
+    ok:true, status_code:200.
+
+- **(c) The rule, going forward.** Every droplet service runs under
+  services/_preload/prod-db.mjs (`node --import`), one mechanism, not a
+  per-service in-file assignment — an assignment inside an entrypoint
+  that also has its own static imports runs too late, because ES module
+  imports are hoisted ahead of it. And: any manual test push sent to a
+  real device carries "TEST" as the first word of the body — never a
+  fabricated clock or score presented as real.
