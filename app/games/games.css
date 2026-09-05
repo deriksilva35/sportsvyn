@@ -240,3 +240,25 @@
   font-family: var(--l-disp); font-style: italic; font-weight: 900; font-size: 15px;
   color: var(--l-ink); background: var(--l-volt); border-radius: 10px; padding: 11px;
 }
+
+/* TODAY'S BOARDS ROWS (relay 2a item 4) */
+.grow { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-top: 1px solid var(--l-line); text-decoration: none; color: inherit; }
+.grow:first-of-type { border-top: 0; }
+.grow .gl {
+  flex: none; width: 40px; height: 40px; border-radius: 10px;
+  background: var(--l-ink); border: 1px solid var(--l-line);
+  display: flex; align-items: center; justify-content: center; font-size: 19px;
+}
+.grow .gl.on { border-color: var(--l-volt); background: var(--l-volt-dim, #1a2000); }
+.grow .gl.done { border-color: var(--l-jade); }
+.grow .tx { flex: 1 1 auto; min-width: 0; }
+.grow .tx b { display: block; font-family: var(--l-disp); font-style: italic; font-weight: 900; font-size: 17px; letter-spacing: -.03em; line-height: 1; }
+.grow .tx small { display: block; margin-top: 4px; font-family: var(--l-mono); font-size: 10px; color: var(--l-mut); line-height: 1.45; }
+.grow .tx small em { font-style: normal; color: #CFCFC9; }
+.grow .st {
+  flex: none; font-family: var(--l-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: .10em; text-transform: uppercase; border: 1px solid var(--l-line);
+  border-radius: 99px; padding: 4px 9px; color: var(--l-mut);
+}
+.grow .st.on { color: var(--l-ink); background: var(--l-volt); border-color: var(--l-volt); }
+.grow .st.done { color: var(--l-jade); border-color: var(--l-jade); }

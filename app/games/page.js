@@ -26,7 +26,6 @@ import { gamesLobby } from '@/lib/games/read';
 import { myLeagues } from '@/lib/leagues/core';
 import { normalizePane } from '@/lib/games/lobby';
 import PaneTabs from '@/components/games/PaneTabs';
-import { Hook, MetaChips, Pulse } from '@/components/games/chrome';
 import SeasonBoard from '@/components/games/SeasonBoard';
 import StandaloneDate from '@/components/StandaloneDate';
 import { tierClass } from '@/lib/daily/reveal';
@@ -160,61 +159,33 @@ function GamesPane({ v, leagues = [], signedIn = false }) {
           rather than inventing a state. */}
       {v.hero && <Hero hero={v.hero} />}
 
-      <div className="ggrid">
-        {v.cards.map((c) => (
-          <a
-            key={c.key}
-            className={`gcard${c.state !== 'ghost' ? ' gcard--live' : ''}`}
-            href={c.state === 'ghost' ? '/games' : c.href}
-            aria-disabled={c.state === 'ghost' ? 'true' : undefined}
-          >
-            <span className="gnum" aria-hidden="true">{c.num}</span>
-            <span className="gtoprow">
-              <span className="gname">{c.name}</span>
-              {/* Status chip: volt for the playable game, jade NEW for
-                  Pick 'em pre-first-settle. Flip-on-open law untouched -
-                  the chip reads state, never the clock. */}
-              {c.key === 'daily' && c.state !== 'ghost' && <span className="gchip gchip--hot">Play now</span>}
-              {c.key === 'pickem' && (
-                <span className="gchip gchip--new">{c.state === 'ghost' ? 'New · opens Aug 25' : 'New'}</span>
-              )}
-            </span>
-            <Hook text={c.hook} />
-            <MetaChips chips={c.chips} />
-            <span className="gcardfoot">
-              <Pulse>
-                {c.key === 'daily' && (
-                  <><b>{c.pulse?.playing ?? 0} playing</b>{c.pulse?.perfect != null && <> &middot; yesterday&rsquo;s perfect {c.pulse.perfect}</>}</>
-                )}
-                {c.key === 'pickem' && (c.pulse
-                  ? <>Board {c.pulse.boardNumber} &middot; <b>{c.pulse.games} games</b>{c.pulse.next && <> &middot; locks {c.pulse.next}</>}</>
-                  : <>New board coming</>)}
-                {c.key === 'weekly' && (c.state === 'ghost'
-                  ? <>Season opens with <b>Week 1</b></>
-                  : (c.closesLabel ?? ' '))}
-                {c.key === 'draft' && <>One ranked entry per week</>}
-              </Pulse>
-              <span className={`gbtn${c.state === 'ghost' ? ' gbtn--ghost' : ''}`}>
-                {c.state === 'ghost' ? c.opensLabel : (c.cta ?? 'Play')}
-              </span>
-            </span>
-          </a>
-        ))}
-      </div>
-
-      <section className="mod">
-        <div className="mod-head">
-          <h2 className="eyebrow">Mock drafts</h2>
-          <span className="pill">Unranked · unlimited</span>
+      {/* TODAY'S BOARDS (relay 2a item 4) - four rows, fixed GAME_ORDER,
+          replacing the old 2x2 .ggrid entirely: the mock never shows that
+          grid, and this screen builds to the mock, not to memory. */}
+      {v.boardRows?.length > 0 && (
+        <div className="mod">
+          <div className="mod-head">
+            <h2 className="eyebrow">Today&rsquo;s boards</h2>
+            <span className="pill">one handle, every board</span>
+          </div>
+          {v.boardRows.map((r) => (
+            <a className="grow" key={r.key} href={r.href}>
+              <div className={`gl${r.tile ? ` ${r.tile}` : ''}`}>{r.glyph}</div>
+              <div className="tx">
+                <b>{r.name}</b>
+                <small>
+                  {r.line1}
+                  <br />
+                  {r.locksAt
+                    ? <>{r.locksPre}<em><StandaloneDate iso={r.locksAt} /></em></>
+                    : r.line2}
+                </small>
+              </div>
+              {r.pill && <span className={`st${r.pill.tone === 'volt' ? ' on' : r.pill.tone === 'jade' ? ' done' : ''}`}>{r.pill.label}</span>}
+            </a>
+          ))}
         </div>
-        <div className="row">
-          <span>
-            Full mock drafts against the same AI rooms The Draft uses. No clock,
-            graded on live ADP.
-          </span>
-        </div>
-        <a className="ghost" href="/sim">Start a mock &rarr;</a>
-      </section>
+      )}
 
       {/* YOUR LEAGUES - the door to the social spine. Lists the member's
           leagues; a signed-in reader with none gets the one-line pitch and
