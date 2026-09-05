@@ -563,7 +563,10 @@
 
 .weekly .yr { padding: 2px 0 6px; }
 .weekly .yr h1 { font-family: var(--d-disp); font-style: italic; font-weight: 900; font-size: 40px; letter-spacing: -.05em; line-height: .92; margin: 0; }
-.weekly .yr .sub { margin-top: 5px; font-size: 13px; color: #CFCFC9; line-height: 1.45; font-family: var(--d-disp); }
+/* 2a-polish-2 item a - matches the mock's .yr .sub exactly: 400 weight,
+   paper-dim, 13px. This was rendering bold and near-white (#CFCFC9,
+   inherited weight), louder than the headline above it. */
+.weekly .yr .sub { margin-top: 5px; font-size: 13px; font-weight: 400; color: #B8B8B3; line-height: 1.45; font-family: var(--d-disp); }
 
 .weekly .warn { margin: 8px 0 0; font-family: var(--d-mono); font-size: 11px; color: var(--d-terra); line-height: 1.5; }
 
