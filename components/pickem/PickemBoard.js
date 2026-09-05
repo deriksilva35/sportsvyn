@@ -15,6 +15,7 @@ import RankBadge from '@/components/gridiron/RankBadge';
 import { spreadParts } from '@/lib/standings/view';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { savePickAction } from '@/app/actions/pickem';
+import StandaloneDate from '@/components/StandaloneDate';
 
 // Where a board game's "Game" affordance points. Keyed by the contest's own
 // sport so a future NFL board cannot silently link college routes.
@@ -24,6 +25,37 @@ const ET_TIME = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit',
 });
 const ET_DAY = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short' });
+const ET_WEEKDAY_LONG = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'long' });
+const ET_YMD = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
+
+/**
+ * Games grouped by their kickoff's ET CALENDAR DAY (relay 2a item 8's
+ * .secl day sections) - not by lock day-of-week generically, this specific
+ * board's own dates, in the order the games already come in (kickoff-time
+ * order, per lib/pickem/entry.js's gameRows()). Each group also carries
+ * whether every game in it shares one lock instant ('lock {local}') or not
+ * ('lock per game' - the common case once a day has more than one window).
+ */
+function groupByLockDay(games) {
+  const groups = [];
+  const byKey = new Map();
+  for (const g of games) {
+    const d = new Date(g.kickoff_at);
+    const key = ET_YMD.format(d);
+    if (!byKey.has(key)) {
+      const group = { key, label: ET_WEEKDAY_LONG.format(d), games: [] };
+      byKey.set(key, group);
+      groups.push(group);
+    }
+    byKey.get(key).games.push(g);
+  }
+  for (const group of groups) {
+    const first = group.games[0].kickoff_at;
+    group.sameLock = group.games.every((g) => g.kickoff_at === first);
+    group.lockAt = group.sameLock ? first : null;
+  }
+  return groups;
+}
 
 /** A board game's page, or null when we have no route for its sport. */
 function gameHref(contest, g) {
@@ -86,19 +118,15 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
     setTimeout(() => setSavedTick(false), 1600);
   }
 
+  const dayGroups = useMemo(() => groupByLockDay(games), [games]);
+
   return (
     <>
-      <section className="pk-hero">
-        <div className="pk-eb">
-          <span>Pick&rsquo;em &middot; Board {contest.boardNumber ?? ''}</span>
-          <span className="pk-mono">{contest.sport.toUpperCase()} &middot; {total} games</span>
-        </div>
-        <h1>{anyKicked ? 'Grading in.' : `${total === 8 ? 'Eight' : total} games. Call the winners.`}</h1>
-        <div className="pk-ctx">
-          Locks per game at kickoff
-          {cd && <> &middot; next kick <b>{cd}</b></>}
-        </div>
-      </section>
+      {/* THE HEADER (relay 2a item 8) - replaces the old .pk-hero/h1/.pk-ctx. */}
+      <header className="hdr">
+        <span className="ed">Pick&rsquo;em &middot; Board {contest.boardNumber ?? ''} &middot; {contest.sport.toUpperCase()} Week {contest.week}</span>
+        <span className="clock">{picked} of {total}</span>
+      </header>
 
       {anyKicked && (
         <section className="pk-record">
@@ -107,14 +135,35 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
         </section>
       )}
 
-      <div className="pk-progress" aria-label={`${picked} of ${total} picked`}>
-        <div className="pk-bar"><i style={{ width: `${(picked / Math.max(total, 1)) * 100}%` }} /></div>
-        <div className="pk-n">{picked}<small>/{total} picked</small></div>
+      {/* THE TINY PIP ROW (relay 2a item 8) - one per game, checked when
+          picked, dashed border once its own kickoff has passed. Replaces
+          the old linear .pk-progress bar. */}
+      <div className="prog">
+        <div className="rrow">
+          {games.map((g) => (
+            <div key={g.match_id} className={`pip tiny${g.my_side != null ? ' full' : ''}${g.kicked ? ' lock' : ''}`}>
+              <span className="dot">{g.my_side != null ? '✓' : '·'}</span>
+            </div>
+          ))}
+        </div>
+        <div className="cap">
+          <span>{picked} of {total} picked</span>
+          {cd && <span>next lock <b>{cd}</b></span>}
+        </div>
       </div>
 
       {lockedMsg && <p className="pk-lockedmsg">{lockedMsg}</p>}
 
-      {games.map((g) => {
+      {dayGroups.map((group) => (
+        <div key={group.key}>
+          {/* THE DAY GROUP HEADER (relay 2a item 8) - '{Day} · {n} games',
+              'lock {local}' when every game in the group shares one kickoff,
+              'lock per game' otherwise (the common case past Thursday). */}
+          <div className="secl">
+            <b>{group.label} &middot; {group.games.length} game{group.games.length === 1 ? '' : 's'}</b>
+            <span>{group.sameLock ? <>lock <StandaloneDate iso={group.lockAt} /></> : 'lock per game'}</span>
+          </div>
+          {group.games.map((g) => {
         const kickedAtMs = new Date(g.kickoff_at).getTime() <= now;
         const eyebrowLeft = g.status === 'final' ? 'Final'
           : g.status === 'live' ? '● Live'
@@ -201,8 +250,10 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
               })}
             </div>
           </div>
-        );
-      })}
+            );
+          })}
+        </div>
+      ))}
 
       {signedIn ? (
         <p className="pk-savebar">{savedTick ? <b>Saved</b> : 'Saved'} &middot; edit any pick until its kickoff</p>

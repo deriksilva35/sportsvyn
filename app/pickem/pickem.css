@@ -144,3 +144,34 @@
 /* On the selected (volt) side the chip has to invert with everything else, or
    a dim grey sits on a bright ground and disappears. */
 .pk-side.on .pk-rec { color: rgba(10, 10, 10, .55); }
+
+/* ===========================================================================
+   RELAY 2a item 8 - the open-state header, pip row, and day-group sections,
+   matching docs/design/games-remock-v2.html. Class names are the mock's own.
+   =========================================================================== */
+.hdr { display: flex; align-items: baseline; justify-content: space-between; padding: 0 0 4px; }
+.hdr .ed {
+  font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600;
+  font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted, #8A8A85);
+}
+.hdr .clock { font-family: var(--font-jetbrains-mono), monospace; font-size: 12px; color: var(--volt, #D4FF00); }
+
+.prog { padding: 10px 0 4px; }
+.prog .rrow { display: flex; gap: 3px; flex-wrap: wrap; }
+.pip.tiny {
+  height: 22px; width: 16px; border-radius: 5px; border: 1px solid var(--line, #2A2A2A);
+  background: var(--ink-2, #141414); display: flex; align-items: center; justify-content: center;
+}
+.pip.tiny .dot { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; color: var(--muted-dim, #5A5A56); }
+.pip.tiny.full { background: var(--volt, #D4FF00); border-color: var(--volt, #D4FF00); }
+.pip.tiny.full .dot { color: var(--ink, #0A0A0A); font-weight: 700; }
+.pip.tiny.lock { border-style: dashed; }
+.prog .cap { margin-top: 7px; display: flex; justify-content: space-between; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; color: var(--muted, #8A8A85); }
+.prog .cap b { color: var(--paper, #F5F5F2); }
+
+.secl { padding: 14px 0 7px; display: flex; align-items: baseline; justify-content: space-between; }
+.secl b {
+  font-family: var(--font-saira-cond, var(--font-saira)), sans-serif; font-weight: 600;
+  font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--volt, #D4FF00);
+}
+.secl span { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; color: var(--muted, #8A8A85); }
