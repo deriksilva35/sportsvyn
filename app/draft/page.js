@@ -182,17 +182,16 @@ export default async function DraftPage({ searchParams }) {
         )}
 
         <section className="mod">
-          <h2 className="eyebrow">The perfect lineup <span className="ctx">&mdash; {v.perfect}</span></h2>
-          <div>
-            {v.perfectPicks.map((p) => (
-              <div className="row" key={p.slot ?? p.id}>
-                <span>
-                  <span className="slot-tag">{p.slot === 'FLEX2' ? 'FLEX' : p.slot}</span>{' '}
-                  {p.name}{p.team && <span className="muted"> · {p.team}</span>}
-                </span>
-                <span className="r">{p.points}</span>
-              </div>
-            ))}
+          {/* THE CEILING IS A REAL ROOM'S ROSTER, NOT A DREAM TEAM (relay D1).
+              Every Draft entrant gets a different eight, so unlike the
+              Weekly there is no shared pool to build a theoretical lineup
+              from - the ceiling is whoever's real roster scored highest,
+              named by seat rather than shown as a picks list. */}
+          <h2 className="eyebrow">The week&rsquo;s best roster <span className="ctx">&mdash; {v.perfect}</span></h2>
+          <div className="row">
+            <span className="muted">
+              {v.ceilingSeat != null ? `Seat ${v.ceilingSeat} drafted it` : 'From one of this week’s rooms'}
+            </span>
           </div>
         </section>
         <p className="muted">
