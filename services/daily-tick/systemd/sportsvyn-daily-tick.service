@@ -19,8 +19,11 @@
 # EnvironmentFile IS THE PROJECT'S OWN .env.local - PUSH_ENABLED, the APNs
 # key path, and PROD_DATABASE_URL all come from it, same reasoning as
 # sportsvyn-live-poller.service: a second copy of a credential is a second
-# thing to leak. index.mjs itself sets DATABASE_URL from PROD_DATABASE_URL
-# before any import can see the wrong one (see its own header).
+# thing to leak. --import services/_preload/prod-db.mjs sets DATABASE_URL
+# from PROD_DATABASE_URL before any import can see the wrong one - the SAME
+# preload sportsvyn-live-poller.service now uses, not a second, in-file
+# mechanism (index.mjs used to do this itself; moved out so there is one
+# way this works, everywhere, not two that happen to agree by coincidence).
 
 [Unit]
 Description=Sportsvyn Daily v2 edition tick (create board, fire daily-live/daily-revealed)
@@ -33,7 +36,7 @@ Type=oneshot
 # user unit: already runs as derik
 WorkingDirectory=/home/derik/projects/sportsvyn
 EnvironmentFile=/home/derik/projects/sportsvyn/.env.local
-ExecStart=/home/derik/.nvm/versions/node/v22.23.1/bin/node services/daily-tick/index.mjs
+ExecStart=/home/derik/.nvm/versions/node/v22.23.1/bin/node --import ./services/_preload/prod-db.mjs services/daily-tick/index.mjs
 
 StandardOutput=journal
 StandardError=journal

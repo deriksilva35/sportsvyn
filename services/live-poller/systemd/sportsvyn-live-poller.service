@@ -39,7 +39,16 @@ EnvironmentFile=/home/derik/projects/sportsvyn/.env.local
 # user's home and is not on systemd's PATH - `/usr/bin/env node` exits 127
 # ("No such file or directory") the moment the unit starts, which is how this
 # was found. Pin the interpreter; an nvm upgrade is a deliberate edit here.
-ExecStart=/home/derik/.nvm/versions/node/v22.23.1/bin/node services/live-poller/index.mjs
+#
+# --import services/_preload/prod-db.mjs SETS process.env.DATABASE_URL FROM
+# PROD_DATABASE_URL BEFORE THE ENTRY MODULE'S OWN IMPORTS EVEN RESOLVE - not
+# an in-file assignment, which import hoisting can outrun. This is the fix
+# for a real bug: lib/wire/emit.js imports the SHARED lib/db.js (DATABASE_URL),
+# not this process's own PROD-scoped client, and with EnvironmentFile pointing
+# DATABASE_URL at DEV, every emit() call silently queried a database with no
+# news_items table at all. Every droplet service uses this same preload now,
+# one mechanism, not a per-service assignment that only some entrypoints had.
+ExecStart=/home/derik/.nvm/versions/node/v22.23.1/bin/node --import ./services/_preload/prod-db.mjs services/live-poller/index.mjs
 
 # RESTART ALWAYS, AND THE QUOTA COUNTER IS PERSISTED BECAUSE OF THIS LINE. A
 # crash loop with an in-memory tally would spend a month's provider budget in an
