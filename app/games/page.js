@@ -17,6 +17,7 @@
  * exception of the viewer's own state in the game they are playing.
  */
 
+import Link from 'next/link';
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
@@ -25,7 +26,7 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { gamesLobby } from '@/lib/games/read';
 import { myLeagues } from '@/lib/leagues/core';
-import { normalizePane, HERO_LOCK_LABEL } from '@/lib/games/lobby';
+import { normalizePane, HERO_LOCK_LABEL, normalizePickemSeasonSport } from '@/lib/games/lobby';
 import PaneTabs from '@/components/games/PaneTabs';
 import SeasonBoard from '@/components/games/SeasonBoard';
 import StandaloneDate from '@/components/StandaloneDate';
@@ -49,13 +50,14 @@ export async function generateViewport() {
 export default async function GamesPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
   const pane = normalizePane(sp.pane);
+  const pickemSeasonSport = normalizePickemSeasonSport(sp.pksport);
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode();
   // GAMES WAS THE ODD ONE: no signed-out branch at all, so a stranger in the
   // container got the lobby - four cards, none of them playable. Same rule.
   requireSignInInShell({ isShell, userId, dest: '/games' });
-  const v = await gamesLobby(userId).catch(() => null);
+  const v = await gamesLobby(userId, { pickemSeasonSport }).catch(() => null);
   // YOUR LEAGUES (v0.2 door): the member's leagues on the lobby, or the
   // create/join CTA when none. Caught to [] like every lobby read.
   const leagues = userId == null ? [] : await myLeagues(Number(userId)).catch(() => []);
@@ -295,6 +297,26 @@ function BoardsPane({ v, userId = null }) {
               <span className="pill">through {b.table.through}</span>
             )}
           </div>
+          {/* ALL / NFL / CFB (relay 2c item 7) - OUTSIDE the live/populates
+              branch below, so the filter is still reachable (and switchable
+              back to All or the other sport) even before that sport has any
+              settled board of its own yet. pickemTable() stays one table
+              across sports; this only narrows which settled boards feed it.
+              Plain <Link>s, soft-navigated by Next's own prefetching - no
+              client component needed for three server-rendered links. */}
+          {b.key === 'pickem' && (
+            <div className="pchips" style={{ marginBottom: '9px' }}>
+              {[[null, 'All'], ['nfl', 'NFL'], ['cfb', 'CFB']].map(([val, label]) => (
+                <Link
+                  key={label}
+                  href={val ? `/games?pane=leaderboards&pksport=${val}` : '/games?pane=leaderboards'}
+                  className={`pchip${v.pickemSeasonSport === val ? ' on' : ''}`}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          )}
           {b.state !== 'live' ? (
             <div className="row"><span className="muted">{b.populatesLabel}</span></div>
           ) : b.key === 'overall' ? (
