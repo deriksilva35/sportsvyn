@@ -19,9 +19,10 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
 import { draftState, draftSettledView, seatOptions } from '@/lib/draft/view';
 import { draftState as readDraftState } from '@/lib/draft/entry';
-import { DRAFT_CONFIG, DRAFT_ROUNDS } from '@/lib/draft/contest';
+import { DRAFT_CONFIG, DRAFT_ROUNDS, nextDraftContest } from '@/lib/draft/contest';
 import { tierClass } from '@/lib/daily/reveal';
 import SeatSelect from '@/components/draft/SeatSelect';
+import StandaloneDate from '@/components/StandaloneDate';
 import '../daily/daily.css';
 import './draft.css';
 
@@ -93,6 +94,7 @@ export default async function DraftPage({ searchParams }) {
 
   // ---- NO BOARD: the full pitch, per the /weekly ruling -------------------
   if (state === 'none') {
+    const upcoming = await nextDraftContest().catch(() => null);
     return (
       <Shell>
         <section className="hero">
@@ -101,7 +103,14 @@ export default async function DraftPage({ searchParams }) {
           <p className="hero-line">
             Draft against the room &middot; <b>best ball</b> &middot; results Tuesday morning
           </p>
-          <div className="wk-soon">Rooms open Tuesday morning</div>
+          <div className="wk-soon">
+            {upcoming ? (
+              <>
+                Opens <StandaloneDate iso={upcoming.opens_at} /><br />
+                Locks <StandaloneDate iso={upcoming.locks_at} />
+              </>
+            ) : 'No room scheduled yet'}
+          </div>
         </section>
         <Rules contest={null} />
       </Shell>

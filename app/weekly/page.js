@@ -24,7 +24,8 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
-import { currentContest, getEntry } from '@/lib/weekly/entries';
+import { currentContest, nextContest, getEntry } from '@/lib/weekly/entries';
+import StandaloneDate from '@/components/StandaloneDate';
 import { weeklyState, settledView, lineupRows } from '@/lib/weekly/view';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
 import { tierClass } from '@/lib/daily/reveal';
@@ -142,9 +143,19 @@ export default async function WeeklyPage({ searchParams }) {
   // the eye lands on the answer to "can I play" in the same place either way.
   // Same treatment will apply to /pickem and /draft before their first boards.
   if (state === 'none') {
+    const upcoming = await nextContest().catch(() => null);
     return (
       <Shell>
-        <Pitch action={<div className="wk-soon">Boards open Tuesday morning</div>} />
+        <Pitch action={(
+          <div className="wk-soon">
+            {upcoming ? (
+              <>
+                Opens <StandaloneDate iso={upcoming.opens_at} /><br />
+                Locks <StandaloneDate iso={upcoming.locks_at} />
+              </>
+            ) : 'No board scheduled yet'}
+          </div>
+        )} />
         <Rules contest={null} />
       </Shell>
     );
