@@ -3,20 +3,17 @@
 // daily-live/daily-revealed is due, then exits. The TIMER owns the 5-minute
 // cadence (services/daily-tick/systemd/) - this file runs exactly once.
 //
-// DATABASE_URL IS SET FROM PROD_DATABASE_URL BEFORE ANY STATIC IMPORT TOUCHES
-// lib/db.js. ES imports are hoisted - a script that sets an env var AFTER a
-// top-level `import { sql } from '../../lib/db.js'` (or anything that
-// transitively imports it, like lib/push/notify.js) is too late: db.js's own
-// top-level `neon(process.env.DATABASE_URL)` already ran against whatever
-// DATABASE_URL held at process start. This exact trap already bit
-// scripts/nfl-historical-backfill.mjs once ("--prod wrote to dev"); every
-// import below is dynamic, after the assignment, on purpose.
-
-if (!process.env.PROD_DATABASE_URL) {
-  console.error('[daily-tick] PROD_DATABASE_URL missing in environment');
-  process.exit(1);
-}
-process.env.DATABASE_URL = process.env.PROD_DATABASE_URL;
+// DATABASE_URL IS SET BY THE UNIT'S OWN --import, NOT IN THIS FILE. The
+// systemd unit runs `node --import ./services/_preload/prod-db.mjs
+// services/daily-tick/index.mjs` - that preload sets process.env.DATABASE_URL
+// from PROD_DATABASE_URL and exits 1 if it is missing, fully resolved before
+// THIS module's own imports load at all. An in-file assignment used to live
+// here instead; it moved to the shared preload so every droplet service uses
+// the SAME mechanism (services/live-poller/index.mjs's own bug - lib/wire/
+// emit.js importing the shared lib/db.js instead of a PROD-scoped client -
+// is exactly what a per-file assignment does not protect against, since it
+// only ever covered THIS file's own top-level state, never a transitively
+// imported module reading process.env.DATABASE_URL on its own).
 
 const { neon } = await import('@neondatabase/serverless');
 const { tick } = await import('../../lib/daily/seasonBoardTick.js');
