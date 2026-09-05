@@ -9,9 +9,18 @@ import { toScoreRow } from '../../lib/live/scoreEvent.js';
 import { emit } from '../../lib/wire/emit.js';
 import { transitionsFor } from '../../lib/push/transitions.js';
 import { dispatch } from '../../lib/push/dispatch.js';
+import { scoreKindLabel } from '../../lib/push/payload.js';
 
 const CFBD = 'https://apinext.collegefootballdata.com';
 const BDL = 'https://api.balldontlie.io';
+
+// LAST SCORE KIND, PER TEAM, PER MATCH - in-memory, one process's worth.
+// A restart loses it, which only matters for the very next delta-of-2 for a
+// team right after that restart (it will read as a safety rather than a
+// two-point conversion if the touchdown it followed happened before the
+// restart) - a small, honest, documented edge, not a reason to persist this
+// to the database for a courtesy notification's own copy.
+const lastScoreKind = new Map();
 
 // ---------------------------------------------------------------------------
 // Fetchers. ONE CALL PER POLL PER LEAGUE, which is the number the whole quota
@@ -193,7 +202,23 @@ export async function pollOnce(sql, {
             ...m, ...after,
             homeAbbr: m.home_abbr, awayAbbr: m.away_abbr, leagueSlug: m.league_slug,
           };
-          const r = await dispatch(sql, { match, event: t.event, state: t.state });
+          // THE SCORE-KIND PREFIX. Exactly one side's delta must be nonzero -
+          // two teams scoring in the same 30s poll has no single honest kind
+          // to name, so it gets none. priorWasTouchdown reads THIS team's own
+          // last remembered kind, which is also updated here, so a later
+          // extra point or two-point try on the same team sees this one.
+          let scoreKind = null;
+          if (t.event === 'score') {
+            const { homeDelta, awayDelta } = t.state;
+            const team = homeDelta && !awayDelta ? 'home' : (!homeDelta && awayDelta ? 'away' : null);
+            const delta = team === 'home' ? homeDelta : team === 'away' ? awayDelta : null;
+            if (team && delta) {
+              const key = `${m.id}:${team}`;
+              scoreKind = scoreKindLabel(delta, { priorWasTouchdown: lastScoreKind.get(key) === 'Touchdown' });
+              if (scoreKind) lastScoreKind.set(key, scoreKind);
+            }
+          }
+          const r = await dispatch(sql, { match, event: t.event, state: { ...t.state, scoreKind } });
           out.pushes.push({ event: t.event, sent: r.sent, skipped: r.skipped, failed: r.failed });
           if (r.authFailure) out.pushAuthFailure = true;
         } catch (e) { out.pushErrors.push(String(e?.message ?? e).slice(0, 120)); }
