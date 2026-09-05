@@ -18,13 +18,20 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ordinal } from '@/lib/standings/view';
 
-export default function SeatSelect({ seats, teamsCount, rounds, clockSeconds }) {
+export default function SeatSelect({
+  seats, teamsCount, rounds, clockSeconds, signedIn = true, signinHref = '/signin',
+}) {
   const [seat, setSeat] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const router = useRouter();
 
   async function start() {
+    // TAKE SEAT ROUTES TO SIGN-IN, SIGNED OUT (2a-polish item 1) - opening a
+    // room is the one irreversible action here, and a reader with no session
+    // cannot spend the week's one draft, so the tap is the door, not a dead
+    // end.
+    if (!signedIn) { router.push(signinHref); return; }
     if (seat == null || busy) return;
     setBusy(true); setErr(null);
     const res = await fetch('/api/draft/start', {

@@ -164,20 +164,6 @@ export default async function WeeklyPage({ searchParams }) {
 
   const board = contest.board ?? [];
 
-  // ---- SIGNED OUT: the pitch ----------------------------------------------
-  if (userId == null) {
-    return (
-      <Shell>
-        <Pitch action={(
-          <a className="btn--volt" href={shellSigninHref('/weekly', isShell)}>
-            Build this week&rsquo;s lineup
-          </a>
-        )} />
-        <Rules contest={contest} />
-      </Shell>
-    );
-  }
-
   // ---- SETTLED: the reveal -------------------------------------------------
   // The Daily's reveal with the answer-hero swapped for the week's own
   // identity. The Daily's hero answers "when are you?" because that is its
@@ -364,14 +350,27 @@ export default async function WeeklyPage({ searchParams }) {
         board={board}
         initialLineup={entry?.lineup ?? {}}
         locksAtLabel={etStamp(contest.locks_at)}
+        signedIn={userId != null}
+        signinHref={shellSigninHref('/weekly', isShell)}
       />
+
+      {/* ONCE OPEN, THIS IS WHAT 'HOW IT WORKS' BECOMES (2a-polish item 1) -
+          the mock's own .perf box under the board, never the pitch's rules
+          table above it. Same reader, same question, but they are looking at
+          the board now rather than wondering whether to. */}
+      <div className="perf">
+        <b>The best six this pool allows</b>
+        <p>
+          Revealed Tuesday morning when Week {contest.week} settles. Your grade is
+          your six as a percentage of it. Raw points never cross weeks - a
+          bye-heavy week has a lower ceiling and the percentage knows that.
+        </p>
+      </div>
 
       <div className="mathline">
         Alerts: opens {etStamp(contest.opens_at)} &middot; one hour to lock {etStamp(reminderAt)}
         {contest.settles_at && <> &middot; graded {etStamp(contest.settles_at)}</>}. All on.
       </div>
-
-      <Rules contest={contest} />
     </Shell>
   );
 }

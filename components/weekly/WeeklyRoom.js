@@ -33,6 +33,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { SLOTS } from '@/lib/weekly/rules';
 import { nextOpenSlot } from '@/lib/daily/play';
 import { poolRows } from '@/lib/weekly/view';
@@ -58,13 +59,16 @@ const restOf = (r) => (r ? String(r).split(' · ').slice(1).join(' · ') : '');
 // because it is the only one that reflects the finished lineup.
 const SAVE_DEBOUNCE_MS = 700;
 
-export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAtLabel = null }) {
+export default function WeeklyRoom({
+  contest, board, initialLineup = {}, locksAtLabel = null, signedIn = true, signinHref = '/signin',
+}) {
   const [lineup, setLineup] = useState(initialLineup ?? {});
   const [active, setActive] = useState('QB');
   const [save, setSave] = useState('clean');   // clean | saving | saved | error
   const [locked, setLocked] = useState(false);
   const [err, setErr] = useState(null);
   const [query, setQuery] = useState('');
+  const router = useRouter();
   const timer = useRef(null);
   const pending = useRef(null);
 
@@ -115,6 +119,9 @@ export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAt
   const rows = useMemo(() => poolRows(board, active, query), [board, active, query]);
 
   function pick(id) {
+    // EVERY TAKE ROUTES TO SIGN-IN, SIGNED OUT (2a-polish item 1) - a pick
+    // this reader has no session to save is not a dead end, it is the door.
+    if (!signedIn) { router.push(signinHref); return; }
     if (locked) return;
     const next = { ...lineup, [active]: id };
     setLineup(next);
@@ -155,7 +162,7 @@ export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAt
             return (
               <button key={s} type="button"
                 className={`pr${p ? '' : ' empty'}`}
-                onClick={() => setActive(s)}>
+                onClick={() => (signedIn ? setActive(s) : router.push(signinHref))}>
                 <span className="pos">{SLOT_LABEL[s]}</span>
                 <span className="nm">
                   <b>{p ? p.name : `Pick a ${SLOT_LABEL[s].toLowerCase()}`}</b>

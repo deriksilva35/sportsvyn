@@ -117,24 +117,6 @@ export default async function DraftPage({ searchParams }) {
     );
   }
 
-  // ---- SIGNED OUT: the pitch ----------------------------------------------
-  if (userId == null) {
-    return (
-      <Shell>
-        <section className="hero">
-          <div className="hero-eyebrow">The Draft &middot; ranked</div>
-          <div className="hero-q">Eight rounds.<br />No bench.</div>
-          <p className="hero-line">
-            {DRAFT_CONFIG.teamsCount} teams &middot; <b>{DRAFT_CONFIG.clockSeconds}s</b> a pick
-            &middot; best ball &middot; results Tuesday morning
-          </p>
-          <a className="btn--volt" href={shellSigninHref('/draft', isShell)}>Take a seat</a>
-        </section>
-        <Rules contest={contest} />
-      </Shell>
-    );
-  }
-
   // ---- SETTLED -------------------------------------------------------------
   if (state === 'settled') {
     const v = draftSettledView({ contest, entry, board: contest.board });
@@ -341,9 +323,13 @@ export default async function DraftPage({ searchParams }) {
         teamsCount={DRAFT_CONFIG.teamsCount}
         rounds={DRAFT_ROUNDS}
         clockSeconds={DRAFT_CONFIG.clockSeconds}
+        signedIn={userId != null}
+        signinHref={shellSigninHref('/draft', isShell)}
       />
 
-      {/* THE MOCK'S OWN TEXT, VERBATIM (item 7's own instruction). */}
+      {/* THE MOCK'S OWN TEXT, VERBATIM (item 7's own instruction). ONCE OPEN,
+          THIS IS WHAT 'HOW IT WORKS' BECOMES (2a-polish item 1) - never the
+          pitch's rules table above the board. */}
       <div className="perf">
         <b>How you are graded</b>
         <p>
@@ -358,8 +344,6 @@ export default async function DraftPage({ searchParams }) {
         Alerts: rooms open {etStamp(contest.opens_at)} &middot; one hour to lock {etStamp(reminderAt)}
         {contest.settles_at && <> &middot; graded {etStamp(contest.settles_at)}</>}. All on.
       </div>
-
-      <Rules contest={contest} />
     </Shell>
   );
 }

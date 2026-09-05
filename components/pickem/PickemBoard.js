@@ -24,7 +24,6 @@ const GAME_ROUTE = { cfb: '/cfb/game', nfl: '/nfl/game' };
 const ET_TIME = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit',
 });
-const ET_DAY = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short' });
 const ET_WEEKDAY_LONG = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'long' });
 const ET_YMD = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
 
@@ -69,6 +68,20 @@ function countdownTo(iso, now) {
   const m = Math.floor(ms / 60000);
   const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60;
   return d > 0 ? `${d}d ${h}h ${mm}m` : h > 0 ? `${h}h ${mm}m` : `${mm}m`;
+}
+
+/**
+ * ONE ROW ALWAYS, unless the board is too big for one to stay legible
+ * (relay 2a-polish item 3). Below the split point every pip shrinks
+ * (flex:1) to fit 390px; past it, splitting keeps a pip tappable rather
+ * than shrinking it into a sliver - and the split is two EQUAL rows, never
+ * a nearly-full row plus a two-pip orphan the way CSS wrapping would.
+ */
+const PIP_SPLIT_AT = 26;
+function pipRows(games) {
+  if (games.length <= PIP_SPLIT_AT) return [games];
+  const half = Math.ceil(games.length / 2);
+  return [games.slice(0, half), games.slice(half)];
 }
 
 export default function PickemBoard({ view, signedIn, signinHref }) {
@@ -122,9 +135,16 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
 
   return (
     <>
-      {/* THE HEADER (relay 2a item 8) - replaces the old .pk-hero/h1/.pk-ctx. */}
+      {/* THE HEADER (relay 2a item 8, week fixed in 2a-polish item 3) -
+          replaces the old .pk-hero/h1/.pk-ctx. The display week only
+          appears when one exists (the AP poll's current week for CFB) -
+          contest.week itself is an internal board-sequencing number, never
+          shown here. */}
       <header className="hdr">
-        <span className="ed">Pick&rsquo;em &middot; Board {contest.boardNumber ?? ''} &middot; {contest.sport.toUpperCase()} Week {contest.week}</span>
+        <span className="ed">
+          Pick&rsquo;em &middot; Board {contest.boardNumber ?? ''} &middot; {contest.sport.toUpperCase()}
+          {contest.displayWeek != null && <> Week {contest.displayWeek}</>}
+        </span>
         <span className="clock">{picked} of {total}</span>
       </header>
 
@@ -135,17 +155,19 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
         </section>
       )}
 
-      {/* THE TINY PIP ROW (relay 2a item 8) - one per game, checked when
-          picked, dashed border once its own kickoff has passed. Replaces
-          the old linear .pk-progress bar. */}
+      {/* THE TINY PIP ROW (relay 2a item 8, split fixed in 2a-polish item 3) -
+          one per game, checked when picked, dashed border once its own
+          kickoff has passed. Replaces the old linear .pk-progress bar. */}
       <div className="prog">
-        <div className="rrow">
-          {games.map((g) => (
-            <div key={g.match_id} className={`pip tiny${g.my_side != null ? ' full' : ''}${g.kicked ? ' lock' : ''}`}>
-              <span className="dot">{g.my_side != null ? '✓' : '·'}</span>
-            </div>
-          ))}
-        </div>
+        {pipRows(games).map((row, i) => (
+          <div className="rrow" key={i}>
+            {row.map((g) => (
+              <div key={g.match_id} className={`pip tiny${g.my_side != null ? ' full' : ''}${g.kicked ? ' lock' : ''}`}>
+                <span className="dot">{g.my_side != null ? '✓' : '·'}</span>
+              </div>
+            ))}
+          </div>
+        ))}
         <div className="cap">
           <span>{picked} of {total} picked</span>
           {cd && <span>next lock <b>{cd}</b></span>}
@@ -165,9 +187,12 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
           </div>
           {group.games.map((g) => {
         const kickedAtMs = new Date(g.kickoff_at).getTime() <= now;
+        // NO DAY LABEL INSIDE A ROW (2a-polish item 3) - the group header
+        // above already names the day; a row only speaks up here for a real
+        // in-progress fact, live or final.
         const eyebrowLeft = g.status === 'final' ? 'Final'
           : g.status === 'live' ? '● Live'
-            : `${ET_DAY.format(new Date(g.kickoff_at))}`;
+            : null;
         const eyebrowRight = g.status === 'final' || g.status === 'live'
           ? (g.home_score != null ? `${g.away_score}-${g.home_score}` : '')
           : `${ET_TIME.format(new Date(g.kickoff_at))} ET`;
@@ -180,7 +205,15 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
                 so the link's own tap has no handler to bubble into. The
                 separation is structural, not a z-index or a stopPropagation
                 that the next edit could undo. The 9px .pk-eb margin-bottom
-                keeps the two tap targets physically apart as well. */}
+                keeps the two tap targets physically apart as well.
+                NO 'GAME ->' PILL (2a-polish item 3): the mono readout itself -
+                the kickoff time pre-kickoff, the score once live or final -
+                IS the link now, so there is no separate label left to cut.
+                It stays in the eyebrow rather than moving into a .pk-side:
+                that side is a <button> carrying the pick's own onClick, and
+                an anchor nested inside it would either be swallowed by the
+                pick tap or fire both - the exact hazard the test below pins
+                against, for the label this replaces as much as the old one. */}
             <div className={`pk-eb${g.status === 'live' ? ' live' : ''}`}>
               <span>{eyebrowLeft}</span>
               <span className="pk-ebr">
@@ -201,20 +234,21 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
                     </span>
                   );
                 })()}
-                <span className="pk-mono">{eyebrowRight}</span>
-                {gameHref(contest, g) && (
+                {gameHref(contest, g) ? (
                   <Link
                     className="pk-gamelink"
                     href={gameHref(contest, g)}
                     aria-label={`${g.away} at ${g.home} game page`}
                   >
-                    Game &rarr;
+                    {eyebrowRight}
                   </Link>
+                ) : (
+                  <span className="pk-mono">{eyebrowRight}</span>
                 )}
               </span>
             </div>
             <div className="pk-sides">
-              {['away', 'home'].map((side) => {
+              {['away', 'home'].map((side, i) => {
                 const name = side === 'home' ? g.home : g.away;
                 const isMine = g.my_side === side;
                 let cls = 'pk-side';
@@ -225,15 +259,15 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
                 } else {
                   cls += ' dim';
                 }
-                const sealed = g.kicked || kickedAtMs || !signedIn;
-                return (
-                  <button
-                    key={side}
-                    type="button"
-                    className={cls}
-                    disabled={sealed}
-                    onClick={() => tap(g, side)}
-                  >
+                // A KICKED GAME DISABLES BOTH SIDES FOR EVERYONE - there is no
+                // pick left to make, signed in or not, so it is never a
+                // sign-in prompt. SIGNED OUT AND NOT YET KICKED IS THE ONE
+                // CASE THAT ROUTES: the side becomes a real link to sign-in
+                // with a return URL (2a-polish item 1), not a disabled
+                // button pretending the pick does not exist.
+                const lockedByKickoff = g.kicked || kickedAtMs;
+                const content = (
+                  <>
                     <RankBadge rank={side === 'home' ? g.home_rank : g.away_rank} />
                     <span className="pk-nm">{name}</span>
                     {/* A CHIP MAY ONLY CLAIM KNOWLEDGE - no record, no chip,
@@ -241,11 +275,31 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
                     {(side === 'home' ? g.home_record : g.away_record) ? (
                       <span className="pk-rec">{side === 'home' ? g.home_record : g.away_record}</span>
                     ) : null}
-                    {!sealed && <span className="pk-tag">{side.toUpperCase()}</span>}
+                    {!lockedByKickoff && <span className="pk-tag">{side.toUpperCase()}</span>}
                     {isMine && g.graded === 'W' && <span className="pk-res w">W</span>}
                     {isMine && g.graded === 'L' && <span className="pk-res l">L</span>}
                     {isMine && g.status === 'live' && <span className="pk-res live">LIVE</span>}
-                  </button>
+                  </>
+                );
+                return (
+                  <>
+                    {/* THE MOCK'S "at" (2a-polish item 3) - the two sides
+                        read as one sentence, "Away at Home". */}
+                    {i === 1 && <div className="pk-at" key="at">at</div>}
+                    {!signedIn && !lockedByKickoff ? (
+                      <a key={side} className={cls} href={signinHref}>{content}</a>
+                    ) : (
+                      <button
+                        key={side}
+                        type="button"
+                        className={cls}
+                        disabled={lockedByKickoff}
+                        onClick={() => tap(g, side)}
+                      >
+                        {content}
+                      </button>
+                    )}
+                  </>
                 );
               })}
             </div>

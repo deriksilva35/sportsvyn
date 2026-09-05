@@ -22,6 +22,7 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
+import { shellSigninHref } from '@/lib/shell/signinHref';
 import { gamesLobby } from '@/lib/games/read';
 import { myLeagues } from '@/lib/leagues/core';
 import { normalizePane } from '@/lib/games/lobby';
@@ -50,9 +51,10 @@ export default async function GamesPage({ searchParams }) {
   const pane = normalizePane(sp.pane);
   const session = await auth();
   const userId = session?.user?.id ?? null;
+  const isShell = await resolveShellMode();
   // GAMES WAS THE ODD ONE: no signed-out branch at all, so a stranger in the
   // container got the lobby - four cards, none of them playable. Same rule.
-  requireSignInInShell({ isShell: await resolveShellMode(), userId, dest: '/games' });
+  requireSignInInShell({ isShell, userId, dest: '/games' });
   const v = await gamesLobby(userId).catch(() => null);
   // YOUR LEAGUES (v0.2 door): the member's leagues on the lobby, or the
   // create/join CTA when none. Caught to [] like every lobby read.
@@ -92,7 +94,14 @@ export default async function GamesPage({ searchParams }) {
           </section>
         )}
 
-        {v && pane === 'games' && <GamesPane v={v} leagues={leagues} signedIn={userId != null} />}
+        {v && pane === 'games' && (
+          <GamesPane
+            v={v}
+            leagues={leagues}
+            signedIn={userId != null}
+            signinHref={shellSigninHref('/games', isShell)}
+          />
+        )}
         {v && pane === 'leaderboards' && <BoardsPane v={v} userId={userId} />}
         {v && pane === 'answer' && <AnswerPane v={v} />}
         {v && pane === 'history' && <HistoryPane v={v} />}
@@ -109,11 +118,15 @@ export default async function GamesPage({ searchParams }) {
 }
 
 /**
- * THE HERO (relay 2a item 3). Two shapes: the everyday one (a game with an
- * unmet lock, tagline + locks-at + one button) and the all-done one (the
- * Daily's own receipt, once every game today is entered).
+ * THE HERO (relay 2a item 3, signed-out parity in 2a-polish item 4). Two
+ * shapes: the everyday one (a game with an unmet lock, tagline + locks-at +
+ * one button) and the all-done one (the Daily's own receipt, once every
+ * game today is entered - inherently signed-in, so `signedIn` never gates
+ * that branch). Signed out on the everyday shape, the button reads 'Sign in
+ * to play' and goes to sign-in with a return URL rather than the game's own
+ * page - the hero names an open game a stranger cannot yet enter.
  */
-function Hero({ hero }) {
+function Hero({ hero, signedIn = true, signinHref = '/signin' }) {
   if (hero.allDone) {
     return (
       <div className="hero">
@@ -131,12 +144,14 @@ function Hero({ hero }) {
         <span>locks <StandaloneDate iso={hero.locksAt} /></span>
       </div>
       <h2>{hero.tagline[0]}<br />{hero.tagline[1]}</h2>
-      <a className="btn" href={hero.href}>{hero.cta}</a>
+      <a className="btn" href={signedIn ? hero.href : signinHref}>
+        {signedIn ? hero.cta : 'Sign in to play'}
+      </a>
     </div>
   );
 }
 
-function GamesPane({ v, leagues = [], signedIn = false }) {
+function GamesPane({ v, leagues = [], signedIn = false, signinHref = '/signin' }) {
   return (
     <>
       {/* THE STAT STRIP (relay 2a item 2). v.strip is a fixed 4-cell array,
@@ -157,7 +172,7 @@ function GamesPane({ v, leagues = [], signedIn = false }) {
           signed-in one with no unmet appointment-game lock right now -
           the mock never designed a hero for either, so neither renders one
           rather than inventing a state. */}
-      {v.hero && <Hero hero={v.hero} />}
+      {v.hero && <Hero hero={v.hero} signedIn={signedIn} signinHref={signinHref} />}
 
       {/* TODAY'S BOARDS (relay 2a item 4) - four rows, fixed GAME_ORDER,
           replacing the old 2x2 .ggrid entirely: the mock never shows that
