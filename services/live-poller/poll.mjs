@@ -214,7 +214,11 @@ export async function pollOnce(sql, {
             const delta = team === 'home' ? homeDelta : team === 'away' ? awayDelta : null;
             if (team && delta) {
               const key = `${m.id}:${team}`;
-              scoreKind = scoreKindLabel(delta, { priorWasTouchdown: lastScoreKind.get(key) === 'Touchdown' });
+              const teamAbbr = team === 'home' ? m.home_abbr : m.away_abbr;
+              // .endsWith, not ===, because the stored value is the full
+              // "TEAM touchdown" prefix, not the bare kind word.
+              const priorWasTouchdown = Boolean(lastScoreKind.get(key)?.endsWith('touchdown'));
+              scoreKind = scoreKindLabel(delta, { priorWasTouchdown, teamAbbr });
               if (scoreKind) lastScoreKind.set(key, scoreKind);
             }
           }
