@@ -220,11 +220,10 @@ function GamesPane({ v, leagues = [], signedIn = false }) {
             <h2 className="eyebrow">Practice</h2>
             <span className="pill">unranked · nothing here counts</span>
           </div>
-          <div className="row">
-            <span>
-              Full mock drafts against the same AI rooms The Draft uses. No clock,
-              graded on live ADP.
-            </span>
+          <div className="pchips">
+            {v.practice.chips.map((c) => (
+              <span key={c.label} className={`pchip${c.on ? ' on' : ''}`}>{c.label}</span>
+            ))}
           </div>
           <a className="ghost" href={v.practice.href}>{v.practice.cta} &rarr;</a>
         </section>

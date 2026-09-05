@@ -1,5 +1,5 @@
 /**
- * /api/cron/pickem-board — create the next Pick 'em board when its open
+ * /api/cron/pickem-board — create the next Pick'em board when its open
  * arrives.
  *
  * DAILY, AND ALMOST ALWAYS A NO-OP, by design. The builder gates on the

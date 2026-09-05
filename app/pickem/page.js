@@ -27,6 +27,7 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { pickemBoardView } from '@/lib/pickem/entry';
 import { firstLockLabel, FIRST_LOCK_FALLBACK } from '@/lib/pickem/read';
 import PickemBoard from '@/components/pickem/PickemBoard';
+import { GAME_NAMES } from '@/lib/games/lobby';
 import '../games/games.css';
 import './pickem.css';
 
@@ -36,7 +37,7 @@ export async function generateViewport() {
   return simViewport(await resolveShellMode());
 }
 
-export const metadata = { title: "Pick 'em - Sportsvyn" };
+export const metadata = { title: `${GAME_NAMES.pickem} - Sportsvyn` };
 
 export default async function PickemPage({ searchParams }) {
   const session = await auth();

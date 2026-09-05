@@ -37,7 +37,7 @@ export async function GET(request) {
   // a tick where nothing is due to close. Gated so the disabled path costs
   // nothing; send-once inside notifyEvent makes the every-tick call safe.
   if (pushEnabled()) await notifyDailyLive().catch(() => {});
-  // Same tick carries the Pick 'em lock reminder - keyed to the board's
+  // Same tick carries the Pick'em lock reminder - keyed to the board's
   // first kickoff inside a 2h window, send-once on the board id. Here for
   // the same reason notifyDailyLive is: this is the house 15-minute tick,
   // and the row (the contest), not a clock, decides.
