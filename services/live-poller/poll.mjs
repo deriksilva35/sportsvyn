@@ -180,7 +180,20 @@ export async function pollOnce(sql, {
       );
       for (const t of evs) {
         try {
-          const r = await dispatch(sql, { match: { ...m, ...after }, event: t.event, state: t.state });
+          // pushPayload() (lib/push/payload.js) destructures camelCase
+          // homeAbbr/awayAbbr/leagueSlug - the query above selects them
+          // snake_case (home_abbr/away_abbr/league_slug, the naming every
+          // other column in this file uses). Without this mapping every
+          // real dispatch() call hit pushPayload()'s `if (!homeAbbr ||
+          // !awayAbbr || !leagueSlug...) return null` guard and bailed
+          // before ever reaching the per-device send loop - silently, with
+          // no log line, no error, and no push_sends row - independent of
+          // and on top of the audienceFor() bug fixed alongside this one.
+          const match = {
+            ...m, ...after,
+            homeAbbr: m.home_abbr, awayAbbr: m.away_abbr, leagueSlug: m.league_slug,
+          };
+          const r = await dispatch(sql, { match, event: t.event, state: t.state });
           out.pushes.push({ event: t.event, sent: r.sent, skipped: r.skipped, failed: r.failed });
           if (r.authFailure) out.pushAuthFailure = true;
         } catch (e) { out.pushErrors.push(String(e?.message ?? e).slice(0, 120)); }
