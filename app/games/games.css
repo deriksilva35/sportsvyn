@@ -189,3 +189,33 @@
    name yields only when the space is genuinely gone. */
 .lob .lb-left { flex: 1 1 auto; }
 .lob .lb-left > :nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===========================================================================
+   RELAY 2a - the lobby rebuild, matching docs/design/games-remock-v2.html.
+   Class names are the mock's own (.hmhdr, .strip, .hero, .grow, .arow, ...) -
+   scoped to /games' own stylesheet, so nothing here collides with the same
+   names used by other pages' own CSS files.
+   =========================================================================== */
+
+.hmhdr { padding: 4px 2px 14px; }
+.hmhdr h1 {
+  font-family: var(--l-disp); font-style: italic; font-weight: 900;
+  font-size: 34px; letter-spacing: -.04em; line-height: 1.02; margin: 0;
+}
+.hmhdr .sub {
+  margin-top: 6px; font-family: var(--l-cond); font-weight: 600;
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--l-mut);
+}
+
+.strip {
+  margin: 0 0 14px; display: grid; grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--l-line); border-radius: 13px; background: var(--l-ink2); overflow: hidden;
+}
+.strip div { padding: 11px 4px; text-align: center; border-left: 1px solid var(--l-line); }
+.strip div:first-child { border-left: 0; }
+.strip b { display: block; font-family: var(--l-mono); font-weight: 700; font-size: 18px; line-height: 1; color: var(--l-paper); }
+.strip b.v { color: var(--l-volt); }
+.strip small {
+  display: block; margin-top: 5px; font-family: var(--l-cond); font-weight: 600;
+  font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--l-mut);
+}

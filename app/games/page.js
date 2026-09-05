@@ -63,10 +63,20 @@ export default async function GamesPage({ searchParams }) {
       <GlobalHeaderServer activeNav="games" />
       <main className="lob" data-surface="ink">
 
-        <header className="lob-head">
-          <h1 className="lob-title">Game day, every day.</h1>
-          <p className="lob-sub">One account. One handle. Every board.</p>
-        </header>
+        {pane === 'games' ? (
+          // THE LOBBY'S OWN HEADER (relay 2a item 2, mock's .hmhdr) - only this
+          // pane, matching the mock's own scoping. The other panes keep the
+          // shared eyebrow below, untouched.
+          <header className="hmhdr">
+            <h1>{v?.header?.title ?? 'Games'}</h1>
+            <div className="sub">{v?.header?.today}{v?.header?.week != null && <> &middot; Week {v.header.week}</>} &middot; {v?.header?.sub}</div>
+          </header>
+        ) : (
+          <header className="lob-head">
+            <h1 className="lob-title">Game day, every day.</h1>
+            <p className="lob-sub">One account. One handle. Every board.</p>
+          </header>
+        )}
 
         {/* A CLIENT SWITCHER OVER SERVER PANES. The panes remain URL params and
             remain server-rendered - that is what makes each one's payload
@@ -101,6 +111,20 @@ export default async function GamesPage({ searchParams }) {
 function GamesPane({ v, leagues = [], signedIn = false }) {
   return (
     <>
+      {/* THE STAT STRIP (relay 2a item 2). v.strip is a fixed 4-cell array,
+          already the right facts for signed-in vs signed-out - the pane
+          never chooses between them, it only renders what read.js decided. */}
+      {v.strip && (
+        <div className="strip">
+          {v.strip.map((cell, i) => (
+            <div key={i}>
+              <b className={cell.volt ? 'v' : undefined}>{cell.value ?? '-'}</b>
+              <small>{cell.label}</small>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="ggrid">
         {v.cards.map((c) => (
           <a
