@@ -215,6 +215,27 @@ function BoardsPane({ v, userId = null }) {
             // podium, movement, the viewer pinned. One component, shared
             // with the league scope.
             <SeasonBoard table={b.table} userId={userId} />
+          ) : b.key === 'pickem' ? (
+            // ACCURACY, NOT POINTS. A dash rank + note replaces a number for
+            // anyone under the minimum-boards floor - never simply absent.
+            <div>
+              {b.table.top.map((r) => (
+                <div className="row" key={r.userId}>
+                  <span className="lb-left"><span className="rank">{r.rank ?? '—'}</span>{r.name}</span>
+                  <span className="v">
+                    {r.note ?? <>{r.pct}% <span className="muted">({r.correct}/{r.played})</span></>}
+                  </span>
+                </div>
+              ))}
+              {b.table.self && (
+                <div className="row row--me">
+                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '—'}</span>{b.table.self.name}</span>
+                  <span className="v">
+                    {b.table.self.note ?? <>{b.table.self.pct}% <span className="muted">({b.table.self.correct}/{b.table.self.played})</span></>}
+                  </span>
+                </div>
+              )}
+            </div>
           ) : (
             <div>
               {b.table.top.map((r) => (
