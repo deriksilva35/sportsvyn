@@ -27,7 +27,11 @@ export async function GET(request) {
   const [teamPref] = teamId ? await sql`
     SELECT ${sql.unsafe(FIELDS.join(', '))} FROM alert_prefs
      WHERE user_id = ${userId} AND scope = 'team' AND scope_id = ${teamId}` : [];
-  return Response.json({ signedIn: true, prefs: resolvePrefs({ teamPref, matchPref }) });
+  // scope: 'match' whenever a matchId was asked for - the per-game sheet's
+  // own read. With neither a saved match row nor a saved team row,
+  // resolvePrefs() renders OFF rather than DEFAULTS (relay ruling: "the
+  // screen may never show a push the system will not attempt").
+  return Response.json({ signedIn: true, prefs: resolvePrefs({ teamPref, matchPref, scope: matchId ? 'match' : null }) });
 }
 
 export async function PUT(request) {
