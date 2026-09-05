@@ -302,22 +302,63 @@ export default async function DraftPage({ searchParams }) {
     );
   }
 
-  // ---- RULES: the seat-select front door ----------------------------------
+  // ---- RULES: the seat-select front door (relay 2a item 7) -----------------
+  const reminderAt = new Date(new Date(contest.locks_at).getTime() - 3_600_000);
   return (
     <Shell>
-      <section className="hero">
-        <div className="hero-eyebrow">The Draft &middot; Week {contest.week}</div>
-        <div className="hero-q">Eight rounds.<br />No bench.</div>
-        <p className="hero-line">
-          Best ball &middot; locks {etStamp(contest.locks_at)} &middot; results Tuesday morning
-        </p>
-      </section>
+      <header className="hdr">
+        <span className="ed">The Draft &middot; Week {contest.week} &middot; ranked</span>
+        <span className="clock">rooms lock <StandaloneDate iso={contest.locks_at} /></span>
+      </header>
+      <div className="yr">
+        <h1>Week {contest.week}</h1>
+        <div className="sub">
+          Eight rounds. No bench. Same pool as The Weekly, drafted against a room of
+          eleven. Your best six of eight count.
+        </div>
+      </div>
+      <div className="warn">
+        Pick a seat and it is your franchise for the week. Walk away and the seat
+        drafts for itself at lock.
+      </div>
+      <div className="prog">
+        <div className="rrow">
+          {Array.from({ length: DRAFT_ROUNDS }, (_, i) => (
+            <div key={i} className="pip">
+              <span className="em">{i + 1}</span>
+              <span className="dot">R{i + 1}</span>
+            </div>
+          ))}
+        </div>
+        <div className="cap">
+          <span>0 of {DRAFT_ROUNDS} picked</span>
+          <span>{DRAFT_CONFIG.clockSeconds}s a pick &middot; {DRAFT_CONFIG.teamsCount} seats &middot; PPR</span>
+        </div>
+      </div>
+
       <SeatSelect
         seats={seatOptions(DRAFT_CONFIG.teamsCount)}
         teamsCount={DRAFT_CONFIG.teamsCount}
         rounds={DRAFT_ROUNDS}
         clockSeconds={DRAFT_CONFIG.clockSeconds}
       />
+
+      {/* THE MOCK'S OWN TEXT, VERBATIM (item 7's own instruction). */}
+      <div className="perf">
+        <b>How you are graded</b>
+        <p>
+          Two ways, both at settle. Your room: where your eight finish against the
+          eleven bots you drafted with. The field: your points against everyone who
+          drafted this week, and the best draft in the field is shown beside yours.
+          There is no solver ceiling here - the best eight in the pool cannot sit on
+          one roster, and the room reacts to what you take.
+        </p>
+      </div>
+      <div className="mathline">
+        Alerts: rooms open {etStamp(contest.opens_at)} &middot; one hour to lock {etStamp(reminderAt)}
+        {contest.settles_at && <> &middot; graded {etStamp(contest.settles_at)}</>}. All on.
+      </div>
+
       <Rules contest={contest} />
     </Shell>
   );

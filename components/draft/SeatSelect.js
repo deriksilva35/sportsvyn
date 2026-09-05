@@ -16,6 +16,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ordinal } from '@/lib/standings/view';
 
 export default function SeatSelect({ seats, teamsCount, rounds, clockSeconds }) {
   const [seat, setSeat] = useState(null);
@@ -42,34 +43,41 @@ export default function SeatSelect({ seats, teamsCount, rounds, clockSeconds }) 
     router.push(`/sim/draft/${j.draftId}`);
   }
 
+  // The current seat's own round1Pick/round2Pick, for the mathline below the
+  // grid (relay 2a item 7's exact seat copy) - real snake math, per seat.
+  const picked = seat == null ? null : seats.find((s) => s.seat === seat);
+
   return (
     <>
+      <div className="secl"><b>Your seat</b><span>your room, same seed for everyone</span></div>
       <section className="mod">
-        <h2 className="eyebrow">Pick your seat</h2>
-        <p className="mod-lede">
-          {teamsCount} teams &middot; {rounds} rounds &middot; {clockSeconds}s per pick.
-          Snake order, so your seat decides every pick you get.
-        </p>
-        <div className="seats">
+        <div className="opts">
           {seats.map((s) => (
             <button
               key={s.seat}
               type="button"
-              className={`seat${seat === s.seat ? ' seat--on' : ''}`}
+              className={`opt${seat === s.seat ? ' on' : ''}`}
               onClick={() => setSeat(s.seat)}
               aria-pressed={seat === s.seat}
             >
-              <span className="seat-n">{s.seat}</span>
-              {s.note && <span className="seat-note">{s.note}</span>}
+              {s.seat}
             </button>
           ))}
+        </div>
+        <div className="mathline" style={{ marginTop: '10px' }}>
+          {picked
+            ? <>Seat {picked.seat} picks {ordinal(picked.round1Pick)} and {ordinal(picked.round2Pick)}. Any seat is
+              open - it is your room against {teamsCount - 1} bots. Everyone who takes seat {picked.seat} faces
+              the same room.</>
+            : <>{teamsCount} teams &middot; {rounds} rounds &middot; {clockSeconds}s per pick. Any seat is open -
+              it is your room against {teamsCount - 1} bots.</>}
         </div>
       </section>
 
       <section className="mod">
         {err && <p className="err">{err}</p>}
         <button className="btn btn--volt" disabled={seat == null || busy} onClick={start}>
-          {busy ? 'Opening the room…' : seat == null ? 'Choose a seat' : `Draft from pick ${seat}`}
+          {busy ? 'Opening the room…' : seat == null ? 'Choose a seat' : `Take seat ${seat}`}
         </button>
         <p className="wk-autosave">
           One ranked draft a week. Opening the room uses it - there is no restart.
