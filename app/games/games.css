@@ -262,3 +262,11 @@
 }
 .grow .st.on { color: var(--l-ink); background: var(--l-volt); border-color: var(--l-volt); }
 .grow .st.done { color: var(--l-jade); border-color: var(--l-jade); }
+
+/* LEADERBOARDS MODULE ROWS (relay 2a item 5) */
+.arow { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-top: 1px solid var(--l-line); }
+.arow:first-of-type { border-top: 0; }
+.arow .d { flex: none; font-family: var(--l-mono); font-size: 11px; color: var(--l-mut); width: 52px; }
+.arow .y { flex: 1 1 auto; font-size: 13px; min-width: 0; color: #CFCFC9; }
+.arow .s { flex: none; font-family: var(--l-mono); font-size: 12px; font-weight: 700; color: var(--l-volt); }
+.arow .s.none { color: var(--l-mut); font-weight: 400; }

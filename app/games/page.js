@@ -187,6 +187,49 @@ function GamesPane({ v, leagues = [], signedIn = false }) {
         </div>
       )}
 
+      {/* THE LEADERBOARDS MODULE (relay 2a item 5) - five compact rows,
+          fixed order. 'Your room' is NOT here: no feature in this codebase
+          tracks a small friend group's per-member streak against a single
+          invite code (leagues are a coarser, different concept - members
+          and a name, no per-member streak/board count) - omitted rather
+          than mocked, per the item's own instruction. */}
+      {v.leaderboardRows && (
+        <div className="mod">
+          <div className="mod-head">
+            <h2 className="eyebrow">Leaderboards</h2>
+            <span className="pill">ranked play only</span>
+          </div>
+          {v.leaderboardRows.map((r) => (
+            <div className="arow" key={r.label}>
+              <span className="d">{r.label}</span>
+              <span className="y">{r.middle}</span>
+              <span className={`s${r.rank == null ? ' none' : ''}`}>{r.rank != null ? `#${r.rank}` : '-'}</span>
+            </div>
+          ))}
+          <a className="ghost" href="/games?pane=leaderboards">All boards &rarr;</a>
+        </div>
+      )}
+
+      {/* PRACTICE (relay 2a item 5) - the mock's evolved 'Mock drafts'
+          module: unranked, nothing here counts. Only real chips render
+          (see lib/games/read.js's practice field for what was left out and
+          why). */}
+      {v.practice && (
+        <section className="mod">
+          <div className="mod-head">
+            <h2 className="eyebrow">Practice</h2>
+            <span className="pill">unranked · nothing here counts</span>
+          </div>
+          <div className="row">
+            <span>
+              Full mock drafts against the same AI rooms The Draft uses. No clock,
+              graded on live ADP.
+            </span>
+          </div>
+          <a className="ghost" href={v.practice.href}>{v.practice.cta} &rarr;</a>
+        </section>
+      )}
+
       {/* YOUR LEAGUES - the door to the social spine. Lists the member's
           leagues; a signed-in reader with none gets the one-line pitch and
           the same route. Signed-out readers see nothing here - the lobby
