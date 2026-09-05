@@ -68,7 +68,7 @@ const restOf = (r) => (r ? String(r).split(' · ').slice(1).join(' · ') : '');
 const SAVE_DEBOUNCE_MS = 700;
 
 export default function WeeklyRoom({
-  contest, board, initialLineup = {}, locksAtLabel = null, signedIn = true, signinHref = '/signin',
+  contest, board, initialLineup = {}, signedIn = true, signinHref = '/signin',
 }) {
   const [lineup, setLineup] = useState(initialLineup ?? {});
   const [active, setActive] = useState('QB');
@@ -150,7 +150,11 @@ export default function WeeklyRoom({
     queue(next);
   }
 
-  const saveLabel = { clean: locksAtLabel ?? ' ', saving: 'Saving…', saved: 'Saved', error: 'Not saved' }[save];
+  // CLEAN CARRIES NO TEXT (relay 2a-polish-2 item d) - it used to repeat the
+  // lock time with no label of its own, and .hdr's own clock already carries
+  // that fact. min-height on .wk-save keeps the row from jumping when a real
+  // status (saving/saved/error) appears.
+  const saveLabel = { clean: '', saving: 'Saving…', saved: 'Saved', error: 'Not saved' }[save];
 
   return (
     <section className="mod mod--play">

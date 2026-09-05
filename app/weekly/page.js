@@ -349,7 +349,6 @@ export default async function WeeklyPage({ searchParams }) {
         contest={{ id: contest.id, locks_at: contest.locks_at, week: contest.week }}
         board={board}
         initialLineup={entry?.lineup ?? {}}
-        locksAtLabel={etStamp(contest.locks_at)}
         signedIn={userId != null}
         signinHref={shellSigninHref('/weekly', isShell)}
       />
