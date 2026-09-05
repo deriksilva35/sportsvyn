@@ -23,6 +23,7 @@ import { DRAFT_CONFIG, DRAFT_ROUNDS, nextDraftContest } from '@/lib/draft/contes
 import { tierClass } from '@/lib/daily/reveal';
 import SeatSelect from '@/components/draft/SeatSelect';
 import StandaloneDate from '@/components/StandaloneDate';
+import { DraftPreOpenLine } from '@/components/games/preOpenLine';
 import '../daily/daily.css';
 import './draft.css';
 
@@ -100,9 +101,7 @@ export default async function DraftPage({ searchParams }) {
         <section className="hero">
           <div className="hero-eyebrow">The Draft &middot; ranked</div>
           <div className="hero-q">Eight rounds.<br />No bench.</div>
-          <p className="hero-line">
-            Draft against the room &middot; <b>best ball</b> &middot; results Tuesday morning
-          </p>
+          <DraftPreOpenLine />
           <div className="wk-soon">
             {upcoming ? (
               <>

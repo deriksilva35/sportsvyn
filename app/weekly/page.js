@@ -31,6 +31,7 @@ import { SLOTS } from '@/lib/weekly/rules';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
 import { tierClass } from '@/lib/daily/reveal';
 import WeeklyRoom from '@/components/weekly/WeeklyRoom';
+import { WeeklyPreOpenLine } from '@/components/games/preOpenLine';
 import '../daily/daily.css';
 
 export const dynamic = 'force-dynamic';
@@ -86,10 +87,7 @@ function Pitch({ action }) {
     <section className="hero">
       <div className="hero-eyebrow">The Weekly &middot; same board for everyone</div>
       <div className="hero-q">Six slots.<br />No clock.</div>
-      <p className="hero-line">
-        One board of this week&rsquo;s actives &middot; edit until{' '}
-        <b>first kickoff</b> &middot; results Tuesday morning
-      </p>
+      <WeeklyPreOpenLine />
       {action}
     </section>
   );

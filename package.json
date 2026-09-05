@@ -27,6 +27,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@babel/preset-react": "^8.0.1",
     "@capacitor/cli": "^7.6.6",
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
