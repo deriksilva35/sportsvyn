@@ -219,3 +219,24 @@
   display: block; margin-top: 5px; font-family: var(--l-cond); font-weight: 600;
   font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--l-mut);
 }
+
+.hero {
+  border: 1px solid #2a3300; border-radius: 14px; margin-bottom: 10px;
+  padding: 15px 14px;
+  background: linear-gradient(160deg, var(--l-volt-dim, #1a2000), var(--l-ink2));
+}
+.hero .eb { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.hero .eb b {
+  font-family: var(--l-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--l-volt);
+}
+.hero .eb span { font-family: var(--l-mono); font-size: 11px; color: #CFCFC9; }
+.hero h2 { font-family: var(--l-disp); font-style: italic; font-weight: 900; font-size: 30px; letter-spacing: -.04em; line-height: 1; margin: 0; }
+.hero p { margin: 7px 0 0; font-size: 13px; color: #CFCFC9; line-height: 1.45; }
+.hero .btn { margin: 12px 0 0; width: 100%; }
+
+.btn {
+  display: block; text-align: center; text-decoration: none;
+  font-family: var(--l-disp); font-style: italic; font-weight: 900; font-size: 15px;
+  color: var(--l-ink); background: var(--l-volt); border-radius: 10px; padding: 11px;
+}

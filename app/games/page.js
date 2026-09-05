@@ -28,6 +28,7 @@ import { normalizePane } from '@/lib/games/lobby';
 import PaneTabs from '@/components/games/PaneTabs';
 import { Hook, MetaChips, Pulse } from '@/components/games/chrome';
 import SeasonBoard from '@/components/games/SeasonBoard';
+import StandaloneDate from '@/components/StandaloneDate';
 import { tierClass } from '@/lib/daily/reveal';
 import './games.css';
 
@@ -108,6 +109,34 @@ export default async function GamesPage({ searchParams }) {
   );
 }
 
+/**
+ * THE HERO (relay 2a item 3). Two shapes: the everyday one (a game with an
+ * unmet lock, tagline + locks-at + one button) and the all-done one (the
+ * Daily's own receipt, once every game today is entered).
+ */
+function Hero({ hero }) {
+  if (hero.allDone) {
+    return (
+      <div className="hero">
+        <div className="eb"><b>Every board is set</b></div>
+        <h2>{hero.score} pts<br />today.</h2>
+        <p>{hero.band ? `${hero.band}. ` : ''}The Daily reveals at midnight ET.</p>
+        <a className="btn" href={hero.href}>See your board</a>
+      </div>
+    );
+  }
+  return (
+    <div className="hero">
+      <div className="eb">
+        <b>{hero.eyebrowLeft}</b>
+        <span>locks <StandaloneDate iso={hero.locksAt} /></span>
+      </div>
+      <h2>{hero.tagline[0]}<br />{hero.tagline[1]}</h2>
+      <a className="btn" href={hero.href}>{hero.cta}</a>
+    </div>
+  );
+}
+
 function GamesPane({ v, leagues = [], signedIn = false }) {
   return (
     <>
@@ -124,6 +153,12 @@ function GamesPane({ v, leagues = [], signedIn = false }) {
           ))}
         </div>
       )}
+
+      {/* THE HERO (relay 2a item 3). null for a signed-out reader, or a
+          signed-in one with no unmet appointment-game lock right now -
+          the mock never designed a hero for either, so neither renders one
+          rather than inventing a state. */}
+      {v.hero && <Hero hero={v.hero} />}
 
       <div className="ggrid">
         {v.cards.map((c) => (
