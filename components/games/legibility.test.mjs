@@ -43,15 +43,20 @@ test('hyphens only, in hooks and in the hero copy', () => {
   assert.doesNotMatch(hero, /[‐-―−]/, 'hero copy carries a non-hyphen dash');
 });
 
-test('one grammar, both surfaces: lobby and Daily render through chrome', () => {
+test('chrome still owns Hook/MetaChips/Pulse; Daily still renders through it', () => {
+  // /games no longer does (relay 2a): the legibility pass's hook-and-chip
+  // card grid is gone from the lobby, replaced by the remock's "Today's
+  // boards" rows, which sell the game through the state line itself rather
+  // than a bolded hook sentence. chrome.js is not dead - /daily's own hero
+  // still uses Pulse - so the module and its exports stay, this assertion
+  // just stops claiming /games is a second consumer.
   const chrome = src('components/games/chrome.js');
   for (const name of ['export function Hook', 'export function MetaChips', 'export function Pulse']) {
     assert.ok(chrome.includes(name), `chrome owns ${name.split(' ').pop()}`);
   }
-  assert.match(src('app/games/page.js'), /from '@\/components\/games\/chrome'/);
   assert.match(src('app/daily/page.js'), /from '@\/components\/games\/chrome'/);
   // No hand-copied chip renderers: the class is written once, in chrome.
-  for (const rel of ['app/games/page.js', 'app/daily/page.js']) {
+  for (const rel of ['app/daily/page.js']) {
     assert.ok(!/className="gchip"[^-]/.test(src(rel).replace(/gchip gchip--/g, 'CHIPVARIANT')) || true);
   }
 });

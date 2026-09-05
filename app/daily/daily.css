@@ -357,10 +357,17 @@
 /* Off by default: outside a round, the global header is the header. */
 .daily-head { display: none; }
 
-.daily-shell:has(.mod--play) .gh { display: none; }
-.daily-shell:has(.mod--play) .daily-head { display: flex; }
+/* SCOPED TO .daily SPECIFICALLY (relay 2a-polish-2 item f), not any
+   .mod--play anywhere in the shell. The Weekly's builder (WeeklyRoom.js)
+   reuses .mod--play for the SAME pool/list styling this ruling's Daily
+   round uses, but the Weekly has no clock and was never meant to trip
+   "the clock owns this screen" - it was silently swapping in .daily-head
+   ("THE WEEKLY") and hiding the real chrome ("MOCK DRAFT") the moment its
+   builder rendered, the one page out of four with a different top bar. */
+.daily-shell:has(.daily .mod--play) .gh { display: none; }
+.daily-shell:has(.daily .mod--play) .daily-head { display: flex; }
 /* The pin measures the shell now that the shell is what fills the viewport. */
-.daily-shell:has(.mod--play) { height: 100dvh; min-height: 0; overflow: hidden; }
+.daily-shell:has(.daily .mod--play) { height: 100dvh; min-height: 0; overflow: hidden; }
 
 /* ============================ LEADERBOARDS ================================
  * Row grammar per v1.2 s2. The rank column is fixed and tabular so names start
@@ -545,3 +552,88 @@
 .dy-k { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 12px; color: var(--muted-dim, #5A5A56); text-transform: uppercase; flex: none; }
 .dyesterday .gpulse { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dy-more { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted, #8A8A85); flex: none; }
+
+/* ===========================================================================
+   RELAY 2a items 6-7 - the Weekly/Draft OPEN states, matching
+   docs/design/games-remock-v2.html. Class names are the mock's own; scoped
+   to .weekly, the shared token wrapper both /weekly and /draft render into.
+   =========================================================================== */
+.weekly .hdr { display: flex; align-items: baseline; justify-content: space-between; padding: 0 0 4px; }
+.weekly .hdr .ed {
+  font-family: var(--d-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--d-mut);
+}
+/* 2a-polish-2 item b - .clock (this file's OWN Daily countdown, line ~202)
+   sets italic/900 and this selector never overrode either, so the lock
+   clock fell through to the countdown's face. Both stated explicitly here. */
+.weekly .hdr .clock { font-family: var(--d-mono); font-style: normal; font-weight: 400; font-size: 12px; color: var(--d-volt); }
+
+.weekly .yr { padding: 2px 0 6px; }
+.weekly .yr h1 { font-family: var(--d-disp); font-style: italic; font-weight: 900; font-size: 40px; letter-spacing: -.05em; line-height: .92; margin: 0; }
+/* 2a-polish-2 item a - matches the mock's .yr .sub exactly: 400 weight,
+   paper-dim, 13px. This was rendering bold and near-white (#CFCFC9,
+   inherited weight), louder than the headline above it. */
+.weekly .yr .sub { margin-top: 5px; font-size: 13px; font-weight: 400; color: #B8B8B3; line-height: 1.45; font-family: var(--d-disp); }
+
+.weekly .warn { margin: 8px 0 0; font-family: var(--d-mono); font-size: 11px; color: var(--d-terra); line-height: 1.5; }
+
+.weekly .prog { padding: 10px 0 4px; }
+.weekly .prog .rrow { display: flex; gap: 3px; }
+.weekly .pip {
+  flex: 1; min-width: 0; height: 52px; border: 1px solid var(--d-line); border-radius: 8px;
+  background: var(--d-ink-2); display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px; padding: 0 1px;
+}
+.weekly .pip .em { font-size: 17px; line-height: 1; filter: grayscale(1) opacity(.5); }
+.weekly .pip .dot {
+  width: 22px; height: 22px; flex: none; border-radius: 99px; background: var(--d-ink);
+  display: flex; align-items: center; justify-content: center; font-family: var(--d-cond);
+  font-weight: 700; font-size: 9px; color: var(--d-paper); line-height: 1;
+}
+.weekly .pip.full { background: var(--d-volt); border-color: var(--d-volt); }
+.weekly .pip.full .em { filter: none; }
+.weekly .pip.full .dot { background: var(--d-ink); color: #fff; }
+.weekly .prog .cap { margin-top: 7px; display: flex; justify-content: space-between; font-family: var(--d-mono); font-size: 10px; color: var(--d-mut); }
+
+.weekly .needline { padding: 10px 0 2px; font-size: 13px; color: #CFCFC9; line-height: 1.4; font-family: var(--d-disp); }
+.weekly .needline b { color: var(--d-volt); font-weight: 600; }
+
+.weekly .secl { padding: 14px 0 7px; display: flex; align-items: baseline; justify-content: space-between; }
+.weekly .secl b { font-family: var(--d-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--d-volt); }
+.weekly .secl span { font-family: var(--d-mono); font-size: 10px; color: var(--d-mut); }
+
+.weekly .list { border: 1px solid var(--d-line); border-radius: 13px; background: var(--d-ink-2); overflow: hidden; width: 100%; }
+.weekly .pr { display: flex; align-items: center; gap: 9px; padding: 9px 14px; border-top: 1px solid var(--d-line); width: 100%; }
+.weekly .list .pr:first-child { border-top: 0; }
+.weekly .pr .pos { flex: none; width: 60px; font-family: var(--d-cond); font-weight: 600; font-size: 11px; letter-spacing: .04em; color: var(--d-mut); }
+.weekly .pr .nm { flex: 1 1 auto; min-width: 0; text-align: left; }
+.weekly .pr .nm b { display: block; font-size: 14px; font-weight: 600; font-family: var(--d-disp); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.weekly .pr .nm small { display: block; margin-top: 2px; font-family: var(--d-mono); font-size: 10px; color: var(--d-mut); }
+.weekly .pr .tk { flex: none; font-family: var(--d-cond); font-weight: 600; font-size: 9px; letter-spacing: .10em; color: var(--d-volt); border: 1px solid var(--d-volt); border-radius: 99px; padding: 4px 9px; }
+.weekly .pr .tk.quiet { color: var(--d-mut); border-color: var(--d-line); }
+.weekly .pr.empty .nm b { color: var(--d-mut); font-weight: 400; }
+
+.weekly .search {
+  margin: 8px 0 0; display: flex; align-items: center; gap: 8px; border: 1px solid var(--d-line);
+  border-radius: 9px; padding: 9px 11px; font-family: var(--d-mono); font-size: 11px; color: var(--d-mut);
+}
+
+.weekly .mathline {
+  margin: 0 0 8px; padding: 8px 12px; border: 1px dashed var(--d-line); border-radius: 11px;
+  font-family: var(--d-mono); font-size: 10px; color: var(--d-mut); line-height: 1.5;
+}
+.weekly .perf { margin: 0 0 8px; border: 1px solid var(--d-line); border-radius: 11px; background: var(--d-ink-2); padding: 9px 12px; }
+.weekly .perf b { font-family: var(--d-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--d-jade); display: block; margin-bottom: 5px; }
+.weekly .perf p { font-family: var(--d-mono); font-size: 10px; color: var(--d-mut); line-height: 1.5; margin: 0; }
+
+/* EXACTLY SIX PER ROW (relay 2a-polish-2 item e) - a grid, not a flex-wrap
+   that fits as many as the row's width allows. 12 seats at flex:1 1 auto
+   wrapped unevenly (7 then 5) depending on rendered width; a fixed
+   6-column grid gives two even rows every time, any seat count. */
+.weekly .opts { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.weekly .opt {
+  text-align: center; border: 1px solid var(--d-line);
+  border-radius: 9px; background: var(--d-ink); padding: 10px 6px; font-family: var(--d-cond);
+  font-weight: 600; font-size: 12px; color: #CFCFC9;
+}
+.weekly .opt.on { border-color: var(--d-volt); color: var(--d-volt); background: rgba(212, 255, 0, .08); }

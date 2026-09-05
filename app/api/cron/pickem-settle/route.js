@@ -1,5 +1,5 @@
 /**
- * /api/cron/pickem-settle — settle every due Pick 'em board.
+ * /api/cron/pickem-settle — settle every due Pick'em board.
  *
  * SAT-SHAPED, GATE-DECIDED. A board's games run Thursday night through late
  * Saturday (Sunday in UTC); CFBD flips `completed` within the gridiron-games

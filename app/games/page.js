@@ -22,12 +22,13 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
+import { shellSigninHref } from '@/lib/shell/signinHref';
 import { gamesLobby } from '@/lib/games/read';
 import { myLeagues } from '@/lib/leagues/core';
 import { normalizePane } from '@/lib/games/lobby';
 import PaneTabs from '@/components/games/PaneTabs';
-import { Hook, MetaChips, Pulse } from '@/components/games/chrome';
 import SeasonBoard from '@/components/games/SeasonBoard';
+import StandaloneDate from '@/components/StandaloneDate';
 import { tierClass } from '@/lib/daily/reveal';
 import './games.css';
 
@@ -50,9 +51,10 @@ export default async function GamesPage({ searchParams }) {
   const pane = normalizePane(sp.pane);
   const session = await auth();
   const userId = session?.user?.id ?? null;
+  const isShell = await resolveShellMode();
   // GAMES WAS THE ODD ONE: no signed-out branch at all, so a stranger in the
   // container got the lobby - four cards, none of them playable. Same rule.
-  requireSignInInShell({ isShell: await resolveShellMode(), userId, dest: '/games' });
+  requireSignInInShell({ isShell, userId, dest: '/games' });
   const v = await gamesLobby(userId).catch(() => null);
   // YOUR LEAGUES (v0.2 door): the member's leagues on the lobby, or the
   // create/join CTA when none. Caught to [] like every lobby read.
@@ -63,10 +65,20 @@ export default async function GamesPage({ searchParams }) {
       <GlobalHeaderServer activeNav="games" />
       <main className="lob" data-surface="ink">
 
-        <header className="lob-head">
-          <h1 className="lob-title">Game day, every day.</h1>
-          <p className="lob-sub">One account. One handle. Every board.</p>
-        </header>
+        {pane === 'games' ? (
+          // THE LOBBY'S OWN HEADER (relay 2a item 2, mock's .hmhdr) - only this
+          // pane, matching the mock's own scoping. The other panes keep the
+          // shared eyebrow below, untouched.
+          <header className="hmhdr">
+            <h1>{v?.header?.title ?? 'Games'}</h1>
+            <div className="sub">{v?.header?.today}{v?.header?.week != null && <> &middot; Week {v.header.week}</>} &middot; {v?.header?.sub}</div>
+          </header>
+        ) : (
+          <header className="lob-head">
+            <h1 className="lob-title">Game day, every day.</h1>
+            <p className="lob-sub">One account. One handle. Every board.</p>
+          </header>
+        )}
 
         {/* A CLIENT SWITCHER OVER SERVER PANES. The panes remain URL params and
             remain server-rendered - that is what makes each one's payload
@@ -82,7 +94,14 @@ export default async function GamesPage({ searchParams }) {
           </section>
         )}
 
-        {v && pane === 'games' && <GamesPane v={v} leagues={leagues} signedIn={userId != null} />}
+        {v && pane === 'games' && (
+          <GamesPane
+            v={v}
+            leagues={leagues}
+            signedIn={userId != null}
+            signinHref={shellSigninHref('/games', isShell)}
+          />
+        )}
         {v && pane === 'leaderboards' && <BoardsPane v={v} userId={userId} />}
         {v && pane === 'answer' && <AnswerPane v={v} />}
         {v && pane === 'history' && <HistoryPane v={v} />}
@@ -98,64 +117,132 @@ export default async function GamesPage({ searchParams }) {
   );
 }
 
-function GamesPane({ v, leagues = [], signedIn = false }) {
+/**
+ * THE HERO (relay 2a item 3, signed-out parity in 2a-polish item 4). Two
+ * shapes: the everyday one (a game with an unmet lock, tagline + locks-at +
+ * one button) and the all-done one (the Daily's own receipt, once every
+ * game today is entered - inherently signed-in, so `signedIn` never gates
+ * that branch). Signed out on the everyday shape, the button reads 'Sign in
+ * to play' and goes to sign-in with a return URL rather than the game's own
+ * page - the hero names an open game a stranger cannot yet enter.
+ */
+function Hero({ hero, signedIn = true, signinHref = '/signin' }) {
+  if (hero.allDone) {
+    return (
+      <div className="hero">
+        <div className="eb"><b>Every board is set</b></div>
+        <h2>{hero.score} pts<br />today.</h2>
+        <p>{hero.band ? `${hero.band}. ` : ''}The Daily reveals at midnight ET.</p>
+        <a className="btn" href={hero.href}>See your board</a>
+      </div>
+    );
+  }
+  return (
+    <div className="hero">
+      <div className="eb">
+        <b>{hero.eyebrowLeft}</b>
+        <span>locks <StandaloneDate iso={hero.locksAt} /></span>
+      </div>
+      <h2>{hero.tagline[0]}<br />{hero.tagline[1]}</h2>
+      <a className="btn" href={signedIn ? hero.href : signinHref}>
+        {signedIn ? hero.cta : 'Sign in to play'}
+      </a>
+    </div>
+  );
+}
+
+function GamesPane({ v, leagues = [], signedIn = false, signinHref = '/signin' }) {
   return (
     <>
-      <div className="ggrid">
-        {v.cards.map((c) => (
-          <a
-            key={c.key}
-            className={`gcard${c.state !== 'ghost' ? ' gcard--live' : ''}`}
-            href={c.state === 'ghost' ? '/games' : c.href}
-            aria-disabled={c.state === 'ghost' ? 'true' : undefined}
-          >
-            <span className="gnum" aria-hidden="true">{c.num}</span>
-            <span className="gtoprow">
-              <span className="gname">{c.name}</span>
-              {/* Status chip: volt for the playable game, jade NEW for
-                  Pick 'em pre-first-settle. Flip-on-open law untouched -
-                  the chip reads state, never the clock. */}
-              {c.key === 'daily' && c.state !== 'ghost' && <span className="gchip gchip--hot">Play now</span>}
-              {c.key === 'pickem' && (
-                <span className="gchip gchip--new">{c.state === 'ghost' ? 'New · opens Aug 25' : 'New'}</span>
-              )}
-            </span>
-            <Hook text={c.hook} />
-            <MetaChips chips={c.chips} />
-            <span className="gcardfoot">
-              <Pulse>
-                {c.key === 'daily' && (
-                  <><b>{c.pulse?.playing ?? 0} playing</b>{c.pulse?.perfect != null && <> &middot; yesterday&rsquo;s perfect {c.pulse.perfect}</>}</>
-                )}
-                {c.key === 'pickem' && (c.pulse
-                  ? <>Board {c.pulse.boardNumber} &middot; <b>{c.pulse.games} games</b>{c.pulse.next && <> &middot; locks {c.pulse.next}</>}</>
-                  : <>New board coming</>)}
-                {c.key === 'weekly' && (c.state === 'ghost'
-                  ? <>Season opens with <b>Week 1</b></>
-                  : (c.closesLabel ?? ' '))}
-                {c.key === 'draft' && <>One ranked entry per week</>}
-              </Pulse>
-              <span className={`gbtn${c.state === 'ghost' ? ' gbtn--ghost' : ''}`}>
-                {c.state === 'ghost' ? c.opensLabel : (c.cta ?? 'Play')}
-              </span>
-            </span>
-          </a>
-        ))}
-      </div>
+      {/* THE STAT STRIP (relay 2a item 2). v.strip is a fixed 4-cell array,
+          already the right facts for signed-in vs signed-out - the pane
+          never chooses between them, it only renders what read.js decided. */}
+      {v.strip && (
+        <div className="strip">
+          {v.strip.map((cell, i) => (
+            <div key={i}>
+              <b className={cell.volt ? 'v' : undefined}>{cell.value ?? '-'}</b>
+              <small>{cell.label}</small>
+            </div>
+          ))}
+        </div>
+      )}
 
-      <section className="mod">
-        <div className="mod-head">
-          <h2 className="eyebrow">Mock drafts</h2>
-          <span className="pill">Unranked · unlimited</span>
+      {/* THE HERO (relay 2a item 3). null for a signed-out reader, or a
+          signed-in one with no unmet appointment-game lock right now -
+          the mock never designed a hero for either, so neither renders one
+          rather than inventing a state. */}
+      {v.hero && <Hero hero={v.hero} signedIn={signedIn} signinHref={signinHref} />}
+
+      {/* TODAY'S BOARDS (relay 2a item 4) - four rows, fixed GAME_ORDER,
+          replacing the old 2x2 .ggrid entirely: the mock never shows that
+          grid, and this screen builds to the mock, not to memory. */}
+      {v.boardRows?.length > 0 && (
+        <div className="mod">
+          <div className="mod-head">
+            <h2 className="eyebrow">Today&rsquo;s boards</h2>
+            <span className="pill">one handle, every board</span>
+          </div>
+          {v.boardRows.map((r) => (
+            <a className="grow" key={r.key} href={r.href}>
+              <div className={`gl${r.tile ? ` ${r.tile}` : ''}`}>{r.glyph}</div>
+              <div className="tx">
+                <b>{r.name}</b>
+                <small>
+                  {r.line1}
+                  <br />
+                  {r.locksAt
+                    ? <>{r.locksPre}<em><StandaloneDate iso={r.locksAt} /></em></>
+                    : r.line2}
+                </small>
+              </div>
+              {r.pill && <span className={`st${r.pill.tone === 'volt' ? ' on' : r.pill.tone === 'jade' ? ' done' : ''}`}>{r.pill.label}</span>}
+            </a>
+          ))}
         </div>
-        <div className="row">
-          <span>
-            Full mock drafts against the same AI rooms The Draft uses. No clock,
-            graded on live ADP.
-          </span>
+      )}
+
+      {/* THE LEADERBOARDS MODULE (relay 2a item 5) - five compact rows,
+          fixed order. 'Your room' is NOT here: no feature in this codebase
+          tracks a small friend group's per-member streak against a single
+          invite code (leagues are a coarser, different concept - members
+          and a name, no per-member streak/board count) - omitted rather
+          than mocked, per the item's own instruction. */}
+      {v.leaderboardRows && (
+        <div className="mod">
+          <div className="mod-head">
+            <h2 className="eyebrow">Leaderboards</h2>
+            <span className="pill">ranked play only</span>
+          </div>
+          {v.leaderboardRows.map((r) => (
+            <div className="arow" key={r.label}>
+              <span className="d">{r.label}</span>
+              <span className="y">{r.middle}</span>
+              <span className={`s${r.rank == null ? ' none' : ''}`}>{r.rank != null ? `#${r.rank}` : '-'}</span>
+            </div>
+          ))}
+          <a className="ghost" href="/games?pane=leaderboards">All boards &rarr;</a>
         </div>
-        <a className="ghost" href="/sim">Start a mock &rarr;</a>
-      </section>
+      )}
+
+      {/* PRACTICE (relay 2a item 5) - the mock's evolved 'Mock drafts'
+          module: unranked, nothing here counts. Only real chips render
+          (see lib/games/read.js's practice field for what was left out and
+          why). */}
+      {v.practice && (
+        <section className="mod">
+          <div className="mod-head">
+            <h2 className="eyebrow">Practice</h2>
+            <span className="pill">unranked · nothing here counts</span>
+          </div>
+          <div className="pchips">
+            {v.practice.chips.map((c) => (
+              <span key={c.label} className={`pchip${c.on ? ' on' : ''}`}>{c.label}</span>
+            ))}
+          </div>
+          <a className="ghost" href={v.practice.href}>{v.practice.cta} &rarr;</a>
+        </section>
+      )}
 
       {/* YOUR LEAGUES - the door to the social spine. Lists the member's
           leagues; a signed-in reader with none gets the one-line pitch and
@@ -221,7 +308,7 @@ function BoardsPane({ v, userId = null }) {
             <div>
               {b.table.top.map((r) => (
                 <div className="row" key={r.userId}>
-                  <span className="lb-left"><span className="rank">{r.rank ?? '—'}</span>{r.name}</span>
+                  <span className="lb-left"><span className="rank">{r.rank ?? '-'}</span>{r.name}</span>
                   <span className="v">
                     {r.note ?? <>{r.pct}% <span className="muted">({r.correct}/{r.played})</span></>}
                   </span>
@@ -229,7 +316,7 @@ function BoardsPane({ v, userId = null }) {
               ))}
               {b.table.self && (
                 <div className="row row--me">
-                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '—'}</span>{b.table.self.name}</span>
+                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '-'}</span>{b.table.self.name}</span>
                   <span className="v">
                     {b.table.self.note ?? <>{b.table.self.pct}% <span className="muted">({b.table.self.correct}/{b.table.self.played})</span></>}
                   </span>
@@ -271,7 +358,7 @@ function AnswerPane({ v }) {
     <section className="mod">
       <div className="mod-head">
         <h2 className="eyebrow">
-          Latest answer{y.edition ? ` — Ed. ${y.edition}` : ''} · {y.date}
+          Latest answer{y.edition ? ` - Ed. ${y.edition}` : ''} · {y.date}
         </h2>
       </div>
       <div className="ans">{y.season} <span className="muted">· Week {y.week}</span></div>
@@ -324,7 +411,7 @@ function YourStats({ v }) {
     <section className="mod">
       <div className="mod-head">
         <h2 className="eyebrow">
-          Your record{v.season?.handle ? ` — ${v.season.handle}` : ''}
+          Your record{v.season?.handle ? ` - ${v.season.handle}` : ''}
         </h2>
         {v.seasonKey && <span className="pill">{v.seasonKey}</span>}
       </div>
@@ -333,7 +420,7 @@ function YourStats({ v }) {
         <div className="stat"><div className="eyebrow">Played</div><div className="n">{s.played}/{s.playable}</div></div>
         <div className="stat">
           <div className="eyebrow">Avg of perfect</div>
-          <div className="n">{s.avgPct != null ? `${s.avgPct}%` : <span className="muted">&mdash;</span>}</div>
+          <div className="n">{s.avgPct != null ? `${s.avgPct}%` : <span className="muted">-</span>}</div>
         </div>
         <div className="stat"><div className="eyebrow">Season pts</div><div className="n">{v.season?.points ?? 0}</div></div>
         <div className="stat"><div className="eyebrow">Streak</div><div className="n">{s.streak}</div></div>
@@ -345,7 +432,7 @@ function YourStats({ v }) {
           <span className="v">
             {s.best
               ? <>{s.best.score}{s.best.edition && <span className="muted"> · Ed. {s.best.edition}</span>}</>
-              : <span className="muted">&mdash;</span>}
+              : <span className="muted">-</span>}
           </span>
         </div>
         <div className="row">
@@ -397,7 +484,7 @@ function HistoryPane({ v }) {
               {/* A sealed row proves a day EXISTS without saying anything
                   about it. No season, no week, no score - that is the whole
                   point of the row. */}
-              <span className="muted">&mdash; sealed &mdash;</span>
+              <span className="muted">- sealed -</span>
               <span className="v muted">open</span>
             </>
           ) : (
@@ -407,7 +494,7 @@ function HistoryPane({ v }) {
                   free width. The id block (edition + era) stacks cleanly; the
                   era line never breaks mid-token. */}
               <span className="hist-when">{h.season} · Wk {h.week}</span>
-              <span className="v hist-win">{h.top ? `${h.top.name} ${h.top.score}` : '—'}</span>
+              <span className="v hist-win">{h.top ? `${h.top.name} ${h.top.score}` : '-'}</span>
               <span className="muted">{h.perfect}</span>
               {h.you !== undefined && (
                 <span className="hist-you">
@@ -416,7 +503,7 @@ function HistoryPane({ v }) {
                       {h.you.score}
                       {h.you.tier && <span className={`badge ${tierClass(h.you.tier)}`}>{h.you.tier}</span>}
                     </>
-                  ) : <span className="muted">&mdash;</span>}
+                  ) : <span className="muted">-</span>}
                 </span>
               )}
             </>

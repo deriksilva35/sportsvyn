@@ -9,6 +9,7 @@
 // weekday - the same class of defect as the Week 0 label.
 
 import { lockLabel } from '@/lib/pickem/read';
+import { GAME_NAMES } from '@/lib/games/lobby';
 
 function Card({ eyebrow, isNew, title, sub, cta, ctaClass = '', href, hot = false }) {
   return (
@@ -52,7 +53,7 @@ export default function GamesBand({ daily, yesterday, pickem, weekly, draft }) {
             ctaClass="play" href="/daily" />
         ) : null}
         {pickem ? (
-          <Card eyebrow={`Board ${pickem.boardNumber}`} isNew={!pickem.entered} title="Pick 'em"
+          <Card eyebrow={`Board ${pickem.boardNumber}`} isNew={!pickem.entered} title={GAME_NAMES.pickem}
             sub={pickemSub}
             cta={`${pickem.picked}/${pickem.total} picked · ${pickem.entered ? 'Finish board' : 'Make picks'}`}
             href="/pickem" />

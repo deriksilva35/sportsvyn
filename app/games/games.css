@@ -90,6 +90,12 @@
   border: 1px solid var(--l-line); background: var(--l-ink3); border-radius: 99px;
   padding: 4px 11px; color: var(--l-mut); white-space: nowrap;
 }
+.pchips { display: flex; flex-wrap: wrap; gap: 5px; }
+.pchip {
+  font-family: var(--l-mono); font-size: 10px; border: 1px solid var(--l-line);
+  border-radius: 99px; padding: 4px 9px; color: var(--l-mut);
+}
+.pchip.on { border-color: var(--l-volt); color: var(--l-volt); }
 .lob .row {
   display: flex; justify-content: space-between; align-items: center; gap: 10px;
   padding: 7px 0; border-bottom: 1px solid var(--l-line);
@@ -189,3 +195,84 @@
    name yields only when the space is genuinely gone. */
 .lob .lb-left { flex: 1 1 auto; }
 .lob .lb-left > :nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===========================================================================
+   RELAY 2a - the lobby rebuild, matching docs/design/games-remock-v2.html.
+   Class names are the mock's own (.hmhdr, .strip, .hero, .grow, .arow, ...) -
+   scoped to /games' own stylesheet, so nothing here collides with the same
+   names used by other pages' own CSS files.
+   =========================================================================== */
+
+.hmhdr { padding: 4px 2px 14px; }
+.hmhdr h1 {
+  font-family: var(--l-disp); font-style: italic; font-weight: 900;
+  font-size: 34px; letter-spacing: -.04em; line-height: 1.02; margin: 0;
+}
+.hmhdr .sub {
+  margin-top: 6px; font-family: var(--l-cond); font-weight: 600;
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--l-mut);
+}
+
+.strip {
+  margin: 0 0 14px; display: grid; grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--l-line); border-radius: 13px; background: var(--l-ink2); overflow: hidden;
+}
+.strip div { padding: 11px 4px; text-align: center; border-left: 1px solid var(--l-line); }
+.strip div:first-child { border-left: 0; }
+.strip b { display: block; font-family: var(--l-mono); font-weight: 700; font-size: 18px; line-height: 1; color: var(--l-paper); }
+.strip b.v { color: var(--l-volt); }
+.strip small {
+  display: block; margin-top: 5px; font-family: var(--l-cond); font-weight: 600;
+  font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--l-mut);
+}
+
+.hero {
+  border: 1px solid #2a3300; border-radius: 14px; margin-bottom: 10px;
+  padding: 15px 14px;
+  background: linear-gradient(160deg, var(--l-volt-dim, #1a2000), var(--l-ink2));
+}
+.hero .eb { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.hero .eb b {
+  font-family: var(--l-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--l-volt);
+}
+.hero .eb span { font-family: var(--l-mono); font-size: 11px; color: #CFCFC9; }
+.hero h2 { font-family: var(--l-disp); font-style: italic; font-weight: 900; font-size: 30px; letter-spacing: -.04em; line-height: 1; margin: 0; }
+.hero p { margin: 7px 0 0; font-size: 13px; color: #CFCFC9; line-height: 1.45; }
+.hero .btn { margin: 12px 0 0; width: 100%; }
+
+.btn {
+  display: block; text-align: center; text-decoration: none;
+  font-family: var(--l-disp); font-style: italic; font-weight: 900; font-size: 15px;
+  color: var(--l-ink); background: var(--l-volt); border-radius: 10px; padding: 11px;
+}
+
+/* TODAY'S BOARDS ROWS (relay 2a item 4) */
+.grow { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-top: 1px solid var(--l-line); text-decoration: none; color: inherit; }
+.grow:first-of-type { border-top: 0; }
+.grow .gl {
+  flex: none; width: 40px; height: 40px; border-radius: 10px;
+  background: var(--l-ink); border: 1px solid var(--l-line);
+  display: flex; align-items: center; justify-content: center; font-size: 19px;
+}
+.grow .gl.on { border-color: var(--l-volt); background: var(--l-volt-dim, #1a2000); }
+.grow .gl.done { border-color: var(--l-jade); }
+.grow .tx { flex: 1 1 auto; min-width: 0; }
+.grow .tx b { display: block; font-family: var(--l-disp); font-style: italic; font-weight: 900; font-size: 17px; letter-spacing: -.03em; line-height: 1; }
+.grow .tx small { display: block; margin-top: 4px; font-family: var(--l-mono); font-size: 10px; color: var(--l-mut); line-height: 1.45; }
+.grow .tx small em { font-style: normal; color: #CFCFC9; }
+.grow .st {
+  flex: none; font-family: var(--l-cond); font-weight: 600; font-size: 9px;
+  letter-spacing: .10em; text-transform: uppercase; border: 1px solid var(--l-line);
+  border-radius: 99px; padding: 4px 9px; color: var(--l-mut);
+}
+.grow .st.on { color: var(--l-ink); background: var(--l-volt); border-color: var(--l-volt); }
+.grow .st.done { color: var(--l-jade); border-color: var(--l-jade); }
+
+/* LEADERBOARDS MODULE ROWS (relay 2a item 5) */
+.arow { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-top: 1px solid var(--l-line); }
+.arow:first-of-type { border-top: 0; }
+.arow .d { flex: none; font-family: var(--l-mono); font-size: 11px; color: var(--l-mut); width: 52px; }
+.arow .y { flex: 1 1 auto; font-size: 13px; min-width: 0; color: #CFCFC9; }
+.arow .s { flex: none; font-family: var(--l-mono); font-size: 12px; font-weight: 700; color: var(--l-volt); }
+.arow .s.none { color: var(--l-mut); font-weight: 400; }

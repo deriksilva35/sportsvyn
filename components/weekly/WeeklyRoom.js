@@ -4,14 +4,16 @@
  * components/weekly/WeeklyRoom.js - the Weekly's builder.
  *
  * THIS IS THE DAILY'S DRAFT UI WITH THE CLOCK REMOVED AND SAVE-ON-CHANGE ADDED.
- * Same slots bar, same position tabs, same PPG pool rows, same pick and clear
- * behaviour, same CSS classes - the scope law for this build was ADAPT, DON'T
- * CONSTRUCT, so anything below that differs from components/daily/DailyRoom.js
- * has to say why. There are exactly three differences and each is annotated:
+ * Same PPG pool rows, same pick and clear behaviour - the scope law for this
+ * build was ADAPT, DON'T CONSTRUCT, so anything below that differs from
+ * components/daily/DailyRoom.js has to say why. There are exactly four
+ * differences and each is annotated:
  *
  *   1. NO CLOCK, A DEADLINE. The Daily's hero instrument is a 3:00 countdown
  *      the round is built around. A deadline days out is not an instrument -
  *      it is a date. It reads as a line, not a bar, and it does not turn red.
+ *      (The deadline itself now lives one level up, in app/weekly/page.js's
+ *      own .hdr - relay 2a item 6 - so this component owns no clock at all.)
  *   2. SAVE ON CHANGE, NO LOCK BUTTON. The Daily has one irreversible submit;
  *      the Weekly has no submit at all. Whatever is saved when the first
  *      kickoff arrives is the entry, so a "lock it in" button would be a lie - it
@@ -19,17 +21,32 @@
  *   3. NO AUTO-ADVANCE PAST A FULL LINEUP. Auto-advance exists to save taps in
  *      a sprint. Here it still moves to the next EMPTY slot, but a builder
  *      with all six filled stays where it is rather than cycling.
+ *   4. SIX ROWS, NOT A TAB BAR (relay 2a item 6). The Daily's slot bar shows
+ *      six small buttons and only ever renders the ACTIVE one's pool below;
+ *      the Weekly's mock shows all six as full rows (name, or "Pick a
+ *      {slot}", with a Take/Change pill) at once. Tapping a row still just
+ *      calls setActive(s) - the exact same selection the pool already
+ *      responds to - so pick()/clear()/queue()/flush() are byte-identical.
  *
  * NOTHING HERE IS LOAD-BEARING FOR FAIRNESS. The server re-reads locks_at on
- * every save and refuses a late one; this countdown is a courtesy.
+ * every save and refuses a late one.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { SLOTS } from '@/lib/weekly/rules';
 import { nextOpenSlot } from '@/lib/daily/play';
-import { timeToLock, poolRows } from '@/lib/weekly/view';
+import { poolRows } from '@/lib/weekly/view';
 
 const SLOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLEX', FLEX2: 'FLEX' };
+// EMPTY-SLOT COPY IS ITS OWN MAP (relay 2a-polish-2 item c), not a
+// lowercased template - QB/RB/WR/TE are read as letters and stay
+// uppercase ("Pick an RB", the article by sound, not spelling), while
+// "flex" is a spoken word and stays lowercase.
+const EMPTY_SLOT_COPY = {
+  QB: 'Pick a QB', RB: 'Pick an RB', WR: 'Pick a WR', TE: 'Pick a TE',
+  FLEX: 'Pick a flex', FLEX2: 'Pick a flex',
+};
 const POOL_LABEL = {
   QB: 'Quarterbacks', RB: 'Running backs', WR: 'Receivers', TE: 'Tight ends',
   FLEX: 'Flex - RB / WR / TE', FLEX2: 'Flex - RB / WR / TE',
@@ -50,33 +67,18 @@ const restOf = (r) => (r ? String(r).split(' · ').slice(1).join(' · ') : '');
 // because it is the only one that reflects the finished lineup.
 const SAVE_DEBOUNCE_MS = 700;
 
-function deadlineLine(t) {
-  if (!t || t.locked) return 'Locked';
-  if (t.days >= 1) return `${t.days}d ${t.hours}h to lock`;
-  if (t.hours >= 1) return `${t.hours}h ${t.mins}m to lock`;
-  return `${t.mins}m to lock`;
-}
-
-export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAtLabel = null }) {
+export default function WeeklyRoom({
+  contest, board, initialLineup = {}, signedIn = true, signinHref = '/signin',
+}) {
   const [lineup, setLineup] = useState(initialLineup ?? {});
   const [active, setActive] = useState('QB');
   const [save, setSave] = useState('clean');   // clean | saving | saved | error
   const [locked, setLocked] = useState(false);
   const [err, setErr] = useState(null);
   const [query, setQuery] = useState('');
-  const [left, setLeft] = useState(() => timeToLock(contest?.locks_at));
+  const router = useRouter();
   const timer = useRef(null);
   const pending = useRef(null);
-
-  // ---- the deadline --------------------------------------------------------
-  // One tick a second is plenty for a countdown measured in days, and unlike
-  // the Daily's 250ms bar there is nothing here that animates between seconds.
-  useEffect(() => {
-    const tick = () => setLeft(timeToLock(contest?.locks_at));
-    tick();
-    const iv = setInterval(tick, 1000);
-    return () => clearInterval(iv);
-  }, [contest?.locks_at]);
 
   const flush = useCallback(async (payload) => {
     setSave('saving'); setErr(null);
@@ -118,7 +120,6 @@ export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAt
   }, []);
 
   const picked = useMemo(() => new Set(Object.values(lineup).filter(Boolean)), [lineup]);
-  const filledCount = SLOTS.filter((s) => lineup[s] != null).length;
 
   // Memoised on the active slot AND the query: re-filtering and re-sorting
   // 1,269 rows on every change of state - and there is one on every pick and
@@ -126,6 +127,9 @@ export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAt
   const rows = useMemo(() => poolRows(board, active, query), [board, active, query]);
 
   function pick(id) {
+    // EVERY TAKE ROUTES TO SIGN-IN, SIGNED OUT (2a-polish item 1) - a pick
+    // this reader has no session to save is not a dead end, it is the door.
+    if (!signedIn) { router.push(signinHref); return; }
     if (locked) return;
     const next = { ...lineup, [active]: id };
     setLineup(next);
@@ -146,41 +150,43 @@ export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAt
     queue(next);
   }
 
-  const saveLabel = { clean: locksAtLabel ?? ' ', saving: 'Saving…', saved: 'Saved', error: 'Not saved' }[save];
+  // CLEAN CARRIES NO TEXT (relay 2a-polish-2 item d) - it used to repeat the
+  // lock time with no label of its own, and .hdr's own clock already carries
+  // that fact. min-height on .wk-save keeps the row from jumping when a real
+  // status (saving/saved/error) appears.
+  const saveLabel = { clean: '', saving: 'Saving…', saved: 'Saved', error: 'Not saved' }[save];
 
   return (
     <section className="mod mod--play">
       <div className="play-head">
 
-        {/* Difference 1: a deadline line where the Daily has its clock. Same
-            slot in the layout, same pinned position, no bar and no red. */}
-        <div className="wk-deadline">
-          <div className="wk-deadline-row">
-            <div className="wk-when">{deadlineLine(left)}</div>
-            <div className="clock-note">
-              {filledCount} of 6 filled<br />PPR · drop worst
-            </div>
-          </div>
-          <div className={`wk-save wk-save--${save}`}>{saveLabel}</div>
-        </div>
-
-        <div className="slots">
+        {/* THE SIX-ROW LIST (relay 2a item 6, mock's .secl + .list/.pr) -
+            replaces the old horizontal .slots tab strip. Every row is
+            always visible (unlike a tab bar, which only ever showed the
+            active one); tapping a row still just calls setActive(s), the
+            exact same selection the pool below already responds to. Pick,
+            clear, save and the debounce are all untouched. */}
+        <div className="secl"><b>Your six</b><span>tap a slot to change it</span></div>
+        <div className="list">
           {SLOTS.map((s) => {
             const id = lineup[s];
             const p = id ? board.find((b) => b.id === id) : null;
             return (
               <button key={s} type="button"
-                className={`slot${active === s ? ' slot--active' : ''}${p ? ' slot--filled' : ''}`}
-                onClick={() => setActive(s)}>
-                <span className="slot-tag">{SLOT_LABEL[s]}</span>
-                <span className="slot-name">{p ? p.name : 'empty'}</span>
-                {p && !locked && (
-                  <span className="slot-x" onClick={(e) => { e.stopPropagation(); clear(s); }}>×</span>
-                )}
+                className={`pr${p ? '' : ' empty'}`}
+                onClick={() => (signedIn ? setActive(s) : router.push(signinHref))}>
+                <span className="pos">{SLOT_LABEL[s]}</span>
+                <span className="nm">
+                  <b>{p ? p.name : EMPTY_SLOT_COPY[s]}</b>
+                  <small>{p ? restOf(p.resume) : ' '}</small>
+                </span>
+                <span className={`tk${p ? ' quiet' : ''}`}>{p ? 'Change' : 'Take'}</span>
               </button>
             );
           })}
         </div>
+
+        <div className={`wk-save wk-save--${save}`}>{saveLabel}</div>
 
         {err && <p className="err">{err}</p>}
         {locked && (
@@ -201,14 +207,15 @@ export default function WeeklyRoom({ contest, board, initialLineup = {}, locksAt
             purpose. The Daily's board is 64 players and the scan under a
             three-minute clock IS that game; a filter would be a cheat code for
             it. The Weekly's board is 1,269 players with four days to think, so
-            hunting for a name is friction with nothing to protect. */}
-        <div className="wk-find">
+            hunting for a name is friction with nothing to protect.
+            BELOW the six-row list (relay 2a item 6's mock), not above it. */}
+        <div className="search">
           <input
             className="wk-find-in"
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={`Find a ${active.startsWith('FLEX') ? 'player' : active}…`}
+            placeholder={`search ${board.length.toLocaleString('en-US')} players by name`}
             aria-label={`Search ${POOL_LABEL[active]}`}
             enterKeyHint="search"
             autoComplete="off"

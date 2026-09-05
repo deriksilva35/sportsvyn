@@ -26,7 +26,8 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { currentContest, nextContest, getEntry } from '@/lib/weekly/entries';
 import StandaloneDate from '@/components/StandaloneDate';
-import { weeklyState, settledView, lineupRows } from '@/lib/weekly/view';
+import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI } from '@/lib/weekly/view';
+import { SLOTS } from '@/lib/weekly/rules';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
 import { tierClass } from '@/lib/daily/reveal';
 import WeeklyRoom from '@/components/weekly/WeeklyRoom';
@@ -106,7 +107,7 @@ function Rules({ contest }) {
         <div className="row"><span>Results</span><span className="r">Tuesday morning</span></div>
       </div>
       <p className="muted">
-        Every change saves &mdash; there is no submit. Whatever is in your six slots at
+        Every change saves - there is no submit. Whatever is in your six slots at
         the first kickoff is your entry. Scores settle once the last game is final,
         which is why results land <b>Tuesday morning</b> rather than Monday night, and
         a settled week does not move again.
@@ -163,20 +164,6 @@ export default async function WeeklyPage({ searchParams }) {
 
   const board = contest.board ?? [];
 
-  // ---- SIGNED OUT: the pitch ----------------------------------------------
-  if (userId == null) {
-    return (
-      <Shell>
-        <Pitch action={(
-          <a className="btn--volt" href={shellSigninHref('/weekly', isShell)}>
-            Build this week&rsquo;s lineup
-          </a>
-        )} />
-        <Rules contest={contest} />
-      </Shell>
-    );
-  }
-
   // ---- SETTLED: the reveal -------------------------------------------------
   // The Daily's reveal with the answer-hero swapped for the week's own
   // identity. The Daily's hero answers "when are you?" because that is its
@@ -205,7 +192,7 @@ export default async function WeeklyPage({ searchParams }) {
 
         {v.you && (
           <section className="mod mod--entered">
-            <h2 className="eyebrow">Your six <span className="ctx">&mdash; worst pick dropped</span></h2>
+            <h2 className="eyebrow">Your six <span className="ctx">- worst pick dropped</span></h2>
             <div className="score-row">
               <div className="score-big">{v.you.score}</div>
               <div className="score-meta">
@@ -222,7 +209,7 @@ export default async function WeeklyPage({ searchParams }) {
                     {p.team && <span className="muted"> · {p.team}</span>}
                   </span>
                   <span className="r">
-                    {p.points ?? '—'}
+                    {p.points ?? '-'}
                     {p.dropped && <span className="r--mut"> dropped</span>}
                   </span>
                 </div>
@@ -232,7 +219,7 @@ export default async function WeeklyPage({ searchParams }) {
         )}
 
         <section className="mod">
-          <h2 className="eyebrow">The perfect lineup <span className="ctx">&mdash; {v.perfect}</span></h2>
+          <h2 className="eyebrow">The perfect lineup <span className="ctx">- {v.perfect}</span></h2>
           <div>
             {v.perfectPicks.map((p) => (
               <div className="row" key={p.slot ?? p.id}>
@@ -247,7 +234,7 @@ export default async function WeeklyPage({ searchParams }) {
         </section>
 
         <p className="muted">
-          Settled from final box scores. A settled week is final &mdash; later stat
+          Settled from final box scores. A settled week is final - later stat
           corrections do not move it.
         </p>
       </Shell>
@@ -271,7 +258,7 @@ export default async function WeeklyPage({ searchParams }) {
       <Shell>
         <section className="mod mod--entered">
           <h2 className="eyebrow">
-            Week {contest.week} <span className="ctx">&mdash; locked</span>
+            Week {contest.week} <span className="ctx">- locked</span>
           </h2>
           {entry ? (
             <>
@@ -299,7 +286,7 @@ export default async function WeeklyPage({ searchParams }) {
                       {p.team && <span className="muted"> · {p.team}</span>}
                     </span>
                     <span className={`r${p.played ? '' : ' r--mut'}`}>
-                      {p.id == null ? '' : p.played ? p.points : '—'}
+                      {p.id == null ? '' : p.played ? p.points : '-'}
                     </span>
                   </div>
                 ))}
@@ -321,15 +308,68 @@ export default async function WeeklyPage({ searchParams }) {
   // Both states render the builder; the rules module sits below it for a
   // first-time reader rather than gating the board behind a START. There is no
   // clock to start, so there is nothing for a gate to protect.
+  const filled = entry?.lineup ?? {};
+  const unfilled = SLOTS.filter((s) => filled[s] == null);
+  const reminderAt = new Date(new Date(contest.locks_at).getTime() - 3_600_000);
   return (
     <Shell>
+      {/* THE HEADER AND PROGRESS (relay 2a item 6) - the mock's .hdr/.yr/
+          .prog/.needline, sitting above the unchanged builder. */}
+      <header className="hdr">
+        <span className="ed">The Weekly &middot; Week {contest.week}</span>
+        <span className="clock">locks <StandaloneDate iso={contest.locks_at} /></span>
+      </header>
+      <div className="yr">
+        <h1>Week {contest.week}</h1>
+        <div className="sub">
+          Six slots. No clock. Any six from the full pool, full PPR, and whatever is
+          saved at first kickoff is your entry.
+        </div>
+      </div>
+      <div className="warn">
+        Same board for everyone. You are graded against the best six this pool
+        could have made.
+      </div>
+      <div className="prog">
+        <div className="rrow">
+          {SLOTS.map((s) => (
+            <div key={s} className={`pip${filled[s] != null ? ' full' : ''}`}>
+              <span className="em">{SLOT_EMOJI[s]}</span>
+              <span className="dot">{SLOT_LABEL[s]}</span>
+            </div>
+          ))}
+        </div>
+        <div className="cap"><span>{SLOTS.length - unfilled.length} of {SLOTS.length} set</span><span>saves on change</span></div>
+      </div>
+      {unfilled.length > 0 && (
+        <div className="needline">Still need <b>{unfilled.map((s) => SLOT_LABEL[s]).join(' · ')}</b></div>
+      )}
+
       <WeeklyRoom
         contest={{ id: contest.id, locks_at: contest.locks_at, week: contest.week }}
         board={board}
         initialLineup={entry?.lineup ?? {}}
-        locksAtLabel={etStamp(contest.locks_at)}
+        signedIn={userId != null}
+        signinHref={shellSigninHref('/weekly', isShell)}
       />
-      <Rules contest={contest} />
+
+      {/* ONCE OPEN, THIS IS WHAT 'HOW IT WORKS' BECOMES (2a-polish item 1) -
+          the mock's own .perf box under the board, never the pitch's rules
+          table above it. Same reader, same question, but they are looking at
+          the board now rather than wondering whether to. */}
+      <div className="perf">
+        <b>The best six this pool allows</b>
+        <p>
+          Revealed Tuesday morning when Week {contest.week} settles. Your grade is
+          your six as a percentage of it. Raw points never cross weeks - a
+          bye-heavy week has a lower ceiling and the percentage knows that.
+        </p>
+      </div>
+
+      <div className="mathline">
+        Alerts: opens {etStamp(contest.opens_at)} &middot; one hour to lock {etStamp(reminderAt)}
+        {contest.settles_at && <> &middot; graded {etStamp(contest.settles_at)}</>}. All on.
+      </div>
     </Shell>
   );
 }

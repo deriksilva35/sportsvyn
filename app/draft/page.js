@@ -73,7 +73,7 @@ function Rules({ contest }) {
       <p className="muted">
         Best ball means you never set a lineup: your best six score automatically from
         what your players actually did. Every pick counts, so there is no bench to hide
-        a miss on. One ranked draft a week &mdash; results land <b>Tuesday morning</b>,
+        a miss on. One ranked draft a week - results land <b>Tuesday morning</b>,
         and a settled week does not move again.
       </p>
     </section>
@@ -117,24 +117,6 @@ export default async function DraftPage({ searchParams }) {
     );
   }
 
-  // ---- SIGNED OUT: the pitch ----------------------------------------------
-  if (userId == null) {
-    return (
-      <Shell>
-        <section className="hero">
-          <div className="hero-eyebrow">The Draft &middot; ranked</div>
-          <div className="hero-q">Eight rounds.<br />No bench.</div>
-          <p className="hero-line">
-            {DRAFT_CONFIG.teamsCount} teams &middot; <b>{DRAFT_CONFIG.clockSeconds}s</b> a pick
-            &middot; best ball &middot; results Tuesday morning
-          </p>
-          <a className="btn--volt" href={shellSigninHref('/draft', isShell)}>Take a seat</a>
-        </section>
-        <Rules contest={contest} />
-      </Shell>
-    );
-  }
-
   // ---- SETTLED -------------------------------------------------------------
   if (state === 'settled') {
     const v = draftSettledView({ contest, entry, board: contest.board });
@@ -157,7 +139,7 @@ export default async function DraftPage({ searchParams }) {
 
         {v.you && (
           <section className="mod mod--entered">
-            <h2 className="eyebrow">Your draft <span className="ctx">&mdash; started six in bold</span></h2>
+            <h2 className="eyebrow">Your draft <span className="ctx">- started six in bold</span></h2>
             <div className="score-row">
               <div className="score-big">{v.you.score}</div>
               <div className="score-meta">
@@ -174,7 +156,7 @@ export default async function DraftPage({ searchParams }) {
                     <span className="slot-tag">R{r.round}</span>{' '}
                     {r.name}<span className="muted"> · {r.pos}</span>
                   </span>
-                  <span className="r">{r.points ?? '—'}</span>
+                  <span className="r">{r.points ?? '-'}</span>
                 </div>
               ))}
             </div>
@@ -187,7 +169,7 @@ export default async function DraftPage({ searchParams }) {
               Weekly there is no shared pool to build a theoretical lineup
               from - the ceiling is whoever's real roster scored highest,
               named by seat rather than shown as a picks list. */}
-          <h2 className="eyebrow">The week&rsquo;s best roster <span className="ctx">&mdash; {v.perfect}</span></h2>
+          <h2 className="eyebrow">The week&rsquo;s best roster <span className="ctx">- {v.perfect}</span></h2>
           <div className="row">
             <span className="muted">
               {v.ceilingSeat != null ? `Seat ${v.ceilingSeat} drafted it` : 'From one of this week’s rooms'}
@@ -195,7 +177,7 @@ export default async function DraftPage({ searchParams }) {
           </div>
         </section>
         <p className="muted">
-          Settled from final box scores. A settled week is final &mdash; later stat
+          Settled from final box scores. A settled week is final - later stat
           corrections do not move it.
         </p>
       </Shell>
@@ -218,7 +200,7 @@ export default async function DraftPage({ searchParams }) {
     return (
       <Shell>
         <section className="mod mod--entered">
-          <h2 className="eyebrow">Week {contest.week} <span className="ctx">&mdash; locked</span></h2>
+          <h2 className="eyebrow">Week {contest.week} <span className="ctx">- locked</span></h2>
           {roster.length ? (
             <>
               <p className="mod-lede">
@@ -264,7 +246,7 @@ export default async function DraftPage({ searchParams }) {
           <h2 className="eyebrow">Your room is open</h2>
           <p className="mod-lede">
             You are drafting from pick {draft?.pick_position}. The clock only runs while
-            you are in the room &mdash; pick up where you left off.
+            you are in the room - pick up where you left off.
           </p>
           <a className="btn btn--volt" href={`/sim/draft/${draft.id}`}>Back to the room &rarr;</a>
         </section>
@@ -279,9 +261,9 @@ export default async function DraftPage({ searchParams }) {
     return (
       <Shell>
         <section className="mod mod--entered">
-          <h2 className="eyebrow">Week {contest.week} <span className="ctx">&mdash; drafted</span></h2>
+          <h2 className="eyebrow">Week {contest.week} <span className="ctx">- drafted</span></h2>
           <p className="mod-lede">
-            {roster.length} picks in. There is nothing else to do &mdash; best ball sets
+            {roster.length} picks in. There is nothing else to do - best ball sets
             your lineup for you.
           </p>
           <div>
@@ -302,23 +284,66 @@ export default async function DraftPage({ searchParams }) {
     );
   }
 
-  // ---- RULES: the seat-select front door ----------------------------------
+  // ---- RULES: the seat-select front door (relay 2a item 7) -----------------
+  const reminderAt = new Date(new Date(contest.locks_at).getTime() - 3_600_000);
   return (
     <Shell>
-      <section className="hero">
-        <div className="hero-eyebrow">The Draft &middot; Week {contest.week}</div>
-        <div className="hero-q">Eight rounds.<br />No bench.</div>
-        <p className="hero-line">
-          Best ball &middot; locks {etStamp(contest.locks_at)} &middot; results Tuesday morning
-        </p>
-      </section>
+      <header className="hdr">
+        <span className="ed">The Draft &middot; Week {contest.week} &middot; ranked</span>
+        <span className="clock">rooms lock <StandaloneDate iso={contest.locks_at} /></span>
+      </header>
+      <div className="yr">
+        <h1>Week {contest.week}</h1>
+        <div className="sub">
+          Eight rounds. No bench. Same pool as The Weekly, drafted against a room of
+          eleven. Your best six of eight count.
+        </div>
+      </div>
+      <div className="warn">
+        Pick a seat and it is your franchise for the week. Walk away and the seat
+        drafts for itself at lock.
+      </div>
+      <div className="prog">
+        <div className="rrow">
+          {Array.from({ length: DRAFT_ROUNDS }, (_, i) => (
+            <div key={i} className="pip">
+              <span className="em">{i + 1}</span>
+              <span className="dot">R{i + 1}</span>
+            </div>
+          ))}
+        </div>
+        <div className="cap">
+          <span>0 of {DRAFT_ROUNDS} picked</span>
+          <span>{DRAFT_CONFIG.clockSeconds}s a pick &middot; {DRAFT_CONFIG.teamsCount} seats &middot; PPR</span>
+        </div>
+      </div>
+
       <SeatSelect
         seats={seatOptions(DRAFT_CONFIG.teamsCount)}
         teamsCount={DRAFT_CONFIG.teamsCount}
         rounds={DRAFT_ROUNDS}
         clockSeconds={DRAFT_CONFIG.clockSeconds}
+        signedIn={userId != null}
+        signinHref={shellSigninHref('/draft', isShell)}
       />
-      <Rules contest={contest} />
+
+      {/* THE MOCK'S OWN TEXT, VERBATIM (item 7's own instruction). ONCE OPEN,
+          THIS IS WHAT 'HOW IT WORKS' BECOMES (2a-polish item 1) - never the
+          pitch's rules table above the board. */}
+      <div className="perf">
+        <b>How you are graded</b>
+        <p>
+          Two ways, both at settle. Your room: where your eight finish against the
+          eleven bots you drafted with. The field: your points against everyone who
+          drafted this week, and the best draft in the field is shown beside yours.
+          There is no solver ceiling here - the best eight in the pool cannot sit on
+          one roster, and the room reacts to what you take.
+        </p>
+      </div>
+      <div className="mathline">
+        Alerts: rooms open {etStamp(contest.opens_at)} &middot; one hour to lock {etStamp(reminderAt)}
+        {contest.settles_at && <> &middot; graded {etStamp(contest.settles_at)}</>}. All on.
+      </div>
     </Shell>
   );
 }

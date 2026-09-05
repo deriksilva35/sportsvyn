@@ -27,6 +27,7 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { pickemBoardView } from '@/lib/pickem/entry';
 import { firstLockLabel, FIRST_LOCK_FALLBACK } from '@/lib/pickem/read';
 import PickemBoard from '@/components/pickem/PickemBoard';
+import { GAME_NAMES } from '@/lib/games/lobby';
 import '../games/games.css';
 import './pickem.css';
 
@@ -36,7 +37,7 @@ export async function generateViewport() {
   return simViewport(await resolveShellMode());
 }
 
-export const metadata = { title: "Pick 'em - Sportsvyn" };
+export const metadata = { title: `${GAME_NAMES.pickem} - Sportsvyn` };
 
 export default async function PickemPage({ searchParams }) {
   const session = await auth();
@@ -67,7 +68,7 @@ export default async function PickemPage({ searchParams }) {
         {view.phase === 'settled' && (
           <section className="pk-hero pk-receipt">
             <div className="pk-eb">
-              <span>Pick&rsquo;em &mdash; settled</span>
+              <span>Pick&rsquo;em &middot; settled</span>
               <span className="pk-mono">{view.contest.sport.toUpperCase()} &middot; {view.contest.gamesCount} games</span>
             </div>
             <h1>{view.record.wins}-{view.record.losses}.</h1>
