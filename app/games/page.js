@@ -25,7 +25,7 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { gamesLobby } from '@/lib/games/read';
 import { myLeagues } from '@/lib/leagues/core';
-import { normalizePane } from '@/lib/games/lobby';
+import { normalizePane, HERO_LOCK_LABEL } from '@/lib/games/lobby';
 import PaneTabs from '@/components/games/PaneTabs';
 import SeasonBoard from '@/components/games/SeasonBoard';
 import StandaloneDate from '@/components/StandaloneDate';
@@ -141,7 +141,7 @@ function Hero({ hero, signedIn = true, signinHref = '/signin' }) {
     <div className="hero">
       <div className="eb">
         <b>{hero.eyebrowLeft}</b>
-        <span>locks <StandaloneDate iso={hero.locksAt} /></span>
+        <span>{HERO_LOCK_LABEL[hero.key]} <StandaloneDate iso={hero.locksAt} /></span>
       </div>
       <h2>{hero.tagline[0]}<br />{hero.tagline[1]}</h2>
       <a className="btn" href={signedIn ? hero.href : signinHref}>
