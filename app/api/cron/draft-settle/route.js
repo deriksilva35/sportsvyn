@@ -30,6 +30,8 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { settleDue } from '@/lib/weekly/settle';
+import { pushEnabled } from '@/lib/push/apns';
+import { notifyDraftSettled } from '@/lib/push/notify';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -64,6 +66,11 @@ export async function GET(request) {
       subject: `[draft] settle FAILED`,
       body: `${res.error ?? ''}\n${errored.map((e) => `contest ${e.contestId}: ${e.error}`).join('\n')}`,
     });
+  }
+  // PUSH HOOK: only the contests settleDue actually reports settled=true.
+  if (res.ok && pushEnabled()) {
+    const settledIds = (summary.results ?? []).filter((r) => r.settled).map((r) => r.contestId);
+    if (settledIds.length) await notifyDraftSettled(settledIds).catch(() => {});
   }
   return Response.json({ ok: res.ok, ...summary });
 }

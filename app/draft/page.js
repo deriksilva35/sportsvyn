@@ -19,9 +19,10 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
 import { draftState, draftSettledView, seatOptions } from '@/lib/draft/view';
 import { draftState as readDraftState } from '@/lib/draft/entry';
-import { DRAFT_CONFIG, DRAFT_ROUNDS } from '@/lib/draft/contest';
+import { DRAFT_CONFIG, DRAFT_ROUNDS, nextDraftContest } from '@/lib/draft/contest';
 import { tierClass } from '@/lib/daily/reveal';
 import SeatSelect from '@/components/draft/SeatSelect';
+import StandaloneDate from '@/components/StandaloneDate';
 import '../daily/daily.css';
 import './draft.css';
 
@@ -93,6 +94,7 @@ export default async function DraftPage({ searchParams }) {
 
   // ---- NO BOARD: the full pitch, per the /weekly ruling -------------------
   if (state === 'none') {
+    const upcoming = await nextDraftContest().catch(() => null);
     return (
       <Shell>
         <section className="hero">
@@ -101,7 +103,14 @@ export default async function DraftPage({ searchParams }) {
           <p className="hero-line">
             Draft against the room &middot; <b>best ball</b> &middot; results Tuesday morning
           </p>
-          <div className="wk-soon">Rooms open Tuesday morning</div>
+          <div className="wk-soon">
+            {upcoming ? (
+              <>
+                Opens <StandaloneDate iso={upcoming.opens_at} /><br />
+                Locks <StandaloneDate iso={upcoming.locks_at} />
+              </>
+            ) : 'No room scheduled yet'}
+          </div>
         </section>
         <Rules contest={null} />
       </Shell>
@@ -173,17 +182,16 @@ export default async function DraftPage({ searchParams }) {
         )}
 
         <section className="mod">
-          <h2 className="eyebrow">The perfect lineup <span className="ctx">&mdash; {v.perfect}</span></h2>
-          <div>
-            {v.perfectPicks.map((p) => (
-              <div className="row" key={p.slot ?? p.id}>
-                <span>
-                  <span className="slot-tag">{p.slot === 'FLEX2' ? 'FLEX' : p.slot}</span>{' '}
-                  {p.name}{p.team && <span className="muted"> · {p.team}</span>}
-                </span>
-                <span className="r">{p.points}</span>
-              </div>
-            ))}
+          {/* THE CEILING IS A REAL ROOM'S ROSTER, NOT A DREAM TEAM (relay D1).
+              Every Draft entrant gets a different eight, so unlike the
+              Weekly there is no shared pool to build a theoretical lineup
+              from - the ceiling is whoever's real roster scored highest,
+              named by seat rather than shown as a picks list. */}
+          <h2 className="eyebrow">The week&rsquo;s best roster <span className="ctx">&mdash; {v.perfect}</span></h2>
+          <div className="row">
+            <span className="muted">
+              {v.ceilingSeat != null ? `Seat ${v.ceilingSeat} drafted it` : 'From one of this week’s rooms'}
+            </span>
           </div>
         </section>
         <p className="muted">

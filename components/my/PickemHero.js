@@ -29,7 +29,7 @@ export default function PickemHero({ card, now = new Date() }) {
   return (
     <section className="hero">
       <div className="tag hero-tag">
-        Pick&rsquo;em - Board 1 locks {lockLabel(card.nextKickoff)}
+        Pick&rsquo;em - Board {card.boardNumber} locks {lockLabel(card.nextKickoff)}
       </div>
       <div className="q">{left} {left === 1 ? 'pick' : 'picks'} left.</div>
       <div className="ctx">

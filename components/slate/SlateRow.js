@@ -31,13 +31,14 @@ const abbr = (t) => t?.abbreviation ?? t?.name ?? 'TBD';
 /**
  * @param g        a game DTO (kickoffAt, status, scores, home/away, week…)
  * @param onBoard  render the Board pill
+ * @param boardNumber the pickem board number the pill names (real, never typed)
  * @param tag      override the meta sub-line (panels carry their own context -
  *                 a lock time on Pick'em, the followed team on Your Schedule -
  *                 and that context is the panel's, not this component's)
  * @param state    override the right-hand state word (defaults Live/FT/Preview)
  * @param href     override the destination; null disables the link entirely
  */
-export default function SlateRow({ g, onBoard = false, tag, state, href }) {
+export default function SlateRow({ g, onBoard = false, boardNumber, tag, state, href }) {
   const { live, final, played, homeWin, awayWin, isPreseason, when, day } = rowState(g);
   const body = (
     <>
@@ -50,7 +51,7 @@ export default function SlateRow({ g, onBoard = false, tag, state, href }) {
           <span className={awayWin ? 'win' : homeWin ? 'dim' : undefined}>{abbr(g.away)}</span>
           {' '}<span className="at">at</span>{' '}
           <span className={homeWin ? 'win' : awayWin ? 'dim' : undefined}>{abbr(g.home)}</span>
-          {onBoard ? <span className="onboard">Board 1</span> : null}
+          {onBoard ? <span className="onboard">Board {boardNumber}</span> : null}
         </div>
         <div className="stag">
           {/* THE TWO EXPRESSIONS STAY TWO. Collapsing them into one template

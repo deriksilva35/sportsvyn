@@ -90,7 +90,7 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
     <>
       <section className="pk-hero">
         <div className="pk-eb">
-          <span>Pick&rsquo;em &mdash; Board {contest.week != null ? '1' : ''}</span>
+          <span>Pick&rsquo;em &mdash; Board {contest.boardNumber ?? ''}</span>
           <span className="pk-mono">{contest.sport.toUpperCase()} &middot; {total} games</span>
         </div>
         <h1>{anyKicked ? 'Grading in.' : `${total === 8 ? 'Eight' : total} games. Call the winners.`}</h1>

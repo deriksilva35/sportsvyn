@@ -23,6 +23,8 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { ensureWeek } from '@/lib/weekly/create';
+import { pushEnabled } from '@/lib/push/apns';
+import { notifyWeeklyOpen, notifyDraftOpen } from '@/lib/push/notify';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -50,6 +52,19 @@ export async function GET(request) {
       subject: '[weekly] board creation FAILED',
       body: String(res.error ?? 'unknown error'),
     });
+  }
+  // PUSH HOOK: STATE-BASED, NOT CREATION-BASED (relay 1b's ruling). Called on
+  // EVERY run, whatever this tick's own outcome was - notifyWeeklyOpen/
+  // notifyDraftOpen each ask "is a contest of my kind open right now, inside
+  // its 24h announce window, and not already claimed" themselves, rather
+  // than trusting THIS tick to be the one that created the row. A creation
+  // tick whose push hiccuped used to mean that contest's open was announced
+  // never; now the next daily tick still finds it inside the window and
+  // fires it, because creation was never the thing that mattered. Caught so
+  // a push hiccup can never fail the run itself.
+  if (res.ok && pushEnabled()) {
+    await notifyWeeklyOpen().catch(() => {});
+    await notifyDraftOpen().catch(() => {});
   }
   return Response.json({ ok: res.ok, ...res.summary });
 }

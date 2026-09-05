@@ -15,7 +15,7 @@ import SlateRow from '@/components/slate/SlateRow';
 import { orderSlate, SLATE_ROW_CAP } from '@/lib/today/slateRow';
 
 
-export default function WeekSlate({ slate, boardIds, scoresHref, label }) {
+export default function WeekSlate({ slate, boardIds, boardNumber, scoresHref, label }) {
   if (!slate?.games?.length) return null;
   const ordered = orderSlate(slate.games);
   const shown = ordered.slice(0, SLATE_ROW_CAP);
@@ -29,11 +29,11 @@ export default function WeekSlate({ slate, boardIds, scoresHref, label }) {
       <div className="eb">
         <span>This week</span>
         <span className="ctx">
-          {weekLabel}{boardIds?.size ? ' · Board 1 marked' : ''}
+          {weekLabel}{boardIds?.size ? ` · Board ${boardNumber} marked` : ''}
         </span>
       </div>
       {shown.map((g) => (
-        <SlateRow key={g.id} g={g} onBoard={boardIds?.has(g.id)} />
+        <SlateRow key={g.id} g={g} onBoard={boardIds?.has(g.id)} boardNumber={boardNumber} />
       ))}
       <a className="ghostcta" href={scoresHref}>
         {hidden > 0 ? `Full scoreboard · ${hidden} more` : 'Full scoreboard'} &rarr;
