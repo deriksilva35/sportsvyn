@@ -39,6 +39,14 @@ import { nextOpenSlot } from '@/lib/daily/play';
 import { poolRows } from '@/lib/weekly/view';
 
 const SLOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLEX', FLEX2: 'FLEX' };
+// EMPTY-SLOT COPY IS ITS OWN MAP (relay 2a-polish-2 item c), not a
+// lowercased template - QB/RB/WR/TE are read as letters and stay
+// uppercase ("Pick an RB", the article by sound, not spelling), while
+// "flex" is a spoken word and stays lowercase.
+const EMPTY_SLOT_COPY = {
+  QB: 'Pick a QB', RB: 'Pick an RB', WR: 'Pick a WR', TE: 'Pick a TE',
+  FLEX: 'Pick a flex', FLEX2: 'Pick a flex',
+};
 const POOL_LABEL = {
   QB: 'Quarterbacks', RB: 'Running backs', WR: 'Receivers', TE: 'Tight ends',
   FLEX: 'Flex - RB / WR / TE', FLEX2: 'Flex - RB / WR / TE',
@@ -165,7 +173,7 @@ export default function WeeklyRoom({
                 onClick={() => (signedIn ? setActive(s) : router.push(signinHref))}>
                 <span className="pos">{SLOT_LABEL[s]}</span>
                 <span className="nm">
-                  <b>{p ? p.name : `Pick a ${SLOT_LABEL[s].toLowerCase()}`}</b>
+                  <b>{p ? p.name : EMPTY_SLOT_COPY[s]}</b>
                   <small>{p ? restOf(p.resume) : ' '}</small>
                 </span>
                 <span className={`tk${p ? ' quiet' : ''}`}>{p ? 'Change' : 'Take'}</span>
