@@ -26,7 +26,8 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { currentContest, nextContest, getEntry } from '@/lib/weekly/entries';
 import StandaloneDate from '@/components/StandaloneDate';
-import { weeklyState, settledView, lineupRows } from '@/lib/weekly/view';
+import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI } from '@/lib/weekly/view';
+import { SLOTS } from '@/lib/weekly/rules';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
 import { tierClass } from '@/lib/daily/reveal';
 import WeeklyRoom from '@/components/weekly/WeeklyRoom';
@@ -321,14 +322,55 @@ export default async function WeeklyPage({ searchParams }) {
   // Both states render the builder; the rules module sits below it for a
   // first-time reader rather than gating the board behind a START. There is no
   // clock to start, so there is nothing for a gate to protect.
+  const filled = entry?.lineup ?? {};
+  const unfilled = SLOTS.filter((s) => filled[s] == null);
+  const reminderAt = new Date(new Date(contest.locks_at).getTime() - 3_600_000);
   return (
     <Shell>
+      {/* THE HEADER AND PROGRESS (relay 2a item 6) - the mock's .hdr/.yr/
+          .prog/.needline, sitting above the unchanged builder. */}
+      <header className="hdr">
+        <span className="ed">The Weekly &middot; Week {contest.week}</span>
+        <span className="clock">locks <StandaloneDate iso={contest.locks_at} /></span>
+      </header>
+      <div className="yr">
+        <h1>Week {contest.week}</h1>
+        <div className="sub">
+          Six slots. No clock. Any six from the full pool, full PPR, and whatever is
+          saved at first kickoff is your entry.
+        </div>
+      </div>
+      <div className="warn">
+        Same board for everyone. You are graded against the best six this pool
+        could have made.
+      </div>
+      <div className="prog">
+        <div className="rrow">
+          {SLOTS.map((s) => (
+            <div key={s} className={`pip${filled[s] != null ? ' full' : ''}`}>
+              <span className="em">{SLOT_EMOJI[s]}</span>
+              <span className="dot">{SLOT_LABEL[s]}</span>
+            </div>
+          ))}
+        </div>
+        <div className="cap"><span>{SLOTS.length - unfilled.length} of {SLOTS.length} set</span><span>saves on change</span></div>
+      </div>
+      {unfilled.length > 0 && (
+        <div className="needline">Still need <b>{unfilled.map((s) => SLOT_LABEL[s]).join(' · ')}</b></div>
+      )}
+
       <WeeklyRoom
         contest={{ id: contest.id, locks_at: contest.locks_at, week: contest.week }}
         board={board}
         initialLineup={entry?.lineup ?? {}}
         locksAtLabel={etStamp(contest.locks_at)}
       />
+
+      <div className="mathline">
+        Alerts: opens {etStamp(contest.opens_at)} &middot; one hour to lock {etStamp(reminderAt)}
+        {contest.settles_at && <> &middot; graded {etStamp(contest.settles_at)}</>}. All on.
+      </div>
+
       <Rules contest={contest} />
     </Shell>
   );
