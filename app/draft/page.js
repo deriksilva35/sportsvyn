@@ -73,7 +73,7 @@ function Rules({ contest }) {
       <p className="muted">
         Best ball means you never set a lineup: your best six score automatically from
         what your players actually did. Every pick counts, so there is no bench to hide
-        a miss on. One ranked draft a week &mdash; results land <b>Tuesday morning</b>,
+        a miss on. One ranked draft a week - results land <b>Tuesday morning</b>,
         and a settled week does not move again.
       </p>
     </section>
@@ -157,7 +157,7 @@ export default async function DraftPage({ searchParams }) {
 
         {v.you && (
           <section className="mod mod--entered">
-            <h2 className="eyebrow">Your draft <span className="ctx">&mdash; started six in bold</span></h2>
+            <h2 className="eyebrow">Your draft <span className="ctx">- started six in bold</span></h2>
             <div className="score-row">
               <div className="score-big">{v.you.score}</div>
               <div className="score-meta">
@@ -174,7 +174,7 @@ export default async function DraftPage({ searchParams }) {
                     <span className="slot-tag">R{r.round}</span>{' '}
                     {r.name}<span className="muted"> · {r.pos}</span>
                   </span>
-                  <span className="r">{r.points ?? '—'}</span>
+                  <span className="r">{r.points ?? '-'}</span>
                 </div>
               ))}
             </div>
@@ -187,7 +187,7 @@ export default async function DraftPage({ searchParams }) {
               Weekly there is no shared pool to build a theoretical lineup
               from - the ceiling is whoever's real roster scored highest,
               named by seat rather than shown as a picks list. */}
-          <h2 className="eyebrow">The week&rsquo;s best roster <span className="ctx">&mdash; {v.perfect}</span></h2>
+          <h2 className="eyebrow">The week&rsquo;s best roster <span className="ctx">- {v.perfect}</span></h2>
           <div className="row">
             <span className="muted">
               {v.ceilingSeat != null ? `Seat ${v.ceilingSeat} drafted it` : 'From one of this week’s rooms'}
@@ -195,7 +195,7 @@ export default async function DraftPage({ searchParams }) {
           </div>
         </section>
         <p className="muted">
-          Settled from final box scores. A settled week is final &mdash; later stat
+          Settled from final box scores. A settled week is final - later stat
           corrections do not move it.
         </p>
       </Shell>
@@ -218,7 +218,7 @@ export default async function DraftPage({ searchParams }) {
     return (
       <Shell>
         <section className="mod mod--entered">
-          <h2 className="eyebrow">Week {contest.week} <span className="ctx">&mdash; locked</span></h2>
+          <h2 className="eyebrow">Week {contest.week} <span className="ctx">- locked</span></h2>
           {roster.length ? (
             <>
               <p className="mod-lede">
@@ -264,7 +264,7 @@ export default async function DraftPage({ searchParams }) {
           <h2 className="eyebrow">Your room is open</h2>
           <p className="mod-lede">
             You are drafting from pick {draft?.pick_position}. The clock only runs while
-            you are in the room &mdash; pick up where you left off.
+            you are in the room - pick up where you left off.
           </p>
           <a className="btn btn--volt" href={`/sim/draft/${draft.id}`}>Back to the room &rarr;</a>
         </section>
@@ -279,9 +279,9 @@ export default async function DraftPage({ searchParams }) {
     return (
       <Shell>
         <section className="mod mod--entered">
-          <h2 className="eyebrow">Week {contest.week} <span className="ctx">&mdash; drafted</span></h2>
+          <h2 className="eyebrow">Week {contest.week} <span className="ctx">- drafted</span></h2>
           <p className="mod-lede">
-            {roster.length} picks in. There is nothing else to do &mdash; best ball sets
+            {roster.length} picks in. There is nothing else to do - best ball sets
             your lineup for you.
           </p>
           <div>

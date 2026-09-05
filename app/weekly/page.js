@@ -106,7 +106,7 @@ function Rules({ contest }) {
         <div className="row"><span>Results</span><span className="r">Tuesday morning</span></div>
       </div>
       <p className="muted">
-        Every change saves &mdash; there is no submit. Whatever is in your six slots at
+        Every change saves - there is no submit. Whatever is in your six slots at
         the first kickoff is your entry. Scores settle once the last game is final,
         which is why results land <b>Tuesday morning</b> rather than Monday night, and
         a settled week does not move again.
@@ -205,7 +205,7 @@ export default async function WeeklyPage({ searchParams }) {
 
         {v.you && (
           <section className="mod mod--entered">
-            <h2 className="eyebrow">Your six <span className="ctx">&mdash; worst pick dropped</span></h2>
+            <h2 className="eyebrow">Your six <span className="ctx">- worst pick dropped</span></h2>
             <div className="score-row">
               <div className="score-big">{v.you.score}</div>
               <div className="score-meta">
@@ -222,7 +222,7 @@ export default async function WeeklyPage({ searchParams }) {
                     {p.team && <span className="muted"> · {p.team}</span>}
                   </span>
                   <span className="r">
-                    {p.points ?? '—'}
+                    {p.points ?? '-'}
                     {p.dropped && <span className="r--mut"> dropped</span>}
                   </span>
                 </div>
@@ -232,7 +232,7 @@ export default async function WeeklyPage({ searchParams }) {
         )}
 
         <section className="mod">
-          <h2 className="eyebrow">The perfect lineup <span className="ctx">&mdash; {v.perfect}</span></h2>
+          <h2 className="eyebrow">The perfect lineup <span className="ctx">- {v.perfect}</span></h2>
           <div>
             {v.perfectPicks.map((p) => (
               <div className="row" key={p.slot ?? p.id}>
@@ -247,7 +247,7 @@ export default async function WeeklyPage({ searchParams }) {
         </section>
 
         <p className="muted">
-          Settled from final box scores. A settled week is final &mdash; later stat
+          Settled from final box scores. A settled week is final - later stat
           corrections do not move it.
         </p>
       </Shell>
@@ -271,7 +271,7 @@ export default async function WeeklyPage({ searchParams }) {
       <Shell>
         <section className="mod mod--entered">
           <h2 className="eyebrow">
-            Week {contest.week} <span className="ctx">&mdash; locked</span>
+            Week {contest.week} <span className="ctx">- locked</span>
           </h2>
           {entry ? (
             <>
@@ -299,7 +299,7 @@ export default async function WeeklyPage({ searchParams }) {
                       {p.team && <span className="muted"> · {p.team}</span>}
                     </span>
                     <span className={`r${p.played ? '' : ' r--mut'}`}>
-                      {p.id == null ? '' : p.played ? p.points : '—'}
+                      {p.id == null ? '' : p.played ? p.points : '-'}
                     </span>
                   </div>
                 ))}

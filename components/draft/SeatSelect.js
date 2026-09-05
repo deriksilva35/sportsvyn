@@ -72,7 +72,7 @@ export default function SeatSelect({ seats, teamsCount, rounds, clockSeconds }) 
           {busy ? 'Opening the room…' : seat == null ? 'Choose a seat' : `Draft from pick ${seat}`}
         </button>
         <p className="wk-autosave">
-          One ranked draft a week. Opening the room uses it &mdash; there is no restart.
+          One ranked draft a week. Opening the room uses it - there is no restart.
         </p>
       </section>
     </>

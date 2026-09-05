@@ -67,7 +67,7 @@ export default async function PickemPage({ searchParams }) {
         {view.phase === 'settled' && (
           <section className="pk-hero pk-receipt">
             <div className="pk-eb">
-              <span>Pick&rsquo;em &mdash; settled</span>
+              <span>Pick&rsquo;em &middot; settled</span>
               <span className="pk-mono">{view.contest.sport.toUpperCase()} &middot; {view.contest.gamesCount} games</span>
             </div>
             <h1>{view.record.wins}-{view.record.losses}.</h1>

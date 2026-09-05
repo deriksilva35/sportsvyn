@@ -221,7 +221,7 @@ function BoardsPane({ v, userId = null }) {
             <div>
               {b.table.top.map((r) => (
                 <div className="row" key={r.userId}>
-                  <span className="lb-left"><span className="rank">{r.rank ?? '—'}</span>{r.name}</span>
+                  <span className="lb-left"><span className="rank">{r.rank ?? '-'}</span>{r.name}</span>
                   <span className="v">
                     {r.note ?? <>{r.pct}% <span className="muted">({r.correct}/{r.played})</span></>}
                   </span>
@@ -229,7 +229,7 @@ function BoardsPane({ v, userId = null }) {
               ))}
               {b.table.self && (
                 <div className="row row--me">
-                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '—'}</span>{b.table.self.name}</span>
+                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '-'}</span>{b.table.self.name}</span>
                   <span className="v">
                     {b.table.self.note ?? <>{b.table.self.pct}% <span className="muted">({b.table.self.correct}/{b.table.self.played})</span></>}
                   </span>
@@ -271,7 +271,7 @@ function AnswerPane({ v }) {
     <section className="mod">
       <div className="mod-head">
         <h2 className="eyebrow">
-          Latest answer{y.edition ? ` — Ed. ${y.edition}` : ''} · {y.date}
+          Latest answer{y.edition ? ` - Ed. ${y.edition}` : ''} · {y.date}
         </h2>
       </div>
       <div className="ans">{y.season} <span className="muted">· Week {y.week}</span></div>
@@ -324,7 +324,7 @@ function YourStats({ v }) {
     <section className="mod">
       <div className="mod-head">
         <h2 className="eyebrow">
-          Your record{v.season?.handle ? ` — ${v.season.handle}` : ''}
+          Your record{v.season?.handle ? ` - ${v.season.handle}` : ''}
         </h2>
         {v.seasonKey && <span className="pill">{v.seasonKey}</span>}
       </div>
@@ -333,7 +333,7 @@ function YourStats({ v }) {
         <div className="stat"><div className="eyebrow">Played</div><div className="n">{s.played}/{s.playable}</div></div>
         <div className="stat">
           <div className="eyebrow">Avg of perfect</div>
-          <div className="n">{s.avgPct != null ? `${s.avgPct}%` : <span className="muted">&mdash;</span>}</div>
+          <div className="n">{s.avgPct != null ? `${s.avgPct}%` : <span className="muted">-</span>}</div>
         </div>
         <div className="stat"><div className="eyebrow">Season pts</div><div className="n">{v.season?.points ?? 0}</div></div>
         <div className="stat"><div className="eyebrow">Streak</div><div className="n">{s.streak}</div></div>
@@ -345,7 +345,7 @@ function YourStats({ v }) {
           <span className="v">
             {s.best
               ? <>{s.best.score}{s.best.edition && <span className="muted"> · Ed. {s.best.edition}</span>}</>
-              : <span className="muted">&mdash;</span>}
+              : <span className="muted">-</span>}
           </span>
         </div>
         <div className="row">
@@ -397,7 +397,7 @@ function HistoryPane({ v }) {
               {/* A sealed row proves a day EXISTS without saying anything
                   about it. No season, no week, no score - that is the whole
                   point of the row. */}
-              <span className="muted">&mdash; sealed &mdash;</span>
+              <span className="muted">- sealed -</span>
               <span className="v muted">open</span>
             </>
           ) : (
@@ -407,7 +407,7 @@ function HistoryPane({ v }) {
                   free width. The id block (edition + era) stacks cleanly; the
                   era line never breaks mid-token. */}
               <span className="hist-when">{h.season} · Wk {h.week}</span>
-              <span className="v hist-win">{h.top ? `${h.top.name} ${h.top.score}` : '—'}</span>
+              <span className="v hist-win">{h.top ? `${h.top.name} ${h.top.score}` : '-'}</span>
               <span className="muted">{h.perfect}</span>
               {h.you !== undefined && (
                 <span className="hist-you">
@@ -416,7 +416,7 @@ function HistoryPane({ v }) {
                       {h.you.score}
                       {h.you.tier && <span className={`badge ${tierClass(h.you.tier)}`}>{h.you.tier}</span>}
                     </>
-                  ) : <span className="muted">&mdash;</span>}
+                  ) : <span className="muted">-</span>}
                 </span>
               )}
             </>

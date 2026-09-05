@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sportsvyn Games - remock v2 (Lobby, Pick'em, Weekly, Draft) on the Daily v3 chrome</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,600;1,900&family=Saira+Condensed:wght@600;700&family=JetBrains+Mono:wght@400;700&family=Source+Serif+4:ital,wght@1,400&display=swap" rel="stylesheet">
+<style>
+/* ===== tokens and base: byte-for-byte from daily-full-mock-v3 ===== */
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--volt-dim:#1a2000;--paper:#F5F5F2;--paper-dim:#B8B8B3;--muted:#8A8A85;--muted-dim:#5A5A56;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;--display:'Saira',sans-serif;--cond:'Saira Condensed',sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:#000}
+body{background:var(--ink);color:var(--paper);font-family:var(--display);-webkit-font-smoothing:antialiased}
+.phone{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:40px;background:var(--ink)}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;text-align:left}
+.hdr{display:flex;align-items:baseline;justify-content:space-between;padding:16px 16px 4px}
+.hdr .ed{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.hdr .clock{font-family:var(--mono);font-size:12px;color:var(--volt)}
+.yr{padding:2px 16px 6px}
+.yr h1{font-style:italic;font-weight:900;font-size:46px;letter-spacing:-.05em;line-height:.92}
+.yr .sub{margin-top:5px;font-size:13px;color:var(--paper-dim);line-height:1.45}
+.warn{margin:8px 16px 0;font-family:var(--mono);font-size:11px;color:var(--terra);line-height:1.5}
+.prog{padding:10px 12px 4px}
+.rrow{display:flex;gap:3px}
+.pip{flex:1;min-width:0;height:52px;border:1px solid var(--line);border-radius:8px;background:var(--ink-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0 1px}
+.pip .em{font-size:17px;line-height:1;filter:grayscale(1) opacity(.5)}
+.pip .dot{width:22px;height:22px;flex:none;border-radius:99px;background:var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-weight:700;font-size:9px;letter-spacing:.02em;color:var(--paper);line-height:1}
+.pip.full{background:var(--volt);border-color:var(--volt)}
+.pip.full .em{filter:none}
+.pip.full .dot{background:var(--ink);color:#fff}
+.pip.tiny{height:22px;border-radius:5px;gap:0}
+.pip.tiny .dot{width:auto;height:auto;background:none;font-size:9px;color:var(--muted-dim)}
+.pip.tiny.full .dot{color:var(--ink);font-weight:700}
+.pip.tiny.lock{border-style:dashed}
+.prog .cap{margin-top:7px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.needline{padding:10px 16px 2px;font-size:13px;color:var(--paper-dim);line-height:1.4}
+.needline b{color:var(--volt);font-weight:600}
+.secl{padding:14px 16px 7px;display:flex;align-items:baseline;justify-content:space-between}
+.secl b{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--volt)}
+.secl span{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.pr{display:flex;align-items:center;gap:9px;padding:9px 14px;border-top:1px solid var(--line);width:100%}
+.pr .pos{flex:none;width:44px;font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.08em;color:var(--muted)}
+.pr .nm{flex:1 1 auto;min-width:0}
+.pr .nm b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr .nm small{display:block;margin-top:2px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.pr .tk{flex:none;font-family:var(--cond);font-weight:600;font-size:9px;letter-spacing:.10em;color:var(--volt);border:1px solid var(--volt);border-radius:99px;padding:4px 9px}
+.pr .tk.quiet{color:var(--muted);border-color:var(--line)}
+.pr.empty .nm b{color:var(--muted-dim);font-weight:400}
+.list{margin:0 12px;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);overflow:hidden}
+.list .pr:first-child{border-top:0}
+.grade{margin:0 12px 12px;border:1px solid var(--line);border-radius:14px;background:var(--ink-2);overflow:hidden}
+.grade .top{background:var(--volt);color:var(--ink);padding:10px 13px;display:flex;align-items:baseline;justify-content:space-between}
+.grade .top b{font-style:italic;font-weight:900;font-size:17px;letter-spacing:-.03em}
+.grade .top span{font-family:var(--mono);font-weight:700;font-size:12px}
+.colhead{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 10px;background:var(--ink-2);border-bottom:1px solid var(--line)}
+.colhead div{font-family:var(--cond);font-weight:700;font-size:9px;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:3px 0;border-radius:7px}
+.colhead .cy{color:var(--ink);background:var(--volt)}
+.colhead .cb{color:var(--jade);border:1px solid var(--jade)}
+.sbr{padding:6px 10px;border-top:1px solid var(--line)}
+.sbr .top2{display:flex;align-items:center;gap:7px;margin-bottom:4px}
+.sbr .pos{font-family:var(--cond);font-weight:700;font-size:9px;letter-spacing:.08em;color:var(--muted);min-width:26px}
+.sbr .vd{font-family:var(--cond);font-weight:600;font-size:8px;letter-spacing:.10em;text-transform:uppercase;border:1px solid;border-radius:99px;padding:1px 6px}
+.sbr.hit .vd{color:var(--jade);border-color:var(--jade)}
+.sbr.miss .vd{color:var(--terra);border-color:var(--terra)}
+.sbr.ahead .vd{color:var(--volt);border-color:var(--volt)}
+.sbr.push .vd{color:var(--muted);border-color:var(--line)}
+.sbr .dif{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--terra)}
+.sbr.hit .dif{color:var(--jade)}.sbr.ahead .dif{color:var(--volt)}.sbr.push .dif{color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.bx{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--ink)}
+.bx .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bx .mt{margin-top:1px;font-family:var(--mono);font-size:8px;color:var(--muted-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bx .pt{margin-top:2px;font-family:var(--mono);font-weight:700;font-size:14px}
+.bx.you{border-color:var(--volt)}.bx.you .pt{color:var(--volt)}
+.bx.best .pt{color:var(--jade)}
+.sbr.hit .bx.you{border-color:var(--jade)}.sbr.hit .bx.you .pt{color:var(--jade)}
+.bx.same{border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px}
+.bx.same .tick{font-family:var(--mono);font-size:16px;color:var(--jade)}
+.bx.same .sm{margin-top:1px;font-family:var(--cond);font-weight:600;font-size:8px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
+.bx.drop{opacity:.45}.bx.drop .nm{text-decoration:line-through}
+.sbr .swap{margin-top:3px;font-family:var(--mono);font-size:9px;color:var(--muted-dim)}
+.mathline{margin:0 12px 8px;padding:8px 12px;border:1px dashed var(--line);border-radius:11px;font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.5}
+.mathline b{color:var(--terra);font-weight:700}
+.perf{margin:0 12px 8px;border:1px solid var(--line);border-radius:11px;background:var(--ink-2);padding:9px 12px}
+.perf b{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--jade);display:block;margin-bottom:5px}
+.perf p{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.5}
+.story{margin:0 12px 8px;border:1px solid var(--line);border-left:3px solid var(--volt);border-radius:11px;background:var(--ink-2);padding:10px 12px}
+.story b{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--volt);display:block;margin-bottom:6px}
+.story p{font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:12px;line-height:1.4;color:var(--paper-dim)}
+.btn{display:block;width:calc(100% - 24px);text-align:center;font-style:italic;font-weight:900;font-size:15px;color:var(--ink);background:var(--volt);border-radius:10px;padding:11px;margin:8px 12px 0}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--paper);font-style:normal;font-family:var(--cond);font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.btn.done{background:none;border:1px solid var(--jade);color:var(--jade)}
+.mid{padding:34px 16px 0;text-align:center}
+.mid .kick{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--volt)}
+.mid h2{margin-top:10px;font-style:italic;font-weight:900;font-size:40px;letter-spacing:-.05em;line-height:.95}
+.mid .big{margin-top:18px;font-family:var(--mono);font-weight:700;font-size:46px;color:var(--volt)}
+.mid .lab{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px}
+.lb{margin:14px 12px 0;border:1px solid var(--line);border-radius:14px;background:var(--ink-2);overflow:hidden}
+.lb .lh{padding:11px 14px;border-bottom:1px solid var(--line);font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+.lr{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--line)}
+.lr:first-of-type{border-top:0}
+.lr .rk{flex:none;width:26px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.lr .who{flex:1 1 auto;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lr .sc{flex:none;font-family:var(--mono);font-size:13px;font-weight:700}
+.lr.you{background:var(--volt-dim)}.lr.you .who{color:var(--volt);font-weight:600}.lr.you .rk{color:var(--volt)}
+.share{margin:12px 12px 0;border:1px solid var(--line);border-radius:14px;background:var(--ink-2);padding:15px 14px}
+.share .g{font-family:var(--mono);font-size:18px;letter-spacing:.09em;line-height:1.5}
+.share .cap{margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.55}
+.note{margin-top:30px;padding:14px 16px 30px;font-size:11px;color:var(--muted-dim);line-height:1.55;border-top:1px dashed var(--line)}
+/* home grammar */
+.hm{padding:0 12px}
+.hmhdr{padding:20px 16px 10px}
+.hmhdr h1{font-style:italic;font-weight:900;font-size:38px;letter-spacing:-.05em;line-height:.95}
+.hmhdr .sub{margin-top:5px;font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.hero{border:1px solid #2a3300;border-radius:14px;background:linear-gradient(160deg,var(--volt-dim),var(--ink-2));padding:15px 14px;margin-bottom:10px}
+.hero .eb{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.hero .eb b{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--volt)}
+.hero .eb span{font-family:var(--mono);font-size:11px;color:var(--paper-dim)}
+.hero h2{font-style:italic;font-weight:900;font-size:30px;letter-spacing:-.04em;line-height:1}
+.hero p{margin-top:7px;font-size:13px;color:var(--paper-dim);line-height:1.45}
+.mod{border:1px solid var(--line);border-radius:13px;background:var(--ink-2);padding:13px 14px;margin-bottom:10px}
+.mod .mh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+.mod .mh b{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--volt)}
+.mod .mh span{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.arow{display:flex;align-items:baseline;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.arow:first-of-type{border-top:0}
+.arow .d{flex:none;font-family:var(--mono);font-size:11px;color:var(--muted);width:52px}
+.arow .y{flex:1 1 auto;font-size:13px;min-width:0}
+.arow .s{flex:none;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--volt)}
+.arow .s.none{color:var(--muted-dim);font-weight:400}
+.arow .s.jade{color:var(--jade)}
+.ghost{display:block;width:100%;text-align:center;font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px;margin-top:9px}
+.pchips{display:flex;flex-wrap:wrap;gap:5px}
+.pchip{font-family:var(--mono);font-size:10px;border:1px solid var(--line);border-radius:99px;padding:4px 9px;color:var(--muted)}
+.pchip.on{border-color:var(--volt);color:var(--volt)}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{flex:1 1 auto;min-width:48px;text-align:center;border:1px solid var(--line);border-radius:9px;background:var(--ink);padding:10px 6px;font-family:var(--cond);font-weight:600;font-size:12px;letter-spacing:.04em;color:var(--paper-dim)}
+.opt.on{border-color:var(--volt);color:var(--volt);background:var(--volt-dim)}
+
+/* ===== additions for the games lobby, named so the relay can cite them ===== */
+/* stat strip: four numbers under the header. The thing v1 Daily never showed. */
+.strip{margin:0 12px 10px;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:13px;background:var(--ink-2);overflow:hidden}
+.strip div{padding:11px 4px;text-align:center;border-left:1px solid var(--line)}
+.strip div:first-child{border-left:0}
+.strip b{display:block;font-family:var(--mono);font-weight:700;font-size:18px;line-height:1;color:var(--paper)}
+.strip b.v{color:var(--volt)}
+.strip small{display:block;margin-top:5px;font-family:var(--cond);font-weight:600;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+/* game row: glyph tile + name + meta + state */
+.grow{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid var(--line)}
+.grow:first-of-type{border-top:0}
+.grow .gl{flex:none;width:40px;height:40px;border-radius:10px;background:var(--ink);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:19px}
+.grow .gl.on{border-color:var(--volt);background:var(--volt-dim)}
+.grow .gl.done{border-color:var(--jade)}
+.grow .tx{flex:1 1 auto;min-width:0}
+.grow .tx b{display:block;font-style:italic;font-weight:900;font-size:17px;letter-spacing:-.03em;line-height:1}
+.grow .tx small{display:block;margin-top:4px;font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.45}
+.grow .tx small em{font-style:normal;color:var(--paper-dim)}
+.grow .st{flex:none;font-family:var(--cond);font-weight:600;font-size:9px;letter-spacing:.10em;text-transform:uppercase;border:1px solid var(--line);border-radius:99px;padding:4px 9px;color:var(--muted)}
+.grow .st.on{color:var(--ink);background:var(--volt);border-color:var(--volt)}
+.grow .st.done{color:var(--jade);border-color:var(--jade)}
+/* pick'em game row: two sides */
+.pk{display:grid;grid-template-columns:1fr 22px 1fr;align-items:stretch;gap:5px;padding:6px 12px;border-top:1px solid var(--line)}
+.pk .side{background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:7px 9px;min-width:0}
+.pk .side.on{border-color:var(--volt);background:var(--volt-dim)}
+.pk .side b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk .side small{display:block;margin-top:2px;font-family:var(--mono);font-size:9px;color:var(--muted)}
+.pk .side.on small{color:var(--volt)}
+.pk .at{align-self:center;text-align:center;font-family:var(--mono);font-size:9px;color:var(--muted-dim)}
+.pk.locked .side{border-style:dashed;opacity:.75}
+.rk{font-family:var(--cond);font-weight:700;font-size:9px;color:var(--volt);letter-spacing:.04em}
+.livedot{display:inline-block;width:6px;height:6px;border-radius:99px;background:var(--live);vertical-align:middle;margin-right:4px}
+.search{margin:8px 12px 0;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+/* mock chrome, outside the phone */
+.mockbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:10px 12px 0;max-width:390px;margin:0 auto}
+.mockbar button{font-family:var(--cond);font-weight:600;letter-spacing:.08em;font-size:11px;text-transform:uppercase;background:#111;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:5px 11px}
+.mockbar button.on{color:var(--ink);background:var(--paper);border-color:var(--paper)}
+.mockbar.state button.on{background:var(--volt);border-color:var(--volt)}
+.scr{display:none}.scr.on{display:block}
+.o{display:none}.g{display:none}
+body.open .o{display:block}body.graded .g{display:block}
+body.open .g,body.graded .o{display:none!important}
+span.o,b.o,small.o{display:none}body.open span.o,body.open b.o,body.open small.o{display:inline}
+span.g,b.g,small.g{display:none}body.graded span.g,body.graded b.g,body.graded small.g{display:inline}
+</style></head><body class="open">
+
+<div class="mockbar" id="screens"><button class="on" data-s="lobby">Lobby</button><button data-s="pickem">Pick'em</button><button data-s="weekly">Weekly</button><button data-s="draft">Draft</button></div>
+<div class="mockbar state" id="states"><button class="on" data-st="open">Tue Sep 8, open</button><button data-st="graded">Tue Sep 15, settled</button></div>
+
+<div class="phone">
+
+<!-- ============ LOBBY ============ -->
+<div class="scr on" id="s-lobby">
+  <div class="hmhdr"><h1>Games</h1><div class="sub"><span class="o">Tuesday Sep 8 &middot; Week 1 &middot; same boards for everyone</span><span class="g">Tuesday Sep 15 &middot; Week 1 settled &middot; Week 2 open</span></div></div>
+  <div class="strip">
+    <div><b class="v">13</b><small>streak</small></div>
+    <div><b>13</b><small>best</small></div>
+    <div><b><span class="o">31</span><span class="g">34</span></b><small>boards</small></div>
+    <div><b><span class="o">86%</span><span class="g">84%</span></b><small>of best</small></div>
+  </div>
+  <div class="hm">
+    <div class="hero o">
+      <div class="eb"><b>The Weekly opened this morning</b><span>locks Wed 5:20 PM PT</span></div>
+      <h2>Six slots.<br>No clock.</h2>
+      <p>Any six from 1,011 players. Edit until first kickoff. Graded against the best six this pool could make.</p>
+      <button class="btn" style="margin:12px 0 0;width:100%">Set your six</button>
+    </div>
+    <div class="hero g">
+      <div class="eb"><b>Week 1 is settled</b><span>3 grades in</span></div>
+      <h2>71% of the<br>ceiling.</h2>
+      <p>Weekly 118.4 of 166.9 &middot; Draft 2nd in the field from seat 7 &middot; Pick'em 17 of 23. Week 2 boards opened at 6:00 AM PT.</p>
+      <button class="btn done" style="margin:12px 0 0;width:100%">See your grades</button>
+    </div>
+
+    <div class="mod">
+      <div class="mh"><b>Today's boards</b><span>one handle, every board</span></div>
+      <div class="grow"><div class="gl">&#x1F5D3;</div><div class="tx"><b>The Daily</b><small>No. 024 &middot; 2011 &middot; nine slots, twelve teams<br><span class="o">not played &middot; closes <em>midnight PT</em></span><span class="g">played &middot; <em>7.4 of 9 &middot; 82%</em></span></small></div><span class="st o">Play</span><span class="st done g">Done</span></div>
+      <div class="grow"><div class="gl">&#x2705;</div><div class="tx"><b>Pick'em</b><small><span class="o">Board 3 &middot; CFB Week 2 &middot; 21 games<br>0 of 21 picked &middot; first lock <em>Thu 4:30 PM PT</em></span><span class="g">Board 3 settled &middot; <em>17 of 23</em><br>Board 4 &middot; 24 games &middot; first lock <em>Thu 4:30 PM PT</em></span></small></div><span class="st o">Pick</span><span class="st g">Board 4</span></div>
+      <div class="grow"><div class="gl on">6&#xFE0F;&#x20E3;</div><div class="tx"><b>The Weekly</b><small><span class="o">Week 1 &middot; six from 1,011 &middot; PPR<br>0 of 6 set &middot; locks <em>Wed 5:20 PM PT</em></span><span class="g">Week 1 &middot; <em>118.4 &middot; 71% of ceiling</em> &middot; 6th of 44<br>Week 2 open &middot; 0 of 6 set</span></small></div><span class="st on o">Open</span><span class="st done g">Graded</span></div>
+      <div class="grow"><div class="gl on">&#x1FA91;</div><div class="tx"><b>The Draft</b><small><span class="o">Week 1 &middot; 12 seats &middot; 8 rounds &middot; 30s<br>no seat yet &middot; rooms lock <em>Wed 5:20 PM PT</em></span><span class="g">Week 1 &middot; seat 7 &middot; <em>131.0 &middot; 88% of field best</em> &middot; 2nd of 29 &middot; 2nd in your room<br>Week 2 open &middot; no seat yet</span></small></div><span class="st on o">Open</span><span class="st done g">Graded</span></div>
+    </div>
+
+    <div class="mod">
+      <div class="mh"><b>Leaderboards</b><span>ranked play only</span></div>
+      <div class="arow"><span class="d">Weekly</span><span class="y"><span class="o">needs 3 weeks &middot; avg % of ceiling</span><span class="g">71.0% &middot; 1 of 3 needed</span></span><span class="s none">-</span></div>
+      <div class="arow"><span class="d">Draft</span><span class="y"><span class="o">needs 3 weeks &middot; avg % of the week's best draft</span><span class="g">87.8% &middot; 1 of 3 needed</span></span><span class="s none">-</span></div>
+      <div class="arow"><span class="d">Pick'em</span><span class="y">63.0% &middot; 29 of 46 correct</span><span class="s">#11</span></div>
+      <div class="arow"><span class="d">Daily</span><span class="y">88.4% &middot; 7.4 of 9 avg</span><span class="s">#34</span></div>
+      <div class="arow"><span class="d">Streak</span><span class="y">13 current &middot; 13 longest &middot; any ranked board</span><span class="s">#9</span></div>
+      <button class="ghost">All boards &rarr;</button>
+    </div>
+
+    <div class="mod">
+      <div class="mh"><b>Your room</b><span>the group chat &middot; 6</span></div>
+      <div class="arow"><span class="d">1</span><span class="y">Todd</span><span class="s">&#x1F525; 9 &middot; 3 boards</span></div>
+      <div class="arow"><span class="d">2</span><span class="y" style="color:var(--volt)">you</span><span class="s">&#x1F525; 13 &middot; 4 boards</span></div>
+      <div class="arow"><span class="d">3</span><span class="y">Marcus</span><span class="s">&#x1F525; 2 &middot; 1 board</span></div>
+      <button class="ghost">Invite &middot; code 7K2XQ &rarr;</button>
+    </div>
+
+    <div class="mod" style="margin-bottom:24px">
+      <div class="mh"><b>Practice</b><span>unranked &middot; nothing here counts</span></div>
+      <div class="pchips"><span class="pchip on">Mock draft</span><span class="pchip">Daily practice</span><span class="pchip">2010s</span><span class="pchip">12 teams</span></div>
+      <button class="ghost">Set up a board &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PICK'EM ============ -->
+<div class="scr" id="s-pickem">
+  <div class="o">
+    <header class="hdr"><span class="ed">Pick'em &middot; Board 3 &middot; CFB Week 2</span><span class="clock">6 of 21</span></header>
+    <div class="yr"><h1>Board 3</h1><div class="sub">Twenty-one games. Call the winner, straight up. Each game locks at its own kickoff, so the Thursday three go first.</div></div>
+    <div class="warn">Perfect board is 21. A tie or a cancelled game is a push and comes off the denominator.</div>
+    <div class="prog"><div class="rrow">
+      <div class="pip tiny full"><span class="dot">&#x2713;</span></div><div class="pip tiny full"><span class="dot">&#x2713;</span></div><div class="pip tiny full"><span class="dot">&#x2713;</span></div>
+      <div class="pip tiny full"><span class="dot">&#x2713;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny full"><span class="dot">&#x2713;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny full"><span class="dot">&#x2713;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div><div class="pip tiny"><span class="dot">&middot;</span></div>
+    </div><div class="cap"><span>6 of 21 picked</span><span>next lock Thu 4:30 PM PT</span></div></div>
+    <div class="needline">Saves on tap. Reminder lands <b>Sat 7:00 AM PT</b> if anything is still open.</div>
+
+    <div class="secl"><b>Thursday &middot; 3 games</b><span>lock 4:30 PM PT</span></div>
+    <div class="list">
+      <div class="pk" style="border-top:0"><div class="side on"><b>Kansas St.</b><small>1-0 &middot; picked</small></div><div class="at">at</div><div class="side"><b>Arizona</b><small>1-0</small></div></div>
+      <div class="pk"><div class="side"><b><span class="rk">19</span> Boise St.</b><small>1-0</small></div><div class="at">at</div><div class="side on"><b>South Florida</b><small>1-0 &middot; picked</small></div></div>
+      <div class="pk"><div class="side on"><b>Iowa</b><small>1-0 &middot; picked</small></div><div class="at">at</div><div class="side"><b><span class="rk">16</span> Iowa St.</b><small>1-0</small></div></div>
+    </div>
+
+    <div class="secl"><b>Saturday &middot; 18 games</b><span>lock per game</span></div>
+    <div class="list">
+      <div class="pk" style="border-top:0"><div class="side"><b><span class="rk">7</span> Michigan</b><small>1-0</small></div><div class="at">at</div><div class="side on"><b><span class="rk">4</span> Oklahoma</b><small>4:30 PM PT &middot; picked</small></div></div>
+      <div class="pk"><div class="side on"><b><span class="rk">1</span> Texas</b><small>9:00 AM PT &middot; picked</small></div><div class="at">at</div><div class="side"><b>San Jose St.</b><small>1-0</small></div></div>
+      <div class="pk"><div class="side"><b><span class="rk">3</span> Georgia</b><small>1-0</small></div><div class="at">at</div><div class="side"><b><span class="rk">12</span> Tennessee</b><small>12:30 PM PT</small></div></div>
+      <div class="pk"><div class="side"><b><span class="rk">11</span> Arizona St.</b><small>1-0</small></div><div class="at">at</div><div class="side"><b>Mississippi St.</b><small>9:00 AM PT</small></div></div>
+      <div class="pk"><div class="side"><b>Baylor</b><small>1-0</small></div><div class="at">at</div><div class="side on"><b><span class="rk">17</span> SMU</b><small>9:00 AM PT &middot; picked</small></div></div>
+      <div class="pk"><div class="side"><b>Utah</b><small>1-0</small></div><div class="at">at</div><div class="side"><b>Wyoming</b><small>2:30 PM PT</small></div></div>
+    </div>
+    <div class="needline" style="text-align:center;color:var(--muted-dim);font-family:var(--mono);font-size:10px">12 more Saturday games</div>
+
+    <div class="perf" style="margin-top:8px"><b>How you are graded</b><p>Correct picks over games played. Your season number is correct % across every board, minimum three boards. Ranked favourites you faded are counted so the story can name them.</p></div>
+    <button class="btn ghost">Home</button>
+  </div>
+
+  <div class="g">
+    <header class="hdr"><span class="ed">Pick'em &middot; Board 3 &middot; CFB Week 2</span><span class="clock">settled Sun 4:30 AM PT</span></header>
+    <div class="grade"><div class="top"><b>Board 3</b><span>17 of 23 &middot; 74%</span></div>
+      <div class="colhead"><div class="cy">You</div><div class="cb">Result</div></div>
+      <div class="sbr hit"><div class="top2"><span class="pos">THU</span><span class="vd">Right</span><span class="dif">&#x2713;</span></div><div class="two"><div class="bx you"><div class="nm">Kansas St.</div><div class="mt">at Arizona &middot; 1-0</div><div class="pt">W</div></div><div class="bx same"><div class="tick">&#x2713;</div><div class="sm">Kansas St. 31-20</div></div></div></div>
+      <div class="sbr miss"><div class="top2"><span class="pos">SAT</span><span class="vd">Wrong</span><span class="dif">-1</span></div><div class="two"><div class="bx you"><div class="nm">Oklahoma</div><div class="mt">#4 &middot; you took the rank</div><div class="pt">L</div></div><div class="bx best"><div class="nm">Michigan 24-21</div><div class="mt">#7 on the road &middot; 9 of 31 had it</div><div class="pt">W</div></div></div></div>
+      <div class="sbr hit"><div class="top2"><span class="pos">SAT</span><span class="vd">Right</span><span class="dif">&#x2713;</span></div><div class="two"><div class="bx you"><div class="nm">Texas</div><div class="mt">#1 &middot; at San Jose St.</div><div class="pt">W</div></div><div class="bx same"><div class="tick">&#x2713;</div><div class="sm">Texas 45-10</div></div></div></div>
+      <div class="sbr push"><div class="top2"><span class="pos">SAT</span><span class="vd">Push</span><span class="dif">off the board</span></div><div class="two"><div class="bx you"><div class="nm" style="color:var(--muted)">Utah</div><div class="mt">at Wyoming</div><div class="pt" style="color:var(--muted)">-</div></div><div class="bx"><div class="nm" style="color:var(--muted)">Cancelled</div><div class="mt">weather &middot; 23 became 22</div><div class="pt" style="color:var(--muted)">-</div></div></div></div>
+      <div class="sbr hit"><div class="top2"><span class="pos">SAT</span><span class="vd">Right</span><span class="dif">&#x2713;</span></div><div class="two"><div class="bx you"><div class="nm">SMU</div><div class="mt">#17 &middot; vs Baylor</div><div class="pt">W</div></div><div class="bx same"><div class="tick">&#x2713;</div><div class="sm">SMU 38-27</div></div></div></div>
+      <div class="sbr miss"><div class="top2"><span class="pos">SAT</span><span class="vd">Wrong</span><span class="dif">-1</span></div><div class="two"><div class="bx you"><div class="nm">Georgia</div><div class="mt">#3 &middot; at Tennessee</div><div class="pt">L</div></div><div class="bx best"><div class="nm">Tennessee 27-24</div><div class="mt">#12 &middot; OT &middot; 12 of 31 had it</div><div class="pt">W</div></div></div></div>
+    </div>
+    <div class="mathline">17 right &middot; 5 wrong &middot; 1 push &middot; <b>4 ranked favourites lost</b>, you had 3 of them.</div>
+    <div class="story"><b>About your board</b><p>Six upsets on the board and four of them came from a ranked road team. You rode the rank in every one of those and it cost you three. The Missouri margin, 62 to 3, was the largest on any Sportsvyn board so far.</p></div>
+    <div class="share"><div class="g" style="display:block">&#x1F7E9;&#x1F7E9;&#x1F7E9;&#x2B1B;&#x1F7E9;&#x1F7E9;&#x1F7E9;&#x2B1B;&#x1F7E9;&#x1F7E9;&#x1F7E9;&#x1F7E9;&#x2B1B;&#x1F7E9;&#x1F7E9;&#x1F7E9;&#x1F7E9;&#x2B1B;&#x1F7E9;&#x1F7E9;&#x2B1B;&#x1F7E9;</div><div class="cap">Pick'em Board 3 &middot; 17 of 23 &middot; 74% &middot; 4th of 31<br>sportsvyn.com/pickem</div></div>
+    <div class="lb"><div class="lh"><span>Board 3</span><span>31 played</span></div>
+      <div class="lr"><span class="rk">1</span><span class="who">malloy</span><span class="sc">20</span></div>
+      <div class="lr"><span class="rk">2</span><span class="who">hurley3594</span><span class="sc">19</span></div>
+      <div class="lr"><span class="rk">3</span><span class="who">kdot</span><span class="sc">18</span></div>
+      <div class="lr you"><span class="rk">4</span><span class="who">you</span><span class="sc">17</span></div>
+    </div>
+    <button class="btn" style="margin-top:12px">Share</button>
+    <button class="btn ghost">Board 4 is open &rarr;</button>
+  </div>
+</div>
+
+<!-- ============ WEEKLY ============ -->
+<div class="scr" id="s-weekly">
+  <div class="o">
+    <header class="hdr"><span class="ed">The Weekly &middot; Week 1</span><span class="clock">locks Wed 5:20 PM PT</span></header>
+    <div class="yr"><h1>Week 1</h1><div class="sub">Six slots. No clock. Any six from the full pool, full PPR, and whatever is saved at first kickoff is your entry.</div></div>
+    <div class="warn">Same board for everyone. You are graded against the best six this pool could have made.</div>
+    <div class="prog"><div class="rrow">
+      <div class="pip full"><span class="em">&#x1F3AF;</span><span class="dot">QB</span></div>
+      <div class="pip full"><span class="em">&#x1F3C3;</span><span class="dot">RB</span></div>
+      <div class="pip"><span class="em">&#x1F932;</span><span class="dot">WR</span></div>
+      <div class="pip"><span class="em">&#x1F9BE;</span><span class="dot">TE</span></div>
+      <div class="pip"><span class="em">&#x1F504;</span><span class="dot">FX</span></div>
+      <div class="pip"><span class="em">&#x1F504;</span><span class="dot">FX</span></div>
+    </div><div class="cap"><span>2 of 6 set</span><span>saves on change</span></div></div>
+    <div class="needline">Still need <b>WR &middot; TE &middot; FLEX &middot; FLEX</b></div>
+
+    <div class="secl"><b>Your six</b><span>tap a slot to change it</span></div>
+    <div class="list">
+      <button class="pr"><span class="pos">&#x1F3AF; QB</span><span class="nm"><b>Josh Allen</b><small>BUF &middot; at NYJ &middot; Sun 10:00 AM PT</small></span><span class="tk quiet">Change</span></button>
+      <button class="pr"><span class="pos">&#x1F3C3; RB</span><span class="nm"><b>Bucky Irving</b><small>TB &middot; vs ATL &middot; Sun 10:00 AM PT</small></span><span class="tk quiet">Change</span></button>
+      <button class="pr empty"><span class="pos">&#x1F932; WR</span><span class="nm"><b>Pick a receiver</b><small>&nbsp;</small></span><span class="tk">Take</span></button>
+      <button class="pr empty"><span class="pos">&#x1F9BE; TE</span><span class="nm"><b>Pick a tight end</b><small>&nbsp;</small></span><span class="tk">Take</span></button>
+      <button class="pr empty"><span class="pos">&#x1F504; FLEX</span><span class="nm"><b>RB, WR or TE</b><small>&nbsp;</small></span><span class="tk">Take</span></button>
+      <button class="pr empty"><span class="pos">&#x1F504; FLEX</span><span class="nm"><b>RB, WR or TE</b><small>&nbsp;</small></span><span class="tk">Take</span></button>
+    </div>
+    <div class="search">&#x1F50E; search 1,011 players by name</div>
+
+    <div class="perf" style="margin-top:12px"><b>The best six this pool allows</b><p>Revealed Tuesday morning when Week 1 settles. Your grade is your six as a percentage of it. Raw points never cross weeks - a bye-heavy week has a lower ceiling and the percentage knows that.</p></div>
+    <div class="mathline">Alerts: opens Tue 6:00 AM PT &middot; one hour to lock Wed 4:20 PM PT &middot; graded Tue Sep 15. All on.</div>
+    <button class="btn ghost">Home</button>
+  </div>
+
+  <div class="g">
+    <header class="hdr"><span class="ed">The Weekly &middot; Week 1</span><span class="clock">settled 5:15 AM PT</span></header>
+    <div class="grade"><div class="top"><b>Week 1</b><span>118.4 pts &middot; 71% of 166.9</span></div>
+      <div class="colhead"><div class="cy">You</div><div class="cb">Best six</div></div>
+      <div class="sbr hit"><div class="top2"><span class="pos">QB</span><span class="vd">Matched</span><span class="dif">&#x2713;</span></div><div class="two"><div class="bx you"><div class="nm">Josh Allen</div><div class="mt">BUF &middot; 312 yds &middot; 3 TD</div><div class="pt">28.6</div></div><div class="bx same"><div class="tick">&#x2713;</div><div class="sm">same pick</div></div></div></div>
+      <div class="sbr hit"><div class="top2"><span class="pos">WR</span><span class="vd">Matched</span><span class="dif">&#x2713;</span></div><div class="two"><div class="bx you"><div class="nm">Puka Nacua</div><div class="mt">LAR &middot; 9-133-1</div><div class="pt">26.3</div></div><div class="bx same"><div class="tick">&#x2713;</div><div class="sm">same pick</div></div></div></div>
+      <div class="sbr hit"><div class="top2"><span class="pos">FLEX</span><span class="vd">Matched</span><span class="dif">&#x2713;</span></div><div class="two"><div class="bx you"><div class="nm">Travis Hunter</div><div class="mt">JAX &middot; 7-98-1</div><div class="pt">21.8</div></div><div class="bx same"><div class="tick">&#x2713;</div><div class="sm">same pick</div></div></div><div class="swap">You had him at FLEX 2. Same player, same points - it counts.</div></div>
+      <div class="sbr ahead"><div class="top2"><span class="pos">SWAP</span><span class="vd">You were ahead</span><span class="dif">+1.2</span></div><div class="two"><div class="bx you"><div class="nm">Bucky Irving</div><div class="mt">TB &middot; 19-104-1 &middot; 4 rec</div><div class="pt">24.1</div></div><div class="bx best"><div class="nm">Jahmyr Gibbs</div><div class="mt">DET &middot; the best six spends RB here to free a slot</div><div class="pt">22.9</div></div></div></div>
+      <div class="sbr miss"><div class="top2"><span class="pos">SWAP</span><span class="vd">Missed</span><span class="dif">-20.2</span></div><div class="two"><div class="bx you"><div class="nm">Nico Collins</div><div class="mt">HOU &middot; 5-62-0</div><div class="pt">11.2</div></div><div class="bx best"><div class="nm">Omarion Hampton</div><div class="mt">LAC &middot; 2 TD &middot; 24 touches</div><div class="pt">31.4</div></div></div></div>
+      <div class="sbr miss"><div class="top2"><span class="pos">SWAP</span><span class="vd">Missed</span><span class="dif">-15.3</span></div><div class="two"><div class="bx you"><div class="nm">Dalton Kincaid</div><div class="mt">BUF &middot; 3-34-0</div><div class="pt">6.4</div></div><div class="bx best"><div class="nm">Brock Bowers</div><div class="mt">LV &middot; 9-127-1</div><div class="pt">21.7</div></div></div></div>
+    </div>
+    <div class="mathline">3 of 6 matched &middot; <b>48.5 points left on the board</b> &middot; your best five counted, Kincaid dropped as worst.</div>
+    <div class="perf"><b>The best six this pool allowed</b><p>Allen &middot; Gibbs &middot; Nacua &middot; Bowers &middot; Hampton &middot; Hunter<br>166.9 points. 1,011 players eligible, 6 of them on this line.</p></div>
+    <div class="story"><b>About your week</b><p>Three of your six were on the best six. The gap is two players: Hampton at FLEX was twenty points on Collins, and Bowers outscored every tight end on the board by nine. Irving over Gibbs was the right call - the best six only leaves him off because Gibbs frees a slot elsewhere.</p></div>
+    <div class="share"><div class="g" style="display:block">&#x1F7E9;&#x1F7E9;&#x1F7E9;&#x1F7E8;&#x2B1B;&#x2B1B;</div><div class="cap">The Weekly Week 1 &middot; 118.4 pts &middot; 71% &middot; 6th of 44<br>sportsvyn.com/weekly</div></div>
+    <div class="lb"><div class="lh"><span>Week 1</span><span>44 played</span></div>
+      <div class="lr"><span class="rk">1</span><span class="who">malloy</span><span class="sc">149.2</span></div>
+      <div class="lr"><span class="rk">2</span><span class="who">ThatOprah</span><span class="sc">141.6</span></div>
+      <div class="lr"><span class="rk">3</span><span class="who">kdot</span><span class="sc">137.0</span></div>
+      <div class="lr you"><span class="rk">6</span><span class="who">you</span><span class="sc">118.4</span></div>
+    </div>
+    <button class="btn" style="margin-top:12px">Share</button>
+    <button class="btn ghost">Week 2 is open &rarr;</button>
+  </div>
+</div>
+
+<!-- ============ DRAFT ============ -->
+<div class="scr" id="s-draft">
+  <div class="o">
+    <header class="hdr"><span class="ed">The Draft &middot; Week 1 &middot; ranked</span><span class="clock">rooms lock Wed 5:20 PM PT</span></header>
+    <div class="yr"><h1>Week 1</h1><div class="sub">Eight rounds. No bench. Same pool as The Weekly, drafted against a room of eleven. Your best six of eight count.</div></div>
+    <div class="warn">Pick a seat and it is your franchise for the week. Walk away and the seat drafts for itself at lock.</div>
+    <div class="prog"><div class="rrow">
+      <div class="pip"><span class="em">1</span><span class="dot">R1</span></div><div class="pip"><span class="em">2</span><span class="dot">R2</span></div><div class="pip"><span class="em">3</span><span class="dot">R3</span></div><div class="pip"><span class="em">4</span><span class="dot">R4</span></div><div class="pip"><span class="em">5</span><span class="dot">R5</span></div><div class="pip"><span class="em">6</span><span class="dot">R6</span></div><div class="pip"><span class="em">7</span><span class="dot">R7</span></div><div class="pip"><span class="em">8</span><span class="dot">R8</span></div>
+    </div><div class="cap"><span>0 of 8 picked</span><span>30s a pick &middot; 12 seats &middot; PPR</span></div></div>
+
+    <div class="secl"><b>Your seat</b><span>your room, same seed for everyone</span></div>
+    <div class="hm"><div class="mod"><div class="opts">
+      <button class="opt">1</button><button class="opt">2</button><button class="opt">3</button><button class="opt">4</button><button class="opt">5</button><button class="opt">6</button><button class="opt on">7</button><button class="opt">8</button><button class="opt">9</button><button class="opt">10</button><button class="opt">11</button><button class="opt">12</button>
+    </div><div class="mathline" style="margin:10px 0 0">Seat 7 picks 7th and 18th. Any seat is open - it is your room against eleven bots. Everyone who takes seat 7 faces the same room.</div></div></div>
+    <button class="btn" style="margin-top:0">Take seat 7</button>
+
+    <div class="perf" style="margin-top:12px"><b>How you are graded</b><p>Two ways, both at settle. Your room: where your eight finish against the eleven bots you drafted with. The field: your points against everyone who drafted this week, and the best draft in the field is shown beside yours. There is no solver ceiling here - the best eight in the pool cannot sit on one roster, and the room reacts to what you take.</p></div>
+    <div class="mathline">Alerts: rooms open Tue 6:00 AM PT &middot; one hour to lock Wed 4:20 PM PT &middot; graded Tue Sep 15. All on.</div>
+    <button class="btn ghost">Home</button>
+  </div>
+
+  <div class="g">
+    <header class="hdr"><span class="ed">The Draft &middot; Week 1 &middot; seat 7</span><span class="clock">settled 6:15 AM PT</span></header>
+    <div class="mid" style="padding-top:8px"><div class="kick">Your room &middot; seat 7</div><div class="big" style="margin-top:8px">2nd</div><div class="lab">of 12 in the room &middot; the bot in seat 3 took 138.9</div></div>
+    <div class="grade" style="margin-top:14px"><div class="top"><b>The field</b><span>131.0 pts &middot; 88% of 149.2</span></div>
+      <div class="colhead"><div class="cy">You &middot; seat 7</div><div class="cb">Field best &middot; malloy &middot; seat 3</div></div>
+      <div class="sbr hit"><div class="top2"><span class="pos">R1</span><span class="vd">Matched</span><span class="dif">&#x2713;</span></div><div class="two"><div class="bx you"><div class="nm">Ja'Marr Chase</div><div class="mt">CIN &middot; pick 7</div><div class="pt">24.8</div></div><div class="bx same"><div class="tick">&#x2713;</div><div class="sm">same pick</div></div></div></div>
+      <div class="sbr hit"><div class="top2"><span class="pos">R2</span><span class="vd">Matched</span><span class="dif">&#x2713;</span></div><div class="two"><div class="bx you"><div class="nm">Brock Bowers</div><div class="mt">LV &middot; pick 18</div><div class="pt">21.7</div></div><div class="bx same"><div class="tick">&#x2713;</div><div class="sm">same pick</div></div></div></div>
+      <div class="sbr miss"><div class="top2"><span class="pos">R3</span><span class="vd">Missed</span><span class="dif">-22.3</span></div><div class="two"><div class="bx you"><div class="nm">De'Von Achane</div><div class="mt">MIA &middot; pick 31</div><div class="pt">9.1</div></div><div class="bx best"><div class="nm">Omarion Hampton</div><div class="mt">LAC &middot; malloy took him at 27 from seat 3</div><div class="pt">31.4</div></div></div></div>
+      <div class="sbr hit"><div class="top2"><span class="pos">R4</span><span class="vd">Matched</span><span class="dif">&#x2713;</span></div><div class="two"><div class="bx you"><div class="nm">Josh Allen</div><div class="mt">BUF &middot; pick 42</div><div class="pt">28.6</div></div><div class="bx same"><div class="tick">&#x2713;</div><div class="sm">same pick</div></div></div></div>
+      <div class="sbr ahead"><div class="top2"><span class="pos">R5</span><span class="vd">You were ahead</span><span class="dif">+5.8</span></div><div class="two"><div class="bx you"><div class="nm">Bucky Irving</div><div class="mt">TB &middot; pick 55</div><div class="pt">24.1</div></div><div class="bx best"><div class="nm">Quinshon Judkins</div><div class="mt">CLE &middot; frees round 6</div><div class="pt">18.3</div></div></div></div>
+      <div class="sbr miss"><div class="top2"><span class="pos">R6</span><span class="vd">Missed</span><span class="dif">-11.8</span></div><div class="two"><div class="bx you"><div class="nm">George Pickens</div><div class="mt">DAL &middot; pick 66</div><div class="pt">7.7</div></div><div class="bx best"><div class="nm">Emeka Egbuka</div><div class="mt">TB &middot; 6-81-1</div><div class="pt">19.5</div></div></div></div>
+      <div class="sbr hit"><div class="top2"><span class="pos">R7</span><span class="vd">Matched</span><span class="dif">&#x2713;</span></div><div class="two"><div class="bx you"><div class="nm">Trey McBride</div><div class="mt">ARI &middot; pick 79</div><div class="pt">16.9</div></div><div class="bx same"><div class="tick">&#x2713;</div><div class="sm">same pick</div></div></div></div>
+      <div class="sbr push"><div class="top2"><span class="pos">R8</span><span class="vd">Dropped</span><span class="dif">best six count</span></div><div class="two"><div class="bx you drop"><div class="nm">Roschon Johnson</div><div class="mt">CHI &middot; pick 90</div><div class="pt">4.2</div></div><div class="bx best drop"><div class="nm">Jaylen Wright</div><div class="mt">MIA &middot; also dropped</div><div class="pt">6.0</div></div></div></div>
+    </div>
+    <div class="mathline">5 of 8 shared with the field's best draft &middot; <b>18.2 points behind</b> &middot; both rosters drop two, Pickens and Johnson for you.</div>
+    <div class="perf"><b>The best draft in the field</b><p>malloy &middot; seat 3 &middot; 149.2 from the six that count<br>Chase &middot; Bowers &middot; Hampton &middot; Allen &middot; Judkins &middot; Egbuka &middot; McBride &middot; Wright. Somebody drafted this. The Weekly's best six was 166.9, shown for context, never ranked against.</p></div>
+    <div class="story"><b>About your draft</b><p>Five of your eight are on the field's best draft. The gap is round three: malloy took Hampton at 27 from seat 3 and you took Achane at 31 with Hampton gone. Your Irving in round five beat malloy's Judkins, which is why the best draft in the field only edges you by 18. In your own room you finished second, behind the seat 3 bot.</p></div>
+    <div class="share"><div class="g" style="display:block">&#x1F7E9;&#x1F7E9;&#x2B1B;&#x1F7E9;&#x1F7E8;&#x2B1B;&#x1F7E9;&#x2B1C;</div><div class="cap">The Draft Week 1 &middot; seat 7 &middot; 131.0 pts &middot; 2nd of 29 &middot; 2nd in room<br>sportsvyn.com/draft</div></div>
+    <div class="lb"><div class="lh"><span>Week 1 &middot; the field</span><span>29 drafted</span></div>
+      <div class="lr"><span class="rk">1</span><span class="who">malloy &middot; seat 3</span><span class="sc">149.2</span></div>
+      <div class="lr you"><span class="rk">2</span><span class="who">you &middot; seat 7</span><span class="sc">131.0</span></div>
+      <div class="lr"><span class="rk">3</span><span class="who">kdot &middot; seat 7</span><span class="sc">127.4</span></div>
+      <div class="lr"><span class="rk">4</span><span class="who">hurley3594 &middot; seat 11</span><span class="sc">122.8</span></div>
+      <div class="lr"><span class="rk">5</span><span class="who">ThatOprah &middot; seat 1</span><span class="sc">119.1</span></div>
+    </div>
+    <div class="lb"><div class="lh"><span>By seat &middot; Week 1</span><span>avg pts &middot; drafters</span></div>
+      <div class="lr"><span class="rk">3</span><span class="who">seat 3</span><span class="sc">134.0 &middot; 3</span></div>
+      <div class="lr you"><span class="rk">7</span><span class="who">seat 7</span><span class="sc">126.1 &middot; 4</span></div>
+      <div class="lr"><span class="rk">1</span><span class="who">seat 1</span><span class="sc">118.7 &middot; 6</span></div>
+      <div class="lr"><span class="rk">12</span><span class="who">seat 12</span><span class="sc">112.3 &middot; 2</span></div>
+      <div class="lr"><span class="rk">-</span><span class="who" style="color:var(--muted)">seats 2, 9 &middot; nobody drafted them</span><span class="sc" style="color:var(--muted-dim)">-</span></div>
+    </div>
+    <div class="mathline" style="margin-top:8px">Seat 1 was the most popular and the fourth best. One week says nothing - the season board keeps the seat, so by Week 6 this table starts to mean something.</div>
+    <button class="btn" style="margin-top:12px">Share</button>
+    <button class="btn ghost">Week 2 rooms are open &rarr;</button>
+  </div>
+</div>
+
+<div class="note">
+REMOCK v2 &middot; built on daily-full-mock-v3's stylesheet, not a lookalike. Everything the Daily settled is carried: volt eyebrows, the pip row with position emojis, the grade card with sticky YOU / BEST headers, MATCHED / MISSED / YOU WERE AHEAD verdicts, SWAP for value-paired misses, the dashed math line, the jade "best roster this board allowed" box, the serif story written from this board only, the emoji glyph row for sharing, and the today-board with your row in volt-dim. New here: a four-number stat strip under the lobby header, a glyph tile per game, a Pick'em pip row of 21 tiny pips, seat selection as the Daily's option grid, and a yellow square in the glyph row for YOU WERE AHEAD. Practice is one collapsed module. No tab bar, no shop, no ads.
+</div>
+</div>
+
+<script>
+const scr=document.querySelectorAll('#screens button'),st=document.querySelectorAll('#states button');
+scr.forEach(b=>b.onclick=()=>{scr.forEach(x=>x.classList.remove('on'));b.classList.add('on');
+ document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById('s-'+b.dataset.s).classList.add('on');window.scrollTo(0,0);});
+st.forEach(b=>b.onclick=()=>{st.forEach(x=>x.classList.remove('on'));b.classList.add('on');
+ document.body.classList.toggle('open',b.dataset.st==='open');document.body.classList.toggle('graded',b.dataset.st==='graded');window.scrollTo(0,0);});
+</script></body></html>
