@@ -83,8 +83,12 @@ export default function SeatSelect({
 
       <section className="mod">
         {err && <p className="err">{err}</p>}
+        {/* ONE BUTTON, ONE READING (relay 2a-polish-2 item e) - always "Take
+            {a} seat {n}", never a second verb ("Choose a seat") for the
+            unselected state. Disabled + .btn--volt's own :disabled opacity
+            is the mute, not different wording. */}
         <button className="btn btn--volt" disabled={seat == null || busy} onClick={start}>
-          {busy ? 'Opening the room…' : seat == null ? 'Choose a seat' : `Take seat ${seat}`}
+          {busy ? 'Opening the room…' : seat == null ? 'Take a seat' : `Take seat ${seat}`}
         </button>
         <p className="wk-autosave">
           One ranked draft a week. Opening the room uses it - there is no restart.

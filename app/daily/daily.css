@@ -619,9 +619,13 @@
 .weekly .perf b { font-family: var(--d-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--d-jade); display: block; margin-bottom: 5px; }
 .weekly .perf p { font-family: var(--d-mono); font-size: 10px; color: var(--d-mut); line-height: 1.5; margin: 0; }
 
-.weekly .opts { display: flex; flex-wrap: wrap; gap: 6px; }
+/* EXACTLY SIX PER ROW (relay 2a-polish-2 item e) - a grid, not a flex-wrap
+   that fits as many as the row's width allows. 12 seats at flex:1 1 auto
+   wrapped unevenly (7 then 5) depending on rendered width; a fixed
+   6-column grid gives two even rows every time, any seat count. */
+.weekly .opts { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
 .weekly .opt {
-  flex: 1 1 auto; min-width: 48px; text-align: center; border: 1px solid var(--d-line);
+  text-align: center; border: 1px solid var(--d-line);
   border-radius: 9px; background: var(--d-ink); padding: 10px 6px; font-family: var(--d-cond);
   font-weight: 600; font-size: 12px; color: #CFCFC9;
 }
