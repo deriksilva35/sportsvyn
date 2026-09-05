@@ -53,17 +53,18 @@ export async function GET(request) {
       body: String(res.error ?? 'unknown error'),
     });
   }
-  // PUSH HOOK: the one fire that CREATES announces BOTH contests - ensureWeek
-  // makes the draft row alongside the weekly row in the same call (B3, "both
-  // rows or neither"), so both opens are announced together. Send-once
-  // inside notifyEvent makes each safe even on a later fire that somehow
-  // reports created again; caught so a push hiccup cannot fail the creation
-  // run - the pickem-board pattern, doubled.
-  if (res.ok && res.summary?.created && pushEnabled()) {
-    await notifyWeeklyOpen(res.summary.id).catch(() => {});
-    if (res.summary?.draft?.id != null) {
-      await notifyDraftOpen(res.summary.draft.id).catch(() => {});
-    }
+  // PUSH HOOK: STATE-BASED, NOT CREATION-BASED (relay 1b's ruling). Called on
+  // EVERY run, whatever this tick's own outcome was - notifyWeeklyOpen/
+  // notifyDraftOpen each ask "is a contest of my kind open right now, inside
+  // its 24h announce window, and not already claimed" themselves, rather
+  // than trusting THIS tick to be the one that created the row. A creation
+  // tick whose push hiccuped used to mean that contest's open was announced
+  // never; now the next daily tick still finds it inside the window and
+  // fires it, because creation was never the thing that mattered. Caught so
+  // a push hiccup can never fail the run itself.
+  if (res.ok && pushEnabled()) {
+    await notifyWeeklyOpen().catch(() => {});
+    await notifyDraftOpen().catch(() => {});
   }
   return Response.json({ ok: res.ok, ...res.summary });
 }
