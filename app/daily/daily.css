@@ -556,7 +556,10 @@
   font-family: var(--d-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--d-mut);
 }
-.weekly .hdr .clock { font-family: var(--d-mono); font-size: 12px; color: var(--d-volt); }
+/* 2a-polish-2 item b - .clock (this file's OWN Daily countdown, line ~202)
+   sets italic/900 and this selector never overrode either, so the lock
+   clock fell through to the countdown's face. Both stated explicitly here. */
+.weekly .hdr .clock { font-family: var(--d-mono); font-style: normal; font-weight: 400; font-size: 12px; color: var(--d-volt); }
 
 .weekly .yr { padding: 2px 0 6px; }
 .weekly .yr h1 { font-family: var(--d-disp); font-style: italic; font-weight: 900; font-size: 40px; letter-spacing: -.05em; line-height: .92; margin: 0; }
