@@ -128,8 +128,8 @@ function GamesPane({ v, leagues = [], signedIn = false }) {
                   <><b>{c.pulse?.playing ?? 0} playing</b>{c.pulse?.perfect != null && <> &middot; yesterday&rsquo;s perfect {c.pulse.perfect}</>}</>
                 )}
                 {c.key === 'pickem' && (c.pulse
-                  ? <>Board 1 &middot; <b>{c.pulse.games} games</b>{c.pulse.next && <> &middot; locks {c.pulse.next}</>}</>
-                  : <>Board 1 &middot; Sat Aug 29</>)}
+                  ? <>Board {c.pulse.boardNumber} &middot; <b>{c.pulse.games} games</b>{c.pulse.next && <> &middot; locks {c.pulse.next}</>}</>
+                  : <>New board coming</>)}
                 {c.key === 'weekly' && (c.state === 'ghost'
                   ? <>Season opens with <b>Week 1</b></>
                   : (c.closesLabel ?? ' '))}

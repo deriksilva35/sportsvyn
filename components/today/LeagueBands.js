@@ -41,7 +41,7 @@ function ArticleRows({ reads }) {
   ));
 }
 
-export function GridironBand({ id, label, week, context, weekSlate, boardIds, board, boardTitle,
+export function GridironBand({ id, label, week, context, weekSlate, boardIds, boardNumber, board, boardTitle,
   boardCtx, boardCta, boardHref, movement, reads, hubHref, hubLabel, scoresHref }) {
   return (
     <>
@@ -50,7 +50,7 @@ export function GridironBand({ id, label, week, context, weekSlate, boardIds, bo
         {/* THE WEEK SLATE LEADS. It replaced a today-only slate: on a Thursday
             that module was empty for CFB and the band opened with a ranking,
             which is the least perishable thing in it. */}
-        <WeekSlate slate={weekSlate} boardIds={boardIds} scoresHref={scoresHref} label={label} />
+        <WeekSlate slate={weekSlate} boardIds={boardIds} boardNumber={boardNumber} scoresHref={scoresHref} label={label} />
         {board?.length ? (
           <Mod title={boardTitle} ctx={boardCtx} cta={boardCta} ctaHref={boardHref}>
             <Rows rows={board} />

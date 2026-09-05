@@ -52,7 +52,7 @@ export default function GamesBand({ daily, yesterday, pickem, weekly, draft }) {
             ctaClass="play" href="/daily" />
         ) : null}
         {pickem ? (
-          <Card eyebrow="Board 1" isNew={!pickem.entered} title="Pick 'em"
+          <Card eyebrow={`Board ${pickem.boardNumber}`} isNew={!pickem.entered} title="Pick 'em"
             sub={pickemSub}
             cta={`${pickem.picked}/${pickem.total} picked · ${pickem.entered ? 'Finish board' : 'Make picks'}`}
             href="/pickem" />

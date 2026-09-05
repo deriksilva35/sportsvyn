@@ -34,7 +34,7 @@ export function ContestsPanel({ daily, yesterday, pickem, weekly, draft }) {
       />
       <Row
         label="Pick'em"
-        sub={pickem ? `Board 1 - locks ${shortLockLabel(pickem.nextKickoff)}` : 'No open board'}
+        sub={pickem ? `Board ${pickem.boardNumber} - locks ${shortLockLabel(pickem.nextKickoff)}` : 'No open board'}
         value={pickem ? <>{pickem.picked}/{pickem.total} <span className="mut">picked</span></> : '-'}
       />
       <Row label="The Weekly" sub={weekly ? 'open' : 'opens Mon Sep 8'}
@@ -69,7 +69,7 @@ export function PickemPanel({ view }) {
   const shown = games.slice(0, PICKEM_VISIBLE);
   const restUnpicked = games.slice(PICKEM_VISIBLE).filter((g) => !g.my_side).length;
   return (
-    <Mod tag={`My Pick'em - Board 1 - ${games.length} games`}
+    <Mod tag={`My Pick'em - Board ${view.contest?.boardNumber} - ${games.length} games`}
       cta="Open the board" ctaHref="/pickem">
       {shown.map((g) => {
         const picked = !!g.my_side;

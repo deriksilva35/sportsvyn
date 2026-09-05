@@ -421,6 +421,7 @@ export default async function HomePage() {
             context={ctx}
             weekSlate={slateOfLeague[id]}
             boardIds={isCfb ? boardIds : null}
+            boardNumber={isCfb ? board?.board_number : null}
             scoresHref={isCfb ? '/scores?sport=cfb' : '/scores?sport=nfl'}
             board={rowsFromBoard(isCfb ? cfbBoard : nflBoard)}
             boardTitle={isCfb ? 'The Sportsvyn 25' : 'Power Rankings'}
