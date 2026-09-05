@@ -23,6 +23,8 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { ensureWeek } from '@/lib/weekly/create';
+import { pushEnabled } from '@/lib/push/apns';
+import { notifyWeeklyOpen, notifyDraftOpen } from '@/lib/push/notify';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -50,6 +52,18 @@ export async function GET(request) {
       subject: '[weekly] board creation FAILED',
       body: String(res.error ?? 'unknown error'),
     });
+  }
+  // PUSH HOOK: the one fire that CREATES announces BOTH contests - ensureWeek
+  // makes the draft row alongside the weekly row in the same call (B3, "both
+  // rows or neither"), so both opens are announced together. Send-once
+  // inside notifyEvent makes each safe even on a later fire that somehow
+  // reports created again; caught so a push hiccup cannot fail the creation
+  // run - the pickem-board pattern, doubled.
+  if (res.ok && res.summary?.created && pushEnabled()) {
+    await notifyWeeklyOpen(res.summary.id).catch(() => {});
+    if (res.summary?.draft?.id != null) {
+      await notifyDraftOpen(res.summary.draft.id).catch(() => {});
+    }
   }
   return Response.json({ ok: res.ok, ...res.summary });
 }

@@ -30,6 +30,8 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { settleDue } from '@/lib/weekly/settle';
+import { pushEnabled } from '@/lib/push/apns';
+import { notifyWeeklySettled } from '@/lib/push/notify';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -64,6 +66,13 @@ export async function GET(request) {
       subject: `[weekly] settle FAILED`,
       body: `${res.error ?? ''}\n${errored.map((e) => `contest ${e.contestId}: ${e.error}`).join('\n')}`,
     });
+  }
+  // PUSH HOOK: only the contests settleDue actually reports settled=true -
+  // a refusal (stats not in yet) or a per-contest error must never announce
+  // a result nobody has. Caught so a push hiccup cannot fail the settle run.
+  if (res.ok && pushEnabled()) {
+    const settledIds = (summary.results ?? []).filter((r) => r.settled).map((r) => r.contestId);
+    if (settledIds.length) await notifyWeeklySettled(settledIds).catch(() => {});
   }
   return Response.json({ ok: res.ok, ...summary });
 }
