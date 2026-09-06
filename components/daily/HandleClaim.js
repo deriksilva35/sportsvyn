@@ -58,10 +58,23 @@ export default function HandleClaim({ onDone = null, current = null, compact = f
     <>
       <div className={`hin${cls}`}>
         <span className="at">@</span>
+        {/* AUTOFILL OFF, AND autoComplete IS THE ONE THAT MATTERS HERE.
+            The other three were already set; without autoComplete iOS
+            offered an AutoFill Contact card on this field, which would have
+            put somebody's REAL NAME into a public leaderboard handle in one
+            tap. A handle is chosen, never suggested.
+
+            IF SAFARI STILL OFFERS A CONTACT: autocomplete="off" is advisory
+            and iOS ignores it in some versions. The next lever is
+            autoComplete="username", which points the heuristic at saved
+            account names rather than the address book. Flagged rather than
+            pre-emptively switched - "off" is what was asked for and is the
+            correct declaration for a field that wants no help at all. */}
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="your_handle"
+          autoComplete="off"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
