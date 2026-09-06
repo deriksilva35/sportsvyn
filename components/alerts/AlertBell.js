@@ -30,7 +30,7 @@ const ROWS = [
   { key: 'score', title: 'Score changes',
     trigger: 'Every score, both teams · "SEA 14, NE 10 · Q2 8:41"',
     latency: 'usually within a minute' },
-  { key: 'quarter', title: 'Quarter and final', trigger: 'End of each quarter and the final' },
+  { key: 'quarter', title: 'Quarter ends', trigger: 'End of each quarter' },
   { key: 'close', title: 'Close game', trigger: 'Q4, one score apart, under five minutes' },
   { key: 'final_only', title: 'Final only', trigger: 'Just the result' },
 ];
