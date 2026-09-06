@@ -15,6 +15,7 @@ import { spreadParts } from '@/lib/standings/view';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { recordLine } from '@/lib/pickem/recordLine';
 import { savePickAction } from '@/app/actions/pickem';
+import { useHandleGate } from '@/components/handle/HandleGate';
 import StandaloneDate from '@/components/StandaloneDate';
 
 // Where a board game's "Game" affordance points. Keyed by the contest's own
@@ -84,7 +85,8 @@ function pipRows(games) {
   return [games.slice(0, half), games.slice(half)];
 }
 
-export default function PickemBoard({ view, signedIn, signinHref }) {
+export default function PickemBoard({ view, signedIn, signinHref, hasHandle = true }) {
+  const { guard, modal: handleModal } = useHandleGate(hasHandle);
   const { contest, games: initialGames } = view;
   // Optimistic overlay: matchId -> side. The server payload stays the truth
   // for everything else.
@@ -112,8 +114,16 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
   const nextKick = games.find((g) => !g.kicked)?.kickoff_at ?? null;
   const cd = nextKick ? countdownTo(nextKick, now) : null;
 
-  async function tap(g, side) {
+  function tap(g, side) {
     if (!signedIn || g.kicked) return;
+    // GUARDED BEFORE THE OPTIMISTIC PAINT, not after. Flipping the side first
+    // and asking second would show the reader a pick that does not exist yet,
+    // and cancelling would then have to un-flip it - a board that moves under
+    // somebody who declined. Nothing changes until there is a handle.
+    guard(() => savePick(g, side));
+  }
+
+  async function savePick(g, side) {
     const was = g.my_side;
     setMine((m) => ({ ...m, [g.match_id]: side === was ? was : side }));
     setLockedMsg(null);
@@ -135,6 +145,7 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
 
   return (
     <>
+      {handleModal}
       {/* THE HEADER (relay 2a item 8, week fixed in 2a-polish item 3) -
           replaces the old .pk-hero/h1/.pk-ctx. The display week only
           appears when one exists (the AP poll's current week for CFB) -

@@ -29,6 +29,7 @@ import PickemBoard from '@/components/pickem/PickemBoard';
 import PickemGrade from '@/components/pickem/PickemGrade';
 import { GAME_NAMES } from '@/lib/games/lobby';
 import { pickemBoardLeaderboard } from '@/lib/games/leaderboard';
+import { userHasHandle } from '@/lib/onboarding';
 import StandaloneDate from '@/components/StandaloneDate';
 import StandaloneDateOnly from '@/components/StandaloneDateOnly';
 import '../../games/games.css';
@@ -69,6 +70,7 @@ export default async function PickemSportPage({ params, searchParams }) {
   const uid = userId == null ? null : Number(userId);
   const now = new Date();
   const view = await pickemBoardView(uid, { sport, now }).catch(() => ({ phase: 'preopen', contest: null, games: [] }));
+  const hasHandle = await userHasHandle(uid, sql);
 
   return (
     <>
@@ -83,6 +85,7 @@ export default async function PickemSportPage({ params, searchParams }) {
             view={view}
             signedIn={uid != null}
             signinHref={shellSigninHref(dest, isShell)}
+            hasHandle={hasHandle}
           />
         )}
 

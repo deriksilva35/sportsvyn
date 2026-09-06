@@ -203,6 +203,7 @@ export default async function DailyPage({ searchParams }) {
           podium={view.entry ? null : <PodiumModule board={podiumBoard} userId={Number(userId)} />}
           overall={<OverallModule table={overallTable} userId={Number(userId)} />}
           claim={me && !me.handle ? <HandleClaim /> : null}
+          hasHandle={Boolean(me?.handle)}
           nudge={<AnswerNudge offer={me != null && me.push_choice == null} />}
         />
       </main>
