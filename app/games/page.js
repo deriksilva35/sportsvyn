@@ -139,6 +139,20 @@ function Hero({ hero, signedIn = true, signinHref = '/signin' }) {
       </div>
     );
   }
+  // THE SETTLED RECAP (relay 2b item 6) - Tuesday morning after settle,
+  // before the new week's boards open. `results` is graded()'s own
+  // {label, pct} list from lib/games/read.js, always at least one entry
+  // whenever this hero fires at all.
+  if (hero.key === 'settled-recap') {
+    return (
+      <div className="hero">
+        <div className="eb"><b>Week {hero.week} is settled</b><span>{hero.gradesIn} grades in</span></div>
+        <h2>{hero.avgPct}% of the best.</h2>
+        <p>{hero.results.map((r) => r.label).join(' · ')}</p>
+        <a className="btn ghost" href={hero.href}>See your grades</a>
+      </div>
+    );
+  }
   return (
     <div className="hero">
       <div className="eb">
