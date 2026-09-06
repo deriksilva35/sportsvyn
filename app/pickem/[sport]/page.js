@@ -86,6 +86,8 @@ export default async function PickemSportPage({ params, searchParams }) {
             signedIn={uid != null}
             signinHref={shellSigninHref(dest, isShell)}
             hasHandle={hasHandle}
+            initialConfirmedAt={view.confirmedAt ?? null}
+            lockLabel={etStamp(view.contest.locksAt)}
           />
         )}
 

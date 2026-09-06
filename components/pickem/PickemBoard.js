@@ -16,6 +16,7 @@ import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { recordLine } from '@/lib/pickem/recordLine';
 import { savePickAction } from '@/app/actions/pickem';
 import { useHandleGate } from '@/components/handle/HandleGate';
+import { confirmPickemEntry } from '@/app/actions/confirm';
 import StandaloneDate from '@/components/StandaloneDate';
 
 // Where a board game's "Game" affordance points. Keyed by the contest's own
@@ -85,8 +86,15 @@ function pipRows(games) {
   return [games.slice(0, half), games.slice(half)];
 }
 
-export default function PickemBoard({ view, signedIn, signinHref, hasHandle = true }) {
+export default function PickemBoard({
+  view, signedIn, signinHref, hasHandle = true, initialConfirmedAt = null, lockLabel = null,
+}) {
   const { guard, modal: handleModal } = useHandleGate(hasHandle);
+  // CONFIRM AND RECEIPT (relay 3 item 3), the Weekly's own model: picks
+  // already autosave, so this records that the reader has seen a finished
+  // board. An unconfirmed board still counts at each game's own lock.
+  const [confirmedAt, setConfirmedAt] = useState(initialConfirmedAt);
+  const [confirming, setConfirming] = useState(false);
   const { contest, games: initialGames } = view;
   // Optimistic overlay: matchId -> side. The server payload stays the truth
   // for everything else.
@@ -138,10 +146,20 @@ export default function PickemBoard({ view, signedIn, signinHref, hasHandle = tr
       return;
     }
     setSavedTick(true);
+    // EDITING AFTER CONFIRMING drops the confirmation until it is re-pressed.
+    setConfirmedAt(null);
     setTimeout(() => setSavedTick(false), 1600);
   }
 
   const dayGroups = useMemo(() => groupByLockDay(games), [games]);
+
+  async function lockItIn() {
+    if (confirming) return;
+    setConfirming(true);
+    const r = await confirmPickemEntry(contest.id).catch(() => null);
+    setConfirming(false);
+    if (r?.ok) setConfirmedAt(r.confirmedAt);
+  }
 
   return (
     <>
@@ -327,6 +345,31 @@ export default function PickemBoard({ view, signedIn, signinHref, hasHandle = tr
         <p className="pk-savebar">{savedTick ? <b>Saved</b> : 'Saved'} &middot; edit any pick until its kickoff</p>
       ) : (
         <a className="pk-signin" href={signinHref}>Sign in to make your picks &rarr;</a>
+      )}
+
+      {/* THE CONFIRM CARD (relay 3 item 3). Only once EVERY game is picked -
+          a part-picked board has nothing to confirm, and each game locks at
+          its own kickoff regardless. */}
+      {signedIn && picked === total && total > 0 && (
+        confirmedAt ? (
+          <div className="wk-receipt">
+            <div className="wk-receipt-h">Locked in</div>
+            <p className="wk-receipt-note">
+              All {total} picked{lockLabel ? <> &middot; first lock {lockLabel}</> : null}. Each game stays
+              editable until its own kickoff; a change re-confirms when it saves.
+            </p>
+          </div>
+        ) : (
+          <div className="wk-review">
+            <div className="wk-review-h">Your board</div>
+            <p className="wk-review-note">
+              {total} of {total} picked{lockLabel ? <> &middot; first lock {lockLabel}</> : null}
+            </p>
+            <button type="button" className="wk-lockin" disabled={confirming} onClick={lockItIn}>
+              {confirming ? 'Locking…' : 'Lock it in'}
+            </button>
+          </div>
+        )
       )}
     </>
   );
