@@ -9,7 +9,7 @@
  * Sixty-one accounts, two handles claimed. The claim UI has only ever existed
  * inside The Daily, so everybody who arrives through the app and does not open
  * that one tab is never asked - and then appears on a public board as
- * "Player 3f9c". This sheet is where the ask moves.
+ * "Anonymous". This sheet is where the ask moves.
  *
  * EMAIL AND NAME ARE OPTIONAL WITH AN EQUAL-WEIGHT SKIP. Not a grey link under
  * a volt button - the same size, the same row, genuinely equal. A sheet that
