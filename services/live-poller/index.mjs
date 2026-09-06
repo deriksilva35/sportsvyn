@@ -17,7 +17,10 @@ import { cadence, sleepUntilNext } from '../../lib/live/cadence.js';
 import { addCalls, callsToday, applyCap, overCap, DEFAULT_CAP } from '../../lib/live/quota.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
-import { pollOnce, cfbdScoreboard, bdlDay, fromCfbd, fromBdl } from './poll.mjs';
+import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, fromCfbd, fromBdl } from './poll.mjs';
+import { dispatch } from '../../lib/push/dispatch.js';
+import { drainPushCounts } from '../../lib/push/warn.js';
+import { execSync } from 'node:child_process';
 import * as neonmod from '@neondatabase/serverless';
 
 const { Client } = neonmod;
@@ -29,6 +32,16 @@ const HEARTBEAT_MS = 5 * 60 * 1000;
 const ALERT_AFTER_FAILURES = 3;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(new Date().toISOString(), ...a);
+
+// THE RUNNING COMMIT, RESOLVED ONCE AT STARTUP (defect 4). Node caches
+// modules at import, so a process started before a deploy runs the OLD code
+// with no way to tell from the outside - which is exactly how 89b168e sat on
+// disk unused for 22 hours while the poller kept sending bare-word prefixes.
+// Read from git rather than an env var so it cannot be set and then lie.
+const HEAD = (() => {
+  try { return execSync('git rev-parse --short HEAD', { cwd: process.cwd() }).toString().trim(); }
+  catch { return 'unknown'; }
+})();
 
 const LEAGUES = [
   { slug: 'cfb', providerKey: 'cfbd_game_id', normalise: fromCfbd,
@@ -68,7 +81,14 @@ async function heartbeat(league, state, extra) {
   await sql`
     INSERT INTO sync_runs (source, kind, started_at, finished_at, ok, summary)
     VALUES (${`live-poller-${league}`}, 'heartbeat', now(), now(), true,
-            ${JSON.stringify({ state, pid: process.pid, ...extra })}::jsonb)`;
+            ${JSON.stringify({
+              state, pid: process.pid, head: HEAD,
+              // payloadNull / audienceEmpty ride every heartbeat (defect 3),
+              // so a window that dropped pushes says so in the ledger rather
+              // than looking identical to a quiet one.
+              ...drainPushCounts(),
+              ...extra,
+            })}::jsonb)`;
 }
 
 /**
@@ -128,6 +148,16 @@ async function loop(lg) {
           league: lg.slug, providerKey: lg.providerKey,
           fetcher: () => lg.fetcher(now), normalise: lg.normalise, now,
         });
+        // THE LOST-FINAL SWEEP rides the same tick and the same window
+        // (defect 2). Cheap - one indexed read that is empty on almost
+        // every poll - and contained, so a failure here never costs the
+        // poll that just succeeded.
+        try {
+          const sw = await sweepLostFinals(sql, { league: lg.slug, now, dispatchFn: dispatch, log });
+          if (sw.stamped) log(`[${lg.slug}] lost finals swept: ${sw.stamped} (emitted ${sw.emitted})`);
+        } catch (e) {
+          log(`[${lg.slug}] lost-final sweep failed:`, String(e?.message ?? e).slice(0, 120));
+        }
         failures = 0;
         pending += r.calls;
         window.polls += 1; window.calls += r.calls;
@@ -170,6 +200,8 @@ async function loop(lg) {
     await sleep(sleepUntilNext(decision, now) * 1000);
   }
 }
+
+log(`live-poller starting: pid=${process.pid} head=${HEAD} leagues=${LEAGUES.map((l) => l.slug).join(',')}`);
 
 for (const lg of LEAGUES) {
   loop(lg).catch((e) => { console.error(`[${lg.slug}] loop died:`, e); process.exit(1); });

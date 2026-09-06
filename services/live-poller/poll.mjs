@@ -118,6 +118,82 @@ export function scopeToStatus(upd) {
  * exactly "games this league already has in flight" and cannot grow if the
  * provider starts returning more.
  */
+/**
+ * THE LOST-FINAL SWEEP (defect 2).
+ *
+ * A final only ever fired from transitionsFor(), which needs to SEE the
+ * status flip live. The candidate query below selects status IN ('live',
+ * 'scheduled') - so once anything else marks a match final (a batch resync,
+ * a manual fix, a restart across the whistle) the poller never looks at it
+ * again and the final push is lost permanently. On 5 Sep that cost 20707 its
+ * ONLY eligible alert: sixteen score events correctly suppressed by
+ * final_only, and then nothing.
+ *
+ * final_seen_at IS THE LEDGER, and it already existed - written whenever the
+ * poller does observe a final. A row that is final with no final_seen_at is
+ * exactly "went final and we never told anyone", which is the condition this
+ * sweeps.
+ *
+ * SCOPED TO THE SAME WINDOW AS THE POLL, deliberately. Without that bound
+ * this would fire for every unseen final in history the first time it ran.
+ * A days-old final is not news and must never be pushed - the backfill for
+ * those is a one-off stamp of final_seen_at, not a notification.
+ *
+ * STAMPED EVEN WHEN NOTHING SENDS. An empty audience still means "we have
+ * now handled this final", or the sweep retries it every thirty seconds
+ * forever.
+ */
+export async function sweepLostFinals(sql, { league, now = new Date(), dispatchFn, log = () => {} }) {
+  const out = { considered: 0, emitted: 0, stamped: 0 };
+  const rows = await sql`
+    SELECT m.id, m.slug, m.status, m.home_score, m.away_score,
+           m.league_id, m.home_team_id, m.away_team_id, m.kickoff_at,
+           l.slug AS league_slug,
+           h.abbreviation AS home_abbr, a.abbreviation AS away_abbr,
+           h.short_name AS home_short_name, a.short_name AS away_short_name,
+           h.name AS home_name, a.name AS away_name
+      FROM matches m
+      JOIN leagues l ON l.id = m.league_id AND l.slug = ${league}
+      LEFT JOIN teams h ON h.id = m.home_team_id
+      LEFT JOIN teams a ON a.id = m.away_team_id
+     WHERE m.status = 'final'
+       AND (m.metadata->'detail'->>'final_seen_at') IS NULL
+       AND m.kickoff_at BETWEEN ${now.toISOString()}::timestamptz - interval '8 hours'
+                            AND ${now.toISOString()}::timestamptz + interval '30 minutes'`;
+  out.considered = rows.length;
+  for (const m of rows) {
+    const match = {
+      ...m,
+      homeAbbr: m.home_abbr, awayAbbr: m.away_abbr, leagueSlug: m.league_slug,
+      home: { short_name: m.home_short_name, name: m.home_name },
+      away: { short_name: m.away_short_name, name: m.away_name },
+    };
+    try {
+      if (dispatchFn) {
+        await dispatchFn(sql, {
+          match, event: 'final',
+          state: { homeScore: m.home_score, awayScore: m.away_score },
+        });
+        out.emitted += 1;
+      }
+    } catch (e) {
+      log(`[${league}] lost-final dispatch failed match=${m.id}: ${String(e?.message ?? e).slice(0, 100)}`);
+    }
+    // NESTED MERGE WRITTEN OUT EXPLICITLY - `metadata || jsonb` is a SHALLOW
+    // merge and would replace the whole `detail` object, taking every sibling
+    // key with it. See CLAUDE.md.
+    await sql`
+      UPDATE matches
+         SET metadata = metadata || jsonb_build_object('detail',
+               COALESCE(metadata->'detail', '{}'::jsonb)
+                 || jsonb_build_object('final_seen_at', ${new Date().toISOString()}::text))
+       WHERE id = ${m.id}`;
+    out.stamped += 1;
+    log(`[${league}] lost final swept match=${m.id}`);
+  }
+  return out;
+}
+
 export async function pollOnce(sql, {
   league, providerKey, fetcher, normalise, now = new Date(), dryRun = false, push = true,
 }) {
@@ -133,6 +209,11 @@ export async function pollOnce(sql, {
            m.external_ids->>${providerKey} AS pid,
            l.slug AS league_slug,
            h.abbreviation AS home_abbr, a.abbreviation AS away_abbr,
+           -- THE FALLBACK CHAIN NEEDS MORE THAN THE ABBR COLUMN (defect 1).
+           -- 105 of 243 CFB teams have no abbreviation - see
+           -- lib/live/teamAbbr.js for the order these are tried in.
+           h.short_name AS home_short_name, a.short_name AS away_short_name,
+           h.name AS home_name, a.name AS away_name,
            (m.metadata->'detail'->>'final_seen_at') AS final_seen_at
       FROM matches m
       JOIN leagues l ON l.id = m.league_id AND l.slug = ${league}
