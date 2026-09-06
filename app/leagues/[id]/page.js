@@ -27,7 +27,7 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { leagueDetail, leaguePreview, leagueMemberIds } from '@/lib/leagues/core';
 import { LEAGUE_TABS, parseLeagueTab, leagueHref } from '@/lib/leagues/nav';
-import { firstLockLabel, FIRST_LOCK_FALLBACK } from '@/lib/pickem/read';
+import { firstLockLabel } from '@/lib/pickem/read';
 import { lastRevealedDate, dayBoard, overall } from '@/lib/daily/boards';
 import { CodeChip, CopyLinkButton, JoinLeagueButton } from '@/components/leagues/LeagueChrome';
 import SeasonBoard from '@/components/games/SeasonBoard';
@@ -106,10 +106,12 @@ export default async function LeaguePage({ params, searchParams }) {
 
   // ---- MEMBER: frame 2 ----------------------------------------------------
   const memberIds = await leagueMemberIds(leagueId).catch(() => []);
-  // Pick'em's lock line, derived from the contest when a board exists -
-  // caught to the sanctioned fallback like every ghost read.
-  const pickemLock = await firstLockLabel().catch(() => FIRST_LOCK_FALLBACK);
-  const pickemLockDate = pickemLock.replace(/^\w+ /, '').split(',')[0];
+  // Pick'em's lock line, derived from the contest when a board exists, else
+  // from the schedule (firstLockLabel() itself, relay 2c-fix item 1) - null
+  // only if genuinely nothing is scheduled for CFB at all, caught the same
+  // safe direction as every other ghost read on this page.
+  const pickemLock = await firstLockLabel().catch(() => null);
+  const pickemLockDate = pickemLock ? pickemLock.replace(/^\w+ /, '').split(',')[0] : null;
   const revealedDate = tab === 'daily' ? await lastRevealedDate().catch(() => null) : null;
   const [daily, season] = tab === 'daily'
     ? await Promise.all([
@@ -147,7 +149,7 @@ export default async function LeaguePage({ params, searchParams }) {
             >
               {t.label}
               {t.ghost && t.date && (
-                <span className="lg-tab-date">{t.key === 'pickem' ? pickemLockDate : t.date}</span>
+                <span className="lg-tab-date">{t.key === 'pickem' ? (pickemLockDate ?? t.date) : t.date}</span>
               )}
             </Link>
           ))}
@@ -204,7 +206,7 @@ export default async function LeaguePage({ params, searchParams }) {
         {tab !== 'daily' && (
           <section className="lg-ghostpanel">
             <div className="big">{GHOSTS[tab]?.big}</div>
-            <div className="when">{tab === 'pickem' ? `first lock · ${pickemLock}` : GHOSTS[tab]?.when}</div>
+            <div className="when">{tab === 'pickem' ? (pickemLock ? `first lock · ${pickemLock}` : GHOSTS.pickem?.when) : GHOSTS[tab]?.when}</div>
           </section>
         )}
       </main>
