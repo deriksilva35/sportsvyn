@@ -23,9 +23,12 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { pickemBoardView, PICKEM_SPORTS } from '@/lib/pickem/entry';
-import { firstLockLabel, FIRST_LOCK_FALLBACK } from '@/lib/pickem/read';
+import { boardPlan } from '@/lib/pickem/create';
+import { sql } from '@/lib/db';
 import PickemBoard from '@/components/pickem/PickemBoard';
 import { GAME_NAMES } from '@/lib/games/lobby';
+import StandaloneDate from '@/components/StandaloneDate';
+import StandaloneDateOnly from '@/components/StandaloneDateOnly';
 import '../../games/games.css';
 import '../pickem.css';
 
@@ -55,7 +58,8 @@ export default async function PickemSportPage({ params, searchParams }) {
   requireSignInInShell({ isShell, userId, dest });
 
   const uid = userId == null ? null : Number(userId);
-  const view = await pickemBoardView(uid, { sport }).catch(() => ({ phase: 'preopen', contest: null, games: [] }));
+  const now = new Date();
+  const view = await pickemBoardView(uid, { sport, now }).catch(() => ({ phase: 'preopen', contest: null, games: [] }));
 
   return (
     <>
@@ -63,7 +67,7 @@ export default async function PickemSportPage({ params, searchParams }) {
       <main className="lob pk-main" data-surface="ink">
         <Link className="appcrumb" href="/games">&larr; Games</Link>
 
-        {view.phase === 'preopen' && <PreOpen sport={sport} />}
+        {view.phase === 'preopen' && <PreOpen sport={sport} now={now} />}
 
         {view.phase === 'living' && (
           <PickemBoard
@@ -102,12 +106,35 @@ export default async function PickemSportPage({ params, searchParams }) {
   );
 }
 
-async function PreOpen({ sport }) {
-  const when = await firstLockLabel({ sport }).catch(() => FIRST_LOCK_FALLBACK);
+/**
+ * THE GHOST DERIVES FROM THE SCHEDULE, NOT A STATIC LINE (relay 2c-fix
+ * item 1) - boardPlan() is the exact read-only half of the creation the
+ * cron will eventually run, so "Board {n} opens ... first lock ..." can
+ * never disagree with what actually gets created. Board number uses the
+ * same per-sport formula ensurePickemBoard() applies at creation and
+ * lib/games/read.js's own lobby-row ghost already uses: 1 + the count of
+ * this sport's pickem contests that opened earlier. Nothing renders at all
+ * when boardPlan() itself finds nothing (no upcoming games for this sport
+ * whatsoever) - no chip may claim knowledge it doesn't have.
+ */
+async function PreOpen({ sport, now }) {
+  const { plan } = await boardPlan({ leagueSlug: sport, now }).catch(() => ({ plan: null }));
+  if (!plan) {
+    return (
+      <section className="pk-ghost">
+        <div className="big">Pick&rsquo;em lights up with the board</div>
+      </section>
+    );
+  }
+  const [{ n }] = await sql`
+    SELECT count(*) AS n FROM contests
+     WHERE game_type = 'pickem' AND sport = ${sport} AND opens_at < ${plan.opensAt.toISOString()}`;
   return (
     <section className="pk-ghost">
       <div className="big">Pick&rsquo;em lights up with the board</div>
-      <div className="when">first lock &middot; {when}</div>
+      <div className="when">
+        Board {Number(n) + 1} opens <StandaloneDateOnly iso={plan.opensAt} /> &middot; first lock <StandaloneDate iso={plan.locksAt} />
+      </div>
     </section>
   );
 }
