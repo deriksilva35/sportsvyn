@@ -27,7 +27,6 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { currentContest, nextContest, getEntry } from '@/lib/weekly/entries';
 import StandaloneDate from '@/components/StandaloneDate';
 import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI } from '@/lib/weekly/view';
-import { SLOTS } from '@/lib/weekly/rules';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
 import { weekStatLines } from '@/lib/weekly/pool';
 import WeeklyRoom from '@/components/weekly/WeeklyRoom';
@@ -270,8 +269,6 @@ export default async function WeeklyPage({ searchParams }) {
   // Both states render the builder; the rules module sits below it for a
   // first-time reader rather than gating the board behind a START. There is no
   // clock to start, so there is nothing for a gate to protect.
-  const filled = entry?.lineup ?? {};
-  const unfilled = SLOTS.filter((s) => filled[s] == null);
   const reminderAt = new Date(new Date(contest.locks_at).getTime() - 3_600_000);
   return (
     <Shell>
@@ -292,25 +289,18 @@ export default async function WeeklyPage({ searchParams }) {
         Same board for everyone. You are graded against the best six this pool
         could have made.
       </div>
-      <div className="prog">
-        <div className="rrow">
-          {SLOTS.map((s) => (
-            <div key={s} className={`pip${filled[s] != null ? ' full' : ''}`}>
-              <span className="em">{SLOT_EMOJI[s]}</span>
-              <span className="dot">{SLOT_LABEL[s]}</span>
-            </div>
-          ))}
-        </div>
-        <div className="cap"><span>{SLOTS.length - unfilled.length} of {SLOTS.length} set</span><span>saves on change</span></div>
-      </div>
-      {unfilled.length > 0 && (
-        <div className="needline">Still need <b>{unfilled.map((s) => SLOT_LABEL[s]).join(' · ')}</b></div>
-      )}
-
+      {/* THE COUNTERS LIVE IN WeeklyRoom NOW (relay 3 item 1). They were
+          here, computed from entry.lineup - the server's copy, frozen at
+          page load - while the six rows below were driven by WeeklyRoom's
+          own client state. A pick updated the rows and left the pips, the
+          caption and the needline behind. One source now, and it is the
+          one that changes when you tap. */}
       <WeeklyRoom
         contest={{ id: contest.id, locks_at: contest.locks_at, week: contest.week }}
         board={board}
         initialLineup={entry?.lineup ?? {}}
+        initialConfirmedAt={entry?.meta?.confirmed_at ?? null}
+        lockLabel={etStamp(contest.locks_at)}
         signedIn={userId != null}
         signinHref={shellSigninHref('/weekly', isShell)}
         hasHandle={hasHandle}
