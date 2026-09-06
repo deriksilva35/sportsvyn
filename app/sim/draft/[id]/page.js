@@ -8,6 +8,8 @@ import DraftRoom from '@/components/sim/DraftRoom';
 import TrackerRoom from '@/components/sim/TrackerRoom';
 import TrackerResults from '@/components/sim/TrackerResults';
 import DraftResults from '@/components/sim/DraftResults';
+import RankedComplete from '@/components/draft/RankedComplete';
+import { sql } from '@/lib/db';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
@@ -42,6 +44,30 @@ export default async function DraftRoomPage({ params, searchParams }) {
 
   const status = base.draft.status;
   const isTrackerDraft = (base.draft.mode ?? 'sim') === 'tracker';
+
+  // ---- THE RANKED GUARD (relay 3 item 4) --------------------------------
+  //
+  // WHY IT HAS TO BE A LOOKUP AND NOT A COLUMN: a ranked draft is
+  // indistinguishable from a practice mock on the `drafts` row itself -
+  // same mode='sim', same config shape. What makes it ranked is that a
+  // contest_entries row for a 'draft' contest POINTS AT IT, via
+  // meta->>'draftId' (lib/draft/entry.js's claimEntry). That is the only
+  // signal, so that is what this asks.
+  //
+  // HOW THE MOCK SHELL WAS REACHABLE BEFORE: the completion branch below
+  // was `isTrackerDraft ? TrackerResults : DraftResults` - two cases, no
+  // third. Everything that was not a tracker fell through to the practice
+  // results board, and the chrome predicates (showTabBar, the "← Mock"
+  // appcrumb, GetTheAppBanner) keyed only on `status !== 'in_progress'`,
+  // so a finished ranked entry got the whole Practice shell.
+  const [ranked] = await sql`
+    SELECT c.id AS contest_id, c.week, c.locks_at, c.settles_at, d.pick_position AS seat
+      FROM contest_entries e
+      JOIN contests c ON c.id = e.contest_id AND c.game_type = 'draft'
+      JOIN drafts d ON d.id = ${draftId}
+     WHERE (e.meta->>'draftId')::int = ${draftId} AND e.user_id = ${Number(userId)}
+     LIMIT 1`.catch(() => []);
+  const isRanked = Boolean(ranked);
 
   // A live tracker draft is its own full screen per the locked mock: it renders
   // its own header (the wordmark still links to /sim, which is the escape hatch)
@@ -90,10 +116,28 @@ export default async function DraftRoomPage({ params, searchParams }) {
       />
     );
   } else if (status === 'completed') {
-    // Tracker draws its own results: the value ledger and a grade-free Read.
-    body = isTrackerDraft
-      ? <TrackerResults data={await getOrCreateTrackerRead(draftId, userId)} />
-      : <DraftResults data={await getOrCreateRead(draftId, userId)} />;
+    // RANKED FIRST. A ranked draft is not a mock and must never land on the
+    // practice results board or its shell.
+    body = isRanked
+      ? (
+        <RankedComplete
+          picks={(base.picks ?? [])
+            .filter((p) => p.picked_by === 'user')
+            .sort((a, b) => a.round - b.round)
+            // draft_picks carries no team column - position is the whole
+            // secondary line, and RankedComplete drops the clause rather
+            // than printing an empty separator.
+            .map((p) => ({ round: p.round, name: p.player_name, pos: p.position }))}
+          seat={ranked.seat}
+          week={ranked.week}
+          locksAt={ranked.locks_at}
+          settlesAt={ranked.settles_at}
+        />
+      )
+      // Tracker draws its own results: the value ledger and a grade-free Read.
+      : isTrackerDraft
+        ? <TrackerResults data={await getOrCreateTrackerRead(draftId, userId)} />
+        : <DraftResults data={await getOrCreateRead(draftId, userId)} />;
   } else {
     body = (
       <div style={{ padding: '40px 0' }}>
@@ -106,7 +150,10 @@ export default async function DraftRoomPage({ params, searchParams }) {
 
   // The bottom tab bar shows on the results / abandoned views, but NOT inside an
   // active draft room - there the swipe pager's own dot/segment tabs own the bottom.
-  const showTabBar = status !== 'in_progress';
+  // NO SIM CHROME ON A RANKED COMPLETION (item 4): no tab bar, no
+  // "← Mock" breadcrumb, no app-store banner. Those belong to Practice,
+  // and this entry belongs to Games.
+  const showTabBar = status !== 'in_progress' && !(isRanked && status === 'completed');
 
   return (
     <div className={`sim${showTabBar ? ' sim--tabbar' : ''}${isShell ? ' sim--shell' : ''}`} data-surface="ink">
