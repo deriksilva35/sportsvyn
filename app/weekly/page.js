@@ -34,6 +34,8 @@ import WeeklyRoom from '@/components/weekly/WeeklyRoom';
 import WeeklyGrade from '@/components/weekly/WeeklyGrade';
 import { WeeklyPreOpenLine } from '@/components/games/preOpenLine';
 import { scoreLeaderboard } from '@/lib/games/leaderboard';
+import { userHasHandle } from '@/lib/onboarding';
+import { sql } from '@/lib/db';
 import '../daily/daily.css';
 import '@/components/games/grade.css';
 
@@ -131,6 +133,7 @@ export default async function WeeklyPage({ searchParams }) {
     ? await getEntry(contest.id, Number(userId)).catch(() => null)
     : null;
   const state = weeklyState({ contest, entry });
+  const hasHandle = await userHasHandle(userId, sql);
 
   // ---- NO BOARD ------------------------------------------------------------
   //
@@ -310,6 +313,7 @@ export default async function WeeklyPage({ searchParams }) {
         initialLineup={entry?.lineup ?? {}}
         signedIn={userId != null}
         signinHref={shellSigninHref('/weekly', isShell)}
+        hasHandle={hasHandle}
       />
 
       {/* ONCE OPEN, THIS IS WHAT 'HOW IT WORKS' BECOMES (2a-polish item 1) -

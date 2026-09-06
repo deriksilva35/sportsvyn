@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SLOTS, CLOCK_MS, slotAccepts, nextOpenSlot } from '@/lib/daily/play';
 import RoomScope from '@/components/shell/RoomScope';
+import { useHandleGate } from '@/components/handle/HandleGate';
 
 // play.js is pure and importable here on purpose: the slot list, the clock
 // length and the eligibility rule are ONE definition shared with the server
@@ -57,7 +58,10 @@ function RevealCountdown({ at }) {
   return <span className="dhero-mono">reveals in {h > 0 ? `${h}h ${m % 60}m` : `${m}m`}</span>;
 };
 
-export default function DailyRoom({ puzzleDate, initialEntry, podium = null, overall = null, claim = null, nudge = null, editionLabel = null, revealsAt = null, statRow = null, yesterdayLine = null }) {
+export default function DailyRoom({ puzzleDate, initialEntry, podium = null, overall = null, claim = null, nudge = null, editionLabel = null, revealsAt = null, statRow = null, yesterdayLine = null, hasHandle = true }) {
+  // THE COMMIT IS GUARDED; THE CLOCK IS NOT. See the note above the Lock
+  // button's own onClick.
+  const { guard, modal: handleModal } = useHandleGate(hasHandle);
   const [entry, setEntry] = useState(initialEntry ?? null);
   const [board, setBoard] = useState(null);
   const [startedAt, setStartedAt] = useState(null);
@@ -106,6 +110,13 @@ export default function DailyRoom({ puzzleDate, initialEntry, podium = null, ove
   useEffect(() => {
     if (!board || left > 0 || submitted.current) return;
     const filled = SLOTS.every((s) => lineup[s] != null);
+    // DELIBERATELY UNGUARDED, and this is the one exception in the whole
+    // feature. This branch is the CLOCK EXPIRING, not a commit the player
+    // made - putting a handle modal in front of it would lose somebody their
+    // round for a name we can ask for at any later write. The deadline
+    // arriving must always be allowed to write. Their row renders Anonymous
+    // until they claim, which is exactly what an unclaimed account already
+    // does everywhere else.
     if (filled) lock(lineup);
   }, [left, board, lineup, lock]);
 
@@ -247,6 +258,7 @@ export default function DailyRoom({ puzzleDate, initialEntry, podium = null, ove
   const late = left <= 0;
   return (
     <section className="mod mod--play">
+      {handleModal}
       {/* CHROME-ISOLATION LAW: this is the only one of the three states with a
           clock, so the app's tab bar hides here and nowhere else. Leaving the
           Daily mid-round consumes the attempt - the board was seen - so a tab
@@ -287,7 +299,7 @@ export default function DailyRoom({ puzzleDate, initialEntry, podium = null, ove
       {err && <p className="err">{err}</p>}
 
       <button className="btn btn--volt btn--lock" disabled={busy || filledCount < 6 || late}
-        onClick={() => lock(lineup)}>
+        onClick={() => guard(() => lock(lineup))}>
         {busy ? 'Locking…' : late ? 'Out of time' : filledCount < 6 ? `${6 - filledCount} to fill` : 'Lock it in'}
       </button>
 

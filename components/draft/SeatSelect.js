@@ -17,10 +17,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ordinal } from '@/lib/standings/view';
+import { useHandleGate } from '@/components/handle/HandleGate';
 
 export default function SeatSelect({
   seats, teamsCount, rounds, clockSeconds, signedIn = true, signinHref = '/signin',
+  hasHandle = true,
 }) {
+  // Taking a seat CONSUMES the week's entry - it is the most irreversible
+  // write in the game, and the one most worth having a name attached to.
+  const { guard, modal: handleModal } = useHandleGate(hasHandle);
   const [seat, setSeat] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -33,6 +38,14 @@ export default function SeatSelect({
     // end.
     if (!signedIn) { router.push(signinHref); return; }
     if (seat == null || busy) return;
+    // GUARDED BEFORE THE REQUEST. /api/draft/start is what claims the entry
+    // (START IS CONSUMED - lib/draft/entry.js), so the modal has to stand in
+    // front of it: cancelling must leave no draft, no entry and the seat
+    // grid exactly as it was.
+    guard(() => startRoom());
+  }
+
+  async function startRoom() {
     setBusy(true); setErr(null);
     const res = await fetch('/api/draft/start', {
       method: 'POST', headers: { 'content-type': 'application/json' },
@@ -56,6 +69,7 @@ export default function SeatSelect({
 
   return (
     <>
+      {handleModal}
       <div className="secl"><b>Your seat</b><span>your room, same seed for everyone</span></div>
       <section className="mod">
         <div className="opts">

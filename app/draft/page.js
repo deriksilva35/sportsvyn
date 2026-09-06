@@ -26,6 +26,8 @@ import DraftGrade from '@/components/draft/DraftGrade';
 import StandaloneDate from '@/components/StandaloneDate';
 import { DraftPreOpenLine } from '@/components/games/preOpenLine';
 import { draftFieldLeaderboard, draftSeatTable } from '@/lib/games/leaderboard';
+import { userHasHandle } from '@/lib/onboarding';
+import { sql } from '@/lib/db';
 import '../daily/daily.css';
 import './draft.css';
 import '@/components/games/grade.css';
@@ -95,6 +97,7 @@ export default async function DraftPage({ searchParams }) {
   const st = await readDraftState(userId).catch(() => ({ contest: null, entry: null, draft: null }));
   const { contest, entry, draft } = st;
   const state = draftState({ contest, entry, draft });
+  const hasHandle = await userHasHandle(userId, sql);
 
   // ---- NO BOARD: the full pitch, per the /weekly ruling -------------------
   if (state === 'none') {
@@ -295,6 +298,7 @@ export default async function DraftPage({ searchParams }) {
         clockSeconds={DRAFT_CONFIG.clockSeconds}
         signedIn={userId != null}
         signinHref={shellSigninHref('/draft', isShell)}
+        hasHandle={hasHandle}
       />
 
       {/* THE MOCK'S OWN TEXT, VERBATIM (item 7's own instruction). ONCE OPEN,

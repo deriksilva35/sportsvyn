@@ -37,6 +37,7 @@ import { useRouter } from 'next/navigation';
 import { SLOTS } from '@/lib/weekly/rules';
 import { nextOpenSlot } from '@/lib/daily/play';
 import { poolRows, poolCountLabel } from '@/lib/weekly/view';
+import { useHandleGate } from '@/components/handle/HandleGate';
 
 const SLOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLEX', FLEX2: 'FLEX' };
 // EMPTY-SLOT COPY IS ITS OWN MAP (relay 2a-polish-2 item c), not a
@@ -69,7 +70,19 @@ const SAVE_DEBOUNCE_MS = 700;
 
 export default function WeeklyRoom({
   contest, board, initialLineup = {}, signedIn = true, signinHref = '/signin',
+  hasHandle = true,
 }) {
+  // THE HANDLE IS ASKED FOR AT THE FIRST SLOT SAVED, not on page load
+  // (components/handle/HandleGate.js). It guards the WRITE, so browsing the
+  // pool, opening a slot tab and searching all stay open; only the request
+  // that would put a row on a leaderboard waits for a name.
+  const { guard, modal: handleModal, hasHandle: claimed } = useHandleGate(hasHandle);
+  // The bail() effect below has an empty dep array (it must - it registers one
+  // listener for the life of the room), so it would close over the FIRST
+  // value of `claimed` forever. A ref kept in sync is what lets it read the
+  // live one, including a handle claimed moments ago in the modal.
+  const hasHandleRef = useRef(claimed);
+  useEffect(() => { hasHandleRef.current = claimed; }, [claimed]);
   const [lineup, setLineup] = useState(initialLineup ?? {});
   const [active, setActive] = useState('QB');
   const [save, setSave] = useState('clean');   // clean | saving | saved | error
@@ -102,13 +115,21 @@ export default function WeeklyRoom({
     pending.current = next;
     setSave('saving');
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => { flush(pending.current); }, SAVE_DEBOUNCE_MS);
-  }, [flush]);
+    // GUARDED AT THE FLUSH, not at the tap: the debounce means one modal for
+    // a burst of picks rather than one per slot, and the thunk guard() stashes
+    // carries the LATEST pending payload, so a claim mid-burst still writes
+    // the finished lineup rather than the slot that happened to open the modal.
+    timer.current = setTimeout(() => { guard(() => flush(pending.current)); }, SAVE_DEBOUNCE_MS);
+  }, [flush, guard]);
 
   // A pick made and the tab closed inside the debounce window would be lost.
   // Flushing on unmount and on hide costs nothing and closes that hole.
   useEffect(() => {
     const bail = () => {
+      // NO BEACON WITHOUT A HANDLE. This is the same write as flush(), just
+      // on the way out; letting it through would create the very entry the
+      // modal is gating, behind the reader's back.
+      if (!hasHandleRef.current) return;
       if (timer.current && pending.current) {
         clearTimeout(timer.current);
         navigator.sendBeacon?.('/api/weekly/save',
@@ -158,6 +179,7 @@ export default function WeeklyRoom({
 
   return (
     <section className="mod mod--play">
+      {handleModal}
       <div className="play-head">
 
         {/* THE SIX-ROW LIST (relay 2a item 6, mock's .secl + .list/.pr) -
