@@ -14,6 +14,7 @@
 import ShareGrade from '@/components/games/ShareGrade';
 import { draftGradeRows, firstDivergentRound, gradeGlyphRow } from '@/lib/games/gradePairing';
 import { ordinal } from '@/lib/standings/view';
+import { seatRangeLabel } from '@/lib/games/leaderboard';
 import { displayName } from '@/lib/daily/handles';
 import StandaloneDate from '@/components/StandaloneDate';
 
@@ -33,13 +34,31 @@ export default function DraftGrade({
 
   const myRow = leaderboard.top.find((r) => r.userId === userId) ?? leaderboard.self ?? null;
 
-  const seatRank = seatTable.findIndex((s) => s.seat === seat) + 1 || null;
   const mostPopular = seatTable.reduce((a, b) => (b.drafters > (a?.drafters ?? -1) ? b : a), null);
+
+  // ONE ENTRANT IS NOT A FIELD (relay 2b-fix item 7). With a single drafter
+  // that drafter IS the ceiling, so "100% of {your own score}" is a
+  // tautology wearing a percentage, and the you-versus-field-best rows
+  // would compare a roster to itself and report eight Matched. The ROOM
+  // block above is untouched: eleven bots is a real comparison and it is
+  // the one this reader actually has.
+  const soleDrafter = leaderboard.played === 1 && v.you != null;
+
+  // DRAFTED SEATS ONLY, THEN ONE LINE FOR THE REST (relay 2b-fix item 6).
+  const drafted = seatTable.filter((s) => s.drafters > 0);
+  const undrafted = seatTable.filter((s) => s.drafters === 0).map((s) => s.seat);
 
   return (
     <>
       <header className="gg-hdr">
-        <span className="gg-ed">The Draft &middot; Week {v.week} &middot; seat {seat}</span>
+        {/* THE SEAT CLAUSE IS ALL OR NOTHING (relay 2b-fix item 1) - a null
+            seat (an entry whose draftId never resolved to a room) used to
+            render the bare word "seat" with nothing after it. Either the
+            number is there and the word earns its place, or the whole
+            clause goes. */}
+        <span className="gg-ed">
+          The Draft &middot; Week {v.week}{seat != null ? ` · seat ${seat}` : ''}
+        </span>
         <span className="gg-clock">settled {settledAtLabel}</span>
       </header>
 
@@ -57,7 +76,19 @@ export default function DraftGrade({
         </div>
       )}
 
-      {v.you && fieldBest && (
+      {v.you && soleDrafter && (
+        <div className="gg-grade">
+          <div className="gg-grade-top">
+            <b>The field</b>
+            <span>{v.you.score} pts</span>
+          </div>
+          <div className="gg-sbr">
+            <div className="gg-lab">You were the only drafter this week.</div>
+          </div>
+        </div>
+      )}
+
+      {v.you && fieldBest && !soleDrafter && (
         <div className="gg-grade">
           <div className="gg-grade-top">
             <b>The field</b>
@@ -97,7 +128,7 @@ export default function DraftGrade({
         </div>
       )}
 
-      {v.you && fieldBest && (
+      {v.you && fieldBest && !soleDrafter && (
         <div className="gg-mathline">
           {matchedCount} of 8 shared with the field&rsquo;s best draft &middot; <b>{gap} points behind</b>
           {(yourDropped.length || bestDropped.length) && (
@@ -108,7 +139,7 @@ export default function DraftGrade({
         </div>
       )}
 
-      {fieldBest && (
+      {fieldBest && !soleDrafter && (
         <div className="gg-perf">
           <b>The best draft in the field</b>
           <p>
@@ -119,7 +150,7 @@ export default function DraftGrade({
         </div>
       )}
 
-      {diverge && (
+      {diverge && !soleDrafter && (
         <div className="gg-story">
           <b>About your draft</b>
           <p>
@@ -155,15 +186,22 @@ export default function DraftGrade({
 
       <div className="gg-lb">
         <div className="gg-lb-h"><span>By seat &middot; Week {v.week}</span><span>avg pts &middot; drafters</span></div>
-        {seatTable.map((s) => (
+        {drafted.map((s, i) => (
           <div className={`gg-lr${s.seat === seat ? ' gg-lr--you' : ''}`} key={s.seat}>
-            <span className="gg-lr-rk">{s.avgPts != null ? seatTable.indexOf(s) + 1 : '-'}</span>
-            <span className="gg-lr-who">
-              {s.drafters ? `seat ${s.seat}` : <span style={{ color: 'var(--muted)' }}>seat {s.seat} · nobody drafted it</span>}
-            </span>
-            <span className="gg-lr-sc">{s.avgPts != null ? `${s.avgPts} · ${s.drafters}` : '-'}</span>
+            <span className="gg-lr-rk">{i + 1}</span>
+            <span className="gg-lr-who">seat {s.seat}</span>
+            <span className="gg-lr-sc">{s.avgPts} &middot; {s.drafters}</span>
           </div>
         ))}
+        {undrafted.length > 0 && (
+          <div className="gg-lr">
+            <span className="gg-lr-rk">-</span>
+            <span className="gg-lr-who" style={{ color: 'var(--muted)' }}>
+              {undrafted.length === 1 ? 'Seat' : 'Seats'} {seatRangeLabel(undrafted)} had no {undrafted.length === 1 ? 'drafter' : 'drafters'} this week
+            </span>
+            <span className="gg-lr-sc" style={{ color: 'var(--muted-dim)' }}>-</span>
+          </div>
+        )}
       </div>
 
       {mostPopular?.drafters > 0 && (
