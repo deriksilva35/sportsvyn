@@ -26,11 +26,20 @@ import { pickemBoardView, PICKEM_SPORTS } from '@/lib/pickem/entry';
 import { boardPlan } from '@/lib/pickem/create';
 import { sql } from '@/lib/db';
 import PickemBoard from '@/components/pickem/PickemBoard';
+import PickemGrade from '@/components/pickem/PickemGrade';
 import { GAME_NAMES } from '@/lib/games/lobby';
+import { pickemBoardLeaderboard } from '@/lib/games/leaderboard';
 import StandaloneDate from '@/components/StandaloneDate';
 import StandaloneDateOnly from '@/components/StandaloneDateOnly';
 import '../../games/games.css';
 import '../pickem.css';
+import '@/components/games/grade.css';
+
+const ET = { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+const etStamp = (iso) => {
+  const d = new Date(iso ?? NaN);
+  return Number.isFinite(d.getTime()) ? `${d.toLocaleString('en-US', ET)} ET` : null;
+};
 
 export const dynamic = 'force-dynamic';
 
@@ -78,30 +87,37 @@ export default async function PickemSportPage({ params, searchParams }) {
         )}
 
         {view.phase === 'settled' && (
-          <section className="pk-hero pk-receipt">
-            <div className="pk-eb">
-              <span>Pick&rsquo;em &middot; settled</span>
-              <span className="pk-mono">{view.contest.sport.toUpperCase()} &middot; {view.contest.gamesCount} games</span>
-            </div>
-            <h1>{view.record.wins}-{view.record.losses}.</h1>
-            {/* The field facts (Relay 3): rank over settled scores, and the
-                rarest correct pick - aggregate counts only, nobody's board. */}
-            {view.receipt ? (
-              <div className="pk-ctx">
-                Board rank <b>{view.receipt.rank}</b> of {view.receipt.field}
-                {view.receipt.best && (
-                  <> &middot; best pick {view.receipt.best.name} ({view.receipt.best.pct}% of field)</>
-                )}
-              </div>
-            ) : (
-              <div className="pk-ctx">
-                {view.progress.picked} picked &middot; {view.games.filter((g) => g.nopick).length} no-pick
-              </div>
-            )}
-          </section>
+          <PickemSettled sport={sport} view={view} uid={uid} now={now} />
         )}
       </main>
       <SiteFooter />
+    </>
+  );
+}
+
+/**
+ * THE GRADE CARD (relay 2b item 4). The field facts view.receipt already
+ * carried (rank, rarest correct pick) stay untouched below the fold as the
+ * old receipt's own summary line - the grade card is the new, full
+ * per-game verdict treatment, not a replacement for a fact receiptFor()
+ * already computes correctly.
+ */
+async function PickemSettled({ sport, view, uid, now }) {
+  const leaderboard = await pickemBoardLeaderboard(view.contest.id, uid, { limit: 5 });
+  const { plan: nextPlan } = await boardPlan({ leagueSlug: sport, now }).catch(() => ({ plan: null }));
+  const next = nextPlan ? { opensAt: nextPlan.opensAt } : null;
+  return (
+    <>
+      <PickemGrade
+        view={view} sport={sport} settledAtLabel={etStamp(view.contest.settledAt)}
+        leaderboard={leaderboard} next={next} nextBoardNumber={view.contest.boardNumber + 1}
+        userId={uid}
+      />
+      {view.receipt?.best && (
+        <div className="gg-mathline">
+          Rarest correct pick: {view.receipt.best.name} ({view.receipt.best.pct}% of field).
+        </div>
+      )}
     </>
   );
 }

@@ -17,15 +17,18 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
+import { weekStatLines } from '@/lib/weekly/pool';
 import { draftState, draftSettledView, seatOptions } from '@/lib/draft/view';
-import { draftState as readDraftState } from '@/lib/draft/entry';
+import { draftState as readDraftState, fieldBestRoster } from '@/lib/draft/entry';
 import { DRAFT_CONFIG, DRAFT_ROUNDS, nextDraftContest } from '@/lib/draft/contest';
-import { tierClass } from '@/lib/daily/reveal';
 import SeatSelect from '@/components/draft/SeatSelect';
+import DraftGrade from '@/components/draft/DraftGrade';
 import StandaloneDate from '@/components/StandaloneDate';
 import { DraftPreOpenLine } from '@/components/games/preOpenLine';
+import { draftFieldLeaderboard, draftSeatTable } from '@/lib/games/leaderboard';
 import '../daily/daily.css';
 import './draft.css';
+import '@/components/games/grade.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -119,63 +122,31 @@ export default async function DraftPage({ searchParams }) {
   // ---- SETTLED -------------------------------------------------------------
   if (state === 'settled') {
     const v = draftSettledView({ contest, entry, board: contest.board });
+    const seat = draft?.pick_position ?? null;
+    const room = entry?.meta?.room ?? null;
+    const fieldBest = contest.perfect?.entry_id != null
+      ? await fieldBestRoster(contest.perfect.entry_id, contest.board).catch(() => null)
+      : null;
+    const leaderboard = await draftFieldLeaderboard(contest.id, userId != null ? Number(userId) : null, { limit: 5 });
+    const seatTable = await draftSeatTable(contest.id, DRAFT_CONFIG.teamsCount);
+    const next = await nextDraftContest().catch(() => null);
+    const statLines = await weekStatLines(
+      contest.season_year, contest.week,
+      [...(v.roster ?? []), ...(fieldBest?.roster ?? [])].map((p) => p.id),
+    ).catch(() => new Map());
     return (
       <Shell>
-        <section className="hero">
-          <div className="hero-eyebrow">The Draft &middot; final</div>
-          <div className="hero-q">{v.season} &middot; Week {v.week}</div>
-          {v.you ? (
-            <p className="hero-line">
-              Your best six scored <b>{v.you.score}</b>
-              {v.you.pct != null && <> &middot; {v.you.pct}% of perfect</>}
-            </p>
-          ) : (
-            <p className="hero-line">
-              {v.dnf ? 'No complete roster was in at kickoff.' : 'You sat this one out.'}
-            </p>
-          )}
-        </section>
-
-        {v.you && (
-          <section className="mod mod--entered">
-            <h2 className="eyebrow">Your draft <span className="ctx">- started six in bold</span></h2>
-            <div className="score-row">
-              <div className="score-big">{v.you.score}</div>
-              <div className="score-meta">
-                {v.you.tier && <span className={`tierbadge ${tierClass(v.you.tier)}`}>{v.you.tier}</span>}
-                <span className="muted">perfect was {v.perfect}</span>
-              </div>
-            </div>
-            <div>
-              {/* THE BENCH IS SHOWN, and in best ball it is the interesting
-                  part: those are the points your draft did not need. */}
-              {v.roster.map((r) => (
-                <div className={`row${r.started ? ' row--started' : ''}`} key={r.ffc ?? r.id}>
-                  <span>
-                    <span className="slot-tag">R{r.round}</span>{' '}
-                    {r.name}<span className="muted"> · {r.pos}</span>
-                  </span>
-                  <span className="r">{r.points ?? '-'}</span>
-                </div>
-              ))}
-            </div>
-          </section>
+        <DraftGrade
+          v={v} seat={seat} room={room} fieldBest={fieldBest} settledAtLabel={etStamp(contest.settled_at)} statLines={statLines}
+          leaderboard={leaderboard} seatTable={seatTable} next={next}
+          userId={userId != null ? Number(userId) : null}
+        />
+        {!v.you && (
+          <p className="muted" style={{ margin: '0 12px 12px' }}>
+            {v.dnf ? 'No complete roster was in at kickoff.' : 'You sat this one out.'}
+          </p>
         )}
-
-        <section className="mod">
-          {/* THE CEILING IS A REAL ROOM'S ROSTER, NOT A DREAM TEAM (relay D1).
-              Every Draft entrant gets a different eight, so unlike the
-              Weekly there is no shared pool to build a theoretical lineup
-              from - the ceiling is whoever's real roster scored highest,
-              named by seat rather than shown as a picks list. */}
-          <h2 className="eyebrow">The week&rsquo;s best roster <span className="ctx">- {v.perfect}</span></h2>
-          <div className="row">
-            <span className="muted">
-              {v.ceilingSeat != null ? `Seat ${v.ceilingSeat} drafted it` : 'From one of this week’s rooms'}
-            </span>
-          </div>
-        </section>
-        <p className="muted">
+        <p className="muted" style={{ margin: '0 12px 12px' }}>
           Settled from final box scores. A settled week is final - later stat
           corrections do not move it.
         </p>

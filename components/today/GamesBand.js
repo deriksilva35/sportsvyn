@@ -38,9 +38,16 @@ export default function GamesBand({ daily, yesterday, pickem, weekly, draft }) {
   // The lock line is DERIVED from the board's own first kickoff - a Pick'em
   // board seals per game at kickoff - and never a typed weekday. Same class of
   // defect as the Week 0 label this page just lost.
-  const pickemSub = pickem
-    ? `${pickem.total} games · locks ${lockLabel(pickem.nextKickoff)}`
-    : null;
+  // A SETTLED BOARD HAS NO GAMES-LEFT-TO-LOCK LINE TO SHOW (relay 2b item 6
+  // gave pickemCardData() a settled shape with no total/nextKickoff at all,
+  // for the lobby's own row) - this card falls back to naming the result
+  // instead of rendering the games-count/lock line against fields that no
+  // longer exist on that shape.
+  const pickemSub = pickem?.settled
+    ? (pickem.record ? `${pickem.record.correct} of ${pickem.record.played} · settled` : 'Settled')
+    : pickem
+      ? `${pickem.total} games · locks ${lockLabel(pickem.nextKickoff)}`
+      : null;
 
   return (
     <>
@@ -53,9 +60,9 @@ export default function GamesBand({ daily, yesterday, pickem, weekly, draft }) {
             ctaClass="play" href="/daily" />
         ) : null}
         {pickem ? (
-          <Card eyebrow={`Board ${pickem.boardNumber}`} isNew={!pickem.entered} title={GAME_NAMES.pickem}
+          <Card eyebrow={`Board ${pickem.boardNumber}`} isNew={!pickem.settled && !pickem.entered} title={GAME_NAMES.pickem}
             sub={pickemSub}
-            cta={`${pickem.picked}/${pickem.total} picked · ${pickem.entered ? 'Finish board' : 'Make picks'}`}
+            cta={pickem.settled ? 'See results' : `${pickem.picked}/${pickem.total} picked · ${pickem.entered ? 'Finish board' : 'Make picks'}`}
             href="/pickem" />
         ) : null}
         {/* The ghost states are the readers' own: a game that has not opened

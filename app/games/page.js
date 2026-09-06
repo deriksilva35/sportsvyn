@@ -139,6 +139,20 @@ function Hero({ hero, signedIn = true, signinHref = '/signin' }) {
       </div>
     );
   }
+  // THE SETTLED RECAP (relay 2b item 6) - Tuesday morning after settle,
+  // before the new week's boards open. `results` is graded()'s own
+  // {label, pct} list from lib/games/read.js, always at least one entry
+  // whenever this hero fires at all.
+  if (hero.key === 'settled-recap') {
+    return (
+      <div className="hero">
+        <div className="eb"><b>Week {hero.week} is settled</b><span>{hero.gradesIn} grades in</span></div>
+        <h2>{hero.avgPct}% of the best.</h2>
+        <p>{hero.results.map((r) => r.label).join(' · ')}</p>
+        <a className="btn ghost" href={hero.href}>See your grades</a>
+      </div>
+    );
+  }
   return (
     <div className="hero">
       <div className="eb">
@@ -346,17 +360,37 @@ function BoardsPane({ v, userId = null }) {
               )}
             </div>
           ) : (
+            // WEEKLY/DRAFT SEASON: ranked on avg stored pct, not raw points
+            // (relay 2b item 7) - same dash-plus-note shape as Pick'em's own
+            // under-the-floor row, never simply absent.
             <div>
               {b.table.top.map((r) => (
                 <div className="row" key={r.userId}>
-                  <span className="lb-left"><span className="rank">{r.rank}</span>{r.name}</span>
-                  <span className="v">{r.points} <span className="muted">pts</span></span>
+                  <span className="lb-left"><span className="rank">{r.rank ?? '-'}</span>{r.name}</span>
+                  <span className="v">
+                    {r.note ?? <>{r.avgPct}% <span className="muted">avg · {r.weeksPlayed} played</span></>}
+                  </span>
                 </div>
               ))}
               {b.table.self && (
                 <div className="row row--me">
-                  <span className="lb-left"><span className="rank">{b.table.self.rank}</span>{b.table.self.name}</span>
-                  <span className="v">{b.table.self.points} <span className="muted">pts</span></span>
+                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '-'}</span>{b.table.self.name}</span>
+                  <span className="v">
+                    {b.table.self.note ?? <>{b.table.self.avgPct}% <span className="muted">avg · {b.table.self.weeksPlayed} played</span></>}
+                  </span>
+                </div>
+              )}
+              {b.key === 'draft' && b.seatTable?.length > 0 && (
+                <div className="seat-table" style={{ marginTop: '10px', borderTop: '1px solid var(--line)', paddingTop: '8px' }}>
+                  <div className="row"><span className="muted">By seat &middot; season</span><span className="muted">avg % &middot; drafters</span></div>
+                  {b.seatTable.map((s) => (
+                    <div className="row" key={s.seat}>
+                      <span className="lb-left">Seat {s.seat}</span>
+                      <span className="v">
+                        {s.note ?? <>{s.avgPct}% <span className="muted">&middot; {s.drafters}</span></>}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

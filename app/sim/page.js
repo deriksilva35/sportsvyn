@@ -107,7 +107,7 @@ export default async function SimLobby({ searchParams }) {
                 toll on the thing they came for, and it is not even true any
                 more - drafts are free and unlimited. What signing in actually
                 buys is a NAME: a handle that carries your score across every
-                game, rather than appearing as Player 3f9c on a public board.
+                game, rather than appearing as Anonymous on a public board.
                 The headline and the free-unlimited line are kept; only the ask
                 is reframed. */}
             <div className="sim-kicker">Fantasy · Mock Draft</div>

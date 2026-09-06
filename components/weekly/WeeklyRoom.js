@@ -36,7 +36,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SLOTS } from '@/lib/weekly/rules';
 import { nextOpenSlot } from '@/lib/daily/play';
-import { poolRows } from '@/lib/weekly/view';
+import { poolRows, poolCountLabel } from '@/lib/weekly/view';
 
 const SLOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLEX', FLEX2: 'FLEX' };
 // EMPTY-SLOT COPY IS ITS OWN MAP (relay 2a-polish-2 item c), not a
@@ -215,7 +215,7 @@ export default function WeeklyRoom({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={`search ${board.length.toLocaleString('en-US')} players by name`}
+            placeholder={`search ${poolCountLabel(board.length)} players by name`}
             aria-label={`Search ${POOL_LABEL[active]}`}
             enterKeyHint="search"
             autoComplete="off"
