@@ -12,6 +12,7 @@
 
 import ShareGrade from '@/components/games/ShareGrade';
 import { pairRows, gradeGlyphRow, gradeStory } from '@/lib/games/gradePairing';
+import { poolCountLabel } from '@/lib/weekly/view';
 import StandaloneDate from '@/components/StandaloneDate';
 
 const dispName = (p) => (p.name ?? 'empty');
@@ -81,7 +82,7 @@ export default function WeeklyGrade({ v, board, settledAtLabel, leaderboard, nex
         <p>
           {v.perfectPicks.map((p) => p.name).join(' · ')}
           <br />
-          {v.perfect} points. {board.length} players eligible, {v.perfectPicks.length} of them on this line.
+          {v.perfect} points. {poolCountLabel(board.length)} players eligible, {v.perfectPicks.length} of them on this line.
         </p>
       </div>
 
