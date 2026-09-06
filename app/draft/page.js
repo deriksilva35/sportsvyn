@@ -17,6 +17,7 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
+import { weekStatLines } from '@/lib/weekly/pool';
 import { draftState, draftSettledView, seatOptions } from '@/lib/draft/view';
 import { draftState as readDraftState, fieldBestRoster } from '@/lib/draft/entry';
 import { DRAFT_CONFIG, DRAFT_ROUNDS, nextDraftContest } from '@/lib/draft/contest';
@@ -129,10 +130,14 @@ export default async function DraftPage({ searchParams }) {
     const leaderboard = await draftFieldLeaderboard(contest.id, userId != null ? Number(userId) : null, { limit: 5 });
     const seatTable = await draftSeatTable(contest.id, DRAFT_CONFIG.teamsCount);
     const next = await nextDraftContest().catch(() => null);
+    const statLines = await weekStatLines(
+      contest.season_year, contest.week,
+      [...(v.roster ?? []), ...(fieldBest?.roster ?? [])].map((p) => p.id),
+    ).catch(() => new Map());
     return (
       <Shell>
         <DraftGrade
-          v={v} seat={seat} room={room} fieldBest={fieldBest} settledAtLabel={etStamp(contest.settled_at)}
+          v={v} seat={seat} room={room} fieldBest={fieldBest} settledAtLabel={etStamp(contest.settled_at)} statLines={statLines}
           leaderboard={leaderboard} seatTable={seatTable} next={next}
           userId={userId != null ? Number(userId) : null}
         />

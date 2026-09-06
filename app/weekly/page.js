@@ -29,6 +29,7 @@ import StandaloneDate from '@/components/StandaloneDate';
 import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI } from '@/lib/weekly/view';
 import { SLOTS } from '@/lib/weekly/rules';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
+import { weekStatLines } from '@/lib/weekly/pool';
 import WeeklyRoom from '@/components/weekly/WeeklyRoom';
 import WeeklyGrade from '@/components/weekly/WeeklyGrade';
 import { WeeklyPreOpenLine } from '@/components/games/preOpenLine';
@@ -173,10 +174,17 @@ export default async function WeeklyPage({ searchParams }) {
     const v = settledView({ contest, entry, board });
     const leaderboard = await scoreLeaderboard(contest.id, userId != null ? Number(userId) : null, { limit: 5 });
     const next = await nextContest().catch(() => null);
+    // The ~12 players actually on the card - yours and the ceiling's -
+    // never the whole week. Caught: a missing stat line costs a row its
+    // detail, never the page.
+    const statLines = await weekStatLines(
+      contest.season_year, contest.week,
+      [...(v.you?.picks ?? []), ...v.perfectPicks].map((p) => p.id),
+    ).catch(() => new Map());
     return (
       <Shell>
         <WeeklyGrade
-          v={v} board={board} settledAtLabel={etStamp(contest.settled_at)}
+          v={v} board={board} settledAtLabel={etStamp(contest.settled_at)} statLines={statLines}
           leaderboard={leaderboard} next={next} userId={userId != null ? Number(userId) : null}
         />
         {!v.you && (

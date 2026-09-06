@@ -13,11 +13,20 @@
 import ShareGrade from '@/components/games/ShareGrade';
 import { pairRows, gradeGlyphRow, gradeStory } from '@/lib/games/gradePairing';
 import { poolCountLabel } from '@/lib/weekly/view';
+import { SEASON_TABLE_MIN_FIELD } from '@/lib/games/lobby';
 import StandaloneDate from '@/components/StandaloneDate';
 
 const dispName = (p) => (p.name ?? 'empty');
 
-export default function WeeklyGrade({ v, board, settledAtLabel, leaderboard, next, userId }) {
+export default function WeeklyGrade({ v, board, settledAtLabel, leaderboard, next, userId, statLines = new Map() }) {
+  // TEAM AND LINE, where a bare em dash used to sit (relay 2b-fix item 1).
+  // `team` rides the board snapshot itself (activePool() selects
+  // teams.abbreviation into it); the stat line is read at render from the
+  // week's own stat rows. Either may be absent - a board built without
+  // team, a player with no line this formatter covers - and the row falls
+  // back through team-only to the em dash rather than printing a stray
+  // separator.
+  const meta = (p) => [p?.team, statLines.get(p?.id)].filter(Boolean).join(' · ') || '—';
   const rows = v.you ? pairRows(v.you.picks, v.perfectPicks) : [];
   const glyph = rows.length ? gradeGlyphRow(rows) : '';
   const story = rows.length ? gradeStory(rows) : null;
@@ -51,7 +60,7 @@ export default function WeeklyGrade({ v, board, settledAtLabel, leaderboard, nex
               <div className="gg-two">
                 <div className="gg-bx gg-you">
                   <div className="gg-nm">{dispName(r.you)}</div>
-                  <div className="gg-mt">{r.you.team ?? '—'}</div>
+                  <div className="gg-mt">{meta(r.you)}</div>
                   <div className="gg-pt">{r.you.points ?? '-'}</div>
                 </div>
                 {r.verdict === 'hit' ? (
@@ -59,7 +68,7 @@ export default function WeeklyGrade({ v, board, settledAtLabel, leaderboard, nex
                 ) : (
                   <div className="gg-bx gg-best">
                     <div className="gg-nm">{dispName(r.best ?? {})}</div>
-                    <div className="gg-mt">{r.best?.team ?? '—'}</div>
+                    <div className="gg-mt">{meta(r.best)}</div>
                     <div className="gg-pt">{r.best?.points ?? '-'}</div>
                   </div>
                 )}
@@ -107,6 +116,14 @@ export default function WeeklyGrade({ v, board, settledAtLabel, leaderboard, nex
           </div>
         )}
       </div>
+
+
+      {v.you && leaderboard.played < SEASON_TABLE_MIN_FIELD && (
+        <div className="gg-mathline">
+          {leaderboard.played === 1 ? 'One entrant' : `${leaderboard.played} entrants`} this week, so
+          it does not count toward the season table. Your score stands.
+        </div>
+      )}
 
       {v.you && (
         <ShareGrade

@@ -15,16 +15,26 @@ import ShareGrade from '@/components/games/ShareGrade';
 import { draftGradeRows, firstDivergentRound, gradeGlyphRow } from '@/lib/games/gradePairing';
 import { ordinal } from '@/lib/standings/view';
 import { seatRangeLabel } from '@/lib/games/leaderboard';
+import { SEASON_TABLE_MIN_FIELD } from '@/lib/games/lobby';
 import { displayName } from '@/lib/daily/handles';
 import StandaloneDate from '@/components/StandaloneDate';
 
 export default function DraftGrade({
   v, seat, room, fieldBest, settledAtLabel, leaderboard, seatTable, next, userId,
+  statLines = new Map(),
 }) {
+  // TEAM, THE ROUND IT WAS TAKEN IN, AND THE LINE (relay 2b-fix item 1).
+  // The field-best box printed a bare em dash on every row; your own side
+  // printed the round with no team. Ordered most-identifying first, since
+  // .gg-mt ellipsises at 8px on a narrow screen.
+  const meta = (p, extra = null) => [
+    p?.team,
+    extra ?? (p?.round != null ? `pick ${p.round}` : null),
+    statLines.get(p?.id),
+  ].filter(Boolean).join(' · ') || '—';
   const yourRounds = v.roster;
   const bestRounds = fieldBest?.roster ?? [];
   const rows = v.you ? draftGradeRows(yourRounds, bestRounds) : [];
-  const glyph = rows.length ? gradeGlyphRow(rows) : '';
   const diverge = firstDivergentRound(rows);
   const matchedCount = rows.filter((r) => r.verdict === 'hit').length;
   const fieldBestName = fieldBest ? displayName({ id: fieldBest.userId, handle: fieldBest.handle }) : 'unknown';
@@ -43,6 +53,19 @@ export default function DraftGrade({
   // block above is untouched: eleven bots is a real comparison and it is
   // the one this reader actually has.
   const soleDrafter = leaderboard.played === 1 && v.you != null;
+
+  // THE GLYPH STRIP IS FIELD-RELATIVE HERE, so it goes with the percentage
+  // and the rank (relay 2b-fix-2 item 2). Every glyph encodes a verdict from
+  // draftGradeRows(yours, fieldBest) - and with one entrant the field best IS
+  // you, so the strip would read eight green squares meaning "you matched
+  // yourself eight times". Same gate as item 7's percentage and the rank
+  // clause in the caption.
+  //
+  // NOT gated on the Weekly or Pick'em, deliberately: the Weekly's glyph
+  // compares you to the theoretical perfect lineup and Pick'em's encodes
+  // right/wrong per game - both are real with a field of one, and only
+  // their RANK is field-relative (already dropped in the caption).
+  const glyph = rows.length && !soleDrafter ? gradeGlyphRow(rows) : '';
 
   // DRAFTED SEATS ONLY, THEN ONE LINE FOR THE REST (relay 2b-fix item 6).
   const drafted = seatTable.filter((s) => s.drafters > 0);
@@ -110,7 +133,7 @@ export default function DraftGrade({
               <div className="gg-two">
                 <div className={`gg-bx gg-you${r.you.dropped ? ' gg-dropped' : ''}`}>
                   <div className="gg-nm">{r.you.name}</div>
-                  <div className="gg-mt">pick {r.you.round != null ? r.you.round : '—'}</div>
+                  <div className="gg-mt">{meta(r.you)}</div>
                   <div className="gg-pt">{r.you.points ?? '-'}</div>
                 </div>
                 {r.verdict === 'hit' && !r.you.dropped ? (
@@ -118,7 +141,7 @@ export default function DraftGrade({
                 ) : (
                   <div className={`gg-bx gg-best${r.best?.dropped ? ' gg-dropped' : ''}`}>
                     <div className="gg-nm">{r.best?.name ?? '—'}</div>
-                    <div className="gg-mt">{r.best?.dropped ? 'also dropped' : '—'}</div>
+                    <div className="gg-mt">{meta(r.best, r.best?.dropped ? 'also dropped' : null)}</div>
                     <div className="gg-pt">{r.best?.points ?? '-'}</div>
                   </div>
                 )}
@@ -194,7 +217,7 @@ export default function DraftGrade({
           </div>
         ))}
         {undrafted.length > 0 && (
-          <div className="gg-lr">
+          <div className="gg-lr gg-lr--wrap">
             <span className="gg-lr-rk">-</span>
             <span className="gg-lr-who" style={{ color: 'var(--muted)' }}>
               {undrafted.length === 1 ? 'Seat' : 'Seats'} {seatRangeLabel(undrafted)} had no {undrafted.length === 1 ? 'drafter' : 'drafters'} this week
@@ -208,6 +231,14 @@ export default function DraftGrade({
         <div className="gg-mathline">
           Seat {mostPopular.seat} was the most popular and the {ordinal(seatTable.findIndex((s) => s.seat === mostPopular.seat) + 1)} best.
           One week says nothing - the season board keeps the seat.
+        </div>
+      )}
+
+
+      {v.you && leaderboard.played < SEASON_TABLE_MIN_FIELD && (
+        <div className="gg-mathline">
+          {leaderboard.played === 1 ? 'One entrant' : `${leaderboard.played} entrants`} this week, so
+          it does not count toward the season table. Your score stands.
         </div>
       )}
 
