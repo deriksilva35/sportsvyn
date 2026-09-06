@@ -28,6 +28,19 @@ export default function PickemGrade({
 
   const myRow = leaderboard.top.find((r) => r.userId === userId) ?? leaderboard.self ?? null;
 
+  // NO ENTRY MEANS NO GRADE (relay 2b-fix item 2). A reader who never
+  // picked this board has nothing to grade, and "0 of 0 · 0%" is not a
+  // result - it is a scoreline invented for somebody who did not play.
+  // pickemGradeRows() only ever emits rows for games this viewer actually
+  // picked, so an empty rows array IS "no entry", signed in or out.
+  const entered = rows.length > 0;
+
+  // THE BOARD'S OWN RESULT, for a reader with no entry to have come for:
+  // how the slate actually went, which is a board-wide fact carrying
+  // nobody's picks (the same class as the rank/record chips the living
+  // board already shows every reader).
+  const finals = view.games.filter((g) => g.status === 'final');
+
   return (
     <>
       <header className="gg-hdr">
@@ -35,6 +48,19 @@ export default function PickemGrade({
         <span className="gg-clock">settled {settledAtLabel}</span>
       </header>
 
+      {!entered && (
+        <div className="gg-perf">
+          <b>How this board went</b>
+          <p>
+            {finals.length} games played
+            {faded > 0 && <> &middot; {faded} ranked {faded === 1 ? 'favourite' : 'favourites'} lost</>}
+            <br />
+            You did not pick this board.
+          </p>
+        </div>
+      )}
+
+      {entered && (
       <div className="gg-grade">
         <div className="gg-grade-top">
           <b>Board {view.contest.boardNumber}</b>
@@ -60,11 +86,14 @@ export default function PickemGrade({
           </div>
         ))}
       </div>
+      )}
 
-      <div className="gg-mathline">
-        {right} right &middot; {wrong} wrong &middot; {push} push
-        {faded > 0 && <> &middot; <b>{faded} ranked favourites lost</b>, you had {hadThem} of them.</>}
-      </div>
+      {entered && (
+        <div className="gg-mathline">
+          {right} right &middot; {wrong} wrong &middot; {push} push
+          {faded > 0 && <> &middot; <b>{faded} ranked favourites lost</b>, you had {hadThem} of them.</>}
+        </div>
+      )}
 
       <div className="gg-lb">
         <div className="gg-lb-h"><span>Board {view.contest.boardNumber}</span><span>{leaderboard.played} played</span></div>
@@ -84,11 +113,13 @@ export default function PickemGrade({
         )}
       </div>
 
-      <ShareGrade
-        glyph={glyph}
-        caption={`Pick'em Board ${view.contest.boardNumber} · ${right} of ${played} · ${pct}%${myRow?.rank ? ` · ${myRow.rank} of ${leaderboard.played}` : ''}`}
-        url={`sportsvyn.com/pickem/${sport}`}
-      />
+      {entered && (
+        <ShareGrade
+          glyph={glyph}
+          caption={`Pick'em Board ${view.contest.boardNumber} · ${right} of ${played} · ${pct}%${myRow?.rank ? ` · ${myRow.rank} of ${leaderboard.played}` : ''}`}
+          url={`sportsvyn.com/pickem/${sport}`}
+        />
+      )}
 
       {next && (
         <div className="gg-mathline">
