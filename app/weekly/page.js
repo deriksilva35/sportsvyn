@@ -29,10 +29,12 @@ import StandaloneDate from '@/components/StandaloneDate';
 import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI } from '@/lib/weekly/view';
 import { SLOTS } from '@/lib/weekly/rules';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
-import { tierClass } from '@/lib/daily/reveal';
 import WeeklyRoom from '@/components/weekly/WeeklyRoom';
+import WeeklyGrade from '@/components/weekly/WeeklyGrade';
 import { WeeklyPreOpenLine } from '@/components/games/preOpenLine';
+import { scoreLeaderboard } from '@/lib/games/leaderboard';
 import '../daily/daily.css';
+import '@/components/games/grade.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -169,69 +171,20 @@ export default async function WeeklyPage({ searchParams }) {
   // score itself. Every module below the hero is the Daily's, unchanged.
   if (state === 'settled') {
     const v = settledView({ contest, entry, board });
+    const leaderboard = await scoreLeaderboard(contest.id, userId != null ? Number(userId) : null, { limit: 5 });
+    const next = await nextContest().catch(() => null);
     return (
       <Shell>
-        {/* Plain .hero, same as the Daily's reveal at app/daily/[date]/page.js:63.
-            A modifier here would have been a divergence with no reason behind it. */}
-        <section className="hero">
-          <div className="hero-eyebrow">The Weekly &middot; final</div>
-          <div className="hero-q">{v.season} &middot; Week {v.week}</div>
-          {v.you ? (
-            <p className="hero-line">
-              You scored <b>{v.you.score}</b>
-              {v.you.pct != null && <> &middot; {v.you.pct}% of perfect</>}
-            </p>
-          ) : (
-            <p className="hero-line">
-              {v.dnf ? 'No complete lineup was in at kickoff.' : 'You sat this one out.'}
-            </p>
-          )}
-        </section>
-
-        {v.you && (
-          <section className="mod mod--entered">
-            <h2 className="eyebrow">Your six <span className="ctx">- worst pick dropped</span></h2>
-            <div className="score-row">
-              <div className="score-big">{v.you.score}</div>
-              <div className="score-meta">
-                {v.you.tier && <span className={`tierbadge ${tierClass(v.you.tier)}`}>{v.you.tier}</span>}
-                <span className="muted">perfect was {v.perfect}</span>
-              </div>
-            </div>
-            <div>
-              {v.you.picks.map((p) => (
-                <div className={`row${p.dropped ? ' row--dropped' : ''}`} key={p.slot}>
-                  <span>
-                    <span className="slot-tag">{p.slot === 'FLEX2' ? 'FLEX' : p.slot}</span>{' '}
-                    {p.name ?? <span className="muted">empty</span>}
-                    {p.team && <span className="muted"> · {p.team}</span>}
-                  </span>
-                  <span className="r">
-                    {p.points ?? '-'}
-                    {p.dropped && <span className="r--mut"> dropped</span>}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
+        <WeeklyGrade
+          v={v} board={board} settledAtLabel={etStamp(contest.settled_at)}
+          leaderboard={leaderboard} next={next} userId={userId != null ? Number(userId) : null}
+        />
+        {!v.you && (
+          <p className="muted" style={{ margin: '0 12px 12px' }}>
+            {v.dnf ? 'No complete lineup was in at kickoff.' : 'You sat this one out.'}
+          </p>
         )}
-
-        <section className="mod">
-          <h2 className="eyebrow">The perfect lineup <span className="ctx">- {v.perfect}</span></h2>
-          <div>
-            {v.perfectPicks.map((p) => (
-              <div className="row" key={p.slot ?? p.id}>
-                <span>
-                  <span className="slot-tag">{p.slot === 'FLEX2' ? 'FLEX' : p.slot}</span>{' '}
-                  {p.name}{p.team && <span className="muted"> · {p.team}</span>}
-                </span>
-                <span className="r">{p.points}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <p className="muted">
+        <p className="muted" style={{ margin: '0 12px 12px' }}>
           Settled from final box scores. A settled week is final - later stat
           corrections do not move it.
         </p>

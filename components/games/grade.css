@@ -1,0 +1,107 @@
+/* components/games/grade.css - the settled GRADE CARD shared by the Weekly,
+   the Draft and Pick'em (relay 2b items 2-4), per docs/design/
+   games-remock-v2.html's 'Tue Sep 15, settled' state.
+
+   EVERY CLASS IS gg- PREFIXED (games grade) so nothing here collides with
+   each surface's own page CSS (app/weekly's daily.css import, app/draft's
+   own stylesheet, app/pickem/pickem.css) - same reasoning, same convention,
+   as components/daily/season/seasonBoard.css's own sbd- prefix, which this
+   file's grade-card rules are adapted from almost verbatim: it is the one
+   other place in this codebase that ships this exact card (MATCHED/MISSED/
+   YOU WERE AHEAD verdicts, sticky YOU/BEST heads, the dashed math line, the
+   jade perf box, the italic serif story, the glyph share). Consumes the
+   site's existing --volt/--ink/--paper/--jade/--terra tokens; does not
+   redefine them. */
+
+.gg-hdr { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 16px 4px; }
+.gg-hdr .gg-ed { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted, #8A8A85); }
+.gg-hdr .gg-clock { font-family: var(--font-mono); font-size: 12px; color: var(--volt, #D4FF00); font-style: normal; }
+
+/* THE DRAFT'S ROOM BLOCK ("Your room · seat n" / rank / bot comparison,
+   relay 2b item 3) - not shared with the Weekly or Pick'em, which have no
+   seat to name. */
+.gg-mid { padding: 8px 16px 0; }
+.gg-mid .gg-kick { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--volt, #D4FF00); }
+.gg-mid .gg-big { margin-top: 8px; font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 34px; letter-spacing: -.04em; color: var(--paper, #F5F5F2); }
+.gg-mid .gg-lab { margin-top: 2px; font-size: 13px; color: var(--paper-dim, #B8B8B3); }
+
+.gg-grade { margin: 14px 12px 12px; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); overflow: hidden; }
+.gg-grade-top { background: var(--volt, #D4FF00); color: var(--ink, #0A0A0A); padding: 10px 13px; display: flex; align-items: baseline; justify-content: space-between; }
+.gg-grade-top b { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 17px; letter-spacing: -.03em; }
+.gg-grade-top span { font-family: var(--font-mono); font-weight: 700; font-size: 12px; }
+
+.gg-colhead { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 10px; background: var(--ink-2, #141414); border-bottom: 1px solid var(--line, #2A2A2A); }
+.gg-colhead div { font-family: var(--font-saira-cond); font-weight: 700; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; text-align: center; padding: 3px 0; border-radius: 7px; }
+.gg-colhead .gg-cy { color: var(--ink, #0A0A0A); background: var(--volt, #D4FF00); }
+.gg-colhead .gg-cb { color: var(--jade, #2A8A4F); border: 1px solid var(--jade, #2A8A4F); }
+
+.gg-sbr { padding: 6px 10px; border-top: 1px solid var(--line, #2A2A2A); }
+.gg-sbr .gg-top2 { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
+.gg-sbr .gg-pos { font-family: var(--font-saira-cond); font-weight: 700; font-size: 9px; letter-spacing: .08em; color: var(--muted, #8A8A85); min-width: 26px; }
+.gg-sbr .gg-vd { font-family: var(--font-saira-cond); font-weight: 600; font-size: 8px; letter-spacing: .10em; text-transform: uppercase; border: 1px solid; border-radius: 99px; padding: 1px 6px; }
+.gg-sbr.gg-hit .gg-vd { color: var(--jade, #2A8A4F); border-color: var(--jade, #2A8A4F); }
+.gg-sbr.gg-miss .gg-vd { color: var(--terra, #B8410F); border-color: var(--terra, #B8410F); }
+.gg-sbr.gg-ahead .gg-vd { color: var(--volt, #D4FF00); border-color: var(--volt, #D4FF00); }
+.gg-sbr.gg-ahead .gg-dif { color: var(--volt, #D4FF00); }
+.gg-sbr .gg-dif { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--terra, #B8410F); }
+.gg-sbr.gg-hit .gg-dif { color: var(--jade, #2A8A4F); }
+.gg-sbr.gg-dropped { opacity: .5; }
+.gg-sbr.gg-dropped .gg-bx .gg-nm { text-decoration: line-through; }
+
+.gg-two { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.gg-bx { border: 1px solid var(--line, #2A2A2A); border-radius: 8px; padding: 6px 8px; background: var(--ink, #0A0A0A); }
+.gg-bx .gg-nm { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--paper, #F5F5F2); }
+.gg-bx .gg-mt { margin-top: 1px; font-family: var(--font-mono); font-size: 8px; color: var(--muted-dim, #5A5A56); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gg-bx .gg-pt { margin-top: 2px; font-family: var(--font-mono); font-weight: 700; font-size: 14px; color: var(--paper, #F5F5F2); }
+.gg-bx.gg-you { border-color: var(--volt, #D4FF00); }
+.gg-bx.gg-you .gg-pt { color: var(--volt, #D4FF00); }
+.gg-bx.gg-best .gg-pt { color: var(--jade, #2A8A4F); }
+.gg-sbr.gg-hit .gg-bx.gg-you { border-color: var(--jade, #2A8A4F); }
+.gg-sbr.gg-hit .gg-bx.gg-you .gg-pt { color: var(--jade, #2A8A4F); }
+.gg-bx.gg-same { border-style: dashed; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; padding: 8px; }
+.gg-bx.gg-same .gg-tick { font-family: var(--font-mono); font-size: 16px; color: var(--jade, #2A8A4F); }
+.gg-bx.gg-same .gg-sm { margin-top: 1px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 8px; letter-spacing: .10em; text-transform: uppercase; color: var(--muted, #8A8A85); }
+.gg-sbr .gg-note { margin-top: 3px; font-family: var(--font-mono); font-size: 9px; color: var(--muted-dim, #5A5A56); }
+
+.gg-mathline { margin: 0 12px 12px; padding: 8px 12px; border: 1px dashed var(--line, #2A2A2A); border-radius: 11px; font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); line-height: 1.5; }
+.gg-mathline b { color: var(--terra, #B8410F); font-weight: 700; }
+
+.gg-perf { margin: 0 12px 12px; border: 1px solid var(--line, #2A2A2A); border-radius: 11px; background: var(--ink-2, #141414); padding: 9px 12px; }
+.gg-perf b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--jade, #2A8A4F); display: block; margin-bottom: 5px; }
+.gg-perf p { font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); line-height: 1.5; margin: 0; }
+
+.gg-story { margin: 0 12px 12px; border: 1px solid var(--line, #2A2A2A); border-left: 3px solid var(--volt, #D4FF00); border-radius: 11px; background: var(--ink-2, #141414); padding: 10px 12px; }
+.gg-story b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--volt, #D4FF00); display: block; margin-bottom: 6px; }
+.gg-story p { font-family: var(--font-source-serif), Georgia, serif; font-style: italic; font-size: 12px; line-height: 1.4; color: var(--paper-dim, #B8B8B3); margin: 0; }
+
+.gg-share { margin: 20px 12px 0; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); padding: 15px 14px; }
+.gg-share .gg-g { font-family: var(--font-mono); font-size: 18px; letter-spacing: .09em; line-height: 1.5; }
+.gg-share .gg-cap { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--muted, #8A8A85); line-height: 1.55; }
+.gg-share-btn {
+  margin-top: 10px; font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  color: var(--volt, #D4FF00); background: transparent; border: 1px solid var(--volt, #D4FF00);
+  border-radius: 8px; padding: 6px 12px; cursor: pointer;
+}
+
+.gg-lb { margin: 12px 12px 0; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); overflow: hidden; }
+.gg-lb-h { padding: 11px 14px; border-bottom: 1px solid var(--line, #2A2A2A); font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted, #8A8A85); display: flex; justify-content: space-between; }
+.gg-lr { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--line, #2A2A2A); }
+.gg-lr:first-of-type { border-top: 0; }
+.gg-lr-rk { flex: none; width: 30px; font-family: var(--font-mono); font-size: 12px; color: var(--muted, #8A8A85); }
+.gg-lr-who { flex: 1 1 auto; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gg-lr-sc { flex: none; font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
+.gg-lr--you { background: var(--volt-dim, rgba(212,255,0,.12)); }
+.gg-lr--you .gg-lr-who { color: var(--volt, #D4FF00); font-weight: 600; }
+.gg-lr--you .gg-lr-rk { color: var(--volt, #D4FF00); }
+
+.gg-btn {
+  display: block; width: 100%; text-align: center; font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 16px;
+  color: var(--ink, #0A0A0A); background: var(--volt, #D4FF00); border: 0; border-radius: 10px; padding: 13px; cursor: pointer; margin: 12px 12px 0;
+}
+.gg-btn.gg-ghost {
+  background: none; border: 1px solid var(--line, #2A2A2A); color: var(--paper, #F5F5F2); font-family: var(--font-saira-cond); font-style: normal;
+  font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+}
+
+/* the jade "graded" pill (item 6, the lobby's settled-state row). */
+.gg-pill { display: inline-block; font-family: var(--font-saira-cond); font-weight: 700; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--jade, #2A8A4F); border: 1px solid var(--jade, #2A8A4F); border-radius: 99px; padding: 2px 8px; }
