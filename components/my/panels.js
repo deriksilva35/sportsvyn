@@ -34,8 +34,12 @@ export function ContestsPanel({ daily, yesterday, pickem, weekly, draft }) {
       />
       <Row
         label="Pick'em"
-        sub={pickem ? `Board ${pickem.boardNumber} - locks ${shortLockLabel(pickem.nextKickoff)}` : 'No open board'}
-        value={pickem ? <>{pickem.picked}/{pickem.total} <span className="mut">picked</span></> : '-'}
+        sub={pickem?.settled
+          ? `Board ${pickem.boardNumber} - settled`
+          : pickem ? `Board ${pickem.boardNumber} - locks ${shortLockLabel(pickem.nextKickoff)}` : 'No open board'}
+        value={pickem?.settled
+          ? (pickem.record ? <>{pickem.record.correct}/{pickem.record.played} <span className="mut">final</span></> : '-')
+          : pickem ? <>{pickem.picked}/{pickem.total} <span className="mut">picked</span></> : '-'}
       />
       <Row label="The Weekly" sub={weekly ? 'open' : 'opens Mon Sep 8'}
         value={weekly ? 'Open' : <StatePill>Soon</StatePill>} />
