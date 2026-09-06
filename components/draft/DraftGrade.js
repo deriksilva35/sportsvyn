@@ -214,7 +214,7 @@ export default function DraftGrade({
       {v.you && (
         <ShareGrade
           glyph={glyph}
-          caption={`The Draft Week ${v.week} · seat ${seat} · ${v.you.score} pts${myRow?.rank ? ` · ${ordinal(myRow.rank)} of ${leaderboard.played}` : ''}${room ? ` · ${ordinal(room.rank)} in room` : ''}`}
+          caption={`The Draft Week ${v.week} · seat ${seat} · ${v.you.score} pts${myRow?.rank && !soleDrafter ? ` · ${ordinal(myRow.rank)} of ${leaderboard.played}` : ''}${room ? ` · ${ordinal(room.rank)} in room` : ''}`}
           url="sportsvyn.com/draft"
         />
       )}

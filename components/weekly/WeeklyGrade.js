@@ -111,7 +111,7 @@ export default function WeeklyGrade({ v, board, settledAtLabel, leaderboard, nex
       {v.you && (
         <ShareGrade
           glyph={glyph}
-          caption={`The Weekly Week ${v.week} · ${v.you.score} pts · ${v.you.pct}%${myRow?.rank ? ` · ${myRow.rank}${ordinalSuffix(myRow.rank)} of ${leaderboard.played}` : ''}`}
+          caption={`The Weekly Week ${v.week} · ${v.you.score} pts · ${v.you.pct}%${myRow?.rank && leaderboard.played > 1 ? ` · ${myRow.rank}${ordinalSuffix(myRow.rank)} of ${leaderboard.played}` : ''}`}
           url="sportsvyn.com/weekly"
         />
       )}

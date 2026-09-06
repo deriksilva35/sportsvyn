@@ -116,7 +116,7 @@ export default function PickemGrade({
       {entered && (
         <ShareGrade
           glyph={glyph}
-          caption={`Pick'em Board ${view.contest.boardNumber} · ${right} of ${played} · ${pct}%${myRow?.rank ? ` · ${myRow.rank} of ${leaderboard.played}` : ''}`}
+          caption={`Pick'em Board ${view.contest.boardNumber} · ${right} of ${played} · ${pct}%${myRow?.rank && leaderboard.played > 1 ? ` · ${myRow.rank} of ${leaderboard.played}` : ''}`}
           url={`sportsvyn.com/pickem/${sport}`}
         />
       )}
