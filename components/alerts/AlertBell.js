@@ -213,9 +213,24 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
                   ? <p className="al-rowerr al-rowerr--master">{rowError.message}</p> : null}
 
                 <div className="al-foot">
-                  <a className="al-teamlink" href={`/${match.leagueSlug}/team/${match.homeSlug ?? ''}`}>
-                    Team defaults: {match.homeAbbr} →
-                  </a>
+                  {/* THE ROUTE IS /team/[slug], NOT /{league}/team/[slug]
+                      (defect 6). This built a league-scoped path that has
+                      never existed - app/team/[slug]/page.js is the only
+                      team route in the app - so it 404'd for every team in
+                      every league, all 243 CFB teams included, not just Ole
+                      Miss. The page itself is league-aware and serves CFB
+                      fine; only the href was wrong.
+
+                      The link is dropped entirely when there is no slug,
+                      rather than pointing at /team/ - a dead link is worse
+                      than no link, and that is what the 404 was. */}
+                  {match.homeSlug
+                    ? (
+                      <a className="al-teamlink" href={`/team/${match.homeSlug}`}>
+                        Team defaults: {match.homeAbbr} →
+                      </a>
+                    )
+                    : <span className="al-scope">Team defaults unavailable</span>}
                   <span className="al-scope">Applies to this game</span>
                 </div>
                 {/* DONE, NOT SAVE. Every row is already written; this only
