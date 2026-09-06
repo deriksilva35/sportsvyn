@@ -47,7 +47,11 @@ export default function ShareGrade({ glyph, caption, url }) {
 
   return (
     <div className="gg-share">
-      <div className="gg-g">{glyph}</div>
+      {/* NO GLYPH, NO STRIP (relay 2b-fix-2 item 2) - an empty .gg-g still
+          paints 18px of line-height, so a caller that withholds the glyph
+          would leave a blank band where the strip was. shareText already
+          filters it out of the copied text. */}
+      {glyph ? <div className="gg-g">{glyph}</div> : null}
       <div className="gg-cap">{caption}<br />{url}</div>
       <button type="button" className="gg-share-btn" onClick={handleShare}>
         {copied ? 'Copied' : 'Share'}
