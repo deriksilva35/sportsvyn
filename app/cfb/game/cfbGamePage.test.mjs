@@ -146,7 +146,16 @@ test('SURFACE 4 - the Pick\'em link is in the HEADER and cannot swallow a pick',
   // The pick buttons carry the ONLY click handler; nothing on the row or the
   // eyebrow does, so a link tap has nothing to bubble into.
   assert.match(code, /onClick=\{\(\) => tap\(g, side\)\}/);
-  assert.equal((code.match(/onClick=/g) ?? []).length, 1, 'exactly one click handler in the row');
+  // SCOPED TO THE ROW, which is what this has always claimed to measure. It
+  // counted onClick across the WHOLE FILE, which held only while the
+  // component had exactly one button anywhere in it - so the unrelated
+  // "Lock it in" button in the confirm card (relay 3 item 3, rendered far
+  // below the rows) tripped it. The guarantee is unchanged and still
+  // structural: within the row's own markup, from the eyebrow through the
+  // pick buttons, the pick button is the only thing that handles a click.
+  const rowRegion = code.slice(code.indexOf('className={`pk-eb'), code.indexOf('className="pk-savebar"'));
+  assert.equal((rowRegion.match(/onClick=/g) ?? []).length, 1,
+    'exactly one click handler in the row');
   assert.doesNotMatch(code, /stopPropagation|preventDefault/,
     'separation must be structural, not a propagation hack a later edit can undo');
 
