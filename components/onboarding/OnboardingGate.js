@@ -17,10 +17,12 @@
  * What survives on these six pages is the REST of the sheet: the optional
  * contact address, the optional name, and the push pre-warm.
  *
- * THE TRIGGER IS STILL `handle IS NULL`. Not a cookie, not localStorage -
- * those re-prompt the same person on a second device, and the brief says
- * never again this season. The handle remains the completion state, so this
- * sheet and the first-entry modal cannot disagree about who is done.
+ * THE TRIGGER IS NOW `onboarded_at IS NULL`, not `handle IS NULL`. With the
+ * handle gone from step 1 this sheet no longer writes that column, so the
+ * old trigger could never be satisfied by finishing - it would have
+ * re-shown on every load forever. completeOnboarding() sets onboarded_at.
+ * Still not a cookie and not localStorage: those re-prompt the same person
+ * on a second device, and the brief says never again this season.
  *
  * IT COSTS ONE QUERY, AND ONLY WHEN SIGNED IN. auth() is already resolved on
  * every page that renders chrome; the extra work is a single indexed read, and
@@ -42,7 +44,7 @@ export default async function OnboardingGate() {
   if (userId == null) return null;
 
   const user = await sql`
-    SELECT id, handle, email, contact_email, name FROM users WHERE id = ${Number(userId)} LIMIT 1`
+    SELECT id, handle, email, contact_email, name, onboarded_at FROM users WHERE id = ${Number(userId)} LIMIT 1`
     .then((r) => r[0] ?? null)
     .catch(() => null);
   if (!user || !needsOnboarding(user)) return null;

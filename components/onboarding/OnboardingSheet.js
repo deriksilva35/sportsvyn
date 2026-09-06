@@ -16,10 +16,12 @@
  * will not let you past without an address is one Apple can reject and a reader
  * can only resent, and neither field is worth that.
  *
- * STEP 1 REUSES HandleClaim RATHER THAN REIMPLEMENTING IT. That component
- * already has live availability, local-then-server validation, the denylist and
- * the cooldown behind it. A second claim UI would be a second place for those
- * rules to drift out of step.
+ * STEP 1 IS GONE FROM THIS SHEET (relay item 3). The handle moved to the
+ * first write to a ranked contest - components/handle/HandleGate.js - where
+ * the reader has actually made something worth naming. What remains here is
+ * the optional contact address, the optional name, and the push pre-warm,
+ * renumbered from what is actually left: 1 of 2, or 1 of 3 where push can
+ * be offered.
  *
  * NOT DISMISSIBLE BY TAPPING AWAY. There is no backdrop close and no X on step
  * 1, because the trigger is `handle IS NULL` - a dismissal would simply return
@@ -29,7 +31,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import HandleClaim from '@/components/daily/HandleClaim';
 import { saveContactEmail, saveName, completeOnboarding, savePushChoice } from '@/app/actions/onboarding';
 import { canOfferPush, enablePush } from '@/lib/push/client';
 
@@ -45,7 +46,9 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
   // cannot produce an OS prompt would be a promise the surface cannot keep.
   // Evaluated once on mount; the plugin does not appear mid-session.
   const [offerPush] = useState(() => canOfferPush());
-  const totalSteps = offerPush ? 4 : 3;
+  // ONE FEWER SINCE THE HANDLE LEFT (relay item 3). What remains is
+  // email, name, and the push pre-warm where it can be delivered on.
+  const totalSteps = offerPush ? 3 : 2;
   // Pre-checked by ruling: the toggle arrives ON, and ENABLE acts on it.
   const [wantsPush, setWantsPush] = useState(true);
   const router = useRouter();
@@ -64,20 +67,20 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
     const res = await saveContactEmail(email).catch(() => ({ ok: false, reason: 'could not save' }));
     setBusy(false);
     if (!res.ok) { setErr(res.reason ?? 'Could not save that.'); return; }
-    setStep(3);
+    setStep(2);
   }
 
   async function submitName() {
     setBusy(true);
     await saveName(name).catch(() => null);
     setBusy(false);
-    if (offerPush) setStep(4); else finish();
+    if (offerPush) setStep(3); else finish();
   }
 
   // Step 3's Skip must ALSO pass through step 4 - skipping your name is not
   // an answer about notifications.
   function afterName() {
-    if (offerPush) setStep(4); else finish();
+    if (offerPush) setStep(3); else finish();
   }
 
   // ---- STEP 4 · PUSH (the pre-warm) --------------------------------------
@@ -111,30 +114,10 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
           {Array.from({ length: totalSteps }, (_, i) => i + 1).map((n) => <i key={n} className={n <= step ? 'on' : undefined} />)}
         </div>
 
-        {/* ---- STEP 1 · HANDLE (required) ------------------------------ */}
+        {/* ---- STEP 1 · EMAIL (optional) ------------------------------- */}
         {step === 1 && (
           <>
             <div className="onb-kicker">Step 1 of {totalSteps}</div>
-            <h2 className="onb-h">Pick your handle</h2>
-            <p className="onb-lede">
-              This is your leaderboard name. It shows next to your score on every
-              board, in every game. Three to fifteen characters, letters, numbers
-              and underscores.
-            </p>
-            <HandleClaim onDone={() => setStep(2)} />
-            {/* THE CONTRACT, stated where the ask is. Step 1 is the one step
-                with no Skip and no backdrop dismiss - the trigger is
-                `handle IS NULL`, so a dismissal would simply return on the next
-                open and read as a bug rather than a choice. A required field is
-                easier to accept when its cost is named out loud. */}
-            <p className="onb-note">You will pick this once - it takes ten seconds.</p>
-          </>
-        )}
-
-        {/* ---- STEP 2 · EMAIL (optional) ------------------------------- */}
-        {step === 2 && (
-          <>
-            <div className="onb-kicker">Step 2 of {totalSteps}</div>
             <h2 className="onb-h">
               {step2?.mode === 'confirm' ? 'Is this the best address for you?' : 'Where should we reach you?'}
             </h2>
@@ -164,7 +147,7 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
             {err && <p className="onb-err">{err}</p>}
             <div className="onb-row">
               {/* EQUAL WEIGHT. Same element, same size, same row. */}
-              <button type="button" className="onb-btn" onClick={() => setStep(3)} disabled={busy}>
+              <button type="button" className="onb-btn" onClick={() => setStep(2)} disabled={busy}>
                 Skip
               </button>
               <button type="button" className="onb-btn onb-btn--go" onClick={submitEmail} disabled={busy || !email.trim()}>
@@ -174,10 +157,10 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
           </>
         )}
 
-        {/* ---- STEP 3 · NAME (optional) -------------------------------- */}
-        {step === 3 && (
+        {/* ---- STEP 2 · NAME (optional) -------------------------------- */}
+        {step === 2 && (
           <>
-            <div className="onb-kicker">Step 3 of {totalSteps}</div>
+            <div className="onb-kicker">Step 2 of {totalSteps}</div>
             <h2 className="onb-h">What should we call you?</h2>
             <p className="onb-lede">
               Only used where a real name reads better than a handle. Nobody else
@@ -204,9 +187,9 @@ export default function OnboardingSheet({ step2, initialName = '' }) {
         )}
 
         {/* ---- STEP 4 · NOTIFICATIONS (shell with plugin only) ---------- */}
-        {step === 4 && (
+        {step === 3 && (
           <>
-            <div className="onb-kicker">Step 4 of {totalSteps}</div>
+            <div className="onb-kicker">Step 3 of {totalSteps}</div>
             <h2 className="onb-h">Know when the board drops</h2>
             <p className="onb-lede">
               Get notified when the board goes live and when the answer drops.
