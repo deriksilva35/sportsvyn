@@ -11,9 +11,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import RankBadge from '@/components/gridiron/RankBadge';
 import { spreadParts } from '@/lib/standings/view';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
+import { recordLine } from '@/lib/pickem/recordLine';
 import { savePickAction } from '@/app/actions/pickem';
 import StandaloneDate from '@/components/StandaloneDate';
 
@@ -266,15 +266,18 @@ export default function PickemBoard({ view, signedIn, signinHref }) {
                 // with a return URL (2a-polish item 1), not a disabled
                 // button pretending the pick does not exist.
                 const lockedByKickoff = g.kicked || kickedAtMs;
+                const rank = side === 'home' ? g.home_rank : g.away_rank;
+                const record = side === 'home' ? g.home_record : g.away_record;
                 const content = (
                   <>
-                    <RankBadge rank={side === 'home' ? g.home_rank : g.away_rank} />
-                    <span className="pk-nm">{name}</span>
-                    {/* A CHIP MAY ONLY CLAIM KNOWLEDGE - no record, no chip,
-                        never an invented dash or a 0-0 built from absence. */}
-                    {(side === 'home' ? g.home_record : g.away_record) ? (
-                      <span className="pk-rec">{side === 'home' ? g.home_record : g.away_record}</span>
-                    ) : null}
+                    <span className="pk-nmwrap">
+                      <span className="pk-nm">{name}</span>
+                      {/* THE JOIN IS BY TEAM ID (lib/pickem/entry.js's
+                          recordMapFor), never by name - two "State" schools
+                          never collide. An absent row is a stated '-', never
+                          a hidden line. */}
+                      <small className="pk-rec">{recordLine(rank, record)}</small>
+                    </span>
                     {!lockedByKickoff && <span className="pk-tag">{side.toUpperCase()}</span>}
                     {isMine && g.graded === 'W' && <span className="pk-res w">W</span>}
                     {isMine && g.graded === 'L' && <span className="pk-res l">L</span>}

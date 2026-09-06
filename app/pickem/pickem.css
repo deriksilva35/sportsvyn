@@ -108,14 +108,15 @@
 }
 .pk-gamelink:active { background: rgba(212, 255, 0, .12); }
 
-/* THE RECORD CHIP AND THE LINE, added 31 Aug.
-   Both are small and muted on purpose: the two team names are the decision,
-   and a record that competes with the name for weight makes the card harder
-   to read, not easier. */
+/* THE NAME + RECORD LINE (relay 2c item 4 - rank folded into the record
+   line as text, "#12 · 3-0", replacing the separate rank badge). Stacked,
+   not inline: the mock's .side b / .side small block layout, in their own
+   column so .pk-tag/.pk-res stay flex:none on the row's right edge. */
+.pk-nmwrap { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
 .pk-rec {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 10px; color: var(--dim, #5a5a56); margin-left: 6px;
-  font-variant-numeric: tabular-nums; white-space: nowrap; flex: none;
+  display: block; font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px; color: var(--dim, #5a5a56);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .pk-spread {
   display: inline-flex; align-items: baseline; min-width: 0;
