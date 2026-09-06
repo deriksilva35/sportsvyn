@@ -13,9 +13,48 @@
    site's existing --volt/--ink/--paper/--jade/--terra tokens; does not
    redefine them. */
 
-.gg-hdr { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 16px 4px; }
-.gg-hdr .gg-ed { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted, #8A8A85); }
-.gg-hdr .gg-clock { font-family: var(--font-mono); font-size: 12px; color: var(--volt, #D4FF00); font-style: normal; }
+/* THE EYEBROW AND THE CLOCK NEVER COLLIDE (relay 2b-fix item 1). The
+   original was a bare `justify-content: space-between` flex row, which is
+   fine until the eyebrow gets long - "The Draft · Week 100 · seat 7" plus
+   "settled Sun, Sep 6, 2:09 AM ET" is well past 390px, and flex's default
+   `min-width:auto` on the two children means neither can shrink: they
+   overlap rather than wrap.
+
+   THREE THINGS FIX IT, and all three are load-bearing:
+     flex-wrap        lets the clock drop to its own line rather than
+                      overlapping when the pair genuinely cannot fit
+     min-width:0      without it a flex item refuses to shrink below its
+                      content width, so wrapping never even gets a chance
+     gap              once they CAN sit on one line, keeps them apart
+
+   At <=390px the clock wraps under the eyebrow and left-aligns with it
+   (margin-left:0 overriding the auto below); at <=320px the eyebrow's own
+   letter-spacing tightens so the longest of them still fits one line
+   rather than breaking mid-word. */
+.gg-hdr {
+  display: flex; align-items: baseline; justify-content: space-between;
+  flex-wrap: wrap; gap: 2px 10px; padding: 16px 16px 4px;
+}
+.gg-hdr .gg-ed {
+  flex: 1 1 auto; min-width: 0;
+  font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--muted, #8A8A85);
+}
+.gg-hdr .gg-clock {
+  flex: 0 0 auto; min-width: 0; margin-left: auto;
+  font-family: var(--font-mono); font-size: 12px; color: var(--volt, #D4FF00); font-style: normal;
+}
+@media (max-width: 390px) {
+  /* Own line, left-aligned under the eyebrow - a right-aligned orphan
+     clock on its own row reads as belonging to whatever is below it. */
+  .gg-hdr .gg-ed { flex-basis: 100%; }
+  .gg-hdr .gg-clock { margin-left: 0; font-size: 11px; }
+}
+@media (max-width: 320px) {
+  .gg-hdr { padding-left: 12px; padding-right: 12px; }
+  .gg-hdr .gg-ed { letter-spacing: .08em; }
+  .gg-hdr .gg-clock { font-size: 10px; }
+}
 
 /* THE DRAFT'S ROOM BLOCK ("Your room · seat n" / rank / bot comparison,
    relay 2b item 3) - not shared with the Weekly or Pick'em, which have no
