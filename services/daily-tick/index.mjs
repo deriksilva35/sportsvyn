@@ -15,6 +15,18 @@
 // only ever covered THIS file's own top-level state, never a transitively
 // imported module reading process.env.DATABASE_URL on its own).
 
+const { execSync } = await import('node:child_process');
+
+// THE RUNNING COMMIT (defect 4) - same reason as the poller's: a scheduled
+// process runs whatever was on disk when it started, and nothing on the
+// outside says which commit that was. 89b168e sat on disk unused for 22
+// hours because no log line anywhere named the SHA in use.
+const HEAD = (() => {
+  try { return execSync('git rev-parse --short HEAD', { cwd: process.cwd() }).toString().trim(); }
+  catch { return 'unknown'; }
+})();
+console.log(new Date().toISOString(), `daily-tick starting: pid=${process.pid} head=${HEAD}`);
+
 const { neon } = await import('@neondatabase/serverless');
 const { tick } = await import('../../lib/daily/seasonBoardTick.js');
 
