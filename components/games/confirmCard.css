@@ -1,0 +1,70 @@
+/* ===========================================================================
+   components/games/confirmCard.css - the confirm card and its receipt.
+
+   IT LIVES WITH ITS COMPONENT NOW, AND THAT IS THE POINT (relay 3c item 2).
+   These rules were in app/daily/daily.css. That was fine while only /weekly
+   rendered the card, because /weekly imports daily.css - and it quietly
+   stopped being fine the moment /pickem rendered the same component, since
+   the Pick'em route imports games.css and pickem.css and has no reason to
+   import the Daily's. ConfirmCard.js imports this file itself, so any route
+   that renders the card gets its styling by construction and none of them
+   has to remember. Same arrangement as components/daily/season/
+   seasonBoard.css, which SeasonBoard.js imports for the same reason.
+
+   AND THE HORIZONTAL MARGIN IS GONE, which is the actual defect Derik saw.
+   The rule used to open `margin: 14px 12px 0`. That 12px was written for
+   .daily-main, a padded block (padding: 14px 14px 56px), where an extra
+   inset reads as a deliberately inset card. .pk-main is a different layout
+   context entirely - a flex column with gap: 12px and NO padding at all -
+   and every one of the Pick'em's own elements (.pk-game rows, .pk-savebar)
+   is horizontally flush with it. So the card, alone on the page, sat 12px
+   in from a full-bleed board: the one element that did not line up.
+
+   Zero horizontal margin is right in BOTH contexts, because in both the
+   card's neighbours are already flush with the parent's content box -
+   .mod and .wk-autosave on the Weekly, .pk-game and .pk-savebar on the
+   Pick'em. The parent owns the page inset; the card does not second-guess
+   it. A shared component must not encode one route's padding.
+
+   The bottom margin is new for the same reason: .daily-main ends in 56px of
+   padding and .pk-main ends in none, so on the Pick'em the card had nothing
+   between it and the footer.
+   =========================================================================== */
+.wk-review, .wk-receipt {
+  margin: 14px 0 16px; padding: 12px 14px; border-radius: 14px;
+  border: 1px solid var(--line, #2A2A2A); background: var(--ink-2, #141414);
+}
+/* JADE, NOT VOLT, once it is done: volt is the call to act, and a receipt
+   is not asking for anything. */
+.wk-receipt { border-color: var(--jade, #2A8A4F); }
+.wk-review-h, .wk-receipt-h {
+  font-family: var(--font-saira-cond); font-weight: 700; font-size: 10px;
+  letter-spacing: .14em; text-transform: uppercase; margin-bottom: 8px;
+}
+.wk-review-h { color: var(--volt, #D4FF00); }
+.wk-receipt-h { color: var(--jade, #2A8A4F); }
+.wk-receipt-list { list-style: none; margin: 0; padding: 0; }
+.wk-receipt-list li {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 5px 0; border-top: 1px solid var(--line, #2A2A2A);
+}
+.wk-receipt-list li:first-child { border-top: 0; }
+.wk-receipt-list .pos {
+  flex: none; width: 46px; font-family: var(--font-saira-cond); font-weight: 600;
+  font-size: 10px; letter-spacing: .08em; color: var(--muted, #8A8A85);
+}
+.wk-receipt-list .nm {
+  flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600;
+  color: var(--paper, #F5F5F2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wk-review-note, .wk-receipt-note {
+  margin: 8px 0 0; font-family: var(--font-mono); font-size: 10px;
+  color: var(--muted, #8A8A85); line-height: 1.5;
+}
+.wk-lockin {
+  display: block; width: 100%; margin-top: 10px; padding: 13px;
+  border: 0; border-radius: 10px; cursor: pointer;
+  background: var(--volt, #D4FF00); color: var(--ink, #0A0A0A);
+  font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 16px;
+}
+.wk-lockin:disabled { opacity: .5; cursor: default; }

@@ -29,6 +29,7 @@
  */
 
 import StandaloneDate from '@/components/StandaloneDate';
+import './confirmCard.css';
 
 export default function ConfirmCard({
   title,                 // review heading - "Your six", "Your board"

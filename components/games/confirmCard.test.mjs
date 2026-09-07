@@ -180,3 +180,61 @@ test('the ranked completion page has the same exit, in the same words', () => {
   assert.match(code, /btn--volt/);
   assert.match(code, /Back to games/);
 });
+
+// ------------------------------------------ 3c: the card is actually styled
+
+test('the card ships its OWN stylesheet, and the component imports it', () => {
+  // THE 3c DEFECT. These rules used to live in app/daily/daily.css. /weekly
+  // imports that file, /pickem never had a reason to - so the moment both
+  // games rendered the same component, one of them was one forgotten import
+  // away from an unstyled card. A route cannot forget an import the
+  // component makes itself.
+  const card = src('components/games/ConfirmCard.js');
+  assert.match(card, /import '\.\/confirmCard\.css'/,
+    'ConfirmCard.js must import its own stylesheet');
+  const css = src('components/games/confirmCard.css');
+  for (const cls of ['.wk-review', '.wk-receipt', '.wk-lockin', '.wk-receipt-list']) {
+    assert.ok(css.includes(cls), `${cls} is defined in the component's own stylesheet`);
+  }
+  // ...and is NOT still defined in the Daily's, which would be two sources
+  // of truth for one card.
+  const daily = src('app/daily/daily.css');
+  for (const cls of ['.wk-review', '.wk-receipt', '.wk-lockin']) {
+    assert.ok(!daily.includes(cls), `${cls} must no longer be defined in daily.css`);
+  }
+});
+
+test('EITHER game rendering the card renders the wrapper class AND the button', () => {
+  // Item 3's guard, stated as the two things that must both survive: the
+  // module wrapper that makes it a card at all, and the element that makes
+  // it pressable. Checked on the shared component, since that is now the
+  // only place either can come from - and checked on both call sites, since
+  // a game that stopped calling it would render neither.
+  const card = strip(src('components/games/ConfirmCard.js'));
+
+  const review = card.slice(card.indexOf('return (\n    <div className="wk-review"'));
+  assert.match(review, /className="wk-review"/, 'the unconfirmed state has its module wrapper');
+  assert.match(review, /<button[^>]*className="wk-lockin"/, 'and its button');
+
+  const receipt = card.slice(card.indexOf('if (done)'), card.indexOf('return (\n    <div className="wk-review"'));
+  assert.match(receipt, /className="wk-receipt"/, 'the confirmed state has its module wrapper');
+
+  for (const rel of [WEEKLY_ROOM, PICKEM_BOARD]) {
+    assert.match(strip(src(rel)), /<ConfirmCard\b/, `${rel} still renders the card`);
+  }
+});
+
+test('the card carries NO horizontal margin - the parent owns the page inset', () => {
+  // What actually broke on the Pick'em: `margin: 14px 12px 0`, written for
+  // .daily-main (a padded block), applied inside .pk-main (a flex column
+  // with no padding) where every neighbour is flush. The card was the one
+  // element on the board that did not line up. A shared component must not
+  // encode one route's padding.
+  const css = src('components/games/confirmCard.css');
+  const rule = css.slice(css.indexOf('.wk-review, .wk-receipt {'));
+  const margin = /margin:\s*([^;]+);/.exec(rule)?.[1] ?? '';
+  const parts = margin.trim().split(/\s+/);
+  assert.ok(parts.length >= 3, `expected a 3-value margin, got "${margin}"`);
+  assert.equal(parts[1], '0', `horizontal margin must be 0, got "${margin}"`);
+  assert.notEqual(parts[2], '0', 'and a bottom margin, since .pk-main has no bottom padding');
+});
