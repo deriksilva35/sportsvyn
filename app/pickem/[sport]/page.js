@@ -25,6 +25,7 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { pickemBoardView, PICKEM_SPORTS } from '@/lib/pickem/entry';
 import { boardPlan } from '@/lib/pickem/create';
 import { plannedBoardNumberFor } from '@/lib/pickem/sequence';
+import { sql } from '@/lib/db';
 import PickemBoard from '@/components/pickem/PickemBoard';
 import PickemGrade from '@/components/pickem/PickemGrade';
 import { GAME_NAMES } from '@/lib/games/lobby';
