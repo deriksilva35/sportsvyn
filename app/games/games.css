@@ -276,3 +276,7 @@
 .arow .y { flex: 1 1 auto; font-size: 13px; min-width: 0; color: #CFCFC9; }
 .arow .s { flex: none; font-family: var(--l-mono); font-size: 12px; font-weight: 700; color: var(--l-volt); }
 .arow .s.none { color: var(--l-mut); font-weight: 400; }
+
+/* The explainer link (relay 5 item 4). It sits between two modules rather
+   than inside one, so it carries the module gap itself. */
+.hiw-link { display: inline-block; margin-bottom: 18px; }

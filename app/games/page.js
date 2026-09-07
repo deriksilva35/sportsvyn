@@ -218,6 +218,16 @@ function GamesPane({ v, leagues = [], signedIn = false, signinHref = '/signin' }
         </div>
       )}
 
+      {/* THE EXPLAINER (relay 5 item 4). Under the boards, not above them:
+          somebody who already knows the games should never have to read
+          past an explainer to reach one.
+
+          OUTSIDE the boardRows guard, and that is the point. It renders
+          whether or not there are boards today and whether or not anyone is
+          signed in - a stranger with an empty slate is exactly the reader
+          who needs it, and /games/how-it-works reads no session at all. */}
+      <a className="ghost hiw-link" href="/games/how-it-works">How the games work &rarr;</a>
+
       {/* THE LEADERBOARDS MODULE (relay 2a item 5) - five compact rows,
           fixed order. 'Your room' is NOT here: no feature in this codebase
           tracks a small friend group's per-member streak against a single
