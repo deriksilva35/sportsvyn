@@ -39,6 +39,7 @@ import { nextOpenSlot } from '@/lib/daily/play';
 import { poolRows, poolCountLabel, SLOT_EMOJI } from '@/lib/weekly/view';
 import { useHandleGate } from '@/components/handle/HandleGate';
 import Sheet from '@/components/ui/Sheet';
+import ConfirmCard from '@/components/games/ConfirmCard';
 import { confirmWeeklyEntry } from '@/app/actions/confirm';
 import '@/components/daily/season/seasonBoard.css';
 
@@ -73,7 +74,7 @@ const SAVE_DEBOUNCE_MS = 700;
 
 export default function WeeklyRoom({
   contest, board, initialLineup = {}, signedIn = true, signinHref = '/signin',
-  hasHandle = true, initialConfirmedAt = null, lockLabel = null,
+  hasHandle = true, initialConfirmedAt = null, locksAt = null,
 }) {
   // THE HANDLE IS ASKED FOR AT THE FIRST SLOT SAVED, not on page load
   // (components/handle/HandleGate.js). It guards the WRITE, so browsing the
@@ -305,50 +306,26 @@ export default function WeeklyRoom({
 
       </div>
 
-      {/* THE CONFIRM CARD (relay 3 item 3). Appears only when all six are
-          set. Pressing it writes entry.meta.confirmed_at; it does NOT
-          submit anything, because autosave already did. An unconfirmed
-          entry counts at lock exactly the same. */}
+      {/* THE CONFIRM CARD (relay 3 item 3, shared 3b item 1). Appears only
+          when all six are set. Pressing it writes entry.meta.confirmed_at;
+          it does NOT submit anything, because autosave already did. An
+          unconfirmed entry counts at lock exactly the same. */}
       {allSet && !locked && (
-        confirmedAt ? (
-          <div className="wk-receipt">
-            <div className="wk-receipt-h">Locked in</div>
-            <ol className="wk-receipt-list">
-              {SLOTS.map((s2) => {
-                const p2 = board.find((b) => b.id === lineup[s2]);
-                return (
-                  <li key={s2}>
-                    <span className="pos">{SLOT_LABEL[s2]}</span>
-                    <span className="nm">{p2 ? p2.name : '-'}</span>
-                  </li>
-                );
-              })}
-            </ol>
-            <p className="wk-receipt-note">
-              All six are in{lockLabel ? <> &middot; locks {lockLabel}</> : null}. You can still
-              change them until then; a change re-confirms when it saves.
-            </p>
-          </div>
-        ) : (
-          <div className="wk-review">
-            <div className="wk-review-h">Your six</div>
-            <ol className="wk-receipt-list">
-              {SLOTS.map((s2) => {
-                const p2 = board.find((b) => b.id === lineup[s2]);
-                return (
-                  <li key={s2}>
-                    <span className="pos">{SLOT_LABEL[s2]}</span>
-                    <span className="nm">{p2 ? p2.name : '-'}</span>
-                  </li>
-                );
-              })}
-            </ol>
-            {lockLabel && <p className="wk-review-note">Locks {lockLabel}</p>}
-            <button type="button" className="wk-lockin" disabled={confirming} onClick={lockItIn}>
-              {confirming ? 'Locking…' : 'Lock it in'}
-            </button>
-          </div>
-        )
+        <ConfirmCard
+          title="Your six"
+          rows={SLOTS.map((s2) => ({
+            key: s2,
+            label: SLOT_LABEL[s2],
+            name: board.find((b) => b.id === lineup[s2])?.name ?? '-',
+          }))}
+          receiptLine="All six are in"
+          lockIso={locksAt}
+          lockPre="Locks"
+          note="You can still change them until then; a change re-confirms when it saves."
+          confirmedAt={confirmedAt}
+          confirming={confirming}
+          onLockIn={lockItIn}
+        />
       )}
 
       {/* THE POOL, IN A SHEET (relay 3 item 2) - one position at a time,

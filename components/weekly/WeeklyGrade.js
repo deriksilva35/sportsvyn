@@ -18,7 +18,7 @@ import StandaloneDate from '@/components/StandaloneDate';
 
 const dispName = (p) => (p.name ?? 'empty');
 
-export default function WeeklyGrade({ v, board, settledAtLabel, leaderboard, next, userId, statLines = new Map() }) {
+export default function WeeklyGrade({ v, board, settledAtIso, leaderboard, next, userId, statLines = new Map() }) {
   // TEAM AND LINE, where a bare em dash used to sit (relay 2b-fix item 1).
   // `team` rides the board snapshot itself (activePool() selects
   // teams.abbreviation into it); the stat line is read at render from the
@@ -40,7 +40,7 @@ export default function WeeklyGrade({ v, board, settledAtLabel, leaderboard, nex
     <>
       <header className="gg-hdr">
         <span className="gg-ed">The Weekly &middot; Week {v.week}</span>
-        <span className="gg-clock">settled {settledAtLabel}</span>
+        <span className="gg-clock">settled <StandaloneDate iso={settledAtIso} /></span>
       </header>
 
       {v.you && (

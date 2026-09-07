@@ -57,7 +57,7 @@ export default function RankedComplete({ picks, seat, week, locksAt, settlesAt }
       {/* ONE WAY ONWARD, and it goes to Games rather than /sim. The mock
           shell's tab bar used to be the only navigation here, which is what
           made a ranked entry feel like a practice round. */}
-      <Link className="btn" href="/games">Back to Games</Link>
+      <Link className="btn btn--volt" href="/games">Back to games &rarr;</Link>
     </>
   );
 }

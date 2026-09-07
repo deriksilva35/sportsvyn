@@ -48,6 +48,7 @@ import { DAILY_V2_PATH } from '@/lib/daily/boardShape';
 // there is exactly one '/daily/board' literal in the whole v2 surface.
 const SHARE_URL = `sportsvyn.com${DAILY_V2_PATH}`;
 import './seasonBoard.css';
+import StandaloneTime from '@/components/StandaloneTime';
 
 const DOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FX', K: 'K' };
 
@@ -463,15 +464,23 @@ function GradeScreen({
       </div>
 
       {/* D1: BEFORE CLOSE, THE TODAY BOARD IS NOT RENDERED ANYWHERE - just
-          this line, ET and the viewer's own local time (Intl handles the
-          zone, never a hand-rolled offset). AFTER CLOSE (todayRows passed),
-          the real Today board renders in its place, your row highlighted. */}
+          this line. AFTER CLOSE (todayRows passed), the real Today board
+          renders in its place, your row highlighted.
+
+          ONE TIME ZONE, NOT TWO (relay 3b item 2). This line used to state
+          the same instant twice - "3:00 AM ET (12:00 AM your time)" - which
+          is the exact thing item 2 rules out, and the "your time" half was
+          a bare toLocaleString() inside a client component: during SSR that
+          formats in the SERVER's zone (UTC on Vercel) and then changes on
+          hydration, which is a real mismatch, not just an inconsistency.
+          StandaloneTime is ET until mount and the viewer's own zone after,
+          identical bytes on both sides of hydration. "Midnight" stays
+          because the Daily's close is DEFINED as midnight ET - that is the
+          rule, and the timestamp beside it is now what it means locally. */}
       {todayRows == null ? (
         closesAt ? (
           <div className="sbd-mid-wait">
-            Leaderboard at midnight ·{' '}
-            {new Date(closesAt).toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' })} ET
-            {' '}({new Date(closesAt).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })} your time)
+            Leaderboard at midnight ET · <StandaloneTime iso={closesAt} /> your time
           </div>
         ) : null
       ) : (

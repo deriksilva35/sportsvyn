@@ -13,11 +13,12 @@ import {
   pickemGradeRows, fadedFavourites, pickemMathline, pickemGlyphRow,
 } from '@/lib/pickem/settledGrade';
 import StandaloneDateOnly from '@/components/StandaloneDateOnly';
+import StandaloneDate from '@/components/StandaloneDate';
 
 const VD_LABEL = { right: 'Right', wrong: 'Wrong', push: 'Push' };
 
 export default function PickemGrade({
-  view, sport, settledAtLabel, leaderboard, next, nextBoardNumber, userId,
+  view, sport, settledAtIso, leaderboard, next, nextBoardNumber, userId,
 }) {
   const rows = pickemGradeRows(view.games);
   const { right, wrong, push } = pickemMathline(rows);
@@ -45,7 +46,7 @@ export default function PickemGrade({
     <>
       <header className="gg-hdr">
         <span className="gg-ed">Pick&rsquo;em &middot; Board {view.contest.boardNumber} &middot; {sport.toUpperCase()}</span>
-        <span className="gg-clock">settled {settledAtLabel}</span>
+        <span className="gg-clock">settled <StandaloneDate iso={settledAtIso} /></span>
       </header>
 
       {!entered && (

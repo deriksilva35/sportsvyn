@@ -49,11 +49,15 @@ export async function generateViewport() {
   return simViewport(await resolveShellMode());
 }
 
-const ET = { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
-const etStamp = (iso) => {
-  const d = new Date(iso ?? NaN);
-  return Number.isFinite(d.getTime()) ? `${d.toLocaleString('en-US', ET)} ET` : null;
-};
+// ONE TIME ZONE PER SCREEN (relay 3b item 2). Every clock on this page now
+// goes through <StandaloneDate>: ET before hydration, the viewer's own zone
+// after. The local etStamp() this replaced formatted server-side and pinned
+// " ET" onto the string, so the page rendered its hero lock in PDT and the
+// rules table's "Edit until" in ET - the same instant, stated twice, three
+// hours apart. A null iso still has to render something, hence Stamp.
+const Stamp = ({ iso, fallback = null }) => (
+  iso && Number.isFinite(new Date(iso).getTime()) ? <StandaloneDate iso={iso} /> : fallback
+);
 
 function Shell({ children }) {
   return (
@@ -104,7 +108,7 @@ function Rules({ contest }) {
       <div>
         <div className="row"><span>The board</span><span className="r">This week&rsquo;s actives</span></div>
         <div className="row"><span>Your lineup</span><span className="r">QB &middot; RB &middot; WR &middot; TE &middot; 2 FLEX</span></div>
-        <div className="row"><span>Edit until</span><span className="r">{etStamp(contest?.locks_at) ?? 'First kickoff'}</span></div>
+        <div className="row"><span>Edit until</span><span className="r"><Stamp iso={contest?.locks_at} fallback="First kickoff" /></span></div>
         <div className="row"><span>Scoring</span><span className="r">PPR, worst pick dropped</span></div>
         <div className="row"><span>Results</span><span className="r">Tuesday morning</span></div>
       </div>
@@ -186,7 +190,7 @@ export default async function WeeklyPage({ searchParams }) {
     return (
       <Shell>
         <WeeklyGrade
-          v={v} board={board} settledAtLabel={etStamp(contest.settled_at)} statLines={statLines}
+          v={v} board={board} settledAtIso={contest.settled_at} statLines={statLines}
           leaderboard={leaderboard} next={next} userId={userId != null ? Number(userId) : null}
         />
         {!v.you && (
@@ -300,7 +304,7 @@ export default async function WeeklyPage({ searchParams }) {
         board={board}
         initialLineup={entry?.lineup ?? {}}
         initialConfirmedAt={entry?.meta?.confirmed_at ?? null}
-        lockLabel={etStamp(contest.locks_at)}
+        locksAt={contest.locks_at}
         signedIn={userId != null}
         signinHref={shellSigninHref('/weekly', isShell)}
         hasHandle={hasHandle}
@@ -320,8 +324,8 @@ export default async function WeeklyPage({ searchParams }) {
       </div>
 
       <div className="mathline">
-        Alerts: opens {etStamp(contest.opens_at)} &middot; one hour to lock {etStamp(reminderAt)}
-        {contest.settles_at && <> &middot; graded {etStamp(contest.settles_at)}</>}. All on.
+        Alerts: opens <Stamp iso={contest.opens_at} /> &middot; one hour to lock <Stamp iso={reminderAt.toISOString()} />
+        {contest.settles_at && <> &middot; graded <Stamp iso={contest.settles_at} /></>}. All on.
       </div>
     </Shell>
   );
