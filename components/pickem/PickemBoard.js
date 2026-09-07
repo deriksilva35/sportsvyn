@@ -16,15 +16,22 @@ import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { recordLine } from '@/lib/pickem/recordLine';
 import { savePickAction } from '@/app/actions/pickem';
 import { useHandleGate } from '@/components/handle/HandleGate';
+import { confirmPickemEntry } from '@/app/actions/confirm';
 import StandaloneDate from '@/components/StandaloneDate';
+import StandaloneTime from '@/components/StandaloneTime';
+import ConfirmCard from '@/components/games/ConfirmCard';
 
 // Where a board game's "Game" affordance points. Keyed by the contest's own
 // sport so a future NFL board cannot silently link college routes.
 const GAME_ROUTE = { cfb: '/cfb/game', nfl: '/nfl/game' };
 
-const ET_TIME = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit',
-});
+// THESE TWO ARE A GROUPING KEY, NOT A CLOCK (relay 3b item 2). The slate's
+// sections are the NFL/CFB week's own ET calendar days - which games belong
+// to "Sunday" is a property of the schedule, not of where the reader is
+// sitting, and regrouping them by viewer-local date would move a Thursday
+// night game into Friday for anyone east of the Atlantic. Every rendered
+// TIME on this board goes through StandaloneDate/StandaloneTime; no
+// timestamp is formatted here.
 const ET_WEEKDAY_LONG = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'long' });
 const ET_YMD = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
 
@@ -85,8 +92,15 @@ function pipRows(games) {
   return [games.slice(0, half), games.slice(half)];
 }
 
-export default function PickemBoard({ view, signedIn, signinHref, hasHandle = true }) {
+export default function PickemBoard({
+  view, signedIn, signinHref, hasHandle = true, initialConfirmedAt = null, locksAt = null,
+}) {
   const { guard, modal: handleModal } = useHandleGate(hasHandle);
+  // CONFIRM AND RECEIPT (relay 3 item 3), the Weekly's own model: picks
+  // already autosave, so this records that the reader has seen a finished
+  // board. An unconfirmed board still counts at each game's own lock.
+  const [confirmedAt, setConfirmedAt] = useState(initialConfirmedAt);
+  const [confirming, setConfirming] = useState(false);
   const { contest, games: initialGames } = view;
   // Optimistic overlay: matchId -> side. The server payload stays the truth
   // for everything else.
@@ -138,10 +152,20 @@ export default function PickemBoard({ view, signedIn, signinHref, hasHandle = tr
       return;
     }
     setSavedTick(true);
+    // EDITING AFTER CONFIRMING drops the confirmation until it is re-pressed.
+    setConfirmedAt(null);
     setTimeout(() => setSavedTick(false), 1600);
   }
 
   const dayGroups = useMemo(() => groupByLockDay(games), [games]);
+
+  async function lockItIn() {
+    if (confirming) return;
+    setConfirming(true);
+    const r = await confirmPickemEntry(contest.id).catch(() => null);
+    setConfirming(false);
+    if (r?.ok) setConfirmedAt(r.confirmedAt);
+  }
 
   return (
     <>
@@ -204,9 +228,13 @@ export default function PickemBoard({ view, signedIn, signinHref, hasHandle = tr
         const eyebrowLeft = g.status === 'final' ? 'Final'
           : g.status === 'live' ? '● Live'
             : null;
+        // KICKOFF IN THE VIEWER'S OWN ZONE (relay 3b item 2), like the
+        // group header's lock time directly above it. This cell used to
+        // print a hardcoded " ET" while that header printed PDT, so a
+        // California reader saw two clocks three hours apart on one board.
         const eyebrowRight = g.status === 'final' || g.status === 'live'
           ? (g.home_score != null ? `${g.away_score}-${g.home_score}` : '')
-          : `${ET_TIME.format(new Date(g.kickoff_at))} ET`;
+          : <StandaloneTime iso={g.kickoff_at} />;
         return (
           <div className="pk-game" key={g.match_id}>
             {/* THE LINK LIVES IN THE HEADER, NEVER AROUND THE PICKS.
@@ -327,6 +355,25 @@ export default function PickemBoard({ view, signedIn, signinHref, hasHandle = tr
         <p className="pk-savebar">{savedTick ? <b>Saved</b> : 'Saved'} &middot; edit any pick until its kickoff</p>
       ) : (
         <a className="pk-signin" href={signinHref}>Sign in to make your picks &rarr;</a>
+      )}
+
+      {/* THE CONFIRM CARD (relay 3 item 3, shared 3b item 1). Only once
+          EVERY game is picked - a part-picked board has nothing to confirm,
+          and each game locks at its own kickoff regardless. Same component
+          the Weekly renders; this board's summary is a count rather than a
+          roster, which is the one thing the two games differ on. */}
+      {signedIn && picked === total && total > 0 && (
+        <ConfirmCard
+          title="Your board"
+          line={`${total} of ${total} picked`}
+          receiptLine={`All ${total} picked`}
+          lockIso={locksAt}
+          lockPre="First lock"
+          note="Each game stays editable until its own kickoff; a change re-confirms when it saves."
+          confirmedAt={confirmedAt}
+          confirming={confirming}
+          onLockIn={lockItIn}
+        />
       )}
     </>
   );

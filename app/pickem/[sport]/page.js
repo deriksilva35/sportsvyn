@@ -36,11 +36,8 @@ import '../../games/games.css';
 import '../pickem.css';
 import '@/components/games/grade.css';
 
-const ET = { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
-const etStamp = (iso) => {
-  const d = new Date(iso ?? NaN);
-  return Number.isFinite(d.getTime()) ? `${d.toLocaleString('en-US', ET)} ET` : null;
-};
+// ONE TIME ZONE PER SCREEN (relay 3b item 2) - see app/weekly/page.js. Every
+// clock this page renders goes through StandaloneDate/StandaloneTime.
 
 export const dynamic = 'force-dynamic';
 
@@ -86,6 +83,8 @@ export default async function PickemSportPage({ params, searchParams }) {
             signedIn={uid != null}
             signinHref={shellSigninHref(dest, isShell)}
             hasHandle={hasHandle}
+            initialConfirmedAt={view.confirmedAt ?? null}
+            locksAt={view.contest.locksAt}
           />
         )}
 
@@ -112,7 +111,7 @@ async function PickemSettled({ sport, view, uid, now }) {
   return (
     <>
       <PickemGrade
-        view={view} sport={sport} settledAtLabel={etStamp(view.contest.settledAt)}
+        view={view} sport={sport} settledAtIso={view.contest.settledAt}
         leaderboard={leaderboard} next={next} nextBoardNumber={view.contest.boardNumber + 1}
         userId={uid}
       />

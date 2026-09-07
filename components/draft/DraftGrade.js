@@ -20,7 +20,7 @@ import { displayName } from '@/lib/daily/handles';
 import StandaloneDate from '@/components/StandaloneDate';
 
 export default function DraftGrade({
-  v, seat, room, fieldBest, settledAtLabel, leaderboard, seatTable, next, userId,
+  v, seat, room, fieldBest, settledAtIso, leaderboard, seatTable, next, userId,
   statLines = new Map(),
 }) {
   // TEAM, THE ROUND IT WAS TAKEN IN, AND THE LINE (relay 2b-fix item 1).
@@ -82,7 +82,7 @@ export default function DraftGrade({
         <span className="gg-ed">
           The Draft &middot; Week {v.week}{seat != null ? ` · seat ${seat}` : ''}
         </span>
-        <span className="gg-clock">settled {settledAtLabel}</span>
+        <span className="gg-clock">settled <StandaloneDate iso={settledAtIso} /></span>
       </header>
 
       {room && (

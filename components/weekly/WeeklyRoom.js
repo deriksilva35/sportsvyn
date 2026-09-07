@@ -36,8 +36,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SLOTS } from '@/lib/weekly/rules';
 import { nextOpenSlot } from '@/lib/daily/play';
-import { poolRows, poolCountLabel } from '@/lib/weekly/view';
+import { poolRows, poolCountLabel, SLOT_EMOJI } from '@/lib/weekly/view';
 import { useHandleGate } from '@/components/handle/HandleGate';
+import Sheet from '@/components/ui/Sheet';
+import ConfirmCard from '@/components/games/ConfirmCard';
+import { confirmWeeklyEntry } from '@/app/actions/confirm';
+import '@/components/daily/season/seasonBoard.css';
 
 const SLOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLEX', FLEX2: 'FLEX' };
 // EMPTY-SLOT COPY IS ITS OWN MAP (relay 2a-polish-2 item c), not a
@@ -70,7 +74,7 @@ const SAVE_DEBOUNCE_MS = 700;
 
 export default function WeeklyRoom({
   contest, board, initialLineup = {}, signedIn = true, signinHref = '/signin',
-  hasHandle = true,
+  hasHandle = true, initialConfirmedAt = null, locksAt = null,
 }) {
   // THE HANDLE IS ASKED FOR AT THE FIRST SLOT SAVED, not on page load
   // (components/handle/HandleGate.js). It guards the WRITE, so browsing the
@@ -89,6 +93,17 @@ export default function WeeklyRoom({
   const [locked, setLocked] = useState(false);
   const [err, setErr] = useState(null);
   const [query, setQuery] = useState('');
+  // THE SLOT SHEET (relay 3 item 2). `active` still names the slot being
+  // filled - every existing path that reads it is unchanged - but it is now
+  // opened deliberately by a tap rather than being a always-on tab, and the
+  // pool renders inside the sheet instead of as a long list under the page.
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // CONFIRMATION IS A RECEIPT, NOT A SUBMIT (relay 3 item 3). The entry
+  // already counts at lock whether or not this is set - autosave is still
+  // the whole submit model - so this records that the reader has SEEN their
+  // finished six, nothing more.
+  const [confirmedAt, setConfirmedAt] = useState(initialConfirmedAt);
+  const [confirming, setConfirming] = useState(false);
   const router = useRouter();
   const timer = useRef(null);
   const pending = useRef(null);
@@ -160,7 +175,22 @@ export default function WeeklyRoom({
     // and a leftover "kelce" on the WR tab would show an empty pool - which
     // reads as a broken board, not as a filter still being applied.
     setQuery('');
+    // TAKING A PLAYER CLOSES THE SHEET and returns to the six rows - the
+    // sheet is for one slot, and leaving it open after a pick would invite a
+    // second pick into a slot that is now filled.
+    setSheetOpen(false);
+    // EDITING AFTER CONFIRMING IS ALLOWED, and drops the confirmation until
+    // the save lands - see confirmIfNeeded() in flush().
+    setConfirmedAt(null);
     queue(next);
+  }
+
+  function openSlot(slot) {
+    if (!signedIn) { router.push(signinHref); return; }
+    if (locked) return;
+    setActive(slot);
+    setQuery('');
+    setSheetOpen(true);
   }
 
   function clear(slot) {
@@ -168,8 +198,20 @@ export default function WeeklyRoom({
     const next = { ...lineup }; delete next[slot];
     setLineup(next);
     setActive(slot);
+    setConfirmedAt(null);
     queue(next);
   }
+
+  // ONE SOURCE FOR THE COUNTERS (relay 3 item 1). These read `lineup`, the
+  // same client state the six rows read. They used to be computed in
+  // app/weekly/page.js from entry.lineup - the SERVER's copy, frozen at page
+  // load - so a pick updated the rows instantly and left the pips, the
+  // "n of 6 set" caption and the needline showing the previous count until
+  // something forced a re-render. Rows right, counters wrong, from two
+  // different truths about the same lineup.
+  const filledSlots = SLOTS.filter((s2) => lineup[s2] != null);
+  const unfilled = SLOTS.filter((s2) => lineup[s2] == null);
+  const allSet = unfilled.length === 0;
 
   // CLEAN CARRIES NO TEXT (relay 2a-polish-2 item d) - it used to repeat the
   // lock time with no label of its own, and .hdr's own clock already carries
@@ -177,9 +219,46 @@ export default function WeeklyRoom({
   // status (saving/saved/error) appears.
   const saveLabel = { clean: '', saving: 'Saving…', saved: 'Saved', error: 'Not saved' }[save];
 
+  async function lockItIn() {
+    if (confirming || locked) return;
+    setConfirming(true);
+    // Flush any pending debounce first, or the confirmation could land
+    // against a lineup the server has not been told about yet.
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+    if (pending.current) await flush(pending.current).catch(() => {});
+    const r = await confirmWeeklyEntry(contest.id).catch(() => null);
+    setConfirming(false);
+    if (r?.ok) setConfirmedAt(r.confirmedAt);
+    else if (r?.reason === 'locked') setLocked(true);
+  }
+
   return (
     <section className="mod mod--play">
       {handleModal}
+
+      {/* THE COUNTERS, DRIVEN BY THE SAME `lineup` THE ROWS READ (item 1).
+          These moved here from app/weekly/page.js, which computed them from
+          the server's entry.lineup and could not see a client-side pick. */}
+      <div className="prog">
+        <div className="rrow">
+          {SLOTS.map((s2) => (
+            <div key={s2} className={`pip${lineup[s2] != null ? ' full' : ''}`}>
+              <span className="em">{SLOT_EMOJI[s2]}</span>
+              <span className="dot">{SLOT_LABEL[s2]}</span>
+            </div>
+          ))}
+        </div>
+        <div className="cap">
+          <span>{filledSlots.length} of {SLOTS.length} set</span>
+          <span>saves on change</span>
+        </div>
+      </div>
+      {unfilled.length > 0 && (
+        <div className="needline">
+          Still need <b>{unfilled.map((s2) => SLOT_LABEL[s2]).join(' · ')}</b>
+        </div>
+      )}
+
       <div className="play-head">
 
         {/* THE SIX-ROW LIST (relay 2a item 6, mock's .secl + .list/.pr) -
@@ -196,7 +275,7 @@ export default function WeeklyRoom({
             return (
               <button key={s} type="button"
                 className={`pr${p ? '' : ' empty'}`}
-                onClick={() => (signedIn ? setActive(s) : router.push(signinHref))}>
+                onClick={() => openSlot(s)}>
                 <span className="pos">{SLOT_LABEL[s]}</span>
                 <span className="nm">
                   <b>{p ? p.name : EMPTY_SLOT_COPY[s]}</b>
@@ -225,62 +304,78 @@ export default function WeeklyRoom({
           </p>
         )}
 
-        {/* THE SEARCH FIELD, and it is here rather than on the Daily on
-            purpose. The Daily's board is 64 players and the scan under a
-            three-minute clock IS that game; a filter would be a cheat code for
-            it. The Weekly's board is 1,269 players with four days to think, so
-            hunting for a name is friction with nothing to protect.
-            BELOW the six-row list (relay 2a item 6's mock), not above it. */}
-        <div className="search">
+      </div>
+
+      {/* THE CONFIRM CARD (relay 3 item 3, shared 3b item 1). Appears only
+          when all six are set. Pressing it writes entry.meta.confirmed_at;
+          it does NOT submit anything, because autosave already did. An
+          unconfirmed entry counts at lock exactly the same. */}
+      {allSet && !locked && (
+        <ConfirmCard
+          title="Your six"
+          rows={SLOTS.map((s2) => ({
+            key: s2,
+            label: SLOT_LABEL[s2],
+            name: board.find((b) => b.id === lineup[s2])?.name ?? '-',
+          }))}
+          receiptLine="All six are in"
+          lockIso={locksAt}
+          lockPre="Locks"
+          note="You can still change them until then; a change re-confirms when it saves."
+          confirmedAt={confirmedAt}
+          confirming={confirming}
+          onLockIn={lockItIn}
+        />
+      )}
+
+      {/* THE POOL, IN A SHEET (relay 3 item 2) - one position at a time,
+          searchable, PPG-sorted, opened by tapping a slot. It replaced a
+          1,002-row list that sat under the page permanently. Same
+          poolRows(board, active, query) as before: the filtering, the
+          slot-legality rule and the PPG sort are unchanged, only where
+          they render moved. */}
+      <Sheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title={EMPTY_SLOT_COPY[active]}
+        subtitle={POOL_LABEL[active]}
+      >
+        <div className="wk-find" style={{ padding: '10px 14px 0' }}>
           <input
-            className="wk-find-in"
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={`search ${poolCountLabel(board.length)} players by name`}
-            aria-label={`Search ${POOL_LABEL[active]}`}
-            enterKeyHint="search"
-            autoComplete="off"
+            placeholder={`search ${poolCountLabel(rows.length)} by name`}
+            autoCapitalize="none"
             autoCorrect="off"
-            spellCheck="false"
+            spellCheck={false}
+            enterKeyHint="search"
+            aria-label={`Search ${POOL_LABEL[active]}`}
           />
           {query && (
             <button type="button" className="wk-find-x" onClick={() => setQuery('')}
               aria-label="Clear search">×</button>
           )}
         </div>
-
-        <div className="pool-head">
-          <span>
-            {POOL_LABEL[active]}
-            {/* The count is the feedback that the filter did something. Without
-                it a query matching nothing is indistinguishable from a board
-                that failed to load. */}
-            {query && <span className="wk-find-n"> · {rows.length} {rows.length === 1 ? 'match' : 'matches'}</span>}
-          </span>
-          <span>PPG</span>
-        </div>
-      </div>
-
-      <div className="pool pool--scroll">
-        {query && rows.length === 0 && (
-          <p className="wk-find-none">
+        {rows.length === 0 && (
+          <p className="wk-find-none" style={{ padding: '10px 14px' }}>
             No {POOL_LABEL[active].toLowerCase()} matching &ldquo;{query}&rdquo;.
-            {' '}The filter only searches the tab you are on.
           </p>
         )}
-        {rows.map((p) => (
-          <button key={p.id} type="button"
-            className={`plyr${picked.has(p.id) ? ' plyr--used' : ''}`}
-            disabled={picked.has(p.id) || locked}
-            onClick={() => pick(p.id)}>
-            <span className="plyr-pos">{p.pos}</span>
-            <span className="plyr-name">{p.name}</span>
-            <span className="plyr-rest">{restOf(p.resume)}</span>
-            <span className="plyr-ppg">{ppgOf(p.resume)}</span>
+        {rows.map((p2) => (
+          <button key={p2.id} type="button"
+            className={`sbd-pr${picked.has(p2.id) ? ' sbd-gone' : ''}`}
+            disabled={picked.has(p2.id) || locked}
+            onClick={() => pick(p2.id)}>
+            <span className="sbd-pos">{p2.pos}</span>
+            <span className="sbd-nm">
+              <b>{p2.name}</b>
+              <small>{restOf(p2.resume)}</small>
+            </span>
+            <span className="sbd-tk">{ppgOf(p2.resume)}</span>
           </button>
         ))}
-      </div>
+      </Sheet>
     </section>
   );
 }

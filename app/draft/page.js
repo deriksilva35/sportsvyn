@@ -42,11 +42,14 @@ export async function generateViewport() {
   return simViewport(await resolveShellMode());
 }
 
-const ET = { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
-const etStamp = (iso) => {
-  const d = new Date(iso ?? NaN);
-  return Number.isFinite(d.getTime()) ? `${d.toLocaleString('en-US', ET)} ET` : null;
-};
+// ONE TIME ZONE PER SCREEN (relay 3b item 2). Every clock on this page goes
+// through <StandaloneDate> - ET before hydration, the viewer's own zone
+// after. The etStamp() this replaced formatted server-side with " ET"
+// pinned on, so the seat-select header said "rooms lock ... PDT" while the
+// waiting card's "Locks" row said ET, three hours apart on one screen.
+const Stamp = ({ iso, fallback = null }) => (
+  iso && Number.isFinite(new Date(iso).getTime()) ? <StandaloneDate iso={iso} /> : fallback
+);
 
 function Shell({ children }) {
   return (
@@ -73,7 +76,7 @@ function Rules({ contest }) {
         <div className="row"><span>Your roster</span><span className="r">QB &middot; 2 RB &middot; 3 WR &middot; TE &middot; FLEX</span></div>
         <div className="row"><span>The clock</span><span className="r">{DRAFT_CONFIG.clockSeconds}s per pick</span></div>
         <div className="row"><span>Scoring</span><span className="r">Best ball, PPR, drop worst</span></div>
-        <div className="row"><span>Drafts until</span><span className="r">{etStamp(contest?.locks_at) ?? 'First kickoff'}</span></div>
+        <div className="row"><span>Drafts until</span><span className="r"><Stamp iso={contest?.locks_at} fallback="First kickoff" /></span></div>
         <div className="row"><span>Results</span><span className="r">Tuesday morning</span></div>
       </div>
       <p className="muted">
@@ -140,7 +143,7 @@ export default async function DraftPage({ searchParams }) {
     return (
       <Shell>
         <DraftGrade
-          v={v} seat={seat} room={room} fieldBest={fieldBest} settledAtLabel={etStamp(contest.settled_at)} statLines={statLines}
+          v={v} seat={seat} room={room} fieldBest={fieldBest} settledAtIso={contest.settled_at} statLines={statLines}
           leaderboard={leaderboard} seatTable={seatTable} next={next}
           userId={userId != null ? Number(userId) : null}
         />
@@ -246,12 +249,18 @@ export default async function DraftPage({ searchParams }) {
                 <span className="r r--mut">{r.pos}</span>
               </div>
             ))}
-            <div className="row"><span>Locks</span><span className="r">{etStamp(contest.locks_at)}</span></div>
+            <div className="row"><span>Locks</span><span className="r"><Stamp iso={contest.locks_at} /></span></div>
             <div className="row"><span>Results</span><span className="r r--mut">Tuesday morning</span></div>
           </div>
           {draft?.id && (
             <a className="ghost" href={`/sim/draft/${draft.id}`}>See the full draft board &rarr;</a>
           )}
+          {/* A WAY OUT (relay 3b item 3). This card is where a drafted-and-
+              waiting player lands, and until now the only link on it went
+              DEEPER - back into the draft board they had already finished.
+              Nothing pointed at the rest of the week, so /draft was a
+              dead end for the whole stretch between drafting and lock. */}
+          <a className="btn btn--volt" href="/games">Back to games &rarr;</a>
         </section>
       </Shell>
     );
@@ -315,8 +324,8 @@ export default async function DraftPage({ searchParams }) {
         </p>
       </div>
       <div className="mathline">
-        Alerts: rooms open {etStamp(contest.opens_at)} &middot; one hour to lock {etStamp(reminderAt)}
-        {contest.settles_at && <> &middot; graded {etStamp(contest.settles_at)}</>}. All on.
+        Alerts: rooms open <Stamp iso={contest.opens_at} /> &middot; one hour to lock <Stamp iso={reminderAt.toISOString()} />
+        {contest.settles_at && <> &middot; graded <Stamp iso={contest.settles_at} /></>}. All on.
       </div>
     </Shell>
   );
