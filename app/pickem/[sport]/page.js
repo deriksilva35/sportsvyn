@@ -24,7 +24,7 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { pickemBoardView, PICKEM_SPORTS } from '@/lib/pickem/entry';
 import { boardPlan } from '@/lib/pickem/create';
-import { sql } from '@/lib/db';
+import { plannedBoardNumberFor } from '@/lib/pickem/sequence';
 import PickemBoard from '@/components/pickem/PickemBoard';
 import PickemGrade from '@/components/pickem/PickemGrade';
 import { GAME_NAMES } from '@/lib/games/lobby';
@@ -106,13 +106,20 @@ export default async function PickemSportPage({ params, searchParams }) {
  */
 async function PickemSettled({ sport, view, uid, now }) {
   const leaderboard = await pickemBoardLeaderboard(view.contest.id, uid, { limit: 5 });
+  // NULL WHEN THE NEXT BOARD ALREADY EXISTS (relay 4 item 2). boardPlan now
+  // refuses to plan a board that is already in the table, so this line
+  // stops advertising an opening for a board a reader could already play -
+  // which is what it was doing on PROD, under a settled board's grade card.
   const { plan: nextPlan } = await boardPlan({ leagueSlug: sport, now }).catch(() => ({ plan: null }));
   const next = nextPlan ? { opensAt: nextPlan.opensAt } : null;
+  const nextNumber = nextPlan
+    ? await plannedBoardNumberFor({ sport, locksAt: nextPlan.locksAt })
+    : null;
   return (
     <>
       <PickemGrade
         view={view} sport={sport} settledAtIso={view.contest.settledAt}
-        leaderboard={leaderboard} next={next} nextBoardNumber={view.contest.boardNumber + 1}
+        leaderboard={leaderboard} next={next} nextBoardNumber={nextNumber}
         userId={uid}
       />
       {view.receipt?.best && (
@@ -144,14 +151,12 @@ async function PreOpen({ sport, now }) {
       </section>
     );
   }
-  const [{ n }] = await sql`
-    SELECT count(*) AS n FROM contests
-     WHERE game_type = 'pickem' AND sport = ${sport} AND opens_at < ${plan.opensAt.toISOString()}`;
+  const n = await plannedBoardNumberFor({ sport, locksAt: plan.locksAt });
   return (
     <section className="pk-ghost">
       <div className="big">Pick&rsquo;em lights up with the board</div>
       <div className="when">
-        Board {Number(n) + 1} opens <StandaloneDateOnly iso={plan.opensAt} /> &middot; first lock <StandaloneDate iso={plan.locksAt} />
+        Board {n} opens <StandaloneDateOnly iso={plan.opensAt} /> &middot; first lock <StandaloneDate iso={plan.locksAt} />
       </div>
     </section>
   );
