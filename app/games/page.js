@@ -226,7 +226,7 @@ function GamesPane({ v, leagues = [], signedIn = false, signinHref = '/signin' }
           whether or not there are boards today and whether or not anyone is
           signed in - a stranger with an empty slate is exactly the reader
           who needs it, and /games/how-it-works reads no session at all. */}
-      <a className="ghost hiw-link" href="/games/how-it-works">How the games work &rarr;</a>
+      <Link className="ghost hiw-link" href="/games/how-it-works">How the games work &rarr;</Link>
 
       {/* THE LEADERBOARDS MODULE (relay 2a item 5) - five compact rows,
           fixed order. 'Your room' is NOT here: no feature in this codebase
