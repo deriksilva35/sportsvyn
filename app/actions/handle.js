@@ -14,7 +14,7 @@
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import {
-  validateHandle, canonical, canRename, renameAvailableAt, RECLAIM_BLOCK_DAYS,
+  validateHandle, canonical, canRename, renameAvailableAt, RECLAIM_BLOCK_DAYS, refuseClaimOverExisting,
 } from '@/lib/daily/handles';
 
 async function blockedByCooldown(lower) {
@@ -45,6 +45,17 @@ export async function checkHandle(raw) {
   return { ok: true, message: 'Available' };
 }
 
+/**
+ * CLAIM: a first handle, through the gate modal. NEVER a rename.
+ *
+ * The modal (components/daily/HandleClaim.js) is the only caller, and it is
+ * shown by useHandleGate when the page believes the user has no handle. For
+ * three days that belief was wrong for everyone (see userHasHandle), so a
+ * player with a handle who typed a new one in here would have been silently
+ * renamed and had their old name released to the 30-day cooldown. A claim
+ * therefore refuses when a handle already exists - renaming is renameHandle()
+ * below, a different action with the cooldown, which no surface calls yet.
+ */
 export async function claimHandle(raw) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
@@ -56,10 +67,34 @@ export async function claimHandle(raw) {
   const me = (await sql`SELECT handle, handle_changed_at FROM users WHERE id = ${userId}`)[0];
   if (!me) return { ok: false, message: 'No such account.' };
 
+  const refusal = refuseClaimOverExisting(me);
+  if (refusal) return refusal;
+
+  return writeHandle({ userId, me, v });
+}
+
+/**
+ * RENAME: an existing handle to a new one, under the 30-day cooldown, with
+ * the old name released to handle_history. Not wired to any surface: there is
+ * no rename UI today, and this exists so the modal's claim can refuse without
+ * losing the path. Route a future account-page rename here.
+ */
+export async function renameHandle(raw) {
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  if (userId == null) return { ok: false, message: 'Sign in first.' };
+
+  const v = validateHandle(raw);
+  if (!v.ok) return { ok: false, reason: v.reason, message: v.message };
+
+  const me = (await sql`SELECT handle, handle_changed_at FROM users WHERE id = ${userId}`)[0];
+  if (!me) return { ok: false, message: 'No such account.' };
+  if (!me.handle) return { ok: false, reason: 'no_handle', message: 'Claim a handle first.' };
+
   // Renaming to the same name is a no-op, not a cooldown burn.
   if (canonical(me.handle) === v.canonical) return { ok: true, handle: me.handle, unchanged: true };
 
-  if (me.handle && !canRename(me.handle_changed_at)) {
+  if (!canRename(me.handle_changed_at)) {
     const at = renameAvailableAt(me.handle_changed_at);
     return {
       ok: false,
@@ -67,6 +102,11 @@ export async function claimHandle(raw) {
       message: `You can change your handle again on ${at.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}.`,
     };
   }
+  return writeHandle({ userId, me, v });
+}
+
+/** The write both actions share: the constraint is the truth, history follows. */
+async function writeHandle({ userId, me, v }) {
   if (await blockedByCooldown(v.canonical)) {
     return { ok: false, reason: 'cooldown', message: 'Recently released - try again later.' };
   }
