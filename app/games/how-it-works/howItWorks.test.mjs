@@ -42,10 +42,46 @@ test('the two cadence lines are verbatim, and three games share one', () => {
     'one declaration and three uses');
 });
 
-test("the Daily's steps still match DailyRoom's, word for word", () => {
-  // THE ONLY BORROWED COPY ON THE PAGE. If somebody rewords the Daily's own
-  // step cards, this page silently starts telling a different story - so
-  // the two are compared directly rather than both trusted.
+// THESE TWO TESTS WERE ONE, AND SPLITTING THEM IS THE POINT.
+//
+// The explainer's Daily steps used to be lifted verbatim from DailyRoom and
+// one loop asserted BOTH files against the same three strings - which was
+// right while this section linked to /daily, because then the two surfaces
+// described the same game and drift between them was the only failure worth
+// catching.
+//
+// They now describe DIFFERENT GAMES. The explainer's Daily section links to
+// DAILY_V2_PATH (the twelve-team season board); DailyRoom is v1's room, still
+// live under /daily, still six players and a season guess. Held together by
+// one assertion, the pair could only be made to pass by dragging one game's
+// words onto the other's screen - exactly the drift the original test existed
+// to prevent, wearing the test's own clothes.
+//
+// So: two tests, two sources of truth, no shared literals. Each guards its own
+// copy, and neither can be satisfied by editing the other file.
+
+test("the explainer's Daily steps are the season board's, pinned to this page", () => {
+  for (const [t, d] of [
+    ['Deal', 'Twelve teams from one past season'],
+    ['Commit', 'Open a team and you must take somebody'],
+    ['Skip', 'Four teams go unused, and you choose which'],
+  ]) {
+    assert.ok(PAGE.includes(`t: '${t}', d: '${d}'`),
+      `the explainer no longer says "${t}: ${d}"`);
+  }
+  assert.ok(PAGE.includes("graded: 'Season fantasy points, PPR, against the board.'"),
+    'the Daily grading line no longer describes the season board');
+  // The uncoupling, asserted rather than trusted: v1's step copy must not
+  // reappear here. A well-meaning revert would otherwise pass silently.
+  for (const gone of ['Six players, any position mix', 'Name the season for a bonus']) {
+    assert.ok(!PAGE.includes(gone), `v1 step copy is back on the explainer: ${gone}`);
+  }
+});
+
+test("DailyRoom keeps v1's own three steps, word for word", () => {
+  // v1 is still served at /daily and this is still the only guard on its step
+  // cards. Pinned here, to DailyRoom alone, so the room's words cannot be
+  // quietly rewritten to match an explainer that no longer describes it.
   const room = src('components/daily/DailyRoom.js');
   for (const [t, d] of [
     ['Draft', 'Six players, any position mix'],
@@ -53,9 +89,7 @@ test("the Daily's steps still match DailyRoom's, word for word", () => {
     ['Guess', 'Name the season for a bonus'],
   ]) {
     assert.ok(room.includes(`>${t}</div><div className="d">${d}</div>`),
-      `DailyRoom no longer says "${t}: ${d}" - update the explainer to match`);
-    assert.ok(PAGE.includes(`t: '${t}', d: '${d}'`),
-      `the explainer no longer says "${t}: ${d}"`);
+      `DailyRoom no longer says "${t}: ${d}"`);
   }
 });
 

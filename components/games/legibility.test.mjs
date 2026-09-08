@@ -17,7 +17,7 @@ const src = (rel) => readFileSync(path.join(REPO, rel), 'utf8');
 
 test('the hook copy is the ratified copy, word for word', () => {
   assert.equal(GAME_META.daily.hook,
-    'Draft **six stars** from a week in NFL history. The sim replays it at **midnight ET**.');
+    'Twelve team cards from one past season. Open one and you **must** take somebody, and that team is **spent**.');
   assert.equal(GAME_META.pickem.hook,
     'Call the winner of **every game** on the board - college Saturdays, NFL Sundays.');
   assert.equal(GAME_META.weekly.hook,
@@ -27,7 +27,7 @@ test('the hook copy is the ratified copy, word for word', () => {
 });
 
 test('every card carries meta chips: time cost first, cadence second', () => {
-  assert.deepEqual(GAME_META.daily.chips, ['2 min', 'every day', 'guess the season']);
+  assert.deepEqual(GAME_META.daily.chips, ['2 min', 'every day', 'four teams unused']);
   assert.deepEqual(GAME_META.pickem.chips, ['1 min', 'weekly', 'locks per game']);
   assert.deepEqual(GAME_META.weekly.chips, ['90 sec', 'every NFL week']);
   assert.deepEqual(GAME_META.draft.chips, ['10 min', 'weekly · ranked']);

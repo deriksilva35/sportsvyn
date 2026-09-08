@@ -111,13 +111,20 @@ const SECTIONS = [
     name: GAME_NAMES.daily,
     cadence: DAILY_CADENCE,
     tagline: 'One season from NFL history. Twelve teams. Eight slots. Four regrets.',
-    // VERBATIM from components/daily/DailyRoom.js's .dsteps block.
+    // THESE ARE THE SEASON BOARD'S STEPS, AND THEY ARE THIS PAGE'S OWN.
+    // They used to be lifted verbatim from components/daily/DailyRoom.js
+    // and pinned against it. That coupling was correct while this section
+    // pointed at /daily; it is wrong now that href is DAILY_V2_PATH,
+    // because DailyRoom is v1's room and describes a different game.
+    // Uncoupled deliberately - see howItWorks.test.mjs, which now asserts
+    // these against this file alone and guards DailyRoom's own three
+    // separately.
     steps: [
-      { n: 1, t: 'Draft', d: 'Six players, any position mix' },
-      { n: 2, t: 'Reveal', d: 'Sim replays the week at midnight ET' },
-      { n: 3, t: 'Guess', d: 'Name the season for a bonus' },
+      { n: 1, t: 'Deal', d: 'Twelve teams from one past season' },
+      { n: 2, t: 'Commit', d: 'Open a team and you must take somebody' },
+      { n: 3, t: 'Skip', d: 'Four teams go unused, and you choose which' },
     ],
-    graded: 'PPR, worst pick dropped.',
+    graded: 'Season fantasy points, PPR, against the board.',
     href: DAILY_V2_PATH,
     cta: 'Play now',
   },
