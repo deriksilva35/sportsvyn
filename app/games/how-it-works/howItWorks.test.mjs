@@ -21,7 +21,7 @@ test('the four taglines are verbatim', () => {
   for (const t of [
     'Pick your seat, draft your team, compete against the field.',
     'Pick the winners. No odds, no problem.',
-    'One season from NFL history. Twelve teams. Nine slots. Three regrets.',
+    'One season from NFL history. Twelve teams. Eight slots. Four regrets.',
   ]) {
     assert.ok(PAGE.includes(t), `missing or altered: ${t}`);
   }
