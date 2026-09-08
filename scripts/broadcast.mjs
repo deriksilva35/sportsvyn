@@ -46,7 +46,7 @@ import { fileURLToPath } from 'node:url';
 import { stdin, stdout } from 'node:process';
 import { sql } from '../lib/db.js';
 import { unsubscribeUrlFor, unsubscribeHeaders } from '../lib/auth/welcomeEmail.js';
-import { databaseFingerprint, assertLiveTarget, validateTestRecipient } from '../lib/email/broadcastRules.js';
+import { databaseFingerprint, assertLiveTarget, validateTestRecipient, sentForCampaign } from '../lib/email/broadcastRules.js';
 
 const args = process.argv.slice(2);
 const LIVE = args.includes('--send');
@@ -122,6 +122,12 @@ const HTML_FILE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const HTML_BYTES = readFileSync(HTML_FILE);
 const HTML_SHA256 = createHash('sha256').update(HTML_BYTES).digest('hex');
 const HTML_TEMPLATE = HTML_BYTES.toString('utf8');
+// THE CAMPAIGN KEY IS THE FILE'S SHA. Every ledger row this run writes carries
+// it, and the send-once check matches on it beside userId - so this send is
+// distinguishable from August's and from whatever comes next. Two sends of
+// byte-identical html are the same campaign by definition, which is the
+// behaviour a resend of a partial run needs.
+const CAMPAIGN = HTML_SHA256;
 
 // EXACTLY ONE UNSUBSCRIBE PLACEHOLDER, asserted at load - before a roster is
 // read or a single mail rendered. Zero means the file has no unsubscribe link
@@ -228,20 +234,20 @@ async function recipients() {
 // ---------------------------------------------------------------------------
 const STUCK_AFTER_MINUTES = 10;
 
+// BEFORE (until 8 Sep 2026): matched source + userId only, so a row from
+// ANY earlier broadcast counted as "already sent" for this one. AFTER: the
+// user's rows are fetched and sentForCampaign() decides, per campaign key.
 async function alreadySent(userId) {
-  const r = await sql`
-    SELECT 1 FROM sync_runs
-     WHERE source = ${SOURCE} AND (summary->>'userId')::int = ${userId}
-       AND (summary->>'outcome' = 'sent'
-            OR (summary->>'outcome' = 'sending'
-                AND started_at > now() - (${STUCK_AFTER_MINUTES} || ' minutes')::interval))
-     LIMIT 1`;
-  return r.length > 0;
+  const rows = await sql`
+    SELECT summary->>'campaign' AS campaign, summary->>'outcome' AS outcome, started_at
+      FROM sync_runs
+     WHERE source = ${SOURCE} AND kind = 'send' AND (summary->>'userId')::int = ${userId}`;
+  return sentForCampaign(rows, CAMPAIGN, { stuckAfterMinutes: STUCK_AFTER_MINUTES });
 }
 
 const recordStart = async (userId) => (await sql`
   INSERT INTO sync_runs (source, kind, started_at, ok, summary)
-  VALUES (${SOURCE}, 'send', now(), true, ${JSON.stringify({ userId, outcome: 'sending' })}::jsonb)
+  VALUES (${SOURCE}, 'send', now(), true, ${JSON.stringify({ userId, campaign: CAMPAIGN, outcome: 'sending' })}::jsonb)
   RETURNING id`)[0].id;
 
 const recordFinish = (rowId, summary, err = null) => sql`
@@ -280,11 +286,11 @@ async function testSend(address) {
     });
     const id = res?.data?.id ?? null;
     if (res?.error) throw new Error(res.error?.message ?? JSON.stringify(res.error));
-    await recordFinish(rowId, { userId: u.id, to: address, test: true, outcome: 'test-sent', id });
+    await recordFinish(rowId, { userId: u.id, campaign: CAMPAIGN, to: address, test: true, outcome: 'test-sent', id });
     console.log(`\n  TEST SEND ACCEPTED. to=${address} resend id=${id}`);
     console.log('  Ledgered as kind=test - not broadcast history.\n');
   } catch (e) {
-    await recordFinish(rowId, { userId: u.id, to: address, test: true, outcome: 'failed' }, String(e?.message ?? e));
+    await recordFinish(rowId, { userId: u.id, campaign: CAMPAIGN, to: address, test: true, outcome: 'failed' }, String(e?.message ?? e));
     throw e;
   }
 }
@@ -304,9 +310,23 @@ async function main() {
   console.log(`  html file       : ${path.relative(process.cwd(), HTML_FILE)}  (${HTML_BYTES.length} bytes, read at run time, never printed)`);
   console.log(`  sha256          : ${HTML_SHA256}`);
   if (testTo) console.log(`  TEST SEND to    : ${testTo} (owner list) - roster ignored`);
+  // THE DRY RUN APPLIES THE SEND-ONCE CHECK TOO. Until 8 Sep it printed the
+  // roster BEFORE the check, so "RECIPIENTS: 222" preceded a live run that
+  // sent 146 - the skip happened only inside the live loop, and nothing
+  // printed beforehand could have shown it. Now RECIPIENTS is what will be
+  // SENT, and the skipped are counted beside it.
+  let toSend = list; let skippedIds = [];
   if (!testTo) {
-    console.log(`\n  RECIPIENTS: ${list.length}`);
-    for (const r of list) console.log(`    ${String(r.id).padStart(4)}  ${r.email}`);
+    // `u`, NOT `r`: broadcastRules.test.mjs locates the LIVE send loop by the
+    // literal `alreadySent(r.id)` (the one call the old dry run never made) and
+    // asserts the DEV refusal and the typed count come before it. This pass is
+    // the dry run's, so it must not wear the live loop's marker.
+    const flags = await Promise.all(list.map((u) => alreadySent(u.id)));
+    toSend = list.filter((_, i) => !flags[i]);
+    skippedIds = list.filter((_, i) => flags[i]).map((r) => r.id);
+    console.log(`  campaign        : ${CAMPAIGN.slice(0, 16)}... (the sha256 above)`);
+    console.log(`\n  RECIPIENTS: ${toSend.length}   (roster ${list.length}, skipped ${skippedIds.length} already sent THIS campaign)`);
+    for (const r of toSend) console.log(`    ${String(r.id).padStart(4)}  ${r.email}`);
   }
 
   const sample = render({ unsubscribeUrl: await unsubscribeUrlFor(list[0]?.id ?? 0) });
@@ -334,9 +354,12 @@ async function main() {
   if (testTo) return testSend(testTo);
 
   const rl = readline.createInterface({ input: stdin, output: stdout });
-  const typed = await rl.question(`  Type the recipient count (${list.length}) to send: `);
+  // THE NUMBER TYPED IS THE NUMBER THAT WILL BE SENT - not the roster. On
+  // 8 Sep the operator typed 222 and 146 went out; the confirmation has to
+  // name the same count the summary line will.
+  const typed = await rl.question(`  Type the recipient count (${toSend.length}) to send: `);
   rl.close();
-  if (typed.trim() !== String(list.length)) {
+  if (typed.trim() !== String(toSend.length)) {
     console.log('  Confirmation did not match. Nothing sent.\n');
     return;
   }
@@ -358,7 +381,7 @@ async function main() {
     await sql`
       INSERT INTO sync_runs (source, kind, started_at, finished_at, ok, summary)
       VALUES (${SOURCE}, 'owner-verify', now(), now(), ${!vRes?.error},
-              ${JSON.stringify({ to: OWNER_VERIFY_ADDRESS, ownerVerify: true, outcome: vRes?.error ? 'failed' : 'sent', id: vRes?.data?.id ?? null })}::jsonb)`;
+              ${JSON.stringify({ to: OWNER_VERIFY_ADDRESS, ownerVerify: true, campaign: CAMPAIGN, outcome: vRes?.error ? 'failed' : 'sent', id: vRes?.data?.id ?? null })}::jsonb)`;
     console.log(`  owner verify copy -> ${OWNER_VERIFY_ADDRESS} (${vRes?.error ? 'FAILED' : 'sent'}, uncounted)`);
   } catch (e) {
     console.log(`  owner verify copy FAILED: ${String(e?.message ?? e)} - audience send continues`);
@@ -375,10 +398,12 @@ async function main() {
         from: EMAIL_FROM, to: r.email, subject: SUBJECT,
         html: mail.html, text: mail.text, headers: unsubscribeHeaders(url),
       });
-      await recordFinish(rowId, { userId: r.id, outcome: 'sent', id: res?.data?.id ?? null });
+      // recordFinish REPLACES summary wholesale, so the key is restated here -
+      // dropping it on finish would make every sent row look historic.
+      await recordFinish(rowId, { userId: r.id, campaign: CAMPAIGN, outcome: 'sent', id: res?.data?.id ?? null });
       sent += 1;
     } catch (e) {
-      await recordFinish(rowId, { userId: r.id, outcome: 'failed' }, String(e?.message ?? e));
+      await recordFinish(rowId, { userId: r.id, campaign: CAMPAIGN, outcome: 'failed' }, String(e?.message ?? e));
       failed += 1;
     }
   }
