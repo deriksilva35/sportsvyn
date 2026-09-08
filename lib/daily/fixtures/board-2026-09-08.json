@@ -1,0 +1,769 @@
+{
+ "note": "PROD daily_boards id 2 (edition 2026-09-08, season 2015) captured 2026-09-08 as stored - best_roster is in the RAW solver shape (raw_name/team_key), which is the defect this fixture reproduces. picks are the first-ever submitted v2 run.",
+ "board_id": 2,
+ "edition_date": "2026-09-08",
+ "season_year": 2015,
+ "ceiling": 2039.4,
+ "board": [
+  {
+   "key": "PHI",
+   "abbr": "PHI",
+   "card": [
+    {
+     "meta": "85 rec · 997 yds · 8 TD",
+     "name": "Jordan Matthews",
+     "points": 232.7,
+     "position": "TE"
+    },
+    {
+     "meta": "3725 yds · 19 TD",
+     "name": "Sam Bradford",
+     "points": 200.9,
+     "position": "QB"
+    },
+    {
+     "meta": "702 rush · 6 TD",
+     "name": "DeMarco Murray",
+     "points": 188.4,
+     "position": "RB"
+    },
+    {
+     "meta": "75 rec · 853 yds · 2 TD",
+     "name": "Zach Ertz",
+     "points": 172.3,
+     "position": "TE"
+    },
+    {
+     "meta": "317 rush · 3 TD",
+     "name": "Darren Sproles",
+     "points": 149.5,
+     "position": "RB"
+    },
+    {
+     "meta": "539 rush · 6 TD",
+     "name": "Ryan Mathews",
+     "points": 130.5,
+     "position": "RB"
+    }
+   ],
+   "record": null
+  },
+  {
+   "key": "BUF",
+   "abbr": "BUF",
+   "card": [
+    {
+     "meta": "3035 yds · 20 TD",
+     "name": "Tyrod Taylor",
+     "points": 271.6,
+     "position": "QB"
+    },
+    {
+     "meta": "60 rec · 1047 yds · 9 TD",
+     "name": "Sammy Watkins",
+     "points": 218.8,
+     "position": "WR"
+    },
+    {
+     "meta": "895 rush · 3 TD",
+     "name": "LeSean McCoy",
+     "points": 180.7,
+     "position": "RB"
+    },
+    {
+     "meta": "517 rush · 7 TD",
+     "name": "Karlos Williams",
+     "points": 126.3,
+     "position": "RB"
+    },
+    {
+     "meta": "51 rec · 528 yds · 3 TD",
+     "name": "Charles Clay",
+     "points": 121.8,
+     "position": "TE"
+    },
+    {
+     "meta": "47 rec · 552 yds · 3 TD",
+     "name": "Robert Woods",
+     "points": 120.2,
+     "position": "WR"
+    }
+   ],
+   "record": null
+  },
+  {
+   "key": "LV",
+   "abbr": "LV",
+   "card": [
+    {
+     "meta": "3987 yds · 32 TD",
+     "name": "Derek Carr",
+     "points": 275.3,
+     "position": "QB"
+    },
+    {
+     "meta": "85 rec · 922 yds · 9 TD",
+     "name": "Michael Crabtree",
+     "points": 231.2,
+     "position": "WR"
+    },
+    {
+     "meta": "72 rec · 1070 yds · 6 TD",
+     "name": "Amari Cooper",
+     "points": 214.7,
+     "position": "WR"
+    },
+    {
+     "meta": "32 rec · 480 yds · 5 TD",
+     "name": "Seth Roberts",
+     "points": 110,
+     "position": "WR"
+    },
+    {
+     "meta": "21/26 FG",
+     "name": "Sebastian Janikowski",
+     "points": 101,
+     "position": "PK"
+    },
+    {
+     "meta": "28 rec · 329 yds · 3 TD",
+     "name": "Clive Walford",
+     "points": 78.9,
+     "position": "TE"
+    }
+   ],
+   "record": null
+  },
+  {
+   "key": "WSH",
+   "abbr": "WSH",
+   "card": [
+    {
+     "meta": "4166 yds · 29 TD",
+     "name": "Kirk Cousins",
+     "points": 295.4,
+     "position": "QB"
+    },
+    {
+     "meta": "87 rec · 952 yds · 11 TD",
+     "name": "Jordan Reed",
+     "points": 248.2,
+     "position": "TE"
+    },
+    {
+     "meta": "72 rec · 777 yds · 6 TD",
+     "name": "Pierre Garcon",
+     "points": 185.7,
+     "position": "WR"
+    },
+    {
+     "meta": "59 rec · 604 yds · 2 TD",
+     "name": "Jamison Crowder",
+     "points": 131.6,
+     "position": "WR"
+    },
+    {
+     "meta": "490 rush · 3 TD",
+     "name": "Matt Jones",
+     "points": 122.4,
+     "position": "RB"
+    },
+    {
+     "meta": "25/28 FG",
+     "name": "Dustin Hopkins",
+     "points": 114,
+     "position": "PK"
+    }
+   ],
+   "record": null
+  },
+  {
+   "key": "HOU",
+   "abbr": "HOU",
+   "card": [
+    {
+     "meta": "111 rec · 1521 yds · 11 TD",
+     "name": "DeAndre Hopkins",
+     "points": 329.1,
+     "position": "WR"
+    },
+    {
+     "meta": "2606 yds · 19 TD",
+     "name": "Brian Hoyer",
+     "points": 170.6,
+     "position": "QB"
+    },
+    {
+     "meta": "47 rec · 658 yds · 4 TD",
+     "name": "Nate Washington",
+     "points": 136.8,
+     "position": "WR"
+    },
+    {
+     "meta": "698 rush · 2 TD",
+     "name": "Alfred Blue",
+     "points": 113.7,
+     "position": "RB"
+    },
+    {
+     "meta": "42 rec · 484 yds · 2 TD",
+     "name": "Cecil Shorts III",
+     "points": 111.9,
+     "position": "WR"
+    },
+    {
+     "meta": "282 rush · 1 TD",
+     "name": "Jonathan Grimes",
+     "points": 83.5,
+     "position": "RB"
+    }
+   ],
+   "record": null
+  },
+  {
+   "key": "JAX",
+   "abbr": "JAX",
+   "card": [
+    {
+     "meta": "4428 yds · 35 TD",
+     "name": "Blake Bortles",
+     "points": 324.1,
+     "position": "QB"
+    },
+    {
+     "meta": "64 rec · 1031 yds · 10 TD",
+     "name": "Allen Hurns",
+     "points": 227.1,
+     "position": "WR"
+    },
+    {
+     "meta": "740 rush · 2 TD",
+     "name": "T.J. Yeldon",
+     "points": 155.9,
+     "position": "RB"
+    },
+    {
+     "meta": "46 rec · 455 yds · 5 TD",
+     "name": "Julius Thomas",
+     "points": 121.5,
+     "position": "TE"
+    },
+    {
+     "meta": "26/30 FG",
+     "name": "Jason Myers",
+     "points": 110,
+     "position": "PK"
+    },
+    {
+     "meta": "32 rec · 368 yds · 1 TD",
+     "name": "Bryan Walters",
+     "points": 74.8,
+     "position": "WR"
+    }
+   ],
+   "record": null
+  },
+  {
+   "key": "TEN",
+   "abbr": "TEN",
+   "card": [
+    {
+     "meta": "94 rec · 1088 yds · 6 TD",
+     "name": "Delanie Walker",
+     "points": 242.4,
+     "position": "TE"
+    },
+    {
+     "meta": "2818 yds · 19 TD",
+     "name": "Marcus Mariota",
+     "points": 217,
+     "position": "QB"
+    },
+    {
+     "meta": "520 rush · 3 TD",
+     "name": "Antonio Andrews",
+     "points": 114,
+     "position": "RB"
+    },
+    {
+     "meta": "32 rec · 549 yds · 4 TD",
+     "name": "Dorial Green-Beckham",
+     "points": 110.9,
+     "position": "WR"
+    },
+    {
+     "meta": "36 rec · 408 yds · 3 TD",
+     "name": "Kendall Wright",
+     "points": 96.5,
+     "position": "WR"
+    },
+    {
+     "meta": "247 rush · 1 TD",
+     "name": "Dexter McCluster",
+     "points": 93.7,
+     "position": "RB"
+    }
+   ],
+   "record": null
+  },
+  {
+   "key": "IND",
+   "abbr": "IND",
+   "card": [
+    {
+     "meta": "967 rush · 6 TD",
+     "name": "Frank Gore",
+     "points": 199.4,
+     "position": "RB"
+    },
+    {
+     "meta": "64 rec · 733 yds · 6 TD",
+     "name": "Donte Moncrief",
+     "points": 173.3,
+     "position": "WR"
+    },
+    {
+     "meta": "1881 yds · 15 TD",
+     "name": "Andrew Luck",
+     "points": 130.8,
+     "position": "QB"
+    },
+    {
+     "meta": "54 rec · 491 yds · 3 TD",
+     "name": "Coby Fleener",
+     "points": 123.1,
+     "position": "TE"
+    },
+    {
+     "meta": "41 rec · 503 yds · 4 TD",
+     "name": "Andre Johnson",
+     "points": 115.3,
+     "position": "WR"
+    },
+    {
+     "meta": "25/27 FG",
+     "name": "Adam Vinatieri",
+     "points": 107,
+     "position": "PK"
+    }
+   ],
+   "record": null
+  },
+  {
+   "key": "ARI",
+   "abbr": "ARI",
+   "card": [
+    {
+     "meta": "4671 yds · 35 TD",
+     "name": "Carson Palmer",
+     "points": 313.2,
+     "position": "QB"
+    },
+    {
+     "meta": "109 rec · 1215 yds · 9 TD",
+     "name": "Larry Fitzgerald",
+     "points": 284.5,
+     "position": "WR"
+    },
+    {
+     "meta": "581 rush · 8 TD",
+     "name": "David Johnson",
+     "points": 211.8,
+     "position": "RB"
+    },
+    {
+     "meta": "52 rec · 849 yds · 6 TD",
+     "name": "Michael Floyd",
+     "points": 172.9,
+     "position": "WR"
+    },
+    {
+     "meta": "28/31 FG",
+     "name": "Chandler Catanzaro",
+     "points": 137,
+     "position": "PK"
+    },
+    {
+     "meta": "814 rush · 3 TD",
+     "name": "Chris Johnson",
+     "points": 111.2,
+     "position": "RB"
+    }
+   ],
+   "record": null
+  },
+  {
+   "key": "CAR",
+   "abbr": "CAR",
+   "card": [
+    {
+     "meta": "3837 yds · 35 TD",
+     "name": "Cam Newton",
+     "points": 397.1,
+     "position": "QB"
+    },
+    {
+     "meta": "77 rec · 1104 yds · 7 TD",
+     "name": "Greg Olsen",
+     "points": 229.4,
+     "position": "TE"
+    },
+    {
+     "meta": "44 rec · 739 yds · 10 TD",
+     "name": "Ted Ginn Jr.",
+     "points": 183.9,
+     "position": "WR"
+    },
+    {
+     "meta": "989 rush · 6 TD",
+     "name": "Jonathan Stewart",
+     "points": 166.8,
+     "position": "RB"
+    },
+    {
+     "meta": "30/36 FG",
+     "name": "Graham Gano",
+     "points": 146,
+     "position": "PK"
+    },
+    {
+     "meta": "31 rec · 473 yds · 5 TD",
+     "name": "Devin Funchess",
+     "points": 108.3,
+     "position": "TE"
+    }
+   ],
+   "record": null
+  },
+  {
+   "key": "DEN",
+   "abbr": "DEN",
+   "card": [
+    {
+     "meta": "105 rec · 1304 yds · 6 TD",
+     "name": "Demaryius Thomas",
+     "points": 271.4,
+     "position": "WR"
+    },
+    {
+     "meta": "76 rec · 1135 yds · 6 TD",
+     "name": "Emmanuel Sanders",
+     "points": 228.4,
+     "position": "WR"
+    },
+    {
+     "meta": "863 rush · 7 TD",
+     "name": "Ronnie Hillman",
+     "points": 163.4,
+     "position": "RB"
+    },
+    {
+     "meta": "720 rush · 5 TD",
+     "name": "C.J. Anderson",
+     "points": 145.3,
+     "position": "RB"
+    },
+    {
+     "meta": "30/35 FG",
+     "name": "Brandon McManus",
+     "points": 125,
+     "position": "PK"
+    },
+    {
+     "meta": "1967 yds · 10 TD",
+     "name": "Brock Osweiler",
+     "points": 118.8,
+     "position": "QB"
+    }
+   ],
+   "record": null
+  },
+  {
+   "key": "DAL",
+   "abbr": "DAL",
+   "card": [
+    {
+     "meta": "1089 rush · 3 TD",
+     "name": "Darren McFadden",
+     "points": 199.7,
+     "position": "RB"
+    },
+    {
+     "meta": "77 rec · 713 yds · 3 TD",
+     "name": "Jason Witten",
+     "points": 166.3,
+     "position": "TE"
+    },
+    {
+     "meta": "52 rec · 840 yds · 3 TD",
+     "name": "Terrance Williams",
+     "points": 154,
+     "position": "WR"
+    },
+    {
+     "meta": "52 rec · 536 yds · 5 TD",
+     "name": "Cole Beasley",
+     "points": 135.6,
+     "position": "WR"
+    },
+    {
+     "meta": "30/32 FG",
+     "name": "Dan Bailey",
+     "points": 115,
+     "position": "PK"
+    },
+    {
+     "meta": "31 rec · 401 yds · 3 TD",
+     "name": "Dez Bryant",
+     "points": 89.1,
+     "position": "WR"
+    }
+   ],
+   "record": null
+  }
+ ],
+ "best_roster": [
+  {
+   "slot": "QB",
+   "player": {
+    "xp": null,
+    "fga": null,
+    "fgm": null,
+    "rec": null,
+    "sacks": "0",
+    "def_td": null,
+    "points": 397.1,
+    "rec_td": null,
+    "def_int": null,
+    "pass_td": 35,
+    "rec_yds": null,
+    "rush_td": 10,
+    "pass_int": 10,
+    "pass_yds": 3837,
+    "position": "QB",
+    "raw_name": "Cam Newton",
+    "rush_yds": 636,
+    "team_key": "CAR",
+    "fumbles_lost": null
+   },
+   "teamKey": "CAR"
+  },
+  {
+   "slot": "RB",
+   "player": {
+    "xp": null,
+    "fga": null,
+    "fgm": null,
+    "rec": 34,
+    "sacks": null,
+    "def_td": null,
+    "points": 199.4,
+    "rec_td": 1,
+    "def_int": null,
+    "pass_td": null,
+    "rec_yds": 267,
+    "rush_td": 6,
+    "pass_int": null,
+    "pass_yds": null,
+    "position": "RB",
+    "raw_name": "Frank Gore",
+    "rush_yds": 967,
+    "team_key": "IND",
+    "fumbles_lost": null
+   },
+   "teamKey": "IND"
+  },
+  {
+   "slot": "RB",
+   "player": {
+    "xp": null,
+    "fga": null,
+    "fgm": null,
+    "rec": 40,
+    "sacks": "0",
+    "def_td": null,
+    "points": 199.7,
+    "rec_td": 0,
+    "def_int": null,
+    "pass_td": 0,
+    "rec_yds": 328,
+    "rush_td": 3,
+    "pass_int": 0,
+    "pass_yds": 0,
+    "position": "RB",
+    "raw_name": "Darren McFadden",
+    "rush_yds": 1089,
+    "team_key": "DAL",
+    "fumbles_lost": null
+   },
+   "teamKey": "DAL"
+  },
+  {
+   "slot": "WR",
+   "player": {
+    "xp": null,
+    "fga": null,
+    "fgm": null,
+    "rec": 111,
+    "sacks": "0",
+    "def_td": null,
+    "points": 329.1,
+    "rec_td": 11,
+    "def_int": null,
+    "pass_td": null,
+    "rec_yds": 1521,
+    "rush_td": null,
+    "pass_int": null,
+    "pass_yds": null,
+    "position": "WR",
+    "raw_name": "DeAndre Hopkins",
+    "rush_yds": null,
+    "team_key": "HOU",
+    "fumbles_lost": null
+   },
+   "teamKey": "HOU"
+  },
+  {
+   "slot": "WR",
+   "player": {
+    "xp": null,
+    "fga": null,
+    "fgm": null,
+    "rec": 109,
+    "sacks": "0",
+    "def_td": null,
+    "points": 284.5,
+    "rec_td": 9,
+    "def_int": null,
+    "pass_td": null,
+    "rec_yds": 1215,
+    "rush_td": null,
+    "pass_int": null,
+    "pass_yds": null,
+    "position": "WR",
+    "raw_name": "Larry Fitzgerald",
+    "rush_yds": null,
+    "team_key": "ARI",
+    "fumbles_lost": null
+   },
+   "teamKey": "ARI"
+  },
+  {
+   "slot": "FLEX",
+   "player": {
+    "xp": null,
+    "fga": null,
+    "fgm": null,
+    "rec": 105,
+    "sacks": "0",
+    "def_td": null,
+    "points": 271.4,
+    "rec_td": 6,
+    "def_int": null,
+    "pass_td": null,
+    "rec_yds": 1304,
+    "rush_td": null,
+    "pass_int": null,
+    "pass_yds": null,
+    "position": "WR",
+    "raw_name": "Demaryius Thomas",
+    "rush_yds": null,
+    "team_key": "DEN",
+    "fumbles_lost": null
+   },
+   "teamKey": "DEN"
+  },
+  {
+   "slot": "FLEX",
+   "player": {
+    "xp": null,
+    "fga": null,
+    "fgm": null,
+    "rec": 87,
+    "sacks": "0",
+    "def_td": null,
+    "points": 248.2,
+    "rec_td": 11,
+    "def_int": null,
+    "pass_td": null,
+    "rec_yds": 952,
+    "rush_td": null,
+    "pass_int": null,
+    "pass_yds": null,
+    "position": "TE",
+    "raw_name": "Jordan Reed",
+    "rush_yds": null,
+    "team_key": "WSH",
+    "fumbles_lost": null
+   },
+   "teamKey": "WSH"
+  },
+  {
+   "slot": "K",
+   "player": {
+    "xp": 32,
+    "fga": 30,
+    "fgm": 26,
+    "rec": null,
+    "sacks": "0",
+    "def_td": null,
+    "points": 110,
+    "rec_td": null,
+    "def_int": null,
+    "pass_td": null,
+    "rec_yds": null,
+    "rush_td": null,
+    "pass_int": null,
+    "pass_yds": null,
+    "position": "PK",
+    "raw_name": "Jason Myers",
+    "rush_yds": null,
+    "team_key": "JAX",
+    "fumbles_lost": null
+   },
+   "teamKey": "JAX"
+  }
+ ],
+ "picks": [
+  {
+   "teamKey": "CAR",
+   "slotIndex": 0,
+   "playerName": "Cam Newton"
+  },
+  {
+   "teamKey": "DAL",
+   "slotIndex": 1,
+   "playerName": "Darren McFadden"
+  },
+  {
+   "teamKey": "HOU",
+   "slotIndex": 2,
+   "playerName": "Alfred Blue"
+  },
+  {
+   "teamKey": "DEN",
+   "slotIndex": 3,
+   "playerName": "Demaryius Thomas"
+  },
+  {
+   "teamKey": "JAX",
+   "slotIndex": 4,
+   "playerName": "Allen Hurns"
+  },
+  {
+   "teamKey": "PHI",
+   "slotIndex": 5,
+   "playerName": "Jordan Matthews"
+  },
+  {
+   "teamKey": "ARI",
+   "slotIndex": 6,
+   "playerName": "Larry Fitzgerald"
+  },
+  {
+   "teamKey": "WSH",
+   "slotIndex": 7,
+   "playerName": "Dustin Hopkins"
+  }
+ ]
+}
