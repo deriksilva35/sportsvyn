@@ -182,6 +182,10 @@ export default function PickemBoard({
         </span>
         <span className="clock">{picked} of {total}</span>
       </header>
+      {/* STRAIGHT UP, SAID ONCE. The line below each game is reference, not
+          the bet - a board that shows a spread beside two buttons reads as
+          against-the-spread to anyone fluent, which this game is not. */}
+      <p className="pk-straight">Pick the winner. Straight up. The line is for reference.</p>
 
       {anyKicked && (
         <section className="pk-record">
@@ -256,23 +260,6 @@ export default function PickemBoard({
             <div className={`pk-eb${g.status === 'live' ? ' live' : ''}`}>
               <span>{eyebrowLeft}</span>
               <span className="pk-ebr">
-                {/* THE LINE, ONCE PER CARD AND NAMED. isPreGame at the render
-                    as well as at the fetch: the spread vanishes the moment a
-                    game kicks, because a pre-kickoff line beside a live score
-                    is a number that stopped being true. Records do NOT vanish -
-                    they are not market data and have no kickoff. */}
-                {(() => {
-                  if (!isPreGame(g.status)) return null;
-                  const p = spreadParts({ spreadHome: g.spread_home, homeAbbr: g.home, awayAbbr: g.away });
-                  if (!p) return null;
-                  // The NAME truncates, the NUMBER does not - see spreadParts.
-                  return (
-                    <span className="pk-spread">
-                      <span className="pk-spread-t">{p.fav}</span>
-                      <span className="pk-spread-n">{'\u00a0'}{p.mag}</span>
-                    </span>
-                  );
-                })()}
                 {gameHref(contest, g) ? (
                   <Link
                     className="pk-gamelink"
@@ -292,7 +279,11 @@ export default function PickemBoard({
                 const isMine = g.my_side === side;
                 let cls = 'pk-side';
                 if (!g.kicked && !kickedAtMs) {
+                  // A PICK IS A WINNER, NOT A BET: the chosen side keeps the
+                  // volt fill and carries YOUR PICK; the other side drops to
+                  // muted so the pair reads as decided, not as two prices.
                   if (isMine) cls += ' on';
+                  else if (g.my_side != null) cls += ' dim';
                 } else if (isMine) {
                   cls += g.graded === 'W' ? ' win' : g.graded === 'L' ? ' loss' : ' pick';
                 } else {
@@ -317,7 +308,9 @@ export default function PickemBoard({
                           a hidden line. */}
                       <small className="pk-rec">{recordLine(rank, record)}</small>
                     </span>
-                    {!lockedByKickoff && <span className="pk-tag">{side.toUpperCase()}</span>}
+                    {!lockedByKickoff && (isMine
+                      ? <span className="pk-tag pk-yourpick">YOUR PICK</span>
+                      : <span className="pk-tag">{side.toUpperCase()}</span>)}
                     {isMine && g.graded === 'W' && <span className="pk-res w">W</span>}
                     {isMine && g.graded === 'L' && <span className="pk-res l">L</span>}
                     {isMine && g.status === 'live' && <span className="pk-res live">LIVE</span>}
@@ -345,6 +338,25 @@ export default function PickemBoard({
                 );
               })}
             </div>
+            {/* THE LINE, BELOW THE SIDES, MUTED MONO, PREFIXED. It used to sit
+                in the eyebrow beside the kickoff time, above the buttons -
+                where a fluent reader takes it as the bet. Down here, after the
+                choice, it is reference. isPreGame at the render as well as at
+                the fetch: it vanishes the moment a game kicks, because a
+                pre-kickoff line beside a live score is a number that stopped
+                being true. Never in the eyebrow, never inside a .pk-side. */}
+            {(() => {
+              if (!isPreGame(g.status)) return null;
+              const p = spreadParts({ spreadHome: g.spread_home, homeAbbr: g.home, awayAbbr: g.away });
+              if (!p) return null;
+              return (
+                <div className="pk-line">
+                  <span className="pk-line-k">line</span>
+                  <span className="pk-line-t">{p.fav}</span>
+                  <span className="pk-line-n">{'\u00a0'}{p.mag}</span>
+                </div>
+              );
+            })()}
           </div>
             );
           })}
