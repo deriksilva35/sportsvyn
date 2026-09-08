@@ -35,6 +35,7 @@ import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { GAME_NAMES } from '@/lib/games/lobby';
+import { DAILY_V2_PATH } from '@/lib/daily/boardShape';
 import '../games.css';
 import './howItWorks.css';
 
@@ -109,7 +110,7 @@ const SECTIONS = [
     key: 'daily',
     name: GAME_NAMES.daily,
     cadence: DAILY_CADENCE,
-    tagline: 'One season from NFL history. Twelve teams. Nine slots. Three regrets.',
+    tagline: 'One season from NFL history. Twelve teams. Eight slots. Four regrets.',
     // VERBATIM from components/daily/DailyRoom.js's .dsteps block.
     steps: [
       { n: 1, t: 'Draft', d: 'Six players, any position mix' },
@@ -117,7 +118,7 @@ const SECTIONS = [
       { n: 3, t: 'Guess', d: 'Name the season for a bonus' },
     ],
     graded: 'PPR, worst pick dropped.',
-    href: '/daily',
+    href: DAILY_V2_PATH,
     cta: 'Play now',
   },
 ];
