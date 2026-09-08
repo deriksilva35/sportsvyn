@@ -14,7 +14,7 @@
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { SLOTS } from '@/lib/daily/boardShape';
-import { submitRun } from '@/lib/daily/seasonBoardRuns';
+import { submitRun, regradeStoredRun } from '@/lib/daily/seasonBoardRuns';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,8 +30,35 @@ export async function POST(request) {
   const r = await submitRun(sql, {
     boardId, userId: Number(userId), picks: body?.picks, elapsedS: Number(body?.elapsedS) || 0, slots: SLOTS,
   });
-  if (!r.ok) return Response.json({ error: r.reason }, { status: r.status ?? 400 });
+  if (!r.ok) {
+    // ALREADY RAN IS NOT AN ERROR THE PLAYER CAN ACT ON - it means their run
+    // is already stored, so the honest response is that run's grade, not a
+    // message. The client renders it exactly as it renders a fresh submit.
+    // Same shape, so the caller needs no second code path.
+    if (r.reason === 'already ran this board') {
+      const [board] = await sql`SELECT * FROM daily_boards WHERE id = ${boardId}`;
+      const [row] = await sql`
+        SELECT * FROM daily_board_runs WHERE board_id = ${boardId} AND user_id = ${Number(userId)}`;
+      if (board && row?.picks) {
+        const stored = regradeStoredRun(board, row.picks, SLOTS);
+        if (stored.ok) {
+          return Response.json({
+            ok: true, alreadyRan: true, grade: stored.grade,
+            score: Number(row.score), pct: Number(row.pct),
+            matched: row.matched, elapsedS: Number(row.elapsed_s),
+          });
+        }
+      }
+    }
+    return Response.json({ error: r.reason }, { status: r.status ?? 400 });
+  }
+  // THE WHOLE GRADE, NOT THREE NUMBERS. The grade screen renders rows, the
+  // best roster, points-left and the glyph - if the route returned only
+  // score/pct/matched the client would still have to compute the rest
+  // itself, which is the client-side grading this change exists to remove.
   return Response.json({
-    ok: true, score: Number(r.run.score), pct: Number(r.run.pct), matched: r.run.matched,
+    ok: true, grade: r.grade,
+    score: Number(r.run.score), pct: Number(r.run.pct),
+    matched: r.run.matched, elapsedS: Number(r.run.elapsed_s),
   });
 }
