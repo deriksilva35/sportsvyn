@@ -99,7 +99,16 @@ export default async function SeasonBoardPage({ searchParams }) {
       const existing = (await sql`
         SELECT * FROM daily_board_runs WHERE board_id = ${board.id} AND user_id = ${userId}`)[0] ?? null;
 
-      if (existing) {
+      // THREE STATES, NOT TWO (097). The row is now written at START, so its
+      // mere existence no longer means "played" - picks is the discriminator:
+      //
+      //   no row              never started        -> the rules card, below
+      //   row, picks NULL     started, unfinished  -> resume, or DNF if closed
+      //   row, picks NOT NULL already submitted    -> the regraded receipt
+      //
+      // Before 097 only the third state could exist, because nothing was
+      // written until a submit.
+      if (existing && existing.picks != null) {
         // A3: land on the STORED grade, rebuilt from the run's own picks -
         // never a fresh board, never re-solved.
         const regraded = regradeStoredRun(board, existing.picks, SLOTS);
@@ -113,6 +122,66 @@ export default async function SeasonBoardPage({ searchParams }) {
             edition={edition} year={year} teams={board.board} slots={SLOTS} ranked userId={userId}
             initialPlay={regraded.play} initialGrade={regraded.grade} initialClockLabel={clockLabel}
             streak={streak} closesAt={board.closes_at} todayRows={todayRows}
+          />
+        );
+      }
+
+      if (existing) {
+        // STARTED, NEVER SUBMITTED.
+        //
+        // THE DEADLINE IS THE BOARD'S OWN CLOSE. v2 has no per-run limit - its
+        // clock counts up and elapsed_s is a record, not a budget - so the one
+        // thing a started run can run out of is the edition's day. `closed` is
+        // the Postgres now() >= closes_at compare already made above.
+        if (closed) {
+          // DNF, AND THE WORDS ARE v1'S OWN (app/daily/page.js's mod--dnf
+          // block, the `view.dnf` branch). Same situation, so the same
+          // sentences: the attempt is spent, the board was seen, there is no
+          // score, and the page must not offer Start again. Only the two
+          // v1-specific nouns change - "lineup" -> "roster", and v1's "One
+          // board a day" keeps its meaning here unchanged.
+          const [streak, todayRows] = await Promise.all([
+            currentStreakFor(userId, editionDate),
+            todayLeaderboard(sql, board.id),
+          ]);
+          return (
+            <div className="sbd">
+              <header className="sbd-hdr">
+                <span className="sbd-ed">{edition}</span>
+                {streak != null ? <span className="sbd-streak">🔥 {streak} day{streak === 1 ? '' : 's'}</span> : null}
+              </header>
+              <div className="sbd-mid-wait" style={{ margin: '16px 12px 0' }}>
+                <b>Ran out of clock</b>
+                <div style={{ marginTop: 6 }}>
+                  You opened today&rsquo;s board but never locked a roster, so there&rsquo;s no score.
+                  One board a day - the perfect roster and the leaderboard unlock at midnight ET.
+                </div>
+              </div>
+              <div className="sbd-lb">
+                <div className="sbd-lb-h"><span>Today</span><span>{todayRows.length} played</span></div>
+                {todayRows.map((r) => (
+                  <div key={r.userId} className="sbd-lr">
+                    <span className="sbd-lr-rk">{r.rank}</span>
+                    <span className="sbd-lr-who">{r.handle}</span>
+                    <span className="sbd-lr-sc">{r.primary.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        // STILL OPEN: resume on the SAME clock. initialScreen skips the rules
+        // card - this player has already read it and already spent the
+        // attempt - and initialStartedAt is the stored instant, so the clock
+        // shows the time actually spent rather than restarting at 0:00.
+        const streak = await currentStreakFor(userId, editionDate);
+        return (
+          <SeasonBoard
+            edition={edition} year={year} teams={board.board} slots={SLOTS} ranked userId={userId}
+            streak={streak} closesAt={board.closes_at}
+            initialStartedAt={String(new Date(existing.started_at).toISOString())}
+            initialScreen="board"
           />
         );
       }

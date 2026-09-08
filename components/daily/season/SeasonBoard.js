@@ -84,13 +84,21 @@ export default function SeasonBoard({
   edition, year, teams, slots, ranked, userId = null, signInHref = null,
   initialPlay = null, initialGrade = null, initialClockLabel = null, streak = null,
   closesAt = null, todayRows = null,
+  // RESUMING A STARTED RUN (097). The server hands the stored started_at back
+  // as an ISO string; the clock is drawn from it, so a reload shows the time
+  // already spent instead of restarting at 0:00.
+  initialStartedAt = null, initialScreen = null,
 }) {
-  const [screen, setScreen] = useState(initialGrade ? 'grade' : 'rules'); // 'rules' | 'board' | 'grade'
+  const [screen, setScreen] = useState(initialScreen ?? (initialGrade ? 'grade' : 'rules')); // 'rules' | 'board' | 'grade'
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState(null);
   const [play, setPlay] = useState(() => initialPlay ?? initBoardPlay(teams, slots));
   // sheetState: 'closed' | { mode:'team', teamKey } | { mode:'slot', teamKey, player, slotIndexes }
   const [sheetState, setSheetState] = useState('closed');
   const [toast, setToast] = useState(null);
-  const [startedAt, setStartedAt] = useState(null);
+  const [startedAt, setStartedAt] = useState(
+    initialStartedAt ? new Date(initialStartedAt).getTime() : null,
+  );
   const [nowMs, setNowMs] = useState(null);
   const [finishedMs, setFinishedMs] = useState(null);
   // Lazy initializer, not an effect: SSR has no `document` (null, safely),
@@ -101,23 +109,60 @@ export default function SeasonBoard({
 
   // THE CLOCK STARTS ON THE RULES CARD'S START, NOT ON THE FIRST TAP. Idempotent:
   // once startedAt is set, calling this again does nothing.
-  const beginTimer = () => {
+  //
+  // t0 IS THE SERVER'S INSTANT, NOT Date.now(). It arrives from
+  // POST /api/daily/board/start (or from initialStartedAt on a resume), so the
+  // clock a player sees is the one the row was stamped with - a reload, a
+  // second tab and a wrong device clock all show the same elapsed time.
+  const beginTimer = (serverStartedAt) => {
     if (startedAt) return;
-    const t0 = Date.now();
+    const t0 = serverStartedAt ? new Date(serverStartedAt).getTime() : Date.now();
     setStartedAt(t0);
-    setNowMs(t0);
+    setNowMs(Date.now());
     tickRef.current = setInterval(() => setNowMs(Date.now()), 1000);
   };
+
+  // A RESUMED RUN IS ALREADY TICKING when the page hands it to us.
+  useEffect(() => {
+    if (initialStartedAt && tickRef.current == null && !initialGrade) {
+      setNowMs(Date.now());
+      tickRef.current = setInterval(() => setNowMs(Date.now()), 1000);
+    }
+  }, [initialStartedAt, initialGrade]);
   useEffect(() => () => clearInterval(tickRef.current), []);
 
   // THE CLOCK CANNOT START SIGNED OUT (ruling, 5b) - the rules card already
   // renders sign-in in place of Start when signedOut, so onStart should be
   // unreachable here signed out; canStartClock(userId) is the pure gate
   // this only defers to, not a second decision of its own.
-  const handleStart = () => {
+  //
+  // THE BOARD IS NOT SHOWN UNTIL THE SERVER HAS THE ROW (097). Before, Start
+  // was beginTimer() + setScreen('board') and wrote nothing anywhere, so a
+  // player could read all twelve cards, reload, and start over on a fresh
+  // clock as often as they liked. The attempt is claimed first now, and the
+  // screen only changes on a response - a failed or offline start leaves the
+  // rules card up rather than handing out a board that was never claimed.
+  const handleStart = async () => {
     if (!canStartClock(userId).ok) return;
-    beginTimer();
-    setScreen('board');
+    if (starting) return;                       // double-tap is not two attempts
+    setStarting(true);
+    setStartError(null);
+    try {
+      const res = await fetch('/api/daily/board/start', { method: 'POST' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStartError(body?.error === 'board closed'
+          ? 'This board has closed.'
+          : 'Could not start. Try again.');
+        return;
+      }
+      beginTimer(body.startedAt);
+      setScreen('board');
+    } catch {
+      setStartError('Could not start. Check your connection.');
+    } finally {
+      setStarting(false);
+    }
   };
 
   const openTeam = (team) => {
@@ -330,7 +375,7 @@ function SlotChoiceSheet({ team, player, slotIndexes, slots, onPick }) {
  * (lib/daily/seasonBoardPlay.js's startClock), and this is the reason it's
  * unreachable: there is no Start button to tap.
  */
-function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signInHref }) {
+function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signInHref, starting = false, startError = null }) {
   const unused = teamCount - slotCount;
   return (
     <div className="sbd-rules">
@@ -377,7 +422,12 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
       {signInHref ? (
         <a className="sbd-btn" style={{ marginTop: 16, textDecoration: 'none', textAlign: 'center' }} href={signInHref}>Sign in to play</a>
       ) : (
-        <button type="button" className="sbd-btn" style={{ marginTop: 16 }} onClick={onStart}>Start</button>
+        <>
+          <button type="button" className="sbd-btn" style={{ marginTop: 16 }} onClick={onStart} disabled={starting}>
+            {starting ? 'Starting…' : 'Start'}
+          </button>
+          {startError ? <div className="sbd-warn" style={{ marginTop: 10 }}>{startError}</div> : null}
+        </>
       )}
     </div>
   );
