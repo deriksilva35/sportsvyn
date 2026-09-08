@@ -1,0 +1,86 @@
+/* /games/how-it-works - the explainer's own shapes.
+   It sits INSIDE .lob, so every colour and family here is one of the
+   lobby's own --l-* tokens; this file adds no palette of its own. The
+   .dsteps/.dstep step cards are the Daily's, unchanged - they arrive with
+   app/daily/daily.css, which the Daily route already loads, so this page
+   restates them scoped to .hiw rather than importing the Daily's whole
+   stylesheet for forty lines. */
+
+.hiw-sec {
+  border-top: 1px solid var(--l-line);
+  padding: 18px 0 20px;
+}
+.hiw-sec:first-of-type { border-top: 0; padding-top: 4px; }
+
+/* THE CADENCE PILL - volt, and it is the first thing in the section
+   because when a game happens is what a stranger asks first. */
+.hiw-cad {
+  display: inline-block;
+  font-family: var(--l-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--l-volt);
+  border: 1px solid var(--l-volt); border-radius: 99px;
+  padding: 4px 10px; margin-bottom: 10px;
+}
+
+/* ONE TYPE SPEC ACROSS ALL FOUR (item 2) - the lobby's own display face at
+   the lobby's own title weight, so no game reads as the important one. */
+.hiw-name {
+  font-family: var(--l-disp); font-style: italic; font-weight: 900;
+  font-size: 30px; letter-spacing: -.04em; line-height: 1.05;
+  margin: 0 0 6px;
+}
+.hiw-tag {
+  margin: 0 0 12px; font-size: 14px; line-height: 1.5;
+  color: #CFCFC9; max-width: 60ch;
+}
+
+.hiw-graded {
+  margin: 12px 0 0; font-family: var(--l-mono); font-size: 10px;
+  color: var(--l-mut); line-height: 1.45;
+}
+.hiw-graded b {
+  color: var(--l-paper); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em; margin-right: 6px;
+}
+
+.hiw-go {
+  display: inline-block; margin-top: 12px;
+  font-family: var(--l-cond); font-weight: 700; font-size: 12px;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--l-volt); text-decoration: none;
+  border-bottom: 1px solid var(--l-volt); padding-bottom: 2px;
+}
+.hiw-go:hover { color: var(--l-paper); border-color: var(--l-paper); }
+
+.hiw-foot {
+  border-top: 1px solid var(--l-line); margin: 4px 0 0; padding-top: 16px;
+  font-family: var(--l-mono); font-size: 11px; color: var(--l-mut);
+  line-height: 1.5;
+}
+
+/* The Daily's step cards, scoped. Same rule bodies as app/daily/daily.css -
+   if that file's .dstep changes, this follows it by hand, which is the
+   trade for not pulling the Daily's whole sheet onto this route. */
+.hiw .dsteps { display: flex; gap: 8px; margin: 0; }
+.hiw .dstep {
+  flex: 1; background: var(--l-ink2); border: 1px solid var(--l-line);
+  border-radius: 11px; padding: 11px 10px;
+}
+.hiw .dstep .n {
+  font-family: var(--l-disp); font-style: italic; font-weight: 900;
+  font-size: 19px; color: var(--l-volt);
+}
+.hiw .dstep .t {
+  font-family: var(--l-cond); font-weight: 600; text-transform: uppercase;
+  letter-spacing: .08em; font-size: 10.5px; margin: 4px 0 3px;
+}
+.hiw .dstep .d {
+  font-family: var(--l-mono); font-size: 10px; color: var(--l-mut);
+  line-height: 1.45;
+}
+
+@media (max-width: 420px) {
+  .hiw .dsteps { flex-direction: column; }
+  .hiw-name { font-size: 26px; }
+}
