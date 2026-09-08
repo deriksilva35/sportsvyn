@@ -41,7 +41,7 @@ import {
   pickOutcome, commitPick, startClock as canStartClock,
 } from '@/lib/daily/seasonBoardPlay';
 import { gradeBoard, boardStory } from '@/lib/daily/seasonBoardGrade';
-import { DAILY_V2_PATH } from '@/lib/daily/boardShape';
+import { DAILY_V2_PATH, DAILY_ROUND_SECONDS } from '@/lib/daily/boardShape';
 
 // THE ONE PLACE THE DOMAIN-QUALIFIED SHARE URL IS BUILT (relay 5b item 7) -
 // DAILY_V2_PATH is the same constant lib/push/copy.js's url fields use, so
@@ -63,6 +63,23 @@ function mmss(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
+const ROUND_MS = DAILY_ROUND_SECONDS * 1000;
+/** Countdown display: CEIL, not floor. With 49.99s left the clock reads
+ * 0:50, and it reads 0:00 only once the round is actually over - floor would
+ * show 0:00 for the last full second while the board was still open. */
+function mmssCountdown(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+/** Receipt/share clock: elapsed, CAPPED at the round. A run that took 31
+ * wall-clock minutes before the clock existed reads 3:00, never 31:28. */
+const clockFor = (elapsedMs) => mmss(Math.min(ROUND_MS, Math.max(0, elapsedMs)));
+
+/** THE WAY OUT - the same crumb the Weekly and the Draft carry, first child
+ * of the screen. /daily/board has no <main>; the .sbd root is its main. */
+const Crumb = () => (
+  <div className="sbd-crumb-row"><Link className="appcrumb" href="/games">&larr; Games</Link></div>
+);
 
 /**
  * @param edition   "The Daily · No. 020"
@@ -112,6 +129,9 @@ export default function SeasonBoard({
   const [serverElapsedS, setServerElapsedS] = useState(null);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState(null);
+  // The clock fires the submit exactly once; a re-render at 0:00 must not
+  // fire it again while the first is in flight.
+  const autoFiredRef = useRef(false);
   // Lazy initializer, not an effect: SSR has no `document` (null, safely),
   // and the client's first render (hydration) runs this function fresh, so
   // document.body is picked up without a setState-in-effect render cascade.
@@ -222,8 +242,9 @@ export default function SeasonBoard({
     playerName: r.pick?.player?.name ?? null,
   }));
 
-  const handleFinish = async () => {
+  const handleFinish = async ({ auto = false } = {}) => {
     if (finishing) return;
+    if (auto) autoFiredRef.current = true;
     // PRACTICE HAS NO ROW TO WRITE. The unranked preview board (?season=) has
     // no daily_boards row and no boardId, so it keeps the client grade - see
     // the grade screen below, where `ranked` decides which grade is used.
@@ -244,6 +265,15 @@ export default function SeasonBoard({
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok || !body?.ok || !body?.grade) {
+        // TWO REFUSALS ARE FINAL, NOT RETRYABLE: the clock ran out on the
+        // server, or it ran out with nothing on the board. Both are a DNF,
+        // and the screen says so rather than offering a retry that cannot
+        // succeed.
+        if (body?.error === 'time expired' || body?.error === 'nothing picked') {
+          clearInterval(tickRef.current);
+          setScreen('dnf');
+          return;
+        }
         setFinishError(body?.error === 'board closed'
           ? 'This board closed before your roster landed. Nothing was scored.'
           : 'Could not submit. Your picks are safe - try again.');
@@ -266,7 +296,43 @@ export default function SeasonBoard({
   const complete = isRosterComplete(play);
   const filled = filledCount(play);
   const left = teamsLeft(play);
+
+  // THE COUNTDOWN. Remaining = the round minus time since the SERVER's
+  // started_at; nowMs is only ever compared against that anchor, so a reload
+  // shows what is actually left, not a fresh 3:00. Null until the clock has
+  // started.
+  const remainingMs = startedAt != null && nowMs != null ? ROUND_MS - (nowMs - startedAt) : null;
+  const clockText = remainingMs == null ? mmssCountdown(ROUND_MS) : mmssCountdown(remainingMs);
+  const clockClass = `sbd-clock${remainingMs != null && remainingMs < 30_000 ? ' sbd-clock--terra' : ''}`;
+
+  // AT ZERO, SUBMIT WHATEVER IS THERE. No modal, no confirmation - the round
+  // is over and the server would refuse a later submit anyway. Once only.
+  useEffect(() => {
+    if (screen !== 'board' || !ranked || boardId == null) return;
+    if (remainingMs == null || remainingMs > 0 || autoFiredRef.current) return;
+    handleFinish({ auto: true });
+  // handleFinish is recreated each render; the ref is the real guard.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remainingMs, screen]);
   const needPositions = [...new Set(play.roster.filter((r) => !r.pick).map((r) => r.pos))];
+
+  if (screen === 'dnf') {
+    // OUT OF CLOCK. v1's own DNF words (app/daily/page.js mod--dnf) with
+    // "lineup" -> "roster"; the attempt is spent and nothing is offered.
+    return (
+      <div className="sbd">
+        <Crumb />
+        <header className="sbd-hdr"><span className="sbd-ed">{edition}</span><span className="sbd-clock sbd-clock--terra">0:00</span></header>
+        <div className="sbd-mid-wait" style={{ margin: '16px 12px 0' }}>
+          <b>Ran out of clock</b>
+          <div style={{ marginTop: 6 }}>
+            You opened today&rsquo;s board but never locked a roster, so there&rsquo;s no score.
+            One board a day - the perfect roster and the leaderboard unlock at midnight ET.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (screen === 'rules') {
     return (
@@ -309,9 +375,10 @@ export default function SeasonBoard({
     // impure now-fallback.
     const clockLabel = initialGrade
       ? initialClockLabel
-      : (serverElapsedS != null ? mmss(serverElapsedS * 1000) : mmss(finishedMs - startedAt));
+      : (serverElapsedS != null ? clockFor(serverElapsedS * 1000) : clockFor(finishedMs - startedAt));
     return (
       <div className="sbd">
+        <Crumb />
         <GradeScreen
           edition={edition} year={year} grade={grade} play={play} teams={teams} clockLabel={clockLabel} ranked={ranked}
           streak={streak} closesAt={closesAt} todayRows={todayRows} userId={userId}
@@ -324,9 +391,10 @@ export default function SeasonBoard({
 
   return (
     <div className="sbd">
+      <Crumb />
       <header className="sbd-hdr">
         <span className="sbd-ed">{edition}</span>
-        <span className="sbd-clock">{startedAt ? mmss(nowMs - startedAt) : '0:00'}</span>
+        <span className={clockClass}>{clockText}</span>
       </header>
       <div className="sbd-yr">
         <h1>{year}</h1>
@@ -514,8 +582,8 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
         {signInHref
           ? 'Sign in to start the clock. One attempt - this board is ranked.'
           : ranked
-            ? 'The clock starts when you tap Start. One attempt - this board is ranked.'
-            : 'The clock starts when you tap Start. Practice is unranked and touches no leaderboard.'}
+            ? 'Three minutes from Start. The clock is on the server. One attempt - this board is ranked.'
+            : 'Three minutes from Start. Practice is unranked and touches no leaderboard.'}
       </div>
 
       {signInHref ? (
@@ -713,7 +781,9 @@ function GradeRow({ row }) {
         <span className="sbd-dif">{diff}</span>
       </div>
       <div className="sbd-two">
-        <GradeBox p={row.you} cls="sbd-you" />
+        {row.you?.name != null
+          ? <GradeBox p={row.you} cls="sbd-you" />
+          : <div className="sbd-bx sbd-you sbd-empty"><div>empty slot</div><div>0</div></div>}
         {row.hit ? (
           <div className="sbd-bx sbd-same">
             <div className="sbd-tick">✓</div>

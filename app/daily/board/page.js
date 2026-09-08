@@ -46,7 +46,8 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { sql } from '@/lib/db';
 import { generateBoard } from '@/lib/daily/boardGenerator';
 import { makeRng } from '@/lib/daily/pool';
-import { SLOTS, DAILY_V2_PATH } from '@/lib/daily/boardShape';
+import { SLOTS, DAILY_V2_PATH, DAILY_ROUND_SECONDS, DAILY_ROUND_GRACE_SECONDS } from '@/lib/daily/boardShape';
+import Link from 'next/link';
 import { todayEt } from '@/lib/daily/entries';
 import { ensureBoardForDate, isEditionLive, effectiveEpoch, metaFor } from '@/lib/daily/seasonBoardEditions';
 import { regradeStoredRun } from '@/lib/daily/seasonBoardRuns';
@@ -113,7 +114,10 @@ export default async function SeasonBoardPage({ searchParams }) {
         // A3: land on the STORED grade, rebuilt from the run's own picks -
         // never a fresh board, never re-solved.
         const regraded = regradeStoredRun(board, existing.picks, SLOTS);
-        const clockLabel = mmss(Number(existing.elapsed_s) * 1000);
+        // CAPPED AT THE ROUND. Row 1 (elapsed_s 1888, from before the clock
+        // existed) reads 3:00 here, never 31:28 - the receipt shows round
+        // time, not wall-clock since start.
+        const clockLabel = mmss(Math.min(DAILY_ROUND_SECONDS, Number(existing.elapsed_s)) * 1000);
         const [streak, todayRows] = await Promise.all([
           currentStreakFor(userId, editionDate),
           closed ? todayLeaderboard(sql, board.id) : Promise.resolve(null),
@@ -135,7 +139,13 @@ export default async function SeasonBoardPage({ searchParams }) {
         // clock counts up and elapsed_s is a record, not a budget - so the one
         // thing a started run can run out of is the edition's day. `closed` is
         // the Postgres now() >= closes_at compare already made above.
-        if (closed) {
+        // THE DEADLINE IS THREE MINUTES FROM started_at (plus grace), OR THE
+        // BOARD'S CLOSE, WHICHEVER COMES FIRST. Computed in Postgres against
+        // the stored instant - the same compare submitRun makes - so a reload
+        // after the round shows the DNF, never a board with negative time.
+        const [{ expired }] = await sql`
+          SELECT now() > ${existing.started_at}::timestamptz + make_interval(secs => ${DAILY_ROUND_SECONDS + DAILY_ROUND_GRACE_SECONDS}) AS expired`;
+        if (closed || expired) {
           // DNF, AND THE WORDS ARE v1'S OWN (app/daily/page.js's mod--dnf
           // block, the `view.dnf` branch). Same situation, so the same
           // sentences: the attempt is spent, the board was seen, there is no
@@ -148,6 +158,7 @@ export default async function SeasonBoardPage({ searchParams }) {
           ]);
           return (
             <div className="sbd">
+              <div className="sbd-crumb-row"><Link className="appcrumb" href="/games">&larr; Games</Link></div>
               <header className="sbd-hdr">
                 <span className="sbd-ed">{edition}</span>
                 {streak != null ? <span className="sbd-streak">🔥 {streak} day{streak === 1 ? '' : 's'}</span> : null}
@@ -201,6 +212,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         ]);
         return (
           <div className="sbd">
+            <div className="sbd-crumb-row"><Link className="appcrumb" href="/games">&larr; Games</Link></div>
             <header className="sbd-hdr">
               <span className="sbd-ed">{edition}</span>
               {streak != null ? <span className="sbd-streak">🔥 {streak} day{streak === 1 ? '' : 's'}</span> : null}
