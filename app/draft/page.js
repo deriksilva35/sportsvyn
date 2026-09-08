@@ -10,6 +10,7 @@
  * FIVE STATES: rules -> drafting -> waiting -> locked -> settled.
  */
 
+import Link from 'next/link';
 import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -60,7 +61,14 @@ function Shell({ children }) {
           <Wordmark href="/" />
           <span className="tag">The <b>Draft</b></span>
         </header>
-        <main className="daily-main">{children}</main>
+        <main className="daily-main">
+          {/* The back crumb Pick'em already carries (app/pickem/[sport]/page.js):
+              same component, same class, first child of <main> - so all three
+              games walk back to the lobby the same way, signed in or out.
+              Inside Shell, which every return path on this page goes through. */}
+          <Link className="appcrumb" href="/games">&larr; Games</Link>
+          {children}
+        </main>
       </div>
     </div>
   );
