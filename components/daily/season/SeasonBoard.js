@@ -337,6 +337,7 @@ export default function SeasonBoard({
   if (screen === 'rules') {
     return (
       <div className="sbd">
+        <Crumb />
         <RulesCard
           edition={edition} year={year} slotCount={slots.length} teamCount={teams.length}
           ranked={ranked} onStart={handleStart} signInHref={signInHref}
@@ -580,7 +581,7 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
 
       <div className="sbd-rnote">
         {signInHref
-          ? 'Sign in to start the clock. One attempt - this board is ranked.'
+          ? 'Three minutes from Start. The clock is on the server. Sign in to start it. One attempt - this board is ranked.'
           : ranked
             ? 'Three minutes from Start. The clock is on the server. One attempt - this board is ranked.'
             : 'Three minutes from Start. Practice is unranked and touches no leaderboard.'}
