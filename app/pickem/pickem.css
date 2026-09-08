@@ -32,6 +32,16 @@
 .pk-game { background: #141414; border: 1px solid var(--rule, #2A2A2A); border-radius: 12px; padding: 12px 12px 10px; }
 .pk-game .pk-eb { font-size: 10px; margin-bottom: 9px; }
 .pk-sides { display: flex; align-items: stretch; gap: 5px; }
+/* The one line under the board header: straight up, said once. */
+.pk-straight { margin: 6px 0 12px; font-family: var(--font-source-serif), Georgia, serif; font-size: 13px; line-height: 1.4; color: var(--muted, #8A8A85); }
+/* THE LINE, below the sides: muted mono, prefixed 'line'. Its own row - never
+   the kickoff row (.pk-eb), never inside a button. */
+.pk-line { display: flex; align-items: baseline; gap: 6px; margin-top: 7px; font-family: var(--font-jetbrains-mono), monospace; font-size: 10.5px; letter-spacing: 0; color: var(--muted-dim, #5A5A56); }
+.pk-line-k { text-transform: uppercase; letter-spacing: .12em; font-size: 9px; }
+.pk-line-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pk-line-n { white-space: nowrap; }
+/* The picked side's tag reads as a verdict. */
+.pk-side.on .pk-yourpick { color: var(--ink, #0A0A0A); font-weight: 700; letter-spacing: .1em; }
 /* THE MOCK'S "at" (2a-polish item 3) - a bare third column between the two
    sides, never a tap target of its own. */
 .pk-at {
