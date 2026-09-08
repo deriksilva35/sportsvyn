@@ -39,6 +39,10 @@
 // typed count - the count is 1 by construction.
 
 import readline from 'node:readline/promises';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { stdin, stdout } from 'node:process';
 import { sql } from '../lib/db.js';
 import { unsubscribeUrlFor, unsubscribeHeaders } from '../lib/auth/welcomeEmail.js';
@@ -90,45 +94,66 @@ const OWNER_VERIFY_ADDRESS = 'deriksilva@gmail.com';
 const POSTAL = process.env.EMAIL_POSTAL_ADDRESS || null;
 
 // ---------------------------------------------------------------------------
-// THE COPY. Approved verbatim 18 Aug, except the CTA target - see CTA_URL.
+// THE COPY. Subject and preheader below; the body is the launch email file,
+// read from disk at run time - see HTML_FILE. (The 18 Aug body and its CTA
+// constants are gone, not commented out.)
 // ---------------------------------------------------------------------------
 //
 // HYPHENS ONLY. House rule, and it is asserted rather than trusted: an em dash
 // pasted in from a document renders as a different character in a mail client
 // than it does in a terminal, and nobody proofreads the HTML part. assertHyphens
 // below refuses to send if one survives into either rendering.
-const SUBJECT = 'Draftvyn is now completely free.';
+const SUBJECT = 'You came for the mock draft. Now it counts.';
+const PREHEADER = 'Four ranked games, all free. The Weekly locks at first kickoff Wednesday night.';
 
-/**
- * WHERE "START A DRAFT" POINTS.
- *
- * The approved copy said draftvyn.com. THAT DOMAIN DOES NOT RESOLVE - checked
- * before wiring it: DNS failure on both draftvyn.com and www.draftvyn.com,
- * while sportsvyn.com answers 200. A dead link is the one defect a broadcast
- * cannot walk back, so this points at the page the button actually names.
- *
- * If draftvyn.com is registered and pointed later, this is the one line to
- * change - and it should change, because the app is Draftvyn and the domain
- * matching the brand is worth having.
- */
-const CTA_URL = 'https://sportsvyn.com/sim';
-const CTA_LABEL = 'START A DRAFT';
+// ============================================================================
+// THE BODY IS A FILE, READ FROM DISK AT RUN TIME - docs/email/launch-email-sep8.html
+// ============================================================================
+// This script used to carry its own copy (a BODY_LINES array and a hand-built
+// dark table) and would have mailed the whole roster last month's "Draftvyn is
+// now completely free" announcement under the launch subject. BODY_LINES and
+// the CTA constants are REMOVED, not left unreferenced: dead copy in the one
+// script that mails everyone is copy that gets sent by accident.
+//
+// The file is read ONCE, here, and its sha256 is printed in the dry-run header
+// so the operator can check it against `sha256sum docs/email/launch-email-sep8.html`
+// on main before typing the count. The bytes are never printed.
+const HTML_FILE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'email', 'launch-email-sep8.html');
+const HTML_BYTES = readFileSync(HTML_FILE);
+const HTML_SHA256 = createHash('sha256').update(HTML_BYTES).digest('hex');
+const HTML_TEMPLATE = HTML_BYTES.toString('utf8');
 
-const BODY_LINES = [
-  'The paywall is gone - all of it. Every mock draft, unlimited. The Tracker for '
-  + 'your real draft night. Superflex, 14 and 16-team rooms, custom league setups. '
-  + 'Everything Draftvyn does is now free for the 2026 season.',
+// EXACTLY ONE UNSUBSCRIBE PLACEHOLDER, asserted at load - before a roster is
+// read or a single mail rendered. Zero means the file has no unsubscribe link
+// and 222 people would get a bulk send with no way out; more than one means a
+// second link this script does not know about. Either is fatal here, loudly.
+const UNSUB_PLACEHOLDER = '{{unsubscribe_url}}';
+const UNSUB_COUNT = HTML_TEMPLATE.split(UNSUB_PLACEHOLDER).length - 1;
+if (UNSUB_COUNT !== 1) {
+  throw new Error(`${path.basename(HTML_FILE)} contains ${UNSUB_COUNT} '${UNSUB_PLACEHOLDER}' placeholders - expected exactly 1. Not rendering.`);
+}
+// The preheader is the file's own hidden first line; assert the file actually
+// carries the one the header claims, so the printed preheader is a fact about
+// the bytes and not a constant that could drift from them.
+if (!HTML_TEMPLATE.includes(PREHEADER)) {
+  throw new Error(`${path.basename(HTML_FILE)} does not contain the expected preheader. Not rendering.`);
+}
 
-  'Get your reps in: full snake drafts against AI rooms that reach and slide, every '
-  + 'pick graded on live ADP. Then bring the Tracker to draft night and keep '
-  + 'best-available and your roster in front of you the whole time.',
-
-  'One more thing - Draftvyn is now more than draft prep. The Daily is live: 64 real '
-  + "performances from one hidden week of NFL history, three minutes to build your "
-  + "best six, new board every midnight. Pick 'em opens Aug 25, and two more games "
-  + 'land with Week 1.',
-
-  'Your draft is coming.',
+// THE PLAIN-TEXT ALTERNATIVE - the four games, their taglines, the lobby.
+// Same lines the 8 Sep single send carried; the taglines are the ratified
+// ones from app/games/how-it-works/page.js.
+const TEXT_LINES = [
+  'You came for the mock draft. Now it counts. Four ranked games, all free.',
+  '',
+  'The Draft - Pick your seat, draft your team, compete against the field.',
+  '',
+  'The Weekly - Pick any player at each position. Make your best roster, no draft, no salary, and see where it stacks up against the field that week.',
+  '',
+  "Pick'em - Pick the winners. No odds, no problem.",
+  '',
+  'The Daily - One season from NFL history. Twelve teams. Eight slots. Four regrets.',
+  '',
+  'https://sportsvyn.com/games',
 ];
 
 /** Refuses the send if a dash that is not a hyphen reaches either rendering. */
@@ -146,63 +171,28 @@ function render({ unsubscribeUrl }) {
   const postal = POSTAL ?? '[EMAIL_POSTAL_ADDRESS NOT SET - REQUIRED BEFORE SENDING]';
 
   const text = [
-    ...BODY_LINES,
-    '',
-    `${CTA_LABEL}: ${CTA_URL}`,
+    ...TEXT_LINES,
     '',
     '---',
     `Unsubscribe: ${unsubscribeUrl}`,
     postal,
-  ].join('\n\n');
+  ].join('\n');
 
-  // ==========================================================================
-  // BULLETPROOF-DARK, after Spark stripped the first draft to white-on-white
-  // ==========================================================================
-  // The first HTML put the background on <body> and the CTA on a styled <a>.
-  // Apple Mail rendered it perfectly; Spark desktop stripped the body style,
-  // leaving near-white text on a white page and the button degraded to
-  // underlined text. Body styles are the FIRST thing clients strip, so:
-  //
-  //   - the background lives on a wrapper TABLE CELL, twice: bgcolor="" (the
-  //     HTML attribute - survives style-stripping) AND inline background-color
-  //     (wins where both are honoured). <body> carries it too, as a third coat,
-  //     not as the load-bearing one.
-  //   - EVERY text element declares its own inline color. Nothing inherits,
-  //     because inheritance is only as strong as the ancestor that gets kept.
-  //   - the CTA is a table cell with bgcolor + padding, wrapping an <a> that
-  //     carries its own color and no underline. A cell with a background
-  //     attribute is the one button construction every client leaves alone.
-  //
-  // Kept DARK by ruling (it is the brand). The pass bar in Spark is LEGIBLE,
-  // not pixel-perfect: if a client still forces white, the bgcolor attribute is
-  // what it honours, and if it strips even that, the per-element colors go down
-  // with the background rather than one surviving without the other.
-  const F = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
-  const html = '<!doctype html><html><head><meta name="color-scheme" content="dark">'
-    + '<meta name="supported-color-schemes" content="dark"></head>'
-    + '<body style="margin:0;padding:0;background-color:#0A0A0A;" bgcolor="#0A0A0A">'
-    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" '
-    + 'bgcolor="#0A0A0A" style="background-color:#0A0A0A;"><tr>'
-    + '<td align="center" bgcolor="#0A0A0A" style="background-color:#0A0A0A;padding:24px;">'
-    + '<table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" '
-    + 'style="max-width:520px;width:100%;"><tr><td>'
-    + `<div style="font-family:${F};font-size:10px;font-weight:700;letter-spacing:.28em;`
-    + 'text-transform:uppercase;color:#D4FF00;margin:0 0 18px;">Draftvyn</div>'
-    + BODY_LINES.map((l) =>
-      `<p style="font-family:${F};font-size:15px;line-height:1.6;color:#F5F5F2;margin:0 0 14px;">${l}</p>`).join('')
-    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;"><tr>'
-    + '<td bgcolor="#D4FF00" style="background-color:#D4FF00;border-radius:8px;">'
-    + `<a href="${CTA_URL}" style="display:inline-block;font-family:${F};color:#0A0A0A;`
-    + 'text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.06em;'
-    + `padding:13px 22px;">${CTA_LABEL}</a>`
-    + '</td></tr></table>'
-    + '<hr style="border:0;border-top:1px solid #232323;margin:24px 0;">'
-    + `<p style="font-family:${F};font-size:12px;color:#8A8A86;line-height:1.6;margin:0;">`
-    + `<a href="${unsubscribeUrl}" style="color:#8A8A86;">Unsubscribe</a><br>`
-    + `<span style="color:#8A8A86;">${postal}</span>`
-    + '</p></td></tr></table></td></tr></table></body></html>';
+  // ONE SUBSTITUTION PER RECIPIENT, re-counted on every render. The load-time
+  // assert above already proved the template has exactly one placeholder;
+  // this re-checks the RESULT, so a template edit between load and send (or a
+  // bug in the replace) cannot ship a literal '{{unsubscribe_url}}' href.
+  const html = HTML_TEMPLATE.replace(UNSUB_PLACEHOLDER, unsubscribeUrl);
+  const left = html.split(UNSUB_PLACEHOLDER).length - 1;
+  const put = html.split(unsubscribeUrl).length - 1;
+  if (left !== 0 || put !== 1) {
+    throw new Error(`unsubscribe substitution failed: ${left} placeholder(s) left, url present ${put} time(s)`);
+  }
 
-  assertHyphens(SUBJECT, text, html);
+  // HYPHENS ONLY applies to the copy THIS SCRIPT authors - the subject and the
+  // text alternative. The HTML file is a designed, approved artifact that went
+  // out on 8 Sep as-is; it is not re-linted here.
+  assertHyphens(SUBJECT, text);
   return { text, html };
 }
 
@@ -310,6 +300,9 @@ async function main() {
   console.log(`  mode            : ${LIVE ? 'LIVE SEND' : 'DRY RUN (no mail will be sent)'}`);
   console.log(`  postal address  : ${POSTAL ?? 'NOT SET - blocks a live send'}`);
   console.log(`  subject         : ${SUBJECT}`);
+  console.log(`  preheader       : ${PREHEADER}`);
+  console.log(`  html file       : ${path.relative(process.cwd(), HTML_FILE)}  (${HTML_BYTES.length} bytes, read at run time, never printed)`);
+  console.log(`  sha256          : ${HTML_SHA256}`);
   if (testTo) console.log(`  TEST SEND to    : ${testTo} (owner list) - roster ignored`);
   if (!testTo) {
     console.log(`\n  RECIPIENTS: ${list.length}`);
