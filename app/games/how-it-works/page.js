@@ -11,7 +11,8 @@
  * absent - see THE THREE-STEP GAP below.
  *
  * WHERE EACH LINE COMES FROM:
- *   cadence pills, taglines, intro   the relay, verbatim
+ *   cadence pills, taglines, intro   relay 5, verbatim
+ *   the Draft/Weekly/Pick'em steps   relay 5b, verbatim
  *   the Daily's three steps          components/daily/DailyRoom.js's own
  *                                    .dsteps block, word for word
  *   grading lines                    each game's own "How it works" module
@@ -22,13 +23,12 @@
  *                                    Today's-boards pill) and "unranked ·
  *                                    nothing here counts" (the Practice row)
  *
- * THE THREE-STEP GAP, stated rather than filled. Item 2 asks each section
- * for three numbered steps "taken from docs/design if present or from the
- * email copy". docs/design has no step copy for the Draft, the Weekly or
- * Pick'em - only the Daily has three numbered steps anywhere in this
- * codebase. Writing the other nine would be inventing copy, which item 5
- * forbids, so those three sections ship without a step block and the Daily
- * ships with its real one. Paste the email copy and they go in as-is.
+ * THE STEPS SHIPPED IN TWO PASSES, and it is worth knowing why. Relay 5
+ * built the page with only the Daily's three, because the Daily's were the
+ * only step copy that existed anywhere in this codebase and writing the
+ * other nine would have been inventing them. Relay 5b supplied the nine.
+ * They are transcribed here exactly as given and asserted verbatim in the
+ * tests, which is the whole point of having waited for them.
  */
 
 import Link from 'next/link';
@@ -57,7 +57,8 @@ const DAILY_CADENCE = 'Daily · a new board every morning';
  * this page runs heaviest-commitment to lightest, which is how somebody
  * deciding what to try reads it.
  *
- * `steps` is null where the copy does not exist yet. See the file header.
+ * Every section carries three steps. `steps` may be null - the component
+ * renders nothing rather than a placeholder - but nothing uses that now.
  */
 const SECTIONS = [
   {
@@ -65,7 +66,11 @@ const SECTIONS = [
     name: GAME_NAMES.draft,
     cadence: WEEKLY_CADENCE,
     tagline: 'Pick your seat, draft your team, compete against the field.',
-    steps: null,
+    steps: [
+      { n: 1, t: 'Seat', d: 'Take one of twelve. It is yours all season.' },
+      { n: 2, t: 'Draft', d: 'Eight rounds against the room, thirty seconds a pick, no bench.' },
+      { n: 3, t: 'Score', d: 'Best six of your eight count, against every other drafter that week.' },
+    ],
     graded: 'Best ball, PPR, drop worst.',
     href: '/draft',
     cta: 'Take a seat',
@@ -77,7 +82,11 @@ const SECTIONS = [
     tagline:
       'Pick any player at each position. Make your best roster, no draft, '
       + 'no salary, and see where it stacks up against the field that week.',
-    steps: null,
+    steps: [
+      { n: 1, t: 'Pick', d: 'Six slots: QB, RB, WR, TE and two flex. Any player, nobody is taken.' },
+      { n: 2, t: 'Edit', d: 'No clock. Change it until first kickoff; whatever is saved is your entry.' },
+      { n: 3, t: 'Grade', d: 'Tuesday you are graded against the best six that pool could have made.' },
+    ],
     graded: 'PPR, worst pick dropped.',
     href: '/weekly',
     cta: 'Set your six',
@@ -87,7 +96,11 @@ const SECTIONS = [
     name: GAME_NAMES.pickem,
     cadence: WEEKLY_CADENCE,
     tagline: 'Pick the winners. No odds, no problem.',
-    steps: null,
+    steps: [
+      { n: 1, t: 'Call', d: 'Every game on the board, straight up. The spread is shown, never required.' },
+      { n: 2, t: 'Lock', d: 'Each game locks at its own kickoff. Change a pick until then.' },
+      { n: 3, t: 'Tally', d: 'One season table across both sports, ranked on correct percentage.' },
+    ],
     graded: 'Right, wrong, push.',
     href: '/pickem',
     cta: 'Make your picks',

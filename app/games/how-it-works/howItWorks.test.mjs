@@ -92,10 +92,33 @@ test('/games links to it, outside the boards guard so it always renders', () => 
   assert.ok(close > endOfGuard, 'the link must be outside the boardRows guard');
 });
 
-test('the steps that do NOT exist are absent, not invented', () => {
-  // Item 5, made mechanical. Only the Daily has step copy in this codebase;
-  // the other three carry `steps: null` until the email copy arrives. If a
-  // future edit fills them in, it must come with a source.
-  const nulls = (PAGE.match(/steps: null/g) ?? []).length;
-  assert.equal(nulls, 3, 'draft, weekly and pickem have no step copy yet');
+test('ALL TWELVE STEPS ARE PRESENT - no section is missing its copy', () => {
+  // Relay 5 shipped with three of twelve and `steps: null` on the rest,
+  // rather than invent nine. 5b supplied them, so the null count is the
+  // thing that must now be zero - it is the same assertion, inverted, and
+  // it still catches a section quietly losing its steps.
+  assert.equal((PAGE.match(/steps: null/g) ?? []).length, 0,
+    'every section has step copy now');
+  assert.equal((PAGE.match(/\{ n: [123], t: '/g) ?? []).length, 12,
+    'four sections x three steps');
+});
+
+test('the nine relay-5b steps are verbatim', () => {
+  // Transcribed copy, so it is checked character for character. Anything
+  // reworded here is a change to ratified copy and should fail loudly.
+  const STEPS = [
+    ['Seat', 'Take one of twelve. It is yours all season.'],
+    ['Draft', 'Eight rounds against the room, thirty seconds a pick, no bench.'],
+    ['Score', 'Best six of your eight count, against every other drafter that week.'],
+    ['Pick', 'Six slots: QB, RB, WR, TE and two flex. Any player, nobody is taken.'],
+    ['Edit', 'No clock. Change it until first kickoff; whatever is saved is your entry.'],
+    ['Grade', 'Tuesday you are graded against the best six that pool could have made.'],
+    ['Call', 'Every game on the board, straight up. The spread is shown, never required.'],
+    ['Lock', 'Each game locks at its own kickoff. Change a pick until then.'],
+    ['Tally', 'One season table across both sports, ranked on correct percentage.'],
+  ];
+  for (const [t, d] of STEPS) {
+    assert.ok(PAGE.includes(`t: '${t}', d: '${d}' }`),
+      `missing or altered: ${t} - ${d}`);
+  }
 });
