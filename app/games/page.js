@@ -190,6 +190,24 @@ function GamesPane({ v, leagues = [], signedIn = false, signinHref = '/signin' }
           rather than inventing a state. */}
       {v.hero && <Hero hero={v.hero} signedIn={signedIn} signinHref={signinHref} />}
 
+      {/* WHAT A STRANGER NEEDS, ABOVE THE FOLD (relay 6 item 3). Signed out,
+          this page opened on a stat strip reading 0 players today and a hero
+          whose only button said "Sign in to play" - it answered neither what
+          this is nor why today, and the explainer link was far below, under
+          Today's boards.
+
+          SIGNED OUT ONLY. A signed-in reader already knows what it costs and
+          has an account; two lines telling them it is free would be noise on
+          the surface they use most. The ghost link under Today's boards stays
+          for everyone - this is a second, earlier entrance to the same page,
+          worded the way the launch email words it. */}
+      {!signedIn && (
+        <div className="lob-stranger">
+          <p className="lob-free">Free. An email and a handle. Nothing to install.</p>
+          <Link className="ghost" href="/games/how-it-works">How to play each game &rarr;</Link>
+        </div>
+      )}
+
       {/* TODAY'S BOARDS (relay 2a item 4) - four rows, fixed GAME_ORDER,
           replacing the old 2x2 .ggrid entirely: the mock never shows that
           grid, and this screen builds to the mock, not to memory. */}

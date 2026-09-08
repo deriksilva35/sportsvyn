@@ -280,3 +280,12 @@
 /* The explainer link (relay 5 item 4). It sits between two modules rather
    than inside one, so it carries the module gap itself. */
 .hiw-link { display: inline-block; margin-bottom: 18px; }
+
+/* THE STRANGER'S TWO LINES (relay 6 item 3) - directly under the hero,
+   signed out only. Quiet on purpose: the hero is the volt thing on this
+   screen and these two lines answer the questions it does not. */
+.lob-stranger { margin: -6px 0 18px; }
+.lob-free {
+  margin: 0 0 10px; font-family: var(--l-mono); font-size: 12px;
+  line-height: 1.5; color: var(--l-mut);
+}

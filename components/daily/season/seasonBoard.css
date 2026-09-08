@@ -236,7 +236,12 @@
 .sbd-story b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--volt, #D4FF00); display: block; margin-bottom: 6px; }
 .sbd-story p { font-family: var(--font-source-serif), Georgia, serif; font-style: italic; font-size: 12px; line-height: 1.4; color: var(--paper-dim, #B8B8B3); margin: 0; }
 
-.sbd-share { margin: 20px 12px 0; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); padding: 15px 14px; }
+/* MARGIN IS NOW SYMMETRIC (relay 6 item 2). This card used to be the last
+   thing on the screen, so `20px 12px 0` was enough - a bottom margin would
+   have done nothing. It sits between the header and the grade rows now and
+   needs to clear both. The border, radius, padding and background are
+   untouched and still match .share in the Daily mock exactly. */
+.sbd-share { margin: 14px 12px 16px; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); padding: 15px 14px; }
 .sbd-share .sbd-g { font-family: var(--font-mono); font-size: 18px; letter-spacing: .09em; line-height: 1.5; }
 .sbd-share .sbd-cap { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--muted, #8A8A85); line-height: 1.55; }
 .sbd-copy {

@@ -35,6 +35,26 @@ export default function DraftResults({ data }) {
     <div>
       <div className="sim-kicker">Draft complete · {config.name}</div>
 
+      {/* THE EXIT (relay 6 item 1). A mock ends and the reader is at their
+          most engaged and their most stranded: they just did the thing, and
+          the only doors out of this screen went further into Practice - the
+          "← Mock" breadcrumb, the sim tab bar. Nothing said the same rooms
+          and the same engine also run for a score.
+
+          ABOVE THE GRADE, deliberately. Below it is past the roster, the
+          ledger and the read - a scroll nobody making a decision performs.
+          Everything else on this screen is untouched, the app-store banner
+          included; this is one card and one link inserted, not a rework. */}
+      <div className="mock-exit">
+        <div className="me-eyebrow">This one was practice</div>
+        <p className="me-line">
+          The ranked Draft opens Tuesday. Same rooms, same engine, and it goes
+          on a leaderboard.
+        </p>
+        <a className="me-cta" href="/draft">Take a seat in the ranked Draft</a>
+      </div>
+      <a className="mock-exit-ghost" href="/games/how-it-works">How the games work &rarr;</a>
+
       {/* grade block + transparency components */}
       <div className="grade-block">
         <div className="grade-letter">{grade}</div>

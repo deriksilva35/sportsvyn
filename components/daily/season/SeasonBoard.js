@@ -411,7 +411,26 @@ function GradeScreen({
     `${grade.mine.toLocaleString()} pts · ${grade.pct}%${streak != null ? ` · streak ${streak}` : ''}`,
     SHARE_URL,
   ].join('\n');
-  const handleCopy = async () => {
+  // THE SHARE SHEET, NOT JUST THE CLIPBOARD (relay 6 item 2). This was
+  // clipboard-only, which was defensible while the button said "Copy" -
+  // it is not once the button says "Share your board". On a phone that
+  // label promises the OS share sheet, and every other game in the product
+  // already opens it: components/games/ShareGrade.js does exactly this and
+  // the Weekly, the Draft and Pick'em all go through it. The Daily kept its
+  // own inline copy because it predates that module.
+  //
+  // Clipboard stays as the fallback, and it is reached two ways: no
+  // navigator.share at all (desktop), or a share that throws mid-call
+  // (cancelled, or refused). The tap never does nothing.
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: shareText });
+        return;
+      } catch {
+        // Cancelled or unsupported mid-call - fall through to the clipboard.
+      }
+    }
     try {
       await navigator.clipboard.writeText(shareText);
       setCopied(true);
@@ -431,6 +450,28 @@ function GradeScreen({
         {ranked && streak != null ? <span className="sbd-streak">🔥 {streak} day{streak === 1 ? '' : 's'}</span> : null}
         <span className="sbd-clock">{clockLabel}</span>
       </header>
+
+      {/* THE SHARE, ABOVE THE ROWS (relay 6 item 2). It used to sit under
+          the grade rows, the story and the leaderboard - past everything, on
+          a screen whose whole point is a result worth showing somebody. The
+          glyph row IS the summary, so putting it directly under the header
+          reads as: here is your board, here is how it went, send it.
+
+          The card's own shapes are unchanged: .sbd-share and .sbd-g are
+          byte-identical to .share and .g in docs/design/daily-full-mock-v3
+          (18px, .09em, 1.5), so the glyph row is already the mock's size and
+          moving it did not resize it. */}
+      <div className="sbd-share">
+        <div className="sbd-g">{grade.glyph}</div>
+        <div className="sbd-cap">
+          {ranked ? edition : 'Practice'} · {year}<br />
+          {grade.mine.toLocaleString()} pts · {grade.pct}% · {clockLabel}<br />
+          {SHARE_URL}
+        </div>
+        <button type="button" className="sbd-copy" onClick={handleShare}>
+          {copied ? 'Copied' : 'Share your board'}
+        </button>
+      </div>
 
       <div className="sbd-grade">
         <div className="sbd-grade-top">
@@ -495,16 +536,6 @@ function GradeScreen({
           ))}
         </div>
       )}
-
-      <div className="sbd-share">
-        <div className="sbd-g">{grade.glyph}</div>
-        <div className="sbd-cap">
-          {ranked ? edition : 'Practice'} · {year}<br />
-          {grade.mine.toLocaleString()} pts · {grade.pct}% · {clockLabel}<br />
-          {SHARE_URL}
-        </div>
-        <button type="button" className="sbd-copy" onClick={handleCopy}>{copied ? 'Copied' : 'Copy'}</button>
-      </div>
 
       {/* E3: the one leaderboards hook this relay adds - the rest of the
           spec's home screen (section 6) is not built here. */}

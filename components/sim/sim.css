@@ -999,3 +999,39 @@
 .jc-foot { margin-top: 8px; }
 .jc-noteam { background: transparent; border: 1px solid var(--rule-dim); color: var(--muted); padding: 8px 12px; font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; cursor: pointer; }
 .jc-refusal { color: var(--paper-dim); font-size: 14px; }
+
+/* ===========================================================================
+   THE MOCK EXIT (relay 6 item 1) - the volt card at the top of a finished
+   mock. Volt because it is the one thing on this screen asking to be acted
+   on; everything below it reports on a draft that is already over.
+   =========================================================================== */
+.mock-exit {
+  margin: 0 0 10px; padding: 15px 16px 16px;
+  border: 1px solid var(--volt, #D4FF00); border-radius: 14px;
+  background: var(--volt-dim, #1a2000);
+}
+.me-eyebrow {
+  font-family: var(--font-saira-cond, var(--font-saira)), sans-serif;
+  font-weight: 700; font-size: 10px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--volt, #D4FF00); margin-bottom: 8px;
+}
+.me-line {
+  margin: 0 0 13px; font-size: 15px; line-height: 1.45;
+  color: var(--paper, #F5F5F2); max-width: 46ch;
+}
+.me-cta {
+  display: inline-block; padding: 13px 22px; border-radius: 10px;
+  background: var(--volt, #D4FF00); color: var(--ink, #0A0A0A);
+  font-family: var(--font-display, var(--font-saira)), sans-serif;
+  font-style: italic; font-weight: 900; font-size: 16px;
+  text-decoration: none;
+}
+/* The ghost sits OUTSIDE the volt card: one card asks for one thing, and a
+   second link inside it would make the reader choose between two buttons. */
+.mock-exit-ghost {
+  display: inline-block; margin: 0 0 18px;
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--muted, #8A8A85); text-decoration: none;
+  border-bottom: 1px solid var(--rule, #2A2A2A); padding-bottom: 2px;
+}
+.mock-exit-ghost:hover { color: var(--paper, #F5F5F2); border-color: var(--paper, #F5F5F2); }
