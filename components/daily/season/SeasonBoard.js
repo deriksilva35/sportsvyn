@@ -83,7 +83,7 @@ function mmss(ms) {
 export default function SeasonBoard({
   edition, year, teams, slots, ranked, userId = null, signInHref = null,
   initialPlay = null, initialGrade = null, initialClockLabel = null, streak = null,
-  closesAt = null, todayRows = null,
+  closesAt = null, todayRows = null, boardId = null,
   // RESUMING A STARTED RUN (097). The server hands the stored started_at back
   // as an ISO string; the clock is drawn from it, so a reload shows the time
   // already spent instead of restarting at 0:00.
@@ -101,6 +101,12 @@ export default function SeasonBoard({
   );
   const [nowMs, setNowMs] = useState(null);
   const [finishedMs, setFinishedMs] = useState(null);
+  // THE SERVER'S GRADE. Set only by a 200 from /api/daily/board/run, and the
+  // only thing the ranked grade screen will render.
+  const [serverGrade, setServerGrade] = useState(null);
+  const [serverElapsedS, setServerElapsedS] = useState(null);
+  const [finishing, setFinishing] = useState(false);
+  const [finishError, setFinishError] = useState(null);
   // Lazy initializer, not an effect: SSR has no `document` (null, safely),
   // and the client's first render (hydration) runs this function fresh, so
   // document.body is picked up without a setState-in-effect render cascade.
@@ -188,10 +194,68 @@ export default function SeasonBoard({
     setTimeout(() => setToast(null), 1500);
   };
 
-  const handleFinish = () => {
-    clearInterval(tickRef.current);
-    setFinishedMs(Date.now());
-    setScreen('grade');
+  //
+  // FINISH SUBMITS. Until now this function cleared the interval and flipped
+  // the screen - nothing was ever POSTed, /api/daily/board/run had zero
+  // callers at every commit it has existed for, and the grade the player saw
+  // was computed in their own browser and thrown away. picks stayed NULL
+  // forever, which is why the board could be replayed from the lobby all
+  // day even after the start row shipped.
+  //
+  // THE SCREEN DOES NOT FLIP UNTIL THE SERVER HAS THE ROW. On any failure the
+  // board and every pick stay exactly where they are and the player can press
+  // Finish again - a lost connection must not cost a run that cannot be
+  // restarted. The one thing this must never do is show a grade the server
+  // did not store.
+  // play.roster -> the wire shape lib/daily/seasonBoardRuns.js validates:
+  // slot index, which team card it came off, and the player's name. NEVER the
+  // points - the server re-reads those off the frozen board, so a client that
+  // lied about a score is refused rather than merely out-scored.
+  const picksFromPlay = (st) => st.roster.map((r, slotIndex) => ({
+    slotIndex,
+    teamKey: r.pick?.teamKey ?? null,
+    playerName: r.pick?.player?.name ?? null,
+  }));
+
+  const handleFinish = async () => {
+    if (finishing) return;
+    // PRACTICE HAS NO ROW TO WRITE. The unranked preview board (?season=) has
+    // no daily_boards row and no boardId, so it keeps the client grade - see
+    // the grade screen below, where `ranked` decides which grade is used.
+    if (!ranked || boardId == null) {
+      clearInterval(tickRef.current);
+      setFinishedMs(Date.now());
+      setScreen('grade');
+      return;
+    }
+    setFinishing(true);
+    setFinishError(null);
+    const elapsedS = startedAt ? Math.max(0, Math.round((Date.now() - startedAt) / 1000)) : 0;
+    try {
+      const res = await fetch('/api/daily/board/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ boardId, picks: picksFromPlay(play), elapsedS }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body?.ok || !body?.grade) {
+        setFinishError(body?.error === 'board closed'
+          ? 'This board closed before your roster landed. Nothing was scored.'
+          : 'Could not submit. Your picks are safe - try again.');
+        return;
+      }
+      // Includes the alreadyRan case: the server hands back the STORED grade
+      // with the same shape, so this renders it rather than an error.
+      clearInterval(tickRef.current);
+      setServerGrade(body.grade);
+      setServerElapsedS(Number(body.elapsedS ?? elapsedS));
+      setFinishedMs(Date.now());
+      setScreen('grade');
+    } catch {
+      setFinishError('Could not submit. Your picks are safe - check your connection and try again.');
+    } finally {
+      setFinishing(false);
+    }
   };
 
   const complete = isRosterComplete(play);
@@ -205,6 +269,7 @@ export default function SeasonBoard({
         <RulesCard
           edition={edition} year={year} slotCount={slots.length} teamCount={teams.length}
           ranked={ranked} onStart={handleStart} signInHref={signInHref}
+          starting={starting} startError={startError}
         />
       </div>
     );
@@ -216,11 +281,30 @@ export default function SeasonBoard({
     // the stored grade and its own stored elapsed-time label are used
     // as-is, never gradeBoard()/mmss(finishedMs-startedAt) against state
     // that was never populated this render.
-    const grade = initialGrade ?? gradeBoard(play, teams, slots);
+    // WHICH GRADE, AND THE RANKED BOARD NEVER USES THE CLIENT'S.
+    //   initialGrade  a returning player - the server already regraded the
+    //                 stored row on the page, unchanged behaviour
+    //   serverGrade   this submit's response
+    //   gradeBoard()  BYPASSED, not removed: it is still the only grade the
+    //                 unranked practice board (?season=) can have, since that
+    //                 board has no row, no boardId and no server run. On a
+    //                 ranked board reaching it would mean showing a score
+    //                 nothing stored, so it is unreachable there by
+    //                 construction rather than by care.
+    const grade = initialGrade ?? serverGrade
+      ?? (ranked && boardId != null ? null : gradeBoard(play, teams, slots));
+    if (!grade) {
+      // Ranked, submitted, but no server grade - only reachable if something
+      // set screen='grade' without a response, which nothing does. Refuse to
+      // invent a number.
+      return <div className="sbd"><div className="sbd-warn" style={{ margin: 16 }}>No stored grade for this run.</div></div>;
+    }
     // finishedMs is always set by handleFinish() before screen flips to
     // 'grade' on a live play-through - there is no other path there, so no
     // impure now-fallback.
-    const clockLabel = initialGrade ? initialClockLabel : mmss(finishedMs - startedAt);
+    const clockLabel = initialGrade
+      ? initialClockLabel
+      : (serverElapsedS != null ? mmss(serverElapsedS * 1000) : mmss(finishedMs - startedAt));
     return (
       <div className="sbd">
         <GradeScreen
@@ -286,7 +370,17 @@ export default function SeasonBoard({
       </div>
 
       {complete ? (
-        <button type="button" className="sbd-btn" onClick={handleFinish}>See your grade</button>
+        <button type="button" className="sbd-btn" onClick={handleFinish} disabled={finishing}>
+          {finishing ? 'Submitting…' : 'See your grade'}
+        </button>
+      ) : null}
+
+      {/* A FAILED SUBMIT DOES NOT COST THE RUN. The board above is still
+          rendered with every pick in place, the button is still there, and
+          this says what happened. The screen has not flipped, so no grade the
+          server did not store is on display. */}
+      {finishError ? (
+        <div className="sbd-warn" style={{ margin: '10px 12px 0' }} role="alert">{finishError}</div>
       ) : null}
 
       {sheetState !== 'closed' && mountNode ? createPortal(

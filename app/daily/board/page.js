@@ -86,6 +86,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         return (
           <SeasonBoard
             edition={edition} year={year} teams={board.board} slots={SLOTS} ranked
+            boardId={board.id}
             signInHref={shellSigninHref(DAILY_V2_PATH, isShell)}
           />
         );
@@ -120,6 +121,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         return (
           <SeasonBoard
             edition={edition} year={year} teams={board.board} slots={SLOTS} ranked userId={userId}
+            boardId={board.id}
             initialPlay={regraded.play} initialGrade={regraded.grade} initialClockLabel={clockLabel}
             streak={streak} closesAt={board.closes_at} todayRows={todayRows}
           />
@@ -179,6 +181,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         return (
           <SeasonBoard
             edition={edition} year={year} teams={board.board} slots={SLOTS} ranked userId={userId}
+            boardId={board.id}
             streak={streak} closesAt={board.closes_at}
             initialStartedAt={String(new Date(existing.started_at).toISOString())}
             initialScreen="board"
@@ -224,6 +227,7 @@ export default async function SeasonBoardPage({ searchParams }) {
       return (
         <SeasonBoard
           edition={edition} year={year} teams={board.board} slots={SLOTS} ranked userId={userId}
+          boardId={board.id}
           streak={streak} closesAt={board.closes_at}
         />
       );
