@@ -92,7 +92,12 @@ export default function SeasonBoard({
   const [screen, setScreen] = useState(initialScreen ?? (initialGrade ? 'grade' : 'rules')); // 'rules' | 'board' | 'grade'
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState(null);
-  const [play, setPlay] = useState(() => initialPlay ?? initBoardPlay(teams, slots));
+  // REHYDRATE A RECEIPT'S PLAY. initialPlay arrives across the RSC boundary
+  // with `used` as an ARRAY (a Set cannot cross it); everything on this side
+  // - teamIsDead, commitPick, boardStory's play.used.size - wants the Set
+  // initBoardPlay makes. Convert once, here, and nowhere else has to know.
+  const hydratePlay = (p) => (p && !(p.used instanceof Set) ? { ...p, used: new Set(p.used ?? []) } : p);
+  const [play, setPlay] = useState(() => hydratePlay(initialPlay) ?? initBoardPlay(teams, slots));
   // sheetState: 'closed' | { mode:'team', teamKey } | { mode:'slot', teamKey, player, slotIndexes }
   const [sheetState, setSheetState] = useState('closed');
   const [toast, setToast] = useState(null);
