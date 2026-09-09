@@ -23,6 +23,7 @@
  * independent and untouched.
  */
 
+import { shouldTouch } from '@/lib/auth/lastSeen';
 import NextAuth from 'next-auth';
 import PostgresAdapter from '@auth/pg-adapter';
 import { fireWelcomeEmail } from './lib/auth/welcomeEmail.js';
@@ -131,7 +132,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
   // direct SQL, so it is unaffected. createVerificationToken stays (the OTP's
   // single-use cross-check reads the row it writes).
   const baseAdapter = PostgresAdapter(pool);
-  const adapter = { ...baseAdapter, useVerificationToken: async () => null };
+  // LAST SEEN, FROM THE ONE LOOKUP EVERY AUTHENTICATED REQUEST MAKES. Database
+  // sessions mean auth() resolves the user through getSessionAndUser, so this
+  // wrapper is the single place a signed-in request is known. ONE UPDATE PER
+  // HOUR PER USER, AT MOST: the statement's WHERE is the throttle (a request
+  // inside the hour matches zero rows), and an in-process memo skips even the
+  // round trip on a warm instance. Fire-and-forget and swallowed - a stamp is
+  // analytics, and analytics must never fail a request.
+  const lastTouched = new Map();
+  const touchLastSeen = (id) => {
+    if (!shouldTouch(lastTouched, id)) return;
+    sql`UPDATE users SET last_seen_at = now()
+        WHERE id = ${Number(id)} AND (last_seen_at IS NULL OR last_seen_at < now() - interval '1 hour')`
+      .catch((e) => console.error('[last-seen]', { id, message: e?.message }));
+  };
+  const adapter = {
+    ...baseAdapter,
+    useVerificationToken: async () => null,
+    async getSessionAndUser(sessionToken) {
+      const r = await baseAdapter.getSessionAndUser(sessionToken);
+      if (r?.user?.id) touchLastSeen(r.user.id);
+      return r;
+    },
+  };
 
   return {
     adapter,
