@@ -592,7 +592,7 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
       ) : (
         <>
           <button type="button" className="sbd-btn" style={{ marginTop: 16 }} onClick={onStart} disabled={starting}>
-            {starting ? 'Starting…' : 'Start'}
+            {starting ? 'Starting…' : 'Start the 3:00 clock'}
           </button>
           {startError ? <div className="sbd-warn" style={{ marginTop: 10 }}>{startError}</div> : null}
         </>

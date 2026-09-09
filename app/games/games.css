@@ -250,6 +250,10 @@
 /* TODAY'S BOARDS ROWS (relay 2a item 4) */
 .grow { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-top: 1px solid var(--l-line); text-decoration: none; color: inherit; }
 .grow:first-of-type { border-top: 0; }
+.grow-wrap:first-child .grow { border-top: 0; }
+/* The Yesterday line above a row: its own link, to that edition's results. */
+.grow-yday { display: block; padding: 8px 0 0 51px; font-family: var(--l-mono); font-size: 10px; color: var(--l-volt); text-decoration: none; letter-spacing: .02em; }
+.grow-yday + .grow { border-top: 0; padding-top: 6px; }
 .grow .gl {
   flex: none; width: 40px; height: 40px; border-radius: 10px;
   background: var(--l-ink); border: 1px solid var(--l-line);

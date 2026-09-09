@@ -218,7 +218,12 @@ function GamesPane({ v, leagues = [], signedIn = false, signinHref = '/signin' }
             <span className="pill">one handle, every board</span>
           </div>
           {v.boardRows.map((r) => (
-            <a className="grow" key={r.key} href={r.href}>
+            <div className="grow-wrap" key={r.key}>
+            {/* A ROW'S "ABOVE" LINE IS ITS OWN LINK, a sibling of the row -
+                an <a> cannot nest an <a>, and this one goes somewhere else:
+                yesterday's results, while the row itself goes to today. */}
+            {r.above && <a className="grow-yday" href={r.above.href}>{r.above.text} &rarr;</a>}
+            <a className="grow" href={r.href}>
               <div className={`gl${r.tile ? ` ${r.tile}` : ''}`}>{r.glyph}</div>
               <div className="tx">
                 <b>{r.name}</b>
@@ -232,6 +237,7 @@ function GamesPane({ v, leagues = [], signedIn = false, signinHref = '/signin' }
               </div>
               {r.pill && <span className={`st${r.pill.tone === 'volt' ? ' on' : r.pill.tone === 'jade' ? ' done' : ''}`}>{r.pill.label}</span>}
             </a>
+            </div>
           ))}
         </div>
       )}
@@ -445,23 +451,30 @@ function AnswerPane({ v }) {
           Latest answer{y.edition ? ` - Ed. ${y.edition}` : ''} · {y.date}
         </h2>
       </div>
-      <div className="ans">{y.season} <span className="muted">· Week {y.week}</span></div>
+      <div className="ans">{y.season} <span className="muted">· twelve teams, eight slots</span></div>
       <div>
-        <div className="row"><span>Perfect lineup</span><span className="v volt">{y.perfect}</span></div>
-        {y.played && (
+        <div className="row"><span>Best roster</span><span className="v volt">{y.perfect.toLocaleString('en-US')}</span></div>
+        {/* THE ANSWER ITSELF: the eight the board allowed, one per team. */}
+        {y.bestRoster.map((b, i) => (
+          <div className="row row--best" key={i}>
+            <span className="muted">{b.slot} · {b.name} <small>{b.abbr}</small></span>
+            <span className="v">{Number(b.points).toLocaleString('en-US')}</span>
+          </div>
+        ))}
+        {y.you && (
           <div className="row">
             <span>You</span>
             <span className="v">
-              {y.score}
-              {y.tier && <span className={`badge ${tierClass(y.tier)}`}>{y.tier}</span>}
-              {y.pct != null && <span className="muted"> {y.pct}%</span>}
+              {y.you.played
+                ? <>{y.you.score.toLocaleString('en-US')}<span className="muted"> · {y.you.pct}% · {y.you.matched ?? '-'} of {y.you.slotCount}</span></>
+                : y.you.dnf ? <span className="muted">DNF</span> : <span className="muted">-</span>}
             </span>
           </div>
         )}
-        {y.winner && (
+        {y.top && (
           <div className="row">
             <span>Top score</span>
-            <span className="v">{y.winner.name} · {y.winner.score}</span>
+            <span className="v">{y.top.name} · {y.top.score.toLocaleString('en-US')}</span>
           </div>
         )}
       </div>
@@ -577,17 +590,14 @@ function HistoryPane({ v }) {
                   across three lines in a cramped left column while the row had
                   free width. The id block (edition + era) stacks cleanly; the
                   era line never breaks mid-token. */}
-              <span className="hist-when">{h.season} · Wk {h.week}</span>
-              <span className="v hist-win">{h.top ? `${h.top.name} ${h.top.score}` : '-'}</span>
-              <span className="muted">{h.perfect}</span>
+              <span className="hist-when">{h.season}</span>
+              <span className="v hist-win">{h.top ? `${h.top.name} ${h.top.score.toLocaleString('en-US')}` : '-'}</span>
+              <span className="muted">{h.perfect.toLocaleString('en-US')}</span>
               {h.you !== undefined && (
                 <span className="hist-you">
-                  {h.you.played ? (
-                    <>
-                      {h.you.score}
-                      {h.you.tier && <span className={`badge ${tierClass(h.you.tier)}`}>{h.you.tier}</span>}
-                    </>
-                  ) : <span className="muted">-</span>}
+                  {h.you.played
+                    ? <>{h.you.score.toLocaleString('en-US')}<span className="muted"> · {h.you.pct}% · {h.you.matched ?? '-'}/{h.you.slotCount}</span></>
+                    : h.you.dnf ? <span className="muted">DNF</span> : <span className="muted">-</span>}
                 </span>
               )}
             </>
