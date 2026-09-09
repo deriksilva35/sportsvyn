@@ -12,7 +12,7 @@
  * the refusal, the person gets a door.
  */
 import { sql } from '@/lib/db';
-import { clickToken } from '@/lib/auth/welcomeEmail';
+import { verifyClick } from '@/lib/email/linkSecret';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,10 +36,7 @@ export async function GET(request) {
   const to = url.searchParams.get('to');
   const dest = safeDestination(to);
 
-  const { timingSafeEqual } = await import('node:crypto');
-  const want = c && u && to ? clickToken({ campaign: c, userId: u, to }) : '';
-  const a = Buffer.from(want); const b = Buffer.from(String(t ?? ''));
-  const ok = want.length > 0 && a.length === b.length && timingSafeEqual(a, b);
+  const ok = verifyClick({ campaign: c, userId: u, to }, t);
 
   try {
     await sql`

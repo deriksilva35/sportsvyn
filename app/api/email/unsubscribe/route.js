@@ -15,6 +15,7 @@
  */
 
 import { sql } from '@/lib/db';
+import { verifyUnsubscribe } from '@/lib/email/linkSecret';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ function page(title, body) {
     + `<body style="margin:0;background:#0A0A0A;color:#F5F5F2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">`
     + `<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;">`
     + `<div style="max-width:360px;">`
-    + `<div style="font-size:10px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:#D4FF00;margin-bottom:12px;">Draftvyn</div>`
+    + `<div style="font-size:10px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:#D4FF00;margin-bottom:12px;">Sportsvyn</div>`
     + `<h1 style="font-size:22px;margin:0 0 10px;">${title}</h1>`
     + `<p style="font-size:15px;line-height:1.55;color:#888;margin:0;">${body}</p>`
     + `</div></div></body></html>`,
@@ -40,12 +41,7 @@ export async function GET(request) {
   const t = url.searchParams.get('t');
   if (!u || !t) return page('Link incomplete', 'That unsubscribe link is missing part of itself. Reply to the email and we will take you off by hand.');
 
-  const { createHmac, timingSafeEqual } = await import('node:crypto');
-  const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || 'dev-only-unsub-secret';
-  const want = createHmac('sha256', secret).update(`unsub:${u}`).digest('hex').slice(0, 32);
-  const a = Buffer.from(want);
-  const b = Buffer.from(String(t));
-  const ok = a.length === b.length && timingSafeEqual(a, b);
+  const ok = verifyUnsubscribe(u, t);
   if (!ok) return page('Link not recognised', 'That unsubscribe link could not be verified. Reply to the email and we will take you off by hand.');
 
   try {
@@ -56,5 +52,5 @@ export async function GET(request) {
     console.error('[unsubscribe] write failed', { u, message: e?.message });
     return page('Something went wrong', 'We could not record that just now. Reply to the email and we will take you off by hand.');
   }
-  return page('You are unsubscribed', 'No more account email from Draftvyn. Your account and your drafts are untouched.');
+  return page('You are unsubscribed', 'No more account email from Sportsvyn. Your account and your drafts are untouched.');
 }

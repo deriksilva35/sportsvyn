@@ -46,6 +46,7 @@ import { fileURLToPath } from 'node:url';
 import { stdin, stdout } from 'node:process';
 import { sql } from '../lib/db.js';
 import { unsubscribeUrlFor, unsubscribeHeaders, clickUrlFor } from '../lib/auth/welcomeEmail.js';
+import { emailLinkSecret } from '../lib/email/linkSecret.js';
 import { rewriteHrefs, emailMeta, htmlToText } from '../lib/email/broadcastRules.js';
 import { databaseFingerprint, assertLiveTarget, validateTestRecipient, sentForCampaign } from '../lib/email/broadcastRules.js';
 
@@ -55,6 +56,7 @@ const LIVE = args.includes('--send');
 // more: a run without --file refuses, because "the script's default email" is
 // how last month's announcement nearly went out under the launch subject.
 const FILE_ARG = (() => { const i = args.indexOf('--file'); return i < 0 ? null : args[i + 1]; })();
+if (!emailLinkSecret()) throw new Error('EMAIL_LINK_SECRET is not set - every unsubscribe and click link would be unverifiable. Not rendering, not sending.');
 if (!FILE_ARG) throw new Error('usage: node scripts/broadcast.mjs --file docs/email/<name>.html [--send] [--limit N] [--to owner]');
 const LIMIT = (() => { const i = args.indexOf('--limit'); return i < 0 ? null : Number(args[i + 1]); })();
 const ONLY = (() => { const i = args.indexOf('--to'); return i < 0 ? null : args[i + 1]; })();
