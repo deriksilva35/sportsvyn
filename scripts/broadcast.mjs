@@ -45,11 +45,19 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { stdin, stdout } from 'node:process';
 import { sql } from '../lib/db.js';
-import { unsubscribeUrlFor, unsubscribeHeaders } from '../lib/auth/welcomeEmail.js';
+import { unsubscribeUrlFor, unsubscribeHeaders, clickUrlFor } from '../lib/auth/welcomeEmail.js';
+import { emailLinkSecret } from '../lib/email/linkSecret.js';
+import { rewriteHrefs, emailMeta, htmlToText } from '../lib/email/broadcastRules.js';
 import { databaseFingerprint, assertLiveTarget, validateTestRecipient, sentForCampaign } from '../lib/email/broadcastRules.js';
 
 const args = process.argv.slice(2);
 const LIVE = args.includes('--send');
+// THE FILE IS AN ARGUMENT, AND IT IS REQUIRED. There is no default body any
+// more: a run without --file refuses, because "the script's default email" is
+// how last month's announcement nearly went out under the launch subject.
+const FILE_ARG = (() => { const i = args.indexOf('--file'); return i < 0 ? null : args[i + 1]; })();
+if (!emailLinkSecret()) throw new Error('EMAIL_LINK_SECRET is not set - every unsubscribe and click link would be unverifiable. Not rendering, not sending.');
+if (!FILE_ARG) throw new Error('usage: node scripts/broadcast.mjs --file docs/email/<name>.html [--send] [--limit N] [--to owner]');
 const LIMIT = (() => { const i = args.indexOf('--limit'); return i < 0 ? null : Number(args[i + 1]); })();
 const ONLY = (() => { const i = args.indexOf('--to'); return i < 0 ? null : args[i + 1]; })();
 
@@ -103,8 +111,8 @@ const POSTAL = process.env.EMAIL_POSTAL_ADDRESS || null;
 // pasted in from a document renders as a different character in a mail client
 // than it does in a terminal, and nobody proofreads the HTML part. assertHyphens
 // below refuses to send if one survives into either rendering.
-const SUBJECT = 'You came for the mock draft. Now it counts.';
-const PREHEADER = 'Four ranked games, all free. The Weekly locks at first kickoff Wednesday night.';
+// SUBJECT AND PREHEADER COME FROM THE FILE: <title> and the hidden preheader
+// div. Asserted present at load - an email with no subject is not sent.
 
 // ============================================================================
 // THE BODY IS A FILE, READ FROM DISK AT RUN TIME - docs/email/launch-email-sep8.html
@@ -118,7 +126,7 @@ const PREHEADER = 'Four ranked games, all free. The Weekly locks at first kickof
 // The file is read ONCE, here, and its sha256 is printed in the dry-run header
 // so the operator can check it against `sha256sum docs/email/launch-email-sep8.html`
 // on main before typing the count. The bytes are never printed.
-const HTML_FILE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'email', 'launch-email-sep8.html');
+const HTML_FILE = path.resolve(process.cwd(), FILE_ARG);
 const HTML_BYTES = readFileSync(HTML_FILE);
 const HTML_SHA256 = createHash('sha256').update(HTML_BYTES).digest('hex');
 const HTML_TEMPLATE = HTML_BYTES.toString('utf8');
@@ -128,6 +136,18 @@ const HTML_TEMPLATE = HTML_BYTES.toString('utf8');
 // byte-identical html are the same campaign by definition, which is the
 // behaviour a resend of a partial run needs.
 const CAMPAIGN = HTML_SHA256;
+const META = emailMeta(HTML_TEMPLATE);
+if (!META.subject) throw new Error(`${path.basename(HTML_FILE)} has no <title> - no subject, not rendering.`);
+const SUBJECT = META.subject;
+const PREHEADER = META.preheader ?? '';
+// COPY STILL PENDING IS A REFUSAL, at load. A scaffold carries the marker
+// '[[COPY' until the words are in; the script will not render it.
+if (HTML_TEMPLATE.includes('[[COPY')) throw new Error(`${path.basename(HTML_FILE)} still carries a [[COPY placeholder - the copy is not in. Not rendering.`);
+// THE TEXT ALTERNATIVE: a sidecar <name>.txt beside the html when present,
+// else the html with its tags stripped.
+const TEXT_FILE = HTML_FILE.replace(/\.html$/, '.txt');
+const TEXT_TEMPLATE = (() => { try { return readFileSync(TEXT_FILE, 'utf8'); } catch { return htmlToText(HTML_TEMPLATE); } })();
+if (TEXT_TEMPLATE.includes('[[COPY')) throw new Error(`${path.basename(TEXT_FILE)} still carries a [[COPY placeholder. Not rendering.`);
 
 // EXACTLY ONE UNSUBSCRIBE PLACEHOLDER, asserted at load - before a roster is
 // read or a single mail rendered. Zero means the file has no unsubscribe link
@@ -141,26 +161,10 @@ if (UNSUB_COUNT !== 1) {
 // The preheader is the file's own hidden first line; assert the file actually
 // carries the one the header claims, so the printed preheader is a fact about
 // the bytes and not a constant that could drift from them.
-if (!HTML_TEMPLATE.includes(PREHEADER)) {
-  throw new Error(`${path.basename(HTML_FILE)} does not contain the expected preheader. Not rendering.`);
+if (PREHEADER && !HTML_TEMPLATE.includes(PREHEADER)) {
+  throw new Error(`${path.basename(HTML_FILE)} does not contain its own preheader. Not rendering.`);
 }
 
-// THE PLAIN-TEXT ALTERNATIVE - the four games, their taglines, the lobby.
-// Same lines the 8 Sep single send carried; the taglines are the ratified
-// ones from app/games/how-it-works/page.js.
-const TEXT_LINES = [
-  'You came for the mock draft. Now it counts. Four ranked games, all free.',
-  '',
-  'The Draft - Pick your seat, draft your team, compete against the field.',
-  '',
-  'The Weekly - Pick any player at each position. Make your best roster, no draft, no salary, and see where it stacks up against the field that week.',
-  '',
-  "Pick'em - Pick the winners. No odds, no problem.",
-  '',
-  'The Daily - One season from NFL history. Twelve teams. Eight slots. Four regrets.',
-  '',
-  'https://sportsvyn.com/games',
-];
 
 /** Refuses the send if a dash that is not a hyphen reaches either rendering. */
 function assertHyphens(...parts) {
@@ -173,11 +177,11 @@ function assertHyphens(...parts) {
   if (bad.length) throw new Error(`non-hyphen dash in the copy: ${bad.join(', ')}`);
 }
 
-function render({ unsubscribeUrl }) {
+function render({ unsubscribeUrl, userId = 0 }) {
   const postal = POSTAL ?? '[EMAIL_POSTAL_ADDRESS NOT SET - REQUIRED BEFORE SENDING]';
 
   const text = [
-    ...TEXT_LINES,
+    TEXT_TEMPLATE.replace(UNSUB_PLACEHOLDER, unsubscribeUrl).trimEnd(),
     '',
     '---',
     `Unsubscribe: ${unsubscribeUrl}`,
@@ -188,7 +192,16 @@ function render({ unsubscribeUrl }) {
   // assert above already proved the template has exactly one placeholder;
   // this re-checks the RESULT, so a template edit between load and send (or a
   // bug in the replace) cannot ship a literal '{{unsubscribe_url}}' href.
-  const html = HTML_TEMPLATE.replace(UNSUB_PLACEHOLDER, unsubscribeUrl);
+  // EVERY LINK GOES THROUGH OUR OWN DOMAIN, per recipient: rewriteHrefs turns
+  // each site href into /api/email/click?c=<campaign>&u=<userId>&t=<sig>&to=
+  // <url>, signed over campaign + user + destination. The unsubscribe link is
+  // NOT rewritten - it is its own signed thing - and the rewrite is asserted
+  // to have touched every site href and nothing else.
+  const rewritten = rewriteHrefs(HTML_TEMPLATE, (to) => clickUrlFor({ campaign: CAMPAIGN, userId, to }), { skip: [UNSUB_PLACEHOLDER] });
+  if (rewritten.siteHrefs !== rewritten.rewrittenCount) {
+    throw new Error(`click rewrite: ${rewritten.siteHrefs} site hrefs but ${rewritten.rewrittenCount} rewritten`);
+  }
+  const html = rewritten.html.replace(UNSUB_PLACEHOLDER, unsubscribeUrl);
   const left = html.split(UNSUB_PLACEHOLDER).length - 1;
   const put = html.split(unsubscribeUrl).length - 1;
   if (left !== 0 || put !== 1) {
@@ -271,7 +284,7 @@ async function testSend(address) {
   if (!u) throw new Error(`no user row for ${address} - the unsubscribe link needs one to sign for`);
 
   const url = await unsubscribeUrlFor(u.id);
-  const mail = render({ unsubscribeUrl: url });
+  const mail = render({ unsubscribeUrl: url, userId: u.id });
 
   const rowId = (await sql`
     INSERT INTO sync_runs (source, kind, started_at, ok, summary)
@@ -329,7 +342,11 @@ async function main() {
     for (const r of toSend) console.log(`    ${String(r.id).padStart(4)}  ${r.email}`);
   }
 
-  const sample = render({ unsubscribeUrl: await unsubscribeUrlFor(list[0]?.id ?? 0) });
+  const sampleId = list[0]?.id ?? 0;
+  const sample = render({ unsubscribeUrl: await unsubscribeUrlFor(sampleId), userId: sampleId });
+  const sampleClick = (sample.html.match(/href="(https:\/\/sportsvyn\.com\/api\/email\/click\?[^"]*)"/) ?? [])[1] ?? null;
+  console.log(`  click links     : ${(sample.html.match(/\/api\/email\/click\?/g) ?? []).length} rewritten through our domain`);
+  console.log(`  sample click    : ${sampleClick ? sampleClick.replace(/&amp;/g, '&') : 'NONE'}`);
   console.log('\n  ---- RENDERED (text) ----');
   console.log(sample.text.split('\n').map((l) => `  | ${l}`).join('\n'));
   console.log('  -------------------------\n');
@@ -373,7 +390,7 @@ async function main() {
   try {
     const [vu] = await sql`SELECT id FROM users WHERE email = ${OWNER_VERIFY_ADDRESS} ORDER BY id LIMIT 1`;
     const vUrl = await unsubscribeUrlFor(vu?.id ?? 0);
-    const vMail = render({ unsubscribeUrl: vUrl });
+    const vMail = render({ unsubscribeUrl: vUrl, userId: vu?.id ?? 0 });
     const vRes = await resend.emails.send({
       from: EMAIL_FROM, to: OWNER_VERIFY_ADDRESS, subject: SUBJECT,
       html: vMail.html, text: vMail.text, headers: unsubscribeHeaders(vUrl),
@@ -393,7 +410,7 @@ async function main() {
     const rowId = await recordStart(r.id);
     try {
       const url = await unsubscribeUrlFor(r.id);
-      const mail = render({ unsubscribeUrl: url });
+      const mail = render({ unsubscribeUrl: url, userId: r.id });
       const res = await resend.emails.send({
         from: EMAIL_FROM, to: r.email, subject: SUBJECT,
         html: mail.html, text: mail.text, headers: unsubscribeHeaders(url),
