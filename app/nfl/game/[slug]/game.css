@@ -77,6 +77,8 @@
   display: flex; align-items: baseline; gap: 8px; padding: 5px 0;
   flex-wrap: nowrap;
 }
+/* the helmet sits on the row's centre line, not its baseline */
+.gg-teamrow > .gg-hm { align-self: center; flex: 0 0 auto; }
 .gg-teamrow .rk, .gg-teamrow .abbr, .gg-teamrow .gg-rec, .gg-teamrow .score { flex: none; }
 .gg-teamrow .abbr {
   font-size: 12px; color: var(--muted-dim); letter-spacing: 0.1em;

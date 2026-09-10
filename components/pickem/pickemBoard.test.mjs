@@ -124,3 +124,38 @@ test('4. a pick tap neither reads nor writes the spread', async () => {
   assert.match(handlers, /savePickAction\(/, 'the slice reached savePick');
   assert.doesNotMatch(handlers, /spread/, 'tap/savePick reference no spread');
 });
+
+// ---------------------------------------------------------------------------
+// HELMETS (relay HELMETS item 5c/6). A dressed row draws one helmet per side,
+// facing each other across the "at"; an undressed row draws none - never a
+// grey one; and a side with a helmet in it still saves the pick on tap.
+// ---------------------------------------------------------------------------
+const dressed = () => ({
+  ...game(), home_team_id: 2, away_team_id: 1,
+  home_colors: { primary: '#002244', secondary: '#69BE28' }, away_colors: { primary: '#002244', secondary: '#C60C30' },
+});
+
+test('helmets: a dressed row draws two, facing each other; an undressed row draws none', () => {
+  const c = render('nfl', dressed());
+  const hm = [...c.querySelectorAll('.pk-hm')];
+  assert.equal(hm.length, 2);
+  const away = byName(c, 'Patriots'); const home = byName(c, 'Seahawks');
+  assert.equal(away.querySelector('.pk-hm').getAttribute('data-facing'), 'right', 'away looks right, toward the at');
+  assert.equal(home.querySelector('.pk-hm').getAttribute('data-facing'), 'left', 'home looks left');
+  for (const s of [away, home]) assert.equal(s.firstElementChild.classList.contains('pk-hm'), true, 'the helmet comes before the name');
+  assert.equal(home.querySelector('.pk-hm').nextElementSibling.classList.contains('pk-nmwrap'), true);
+  const bare = render('nfl', { ...game(), home_colors: null, away_colors: null });
+  assert.equal(bare.querySelectorAll('.pk-hm').length, 0, 'no colors, no helmet');
+  const half = render('nfl', { ...game(), home_colors: { primary: '#002244', secondary: null }, away_colors: null });
+  assert.equal(half.querySelectorAll('.pk-hm').length, 0, 'one color is not a dressed team');
+});
+
+test('helmets: tapping a side that carries a helmet still saves the pick', async () => {
+  const { calls } = await stub(); const n = calls.length;
+  const c = render('nfl', dressed());
+  await click(byName(c, 'Seahawks').querySelector('.pk-hm'));
+  assert.equal(calls.length, n + 1, 'one save');
+  assert.match(JSON.stringify(calls[n]), /"home"/, 'the home side');
+  assert.match(JSON.stringify(calls[n]), /20749/, 'this game');
+  assert.equal(byName(c, 'Seahawks').classList.contains('on'), true, 'and the side reads as picked');
+});

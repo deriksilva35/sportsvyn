@@ -186,6 +186,8 @@
   display: flex; align-items: baseline; gap: 9px; font-size: 14px;
   padding: 5px 0; border-bottom: 1px solid var(--rule);
 }
+/* the helmet sits on the row's centre line, not its baseline */
+.gi-team > .gi-hm { align-self: center; flex: 0 0 auto; }
 .gi-card-body .gi-team:last-of-type { border-bottom: none; }
 .gi-team .abbr {
   font-family: var(--font-jetbrains-mono), monospace;

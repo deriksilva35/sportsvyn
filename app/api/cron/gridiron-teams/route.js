@@ -10,6 +10,8 @@
 import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { bootstrapLeagues, syncNflTeams, syncCfbTeams } from '@/lib/gridiron/sync';
+import { loadTeamColors } from '@/lib/gridiron/nflverse';
+import { syncNflColors } from '@/lib/gridiron/teamColors';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision, probeCfbdBudget } from '@/lib/pollers/runRecorder';
@@ -31,6 +33,7 @@ export async function GET(request) {
       run: async () => {
         const { nfl, cfb } = await bootstrapLeagues();
         const nflTeams = await syncNflTeams(nfl.id, season);
+        const nflColors = await syncNflColors(sql, nfl.id, await loadTeamColors());
         const cfbTeams = await syncCfbTeams(cfb.id, season);
         return { season, nfl: nflTeams, cfb: cfbTeams };
       },

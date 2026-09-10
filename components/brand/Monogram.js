@@ -10,6 +10,16 @@ import {
   MONOGRAM_BAR, MONOGRAM_MARK, MONOGRAM_Y_BOUNDS, barByDefault, yPoints,
 } from '@/lib/brand/monogram';
 
+/** The two shapes alone, in the 1024 space - for placing inside another svg. */
+export function MonogramGlyph({ bar = true }) {
+  return (
+    <>
+      {bar ? <rect x={MONOGRAM_BAR.x} y={MONOGRAM_BAR.y} width={MONOGRAM_BAR.width} height={MONOGRAM_BAR.height} /> : null}
+      <polygon points={yPoints()} />
+    </>
+  );
+}
+
 export default function Monogram({ size = 24, bar = barByDefault(size), color = 'currentColor', className, title }) {
   const box = bar ? MONOGRAM_MARK : MONOGRAM_Y_BOUNDS;
   const width = Math.round((size * box.width) / box.height * 100) / 100;
@@ -25,8 +35,7 @@ export default function Monogram({ size = 24, bar = barByDefault(size), color = 
       aria-hidden={title ? undefined : true}
       data-bar={bar ? '1' : '0'}
     >
-      {bar ? <rect x={MONOGRAM_BAR.x} y={MONOGRAM_BAR.y} width={MONOGRAM_BAR.width} height={MONOGRAM_BAR.height} /> : null}
-      <polygon points={yPoints()} />
+      <MonogramGlyph bar={bar} />
     </svg>
   );
 }
