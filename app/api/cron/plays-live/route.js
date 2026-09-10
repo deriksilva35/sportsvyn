@@ -1,5 +1,6 @@
 /**
- * /api/cron/plays-live - live play-by-play for Pick'em board games (CFB).
+ * /api/cron/plays-live - live play-by-play: every live NFL game, and the CFB
+ * games on an open Pick'em board (lib/pollers/playsScope.js says why).
  *
  * ============================================================================
  * STRUCTURAL CALL: ITS OWN POLLER, NOT A RIDER ON gridiron-games.
@@ -35,7 +36,7 @@ import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { liveBoardGames, lastPolledAt, dueForPoll } from '@/lib/pollers/playsScope';
 import { PLAYS_POLL_INTERVAL_SEC } from '@/lib/pollers/cadence';
-import { importCfbPlays } from '@/lib/gridiron/playsImport';
+import { importPlaysFor } from '@/lib/gridiron/playsImport';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision, probeCfbdBudget } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
@@ -76,7 +77,7 @@ export async function GET(request) {
       let plays = 0, drives = 0, failed = 0;
       for (const g of due) {
         try {
-          const r = await importCfbPlays(g.id);
+          const r = await importPlaysFor(g.id);
           plays += r.written; drives += r.drives;
           games.push({ slug: g.slug, plays: r.written, drives: r.drives, status: r.providerStatus });
         } catch (e) {

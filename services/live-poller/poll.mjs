@@ -3,7 +3,7 @@
 // makes was made in a pure module under lib/live/ and can be tested without a
 // network, a clock or a database.
 
-import { mapLiveStatus, liveState } from '../../lib/live/vocabulary.js';
+import { mapLiveStatus, liveState, parseBdlProse } from '../../lib/live/vocabulary.js';
 import { writeLive, scoreChanged } from '../../lib/live/write.js';
 import { toScoreRow } from '../../lib/live/scoreEvent.js';
 import { emit } from '../../lib/wire/emit.js';
@@ -79,11 +79,11 @@ export function fromBdl(row, unmapped) {
     status,
     homeScore: Number.isFinite(Number(row?.home_team_score)) ? Number(row.home_team_score) : null,
     awayScore: Number.isFinite(Number(row?.visitor_team_score)) ? Number(row.visitor_team_score) : null,
-    // BDL SENDS NO PERIOD OR CLOCK on this endpoint - measured on the real
-    // payload, 1 Sep 2026. So an NFL score event carries the scoreline without
-    // the chip, which the headline builder already handles by dropping the
-    // qualifier whole rather than rendering half of it.
-    liveState: null,
+    // BDL SENDS NO PERIOD OR CLOCK FIELD - but the prose `status` carries
+    // both once the game is on ("7:30 - 4th", "halftime"; measured 9 Sep
+    // 2026, the NE-SEA opener). parseBdlProse reads it; null when it does
+    // not parse, and the headline builder drops the qualifier whole.
+    liveState: status === 'live' ? parseBdlProse(row?.status) : null,
   };
 }
 
