@@ -4,13 +4,14 @@ import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { install } from '../../lib/testing/nextResolve.mjs';
 import { INK, PAPER } from '../../lib/brand/contrast.js';
+import { MONOGRAM_MARK } from '../../lib/brand/monogram.js';
 
-let html;
+let html; let DECAL_FRACTION;
 before(async () => {
   install();
   const React = (await import('react')).default;
   const { renderToStaticMarkup } = await import('react-dom/server');
-  const { default: Helmet } = await import('./Helmet.js');
+  const mod = await import('./Helmet.js'); const Helmet = mod.default; DECAL_FRACTION = mod.DECAL_FRACTION;
   html = (props) => renderToStaticMarkup(React.createElement(Helmet, props));
 });
 
@@ -42,9 +43,14 @@ test('facing mirrors the helmet, never the glyph; size sets the box', () => {
   assert.match(r, /width="24" height="24"/); assert.match(html({ primary: '#002244', secondary: '#C60C30', size: 40 }), /width="40" height="40"/);
 });
 
-test('the decal bar follows the monogram default: off at 24/32/40, on from 43 px', () => {
+test('the decal is 0.20 of the helmet: bar off at 24/32/40, on from 60 px', () => {
+  assert.equal(DECAL_FRACTION, 0.20);
+  const at100 = html({ primary: '#002244', secondary: '#C60C30', size: 100 });
+  const s = 20 / MONOGRAM_MARK.height; // at 100 px the decal is 20 px, the bar is on, the box is the whole mark
+  const got = Number(/scale\(([\d.e-]+)\)/.exec(at100)[1]);
+  assert.ok(Math.abs(got - s) < 1e-9, `decal scale is 20 units over the glyph height (${s}, got ${got})`);
   const p = { primary: '#002244', secondary: '#C60C30' };
   for (const size of [24, 32, 40]) assert.match(html({ ...p, size }), /data-bar="0"/, `${size}`);
-  assert.match(html({ ...p, size: 43 }), /data-bar="1"/); assert.match(html({ ...p, size: 64 }), /<rect /);
+  assert.match(html({ ...p, size: 59 }), /data-bar="0"/); assert.match(html({ ...p, size: 60 }), /data-bar="1"/); assert.match(html({ ...p, size: 64 }), /<rect /);
   assert.doesNotMatch(html({ ...p, size: 24 }), /<rect /);
 });

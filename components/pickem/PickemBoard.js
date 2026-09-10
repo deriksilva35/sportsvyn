@@ -299,7 +299,12 @@ export default function PickemBoard({
                 const lockedByKickoff = g.kicked || kickedAtMs;
                 const rank = side === 'home' ? g.home_rank : g.away_rank;
                 const record = side === 'home' ? g.home_record : g.away_record;
-                const colors = side === 'home' ? g.home_colors : g.away_colors;
+                // BOTH OR NEITHER. A two-sided row with one helmet reads as
+                // a mistake, not a fact, and the names stop aligning. An
+                // FCS-at-FBS game draws no helmet on either side; the score
+                // card's stacked lines stay per team.
+                const dressed = Boolean(g.home_colors && g.away_colors);
+                const colors = dressed ? (side === 'home' ? g.home_colors : g.away_colors) : null;
                 const content = (
                   <>
                     {/* THE HELMETS FACE EACH OTHER across the "at": away

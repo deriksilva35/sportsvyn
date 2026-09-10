@@ -150,6 +150,16 @@ test('helmets: a dressed row draws two, facing each other; an undressed row draw
   assert.equal(half.querySelectorAll('.pk-hm').length, 0, 'one color is not a dressed team');
 });
 
+test('helmets: BOTH OR NEITHER - an FCS-at-FBS row draws none, an FBS-at-FBS row draws two', () => {
+  const famuAtMiami = { ...game(), slug: 'cfb-2026-reg-w2-florida-a-m-miami', home: 'Miami', away: 'Florida A&M', home_team_id: 2, away_team_id: 1,
+    home_colors: { primary: '#F47321', secondary: '#005030' }, away_colors: null };
+  const c1 = render('cfb', famuAtMiami);
+  assert.equal(c1.querySelectorAll('.pk-hm').length, 0, 'Miami is dressed, Florida A&M is not: neither side draws');
+  assert.equal(byName(c1, 'Miami').firstElementChild.classList.contains('pk-nmwrap'), true, 'the names align as before helmets');
+  const c2 = render('cfb', { ...famuAtMiami, away: 'Notre Dame', away_colors: { primary: '#0C2340', secondary: '#C99700' } });
+  assert.equal(c2.querySelectorAll('.pk-hm').length, 2, 'both dressed: two');
+});
+
 test('helmets: tapping a side that carries a helmet still saves the pick', async () => {
   const { calls } = await stub(); const n = calls.length;
   const c = render('nfl', dressed());
