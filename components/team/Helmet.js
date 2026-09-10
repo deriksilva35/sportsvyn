@@ -5,7 +5,7 @@
 // a light shell and PAPER on a dark one, decided by the shell's luminance
 // (lib/brand/contrast.js) - never per team. The bar over the Y follows the
 // monogram's own default: on from 12 CSS px of decal height (the decal is
-// 0.28 of the helmet), so it appears at helmet sizes of ~43 px and up.
+// 0.20 of the helmet), so it appears at helmet sizes of 60 px and up.
 //
 // A team with no colors renders NO helmet - null, not a grey one. Both colors
 // or nothing: `teamColors()` in lib/gridiron/readers.js enforces the pair.
@@ -16,7 +16,7 @@ import { MonogramGlyph } from '@/components/brand/Monogram';
 import { MONOGRAM_MARK, MONOGRAM_Y_BOUNDS, barByDefault } from '@/lib/brand/monogram';
 import { decalColor, parseHex } from '@/lib/brand/contrast';
 
-export const DECAL_FRACTION = 0.28;
+export const DECAL_FRACTION = 0.20;
 
 export default function Helmet({ primary, secondary, facing = 'right', size = 24, className, title }) {
   if (!parseHex(primary) || !parseHex(secondary)) return null;

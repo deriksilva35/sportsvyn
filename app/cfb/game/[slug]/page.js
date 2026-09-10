@@ -28,6 +28,7 @@
  * tab - not an empty frame.
  */
 
+import Helmet from '@/components/team/Helmet';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getGamePage } from '@/lib/gridiron/gameDetail';
@@ -370,6 +371,8 @@ function TeamRow({ t, score, loser, show, rank, record = null }) {
   return (
     <div className={`gg-teamrow${loser ? ' loser' : ''}`}>
       <RankBadge rank={rank} size="big" />
+      {/* helmet before the abbreviation, facing the score; none without colors */}
+      <Helmet primary={t?.colors?.primary} secondary={t?.colors?.secondary} facing="right" size={28} className="gg-hm" />
       <span className="abbr">{t?.abbreviation ?? ''}</span>
       <span className="tname">{t?.name ?? 'TBD'}</span>
       {/* A chip may only claim knowledge. Records carry no kickoff, so this
