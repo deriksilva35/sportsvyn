@@ -28,7 +28,7 @@ import AlertBell from '@/components/alerts/AlertBell';
 import { auth } from '@/auth';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
-import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/lib/gridiron/driveStrip';
+import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay, lastActionPlay } from '@/lib/gridiron/driveStrip';
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
 import { propsSlate } from '@/lib/market/reads';
@@ -251,7 +251,7 @@ export default async function GamePage({ params, searchParams }) {
               defenseAbbr={defenseAbbr}
               simulated={sim.simulated}
             />
-            {stripState.mode !== 'final' && <LastPlay play={stripLastPlay} />}
+            {stripState.mode !== 'final' && <LastPlay play={lastActionPlay(sim.plays) ?? stripLastPlay} />}
             {/* THE DRIVE LIST LIVES IN THE DRIVES TAB (gamecast mock v0.2,
                 frame 1): the strip and the last play are the hero, the
                 drives are a tab beside the scoring summary. */}
