@@ -28,7 +28,7 @@ import AlertBell from '@/components/alerts/AlertBell';
 import { auth } from '@/auth';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
-import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay, lastActionPlay } from '@/lib/gridiron/driveStrip';
+import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay, lastActionPlay, showGamecast } from '@/lib/gridiron/driveStrip';
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
 import { propsSlate } from '@/lib/market/reads';
@@ -238,7 +238,7 @@ export default async function GamePage({ params, searchParams }) {
         {/* THE DRIVESTRIP. Renders nothing at all when no plays are stored -
             the honest gap is a state of the strip, not of the page, and a game
             with no feed simply does not grow a section. */}
-        {gamecast?.plays?.length ? (
+        {showGamecast({ mode: stripState.mode, playCount: gamecast?.plays?.length ?? 0 }) ? (
           <section className="gg-sect" aria-label="Gamecast">
             <div className="gg-kick"><h2>GAMECAST</h2><div className="rule" /></div>
             <DriveStrip
