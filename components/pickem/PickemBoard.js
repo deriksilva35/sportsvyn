@@ -9,6 +9,7 @@
 // against the snapshot kickoff (lib/pickem/entry); a stale client that taps
 // a just-kicked game gets 'game_locked' back and the row seals itself.
 
+import Helmet from '@/components/team/Helmet';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { spreadParts } from '@/lib/standings/view';
@@ -298,8 +299,14 @@ export default function PickemBoard({
                 const lockedByKickoff = g.kicked || kickedAtMs;
                 const rank = side === 'home' ? g.home_rank : g.away_rank;
                 const record = side === 'home' ? g.home_record : g.away_record;
+                const colors = side === 'home' ? g.home_colors : g.away_colors;
                 const content = (
                   <>
+                    {/* THE HELMETS FACE EACH OTHER across the "at": away
+                        looks right, home looks left. .pk-nmwrap stacks the
+                        name over the record, so the helmet sits beside the
+                        stack, before the name. None without colors. */}
+                    <Helmet primary={colors?.primary} secondary={colors?.secondary} facing={side === 'home' ? 'left' : 'right'} size={24} className="pk-hm" />
                     <span className="pk-nmwrap">
                       <span className="pk-nm">{name}</span>
                       {/* THE JOIN IS BY TEAM ID (lib/pickem/entry.js's

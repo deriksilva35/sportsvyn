@@ -122,6 +122,7 @@
    line as text, "#12 · 3-0", replacing the separate rank badge). Stacked,
    not inline: the mock's .side b / .side small block layout, in their own
    column so .pk-tag/.pk-res stay flex:none on the row's right edge. */
+.pk-hm { flex: 0 0 auto; }
 .pk-nmwrap { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
 .pk-rec {
   display: block; font-family: 'JetBrains Mono', ui-monospace, monospace;

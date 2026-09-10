@@ -17,6 +17,7 @@
 // gridiron match page, so the expand IS the destination rather than a stop on
 // the way to one.
 
+import Helmet from '@/components/team/Helmet';
 import { useState } from 'react';
 import Link from 'next/link';
 import DriveStrip from './DriveStrip';
@@ -99,6 +100,9 @@ function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = n
   const scoreClass = `sc${live ? ' live' : ''}${score == null ? ' none' : ''}`;
   return (
     <div className={`gi-team ${final && isWinner ? 'win' : ''} ${final && isLoser ? 'lose' : ''}`}>
+      {/* THE HELMET FACES THE SCORE. Null when the team has no colors - the
+          row then reads exactly as it did before, never with a grey helmet. */}
+      <Helmet primary={t.colors?.primary} secondary={t.colors?.secondary} facing="right" size={22} className="gi-hm" />
       {abbr ? <span className="abbr">{abbr}</span> : <span className="abbr" />}
       <RankBadge rank={t.apRank} />
       <span className="nm">{name}</span>
