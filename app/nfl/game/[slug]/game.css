@@ -295,3 +295,12 @@
   display: block; font-size: 9px; letter-spacing: 0.06em;
   color: var(--muted-dim); margin-top: 1px;
 }
+
+/* BOX SCORE - the line-score grammar, per team, four groups */
+.gg-boxteam { margin: 0 0 18px; }
+.gg-boxhead { display: flex; align-items: center; gap: 8px; padding: 10px 0 4px; }
+.gg-boxhead .abbr { font-family: var(--mono, ui-monospace, monospace); font-size: 13px; letter-spacing: 0.12em; color: var(--paper); }
+.gg-boxgrp { margin-top: 6px; }
+.gg-boxgrp th.t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46vw; }
+.gg-boxgrp tbody th.t { color: var(--paper); letter-spacing: 0; font-size: 13px; font-weight: 500; }
+.gg-boxpos { color: var(--muted); font-size: 11px; letter-spacing: 0.06em; }
