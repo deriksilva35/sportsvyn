@@ -19,7 +19,7 @@
 import Helmet from '@/components/team/Helmet';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getGamePage, scoringByQuarter, linesByGroup, fantasyLeaders, SCORING_FORMATS } from '@/lib/gridiron/gameDetail';
+import { getGamePage, scoringByQuarter, scoringFromPlays, linesByGroup, fantasyLeaders, SCORING_FORMATS } from '@/lib/gridiron/gameDetail';
 import { lineScoreGrid, liveChip } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
 import { getBriefForMatch } from '@/lib/gridiron/gameBrief';
@@ -90,7 +90,6 @@ export default async function GamePage({ params, searchParams }) {
   const propsCard = isPreGame(game.status)
     ? (await propsSlate({ matchIds: [game.id] }).catch(() => []))[0] ?? null
     : null;
-  const quarters = scoringByQuarter(game);
   const brief = await getBriefForMatch(game.id);
   // REG-only by construction (getTeamRecord filters season_type), nullable,
   // and caught: a missing standings row must not break a game page.
@@ -104,6 +103,9 @@ export default async function GamePage({ params, searchParams }) {
   // VISUAL component against real data and nothing whatever about live polling
   // - see simulateAsOf().
   const gamecast = await gamecastFor(game.id);
+  // SCORING FROM THE PLAYS when there are plays; match_events otherwise (CFB
+  // has a writer for those, the NFL does not yet).
+  const quarters = gamecast?.plays?.length ? scoringFromPlays(gamecast.plays) : scoringByQuarter(game);
   const rawAsOf = Array.isArray(sp.asOf) ? sp.asOf[0] : sp.asOf;
   const asOf = rawAsOf != null && /^\d+$/.test(String(rawAsOf)) ? Number(rawAsOf) : null;
   const sim = simulateAsOf(gamecast?.plays ?? [], asOf);
@@ -148,6 +150,7 @@ export default async function GamePage({ params, searchParams }) {
     quarters.length ? { key: 'scoring', label: 'SCORING' } : null,
     hasPlayers ? { key: 'players', label: 'PLAYER LINES' } : null,
     teamBox ? { key: 'teambox', label: 'TEAM BOX' } : null,
+    gamecast?.plays?.length ? { key: 'drives', label: 'DRIVES' } : null,
   ].filter(Boolean);
 
   const winner = final ? (game.homeScore > game.awayScore ? 'home' : game.awayScore > game.homeScore ? 'away' : null) : null;
@@ -236,8 +239,8 @@ export default async function GamePage({ params, searchParams }) {
             the honest gap is a state of the strip, not of the page, and a game
             with no feed simply does not grow a section. */}
         {gamecast?.plays?.length ? (
-          <section className="gg-sect" aria-label="Drive chart">
-            <div className="gg-kick"><h2>DRIVES</h2><div className="rule" /></div>
+          <section className="gg-sect" aria-label="Gamecast">
+            <div className="gg-kick"><h2>GAMECAST</h2><div className="rule" /></div>
             <DriveStrip
               state={stripState}
               lastPlay={stripLastPlay}
@@ -249,11 +252,9 @@ export default async function GamePage({ params, searchParams }) {
               simulated={sim.simulated}
             />
             {stripState.mode !== 'final' && <LastPlay play={stripLastPlay} />}
-            <DriveChart
-              rows={driveRows}
-              teamAbbr={gamecast.teamAbbr}
-              homeTeamId={game.home?.id}
-            />
+            {/* THE DRIVE LIST LIVES IN THE DRIVES TAB (gamecast mock v0.2,
+                frame 1): the strip and the last play are the hero, the
+                drives are a tab beside the scoring summary. */}
           </section>
         ) : null}
 
@@ -278,6 +279,9 @@ export default async function GamePage({ params, searchParams }) {
               brief: brief ? <BriefPanel brief={brief} /> : null,
               scoring: quarters.length ? <ScoringPanel quarters={quarters} game={game} /> : null,
               teambox: teamBox ? <TeamBoxPanel box={teamBox} teams={teams} /> : null,
+              drives: gamecast?.plays?.length ? (
+                <DriveChart rows={driveRows} teamAbbr={gamecast.teamAbbr} homeTeamId={game.home?.id} />
+              ) : null,
             }}
           />
         ) : (

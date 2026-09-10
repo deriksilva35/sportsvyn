@@ -191,9 +191,15 @@ test('ODDS STAYS WHERE THE PREGAME GUARD PUT IT - it is not a tab', () => {
   assert.equal(CFB.includes("key: 'odds'"), false, 'and never becomes a panel');
 });
 
-test('the NFL page inherits the component, and is otherwise untouched here', () => {
+test('the NFL page inherits the component, and carries its own drives tab since the live-page relay', () => {
   assert.match(NFL, /<GameTabs/);
-  // It declares its own panels; this relay did not add a drives panel to it.
+  // It declares its own panels. The CFB relay added no drives panel to it;
+  // the NFL live-page relay (10 Sep) did - the gamecast mock's frame 1 puts
+  // the drive list in a DRIVES tab beside the scoring summary, with the
+  // strip and the last play as the hero above the rail.
   assert.match(NFL, /const panels = \[/);
-  assert.equal(NFL.includes("key: 'drives'"), false);
+  assert.equal(NFL.includes("key: 'drives'"), true);
+  assert.match(NFL, /gamecast\?\.plays\?\.length \? \{ key: 'drives', label: 'DRIVES' \} : null/, 'only when there are plays');
+  assert.match(NFL, /drives: gamecast\?\.plays\?\.length \? \(\s*<DriveChart/, 'the tab is the drive chart');
+  assert.equal((NFL.match(/<DriveChart/g) ?? []).length, 1, 'and the chart is drawn once - not also under the strip');
 });
