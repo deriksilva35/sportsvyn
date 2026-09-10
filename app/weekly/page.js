@@ -288,14 +288,17 @@ export default async function WeeklyPage({ searchParams }) {
   // Both states render the builder; the rules module sits below it for a
   // first-time reader rather than gating the board behind a START. There is no
   // clock to start, so there is nothing for a gate to protect.
-  const reminderAt = new Date(new Date(contest.locks_at).getTime() - 3_600_000);
+  // ROLLING LOCK (R4): the hour-out reminder keys on the FIRST kickoff; the
+  // header names the first kickoff until it passes, then the window close.
+  const beforeFirst = firstKickoff != null && Date.now() < new Date(firstKickoff).getTime();
+  const reminderAt = new Date(new Date(firstKickoff ?? contest.locks_at).getTime() - 3_600_000);
   return (
     <Shell>
       {/* THE HEADER AND PROGRESS (relay 2a item 6) - the mock's .hdr/.yr/
           .prog/.needline, sitting above the unchanged builder. */}
       <header className="hdr">
         <span className="ed">The Weekly &middot; Week {contest.week}</span>
-        <span className="clock">locks <StandaloneDate iso={contest.locks_at} /></span>
+        <span className="clock">{beforeFirst ? 'first kickoff ' : 'locks '}<StandaloneDate iso={beforeFirst ? firstKickoff : contest.locks_at} /></span>
       </header>
       <div className="yr">
         <h1>Week {contest.week}</h1>
@@ -340,7 +343,7 @@ export default async function WeeklyPage({ searchParams }) {
       </div>
 
       <div className="mathline">
-        Alerts: opens <Stamp iso={contest.opens_at} /> &middot; one hour to lock <Stamp iso={reminderAt.toISOString()} />
+        Alerts: opens <Stamp iso={contest.opens_at} /> &middot; one hour before first kickoff <Stamp iso={reminderAt.toISOString()} />
         {contest.settles_at && <> &middot; graded <Stamp iso={contest.settles_at} /></>}. All on.
       </div>
     </Shell>
