@@ -26,6 +26,7 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { currentContest, nextContest, getEntry } from '@/lib/weekly/entries';
+import { slateBounds, teamKickoffs, rowKickoff } from '@/lib/contests/slateBounds';
 import StandaloneDate from '@/components/StandaloneDate';
 import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI } from '@/lib/weekly/view';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
@@ -109,14 +110,15 @@ function Pitch({ action }) {
   );
 }
 
-function Rules({ contest }) {
+function Rules({ contest, firstKickoff = null }) {
   return (
     <section className="mod">
       <h2 className="eyebrow">How it works</h2>
       <div>
         <div className="row"><span>The board</span><span className="r">This week&rsquo;s actives</span></div>
         <div className="row"><span>Your lineup</span><span className="r">QB &middot; RB &middot; WR &middot; TE &middot; 2 FLEX</span></div>
-        <div className="row"><span>Edit until</span><span className="r"><Stamp iso={contest?.locks_at} fallback="First kickoff" /></span></div>
+        <div className="row"><span>First kickoff</span><span className="r"><Stamp iso={firstKickoff ?? contest?.locks_at} fallback="First kickoff" /></span></div>
+        <div className="row"><span>Each slot</span><span className="r">locks at its player&rsquo;s kickoff</span></div>
         <div className="row"><span>Scoring</span><span className="r">PPR, worst pick dropped</span></div>
         <div className="row"><span>Results</span><span className="r">Tuesday morning</span></div>
       </div>
@@ -177,7 +179,12 @@ export default async function WeeklyPage({ searchParams }) {
     );
   }
 
-  const board = contest.board ?? [];
+  // ROLLING LOCK: every pool row carries the kickoff of its team's game this
+  // week (R3; a bye locks at the window close). The kickoffs are the lock;
+  // the room prints them through StandaloneTime, in the viewer's zone.
+  const [bounds, kickoffs] = await Promise.all([slateBounds(contest), teamKickoffs(contest)]);
+  const board = (contest.board ?? []).map((p) => ({ ...p, kickoff_at: rowKickoff(p, kickoffs, contest.locks_at) }));
+  const firstKickoff = bounds?.firstKickoff ?? null;
 
   // ---- SETTLED: the reveal -------------------------------------------------
   // The Daily's reveal with the answer-hero swapped for the week's own
@@ -313,6 +320,7 @@ export default async function WeeklyPage({ searchParams }) {
         initialLineup={entry?.lineup ?? {}}
         initialConfirmedAt={entry?.meta?.confirmed_at ?? null}
         locksAt={contest.locks_at}
+        firstKickoff={firstKickoff}
         signedIn={userId != null}
         signinHref={shellSigninHref('/weekly', isShell)}
         hasHandle={hasHandle}

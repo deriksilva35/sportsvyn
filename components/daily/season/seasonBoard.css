@@ -253,3 +253,10 @@
   border-radius: 8px; padding: 6px 12px; cursor: pointer;
 }
 .sbd-lbd-link { display: block; text-align: center; margin: 16px 12px 24px; font-size: 13px; font-weight: 700; color: var(--volt, #D4FF00); text-decoration: none; }
+
+/* ROLLING LOCK - a slot that has kicked off is grey and inert; a pool row
+   whose team has kicked cannot be taken. */
+.weekly .pr.wk-locked { opacity: .55; cursor: default; }
+.weekly .pr.wk-locked .tk { color: var(--d-mut); border-color: var(--d-line); }
+.weekly .pr .nm .wk-ko { display: block; margin-top: 2px; font-family: var(--d-mono); font-size: 10px; color: var(--d-mut); }
+.sbd-pr.sbd-kicked { opacity: .45; cursor: default; }

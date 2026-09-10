@@ -13,6 +13,12 @@
 import { shellSigninHref } from '@/lib/shell/signinHref';
 
 const ET = { timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit' };
+// ROLLING LOCK: before the first kickoff the deadline that matters is the
+// first kickoff; after it, the window close (locks_at = last kickoff).
+const lockLine = (view) => {
+  const first = new Date(view?.firstKickoff ?? NaN).getTime();
+  return Number.isFinite(first) && Date.now() < first ? `First kickoff ${deadline(view.firstKickoff)}` : `Locks ${deadline(view?.locksAt)}`;
+};
 const deadline = (iso) => {
   const d = new Date(iso ?? NaN);
   return Number.isFinite(d.getTime()) ? `${d.toLocaleString('en-US', ET)} ET` : 'first kickoff';
@@ -42,7 +48,7 @@ export default function WeeklyModule({ view, isShell = false, signedIn = false }
         </p>
         <a className="dly-cta" href={href}>Build your lineup</a>
         <div className="dly-foot">
-          Locks {deadline(view.locksAt)} · Results Tuesday morning · PPR, drop worst
+          {lockLine(view)} · Results Tuesday morning · PPR, drop worst
         </div>
       </section>
     );
@@ -68,7 +74,7 @@ export default function WeeklyModule({ view, isShell = false, signedIn = false }
         <a className="dly-cta" href={view.href}>
           {view.remaining === 0 ? 'Review your lineup' : 'Finish your lineup'}
         </a>
-        <div className="dly-foot">Locks {deadline(view.locksAt)} · Results Tuesday morning</div>
+        <div className="dly-foot">{lockLine(view)} · Results Tuesday morning</div>
       </section>
     );
   }

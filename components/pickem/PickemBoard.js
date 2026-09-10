@@ -241,7 +241,7 @@ export default function PickemBoard({
           ? (g.home_score != null ? `${g.away_score}-${g.home_score}` : '')
           : <StandaloneTime iso={g.kickoff_at} />;
         return (
-          <div className="pk-game" key={g.match_id}>
+          <div className={`pk-game${g.kicked || kickedAtMs ? ' pk-locked' : ''}`} key={g.match_id}>
             {/* THE LINK LIVES IN THE HEADER, NEVER AROUND THE PICKS.
                 .pk-eb and .pk-sides are SIBLINGS - the anchor is not an
                 ancestor of the pick buttons, so a pick tap has no anchor to
@@ -332,7 +332,9 @@ export default function PickemBoard({
                   <>
                     {/* THE MOCK'S "at" (2a-polish item 3) - the two sides
                         read as one sentence, "Away at Home". */}
-                    {i === 1 && <div className="pk-at" key="at">at</div>}
+                    {/* A LOCKED ROW SAYS WHEN IT LOCKED where "at" was (rolling
+                        lock): the kickoff time in the pk-at slot, no other copy. */}
+                    {i === 1 && <div className="pk-at" key="at">{g.kicked || kickedAtMs ? <StandaloneTime iso={g.kickoff_at} /> : 'at'}</div>}
                     {!signedIn && !lockedByKickoff ? (
                       <a key={side} className={cls} href={signinHref}>{content}</a>
                     ) : (

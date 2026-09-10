@@ -157,7 +157,7 @@ async function PreOpen({ sport, now }) {
     <section className="pk-ghost">
       <div className="big">Pick&rsquo;em lights up with the board</div>
       <div className="when">
-        Board {n} opens <StandaloneDateOnly iso={plan.opensAt} /> &middot; first lock <StandaloneDate iso={plan.locksAt} />
+        Board {n} opens <StandaloneDateOnly iso={plan.opensAt} /> &middot; first lock <StandaloneDate iso={plan.firstKickoff ?? plan.locksAt} />
       </div>
     </section>
   );
