@@ -26,7 +26,7 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { currentContest, nextContest, getEntry } from '@/lib/weekly/entries';
-import { slateBounds, teamKickoffs, rowKickoff } from '@/lib/contests/slateBounds';
+import { slateBounds, teamKickoffs, rowKickoff, lockPhase } from '@/lib/contests/slateBounds';
 import StandaloneDate from '@/components/StandaloneDate';
 import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI } from '@/lib/weekly/view';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
@@ -290,7 +290,7 @@ export default async function WeeklyPage({ searchParams }) {
   // clock to start, so there is nothing for a gate to protect.
   // ROLLING LOCK (R4): the hour-out reminder keys on the FIRST kickoff; the
   // header names the first kickoff until it passes, then the window close.
-  const beforeFirst = firstKickoff != null && Date.now() < new Date(firstKickoff).getTime();
+  const { beforeFirst } = lockPhase({ firstKickoff, locksAt: contest.locks_at });
   const reminderAt = new Date(new Date(firstKickoff ?? contest.locks_at).getTime() - 3_600_000);
   return (
     <Shell>
