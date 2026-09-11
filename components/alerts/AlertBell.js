@@ -15,16 +15,18 @@
 // is not recoverable from the page.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { DEFAULTS } from '@/lib/push/prefs';
+import { DEFAULTS, nextRow } from '@/lib/push/prefs';
 import { dayHeading, kickoffParts } from '@/lib/gridiron/kickoff';
 import { useViewerTz } from '@/components/gridiron/useViewerTz';
 import { tzOrUtc } from '@/lib/gridiron/viewerTz';
 import { enableAlerts } from './enable';
-import { SILENCED_BY_FINAL_ONLY, silencedByFinalOnly, applyRowToggle } from '@/lib/push/sheetRules';
+import { summaryLine } from '@/lib/push/sheetRules';
 import './alerts.css';
 
-// The five rows, in the order the sheet draws them. Data, not markup, so the
-// order and the copy live in one place.
+// The five trigger rows, in the order the sheet draws them. Data, not markup,
+// so the order and the copy live in one place. FINAL IS THE FIFTH TRIGGER
+// (ALERTS SHEET relay, R2), not a "Final only" mode that silenced the other
+// four: every row means exactly what its switch says.
 const ROWS = [
   { key: 'kickoff', title: 'Kickoff', trigger: 'When the game goes live' },
   { key: 'score', title: 'Score changes',
@@ -32,7 +34,7 @@ const ROWS = [
     latency: 'usually within a minute' },
   { key: 'quarter', title: 'Quarter ends', trigger: 'End of each quarter' },
   { key: 'close', title: 'Close game', trigger: 'Q4, one score apart, under five minutes' },
-  { key: 'final_only', title: 'Final only', trigger: 'Just the result' },
+  { key: 'final', title: 'Final', trigger: 'The result, when the game ends' },
 ];
 
 function Toggle({ on, onChange, label, disabled }) {
@@ -93,44 +95,49 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
   // ROWS SAVE ON CHANGE. No Save button to forget, so the sheet's only exit is
   // Done and there is no state that exists on screen and not on the server.
   const save = async (next, rowKey) => {
-    setPrefs(next);
+    // THE ROW ON SCREEN IS THE ROW THE SERVER WILL KEEP. nextRow() is the
+    // route's own rule (R1): a first master tap on a game with no saved row
+    // becomes the DEFAULTS row, not the OFF flags the sheet was showing, and
+    // a master-off keeps the triggers. The saved match row is the one whose
+    // source is 'match' - a team row showing through is not a saved row here.
+    const row = nextRow(prefs?.source === 'match' ? prefs : null, next);
+    setPrefs({ ...row, source: 'match' });
     setBusy(true); setRowError(null); setSaved(false);
     try {
       // TURNING SOMETHING ON IS THE TAP THE PROMPT FOLLOWS. Only here, and only
       // when the reader has actually asked for an alert. enableAlerts picks the
       // transport from the environment, so the shell never sees a browser
       // message and the browser never reaches for a plugin.
-      const asked = next.master
-        && Object.keys(DEFAULTS).some((k) => k !== 'master' && next[k]);
+      const asked = row.master
+        && Object.keys(DEFAULTS).some((k) => k !== 'master' && row[k]);
       if (asked) {
         const r = await enableAlerts();
         if (!r.ok) { setRowError({ key: rowKey, message: r.error }); setBusy(false); return; }
       }
       const res = await fetch('/api/push/prefs', {
         method: 'PUT', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ scope: 'match', scopeId: match.id, ...next }),
+        body: JSON.stringify({ scope: 'match', scopeId: match.id, ...row }),
       });
       if (!res.ok) {
         setRowError({ key: rowKey, message: 'That did not save. Check your connection and try again.' });
         return;
       }
+      // The server's answer wins over the optimistic row, should they differ.
+      const j = await res.json().catch(() => null);
+      if (j?.prefs) setPrefs(j.prefs);
       setSaved(true);
     } catch {
       setRowError({ key: rowKey, message: 'That did not save. Check your connection and try again.' });
     } finally { setBusy(false); }
   };
 
-  // FINAL ONLY IS A SILENCER, AND TOUCHING WHAT IT SILENCES TURNS IT OFF.
-  // Otherwise a reader taps Score changes, watches the toggle move, and gets
-  // nothing - the row says on and the game says silent. Master and Final only
-  // can never both read as "everything on".
-  const setRow = (key, value) => save(applyRowToggle(p, key, value), key);
+  const setRow = (key, value) => save({ ...p, [key]: value }, key);
 
   const p = prefs ?? DEFAULTS;
   // A CHIP MAY ONLY CLAIM KNOWLEDGE: the pill lights only when we have read the
   // prefs and something is actually on.
   const anyOn = Boolean(prefs && p.master
-    && (p.kickoff || p.score || p.quarter || p.close || p.final_only));
+    && (p.kickoff || p.score || p.quarter || p.close || p.final));
   const kick = kickoffParts(match.kickoffAt, tzOrUtc(tz));
   const day = dayHeading(match.kickoffAt, tzOrUtc(tz));
 
@@ -171,6 +178,12 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
               </div>
             ) : (
               <>
+                {/* THE FIRST LINE SAYS WHAT THE ROW WILL DO (R3) - "Kickoff,
+                    score changes and the final", "Final only", "Off" - and it
+                    is recomputed on every toggle. Only once the prefs are
+                    read: before that the sheet knows nothing and must not
+                    claim it does. */}
+                <p className="al-summary" aria-live="polite">{prefs ? summaryLine(p) : '\u00a0'}</p>
                 <p className="al-note">
                   Push to this phone. This game only. Your team defaults live on the team page.
                 </p>
@@ -184,29 +197,23 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
                     onChange={(v) => save({ ...p, master: v }, 'master')} />
                 </div>
 
+                {/* MASTER OFF DIMS AND DISABLES THE FIVE, it does not hide
+                    them: the reader can see what comes back when they turn
+                    the game on again. */}
                 <div className={`al-rows${p.master ? '' : ' al-dim'}`}>
-                  {ROWS.map((r) => {
-                    const silenced = silencedByFinalOnly(p, r.key);
-                    return (
-                      <div className={`al-row${silenced ? ' al-silenced' : ''}`} key={r.key}>
-                        <div className="al-txt">
-                          <span className="al-title">{r.title}</span>
-                          <span className="al-trig">
-                            {silenced ? 'Silenced by Final only' : r.trigger}
-                          </span>
-                          {r.latency && !silenced ? <span className="al-lat">{r.latency}</span> : null}
-                          {rowError?.key === r.key
-                            ? <span className="al-rowerr">{rowError.message}</span> : null}
-                        </div>
-                        {/* A SILENCED ROW STAYS TAPPABLE. Dimming says "this is
-                            doing nothing"; disabling would say "you cannot
-                            change this", and turning it on is precisely how a
-                            reader gets out of Final only. */}
-                        <Toggle on={Boolean(p[r.key])} label={r.title} disabled={busy || !p.master}
-                          onChange={(v) => setRow(r.key, v)} />
+                  {ROWS.map((r) => (
+                    <div className="al-row" key={r.key}>
+                      <div className="al-txt">
+                        <span className="al-title">{r.title}</span>
+                        <span className="al-trig">{r.trigger}</span>
+                        {r.latency ? <span className="al-lat">{r.latency}</span> : null}
+                        {rowError?.key === r.key
+                          ? <span className="al-rowerr">{rowError.message}</span> : null}
                       </div>
-                    );
-                  })}
+                      <Toggle on={Boolean(p[r.key])} label={r.title} disabled={busy || !p.master}
+                        onChange={(v) => setRow(r.key, v)} />
+                    </div>
+                  ))}
                 </div>
 
                 {rowError && rowError.key === 'master'
