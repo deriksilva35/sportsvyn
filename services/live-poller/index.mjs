@@ -13,7 +13,7 @@
 // writers on their own cadences.
 
 import { neon } from '@neondatabase/serverless';
-import { cadence, sleepUntilNext } from '../../lib/live/cadence.js';
+import { cadence, sleepUntilNext, kickoffDelta } from '../../lib/live/cadence.js';
 import { addCalls, callsToday, applyCap, overCap, DEFAULT_CAP } from '../../lib/live/quota.js';
 import { StatsTracker } from '../../lib/live/statsCadence.js';
 import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
@@ -137,13 +137,13 @@ async function loop(lg) {
     if (active && !lock) {
       lock = await acquire(lg.slug);
       if (!lock) log(`[${lg.slug}] another holder has the live lock; polling anyway is not safe - waiting`);
-      else { windowId = await openWindow(lg.slug, decision.state); log(`[${lg.slug}] window open (${decision.state})`); }
+      else { windowId = await openWindow(lg.slug, decision.state); log(`[${lg.slug}] window open (${decision.state}) ${kickoffDelta(decision.nextKickoffAt, now)}`); }
     }
     if (!active && lock) {
       await closeWindow(windowId, { ...window, closedState: decision.state });
       await release(lock, lg.slug); lock = null; windowId = null;
       Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0 });
-      log(`[${lg.slug}] window closed`);
+      log(`[${lg.slug}] window closed (${decision.state}) ${kickoffDelta(decision.nextKickoffAt, now)}`);
     }
 
     // --- the poll ---------------------------------------------------------
