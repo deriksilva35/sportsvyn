@@ -21,7 +21,7 @@ import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { closeDay } from '@/lib/daily/close';
 import { pushEnabled, gateReport } from '@/lib/push/apns';
-import { notifyDailyLive, notifyDailyRevealed, notifyPickemReminder, notifyWeeklyReminder, notifyDraftReminder } from '@/lib/push/notify';
+import { notifyDailyLive, notifyDailyRevealed, notifyPickemReminder, notifyWeeklyReminder, notifyWeeklyLastKick, notifyDraftReminder } from '@/lib/push/notify';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -46,6 +46,7 @@ export async function GET(request) {
   // minute window (ruled), send-once on the contest id. Personalized per
   // recipient (n_set / seat_state), unlike the pickem reminder above.
   if (pushEnabled()) await notifyWeeklyReminder().catch(() => {});
+  if (pushEnabled()) await notifyWeeklyLastKick().catch(() => {});
   if (pushEnabled()) await notifyDraftReminder().catch(() => {});
 
   const due = await sql`

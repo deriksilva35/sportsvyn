@@ -26,6 +26,7 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { currentContest, nextContest, getEntry } from '@/lib/weekly/entries';
+import { slateBounds, teamKickoffs, rowKickoff, lockPhase } from '@/lib/contests/slateBounds';
 import StandaloneDate from '@/components/StandaloneDate';
 import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI } from '@/lib/weekly/view';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
@@ -109,14 +110,15 @@ function Pitch({ action }) {
   );
 }
 
-function Rules({ contest }) {
+function Rules({ contest, firstKickoff = null }) {
   return (
     <section className="mod">
       <h2 className="eyebrow">How it works</h2>
       <div>
         <div className="row"><span>The board</span><span className="r">This week&rsquo;s actives</span></div>
         <div className="row"><span>Your lineup</span><span className="r">QB &middot; RB &middot; WR &middot; TE &middot; 2 FLEX</span></div>
-        <div className="row"><span>Edit until</span><span className="r"><Stamp iso={contest?.locks_at} fallback="First kickoff" /></span></div>
+        <div className="row"><span>First kickoff</span><span className="r"><Stamp iso={firstKickoff ?? contest?.locks_at} fallback="First kickoff" /></span></div>
+        <div className="row"><span>Each slot</span><span className="r">locks at its player&rsquo;s kickoff</span></div>
         <div className="row"><span>Scoring</span><span className="r">PPR, worst pick dropped</span></div>
         <div className="row"><span>Results</span><span className="r">Tuesday morning</span></div>
       </div>
@@ -177,7 +179,12 @@ export default async function WeeklyPage({ searchParams }) {
     );
   }
 
-  const board = contest.board ?? [];
+  // ROLLING LOCK: every pool row carries the kickoff of its team's game this
+  // week (R3; a bye locks at the window close). The kickoffs are the lock;
+  // the room prints them through StandaloneTime, in the viewer's zone.
+  const [bounds, kickoffs] = await Promise.all([slateBounds(contest), teamKickoffs(contest)]);
+  const board = (contest.board ?? []).map((p) => ({ ...p, kickoff_at: rowKickoff(p, kickoffs, contest.locks_at) }));
+  const firstKickoff = bounds?.firstKickoff ?? null;
 
   // ---- SETTLED: the reveal -------------------------------------------------
   // The Daily's reveal with the answer-hero swapped for the week's own
@@ -281,14 +288,17 @@ export default async function WeeklyPage({ searchParams }) {
   // Both states render the builder; the rules module sits below it for a
   // first-time reader rather than gating the board behind a START. There is no
   // clock to start, so there is nothing for a gate to protect.
-  const reminderAt = new Date(new Date(contest.locks_at).getTime() - 3_600_000);
+  // ROLLING LOCK (R4): the hour-out reminder keys on the FIRST kickoff; the
+  // header names the first kickoff until it passes, then the window close.
+  const { beforeFirst } = lockPhase({ firstKickoff, locksAt: contest.locks_at });
+  const reminderAt = new Date(new Date(firstKickoff ?? contest.locks_at).getTime() - 3_600_000);
   return (
     <Shell>
       {/* THE HEADER AND PROGRESS (relay 2a item 6) - the mock's .hdr/.yr/
           .prog/.needline, sitting above the unchanged builder. */}
       <header className="hdr">
         <span className="ed">The Weekly &middot; Week {contest.week}</span>
-        <span className="clock">locks <StandaloneDate iso={contest.locks_at} /></span>
+        <span className="clock">{beforeFirst ? 'first kickoff ' : 'locks '}<StandaloneDate iso={beforeFirst ? firstKickoff : contest.locks_at} /></span>
       </header>
       <div className="yr">
         <h1>Week {contest.week}</h1>
@@ -313,6 +323,7 @@ export default async function WeeklyPage({ searchParams }) {
         initialLineup={entry?.lineup ?? {}}
         initialConfirmedAt={entry?.meta?.confirmed_at ?? null}
         locksAt={contest.locks_at}
+        firstKickoff={firstKickoff}
         signedIn={userId != null}
         signinHref={shellSigninHref('/weekly', isShell)}
         hasHandle={hasHandle}
@@ -332,7 +343,7 @@ export default async function WeeklyPage({ searchParams }) {
       </div>
 
       <div className="mathline">
-        Alerts: opens <Stamp iso={contest.opens_at} /> &middot; one hour to lock <Stamp iso={reminderAt.toISOString()} />
+        Alerts: opens <Stamp iso={contest.opens_at} /> &middot; one hour before first kickoff <Stamp iso={reminderAt.toISOString()} />
         {contest.settles_at && <> &middot; graded <Stamp iso={contest.settles_at} /></>}. All on.
       </div>
     </Shell>

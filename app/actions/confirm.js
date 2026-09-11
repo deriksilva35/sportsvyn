@@ -22,6 +22,7 @@
  * so || is exactly right.
  */
 
+import { confirmVerdict } from '@/lib/games/confirmRules';
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 
@@ -34,12 +35,13 @@ async function confirmEntry(contestId, gameType) {
   // reassurance about an entry that can no longer change, which is at best
   // noise and at worst reads as "this got in" when it did not.
   const [c] = await sql`
-    SELECT id, locks_at, settled FROM contests
+    SELECT id, locks_at, settled, board FROM contests
      WHERE id = ${Number(contestId)} AND game_type = ${gameType}`;
   if (!c) return { ok: false, reason: 'no such contest' };
-  if (c.settled || new Date(c.locks_at).getTime() <= Date.now()) {
-    return { ok: false, reason: 'locked' };
-  }
+  // ROLLING LOCK: a Pick'em entry confirms while ANY row is still unkicked;
+  // the Weekly and the Draft keep the contest gate (lib/games/confirmRules.js).
+  const verdict = confirmVerdict(gameType, c);
+  if (!verdict.ok) return { ok: false, reason: 'locked' };
 
   const at = new Date().toISOString();
   const rows = await sql`

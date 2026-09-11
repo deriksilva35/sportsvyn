@@ -30,8 +30,10 @@ export async function POST(request) {
   if (!r.ok) {
     // 409 for a locked week: the client flips to the locked surface on this
     // exact code rather than showing an error it cannot act on.
-    const status = r.reason === 'locked' ? 409 : 400;
-    return Response.json({ error: r.reason, errors: r.errors }, { status });
+    const status = r.reason === 'locked' || r.reason === 'slot_locked' ? 409 : 400;
+    // slot_locked: the other slots in this save were stored - say so, and name
+    // the slot and its kickoff so the room can put it back.
+    return Response.json({ error: r.reason, errors: r.errors, slot: r.slot ?? null, kickoffAt: r.kickoffAt ?? null, rejected: r.rejected ?? null, saved: r.saved ?? false, lineup: r.entry?.lineup ?? null }, { status });
   }
   return Response.json({ ok: true, filled: r.filled, savedAt: r.entry?.updated_at ?? null });
 }

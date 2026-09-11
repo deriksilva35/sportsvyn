@@ -39,6 +39,7 @@ import { nextOpenSlot } from '@/lib/daily/play';
 import { poolRows, poolCountLabel, SLOT_EMOJI } from '@/lib/weekly/view';
 import { useHandleGate } from '@/components/handle/HandleGate';
 import Sheet from '@/components/ui/Sheet';
+import StandaloneTime from '@/components/StandaloneTime';
 import ConfirmCard from '@/components/games/ConfirmCard';
 import { confirmWeeklyEntry } from '@/app/actions/confirm';
 import '@/components/daily/season/seasonBoard.css';
@@ -74,7 +75,7 @@ const SAVE_DEBOUNCE_MS = 700;
 
 export default function WeeklyRoom({
   contest, board, initialLineup = {}, signedIn = true, signinHref = '/signin',
-  hasHandle = true, initialConfirmedAt = null, locksAt = null,
+  hasHandle = true, initialConfirmedAt = null, locksAt = null, firstKickoff = null,
 }) {
   // THE HANDLE IS ASKED FOR AT THE FIRST SLOT SAVED, not on page load
   // (components/handle/HandleGate.js). It guards the WRITE, so browsing the
@@ -91,6 +92,14 @@ export default function WeeklyRoom({
   const [active, setActive] = useState('QB');
   const [save, setSave] = useState('clean');   // clean | saving | saved | error
   const [locked, setLocked] = useState(false);
+  // ROLLING LOCK: a slot locks at its player's kickoff, so the room needs a
+  // clock. Seeded once and ticked every 30 s; the server is the judge, this
+  // only greys what it would refuse.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(id); }, []);
+  const kickoffOf = useCallback((id) => board.find((b) => b.id === id)?.kickoff_at ?? null, [board]);
+  const hasKicked = useCallback((id) => { const k = kickoffOf(id); return k != null && new Date(k).getTime() <= now; }, [kickoffOf, now]);
+  const slotLocked = useCallback((s) => lineup[s] != null && hasKicked(lineup[s]), [lineup, hasKicked]);
   const [err, setErr] = useState(null);
   const [query, setQuery] = useState('');
   // THE SLOT SHEET (relay 3 item 2). `active` still names the slot being
@@ -117,6 +126,13 @@ export default function WeeklyRoom({
     const j = await res.json().catch(() => ({}));
     if (res.ok) { setSave('saved'); return; }
     setSave('error');
+    if (res.status === 409 && j.error === 'slot_locked') {
+      // ROLLING LOCK: one slot was refused at its kickoff, the others in the
+      // same save were stored. Put the server's copy back and name the slot.
+      if (j.lineup) setLineup(j.lineup);
+      setErr(`${SLOT_LABEL[j.slot] ?? j.slot} locked at its kickoff. The rest saved.`);
+      return;
+    }
     // A 409 means the week locked underneath us - which happens to anyone with
     // the tab open at kickoff. It is not an error to apologise for; it is the
     // deadline arriving, so the surface changes rather than showing a message.
@@ -167,6 +183,7 @@ export default function WeeklyRoom({
     // this reader has no session to save is not a dead end, it is the door.
     if (!signedIn) { router.push(signinHref); return; }
     if (locked) return;
+    if (slotLocked(active) || hasKicked(id)) return;
     const next = { ...lineup, [active]: id };
     setLineup(next);
     // Difference 3: a full lineup stays put instead of cycling back to QB.
@@ -186,6 +203,7 @@ export default function WeeklyRoom({
   }
 
   function openSlot(slot) {
+    if (slotLocked(slot)) return;
     if (!signedIn) { router.push(signinHref); return; }
     if (locked) return;
     setActive(slot);
@@ -194,7 +212,7 @@ export default function WeeklyRoom({
   }
 
   function clear(slot) {
-    if (locked) return;
+    if (locked || slotLocked(slot)) return;
     const next = { ...lineup }; delete next[slot];
     setLineup(next);
     setActive(slot);
@@ -272,16 +290,20 @@ export default function WeeklyRoom({
           {SLOTS.map((s) => {
             const id = lineup[s];
             const p = id ? board.find((b) => b.id === id) : null;
+            const isLocked = slotLocked(s);
             return (
               <button key={s} type="button"
-                className={`pr${p ? '' : ' empty'}`}
+                className={`pr${p ? '' : ' empty'}${isLocked ? ' wk-locked' : ''}`}
+                disabled={isLocked}
                 onClick={() => openSlot(s)}>
                 <span className="pos">{SLOT_LABEL[s]}</span>
                 <span className="nm">
                   <b>{p ? p.name : EMPTY_SLOT_COPY[s]}</b>
-                  <small>{p ? restOf(p.resume) : ' '}</small>
+                  <small>{p ? restOf(p.resume) : ' '}</small>
+                  {/* the slot's own lock time (rolling lock) */}
+                  {p?.kickoff_at ? <small className="wk-ko">{isLocked ? 'Locked · ' : 'Locks '}<StandaloneTime iso={p.kickoff_at} /></small> : null}
                 </span>
-                <span className={`tk${p ? ' quiet' : ''}`}>{p ? 'Change' : 'Take'}</span>
+                <span className={`tk${p ? ' quiet' : ''}`}>{isLocked ? 'Locked' : p ? 'Change' : 'Take'}</span>
               </button>
             );
           })}
@@ -292,7 +314,7 @@ export default function WeeklyRoom({
         {err && <p className="err">{err}</p>}
         {locked && (
           <p className="wk-locked-note">
-            The week has locked. Your lineup is in as it stands.
+            The week has closed. Your lineup is in as it stands.
           </p>
         )}
 
@@ -364,13 +386,13 @@ export default function WeeklyRoom({
         )}
         {rows.map((p2) => (
           <button key={p2.id} type="button"
-            className={`sbd-pr${picked.has(p2.id) ? ' sbd-gone' : ''}`}
-            disabled={picked.has(p2.id) || locked}
+            className={`sbd-pr${picked.has(p2.id) ? ' sbd-gone' : ''}${hasKicked(p2.id) ? ' sbd-kicked' : ''}`}
+            disabled={picked.has(p2.id) || locked || hasKicked(p2.id)}
             onClick={() => pick(p2.id)}>
             <span className="sbd-pos">{p2.pos}</span>
             <span className="sbd-nm">
               <b>{p2.name}</b>
-              <small>{restOf(p2.resume)}</small>
+              <small>{hasKicked(p2.id) ? <>Kicked · <StandaloneTime iso={p2.kickoff_at} /></> : restOf(p2.resume)}</small>
             </span>
             <span className="sbd-tk">{ppgOf(p2.resume)}</span>
           </button>

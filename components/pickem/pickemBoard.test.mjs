@@ -54,6 +54,14 @@ const game = () => ({
   spread_home: -3, home_rank: null, away_rank: null, home_record: null, away_record: null,
   home_score: null, away_score: null,
 });
+function renderMany(sport, games) {
+  const container = document.getElementById('root'); const root = createRoot(container); roots.add(root);
+  act(() => root.render(React.createElement(PickemBoard, {
+    view: { contest: { id: 1, boardNumber: 1, sport, displayWeek: 1, week: 1 }, games },
+    signedIn: true, signinHref: '/signin', hasHandle: true, initialConfirmedAt: null, locksAt: future,
+  })));
+  return container;
+}
 function render(sport = 'nfl', g = game()) {
   const container = document.getElementById('root'); const root = createRoot(container); roots.add(root);
   act(() => root.render(React.createElement(PickemBoard, {
@@ -168,4 +176,24 @@ test('helmets: tapping a side that carries a helmet still saves the pick', async
   assert.match(JSON.stringify(calls[n]), /"home"/, 'the home side');
   assert.match(JSON.stringify(calls[n]), /20749/, 'this game');
   assert.equal(byName(c, 'Seahawks').classList.contains('on'), true, 'and the side reads as picked');
+});
+
+// ---------------------------------------------------------------------------
+// ROLLING LOCK: a kicked row wears pk-locked and its pk-at slot shows the
+// kickoff time; an unkicked row on the same board stays live.
+// ---------------------------------------------------------------------------
+test('rolling lock: a kicked row is pk-locked with its kickoff where "at" was; the next row is live', () => {
+  const past = new Date(Date.now() - 3 * 3600_000).toISOString();
+  const kicked = { ...game(), match_id: 20749, kickoff_at: past, kicked: true, status: 'live', home_score: 3, away_score: 10 };
+  const live = { ...game(), match_id: 20750, slug: 'nfl-2026-reg-w1-sf-lar', home: 'Rams', away: '49ers' };
+  const c = renderMany('nfl', [kicked, live]);
+  const rows = [...c.querySelectorAll('.pk-game')];
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].classList.contains('pk-locked'), true);
+  assert.equal(rows[1].classList.contains('pk-locked'), false);
+  assert.notEqual(rows[0].querySelector('.pk-at').textContent.trim(), 'at', 'the kickoff time, not "at"');
+  assert.match(rows[0].querySelector('.pk-at').textContent, /\d/);
+  assert.equal(rows[1].querySelector('.pk-at').textContent.trim(), 'at');
+  assert.equal(rows[0].querySelectorAll('button.pk-side[disabled]').length, 2, 'both sides inert');
+  assert.equal(rows[1].querySelectorAll('button.pk-side:not([disabled])').length, 2, 'both sides live');
 });
