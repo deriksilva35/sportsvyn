@@ -151,7 +151,7 @@ async function loop(lg) {
       try {
         const r = await pollOnce(sql, {
           league: lg.slug, providerKey: lg.providerKey,
-          fetcher: () => lg.fetcher(now), normalise: lg.normalise, now,
+          fetcher: () => lg.fetcher(now), normalise: lg.normalise, now, log,
         });
         // THE LOST-FINAL SWEEP rides the same tick and the same window
         // (defect 2). Cheap - one indexed read that is empty on almost

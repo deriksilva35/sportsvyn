@@ -195,7 +195,7 @@ export async function sweepLostFinals(sql, { league, now = new Date(), dispatchF
 }
 
 export async function pollOnce(sql, {
-  league, providerKey, fetcher, normalise, now = new Date(), dryRun = false, push = true,
+  league, providerKey, fetcher, normalise, now = new Date(), dryRun = false, push = true, log = () => {},
 }) {
   const out = {
     league, considered: 0, matched: 0, unmatched: 0, written: 0,
@@ -303,7 +303,9 @@ export async function pollOnce(sql, {
               if (scoreKind) lastScoreKind.set(key, scoreKind);
             }
           }
-          const r = await dispatch(sql, { match, event: t.event, state: { ...t.state, scoreKind } });
+          // the poller's logger rides in, so dispatch's summary line
+          // (audience / eligible / sent / skipped) reaches the journal
+          const r = await dispatch(sql, { match, event: t.event, state: { ...t.state, scoreKind }, log });
           out.pushes.push({ event: t.event, sent: r.sent, skipped: r.skipped, failed: r.failed });
           if (r.authFailure) out.pushAuthFailure = true;
         } catch (e) { out.pushErrors.push(String(e?.message ?? e).slice(0, 120)); }
