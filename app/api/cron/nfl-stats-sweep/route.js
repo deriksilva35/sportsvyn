@@ -13,6 +13,7 @@
 import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { ingestAllPlayers, syncNflSeason } from '@/lib/gridiron/nflStatsSync';
+import { sweepGameStats } from '@/lib/gridiron/gameStatsSync';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
@@ -33,7 +34,17 @@ export async function GET(request) {
       run: async () => {
         const players = await ingestAllPlayers({ log: console.log });
         const stats = await syncNflSeason({ season, log: console.log });
-        return { season, players, stats };
+        // BESIDE THE SEASON SWEEP, NOT INSTEAD: any final this season still
+        // holding no stats rows gets one per-game pull (a game the live
+        // poller missed, or one the season feed had not scored yet).
+        const weeks = await sql`
+          SELECT DISTINCT m.week FROM matches m JOIN leagues l ON l.id = m.league_id
+           WHERE l.slug = 'nfl' AND m.season_year = ${season} AND m.season_phase = 'REG' AND m.status = 'final'
+             AND m.external_ids ? 'bdl_game_id'
+             AND NOT EXISTS (SELECT 1 FROM nfl_player_game_stats s WHERE s.match_id = m.id) ORDER BY 1`;
+        const gameSweeps = [];
+        for (const w of weeks) gameSweeps.push(await sweepGameStats(w.week, { season, log: console.log }));
+        return { season, players, stats, gameSweeps: gameSweeps.map((g) => ({ week: g.week, candidates: g.candidates, synced: g.synced.length })) };
       },
     }),
   );

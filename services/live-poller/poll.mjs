@@ -143,6 +143,24 @@ export function scopeToStatus(upd) {
  * now handled this final", or the sweep retries it every thirty seconds
  * forever.
  */
+/**
+ * ONE MATCH SHAPE FOR EVERY PUSH, from a poll row (home_abbr / home_short_name
+ * / home_name and the away triplet) plus whatever the poll just wrote. Both
+ * the score path and the lost-final path build through here, so the team
+ * objects that let pushPayload fall back to short_name / name (105 of 243
+ * CFB teams have no abbreviation - Florida A&M at Miami, 10 Sep, lost five
+ * score pushes to a score path that passed abbreviations only) cannot be
+ * dropped from one path again.
+ */
+export function matchForPush(m, after = {}) {
+  return {
+    ...m, ...after,
+    homeAbbr: m.home_abbr, awayAbbr: m.away_abbr, leagueSlug: m.league_slug,
+    home: { abbreviation: m.home_abbr, short_name: m.home_short_name, name: m.home_name },
+    away: { abbreviation: m.away_abbr, short_name: m.away_short_name, name: m.away_name },
+  };
+}
+
 export async function sweepLostFinals(sql, { league, now = new Date(), dispatchFn, log = () => {} }) {
   const out = { considered: 0, emitted: 0, stamped: 0 };
   const rows = await sql`
@@ -162,12 +180,7 @@ export async function sweepLostFinals(sql, { league, now = new Date(), dispatchF
                             AND ${now.toISOString()}::timestamptz + interval '30 minutes'`;
   out.considered = rows.length;
   for (const m of rows) {
-    const match = {
-      ...m,
-      homeAbbr: m.home_abbr, awayAbbr: m.away_abbr, leagueSlug: m.league_slug,
-      home: { short_name: m.home_short_name, name: m.home_name },
-      away: { short_name: m.away_short_name, name: m.away_name },
-    };
+    const match = matchForPush(m);
     try {
       if (dispatchFn) {
         await dispatchFn(sql, {
@@ -195,7 +208,7 @@ export async function sweepLostFinals(sql, { league, now = new Date(), dispatchF
 }
 
 export async function pollOnce(sql, {
-  league, providerKey, fetcher, normalise, now = new Date(), dryRun = false, push = true,
+  league, providerKey, fetcher, normalise, now = new Date(), dryRun = false, push = true, log = () => {},
 }) {
   const out = {
     league, considered: 0, matched: 0, unmatched: 0, written: 0,
@@ -279,10 +292,7 @@ export async function pollOnce(sql, {
           // before ever reaching the per-device send loop - silently, with
           // no log line, no error, and no push_sends row - independent of
           // and on top of the audienceFor() bug fixed alongside this one.
-          const match = {
-            ...m, ...after,
-            homeAbbr: m.home_abbr, awayAbbr: m.away_abbr, leagueSlug: m.league_slug,
-          };
+          const match = matchForPush(m, after);
           // THE SCORE-KIND PREFIX. Exactly one side's delta must be nonzero -
           // two teams scoring in the same 30s poll has no single honest kind
           // to name, so it gets none. priorWasTouchdown reads THIS team's own
@@ -303,7 +313,9 @@ export async function pollOnce(sql, {
               if (scoreKind) lastScoreKind.set(key, scoreKind);
             }
           }
-          const r = await dispatch(sql, { match, event: t.event, state: { ...t.state, scoreKind } });
+          // the poller's logger rides in, so dispatch's summary line
+          // (audience / eligible / sent / skipped) reaches the journal
+          const r = await dispatch(sql, { match, event: t.event, state: { ...t.state, scoreKind }, log });
           out.pushes.push({ event: t.event, sent: r.sent, skipped: r.skipped, failed: r.failed });
           if (r.authFailure) out.pushAuthFailure = true;
         } catch (e) { out.pushErrors.push(String(e?.message ?? e).slice(0, 120)); }

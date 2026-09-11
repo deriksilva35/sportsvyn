@@ -24,6 +24,7 @@ import { lineScoreGrid, liveChip } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
 import { getBriefForMatch } from '@/lib/gridiron/gameBrief';
 import GameTabs from '@/components/gridiron/GameTabs';
+import BoxScore from '@/components/gridiron/BoxScore';
 import AlertBell from '@/components/alerts/AlertBell';
 import { auth } from '@/auth';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
@@ -151,6 +152,7 @@ export default async function GamePage({ params, searchParams }) {
     hasPlayers ? { key: 'players', label: 'PLAYER LINES' } : null,
     teamBox ? { key: 'teambox', label: 'TEAM BOX' } : null,
     gamecast?.plays?.length ? { key: 'drives', label: 'DRIVES' } : null,
+    game.boxScore?.length ? { key: 'boxscore', label: 'BOX SCORE' } : null,
   ].filter(Boolean);
 
   const winner = final ? (game.homeScore > game.awayScore ? 'home' : game.awayScore > game.homeScore ? 'away' : null) : null;
@@ -282,6 +284,7 @@ export default async function GamePage({ params, searchParams }) {
               drives: gamecast?.plays?.length ? (
                 <DriveChart rows={driveRows} teamAbbr={gamecast.teamAbbr} homeTeamId={game.home?.id} />
               ) : null,
+              boxscore: game.boxScore?.length ? <BoxScore boxScore={game.boxScore} teams={teams} /> : null,
             }}
           />
         ) : (

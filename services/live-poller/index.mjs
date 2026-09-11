@@ -13,8 +13,10 @@
 // writers on their own cadences.
 
 import { neon } from '@neondatabase/serverless';
-import { cadence, sleepUntilNext } from '../../lib/live/cadence.js';
+import { cadence, sleepUntilNext, kickoffDelta } from '../../lib/live/cadence.js';
 import { addCalls, callsToday, applyCap, overCap, DEFAULT_CAP } from '../../lib/live/quota.js';
+import { StatsTracker } from '../../lib/live/statsCadence.js';
+import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
 import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, fromCfbd, fromBdl } from './poll.mjs';
@@ -112,7 +114,10 @@ async function release(client, league) {
 
 async function loop(lg) {
   let lock = null, windowId = null, failures = 0, pending = 0, lastBeat = 0;
-  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [] };
+  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0 };
+  // BOX SCORE PULLS (NFL): every 10th live poll per live game, once at final.
+  const stats = lg.slug === 'nfl' ? new StatsTracker() : null;
+  let statsCallsToday = 0;
 
   for (;;) {
     const now = new Date();
@@ -132,13 +137,13 @@ async function loop(lg) {
     if (active && !lock) {
       lock = await acquire(lg.slug);
       if (!lock) log(`[${lg.slug}] another holder has the live lock; polling anyway is not safe - waiting`);
-      else { windowId = await openWindow(lg.slug, decision.state); log(`[${lg.slug}] window open (${decision.state})`); }
+      else { windowId = await openWindow(lg.slug, decision.state); log(`[${lg.slug}] window open (${decision.state}) ${kickoffDelta(decision.nextKickoffAt, now)}`); }
     }
     if (!active && lock) {
       await closeWindow(windowId, { ...window, closedState: decision.state });
       await release(lock, lg.slug); lock = null; windowId = null;
-      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [] });
-      log(`[${lg.slug}] window closed`);
+      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0 });
+      log(`[${lg.slug}] window closed (${decision.state}) ${kickoffDelta(decision.nextKickoffAt, now)}`);
     }
 
     // --- the poll ---------------------------------------------------------
@@ -146,7 +151,7 @@ async function loop(lg) {
       try {
         const r = await pollOnce(sql, {
           league: lg.slug, providerKey: lg.providerKey,
-          fetcher: () => lg.fetcher(now), normalise: lg.normalise, now,
+          fetcher: () => lg.fetcher(now), normalise: lg.normalise, now, log,
         });
         // THE LOST-FINAL SWEEP rides the same tick and the same window
         // (defect 2). Cheap - one indexed read that is empty on almost
@@ -167,6 +172,23 @@ async function loop(lg) {
         for (const u of r.unmapped) if (!window.unmapped.includes(u)) window.unmapped.push(u);
         if (r.scoreChanges) log(`[${lg.slug}] ${r.scoreChanges} score change(s), ${r.events} event(s)`);
         if (r.unmapped.length) log(`[${lg.slug}] UNMAPPED STATUS:`, r.unmapped.join(', '));
+        if (stats) {
+          // the games this window is watching: live now, or seen live earlier
+          // (so a flip to final is caught once). One row read, no provider call.
+          const seenIds = [...stats.seen.keys()];
+          const watched = await sql`
+            SELECT m.id, m.status FROM matches m JOIN leagues l ON l.id = m.league_id
+             WHERE l.slug = 'nfl' AND (m.status = 'live' OR m.id = ANY(${seenIds}::int[]))`;
+          for (const d of stats.due({ polls: window.polls, matches: watched })) {
+            try {
+              const g = await syncGameStats(d.id);
+              pending += g.calls; window.calls += g.calls; window.statsCalls += g.calls; statsCallsToday += g.calls;
+              log(`[nfl] box score ${d.why} match=${g.matchId} rows=${g.rows} changed=${g.changed} calls=${g.calls}`);
+            } catch (e) {
+              log(`[nfl] box score ${d.why} match=${d.id} failed:`, String(e?.message ?? e).slice(0, 120));
+            }
+          }
+        }
       } catch (e) {
         failures += 1;
         log(`[${lg.slug}] poll failed (${failures}):`, e.message);
@@ -186,7 +208,7 @@ async function loop(lg) {
     if (Date.now() - lastBeat >= HEARTBEAT_MS) {
       const total = pending ? await addCalls(sql, lg.slug, pending, now).catch(() => null) : spent;
       pending = 0; lastBeat = Date.now();
-      await heartbeat(lg.slug, decision.state, { callsToday: total, cap: DEFAULT_CAP[lg.slug], live: decision.liveCount }).catch(() => {});
+      await heartbeat(lg.slug, decision.state, { callsToday: total, cap: DEFAULT_CAP[lg.slug], live: decision.liveCount, ...(stats ? { statsCalls: statsCallsToday } : {}) }).catch(() => {});
       if (overCap(total, lg.slug)) {
         const { maybeAlert } = await import('../../lib/pollers/alerts.js');
         await maybeAlert(sql, {
