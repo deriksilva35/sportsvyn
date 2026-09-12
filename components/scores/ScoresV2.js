@@ -103,7 +103,10 @@ function Card({ g, x, signedIn, signinHref, tz }) {
       <Stake stake={x.stake} g={g} boardOpen={boardOpen} signinHref={signinHref} signedIn={signedIn} />
       {final ? (
         <div className="sv2-foot">
-          <span>{x.stake?.pick ? <>{PICKEM} <b>{x.stake.pick.abbr} {x.stake.pick.state === 'won' ? '✓' : x.stake.pick.state === 'lost' ? '✗' : ''}</b></> : stat ? <b>{stat}</b> : 'Final'}</span>
+          {/* THE FOOT IS THE GAME, NOT THE READER (addendum 6): the stat
+              line and the box score. The pick result lives in the stake row
+              and nowhere else, so a final never says it twice. */}
+          <span>{stat ? <b>{stat}</b> : 'Final'}</span>
           {x.hasStats ? <span className="go">Box score &rarr;</span> : null}
         </div>
       ) : !live ? (
@@ -151,6 +154,13 @@ export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLab
         <span className="sp" />
         {signedIn && <Link className={`sv2-pill mine${v.mine ? ' on' : ''}`} href={href({ date: v.date, sport: v.sport, mine: !v.mine })} data-mine-count={v.mineCount}>Mine · {v.mineCount}</Link>}
       </div>
+      {/* A NON-TODAY DAY COLLAPSES THE LIVE GAMES TO ONE LINE (DAY PICK
+          LEADS relay item 2). The day the reader picked leads the page. */}
+      {v.liveAway && (
+        <Link className="sv2-liveaway" href="/scores" data-liveaway={v.liveAway.count}>
+          {v.liveAway.count} live now <span>Back to today &rarr;</span>
+        </Link>
+      )}
       {v.groups.length === 0 && <p className="sv2-empty">No games {v.mine ? 'with a stake ' : ''}on this day.</p>}
       {v.groups.map((grp) => (
         <section key={grp.key} className="sv2-group" data-group={grp.key}>

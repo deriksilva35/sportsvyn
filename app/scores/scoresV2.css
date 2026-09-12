@@ -27,6 +27,15 @@
 .sv2-gh h2 { font: 700 18px/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; margin: 0; color: var(--paper); }
 .sv2-gh small { color: var(--muted); font: 500 11px var(--font-mono); }
 .sv2-empty { color: var(--muted); font-size: 13px; margin: 18px 0; }
+/* THE COLLAPSED LIVE LINE on a non-today day: one row in live-red, the way
+   back to today on its right. */
+.sv2-liveaway {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border: 1px solid var(--live); border-radius: 12px; padding: 10px 14px; margin-bottom: 4px;
+  color: var(--live); font: 700 12px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; text-decoration: none;
+}
+.sv2-liveaway::before { content: ''; width: 6px; height: 6px; border-radius: 99px; background: var(--live); flex: 0 0 auto; }
+.sv2-liveaway span { margin-left: auto; color: var(--volt); }
 
 .sv2-list { display: grid; gap: 10px; }
 .sv2-card { border: 1px solid var(--line); border-radius: 12px; background: var(--ink-2); padding: 12px 14px; display: block; width: 100%; color: var(--paper); text-decoration: none; }
