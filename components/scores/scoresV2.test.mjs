@@ -51,12 +51,22 @@ function fixture({ signedIn = true } = {}) {
   return {
     today: '2026-09-12', date: '2026-09-12', tz: 'America/Los_Angeles', sport: 'all', mine: false, liveCount: 2, mineCount: signedIn ? 3 : 0,
     days: [{ date: '2026-09-11', dow: 'Fri', day: 11, counts: { live: 0, final: 1, scheduled: 0, epl: 0 }, on: false }, { date: '2026-09-12', dow: 'Sat', day: 12, counts: { live: 2, final: 0, scheduled: 0, epl: 1 }, on: true }, { date: '2026-09-13', dow: 'Sun', day: 13, counts: { live: 0, final: 0, scheduled: 1, epl: 0 }, on: false }],
+    liveAway: null,
     groups: [
       { key: 'live', title: 'Live now', sub: 'updates every 30s', games: [live, epl] },
       { key: 'day', title: 'Tomorrow · Sunday', sub: '1 game · your picks lock at kick', games: [up] },
       { key: 'final', title: 'Final', sub: 'Fri', games: [fin] },
     ],
     extras,
+  };
+}
+// The same slate with SUNDAY picked: the day leads, the live games collapse.
+function sundayFixture() {
+  const v = fixture();
+  return {
+    ...v, date: '2026-09-13', liveAway: { count: 2 },
+    days: v.days.map((d) => ({ ...d, on: d.date === '2026-09-13' })),
+    groups: v.groups.filter((g) => g.key !== 'live'),
   };
 }
 const html = (props) => renderToStaticMarkup(React.createElement(ScoresV2, props));
@@ -106,8 +116,8 @@ test('upcoming card: kickoff, Your pick chip, spread and total, Preview; final c
   assert.match(up, /Spread TEN -5\.5 · O\/U 43\.5/); assert.match(up, /class="go">Change pick →</, 'picked and open -> Change pick (rider 2)');
   assert.match(up, /Weekly · Nix, Sutton <b>2 players<\/b>/); assert.match(up, /class="bell">Alerts</);
   assert.match(fin, /^ final" href="\/cfb\/game\/g-2"/); assert.match(fin, /Final · Fri/);
-  assert.match(fin, /Pick(?:&#x27;|')em <b>NCSU ✓<\/b>/); assert.match(fin, /class="go">Box score →</);
-  // a final with no pick shows the stat line instead
+  assert.match(fin, /data-stake="1"/); assert.match(fin, /Pick(?:&#x27;|')em <b>NCSU ✓<\/b>/); assert.match(fin, /class="go">Box score →</);
+  // the foot is the stat line whether or not there is a pick (addendum 6)
   const v2 = fixture(); v2.extras.get(2).stake = null;
   const h2 = html({ v: v2, signedIn: true }).split('<a class="sv2-card').slice(1)[3];
   assert.match(h2, /<b>Bailey 13\/17 · 281 · 1 TD<\/b>/);
@@ -170,6 +180,61 @@ test('an FCS side with no abbreviation gets one derived from its name, on the ma
   const h = html({ v, signedIn: true }).split('<a class="sv2-card').slice(1)[3];
   assert.match(h, /data-teammark="abbr"[^>]*aria-label="Norfolk State"[^>]*>NOR</);
   assert.match(h, /<span class="ab">NOR<\/span><span class="nm">Norfolk State/);
+});
+
+test('DAY PICK LEADS: on another day the day leads, the live games are one red line, and no live card renders', () => {
+  const h = html({ v: sundayFixture(), signedIn: true });
+  // the line, its count, and the way back
+  assert.match(h, /<a class="sv2-liveaway" data-liveaway="2" href="\/scores">2 live now <span>Back to today →<\/span><\/a>/);
+  // it sits above the first group, and the day's own games lead
+  assert.ok(h.indexOf('sv2-liveaway') < h.indexOf('data-group='), 'the line is above the groups');
+  assert.deepEqual([...h.matchAll(/data-group="(\w+)"/g)].map((m) => m[1]), ['day', 'final']);
+  // NO live card markup at all
+  assert.doesNotMatch(h, /class="sv2-card live"/);
+  assert.doesNotMatch(h, /data-variant="live"/);
+  assert.doesNotMatch(h, /<h2>Live now<\/h2>/);
+  assert.doesNotMatch(h, /data-drive="1"/, 'no drive strip either - the cards are gone');
+  // today keeps its own line and no collapse
+  const t = html({ v: fixture(), signedIn: true });
+  assert.doesNotMatch(t, /sv2-liveaway/); assert.match(t, /<h2>Live now<\/h2>/);
+  // the line's CSS is live-red with the dot
+  const css = readFileSync(path.join(path.resolve(__dirname, '..', '..'), 'app/scores/scoresV2.css'), 'utf8');
+  assert.match(css, /\.sv2-liveaway \{[^}]*border: 1px solid var\(--live\)[^}]*color: var\(--live\)/s);
+});
+
+test('the day strip: the picked day is marked on, and today keeps its live class even when another day is picked', () => {
+  const h = html({ v: sundayFixture(), signedIn: true });
+  // Sat (today) still carries live; Sun (picked) carries on and not live
+  assert.match(h, /class="sv2-day live"[^>]*data-date="2026-09-12"/, 'today keeps its live class');
+  assert.match(h, /class="sv2-day on"[^>]*data-date="2026-09-13"/, 'the picked day is marked on');
+  assert.doesNotMatch(h, /class="sv2-day on live"[^>]*data-date="2026-09-13"/);
+  // and on today both land on the same chip
+  assert.match(html({ v: fixture(), signedIn: true }), /class="sv2-day on live"[^>]*data-date="2026-09-12"/);
+  // every chip is a full navigation to its own date (Next scrolls to top by default - no scroll={false} anywhere)
+  const comp = readFileSync(path.join(path.resolve(__dirname, '..', '..'), 'components/scores/ScoresV2.js'), 'utf8');
+  assert.doesNotMatch(comp, /scroll=\{false\}/, 'a day change must land at the top of the new page');
+  assert.equal((h.match(/class="sv2-day[^"]*"[^>]*href="\/scores\?date=/g) ?? []).length, 3);
+});
+
+test('a final foot carries the stat line and the box score, never the pick (addendum 6)', () => {
+  const h = html({ v: fixture(), signedIn: true });
+  const fin = h.split('<a class="sv2-card').slice(1)[3];
+  const foot = fin.slice(fin.indexOf('<div class="sv2-foot">'));
+  assert.doesNotMatch(foot, /Pick(?:&#x27;|')em/, 'the result lives in the stake row and nowhere else');
+  assert.match(foot, /<b>Bailey 13\/17 · 281 · 1 TD<\/b>/); assert.match(foot, /class="go">Box score →</);
+  // and the stake row still carries it
+  assert.match(fin, /data-stake="1"/); assert.match(fin, /Pick(?:&#x27;|')em <b>NCSU ✓<\/b>/);
+  // a final with no stat line and no stats reads "Final" with no box-score link
+  const v = fixture(); v.extras.get(2).stat = null; v.extras.get(2).hasStats = false;
+  const bare = html({ v, signedIn: true }).split('<a class="sv2-card').slice(1)[3];
+  assert.match(bare, /<div class="sv2-foot"><span>Final<\/span><\/div>/);
+});
+
+test('addendum 5: the Scores tab mounts TzCookie so sv_tz is written on the first visit', () => {
+  const page = readFileSync(path.join(path.resolve(__dirname, '..', '..'), 'app/scores/page.js'), 'utf8');
+  assert.match(page, /import TzCookie from '@\/components\/gridiron\/TzCookie'/);
+  assert.match(page, /<TzCookie \/>/);
+  assert.ok(page.indexOf('<TzCookie />') < page.indexOf('<ScoresV2'), 'mounted with the tab, above the board');
 });
 
 test('no em dashes; /nfl/scores and /cfb/scores still mount ScoresView; LeagueScores untouched', () => {

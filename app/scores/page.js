@@ -20,6 +20,7 @@ import { parseScoresParams, defaultScoresDate } from '@/lib/gridiron/scoresNav';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import '@/components/gridiron/gridiron.css';
 import ScoresV2 from '@/components/scores/ScoresV2';
+import TzCookie from '@/components/gridiron/TzCookie';
 import { scoresV2 } from '@/lib/gridiron/scoresV2';
 import { ET } from '@/lib/gridiron/scoresV2Shape';
 import './scoresV2.css';
@@ -200,6 +201,11 @@ export default async function ScoresPage({ searchParams }) {
   return (
     <div className="gi" data-surface="ink">
       <ScoresChrome isShell={isShell} />
+      {/* sv_tz IS WRITTEN HERE (addendum 5). The tab is the one surface a
+          reader reaches before any Scoreboard has mounted, so without this
+          the header and the day strip stayed on Eastern for the whole first
+          session. From the second request on, both read the viewer's zone. */}
+      <TzCookie />
       <ScoresV2 v={v} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} />
     </div>
   );
