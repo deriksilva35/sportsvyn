@@ -17,7 +17,14 @@
 
 /* intro */
 .lv-intro { padding-top: 10px; }
-.lv-intro h1 { font: 800 40px/1 var(--font-display); text-transform: uppercase; letter-spacing: -.02em; margin: 4px 0 0; color: var(--paper); }
+/* ONE LINE, NEVER WRAPPED. "Every day is game day." broke over two lines on
+   a 360px phone at a fixed 40px; the clamp scales it to the viewport instead,
+   and the nowrap is the guarantee - a wrap here reads as two headlines. */
+.lv-intro h1 {
+  font-family: var(--font-display); font-weight: 800; font-size: clamp(22px, 7.6vw, 30px); line-height: 1;
+  text-transform: uppercase; letter-spacing: -.02em; margin: 4px 0 0; color: var(--paper);
+  white-space: nowrap;
+}
 .lv-intro h1 i { font-style: italic; color: var(--volt); }
 .lv-intro p { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 6px 0 0; }
 
@@ -55,17 +62,23 @@
 .lv-minis { display: grid; gap: 10px; margin-top: 12px; }
 .lv-mini { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; color: var(--paper); text-decoration: none; }
 .lv-ico { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 99px; background: var(--ink-3); border: 1px solid var(--line); color: var(--volt); font: 800 14px var(--font-display); flex: 0 0 auto; }
-.lv-mini strong, .lv-tool strong { display: block; font-size: 14px; margin-bottom: 3px; }
-.lv-mini small, .lv-tool small { color: var(--muted); font: 500 11px var(--font-mono); display: block; letter-spacing: .02em; line-height: 1.4; }
+.lv-mini strong { display: block; font-size: 14px; margin-bottom: 3px; }
+.lv-mini small { color: var(--muted); font: 500 11px var(--font-mono); display: block; letter-spacing: .02em; line-height: 1.4; }
 .lv-mini .st { margin-left: auto; flex: 0 0 auto; border-radius: 99px; padding: 6px 10px; font: 700 11px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--line); color: var(--muted); }
 .lv-mini .st.go { background: var(--volt); color: var(--ink); border-color: var(--volt); }
 .lv-mini .st.done { color: var(--jade); border-color: var(--jade); }
-.lv-tools { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-top: 10px; }
-.lv-tool { display: flex; align-items: center; gap: 12px; padding: 14px; border-bottom: 1px solid var(--line); width: 100%; min-height: 64px; color: var(--paper); text-decoration: none; }
-.lv-tool:last-of-type { border-bottom: 0; }
-.lv-tool .arrow { margin-left: auto; color: var(--volt); font-weight: 700; }
-.lv-tools .note { padding: 10px 14px; background: var(--ink-3); color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
-.lv-tools .note b { color: var(--paper); font-weight: 600; }
+/* THE DRAFT ROOM: the caption first, then two half-width tiles. It leads the
+   page now, so it has to read in one glance - a reason and two doors. */
+.lv-note { color: var(--muted-dim, #6E6E68); font: 500 11px var(--font-mono); line-height: 1.45; margin: 0 0 8px; }
+.lv-note b { color: var(--muted); font-weight: 600; }
+.lv-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lv-tile {
+  background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 9px; min-height: 56px; color: var(--paper); text-decoration: none;
+}
+.lv-tile .lv-ico { width: 24px; height: 24px; font-size: 11px; }
+.lv-tile strong { display: block; font-size: 13px; }
+.lv-tile small { color: var(--muted); font: 500 10px var(--font-mono); }
 
 /* tonight */
 .lv-scores { display: grid; gap: 10px; }
