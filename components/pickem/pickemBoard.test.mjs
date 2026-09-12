@@ -286,3 +286,16 @@ test('D3: Claim -> the stashed pick replays; two stashed picks land in order', a
   assert.equal(c.querySelector('.onb-scrim'), null, 'never asked twice');
   assert.equal(s.calls.length, 3);
 });
+
+test('RIDER: one denominator - 16 rows, 2 kicked, 0 picked -> header "0 of 14", cap "0 of 14 picked", record "14 pending"', () => {
+  const c = renderGate(boardOf(16, { kicked: 2, picked: 0 }), { hasHandle: true });
+  assert.equal(c.querySelector('header.hdr .clock').textContent, '0 of 14');
+  assert.equal(c.querySelector('.prog .cap span').textContent, '0 of 14 picked');
+  assert.match(c.querySelector('.pk-record .pk-big').textContent, /14 pending/);
+  assert.equal(c.querySelector('.wk-review'), null, 'nothing picked, no card');
+  // and with all 14 open picked, the three read the same 14
+  const c2 = renderGate(boardOf(16, { kicked: 2, picked: 14 }), { hasHandle: true });
+  assert.equal(c2.querySelector('header.hdr .clock').textContent, '14 of 14');
+  assert.equal(c2.querySelector('.prog .cap span').textContent, '14 of 14 picked');
+  assert.match(c2.querySelector('.wk-review .wk-review-note').textContent, /^14 of 14 picked/);
+});

@@ -120,8 +120,8 @@ export default function PickemBoard({
     my_side: mine[g.match_id] ?? g.my_side,
   })), [initialGames, mine, now]);
 
-  const picked = games.filter((g) => g.my_side != null).length;
-  const total = games.length;
+  // ONE DENOMINATOR ON THE PAGE (GO rider): the header clock, the pip
+  // caption and the confirm line all count the PICKABLE games - see below.
   // WHAT CAN STILL BE PICKED, at this render (FRESH-USER FIXES, D4). The
   // confirm card used to wait for picked === total, and a board that already
   // had a kicked game - every NFL board from Friday on - could never reach it:
@@ -193,7 +193,7 @@ export default function PickemBoard({
           Pick&rsquo;em &middot; Board {contest.boardNumber ?? ''} &middot; {contest.sport.toUpperCase()}
           {contest.displayWeek != null && <> Week {contest.displayWeek}</>}
         </span>
-        <span className="clock">{picked} of {total}</span>
+        <span className="clock">{pickedOpen} of {pickable}</span>
       </header>
       {/* STRAIGHT UP, SAID ONCE. The line below each game is reference, not
           the bet - a board that shows a spread beside two buttons reads as
@@ -221,7 +221,7 @@ export default function PickemBoard({
           </div>
         ))}
         <div className="cap">
-          <span>{picked} of {total} picked</span>
+          <span>{pickedOpen} of {pickable} picked</span>
           {cd && <span>next lock <b>{cd}</b></span>}
         </div>
       </div>
