@@ -141,6 +141,18 @@ export default function LobbyV2({ v, signedIn = false, isShell = false, leagues 
         </p>
       </div>
 
+
+      {/* THE DRAFT ROOM LEADS (HEADLINE FIT + DRAFT ROOM ON TOP relay):
+          directly under the intro, above the Daily. The caption carries the
+          section's one idea and sits ABOVE the tiles, so a reader meets the
+          reason before the two doors. */}
+      <div className="lv-sh"><h2>Draft room</h2></div>
+      <p className="lv-note"><b>Mock season is over, not the mock.</b> Every Draft room uses the same clock and board, so a mock is a practice run.</p>
+      <div className="lv-duo" data-section="draft-room">
+        <a className="lv-tile" href="/sim"><span className="lv-ico">M</span><span><strong>Mock</strong><small>vs the market</small></span></a>
+        <a className="lv-tile" href="/sim/tracker"><span className="lv-ico">T</span><span><strong>Tracker</strong><small>log your draft</small></span></a>
+      </div>
+
       <div className="lv-games">
         <GameCard
           card={daily} hero signedIn={signedIn} signinHref={signinHref}
@@ -159,12 +171,6 @@ export default function LobbyV2({ v, signedIn = false, isShell = false, leagues 
         <MiniRow row={draft} signedIn={signedIn} signinHref={signinHref} />
       </div>
 
-      <div className="lv-sh"><div><h2>Draft room</h2><p>Practice for the Draft. Track the one you&rsquo;re in.</p></div></div>
-      <div className="lv-tools" data-section="draft-room">
-        <a className="lv-tool" href="/sim"><span className="lv-ico">M</span><span><strong>Mock draft</strong><small>Draft against the market &middot; same 30s clock as the Draft &middot; 12 presets</small></span><span className="arrow">&rarr;</span></a>
-        <a className="lv-tool" href="/sim/tracker"><span className="lv-ico">T</span><span><strong>Draft tracker</strong><small>Drafting somewhere else? Log each pick, see who&rsquo;s left</small></span><span className="arrow">&rarr;</span></a>
-        <div className="note"><b>Mock season is over,</b> not the mock. Every Draft room uses the mock&rsquo;s clock and board, so a mock is a practice run for the next room.</div>
-      </div>
 
       <div className="lv-sh"><h2>{tonightTitle({ games: v.tonight, now: v.now, tz: viewerTz ?? 'America/New_York' })}</h2><a href="/scores">All scores &rarr;</a></div>
       <div className="lv-scores" data-section="tonight">

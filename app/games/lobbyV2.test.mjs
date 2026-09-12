@@ -15,8 +15,11 @@ const comp = strip(src('components/games/LobbyV2.js'));
 const lobby = comp.slice(comp.indexOf('export default function LobbyV2('));
 
 test('the page renders every section, in the mock\'s order', () => {
-  const order = ['className="lv-ah"', 'className="lv-intro"', 'className="lv-games"', 'card={daily} hero', 'card={weekly}',
-    'className="lv-minis"', 'row={pickem}', 'row={draft}', '<h2>Draft room</h2>', 'data-section="draft-room"',
+  // HEADLINE FIT + DRAFT ROOM ON TOP relay: the Draft room moved above the
+  // Daily card, directly under the intro. Nothing else changed place.
+  const order = ['className="lv-ah"', 'className="lv-intro"', '<h2>Draft room</h2>', 'className="lv-note"',
+    'data-section="draft-room"', 'className="lv-games"', 'card={daily} hero', 'card={weekly}',
+    'className="lv-minis"', 'row={pickem}', 'row={draft}',
     'tonightTitle({ games: v.tonight', 'data-section="tonight"', 'data-section="read"', 'className="lv-more"'];
   let at = 0;
   for (const marker of order) {
@@ -33,10 +36,13 @@ test('the page renders every section, in the mock\'s order', () => {
 test('Mock and Tracker live in the Draft room and nowhere else on the page - one link each', () => {
   assert.equal((lobby.match(/href="\/sim"/g) ?? []).length, 1);
   assert.equal((lobby.match(/href="\/sim\/tracker"/g) ?? []).length, 1);
-  const room = lobby.slice(lobby.indexOf('data-section="draft-room"'), lobby.indexOf('tonightTitle({ games: v.tonight'));
+  const room = lobby.slice(lobby.indexOf('data-section="draft-room"'), lobby.indexOf('className="lv-games"'));
   assert.match(room, /href="\/sim"/); assert.match(room, /href="\/sim\/tracker"/);
-  assert.match(room, /<strong>Mock draft<\/strong>/); assert.match(room, /<strong>Draft tracker<\/strong>/);
-  assert.match(room, /Mock season is over,<\/b> not the mock\./);
+  assert.match(room, /<strong>Mock<\/strong><small>vs the market<\/small>/);
+  assert.match(room, /<strong>Tracker<\/strong><small>log your draft<\/small>/);
+  // two half-width tiles, 24px disc each
+  assert.equal((room.match(/className="lv-tile"/g) ?? []).length, 2);
+  assert.match(lobby, /<div className="lv-duo" data-section="draft-room">/);
   // the old Practice module is gone from the page
   assert.doesNotMatch(page + comp, /v\.practice|Set up a board/);
 });
@@ -86,4 +92,33 @@ test('the page wires the v2 reader to the pane and keeps the other three panes o
   assert.match(page, /const v2 = pane === 'games' \? await lobbyV2\(userId\)\.catch\(\(\) => null\) : null;/);
   assert.match(page, /<LobbyV2 v=\{v2\} signedIn=\{userId != null\} isShell=\{isShell\} leagues=\{leagues\} viewerTz=\{viewerTz\} \/>/);
   assert.match(page, /pane === 'leaderboards' && <BoardsPane/); assert.match(page, /pane === 'answer' && <AnswerPane/); assert.match(page, /pane === 'history' && <HistoryPane/);
+});
+
+test('HEADLINE FIT: the h1 is one line, clamped to the viewport, and nothing can wrap it back', () => {
+  const css = src('app/games/lobbyV2.css');
+  const rule = css.slice(css.indexOf('.lv-intro h1 {'), css.indexOf('}', css.indexOf('.lv-intro h1 {')));
+  assert.match(rule, /white-space: nowrap/, 'the guarantee');
+  assert.match(rule, /font-size: clamp\(22px, 7\.6vw, 30px\)/, 'scales with the viewport');
+  assert.match(rule, /font-weight: 800/); assert.match(rule, /text-transform: uppercase/);
+  // no later rule may put the wrap back or pin a fixed size
+  const after = css.slice(css.indexOf('.lv-intro h1 {') + 1);
+  assert.doesNotMatch(after, /\.lv-intro h1[^{]*\{[^}]*white-space:\s*(normal|pre-wrap)/);
+  assert.doesNotMatch(after, /\.lv-intro h1[^{]*\{[^}]*font-size:\s*\d+px/);
+  // the volt italic on "game day." is untouched
+  assert.match(css, /\.lv-intro h1 i \{ font-style: italic; color: var\(--volt\); \}/);
+  assert.match(lobby, /<h1>Every day is <i>game day\.<\/i><\/h1>/);
+});
+
+test('DRAFT ROOM ON TOP: the caption sits above the tiles, the old sub-line is gone, and the section leads the page', () => {
+  // caption above tiles
+  assert.ok(lobby.indexOf('className="lv-note"') < lobby.indexOf('data-section="draft-room"'), 'caption first');
+  assert.match(lobby, /<p className="lv-note"><b>Mock season is over, not the mock\.<\/b> Every Draft room uses the same clock and board, so a mock is a practice run\.<\/p>/);
+  // the old sub-line and the old stacked tools are gone
+  assert.doesNotMatch(lobby, /Practice for the Draft/);
+  assert.doesNotMatch(lobby, /lv-tools|lv-tool\b|Draft tracker|Mock draft/);
+  assert.doesNotMatch(src('app/games/lobbyV2.css'), /\.lv-tools|\.lv-tool\b/);
+  // the section header carries no sub-line of its own
+  assert.match(lobby, /<div className="lv-sh"><h2>Draft room<\/h2><\/div>/);
+  // and it leads: above the Daily card
+  assert.ok(lobby.indexOf('<h2>Draft room</h2>') < lobby.indexOf('card={daily} hero'));
 });
