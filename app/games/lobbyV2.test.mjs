@@ -68,6 +68,14 @@ test('no em dashes on the page or its shapes; the three panes and the stranger b
   assert.match(comp, /const href = signedIn \? card\.href : signinHref\(card\.href\);/);
   // no zeros strip, no pane nav on the games pane
   assert.doesNotMatch(lobby, /className="strip"/); assert.doesNotMatch(lobby, /<PaneTabs/);
+  // R3/R4: the Tonight foot leads with the broadcaster; Read the game is football-only and omitted when empty
+  assert.match(comp, /\[g\.network, spread\]\.filter\(Boolean\)\.join\(' · '\)/);
+  const reader = strip(src('lib/games/lobbyV2.js'));
+  assert.match(reader, /FROM match_broadcasters b\s+WHERE b\.match_id = m\.id AND b\.country_code = 'US'/);
+  assert.match(reader, /JOIN leagues l ON l\.id = a\.league_id\s+WHERE a\.status = 'published' AND a\.type <> 'preview' AND l\.slug IN \('nfl', 'cfb'\)/);
+  assert.match(lobby, /\{v\.read && \(/, 'no article -> no section');
+  // R6: the Practice module is gone from the lobby reader too
+  assert.doesNotMatch(strip(src('lib/games/read.js')), /practice: \{ chips/);
   // the Tonight card carries no win-probability bar and TeamMark at 24
   assert.doesNotMatch(lobby, /className="bar"/); assert.match(comp, /<TeamMark primary=\{t\.colors\.primary\} secondary=\{t\.colors\.secondary\} size=\{24\}/);
 });

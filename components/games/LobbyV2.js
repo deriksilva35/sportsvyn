@@ -90,8 +90,10 @@ function ScoreCard({ g }) {
       <TeamLine t={g.home} trail={live || final ? awayLeads : false} scored={live || final} />
       {/* NO WIN-PROBABILITY BAR: no probability exists for gridiron (Part A
           3f), so the bar is omitted and the spread line stays. */}
+      {/* FOOT: broadcaster first (match_broadcasters, R3), then the spread;
+          right side is the box score once the game is on, the pick before. */}
       <div className="lv-sfoot">
-        <span>{spread ?? (live ? 'Live' : final ? 'Final' : 'No line yet')}</span>
+        <span>{[g.network, spread].filter(Boolean).join(' · ') || (live ? 'Live' : final ? 'Final' : 'No line yet')}</span>
         <span>{live || final ? 'Box score →' : `Your pick: ${g.myPick ?? 'none'}`}</span>
       </div>
     </a>
