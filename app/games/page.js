@@ -1,5 +1,5 @@
 /**
- * /games — the arcade's front door, and the app's Games tab through the shell.
+ * /games - the arcade's front door, and the app's Games tab through the shell.
  *
  * ONE SURFACE, TWO DOORS. The homepage is the publication's door and keeps the
  * Daily module and yesterday strip; this is the arcade's. Per app mock v0.2 the
@@ -25,13 +25,17 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { gamesLobby } from '@/lib/games/read';
+import { lobbyV2 } from '@/lib/games/lobbyV2';
+import LobbyV2 from '@/components/games/LobbyV2';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 import { myLeagues } from '@/lib/leagues/core';
-import { normalizePane, HERO_LOCK_LABEL, normalizePickemSeasonSport } from '@/lib/games/lobby';
+import { normalizePane, normalizePickemSeasonSport } from '@/lib/games/lobby';
 import PaneTabs from '@/components/games/PaneTabs';
 import SeasonBoard from '@/components/games/SeasonBoard';
 import StandaloneDate from '@/components/StandaloneDate';
 import { tierClass } from '@/lib/daily/reveal';
 import './games.css';
+import './lobbyV2.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -57,7 +61,11 @@ export default async function GamesPage({ searchParams }) {
   // GAMES WAS THE ODD ONE: no signed-out branch at all, so a stranger in the
   // container got the lobby - four cards, none of them playable. Same rule.
   requireSignInInShell({ isShell, userId, dest: '/games' });
-  const v = await gamesLobby(userId, { pickemSeasonSport }).catch(() => null);
+  // THE GAMES PANE IS v2 (GAMES TAB v2 relay): its own reader, its own
+  // shapes. The other three panes still draw from gamesLobby(), unchanged.
+  const v2 = pane === 'games' ? await lobbyV2(userId).catch(() => null) : null;
+  const viewerTz = pane === 'games' ? await readViewerTz() : null;
+  const v = pane === 'games' ? null : await gamesLobby(userId, { pickemSeasonSport }).catch(() => null);
   // YOUR LEAGUES (v0.2 door): the member's leagues on the lobby, or the
   // create/join CTA when none. Caught to [] like every lobby read.
   const leagues = userId == null ? [] : await myLeagues(Number(userId)).catch(() => []);
@@ -65,49 +73,32 @@ export default async function GamesPage({ searchParams }) {
   return (
     <>
       <GlobalHeaderServer activeNav="games" />
-      <main className="lob" data-surface="ink">
-
+      <main className={`lob${pane === 'games' ? ' lv' : ''}`} data-surface="ink">
         {pane === 'games' ? (
-          // THE LOBBY'S OWN HEADER (relay 2a item 2, mock's .hmhdr) - only this
-          // pane, matching the mock's own scoping. The other panes keep the
-          // shared eyebrow below, untouched.
-          <header className="hmhdr">
-            <h1>{v?.header?.title ?? 'Games'}</h1>
-            <div className="sub">{v?.header?.today}{v?.header?.week != null && <> &middot; Week {v.header.week}</>} &middot; {v?.header?.sub}</div>
-          </header>
+          v2
+            ? <LobbyV2 v={v2} signedIn={userId != null} isShell={isShell} leagues={leagues} viewerTz={viewerTz} />
+            : (
+              <section className="mod">
+                <p className="muted">The lobby is having a moment. Try again shortly.</p>
+              </section>
+            )
         ) : (
-          <header className="lob-head">
-            <h1 className="lob-title">Game day, every day.</h1>
-            <p className="lob-sub">One account. One handle. Every board.</p>
-          </header>
+          <>
+            <header className="lob-head">
+              <h1 className="lob-title">Game day, every day.</h1>
+              <p className="lob-sub">One account. One handle. Every board.</p>
+            </header>
+            <PaneTabs pane={pane} />
+            {!v && (
+              <section className="mod">
+                <p className="muted">The lobby is having a moment. Try again shortly.</p>
+              </section>
+            )}
+            {v && pane === 'leaderboards' && <BoardsPane v={v} userId={userId} />}
+            {v && pane === 'answer' && <AnswerPane v={v} />}
+            {v && pane === 'history' && <HistoryPane v={v} />}
+          </>
         )}
-
-        {/* A CLIENT SWITCHER OVER SERVER PANES. The panes remain URL params and
-            remain server-rendered - that is what makes each one's payload
-            independently leak-testable, and it is not negotiable. What changed
-            is that these are next/link soft navigations rather than <a> tags,
-            so the outgoing pane stays painted until the incoming one arrives
-            instead of the browser tearing the document down between them. */}
-        <PaneTabs pane={pane} />
-
-        {!v && (
-          <section className="mod">
-            <p className="muted">The lobby is having a moment. Try again shortly.</p>
-          </section>
-        )}
-
-        {v && pane === 'games' && (
-          <GamesPane
-            v={v}
-            leagues={leagues}
-            signedIn={userId != null}
-            signinHref={shellSigninHref('/games', isShell)}
-          />
-        )}
-        {v && pane === 'leaderboards' && <BoardsPane v={v} userId={userId} />}
-        {v && pane === 'answer' && <AnswerPane v={v} />}
-        {v && pane === 'history' && <HistoryPane v={v} />}
-
         <p className="lob-foot">
           One account · one handle · one leaderboard spine. Pick &rsquo;em and The Weekly settle
           on real games; the Daily settles on history. Not affiliated with the NFL.
@@ -128,212 +119,6 @@ export default async function GamesPage({ searchParams }) {
  * to play' and goes to sign-in with a return URL rather than the game's own
  * page - the hero names an open game a stranger cannot yet enter.
  */
-function Hero({ hero, signedIn = true, signinHref = '/signin' }) {
-  if (hero.allDone) {
-    return (
-      <div className="hero">
-        <div className="eb"><b>Every board is set</b></div>
-        <h2>{hero.score} pts<br />today.</h2>
-        <p>{hero.band ? `${hero.band}. ` : ''}The Daily reveals at midnight ET.</p>
-        <a className="btn" href={hero.href}>See your board</a>
-      </div>
-    );
-  }
-  // THE SETTLED RECAP (relay 2b item 6) - Tuesday morning after settle,
-  // before the new week's boards open. `results` is graded()'s own
-  // {label, pct} list from lib/games/read.js, always at least one entry
-  // whenever this hero fires at all.
-  if (hero.key === 'settled-recap') {
-    return (
-      <div className="hero">
-        <div className="eb"><b>Week {hero.week} is settled</b><span>{hero.gradesIn} grades in</span></div>
-        <h2>{hero.avgPct}% of the best.</h2>
-        <p>{hero.results.map((r) => r.label).join(' · ')}</p>
-        <a className="btn ghost" href={hero.href}>See your grades</a>
-      </div>
-    );
-  }
-  return (
-    <div className="hero">
-      <div className="eb">
-        <b>{hero.eyebrowLeft}</b>
-        <span>{HERO_LOCK_LABEL[hero.key]} <StandaloneDate iso={hero.locksAt} /></span>
-      </div>
-      <h2>{hero.tagline[0]}<br />{hero.tagline[1]}</h2>
-      <a className="btn" href={signedIn ? hero.href : signinHref}>
-        {signedIn ? hero.cta : 'Sign in to play'}
-      </a>
-    </div>
-  );
-}
-
-function GamesPane({ v, leagues = [], signedIn = false, signinHref = '/signin' }) {
-  return (
-    <>
-      {/* THE STAT STRIP (relay 2a item 2). v.strip is a fixed 4-cell array,
-          already the right facts for signed-in vs signed-out - the pane
-          never chooses between them, it only renders what read.js decided. */}
-      {v.strip && (
-        <div className="strip">
-          {v.strip.map((cell, i) => (
-            <div key={i}>
-              <b className={cell.volt ? 'v' : undefined}>{cell.value ?? '-'}</b>
-              <small>{cell.label}</small>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* THE HERO (relay 2a item 3). null for a signed-out reader, or a
-          signed-in one with no unmet appointment-game lock right now -
-          the mock never designed a hero for either, so neither renders one
-          rather than inventing a state. */}
-      {v.hero && <Hero hero={v.hero} signedIn={signedIn} signinHref={signinHref} />}
-
-      {/* WHAT A STRANGER NEEDS, ABOVE THE FOLD (relay 6 item 3). Signed out,
-          this page opened on a stat strip reading 0 players today and a hero
-          whose only button said "Sign in to play" - it answered neither what
-          this is nor why today, and the explainer link was far below, under
-          Today's boards.
-
-          SIGNED OUT ONLY. A signed-in reader already knows what it costs and
-          has an account; two lines telling them it is free would be noise on
-          the surface they use most. The ghost link under Today's boards stays
-          for everyone - this is a second, earlier entrance to the same page,
-          worded the way the launch email words it. */}
-      {!signedIn && (
-        <div className="lob-stranger">
-          <p className="lob-free">Free. An email and a handle. Nothing to install.</p>
-          <Link className="ghost" href="/games/how-it-works">How to play each game &rarr;</Link>
-        </div>
-      )}
-
-      {/* TODAY'S BOARDS (relay 2a item 4) - four rows, fixed GAME_ORDER,
-          replacing the old 2x2 .ggrid entirely: the mock never shows that
-          grid, and this screen builds to the mock, not to memory. */}
-      {v.boardRows?.length > 0 && (
-        <div className="mod">
-          <div className="mod-head">
-            <h2 className="eyebrow">Today&rsquo;s boards</h2>
-            <span className="pill">one handle, every board</span>
-          </div>
-          {v.boardRows.map((r) => (
-            <div className="grow-wrap" key={r.key}>
-            {/* A ROW'S "ABOVE" LINE IS ITS OWN LINK, a sibling of the row -
-                an <a> cannot nest an <a>, and this one goes somewhere else:
-                yesterday's results, while the row itself goes to today. */}
-            {r.above && <a className="grow-yday" href={r.above.href}>{r.above.text} &rarr;</a>}
-            <a className="grow" href={r.href}>
-              <div className={`gl${r.tile ? ` ${r.tile}` : ''}`}>{r.glyph}</div>
-              <div className="tx">
-                <b>{r.name}</b>
-                <small>
-                  {r.line1}
-                  <br />
-                  {r.locksAt
-                    ? <>{r.locksPre}<em><StandaloneDate iso={r.locksAt} /></em></>
-                    : r.line2}
-                </small>
-              </div>
-              {r.pill && <span className={`st${r.pill.tone === 'volt' ? ' on' : r.pill.tone === 'jade' ? ' done' : ''}`}>{r.pill.label}</span>}
-            </a>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* THE EXPLAINER (relay 5 item 4). Under the boards, not above them:
-          somebody who already knows the games should never have to read
-          past an explainer to reach one.
-
-          OUTSIDE the boardRows guard, and that is the point. It renders
-          whether or not there are boards today and whether or not anyone is
-          signed in - a stranger with an empty slate is exactly the reader
-          who needs it, and /games/how-it-works reads no session at all. */}
-      <Link className="ghost hiw-link" href="/games/how-it-works">How the games work &rarr;</Link>
-
-      {/* THE LEADERBOARDS MODULE (relay 2a item 5) - five compact rows,
-          fixed order. 'Your room' is NOT here: no feature in this codebase
-          tracks a small friend group's per-member streak against a single
-          invite code (leagues are a coarser, different concept - members
-          and a name, no per-member streak/board count) - omitted rather
-          than mocked, per the item's own instruction. */}
-      {v.leaderboardRows && (
-        <div className="mod">
-          <div className="mod-head">
-            <h2 className="eyebrow">Leaderboards</h2>
-            <span className="pill">ranked play only</span>
-          </div>
-          {v.leaderboardRows.map((r) => (
-            <div className="arow" key={r.label}>
-              <span className="d">{r.label}</span>
-              <span className="y">{r.middle}</span>
-              <span className={`s${r.rank == null ? ' none' : ''}`}>{r.rank != null ? `#${r.rank}` : '-'}</span>
-            </div>
-          ))}
-          <a className="ghost" href="/games?pane=leaderboards">All boards &rarr;</a>
-        </div>
-      )}
-
-      {/* PRACTICE (relay 2a item 5) - the mock's evolved 'Mock drafts'
-          module: unranked, nothing here counts. Only real chips render
-          (see lib/games/read.js's practice field for what was left out and
-          why). */}
-      {v.practice && (
-        <section className="mod">
-          <div className="mod-head">
-            <h2 className="eyebrow">Practice</h2>
-            <span className="pill">unranked · nothing here counts</span>
-          </div>
-          <div className="pchips">
-            {v.practice.chips.map((c) => (
-              <span key={c.label} className={`pchip${c.on ? ' on' : ''}`}>{c.label}</span>
-            ))}
-          </div>
-          <a className="ghost" href={v.practice.href}>{v.practice.cta} &rarr;</a>
-        </section>
-      )}
-
-      {/* YOUR LEAGUES - the door to the social spine. Lists the member's
-          leagues; a signed-in reader with none gets the one-line pitch and
-          the same route. Signed-out readers see nothing here - the lobby
-          pitch machinery already owns that conversation. */}
-      {signedIn && (
-        <section className="mod">
-          <div className="mod-head">
-            <h2 className="eyebrow">Your leagues</h2>
-            {leagues.length > 0 && <span className="pill">{leagues.length}</span>}
-          </div>
-          {leagues.length === 0 ? (
-            <div className="row">
-              <span className="muted">
-                Your people, one board - create a league and share the code.
-              </span>
-            </div>
-          ) : (
-            leagues.map((lg) => (
-              <div className="row" key={lg.id}>
-                <span>{lg.name}</span>
-                <span className="v muted">{lg.members} {lg.members === 1 ? 'member' : 'members'}</span>
-              </div>
-            ))
-          )}
-          <a className="ghost" href="/leagues">
-            {leagues.length === 0 ? 'Start a league →' : 'Open your leagues →'}
-          </a>
-        </section>
-      )}
-
-      {/* GATED ON THE RECORD ITSELF, not on v.season. seasonStrip() returns
-          null until the reader has a STANDING, so gating on it hid the whole
-          module from exactly the readers it is most useful to: anyone who has
-          played a day or two and has no ranked position yet. The record exists
-          the moment a revealed day does. */}
-      <YourStats v={v} />
-    </>
-  );
-}
-
 function BoardsPane({ v, userId = null }) {
   return (
     <>

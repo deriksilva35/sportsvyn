@@ -66,6 +66,7 @@
   --ink-2: #141414;
   --ink-3: #1C1C1C;
   --line: #2A2A2A;
+  --blue: #245BFF;   /* v1.4 · Daily surface only */
   --font-saira-cond: var(--font-saira-condensed), var(--font-saira), sans-serif;
   --font-archivo-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 }
