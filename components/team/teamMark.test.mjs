@@ -35,7 +35,17 @@ test('Helmet.js is untouched by this relay, and the lobby is the only TeamMark u
   assert.doesNotMatch(src, /TeamMark/);
   const { execSync } = await import('node:child_process');
   const users = execSync("grep -rl \"components/team/TeamMark\" --include=*.js app components lib | grep -v test || true", { cwd: new URL('../../', import.meta.url).pathname }).toString().trim().split('\n').filter(Boolean);
-  assert.deepEqual(users.sort(), ['components/games/LobbyV2.js', 'components/team/TeamMark.js'].filter((f) => users.includes(f)).sort());
+  const ALLOWED = ['components/games/LobbyV2.js', 'components/scores/ScoresV2.js', 'components/team/TeamMark.js'];
   assert.ok(users.includes('components/games/LobbyV2.js'), 'the lobby uses it');
-  assert.ok(!users.some((f) => !['components/games/LobbyV2.js', 'components/team/TeamMark.js'].includes(f)), `no other user: ${users}`);
+  assert.ok(users.includes('components/scores/ScoresV2.js'), 'the Scores tab uses it (SCORES TAB v2)');
+  assert.ok(!users.some((f) => !ALLOWED.includes(f)), `no other user: ${users}`);
+});
+
+test('no colors -> an ink-3 disc with the abbreviation and the --line ring (EPL fallback, SCORES TAB v2 Part A 2)', () => {
+  const h = html({ primary: null, secondary: null, abbr: 'BRE', size: 24, title: 'Brentford' });
+  assert.match(h, /data-teammark="abbr"/); assert.match(h, /aria-label="Brentford"/);
+  assert.match(h, /background:var\(--ink-3, #1C1C1C\)/); assert.match(h, /border:1px solid var\(--line, #2A2A2A\)/);
+  assert.match(h, />BRE<\/span>/); assert.doesNotMatch(h, /<svg/);
+  assert.match(html({ primary: '#111111', secondary: null, abbr: 'X', size: 24 }), /data-teammark="abbr"/, 'one colour is no colours');
+  assert.match(html({ primary: null, secondary: null, abbr: 'ARSENAL', size: 24 }), />ARS<\/span>/, 'three letters at most');
 });

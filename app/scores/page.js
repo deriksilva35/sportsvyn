@@ -1,4 +1,4 @@
-// app/scores/page.js — the Scoreboard (ink surface). Reads whatever
+// app/scores/page.js - the Scoreboard (ink surface). Reads whatever
 // DATABASE_URL points at - on Vercel that is PROD. (An earlier note here
 // claimed this page read development data; it predated the env split and was
 // stale the day it deployed.)
@@ -19,6 +19,10 @@ import { loadRecordChips } from '@/lib/gridiron/recordsLoader';
 import { parseScoresParams, defaultScoresDate } from '@/lib/gridiron/scoresNav';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import '@/components/gridiron/gridiron.css';
+import ScoresV2 from '@/components/scores/ScoresV2';
+import { scoresV2 } from '@/lib/gridiron/scoresV2';
+import { ET } from '@/lib/gridiron/scoresV2Shape';
+import './scoresV2.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Scores - Sportsvyn' };
@@ -66,6 +70,19 @@ function label(iso) {
  * PINNED IS ONE PROP, not a fork. Everything below reads `sport`, which the
  * pin simply decides instead of the URL.
  */
+// ONE CHROME FOR BOTH VIEWS: the global header, the league header when a
+// league page mounts ScoresView, and the shell's segment control behind its
+// gate - rendered here and nowhere else in this file.
+function ScoresChrome({ isShell, leagueHeader = null }) {
+  return (
+    <>
+      <GlobalHeaderServer activeNav="scores" />
+      {leagueHeader ?? null}
+      {isShell && <SportsvynSegment />}
+    </>
+  );
+}
+
 export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
 
   const isShell = await resolveShellMode();
@@ -124,9 +141,7 @@ export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
           which meant the league wearings of this board had no global header at
           all - no wordmark, no way out to the rest of the site. The league
           header goes UNDER it, not instead of it. */}
-      <GlobalHeaderServer activeNav="scores" />
-      {leagueHeader ?? null}
-      {isShell && <SportsvynSegment />}
+      <ScoresChrome isShell={isShell} leagueHeader={leagueHeader} />
 
       <div className="gi-wrap">
         <div className="gi-kicker">
@@ -164,6 +179,28 @@ export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
 }
 
 
+// THE SCORES TAB, v2 (SCORES TAB v2 relay; docs/design/mocks/scores-tab-v0_2.html).
+// /scores is the tab. /nfl/scores and /cfb/scores still mount ScoresView
+// above, untouched (relay item 9).
+const one = (v) => (Array.isArray(v) ? v[0] : v);
+function zoneLabel(tz) {
+  try {
+    const name = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'long' }).formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value ?? tz;
+    return name.replace(/ (Standard|Daylight) Time$/, '');
+  } catch { return tz; }
+}
 export default async function ScoresPage({ searchParams }) {
-  return ScoresView({ sp: (await searchParams) ?? {} });
+  const sp = (await searchParams) ?? {};
+  const [session, viewerTz, isShell] = await Promise.all([auth().catch(() => null), readViewerTz(), resolveShellMode()]);
+  const userId = session?.user?.id ?? null;
+  const tz = viewerTz ?? ET;
+  const sportRaw = one(sp.sport);
+  const sport = ['nfl', 'cfb', 'epl'].includes(sportRaw) ? sportRaw : 'all';
+  const v = await scoresV2({ userId, date: one(sp.date) ?? null, sport, mine: userId != null && one(sp.mine) === '1', tz });
+  return (
+    <div className="gi" data-surface="ink">
+      <ScoresChrome isShell={isShell} />
+      <ScoresV2 v={v} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} />
+    </div>
+  );
 }
