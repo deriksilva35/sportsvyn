@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Sportsvyn app · Scores tab remock v0.1</title>
+<!-- The ruled mock for SCORES TAB v2 (relay of 12 Sep 2026), saved verbatim
+     except for one thing: the wordmark was pasted as a base64 JPEG; the same
+     asset ships at /brand/, so the img src points there. Fonts and hexes in
+     this file are stand-ins - the build uses the site's tokens. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,600;0,700;0,800;1,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--blue:#245BFF;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;
+--disp:'Saira',system-ui,sans-serif;--sans:system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:#000}
+body{font:14px/1.5 var(--sans);color:var(--paper);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eb{color:var(--volt);font-family:var(--mono);font-size:11px;letter-spacing:.12em;font-weight:700;text-transform:uppercase}
+.eb.q{color:var(--muted)}
+h1,h2,h3{font-family:var(--disp);line-height:1}
+.mockbar{position:sticky;top:0;z-index:50;background:#000;color:#8a8a84;border-bottom:1px solid var(--line);padding:10px 16px;font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.phone{width:390px;max-width:100%;margin:20px auto;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;height:844px;display:flex;flex-direction:column}
+.scroll{flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:20px}
+.pad{padding:0 18px}
+.ah{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 8px}
+.wm{height:20px;width:auto;display:block}
+.av{width:30px;height:30px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line);display:grid;place-items:center;font:800 13px var(--disp);color:var(--volt)}
+
+.ahead{padding-top:10px;display:flex;justify-content:space-between;align-items:flex-end}
+.ahead h1{font:800 34px var(--disp);text-transform:uppercase;letter-spacing:-.02em}
+.ahead .eb{margin-top:4px}
+
+/* day strip */
+.days{display:flex;gap:6px;margin:14px 0 10px;overflow-x:auto;scrollbar-width:none}
+.day{flex:0 0 auto;border:1px solid var(--line);background:var(--ink-2);border-radius:12px;padding:8px 10px;min-width:56px;text-align:center}
+.day small{display:block;font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--quiet)}
+.day b{display:block;font:700 15px var(--disp);margin-top:2px}
+.day i{display:block;font:500 10px var(--mono);color:var(--muted);font-style:normal;margin-top:2px}
+.day.on{border-color:var(--volt);background:var(--ink-3)}
+.day.on b{color:var(--volt)}
+.day.live i{color:var(--live)}
+
+.filt{display:flex;gap:6px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.filt button{color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:7px 12px;font:600 12px var(--mono);min-height:34px}
+.filt button.on{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+.filt button.mine{border-color:var(--volt);color:var(--volt)}
+.filt .sp{flex:1}
+
+.gh{display:flex;align-items:baseline;justify-content:space-between;margin:18px 0 8px}
+.gh h2{font:700 18px var(--disp);text-transform:uppercase;letter-spacing:.02em}
+.gh small{color:var(--muted);font:500 11px var(--mono)}
+
+.scores{display:grid;gap:10px}
+.score{border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:12px 14px;display:block;width:100%}
+.score.live{box-shadow:inset 0 3px 0 var(--live)}
+.lbl{display:flex;justify-content:space-between;align-items:center;font:600 10px var(--mono);letter-spacing:.1em;color:var(--muted);margin-bottom:8px;text-transform:uppercase}
+.lbl .l{color:var(--live);display:flex;align-items:center;gap:6px}
+.lbl .l::before{content:'';width:6px;height:6px;border-radius:99px;background:var(--live)}
+.lbl .bell{color:var(--volt)}
+.team{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:14px;font-weight:600}
+.hm{width:24px;height:24px;flex:0 0 auto;display:block}
+.team .ab{font:700 12px var(--mono);color:var(--muted);width:44px}
+.team .pos{color:var(--volt);font-size:10px;margin-left:2px}
+.team .rec{color:var(--quiet);font:500 11px var(--mono);margin-left:4px}
+.team b{margin-left:auto;font:700 22px var(--mono)}
+.team.trail,.team.trail b{color:var(--muted)}
+.team .pk{font:700 9px var(--mono);letter-spacing:.08em;color:var(--ink);background:var(--volt);border-radius:99px;padding:2px 6px;margin-left:6px}
+
+.strip{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.strip .dd{font:700 12px var(--mono);color:var(--paper)}
+.strip .dd small{color:var(--muted);font-weight:500;margin-left:6px}
+.strip .lp{grid-column:1/-1;color:var(--muted);font-size:12px;line-height:1.4}
+.field{grid-column:1/-1;height:6px;border-radius:99px;background:var(--ink-3);position:relative;overflow:hidden;margin-top:2px}
+.field i{position:absolute;top:0;bottom:0;background:var(--volt);width:3px;border-radius:99px}
+.field u{position:absolute;top:0;bottom:0;background:rgba(212,255,0,.18)}
+
+.wp{margin-top:8px}
+.wp .t{display:flex;justify-content:space-between;font:600 10px var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.bar{height:4px;border-radius:99px;background:var(--ink-3);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--volt)}
+
+.stake{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
+.stake span{border:1px solid var(--line);border-radius:99px;padding:4px 9px;font:600 11px var(--mono);color:var(--paper)}
+.stake span b{color:var(--volt);font-weight:700}
+.stake span.bad b{color:var(--terra)}
+.stake span.good b{color:var(--jade)}
+.stake .none{color:var(--quiet);border-style:dashed}
+
+.sfoot{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;color:var(--muted);font:500 11px var(--mono);display:flex;justify-content:space-between;gap:8px}
+.sfoot b{color:var(--paper);font-weight:600}
+.sfoot .go{color:var(--volt);font-weight:700}
+
+.final{padding:10px 14px}
+.final .team{margin:4px 0;font-size:13px}
+.final .team b{font-size:18px}
+
+.mnav{display:flex;background:var(--ink);border-top:1px solid var(--line);padding:8px 5px 22px}
+.mnav button{color:var(--muted);display:flex;align-items:center;flex-direction:column;gap:5px;font:600 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;flex:1;padding:7px 0;text-align:center}
+.mnav button .i{font:800 18px var(--disp);line-height:1}
+.mnav button.on{color:var(--volt);box-shadow:inset 0 2px 0 var(--volt)}
+</style>
+</head>
+<body>
+<div class="mockbar">Sportsvyn app · Scores tab · remock v0.2 · two-tone marks · Sat Sep 12 · 4:40 PM PT</div>
+<div class="phone">
+<div class="scroll">
+  <header class="ah"><img class="wm" alt="Sportsvyn" src="/brand/sportsvynwordmarkwhite3000x600truealpha.png"><span class="av">D</span></header>
+  <div class="pad">
+    <div class="ahead"><div><h1>Scores</h1><div class="eb q">Saturday · all times Pacific</div></div><div class="eb">3 live</div></div>
+
+    <div class="days">
+      <div class="day"><small>Thu</small><b>10</b><i>2 final</i></div>
+      <div class="day"><small>Fri</small><b>11</b><i>4 final</i></div>
+      <div class="day on live"><small>Sat</small><b>12</b><i>3 live</i></div>
+      <div class="day"><small>Sun</small><b>13</b><i>14 games</i></div>
+      <div class="day"><small>Mon</small><b>14</b><i>2 games</i></div>
+      <div class="day"><small>Tue</small><b>15</b><i>EPL</i></div>
+    </div>
+
+    <div class="filt">
+      <button class="on">All</button><button>NFL</button><button>CFB</button><button>EPL</button>
+      <span class="sp"></span>
+      <button class="mine">Mine · 6</button>
+    </div>
+
+    <div class="gh"><h2>Live</h2><small>updates every 30s</small></div>
+    <div class="scores">
+      <a class="score live" href="#">
+        <div class="lbl"><span class="l">Q3 · 8:41</span><span>CFB · ACC Network</span><span class="bell">Alerts on</span></div>
+        <div class="team"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c1"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c1)"><rect width="100" height="100" fill="#9E1B32"/><rect y="58" width="100" height="42" fill="#FFFFFF"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">ALA</span><span>Alabama<span class="rec">1-0</span></span><b class="n">24</b></div>
+        <div class="team trail"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c2"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c2)"><rect width="100" height="100" fill="#154734"/><rect y="58" width="100" height="42" fill="#CFC493"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">USF</span><span>South Florida<span class="rec">1-0</span></span><b class="n">10</b></div>
+        <div class="strip">
+          <span class="dd">2nd &amp; 6<small>ALA 41</small></span><span class="n" style="color:var(--muted);font-size:11px">ALA ball</span>
+          <div class="field"><u style="left:0;width:41%"></u><i style="left:41%"></i></div>
+          <span class="lp">J. Milroe pass short right to G. Bernard for 9 yards.</span>
+        </div>
+        <div class="wp"><div class="t"><span>Win prob</span><span>ALA 91%</span></div><div class="bar"><i style="width:91%"></i></div></div>
+        <div class="stake"><span>Pick'em <b>ALA</b></span><span class="good">Weekly · Milroe <b>18.4</b></span></div>
+      </a>
+
+      <a class="score live" href="#">
+        <div class="lbl"><span class="l">Q2 · 3:12</span><span>CFB · FOX</span><span></span></div>
+        <div class="team trail"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c3"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c3)"><rect width="100" height="100" fill="#BB0000"/><rect y="58" width="100" height="42" fill="#666666"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">OSU</span><span>Ohio State<span class="rec">1-0</span></span><b class="n">7</b></div>
+        <div class="team"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c4"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c4)"><rect width="100" height="100" fill="#CC0000"/><rect y="58" width="100" height="42" fill="#FFFFFF"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">TEX</span><span>Texas<span class="rec">1-0</span></span><b class="n">10</b></div>
+        <div class="strip">
+          <span class="dd">3rd &amp; 2<small>TEX 28</small></span><span class="n" style="color:var(--muted);font-size:11px">OSU ball</span>
+          <div class="field"><u style="left:0;width:72%"></u><i style="left:72%"></i></div>
+          <span class="lp">Timeout, Texas.</span>
+        </div>
+        <div class="wp"><div class="t"><span>Win prob</span><span>TEX 54%</span></div><div class="bar"><i style="width:54%"></i></div></div>
+        <div class="stake"><span class="bad">Pick'em <b>OSU</b></span><span class="none">No Weekly players</span></div>
+      </a>
+    </div>
+
+    <div class="gh"><h2>Tomorrow · Sunday</h2><small>14 games · your picks lock at kick</small></div>
+    <div class="scores">
+      <a class="score" href="#">
+        <div class="lbl"><span>10:00 AM PT</span><span>NFL · CBS</span><span class="bell">Alerts</span></div>
+        <div class="team"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c5"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c5)"><rect width="100" height="100" fill="#FB4F14"/><rect y="58" width="100" height="42" fill="#002244"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">DEN</span><span>Denver<span class="rec">0-0</span></span><span class="pk">Your pick</span><b class="n">70%</b></div>
+        <div class="team trail"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c6"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c6)"><rect width="100" height="100" fill="#0C2340"/><rect y="58" width="100" height="42" fill="#4B92DB"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">TEN</span><span>Tennessee<span class="rec">0-0</span></span><b class="n">30%</b></div>
+        <div class="stake"><span>Weekly · Nix, Sutton <b>2 players</b></span><span>Daily card <b>Read</b></span></div>
+        <div class="sfoot"><span>Spread DEN -5.5 · O/U 43.5</span><span class="go">Preview →</span></div>
+      </a>
+      <a class="score" href="#">
+        <div class="lbl"><span>1:25 PM PT</span><span>NFL · CBS</span><span></span></div>
+        <div class="team"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c7"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c7)"><rect width="100" height="100" fill="#E31837"/><rect y="58" width="100" height="42" fill="#FFB81C"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">KC</span><span>Kansas City<span class="rec">0-0</span></span><b class="n">57%</b></div>
+        <div class="team trail"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c8"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c8)"><rect width="100" height="100" fill="#0080C6"/><rect y="58" width="100" height="42" fill="#FFC20E"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">LAC</span><span>LA Chargers<span class="rec">0-0</span></span><b class="n">43%</b></div>
+        <div class="stake"><span class="none">No pick yet</span><span>Weekly · Kelce <b>1 player</b></span></div>
+        <div class="sfoot"><span>Spread KC -2.5 · O/U 46</span><span class="go">Pick →</span></div>
+      </a>
+    </div>
+
+    <div class="gh"><h2>Final</h2><small>Thu · Fri</small></div>
+    <div class="scores">
+      <a class="score final" href="#">
+        <div class="lbl"><span>Final · Fri</span><span>CFB</span><span></span></div>
+        <div class="team trail"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c9"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c9)"><rect width="100" height="100" fill="#8B0000"/><rect y="58" width="100" height="42" fill="#0033A0"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">RICH</span><span>Richmond</span><b class="n">3</b></div>
+        <div class="team"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c10"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c10)"><rect width="100" height="100" fill="#CC0000"/><rect y="58" width="100" height="42" fill="#FFFFFF"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">NCSU</span><span>NC State</span><b class="n">38</b></div>
+        <div class="sfoot"><span>Pick'em <b>NCSU ✓</b></span><span class="go">Box score →</span></div>
+      </a>
+      <a class="score final" href="#">
+        <div class="lbl"><span>Final · Thu</span><span>NFL</span><span></span></div>
+        <div class="team"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c11"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c11)"><rect width="100" height="100" fill="#AA0000"/><rect y="58" width="100" height="42" fill="#B3995D"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">SF</span><span>San Francisco</span><b class="n">27</b></div>
+        <div class="team trail"><svg class="hm" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><defs><clipPath id="c12"><circle cx="50" cy="50" r="46"/></clipPath></defs><g clip-path="url(#c12)"><rect width="100" height="100" fill="#003594"/><rect y="58" width="100" height="42" fill="#FFA300"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#2A2A2A" stroke-width="3"/></svg><span class="ab">LAR</span><span>LA Rams</span><b class="n">7</b></div>
+        <div class="sfoot"><span>Purdy 25/34 · 205 · 3 TD</span><span class="go">Box score →</span></div>
+      </a>
+    </div>
+  </div>
+</div>
+<nav class="mnav" aria-label="App navigation">
+  <button><span class="i">Ȳ</span>Play</button>
+  <button class="on"><span class="i">21</span>Scores</button>
+  <button><span class="i">#1</span>Rankings</button>
+  <button><span class="i">@</span>You</button>
+</nav>
+</div>
+</body>
+</html>

@@ -10,7 +10,23 @@ import Helmet from '@/components/team/Helmet';
 
 export const TEAMMARK_HELMET_MIN = 28;
 
-export default function TeamMark({ primary, secondary, size = 24, className, title }) {
+export default function TeamMark({ primary, secondary, size = 24, className, title, abbr = null }) {
+  // NO COLORS (EPL, SCORES TAB v2 Part A 2): an ink-3 disc with the
+  // abbreviation, the same --line ring. Never a grey helmet, never nothing.
+  if (!primary || !secondary) {
+    const s = Number(size);
+    const ring = Math.max(1, (s * 3) / 100);
+    return (
+      <span
+        className={className ? `teammark teammark--abbr ${className}` : 'teammark teammark--abbr'}
+        data-teammark="abbr" role="img" aria-label={title ?? abbr ?? undefined}
+        style={{ width: s, height: s, borderRadius: 99, background: 'var(--ink-3, #1C1C1C)', border: `${ring}px solid var(--line, #2A2A2A)`,
+          display: 'inline-grid', placeItems: 'center', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: Math.max(7, Math.round(s * 0.34)), color: 'var(--muted, #9A9A94)', lineHeight: 1, flex: '0 0 auto' }}
+      >
+        {(abbr ?? '').slice(0, 3)}
+      </span>
+    );
+  }
   if (size >= TEAMMARK_HELMET_MIN) {
     return <Helmet primary={primary} secondary={secondary} size={size} className={className} title={title} />;
   }
