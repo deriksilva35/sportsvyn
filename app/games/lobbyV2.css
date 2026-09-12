@@ -1,0 +1,90 @@
+/* app/games/lobbyV2.css - the Games tab v2 (docs/design/mocks/games-tab-v0_1.html).
+   Site tokens only: the mock's fonts and hexes were stand-ins. --blue is the
+   v1.4 token and this file's .lv-game.hero rule is its ONLY use. No em dashes. */
+
+.lv { --lv-n: var(--font-mono); }
+.lv .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.lv .lv-eb { color: var(--volt); font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; font-weight: 700; text-transform: uppercase; }
+.lv .lv-eb.q { color: var(--muted); }
+
+/* app header */
+.lv-ah { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 8px; }
+.lv-ah .lv-wm { height: 20px; width: auto; display: block; }
+.lv-me { display: flex; align-items: center; gap: 8px; }
+.lv-streak, .lv-signin { border: 1px solid var(--line); background: var(--ink-2); border-radius: 99px; padding: 6px 11px; font: 700 11px var(--font-mono); letter-spacing: .04em; color: var(--paper); text-decoration: none; }
+.lv-streak b { color: var(--volt); }
+.lv-av { width: 30px; height: 30px; border-radius: 99px; background: var(--ink-3); border: 1px solid var(--line); display: grid; place-items: center; font: 800 13px var(--font-display); color: var(--volt); }
+
+/* intro */
+.lv-intro { padding-top: 10px; }
+.lv-intro h1 { font: 800 40px/1 var(--font-display); text-transform: uppercase; letter-spacing: -.02em; margin: 4px 0 0; color: var(--paper); }
+.lv-intro h1 i { font-style: italic; color: var(--volt); }
+.lv-intro p { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 6px 0 0; }
+
+/* section heads */
+.lv-sh { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 26px 0 10px; }
+.lv-sh h2 { font: 700 20px/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; margin: 0; color: var(--paper); }
+.lv-sh a { color: var(--volt); font-weight: 600; font-size: 12px; white-space: nowrap; text-decoration: none; }
+.lv-sh p { color: var(--muted); font-size: 12px; margin: 2px 0 0; }
+
+/* the two game cards */
+.lv-games { display: grid; gap: 12px; margin-top: 18px; }
+.lv-game { position: relative; overflow: hidden; border-radius: 12px; padding: 18px; background: var(--ink-2); border: 1px solid var(--line); min-height: 210px; display: flex; flex-direction: column; align-items: flex-start; width: 100%; color: var(--paper); text-decoration: none; }
+.lv-game.hero { background: var(--blue); border-color: var(--blue); color: #fff; }
+.lv-game .top { display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+.lv-game .tag { border-radius: 99px; padding: 4px 9px; font: 700 11px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; border: 1px solid var(--line); color: var(--muted); }
+.lv-game.hero .tag { color: #fff; border-color: rgba(255,255,255,.5); }
+.lv-game .top small { font: 600 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.lv-game.hero .top small { color: #C9D6FF; }
+.lv-game h2 { font: 800 46px/1 var(--font-display); text-transform: uppercase; letter-spacing: -.02em; margin: 12px 0 6px; position: relative; z-index: 1; color: inherit; }
+.lv-game p { color: var(--muted); font-size: 13px; line-height: 1.55; max-width: 30ch; position: relative; z-index: 1; margin: 0; }
+.lv-game.hero p { color: #E0E8FF; }
+.lv-stat { display: flex; gap: 18px; margin-top: 12px; position: relative; z-index: 1; }
+.lv-stat b { display: block; font: 700 22px var(--font-mono); letter-spacing: -.02em; }
+.lv-stat span { font: 600 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim, #6E6E68); }
+.lv-game.hero .lv-stat span { color: #C9D6FF; }
+.lv-game .bot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 18px; width: 100%; position: relative; z-index: 1; }
+.lv-play { border-radius: 99px; background: var(--volt); color: var(--ink); padding: 11px 16px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; min-height: 44px; }
+.lv-play.done { background: transparent; color: var(--paper); border: 1px solid var(--line); }
+.lv-game .bot small { font: 600 11px var(--font-mono); color: var(--muted); }
+.lv-game.hero .bot small { color: #E0E8FF; }
+.lv-ymark { position: absolute; right: -10px; top: 26px; opacity: .06; pointer-events: none; font: italic 900 200px/1 var(--font-display); color: var(--volt); }
+.lv-game.hero .lv-ymark { color: #fff; opacity: .10; }
+
+/* the two rows and the tools */
+.lv-minis { display: grid; gap: 10px; margin-top: 12px; }
+.lv-mini { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; color: var(--paper); text-decoration: none; }
+.lv-ico { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 99px; background: var(--ink-3); border: 1px solid var(--line); color: var(--volt); font: 800 14px var(--font-display); flex: 0 0 auto; }
+.lv-mini strong, .lv-tool strong { display: block; font-size: 14px; margin-bottom: 3px; }
+.lv-mini small, .lv-tool small { color: var(--muted); font: 500 11px var(--font-mono); display: block; letter-spacing: .02em; line-height: 1.4; }
+.lv-mini .st { margin-left: auto; flex: 0 0 auto; border-radius: 99px; padding: 6px 10px; font: 700 11px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--line); color: var(--muted); }
+.lv-mini .st.go { background: var(--volt); color: var(--ink); border-color: var(--volt); }
+.lv-mini .st.done { color: var(--jade); border-color: var(--jade); }
+.lv-tools { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-top: 10px; }
+.lv-tool { display: flex; align-items: center; gap: 12px; padding: 14px; border-bottom: 1px solid var(--line); width: 100%; min-height: 64px; color: var(--paper); text-decoration: none; }
+.lv-tool:last-of-type { border-bottom: 0; }
+.lv-tool .arrow { margin-left: auto; color: var(--volt); font-weight: 700; }
+.lv-tools .note { padding: 10px 14px; background: var(--ink-3); color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
+.lv-tools .note b { color: var(--paper); font-weight: 600; }
+
+/* tonight */
+.lv-scores { display: grid; gap: 10px; }
+.lv-score { border: 1px solid var(--line); border-radius: 12px; background: var(--ink-2); padding: 12px 14px; color: var(--paper); text-decoration: none; display: block; }
+.lv-score.live { box-shadow: inset 0 3px 0 var(--live); }
+.lv-lbl { display: flex; justify-content: space-between; font: 600 10px var(--font-mono); letter-spacing: .1em; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; }
+.lv-lbl .l { color: var(--live); }
+.lv-team { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 14px; font-weight: 600; }
+.lv-team .teammark, .lv-team .helmet { flex: 0 0 auto; }
+.lv-team .ab { font: 700 12px var(--font-mono); color: var(--muted); width: 44px; }
+.lv-team b { margin-left: auto; font: 700 20px var(--font-mono); }
+.lv-team.trail, .lv-team.trail b { color: var(--muted); }
+.lv-sfoot { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; color: var(--muted); font: 500 11px var(--font-mono); display: flex; justify-content: space-between; }
+
+/* read the game */
+.lv-read { border-top: 1px solid var(--line); margin-top: 26px; padding: 18px 0 10px; }
+.lv-read h3 { font: italic 500 19px var(--font-serif); margin: 4px 0; color: var(--paper); }
+.lv-read p { color: var(--muted); font-size: 13px; margin: 0; }
+.lv-read a { color: var(--volt); font-weight: 600; font-size: 12px; display: inline-block; margin-top: 8px; text-decoration: none; }
+
+/* the panes that moved to the bottom */
+.lv-more { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 22px; }

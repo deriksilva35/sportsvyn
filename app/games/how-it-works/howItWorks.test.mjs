@@ -114,16 +114,15 @@ test('the game names come from the one place that owns them', () => {
   }
 });
 
-test('/games links to it, outside the boards guard so it always renders', () => {
-  const games = src('app/games/page.js');
+test('/games links to it, outside any boards guard so it always renders', () => {
+  // GAMES TAB v2: the pane is components/games/LobbyV2.js and has no
+  // boards guard at all - the link sits in the unconditional foot links.
+  const games = src('components/games/LobbyV2.js');
   assert.ok(games.includes('href="/games/how-it-works">How the games work'),
     '/games carries the ghost link');
-  // It must NOT sit inside `{v.boardRows?.length > 0 && (` - an empty slate
-  // is exactly when a reader needs the explainer most.
-  const guard = games.indexOf('{v.boardRows?.length > 0 && (');
-  const close = games.indexOf('How the games work');
-  const endOfGuard = games.indexOf('      )}', guard);
-  assert.ok(close > endOfGuard, 'the link must be outside the boardRows guard');
+  assert.ok(!games.includes('boardRows'), 'no boards guard exists to hide it behind');
+  const foot = games.slice(games.indexOf('className="lv-more"'));
+  assert.ok(foot.includes('How the games work'), 'in the always-rendered foot');
 });
 
 test('ALL TWELVE STEPS ARE PRESENT - no section is missing its copy', () => {

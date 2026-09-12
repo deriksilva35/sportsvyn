@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Sportsvyn app · Games tab remock v0.1</title>
+<!-- The ruled mock for GAMES TAB v2 (relay of 12 Sep 2026), saved verbatim
+     except for one thing: the wordmark was pasted as a base64 JPEG; the same
+     asset ships at /brand/, so the img src points there. Fonts and hexes in
+     this file are stand-ins - the build uses the site's tokens. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,600;0,700;0,800;1,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--blue:#245BFF;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;
+--disp:'Saira',system-ui,sans-serif;--sans:system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:#000}
+body{font:14px/1.5 var(--sans);color:var(--paper);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eb{color:var(--volt);font-family:var(--mono);font-size:11px;letter-spacing:.12em;font-weight:700;text-transform:uppercase}
+.eb.q{color:var(--muted)}
+h1,h2,h3{font-family:var(--disp);line-height:1}
+.mockbar{position:sticky;top:0;z-index:50;background:#000;color:#8a8a84;border-bottom:1px solid var(--line);padding:10px 16px;font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.phone{width:390px;max-width:100%;margin:20px auto;background:var(--ink);border:1px solid var(--line);border-radius:28px;overflow:hidden;height:844px;display:flex;flex-direction:column}
+.scroll{flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:20px}
+.pad{padding:0 18px}
+
+/* app header */
+.ah{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 8px}
+.wm{height:20px;width:auto;display:block}
+.me{display:flex;align-items:center;gap:8px}
+.streak{border:1px solid var(--line);background:var(--ink-2);border-radius:99px;padding:6px 11px;font:700 11px var(--mono);letter-spacing:.04em;color:var(--paper)}
+.streak b{color:var(--volt)}
+.av{width:30px;height:30px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line);display:grid;place-items:center;font:800 13px var(--disp);color:var(--volt)}
+
+.intro{padding-top:14px}
+.intro h1{font:800 40px var(--disp);text-transform:uppercase;letter-spacing:-.02em;margin-top:4px}
+.intro h1 i{font-style:italic;color:var(--volt)}
+.intro p{color:var(--muted);font-size:13px;line-height:1.5;margin-top:6px}
+
+.sh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:26px 0 10px}
+.sh h2{font:700 20px var(--disp);text-transform:uppercase;letter-spacing:.02em}
+.sh a{color:var(--volt);font-weight:600;font-size:12px;white-space:nowrap}
+.sh p{color:var(--muted);font-size:12px;margin-top:2px}
+
+.games{display:grid;gap:12px;margin-top:18px}
+.game{position:relative;overflow:hidden;border-radius:12px;padding:18px;background:var(--ink-2);border:1px solid var(--line);min-height:210px;display:flex;flex-direction:column;align-items:flex-start;width:100%}
+.game.hero{background:var(--blue);border-color:var(--blue);color:#fff}
+.game .top{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+.game .tag{border-radius:99px;padding:4px 9px;font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);color:var(--muted)}
+.game.hero .tag{color:#fff;border-color:rgba(255,255,255,.5)}
+.game .top small{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.game.hero .top small{color:#C9D6FF}
+.game h2{font:800 46px var(--disp);text-transform:uppercase;letter-spacing:-.02em;margin:12px 0 6px;position:relative;z-index:1}
+.game p{color:var(--muted);font-size:13px;line-height:1.55;max-width:30ch;position:relative;z-index:1}
+.game.hero p{color:#E0E8FF}
+.stat{display:flex;gap:18px;margin-top:12px;position:relative;z-index:1}
+.stat b{display:block;font:700 22px var(--mono);letter-spacing:-.02em}
+.stat span{font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--quiet)}
+.game.hero .stat span{color:#C9D6FF}
+.game .bot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:18px;width:100%;position:relative;z-index:1}
+.play{border-radius:99px;background:var(--volt);color:var(--ink);padding:11px 16px;font-weight:700;display:inline-flex;align-items:center;gap:8px;font-size:13px;min-height:44px}
+.play.done{background:transparent;color:var(--paper);border:1px solid var(--line)}
+.game .bot small{font:600 11px var(--mono);color:var(--muted)}
+.game.hero .bot small{color:#E0E8FF}
+.ymark{position:absolute;right:-10px;top:26px;opacity:.06;pointer-events:none;font:italic 900 200px var(--disp);color:var(--volt);line-height:1}
+.game.hero .ymark{color:#fff;opacity:.10}
+
+.minis{display:grid;gap:10px;margin-top:12px}
+.mini{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;width:100%;min-height:64px}
+.ico{width:38px;height:38px;display:grid;place-items:center;border-radius:99px;background:var(--ink-3);border:1px solid var(--line);color:var(--volt);font:800 14px var(--disp);flex:0 0 auto}
+.mini strong{display:block;font-size:14px;margin-bottom:3px}
+.mini small{color:var(--muted);font:500 11px var(--mono);display:block;letter-spacing:.02em;line-height:1.4}
+.mini .st{margin-left:auto;flex:0 0 auto;border-radius:99px;padding:6px 10px;font:700 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);color:var(--muted)}
+.mini .st.go{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+.mini .st.done{color:var(--jade);border-color:var(--jade)}
+
+/* tools */
+.tools{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:10px}
+.tool{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--line);width:100%;min-height:64px}
+.tool:last-child{border:0}
+.tool strong{display:block;font-size:14px;margin-bottom:3px}
+.tool small{color:var(--muted);font:500 11px var(--mono);display:block;line-height:1.4}
+.tool .arrow{margin-left:auto;color:var(--volt);font-weight:700}
+.tools .note{padding:10px 14px;background:var(--ink-3);color:var(--muted);font-size:12px;border-top:1px solid var(--line)}
+.tools .note b{color:var(--paper);font-weight:600}
+
+/* tonight strip */
+.scores{display:grid;gap:10px}
+.score{border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:12px 14px}
+.score.live{box-shadow:inset 0 3px 0 var(--live)}
+.lbl{display:flex;justify-content:space-between;font:600 10px var(--mono);letter-spacing:.1em;color:var(--muted);margin-bottom:8px;text-transform:uppercase}
+.lbl .l{color:var(--live)}
+.team{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:14px;font-weight:600}
+.hm{width:24px;height:24px;border-radius:99px;flex:0 0 auto;border:1px solid var(--line)}
+.team .ab{font:700 12px var(--mono);color:var(--muted);width:44px}
+.team b{margin-left:auto;font:700 20px var(--mono)}
+.team.trail,.team.trail b{color:var(--muted)}
+.bar{height:4px;border-radius:99px;background:var(--ink-3);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--volt)}
+.sfoot{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;color:var(--muted);font:500 11px var(--mono);display:flex;justify-content:space-between}
+
+.read{border-top:1px solid var(--line);margin-top:26px;padding:18px 0 10px}
+.read h3{font:italic 500 19px Georgia,'Times New Roman',serif;margin:4px 0}
+.read p{color:var(--muted);font-size:13px}
+.read a{color:var(--volt);font-weight:600;font-size:12px;display:inline-block;margin-top:8px}
+
+.mnav{display:flex;background:var(--ink);border-top:1px solid var(--line);padding:8px 5px 22px}
+.mnav button{color:var(--muted);display:flex;align-items:center;flex-direction:column;gap:5px;font:600 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;flex:1;padding:7px 0;text-align:center}
+.mnav button .i{font:800 18px var(--disp);line-height:1}
+.mnav button.on{color:var(--volt);box-shadow:inset 0 2px 0 var(--volt)}
+</style>
+</head>
+<body>
+<div class="mockbar">Sportsvyn app · Games tab · remock v0.1 · signed in · Sat Sep 12 · Pacific</div>
+
+<div class="phone">
+<div class="scroll">
+
+  <header class="ah">
+    <img class="wm" alt="Sportsvyn" src="/brand/sportsvynwordmarkwhite3000x600truealpha.png">
+    <div class="me"><span class="streak"><b>12</b> day streak</span><span class="av">D</span></div>
+  </header>
+
+  <div class="pad">
+    <div class="intro">
+      <div class="eb">Saturday · Week 1</div>
+      <h1>Every day is <i>game day.</i></h1>
+      <p>Two boards open. Fourteen NFL games lock tomorrow at 10:00 AM PT.</p>
+    </div>
+
+    <div class="games">
+      <a class="game hero" href="#">
+        <div class="ymark" aria-hidden="true">Ȳ</div>
+        <div class="top"><span class="tag">Daily</span><small>Edition 027 · closes 9:00 PM PT</small></div>
+        <h2>The Daily</h2>
+        <p>Eight slots, twelve teams, one secret NFL week. Three minutes. Same board for everyone.</p>
+        <div class="stat"><div><b class="n">148.6</b><span>Yesterday</span></div><div><b class="n">171.2</b><span>Best</span></div><div><b class="n">#18</b><span>of 1,204</span></div></div>
+        <div class="bot"><span class="play">Play today's board</span><small class="n">6h 14m left</small></div>
+      </a>
+      <a class="game" href="#">
+        <div class="ymark" aria-hidden="true">Ȳ</div>
+        <div class="top"><span class="tag">Weekly</span><small>Week 1 · 6 of 6 set</small></div>
+        <h2>The Weekly</h2>
+        <p>Your best six, full PPR. Each slot locks at its player's kickoff.</p>
+        <div class="stat"><div><b class="n">31.4</b><span>Scored</span></div><div><b class="n">148.2</b><span>Projected</span></div><div><b class="n">#212</b><span>of 1,204</span></div></div>
+        <div class="bot"><span class="play done">Lineup set · view</span><small class="n">locks Mon 5:15 PM PT</small></div>
+      </a>
+    </div>
+
+    <div class="minis">
+      <a class="mini" href="#"><span class="ico">✓</span><span><strong>Pick'em</strong><small>NFL 0 of 14 · first lock Sun 10:00 AM PT<br>CFB 4 of 22 · locking through tonight</small></span><span class="st go">Pick</span></a>
+      <a class="mini" href="#"><span class="ico">12</span><span><strong>The Draft</strong><small>12 seats · 8 rounds · 30s clock<br>Week 2 rooms open Tue</small></span><span class="st">Tue</span></a>
+    </div>
+
+    <div class="sh"><div><h2>Draft room</h2><p>Practice for the Draft. Track the one you're in.</p></div></div>
+    <div class="tools">
+      <a class="tool" href="#"><span class="ico">M</span><span><strong>Mock draft</strong><small>Draft against the market · same 30s clock as the Draft · 12 presets</small></span><span class="arrow">→</span></a>
+      <a class="tool" href="#"><span class="ico">T</span><span><strong>Draft tracker</strong><small>Drafting somewhere else? Log each pick, see who's left</small></span><span class="arrow">→</span></a>
+      <div class="note"><b>Mock season is over,</b> not the mock. Every Draft room uses the mock's clock and board, so a mock is a practice run for Tuesday.</div>
+    </div>
+
+    <div class="sh"><h2>Tonight</h2><a href="#">All scores →</a></div>
+    <div class="scores">
+      <article class="score live"><div class="lbl"><span>CFB · Week 2</span><span class="l">Live · Q3 11:02</span></div>
+        <div class="team trail"><span class="hm" style="background:#8B0000"></span><span class="ab">RICH</span><span>Richmond</span><b class="n">3</b></div>
+        <div class="team"><span class="hm" style="background:#CC0000"></span><span class="ab">NCSU</span><span>NC State</span><b class="n">31</b></div>
+        <div class="bar"><i style="width:99%"></i></div>
+        <div class="sfoot"><span>NCSU 99% · alerts on</span><span>Box score →</span></div></article>
+      <article class="score"><div class="lbl"><span>NFL · Week 1</span><span>Sun · 10:00 AM PT</span></div>
+        <div class="team"><span class="hm" style="background:#FB4F14"></span><span class="ab">DEN</span><span>Denver</span><b class="n">70%</b></div>
+        <div class="team trail"><span class="hm" style="background:#0C2340"></span><span class="ab">TEN</span><span>Tennessee</span><b class="n">30%</b></div>
+        <div class="sfoot"><span>Spread DEN -5.5</span><span>Your pick: none</span></div></article>
+    </div>
+
+    <div class="read"><div class="eb q">Read the game</div><h3>The Daily Card</h3><p>Week 1 spreads are still pricing last year's offenses. 9 min.</p><a href="#">Read the card →</a></div>
+  </div>
+</div>
+
+<nav class="mnav" aria-label="App navigation">
+  <button class="on"><span class="i">Ȳ</span>Play</button>
+  <button><span class="i">21</span>Scores</button>
+  <button><span class="i">#1</span>Rankings</button>
+  <button><span class="i">@</span>You</button>
+</nav>
+</div>
+</body>
+</html>

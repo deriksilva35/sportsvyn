@@ -42,3 +42,7 @@ uppercase;display:inline-flex;align-items:baseline}
 .y-wrap{position:relative;color:var(--volt);display:inline-block}
 .y-wrap .macron{position:absolute;left:0;top:-0.05em;width:115%;
 height:0.07em;background:var(--volt);transform:translateX(-35%)}
+
+
+## v1.4 addendum (GAMES TAB v2)
+--blue:#245BFF  Daily surface only - the Daily card on the Games tab. No other use of blue anywhere.
