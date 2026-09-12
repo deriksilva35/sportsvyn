@@ -17,6 +17,7 @@ import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { recordLine } from '@/lib/pickem/recordLine';
 import { savePickAction } from '@/app/actions/pickem';
 import { useHandleGate } from '@/components/handle/HandleGate';
+import { orderFor, connectorFor } from '@/lib/gridiron/teamOrder';
 import { confirmPickemEntry } from '@/app/actions/confirm';
 import StandaloneDate from '@/components/StandaloneDate';
 import StandaloneTime from '@/components/StandaloneTime';
@@ -292,7 +293,10 @@ export default function PickemBoard({
               </span>
             </div>
             <div className="pk-sides">
-              {['away', 'home'].map((side, i) => {
+              {/* League order and the word between the sides are one rule,
+                  lib/gridiron/teamOrder.js - away-first and "at" for
+                  gridiron, home-first and "v" for soccer. */}
+              {orderFor(contest?.sport).map((side, i) => {
                 const name = side === 'home' ? g.home : g.away;
                 const isMine = g.my_side === side;
                 let cls = 'pk-side';
@@ -328,7 +332,10 @@ export default function PickemBoard({
                         looks right, home looks left. .pk-nmwrap stacks the
                         name over the record, so the helmet sits beside the
                         stack, before the name. None without colors. */}
-                    <Helmet primary={colors?.primary} secondary={colors?.secondary} facing={side === 'home' ? 'left' : 'right'} size={24} className="pk-hm" />
+                    {/* THE HELMETS FACE EACH OTHER by POSITION, not by side:
+                        the first row looks right, the second looks left, so they
+                        meet over the connector whichever order the league takes. */}
+                    <Helmet primary={colors?.primary} secondary={colors?.secondary} facing={i === 0 ? 'right' : 'left'} size={24} className="pk-hm" />
                     <span className="pk-nmwrap">
                       <span className="pk-nm">{name}</span>
                       {/* THE JOIN IS BY TEAM ID (lib/pickem/entry.js's
@@ -351,7 +358,7 @@ export default function PickemBoard({
                         read as one sentence, "Away at Home". */}
                     {/* A LOCKED ROW SAYS WHEN IT LOCKED where "at" was (rolling
                         lock): the kickoff time in the pk-at slot, no other copy. */}
-                    {i === 1 && <div className="pk-at" key="at">{g.kicked || kickedAtMs ? <StandaloneTime iso={g.kickoff_at} /> : 'at'}</div>}
+                    {i === 1 && <div className="pk-at" key="at">{g.kicked || kickedAtMs ? <StandaloneTime iso={g.kickoff_at} /> : connectorFor(contest?.sport)}</div>}
                     {!signedIn && !lockedByKickoff ? (
                       <a key={side} className={cls} href={signinHref}>{content}</a>
                     ) : (

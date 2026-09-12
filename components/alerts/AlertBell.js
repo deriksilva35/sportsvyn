@@ -21,6 +21,7 @@ import { useViewerTz } from '@/components/gridiron/useViewerTz';
 import { tzOrUtc } from '@/lib/gridiron/viewerTz';
 import { enableAlerts } from './enable';
 import { summaryLine } from '@/lib/push/sheetRules';
+import { orderFor, connectorFor } from '@/lib/gridiron/teamOrder';
 import './alerts.css';
 
 // The five trigger rows, in the order the sheet draws them. Data, not markup,
@@ -157,7 +158,12 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
           <button type="button" className="al-back" aria-label="Close alerts" onClick={close} />
           <div className="al-sheet" role="dialog" aria-modal="true" aria-label="Game alerts" ref={sheetRef}>
             <div className="al-hd">
-              <h2 className="al-h1">{match.awayAbbr} at {match.homeAbbr}</h2>
+              {/* THE LEAGUE NAMES THE SIDES (TEAM ORDER relay): "NE at SEA"
+                  on a gridiron game, "TOT v EVE" if a bell ever lands on a
+                  soccer one. One connector rule, no literal here. */}
+              <h2 className="al-h1">
+                {orderFor(match.leagueSlug).map((s) => (s === 'home' ? match.homeAbbr : match.awayAbbr)).join(` ${connectorFor(match.leagueSlug)} `)}
+              </h2>
               <button type="button" className="al-x" aria-label="Close" onClick={close}>×</button>
             </div>
             <div className="al-eye">

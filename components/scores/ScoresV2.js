@@ -9,6 +9,7 @@ import StandaloneTime from '@/components/StandaloneTime';
 import TeamMark from '@/components/team/TeamMark';
 import LiveRefresh from '@/components/scores/LiveRefresh';
 import { shellSigninHref } from '@/lib/shell/signinHref';
+import { orderFor } from '@/lib/gridiron/teamOrder';
 import { LEAGUE_LABEL, abbrOf, cardVariant, countLine, pickTone, statLineText, oddsLine, eplBar, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
 
 // THE SITE'S STRAIGHT APOSTROPHE, everywhere on this tab (GO rider 1).
@@ -87,8 +88,19 @@ function Card({ g, x, signedIn, signinHref, tz }) {
         <span>{LEAGUE_LABEL[g.leagueSlug]}{g.network ? ` · ${g.network}` : ''}</span>
         <span className="bell">{x.stake?.alerts ? (live ? 'Alerts on' : 'Alerts') : ''}</span>
       </div>
-      <TeamRow t={g.away} score={g.awayScore} trail={scored ? homeLeads : false} record={x.record.away} pick={pickAbbr != null && pickAbbr === g.away.abbreviation} pct={pctFor('away')} scored={scored} />
-      <TeamRow t={g.home} score={g.homeScore} trail={scored ? awayLeads : false} record={x.record.home} pick={pickAbbr != null && pickAbbr === g.home.abbreviation} pct={pctFor('home')} scored={scored} />
+      {/* WHO GOES FIRST IS THE LEAGUE'S RULE, not this card's - away-first
+          for gridiron, home-first for soccer (lib/gridiron/teamOrder.js). */}
+      {orderFor(g.leagueSlug).map((side) => {
+        const t = side === 'home' ? g.home : g.away;
+        return (
+          <TeamRow
+            key={side} t={t} score={side === 'home' ? g.homeScore : g.awayScore}
+            trail={scored && (side === 'home' ? awayLeads : homeLeads)}
+            record={x.record[side]} pick={pickAbbr != null && pickAbbr === abbrOf(t)}
+            pct={pctFor(side)} scored={scored}
+          />
+        );
+      })}
       {live && x.drive && (
         <div className="sv2-strip" data-drive="1">
           <span className="dd">{x.drive.label}{x.drive.spot ? <small>{x.drive.spot}</small> : null}</span>

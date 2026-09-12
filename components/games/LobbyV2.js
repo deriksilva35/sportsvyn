@@ -6,6 +6,7 @@
 import Link from 'next/link';
 import StandaloneDate from '@/components/StandaloneDate';
 import TeamMark from '@/components/team/TeamMark';
+import { orderFor } from '@/lib/gridiron/teamOrder';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { numberWord, tonightTitle } from '@/lib/games/lobbyV2Shape';
 
@@ -86,8 +87,14 @@ function ScoreCard({ g }) {
         <span>{g.leagueSlug.toUpperCase()}{g.week != null ? ` · Week ${g.week}` : ''}</span>
         {live ? <span className="l">{g.liveLabel}</span> : final ? <span>Final</span> : <span><StandaloneDate iso={g.kickoffAt} /></span>}
       </div>
-      <TeamLine t={g.away} trail={live || final ? homeLeads : false} scored={live || final} />
-      <TeamLine t={g.home} trail={live || final ? awayLeads : false} scored={live || final} />
+      {/* League order, one rule: lib/gridiron/teamOrder.js. */}
+      {orderFor(g.leagueSlug).map((side) => (
+        <TeamLine
+          key={side} t={side === 'home' ? g.home : g.away}
+          trail={(live || final) && (side === 'home' ? awayLeads : homeLeads)}
+          scored={live || final}
+        />
+      ))}
       {/* NO WIN-PROBABILITY BAR: no probability exists for gridiron (Part A
           3f), so the bar is omitted and the spread line stays. */}
       {/* FOOT: broadcaster first (match_broadcasters, R3), then the spread;

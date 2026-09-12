@@ -27,6 +27,7 @@ import GameTabs from '@/components/gridiron/GameTabs';
 import BoxScore from '@/components/gridiron/BoxScore';
 import AlertBell from '@/components/alerts/AlertBell';
 import { auth } from '@/auth';
+import { orderFor } from '@/lib/gridiron/teamOrder';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay, lastActionPlay, showGamecast } from '@/lib/gridiron/driveStrip';
@@ -194,8 +195,15 @@ export default async function GamePage({ params, searchParams }) {
             {game.seasonPhase === 'PRE' ? <span className="gg-chip pre">PRE</span> : null}
           </div>
 
-          <TeamRow record={awayRecord} t={game.away} score={game.awayScore} loser={winner === 'home'} show={final || live} />
-          <TeamRow record={homeRecord} t={game.home} score={game.homeScore} loser={winner === 'away'} show={final || live} />
+          {/* League order, one rule: lib/gridiron/teamOrder.js. */}
+          {orderFor(game.leagueSlug).map((side) => (
+            <TeamRow
+              key={side} record={side === 'home' ? homeRecord : awayRecord}
+              t={side === 'home' ? game.home : game.away}
+              score={side === 'home' ? game.homeScore : game.awayScore}
+              loser={winner === (side === 'home' ? 'away' : 'home')} show={final || live}
+            />
+          ))}
 
           <div className="gg-headfoot">
             <span>{game.leagueSlug.toUpperCase()} · {game.seasonPhase} W{game.week}</span>
