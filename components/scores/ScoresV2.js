@@ -11,6 +11,9 @@ import LiveRefresh from '@/components/scores/LiveRefresh';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { LEAGUE_LABEL, cardVariant, countLine, pickTone, statLineText, oddsLine, eplBar, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
 
+// THE SITE'S STRAIGHT APOSTROPHE, everywhere on this tab (GO rider 1).
+const PICKEM = "Pick'em";
+
 const href = ({ date, sport = 'all', mine = false }) => {
   const p = new URLSearchParams();
   if (date) p.set('date', date);
@@ -53,9 +56,9 @@ function Stake({ stake, g, boardOpen, signinHref, signedIn }) {
   if (stake?.pick) {
     const st = stake.pick.state;
     const mark = st === 'won' ? ' ✓' : st === 'lost' ? ' ✗' : '';
-    chips.push(<span key="pick" className={pickTone(st)}>Pick&rsquo;em <b>{stake.pick.abbr}{mark}</b></span>);
+    chips.push(<span key="pick" className={pickTone(st)}>{PICKEM} <b>{stake.pick.abbr}{mark}</b></span>);
   } else if (boardOpen) {
-    chips.push(<Link key="nopick" className="none" href="/pickem/nfl">No pick yet</Link>);
+    chips.push(<Link key="nopick" className="none" href={`/pickem/${g.leagueSlug}`}>No pick yet</Link>);
   }
   if (stake?.weekly?.length) {
     const pts = Math.round(stake.weekly.reduce((a, r) => a + r.points, 0) * 10) / 10;
@@ -104,13 +107,21 @@ function Card({ g, x, signedIn, signinHref, tz }) {
       <Stake stake={x.stake} g={g} boardOpen={boardOpen} signinHref={signinHref} signedIn={signedIn} />
       {final ? (
         <div className="sv2-foot">
-          <span>{x.stake?.pick ? <>Pick&rsquo;em <b>{x.stake.pick.abbr} {x.stake.pick.state === 'won' ? '✓' : x.stake.pick.state === 'lost' ? '✗' : ''}</b></> : stat ? <b>{stat}</b> : 'Final'}</span>
+          <span>{x.stake?.pick ? <>{PICKEM} <b>{x.stake.pick.abbr} {x.stake.pick.state === 'won' ? '✓' : x.stake.pick.state === 'lost' ? '✗' : ''}</b></> : stat ? <b>{stat}</b> : 'Final'}</span>
           {x.hasStats ? <span className="go">Box score &rarr;</span> : null}
         </div>
       ) : !live ? (
         <div className="sv2-foot">
           <span>{odds ?? 'No line yet'}</span>
-          <span className="go">{!signedIn ? 'Sign in to pick' : x.stake?.pick || !boardOpen ? (x.preview ? 'Preview →' : '') : 'Pick →'}</span>
+          {/* GO rider 2: "Change pick" while picked and still open, "Preview"
+              only with an article and no pick, otherwise no element at all. */}
+          {!signedIn
+            ? <span className="go">Sign in to pick</span>
+            : x.stake?.pick && x.open
+              ? <span className="go">Change pick →</span>
+              : !x.stake?.pick && x.preview
+                ? <span className="go">Preview →</span>
+                : null}
         </div>
       ) : null}
     </a>

@@ -36,7 +36,7 @@ after(() => { for (const f of [LINK, NAV]) { try { unlinkSync(f); } catch { /* g
 
 const team = (id, ab, colors = { primary: '#111111', secondary: '#EEEEEE' }) => ({ id, abbreviation: ab, name: ab, shortName: ab, colors });
 const game = (id, league, status, kickoffAt, home, away, hs = null, as = null, extra = {}) => ({ id, slug: `g-${id}`, leagueSlug: league, status, kickoffAt, homeScore: hs, awayScore: as, home, away, network: 'FOX', liveState: null, etWeekday: 'Fri', ...extra });
-const X = (o = {}) => ({ record: { home: '1-0', away: '0-1' }, spreadHome: null, total: null, preview: null, drive: null, stat: null, hasStats: false, prob: null, stake: null, ...o });
+const X = (o = {}) => ({ record: { home: '1-0', away: '0-1' }, spreadHome: null, total: null, preview: null, drive: null, stat: null, hasStats: false, prob: null, stake: null, open: false, ...o });
 function fixture({ signedIn = true } = {}) {
   const live = game(3, 'cfb', 'live', '2026-09-12T23:30:00Z', team(5, 'ALA'), team(6, 'USF'), 24, 10, { liveState: { period: 3, clock: '8:41' } });
   const epl = game(5, 'epl', 'live', '2026-09-12T16:30:00Z', team(9, 'BRE', null), team(10, 'BOU', null), 1, 1, { liveState: { period: '2H', elapsed: 71 } });
@@ -45,7 +45,7 @@ function fixture({ signedIn = true } = {}) {
   const extras = new Map([
     [3, X({ drive: { label: '2nd & 6', spot: 'ALA 41', offenseAbbr: 'ALA', pct: 41, lastPlay: 'J. Milroe pass short right to G. Bernard for 9 yards.' }, stake: signedIn ? { pick: { side: 'home', abbr: 'ALA', state: 'winning' }, weekly: [{ name: 'Jalen Milroe', pos: 'QB', points: 18.4 }], alerts: true } : null })],
     [5, X({ prob: { home: 54, draw: 24, away: 22 } })],
-    [6, X({ spreadHome: -5.5, total: 43.5, preview: '/article/den-ten', stake: signedIn ? { pick: { side: 'away', abbr: 'DEN', state: 'pending' }, weekly: [{ name: 'Bo Nix', pos: 'QB', points: 0 }, { name: 'Courtland Sutton', pos: 'WR', points: 0 }], alerts: true } : null })],
+    [6, X({ open: true, spreadHome: -5.5, total: 43.5, preview: '/article/den-ten', stake: signedIn ? { pick: { side: 'away', abbr: 'DEN', state: 'pending' }, weekly: [{ name: 'Bo Nix', pos: 'QB', points: 0 }, { name: 'Courtland Sutton', pos: 'WR', points: 0 }], alerts: true } : null })],
     [2, X({ stat: { name: 'CJ Bailey', passCmp: 13, passAtt: 17, passYds: 281, passTd: 1 }, hasStats: true, stake: signedIn ? { pick: { side: 'home', abbr: 'NCSU', state: 'won' }, weekly: [], alerts: false } : null })],
   ]);
   return {
@@ -92,7 +92,7 @@ test('live card: red rule, period and clock, network, Alerts on, the drive strip
   assert.match(ala, /<span class="lp">J\. Milroe pass short right to G\. Bernard for 9 yards\.<\/span>/);
   assert.doesNotMatch(ala, /data-winprob/, 'no win-probability bar on football');
   assert.match(ala, /<b class="n">24<\/b>/); assert.match(ala, /<span class="rec">1-0<\/span>/);
-  assert.match(ala, /data-stake="1"/); assert.match(ala, /class="good">Pick’em <b>ALA<\/b>/); assert.match(ala, /class="good">Weekly · Milroe <b>18\.4<\/b>/);
+  assert.match(ala, /data-stake="1"/); assert.match(ala, /class="good">Pick(?:&#x27;|')em <b>ALA<\/b>/); assert.match(ala, /class="good">Weekly · Milroe <b>18\.4<\/b>/);
   assert.match(bre, /data-winprob="epl"/); assert.match(bre, /<span>BRE 54%<\/span>/); assert.match(bre, /style="width:54%"/);
   assert.match(bre, /<span class="l">71&#x27;<\/span>|<span class="l">71'<\/span>/);
   assert.doesNotMatch(bre, /data-drive/);
@@ -103,18 +103,29 @@ test('upcoming card: kickoff, Your pick chip, spread and total, Preview; final c
   const cards = h.split('<a class="sv2-card').slice(1);
   const up = cards[2], fin = cards[3];
   assert.match(up, /<span class="pk">Your pick<\/span>/); assert.equal((up.match(/Your pick/g) ?? []).length, 1);
-  assert.match(up, /Spread TEN -5\.5 · O\/U 43\.5/); assert.match(up, /class="go">Preview →</, 'picked -> Preview, not Pick');
+  assert.match(up, /Spread TEN -5\.5 · O\/U 43\.5/); assert.match(up, /class="go">Change pick →</, 'picked and open -> Change pick (rider 2)');
   assert.match(up, /Weekly · Nix, Sutton <b>2 players<\/b>/); assert.match(up, /class="bell">Alerts</);
   assert.match(fin, /^ final" href="\/cfb\/game\/g-2"/); assert.match(fin, /Final · Fri/);
-  assert.match(fin, /Pick’em <b>NCSU ✓<\/b>/); assert.match(fin, /class="go">Box score →</);
+  assert.match(fin, /Pick(?:&#x27;|')em <b>NCSU ✓<\/b>/); assert.match(fin, /class="go">Box score →</);
   // a final with no pick shows the stat line instead
   const v2 = fixture(); v2.extras.get(2).stake = null;
   const h2 = html({ v: v2, signedIn: true }).split('<a class="sv2-card').slice(1)[3];
   assert.match(h2, /<b>Bailey 13\/17 · 281 · 1 TD<\/b>/);
-  // no pick on an open board -> "No pick yet" dashed chip to the board, and "Pick →"
+  // no pick on an open board -> "No pick yet" chip to THIS league's board (rider 3), and Preview only with an article (rider 2)
   const v3 = fixture(); v3.extras.get(6).stake = { pick: null, weekly: [], alerts: false };
   const h3 = html({ v: v3, signedIn: true }).split('<a class="sv2-card').slice(1)[2];
-  assert.match(h3, /class="none" href="\/pickem\/nfl">No pick yet<\/a>/); assert.match(h3, /class="go">Pick →</);
+  assert.match(h3, /class="none" href="\/pickem\/nfl">No pick yet<\/a>/); assert.match(h3, /class="go">Preview →</);
+  const v4 = fixture(); v4.extras.get(6).stake = { pick: null, weekly: [], alerts: false }; v4.extras.get(6).preview = null;
+  const h4 = html({ v: v4, signedIn: true }).split('<a class="sv2-card').slice(1)[2];
+  assert.doesNotMatch(h4, /class="go"/, 'no pick and no preview -> no element at all');
+  const v5 = fixture(); v5.extras.get(6).open = false;
+  const h5 = html({ v: v5, signedIn: true }).split('<a class="sv2-card').slice(1)[2];
+  assert.doesNotMatch(h5, /class="go"/, 'picked but kicked -> no Change pick, no empty span');
+  assert.doesNotMatch(html({ v: fixture(), signedIn: true }), /<span class="go"><\/span>/, 'never an empty go span');
+  // a CFB card's chip goes to the CFB board
+  const v6 = fixture(); v6.groups[1].games[0] = { ...v6.groups[1].games[0], leagueSlug: 'cfb' };
+  v6.extras.get(6).stake = { pick: null, weekly: [], alerts: false };
+  assert.match(html({ v: v6, signedIn: true }), /class="none" href="\/pickem\/cfb">No pick yet<\/a>/);
 });
 
 test('Mine: the pill carries the count and toggles ?mine=1; signed out has no Mine, no stake markup, "Sign in to pick"', () => {
@@ -124,7 +135,7 @@ test('Mine: the pill carries the count and toggles ?mine=1; signed out has no Mi
   const on = html({ v: { ...fixture(), mine: true }, signedIn: true });
   assert.match(on, /class="sv2-pill mine on"[^>]*href="\/scores\?date=2026-09-12"/);
   const out = html({ v: fixture({ signedIn: false }), signedIn: false });
-  assert.doesNotMatch(out, /data-stake|Mine ·|Your pick|Pick’em|Alerts/);
+  assert.doesNotMatch(out, /data-stake|Mine ·|Your pick|Pick'em|Alerts/);
   assert.match(out, /class="go">Sign in to pick</);
   assert.equal((out.match(/data-variant=/g) ?? []).length, 4, 'the same four cards');
 });
@@ -165,6 +176,10 @@ test('no em dashes; /nfl/scores and /cfb/scores still mount ScoresView; LeagueSc
   const REPO = path.resolve(__dirname, '..', '..');
   for (const f of ['components/scores/ScoresV2.js', 'components/scores/LiveRefresh.js', 'lib/gridiron/scoresV2.js', 'lib/gridiron/scoresV2Shape.js', 'app/scores/scoresV2.css', 'app/scores/page.js']) {
     assert.ok(!/—/.test(readFileSync(path.join(REPO, f), 'utf8')), `${f} carries an em dash`);
+  }
+  // GO rider 1: the site's straight apostrophe, no U+2019 anywhere in components/scores
+  for (const f of ['components/scores/ScoresV2.js', 'components/scores/LiveRefresh.js']) {
+    assert.ok(!/\u2019/.test(readFileSync(path.join(REPO, f), 'utf8')), `${f} carries a curly apostrophe`);
   }
   const page = readFileSync(path.join(REPO, 'app/scores/page.js'), 'utf8');
   assert.match(page, /export async function ScoresView\(/); assert.match(page, /<ScoresV2 v=\{v\} signedIn=\{userId != null\}/);
