@@ -22,7 +22,7 @@ import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
-import { pickemBoardView, PICKEM_SPORTS } from '@/lib/pickem/entry';
+import { pickemBoardView, PICKEM_SPORTS, pickemCardData } from '@/lib/pickem/entry';
 import { boardPlan } from '@/lib/pickem/create';
 import { plannedBoardNumberFor } from '@/lib/pickem/sequence';
 import { sql } from '@/lib/db';
@@ -36,6 +36,7 @@ import StandaloneDateOnly from '@/components/StandaloneDateOnly';
 import '../../games/games.css';
 import '../pickem.css';
 import '@/components/games/grade.css';
+import SportSwitch from '@/components/pickem/SportSwitch';
 
 // ONE TIME ZONE PER SCREEN (relay 3b item 2) - see app/weekly/page.js. Every
 // clock this page renders goes through StandaloneDate/StandaloneTime.
@@ -68,6 +69,13 @@ export default async function PickemSportPage({ params, searchParams }) {
   const uid = userId == null ? null : Number(userId);
   const now = new Date();
   const view = await pickemBoardView(uid, { sport, now }).catch(() => ({ phase: 'preopen', contest: null, games: [] }));
+  // BOTH BOARDS' STATE, for the switch. A sport with no current board is
+  // simply absent, and one board renders no switch at all.
+  const boards = (await Promise.all(PICKEM_SPORTS.map(async (s) => {
+    const d = await pickemCardData(uid, { sport: s, now }).catch(() => null);
+    return d ? { sport: s, pickedOpen: d.pickedOpen, pickable: d.pickable, settled: Boolean(d.settled) } : null;
+  }))).filter(Boolean);
+  const sportSwitch = <SportSwitch boards={boards} sport={sport} />;
   const hasHandle = await userHasHandle(uid, sql);
 
   return (
@@ -76,6 +84,9 @@ export default async function PickemSportPage({ params, searchParams }) {
       <main className="lob pk-main" data-surface="ink">
         <Link className="appcrumb" href="/games">&larr; Games</Link>
 
+        {/* The switch rides with the board when there is one; on the other
+            two phases it sits at the top so it never disappears. */}
+        {view.phase !== 'living' && sportSwitch}
         {view.phase === 'preopen' && <PreOpen sport={sport} now={now} />}
 
         {view.phase === 'living' && (
@@ -86,6 +97,7 @@ export default async function PickemSportPage({ params, searchParams }) {
             hasHandle={hasHandle}
             initialConfirmedAt={view.confirmedAt ?? null}
             locksAt={view.contest.locksAt}
+            sportSwitch={sportSwitch}
           />
         )}
 

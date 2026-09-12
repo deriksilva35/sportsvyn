@@ -209,3 +209,15 @@
   font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--volt, #D4FF00);
 }
 .secl span { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; color: var(--muted, #8A8A85); }
+
+/* THE SPORT SWITCH (addendum): two pills under the board header, the current
+   one filled and inert. A lone board renders none of this. */
+.pk-switch { display: flex; gap: 8px; margin: 0 0 12px; }
+.pk-sw {
+  display: inline-flex; align-items: baseline; gap: 7px;
+  border: 1px solid var(--line); border-radius: 99px; padding: 7px 12px; min-height: 34px;
+  font: 700 12px var(--font-mono); letter-spacing: .04em; color: var(--muted); text-decoration: none;
+}
+.pk-sw small { font: 500 11px var(--font-mono); color: var(--muted-dim, #6E6E68); letter-spacing: 0; }
+.pk-sw.on { background: var(--volt); border-color: var(--volt); color: var(--ink); cursor: default; }
+.pk-sw.on small { color: var(--ink); opacity: .72; }

@@ -85,7 +85,10 @@ test('no em dashes on the page or its shapes; the three panes and the stranger b
   // R6: the Practice module is gone from the lobby reader too
   assert.doesNotMatch(strip(src('lib/games/read.js')), /practice: \{ chips/);
   // the Tonight card carries no win-probability bar and TeamMark at 24
-  assert.doesNotMatch(lobby, /className="bar"/); assert.match(comp, /<TeamMark primary=\{t\.colors\.primary\} secondary=\{t\.colors\.secondary\} size=\{24\}/);
+  assert.doesNotMatch(lobby, /className="bar"/);
+  // the strip's mark takes the DERIVED abbreviation, so a side with none
+  // still shows three letters rather than a blank disc (relay addendum)
+  assert.match(comp, /<TeamMark primary=\{t\.colors\?\.primary\} secondary=\{t\.colors\?\.secondary\} abbr=\{abbrOf\(t\)\} size=\{24\}/);
 });
 
 test('the page wires the v2 reader to the pane and keeps the other three panes on gamesLobby()', () => {

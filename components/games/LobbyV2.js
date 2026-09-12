@@ -9,6 +9,7 @@ import TeamMark from '@/components/team/TeamMark';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { numberWord, tonightTitle } from '@/lib/games/lobbyV2Shape';
+import { abbrOf } from '@/lib/gridiron/scoresV2Shape';
 
 // ---------------------------------------------------------------------------
 // THE GAMES PANE, v2 (docs/design/mocks/games-tab-v0_1.html). Top to bottom:
@@ -65,10 +66,12 @@ function MiniRow({ row, signedIn, signinHref }) {
 function TeamLine({ t, trail = false, scored = false }) {
   return (
     <div className={`lv-team${trail ? ' trail' : ''}`}>
-      {t.colors
-        ? <TeamMark primary={t.colors.primary} secondary={t.colors.secondary} size={24} title={t.name} />
-        : <span className="lv-ico" style={{ width: 24, height: 24 }} />}
-      <span className="ab">{t.abbr}</span><span>{t.name}</span>
+      {/* ONE DERIVED ABBREVIATION, BOTH SURFACES: a side with none ("Sacred
+          Heart") reads SAC on the mark and in the column here exactly as it
+          does on a Scores card. The column is 44px - a full name in that slot
+          wrapped the row. */}
+      <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={abbrOf(t)} size={24} title={t.name} />
+      <span className="ab">{abbrOf(t)}</span><span>{t.name}</span>
       {scored && <b className="n">{t.score ?? 0}</b>}
     </div>
   );
@@ -80,7 +83,7 @@ function ScoreCard({ g }) {
   const homeLeads = g.home.score != null && g.away.score != null && g.home.score > g.away.score;
   const awayLeads = g.home.score != null && g.away.score != null && g.away.score > g.home.score;
   const spread = g.spreadHome == null ? null
-    : `Spread ${g.spreadHome <= 0 ? g.home.abbr : g.away.abbr} ${g.spreadHome <= 0 ? g.spreadHome : -g.spreadHome}`;
+    : `Spread ${abbrOf(g.spreadHome <= 0 ? g.home : g.away)} ${g.spreadHome <= 0 ? g.spreadHome : -g.spreadHome}`;
   return (
     <a className={`lv-score${live ? ' live' : ''}`} href={g.href} data-status={g.status}>
       <div className="lv-lbl">
