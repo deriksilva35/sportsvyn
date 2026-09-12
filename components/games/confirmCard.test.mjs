@@ -74,7 +74,8 @@ test('both states carry a summary - roster for the Weekly, count for the Pickem'
     'and rendered in both the receipt and the review');
 
   assert.match(strip(src(WEEKLY_ROOM)), /rows=\{SLOTS\.map/, 'the Weekly passes its six');
-  assert.match(strip(src(PICKEM_BOARD)), /line=\{`\$\{total\} of \$\{total\} picked`\}/,
+  // D4: the count is the PICKABLE games - kicked rows are outside it.
+  assert.match(strip(src(PICKEM_BOARD)), /line=\{`\$\{pickable\} of \$\{pickable\} picked`\}/,
     "the Pick'em passes its count");
 });
 
@@ -82,9 +83,10 @@ test('the card states the lock time, and through StandaloneDate', () => {
   const card = strip(src('components/games/ConfirmCard.js'));
   assert.match(card, /import StandaloneDate from '@\/components\/StandaloneDate'/);
   assert.match(card, /<StandaloneDate iso=\{lockIso\}/);
-  for (const rel of [WEEKLY_ROOM, PICKEM_BOARD]) {
-    assert.match(strip(src(rel)), /lockIso=\{locksAt\}/, `${rel} hands it the instant, not a string`);
-  }
+  // FRESH-USER FIXES, D12: only the Pick'em hands the card a lock instant.
+  // The Weekly's header owns its deadline; its card says none.
+  assert.match(strip(src(PICKEM_BOARD)), /lockIso=\{locksAt\}/, 'the Pick\'em hands it the instant, not a string');
+  assert.doesNotMatch(strip(src(WEEKLY_ROOM)), /lockIso=/, 'the Weekly card renders no lock instant (D12)');
 });
 
 // ------------------------------------------- 2: one time zone per screen

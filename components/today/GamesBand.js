@@ -57,7 +57,7 @@ export default function GamesBand({ daily, yesterday, pickem, weekly, draft }) {
             eyebrow={daily.edition ? `Edition No. ${daily.edition}` : 'The Daily'}
             title="The Daily" sub={dailySub}
             cta={daily.edition ? `Play Ed. ${daily.edition}` : 'Play today'}
-            ctaClass="play" href="/daily" />
+            ctaClass="play" href="/daily/board" />
         ) : null}
         {pickem ? (
           <Card eyebrow={`Board ${pickem.boardNumber}`} isNew={!pickem.settled && !pickem.entered} title={GAME_NAMES.pickem}

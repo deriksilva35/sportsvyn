@@ -258,5 +258,8 @@
    whose team has kicked cannot be taken. */
 .weekly .pr.wk-locked { opacity: .55; cursor: default; }
 .weekly .pr.wk-locked .tk { color: var(--d-mut); border-color: var(--d-line); }
+/* A SLOT HELD BEHIND THE HANDLE MODAL (D3): the pick stays, the sub-line says
+   why it is not saved yet, and tapping the row re-opens the modal. */
+.weekly .pr.wk-pending .nm small { color: var(--d-mut); text-decoration: underline dotted; text-underline-offset: 2px; }
 .weekly .pr .nm .wk-ko { display: block; margin-top: 2px; font-family: var(--d-mono); font-size: 10px; color: var(--d-mut); }
 .sbd-pr.sbd-kicked { opacity: .45; cursor: default; }

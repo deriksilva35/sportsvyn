@@ -20,6 +20,7 @@
  */
 
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -114,6 +115,7 @@ export default async function DailyPage({ searchParams }) {
           <section className="mod">
             <h2 className="eyebrow">Today&rsquo;s board</h2>
             <p className="mod-lede">Not up yet. It lands at midnight ET.</p>
+            <p className="mod-lede"><Link href="/daily/board">Today&rsquo;s board &rarr;</Link></p>
           </section>
         </main>
         </div>
