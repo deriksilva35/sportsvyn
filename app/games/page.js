@@ -27,6 +27,7 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { gamesLobby } from '@/lib/games/read';
 import { lobbyV2 } from '@/lib/games/lobbyV2';
 import LobbyV2 from '@/components/games/LobbyV2';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 import { myLeagues } from '@/lib/leagues/core';
 import { normalizePane, normalizePickemSeasonSport } from '@/lib/games/lobby';
 import PaneTabs from '@/components/games/PaneTabs';
@@ -63,6 +64,7 @@ export default async function GamesPage({ searchParams }) {
   // THE GAMES PANE IS v2 (GAMES TAB v2 relay): its own reader, its own
   // shapes. The other three panes still draw from gamesLobby(), unchanged.
   const v2 = pane === 'games' ? await lobbyV2(userId).catch(() => null) : null;
+  const viewerTz = pane === 'games' ? await readViewerTz() : null;
   const v = pane === 'games' ? null : await gamesLobby(userId, { pickemSeasonSport }).catch(() => null);
   // YOUR LEAGUES (v0.2 door): the member's leagues on the lobby, or the
   // create/join CTA when none. Caught to [] like every lobby read.
@@ -74,7 +76,7 @@ export default async function GamesPage({ searchParams }) {
       <main className={`lob${pane === 'games' ? ' lv' : ''}`} data-surface="ink">
         {pane === 'games' ? (
           v2
-            ? <LobbyV2 v={v2} signedIn={userId != null} isShell={isShell} leagues={leagues} />
+            ? <LobbyV2 v={v2} signedIn={userId != null} isShell={isShell} leagues={leagues} viewerTz={viewerTz} />
             : (
               <section className="mod">
                 <p className="muted">The lobby is having a moment. Try again shortly.</p>

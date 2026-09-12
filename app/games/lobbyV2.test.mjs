@@ -17,7 +17,7 @@ const lobby = comp.slice(comp.indexOf('export default function LobbyV2('));
 test('the page renders every section, in the mock\'s order', () => {
   const order = ['className="lv-ah"', 'className="lv-intro"', 'className="lv-games"', 'card={daily} hero', 'card={weekly}',
     'className="lv-minis"', 'row={pickem}', 'row={draft}', '<h2>Draft room</h2>', 'data-section="draft-room"',
-    '<h2>Tonight</h2>', 'data-section="tonight"', 'data-section="read"', 'className="lv-more"'];
+    'tonightTitle({ games: v.tonight', 'data-section="tonight"', 'data-section="read"', 'className="lv-more"'];
   let at = 0;
   for (const marker of order) {
     const i = lobby.indexOf(marker, at);
@@ -25,13 +25,15 @@ test('the page renders every section, in the mock\'s order', () => {
   }
   // The intro line and its H1, verbatim.
   assert.match(lobby, /<h1>Every day is <i>game day\.<\/i><\/h1>/);
-  assert.match(lobby, /\{intro\.open\}/); assert.match(lobby, /numberWord\(intro\.lock\.count, \{ cap: true \}\)/);
+  assert.match(lobby, /\{intro\.open\}/); assert.match(lobby, /First of \{numberWord\(intro\.lock\.count\)\} \{intro\.lock\.league\} game/);
+  assert.match(lobby, /\{intro\.live\} live now\./); assert.match(lobby, /still to pick\./);
+  assert.match(page, /const viewerTz = pane === 'games' \? await readViewerTz\(\) : null;/);
 });
 
 test('Mock and Tracker live in the Draft room and nowhere else on the page - one link each', () => {
   assert.equal((lobby.match(/href="\/sim"/g) ?? []).length, 1);
   assert.equal((lobby.match(/href="\/sim\/tracker"/g) ?? []).length, 1);
-  const room = lobby.slice(lobby.indexOf('data-section="draft-room"'), lobby.indexOf('<h2>Tonight</h2>'));
+  const room = lobby.slice(lobby.indexOf('data-section="draft-room"'), lobby.indexOf('tonightTitle({ games: v.tonight'));
   assert.match(room, /href="\/sim"/); assert.match(room, /href="\/sim\/tracker"/);
   assert.match(room, /<strong>Mock draft<\/strong>/); assert.match(room, /<strong>Draft tracker<\/strong>/);
   assert.match(room, /Mock season is over,<\/b> not the mock\./);
@@ -82,6 +84,6 @@ test('no em dashes on the page or its shapes; the three panes and the stranger b
 
 test('the page wires the v2 reader to the pane and keeps the other three panes on gamesLobby()', () => {
   assert.match(page, /const v2 = pane === 'games' \? await lobbyV2\(userId\)\.catch\(\(\) => null\) : null;/);
-  assert.match(page, /<LobbyV2 v=\{v2\} signedIn=\{userId != null\} isShell=\{isShell\} leagues=\{leagues\} \/>/);
+  assert.match(page, /<LobbyV2 v=\{v2\} signedIn=\{userId != null\} isShell=\{isShell\} leagues=\{leagues\} viewerTz=\{viewerTz\} \/>/);
   assert.match(page, /pane === 'leaderboards' && <BoardsPane/); assert.match(page, /pane === 'answer' && <AnswerPane/); assert.match(page, /pane === 'history' && <HistoryPane/);
 });

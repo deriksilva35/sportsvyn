@@ -7,7 +7,7 @@ import Link from 'next/link';
 import StandaloneDate from '@/components/StandaloneDate';
 import TeamMark from '@/components/team/TeamMark';
 import { shellSigninHref } from '@/lib/shell/signinHref';
-import { numberWord } from '@/lib/games/lobbyV2Shape';
+import { numberWord, tonightTitle } from '@/lib/games/lobbyV2Shape';
 
 // ---------------------------------------------------------------------------
 // THE GAMES PANE, v2 (docs/design/mocks/games-tab-v0_1.html). Top to bottom:
@@ -100,7 +100,7 @@ function ScoreCard({ g }) {
   );
 }
 
-export default function LobbyV2({ v, signedIn = false, isShell = false, leagues = [] }) {
+export default function LobbyV2({ v, signedIn = false, isShell = false, leagues = [], viewerTz = null }) {
   const signinHref = (dest) => shellSigninHref(dest, isShell);
   const initial = (v.handle ?? '').trim().charAt(0).toUpperCase() || 'Ȳ';
   const { daily, weekly, pickem, draft, intro } = v;
@@ -124,9 +124,13 @@ export default function LobbyV2({ v, signedIn = false, isShell = false, leagues 
       <div className="lv-intro">
         <div className="lv-eb">{weekdayEt(v.now)}{v.week != null && <> &middot; Week {v.week}</>}</div>
         <h1>Every day is <i>game day.</i></h1>
+        {/* GO rider 1: rows lock at their own kickoff, so the line names the
+            first kickoff; with a game live it counts what is live and what
+            is still to pick. */}
         <p className="lv-line">
-          {intro.open}
-          {intro.lock && <> {numberWord(intro.lock.count, { cap: true })} {intro.lock.league} game{intro.lock.count === 1 ? '' : 's'} lock <StandaloneDate iso={intro.lock.at} />.</>}
+          {intro.live > 0
+            ? <>{intro.live} live now.{intro.lock ? <> {intro.lock.toPick} {intro.lock.league} game{intro.lock.toPick === 1 ? '' : 's'} still to pick.</> : null}</>
+            : <>{intro.open}{intro.lock && <> First of {numberWord(intro.lock.count)} {intro.lock.league} game{intro.lock.count === 1 ? '' : 's'} kicks <StandaloneDate iso={intro.lock.at} />.</>}</>}
         </p>
       </div>
 
@@ -155,7 +159,7 @@ export default function LobbyV2({ v, signedIn = false, isShell = false, leagues 
         <div className="note"><b>Mock season is over,</b> not the mock. Every Draft room uses the mock&rsquo;s clock and board, so a mock is a practice run for the next room.</div>
       </div>
 
-      <div className="lv-sh"><h2>Tonight</h2><a href="/scores">All scores &rarr;</a></div>
+      <div className="lv-sh"><h2>{tonightTitle({ games: v.tonight, now: v.now, tz: viewerTz ?? 'America/New_York' })}</h2><a href="/scores">All scores &rarr;</a></div>
       <div className="lv-scores" data-section="tonight">
         {v.tonight.length === 0
           ? <p className="muted">No games on the board right now.</p>
