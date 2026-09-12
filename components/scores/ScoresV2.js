@@ -9,7 +9,7 @@ import StandaloneTime from '@/components/StandaloneTime';
 import TeamMark from '@/components/team/TeamMark';
 import LiveRefresh from '@/components/scores/LiveRefresh';
 import { shellSigninHref } from '@/lib/shell/signinHref';
-import { LEAGUE_LABEL, cardVariant, countLine, pickTone, statLineText, oddsLine, eplBar, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
+import { LEAGUE_LABEL, abbrOf, cardVariant, countLine, pickTone, statLineText, oddsLine, eplBar, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
 
 // THE SITE'S STRAIGHT APOSTROPHE, everywhere on this tab (GO rider 1).
 const PICKEM = "Pick'em";
@@ -32,10 +32,6 @@ function liveLabel(g) {
   const q = ls.period ?? null; const c = ls.clock ?? null;
   return q ? `Q${q}${c ? ` · ${c}` : ''}` : 'Live';
 }
-
-// AN FCS SIDE HAS NO ABBREVIATION: derive one from the name so the mark and
-// the column never go blank ("Norfolk State" -> "NOR").
-export const abbrOf = (t) => t?.abbreviation ?? String(t?.shortName ?? t?.name ?? '').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase();
 
 function TeamRow({ t, score, trail, record, pick, pct, scored }) {
   const ab = abbrOf(t);
