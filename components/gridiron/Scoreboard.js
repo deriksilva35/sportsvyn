@@ -22,6 +22,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import DriveStrip from './DriveStrip';
 import { scoresHref, SPORT_CHIPS } from '@/lib/gridiron/scoresNav';
+import { orderFor } from '@/lib/gridiron/teamOrder';
 
 // Where a gridiron card's "Full game" link points, per league. A map rather
 // than a conditional: each code owns a sibling route, and a fourth would
@@ -267,8 +268,17 @@ function Card({ g, records, tz, withDay = true, signedIn = false }) {
           </span>
           <span className="gi-chev" aria-hidden="true">▾</span>
         </div>
-        <TeamLine t={g.away} score={aw} isWinner={awayWin} isLoser={homeWin} final={final} live={g.status === 'live'} record={records?.get?.(g.away?.id) ?? null} />
-        <TeamLine t={g.home} score={hw} isWinner={homeWin} isLoser={awayWin} final={final} live={g.status === 'live'} record={records?.get?.(g.home?.id) ?? null} />
+        {/* League order, one rule: lib/gridiron/teamOrder.js. */}
+        {orderFor(g.leagueSlug).map((side) => {
+          const t = side === 'home' ? g.home : g.away;
+          return (
+            <TeamLine
+              key={side} t={t} score={side === 'home' ? hw : aw}
+              isWinner={side === 'home' ? homeWin : awayWin} isLoser={side === 'home' ? awayWin : homeWin}
+              final={final} live={g.status === 'live'} record={records?.get?.(t?.id) ?? null}
+            />
+          );
+        })}
         {/* The Watch unit is gone. Watch Score is a soccer instrument - there is
             no gridiron composite and never was one on this card, so it rendered
             a permanent placeholder on every row forever, which does not read as
@@ -347,7 +357,7 @@ function SoccerCard({ g, records, tz, withDay = true }) {
   const live = g.status === 'live';
   const chip = live ? soccerLiveChip(g.liveState) : null;
   const draw = (final || live) && g.homeScore != null && g.homeScore === g.awayScore;
-  const side = (t, score, otherScore) => {
+  const side = (t, score, otherScore, key) => {
     // THE SOCCER CHIP IS A POSITION, NOT A RECORD. "3rd" is what a supporter
     // says; nobody describes a club as 5-2-1. recordChipMap() already speaks
     // that grammar, so the card just renders the string it is handed.
@@ -356,7 +366,7 @@ function SoccerCard({ g, records, tz, withDay = true }) {
     // nobody, because it is not over.
     const lost = final && !draw && score != null && otherScore != null && score < otherScore;
     return (
-      <div className={`gi-team${lost ? ' loser' : ''}`}>
+      <div className={`gi-team${lost ? ' loser' : ''}`} key={key}>
         {/* The club code, left of the name - gridiron's BUF/TEN pattern in
             soccer's own markup. Sourced from teams.abbreviation, which
             squadImport fills from the provider's `code` (all 20 EPL clubs
@@ -396,8 +406,11 @@ function SoccerCard({ g, records, tz, withDay = true }) {
       {/* Straight to the league's own match center - /match would only 308
           here anyway, and a card should not spend a redirect. */}
       <Link className="gi-soccer-teams" href={`/epl/match/${g.slug}`}>
-        {side(g.away, g.awayScore, g.homeScore)}
-        {side(g.home, g.homeScore, g.awayScore)}
+        {/* Soccer reads home-first - lib/gridiron/teamOrder.js, not a local
+            choice. */}
+        {orderFor(g.leagueSlug).map((s) => (s === 'home'
+          ? side(g.home, g.homeScore, g.awayScore, s)
+          : side(g.away, g.awayScore, g.homeScore, s)))}
       </Link>
       {(compLabel || g.venue) && (
         <div className="gi-soccer-meta">

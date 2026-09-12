@@ -45,6 +45,7 @@ import PropsPanel from '@/components/gridiron/PropsPanel';
 import GameTabs from '@/components/gridiron/GameTabs';
 import AlertBell from '@/components/alerts/AlertBell';
 import { auth } from '@/auth';
+import { orderFor } from '@/lib/gridiron/teamOrder';
 import { parseGameTab } from '@/lib/gridiron/gameTabsNav';
 import { cfbBoxScoreFor, boxScoreLabel } from '@/lib/cfb/boxScore';
 import { propsSlate } from '@/lib/market/reads';
@@ -263,8 +264,18 @@ export default async function CfbGamePage({ params, searchParams }) {
               ? <span className="gg-chip time">{fmtKick(game.kickoffAt)} ET</span> : null}
           </div>
 
-          <TeamRow record={awayRecord} t={game.away} score={game.awayScore} loser={winner === 'home'} show={final || live} rank={apRanks.get(game.away?.id) ?? null} />
-          <TeamRow record={homeRecord} t={game.home} score={game.homeScore} loser={winner === 'away'} show={final || live} rank={apRanks.get(game.home?.id) ?? null} />
+          {/* League order, one rule: lib/gridiron/teamOrder.js. */}
+          {orderFor(game.leagueSlug).map((side) => {
+            const t = side === 'home' ? game.home : game.away;
+            return (
+              <TeamRow
+                key={side} record={side === 'home' ? homeRecord : awayRecord} t={t}
+                score={side === 'home' ? game.homeScore : game.awayScore}
+                loser={winner === (side === 'home' ? 'away' : 'home')} show={final || live}
+                rank={apRanks.get(t?.id) ?? null}
+              />
+            );
+          })}
 
           <div className="gg-headfoot">
             <span>CFB · {game.seasonPhase} W{game.week}</span>

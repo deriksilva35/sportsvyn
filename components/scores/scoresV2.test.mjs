@@ -182,6 +182,26 @@ test('an FCS side with no abbreviation gets one derived from its name, on the ma
   assert.match(h, /<span class="ab">NOR<\/span><span class="nm">Norfolk State/);
 });
 
+test('TEAM ORDER: the EPL card renders home first, the football cards away first', () => {
+  const h = html({ v: fixture(), signedIn: true });
+  const cards = h.split('<a class="sv2-card').slice(1);
+  const rowAbbrs = (c) => [...c.matchAll(/<span class="ab">([^<]*)<\/span>/g)].map((m) => m[1]);
+  // the fixture's live CFB card is ALA (home) v USF (away) -> away first
+  assert.deepEqual(rowAbbrs(cards[0]), ['USF', 'ALA'], 'CFB: away then home');
+  // the EPL card is BRE (home) v BOU (away) -> home first
+  assert.deepEqual(rowAbbrs(cards[1]), ['BRE', 'BOU'], 'EPL: home then away');
+  // NFL upcoming: TEN (home) v DEN (away) -> away first
+  assert.deepEqual(rowAbbrs(cards[2]), ['DEN', 'TEN'], 'NFL: away then home');
+  // the score follows the TEAM, not the row position: BRE leads the card and
+  // still carries the home score
+  const eplRows = cards[1].split('<div class="sv2-team');
+  assert.match(eplRows[1], /<span class="ab">BRE<\/span>[\s\S]*<b class="n">1<\/b>/);
+  assert.match(eplRows[2], /<span class="ab">BOU<\/span>[\s\S]*<b class="n">1<\/b>/);
+  // and nothing here decides the order for itself
+  const comp = readFileSync(path.join(path.resolve(__dirname, '..', '..'), 'components/scores/ScoresV2.js'), 'utf8');
+  assert.match(comp, /orderFor\(g\.leagueSlug\)/);
+});
+
 test('DAY PICK LEADS: on another day the day leads, the live games are one red line, and no live card renders', () => {
   const h = html({ v: sundayFixture(), signedIn: true });
   // the line, its count, and the way back

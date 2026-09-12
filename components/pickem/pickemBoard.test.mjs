@@ -299,3 +299,28 @@ test('RIDER: one denominator - 16 rows, 2 kicked, 0 picked -> header "0 of 14", 
   assert.equal(c2.querySelector('.prog .cap span').textContent, '14 of 14 picked');
   assert.match(c2.querySelector('.wk-review .wk-review-note').textContent, /^14 of 14 picked/);
 });
+
+// ---------------------------------------------------------------------------
+// TEAM ORDER relay: the league decides who goes first and what sits between.
+// ---------------------------------------------------------------------------
+test('TEAM ORDER: an NFL board reads away-first across "at"; a soccer board reads home-first across "v"', () => {
+  const nfl = render('nfl');
+  assert.deepEqual(sides(nfl).map((b) => b.querySelector('.pk-nm').textContent), ['Patriots', 'Seahawks'], 'away then home');
+  assert.equal(nfl.querySelector('.pk-at').textContent, 'at');
+  act(() => { for (const r of roots) r.unmount(); }); roots.clear();
+  const cfb = render('cfb');
+  assert.deepEqual(sides(cfb).map((b) => b.querySelector('.pk-nm').textContent), ['Patriots', 'Seahawks']);
+  assert.equal(cfb.querySelector('.pk-at').textContent, 'at');
+  act(() => { for (const r of roots) r.unmount(); }); roots.clear();
+  // no soccer board exists yet; the rule is the rule when one does
+  const epl = render('epl');
+  assert.deepEqual(sides(epl).map((b) => b.querySelector('.pk-nm').textContent), ['Seahawks', 'Patriots'], 'home then away');
+  assert.equal(epl.querySelector('.pk-at').textContent, 'v');
+  act(() => { for (const r of roots) r.unmount(); }); roots.clear();
+  // the helmets still face each other whichever way round the league reads:
+  // first row looks right, second looks left, so they meet over the connector
+  const dressedEpl = render('epl', dressed());
+  const hm = [...dressedEpl.querySelectorAll('.pk-hm')];
+  assert.deepEqual(hm.map((h) => h.getAttribute('data-facing')), ['right', 'left']);
+  assert.equal(byName(dressedEpl, 'Seahawks').querySelector('.pk-hm').getAttribute('data-facing'), 'right', 'the HOME side leads a soccer row and looks right');
+});
