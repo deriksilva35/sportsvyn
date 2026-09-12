@@ -95,7 +95,7 @@ function pipRows(games) {
 }
 
 export default function PickemBoard({
-  view, signedIn, signinHref, hasHandle = true, initialConfirmedAt = null, locksAt = null,
+  view, signedIn, signinHref, hasHandle = true, initialConfirmedAt = null, locksAt = null, sportSwitch = null,
 }) {
   const { guard, modal: handleModal, pending: heldRows } = useHandleGate(hasHandle);
   // CONFIRM AND RECEIPT (relay 3 item 3), the Weekly's own model: picks
@@ -196,6 +196,9 @@ export default function PickemBoard({
         </span>
         <span className="clock">{pickedOpen} of {pickable}</span>
       </header>
+      {/* THE SECOND DOOR, directly under this board's own clock: the other
+          board's state without leaving this one (SPORT SWITCH addendum). */}
+      {sportSwitch}
       {/* STRAIGHT UP, SAID ONCE. The line below each game is reference, not
           the bet - a board that shows a spread beside two buttons reads as
           against-the-spread to anyone fluent, which this game is not. */}
