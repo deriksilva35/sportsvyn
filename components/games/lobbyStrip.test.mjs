@@ -92,3 +92,43 @@ test('BOTH SURFACES DERIVE THE SAME LETTERS - one helper, no second rule', () =>
   assert.match(reader, /abbreviation: r\.away_abbr \?\? null/);
   assert.doesNotMatch(reader, /abbr: r\.home_abbr \?\? \(r\.home_short/, 'the old name-into-the-abbr-slot fallback is gone');
 });
+
+// ---------------------------------------------------------------------------
+// TOP 25 (relay Part B). The AP number reaches the strip from the same reader
+// the Scores tab uses, and reaches nothing else.
+// ---------------------------------------------------------------------------
+test('a ranked CFB side wears its AP number on the strip, an unranked one wears nothing', () => {
+  const g = strip({
+    home: { name: 'Massachusetts', shortName: 'Massachusetts', abbreviation: 'MASS', colors: { primary: '#881C1C', secondary: '#FFFFFF' }, score: null, rank: null },
+    away: { name: 'Sacred Heart', shortName: 'Sacred Heart', abbreviation: null, colors: null, score: null, rank: 14 },
+  });
+  const rows = html({ v: v({ tonight: [g] }) }).split('<div class="lv-team').slice(1);
+  assert.match(rows[0], /<span><span class="rk">14<\/span>Sacred Heart<\/span>/, 'the badge leads the name');
+  assert.doesNotMatch(rows[1], /class="rk"/, 'the unranked side has no badge');
+});
+
+test('ties keep their number: two sides both at 14 both read 14 (R2)', () => {
+  const g = strip({
+    home: { name: 'Massachusetts', shortName: 'Massachusetts', abbreviation: 'MASS', colors: null, score: null, rank: 14 },
+    away: { name: 'Sacred Heart', shortName: 'Sacred Heart', abbreviation: null, colors: null, score: null, rank: 14 },
+  });
+  const nums = [...html({ v: v({ tonight: [g] }) }).matchAll(/<span class="rk">(\d+)<\/span>/g)].map((m) => m[1]);
+  assert.deepEqual(nums, ['14', '14'], 'no de-duplication, no 14a/14b');
+});
+
+test('an NFL game on the strip never carries a badge', () => {
+  const g = strip({
+    leagueSlug: 'nfl',
+    home: { name: 'Titans', shortName: 'Titans', abbreviation: 'TEN', colors: null, score: null, rank: null },
+    away: { name: 'Broncos', shortName: 'Broncos', abbreviation: 'DEN', colors: null, score: null, rank: null },
+  });
+  assert.doesNotMatch(html({ v: v({ tonight: [g] }) }), /class="rk"/);
+});
+
+test('the strip badge has a rule of its own - /games does not load gridiron.css', () => {
+  const css = readFileSync(path.join(REPO, 'app/games/lobbyV2.css'), 'utf8');
+  assert.match(css, /\.lv-team \.rk \{/, 'the badge is styled on this surface');
+  assert.match(css, /background: var\(--volt\)/);
+  const page = readFileSync(path.join(REPO, 'app/games/page.js'), 'utf8');
+  assert.equal(/gridiron\.css/.test(page), false, 'which is why the rule cannot be borrowed');
+});

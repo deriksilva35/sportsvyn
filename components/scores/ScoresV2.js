@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import StandaloneTime from '@/components/StandaloneTime';
 import TeamMark from '@/components/team/TeamMark';
+import RankBadge from '@/components/gridiron/RankBadge';
 import LiveRefresh from '@/components/scores/LiveRefresh';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { orderFor } from '@/lib/gridiron/teamOrder';
@@ -15,11 +16,14 @@ import { LEAGUE_LABEL, abbrOf, cardVariant, countLine, pickTone, statLineText, o
 // THE SITE'S STRAIGHT APOSTROPHE, everywhere on this tab (GO rider 1).
 const PICKEM = "Pick'em";
 
-const href = ({ date, sport = 'all', mine = false }) => {
+const href = ({ date, sport = 'all', mine = false, top25 = false }) => {
   const p = new URLSearchParams();
   if (date) p.set('date', date);
   if (sport !== 'all') p.set('sport', sport);
   if (mine) p.set('mine', '1');
+  // TOP 25 RIDES ONLY WHERE IT CAN MEAN SOMETHING. It is a CFB filter, so an
+  // NFL or EPL pill drops it rather than handing the reader an empty board.
+  if (top25 && (sport === 'all' || sport === 'cfb')) p.set('top25', '1');
   const q = p.toString();
   return q ? `/scores?${q}` : '/scores';
 };
@@ -34,13 +38,16 @@ function liveLabel(g) {
   return q ? `Q${q}${c ? ` · ${c}` : ''}` : 'Live';
 }
 
-function TeamRow({ t, score, trail, record, pick, pct, scored }) {
+function TeamRow({ t, score, trail, record, pick, pct, scored, rank = null }) {
   const ab = abbrOf(t);
   return (
     <div className={`sv2-team${trail ? ' trail' : ''}`}>
       <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={ab} size={24} title={t.name} />
       <span className="ab">{ab}</span>
-      <span className="nm">{t.shortName ?? t.name}{record ? <span className="rec">{record}</span> : null}</span>
+      {/* THE AP NUMBER SITS INSIDE THE NAME, not beside the score: it is part
+          of what the team is called this week, and RankBadge renders nothing
+          at all when the side is unranked or the league is not CFB. */}
+      <span className="nm"><RankBadge rank={rank} />{t.shortName ?? t.name}{record ? <span className="rec">{record}</span> : null}</span>
       {pick ? <span className="pk">Your pick</span> : null}
       {scored ? <b className="n">{score ?? 0}</b> : pct != null ? <b className="n pct">{pct}%</b> : null}
     </div>
@@ -97,7 +104,7 @@ function Card({ g, x, signedIn, signinHref, tz }) {
             key={side} t={t} score={side === 'home' ? g.homeScore : g.awayScore}
             trail={scored && (side === 'home' ? awayLeads : homeLeads)}
             record={x.record[side]} pick={pickAbbr != null && pickAbbr === abbrOf(t)}
-            pct={pctFor(side)} scored={scored}
+            pct={pctFor(side)} scored={scored} rank={x.rank?.[side] ?? null}
           />
         );
       })}
@@ -153,7 +160,7 @@ export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLab
         {v.days.map((d) => {
           const c = countLine(d.counts);
           return (
-            <Link key={d.date} className={`sv2-day${d.on ? ' on' : ''}${c.live ? ' live' : ''}`} href={href({ date: d.date, sport: v.sport, mine: v.mine })} data-date={d.date}>
+            <Link key={d.date} className={`sv2-day${d.on ? ' on' : ''}${c.live ? ' live' : ''}`} href={href({ date: d.date, sport: v.sport, mine: v.mine, top25: v.top25 })} data-date={d.date}>
               <small>{d.dow}</small><b>{d.day}</b><i>{c.text}</i>
             </Link>
           );
@@ -161,10 +168,17 @@ export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLab
       </div>
       <div className="sv2-filt" data-section="pills">
         {pills.map(([k, label]) => (
-          <Link key={k} className={`sv2-pill${v.sport === k ? ' on' : ''}`} href={href({ date: v.date, sport: k, mine: v.mine })}>{label}</Link>
+          <Link key={k} className={`sv2-pill${v.sport === k ? ' on' : ''}`} href={href({ date: v.date, sport: k, mine: v.mine, top25: v.top25 })}>{label}</Link>
         ))}
+        {/* THE FIFTH PILL, AND ONLY WHEN IT WOULD FIND SOMETHING (R5). No
+            ranked CFB game on the picked day under the league filter in
+            force, no pill - the reader is never offered a filter that
+            empties the board. */}
+        {v.rankedToday && (
+          <Link className={`sv2-pill top25${v.top25 ? ' on' : ''}`} href={href({ date: v.date, sport: v.sport, mine: v.mine, top25: !v.top25 })} data-top25={v.top25 ? '1' : '0'}>Top 25</Link>
+        )}
         <span className="sp" />
-        {signedIn && <Link className={`sv2-pill mine${v.mine ? ' on' : ''}`} href={href({ date: v.date, sport: v.sport, mine: !v.mine })} data-mine-count={v.mineCount}>Mine · {v.mineCount}</Link>}
+        {signedIn && <Link className={`sv2-pill mine${v.mine ? ' on' : ''}`} href={href({ date: v.date, sport: v.sport, mine: !v.mine, top25: v.top25 })} data-mine-count={v.mineCount}>Mine · {v.mineCount}</Link>}
       </div>
       {/* A NON-TODAY DAY COLLAPSES THE LIVE GAMES TO ONE LINE (DAY PICK
           LEADS relay item 2). The day the reader picked leads the page. */}
@@ -173,7 +187,7 @@ export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLab
           {v.liveAway.count} live now <span>Back to today &rarr;</span>
         </Link>
       )}
-      {v.groups.length === 0 && <p className="sv2-empty">No games {v.mine ? 'with a stake ' : ''}on this day.</p>}
+      {v.groups.length === 0 && <p className="sv2-empty">No {v.top25 ? 'ranked ' : ''}games {v.mine ? 'with a stake ' : ''}on this day.</p>}
       {v.groups.map((grp) => (
         <section key={grp.key} className="sv2-group" data-group={grp.key}>
           <div className="sv2-gh"><h2>{grp.title}</h2><small>{grp.sub}</small></div>

@@ -6,6 +6,7 @@
 import Link from 'next/link';
 import StandaloneDate from '@/components/StandaloneDate';
 import TeamMark from '@/components/team/TeamMark';
+import RankBadge from '@/components/gridiron/RankBadge';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { numberWord, tonightTitle } from '@/lib/games/lobbyV2Shape';
@@ -71,7 +72,9 @@ function TeamLine({ t, trail = false, scored = false }) {
           does on a Scores card. The column is 44px - a full name in that slot
           wrapped the row. */}
       <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={abbrOf(t)} size={24} title={t.name} />
-      <span className="ab">{abbrOf(t)}</span><span>{t.name}</span>
+      {/* THE AP NUMBER, from the same reader as the Scores tab (R4). Unranked
+          sides and every NFL side render nothing. */}
+      <span className="ab">{abbrOf(t)}</span><span><RankBadge rank={t.rank ?? null} />{t.name}</span>
       {scored && <b className="n">{t.score ?? 0}</b>}
     </div>
   );

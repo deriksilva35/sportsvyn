@@ -37,7 +37,7 @@ import { distinctLabel } from '@/lib/gridiron/labels';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/lib/gridiron/driveStrip';
-import { apRankMap, currentApWeek, latestPollSeason, AP_POLL } from '@/lib/cfb/rankings';
+import { currentApRanks } from '@/lib/cfb/rankings';
 import RankBadge from '@/components/gridiron/RankBadge';
 import { getTeamRecordChip } from '@/lib/standings/read';
 import OddsStrip from '@/components/gridiron/OddsStrip';
@@ -114,9 +114,12 @@ export default async function CfbGamePage({ params, searchParams }) {
   // AP badges. The rank shown is the CURRENT poll's, not the poll as it stood
   // when the game was played - a historical game page carries today's ranking,
   // which is the same thing every scoreboard does.
-  const apSeason = await latestPollSeason(AP_POLL);
-  const apWeek = apSeason ? await currentApWeek(apSeason) : null;
-  const apRanks = await apRankMap({ season: apSeason, week: apWeek });
+  // ONE READER, ALL THREE SURFACES (R4). This page used to resolve the season
+  // and the week itself, three awaits in a row, which is how a page ends up a
+  // week behind the Scores tab. currentApRanks() is those same three calls in
+  // one place, each of them caught, so a missing poll costs a badge and not a
+  // game page.
+  const { ranks: apRanks } = await currentApRanks();
   // REG-only by construction (getTeamRecord filters season_type), nullable,
   // and caught: a missing standings row must not break a game page.
   const [homeRecord, awayRecord] = await Promise.all([

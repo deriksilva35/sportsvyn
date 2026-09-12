@@ -270,3 +270,67 @@ test('no em dashes; /nfl/scores and /cfb/scores still mount ScoresView; LeagueSc
   assert.match(page, /export async function ScoresView\(/); assert.match(page, /<ScoresV2 v=\{v\} signedIn=\{userId != null\}/);
   for (const f of ['app/nfl/scores/page.js', 'app/cfb/scores/page.js']) assert.match(readFileSync(path.join(REPO, f), 'utf8'), /import \{ ScoresView \} from '@\/app\/scores\/page'/);
 });
+
+// ---------------------------------------------------------------------------
+// TOP 25 (relay Part B). The fifth pill and the AP badge on a card.
+// ---------------------------------------------------------------------------
+// The same slate with ranks attached: the live CFB game has a ranked home
+// side (ALA #4) and an unranked visitor, the CFB final has neither, and the
+// NFL game is a league the poll does not reach.
+function rankedFixture(over = {}) {
+  const v = fixture();
+  const extras = new Map(v.extras);
+  extras.set(3, { ...extras.get(3), rank: { home: 4, away: null } });
+  extras.set(2, { ...extras.get(2), rank: { home: null, away: null } });
+  extras.set(6, { ...extras.get(6), rank: { home: null, away: null } });
+  return { ...v, extras, rankedToday: true, top25: false, ...over };
+}
+
+test('Top 25: no pill when the picked day has no ranked CFB game', () => {
+  const h = html({ v: fixture(), signedIn: true, zoneLabel: 'Pacific' });
+  assert.equal(/sv2-pill top25/.test(h), false, 'the pill is absent');
+  assert.equal(/>Top 25</.test(h), false, 'and so is its label');
+});
+
+test('Top 25: the pill renders when a ranked CFB game is on the day, and toggles the flag on', () => {
+  const h = html({ v: rankedFixture(), signedIn: true, zoneLabel: 'Pacific' });
+  const m = h.match(/<a class="sv2-pill top25"[^>]*href="([^"]+)"[^>]*>Top 25<\/a>/);
+  assert.ok(m, 'the fifth pill renders');
+  assert.match(m[1], /top25=1/, 'off, it links to on');
+  assert.equal(/sv2-pill top25 on/.test(h), false, 'and is not marked on');
+});
+
+test('Top 25: the pill on drops the flag from its own href, and every other link carries it', () => {
+  const h = html({ v: rankedFixture({ top25: true }), signedIn: true, zoneLabel: 'Pacific' });
+  const m = h.match(/<a class="sv2-pill top25 on"[^>]*href="([^"]+)"[^>]*>Top 25<\/a>/);
+  assert.ok(m, 'the pill is marked on');
+  assert.equal(/top25=1/.test(m[1]), false, 'on, it links to off');
+  // The Link stub spreads the rest BEFORE href, so data-date leads.
+  const day = h.match(/<a[^>]*data-date="2026-09-13"[^>]*href="([^"]*)"/);
+  assert.ok(day && /top25=1/.test(day[1]), 'the day strip carries the flag');
+  const mine = h.match(/<a class="sv2-pill mine"[^>]*href="([^"]+)"/);
+  assert.ok(mine && /top25=1/.test(mine[1]), 'the Mine pill carries it too, so the two combine');
+});
+
+test('Top 25: the NFL and EPL pills drop the flag, the All and CFB pills keep it', () => {
+  const h = html({ v: rankedFixture({ top25: true }), signedIn: true, zoneLabel: 'Pacific' });
+  const pill = (label) => h.match(new RegExp(`<a class="sv2-pill[^"]*"[^>]*href="([^"]*)"[^>]*>${label}</a>`))?.[1] ?? null;
+  assert.equal(/top25=1/.test(pill('NFL') ?? ''), false, 'NFL cannot host a ranked game');
+  assert.equal(/top25=1/.test(pill('EPL') ?? ''), false, 'nor can EPL');
+  assert.match(pill('CFB') ?? '', /top25=1/, 'CFB keeps it');
+  assert.match(pill('All') ?? '', /top25=1/, 'so does All');
+});
+
+test('Top 25: the badge draws on the ranked side only, and on no NFL or EPL row', () => {
+  const h = html({ v: rankedFixture(), signedIn: true, zoneLabel: 'Pacific' });
+  const badges = [...h.matchAll(/<span class="rk">(\d+)<\/span>/g)].map((m) => m[1]);
+  assert.deepEqual(badges, ['4'], 'exactly one badge on the whole board');
+  assert.match(h, /<span class="nm"><span class="rk">4<\/span>ALA/, 'it sits inside the name, before it');
+  assert.equal(/<span class="rk">\d+<\/span>(TEN|DEN|BRE|BOU|NCSU|RICH)/.test(h), false, 'no badge on an unranked or non-CFB side');
+});
+
+test('Top 25: the empty line says ranked when the filter is what emptied the board', () => {
+  const v = rankedFixture({ top25: true, groups: [] });
+  assert.match(html({ v, signedIn: true, zoneLabel: 'Pacific' }), /No ranked games on this day\./);
+  assert.match(html({ v: { ...v, mine: true }, signedIn: true, zoneLabel: 'Pacific' }), /No ranked games with a stake on this day\./);
+});
