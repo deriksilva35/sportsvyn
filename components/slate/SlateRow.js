@@ -16,9 +16,11 @@
 // regardless of how long a club's name is. That is the same reason the /scores
 // card fixes its abbreviation column.
 
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { rowState } from '@/lib/today/slateRow';
 import './slateRow.css';
+import { orderFor, connectorFor } from '@/lib/gridiron/teamOrder';
 
 // NFL AND CFB ONLY, exactly as the front page had it. Adding epl here turned
 // every EPL row from a <div> into an <a> and moved 252 tag lines on a page this
@@ -48,9 +50,15 @@ export default function SlateRow({ g, onBoard = false, boardNumber, tag, state, 
       </div>
       <div>
         <div className="mu">
-          <span className={awayWin ? 'win' : homeWin ? 'dim' : undefined}>{abbr(g.away)}</span>
-          {' '}<span className="at">at</span>{' '}
-          <span className={homeWin ? 'win' : awayWin ? 'dim' : undefined}>{abbr(g.home)}</span>
+          {/* League order and connector, one rule (TEAM ORDER relay). */}
+          {orderFor(g.leagueSlug).map((side, i) => (
+            <Fragment key={side}>
+              {i === 1 ? <>{' '}<span className="at">{connectorFor(g.leagueSlug)}</span>{' '}</> : null}
+              <span className={(side === 'home' ? homeWin : awayWin) ? 'win' : (side === 'home' ? awayWin : homeWin) ? 'dim' : undefined}>
+                {abbr(side === 'home' ? g.home : g.away)}
+              </span>
+            </Fragment>
+          ))}
           {onBoard ? <span className="onboard">Board {boardNumber}</span> : null}
         </div>
         <div className="stag">
