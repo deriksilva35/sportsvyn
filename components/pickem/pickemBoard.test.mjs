@@ -197,3 +197,92 @@ test('rolling lock: a kicked row is pk-locked with its kickoff where "at" was; t
   assert.equal(rows[0].querySelectorAll('button.pk-side[disabled]').length, 2, 'both sides inert');
   assert.equal(rows[1].querySelectorAll('button.pk-side:not([disabled])').length, 2, 'both sides live');
 });
+
+// ---------------------------------------------------------------------------
+// FRESH-USER FIXES - D4 (confirm reachable mid-week) and D3 (Not now keeps
+// the pick). PICKEM_PASTE=1 prints the pending row - the served-proof paste.
+// ---------------------------------------------------------------------------
+const past3h = new Date(Date.now() - 3 * 3600_000).toISOString();
+function boardOf(n, { kicked = 0, picked = 0 } = {}) {
+  return Array.from({ length: n }, (_, i) => ({
+    ...game(), match_id: 30000 + i, slug: `nfl-2026-reg-w1-g${i}`, home: `Home${i}`, away: `Away${i}`,
+    ...(i < kicked ? { kickoff_at: past3h, kicked: true, status: 'final', home_score: 3, away_score: 10 } : {}),
+    my_side: i >= kicked && i < kicked + picked ? 'home' : null,
+  }));
+}
+function renderGate(games, { hasHandle = false } = {}) {
+  const container = document.getElementById('root'); const root = createRoot(container); roots.add(root);
+  act(() => root.render(React.createElement(PickemBoard, {
+    view: { contest: { id: 1, boardNumber: 1, sport: 'nfl', displayWeek: 1, week: 1 }, games },
+    signedIn: true, signinHref: '/signin', hasHandle, initialConfirmedAt: null, locksAt: future,
+  })));
+  return container;
+}
+const wait = (ms) => act(async () => { await new Promise((r) => setTimeout(r, ms)); });
+const rowOf = (c, matchId) => [...c.querySelectorAll('.pk-game')].find((r) => r.querySelector(`a[aria-label="Away${matchId - 30000} at Home${matchId - 30000} game page"]`) || r.textContent.includes(`Away${matchId - 30000}`));
+
+test('D4: 16 rows, 1 kicked, 15 picked -> the confirm card is present and counts the pickable', () => {
+  const c = renderGate(boardOf(16, { kicked: 1, picked: 15 }), { hasHandle: true });
+  const card = c.querySelector('.wk-review'); assert.ok(card, 'Lock it in is reachable with the Thursday game already played');
+  assert.match(card.querySelector('.wk-review-note').textContent, /^15 of 15 picked/);
+  assert.ok(card.querySelector('.wk-lockin'));
+});
+test('D4: 16 rows, 1 kicked, 14 picked -> absent', () => {
+  const c = renderGate(boardOf(16, { kicked: 1, picked: 14 }), { hasHandle: true });
+  assert.equal(c.querySelector('.wk-review'), null);
+});
+test('D4: 0 kicked, 16 picked -> present, "16 of 16 picked"', () => {
+  const c = renderGate(boardOf(16, { kicked: 0, picked: 16 }), { hasHandle: true });
+  assert.match(c.querySelector('.wk-review .wk-review-note').textContent, /^16 of 16 picked/);
+});
+test('D4: a pick on a kicked game does not count - 1 kicked-and-picked + 14 open picked -> absent', () => {
+  const games = boardOf(16, { kicked: 1, picked: 14 }); games[0].my_side = 'home';
+  const c = renderGate(games, { hasHandle: true });
+  assert.equal(c.querySelector('.wk-review'), null, 'the sealed pick is outside both numerator and denominator');
+});
+
+test('D3: Not now -> the row is pk-pending, the pick is retained on screen, nothing written; the row says why', async () => {
+  const s = await stub(); s.calls.length = 0;
+  const c = renderGate(boardOf(2));
+  await click(byName(c, 'Home0'));
+  assert.ok(c.querySelector('.onb-scrim'), 'the handle modal opened on the first pick');
+  const notNow = [...c.querySelectorAll('button')].find((b) => b.textContent === 'Not now');
+  await click(notNow);
+  assert.equal(c.querySelector('.onb-scrim'), null, 'modal closed');
+  const row = [...c.querySelectorAll('.pk-game')][0];
+  assert.ok(row.classList.contains('pk-pending'), 'the row is marked pending');
+  assert.match(byName(c, 'Home0').className, /\bon\b/, 'the pick stays painted');
+  assert.equal(row.querySelector('.pk-pending-lbl').textContent, 'Needs a handle');
+  assert.equal(s.calls.length, 0, 'nothing reached the server');
+  if (process.env.PICKEM_PASTE) console.log(`\nPASTE pending row after Not now:\n${row.outerHTML}\n`);
+  // Tapping the pending row (either side is a write) re-opens the modal.
+  await click(byName(c, 'Away0'));
+  assert.ok(c.querySelector('.onb-scrim'), 'tapping the pending row re-opens the modal');
+  assert.equal(row.querySelectorAll('[onclick], button:not(.pk-side)').length, 0, 'the label is text, not a control');
+});
+
+test('D3: Claim -> the stashed pick replays; two stashed picks land in order', async () => {
+  const s = await stub(); s.calls.length = 0;
+  const c = renderGate(boardOf(3));
+  await click(byName(c, 'Home0'));
+  await click([...c.querySelectorAll('button')].find((b) => b.textContent === 'Not now'));
+  await click(byName(c, 'Away1'));
+  assert.ok(c.querySelector('.onb-scrim'), 'the next write re-opens the modal');
+  assert.equal([...c.querySelectorAll('.pk-game.pk-pending')].length, 2, 'both rows pending');
+  assert.equal(s.calls.length, 0);
+  // Claim through the real HandleClaim: type, wait for the availability check, tap Claim.
+  const input = c.querySelector('.onb-scrim input[aria-label="Handle"]');
+  const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, 'value').set;
+  await act(async () => { setter.call(input, 'fresh_user'); input.dispatchEvent(new dom.window.Event('input', { bubbles: true })); });
+  await wait(450);
+  const claim = [...c.querySelectorAll('.onb-scrim button')].find((b) => /^Claim @/.test(b.textContent));
+  assert.equal(claim.disabled, false, 'the availability check passed');
+  await click(claim); await wait(20);
+  assert.equal(c.querySelector('.onb-scrim'), null, 'modal closed on claim');
+  assert.deepEqual(s.calls.map((a) => [a[1], a[2]]), [[30000, 'home'], [30001, 'away']], 'replayed in order');
+  assert.equal(c.querySelectorAll('.pk-game.pk-pending').length, 0, 'nothing pending after the replay');
+  // and a later pick goes straight through
+  await click(byName(c, 'Home2'));
+  assert.equal(c.querySelector('.onb-scrim'), null, 'never asked twice');
+  assert.equal(s.calls.length, 3);
+});

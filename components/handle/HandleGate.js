@@ -42,51 +42,68 @@ import { useCallback, useRef, useState } from 'react';
 import HandleClaim from '@/components/daily/HandleClaim';
 import '@/components/onboarding/onboarding.css';
 
+/** guard() returns this when the write was HELD behind the modal. */
+export const HELD = Symbol('handle-gate:held');
+
 /**
  * @param {boolean} initialHasHandle  server-known, from users.handle
- * @returns {{guard: (run: Function) => any, modal: JSX|null, hasHandle: boolean}}
+ * @returns {{guard: (run: Function, key?: any) => any, modal: JSX|null, hasHandle: boolean, pending: Set<any>, reopen: Function}}
  */
 export function useHandleGate(initialHasHandle) {
   const [hasHandle, setHasHandle] = useState(Boolean(initialHasHandle));
   const [open, setOpen] = useState(false);
-  // A REF, NOT STATE: stashing the thunk in state would re-render on every
-  // guarded tap, and the thunk is not something the UI renders from.
-  const pending = useRef(null);
+  // THE STASH IS A LIST, AND "NOT NOW" DOES NOT EMPTY IT (FRESH-USER FIXES,
+  // D3). It used to hold one thunk and drop it on cancel, so a reader who
+  // tapped a side, saw the modal, and tapped Not now lost the pick with no
+  // sign anything happened - the board looked untouched. Now every write
+  // made without a handle is kept, in order, keyed by the row or slot it
+  // touches; the caller paints those keys as pending ("Needs a handle"),
+  // the next write or a tap on a pending row re-opens the modal, and a
+  // successful claim replays the whole list in order.
+  //
+  // A REF for the thunks (the UI never renders from them) and STATE for the
+  // keys (the UI paints from those).
+  const stash = useRef([]);
+  const [pendingKeys, setPendingKeys] = useState(() => new Set());
 
-  const guard = useCallback((run) => {
+  const guard = useCallback((run, key = null) => {
     if (hasHandle) return run();
-    pending.current = run;
+    stash.current.push({ key, run });
+    if (key != null) setPendingKeys((s) => new Set([...s, key]));
     setOpen(true);
-    return undefined;
+    return HELD;
   }, [hasHandle]);
 
   const onClaimed = useCallback(() => {
     setHasHandle(true);
     setOpen(false);
-    const run = pending.current;
-    pending.current = null;
-    // Resume the interrupted write. Caught: a failure here is the write's
-    // own to report through its own error state, never the modal's.
-    if (run) Promise.resolve(run()).catch(() => {});
+    const runs = stash.current;
+    stash.current = [];
+    setPendingKeys(new Set());
+    // Replay IN ORDER, one after the other: a second pick on the same game
+    // must land after the first, a lineup write after the lineup before it.
+    // Caught per write: a failure is the write's own to report through its
+    // own error state, never the modal's.
+    (async () => {
+      for (const { run } of runs) {
+        try { await run(); } catch { /* reported by the caller */ }
+      }
+    })();
   }, []);
 
   const onCancel = useCallback(() => {
-    pending.current = null;   // dropped, so nothing is saved
-    setOpen(false);
+    setOpen(false);           // the stash stays - nothing is dropped
   }, []);
+
+  const reopen = useCallback(() => { if (!hasHandle) setOpen(true); }, [hasHandle]);
 
   const modal = open
     ? <HandleGateModal onClaimed={onClaimed} onCancel={onCancel} />
     : null;
 
-  return { guard, modal, hasHandle };
+  return { guard, modal, hasHandle, pending: pendingKeys, reopen };
 }
 
-/**
- * The modal itself. Dismissible, unlike the old step 1 - the reader is
- * mid-action on a board they can see, so trapping them here would be a
- * worse wall than the one this replaces.
- */
 export function HandleGateModal({ onClaimed, onCancel }) {
   return (
     <div
@@ -109,7 +126,7 @@ export function HandleGateModal({ onClaimed, onCancel }) {
           Not now
         </button>
         <p className="onb-note">
-          Not now leaves this entry unsaved. Nothing else on the board changes.
+          Not now keeps your pick on the board, marked until you claim a handle.
         </p>
       </div>
     </div>

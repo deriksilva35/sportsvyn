@@ -60,7 +60,7 @@ async function loadGate() {
   finally { unlinkSync(tmp); }
 }
 
-const { useHandleGate } = await loadGate();
+const { useHandleGate, HELD } = await loadGate();
 const { createElement: h } = await import('react');
 const { act } = await import('react');
 const { createRoot } = await import('react-dom/client');
@@ -120,7 +120,7 @@ test('NO handle: the write is BLOCKED, then runs on a successful claim', async (
   assert.equal(g.modalOpen(), false, 'never asked twice');
 });
 
-test('CANCEL: no write, and the stashed thunk is dropped for good', async () => {
+test('CANCEL: no write now, and the stashed thunk is KEPT for the claim (FRESH-USER FIXES, D3)', async () => {
   globalThis.__claim = null;
   const g = await mount(false);
   let writes = 0;
@@ -128,14 +128,16 @@ test('CANCEL: no write, and the stashed thunk is dropped for good', async () => 
   assert.equal(g.modalOpen(), true);
 
   await g.cancel();
-  assert.equal(writes, 0, 'cancel wrote nothing - no entry row is created');
+  assert.equal(writes, 0, 'cancel wrote nothing yet - no entry row is created behind the reader');
   assert.equal(g.modalOpen(), false, 'and the board is back, not a wall');
 
-  // AND IT STAYS DROPPED. A later claim must not resurrect a write the
-  // reader already declined - only whatever they tap next should run.
+  // AND IT IS NOT DROPPED. It used to be: a reader who tapped Not now lost
+  // the pick with no sign anything happened. The declined write waits with
+  // the row painted pending, and the claim replays it AND whatever came after.
   await g.guard(() => { writes += 10; });
   await g.claim('later');
-  assert.equal(writes, 10, 'only the NEW write ran; the declined one never fired');
+  await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
+  assert.equal(writes, 11, 'both writes ran on the claim - the held one first');
 });
 
 test('every guarded surface renders the modal it creates', () => {
@@ -154,4 +156,31 @@ test('every guarded surface renders the modal it creates', () => {
     assert.match(s, /useHandleGate\(/, `${rel} guards its write`);
     assert.match(s, /\{handleModal\}/, `${rel} renders the modal it creates`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// FRESH-USER FIXES, D3: Not now keeps the stash; claim replays it in order.
+// ---------------------------------------------------------------------------
+test('D3: Not now KEEPS the write; the key reads as pending; the next write re-opens; claim replays in order', async () => {
+  globalThis.__claim = null;
+  const g = await mount(false);
+  const order = [];
+  let held;
+  await act(async () => { held = g.gate.guard(() => { order.push('one'); }, 'row-1'); });
+  assert.equal(held, HELD, 'guard() says it held the write');
+  assert.equal(g.modalOpen(), true);
+  await g.cancel();
+  assert.equal(g.modalOpen(), false, 'Not now closes the modal');
+  assert.equal(order.length, 0, 'and writes nothing');
+  assert.ok(g.gate.pending.has('row-1'), 'the row is pending, not forgotten');
+  await g.guard(() => { order.push('two'); });
+  assert.equal(g.modalOpen(), true, 'the next write re-opens the modal');
+  await g.cancel();
+  await act(async () => { g.gate.reopen(); });
+  assert.equal(g.modalOpen(), true, 'reopen() re-opens it from a pending row');
+  await g.claim('newhandle');
+  await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
+  assert.deepEqual(order, ['one', 'two'], 'every stashed write ran, in order');
+  assert.equal(g.gate.pending.size, 0, 'nothing pending after the claim');
+  assert.equal(g.modalOpen(), false);
 });

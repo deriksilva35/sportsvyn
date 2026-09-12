@@ -37,7 +37,7 @@ import { useRouter } from 'next/navigation';
 import { SLOTS } from '@/lib/weekly/rules';
 import { nextOpenSlot } from '@/lib/daily/play';
 import { poolRows, poolCountLabel, SLOT_EMOJI } from '@/lib/weekly/view';
-import { useHandleGate } from '@/components/handle/HandleGate';
+import { useHandleGate, HELD } from '@/components/handle/HandleGate';
 import Sheet from '@/components/ui/Sheet';
 import StandaloneTime from '@/components/StandaloneTime';
 import ConfirmCard from '@/components/games/ConfirmCard';
@@ -81,16 +81,10 @@ export default function WeeklyRoom({
   // (components/handle/HandleGate.js). It guards the WRITE, so browsing the
   // pool, opening a slot tab and searching all stay open; only the request
   // that would put a row on a leaderboard waits for a name.
-  const { guard, modal: handleModal, hasHandle: claimed } = useHandleGate(hasHandle);
-  // The bail() effect below has an empty dep array (it must - it registers one
-  // listener for the life of the room), so it would close over the FIRST
-  // value of `claimed` forever. A ref kept in sync is what lets it read the
-  // live one, including a handle claimed moments ago in the modal.
-  const hasHandleRef = useRef(claimed);
-  useEffect(() => { hasHandleRef.current = claimed; }, [claimed]);
+  const { guard, modal: handleModal, pending: heldSlots, reopen: reopenHandle } = useHandleGate(hasHandle);
   const [lineup, setLineup] = useState(initialLineup ?? {});
   const [active, setActive] = useState('QB');
-  const [save, setSave] = useState('clean');   // clean | saving | saved | error
+  const [save, setSave] = useState('clean');   // clean | saving | saved | error | held
   const [locked, setLocked] = useState(false);
   // ROLLING LOCK: a slot locks at its player's kickoff, so the room needs a
   // clock. Seeded once and ticked every 30 s; the server is the judge, this
@@ -142,7 +136,7 @@ export default function WeeklyRoom({
 
   // Debounced write on every lineup change. The ref carries the latest payload
   // so a rapid sequence of picks collapses to one request with the last state.
-  const queue = useCallback((next) => {
+  const queue = useCallback((next, slot) => {
     pending.current = next;
     setSave('saving');
     if (timer.current) clearTimeout(timer.current);
@@ -150,17 +144,21 @@ export default function WeeklyRoom({
     // a burst of picks rather than one per slot, and the thunk guard() stashes
     // carries the LATEST pending payload, so a claim mid-burst still writes
     // the finished lineup rather than the slot that happened to open the modal.
-    timer.current = setTimeout(() => { guard(() => flush(pending.current)); }, SAVE_DEBOUNCE_MS);
+    // THE SLOT THAT CHANGED RIDES WITH THE WRITE (D3): a held write paints
+    // that slot "Needs a handle" until the claim replays it.
+    timer.current = setTimeout(() => {
+      if (guard(() => flush(pending.current), slot) === HELD) setSave('held');
+    }, SAVE_DEBOUNCE_MS);
   }, [flush, guard]);
 
   // A pick made and the tab closed inside the debounce window would be lost.
   // Flushing on unmount and on hide costs nothing and closes that hole.
   useEffect(() => {
     const bail = () => {
-      // NO BEACON WITHOUT A HANDLE. This is the same write as flush(), just
-      // on the way out; letting it through would create the very entry the
-      // modal is gating, behind the reader's back.
-      if (!hasHandleRef.current) return;
+      // THE BEACON FIRES WITH OR WITHOUT A HANDLE (D3). It used to bail when
+      // no handle was claimed, so a reader who tapped Not now and left lost
+      // the lineup. The server creates the entry either way - saveLineup has
+      // no handle rule - and the handle attaches whenever it is claimed.
       if (timer.current && pending.current) {
         clearTimeout(timer.current);
         navigator.sendBeacon?.('/api/weekly/save',
@@ -199,7 +197,7 @@ export default function WeeklyRoom({
     // EDITING AFTER CONFIRMING IS ALLOWED, and drops the confirmation until
     // the save lands - see confirmIfNeeded() in flush().
     setConfirmedAt(null);
-    queue(next);
+    queue(next, active);
   }
 
   function openSlot(slot) {
@@ -217,7 +215,7 @@ export default function WeeklyRoom({
     setLineup(next);
     setActive(slot);
     setConfirmedAt(null);
-    queue(next);
+    queue(next, slot);
   }
 
   // ONE SOURCE FOR THE COUNTERS (relay 3 item 1). These read `lineup`, the
@@ -235,7 +233,7 @@ export default function WeeklyRoom({
   // lock time with no label of its own, and .hdr's own clock already carries
   // that fact. min-height on .wk-save keeps the row from jumping when a real
   // status (saving/saved/error) appears.
-  const saveLabel = { clean: '', saving: 'Saving…', saved: 'Saved', error: 'Not saved' }[save];
+  const saveLabel = { clean: '', saving: 'Saving…', saved: 'Saved', error: 'Not saved', held: 'Needs a handle' }[save];
 
   async function lockItIn() {
     if (confirming || locked) return;
@@ -291,15 +289,16 @@ export default function WeeklyRoom({
             const id = lineup[s];
             const p = id ? board.find((b) => b.id === id) : null;
             const isLocked = slotLocked(s);
+            const held = heldSlots.has(s);
             return (
               <button key={s} type="button"
-                className={`pr${p ? '' : ' empty'}${isLocked ? ' wk-locked' : ''}`}
+                className={`pr${p ? '' : ' empty'}${isLocked ? ' wk-locked' : ''}${held ? ' wk-pending' : ''}`}
                 disabled={isLocked}
-                onClick={() => openSlot(s)}>
+                onClick={() => (held ? reopenHandle() : openSlot(s))}>
                 <span className="pos">{SLOT_LABEL[s]}</span>
                 <span className="nm">
                   <b>{p ? p.name : EMPTY_SLOT_COPY[s]}</b>
-                  <small>{p ? restOf(p.resume) : ' '}</small>
+                  <small>{held ? 'Needs a handle' : p ? restOf(p.resume) : ' '}</small>
                   {/* the slot's own lock time (rolling lock) */}
                   {p?.kickoff_at ? <small className="wk-ko">{isLocked ? 'Locked · ' : 'Locks '}<StandaloneTime iso={p.kickoff_at} /></small> : null}
                 </span>
@@ -341,9 +340,7 @@ export default function WeeklyRoom({
             name: board.find((b) => b.id === lineup[s2])?.name ?? '-',
           }))}
           receiptLine="All six are in"
-          lockIso={locksAt}
-          lockPre="Locks"
-          note="You can still change them until then; a change re-confirms when it saves."
+          note="Whatever is here at each kickoff is your entry."
           confirmedAt={confirmedAt}
           confirming={confirming}
           onLockIn={lockItIn}

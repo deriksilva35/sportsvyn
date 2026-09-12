@@ -96,7 +96,7 @@ function pipRows(games) {
 export default function PickemBoard({
   view, signedIn, signinHref, hasHandle = true, initialConfirmedAt = null, locksAt = null,
 }) {
-  const { guard, modal: handleModal } = useHandleGate(hasHandle);
+  const { guard, modal: handleModal, pending: heldRows } = useHandleGate(hasHandle);
   // CONFIRM AND RECEIPT (relay 3 item 3), the Weekly's own model: picks
   // already autosave, so this records that the reader has seen a finished
   // board. An unconfirmed board still counts at each game's own lock.
@@ -122,6 +122,15 @@ export default function PickemBoard({
 
   const picked = games.filter((g) => g.my_side != null).length;
   const total = games.length;
+  // WHAT CAN STILL BE PICKED, at this render (FRESH-USER FIXES, D4). The
+  // confirm card used to wait for picked === total, and a board that already
+  // had a kicked game - every NFL board from Friday on - could never reach it:
+  // the Thursday game's buttons are disabled and a forced save is refused,
+  // so "Lock it in" never rendered for anyone joining mid-week. The card now
+  // asks for every game that is STILL OPEN; kicked rows are out of both the
+  // numerator and the denominator. Server confirmVerdict is unchanged.
+  const pickable = games.filter((g) => !g.kicked).length;
+  const pickedOpen = games.filter((g) => !g.kicked && g.my_side != null).length;
   const wins = games.filter((g) => g.graded === 'W').length;
   const losses = games.filter((g) => g.graded === 'L').length;
   const pending = games.filter((g) => g.status !== 'final').length;
@@ -131,17 +140,20 @@ export default function PickemBoard({
 
   function tap(g, side) {
     if (!signedIn || g.kicked) return;
-    // GUARDED BEFORE THE OPTIMISTIC PAINT, not after. Flipping the side first
-    // and asking second would show the reader a pick that does not exist yet,
-    // and cancelling would then have to un-flip it - a board that moves under
-    // somebody who declined. Nothing changes until there is a handle.
-    guard(() => savePick(g, side));
-  }
-
-  async function savePick(g, side) {
     const was = g.my_side;
+    // THE PICK SHOWS AT THE TAP, handle or no handle (FRESH-USER FIXES, D3).
+    // The optimistic paint used to wait behind guard(), so a reader who
+    // tapped Not now saw a board that had not moved and a pick that did not
+    // exist. Now the overlay is applied here and only the SERVER write waits
+    // behind the gate: a held write leaves the row painted and marked
+    // pk-pending ("Needs a handle"), and the claim replays it.
     setMine((m) => ({ ...m, [g.match_id]: side === was ? was : side }));
     setLockedMsg(null);
+    setConfirmedAt(null);
+    guard(() => savePick(g, side, was), g.match_id);
+  }
+
+  async function savePick(g, side, was) {
     const res = await savePickAction(contest.id, g.match_id, side)
       .catch(() => ({ ok: false, reason: 'network' }));
     if (!res.ok) {
@@ -240,8 +252,9 @@ export default function PickemBoard({
         const eyebrowRight = g.status === 'final' || g.status === 'live'
           ? (g.home_score != null ? `${g.away_score}-${g.home_score}` : '')
           : <StandaloneTime iso={g.kickoff_at} />;
+        const held = heldRows.has(g.match_id);
         return (
-          <div className={`pk-game${g.kicked || kickedAtMs ? ' pk-locked' : ''}`} key={g.match_id}>
+          <div className={`pk-game${g.kicked || kickedAtMs ? ' pk-locked' : ''}${held ? ' pk-pending' : ''}`} key={g.match_id}>
             {/* THE LINK LIVES IN THE HEADER, NEVER AROUND THE PICKS.
                 .pk-eb and .pk-sides are SIBLINGS - the anchor is not an
                 ancestor of the pick buttons, so a pick tap has no anchor to
@@ -259,7 +272,11 @@ export default function PickemBoard({
                 pick tap or fire both - the exact hazard the test below pins
                 against, for the label this replaces as much as the old one. */}
             <div className={`pk-eb${g.status === 'live' ? ' live' : ''}`}>
-              <span>{eyebrowLeft}</span>
+              {/* A HELD PICK SAYS SO HERE, as text, not a control: the pick
+                  buttons stay the row's only click handler (SURFACE 4), and
+                  tapping either side of a pending row IS a write, which
+                  re-opens the modal. */}
+              <span>{held ? <span className="pk-pending-lbl">Needs a handle</span> : eyebrowLeft}</span>
               <span className="pk-ebr">
                 {gameHref(contest, g) ? (
                   <Link
@@ -388,11 +405,11 @@ export default function PickemBoard({
           and each game locks at its own kickoff regardless. Same component
           the Weekly renders; this board's summary is a count rather than a
           roster, which is the one thing the two games differ on. */}
-      {signedIn && picked === total && total > 0 && (
+      {signedIn && pickedOpen === pickable && pickable > 0 && (
         <ConfirmCard
           title="Your board"
-          line={`${total} of ${total} picked`}
-          receiptLine={`All ${total} picked`}
+          line={`${pickable} of ${pickable} picked`}
+          receiptLine={`All ${pickable} picked`}
           lockIso={locksAt}
           lockPre="First lock"
           note="Each game stays editable until its own kickoff; a change re-confirms when it saves."
