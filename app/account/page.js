@@ -26,6 +26,8 @@ import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import YourDrafts from '@/components/sim/YourDrafts';
+import FollowedTeams from '@/components/account/FollowedTeams';
+import { getFollowedTeams, followableTeams } from '@/lib/follows';
 import { getDraftHistory } from '@/lib/fantasy/drafts';
 import { splitDrafts } from '@/lib/fantasy/yourDrafts';
 import SignOutButton from '@/components/sim/SignOutButton';
@@ -54,13 +56,18 @@ export default async function AccountPage({ searchParams }) {
   const isShell = await resolveShellMode();
   // Neither read may cost the page: a membership lookup that fails reads as
   // "not a member", which is the safe direction for a status line.
-  const [member, membership, me, draftRows] = await Promise.all([
+  const [member, membership, me, draftRows, followedTeams, allTeams] = await Promise.all([
     isMember(userId).catch(() => false),
     getMembership(userId).catch(() => null),
     sql`SELECT push_choice FROM users WHERE id = ${Number(userId)}`.then((r) => r[0] ?? null).catch(() => null),
     // Caught to an empty list: a history read must never be able to cost
     // somebody their account page, which is also where sign-out lives.
     getDraftHistory(userId).catch(() => []),
+    // Same rule for the follow reads: a list that fails renders the empty
+    // state, and the adder simply has nothing to offer. Neither may cost the
+    // page that holds sign-out.
+    getFollowedTeams(userId).catch(() => []),
+    followableTeams().catch(() => []),
   ]);
   const yourDrafts = splitDrafts(draftRows);
 
@@ -124,6 +131,11 @@ export default async function AccountPage({ searchParams }) {
             nothing at all for a reader with no drafts - a heading over an empty
             list reads as a feature that failed to load. */}
         <YourDrafts split={yourDrafts} />
+
+        {/* TEAMS YOU FOLLOW. The account page is where a standing choice gets
+            reviewed and undone; the star on a team page can only make one.
+            Both call the same two server actions. */}
+        <FollowedTeams initialTeams={followedTeams} allTeams={allTeams} />
 
         <section className="acct-mod">
           <h2 className="acct-eyebrow">Elsewhere</h2>

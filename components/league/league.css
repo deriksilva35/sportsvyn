@@ -49,6 +49,11 @@
   background: var(--ink-3); border: 1px solid var(--line); border-radius: 99px;
   padding: 7px 12px 7px 9px; text-decoration: none; white-space: nowrap;
 }
+
+/* A FOLLOWED TEAM IS OUTLINED, NOT FILLED. The rail is a ranking first; a volt
+   fill would read as a rank state. The outline says "yours" without competing
+   with the number. Signed out, no chip wears it. */
+.lgr-chip.mine { border-color: var(--volt); }
 .lgr-rank { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 11px; color: var(--volt); }
 .lgr-abbr { font-family: var(--font-saira-cond); font-weight: 700; font-size: 13px; letter-spacing: .04em; color: var(--paper); }
 .lgr-mv { font-size: 9px; line-height: 1; }

@@ -5,13 +5,15 @@
  * rename-mirror of components/team/FollowStar.js (playerId/playerName props,
  * followPlayer/unfollowPlayer actions). Same optimistic flip + revert via
  * useTransition, same logged-out inline sign-in prompt (callbackUrl to the
- * current path), same aria-pressed + 44px target. Shares .follow-star-* styling
- * via components/follow-star.css.
+ * current path), same aria-pressed + 44px target, and since the TEAM FOLLOWING
+ * relay the same shell-aware sign-in link. Shares .follow-star-* styling via
+ * components/follow-star.css.
  */
 
 import { useState, useTransition } from 'react';
 import { usePathname } from 'next/navigation';
 import { followPlayer, unfollowPlayer } from '@/app/actions/follows';
+import { shellSigninHref } from '@/lib/shell/signinHref';
 import '@/components/follow-star.css';
 
 function StarIcon({ filled }) {
@@ -35,16 +37,21 @@ function StarIcon({ filled }) {
   );
 }
 
-export default function PlayerFollowStar({ playerId, playerName, isAuthed, initialFollowing }) {
+export default function PlayerFollowStar({ playerId, playerName, isAuthed, initialFollowing, isShell = false }) {
   const [following, setFollowing] = useState(Boolean(initialFollowing));
   const [promptOpen, setPromptOpen] = useState(false);
   const [, startTransition] = useTransition();
   const pathname = usePathname();
 
-  const signinHref =
-    pathname && !pathname.startsWith('/signin')
-      ? `/signin?callbackUrl=${encodeURIComponent(pathname)}`
-      : '/signin';
+  // THE SHELL MARKER RIDES ALONG, same as the team star. This built the URL
+  // by hand, which carries no marker, so an Apple signup from a player page
+  // inside the native container was labelled apple:web. shellSigninHref() is
+  // the one builder that puts the marker on /signin AND inside the
+  // callbackUrl - the second is what survives Apple's cross-site form_post
+  // dropping the SameSite=Lax cookie. isShell is a prop because a client
+  // component cannot read the cookie.
+  const dest = pathname && !pathname.startsWith('/signin') ? pathname : '/';
+  const signinHref = shellSigninHref(dest, isShell);
 
   function onClick() {
     if (!isAuthed) {

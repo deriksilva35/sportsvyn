@@ -28,6 +28,7 @@ import RankRail from '@/components/league/RankRail';
 import GamesStrip from '@/components/league/GamesStrip';
 import LeagueScores from '@/components/league/LeagueScores';
 import { railFor } from '@/lib/gridiron/leagueRail';
+import { getFollowedTeamIds } from '@/lib/follows';
 import { railChips, stripTiles } from '@/lib/gridiron/leagueLanding';
 import { loadRecordChips } from '@/lib/gridiron/recordsLoader';
 import { readViewerTz } from '@/lib/gridiron/serverTz';
@@ -74,6 +75,9 @@ export default async function TodayPage({ leagueSlug, leagueLabel, searchParams 
     leagueReads(leagueSlug),
     wireTeaser(leagueSlug).catch(() => ({ items: [], newest: null })),
   ]);
+  // The rail marks the reader's teams. One read, cheap, and empty when signed
+  // out - the rail then draws exactly as it did before.
+  const followed = new Set(userId == null ? [] : await getFollowedTeamIds(userId).catch(() => []));
   const viewerTz = await readViewerTz();
   const chips = railChips(railRows);
   const lobbyCards = Object.fromEntries((lobby?.cards ?? []).filter(Boolean).map((c) => [c.key, c]));
@@ -103,6 +107,7 @@ export default async function TodayPage({ leagueSlug, leagueLabel, searchParams 
         title={isNfl ? 'Sportsvyn Power Rankings' : 'AP Top 25'}
         allHref={isNfl ? '/nfl/rankings?tab=power' : '/cfb/rankings'}
         allLabel={isNfl ? 'All 32 →' : 'All 25 →'}
+        followed={followed}
       />
       <GamesStrip tiles={tiles} signedIn={userId != null} />
       <LeagueScores

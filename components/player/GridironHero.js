@@ -14,7 +14,7 @@ import { heroEyebrow, heroChips, bioCells } from './gridironPlayer';
 // smallest honest fix. Soccer's PlayerHero is untouched.
 import PlayerFollowStar from './PlayerFollowStar';
 
-export default function GridironHero({ player, isAuthed = false, initialFollowing = false }) {
+export default function GridironHero({ player, isAuthed = false, initialFollowing = false, isShell = false }) {
   const eyebrow = heroEyebrow(player.league_slug, player.position);
   const chips = heroChips({
     position: player.position,
@@ -41,6 +41,7 @@ export default function GridironHero({ player, isAuthed = false, initialFollowin
           playerId={player.id}
           playerName={player.full_name}
           isAuthed={isAuthed}
+          isShell={isShell}
           initialFollowing={initialFollowing}
         />
       </div>

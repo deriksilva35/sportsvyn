@@ -16,7 +16,6 @@
  * is everything true about it.
  */
 
-import Helmet from '@/components/team/Helmet';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getGamePage, scoringByQuarter, scoringFromPlays, linesByGroup, fantasyLeaders, SCORING_FORMATS } from '@/lib/gridiron/gameDetail';
@@ -28,6 +27,9 @@ import BoxScore from '@/components/gridiron/BoxScore';
 import AlertBell from '@/components/alerts/AlertBell';
 import { auth } from '@/auth';
 import { orderFor } from '@/lib/gridiron/teamOrder';
+import GameTeamRow from '@/components/gridiron/GameTeamRow';
+import { getFollowedTeamIds } from '@/lib/follows';
+import { resolveShellMode } from '@/lib/shell/shell';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay, lastActionPlay, showGamecast } from '@/lib/gridiron/driveStrip';
@@ -76,6 +78,13 @@ export default async function GamePage({ params, searchParams }) {
   // FOR THE ALERT BELL ONLY. The page itself is open to everyone; this decides
   // whether the sheet shows toggles or a sign-in.
   const viewerId = (await auth().catch(() => null))?.user?.id ?? null;
+  // The header's follow stars: one read for both sides, empty when signed
+  // out, and caught - a follow lookup must never cost a game page.
+  const [followedIds, isShell] = await Promise.all([
+    viewerId == null ? Promise.resolve([]) : getFollowedTeamIds(viewerId).catch(() => []),
+    resolveShellMode().catch(() => false),
+  ]);
+  const followed = new Set(followedIds);
   // A soccer slug reaching a gridiron route is a 404, not a redirect loop back
   // to /match: getGamePage only resolves rows in the two gridiron leagues.
   if (!game || game.leagueSlug !== 'nfl') notFound();
@@ -196,14 +205,18 @@ export default async function GamePage({ params, searchParams }) {
           </div>
 
           {/* League order, one rule: lib/gridiron/teamOrder.js. */}
-          {orderFor(game.leagueSlug).map((side) => (
-            <TeamRow
-              key={side} record={side === 'home' ? homeRecord : awayRecord}
-              t={side === 'home' ? game.home : game.away}
-              score={side === 'home' ? game.homeScore : game.awayScore}
-              loser={winner === (side === 'home' ? 'away' : 'home')} show={final || live}
-            />
-          ))}
+          {orderFor(game.leagueSlug).map((side) => {
+            const t = side === 'home' ? game.home : game.away;
+            return (
+              <GameTeamRow
+                key={side} record={side === 'home' ? homeRecord : awayRecord} t={t}
+                score={side === 'home' ? game.homeScore : game.awayScore}
+                loser={winner === (side === 'home' ? 'away' : 'home')} show={final || live}
+                signedIn={viewerId != null} isShell={isShell}
+                following={followed.has(t?.id)}
+              />
+            );
+          })}
 
           <div className="gg-headfoot">
             <span>{game.leagueSlug.toUpperCase()} · {game.seasonPhase} W{game.week}</span>
@@ -308,24 +321,6 @@ export default async function GamePage({ params, searchParams }) {
   );
 }
 
-function TeamRow({ t, score, loser, show, record = null }) {
-  // Same order as the CFB row, minus the badge the NFL has no poll for:
-  // abbreviation, name, record, then the score at the right edge.
-  return (
-    <div className={`gg-teamrow${loser ? ' loser' : ''}`}>
-      {/* helmet before the abbreviation, facing the score; none without colors */}
-      <Helmet primary={t?.colors?.primary} secondary={t?.colors?.secondary} facing="right" size={28} className="gg-hm" />
-      <span className="abbr">{t?.abbreviation ?? ''}</span>
-      <span className="tname">{t?.name ?? 'TBD'}</span>
-      {/* A chip may only claim knowledge. Records carry no kickoff, so this
-          renders pre-game, live and final alike - unlike the market strip. */}
-      {record ? <span className="gg-rec">{record}</span> : null}
-      {/* No score column before kickoff. A 0 next to a team that has not played
-          is not a low score, it is a wrong one. */}
-      <span className="score">{show ? score : ''}</span>
-    </div>
-  );
-}
 
 /**
  * What a game that has not kicked off can honestly say about itself. This is

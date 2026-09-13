@@ -1,0 +1,71 @@
+/* components/account/followedTeams.css - "Teams you follow" on /account.
+   Written on the account page's own token namespace (--a-*), which that page
+   declares on .acct; this module renders nowhere else. */
+
+.ft-empty, .ft-hint {
+  margin: 0; color: var(--a-mut); font-size: 12px; line-height: 1.5;
+}
+.ft-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ft-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--a-line);
+}
+.ft-row:last-child { border-bottom: none; }
+.ft-name { color: var(--a-paper); text-decoration: none; font-size: 13px; }
+.ft-name:hover { text-decoration: underline; }
+.ft-lg {
+  font-family: var(--a-cond); font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--a-mut);
+}
+/* The league label sits hard against the control, not against the name, so a
+   long name and a short one leave the Remove button in the same place. */
+.ft-row .ft-lg, .ft-result .ft-lg { margin-left: auto; }
+.ft-x, .ft-plus {
+  flex: none; min-height: 32px; padding: 6px 10px;
+  background: transparent; border: 1px solid var(--a-line); border-radius: 99px;
+  color: var(--a-mut); font-family: var(--a-cond); font-size: 10px;
+  letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
+}
+.ft-x:hover { color: var(--a-paper); border-color: var(--a-mut); }
+.ft-plus { color: var(--a-volt); border-color: var(--a-volt); }
+.ft-plus.on, .ft-plus:disabled { color: var(--a-jade); border-color: var(--a-jade); cursor: default; }
+.ft-x:focus-visible, .ft-plus:focus-visible, .ft-add:focus-visible, .ft-lg-pill:focus-visible, .ft-q:focus-visible {
+  outline: 2px solid var(--a-volt); outline-offset: 2px;
+}
+
+.ft-add {
+  margin-top: 10px; min-height: 36px; padding: 8px 14px;
+  background: transparent; border: 1px dashed var(--a-line); border-radius: 99px;
+  color: var(--a-paper); font-family: var(--a-cond); font-size: 11px;
+  letter-spacing: .1em; text-transform: uppercase; cursor: pointer; width: 100%;
+}
+.ft-add:hover { border-color: var(--a-volt); color: var(--a-volt); }
+
+.ft-picker { margin-top: 10px; }
+.ft-lgs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.ft-lg-pill {
+  min-height: 30px; padding: 5px 10px; background: transparent;
+  border: 1px solid var(--a-line); border-radius: 99px; color: var(--a-mut);
+  font-family: var(--a-cond); font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; cursor: pointer;
+}
+.ft-lg-pill.on { background: var(--a-volt); color: var(--a-ink); border-color: var(--a-volt); }
+.ft-q {
+  width: 100%; min-height: 38px; padding: 8px 12px;
+  background: var(--a-ink-3); border: 1px solid var(--a-line); border-radius: 8px;
+  color: var(--a-paper); font-family: var(--a-mono); font-size: 13px;
+}
+.ft-q::placeholder { color: var(--a-mut); }
+/* THE RESULTS SCROLL, THE PAGE DOES NOT. Forty rows would otherwise push the
+   sign-out button a screen and a half down every time the adder opens. */
+.ft-results {
+  list-style: none; margin: 8px 0 0; padding: 0;
+  max-height: 260px; overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.ft-result {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--a-line);
+}
+.ft-result:last-child { border-bottom: none; }
+.ft-result .ft-name { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -1,7 +1,24 @@
-/* components/follow-star.css — shared FollowStar / PlayerFollowStar styling.
- * Copied verbatim from app/team/[slug]/team.css (the team page keeps its own
- * copy) so the player page gets the identical star without a cross-import.
- * Imported by PlayerFollowStar.js. */
+/* components/follow-star.css - THE follow star's styling, for every surface
+ * that carries one.
+ *
+ * IT USED TO BE TWO COPIES. This file said "copied verbatim from
+ * app/team/[slug]/team.css (the team page keeps its own copy)", and it was
+ * telling the truth: the same 2,660 characters of rules existed twice, once
+ * here for the player star and once inside the team page's route-scoped
+ * stylesheet for the team star. Two copies of a thing drift; worse, the team
+ * page's copy was route-scoped, so the component rendered as an unstyled
+ * button anywhere but /team/[slug] - which is precisely what spreading it to
+ * the game headers, the rank rail and the account page would have done.
+ *
+ * The team.css copy is deleted and FollowStar.js imports this one. Nothing
+ * about the rules changed in the collapse; they were identical.
+ *
+ * Every token here (--ink, --paper-warm, --charcoal, --volt, --volt-dim,
+ * --graphite, --rule-dark, --muted, --font-mono) is a :root global, so the
+ * star paints the same on the paper team page and on an ink gridiron surface.
+ *
+ * Imported by components/team/FollowStar.js and
+ * components/player/PlayerFollowStar.js. */
 
 .follow-star-wrap {
   position: relative;

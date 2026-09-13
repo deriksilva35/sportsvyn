@@ -15,6 +15,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
+import { resolveShellMode } from '@/lib/shell/shell';
 import Wordmark from '@/components/Wordmark';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import BackToAppBar from '@/components/BackToAppBar';
@@ -88,7 +89,9 @@ export default async function TeamPage({ params }) {
   // synchronously — no client flash from outline → filled on hydration.
   // The session itself is not prop-drilled to the client; only the
   // boolean `isAuthed` and the seed value cross the server/client line.
-  const session = await auth();
+  // isShell for the follow star's signed-out link only: a client component
+  // cannot read the cookie, so the mode is resolved here and passed down.
+  const [session, isShell] = await Promise.all([auth(), resolveShellMode().catch(() => false)]);
   const userId = session?.user?.id ?? null;
   const isAuthed = !!session?.user;
 
@@ -135,7 +138,7 @@ export default async function TeamPage({ params }) {
           <span className="current">{team.name}</span>
         </div>
 
-        <TeamHero team={team} isAuthed={isAuthed} initialFollowing={initialFollowing} />
+        <TeamHero team={team} isAuthed={isAuthed} initialFollowing={initialFollowing} isShell={isShell} />
         <SportsvynOutlook team={team} odds={odds} nextMatch={nextInfo} />
         <FormStrip matches={matches} teamId={team.id} stats={stats} />
 
