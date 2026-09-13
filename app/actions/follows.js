@@ -24,6 +24,7 @@
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { FOLLOW_CAP_PER_LEAGUE } from '@/lib/follows';
 
 // Same shape for both return values so the client can branch on .ok
 // without remembering which action returned what.
@@ -47,8 +48,11 @@ import { revalidatePath } from 'next/cache';
  * is the idempotent no-op it has always been, and counting it against the cap
  * would make a double tap look like a limit.
  */
-export const FOLLOW_CAP_PER_LEAGUE = 5;
-
+// THE CONSTANT LIVES IN lib/follows.js, NOT HERE. A 'use server' module may
+// export ONLY async functions - a plain `export const` makes the bundler drop
+// every export in the file ("The module has no exports at all"), which fails
+// the production build and takes followTeam and unfollowTeam with it. That is
+// exactly what shipping it here did.
 async function lookupTeam(teamId) {
   if (!Number.isInteger(teamId) || teamId <= 0) return null;
   const rows = await sql`

@@ -180,7 +180,13 @@ test('signed out, the button is a sign-in link and never a button', () => {
 
 test('THE FOLLOW CAP IS THE SERVER\'S, and the refusal names it', () => {
   const s = src('app/actions/follows.js');
-  assert.match(s, /export const FOLLOW_CAP_PER_LEAGUE = 5;/);
+  // THE CONSTANT MAY NOT LIVE IN THE ACTION FILE. A 'use server' module may
+  // export only async functions; a plain export there drops every export in
+  // the file and fails the production build. This pins the split that bug
+  // cost.
+  assert.match(src('lib/follows.js'), /export const FOLLOW_CAP_PER_LEAGUE = 5;/);
+  assert.equal(/export const /.test(s), false, "'use server' exports async functions only");
+  assert.match(s, /import \{ FOLLOW_CAP_PER_LEAGUE \} from '@\/lib\/follows'/);
   assert.match(s, /reason: 'cap_reached'/);
   assert.match(s, /cap: FOLLOW_CAP_PER_LEAGUE, league: team\.league_slug/);
   // Counted per league, and never against a team already followed.
