@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sportsvyn - Rankings tab v0.1</title>
+<!-- The ruled mock for RANKINGS TAB v2 (relay of 13 Sep 2026), NFL + People,
+     saved verbatim from the relay message. Fonts and hexes here are stand-ins;
+     the build uses the site's tokens. -->
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--paper:#F5F5F2;--mute:#8A8A85;--jade:#2A8A4F;--terra:#B8410F;--red:#E63946;--blue:#245BFF}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#050505;color:var(--paper);font-family:'JetBrains Mono',monospace;display:flex;justify-content:center;gap:28px;padding:28px;flex-wrap:wrap}
+.phone{width:390px;background:var(--ink);border:1px solid var(--line);border-radius:36px;overflow:hidden;position:relative;height:844px}
+.screen{height:770px;overflow:auto;padding:14px 14px 20px}
+.screen::-webkit-scrollbar{display:none}
+.cap{width:390px;color:var(--mute);font:600 11px 'Saira Condensed';letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.eb{font:600 10px 'Saira Condensed';letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+h1{font:italic 900 30px/1 'Saira';letter-spacing:-.04em;margin:4px 0 12px}
+.pills{display:flex;gap:6px;margin-bottom:12px;overflow:auto}
+.pill{font:600 12px 'Saira Condensed';letter-spacing:.08em;text-transform:uppercase;padding:7px 12px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line);color:var(--paper);white-space:nowrap}
+.pill.on{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+.seg{display:flex;background:var(--ink-3);border:1px solid var(--line);border-radius:99px;padding:3px;margin-bottom:12px}
+.seg span{flex:1;text-align:center;font:600 11px 'Saira Condensed';letter-spacing:.10em;text-transform:uppercase;padding:7px 0;border-radius:99px;color:var(--mute)}
+.seg span.on{background:var(--ink);color:var(--paper)}
+.mod{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.mod .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.mod .hd .eb{color:var(--volt)}
+.mod .hd .sub{font:600 10px 'Saira Condensed';letter-spacing:.10em;text-transform:uppercase;color:var(--mute)}
+.row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.row:last-child{border-bottom:0}
+.row .rk{width:22px;color:var(--mute);font-weight:700;font-variant-numeric:tabular-nums;font-size:12px}
+.row .nm{flex:1;font:700 13px 'Saira Condensed';letter-spacing:.02em}
+.row .nm small{display:block;font:500 10px 'JetBrains Mono';color:var(--mute);letter-spacing:0;margin-top:2px}
+.row .v{font-weight:700;font-variant-numeric:tabular-nums}
+.row .mv{width:30px;text-align:right;font-size:11px;font-weight:700}
+.up{color:var(--jade)}.dn{color:var(--terra)}.mu{color:var(--mute)}.volt{color:var(--volt)}
+.row.you{background:linear-gradient(90deg,rgba(212,255,0,.10),transparent 60%);margin:0 -14px;padding-left:14px;padding-right:14px;border-left:3px solid var(--volt)}
+.row.you .nm::after{content:'YOU';font:600 9px 'Saira Condensed';letter-spacing:.14em;color:var(--ink);background:var(--volt);padding:2px 5px;border-radius:99px;margin-left:8px;vertical-align:middle}
+.tm{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);flex:none;position:relative;overflow:hidden;background:var(--c2)}
+.tm::before{content:'';position:absolute;inset:0;background:var(--c1);clip-path:polygon(0 0,100% 0,0 100%)}
+.tm.fol{box-shadow:0 0 0 2px var(--ink-2),0 0 0 3px var(--volt)}
+.ghost{display:block;text-align:center;font:600 12px 'Saira Condensed';letter-spacing:.10em;text-transform:uppercase;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--ink-3);color:var(--paper);margin-top:10px;text-decoration:none}
+.tabs{position:absolute;bottom:0;left:0;right:0;height:74px;background:#0D0D0D;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;padding-bottom:12px}
+.tab{text-align:center;font:600 9px 'Saira Condensed';letter-spacing:.10em;color:var(--mute)}
+.tab i{display:block;font-style:normal;font-size:18px;margin-bottom:3px}
+.tab.on{color:var(--volt)}
+.stattog{display:flex;gap:4px;margin-bottom:6px}
+.stattog span{font:600 10px 'Saira Condensed';letter-spacing:.10em;text-transform:uppercase;padding:4px 9px;border-radius:99px;border:1px solid var(--line);color:var(--mute)}
+.stattog span.on{border-color:var(--volt);color:var(--volt)}
+.seat{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.seat div{background:var(--ink-3);border:1px solid var(--line);border-radius:8px;padding:6px 0;text-align:center}
+.seat div b{display:block;font-size:13px;font-variant-numeric:tabular-nums}
+.seat div small{font:600 9px 'Saira Condensed';letter-spacing:.12em;color:var(--mute)}
+.seat div.you{border-color:var(--volt)}
+.seat div.none b{color:var(--mute);font-weight:500}
+.note{font-size:11px;color:var(--mute);margin-top:8px;line-height:1.5}
+</style></head><body>
+
+<div>
+<div class="cap">Rankings - Teams (NFL)</div>
+<div class="phone"><div class="screen">
+<div class="eb">Sunday · Week 2 · through Sat</div>
+<h1>Rankings</h1>
+<div class="pills"><span class="pill on">NFL</span><span class="pill">CFB</span><span class="pill">EPL</span><span class="pill">MLB <small style="opacity:.6">SOON</small></span></div>
+<div class="seg"><span class="on">Teams</span><span>Players</span><span>People</span></div>
+
+<div class="mod"><div class="hd"><span class="eb">Power · Week 2</span><span class="sub">your teams outlined</span></div>
+<div class="row"><span class="rk">1</span><span class="tm" style="--c1:#004C54;--c2:#A5ACAF"></span><span class="nm">Eagles<small>1-0 · 24-17 at GB</small></span><span class="mv up">▲ 1</span><span class="v">92.4</span></div>
+<div class="row"><span class="rk">2</span><span class="tm" style="--c1:#E31837;--c2:#FFB612"></span><span class="nm">Chiefs<small>1-0</small></span><span class="mv dn">▼ 1</span><span class="v">91.1</span></div>
+<div class="row"><span class="rk">3</span><span class="tm fol" style="--c1:#0076B6;--c2:#B0B7BC"></span><span class="nm">Lions<small>1-0 · you follow</small></span><span class="mv up">▲ 2</span><span class="v">89.7</span></div>
+<div class="row"><span class="rk">4</span><span class="tm" style="--c1:#241773;--c2:#9E7C0C"></span><span class="nm">Ravens<small>1-0</small></span><span class="mv mu">–</span><span class="v">88.9</span></div>
+<div class="row"><span class="rk">5</span><span class="tm" style="--c1:#AA0000;--c2:#B3995D"></span><span class="nm">49ers<small>1-0 · 27-7 at LAR</small></span><span class="mv up">▲ 3</span><span class="v">87.2</span></div>
+<div class="row"><span class="rk">6</span><span class="tm fol" style="--c1:#00338D;--c2:#C60C30"></span><span class="nm">Bills<small>1-0 · you follow</small></span><span class="mv dn">▼ 2</span><span class="v">86.8</span></div>
+<div class="row"><span class="rk">7</span><span class="tm" style="--c1:#FB4F14;--c2:#000000"></span><span class="nm">Bengals<small>1-0</small></span><span class="mv up">▲ 4</span><span class="v">85.0</span></div>
+<div class="row"><span class="rk">8</span><span class="tm" style="--c1:#002244;--c2:#69BE28"></span><span class="nm">Seahawks<small>1-0 · 13-10 vs NE</small></span><span class="mv up">▲ 1</span><span class="v">83.6</span></div>
+<a class="ghost" href="#">All 32 →</a></div>
+
+<div class="mod"><div class="hd"><span class="eb">AFC East</span><span class="sub">your division</span></div>
+<div class="row"><span class="rk">1</span><span class="tm fol" style="--c1:#00338D;--c2:#C60C30"></span><span class="nm">Bills</span><span class="v">1-0</span></div>
+<div class="row"><span class="rk">2</span><span class="tm" style="--c1:#008E97;--c2:#F58220"></span><span class="nm">Dolphins</span><span class="v">1-0</span></div>
+<div class="row"><span class="rk">3</span><span class="tm" style="--c1:#003F2D;--c2:#000000"></span><span class="nm">Jets</span><span class="v mu">0-1</span></div>
+<div class="row"><span class="rk">4</span><span class="tm" style="--c1:#002244;--c2:#C60C30"></span><span class="nm">Patriots</span><span class="v mu">0-1</span></div>
+<a class="ghost" href="#">Full standings →</a></div>
+
+<div class="mod"><div class="hd"><span class="eb">Follow teams</span></div>
+<p class="note">Outlined teams are yours. Follow up to five per league and they sit outlined on every list here and first on Today.</p>
+<a class="ghost" href="#">Choose teams →</a></div>
+</div>
+<div class="tabs"><div class="tab"><i>🎮</i>PLAY</div><div class="tab"><i>🏈</i>SCORES</div><div class="tab on"><i>📊</i>RANKINGS</div><div class="tab"><i>Ȳ</i>YOU</div></div>
+</div></div>
+
+<div>
+<div class="cap">Rankings - Players (NFL)</div>
+<div class="phone"><div class="screen">
+<div class="eb">Sunday · Week 2 · through Sat</div>
+<h1>Rankings</h1>
+<div class="pills"><span class="pill on">NFL</span><span class="pill">CFB</span><span class="pill">EPL</span></div>
+<div class="seg"><span>Teams</span><span class="on">Players</span><span>People</span></div>
+
+<div class="mod"><div class="hd"><span class="eb">Season leaders</span><span class="sub">through Week 1</span></div>
+<div class="stattog"><span class="on">Pass yds</span><span>Rush yds</span><span>Rec yds</span><span>TD</span></div>
+<div class="row"><span class="rk">1</span><span class="tm" style="--c1:#AA0000;--c2:#B3995D"></span><span class="nm">Brock Purdy<small>SF · 25/34 · 3 TD</small></span><span class="v">205</span></div>
+<div class="row"><span class="rk">2</span><span class="tm" style="--c1:#002244;--c2:#C60C30"></span><span class="nm">Drake Maye<small>NE · 23/33 · 1 TD</small></span><span class="v">178</span></div>
+<div class="row"><span class="rk">3</span><span class="tm" style="--c1:#002244;--c2:#69BE28"></span><span class="nm">Drew Lock<small>SEA · 19/28</small></span><span class="v">164</span></div>
+<div class="row"><span class="rk">4</span><span class="tm" style="--c1:#003594;--c2:#FFD100"></span><span class="nm">Matthew Stafford<small>LAR · 21/37</small></span><span class="v">151</span></div>
+<p class="note">Two games played. Sunday's thirteen fill this in by tonight.</p>
+<a class="ghost" href="#">All leaders →</a></div>
+
+<div class="mod"><div class="hd"><span class="eb">Fantasy · PPR · season</span><span class="sub">your Weekly players marked</span></div>
+<div class="row"><span class="rk">1</span><span class="tm" style="--c1:#AA0000;--c2:#B3995D"></span><span class="nm">Brock Purdy<small>QB · SF</small></span><span class="v">24.2</span></div>
+<div class="row"><span class="rk">2</span><span class="tm fol" style="--c1:#003594;--c2:#FFD100"></span><span class="nm">Puka Nacua<small>WR · LAR · <span class="volt">in your six</span></small></span><span class="v">12.4</span></div>
+<div class="row"><span class="rk">3</span><span class="tm" style="--c1:#002244;--c2:#69BE28"></span><span class="nm">Jaxon Smith-Njigba<small>WR · SEA</small></span><span class="v">11.9</span></div>
+<div class="row"><span class="rk">4</span><span class="tm" style="--c1:#002244;--c2:#C60C30"></span><span class="nm">Rhamondre Stevenson<small>RB · NE</small></span><span class="v">10.7</span></div>
+<a class="ghost" href="#">By position →</a></div>
+
+<div class="mod"><div class="hd"><span class="eb">Week leaders · Week 1</span></div>
+<div class="row"><span class="rk mu">PASS</span><span class="nm">Brock Purdy<small>SF</small></span><span class="v">205</span></div>
+<div class="row"><span class="rk mu">RUSH</span><span class="nm">Christian McCaffrey<small>SF</small></span><span class="v">94</span></div>
+<div class="row"><span class="rk mu">REC</span><span class="nm">Jaxon Smith-Njigba<small>SEA</small></span><span class="v">118</span></div>
+</div>
+</div>
+<div class="tabs"><div class="tab"><i>🎮</i>PLAY</div><div class="tab"><i>🏈</i>SCORES</div><div class="tab on"><i>📊</i>RANKINGS</div><div class="tab"><i>Ȳ</i>YOU</div></div>
+</div></div>
+
+<div>
+<div class="cap">Rankings - People</div>
+<div class="phone"><div class="screen">
+<div class="eb">Sunday · Week 2</div>
+<h1>Rankings</h1>
+<div class="pills"><span class="pill on">All games</span><span class="pill">Weekly</span><span class="pill">Draft</span><span class="pill">Pick'em</span><span class="pill">Daily</span></div>
+<div class="seg"><span>Teams</span><span>Players</span><span class="on">People</span></div>
+
+<div class="mod"><div class="hd"><span class="eb">The Daily · streak</span><span class="sub">ranked play only</span></div>
+<div class="row"><span class="rk">1</span><span class="nm">@hurley3594<small>best 94%</small></span><span class="v">🔥 6</span></div>
+<div class="row"><span class="rk">2</span><span class="nm">@theskry<small>best 88%</small></span><span class="v">🔥 4</span></div>
+<div class="row you"><span class="rk">3</span><span class="nm">@sportsvyn_og<small>best 90% · DNF Wed</small></span><span class="v">🔥 1</span></div>
+<div class="row"><span class="rk">4</span><span class="nm">@benson<small>best 76%</small></span><span class="v">🔥 1</span></div>
+<a class="ghost" href="#">Full table · 17 →</a></div>
+
+<div class="mod"><div class="hd"><span class="eb">The Weekly · avg of ceiling</span><span class="sub">min 3 weeks to rank</span></div>
+<div class="row you"><span class="rk">–</span><span class="nm">@sportsvyn_og<small>1 week · 12.4 so far</small></span><span class="v mu">1 of 3</span></div>
+<p class="note">Nobody ranks yet. The table fills after Week 3 settles.</p></div>
+
+<div class="mod"><div class="hd"><span class="eb">The Draft · by seat</span><span class="sub">avg pts · min 3 drafters</span></div>
+<div class="seat">
+<div class="none"><small>S1</small><b>–</b></div><div class="none"><small>S2</small><b>–</b></div><div class="none"><small>S3</small><b>–</b></div>
+<div class="none"><small>S4</small><b>–</b></div><div class="none"><small>S5</small><b>–</b></div><div class="none"><small>S6</small><b>–</b></div>
+<div class="you none"><small>S7</small><b>–</b></div><div class="none"><small>S8</small><b>–</b></div><div class="none"><small>S9</small><b>–</b></div>
+<div class="none"><small>S10</small><b>–</b></div><div class="none"><small>S11</small><b>–</b></div><div class="none"><small>S12</small><b>–</b></div>
+</div>
+<p class="note">Is seat 1 worth having? By November this table will say. You drafted from seat 7 this week.</p></div>
+
+<div class="mod"><div class="hd"><span class="eb">Pick'em · correct %</span><span class="sub">NFL + CFB · min 3 boards</span></div>
+<div class="row"><span class="rk">1</span><span class="nm">@packerAJ01<small>3 boards · 41-14</small></span><span class="v">74.5%</span></div>
+<div class="row"><span class="rk">2</span><span class="nm">@bryan<small>3 boards · 38-17</small></span><span class="v">69.1%</span></div>
+<div class="row you"><span class="rk">–</span><span class="nm">@sportsvyn_og<small>2 boards · 8-1 · ranks after 1 more</small></span><span class="v mu">88.9%</span></div>
+<a class="ghost" href="#">Full table →</a></div>
+</div>
+<div class="tabs"><div class="tab"><i>🎮</i>PLAY</div><div class="tab"><i>🏈</i>SCORES</div><div class="tab on"><i>📊</i>RANKINGS</div><div class="tab"><i>Ȳ</i>YOU</div></div>
+</div></div>
+
+</body></html>
