@@ -1,0 +1,173 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>You tab · v0.1</title>
+<!-- The ruled mock for YOU TAB v1 (relay of 13 Sep 2026), saved verbatim from
+     the relay message. Fonts and hexes here are stand-ins; the build uses the
+     site's tokens. -->
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,700;0,800;1,900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--blue:#245BFF;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;--mono:'JetBrains Mono',monospace;--disp:'Saira',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}body{background:#000;color:var(--paper);font:14px/1.5 system-ui,sans-serif;padding:14px}
+.lbl{width:390px;max-width:100%;margin:0 auto 8px;color:var(--muted);font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.phone{width:390px;max-width:100%;margin:0 auto 26px;background:var(--ink);border:1px solid var(--line);border-radius:24px;padding:16px 16px 22px;overflow:hidden}
+.eb{color:var(--volt);font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.eb.q{color:var(--muted)}
+.sh{display:flex;align-items:baseline;justify-content:space-between;margin:20px 0 8px}
+.sh h3{font:700 16px var(--disp);text-transform:uppercase;letter-spacing:.02em}
+.sh a{color:var(--volt);font:600 11px system-ui}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.card{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 13px}
+
+/* identity */
+.me{display:flex;align-items:center;gap:12px;padding-top:4px}
+.av{width:52px;height:52px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line);display:grid;place-items:center;font:800 22px var(--disp);color:var(--volt);flex:0 0 auto}
+.me h1{font:800 26px var(--disp);text-transform:lowercase;letter-spacing:-.01em;line-height:1}
+.me .sub{color:var(--muted);font:500 11px var(--mono);margin-top:4px}
+.me .edit{margin-left:auto;border:1px solid var(--line);border-radius:99px;padding:7px 11px;font:600 11px var(--mono);color:var(--muted)}
+
+/* streak strip */
+.streak{display:flex;gap:8px;margin-top:14px}
+.sbox{flex:1;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.sbox b{display:block;font:700 21px var(--mono);letter-spacing:-.02em}
+.sbox span{font:600 9px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--quiet)}
+.sbox.hot{border-color:var(--volt)}
+.sbox.hot b{color:var(--volt)}
+
+/* dots */
+.dots{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
+.dot{width:22px;height:22px;border-radius:6px;background:var(--ink-3);border:1px solid var(--line);display:grid;place-items:center;font:700 9px var(--mono);color:var(--quiet)}
+.dot.on{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+.dot.dnf{border-color:var(--terra);color:var(--terra)}
+
+/* game rows */
+.gr{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+.gr:first-child{border:0}
+.gr .ic{width:30px;height:30px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line);display:grid;place-items:center;font:800 12px var(--disp);color:var(--volt);flex:0 0 auto}
+.gr .nm{font-weight:600;font-size:13px}
+.gr .nm small{display:block;color:var(--muted);font:500 10px var(--mono);margin-top:2px;font-weight:500}
+.gr .rt{margin-left:auto;text-align:right}
+.gr .rt b{display:block;font:700 15px var(--mono)}
+.gr .rt span{font:600 9px var(--mono);letter-spacing:.08em;color:var(--quiet);text-transform:uppercase}
+
+/* teams */
+.tm{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--line);font-size:13px}
+.tm:first-child{border:0}
+.mk{width:22px;height:22px;flex:0 0 auto}
+.tm .lg{margin-left:auto;font:600 10px var(--mono);color:var(--quiet);letter-spacing:.06em}
+.tm .x{color:var(--quiet);font:600 10px var(--mono);margin-left:10px}
+.addbtn{display:block;width:100%;text-align:center;border:1px dashed var(--line);border-radius:12px;padding:11px;color:var(--volt);font:600 12px system-ui;margin-top:8px}
+
+/* settings rows */
+.set{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line);font-size:13px}
+.set:first-child{border:0}
+.set .k{font-weight:600}
+.set .k small{display:block;color:var(--muted);font:500 10px var(--mono);margin-top:2px;font-weight:500}
+.set .v{margin-left:auto;color:var(--muted);font:600 11px var(--mono)}
+.set .v.on{color:var(--volt)}
+.set .chev{color:var(--quiet);margin-left:8px}
+
+/* membership */
+.mem{background:var(--ink-2);border:1px solid var(--volt);border-radius:12px;padding:13px;margin-top:12px;display:flex;align-items:center;gap:12px}
+.mem .t{font:800 17px var(--disp);text-transform:uppercase}
+.mem .s{color:var(--muted);font:500 11px var(--mono);margin-top:3px}
+.mem .go{margin-left:auto;background:var(--volt);color:var(--ink);border-radius:99px;padding:9px 14px;font-weight:700;font-size:12px;flex:0 0 auto}
+
+.foot{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px}
+.foot a{color:var(--quiet);font:500 11px var(--mono)}
+.ver{width:100%;color:var(--quiet);font:500 10px var(--mono);margin-top:6px}
+
+/* signed out */
+.so{text-align:center;padding:26px 10px}
+.so h2{font:800 30px var(--disp);text-transform:uppercase;letter-spacing:-.02em}
+.so p{color:var(--muted);font-size:13px;line-height:1.55;max-width:30ch;margin:8px auto 16px}
+.so a{background:var(--volt);color:var(--ink);border-radius:99px;padding:12px 20px;font-weight:700;font-size:14px;display:inline-block}
+.so .alt{display:block;margin-top:12px;color:var(--volt);font:600 12px system-ui;background:none;padding:0}
+</style></head><body>
+
+<div class="lbl">You · signed in</div>
+<div class="phone">
+  <div class="me">
+    <span class="av">S</span>
+    <div><h1>@sportsvyn_og</h1><div class="sub">Member since June · Pacific</div></div>
+    <span class="edit">Edit</span>
+  </div>
+
+  <div class="streak">
+    <div class="sbox hot"><b class="n">12</b><span>Day streak</span></div>
+    <div class="sbox"><b class="n">31</b><span>Best</span></div>
+    <div class="sbox"><b class="n">44</b><span>Boards</span></div>
+  </div>
+
+  <div class="sh"><h3>The Daily</h3><a href="#">History →</a></div>
+  <div class="card">
+    <div class="dots">
+      <span class="dot on">M</span><span class="dot on">T</span><span class="dot on">W</span><span class="dot dnf">T</span><span class="dot on">F</span><span class="dot on">S</span><span class="dot on">S</span>
+      <span class="dot on">M</span><span class="dot on">T</span><span class="dot on">W</span><span class="dot on">T</span><span class="dot on">F</span><span class="dot on">S</span><span class="dot">S</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:11px;color:var(--muted);font:500 11px var(--mono)">
+      <span>Last 14 days · 1 DNF</span><span>Best <b class="n" style="color:var(--paper)">1868.9</b></span>
+    </div>
+  </div>
+
+  <div class="sh"><h3>Your season</h3><a href="#">Rankings →</a></div>
+  <div class="card">
+    <div class="gr"><span class="ic">D</span><span class="nm">The Daily<small>44 boards · 87% of best</small></span><span class="rt"><b class="n">#18</b><span>of 1,204</span></span></div>
+    <div class="gr"><span class="ic">W</span><span class="nm">The Weekly<small>1 week played</small></span><span class="rt"><b class="n">#1</b><span>of 1</span></span></div>
+    <div class="gr"><span class="ic">P</span><span class="nm">Pick'em<small>NFL 1-1 · CFB 7-0</small></span><span class="rt"><b class="n">.800</b><span>season</span></span></div>
+    <div class="gr"><span class="ic">12</span><span class="nm">The Draft<small>1 room · seat 7</small></span><span class="rt"><b class="n">–</b><span>ranks after 2</span></span></div>
+  </div>
+
+  <div class="sh"><h3>Teams you follow</h3><a href="#">Add →</a></div>
+  <div class="card">
+    <div class="tm"><svg class="mk" viewBox="0 0 24 24"><defs><clipPath id="a"><circle cx="12" cy="12" r="11.5"/></clipPath></defs><g clip-path="url(#a)"><rect width="24" height="24" fill="#CE1126"/><rect y="14" width="24" height="10" fill="#14213D"/></g></svg><span>Ole Miss</span><span class="lg">CFB</span><span class="x">Remove</span></div>
+    <div class="tm"><svg class="mk" viewBox="0 0 24 24"><defs><clipPath id="b"><circle cx="12" cy="12" r="11.5"/></clipPath></defs><g clip-path="url(#b)"><rect width="24" height="24" fill="#AA0000"/><rect y="14" width="24" height="10" fill="#B3995D"/></g></svg><span>49ers</span><span class="lg">NFL</span><span class="x">Remove</span></div>
+    <div class="tm"><span class="mk" style="display:grid;place-items:center;border-radius:99px;background:var(--ink-3);border:1px solid var(--line);font:700 7px var(--mono);color:var(--muted)">MEX</span><span>Mexico</span><span class="lg">World Cup</span><span class="x">Remove</span></div>
+  </div>
+  <a class="addbtn">Follow a team · 2 of 5 NFL, 1 of 5 CFB</a>
+
+  <div class="sh"><h3>Alerts</h3><a href="#">All →</a></div>
+  <div class="card">
+    <div class="set"><span class="k">Push notifications<small>this iPhone</small></span><span class="v on">On</span><span class="chev">›</span></div>
+    <div class="set"><span class="k">Game alerts<small>4 games subscribed</small></span><span class="v">Kickoff, score, final</span><span class="chev">›</span></div>
+    <div class="set"><span class="k">Board reminders<small>before each lock</small></span><span class="v on">On</span><span class="chev">›</span></div>
+    <div class="set"><span class="k">Email<small>d***@gmail.com</small></span><span class="v">Results only</span><span class="chev">›</span></div>
+  </div>
+
+  <div class="mem">
+    <div><div class="t">Member</div><div class="s">Renews Jun 12 · $8/mo</div></div>
+    <span class="go">Manage</span>
+  </div>
+
+  <div class="sh"><h3>Settings</h3></div>
+  <div class="card">
+    <div class="set"><span class="k">Time zone<small>from this device</small></span><span class="v">Pacific</span><span class="chev">›</span></div>
+    <div class="set"><span class="k">Handle<small>changed once</small></span><span class="v">@sportsvyn_og</span><span class="chev">›</span></div>
+    <div class="set"><span class="k">Sign out</span><span class="chev">›</span></div>
+  </div>
+
+  <div class="foot">
+    <a href="#">How the games work</a><a href="#">Terms</a><a href="#">Privacy</a><a href="#">Contact</a>
+    <span class="ver">Sportsvyn · build e9ff716</span>
+  </div>
+</div>
+
+<div class="lbl">You · signed out</div>
+<div class="phone">
+  <div class="so">
+    <h2>You</h2>
+    <p>Your streak, your rank in every game, the teams you follow and what gets pushed to this phone. All of it starts with a handle.</p>
+    <a href="#">Create your account</a>
+    <a class="alt" href="#">Already have one? Sign in</a>
+  </div>
+
+  <div class="sh"><h3>What you get</h3></div>
+  <div class="card">
+    <div class="gr"><span class="ic">D</span><span class="nm">A streak<small>One board a day, three minutes</small></span></div>
+    <div class="gr"><span class="ic">W</span><span class="nm">A rank in four games<small>Same boards as everyone else</small></span></div>
+    <div class="gr"><span class="ic">★</span><span class="nm">Your teams<small>Scores and alerts for the ones you pick</small></span></div>
+  </div>
+
+  <div class="foot">
+    <a href="#">How the games work</a><a href="#">Terms</a><a href="#">Privacy</a><a href="#">Contact</a>
+  </div>
+</div>
+
+</body></html>
