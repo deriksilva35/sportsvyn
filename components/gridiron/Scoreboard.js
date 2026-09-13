@@ -20,9 +20,9 @@
 import Helmet from '@/components/team/Helmet';
 import { useState } from 'react';
 import Link from 'next/link';
-import DriveStrip from './DriveStrip';
 import { scoresHref, SPORT_CHIPS } from '@/lib/gridiron/scoresNav';
 import { orderFor } from '@/lib/gridiron/teamOrder';
+import { abbrOf } from '@/lib/gridiron/scoresV2Shape';
 
 // Where a gridiron card's "Full game" link points, per league. A map rather
 // than a conditional: each code owns a sibling route, and a fourth would
@@ -81,7 +81,11 @@ function Kickoff({ iso, tz, withDay = true }) {
 // score go full white; the loser drops to muted, so a glance at a finished card
 // answers "who won" before it answers "what was the score".
 function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = null }) {
-  const abbr = t.abbreviation || null;
+  // ONE DERIVED ABBREVIATION, EVERY SURFACE. This read t.abbreviation alone,
+  // so an FCS visitor with none ("Monmouth") rendered an empty mono slot on a
+  // live card while the same side read MON on the Scores tab and the lobby
+  // strip. abbrOf() is the helper those two already use.
+  const abbr = abbrOf(t) || null;
   // A FAILED JOIN RENDERS AN ABSENCE, NOT A CLAIM. This said 'TBD', which is a
   // statement that the opponent is undetermined - and it fired not on an
   // undetermined opponent but on a team row we did not manage to join. The
@@ -510,11 +514,6 @@ export default function Scoreboard({ byLeague, date, sport = 'all', live = false
 
       {visible.map((s) => <Section key={s.key} sport={s} games={byLeague[s.key] ?? []} liveOnly={live} records={records} tz={tz} signedIn={signedIn} />)}
 
-      {/* DriveStrip is built + ready but renders nowhere until live rows exist.
-          Hidden demo so the component is exercised by the build. */}
-      <div hidden aria-hidden="true">
-        <DriveStrip yardsToEndzone={34} distance={6} driveStartYTE={75} possessionAbbr="KC" down={2} opponentSide="OPP 34" />
-      </div>
     </div>
   );
 }

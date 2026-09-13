@@ -22,18 +22,22 @@ import { switcherRows } from '@/lib/gridiron/leagueSwitch';
 import LeagueSwitcher from '@/components/league/LeagueSwitcher';
 
 export default async function LeagueHeader({
-  label, week, phase, date, games, leagueSlug, pathname,
+  label, week, phase, games, leagueSlug, pathname,
 }) {
   // THE WEEK LINE RESOLVES ITSELF when the caller has not already done the
   // work. The landing has - it read the slate for its own modules - so it
   // passes what it holds; every other league route passes nothing and gets the
   // same line rather than a bare title.
-  let w = week; let ph = phase; let d = date;
+  let w = week; let ph = phase;
   if (w === undefined && leagueSlug) {
     const r = await resolveLeagueWeek(leagueSlug);
-    w = r.week; ph = r.phase; d = r.date;
+    w = r.week; ph = r.phase;
   }
-  const eyebrow = landingEyebrow({ week: w, phase: ph, date: d });
+  // THE EYEBROW NAMES TODAY, so this header no longer takes a date at all -
+  // see landingEyebrow(). A page called Today that named last Wednesday,
+  // because the landing handed it the week's first kickoff, was the defect
+  // this closes.
+  const eyebrow = landingEyebrow({ week: w, phase: ph });
   const live = livePill(games);
   // THE PILLS COME FROM THE ROUTE, not from a prop each page remembers to set.
   // One list, one resolver - see lib/gridiron/leagueNav.js.
@@ -51,7 +55,7 @@ export default async function LeagueHeader({
       try {
         if (r.slug === 'epl') return (await resolveEplWeek()).label;
         const wk = await resolveLeagueWeek(r.slug);
-        return landingEyebrow({ week: wk.week, phase: wk.phase, date: wk.date });
+        return landingEyebrow({ week: wk.week, phase: wk.phase });
       } catch { return null; }
     }));
     rows = rows.map((r, i) => ({ ...r, eyebrow: eyebrows[i] }));

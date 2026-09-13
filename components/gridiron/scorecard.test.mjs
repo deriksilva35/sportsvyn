@@ -239,3 +239,31 @@ test('hyphens only in the card copy', () => {
   // ABSENT and is a data glyph, not copy - it must not appear inline here.
   assert.deepEqual(emDash, [], 'no em or en dashes in the component source');
 });
+
+// ------------------------------------------------- TODAY PAGE DATA FIXES
+
+test('ONE DERIVED ABBREVIATION, THIS SURFACE TOO', () => {
+  // A live CFB card served Monmouth as <span class="abbr"></span> - an empty
+  // mono slot - because this row read t.abbreviation alone while the Scores
+  // tab and the lobby strip both derived MON from the name. Same helper now.
+  assert.match(card, /const abbr = abbrOf\(t\) \|\| null;/);
+  assert.doesNotMatch(card, /const abbr = t\.abbreviation \|\| null;/, 'the raw read is gone');
+  assert.match(card, /import \{ abbrOf \} from '@\/lib\/gridiron\/scoresV2Shape'/);
+  // The NAME fallback is deliberately NOT derived: a card that cannot name a
+  // side should say the identity it has, not a three-letter guess.
+  assert.match(card, /const name = t\.name \|\| t\.label \|\| t\.abbreviation \|\| ''/);
+});
+
+test('THE HIDDEN DRIVESTRIP DEMO IS GONE FROM THE SHELL', () => {
+  // It was hidden and aria-hidden, so no reader ever saw it - but it shipped
+  // inside the HTML of every page that mounts this shell, including /nfl and
+  // /cfb while real games were live, carrying hardcoded KC / 2nd & 6 / OPP 34.
+  assert.doesNotMatch(card, /<DriveStrip/, 'no demo mount');
+  assert.doesNotMatch(card, /possessionAbbr="KC"|opponentSide="OPP 34"|yardsToEndzone=\{34\}/, 'no sample values');
+  assert.doesNotMatch(card, /hidden aria-hidden/, 'and no hidden block at all');
+  assert.doesNotMatch(card, /from '\.\/DriveStrip'/, 'and the import went with it');
+  // The live drive strip readers actually see lives elsewhere and is untouched:
+  // the Gamecast DriveStrip on the game pages, ScoresV2's sv2-strip on /scores.
+  assert.match(stripComments(src('components/gridiron/Gamecast.js')), /export function DriveStrip/);
+  assert.match(src('components/scores/ScoresV2.js'), /className="sv2-strip"/);
+});
