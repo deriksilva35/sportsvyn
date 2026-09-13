@@ -159,3 +159,44 @@ test('a follow is a stake, stated once', () => {
   assert.equal(/follow/.test(strip(src('components/scores/ScoresV2.js'))), false,
     'the tab draws no follow-specific control - Mine is one answer to one question');
 });
+
+test('THE PLAYER STAR CARRIES THE MARKER TOO, in both places', () => {
+  // Same three-line fix as the team star. Left out of the first commit
+  // because R4 scoped the ruling to the surface being spread; a player page
+  // inside the container had the identical apple:web mislabel.
+  const star = src('components/player/PlayerFollowStar.js');
+  assert.equal(/`\/signin\?callbackUrl=\$\{encodeURIComponent\(pathname\)\}`/.test(star), false,
+    'the hand-rolled href is gone');
+  assert.match(star, /import \{ shellSigninHref \} from '@\/lib\/shell\/signinHref'/);
+  assert.match(star, /const signinHref = shellSigninHref\(dest, isShell\)/);
+  assert.match(star, /isShell = false/, 'the mode arrives as a prop');
+  // Threaded through both heroes and both arms of the player page.
+  for (const p of ['components/player/PlayerHero.js', 'components/player/GridironHero.js']) {
+    assert.match(strip(src(p)), /isShell = false/, `${p} accepts it`);
+    assert.match(strip(src(p)), /isShell=\{isShell\}/, `${p} passes it down`);
+  }
+  const page = strip(src('app/player/[slug]/page.js'));
+  assert.match(page, /import \{ resolveShellMode \} from '@\/lib\/shell\/shell'/);
+  assert.equal((page.match(/resolveShellMode\(\)/g) ?? []).length, 2,
+    'both arms of the page resolve it - the gridiron arm is its own component');
+  assert.match(page, /isShell=\{gIsShell\}/, 'the gridiron arm');
+  assert.match(page, /<PlayerHero [^>]*isShell=\{isShell\}/, 'and the soccer arm');
+  // Exactly once each, not twice.
+  assert.equal((src('components/player/PlayerHero.js').match(/isShell=\{isShell\}/g) ?? []).length, 1);
+});
+
+test('the marker lands in BOTH places in the built href', async () => {
+  // The reason the helper exists: a bare &shell= would be a sibling param of
+  // /signin, and Apple's cross-site form_post drops the SameSite=Lax cookie,
+  // so the marker inside the callbackUrl is the one that survives.
+  const { shellSigninHref } = await import('../../lib/shell/signinHref.js');
+  const inShell = shellSigninHref('/player/brock-purdy-nfl-27', true);
+  assert.match(inShell, /^\/signin\?callbackUrl=/);
+  const cb = decodeURIComponent(new URL(inShell, 'https://x').searchParams.get('callbackUrl'));
+  assert.match(cb, /^\/player\/brock-purdy-nfl-27\?/, 'the marker is inside the callback');
+  assert.ok(/[?&]shell=/.test(cb), 'the callback carries it');
+  assert.ok(/[&]shell=/.test(inShell), 'and so does the /signin URL itself');
+  // On the web it is a plain callbackUrl and nothing else.
+  assert.equal(shellSigninHref('/player/brock-purdy-nfl-27', false),
+    '/signin?callbackUrl=%2Fplayer%2Fbrock-purdy-nfl-27');
+});

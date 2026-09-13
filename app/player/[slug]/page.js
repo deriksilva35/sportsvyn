@@ -27,6 +27,7 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import BackToAppBar from '@/components/BackToAppBar';
 
 import { auth } from '@/auth';
+import { resolveShellMode } from '@/lib/shell/shell';
 import { getPlayerBySlug, getPlayerGroupFixtures } from '@/lib/players';
 import { isFollowingPlayer } from '@/lib/follows';
 
@@ -73,7 +74,7 @@ const LEAGUE_LABEL = { nfl: 'NFL', cfb: 'CFB' };
  * lesson was that a shared component edited "generically" is where soccer
  * regressions come from.
  */
-async function GridironPlayer({ player, crumb, isAuthed = false, initialFollowing = false, season = null }) {
+async function GridironPlayer({ player, crumb, isAuthed = false, initialFollowing = false, isShell = false, season = null }) {
   // THE COLUMN VOCABULARY FORKS BY CODE, and it is a data fact rather than a
   // design one: nfl_player_game_stats has never held a tackles column, so NFL
   // defense reads Sacks/INT/FR/TD, while CFBD does carry tackles and TFL, so
@@ -137,7 +138,7 @@ async function GridironPlayer({ player, crumb, isAuthed = false, initialFollowin
         ))}
       </div>
 
-      <GridironHero player={player} isAuthed={isAuthed} initialFollowing={initialFollowing} />
+      <GridironHero player={player} isAuthed={isAuthed} initialFollowing={initialFollowing} isShell={isShell} />
 
       <nav className="anchor-pills gp-pills">
         {playerPills({ hasStats, hasLog: games.length > 0 }).map((p) => (
@@ -199,6 +200,7 @@ export default async function PlayerPage({ params, searchParams }) {
     const gSession = await auth();
     const gUserId = gSession?.user?.id ?? null;
     const gFollowing = await isFollowingPlayer(gUserId, player.id);
+    const gIsShell = await resolveShellMode().catch(() => false);
     return (
       <>
         <BackToAppBar />
@@ -208,6 +210,7 @@ export default async function PlayerPage({ params, searchParams }) {
           crumb={playerCrumb(player.league_slug, player.full_name)}
           isAuthed={gUserId != null}
           initialFollowing={gFollowing}
+          isShell={gIsShell}
           season={typeof sp.season === 'string' ? sp.season : null}
         />
       </>
@@ -219,6 +222,9 @@ export default async function PlayerPage({ params, searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isAuthed = !!session?.user;
+  // isShell for the follow star's signed-out link only - a client component
+  // cannot read the cookie, so the mode is resolved here and passed down.
+  const isShell = await resolveShellMode().catch(() => false);
   const initialFollowing = await isFollowingPlayer(userId, player.id);
 
   const fixtures = await getPlayerGroupFixtures(player.team_id);
@@ -239,7 +245,7 @@ export default async function PlayerPage({ params, searchParams }) {
           <span className="current">{player.full_name}</span>
         </div>
 
-        <PlayerHero player={player} isAuthed={isAuthed} initialFollowing={initialFollowing} />
+        <PlayerHero player={player} isAuthed={isAuthed} initialFollowing={initialFollowing} isShell={isShell} />
 
         {/* Bio grid renders only when at least one bio field is populated.
             Pre-backfill (today) → returns null, no header, no broken grid. */}

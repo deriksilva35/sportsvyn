@@ -44,7 +44,7 @@ const POSITION_LABEL = {
   ATT: 'Forward',
 };
 
-export default function PlayerHero({ player, isAuthed = false, initialFollowing = false }) {
+export default function PlayerHero({ player, isAuthed = false, initialFollowing = false, isShell = false }) {
   const posLabel = POSITION_LABEL[player.position] ?? player.position ?? null;
   const teamHref = player.team_slug ? `/team/${player.team_slug}` : null;
 
@@ -61,6 +61,7 @@ export default function PlayerHero({ player, isAuthed = false, initialFollowing 
             playerId={player.id}
             playerName={player.full_name}
             isAuthed={isAuthed}
+            isShell={isShell}
             initialFollowing={initialFollowing}
           />
         </div>
