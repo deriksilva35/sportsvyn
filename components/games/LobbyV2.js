@@ -45,6 +45,51 @@ function GameCard({ card, hero = false, sub, right, signedIn, signinHref }) {
   );
 }
 
+// ONE PICK'EM TILE. Half width beside its sibling, or full width alone - the
+// grid decides, so this renders the same either way. It is the lv-mini shape
+// with a smaller disc and its own pill, because it carries two lines.
+function PickemTile({ tile, signedIn, signinHref }) {
+  const tone = tile.pill?.tone === 'volt' ? ' go' : tile.pill?.tone === 'jade' ? ' done' : '';
+  return (
+    <a className="lv-ptile" href={signedIn ? tile.href : signinHref(tile.href)} data-row={tile.key} data-sport={tile.sport}>
+      <span className="lv-ph">
+        <span className="lv-ico">{tile.glyph}</span>
+        {tile.pill && <span className={`st${tone}`}>{tile.pill.label}</span>}
+      </span>
+      <strong>{tile.label}</strong>
+      <small>
+        {tile.lines.map((l, i) => (
+          <span key={i}>{i > 0 && <br />}{l.text}{l.at ? <StandaloneDate iso={l.at} /> : null}</span>
+        ))}
+      </small>
+    </a>
+  );
+}
+
+// THE SECTION. Two boards go side by side; ONE board keeps the old
+// full-width row exactly as it was; no board renders nothing at all.
+function PickemSection({ row, signedIn, signinHref }) {
+  const tiles = row?.tiles ?? [];
+  if (!tiles.length) return null;
+  if (tiles.length === 1) {
+    // ONE BOARD, THE OLD SHAPE - but built from the tile, not the aggregate:
+    // the aggregate still carries a "CFB no board yet" line for the sport
+    // that does not exist, and a full-width row for the one live board must
+    // not say that.
+    const t = tiles[0];
+    const one = {
+      key: 'pickem', title: "Pick'em", glyph: '✓', href: t.href, pill: t.pill,
+      lines: t.lines.map((l, i) => (i === 0 ? { ...l, text: `${t.label} ${l.text}` } : l)),
+    };
+    return <MiniRow row={one} signedIn={signedIn} signinHref={signinHref} />;
+  }
+  return (
+    <div className="lv-duo lv-pickem" data-section="pickem">
+      {tiles.map((t) => <PickemTile key={t.key} tile={t} signedIn={signedIn} signinHref={signinHref} />)}
+    </div>
+  );
+}
+
 function MiniRow({ row, signedIn, signinHref }) {
   const href = signedIn ? row.href : signinHref(row.href);
   const tone = row.pill?.tone === 'volt' ? ' go' : row.pill?.tone === 'jade' ? ' done' : '';
@@ -173,7 +218,8 @@ export default function LobbyV2({ v, signedIn = false, isShell = false, leagues 
       </div>
 
       <div className="lv-minis">
-        <MiniRow row={pickem} signedIn={signedIn} signinHref={signinHref} />
+        <PickemSection row={pickem} signedIn={signedIn} signinHref={signinHref} />
+        {/* THE DRAFT ROW IS UNTOUCHED, full width (relay item 3). */}
         <MiniRow row={draft} signedIn={signedIn} signinHref={signinHref} />
       </div>
 
