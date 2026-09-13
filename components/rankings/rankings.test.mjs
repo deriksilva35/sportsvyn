@@ -231,3 +231,29 @@ test('SOURCE GUARD: no module renders a movement glyph while previous_rank is un
   // And the guard is looking at something: the files exist and are non-trivial.
   assert.ok(files.length >= 5, 'the guard covers the rankings tree');
 });
+
+test('SIGNED OUT, THE GROUP DEFAULT IS THE BEST TEAM\'S, not the first row', () => {
+  // It used to fall to label(rows[0]) - whoever sorted first by wins - which
+  // put a stranger on Mountain West while Ohio State sat at the top of the
+  // poll two modules above. CFB takes the AP number one's conference and the
+  // NFL takes the power number one's division.
+  const s = src('lib/rankings/reads.js');
+  assert.match(s, /export async function groupTable\(leagueSlug, season, group, \{ defaultTeamId = null \} = \{\}\)/);
+  assert.match(s, /const want = group \?\? fromTop \?\? label\(rows\[0\]\);/,
+    'a followed group still wins, and the first row is only the last resort');
+  const v = src('lib/rankings/view.js');
+  assert.match(v, /defaultTeamId: power\[0\]\?\.teamId \?\? null/, 'NFL from the power number one');
+  assert.match(v, /defaultTeamId: ap\?\.rows\?\.\[0\]\?\.teamId \?\? null/, 'CFB from the AP number one');
+  // The ranking has to be READ before the group can be chosen from it, so
+  // neither pair may be fired off in one Promise.all.
+  assert.equal(/Promise\.all\(\[\s*empty\(\[\]\)\(nflPower/.test(v), false,
+    'the NFL power read is awaited before the division is chosen');
+});
+
+test('a followed group still beats the default', () => {
+  // pickGroup's rule is unchanged: followedGroup wins when this season's rows
+  // contain it. Only the fallback moved.
+  const s = src('lib/rankings/reads.js');
+  const fn = s.slice(s.indexOf('export async function groupTable'));
+  assert.ok(fn.indexOf('group ??') < fn.indexOf('fromTop ??'), 'the follow is tried first');
+});
