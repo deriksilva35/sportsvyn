@@ -201,6 +201,10 @@ function Numbers({ v, signinHref }) {
         {others.map((s) => (
           <Link key={s} href={s === 'epl' ? '/epl/standings' : `/${s}`}>{LEAGUE_LABEL[s]}</Link>
         ))}
+        {/* THE WAY OUT TO EVERY GAME, both states. The tab shows a reader
+            their own day; /scores is the whole board, and without this the
+            only route to it signed in was the header. */}
+        <Link className="all" href="/scores">All games &rarr;</Link>
       </div>
       {v.chips.length > 0 && (
         <div className="tv-rail" data-section="rail">
@@ -243,16 +247,10 @@ function Numbers({ v, signinHref }) {
 
 export default function TodayV2({ v, isShell = false }) {
   const signinHref = (dest) => shellSigninHref(dest, isShell);
-  // The Weekly hero needs each player's GAME. The slate is already on the
-  // page for the kickoff list; matching by team abbreviation is the same join
-  // stakeForMatches does, and it costs nothing extra.
-  const gamesByTeam = new Map();
-  for (const g of v.kicks) {
-    for (const t of [g.home, g.away]) {
-      const a = t?.abbreviation ?? abbrOf(t);
-      if (a) gamesByTeam.set(a, { status: g.status, metadata: { live_state: g.liveState }, kickoffAt: g.kickoffAt });
-    }
-  }
+  // The Weekly hero's slot states come from the CONTEST'S WEEK, read as a map
+  // by the page reader. Matching today's slate instead left every player
+  // whose game is on another day with no state at all.
+  const gamesByTeam = v.weekGames ?? new Map();
   return (
     <div className="tv" data-surface="ink" data-signed-in={v.signedIn ? '1' : '0'}>
       <div className="tv-eb">{v.eyebrow}</div>

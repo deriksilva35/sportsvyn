@@ -253,3 +253,47 @@ test('no em dash anywhere in the page or its readers', () => {
     assert.equal(/—/.test(readFileSync(path.join(REPO, f), 'utf8')), false, `${f} carries an em dash`);
   }
 });
+
+test('SIX SLOTS, SIX STATES, ACROSS FOUR DAYS - the week, not the day', () => {
+  // THE BUG THIS PINS: the slot state was matched against TODAY's slate, so a
+  // lineup spread over Thursday, Sunday and Monday showed a state for the
+  // Sunday players and nothing for the rest. The map is the contest's WEEK
+  // now, so every filled row carries one.
+  const week = new Map([
+    ['SF', { status: 'final', metadata: { live_state: null }, kickoffAt: '2026-09-10T00:20:00Z' }],
+    ['ATL', { status: 'live', metadata: { live_state: { period: 3, clock: '6:12' } }, kickoffAt: '2026-09-13T17:00:00Z' }],
+    ['CIN', { status: 'scheduled', metadata: { live_state: null }, kickoffAt: '2026-09-13T20:05:00Z' }],
+    ['LAR', { status: 'final', metadata: { live_state: null }, kickoffAt: '2026-09-14T00:20:00Z' }],
+    ['GB', { status: 'scheduled', metadata: { live_state: null }, kickoffAt: '2026-09-15T00:15:00Z' }],
+  ]);
+  const h = html(base({ weekGames: week, kicks: [] }));
+  const rows = [...h.matchAll(/data-slot="(\w+)" data-game="([^"]+)"/g)].map((m) => [m[1], m[2]]);
+  assert.equal(rows.length, 6, 'all six slots render');
+  const by = Object.fromEntries(rows);
+  assert.equal(by.QB, 'final', 'Thursday, finished');
+  assert.equal(by.RB, 'Q3 6:12', 'Sunday afternoon, live with period and clock');
+  assert.equal(by.WR, 'scheduled', 'Sunday night, not started');
+  assert.equal(by.TE, 'scheduled', 'an unset slot has no team and no game');
+  assert.equal(by.FLEX, 'final', 'Sunday night, finished');
+  assert.equal(by.FLEX2, 'scheduled', 'Monday, not started');
+  // The three renderings the states produce.
+  const qb = h.slice(h.indexOf('data-slot="QB"'), h.indexOf('data-slot="RB"'));
+  assert.match(qb, /SF · final/); assert.match(qb, /<b class="n">18\.4<\/b>/, 'a final shows points');
+  const rb = h.slice(h.indexOf('data-slot="RB"'), h.indexOf('data-slot="WR"'));
+  assert.match(rb, /ATL · Q3 6:12/); assert.match(rb, /<b class="n live">14\.1<\/b>/, 'a live row shows live points');
+  const wr = h.slice(h.indexOf('data-slot="WR"'), h.indexOf('data-slot="TE"'));
+  assert.match(wr, /<span class="st">Not started<\/span>/, 'and a scheduled one says so with its kickoff');
+  assert.match(wr, /CIN · /);
+});
+
+test('the switch block carries the way out to every game, both states', () => {
+  for (const [label, v] of [
+    ['signed in', base()],
+    ['signed out', base({ signedIn: false, title: 'Today', hero: null, picks: null, daily: null, teams: [], riding: false })],
+  ]) {
+    const h = html(v);
+    const sw = h.slice(h.indexOf('data-section="switch"'), h.indexOf('data-section="rail"'));
+    assert.match(sw, /<a class="all" href="\/scores">All games →<\/a>/, `${label}: the link is there`);
+    assert.match(sw, /<span class="on">NFL<\/span>/, `${label}: beside the league pills`);
+  }
+});

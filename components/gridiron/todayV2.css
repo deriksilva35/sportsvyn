@@ -78,6 +78,9 @@
 .tv-sw { display: flex; gap: 6px; margin: 10px 0 8px; }
 .tv-sw span, .tv-sw a { border: 1px solid var(--line); border-radius: 99px; padding: 5px 10px; font: 600 11px var(--font-mono); color: var(--muted); text-decoration: none; }
 .tv-sw span.on { background: var(--volt); color: var(--ink); border-color: var(--volt); }
+/* The way out sits apart from the league pills - it is a destination, not a
+   sibling of the three codes. */
+.tv-sw .all { margin-left: auto; border-color: transparent; color: var(--volt); }
 .tv-rail { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
 .tv-rail::-webkit-scrollbar { display: none; }
 .tv-rchip { flex: none; border: 1px solid var(--line); background: var(--ink-2); border-radius: 10px; padding: 7px 9px; text-align: center; min-width: 50px; text-decoration: none; }
