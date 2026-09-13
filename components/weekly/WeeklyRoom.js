@@ -35,6 +35,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SLOTS } from '@/lib/weekly/rules';
+import { slotState } from '@/lib/weekly/slotState';
 import { nextOpenSlot } from '@/lib/daily/play';
 import { poolRows, poolCountLabel, SLOT_EMOJI } from '@/lib/weekly/view';
 import { useHandleGate, HELD } from '@/components/handle/HandleGate';
@@ -76,6 +77,13 @@ const SAVE_DEBOUNCE_MS = 700;
 export default function WeeklyRoom({
   contest, board, initialLineup = {}, signedIn = true, signinHref = '/signin',
   hasHandle = true, initialConfirmedAt = null, locksAt = null, firstKickoff = null,
+  // THE LIVE LAYER (relay: live points on the Weekly). Plain objects, not Maps
+  // - this is a client component and a Map does not cross that boundary. null
+  // before any game in the week has kicked off, which is also the shape a
+  // signed-out reader gets, so every consumer below is guarded on it.
+  //   byId   playerId -> { points, played }
+  //   games  teamAbbr -> { status, metadata, kickoffAt }
+  live = null,
 }) {
   // THE HANDLE IS ASKED FOR AT THE FIRST SLOT SAVED, not on page load
   // (components/handle/HandleGate.js). It guards the WRITE, so browsing the
@@ -268,6 +276,18 @@ export default function WeeklyRoom({
           <span>{filledSlots.length} of {SLOTS.length} set</span>
           <span>saves on change</span>
         </div>
+        {/* THE HEADER CARRIES THE NUMBER once anything has kicked off, the
+            same pair the Today tab's hero prints: the live total, and where
+            it puts you. Both are absent - not zero - before the first game. */}
+        {live && live.startedCount > 0 ? (
+          <div className="wk-live" data-live="on">
+            <b>{live.total}</b>
+            <span>
+              live &middot; {live.startedCount} of {live.slots} started
+              {live.rank != null ? <> &middot; {live.rank}{live.of ? ` of ${live.of}` : ''}</> : null}
+            </span>
+          </div>
+        ) : null}
       </div>
       {unfilled.length > 0 && (
         <div className="needline">
@@ -290,19 +310,39 @@ export default function WeeklyRoom({
             const p = id ? board.find((b) => b.id === id) : null;
             const isLocked = slotLocked(s);
             const held = heldSlots.has(s);
+            // THE NUMBER AND THE GAME, decided by the one rule three surfaces
+            // share (lib/weekly/slotState.js). The row it is handed is built
+            // from the SAME pieces liveEntryRows returns - the live read keys
+            // its points by player id, so a slot filled ten seconds ago shows
+            // its player's real state rather than waiting for a page load.
+            const st = p && live
+              ? slotState({
+                row: { id: p.id, team: p.team ?? null, points: live.byId?.[p.id]?.points ?? 0, played: Boolean(live.byId?.[p.id]?.played) },
+                game: p.team ? live.games?.[p.team] ?? null : null,
+              })
+              : null;
             return (
               <button key={s} type="button"
                 className={`pr${p ? '' : ' empty'}${isLocked ? ' wk-locked' : ''}${held ? ' wk-pending' : ''}`}
                 disabled={isLocked}
+                data-game={st ? st.kind : undefined}
                 onClick={() => (held ? reopenHandle() : openSlot(s))}>
                 <span className="pos">{SLOT_LABEL[s]}</span>
                 <span className="nm">
                   <b>{p ? p.name : EMPTY_SLOT_COPY[s]}</b>
                   <small>{held ? 'Needs a handle' : p ? restOf(p.resume) : ' '}</small>
-                  {/* the slot's own lock time (rolling lock) */}
-                  {p?.kickoff_at ? <small className="wk-ko">{isLocked ? 'Locked · ' : 'Locks '}<StandaloneTime iso={p.kickoff_at} /></small> : null}
+                  {/* THE SLOT'S OWN LINE. Once the game is under way it says
+                      what the game is doing; before that it stays the rolling
+                      lock's own time, which is what it has always said. */}
+                  {st?.label
+                    ? <small className="wk-ko">{p.team ? `${p.team} · ` : ''}{st.label}</small>
+                    : p?.kickoff_at ? <small className="wk-ko">{isLocked ? 'Locked · ' : 'Locks '}<StandaloneTime iso={p.kickoff_at} /></small> : null}
                 </span>
-                <span className={`tk${p ? ' quiet' : ''}`}>{isLocked ? 'Locked' : p ? 'Change' : 'Take'}</span>
+                {/* NOT STARTED IS A WORD, NOT A ZERO - the pill keeps its job
+                    until there is a real number to show in its place. */}
+                {st?.started
+                  ? <span className={`wk-pts${st.kind === 'live' ? ' live' : ''}`}>{st.points}</span>
+                  : <span className={`tk${p ? ' quiet' : ''}`}>{isLocked ? 'Locked' : p ? 'Change' : 'Take'}</span>}
               </button>
             );
           })}

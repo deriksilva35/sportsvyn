@@ -638,3 +638,23 @@
 }
 .weekly .opt.on { border-color: var(--d-volt); color: var(--d-volt); background: rgba(212, 255, 0, .08); }
 
+
+/* ============================ THE LIVE LAYER =============================
+   Relay: live points on the Weekly and the Draft. Two additions and one
+   correction, all scoped to rows that already existed.
+
+   r--wrap IS THE CORRECTION. `.row .r` is white-space:nowrap because the
+   numbers in that column must never break across two lines - a score reading
+   "14." / "2" is worse than no score. The Results line lives in the same
+   column and is a SENTENCE, so nowrap sent it off the right edge of every
+   phone. It opts out; the numbers keep the rule. */
+.row .r--wrap { white-space: normal; text-align: right; }
+
+/* The tick that marks a Draft pick as one of the counting six. Quiet - the
+   dimming on the other two is the loud half of the pair, and two loud
+   treatments on one list is a list that reads as an error state. */
+.row .dr-count {
+  margin-left: 6px; color: var(--d-volt); font-weight: 700;
+  font-size: 11px; vertical-align: 1px;
+}
+.row--dropped .dr-count { display: none; }

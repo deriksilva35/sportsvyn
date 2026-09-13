@@ -16,7 +16,7 @@ import TeamMark from '@/components/team/TeamMark';
 import RankBadge from '@/components/gridiron/RankBadge';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { abbrOf } from '@/lib/gridiron/scoresV2Shape';
-import { liveLabelOf } from '@/lib/gridiron/todayReads';
+import { slotState } from '@/lib/weekly/slotState';
 import './todayV2.css';
 
 const LEAGUE_LABEL = Object.freeze({ nfl: 'NFL', cfb: 'CFB', epl: 'EPL' });
@@ -51,32 +51,26 @@ function ReadStrip({ read }) {
 
 // ---- the Weekly hero -----------------------------------------------------
 function SlotRow({ row, game }) {
-  const live = game?.status === 'live';
-  const final = game?.status === 'final';
-  // THE THREE STATES THE MOCK ASKS FOR: final, live with period and clock, or
-  // the kickoff time. The state is the GAME's, matched to the player by team
-  // abbreviation - the same join stakeForMatches performs.
-  const state = final ? 'final'
-    : live ? (liveLabelOf('live', game.metadata) ?? 'Live').replace(/^Live · /, '')
-      : null;
-  // NOT STARTED IS A WORD, NOT A ZERO. A 0 beside a player who has not played
-  // is not a low score, it is a wrong one - the same rule the game cards use.
-  const started = row.played || live || final;
+  // THE THREE STATES THE MOCK ASKS FOR - final, live with period and clock, or
+  // the kickoff time - are decided in lib/weekly/slotState.js now, because the
+  // Weekly room and the Draft card ask the same question of the same pair and
+  // a rule living inside this JSX is a rule those two could not reach.
+  const st = slotState({ row, game });
   return (
-    <div className={`tv-pr${row.played ? ' done' : ''}`} data-slot={row.slot} data-game={state ?? 'scheduled'}>
+    <div className={`tv-pr${row.played ? ' done' : ''}`} data-slot={row.slot} data-game={st.label ?? st.kind}>
       <span className="pos">{SLOT_LABEL(row.slot)}</span>
       <span className="who">
         {row.name ?? <i className="tv-unset">Not set</i>}
         {row.team ? (
           <small>
             {row.team}
-            {state ? ` · ${state}` : null}
-            {!state && game?.kickoffAt ? <> · <StandaloneTime iso={game.kickoffAt} /></> : null}
+            {st.label ? ` · ${st.label}` : null}
+            {st.kickoffAt ? <> · <StandaloneTime iso={st.kickoffAt} /></> : null}
           </small>
         ) : null}
       </span>
-      {started
-        ? <b className={`n${live ? ' live' : ''}`}>{row.points}</b>
+      {st.started
+        ? <b className={`n${st.kind === 'live' ? ' live' : ''}`}>{st.points}</b>
         : <span className="st">Not started</span>}
     </div>
   );

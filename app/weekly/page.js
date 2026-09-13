@@ -28,8 +28,11 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { currentContest, nextContest, getEntry } from '@/lib/weekly/entries';
 import { slateBounds, teamKickoffs, rowKickoff, lockPhase } from '@/lib/contests/slateBounds';
 import StandaloneDate from '@/components/StandaloneDate';
+import StandaloneTime from '@/components/StandaloneTime';
 import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI } from '@/lib/weekly/view';
-import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
+import { liveEntryRows, liveScoredBoard, liveBoard } from '@/lib/weekly/live';
+import { slotStates } from '@/lib/weekly/slotState';
+import { weekTeamGames } from '@/lib/gridiron/todayV2';
 import { weekStatLines } from '@/lib/weekly/pool';
 import WeeklyRoom from '@/components/weekly/WeeklyRoom';
 import WeeklyGrade from '@/components/weekly/WeeklyGrade';
@@ -234,6 +237,11 @@ export default async function WeeklyPage({ searchParams }) {
         return liveEntryRows({ lineup: entry.lineup ?? {}, scored, playedIds });
       })().catch(() => null)
       : null;
+    // THE GAME BESIDE THE NUMBER, here as in the room above it. Without it a
+    // locked row printed "-" for a man who has not kicked off and his real
+    // number for one who had, with nothing to say which was which.
+    const games = await weekTeamGames({ week: contest.week, seasonYear: contest.season_year }).catch(() => new Map());
+    const view = live ? slotStates({ rows: live.rows, gamesByTeam: games }) : null;
     return (
       <Shell>
         <section className="mod mod--entered">
@@ -258,19 +266,35 @@ export default async function WeeklyPage({ searchParams }) {
               {/* lineupRows walked SLOTS for order; the live rows walk the same
                   SLOTS, so the order law holds and points ride along. */}
               <div>
-                {(live?.rows ?? lineupRows(entry.lineup, board)).map((p) => (
-                  <div className="row" key={p.slot}>
-                    <span>
-                      <span className="slot-tag">{p.slot === 'FLEX2' ? 'FLEX' : p.slot}</span>{' '}
-                      {p.name ?? <span className="muted">empty</span>}
-                      {p.team && <span className="muted"> · {p.team}</span>}
-                    </span>
-                    <span className={`r${p.played ? '' : ' r--mut'}`}>
-                      {p.id == null ? '' : p.played ? p.points : '-'}
-                    </span>
-                  </div>
-                ))}
-                <div className="row"><span>Results</span><span className="r r--mut">Tuesday morning &middot; drop-worst applies at settle</span></div>
+                {view
+                  ? view.rows.map(({ row: p, state: st }) => (
+                    <div className="row" key={p.slot} data-game={st.kind}>
+                      <span>
+                        <span className="slot-tag">{p.slot === 'FLEX2' ? 'FLEX' : p.slot}</span>{' '}
+                        {p.name ?? <span className="muted">empty</span>}
+                        {p.team && <span className="muted"> · {p.team}</span>}
+                        {st.label && <span className="muted"> · {st.label}</span>}
+                      </span>
+                      {/* A NUMBER, OR THE KICKOFF - never a dash standing in
+                          for both "has not played" and "we do not know". */}
+                      <span className={`r${st.started ? '' : ' r--mut'}`}>
+                        {st.started ? st.points
+                          : st.kickoffAt ? <StandaloneTime iso={st.kickoffAt} />
+                            : st.kind === 'bye' ? 'bye' : ''}
+                      </span>
+                    </div>
+                  ))
+                  : lineupRows(entry.lineup, board).map((p) => (
+                    <div className="row" key={p.slot}>
+                      <span>
+                        <span className="slot-tag">{p.slot === 'FLEX2' ? 'FLEX' : p.slot}</span>{' '}
+                        {p.name ?? <span className="muted">empty</span>}
+                        {p.team && <span className="muted"> · {p.team}</span>}
+                      </span>
+                      <span className="r r--mut">-</span>
+                    </div>
+                  ))}
+                <div className="row"><span>Results</span><span className="r r--mut r--wrap">Tuesday morning &middot; drop-worst applies at settle</span></div>
               </div>
             </>
           ) : (
@@ -292,6 +316,43 @@ export default async function WeeklyPage({ searchParams }) {
   // header names the first kickoff until it passes, then the window close.
   const { beforeFirst } = lockPhase({ firstKickoff, locksAt: contest.locks_at });
   const reminderAt = new Date(new Date(firstKickoff ?? contest.locks_at).getTime() - 3_600_000);
+
+  // ---- THE LIVE LAYER ------------------------------------------------------
+  // ROLLING LOCK MEANS THE ROOM IS OPEN WHILE GAMES ARE ON. The contest's own
+  // locks_at is the LAST kickoff of the week, so from Thursday night to Monday
+  // night this branch is what a reader with a full lineup is looking at - and
+  // until now it showed six names and a lock time while four of them were
+  // playing. Same pair the Today tab's hero reads: liveEntryRows for the
+  // numbers, the week's slate for what each player's game is doing.
+  //
+  // NULL UNTIL SOMETHING HAS HAPPENED. Before the first kickoff there is no
+  // live layer at all and the room renders exactly as it always has.
+  const live = await (async () => {
+    if (!entry) return null;
+    const [{ scored, playedIds }, games] = await Promise.all([
+      liveScoredBoard(contest),
+      weekTeamGames({ week: contest.week, seasonYear: contest.season_year }),
+    ]);
+    const mine = liveEntryRows({ lineup: entry.lineup ?? {}, scored, playedIds });
+    const gamesByTeam = Object.fromEntries(games);
+    const view = slotStates({ rows: mine.rows, gamesByTeam: games });
+    if (view.startedCount === 0) return null;
+    // THE RANK IS THE ONE THE TODAY TAB ALREADY PRINTS for this same contest -
+    // an aggregate over entries, never a lineup. liveBoard selects no lineup
+    // column at all, which is the leak law's shape for this window.
+    const board2 = await liveBoard(contest, { limit: 100000 }).catch(() => []);
+    const me = board2.find((r) => r.userId === Number(userId)) ?? null;
+    return {
+      byId: Object.fromEntries(mine.rows.filter((r) => r.id != null)
+        .map((r) => [r.id, { points: r.points, played: r.played }])),
+      games: gamesByTeam,
+      total: view.total,
+      startedCount: view.startedCount,
+      slots: view.slots,
+      rank: me ? me.rank : null,
+      of: board2.length,
+    };
+  })().catch(() => null);
   return (
     <Shell>
       {/* THE HEADER AND PROGRESS (relay 2a item 6) - the mock's .hdr/.yr/
@@ -327,6 +388,7 @@ export default async function WeeklyPage({ searchParams }) {
         signedIn={userId != null}
         signinHref={shellSigninHref('/weekly', isShell)}
         hasHandle={hasHandle}
+        live={live}
       />
 
       {/* ONCE OPEN, THIS IS WHAT 'HOW IT WORKS' BECOMES (2a-polish item 1) -

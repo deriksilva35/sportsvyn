@@ -263,3 +263,30 @@
 .weekly .pr.wk-pending .nm small { color: var(--d-mut); text-decoration: underline dotted; text-underline-offset: 2px; }
 .weekly .pr .nm .wk-ko { display: block; margin-top: 2px; font-family: var(--d-mono); font-size: 10px; color: var(--d-mut); }
 .sbd-pr.sbd-kicked { opacity: .45; cursor: default; }
+
+/* ===================== THE WEEKLY ROOM'S LIVE LAYER =======================
+   Relay: live points on the Weekly and the Draft.
+
+   The room is open while the games are on - the contest's locks_at is the
+   week's LAST kickoff, so from Thursday night to Monday night a reader with a
+   full lineup is looking at this screen. These two rules are what it gained:
+   a number in the slot row where the Take/Change pill sits before kickoff,
+   and a total over the six. */
+.weekly .pr .wk-pts {
+  font-family: var(--d-mono); font-weight: 700; font-size: 15px;
+  font-variant-numeric: tabular-nums; white-space: nowrap; flex: 0 0 auto;
+}
+/* LIVE IS THE ONLY COLOURED STATE. A final number is settled and reads as
+   text; a running one is the thing that will be different in ten minutes. */
+.weekly .pr .wk-pts.live { color: var(--d-volt); }
+.weekly .pr[data-game="bye"] .wk-pts { color: var(--d-mut); }
+
+.weekly .wk-live {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--d-line);
+}
+.weekly .wk-live b {
+  font-family: var(--d-mono); font-weight: 700; font-size: 22px;
+  font-variant-numeric: tabular-nums; line-height: 1;
+}
+.weekly .wk-live span { font-size: 11px; color: var(--d-mut); }
