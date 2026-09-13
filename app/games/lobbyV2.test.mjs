@@ -58,10 +58,20 @@ test('--blue is the Daily card\'s surface and nothing else\'s (token v1.4)', () 
     const p = path.join(rel, e); if (e === 'node_modules' || e === '.next' || e.startsWith('.')) return [];
     return statSync(path.join(REPO, p)).isDirectory() ? walk(p) : /\.(css|js|mjs)$/.test(e) ? [p] : [];
   });
+  // THE RULE IS "THE DAILY CARD'S SURFACE", NOT "ONE FILE". The Today tab
+  // draws a Daily card too (TODAY TAB v2), and painting it a second blue
+  // would be the leak this test exists to stop - so its stylesheet is named
+  // here, deliberately, rather than the rule being loosened to a keyword.
+  // Any OTHER file reaching for the token still fails.
+  const ALLOWED = ['app/games/lobbyV2.css', 'app/globals.css', 'components/gridiron/todayV2.css'];
   const others = ['app', 'components', 'lib'].flatMap(walk)
-    .filter((f) => !['app/games/lobbyV2.css', 'app/globals.css'].includes(f) && !f.endsWith('.test.mjs'))
+    .filter((f) => !ALLOWED.includes(f) && !f.endsWith('.test.mjs'))
     .filter((f) => /--blue\b/.test(src(f)));
   assert.deepEqual(others, [], `--blue leaked into ${others}`);
+  // And on the Today tab it paints the Daily card and nothing else.
+  const tv = src('components/gridiron/todayV2.css');
+  assert.equal((tv.match(/var\(--blue/g) ?? []).length, 1, 'one use, the Daily surface');
+  assert.match(tv, /\.tv-daily \{[^}]*background: var\(--blue/);
   assert.doesNotMatch(page + comp, /--blue|#245BFF/);
 });
 
@@ -79,8 +89,16 @@ test('no em dashes on the page or its shapes; the three panes and the stranger b
   // R3/R4: the Tonight foot leads with the broadcaster; Read the game is football-only and omitted when empty
   assert.match(comp, /\[g\.network, spread\]\.filter\(Boolean\)\.join\(' · '\)/);
   const reader = strip(src('lib/games/lobbyV2.js'));
-  assert.match(reader, /FROM match_broadcasters b\s+WHERE b\.match_id = m\.id AND b\.country_code = 'US'/);
-  assert.match(reader, /JOIN leagues l ON l\.id = a\.league_id\s+WHERE a\.status = 'published' AND a\.type <> 'preview' AND l\.slug IN \('nfl', 'cfb'\)/);
+  // THE TONIGHT QUERY MOVED (TODAY TAB v2, Q3). It is liveElseNext() in
+  // lib/gridiron/todayReads.js now, shared with the Today tab, and the lobby
+  // calls it unscoped with the same LIMIT 2. The broadcaster lateral went
+  // with the query.
+  const shared = readFileSync(path.join(REPO, 'lib/gridiron/todayReads.js'), 'utf8');
+  assert.match(shared, /FROM match_broadcasters b\s+WHERE b\.match_id = m\.id AND b\.country_code = 'US'/);
+  assert.match(reader, /liveElseNext\(\{ uid, limit: 2 \}\)/, 'and the lobby asks for it unscoped');
+  // latestRead() moved to the shared module too (TODAY TAB v2, Q3); the rule
+  // that the read is football and never a preview did not.
+  assert.match(shared, /JOIN leagues l ON l\.id = a\.league_id\s+WHERE a\.status = 'published' AND a\.type <> 'preview' AND l\.slug IN \('nfl', 'cfb'\)/);
   assert.match(lobby, /\{v\.read && \(/, 'no article -> no section');
   // R6: the Practice module is gone from the lobby reader too
   assert.doesNotMatch(strip(src('lib/games/read.js')), /practice: \{ chips/);

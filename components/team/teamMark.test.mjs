@@ -40,7 +40,10 @@ test('Helmet.js is untouched by this relay, and TeamMark has only its named user
   const ALLOWED = ['components/games/LobbyV2.js', 'components/scores/ScoresV2.js', 'components/team/TeamMark.js',
     // "Teams you follow" on /account (TEAM FOLLOWING relay) - a list of teams
     // wants the same 24px mark the lobby and the Scores tab draw.
-    'components/account/FollowedTeams.js'];
+    'components/account/FollowedTeams.js',
+    // The Today tab's "Your teams" rows (TODAY TAB v2) - the same 24px-class
+    // mark, at 20px, beside a followed team's live or next game.
+    'components/gridiron/TodayV2.js'];
   assert.ok(users.includes('components/games/LobbyV2.js'), 'the lobby uses it');
   assert.ok(users.includes('components/scores/ScoresV2.js'), 'the Scores tab uses it (SCORES TAB v2)');
   assert.ok(!users.some((f) => !ALLOWED.includes(f)), `no other user: ${users}`);

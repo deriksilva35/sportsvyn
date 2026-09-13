@@ -1,0 +1,109 @@
+/* components/gridiron/todayV2.css - the Today tab, per
+   docs/design/mocks/today-tab-v0_1.html. Written on the global tokens; the
+   mock's :root block is a stand-in and none of its hexes are copied. */
+
+.tv { max-width: 640px; margin: 0 auto; padding: 14px 16px 28px; color: var(--paper); }
+.tv-eb { color: var(--volt); font: 700 10px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.tv-eb.q { color: var(--muted); }
+.tv-h1 { font: 800 32px var(--font-display); text-transform: uppercase; letter-spacing: -.02em; margin: 4px 0 0; line-height: 1; }
+
+.tv-sh { display: flex; align-items: baseline; justify-content: space-between; margin: 20px 0 8px; }
+.tv-sh h3 { font: 700 16px var(--font-display); text-transform: uppercase; letter-spacing: .02em; margin: 0; }
+.tv-sh a { color: var(--volt); font-size: 11px; font-weight: 600; text-decoration: none; }
+.tv .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.tv-card { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 13px; }
+
+/* the read strip */
+.tv-read {
+  display: block; background: var(--ink-2); border: 1px solid var(--line);
+  border-left: 3px solid var(--volt); border-radius: 12px; padding: 12px 13px;
+  margin-top: 12px; color: var(--paper); text-decoration: none;
+}
+.tv-read h4 { font: italic 400 17px var(--font-serif, Georgia, serif); line-height: 1.35; margin: 5px 0; text-transform: none; }
+.tv-read p { color: var(--muted); font-size: 12.5px; line-height: 1.45; margin: 0; }
+.tv-read .tv-go { color: var(--volt); font-size: 11px; font-weight: 600; display: inline-block; margin-top: 7px; }
+
+/* the Weekly hero */
+.tv-hero { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-top: 12px; }
+.tv-row1 { display: flex; align-items: flex-end; gap: 10px; }
+.tv-big { font: 800 42px var(--font-display); letter-spacing: -.03em; line-height: .95; }
+.tv-rk { margin-left: auto; text-align: right; }
+.tv-rk b { font: 700 19px var(--font-mono); display: block; }
+.tv-rk span { font: 600 9px var(--font-mono); letter-spacing: .1em; color: var(--quiet); text-transform: uppercase; }
+.tv-bar { height: 5px; border-radius: 99px; background: var(--ink-3); overflow: hidden; margin: 10px 0 2px; }
+.tv-bar i { display: block; height: 100%; background: var(--volt); }
+.tv-barc { display: flex; justify-content: space-between; font: 600 9px var(--font-mono); color: var(--quiet); letter-spacing: .08em; text-transform: uppercase; }
+.tv-pr { display: flex; align-items: center; gap: 9px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.tv-pr .pos { font: 700 9px var(--font-mono); color: var(--quiet); width: 30px; letter-spacing: .08em; flex: none; }
+.tv-pr .who { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tv-pr .who small { color: var(--muted); font: 500 10px var(--font-mono); margin-left: 5px; font-weight: 500; }
+.tv-pr b { margin-left: auto; font: 700 15px var(--font-mono); flex: none; }
+.tv-pr b.live { color: var(--volt); }
+.tv-pr .st { margin-left: auto; font: 600 10px var(--font-mono); color: var(--quiet); letter-spacing: .06em; flex: none; }
+.tv-pr.done .who { color: var(--muted); }
+.tv-unset { color: var(--quiet); font-style: italic; font-weight: 500; }
+
+/* the picks strip */
+.tv-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.tv-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 99px; padding: 5px 9px; font: 600 11px var(--font-mono); }
+.tv-chip b { color: var(--volt); font-weight: 700; }
+.tv-chip.good { border-color: var(--jade); }
+.tv-chip.good b { color: var(--jade); }
+.tv-chip.bad { border-color: var(--terra); }
+.tv-chip.bad b { color: var(--terra); }
+.tv-chip.q { color: var(--quiet); border-style: dashed; }
+.tv-foot { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font: 500 11px var(--font-mono); border-top: 1px solid var(--line); padding-top: 9px; }
+.tv-foot b { color: var(--paper); }
+
+/* the Daily */
+.tv-daily { display: flex; align-items: center; gap: 12px; background: var(--blue, #245BFF); border-radius: 12px; padding: 13px; margin-top: 12px; text-decoration: none; }
+.tv-dt { font: 800 20px var(--font-display); text-transform: uppercase; color: #fff; line-height: 1; }
+.tv-ds { color: #D8E2FF; font: 500 11px var(--font-mono); margin-top: 4px; }
+.tv-dgo { margin-left: auto; background: var(--volt); color: var(--ink); border-radius: 99px; padding: 10px 15px; font-weight: 700; font-size: 13px; flex: none; }
+
+/* your teams, and the signed-out kickoff list - one row shape */
+.tv-gm { display: flex; align-items: center; gap: 9px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13px; color: var(--paper); text-decoration: none; }
+.tv-gm:first-child { border-top: 0; }
+.tv-gm .ab { font: 700 11px var(--font-mono); color: var(--muted); min-width: 42px; flex: none; }
+.tv-gm .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tv-gm .sc { margin-left: auto; font: 700 15px var(--font-mono); flex: none; }
+.tv-gm .sc.line { font: 600 11px var(--font-mono); color: var(--muted); }
+.tv-gm .tag { font: 600 10px var(--font-mono); letter-spacing: .06em; margin-left: 8px; flex: none; }
+.tv-gm .tag.w { color: var(--jade); }
+.tv-gm .tag.l { color: var(--terra); }
+.tv-gm .tag.lv { color: var(--live); }
+
+/* the numbers */
+.tv-sw { display: flex; gap: 6px; margin: 10px 0 8px; }
+.tv-sw span, .tv-sw a { border: 1px solid var(--line); border-radius: 99px; padding: 5px 10px; font: 600 11px var(--font-mono); color: var(--muted); text-decoration: none; }
+.tv-sw span.on { background: var(--volt); color: var(--ink); border-color: var(--volt); }
+.tv-rail { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.tv-rail::-webkit-scrollbar { display: none; }
+.tv-rchip { flex: none; border: 1px solid var(--line); background: var(--ink-2); border-radius: 10px; padding: 7px 9px; text-align: center; min-width: 50px; text-decoration: none; }
+.tv-rchip .r { font: 700 12px var(--font-mono); color: var(--volt); }
+.tv-rchip .a { font: 700 11px var(--font-mono); color: var(--paper); }
+.tv-rchip .w { font: 500 9px var(--font-mono); color: var(--quiet); }
+/* A FOLLOWED TEAM IS OUTLINED, NOT FILLED - the same rule the league rail
+   follows, for the same reason: the rail is a ranking first. */
+.tv-rchip.mine { border-color: var(--volt); }
+.tv-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.tv-tbl { width: 100%; border-collapse: collapse; font: 600 12px var(--font-mono); }
+.tv-tbl td { text-align: right; padding: 5px 0; border-top: 1px solid var(--line); }
+.tv-tbl tr:first-child td { border-top: 0; }
+.tv-tbl td.l { text-align: left; color: var(--muted); }
+.tv-tbl td.v { color: var(--paper); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 0; }
+
+/* the wire */
+.tv-wire { display: flex; gap: 9px; padding: 9px 0; border-top: 1px solid var(--line); color: var(--paper); text-decoration: none; }
+.tv-wire:first-child { border-top: 0; }
+.tv-wire .ln { font: 700 9px var(--font-mono); color: var(--volt); letter-spacing: .1em; width: 42px; flex: none; padding-top: 2px; }
+.tv-wire .ln.q { color: var(--quiet); }
+.tv-wire p { font-size: 12.5px; line-height: 1.4; margin: 0; }
+.tv-wire small { display: block; color: var(--quiet); font: 500 10px var(--font-mono); margin-top: 2px; }
+
+/* nothing riding yet */
+.tv-empty { background: var(--ink-2); border: 1px dashed var(--line); border-radius: 12px; padding: 16px; text-align: center; margin-top: 12px; }
+.tv-empty h4 { font: 800 20px var(--font-display); text-transform: uppercase; margin: 0 0 5px; }
+.tv-empty p { color: var(--muted); font-size: 12.5px; line-height: 1.5; max-width: 30ch; margin: 0 auto 11px; }
+.tv-empty a { background: var(--volt); color: var(--ink); border-radius: 99px; padding: 10px 16px; font-weight: 700; font-size: 13px; display: inline-block; text-decoration: none; }
