@@ -28,7 +28,6 @@
  * tab - not an empty frame.
  */
 
-import Helmet from '@/components/team/Helmet';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getGamePage } from '@/lib/gridiron/gameDetail';
@@ -38,7 +37,6 @@ import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/lib/gridiron/driveStrip';
 import { currentApRanks } from '@/lib/cfb/rankings';
-import RankBadge from '@/components/gridiron/RankBadge';
 import { getTeamRecordChip } from '@/lib/standings/read';
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
@@ -46,6 +44,9 @@ import GameTabs from '@/components/gridiron/GameTabs';
 import AlertBell from '@/components/alerts/AlertBell';
 import { auth } from '@/auth';
 import { orderFor } from '@/lib/gridiron/teamOrder';
+import GameTeamRow from '@/components/gridiron/GameTeamRow';
+import { getFollowedTeamIds } from '@/lib/follows';
+import { resolveShellMode } from '@/lib/shell/shell';
 import { parseGameTab } from '@/lib/gridiron/gameTabsNav';
 import { cfbBoxScoreFor, boxScoreLabel } from '@/lib/cfb/boxScore';
 import { propsSlate } from '@/lib/market/reads';
@@ -94,6 +95,13 @@ export default async function CfbGamePage({ params, searchParams }) {
   // FOR THE ALERT BELL ONLY. The page itself is open to everyone; this decides
   // whether the sheet shows toggles or a sign-in.
   const viewerId = (await auth().catch(() => null))?.user?.id ?? null;
+  // The header's follow stars: one read for both sides, empty when signed
+  // out, and caught - a follow lookup must never cost a game page.
+  const [followedIds, isShell] = await Promise.all([
+    viewerId == null ? Promise.resolve([]) : getFollowedTeamIds(viewerId).catch(() => []),
+    resolveShellMode().catch(() => false),
+  ]);
+  const followed = new Set(followedIds);
   // The mirror of the NFL route's guard, pointing the other way. getGamePage
   // resolves both gridiron leagues, so without this an NFL slug would render
   // here too and the two routes would both answer for the same game.
@@ -271,11 +279,13 @@ export default async function CfbGamePage({ params, searchParams }) {
           {orderFor(game.leagueSlug).map((side) => {
             const t = side === 'home' ? game.home : game.away;
             return (
-              <TeamRow
+              <GameTeamRow
                 key={side} record={side === 'home' ? homeRecord : awayRecord} t={t}
                 score={side === 'home' ? game.homeScore : game.awayScore}
                 loser={winner === (side === 'home' ? 'away' : 'home')} show={final || live}
                 rank={apRanks.get(t?.id) ?? null}
+                signedIn={viewerId != null} isShell={isShell}
+                following={followed.has(t?.id)}
               />
             );
           })}
@@ -371,33 +381,17 @@ export default async function CfbGamePage({ params, searchParams }) {
   );
 }
 
-// TeamRow and PreGameFacts are deliberately duplicated from the NFL route
-// rather than extracted: they are markup, the sibling law says siblings own
-// their markup, and hoisting them would mean editing the NFL page in a relay
-// whose brief was explicitly not to touch it. If a third gridiron surface ever
-// wants them, that is the moment to extract - three callers is a component,
-// two is a coincidence.
-function TeamRow({ t, score, loser, show, rank, record = null }) {
-  // ORDER IS LAYOUT HERE, so it is written once and not rearranged
-  // casually: badge, abbreviation, name, record, then the score pushed to
-  // the right edge by margin-left:auto. Every part but the name is
-  // flex:none; the name is the only child that gives way.
-  return (
-    <div className={`gg-teamrow${loser ? ' loser' : ''}`}>
-      <RankBadge rank={rank} size="big" />
-      {/* helmet before the abbreviation, facing the score; none without colors */}
-      <Helmet primary={t?.colors?.primary} secondary={t?.colors?.secondary} facing="right" size={28} className="gg-hm" />
-      <span className="abbr">{t?.abbreviation ?? ''}</span>
-      <span className="tname">{t?.name ?? 'TBD'}</span>
-      {/* A chip may only claim knowledge. Records carry no kickoff, so this
-          renders pre-game, live and final alike - unlike the market strip. */}
-      {record ? <span className="gg-rec">{record}</span> : null}
-      {/* No score column before kickoff. A 0 next to a team that has not played
-          is not a low score, it is a wrong one. */}
-      <span className="score">{show ? score : ''}</span>
-    </div>
-  );
-}
+// PreGameFacts is still deliberately duplicated from the NFL route: it is
+// markup, the sibling law says siblings own their markup, and two callers is
+// a coincidence.
+//
+// TeamRow IS NOT, ANY MORE. Its own note here named the trigger - "if a third
+// gridiron surface ever wants them, that is the moment to extract - three
+// callers is a component, two is a coincidence" - and the follow star was the
+// third want. It now lives in components/gridiron/GameTeamRow.js, which both
+// game pages render. The NFL copy was identical to this one but for the rank
+// badge, and the badge renders null on a null rank, so the extract needed no
+// league branch.
 
 function GameFacts({ game, final }) {
   const place = [game.venue, game.venueCity].filter(Boolean).join(', ');

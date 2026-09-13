@@ -30,12 +30,17 @@ test('28 -> the existing Helmet, byte for byte', () => {
   assert.match(via, /#CC0000/); assert.match(via, /#FFFFFF/);
 });
 
-test('Helmet.js is untouched by this relay, and the lobby is the only TeamMark user', async () => {
+test('Helmet.js is untouched by this relay, and TeamMark has only its named users', async () => {
   const src = readFileSync(new URL('./Helmet.js', import.meta.url), 'utf8');
   assert.doesNotMatch(src, /TeamMark/);
   const { execSync } = await import('node:child_process');
   const users = execSync("grep -rl \"components/team/TeamMark\" --include=*.js app components lib | grep -v test || true", { cwd: new URL('../../', import.meta.url).pathname }).toString().trim().split('\n').filter(Boolean);
-  const ALLOWED = ['components/games/LobbyV2.js', 'components/scores/ScoresV2.js', 'components/team/TeamMark.js'];
+  // The allowlist is deliberate, not a snapshot: a NEW user of the mark is a
+  // design decision and has to be added here on purpose.
+  const ALLOWED = ['components/games/LobbyV2.js', 'components/scores/ScoresV2.js', 'components/team/TeamMark.js',
+    // "Teams you follow" on /account (TEAM FOLLOWING relay) - a list of teams
+    // wants the same 24px mark the lobby and the Scores tab draw.
+    'components/account/FollowedTeams.js'];
   assert.ok(users.includes('components/games/LobbyV2.js'), 'the lobby uses it');
   assert.ok(users.includes('components/scores/ScoresV2.js'), 'the Scores tab uses it (SCORES TAB v2)');
   assert.ok(!users.some((f) => !ALLOWED.includes(f)), `no other user: ${users}`);

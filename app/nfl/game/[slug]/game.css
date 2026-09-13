@@ -101,6 +101,20 @@
 }
 .gg-teamrow.loser .tname, .gg-teamrow.loser .score { color: var(--muted); }
 
+/* THE FOLLOW STAR IN A GAME HEADER is the same component and the same sheet
+   (components/follow-star.css); only the label is dropped, because a row that
+   already carries a rank, a helmet, a name, a record and a score has no width
+   for the word "Following". The 44px touch target the component promises is
+   kept - the button goes square rather than short - and the button's
+   aria-label, which it has always carried, is the accessible name once the
+   visible label is gone. */
+.gg-teamrow .gg-follow { flex: none; align-self: center; }
+.gg-teamrow .gg-follow .follow-star-btn { padding: 10px; gap: 0; }
+.gg-teamrow .gg-follow .follow-star-label {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
 .gg-headfoot {
   display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule-dim);

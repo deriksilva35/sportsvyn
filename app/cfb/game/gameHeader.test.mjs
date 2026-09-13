@@ -90,28 +90,29 @@ test('the box math is written down, with the worst case named', () => {
 });
 
 test('MARKUP ORDER IS LAYOUT ORDER, and both codes agree on it', () => {
-  const row = (s) => {
-    const i = s.indexOf('function TeamRow');
-    return s.slice(i, s.indexOf('\n}', i));
-  };
-  const cfb = row(CFB);
-  // badge, abbr, name, record, score - in that source order.
-  const order = ['<RankBadge', 'className="abbr"', 'className="tname"', 'className="gg-rec"', 'className="score"'];
+  // THE ROW MOVED (TEAM FOLLOWING relay, R3). It was two copies, one per game
+  // page, and the CFB copy's own note named three callers as the moment to
+  // extract; the follow star was the third. Both pages now render
+  // components/gridiron/GameTeamRow.js, so the order is asserted once, there.
+  const rowSrc = readFileSync(new URL('../../../components/gridiron/GameTeamRow.js', import.meta.url), 'utf8');
+  const i = rowSrc.indexOf('export default function GameTeamRow');
+  const row = rowSrc.slice(i);
+  // badge, abbr, name, record, star, score - in that source order.
+  const order = ['<RankBadge', 'className="abbr"', 'className="tname"', 'className="gg-rec"',
+    'className="gg-follow"', 'className="score"'];
   let at = -1;
   for (const m of order) {
-    const i = cfb.indexOf(m);
-    assert.ok(i > at, `${m} is out of order in the CFB header row`);
-    at = i;
+    const j = row.indexOf(m);
+    assert.ok(j > at, `${m} is out of order in the shared header row`);
+    at = j;
   }
-  // The NFL row is the same minus the badge it has no poll for.
-  const nfl = row(NFL);
-  assert.equal(nfl.includes('<RankBadge'), false);
-  let bt = -1;
-  for (const m of ['className="abbr"', 'className="tname"', 'className="gg-rec"', 'className="score"']) {
-    const i = nfl.indexOf(m);
-    assert.ok(i > bt, `${m} is out of order in the NFL header row`);
-    bt = i;
-  }
+  // Neither page kept a copy to drift.
+  assert.equal(/function TeamRow\(/.test(CFB), false, 'the CFB page kept no local row');
+  assert.equal(/function TeamRow\(/.test(NFL), false, 'nor the NFL page');
+  // The badge is the one thing the two rows never shared: CFB passes a rank,
+  // the NFL page has no poll to fill one and passes none.
+  assert.match(CFB, /rank=\{apRanks\.get\(t\?\.id\) \?\? null\}/);
+  assert.equal(/rank=\{/.test(NFL), false);
 });
 
 test('the winner law is the SCOREBOARD\'s: loser muted, winner left alone', () => {

@@ -28,6 +28,8 @@
 import { useState, useTransition } from 'react';
 import { usePathname } from 'next/navigation';
 import { followTeam, unfollowTeam } from '@/app/actions/follows';
+import { shellSigninHref } from '@/lib/shell/signinHref';
+import '@/components/follow-star.css';
 
 function StarIcon({ filled }) {
   // The "filled" variant uses fill + stroke both at currentColor; the
@@ -53,18 +55,24 @@ function StarIcon({ filled }) {
   );
 }
 
-export default function FollowStar({ teamId, teamName, isAuthed, initialFollowing }) {
+export default function FollowStar({ teamId, teamName, isAuthed, initialFollowing, isShell = false }) {
   const [following, setFollowing] = useState(Boolean(initialFollowing));
   const [promptOpen, setPromptOpen] = useState(false);
   const [, startTransition] = useTransition();
   const pathname = usePathname();
 
-  // Same shape as SiteHeader's signinHref — preserve where the user
-  // is so they come back here after the magic-link click.
-  const signinHref =
-    pathname && !pathname.startsWith('/signin')
-      ? `/signin?callbackUrl=${encodeURIComponent(pathname)}`
-      : '/signin';
+  // THE SHELL MARKER HAS TO RIDE ALONG (R4). This built the sign-in URL by
+  // hand, which is idiom (2) in this codebase and carries no shell marker -
+  // so a signed-out tap inside the native container sent the reader through
+  // a web-shaped sign-in and every Apple signup from here was labelled
+  // apple:web. shellSigninHref() is the one builder that puts the marker
+  // both on /signin and inside the callbackUrl, which is what survives
+  // Apple's cross-site form_post dropping the SameSite=Lax cookie.
+  //
+  // isShell arrives as a prop because this is a client component and cannot
+  // read the cookie; every caller resolves it server-side already.
+  const dest = pathname && !pathname.startsWith('/signin') ? pathname : '/';
+  const signinHref = shellSigninHref(dest, isShell);
 
   function onClick() {
     if (!isAuthed) {

@@ -20,6 +20,10 @@ const src = (rel) => readFileSync(path.join(REPO, rel), 'utf8');
 const stripComments = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
 const page = stripComments(src('app/nfl/game/[slug]/page.js'));
+// The header's team row is shared by both game pages since the TEAM FOLLOWING
+// relay; assertions about its MARKUP read it there, assertions about what the
+// page decides still read the page.
+const gameRow = stripComments(src('components/gridiron/GameTeamRow.js'));
 const tabs = stripComments(src('components/gridiron/GameTabs.js'));
 const detail = stripComments(src('lib/gridiron/gameDetail.js'));
 const brief = stripComments(src('lib/gridiron/gameBrief.js'));
@@ -64,8 +68,11 @@ test('panels are keyed, not positional', () => {
 });
 
 test('the page never renders a score for a game that has not been played', () => {
+  // The page still decides (show={final || live}); the row that obeys it moved
+  // to components/gridiron/GameTeamRow.js when the two copies were extracted
+  // (TEAM FOLLOWING relay, R3).
   assert.match(page, /show=\{final \|\| live\}/);
-  assert.match(page, /\{show \? score : ''\}/);
+  assert.match(gameRow, /\{show \? score : ''\}/);
 });
 
 test('THE RECORD CHIP IS REGULAR-SEASON OR NOTHING', () => {
@@ -86,7 +93,9 @@ test('THE RECORD CHIP IS REGULAR-SEASON OR NOTHING', () => {
   assert.ok(!/team_records/.test(page), 'the page must not query team_records itself');
   assert.ok(!/formatRecord/.test(page), 'the page must not format a record inline');
   // And the chip renders only when there is one - never a dash, never 0-0.
-  assert.match(page, /\{record \? <span className="gg-rec">/);
+  // The render moved with the row; the page still sources the value.
+  assert.match(gameRow, /\{record \? <span className="gg-rec">/);
+  assert.match(page, /record=\{side === 'home' \? homeRecord : awayRecord\}/);
 });
 
 // ---------------------------------------------------------------------------

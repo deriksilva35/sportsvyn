@@ -23,7 +23,7 @@ function MovementChip({ movement }) {
   return <span className="team-rank-mvmt down">▼ Down {Math.abs(movement)}</span>;
 }
 
-export default function TeamHero({ team, isAuthed = false, initialFollowing = false }) {
+export default function TeamHero({ team, isAuthed = false, initialFollowing = false, isShell = false }) {
   return (
     <section className="team-hero">
       <div className="team-hero-left">
@@ -43,6 +43,7 @@ export default function TeamHero({ team, isAuthed = false, initialFollowing = fa
               teamName={team.name}
               isAuthed={isAuthed}
               initialFollowing={initialFollowing}
+              isShell={isShell}
             />
           </div>
         </div>
