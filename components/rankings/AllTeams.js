@@ -71,10 +71,10 @@ export default function AllTeams({ league, label, teams = [], initialFollowed = 
     const on = followed.has(t.id);
     return (
       <div className="rk-row" key={t.id} data-team-id={t.id}>
-        <span className="rk">{t.apRank ?? '–'}</span>
+        <span className="rnk-n">{t.apRank ?? '–'}</span>
         <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={t.abbreviation}
           size={22} title={t.fullName ?? t.name} className={on ? 'rk-mark fol' : 'rk-mark'} />
-        <span className="nm">{t.name}<small>{[t.group, t.record].filter(Boolean).join(' · ')}</small></span>
+        <span className="rnk-nm">{t.name}<small>{[t.group, t.record].filter(Boolean).join(' · ')}</small></span>
         {signedIn ? (
           <button type="button" className={`rk-fol${on ? ' on' : ''}`} aria-pressed={on}
             aria-label={`${on ? 'Unfollow' : 'Follow'} ${t.fullName ?? t.name}`} onClick={() => toggle(t)}>
@@ -88,7 +88,7 @@ export default function AllTeams({ league, label, teams = [], initialFollowed = 
   };
 
   return (
-    <div className="rk" data-surface="ink" data-list="all-teams">
+    <div className="rnk" data-surface="ink" data-list="all-teams">
       <div className="rk-crumb"><a href={`/rankings?league=${league}`}>← Rankings · {label}</a></div>
       <h1 className="rk-h1">All {teams.length}</h1>
       <div className="rk-search">

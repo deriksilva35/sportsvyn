@@ -14,7 +14,7 @@ export default function RankRow({
 }) {
   return (
     <div className={`rk-row${you ? ' you' : ''}`} data-you={you ? '1' : undefined}>
-      <span className="rk">{rank ?? '–'}</span>
+      <span className="rnk-n">{rank ?? '–'}</span>
       {team ? (
         <TeamMark
           primary={team.colors?.primary} secondary={team.colors?.secondary}
@@ -22,13 +22,13 @@ export default function RankRow({
           className={followed ? 'rk-mark fol' : 'rk-mark'}
         />
       ) : null}
-      <span className="nm">
+      <span className="rnk-nm">
         {name}
         {you ? <b className="rk-you">YOU</b> : null}
         {sub ? <small>{sub}</small> : null}
       </span>
-      {second != null ? <span className="v">{second}</span> : null}
-      {value != null ? <span className={`v${you ? ' mu' : ''}`}>{value}</span> : null}
+      {second != null ? <span className="rnk-v">{second}</span> : null}
+      {value != null ? <span className={`rnk-v${you ? ' mu' : ''}`}>{value}</span> : null}
       {right}
     </div>
   );

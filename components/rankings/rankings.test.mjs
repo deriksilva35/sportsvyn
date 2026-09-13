@@ -134,7 +134,7 @@ test('PEOPLE: the you row appears for a user with any entry, with the distance',
   assert.ok(you, 'the you row renders');
   assert.match(h, /<b class="rk-you">YOU<\/b>/);
   assert.match(h, /ranks after 1 more/);
-  assert.match(h, /<span class="rk">–<\/span>/, 'an unranked you row shows a dash');
+  assert.match(h, /<span class="rnk-n">–<\/span>/, 'an unranked you row shows a dash');
   // The seat grid: twelve cells, dashes, the caller's outlined.
   assert.equal((h.match(/data-seat="\d+"/g) ?? []).length, 12);
   assert.match(h, /class="you none" data-seat="7"/);
@@ -145,6 +145,10 @@ test('THE YOU ROW IS ONE COMPONENT, used on every view', () => {
   assert.match(s, /you \? ' you' : ''/);
   assert.match(s, /<b className="rk-you">YOU<\/b>/);
   assert.match(s, /rank \?\? '–'/, 'the rank column is a dash when it is unknown');
+  // AND IT IS .rnk-n, NEVER .rk - gridiron.css owns a bare .rk (the AP badge)
+  // and every page under /rankings loads it.
+  assert.match(s, /className="rnk-n"/);
+  assert.equal(/className="rk"/.test(s), false);
   const css = src('components/rankings/rankings.css');
   assert.match(css, /\.rk-row\.you \{[^}]*border-left: 3px solid var\(--volt\)/);
   // Nothing else draws a you row.
@@ -168,8 +172,8 @@ test('the list groups by conference, ranks by AP where one exists, and offers Fo
   assert.equal((h.match(/class="rk-fol/g) ?? []).length, 4, 'a button on every row');
   assert.match(h, /<button type="button" class="rk-fol on" aria-pressed="true"/, 'a followed team reads Following');
   // R2: AP rank left, dash where there is none.
-  assert.match(h, /<span class="rk">9<\/span>/);
-  assert.match(h, /<span class="rk">–<\/span>/);
+  assert.match(h, /<span class="rnk-n">9<\/span>/);
+  assert.match(h, /<span class="rnk-n">–<\/span>/);
 });
 
 test('signed out, the button is a sign-in link and never a button', () => {
@@ -262,4 +266,27 @@ test('a followed group still beats the default', () => {
   const s = src('lib/rankings/reads.js');
   const fn = s.slice(s.indexOf('export async function groupTable'));
   assert.ok(fn.indexOf('group ??') < fn.indexOf('fromTop ??'), 'the follow is tried first');
+});
+
+test('NO RANKINGS CLASS COLLIDES WITH gridiron.css', () => {
+  // THE BUG THIS EXISTS FOR. The page container and the rank column were both
+  // `.rk`, and gridiron.css - loaded by every route under /rankings - already
+  // owns a bare `.rk`: the AP rank badge, volt fill, black text,
+  // display:inline-flex. The whole screen rendered as one giant volt badge
+  // with the layout collapsed inside it.
+  // Comments are stripped first: the note explaining WHY .rk is avoided
+  // names the class, and matching that would fail the file for saying so.
+  const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, '');
+  const classesIn = (css) => new Set(
+    [...strip(css).matchAll(/(?:^|[\s,{}>+~])\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]),
+  );
+  const mine = classesIn(src('components/rankings/rankings.css'));
+  const gridiron = classesIn(src('components/gridiron/gridiron.css'));
+  const clash = [...mine].filter((c) => gridiron.has(c));
+  assert.deepEqual(clash, [], `rankings.css reuses gridiron.css selectors: ${clash}`);
+  // And the two that did collide are gone from the markup for good.
+  for (const f of ['components/rankings/RankRow.js', 'components/rankings/Rankings.js',
+    'components/rankings/AllTeams.js']) {
+    assert.equal(/className="rk"/.test(src(f)), false, `${f} still uses the colliding bare .rk`);
+  }
 });
