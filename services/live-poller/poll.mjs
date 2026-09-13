@@ -10,6 +10,8 @@ import { emit } from '../../lib/wire/emit.js';
 import { transitionsFor } from '../../lib/push/transitions.js';
 import { dispatch } from '../../lib/push/dispatch.js';
 import { scoreKindLabel } from '../../lib/push/payload.js';
+import { onScore, onTick, flush as flushFold } from '../../lib/push/scoreFold.js';
+import { scoringPlayFor } from '../../lib/push/scoringPlayRead.js';
 
 const CFBD = 'https://apinext.collegefootballdata.com';
 const BDL = 'https://api.balldontlie.io';
@@ -21,6 +23,12 @@ const BDL = 'https://api.balldontlie.io';
 // restart) - a small, honest, documented edge, not a reason to persist this
 // to the database for a courtesy notification's own copy.
 const lastScoreKind = new Map();
+// HELD TOUCHDOWNS, keyed `${matchId}:${team}`. In-process and deliberately so:
+// a hold is at most FOLD_WINDOW_MS old, and a restart inside that window loses
+// nothing a reader would notice - the six went unsent, and the next delta on
+// that team sends the current scoreline anyway. Persisting it would be a
+// durable store for ninety seconds of state.
+const pendingScore = new Map();
 
 // ---------------------------------------------------------------------------
 // Fetchers. ONE CALL PER POLL PER LEAGUE, which is the number the whole quota
@@ -293,31 +301,75 @@ export async function pollOnce(sql, {
           // no log line, no error, and no push_sends row - independent of
           // and on top of the audienceFor() bug fixed alongside this one.
           const match = matchForPush(m, after);
-          // THE SCORE-KIND PREFIX. Exactly one side's delta must be nonzero -
-          // two teams scoring in the same 30s poll has no single honest kind
-          // to name, so it gets none. priorWasTouchdown reads THIS team's own
-          // last remembered kind, which is also updated here, so a later
-          // extra point or two-point try on the same team sees this one.
-          let scoreKind = null;
-          if (t.event === 'score') {
-            const { homeDelta, awayDelta } = t.state;
-            const team = homeDelta && !awayDelta ? 'home' : (!homeDelta && awayDelta ? 'away' : null);
-            const delta = team === 'home' ? homeDelta : team === 'away' ? awayDelta : null;
-            if (team && delta) {
-              const key = `${m.id}:${team}`;
-              const teamAbbr = team === 'home' ? m.home_abbr : m.away_abbr;
-              // .endsWith, not ===, because the stored value is the full
-              // "TEAM touchdown" prefix, not the bare kind word.
-              const priorWasTouchdown = Boolean(lastScoreKind.get(key)?.endsWith('touchdown'));
-              scoreKind = scoreKindLabel(delta, { priorWasTouchdown, teamAbbr });
-              if (scoreKind) lastScoreKind.set(key, scoreKind);
+          // ONE TOUCHDOWN, ONE NOTIFICATION (lib/push/scoreFold.js). A score
+          // may HOLD here rather than send - for at most ninety seconds, and
+          // only a bare six with no play row to read. Everything else, and
+          // every other event, goes straight through.
+          //
+          // ANYTHING THAT IS NOT A SCORE FLUSHES THE HOLD FIRST. A reader must
+          // never be told the game ended and then told about a touchdown from
+          // before the whistle.
+          const sendOne = async (event, state) => {
+            const r = await dispatch(sql, { match, event, state, log });
+            out.pushes.push({ event, sent: r.sent, skipped: r.skipped, failed: r.failed });
+            if (r.authFailure) out.pushAuthFailure = true;
+          };
+
+          if (t.event !== 'score') {
+            for (const side of ['home', 'away']) {
+              const k = `${m.id}:${side}`;
+              const { pending: p2, emit: held } = flushFold(pendingScore.get(k) ?? null);
+              if (p2) pendingScore.set(k, p2); else pendingScore.delete(k);
+              for (const e of held) {
+                const abbr = side === 'home' ? m.home_abbr : m.away_abbr;
+                await sendOne('score', {
+                  ...e.state,
+                  scoreKind: e.kind ? `${abbr} ${e.kind}` : null,
+                  scorer: e.scorer ?? null,
+                });
+              }
             }
+            await sendOne(t.event, { ...t.state, scoreKind: null, scorer: null });
+            continue;
           }
-          // the poller's logger rides in, so dispatch's summary line
-          // (audience / eligible / sent / skipped) reaches the journal
-          const r = await dispatch(sql, { match, event: t.event, state: { ...t.state, scoreKind }, log });
-          out.pushes.push({ event: t.event, sent: r.sent, skipped: r.skipped, failed: r.failed });
-          if (r.authFailure) out.pushAuthFailure = true;
+
+          const { homeDelta, awayDelta } = t.state;
+          const team = homeDelta && !awayDelta ? 'home' : (!homeDelta && awayDelta ? 'away' : null);
+          const delta = team === 'home' ? homeDelta : team === 'away' ? awayDelta : null;
+          if (!team || !delta) {
+            // TWO TEAMS IN ONE POLL HAS NO SINGLE HONEST KIND TO NAME, and no
+            // single team to fold against either. It goes as it always did.
+            await sendOne('score', { ...t.state, scoreKind: null, scorer: null });
+            continue;
+          }
+
+          const key = `${m.id}:${team}`;
+          const teamAbbr = team === 'home' ? m.home_abbr : m.away_abbr;
+          // THE ENRICHMENT, NEVER THE DEPENDENCY. A null here - the play row
+          // has not landed, or the lookup threw - costs the scorer's name and
+          // nothing else.
+          const play = await scoringPlayFor(sql, m.id, { homeScore: after.home_score, awayScore: after.away_score });
+          const { pending: nextPending, emit } = onScore(
+            pendingScore.get(key) ?? null,
+            { delta, state: t.state, play, now: Date.now() },
+          );
+          // THE MATCH RIDES THE HOLD. The timeout sweep below runs outside
+          // this loop and has no other way back to the row it must send about.
+          if (nextPending) pendingScore.set(key, { ...nextPending, match, teamAbbr });
+          else pendingScore.delete(key);
+          for (const e of emit) {
+            // .endsWith, not ===, because the stored value is the full
+            // "TEAM touchdown" prefix, not the bare kind word.
+            const priorWasTouchdown = Boolean(lastScoreKind.get(key)?.endsWith('touchdown'));
+            // THE PLAY WINS WHERE IT SPOKE; the delta keeps the floor. The
+            // fallback is only ever reached when no play row named the kind,
+            // which is also the only path that leaves e.folded false.
+            const scoreKind = e.kind
+              ? `${teamAbbr} ${e.kind}`
+              : scoreKindLabel(delta, { priorWasTouchdown, teamAbbr });
+            if (scoreKind) lastScoreKind.set(key, scoreKind);
+            await sendOne('score', { ...e.state, scoreKind, scorer: e.scorer ?? null });
+          }
         } catch (e) { out.pushErrors.push(String(e?.message ?? e).slice(0, 120)); }
       }
     }
@@ -338,6 +390,31 @@ export async function pollOnce(sql, {
         seen_at: new Date().toISOString(),
       } }, upd.liveState);
       if (ev) events.push(ev);
+    }
+  }
+
+  // ---- THE HOLD SWEEP ------------------------------------------------------
+  // A touchdown held for its try goes out on its own once the window closes -
+  // which is also exactly what a MISSED extra point looks like from here, and
+  // a six is the right number for one. This runs every poll, including polls
+  // where the held match did not change, because otherwise a game that goes
+  // quiet after a touchdown would sit on it until the next score.
+  if (!dryRun && push) {
+    for (const [k, p] of [...pendingScore]) {
+      const { pending: still, emit: due } = onTick(p, { now: Date.now() });
+      if (still) pendingScore.set(k, still); else pendingScore.delete(k);
+      for (const e of due) {
+        try {
+          const r = await dispatch(sql, {
+            match: p.match,
+            event: 'score',
+            state: { ...e.state, scoreKind: e.kind ? `${p.teamAbbr} ${e.kind}` : null, scorer: e.scorer ?? null },
+            log,
+          });
+          out.pushes.push({ event: 'score', sent: r.sent, skipped: r.skipped, failed: r.failed, foldTimeout: true });
+          if (r.authFailure) out.pushAuthFailure = true;
+        } catch (e2) { out.pushErrors.push(String(e2?.message ?? e2).slice(0, 120)); }
+      }
     }
   }
 
