@@ -175,6 +175,8 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     'app/scores/scoresV2.css': 12,
     // The Today tab v2 (TODAY TAB v2 relay), on the global tokens.
     'components/gridiron/todayV2.css': 18,
+    // The Rankings tab v2 (RANKINGS TAB v2 relay), on the global tokens.
+    'components/rankings/rankings.css': 17,
   };
   const found = {};
   for (const f of CSS) {
@@ -184,8 +186,8 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   }
   assert.deepEqual(found, EXPECTED,
     'a new bare call site is fine now that the tokens are global - update the count deliberately');
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 90,
-    '18 were broken before the promotion; 72 were written after it');
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 107,
+    '18 were broken before the promotion; 89 were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.
   for (const t of ['--ink-2', '--ink-3', '--line']) {

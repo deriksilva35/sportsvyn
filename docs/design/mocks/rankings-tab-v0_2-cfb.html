@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sportsvyn - Rankings tab v0.2 - CFB</title>
+<!-- The ruled mock for RANKINGS TAB v2 (relay of 13 Sep 2026), CFB teams,
+     the All 138 list and CFB players, saved verbatim from the relay message.
+     Fonts and hexes here are stand-ins; the build uses the site's tokens. -->
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,900&family=Saira+Condensed:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--paper:#F5F5F2;--mute:#8A8A85;--jade:#2A8A4F;--terra:#B8410F;--red:#E63946}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#050505;color:var(--paper);font-family:'JetBrains Mono',monospace;display:flex;justify-content:center;gap:28px;padding:28px;flex-wrap:wrap}
+.phone{width:390px;background:var(--ink);border:1px solid var(--line);border-radius:36px;overflow:hidden;position:relative;height:844px}
+.screen{height:770px;overflow:auto;padding:14px 14px 20px}
+.screen::-webkit-scrollbar{display:none}
+.cap{width:390px;color:var(--mute);font:600 11px 'Saira Condensed';letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.eb{font:600 10px 'Saira Condensed';letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+h1{font:italic 900 30px/1 'Saira';letter-spacing:-.04em;margin:4px 0 12px}
+.pills{display:flex;gap:6px;margin-bottom:12px;overflow:auto}
+.pill{font:600 12px 'Saira Condensed';letter-spacing:.08em;text-transform:uppercase;padding:7px 12px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line);color:var(--paper);white-space:nowrap}
+.pill.on{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+.seg{display:flex;background:var(--ink-3);border:1px solid var(--line);border-radius:99px;padding:3px;margin-bottom:12px}
+.seg span{flex:1;text-align:center;font:600 11px 'Saira Condensed';letter-spacing:.10em;text-transform:uppercase;padding:7px 0;border-radius:99px;color:var(--mute)}
+.seg span.on{background:var(--ink);color:var(--paper)}
+.mod{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.mod .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.mod .hd .eb{color:var(--volt)}
+.mod .hd .sub{font:600 10px 'Saira Condensed';letter-spacing:.10em;text-transform:uppercase;color:var(--mute)}
+.row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.row:last-child{border-bottom:0}
+.row .rk{width:22px;color:var(--mute);font-weight:700;font-variant-numeric:tabular-nums;font-size:12px}
+.row .nm{flex:1;font:700 13px 'Saira Condensed';letter-spacing:.02em}
+.row .nm small{display:block;font:500 10px 'JetBrains Mono';color:var(--mute);letter-spacing:0;margin-top:2px}
+.row .v{font-weight:700;font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.row .v.mu{color:var(--mute);font-weight:500}
+.row .mv{width:30px;text-align:right;font-size:11px;font-weight:700}
+.up{color:var(--jade)}.dn{color:var(--terra)}.mu{color:var(--mute)}.volt{color:var(--volt)}
+.new{font:600 9px 'Saira Condensed';letter-spacing:.12em;color:var(--jade);border:1px solid var(--jade);border-radius:99px;padding:1px 5px}
+.tm{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);flex:none;position:relative;overflow:hidden;background:var(--c2)}
+.tm::before{content:'';position:absolute;inset:0;background:var(--c1);clip-path:polygon(0 0,100% 0,0 100%)}
+.tm.fol{box-shadow:0 0 0 2px var(--ink-2),0 0 0 3px var(--volt)}
+.ghost{display:block;text-align:center;font:600 12px 'Saira Condensed';letter-spacing:.10em;text-transform:uppercase;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--ink-3);color:var(--paper);margin-top:10px;text-decoration:none}
+.tabs{position:absolute;bottom:0;left:0;right:0;height:74px;background:#0D0D0D;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;padding-bottom:12px}
+.tab{text-align:center;font:600 9px 'Saira Condensed';letter-spacing:.10em;color:var(--mute)}
+.tab i{display:block;font-style:normal;font-size:18px;margin-bottom:3px}
+.tab.on{color:var(--volt)}
+.note{font-size:11px;color:var(--mute);margin-top:8px;line-height:1.5}
+.cols{display:flex;gap:10px;font:600 9px 'Saira Condensed';letter-spacing:.12em;color:var(--mute);padding:0 0 4px;justify-content:flex-end}
+.cols span{min-width:34px;text-align:right}
+.search{display:flex;align-items:center;gap:8px;background:var(--ink-3);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px;color:var(--mute);font-size:13px}
+.search b{color:var(--paper);font-weight:500}
+.search .cur{width:1px;height:14px;background:var(--volt)}
+.conf{font:600 10px 'Saira Condensed';letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding:10px 0 4px;border-bottom:1px solid var(--line)}
+.fol-btn{font:600 10px 'Saira Condensed';letter-spacing:.10em;text-transform:uppercase;padding:4px 9px;border-radius:99px;border:1px solid var(--line);color:var(--mute)}
+.fol-btn.on{border-color:var(--volt);color:var(--volt)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{display:flex;align-items:center;gap:6px;font:600 11px 'Saira Condensed';letter-spacing:.06em;padding:5px 9px 5px 5px;border-radius:99px;background:var(--ink-3);border:1px solid var(--volt)}
+.chip .tm{width:16px;height:16px}
+.chip i{font-style:normal;color:var(--mute);margin-left:2px}
+.crumb{font:600 11px 'Saira Condensed';letter-spacing:.10em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+</style></head><body>
+
+<div>
+<div class="cap">Rankings - Teams (CFB)</div>
+<div class="phone"><div class="screen">
+<div class="eb">Sunday · Week 3 · AP poll Sep 6</div>
+<h1>Rankings</h1>
+<div class="pills"><span class="pill">NFL</span><span class="pill on">CFB</span><span class="pill">EPL</span></div>
+<div class="seg"><span class="on">Teams</span><span>Players</span><span>People</span></div>
+
+<div class="mod"><div class="hd"><span class="eb">AP Top 25 · Week 3</span><span class="sub">new poll Tue</span></div>
+<div class="row"><span class="rk">1</span><span class="tm" style="--c1:#BB0000;--c2:#666666"></span><span class="nm">Ohio State<small>2-0 · beat Texas 14-7</small></span><span class="mv mu">–</span><span class="v mu">1,512</span></div>
+<div class="row"><span class="rk">2</span><span class="tm" style="--c1:#154733;--c2:#FEE123"></span><span class="nm">Oregon<small>2-0</small></span><span class="mv mu">–</span><span class="v mu">1,440</span></div>
+<div class="row"><span class="rk">3</span><span class="tm" style="--c1:#BA0C2F;--c2:#000000"></span><span class="nm">Georgia<small>2-0</small></span><span class="mv up">▲ 1</span><span class="v mu">1,398</span></div>
+<div class="row"><span class="rk">4</span><span class="tm" style="--c1:#0C2340;--c2:#C99700"></span><span class="nm">Notre Dame<small>2-0</small></span><span class="mv up">▲ 1</span><span class="v mu">1,301</span></div>
+<div class="row"><span class="rk">5</span><span class="tm" style="--c1:#BF5700;--c2:#333F48"></span><span class="nm">Texas<small>1-1 · lost at OSU</small></span><span class="mv dn">▼ 2</span><span class="v mu">1,255</span></div>
+<div class="row"><span class="rk">6</span><span class="tm" style="--c1:#990000;--c2:#EEEDEB"></span><span class="nm">Indiana<small>2-0</small></span><span class="mv mu">–</span><span class="v mu">1,190</span></div>
+<div class="row"><span class="rk">7</span><span class="tm fol" style="--c1:#F47321;--c2:#005030"></span><span class="nm">Miami<small>2-0 · you follow</small></span><span class="mv mu">–</span><span class="v mu">1,144</span></div>
+<div class="row"><span class="rk">8</span><span class="tm" style="--c1:#500000;--c2:#FFFFFF"></span><span class="nm">Texas A&amp;M<small>2-0</small></span><span class="mv mu">–</span><span class="v mu">1,090</span></div>
+<div class="row"><span class="rk">9</span><span class="tm fol" style="--c1:#CE1126;--c2:#14213D"></span><span class="nm">Ole Miss<small>2-0 · you follow</small></span><span class="mv mu">–</span><span class="v mu">1,031</span></div>
+<div class="row"><span class="rk">10</span><span class="tm" style="--c1:#841617;--c2:#FDF9D8"></span><span class="nm">Oklahoma<small>2-0 · beat Michigan</small></span><span class="mv up">▲ 3</span><span class="v mu">988</span></div>
+<div class="row"><span class="rk">25</span><span class="tm" style="--c1:#F1B82D;--c2:#000000"></span><span class="nm">Missouri <span class="new">NEW</span><small>2-0 · beat Kansas</small></span><span class="mv up">▲</span><span class="v mu">114</span></div>
+<a class="ghost" href="#">All 25 · dropped out: SMU, Michigan →</a></div>
+
+<div class="mod"><div class="hd"><span class="eb">Power · Week 3</span><span class="sub">ours, not the poll</span></div>
+<div class="row"><span class="rk">1</span><span class="tm" style="--c1:#BB0000;--c2:#666666"></span><span class="nm">Ohio State</span><span class="mv mu">–</span><span class="v">94.1</span></div>
+<div class="row"><span class="rk">2</span><span class="tm" style="--c1:#BA0C2F;--c2:#000000"></span><span class="nm">Georgia</span><span class="mv up">▲ 2</span><span class="v">91.6</span></div>
+<div class="row"><span class="rk">3</span><span class="tm" style="--c1:#154733;--c2:#FEE123"></span><span class="nm">Oregon</span><span class="mv dn">▼ 1</span><span class="v">90.8</span></div>
+<div class="row"><span class="rk">4</span><span class="tm fol" style="--c1:#CE1126;--c2:#14213D"></span><span class="nm">Ole Miss<small>AP 9 · we have them higher</small></span><span class="mv up">▲ 4</span><span class="v">88.2</span></div>
+<div class="row"><span class="rk">5</span><span class="tm" style="--c1:#0C2340;--c2:#C99700"></span><span class="nm">Notre Dame</span><span class="mv mu">–</span><span class="v">87.9</span></div>
+<a class="ghost" href="#">All 138 →</a></div>
+
+<div class="mod"><div class="hd"><span class="eb">SEC</span><span class="sub">your conference</span></div>
+<div class="cols"><span>CONF</span><span>OVR</span></div>
+<div class="row"><span class="rk">1</span><span class="tm" style="--c1:#BA0C2F;--c2:#000000"></span><span class="nm">Georgia</span><span class="v">1-0</span><span class="v">2-0</span></div>
+<div class="row"><span class="rk">2</span><span class="tm fol" style="--c1:#CE1126;--c2:#14213D"></span><span class="nm">Ole Miss</span><span class="v">1-0</span><span class="v">2-0</span></div>
+<div class="row"><span class="rk">3</span><span class="tm" style="--c1:#500000;--c2:#FFFFFF"></span><span class="nm">Texas A&amp;M</span><span class="v">0-0</span><span class="v">2-0</span></div>
+<div class="row"><span class="rk">4</span><span class="tm" style="--c1:#9E1B32;--c2:#828A8F"></span><span class="nm">Alabama</span><span class="v">0-0</span><span class="v">1-1</span></div>
+<div class="row"><span class="rk">5</span><span class="tm" style="--c1:#461D7C;--c2:#FDD023"></span><span class="nm">LSU</span><span class="v">0-1</span><span class="v">1-1</span></div>
+<div class="row"><span class="rk">6</span><span class="tm" style="--c1:#BF5700;--c2:#333F48"></span><span class="nm">Texas</span><span class="v">0-0</span><span class="v">1-1</span></div>
+<a class="ghost" href="#">All 16 · other conferences →</a></div>
+
+<div class="mod"><div class="hd"><span class="eb">Your teams · 2 of 5</span></div>
+<div class="chips"><span class="chip"><span class="tm" style="--c1:#CE1126;--c2:#14213D"></span>OLE MISS<i>×</i></span><span class="chip"><span class="tm" style="--c1:#F47321;--c2:#005030"></span>MIAMI<i>×</i></span></div>
+<a class="ghost" href="#">Add a team →</a></div>
+</div>
+<div class="tabs"><div class="tab"><i>🎮</i>PLAY</div><div class="tab"><i>🏈</i>SCORES</div><div class="tab on"><i>📊</i>RANKINGS</div><div class="tab"><i>Ȳ</i>YOU</div></div>
+</div></div>
+
+<div>
+<div class="cap">All 138 - the one list (search + follow)</div>
+<div class="phone"><div class="screen">
+<div class="crumb">← Rankings · CFB</div>
+<h1>All 138</h1>
+<div class="search">🔍 <b>ole</b><span class="cur"></span></div>
+
+<div class="mod"><div class="hd"><span class="eb">3 matches</span></div>
+<div class="row"><span class="rk">9</span><span class="tm fol" style="--c1:#CE1126;--c2:#14213D"></span><span class="nm">Ole Miss<small>SEC · 2-0 · AP 9</small></span><span class="fol-btn on">Following</span></div>
+<div class="row"><span class="rk">–</span><span class="tm" style="--c1:#004B87;--c2:#F1B82D"></span><span class="nm">Toledo<small>MAC · 2-0</small></span><span class="fol-btn">Follow</span></div>
+<div class="row"><span class="rk">–</span><span class="tm" style="--c1:#0033A0;--c2:#FFFFFF"></span><span class="nm">Old Dominion<small>Sun Belt · 1-1</small></span><span class="fol-btn">Follow</span></div>
+</div>
+
+<div class="note" style="margin:0 0 8px">Clear the search and the list is every FBS team, by conference, power rank on the left.</div>
+
+<div class="mod">
+<div class="conf">ACC · 17</div>
+<div class="row"><span class="rk">7</span><span class="tm fol" style="--c1:#F47321;--c2:#005030"></span><span class="nm">Miami<small>2-0</small></span><span class="fol-btn on">Following</span></div>
+<div class="row"><span class="rk">14</span><span class="tm" style="--c1:#782F40;--c2:#CEB888"></span><span class="nm">Florida State<small>1-1</small></span><span class="fol-btn">Follow</span></div>
+<div class="row"><span class="rk">21</span><span class="tm" style="--c1:#AD0000;--c2:#000000"></span><span class="nm">Louisville<small>1-1</small></span><span class="fol-btn">Follow</span></div>
+<div class="row"><span class="rk">33</span><span class="tm" style="--c1:#0033A0;--c2:#C8102E"></span><span class="nm">SMU<small>1-1</small></span><span class="fol-btn">Follow</span></div>
+<div class="conf">Big 12 · 16</div>
+<div class="row"><span class="rk">11</span><span class="tm" style="--c1:#CC0000;--c2:#000000"></span><span class="nm">Texas Tech<small>2-0</small></span><span class="fol-btn">Follow</span></div>
+<div class="row"><span class="rk">16</span><span class="tm" style="--c1:#0062B8;--c2:#FFFFFF"></span><span class="nm">BYU<small>2-0</small></span><span class="fol-btn">Follow</span></div>
+<div class="conf">Big Ten · 18</div>
+<div class="row"><span class="rk">1</span><span class="tm" style="--c1:#BB0000;--c2:#666666"></span><span class="nm">Ohio State<small>2-0</small></span><span class="fol-btn">Follow</span></div>
+<div class="row"><span class="rk">3</span><span class="tm" style="--c1:#154733;--c2:#FEE123"></span><span class="nm">Oregon<small>2-0</small></span><span class="fol-btn">Follow</span></div>
+</div>
+</div>
+<div class="tabs"><div class="tab"><i>🎮</i>PLAY</div><div class="tab"><i>🏈</i>SCORES</div><div class="tab on"><i>📊</i>RANKINGS</div><div class="tab"><i>Ȳ</i>YOU</div></div>
+</div></div>
+
+<div>
+<div class="cap">Rankings - Players (CFB)</div>
+<div class="phone"><div class="screen">
+<div class="eb">Sunday · Week 3</div>
+<h1>Rankings</h1>
+<div class="pills"><span class="pill">NFL</span><span class="pill on">CFB</span><span class="pill">EPL</span></div>
+<div class="seg"><span>Teams</span><span class="on">Players</span><span>People</span></div>
+
+<div class="mod"><div class="hd"><span class="eb">Season leaders</span><span class="sub">through Week 2 · FBS</span></div>
+<div class="row"><span class="rk mu" style="width:auto;font-size:9px;letter-spacing:.12em">PASS</span></div>
+<div class="row"><span class="rk">1</span><span class="tm" style="--c1:#F47321;--c2:#005030"></span><span class="nm">Carson Beck<small>Miami · 2 g · 7 TD</small></span><span class="v">644</span></div>
+<div class="row"><span class="rk">2</span><span class="tm" style="--c1:#461D7C;--c2:#FDD023"></span><span class="nm">Garrett Nussmeier<small>LSU · 2 g · 4 TD</small></span><span class="v">598</span></div>
+<div class="row"><span class="rk">3</span><span class="tm" style="--c1:#CC0000;--c2:#000000"></span><span class="nm">Behren Morton<small>Texas Tech · 2 g</small></span><span class="v">571</span></div>
+<a class="ghost" href="#">Passing · rushing · receiving →</a></div>
+
+<div class="mod"><div class="hd"><span class="eb">Golden Boot race · 2026</span><span class="sub">tag · 3 rows</span></div>
+<div class="row"><span class="rk">1</span><span class="tm" style="--c1:#BF5700;--c2:#333F48"></span><span class="nm">CJ Baxter<small>Texas · RB</small></span><span class="v">5 TD</span></div>
+<div class="row"><span class="rk">2</span><span class="tm" style="--c1:#BA0C2F;--c2:#000000"></span><span class="nm">Nate Frazier<small>Georgia · RB</small></span><span class="v">4 TD</span></div>
+<div class="row"><span class="rk">3</span><span class="tm" style="--c1:#CE1126;--c2:#14213D"></span><span class="nm">Kewan Lacy<small>Ole Miss · RB</small></span><span class="v">4 TD</span></div>
+</div>
+
+<div class="mod"><div class="hd"><span class="eb">Week leaders · Week 2</span></div>
+<div class="row"><span class="rk mu">PASS</span><span class="nm">Carson Beck<small>Miami vs Florida A&amp;M</small></span><span class="v">402</span></div>
+<div class="row"><span class="rk mu">RUSH</span><span class="nm">Jeremiyah Love<small>Notre Dame</small></span><span class="v">156</span></div>
+<div class="row"><span class="rk mu">REC</span><span class="nm">Antonio Williams<small>Clemson</small></span><span class="v">141</span></div>
+</div>
+<p class="note">No fantasy module on CFB. Nothing scores college fantasy here and the tab does not pretend to.</p>
+</div>
+<div class="tabs"><div class="tab"><i>🎮</i>PLAY</div><div class="tab"><i>🏈</i>SCORES</div><div class="tab on"><i>📊</i>RANKINGS</div><div class="tab"><i>Ȳ</i>YOU</div></div>
+</div></div>
+
+</body></html>
