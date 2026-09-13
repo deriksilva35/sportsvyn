@@ -119,8 +119,16 @@ test('the format toggle offers three formats, PPR first', () => {
 });
 
 test('the leaders list is recomputed per format on the SERVER', () => {
-  assert.match(page, /for \(const f of SCORING_FORMATS\) leaders\[f\] = fantasyLeaders\(game, f, 5\)/);
+  // Still per format and still on the server; the source it reads now depends
+  // on which table holds the game. Preseason keeps fantasyLeaders() over the
+  // stored provider rows, the regular season takes leadersFromRows() over
+  // nfl_player_game_stats - see lib/gridiron/regLines.js.
+  assert.match(page, /for \(const f of SCORING_FORMATS\) \{/);
+  assert.match(page, /leaders\[f\] = reg \? leadersFromRows\(reg\.rows, f, 5\) : fantasyLeaders\(game, f, 5\)/);
   assert.match(tabs, /leaders\[format\]/);
+  // The browser never recomputes - it picks between three numbers the server
+  // already produced, whichever path produced them.
+  assert.ok(!/fantasyPoints\(/.test(tabs));
 });
 
 // ---------------------------------------------------------------------------
