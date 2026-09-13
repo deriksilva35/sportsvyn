@@ -110,3 +110,19 @@
   font: 700 10px var(--font-mono); color: var(--ink); background: var(--volt);
   border-radius: 4px; padding: 1px 5px; margin-right: 6px; line-height: 1.5; flex: none;
 }
+
+/* THE PICK'EM SPLIT (LOBBY PICK'EM SPLIT relay). Two boards, two tiles, the
+   same 1fr 1fr / 8px grid the Draft room duo uses - but these carry two lines
+   each, so the height comes from the content and not the duo's 56px floor. */
+.lv-duo.lv-pickem .lv-ptile { min-height: 0; }
+.lv-ptile {
+  background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px; display: block; color: var(--paper); text-decoration: none;
+}
+.lv-ph { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.lv-ptile .lv-ico { width: 24px; height: 24px; font-size: 11px; }
+.lv-ptile strong { display: block; font-size: 14px; margin-bottom: 3px; }
+.lv-ptile small { color: var(--muted); font: 500 11px var(--font-mono); display: block; letter-spacing: .02em; line-height: 1.4; }
+.lv-ptile .st { flex: 0 0 auto; border-radius: 99px; padding: 4px 8px; font: 700 10px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--line); color: var(--muted); }
+.lv-ptile .st.go { background: var(--volt); color: var(--ink); border-color: var(--volt); }
+.lv-ptile .st.done { color: var(--jade); border-color: var(--jade); }

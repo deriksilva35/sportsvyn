@@ -170,7 +170,7 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     // The Games tab v2 (GAMES TAB v2 relay), written on the global tokens.
     // The Pick'em board's sport switch (SPORT SWITCH addendum).
     'app/pickem/pickem.css': 1,
-    'app/games/lobbyV2.css': 19,
+    'app/games/lobbyV2.css': 22,
     // The Scores tab v2 (SCORES TAB v2 relay), likewise.
     'app/scores/scoresV2.css': 12,
   };
@@ -182,8 +182,8 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   }
   assert.deepEqual(found, EXPECTED,
     'a new bare call site is fine now that the tokens are global - update the count deliberately');
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 69,
-    '18 were broken before the promotion; 51 were written after it');
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 72,
+    '18 were broken before the promotion; 54 were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.
   for (const t of ['--ink-2', '--ink-3', '--line']) {
