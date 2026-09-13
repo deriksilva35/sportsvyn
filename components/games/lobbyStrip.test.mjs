@@ -87,7 +87,9 @@ test('BOTH SURFACES DERIVE THE SAME LETTERS - one helper, no second rule', () =>
   }
   // the lobby reader hands over the RAW abbreviation, nulls included, so the
   // helper - not the SQL - decides what a missing one becomes
-  const reader = readFileSync(path.join(REPO, 'lib/games/lobbyV2.js'), 'utf8');
+  // The reader moved to the shared module (TODAY TAB v2, Q3); the rule that
+  // the SQL hands over a RAW abbreviation, nulls included, did not.
+  const reader = readFileSync(path.join(REPO, 'lib/gridiron/todayReads.js'), 'utf8');
   assert.match(reader, /abbreviation: r\.home_abbr \?\? null/);
   assert.match(reader, /abbreviation: r\.away_abbr \?\? null/);
   assert.doesNotMatch(reader, /abbr: r\.home_abbr \?\? \(r\.home_short/, 'the old name-into-the-abbr-slot fallback is gone');
