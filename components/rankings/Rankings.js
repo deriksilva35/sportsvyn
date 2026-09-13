@@ -233,7 +233,7 @@ function People({ v }) {
 
 export default function Rankings({ v }) {
   return (
-    <div className="rk" data-surface="ink" data-league={v.league} data-view={v.view}
+    <div className="rnk" data-surface="ink" data-league={v.league} data-view={v.view}
       data-signed-in={v.signedIn ? '1' : '0'}>
       <div className="rk-top">{v.eyebrow}</div>
       <h1 className="rk-h1">Rankings</h1>
