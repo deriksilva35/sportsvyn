@@ -18,6 +18,8 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
+import { draftLiveRows } from '@/lib/draft/liveCard';
+import { weekTeamGames } from '@/lib/gridiron/todayV2';
 import { weekStatLines } from '@/lib/weekly/pool';
 import { draftState, draftSettledView, seatOptions } from '@/lib/draft/view';
 import { draftState as readDraftState, fieldBestRoster } from '@/lib/draft/entry';
@@ -25,6 +27,7 @@ import { DRAFT_CONFIG, DRAFT_ROUNDS, nextDraftContest } from '@/lib/draft/contes
 import SeatSelect from '@/components/draft/SeatSelect';
 import DraftGrade from '@/components/draft/DraftGrade';
 import StandaloneDate from '@/components/StandaloneDate';
+import DraftLiveCard from '@/components/draft/DraftLiveCard';
 import { DraftPreOpenLine } from '@/components/games/preOpenLine';
 import { draftFieldLeaderboard, draftSeatTable } from '@/lib/games/leaderboard';
 import { userHasHandle } from '@/lib/onboarding';
@@ -176,11 +179,18 @@ export default async function DraftPage({ searchParams }) {
     // it. Same read the Weekly's window uses; drop-worst waits for settle.
     const live = roster.length
       ? await (async () => {
-        const { scored, playedIds } = await liveScoredBoard(contest);
-        return liveEntryRows({ roster, scored, playedIds });
+        const [{ scored, playedIds }, gamesByTeam] = await Promise.all([
+          liveScoredBoard(contest),
+          weekTeamGames({ week: contest.week, seasonYear: contest.season_year }).catch(() => new Map()),
+        ]);
+        const mine = liveEntryRows({ roster, scored, playedIds });
+        // EIGHT ROWS WITH THEIR NUMBERS AND THEIR GAMES, and the six that
+        // count marked. lib/draft/liveCard.js lines the best six up against
+        // the roster; it re-decides nothing, bestBall already chose.
+        return { ...mine, card: draftLiveRows({ roster, scored, playedIds, liveRows: mine.rows, gamesByTeam }) };
       })().catch(() => null)
       : null;
-    const liveIds = new Set((live?.rows ?? []).map((r) => r.id).filter(Boolean));
+    const card = live?.card ?? null;
     return (
       <Shell>
         <section className="mod mod--entered">
@@ -191,25 +201,17 @@ export default async function DraftPage({ searchParams }) {
                 Your {roster.length} picks are in. Best ball scores your best six once
                 every game is final.
               </p>
-              {live && (
+              {card && (
                 <div className="score-row">
-                  <div className="score-big">{live.total}</div>
+                  <div className="score-big">{card.total}</div>
                   <div className="score-meta">
                     <span className="muted">
-                      live best six &middot; {live.playedCount} of {live.slots} played &middot; before drop-worst
+                      live best six &middot; {card.startedCount} of {card.counting} started &middot; before drop-worst
                     </span>
                   </div>
                 </div>
               )}
-              <div>
-                {roster.map((r) => (
-                  <div className={`row${liveIds.size && !liveIds.has(r.id) ? ' row--dropped' : ''}`} key={r.ffc ?? r.id}>
-                    <span><span className="slot-tag">R{r.round}</span> {r.name}</span>
-                    <span className="r r--mut">{r.pos}</span>
-                  </div>
-                ))}
-                <div className="row"><span>Results</span><span className="r r--mut">Tuesday morning &middot; drop-worst applies at settle</span></div>
-              </div>
+              <DraftLiveCard card={card} roster={roster} />
             </>
           ) : (
             <p className="mod-lede">

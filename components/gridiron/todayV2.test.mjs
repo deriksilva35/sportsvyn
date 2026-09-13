@@ -273,9 +273,13 @@ test('SIX SLOTS, SIX STATES, ACROSS FOUR DAYS - the week, not the day', () => {
   assert.equal(by.QB, 'final', 'Thursday, finished');
   assert.equal(by.RB, 'Q3 6:12', 'Sunday afternoon, live with period and clock');
   assert.equal(by.WR, 'scheduled', 'Sunday night, not started');
-  assert.equal(by.TE, 'scheduled', 'an unset slot has no team and no game');
+  // AN UNSET SLOT IS 'empty', NOT 'scheduled'. It used to print 'scheduled'
+  // because the attribute fell back to that literal whenever there was no
+  // game - which said "this player's game has not kicked off" about a slot
+  // with no player in it. lib/weekly/slotState.js separates the two.
+  assert.equal(by.TE, 'empty', 'an unset slot has no player, so it has no game state');
   assert.equal(by.FLEX, 'final', 'Sunday night, finished');
-  assert.equal(by.FLEX2, 'scheduled', 'Monday, not started');
+  assert.equal(by.FLEX2, 'scheduled', 'Monday, the slate has not started it');
   // The three renderings the states produce.
   const qb = h.slice(h.indexOf('data-slot="QB"'), h.indexOf('data-slot="RB"'));
   assert.match(qb, /SF · final/); assert.match(qb, /<b class="n">18\.4<\/b>/, 'a final shows points');
