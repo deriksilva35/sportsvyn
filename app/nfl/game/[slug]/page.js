@@ -19,6 +19,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getGamePage, scoringByQuarter, scoringFromPlays, linesByGroup, fantasyLeaders, SCORING_FORMATS } from '@/lib/gridiron/gameDetail';
+import { regTeamTables, leadersFromRows } from '@/lib/gridiron/regLines';
 import { lineScoreGrid, liveChip } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
 import { getBriefForMatch } from '@/lib/gridiron/gameBrief';
@@ -144,7 +145,18 @@ export default async function GamePage({ params, searchParams }) {
     : null;
 
   const teams = [game.away, game.home].filter((t) => t?.id);
-  const teamTables = teams.map((t) => ({ team: t, tables: linesByGroup(game, t.id) }));
+  // TWO SOURCES, ONE PANEL. The REGULAR SEASON - every game this route serves
+  // in September - reads nfl_player_game_stats through lib/gridiron/regLines.js,
+  // which is written per game, live and at final, by the poller that is already
+  // running. gridiron_player_lines holds the 49 stored PRESEASON games and
+  // nothing else; nothing writes to it any more. Preference goes to the stored
+  // provider rows where they exist, so an August game page is byte-identical to
+  // what it served in August, and everything else gets the path that has data.
+  const reg = game.lines?.length ? null : await regTeamTables(game.id);
+  const teamTables = teams.map((t) => ({
+    team: t,
+    tables: reg ? (reg.tables.get(t.id) ?? []) : linesByGroup(game, t.id),
+  }));
   const hasPlayers = teamTables.some((t) => t.tables.length > 0);
 
   // Leaders are computed PER FORMAT rather than once and re-sorted in the
@@ -152,7 +164,9 @@ export default async function GamePage({ params, searchParams }) {
   // the wrong five: drop the receptions and a three-catch night leaves the list
   // entirely rather than moving down it.
   const leaders = {};
-  for (const f of SCORING_FORMATS) leaders[f] = fantasyLeaders(game, f, 5);
+  for (const f of SCORING_FORMATS) {
+    leaders[f] = reg ? leadersFromRows(reg.rows, f, 5) : fantasyLeaders(game, f, 5);
+  }
 
   const teamBox = game.teamBox && Object.keys(game.teamBox).length ? game.teamBox : null;
 

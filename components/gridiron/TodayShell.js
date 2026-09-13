@@ -1,8 +1,10 @@
 // components/gridiron/TodayShell.js - the /nfl and /cfb Today tab.
 //
-// THIS IS THE ROUTE THE CONTAINER'S TODAY TAB OPENS. lib/shell/appTabs.js
-// points it at /nfl and activeTabFor lights 'today' for /nfl, /cfb and /epl.
-// The web header's TODAY is a different page at "/" and is untouched by this.
+// THIS IS THE LEAGUE DAY PAGE. The container's bar went to four (Play /
+// Scores / Rankings / You) and the Today tab went with the fifth slot, so
+// /nfl, /cfb and /epl now light SCORES - activeTabFor says so, and the way in
+// is the Scores tab's league chips. The web header's TODAY is a different page
+// at "/" and is untouched by this.
 //
 // IT REPLACES TodayPage's BODY, NOT ITS CHROME. The global header, the league
 // header with its week eyebrow and live pill, and the section sub-nav are the
