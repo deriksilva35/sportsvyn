@@ -1,0 +1,91 @@
+/* components/rankings/rankings.css - the Rankings tab, per the two ruled
+   mocks. Written on the global tokens; the mocks' :root block is a stand-in
+   and none of its hexes are copied. */
+
+.rk { max-width: 640px; margin: 0 auto; padding: 14px 16px 28px; color: var(--paper); }
+.rk-top { font: 600 10px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.rk-h1 { font: italic 900 30px/1 var(--font-display); letter-spacing: -.04em; margin: 4px 0 12px; }
+.rk-crumb { font: 600 11px var(--font-mono); letter-spacing: .10em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.rk-crumb a { color: inherit; text-decoration: none; }
+
+.rk-pills { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
+.rk-pills::-webkit-scrollbar { display: none; }
+.rk-pill {
+  font: 600 12px var(--font-mono); letter-spacing: .08em; text-transform: uppercase;
+  padding: 7px 12px; border-radius: 99px; background: var(--ink-3);
+  border: 1px solid var(--line); color: var(--paper); white-space: nowrap; text-decoration: none;
+}
+.rk-pill.on { background: var(--volt); color: var(--ink); border-color: var(--volt); }
+
+.rk-seg { display: flex; background: var(--ink-3); border: 1px solid var(--line); border-radius: 99px; padding: 3px; margin-bottom: 12px; }
+.rk-seg a {
+  flex: 1; text-align: center; font: 600 11px var(--font-mono); letter-spacing: .10em;
+  text-transform: uppercase; padding: 7px 0; border-radius: 99px; color: var(--muted); text-decoration: none;
+}
+.rk-seg a.on { background: var(--ink); color: var(--paper); }
+
+.rk-mod { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+.rk-hd { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.rk-eb { font: 600 10px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--volt); }
+.rk-sub { font: 600 10px var(--font-mono); letter-spacing: .10em; text-transform: uppercase; color: var(--muted); }
+.rk-note { font-size: 11px; color: var(--muted); margin: 8px 0 0; line-height: 1.5; }
+.rk-err { font-size: 12px; color: var(--terra); margin: 0 0 10px; }
+.rk-ghost {
+  display: block; text-align: center; font: 600 12px var(--font-mono); letter-spacing: .10em;
+  text-transform: uppercase; padding: 10px; border: 1px solid var(--line); border-radius: 9px;
+  background: var(--ink-3); color: var(--paper); margin-top: 10px; text-decoration: none;
+}
+
+.rk-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.rk-row:last-child { border-bottom: 0; }
+.rk-row .rk { width: 22px; flex: none; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; font-size: 12px; }
+.rk-row .nm { flex: 1; min-width: 0; font: 700 13px var(--font-display); letter-spacing: .02em; }
+.rk-row .nm small { display: block; font: 500 10px var(--font-mono); color: var(--muted); letter-spacing: 0; margin-top: 2px; }
+.rk-row .v { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
+.rk-row .v.mu { color: var(--muted); font-weight: 500; }
+.rk-mark { flex: none; }
+/* A FOLLOWED TEAM WEARS THE VOLT RING on every row that draws a mark. */
+.rk-mark.fol { box-shadow: 0 0 0 2px var(--ink-2), 0 0 0 3px var(--volt); border-radius: 99px; }
+
+/* THE YOU ROW (item 6): one component, one look, all three views. */
+.rk-row.you {
+  background: linear-gradient(90deg, rgba(212, 255, 0, .10), transparent 60%);
+  margin: 0 -14px; padding-left: 14px; padding-right: 14px; border-left: 3px solid var(--volt);
+}
+.rk-you {
+  font: 600 9px var(--font-mono); letter-spacing: .14em; color: var(--ink);
+  background: var(--volt); padding: 2px 5px; border-radius: 99px; margin-left: 8px; vertical-align: middle;
+}
+
+.rk-cols { display: flex; gap: 10px; justify-content: flex-end; font: 600 9px var(--font-mono); letter-spacing: .12em; color: var(--muted); padding-bottom: 4px; }
+.rk-cols span { min-width: 34px; text-align: right; }
+
+.rk-tog { display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; }
+.rk-tog a {
+  font: 600 10px var(--font-mono); letter-spacing: .10em; text-transform: uppercase;
+  padding: 4px 9px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); text-decoration: none;
+}
+.rk-tog a.on { border-color: var(--volt); color: var(--volt); }
+
+.rk-seat { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.rk-seat > div { background: var(--ink-3); border: 1px solid var(--line); border-radius: 8px; padding: 6px 0; text-align: center; }
+.rk-seat > div b { display: block; font-size: 13px; font-variant-numeric: tabular-nums; }
+.rk-seat > div small { font: 600 9px var(--font-mono); letter-spacing: .12em; color: var(--muted); }
+.rk-seat > div.you { border-color: var(--volt); }
+.rk-seat > div.none b { color: var(--muted); font-weight: 500; }
+
+.rk-search { margin-bottom: 12px; }
+.rk-search input {
+  width: 100%; min-height: 40px; padding: 10px 12px; background: var(--ink-3);
+  border: 1px solid var(--line); border-radius: 10px; color: var(--paper); font: 500 13px var(--font-mono);
+}
+.rk-search input::placeholder { color: var(--muted); }
+.rk-search input:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+.rk-conf { font: 600 10px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 10px 0 4px; border-bottom: 1px solid var(--line); }
+.rk-fol {
+  flex: none; font: 600 10px var(--font-mono); letter-spacing: .10em; text-transform: uppercase;
+  padding: 5px 9px; min-height: 30px; border-radius: 99px; border: 1px solid var(--line);
+  background: transparent; color: var(--muted); cursor: pointer; text-decoration: none;
+}
+.rk-fol.on { border-color: var(--volt); color: var(--volt); }
+.rk-fol:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
