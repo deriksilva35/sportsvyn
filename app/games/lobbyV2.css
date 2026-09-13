@@ -101,3 +101,12 @@
 
 /* the panes that moved to the bottom */
 .lv-more { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+
+/* THE AP RANK BADGE ON THE TONIGHT STRIP. /games does not load gridiron.css,
+   so the badge gets its own rule here - same volt fill, black numeral and
+   6px gutter as components/gridiron/RankBadge.js wears everywhere else. */
+.lv-team .rk {
+  display: inline-flex; align-items: center; justify-content: center;
+  font: 700 10px var(--font-mono); color: var(--ink); background: var(--volt);
+  border-radius: 4px; padding: 1px 5px; margin-right: 6px; line-height: 1.5; flex: none;
+}

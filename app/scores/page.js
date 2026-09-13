@@ -197,7 +197,7 @@ export default async function ScoresPage({ searchParams }) {
   const tz = viewerTz ?? ET;
   const sportRaw = one(sp.sport);
   const sport = ['nfl', 'cfb', 'epl'].includes(sportRaw) ? sportRaw : 'all';
-  const v = await scoresV2({ userId, date: one(sp.date) ?? null, sport, mine: userId != null && one(sp.mine) === '1', tz });
+  const v = await scoresV2({ userId, date: one(sp.date) ?? null, sport, mine: userId != null && one(sp.mine) === '1', top25: one(sp.top25) === '1', tz });
   return (
     <div className="gi" data-surface="ink">
       <ScoresChrome isShell={isShell} />
