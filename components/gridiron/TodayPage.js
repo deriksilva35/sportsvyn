@@ -1,5 +1,16 @@
 // components/gridiron/TodayPage.js — shared server render for the /nfl and /cfb
-// Today shells. Local ink header + sport sub-nav; NO site header. DEV reads only.
+// Today tabs. Global site header, then the league header and the sport
+// sub-nav. Both routes are PUBLIC, indexable and in the sitemap
+// (lib/seo/routes.js), and every read below hits whatever DATABASE_URL points
+// at - on Vercel that is PROD.
+//
+// THE OLD HEADER SAID "NO site header. DEV reads only." Two of those three
+// claims went stale. The site header has been mounted here since
+// GlobalHeaderServer landed, and these stopped being unlinked noindex shells
+// on the DEV branch the day they were linked. The surviving claim is the one
+// worth keeping: THIS TREE NEVER WRITES. Every function it calls is a SELECT
+// or a pure shaper; there is no INSERT, UPDATE, DELETE or server action
+// anywhere below this file.
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import { getCurrentWeek, getNearestUpcomingWeek, getWeekSlate } from '@/lib/gridiron/readers';
@@ -83,7 +94,6 @@ export default async function TodayPage({ leagueSlug, leagueLabel, searchParams 
         label={leagueLabel}
         week={week}
         phase={phase}
-        date={allGames[0]?.kickoffAt ?? null}
         games={allGames}
         leagueSlug={leagueSlug}
         pathname={`/${leagueSlug}`}
