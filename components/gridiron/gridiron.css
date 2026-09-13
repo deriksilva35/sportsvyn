@@ -281,13 +281,6 @@
 .gi-odds-side .am { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted-dim); }
 .gi-odds-fine { margin-top: 12px; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-dim); }
 
-/* ---- drive strip ---- */
-.gi-drive { padding: 8px 0 2px; }
-.gi-drive svg { width: 100%; max-width: 320px; height: auto; display: block; }
-.gi-drive-cap { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-top: 5px; }
-.gi-drive-cap b { color: var(--volt); font-weight: 700; }
-.gi-drive-cap .fd { color: var(--paper-dim); }
-
 /* ---- lede zone (Today pages, standings) ----
    THIS BAND WAS THE LAST PAPER GROUND IN THE PRODUCT, and it had stopped
    working. It painted background:var(--paper) while its three text tokens
