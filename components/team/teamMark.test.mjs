@@ -47,7 +47,9 @@ test('Helmet.js is untouched by this relay, and TeamMark has only its named user
     // The Rankings tab's ranked rows and its All-teams list (RANKINGS TAB v2)
     // - the same mark, at 22px, and the follow ring is drawn on it.
     'components/rankings/RankRow.js',
-    'components/rankings/AllTeams.js'];
+    'components/rankings/AllTeams.js',
+    // The You tab's followed-team rows (YOU TAB v1) - the same 22px mark.
+    'components/you/You.js'];
   assert.ok(users.includes('components/games/LobbyV2.js'), 'the lobby uses it');
   assert.ok(users.includes('components/scores/ScoresV2.js'), 'the Scores tab uses it (SCORES TAB v2)');
   assert.ok(!users.some((f) => !ALLOWED.includes(f)), `no other user: ${users}`);
