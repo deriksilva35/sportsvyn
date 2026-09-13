@@ -1,0 +1,212 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Today tab · Your day (A + C stats)</title>
+<!-- The ruled mock for TODAY TAB v2 (relay of 13 Sep 2026), saved verbatim
+     from the relay message. Fonts and hexes here are stand-ins; the build
+     uses the site's tokens. -->
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,700;0,800;1,900&family=JetBrains+Mono:wght@500;700&family=Source+Serif+4:ital,wght@1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--blue:#245BFF;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;--mono:'JetBrains Mono',monospace;--disp:'Saira',sans-serif;--serif:'Source Serif 4',Georgia,serif}
+*{box-sizing:border-box;margin:0;padding:0}body{background:#000;color:var(--paper);font:14px/1.5 system-ui,sans-serif;padding:14px}
+.lbl{width:390px;max-width:100%;margin:0 auto 8px;color:var(--muted);font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.phone{width:390px;max-width:100%;margin:0 auto 26px;background:var(--ink);border:1px solid var(--line);border-radius:24px;padding:16px 16px 22px;overflow:hidden}
+.eb{color:var(--volt);font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.eb.q{color:var(--muted)}
+h2{font-family:var(--disp);line-height:1;text-transform:uppercase}
+.h1{font:800 32px var(--disp);text-transform:uppercase;letter-spacing:-.02em;margin-top:4px}
+.sh{display:flex;align-items:baseline;justify-content:space-between;margin:20px 0 8px}
+.sh h3{font:700 16px var(--disp);text-transform:uppercase;letter-spacing:.02em}
+.sh a{color:var(--volt);font:600 11px system-ui}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.card{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 13px}
+.mk{width:20px;height:20px;flex:0 0 auto}
+
+/* read strip */
+.read{background:var(--ink-2);border:1px solid var(--line);border-left:3px solid var(--volt);border-radius:12px;padding:12px 13px;margin-top:12px}
+.read h4{font:italic 400 17px var(--serif);line-height:1.35;margin:5px 0 5px;text-transform:none}
+.read p{color:var(--muted);font-size:12.5px;line-height:1.45}
+.read a{color:var(--volt);font:600 11px system-ui;display:inline-block;margin-top:7px}
+
+/* weekly hero */
+.hero{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+.hero .row1{display:flex;align-items:flex-end;gap:10px}
+.big{font:800 42px var(--disp);letter-spacing:-.03em;line-height:.95}
+.hero .rk{margin-left:auto;text-align:right}
+.hero .rk b{font:700 19px var(--mono);display:block}
+.hero .rk span{font:600 9px var(--mono);letter-spacing:.1em;color:var(--quiet);text-transform:uppercase}
+.bar{height:5px;border-radius:99px;background:var(--ink-3);overflow:hidden;margin:10px 0 2px}
+.bar i{display:block;height:100%;background:var(--volt)}
+.barc{display:flex;justify-content:space-between;font:600 9px var(--mono);color:var(--quiet);letter-spacing:.08em;text-transform:uppercase}
+.pr{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--line);font-size:13px}
+.pr .pos{font:700 9px var(--mono);color:var(--quiet);width:26px;letter-spacing:.08em}
+.pr .who{font-weight:600}
+.pr .who small{color:var(--muted);font:500 10px var(--mono);margin-left:5px;font-weight:500}
+.pr b{margin-left:auto;font:700 15px var(--mono)}
+.pr b.live{color:var(--volt)}
+.pr .st{margin-left:auto;font:600 10px var(--mono);color:var(--quiet);letter-spacing:.06em}
+.pr.done .who{color:var(--muted)}
+
+/* picks */
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:99px;padding:5px 9px;font:600 11px var(--mono)}
+.chip b{color:var(--volt);font-weight:700}
+.chip.good{border-color:rgba(42,138,79,.5)}.chip.good b{color:var(--jade)}
+.chip.bad{border-color:rgba(184,65,15,.5)}.chip.bad b{color:var(--terra)}
+.chip.q{color:var(--quiet);border-style:dashed}
+.foot{display:flex;justify-content:space-between;color:var(--muted);font:500 11px var(--mono);border-top:1px solid var(--line);padding-top:9px}
+.foot b{color:var(--paper)}
+
+/* daily */
+.daily{background:var(--blue);border-radius:12px;padding:13px;display:flex;align-items:center;gap:12px;margin-top:12px}
+.daily .t{font:800 20px var(--disp);text-transform:uppercase;color:#fff;line-height:1}
+.daily .s{color:#D8E2FF;font:500 11px var(--mono);margin-top:4px}
+.daily .go{margin-left:auto;background:var(--volt);color:var(--ink);border-radius:99px;padding:10px 15px;font-weight:700;font-size:13px;flex:0 0 auto}
+
+/* your teams */
+.gm{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--line);font-size:13px}
+.gm:first-child{border:0}
+.gm .ab{font:700 11px var(--mono);color:var(--muted);width:38px}
+.gm .sc{margin-left:auto;font:700 15px var(--mono)}
+.gm .tag{font:600 10px var(--mono);letter-spacing:.06em;margin-left:8px}
+.gm .tag.w{color:var(--jade)}.gm .tag.l{color:var(--terra)}.gm .tag.lv{color:var(--live)}
+.gm .rk{font:700 10px var(--mono);color:var(--volt);margin-right:3px}
+
+/* stat block (from C) */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tbl{width:100%;border-collapse:collapse;font:600 12px var(--mono)}
+.tbl td{text-align:right;padding:5px 0;border-top:1px solid var(--line)}
+.tbl tr:first-child td{border:0}
+.tbl td.l{text-align:left;color:var(--muted)}
+.tbl td.v{color:var(--paper)}
+.rail{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.rchip{flex:0 0 auto;border:1px solid var(--line);background:var(--ink-2);border-radius:10px;padding:7px 9px;text-align:center;min-width:50px}
+.rchip .r{font:700 12px var(--mono);color:var(--volt)}
+.rchip .a{font:700 11px var(--mono)}
+.rchip .w{font:500 9px var(--mono);color:var(--quiet)}
+.rchip.mine{border-color:var(--volt)}
+.sw{display:flex;gap:6px;margin:10px 0 8px}
+.sw span,.sw a{border:1px solid var(--line);border-radius:99px;padding:5px 10px;font:600 11px var(--mono);color:var(--muted)}
+.sw span.on{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+.wire{display:flex;gap:9px;padding:9px 0;border-top:1px solid var(--line)}
+.wire:first-child{border:0}
+.wire .ln{font:700 9px var(--mono);color:var(--volt);letter-spacing:.1em;width:40px;flex:0 0 auto;padding-top:2px}
+.wire .ln.q{color:var(--quiet)}
+.wire p{font-size:12.5px;line-height:1.4}
+.wire small{display:block;color:var(--quiet);font:500 10px var(--mono);margin-top:2px}
+
+/* signed out */
+.empty{background:var(--ink-2);border:1px dashed var(--line);border-radius:12px;padding:16px;text-align:center;margin-top:12px}
+.empty h4{font:800 20px var(--disp);text-transform:uppercase;margin-bottom:5px}
+.empty p{color:var(--muted);font-size:12.5px;line-height:1.5;max-width:30ch;margin:0 auto 11px}
+.empty a{background:var(--volt);color:var(--ink);border-radius:99px;padding:10px 16px;font-weight:700;font-size:13px;display:inline-block}
+</style></head><body>
+
+<div class="lbl">Signed in · Sunday mid-slate</div>
+<div class="phone">
+  <div class="eb">Sunday · Week 1 · 10:42 AM</div>
+  <div class="h1">Your day</div>
+
+  <div class="read">
+    <div class="eb q">The read</div>
+    <h4>Week 1 spreads are still pricing last year's offenses.</h4>
+    <p>Three games where the number hasn't caught up, and one where it already has.</p>
+    <a href="#">Read the card · 9 min →</a>
+  </div>
+
+  <div class="sh"><h3>The Weekly</h3><a href="#">Lineup →</a></div>
+  <div class="hero">
+    <div class="row1"><div><div class="eb q">Live</div><div class="big n">48.2</div></div>
+      <div class="rk"><b class="n">#31</b><span>of 1,204</span></div></div>
+    <div class="bar"><i style="width:33%"></i></div>
+    <div class="barc"><span>3 of 6 played</span><span>leader 71.9</span></div>
+    <div class="pr done"><span class="pos">QB</span><span class="who">B. Purdy<small>SF · final</small></span><b class="n">18.4</b></div>
+    <div class="pr"><span class="pos">RB</span><span class="who">B. Robinson<small>ATL · Q3 6:12</small></span><b class="n live">14.1</b></div>
+    <div class="pr"><span class="pos">RB</span><span class="who">J. Jacobs<small>GB · Q2 0:41</small></span><b class="n live">9.2</b></div>
+    <div class="pr"><span class="pos">WR</span><span class="who">J. Chase<small>CIN · 1:00 PM</small></span><span class="st">Not started</span></div>
+    <div class="pr"><span class="pos">TE</span><span class="who">T. Kelce<small>KC · 1:25 PM</small></span><span class="st">Not started</span></div>
+    <div class="pr"><span class="pos">FLEX</span><span class="who">P. Nacua<small>LAR · final</small></span><b class="n">6.5</b></div>
+  </div>
+
+  <div class="sh"><h3>Your picks</h3><a href="#">Board →</a></div>
+  <div class="card">
+    <div class="chips"><span class="chip good">SEA <b>✓</b></span><span class="chip bad">LAR <b>✗</b></span><span class="chip">CIN <b>live</b></span><span class="chip">DEN <b>live</b></span><span class="chip q">12 pending</span></div>
+    <div class="foot"><span>NFL <b>1-1</b> · CFB <b>5-2</b></span><span>next lock 1:00 PM</span></div>
+  </div>
+
+  <div class="daily">
+    <div><div class="t">The Daily</div><div class="s">Edition 029 · not played · closes midnight ET</div></div>
+    <span class="go">Play</span>
+  </div>
+
+  <div class="sh"><h3>Your teams</h3><a href="#">Edit →</a></div>
+  <div class="card">
+    <div class="gm"><svg class="mk" viewBox="0 0 24 24"><defs><clipPath id="c1"><circle cx="12" cy="12" r="11.5"/></clipPath></defs><g clip-path="url(#c1)"><rect width="24" height="24" fill="#AA0000"/><rect y="14" width="24" height="10" fill="#B3995D"/></g></svg><span class="ab">SF</span><span>49ers</span><span class="sc n">27-7</span><span class="tag w">W</span></div>
+    <div class="gm"><svg class="mk" viewBox="0 0 24 24"><defs><clipPath id="c2"><circle cx="12" cy="12" r="11.5"/></clipPath></defs><g clip-path="url(#c2)"><rect width="24" height="24" fill="#E31837"/><rect y="14" width="24" height="10" fill="#FFB81C"/></g></svg><span class="ab">KC</span><span>Chiefs</span><span class="sc n">1:25 PM</span></div>
+    <div class="gm"><svg class="mk" viewBox="0 0 24 24"><defs><clipPath id="c3"><circle cx="12" cy="12" r="11.5"/></clipPath></defs><g clip-path="url(#c3)"><rect width="24" height="24" fill="#9E1B32"/><rect y="14" width="24" height="10" fill="#FFFFFF"/></g></svg><span class="rk">#13</span><span class="ab">ALA</span><span>Alabama</span><span class="sc n">24-10</span><span class="tag lv">Q3</span></div>
+  </div>
+
+  <div class="sh"><h3>The numbers</h3><a href="#">NFL home →</a></div>
+  <div class="sw"><span class="on">NFL</span><a>CFB</a><a>EPL</a></div>
+  <div class="rail">
+    <div class="rchip mine"><div class="r">1</div><div class="a">SF</div><div class="w">1-0</div></div>
+    <div class="rchip"><div class="r">2</div><div class="a">LAR</div><div class="w">0-1</div></div>
+    <div class="rchip mine"><div class="r">3</div><div class="a">KC</div><div class="w">0-0</div></div>
+    <div class="rchip"><div class="r">4</div><div class="a">BUF</div><div class="w">0-0</div></div>
+    <div class="rchip"><div class="r">5</div><div class="a">CIN</div><div class="w">0-0</div></div>
+    <div class="rchip"><div class="r">6</div><div class="a">DET</div><div class="w">0-0</div></div>
+  </div>
+  <div class="two" style="margin-top:8px">
+    <div class="card"><div class="eb q" style="margin-bottom:5px">Week leaders</div>
+      <table class="tbl"><tr><td class="l">PASS</td><td class="v">Purdy 205</td></tr><tr><td class="l">RUSH</td><td class="v">Robinson 88</td></tr><tr><td class="l">REC</td><td class="v">Nacua 122</td></tr></table></div>
+    <div class="card"><div class="eb q" style="margin-bottom:5px">AFC West</div>
+      <table class="tbl"><tr><td class="l">KC</td><td class="v">0-0</td></tr><tr><td class="l">LAC</td><td class="v">0-0</td></tr><tr><td class="l">DEN</td><td class="v">0-0</td></tr><tr><td class="l">LV</td><td class="v">0-0</td></tr></table></div>
+  </div>
+
+  <div class="sh"><h3>The wire</h3><a href="#">All →</a></div>
+  <div class="card">
+    <div class="wire"><span class="ln">MOVE</span><p>Denver −5.5, from −5 overnight.<small>Market · 2h</small></p></div>
+    <div class="wire"><span class="ln q">CLUB</span><p>Mims Jr. not assigned a game status for Week 1.<small>Broncos · 5h</small></p></div>
+  </div>
+</div>
+
+<div class="lbl">Signed out / brand new</div>
+<div class="phone">
+  <div class="eb">Sunday · Week 1 · 10:42 AM</div>
+  <div class="h1">Today</div>
+
+  <div class="read">
+    <div class="eb q">The read</div>
+    <h4>Week 1 spreads are still pricing last year's offenses.</h4>
+    <p>Three games where the number hasn't caught up, and one where it already has.</p>
+    <a href="#">Read the card · 9 min →</a>
+  </div>
+
+  <div class="empty">
+    <h4>Nothing riding yet</h4>
+    <p>Set six players, pick fourteen games, or play today's Daily. Then this page is yours.</p>
+    <a href="#">Start with the Daily</a>
+  </div>
+
+  <div class="sh"><h3>Kicking off</h3><a href="#">All scores →</a></div>
+  <div class="card">
+    <div class="gm"><span class="ab n">10:00</span><span>DEN at TEN</span><span class="sc" style="font:600 11px var(--mono);color:var(--muted)">DEN −5.5</span></div>
+    <div class="gm"><span class="ab n">1:00</span><span>TB at CIN</span><span class="sc" style="font:600 11px var(--mono);color:var(--muted)">CIN −3.5</span></div>
+    <div class="gm"><span class="ab n">1:25</span><span>KC at LAC</span><span class="sc" style="font:600 11px var(--mono);color:var(--muted)">KC −2.5</span></div>
+  </div>
+
+  <div class="sh"><h3>The numbers</h3><a href="#">NFL home →</a></div>
+  <div class="sw"><span class="on">NFL</span><a>CFB</a><a>EPL</a></div>
+  <div class="rail">
+    <div class="rchip"><div class="r">1</div><div class="a">SF</div><div class="w">1-0</div></div>
+    <div class="rchip"><div class="r">2</div><div class="a">LAR</div><div class="w">0-1</div></div>
+    <div class="rchip"><div class="r">3</div><div class="a">KC</div><div class="w">0-0</div></div>
+    <div class="rchip"><div class="r">4</div><div class="a">BUF</div><div class="w">0-0</div></div>
+    <div class="rchip"><div class="r">5</div><div class="a">CIN</div><div class="w">0-0</div></div>
+  </div>
+  <div class="two" style="margin-top:8px">
+    <div class="card"><div class="eb q" style="margin-bottom:5px">Week leaders</div>
+      <table class="tbl"><tr><td class="l">PASS</td><td class="v">Purdy 205</td></tr><tr><td class="l">RUSH</td><td class="v">Robinson 88</td></tr><tr><td class="l">REC</td><td class="v">Nacua 122</td></tr></table></div>
+    <div class="card"><div class="eb q" style="margin-bottom:5px">AFC East</div>
+      <table class="tbl"><tr><td class="l">BUF</td><td class="v">0-0</td></tr><tr><td class="l">MIA</td><td class="v">0-0</td></tr><tr><td class="l">NE</td><td class="v">0-1</td></tr><tr><td class="l">NYJ</td><td class="v">0-0</td></tr></table></div>
+  </div>
+</div>
+
+</body></html>
