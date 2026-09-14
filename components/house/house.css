@@ -1,0 +1,30 @@
+/* components/house/house.css - the house marker and its method line.
+
+   MUTED ON PURPOSE. This is a disclosure, not a decoration: it has to be
+   legible on every row it appears on and it must never read as a rank, a
+   badge or a score. It is the same treatment on a row at the top of the
+   board as on a row at the bottom. */
+
+.hs { display: inline-flex; flex-direction: column; gap: 1px; vertical-align: middle; margin-left: 6px; }
+.hs--inline { flex-direction: row; align-items: baseline; gap: 6px; }
+
+.hs-mark {
+  display: inline-block;
+  font-family: var(--font-mono, monospace);
+  font-size: 9px; font-weight: 700; letter-spacing: .1em;
+  line-height: 1.4; padding: 0 4px; border-radius: 3px;
+  color: var(--muted, #9A9A94);
+  border: 1px solid var(--line, #2A2A2A);
+  white-space: nowrap;
+}
+
+/* THE METHOD LINE WRAPS. It is a sentence, and a sentence in a table cell
+   that cannot wrap runs off the side of a phone - the same defect the Draft
+   card's Results line had. */
+.hs-method {
+  display: block;
+  font-size: 10px; line-height: 1.35;
+  color: var(--quiet, #6E6E68);
+  white-space: normal; max-width: 34ch;
+}
+.hs--inline .hs-method { display: inline; max-width: none; }

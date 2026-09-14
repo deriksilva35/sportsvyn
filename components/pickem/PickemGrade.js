@@ -9,6 +9,8 @@
  */
 
 import ShareGrade from '@/components/games/ShareGrade';
+import { HouseMark } from '@/components/house/HouseTag';
+import '@/components/house/house.css';
 import {
   pickemGradeRows, fadedFavourites, pickemMathline, pickemGlyphRow,
 } from '@/lib/pickem/settledGrade';
@@ -101,7 +103,7 @@ export default function PickemGrade({
         {leaderboard.top.map((r) => (
           <div className={`gg-lr${myRow && r.userId === myRow.userId ? ' gg-lr--you' : ''}`} key={r.userId}>
             <span className="gg-lr-rk">{r.rank}</span>
-            <span className="gg-lr-who">{myRow && r.userId === myRow.userId ? 'you' : r.name}</span>
+            <span className="gg-lr-who">{myRow && r.userId === myRow.userId ? 'you' : r.name}<HouseMark row={r} /></span>
             <span className="gg-lr-sc">{r.score}</span>
           </div>
         ))}

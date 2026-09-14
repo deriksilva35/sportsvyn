@@ -18,6 +18,8 @@
  */
 
 import Link from 'next/link';
+import HouseTag from '@/components/house/HouseTag';
+import '@/components/house/house.css';
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
@@ -163,7 +165,7 @@ function BoardsPane({ v, userId = null }) {
             <div>
               {b.table.top.map((r) => (
                 <div className="row" key={r.userId}>
-                  <span className="lb-left"><span className="rank">{r.rank ?? '-'}</span>{r.name}</span>
+                  <span className="lb-left"><span className="rank">{r.rank ?? '-'}</span>{r.name}<HouseTag row={r} /></span>
                   <span className="v">
                     {r.note ?? <>{r.pct}% <span className="muted">({r.correct}/{r.played})</span></>}
                   </span>
@@ -171,7 +173,7 @@ function BoardsPane({ v, userId = null }) {
               ))}
               {b.table.self && (
                 <div className="row row--me">
-                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '-'}</span>{b.table.self.name}</span>
+                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '-'}</span>{b.table.self.name}<HouseTag row={b.table.self} /></span>
                   <span className="v">
                     {b.table.self.note ?? <>{b.table.self.pct}% <span className="muted">({b.table.self.correct}/{b.table.self.played})</span></>}
                   </span>
@@ -185,7 +187,7 @@ function BoardsPane({ v, userId = null }) {
             <div>
               {b.table.top.map((r) => (
                 <div className="row" key={r.userId}>
-                  <span className="lb-left"><span className="rank">{r.rank ?? '-'}</span>{r.name}</span>
+                  <span className="lb-left"><span className="rank">{r.rank ?? '-'}</span>{r.name}<HouseTag row={r} /></span>
                   <span className="v">
                     {r.note ?? <>{r.avgPct}% <span className="muted">avg · {r.weeksPlayed} played</span></>}
                   </span>
@@ -193,7 +195,7 @@ function BoardsPane({ v, userId = null }) {
               ))}
               {b.table.self && (
                 <div className="row row--me">
-                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '-'}</span>{b.table.self.name}</span>
+                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '-'}</span>{b.table.self.name}<HouseTag row={b.table.self} /></span>
                   <span className="v">
                     {b.table.self.note ?? <>{b.table.self.avgPct}% <span className="muted">avg · {b.table.self.weeksPlayed} played</span></>}
                   </span>
