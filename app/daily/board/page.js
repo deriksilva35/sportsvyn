@@ -41,6 +41,8 @@
  */
 
 import { auth } from '@/auth';
+import HouseTag from '@/components/house/HouseTag';
+import '@/components/house/house.css';
 import { resolveShellMode } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { sql } from '@/lib/db';
@@ -175,7 +177,7 @@ export default async function SeasonBoardPage({ searchParams }) {
                 {todayRows.map((r) => (
                   <div key={r.userId} className="sbd-lr">
                     <span className="sbd-lr-rk">{r.rank}</span>
-                    <span className="sbd-lr-who">{r.handle}</span>
+                    <span className="sbd-lr-who">{r.handle}<HouseTag row={r} /></span>
                     <span className="sbd-lr-sc">{r.primary.toLocaleString()}</span>
                   </div>
                 ))}
@@ -225,7 +227,7 @@ export default async function SeasonBoardPage({ searchParams }) {
               {todayRows.map((r) => (
                 <div key={r.userId} className="sbd-lr">
                   <span className="sbd-lr-rk">{r.rank}</span>
-                  <span className="sbd-lr-who">{r.handle}</span>
+                  <span className="sbd-lr-who">{r.handle}<HouseTag row={r} /></span>
                   <span className="sbd-lr-sc">{r.primary.toLocaleString()}</span>
                 </div>
               ))}

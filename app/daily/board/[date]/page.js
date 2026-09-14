@@ -17,6 +17,8 @@
  */
 
 import { redirect, notFound } from 'next/navigation';
+import HouseTag from '@/components/house/HouseTag';
+import '@/components/house/house.css';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
@@ -112,7 +114,7 @@ export default async function DailyResultsPage({ params }) {
         {rows.map((r) => (
           <div key={r.userId} className="sbd-lr">
             <span className="sbd-lr-rk">{r.rank}</span>
-            <span className="sbd-lr-who">{r.handle}</span>
+            <span className="sbd-lr-who">{r.handle}<HouseTag row={r} /></span>
             <span className="sbd-lr-sc">{r.primary.toLocaleString('en-US')}</span>
           </div>
         ))}

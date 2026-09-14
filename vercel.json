@@ -130,6 +130,10 @@
       "schedule": "21 * * * *"
     },
     {
+      "path": "/api/cron/house-entries",
+      "schedule": "40 * * * *"
+    },
+    {
       "path": "/api/cron/wire",
       "schedule": "7,22,37,52 * * * *"
     }

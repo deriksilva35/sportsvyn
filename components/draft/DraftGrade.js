@@ -12,6 +12,8 @@
  */
 
 import ShareGrade from '@/components/games/ShareGrade';
+import { HouseMark } from '@/components/house/HouseTag';
+import '@/components/house/house.css';
 import { draftGradeRows, firstDivergentRound, gradeGlyphRow } from '@/lib/games/gradePairing';
 import { ordinal } from '@/lib/standings/view';
 import { seatRangeLabel } from '@/lib/games/leaderboard';
@@ -192,7 +194,7 @@ export default function DraftGrade({
           <div className={`gg-lr${myRow && r.userId === myRow.userId ? ' gg-lr--you' : ''}`} key={r.userId}>
             <span className="gg-lr-rk">{r.rank}</span>
             <span className="gg-lr-who">
-              {myRow && r.userId === myRow.userId ? 'you' : r.name}
+              {myRow && r.userId === myRow.userId ? 'you' : r.name}<HouseMark row={r} />
               {r.seat != null && <> &middot; seat {r.seat}</>}
             </span>
             <span className="gg-lr-sc">{r.score}</span>

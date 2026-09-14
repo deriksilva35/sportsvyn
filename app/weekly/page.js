@@ -196,7 +196,7 @@ export default async function WeeklyPage({ searchParams }) {
   // score itself. Every module below the hero is the Daily's, unchanged.
   if (state === 'settled') {
     const v = settledView({ contest, entry, board });
-    const leaderboard = await scoreLeaderboard(contest.id, userId != null ? Number(userId) : null, { limit: 5 });
+    const leaderboard = await scoreLeaderboard(contest.id, userId != null ? Number(userId) : null, { limit: 5, game: 'weekly' });
     const next = await nextContest().catch(() => null);
     // The ~12 players actually on the card - yours and the ceiling's -
     // never the whole week. Caught: a missing stat line costs a row its
