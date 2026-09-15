@@ -49,7 +49,7 @@ const signedInAs = (id) => writeFileSync(STATE, JSON.stringify({ userId: id }));
 before(async () => {
   const [u] = await sql`INSERT INTO users (email) VALUES (${`${NS}@example.invalid`}) RETURNING id`;
   userId = u.id;
-  const [m] = await sql`SELECT id FROM matches ORDER BY id DESC LIMIT 1`;
+  const [m] = await sql`SELECT id FROM matches ORDER BY id ASC LIMIT 1`;
   matchId = m.id;
   signedInAs(userId);
   writeFileSync(STUB, [
