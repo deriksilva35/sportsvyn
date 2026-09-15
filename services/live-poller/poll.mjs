@@ -10,7 +10,7 @@ import { emit } from '../../lib/wire/emit.js';
 import { transitionsFor } from '../../lib/push/transitions.js';
 import { dispatch } from '../../lib/push/dispatch.js';
 import { scoreKindLabel } from '../../lib/push/payload.js';
-import { onScore, onTick, flush as flushFold } from '../../lib/push/scoreFold.js';
+import { onScore, onTick, flush as flushFold, FOLD_WINDOW_MS } from '../../lib/push/scoreFold.js';
 import { scoringPlayFor } from '../../lib/push/scoringPlayRead.js';
 
 const CFBD = 'https://apinext.collegefootballdata.com';
@@ -318,7 +318,15 @@ export async function pollOnce(sql, {
           if (t.event !== 'score') {
             for (const side of ['home', 'away']) {
               const k = `${m.id}:${side}`;
-              const { pending: p2, emit: held } = flushFold(pendingScore.get(k) ?? null);
+              const held0 = pendingScore.get(k) ?? null;
+              // THE LOOKUP IS RE-RUN WHEN THE HOLD RESOLVES, not only when it
+              // started. A held six usually has no play row yet - the plays
+              // cron writes every ~120s against a 30s score poller - so the
+              // scorer very often arrives during the hold.
+              const freshPlay = held0
+                ? await scoringPlayFor(sql, m.id, { homeScore: held0.state?.homeScore, awayScore: held0.state?.awayScore }).catch(() => null)
+                : null;
+              const { pending: p2, emit: held } = flushFold(held0, { play: freshPlay });
               if (p2) pendingScore.set(k, p2); else pendingScore.delete(k);
               for (const e of held) {
                 const abbr = side === 'home' ? m.home_abbr : m.away_abbr;
@@ -326,6 +334,7 @@ export async function pollOnce(sql, {
                   ...e.state,
                   scoreKind: e.kind ? `${abbr} ${e.kind}` : null,
                   scorer: e.scorer ?? null,
+                  credit: e.credit ?? null,
                 });
               }
             }
@@ -368,7 +377,7 @@ export async function pollOnce(sql, {
               ? `${teamAbbr} ${e.kind}`
               : scoreKindLabel(delta, { priorWasTouchdown, teamAbbr });
             if (scoreKind) lastScoreKind.set(key, scoreKind);
-            await sendOne('score', { ...e.state, scoreKind, scorer: e.scorer ?? null });
+            await sendOne('score', { ...e.state, scoreKind, scorer: e.scorer ?? null, credit: e.credit ?? null });
           }
         } catch (e) { out.pushErrors.push(String(e?.message ?? e).slice(0, 120)); }
       }
@@ -401,14 +410,25 @@ export async function pollOnce(sql, {
   // quiet after a touchdown would sit on it until the next score.
   if (!dryRun && push) {
     for (const [k, p] of [...pendingScore]) {
-      const { pending: still, emit: due } = onTick(p, { now: Date.now() });
+      // ONE LOOKUP PER DUE HOLD, and only when it is actually due - a hold
+      // still inside its window costs no query.
+      const due0 = Date.now() - p.at >= FOLD_WINDOW_MS;
+      const freshPlay = due0
+        ? await scoringPlayFor(sql, p.match?.id ?? null, { homeScore: p.state?.homeScore, awayScore: p.state?.awayScore }).catch(() => null)
+        : null;
+      const { pending: still, emit: due } = onTick(p, { now: Date.now(), play: freshPlay });
       if (still) pendingScore.set(k, still); else pendingScore.delete(k);
       for (const e of due) {
         try {
           const r = await dispatch(sql, {
             match: p.match,
             event: 'score',
-            state: { ...e.state, scoreKind: e.kind ? `${p.teamAbbr} ${e.kind}` : null, scorer: e.scorer ?? null },
+            state: {
+              ...e.state,
+              scoreKind: e.kind ? `${p.teamAbbr} ${e.kind}` : null,
+              scorer: e.scorer ?? null,
+              credit: e.credit ?? null,
+            },
             log,
           });
           out.pushes.push({ event: 'score', sent: r.sent, skipped: r.skipped, failed: r.failed, foldTimeout: true });
