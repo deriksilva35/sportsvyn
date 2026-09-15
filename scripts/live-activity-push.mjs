@@ -56,7 +56,12 @@ if (!Number.isInteger(matchId) || matchId <= 0) {
 const event = arg('event', 'update') === 'end' ? 'end' : 'update';
 
 const [match] = await sql`
-  SELECT m.id, m.slug, m.status, m.home_score, m.away_score, m.live_state,
+  -- live_state IS A KEY IN metadata, not a column - the poller writes it with
+  -- a top-level jsonb merge (lib/gridiron/cfbScoreboard.js explains why it is
+  -- flat). Reading it as a column is the mistake this line exists to prevent
+  -- the next person making.
+  SELECT m.id, m.slug, m.status, m.home_score, m.away_score,
+         m.metadata->'live_state' AS live_state,
          h.abbreviation AS home_abbr, a.abbreviation AS away_abbr
     FROM matches m
     JOIN teams h ON h.id = m.home_team_id
