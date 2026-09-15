@@ -11,6 +11,7 @@
  */
 
 import Link from 'next/link';
+import { rosterForEntry } from '@/lib/draft/roomRoster';
 import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -243,7 +244,12 @@ export default async function DraftPage({ searchParams }) {
 
   // ---- WAITING: drafted, not yet locked -----------------------------------
   if (state === 'waiting') {
-    const roster = entry?.meta?.roster ?? [];
+    // THE ROOM SHOWS WHAT IT DRAFTED BEFORE IT SHOWS WHAT IT SCORED.
+    // meta.roster is written at bridge time, and a room completed by
+    // autoCompleteDraftFor - the house personas' whole path, and the settle's
+    // self-heal - does not bridge until Tuesday. Reading the picks back means
+    // a finished room is never an empty card. See lib/draft/roomRoster.js.
+    const { source, rows: roster } = await rosterForEntry(entry);
     return (
       <Shell>
         <section className="mod mod--entered">
@@ -254,11 +260,27 @@ export default async function DraftPage({ searchParams }) {
           </p>
           <div>
             {roster.map((r) => (
-              <div className="row" key={r.ffc ?? r.id}>
-                <span><span className="slot-tag">R{r.round}</span> {r.name}</span>
+              <div className="row" key={r.ffc ?? r.id ?? r.overall}>
+                <span>
+                  <span className="slot-tag">R{r.round}</span> {r.name}
+                  {/* THE OVERALL, on the read-back path only. It is what
+                      draft_picks is ordered by and the only thing that says
+                      where in the room a pick happened. */}
+                  {r.overall != null ? <span className="muted"> &middot; {r.overall} ov</span> : null}
+                </span>
                 <span className="r r--mut">{r.pos}</span>
               </div>
             ))}
+            {/* NO SCORES AND NO BEST-SIX MARKING, said rather than shown. Both
+                need the week's real points, which do not exist until the
+                settle; six ticks and eight zeros on a Wednesday would be
+                inventing both. */}
+            {source === 'picks' ? (
+              <div className="row">
+                <span>Best six</span>
+                <span className="r r--mut r--wrap">chosen at settle, from the week&apos;s real scores</span>
+              </div>
+            ) : null}
             <div className="row"><span>Locks</span><span className="r"><Stamp iso={contest.locks_at} /></span></div>
             <div className="row"><span>Results</span><span className="r r--mut">Tuesday morning</span></div>
           </div>

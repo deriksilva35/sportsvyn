@@ -21,7 +21,7 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { runHouseTick } from '@/lib/house/run';
 import { HOMER_TEAMS } from '@/lib/house/personas';
-import { currentPickemBoard } from '@/lib/pickem/sequence';
+import { openPickemBoards } from '@/lib/pickem/sequence';
 import { currentContest as currentWeeklyContest } from '@/lib/weekly/entries';
 import { currentDraftContest } from '@/lib/draft/contest';
 import { getSpreadHome } from '@/lib/gridiron/oddsReader';
@@ -40,12 +40,20 @@ async function openDailyBoard(now) {
   return b ?? null;
 }
 
-/** The Homer's team ids, resolved from abbreviations once per tick. */
+/**
+ * The Homer's team ids, per sport, resolved once per tick.
+ *
+ * ITS CLUBS ARE NFL CLUBS. On a CFB board it has no team in the fight, so the
+ * cfb list is empty and it picks nothing there - the right answer for a homer
+ * whose teams are not playing, and what its method line already promises.
+ */
 async function homerTeamIds() {
   const rows = await sql`
-    SELECT t.id FROM teams t JOIN leagues l ON l.id = t.league_id
-     WHERE l.slug = 'nfl' AND t.abbreviation = ANY(${[...HOMER_TEAMS]})`;
-  return rows.map((r) => Number(r.id));
+    SELECT t.id, l.slug FROM teams t JOIN leagues l ON l.id = t.league_id
+     WHERE l.slug IN ('nfl', 'cfb') AND t.abbreviation = ANY(${[...HOMER_TEAMS]})`;
+  const out = { nfl: [], cfb: [] };
+  for (const r of rows) if (r.slug === 'nfl') out.nfl.push(Number(r.id));
+  return out;
 }
 
 export async function GET(request) {
@@ -56,24 +64,29 @@ export async function GET(request) {
     source: SOURCE,
     kind: 'file',
     run: async () => {
-      const [daily, pickem, weekly, draft, homerIds] = await Promise.all([
+      const [daily, boards, weekly, draft, homerIds] = await Promise.all([
         openDailyBoard(now).catch(() => null),
-        currentPickemBoard({ now }).catch(() => null),
+        openPickemBoards({ now }).catch(() => []),
         currentWeeklyContest({ now }).catch(() => null),
         currentDraftContest({ now }).catch(() => null),
-        homerTeamIds().catch(() => []),
+        homerTeamIds().catch(() => ({ nfl: [], cfb: [] })),
       ]);
-      const spreads = pickem
-        ? await getSpreadHome((pickem.board ?? []).map((g) => g.match_id)).catch(() => new Map())
-        : new Map();
+
+      // ONE ODDS READ PER BOARD, not one for the slate. The two boards are
+      // different sports with different match ids, and a shared map would
+      // silently give each board the other's misses.
+      const spreadsByBoard = new Map();
+      for (const b of boards) {
+        spreadsByBoard.set(b.id, await getSpreadHome((b.board ?? []).map((g) => g.match_id)).catch(() => new Map()));
+      }
 
       const summary = await runHouseTick(sql, {
         now,
         openDailyBoard: daily,
-        pickemContest: pickem && !pickem.settled ? pickem : null,
+        pickemBoards: boards,
         weeklyContest: weekly && !weekly.settled ? weekly : null,
         draftContest: draft && !draft.settled ? draft : null,
-        spreads,
+        spreadsByBoard,
         homerTeamIds: homerIds,
       });
       return { ok: true, summary };
