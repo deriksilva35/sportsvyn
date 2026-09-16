@@ -15,6 +15,11 @@
 // still a browser. Rendering a button that cannot post is worse than not
 // rendering it.
 //
+// IT NEVER STARTS ON ITS OWN (relay 3B item 4). Activity.request needs the app
+// in the foreground, and a start posted from a mount effect while the webview
+// is still coming up is simply lost. The only start in this file is inside an
+// onClick.
+//
 // STATE IS A PROP, NOT A FETCH. The six fields are built on the server by
 // stateFromMatch() from the same game the page is already rendering, so this
 // component cannot invent a scoreline the page does not show.
@@ -24,7 +29,7 @@ import {
   startLiveActivity, endLiveActivity, canUseLiveActivityBridge,
 } from '@/lib/shell/liveActivityBridge';
 
-export default function LiveActivityDebug({ matchId, state, url }) {
+export default function LiveActivityDebug({ matchId, url, state }) {
   // MOUNTED FIRST, THEN ASK. document.cookie and window.Capacitor do not exist
   // during the server render, and answering "no" there and "yes" after
   // hydration is a mismatch React will complain about. null means "not asked
@@ -37,7 +42,7 @@ export default function LiveActivityDebug({ matchId, state, url }) {
   if (can !== true) return null;
 
   const start = () => {
-    const posted = startLiveActivity({ matchId, state, url });
+    const posted = startLiveActivity({ matchId, url, state });
     setSaid(posted
       ? `start posted · ${state.awayAbbr} ${state.awayScore}, ${state.homeAbbr} ${state.homeScore}${state.period ? ` · ${state.period} ${state.clock}` : ''}`
       : 'start NOT posted - no container');

@@ -337,8 +337,8 @@ export default async function GamePage({ params, searchParams }) {
         {isShell ? (
           <LiveActivityDebug
             matchId={game.id}
-            state={stateFromMatch(game)}
             url={gameUrlFor(game)}
+            state={stateFromMatch(game)}
           />
         ) : null}
 
