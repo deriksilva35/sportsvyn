@@ -30,7 +30,7 @@
 // 0-0 with no period and a frozen card proves nothing.
 
 import { neon } from '@neondatabase/serverless';
-import { contentState, updatePayload, endPayload, liveActivityConfig, liveActivityTopic } from '../lib/push/liveActivity.js';
+import { contentState, stateFromMatch, updatePayload, endPayload, liveActivityConfig, liveActivityTopic } from '../lib/push/liveActivity.js';
 import { gateReport } from '../lib/push/apns.js';
 import { liveActivitiesFor, pushLiveActivities } from '../lib/push/liveActivityStore.js';
 
@@ -72,13 +72,24 @@ if (!match) { console.error(`no match ${matchId} on ${prod ? 'PROD' : 'DEV'}`); 
 const scoreArg = arg('score');
 const [awayOverride, homeOverride] = scoreArg ? scoreArg.split('-').map((s) => Number(s.trim())) : [null, null];
 
+// ONE BUILDER, NOT TWO (relay 3B item 3). stateFromMatch() is the same
+// function the NFL game page hands to the bridge, so a card started from the
+// web and a card updated by this script cannot disagree about what the six
+// fields mean. It speaks getGamePage()'s shape, so the flat SQL row is aliased
+// into that shape here rather than the six being assembled a second way.
+const base = stateFromMatch({
+  away: { abbreviation: match.away_abbr },
+  home: { abbreviation: match.home_abbr },
+  awayScore: match.away_score,
+  homeScore: match.home_score,
+  liveState: match.live_state,
+});
 const state = contentState({
-  awayAbbr: match.away_abbr,
-  awayScore: awayOverride ?? match.away_score ?? 0,
-  homeAbbr: match.home_abbr,
-  homeScore: homeOverride ?? match.home_score ?? 0,
-  period: arg('period', match.live_state?.period ?? ''),
-  clock: arg('clock', match.live_state?.clock ?? ''),
+  ...base,
+  awayScore: awayOverride ?? base.awayScore,
+  homeScore: homeOverride ?? base.homeScore,
+  period: arg('period', base.period),
+  clock: arg('clock', base.clock),
 });
 
 const cfg = liveActivityConfig();
