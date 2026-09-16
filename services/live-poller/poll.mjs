@@ -230,6 +230,14 @@ export async function pollOnce(sql, {
   const candidates = await sql`
     SELECT m.id, m.slug, m.status, m.home_score, m.away_score,
            m.league_id, m.home_team_id, m.away_team_id, m.kickoff_at,
+           -- THE BEFORE live_state, WHICH THIS QUERY DID NOT SELECT UNTIL NOW.
+           -- transitionsFor's quarter rule needs the period we held BEFORE this
+           -- poll; without it the call below passed live_state: null every time
+           -- and 'quarter' could never fire - not for a Live Activity, and not
+           -- for the quarter ALERTS readers have been able to switch on since
+           -- the alerts sheet shipped. One column, and the rule works as
+           -- written.
+           m.metadata->'live_state' AS before_live_state,
            m.external_ids->>${providerKey} AS pid,
            l.slug AS league_slug,
            h.abbreviation AS home_abbr, a.abbreviation AS away_abbr,
@@ -289,7 +297,7 @@ export async function pollOnce(sql, {
     // Wire and the settle all depend on.
     if (!dryRun && push) {
       const evs = transitionsFor(
-        { ...m, live_state: null },
+        { ...m, live_state: m.before_live_state ?? null },
         { ...after, live_state: upd.liveState },
       );
       for (const t of evs) {

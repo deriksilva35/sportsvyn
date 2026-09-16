@@ -21,7 +21,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { pollOnce } from './poll.mjs';
-import { transitionsFor } from '../../lib/push/transitions.js';
+import { stateFromMatch } from '../../lib/push/liveActivityState.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, '..', '..');
@@ -120,31 +120,28 @@ test('A SCORE CHANGE REACHES THE RIDER, with the after row\'s numbers', async ()
   assert.equal(la.failed, 0);
 });
 
-test('A QUARTER CHANGE CANNOT REACH THE RIDER TODAY - and this is why', async () => {
-  // NOT A CHOICE, A HOLE I FOUND WIRING THIS. poll.mjs calls
-  //   transitionsFor({ ...m, live_state: null }, { ...after, live_state: upd.liveState })
-  // and the candidate query does not select m.metadata, so the BEFORE period is
-  // hard-nulled on every poll. transitionsFor's quarter rule requires a before
-  // period, so 'quarter' has never fired from the poller - for the card, and
-  // for quarter ALERTS, which readers have been able to switch on since the
-  // alerts sheet shipped.
+test('A QUARTER CHANGE PUSHES THE NEW QUARTER, not the one the game left', async () => {
+  // THE HOLE THIS TEST WAS WRITTEN AGAINST, now closed. poll.mjs used to call
+  //   transitionsFor({ ...m, live_state: null }, ...)
+  // because the candidate query never selected m.metadata, so the BEFORE period
+  // was null on every poll and 'quarter' could not fire at all. The query now
+  // selects it.
+  //
+  // AND THE SECOND TRAP: transitionsFor deliberately puts the BEFORE period on
+  // its quarter event so an alert can say "End of Q2". A card built from the
+  // event would show Q2 at the moment the game entered Q3 - and would pass any
+  // test that only checks that a push went out. The rider builds from the AFTER
+  // row, so the assertion below is on the row, not on the event.
   const out = await poll(feed('live', 10, 7, 3, '14:52'));
-  assert.equal(out.liveActivities.length, 0, 'the quarter alone moves nothing today');
-
-  // The rule itself is fine. Given the before period it would fire - so the
-  // fix is the row, not the rule.
-  const before = { status: 'live', home_score: 10, away_score: 7, live_state: { period: 2, clock: '0:00' } };
-  const after = { status: 'live', home_score: 10, away_score: 7, live_state: { period: 3, clock: '14:52' } };
-  assert.deepEqual(transitionsFor(before, after).map((t) => t.event), ['quarter']);
-  assert.deepEqual(
-    transitionsFor({ ...before, live_state: null }, after).map((t) => t.event), [],
-    'and with the before live_state nulled - the poller\'s exact call - it does not',
-  );
-
-  // The write still happened, and the row now holds the new period, so the
-  // moment the before row is passed in this becomes a push with Q3 on it.
+  assert.equal(out.liveActivities.length, 1, 'the quarter alone is worth a push');
+  assert.equal(out.liveActivities[0].event, 'update');
   const [row] = await sql`SELECT metadata->'live_state'->>'period' AS period FROM matches WHERE id = ${matchId}`;
-  assert.equal(row.period, '3');
+  assert.equal(row.period, '3', 'and the row the state is built from holds the NEW period');
+  // What the card would carry, built the way the rider builds it.
+  assert.equal(stateFromMatch({
+    away: { abbreviation: 'X' }, home: { abbreviation: 'Y' },
+    awayScore: 7, homeScore: 10, liveState: { period: 3, clock: '14:52' },
+  }).period, 'Q3');
 });
 
 test('A POLL THAT CHANGES NOTHING PUSHES NOTHING', async () => {
