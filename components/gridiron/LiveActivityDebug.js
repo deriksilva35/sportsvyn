@@ -24,22 +24,26 @@
 // stateFromMatch() from the same game the page is already rendering, so this
 // component cannot invent a scoreline the page does not show.
 
-import { useEffect, useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import {
   startLiveActivity, endLiveActivity, canUseLiveActivityBridge,
 } from '@/lib/shell/liveActivityBridge';
 
+// useSyncExternalStore, NOT useState + useEffect - the pattern
+// components/shell/AppHeader.js already uses for the same question. The shell
+// cookie and window.Capacitor are an EXTERNAL source that does not exist during
+// the server render, and a setState in a mount effect to find that out is both
+// a cascading render and a lint error. The server snapshot is false, so the
+// control is absent in the first paint and appears only where it can work.
+const subscribe = () => () => {};
+const getSnapshot = () => canUseLiveActivityBridge();
+const getServerSnapshot = () => false;
+
 export default function LiveActivityDebug({ matchId, url, state }) {
-  // MOUNTED FIRST, THEN ASK. document.cookie and window.Capacitor do not exist
-  // during the server render, and answering "no" there and "yes" after
-  // hydration is a mismatch React will complain about. null means "not asked
-  // yet" and renders nothing.
-  const [can, setCan] = useState(null);
+  const can = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [said, setSaid] = useState(null);
 
-  useEffect(() => { setCan(canUseLiveActivityBridge()); }, []);
-
-  if (can !== true) return null;
+  if (!can) return null;
 
   const start = () => {
     const posted = startLiveActivity({ matchId, url, state });
