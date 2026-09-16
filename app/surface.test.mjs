@@ -179,6 +179,9 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     'components/rankings/rankings.css': 17,
     // The You tab (YOU TAB v1), on the global tokens.
     'components/you/you.css': 17,
+    // The Live Activity debug control (relay 3B): one border on a shell-only
+    // button, written after the promotion and therefore never broken.
+    'app/nfl/game/[slug]/game.css': 1,
   };
   const found = {};
   for (const f of CSS) {
@@ -188,8 +191,8 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   }
   assert.deepEqual(found, EXPECTED,
     'a new bare call site is fine now that the tokens are global - update the count deliberately');
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 124,
-    '18 were broken before the promotion; 106 were written after it');
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 125,
+    '18 were broken before the promotion; 107 were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.
   for (const t of ['--ink-2', '--ink-3', '--line']) {

@@ -40,6 +40,8 @@ import { propsSlate } from '@/lib/market/reads';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import BackToAppBar from '@/components/BackToAppBar';
+import LiveActivityDebug from '@/components/gridiron/LiveActivityDebug';
+import { stateFromMatch, gameUrlFor } from '@/lib/push/liveActivityState';
 import { getTeamRecordChip } from '@/lib/standings/read';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import '@/components/gridiron/gridiron.css';
@@ -325,6 +327,20 @@ export default async function GamePage({ params, searchParams }) {
         ) : (
           <PreGameFacts game={game} />
         )}
+
+        {/* LIVE ACTIVITY DEBUG (relay 3B item 2). SHELL ONLY, and nothing on
+            this page calls the bridge on its own - this is the deliberate hand
+            that starts an Activity for this game and ends it, the web
+            equivalent of the native debug buttons. The six fields come from
+            stateFromMatch(), the same builder scripts/live-activity-push.mjs
+            uses, so the card and the push cannot disagree about the score. */}
+        {isShell ? (
+          <LiveActivityDebug
+            matchId={game.id}
+            url={gameUrlFor(game)}
+            state={stateFromMatch(game)}
+          />
+        ) : null}
 
         <footer className="gg-foot">
           SPORTSVYN IS NOT AFFILIATED WITH, ENDORSED BY, OR SPONSORED BY THE NATIONAL
