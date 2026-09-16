@@ -171,6 +171,13 @@ async function loop(lg) {
         window.latencies.push(...r.latencies);
         for (const u of r.unmapped) if (!window.unmapped.includes(u)) window.unmapped.push(u);
         if (r.scoreChanges) log(`[${lg.slug}] ${r.scoreChanges} score change(s), ${r.events} event(s)`);
+        // THE LIVE ACTIVITY RIDER, IN THE JOURNAL. Without a line here the
+        // rider is invisible: a night where every card froze and a night where
+        // nobody had one open read exactly the same. Only polls that found an
+        // Activity log at all (poll.mjs drops the empty ones).
+        for (const la of r.liveActivities ?? []) {
+          log(`[${lg.slug}] live activity ${la.event} match=${la.matchId} of=${la.activities} sent=${la.sent} failed=${la.failed} revoked=${la.revoked} skipped=${la.skipped}`);
+        }
         if (r.unmapped.length) log(`[${lg.slug}] UNMAPPED STATUS:`, r.unmapped.join(', '));
         if (stats) {
           // the games this window is watching: live now, or seen live earlier
