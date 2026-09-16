@@ -12,6 +12,8 @@ import { dispatch } from '../../lib/push/dispatch.js';
 import { scoreKindLabel } from '../../lib/push/payload.js';
 import { onScore, onTick, flush as flushFold, FOLD_WINDOW_MS } from '../../lib/push/scoreFold.js';
 import { scoringPlayFor } from '../../lib/push/scoringPlayRead.js';
+import { activityEventFor, pushLiveActivities } from '../../lib/push/liveActivityStore.js';
+import { stateFromMatch } from '../../lib/push/liveActivityState.js';
 
 const CFBD = 'https://apinext.collegefootballdata.com';
 const BDL = 'https://api.balldontlie.io';
@@ -222,6 +224,7 @@ export async function pollOnce(sql, {
     league, considered: 0, matched: 0, unmatched: 0, written: 0,
     scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [],
     latencies: [], wouldWrite: [], pushes: [], pushErrors: [], pushAuthFailure: false,
+    liveActivities: [],
   };
 
   const candidates = await sql`
@@ -380,6 +383,46 @@ export async function pollOnce(sql, {
             await sendOne('score', { ...e.state, scoreKind, scorer: e.scorer ?? null, credit: e.credit ?? null });
           }
         } catch (e) { out.pushErrors.push(String(e?.message ?? e).slice(0, 120)); }
+      }
+
+      // ---- THE LIVE ACTIVITY RIDER (relay 4) -----------------------------
+      // ONE PUSH PER POLL AT MOST, on the transitions the Part C ruling names.
+      // It rides the SAME transition list the alerts ride rather than asking
+      // the row a second question, so "worth a push" has one definition.
+      //
+      // THE CONTENT STATE COMES FROM THE AFTER ROW, NOT FROM THE EVENT. The
+      // quarter event deliberately carries the period the game LEFT
+      // (lib/push/transitions.js sets state.period to the before value, so an
+      // alert can say "End of Q1"), and a card built from that would show Q1
+      // at the moment the game entered Q2 - and would look right in any test
+      // that only checks a push went out. The event decides WHETHER to push;
+      // the row decides WHAT.
+      //
+      // ITS FAILURE IS CONTAINED, like the alert rider above it: a lock-screen
+      // card is a courtesy on top of a scoreboard, and losing one must never
+      // cost the write the board, the Wire and the settle depend on.
+      const laEvent = activityEventFor(evs);
+      if (laEvent) {
+        try {
+          const r = await pushLiveActivities(sql, {
+            matchId: m.id,
+            event: laEvent,
+            state: stateFromMatch({
+              away: { abbreviation: m.away_abbr },
+              home: { abbreviation: m.home_abbr },
+              awayScore: after.away_score,
+              homeScore: after.home_score,
+              liveState: upd.liveState,
+            }),
+            log,
+          });
+          // A MATCH WITH NO ACTIVITIES IS NOT LEDGER-WORTHY. Until relay 5
+          // nothing auto-starts one, so most games have none and a row per
+          // poll would bury the polls that did something.
+          if (r.activities) out.liveActivities.push(r);
+        } catch (e) {
+          out.pushErrors.push(`liveActivity: ${String(e?.message ?? e).slice(0, 100)}`);
+        }
       }
     }
 
