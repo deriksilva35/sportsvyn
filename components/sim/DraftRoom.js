@@ -89,7 +89,17 @@ export default function DraftRoom({
   const [cls, setCls] = useState('ALL');
   const [college, setCollege] = useState(false);
   const [team, setTeam] = useState('ALL');
-  const [sort, setSort] = useState('adp');
+  // THE SORT THE ROOM OPENS ON COMES FROM THE CONFIG, not from this file.
+  // "The Draft" preset names 'ppg' in draft_configs.default_sort so its room
+  // opens on this season's points per game - the Weekly's number, for the
+  // format the Weekly's game settles. Every other config names nothing and
+  // opens on the board's own order, exactly as before.
+  //
+  // NOT VALIDATED HERE. A key the current filter does not offer degrades to
+  // 'adp' in activeSort below, which is the same path a filter change already
+  // takes when it strips the active key out from under the sort - so a bad
+  // value in the column costs a fallback, never a broken room.
+  const [sort, setSort] = useState(config?.default_sort ?? 'adp');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1); // swipe pager index: 0 BOARD / 1 PICK / 2 ROSTER
   const [view, setView] = useState('list'); // desktop (>900) only: 'list' 3-col | 'board' full-width snake grid

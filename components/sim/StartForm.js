@@ -24,11 +24,34 @@ import {
 // attribution.js, NOT ffc.js — ffc.js imports lib/db.js and this is a client bundle.
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/attribution';
 
-// Presets that mirror a ranked contest, by name. A name rather than an id
-// because ids differ between databases - DEV's row is 1902 and PROD's will be
-// its own - and this only decides a label. The values are asserted against
-// DRAFT_CONFIG in lib/draft/preset.test.mjs, which is where drift would bite.
-const RANKED_PRESETS = new Set(['The Weekly Six']);
+// Presets that mirror a ranked contest, by name, with the line each one earns.
+// A name rather than an id because ids differ between databases - DEV's Weekly
+// Six is 1902 and PROD's is 20 - and this only decides a label. The values are
+// asserted against DRAFT_CONFIG in lib/draft/preset.test.mjs, which is where
+// drift would bite.
+//
+// THE CONNECTION HAS TO BE EXPLICIT or a preset is just another shape on the
+// rail. These two exist so the practice range can rehearse formats that
+// actually settle, and naming the game is the entire reason they earn a chip.
+//
+// ONE CARD CARRIES THE MARK. Both of these rehearse a game that settles, but
+// two volt-bordered cards on a six-card rail is a rail with a highlight and no
+// emphasis - the border stops meaning "this one" and starts meaning "these".
+// The Draft is the room this app's Draft page actually runs, so it takes the
+// border and the tag; the Weekly Six keeps its line, which is the part that
+// does the work.
+const RANKED_PRESETS = new Map([
+  ['The Draft', {
+    border: true,
+    tag: 'THE DRAFT',
+    line: "12 · PPR · 8 rounds · the Draft's exact board · sorted by this season",
+  }],
+  ['The Weekly Six', {
+    border: false,
+    tag: null,
+    line: "12 · PPR · 6 rounds · the Weekly's exact board",
+  }],
+]);
 
 const SEG_SCORING = SCORING_FORMATS.map((f) => ({ v: f, label: SCORING_LABEL[f] }));
 const SEG_CLOCK = CLOCK_OPTIONS.map((s) => ({ v: s, label: s == null ? 'NONE' : `${s}S` }));
@@ -163,14 +186,13 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
       <div className="chiplab">Start from</div>
       <div className="deck">
         {presets.map((p) => (
-          <button key={p.id} type="button" className={`pcard${selection === p.id ? ' on' : ''}${RANKED_PRESETS.has(p.name) ? ' pcard--ranked' : ''}`} onClick={() => choosePreset(p)}>
-            <div className="pn">{p.name}</div>
+          <button key={p.id} type="button" className={`pcard${selection === p.id ? ' on' : ''}${RANKED_PRESETS.get(p.name)?.border ? ' pcard--ranked' : ''}`} onClick={() => choosePreset(p)}>
+            <div className="pn">
+              {p.name}
+              {RANKED_PRESETS.get(p.name)?.tag && <span className="ptag">{RANKED_PRESETS.get(p.name).tag}</span>}
+            </div>
             <div className="pm">{p.teams_count} teams · {SCORING_LABEL[p.scoring_format] ?? p.scoring_format.toUpperCase()} · {p.pick_timer_seconds ? `${p.pick_timer_seconds}s` : 'no clock'}</div>
-            {/* THE CONNECTION HAS TO BE EXPLICIT or the preset is just another
-                shape on the rail. This one exists so the practice range can
-                rehearse the format The Draft actually settles - naming it is
-                the entire reason it earns a chip. */}
-            {RANKED_PRESETS.has(p.name) && <div className="pm pm--ranked">the ranked format, unranked</div>}
+            {RANKED_PRESETS.get(p.name)?.line && <div className="pm pm--ranked">{RANKED_PRESETS.get(p.name).line}</div>}
           </button>
         ))}
         <button
