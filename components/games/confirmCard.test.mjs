@@ -26,19 +26,35 @@ const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '')
 const WEEKLY_ROOM = 'components/weekly/WeeklyRoom.js';
 const PICKEM_BOARD = 'components/pickem/PickemBoard.js';
 
-// PICK'EM NO LONGER RENDERS ConfirmCard (v2, R4). Its confirm moved into the
-// board's own footer - a counter that becomes "Lock it in" - because under the
-// rolling lock a card floating below a half-locked board had nothing to sit
-// beside. What did NOT change is the ACTION and the GATE: confirmPickemEntry
-// and confirmVerdict are still the only two, and the tests below now check
-// that rather than checking which component draws the button.
+// NEITHER GAME RENDERS ConfirmCard ANY MORE. The Pick'em's confirm moved into
+// its board footer at v2 (R4); the Weekly's moved into its footer at v2 as
+// well, for the same reason - under a rolling lock a card floating below a
+// half-locked lineup has nothing to sit beside. What did NOT change either
+// time is the ACTION and the GATE: confirmWeeklyEntry / confirmPickemEntry and
+// confirmVerdict are still the only ones, and the tests below check those
+// rather than which component draws the button.
+//
+// ConfirmCard.js AND confirmCard.css ARE THEREFORE UNRENDERED. They are left
+// in the tree, not deleted: removing a shared component is a decision for the
+// relay that notices it is unused, not a side effect of a reskin. The clauses
+// below that describe the card's internals still hold and still pass, and the
+// one guard that matters now is that neither game has rebuilt its markup.
 
 // ------------------------------------------------------ 1: one card, shared
 
-test('THE WEEKLY renders the shared confirm card', () => {
+test('THE WEEKLY CONFIRMS THROUGH ITS FOOTER, with the same action and the same gate', () => {
   const code = strip(src(WEEKLY_ROOM));
-  assert.match(code, /import ConfirmCard from '@\/components\/games\/ConfirmCard'/, 'imports the shared card');
-  assert.match(code, /<ConfirmCard\b/, 'renders it');
+  assert.doesNotMatch(code, /<ConfirmCard\b/, 'no card in the v2 room');
+  assert.doesNotMatch(code, /import ConfirmCard/, 'and it does not import one');
+  assert.match(code, /import \{ confirmWeeklyEntry \} from '@\/app\/actions\/confirm'/,
+    'the same action as before');
+  assert.match(code, /onClick=\{lockItIn\}/, 'and one control that calls it');
+  assert.match(code, /wkv-lock/, 'which is the footer button');
+  // THE RECEIPT IS STILL A RECEIPT. Confirming writes meta.confirmed_at and
+  // nothing else; the settle reads it nowhere.
+  assert.match(code, /confirmWeeklyEntry\(contest\.id\)/);
+  assert.doesNotMatch(strip(src('lib/weekly/settle.js')), /confirmed_at/,
+    'the settle has never read the receipt and still does not');
 });
 
 test("PICK'EM CONFIRMS THROUGH ITS FOOTER, with the same action and the same gate", () => {
@@ -86,7 +102,13 @@ test('the Weekly card carries a roster summary, and the Pickem footer a count', 
   assert.ok(card.indexOf('{summary}', summaryDecl) < card.lastIndexOf('{summary}'),
     'and rendered in both the receipt and the review');
 
-  assert.match(strip(src(WEEKLY_ROOM)), /rows=\{SLOTS\.map/, 'the Weekly passes its six');
+  // THE WEEKLY'S FOOTER NAMES WHAT IS MISSING, not a roster summary: the six
+  // slots are on screen above it, so restating them under the board was the
+  // duplication the v2 footer removed. What it must say is the rule.
+  const room = strip(src(WEEKLY_ROOM));
+  assert.match(room, /\$\{unfilled\.length\} to fill/, 'the Weekly counts what is still empty');
+  assert.match(room, /Six filled or the week does not count/, 'and states the DNF rule');
+  assert.doesNotMatch(room, /scores 0/, 'and never the mock\'s wrong version of it');
   // D4 STILL HOLDS, in the footer now: the count is the PICKABLE games, so a
   // kicked row is outside both the numerator and the denominator.
   const board = strip(src(PICKEM_BOARD));
@@ -240,9 +262,12 @@ test('EITHER game rendering the card renders the wrapper class AND the button', 
   const receipt = card.slice(card.indexOf('if (done)'), card.indexOf('return (\n    <div className="wk-review"'));
   assert.match(receipt, /className="wk-receipt"/, 'the confirmed state has its module wrapper');
 
-  // ONE CALL SITE NOW, not two: the Weekly. The Pick'em's confirm lives in its
-  // own footer and is checked above.
-  assert.match(strip(src(WEEKLY_ROOM)), /<ConfirmCard\b/, 'the Weekly still renders the card');
+  // AND NO CALL SITE AT ALL NOW. Both games confirm through their own footers
+  // (checked above), so this component is unrendered - FILED, not deleted.
+  // The guard that survives is that neither game rebuilt what it replaced.
+  for (const rel of [WEEKLY_ROOM, PICKEM_BOARD]) {
+    assert.doesNotMatch(strip(src(rel)), /<ConfirmCard\b/, `${rel} renders no card`);
+  }
 });
 
 test('the card carries NO horizontal margin - the parent owns the page inset', () => {

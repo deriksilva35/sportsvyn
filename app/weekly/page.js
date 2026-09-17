@@ -41,6 +41,7 @@ import { scoreLeaderboard } from '@/lib/games/leaderboard';
 import { userHasHandle } from '@/lib/onboarding';
 import { sql } from '@/lib/db';
 import '../daily/daily.css';
+import './weekly.css';
 import '@/components/games/grade.css';
 
 export const dynamic = 'force-dynamic';
@@ -327,14 +328,18 @@ export default async function WeeklyPage({ searchParams }) {
   //
   // NULL UNTIL SOMETHING HAS HAPPENED. Before the first kickoff there is no
   // live layer at all and the room renders exactly as it always has.
+  // THE WEEK'S SLATE IS NOT PART OF THE LIVE LAYER, and separating them is
+  // what lets a slot say "SF vs MIA · 1:25 PM" on a Wednesday. `live` is null
+  // until a game has started (below); the opponent, the kickoff and the final
+  // score are public facts about the week that the slots need the whole time.
+  const games = await weekTeamGames({ week: contest.week, seasonYear: contest.season_year })
+    .catch(() => new Map());
+  const gamesByTeam = Object.fromEntries(games);
+
   const live = await (async () => {
     if (!entry) return null;
-    const [{ scored, playedIds }, games] = await Promise.all([
-      liveScoredBoard(contest),
-      weekTeamGames({ week: contest.week, seasonYear: contest.season_year }),
-    ]);
+    const { scored, playedIds } = await liveScoredBoard(contest);
     const mine = liveEntryRows({ lineup: entry.lineup ?? {}, scored, playedIds });
-    const gamesByTeam = Object.fromEntries(games);
     const view = slotStates({ rows: mine.rows, gamesByTeam: games });
     if (view.startedCount === 0) return null;
     // THE RANK IS THE ONE THE TODAY TAB ALREADY PRINTS for this same contest -
@@ -345,7 +350,6 @@ export default async function WeeklyPage({ searchParams }) {
     return {
       byId: Object.fromEntries(mine.rows.filter((r) => r.id != null)
         .map((r) => [r.id, { points: r.points, played: r.played }])),
-      games: gamesByTeam,
       total: view.total,
       startedCount: view.startedCount,
       slots: view.slots,
@@ -388,21 +392,15 @@ export default async function WeeklyPage({ searchParams }) {
         signedIn={userId != null}
         signinHref={shellSigninHref('/weekly', isShell)}
         hasHandle={hasHandle}
+        games={gamesByTeam}
         live={live}
       />
 
-      {/* ONCE OPEN, THIS IS WHAT 'HOW IT WORKS' BECOMES (2a-polish item 1) -
-          the mock's own .perf box under the board, never the pitch's rules
-          table above it. Same reader, same question, but they are looking at
-          the board now rather than wondering whether to. */}
-      <div className="perf">
-        <b>The best six this pool allows</b>
-        <p>
-          Revealed Tuesday morning when Week {contest.week} settles. Your grade is
-          your six as a percentage of it. Raw points never cross weeks - a
-          bye-heavy week has a lower ceiling and the percentage knows that.
-        </p>
-      </div>
+      {/* THE .perf BOX MOVED INTO THE ROOM (v2, ruling L). It is one line under
+          the lineup now - "best six this pool allows · 873 players" - beside
+          the six it is a claim about, rather than a paragraph below the board
+          restating what the grade is. The ceiling itself is still revealed
+          Tuesday morning at settle; nothing about that changed. */}
 
       <div className="mathline">
         Alerts: opens <Stamp iso={contest.opens_at} /> &middot; one hour before first kickoff <Stamp iso={reminderAt.toISOString()} />
