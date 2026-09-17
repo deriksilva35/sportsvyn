@@ -14,7 +14,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -34,11 +34,12 @@ const PICKEM_BOARD = 'components/pickem/PickemBoard.js';
 // confirmVerdict are still the only ones, and the tests below check those
 // rather than which component draws the button.
 //
-// ConfirmCard.js AND confirmCard.css ARE THEREFORE UNRENDERED. They are left
-// in the tree, not deleted: removing a shared component is a decision for the
-// relay that notices it is unused, not a side effect of a reskin. The clauses
-// below that describe the card's internals still hold and still pass, and the
-// one guard that matters now is that neither game has rebuilt its markup.
+// ConfirmCard.js AND confirmCard.css ARE THEREFORE DELETED (ruled). What this
+// file guards is no longer a component's internals - there is no component -
+// but the PATH that replaced it: two footers, two actions, one gate, and
+// neither game rebuilding the markup that went away. The clauses that read the
+// card's source are gone with it; the ones about one time zone per screen and
+// about a drafted-and-waiting card not being a dead end never depended on it.
 
 // ------------------------------------------------------ 1: one card, shared
 
@@ -79,37 +80,16 @@ test('NEITHER board still carries its own copy of the card markup', () => {
   }
 });
 
-test('the card has ONE button, and it is the volt Lock it in', () => {
-  const code = strip(src('components/games/ConfirmCard.js'));
-  assert.equal((code.match(/<button/g) ?? []).length, 1, 'exactly one button on the card');
-  assert.match(code, /className="wk-lockin"/, 'and it is the volt one');
-  assert.match(code, /Lock it in/);
-  // The receipt is jade and has no button: a receipt is not asking for
-  // anything, so it must not offer a second thing to press.
-  const receipt = code.slice(code.indexOf('if (done)'), code.indexOf('return (\n    <div className="wk-review"'));
-  assert.match(receipt, /wk-receipt/);
-  assert.doesNotMatch(receipt, /<button/, 'the locked-in state offers nothing to press');
-});
 
-test('the Weekly card carries a roster summary, and the Pickem footer a count', () => {
-  const card = strip(src('components/games/ConfirmCard.js'));
-  // rows (roster) and line/receiptLine (count) are both real inputs, and the
-  // roster renders in BOTH states rather than only before locking.
-  assert.match(card, /rows = null/);
-  assert.match(card, /receiptLine = null/);
-  const summaryDecl = card.indexOf('const summary =');
-  assert.ok(summaryDecl > 0, 'one summary, built once');
-  assert.ok(card.indexOf('{summary}', summaryDecl) < card.lastIndexOf('{summary}'),
-    'and rendered in both the receipt and the review');
-
+test('EACH FOOTER STATES ITS OWN RULE: the Weekly what is missing, the Pickem a count', () => {
   // THE WEEKLY'S FOOTER NAMES WHAT IS MISSING, not a roster summary: the six
   // slots are on screen above it, so restating them under the board was the
   // duplication the v2 footer removed. What it must say is the rule.
   const room = strip(src(WEEKLY_ROOM));
   assert.match(room, /\$\{unfilled\.length\} to fill/, 'the Weekly counts what is still empty');
   assert.match(room, /Six filled or the week does not count/, 'and states the DNF rule');
-  assert.doesNotMatch(room, /scores 0/, 'and never the mock\'s wrong version of it');
-  // D4 STILL HOLDS, in the footer now: the count is the PICKABLE games, so a
+  assert.doesNotMatch(room, /scores 0/, "and never the mock's wrong version of it");
+  // D4 STILL HOLDS, in the footer: the count is the PICKABLE games, so a
   // kicked row is outside both the numerator and the denominator.
   const board = strip(src(PICKEM_BOARD));
   assert.match(board, /const toGo = pickable - pickedOpen;/, "the Pick'em counts what is still open");
@@ -117,18 +97,6 @@ test('the Weekly card carries a roster summary, and the Pickem footer a count', 
   assert.match(board, /\{pickedOpen\} of \{pickable\} picked/, 'one denominator, in the header too');
 });
 
-test('the card states the lock time, and through StandaloneDate', () => {
-  const card = strip(src('components/games/ConfirmCard.js'));
-  assert.match(card, /import StandaloneDate from '@\/components\/StandaloneDate'/);
-  assert.match(card, /<StandaloneDate iso=\{lockIso\}/);
-  // FRESH-USER FIXES, D12: the Weekly's header owns its deadline and its card
-  // says none. The Pick'em no longer renders this card at all (v2, R4); its
-  // footer names the next lock through the same island instead of a string.
-  assert.doesNotMatch(strip(src(WEEKLY_ROOM)), /lockIso=/, 'the Weekly card renders no lock instant (D12)');
-  const board = strip(src(PICKEM_BOARD));
-  assert.doesNotMatch(board, /lockIso=/, "the Pick'em passes no lockIso - it renders no card");
-  assert.match(board, /<StandaloneTime iso=/, 'and every instant it does render goes through an island');
-});
 
 // ------------------------------------------- 2: one time zone per screen
 
@@ -224,63 +192,22 @@ test('the ranked completion page has the same exit, in the same words', () => {
   assert.match(code, /Back to games/);
 });
 
-// ------------------------------------------ 3c: the card is actually styled
 
-test('the card ships its OWN stylesheet, and the component imports it', () => {
-  // THE 3c DEFECT. These rules used to live in app/daily/daily.css. /weekly
-  // imports that file, /pickem never had a reason to - so the moment both
-  // games rendered the same component, one of them was one forgotten import
-  // away from an unstyled card. A route cannot forget an import the
-  // component makes itself.
-  const card = src('components/games/ConfirmCard.js');
-  assert.match(card, /import '\.\/confirmCard\.css'/,
-    'ConfirmCard.js must import its own stylesheet');
-  const css = src('components/games/confirmCard.css');
-  for (const cls of ['.wk-review', '.wk-receipt', '.wk-lockin', '.wk-receipt-list']) {
-    assert.ok(css.includes(cls), `${cls} is defined in the component's own stylesheet`);
+test('THE CARD IS GONE, AND NEITHER GAME MAY GROW ITS OWN', () => {
+  // Item 3's guard, restated for a tree with no card in it. Both files are
+  // deleted; what must not happen is either board rebuilding the markup, or
+  // a stray import of a module that no longer exists (which would build).
+  for (const rel of ['components/games/ConfirmCard.js', 'components/games/confirmCard.css']) {
+    assert.equal(existsSync(path.join(REPO, rel)), false, `${rel} is deleted`);
   }
-  // ...and is NOT still defined in the Daily's, which would be two sources
-  // of truth for one card.
-  const daily = src('app/daily/daily.css');
-  for (const cls of ['.wk-review', '.wk-receipt', '.wk-lockin']) {
-    assert.ok(!daily.includes(cls), `${cls} must no longer be defined in daily.css`);
-  }
-});
-
-test('EITHER game rendering the card renders the wrapper class AND the button', () => {
-  // Item 3's guard, stated as the two things that must both survive: the
-  // module wrapper that makes it a card at all, and the element that makes
-  // it pressable. Checked on the shared component, since that is now the
-  // only place either can come from - and checked on both call sites, since
-  // a game that stopped calling it would render neither.
-  const card = strip(src('components/games/ConfirmCard.js'));
-
-  const review = card.slice(card.indexOf('return (\n    <div className="wk-review"'));
-  assert.match(review, /className="wk-review"/, 'the unconfirmed state has its module wrapper');
-  assert.match(review, /<button[^>]*className="wk-lockin"/, 'and its button');
-
-  const receipt = card.slice(card.indexOf('if (done)'), card.indexOf('return (\n    <div className="wk-review"'));
-  assert.match(receipt, /className="wk-receipt"/, 'the confirmed state has its module wrapper');
-
-  // AND NO CALL SITE AT ALL NOW. Both games confirm through their own footers
-  // (checked above), so this component is unrendered - FILED, not deleted.
-  // The guard that survives is that neither game rebuilt what it replaced.
   for (const rel of [WEEKLY_ROOM, PICKEM_BOARD]) {
-    assert.doesNotMatch(strip(src(rel)), /<ConfirmCard\b/, `${rel} renders no card`);
+    const code = strip(src(rel));
+    assert.doesNotMatch(code, /<ConfirmCard\b/, `${rel} renders no card`);
+    assert.doesNotMatch(code, /from '@\/components\/games\/ConfirmCard'/, `${rel} imports nothing that is gone`);
+  }
+  // AND NOBODY ELSE IMPORTS IT EITHER - a route that did would fail the build.
+  for (const f of SURFACE_FILES) {
+    assert.doesNotMatch(src(f), /components\/games\/(ConfirmCard|confirmCard\.css)/, `${f} still reaches for it`);
   }
 });
 
-test('the card carries NO horizontal margin - the parent owns the page inset', () => {
-  // What actually broke on the Pick'em: `margin: 14px 12px 0`, written for
-  // .daily-main (a padded block), applied inside .pk-main (a flex column
-  // with no padding) where every neighbour is flush. The card was the one
-  // element on the board that did not line up. A shared component must not
-  // encode one route's padding.
-  const css = src('components/games/confirmCard.css');
-  const rule = css.slice(css.indexOf('.wk-review, .wk-receipt {'));
-  const margin = /margin:\s*([^;]+);/.exec(rule)?.[1] ?? '';
-  const parts = margin.trim().split(/\s+/);
-  assert.ok(parts.length >= 3, `expected a 3-value margin, got "${margin}"`);
-  assert.equal(parts[1], '0', `horizontal margin must be 0, got "${margin}"`);
-  assert.notEqual(parts[2], '0', 'and a bottom margin, since .pk-main has no bottom padding');
-});
