@@ -30,6 +30,8 @@ import PickemBoard from '@/components/pickem/PickemBoard';
 import PickemGrade from '@/components/pickem/PickemGrade';
 import { GAME_NAMES } from '@/lib/games/lobby';
 import { pickemBoardLeaderboard } from '@/lib/games/leaderboard';
+import { pickemTable } from '@/lib/games/read';
+import { mySeason } from '@/lib/pickem/seasonPct';
 import { userHasHandle } from '@/lib/onboarding';
 import StandaloneDate from '@/components/StandaloneDate';
 import StandaloneDateOnly from '@/components/StandaloneDateOnly';
@@ -77,6 +79,15 @@ export default async function PickemSportPage({ params, searchParams }) {
   }))).filter(Boolean);
   const sportSwitch = <SportSwitch boards={boards} sport={sport} />;
   const hasHandle = await userHasHandle(uid, sql);
+  // THE SEASON LINE (v2 reader ruling b). One call to the table the lobby
+  // already computes, narrowed to this sport, and then the reader's own row out
+  // of it. .catch(() => null) for the same reason the records and the line have
+  // one: a season aggregate that cannot be read must not take the board down,
+  // and a reader with no settled board yet correctly has no line at all.
+  const season = mySeason(
+    await pickemTable(uid, { sport }).catch(() => null),
+    uid,
+  );
 
   return (
     <>
@@ -98,6 +109,7 @@ export default async function PickemSportPage({ params, searchParams }) {
             initialConfirmedAt={view.confirmedAt ?? null}
             locksAt={view.contest.locksAt}
             sportSwitch={sportSwitch}
+            season={season}
           />
         )}
 
