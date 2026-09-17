@@ -14,6 +14,22 @@
 // than 1985 boards. That gap gets its own future relay (nflverse, 1999+),
 // its own ruling on the resulting 1980-98 vs 1999+ inconsistency.
 //
+// POSITION IS THE PER-SEASON ONE WHERE WE HOLD IT (ruling R2, corpus relay).
+// nfl_player_seasons carries an nflverse position per (player, season) - one
+// row per pair, no team dimension, so this join cannot fan out - and
+// nfl_players.position carries ONE value for a whole career. A player's
+// position in 2004 is a fact we hold; using his career-stored one is a small
+// lie we do not need to tell. COALESCE(ps.position, np.position), and the
+// board-position filter applies to the RESOLVED value, not to the career one,
+// so a row's eligibility follows the season it belongs to.
+//
+// MEASURED ON PROD BEFORE THE CHANGE, 2002-2013: 20,252 of 20,324 stints find
+// a per-season position and 72 fall back; 4,928 disagree with the career
+// value. Net effect on the board set is +20 rows (7,252 against 7,232) - 43
+// gained, 23 lost - and the disagreements are the right ones: a 2008 "Alex
+// Smith" whose career row is the TE, Brad St. Louis correctly a long snapper
+// rather than a tight end, Boomer Grigsby a linebacker rather than a back.
+//
 // SCOPE MATCHES FOOTBALLDB'S OWN: only QB/RB/WR/TE/PK, is_team_defense=false.
 // footballdb never writes an individual defensive player to this table
 // (lib/footballdb/identity.js: inferPosition returns null for a defense-tab-
@@ -66,7 +82,9 @@ console.log('='.repeat(74));
 const rows = await sql`
   SELECT
     gs.nfl_player_id, m.season_year, gs.team_id, t.abbreviation AS team_abbr,
-    np.position, np.full_name AS raw_name,
+    COALESCE(ps.position, np.position) AS position,
+    (ps.position IS NOT NULL) AS position_per_season,
+    np.full_name AS raw_name,
     COUNT(*)::int AS games,
     SUM(gs.pass_cmp)::int AS pass_cmp, SUM(gs.pass_att)::int AS pass_att,
     SUM(gs.pass_yds)::int AS pass_yds, SUM(gs.pass_td)::int AS pass_td, SUM(gs.pass_int)::int AS pass_int,
@@ -78,11 +96,15 @@ const rows = await sql`
   JOIN matches m ON m.id = gs.match_id
   JOIN leagues l ON l.id = m.league_id
   JOIN nfl_players np ON np.id = gs.nfl_player_id
+  LEFT JOIN nfl_player_seasons ps
+         ON ps.nfl_player_id = gs.nfl_player_id AND ps.season_year = m.season_year
   LEFT JOIN teams t ON t.id = gs.team_id
   WHERE l.slug = 'nfl' AND m.season_phase = 'REG'
     AND m.season_year BETWEEN ${lo} AND ${hi}
-    AND np.is_team_defense = false AND np.position IN ('QB','RB','WR','TE','PK')
-  GROUP BY gs.nfl_player_id, m.season_year, gs.team_id, t.abbreviation, np.position, np.full_name
+    AND np.is_team_defense = false
+    AND COALESCE(ps.position, np.position) IN ('QB','RB','WR','TE','PK')
+  GROUP BY gs.nfl_player_id, m.season_year, gs.team_id, t.abbreviation,
+           COALESCE(ps.position, np.position), ps.position, np.full_name
   ORDER BY m.season_year, np.full_name`;
 
 const noTeam = rows.filter((r) => r.team_id == null);
@@ -139,10 +161,24 @@ if (noTeam.length) {
   if (noTeam.length > 20) console.log(`   ... and ${noTeam.length - 20} more`);
 }
 
+// WHERE EACH POSITION CAME FROM (R2). A run that silently fell back to the
+// career position for most of a season would otherwise look identical to one
+// that used the per-season fact, and the whole point of the ruling is which.
+const perSeasonCount = rows.filter((r) => r.team_id != null && r.position_per_season).length;
+console.log(`position source: per-season ${perSeasonCount}, career fallback ${written.length - perSeasonCount}`);
+
 const bySeason = {};
-for (const w of written) bySeason[w.season_year] = (bySeason[w.season_year] ?? 0) + 1;
+const mixBySeason = {};
+for (const w of written) {
+  bySeason[w.season_year] = (bySeason[w.season_year] ?? 0) + 1;
+  (mixBySeason[w.season_year] ??= {})[w.position] = ((mixBySeason[w.season_year] ?? {})[w.position] ?? 0) + 1;
+}
 console.log('\nby season:');
-for (const y of Object.keys(bySeason).sort()) console.log(`   ${y}: ${bySeason[y]} rows`);
+for (const y of Object.keys(bySeason).sort()) {
+  const m = mixBySeason[y];
+  const mix = ['QB', 'RB', 'WR', 'TE', 'PK'].map((p) => `${p} ${m[p] ?? 0}`).join('  ');
+  console.log(`   ${y}: ${String(bySeason[y]).padStart(4)} rows   ${mix}`);
+}
 
 // A traded player shows as two+ rows sharing nfl_player_id but different
 // team_key within the same season_year — print the first such case found.
