@@ -70,6 +70,16 @@ const SLOT_CLASS = { QB: 'qb', RB: 'rb', WR: 'wr', TE: 'te', FLEX: 'flx', K: 'k'
 // under it says the next thing to do.
 const STEP_NAMES = ['Team', 'Player', 'Slot'];
 
+/**
+ * The right-hand eyebrow carries the EDITION, and the title now carries the
+ * words "The Daily". Both routes compose `edition` with that prefix already
+ * ("The Daily · 2026-09-18", "The Daily · No. 024"), so printing it whole
+ * beside the new title would say the name of the game twice in one line.
+ * Display only, and only on the play screen - the results bar prints
+ * `edition` untouched.
+ */
+const editionTail = (edition) => String(edition ?? '').replace(/^The Daily\s*·\s*/, '');
+
 /** The name as a filled slot shows it: the last word, uppercased by CSS.
  * "A. St. Brown" -> "Brown", "Jahmyr Gibbs" -> "Gibbs". A slot tile is 70px
  * wide and a full name does not fit one; the panel beside it carries the
@@ -457,8 +467,15 @@ export default function SeasonBoard({
 
       <header className="sbd-hd">
         <div className="sbd-hd-top">
-          <span className="sbd-eb">The Daily</span>
-          <span className="sbd-ed2">{edition}</span>
+          {/* THE SEASON IS THE TITLE (FIX 2). The board is a 2024 board or a
+              1987 board, and a player who opens it mid-round has no other
+              place to read that: the rules card states the year once, then
+              the card is gone for the rest of the round. `year` is the board
+              row's own season_year on both edition routes and the drawn
+              era on the free-play preview, so this follows the board rather
+              than anything the URL said. */}
+          <span className="sbd-eb">The Daily · {year}</span>
+          <span className="sbd-ed2">{editionTail(edition)}</span>
         </div>
         <div className={crowClass}>
           {/* THE CLOCK IS UNCHANGED BENEATH THE SKIN. Same remainingMs off the
@@ -507,7 +524,7 @@ export default function SeasonBoard({
             its two em dashes written as hyphens per the house rule. */}
         <p className="sbd-note">
           {stage === 1 ? (
-            <>Fill <b>eight slots</b> from <b>twelve teams</b>, one player each. Their real season points are your score. Tap a team to see its six.</>
+            <>Fill <b>eight slots</b> from <b>twelve teams</b>, one player each. Their real <b>{year}</b> season points are your score. Tap a team to see its six.</>
           ) : stage === 2 ? (
             <>Six from the <b>{curTeam?.abbr}</b>. Dimmed ones fit no slot you have left. Tap one.</>
           ) : stage === 3 ? (
