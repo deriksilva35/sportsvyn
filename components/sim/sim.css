@@ -905,6 +905,16 @@
   color: var(--volt); font-size: 9px; letter-spacing: .06em; text-transform: uppercase;
   margin-top: 2px;
 }
+/* THE TAG on a card whose name is not self-explanatory next to the game it
+   rehearses. "The Draft" is a preset and a contest with the same words, so the
+   card carries the chip that says which one it points at. The name still
+   ellipsises; the tag does not shrink, because a truncated tag is noise. */
+.pcard .ptag {
+  display: inline-block; margin-left: 6px; padding: 1px 4px;
+  border: 1px solid var(--volt); border-radius: 3px;
+  font-size: 8px; font-style: normal; font-weight: 800; letter-spacing: .08em;
+  color: var(--volt); vertical-align: middle;
+}
 
 /* THE DAILY BAND on Practice (v0.3 polish) - one compact volt-forward line
    above the deck. A band, deliberately not a hero: Practice keeps the page. */
