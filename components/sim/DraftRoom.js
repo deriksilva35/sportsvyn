@@ -426,9 +426,14 @@ export default function DraftRoom({
   // next overall - all of it already derived, none of it new state.
   const pickInRound = complete ? null : ((currentOverall - 1) % config.teams_count) + 1;
   const pickLabel = complete ? null : `${round}.${String(pickInRound).padStart(2, '0')}`;
-  const nextLabel = myNextOverall == null ? null
-    : `${Math.ceil(myNextOverall / config.teams_count)}.${String(((myNextOverall - 1) % config.teams_count) + 1).padStart(2, '0')}`;
-  const picksAway = myNextOverall == null ? null : myNextOverall - currentOverall;
+  // ON YOUR OWN TURN, "NEXT" MEANS THE ONE AFTER THIS ONE. myNextOverall
+  // counts from picks.length, so on your turn it returns the pick you are
+  // making - right for the seat valuation that reads it, wrong for a hero
+  // that would then say "next pick 1.01" while you are on 1.01.
+  const heroNext = isMyTurn ? nextUserOverall(order, userTeamIndex, currentOverall) : myNextOverall;
+  const nextLabel = heroNext == null ? null
+    : `${Math.ceil(heroNext / config.teams_count)}.${String(((heroNext - 1) % config.teams_count) + 1).padStart(2, '0')}`;
+  const picksAway = heroNext == null ? null : heroNext - currentOverall;
   // THE DRAIN IS THE CLOCK, NOT A SECOND OPINION ABOUT IT. Width straight off
   // the same `clock` the number shows, so the two cannot disagree.
   const drainPct = timerSeconds == null || clock == null
@@ -936,6 +941,127 @@ export default function DraftRoom({
           ) : null}
         </div>
       )}
+    </div>
+  );
+}
+
+
+// Tint class for a board cell — only the four skill positions tint (per the
+// mock); K/DST/others stay neutral ink.
+const TINTED = new Set(['QB', 'RB', 'WR', 'TE']);
+function posClass(pos) { return TINTED.has(pos) ? pos : ''; }
+
+// The BOARD page: the whole snake draft as a teams x rounds grid. All columns fit
+// the viewport width (no horizontal scroll) — column count comes from config, so
+// a 14/16-team board narrows its cells rather than scrolling. Vertical scroll runs
+// through every round. Cells are populated from live pick state.
+function BoardGrid({ board }) {
+  const { teams, columns, rows } = board;
+  return (
+    <div className="bg2" style={{ gridTemplateColumns: `22px repeat(${teams}, minmax(0, 1fr))` }}>
+      <div className="bh corner" />
+      {columns.map((c) => (
+        <div key={c.teamIndex} className={`bh${c.isYou ? ' you' : ''}`}>{c.label}</div>
+      ))}
+      {rows.map((row) => (
+        <Fragment key={row.round}>
+          <div className="br">{row.round}</div>
+          {row.cells.map((cell) => <BoardCell key={cell.overall} cell={cell} />)}
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+// One cell, two sizes. The `.pk` overall-pick number and the fuller last name
+// are always in the DOM; CSS reveals + enlarges them only in the desktop BOARD
+// view (.room--board), and keeps the mobile pager cells compact. boardName's
+// generous cap lets desktop show the full last name while the mobile cell's
+// nowrap+ellipsis trims it to fit: one renderer, size handled in CSS.
+function BoardCell({ cell }) {
+  // AN UNMADE KEEPER OWNS THE CELL. Muted, tagged KEEPER, and it outranks the
+  // clock: nobody can pick there, so a CLOCK on it would be a lie the engine
+  // corrects a moment later by committing him. When the commit lands the cell
+  // is a pick and renders full, keeping the KEPT marker.
+  if (cell.keeper && !cell.pick) {
+    const kpos = cell.keeper.slotPos || cell.keeper.position;
+    return (
+      <div className={`bc kp ${posClass(kpos)}${cell.mine ? ' mine' : ''}`.trim()}>
+        <span className="pk">{cell.overall}</span>
+        <span className="p">{kpos} · KEEPER</span>
+        <span className="n">{boardName(cell.keeper.name, 14)}</span>
+      </div>
+    );
+  }
+  if (cell.onClock) {
+    return <div className={`bc otc2${cell.mine ? ' mine' : ''}`}><span className="pk">{cell.overall}</span><span className="n">CLOCK</span></div>;
+  }
+  if (!cell.pick) {
+    return <div className={`bc empty${cell.mine ? ' mine' : ''}`}><span className="pk">{cell.overall}</span><span className="n">·</span></div>;
+  }
+  const pos = cell.pick.slotPos || cell.pick.position;
+  return (
+    <div className={`bc ${posClass(pos)}${cell.mine ? ' mine' : ''}`.trim()}>
+      <span className="pk">{cell.overall}</span>
+      <span className="p">{pos}{cell.pick.isKeeper ? ' · KEPT' : ''}</span>
+      <span className="n">{cell.pick.synthetic ? pos : boardName(cell.pick.playerName, 14)}</span>
+    </div>
+  );
+}
+
+// Season totals + game log for an expanded player. `stats` is undefined (not
+// asked yet), 'loading', null (unknown - the honest state until the gridiron
+// backfill lands), or a SeasonStats object.
+function StatStrip({ stats, scoringFormat }) {
+  if (stats === undefined || stats === 'loading') return <div className="p-stats loading">Loading season…</div>;
+  if (stats === null) {
+    return (
+      <div className="p-stats empty">
+        Season stats land with the data backfill.
+      </div>
+    );
+  }
+  // Columns and points both derive from the same structured stat line, so the
+  // table and the total cannot disagree about what the player did.
+  const view = viewFor(stats.position);
+  const summary = seasonSummary(stats.games, scoringFormat);
+  const slot = displayPosition(stats.position);
+  const exact = isExactlyScored(slot);
+  return (
+    <div className="p-stats">
+      <div className="s-totals">
+        <span className="s-season">{stats.season}</span>
+        <span className="s-tot s-fpts">
+          <b>{summary.points}</b><i>{exact ? 'Fantasy pts' : 'Fantasy pts (partial)'}</i>
+        </span>
+        <span className="s-tot"><b>{exact ? summary.ppg : `~${summary.ppg}`}</b><i>Per game</i></span>
+        {view.totals(stats.totals).map((t) => (
+          <span key={t.label} className="s-tot"><b>{t.value}</b><i>{t.label}</i></span>
+        ))}
+      </div>
+      {!exact && (
+        <div className="s-note">
+          Partial: kicker field goals score a flat 3 (no distance tiers) and defensive
+          points allowed are not in the data.
+        </div>
+      )}
+      <div className="s-scroll">
+        <table className="s-log">
+          <thead>
+            <tr><th>WK</th>{view.columns.map((c) => <th key={c}>{c}</th>)}<th>FPTS</th></tr>
+          </thead>
+          <tbody>
+            {stats.games.map((g) => (
+              <tr key={g.week}>
+                <td className="wk">{g.week}</td>
+                <td>{g.opp}</td>
+                {view.row(g.stats).map((v, i) => <td key={i}>{v}</td>)}
+                <td className="fpts">{fantasyPoints(g.stats, scoringFormat)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
