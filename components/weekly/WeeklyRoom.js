@@ -47,7 +47,7 @@ import { useRouter } from 'next/navigation';
 import { SLOTS } from '@/lib/weekly/rules';
 import { slotState } from '@/lib/weekly/slotState';
 import { nextOpenSlot } from '@/lib/daily/play';
-import { poolRows, poolCountLabel, ppgOf } from '@/lib/weekly/view';
+import { poolRows, poolCountLabel } from '@/lib/weekly/view';
 import { ordinal } from '@/lib/standings/view';
 import { useHandleGate, HELD } from '@/components/handle/HandleGate';
 import StandaloneTime from '@/components/StandaloneTime';
@@ -503,7 +503,9 @@ export default function WeeklyRoom({
                   ))}
                 </span>
               ) : null}
-              <span className="wkv-srt">career</span>
+              {/* THE SORT IS NAMED BY ITS SEASON, from the contest row -
+                  never a typed year. */}
+              <span className="wkv-srt">{contest.season_year ?? 'season'}</span>
             </>
           ) : null}
         </div>
@@ -521,7 +523,8 @@ export default function WeeklyRoom({
             const mine = lineup[active] === p2.id;
             const used = picked.has(p2.id) && !mine;
             const gone = kicked || used;
-            const career = ppgOf(p2.resume);
+            const game = p2.team ? games?.[p2.team] ?? null : null;
+            const st = slotState({ row: { id: p2.id, team: p2.team ?? null, points: 0, played: false }, game });
             return (
               <button key={p2.id} type="button"
                 className={`wkv-prow${mine ? ' sel' : ''}${gone ? ' gone' : ''}`}
@@ -530,17 +533,32 @@ export default function WeeklyRoom({
                 <span className={`wkv-pb ${POS_CLASS[p2.pos] ?? 'flex'}`}>{p2.pos}</span>
                 <span className="wkv-who">
                   <b>{p2.name}</b>
-                  {/* THE WHOLE RESUME STAYS. It is the only place a rookie
-                      with no PPG is identified at all - "R1 #2 - LSU". */}
-                  <small>{kicked ? <>Kicked &middot; <StandaloneTime iso={p2.kickoff_at} /></>
-                    : used ? `${p2.resume} · in your lineup` : p2.resume}</small>
+                  {/* LINE ONE IS THE GAME. Who he plays, home or away, and
+                      when - the same four shapes the lineup slots use, off
+                      the same slate value. A reader choosing between two
+                      backs is choosing between two matchups. */}
+                  <small className={st?.kind === 'live' ? 'wkv-l' : undefined}>
+                    {used ? 'in your lineup'
+                      : kicked ? <>Kicked &middot; <StandaloneTime iso={p2.kickoff_at} /></>
+                        : st?.kind === 'live'
+                          ? `${matchupOf(p2.team, st)} · ${st.period ?? 'Live'}${st.clock ? ` ${st.clock}` : ''}`
+                          : st?.kind === 'bye'
+                            ? `${p2.team} · bye`
+                            : <>{matchupOf(p2.team, st)}{p2.kickoff_at ? <> &middot; <StandaloneTime iso={p2.kickoff_at} /></> : null}</>}
+                  </small>
+                  {/* LINE TWO IS THIS SEASON, or nothing at all. The career
+                      rate and the college/draft resume no longer render here
+                      (ruled): they are facts about a decade ago on a row
+                      about this week. The resume string still rides the wire
+                      untouched - poolRows uses it as the sort tiebreak. */}
+                  {p2.season?.line ? <small>{p2.season.line}</small> : null}
                 </span>
                 <span className="wkv-val">
-                  {/* BLANK, NOT A ZERO, WHERE THERE IS NO CAREER RATE. ppgOf
-                      returns -1 for a player with no games, and a blank
-                      sorts last (lib/weekly/view.js poolRows). */}
-                  <b className="n">{career < 0 ? '' : career.toFixed(1)}</b>
-                  <small>{career < 0 ? '' : 'career'}</small>
+                  {/* BLANK, NOT A ZERO, FOR A PLAYER WITH NO FINAL GAME YET.
+                      A blank sorts last in poolRows; a 0.0 would read as a
+                      man who played and did nothing. */}
+                  <b className="n">{p2.season ? p2.season.ppg.toFixed(1) : ''}</b>
+                  <small>{p2.season ? `ppg · ${p2.season.gp} g` : ''}</small>
                 </span>
               </button>
             );

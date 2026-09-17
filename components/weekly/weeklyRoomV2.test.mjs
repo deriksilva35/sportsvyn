@@ -65,17 +65,26 @@ const GAMES = {
   LAR: { status: 'scheduled', metadata: { live_state: null }, kickoffAt: KO.LAR, opp: 'NYG', home: true, score: null, oppScore: null },
 };
 
-/** A pool row in activePool()'s shape, with the kickoff the page decorates it with. */
-const p = (id, pos, name, team, ppg, extra = '') => ({
+/**
+ * A pool row as the page reader now hands it over: activePool()'s own shape,
+ * the kickoff the page decorates it with, and `season` from
+ * lib/weekly/seasonLine.js - null for a player with no final game yet.
+ */
+const p = (id, pos, name, team, ppg, extra = '', season = null) => ({
   id, pos, name, team,
   resume: ppg == null ? extra : `${ppg.toFixed(1)} PPG · 42 g${extra}`,
   kickoff_at: KO[team],
+  season,
 });
+const szn = (ppg, gp, line) => ({ ppg, gp, line });
 const BOARD = [
-  p(1, 'QB', 'Josh Allen', 'BUF', 22.4),
-  p(2, 'QB', 'Brock Purdy', 'SF', 17.6),
+  // THE SEASON DISAGREES WITH THE CAREER ON PURPOSE: Purdy is the worst
+  // career QB here and the best this season, so a test that passes under the
+  // old career sort cannot pass under the new one.
+  p(1, 'QB', 'Josh Allen', 'BUF', 22.4, '', szn(28.4, 1, '334 yds · 2 TD · 0 INT · 23 rush')),
+  p(2, 'QB', 'Brock Purdy', 'SF', 17.6, '', szn(31.2, 1, '298 yds · 3 TD · 1 INT · 12 rush')),
   p(3, 'QB', 'Dak Prescott', 'DAL', 18.5),
-  p(4, 'QB', 'Patrick Mahomes', 'KC', 21.1),
+  p(4, 'QB', 'Patrick Mahomes', 'KC', 21.1, '', szn(19.9, 1, '241 yds · 1 TD · 0 INT · 8 rush')),
   p(10, 'RB', 'Bijan Robinson', 'ATL', 19.8),
   p(11, 'RB', 'Christian McCaffrey', 'SF', 15.4),
   p(12, 'RB', 'Kenneth Walker', 'SEA', 14.0),
@@ -143,7 +152,7 @@ function room(props = {}) {
   const c = document.getElementById('root');
   const root = createRoot(c); roots.add(root);
   act(() => root.render(React.createElement(WeeklyRoom, {
-    contest: { id: 10, week: 2, locks_at: future(100) },
+    contest: { id: 10, week: 2, locks_at: future(100), season_year: 2026 },
     board: BOARD, initialLineup: {}, games: GAMES, live: null,
     signedIn: true, hasHandle: true, signinHref: '/signin?d=/weekly',
     locksAt: future(100), firstKickoff: past(30),
@@ -404,17 +413,75 @@ test('NO LIVE LAYER, NO NUMBERS - not even on a final game', () => {
 // THE PANEL: tabs, search, legality
 // ---------------------------------------------------------------------------
 
-test('TAPPING AN OPEN SLOT OPENS ITS POOL, sorted by career PPG', () => {
+test('TAPPING AN OPEN SLOT OPENS ITS POOL, SORTED BY THIS SEASON', () => {
   const c = room();
   click(slots(c)[0].querySelector('.wkv-slot-tap'));
   assert.match(txt(c, '.wkv-pan-h b'), /^QB · Quarterbacks$/);
   const names = prows(c).map((r) => r.querySelector('.wkv-who b').textContent);
-  assert.deepEqual(names, ['Josh Allen', 'Patrick Mahomes', 'Dak Prescott', 'Brock Purdy']);
-  assert.equal(txt(c, '.wkv-srt'), 'career');
-  assert.equal(prows(c)[0].querySelector('.wkv-val b').textContent, '22.4');
-  assert.equal(prows(c)[0].querySelector('.wkv-val small').textContent, 'career');
-  // THE WHOLE RESUME IS THE SMALL LINE.
-  assert.equal(prows(c)[1].querySelector('.wkv-who small').textContent, '21.1 PPG · 42 g');
+  // Purdy (31.2 this season, 17.6 career) leads Allen (28.4 / 22.4) and
+  // Mahomes (19.9 / 21.1); Prescott has no final game and sorts LAST.
+  assert.deepEqual(names, ['Brock Purdy', 'Josh Allen', 'Patrick Mahomes', 'Dak Prescott']);
+  assert.equal(prows(c)[0].querySelector('.wkv-val b').textContent, '31.2');
+  assert.equal(prows(c)[0].querySelector('.wkv-val small').textContent, 'ppg · 1 g');
+});
+
+test('THE SORT LABEL IS THE SEASON, READ FROM THE CONTEST', () => {
+  const c = room();
+  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  assert.equal(txt(c, '.wkv-srt'), '2026');
+  assert.doesNotMatch(txt(c, '.wkv-srt'), /career/);
+  // and a contest with no season still labels the column with a word
+  act(() => { for (const r of roots) r.unmount(); }); roots.clear();
+  const c2 = room({ contest: { id: 10, week: 2, locks_at: future(100) } });
+  click(slots(c2)[0].querySelector('.wkv-slot-tap'));
+  assert.equal(txt(c2, '.wkv-srt'), 'season');
+});
+
+test('NO CAREER PPG AND NO COLLEGE RESUME RENDER ON THE PANEL ANY MORE', () => {
+  const c = room();
+  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  const html = c.querySelector('.wkv-pan-b').textContent;
+  assert.doesNotMatch(html, /PPG/, 'the frozen career string is not on screen');
+  assert.doesNotMatch(html, /42 g\b/, 'nor its games count');
+  assert.doesNotMatch(html, /career/);
+  // The resume is still ON THE WIRE - poolRows uses it as the tiebreak - it
+  // is simply not shown. (Prescott has no season, so he is ordered by it.)
+  assert.equal(prows(c).at(-1).querySelector('.wkv-who b').textContent, 'Dak Prescott');
+});
+
+test('THE TWO SMALL LINES: the game, then this season', () => {
+  const c = room();
+  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  const purdy = prows(c)[0];
+  const lines = [...purdy.querySelectorAll('.wkv-who small')].map((x) => x.textContent);
+  assert.equal(lines.length, 2);
+  assert.match(lines[0], /^SF vs MIA · \d{1,2}:\d{2} (AM|PM)/, 'line one is the matchup and its kickoff');
+  assert.equal(lines[1], '298 yds · 3 TD · 1 INT · 12 rush', 'line two is the season line');
+  // A row with no season has ONE line, not an empty second one.
+  const dak = prows(c).find((r) => r.textContent.includes('Dak Prescott'));
+  assert.equal(dak.querySelectorAll('.wkv-who small').length, 1);
+});
+
+test('A LIVE ROW SAYS THE PERIOD AND THE CLOCK, in the live colour', () => {
+  const c = room();
+  click(slots(c)[1].querySelector('.wkv-slot-tap'));      // RB tab
+  const bijan = prows(c).find((r) => r.textContent.includes('Bijan Robinson'));
+  const line = bijan.querySelector('.wkv-who small');
+  // ATL is live in this fixture, so he is also KICKED and unpickable - the
+  // kicked line wins, because "you cannot have him" outranks "his game is on".
+  assert.ok(bijan.className.includes('gone'));
+  assert.match(line.textContent, /^Kicked · /);
+  // A player whose game is live but who is somehow still takeable would read
+  // the live line; the shape is asserted on the lineup slots, which share it.
+  assert.ok(line != null);
+});
+
+test('A BYE READS AS A BYE ON A PANEL ROW TOO', () => {
+  const board = [...BOARD, { id: 98, pos: 'QB', name: 'Bye Passer', team: 'CLE', resume: '9.0 PPG · 20 g', kickoff_at: future(200), season: szn(12.0, 1, '150 yds · 1 TD · 0 INT · 0 rush') }];
+  const c = room({ board });
+  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  const bye = prows(c).find((r) => r.textContent.includes('Bye Passer'));
+  assert.equal(bye.querySelectorAll('.wkv-who small')[0].textContent, 'CLE · bye');
 });
 
 test('TAPPING THE SAME SLOT AGAIN CLOSES THE PANEL', () => {
@@ -472,10 +539,14 @@ test('A ROOKIE WITH NO CAREER RATE GETS A BLANK, NOT A ZERO - and his resume sti
   const c = room();
   click(slots(c)[2].querySelector('.wkv-slot-tap'));      // WR
   const rookie = prows(c).find((r) => r.textContent.includes('Carson Beck'));
-  assert.equal(rookie.querySelector('.wkv-val b').textContent, '');
+  assert.equal(rookie.querySelector('.wkv-val b').textContent, '', 'no season, no number');
   assert.equal(rookie.querySelector('.wkv-val small').textContent, '');
-  assert.equal(rookie.querySelector('.wkv-who small').textContent, 'R1 #2 - LSU');
-  // and he sorts LAST, behind every priced receiver
+  // HIS DRAFT RESUME NO LONGER RENDERS (ruled). What identifies him now is the
+  // game he is about to play, which is the fact the week turns on.
+  assert.doesNotMatch(rookie.textContent, /R1 #2/);
+  assert.match(rookie.querySelectorAll('.wkv-who small')[0].textContent, /^KC vs IND · /);
+  assert.equal(rookie.querySelectorAll('.wkv-who small').length, 1, 'and no season line');
+  // He still sorts last: no season number, and no career rate to break the tie.
   assert.equal(prows(c).at(-1).textContent.includes('Carson Beck'), true);
 });
 
@@ -485,7 +556,8 @@ test('A PLAYER ALREADY IN THE LINEUP IS MARKED AND UNPICKABLE', () => {
   const cmc = prows(c).find((r) => r.textContent.includes('Christian McCaffrey'));
   assert.ok(cmc.className.includes('gone'));
   assert.equal(cmc.disabled, true);
-  assert.match(cmc.querySelector('.wkv-who small').textContent, /· in your lineup$/);
+  assert.equal(cmc.querySelector('.wkv-who small').textContent, 'in your lineup',
+    'the row says why it is unavailable, and spends no width on anything else');
 });
 
 test('PICKING FILLS THE SLOT, ADVANCES, AND WRITES ONCE', async () => {

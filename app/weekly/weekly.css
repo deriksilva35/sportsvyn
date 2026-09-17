@@ -373,6 +373,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* A ROW WHOSE GAME IS ON says so in the live colour, the same signal the
+   lineup slots use. The second line (this season) keeps the muted tone - it
+   is history either way. */
+.wkv-who small.wkv-l { color: var(--live, #e63946); }
 .wkv-val { margin-left: auto; text-align: right; }
 .wkv-val b { display: block; font: 700 14px var(--font-mono, ui-monospace, monospace); }
 .wkv-val small { font: 600 8px var(--font-mono, ui-monospace, monospace); color: var(--muted-dim, #6e6e68); }

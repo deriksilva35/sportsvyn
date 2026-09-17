@@ -34,6 +34,7 @@ import { liveEntryRows, liveScoredBoard, liveBoard } from '@/lib/weekly/live';
 import { slotStates } from '@/lib/weekly/slotState';
 import { weekTeamGames } from '@/lib/gridiron/todayV2';
 import { weekStatLines } from '@/lib/weekly/pool';
+import { seasonStats } from '@/lib/weekly/seasonLine';
 import WeeklyRoom from '@/components/weekly/WeeklyRoom';
 import WeeklyGrade from '@/components/weekly/WeeklyGrade';
 import { WeeklyPreOpenLine } from '@/components/games/preOpenLine';
@@ -336,6 +337,15 @@ export default async function WeeklyPage({ searchParams }) {
     .catch(() => new Map());
   const gamesByTeam = Object.fromEntries(games);
 
+  // THIS SEASON, ON EVERY POOL ROW. One grouped scan of the season's FINAL
+  // games (lib/weekly/seasonLine.js), attached here rather than in the panel
+  // so the client does no reading and poolRows can sort on it. Null-safe: a
+  // player with no final game yet simply has no `season`, which sorts last and
+  // renders as a blank. CAUGHT, because the panel is not worth the page - a
+  // failed read costs the rows their second line, never the board.
+  const season = await seasonStats(contest.season_year).catch(() => new Map());
+  const boardWithSeason = board.map((p) => ({ ...p, season: season.get(p.id) ?? null }));
+
   const live = await (async () => {
     if (!entry) return null;
     const { scored, playedIds } = await liveScoredBoard(contest);
@@ -383,8 +393,8 @@ export default async function WeeklyPage({ searchParams }) {
           caption and the needline behind. One source now, and it is the
           one that changes when you tap. */}
       <WeeklyRoom
-        contest={{ id: contest.id, locks_at: contest.locks_at, week: contest.week }}
-        board={board}
+        contest={{ id: contest.id, locks_at: contest.locks_at, week: contest.week, season_year: contest.season_year }}
+        board={boardWithSeason}
         initialLineup={entry?.lineup ?? {}}
         initialConfirmedAt={entry?.meta?.confirmed_at ?? null}
         locksAt={contest.locks_at}
