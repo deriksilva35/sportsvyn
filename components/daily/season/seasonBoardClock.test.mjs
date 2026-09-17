@@ -58,7 +58,12 @@ function render(elapsedS, extra = {}) {
   })));
   return { container, root };
 }
-const clock = (c) => c.querySelector('.sbd-clock');
+// THE CLOCK IS A ROW OF DIGIT TILES NOW (v2.0), not a single span: one .sbd-dg
+// per digit with a .sbd-cl colon between them, and the warn/crit colour lives
+// on the row (.sbd-crow) rather than on the text. Same remainingMs underneath -
+// only the rendering changed - so these tests still read the same number.
+const clock = (c) => c.querySelector('.sbd-clk');
+const c_row = (c) => c.querySelector('.sbd-crow');
 const crumbFirst = (c) => { const root = c.querySelector('.sbd'); const first = root?.firstElementChild;
   return first?.querySelector('a.appcrumb[href="/games"]') ?? (first?.matches?.('a.appcrumb[href="/games"]') ? first : null); };
 
@@ -67,7 +72,7 @@ test('the clock counts DOWN from started_at: a reload at 2:10 elapsed shows 0:50
   const { container, root } = render(130);
   await act(async () => {});
   assert.equal(clock(container).textContent, '0:50');
-  assert.ok(!clock(container).className.includes('terra'), 'not terra with 50s left');
+  assert.ok(!c_row(container).className.includes('sbd-crit'), 'not critical with 50s left');
   assert.ok(crumbFirst(container), '← Games is the first child of the board screen');
   assert.equal(fetchCalls.length, 0);
   act(() => root.unmount());
@@ -78,7 +83,7 @@ test('under 0:30 the clock turns terra', async () => {
   const { container, root } = render(160);
   await act(async () => {});
   assert.equal(clock(container).textContent, '0:20');
-  assert.match(clock(container).className, /sbd-clock--terra/);
+  assert.match(c_row(container).className, /sbd-crit/);
   act(() => root.unmount());
 });
 

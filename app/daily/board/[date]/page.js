@@ -22,7 +22,7 @@ import '@/components/house/house.css';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
-import { SLOTS, DAILY_V2_PATH, DAILY_ROUND_SECONDS } from '@/lib/daily/boardShape';
+import { SLOTS, slotsOf, DAILY_V2_PATH, DAILY_ROUND_SECONDS } from '@/lib/daily/boardShape';
 import { todayEt } from '@/lib/daily/entries';
 import { regradeStoredRun } from '@/lib/daily/seasonBoardRuns';
 import { todayLeaderboard, streakLeaderboard } from '@/lib/daily/seasonBoardLeaderboards';
@@ -67,11 +67,11 @@ export default async function DailyResultsPage({ params }) {
 
   if (run?.picks != null) {
     // THE RECEIPT THE PLAYER SAW AT SUBMIT, regraded from the stored picks.
-    const regraded = regradeStoredRun(board, run.picks, SLOTS);
+    const regraded = regradeStoredRun(board, run.picks);
     if (regraded.ok) {
       return (
         <SeasonBoard
-          edition={edition} year={year} teams={board.board} slots={SLOTS} ranked userId={userId}
+          edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked userId={userId}
           boardId={board.id}
           initialPlay={regraded.play} initialGrade={regraded.grade}
           initialClockLabel={mmss(Math.min(DAILY_ROUND_SECONDS, Number(run.elapsed_s ?? 0)) * 1000)}

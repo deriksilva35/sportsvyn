@@ -13,7 +13,7 @@
  */
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
-import { SLOTS } from '@/lib/daily/boardShape';
+
 import { submitRun, regradeStoredRun } from '@/lib/daily/seasonBoardRuns';
 
 export const dynamic = 'force-dynamic';
@@ -28,7 +28,7 @@ export async function POST(request) {
   if (!Number.isInteger(boardId)) return Response.json({ error: 'boardId required' }, { status: 400 });
 
   const r = await submitRun(sql, {
-    boardId, userId: Number(userId), picks: body?.picks, elapsedS: Number(body?.elapsedS) || 0, slots: SLOTS,
+    boardId, userId: Number(userId), picks: body?.picks, elapsedS: Number(body?.elapsedS) || 0,
   });
   if (!r.ok) {
     // ALREADY RAN IS NOT AN ERROR THE PLAYER CAN ACT ON - it means their run
@@ -40,7 +40,7 @@ export async function POST(request) {
       const [row] = await sql`
         SELECT * FROM daily_board_runs WHERE board_id = ${boardId} AND user_id = ${Number(userId)}`;
       if (board && row?.picks) {
-        const stored = regradeStoredRun(board, row.picks, SLOTS);
+        const stored = regradeStoredRun(board, row.picks);
         if (stored.ok) {
           return Response.json({
             ok: true, alreadyRan: true, grade: stored.grade,

@@ -1,0 +1,255 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The Daily · v2.0 spec</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--jade:#2A8A4F;--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--terra:#B8410F;--live:#E63946;
+--qb:#FF5C8A;--rb:#4ADE80;--wr:#38BDF8;--te:#FB923C;--k:#C084FC;--mono:'JetBrains Mono',monospace;--disp:'Saira',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#050506;color:var(--paper);font:14px/1.5 system-ui,sans-serif;padding:10px}
+.wrap{max-width:394px;margin:0 auto}
+.cap{color:var(--muted);font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+#err{display:none;background:#3a0d0d;border:1px solid var(--live);color:#ffd7d7;border-radius:8px;padding:9px 11px;font:600 11px var(--mono);margin-bottom:8px;white-space:pre-wrap;line-height:1.5}
+.app{background:var(--ink);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+.hd{padding:12px 14px 10px;border-bottom:1px solid var(--line);background:#111}
+.hd-top{display:flex;align-items:center;margin-bottom:8px}
+.eb{color:var(--volt);font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.hd-top .ed{color:var(--quiet);font:600 9px var(--mono);margin-left:auto}
+.crow{display:flex;align-items:center;gap:12px}
+.clk{display:flex;gap:3px;align-items:center}
+.dg{width:29px;height:42px;border-radius:4px;background:#17181a;box-shadow:inset 0 0 0 1px #000;
+    font:800 29px/42px var(--mono);text-align:center;position:relative;overflow:hidden}
+.dg::after{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:#000}
+.cl{font:800 25px var(--mono);color:var(--quiet)}
+.crow.warn .dg{color:var(--terra)}
+.crow.crit .dg{color:var(--live)}
+.tot{margin-left:auto;text-align:right}
+.tot b{display:block;font:800 29px var(--mono);letter-spacing:-.03em;line-height:1;color:var(--volt)}
+.tot span{font:600 9px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.pips{display:flex;gap:4px;margin-top:9px}
+.pip{flex:1;height:4px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line)}
+.pip.on{background:var(--volt);border-color:var(--volt)}
+.sub{display:flex;justify-content:space-between;margin-top:6px;font:500 10px var(--mono);color:var(--muted)}
+
+.duo{display:flex;gap:8px;margin:10px 10px 0;align-items:stretch}
+.field{flex:0 0 150px;margin:0;border-radius:14px;padding:10px 7px;border:1px solid var(--line);
+ background:repeating-linear-gradient(90deg,transparent 0 46px,rgba(255,255,255,.035) 46px 47px),linear-gradient(160deg,#101a12,#0a0f0b)}
+.form{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.slot{aspect-ratio:1/0.92;border-radius:10px;border:1.5px dashed var(--line);background:rgba(10,10,10,.5);
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;position:relative}
+.slot .pos{font:800 12px var(--disp);color:var(--quiet)}
+.slot.qb .pos{color:var(--qb)}.slot.rb .pos{color:var(--rb)}.slot.wr .pos{color:var(--wr)}.slot.te .pos{color:var(--te)}.slot.k .pos{color:var(--k)}
+.slot.elig{border-style:solid;border-color:var(--volt);background:rgba(212,255,0,.09);box-shadow:0 0 14px rgba(212,255,0,.3)}
+.slot.filled{border-style:solid;background:var(--ink-2)}
+.slot .nm{font:700 10px var(--disp);text-transform:uppercase;line-height:1.05;text-align:center;padding:0 2px}
+.slot .tm{font:600 8px var(--mono);color:var(--muted)}
+.slot .pts{font:700 13px var(--mono);color:var(--volt)}
+.slot .x{position:absolute;top:1px;right:5px;color:var(--quiet);font:700 12px var(--mono)}
+
+/* the player panel — always present, fixed height, only its contents change */
+.panel{flex:1 1 auto;min-width:0;margin:0;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);display:flex;flex-direction:column}
+.pan-h{display:flex;align-items:center;gap:7px;padding:7px 10px;border-bottom:1px solid var(--line);background:var(--ink-3);border-radius:12px 12px 0 0}
+.pan-h b{font:700 12px var(--disp);text-transform:uppercase}
+.pan-h .mk{width:17px;height:17px;margin:0}
+.pan-h small{color:var(--muted);font:500 9px var(--mono);margin-left:auto;text-align:right;line-height:1.3}
+.pan-h small.go{color:var(--volt);font-weight:700}
+.pan-b{flex:1;overflow-y:auto;scrollbar-width:none}
+.empty{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 14px;color:var(--quiet);font:600 10px var(--mono);letter-spacing:.05em;line-height:1.6}
+.prow{display:flex;align-items:center;gap:7px;padding:7px 9px;border-bottom:1px solid var(--line);cursor:pointer}
+.prow:last-child{border:0}
+.prow.sel{background:rgba(212,255,0,.09);box-shadow:inset 3px 0 0 var(--volt)}
+.prow.gone{opacity:.26}
+.pb{width:24px;height:18px;border-radius:5px;display:grid;place-items:center;font:800 8px var(--disp);color:#0A0A0A;flex:0 0 auto}
+.pb.qb{background:var(--qb)}.pb.rb{background:var(--rb)}.pb.wr{background:var(--wr)}.pb.te{background:var(--te)}.pb.k{background:var(--k)}
+.prow .who{min-width:0}
+.prow .who b{display:block;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .who small{display:block;color:var(--muted);font:500 9px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .val{margin-left:auto;text-align:right}
+.prow .val b{display:block;font:700 14px var(--mono)}
+.prow .val small{font:600 8px var(--mono);color:var(--quiet)}
+
+.steps{margin:10px 10px 0;border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:9px 11px 10px}
+.strip{display:flex;align-items:center;gap:6px}
+.stp{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.stp i{width:17px;height:17px;border-radius:50%;border:1px solid var(--line);color:var(--quiet);
+ font:700 9px/15px var(--mono);text-align:center;font-style:normal;flex:0 0 auto}
+.stp b{font:700 9px var(--mono);letter-spacing:.12em;color:var(--quiet);text-transform:uppercase}
+.stp.on i{border-color:var(--volt);background:var(--volt);color:var(--ink)}
+.stp.on b{color:var(--volt)}
+.stp.done i{border-color:var(--jade);color:var(--jade)}
+.stp.done b{color:var(--muted)}
+.arw{flex:1;height:1px;background:var(--line)}
+.note{margin-top:8px;font-size:12px;line-height:1.45;color:var(--muted)}
+.note b{color:var(--paper);font-weight:600}
+
+.sh{display:flex;align-items:baseline;justify-content:space-between;margin:11px 12px 6px}
+.sh h3{font:700 13px var(--disp);text-transform:uppercase}
+.sh span{color:var(--volt);font:600 10px var(--mono)}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;padding:0 10px}
+.tc{border-radius:9px;border:1px solid var(--line);background:var(--ink-2);padding:6px 2px 5px;text-align:center;cursor:pointer;position:relative}
+.mk{width:21px;height:21px;border-radius:50%;margin:0 auto 3px;border:1px solid var(--line)}
+.tc b{display:block;font:700 9px var(--mono)}
+.tc.on{border-color:var(--volt);background:rgba(212,255,0,.06)}
+.tc.used{opacity:.3}
+.tc.used::after{content:'✓';position:absolute;top:1px;right:4px;color:var(--volt);font:700 9px var(--mono)}
+
+.ft{border-top:1px solid var(--line);margin-top:11px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.ft .pace{font:500 11px var(--mono);color:var(--muted);line-height:1.3}
+.ft .pace b{color:var(--paper);font-weight:700}
+.lock{margin-left:auto;background:var(--volt);color:var(--ink);border:0;border-radius:99px;padding:10px 18px;font:700 14px system-ui;cursor:pointer}
+.lock:disabled{background:var(--ink-3);color:var(--quiet)}
+</style></head><body>
+<div class="wrap">
+  <div class="cap">The Daily · v2.0 SPEC — the ranked eight</div>
+  <div id="err"></div>
+  <div class="app">
+    <div class="hd">
+      <div class="hd-top"><span class="eb">The Daily</span><span class="ed">Edition 031 · same board for everyone</span></div>
+      <div class="crow" id="crow"><div class="clk" id="clk"></div>
+        <div class="tot"><b class="n" id="tot">0.0</b><span>Points</span></div></div>
+      <div class="pips" id="pips"></div>
+      <div class="sub"><span id="cnt">0 of 8 slots</span><span id="tl">12 teams left</span></div>
+    </div>
+    <div class="steps">
+      <div class="strip" id="strip"></div>
+      <div class="note" id="note"></div>
+    </div>
+    <div class="sh"><h3>Teams</h3><span id="hint">tap a team</span></div>
+    <div class="grid" id="grid"></div>
+    <div class="duo">
+    <div class="field"><div class="form" id="form"></div></div>
+    <div class="panel">
+      <div class="pan-h" id="ph"><b>The board</b><small>tap a team above</small></div>
+      <div class="pan-b" id="pb"><div class="empty">tap a team<br>above</div></div>
+    </div>
+    </div>
+    <div class="ft">
+      <div class="pace">Best board so far<br><b class="n">1,868.9</b> · you are on <b class="n" id="pace">–</b></div>
+      <button class="lock" id="lock" disabled onclick="go('grade')">Lock it in</button>
+    </div>
+  </div>
+</div>
+<script>
+window.onerror=function(m,s,l,c){var e=document.getElementById('err');e.style.display='block';
+  e.textContent='JS ERROR\n'+m+'\nline '+l+':'+c;return false};
+var TEAMS=[
+ {ab:'DET',c:'#0076B6',d:'#B0B7BC',n:'Lions'},{ab:'BUF',c:'#00338D',d:'#C60C30',n:'Bills'},
+ {ab:'KC',c:'#E31837',d:'#FFB81C',n:'Chiefs'},{ab:'SF',c:'#AA0000',d:'#B3995D',n:'49ers'},
+ {ab:'MIA',c:'#008E97',d:'#FC4C02',n:'Dolphins'},{ab:'DAL',c:'#003594',d:'#869397',n:'Cowboys'},
+ {ab:'GB',c:'#203731',d:'#FFB612',n:'Packers'},{ab:'PHI',c:'#004C54',d:'#A5ACAF',n:'Eagles'},
+ {ab:'CIN',c:'#FB4F14',d:'#000000',n:'Bengals'},{ab:'BAL',c:'#241773',d:'#9E7C0C',n:'Ravens'},
+ {ab:'MIN',c:'#4F2683',d:'#FFC62F',n:'Vikings'},{ab:'LAR',c:'#003594',d:'#FFA300',n:'Rams'}];
+var POOL={
+ DET:[['QB','J. Goff','4,629 yds · 30 TD',312.4],['RB','J. Gibbs','1,412 yds · 16 TD',286.1],['WR','A. St. Brown','119 rec · 1,515',301.8],['TE','S. LaPorta','86 rec · 889',214.5],['PK','J. Bates','34/37 FG · 52 XP',148.6],['RB','D. Montgomery','775 yds · 12 TD',171.9]],
+ BUF:[['QB','J. Allen','4,306 yds · 44 TD',398.6],['RB','J. Cook','1,122 yds · 16 TD',258.3],['WR','K. Shakir','76 rec · 821',162.4],['TE','D. Kincaid','73 rec · 673',148.1],['PK','T. Bass','28/31 FG · 49 XP',142.1],['RB','R. Davis','746 yds · 5 TD',129.8]],
+ KC:[['QB','P. Mahomes','4,183 yds · 27 TD',331.2],['TE','T. Kelce','93 rec · 984',231.6],['RB','I. Pacheco','935 yds · 7 TD',188.4],['WR','R. Rice','79 rec · 938',201.3],['PK','H. Butker','33/35 FG · 45 XP',151.8],['RB','K. Hunt','728 yds · 7 TD',151.2]],
+ SF:[['QB','B. Purdy','4,280 yds · 31 TD',344.8],['RB','C. McCaffrey','1,459 yds · 21 TD',391.5],['WR','D. Samuel','89 rec · 1,003',219.7],['TE','G. Kittle','65 rec · 1,020',208.4],['PK','J. Moody','34/38 FG · 47 XP',146.2],['RB','J. Mason','789 yds · 3 TD',134.6]],
+ MIA:[['QB','T. Tagovailoa','4,624 yds · 29 TD',326.1],['RB','R. Mostert','1,012 yds · 18 TD',261.9],['WR','T. Hill','119 rec · 1,799',348.2],['WR','J. Waddle','72 rec · 1,014',196.5],['PK','J. Sanders','29/32 FG · 44 XP',139.4],['RB','D. Achane','800 yds · 8 TD',189.3]],
+ DAL:[['QB','D. Prescott','4,516 yds · 36 TD',362.7],['WR','C. Lamb','135 rec · 1,749',369.4],['RB','T. Pollard','1,005 yds · 6 TD',204.8],['TE','J. Ferguson','71 rec · 761',159.2],['PK','B. Aubrey','36/38 FG · 51 XP',163.7],['RB','R. Dowdle','361 yds · 2 TD',88.1]],
+ GB:[['QB','J. Love','4,159 yds · 32 TD',338.9],['RB','A. Jones','656 yds · 3 TD',148.7],['WR','J. Reed','64 rec · 793',173.2],['TE','T. Kraft','31 rec · 355',82.6],['PK','A. Carlson','27/30 FG · 46 XP',134.9],['RB','A. Dillon','613 yds · 2 TD',121.3]],
+ PHI:[['QB','J. Hurts','3,858 yds · 23 TD',371.5],['RB','D. Swift','1,049 yds · 5 TD',211.4],['WR','A. Brown','106 rec · 1,456',291.8],['PK','J. Elliott','30/33 FG · 52 XP',147.3],['TE','D. Goedert','59 rec · 592',134.7],['RB','K. Gainwell','310 yds · 3 TD',96.2]],
+ CIN:[['QB','J. Burrow','2,309 yds · 15 TD',188.6],['WR','J. Chase','100 rec · 1,216',257.4],['WR','T. Higgins','42 rec · 656',132.9],['RB','J. Mixon','1,034 yds · 12 TD',243.1],['PK','E. McPherson','31/34 FG · 48 XP',145.1],['RB','C. Brown','179 yds · 1 TD',58.3]],
+ BAL:[['QB','L. Jackson','3,678 yds · 24 TD',386.2],['RB','G. Edwards','810 yds · 13 TD',196.5],['TE','M. Andrews','45 rec · 544',124.3],['WR','Z. Flowers','77 rec · 858',188.9],['RB','J. Hill','352 yds · 3 TD',94.7],['PK','J. Tucker','32/34 FG · 43 XP',151.6]],
+ MIN:[['QB','K. Cousins','2,331 yds · 18 TD',182.4],['WR','J. Jefferson','68 rec · 1,074',214.6],['RB','A. Mattison','700 yds · 4 TD',148.2],['TE','T. Hockenson','95 rec · 960',221.8],['PK','G. Joseph','35/38 FG · 47 XP',156.2],['RB','T. Chandler','142 yds · 0 TD',44.1]],
+ LAR:[['QB','M. Stafford','3,965 yds · 24 TD',298.7],['RB','K. Williams','1,144 yds · 12 TD',268.4],['WR','P. Nacua','105 rec · 1,486',294.1],['PK','J. Karty','29/31 FG · 50 XP',143.8],['TE','T. Higbee','47 rec · 495',108.6],['RB','R. Rivers','32 yds · 0 TD',18.9]]};
+var SLOTS=['qb','rb','rb','wr','wr','te','flx','k'];
+var LABEL={qb:'QB',rb:'RB',wr:'WR',te:'TE',flx:'FLEX',k:'K'};
+var picks=[null,null,null,null,null,null,null,null], cur=null, held=null, t=134;
+
+function el(id){return document.getElementById(id)}
+function mk(t2){return '<div class="mk" style="background:linear-gradient(to bottom,'+t2.c+' 0 58%,'+t2.d+' 58% 100%)"></div>'}
+function team(ab){for(var i=0;i<TEAMS.length;i++){if(TEAMS[i].ab===ab)return TEAMS[i]}return null}
+function elig(i){if(picks[i]||!held)return false;
+  var s=SLOTS[i],p=held.pos.toLowerCase();
+  if(s==='flx')return p==='rb'||p==='wr'||p==='te';
+  return s===p}
+
+function draw(){
+  var f='',i,p;
+  for(i=0;i<8;i++){p=picks[i];
+    if(p){f+='<div class="slot filled '+SLOTS[i]+'" data-clr="'+i+'"><span class="x">×</span>'+
+      '<span class="pos" style="font-size:9px">'+LABEL[SLOTS[i]]+'</span>'+
+      '<span class="nm">'+p.last+'</span><span class="tm">'+p.team+'</span>'+
+      '<span class="pts n">'+p.pts.toFixed(1)+'</span></div>'}
+    else{f+='<div class="slot '+SLOTS[i]+(elig(i)?' elig':'')+'" data-place="'+i+'">'+
+      '<span class="pos">'+LABEL[SLOTS[i]]+'</span></div>'}}
+  el('form').innerHTML=f;
+  var pp='';for(i=0;i<8;i++){pp+='<div class="pip'+(picks[i]?' on':'')+'"></div>'}
+  el('pips').innerHTML=pp;
+  var n=0,tot=0,used={};
+  for(i=0;i<8;i++){if(picks[i]){n++;tot+=picks[i].pts;used[picks[i].team]=1}}
+  el('cnt').textContent=n+' of 8 slots';
+  el('tot').textContent=tot.toFixed(1);
+  var uc=0;for(var k in used){uc++}
+  el('tl').textContent=(12-uc)+' teams left';
+  el('lock').disabled=n<8;
+  el('pace').textContent=n?Math.round(tot/1868.9*100)+'%':'–';
+  el('hint').textContent=held?'tap a lit slot ↑':'tap a team';
+  var g='';
+  for(i=0;i<TEAMS.length;i++){var t2=TEAMS[i];var u=used[t2.ab];
+    g+='<div class="tc'+(cur===t2.ab?' on':'')+(u?' used':'')+'"'+(u?'':' data-team="'+t2.ab+'"')+'>'+
+       mk(t2)+'<b>'+t2.ab+'</b></div>'}
+  el('grid').innerHTML=g;
+}
+function steps(){
+  var n=0,i;for(i=0;i<8;i++){if(picks[i])n++}
+  var stage = n===8 ? 4 : held ? 3 : cur ? 2 : 1;
+  var names=['Team','Player','Slot'],h='';
+  for(i=0;i<3;i++){
+    var cls = stage===4 ? 'done' : (i+1===stage ? 'on' : (i+1<stage ? 'done' : ''));
+    h+='<span class="stp '+cls+'"><i>'+(cls==='done'?'✓':(i+1))+'</i><b>'+names[i]+'</b></span>';
+    if(i<2)h+='<span class="arw"></span>';
+  }
+  document.getElementById('strip').innerHTML=h;
+  var msg;
+  if(stage===1) msg='Fill <b>eight slots</b> from <b>twelve teams</b>, one player each. Their real season points are your score. Tap a team to see its six.';
+  else if(stage===2) msg='Six from the <b>'+team(cur).n+'</b>. Dimmed ones fit no slot you have left. Tap one.';
+  else if(stage===3) msg='<b>'+held.name+'</b> fits the lit slots. Tap one to place him — or tap another player to change your mind.';
+  else msg='All eight in. <b>Lock it in</b> before the clock runs out, or keep swapping — tap any filled slot to clear it.';
+  document.getElementById('note').innerHTML=msg;
+}
+
+function panel(){
+  if(!cur){el('ph').innerHTML='<b>The board</b><small>tap a team above</small>';
+    el('pb').innerHTML='<div class="empty">tap a team<br>above</div>';return}
+  var t2=team(cur);
+  el('ph').innerHTML=mk(t2)+'<b>'+t2.n+'</b><small class="'+(held?'go':'')+'">'+
+    (held?held.name+'<br>tap a lit slot ↑':'tap a player')+'</small>';
+  var open={},i;for(i=0;i<8;i++){if(!picks[i])open[SLOTS[i]]=1}
+  var rows=POOL[cur],h='';
+  for(i=0;i<rows.length;i++){var r=rows[i],pos=r[0],pl=pos.toLowerCase();
+    var fits=open[pl]||(open.flx&&(pl==='rb'||pl==='wr'||pl==='te'));
+    h+='<div class="prow'+(held&&held.i===i?' sel':'')+(fits?'':' gone')+'"'+(fits?' data-hold="'+i+'"':'')+'>'+
+       '<span class="pb '+pl+'">'+pos+'</span>'+
+       '<span class="who"><b>'+r[1]+'</b><small>'+r[2]+'</small></span>'+
+       '<span class="val"><b class="n">'+r[3].toFixed(1)+'</b><small>PTS</small></span></div>'}
+  el('pb').innerHTML=h;
+}
+document.addEventListener('click',function(ev){
+  var n=ev.target;
+  while(n&&n!==document.body){
+    if(n.dataset){
+      if(n.dataset.team){cur=n.dataset.team;held=null;draw();panel();steps();return}
+      if(n.dataset.hold){var i=+n.dataset.hold,r=POOL[cur][i];
+        held={i:i,pos:r[0],name:r[1],pts:r[3],team:cur,last:r[1].split(' ').pop()};draw();panel();steps();return}
+      if(n.dataset.place){var j=+n.dataset.place;
+        if(!elig(j))return;
+        picks[j]={name:held.name,last:held.last,team:held.team,pts:held.pts,pos:held.pos};
+        held=null;cur=null;draw();panel();steps();return}
+      if(n.dataset.clr){picks[+n.dataset.clr]=null;draw();panel();steps();return}
+    }
+    n=n.parentNode;
+  }
+});
+function go(){var tot=0;for(var i=0;i<8;i++){tot+=picks[i].pts}
+  alert('Locked in · '+tot.toFixed(1)+' points · '+Math.round(tot/1868.9*100)+'% of the perfect board')}
+function clock(){
+  var m=Math.floor(t/60),s=(t%60<10?'0':'')+(t%60),str=m+':'+s,h='';
+  for(var i=0;i<str.length;i++){h+= str[i]===':' ? '<span class="cl">:</span>' : '<div class="dg">'+str[i]+'</div>'}
+  el('clk').innerHTML=h;
+  el('crow').className='crow'+(t<=30?' crit':t<=60?' warn':'');
+}
+setInterval(function(){if(t>0){t--;clock()}},1000);
+clock();draw();panel();steps();
+</script>
+</body></html>

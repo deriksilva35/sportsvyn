@@ -117,8 +117,10 @@ function renderBoard(props = {}) {
 }
 
 function clickFinish(container) {
+  // THE FINISH BUTTON IS THE LOCK NOW (v2.0): "Lock it in", in the footer,
+  // disabled until the roster is complete. Same handleFinish underneath.
   const btn = [...container.querySelectorAll('button')]
-    .find((b) => /see your grade|submitting/i.test(b.textContent));
+    .find((b) => /lock it in|locking/i.test(b.textContent));
   assert.ok(btn, 'the Finish button is on screen for a complete roster');
   return btn;
 }
