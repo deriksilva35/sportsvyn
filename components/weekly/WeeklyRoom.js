@@ -52,7 +52,6 @@ import { ordinal } from '@/lib/standings/view';
 import { useHandleGate, HELD } from '@/components/handle/HandleGate';
 import StandaloneTime from '@/components/StandaloneTime';
 import { confirmWeeklyEntry } from '@/app/actions/confirm';
-import '@/app/weekly/weekly.css';
 
 const SLOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLEX', FLEX2: 'FLEX' };
 const POOL_LABEL = {
