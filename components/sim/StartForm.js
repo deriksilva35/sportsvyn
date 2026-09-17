@@ -33,14 +33,23 @@ import { FFC_ATTRIBUTION } from '@/lib/fantasy/attribution';
 // THE CONNECTION HAS TO BE EXPLICIT or a preset is just another shape on the
 // rail. These two exist so the practice range can rehearse formats that
 // actually settle, and naming the game is the entire reason they earn a chip.
+//
+// ONE CARD CARRIES THE MARK. Both of these rehearse a game that settles, but
+// two volt-bordered cards on a six-card rail is a rail with a highlight and no
+// emphasis - the border stops meaning "this one" and starts meaning "these".
+// The Draft is the room this app's Draft page actually runs, so it takes the
+// border and the tag; the Weekly Six keeps its line, which is the part that
+// does the work.
 const RANKED_PRESETS = new Map([
   ['The Draft', {
+    border: true,
     tag: 'THE DRAFT',
     line: "12 · PPR · 8 rounds · the Draft's exact board · sorted by this season",
   }],
   ['The Weekly Six', {
+    border: false,
     tag: null,
-    line: 'the ranked format, unranked',
+    line: "12 · PPR · 6 rounds · the Weekly's exact board",
   }],
 ]);
 
@@ -177,7 +186,7 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
       <div className="chiplab">Start from</div>
       <div className="deck">
         {presets.map((p) => (
-          <button key={p.id} type="button" className={`pcard${selection === p.id ? ' on' : ''}${RANKED_PRESETS.has(p.name) ? ' pcard--ranked' : ''}`} onClick={() => choosePreset(p)}>
+          <button key={p.id} type="button" className={`pcard${selection === p.id ? ' on' : ''}${RANKED_PRESETS.get(p.name)?.border ? ' pcard--ranked' : ''}`} onClick={() => choosePreset(p)}>
             <div className="pn">
               {p.name}
               {RANKED_PRESETS.get(p.name)?.tag && <span className="ptag">{RANKED_PRESETS.get(p.name).tag}</span>}
