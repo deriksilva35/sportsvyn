@@ -26,15 +26,28 @@ const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '')
 const WEEKLY_ROOM = 'components/weekly/WeeklyRoom.js';
 const PICKEM_BOARD = 'components/pickem/PickemBoard.js';
 
+// PICK'EM NO LONGER RENDERS ConfirmCard (v2, R4). Its confirm moved into the
+// board's own footer - a counter that becomes "Lock it in" - because under the
+// rolling lock a card floating below a half-locked board had nothing to sit
+// beside. What did NOT change is the ACTION and the GATE: confirmPickemEntry
+// and confirmVerdict are still the only two, and the tests below now check
+// that rather than checking which component draws the button.
+
 // ------------------------------------------------------ 1: one card, shared
 
-test('BOTH ranked boards render the SAME confirm card component', () => {
-  for (const rel of [WEEKLY_ROOM, PICKEM_BOARD]) {
-    const code = strip(src(rel));
-    assert.match(code, /import ConfirmCard from '@\/components\/games\/ConfirmCard'/,
-      `${rel} imports the shared card`);
-    assert.match(code, /<ConfirmCard\b/, `${rel} renders it`);
-  }
+test('THE WEEKLY renders the shared confirm card', () => {
+  const code = strip(src(WEEKLY_ROOM));
+  assert.match(code, /import ConfirmCard from '@\/components\/games\/ConfirmCard'/, 'imports the shared card');
+  assert.match(code, /<ConfirmCard\b/, 'renders it');
+});
+
+test("PICK'EM CONFIRMS THROUGH ITS FOOTER, with the same action and the same gate", () => {
+  const code = strip(src(PICKEM_BOARD));
+  assert.doesNotMatch(code, /<ConfirmCard\b/, 'no card on the v2 board');
+  assert.match(code, /import \{ confirmPickemEntry \} from '@\/app\/actions\/confirm'/,
+    'the same action as before');
+  assert.match(code, /onClick=\{lockItIn\}/, 'and one control that calls it');
+  assert.match(code, /pkv-lock/, 'which is the footer button');
 });
 
 test('NEITHER board still carries its own copy of the card markup', () => {
@@ -62,7 +75,7 @@ test('the card has ONE button, and it is the volt Lock it in', () => {
   assert.doesNotMatch(receipt, /<button/, 'the locked-in state offers nothing to press');
 });
 
-test('both states carry a summary - roster for the Weekly, count for the Pickem', () => {
+test('the Weekly card carries a roster summary, and the Pickem footer a count', () => {
   const card = strip(src('components/games/ConfirmCard.js'));
   // rows (roster) and line/receiptLine (count) are both real inputs, and the
   // roster renders in BOTH states rather than only before locking.
@@ -74,19 +87,25 @@ test('both states carry a summary - roster for the Weekly, count for the Pickem'
     'and rendered in both the receipt and the review');
 
   assert.match(strip(src(WEEKLY_ROOM)), /rows=\{SLOTS\.map/, 'the Weekly passes its six');
-  // D4: the count is the PICKABLE games - kicked rows are outside it.
-  assert.match(strip(src(PICKEM_BOARD)), /line=\{`\$\{pickable\} of \$\{pickable\} picked`\}/,
-    "the Pick'em passes its count");
+  // D4 STILL HOLDS, in the footer now: the count is the PICKABLE games, so a
+  // kicked row is outside both the numerator and the denominator.
+  const board = strip(src(PICKEM_BOARD));
+  assert.match(board, /const toGo = pickable - pickedOpen;/, "the Pick'em counts what is still open");
+  assert.match(board, /\$\{toGo\} to go/, 'and says so on the control');
+  assert.match(board, /\{pickedOpen\} of \{pickable\} picked/, 'one denominator, in the header too');
 });
 
 test('the card states the lock time, and through StandaloneDate', () => {
   const card = strip(src('components/games/ConfirmCard.js'));
   assert.match(card, /import StandaloneDate from '@\/components\/StandaloneDate'/);
   assert.match(card, /<StandaloneDate iso=\{lockIso\}/);
-  // FRESH-USER FIXES, D12: only the Pick'em hands the card a lock instant.
-  // The Weekly's header owns its deadline; its card says none.
-  assert.match(strip(src(PICKEM_BOARD)), /lockIso=\{locksAt\}/, 'the Pick\'em hands it the instant, not a string');
+  // FRESH-USER FIXES, D12: the Weekly's header owns its deadline and its card
+  // says none. The Pick'em no longer renders this card at all (v2, R4); its
+  // footer names the next lock through the same island instead of a string.
   assert.doesNotMatch(strip(src(WEEKLY_ROOM)), /lockIso=/, 'the Weekly card renders no lock instant (D12)');
+  const board = strip(src(PICKEM_BOARD));
+  assert.doesNotMatch(board, /lockIso=/, "the Pick'em passes no lockIso - it renders no card");
+  assert.match(board, /<StandaloneTime iso=/, 'and every instant it does render goes through an island');
 });
 
 // ------------------------------------------- 2: one time zone per screen
@@ -221,9 +240,9 @@ test('EITHER game rendering the card renders the wrapper class AND the button', 
   const receipt = card.slice(card.indexOf('if (done)'), card.indexOf('return (\n    <div className="wk-review"'));
   assert.match(receipt, /className="wk-receipt"/, 'the confirmed state has its module wrapper');
 
-  for (const rel of [WEEKLY_ROOM, PICKEM_BOARD]) {
-    assert.match(strip(src(rel)), /<ConfirmCard\b/, `${rel} still renders the card`);
-  }
+  // ONE CALL SITE NOW, not two: the Weekly. The Pick'em's confirm lives in its
+  // own footer and is checked above.
+  assert.match(strip(src(WEEKLY_ROOM)), /<ConfirmCard\b/, 'the Weekly still renders the card');
 });
 
 test('the card carries NO horizontal margin - the parent owns the page inset', () => {
