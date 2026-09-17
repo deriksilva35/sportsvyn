@@ -443,6 +443,13 @@ export default function DraftRoom({
               ADP from the {poolMapping.poolTeams}-team {SCORING_LABEL[poolMapping.poolScoring] ?? String(poolMapping.poolScoring).toUpperCase()} market pool
             </div>
           )}
+          {/* WHICH SNAPSHOT, ALWAYS. A ranked room reaches back for a snapshot
+              that can seat 96 picks, so "the ADP" is no longer self-evidently
+              today's - and a reader comparing two rooms deserves to know they
+              were priced on different days. */}
+          {poolMapping?.snapshotDate && (
+            <div className="board-note">ADP snapshot {poolMapping.snapshotDate}</div>
+          )}
           <BoardGrid board={board} />
         </section>
 

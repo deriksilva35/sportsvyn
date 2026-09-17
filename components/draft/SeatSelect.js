@@ -19,6 +19,40 @@ import { useRouter } from 'next/navigation';
 import { ordinal } from '@/lib/standings/view';
 import { useHandleGate } from '@/components/handle/HandleGate';
 
+/**
+ * EVERY REFUSAL /api/draft/start CAN RETURN, AS A SENTENCE.
+ *
+ * WHAT THIS REPLACED: `j.error ?? 'Could not start.'` - which printed the
+ * machine reason straight onto the seat grid. On 17 Sep, with FFC's ADP feed
+ * thinned below a 96-pick room, a reader picking a seat was shown the literal
+ * string "pool_too_small". The token is for the log; the reader gets a
+ * sentence, and one that says whether waiting helps.
+ *
+ * KEYED ON EVERY REASON THE ROUTE ACTUALLY EMITS - its own six
+ * (app/api/draft/start/route.js), plus what startCustomDraftFor and
+ * claimEntry hand it. A reason with no line here falls to `default` rather
+ * than leaking; a test asserts the map covers the route's own strings.
+ * Same shape TrackerStart.js already uses for the sim console.
+ */
+const START_ERRORS = {
+  // the route's own gates
+  unauthorized: 'Sign in to take a seat.',
+  'bad seat': 'That seat is not on this board.',
+  'no board': 'There is no room open this week yet.',
+  settled: 'This week is already graded.',
+  locked: 'This week has locked.',
+  // startCustomDraftFor
+  pool_too_small: 'The draft pool is short this week - check back later.',
+  no_pool: 'The draft pool is not loaded yet - check back later.',
+  bad_position: 'That seat is not on this board.',
+  bad_seat: 'That seat is not on this board.',
+  invalid_config: 'This room is misconfigured. We are on it.',
+  // claimEntry, when it has no draft to send us to
+  'already entered': 'You already have a room for this week.',
+  'could not start': 'Could not start. Try again in a moment.',
+  default: 'Could not start. Try again in a moment.',
+};
+
 export default function SeatSelect({
   seats, teamsCount, rounds, clockSeconds, signedIn = true, signinHref = '/signin',
   hasHandle = true,
@@ -57,7 +91,7 @@ export default function SeatSelect({
       // A 409 with a draftId is a claim that already exists - send them to it
       // rather than reporting an error they cannot act on.
       if (j.draftId) { router.push(`/sim/draft/${j.draftId}`); return; }
-      setErr(j.error === 'locked' ? 'This week has locked.' : j.error ?? 'Could not start.');
+      setErr(START_ERRORS[j.error] ?? START_ERRORS.default);
       return;
     }
     router.push(`/sim/draft/${j.draftId}`);
