@@ -154,7 +154,12 @@ test('the grade screen renders THE SERVER\'S numbers, not a client grade', async
 
   const text = container.textContent;
   assert.match(text, /123\.4/, "the server's score is on screen");
-  assert.match(text, /61%/, "the server's pct is on screen");
+  // THE SERVER'S NUMBERS, FORMATTED HERE. The screen no longer prints the
+  // server's precomputed whole-number pct; it formats the server's own score
+  // and ceiling through the one formatter, which is the same ratio at one
+  // decimal - 123.4 of 200 is 61.7%. What the rule forbids is a CLIENT-graded
+  // score, and both numbers here still come from the response.
+  assert.match(text, /61\.7%/, "the server's numbers, through the one formatter");
   assert.match(text, /200/, "the server's perfect/ceiling is on screen");
   // The client grade of this play state would be 10+11+...+17 = 108, never 123.4.
   assert.doesNotMatch(text, /\b108\b/, 'the client-computed total must not appear');
