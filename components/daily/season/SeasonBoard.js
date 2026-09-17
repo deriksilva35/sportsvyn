@@ -41,6 +41,7 @@ import {
   legalSlotIndexes, commitPick, clearSlot, startClock as canStartClock,
 } from '@/lib/daily/seasonBoardPlay';
 import { gradeBoard, boardStory } from '@/lib/daily/seasonBoardGrade';
+import { pctOfCeiling } from '@/lib/daily/format';
 import { DAILY_V2_PATH, DAILY_ROUND_SECONDS } from '@/lib/daily/boardShape';
 
 // THE ONE PLACE THE DOMAIN-QUALIFIED SHARE URL IS BUILT (relay 5b item 7) -
@@ -726,10 +727,14 @@ function GradeScreen({
   // clipboard target. Streak is OMITTED, never shown as 0 or "-", when the
   // caller has no streak context (practice, or a page that never computed
   // one) - a missing fact is left out, not guessed at.
+  // THE ONE FORMATTER (lib/daily/format.js). A null - no ceiling to measure
+  // against - OMITS the percentage from every one of these three lines rather
+  // than printing a dash or a zero.
+  const pctLabel = pctOfCeiling(grade.mine, grade.perfect);
   const shareText = [
     grade.glyph,
     `${ranked ? edition : 'Practice'} · ${year}`,
-    `${grade.mine.toLocaleString()} pts · ${grade.pct}%${streak != null ? ` · streak ${streak}` : ''}`,
+    `${grade.mine.toLocaleString()} pts${pctLabel ? ` · ${pctLabel}` : ''}${streak != null ? ` · streak ${streak}` : ''}`,
     SHARE_URL,
   ].join('\n');
   // THE SHARE SHEET, NOT JUST THE CLIPBOARD (relay 6 item 2). This was
@@ -786,7 +791,7 @@ function GradeScreen({
         <div className="sbd-g">{grade.glyph}</div>
         <div className="sbd-cap">
           {ranked ? edition : 'Practice'} · {year}<br />
-          {grade.mine.toLocaleString()} pts · {grade.pct}% · {clockLabel}<br />
+          {grade.mine.toLocaleString()} pts{pctLabel ? ` · ${pctLabel}` : ''} · {clockLabel}<br />
           {SHARE_URL}
         </div>
         <button type="button" className="sbd-copy" onClick={handleShare}>
@@ -797,7 +802,7 @@ function GradeScreen({
       <div className="sbd-grade">
         <div className="sbd-grade-top">
           <b>{year}</b>
-          <span>{grade.mine.toLocaleString()} pts · {grade.pct}% of {grade.perfect.toLocaleString()}</span>
+          <span>{grade.mine.toLocaleString()} pts{pctLabel ? ` · ${pctLabel}` : ''} of {grade.perfect.toLocaleString()}</span>
         </div>
         <div className="sbd-colhead">
           <div className="sbd-cy">You</div>
