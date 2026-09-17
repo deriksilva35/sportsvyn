@@ -707,12 +707,19 @@ export default function DraftRoom({
               College ADP is a separate market — no VAL, and no seat read, on these rows.
             </div>
           )}
+          {/* THE COLUMN IS NAMED FOR WHAT IS IN IT. On a Sportsvyn-board room
+              the number is our own board RANK, not a market's average draft
+              position, and heading it ADP would be a claim nobody measured.
+              An FFC room still says ADP because that is still what it is.
+              VAL is unchanged either way - pick minus the number in the
+              column - because the subtraction means the same thing whichever
+              number the column holds. */}
           <div className="p-row nhead" aria-hidden="true">
             <span className="ncols">
               <span className="ncol">PPG</span>
               {collegeView
                 ? <span className="ncol">NCAAF</span>
-                : <><span className="ncol">ADP</span><span className="ncol">VAL</span></>}
+                : <><span className="ncol">{poolMapping?.boardLabel ? 'RANK' : 'ADP'}</span><span className="ncol">VAL</span></>}
             </span>
             <span className="draft nghost">Draft</span>
           </div>

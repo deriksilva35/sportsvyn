@@ -149,12 +149,25 @@ test('one header row seats the labels over the columns by shared geometry', () =
   assert.match(mock, /className="p-row nhead" aria-hidden="true"/);
   assert.match(mock, /className="draft nghost">Draft</);
   // The header's label cells ARE .ncol cells - same width var, cannot drift.
+  //
+  // THE MIDDLE LABEL IS NAMED FOR WHAT IS IN THE COLUMN. A room drafting our
+  // own board (lib/draft/ourBoard.js) holds a board RANK there, not a market's
+  // average draft position, so the mock room's middle cell is an expression
+  // rather than a literal - RANK on a Sportsvyn board, ADP on an FFC one. The
+  // GEOMETRY is what this test is about and it is unchanged: three .ncol cells
+  // in order, PPG first and VAL last, the same width variable for all three.
   for (const rel of ROOMS) {
     const t = src(rel);
     const head = t.slice(t.indexOf('nhead'), t.indexOf('nghost'));
-    assert.match(head, /className="ncol">PPG<[\s\S]*className="ncol">ADP<[\s\S]*className="ncol">VAL</,
-      `${rel}: labels are ncol cells in PPG/ADP/VAL order`);
+    assert.match(head, /className="ncol">PPG<[\s\S]*className="ncol">(?:ADP|\{[^}]*'RANK'[^}]*\})<[\s\S]*className="ncol">VAL</,
+      `${rel}: labels are ncol cells in PPG/(ADP|RANK)/VAL order`);
   }
+  // The tracker is always an FFC room, so its label stays the literal.
+  assert.match(src('components/sim/TrackerRoom.js'), /className="ncol">ADP</);
+  // And the mock room names the column from the board it was given, never from
+  // a second guess at which board that is.
+  const mockHead = src('components/sim/DraftRoom.js');
+  assert.match(mockHead, /className="ncol">\{poolMapping\?\.boardLabel \? 'RANK' : 'ADP'\}</);
 });
 
 test('ADP stays an integer - it is a rank, not a measurement', () => {
