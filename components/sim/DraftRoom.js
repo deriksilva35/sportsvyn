@@ -328,11 +328,15 @@ export default function DraftRoom({
     summariesLoaded.current = true;
     let cancelled = false;
     (async () => {
-      const res = await fetchPlayerSummaries(available.map((p) => p.ffcPlayerId), config.scoring_format);
+      const res = await fetchPlayerSummaries(draftId, available.map((p) => p.ffcPlayerId), config.scoring_format);
       if (!cancelled && res.ok) setSummaries(res.summaries);
     })();
     return () => { cancelled = true; };
-  }, [available, config.scoring_format]);
+    // draftId is in the list because the summaries are now season-scoped and
+    // the server resolves that season FROM the draft. It never changes for a
+    // mounted room, and the ref above makes this run once regardless - but a
+    // dependency that is read must be declared.
+  }, [available, config.scoring_format, draftId]);
 
   // --- stat strip: expand a row -> load that player's season ---
   async function toggleExpand(p) {
@@ -341,7 +345,7 @@ export default function DraftRoom({
     setExpandedId(next);
     if (next == null || statsById[id] !== undefined) return;
     setStatsById((m) => ({ ...m, [id]: 'loading' }));
-    const res = await fetchPlayerStats(id);
+    const res = await fetchPlayerStats(draftId, id);
     setStatsById((m) => ({ ...m, [id]: res.ok ? res.stats : null }));
   }
 
