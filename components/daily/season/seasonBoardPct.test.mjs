@@ -114,11 +114,11 @@ test('a real perfect board is the ONLY thing that reads 100%', () => {
   assert.doesNotMatch(c.textContent, /99\.9%/);
 });
 
-test('A ZERO CEILING READS "0.0%", per the full relay, and nothing divides by it', () => {
+test('NO CEILING, NO PERCENTAGE - the screen drops it rather than printing a zero', () => {
   const c = results({ ...grade(), perfect: 0 });
-  assert.match(c.textContent, /0\.0%/);
-  assert.doesNotMatch(c.textContent, /NaN|Infinity/, 'no arithmetic escaped onto the screen');
-  assert.doesNotMatch(c.textContent, /100%/);
+  assert.doesNotMatch(c.textContent, /%/, 'no percentage anywhere on the screen');
+  assert.doesNotMatch(c.textContent, /0%|-%|NaN|Infinity/, 'and certainly not a zero or a dash');
+  assert.match(c.querySelector('.sbd-cap').textContent, /2,363\.1 pts · 2:41/, 'the rest of the line survives');
 });
 
 // A NULL CEILING IS NOT RENDERABLE ON THIS SCREEN AND NEVER WAS. The grade
