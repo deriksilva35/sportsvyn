@@ -73,6 +73,11 @@ const r0 = (x) => (x == null ? '?' : Math.round(Number(x)));
 export default function DraftRoom({
   draftId, config, order, userTeamIndex, initialPicks, initialAvailable, timerSeconds, initialAuto, poolMapping, minors = [],
   upcomingKeepers = [], franchise = null,
+  // THE ROLLING POOL'S OTHER HALF (v2). Players whose game has kicked off:
+  // the writer has always refused them ('player_kicked_off') and this list is
+  // what lets the room say so BEFORE the tap rather than after it. Empty for
+  // a practice mock, which has no week and no slate.
+  withheld = [],
 }) {
   const router = useRouter();
   const [picks, setPicks] = useState(initialPicks);
@@ -144,6 +149,35 @@ export default function DraftRoom({
   );
   // LAST pick strip: slot (round.pickInRound), team, name, position — updates every pick.
   const last = picks[picks.length - 1] ?? null;
+  /**
+   * The ticker's own cells (v2), built the way lastLine already builds its
+   * one: the slot label from round + overallPick, the seat from `order`, and
+   * a synthetic K/DST kept under its replacement name rather than a blank.
+   * Same fields for a pick loaded from the database and one the engine just
+   * returned, which is why lastLine could do it this way first.
+   */
+  const tickCell = (pk) => ({
+    label: `${pk.round}.${String(((pk.overallPick - 1) % config.teams_count) + 1).padStart(2, '0')}`,
+    seat: order[pk.overallPick - 1] + 1,
+    name: pk.synthetic ? `Replacement ${pk.slotPos}` : pk.playerName,
+    pos: pk.slotPos,
+    isUser: pk.isUser ?? (order[pk.overallPick - 1] === userTeamIndex),
+  });
+  /**
+   * Has this seat already picked in the round on the clock?
+   *
+   * THE SNAKE, NOT A COUNTER. Round 1 runs seat 1..N and round 2 runs N..1, so
+   * "already picked" is a question about this round's DIRECTION - a seat-order
+   * counter would mark the wrong half of every even round. seatForPick is the
+   * inverse of this arithmetic and lib/draft/room.js tests both directions.
+   */
+  const seatDoneThisRound = (seat) => {
+    if (complete || round == null) return false;
+    const N = config.teams_count;
+    const overall = (round - 1) * N + (round % 2 === 1 ? seat : N - seat + 1);
+    return overall < currentOverall;
+  };
+
   const lastLine = last ? {
     slot: `${last.round}.${String(((last.overallPick - 1) % config.teams_count) + 1).padStart(2, '0')}`,
     team: order[last.overallPick - 1] + 1,
@@ -371,10 +405,41 @@ export default function DraftRoom({
   // it - that axis stays live in both views.
   const collegeView = college;
 
+  // KICKED PLAYERS STAY ON THE BOARD, MARKED (v2). They used to be absent from
+  // the writer's list and present in the room's, so the room offered a player
+  // the server would refuse. Now they ride the same filters and the same sort
+  // as everyone else, wearing `kicked` - which the row turns into a grey and
+  // "out of the pool", and which the pick path refuses at the top.
+  const poolAll = useMemo(
+    () => (withheld.length ? [...available, ...withheld.map((p) => ({ ...p, kicked: true }))] : available),
+    [available, withheld],
+  );
   const shown = useMemo(() => {
-    const list = filterPlayers(available, { position: filter, team, search, cls, league: college ? 'ncaaf' : 'nfl' });
+    const list = filterPlayers(poolAll, { position: filter, team, search, cls, league: college ? 'ncaaf' : 'nfl' });
     return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), summaries, seatValuation);
-  }, [available, filter, team, search, cls, college, sortOpts, activeSort, summaries, seatValuation]);
+  }, [poolAll, filter, team, search, cls, college, sortOpts, activeSort, summaries, seatValuation]);
+
+  // ---- THE CLOCK HERO (v2) ------------------------------------------------
+  // WHOSE PICK, WHICH PICK, AND WHEN YOURS COMES BACK. The banner this
+  // replaced said "Team 7 on the clock · Pick 31" and nothing else; the mock's
+  // hero names the seat, the pick in round.pick form, and the reader's own
+  // next overall - all of it already derived, none of it new state.
+  const pickInRound = complete ? null : ((currentOverall - 1) % config.teams_count) + 1;
+  const pickLabel = complete ? null : `${round}.${String(pickInRound).padStart(2, '0')}`;
+  // ON YOUR OWN TURN, "NEXT" MEANS THE ONE AFTER THIS ONE. myNextOverall
+  // counts from picks.length, so on your turn it returns the pick you are
+  // making - right for the seat valuation that reads it, wrong for a hero
+  // that would then say "next pick 1.01" while you are on 1.01.
+  const heroNext = isMyTurn ? nextUserOverall(order, userTeamIndex, currentOverall) : myNextOverall;
+  const nextLabel = heroNext == null ? null
+    : `${Math.ceil(heroNext / config.teams_count)}.${String(((heroNext - 1) % config.teams_count) + 1).padStart(2, '0')}`;
+  const picksAway = heroNext == null ? null : heroNext - currentOverall;
+  // THE DRAIN IS THE CLOCK, NOT A SECOND OPINION ABOUT IT. Width straight off
+  // the same `clock` the number shows, so the two cannot disagree.
+  const drainPct = timerSeconds == null || clock == null
+    ? 0 : Math.max(0, Math.min(100, (clock / timerSeconds) * 100));
+  const armedPlayer = armedId == null ? null : shown.find((p) => p.ffcPlayerId === armedId) ?? null;
+  const bestAvailable = shown.find((p) => !p.kicked) ?? null;
 
   const rounds = board.rounds;
   return (
@@ -384,17 +449,104 @@ export default function DraftRoom({
           protect - and the tracker room, which shares this route, declares
           itself differently. */}
       <RoomScope tab="practice" timed={timerSeconds != null} />
-      {/* PERSISTENT HEADER (all pages): clock banner + AUTO, then last-pick strip */}
-      <div className="room-head">
-        <div className={`on-clock${canPick ? '' : ' waiting'}`}>
-          <span className="dot" />
-          <span className="txt">{complete ? 'Draft complete' : auto
-            ? <>Auto-drafting your seat · <b>Pick {currentOverall}</b> · Round {round}</>
-            : isMyTurn
-              ? <>You&apos;re on the clock · <b>Pick {currentOverall}</b> · Round {round}</>
-              : <>Team {onClockTeam + 1} on the clock · Pick {currentOverall}</>}</span>
-          {timerSeconds != null && canPick && <span className={`timer${clock <= 10 ? ' low' : ''}`}>{Math.max(0, clock ?? 0)}</span>}
+      {/* ---- THE CLOCK HERO (v2, per the mock) ---------------------------
+          Whose pick it is, which pick that is, when the reader's own comes
+          back, and the countdown as the biggest thing on the screen.
+
+          THE CLOCK IS ADVISORY AND THE SUB-LABEL SAYS SO. It counts down in
+          this browser and asks the server to auto-pick at zero
+          (timerAutoPick); there is no server deadline, a reload restarts it,
+          and the engine - not this number - decides what happens. Drawing it
+          as a countdown without saying that would be the one thing the mock
+          could have made us imply. */}
+      <div className="dv-clk">
+        <div className="dv-otc">
+          <div className="dv-who">
+            <div className="dv-lab">
+              {complete ? 'Draft complete' : <>On the clock · pick {pickLabel}</>}
+            </div>
+            <b className={isMyTurn ? 'dv-you' : undefined}>
+              {complete ? '—' : isMyTurn ? 'You' : `Seat ${onClockTeam + 1}`}
+            </b>
+            <small>
+              {complete ? `${picks.length} picks made`
+                : isMyTurn
+                  ? <>seat {userTeamIndex + 1}{nextLabel ? <> · next pick {nextLabel}{picksAway > 0 ? ` · ${picksAway} picks away` : ''}</> : null}</>
+                  : <>auto seat{nextLabel ? <> · you pick again at {nextLabel}</> : null}</>}
+            </small>
+          </div>
+          <div className="dv-t">
+            {/* NO CLOCK IS A WORD, NOT A ZERO. An untimed practice mock has
+                nothing to count and no drain bar at all. */}
+            <b className={`n${clock != null && clock <= 10 ? ' dv-hot' : ''}`}>
+              {timerSeconds == null ? 'no' : Math.max(0, clock ?? 0)}
+            </b>
+            <span>{timerSeconds == null ? 'clock' : 'seconds'}</span>
+          </div>
         </div>
+        <div className="dv-sub">
+          {timerSeconds == null ? 'untimed · take as long as you like'
+            : 'advisory · auto-picks at 0'}
+        </div>
+        {timerSeconds != null && (
+          <div className="dv-drain">
+            <i className={clock != null && clock <= 10 ? 'dv-hot' : undefined} style={{ width: `${drainPct}%` }} />
+          </div>
+        )}
+      </div>
+
+      {/* ---- THE SEAT STRIP ---------------------------------------------
+          Twelve cells through seatForPick, the round's direction named, the
+          reader's own seat outlined. EVERY OTHER SEAT READS "auto", because
+          that is what it is: eleven engine seats. No house marks here - the
+          personas draft their own rooms and stay a field-board fact. */}
+      <div className="dv-seats">
+        {Array.from({ length: config.teams_count }, (_, i) => {
+          const seat = i + 1;
+          const onClock = !complete && onClockTeam === i;
+          const done = !complete && !onClock && seatDoneThisRound(seat);
+          return (
+            <div key={seat}
+              className={`dv-seat${done ? ' done' : ''}${onClock ? ' on' : ''}${i === userTeamIndex ? ' you' : ''}`}>
+              <b>{seat}</b>
+              <small>{i === userTeamIndex ? 'you' : 'auto'}</small>
+            </div>
+          );
+        })}
+      </div>
+      <div className="dv-snake">
+        <span>{complete ? 'ALL PICKS IN' : round % 2 === 1 ? `ROUND ${round} →` : `← ROUND ${round}`}</span>
+        <span>{complete ? '' : round % 2 === 1 ? `← ROUND ${round + 1} COMES BACK` : `ROUND ${round + 1} →`}</span>
+      </div>
+
+      {/* ---- THE TICKER, FROM THE PERSISTED PICKS -------------------------
+          The last four that landed and then the cell on the clock. Every
+          field is already on the pick row - overall, seat, name, position -
+          and the strip it replaces showed exactly one pick. */}
+      <div className="dv-tick">
+        {picks.slice(-4).map((pk) => {
+          const t = tickCell(pk);
+          return (
+            <div key={pk.overallPick} className={`dv-tk${t.isUser ? ' you' : ''}`}>
+              <small>{t.label} · {t.isUser ? 'YOU' : `seat ${t.seat}`}</small>
+              <b>{t.name}</b>
+              <i>{t.pos}</i>
+            </div>
+          );
+        })}
+        {!complete && (
+          <div className={`dv-tk${isMyTurn ? ' you' : ''}`}>
+            <small>{pickLabel} · {isMyTurn ? 'YOU' : `seat ${onClockTeam + 1}`}</small>
+            <b>·&nbsp;·&nbsp;·</b>
+            <i>on the clock</i>
+          </div>
+        )}
+      </div>
+
+      {/* PERSISTENT HEADER (all pages): the view toggle + AUTO. The clock
+          banner moved into the hero above; what stays here are the two
+          controls, which the hero has no room for and which are not clocks. */}
+      <div className="room-head">
         {/* desktop-only LIST/BOARD view toggle (mobile uses the swipe pager instead) */}
         <div className="room-view" role="group" aria-label="Room view">
           <button type="button" className={`rseg${view === 'list' ? ' on' : ''}`} onClick={() => setView('list')} aria-pressed={view === 'list'}>List</button>
@@ -459,8 +611,16 @@ export default function DraftRoom({
               both numbers rather than the larger one alone - "120 of 927" is
               true, "927" over 120 rows is not. Both read from ROW_CAP and from
               the same `shown`, so they cannot drift apart. */}
-          <div className="plabel">Available · {shown.length > ROW_CAP
-            ? `${ROW_CAP} of ${shown.length}` : shown.length}</div>
+          {/* ADP, AND WHICH SNAPSHOT OF IT. A ranked room now reaches back for
+              a snapshot that can seat 96 picks, so "the ADP" is not
+              self-evidently today's - and the counts are the real ones, which
+              on 17 Sep is 78 rows, not the 96 the mock drew. */}
+          <div className="plabel">
+            ADP{poolMapping?.snapshotDate ? ` · FFC snapshot ${poolMapping.snapshotDate}` : ''}
+            {' · '}
+            {shown.length > ROW_CAP ? `${ROW_CAP} of ${shown.length}` : shown.length}
+            {withheld.length ? ` · ${withheld.length} out of the pool` : ''}
+          </div>
           <div className="avail-tools">
           <input className="avail-search" placeholder="Search players" value={search} onChange={(e) => setSearch(e.target.value)} />
           <div className="avail-chips">
@@ -566,7 +726,7 @@ export default function DraftRoom({
             const seatRead = seatValuation.get(p.ffcPlayerId) ?? null;
             const approx = sum && !isExactlyScored(slot);
             return (
-              <div key={p.ffcPlayerId} className={`p-item${open ? ' open' : ''}`}>
+              <div key={p.ffcPlayerId} className={`p-item${open ? ' open' : ''}${p.kicked ? ' dv-gone' : ''}`}>
                 <div className={`p-row${armedId === p.ffcPlayerId ? ' armed' : ''}`}>
                   <button type="button" className="p-main" onClick={() => toggleExpand(p)} aria-expanded={open}>
                     <span className="ava" data-pos={slot}>{slot}</span>
@@ -655,12 +815,19 @@ export default function DraftRoom({
                       </span>
                     </span>
                   </button>
-                  {canPick && (armedId === p.ffcPlayerId
-                    ? <span className="p-act"><button className="confirm" onClick={() => confirm(p)}>Confirm</button><button className="cancel" onClick={() => { setArmedId(null); setErr(null); }}>✕</button></span>
-                    : <button className="draft" onClick={() => {
-                      const f = flagsAfterArm(p.ffcPlayerId);
-                      setArmedId(f.armedId); setErr(f.err); sendHaptic('light');
-                    }}>Draft</button>)}
+                  {/* A KICKED PLAYER GETS NO BUTTON AT ALL, and says why.
+                      The writer would refuse him ('player_kicked_off'), and an
+                      affordance that cannot work is worse than none - the same
+                      rule the Weekly's × follows. ARM-THEN-CONFIRM IS
+                      UNCHANGED for everyone else. */}
+                  {p.kicked
+                    ? <span className="dv-out">out of the pool</span>
+                    : canPick && (armedId === p.ffcPlayerId
+                      ? <span className="p-act"><button className="confirm" onClick={() => confirm(p)}>Confirm</button><button className="cancel" onClick={() => { setArmedId(null); setErr(null); }}>✕</button></span>
+                      : <button className="draft" onClick={() => {
+                        const f = flagsAfterArm(p.ffcPlayerId);
+                        setArmedId(f.armedId); setErr(f.err); sendHaptic('light');
+                      }}>Draft</button>)}
                 </div>
                 {armedId === p.ffcPlayerId && err && <div className="p-err">{ERR[err.reason] ?? err.reason}</div>}
                 {open && <StatStrip stats={stats} scoringFormat={config.scoring_format} />}
@@ -673,6 +840,29 @@ export default function DraftRoom({
 
         {/* ROSTER page: current lineup-order roster, full page */}
         <section className="page zone pg-roster">
+          {/* ---- YOUR EIGHT, AS A RAIL (v2) --------------------------------
+              One cell per round, four to a row - so the ranked eight read as
+              a 2x4 block and a fifteen-round league wraps rather than
+              scrolling. Round labels, because a draft is remembered by where
+              a player was taken. The full lineup-ordered roster is below it,
+              unchanged. */}
+          <div className="dv-rail">
+            {Array.from({ length: rounds }, (_, i) => {
+              const pk = userPicks.find((x) => x.round === i + 1)
+                ?? myPendingKeepers.find((k) => k.round === i + 1) ?? null;
+              return (
+                <div key={i} className={`dv-e${pk ? ' f' : ''}`}>
+                  <span className="dv-r">R{i + 1}</span>
+                  {pk ? (
+                    <>
+                      <b>{pk.synthetic ? `Replacement ${pk.slotPos}` : pk.playerName}</b>
+                      <small>{pk.slotPos}{pk.team ? ` · ${pk.team}` : ''}</small>
+                    </>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
           {/* SEAT = FRANCHISE (ruling 2 Sep): this roster is the team at this
               column - its keepers, its picks. The name says whose, and "your
               team" marks the run where it is the reader's own. */}
@@ -723,9 +913,38 @@ export default function DraftRoom({
           ))}
         </div>
       </div>
+
+      {/* ---- THE FOOTER (v2) ---------------------------------------------
+          ARM-THEN-CONFIRM IS THE RULE AND THIS IS ONE MORE WAY TO ARM, never
+          a way around it: with a player armed the button confirms HIM, and
+          with nothing armed it arms the best available by ADP - the same
+          player the clock would take at zero. Two taps to commit, either way.
+          NO STAR AND NO QUEUE: neither exists anywhere in this product, in
+          client state or in a column, so the mock's ☆ is cut. */}
+      {!complete && canPick && (
+        <div className="dv-ft">
+          <div className="dv-pace">
+            <b>Snake · {timerSeconds == null ? 'no clock' : `${timerSeconds}s a pick`}</b><br />
+            {timerSeconds == null ? 'Take as long as you like' : 'Out of time = best available, auto'}
+          </div>
+          {armedPlayer ? (
+            <button type="button" className="dv-btn" onClick={() => confirm(armedPlayer)}>
+              Draft {armedPlayer.name}
+            </button>
+          ) : bestAvailable ? (
+            <button type="button" className="dv-btn" onClick={() => {
+              const f = flagsAfterArm(bestAvailable.ffcPlayerId);
+              setArmedId(f.armedId); setErr(f.err); sendHaptic('light');
+            }}>
+              Best available
+            </button>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
+
 
 // Tint class for a board cell — only the four skill positions tint (per the
 // mock); K/DST/others stay neutral ink.

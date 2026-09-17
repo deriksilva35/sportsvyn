@@ -31,6 +31,7 @@ import StandaloneDate from '@/components/StandaloneDate';
 import DraftLiveCard from '@/components/draft/DraftLiveCard';
 import { DraftPreOpenLine } from '@/components/games/preOpenLine';
 import { draftFieldLeaderboard, draftSeatTable } from '@/lib/games/leaderboard';
+import { draftBySeat } from '@/lib/rankings/people';
 import { userHasHandle } from '@/lib/onboarding';
 import { sql } from '@/lib/db';
 import '../daily/daily.css';
@@ -192,27 +193,30 @@ export default async function DraftPage({ searchParams }) {
       })().catch(() => null)
       : null;
     const card = live?.card ?? null;
+    // THE SEAT LINE, IN POINTS, WHICH IS WHAT WE HOLD. draftBySeat averages
+    // POINTS per seat over settled draft entries - not finishing place, which
+    // would need a rank-per-contest window query nobody has written. The floor
+    // is stated rather than implied: under it the line says how many drafts
+    // there are instead of a false average.
+    const seats = userId == null ? null : await draftBySeat(Number(userId)).catch(() => null);
+    const mySeat = draft?.pick_position ?? seats?.mySeat ?? null;
+    const seatRow = mySeat == null ? null : seats?.seats?.find((x) => x.seat === mySeat) ?? null;
+    const seatLine = seatRow == null ? null
+      : seatRow.avg != null
+        ? `Seat ${mySeat} averages ${seatRow.avg} pts over ${seatRow.drafters} drafts`
+        : `Seat ${mySeat} · ${seatRow.drafters} ${seatRow.drafters === 1 ? 'draft' : 'drafts'} so far · average shown at ${seats.minDrafters}`;
     return (
       <Shell>
         <section className="mod mod--entered">
           <h2 className="eyebrow">Week {contest.week} <span className="ctx">- locked</span></h2>
           {roster.length ? (
             <>
-              <p className="mod-lede">
-                Your {roster.length} picks are in. Best ball scores your best six once
-                every game is final.
-              </p>
-              {card && (
-                <div className="score-row">
-                  <div className="score-big">{card.total}</div>
-                  <div className="score-meta">
-                    <span className="muted">
-                      live best six &middot; {card.startedCount} of {card.counting} started &middot; before drop-worst
-                    </span>
-                  </div>
-                </div>
-              )}
-              <DraftLiveCard card={card} roster={roster} />
+              {/* THE CARD CARRIES THE HERO NOW (v2). The lede and the
+                  score-row here were the v1 statement of the same two facts -
+                  the live best six and how much of it has played - and the
+                  card's own header says both, in the Pick'em grammar, beside
+                  the pips they describe. */}
+              <DraftLiveCard card={card} roster={roster} seatLine={seatLine} />
             </>
           ) : (
             <p className="mod-lede">

@@ -1035,3 +1035,134 @@
   border-bottom: 1px solid var(--rule, #2A2A2A); padding-bottom: 2px;
 }
 .mock-exit-ghost:hover { color: var(--paper, #F5F5F2); border-color: var(--paper, #F5F5F2); }
+
+/* ===========================================================================
+   THE DRAFT ROOM, v2  (docs/design/mocks/draft-v2.html, screen 1)
+   ---------------------------------------------------------------------------
+   TRANSLATED, NOT COPIED: the mock declares its own palette because it runs
+   standalone; this rides the app's tokens with the mock's hexes as fallbacks,
+   the same arrangement the Pick'em and Weekly v2 blocks use. Prefixed dv- so
+   nothing here can reach the tracker room, the results board or the existing
+   .room chrome that still owns the pager, the AUTO switch and the pool rows.
+   =========================================================================== */
+
+/* the clock hero */
+.dv-clk { padding: 12px 14px 0; background: #111; border-bottom: 1px solid var(--line, #2a2a2a); }
+.dv-otc { display: flex; align-items: flex-end; gap: 10px; }
+.dv-who { min-width: 0; }
+.dv-lab {
+  font: 700 9px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-dim, #6e6e68);
+}
+.dv-who b {
+  display: block; margin-top: 2px;
+  font: 900 24px var(--font-display, system-ui, sans-serif);
+  text-transform: uppercase; line-height: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dv-who b.dv-you { color: var(--volt, #d4ff00); }
+.dv-who small {
+  display: block; margin-top: 3px;
+  font: 500 9px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94);
+}
+.dv-t { margin-left: auto; text-align: right; flex: 0 0 auto; }
+.dv-t b {
+  display: block; color: var(--volt, #d4ff00);
+  font: 800 44px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: -0.05em; line-height: 0.85;
+}
+.dv-t b.dv-hot { color: var(--live, #e63946); }
+.dv-t span {
+  font: 600 9px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.11em; color: var(--muted-dim, #6e6e68); text-transform: uppercase;
+}
+/* THE CLOCK IS ADVISORY AND THIS LINE IS WHERE IT SAYS SO. */
+.dv-sub {
+  margin-top: 6px;
+  font: 500 9px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.06em; color: var(--muted-dim, #6e6e68);
+}
+.dv-drain { height: 3px; background: var(--ink-3, #1c1c1c); margin: 8px -14px 0; position: relative; }
+.dv-drain i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--volt, #d4ff00); }
+.dv-drain i.dv-hot { background: var(--live, #e63946); }
+
+/* the seat strip */
+.dv-seats { display: flex; gap: 3px; padding: 9px 12px 0; }
+.dv-seat {
+  flex: 1; height: 34px; position: relative;
+  border: 1px solid var(--line, #2a2a2a); border-radius: 7px;
+  background: var(--ink-2, #141414);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+}
+.dv-seat b { font: 800 10px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94); line-height: 1; }
+.dv-seat small {
+  font: 600 6px var(--font-mono, ui-monospace, monospace);
+  color: var(--muted-dim, #6e6e68); letter-spacing: 0.04em; text-transform: uppercase; line-height: 1;
+}
+.dv-seat.done { opacity: 0.5; }
+.dv-seat.on { border-color: var(--volt, #d4ff00); background: rgba(212, 255, 0, 0.12); }
+.dv-seat.on b { color: var(--volt, #d4ff00); }
+.dv-seat.you { border-color: var(--paper, #f5f5f2); }
+.dv-seat.you.on { border-color: var(--volt, #d4ff00); }
+.dv-snake {
+  display: flex; justify-content: space-between; padding: 6px 12px 0;
+  font: 600 8px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dim, #6e6e68);
+}
+
+/* the pick ticker */
+.dv-tick { display: flex; gap: 6px; padding: 10px 12px 0; overflow-x: auto; scrollbar-width: none; }
+.dv-tick::-webkit-scrollbar { display: none; }
+.dv-tk {
+  flex: 0 0 auto; min-width: 96px; padding: 5px 8px;
+  border: 1px solid var(--line, #2a2a2a); border-radius: 9px; background: var(--ink-2, #141414);
+}
+.dv-tk small {
+  display: block; font: 600 8px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.06em; color: var(--muted-dim, #6e6e68);
+}
+.dv-tk b {
+  display: block; max-width: 120px;
+  font: 700 11px var(--font-display, system-ui, sans-serif); text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dv-tk i { font: 500 8px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94); font-style: normal; }
+.dv-tk.you { border-color: var(--volt, #d4ff00); }
+.dv-tk.you small { color: var(--volt, #d4ff00); }
+
+/* a kicked row: on the board, greyed, and unpickable */
+.p-item.dv-gone { opacity: 0.34; }
+.dv-out {
+  font: 700 8px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--terra, #b8410f);
+  white-space: nowrap;
+}
+
+/* your eight, as a rail */
+.dv-rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 12px 10px; }
+.dv-e {
+  border: 1.5px dashed var(--line, #2a2a2a); border-radius: 8px;
+  background: rgba(10, 10, 10, 0.5); padding: 5px 5px 4px; min-height: 46px;
+}
+.dv-e.f { border-style: solid; background: var(--ink-2, #141414); }
+.dv-r { font: 700 7px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.06em; color: var(--muted-dim, #6e6e68); }
+.dv-e b {
+  display: block; margin-top: 2px;
+  font: 700 9px var(--font-display, system-ui, sans-serif); text-transform: uppercase; line-height: 1.05;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dv-e small { display: block; margin-top: 1px; font: 500 7px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94); }
+
+/* the footer */
+.dv-ft {
+  border-top: 1px solid var(--line, #2a2a2a); padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.dv-pace { font: 500 11px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94); line-height: 1.3; }
+.dv-pace b { color: var(--paper, #f5f5f2); font-weight: 700; }
+.dv-btn {
+  margin-left: auto; background: var(--volt, #d4ff00); color: var(--ink, #0a0a0a);
+  border: 0; border-radius: 99px; padding: 10px 18px;
+  font: 700 14px system-ui, sans-serif; cursor: pointer; white-space: nowrap;
+  max-width: 62%; overflow: hidden; text-overflow: ellipsis;
+}
