@@ -1,0 +1,260 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pick'em · v2 mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;--mono:'JetBrains Mono',monospace;--disp:'Saira',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#050506;color:var(--paper);font:14px/1.5 system-ui,sans-serif;padding:10px}
+.wrap{max-width:394px;margin:0 auto}
+.cap{color:var(--muted);font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+#err{display:none;background:#3a0d0d;border:1px solid var(--live);color:#ffd7d7;border-radius:8px;padding:9px 11px;font:600 11px var(--mono);margin-bottom:8px;white-space:pre-wrap}
+.app{background:var(--ink);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* header */
+.hd{padding:12px 14px 11px;border-bottom:1px solid var(--line);background:#111}
+.hd-top{display:flex;align-items:center;margin-bottom:9px}
+.eb{color:var(--volt);font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.hd-top .ed{color:var(--quiet);font:600 9px var(--mono);margin-left:auto}
+.rec{display:flex;align-items:flex-end;gap:12px}
+.rec .big{font:800 40px var(--mono);letter-spacing:-.03em;line-height:.9}
+.rec .big small{font:700 15px var(--mono);color:var(--quiet);margin-left:3px}
+.rec .rt{margin-left:auto;text-align:right}
+.rec .rt b{display:block;font:800 26px var(--mono);letter-spacing:-.03em;line-height:1;color:var(--volt)}
+.rec .rt span{font:600 9px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.pips{display:flex;gap:3px;margin-top:10px;flex-wrap:wrap}
+.pip{flex:1 0 12px;height:4px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line)}
+.pip.w{background:var(--jade);border-color:var(--jade)}
+.pip.l{background:var(--terra);border-color:var(--terra)}
+.pip.on{background:var(--volt);border-color:var(--volt)}
+.sub{display:flex;justify-content:space-between;margin-top:7px;font:500 10px var(--mono);color:var(--muted)}
+
+/* sport switch */
+.sw{display:flex;gap:6px;padding:11px 12px 0}
+.sw a{flex:1;border:1px solid var(--line);border-radius:10px;padding:7px 8px;text-align:center;cursor:pointer;background:var(--ink-2)}
+.sw a b{display:block;font:700 12px var(--disp);letter-spacing:.04em}
+.sw a small{display:block;font:500 9px var(--mono);color:var(--quiet);margin-top:2px}
+.sw a.on{border-color:var(--volt);background:rgba(212,255,0,.06)}
+.sw a.on b{color:var(--volt)}
+
+/* step strip */
+.steps{margin:10px 12px 0;border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:9px 11px 10px}
+.strip{display:flex;align-items:center;gap:6px}
+.stp{display:flex;align-items:center;gap:6px}
+.stp i{width:17px;height:17px;border-radius:50%;border:1px solid var(--line);color:var(--quiet);font:700 9px/15px var(--mono);text-align:center;font-style:normal;flex:0 0 auto}
+.stp b{font:700 9px var(--mono);letter-spacing:.12em;color:var(--quiet);text-transform:uppercase}
+.stp.on i{border-color:var(--volt);background:var(--volt);color:var(--ink)}
+.stp.on b{color:var(--volt)}
+.stp.done i{border-color:var(--jade);color:var(--jade)}
+.stp.done b{color:var(--muted)}
+.arw{flex:1;height:1px;background:var(--line)}
+.note{margin-top:8px;font-size:12px;line-height:1.45;color:var(--muted)}
+.note b{color:var(--paper);font-weight:600}
+
+/* day group */
+.dh{display:flex;align-items:baseline;justify-content:space-between;margin:14px 12px 6px}
+.dh h3{font:700 13px var(--disp);text-transform:uppercase;letter-spacing:.03em}
+.dh span{color:var(--quiet);font:600 9px var(--mono);letter-spacing:.06em}
+.dh.locked h3{color:var(--quiet)}
+
+/* the game row */
+.games{display:grid;gap:7px;padding:0 12px}
+.g{border:1px solid var(--line);border-radius:12px;background:var(--ink-2);overflow:hidden}
+.g.locked{opacity:.55}
+.g.live{box-shadow:inset 0 2px 0 var(--live)}
+.g-top{display:flex;align-items:center;gap:6px;padding:6px 10px 5px;font:600 9px var(--mono);letter-spacing:.07em;color:var(--quiet);text-transform:uppercase}
+.g-top .l{color:var(--live);display:flex;align-items:center;gap:4px}
+.g-top .l::before{content:'';width:5px;height:5px;border-radius:99px;background:var(--live)}
+.g-top .r{margin-left:auto}
+.sides{display:flex;gap:1px;background:var(--line)}
+.side{flex:1;background:var(--ink-2);padding:9px 8px;display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;min-height:56px}
+.side:hover{background:var(--ink-3)}
+.mk{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);flex:0 0 auto}
+.side .nm{min-width:0}
+.side .nm b{display:block;font:700 13px var(--disp);text-transform:uppercase;letter-spacing:.01em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side .nm small{display:block;color:var(--quiet);font:500 9px var(--mono);margin-top:1px}
+.side .sc{margin-left:auto;font:700 19px var(--mono);color:var(--muted)}
+.side.picked{background:rgba(212,255,0,.1);box-shadow:inset 0 0 0 1.5px var(--volt)}
+.side.picked .nm b{color:var(--volt)}
+.side.won{background:rgba(42,138,79,.14);box-shadow:inset 0 0 0 1.5px var(--jade)}
+.side.won .nm b{color:var(--jade)}
+.side.lost{background:rgba(184,65,15,.12);box-shadow:inset 0 0 0 1.5px var(--terra)}
+.side.lost .nm b{color:var(--terra)}
+.side .tick{position:absolute;top:4px;right:6px;font:700 11px var(--mono)}
+.g-foot{display:flex;align-items:center;gap:8px;padding:6px 10px 7px;border-top:1px solid var(--line);font:500 10px var(--mono);color:var(--quiet)}
+.g-foot .pick{margin-left:auto;font-weight:700}
+.g-foot .pick.j{color:var(--jade)}
+.g-foot .pick.t{color:var(--terra)}
+.g-foot .pick.v{color:var(--volt)}
+
+.ft{border-top:1px solid var(--line);margin-top:13px;padding:11px 12px;display:flex;align-items:center;gap:10px}
+.ft .pace{font:500 11px var(--mono);color:var(--muted);line-height:1.3}
+.ft .pace b{color:var(--paper);font-weight:700}
+.lock{margin-left:auto;background:var(--volt);color:var(--ink);border:0;border-radius:99px;padding:10px 18px;font:700 14px system-ui;cursor:pointer}
+.lock:disabled{background:var(--ink-3);color:var(--quiet)}
+</style></head><body>
+<div class="wrap">
+  <div class="cap">Pick'em · v2 mock — tap a side to pick it, tap again to change</div>
+  <div id="err"></div>
+  <div class="app">
+    <div class="hd">
+      <div class="hd-top"><span class="eb">Pick'em</span><span class="ed">Board 2 · NFL Week 2</span></div>
+      <div class="rec">
+        <div><div class="eb" style="color:var(--quiet);margin-bottom:2px">Your board</div>
+          <div class="big n" id="rec">2-1<small class="n" id="pend"> · 13 pending</small></div></div>
+        <div class="rt"><b class="n" id="pct">.667</b><span>Season</span></div>
+      </div>
+      <div class="pips" id="pips"></div>
+      <div class="sub"><span id="cnt">3 of 16 picked</span><span id="next">next lock Sun 10:00 AM</span></div>
+    </div>
+
+    <div class="sw">
+      <a class="on"><b>NFL</b><small id="swnfl">3 of 16</small></a>
+      <a><b>CFB</b><small>0 of 22</small></a>
+    </div>
+
+    <div class="steps">
+      <div class="strip" id="strip"></div>
+      <div class="note" id="note"></div>
+    </div>
+
+    <div id="board"></div>
+
+    <div class="ft">
+      <div class="pace">Straight up, no spread<br>The line is <b>for reference only</b></div>
+      <button class="lock" id="lockbtn" disabled>Lock it in</button>
+    </div>
+  </div>
+</div>
+<script>
+window.onerror=function(m,s,l,c){var e=document.getElementById('err');e.style.display='block';
+  e.textContent='JS ERROR\n'+m+'\nline '+l+':'+c;return false};
+
+var T={
+ DET:['#0076B6','#B0B7BC','Lions'], BUF:['#00338D','#C60C30','Bills'],
+ KC:['#E31837','#FFB81C','Chiefs'], SF:['#AA0000','#B3995D','49ers'],
+ MIA:['#008E97','#FC4C02','Dolphins'], DAL:['#003594','#869397','Cowboys'],
+ GB:['#203731','#FFB612','Packers'], PHI:['#004C54','#A5ACAF','Eagles'],
+ CIN:['#FB4F14','#000000','Bengals'], BAL:['#241773','#9E7C0C','Ravens'],
+ MIN:['#4F2683','#FFC62F','Vikings'], LAR:['#003594','#FFA300','Rams'],
+ NYJ:['#125740','#000000','Jets'], TEN:['#0C2340','#4B92DB','Titans'],
+ SEA:['#002244','#69BE28','Seahawks'], NE:['#002244','#C60C30','Patriots'],
+ DEN:['#FB4F14','#002244','Broncos'], LAC:['#0080C6','#FFC20E','Chargers'],
+ TB:['#D50A0A','#34302B','Buccaneers'], ATL:['#A71930','#000000','Falcons']
+};
+// state: final | live | open
+var GAMES=[
+ {d:'Thursday',t:'Sep 17 · 5:15 PM',s:'final',a:'DET',h:'BUF',as:24,hs:31,line:'BUF -4.5',net:'Prime'},
+ {d:'Sunday',t:'10:00 AM',s:'live',a:'TB',h:'CIN',as:10,hs:21,line:'CIN -3.5',net:'FOX',per:'Q3 7:28'},
+ {d:'Sunday',t:'10:00 AM',s:'live',a:'NYJ',h:'TEN',as:7,hs:3,line:'TEN -1.5',net:'CBS',per:'Q2 0:41'},
+ {d:'Sunday',t:'10:00 AM',s:'open',a:'SEA',h:'NE',line:'SEA -2.5',net:'FOX'},
+ {d:'Sunday',t:'10:00 AM',s:'open',a:'GB',h:'MIN',line:'GB -1.5',net:'FOX'},
+ {d:'Sunday',t:'1:05 PM',s:'open',a:'DEN',h:'LAC',line:'LAC -2.5',net:'CBS'},
+ {d:'Sunday',t:'1:25 PM',s:'open',a:'SF',h:'LAR',line:'SF -5.5',net:'FOX'},
+ {d:'Sunday',t:'1:25 PM',s:'open',a:'ATL',h:'DAL',line:'DAL -3.5',net:'FOX'},
+ {d:'Sunday',t:'5:20 PM',s:'open',a:'KC',h:'PHI',line:'PHI -1.5',net:'NBC'},
+ {d:'Monday',t:'5:15 PM',s:'open',a:'MIA',h:'BAL',line:'BAL -7.5',net:'ESPN'}
+];
+// picks: index -> 'a' | 'h'
+var picks={0:'a',1:'h',2:'a'};
+function el(id){return document.getElementById(id)}
+function mk(ab){var t=T[ab];return '<div class="mk" style="background:linear-gradient(to bottom,'+t[0]+' 0 58%,'+t[1]+' 58% 100%)"></div>'}
+
+function result(g,side){
+  if(g.s!=='final')return null;
+  var won = g.hs>g.as ? 'h' : 'a';
+  return side===won?'won':'lost';
+}
+function draw(){
+  var html='',lastDay=null,i;
+  for(i=0;i<GAMES.length;i++){
+    var g=GAMES[i], p=picks[i], locked = g.s!=='open';
+    if(g.d!==lastDay){
+      var dayGames=GAMES.filter(function(x){return x.d===g.d});
+      var dayOpen=dayGames.filter(function(x){return x.s==='open'}).length;
+      if(html)html+='</div>';
+      html+='<div class="dh'+(dayOpen?'':' locked')+'"><h3>'+g.d+'</h3><span>'+
+        (dayOpen? dayOpen+' still open' : 'all locked')+'</span></div><div class="games">';
+      lastDay=g.d;
+    }
+    var cls='g'+(locked?' locked':'')+(g.s==='live'?' live':'');
+    html+='<div class="'+cls+'">'+
+      '<div class="g-top">'+(g.s==='live'?'<span class="l">'+g.per+'</span>':'<span>'+g.t+'</span>')+
+      '<span class="r">'+g.net+'</span></div><div class="sides">'+
+      side(i,g,'a',p)+side(i,g,'h',p)+'</div>'+
+      foot(i,g,p)+'</div>';
+  }
+  html+='</div>';
+  el('board').innerHTML=html;
+
+  var n=0,w=0,l=0,open=0;
+  for(i=0;i<GAMES.length;i++){
+    if(picks[i]!=null)n++;
+    if(GAMES[i].s==='open')open++;
+    var r=picks[i]!=null?result(GAMES[i],picks[i]):null;
+    if(r==='won')w++; if(r==='lost')l++;
+  }
+  el('rec').innerHTML=w+'-'+l+'<small class="n"> · '+(n-w-l)+' pending</small>';
+  el('cnt').textContent=n+' of '+GAMES.length+' picked';
+  el('swnfl').textContent=n+' of '+GAMES.length;
+  el('pct').textContent=(w+l)?('.'+String(Math.round(w/(w+l)*1000)).padStart(3,'0')):'—';
+  var pp='';
+  for(i=0;i<GAMES.length;i++){
+    var r=picks[i]!=null?result(GAMES[i],picks[i]):null;
+    pp+='<div class="pip '+(r==='won'?'w':r==='lost'?'l':picks[i]!=null?'on':'')+'"></div>';
+  }
+  el('pips').innerHTML=pp;
+  var unpicked=0;
+  for(i=0;i<GAMES.length;i++){if(GAMES[i].s==='open'&&picks[i]==null)unpicked++}
+  el('lockbtn').disabled=unpicked>0;
+  el('lockbtn').textContent=unpicked>0?unpicked+' to go':'Lock it in';
+  steps(n,open,unpicked);
+}
+function side(i,g,which,p){
+  var ab=which==='a'?g.a:g.h, sc=which==='a'?g.as:g.hs;
+  var picked=p===which, r=picked?result(g,which):null;
+  var cls='side'+(r==='won'?' won':r==='lost'?' lost':picked?' picked':'');
+  var tick=r==='won'?'<span class="tick" style="color:var(--jade)">✓</span>':
+           r==='lost'?'<span class="tick" style="color:var(--terra)">✗</span>':
+           picked?'<span class="tick" style="color:var(--volt)">●</span>':'';
+  var scoreCell = g.s==='open' ? '' : '<span class="sc n">'+sc+'</span>';
+  return '<div class="'+cls+'"'+(g.s==='open'?' data-pick="'+i+which+'"':'')+'>'+
+    mk(ab)+'<span class="nm"><b>'+T[ab][2]+'</b><small>'+(which==='a'?'away':'home')+'</small></span>'+
+    scoreCell+tick+'</div>';
+}
+function foot(i,g,p){
+  var r=p!=null?result(g,p):null;
+  var right = r==='won' ? '<span class="pick j">'+T[p==='a'?g.a:g.h][2]+' ✓</span>'
+            : r==='lost' ? '<span class="pick t">'+T[p==='a'?g.a:g.h][2]+' ✗</span>'
+            : p!=null ? '<span class="pick v">'+T[p==='a'?g.a:g.h][2]+'</span>'
+            : g.s==='open' ? '<span class="pick" style="color:var(--quiet)">no pick</span>' : '';
+  return '<div class="g-foot"><span>'+g.line+'</span>'+right+'</div>';
+}
+function steps(n,open,unpicked){
+  var stage = unpicked===0 ? 3 : n>0 ? 2 : 1;
+  var names=['Pick','Fill the board','Locked in'],h='';
+  for(var i=0;i<3;i++){
+    var cls = i+1===stage?'on':(i+1<stage?'done':'');
+    h+='<span class="stp '+cls+'"><i>'+(cls==='done'?'✓':(i+1))+'</i><b>'+names[i]+'</b></span>';
+    if(i<2)h+='<span class="arw"></span>';
+  }
+  el('strip').innerHTML=h;
+  var msg;
+  if(stage===1) msg='Pick the <b>winner</b> of every game, straight up. The line is shown for reference and does not change the scoring. Each game locks at its own kickoff.';
+  else if(stage===2) msg='<b>'+unpicked+' still open.</b> Tap a side to change a pick any time before that game kicks off. A game you never picked scores nothing.';
+  else msg='Every open game is picked. Keep changing them right up to each kickoff - <b>nothing is final until the game starts</b>.';
+  el('note').innerHTML=msg;
+}
+document.addEventListener('click',function(ev){
+  var n=ev.target;
+  while(n&&n!==document.body){
+    if(n.dataset&&n.dataset.pick){
+      var i=parseInt(n.dataset.pick), w=n.dataset.pick.slice(-1);
+      picks[i] = picks[i]===w ? null : w;
+      draw();return;
+    }
+    n=n.parentNode;
+  }
+});
+draw();
+</script>
+</body></html>

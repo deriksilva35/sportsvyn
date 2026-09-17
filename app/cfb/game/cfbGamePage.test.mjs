@@ -133,14 +133,14 @@ test('SURFACE 4 - the Pick\'em link is in the HEADER and cannot swallow a pick',
   const s = src('components/pickem/PickemBoard.js');
   const code = strip(s);
 
-  // The anchor is inside .pk-eb.
-  const eb = code.slice(code.indexOf('className={`pk-eb'), code.indexOf('className="pk-sides"'));
-  assert.match(eb, /pk-gamelink/, 'the link lives in the eyebrow header');
+  // The anchor is inside the row's eyebrow (v2: .pkv-gtop, was .pk-eb).
+  const eb = code.slice(code.indexOf('className="pkv-gtop"'), code.indexOf('className="pkv-sides"'));
+  assert.match(eb, /pkv-gamelink/, 'the link lives in the eyebrow header');
 
-  // ...and .pk-eb closes BEFORE .pk-sides opens - siblings, not nested. So the
-  // anchor is not an ancestor of any pick button.
-  const sides = code.slice(code.indexOf('className="pk-sides"'));
-  assert.doesNotMatch(sides.slice(0, sides.indexOf('</div>')), /pk-gamelink/,
+  // ...and the eyebrow closes BEFORE the sides open - siblings, not nested. So
+  // the anchor is not an ancestor of any pick button.
+  const sides = code.slice(code.indexOf('className="pkv-sides"'));
+  assert.doesNotMatch(sides.slice(0, sides.indexOf('</div>')), /pkv-gamelink/,
     'no link may appear inside the pick-button subtree');
 
   // The pick buttons carry the ONLY click handler; nothing on the row or the
@@ -153,7 +153,10 @@ test('SURFACE 4 - the Pick\'em link is in the HEADER and cannot swallow a pick',
   // below the rows) tripped it. The guarantee is unchanged and still
   // structural: within the row's own markup, from the eyebrow through the
   // pick buttons, the pick button is the only thing that handles a click.
-  const rowRegion = code.slice(code.indexOf('className={`pk-eb'), code.indexOf('className="pk-savebar"'));
+  // SCOPED TO THE ROW: from the eyebrow through the sides, the pick button is
+  // the only thing that handles a click. The footer's own confirm button sits
+  // far below and is not part of this region.
+  const rowRegion = code.slice(code.indexOf('className="pkv-gtop"'), code.indexOf('className="pkv-gfoot"'));
   assert.equal((rowRegion.match(/onClick=/g) ?? []).length, 1,
     'exactly one click handler in the row');
   assert.doesNotMatch(code, /stopPropagation|preventDefault/,
@@ -169,17 +172,20 @@ test('SURFACE 4 - the Pick\'em link is in the HEADER and cannot swallow a pick',
 
 test('the Pick\'em link has its own tap target, physically clear of the picks', () => {
   const css = src('app/pickem/pickem.css');
-  assert.match(css, /\.pk-gamelink \{/);
-  assert.match(css, /padding: 6px 8px/, 'a real tap target, not a bare 10px word');
-  // .pk-eb keeps its 9px gap above the buttons.
-  assert.match(css, /\.pk-game \.pk-eb \{[^}]*margin-bottom: 9px/);
-  // The eyebrow's first-child rule must still match the LEFT span - inserting
-  // the link before it would have silently killed the live-red styling.
-  assert.match(css, /\.pk-eb\.live > span:first-child/);
+  assert.match(css, /\.pkv-gamelink \{/);
+  // v2's eyebrow is a flex row with its own gap, and the link sits in the
+  // right-hand group beside the network - clear of the two tap targets below,
+  // which is the whole guarantee. The old 6px 8px padding rule belonged to a
+  // bare-word link in a cramped row; this one has room by construction.
+  assert.match(css, /\.pkv-gtop \{[^}]*padding: 6px 10px 5px/);
+  assert.match(css, /\.pkv-gtopr \{[^}]*margin-left: auto/);
+  // THE LIVE RULE IS ON THE ROW NOW, not on a first-child span, so inserting
+  // anything into the eyebrow can no longer kill the live styling.
+  assert.match(css, /\.pkv-g\.live \{[^}]*inset 0 2px 0 var\(--live/);
   const code = strip(src('components/pickem/PickemBoard.js'));
-  const eb = code.slice(code.indexOf('className={`pk-eb'));
-  assert.ok(eb.indexOf('{eyebrowLeft}') < eb.indexOf('pk-gamelink'),
-    'the link must come AFTER the left span or .pk-eb.live > span:first-child breaks');
+  const eb = code.slice(code.indexOf('className="pkv-gtop"'));
+  assert.ok(eb.indexOf('pkv-gtopr') < eb.indexOf('pkv-gamelink'),
+    'the link sits inside the right-hand group, after the clock or kickoff');
 });
 
 test('the slug the link needs is actually exposed by the view', () => {

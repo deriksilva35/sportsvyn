@@ -66,10 +66,15 @@ test('the page feeds it both boards and the board renders it under its own clock
   assert.match(page, /<SportSwitch boards=\{boards\} sport=\{sport\} \/>/);
   assert.match(page, /sportSwitch=\{sportSwitch\}/, 'handed to the living board');
   assert.match(page, /\{view\.phase !== 'living' && sportSwitch\}/, 'and still shown on the other phases');
+  // THE SWITCH SITS DIRECTLY UNDER THE BOARD'S OWN HEADER, still - v2 renamed
+  // the header (.pkv-hd) but not the rule: the second door is the first thing
+  // below this board's own state, not buried under the games.
   const board = readFileSync(path.join(REPO, 'components/pickem/PickemBoard.js'), 'utf8');
-  const after = board.slice(board.indexOf('<span className="clock">'));
-  assert.match(after.slice(0, 400), /\{sportSwitch\}/, 'directly under the board header');
-  // the pills are styled, current filled
+  const after = board.slice(board.indexOf('</header>'));
+  assert.match(after.slice(0, 200), /\{sportSwitch\}/, 'directly under the board header');
+  // TWO CARDS NOW, not two pills (ruling d): same component, same props, same
+  // routing - only the markup and the classes changed.
   const css = readFileSync(path.join(REPO, 'app/pickem/pickem.css'), 'utf8');
-  assert.match(css, /\.pk-sw\.on \{ background: var\(--volt\)/);
+  assert.match(css, /\.pk-sw\.on \{ border-color: var\(--volt\)/);
+  assert.match(css, /\.pk-switch \{ display: flex;/);
 });
