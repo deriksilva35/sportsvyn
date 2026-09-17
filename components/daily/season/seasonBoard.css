@@ -290,3 +290,217 @@
   font-variant-numeric: tabular-nums; line-height: 1;
 }
 .weekly .wk-live span { font-size: 11px; color: var(--d-mut); }
+
+/* ==========================================================================
+   THE DAILY v2.0 BOARD SCREEN (docs/design/mocks/daily-v2.html).
+   Scoped under .sbd-v2 so the rules, grade and DNF screens above are
+   untouched - they still render through the v1 classes, and a board played
+   before this shape keeps its own look on its own screen.
+   TOKENS, NOT HEXES: the mock's --qb/--rb/--wr/--te/--k are the only new
+   colours, declared here because no global token covers a position.
+   ========================================================================== */
+.sbd-v2 { --qb: #FF5C8A; --rb: #4ADE80; --wr: #38BDF8; --te: #FB923C; --k: #C084FC; }
+
+/* header: clock, points, pips */
+.sbd-v2 .sbd-hd { padding: 12px 14px 10px; border-bottom: 1px solid var(--line, #2a2a2a); }
+.sbd-v2 .sbd-hd-top { display: flex; align-items: center; margin-bottom: 8px; }
+.sbd-v2 .sbd-eb {
+  color: var(--volt); font-family: var(--mono, ui-monospace, monospace);
+  font-weight: 700; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.sbd-v2 .sbd-ed2 {
+  margin-left: auto; color: var(--muted-dim, #6e6e68);
+  font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 9px;
+}
+.sbd-v2 .sbd-crow { display: flex; align-items: center; gap: 12px; }
+.sbd-v2 .sbd-clk { display: flex; gap: 3px; align-items: center; }
+.sbd-v2 .sbd-dg {
+  width: 29px; height: 42px; border-radius: 4px; background: #17181a;
+  box-shadow: inset 0 0 0 1px #000; font-family: var(--mono, ui-monospace, monospace);
+  font-weight: 800; font-size: 29px; line-height: 42px; text-align: center;
+}
+.sbd-v2 .sbd-cl {
+  font-family: var(--mono, ui-monospace, monospace); font-weight: 800; font-size: 25px;
+  color: var(--muted-dim, #6e6e68);
+}
+/* THE LAST MINUTE, THEN THE LAST THIRTY SECONDS. Two steps, not a fade: a
+   colour that drifts tells a reader nothing they can act on. */
+.sbd-v2 .sbd-crow.sbd-warn2 .sbd-dg { color: var(--terra, #b8410f); }
+.sbd-v2 .sbd-crow.sbd-crit .sbd-dg { color: var(--live, #e63946); }
+.sbd-v2 .sbd-tot { margin-left: auto; text-align: right; }
+.sbd-v2 .sbd-tot b {
+  display: block; font-family: var(--mono, ui-monospace, monospace); font-weight: 800;
+  font-size: 29px; letter-spacing: -0.03em; line-height: 1; color: var(--volt);
+}
+.sbd-v2 .sbd-tot span {
+  font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 9px;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted-dim, #6e6e68);
+}
+.sbd-v2 .sbd-pips { display: flex; gap: 4px; margin-top: 9px; }
+.sbd-v2 .sbd-pip2 {
+  flex: 1; height: 4px; border-radius: 99px;
+  background: var(--ink-3, #1c1c1c); border: 1px solid var(--line, #2a2a2a);
+}
+.sbd-v2 .sbd-pip2.sbd-on { background: var(--volt); border-color: var(--volt); }
+.sbd-v2 .sbd-sub2 {
+  display: flex; justify-content: space-between; margin-top: 6px;
+  font-family: var(--mono, ui-monospace, monospace); font-weight: 500; font-size: 10px;
+  color: var(--muted);
+}
+
+/* the step strip */
+.sbd-v2 .sbd-steps {
+  margin: 10px 10px 0; border: 1px solid var(--line, #2a2a2a); border-radius: 12px;
+  background: var(--ink-2, #141414); padding: 9px 11px 10px;
+}
+.sbd-v2 .sbd-strip { display: flex; align-items: center; gap: 6px; }
+.sbd-v2 .sbd-stpwrap { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; }
+.sbd-v2 .sbd-stpwrap:last-child { flex: 0 0 auto; }
+.sbd-v2 .sbd-stp { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.sbd-v2 .sbd-stp i {
+  width: 17px; height: 17px; border-radius: 50%; border: 1px solid var(--line, #2a2a2a);
+  color: var(--muted-dim, #6e6e68); font-family: var(--mono, ui-monospace, monospace);
+  font-weight: 700; font-size: 9px; line-height: 15px; text-align: center; font-style: normal;
+}
+.sbd-v2 .sbd-stp b {
+  font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 9px;
+  letter-spacing: 0.12em; color: var(--muted-dim, #6e6e68); text-transform: uppercase;
+}
+.sbd-v2 .sbd-stp.on i { border-color: var(--volt); background: var(--volt); color: var(--ink, #0a0a0a); }
+.sbd-v2 .sbd-stp.on b { color: var(--volt); }
+.sbd-v2 .sbd-stp.done i { border-color: var(--jade, #2a8a4f); color: var(--jade, #2a8a4f); }
+.sbd-v2 .sbd-stp.done b { color: var(--muted); }
+.sbd-v2 .sbd-arw { flex: 1; height: 1px; background: var(--line, #2a2a2a); }
+.sbd-v2 .sbd-note { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.sbd-v2 .sbd-note b { color: var(--paper); font-weight: 600; }
+
+/* twelve teams, 6 x 2 */
+.sbd-v2 .sbd-sh2 {
+  display: flex; align-items: baseline; justify-content: space-between; margin: 11px 12px 6px;
+}
+.sbd-v2 .sbd-sh2 h3 { font-family: var(--font-saira-cond, sans-serif); font-weight: 700; font-size: 13px; text-transform: uppercase; }
+.sbd-v2 .sbd-sh2 span { color: var(--volt); font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 10px; }
+.sbd-v2 .sbd-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; padding: 0 10px; }
+.sbd-v2 .sbd-tc2 {
+  border-radius: 9px; border: 1px solid var(--line, #2a2a2a); background: var(--ink-2, #141414);
+  padding: 6px 2px 5px; text-align: center; position: relative; color: var(--paper);
+}
+.sbd-v2 .sbd-tc2 b { display: block; font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 9px; }
+.sbd-v2 .sbd-tc2.sbd-tcon { border-color: var(--volt); background: rgba(212, 255, 0, 0.06); }
+.sbd-v2 .sbd-tc2.sbd-used { opacity: 0.3; }
+.sbd-v2 .sbd-tc2.sbd-used::after {
+  content: '✓'; position: absolute; top: 1px; right: 4px; color: var(--volt);
+  font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 9px;
+}
+.sbd-v2 .sbd-mk {
+  display: block; width: 21px; height: 21px; border-radius: 50%; margin: 0 auto 3px;
+  border: 1px solid var(--line, #2a2a2a); background: var(--ink-3, #1c1c1c);
+}
+.sbd-v2 .sbd-panh .sbd-mk { width: 17px; height: 17px; margin: 0; }
+
+/* the roster beside the panel */
+.sbd-v2 .sbd-duo { display: flex; gap: 8px; margin: 10px 10px 0; align-items: stretch; }
+.sbd-v2 .sbd-field {
+  flex: 0 0 150px; border-radius: 14px; padding: 10px 7px; border: 1px solid var(--line, #2a2a2a);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 46px, rgba(255, 255, 255, 0.035) 46px 47px),
+    linear-gradient(160deg, #101a12, #0a0f0b);
+}
+.sbd-v2 .sbd-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.sbd-v2 .sbd-slot {
+  aspect-ratio: 1 / 0.92; border-radius: 10px; border: 1.5px dashed var(--line, #2a2a2a);
+  background: rgba(10, 10, 10, 0.5); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 1px; position: relative; color: var(--paper);
+}
+.sbd-v2 .sbd-spos { font-family: var(--font-saira-cond, sans-serif); font-weight: 800; font-size: 12px; color: var(--muted-dim, #6e6e68); }
+.sbd-v2 .sbd-slot.qb .sbd-spos { color: var(--qb); }
+.sbd-v2 .sbd-slot.rb .sbd-spos { color: var(--rb); }
+.sbd-v2 .sbd-slot.wr .sbd-spos { color: var(--wr); }
+.sbd-v2 .sbd-slot.te .sbd-spos { color: var(--te); }
+.sbd-v2 .sbd-slot.k .sbd-spos { color: var(--k); }
+/* A LIT SLOT IS THE ONLY THING A HELD PLAYER CAN LAND IN. */
+.sbd-v2 .sbd-slot.elig {
+  border-style: solid; border-color: var(--volt); background: rgba(212, 255, 0, 0.09);
+  box-shadow: 0 0 14px rgba(212, 255, 0, 0.3);
+}
+.sbd-v2 .sbd-slot.filled { border-style: solid; background: var(--ink-2, #141414); }
+.sbd-v2 .sbd-slot.filled .sbd-spos { font-size: 9px; }
+.sbd-v2 .sbd-nm {
+  font-family: var(--font-saira-cond, sans-serif); font-weight: 700; font-size: 10px;
+  text-transform: uppercase; line-height: 1.05; text-align: center; padding: 0 2px;
+}
+.sbd-v2 .sbd-tm { font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 8px; color: var(--muted); }
+.sbd-v2 .sbd-pts { font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 13px; color: var(--volt); }
+.sbd-v2 .sbd-x {
+  position: absolute; top: 1px; right: 5px; color: var(--muted-dim, #6e6e68);
+  font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 12px;
+}
+
+/* the player panel - ALWAYS PRESENT, only its contents change */
+.sbd-v2 .sbd-panel {
+  flex: 1 1 auto; min-width: 0; border: 1px solid var(--line, #2a2a2a); border-radius: 13px;
+  background: var(--ink-2, #141414); display: flex; flex-direction: column;
+}
+.sbd-v2 .sbd-panh {
+  display: flex; align-items: center; gap: 7px; padding: 7px 10px;
+  border-bottom: 1px solid var(--line, #2a2a2a); background: var(--ink-3, #1c1c1c);
+  border-radius: 12px 12px 0 0;
+}
+.sbd-v2 .sbd-panh b { font-family: var(--font-saira-cond, sans-serif); font-weight: 700; font-size: 12px; text-transform: uppercase; }
+.sbd-v2 .sbd-panh small {
+  color: var(--muted); font-family: var(--mono, ui-monospace, monospace); font-weight: 500;
+  font-size: 9px; margin-left: auto; text-align: right; line-height: 1.3;
+}
+.sbd-v2 .sbd-panh small.go { color: var(--volt); font-weight: 700; }
+.sbd-v2 .sbd-panb { flex: 1; overflow-y: auto; scrollbar-width: none; }
+.sbd-v2 .sbd-empty {
+  height: 100%; display: flex; align-items: center; justify-content: center; text-align: center;
+  padding: 0 14px; color: var(--muted-dim, #6e6e68);
+  font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 10px;
+  letter-spacing: 0.05em; line-height: 1.6;
+}
+.sbd-v2 .sbd-prow {
+  display: flex; align-items: center; gap: 7px; padding: 7px 9px; width: 100%;
+  border-bottom: 1px solid var(--line, #2a2a2a); background: transparent; color: var(--paper); text-align: left;
+}
+.sbd-v2 .sbd-prow:last-child { border-bottom: 0; }
+.sbd-v2 .sbd-prow.sel { background: rgba(212, 255, 0, 0.09); box-shadow: inset 3px 0 0 var(--volt); }
+.sbd-v2 .sbd-prow.gone { opacity: 0.26; }
+.sbd-v2 .sbd-pb {
+  width: 24px; height: 18px; border-radius: 5px; display: grid; place-items: center;
+  font-family: var(--font-saira-cond, sans-serif); font-weight: 800; font-size: 8px;
+  color: #0a0a0a; flex: 0 0 auto; background: var(--muted);
+}
+.sbd-v2 .sbd-pb.qb { background: var(--qb); }
+.sbd-v2 .sbd-pb.rb { background: var(--rb); }
+.sbd-v2 .sbd-pb.wr { background: var(--wr); }
+.sbd-v2 .sbd-pb.te { background: var(--te); }
+.sbd-v2 .sbd-pb.k { background: var(--k); }
+.sbd-v2 .sbd-who { min-width: 0; }
+.sbd-v2 .sbd-who b { display: block; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sbd-v2 .sbd-who small {
+  display: block; color: var(--muted); font-family: var(--mono, ui-monospace, monospace);
+  font-weight: 500; font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sbd-v2 .sbd-val { margin-left: auto; text-align: right; }
+.sbd-v2 .sbd-val b { display: block; font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 14px; }
+.sbd-v2 .sbd-val small { font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 8px; color: var(--muted-dim, #6e6e68); }
+
+/* the lock */
+.sbd-v2 .sbd-ft {
+  border-top: 1px solid var(--line, #2a2a2a); margin-top: 11px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sbd-v2 .sbd-pace {
+  font-family: var(--mono, ui-monospace, monospace); font-weight: 500; font-size: 11px;
+  color: var(--muted); line-height: 1.3;
+}
+.sbd-v2 .sbd-pace b { color: var(--paper); font-weight: 700; }
+.sbd-v2 .sbd-lock {
+  margin-left: auto; background: var(--volt); color: var(--ink, #0a0a0a); border: 0;
+  border-radius: 99px; padding: 10px 18px; font-weight: 700; font-size: 14px;
+}
+.sbd-v2 .sbd-lock:disabled { background: var(--ink-3, #1c1c1c); color: var(--muted-dim, #6e6e68); }
+/* A TEAM THAT CAN NO LONGER FILL ANYTHING dims, but wears no tick - the tick
+   means "you spent this one", and only a real pick earns it. */
+.sbd-v2 .sbd-tc2.sbd-dead2 { opacity: 0.3; }

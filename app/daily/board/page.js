@@ -48,7 +48,7 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { sql } from '@/lib/db';
 import { generateBoard } from '@/lib/daily/boardGenerator';
 import { makeRng } from '@/lib/daily/pool';
-import { SLOTS, DAILY_V2_PATH, DAILY_ROUND_SECONDS, DAILY_ROUND_GRACE_SECONDS } from '@/lib/daily/boardShape';
+import { SLOTS, slotsOf, DAILY_V2_PATH, DAILY_ROUND_SECONDS, DAILY_ROUND_GRACE_SECONDS } from '@/lib/daily/boardShape';
 import Link from 'next/link';
 import { todayEt } from '@/lib/daily/entries';
 import { ensureBoardForDate, isEditionLive, effectiveEpoch, metaFor } from '@/lib/daily/seasonBoardEditions';
@@ -88,7 +88,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         // the edition path only. dest back to /daily/board.
         return (
           <SeasonBoard
-            edition={edition} year={year} teams={board.board} slots={SLOTS} ranked
+            edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked
             boardId={board.id}
             signInHref={shellSigninHref(DAILY_V2_PATH, isShell)}
           />
@@ -115,7 +115,7 @@ export default async function SeasonBoardPage({ searchParams }) {
       if (existing && existing.picks != null) {
         // A3: land on the STORED grade, rebuilt from the run's own picks -
         // never a fresh board, never re-solved.
-        const regraded = regradeStoredRun(board, existing.picks, SLOTS);
+        const regraded = regradeStoredRun(board, existing.picks);
         // CAPPED AT THE ROUND. Row 1 (elapsed_s 1888, from before the clock
         // existed) reads 3:00 here, never 31:28 - the receipt shows round
         // time, not wall-clock since start.
@@ -126,7 +126,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         ]);
         return (
           <SeasonBoard
-            edition={edition} year={year} teams={board.board} slots={SLOTS} ranked userId={userId}
+            edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked userId={userId}
             boardId={board.id}
             initialPlay={regraded.play} initialGrade={regraded.grade} initialClockLabel={clockLabel}
             streak={streak} closesAt={board.closes_at} todayRows={todayRows}
@@ -193,7 +193,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         const streak = await currentStreakFor(userId, editionDate);
         return (
           <SeasonBoard
-            edition={edition} year={year} teams={board.board} slots={SLOTS} ranked userId={userId}
+            edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked userId={userId}
             boardId={board.id}
             streak={streak} closesAt={board.closes_at}
             initialStartedAt={String(new Date(existing.started_at).toISOString())}
@@ -240,7 +240,7 @@ export default async function SeasonBoardPage({ searchParams }) {
       const streak = await currentStreakFor(userId, editionDate);
       return (
         <SeasonBoard
-          edition={edition} year={year} teams={board.board} slots={SLOTS} ranked userId={userId}
+          edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked userId={userId}
           boardId={board.id}
           streak={streak} closesAt={board.closes_at}
         />

@@ -15,14 +15,14 @@
  * no opinion on - which screen is showing, and whether a chosen player still
  * needs a slot picked for them.
  *
- * COMMIT-ON-OPEN, NO CLOSE (ruling), enforced structurally, not just by
- * omission: the backdrop and the sheet itself carry NO onClick that could
- * dismiss them while a team is open or a slot choice is pending. The only
- * way out of `sheetState !== 'closed'` is finishPick(), which requires a
- * fully-formed slot index - there is no code path that clears sheetState
- * without one.
+ * COMMIT-ON-OPEN IS GONE (v2.0 ruling, docs/design/mocks/daily-v2.html).
+ * Opening a team used to spend it and a closeless modal enforced that; the
+ * ranked board is a three-minute puzzle with a lock at the end, so the panel
+ * is browsable, the hold is reversible, and a filled slot can be cleared -
+ * the mock's own copy says so. What replaced the modal is two pieces of
+ * state, `cur` and `held`, and a panel that is always on screen.
  *
- * THE SHEET IS A PORTAL TO document.body, not rendered in normal flow.
+ * THE TOAST IS STILL A PORTAL TO document.body, not rendered in normal flow.
  * position:fixed centering (left:50%;top:50%;transform:translate(-50%,-50%))
  * is relative to the nearest ancestor with a CSS transform/filter/perspective
  * if one exists ANYWHERE up the tree, not the viewport - a common shell-
@@ -38,7 +38,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import {
   initBoardPlay, teamIsDead, isRosterComplete, filledCount, teamsLeft,
-  pickOutcome, commitPick, startClock as canStartClock,
+  legalSlotIndexes, commitPick, clearSlot, startClock as canStartClock,
 } from '@/lib/daily/seasonBoardPlay';
 import { gradeBoard, boardStory } from '@/lib/daily/seasonBoardGrade';
 import { DAILY_V2_PATH, DAILY_ROUND_SECONDS } from '@/lib/daily/boardShape';
@@ -56,8 +56,33 @@ const DOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FX', K: 'K' }
 // carries through everywhere that slot is shown: the progress row AND the
 // grade rows (ruling). Verbatim codepoints from docs/design/daily-full-
 // mock-v3.html's own EM map: QB target, RB runner, WR hands, FLEX cycle,
-// K shoe. No TE entry - this board's shape has no TE slot, only FLEX.
-const SLOT_EMOJI = { QB: '\u{1F3AF}', RB: '\u{1F3C3}', WR: '\u{1F932}', FLEX: '\u{1F504}', K: '\u{1F45F}' };
+// K shoe. TE now has a slot of its own (v2.0) and takes the FLEX cycle's
+// sibling - a hand-off - so every slot on the ranked shape has a glyph.
+const SLOT_EMOJI = { QB: '\u{1F3AF}', RB: '\u{1F3C3}', WR: '\u{1F932}', TE: '\u{1F91D}', FLEX: '\u{1F504}', K: '\u{1F45F}' };
+
+// THE SLOT'S OWN COLOUR, per the v2.0 mock's --qb/--rb/--wr/--te/--k. FLEX
+// has none in the mock and inherits the quiet default.
+const SLOT_CLASS = { QB: 'qb', RB: 'rb', WR: 'wr', TE: 'te', FLEX: 'flx', K: 'k' };
+
+// THE STEP STRIP'S THREE STEPS (v2.0 ruling R5). Contextual, not static help:
+// which one is lit is derived from what the player is holding, and the line
+// under it says the next thing to do.
+const STEP_NAMES = ['Team', 'Player', 'Slot'];
+
+/** The name as a filled slot shows it: the last word, uppercased by CSS.
+ * "A. St. Brown" -> "Brown", "Jahmyr Gibbs" -> "Gibbs". A slot tile is 70px
+ * wide and a full name does not fit one; the panel beside it carries the
+ * whole name, so nothing is hidden, only abbreviated where it must be. */
+function lastNameOf(name) {
+  const parts = String(name ?? '').trim().split(/\s+/);
+  return parts.length ? parts[parts.length - 1] : '';
+}
+
+/** A team key -> the abbreviation the board carries for it. The pick stores
+ * the key; the tile shows what the chip row shows. */
+function abbrOf(teams, teamKey) {
+  return teams.find((t) => t.key === teamKey)?.abbr ?? teamKey;
+}
 
 function mmss(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -115,8 +140,13 @@ export default function SeasonBoard({
   // initBoardPlay makes. Convert once, here, and nowhere else has to know.
   const hydratePlay = (p) => (p && !(p.used instanceof Set) ? { ...p, used: new Set(p.used ?? []) } : p);
   const [play, setPlay] = useState(() => hydratePlay(initialPlay) ?? initBoardPlay(teams, slots));
-  // sheetState: 'closed' | { mode:'team', teamKey } | { mode:'slot', teamKey, player, slotIndexes }
-  const [sheetState, setSheetState] = useState('closed');
+  // THE MOCK'S TWO PIECES OF SELECTION STATE, and there is no third. `cur` is
+  // the team whose six are in the panel; `held` is the player waiting for a
+  // slot. Both are cleared by placing a pick. The modal sheet flow they
+  // replace is gone: the panel is always on screen, so a tap never covers the
+  // board it is about.
+  const [cur, setCur] = useState(null);
+  const [held, setHeld] = useState(null);
   const [toast, setToast] = useState(null);
   const [startedAt, setStartedAt] = useState(
     initialStartedAt ? new Date(initialStartedAt).getTime() : null,
@@ -196,27 +226,44 @@ export default function SeasonBoard({
     }
   };
 
-  const openTeam = (team) => {
-    if (teamIsDead(play, team)) return; // a dead chip has pointer-events:none too - this is the belt under the suspenders
-    setSheetState({ mode: 'team', teamKey: team.key });
+  // OPENING A TEAM COSTS NOTHING NOW. The old board was commit-on-open - look
+  // at a team and you had spent it - and the modal existed to enforce that.
+  // The v2.0 mock replaces it with a panel you can browse: the team is spent
+  // when a player of theirs lands in a slot, and not before.
+  const selectTeam = (team) => {
+    if (teamIsDead(play, team)) return;
+    setCur(team.key);
+    setHeld(null);
   };
 
-  const choosePlayer = (team, player) => {
-    const outcome = pickOutcome(play, player);
-    if (!outcome.ok) return; // NO SLOT rows are already inert; unreachable from a real tap
-    if (outcome.auto) {
-      finishPick(team, player, outcome.slotIndex);
-      return;
-    }
-    setSheetState({ mode: 'slot', teamKey: team.key, player, slotIndexes: outcome.slotIndexes });
+  // HOLDING A PLAYER IS NOT PLACING ONE. A held player lights the slots he can
+  // fill; tapping another player just moves the hold, which is the mock's own
+  // "or tap another player to change your mind".
+  const holdPlayer = (team, player) => {
+    if (!legalSlotIndexes(play, player.position).length) return; // row renders inert
+    setHeld({ teamKey: team.key, player });
   };
 
-  const finishPick = (team, player, slotIndex) => {
+  const placeInSlot = (slotIndex) => {
+    if (!held) return;
+    const team = teams.find((t) => t.key === held.teamKey);
+    if (!team) return;
+    if (!legalSlotIndexes(play, held.player.position).includes(slotIndex)) return;
     const slotPos = play.slots[slotIndex];
-    setPlay((p) => commitPick(p, team, player, slotIndex));
-    setSheetState('closed');
-    setToast({ name: player.name, slot: slotPos, abbr: team.abbr });
+    setPlay((p) => commitPick(p, team, held.player, slotIndex));
+    setHeld(null);
+    setCur(null);
+    setToast({ name: held.player.name, slot: slotPos, abbr: team.abbr });
     setTimeout(() => setToast(null), 1500);
+  };
+
+  // TAP A FILLED SLOT TO CLEAR IT (the mock's copy, and the rule it reverses).
+  // The team comes back with it - clearSlot rebuilds `used` from what is left
+  // rather than decrementing, so a team cannot be released twice.
+  const clearAt = (slotIndex) => {
+    if (!play.roster[slotIndex]?.pick) return;
+    setPlay((p) => clearSlot(p, slotIndex));
+    setHeld(null);
   };
 
   //
@@ -388,66 +435,187 @@ export default function SeasonBoard({
     );
   }
 
-  const openTeamObj = sheetState !== 'closed' ? teams.find((t) => t.key === sheetState.teamKey) : null;
+  // ---- THE BOARD SCREEN, per docs/design/mocks/daily-v2.html --------------
+  // Clock and points, the step strip, twelve teams as a 6x2 grid, then the
+  // roster 2x4 beside a player panel that is always on screen.
+  const totalPoints = play.roster.reduce((a, r) => a + Number(r.pick?.player?.points ?? 0), 0);
+  const unspent = teams.length - play.used.size;
+  const curTeam = cur ? teams.find((t) => t.key === cur) : null;
+  // THE LIT SLOTS. Computed once here rather than per slot, because the same
+  // list decides which slots glow AND which taps are accepted.
+  const litSlots = held ? legalSlotIndexes(play, held.player.position) : [];
+  // WHICH STEP IS LIVE (R5). Derived from what the player is holding - never
+  // stored, so it cannot disagree with the board.
+  const stage = complete ? 4 : held ? 3 : cur ? 2 : 1;
+  const secondsLeft = remainingMs == null ? ROUND_MS / 1000 : Math.max(0, remainingMs / 1000);
+  const crowClass = `sbd-crow${secondsLeft <= 30 ? ' sbd-crit' : secondsLeft <= 60 ? ' sbd-warn2' : ''}`;
 
   return (
-    <div className="sbd">
+    <div className="sbd sbd-v2">
       <Crumb />
-      <header className="sbd-hdr">
-        <span className="sbd-ed">{edition}</span>
-        <span className={clockClass}>{clockText}</span>
+
+      <header className="sbd-hd">
+        <div className="sbd-hd-top">
+          <span className="sbd-eb">The Daily</span>
+          <span className="sbd-ed2">{edition}</span>
+        </div>
+        <div className={crowClass}>
+          {/* THE CLOCK IS UNCHANGED BENEATH THE SKIN. Same remainingMs off the
+              server's started_at; only its rendering is new - one tile per
+              digit, the colon between them. */}
+          <div className="sbd-clk">
+            {clockText.split('').map((ch, i) => (ch === ':'
+              ? <span key={i} className="sbd-cl">:</span>
+              : <span key={i} className="sbd-dg">{ch}</span>))}
+          </div>
+          <div className="sbd-tot">
+            <b className="n">{totalPoints.toFixed(1)}</b>
+            <span>Points</span>
+          </div>
+        </div>
+        <div className="sbd-pips">
+          {play.roster.map((r, i) => <span key={i} className={`sbd-pip2${r.pick ? ' sbd-on' : ''}`} />)}
+        </div>
+        <div className="sbd-sub2">
+          <span>{filled} of {slots.length} slots</span>
+          {/* TEAMS LEFT IS THE UNSPENT COUNT, matching the ticks on the chips
+              above it. teamsLeft(play) counts teams that can still fill
+              something, which on a full board is zero while four chips sit
+              there visibly unticked - two true numbers, and this is the one
+              the reader can see. The other is what dims a chip. */}
+          <span>{unspent} team{unspent === 1 ? '' : 's'} left</span>
+        </div>
       </header>
-      <div className="sbd-yr">
-        <h1>{year}</h1>
-        <div className="sbd-sub">
-          Twelve teams. Eight slots. Open a team and you must take someone -
-          there is no backing out.
+
+      <div className="sbd-steps">
+        <div className="sbd-strip">
+          {STEP_NAMES.map((name, i) => {
+            const cls = stage === 4 ? 'done' : (i + 1 === stage ? 'on' : (i + 1 < stage ? 'done' : ''));
+            return (
+              <span key={name} className="sbd-stpwrap">
+                <span className={`sbd-stp ${cls}`}>
+                  <i>{cls === 'done' ? '✓' : i + 1}</i>
+                  <b>{name}</b>
+                </span>
+                {i < STEP_NAMES.length - 1 ? <span className="sbd-arw" /> : null}
+              </span>
+            );
+          })}
         </div>
-      </div>
-      {complete ? <div className="sbd-warn">{slots.length} slots filled.</div> : null}
-
-      <div className="sbd-prog">
-        <div className="sbd-rrow">
-          {play.roster.map((r, i) => (
-            <div key={i} className={`sbd-pip${r.pick ? ' sbd-full' : ''}`} title={r.pick ? `${r.pos} - ${r.pick.player.name}` : r.pos}>
-              <span className="sbd-em">{SLOT_EMOJI[r.pos] ?? ''}</span>
-              <span className="sbd-dot">{DOT_LABEL[r.pos] ?? r.pos}</span>
-            </div>
-          ))}
-        </div>
-        <div className="sbd-cap">
-          <span>{filled} of {slots.length} filled</span>
-          <span>{left} team{left === 1 ? '' : 's'} left</span>
-        </div>
+        {/* THE LINE SAYS THE NEXT THING TO DO (R5). Copy is the mock's, with
+            its two em dashes written as hyphens per the house rule. */}
+        <p className="sbd-note">
+          {stage === 1 ? (
+            <>Fill <b>eight slots</b> from <b>twelve teams</b>, one player each. Their real season points are your score. Tap a team to see its six.</>
+          ) : stage === 2 ? (
+            <>Six from the <b>{curTeam?.abbr}</b>. Dimmed ones fit no slot you have left. Tap one.</>
+          ) : stage === 3 ? (
+            <><b>{held.player.name}</b> fits the lit slots. Tap one to place him - or tap another player to change your mind.</>
+          ) : (
+            <>All eight in. <b>Lock it in</b> before the clock runs out, or keep swapping - tap any filled slot to clear it.</>
+          )}
+        </p>
       </div>
 
-      <div className="sbd-needline">
-        {complete ? 'Roster complete.' : <>Still need <b>{needPositions.join(' · ')}</b></>}
+      <div className="sbd-sh2">
+        <h3>Teams</h3>
+        <span>{held ? 'tap a lit slot' : 'tap a team'}</span>
       </div>
-
-      <div className="sbd-secl">
-        <b>Teams</b>
-        <span>{teams.length - slots.length} go unused</span>
-      </div>
-
-      <div className="sbd-chips">
+      <div className="sbd-grid">
         {teams.map((t) => {
+          // TWO DIFFERENT DEAD CHIPS, and they mean different things to a
+          // reader. SPENT is a team whose player is already on the board - it
+          // wears the tick. DEAD-BUT-UNSPENT is a team that can no longer fill
+          // anything still open; it dims and refuses a tap, but it never
+          // claims a pick that was not made.
+          const spent = play.used.has(t.key);
           const dead = teamIsDead(play, t);
           return (
-            <button key={t.key} type="button" className={`sbd-tc${dead ? ' sbd-dead' : ''}`}
-              disabled={dead} onClick={() => openTeam(t)}>
+            <button key={t.key} type="button"
+              className={`sbd-tc2${cur === t.key ? ' sbd-tcon' : ''}${spent ? ' sbd-used' : ''}${dead && !spent ? ' sbd-dead2' : ''}`}
+              disabled={dead} onClick={() => selectTeam(t)}>
+              <span className="sbd-mk" aria-hidden="true" />
               <b>{t.abbr}</b>
-              <small>{t.record}</small>
             </button>
           );
         })}
       </div>
 
-      {complete ? (
-        <button type="button" className="sbd-btn" onClick={handleFinish} disabled={finishing}>
-          {finishing ? 'Submitting…' : 'See your grade'}
+      <div className="sbd-duo">
+        <div className="sbd-field">
+          <div className="sbd-form">
+            {play.roster.map((r, i) => {
+              const lit = litSlots.includes(i);
+              const cls = SLOT_CLASS[r.pos] ?? 'flx';
+              if (r.pick) {
+                return (
+                  <button key={i} type="button" className={`sbd-slot filled ${cls}`}
+                    onClick={() => clearAt(i)} aria-label={`Clear ${r.pos}`}>
+                    <span className="sbd-x">&times;</span>
+                    <span className="sbd-spos">{r.pos}</span>
+                    {/* THE NAME, NOT A JERSEY (R4). */}
+                    <span className="sbd-nm">{lastNameOf(r.pick.player.name)}</span>
+                    <span className="sbd-tm">{abbrOf(teams, r.pick.teamKey)}</span>
+                    <span className="sbd-pts n">{Number(r.pick.player.points).toFixed(1)}</span>
+                  </button>
+                );
+              }
+              return (
+                <button key={i} type="button" className={`sbd-slot ${cls}${lit ? ' elig' : ''}`}
+                  onClick={() => placeInSlot(i)} aria-label={r.pos}>
+                  <span className="sbd-spos">{r.pos}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="sbd-panel">
+          <div className="sbd-panh">
+            {curTeam ? <span className="sbd-mk" aria-hidden="true" /> : null}
+            <b>{curTeam ? curTeam.abbr : 'The board'}</b>
+            <small className={held ? 'go' : ''}>
+              {curTeam
+                ? (held ? <>{held.player.name}<br />tap a lit slot</> : 'tap a player')
+                : 'tap a team above'}
+            </small>
+          </div>
+          <div className="sbd-panb">
+            {!curTeam ? (
+              <div className="sbd-empty">tap a team<br />above</div>
+            ) : curTeam.card.map((p, i) => {
+              const fits = legalSlotIndexes(play, p.position).length > 0;
+              const sel = held?.teamKey === curTeam.key && held?.player?.name === p.name;
+              return (
+                <button key={`${p.name}-${i}`} type="button"
+                  className={`sbd-prow${sel ? ' sel' : ''}${fits ? '' : ' gone'}`}
+                  disabled={!fits} onClick={() => holdPlayer(curTeam, p)}>
+                  <span className={`sbd-pb ${SLOT_CLASS[p.position] ?? 'flx'}`}>{p.position}</span>
+                  <span className="sbd-who">
+                    <b>{p.name}</b>
+                    <small>{p.meta}</small>
+                  </span>
+                  <span className="sbd-val">
+                    <b className="n">{Number(p.points).toFixed(1)}</b>
+                    <small>PTS</small>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="sbd-ft">
+        <div className="sbd-pace">
+          {filled} of {slots.length} in<br />
+          <b className="n">{totalPoints.toFixed(1)}</b> points on the board
+        </div>
+        <button type="button" className="sbd-lock" onClick={() => handleFinish()}
+          disabled={!complete || finishing}>
+          {finishing ? 'Locking…' : 'Lock it in'}
         </button>
-      ) : null}
+      </div>
 
       {/* A FAILED SUBMIT DOES NOT COST THE RUN. The board above is still
           rendered with every pick in place, the button is still there, and
@@ -457,32 +625,10 @@ export default function SeasonBoard({
         <div className="sbd-warn" style={{ margin: '10px 12px 0' }} role="alert">{finishError}</div>
       ) : null}
 
-      {sheetState !== 'closed' && mountNode ? createPortal(
-        <>
-          {/* NO onClick HERE. The backdrop is inert while a team is open or a
-              slot choice is pending - that omission IS the "no way out" rule. */}
-          <div className="sbd-back" />
-          <div className="sbd-sheet">
-            {sheetState.mode === 'team' ? (
-              <TeamSheet team={openTeamObj} play={play} onChoose={(player) => choosePlayer(openTeamObj, player)} />
-            ) : (
-              <SlotChoiceSheet
-                team={teams.find((t) => t.key === sheetState.teamKey)}
-                player={sheetState.player}
-                slotIndexes={sheetState.slotIndexes}
-                slots={play.slots}
-                onPick={(slotIndex) => finishPick(teams.find((t) => t.key === sheetState.teamKey), sheetState.player, slotIndex)}
-              />
-            )}
-          </div>
-        </>,
-        mountNode,
-      ) : null}
-
       {toast && mountNode ? createPortal(
         <div className="sbd-toast">
           <b>{toast.name}</b>
-          <p>{toast.slot} locked · {toast.abbr} spent</p>
+          <p>{toast.slot} locked &middot; {toast.abbr} spent</p>
         </div>,
         mountNode,
       ) : null}
@@ -490,59 +636,13 @@ export default function SeasonBoard({
   );
 }
 
-function TeamSheet({ team, play, onChoose }) {
-  return (
-    <div>
-      <div className="sbd-sh">
-        <b>{team.abbr} · {team.record ?? '—'}</b>
-        <span>you must take one player</span>
-      </div>
-      {team.card.map((p, i) => {
-        const gone = pickOutcome(play, p).ok === false;
-        return (
-          <button key={i} type="button" className={`sbd-pr${gone ? ' sbd-gone' : ''}`}
-            disabled={gone} onClick={() => onChoose(p)}>
-            <span className="sbd-pos">{SLOT_EMOJI[p.position] ?? ''} {p.position}</span>
-            <span className="sbd-nm"><b>{p.name}</b><small>{p.meta}</small></span>
-            <span className="sbd-tk">{gone ? 'NO SLOT' : 'TAKE'}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+// TeamSheet and SlotChoiceSheet ARE GONE, not commented out. They were the
+// commit-on-open modal pair: a backdrop with no dismiss, a team sheet you
+// had to pick from, and a slot chooser for an ambiguous position. The v2.0
+// board browses a panel instead and lets a placed pick be cleared, so both
+// were unreachable the moment the new screen landed - and an unreachable
+// component is how a second, stale interaction model survives a redesign.
 
-function SlotChoiceSheet({ team, player, slotIndexes, slots, onPick }) {
-  return (
-    <div>
-      <div className="sbd-sh">
-        <b>{player.name}</b>
-        <span>{team.abbr} · {player.meta}</span>
-      </div>
-      <div className="sbd-slotq">
-        <p>Where does he go? <b>This locks the slot and spends {team.abbr}.</b></p>
-        <div className="sbd-slotbtns">
-          {slotIndexes.map((s) => (
-            <button key={s} type="button" className="sbd-slotbtn" onClick={() => onPick(s)}>{slots[s]}</button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * The rules card. Four numbered lines, then the ranked-or-not line. THE
- * CLOCK STARTS HERE, not on the first team tap - onStart is the only thing
- * that calls startClock.
- *
- * SIGN-IN IN PLACE OF START (5b, edition path only): when signInHref is
- * set, the card renders exactly as before through every rule line, and
- * ONLY the button at the bottom changes - a sign-in link, dest back to
- * /daily/board, instead of Start. The clock cannot start signed out
- * (lib/daily/seasonBoardPlay.js's startClock), and this is the reason it's
- * unreachable: there is no Start button to tap.
- */
 function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signInHref, starting = false, startError = null }) {
   const unused = teamCount - slotCount;
   return (
