@@ -1,0 +1,249 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The Weekly · v2 mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;
+--qb:#FF5C8A;--rb:#4ADE80;--wr:#38BDF8;--te:#FB923C;--mono:'JetBrains Mono',monospace;--disp:'Saira',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#050506;color:var(--paper);font:14px/1.5 system-ui,sans-serif;padding:10px}
+.wrap{max-width:394px;margin:0 auto}
+.cap{color:var(--muted);font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+#err{display:none;background:#3a0d0d;border:1px solid var(--live);color:#ffd7d7;border-radius:8px;padding:9px 11px;font:600 11px var(--mono);margin-bottom:8px;white-space:pre-wrap}
+.app{background:var(--ink);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* header - same bones as Pick'em v2 */
+.hd{padding:12px 14px 11px;border-bottom:1px solid var(--line);background:#111}
+.hd-top{display:flex;align-items:center;margin-bottom:9px}
+.eb{color:var(--volt);font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.hd-top .ed{color:var(--quiet);font:600 9px var(--mono);margin-left:auto}
+.rec{display:flex;align-items:flex-end;gap:12px}
+.rec .big{font:800 40px var(--mono);letter-spacing:-.03em;line-height:.9}
+.rec .big small{font:700 15px var(--mono);color:var(--quiet);margin-left:3px}
+.rec .rt{margin-left:auto;text-align:right}
+.rec .rt b{display:block;font:800 26px var(--mono);letter-spacing:-.03em;line-height:1;color:var(--volt)}
+.rec .rt span{font:600 9px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.pips{display:flex;gap:4px;margin-top:10px}
+.pip{flex:1;height:4px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line)}
+.pip.on{background:var(--volt);border-color:var(--volt)}
+.pip.live{background:var(--live);border-color:var(--live)}
+.pip.done{background:var(--jade);border-color:var(--jade)}
+.sub{display:flex;justify-content:space-between;margin-top:7px;font:500 10px var(--mono);color:var(--muted)}
+
+/* step strip */
+.steps{margin:10px 12px 0;border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:9px 11px 10px}
+.strip{display:flex;align-items:center;gap:6px}
+.stp{display:flex;align-items:center;gap:6px}
+.stp i{width:17px;height:17px;border-radius:50%;border:1px solid var(--line);color:var(--quiet);font:700 9px/15px var(--mono);text-align:center;font-style:normal;flex:0 0 auto}
+.stp b{font:700 9px var(--mono);letter-spacing:.12em;color:var(--quiet);text-transform:uppercase}
+.stp.on i{border-color:var(--volt);background:var(--volt);color:var(--ink)}
+.stp.on b{color:var(--volt)}
+.stp.done i{border-color:var(--jade);color:var(--jade)}
+.stp.done b{color:var(--muted)}
+.arw{flex:1;height:1px;background:var(--line)}
+.note{margin-top:8px;font-size:12px;line-height:1.45;color:var(--muted)}
+.note b{color:var(--paper);font-weight:600}
+
+/* section head */
+.sh{display:flex;align-items:baseline;justify-content:space-between;margin:14px 12px 6px}
+.sh h3{font:700 13px var(--disp);text-transform:uppercase;letter-spacing:.03em}
+.sh span{color:var(--quiet);font:600 9px var(--mono);letter-spacing:.06em}
+
+/* the lineup - six slots, 2x3, the Daily's roster grid */
+.lineup{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 12px}
+.slot{border:1.5px dashed var(--line);border-radius:12px;background:rgba(10,10,10,.5);padding:8px 9px 8px;min-height:74px;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:2px}
+.slot.filled{border-style:solid;background:var(--ink-2)}
+.slot.sel{border-style:solid;border-color:var(--volt);background:rgba(212,255,0,.09);box-shadow:0 0 14px rgba(212,255,0,.25)}
+.slot.kicked{cursor:default;border-style:solid}
+.slot.live{box-shadow:inset 0 2px 0 var(--live)}
+.slot.final{opacity:.75}
+.slot .pos{font:800 10px var(--disp);letter-spacing:.06em}
+.slot.qb .pos{color:var(--qb)}.slot.rb .pos{color:var(--rb)}.slot.wr .pos{color:var(--wr)}.slot.te .pos{color:var(--te)}.slot.flex .pos{color:var(--muted)}
+.slot .nm{font:700 13px var(--disp);text-transform:uppercase;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot .st{font:500 9px var(--mono);color:var(--quiet);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot .st.l{color:var(--live)}
+.slot .pts{position:absolute;right:9px;bottom:8px;font:700 15px var(--mono);color:var(--volt)}
+.slot.final .pts{color:var(--paper)}
+.slot .x{position:absolute;top:5px;right:8px;color:var(--quiet);font:700 12px var(--mono)}
+.slot .lk{position:absolute;top:6px;right:8px;color:var(--quiet);font:600 9px var(--mono);letter-spacing:.08em}
+.slot .empty{color:var(--quiet);font:600 10px var(--mono);letter-spacing:.05em;margin-top:6px}
+.slot.sel .empty{color:var(--volt)}
+
+/* the player panel */
+.panel{margin:10px 12px 0;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);overflow:hidden}
+.pan-h{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--line);background:var(--ink-3)}
+.pan-h b{font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tab{border:1px solid var(--line);border-radius:99px;padding:2px 8px;font:700 9px var(--mono);color:var(--quiet);cursor:pointer}
+.tab.on{border-color:var(--volt);color:var(--volt)}
+.pan-h .srt{font:600 8px var(--mono);color:var(--quiet);letter-spacing:.08em}
+.pan-b{max-height:262px;overflow-y:auto;scrollbar-width:none}
+.empty-p{padding:22px 14px;text-align:center;color:var(--quiet);font:600 10px var(--mono);letter-spacing:.05em;line-height:1.6}
+.prow{display:flex;align-items:center;gap:7px;padding:7px 9px;border-bottom:1px solid var(--line);cursor:pointer}
+.prow:last-child{border:0}
+.prow.sel{background:rgba(212,255,0,.09);box-shadow:inset 3px 0 0 var(--volt)}
+.prow.gone{opacity:.3;cursor:default}
+.pb{width:24px;height:18px;border-radius:5px;display:grid;place-items:center;font:800 8px var(--disp);color:#0A0A0A;flex:0 0 auto}
+.pb.qb{background:var(--qb)}.pb.rb{background:var(--rb)}.pb.wr{background:var(--wr)}.pb.te{background:var(--te)}
+.prow .who{min-width:0}
+.prow .who b{display:block;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .who small{display:block;color:var(--muted);font:500 9px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .val{margin-left:auto;text-align:right}
+.prow .val b{display:block;font:700 14px var(--mono)}
+.prow .val small{font:600 8px var(--mono);color:var(--quiet)}
+
+.ft{border-top:1px solid var(--line);margin-top:13px;padding:11px 12px;display:flex;align-items:center;gap:10px}
+.ft .pace{font:500 11px var(--mono);color:var(--muted);line-height:1.3}
+.ft .pace b{color:var(--paper);font-weight:700}
+.lock{margin-left:auto;background:var(--volt);color:var(--ink);border:0;border-radius:99px;padding:10px 18px;font:700 14px system-ui;cursor:pointer;white-space:nowrap}
+.lock:disabled{background:var(--ink-3);color:var(--quiet)}
+</style></head><body>
+<div class="wrap">
+  <div class="cap">The Weekly · v2 mock - Sunday 12:40 PM PT, mid-slate. Tap an open slot, then a player</div>
+  <div id="err"></div>
+  <div class="app">
+    <div class="hd">
+      <div class="hd-top"><span class="eb">The Weekly</span><span class="ed">Week 2 · NFL · PPR, drop worst</span></div>
+      <div class="rec">
+        <div><div class="eb" style="color:var(--quiet);margin-bottom:2px">Your lineup</div>
+          <div class="big n" id="tot">48.2<small class="n" id="totsub"> · 3 to play</small></div></div>
+        <div class="rt"><b class="n" id="rank">14th</b><span>of 61 · live</span></div>
+      </div>
+      <div class="pips" id="pips"></div>
+      <div class="sub"><span id="cnt">5 of 6 filled</span><span id="next">next lock 1:25 PM</span></div>
+    </div>
+
+    <div class="steps">
+      <div class="strip" id="strip"></div>
+      <div class="note" id="note"></div>
+    </div>
+
+    <div class="sh"><h3>Lineup</h3><span id="shr">3 slots still open</span></div>
+    <div class="lineup" id="lineup"></div>
+
+    <div class="panel">
+      <div class="pan-h"><b id="ph">Tap an open slot</b><span class="tabs" id="tabs"></span><span class="srt" id="srt"></span></div>
+      <div class="pan-b" id="pool"></div>
+    </div>
+
+    <div class="ft">
+      <div class="pace" id="pace">Every change saves<br>An <b>empty slot at kickoff scores 0</b></div>
+      <button class="lock" id="lockbtn" disabled>1 to fill</button>
+    </div>
+  </div>
+</div>
+<script>
+window.onerror=function(m,s,l,c){var e=document.getElementById('err');e.style.display='block';
+  e.textContent='JS ERROR\n'+m+'\nline '+l+':'+c;return false};
+
+// state of a game: final | live | open   (rolling lock: a slot locks at ITS player's kickoff)
+var GAMES={
+ BUF:{s:'final',t:'Thu 5:15 PM',vs:'vs DET',fin:'Final 31-24'},
+ DET:{s:'final',t:'Thu 5:15 PM',vs:'at BUF',fin:'Final 24-31'},
+ ATL:{s:'live',t:'10:00 AM',vs:'at CAR',per:'Q3 7:28'},
+ CAR:{s:'live',t:'10:00 AM',vs:'vs ATL',per:'Q3 7:28'},
+ SEA:{s:'live',t:'10:00 AM',vs:'at NE',per:'Q3 2:11'},
+ SF:{s:'open',t:'1:25 PM',vs:'vs MIA'},
+ DAL:{s:'open',t:'1:25 PM',vs:'vs WSH'},
+ KC:{s:'open',t:'5:20 PM',vs:'vs IND'},
+ LAR:{s:'open',t:'Mon 5:15 PM',vs:'vs NYG'},
+ NYG:{s:'open',t:'Mon 5:15 PM',vs:'at LAR'}
+};
+// the week's actives, PPG-sorted per position. pts = live/final points where the game has kicked.
+var POOL={
+ qb:[{n:'Josh Allen',tm:'BUF',ppg:22.4,pts:28.4},{n:'Patrick Mahomes',tm:'KC',ppg:21.1},{n:'Jared Goff',tm:'DET',ppg:19.0,pts:17.2},{n:'Dak Prescott',tm:'DAL',ppg:18.5},{n:'Matthew Stafford',tm:'LAR',ppg:17.9},{n:'Brock Purdy',tm:'SF',ppg:17.6},{n:'Sam Darnold',tm:'SEA',ppg:16.2,pts:9.8},{n:'Bryce Young',tm:'CAR',ppg:14.9,pts:12.1}],
+ rb:[{n:'Bijan Robinson',tm:'ATL',ppg:19.8,pts:11.6},{n:'Jahmyr Gibbs',tm:'DET',ppg:19.1,pts:19.8},{n:'James Cook',tm:'BUF',ppg:15.7,pts:14.3},{n:'Christian McCaffrey',tm:'SF',ppg:15.4},{n:'Kenneth Walker',tm:'SEA',ppg:14.0,pts:6.4},{n:'Kyren Williams',tm:'LAR',ppg:13.8},{n:'Isiah Pacheco',tm:'KC',ppg:11.2},{n:'Chuba Hubbard',tm:'CAR',ppg:10.9,pts:8.0}],
+ wr:[{n:'Puka Nacua',tm:'LAR',ppg:20.3},{n:'CeeDee Lamb',tm:'DAL',ppg:18.9},{n:'Amon-Ra St. Brown',tm:'DET',ppg:18.4,pts:12.7},{n:'Drake London',tm:'ATL',ppg:16.6,pts:9.2},{n:'Jaxon Smith-Njigba',tm:'SEA',ppg:16.1,pts:14.8},{n:'Malik Nabers',tm:'NYG',ppg:15.9},{n:'Rashee Rice',tm:'KC',ppg:15.2},{n:'Khalil Shakir',tm:'BUF',ppg:11.0,pts:7.4}],
+ te:[{n:'George Kittle',tm:'SF',ppg:14.2},{n:'Travis Kelce',tm:'KC',ppg:12.7},{n:'Sam LaPorta',tm:'DET',ppg:11.9,pts:6.6},{n:'Kyle Pitts',tm:'ATL',ppg:9.4,pts:3.1},{n:'Dalton Kincaid',tm:'BUF',ppg:9.1,pts:10.2},{n:'Jake Ferguson',tm:'DAL',ppg:8.8}]
+};
+var SLOTS=[{k:'qb',lab:'QB',elig:['qb']},{k:'rb',lab:'RB',elig:['rb']},{k:'wr',lab:'WR',elig:['wr']},
+           {k:'te',lab:'TE',elig:['te']},{k:'flex',lab:'FLEX',elig:['rb','wr','te']},{k:'flex',lab:'FLEX',elig:['rb','wr','te']}];
+// lineup: slot index -> {pos, n}
+var lineup={0:{pos:'qb',n:'Josh Allen'},1:{pos:'rb',n:'Bijan Robinson'},2:{pos:'wr',n:'Puka Nacua'},3:{pos:'te',n:'George Kittle'},4:{pos:'rb',n:'Jahmyr Gibbs'}};
+var sel=null, tab=null, confirmed=false;
+var RANK_ORDER=['Thu 5:15 PM','10:00 AM','1:25 PM','5:20 PM','Mon 5:15 PM'];
+
+function el(id){return document.getElementById(id)}
+function P(pos,n){for(var i=0;i<POOL[pos].length;i++)if(POOL[pos][i].n===n)return POOL[pos][i];return null}
+function G(p){return GAMES[p.tm]}
+function inLineup(pos,n){for(var k in lineup)if(lineup[k]&&lineup[k].pos===pos&&lineup[k].n===n)return true;return false}
+function slotState(i){var e=lineup[i];if(!e)return 'open';return G(P(e.pos,e.n)).s}
+
+function draw(){
+  var h='',i,filled=0,pts=0,toPlay=0,openSlots=0,nextT=null,pips='';
+  for(i=0;i<6;i++){
+    var s=SLOTS[i],e=lineup[i],st=slotState(i),p=e?P(e.pos,e.n):null,g=p?G(p):null;
+    var kicked = st!=='open';
+    if(e)filled++;
+    if(!kicked)openSlots++;
+    if(p&&g.s!=='final')toPlay++;
+    if(p&&p.pts!=null)pts+=p.pts;
+    if(!kicked&&p){var r=RANK_ORDER.indexOf(g.t);if(nextT==null||r<RANK_ORDER.indexOf(nextT))nextT=g.t}
+    pips+='<div class="pip '+(st==='final'?'done':st==='live'?'live':e?'on':'')+'"></div>';
+    var cls='slot '+s.k+(e?' filled':'')+(sel===i?' sel':'')+(kicked?' kicked '+st:'');
+    var inner='<span class="pos">'+s.lab+(s.k==='flex'&&e?' · '+e.pos.toUpperCase():'')+'</span>';
+    if(e){
+      inner+='<span class="nm">'+e.n+'</span>';
+      if(g.s==='final') inner+='<span class="st">'+p.tm+' · '+g.fin+'</span><span class="lk">FINAL</span><span class="pts n">'+p.pts.toFixed(1)+'</span>';
+      else if(g.s==='live') inner+='<span class="st l">'+p.tm+' '+g.vs+' · '+g.per+'</span><span class="lk">LIVE</span><span class="pts n">'+p.pts.toFixed(1)+'</span>';
+      else inner+='<span class="st">'+p.tm+' '+g.vs+' · '+g.t+'</span><span class="x" data-x="'+i+'">×</span>';
+    } else inner+='<span class="empty">'+(sel===i?'PICK BELOW':'TAP TO FILL')+'</span>';
+    h+='<div class="'+cls+'"'+(kicked?'':' data-slot="'+i+'"')+'>'+inner+'</div>';
+  }
+  el('lineup').innerHTML=h; el('pips').innerHTML=pips;
+  el('tot').innerHTML=pts.toFixed(1)+'<small class="n"> · '+(toPlay?toPlay+' to play':'all in')+'</small>';
+  el('cnt').textContent=filled+' of 6 filled';
+  el('next').textContent= nextT?'next lock '+nextT:(openSlots?'open slots lock at kickoff':'all locked');
+  el('shr').textContent= openSlots?openSlots+' slot'+(openSlots>1?'s':'')+' still open':'all locked';
+  var empty=6-filled;
+  var btn=el('lockbtn');
+  if(openSlots===0){btn.style.display='none';el('pace').innerHTML='<b>All six locked.</b> Worst pick drops at settle<br>Results Tuesday morning'}
+  else{btn.style.display='';btn.disabled=empty>0||confirmed;btn.textContent=empty>0?empty+' to fill':confirmed?'Locked in':'Lock it in';
+    el('pace').innerHTML= confirmed?'<b>Locked in 12:40 PM PDT</b> · edit any open<br>slot until its kickoff':'Every change saves<br>An <b>empty slot at kickoff scores 0</b>'}
+  steps(filled,empty,openSlots);
+  panel();
+}
+function steps(filled,empty,openSlots){
+  var stage = empty===0?3:filled>0?2:1;
+  var names=['Pick','Fill the lineup','Locked in'],h='';
+  for(var i=0;i<3;i++){var cls=i+1===stage?'on':(i+1<stage?'done':'');
+    h+='<span class="stp '+cls+'"><i>'+(cls==='done'?'✓':(i+1))+'</i><b>'+names[i]+'</b></span>';if(i<2)h+='<span class="arw"></span>'}
+  el('strip').innerHTML=h;
+  var msg;
+  if(stage===1) msg='Six slots from <b>this week\'s actives</b>. QB, RB, WR, TE and two FLEX. Full PPR, your worst pick dropped at settle. Each slot locks when its player\'s game kicks off.';
+  else if(stage===2) msg='<b>'+empty+' slot'+(empty>1?'s':'')+' still empty.</b> Tap it, then a player. Every change saves - an empty slot at kickoff scores 0, and a player already kicked cannot be added.';
+  else msg='Every slot is filled. Keep changing the open ones right up to their kickoff - <b>nothing is final until the game starts</b>.';
+  el('note').innerHTML=msg;
+}
+function panel(){
+  if(sel==null){el('ph').textContent='Tap an open slot';el('tabs').innerHTML='';el('srt').textContent='';
+    el('pool').innerHTML='<div class="empty-p">A KICKED SLOT IS LOCKED<br>THE OPEN ONES ARE YOURS UNTIL KICKOFF</div>';return}
+  var s=SLOTS[sel]; if(!tab||s.elig.indexOf(tab)<0)tab=s.elig[0];
+  el('ph').textContent=s.lab+(s.elig.length>1?'':'')+' · '+({qb:'Quarterbacks',rb:'Running backs',wr:'Receivers',te:'Tight ends'})[tab];
+  var t='';if(s.elig.length>1)for(var i=0;i<s.elig.length;i++)t+='<span class="tab'+(s.elig[i]===tab?' on':'')+'" data-tab="'+s.elig[i]+'">'+s.elig[i].toUpperCase()+'</span>';
+  el('tabs').innerHTML=t; el('srt').textContent='PPG';
+  var h='',cur=lineup[sel];
+  POOL[tab].forEach(function(p){
+    var g=G(p), kicked=g.s!=='open', used=inLineup(tab,p.n), mine=cur&&cur.pos===tab&&cur.n===p.n;
+    var gone=kicked||(used&&!mine);
+    var line=p.tm+' '+g.vs+' · '+(kicked?(g.s==='live'?g.per:'final'):g.t)+(used&&!mine?' · in your lineup':'');
+    h+='<div class="prow'+(mine?' sel':'')+(gone?' gone':'')+'"'+(gone?'':' data-pick="'+p.n+'"')+'>'+
+      '<span class="pb '+tab+'">'+tab.toUpperCase()+'</span><span class="who"><b>'+p.n+'</b><small>'+line+'</small></span>'+
+      '<span class="val"><b class="n">'+p.ppg.toFixed(1)+'</b><small>'+(kicked?(p.pts!=null?p.pts.toFixed(1)+' now':'kicked'):'ppg')+'</small></span></div>';
+  });
+  el('pool').innerHTML=h;
+}
+document.addEventListener('click',function(ev){
+  var n=ev.target;
+  while(n&&n!==document.body){
+    var d=n.dataset||{};
+    if(d.x!=null){delete lineup[parseInt(d.x)];confirmed=false;sel=parseInt(d.x);draw();return}
+    if(d.slot!=null){sel=sel===parseInt(d.slot)?null:parseInt(d.slot);tab=null;draw();return}
+    if(d.tab){tab=d.tab;panel();return}
+    if(d.pick){lineup[sel]={pos:tab,n:d.pick};confirmed=false;var nx=null;for(var i=0;i<6;i++)if(!lineup[i]&&slotState(i)==='open'){nx=i;break}sel=nx;tab=null;draw();return}
+    if(n.id==='lockbtn'){confirmed=true;draw();return}
+    n=n.parentNode;
+  }
+});
+draw();
+</script>
+</body></html>
