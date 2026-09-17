@@ -332,7 +332,11 @@ export default function DraftRoom({
       if (!cancelled && res.ok) setSummaries(res.summaries);
     })();
     return () => { cancelled = true; };
-  }, [available, config.scoring_format]);
+    // draftId is in the list because the summaries are now season-scoped and
+    // the server resolves that season FROM the draft. It never changes for a
+    // mounted room, and the ref above makes this run once regardless - but a
+    // dependency that is read must be declared.
+  }, [available, config.scoring_format, draftId]);
 
   // --- stat strip: expand a row -> load that player's season ---
   async function toggleExpand(p) {
