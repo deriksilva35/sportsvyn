@@ -14,6 +14,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { transformSync } from '@babel/core';
+import { pctOfCeiling } from '../../../lib/daily/format.js';
 import { install } from '../../../lib/testing/nextResolve.mjs';
 install();
 
@@ -113,9 +114,20 @@ test('a real perfect board is the ONLY thing that reads 100%', () => {
   assert.doesNotMatch(c.textContent, /99\.9%/);
 });
 
-test('NO CEILING, NO PERCENTAGE - the line drops it rather than printing a zero', () => {
+test('A ZERO CEILING READS "0.0%", per the full relay, and nothing divides by it', () => {
   const c = results({ ...grade(), perfect: 0 });
-  assert.doesNotMatch(c.textContent, /%/, 'no percentage anywhere on the screen');
-  assert.doesNotMatch(c.textContent, /0%|-%/, 'and certainly not a zero or a dash');
-  assert.match(c.querySelector('.sbd-cap').textContent, /2,363\.1 pts · 2:41/, 'the rest of the line survives');
+  assert.match(c.textContent, /0\.0%/);
+  assert.doesNotMatch(c.textContent, /NaN|Infinity/, 'no arithmetic escaped onto the screen');
+  assert.doesNotMatch(c.textContent, /100%/);
+});
+
+// A NULL CEILING IS NOT RENDERABLE ON THIS SCREEN AND NEVER WAS. The grade
+// header's own line reads `of {grade.perfect.toLocaleString()}`, which throws
+// on a null long before the percentage is reached - true before this relay and
+// unchanged by it, because gradeFromOptimum always returns a numeric perfect.
+// The formatter's null branch is covered in lib/daily/format.test.mjs; putting
+// it on screen here would mean guarding a line this relay was not sent to
+// touch. FILED, not fixed.
+test('the formatter omits rather than inventing a percentage when the ceiling is unknown', () => {
+  assert.equal(pctOfCeiling(2363.1, null), null);
 });
