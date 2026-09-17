@@ -28,3 +28,115 @@
    the only thing the list has to say is which ones counted. */
 .row--started { font-weight: 700; }
 .row--started .r { color: var(--d-volt); }
+
+/* ===========================================================================
+   THE DRAFT GAME IN FLIGHT, v2  (docs/design/mocks/draft-v2.html, screen 2)
+   ---------------------------------------------------------------------------
+   The Pick'em grammar, applied to a card that already had every fact and
+   spent no width on any of them. Prefixed dvg- so nothing here reaches the
+   settled grade card, the seat picker or the .row/.mod chrome around it.
+   =========================================================================== */
+
+.dvg {
+  background: var(--ink, #0a0a0a);
+  border: 1px solid var(--line, #2a2a2a);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.dvg .n { font-family: var(--font-mono, ui-monospace, monospace); font-variant-numeric: tabular-nums; }
+
+.dvg-hd { padding: 12px 14px 11px; border-bottom: 1px solid var(--line, #2a2a2a); background: #111; }
+.dvg-hd-top { display: flex; align-items: center; margin-bottom: 9px; }
+.dvg-eb {
+  color: var(--volt, #d4ff00);
+  font: 700 10px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.dvg-eb.dvg-quiet { color: var(--muted-dim, #6e6e68); display: block; margin-bottom: 2px; }
+.dvg-ed { margin-left: auto; color: var(--muted-dim, #6e6e68); font: 600 9px var(--font-mono, ui-monospace, monospace); }
+.dvg-rec { display: flex; align-items: flex-end; gap: 12px; }
+.dvg-big { font: 800 40px var(--font-mono, ui-monospace, monospace); letter-spacing: -0.03em; line-height: 0.9; }
+.dvg-big small { font: 700 15px var(--font-mono, ui-monospace, monospace); color: var(--muted-dim, #6e6e68); margin-left: 3px; }
+.dvg-pips { display: flex; gap: 4px; margin-top: 10px; }
+.dvg-pip {
+  flex: 1; height: 4px; border-radius: 99px;
+  background: var(--ink-3, #1c1c1c); border: 1px solid var(--line, #2a2a2a);
+}
+.dvg-pip.on { background: var(--volt, #d4ff00); border-color: var(--volt, #d4ff00); }
+.dvg-pip.live { background: var(--live, #e63946); border-color: var(--live, #e63946); }
+.dvg-pip.done { background: var(--jade, #2a8a4f); border-color: var(--jade, #2a8a4f); }
+/* THE TWO THAT DROP are outlined, not filled: on the card but not counting. */
+.dvg-pip.drop { background: var(--ink-3, #1c1c1c); border-color: var(--muted-dim, #6e6e68); }
+.dvg-sub {
+  display: flex; justify-content: space-between; margin-top: 7px;
+  font: 500 10px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94);
+}
+
+.dvg-steps {
+  margin: 10px 12px 0; padding: 9px 11px 10px;
+  border: 1px solid var(--line, #2a2a2a); border-radius: 12px; background: var(--ink-2, #141414);
+}
+.dvg-strip { display: flex; align-items: center; gap: 6px; }
+.dvg-stpwrap { display: flex; align-items: center; gap: 6px; flex: 0 1 auto; min-width: 0; }
+.dvg-stpwrap:not(:last-child) { flex: 1; }
+.dvg-stp { display: flex; align-items: center; gap: 6px; }
+.dvg-stp i {
+  width: 17px; height: 17px; border-radius: 50%; flex: 0 0 auto;
+  border: 1px solid var(--line, #2a2a2a); color: var(--muted-dim, #6e6e68);
+  font: 700 9px/15px var(--font-mono, ui-monospace, monospace); text-align: center; font-style: normal;
+}
+.dvg-stp b {
+  font: 700 9px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.12em; color: var(--muted-dim, #6e6e68); text-transform: uppercase; white-space: nowrap;
+}
+.dvg-stp.on i { border-color: var(--volt, #d4ff00); background: var(--volt, #d4ff00); color: var(--ink, #0a0a0a); }
+.dvg-stp.on b { color: var(--volt, #d4ff00); }
+.dvg-stp.done i { border-color: var(--jade, #2a8a4f); color: var(--jade, #2a8a4f); }
+.dvg-stp.done b { color: var(--muted, #9a9a94); }
+.dvg-arw { flex: 1; height: 1px; background: var(--line, #2a2a2a); min-width: 6px; }
+.dvg-note { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted, #9a9a94); }
+.dvg-note b { color: var(--paper, #f5f5f2); font-weight: 600; }
+
+.dvg-ros {
+  margin: 10px 12px 0; overflow: hidden;
+  border: 1px solid var(--line, #2a2a2a); border-radius: 13px; background: var(--ink-2, #141414);
+}
+.dvg-rr {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  border-bottom: 1px solid var(--line, #2a2a2a);
+}
+.dvg-rr:last-child { border-bottom: 0; }
+.dvg-rr.live { box-shadow: inset 3px 0 0 var(--live, #e63946); }
+/* THE TWO THAT DROP: dimmed, and the name struck through, because "not
+   counting" is a fact about the row and not a shade of emphasis. */
+.dvg-rr.drop { opacity: 0.45; }
+.dvg-rr.drop .dvg-who b { text-decoration: line-through; text-decoration-color: var(--terra, #b8410f); }
+.dvg-rr.drop .dvg-pts { color: var(--muted-dim, #6e6e68); font-size: 12px; }
+.dvg-pb {
+  width: 26px; flex: 0 0 auto; text-align: center;
+  font: 800 9px var(--font-display, system-ui, sans-serif);
+  color: var(--muted, #9a9a94); letter-spacing: 0.04em;
+}
+.dvg-who { min-width: 0; flex: 1; }
+.dvg-who b {
+  display: block;
+  font: 700 13px var(--font-display, system-ui, sans-serif);
+  text-transform: uppercase; line-height: 1.05;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dvg-who small {
+  display: block; margin-top: 1px;
+  font: 500 9px var(--font-mono, ui-monospace, monospace); color: var(--muted-dim, #6e6e68);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dvg-who small.dvg-l { color: var(--live, #e63946); }
+.dvg-count { color: var(--jade, #2a8a4f); }
+.dvg-pts {
+  width: 56px; text-align: right;
+  font: 700 16px var(--font-mono, ui-monospace, monospace); color: var(--volt, #d4ff00);
+}
+.dvg-rr.fin .dvg-pts { color: var(--paper, #f5f5f2); }
+
+.dvg-ft { border-top: 1px solid var(--line, #2a2a2a); margin-top: 12px; padding: 10px 12px; }
+.dvg-pace { margin: 0; font: 500 11px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94); line-height: 1.35; }
+.dvg-pace b { color: var(--paper, #f5f5f2); font-weight: 700; }
