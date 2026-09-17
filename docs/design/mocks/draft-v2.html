@@ -1,0 +1,327 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The Draft · room + game · v2 mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;
+--qb:#FF5C8A;--rb:#4ADE80;--wr:#38BDF8;--te:#FB923C;--mono:'JetBrains Mono',monospace;--disp:'Saira',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#050506;color:var(--paper);font:14px/1.5 system-ui,sans-serif;padding:10px}
+.wrap{max-width:394px;margin:0 auto}
+.cap{color:var(--muted);font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 7px}
+.cap:first-child{margin-top:0}
+#err{display:none;background:#3a0d0d;border:1px solid var(--live);color:#ffd7d7;border-radius:8px;padding:9px 11px;font:600 11px var(--mono);margin-bottom:8px;white-space:pre-wrap}
+.app{background:var(--ink);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eb{color:var(--volt);font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.q{color:var(--quiet)}
+.c-qb{color:var(--qb)}.c-rb{color:var(--rb)}.c-wr{color:var(--wr)}.c-te{color:var(--te)}
+.pb{width:24px;height:18px;border-radius:5px;display:grid;place-items:center;font:800 8px var(--disp);color:#0A0A0A;flex:0 0 auto}
+.pb.qb{background:var(--qb)}.pb.rb{background:var(--rb)}.pb.wr{background:var(--wr)}.pb.te{background:var(--te)}
+
+/* ===== ROOM ===== */
+.clk{padding:12px 14px 0;background:#111;border-bottom:1px solid var(--line)}
+.clk-top{display:flex;align-items:center;margin-bottom:8px}
+.clk-top .ed{margin-left:auto;font:600 9px var(--mono);color:var(--quiet)}
+.otc{display:flex;align-items:flex-end;gap:10px}
+.otc .who{min-width:0}
+.otc .who .lab{font:700 9px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--quiet)}
+.otc .who b{display:block;font:900 24px var(--disp);text-transform:uppercase;letter-spacing:-.01em;line-height:1;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.otc .who b.you{color:var(--volt)}
+.otc .who small{display:block;font:500 9px var(--mono);color:var(--muted);margin-top:3px}
+.otc .t{margin-left:auto;text-align:right;flex:0 0 auto}
+.otc .t b{display:block;font:800 44px var(--mono);letter-spacing:-.05em;line-height:.85;color:var(--volt)}
+.otc .t b.hot{color:var(--live)}
+.otc .t span{font:600 9px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.drain{height:3px;background:var(--ink-3);margin:10px -14px 0;position:relative}
+.drain i{position:absolute;left:0;top:0;bottom:0;background:var(--volt);width:63%}
+.drain i.hot{background:var(--live)}
+/* seat strip - the snake */
+.seats{display:flex;gap:3px;padding:9px 12px 0}
+.seat{flex:1;height:34px;border-radius:7px;border:1px solid var(--line);background:var(--ink-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;position:relative}
+.seat b{font:800 10px var(--mono);color:var(--muted);line-height:1}
+.seat small{font:600 6px var(--mono);color:var(--quiet);letter-spacing:.04em;text-transform:uppercase;line-height:1}
+.seat.done{opacity:.5}
+.seat.on{border-color:var(--volt);background:rgba(212,255,0,.12)}
+.seat.on b{color:var(--volt)}
+.seat.you{border-color:var(--paper)}
+.seat.you.on{border-color:var(--volt)}
+.seat.you::after{content:'';position:absolute;bottom:-4px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:99px;background:var(--volt)}
+.seat.house small{color:var(--muted)}
+.snake{display:flex;justify-content:space-between;padding:6px 12px 0;font:600 8px var(--mono);color:var(--quiet);letter-spacing:.08em;text-transform:uppercase}
+/* ticker */
+.tick{display:flex;gap:6px;padding:10px 12px 0;overflow-x:auto;scrollbar-width:none}
+.tk{flex:0 0 auto;border:1px solid var(--line);border-radius:9px;background:var(--ink-2);padding:5px 8px;min-width:96px}
+.tk small{display:block;font:600 8px var(--mono);color:var(--quiet);letter-spacing:.06em}
+.tk b{display:block;font:700 11px var(--disp);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.tk i{font:500 8px var(--mono);color:var(--muted);font-style:normal}
+.tk.you{border-color:var(--volt)}
+.tk.you small{color:var(--volt)}
+/* board */
+.sh{display:flex;align-items:baseline;gap:8px;margin:12px 12px 6px}
+.sh h3{font:700 13px var(--disp);text-transform:uppercase;letter-spacing:.03em}
+.sh .r{margin-left:auto;color:var(--quiet);font:600 9px var(--mono);letter-spacing:.06em}
+.tabs{display:flex;gap:4px;padding:0 12px}
+.tab{border:1px solid var(--line);border-radius:99px;padding:3px 10px;font:700 9px var(--mono);color:var(--quiet);cursor:pointer}
+.tab.on{border-color:var(--volt);color:var(--volt)}
+.tab.run{border-color:var(--terra);color:var(--terra)}
+.board{margin:8px 12px 0;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);overflow:hidden}
+.bh{display:flex;gap:7px;padding:5px 10px;border-bottom:1px solid var(--line);font:600 8px var(--mono);color:var(--quiet);letter-spacing:.08em;text-transform:uppercase}
+.bh .adp{margin-left:auto;width:36px;text-align:right}.bh .pts{width:40px;text-align:right}
+.prow{display:flex;align-items:center;gap:7px;padding:7px 10px;border-bottom:1px solid var(--line);cursor:pointer}
+.prow:last-child{border:0}
+.prow:active{background:var(--ink-3)}
+.prow .rk{font:700 10px var(--mono);color:var(--quiet);width:16px;text-align:right}
+.prow .who{min-width:0;flex:1}
+.prow .who b{display:block;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .who small{display:block;color:var(--muted);font:500 9px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .who small.gone{color:var(--terra)}
+.prow .adp{width:36px;text-align:right;font:700 11px var(--mono);color:var(--muted)}
+.prow .adp.v{color:var(--jade)}
+.prow .pts{width:40px;text-align:right;font:700 13px var(--mono)}
+.prow .star{width:14px;text-align:center;color:var(--quiet);font-size:12px}
+.prow.qd .star{color:var(--volt)}
+.prow.gone{opacity:.32;cursor:default}
+.more{padding:7px;text-align:center;font:600 9px var(--mono);color:var(--quiet);letter-spacing:.06em;border-top:1px solid var(--line)}
+/* your eight */
+.eight{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:0 12px}
+.e{border:1.5px dashed var(--line);border-radius:9px;padding:6px 6px 5px;min-height:52px;background:rgba(10,10,10,.5)}
+.e.f{border-style:solid;background:var(--ink-2)}
+.e .r{font:700 8px var(--mono);color:var(--quiet);letter-spacing:.06em}
+.e b{display:block;font:700 10px var(--disp);text-transform:uppercase;line-height:1.05;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.e small{display:block;font:500 8px var(--mono);color:var(--muted);margin-top:1px}
+.ft{border-top:1px solid var(--line);margin-top:12px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.ft .pace{font:500 11px var(--mono);color:var(--muted);line-height:1.3}
+.ft .pace b{color:var(--paper);font-weight:700}
+.btn{margin-left:auto;background:var(--volt);color:var(--ink);border:0;border-radius:99px;padding:10px 18px;font:700 14px system-ui;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:var(--ink-3);color:var(--muted)}
+
+/* ===== GAME ===== */
+.hd{padding:12px 14px 11px;border-bottom:1px solid var(--line);background:#111}
+.hd-top{display:flex;align-items:center;margin-bottom:9px}
+.hd-top .ed{color:var(--quiet);font:600 9px var(--mono);margin-left:auto}
+.rec{display:flex;align-items:flex-end;gap:12px}
+.rec .big{font:800 40px var(--mono);letter-spacing:-.03em;line-height:.9}
+.rec .big small{font:700 15px var(--mono);color:var(--quiet);margin-left:3px}
+.rec .rt{margin-left:auto;text-align:right}
+.rec .rt b{display:block;font:800 26px var(--mono);letter-spacing:-.03em;line-height:1;color:var(--volt)}
+.rec .rt span{font:600 9px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.pips{display:flex;gap:4px;margin-top:10px}
+.pip{flex:1;height:4px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line)}
+.pip.on{background:var(--volt);border-color:var(--volt)}.pip.live{background:var(--live);border-color:var(--live)}.pip.done{background:var(--jade);border-color:var(--jade)}.pip.drop{background:var(--ink-3);border-color:var(--quiet)}
+.sub{display:flex;justify-content:space-between;margin-top:7px;font:500 10px var(--mono);color:var(--muted)}
+.steps{margin:10px 12px 0;border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:9px 11px 10px}
+.strip{display:flex;align-items:center;gap:6px}
+.stp{display:flex;align-items:center;gap:6px}
+.stp i{width:17px;height:17px;border-radius:50%;border:1px solid var(--line);color:var(--quiet);font:700 9px/15px var(--mono);text-align:center;font-style:normal;flex:0 0 auto}
+.stp b{font:700 9px var(--mono);letter-spacing:.12em;color:var(--quiet);text-transform:uppercase}
+.stp.on i{border-color:var(--volt);background:var(--volt);color:var(--ink)}.stp.on b{color:var(--volt)}
+.stp.done i{border-color:var(--jade);color:var(--jade)}.stp.done b{color:var(--muted)}
+.arw{flex:1;height:1px;background:var(--line)}
+.note{margin-top:8px;font-size:12px;line-height:1.45;color:var(--muted)}.note b{color:var(--paper);font-weight:600}
+/* scored roster rows */
+.ros{margin:0 12px;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);overflow:hidden}
+.rr{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.rr:last-child{border:0}
+.rr .who{min-width:0;flex:1}
+.rr .who b{display:block;font:700 13px var(--disp);text-transform:uppercase;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rr .who small{display:block;font:500 9px var(--mono);color:var(--quiet);margin-top:1px}
+.rr .who small.l{color:var(--live)}
+.rr .pts{font:700 16px var(--mono);color:var(--volt);text-align:right;width:52px}
+.rr.fin .pts{color:var(--paper)}
+.rr.live{box-shadow:inset 3px 0 0 var(--live)}
+.rr.drop{opacity:.45}
+.rr.drop .who b{text-decoration:line-through;text-decoration-color:var(--terra)}
+.rr.drop .pts{color:var(--quiet);font-size:12px}
+.rr.drop .pts::after{content:' dropped';font-size:8px;letter-spacing:.06em}
+.rr .tag{font:700 8px var(--mono);letter-spacing:.1em;padding:2px 6px;border-radius:99px;border:1px solid var(--line);color:var(--quiet)}
+.rr .tag.j{border-color:var(--jade);color:var(--jade)}
+.rr .tag.t{border-color:var(--terra);color:var(--terra)}
+/* field module */
+.field{margin:10px 12px 0;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);padding:10px 11px}
+.fbar{height:8px;border-radius:99px;background:var(--ink-3);position:relative;margin:8px 0 6px;overflow:hidden}
+.fbar i{position:absolute;left:0;top:0;bottom:0;background:var(--volt);width:88.6%}
+.fbar em{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--paper);left:92%}
+.fl{display:flex;justify-content:space-between;font:600 9px var(--mono);color:var(--quiet);letter-spacing:.06em}
+.fl b{color:var(--paper)}
+/* seat table */
+.tbl{margin:8px 12px 0;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);overflow:hidden}
+.tr{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line);font:500 11px var(--mono)}
+.tr:last-child{border:0}
+.tr .rk{width:22px;color:var(--quiet);font-weight:700}
+.tr .h{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr .h small{color:var(--quiet);font-size:9px;margin-left:6px}
+.tr .s{width:52px;text-align:right;font-weight:700}
+.tr .g{width:22px;text-align:right;font-size:9px;color:var(--quiet)}
+.tr.you{box-shadow:inset 3px 0 0 var(--volt);background:rgba(212,255,0,.06)}
+.tr.you .h{color:var(--volt);font-weight:700}
+.tr .pill{font:700 8px var(--mono);letter-spacing:.1em;padding:1px 6px;border-radius:99px;background:var(--volt);color:var(--ink);margin-left:6px}
+.tr .hs{font:600 8px var(--mono);letter-spacing:.06em;color:var(--quiet);border:1px solid var(--line);border-radius:99px;padding:1px 5px;margin-left:6px}
+</style></head><body>
+<div class="wrap">
+  <div class="cap">1 · The room - your pick, round 3, 30 second clock. Tap a player to draft him</div>
+  <div id="err"></div>
+  <div class="app" id="room">
+    <div class="clk">
+      <div class="clk-top"><span class="eb">The Draft · Room</span><span class="ed">Week 3 · 12 seats · 8 rounds · PPR</span></div>
+      <div class="otc">
+        <div class="who" id="otc"></div>
+        <div class="t"><b class="n" id="clock">19</b><span>seconds</span></div>
+      </div>
+      <div class="drain"><i id="drain"></i></div>
+    </div>
+    <div class="seats" id="seats"></div>
+    <div class="snake" id="snake"></div>
+    <div class="tick" id="tick"></div>
+
+    <div class="sh"><h3>Best available</h3><span class="r" id="poolr">PICK 3.05 · 27 OF 96</span></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="board">
+      <div class="bh"><span style="width:16px"></span><span>Player</span><span class="adp">ADP</span><span class="pts">Wk 3</span><span style="width:14px"></span></div>
+      <div id="pool"></div>
+      <div class="more" id="more"></div>
+    </div>
+
+    <div class="sh"><h3>Your eight</h3><span class="r" id="eightr">2 of 8</span></div>
+    <div class="eight" id="eight"></div>
+
+    <div class="ft">
+      <div class="pace"><b>Snake · 30s a pick</b><br>Out of time = best available, auto</div>
+      <button class="btn" id="draftbtn">Draft <span id="dbname">the queue</span></button>
+    </div>
+  </div>
+
+  <div class="cap">2 · The Draft game - Sunday 3:40 PM PT, your eight scored live, best six count</div>
+  <div class="app" id="game">
+    <div class="hd">
+      <div class="hd-top"><span class="eb">The Draft</span><span class="ed">Week 3 · NFL · Room 14 · Seat 5</span></div>
+      <div class="rec">
+        <div><div class="eb q" style="margin-bottom:2px">Your best six</div>
+          <div class="big n">118.7<small class="n"> · 2 to play</small></div></div>
+        <div class="rt"><b class="n">3rd</b><span>of 12 · this room</span></div>
+      </div>
+      <div class="pips"><div class="pip done"></div><div class="pip done"></div><div class="pip live"></div><div class="pip done"></div><div class="pip on"></div><div class="pip live"></div><div class="pip drop"></div><div class="pip drop"></div></div>
+      <div class="sub"><span>6 of 8 count · worst two dropped</span><span>field best 131.4</span></div>
+    </div>
+
+    <div class="steps">
+      <div class="strip">
+        <span class="stp done"><i>✓</i><b>Draft</b></span><span class="arw"></span>
+        <span class="stp on"><i>2</i><b>Scored live</b></span><span class="arw"></span>
+        <span class="stp"><i>3</i><b>Settled</b></span>
+      </div>
+      <div class="note">Your eight play their real games. The <b>best six count</b>, the worst two drop. Nothing to set - the lineup is whoever scores. Graded against the room and the field on Tuesday morning.</div>
+    </div>
+
+    <div class="sh"><h3>Your eight</h3><span class="r">BEST SIX IN BOLD</span></div>
+    <div class="ros">
+      <div class="rr fin"><span class="pb qb">QB</span><span class="who"><b>Josh Allen</b><small>BUF · Final · 31-24 DET · R1 #5</small></span><span class="pts n">28.4</span></div>
+      <div class="rr fin"><span class="pb rb">RB</span><span class="who"><b>Jahmyr Gibbs</b><small>DET · Final · 24-31 BUF · R2 #20</small></span><span class="pts n">19.8</span></div>
+      <div class="rr live"><span class="pb wr">WR</span><span class="who"><b>CeeDee Lamb</b><small class="l">DAL vs WSH · Q3 4:12</small></span><span class="pts n">16.3</span></div>
+      <div class="rr fin"><span class="pb rb">RB</span><span class="who"><b>Kenneth Walker</b><small>SEA · Final · 20-17 NE · R3 #29</small></span><span class="pts n">14.9</span></div>
+      <div class="rr"><span class="pb wr">WR</span><span class="who"><b>Puka Nacua</b><small>LAR vs NYG · Mon 5:15 PM · R4 #44</small></span><span class="pts n q">-</span></div>
+      <div class="rr live"><span class="pb te">TE</span><span class="who"><b>George Kittle</b><small class="l">SF vs MIA · Q2 8:50</small></span><span class="pts n">9.1</span></div>
+      <div class="rr drop fin"><span class="pb wr">WR</span><span class="who"><b>Khalil Shakir</b><small>BUF · Final · R7 #77</small></span><span class="pts n">7.4</span></div>
+      <div class="rr drop fin"><span class="pb rb">RB</span><span class="who"><b>Chuba Hubbard</b><small>CAR · Final · R8 #92</small></span><span class="pts n">8.0</span></div>
+    </div>
+
+    <div class="field">
+      <div class="fl"><span>YOU · 118.7</span><b>FIELD BEST · 131.4</b></div>
+      <div class="fbar"><i></i><em title="room best 122.0"></em></div>
+      <div class="fl"><span>90.3% of the field's best, with two still playing</span><span>room best 122.0</span></div>
+    </div>
+
+    <div class="sh"><h3>This room</h3><span class="r">12 SEATS · 5 HOUSE</span></div>
+    <div class="tbl">
+      <div class="tr"><span class="rk">1</span><span class="h">jakebutler<small>seat 9</small></span><span class="s n">122.0</span><span class="g">1</span></div>
+      <div class="tr"><span class="rk">2</span><span class="h">The Chalk<span class="hs">HOUSE</span><small>highest ADP, every pick</small></span><span class="s n">120.6</span><span class="g">2</span></div>
+      <div class="tr you"><span class="rk">3</span><span class="h">sportsvyn_og<span class="pill">YOU</span><small>seat 5</small></span><span class="s n">118.7</span><span class="g">2</span></div>
+      <div class="tr"><span class="rk">4</span><span class="h">The Fade<span class="hs">HOUSE</span><small>never the consensus</small></span><span class="s n">111.2</span><span class="g">1</span></div>
+      <div class="tr"><span class="rk">5</span><span class="h">mcamilli<small>seat 2</small></span><span class="s n">109.9</span><span class="g">3</span></div>
+      <div class="tr"><span class="rk">6</span><span class="h">The Homer<span class="hs">HOUSE</span><small>Niners first</small></span><span class="s n">104.4</span><span class="g">2</span></div>
+      <div class="more">6 MORE · FULL ROOM</div>
+    </div>
+
+    <div class="ft">
+      <div class="pace"><b>The Draft · by seat</b><br>Seat 5 averages 4th this season</div>
+      <button class="btn ghost">Season table</button>
+    </div>
+  </div>
+</div>
+<script>
+window.onerror=function(m,s,l,c){var e=document.getElementById('err');e.style.display='block';e.textContent='JS ERROR\n'+m+'\nline '+l+':'+c;return false};
+function el(id){return document.getElementById(id)}
+// seats: 12; five house personas take seats, per ruling. you = seat 5.
+var SEATS=['tbone','mcamilli','The Chalk','r_ess','sportsvyn_og','The Fade','kwon','The Book','jakebutler','The Gut','dfrancis','The Homer'];
+var HOUSE={'The Chalk':1,'The Fade':1,'The Book':1,'The Gut':1,'The Homer':1};
+var YOU=4; // index
+var round=3, pickInRound=5; // 3.05 -> snake: round 3 goes forward, seat index 4 = you
+var picks=[ // the ticker, most recent last
+ {s:'r_ess',p:'3.01',n:'Derrick Henry',pos:'rb'},{s:'The Chalk',p:'3.02',n:'Nico Collins',pos:'wr'},
+ {s:'mcamilli',p:'3.03',n:'Lamar Jackson',pos:'qb'},{s:'tbone',p:'3.04',n:'Trey McBride',pos:'te'}];
+var POOL=[
+ {n:'Puka Nacua',pos:'wr',tm:'LAR',g:'vs NYG Mon 5:15',adp:11,pts:20.3},
+ {n:'Patrick Mahomes',pos:'qb',tm:'KC',g:'vs IND Sun 5:20',adp:19,pts:21.1},
+ {n:'Kenneth Walker',pos:'rb',tm:'SEA',g:'at NE Sun 10:00',adp:31,pts:14.0},
+ {n:'Amon-Ra St. Brown',pos:'wr',tm:'DET',g:'Thu · kicked',adp:14,pts:18.4,gone:1},
+ {n:'George Kittle',pos:'te',tm:'SF',g:'vs MIA Sun 1:25',adp:38,pts:14.2},
+ {n:'Kyren Williams',pos:'rb',tm:'LAR',g:'vs NYG Mon 5:15',adp:34,pts:13.8},
+ {n:'Jaxon Smith-Njigba',pos:'wr',tm:'SEA',g:'at NE Sun 10:00',adp:27,pts:16.1},
+ {n:'Dak Prescott',pos:'qb',tm:'DAL',g:'vs WSH Sun 1:25',adp:52,pts:18.5},
+ {n:'Malik Nabers',pos:'wr',tm:'NYG',g:'at LAR Mon 5:15',adp:22,pts:15.9},
+ {n:'Isiah Pacheco',pos:'rb',tm:'KC',g:'vs IND Sun 5:20',adp:47,pts:11.2},
+ {n:'Travis Kelce',pos:'te',tm:'KC',g:'vs IND Sun 5:20',adp:40,pts:12.7},
+ {n:'Drake London',pos:'wr',tm:'ATL',g:'at CAR Sun 10:00',adp:29,pts:16.6}
+];
+var queue={'Puka Nacua':1,'George Kittle':1};
+var mine=[{r:'1.05',n:'Josh Allen',pos:'qb',tm:'BUF'},{r:'2.08',n:'Bijan Robinson',pos:'rb',tm:'ATL'}];
+var tab='all', clock=19;
+
+function draw(){
+  var you = true; // it is your pick in this frame
+  el('otc').innerHTML='<div class="lab">On the clock · pick 3.05</div><b class="you">You</b><small>seat 5 · next pick 4.08 · 15 picks away</small>';
+  var s='';
+  for(var i=0;i<12;i++){var nm=SEATS[i],cls='seat'+(i<pickInRound-1?' done':'')+(i===YOU?' you':'')+(i===pickInRound-1?' on':'')+(HOUSE[nm]?' house':'');
+    s+='<div class="'+cls+'"><b>'+(i+1)+'</b><small>'+(HOUSE[nm]?'house':i===YOU?'you':'')+'</small></div>'}
+  el('seats').innerHTML=s;
+  el('snake').innerHTML='<span>ROUND '+round+' →</span><span>← ROUND '+(round+1)+' COMES BACK</span>';
+  var t='';for(i=0;i<picks.length;i++){var p=picks[i];t+='<div class="tk'+(p.s==='sportsvyn_og'?' you':'')+'"><small>'+p.p+' · '+(HOUSE[p.s]?p.s.toUpperCase():p.s)+'</small><b class="c-'+p.pos+'">'+p.n+'</b><i>'+p.pos.toUpperCase()+'</i></div>'}
+  t+='<div class="tk you"><small>3.05 · YOU</small><b>·&nbsp;·&nbsp;·</b><i>on the clock</i></div>';
+  el('tick').innerHTML=t;
+  var tabs=[['all','ALL'],['qb','QB'],['rb','RB'],['wr','WR'],['te','TE']],h='';
+  tabs.forEach(function(x){h+='<span class="tab'+(tab===x[0]?' on':'')+(x[0]==='rb'?' run':'')+'" data-tab="'+x[0]+'">'+x[1]+(x[0]==='rb'?' · run on':'')+'</span>'});
+  el('tabs').innerHTML=h;
+  var rows=POOL.filter(function(p){return tab==='all'||p.pos===tab}),r='',pickNo=(round-1)*12+pickInRound;
+  rows.forEach(function(p,i){
+    var d=p.adp-pickNo, adp=(d>=0?'+':'')+d;
+    r+='<div class="prow'+(p.gone?' gone':'')+(queue[p.n]?' qd':'')+'"'+(p.gone?'':' data-pick="'+p.n+'"')+'>'+
+      '<span class="rk">'+(i+1)+'</span><span class="pb '+p.pos+'">'+p.pos.toUpperCase()+'</span>'+
+      '<span class="who"><b>'+p.n+'</b><small'+(p.gone?' class="gone"':'')+'>'+p.tm+' · '+p.g+(p.gone?' · out of the pool':'')+'</small></span>'+
+      '<span class="adp'+(d>0?' v':'')+'">'+adp+'</span><span class="pts n">'+p.pts.toFixed(1)+'</span>'+
+      '<span class="star" data-q="'+p.n+'">'+(queue[p.n]?'★':'☆')+'</span></div>'});
+  el('pool').innerHTML=r; el('more').textContent=(96-27-rows.length)+' MORE · PPG SORTED · ADP FROM FFC';
+  var e='';for(i=0;i<8;i++){var m=mine[i];e+=m?'<div class="e f"><span class="r">'+m.r+'</span><b class="c-'+m.pos+'">'+m.n+'</b><small>'+m.pos.toUpperCase()+' · '+m.tm+'</small></div>':'<div class="e"><span class="r">R'+(i+1)+'</span></div>'}
+  el('eight').innerHTML=e; el('eightr').textContent=mine.length+' of 8';
+  var q=Object.keys(queue).filter(function(n){return !POOL.filter(function(p){return p.n===n})[0].gone})[0];
+  el('dbname').textContent=q||'best available';
+  el('clock').textContent=clock; el('clock').className='n'+(clock<=10?' hot':''); el('drain').style.width=(clock/30*100)+'%'; el('drain').className=clock<=10?'hot':'';
+}
+function take(name){
+  var p=POOL.filter(function(x){return x.n===name})[0]; if(!p||p.gone)return;
+  mine.push({r:'3.05',n:p.n,pos:p.pos,tm:p.tm}); p.gone=2; delete queue[p.n];
+  picks.push({s:'sportsvyn_og',p:'3.05',n:p.n,pos:p.pos});
+  clock=30; pickInRound=6; draw();
+  el('otc').innerHTML='<div class="lab">On the clock · pick 3.06</div><b>The Fade</b><small>house · never the consensus · you pick again at 4.08</small>';
+  var tk=el('tick'); tk.innerHTML=tk.innerHTML.replace(/<div class="tk you"><small>3\.05 · YOU<\/small><b>·[\s\S]*?<\/div>$/,'')+'<div class="tk"><small>3.06 · THE FADE</small><b>·&nbsp;·&nbsp;·</b><i>on the clock</i></div>';
+  el('draftbtn').className='btn ghost'; el('draftbtn').innerHTML='Waiting · 15 picks';
+  tk.scrollLeft=9999;
+}
+document.addEventListener('click',function(ev){var n=ev.target;
+  while(n&&n!==document.body){var d=n.dataset||{};
+    if(d.q){if(queue[d.q])delete queue[d.q];else queue[d.q]=1;draw();return}
+    if(d.tab){tab=d.tab;draw();return}
+    if(d.pick){take(d.pick);return}
+    if(n.id==='draftbtn'&&mine.length<3){take(el('dbname').textContent);return}
+    n=n.parentNode}});
+draw();
+setInterval(function(){if(mine.length<3&&clock>1){clock--;el('clock').textContent=clock;el('clock').className='n'+(clock<=10?' hot':'');el('drain').style.width=(clock/30*100)+'%';el('drain').className=clock<=10?'hot':''}},1000);
+</script>
+</body></html>
