@@ -123,6 +123,52 @@ const t = (c, s) => c.querySelector(s)?.textContent ?? null;
 const click = (n) => act(() => n.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })));
 
 // ---------------------------------------------------------------------------
+// THE WHOLE ROOM RENDERS - the guard a source-pin test cannot give you
+// ---------------------------------------------------------------------------
+
+test('THE BOARD PAGE RENDERS, WITH ITS GRID AND ITS CELLS', () => {
+  // WHY THIS EXISTS. A footer edit on this file once spliced at the first
+  // `</div></div>);}` and truncated four local components - TINTED, posClass,
+  // BoardGrid, BoardCell, StatStrip. `next build` compiled successfully,
+  // because an undefined identifier is a RUNTIME ReferenceError, and the
+  // fourteen files that read this component's source all passed. Mounting it
+  // is the only thing that catches that, so this asserts the Board page
+  // actually produces its grid rather than throwing on render.
+  const c = room({ initialPicks: [PICK(1, 1, 0, 'Bijan Robinson', 'RB')] });
+  const board = c.querySelector('.pg-board');
+  assert.ok(board, 'the Board page is in the pager');
+  const cells = board.querySelectorAll('.bcell, .bc, [class*="bcell"]');
+  assert.ok(board.textContent.includes('The Board'), 'and it is labelled');
+  // 12 seats x 8 rounds of cells, however the grid names them.
+  assert.ok(cells.length >= 96 || board.querySelectorAll('div').length >= 96,
+    `the grid rendered ${cells.length} cells / ${board.querySelectorAll('div').length} nodes`);
+  // The drafted player is on it. The cells carry the SURNAME - the grid is
+  // twelve columns wide on a phone - so this asserts what the cell shows.
+  assert.match(board.textContent, /Robinson/);
+  // And the 96 pick numbers are all there, snaked: row 2 runs 24 down to 13.
+  assert.match(board.textContent, /24·23·22·21·20·19·18·17·16·15·14·13/);
+});
+
+test('EVERY LOCAL COMPONENT THIS FILE REFERENCES IS DEFINED IN IT', () => {
+  // The static half of the same guard: a JSX tag that is neither imported nor
+  // defined compiles clean and throws on render.
+  const src = readFileSync(new URL('./DraftRoom.js', import.meta.url), 'utf8');
+  const imported = new Set([...src.matchAll(/^import\s+([A-Za-z0-9_$]+)|\{([^}]*)\}\s+from/gm)]
+    .flatMap((m) => (m[1] ? [m[1]] : (m[2] ?? '').split(',').map((x) => x.trim().split(' ')[0])))
+    .filter(Boolean));
+  const defined = new Set([...src.matchAll(/^(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z0-9_$]+)/gm)].map((m) => m[1]));
+  for (const m of src.matchAll(/^(?:export\s+)?const\s+([A-Za-z0-9_$]+)\s*=/gm)) defined.add(m[1]);
+  const used = new Set([...src.matchAll(/<([A-Z][A-Za-z0-9_$]*)/g)].map((m) => m[1]));
+  const orphans = [...used].filter((t) => !imported.has(t) && !defined.has(t) && t !== 'Fragment');
+  assert.deepEqual(orphans, [], `these JSX tags are neither imported nor defined: ${orphans.join(', ')}`);
+  // And the four that were truncated are named explicitly, so a future splice
+  // has to delete a named assertion rather than pass quietly.
+  for (const n of ['BoardGrid', 'BoardCell', 'StatStrip', 'posClass']) {
+    assert.ok(defined.has(n), `${n} is defined in this file`);
+  }
+});
+
+// ---------------------------------------------------------------------------
 // YOUR PICK
 // ---------------------------------------------------------------------------
 

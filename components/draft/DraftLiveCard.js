@@ -52,6 +52,13 @@ export default function DraftLiveCard({ card = null, roster = [], seatLine = nul
   const counting = card?.counting ?? rows.length;
   const started = card?.startedCount ?? 0;
   const live = rows.filter((r) => r.state?.kind === 'live').length;
+  // ONE CONDITION FOR EVERY CLAIM ABOUT THE BEST SIX, AND IT IS "SOMETHING HAS
+  // PLAYED". bestBall chooses six the moment a roster exists, and before the
+  // first kickoff it is choosing between eight zeros - so the tick, the strike
+  // and the outlined pips were all asserting a verdict nobody had reached yet,
+  // on a Wednesday. Membership is real only once there are points to rank, and
+  // until then the eight are eight.
+  const anyPlayed = started > 0;
 
   return (
     <div className="dvg">
@@ -67,7 +74,7 @@ export default function DraftLiveCard({ card = null, roster = [], seatLine = nul
             alone printed a 0 hero all week before the first kickoff. The
             gate is what has PLAYED, which is the rule every other surface
             follows. Caught by the served render, not by a test I wrote. */}
-        {card && started > 0 ? (
+        {card && anyPlayed ? (
           <div className="dvg-rec">
             <div>
               <span className="dvg-eb dvg-quiet">Your best six</span>
@@ -85,14 +92,15 @@ export default function DraftLiveCard({ card = null, roster = [], seatLine = nul
           {rows.map((r) => (
             <span
               key={r.key}
-              className={`dvg-pip${!r.counting ? ' drop' : r.state?.kind === 'final' ? ' done'
-                : r.state?.kind === 'live' ? ' live' : ' on'}`}
-              data-row-state={r.counting ? (r.state?.kind ?? 'pre') : 'dropped'}
+              className={`dvg-pip${anyPlayed && !r.counting ? ' drop'
+                : r.state?.kind === 'final' ? ' done'
+                  : r.state?.kind === 'live' ? ' live' : ' on'}`}
+              data-row-state={anyPlayed && !r.counting ? 'dropped' : (r.state?.kind ?? 'pre')}
             />
           ))}
         </div>
         <div className="dvg-sub">
-          <span>{counting} of {rows.length} count &middot; worst two dropped</span>
+          <span>{anyPlayed ? `${counting} of ${rows.length} count` : `${rows.length} picks in`} &middot; worst two dropped</span>
           <span>graded Tuesday</span>
         </div>
       </header>
@@ -124,14 +132,14 @@ export default function DraftLiveCard({ card = null, roster = [], seatLine = nul
       {/* ---- THE EIGHT ---------------------------------------------------- */}
       <div className="dvg-ros">
         {rows.map((r) => (
-          <div className={`dvg-rr${r.counting ? '' : ' drop'}${r.state?.kind === 'live' ? ' live' : ''}${r.state?.kind === 'final' ? ' fin' : ''}`}
+          <div className={`dvg-rr${anyPlayed && !r.counting ? ' drop' : ''}${r.state?.kind === 'live' ? ' live' : ''}${r.state?.kind === 'final' ? ' fin' : ''}`}
             key={r.key} data-game={r.state?.kind}>
             <span className="dvg-pb" data-pos={r.pos}>{r.pos}</span>
             <span className="dvg-who">
               {/* THE SIX THAT COUNT ARE MARKED, not merely the two that do
                   not. A reader should not have to infer membership from the
                   absence of dimming. */}
-              <b>{r.name}{r.counting && r.state ? <span className="dvg-count" title="counts toward the best six"> ✓</span> : null}</b>
+              <b>{r.name}{anyPlayed && r.counting ? <span className="dvg-count" title="counts toward the best six"> ✓</span> : null}</b>
               <small className={r.state?.kind === 'live' ? 'dvg-l' : undefined}>
                 R{r.round} &middot; {lineFor(r)}
               </small>

@@ -104,12 +104,60 @@ test('BEFORE ANYTHING KICKS OFF: eight rows, no hero, and no number invented', (
   // every pip reads "to come", and none is dropped: nothing has been decided
   assert.equal(c.querySelectorAll('.dvg-pip.on').length, 8);
   assert.equal(c.querySelectorAll('.dvg-pip.drop').length, 0);
-  assert.match(t(c, '.dvg-sub'), /8 of 8 count · worst two dropped/);
+  assert.match(t(c, '.dvg-sub'), /8 picks in · worst two dropped/,
+    'and it claims no verdict: nothing has played, so the six are not known');
 });
 
 // ---------------------------------------------------------------------------
 // IN FLIGHT
 // ---------------------------------------------------------------------------
+
+/**
+ * CONTEST 11 AS IT ACTUALLY STOOD, read off PROD on 17 Sep: eight picks, every
+ * game still scheduled, zero box-score rows for the week. draftLiveRows
+ * returns a real card for this - total 0, startedCount 0 - and bestBall has
+ * already "chosen" six out of eight zeros.
+ */
+function preKickoffCard() {
+  const base = card();
+  return {
+    ...base,
+    total: 0,
+    startedCount: 0,
+    counting: 6,
+    rows: base.rows.map((r, i) => ({
+      ...r, points: 0, counting: i < 6,
+      state: stSched(r.state?.opp ?? 'KC', true, future(6)),
+    })),
+  };
+}
+
+test('BEFORE THE FIRST KICKOFF: eight plain rows, eight volt pips, no ticks', () => {
+  // THE VERDICT IS NOT IN YET. bestBall picks six the moment a roster exists,
+  // and on a Wednesday it is ranking eight zeros - so a tick, a strike or an
+  // outlined pip would be asserting a result nobody has reached.
+  const c = render({ card: preKickoffCard() });
+  assert.equal(c.querySelectorAll('.dvg-count').length, 0, 'no counting ticks');
+  assert.equal(c.querySelectorAll('.dvg-rr.drop').length, 0, 'nothing struck');
+  assert.equal(c.querySelectorAll('.dvg-pip').length, 8);
+  assert.equal(c.querySelectorAll('.dvg-pip.on').length, 8, 'all eight read "to come"');
+  assert.equal(c.querySelectorAll('.dvg-pip.drop').length, 0);
+  assert.deepEqual([...c.querySelectorAll('.dvg-pip')].map((p) => p.getAttribute('data-row-state')),
+    Array.from({ length: 8 }, () => 'scheduled'));
+  assert.equal(c.querySelector('.dvg-rec'), null, 'and no hero');
+  // The sub row states the rule without claiming the six are known.
+  assert.match(c.querySelector('.dvg-sub').textContent, /8 picks in · worst two dropped/);
+  assert.doesNotMatch(c.querySelector('.dvg-sub').textContent, /6 of 8 count/);
+});
+
+test('ONCE A GAME HAS PLAYED: six ticks, two struck, two drop pips', () => {
+  const c = render();
+  assert.equal(c.querySelectorAll('.dvg-count').length, 6);
+  assert.equal(c.querySelectorAll('.dvg-rr.drop').length, 2);
+  assert.equal(c.querySelectorAll('.dvg-pip.drop').length, 2);
+  assert.match(c.querySelector('.dvg-sub').textContent, /6 of 8 count/);
+  assert.ok(c.querySelector('.dvg-rec'), 'and the hero is there');
+});
 
 test('A CARD WITH NOTHING STARTED SHOWS NO HERO EITHER - not a 0', () => {
   // draftLiveRows returns a card the moment a roster exists (total 0,
@@ -169,10 +217,11 @@ test('A BYE READS AS A BYE', () => {
 test('THE COUNTING SIX ARE MARKED, and the two that drop are struck and dimmed', () => {
   const c = render();
   const marked = rows(c).filter((r) => r.querySelector('.dvg-count') != null);
-  // ALL SIX, INCLUDING THE ONE WHO HAS NOT PLAYED YET. The tick is about
-  // membership in the best six AS OF NOW - which is what bestBall decided -
-  // and not about having a number yet. Puka Nacua counts on Sunday afternoon
-  // with a Monday kickoff ahead of him.
+  // ALL SIX, INCLUDING THE ONE WHO HAS NOT PLAYED YET - once ANY game has
+  // played. The tick is membership in the best six as of now, which is what
+  // bestBall decided; Puka Nacua counts on Sunday afternoon with a Monday
+  // kickoff ahead of him. Before the first kickoff there are no ticks at all,
+  // which is the test above.
   assert.equal(marked.length, 6, 'the counting six carry the tick');
   assert.ok(marked.some((r) => r.textContent.includes('Puka Nacua')),
     'a counting row whose game has not kicked off is still one of the six');
@@ -228,7 +277,12 @@ test('NO RANK CELL, NO FIELD BAR, NO ROOM TABLE this relay', () => {
 });
 
 test('THE CARD SCORES NOTHING - the guard, restated where it can be seen', () => {
-  const src = readFileSync(new URL('./DraftLiveCard.js', import.meta.url), 'utf8');
+  // COMMENTS STRIPPED FIRST: this file's prose explains that bestBall chose
+  // the six and that the card scores nothing, which is exactly the sentence a
+  // naive grep then trips on.
+  const src = readFileSync(new URL('./DraftLiveCard.js', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
   assert.doesNotMatch(src, /fantasyPoints|RECEPTION_PTS|recYds|rushTd/);
   assert.doesNotMatch(src, /bestBall/, 'bestBall chose the six; this draws them');
 });
