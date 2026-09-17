@@ -119,7 +119,7 @@ export default function TrackerRoom({
     summariesLoaded.current = true;
     let cancelled = false;
     (async () => {
-      const res = await fetchPlayerSummaries(initialAvailable.map((p) => p.ffcPlayerId), config.scoring_format);
+      const res = await fetchPlayerSummaries(draftId, initialAvailable.map((p) => p.ffcPlayerId), config.scoring_format);
       if (!cancelled && res.ok) setSummaries(res.summaries);
     })();
     return () => { cancelled = true; };

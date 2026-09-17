@@ -20,6 +20,8 @@ import {
 import { deleteAccountFor } from '@/lib/account';
 import { getPlayerSeasonStats, getPlayerSeasonSummaries } from '@/lib/fantasy/playerStats';
 import { getCollegeSeasonSummaries } from '@/lib/fantasy/collegeStats';
+import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
+import { sql } from '@/lib/db';
 
 async function currentUserId() {
   const session = await auth();
@@ -125,21 +127,52 @@ export async function setAutoDraft(draftId, on) {
   return res;
 }
 
+/**
+ * WHICH SEASON THIS ROOM'S NUMBERS MEAN.
+ *
+ * A RANKED ROOM TAKES ITS CONTEST'S SEASON. The room is a rehearsal for one
+ * week of one season, and the column has to be about the year being played -
+ * this is the whole reason `const SEASON_YEAR = 2025` had to go.
+ *
+ * A PRACTICE MOCK OR A TRACKER TAKES THE CURRENT REG SEASON, resolved by the
+ * same resolveSeasonYear every cron uses (July onward is the new season), so
+ * an untethered room is about today rather than about whenever a constant was
+ * last edited.
+ *
+ * SERVER-SIDE, FROM THE DRAFT ID. The client never sends a season: it would be
+ * a number a browser could choose, and a stat column is not a client's opinion.
+ */
+async function seasonForDraft(draftId) {
+  const id = Number(draftId);
+  if (Number.isFinite(id) && id > 0) {
+    const [row] = await sql`
+      SELECT c.season_year
+        FROM contest_entries e
+        JOIN contests c ON c.id = e.contest_id
+       WHERE (e.meta->>'draftId')::int = ${id}
+       LIMIT 1`.catch(() => []);
+    if (row?.season_year != null) return Number(row.season_year);
+  }
+  return resolveSeasonYear(new Date());
+}
+
 // Season stats for one pool player. Returns { ok: true, stats: null } today:
 // there are no NFL stat rows in DEV (see lib/fantasy/playerStats.js). The room
 // renders an honest empty state; the wiring is real so the backfill session only
 // has to fill in getPlayerSeasonStats.
-export async function fetchPlayerStats(ffcPlayerId) {
+export async function fetchPlayerStats(draftId, ffcPlayerId) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
-  return { ok: true, stats: await getPlayerSeasonStats(String(ffcPlayerId)) };
+  const season = await seasonForDraft(draftId);
+  return { ok: true, stats: await getPlayerSeasonStats(String(ffcPlayerId), season) };
 }
 
 // Season fantasy summaries for the collapsed rows' quick stats, batched (one
 // call for the whole visible list, never one per row). Returns {} today.
-export async function fetchPlayerSummaries(ffcPlayerIds, scoringFormat) {
+export async function fetchPlayerSummaries(draftId, ffcPlayerIds, scoringFormat) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const season = await seasonForDraft(draftId);
   const ids = (ffcPlayerIds ?? []).map(String);
   // TWO ROSTERS, ONE MAP. NFL identity resolves through
   // sim_player_pool.matched_player_id -> nfl_players; college identity cannot
@@ -148,7 +181,7 @@ export async function fetchPlayerSummaries(ffcPlayerIds, scoringFormat) {
   // instead. Each function ignores ids that are not its own, so the two never
   // write the same key and the merge order does not matter.
   const [nfl, college] = await Promise.all([
-    getPlayerSeasonSummaries(ids, scoringFormat),
+    getPlayerSeasonSummaries(ids, scoringFormat, season),
     getCollegeSeasonSummaries(ids, scoringFormat),
   ]);
   return { ok: true, summaries: { ...nfl, ...college } };
