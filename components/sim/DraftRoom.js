@@ -599,13 +599,15 @@ export default function DraftRoom({
               ADP from the {poolMapping.poolTeams}-team {SCORING_LABEL[poolMapping.poolScoring] ?? String(poolMapping.poolScoring).toUpperCase()} market pool
             </div>
           )}
-          {/* WHICH SNAPSHOT, ALWAYS. A ranked room reaches back for a snapshot
-              that can seat 96 picks, so "the ADP" is no longer self-evidently
-              today's - and a reader comparing two rooms deserves to know they
-              were priced on different days. */}
-          {poolMapping?.snapshotDate && (
-            <div className="board-note">ADP snapshot {poolMapping.snapshotDate}</div>
-          )}
+          {/* WHOSE BOARD, ALWAYS. On our own board the line names the board;
+              on FFC's it names the snapshot, because a ranked room reaches
+              back for one that can seat 96 picks and a reader comparing two
+              rooms deserves to know they were priced on different days. */}
+          {poolMapping?.boardLabel
+            ? <div className="board-note">{poolMapping.boardLabel}</div>
+            : poolMapping?.snapshotDate
+              ? <div className="board-note">ADP snapshot {poolMapping.snapshotDate}</div>
+              : null}
           <BoardGrid board={board} />
         </section>
 
@@ -620,7 +622,8 @@ export default function DraftRoom({
               self-evidently today's - and the counts are the real ones, which
               on 17 Sep is 78 rows, not the 96 the mock drew. */}
           <div className="plabel">
-            ADP{poolMapping?.snapshotDate ? ` · FFC snapshot ${poolMapping.snapshotDate}` : ''}
+            {poolMapping?.boardLabel
+              ?? `ADP${poolMapping?.snapshotDate ? ` · FFC snapshot ${poolMapping.snapshotDate}` : ''}`}
             {' · '}
             {shown.length > ROW_CAP ? `${ROW_CAP} of ${shown.length}` : shown.length}
             {withheld.length ? ` · ${withheld.length} out of the pool` : ''}
@@ -785,11 +788,13 @@ export default function DraftRoom({
                         <span className="ncols">
                           {/* PPG IS SEASON-STAMPED FOR A COLLEGE ROW, in the
                               title, because the number beside it on an NFL row
-                              is a different year: NFL PPG is 2025 REG and the
-                              college log ends at the 2025 season with 2026
-                              barely begun. Same house arithmetic either way -
-                              seasonSummary over a game log - so the scales are
-                              comparable and only the year differs.
+                              can be a different year: the NFL column is the
+                              season the room is playing (the server resolves
+                              it - see seasonForDraft), while the college log
+                              runs a season behind whenever the CFB corpus does.
+                              Same house arithmetic either way - seasonSummary
+                              over a game log - so the scales are comparable and
+                              only the year can differ.
                               AN UNRESOLVED PLAYER RENDERS NOTHING. Not a zero:
                               a Fantrax "Cook, Cameron" does not reach a CFBD
                               roster that says "Cam Cook", and 0.0 would read as
