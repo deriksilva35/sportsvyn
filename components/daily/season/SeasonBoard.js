@@ -654,21 +654,24 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
         <span className="sbd-n">1</span>
         <div className="sbd-t">
           <b>Open a team, take a player</b>
-          <p>Twelve team cards. Tap one and you are committed - you must take somebody from it, and then that team is spent.</p>
+          {/* THE RULE THIS CARD USED TO STATE IS GONE (v2.0). It read "tap one
+              and you are committed", which is no longer true and was the first
+              thing a player would have found out by tapping. */}
+          <p>Twelve team cards. Open any of them and look - a team is only spent once one of its players is on your board.</p>
         </div>
       </div>
       <div className="sbd-rl">
         <span className="sbd-n">2</span>
         <div className="sbd-t">
           <b>You choose the slot</b>
-          <p>Take a back and decide whether he fills RB or FLEX. The slot locks with the pick.</p>
+          <p>Take a back and decide whether he fills RB or FLEX. Tap a filled slot to clear it and get the team back.</p>
         </div>
       </div>
       <div className="sbd-rl">
         <span className="sbd-n">3</span>
         <div className="sbd-t">
           <b>{slotCount === 8 ? 'Eight' : slotCount} slots, {unused} team{unused === 1 ? '' : 's'} unused</b>
-          <p>Choosing which teams to skip is part of it. Scoring is season fantasy points, PPR.</p>
+          <p>QB, two RB, two WR, a TE, a FLEX and a kicker. Choosing which teams to skip is part of it, and scoring is season fantasy points, PPR.</p>
         </div>
       </div>
       <div className="sbd-rl">
