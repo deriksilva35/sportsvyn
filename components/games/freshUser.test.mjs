@@ -22,8 +22,13 @@ test('D12: the Weekly confirm card renders no lock instant - the header owns the
   assert.match(page, /\{beforeFirst \? 'first kickoff ' : 'locks '\}<StandaloneDate iso=\{beforeFirst \? firstKickoff : contest\.locks_at\} \/>/);
   // Per-slot times stay.
   assert.match(room, /\{isLocked \? 'Locked · ' : 'Locks '\}<StandaloneTime iso=\{p\.kickoff_at\} \/>/);
-  // The Pick'em card still hands ConfirmCard its first lock - only the Weekly dropped it.
-  assert.match(strip(src('components/pickem/PickemBoard.js')), /lockIso=\{locksAt\}/);
+  // THE PICK'EM RENDERS NO CARD AT ALL NOW (v2, R4): its confirm is the board's
+  // own footer button. D12's rule is about the WEEKLY's card, and it is
+  // unchanged; what the Pick'em must still do is name its next lock through an
+  // island rather than a formatted string, which it does in the header.
+  const board = strip(src('components/pickem/PickemBoard.js'));
+  assert.doesNotMatch(board, /<ConfirmCard/);
+  assert.match(board, /next lock <b>\{cd\}<\/b>/, 'the next lock is named, from the countdown');
 });
 
 test('D3: the Weekly beacon no longer bails without a handle, and a held write paints the slot', () => {
