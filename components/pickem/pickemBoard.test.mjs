@@ -70,30 +70,34 @@ function render(sport = 'nfl', g = game()) {
   })));
   return container;
 }
-const sides = (c) => [...c.querySelectorAll('.pk-side')];
-const byName = (c, n) => sides(c).find((b) => b.querySelector('.pk-nm')?.textContent === n);
+const sides = (c) => [...c.querySelectorAll('.pkv-side')];
+const byName = (c, n) => sides(c).find((b) => b.querySelector('.pkv-nm b')?.textContent === n);
 const click = (el) => act(async () => { el.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })); });
 
-test('1. one line under the header, the same words on both sports', () => {
+test('1. STRAIGHT UP IS SAID ONCE, in the step strip, on both sports', () => {
+  // v2 moved this sentence out of its own .pk-straight paragraph and into the
+  // step strip's one contextual line. The RULE is unchanged and is what this
+  // test protects: a board that shows a spread beside two buttons must say, in
+  // words, that the spread is not the bet.
   for (const sport of ['nfl', 'cfb']) {
     const c = render(sport);
-    const p = c.querySelector('.pk-straight');
-    assert.ok(p, `${sport}: the line exists`);
-    assert.equal(p.textContent, 'Pick the winner. Straight up. The line is for reference.');
-    assert.equal(c.querySelector('header.hdr').nextElementSibling, p, 'directly under the board header');
+    const note = c.querySelector('.pkv-note');
+    assert.ok(note, `${sport}: the line exists`);
+    assert.match(note.textContent, /straight up/i);
+    assert.match(note.textContent, /does not change the scoring/i);
+    assert.match(note.textContent, /locks at its own kickoff/i);
     act(() => { for (const r of roots) r.unmount(); }); roots.clear();
   }
 });
 
-test('2. the line sits BELOW both sides, muted mono, prefixed "line" - never in the kickoff row', () => {
+test('2. the line sits BELOW both sides - never in the kickoff row', () => {
   const c = render();
-  const line = c.querySelector('.pk-line'); assert.ok(line, 'the line renders pre-kick');
-  assert.match(line.textContent, /^line\s*Seahawks\s*−3$/u);
-  assert.equal(line.querySelector('.pk-line-k').textContent, 'line');
-  const sidesEl = c.querySelector('.pk-sides'); const eb = c.querySelector('.pk-eb');
+  const line = c.querySelector('.pkv-line'); assert.ok(line, 'the line renders pre-kick');
+  assert.match(line.textContent, /Seahawks\s*−3/u);
+  const sidesEl = c.querySelector('.pkv-sides'); const top = c.querySelector('.pkv-gtop');
   assert.ok(sidesEl.compareDocumentPosition(line) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING, 'after the sides');
-  assert.ok(!eb.contains(line), 'not in the eyebrow');
-  assert.doesNotMatch(eb.textContent, /[−+-]\s*\d/, 'the kickoff row carries no odds');
+  assert.ok(!top.contains(line), 'not in the kickoff row');
+  assert.doesNotMatch(top.textContent, /[−+-]\s*\d/, 'the kickoff row carries no odds');
   assert.equal(c.querySelector('.pk-spread'), null, 'the old chip is gone');
 });
 
@@ -101,16 +105,19 @@ test('3. a pick reads as a winner: volt stays, the other side goes muted, YOUR P
   const c = render();
   const sea = byName(c, 'Seahawks'), ne = byName(c, 'Patriots');
   assert.ok(sea && ne);
-  for (const b of [sea, ne]) { assert.doesNotMatch(b.textContent, /YOUR PICK/); assert.doesNotMatch(b.className, /\bdim\b|\bon\b/); }
+  // v2 marks the PICK rather than dimming the other side: a volt ring and a
+  // dot on the chosen one, nothing on the other. The rule kept here is that a
+  // pick is unmistakable and that no odds ever ride a tap target.
+  for (const b of [sea, ne]) { assert.doesNotMatch(b.className, /picked/); assert.equal(b.querySelector('.pkv-tick'), null); }
   await click(sea);
-  assert.match(sea.className, /\bon\b/, 'picked side keeps the volt fill');
-  assert.match(sea.textContent, /YOUR PICK/);
-  assert.match(ne.className, /\bdim\b/, 'the unpicked side drops to muted');
-  assert.doesNotMatch(ne.textContent, /YOUR PICK/);
+  assert.match(sea.className, /picked/, 'the picked side carries the volt ring');
+  assert.equal(sea.querySelector('.pkv-tick').textContent, '●');
+  assert.doesNotMatch(ne.className, /picked/);
+  assert.equal(ne.querySelector('.pkv-tick'), null);
   for (const b of sides(c)) {
     assert.doesNotMatch(b.textContent, /[−+-]\s*\d/, 'no odds anywhere on a button');
     assert.doesNotMatch(b.textContent, /\bline\b/i);
-    assert.equal(b.querySelector('.pk-line'), null);
+    assert.equal(b.querySelector('.pkv-line'), null);
   }
 });
 
@@ -143,39 +150,39 @@ const dressed = () => ({
   home_colors: { primary: '#002244', secondary: '#69BE28' }, away_colors: { primary: '#002244', secondary: '#C60C30' },
 });
 
-test('helmets: a dressed row draws two, facing each other; an undressed row draws none', () => {
+test('THE MARK: a dressed row draws two coloured, an undressed row draws two neutral', () => {
+  // v2 replaces the board's helmets with the mock's two-colour disc. Helmet
+  // itself is untouched and still dresses the game page. What carries over is
+  // the RULE the helmets established: BOTH OR NEITHER. One coloured mark beside
+  // one grey one reads as a favourite, which this board must never imply.
   const c = render('nfl', dressed());
-  const hm = [...c.querySelectorAll('.pk-hm')];
-  assert.equal(hm.length, 2);
-  const away = byName(c, 'Patriots'); const home = byName(c, 'Seahawks');
-  assert.equal(away.querySelector('.pk-hm').getAttribute('data-facing'), 'right', 'away looks right, toward the at');
-  assert.equal(home.querySelector('.pk-hm').getAttribute('data-facing'), 'left', 'home looks left');
-  for (const s of [away, home]) assert.equal(s.firstElementChild.classList.contains('pk-hm'), true, 'the helmet comes before the name');
-  assert.equal(home.querySelector('.pk-hm').nextElementSibling.classList.contains('pk-nmwrap'), true);
+  const marks = [...c.querySelectorAll('.pkv-mk')];
+  assert.equal(marks.length, 2);
+  assert.equal(marks.every((m) => /linear-gradient/.test(m.getAttribute('style') ?? '')), true, 'both dressed');
+  for (const s2 of sides(c)) assert.equal(s2.firstElementChild.classList.contains('pkv-mk'), true, 'the mark comes first');
   const bare = render('nfl', { ...game(), home_colors: null, away_colors: null });
-  assert.equal(bare.querySelectorAll('.pk-hm').length, 0, 'no colors, no helmet');
-  const half = render('nfl', { ...game(), home_colors: { primary: '#002244', secondary: null }, away_colors: null });
-  assert.equal(half.querySelectorAll('.pk-hm').length, 0, 'one color is not a dressed team');
+  assert.equal([...bare.querySelectorAll('.pkv-mk')].every((m) => !m.getAttribute('style')), true, 'no colours, two neutral marks');
+  assert.equal(bare.querySelectorAll('.pkv-mk').length, 2, 'the slot is always there - the layout does not move');
 });
 
-test('helmets: BOTH OR NEITHER - an FCS-at-FBS row draws none, an FBS-at-FBS row draws two', () => {
+test('THE MARK: BOTH OR NEITHER - an FCS-at-FBS row draws neither side coloured', () => {
   const famuAtMiami = { ...game(), slug: 'cfb-2026-reg-w2-florida-a-m-miami', home: 'Miami', away: 'Florida A&M', home_team_id: 2, away_team_id: 1,
     home_colors: { primary: '#F47321', secondary: '#005030' }, away_colors: null };
   const c1 = render('cfb', famuAtMiami);
-  assert.equal(c1.querySelectorAll('.pk-hm').length, 0, 'Miami is dressed, Florida A&M is not: neither side draws');
-  assert.equal(byName(c1, 'Miami').firstElementChild.classList.contains('pk-nmwrap'), true, 'the names align as before helmets');
+  assert.equal([...c1.querySelectorAll('.pkv-mk')].some((m) => m.getAttribute('style')), false,
+    'Miami is dressed and Florida A&M is not, so neither is coloured');
   const c2 = render('cfb', { ...famuAtMiami, away: 'Notre Dame', away_colors: { primary: '#0C2340', secondary: '#C99700' } });
-  assert.equal(c2.querySelectorAll('.pk-hm').length, 2, 'both dressed: two');
+  assert.equal([...c2.querySelectorAll('.pkv-mk')].every((m) => /linear-gradient/.test(m.getAttribute('style') ?? '')), true, 'both dressed: both coloured');
 });
 
-test('helmets: tapping a side that carries a helmet still saves the pick', async () => {
+test('THE MARK: tapping the mark still saves the pick', async () => {
   const { calls } = await stub(); const n = calls.length;
   const c = render('nfl', dressed());
-  await click(byName(c, 'Seahawks').querySelector('.pk-hm'));
+  await click(byName(c, 'Seahawks').querySelector('.pkv-mk'));
   assert.equal(calls.length, n + 1, 'one save');
   assert.match(JSON.stringify(calls[n]), /"home"/, 'the home side');
   assert.match(JSON.stringify(calls[n]), /20749/, 'this game');
-  assert.equal(byName(c, 'Seahawks').classList.contains('on'), true, 'and the side reads as picked');
+  assert.match(byName(c, 'Seahawks').className, /picked/, 'and the side reads as picked');
 });
 
 // ---------------------------------------------------------------------------
@@ -187,15 +194,17 @@ test('rolling lock: a kicked row is pk-locked with its kickoff where "at" was; t
   const kicked = { ...game(), match_id: 20749, kickoff_at: past, kicked: true, status: 'live', home_score: 3, away_score: 10 };
   const live = { ...game(), match_id: 20750, slug: 'nfl-2026-reg-w1-sf-lar', home: 'Rams', away: '49ers' };
   const c = renderMany('nfl', [kicked, live]);
-  const rows = [...c.querySelectorAll('.pk-game')];
+  const rows = [...c.querySelectorAll('.pkv-g')];
   assert.equal(rows.length, 2);
-  assert.equal(rows[0].classList.contains('pk-locked'), true);
-  assert.equal(rows[1].classList.contains('pk-locked'), false);
-  assert.notEqual(rows[0].querySelector('.pk-at').textContent.trim(), 'at', 'the kickoff time, not "at"');
-  assert.match(rows[0].querySelector('.pk-at').textContent, /\d/);
-  assert.equal(rows[1].querySelector('.pk-at').textContent.trim(), 'at');
-  assert.equal(rows[0].querySelectorAll('button.pk-side[disabled]').length, 2, 'both sides inert');
-  assert.equal(rows[1].querySelectorAll('button.pk-side:not([disabled])').length, 2, 'both sides live');
+  assert.match(rows[0].className, /locked/);
+  assert.doesNotMatch(rows[1].className, /locked/);
+  // v2 has no "at" connector between the sides; the kicked row says LIVE with
+  // its period where the kickoff time was, and the open row still says when it
+  // kicks. The rule tested is unchanged: a kicked row is inert, the next is not.
+  assert.match(rows[0].querySelector('.pkv-gtop').textContent, /LIVE|Q\d/);
+  assert.match(rows[1].querySelector('.pkv-gtop').textContent, /\d/, 'the open row shows its kickoff');
+  assert.equal(rows[0].querySelectorAll('button.pkv-side[disabled]').length, 2, 'both sides inert');
+  assert.equal(rows[1].querySelectorAll('button.pkv-side:not([disabled])').length, 2, 'both sides live');
 });
 
 // ---------------------------------------------------------------------------
@@ -221,24 +230,32 @@ function renderGate(games, { hasHandle = false } = {}) {
 const wait = (ms) => act(async () => { await new Promise((r) => setTimeout(r, ms)); });
 const rowOf = (c, matchId) => [...c.querySelectorAll('.pk-game')].find((r) => r.querySelector(`a[aria-label="Away${matchId - 30000} at Home${matchId - 30000} game page"]`) || r.textContent.includes(`Away${matchId - 30000}`));
 
-test('D4: 16 rows, 1 kicked, 15 picked -> the confirm card is present and counts the pickable', () => {
+test('D4: 16 rows, 1 kicked, 15 picked -> Lock it in is LIVE and counts the pickable', () => {
+  // v2 moves the confirm out of ConfirmCard and into the footer button. The
+  // fresh-user rule it protects is unchanged: a board with the Thursday game
+  // already played must still be confirmable.
   const c = renderGate(boardOf(16, { kicked: 1, picked: 15 }), { hasHandle: true });
-  const card = c.querySelector('.wk-review'); assert.ok(card, 'Lock it in is reachable with the Thursday game already played');
-  assert.match(card.querySelector('.wk-review-note').textContent, /^15 of 15 picked/);
-  assert.ok(card.querySelector('.wk-lockin'));
+  const btn = c.querySelector('.pkv-lock');
+  assert.ok(btn, 'the control exists');
+  assert.equal(btn.textContent, 'Lock it in');
+  assert.equal(btn.disabled, false);
+  assert.match(c.querySelector('.pkv-sub').textContent, /15 of 15 picked/);
 });
-test('D4: 16 rows, 1 kicked, 14 picked -> absent', () => {
+test('D4: 16 rows, 1 kicked, 14 picked -> the counter, not the confirm', () => {
   const c = renderGate(boardOf(16, { kicked: 1, picked: 14 }), { hasHandle: true });
-  assert.equal(c.querySelector('.wk-review'), null);
+  assert.equal(c.querySelector('.pkv-lock').textContent, '1 to go');
+  assert.equal(c.querySelector('.pkv-lock').disabled, true);
 });
-test('D4: 0 kicked, 16 picked -> present, "16 of 16 picked"', () => {
+test('D4: 0 kicked, 16 picked -> "Lock it in" and "16 of 16 picked"', () => {
   const c = renderGate(boardOf(16, { kicked: 0, picked: 16 }), { hasHandle: true });
-  assert.match(c.querySelector('.wk-review .wk-review-note').textContent, /^16 of 16 picked/);
+  assert.equal(c.querySelector('.pkv-lock').textContent, 'Lock it in');
+  assert.match(c.querySelector('.pkv-sub').textContent, /16 of 16 picked/);
 });
-test('D4: a pick on a kicked game does not count - 1 kicked-and-picked + 14 open picked -> absent', () => {
+test('D4: a pick on a kicked game does not count - 1 kicked-and-picked + 14 open picked -> still 1 to go', () => {
   const games = boardOf(16, { kicked: 1, picked: 14 }); games[0].my_side = 'home';
   const c = renderGate(games, { hasHandle: true });
-  assert.equal(c.querySelector('.wk-review'), null, 'the sealed pick is outside both numerator and denominator');
+  assert.equal(c.querySelector('.pkv-lock').textContent, '1 to go',
+    'the sealed pick is outside both numerator and denominator');
 });
 
 test('D3: Not now -> the row is pk-pending, the pick is retained on screen, nothing written; the row says why', async () => {
@@ -249,16 +266,16 @@ test('D3: Not now -> the row is pk-pending, the pick is retained on screen, noth
   const notNow = [...c.querySelectorAll('button')].find((b) => b.textContent === 'Not now');
   await click(notNow);
   assert.equal(c.querySelector('.onb-scrim'), null, 'modal closed');
-  const row = [...c.querySelectorAll('.pk-game')][0];
+  const row = [...c.querySelectorAll('.pkv-g')][0];
   assert.ok(row.classList.contains('pk-pending'), 'the row is marked pending');
-  assert.match(byName(c, 'Home0').className, /\bon\b/, 'the pick stays painted');
+  assert.match(byName(c, 'Home0').className, /picked/, 'the pick stays painted');
   assert.equal(row.querySelector('.pk-pending-lbl').textContent, 'Needs a handle');
   assert.equal(s.calls.length, 0, 'nothing reached the server');
   if (process.env.PICKEM_PASTE) console.log(`\nPASTE pending row after Not now:\n${row.outerHTML}\n`);
   // Tapping the pending row (either side is a write) re-opens the modal.
   await click(byName(c, 'Away0'));
   assert.ok(c.querySelector('.onb-scrim'), 'tapping the pending row re-opens the modal');
-  assert.equal(row.querySelectorAll('[onclick], button:not(.pk-side)').length, 0, 'the label is text, not a control');
+  assert.equal(row.querySelectorAll('[onclick], button:not(.pkv-side)').length, 0, 'the label is text, not a control');
 });
 
 test('D3: Claim -> the stashed pick replays; two stashed picks land in order', async () => {
@@ -268,7 +285,7 @@ test('D3: Claim -> the stashed pick replays; two stashed picks land in order', a
   await click([...c.querySelectorAll('button')].find((b) => b.textContent === 'Not now'));
   await click(byName(c, 'Away1'));
   assert.ok(c.querySelector('.onb-scrim'), 'the next write re-opens the modal');
-  assert.equal([...c.querySelectorAll('.pk-game.pk-pending')].length, 2, 'both rows pending');
+  assert.equal([...c.querySelectorAll('.pkv-g.pk-pending')].length, 2, 'both rows pending');
   assert.equal(s.calls.length, 0);
   // Claim through the real HandleClaim: type, wait for the availability check, tap Claim.
   const input = c.querySelector('.onb-scrim input[aria-label="Handle"]');
@@ -280,7 +297,7 @@ test('D3: Claim -> the stashed pick replays; two stashed picks land in order', a
   await click(claim); await wait(20);
   assert.equal(c.querySelector('.onb-scrim'), null, 'modal closed on claim');
   assert.deepEqual(s.calls.map((a) => [a[1], a[2]]), [[30000, 'home'], [30001, 'away']], 'replayed in order');
-  assert.equal(c.querySelectorAll('.pk-game.pk-pending').length, 0, 'nothing pending after the replay');
+  assert.equal(c.querySelectorAll('.pkv-g.pk-pending').length, 0, 'nothing pending after the replay');
   // and a later pick goes straight through
   await click(byName(c, 'Home2'));
   assert.equal(c.querySelector('.onb-scrim'), null, 'never asked twice');
@@ -288,39 +305,31 @@ test('D3: Claim -> the stashed pick replays; two stashed picks land in order', a
 });
 
 test('RIDER: one denominator - 16 rows, 2 kicked, 0 picked -> header "0 of 14", cap "0 of 14 picked", record "14 pending"', () => {
+  // ONE DENOMINATOR, and v2 has three places it must agree: the sub line, the
+  // counter, and the record's pending count.
   const c = renderGate(boardOf(16, { kicked: 2, picked: 0 }), { hasHandle: true });
-  assert.equal(c.querySelector('header.hdr .clock').textContent, '0 of 14');
-  assert.equal(c.querySelector('.prog .cap span').textContent, '0 of 14 picked');
-  assert.match(c.querySelector('.pk-record .pk-big').textContent, /14 pending/);
-  assert.equal(c.querySelector('.wk-review'), null, 'nothing picked, no card');
-  // and with all 14 open picked, the three read the same 14
+  assert.match(c.querySelector('.pkv-sub').textContent, /0 of 14 picked/);
+  assert.equal(c.querySelector('.pkv-lock').textContent, '14 to go');
+  assert.match(c.querySelector('.pkv-big').textContent, /14 pending/);
   const c2 = renderGate(boardOf(16, { kicked: 2, picked: 14 }), { hasHandle: true });
-  assert.equal(c2.querySelector('header.hdr .clock').textContent, '14 of 14');
-  assert.equal(c2.querySelector('.prog .cap span').textContent, '14 of 14 picked');
-  assert.match(c2.querySelector('.wk-review .wk-review-note').textContent, /^14 of 14 picked/);
+  assert.match(c2.querySelector('.pkv-sub').textContent, /14 of 14 picked/);
+  assert.equal(c2.querySelector('.pkv-lock').textContent, 'Lock it in');
 });
 
 // ---------------------------------------------------------------------------
 // TEAM ORDER relay: the league decides who goes first and what sits between.
 // ---------------------------------------------------------------------------
-test('TEAM ORDER: an NFL board reads away-first across "at"; a soccer board reads home-first across "v"', () => {
+test('TEAM ORDER: an NFL board reads away-first, a soccer board home-first', () => {
+  // v2 has no connector between the sides - the mock puts the two tap targets
+  // flush against each other - so the ORDER is the whole rule now, and
+  // orderFor() is still what decides it.
   const nfl = render('nfl');
-  assert.deepEqual(sides(nfl).map((b) => b.querySelector('.pk-nm').textContent), ['Patriots', 'Seahawks'], 'away then home');
-  assert.equal(nfl.querySelector('.pk-at').textContent, 'at');
+  assert.deepEqual(sides(nfl).map((b) => b.querySelector('.pkv-nm b').textContent), ['Patriots', 'Seahawks'], 'away then home');
   act(() => { for (const r of roots) r.unmount(); }); roots.clear();
   const cfb = render('cfb');
-  assert.deepEqual(sides(cfb).map((b) => b.querySelector('.pk-nm').textContent), ['Patriots', 'Seahawks']);
-  assert.equal(cfb.querySelector('.pk-at').textContent, 'at');
+  assert.deepEqual(sides(cfb).map((b) => b.querySelector('.pkv-nm b').textContent), ['Patriots', 'Seahawks']);
   act(() => { for (const r of roots) r.unmount(); }); roots.clear();
   // no soccer board exists yet; the rule is the rule when one does
   const epl = render('epl');
-  assert.deepEqual(sides(epl).map((b) => b.querySelector('.pk-nm').textContent), ['Seahawks', 'Patriots'], 'home then away');
-  assert.equal(epl.querySelector('.pk-at').textContent, 'v');
-  act(() => { for (const r of roots) r.unmount(); }); roots.clear();
-  // the helmets still face each other whichever way round the league reads:
-  // first row looks right, second looks left, so they meet over the connector
-  const dressedEpl = render('epl', dressed());
-  const hm = [...dressedEpl.querySelectorAll('.pk-hm')];
-  assert.deepEqual(hm.map((h) => h.getAttribute('data-facing')), ['right', 'left']);
-  assert.equal(byName(dressedEpl, 'Seahawks').querySelector('.pk-hm').getAttribute('data-facing'), 'right', 'the HOME side leads a soccer row and looks right');
+  assert.deepEqual(sides(epl).map((b) => b.querySelector('.pkv-nm b').textContent), ['Seahawks', 'Patriots'], 'home then away');
 });

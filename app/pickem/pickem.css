@@ -221,3 +221,169 @@
 .pk-sw small { font: 500 11px var(--font-mono); color: var(--muted-dim, #6E6E68); letter-spacing: 0; }
 .pk-sw.on { background: var(--volt); border-color: var(--volt); color: var(--ink); cursor: default; }
 .pk-sw.on small { color: var(--ink); opacity: .72; }
+
+/* ==========================================================================
+   PICK'EM v2 (docs/design/mocks/pickem-v2.html, fdd4fcc). The RESKIN: the
+   rolling lock, the scoring, the writers and the confirm semantics are all
+   unchanged - only what a reader sees is new. Classes are prefixed pkv- so
+   the settled grade screen and the preopen card keep their own pk- rules
+   untouched.
+   ========================================================================== */
+
+/* the header: record, season, pips */
+.pkv-hd { padding: 12px 14px 11px; border-bottom: 1px solid var(--line, #2a2a2a); }
+.pkv-hd-top { display: flex; align-items: center; margin-bottom: 9px; }
+.pkv-eb {
+  color: var(--volt); font: 700 10px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.pkv-eb.pkv-quiet { color: var(--muted-dim, #6e6e68); display: block; margin-bottom: 2px; }
+.pkv-ed {
+  margin-left: auto; color: var(--muted-dim, #6e6e68);
+  font: 600 9px var(--font-mono, ui-monospace, monospace);
+}
+.pkv-rec { display: flex; align-items: flex-end; gap: 12px; }
+.pkv-big { font: 800 40px var(--font-mono, ui-monospace, monospace); letter-spacing: -0.03em; line-height: 0.9; }
+.pkv-big small { font: 700 15px var(--font-mono, ui-monospace, monospace); color: var(--muted-dim, #6e6e68); margin-left: 3px; }
+.pkv-rt { margin-left: auto; text-align: right; }
+.pkv-rt b { display: block; font: 800 26px var(--font-mono, ui-monospace, monospace); letter-spacing: -0.03em; line-height: 1; color: var(--volt); }
+.pkv-rt span { font: 600 9px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.11em; color: var(--muted-dim, #6e6e68); text-transform: uppercase; }
+/* ONE PIP A GAME, WRAPPING - a 22-game CFB board wraps to two rows without a
+   second rule, which is why flex-wrap is here rather than a fixed grid. */
+.pkv-pips { display: flex; gap: 3px; margin-top: 10px; flex-wrap: wrap; }
+.pkv-pip {
+  flex: 1 0 12px; height: 4px; border-radius: 99px;
+  background: var(--ink-3, #1c1c1c); border: 1px solid var(--line, #2a2a2a);
+}
+.pkv-pip.on { background: var(--volt); border-color: var(--volt); }
+.pkv-pip.w { background: var(--jade, #2a8a4f); border-color: var(--jade, #2a8a4f); }
+.pkv-pip.l { background: var(--terra, #b8410f); border-color: var(--terra, #b8410f); }
+/* A KICKED GAME NOBODY PICKED reads as spent, not as available. */
+.pkv-pip.none { border-style: dashed; opacity: 0.5; }
+.pkv-sub {
+  display: flex; justify-content: space-between; margin-top: 7px;
+  font: 500 10px var(--font-mono, ui-monospace, monospace); color: var(--muted);
+}
+
+/* the step strip */
+.pkv-steps {
+  margin: 10px 0 0; border: 1px solid var(--line, #2a2a2a); border-radius: 12px;
+  background: var(--ink-2, #141414); padding: 9px 11px 10px;
+}
+.pkv-strip { display: flex; align-items: center; gap: 6px; }
+.pkv-stpwrap { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; }
+.pkv-stpwrap:last-child { flex: 0 0 auto; }
+.pkv-stp { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.pkv-stp i {
+  width: 17px; height: 17px; border-radius: 50%; border: 1px solid var(--line, #2a2a2a);
+  color: var(--muted-dim, #6e6e68); font: 700 9px/15px var(--font-mono, ui-monospace, monospace);
+  text-align: center; font-style: normal;
+}
+.pkv-stp b {
+  font: 700 9px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.12em;
+  color: var(--muted-dim, #6e6e68); text-transform: uppercase;
+}
+.pkv-stp.on i { border-color: var(--volt); background: var(--volt); color: var(--ink, #0a0a0a); }
+.pkv-stp.on b { color: var(--volt); }
+.pkv-stp.done i { border-color: var(--jade, #2a8a4f); color: var(--jade, #2a8a4f); }
+.pkv-stp.done b { color: var(--muted); }
+.pkv-arw { flex: 1; height: 1px; background: var(--line, #2a2a2a); }
+.pkv-note { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.pkv-note b { color: var(--paper); font-weight: 600; }
+
+/* the day group */
+.pkv-dh { display: flex; align-items: baseline; justify-content: space-between; margin: 14px 0 6px; }
+.pkv-dh h3 { font: 700 13px var(--font-saira-cond, sans-serif); text-transform: uppercase; letter-spacing: 0.03em; }
+.pkv-dh span { color: var(--muted-dim, #6e6e68); font: 600 9px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.06em; }
+.pkv-dh.locked h3 { color: var(--muted-dim, #6e6e68); }
+
+/* the game */
+.pkv-games { display: grid; gap: 7px; }
+.pkv-g { border: 1px solid var(--line, #2a2a2a); border-radius: 12px; background: var(--ink-2, #141414); overflow: hidden; }
+.pkv-g.locked { opacity: 0.55; }
+/* THE LIVE RULE - a red top edge, so a live game reads at a glance without a
+   badge competing with the pick state on the sides. */
+.pkv-g.live { box-shadow: inset 0 2px 0 var(--live, #e63946); opacity: 1; }
+.pkv-gtop {
+  display: flex; align-items: center; gap: 6px; padding: 6px 10px 5px;
+  font: 600 9px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.07em;
+  color: var(--muted-dim, #6e6e68); text-transform: uppercase;
+}
+.pkv-l { color: var(--live, #e63946); display: flex; align-items: center; gap: 4px; }
+.pkv-l::before { content: ''; width: 5px; height: 5px; border-radius: 99px; background: var(--live, #e63946); }
+.pkv-gtopr { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.pkv-gamelink { color: var(--muted-dim, #6e6e68); text-decoration: none; }
+.pkv-gamelink:hover { color: var(--paper); text-decoration: underline; }
+.pkv-net { color: var(--muted-dim, #6e6e68); }
+
+.pkv-sides { display: flex; gap: 1px; background: var(--line, #2a2a2a); }
+.pkv-side {
+  flex: 1; background: var(--ink-2, #141414); padding: 9px 8px; display: flex;
+  align-items: center; gap: 8px; position: relative; min-height: 56px;
+  color: var(--paper); text-align: left; border: 0; text-decoration: none;
+}
+.pkv-side:disabled { cursor: default; }
+.pkv-mk {
+  width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line, #2a2a2a);
+  flex: 0 0 auto; background: var(--ink-3, #1c1c1c);
+}
+.pkv-nm { min-width: 0; }
+.pkv-nm b {
+  display: block; font: 700 13px var(--font-saira-cond, sans-serif); text-transform: uppercase;
+  letter-spacing: 0.01em; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pkv-nm small {
+  display: block; color: var(--muted-dim, #6e6e68);
+  font: 500 9px var(--font-mono, ui-monospace, monospace); margin-top: 1px;
+}
+.pkv-sc { margin-left: auto; font: 700 19px var(--font-mono, ui-monospace, monospace); color: var(--muted); }
+.pkv-side.picked { background: rgba(212, 255, 0, 0.1); box-shadow: inset 0 0 0 1.5px var(--volt); }
+.pkv-side.picked .pkv-nm b { color: var(--volt); }
+.pkv-side.won { background: rgba(42, 138, 79, 0.14); box-shadow: inset 0 0 0 1.5px var(--jade, #2a8a4f); }
+.pkv-side.won .pkv-nm b { color: var(--jade, #2a8a4f); }
+.pkv-side.lost { background: rgba(184, 65, 15, 0.12); box-shadow: inset 0 0 0 1.5px var(--terra, #b8410f); }
+.pkv-side.lost .pkv-nm b { color: var(--terra, #b8410f); }
+.pkv-tick { position: absolute; top: 4px; right: 6px; font: 700 11px var(--font-mono, ui-monospace, monospace); }
+.pkv-tick.w { color: var(--jade, #2a8a4f); }
+.pkv-tick.l { color: var(--terra, #b8410f); }
+.pkv-tick.p { color: var(--volt); }
+
+.pkv-gfoot {
+  display: flex; align-items: center; gap: 8px; padding: 6px 10px 7px;
+  border-top: 1px solid var(--line, #2a2a2a);
+  font: 500 10px var(--font-mono, ui-monospace, monospace); color: var(--muted-dim, #6e6e68);
+}
+.pkv-pick { margin-left: auto; font-weight: 700; }
+.pkv-pick.j { color: var(--jade, #2a8a4f); }
+.pkv-pick.t { color: var(--terra, #b8410f); }
+.pkv-pick.v { color: var(--volt); }
+.pkv-pick.pkv-nopick { color: var(--muted-dim, #6e6e68); font-weight: 500; }
+
+/* the footer: a counter until it is a confirm */
+.pkv-ft {
+  border-top: 1px solid var(--line, #2a2a2a); margin-top: 13px; padding: 11px 0;
+  display: flex; align-items: center; gap: 10px;
+}
+.pkv-pace { font: 500 11px var(--font-mono, ui-monospace, monospace); color: var(--muted); line-height: 1.3; }
+.pkv-pace b { color: var(--paper); font-weight: 700; }
+.pkv-lock {
+  margin-left: auto; background: var(--volt); color: var(--ink, #0a0a0a); border: 0;
+  border-radius: 99px; padding: 10px 18px; font-weight: 700; font-size: 14px;
+}
+.pkv-lock:disabled { background: var(--ink-3, #1c1c1c); color: var(--muted-dim, #6e6e68); }
+
+/* THE SPORT SWITCH, RESTYLED IN PLACE (ruling d). Same component, same props,
+   same routing - two cards instead of two pills. */
+.pk-switch { display: flex; gap: 6px; margin: 11px 0 0; }
+.pk-sw {
+  flex: 1; border: 1px solid var(--line, #2a2a2a); border-radius: 10px; padding: 7px 8px;
+  text-align: center; background: var(--ink-2, #141414); color: var(--paper);
+  text-decoration: none; display: block; font: 700 12px var(--font-saira-cond, sans-serif);
+  letter-spacing: 0.04em;
+}
+.pk-sw small {
+  display: block; font: 500 9px var(--font-mono, ui-monospace, monospace);
+  color: var(--muted-dim, #6e6e68); margin-top: 2px; letter-spacing: 0;
+}
+.pk-sw.on { border-color: var(--volt); background: rgba(212, 255, 0, 0.06); color: var(--volt); cursor: default; }
+.pk-sw.on small { color: var(--muted-dim, #6e6e68); }

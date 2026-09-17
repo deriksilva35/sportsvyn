@@ -9,7 +9,6 @@
 // against the snapshot kickoff (lib/pickem/entry); a stale client that taps
 // a just-kicked game gets 'game_locked' back and the row seals itself.
 
-import Helmet from '@/components/team/Helmet';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { spreadParts } from '@/lib/standings/view';
@@ -17,15 +16,18 @@ import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { recordLine } from '@/lib/pickem/recordLine';
 import { savePickAction } from '@/app/actions/pickem';
 import { useHandleGate } from '@/components/handle/HandleGate';
-import { orderFor, connectorFor } from '@/lib/gridiron/teamOrder';
+import { orderFor } from '@/lib/gridiron/teamOrder';
 import { confirmPickemEntry } from '@/app/actions/confirm';
-import StandaloneDate from '@/components/StandaloneDate';
 import StandaloneTime from '@/components/StandaloneTime';
-import ConfirmCard from '@/components/games/ConfirmCard';
 
 // Where a board game's "Game" affordance points. Keyed by the contest's own
 // sport so a future NFL board cannot silently link college routes.
 const GAME_ROUTE = { cfb: '/cfb/game', nfl: '/nfl/game' };
+
+// THE STEP STRIP'S THREE STEPS (v2 mock). Contextual, not static help: which
+// one is lit follows the board's own state, and the line under it says when a
+// pick stops being editable.
+const STEP_NAMES = ['Pick', 'Fill the board', 'Locked in'];
 
 // THESE TWO ARE A GROUPING KEY, NOT A CLOCK (relay 3b item 2). The slate's
 // sections are the NFL/CFB week's own ET calendar days - which games belong
@@ -96,6 +98,10 @@ function pipRows(games) {
 
 export default function PickemBoard({
   view, signedIn, signinHref, hasHandle = true, initialConfirmedAt = null, locksAt = null, sportSwitch = null,
+  // THE SEASON LINE, or null. Computed on the server by lib/pickem/seasonPct.js
+  // from the same table the lobby ranks with; null for a reader with no
+  // settled board, and then the header simply has no season on it.
+  season = null,
 }) {
   const { guard, modal: handleModal, pending: heldRows } = useHandleGate(hasHandle);
   // CONFIRM AND RECEIPT (relay 3 item 3), the Weekly's own model: picks
@@ -181,253 +187,244 @@ export default function PickemBoard({
     if (r?.ok) setConfirmedAt(r.confirmedAt);
   }
 
+  // ---- THE v2 BOARD, per docs/design/mocks/pickem-v2.html (fdd4fcc) --------
+  // Record and pips in the header, the sport switch as two cards, the step
+  // strip with one contextual line, games grouped by day with an open count,
+  // two large tap targets a game, the line and the network in the foot, and a
+  // footer that is a COUNTER until every open game is picked.
+  const toGo = pickable - pickedOpen;
+  // THE DENOMINATOR IS PICKABLE ROWS ONLY (the fresh-user rider). A game that
+  // has already kicked with no pick on it is neither "to go" nor a reason the
+  // board cannot be locked in - it is simply gone, and it scores nothing.
+  const stage = pickable === 0 ? 3 : toGo === 0 ? 3 : pickedOpen > 0 ? 2 : 1;
+  const canConfirm = signedIn && pickable > 0 && toGo === 0;
+
   return (
     <>
       {handleModal}
-      {/* THE HEADER (relay 2a item 8, week fixed in 2a-polish item 3) -
-          replaces the old .pk-hero/h1/.pk-ctx. The display week only
-          appears when one exists (the AP poll's current week for CFB) -
-          contest.week itself is an internal board-sequencing number, never
-          shown here. */}
-      <header className="hdr">
-        <span className="ed">
-          Pick&rsquo;em &middot; Board {contest.boardNumber ?? ''} &middot; {contest.sport.toUpperCase()}
-          {contest.displayWeek != null && <> Week {contest.displayWeek}</>}
-        </span>
-        <span className="clock">{pickedOpen} of {pickable}</span>
-      </header>
-      {/* THE SECOND DOOR, directly under this board's own clock: the other
-          board's state without leaving this one (SPORT SWITCH addendum). */}
-      {sportSwitch}
-      {/* STRAIGHT UP, SAID ONCE. The line below each game is reference, not
-          the bet - a board that shows a spread beside two buttons reads as
-          against-the-spread to anyone fluent, which this game is not. */}
-      <p className="pk-straight">Pick the winner. Straight up. The line is for reference.</p>
 
-      {anyKicked && (
-        <section className="pk-record">
-          <div className="pk-eb">Your board {nextKick == null ? '· locked' : ''}</div>
-          <div className="pk-big">{wins}-{losses} <small>&middot; {pending} pending</small></div>
-        </section>
-      )}
-
-      {/* THE TINY PIP ROW (relay 2a item 8, split fixed in 2a-polish item 3) -
-          one per game, checked when picked, dashed border once its own
-          kickoff has passed. Replaces the old linear .pk-progress bar. */}
-      <div className="prog">
-        {pipRows(games).map((row, i) => (
-          <div className="rrow" key={i}>
-            {row.map((g) => (
-              <div key={g.match_id} className={`pip tiny${g.my_side != null ? ' full' : ''}${g.kicked ? ' lock' : ''}`}>
-                <span className="dot">{g.my_side != null ? '✓' : '·'}</span>
-              </div>
-            ))}
+      <header className="pkv-hd">
+        <div className="pkv-hd-top">
+          <span className="pkv-eb">Pick&rsquo;em</span>
+          <span className="pkv-ed">
+            Board {contest.boardNumber ?? ''} &middot; {contest.sport.toUpperCase()}
+            {contest.displayWeek != null && <> Week {contest.displayWeek}</>}
+          </span>
+        </div>
+        <div className="pkv-rec">
+          <div>
+            <div className="pkv-eb pkv-quiet">Your board {nextKick == null ? '· locked' : ''}</div>
+            {/* W-L AND PENDING, the same three numbers the old .pk-record
+                block carried - recordOf's own arithmetic, not a second count. */}
+            <div className="pkv-big n">
+              {wins}-{losses}<small className="n"> &middot; {pending} pending</small>
+            </div>
           </div>
-        ))}
-        <div className="cap">
+          {/* THE SEASON AVERAGE, or nothing at all. A reader with no settled
+              board has no season, and an invented .000 would read as a record
+              of failure rather than an absence of one. */}
+          {season ? (
+            <div className="pkv-rt">
+              <b className="n">{season.avg}</b>
+              <span>Season</span>
+            </div>
+          ) : null}
+        </div>
+        <div className="pkv-pips">
+          {games.map((g) => {
+            const cls = g.graded === 'W' ? ' w' : g.graded === 'L' ? ' l' : g.my_side != null ? ' on' : '';
+            const title = `${g.away} at ${g.home}`;
+            return <span key={g.match_id} className={`pkv-pip${cls}${g.kicked && g.my_side == null ? ' none' : ''}`} title={title} />;
+          })}
+        </div>
+        <div className="pkv-sub">
           <span>{pickedOpen} of {pickable} picked</span>
           {cd && <span>next lock <b>{cd}</b></span>}
         </div>
+      </header>
+
+      {sportSwitch}
+
+      <div className="pkv-steps">
+        <div className="pkv-strip">
+          {STEP_NAMES.map((name, i) => {
+            const cls = i + 1 === stage ? 'on' : (i + 1 < stage ? 'done' : '');
+            return (
+              <span key={name} className="pkv-stpwrap">
+                <span className={`pkv-stp ${cls}`}>
+                  <i>{cls === 'done' ? '✓' : i + 1}</i>
+                  <b>{name}</b>
+                </span>
+                {i < STEP_NAMES.length - 1 ? <span className="pkv-arw" /> : null}
+              </span>
+            );
+          })}
+        </div>
+        {/* ONE LINE, AND IT SAYS WHEN A PICK STOPS BEING EDITABLE. The mock's
+            copy, with its em dash written as a hyphen per the house rule. */}
+        <p className="pkv-note">
+          {stage === 1 ? (
+            <>Pick the <b>winner</b> of every game, straight up. The line is shown for reference and does not change the scoring. Each game locks at its own kickoff.</>
+          ) : stage === 2 ? (
+            <><b>{toGo} still open.</b> Tap a side to change a pick any time before that game kicks off. A game you never picked scores nothing.</>
+          ) : (
+            <>Every open game is picked. Keep changing them right up to each kickoff - <b>nothing is final until the game starts</b>.</>
+          )}
+        </p>
       </div>
 
       {lockedMsg && <p className="pk-lockedmsg">{lockedMsg}</p>}
 
-      {dayGroups.map((group) => (
-        <div key={group.key}>
-          {/* THE DAY GROUP HEADER (relay 2a item 8) - '{Day} · {n} games',
-              'lock {local}' when every game in the group shares one kickoff,
-              'lock per game' otherwise (the common case past Thursday). */}
-          <div className="secl">
-            <b>{group.label} &middot; {group.games.length} game{group.games.length === 1 ? '' : 's'}</b>
-            <span>{group.sameLock ? <>lock <StandaloneDate iso={group.lockAt} /></> : 'lock per game'}</span>
-          </div>
-          {group.games.map((g) => {
-        const kickedAtMs = new Date(g.kickoff_at).getTime() <= now;
-        // NO DAY LABEL INSIDE A ROW (2a-polish item 3) - the group header
-        // above already names the day; a row only speaks up here for a real
-        // in-progress fact, live or final.
-        const eyebrowLeft = g.status === 'final' ? 'Final'
-          : g.status === 'live' ? '● Live'
-            : null;
-        // KICKOFF IN THE VIEWER'S OWN ZONE (relay 3b item 2), like the
-        // group header's lock time directly above it. This cell used to
-        // print a hardcoded " ET" while that header printed PDT, so a
-        // California reader saw two clocks three hours apart on one board.
-        const eyebrowRight = g.status === 'final' || g.status === 'live'
-          ? (g.home_score != null ? `${g.away_score}-${g.home_score}` : '')
-          : <StandaloneTime iso={g.kickoff_at} />;
-        const held = heldRows.has(g.match_id);
+      {dayGroups.map((group) => {
+        const openInGroup = group.games.filter((g) => !g.kicked).length;
         return (
-          <div className={`pk-game${g.kicked || kickedAtMs ? ' pk-locked' : ''}${held ? ' pk-pending' : ''}`} key={g.match_id}>
-            {/* THE LINK LIVES IN THE HEADER, NEVER AROUND THE PICKS.
-                .pk-eb and .pk-sides are SIBLINGS - the anchor is not an
-                ancestor of the pick buttons, so a pick tap has no anchor to
-                navigate; and nothing on .pk-game or .pk-eb carries an onClick,
-                so the link's own tap has no handler to bubble into. The
-                separation is structural, not a z-index or a stopPropagation
-                that the next edit could undo. The 9px .pk-eb margin-bottom
-                keeps the two tap targets physically apart as well.
-                NO 'GAME ->' PILL (2a-polish item 3): the mono readout itself -
-                the kickoff time pre-kickoff, the score once live or final -
-                IS the link now, so there is no separate label left to cut.
-                It stays in the eyebrow rather than moving into a .pk-side:
-                that side is a <button> carrying the pick's own onClick, and
-                an anchor nested inside it would either be swallowed by the
-                pick tap or fire both - the exact hazard the test below pins
-                against, for the label this replaces as much as the old one. */}
-            <div className={`pk-eb${g.status === 'live' ? ' live' : ''}`}>
-              {/* A HELD PICK SAYS SO HERE, as text, not a control: the pick
-                  buttons stay the row's only click handler (SURFACE 4), and
-                  tapping either side of a pending row IS a write, which
-                  re-opens the modal. */}
-              <span>{held ? <span className="pk-pending-lbl">Needs a handle</span> : eyebrowLeft}</span>
-              <span className="pk-ebr">
-                {gameHref(contest, g) ? (
-                  <Link
-                    className="pk-gamelink"
-                    href={gameHref(contest, g)}
-                    aria-label={`${g.away} at ${g.home} game page`}
-                  >
-                    {eyebrowRight}
-                  </Link>
-                ) : (
-                  <span className="pk-mono">{eyebrowRight}</span>
-                )}
-              </span>
+          <div key={group.key}>
+            <div className={`pkv-dh${openInGroup ? '' : ' locked'}`}>
+              <h3>{group.label}</h3>
+              <span>{openInGroup ? `${openInGroup} still open` : 'all locked'}</span>
             </div>
-            <div className="pk-sides">
-              {/* League order and the word between the sides are one rule,
-                  lib/gridiron/teamOrder.js - away-first and "at" for
-                  gridiron, home-first and "v" for soccer. */}
-              {orderFor(contest?.sport).map((side, i) => {
-                const name = side === 'home' ? g.home : g.away;
-                const isMine = g.my_side === side;
-                let cls = 'pk-side';
-                if (!g.kicked && !kickedAtMs) {
-                  // A PICK IS A WINNER, NOT A BET: the chosen side keeps the
-                  // volt fill and carries YOUR PICK; the other side drops to
-                  // muted so the pair reads as decided, not as two prices.
-                  if (isMine) cls += ' on';
-                  else if (g.my_side != null) cls += ' dim';
-                } else if (isMine) {
-                  cls += g.graded === 'W' ? ' win' : g.graded === 'L' ? ' loss' : ' pick';
-                } else {
-                  cls += ' dim';
-                }
-                // A KICKED GAME DISABLES BOTH SIDES FOR EVERYONE - there is no
-                // pick left to make, signed in or not, so it is never a
-                // sign-in prompt. SIGNED OUT AND NOT YET KICKED IS THE ONE
-                // CASE THAT ROUTES: the side becomes a real link to sign-in
-                // with a return URL (2a-polish item 1), not a disabled
-                // button pretending the pick does not exist.
-                const lockedByKickoff = g.kicked || kickedAtMs;
-                const rank = side === 'home' ? g.home_rank : g.away_rank;
-                const record = side === 'home' ? g.home_record : g.away_record;
-                // BOTH OR NEITHER. A two-sided row with one helmet reads as
-                // a mistake, not a fact, and the names stop aligning. An
-                // FCS-at-FBS game draws no helmet on either side; the score
-                // card's stacked lines stay per team.
-                const dressed = Boolean(g.home_colors && g.away_colors);
-                const colors = dressed ? (side === 'home' ? g.home_colors : g.away_colors) : null;
-                const content = (
-                  <>
-                    {/* THE HELMETS FACE EACH OTHER across the "at": away
-                        looks right, home looks left. .pk-nmwrap stacks the
-                        name over the record, so the helmet sits beside the
-                        stack, before the name. None without colors. */}
-                    {/* THE HELMETS FACE EACH OTHER by POSITION, not by side:
-                        the first row looks right, the second looks left, so they
-                        meet over the connector whichever order the league takes. */}
-                    <Helmet primary={colors?.primary} secondary={colors?.secondary} facing={i === 0 ? 'right' : 'left'} size={24} className="pk-hm" />
-                    <span className="pk-nmwrap">
-                      <span className="pk-nm">{name}</span>
-                      {/* THE JOIN IS BY TEAM ID (lib/pickem/entry.js's
-                          recordMapFor), never by name - two "State" schools
-                          never collide. An absent row is a stated '-', never
-                          a hidden line. */}
-                      <small className="pk-rec">{recordLine(rank, record)}</small>
-                    </span>
-                    {!lockedByKickoff && (isMine
-                      ? <span className="pk-tag pk-yourpick">YOUR PICK</span>
-                      : <span className="pk-tag">{side.toUpperCase()}</span>)}
-                    {isMine && g.graded === 'W' && <span className="pk-res w">W</span>}
-                    {isMine && g.graded === 'L' && <span className="pk-res l">L</span>}
-                    {isMine && g.status === 'live' && <span className="pk-res live">LIVE</span>}
-                  </>
-                );
+            <div className="pkv-games">
+              {group.games.map((g) => {
+                const held = heldRows?.has?.(g.match_id);
+                const locked = g.kicked;
+                const live = g.status === 'live';
+                const showScores = g.status !== 'scheduled';
                 return (
-                  <>
-                    {/* THE MOCK'S "at" (2a-polish item 3) - the two sides
-                        read as one sentence, "Away at Home". */}
-                    {/* A LOCKED ROW SAYS WHEN IT LOCKED where "at" was (rolling
-                        lock): the kickoff time in the pk-at slot, no other copy. */}
-                    {i === 1 && <div className="pk-at" key="at">{g.kicked || kickedAtMs ? <StandaloneTime iso={g.kickoff_at} /> : connectorFor(contest?.sport)}</div>}
-                    {!signedIn && !lockedByKickoff ? (
-                      <a key={side} className={cls} href={signinHref}>{content}</a>
-                    ) : (
-                      <button
-                        key={side}
-                        type="button"
-                        className={cls}
-                        disabled={lockedByKickoff}
-                        onClick={() => tap(g, side)}
-                      >
-                        {content}
-                      </button>
-                    )}
-                  </>
+                  <div className={`pkv-g${locked ? ' locked' : ''}${live ? ' live' : ''}${held ? ' pk-pending' : ''}`} key={g.match_id}>
+                    <div className="pkv-gtop">
+                      {live ? (
+                        // THE LIVE RULE CARRIES THE CLOCK, when the poller has
+                        // one. A live game with no live_state yet says LIVE and
+                        // nothing more rather than an invented quarter.
+                        <span className="pkv-l">{g.period ? `${g.period}${g.clock ? ` ${g.clock}` : ''}` : 'LIVE'}</span>
+                      ) : (
+                        <span>{held ? <span className="pk-pending-lbl">Needs a handle</span> : <StandaloneTime iso={g.kickoff_at} />}</span>
+                      )}
+                      <span className="pkv-gtopr">
+                        {/* THE WAY OUT TO THE GAME PAGE stays. The mock does not
+                            draw it; removing a navigation affordance is a
+                            behaviour change, not a reskin, so it keeps its
+                            place beside the network. */}
+                        {/* NO ROUTE, NO LINK. gameHref returns null for a sport
+                            this app has no game page for (soccer today), and a
+                            Link with a null href throws rather than degrading -
+                            it crashed the whole board in test before this guard. */}
+                        {gameHref(contest, g) ? (
+                          <Link className="pkv-gamelink" href={gameHref(contest, g)}>Game</Link>
+                        ) : null}
+                        {g.network ? <span className="pkv-net">{g.network}</span> : null}
+                      </span>
+                    </div>
+
+                    <div className="pkv-sides">
+                      {/* BOTH OR NEITHER, the helmets' own rule carried onto the
+                          disc. One coloured mark beside one grey one reads as a
+                          favourite, which is the thing this board must never
+                          imply - so a row where either side has no colours
+                          draws two neutral marks, not one of each. */}
+                      {orderFor(contest?.sport).map((side) => {
+                        const dressed = Boolean(g.home_colors?.primary && g.away_colors?.primary);
+                        const isAway = side === 'away';
+                        const name = isAway ? g.away : g.home;
+                        const score = isAway ? g.away_score : g.home_score;
+                        const colors = isAway ? g.away_colors : g.home_colors;
+                        const rank = isAway ? g.away_rank : g.home_rank;
+                        const record = isAway ? g.away_record : g.home_record;
+                        const isMine = g.my_side === side;
+                        const won = isMine && g.graded === 'W';
+                        const lost = isMine && g.graded === 'L';
+                        const cls = `pkv-side${won ? ' won' : lost ? ' lost' : isMine ? ' picked' : ''}`;
+                        const content = (
+                          <>
+                            {/* THE TWO-COLOUR MARK is Helmet's own colours in a
+                                disc - Helmet itself is unchanged and still
+                                draws the game page's helmet. */}
+                            <span
+                              className="pkv-mk"
+                              aria-hidden="true"
+                              style={dressed ? {
+                                background: `linear-gradient(to bottom, ${colors.primary} 0 58%, ${colors.secondary ?? colors.primary} 58% 100%)`,
+                              } : undefined}
+                            />
+                            <span className="pkv-nm">
+                              <b>{name}</b>
+                              {/* RANK AND RECORD (ruling c), and the side word
+                                  when there is neither. recordLine returns a
+                                  bare '-' for a team with no record, which
+                                  claims we looked and found nothing; "away"
+                                  says the true thing instead. */}
+                              <small>{record ? recordLine(rank, record) : (isAway ? 'away' : 'home')}</small>
+                            </span>
+                            {showScores ? <span className="pkv-sc n">{score ?? 0}</span> : null}
+                            {won ? <span className="pkv-tick w">✓</span>
+                              : lost ? <span className="pkv-tick l">✗</span>
+                                : isMine ? <span className="pkv-tick p">●</span> : null}
+                          </>
+                        );
+                        if (!signedIn && !locked) {
+                          return <a key={side} className={cls} href={signinHref}>{content}</a>;
+                        }
+                        return (
+                          <button key={side} type="button" className={cls} disabled={locked} onClick={() => tap(g, side)}>
+                            {content}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="pkv-gfoot">
+                      {(() => {
+                        if (!isPreGame(g.status)) return null;
+                        const p = spreadParts({ spreadHome: g.spread_home, homeAbbr: g.home, awayAbbr: g.away });
+                        if (!p) return null;
+                        return <span className="pkv-line">{p.fav}{' '}{p.mag}</span>;
+                      })()}
+                      {g.my_side != null ? (
+                        <span className={`pkv-pick${g.graded === 'W' ? ' j' : g.graded === 'L' ? ' t' : ' v'}`}>
+                          {g.my_side === 'away' ? g.away : g.home}
+                          {g.graded === 'W' ? ' ✓' : g.graded === 'L' ? ' ✗' : ''}
+                        </span>
+                      ) : (
+                        <span className="pkv-pick pkv-nopick">{locked ? 'no pick' : 'no pick'}</span>
+                      )}
+                    </div>
+                  </div>
                 );
               })}
             </div>
-            {/* THE LINE, BELOW THE SIDES, MUTED MONO, PREFIXED. It used to sit
-                in the eyebrow beside the kickoff time, above the buttons -
-                where a fluent reader takes it as the bet. Down here, after the
-                choice, it is reference. isPreGame at the render as well as at
-                the fetch: it vanishes the moment a game kicks, because a
-                pre-kickoff line beside a live score is a number that stopped
-                being true. Never in the eyebrow, never inside a .pk-side. */}
-            {(() => {
-              if (!isPreGame(g.status)) return null;
-              const p = spreadParts({ spreadHome: g.spread_home, homeAbbr: g.home, awayAbbr: g.away });
-              if (!p) return null;
-              return (
-                <div className="pk-line">
-                  <span className="pk-line-k">line</span>
-                  <span className="pk-line-t">{p.fav}</span>
-                  <span className="pk-line-n">{'\u00a0'}{p.mag}</span>
-                </div>
-              );
-            })()}
           </div>
-            );
-          })}
-        </div>
-      ))}
+        );
+      })}
 
-      {signedIn ? (
-        <p className="pk-savebar">{savedTick ? <b>Saved</b> : 'Saved'} &middot; edit any pick until its kickoff</p>
-      ) : (
+      {!signedIn ? (
         <a className="pk-signin" href={signinHref}>Sign in to make your picks &rarr;</a>
-      )}
+      ) : null}
 
-      {/* THE CONFIRM CARD (relay 3 item 3, shared 3b item 1). Only once
-          EVERY game is picked - a part-picked board has nothing to confirm,
-          and each game locks at its own kickoff regardless. Same component
-          the Weekly renders; this board's summary is a count rather than a
-          roster, which is the one thing the two games differ on. */}
-      {signedIn && pickedOpen === pickable && pickable > 0 && (
-        <ConfirmCard
-          title="Your board"
-          line={`${pickable} of ${pickable} picked`}
-          receiptLine={`All ${pickable} picked`}
-          lockIso={locksAt}
-          lockPre="First lock"
-          note="Each game stays editable until its own kickoff; a change re-confirms when it saves."
-          confirmedAt={confirmedAt}
-          confirming={confirming}
-          onLockIn={lockItIn}
-        />
-      )}
+      {/* THE FOOTER IS THE CONFIRM CONTROL (R4). ConfirmCard's markup is gone;
+          confirmPickemEntry and confirmVerdict are still the only action and
+          the only gate behind it. The word "submit" appears nowhere: picks
+          autosave and an unconfirmed board still counts at each kickoff. */}
+      <div className="pkv-ft">
+        <div className="pkv-pace">
+          {confirmedAt ? (
+            <>Locked in<br /><b><StandaloneTime iso={confirmedAt} /></b> &middot; edit any pick until its kickoff</>
+          ) : savedTick ? (
+            <><b>Saved</b><br />edit any pick until its kickoff</>
+          ) : (
+            <>Straight up, no spread<br />The line is <b>for reference only</b></>
+          )}
+        </div>
+        {signedIn && pickable > 0 ? (
+          <button
+            type="button"
+            className="pkv-lock"
+            disabled={!canConfirm || confirming || Boolean(confirmedAt)}
+            onClick={lockItIn}
+          >
+            {confirming ? 'Locking…' : confirmedAt ? 'Locked in' : canConfirm ? 'Lock it in' : `${toGo} to go`}
+          </button>
+        ) : null}
+      </div>
     </>
   );
 }
