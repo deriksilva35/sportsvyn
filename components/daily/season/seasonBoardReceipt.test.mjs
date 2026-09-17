@@ -63,7 +63,9 @@ test('4b. the receipt branch renders without throwing, and shows four matched', 
 
   const text = container.textContent;
   assert.match(text, /4 of 8 matched/, 'four matched, from the stored grade');
-  assert.match(text, /1,840\.2 pts · 90%/);
+  // ONE DECIMAL NOW (lib/daily/format.js): 1840.2 of 2039.4 is 90.23%, which
+  // the old whole-number rounding wrote as "90%".
+  assert.match(text, /1,840\.2 pts · 90\.2%/);
   assert.doesNotMatch(text, /undefined/, 'no undefined anywhere on the receipt');
   assert.match(text, /DeAndre Hopkins \(HOU\)/, 'the story names the biggest miss');
   // Best-roster cells carry names: Frank Gore is on the best roster and not on Derik's.

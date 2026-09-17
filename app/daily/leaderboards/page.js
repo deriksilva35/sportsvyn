@@ -14,6 +14,7 @@
  * SQL dense_rank()); this page renders them as given, no client re-sort.
  */
 
+import { pctOfCeiling } from '@/lib/daily/format';
 import Link from 'next/link';
 import { todayEt } from '@/lib/daily/entries';
 import { displayName } from '@/lib/daily/handles';
@@ -88,12 +89,15 @@ function Row({ r, tab, me }) {
 
 function primaryFor(r, tab) {
   switch (tab) {
-    case 'main': return `${Math.round(r.primary * 1000) / 10}%`;
+    // THE ONE FORMATTER. primary is a ratio (an average of score/ceiling, or a
+    // single run's), so the ceiling is 1. It matters most on 'best': a run that
+    // fell short must not top this board reading "100%".
+    case 'main': return pctOfCeiling(r.primary, 1);
     case 'today': return `${r.primary} pts`;
     case 'streak': return `${r.primary} day${r.primary === 1 ? '' : 's'}`;
     case 'perfect': return `${r.primary} perfect`;
     case 'played': return `${r.primary} played`;
-    case 'best': return `${Math.round(r.primary * 1000) / 10}%`;
+    case 'best': return pctOfCeiling(r.primary, 1);
     default: return String(r.primary);
   }
 }

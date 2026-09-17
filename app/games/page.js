@@ -253,7 +253,7 @@ function AnswerPane({ v }) {
             <span>You</span>
             <span className="v">
               {y.you.played
-                ? <>{y.you.score.toLocaleString('en-US')}<span className="muted"> · {y.you.pct}% · {y.you.matched ?? '-'} of {y.you.slotCount}</span></>
+                ? <>{y.you.score.toLocaleString('en-US')}<span className="muted">{y.you.pct ? ` · ${y.you.pct}` : ''} · {y.you.matched ?? '-'} of {y.you.slotCount}</span></>
                 : y.you.dnf ? <span className="muted">DNF</span> : <span className="muted">-</span>}
             </span>
           </div>
@@ -383,7 +383,7 @@ function HistoryPane({ v }) {
               {h.you !== undefined && (
                 <span className="hist-you">
                   {h.you.played
-                    ? <>{h.you.score.toLocaleString('en-US')}<span className="muted"> · {h.you.pct}% · {h.you.matched ?? '-'}/{h.you.slotCount}</span></>
+                    ? <>{h.you.score.toLocaleString('en-US')}<span className="muted">{h.you.pct ? ` · ${h.you.pct}` : ''} · {h.you.matched ?? '-'}/{h.you.slotCount}</span></>
                     : h.you.dnf ? <span className="muted">DNF</span> : <span className="muted">-</span>}
                 </span>
               )}

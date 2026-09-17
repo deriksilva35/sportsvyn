@@ -41,6 +41,7 @@ import {
   legalSlotIndexes, commitPick, clearSlot, startClock as canStartClock,
 } from '@/lib/daily/seasonBoardPlay';
 import { gradeBoard, boardStory } from '@/lib/daily/seasonBoardGrade';
+import { pctOfCeiling } from '@/lib/daily/format';
 import { DAILY_V2_PATH, DAILY_ROUND_SECONDS } from '@/lib/daily/boardShape';
 
 // THE ONE PLACE THE DOMAIN-QUALIFIED SHARE URL IS BUILT (relay 5b item 7) -
@@ -68,6 +69,16 @@ const SLOT_CLASS = { QB: 'qb', RB: 'rb', WR: 'wr', TE: 'te', FLEX: 'flx', K: 'k'
 // which one is lit is derived from what the player is holding, and the line
 // under it says the next thing to do.
 const STEP_NAMES = ['Team', 'Player', 'Slot'];
+
+/**
+ * The right-hand eyebrow carries the EDITION, and the title now carries the
+ * words "The Daily". Both routes compose `edition` with that prefix already
+ * ("The Daily · 2026-09-18", "The Daily · No. 024"), so printing it whole
+ * beside the new title would say the name of the game twice in one line.
+ * Display only, and only on the play screen - the results bar prints
+ * `edition` untouched.
+ */
+const editionTail = (edition) => String(edition ?? '').replace(/^The Daily\s*·\s*/, '');
 
 /** The name as a filled slot shows it: the last word, uppercased by CSS.
  * "A. St. Brown" -> "Brown", "Jahmyr Gibbs" -> "Gibbs". A slot tile is 70px
@@ -456,8 +467,15 @@ export default function SeasonBoard({
 
       <header className="sbd-hd">
         <div className="sbd-hd-top">
-          <span className="sbd-eb">The Daily</span>
-          <span className="sbd-ed2">{edition}</span>
+          {/* THE SEASON IS THE TITLE (FIX 2). The board is a 2024 board or a
+              1987 board, and a player who opens it mid-round has no other
+              place to read that: the rules card states the year once, then
+              the card is gone for the rest of the round. `year` is the board
+              row's own season_year on both edition routes and the drawn
+              era on the free-play preview, so this follows the board rather
+              than anything the URL said. */}
+          <span className="sbd-eb">The Daily · {year}</span>
+          <span className="sbd-ed2">{editionTail(edition)}</span>
         </div>
         <div className={crowClass}>
           {/* THE CLOCK IS UNCHANGED BENEATH THE SKIN. Same remainingMs off the
@@ -506,7 +524,7 @@ export default function SeasonBoard({
             its two em dashes written as hyphens per the house rule. */}
         <p className="sbd-note">
           {stage === 1 ? (
-            <>Fill <b>eight slots</b> from <b>twelve teams</b>, one player each. Their real season points are your score. Tap a team to see its six.</>
+            <>Fill <b>eight slots</b> from <b>twelve teams</b>, one player each. Their real <b>{year}</b> season points are your score. Tap a team to see its six.</>
           ) : stage === 2 ? (
             <>Six from the <b>{curTeam?.abbr}</b>. Dimmed ones fit no slot you have left. Tap one.</>
           ) : stage === 3 ? (
@@ -726,10 +744,14 @@ function GradeScreen({
   // clipboard target. Streak is OMITTED, never shown as 0 or "-", when the
   // caller has no streak context (practice, or a page that never computed
   // one) - a missing fact is left out, not guessed at.
+  // THE ONE FORMATTER (lib/daily/format.js). A null - no ceiling to measure
+  // against - OMITS the percentage from every one of these three lines rather
+  // than printing a dash or a zero.
+  const pctLabel = pctOfCeiling(grade.mine, grade.perfect);
   const shareText = [
     grade.glyph,
     `${ranked ? edition : 'Practice'} · ${year}`,
-    `${grade.mine.toLocaleString()} pts · ${grade.pct}%${streak != null ? ` · streak ${streak}` : ''}`,
+    `${grade.mine.toLocaleString()} pts${pctLabel ? ` · ${pctLabel}` : ''}${streak != null ? ` · streak ${streak}` : ''}`,
     SHARE_URL,
   ].join('\n');
   // THE SHARE SHEET, NOT JUST THE CLIPBOARD (relay 6 item 2). This was
@@ -786,7 +808,7 @@ function GradeScreen({
         <div className="sbd-g">{grade.glyph}</div>
         <div className="sbd-cap">
           {ranked ? edition : 'Practice'} · {year}<br />
-          {grade.mine.toLocaleString()} pts · {grade.pct}% · {clockLabel}<br />
+          {grade.mine.toLocaleString()} pts{pctLabel ? ` · ${pctLabel}` : ''} · {clockLabel}<br />
           {SHARE_URL}
         </div>
         <button type="button" className="sbd-copy" onClick={handleShare}>
@@ -797,7 +819,7 @@ function GradeScreen({
       <div className="sbd-grade">
         <div className="sbd-grade-top">
           <b>{year}</b>
-          <span>{grade.mine.toLocaleString()} pts · {grade.pct}% of {grade.perfect.toLocaleString()}</span>
+          <span>{grade.mine.toLocaleString()} pts{pctLabel ? ` · ${pctLabel}` : ''} of {grade.perfect.toLocaleString()}</span>
         </div>
         <div className="sbd-colhead">
           <div className="sbd-cy">You</div>
