@@ -110,6 +110,7 @@ export default async function DraftRoomPage({ params, searchParams }) {
         timerSeconds={room.timerSeconds}
         initialAuto={room.isAuto}
         poolMapping={room.poolMapping}
+        withheld={room.withheld ?? []}
         minors={room.minors}
         upcomingKeepers={room.upcomingKeepers ?? []}
         franchise={room.franchise ?? null}
