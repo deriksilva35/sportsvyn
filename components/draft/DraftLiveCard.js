@@ -61,9 +61,13 @@ export default function DraftLiveCard({ card = null, roster = [], seatLine = nul
           <span className="dvg-eb">The Draft</span>
           <span className="dvg-ed">best six of eight</span>
         </div>
-        {/* NO NUMBER BEFORE THERE IS ONE. With no live layer the hero is
-            absent rather than zero - the rule every other surface follows. */}
-        {card ? (
+        {/* NO NUMBER BEFORE THERE IS ONE, AND A CARD WITH NOTHING STARTED
+            COUNTS AS NOTHING. draftLiveRows returns a card the moment a
+            roster exists - total 0, startedCount 0 - so gating on the card
+            alone printed a 0 hero all week before the first kickoff. The
+            gate is what has PLAYED, which is the rule every other surface
+            follows. Caught by the served render, not by a test I wrote. */}
+        {card && started > 0 ? (
           <div className="dvg-rec">
             <div>
               <span className="dvg-eb dvg-quiet">Your best six</span>

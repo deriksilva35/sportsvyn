@@ -111,6 +111,17 @@ test('BEFORE ANYTHING KICKS OFF: eight rows, no hero, and no number invented', (
 // IN FLIGHT
 // ---------------------------------------------------------------------------
 
+test('A CARD WITH NOTHING STARTED SHOWS NO HERO EITHER - not a 0', () => {
+  // draftLiveRows returns a card the moment a roster exists (total 0,
+  // startedCount 0), so gating the hero on the card alone printed a 0 all
+  // week before the first kickoff. The served render caught it.
+  const pre = card();
+  const c = render({ card: { ...pre, total: 0, startedCount: 0, rows: pre.rows.map((r) => ({ ...r, state: null, points: 0 })) } });
+  assert.equal(c.querySelector('.dvg-rec'), null);
+  assert.doesNotMatch(c.textContent, /\b0 · 0 of 8 started\b/);
+  assert.ok(c.querySelector('.dvg-sub'), 'the sub row still states the rule');
+});
+
 test('THE HERO IS THE LIVE BEST SIX, with how much of it has played', () => {
   const c = render();
   assert.match(t(c, '.dvg-big'), /^88\.5 · 5 of 8 started$/);
