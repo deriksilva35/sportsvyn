@@ -14,6 +14,7 @@
 
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
+import { canRevive, STRIKE_LIMIT } from '@/lib/push/tokenHealth';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +36,31 @@ export async function POST(request) {
   // unknown is honest, an invented state is not.
   const permission = ['granted', 'denied', 'prompt', 'prompt-with-rationale']
     .includes(body?.permission) ? body.permission : null;
+
+  // REVIVE-IN-PLACE IS NOW CONDITIONAL, AND THIS IS THE WHOLE FIX.
+  //
+  // The unconditional `revoked_at = NULL` in the upsert below cost three days of
+  // silence (15-18 Sep 2026): APNs rejected his token on every event, every
+  // sender dutifully revoked it, and every app launch brought it back. The
+  // loop was invisible because revoked_at holds one timestamp and a token
+  // that dies nightly looks exactly like one that died once.
+  //
+  // A token that has struck out stays dead. The DEVICE is not blocked: APNs
+  // issues a NEW token string on reinstall or re-permission, and that is a new
+  // row at zero strikes - which is precisely how the incident ended, at 01:15
+  // on 18 Sep, when a fresh token registered and took every push after it.
+  const [existing] = await sql`SELECT strikes, revoked_at FROM device_tokens WHERE token = ${token} LIMIT 1`;
+  if (!canRevive(existing)) {
+    return Response.json({
+      ok: false,
+      reason: 'token_rejected',
+      // THE APP IS TOLD WHAT TO DO ABOUT IT, not merely that it failed. A
+      // client that knows this token is finished can ask iOS for a new one.
+      detail: `APNs rejected this token ${existing.strikes} times in a row`,
+      strikes: existing.strikes,
+      limit: STRIKE_LIMIT,
+    }, { status: 200 });
+  }
 
   await sql`
     INSERT INTO device_tokens (token, user_id, platform, permission)
