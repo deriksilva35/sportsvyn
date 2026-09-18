@@ -12,23 +12,48 @@ test('D1: the sign-in page says when the handle comes, and no longer asks for on
   assert.doesNotMatch(t, /Pick a handle - the name beside your score in every game\./);
 });
 
-test('D12: the Weekly room states no deadline of its own - the header owns it', () => {
+test('D12: ONE deadline per Weekly screen - and the room owns it now', () => {
   const room = strip(src('components/weekly/WeeklyRoom.js'));
-  // THE RULE IS UNCHANGED; THE SURFACE IT APPLIES TO IS THE FOOTER NOW (v2).
-  // The confirm card is gone, so what must not appear is a lock instant
-  // anywhere in the room: the deadline belongs to the page header, and the
-  // room's own times are per-slot kickoffs and the confirm receipt.
+  // D12'S RULE IS UNCHANGED AND ITS OWNER MOVED (weekly-hdr relay item 2).
+  // The rule was always "one deadline per Weekly screen"; the header used to
+  // be the one that stated it. But the Weekly has had no single lock since the
+  // rolling lock shipped - each slot locks at its own player's kickoff - so a
+  // page-level "first kickoff / locks" stamp was naming a deadline that does
+  // not exist, while the room's "next lock" named the one that does. The stamp
+  // is gone and the room's line is the deadline.
   const footer = room.slice(room.indexOf('wkv-ft'));
   assert.doesNotMatch(footer, /lockIso|locks_at|locksAt|lockPre/, 'the footer carries no locks line');
-  assert.match(footer, /Locked in <StandaloneTime iso=\{confirmedAt\} \/>/, 'only the receipt, through an island');
+  assert.match(footer, /Locked in <StandaloneTime iso=\{confirmedAt\} weekday zone=\{false\} \/>/,
+    'only the receipt, through an island, and it names its day');
   assert.match(footer, /edit any open slot until its kickoff/);
-  // The page header still alternates first kickoff -> locks, untouched.
+
+  // THE HEADER STATES NO DEADLINE AT ALL. This is the assertion the old one
+  // inverted: what used to be required is now forbidden.
   const page = strip(src('app/weekly/page.js'));
-  assert.match(page, /\{beforeFirst \? 'first kickoff ' : 'locks '\}<StandaloneDate iso=\{beforeFirst \? firstKickoff : contest\.locks_at\} \/>/);
-  // PER-SLOT TIMES STAY, and still go through the island rather than a
-  // formatted string: an open slot names its player's kickoff.
-  assert.match(room, /<StandaloneTime iso=\{p\.kickoff_at\} \/>/);
-  assert.match(room, /next lock <StandaloneTime iso=\{nextLockIso\} \/>/, 'and so does the next lock');
+  const header = page.slice(page.indexOf('<header className="hdr">'), page.indexOf('<WeeklyRoom'));
+  assert.doesNotMatch(header, /StandaloneDate|StandaloneTime|first kickoff|locks_at/,
+    'the page header names no deadline - the room does');
+  assert.match(header, /The Weekly &middot; Week \{contest\.week\}/, 'the eyebrow stays');
+  assert.match(header, /<h1>Week \{contest\.week\}<\/h1>/, 'and the title');
+
+  // EXACTLY ONE LOCK OR KICKOFF STAMP OUTSIDE THE SLOT ROWS. The room's own
+  // per-slot kickoffs are inside the rows and do not count; "next lock" is the
+  // one, and there is no second.
+  const outside = room.slice(0, room.indexOf('wkv-rows')) + footer;
+  const stamps = outside.match(/next lock <StandaloneTime|locks <StandaloneTime|first kickoff <Standalone/g) ?? [];
+  assert.equal(stamps.length, 1, `one deadline outside the rows, found ${stamps.length}`);
+
+  // PER-SLOT TIMES STAY, still through the island, and now carry their day:
+  // a slate that runs Thursday to Monday printed "5:15 PM" on two rows four
+  // days apart with nothing to tell them apart.
+  assert.match(room, /<StandaloneTime iso=\{p\.kickoff_at\} weekday zone=\{false\} \/>/);
+  assert.match(room, /next lock <StandaloneTime iso=\{nextLockIso\} weekday \/>/, 'and so does the next lock');
+
+  // THE ZONE SUFFIX LANDS ONCE. Only the next-lock stamp keeps it; every other
+  // Weekly time drops it, because eight rows repeating the reader's own zone is
+  // noise and dropping it everywhere would leave the board on no stated clock.
+  const zoned = room.match(/<StandaloneTime iso=\{[^}]+\}(?! weekday zone=\{false\})[^/]*\/>/g) ?? [];
+  assert.equal(zoned.length, 1, `exactly one zoned time in the room, found ${zoned.length}: ${zoned.join(' | ')}`);
   // THE PICK'EM RENDERS NO CARD AT ALL NOW (v2, R4): its confirm is the board's
   // own footer button. D12's rule is about the WEEKLY's card, and it is
   // unchanged; what the Pick'em must still do is name its next lock through an

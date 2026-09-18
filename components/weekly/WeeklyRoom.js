@@ -345,8 +345,12 @@ export default function WeeklyRoom({
         <div className="wkv-sub">
           <span>{filledSlots.length} of {SLOTS.length} filled</span>
           <span>
+            {/* THE ONE DEADLINE ON THIS SCREEN, AND THE ONLY ZONE SUFFIX.
+                A Weekly slate runs Thursday to Monday, so every kickoff on
+                the page carries its day; the reader's own zone is stated
+                ONCE, here, rather than repeated down eight rows. */}
             {nextLockIso
-              ? <>next lock <StandaloneTime iso={nextLockIso} /></>
+              ? <>next lock <StandaloneTime iso={nextLockIso} weekday /></>
               : openSlots.length > 0 ? 'open slots lock at kickoff' : 'all locked'}
           </span>
         </div>
@@ -434,7 +438,7 @@ export default function WeeklyRoom({
                             ? `${matchupOf(p.team, st)} · ${st.period ?? 'Live'}${st.clock ? ` ${st.clock}` : ''}`
                             : st?.kind === 'bye'
                               ? `${p.team} · bye`
-                              : <>{matchupOf(p.team, st)} &middot; {p.kickoff_at ? <StandaloneTime iso={p.kickoff_at} /> : 'kickoff'}</>}
+                              : <>{matchupOf(p.team, st)} &middot; {p.kickoff_at ? <StandaloneTime iso={p.kickoff_at} weekday zone={false} /> : 'kickoff'}</>}
                     </span>
                   </>
                 ) : (
@@ -539,12 +543,12 @@ export default function WeeklyRoom({
                       backs is choosing between two matchups. */}
                   <small className={st?.kind === 'live' ? 'wkv-l' : undefined}>
                     {used ? 'in your lineup'
-                      : kicked ? <>Kicked &middot; <StandaloneTime iso={p2.kickoff_at} /></>
+                      : kicked ? <>Kicked &middot; <StandaloneTime iso={p2.kickoff_at} weekday zone={false} /></>
                         : st?.kind === 'live'
                           ? `${matchupOf(p2.team, st)} · ${st.period ?? 'Live'}${st.clock ? ` ${st.clock}` : ''}`
                           : st?.kind === 'bye'
                             ? `${p2.team} · bye`
-                            : <>{matchupOf(p2.team, st)}{p2.kickoff_at ? <> &middot; <StandaloneTime iso={p2.kickoff_at} /></> : null}</>}
+                            : <>{matchupOf(p2.team, st)}{p2.kickoff_at ? <> &middot; <StandaloneTime iso={p2.kickoff_at} weekday zone={false} /></> : null}</>}
                   </small>
                   {/* LINE TWO IS THIS SEASON, or nothing at all. The career
                       rate and the college/draft resume no longer render here
@@ -577,7 +581,7 @@ export default function WeeklyRoom({
           ) : openSlots.length === 0 ? (
             <><b>All six locked.</b> Worst pick drops at settle<br />Results Tuesday morning</>
           ) : confirmedAt ? (
-            <><b>Locked in <StandaloneTime iso={confirmedAt} /></b> &middot; edit any open slot until its kickoff</>
+            <><b>Locked in <StandaloneTime iso={confirmedAt} weekday zone={false} /></b> &middot; edit any open slot until its kickoff</>
           ) : (
             <>Every change saves<br /><b>Six filled or the week does not count</b></>
           )}

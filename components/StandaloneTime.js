@@ -19,32 +19,34 @@
  * SSR FALLBACK IS ET for the same reason StandaloneDate's is: an
  * unhydrated UTC hour reads as a schedule error to an audience that is
  * entirely in US zones.
+ *
+ * TWO OPTIONAL PROPS, ADDED FOR THE WEEKLY (weekly-hdr relay), and both
+ * default to today's exact output so no existing caller moves:
+ *
+ *   weekday   prepend "Thu " / "Sun " / "Mon ", in the SAME zone as the
+ *             time. A Weekly slate runs Thursday to Monday and every row
+ *             read "5:15 PM" - two identical strings four days apart, on
+ *             one screen, with nothing to tell them apart. The day has to
+ *             come from the same Intl format call as the hour or the pair
+ *             can disagree across a midnight boundary in the viewer's zone.
+ *   zone      false drops the " PDT". THE SUFFIX BELONGS ONCE PER SCREEN,
+ *             not once per row: eight rows repeating the reader's own zone
+ *             is noise, and dropping it everywhere would leave a board with
+ *             no statement of which clock it is on at all. The Weekly puts
+ *             it on the one deadline - "next lock" - and nowhere else.
+ *
+ * A SIBLING COMPONENT WAS THE ALTERNATIVE AND IS WORSE. The hydration-safe
+ * dance below (ET on the server, the viewer's zone after mount) is the thing
+ * that must not be copied; a second file would be a second chance to get the
+ * fallback wrong, and this file's own header is already an argument against
+ * two formatters for one question.
  */
 
 import { useEffect, useState } from 'react';
+import { standaloneTimeLabel } from '@/lib/time/standaloneLabel';
 
-function formatFromParts(parts, zoneLabel) {
-  const v = (t) => parts.find((p) => p.type === t)?.value ?? '';
-  return `${v('hour')}:${v('minute')} ${v('dayPeriod')} ${zoneLabel}`;
-}
-
-function formatEasternFallback(iso) {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York',
-  });
-  return formatFromParts(fmt.formatToParts(new Date(iso)), 'ET');
-}
-
-function formatLocal(iso) {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short',
-  });
-  const parts = fmt.formatToParts(new Date(iso));
-  return formatFromParts(parts, parts.find((p) => p.type === 'timeZoneName')?.value ?? '');
-}
-
-export default function StandaloneTime({ iso }) {
-  const [label, setLabel] = useState(() => formatEasternFallback(iso));
-  useEffect(() => { setLabel(formatLocal(iso)); }, [iso]);
+export default function StandaloneTime({ iso, weekday = false, zone = true }) {
+  const [label, setLabel] = useState(() => standaloneTimeLabel(iso, { weekday, zone, tz: null }));
+  useEffect(() => { setLabel(standaloneTimeLabel(iso, { weekday, zone, tz: undefined })); }, [iso, weekday, zone]);
   return <>{label}</>;
 }

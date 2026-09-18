@@ -26,7 +26,7 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { currentContest, nextContest, getEntry } from '@/lib/weekly/entries';
-import { slateBounds, teamKickoffs, rowKickoff, lockPhase } from '@/lib/contests/slateBounds';
+import { slateBounds, teamKickoffs, rowKickoff } from '@/lib/contests/slateBounds';
 import StandaloneDate from '@/components/StandaloneDate';
 import StandaloneTime from '@/components/StandaloneTime';
 import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI } from '@/lib/weekly/view';
@@ -281,7 +281,7 @@ export default async function WeeklyPage({ searchParams }) {
                           for both "has not played" and "we do not know". */}
                       <span className={`r${st.started ? '' : ' r--mut'}`}>
                         {st.started ? st.points
-                          : st.kickoffAt ? <StandaloneTime iso={st.kickoffAt} />
+                          : st.kickoffAt ? <StandaloneTime iso={st.kickoffAt} weekday zone={false} />
                             : st.kind === 'bye' ? 'bye' : ''}
                       </span>
                     </div>
@@ -316,7 +316,6 @@ export default async function WeeklyPage({ searchParams }) {
   // clock to start, so there is nothing for a gate to protect.
   // ROLLING LOCK (R4): the hour-out reminder keys on the FIRST kickoff; the
   // header names the first kickoff until it passes, then the window close.
-  const { beforeFirst } = lockPhase({ firstKickoff, locksAt: contest.locks_at });
   const reminderAt = new Date(new Date(firstKickoff ?? contest.locks_at).getTime() - 3_600_000);
 
   // ---- THE LIVE LAYER ------------------------------------------------------
@@ -369,22 +368,27 @@ export default async function WeeklyPage({ searchParams }) {
   })().catch(() => null);
   return (
     <Shell>
-      {/* THE HEADER AND PROGRESS (relay 2a item 6) - the mock's .hdr/.yr/
-          .prog/.needline, sitting above the unchanged builder. */}
+      {/* THE HEADER, FOLDED (weekly-hdr relay item 2). What was here said the
+          same things three times and one of them was no longer true.
+          GONE, AND WHY EACH:
+            .clock  "first kickoff <date>" / "locks <date>" in the eyebrow's
+                    right slot. The Weekly has not had a single lock since the
+                    rolling lock shipped - each slot locks at its own player's
+                    kickoff - so a page-level deadline stamp was a fourth
+                    answer to a question the room already answers once, in
+                    "next lock". D12: ONE deadline per screen.
+            .yr sub "...whatever is saved at first kickoff is your entry"
+                    states that retired single lock outright.
+            .warn   "you are graded against the best six this pool could have
+                    made" - the .perf line under the lineup says exactly this,
+                    beside the six it is a claim about.
+          WHAT STAYS: the eyebrow and the week title, which are the only two
+          things on this block that name where you are. */}
       <header className="hdr">
         <span className="ed">The Weekly &middot; Week {contest.week}</span>
-        <span className="clock">{beforeFirst ? 'first kickoff ' : 'locks '}<StandaloneDate iso={beforeFirst ? firstKickoff : contest.locks_at} /></span>
       </header>
       <div className="yr">
         <h1>Week {contest.week}</h1>
-        <div className="sub">
-          Six slots. No clock. Any six from the full pool, full PPR, and whatever is
-          saved at first kickoff is your entry.
-        </div>
-      </div>
-      <div className="warn">
-        Same board for everyone. You are graded against the best six this pool
-        could have made.
       </div>
       {/* THE COUNTERS LIVE IN WeeklyRoom NOW (relay 3 item 1). They were
           here, computed from entry.lineup - the server's copy, frozen at
