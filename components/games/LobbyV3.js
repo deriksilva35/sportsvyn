@@ -70,7 +70,7 @@ function GameRow({ row, signedIn, signinHref }) {
 // THIS WEEK
 // ---------------------------------------------------------------------------
 function WeekPane({ v, signedIn, signinHref }) {
-  const { now, rows, practice, week } = v;
+  const { now, rows = [], practice = [], week = null } = v;
   return (
     <>
       <NowCard card={now} signedIn={signedIn} signinHref={signinHref} />
@@ -142,7 +142,10 @@ function BoardsPane({ v, userId }) {
           </>
         )}
       </div>
-      <p className="gv-foot">Season standings on <b>Rankings</b> · week boards here</p>
+      <p className="gv-foot">
+        {board?.note ? <>{board.note} · </> : null}
+        Season standings on <b>Rankings</b> · week boards here
+      </p>
     </>
   );
 }
@@ -260,10 +263,13 @@ export default function LobbyV3({ v, chip = 'week', signedIn = false, signinHref
         ))}
       </div>
 
-      {chip === 'week' && <WeekPane v={v.week} signedIn={signedIn} signinHref={signinHref} />}
-      {chip === 'boards' && <BoardsPane v={v.boards} userId={userId} />}
-      {chip === 'results' && <ResultsPane v={v.results} />}
-      {chip === 'alerts' && <AlertsPane v={v.alerts} signedIn={signedIn} signinHref={signinHref} />}
+      {/* ONE PANE'S PAYLOAD IS ALL THE READER FETCHED (lib/games/lobbyV3.js
+          reads only the selected chip), so every other key is absent by
+          design rather than by failure - hence the ?? {}. */}
+      {chip === 'week' && <WeekPane v={v.week ?? {}} signedIn={signedIn} signinHref={signinHref} />}
+      {chip === 'boards' && <BoardsPane v={v.boards ?? {}} userId={userId} />}
+      {chip === 'results' && <ResultsPane v={v.results ?? {}} />}
+      {chip === 'alerts' && <AlertsPane v={v.alerts ?? {}} signedIn={signedIn} signinHref={signinHref} />}
     </div>
   );
 }
