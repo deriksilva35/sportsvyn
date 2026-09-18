@@ -130,6 +130,38 @@ function WeekPane({ v, signedIn, signinHref }) {
 // ---------------------------------------------------------------------------
 // BOARDS - week boards here, season standings on Rankings
 // ---------------------------------------------------------------------------
+
+/**
+ * A SEASON TABLE RANKED ON A PERCENTAGE - Pick'em, the Weekly, the Draft.
+ *
+ * ONE RENDERER FOR THE THREE, because the only thing that differs is the
+ * sub-line's nouns: Pick'em counts correct of played, the other two count
+ * weeks. v2 had two near-identical blocks for exactly this and they had
+ * already drifted apart in whitespace.
+ */
+function PctRow({ r, pickem = false, me = false }) {
+  return (
+    <div className={`gv-tr${me ? ' you' : ''}`}>
+      <span className="gv-rk">{r.rank ?? '-'}</span>
+      <span className="gv-hn">{r.name}<HouseTag row={r} /></span>
+      <span className="gv-sc n">
+        {r.note ?? (pickem
+          ? `${r.pct}% · ${r.correct}/${r.played}`
+          : `${r.avgPct}% avg · ${r.weeksPlayed} played`)}
+      </span>
+    </div>
+  );
+}
+
+function PctBoard({ table, pickem = false }) {
+  return (
+    <div className="gv-lb">
+      {(table?.top ?? []).map((r) => <PctRow key={r.userId} r={r} pickem={pickem} />)}
+      {table?.self && <PctRow r={table.self} pickem={pickem} me />}
+    </div>
+  );
+}
+
 function BoardsPane({ v, userId }) {
   const { boards = [], boardKey = null, sections = null } = v;
   const board = boards.find((b) => b.key === boardKey) ?? boards[0] ?? null;
@@ -138,20 +170,38 @@ function BoardsPane({ v, userId }) {
       className={b.key === board?.key ? 'on' : undefined}>{b.label}</Link>
   ));
 
-  // THE SEASON TAB RENDERS THE SAME COMPONENT THE LEAGUE PAGE DOES. One
-  // definition, both scopes - which is the law components/games/seasonBoard
-  // .test.mjs has guarded since the board existed, and the reason this tab
-  // exists at all is in lib/games/lobbyV3.js beside V3_BOARD_TABS.
+  // THE SEASON TAB, AND EACH BOARD IN ITS OWN SHAPE.
+  //
+  // THE DAILY IS THE ONLY ONE THAT IS A SeasonBoard, which is the v2 page's
+  // own split and not a style choice: SeasonBoard reads points and days
+  // played, and the other three tables are ranked on an AVERAGE PERCENTAGE
+  // (relay 2b item 7), carrying pct / correct / played / avgPct /
+  // weeksPlayed. My first cut sent all four through SeasonBoard and served
+  // Pick'em and the Weekly as rows of blanks and "- pts" - caught by serving
+  // the tab, not by a fixture, because every fixture I wrote had the Daily's
+  // shape in it.
+  //
+  // A ROW UNDER THE FLOOR CARRIES ITS NOTE, NEVER A BLANK. pickemTable and
+  // gameSeasonTable both write `note` in place of a figure for anyone short
+  // of the minimum, and that note is the whole point of the row.
+  //
+  // One definition, both scopes, still: the Daily board here is the same
+  // SeasonBoard component the league page renders.
   if (boardKey === 'season') {
     return (
       <>
         <div className="gv-lb"><div className="gv-lbh">{tabs}</div></div>
         {(sections ?? []).map((sec) => (
           <section className="gv-season" key={sec.key}>
-            <div className="gv-sh"><h3>{sec.name}</h3></div>
-            {sec.state === 'live'
-              ? <SeasonBoard table={sec.table} userId={userId} />
-              : <p className="gv-foot">{sec.populatesLabel}</p>}
+            <div className="gv-sh">
+              <h3>{sec.name}</h3>
+              {sec.state === 'live' && sec.table?.through && <span>through {sec.table.through}</span>}
+            </div>
+            {sec.state !== 'live'
+              ? <p className="gv-foot">{sec.populatesLabel}</p>
+              : sec.key === 'overall'
+                ? <SeasonBoard table={sec.table} userId={userId} />
+                : <PctBoard table={sec.table} pickem={sec.key === 'pickem'} />}
           </section>
         ))}
         <p className="gv-foot">Week boards on the other four tabs</p>

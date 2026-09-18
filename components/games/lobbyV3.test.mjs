@@ -410,6 +410,7 @@ test('the SEASON tab draws the four season boards through the shared component',
   // A PENDING BOARD SAYS WHEN IT POPULATES, and draws no empty table.
   assert.match(txt(c), /The Draft — season/);
   assert.match(txt(c), /First settle with Week 1/);
+  assert.equal(c.querySelectorAll('.gv-season').length, 2);
   // and the tabs are still all there, so the reader can get back
   assert.deepEqual([...c.querySelectorAll('.gv-lbh a')].map((a) => txt(a)), ['WEEKLY', 'SEASON']);
 });
@@ -423,4 +424,40 @@ test('the season boards are reachable at all: no season table is orphaned by the
   for (const call of ["overall(uid, 10)", "pickemTable(uid, { sport: null })", "gameSeasonTable('weekly', uid)", "gameSeasonTable('draft', uid)"]) {
     assert.ok(src.includes(call), `the season tab must still read ${call}`);
   }
+});
+
+test('the pct-ranked season boards print their OWN figures, not the Daily\'s', () => {
+  // THE BUG THIS EXISTS FOR: sending all four season tables through
+  // SeasonBoard - which reads points and days played - served Pick'em and the
+  // Weekly as rows of blanks and "- pts". These three are ranked on an
+  // average percentage and carry pct / correct / played / avgPct /
+  // weeksPlayed.
+  const c = screen({ chip: 'boards', userId: 1, v: { boards: {
+    boardKey: 'season',
+    boards: [{ key: 'season', label: 'SEASON', rows: [] }],
+    sections: [
+      { key: 'pickem', name: "Pick'em — season", state: 'live', table: {
+        top: [
+          { rank: 1, userId: 1, name: '@sportsvyn_og', pct: 94.7, correct: 36, played: 38 },
+          // UNDER THE FLOOR: the note replaces the figure, and the rank is a dash.
+          { rank: null, userId: 2, name: '@benson', note: '1 of 3 boards' },
+        ],
+        self: null,
+      } },
+      { key: 'weekly', name: 'The Weekly — season', state: 'live', table: {
+        top: [{ rank: 1, userId: 9, name: '@jake', avgPct: 88.2, weeksPlayed: 4 }],
+        self: { rank: null, userId: 1, name: '@sportsvyn_og', note: '1 of 3 weeks' },
+      } },
+    ],
+  } } });
+  const pk = [...c.querySelectorAll('.gv-season')[0].querySelectorAll('.gv-tr')];
+  assert.deepEqual(cells(pk[0]), ['1', '@sportsvyn_og', '94.7% · 36/38']);
+  assert.deepEqual(cells(pk[1]), ['-', '@benson', '1 of 3 boards']);
+  const wk = [...c.querySelectorAll('.gv-season')[1].querySelectorAll('.gv-tr')];
+  assert.deepEqual(cells(wk[0]), ['1', '@jake', '88.2% avg · 4 played']);
+  // the viewer's own row is pinned below the top and marked
+  assert.equal(wk[1].className.includes('you'), true);
+  assert.deepEqual(cells(wk[1]), ['-', '@sportsvyn_og', '1 of 3 weeks']);
+  // and no board printed a figure it does not have
+  assert.equal(/ pts|undefined|NaN/.test(txt(c)), false);
 });
