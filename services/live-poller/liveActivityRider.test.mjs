@@ -88,19 +88,28 @@ before(async () => {
 });
 
 after(async () => {
-  // THE GLOBAL PREFIX, NOT JUST THIS RUN'S. A run that dies before its teardown
-  // leaves a sentinel match behind, and the residue check below then fails
-  // every future run for a mess it did not make. Only this file ever writes
-  // these rows, so sweeping the prefix is safe and self-healing.
-  await sql`DELETE FROM live_activities WHERE activity_id LIKE 'sentinel-la-rider-%'`;
+  // THIS RUN'S ROWS, NOT THE WHOLE PREFIX (test-iso relay). The old sweep took
+  // 'sentinel-la-rider-%' and then ASSERTED the count was zero - so a second
+  // run of this file writing between the DELETE and the SELECT failed the
+  // first one, the same shape that made collegeSurface flake for two relays.
+  // NS already carries a per-run stamp; the teardown now uses it.
+  //
+  // RESIDUE FROM A DEAD RUN is still swept, but by AGE rather than by prefix:
+  // an hour is longer than any suite file runs, so it can never be a live
+  // sibling's row.
+  await sql`DELETE FROM live_activities WHERE activity_id LIKE ${`${NS}%`}`;
+  await sql`DELETE FROM live_activities WHERE activity_id LIKE 'sentinel-la-rider-%'
+              AND created_at < now() - interval '1 hour'`;
   // THE WIRE ROWS TOO. A score change emits a headline, and a sentinel game
   // leaking onto the wire is exactly the residue this teardown exists for.
   await sql`DELETE FROM news_items WHERE payload->>'matchId' = ${String(matchId)}
                OR headline LIKE ${`%${NS}%`}`;
-  await sql`DELETE FROM matches WHERE slug LIKE 'sentinel-la-rider-%'`;
+  await sql`DELETE FROM matches WHERE slug LIKE ${`${NS}%`}`;
+  await sql`DELETE FROM matches WHERE slug LIKE 'sentinel-la-rider-%'
+              AND kickoff_at < now() - interval '1 hour' AND season_year >= 2090`;
   const [left] = await sql`
-    SELECT (SELECT count(*)::int FROM live_activities WHERE activity_id LIKE 'sentinel-la-rider-%') AS acts,
-           (SELECT count(*)::int FROM matches WHERE slug LIKE 'sentinel-la-rider-%') AS matches`;
+    SELECT (SELECT count(*)::int FROM live_activities WHERE activity_id LIKE ${`${NS}%`}) AS acts,
+           (SELECT count(*)::int FROM matches WHERE slug LIKE ${`${NS}%`}) AS matches`;
   assert.equal(left.acts, 0, 'sentinel activities left behind');
   assert.equal(left.matches, 0, 'sentinel matches left behind');
 });
