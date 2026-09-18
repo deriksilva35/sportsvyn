@@ -9,7 +9,8 @@
 //   navigation per tap. WKWebView tore the page down, the root layout's
 //   chrome (client-gated header, tab bar, profile chip) vanished and popped
 //   back at hydration, and the page shifted ~54px when the header mounted.
-//   This exact bug was solved once already in /games' PaneTabs; the segment
+//   This exact bug was solved once already in /games' pane tabs (retired with
+//   the v2 lobby in GAMES v3, where the chips are plain links); the segment
 //   shipped without inheriting the lesson. Soft nav keeps the layout mounted
 //   and the outgoing page painted until the incoming one arrives.
 //

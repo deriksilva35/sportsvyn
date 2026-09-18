@@ -100,3 +100,9 @@
 .gv-alrow .gv-t { flex: 1; min-width: 0; }
 .gv-alrow b { display: block; font: 700 13px var(--font-saira), sans-serif; text-transform: uppercase; }
 .gv-alrow small { display: block; font: 500 10px var(--font-mono), monospace; color: var(--muted, #9A9A94); margin-top: 2px; }
+
+/* RELAY 6'S STRANGER LINES AND THE EXPLAINER GHOST. Both predate the mock and
+   both stay (see LobbyV3.js); .lob-stranger and .lob-free are already defined
+   on games.css, so only the foot link needs a rule of its own. */
+.gv-more { margin: 10px 0 0; }
+.gv-more .ghost { font-size: 12px; letter-spacing: .02em; }

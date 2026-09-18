@@ -170,7 +170,9 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     // The Games tab v2 (GAMES TAB v2 relay), written on the global tokens.
     // The Pick'em board's sport switch (SPORT SWITCH addendum).
     'app/pickem/pickem.css': 1,
-    'app/games/lobbyV2.css': 22,
+    // app/games/lobbyV2.css was 22 and is gone with the v2 lobby (GAMES v3);
+    // lobbyV3.css is written entirely on the global tokens and so has no
+    // entry at all, which is the guard's own preferred answer.
     // The Scores tab v2 (SCORES TAB v2 relay), likewise.
     'app/scores/scoresV2.css': 12,
     // The Today tab v2 (TODAY TAB v2 relay), on the global tokens.
@@ -192,9 +194,13 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   }
   assert.deepEqual(found, EXPECTED,
     'a new bare call site is fine now that the tokens are global - update the count deliberately');
-  // 125 - 1 = 124: the debug control's border went with the control.
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 124,
-    '18 were broken before the promotion; 106 were written after it');
+  // 125 - 22 - 1 = 102. TWO RELAYS DELETED A STYLESHEET EACH, and this
+  // number is the only place that notices both: the LIVE ACTIVITY DOOR took
+  // the debug control's one border with game.css's block, and GAMES v3 took
+  // app/games/lobbyV2.css's 22 with the v2 lobby. Neither replacement uses a
+  // bare token, so neither has an entry above.
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 102,
+    '18 were broken before the promotion; 84 were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.
   for (const t of ['--ink-2', '--ink-3', '--line']) {

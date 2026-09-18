@@ -98,6 +98,23 @@ function WeekPane({ v, signedIn, signinHref }) {
       </div>
 
       <p className="gv-foot">{v.foot}</p>
+
+      {/* RELAY 6'S TWO ENTRANCES TO THE EXPLAINER SURVIVE THE MOCK, which
+          draws neither. They are not layout: the launch email points at
+          /games/how-it-works, relay 6 pinned the count at two on purpose, and
+          the stranger lines are the free-to-play statement a first-time
+          visitor is owed. Dropping them because a layout mock is quiet about
+          them would be a product change wearing a redesign's clothes. */}
+      {!signedIn && (
+        <div className="lob-stranger">
+          <p className="lob-free">Free. An email and a handle. Nothing to install.</p>
+          <Link className="ghost" href="/games/how-it-works">How to play each game &rarr;</Link>
+        </div>
+      )}
+      <p className="gv-more">
+        <Link className="ghost" href="/games/how-it-works">How the games work &rarr;</Link>
+      </p>
+
       {/* THE LEGAL LINE STAYS, as the last line of This week (addendum 5). */}
       <p className="gv-legal">
         One account · one handle · one leaderboard spine. Not affiliated with the

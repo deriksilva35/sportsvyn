@@ -115,14 +115,18 @@ test('the game names come from the one place that owns them', () => {
 });
 
 test('/games links to it, outside any boards guard so it always renders', () => {
-  // GAMES TAB v2: the pane is components/games/LobbyV2.js and has no
-  // boards guard at all - the link sits in the unconditional foot links.
-  const games = src('components/games/LobbyV2.js');
+  // GAMES v3: the pane is components/games/LobbyV3.js. Same law, same
+  // shape - the ghost sits in the This week foot, outside every signed-in
+  // branch, so a stranger and a member both meet it.
+  const games = src('components/games/LobbyV3.js');
   assert.ok(games.includes('href="/games/how-it-works">How the games work'),
     '/games carries the ghost link');
   assert.ok(!games.includes('boardRows'), 'no boards guard exists to hide it behind');
-  const foot = games.slice(games.indexOf('className="lv-more"'));
+  const foot = games.slice(games.indexOf('className="gv-more"'));
   assert.ok(foot.includes('How the games work'), 'in the always-rendered foot');
+  // and it is NOT inside the !signedIn block - that is the second entrance.
+  const stranger = games.indexOf('lob-stranger');
+  assert.ok(games.indexOf('className="gv-more"') > stranger, 'the ghost sits after, not within');
 });
 
 test('ALL TWELVE STEPS ARE PRESENT - no section is missing its copy', () => {
