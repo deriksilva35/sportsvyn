@@ -23,6 +23,7 @@
 
 import Link from 'next/link';
 import HouseTag from '@/components/house/HouseTag';
+import '@/components/house/house.css';
 import StandaloneTime from '@/components/StandaloneTime';
 import { V3_CHIPS, V3_CHIP_LABEL } from '@/lib/games/lobby';
 import SeasonBoard from '@/components/games/SeasonBoard';
