@@ -293,7 +293,10 @@ test('A FINAL SLOT: the team, the score it ended on, and no kickoff time', () =>
 test('AN OPEN SLOT: the matchup and its kickoff, through the island', () => {
   const c = room({ initialLineup: MIXED, live: LIVE_LAYER });
   const te = slots(c)[3];                            // George Kittle, SF vs MIA
-  assert.match(lineOf(te), /^SF vs MIA · \d{1,2}:\d{2} (AM|PM)/);
+  // THE DAY IS ON IT NOW (weekly-hdr). A Weekly slate runs Thursday to Monday
+  // and this line used to read "5:15 PM" on two rows four days apart.
+  assert.match(lineOf(te), /^SF vs MIA · (Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2}:\d{2} (AM|PM)$/,
+    'the matchup, the day, the time - and no zone on a row');
   assert.equal(te.querySelector('.wkv-pts'), null, 'no number before he has played');
   assert.equal(te.querySelector('.wkv-lk'), null, 'and no badge');
   assert.equal(te.querySelector('.wkv-slot-tap').disabled, false);
@@ -359,7 +362,9 @@ test('NEXT LOCK is the earliest kickoff among FILLED, UNKICKED slots', () => {
   // in this lineup, and the kicked ones cannot contribute.
   const c = room({ initialLineup: MIXED, live: LIVE_LAYER });
   const cell = sub(c)[1];
-  assert.match(cell, /^next lock \d{1,2}:\d{2} (AM|PM)/);
+  // THE ONE DEADLINE ON THE SCREEN, and the one place the zone is stated.
+  assert.match(cell, /^next lock (Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2}:\d{2} (AM|PM) [A-Z]{2,5}$/,
+    'day, time AND zone - this line is where the suffix lands');
   const iso = c.querySelectorAll('.wkv-sub time');
   if (iso.length) assert.ok(iso[0].getAttribute('dateTime') ?? true);
 });
@@ -455,7 +460,8 @@ test('THE TWO SMALL LINES: the game, then this season', () => {
   const purdy = prows(c)[0];
   const lines = [...purdy.querySelectorAll('.wkv-who small')].map((x) => x.textContent);
   assert.equal(lines.length, 2);
-  assert.match(lines[0], /^SF vs MIA · \d{1,2}:\d{2} (AM|PM)/, 'line one is the matchup and its kickoff');
+  assert.match(lines[0], /^SF vs MIA · (Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2}:\d{2} (AM|PM)$/,
+    'line one is the matchup, the DAY and its kickoff - a five-day slate needs the day');
   assert.equal(lines[1], '298 yds · 3 TD · 1 INT · 12 rush', 'line two is the season line');
   // A row with no season has ONE line, not an empty second one.
   const dak = prows(c).find((r) => r.textContent.includes('Dak Prescott'));
@@ -583,7 +589,9 @@ test('CONFIRM: the button calls the action and becomes the receipt', async () =>
   assert.deepEqual(stub.confirms, [[10]], 'confirmWeeklyEntry(contest.id), once');
   assert.equal(txt(c, '.wkv-lock'), 'Locked in');
   assert.equal(c.querySelector('.wkv-lock').disabled, true);
-  assert.match(txt(c, '.wkv-pace'), /^Locked in \d{1,2}:\d{2} (AM|PM)/);
+  // The receipt names its day too: "which day did I lock this" is a real
+  // question on a slate that runs Thursday to Monday.
+  assert.match(txt(c, '.wkv-pace'), /^Locked in (Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2}:\d{2} (AM|PM)/);
   assert.match(txt(c, '.wkv-pace'), /edit any open slot until its kickoff$/);
   assert.equal(saves.length, 0, 'nothing was pending, so nothing was flushed');
 });
