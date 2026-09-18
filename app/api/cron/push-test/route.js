@@ -26,8 +26,9 @@
 
 import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
-import { apnsConfig, sendToToken, alertPayload } from '@/lib/push/apns';
+import { apnsConfig, sendToToken, alertPayload, gateReport } from '@/lib/push/apns';
 import { copyFor } from '@/lib/push/copy';
+import { recordSend } from '@/lib/push/tokenHealth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -54,25 +55,57 @@ export async function POST(request) {
   const owned = u && (OWNER_EMAILS.includes(u.email) || OWNER_EMAILS.includes(u.contact_email ?? ''));
   if (!owned) return Response.json({ error: 'test pushes target owner devices only' }, { status: 403 });
 
-  const [dev] = await sql`
-    SELECT token FROM device_tokens
-     WHERE user_id = ${userId} AND revoked_at IS NULL
-     ORDER BY last_seen_at DESC LIMIT 1`;
-  if (!dev) return Response.json({ error: 'no live token for that user' }, { status: 404 });
+  // WHICH TOKEN, SAYABLE OUT LOUD.
+  //
+  // Without `token`, this picks the most recently seen LIVE token - and on the
+  // night it was needed most that rule chose the wrong device. 09D6170D... had
+  // been revoked seven minutes earlier, so the probe silently fell through to
+  // a token from a phone nobody was holding, returned 200, and proved nothing.
+  // A prefix is enough to name one: they are 64 hex characters and the first
+  // eight are already how every ledger line refers to them.
+  const want = typeof body?.token === 'string' ? body.token.trim() : '';
+  const [dev] = want
+    ? await sql`SELECT token, revoked_at, strikes FROM device_tokens
+                 WHERE user_id = ${userId} AND token LIKE ${`${want}%`}
+                 ORDER BY last_seen_at DESC NULLS LAST LIMIT 1`
+    : await sql`SELECT token, revoked_at, strikes FROM device_tokens
+                 WHERE user_id = ${userId} AND revoked_at IS NULL
+                 ORDER BY last_seen_at DESC LIMIT 1`;
+  if (!dev) {
+    return Response.json({
+      error: want ? 'no token for that user matching that prefix' : 'no live token for that user',
+    }, { status: 404 });
+  }
 
   const eventId = `daily-revealed:vercel-test-${body?.tag ?? 1}`;
   const copy = copyFor(eventId);
 
+  // THE TOKEN IT CHOSE IS IN THE LEDGER AND IN THE ANSWER, both as a prefix.
+  // "which device did this actually reach" must never again be a question the
+  // record cannot answer.
+  const tokenPrefix = String(dev.token).slice(0, 12);
+  const gate = gateReport();
+  const ledger = (extra) => JSON.stringify({
+    eventId, test: true, runtime: 'vercel', userId, tokenPrefix,
+    revoked: dev.revoked_at != null, strikes: dev.strikes ?? 0,
+    host: cfg.host, env: cfg.sandbox ? 'sandbox' : 'production', topic: cfg.topic,
+    gate: { armed: gate.armed, pemLines: gate.APNS_KEY.pemLines },
+    ...extra,
+  });
   const [row] = await sql`
     INSERT INTO sync_runs (source, kind, started_at, ok, summary)
-    VALUES ('push', 'test', now(), true,
-            ${JSON.stringify({ eventId, test: true, runtime: 'vercel', userId, outcome: 'sending' })}::jsonb)
+    VALUES ('push', 'test', now(), true, ${ledger({ outcome: 'sending' })}::jsonb)
     RETURNING id`;
   const res = await sendToToken(cfg, dev.token, alertPayload(copy));
+  await recordSend(sql, dev.token, res);
   await sql`
     UPDATE sync_runs SET finished_at = now(), ok = ${res.ok},
-           summary = ${JSON.stringify({ eventId, test: true, runtime: 'vercel', userId, outcome: res.ok ? 'sent' : 'failed', apns: res })}::jsonb
+           summary = ${ledger({ outcome: res.ok ? 'sent' : 'failed', apns: res })}::jsonb
      WHERE id = ${row.id}`;
 
-  return Response.json({ ok: res.ok, apns: res, ledger: row.id, sandbox: cfg.sandbox });
+  return Response.json({
+    ok: res.ok, apns: res, ledger: row.id, sandbox: cfg.sandbox,
+    token: tokenPrefix, wasRevoked: dev.revoked_at != null, strikes: dev.strikes ?? 0,
+    host: cfg.host, topic: cfg.topic,
+  });
 }
