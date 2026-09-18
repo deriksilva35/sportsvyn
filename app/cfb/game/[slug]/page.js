@@ -42,6 +42,7 @@ import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
 import GameTabs from '@/components/gridiron/GameTabs';
 import AlertBell from '@/components/alerts/AlertBell';
+import { stateFromMatch, gameUrlFor } from '@/lib/push/liveActivityState';
 import { auth } from '@/auth';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import GameTeamRow from '@/components/gridiron/GameTeamRow';
@@ -297,11 +298,21 @@ export default async function CfbGamePage({ params, searchParams }) {
                 control for one idea: a reader who set alerts from the
                 scoreboard opens the same sheet here and sees the state they
                 left. */}
+            {/* THE LOCK-SCREEN DOOR RIDES THE SHEET (LIVE ACTIVITY DOOR
+                relay). The six fields and the deep link are built HERE, on
+                the server, by the same stateFromMatch()/gameUrlFor() pair
+                scripts/live-activity-push.mjs uses - so the card on the lock
+                screen and the push that updates it cannot disagree about the
+                score. The sheet decides whether to draw the row; it is given
+                the inputs, never asked to invent them. */}
             <AlertBell compact={false} signedIn={viewerId != null} match={{
               id: game.id, slug: game.slug, leagueSlug: game.leagueSlug,
               homeAbbr: game.home?.abbreviation ?? '', awayAbbr: game.away?.abbreviation ?? '',
               homeTeamId: game.home?.id ?? null, homeSlug: game.home?.slug ?? null,
               kickoffAt: game.kickoffAt,
+            }} liveActivity={{
+              url: gameUrlFor(game), state: stateFromMatch(game),
+              final: game.status === 'final',
             }} />
           </div>
         </header>

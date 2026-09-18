@@ -14,7 +14,7 @@
 // ask for is the fastest way to get permission denied permanently, and denied
 // is not recoverable from the page.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { DEFAULTS, nextRow } from '@/lib/push/prefs';
 import { dayHeading, kickoffParts } from '@/lib/gridiron/kickoff';
 import { useViewerTz } from '@/components/gridiron/useViewerTz';
@@ -22,6 +22,9 @@ import { tzOrUtc } from '@/lib/gridiron/viewerTz';
 import { enableAlerts } from './enable';
 import { summaryLine } from '@/lib/push/sheetRules';
 import { orderFor, connectorFor } from '@/lib/gridiron/teamOrder';
+import {
+  startLiveActivity, endLiveActivity, canUseLiveActivityBridge,
+} from '@/lib/shell/liveActivityBridge';
 import './alerts.css';
 
 // The five trigger rows, in the order the sheet draws them. Data, not markup,
@@ -38,6 +41,16 @@ const ROWS = [
   { key: 'final', title: 'Final', trigger: 'The result, when the game ends' },
 ];
 
+// THE BRIDGE IS AN EXTERNAL SOURCE, not state - the shell cookie and
+// window.Capacitor do not exist during the server render, and finding that out
+// in a mount effect is both a cascading render and a lint error. Same
+// useSyncExternalStore the retired debug panel used, and AppHeader before it.
+// The server snapshot is false, so the row is absent in the first paint and
+// appears only where it can actually work.
+const subscribeBridge = () => () => {};
+const bridgeSnapshot = () => canUseLiveActivityBridge();
+const bridgeServerSnapshot = () => false;
+
 function Toggle({ on, onChange, label, disabled }) {
   return (
     <button
@@ -50,7 +63,13 @@ function Toggle({ on, onChange, label, disabled }) {
   );
 }
 
-export default function AlertBell({ match, signedIn = false, compact = true }) {
+/**
+ * @param {object} [liveActivity] the lock-screen door's inputs, supplied by the
+ *   GAME PAGES only: { url, state, final }. Absent on the scoreboard card,
+ *   which has no stateFromMatch() in hand - and a card that cannot build the
+ *   six fields must not draw a switch that would post an empty one.
+ */
+export default function AlertBell({ match, signedIn = false, compact = true, liveActivity = null }) {
   const [open, setOpen] = useState(false);
   const [prefs, setPrefs] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -58,6 +77,9 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
   // say which toggle did not take, so the reader turns the wrong one back off.
   const [rowError, setRowError] = useState(null);
   const [saved, setSaved] = useState(false);
+  // THE SWITCH'S STATE IS THE TABLE'S, read on the same fetch as the prefs.
+  // null = not read yet, so the switch cannot claim off before it knows.
+  const [laOn, setLaOn] = useState(null);
   const triggerRef = useRef(null);
   const sheetRef = useRef(null);
   const tz = useViewerTz();
@@ -71,8 +93,8 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
     let dead = false;
     fetch(`/api/push/prefs?matchId=${match.id}&teamId=${match.homeTeamId ?? ''}`)
       .then((r) => r.json())
-      .then((j) => { if (!dead) setPrefs(j.prefs ?? DEFAULTS); })
-      .catch(() => { if (!dead) setPrefs(DEFAULTS); });
+      .then((j) => { if (!dead) { setPrefs(j.prefs ?? DEFAULTS); setLaOn(Boolean(j.liveActivity)); } })
+      .catch(() => { if (!dead) { setPrefs(DEFAULTS); setLaOn(false); } });
     return () => { dead = true; };
   }, [open, prefs, signedIn, match.id, match.homeTeamId]);
 
@@ -134,6 +156,27 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
 
   const setRow = (key, value) => save({ ...p, [key]: value }, key);
 
+  const canBridge = useSyncExternalStore(subscribeBridge, bridgeSnapshot, bridgeServerSnapshot);
+  // THREE CONDITIONS, ALL REQUIRED, AND ONE OF THEM IS THE GAME'S OWN STATE.
+  // No bridge: a browser cannot hold a Live Activity, so the row would be a
+  // switch that posts nothing. No liveActivity prop: the caller could not
+  // build the six fields. Final: there is nothing left to follow, and an
+  // Activity started on a finished game is a card that never updates and
+  // never ends on its own.
+  const showLive = Boolean(canBridge && liveActivity && !liveActivity.final);
+
+  const toggleLive = (want) => {
+    const posted = want
+      ? startLiveActivity({ matchId: match.id, url: liveActivity.url, state: liveActivity.state })
+      : endLiveActivity({ matchId: match.id });
+    // THE SWITCH FOLLOWS THE POST, NOT THE DATABASE. live_activities is
+    // written by the APP when it registers the Activity it actually started -
+    // the web side never writes that row and must not pretend it did. If the
+    // post did not go out, the switch stays where it was and says so.
+    if (posted) { setLaOn(want); setRowError(null); setSaved(true); }
+    else setRowError({ key: 'live', message: 'The app did not take that. Reopen the game and try again.' });
+  };
+
   const p = prefs ?? DEFAULTS;
   // A CHIP MAY ONLY CLAIM KNOWLEDGE: the pill lights only when we have read the
   // prefs and something is actually on.
@@ -193,6 +236,23 @@ export default function AlertBell({ match, signedIn = false, compact = true }) {
                 <p className="al-note">
                   Push to this phone. This game only. Your team defaults live on the team page.
                 </p>
+
+                {/* THE LOCK-SCREEN DOOR, first because it is the loudest
+                    thing the sheet can do - a card on the lock screen, not a
+                    notification that arrives and goes. Shell only, and never
+                    on a game that is already final. */}
+                {showLive ? (
+                  <div className="al-row al-row--live">
+                    <div className="al-txt">
+                      <span className="al-title">Live on lock screen</span>
+                      <span className="al-trig">The score, updating, until the game ends</span>
+                      {rowError?.key === 'live'
+                        ? <span className="al-rowerr">{rowError.message}</span> : null}
+                    </div>
+                    <Toggle on={laOn === true} label="Live on lock screen"
+                      disabled={laOn === null} onChange={toggleLive} />
+                  </div>
+                ) : null}
 
                 <div className="al-row al-row--master">
                   <div className="al-txt">

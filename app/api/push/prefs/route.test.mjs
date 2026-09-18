@@ -60,7 +60,12 @@ const row = async () => (await sql`SELECT user_id, scope, scope_id, master, kick
 
 test('a fresh user reads OFF, and one master tap writes the DEFAULTS row (R1)', async () => {
   assert.equal(await row(), null, 'no row before the tap');
-  assert.deepEqual(await get(), { signedIn: true, prefs: { ...OFF, source: 'default' } });
+  // liveActivity RIDES THIS READ (LIVE ACTIVITY DOOR relay): the sheet's
+  // lock-screen switch is keyed on the same match and the same reader as the
+  // prefs, so it is answered on the same fetch rather than through a second
+  // route. False with no Activity running - and false is what a failed read
+  // returns too, because off is the state a reader can act on.
+  assert.deepEqual(await get(), { signedIn: true, prefs: { ...OFF, source: 'default' }, liveActivity: false });
   // The sheet sends the flags it was showing with master flipped: OFF + master.
   const r = await put({ ...OFF, master: true });
   assert.deepEqual(r, { ok: true, prefs: { ...DEFAULTS, source: 'match' } });
@@ -69,7 +74,7 @@ test('a fresh user reads OFF, and one master tap writes the DEFAULTS row (R1)', 
     master: true, kickoff: true, score: true, quarter: false, close: true, final_only: true });
   if (process.env.ALERTS_PASTE) console.log(`\nPASTE alert_prefs row on DEV after one master tap (sentinel user ${userId}):\n${JSON.stringify(saved)}\n`);
   // And the read maps final_only back to `final`.
-  assert.deepEqual(await get(), { signedIn: true, prefs: { ...DEFAULTS, source: 'match' } });
+  assert.deepEqual(await get(), { signedIn: true, prefs: { ...DEFAULTS, source: 'match' }, liveActivity: false });
 });
 
 test('master OFF keeps the triggers; master ON again with a row keeps the reader\'s flags', async () => {

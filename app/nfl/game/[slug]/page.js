@@ -40,7 +40,6 @@ import { propsSlate } from '@/lib/market/reads';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import BackToAppBar from '@/components/BackToAppBar';
-import LiveActivityDebug from '@/components/gridiron/LiveActivityDebug';
 import { stateFromMatch, gameUrlFor } from '@/lib/push/liveActivityState';
 import { getTeamRecordChip } from '@/lib/standings/read';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -241,11 +240,21 @@ export default async function GamePage({ params, searchParams }) {
                 control for one idea: a reader who set alerts from the
                 scoreboard opens the same sheet here and sees the state they
                 left. */}
+            {/* THE LOCK-SCREEN DOOR RIDES THE SHEET (LIVE ACTIVITY DOOR
+                relay). The six fields and the deep link are built HERE, on
+                the server, by the same stateFromMatch()/gameUrlFor() pair
+                scripts/live-activity-push.mjs uses - so the card on the lock
+                screen and the push that updates it cannot disagree about the
+                score. The sheet decides whether to draw the row; it is given
+                the inputs, never asked to invent them. */}
             <AlertBell compact={false} signedIn={viewerId != null} match={{
               id: game.id, slug: game.slug, leagueSlug: game.leagueSlug,
               homeAbbr: game.home?.abbreviation ?? '', awayAbbr: game.away?.abbreviation ?? '',
               homeTeamId: game.home?.id ?? null, homeSlug: game.home?.slug ?? null,
               kickoffAt: game.kickoffAt,
+            }} liveActivity={{
+              url: gameUrlFor(game), state: stateFromMatch(game),
+              final: game.status === 'final',
             }} />
           </div>
         </header>
@@ -328,19 +337,13 @@ export default async function GamePage({ params, searchParams }) {
           <PreGameFacts game={game} />
         )}
 
-        {/* LIVE ACTIVITY DEBUG (relay 3B item 2). SHELL ONLY, and nothing on
-            this page calls the bridge on its own - this is the deliberate hand
-            that starts an Activity for this game and ends it, the web
-            equivalent of the native debug buttons. The six fields come from
-            stateFromMatch(), the same builder scripts/live-activity-push.mjs
-            uses, so the card and the push cannot disagree about the score. */}
-        {isShell ? (
-          <LiveActivityDebug
-            matchId={game.id}
-            url={gameUrlFor(game)}
-            state={stateFromMatch(game)}
-          />
-        ) : null}
+        {/* THE LIVE ACTIVITY DEBUG PANEL WAS HERE and is gone (LIVE ACTIVITY
+            DOOR relay). It existed to prove the bridge, the six fields and the
+            deep link against a real handset before anything was wired to a
+            reader's hand; that is now the Alerts sheet's "Live on lock screen"
+            row, which is the same two calls with a state the reader can see.
+            A debug control that has been superseded by a shipped one is not a
+            safety net, it is a second way to start the same Activity. */}
 
         <footer className="gg-foot">
           SPORTSVYN IS NOT AFFILIATED WITH, ENDORSED BY, OR SPONSORED BY THE NATIONAL

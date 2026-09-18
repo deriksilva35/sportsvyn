@@ -6,6 +6,7 @@
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { DEFAULTS, SELECT_FIELDS, nextRow, resolvePrefs } from '@/lib/push/prefs';
+import { viewerActivityFor } from '@/lib/push/liveActivityStore';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,7 @@ const SCOPES = new Set(['team', 'match']);
 export async function GET(request) {
   const session = await auth().catch(() => null);
   const userId = session?.user?.id ?? null;
-  if (!userId) return Response.json({ signedIn: false, prefs: { ...DEFAULTS, source: 'default' } });
+  if (!userId) return Response.json({ signedIn: false, prefs: { ...DEFAULTS, source: 'default' }, liveActivity: false });
 
   const u = new URL(request.url);
   const matchId = Number(u.searchParams.get('matchId')) || null;
@@ -26,11 +27,27 @@ export async function GET(request) {
   const [teamPref] = teamId ? await sql`
     SELECT ${sql.unsafe(SELECT_FIELDS)} FROM alert_prefs
      WHERE user_id = ${userId} AND scope = 'team' AND scope_id = ${teamId}` : [];
+  // THE LOCK-SCREEN SWITCH RIDES THIS FETCH RATHER THAN OPENING A ROUTE OF
+  // ITS OWN. It is keyed on exactly the same two things the prefs are - this
+  // match, this reader - and it is read at exactly the same moment, when the
+  // sheet first opens. A second endpoint would be a second round trip for one
+  // boolean, and a second place for the sheet's state to be half-loaded.
+  //
+  // Caught to false: a failed read must leave the switch off, because off is
+  // the state a reader can act on - an ON switch that cannot be turned off
+  // is worse than an OFF switch that has to be tapped twice.
+  const liveActivity = matchId
+    ? await viewerActivityFor(sql, { matchId, userId }).catch(() => false)
+    : false;
   // scope: 'match' whenever a matchId was asked for - the per-game sheet's
   // own read. With neither a saved match row nor a saved team row,
   // resolvePrefs() renders OFF rather than DEFAULTS (relay ruling: "the
   // screen may never show a push the system will not attempt").
-  return Response.json({ signedIn: true, prefs: resolvePrefs({ teamPref, matchPref, scope: matchId ? 'match' : null }) });
+  return Response.json({
+    signedIn: true,
+    prefs: resolvePrefs({ teamPref, matchPref, scope: matchId ? 'match' : null }),
+    liveActivity,
+  });
 }
 
 export async function PUT(request) {
