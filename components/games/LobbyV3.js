@@ -25,6 +25,8 @@ import Link from 'next/link';
 import HouseTag from '@/components/house/HouseTag';
 import StandaloneTime from '@/components/StandaloneTime';
 import { V3_CHIPS, V3_CHIP_LABEL } from '@/lib/games/lobby';
+import SeasonBoard from '@/components/games/SeasonBoard';
+import '@/components/games/season.css';
 
 // ---------------------------------------------------------------------------
 // the now card
@@ -128,17 +130,38 @@ function WeekPane({ v, signedIn, signinHref }) {
 // BOARDS - week boards here, season standings on Rankings
 // ---------------------------------------------------------------------------
 function BoardsPane({ v, userId }) {
-  const { boards = [], boardKey = null } = v;
+  const { boards = [], boardKey = null, sections = null } = v;
   const board = boards.find((b) => b.key === boardKey) ?? boards[0] ?? null;
+  const tabs = boards.map((b) => (
+    <Link key={b.key} href={`/games?pane=boards&b=${b.key}`}
+      className={b.key === board?.key ? 'on' : undefined}>{b.label}</Link>
+  ));
+
+  // THE SEASON TAB RENDERS THE SAME COMPONENT THE LEAGUE PAGE DOES. One
+  // definition, both scopes - which is the law components/games/seasonBoard
+  // .test.mjs has guarded since the board existed, and the reason this tab
+  // exists at all is in lib/games/lobbyV3.js beside V3_BOARD_TABS.
+  if (boardKey === 'season') {
+    return (
+      <>
+        <div className="gv-lb"><div className="gv-lbh">{tabs}</div></div>
+        {(sections ?? []).map((sec) => (
+          <section className="gv-season" key={sec.key}>
+            <div className="gv-sh"><h3>{sec.name}</h3></div>
+            {sec.state === 'live'
+              ? <SeasonBoard table={sec.table} userId={userId} />
+              : <p className="gv-foot">{sec.populatesLabel}</p>}
+          </section>
+        ))}
+        <p className="gv-foot">Week boards on the other four tabs</p>
+      </>
+    );
+  }
+
   return (
     <>
       <div className="gv-lb">
-        <div className="gv-lbh">
-          {boards.map((b) => (
-            <Link key={b.key} href={`/games?pane=boards&b=${b.key}`}
-              className={b.key === board?.key ? 'on' : undefined}>{b.label}</Link>
-          ))}
-        </div>
+        <div className="gv-lbh">{tabs}</div>
         {!board || !board.rows?.length ? (
           // THE BY-DAY RULE, STATED RATHER THAN DRAWN EMPTY (addendum 3). A
           // Thursday Weekly board has entries and no scores; Pick'em has no

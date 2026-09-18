@@ -106,3 +106,4 @@
    on games.css, so only the foot link needs a rule of its own. */
 .gv-more { margin: 10px 0 0; }
 .gv-more .ghost { font-size: 12px; letter-spacing: .02em; }
+.gv-season { margin: 0 0 14px; }

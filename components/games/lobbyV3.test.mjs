@@ -393,3 +393,34 @@ test('signed out on Alerts: one door, and no list of somebody else’s alerts', 
   assert.match(txt(c), /Sign in to set them/);
   assert.equal(c.querySelector('.gv-alrow a').getAttribute('href'), '/signin?callbackUrl=%2Fgames%3Fpane%3Dalerts');
 });
+
+test('the SEASON tab draws the four season boards through the shared component', () => {
+  const table = (rows) => ({ top: rows, self: null, through: null });
+  const c = screen({ chip: 'boards', userId: 1, v: { boards: {
+    boardKey: 'season',
+    boards: [{ key: 'weekly', label: 'WEEKLY', rows: [] }, { key: 'season', label: 'SEASON', rows: [] }],
+    sections: [
+      { key: 'overall', name: 'The Daily — season', state: 'live',
+        table: table([{ rank: 1, userId: 1, name: '@sportsvyn_og', value: '66.6' }]) },
+      { key: 'draft', name: 'The Draft — season', state: 'pending', populatesLabel: 'First settle with Week 1' },
+    ],
+  } } });
+  assert.match(txt(c), /The Daily — season/);
+  assert.match(txt(c), /@sportsvyn_og/);
+  // A PENDING BOARD SAYS WHEN IT POPULATES, and draws no empty table.
+  assert.match(txt(c), /The Draft — season/);
+  assert.match(txt(c), /First settle with Week 1/);
+  // and the tabs are still all there, so the reader can get back
+  assert.deepEqual([...c.querySelectorAll('.gv-lbh a')].map((a) => txt(a)), ['WEEKLY', 'SEASON']);
+});
+
+test('the season boards are reachable at all: no season table is orphaned by the v2 removal', async () => {
+  // v2's leaderboards pane was the ONLY home of the Weekly, Draft and Daily
+  // season tables, and Rankings links back to /games for the full Pick'em
+  // one. This asserts the reader still composes all four.
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../../lib/games/lobbyV3.js', import.meta.url), 'utf8');
+  for (const call of ["overall(uid, 10)", "pickemTable(uid, { sport: null })", "gameSeasonTable('weekly', uid)", "gameSeasonTable('draft', uid)"]) {
+    assert.ok(src.includes(call), `the season tab must still read ${call}`);
+  }
+});
