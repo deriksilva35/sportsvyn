@@ -39,6 +39,7 @@ import { lineTwoTokens, seatSortHint } from '@/lib/fantasy/lineTwo';
 import { valueGap } from '@/lib/fantasy/needs';
 import { flagsAfterResult, flagsAfterArm } from '@/lib/fantasy/roomFlags';
 import { nextUserOverall } from '@/lib/fantasy/tracker';
+import { remainingSeconds } from '@/lib/draft/deadline';
 import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/scoring';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
@@ -72,6 +73,12 @@ const r0 = (x) => (x == null ? '?' : Math.round(Number(x)));
 
 export default function DraftRoom({
   draftId, config, order, userTeamIndex, initialPicks, initialAvailable, timerSeconds, initialAuto, poolMapping, minors = [],
+  // THE SERVER'S DEADLINE FOR THE TURN ON THE CLOCK (migration 105). The
+  // countdown seeds from THIS, not from timerSeconds, so a reload shows the
+  // true remainder instead of buying another full clock - and a phone that
+  // slept lands on a resolved room, because the read that produced these props
+  // settled the expired turn before it rendered. Null in an untimed room.
+  turnDeadlineAt = null,
   upcomingKeepers = [], franchise = null,
   // THE ROLLING POOL'S OTHER HALF (v2). Players whose game has kicked off:
   // the writer has always refused them ('player_kicked_off') and this list is
@@ -104,7 +111,9 @@ export default function DraftRoom({
   const [page, setPage] = useState(1); // swipe pager index: 0 BOARD / 1 PICK / 2 ROSTER
   const [view, setView] = useState('list'); // desktop (>900) only: 'list' 3-col | 'board' full-width snake grid
   const pagerRef = useRef(null);
-  const [clock, setClock] = useState(timerSeconds ?? null);
+  const [clock, setClock] = useState(() => (
+    turnDeadlineAt != null ? remainingSeconds(turnDeadlineAt, timerSeconds, new Date()) : (timerSeconds ?? null)
+  ));
   const [auto, setAuto] = useState(initialAuto === true);
   const [expandedId, setExpandedId] = useState(null);
   const [statsById, setStatsById] = useState({}); // id -> 'loading' | null | SeasonStats
@@ -241,7 +250,14 @@ export default function DraftRoom({
       await delay(pk.isUser ? 0 : 220); // user pick instant; AI picks reveal one by one
     }
     setRevealing(false);
-    setClock(timerSeconds ?? null);
+    // THE NEW TURN'S CLOCK COMES BACK WITH THE PICKS. persistTurn writes the
+    // next deadline in the same transaction, so seeding from it keeps the
+    // number on screen and the number the server will act on the same one -
+    // the reveal animation above takes real seconds, and restarting at the
+    // full timer here would hand them back.
+    setClock(res.turnDeadlineAt != null
+      ? remainingSeconds(res.turnDeadlineAt, timerSeconds, new Date())
+      : (timerSeconds ?? null));
     if (res.status === 'completed') router.refresh(); // server re-renders as results
   }, [router, timerSeconds]);
 
