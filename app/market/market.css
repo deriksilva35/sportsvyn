@@ -294,3 +294,153 @@
   margin-left: 5px; vertical-align: middle;
 }
 .mk-wrap .pt-foot { font-size: 10px; color: var(--muted); padding: 12px 14px; line-height: 1.6; }
+
+/* ===========================================================================
+   THE PROPS INDEX (Player Props Part B) - every priced prop, grouped by game.
+   House tokens only, same as the rest of this sheet: --rule, --graphite,
+   --paper, --muted, --volt, --jade, --terra, --live.
+   =========================================================================== */
+.px { margin: 0; }
+.px-frow { display: flex; gap: 5px; padding: 4px 0; overflow-x: auto; scrollbar-width: none; }
+.px-frow::-webkit-scrollbar { display: none; }
+.px-frow .l, .px-sortrow .l {
+  flex: 0 0 auto; width: 36px; align-self: center;
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 8px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--muted-dim);
+}
+.px-chip {
+  flex: 0 0 auto; white-space: nowrap; border: 1px solid var(--rule); border-radius: 99px;
+  padding: 4px 10px; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px;
+  font-weight: 700; letter-spacing: .04em; color: var(--muted); text-decoration: none;
+}
+.px-chip.on { border-color: var(--volt); color: var(--volt); }
+.px-chip.qb.on { border-color: #FF5C8A; color: #FF5C8A; }
+.px-chip.rb.on { border-color: #4ADE80; color: #4ADE80; }
+.px-chip.wr.on { border-color: #38BDF8; color: #38BDF8; }
+.px-chip.te.on { border-color: #FB923C; color: #FB923C; }
+.px-sortrow { display: flex; align-items: center; gap: 6px; padding: 8px 0 2px; }
+.px-sortrow .cnt {
+  margin-left: auto; font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 9px; font-weight: 600; color: var(--muted-dim);
+}
+
+.px-gh { display: flex; align-items: center; gap: 8px; margin: 16px 0 6px; }
+.px-gh b { font-family: var(--font-saira), sans-serif; font-weight: 800; font-size: 12px; text-transform: uppercase; color: var(--paper); }
+.px-gh .t { margin-left: auto; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; font-weight: 600; color: var(--muted); }
+.px-gh .t .live { font-style: normal; color: var(--live, #E63946); font-weight: 700; }
+
+.px-list { border: 1px solid var(--rule); border-radius: 14px; background: var(--graphite); overflow: hidden; }
+.px-row {
+  display: flex; align-items: center; gap: 9px; padding: 9px 11px;
+  border-bottom: 1px solid var(--rule); text-decoration: none; color: inherit;
+}
+.px-row:last-child { border-bottom: 0; }
+.px-row:hover { background: var(--graphite-up); }
+.px-pb {
+  flex: 0 0 auto; width: 24px; height: 18px; border-radius: 5px; display: grid; place-items: center;
+  font-family: var(--font-saira), sans-serif; font-weight: 800; font-size: 8px; color: #0A0A0A;
+}
+.px-pb.qb { background: #FF5C8A; } .px-pb.rb { background: #4ADE80; }
+.px-pb.wr { background: #38BDF8; } .px-pb.te { background: #FB923C; }
+.px-pb.none { background: transparent; border: 1px solid var(--rule); color: var(--muted-dim); }
+.px-who { flex: 1; min-width: 0; }
+.px-who b { display: block; font-size: 12px; font-weight: 600; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.px-who small {
+  display: block; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px;
+  color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.px-who small i { font-style: normal; color: var(--paper); font-weight: 700; }
+
+/* THE SPARKLINE. An empty slot keeps the columns aligned on unlinked rows -
+   the row reads identically minus the bars, which is the point. */
+.px-spark { display: flex; gap: 2px; align-items: flex-end; height: 16px; width: 34px; flex: 0 0 auto; }
+.px-spark i { flex: 1; border-radius: 2px; background: var(--rule); }
+.px-spark i.o { background: var(--jade); }
+.px-spark i.u { background: var(--muted-dim); }
+/* A DNP IS AN OUTLINE, NOT A ZERO - it was not measured, it did not fail. */
+.px-spark i.dnp { background: transparent; border: 1px dashed var(--rule); }
+.px-spark.empty { visibility: hidden; }
+
+.px-num { flex: 0 0 auto; width: 52px; text-align: right; }
+.px-num b {
+  display: block; font-family: var(--font-jetbrains-mono), monospace; font-size: 13px;
+  font-weight: 800; letter-spacing: -.02em; line-height: 1; color: var(--paper);
+}
+.px-num b.off { font-size: 12px; color: var(--muted); }
+.px-num span {
+  display: block; font-family: var(--font-jetbrains-mono), monospace; font-size: 7px;
+  font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); margin-top: 2px;
+}
+.px-num.hit b { color: var(--jade); }
+.px-num.hit.cold b { color: var(--terra); }
+
+.px-empty {
+  margin: 12px 0; border: 1px dashed var(--rule); border-radius: 14px; padding: 18px;
+  text-align: center; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px;
+  font-weight: 600; letter-spacing: .05em; color: var(--muted-dim);
+}
+.px-ft {
+  margin: 14px 0 0; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px;
+  line-height: 1.5; color: var(--muted-dim);
+}
+.px-ft b { color: var(--muted); font-weight: 700; }
+
+/* ===========================================================================
+   THE PLAYER PROP CARD (/market/props/<slug>?match=<id>)
+   =========================================================================== */
+.ppc { max-width: 520px; }
+.ppc-strip {
+  display: flex; align-items: center; gap: 10px; text-decoration: none;
+  border: 1px solid var(--rule); border-radius: 12px; background: var(--graphite);
+  padding: 10px 12px; margin-bottom: 14px;
+}
+.ppc-strip b { font-family: var(--font-saira), sans-serif; font-weight: 800; font-size: 13px; text-transform: uppercase; color: var(--paper); }
+.ppc-strip span { margin-left: auto; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; color: var(--muted); }
+.ppc-strip .live { font-style: normal; color: var(--live, #E63946); font-weight: 700; }
+.ppc-who h1 {
+  font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
+  text-transform: uppercase; font-size: 30px; line-height: 1.02; letter-spacing: -.02em;
+  color: var(--paper); margin: 0;
+}
+.ppc-who p { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted); margin: 4px 0 18px; }
+
+.ppc-prop { border: 1px solid var(--rule); border-radius: 13px; background: var(--graphite); padding: 12px; margin-bottom: 10px; }
+.ppc-ph { display: flex; align-items: baseline; gap: 8px; }
+.ppc-ph b { font-family: var(--font-saira), sans-serif; font-weight: 800; font-size: 13px; text-transform: uppercase; color: var(--paper); }
+.ppc-ph .bk { margin-left: auto; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; color: var(--muted-dim); }
+.ppc-cells { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 12px; }
+.ppc-cells .c { border: 1px solid var(--rule); border-radius: 10px; padding: 8px 10px; }
+.ppc-cells .c b {
+  display: block; font-family: var(--font-jetbrains-mono), monospace; font-size: 20px;
+  font-weight: 800; letter-spacing: -.03em; line-height: 1; color: var(--paper);
+}
+.ppc-cells .c b.off { font-size: 16px; color: var(--muted); }
+.ppc-cells .c span {
+  display: block; font-family: var(--font-jetbrains-mono), monospace; font-size: 8px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); margin-top: 3px;
+}
+.ppc-cells .c.hit b { color: var(--jade); }
+.ppc-cells .c.hit.cold b { color: var(--terra); }
+
+.ppc-chart { position: relative; display: flex; align-items: flex-end; gap: 6px; height: 76px; padding-top: 12px; }
+.ppc-bar { flex: 1; position: relative; background: var(--muted-dim); border-radius: 3px 3px 0 0; }
+.ppc-bar.over { background: var(--jade); }
+/* A DNP IS AN OUTLINE - not measured, not a zero, and not in the denominator. */
+.ppc-bar.dnp { background: transparent; border: 1px dashed var(--rule); }
+.ppc-bar .v {
+  position: absolute; top: -12px; left: 0; right: 0; text-align: center;
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; color: var(--muted);
+}
+.ppc-bar .w {
+  position: absolute; bottom: -14px; left: 0; right: 0; text-align: center;
+  font-family: var(--font-jetbrains-mono), monospace; font-size: 8px; color: var(--muted-dim);
+}
+/* THE LINE IS A VOLT RULE across the bars - the price, drawn where it sits. */
+.ppc-line { position: absolute; left: 0; right: 0; border-top: 1px solid var(--volt); pointer-events: none; }
+.ppc-line span {
+  position: absolute; right: 0; top: -12px; font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 9px; font-weight: 700; color: var(--volt);
+}
+.ppc-cap { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; color: var(--muted-dim); margin: 20px 0 0; }
+.ppc-ft { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; line-height: 1.6; color: var(--muted-dim); margin: 18px 0 0; }
+.ppc-ft b { color: var(--muted); font-weight: 700; }
