@@ -1,0 +1,302 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mock draft · v2 mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;
+--qb:#FF5C8A;--rb:#4ADE80;--wr:#38BDF8;--te:#FB923C;--k:#C084FC;--dst:#94A3B8;--mono:'JetBrains Mono',monospace;--disp:'Saira',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#050506;color:var(--paper);font:14px/1.5 system-ui,sans-serif;padding:10px}
+.wrap{max-width:394px;margin:0 auto}
+.cap{color:var(--muted);font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 7px}
+.cap:first-child{margin-top:0}
+#err{display:none;background:#3a0d0d;border:1px solid var(--live);color:#ffd7d7;border-radius:8px;padding:9px 11px;font:600 11px var(--mono);margin-bottom:8px;white-space:pre-wrap}
+.app{background:var(--ink);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eb{color:var(--volt);font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.q{color:var(--quiet)}
+.c-qb{color:var(--qb)}.c-rb{color:var(--rb)}.c-wr{color:var(--wr)}.c-te{color:var(--te)}.c-k{color:var(--k)}.c-dst{color:var(--dst)}
+.pb{width:24px;height:18px;border-radius:5px;display:grid;place-items:center;font:800 8px var(--disp);color:#0A0A0A;flex:0 0 auto}
+.pb.qb{background:var(--qb)}.pb.rb{background:var(--rb)}.pb.wr{background:var(--wr)}.pb.te{background:var(--te)}.pb.k{background:var(--k)}.pb.dst{background:var(--dst)}
+.hd{padding:12px 14px 11px;border-bottom:1px solid var(--line);background:#111}
+.hd-top{display:flex;align-items:center;margin-bottom:9px}
+.hd-top .ed{color:var(--quiet);font:600 9px var(--mono);margin-left:auto}
+.rec{display:flex;align-items:flex-end;gap:12px}
+.rec .big{font:800 40px var(--mono);letter-spacing:-.03em;line-height:.9}
+.rec .big small{font:700 15px var(--mono);color:var(--quiet);margin-left:3px}
+.rec .rt{margin-left:auto;text-align:right}
+.rec .rt b{display:block;font:800 26px var(--mono);letter-spacing:-.03em;line-height:1;color:var(--volt)}
+.rec .rt span{font:600 9px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.sub{display:flex;justify-content:space-between;margin-top:7px;font:500 10px var(--mono);color:var(--muted)}
+.sh{display:flex;align-items:baseline;gap:8px;margin:12px 12px 6px}
+.sh h3{font:700 13px var(--disp);text-transform:uppercase;letter-spacing:.03em}
+.sh .r{margin-left:auto;color:var(--quiet);font:600 9px var(--mono);letter-spacing:.06em}
+.ft{border-top:1px solid var(--line);margin-top:12px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.ft .pace{font:500 11px var(--mono);color:var(--muted);line-height:1.3}
+.ft .pace b{color:var(--paper);font-weight:700}
+.btn{margin-left:auto;background:var(--volt);color:var(--ink);border:0;border-radius:99px;padding:10px 18px;font:700 14px system-ui;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:var(--ink-3);color:var(--muted)}
+
+/* ===== SETUP ===== */
+.deck{display:grid;gap:6px;padding:0 12px}
+.pre{border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:10px 11px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.pre.on{border-color:var(--volt);background:rgba(212,255,0,.07)}
+.pre .t{min-width:0;flex:1}
+.pre .t b{display:block;font:700 13px var(--disp);text-transform:uppercase;letter-spacing:.01em}
+.pre.on .t b{color:var(--volt)}
+.pre .t small{display:block;font:500 9px var(--mono);color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pre .tag{font:700 8px var(--mono);letter-spacing:.1em;padding:2px 6px;border-radius:99px;border:1px solid var(--line);color:var(--quiet);flex:0 0 auto}
+.pre .tag.v{border-color:var(--volt);color:var(--volt)}
+.pre .tag.j{border-color:var(--jade);color:var(--jade)}
+.opts{margin:10px 12px 0;border:1px solid var(--line);border-radius:12px;background:var(--ink-2);overflow:hidden}
+.opt{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid var(--line)}
+.opt:last-child{border:0}
+.opt .l{font:700 9px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--quiet);width:64px}
+.seg{display:flex;gap:3px;margin-left:auto}
+.seg span{border:1px solid var(--line);border-radius:99px;padding:3px 9px;font:700 9px var(--mono);color:var(--quiet);cursor:pointer}
+.seg span.on{border-color:var(--volt);color:var(--volt)}
+.slots{display:flex;gap:3px;margin-left:auto}
+.slots i{width:19px;height:19px;border-radius:5px;border:1px solid var(--line);font:700 9px/17px var(--mono);text-align:center;color:var(--quiet);font-style:normal;cursor:pointer}
+.slots i.on{border-color:var(--volt);color:var(--volt);background:rgba(212,255,0,.1)}
+.slots i.rnd{width:auto;padding:0 6px}
+.ros{display:flex;flex-wrap:wrap;gap:3px;padding:0 12px}
+.ros span{font:800 9px var(--disp);letter-spacing:.06em;padding:3px 7px;border-radius:5px;background:var(--ink-3);border:1px solid var(--line)}
+
+/* ===== ROOM ===== */
+.clk{padding:12px 14px 0;background:#111;border-bottom:1px solid var(--line)}
+.clk-top{display:flex;align-items:center;margin-bottom:8px}
+.clk-top .ed{margin-left:auto;font:600 9px var(--mono);color:var(--quiet)}
+.otc{display:flex;align-items:flex-end;gap:10px}
+.otc .who{min-width:0}
+.otc .who .lab{font:700 9px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--quiet)}
+.otc .who b{display:block;font:900 24px var(--disp);text-transform:uppercase;line-height:1;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.otc .who b.you{color:var(--volt)}
+.otc .who small{display:block;font:500 9px var(--mono);color:var(--muted);margin-top:3px}
+.otc .t{margin-left:auto;text-align:right;flex:0 0 auto}
+.otc .t b{display:block;font:800 44px var(--mono);letter-spacing:-.05em;line-height:.85;color:var(--volt)}
+.otc .t span{font:600 9px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.drain{height:3px;background:var(--ink-3);margin:10px -14px 0;position:relative}
+.drain i{position:absolute;left:0;top:0;bottom:0;background:var(--volt);width:80%}
+.seats{display:flex;gap:3px;padding:9px 12px 0}
+.seat{flex:1;height:34px;border-radius:7px;border:1px solid var(--line);background:var(--ink-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;position:relative}
+.seat b{font:800 10px var(--mono);color:var(--muted);line-height:1}
+.seat small{font:600 6px var(--mono);color:var(--quiet);letter-spacing:.04em;text-transform:uppercase;line-height:1}
+.seat.done{opacity:.5}.seat.on{border-color:var(--volt);background:rgba(212,255,0,.12)}.seat.on b{color:var(--volt)}
+.seat.you{border-color:var(--paper)}.seat.you.on{border-color:var(--volt)}
+.seat.you::after{content:'';position:absolute;bottom:-4px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:99px;background:var(--volt)}
+.snake{display:flex;justify-content:space-between;padding:6px 12px 0;font:600 8px var(--mono);color:var(--quiet);letter-spacing:.08em;text-transform:uppercase}
+.tick{display:flex;gap:6px;padding:10px 12px 0;overflow-x:auto;scrollbar-width:none}
+.tk{flex:0 0 auto;border:1px solid var(--line);border-radius:9px;background:var(--ink-2);padding:5px 8px;min-width:96px}
+.tk small{display:block;font:600 8px var(--mono);color:var(--quiet);letter-spacing:.06em}
+.tk b{display:block;font:700 11px var(--disp);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.tk i{font:500 8px var(--mono);color:var(--muted);font-style:normal}
+.tk.you{border-color:var(--volt)}.tk.you small{color:var(--volt)}
+.tabs{display:flex;gap:4px;padding:0 12px;overflow-x:auto;scrollbar-width:none}
+.tab{border:1px solid var(--line);border-radius:99px;padding:3px 10px;font:700 9px var(--mono);color:var(--quiet);cursor:pointer;flex:0 0 auto}
+.tab.on{border-color:var(--volt);color:var(--volt)}
+.tab.need{border-color:var(--terra);color:var(--terra)}
+.board{margin:8px 12px 0;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);overflow:hidden}
+.bh{display:flex;gap:7px;padding:5px 10px;border-bottom:1px solid var(--line);font:600 8px var(--mono);color:var(--quiet);letter-spacing:.08em;text-transform:uppercase}
+.bh .adp{margin-left:auto;width:36px;text-align:right}.bh .pts{width:40px;text-align:right}
+.prow{display:flex;align-items:center;gap:7px;padding:7px 10px;border-bottom:1px solid var(--line);cursor:pointer}
+.prow:last-child{border:0}
+.prow .rk{font:700 10px var(--mono);color:var(--quiet);width:16px;text-align:right}
+.prow .who{min-width:0;flex:1}
+.prow .who b{display:block;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .who small{display:block;color:var(--muted);font:500 9px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .adp{width:36px;text-align:right;font:700 11px var(--mono);color:var(--muted)}
+.prow .adp.v{color:var(--jade)}
+.prow .pts{width:40px;text-align:right;font:700 13px var(--mono)}
+.prow .star{width:14px;text-align:center;color:var(--quiet);font-size:12px}
+.prow.qd .star{color:var(--volt)}
+.more{padding:7px;text-align:center;font:600 9px var(--mono);color:var(--quiet);letter-spacing:.06em;border-top:1px solid var(--line)}
+.fifteen{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:0 12px}
+.e{border:1.5px dashed var(--line);border-radius:8px;padding:5px 5px 4px;min-height:44px;background:rgba(10,10,10,.5)}
+.e.f{border-style:solid;background:var(--ink-2)}
+.e .r{font:700 7px var(--mono);color:var(--quiet);letter-spacing:.06em}
+.e b{display:block;font:700 9px var(--disp);text-transform:uppercase;line-height:1.05;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.e small{display:block;font:500 7px var(--mono);color:var(--muted);margin-top:1px}
+.e.bn{opacity:.8}
+
+/* ===== THE READ ===== */
+.grade{display:flex;align-items:flex-end;gap:12px}
+.grade .g{font:900 64px var(--disp);letter-spacing:-.04em;line-height:.85;color:var(--volt)}
+.grade .g small{font:800 20px var(--disp);color:var(--quiet);margin-left:2px}
+.grade .rt{margin-left:auto;text-align:right}
+.grade .rt b{display:block;font:800 22px var(--mono);letter-spacing:-.03em;line-height:1}
+.grade .rt b.j{color:var(--jade)}
+.grade .rt span{font:600 9px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.prose{margin:10px 12px 0;border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:10px 11px;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.prose b{color:var(--paper);font-weight:600}
+.calls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;padding:0 12px}
+.call{border:1px solid var(--line);border-radius:10px;background:var(--ink-2);padding:8px 8px 7px;min-height:78px}
+.call .l{font:700 8px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.call b{display:block;font:700 11px var(--disp);text-transform:uppercase;line-height:1.05;margin-top:4px}
+.call small{display:block;font:500 8px var(--mono);color:var(--muted);margin-top:2px;line-height:1.35}
+.call.v .l{color:var(--jade)}.call.r .l{color:var(--terra)}.call.p .l{color:var(--volt)}
+.ledger{margin:0 12px;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);overflow:hidden}
+.lr{display:flex;align-items:center;gap:7px;padding:6px 10px;border-bottom:1px solid var(--line);font:500 11px var(--mono)}
+.lr:last-child{border:0}
+.lr .pk{width:34px;color:var(--quiet);font-weight:700;font-size:10px}
+.lr .who{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:600 12px system-ui}
+.lr .who small{font:500 9px var(--mono);color:var(--quiet);margin-left:5px}
+.lr .adp{width:34px;text-align:right;color:var(--quiet);font-size:10px}
+.lr .d{width:40px;text-align:right;font-weight:700}
+.lr .d.v{color:var(--jade)}.lr .d.r{color:var(--terra)}.lr .d.z{color:var(--quiet)}
+.lr.bn .who{color:var(--muted)}
+.cons{margin:8px 12px 0;display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.con{border:1px solid var(--line);border-radius:10px;background:var(--ink-2);padding:7px 9px}
+.con .l{font:700 8px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--quiet)}
+.con b{display:block;font:800 18px var(--mono);letter-spacing:-.03em;margin-top:2px}
+.con small{display:block;font:500 8px var(--mono);color:var(--muted)}
+</style></head><body>
+<div class="wrap">
+  <div class="cap">1 · Setup - the practice deck. Weekly Six leads. Tap a preset, a seat, a timer</div>
+  <div id="err"></div>
+  <div class="app">
+    <div class="hd">
+      <div class="hd-top"><span class="eb">Mock draft · Practice</span><span class="ed">Draft room · unlimited</span></div>
+      <div class="rec">
+        <div><div class="eb q" style="margin-bottom:2px">Your drafts</div>
+          <div class="big n">7<small class="n"> · best grade A-</small></div></div>
+        <div class="rt"><b class="n">+41</b><span>value · last draft</span></div>
+      </div>
+      <div class="sub"><span>ADP data courtesy of Fantasy Football Calculator</span><span>snapshot Tue 6:00 AM</span></div>
+    </div>
+
+    <div class="sh"><h3>Pick a board</h3><span class="r">4 PRESETS · 1 LEAGUE</span></div>
+    <div class="deck" id="deck"></div>
+
+    <div class="sh"><h3>Settings</h3><span class="r" id="setr">12 · PPR · 8 RDS · 30S</span></div>
+    <div class="opts">
+      <div class="opt"><span class="l">Seat</span><span class="slots" id="slots"></span></div>
+      <div class="opt"><span class="l">Timer</span><span class="seg" id="timer"><span data-t="30" class="on">30s</span><span data-t="60">60s</span><span data-t="0">Off</span></span></div>
+      <div class="opt"><span class="l">Mode</span><span class="seg" id="mode"><span data-m="me" class="on">I draft</span><span data-m="auto">Full auto</span></span></div>
+    </div>
+    <div class="sh"><h3>Roster</h3><span class="r" id="rosr">8 ROUNDS · BEST SIX SCORE</span></div>
+    <div class="ros" id="ros"></div>
+
+    <div class="ft">
+      <div class="pace" id="setpace">Practice for <b>the Draft</b><br>Same room, same clock, no standings</div>
+      <button class="btn" id="go">Draft from seat 5</button>
+    </div>
+  </div>
+
+  <div class="cap">2 · The room - your league's board, round 11 of 15, bench and floors in play</div>
+  <div class="app">
+    <div class="clk">
+      <div class="clk-top"><span class="eb">Mock draft · The Longest Yard</span><span class="ed">12 · PPR · 15 rds · 60s</span></div>
+      <div class="otc">
+        <div class="who"><div class="lab">On the clock · pick 11.02</div><b class="you">You</b><small>seat 2 · 41 keepers on the board · next 12.11</small></div>
+        <div class="t"><b class="n">48</b><span>seconds</span></div>
+      </div>
+      <div class="drain"><i></i></div>
+    </div>
+    <div class="seats">
+      <div class="seat done"><b>1</b><small></small></div><div class="seat you on"><b>2</b><small>you</small></div><div class="seat"><b>3</b><small>kpr</small></div><div class="seat"><b>4</b><small></small></div><div class="seat"><b>5</b><small></small></div><div class="seat"><b>6</b><small>kpr</small></div><div class="seat"><b>7</b><small></small></div><div class="seat"><b>8</b><small></small></div><div class="seat"><b>9</b><small></small></div><div class="seat"><b>10</b><small>kpr</small></div><div class="seat"><b>11</b><small></small></div><div class="seat"><b>12</b><small></small></div>
+    </div>
+    <div class="snake"><span>ROUND 11 →</span><span>KPR = KEEPER CELL, PRE-MADE</span></div>
+    <div class="tick">
+      <div class="tk"><small>10.11 · seat 2</small><b class="c-wr">Jayden Reed</b><i>WR · you</i></div>
+      <div class="tk"><small>10.12 · seat 1</small><b class="c-rb">Tyjae Spears</b><i>RB</i></div>
+      <div class="tk"><small>11.01 · seat 1</small><b class="c-te">Isaiah Likely</b><i>TE</i></div>
+      <div class="tk you"><small>11.02 · YOU</small><b>·&nbsp;·&nbsp;·</b><i>on the clock</i></div>
+    </div>
+
+    <div class="sh"><h3>Best available</h3><span class="r">PICK 11.02 · 122 LEFT</span></div>
+    <div class="tabs"><span class="tab on">ALL</span><span class="tab">QB</span><span class="tab">RB</span><span class="tab">WR</span><span class="tab">TE</span><span class="tab need">K · open</span><span class="tab need">DST · open</span></div>
+    <div class="board">
+      <div class="bh"><span style="width:16px"></span><span>Player</span><span class="adp">ADP</span><span class="pts">PPG</span><span style="width:14px"></span></div>
+      <div class="prow"><span class="rk">1</span><span class="pb wr">WR</span><span class="who"><b>Keon Coleman</b><small>BUF · bye 12 · R2 2024</small></span><span class="adp v">+9</span><span class="pts n">11.8</span><span class="star">☆</span></div>
+      <div class="prow qd"><span class="rk">2</span><span class="pb rb">RB</span><span class="who"><b>Bucky Irving</b><small>TB · bye 9 · R4 2024</small></span><span class="adp v">+4</span><span class="pts n">12.1</span><span class="star">★</span></div>
+      <div class="prow"><span class="rk">3</span><span class="pb qb">QB</span><span class="who"><b>Bo Nix</b><small>DEN · bye 14 · your QB2 spot</small></span><span class="adp">-3</span><span class="pts n">18.1</span><span class="star">☆</span></div>
+      <div class="prow"><span class="rk">4</span><span class="pb te">TE</span><span class="who"><b>Tucker Kraft</b><small>GB · bye 10</small></span><span class="adp">-6</span><span class="pts n">9.4</span><span class="star">☆</span></div>
+      <div class="prow"><span class="rk">5</span><span class="pb k">K</span><span class="who"><b>Brandon Aubrey</b><small>DAL · bye 7 · floor: no K before R13</small></span><span class="adp">-14</span><span class="pts n">10.9</span><span class="star">☆</span></div>
+      <div class="more">117 MORE · PPG SORTED · ADP FROM FANTRAX SNAPSHOT</div>
+    </div>
+
+    <div class="sh"><h3>Your fifteen</h3><span class="r">10 OF 15 · K, DST, 3 BN OPEN</span></div>
+    <div class="fifteen" id="fifteen"></div>
+
+    <div class="ft">
+      <div class="pace"><b>Snake · 60s a pick</b><br>Out of time = best available by ADP, auto</div>
+      <button class="btn">Draft Bucky Irving</button>
+    </div>
+  </div>
+
+  <div class="cap">3 · The Read - results. Everyone grades, we explain. The share card is this screen</div>
+  <div class="app">
+    <div class="hd">
+      <div class="hd-top"><span class="eb">The Read</span><span class="ed">Mock 8 · Standard 12 PPR · seat 5</span></div>
+      <div class="grade">
+        <div><div class="eb q" style="margin-bottom:4px">Grade</div><div class="g">B<small>+</small></div></div>
+        <div class="rt"><b class="n j">+41</b><span>value vs ADP · 8 picks</span><b class="n" style="margin-top:8px;font-size:15px;color:var(--paper)">7 · 1</b><span>value · reach</span></div>
+      </div>
+      <div class="sub"><span>Value captured 71 · construction 62</span><span>method: /methodology</span></div>
+    </div>
+    <div class="prose">You drafted the board, not a team - <b>seven of eight picks beat their ADP</b>, and the one that did not was the pick that decided the shape. Taking a tight end at 3.05 while the run was on running backs cost you the second back the room let fall to 4.08 anyway. The construction is sound because the room bailed you out, not because the plan did.</div>
+
+    <div class="sh"><h3>Three callouts</h3><span class="r">VALUE · REACH · PIVOT</span></div>
+    <div class="calls">
+      <div class="call v"><span class="l">Best value</span><b>Kenneth Walker</b><small>4.08 · ADP 31<br>+13 · a starter in round 4</small></div>
+      <div class="call r"><span class="l">Biggest reach</span><b>George Kittle</b><small>3.05 · ADP 38<br>-9 · into an RB run</small></div>
+      <div class="call p"><span class="l">The pivot</span><b>Round 3</b><small>3 RBs went 3.01-3.04<br>you went TE, then RB fell</small></div>
+    </div>
+
+    <div class="sh"><h3>The ledger</h3><span class="r">PICK · ADP · VALUE</span></div>
+    <div class="ledger">
+      <div class="lr"><span class="pk">1.05</span><span class="who">Josh Allen<small>QB · BUF</small></span><span class="adp">6</span><span class="d v">+1</span></div>
+      <div class="lr"><span class="pk">2.08</span><span class="who">Bijan Robinson<small>RB · ATL</small></span><span class="adp">24</span><span class="d v">+4</span></div>
+      <div class="lr"><span class="pk">3.05</span><span class="who">George Kittle<small>TE · SF</small></span><span class="adp">38</span><span class="d r">-9</span></div>
+      <div class="lr"><span class="pk">4.08</span><span class="who">Kenneth Walker<small>RB · SEA</small></span><span class="adp">31</span><span class="d v">+13</span></div>
+      <div class="lr"><span class="pk">5.05</span><span class="who">Jaxon Smith-Njigba<small>WR · SEA</small></span><span class="adp">27</span><span class="d v">+26</span></div>
+      <div class="lr"><span class="pk">6.08</span><span class="who">Drake London<small>WR · ATL</small></span><span class="adp">29</span><span class="d v">+39</span></div>
+      <div class="lr"><span class="pk">7.05</span><span class="who">Khalil Shakir<small>WR · BUF</small></span><span class="adp">77</span><span class="d z">0</span></div>
+      <div class="lr"><span class="pk">8.08</span><span class="who">Chuba Hubbard<small>RB · CAR</small></span><span class="adp">92</span><span class="d v">+2</span></div>
+    </div>
+
+    <div class="cons">
+      <div class="con"><span class="l">Value captured</span><b class="n">71</b><small>sum of deltas, scaled</small></div>
+      <div class="con"><span class="l">Construction</span><b class="n">62</b><small>QB · 3 RB · 3 WR · TE · six field</small></div>
+    </div>
+
+    <div class="ft">
+      <div class="pace"><b>Share the Read</b><br>9x16 card · roster, grade, one callout</div>
+      <button class="btn">Draft again</button>
+    </div>
+  </div>
+</div>
+<script>
+window.onerror=function(m,s,l,c){var e=document.getElementById('err');e.style.display='block';e.textContent='JS ERROR\n'+m+'\nline '+l+':'+c;return false};
+function el(id){return document.getElementById(id)}
+var PRESETS=[
+ {n:'Weekly Six',s:'12 · PPR · 8 rounds · the Draft\'s exact board',tag:'THE DRAFT',t:'v',size:12,rds:8,ros:['QB','RB','WR','TE','FLEX','FLEX','BN','BN'],score:'BEST SIX SCORE'},
+ {n:'The Longest Yard',s:'Fantrax · 12 · PPR · 15 rounds · 41 keepers · drafting from seat 2',tag:'MY LEAGUE',t:'j',size:12,rds:15,ros:['QB','RB','RB','WR','WR','TE','FLEX','K','DST','BN','BN','BN','BN','BN','BN'],score:'YOUR LEAGUE\'S ROSTER'},
+ {n:'Standard 12 PPR',s:'12 · PPR · 15 rounds · QB 2RB 2WR TE FLEX K DST 6BN',tag:'',size:12,rds:15,ros:['QB','RB','RB','WR','WR','TE','FLEX','K','DST','BN','BN','BN','BN','BN','BN'],score:'FULL ROSTER'},
+ {n:'10-team Half',s:'10 · half PPR · 15 rounds',tag:'',size:10,rds:15,ros:['QB','RB','RB','WR','WR','TE','FLEX','K','DST','BN','BN','BN','BN','BN','BN'],score:'FULL ROSTER'},
+ {n:'12-team 2QB',s:'12 · PPR · 15 rounds · two quarterbacks',tag:'',size:12,rds:15,ros:['QB','QB','RB','RB','WR','WR','TE','FLEX','K','DST','BN','BN','BN','BN','BN'],score:'FULL ROSTER'}
+];
+var pre=0, seat=5, timer=30, mode='me';
+function draw(){
+  var p=PRESETS[pre],h='';
+  PRESETS.forEach(function(x,i){h+='<div class="pre'+(i===pre?' on':'')+'" data-pre="'+i+'"><span class="t"><b>'+x.n+'</b><small>'+x.s+'</small></span>'+(x.tag?'<span class="tag '+x.t+'">'+x.tag+'</span>':'')+'</div>'});
+  el('deck').innerHTML=h;
+  var s='';for(var i=1;i<=p.size;i++)s+='<i class="'+(seat===i?'on':'')+'" data-seat="'+i+'">'+i+'</i>';
+  s+='<i class="rnd'+(seat===0?' on':'')+'" data-seat="0">rnd</i>';el('slots').innerHTML=s;
+  el('setr').textContent=p.size+' · '+(p.n==='10-team Half'?'HALF':'PPR')+' · '+p.rds+' RDS · '+(timer?timer+'S':'NO CLOCK');
+  el('ros').innerHTML=p.ros.map(function(r){return '<span'+(r==='BN'?' style="color:var(--quiet)"':'')+'>'+r+'</span>'}).join('');
+  el('rosr').textContent=p.rds+' ROUNDS · '+p.score;
+  el('go').textContent=(mode==='auto'?'Run it, full auto':'Draft')+(seat?' from seat '+seat:' from a random seat');
+  el('setpace').innerHTML= pre===0?'Practice for <b>the Draft</b><br>Same room, same clock, no standings':pre===1?'<b>Your league</b>, keepers pre-made<br>Devy players ride as Minors, undrafted':'<b>Unlimited</b> · every draft gets a Read<br>History from draft one';
+  document.querySelectorAll('#timer span').forEach(function(e){e.className=parseInt(e.dataset.t)===timer?'on':''});
+  document.querySelectorAll('#mode span').forEach(function(e){e.className=e.dataset.m===mode?'on':''});
+}
+var F=[['1.02','Ja\'Marr Chase','WR','kpr'],['2.11','Saquon Barkley','RB','kpr'],['3.02','Nico Collins','WR'],['4.11','Kyren Williams','RB'],['5.02','Trey McBride','TE'],['6.11','Jalen Hurts','QB'],['7.02','Chris Olave','WR'],['8.11','Tyler Warren','TE','bn'],['9.02','Tank Bigsby','RB','bn'],['10.11','Jayden Reed','WR','bn'],['11.02','','',''],['12.11','','K',''],['13.02','','DST',''],['14.11','','BN',''],['15.02','','BN','']];
+el('fifteen').innerHTML=F.map(function(x){return x[1]?'<div class="e f'+(x[3]==='bn'?' bn':'')+'"><span class="r">'+x[0]+(x[3]==='kpr'?' KPR':'')+'</span><b class="c-'+x[2].toLowerCase()+'">'+x[1]+'</b><small>'+x[2]+(x[3]==='bn'?' · bench':'')+'</small></div>':'<div class="e"><span class="r">'+x[0]+'</span><small>'+(x[2]||'')+'</small></div>'}).join('');
+document.addEventListener('click',function(ev){var n=ev.target;while(n&&n!==document.body){var d=n.dataset||{};
+  if(d.pre!=null){pre=parseInt(d.pre);if(seat>PRESETS[pre].size)seat=PRESETS[pre].size;if(pre===1)seat=2;draw();return}
+  if(d.seat!=null){seat=parseInt(d.seat);draw();return}
+  if(d.t!=null){timer=parseInt(d.t);draw();return}
+  if(d.m){mode=d.m;draw();return}
+  n=n.parentNode}});
+draw();
+</script>
+</body></html>
