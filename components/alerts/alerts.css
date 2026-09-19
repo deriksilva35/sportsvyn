@@ -91,6 +91,17 @@
   background: var(--ink-3, #1c1c1c);
   margin: 0 -16px; padding: 12px 16px; border-radius: 10px;
 }
+/* THE LOCK-SCREEN ROW WEARS THE MASTER'S SHAPE, not a louder one. It is the
+   biggest thing the sheet does, and that is an argument for putting it FIRST,
+   not for inventing a colour. The volt rule is the only difference: it marks
+   the one row that is a live card rather than a notification. */
+.al-row--live {
+  background: var(--ink-3, #1c1c1c);
+  margin: 0 -16px 8px; padding: 12px 16px; border-radius: 10px;
+  border-left: 2px solid var(--volt, #d7ff3e);
+}
+.al-row--live + .al-row--master { border-top: 0; }
+
 .al-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .al-title { font-family: var(--font-saira); font-size: 15px; font-weight: 600; color: var(--paper); }
 .al-trig {
