@@ -183,7 +183,13 @@ export default async function SimLobby({ searchParams }) {
                       {summary.bestGrade ? <> · best grade <b>{summary.bestGrade}</b></> : null}
                     </p>
                   )}
-                  <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap} />
+                  {/* ?preset= comes from the Read's "Draft again" and names
+                      the board just drafted. StartForm falls back to the first
+                      preset when the id is not on the deck, so a stale link
+                      degrades to today's behaviour rather than to an empty
+                      form. */}
+                  <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap}
+                    initialPresetId={Array.isArray(params.preset) ? params.preset[0] : (params.preset ?? null)} />
                 </section>
                 {/* The tracker link moved INTO StartForm (v0.3.1): it now
                     carries the live config as a handoff, and only the form

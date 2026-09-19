@@ -107,9 +107,12 @@ const START_ERRORS = {
   default: 'Could not start. Try again in a moment.',
 };
 
-export default function StartForm({ presets, canStart, used, limit, member = false, shell = false, iap = false }) {
+export default function StartForm({ presets, canStart, used, limit, member = false, shell = false, iap = false, initialPresetId = null }) {
   const router = useRouter();
-  const first = presets[0];
+  // THE BOARD "DRAFT AGAIN" ASKED FOR, when it named one this deck can select.
+  // An id that is not on the deck any more - a retired preset, a link from an
+  // old Read - falls back to the first rather than rendering an empty form.
+  const first = presets.find((p) => String(p.id) === String(initialPresetId)) ?? presets[0];
   const [config, setConfig] = useState(() => presetToConfig(first));
   const [selection, setSelection] = useState(first.id); // preset id | 'custom'
   const [seat, setSeat] = useState('random');
