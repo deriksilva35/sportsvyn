@@ -319,20 +319,3 @@
 .gg-boxgrp tbody th.t { color: var(--paper); letter-spacing: 0; font-size: 13px; font-weight: 500; }
 .gg-boxpos { color: var(--muted); font-size: 11px; letter-spacing: 0.06em; }
 
-/* LIVE ACTIVITY DEBUG (relay 3B). Shell-only, and deliberately plain: it is a
-   control for proving the bridge, not a product surface, so it borrows the
-   section furniture and adds nothing to the design language. */
-.gg-ladbg { margin: 22px 0 0; }
-.gg-ladbg-row { display: flex; gap: 8px; margin: 8px 0 10px; }
-.gg-ladbg-row button {
-  font-family: var(--font-saira-cond); font-weight: 600; font-size: 12px;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--paper); background: transparent;
-  border: 1px solid var(--line); border-radius: 99px; padding: 8px 14px;
-}
-.gg-ladbg-state { display: grid; gap: 2px; margin: 0; }
-.gg-ladbg-state div { display: flex; gap: 10px; font-size: 12px; }
-.gg-ladbg-state dt { color: var(--muted); min-width: 52px; }
-.gg-ladbg-state dd { margin: 0; color: var(--paper); }
-.gg-ladbg-state dd.u { word-break: break-all; }
-.gg-ladbg-said { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
