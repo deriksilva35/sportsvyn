@@ -37,7 +37,7 @@ import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay, lastActionP
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
 import { propsSlate } from '@/lib/market/reads';
-import { isPreGame } from '@/lib/gridiron/oddsFormat';
+import { isPreGame, showsProps } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import BackToAppBar from '@/components/BackToAppBar';
 import { stateFromMatch, liveLine, gameUrlFor } from '@/lib/push/liveActivityState';
@@ -100,7 +100,7 @@ export default async function GamePage({ params, searchParams }) {
     : null;
   // Props are scoped to the game week and the board, so most games have none -
   // PropsPanel renders null rather than an empty shell.
-  const propsCard = isPreGame(game.status)
+  const propsCard = showsProps(game.status)
     ? (await propsSlate({ matchIds: [game.id] }).catch(() => []))[0] ?? null
     : null;
   const brief = await getBriefForMatch(game.id);
@@ -325,7 +325,7 @@ export default async function GamePage({ params, searchParams }) {
             joins scheduled matches. Renders null when there is no clean
             two-sided read: absence over inference. */}
         {isPreGame(game.status) && odds ? <OddsStrip odds={odds} leagueSlug="nfl" matchId={game.id} /> : null}
-        {isPreGame(game.status) && propsCard ? <PropsPanel card={propsCard} leagueSlug="nfl" matchId={game.id} /> : null}
+        {showsProps(game.status) && propsCard ? <PropsPanel card={propsCard} leagueSlug="nfl" matchId={game.id} /> : null}
 
         {panels.length ? (
           <GameTabs

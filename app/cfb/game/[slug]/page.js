@@ -51,7 +51,7 @@ import { resolveShellMode } from '@/lib/shell/shell';
 import { parseGameTab } from '@/lib/gridiron/gameTabsNav';
 import { cfbBoxScoreFor, boxScoreLabel } from '@/lib/cfb/boxScore';
 import { propsSlate } from '@/lib/market/reads';
-import { isPreGame } from '@/lib/gridiron/oddsFormat';
+import { isPreGame, showsProps } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import BackToAppBar from '@/components/BackToAppBar';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -117,7 +117,7 @@ export default async function CfbGamePage({ params, searchParams }) {
     : null;
   // Props are scoped to the game week and the board, so most games have none -
   // PropsPanel renders null rather than an empty shell.
-  const propsCard = isPreGame(game.status)
+  const propsCard = showsProps(game.status)
     ? (await propsSlate({ matchIds: [game.id] }).catch(() => []))[0] ?? null
     : null;
   // AP badges. The rank shown is the CURRENT poll's, not the poll as it stood
@@ -336,7 +336,7 @@ export default async function CfbGamePage({ params, searchParams }) {
             scheduled matches. Renders null when there is no clean two-sided
             read: absence over inference. */}
         {isPreGame(game.status) && odds ? <OddsStrip odds={odds} leagueSlug="cfb" matchId={game.id} /> : null}
-        {isPreGame(game.status) && propsCard ? <PropsPanel card={propsCard} leagueSlug="cfb" matchId={game.id} /> : null}
+        {showsProps(game.status) && propsCard ? <PropsPanel card={propsCard} leagueSlug="cfb" matchId={game.id} /> : null}
 
         {grid ? (
           <section className="gg-sect" aria-label="Line score">
