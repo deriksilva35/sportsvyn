@@ -73,7 +73,12 @@ function Row({ r }) {
         </div>
         <div className="gm">
           {away} at {home} · {r.leagueSlug.toUpperCase()}
-          {r.kickoffAt ? ` · ${WHEN.format(new Date(r.kickoffAt)).toUpperCase()}` : ''}
+          {/* A LIVE GAME SAYS SO INSTEAD OF SHOWING A KICKOFF THAT HAS PASSED.
+              The slate admits live games, so printing "SAT 3:30 PM" beside one
+              already being played reads as a game still to come. */}
+          {r.matchStatus === 'live'
+            ? <> · <i className="live">LIVE</i></>
+            : (r.kickoffAt ? ` · ${WHEN.format(new Date(r.kickoffAt)).toUpperCase()}` : '')}
         </div>
         {/* UNLINKED ROWS READ IDENTICALLY MINUS THIS LINE. Same grammar, same
             sort position, no demotion - a missing chart is our gap, not the
@@ -102,8 +107,8 @@ function Row({ r }) {
       <div className="ln">{r.line ?? '—'}</div>
       <div className="px">{american(r.american)}</div>
       {r.asOffered
-        ? <div className="asoff">as offered</div>
-        : <div className="imp">{pct(r.impliedPct)}</div>}
+        ? <div className="asoff">{r.matchStatus === 'live' ? 'as offered · pre-kick' : 'as offered'}</div>
+        : <div className="imp">{pct(r.impliedPct)}{r.matchStatus === 'live' ? <span className="prek">pre-kick</span> : null}</div>}
       <Move v={r.moveProb} />
     </div>
   );

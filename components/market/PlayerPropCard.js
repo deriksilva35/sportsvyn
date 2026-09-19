@@ -49,7 +49,7 @@ function Bars({ series }) {
   );
 }
 
-function Prop({ p }) {
+function Prop({ p, live }) {
   const label = MARKET_LABELS[p.marketType] ?? p.marketType;
   const hit = p.hit && p.hit.games > 0 ? p.hit : null;
   return (
@@ -60,10 +60,15 @@ function Prop({ p }) {
       </div>
       <div className="ppc-cells">
         <div className="c">
-          {/* AS-OFFERED CARRIES NO PERCENTAGE - it was never de-vigged. */}
+          {/* AS-OFFERED CARRIES NO PERCENTAGE - it was never de-vigged. And
+              once the game is on, the consensus has stopped updating, so the
+              cell says the number is a pre-kick stamp rather than letting a
+              stale price read as a live quote. Same words the index uses. */}
           {p.asOffered
-            ? <><b className="off">{p.american > 0 ? `+${p.american}` : p.american}</b><span>as offered</span></>
-            : <><b>{p.impliedPct == null ? '—' : `${p.impliedPct.toFixed(1)}%`}</b><span>market says</span></>}
+            ? <><b className="off">{p.american > 0 ? `+${p.american}` : p.american}</b>
+                <span>{live ? 'as offered · pre-kick' : 'as offered'}</span></>
+            : <><b>{p.impliedPct == null ? '—' : `${p.impliedPct.toFixed(1)}%`}</b>
+                <span>{live ? 'pre-kick' : 'market says'}</span></>}
         </div>
         <div className={`c hit${hit && hit.cleared / hit.games <= 0.4 ? ' cold' : ''}`}>
           <b>{hit ? `${hit.cleared} of ${hit.games}` : '—'}</b>
@@ -118,7 +123,7 @@ export default function PlayerPropCard({ card }) {
         </p>
       </div>
 
-      {props.map((p, i) => <Prop key={`${p.marketType}-${p.side ?? ''}-${i}`} p={p} />)}
+      {props.map((p, i) => <Prop key={`${p.marketType}-${p.side ?? ''}-${i}`} p={p} live={live} />)}
 
       <p className="ppc-ft">
         <b>Market says</b> is the consensus implied probability, de-vigged across

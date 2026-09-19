@@ -88,6 +88,38 @@ test('THE COUNT SAYS BOTH NUMBERS WHEN THE PAGE IS SHORT OF THE SLATE', () => {
     'and it stays a bare count when nothing was left off');
 });
 
+test('A LIVE GAME GROUPS FIRST, WEARS THE RED MARK, AND STAMPS ITS NUMBER PRE-KICK', () => {
+  // The live game kicked off EARLIER than the scheduled one, so chronology
+  // alone would still put it first; the later kickoff proves the live band
+  // wins on status, not on the clock.
+  const c = index([
+    row({ matchId: 1, kickoffAt: KICK, home: { abbr: 'MICH' }, away: { abbr: 'UTEP' } }),
+    row({
+      matchId: 9, matchStatus: 'live', kickoffAt: '2026-09-20T23:00:00.000Z',
+      home: { abbr: 'OU' }, away: { abbr: 'TEX' }, asOffered: false, impliedPct: 54.9,
+    }),
+  ]);
+  const heads = [...c.querySelectorAll('.px-gh')];
+  assert.match(txt(heads[0]), /TEX at OU/, 'the live game leads, though it kicks off later');
+  assert.ok(heads[0].querySelector('i.live'), 'and wears the red LIVE mark');
+  assert.equal(heads[1].querySelector('i.live'), null, 'the scheduled game keeps its kickoff time');
+
+  const nums = [...c.querySelectorAll('.px-num')].map(txt);
+  assert.ok(nums.some((t) => /54\.9%/.test(t) && /pre-kick/.test(t)),
+    'the live row says the number stopped at kickoff');
+  assert.equal(nums.some((t) => /pre-kick/.test(t) && /MICH|UTEP/.test(t)), false);
+  assert.ok(nums.some((t) => /market/.test(t) && !/pre-kick/.test(t)),
+    'and a scheduled row still reads market');
+});
+
+test('A LIVE AS-OFFERED PRICE IS STAMPED TOO, and keeps its de-vig disclaimer', () => {
+  const c = index([row({ matchStatus: 'live', asOffered: true, impliedPct: null, american: 300 })]);
+  const num = txt(c.querySelector('.px-num'));
+  assert.match(num, /as offered/, 'the un-de-vigged price still says so');
+  assert.match(num, /pre-kick/, 'and says the number stopped at kickoff');
+  assert.equal(/%/.test(num), false);
+});
+
 test('HIT IS n OF N WITH THE REAL N - never a fabricated five', () => {
   const c = index([row({ hit: { cleared: 1, games: 3 } })]);
   const hit = c.querySelector('.px-num.hit');

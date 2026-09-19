@@ -196,6 +196,9 @@
 .mk-wrap .pb-row .px { font-weight: 700; }
 .mk-wrap .pb-row .imp { color: var(--muted); font-size: 11px; }
 .mk-wrap .pb-row .asoff { font-size: 9px; color: var(--muted); }
+/* The slate admits live games; a live row says its number stopped at kickoff. */
+.mk-wrap .pb-row .gm .live { font-style: normal; color: var(--live, #E63946); font-weight: 700; }
+.mk-wrap .pb-row .imp .prek { display: block; font-size: 9px; color: var(--muted); }
 .mk-wrap .pb-row .boardpill {
   font-family: var(--font-saira-cond); font-weight: 600; letter-spacing: .08em;
   font-size: 9px; text-transform: uppercase; color: var(--volt);

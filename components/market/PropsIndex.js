@@ -70,6 +70,9 @@ function PropRow({ r, href }) {
   const ruleLine = lineFor(r.marketType, r.line);
   const hit = r.hit && r.hit.games > 0 ? r.hit : null;
   const cold = hit ? hit.cleared / hit.games <= 0.4 : false;
+  // The row carries its own match status, so the stamp is right under the two
+  // sorts that dissolve the game groups as well as under the grouped view.
+  const live = r.matchStatus === 'live';
 
   const body = (
     <>
@@ -93,10 +96,14 @@ function PropRow({ r, href }) {
       {r.chart && ruleLine != null ? <Spark chart={r.chart} line={ruleLine} /> : <span className="px-spark empty" />}
       <span className="px-num">
         {/* AS-OFFERED CARRIES NO PERCENTAGE. It was never de-vigged; a number
-            in this column would imply a normalisation that did not happen. */}
+            in this column would imply a normalisation that did not happen.
+            AND ONCE THE GAME IS ON, THE NUMBER IS A STAMP, NOT A QUOTE. The
+            consensus stops updating at kickoff, so a live row says "pre-kick"
+            rather than letting a stale price read as the current market. */}
         {r.asOffered
-          ? <><b className="off">{r.american > 0 ? `+${r.american}` : r.american}</b><span>as offered</span></>
-          : <><b>{pct(r.impliedPct) ?? '—'}</b><span>market</span></>}
+          ? <><b className="off">{r.american > 0 ? `+${r.american}` : r.american}</b>
+              <span>{live ? 'as offered · pre-kick' : 'as offered'}</span></>
+          : <><b>{pct(r.impliedPct) ?? '—'}</b><span>{live ? 'pre-kick' : 'market'}</span></>}
       </span>
       <span className={`px-num hit${cold ? ' cold' : ''}`}>
         <b>{hit ? `${hit.cleared} of ${hit.games}` : '—'}</b>
@@ -156,7 +163,12 @@ export default function PropsIndex({
       }
       by.get(r.matchId).rows.push(r);
     }
-    games.sort((a, b) => new Date(a.kickoffAt) - new Date(b.kickoffAt));
+    // LIVE GAMES COME FIRST, then the rest in kickoff order. A game already
+    // being played is the one a reader is looking at, and leaving it in
+    // chronological position buries it under everything that kicks off later.
+    // Within each band the order is still the clock.
+    games.sort((a, b) => (b.status === 'live' ? 1 : 0) - (a.status === 'live' ? 1 : 0)
+      || new Date(a.kickoffAt) - new Date(b.kickoffAt));
   }
 
   return (
