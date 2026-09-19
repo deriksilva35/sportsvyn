@@ -6,38 +6,32 @@
  * same lobby renders as the native Games tab, so it is built once here rather
  * than twice.
  *
- * PANES ARE URL PARAMS, NOT AN ISLAND. ?pane=leaderboards renders server-side
- * complete, which buys three things a client island would not: no hydration and
- * no layout shift, a shareable link to any pane, and - the reason that decided
- * it - each pane's payload can be fetched and leak-tested independently. The
- * cost is a navigation per tab, which on four static panes is the right trade.
+ * v3 IS THE WHOLE PAGE NOW (docs/design/mocks/games-v3.html). v2 answered "what
+ * is there"; v3 answers "what should I do" - one now card, four game rows, four
+ * chips - and there is no toggle between them, because two lobbies is two sets
+ * of numbers to keep honest.
+ *
+ * CHIPS ARE URL PARAMS, NOT AN ISLAND, for the three reasons v2's panes were:
+ * no hydration flash, a shareable link to any chip, and each chip's payload
+ * fetched and leak-tested on its own. normalizeChip() maps every v2 ?pane=
+ * value onto one of the four, so no bookmark that exists today breaks.
  *
  * THE STANDINGS LAW APPLIES TO EVERY NUMBER HERE. See lib/games/read.js: every
  * figure comes from a revealed day or a settled contest, with the single
  * exception of the viewer's own state in the game they are playing.
  */
 
-import Link from 'next/link';
-import HouseTag from '@/components/house/HouseTag';
-import '@/components/house/house.css';
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
-import { gamesLobby } from '@/lib/games/read';
-import { lobbyV2 } from '@/lib/games/lobbyV2';
-import LobbyV2 from '@/components/games/LobbyV2';
-import { readViewerTz } from '@/lib/gridiron/serverTz';
-import { myLeagues } from '@/lib/leagues/core';
-import { normalizePane, normalizePickemSeasonSport } from '@/lib/games/lobby';
-import PaneTabs from '@/components/games/PaneTabs';
-import SeasonBoard from '@/components/games/SeasonBoard';
-import StandaloneDate from '@/components/StandaloneDate';
-import { tierClass } from '@/lib/daily/reveal';
+import { lobbyV3 } from '@/lib/games/lobbyV3';
+import LobbyV3 from '@/components/games/LobbyV3';
+import { normalizeChip } from '@/lib/games/lobby';
 import './games.css';
-import './lobbyV2.css';
+import './lobbyV3.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -49,357 +43,40 @@ export async function generateViewport() {
   return simViewport(await resolveShellMode());
 }
 
-// The emoji icons retired with the legibility pass: the mock's ghost
-// numeral (gnum) carries the card's identity now, and the words do the
-// selling.
-
 export default async function GamesPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
-  const pane = normalizePane(sp.pane);
-  const pickemSeasonSport = normalizePickemSeasonSport(sp.pksport);
+  const chip = normalizeChip(sp.pane);
+  const boardKey = sp.b == null ? null : String(sp.b);
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode();
   // GAMES WAS THE ODD ONE: no signed-out branch at all, so a stranger in the
   // container got the lobby - four cards, none of them playable. Same rule.
   requireSignInInShell({ isShell, userId, dest: '/games' });
-  // THE GAMES PANE IS v2 (GAMES TAB v2 relay): its own reader, its own
-  // shapes. The other three panes still draw from gamesLobby(), unchanged.
-  const v2 = pane === 'games' ? await lobbyV2(userId).catch(() => null) : null;
-  const viewerTz = pane === 'games' ? await readViewerTz() : null;
-  const v = pane === 'games' ? null : await gamesLobby(userId, { pickemSeasonSport }).catch(() => null);
-  // YOUR LEAGUES (v0.2 door): the member's leagues on the lobby, or the
-  // create/join CTA when none. Caught to [] like every lobby read.
-  const leagues = userId == null ? [] : await myLeagues(Number(userId)).catch(() => []);
+
+  const v = await lobbyV3(userId, { chip, boardKey }).catch(() => null);
 
   return (
     <>
       <GlobalHeaderServer activeNav="games" />
-      <main className={`lob${pane === 'games' ? ' lv' : ''}`} data-surface="ink">
-        {pane === 'games' ? (
-          v2
-            ? <LobbyV2 v={v2} signedIn={userId != null} isShell={isShell} leagues={leagues} viewerTz={viewerTz} />
-            : (
-              <section className="mod">
-                <p className="muted">The lobby is having a moment. Try again shortly.</p>
-              </section>
-            )
-        ) : (
-          <>
-            <header className="lob-head">
-              <h1 className="lob-title">Game day, every day.</h1>
-              <p className="lob-sub">One account. One handle. Every board.</p>
-            </header>
-            <PaneTabs pane={pane} />
-            {!v && (
-              <section className="mod">
-                <p className="muted">The lobby is having a moment. Try again shortly.</p>
-              </section>
-            )}
-            {v && pane === 'leaderboards' && <BoardsPane v={v} userId={userId} />}
-            {v && pane === 'answer' && <AnswerPane v={v} />}
-            {v && pane === 'history' && <HistoryPane v={v} />}
-          </>
-        )}
-        <p className="lob-foot">
-          One account · one handle · one leaderboard spine. Pick &rsquo;em and The Weekly settle
-          on real games; the Daily settles on history. Not affiliated with the NFL.
-          nflverse data CC-BY-4.0.
-        </p>
+      <main className="lob lv" data-surface="ink">
+        {v
+          ? (
+            <LobbyV3
+              v={v}
+              chip={chip}
+              signedIn={userId != null}
+              signinHref={(dest) => shellSigninHref(dest, isShell)}
+              userId={userId == null ? null : Number(userId)}
+            />
+          )
+          : (
+            <section className="mod">
+              <p className="muted">The lobby is having a moment. Try again shortly.</p>
+            </section>
+          )}
       </main>
       <SiteFooter />
     </>
-  );
-}
-
-/**
- * THE HERO (relay 2a item 3, signed-out parity in 2a-polish item 4). Two
- * shapes: the everyday one (a game with an unmet lock, tagline + locks-at +
- * one button) and the all-done one (the Daily's own receipt, once every
- * game today is entered - inherently signed-in, so `signedIn` never gates
- * that branch). Signed out on the everyday shape, the button reads 'Sign in
- * to play' and goes to sign-in with a return URL rather than the game's own
- * page - the hero names an open game a stranger cannot yet enter.
- */
-function BoardsPane({ v, userId = null }) {
-  return (
-    <>
-      {v.boards.map((b) => (
-        <section className="mod" key={b.key}>
-          <div className="mod-head">
-            <h2 className="eyebrow">{b.name}</h2>
-            {b.state === 'live' && b.table?.through && (
-              <span className="pill">through {b.table.through}</span>
-            )}
-          </div>
-          {/* ALL / NFL / CFB (relay 2c item 7) - OUTSIDE the live/populates
-              branch below, so the filter is still reachable (and switchable
-              back to All or the other sport) even before that sport has any
-              settled board of its own yet. pickemTable() stays one table
-              across sports; this only narrows which settled boards feed it.
-              Plain <Link>s, soft-navigated by Next's own prefetching - no
-              client component needed for three server-rendered links. */}
-          {b.key === 'pickem' && (
-            <div className="pchips" style={{ marginBottom: '9px' }}>
-              {[[null, 'All'], ['nfl', 'NFL'], ['cfb', 'CFB']].map(([val, label]) => (
-                <Link
-                  key={label}
-                  href={val ? `/games?pane=leaderboards&pksport=${val}` : '/games?pane=leaderboards'}
-                  className={`pchip${v.pickemSeasonSport === val ? ' on' : ''}`}
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-          )}
-          {b.state !== 'live' ? (
-            <div className="row"><span className="muted">{b.populatesLabel}</span></div>
-          ) : b.key === 'overall' ? (
-            // Frame 3: the Daily season board is a prize, not a table -
-            // podium, movement, the viewer pinned. One component, shared
-            // with the league scope.
-            <SeasonBoard table={b.table} userId={userId} />
-          ) : b.key === 'pickem' ? (
-            // ACCURACY, NOT POINTS. A dash rank + note replaces a number for
-            // anyone under the minimum-boards floor - never simply absent.
-            <div>
-              {b.table.top.map((r) => (
-                <div className="row" key={r.userId}>
-                  <span className="lb-left"><span className="rank">{r.rank ?? '-'}</span>{r.name}<HouseTag row={r} /></span>
-                  <span className="v">
-                    {r.note ?? <>{r.pct}% <span className="muted">({r.correct}/{r.played})</span></>}
-                  </span>
-                </div>
-              ))}
-              {b.table.self && (
-                <div className="row row--me">
-                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '-'}</span>{b.table.self.name}<HouseTag row={b.table.self} /></span>
-                  <span className="v">
-                    {b.table.self.note ?? <>{b.table.self.pct}% <span className="muted">({b.table.self.correct}/{b.table.self.played})</span></>}
-                  </span>
-                </div>
-              )}
-            </div>
-          ) : (
-            // WEEKLY/DRAFT SEASON: ranked on avg stored pct, not raw points
-            // (relay 2b item 7) - same dash-plus-note shape as Pick'em's own
-            // under-the-floor row, never simply absent.
-            <div>
-              {b.table.top.map((r) => (
-                <div className="row" key={r.userId}>
-                  <span className="lb-left"><span className="rank">{r.rank ?? '-'}</span>{r.name}<HouseTag row={r} /></span>
-                  <span className="v">
-                    {r.note ?? <>{r.avgPct}% <span className="muted">avg · {r.weeksPlayed} played</span></>}
-                  </span>
-                </div>
-              ))}
-              {b.table.self && (
-                <div className="row row--me">
-                  <span className="lb-left"><span className="rank">{b.table.self.rank ?? '-'}</span>{b.table.self.name}<HouseTag row={b.table.self} /></span>
-                  <span className="v">
-                    {b.table.self.note ?? <>{b.table.self.avgPct}% <span className="muted">avg · {b.table.self.weeksPlayed} played</span></>}
-                  </span>
-                </div>
-              )}
-              {b.key === 'draft' && b.seatTable?.length > 0 && (
-                <div className="seat-table" style={{ marginTop: '10px', borderTop: '1px solid var(--line)', paddingTop: '8px' }}>
-                  <div className="row"><span className="muted">By seat &middot; season</span><span className="muted">avg % &middot; drafters</span></div>
-                  {b.seatTable.map((s) => (
-                    <div className="row" key={s.seat}>
-                      <span className="lb-left">Seat {s.seat}</span>
-                      <span className="v">
-                        {s.note ?? <>{s.avgPct}% <span className="muted">&middot; {s.drafters}</span></>}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-      ))}
-    </>
-  );
-}
-
-function AnswerPane({ v }) {
-  const y = v.yesterday;
-  if (!y) {
-    return (
-      <section className="mod">
-        <div className="row"><span className="muted">No day has revealed yet.</span></div>
-      </section>
-    );
-  }
-  return (
-    <section className="mod">
-      <div className="mod-head">
-        <h2 className="eyebrow">
-          Latest answer{y.edition ? ` - Ed. ${y.edition}` : ''} · {y.date}
-        </h2>
-      </div>
-      <div className="ans">{y.season} <span className="muted">· twelve teams, eight slots</span></div>
-      <div>
-        <div className="row"><span>Best roster</span><span className="v volt">{y.perfect.toLocaleString('en-US')}</span></div>
-        {/* THE ANSWER ITSELF: the eight the board allowed, one per team. */}
-        {y.bestRoster.map((b, i) => (
-          <div className="row row--best" key={i}>
-            <span className="muted">{b.slot} · {b.name} <small>{b.abbr}</small></span>
-            <span className="v">{Number(b.points).toLocaleString('en-US')}</span>
-          </div>
-        ))}
-        {y.you && (
-          <div className="row">
-            <span>You</span>
-            <span className="v">
-              {y.you.played
-                ? <>{y.you.score.toLocaleString('en-US')}<span className="muted">{y.you.pct ? ` · ${y.you.pct}` : ''} · {y.you.matched ?? '-'} of {y.you.slotCount}</span></>
-                : y.you.dnf ? <span className="muted">DNF</span> : <span className="muted">-</span>}
-            </span>
-          </div>
-        )}
-        {y.top && (
-          <div className="row">
-            <span>Top score</span>
-            <span className="v">{y.top.name} · {y.top.score.toLocaleString('en-US')}</span>
-          </div>
-        )}
-      </div>
-      {/* ONE LINK, AND IT GOES TO THE REVEAL. This used to offer "Share card →"
-          pointing at /daily/[date]/card, which is a 1080x1920 PNG from next/og -
-          a reader who tapped it landed on a bare image with no chrome, no
-          breadcrumb and no way back. The card is for unfurls and texts, which is
-          a job it does without anyone visiting it directly; the reveal carries
-          the same content in DOM, plus the board and a way out. The card stays
-          reachable from there as an action. */}
-      <div className="lob-links">
-        <a className="ghost" href={y.href}>The full board &rarr;</a>
-      </div>
-    </section>
-  );
-}
-
-/**
- * YOUR RECORD - through revealed days only, INCLUDING your own open day.
- *
- * Every other surface lets the reader see their own in-flight result, because
- * it is theirs. These are standings: a number that moved when you locked this
- * morning would disagree with the leaderboard one pane away, and "played 12/11"
- * reads as the page being unable to count. See lib/games/personal.js.
- */
-function YourStats({ v }) {
-  const s = v.stats;
-  if (!s) return null;
-  const tiers = Object.entries(s.tiers).filter(([, n]) => n > 0);
-  return (
-    <section className="mod">
-      <div className="mod-head">
-        <h2 className="eyebrow">
-          Your record{v.season?.handle ? ` - ${v.season.handle}` : ''}
-        </h2>
-        {v.seasonKey && <span className="pill">{v.seasonKey}</span>}
-      </div>
-
-      <div className="grid2">
-        <div className="stat"><div className="eyebrow">Played</div><div className="n">{s.played}/{s.playable}</div></div>
-        <div className="stat">
-          <div className="eyebrow">Avg of perfect</div>
-          <div className="n">{s.avgPct != null ? `${s.avgPct}%` : <span className="muted">-</span>}</div>
-        </div>
-        <div className="stat"><div className="eyebrow">Season pts</div><div className="n">{v.season?.points ?? 0}</div></div>
-        <div className="stat"><div className="eyebrow">Streak</div><div className="n">{s.streak}</div></div>
-      </div>
-
-      <div>
-        <div className="row">
-          <span>Best score</span>
-          <span className="v">
-            {s.best
-              ? <>{s.best.score}{s.best.edition && <span className="muted"> · Ed. {s.best.edition}</span>}</>
-              : <span className="muted">-</span>}
-          </span>
-        </div>
-        <div className="row">
-          <span>Guesses</span>
-          <span className="v">
-            {s.guess.guessed === 0
-              ? <span className="muted">none yet</span>
-              : (
-                <>
-                  {s.guess.exact} exact
-                  <span className="muted"> · {s.guess.seasonRight} season only · {s.guess.missed} missed</span>
-                </>
-              )}
-          </span>
-        </div>
-        {/* Tiers with a zero count are ABSENT rather than shown as 0. A row of
-            empty badges reads as a scorecard of failures; the ones you earned
-            read as a collection. */}
-        {tiers.length > 0 && (
-          <div className="row">
-            <span>Tiers</span>
-            <span className="v tierline">
-              {tiers.map(([label, n]) => (
-                <span className={`badge ${tierClass(label)}`} key={label}>{label} ×{n}</span>
-              ))}
-            </span>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function HistoryPane({ v }) {
-  // The column only exists when there is a reader to own it. Driven by the
-  // presence of `you` on the rows themselves, not by a separate flag, so the
-  // header and the cells cannot disagree about whether the column is there.
-  const hasYou = v.history.some((h) => h.you !== undefined);
-  return (
-    <section className="mod">
-      <div className="mod-head">
-        <h2 className="eyebrow">Every edition</h2>
-        {hasYou && <span className="pill">Your score, revealed days</span>}
-      </div>
-      <div>
-        {v.history.map((h) => {
-          const inner = h.sealed ? (
-            <>
-              {/* A sealed row proves a day EXISTS without saying anything
-                  about it. No season, no week, no score - that is the whole
-                  point of the row. */}
-              <span className="muted">- sealed -</span>
-              <span className="v muted">open</span>
-            </>
-          ) : (
-            <>
-              {/* NOWRAP AS A CLASS, not a hope: "2018 · Wk 10" was breaking
-                  across three lines in a cramped left column while the row had
-                  free width. The id block (edition + era) stacks cleanly; the
-                  era line never breaks mid-token. */}
-              <span className="hist-when">{h.season}</span>
-              <span className="v hist-win">{h.top ? `${h.top.name} ${h.top.score.toLocaleString('en-US')}` : '-'}</span>
-              <span className="muted">{h.perfect.toLocaleString('en-US')}</span>
-              {h.you !== undefined && (
-                <span className="hist-you">
-                  {h.you.played
-                    ? <>{h.you.score.toLocaleString('en-US')}<span className="muted">{h.you.pct ? ` · ${h.you.pct}` : ''} · {h.you.matched ?? '-'}/{h.you.slotCount}</span></>
-                    : h.you.dnf ? <span className="muted">DNF</span> : <span className="muted">-</span>}
-                </span>
-              )}
-            </>
-          );
-          // A SEALED ROW IS NOT A LINK. There is nothing at the other end yet,
-          // and a link to a page that redirects back is worse than no link.
-          return h.sealed
-            ? <div className="row row--sealed" key={h.date}><span className="hist-ed">{h.label}</span>{inner}</div>
-            : (
-              <a className="row row--hist row--link" key={h.date} href={h.href}>
-                <span className="hist-ed">{h.label}</span>{inner}
-              </a>
-            );
-        })}
-      </div>
-    </section>
   );
 }

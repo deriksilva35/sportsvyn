@@ -37,7 +37,9 @@ test('Helmet.js is untouched by this relay, and TeamMark has only its named user
   const users = execSync("grep -rl \"components/team/TeamMark\" --include=*.js app components lib | grep -v test || true", { cwd: new URL('../../', import.meta.url).pathname }).toString().trim().split('\n').filter(Boolean);
   // The allowlist is deliberate, not a snapshot: a NEW user of the mark is a
   // design decision and has to be added here on purpose.
-  const ALLOWED = ['components/games/LobbyV2.js', 'components/scores/ScoresV2.js', 'components/team/TeamMark.js',
+  // components/games/LobbyV2.js was here and is gone: the v3 Games tab drops
+  // the Tonight strip, which was the lobby's only use of the mark.
+  const ALLOWED = ['components/scores/ScoresV2.js', 'components/team/TeamMark.js',
     // "Teams you follow" on /account (TEAM FOLLOWING relay) - a list of teams
     // wants the same 24px mark the lobby and the Scores tab draw.
     'components/account/FollowedTeams.js',
@@ -50,7 +52,6 @@ test('Helmet.js is untouched by this relay, and TeamMark has only its named user
     'components/rankings/AllTeams.js',
     // The You tab's followed-team rows (YOU TAB v1) - the same 22px mark.
     'components/you/You.js'];
-  assert.ok(users.includes('components/games/LobbyV2.js'), 'the lobby uses it');
   assert.ok(users.includes('components/scores/ScoresV2.js'), 'the Scores tab uses it (SCORES TAB v2)');
   assert.ok(!users.some((f) => !ALLOWED.includes(f)), `no other user: ${users}`);
 });

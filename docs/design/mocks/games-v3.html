@@ -1,0 +1,221 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Games · v3 mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;--mono:'JetBrains Mono',monospace;--disp:'Saira',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#050506;color:var(--paper);font:14px/1.5 system-ui,sans-serif;padding:10px}
+.wrap{max-width:394px;margin:0 auto}
+.cap{color:var(--muted);font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 7px}
+.cap:first-child{margin-top:0}
+#err{display:none;background:#3a0d0d;border:1px solid var(--live);color:#ffd7d7;border-radius:8px;padding:9px 11px;font:600 11px var(--mono);margin-bottom:8px;white-space:pre-wrap}
+.app{background:var(--ink);border:1px solid var(--line);border-radius:22px;overflow:hidden;padding-bottom:14px}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eb{color:var(--volt);font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.q{color:var(--quiet)}
+
+/* top */
+.top{display:flex;align-items:center;padding:14px 16px 8px}
+.top h1{font:900 22px var(--disp);letter-spacing:-.01em;text-transform:uppercase}
+.top .me{margin-left:auto;font:600 10px var(--mono);color:var(--muted)}
+.top .me b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink-3);color:var(--volt);font:800 10px var(--disp);margin-right:6px;vertical-align:middle}
+
+/* the one thing to do now */
+.now{margin:6px 12px 0;border:1.5px solid var(--volt);border-radius:16px;background:rgba(212,255,0,.06);padding:12px 13px 12px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.now .t{min-width:0;flex:1}
+.now .t .l{font:700 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--volt)}
+.now .t b{display:block;font:800 20px var(--disp);text-transform:uppercase;line-height:1.05;margin-top:3px;letter-spacing:-.01em}
+.now .t small{display:block;font:500 11px var(--mono);color:var(--muted);margin-top:4px}
+.now .go{background:var(--volt);color:var(--ink);border-radius:99px;padding:10px 16px;font:700 14px system-ui;white-space:nowrap;flex:0 0 auto}
+.now.done{border-color:var(--line);background:var(--ink-2)}
+.now.done .t .l{color:var(--jade)}
+.now.done .go{background:var(--ink-3);color:var(--muted)}
+
+/* game rows */
+.sh{display:flex;align-items:baseline;margin:16px 16px 6px}
+.sh h3{font:700 12px var(--disp);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.sh span{margin-left:auto;color:var(--quiet);font:600 9px var(--mono);letter-spacing:.06em}
+.list{margin:0 12px;border:1px solid var(--line);border-radius:16px;background:var(--ink-2);overflow:hidden}
+.g{display:flex;align-items:center;gap:12px;padding:13px 13px;border-bottom:1px solid var(--line);cursor:pointer;min-height:66px}
+.g:last-child{border:0}
+.g .ic{width:36px;height:36px;border-radius:10px;background:var(--ink-3);border:1px solid var(--line);display:grid;place-items:center;font:900 12px var(--disp);color:var(--paper);flex:0 0 auto;letter-spacing:-.02em}
+.g .ic.live{border-color:var(--live);color:var(--live)}
+.g .ic.done{border-color:var(--jade);color:var(--jade)}
+.g .t{min-width:0;flex:1}
+.g .t b{display:block;font:800 15px var(--disp);text-transform:uppercase;line-height:1.05}
+.g .t small{display:block;font:500 11px var(--mono);color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g .t small i{font-style:normal;color:var(--paper);font-weight:700}
+.g .t small i.l{color:var(--live)}
+.g .t small i.j{color:var(--jade)}
+.g .r{text-align:right;flex:0 0 auto}
+.g .r b{display:block;font:800 18px var(--mono);letter-spacing:-.03em;line-height:1}
+.g .r b.v{color:var(--volt)}
+.g .r span{display:block;font:600 8px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--quiet);margin-top:3px}
+.g .chev{color:var(--quiet);font:700 14px var(--mono);flex:0 0 auto}
+
+/* practice + results */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 12px 0}
+.tile{border:1px solid var(--line);border-radius:14px;background:var(--ink-2);padding:11px 12px;cursor:pointer;min-height:70px}
+.tile .l{font:700 9px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--quiet)}
+.tile b{display:block;font:800 14px var(--disp);text-transform:uppercase;margin-top:4px;line-height:1.05}
+.tile small{display:block;font:500 10px var(--mono);color:var(--muted);margin-top:3px}
+.foot{margin:14px 16px 0;font:500 10px var(--mono);color:var(--quiet);line-height:1.5}
+.foot b{color:var(--muted);font-weight:700}
+.tabs{display:flex;gap:6px;margin:0 0 8px}
+.tab{border:1px solid var(--line);border-radius:99px;padding:3px 10px;font:700 9px var(--mono);color:var(--quiet);cursor:pointer;letter-spacing:.06em}
+.tab.on{border-color:var(--volt);color:var(--volt)}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:8px 12px 0}
+.chip{border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:9px 4px 8px;text-align:center;cursor:pointer;font:700 10px var(--mono);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.chip.on{border-color:var(--volt);color:var(--volt);background:rgba(212,255,0,.07)}
+.pane{display:none}.pane.on{display:block}
+.lb{margin:12px 12px 0;border:1px solid var(--line);border-radius:16px;background:var(--ink-2);overflow:hidden}
+.lb .h{display:flex;gap:6px;padding:9px 12px;border-bottom:1px solid var(--line)}
+.lb .h span{border:1px solid var(--line);border-radius:99px;padding:2px 9px;font:700 9px var(--mono);color:var(--quiet)}
+.lb .h span.on{border-color:var(--volt);color:var(--volt)}
+.tr{display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid var(--line);font:500 12px var(--mono)}
+.tr:last-child{border:0}
+.tr .rk{width:26px;color:var(--quiet);font-weight:700}
+.tr .hn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr .hn small{color:var(--quiet);font-size:9px;margin-left:6px}
+.tr .sc{font-weight:700}
+.tr.you{box-shadow:inset 3px 0 0 var(--volt);background:rgba(212,255,0,.06)}
+.tr.you .hn{color:var(--volt);font-weight:700}
+.al{margin:12px 12px 0;border:1px solid var(--line);border-radius:16px;background:var(--ink-2);overflow:hidden}
+.al .row{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:1px solid var(--line)}
+.al .row:last-child{border:0}
+.al .row .t{flex:1;min-width:0}
+.al .row b{display:block;font:700 13px var(--disp);text-transform:uppercase}
+.al .row small{display:block;font:500 10px var(--mono);color:var(--muted);margin-top:2px}
+.sw{width:38px;height:22px;border-radius:99px;background:var(--volt);position:relative;flex:0 0 auto}
+.sw::after{content:'';position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:var(--ink)}
+.sw.off{background:var(--ink-3);border:1px solid var(--line)}.sw.off::after{right:auto;left:3px;background:var(--quiet)}
+</style></head><body>
+<div class="wrap">
+  <div class="cap">Games · v3 mock - one thing to do now, four games, four chips. Demo day:</div>
+  <div class="tabs" id="tabs"></div>
+  <div id="err"></div>
+  <div class="app">
+    <div class="top"><h1>Games</h1><span class="me"><b>S</b>@sportsvyn_og</span></div>
+    <div class="chips" id="chips"></div>
+
+    <div class="pane on" id="p-week">
+    <div class="now" id="now"></div>
+
+    <div class="sh"><h3>This week</h3><span id="wk">NFL WEEK 2</span></div>
+    <div class="list" id="list"></div>
+
+    <div class="sh"><h3>Practice</h3><span>UNLIMITED · FREE</span></div>
+    <div class="two">
+      <div class="tile"><span class="l">Mock draft</span><b>The Draft</b><small>12 · 8 rounds · this season</small></div>
+      <div class="tile"><span class="l">Mock draft</span><b>Your league</b><small>The Longest Yard · 15 rds</small></div>
+    </div>
+
+    <div class="foot" id="foot"></div>
+    </div>
+
+    <div class="pane" id="p-boards">
+      <div class="lb"><div class="h"><span class="on">WEEKLY</span><span>PICK'EM</span><span>DRAFT</span><span>DAILY</span></div>
+        <div class="tr"><span class="rk">1</span><span class="hn">jakebutler</span><span class="sc n">152.4</span></div>
+        <div class="tr"><span class="rk">2</span><span class="hn">The Chalk<small>HOUSE</small></span><span class="sc n">147.9</span></div>
+        <div class="tr you"><span class="rk">3</span><span class="hn">sportsvyn_og</span><span class="sc n">141.6</span></div>
+        <div class="tr"><span class="rk">4</span><span class="hn">mcamilli</span><span class="sc n">139.0</span></div>
+        <div class="tr"><span class="rk">5</span><span class="hn">The Fade<small>HOUSE</small></span><span class="sc n">133.2</span></div>
+        <div class="tr"><span class="rk q">…</span><span class="hn q">61 played · perfect six 168.3</span><span class="sc"></span></div>
+      </div>
+      <div class="foot">Season standings on <b>Rankings</b> · week boards here</div>
+    </div>
+
+    <div class="pane" id="p-results">
+      <div class="lb"><div class="h"><span>WEEK 1</span><span class="on">DAILY</span></div>
+        <div class="tr you"><span class="rk">Thu</span><span class="hn">2024 season<small>7 of 8 · 2:43</small></span><span class="sc n">99.7%</span></div>
+        <div class="tr"><span class="rk">Wed</span><span class="hn">1996 season<small>6 of 8 · 3:10</small></span><span class="sc n">96.1%</span></div>
+        <div class="tr"><span class="rk">Tue</span><span class="hn">2011 season<small>5 of 8 · 2:58</small></span><span class="sc n">91.4%</span></div>
+        <div class="tr"><span class="rk">Mon</span><span class="hn">1988 season<small>7 of 8 · 2:21</small></span><span class="sc n">97.8%</span></div>
+        <div class="tr"><span class="rk">Sun</span><span class="hn">2019 season<small>4 of 8 · 3:41</small></span><span class="sc n">88.0%</span></div>
+        <div class="tr"><span class="rk q">…</span><span class="hn q">7 played this week · avg 94.2% · best 99.7%</span><span class="sc"></span></div>
+      </div>
+      <div class="lb" style="margin-top:8px"><div class="h"><span class="on">WEEK 1</span></div>
+        <div class="tr"><span class="rk">W</span><span class="hn">The Weekly<small>graded Tue</small></span><span class="sc n">3rd · 141.6</span></div>
+        <div class="tr"><span class="rk">P</span><span class="hn">Pick'em<small>NFL + CFB</small></span><span class="sc n">21-11</span></div>
+        <div class="tr"><span class="rk">R</span><span class="hn">The Draft<small>room 14 · seat 5</small></span><span class="sc n">2nd · 131.4</span></div>
+        <div class="tr"><span class="rk">D</span><span class="hn">The Daily<small>7 played · best 99.7%</small></span><span class="sc n">avg 94.2%</span></div>
+      </div>
+      <div class="foot">Tap a row for the graded screen · share cards live there</div>
+    </div>
+
+    <div class="pane" id="p-alerts">
+      <div class="al">
+        <div class="row"><div class="t"><b>The Daily</b><small>opens 9:00 PM · results 9:00 PM next day</small></div><span class="sw"></span></div>
+        <div class="row"><div class="t"><b>The Weekly</b><small>opens Tue · one hour before first kickoff · graded</small></div><span class="sw"></span></div>
+        <div class="row"><div class="t"><b>Pick'em</b><small>opens · reminder · graded</small></div><span class="sw"></span></div>
+        <div class="row"><div class="t"><b>The Draft</b><small>rooms open · your seat · graded</small></div><span class="sw"></span></div>
+        <div class="row"><div class="t"><b>Game alerts</b><small>kickoff · scores · final for teams you follow</small></div><span class="sw off"></span></div>
+      </div>
+      <div class="foot">One switch per game · times in your zone</div>
+    </div>
+  </div>
+</div>
+<script>
+window.onerror=function(m,s,l,c){var e=document.getElementById('err');e.style.display='block';e.textContent='JS ERROR\n'+m+'\nline '+l+':'+c;return false};
+function el(id){return document.getElementById(id)}
+// Three demo days. Every line is a state the site already computes; nothing here is a new rule.
+var DAYS={
+ thu:{tab:'THU · PRE-KICK',
+  now:{l:'Tonight',b:'The Daily',s:'8 slots · 12 teams · about 3 minutes · 4-day streak · season revealed when you start',go:'Play',done:false},
+  games:[
+   {ic:'D',name:'The Daily',line:'yesterday <i>99.7%</i> · 7 of 8 matched · 4-day streak',r:'99.7%',rs:'yesterday',v:true},
+   {ic:'W',name:'The Weekly',line:'<i>Allen · Walker · Gibbs</i> +3 · locks Thu 5:15 PM',r:'6/6',rs:'set'},
+   {ic:'P',name:'Pick\'em',line:'<i>38 picks</i> in · first game Thu 5:15 PM · season .618',r:'38',rs:'picked'},
+   {ic:'R',name:'The Draft',line:'<i>on the clock</i> · pick 7.06 · 2 rounds to go',r:'7.06',rs:'your pick',v:true}
+  ],
+  foot:'<b>Results</b> Tuesday morning · alerts on'},
+ fri:{tab:'FRI · MORNING',
+  now:{l:'Graded overnight',b:'Your Daily · 99.7%',s:'2024 season · 2,363.1 of 2,371.1 · 7 of 8 · 5-day streak',go:'See results',done:true},
+  games:[
+   {ic:'D',name:'The Daily',line:'<i class="j">99.7%</i> yesterday · 94.2% avg this week · next opens 9:00 PM',r:'99.7%',rs:'yesterday',v:true,done:true},
+   {ic:'W',name:'The Weekly',line:'<i class="l">Allen 34.2</i> final · 5 to play · 6th of 61',r:'34.2',rs:'live',v:true,live:true},
+   {ic:'P',name:'Pick\'em',line:'NFL <i class="j">1-0</i> · 15 pending · CFB 22 pending',r:'1-0',rs:'record',live:true},
+   {ic:'R',name:'The Draft',line:'roster in · <i>Allen 34.2</i> · 7 to play',r:'34.2',rs:'best six',v:true}
+  ],
+  foot:'Every Daily is graded at 9:00 PM · results one tap away, here or on the card'},
+ sun:{tab:'SUN · LIVE',
+  now:{l:'Live now',b:'Your Weekly · 48.2',s:'3 to play · 14th of 61',go:'Watch',done:false},
+  games:[
+   {ic:'D',name:'The Daily',line:'today <i class="j">96.1%</i> · 6 of 8 · next opens 9:00 PM',r:'96.1%',rs:'today',v:true},
+   {ic:'W',name:'The Weekly',line:'<i class="l">live</i> · 48.2 · 3 to play · <i>14th</i> of 61',r:'48.2',rs:'live',v:true,live:true},
+   {ic:'P',name:'Pick\'em',line:'<i class="l">live</i> · NFL 5-2 · CFB 12-8 · 9 pending',r:'17-10',rs:'record',live:true},
+   {ic:'R',name:'The Draft',line:'<i class="l">live</i> · best six 118.7 · 2 to play',r:'118.7',rs:'best six',v:true,live:true}
+  ],
+  foot:'Everything scores on its own · <b>graded Tuesday</b>'},
+ tue:{tab:'TUE · GRADED',
+  now:{l:'Graded',b:'Week 2 is in',s:'Weekly 3rd of 61 · Pick\'em 21-11 · Draft 2nd in room',go:'See results',done:true},
+  games:[
+   {ic:'D',name:'The Daily',line:'tonight\'s edition opens 9:00 PM · 6-day streak',r:'9 PM',rs:'tonight'},
+   {ic:'W',name:'The Weekly',line:'<i class="j">3rd</i> of 61 · 141.6 · Allen 34.2 best · wk 3 open',r:'3rd',rs:'of 61',done:true},
+   {ic:'P',name:'Pick\'em',line:'<i class="j">21-11</i> · 65.6% · season .618',r:'21-11',rs:'final',done:true},
+   {ic:'R',name:'The Draft',line:'<i class="j">2nd</i> in room · 131.4 · 4th of 58 field · rooms open',r:'2nd',rs:'room',done:true}
+  ],
+  foot:'Week 3 rooms and boards open <b>Tuesday 6:00 AM</b>'}
+};
+var day='thu', chip='week';
+var CHIPS=[['week','This week'],['boards','Boards'],['results','Results'],['alerts','Alerts']];
+function draw(){
+  var d=DAYS[day],h='';
+  for(var k in DAYS)h+='<span class="tab'+(k===day?' on':'')+'" data-day="'+k+'">'+DAYS[k].tab+'</span>';
+  el('tabs').innerHTML=h;
+  el('now').className='now'+(d.now.done?' done':'');
+  el('now').innerHTML='<div class="t"><span class="l">'+d.now.l+'</span><b>'+d.now.b+'</b><small>'+d.now.s+'</small></div><span class="go">'+d.now.go+'</span>';
+  var g='';
+  d.games.forEach(function(x){
+    g+='<div class="g"><div class="ic'+(x.live?' live':'')+(x.done?' done':'')+'">'+x.ic+'</div>'+
+      '<div class="t"><b>'+x.name+'</b><small>'+x.line+'</small></div>'+
+      '<div class="r"><b class="n'+(x.v?' v':'')+'">'+x.r+'</b><span>'+x.rs+'</span></div><span class="chev">›</span></div>';
+  });
+  el('list').innerHTML=g; el('foot').innerHTML=d.foot;
+  var c='';CHIPS.forEach(function(x){c+='<div class="chip'+(chip===x[0]?' on':'')+'" data-chip="'+x[0]+'">'+x[1]+'</div>'});
+  el('chips').innerHTML=c;
+  CHIPS.forEach(function(x){el('p-'+x[0]).className='pane'+(chip===x[0]?' on':'')});
+}
+document.addEventListener('click',function(ev){var n=ev.target;while(n&&n!==document.body){if(n.dataset&&n.dataset.day){day=n.dataset.day;draw();return}if(n.dataset&&n.dataset.chip){chip=n.dataset.chip;draw();return}n=n.parentNode}});
+draw();
+</script>
+</body></html>
