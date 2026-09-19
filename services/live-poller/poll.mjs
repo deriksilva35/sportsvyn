@@ -482,6 +482,11 @@ export async function pollOnce(sql, {
           awayScore: after.away_score,
           homeScore: after.home_score,
           liveState: upd.liveState,
+          // THE TENTH FIELD, off the candidate row this rider already holds.
+          // It never changes, so it is deliberately absent from the trigger
+          // key below - a card does not move because its kickoff is still
+          // the same kickoff.
+          kickoffAt: m.kickoff_at,
         }, line);
         // THE KEY IS EXACTLY THE FOUR THE RELAY NAMES. possession and
         // situation ride along on the card but do not trigger it: they cannot

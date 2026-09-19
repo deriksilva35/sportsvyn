@@ -46,7 +46,8 @@ let liveActivityAnswer = false;
 
 const MATCH = { id: 5591, slug: 'nfl-2026-reg-w1-nyj-ten', leagueSlug: 'nfl', homeAbbr: 'TEN', awayAbbr: 'NYJ',
   homeTeamId: 3202, homeSlug: 'tennessee-titans', kickoffAt: '2026-09-13T17:00:00.000Z' };
-const STATE = { awayAbbr: 'NYJ', awayScore: 7, homeAbbr: 'TEN', homeScore: 14, period: 'Q2', clock: '1:39' };
+const STATE = { awayAbbr: 'NYJ', awayScore: 7, homeAbbr: 'TEN', homeScore: 14, period: 'Q2', clock: '1:39',
+  kickoffAt: '2026-09-13T17:00:00.000Z' };
 const URL_ = 'https://sportsvyn.com/nfl/game/nfl-2026-reg-w1-nyj-ten';
 const LA = { url: URL_, state: STATE, final: false };
 
@@ -133,7 +134,7 @@ test('AFTER THE FINAL IT IS GONE. There is nothing left to follow', async () => 
   assert.equal(c.querySelectorAll('.al-rows .al-row').length, 5);
 });
 
-test('ON posts startLiveActivity with the url TOP LEVEL and the nine fields; OFF posts end', async () => {
+test('ON posts startLiveActivity with the url TOP LEVEL and the ten fields; OFF posts end', async () => {
   beNative();
   const c = await openSheet({ liveActivity: LA });
   const tg = liveToggle(c);
@@ -141,7 +142,7 @@ test('ON posts startLiveActivity with the url TOP LEVEL and the nine fields; OFF
 
   await click(tg);
   assert.equal(posted.length, 1);
-  // SIX BECAME NINE (LIVE ACTIVITY - THE LIVE LINE relay). The sheet hands
+  // SIX BECAME TEN (the live line, then kickoffAt). The sheet hands
   // over whatever the page built; the page has the game but not the play feed,
   // so the line is three empty strings here - which is the honest answer, not
   // a gap to paper over with a thinner reader in the component.
@@ -149,7 +150,7 @@ test('ON posts startLiveActivity with the url TOP LEVEL and the nine fields; OFF
     type: 'startLiveActivity', matchId: 5591, url: URL_,
     state: {
       awayAbbr: 'NYJ', awayScore: 7, homeAbbr: 'TEN', homeScore: 14, period: 'Q2', clock: '1:39',
-      possession: '', situation: '', lastPlay: '',
+      possession: '', situation: '', lastPlay: '', kickoffAt: '2026-09-13T17:00:00.000Z',
     },
   });
   assert.equal(liveToggle(c).getAttribute('aria-checked'), 'true', 'and the switch follows the post');
