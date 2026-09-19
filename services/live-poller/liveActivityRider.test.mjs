@@ -20,7 +20,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
-import { pollOnce } from './poll.mjs';
+import { pollOnce, LA_COALESCE_MS, recordLaPushes, laPushesPerHour, _resetLaCadence } from './poll.mjs';
 import { stateFromMatch } from '../../lib/push/liveActivityState.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -63,8 +63,8 @@ const normalise = (row) => ({
   liveState: row.status === 'live' ? { period: row.period, clock: row.clock } : null,
 });
 
-const poll = (fetcher) => pollOnce(sql, {
-  league: 'nfl', providerKey: 'bdl_game_id', fetcher, normalise, now: new Date(), push: true,
+const poll = (fetcher, now = new Date()) => pollOnce(sql, {
+  league: 'nfl', providerKey: 'bdl_game_id', fetcher, normalise, now, push: true,
 });
 
 const activityRow = async () =>
@@ -165,13 +165,25 @@ test('A POLL THAT CHANGES NOTHING PUSHES NOTHING', async () => {
   assert.deepEqual((await poll(feed('live', 10, 7, 3, '14:52'))).liveActivities, []);
 });
 
-test('THE CLOCK ALONE IS A PUSH NOW, which is the point of the relay', async () => {
+test('THE CLOCK ALONE IS STILL A PUSH - it now waits for the window (LA-CADENCE)', async () => {
   // Same score, same quarter, the clock moved. Under the six-field card this
   // was deliberately silent; a card carrying a running clock and a live line
   // that sat still for four minutes of a goal-line stand was the complaint.
-  const out = await poll(feed('live', 10, 7, 3, '11:40'));
-  assert.equal(out.liveActivities.length, 1);
-  assert.equal(out.liveActivities[0].event, 'update');
+  //
+  // THE RULING STANDS AND THE TIMING CHANGED. The clock is still worth a push -
+  // this test did not become wrong - but it is TEXTURE, so it arrives when the
+  // window opens rather than on the next tick. The old assertion pinned the
+  // push to the immediate tick, which is the one part of it la-cadence turns
+  // over; it is restated rather than deleted, because the thing it protects
+  // (a frozen clock on a lock screen) is still real.
+  const base = new Date();
+  const soon = await poll(feed('live', 10, 7, 3, '11:40'), base);
+  assert.equal(soon.liveActivities.length, 0, 'not on the very next tick any more');
+
+  const later = await poll(feed('live', 10, 7, 3, '11:22'),
+    new Date(base.getTime() + LA_COALESCE_MS + 1000));
+  assert.equal(later.liveActivities.length, 1, 'but the clock alone still moves the card');
+  assert.equal(later.liveActivities[0].event, 'update');
 });
 
 test('FIVE CHANGES IN ONE TICK ARE ONE PUSH, of the state at the end of it', async () => {
@@ -237,4 +249,138 @@ test('a match with no Activities costs the poll nothing', async () => {
   const out = await poll(feed('live', 17, 7, 4, '2:00'));
   assert.equal(out.written, 1, 'the score still changed');
   assert.deepEqual(out.liveActivities, [], 'nothing to push to, nothing in the ledger');
+});
+
+
+// ---------------------------------------------------------------------------
+// LA-CADENCE - the coalescing window.
+//
+// DRIVEN BY THE TICK'S CLOCK, not by waiting. pollOnce takes `now` and the
+// rider measures the window against it, so two minutes of game time cost this
+// file nothing. The alternative - real sleeps - would have put four minutes in
+// the suite to prove a two-minute rule.
+// ---------------------------------------------------------------------------
+
+// THE CLOCK IS ANCHORED TO THE SENTINEL'S KICKOFF, not to a literal date. The
+// candidate query takes matches kicking off within 8 hours of `now`, so a fixed
+// future timestamp put the match outside the window and the rider was never
+// reached - every assertion here failed for a reason that had nothing to do
+// with cadence. freshCard() re-anchors before each test.
+let T0 = new Date();
+const at = (ms) => new Date(T0.getTime() + ms);
+
+// A FRESH ACTIVITY PER CADENCE TEST. 'THE WHISTLE SENDS ONE end' above ends the
+// file's original sentinel, so every test after it has zero listeners and the
+// rider correctly does nothing - which would have made every assertion below
+// pass for the wrong reason if it expected silence, and fail confusingly where
+// it expects a push. Each test opens its own card and the teardown's ${NS}
+// prefix sweeps it.
+let seq = 0;
+async function freshCard() {
+  const id = `${NS}-c${seq += 1}`;
+  await sql`
+    INSERT INTO live_activities (activity_id, push_token, user_id, match_id, started_at)
+    VALUES (${id}, ${TOKEN}, NULL, ${matchId}, now())`;
+  // And the game is live again: the whistle test left it final, and a final
+  // match is not a match this rider has anything to say about.
+  await sql`UPDATE matches SET status = 'live' WHERE id = ${matchId}`;
+  T0 = new Date();
+  _resetLaCadence();
+  return id;
+}
+
+test('FIVE PLAYS IN A MINUTE ARE ONE PUSH', async () => {
+  await freshCard();
+  // The first poll syncs the card - that push is the documented cost of a
+  // cold map and is not what this test is about.
+  const first = await poll(feed('live', 10, 7, 2, '9:00'), at(0));
+  assert.equal(first.liveActivities.length, 1, 'the first sight of a match pushes once');
+
+  // Five plays: the clock moves and the last play changes, the score does not.
+  // Every one of these would have pushed under the old rule.
+  let pushes = 0;
+  const plays = [[10_000, '8:52'], [22_000, '8:40'], [31_000, '8:21'], [44_000, '8:02'], [58_000, '7:48']];
+  for (const [ms, clock] of plays) {
+    const out = await poll(feed('live', 10, 7, 2, clock), at(ms));
+    pushes += out.liveActivities.length;
+  }
+  assert.equal(pushes, 0, 'five texture changes inside the window are silent');
+
+  // And when the window elapses, ONE push carries the LATEST line - not the
+  // first one that went stale.
+  const after = await poll(feed('live', 10, 7, 2, '7:30'), at(LA_COALESCE_MS + 1000));
+  assert.equal(after.liveActivities.length, 1, 'one push after the window, not five');
+  const [m2] = await sql`SELECT metadata->'live_state'->>'clock' AS clock FROM matches WHERE id = ${matchId}`;
+  assert.equal(m2.clock, '7:30', 'and it carries the line as it stands now');
+});
+
+test('A SCORE MID-WINDOW PUSHES AT ONCE, AND RESETS NOTHING', async () => {
+  await freshCard();
+  await poll(feed('live', 10, 7, 2, '6:00'), at(0));            // sync the card
+
+  // Texture inside the window: silent.
+  const quiet = await poll(feed('live', 10, 7, 2, '5:44'), at(20_000));
+  assert.equal(quiet.liveActivities.length, 0);
+
+  // A SCORE. News does not wait for the window.
+  const score = await poll(feed('live', 17, 7, 2, '5:30'), at(30_000));
+  assert.equal(score.liveActivities.length, 1, 'a score goes out immediately');
+
+  // RESETTING NOTHING: the texture window still expires on its ORIGINAL
+  // schedule. If the score had restarted it, this poll would be silent.
+  const texture = await poll(feed('live', 17, 7, 2, '4:10'), at(LA_COALESCE_MS + 500));
+  assert.equal(texture.liveActivities.length, 1,
+    'the window was measured from the last COALESCED push, not from the score');
+
+  // And a period change is news too, at any point in the window.
+  const period = await poll(feed('live', 17, 7, 3, '15:00'), at(LA_COALESCE_MS + 2000));
+  assert.equal(period.liveActivities.length, 1, 'a new quarter does not wait either');
+});
+
+test('A FINAL PUSHES IMMEDIATELY, whatever the window says', async () => {
+  const cardId = await freshCard();
+  await poll(feed('live', 21, 14, 4, '2:00'), at(0));           // sync the card
+  const out = await poll(feed('final', 21, 14, 4, '0:00'), at(5_000));
+  assert.equal(out.liveActivities.length, 1, 'the whistle never waits');
+  assert.equal(out.liveActivities[0].event, 'end');
+  const [row] = await sql`SELECT ended_at FROM live_activities WHERE activity_id = ${cardId}`;
+  assert.ok(row, 'the Activity row survives to be read');
+});
+
+test('NOTHING CHANGED IS STILL NOTHING PUSHED', async () => {
+  await freshCard();
+  await poll(feed('live', 3, 7, 1, '12:00'), at(0));
+  // Past the window, and the line has not moved: the window is a ceiling on
+  // pushes, never a schedule for them.
+  const out = await poll(feed('live', 3, 7, 1, '12:00'), at(LA_COALESCE_MS * 2));
+  assert.equal(out.liveActivities.length, 0, 'a still card is not repushed on a timer');
+});
+
+test('THE HOURLY LEDGER COUNTS PER ACTIVITY, and ages out', () => {
+  _resetLaCadence();
+  const t = Date.parse('2026-09-20T18:00:00.000Z');
+  const HOUR = 3_600_000;
+  recordLaPushes(['a', 'b'], t);
+  recordLaPushes(['a'], t + 1000);
+  recordLaPushes(['a'], t + 2000);
+  assert.deepEqual(laPushesPerHour(t + 3000), { a: 3, b: 1 }, 'counted per Activity, not per match');
+
+  // An hour later the old pushes have aged out of the window entirely.
+  assert.deepEqual(laPushesPerHour(t + HOUR + 5000), {}, 'the window rolls');
+
+  // A card that has gone quiet is dropped rather than frozen at its last count,
+  // and a still-active one keeps counting.
+  recordLaPushes(['b'], t + HOUR + 6000);
+  const seen = laPushesPerHour(t + HOUR + 7000);
+  assert.deepEqual(seen, { b: 1 });
+  assert.equal('a' in seen, false, 'an ended card does not linger in the ledger');
+});
+
+test('THE LEDGER COUNTS WHAT WAS SENT, not what was attempted', () => {
+  _resetLaCadence();
+  const t = Date.parse('2026-09-20T18:00:00.000Z');
+  // pushLiveActivities reports sentIds only for pushes APNs accepted, so a
+  // failed or skipped push must never inflate a card's hourly count.
+  assert.deepEqual(recordLaPushes([], t), {}, 'a dark or failed push records nothing');
+  assert.deepEqual(laPushesPerHour(t), {});
 });
