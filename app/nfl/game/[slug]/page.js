@@ -40,7 +40,7 @@ import { propsSlate } from '@/lib/market/reads';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import BackToAppBar from '@/components/BackToAppBar';
-import { stateFromMatch, gameUrlFor } from '@/lib/push/liveActivityState';
+import { stateFromMatch, liveLine, gameUrlFor } from '@/lib/push/liveActivityState';
 import { getTeamRecordChip } from '@/lib/standings/read';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import '@/components/gridiron/gridiron.css';
@@ -253,7 +253,18 @@ export default async function GamePage({ params, searchParams }) {
               homeTeamId: game.home?.id ?? null, homeSlug: game.home?.slug ?? null,
               kickoffAt: game.kickoffAt,
             }} liveActivity={{
-              url: gameUrlFor(game), state: stateFromMatch(game),
+              url: gameUrlFor(game),
+              // THE LINE IS PASSED, NOT LEFT BLANK. This page already holds
+              // the play feed - it draws the strip from it two sections down -
+              // so an Activity started here carries possession, the down and
+              // the last play from its first frame instead of three empty
+              // strings until the next poller tick. Same readers, same
+              // numbers: the card and the gamecast under it cannot disagree.
+              state: stateFromMatch(game, liveLine({
+                plays: sim.plays,
+                homeTeamId: game.home?.id,
+                teamAbbr: gamecast?.teamAbbr ?? new Map(),
+              })),
               final: game.status === 'final',
             }} />
           </div>

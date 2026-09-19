@@ -133,7 +133,7 @@ test('AFTER THE FINAL IT IS GONE. There is nothing left to follow', async () => 
   assert.equal(c.querySelectorAll('.al-rows .al-row').length, 5);
 });
 
-test('ON posts startLiveActivity with the url TOP LEVEL and the six fields; OFF posts end', async () => {
+test('ON posts startLiveActivity with the url TOP LEVEL and the nine fields; OFF posts end', async () => {
   beNative();
   const c = await openSheet({ liveActivity: LA });
   const tg = liveToggle(c);
@@ -141,9 +141,16 @@ test('ON posts startLiveActivity with the url TOP LEVEL and the six fields; OFF 
 
   await click(tg);
   assert.equal(posted.length, 1);
+  // SIX BECAME NINE (LIVE ACTIVITY - THE LIVE LINE relay). The sheet hands
+  // over whatever the page built; the page has the game but not the play feed,
+  // so the line is three empty strings here - which is the honest answer, not
+  // a gap to paper over with a thinner reader in the component.
   assert.deepEqual(posted[0], {
     type: 'startLiveActivity', matchId: 5591, url: URL_,
-    state: { awayAbbr: 'NYJ', awayScore: 7, homeAbbr: 'TEN', homeScore: 14, period: 'Q2', clock: '1:39' },
+    state: {
+      awayAbbr: 'NYJ', awayScore: 7, homeAbbr: 'TEN', homeScore: 14, period: 'Q2', clock: '1:39',
+      possession: '', situation: '', lastPlay: '',
+    },
   });
   assert.equal(liveToggle(c).getAttribute('aria-checked'), 'true', 'and the switch follows the post');
 
