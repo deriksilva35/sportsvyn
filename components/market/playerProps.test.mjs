@@ -184,7 +184,9 @@ test('the card names the player without inventing a depth chart', () => {
 test('A CROSSED SEASON IS LABELLED, and the two windows are reconciled', () => {
   const c = render(card());
   const cap = txt(c.querySelector('.ppc-cap'));
-  assert.match(cap, /Last 5 played/);
+  // THE WINDOW IS FIVE; the noun it takes belongs to the DNP guard below,
+  // because this fixture holds one and "played" would be a claim about it.
+  assert.match(cap, /Last 5 /);
   assert.match(cap, /2025 and 2026/, 'the crossing is stated, never silent');
   // the hit rate is one season and the chart is five games - the page says so
   assert.match(cap, /hit rate is/);
@@ -199,6 +201,15 @@ test('A DNP IS AN OUTLINE, NOT A ZERO - and is not in the denominator', () => {
   assert.match(txt(dnp[0]), /—/, 'the value reads as absent');
   // the hit cell counts 3 games, not the 5 bars: valueOf drops the unmeasured
   assert.match(txt(c.querySelector('.ppc-cells .c.hit')), /1 of 3/);
+});
+
+test('A WINDOW WITH A DNP IN IT IS NOT FIVE GAMES PLAYED', () => {
+  // The default fixture's window holds one DNP, so the caption must not call
+  // all five "played" - the dashed bar on the same chart says otherwise.
+  const c = render(card());
+  const cap = txt(c.querySelector('.ppc-cap'));
+  assert.match(cap, /Last 5 games/);
+  assert.equal(/Last 5 played/.test(cap), false, 'he did not play all five');
 });
 
 test('the card strip returns to the game page', () => {

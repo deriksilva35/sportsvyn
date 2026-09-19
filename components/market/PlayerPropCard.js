@@ -76,9 +76,14 @@ function Prop({ p }) {
           five he played, so on an early-season card the two windows genuinely
           differ - and the page says so rather than letting them look
           inconsistent. */}
+      {/* "PLAYED" IS A CLAIM ABOUT EVERY BAR IN THE WINDOW. A DNP rides the
+          chart as a dashed outline so the gap is visible, which means the
+          window is the last five GAMES and he played fewer - saying "last 5
+          played" over a chart with a dash in it states something the chart
+          itself contradicts. The stronger word is kept only where it is true. */}
       {p.series ? (
         <p className="ppc-cap">
-          Last {p.series.points.length} played
+          Last {p.series.points.length}{p.series.points.every((x) => x.value != null) ? ' played' : ' games'}
           {p.series.crossed ? ` · ${p.series.seasons.join(' and ')}` : ''}
           {hit ? ` · hit rate is ${hit.games === 1 ? 'the' : 'this season’s'} ${hit.games} game${hit.games === 1 ? '' : 's'}` : ''}
         </p>
