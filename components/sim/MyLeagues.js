@@ -13,7 +13,9 @@
 import LeagueStart from './LeagueStart';
 import LeagueShare from './LeagueShare';
 import JoinByCode from './JoinByCode';
+import Link from 'next/link';
 import { dayHeading, kickoffParts } from '@/lib/gridiron/kickoff';
+import { trackerHandoffHref } from '@/lib/fantasy/handoff';
 
 export default function MyLeagues({ leagues, tz = null, userId = null }) {
   if (!leagues?.length) return null;
@@ -44,6 +46,28 @@ export default function MyLeagues({ leagues, tz = null, userId = null }) {
               defaultSeat={l.default_seat ?? null}
               keptBySeat={l.kept_by_seat ?? null}
             />
+            {/* TRACK A LIVE DRAFT - the tracker's door, moved here from the
+                Games tab (GAMES v3 addendum). It belongs on a LEAGUE row and
+                nowhere else: the tracker's whole job is to follow a draft
+                happening somewhere else, and "somewhere else" is a league you
+                imported, not a practice preset.
+
+                IT CARRIES THIS LEAGUE'S SHAPE, through the same handoff
+                StartForm packs - teams, scoring and the roster - so the
+                tracker opens on the board you are actually sitting at instead
+                of asking you to re-describe it. A league row is the one place
+                that shape is already known. */}
+            <Link
+              className="sml-track"
+              href={trackerHandoffHref({
+                teamsCount: l.teams_count,
+                scoringFormat: l.scoring_format,
+                rosterSlots: l.roster_slots ?? {},
+              })}
+            >
+              Track a live draft &rarr;
+            </Link>
+
             {/* Who is in, the invite (owner), the league's mocks. */}
             <LeagueShare
               configId={l.id}
