@@ -1,9 +1,16 @@
 // components/gridiron/PropsPanel.js — the game page's player-prop read.
 //
-// Pre-game only, mounted under OddsStrip behind the same guard. Renders null
-// when there are no priced props, which is the common case: props are scoped to
-// the current game week and the Pick'em board, so most games never have any and
-// a permanent empty panel would read as broken rather than as not-applicable.
+// Pre-game AND LIVE, mounted under OddsStrip behind the same guard. Renders
+// null when there are no priced props, which is the common case: props are
+// scoped to the current game week and the Pick'em board, so most games never
+// have any and a permanent empty panel would read as broken rather than as
+// not-applicable. A FINAL NEVER REACHES HERE - the reader's slate excludes it,
+// because once the game is over the price is history and the result belongs to
+// the page itself.
+//
+// A LIVE GAME'S NUMBERS ARE A STAMP, NOT A QUOTE. The consensus stops updating
+// at kickoff, so the panel says "pre-kick" - the same word the props index and
+// the player card use - rather than letting a frozen price read as current.
 //
 // THE NON-EXCLUSIVITY NOTE RIDES WITH THE NUMBERS. Anytime prices are stored
 // raw and single-sided - several players score in one game, so the field sums
@@ -17,7 +24,11 @@ export default function PropsPanel({ card, leagueSlug, matchId }) {
     <section className="gi-props" aria-label="Player props">
       <div className="gi-props-h">
         <span className="lbl">Player props</span>
-        <span className="src">Market · pre-kickoff consensus</span>
+        <span className="src">
+          {card.matchStatus === 'live'
+            ? <><i className="live">LIVE</i> · prices are pre-kick</>
+            : 'Market · pre-kickoff consensus'}
+        </span>
       </div>
       {/* A ROW OPENS THE PLAYER'S CARD when we know who it is about. An
           unlinked row keeps every number it had and is simply not a link -
