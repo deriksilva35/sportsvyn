@@ -1,0 +1,143 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Player props · v1 mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;--mono:'JetBrains Mono',monospace;--disp:'Saira',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#050506;color:var(--paper);font:14px/1.5 system-ui,sans-serif;padding:10px}
+.wrap{max-width:394px;margin:0 auto}
+.cap{color:var(--muted);font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin:0 0 7px}
+#err{display:none;background:#3a0d0d;border:1px solid var(--live);color:#ffd7d7;border-radius:8px;padding:9px 11px;font:600 11px var(--mono);margin-bottom:8px;white-space:pre-wrap}
+.app{background:var(--ink);border:1px solid var(--line);border-radius:22px;overflow:hidden;padding-bottom:14px}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eb{color:var(--volt);font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.q{color:var(--quiet)}
+
+/* game strip */
+.gs{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:#111}
+.gs .tm{display:flex;align-items:center;gap:7px;font:800 13px var(--disp)}
+.gs .tm small{display:block;font:500 9px var(--mono);color:var(--quiet)}
+.mk{width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg,var(--a) 50%,var(--b) 50%);border:1px solid var(--line);flex:0 0 auto}
+.gs .mid{margin:0 auto;text-align:center;font:600 9px var(--mono);color:var(--muted);letter-spacing:.06em}
+.gs .mid b{display:block;font:700 12px var(--mono);color:var(--paper);letter-spacing:0}
+
+/* player */
+.pl{padding:14px 14px 10px;display:flex;align-items:flex-end;gap:12px}
+.pl .who .l{font:700 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--quiet)}
+.pl .who b{display:block;font:900 26px var(--disp);text-transform:uppercase;letter-spacing:-.01em;line-height:1;margin-top:3px}
+.pl .who small{display:block;font:500 10px var(--mono);color:var(--muted);margin-top:4px}
+.pl .rt{margin-left:auto;text-align:right}
+.pl .rt b{display:block;font:800 22px var(--mono);letter-spacing:-.03em;line-height:1;color:var(--volt)}
+.pl .rt span{font:600 8px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.pos{display:inline-grid;place-items:center;width:26px;height:18px;border-radius:5px;background:#4ADE80;color:var(--ink);font:800 9px var(--disp);vertical-align:middle;margin-right:6px}
+
+/* prop rows */
+.sh{display:flex;align-items:baseline;margin:6px 14px 6px}
+.sh h3{font:700 12px var(--disp);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.sh span{margin-left:auto;color:var(--quiet);font:600 9px var(--mono);letter-spacing:.06em}
+.props{margin:0 12px;border:1px solid var(--line);border-radius:16px;background:var(--ink-2);overflow:hidden}
+.pr{border-bottom:1px solid var(--line)}
+.pr:last-child{border:0}
+.pr .hd{display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:pointer}
+.pr .hd .nm{font:800 14px var(--disp);text-transform:uppercase;flex:1;min-width:0}
+.pr .hd .nm small{display:block;font:500 10px var(--mono);color:var(--muted);text-transform:none;margin-top:2px}
+.pr .hd .ln{text-align:right}
+.pr .hd .ln b{display:block;font:800 20px var(--mono);letter-spacing:-.03em;line-height:1}
+.pr .hd .ln span{font:600 8px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--quiet)}
+.pr .hd .mini{display:flex;gap:2px;align-items:flex-end;height:18px;width:38px;flex:0 0 auto}
+.pr .hd .mini i{flex:1;border-radius:2px;background:var(--ink-3)}
+.pr .hd .mini i.o{background:var(--jade)}.pr .hd .mini i.u{background:var(--quiet)}
+.pr .hd .chev{color:var(--quiet);font:700 12px var(--mono);transition:transform .15s}
+.pr.open .hd .chev{transform:rotate(90deg)}
+.pr .body{display:none;padding:2px 13px 13px}
+.pr.open .body{display:block}
+
+/* the two numbers */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.cell{border:1px solid var(--line);border-radius:10px;background:var(--ink);padding:8px 10px}
+.cell .l{font:700 8px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--quiet)}
+.cell b{display:block;font:800 20px var(--mono);letter-spacing:-.03em;margin-top:2px}
+.cell small{display:block;font:500 9px var(--mono);color:var(--muted);margin-top:1px}
+.cell.mkt b{color:var(--paper)}.cell.hit b{color:var(--jade)}.cell.hit.cold b{color:var(--terra)}
+
+/* the chart */
+.ch{position:relative;height:118px;padding:0 4px}
+.ch .bars{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;height:88px;align-items:end}
+.ch .bar{position:relative;height:100%;display:flex;align-items:flex-end}
+.ch .bar i{display:block;width:100%;border-radius:6px 6px 3px 3px;background:var(--ink-3);border:1px solid var(--line);min-height:6px}
+.ch .bar i.o{background:var(--jade);border-color:var(--jade)}
+.ch .bar i.dnp{background:transparent;border:1px dashed var(--line)}
+.ch .bar b{position:absolute;left:0;right:0;text-align:center;font:700 11px var(--mono);color:var(--paper);bottom:calc(100% + 2px)}
+.ch .bar b.in{color:var(--ink);bottom:auto;top:4px}
+.ch .bar b.q{color:var(--quiet)}
+.ch .lbl{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px;text-align:center;font:500 8px var(--mono);color:var(--quiet);line-height:1.3}
+.ch .lbl span b{display:block;font:700 9px var(--mono);color:var(--muted)}
+.ch .rule{position:absolute;left:4px;right:4px;border-top:1px dashed var(--volt);opacity:.8}
+.ch .rule em{position:absolute;right:0;top:-14px;font:700 8px var(--mono);color:var(--volt);font-style:normal;letter-spacing:.06em}
+.stance{margin-top:10px;border-left:2px solid var(--volt);padding:6px 10px;font:500 11px var(--mono);color:var(--muted);line-height:1.45}
+.stance b{color:var(--paper);font-weight:700}
+.stance.none{border-color:var(--line);color:var(--quiet)}
+.ft{margin:14px 14px 0;font:500 10px var(--mono);color:var(--quiet);line-height:1.5}
+.ft b{color:var(--muted);font-weight:700}
+</style></head><body>
+<div class="wrap">
+  <div class="cap">Player props · v1 mock - one player, the line, the last five against it. No bet buttons. Tap a row</div>
+  <div id="err"></div>
+  <div class="app">
+    <div class="gs">
+      <div class="tm"><span class="mk" style="--a:#BA0C2F;--b:#000"></span><span>UGA<small>2-0 · #3</small></span></div>
+      <div class="mid">SAT 9:00 AM · ABC<b class="n">UGA -14.5 · 51.5</b></div>
+      <div class="tm"><span>ARK<small>1-1</small></span><span class="mk" style="--a:#9D2235;--b:#FFF"></span></div>
+    </div>
+
+    <div class="pl">
+      <div class="who"><span class="l">Georgia · running back</span><b>Nate Frazier</b><small><span class="pos">RB</span>RB1 · 3 games · 21.4 ppg</small></div>
+      <div class="rt"><b class="n">6</b><span>props priced</span></div>
+    </div>
+
+    <div class="sh"><h3>Props</h3><span>MARKET · PRE-KICKOFF CONSENSUS · 10 BOOKS</span></div>
+    <div class="props" id="props"></div>
+
+    <div class="ft">The market's number is the consensus implied probability, de-vigged where both sides are priced. <b>Hit rate is the last five games this line would have cleared</b>, from the box scores. Sportsvyn does not sell picks; where the desk disagrees with the market, it says so and why.</div>
+  </div>
+</div>
+<script>
+window.onerror=function(m,s,l,c){var e=document.getElementById('err');e.style.display='block';e.textContent='JS ERROR\n'+m+'\nline '+l+':'+c;return false};
+// last five games, oldest -> newest, from the box-score rows. null = did not play.
+var GAMES=[{d:'Nov 28',o:'@ GT'},{d:'Dec 6',o:'@ BAMA'},{d:'Jan 1',o:'vs MISS'},{d:'Sep 5',o:'vs TNST'},{d:'Sep 12',o:'vs WKU'}];
+var PROPS=[
+ {k:'rrtd',n:'Rush + Rec TDs',sub:'anytime',line:0.5,side:'over',mkt:58.6,vals:[0,1,0,3,1],stance:'The desk agrees. <b>Arkansas has allowed a rushing score in nine straight</b>, and Frazier has the goal-line role outright.'},
+ {k:'rush',n:'Rush yards',sub:'over / under',line:76.5,side:'over',mkt:50.4,vals:[41,88,62,112,79],stance:null},
+ {k:'rec',n:'Receiving yards',sub:'over / under',line:6.5,side:'over',mkt:50.4,vals:[12,0,18,4,27],stance:null},
+ {k:'rryds',n:'Rush + Rec yards',sub:'over / under',line:89.5,side:'over',mkt:49.2,vals:[53,88,80,116,106],stance:'<b>Leaning under.</b> The two clears came against Tennessee State and Western Kentucky; the SEC three averaged 74.'},
+ {k:'car',n:'Carries',sub:'over / under',line:15.5,side:'over',mkt:52.0,vals:[11,17,14,19,16],stance:null},
+ {k:'ftd',n:'First TD scorer',sub:'anytime field',line:null,side:null,mkt:19.2,vals:[0,0,0,1,0],stance:null}
+];
+var open='rrtd';
+function el(id){return document.getElementById(id)}
+function hits(p){var h=0,n=0;p.vals.forEach(function(v){if(v==null)return;n++;if(p.line==null?v>0:v>p.line)h++});return {h:h,n:n}}
+function draw(){
+  var h='';
+  PROPS.forEach(function(p){
+    var hr=hits(p),max=Math.max(p.line||0,Math.max.apply(null,p.vals.map(function(v){return v==null?0:v})))||1;
+    var mini='';p.vals.forEach(function(v){var pct=v==null?8:Math.max(8,Math.round(v/max*100));var cls=v==null?'':(p.line==null?v>0:v>p.line)?'o':'u';mini+='<i class="'+cls+'" style="height:'+pct+'%"></i>'});
+    var ln=p.line==null?'<b class="n">'+p.mkt.toFixed(1)+'%</b><span>market</span>':'<b class="n">'+p.line+'</b><span>'+p.side+' · '+p.mkt.toFixed(1)+'%</span>';
+    var bars='',lbl='';
+    p.vals.forEach(function(v,i){var pct=v==null?6:Math.max(6,Math.round(v/max*100));var cl=v==null?'dnp':(p.line==null?v>0:v>p.line)?'o':'';
+      bars+='<div class="bar"><b class="'+(v==null?'q':(pct>30?'in':''))+'">'+(v==null?'DNP':v)+'</b><i class="'+cl+'" style="height:'+pct+'%"></i></div>';
+      lbl+='<span><b>'+GAMES[i].d+'</b>'+GAMES[i].o+'</span>'});
+    var ruleTop=p.line==null?null:Math.round(88-(p.line/max*88));
+    var cold=hr.h<=hr.n/2;
+    h+='<div class="pr'+(open===p.k?' open':'')+'" data-k="'+p.k+'"><div class="hd"><span class="nm">'+p.n+'<small>'+p.sub+'</small></span><span class="mini">'+mini+'</span><span class="ln">'+ln+'</span><span class="chev">›</span></div>'+
+      '<div class="body"><div class="two">'+
+      '<div class="cell mkt"><span class="l">Market says</span><b class="n">'+p.mkt.toFixed(1)+'%</b><small>'+(p.line==null?'to score first':p.side+' '+p.line)+' · 10 books</small></div>'+
+      '<div class="cell hit'+(cold?' cold':'')+'"><span class="l">Last five</span><b class="n">'+hr.h+' of '+hr.n+'</b><small>'+(p.line==null?'scored a TD':'cleared '+p.line)+'</small></div></div>'+
+      '<div class="ch">'+(ruleTop==null?'':'<div class="rule" style="top:'+ruleTop+'px"><em>'+p.line+'</em></div>')+'<div class="bars">'+bars+'</div><div class="lbl">'+lbl+'</div></div>'+
+      (p.stance?'<div class="stance">'+p.stance+'</div>':'<div class="stance none">No desk position on this line.</div>')+
+      '</div></div>';
+  });
+  el('props').innerHTML=h;
+}
+document.addEventListener('click',function(ev){var n=ev.target;while(n&&n!==document.body){if(n.dataset&&n.dataset.k){open=open===n.dataset.k?null:n.dataset.k;draw();return}n=n.parentNode}});
+draw();
+</script>
+</body></html>
