@@ -78,6 +78,35 @@ function sameConfig(a, b) {
   return true;
 }
 
+/**
+ * WHAT THE ROOM SAID, IN WORDS (filed defect: StartForm.js printed
+ * `Could not start: ${res.reason}`).
+ *
+ * The four reasons the branches below already handle keep their own lines;
+ * this is the floor under everything else startDraftFor and startCustomDraftFor
+ * can emit - and they can emit pool_too_small, no_pool, bad_position, no_seat,
+ * bad_seat, league_not_found and preset_not_found. A reader who chose a preset
+ * and a seat was being shown "Could not start: pool_too_small", which names a
+ * table they have never heard of and suggests nothing they can do.
+ *
+ * SAME SHAPE AS components/draft/SeatSelect.js's START_ERRORS, deliberately -
+ * one room, two doors, and a reader who meets the same refusal at both should
+ * read the same sentence. It is not imported from there because that map is
+ * keyed on the RANKED route's gates (settled, locked, 'no board'), which this
+ * form cannot produce; sharing it would mean carrying six lines that can never
+ * fire and dropping the ones that can.
+ */
+const START_ERRORS = {
+  pool_too_small: 'That shape needs more players than the board has right now. Try fewer rounds or a smaller league.',
+  no_pool: 'The draft board is not loaded yet - check back in a few minutes.',
+  preset_not_found: 'That preset is no longer available. Pick another.',
+  league_not_found: 'We could not find that league on your account.',
+  no_seat: 'Pick a seat to start.',
+  bad_seat: 'That seat is not on this board.',
+  bad_position: 'That seat is not on this board.',
+  default: 'Could not start. Try again in a moment.',
+};
+
 export default function StartForm({ presets, canStart, used, limit, member = false, shell = false, iap = false }) {
   const router = useRouter();
   const first = presets[0];
@@ -153,7 +182,9 @@ export default function StartForm({ presets, canStart, used, limit, member = fal
         if (res.reason === 'entitlement') { setFreeGated(true); return; }
         if (res.reason === 'entitlement_custom') { setErr('Custom drafts are a member feature.'); return; }
         if (res.reason === 'unauthenticated') { router.push('/signin?callbackUrl=/sim'); return; }
-        setErr(res.reason === 'invalid_config' ? `That config isn't valid (${res.detail}).` : `Could not start: ${res.reason}`);
+        setErr(res.reason === 'invalid_config'
+          ? `That config isn't valid (${res.detail}).`
+          : (START_ERRORS[res.reason] ?? START_ERRORS.default));
         return;
       }
       router.push(`/sim/draft/${res.draftId}`);
