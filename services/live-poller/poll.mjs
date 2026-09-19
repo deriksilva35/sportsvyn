@@ -477,8 +477,11 @@ export async function pollOnce(sql, {
       if (laListeners > 0) {
         const line = await laLineFor(sql, m).catch(() => ({ possession: '', situation: '', lastPlay: '' }));
         laState = stateFromMatch({
-          away: { abbreviation: m.away_abbr },
-          home: { abbreviation: m.home_abbr },
+          // ALL THREE SOURCES, because the candidate row has all three and
+          // abbrOf resolves in order. Passing the abbreviation alone made the
+          // card disagree with the same game's Scores row.
+          away: { abbreviation: m.away_abbr, short_name: m.away_short_name, name: m.away_name },
+          home: { abbreviation: m.home_abbr, short_name: m.home_short_name, name: m.home_name },
           awayScore: after.away_score,
           homeScore: after.home_score,
           liveState: upd.liveState,
