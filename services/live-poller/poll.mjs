@@ -13,7 +13,8 @@ import { scoreKindLabel } from '../../lib/push/payload.js';
 import { onScore, onTick, flush as flushFold, FOLD_WINDOW_MS } from '../../lib/push/scoreFold.js';
 import { scoringPlayFor } from '../../lib/push/scoringPlayRead.js';
 import { activityEventFor, pushLiveActivities } from '../../lib/push/liveActivityStore.js';
-import { stateFromMatch } from '../../lib/push/liveActivityState.js';
+import { stateFromMatch, liveLine } from '../../lib/push/liveActivityState.js';
+import { playsFor } from '../../lib/gridiron/playsImport.js';
 
 const CFBD = 'https://apinext.collegefootballdata.com';
 const BDL = 'https://api.balldontlie.io';
@@ -31,6 +32,14 @@ const lastScoreKind = new Map();
 // that team sends the current scoreline anyway. Persisting it would be a
 // durable store for ninety seconds of state.
 const pendingScore = new Map();
+// THE LAST LINE PUT ON A LOCK SCREEN, per match. In-process, like the two
+// above, and for the same reason: it is the memory of what a CARD already
+// says, and a restart's cost is one redundant push per live game on the first
+// tick after it - which re-syncs a card rather than corrupting one. A column
+// for it would be a migration for a courtesy's own copy.
+//
+// IT IS WHY THIS RELAY OWES A RESTART: the map is the rule.
+const lastLaLine = new Map();
 
 // ---------------------------------------------------------------------------
 // Fetchers. ONE CALL PER POLL PER LEAGUE, which is the number the whole quota
@@ -169,6 +178,38 @@ export function matchForPush(m, after = {}) {
     home: { abbreviation: m.home_abbr, short_name: m.home_short_name, name: m.home_name },
     away: { abbreviation: m.away_abbr, short_name: m.away_short_name, name: m.away_name },
   };
+}
+
+/**
+ * IS ANY LOCK SCREEN LISTENING TO THIS GAME? The cheap indexed question
+ * (live_activities_live_idx), asked before the expensive one.
+ *
+ * The rider used to build its state unconditionally because the state was six
+ * fields off the row it already had. The live line needs the play feed, which
+ * is a read per match per tick, and a Sunday with forty live games and no
+ * Activities running must not pay forty table scans for a card nobody has.
+ */
+async function liveActivityCount(sql, matchId) {
+  const [r] = await sql`
+    SELECT count(*)::int AS n FROM live_activities
+     WHERE match_id = ${Number(matchId)} AND ended_at IS NULL AND revoked_at IS NULL`;
+  return r?.n ?? 0;
+}
+
+/**
+ * THE LIVE LINE FOR ONE MATCH, through the readers the game page uses.
+ *
+ * The abbreviations come from the poll row itself (m.home_abbr / m.away_abbr),
+ * which is where the rider already gets them for the scoreline - no second
+ * teams query for three letters this function was handed.
+ */
+async function laLineFor(sql, m) {
+  const plays = await playsFor(m.id);
+  return liveLine({
+    plays,
+    homeTeamId: m.home_team_id,
+    teamAbbr: new Map([[m.home_team_id, m.home_abbr], [m.away_team_id, m.away_abbr]]),
+  });
 }
 
 export async function sweepLostFinals(sql, { league, now = new Date(), dispatchFn, log = () => {} }) {
@@ -409,19 +450,61 @@ export async function pollOnce(sql, {
       // ITS FAILURE IS CONTAINED, like the alert rider above it: a lock-screen
       // card is a courtesy on top of a scoreboard, and losing one must never
       // cost the write the board, the Wire and the settle depend on.
-      const laEvent = activityEventFor(evs);
+      // THE TRIGGER IS THE CARD'S OWN CONTENT NOW (LIVE ACTIVITY - THE LIVE
+      // LINE relay), not the alert transitions. A card carrying possession,
+      // the down and the last play goes stale on a play that scores nothing
+      // and ends no quarter - which is most plays - so "worth a push" is no
+      // longer "worth an alert". It fires on a change to the PERIOD, the
+      // CLOCK, the SCORE or the LAST PLAY.
+      //
+      // THE FINAL STILL WINS AND STILL ENDS. activityEventFor keeps that
+      // ruling: a poll that sees the last score and the whistle together
+      // sends one 'end' carrying the final score.
+      //
+      // COALESCED TO ONE PUSH PER ACTIVITY PER TICK, structurally: this rider
+      // runs once per match per tick and pushLiveActivities sends one push per
+      // Activity. Five changes inside one tick are one push of the state as it
+      // stands at the end of it, which is also the only state worth showing.
+      //
+      // THE PLAYS ARE READ ONLY WHEN SOMETHING IS LISTENING. playsFor() is a
+      // table scan per match; a live Sunday with no Activities running must
+      // not pay for it, so the count comes first and it is the cheap indexed
+      // one.
+      const laFinal = activityEventFor(evs) === 'end';
+      const laListeners = await liveActivityCount(sql, m.id).catch(() => 0);
+      let laEvent = null;
+      let laState = null;
+      if (laListeners > 0) {
+        const line = await laLineFor(sql, m).catch(() => ({ possession: '', situation: '', lastPlay: '' }));
+        laState = stateFromMatch({
+          away: { abbreviation: m.away_abbr },
+          home: { abbreviation: m.home_abbr },
+          awayScore: after.away_score,
+          homeScore: after.home_score,
+          liveState: upd.liveState,
+          // THE TENTH FIELD, off the candidate row this rider already holds.
+          // It never changes, so it is deliberately absent from the trigger
+          // key below - a card does not move because its kickoff is still
+          // the same kickoff.
+          kickoffAt: m.kickoff_at,
+        }, line);
+        // THE KEY IS EXACTLY THE FOUR THE RELAY NAMES. possession and
+        // situation ride along on the card but do not trigger it: they cannot
+        // change without the snap changing, and making them triggers would
+        // spend a push on a card that reads identically.
+        const key = [laState.period, laState.clock, laState.awayScore,
+          laState.homeScore, laState.lastPlay].join('\u0001');
+        if (laFinal) laEvent = 'end';
+        else if (lastLaLine.get(m.id) !== key) laEvent = 'update';
+        if (laEvent) lastLaLine.set(m.id, key);
+        if (laFinal) lastLaLine.delete(m.id);
+      }
       if (laEvent) {
         try {
           const r = await pushLiveActivities(sql, {
             matchId: m.id,
             event: laEvent,
-            state: stateFromMatch({
-              away: { abbreviation: m.away_abbr },
-              home: { abbreviation: m.home_abbr },
-              awayScore: after.away_score,
-              homeScore: after.home_score,
-              liveState: upd.liveState,
-            }),
+            state: laState,
             log,
           });
           // A MATCH WITH NO ACTIVITIES IS NOT LEDGER-WORTHY. Until relay 5

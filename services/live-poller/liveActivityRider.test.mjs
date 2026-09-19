@@ -154,15 +154,51 @@ test('A QUARTER CHANGE PUSHES THE NEW QUARTER, not the one the game left', async
 });
 
 test('A POLL THAT CHANGES NOTHING PUSHES NOTHING', async () => {
-  // Never per poll. Same scoreline, same quarter, only the clock moved - which
-  // is exactly the case the Part C ruling refuses to spend a push on.
-  const out = await poll(feed('live', 10, 7, 3, '11:40'));
-  assert.equal(out.liveActivities.length, 0);
+  // THE FIXTURE MOVED WITH THE RULE (LIVE ACTIVITY - THE LIVE LINE relay).
+  // This used to poll the same score and quarter with a DIFFERENT clock and
+  // assert silence, because under the Part C ruling only a score or a quarter
+  // moved the card. The clock is on the card now and it is a trigger, so that
+  // poll is a push and proving "nothing changed" requires changing nothing.
+  const out = await poll(feed('live', 10, 7, 3, '14:52'));
+  assert.equal(out.liveActivities.length, 0, 'identical period, clock, score and last play');
+  // and a second identical poll is still silent - the memory is not one-shot
+  assert.deepEqual((await poll(feed('live', 10, 7, 3, '14:52'))).liveActivities, []);
 });
 
-test('KICKOFF IS NOT A CARD MOVE EITHER', async () => {
-  // A fresh scheduled game flipping live: the alert path sends a kickoff, the
-  // card has nothing to say that 0-0 with no clock does not already say.
+test('THE CLOCK ALONE IS A PUSH NOW, which is the point of the relay', async () => {
+  // Same score, same quarter, the clock moved. Under the six-field card this
+  // was deliberately silent; a card carrying a running clock and a live line
+  // that sat still for four minutes of a goal-line stand was the complaint.
+  const out = await poll(feed('live', 10, 7, 3, '11:40'));
+  assert.equal(out.liveActivities.length, 1);
+  assert.equal(out.liveActivities[0].event, 'update');
+});
+
+test('FIVE CHANGES IN ONE TICK ARE ONE PUSH, of the state at the end of it', async () => {
+  // The coalescing is structural, and this is the test that says so: the rider
+  // runs once per match per tick and pushLiveActivities sends one push per
+  // Activity, so a provider payload carrying a new score AND a new quarter AND
+  // a new clock at once cannot become three cards.
+  const out = await poll(feed('live', 21, 14, 4, '0:42'));
+  assert.equal(out.liveActivities.length, 1, 'one ledger row for the match');
+  const la = out.liveActivities[0];
+  assert.equal(la.activities, 1, 'one Activity');
+  assert.equal(la.skipped + la.sent, 1, 'ONE push for it, not one per change');
+  // and the row it was built from holds the end state, not an intermediate
+  const [row] = await sql`
+    SELECT home_score, away_score, metadata->'live_state'->>'clock' AS clock
+      FROM matches WHERE id = ${matchId}`;
+  assert.equal(Number(row.home_score), 21);
+  assert.equal(row.clock, '0:42');
+});
+
+test('KICKOFF NOW MOVES THE CARD, because the card now carries a clock', async () => {
+  // THIS RULING TURNED OVER WITH THE CONTRACT, and deliberately. Under the six
+  // fields a kickoff was 0-0 with no clock worth showing, so the Part C ruling
+  // refused to spend a push on it. The nine-field card starts a clock and a
+  // line at kickoff - period '' -> 'Q1', clock '' -> '15:00' - which is a
+  // change to two of the four triggers and the moment the reader started the
+  // Activity FOR.
   const [m2] = await sql`
     INSERT INTO matches (league_id, slug, status, home_team_id, away_team_id, kickoff_at, external_ids)
     VALUES (${leagueId}, ${`${NS}-b`}, 'scheduled', ${homeId}, ${awayId}, now(),
@@ -174,7 +210,9 @@ test('KICKOFF IS NOT A CARD MOVE EITHER', async () => {
     league: 'nfl', providerKey: 'bdl_game_id', push: true, now: new Date(), normalise,
     fetcher: async () => ({ rows: [{ id: `${PID}-b`, status: 'live', homeScore: 0, awayScore: 0, period: 1, clock: '15:00' }], calls: 1 }),
   });
-  assert.deepEqual(out.liveActivities.filter((l) => l.matchId === m2.id), []);
+  const mine = out.liveActivities.filter((l) => l.matchId === m2.id);
+  assert.equal(mine.length, 1, 'the card learns the game started');
+  assert.equal(mine[0].event, 'update');
   await sql`DELETE FROM live_activities WHERE activity_id = ${`${NS}-a2`}`;
   await sql`DELETE FROM news_items WHERE payload->>'matchId' = ${String(m2.id)}`;
   await sql`DELETE FROM matches WHERE id = ${m2.id}`;
