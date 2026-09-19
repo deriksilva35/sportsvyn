@@ -663,3 +663,9 @@
    the day is which news. Dropped entirely inside a grouped day, where the
    header above already carries it. */
 .gi-up .gi-kday { color: var(--muted); font-weight: 600; }
+/* A LINKED PROP ROW (Player Props Part B) reads exactly like an unlinked one
+   until it is touched - the link is a capability, not a decoration, and a row
+   that looked different because we happened to resolve its name would be
+   editorialising our own coverage. */
+a.gi-props-row { text-decoration: none; color: inherit; }
+a.gi-props-row:hover .who { color: var(--paper); text-decoration: underline; }

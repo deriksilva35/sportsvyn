@@ -36,13 +36,14 @@ import {
 import PropsBoard from '@/components/market/PropsBoard';
 import PropsTable from '@/components/market/PropsTable';
 import PropsFilters from '@/components/market/PropsFilters';
+import PropsIndex from '@/components/market/PropsIndex';
 import { LinesTable, FuturesTable } from '@/components/market/LineTable';
 import GameFilter from '@/components/market/GameFilter';
 import {
   flattenLines, flattenFutures, sortRows, teamShort, linesGames,
   LINES_COLUMNS, FUTURES_COLUMNS, LINES_PAGE, FUTURES_PAGE,
 } from '@/lib/market/lineTables';
-import { propsBoard, propsGames, shortName } from '@/lib/market/propsBoard';
+import { propsBoard, propsGames, shortName, MARKET_LABELS } from '@/lib/market/propsBoard';
 import { marketHref, nextDir, hiddenFields } from '@/lib/market/marketUrl';
 import './market.css';
 
@@ -245,21 +246,41 @@ export async function MarketView({ sp, pinned = null, leagueHeader = null }) {
     q: typeof sp.q === 'string' ? sp.q : null,
     board: sp.board === '1' ? '1' : null,
     movers: sp.movers === '1' ? '1' : null,
+    // The index's four filters (Player Props Part B). Null when unset, so a
+    // URL that never touched them is byte-identical to the one that shipped.
+    team: typeof sp.team === 'string' && sp.team !== 'all' ? sp.team : null,
+    pos: typeof sp.pos === 'string' && sp.pos !== 'all' ? sp.pos : null,
+    mkt: typeof sp.mkt === 'string' && sp.mkt !== 'all' ? sp.mkt : null,
+    hit: typeof sp.hit === 'string' && sp.hit !== '0' ? sp.hit : null,
   };
   const href = (patch) => marketHref(urlState, patch);
 
+  // THE PROPS TAB LEADS WITH THE INDEX (Player Props Part B) and keeps both
+  // views that shipped: ?view=table and ?view=charts render exactly what they
+  // rendered before, so no URL anybody holds changed meaning. Only the
+  // UNMARKED props URL moved, and it moved to the screen the mock describes.
   const view = tab === 'props'
-    ? (sp.view === 'charts' ? 'charts' : 'table')
+    ? (sp.view === 'charts' ? 'charts' : sp.view === 'table' ? 'table' : 'index')
     : (sp.view === 'table' ? 'table' : 'cards');
   const boardState = {
     league: filter === 'movers' ? 'all' : filter,
     game: typeof sp.game === 'string' && sp.game !== '' ? sp.game : null,
     dir: sp.dir === 'asc' || sp.dir === 'desc' ? sp.dir : null,
     group: typeof sp.g === 'string' ? sp.g : 'all',
-    sort: typeof sp.sort === 'string' ? sp.sort : (typeof sp.s === 'string' ? sp.s : 'move'),
+    // THE INDEX SORTS BY KICKOFF, the table by 24h move - each view's default
+    // is the question that view exists to answer, and an explicit ?sort= still
+    // wins on both.
+    sort: typeof sp.sort === 'string' ? sp.sort
+      : (typeof sp.s === 'string' ? sp.s : (view === 'index' ? 'kickoff' : 'move')),
     q: typeof sp.q === 'string' ? sp.q : '',
     boardOnly: sp.board === '1',
     moversOnly: sp.movers === '1' || filter === 'movers',
+    team: typeof sp.team === 'string' ? sp.team : 'all',
+    pos: typeof sp.pos === 'string' ? sp.pos : 'all',
+    marketType: typeof sp.mkt === 'string' ? sp.mkt : 'all',
+    minHitPct: Number(sp.hit) || 0,
+    // The index shows a slate, not a page of forty.
+    limit: view === 'index' ? 400 : undefined,
   };
 
   const [byLeague, futures, books, snapAt, boardIds, board, games] = await Promise.all([
@@ -273,6 +294,18 @@ export async function MarketView({ sp, pinned = null, leagueHeader = null }) {
   // doing has no other opinion about which game matters.
   const cfb = byLeague.get('cfb') ?? [];
   cfb.sort((a, b) => (boardIds.has(b.matchId) ? 1 : 0) - (boardIds.has(a.matchId) ? 1 : 0));
+
+  // THE INDEX'S CHIP LISTS COME FROM THE BOARD ITSELF, not from a constant.
+  // A team chip for a team with nothing priced is a filter that can only
+  // return the empty state, and a stat chip for a market the feed is not
+  // carrying today is the same. Both lists are what the slate actually holds.
+  const indexTeams = board
+    ? [...new Set(board.rows.flatMap((r) => [r.home.abbr, r.away.abbr]).filter(Boolean))].sort()
+    : [];
+  const indexStats = board
+    ? [...new Set(board.rows.map((r) => r.marketType))].sort()
+      .map((m) => [m, (MARKET_LABELS[m] ?? m).toUpperCase()])
+    : [];
 
   const leagues = MARKET_LEAGUES.filter((s) => filter === 'all' || filter === 'movers' || filter === s);
   const shown = new Map();
@@ -392,7 +425,37 @@ export async function MarketView({ sp, pinned = null, leagueHeader = null }) {
           <section>
             <PropsFilters state={boardState} games={games} view={view} urlState={urlState}
               hrefFor={href} />
-            {board.rows.length === 0 ? (
+            {view === 'index' ? (
+              /* THE INDEX carries its own filter stack (sport / team / pos /
+                 stat / hit) and its own empty state, because "loosen a filter"
+                 is the only useful thing to say to a reader who narrowed five
+                 of them. It is not wrapped in the rows.length check above for
+                 that reason. */
+              <PropsIndex
+                rows={board.rows}
+                filtered={board.filtered ?? board.rows.length}
+                state={boardState}
+                /* ONE KEY PER PATCH, and this is not style. marketHref merges
+                   { ...current, ...patch }, so a key present-but-undefined
+                   OVERWRITES the current value and then serialises to nothing -
+                   which would make every chip tap silently clear the other four
+                   filters. The patch is built from the key actually being set. */
+                hrefFor={(patch) => {
+                  const out = {};
+                  if ('league' in patch) { out.f = patch.league === 'all' ? null : patch.league; out.team = null; }
+                  if ('team' in patch) out.team = patch.team === 'all' ? null : patch.team;
+                  if ('pos' in patch) out.pos = patch.pos === 'all' ? null : patch.pos;
+                  if ('marketType' in patch) out.mkt = patch.marketType === 'all' ? null : patch.marketType;
+                  if ('minHitPct' in patch) out.hit = Number(patch.minHitPct) > 0 ? String(patch.minHitPct) : null;
+                  if ('sort' in patch) out.sort = patch.sort;
+                  return href(out);
+                }}
+                teams={indexTeams}
+                stats={indexStats}
+                cardHref={(r) => (r.playerSlug
+                  ? `/market/props/${r.playerSlug}?match=${r.matchId}` : null)}
+              />
+            ) : board.rows.length === 0 ? (
               <div className="emptyband">No priced props match those filters.</div>
             ) : view === 'charts' ? (
               <PropsBoard rows={board.rows} total={board.total} state={boardState} chromeless

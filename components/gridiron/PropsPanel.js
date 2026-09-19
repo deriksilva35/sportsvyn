@@ -19,14 +19,27 @@ export default function PropsPanel({ card, leagueSlug, matchId }) {
         <span className="lbl">Player props</span>
         <span className="src">Market · pre-kickoff consensus</span>
       </div>
-      {card.rows.map((r) => (
-        <div className="gi-props-row" key={`${r.marketType}:${r.label}`}>
-          <span className="mk">{r.marketLabel}</span>
-          <span className="who">{r.label}{r.value ? ` ${r.value}` : ''}</span>
-          <span className="px">{american(r.american)}</span>
-          <span className="imp">{r.impliedPct == null ? '' : `${r.impliedPct.toFixed(1)}%`}</span>
-        </div>
-      ))}
+      {/* A ROW OPENS THE PLAYER'S CARD when we know who it is about. An
+          unlinked row keeps every number it had and is simply not a link -
+          the resolver could not name the player, and a link to a card we
+          cannot build is worse than no link. */}
+      {card.rows.map((r) => {
+        const body = (
+          <>
+            <span className="mk">{r.marketLabel}</span>
+            <span className="who">{r.label}{r.value ? ` ${r.value}` : ''}</span>
+            <span className="px">{american(r.american)}</span>
+            <span className="imp">{r.impliedPct == null ? '' : `${r.impliedPct.toFixed(1)}%`}</span>
+          </>
+        );
+        const key = `${r.marketType}:${r.label}`;
+        return r.playerSlug && matchId
+          ? (
+            <a className="gi-props-row" key={key}
+              href={`/market/props/${r.playerSlug}?match=${matchId}`}>{body}</a>
+          )
+          : <div className="gi-props-row" key={key}>{body}</div>;
+      })}
       {card.overflow > 0 ? <div className="gi-props-more">+{card.overflow} more priced</div> : null}
       {card.hasAnytime ? (
         <div className="gi-props-note">
