@@ -67,6 +67,11 @@
 .mk-wrap .g .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
 .mk-wrap .g .match { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mk-wrap .g .when { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
+/* The slate admits live games; a live card says its prices stopped at kickoff. */
+.mk-wrap .g .when .live { font-style: normal; color: var(--live, #E63946); font-weight: 700; }
+.mk-wrap .g .prek { font-size: 9px; color: var(--muted); letter-spacing: 0.06em; margin: -4px 0 6px; }
+.mk-wrap table.pt .gm .live { font-style: normal; color: var(--live, #E63946); font-weight: 700; }
+.mk-wrap table.pt .gm .prek { font-size: 9px; color: var(--muted); }
 
 /* Board membership is a FACT ABOUT THE GAME, not a rating of the price, so it
    is an outline chip in the state-pill grammar rather than anything louder. */

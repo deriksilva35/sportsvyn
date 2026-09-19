@@ -76,7 +76,11 @@ export function LinesTable({ rows, total, columns, sort, dir, hrefFor }) {
                   {route && r.matchSlug
                     ? <Link href={`${route}/${r.matchSlug}`}>{game}</Link>
                     : game}
-                  {r.kickoffAt ? ` · ${WHEN.format(new Date(r.kickoffAt)).toUpperCase()}` : ''}
+                  {/* Same rule as the card: a live game wears the mark, not a
+                      kickoff time it is already past. */}
+                  {r.matchStatus === 'live'
+                    ? <> · <i className="live">LIVE</i> <span className="prek">pre-kick</span></>
+                    : (r.kickoffAt ? ` · ${WHEN.format(new Date(r.kickoffAt)).toUpperCase()}` : '')}
                   {r.onBoard ? <span className="boardpill">Board</span> : null}
                 </td>
                 <td className="l mkt">{r.leagueSlug}</td>
