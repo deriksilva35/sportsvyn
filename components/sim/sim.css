@@ -1182,3 +1182,8 @@
   font: 700 14px system-ui, sans-serif; cursor: pointer; white-space: nowrap;
   max-width: 62%; overflow: hidden; text-overflow: ellipsis;
 }
+
+/* YOUR DRAFTS, on the setup header. Two facts, quiet - the deck is what the
+   reader came for. */
+.sim-record { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .06em; color: var(--muted); margin: -4px 0 16px; }
+.sim-record b { color: var(--paper); font-weight: 700; }

@@ -14,7 +14,7 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
-import { getPresets, getDraftsUsed, isMember, canStartDraft, getOpenSimDraft, getMyLeagues, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
+import { getPresets, getDraftsUsed, isMember, canStartDraft, getOpenSimDraft, getMyLeagues, getDraftsSummary, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
 import MyLeagues from '@/components/sim/MyLeagues';
 import JoinByCode from '@/components/sim/JoinByCode';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
@@ -127,13 +127,17 @@ export default async function SimLobby({ searchParams }) {
         ) : (
           await (async () => {
             // The open-draft read rides the same round trip as the other three.
-            const [presets, used, member, openDraft, myLeagues] = await Promise.all([
+            const [presets, used, member, openDraft, myLeagues, summary] = await Promise.all([
               getPresets(), getDraftsUsed(userId), isMember(userId), getOpenSimDraft(userId),
               // SCOPED BY user_id AND source, in its own query. getPresets
               // filters on is_preset alone with no user scoping, so putting an
               // imported league through it would show one reader's league to
               // everybody. The presets query is untouched.
               getMyLeagues(userId),
+              // THE HEADER'S TWO NUMBERS, on the same round trip as the other
+              // five. See getDraftsSummary for why it is two and not the
+              // mock's three.
+              getDraftsSummary(userId).catch(() => ({ drafts: 0, bestGrade: null })),
             ]);
             const gate = await canStartDraft(userId, member);
             return (
@@ -168,6 +172,17 @@ export default async function SimLobby({ searchParams }) {
                 {myLeagues.length === 0 && <JoinByCode variant="empty" />}
                 <section>
                   <div className="sim-kicker">Start a mock draft</div>
+                  {/* YOUR DRAFTS - the mock's header block, with the two
+                      numbers that are one query. It renders only once there is
+                      something to report: "0 drafts" on a first visit is a
+                      scoreboard for a game nobody has played, and the deck
+                      below is the thing to look at. */}
+                  {summary.drafts > 0 && (
+                    <p className="sim-record">
+                      <b>{summary.drafts}</b> draft{summary.drafts === 1 ? '' : 's'}
+                      {summary.bestGrade ? <> · best grade <b>{summary.bestGrade}</b></> : null}
+                    </p>
+                  )}
                   <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap} />
                 </section>
                 {/* The tracker link moved INTO StartForm (v0.3.1): it now
