@@ -176,7 +176,15 @@ async function loop(lg) {
         // nobody had one open read exactly the same. Only polls that found an
         // Activity log at all (poll.mjs drops the empty ones).
         for (const la of r.liveActivities ?? []) {
-          log(`[${lg.slug}] live activity ${la.event} match=${la.matchId} of=${la.activities} sent=${la.sent} failed=${la.failed} revoked=${la.revoked} skipped=${la.skipped}`);
+          // PER ACTIVITY, PER HOUR, ON THE SAME LINE. Without it the only way
+          // to answer "how many pushes has this card taken" was to grep the
+          // journal and trust its retention; the cadence this relay sets is
+          // judged on exactly that number, so it is stated rather than counted
+          // afterwards. Shortened ids: the line is read at a glance, and the
+          // first eight are enough to tell two cards on one match apart.
+          const per = Object.entries(la.perHour ?? {})
+            .map(([id, n]) => `${id.slice(0, 8)}=${n}`).join(' ');
+          log(`[${lg.slug}] live activity ${la.event} match=${la.matchId} of=${la.activities} sent=${la.sent} failed=${la.failed} revoked=${la.revoked} skipped=${la.skipped}${per ? ` hr[${per}]` : ''}`);
         }
         if (r.unmapped.length) log(`[${lg.slug}] UNMAPPED STATUS:`, r.unmapped.join(', '));
         if (stats) {

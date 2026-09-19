@@ -41,6 +41,68 @@ const pendingScore = new Map();
 // IT IS WHY THIS RELAY OWES A RESTART: the map is the rule.
 const lastLaLine = new Map();
 
+// THE COALESCING WINDOW (LA-CADENCE). A card carrying the clock and the last
+// play changes on almost every snap, and the previous rule pushed on every one
+// of them: 14 of 20 pushes on one CFB game landed 35 seconds or less after the
+// one before. A lock screen does not need the clock to the second, and a phone
+// has a budget for these.
+//
+// SO THE TRIGGERS SPLIT IN TWO. A SCORE OR A PERIOD CHANGE IS NEWS and goes out
+// at once, as it always did; a FINAL likewise. The CLOCK and the LAST PLAY are
+// texture: they coalesce, at most one push per Activity per window, and the
+// push carries the line as it stands when it fires rather than the line that
+// first went stale.
+//
+// AN IMMEDIATE PUSH RESETS NOTHING. The window belongs to the texture, so a
+// score landing 30 seconds into it does not buy the next two minutes of silence
+// - the coalesced push still fires on its own schedule with whatever the clock
+// says then. Only a coalesced push restarts the window, which is what makes the
+// rate a ceiling on texture rather than on news.
+//
+// PER MATCH IS PER ACTIVITY. The rider runs once per match per tick and
+// pushLiveActivities fans one push out to every Activity on that match, so a
+// ceiling of one push per match per window IS one per Activity per window.
+export const LA_COALESCE_MS = 120_000;
+const lastLaPushAt = new Map();
+
+// THE HOURLY LEDGER, per Activity. The push count lived nowhere: live_activities
+// carries updated_at and nothing else, so "how many pushes did this card take"
+// could only be answered by grepping the journal, and only as far back as the
+// journal goes. This keeps the timestamps in memory and the summary states the
+// count, which is the number this relay is judged on.
+const laPushLog = new Map();
+
+export function recordLaPushes(ids, now = Date.now(), windowMs = 3_600_000) {
+  for (const id of ids ?? []) {
+    const hits = laPushLog.get(id) ?? [];
+    hits.push(now);
+    laPushLog.set(id, hits);
+  }
+  // Prune every tracked Activity, not only the ones just pushed: a card that
+  // has gone quiet must age out of the ledger rather than sit at its last count
+  // forever, and an ended one must not leak.
+  for (const [id, hits] of laPushLog) {
+    const live = hits.filter((t) => now - t < windowMs);
+    if (live.length) laPushLog.set(id, live); else laPushLog.delete(id);
+  }
+  return Object.fromEntries((ids ?? []).map((id) => [id, (laPushLog.get(id) ?? []).length]));
+}
+
+/** Pushes in the last hour, per Activity - for the tick summary. */
+export function laPushesPerHour(now = Date.now(), windowMs = 3_600_000) {
+  const out = {};
+  for (const [id, hits] of laPushLog) {
+    const n = hits.filter((t) => now - t < windowMs).length;
+    if (n) out[id] = n;
+  }
+  return out;
+}
+
+/** Test seam: the poller is a long-lived process, a test is not. */
+export function _resetLaCadence() {
+  lastLaLine.clear(); lastLaPushAt.clear(); laPushLog.clear();
+}
+
 // ---------------------------------------------------------------------------
 // Fetchers. ONE CALL PER POLL PER LEAGUE, which is the number the whole quota
 // argument rests on.
@@ -495,12 +557,53 @@ export async function pollOnce(sql, {
         // situation ride along on the card but do not trigger it: they cannot
         // change without the snap changing, and making them triggers would
         // spend a push on a card that reads identically.
-        const key = [laState.period, laState.clock, laState.awayScore,
-          laState.homeScore, laState.lastPlay].join('\u0001');
-        if (laFinal) laEvent = 'end';
-        else if (lastLaLine.get(m.id) !== key) laEvent = 'update';
-        if (laEvent) lastLaLine.set(m.id, key);
-        if (laFinal) lastLaLine.delete(m.id);
+        //
+        // NOW IN TWO HALVES (LA-CADENCE). NEWS is the score and the period and
+        // goes out at once; TEXTURE is the clock and the last play and waits
+        // for the window. Both are still compared against what the card
+        // already says, so nothing pushes on a line that has not moved.
+        const news = [laState.period, laState.awayScore, laState.homeScore].join('\u0001');
+        const full = [news, laState.clock, laState.lastPlay].join('\u0001');
+        const prev = lastLaLine.get(m.id);
+        // THE TICK'S OWN CLOCK, not Date.now(). pollOnce already takes `now`
+        // and every other time-sensitive branch in this function reads it, so
+        // the window is measured against the same instant the rest of the poll
+        // is - and a test can drive two minutes without waiting two minutes.
+        const nowMs = new Date(now).getTime();
+        if (laFinal) {
+          // A FINAL PUSHES IMMEDIATELY AND ALWAYS. It is the last thing the
+          // card will ever say and the event that ends it; a window that could
+          // delay it would leave a dead card on a lock screen for two minutes.
+          laEvent = 'end';
+        } else if (!prev) {
+          // FIRST SIGHT OF THIS MATCH - after a restart, or the first tick a
+          // card exists. One push to sync the card is the documented cost.
+          //
+          // AND IT OPENS THE TEXTURE WINDOW. This push carried the clock and
+          // the last play, so the card is current; without starting the window
+          // here the very next snap would push again seconds later, which is
+          // the burst the window exists to stop.
+          laEvent = 'update';
+          lastLaPushAt.set(m.id, nowMs);
+        } else if (prev.news !== news) {
+          laEvent = 'update';
+        } else if (prev.full !== full && nowMs - (lastLaPushAt.get(m.id) ?? 0) >= LA_COALESCE_MS) {
+          // TEXTURE, AND THE WINDOW HAS ELAPSED. laState is read fresh every
+          // tick, so this carries the LATEST line - not the one that first
+          // went stale.
+          laEvent = 'update';
+          lastLaPushAt.set(m.id, nowMs);
+        }
+        // THE WINDOW IS NOT RESET BY NEWS, deliberately: a score 30 seconds in
+        // must not buy the next two minutes of silence from the clock. Only the
+        // branch above touches lastLaPushAt.
+        //
+        // BUT THE CARD'S REMEMBERED LINE IS UPDATED BY ANY PUSH, because any
+        // push carries the whole state - the card now says all of it, and
+        // leaving `full` stale would fire a redundant texture push the moment
+        // the window opened.
+        if (laEvent) lastLaLine.set(m.id, { news, full });
+        if (laFinal) { lastLaLine.delete(m.id); lastLaPushAt.delete(m.id); }
       }
       if (laEvent) {
         try {
@@ -513,7 +616,13 @@ export async function pollOnce(sql, {
           // A MATCH WITH NO ACTIVITIES IS NOT LEDGER-WORTHY. Until relay 5
           // nothing auto-starts one, so most games have none and a row per
           // poll would bury the polls that did something.
-          if (r.activities) out.liveActivities.push(r);
+          if (r.activities) {
+            // THE HOURLY COUNT RIDES THE SAME LINE. Recorded from the ids that
+            // were actually SENT, so a failed push is not counted as one the
+            // card received.
+            r.perHour = recordLaPushes(r.sentIds, new Date(now).getTime());
+            out.liveActivities.push(r);
+          }
         } catch (e) {
           out.pushErrors.push(`liveActivity: ${String(e?.message ?? e).slice(0, 100)}`);
         }
