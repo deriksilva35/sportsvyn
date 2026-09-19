@@ -23,8 +23,18 @@ const css = src('components/sim/sim.css');
 
 test('MyLeagues has no /sim/league/ link and no route for one exists', () => {
   assert.equal((strip.match(/sim\/league\//g) ?? []).length, 0, 'no link into /sim/league/');
-  assert.equal((strip.match(/<Link/g) ?? []).length, 0, 'the card is not a link at all');
   assert.ok(!existsSync(path.join(REPO, 'app/sim/league')), 'no app/sim/league route');
+  // THE CARD IS STILL NOT A LINK, and this used to say so by counting <Link>
+  // at zero. Mock Part B put ONE inside it - "Track a live draft", moved off
+  // the Games tab by the GAMES v3 addendum - so the count is now 1 and the
+  // rule is stated instead of implied: nothing NAVIGATES on this card except
+  // that named door, and it goes to the tracker, not to a league route.
+  const links = [...strip.matchAll(/<Link[\s\S]*?href=\{?([^}\n]*)/g)].map((m) => m[1]);
+  assert.equal(links.length, 1, 'exactly one link on the card');
+  assert.match(strip, /className="sml-track"/, 'and it is the tracker door');
+  assert.match(strip, /trackerHandoffHref\(\{/, 'carrying this league\'s shape, not a bare href');
+  // The card BODY is still inert: name, meta, when and the start button.
+  assert.equal(/<Link[^>]*className="sml-(name|meta|when|card)"/.test(strip), false);
   // 084: the card hands the strip its size, the reader's own team and (ruling
   // 2 Sep) each franchise's keeper count for the pills.
   // RE-PINNED (085, league sharing): this pinned defaultSeat={(l.teams ?? [])

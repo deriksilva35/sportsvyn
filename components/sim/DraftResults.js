@@ -29,6 +29,15 @@ export default function DraftResults({ data }) {
   const { config, userPicks, grade, gradeScore, components, rosterValueTotal, bestValue, biggestReach, pivot, byeStackWarnings, draft } = results;
   const roster = buildRoster(userPicks, config.roster_slots);
   const ledger = [...userPicks].sort((a, b) => a.overallPick - b.overallPick);
+  // ONE PASS OVER THE LEDGER ABOVE, not a stored figure. disp() is the same
+  // whole-pick delta the ledger's Value column prints, so the two cannot
+  // disagree - and a pick taken exactly at its ADP counts as neither, which is
+  // why these do not add up to the roster size.
+  const ledgerCounts = ledger.reduce((acc, pk) => {
+    const v = disp(pk);
+    if (v > 0) acc.value += 1; else if (v < 0) acc.reach += 1;
+    return acc;
+  }, { value: 0, reach: 0 });
   const totalDisplay = -rosterValueTotal; // rosterValueTotal is engine-signed; flip for display
 
   return (
@@ -58,7 +67,19 @@ export default function DraftResults({ data }) {
       {/* grade block + transparency components */}
       <div className="grade-block">
         <div className="grade-letter">{grade}</div>
-        <div className="grade-meta"><span className="score">{gradeScore}</span><div className="lbl">Draft grade</div></div>
+        <div className="grade-meta">
+          <span className="score">{gradeScore}</span>
+          <div className="lbl">Draft grade</div>
+          {/* THE MOCK'S "7 · 1 value · reach" PAIR. Nobody computes it today
+              and nobody needs to: it is one pass over the ledger that is
+              already on this screen, so it is counted at render rather than
+              stored. Picks that beat their ADP and picks that reached past it;
+              a pick taken exactly at ADP is neither, which is why these two
+              do not sum to the roster. */}
+          <div className="lbl">
+            <b>{ledgerCounts.value}</b> value · <b>{ledgerCounts.reach}</b> reach
+          </div>
+        </div>
         <div className="components">
           <div className="c"><span>Value (paid vs market)</span><b>{components.valueScore}</b></div>
           <div className="c"><span>Construction (what you built)</span><b>{components.constructionScore}</b></div>
@@ -123,7 +144,13 @@ export default function DraftResults({ data }) {
       </table>
 
       <div style={{ display: 'flex', gap: 12, marginTop: 18 }}>
-        <a className="sim-cta" href="/sim">Draft again</a>
+        {/* DRAFT AGAIN CARRIES THE BOARD. It was a bare /sim, which re-seeds
+            the form on the FIRST preset - so a reader who just drafted The
+            Weekly Six and tapped "again" landed on The Draft. Only a PRESET
+            travels: a custom or an imported-league config is not a row the
+            deck can select, and a querystring naming one would be a link to
+            a screen that ignores it. */}
+        <a className="sim-cta" href={config.is_preset ? `/sim?preset=${config.id}` : '/sim'}>Draft again</a>
         <a href="/sim" style={{ alignSelf: 'center', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)', textDecoration: 'none' }}>History (soon)</a>
       </div>
     </div>
