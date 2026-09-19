@@ -180,7 +180,15 @@ export default function PropsIndex({
           <Link key={k} className={`px-chip${(state.sort ?? 'kickoff') === k ? ' on' : ''}`}
             href={hrefFor({ sort: k })}>{t}</Link>
         ))}
-        <span className="cnt">{filtered} {filtered === 1 ? 'prop' : 'props'}</span>
+        {/* THE COUNT MUST NOT OUTRUN THE ROWS. filtered is the whole matching
+            slate; the index draws at most a page of it. Printing the slate
+            total over a shorter list tells the reader he is looking at 1172
+            props when 400 are on the screen, so when the page is short of the
+            set, the count says both numbers. */}
+        <span className="cnt">
+          {rows.length < filtered ? `${rows.length} of ${filtered}` : filtered}
+          {' '}{filtered === 1 ? 'prop' : 'props'}
+        </span>
       </div>
 
       {rows.length === 0 ? (

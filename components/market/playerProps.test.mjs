@@ -50,11 +50,11 @@ const row = (o = {}) => ({
   ...o,
 });
 
-function index(rows, state = {}) {
+function index(rows, state = {}, filtered = rows.length) {
   const c = document.getElementById('root');
   const root = createRoot(c); roots.add(root);
   act(() => root.render(React.createElement(PropsIndex, {
-    rows, filtered: rows.length,
+    rows, filtered,
     state: { league: 'all', team: 'all', pos: 'all', marketType: 'all', minHitPct: 0, sort: 'kickoff', ...state },
     hrefFor: () => '/market?tab=props', teams: ['MICH', 'UTEP'],
     stats: [['player_receptions', 'RECS']], cardHref: (r) => (r.playerSlug ? `/market/props/${r.playerSlug}?match=${r.matchId}` : null),
@@ -75,6 +75,17 @@ test('the index groups by game in kickoff order and counts what it shows', () =>
   const heads = [...c.querySelectorAll('.px-gh b')].map(txt);
   assert.deepEqual(heads, ['UTEP at MICH', 'TEX at OU'], 'earliest kickoff first');
   assert.match(txt(c.querySelector('.px-sortrow .cnt')), /2 props/);
+});
+
+test('THE COUNT SAYS BOTH NUMBERS WHEN THE PAGE IS SHORT OF THE SLATE', () => {
+  // filtered is the whole matching set; the index draws a page of it. A count
+  // of 1172 over 400 drawn rows is a true number in a false place.
+  const c = index([row(), row({ matchId: 2 })], {}, 1172);
+  assert.match(txt(c.querySelector('.px-sortrow .cnt')), /2 of 1172 props/);
+
+  const whole = index([row(), row({ matchId: 2 })]);
+  assert.match(txt(whole.querySelector('.px-sortrow .cnt')), /^\s*2 props\s*$/,
+    'and it stays a bare count when nothing was left off');
 });
 
 test('HIT IS n OF N WITH THE REAL N - never a fabricated five', () => {
