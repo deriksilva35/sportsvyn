@@ -137,6 +137,7 @@ function Row({ label, sel, price, implied, move }) {
 }
 
 function Card({ card, onBoard }) {
+  const live = card.matchStatus === 'live';
   const away = card.away.abbreviation || card.away.name || 'TBD';
   const home = card.home.abbreviation || card.home.name || 'TBD';
   const spread = card.spread.length ? card.spread[0] : null;
@@ -148,8 +149,19 @@ function Card({ card, onBoard }) {
           {away} at {home}
           {onBoard ? <> <span className="boardpill">Board</span></> : null}
         </span>
-        <span className="when">{card.kickoffAt ? WHEN.format(new Date(card.kickoffAt)).toUpperCase() : 'TBD'}</span>
+        {/* A LIVE CARD SAYS SO INSTEAD OF SHOWING A KICKOFF THAT HAS PASSED.
+            The slate admits live games; printing "SAT 3:30 PM" beside one
+            already being played reads as a game still to come. */}
+        <span className="when">
+          {live
+            ? <i className="live">LIVE</i>
+            : (card.kickoffAt ? WHEN.format(new Date(card.kickoffAt)).toUpperCase() : 'TBD')}
+        </span>
       </div>
+      {/* THE NUMBERS FROZE AT KICKOFF. The consensus stops updating once play
+          starts, so a live card stamps its prices rather than letting them
+          read as a running line. Same word the props surfaces use. */}
+      {live ? <div className="prek">Prices are pre-kick</div> : null}
 
       {/* SHORT NAMES, THE ONE EDIT TO A HOMED TAB - and the SOURCE matters.
           Full club names truncate to nonsense in this column at phone width, a
