@@ -101,6 +101,23 @@ test('AN UNLINKED ROW GETS NO SPARKLINE, and keeps its columns', () => {
   assert.equal(c.querySelector('a.px-row'), null, 'an unlinked row is not a link');
 });
 
+test('AN ANYTIME ROW STILL DRAWS ITS BARS - the market is the line', () => {
+  // A NULL selection_value IS NOT A MISSING LINE. Anytime and first TD price
+  // the event itself, so the row prints no number - but the hit count beside
+  // it was measured against 0.5, and a row that asserts "1 of 2" while holding
+  // an empty sparkline slot is withholding the picture it just summarised.
+  const c = index([row({
+    marketType: 'player_anytime_td', line: null, asOffered: true, impliedPct: null,
+    hit: { cleared: 1, games: 2 },
+    chart: { points: [{ value: 1, week: 2 }, { value: 0, week: 1 }], line: 0.5, season: 2026, noun: 'TDs' },
+  })]);
+  assert.ok(c.querySelector('.px-spark') && !c.querySelector('.px-spark.empty'),
+    'the anytime row draws bars against its implicit 0.5');
+  assert.ok(c.querySelectorAll('.px-spark i').length > 0);
+  assert.equal(/ 0\.5/.test(txt(c.querySelector('.px-who'))), false,
+    'and the printed row still carries no line, because the market is the line');
+});
+
 test('a linked row opens the card at ?match=', () => {
   const c = index([row()]);
   const a = c.querySelector('a.px-row');

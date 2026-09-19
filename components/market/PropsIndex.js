@@ -16,6 +16,7 @@
 
 import Link from 'next/link';
 import { shortName, MARKET_LABELS } from '@/lib/market/propsBoard';
+import { lineFor } from '@/lib/market/propStats';
 
 const WHEN = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit',
@@ -61,6 +62,12 @@ function PropRow({ r, href }) {
     ? String(r.position).toUpperCase() : null;
   const label = MARKET_LABELS[r.marketType] ?? r.marketType;
   const line = r.line == null ? null : Number(r.line);
+  // AN ANYTIME MARKET IS ITS OWN LINE. selection_value is NULL for anytime and
+  // first TD - the market IS the threshold - so the printed row carries no
+  // number, but the sparkline's rule still has one, and it is the same 0.5 the
+  // hit count on this row was already measured against. Reading the raw line
+  // here withheld the picture from every row that asserted "0 of 2".
+  const ruleLine = lineFor(r.marketType, r.line);
   const hit = r.hit && r.hit.games > 0 ? r.hit : null;
   const cold = hit ? hit.cleared / hit.games <= 0.4 : false;
 
@@ -83,7 +90,7 @@ function PropRow({ r, href }) {
       {/* A SPARKLINE IS A CLAIM ABOUT GAMES WE HOLD. An unlinked row has no
           player behind it, so it gets none - the gap is ours, and drawing
           flat bars would hide it. */}
-      {r.chart && line != null ? <Spark chart={r.chart} line={line} /> : <span className="px-spark empty" />}
+      {r.chart && ruleLine != null ? <Spark chart={r.chart} line={ruleLine} /> : <span className="px-spark empty" />}
       <span className="px-num">
         {/* AS-OFFERED CARRIES NO PERCENTAGE. It was never de-vigged; a number
             in this column would imply a normalisation that did not happen. */}
