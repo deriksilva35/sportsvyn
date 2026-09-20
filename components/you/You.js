@@ -29,7 +29,7 @@
 //     is real.
 
 import Link from 'next/link';
-import RedZoneRow from './RedZoneRow';
+import RedZoneRow from '@/components/you/RedZoneRow';
 import TeamMark from '@/components/team/TeamMark';
 import { leagueWord } from '@/lib/you/reads';
 import './you.css';

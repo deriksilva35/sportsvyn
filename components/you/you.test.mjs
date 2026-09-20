@@ -136,15 +136,27 @@ test('TEAMS: the cap is on the control, so a sixth follow is never a surprise (R
 test('ALERTS: read and link only - every row points somewhere and none writes (R3)', () => {
   const h = html(base());
   const rows = [...h.matchAll(/data-row="(\w+)"/g)].map((m) => m[1]);
-  assert.deepEqual(rows, ['push', 'games', 'email', 'tz', 'handle', 'signout']);
+  // 'redzone' JOINED (NFL RED ZONE), between the game rows and the email row:
+  // it is an alert, so it belongs in this card, and it is the broadest one, so
+  // it sits after the narrower two.
+  assert.deepEqual(rows, ['push', 'games', 'redzone', 'email', 'tz', 'handle', 'signout']);
   assert.match(h, /Push notifications<small>ios<\/small><\/span><span class="yu-v on">On/);
   assert.match(h, /4 games subscribed<\/small><\/span><span class="yu-v">kickoff, score, final/);
   assert.match(h, /Email<small>d\*\*\*@gmail\.com<\/small><\/span><span class="yu-v on">On/);
   // BOARD REMINDERS ARE NOT HERE. No column, no scope, nothing to read (Q2).
   assert.equal(/[Bb]oard reminder/.test(h), false);
-  // Nothing in this component is a control.
+  // R3 STANDS, WITH EXACTLY ONE EXCEPTION, AND THE EXCEPTION IS BOUNDED.
+  // You.js itself is still a server component that writes nothing: no button,
+  // no handler, no client directive. The red-zone switch is a named child,
+  // because a league-wide standing instruction has no other surface to point
+  // at - there is no screen that owns "every NFL game". If a SECOND writer
+  // ever appears here, this assertion is what it has to argue with.
   const c = src('components/you/You.js');
-  assert.equal(/<button|onClick|'use client'/.test(c), false, 'the You tab writes nothing');
+  assert.equal(/<button|onClick|'use client'/.test(c), false, 'You.js itself still writes nothing');
+  const writers = [...c.matchAll(/<([A-Z]\w+)Row\b/g)].map((m) => `${m[1]}Row`);
+  assert.deepEqual(writers, ['RedZoneRow'], 'exactly one control on this tab');
+  // And it states its cost before a reader turns it on.
+  assert.match(src('components/you/RedZoneRow.js'), /about 130 a Sunday/);
 });
 
 test('ALERTS: the off and unsubscribed states, and no game row at zero', () => {

@@ -65,7 +65,13 @@ test('a fresh user reads OFF, and one master tap writes the DEFAULTS row (R1)', 
   // prefs, so it is answered on the same fetch rather than through a second
   // route. False with no Activity running - and false is what a failed read
   // returns too, because off is the state a reader can act on.
-  assert.deepEqual(await get(), { signedIn: true, prefs: { ...OFF, source: 'default' }, liveActivity: false });
+  // leagueId JOINED THE BODY (NFL RED ZONE): the red-zone switch asks by SLUG
+  // and the route hands back the row id the PUT writes to, so no league id is
+  // baked into a client bundle. It is null whenever no league was asked for,
+  // which is every call the per-game sheet makes.
+  assert.deepEqual(await get(), {
+    signedIn: true, prefs: { ...OFF, source: 'default' }, leagueId: null, liveActivity: false,
+  });
   // The sheet sends the flags it was showing with master flipped: OFF + master.
   const r = await put({ ...OFF, master: true });
   assert.deepEqual(r, { ok: true, prefs: { ...DEFAULTS, source: 'match' } });
@@ -74,7 +80,9 @@ test('a fresh user reads OFF, and one master tap writes the DEFAULTS row (R1)', 
     master: true, kickoff: true, score: true, quarter: false, close: true, final_only: true });
   if (process.env.ALERTS_PASTE) console.log(`\nPASTE alert_prefs row on DEV after one master tap (sentinel user ${userId}):\n${JSON.stringify(saved)}\n`);
   // And the read maps final_only back to `final`.
-  assert.deepEqual(await get(), { signedIn: true, prefs: { ...DEFAULTS, source: 'match' }, liveActivity: false });
+  assert.deepEqual(await get(), {
+    signedIn: true, prefs: { ...DEFAULTS, source: 'match' }, leagueId: null, liveActivity: false,
+  });
 });
 
 test('master OFF keeps the triggers; master ON again with a row keeps the reader\'s flags', async () => {
