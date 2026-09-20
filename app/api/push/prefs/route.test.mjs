@@ -69,8 +69,13 @@ test('a fresh user reads OFF, and one master tap writes the DEFAULTS row (R1)', 
   // and the route hands back the row id the PUT writes to, so no league id is
   // baked into a client bundle. It is null whenever no league was asked for,
   // which is every call the per-game sheet makes.
+  // leagueFloor JOINED THE BODY (OFF IS RESET): the sheet needs to know whether
+  // a red-zone row sits under this game, because that decides whether turning
+  // the game OFF reads as silence or as "Back to red zone". False here - this
+  // fixture has no league row.
   assert.deepEqual(await get(), {
-    signedIn: true, prefs: { ...OFF, source: 'default' }, leagueId: null, liveActivity: false,
+    signedIn: true, prefs: { ...OFF, source: 'default' },
+    leagueId: null, leagueFloor: false, liveActivity: false,
   });
   // The sheet sends the flags it was showing with master flipped: OFF + master.
   const r = await put({ ...OFF, master: true });
@@ -81,7 +86,8 @@ test('a fresh user reads OFF, and one master tap writes the DEFAULTS row (R1)', 
   if (process.env.ALERTS_PASTE) console.log(`\nPASTE alert_prefs row on DEV after one master tap (sentinel user ${userId}):\n${JSON.stringify(saved)}\n`);
   // And the read maps final_only back to `final`.
   assert.deepEqual(await get(), {
-    signedIn: true, prefs: { ...DEFAULTS, source: 'match' }, leagueId: null, liveActivity: false,
+    signedIn: true, prefs: { ...DEFAULTS, source: 'match' },
+    leagueId: null, leagueFloor: false, liveActivity: false,
   });
 });
 
