@@ -4,15 +4,24 @@
 // game. The only number that moves mid-slate is a rank, and it moves because
 // a board settled.
 //
-// ALERTS ARE READ AND LINK ONLY (R3). Every row states what is true and points
-// at the surface that changes it. This tab moves no writer: the AlertBell
-// sheet and /account's rows are untouched.
+// ALERTS ARE READ AND LINK ONLY (R3), WITH EXACTLY ONE EXCEPTION. Every row
+// states what is true and points at the surface that changes it, and the
+// AlertBell sheet and /account's rows are still untouched.
+//
+// THE EXCEPTION IS THE RED-ZONE SWITCH, and it is not a crack in the rule so
+// much as the case the rule did not cover. R3 works because every alert has a
+// surface that owns it: a game's bell owns a game, a team page owns a team.
+// A LEAGUE-WIDE STANDING INSTRUCTION OWNS NOTHING SMALLER THAN ITSELF - there
+// is no screen it could point at - so a read-only row would point at nothing
+// and the preference would be unreachable. It writes. Nothing else here does,
+// and the next row that wants to should have to argue with this paragraph.
 //
 // THREE ROWS THE MOCK DRAWS ARE NOT HERE, each for a stated reason:
 //   BOARD REMINDERS - there is no preference in the schema to read. No
-//     column, no alert_prefs scope, and the scope CHECK allows only 'team'
-//     and 'match'. A row reading "not set up yet" is a promise with nothing
-//     behind it (Q2).
+//     column and no alert_prefs scope for it. (The scope CHECK now allows
+//     'league' as well as 'team' and 'match' - migration 107 - but a league
+//     is not a board, so the gap this names is unchanged.) A row reading
+//     "not set up yet" is a promise with nothing behind it (Q2).
 //   THE PRICE - nothing in the app stores one per user; memberships.price_id
 //     is a Stripe id, never an amount (Q4).
 //   MEMBER SINCE - users.created_at is null for the accounts that predate
@@ -20,6 +29,7 @@
 //     is real.
 
 import Link from 'next/link';
+import RedZoneRow from './RedZoneRow';
 import TeamMark from '@/components/team/TeamMark';
 import { leagueWord } from '@/lib/you/reads';
 import './you.css';
@@ -151,6 +161,9 @@ function Alerts({ alerts }) {
             <span className="yu-chev">›</span>
           </Link>
         ) : null}
+        {/* THE ONE WRITER ON THIS TAB. A league-wide standing instruction has
+            no other surface to point at - see RedZoneRow's own note. */}
+        <RedZoneRow league="nfl" label="NFL red zone" />
         <Link className="yu-set" href="/account" data-row="email">
           <span className="yu-k">Email<small>{alerts.emailMasked ?? 'your address'}</small></span>
           <span className={`yu-v${alerts.email.optedOut ? '' : ' on'}`}>{alerts.email.optedOut ? 'Unsubscribed' : 'On'}</span>

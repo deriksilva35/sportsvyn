@@ -10,7 +10,9 @@ import { viewerActivityFor } from '@/lib/push/liveActivityStore';
 
 export const dynamic = 'force-dynamic';
 
-const SCOPES = new Set(['team', 'match']);
+// 'league' joined for NFL RED ZONE: scope_id is the league id, and the row is
+// a standing instruction for every game in it.
+const SCOPES = new Set(['team', 'match', 'league']);
 
 export async function GET(request) {
   const session = await auth().catch(() => null);
@@ -20,6 +22,14 @@ export async function GET(request) {
   const u = new URL(request.url);
   const matchId = Number(u.searchParams.get('matchId')) || null;
   const teamId = Number(u.searchParams.get('teamId')) || null;
+  // BY SLUG, NOT BY ID. The caller is a client component and an integer league
+  // id in a bundle is a number nobody can check; the slug is the thing the URL
+  // space already speaks. The id is resolved here and handed back, so the PUT
+  // that follows writes the same row this GET read.
+  const leagueSlug = (u.searchParams.get('league') ?? '').trim().toLowerCase();
+  const [lg] = leagueSlug ? await sql`
+    SELECT id FROM leagues WHERE slug = ${leagueSlug}` : [];
+  const leagueId = lg?.id ?? null;
 
   const [matchPref] = matchId ? await sql`
     SELECT ${sql.unsafe(SELECT_FIELDS)} FROM alert_prefs
@@ -27,6 +37,13 @@ export async function GET(request) {
   const [teamPref] = teamId ? await sql`
     SELECT ${sql.unsafe(SELECT_FIELDS)} FROM alert_prefs
      WHERE user_id = ${userId} AND scope = 'team' AND scope_id = ${teamId}` : [];
+  // THE RED-ZONE ROW, when the caller asks for one. The You page's switch is
+  // the only caller today and asks for a league alone; the per-game sheet does
+  // not, because a league row must never be what a game's bell renders - it is
+  // the floor under that sheet, not its state.
+  const [leaguePref] = leagueId ? await sql`
+    SELECT ${sql.unsafe(SELECT_FIELDS)} FROM alert_prefs
+     WHERE user_id = ${userId} AND scope = 'league' AND scope_id = ${leagueId}` : [];
   // THE LOCK-SCREEN SWITCH RIDES THIS FETCH RATHER THAN OPENING A ROUTE OF
   // ITS OWN. It is keyed on exactly the same two things the prefs are - this
   // match, this reader - and it is read at exactly the same moment, when the
@@ -45,7 +62,9 @@ export async function GET(request) {
   // screen may never show a push the system will not attempt").
   return Response.json({
     signedIn: true,
-    prefs: resolvePrefs({ teamPref, matchPref, scope: matchId ? 'match' : null }),
+    prefs: resolvePrefs({ teamPref, matchPref, leaguePref, scope: matchId ? 'match' : null }),
+    // The row the switch writes back to. Null when no league was asked for.
+    leagueId,
     liveActivity,
   });
 }

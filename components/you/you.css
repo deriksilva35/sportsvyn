@@ -60,6 +60,11 @@
 .yu-k small { display: block; color: var(--muted); font: 500 10px var(--font-mono); margin-top: 2px; font-weight: 500; }
 .yu-v { margin-left: auto; flex: none; color: var(--muted); font: 600 11px var(--font-mono); text-align: right; }
 .yu-v.on { color: var(--volt); }
+/* The red-zone switch is the one control on this tab, so it borrows the value
+   column's type rather than inventing a widget: same place, same weight, and
+   it reads On/Off exactly like the rows that only report. */
+.yu-tog { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: inherit; letter-spacing: inherit; }
+.yu-tog:disabled { opacity: .55; cursor: default; }
 .yu-chev { color: var(--quiet); margin-left: 8px; flex: none; }
 
 /* membership */
