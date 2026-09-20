@@ -80,6 +80,9 @@ export default function AlertBell({ match, signedIn = false, compact = true, liv
   // THE SWITCH'S STATE IS THE TABLE'S, read on the same fetch as the prefs.
   // null = not read yet, so the switch cannot claim off before it knows.
   const [laOn, setLaOn] = useState(null);
+  // THE FLOOR UNDER THIS GAME (OFF IS RESET relay): whether a red-zone row
+  // is on for its league, which decides whether OFF reads as silence.
+  const [leagueFloor, setLeagueFloor] = useState(false);
   const triggerRef = useRef(null);
   const sheetRef = useRef(null);
   const tz = useViewerTz();
@@ -93,8 +96,12 @@ export default function AlertBell({ match, signedIn = false, compact = true, liv
     let dead = false;
     fetch(`/api/push/prefs?matchId=${match.id}&teamId=${match.homeTeamId ?? ''}`)
       .then((r) => r.json())
-      .then((j) => { if (!dead) { setPrefs(j.prefs ?? DEFAULTS); setLaOn(Boolean(j.liveActivity)); } })
-      .catch(() => { if (!dead) { setPrefs(DEFAULTS); setLaOn(false); } });
+      .then((j) => {
+        if (dead) return;
+        setPrefs(j.prefs ?? DEFAULTS); setLaOn(Boolean(j.liveActivity));
+        setLeagueFloor(Boolean(j.leagueFloor));
+      })
+      .catch(() => { if (!dead) { setPrefs(DEFAULTS); setLaOn(false); setLeagueFloor(false); } });
     return () => { dead = true; };
   }, [open, prefs, signedIn, match.id, match.homeTeamId]);
 
@@ -232,7 +239,7 @@ export default function AlertBell({ match, signedIn = false, compact = true, liv
                     is recomputed on every toggle. Only once the prefs are
                     read: before that the sheet knows nothing and must not
                     claim it does. */}
-                <p className="al-summary" aria-live="polite">{prefs ? summaryLine(p) : '\u00a0'}</p>
+                <p className="al-summary" aria-live="polite">{prefs ? summaryLine(p, { leagueFloor }) : '\u00a0'}</p>
                 <p className="al-note">
                   Push to this phone. This game only. Your team defaults live on the team page.
                 </p>

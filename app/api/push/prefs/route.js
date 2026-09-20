@@ -37,6 +37,17 @@ export async function GET(request) {
   const [teamPref] = teamId ? await sql`
     SELECT ${sql.unsafe(SELECT_FIELDS)} FROM alert_prefs
      WHERE user_id = ${userId} AND scope = 'team' AND scope_id = ${teamId}` : [];
+  // IS THERE A LEAGUE FLOOR UNDER THIS GAME? The per-game sheet needs it to
+  // say what turning the game OFF actually does - with red zone on, off means
+  // "back to red zone", not silence. Only asked when a match is in hand, and
+  // it is one indexed lookup on a table the route is already reading.
+  const [floor] = matchId ? await sql`
+    SELECT 1 FROM alert_prefs ap
+      JOIN matches m ON m.id = ${matchId}
+     WHERE ap.user_id = ${userId} AND ap.scope = 'league'
+       AND ap.scope_id = m.league_id AND ap.master
+     LIMIT 1` : [];
+  const leagueFloor = Boolean(floor);
   // THE RED-ZONE ROW, when the caller asks for one. The You page's switch is
   // the only caller today and asks for a league alone; the per-game sheet does
   // not, because a league row must never be what a game's bell renders - it is
@@ -65,6 +76,9 @@ export async function GET(request) {
     prefs: resolvePrefs({ teamPref, matchPref, leaguePref, scope: matchId ? 'match' : null }),
     // The row the switch writes back to. Null when no league was asked for.
     leagueId,
+    // Whether a red-zone row is on for this match's league, so the sheet can
+    // say where an OFF game goes.
+    leagueFloor,
     liveActivity,
   });
 }
