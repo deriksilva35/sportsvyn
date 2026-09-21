@@ -47,7 +47,18 @@
 .sv2-lbl .bell { color: var(--volt); }
 .sv2-team { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 14px; font-weight: 600; }
 .sv2-card.final .sv2-team { margin: 4px 0; font-size: 13px; }
-.sv2-team .ab { font: 700 12px var(--font-mono); color: var(--muted); width: 44px; }
+/* THE 44px COLUMN IS WHY THE NAMES LINE UP between a card's two rows, and it
+   already had room for the possession dot - which matters, because only one
+   row ever carries the dot and a column that GREW for it would step that
+   row's name out of line with the other's.
+     WIDEST CASE, COUNTED: 4 is the longest gridiron abbreviation there is (53
+     CFB teams at 4, none at 5, the NFL tops out at 3). At 12px mono with no
+     tracking that is 4 x 7.2 = 28.8px, and the dot adds 5px of margin plus
+     6px of dot = 39.8px inside a fixed 44px. Nothing overflows and nothing
+     reflows. flex:none and nowrap so neither can start.
+   The game page reserves the same slot at 45px, where 0.1em of tracking makes
+   the same four letters wider - see the BOX MATH in app/nfl/game/[slug]/game.css. */
+.sv2-team .ab { font: 700 12px var(--font-mono); color: var(--muted); width: 44px; flex: none; white-space: nowrap; }
 .sv2-team .rec { color: var(--muted-dim, #6E6E68); font: 500 11px var(--font-mono); margin-left: 4px; }
 .sv2-team b { margin-left: auto; font: 700 22px var(--font-mono); }
 .sv2-card.final .sv2-team b { font-size: 18px; }
@@ -55,10 +66,12 @@
 .sv2-team.trail, .sv2-team.trail b { color: var(--muted); }
 .sv2-team .pk { font: 700 9px var(--font-mono); letter-spacing: .08em; color: var(--ink); background: var(--volt); border-radius: 99px; padding: 2px 6px; margin-left: 6px; }
 
-.sv2-strip { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+/* ONE COLUMN SINCE THE POSSESSION DOT. The second column held "ALA ball" and
+   nothing else; the volt dot on the team row says it now, so the line is the
+   down, the distance and the spot, with the field and the last play beneath. */
+.sv2-strip { display: grid; grid-template-columns: 1fr; gap: 8px; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 .sv2-strip .dd { font: 700 12px var(--font-mono); color: var(--paper); }
 .sv2-strip .dd small { color: var(--muted); font-weight: 500; margin-left: 6px; }
-.sv2-strip .ball { font: 500 11px var(--font-mono); color: var(--muted); }
 .sv2-strip .lp { grid-column: 1 / -1; color: var(--muted); font-size: 12px; line-height: 1.4; }
 .sv2-strip .field { grid-column: 1 / -1; height: 6px; border-radius: 99px; background: var(--ink-3); position: relative; overflow: hidden; margin-top: 2px; }
 .sv2-strip .field i { position: absolute; top: 0; bottom: 0; background: var(--volt); width: 3px; border-radius: 99px; }
