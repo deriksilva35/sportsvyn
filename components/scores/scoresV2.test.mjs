@@ -3,7 +3,7 @@ import { test, before, after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { writeFileSync, unlinkSync, readFileSync } from 'node:fs';
+import { writeFileSync, unlinkSync, readFileSync, readdirSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { JSDOM } from 'jsdom';
 import { install } from '../../lib/testing/nextResolve.mjs';
@@ -405,17 +405,42 @@ test('NO DOT WITH NO POSSESSION, and none on a card that is not football', () =>
 test('the dot is ONE rule in ONE sheet, and it is volt, not the live red', () => {
   const REPO = path.resolve(__dirname, '..', '..');
   const gi = readFileSync(path.join(REPO, 'components/gridiron/gridiron.css'), 'utf8');
-  const rule = gi.slice(gi.indexOf('.gi-poss {'), gi.indexOf('}', gi.indexOf('.gi-poss {')) + 1);
+  // ANCHORED AT A LINE START, because the block above this rule now QUOTES the
+  // dead declaration it replaced - and an unanchored indexOf found the quote
+  // and asserted the comment instead of the rule. Comments describe the rules;
+  // they must not be able to satisfy them, or to break them.
+  const at = gi.search(/^\.gi-poss\s*\{/m);
+  assert.ok(at > -1, '.gi-poss must have a rule of its own');
+  const rule = gi.slice(at, gi.indexOf('}', at) + 1);
   assert.match(rule, /background: var\(--volt\)/, 'volt, because it means possession, not liveness');
   assert.match(rule, /border-radius: 50%/, 'a dot, not the v3 mocks\' diamond');
   assert.match(rule, /animation: none/, 'and it does not pulse - only the live dot breathes');
   // BOTH SURFACES IMPORT THIS SHEET, which is what makes "the same size" true
-  // rather than hoped for. A second definition anywhere is the drift this
-  // component exists to prevent.
+  // rather than hoped for.
   for (const f of ['app/scores/page.js', 'app/nfl/game/[slug]/page.js', 'app/cfb/game/[slug]/page.js']) {
     assert.match(readFileSync(path.join(REPO, f), 'utf8'), /components\/gridiron\/gridiron\.css/, `${f} must import the sheet the dot lives in`);
   }
-  for (const f of ['app/scores/scoresV2.css', 'app/nfl/game/[slug]/game.css']) {
-    assert.doesNotMatch(readFileSync(path.join(REPO, f), 'utf8'), /\.gi-poss/, `${f} must not redefine the dot`);
-  }
+  // EXACTLY ONE RULE, COUNTED ACROSS EVERY STYLESHEET IN THE PRODUCT - and
+  // this assertion is written this way because the first version of it was a
+  // LIE THAT PASSED. It checked two named sheets for a redefinition and found
+  // none, while .gi-poss was declared TWICE in gridiron.css itself: a053fbb
+  // had transcribed a dead `color/font-size` rule from the v3 mock two months
+  // earlier, it came last in the cascade, and it shipped alongside this dot.
+  // A guard that names the files it will look in cannot see the file it did
+  // not name, so this one walks them all.
+  const sheets = [];
+  const walk = (rel) => {
+    for (const d of readdirSync(path.join(REPO, rel), { withFileTypes: true })) {
+      const next = `${rel}/${d.name}`;
+      if (d.isDirectory()) { walk(next); continue; }
+      if (d.name.endsWith('.css')) sheets.push(next);
+    }
+  };
+  for (const root of ['app', 'components']) walk(root);
+  const declaring = sheets.filter((f) => /^\s*\.gi-poss\s*[,{]/m.test(readFileSync(path.join(REPO, f), 'utf8')));
+  assert.deepEqual(declaring, ['components/gridiron/gridiron.css'],
+    'the dot is declared in exactly one sheet');
+  const decls = [...readFileSync(path.join(REPO, 'components/gridiron/gridiron.css'), 'utf8')
+    .matchAll(/^\s*\.gi-poss\s*[,{]/gm)];
+  assert.equal(decls.length, 1, 'and exactly once inside it - never a second declaration to win the cascade');
 });

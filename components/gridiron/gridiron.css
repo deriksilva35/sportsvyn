@@ -154,6 +154,17 @@
    situation line; the down, the distance and the spot were never what the
    sentence carried and they stay.
 
+   THIS CLASS ALREADY EXISTED, AND IT WAS DEAD. a053fbb (15 Jul) transcribed
+   `.gi-poss { color: var(--volt); font-size: 9px; }` from the v3 mock's
+   "possession marker volt ◆ 9px" and never wrote the element that wears it -
+   two months of a rule with no renderer, in any commit, on any served page.
+   That second declaration is deleted rather than left below this one, because
+   two rules for one class is how a later reader learns the wrong size: the
+   dead one came last and would have won `color` and `font-size`. The dot is
+   now defined EXACTLY ONCE in the whole product, and
+   components/scores/scoresV2.test.mjs counts the stylesheets to keep it that
+   way.
+
    IT IS NOT THE LIVE DOT, and the difference is deliberate. .gi-dot above is
    --live and BREATHES, because it means "this game is on". This one is --volt
    and still, because it means "this side has the ball" - a mark that pulsed
@@ -236,7 +247,6 @@
 .gi-team .sc.live { color: var(--live); }
 .gi-team .sc.none { color: var(--muted); font-weight: 400; }
 .gi-team.win .sc { color: var(--volt); }
-.gi-poss { color: var(--volt); font-size: 9px; }
 
 /* foot
    One line: the mechanical scope on the left, the human name for the game and
