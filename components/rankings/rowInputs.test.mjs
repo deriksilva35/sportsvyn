@@ -49,6 +49,8 @@ const CFB_INPUTS = {
     { opp: 'BAY', result: 'W', margin: 28 },
   ],
   ap: { rank: 1, score: 10 },
+  editor: { rank: 2, score: 9.37 },
+  composite: { dims: ['result', 'editor'], values: { result: 8.3, editor: 9.37 }, value: 8.8 },
   weights: { editorial: 0.7, sites: 0.3 },
 };
 // An NFL row: no poll exists, so no AP and full editorial weight.
@@ -56,6 +58,8 @@ const NFL_INPUTS = {
   elo: 1697.22, delta3: -37.87,
   last3: [{ opp: 'SF', result: 'L', margin: 7 }],
   ap: null,
+  editor: null,
+  composite: { dims: ['result'], values: { result: 9.7, editor: null }, value: 9.7 },
   weights: { editorial: 1, sites: 0 },
 };
 const h = (props) => render(React.createElement(RowInputs, props));
@@ -76,26 +80,43 @@ test('A CFB ROW SHOWS ALL FOUR FACTS, in the order the panel promises', () => {
   // the thing that enters the blend and the rank is the thing a reader knows.
   assert.match(out, /<dt>AP<\/dt><dd>#1 <span class="rk-arrow">→<\/span> 10\.00 <small>curved over a 25-team field<\/small>/);
   assert.match(out, /<dt>Weights<\/dt><dd>editorial 0\.70 · AP 0\.30<\/dd>/);
-  assert.match(out, /2 of 5 dimensions scored/);
-  assert.match(out, /result and momentum; process, squad and coherence are held/);
-  // Order on the page is Elo, Last three, AP, Weights, Dimensions.
+  // THE EDITOR'S LINE, beside the poll and labelled as a judgement.
+  assert.match(out, /<dt>Editor<\/dt><dd>#2 <span class="rk-arrow">→<\/span> 9\.37 <small>this week&#x27;s editor list<\/small>/);
+  // THE COMPOSITE, WRITTEN OUT so a reader can do the mean in their head.
+  assert.match(out, /<dt>Composite<\/dt><dd><span>result 8\.3<\/span><span> \+ editor 9\.4<\/span> <span class="rk-arrow">→<\/span> 8\.8<\/dd>/);
+  assert.match(out, /result, of 5/);
+  assert.match(out, /momentum is shown, not blended; process, squad and coherence are held/);
+  // Order on the page is Elo, Last three, AP, Editor, Composite, Weights, Dimensions.
   const at = (s) => out.indexOf(s);
   assert.ok(at('>Elo<') < at('>Last three<'));
   assert.ok(at('>Last three<') < at('>AP<'));
-  assert.ok(at('>AP<') < at('>Weights<'));
+  assert.ok(at('>AP<') < at('>Editor<'));
+  assert.ok(at('>Editor<') < at('>Composite<'));
+  assert.ok(at('>Composite<') < at('>Weights<'));
   assert.ok(at('>Weights<') < at('>Dimensions<'));
+});
+
+test('A TEAM BELOW THE EDITOR\'S 25 SHOWS NO EDITOR LINE, and says the composite is result alone', () => {
+  const out = h({ inputs: { ...CFB_INPUTS, editor: null, composite: { dims: ['result'], values: { result: 8.3, editor: null }, value: 8.3 } } });
+  assert.equal(/<dt>Editor<\/dt>/.test(out), false, 'absent, not blank - 113 of 138 teams are here');
+  assert.match(out, /<dt>Composite<\/dt><dd><span>result 8\.3<\/span> <span class="rk-arrow">→<\/span> 8\.3<small>not in the editor&#x27;s 25<\/small>/);
 });
 
 test('AN NFL ROW HAS NO AP LINE AT ALL - absent, not blank', () => {
   const out = h({ inputs: NFL_INPUTS });
   assert.equal(/<dt>AP<\/dt>/.test(out), false, 'a league with no poll shows no poll row');
-  assert.equal(/rk-arrow/.test(out), false);
+  // The composite line uses the same arrow, so this asks about the AP row
+  // specifically rather than about the glyph anywhere in the panel.
+  assert.equal(/<dt>AP<\/dt><dd>#/.test(out), false);
   // And the weights line says WHY there is only one number in the blend,
   // rather than printing "AP 0.00" and inviting the question.
   assert.match(out, /<dt>Weights<\/dt><dd>editorial 1\.00 · no second source to blend<\/dd>/);
   assert.match(out, /1697\.22<small>-37\.9 over the last three<\/small>/, 'a negative swing keeps its sign');
   assert.match(out, /class="rk-res l">L <b>7<\/b> SF/);
-  assert.match(out, /2 of 5 dimensions scored/);
+  assert.match(out, /result, of 5/);
+  // NO EDITOR LIST FOR THE NFL, so no editor line and a one-dimension composite.
+  assert.equal(/<dt>Editor<\/dt>/.test(out), false);
+  assert.match(out, /<dt>Composite<\/dt><dd><span>result 9\.7<\/span>/);
 });
 
 test('AN UNRANKED CFB ROW SHOWS NO AP LINE EITHER, and says the blend did not happen', () => {
@@ -103,6 +124,7 @@ test('AN UNRANKED CFB ROW SHOWS NO AP LINE EITHER, and says the blend did not ha
   // does not rank - most of a 138-team field, every week.
   const out = h({ inputs: { ...CFB_INPUTS, ap: null } });
   assert.equal(/<dt>AP<\/dt>/.test(out), false);
+  assert.match(out, /<dt>Editor<\/dt>/, 'the editor may rank a team the poll does not - that is the point');
   assert.match(out, /editorial 1\.00 · no second source to blend/,
     'the sites weight is configured but nothing came back to spend it on');
 });
@@ -118,8 +140,8 @@ test('NO BLOB, NO PANEL - a hand-seeded row does not open onto nothing', () => {
   // A blob with an Elo and nothing else still renders, minus every optional row.
   const bare = h({ inputs: { elo: 1500 } });
   assert.match(bare, /<dd>1500\.00<\/dd>/);
-  assert.equal(/Last three|<dt>AP<\/dt>|<dt>Weights<\/dt>/.test(bare), false);
-  assert.match(bare, /2 of 5 dimensions scored/, 'the dimension count is not optional - it is the caveat');
+  assert.equal(/Last three|<dt>AP<\/dt>|<dt>Editor<\/dt>|<dt>Composite<\/dt>|<dt>Weights<\/dt>/.test(bare), false);
+  assert.match(bare, /result, of 5/, 'the dimension caveat is not optional');
 });
 
 test('THE ROW IS A <details> ONLY WHEN IT HAS WORKING BEHIND IT', () => {
