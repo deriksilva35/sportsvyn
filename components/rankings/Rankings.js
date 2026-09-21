@@ -109,7 +109,11 @@ function TeamsCfb({ v }) {
         </Module>
       )}
       {t.ours.length > 0 && (
-        <Module section="ours" title="SPORTSVYN POWER" sub="computed">
+        // THE MODEL'S CASE sits under the board as the module's note: ranks
+        // 1-25 are the editor's list by ruling, so the team the model rates
+        // highest of everyone left off has nowhere else to be seen.
+        <Module section="ours" title="SPORTSVYN POWER" sub="computed"
+          note={t.modelCase ? `The model's case: ${t.modelCase.name} · Elo ${Math.round(t.modelCase.elo)}` : null}>
           {t.ours.map((r) => (
             <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r}
               followed={v.followed.has(r.teamId)} sub={r.vsAp?.text ?? null} value={r.score}
