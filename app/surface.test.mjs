@@ -178,7 +178,10 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     // The Today tab v2 (TODAY TAB v2 relay), on the global tokens.
     'components/gridiron/todayV2.css': 18,
     // The Rankings tab v2 (RANKINGS TAB v2 relay), on the global tokens.
-    'components/rankings/rankings.css': 17,
+    // 17 -> 18 (POWER RANKINGS relay): .rk-exp, the expanding power row,
+    // carries the row rule's own 1px var(--line) bottom border because the
+    // <details> wrapper now owns the separator the <summary> gave up.
+    'components/rankings/rankings.css': 18,
     // The You tab (YOU TAB v1), on the global tokens.
     'components/you/you.css': 17,
     // app/nfl/game/[slug]/game.css was 1 - the Live Activity debug control's
@@ -199,8 +202,9 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   // the debug control's one border with game.css's block, and GAMES v3 took
   // app/games/lobbyV2.css's 22 with the v2 lobby. Neither replacement uses a
   // bare token, so neither has an entry above.
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 102,
-    '18 were broken before the promotion; 84 were written after it');
+  // 102 -> 103 with the expanding power row's separator (POWER RANKINGS relay).
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 103,
+    '18 were broken before the promotion; the rest were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.
   for (const t of ['--ink-2', '--ink-3', '--line']) {

@@ -83,10 +83,20 @@ test('TEAMS / CFB: AP, OUR TOP 25 and the conference, with CONF and OVR', () => 
   assert.deepEqual(mods(h), ['ap', 'ours', 'group', 'yours']);
   assert.match(h, /AP Top 25 · Week 3/);
   assert.match(h, /1,512/, 'points, formatted');
-  assert.match(h, /Our Top 25/); assert.match(h, /editorial, not the poll/);
+  // THE BOARD IS COMPUTED NOW, and it says so where it used to say editorial.
+  assert.match(h, /SPORTSVYN POWER/); assert.match(h, /computed/);
+  assert.equal(/Our Top 25|editorial, not the poll/.test(h), false, 'the editorial label is gone with the editorial board');
   assert.match(h, /<div class="rk-cols"><span>CONF<\/span><span>OVR<\/span><\/div>/);
-  // R1: no movement, no NEW badge, no dropped-out line.
-  assert.equal(/▲|▼|NEW|dropped out/i.test(h), false);
+  // R1 STILL HOLDS FOR THE AP MODULE: one poll week, so no movement on it and
+  // no NEW badge or dropped-out line anywhere.
+  // THE BADGE IS MATCHED AS RENDERED TEXT, not as the word anywhere in the
+  // markup - a movement cell for a row with no previous edition carries
+  // class="rk-mv new", which a case-insensitive /NEW/ matched and which is
+  // not a NEW badge at all.
+  assert.equal(/>NEW</.test(h), false, 'no NEW badge');
+  assert.equal(/dropped out/i.test(h), false);
+  const ap = h.slice(h.indexOf('data-module="ap"'), h.indexOf('data-module="ours"'));
+  assert.equal(/▲|▼/.test(ap), false, 'the AP module has no movement column');
   // The All-138 link hangs off the conference module, NOT off Our Top 25.
   const ours = h.slice(h.indexOf('data-module="ours"'), h.indexOf('data-module="group"'));
   assert.equal(/All 138/.test(ours), false, 'Our Top 25 is a ranking, not a directory');
@@ -158,22 +168,30 @@ test('THE YOU ROW IS ONE COMPONENT, used on every view', () => {
 
 // ---------------------------------------------------------------- the list
 
-const T = (id, name, group, ap = null) => ({ id, name, fullName: name, abbreviation: name.slice(0, 3).toUpperCase(), colors: {}, group, record: '2-0', apRank: ap });
-const TEAMS = [T(1, 'Ole Miss', 'SEC', 9), T(2, 'Toledo', 'MAC'), T(3, 'Old Dominion', 'Sun Belt'), T(4, 'Miami', 'ACC', 7)];
+const T = (id, name, group, ap = null, power = null) => ({ id, name, fullName: name, abbreviation: name.slice(0, 3).toUpperCase(), colors: {}, group, record: '2-0', apRank: ap, powerRank: power });
+const TEAMS = [T(1, 'Ole Miss', 'SEC', 9, 6), T(2, 'Toledo', 'MAC'), T(3, 'Old Dominion', 'Sun Belt'), T(4, 'Miami', 'ACC', 7, 2)];
 const list = (over = {}) => render(React.createElement(AllTeams, {
   league: 'cfb', label: 'CFB', teams: TEAMS, initialFollowed: [1], signedIn: true, signinHref: '/signin', ...over,
 }));
 
-test('the list groups by conference, ranks by AP where one exists, and offers Follow on every row', () => {
+test('the list groups by conference, ranks by POWER where one exists, and offers Follow on every row', () => {
   const h = list();
   assert.match(h, /<h1 class="rk-h1">All 4<\/h1>/);
   assert.match(h, /data-module="groups"/);
   assert.match(h, /ACC · 1/); assert.match(h, /SEC · 1/);
   assert.equal((h.match(/class="rk-fol/g) ?? []).length, 4, 'a button on every row');
   assert.match(h, /<button type="button" class="rk-fol on" aria-pressed="true"/, 'a followed team reads Following');
-  // R2: AP rank left, dash where there is none.
-  assert.match(h, /<span class="rnk-n">9<\/span>/);
-  assert.match(h, /<span class="rnk-n">–<\/span>/);
+  // THE LEFT COLUMN IS THE POWER RANK NOW. R2 put the AP rank there because
+  // no 138-team power ranking existed; one does, so the poll moves to the
+  // sub-line and the spine of the list is our own order.
+  assert.match(h, /<span class="rnk-n">6<\/span>/, 'Ole Miss is power 6');
+  assert.match(h, /<span class="rnk-n">2<\/span>/, 'Miami is power 2');
+  assert.match(h, /<span class="rnk-n">–<\/span>/, 'an unrated team still shows a dash');
+  // AND THE AP RANK IS IN THE SUB-LINE, only where the poll ranks the team.
+  assert.match(h, /SEC · 2-0 · AP 9/);
+  assert.match(h, /ACC · 2-0 · AP 7/);
+  assert.match(h, /MAC · 2-0</, 'an unranked team\'s sub-line does not mention a poll at all');
+  assert.equal((h.match(/AP \d/g) ?? []).length, 2, 'two ranked teams, two AP mentions');
 });
 
 test('signed out, the button is a sign-in link and never a button', () => {
@@ -223,22 +241,50 @@ test('SOURCE GUARD: the AP module is the only 25-row module', () => {
   assert.match(src('lib/rankings/reads.js'), /export async function apTop25\(\{ limit = 25 \} = \{\}\)/);
 });
 
-test('SOURCE GUARD: no module renders a movement glyph while previous_rank is unwritten', () => {
+test('A MOVEMENT GLYPH IFF previous_rank IS SET - both directions, rendered', () => {
+  // THE GUARD THAT REPLACED "NO MOVEMENT ANYWHERE". The old rule was right for
+  // a board with one edition and is wrong for one with two; what has to stay
+  // true is that a glyph is drawn from previous_rank and never from anything
+  // else - a row that was not on the last edition has no arrow to draw.
+  const power = (over) => ({ ...team(1, 'PHI', 'Eagles'), rank: 1, score: 8.5, ...over });
+
+  // NEW: previousRank null. No arrow, whatever rankMovement says.
+  const isNew = html(base({ teams: { ...base().teams, power: [power({ previousRank: null, rankMovement: 3 })] } }));
+  assert.equal(/▲|▼/.test(isNew), false, 'a row with no previous rank draws no arrow');
+  assert.match(isNew, /class="rk-mv new"/);
+
+  // UP, DOWN and HOLD all require previousRank, and all render distinctly.
+  const up = html(base({ teams: { ...base().teams, power: [power({ previousRank: 4, rankMovement: 3 })] } }));
+  assert.match(up, /class="rk-mv up"[^>]*aria-label="up 3"[^>]*>▲3</);
+  const down = html(base({ teams: { ...base().teams, power: [power({ rank: 5, previousRank: 2, rankMovement: -3 })] } }));
+  assert.match(down, /class="rk-mv dn"[^>]*aria-label="down 3"[^>]*>▼3</);
+  // A HOLD IS NOT A NEW ROW. previousRank 1, movement 0 - the distinction the
+  // reader loses if only rank_movement is read.
+  const hold = html(base({ teams: { ...base().teams, power: [power({ previousRank: 1, rankMovement: 0 })] } }));
+  assert.match(hold, /class="rk-mv hold"[^>]*aria-label="unchanged"/);
+  assert.equal(/rk-mv new/.test(hold), false);
+
+  // AND THE COLUMN IS PRESENT EVEN WHEN EVERY ROW IS NEW - edition 1 shows a
+  // blank column rather than no column, so edition 2 does not change the shape
+  // of the list.
+  assert.match(isNew, /class="rk-mv/);
+});
+
+test('SOURCE GUARD: movement is read from previous_rank, in exactly one place', () => {
   const walk = (rel) => readdirSync(path.join(REPO, rel)).flatMap((e) => {
     const p = path.join(rel, e);
     return statSync(path.join(REPO, p)).isDirectory() ? walk(p) : /\.(js|css)$/.test(e) ? [p] : [];
   });
-  // COMMENTS ARE STRIPPED FIRST. A comment explaining why movement is absent
-  // is the opposite of the thing this guard is looking for, and matching it
-  // would punish the file for saying so.
+  // COMMENTS ARE STRIPPED FIRST, for the same reason as before: a comment
+  // about movement is not a movement column.
   const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
   const files = [...walk('components/rankings'), 'lib/rankings/reads.js', 'lib/rankings/view.js'];
-  for (const f of files) {
-    const t = strip(src(f));
-    assert.equal(/[▲▼]/.test(t), false, `${f} draws a movement glyph`);
-    assert.equal(/previous_rank|rank_movement/.test(t), false, `${f} reads a movement column that is unwritten`);
-  }
-  // And the guard is looking at something: the files exist and are non-trivial.
+  const drawers = files.filter((f) => /[▲▼]/.test(strip(src(f))));
+  assert.deepEqual(drawers, ['components/rankings/RowInputs.js'],
+    'exactly one component draws the glyph, so the threshold cannot be reinvented per module');
+  // The column is SELECTED once, in the one query that serves both boards.
+  const reads = strip(src('lib/rankings/reads.js'));
+  assert.match(reads, /re\.previous_rank, re\.rank_movement/);
   assert.ok(files.length >= 5, 'the guard covers the rankings tree');
 });
 

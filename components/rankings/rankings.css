@@ -49,6 +49,50 @@
 .rk-row .rnk-nm small { display: block; font: 500 10px var(--font-mono); color: var(--muted); letter-spacing: 0; margin-top: 2px; }
 .rk-row .rnk-v { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
 .rk-row .rnk-v.mu { color: var(--muted); font-weight: 500; }
+
+/* MOVEMENT, AND THE WORKING BEHIND A ROW (power rankings relay).
+   THE GLYPH IS DRAWN IFF previous_rank IS SET, which is a rule about data and
+   not about styling - components/rankings/RowInputs.js Movement() owns it.
+   All four states occupy the SAME WIDTH, because a column that changes width
+   as teams move makes the whole list twitch between editions. */
+.rk-row .rk-mv {
+  flex: none; width: 34px; text-align: right;
+  font: 700 10px var(--font-mono); font-variant-numeric: tabular-nums;
+}
+.rk-row .rk-mv.up { color: var(--volt); }
+.rk-row .rk-mv.dn { color: var(--terra, #E07A5F); }
+.rk-row .rk-mv.hold, .rk-row .rk-mv.new { color: var(--muted-dim, #6E6E68); }
+
+/* THE EXPANDING ROW. The <summary> IS the row, so it keeps .rk-row's own
+   layout; list-style is removed because the triangle would land inside the
+   rank column and read as part of the number. */
+.rk-exp { border-bottom: 1px solid var(--line); }
+.rk-exp:last-child { border-bottom: 0; }
+.rk-exp > summary.rk-row { border-bottom: 0; cursor: pointer; list-style: none; }
+.rk-exp > summary.rk-row::-webkit-details-marker { display: none; }
+.rk-exp[open] > summary.rk-row .rnk-nm { color: var(--volt); }
+
+.rk-inputs { margin: 0 0 10px 32px; }
+.rk-inputs > summary {
+  font: 700 9px var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted-dim, #6E6E68); cursor: pointer; padding: 2px 0;
+}
+.rk-inputs dl { margin: 6px 0 0; display: grid; gap: 5px; }
+.rk-inputs dl > div { display: flex; gap: 10px; align-items: baseline; }
+.rk-inputs dt {
+  flex: none; width: 74px; font: 700 9px var(--font-mono);
+  letter-spacing: .12em; text-transform: uppercase; color: var(--muted-dim, #6E6E68);
+}
+.rk-inputs dd {
+  margin: 0; flex: 1; min-width: 0; font: 500 11px var(--font-mono);
+  color: var(--paper); font-variant-numeric: tabular-nums;
+}
+.rk-inputs dd small { color: var(--muted); margin-left: 6px; font-size: 10px; }
+.rk-inputs .rk-arrow { color: var(--muted-dim, #6E6E68); }
+.rk-inputs .rk-last3 { display: flex; flex-wrap: wrap; gap: 8px; }
+.rk-inputs .rk-res.w b { color: var(--volt); }
+.rk-inputs .rk-res.l b { color: var(--terra, #E07A5F); }
+.rk-inputs .rk-res.t b { color: var(--muted); }
 .rk-mark { flex: none; }
 /* A FOLLOWED TEAM WEARS THE VOLT RING on every row that draws a mark. */
 .rk-mark.fol { box-shadow: 0 0 0 2px var(--ink-2), 0 0 0 3px var(--volt); border-radius: 99px; }

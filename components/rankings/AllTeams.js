@@ -16,9 +16,18 @@
  * ship once; a keystroke round trip on a list this size is latency bought
  * with nothing.
  *
- * THE LEFT COLUMN IS THE AP RANK WHERE ONE EXISTS AND A DASH OTHERWISE (R2).
- * There is no 138-team power ranking to put there, and inventing an order
- * would be the pretending this tab exists not to do.
+ * THE LEFT COLUMN IS THE POWER RANK, AND IT USED TO BE THE AP RANK (R2).
+ * R2's reason was that "there is no 138-team power ranking to put there, and
+ * inventing an order would be the pretending this tab exists not to do" -
+ * which was true until lib/rankings/publishGridironEdition.js started
+ * computing one over every final PROD holds. There is one now, it covers the
+ * whole FBS field, and it is not invented.
+ *
+ * THE AP RANK MOVED INTO THE SUB-LINE, where the poll is one fact about a
+ * team beside its conference and its record, rather than the spine of the
+ * list. It appears only where the AP ranks the team; an unranked team's
+ * sub-line simply does not mention a poll, which is different from saying it
+ * is unranked 138 times.
  */
 
 import { useMemo, useState, useTransition } from 'react';
@@ -71,10 +80,10 @@ export default function AllTeams({ league, label, teams = [], initialFollowed = 
     const on = followed.has(t.id);
     return (
       <div className="rk-row" key={t.id} data-team-id={t.id}>
-        <span className="rnk-n">{t.apRank ?? '–'}</span>
+        <span className="rnk-n">{t.powerRank ?? '–'}</span>
         <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={t.abbreviation}
           size={22} title={t.fullName ?? t.name} className={on ? 'rk-mark fol' : 'rk-mark'} />
-        <span className="rnk-nm">{t.name}<small>{[t.group, t.record].filter(Boolean).join(' · ')}</small></span>
+        <span className="rnk-nm">{t.name}<small>{[t.group, t.record, t.apRank == null ? null : `AP ${t.apRank}`].filter(Boolean).join(' · ')}</small></span>
         {signedIn ? (
           <button type="button" className={`rk-fol${on ? ' on' : ''}`} aria-pressed={on}
             aria-label={`${on ? 'Unfollow' : 'Follow'} ${t.fullName ?? t.name}`} onClick={() => toggle(t)}>

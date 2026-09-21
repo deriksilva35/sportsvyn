@@ -62,6 +62,14 @@
       "schedule": "15 14 * * 1,2"
     },
     {
+      "path": "/api/cron/power-edition?league=cfb",
+      "schedule": "0 15 * * 1"
+    },
+    {
+      "path": "/api/cron/power-edition?league=nfl",
+      "schedule": "5 13 * * 2"
+    },
+    {
       "path": "/api/cron/cfb-player-stats",
       "schedule": "0 * * * *"
     },

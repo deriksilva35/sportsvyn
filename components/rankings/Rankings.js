@@ -10,12 +10,17 @@
 //      one poll week exists on PROD and a diff needs two.
 //   R3 the NFL power module has no movement column - no row carries a
 //      previous_rank. A column of dashes is a promise the data cannot keep.
+//      SUPERSEDED BY THE POWER RANKINGS RELAY: a computed edition writes
+//      previous_rank, so the column is back. It is BLANK ON EDITION 1 - every
+//      row is new and a new row shows an en dash, not an arrow - and it fills
+//      from edition 2 onward. The promise is now one the data can keep.
 //   R5 CFB's touchdown module is TD LEADERS. A Golden Boot is a soccer
 //      trophy, and this tab's whole argument is that it does not pretend.
 
 import Link from 'next/link';
 import Module from './Module.js';
 import RankRow from './RankRow.js';
+import RowInputs, { Movement } from './RowInputs.js';
 import { LEAGUE_LABEL, LEAGUES, VIEWS, GAMES, rankingsHref } from '@/lib/rankings/view';
 import { STAT_KEYS, statLabel } from '@/lib/rankings/reads';
 import './rankings.css';
@@ -65,11 +70,15 @@ function TeamsNfl({ v }) {
   return (
     <>
       {t.power.length > 0 && (
-        <Module section="power" title={`Power · Week ${v.week}`} sub={v.signedIn ? 'your teams outlined' : null}
+        <Module section="power" title="SPORTSVYN POWER" sub="computed"
           href="/rankings/teams?league=nfl" cta="All 32 →">
           {t.power.map((r) => (
-            <RankRow key={r.rank} rank={r.rank} name={r.name} team={r}
-              followed={v.followed.has(r.teamId)} value={r.score} />
+            // THE KEY IS THE TEAM, NOT THE RANK. Ties share a rank now, so
+            // two rows can carry the same number and a rank key would collide.
+            <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r}
+              followed={v.followed.has(r.teamId)} value={r.score}
+              right={<Movement previousRank={r.previousRank} movement={r.rankMovement} />}
+              expand={<RowInputs inputs={r.inputs} />} />
           ))}
         </Module>
       )}
@@ -100,10 +109,16 @@ function TeamsCfb({ v }) {
         </Module>
       )}
       {t.ours.length > 0 && (
-        <Module section="ours" title="Our Top 25" sub="editorial, not the poll">
+        // THE MODEL'S CASE sits under the board as the module's note: ranks
+        // 1-25 are the editor's list by ruling, so the team the model rates
+        // highest of everyone left off has nowhere else to be seen.
+        <Module section="ours" title="SPORTSVYN POWER" sub="computed"
+          note={t.modelCase ? `The model's case: ${t.modelCase.name} · Elo ${Math.round(t.modelCase.elo)}` : null}>
           {t.ours.map((r) => (
-            <RankRow key={r.rank} rank={r.rank} name={r.name} team={r}
-              followed={v.followed.has(r.teamId)} sub={r.vsAp?.text ?? null} value={r.score} />
+            <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r}
+              followed={v.followed.has(r.teamId)} sub={r.vsAp?.text ?? null} value={r.score}
+              right={<Movement previousRank={r.previousRank} movement={r.rankMovement} />}
+              expand={<RowInputs inputs={r.inputs} />} />
           ))}
         </Module>
       )}
