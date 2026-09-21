@@ -29,7 +29,7 @@ const signed = (v) => (v == null ? null : `${Number(v) > 0 ? '+' : ''}${Number(v
 
 export default function RowInputs({ inputs = null, total = 5 }) {
   if (!inputs || inputs.elo == null) return null;
-  const { elo, delta3, last3 = [], ap = null, editor = null, composite = null, weights = null } = inputs;
+  const { elo, delta3, last3 = [], ap = null, editor = null, composite = null, weights = null, field = null } = inputs;
   return (
     <details className="rk-inputs">
       <summary>How this rank was computed</summary>
@@ -53,7 +53,7 @@ export default function RowInputs({ inputs = null, total = 5 }) {
             NFL, which has no poll at all. An unranked CFB team says so in
             words - a blank would read as a missing value. */}
         {ap ? (
-          <div><dt>AP</dt><dd>#{ap.rank} <span className="rk-arrow">→</span> {n2(ap.score)} <small>curved over a 25-team field</small></dd></div>
+          <div><dt>AP</dt><dd>#{ap.rank} <span className="rk-arrow">→</span> {n2(ap.score)} <small>curved over {field ? `the ${field}-team field` : 'the published field'}</small></dd></div>
         ) : null}
         {/* THE EDITOR'S LINE. It is a judgement, not a measurement, so it is
             labelled as one and it sits beside the poll rather than inside the

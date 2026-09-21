@@ -50,6 +50,7 @@ const CFB_INPUTS = {
   ],
   ap: { rank: 1, score: 10 },
   editor: { rank: 2, score: 9.37 },
+  field: 138,
   composite: { dims: ['result', 'editor'], values: { result: 8.3, editor: 9.37 }, value: 8.8 },
   weights: { editorial: 0.7, sites: 0.3 },
 };
@@ -78,7 +79,15 @@ test('A CFB ROW SHOWS ALL FOUR FACTS, in the order the panel promises', () => {
   assert.equal((out.match(/class="rk-res/g) ?? []).length, 3);
   // THE CURVE IS SHOWN AS A CONVERSION, rank to score, because the score is
   // the thing that enters the blend and the rank is the thing a reader knows.
-  assert.match(out, /<dt>AP<\/dt><dd>#1 <span class="rk-arrow">→<\/span> 10\.00 <small>curved over a 25-team field<\/small>/);
+  // THE CAPTION NAMES THE FIELD THE ROW WAS ACTUALLY CURVED OVER. It read
+  // "a 25-team field" for one deploy after the ruling moved every curve to the
+  // published field - true when written, false when shipped. It is now the
+  // stored number, so it cannot disagree with the score beside it.
+  assert.match(out, /<dt>AP<\/dt><dd>#1 <span class="rk-arrow">→<\/span> 10\.00 <small>curved over the 138-team field<\/small>/);
+  assert.equal(/25-team field/.test(out), false);
+  // With no field recorded - a row written before this existed - it says what
+  // it can honestly say rather than naming a number it does not have.
+  assert.match(h({ inputs: { ...CFB_INPUTS, field: null } }), /curved over the published field/);
   assert.match(out, /<dt>Weights<\/dt><dd>editorial 0\.70 · AP 0\.30<\/dd>/);
   // THE EDITOR'S LINE, beside the poll and labelled as a judgement.
   assert.match(out, /<dt>Editor<\/dt><dd>#2 <span class="rk-arrow">→<\/span> 9\.37 <small>this week&#x27;s editor list<\/small>/);
