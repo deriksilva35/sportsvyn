@@ -107,8 +107,13 @@ export function DriveStrip({ state, lastPlay, drive, homeAbbr, awayAbbr, offense
         <div className={`ds-dd${state.mode === 'between' ? ' quiet' : ''}`}>
           {state.mode === 'between' ? 'Between drives' : (dd ?? '—')}
         </div>
+        {/* THE SPOT, AND NOT WHO HAS IT. This line used to end "· NE ball";
+            the score strip above now carries a volt dot on the row of the
+            team in possession, the same mark the Live Activity uses, so
+            saying it here as well would be the same fact twice on one
+            screen. The down, the distance and the spot are untouched. */}
         {spot && state.mode !== 'between' && (
-          <div className="ds-at">at <b>{spot}</b>{offenseAbbr ? ` · ${offenseAbbr} ball` : ''}</div>
+          <div className="ds-at">at <b>{spot}</b></div>
         )}
       </div>
       <Field geometry={geometry} homeAbbr={homeAbbr} awayAbbr={awayAbbr} />

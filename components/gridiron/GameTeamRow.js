@@ -22,10 +22,11 @@
 import Helmet from '@/components/team/Helmet';
 import RankBadge from '@/components/gridiron/RankBadge';
 import FollowStar from '@/components/team/FollowStar';
+import PossessionDot from '@/components/gridiron/PossessionDot';
 
 export default function GameTeamRow({
   t, score, loser, show, rank = null, record = null,
-  signedIn = false, isShell = false, following = null,
+  signedIn = false, isShell = false, following = null, hasBall = false,
 }) {
   // THE STAR IS SIGNED-IN ONLY HERE, and that is a deliberate difference from
   // the team page. On /team/[slug] the star is the page's own call to action
@@ -42,7 +43,12 @@ export default function GameTeamRow({
       <RankBadge rank={rank} size="big" />
       {/* helmet before the abbreviation, facing the score; none without colors */}
       <Helmet primary={t?.colors?.primary} secondary={t?.colors?.secondary} facing="right" size={28} className="gg-hm" />
-      <span className="abbr">{t?.abbreviation ?? ''}</span>
+      {/* THE VOLT DOT SITS WITH THE ABBREVIATION, which is what the Live
+          Activity's card marks and what the strip's own sentence used to
+          name. Inside the span, so it travels with the three letters rather
+          than becoming a seventh child of a row whose child count has already
+          broken this layout once. */}
+      <span className="abbr">{t?.abbreviation ?? ''}{hasBall ? <PossessionDot abbr={t?.abbreviation ?? null} /> : null}</span>
       <span className="tname">{t?.name ?? 'TBD'}</span>
       {/* A chip may only claim knowledge. Records carry no kickoff, so this
           renders pre-game, live and final alike - unlike the market strip. */}

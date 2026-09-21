@@ -62,17 +62,31 @@
      375 - 32 (.gg-wrap padding 0 16px) = 343 usable
      rank badge .rk-big  12px mono, 2px7px padding, 6px margin  ~= 30
      gap                                                            8
-     abbr "NDSU"         12px, 0.1em tracking                   ~= 34
+     abbr "NDSU" + dot  12px, 0.1em tracking, 6px dot + 5px      ~= 45
      gap                                                            8
      record "1-0"        11px mono                              ~= 22
      gap                                                            8
      score "42"          clamp(26px,6.5vw,34px) -> 24.4px at 375 ~= 30
      ------------------------------------------------------------------
-     fixed total                                                  140
-     name gets 343 - 140 = 203px, and "North Dakota State" at
-     clamp(20px,5.4vw,28px) -> 20.25px Saira is ~186px. It FITS, with 17px
+     fixed total                                                  151
+     name gets 343 - 151 = 192px, and "North Dakota State" at
+     clamp(20px,5.4vw,28px) -> 20.25px Saira is ~186px. It FITS, with 6px
      spare - and if it did not, it would ellipsis rather than wrap, because it
-     is the only child that can shrink. */
+     is the only child that can shrink.
+
+   THE ABBREVIATION COLUMN RESERVES THE POSSESSION DOT, and that is why it
+   went from 34 to 45 (POSSESSION DOT ON THE BOARD relay). The dot rides one
+   of the two rows, never both, so a column that GREW for it would step that
+   row's team name out of line with the other row's - an 11px indent on the
+   biggest type on the page, appearing and disappearing with the snap. The
+   slot is therefore always there and only sometimes painted.
+     4 IS THE LONGEST GRIDIRON ABBREVIATION THERE IS, counted rather than
+     assumed: teams joined to leagues nfl and cfb are 2, 3 or 4 characters
+     (53 CFB teams at 4, none at 5, and the NFL tops out at 3).
+     4 chars x (7.2px advance + 1.2px tracking) = 33.6, + 5px margin + 6px
+     dot = 44.6 -> 45. Every gridiron row therefore holds its mark AND the
+     dot inside the reserved column, and nothing moves when possession
+     changes. */
 .gg-teamrow {
   display: flex; align-items: baseline; gap: 8px; padding: 5px 0;
   flex-wrap: nowrap;
@@ -82,7 +96,10 @@
 .gg-teamrow .rk, .gg-teamrow .abbr, .gg-teamrow .gg-rec, .gg-teamrow .score { flex: none; }
 .gg-teamrow .abbr {
   font-size: 12px; color: var(--muted-dim); letter-spacing: 0.1em;
-  min-width: 34px;
+  /* 45px = the longest abbreviation there is plus the possession dot; see the
+     BOX MATH above. It is the dot's reserved slot, so the team name beside it
+     does not move when the ball changes hands. */
+  min-width: 45px; white-space: nowrap;
 }
 .gg-teamrow .tname {
   font-family: var(--gg-disp); font-weight: 700;

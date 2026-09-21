@@ -97,7 +97,10 @@ test('live card: red rule, period and clock, network, Alerts on, the drive strip
   const ala = cards[0], bre = cards[1];
   assert.match(ala, /^ live" href="\/cfb\/game\/g-3"/);
   assert.match(ala, /<span class="l">Q3 · 8:41<\/span><span>CFB · FOX<\/span><span class="bell">Alerts on<\/span>/);
-  assert.match(ala, /data-drive="1"/); assert.match(ala, /<span class="dd">2nd &amp; 6<small>ALA 41<\/small><\/span><span class="ball">ALA ball<\/span>/);
+  // THE SITUATION LINE IS DOWN, DISTANCE, SPOT - and nothing after it. "ALA
+  // ball" used to close this line and the volt dot on the ALA row says it now.
+  assert.match(ala, /data-drive="1"/); assert.match(ala, /<span class="dd">2nd &amp; 6<small>ALA 41<\/small><\/span>/);
+  assert.doesNotMatch(ala, /class="ball"|ALA ball/, 'the sentence the dot replaced is gone from the card');
   assert.match(ala, /class="field"><u style="left:0;width:41%"><\/u><i style="left:41%"><\/i>/);
   assert.match(ala, /<span class="lp">J\. Milroe pass short right to G\. Bernard for 9 yards\.<\/span>/);
   assert.doesNotMatch(ala, /data-winprob/, 'no win-probability bar on football');
@@ -185,7 +188,11 @@ test('an FCS side with no abbreviation gets one derived from its name, on the ma
 test('TEAM ORDER: the EPL card renders home first, the football cards away first', () => {
   const h = html({ v: fixture(), signedIn: true });
   const cards = h.split('<a class="sv2-card').slice(1);
-  const rowAbbrs = (c) => [...c.matchAll(/<span class="ab">([^<]*)<\/span>/g)].map((m) => m[1]);
+  // The possession dot rides INSIDE the abbreviation span, so the row that has
+  // the ball ends <span class="ab">ALA<i class="gi-poss" ...></i></span>. The
+  // pattern allows it and captures the letters either way, which is the point:
+  // adding the dot must not change which row is first.
+  const rowAbbrs = (c) => [...c.matchAll(/<span class="ab">([^<]*)(?:<i class="gi-poss"[^>]*><\/i>)?<\/span>/g)].map((m) => m[1]);
   // the fixture's live CFB card is ALA (home) v USF (away) -> away first
   assert.deepEqual(rowAbbrs(cards[0]), ['USF', 'ALA'], 'CFB: away then home');
   // the EPL card is BRE (home) v BOU (away) -> home first
@@ -333,4 +340,82 @@ test('Top 25: the empty line says ranked when the filter is what emptied the boa
   const v = rankedFixture({ top25: true, groups: [] });
   assert.match(html({ v, signedIn: true, zoneLabel: 'Pacific' }), /No ranked games on this day\./);
   assert.match(html({ v: { ...v, mine: true }, signedIn: true, zoneLabel: 'Pacific' }), /No ranked games with a stake on this day\./);
+});
+
+// ---------------------------------------------------------- the possession dot
+
+// THE BOARD ASKS THE READER, AND THE READER'S ANSWER LANDS ON A ROW. The rule
+// itself is proved in lib/gridiron/possession.test.mjs; what only a render can
+// show is that the dot reaches the RIGHT row, and that flipping possession
+// flips which row wears it rather than adding a second one.
+const dotted = (card) => [...card.matchAll(/<span class="ab">([^<]*)<i class="gi-poss"/g)].map((m) => m[1]);
+
+test('THE VOLT DOT RIDES THE TEAM IN POSSESSION - one row, the right one', () => {
+  const h = html({ v: fixture(), signedIn: true });
+  const cards = h.split('<a class="sv2-card').slice(1);
+  // The live CFB card is ALA (home) v USF (away) with ALA holding the ball.
+  assert.deepEqual(dotted(cards[0]), ['ALA'], 'the home row, and only it');
+  assert.equal((h.match(/gi-poss/g) ?? []).length, 1, 'one dot on the whole board');
+  // It carries the words it replaced, for a reader who is not looking at it.
+  assert.match(cards[0], /<i class="gi-poss" role="img" aria-label="ALA has the ball"><\/i>/);
+});
+
+test('THE AWAY SIDE GETS THE SAME DOT when the away side has the ball', () => {
+  // ONE THING CHANGES from the fixture above: who is on offense. If the dot
+  // followed the row position rather than the team, this is where it shows.
+  const v = fixture();
+  v.extras.get(3).drive = { ...v.extras.get(3).drive, offenseAbbr: 'USF', spot: 'USF 41' };
+  const cards = html({ v, signedIn: true }).split('<a class="sv2-card').slice(1);
+  assert.deepEqual(dotted(cards[0]), ['USF'], 'the away row now, and only it');
+  assert.match(cards[0], /aria-label="USF has the ball"/);
+});
+
+test('NO DOT AT HALFTIME OR BETWEEN QUARTERS - the situation line stays, the mark does not', () => {
+  for (const [label, liveState] of [
+    ['halftime', { period: 2, clock: '0:00' }],
+    ['between quarters', { period: 3, clock: '0:00' }],
+  ]) {
+    const v = fixture();
+    v.groups[0].games[0].liveState = liveState;
+    const cards = html({ v, signedIn: true }).split('<a class="sv2-card').slice(1);
+    assert.deepEqual(dotted(cards[0]), [], `no dot at ${label}`);
+    // The down, the distance and the spot are untouched: that IS where the
+    // ball will be spotted when play restarts.
+    assert.match(cards[0], /<span class="dd">2nd &amp; 6<small>ALA 41<\/small><\/span>/, `the line survives ${label}`);
+  }
+});
+
+test('NO DOT WITH NO POSSESSION, and none on a card that is not football', () => {
+  // Between drives the board has no down-bearing play and no drive at all.
+  const v = fixture();
+  v.extras.get(3).drive = null;
+  const cards = html({ v, signedIn: true }).split('<a class="sv2-card').slice(1);
+  assert.deepEqual(dotted(cards[0]), []);
+  assert.doesNotMatch(cards[0], /data-drive="1"/, 'and no strip either');
+  // The EPL card beside it is live, and has never had a dot to lose.
+  const h = html({ v: fixture(), signedIn: true });
+  const epl = h.split('<a class="sv2-card').slice(1)[1];
+  assert.doesNotMatch(epl, /gi-poss/, 'soccer measures possession in percent, not in dots');
+  assert.match(epl, /data-winprob="epl"/, 'it still carries what it always did');
+  // And a FINAL football card keeps its last drive without wearing the mark.
+  const fin = h.split('<a class="sv2-card').slice(1)[3];
+  assert.doesNotMatch(fin, /gi-poss/);
+});
+
+test('the dot is ONE rule in ONE sheet, and it is volt, not the live red', () => {
+  const REPO = path.resolve(__dirname, '..', '..');
+  const gi = readFileSync(path.join(REPO, 'components/gridiron/gridiron.css'), 'utf8');
+  const rule = gi.slice(gi.indexOf('.gi-poss {'), gi.indexOf('}', gi.indexOf('.gi-poss {')) + 1);
+  assert.match(rule, /background: var\(--volt\)/, 'volt, because it means possession, not liveness');
+  assert.match(rule, /border-radius: 50%/, 'a dot, not the v3 mocks\' diamond');
+  assert.match(rule, /animation: none/, 'and it does not pulse - only the live dot breathes');
+  // BOTH SURFACES IMPORT THIS SHEET, which is what makes "the same size" true
+  // rather than hoped for. A second definition anywhere is the drift this
+  // component exists to prevent.
+  for (const f of ['app/scores/page.js', 'app/nfl/game/[slug]/page.js', 'app/cfb/game/[slug]/page.js']) {
+    assert.match(readFileSync(path.join(REPO, f), 'utf8'), /components\/gridiron\/gridiron\.css/, `${f} must import the sheet the dot lives in`);
+  }
+  for (const f of ['app/scores/scoresV2.css', 'app/nfl/game/[slug]/game.css']) {
+    assert.doesNotMatch(readFileSync(path.join(REPO, f), 'utf8'), /\.gi-poss/, `${f} must not redefine the dot`);
+  }
 });

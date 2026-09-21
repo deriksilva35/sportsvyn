@@ -146,6 +146,30 @@
 }
 .gi-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live); animation: gi-pulse 1.6s infinite; }
 @keyframes gi-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+/* POSSESSION - THE VOLT DOT, one rule for both surfaces (POSSESSION DOT ON
+   THE BOARD relay). The Scores card and the game-page score strip mark the
+   team with the ball exactly the way the Live Activity's card does: a round
+   volt dot after the abbreviation. It replaced the words "<TEAM> ball" on the
+   situation line; the down, the distance and the spot were never what the
+   sentence carried and they stay.
+
+   IT IS NOT THE LIVE DOT, and the difference is deliberate. .gi-dot above is
+   --live and BREATHES, because it means "this game is on". This one is --volt
+   and still, because it means "this side has the ball" - a mark that pulsed
+   would read as the clock running, which is the one thing it must not say.
+
+   flex:none, because both rows it lands on are flex lines that must not wrap:
+   the dot takes its own space and moves nobody. Both /scores and the two game
+   pages already import this sheet, so the size is written once and cannot
+   drift into two sizes. */
+.gi-poss {
+  flex: none; display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--volt); animation: none;
+  /* beside the letters, on their middle - not on the baseline, where a round
+     mark next to uppercase mono reads as a full stop */
+  margin-left: 5px; vertical-align: middle;
+}
 /* FINAL STOPS BEING A JADE BADGE. A solid affirmation chip on every finished
    row was the loudest thing on a card whose actual news is the score, and it
    said the same thing 60 times on a Saturday. The volt winning score now

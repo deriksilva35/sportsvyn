@@ -86,7 +86,18 @@ test('the box math is written down, with the worst case named', () => {
   const c = CSS.slice(CSS.indexOf('BOX MATH AT 375'), CSS.indexOf('.gg-teamrow {'));
   assert.match(c, /North Dakota State/);
   assert.match(c, /343/, 'the usable width after .gg-wrap padding');
-  assert.match(c, /203/, 'what is left for the name');
+  // 203 BECAME 192 WHEN THE ABBREVIATION COLUMN RESERVED THE POSSESSION DOT
+  // (POSSESSION DOT ON THE BOARD relay): 34px of abbr became 45px of abbr
+  // plus dot, so the name's budget lost the same 11px and the worst case
+  // still fits. The number is asserted, not the slack, because the slack is
+  // what the next change spends.
+  assert.match(c, /192/, 'what is left for the name');
+  // THE RESERVATION IS THE POINT, and it is the half a reader would not
+  // guess: the dot rides ONE of the two rows, so a column that grew for it
+  // would indent that row's name and nobody else's.
+  const r = rule('.gg-teamrow .abbr');
+  assert.match(r, /min-width: 45px/, 'the dot has a reserved slot, not a growing column');
+  assert.match(CSS, /4 IS THE LONGEST GRIDIRON ABBREVIATION THERE IS/, 'and the width is counted, not assumed');
 });
 
 test('MARKUP ORDER IS LAYOUT ORDER, and both codes agree on it', () => {

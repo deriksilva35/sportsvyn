@@ -8,9 +8,11 @@ import Link from 'next/link';
 import StandaloneTime from '@/components/StandaloneTime';
 import TeamMark from '@/components/team/TeamMark';
 import RankBadge from '@/components/gridiron/RankBadge';
+import PossessionDot from '@/components/gridiron/PossessionDot';
 import LiveRefresh from '@/components/scores/LiveRefresh';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { orderFor } from '@/lib/gridiron/teamOrder';
+import { possessionSide } from '@/lib/gridiron/possession';
 import { LEAGUE_LABEL, abbrOf, cardVariant, countLine, pickTone, statLineText, oddsLine, eplBar, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
 
 // THE SITE'S STRAIGHT APOSTROPHE, everywhere on this tab (GO rider 1).
@@ -38,12 +40,16 @@ function liveLabel(g) {
   return q ? `Q${q}${c ? ` · ${c}` : ''}` : 'Live';
 }
 
-function TeamRow({ t, score, trail, record, pick, pct, scored, rank = null }) {
+function TeamRow({ t, score, trail, record, pick, pct, scored, rank = null, hasBall = false }) {
   const ab = abbrOf(t);
   return (
     <div className={`sv2-team${trail ? ' trail' : ''}`}>
       <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={ab} size={24} title={t.name} />
-      <span className="ab">{ab}</span>
+      {/* THE DOT RIDES THE ABBREVIATION, not the situation line under it. The
+          line used to end with "ALA ball"; the row it was describing is right
+          there, and a mark on that row says it without spending a line on it.
+          One reader decides which row gets it - lib/gridiron/possession.js. */}
+      <span className="ab">{ab}{hasBall ? <PossessionDot abbr={ab} /> : null}</span>
       {/* THE AP NUMBER SITS INSIDE THE NAME, not beside the score: it is part
           of what the team is called this week, and RankBadge renders nothing
           at all when the side is unranked or the league is not CFB. */}
@@ -85,6 +91,14 @@ function Card({ g, x, signedIn, signinHref, tz }) {
   const boardOpen = !scored && (g.leagueSlug === 'nfl' || g.leagueSlug === 'cfb');
   const stat = final ? statLineText(x.stat, g.leagueSlug) : null;
   const pickAbbr = x.stake?.pick?.abbr ?? null;
+  // WHICH ROW HAS THE BALL, asked once, of the one reader. The card holds the
+  // clock as well as the drive, so a halftime or an end-of-quarter card keeps
+  // its down-distance-spot - the ball WILL be spotted there - and carries no
+  // dot, because at 0:00 nobody has it.
+  const ball = possessionSide({
+    leagueSlug: g.leagueSlug, status: g.status, possession: x.drive?.offenseAbbr ?? null,
+    homeAbbr: abbrOf(g.home), awayAbbr: abbrOf(g.away), liveState: g.liveState,
+  });
   const gameHref = g.leagueSlug === 'epl' ? `/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`;
   return (
     <a className={`sv2-card${live ? ' live' : ''}${final ? ' final' : ''}`} href={gameHref} data-variant={v} data-league={g.leagueSlug}>
@@ -105,13 +119,15 @@ function Card({ g, x, signedIn, signinHref, tz }) {
             trail={scored && (side === 'home' ? awayLeads : homeLeads)}
             record={x.record[side]} pick={pickAbbr != null && pickAbbr === abbrOf(t)}
             pct={pctFor(side)} scored={scored} rank={x.rank?.[side] ?? null}
+            hasBall={ball === side}
           />
         );
       })}
       {live && x.drive && (
         <div className="sv2-strip" data-drive="1">
+          {/* DOWN, DISTANCE, SPOT - and nothing else. "ALA ball" used to sit
+              beside this; the volt dot on the team row above says it now. */}
           <span className="dd">{x.drive.label}{x.drive.spot ? <small>{x.drive.spot}</small> : null}</span>
-          <span className="ball">{x.drive.offenseAbbr ? `${x.drive.offenseAbbr} ball` : ''}</span>
           {x.drive.pct != null && <div className="field"><u style={{ left: 0, width: `${x.drive.pct}%` }} /><i style={{ left: `${x.drive.pct}%` }} /></div>}
           {x.drive.lastPlay ? <span className="lp">{x.drive.lastPlay}</span> : null}
         </div>

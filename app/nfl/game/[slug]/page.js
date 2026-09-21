@@ -28,6 +28,7 @@ import BoxScore from '@/components/gridiron/BoxScore';
 import AlertBell from '@/components/alerts/AlertBell';
 import { auth } from '@/auth';
 import { orderFor } from '@/lib/gridiron/teamOrder';
+import { possessionSide } from '@/lib/gridiron/possession';
 import GameTeamRow from '@/components/gridiron/GameTeamRow';
 import { getFollowedTeamIds } from '@/lib/follows';
 import { resolveShellMode } from '@/lib/shell/shell';
@@ -144,6 +145,18 @@ export default async function GamePage({ params, searchParams }) {
   const defenseAbbr = currentDrive
     ? (currentDrive.offenseIsHome ? game.away?.abbreviation : game.home?.abbreviation)
     : null;
+  // WHICH ROW CARRIES THE VOLT DOT, from the one reader both this page and
+  // the Scores board ask (lib/gridiron/possession.js). The liveState it is
+  // given is the one gamecastState() is given three lines up, for the same
+  // reason: a simulated ?asOf= cut must not be read against the clock as it
+  // stands now. The strip beneath keeps the down, the distance and the spot;
+  // it no longer says whose ball it is, because this says it.
+  const ballSide = possessionSide({
+    leagueSlug: game.leagueSlug, status: sim.simulated ? 'live' : game.status,
+    possession: currentDrive?.offenseAbbr ?? null,
+    homeAbbr: game.home?.abbreviation, awayAbbr: game.away?.abbreviation,
+    liveState: sim.simulated ? null : game.liveState,
+  });
 
   const teams = [game.away, game.home].filter((t) => t?.id);
   // TWO SOURCES, ONE PANEL. The REGULAR SEASON - every game this route serves
@@ -227,6 +240,7 @@ export default async function GamePage({ params, searchParams }) {
                 key={side} record={side === 'home' ? homeRecord : awayRecord} t={t}
                 score={side === 'home' ? game.homeScore : game.awayScore}
                 loser={winner === (side === 'home' ? 'away' : 'home')} show={final || live}
+                hasBall={ballSide === side}
                 signedIn={viewerId != null} isShell={isShell}
                 following={followed.has(t?.id)}
               />
