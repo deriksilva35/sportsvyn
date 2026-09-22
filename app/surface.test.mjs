@@ -189,6 +189,11 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     // panel and its head, the slot cards, the locked-slot placeholder and the
     // board's own rows and bar. Counted on purpose.
     'app/october/october.css': 12,
+    // The Run (MLB B3), built to docs/design/mocks/the-run-v0_1.html. Its
+    // sheet starts from October's - the two mocks draw the same header,
+    // clock, steps strip, panel and footer - so it inherits the same ink
+    // grounds plus the club grid's own. Counted on purpose.
+    'app/run/run.css': 13,
     // The Today tab v2 (TODAY TAB v2 relay), on the global tokens.
     'components/gridiron/todayV2.css': 18,
     // The Rankings tab v2 (RANKINGS TAB v2 relay), on the global tokens.
@@ -221,9 +226,10 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   // (MLB B1 item 6, built to docs/design/mocks/mlb-scores-v0_1.html).
   // 105 -> 107 with the bracket's slot card and the round board's row card
   // (MLB B2 items 2 and 3).
-  // 107 -> 119 with October's card and board (MLB B3) - the mock is dense
-  // with ink grounds and every one of them is a real surface.
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 119,
+  // 107 -> 119 with October's card and board - the mock is dense with ink
+  // grounds and every one of them is a real surface.
+  // 119 -> 132 with The Run's nine and its league board (MLB B3).
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 132,
     '18 were broken before the promotion; the rest were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.

@@ -50,6 +50,7 @@ import { stageFromGameType, stagesByBacktrack, STAGES, SERIES_IN_ROUND, STAGE_LA
 import { ourAbbr, statsApiEnabled } from '../lib/mlb/statsapi.js';
 import { ensureSeriesBoard } from '../lib/mlb/seriesPickem.js';
 import { ensureOctoberDays } from '../lib/october/create.js';
+import { ensureRunRounds } from '../lib/run/create.js';
 
 const args = process.argv.slice(2);
 const PROD = args.includes('--prod');
@@ -207,6 +208,18 @@ for (const season of seasons) {
   console.log('\n  october days');
   for (const d of await ensureOctoberDays(Number(season))) {
     console.log(`    ${d.day}  ${d.created ? `CREATED id=${d.id} · ${d.games} games · first pitch ${String(d.firstPitch).slice(11, 16)}Z` : `${d.reason}${d.id ? ` id=${d.id}` : ''}`}`);
+  }
+
+  // THE RUN'S ROUNDS. Round 1 opens here - the relay's own instruction - and
+  // every later round opens the first time this job runs after its
+  // predecessor's last series is decided, which is what makes "the morning
+  // after" true without anybody scheduling it.
+  console.log('\n  the run');
+  for (const r of await ensureRunRounds(Number(season))) {
+    const how = r.created
+      ? `CREATED id=${r.id} · ${r.alive} clubs alive of ${r.clubs} · locks ${String(r.locksAt).slice(0, 16)}`
+      : r.id ? `exists id=${r.id}` : `${r.reason}${r.have != null ? ` (${r.have} of ${r.want})` : ''}`;
+    console.log(`    ${String(r.round).padEnd(14)} ${how}`);
   }
 
   // THE ROUND BOARDS, in bracket order. Every round that is WHOLE gets one;
