@@ -7,7 +7,7 @@ import { mapLiveStatus, liveState, parseBdlProse } from '../../lib/live/vocabula
 import { writeLive, scoreChanged } from '../../lib/live/write.js';
 import { toScoreRow } from '../../lib/live/scoreEvent.js';
 import { fromBdlMlb } from '../../lib/mlb/ingest.js';
-import { mlbDetailOf, writeMlbDetail, writeMlbGamePk, writeMlbLineups, lineupDue } from '../../lib/mlb/detail.js';
+import { mlbDetailOf, writeMlbDetail, writeMlbGamePk, writeMlbLineups, writeMlbProbables, lineupDue } from '../../lib/mlb/detail.js';
 import { fetchScheduleByMatch, fetchGameFeed, pickByKickoff, matchKey, statsApiEnabled } from '../../lib/mlb/statsapi.js';
 
 import { emit } from '../../lib/wire/emit.js';
@@ -342,10 +342,10 @@ export async function mlbEnrich(row, m, sql, { log = () => {}, live: isLive = tr
   // and lineupDue() is what keeps that from being every game every thirty
   // seconds. See lib/mlb/detail.js.
   if (!isLive && !lineupDue({ kickoff_at: m?.kickoff_at, lineups: m?.before_lineups ?? null }, { now })) {
-    return { play, live: null, lineups: null, calls };
+    return { play, live: null, lineups: null, probables: null, calls };
   }
 
-  let live = null; let lineups = null;
+  let live = null; let lineups = null; let probables = null;
   try {
     const r = await resolveMlbGamePk(m, sql, { log });
     calls += r.calls;
@@ -354,13 +354,19 @@ export async function mlbEnrich(row, m, sql, { log = () => {}, live: isLive = tr
       calls += feed.calls;
       live = feed.live;
       lineups = feed.lineups;
+      // THE STARTERS RIDE THE SAME DOCUMENT AS THE CARD, so refreshing them
+      // costs nothing and happens on exactly lineupDue's cadence. A starter
+      // announced at 4pm used to reach the picker only on the next daily pool
+      // build - which is tomorrow - so "starter not announced" was a permanent
+      // state for the day it mattered on.
+      probables = feed.probables;
       // NOT POSTED IS A READING TOO, and it must be written. Without a
       // fetchedAt stamp on a game whose card is not up yet, lineupDue() reads
       // "never asked" forever and asks again on every single poll.
       if (!lineups && feed.calls) lineups = { away: null, home: null };
     }
   } catch (e) { log(`[mlb] statsapi enrich failed for ${m?.slug}: ${e.message}`); }
-  return { play, live, lineups, calls };
+  return { play, live, lineups, probables, calls };
 }
 
 /**
@@ -521,7 +527,7 @@ export async function pollOnce(sql, {
   now = new Date(), dryRun = false, push = true, log = () => {},
 }) {
   const out = {
-    league, considered: 0, matched: 0, unmatched: 0, written: 0, detail: 0, lineups: 0,
+    league, considered: 0, matched: 0, unmatched: 0, written: 0, detail: 0, lineups: 0, probables: 0,
     scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [],
     latencies: [], wouldWrite: [], pushes: [], pushErrors: [], pushAuthFailure: false,
     liveActivities: [],
@@ -607,6 +613,14 @@ export async function pollOnce(sql, {
       try {
         if (await writeMlbLineups(sql, m.id, extra.lineups, { at: now })) out.lineups += 1;
       } catch (e) { log(`[${league}] lineup write failed match=${m.id}: ${e.message}`); }
+    }
+    // THE PROBABLES, on the same pass and the same reasoning: a pre-kick row
+    // writes its starters whether or not its score moved. Its own writer and
+    // its own top-level key, so it cannot touch the lineups beside it.
+    if (extra?.probables && !dryRun) {
+      try {
+        if (await writeMlbProbables(sql, m.id, extra.probables)) out.probables += 1;
+      } catch (e) { log(`[${league}] probables write failed match=${m.id}: ${e.message}`); }
     }
     const raw = normalise(row, out.unmapped, extra);
     // AN UNREADABLE STATUS WRITES NOTHING AT ALL. Not the score either: a

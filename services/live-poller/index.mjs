@@ -158,7 +158,7 @@ async function release(client, league) {
 
 async function loop(lg) {
   let lock = null, windowId = null, failures = 0, pending = 0, lastBeat = 0;
-  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0 };
+  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0 };
   // BOX SCORE PULLS: every 10th live poll per live game, once at final.
   // MLB JOINS ON THE SAME TRACKER. Its ingest existed and was called by
   // nothing, so mlb_player_game_stats stayed empty on every game ever played -
@@ -190,7 +190,7 @@ async function loop(lg) {
     if (!active && lock) {
       await closeWindow(windowId, { ...window, closedState: decision.state });
       await release(lock, lg.slug); lock = null; windowId = null;
-      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0 });
+      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0 });
       log(`[${lg.slug}] window closed (${decision.state}) ${kickoffDelta(decision.nextKickoffAt, now)}`);
     }
 
@@ -220,6 +220,7 @@ async function loop(lg) {
         // and a window whose pre-kick pass silently stopped running look the
         // same from outside without a count.
         window.lineups += r.lineups ?? 0;
+        window.probables += r.probables ?? 0;
         window.events += r.events;
         window.latencies.push(...r.latencies);
         for (const u of r.unmapped) if (!window.unmapped.includes(u)) window.unmapped.push(u);
