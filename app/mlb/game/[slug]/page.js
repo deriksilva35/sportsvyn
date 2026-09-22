@@ -96,7 +96,14 @@ export default async function MlbGamePage({ params, searchParams }) {
     <div className="gi mgame" data-surface="ink">
       <GlobalHeaderServer activeNav="scores" />
       <div className="mg-wrap">
-        <div className="mg-crumb"><Link href="/scores?sport=mlb">&#8249; Scores · MLB</Link></div>
+        {/* TWO WAYS OUT, and the second one is the reason the bracket is not a
+            page nobody can reach - the dead "MLB 2027" chip is what that rule
+            is named after. It renders in October and in April alike; a bracket
+            with no field set says so rather than 404ing. */}
+        <div className="mg-crumb">
+          <Link href="/scores?sport=mlb">&#8249; Scores · MLB</Link>
+          <Link className="r" href="/mlb/bracket">Postseason bracket &#8250;</Link>
+        </div>
 
         <header className="mg-head">
           <div className="mg-chips">

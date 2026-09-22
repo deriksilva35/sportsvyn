@@ -180,6 +180,10 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     // and the line score's current-half cell, which the mock draws on
     // --ink-2 and --ink-3. Both tokens resolve globally; counted on purpose.
     'app/mlb/game/[slug]/mlbgame.css': 2,
+    // The postseason bracket and the round board (MLB B2), both written on
+    // the global tokens: one card ground each. Counted on purpose.
+    'app/mlb/bracket/bracket.css': 1,
+    'app/pickem/mlb/series.css': 1,
     // The Today tab v2 (TODAY TAB v2 relay), on the global tokens.
     'components/gridiron/todayV2.css': 18,
     // The Rankings tab v2 (RANKINGS TAB v2 relay), on the global tokens.
@@ -210,7 +214,9 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   // 102 -> 103 with the expanding power row's separator (POWER RANKINGS relay).
   // 103 -> 105 with the MLB game page's At Bat card and current-half cell
   // (MLB B1 item 6, built to docs/design/mocks/mlb-scores-v0_1.html).
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 105,
+  // 105 -> 107 with the bracket's slot card and the round board's row card
+  // (MLB B2 items 2 and 3).
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 107,
     '18 were broken before the promotion; the rest were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.
