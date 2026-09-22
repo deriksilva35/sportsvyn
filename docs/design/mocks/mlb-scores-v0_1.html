@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sportsvyn · MLB scores card + game page · mock v0.1</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Saira:ital,wght@1,900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;
+    --volt:#D4FF00;--paper:#F5F5F2;--jade:#2A8A4F;--terra:#B8410F;--live:#E63946;
+    --mute:#8a8a86;--mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#050505;color:var(--paper);font-family:var(--mono)}
+  body{padding:28px 16px 60px;display:flex;flex-wrap:wrap;gap:28px;justify-content:center}
+  .frame{width:390px;background:var(--ink);border:1px solid var(--line);border-radius:22px;padding:14px 12px 24px}
+  .frame h2{font:italic 900 22px/1 Saira,sans-serif;letter-spacing:-.02em;margin:6px 4px 2px}
+  .note{color:var(--mute);font-size:11px;margin:0 4px 14px;line-height:1.5}
+  .cap{width:390px;color:var(--mute);font-size:11px;line-height:1.55;margin-top:-16px}
+  .cap b{color:var(--paper);font-weight:500}
+
+  /* pills + group label - as ScoresV2 */
+  .pills{display:flex;gap:6px;margin:0 4px 14px}
+  .pill{border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:12px;color:var(--paper)}
+  .pill.on{background:var(--volt);color:var(--ink);border-color:var(--volt);font-weight:700}
+  .grp{display:flex;justify-content:space-between;align-items:baseline;margin:14px 4px 8px}
+  .grp b{font:italic 900 18px/1 Saira,sans-serif;letter-spacing:.02em}
+  .grp span{font-size:11px;color:var(--mute)}
+
+  /* the card */
+  .card{display:block;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 12px 10px;margin:0 0 10px;text-decoration:none;color:inherit;position:relative}
+  .card.live{border-top:2px solid var(--live)}
+  .lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-bottom:8px}
+  .lbl .l{color:var(--live);font-weight:700}
+  .lbl .l::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--live);margin-right:6px;vertical-align:middle}
+  .team{display:grid;grid-template-columns:24px 44px 1fr auto;align-items:center;gap:8px;padding:5px 0}
+  .team.trail{color:var(--mute)}
+  .mark{width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:linear-gradient(to bottom,var(--c1) 50%,var(--c2) 50%)}
+  .ab{font-size:13px;font-weight:700}
+  .ab i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--volt);margin-left:5px;vertical-align:middle}
+  .nm{font-size:15px;font-weight:500}
+  .nm small{color:var(--mute);font-size:11px;margin-left:6px;font-weight:400}
+  .n{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+  .team.trail .n{color:var(--mute)}
+
+  /* the baseball strip - replaces the drive strip */
+  .strip{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;border-top:1px solid var(--line);margin-top:8px;padding:9px 0 4px;font-size:12px}
+  .strip .st{font-weight:700}
+  .strip .st small{color:var(--mute);font-weight:400;margin-left:8px}
+  .strip .cnt{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+  .strip .cnt small{color:var(--mute);font-weight:400;margin-right:8px}
+  .dia{width:34px;height:34px;position:relative;margin:0 auto}
+  .dia b{position:absolute;width:11px;height:11px;border:1.5px solid var(--mute);transform:rotate(45deg);background:transparent}
+  .dia b.on{background:var(--volt);border-color:var(--volt)}
+  .dia .b2{left:11.5px;top:1px}.dia .b3{left:1px;top:11.5px}.dia .b1{left:22px;top:11.5px}
+  .dia.none{opacity:0}
+  .lp{font-size:12px;color:var(--mute);line-height:1.45;padding:2px 0 0}
+  .lp b{color:var(--paper);font-weight:500}
+  .stake{display:flex;gap:8px;margin-top:8px}
+  .stake span{border:1px solid var(--line);border-radius:99px;padding:4px 10px;font-size:11px}
+  .stake .good{color:var(--jade);border-color:#1f3d2a}
+  .pre{font-size:12px;color:var(--mute);border-top:1px solid var(--line);margin-top:8px;padding-top:9px}
+  .pre b{color:var(--paper);font-weight:500}
+  .fin{font-size:12px;color:var(--mute);border-top:1px solid var(--line);margin-top:8px;padding-top:9px}
+
+  /* game page head */
+  .gp .chip{display:inline-block;background:var(--live);color:var(--paper);font-size:11px;font-weight:700;padding:3px 8px;border-radius:3px}
+  .gp .head{display:flex;justify-content:space-between;align-items:center;margin:0 4px 10px;font-size:13px}
+  .gp .head .st{color:var(--live);font-weight:700}
+  .gp .head .st small{color:var(--mute);font-weight:400;margin-left:8px}
+  .ls{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 2px;font-variant-numeric:tabular-nums}
+  .ls th,.ls td{padding:6px 4px;text-align:center;border-bottom:1px solid var(--line)}
+  .ls th{color:var(--mute);font-weight:400}
+  .ls td:first-child,.ls th:first-child{text-align:left;font-weight:700;padding-left:8px;width:52px}
+  .ls .now{background:var(--ink-3);color:var(--volt)}
+  .ls .rhe{color:var(--paper);font-weight:700}
+  .ls .rhe.r{border-left:1px solid var(--line)}
+  .ls .lead td{color:var(--paper)}
+  .ls .trail td{color:var(--mute)}
+  .mod{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+  .mod .eb{color:var(--volt);font-size:11px;font-weight:700;letter-spacing:.06em;margin-bottom:8px}
+  .sit{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+  .sit .big{font-size:18px;font-weight:700}
+  .sit .big small{display:block;font-size:11px;color:var(--mute);font-weight:400;margin-top:2px}
+  .sit .cnt{text-align:right}
+  .dia.lg{width:52px;height:52px}
+  .dia.lg b{width:16px;height:16px}
+  .dia.lg .b2{left:18px;top:2px}.dia.lg .b3{left:2px;top:18px}.dia.lg .b1{left:34px;top:18px}
+  .ab-line{font-size:12px;color:var(--mute);margin-top:10px;line-height:1.5}
+  .ab-line b{color:var(--paper);font-weight:500}
+  .sp{font-size:12px;line-height:1.55}
+  .sp div{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid var(--line)}
+  .sp div:last-child{border:0}
+  .sp em{font-style:normal;color:var(--mute);width:56px;flex:none}
+  .sp b{font-weight:700;width:36px;flex:none;text-align:right;font-variant-numeric:tabular-nums}
+  .tabs{display:flex;gap:16px;margin:12px 4px 0;font-size:12px;color:var(--mute)}
+  .tabs .on{color:var(--paper);border-bottom:2px solid var(--volt);padding-bottom:4px}
+</style>
+</head>
+<body>
+
+<!-- ============ SCORES BOARD ============ -->
+<div class="frame">
+  <h2>Scores</h2>
+  <p class="note">Tuesday · all times Pacific · 3 live</p>
+  <div class="pills"><span class="pill">All</span><span class="pill">NFL</span><span class="pill">CFB</span><span class="pill on">MLB</span><span class="pill">EPL</span></div>
+
+  <div class="grp"><b>LIVE NOW</b><span>2 games</span></div>
+
+  <!-- LIVE: runners on 1st and 3rd, 2 out, 3-2 -->
+  <a class="card live" href="#">
+    <div class="lbl"><span class="l">Top 7th</span><span>MLB · NBC</span><span>Alerts on</span></div>
+    <div class="team">
+      <span class="mark" style="--c1:#092C5C;--c2:#8FBCE6"></span>
+      <span class="ab">TB<i></i></span>
+      <span class="nm">Rays<small>1-0 in series</small></span>
+      <b class="n">3</b>
+    </div>
+    <div class="team trail">
+      <span class="mark" style="--c1:#0C2340;--c2:#C4CED3"></span>
+      <span class="ab">NYY</span>
+      <span class="nm">Yankees<small>0-1</small></span>
+      <b class="n">2</b>
+    </div>
+    <div class="strip">
+      <span class="st">2 out<small>Top 7th</small></span>
+      <span class="dia"><b class="b2"></b><b class="b3 on"></b><b class="b1 on"></b></span>
+      <span class="cnt"><small>count</small>3-2</span>
+    </div>
+    <p class="lp"><b>Y. Díaz</b> singled to right, Lowe scored. <b>B. Lowe</b> to third.</p>
+    <div class="stake"><span class="good">Series pick <b>TB</b></span><span>October · Díaz <b>8.0</b></span></div>
+  </a>
+
+  <!-- LIVE: between halves - no count, no diamond -->
+  <a class="card live" href="#">
+    <div class="lbl"><span class="l">Mid 4th</span><span>MLB · Peacock</span><span></span></div>
+    <div class="team">
+      <span class="mark" style="--c1:#005A9C;--c2:#EF3E42"></span>
+      <span class="ab">LAD</span>
+      <span class="nm">Dodgers<small>0-0</small></span>
+      <b class="n">1</b>
+    </div>
+    <div class="team">
+      <span class="mark" style="--c1:#E81828;--c2:#002D72"></span>
+      <span class="ab">PHI</span>
+      <span class="nm">Phillies<small>0-0</small></span>
+      <b class="n">1</b>
+    </div>
+    <div class="strip">
+      <span class="st">Mid 4th<small>changing sides</small></span>
+      <span class="dia none"></span>
+      <span class="cnt"></span>
+    </div>
+    <p class="lp"><b>K. Schwarber</b> homered to right center (398 feet).</p>
+  </a>
+
+  <div class="grp"><b>TODAY</b><span>2 games</span></div>
+
+  <!-- PRE-GAME: probables -->
+  <a class="card" href="#">
+    <div class="lbl"><span>5:08 PM</span><span>MLB · NBC</span><span></span></div>
+    <div class="team">
+      <span class="mark" style="--c1:#0C2340;--c2:#E31937"></span>
+      <span class="ab">DET</span>
+      <span class="nm">Tigers<small>0-1</small></span>
+      <b class="n"></b>
+    </div>
+    <div class="team">
+      <span class="mark" style="--c1:#0C2C56;--c2:#005C5C"></span>
+      <span class="ab">SEA</span>
+      <span class="nm">Mariners<small>1-0</small></span>
+      <b class="n"></b>
+    </div>
+    <p class="pre"><b>T. Skubal</b> (L) vs <b>L. Castillo</b> (R) · SEA -135 · O/U 6.5</p>
+  </a>
+
+  <!-- FINAL -->
+  <a class="card" href="#">
+    <div class="lbl"><span>Final</span><span>MLB</span><span></span></div>
+    <div class="team">
+      <span class="mark" style="--c1:#002D62;--c2:#EB6E1F"></span>
+      <span class="ab">HOU</span>
+      <span class="nm">Astros<small>1-0</small></span>
+      <b class="n">5</b>
+    </div>
+    <div class="team trail">
+      <span class="mark" style="--c1:#0C2340;--c2:#00A3E0"></span>
+      <span class="ab">CLE</span>
+      <span class="nm">Guardians<small>0-1</small></span>
+      <b class="n">2</b>
+    </div>
+    <p class="fin"><b>F. Valdez</b> 7 IP · 9 K · 1 ER &nbsp;·&nbsp; <b>Y. Álvarez</b> 2-4 · HR · 3 RBI</p>
+  </a>
+</div>
+<p class="cap"><b>Scores board.</b> MLB joins the pills. The card is the ScoresV2 card unchanged above the rule; the drive strip becomes the baseball strip: outs and half on the left, the diamond in the middle (2nd on top, volt when occupied), the count on the right, the last scoring play beneath. Between halves the strip keeps the half and drops the count and the diamond. Pre-game shows the probables in place of the strip; final shows the winning pitcher and the bat of the night. The volt dot beside TB is the batting side.</p>
+
+<!-- ============ GAME PAGE ============ -->
+<div class="frame gp">
+  <h2>Rays at Yankees</h2>
+  <p class="note">Wild Card · Game 2 · TB leads 1-0</p>
+  <div class="head"><span class="st">Top 7th<small>2 out · 3-2</small></span><span class="chip">LIVE</span></div>
+
+  <table class="ls">
+    <tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th class="now">7</th><th>8</th><th>9</th><th class="rhe r">R</th><th class="rhe">H</th><th class="rhe">E</th></tr>
+    <tr class="lead"><td>TB</td><td>0</td><td>1</td><td>0</td><td>0</td><td>2</td><td>0</td><td class="now">0</td><td></td><td></td><td class="rhe r">3</td><td class="rhe">7</td><td class="rhe">0</td></tr>
+    <tr class="trail"><td>NYY</td><td>0</td><td>0</td><td>0</td><td>2</td><td>0</td><td>0</td><td></td><td></td><td></td><td class="rhe r">2</td><td class="rhe">5</td><td class="rhe">1</td></tr>
+  </table>
+
+  <div class="mod">
+    <div class="eb">AT BAT</div>
+    <div class="sit">
+      <div class="big">2 out<small>Top 7th</small></div>
+      <span class="dia lg"><b class="b2"></b><b class="b3 on"></b><b class="b1 on"></b></span>
+      <div class="big cnt">3-2<small>count</small></div>
+    </div>
+    <p class="ab-line"><b>J. Caminero</b> batting · <b>L. Weaver</b> pitching · pitch 6, 94 mph four-seam</p>
+  </div>
+
+  <div class="mod">
+    <div class="eb">SCORING</div>
+    <div class="sp">
+      <div><em>Bot 4th</em><b>0-2</b><span>Judge homered to left (412 feet), Soto scored.</span></div>
+      <div><em>Top 5th</em><b>2-2</b><span>Paredes doubled to left center, Arozarena and Franco scored.</span></div>
+      <div><em>Top 7th</em><b>3-2</b><span>Díaz singled to right, Lowe scored.</span></div>
+    </div>
+  </div>
+
+  <div class="tabs"><span class="on">Hitting</span><span>Pitching</span><span>Plays</span></div>
+</div>
+<p class="cap"><b>Game page.</b> Line score by inning with R/H/E, the current half in volt; an At Bat module with the big count and the diamond; scoring plays with the score after each; box score tabs (Hitting / Pitching per team) below. No clock anywhere. Pre-game the At Bat module is the probables; final it is the decision (W / L / SV).</p>
+
+</body>
+</html>

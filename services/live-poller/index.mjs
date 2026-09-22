@@ -19,7 +19,8 @@ import { StatsTracker } from '../../lib/live/statsCadence.js';
 import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
-import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, fromCfbd, fromBdl } from './poll.mjs';
+import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich } from './poll.mjs';
+import { sportOf } from '../../lib/live/vocabulary.js';
 import { dispatch } from '../../lib/push/dispatch.js';
 import { drainPushCounts } from '../../lib/push/warn.js';
 import { execSync } from 'node:child_process';
@@ -50,6 +51,42 @@ const LEAGUES = [
     fetcher: () => cfbdScoreboard()() },
   { slug: 'nfl', providerKey: 'bdl_game_id', normalise: fromBdl,
     fetcher: (now) => bdlDay(new Date(now).toISOString().slice(0, 10))() },
+  // MLB. SAME CADENCE AS THE NFL - one slate call per poll - but its live
+  // state needs a SECOND call per live game: /games carries the inning and
+  // nothing else, and the outs and the count are only on /plays, whose param
+  // is singular. `enrich` is how a league says so; the two football leagues
+  // pass none and the loop is unchanged for them.
+  //
+  // TWO DAYS, NOT ONE. A 01:45Z first pitch belongs to the previous calendar
+  // day in every American sense and to today in UTC; asking for both is one
+  // extra call against a 600/minute key and is the difference between seeing
+  // a west-coast game and not.
+  { slug: 'mlb', providerKey: 'bdl_game_id', normalise: fromMlb,
+    fetcher: async (now) => {
+      const day = (offset) => new Date(new Date(now).getTime() + offset * 86_400_000)
+        .toISOString().slice(0, 10);
+      const [a, b] = await Promise.all([mlbDay(day(0))(), mlbDay(day(-1))()]);
+      const seen = new Set();
+      const rows = [...a.rows, ...b.rows].filter((r) => {
+        const k = String(r?.id);
+        if (seen.has(k)) return false;
+        seen.add(k); return true;
+      });
+      return { rows, calls: a.calls + b.calls };
+    },
+    // TWO PROVIDERS IN ONE ENRICHMENT: BDL's newest play carries the outs and
+    // the count; statsapi's game feed carries the runners, the batter and the
+    // pitcher, which BDL does not have at all. mlbEnrich does the gamePk
+    // resolution once per game and stores it on the row.
+    enrich: mlbEnrich,
+    // THE LINE SCORE AND THE SCORING SUMMARY, which writeLive is forbidden and
+    // which are on the row we already hold. Football's equivalents arrive from
+    // a different provider on a different cadence and have their own jobs;
+    // baseball's do not exist anywhere else, so the poller writes them through
+    // lib/mlb/detail.js - a separate statement over separate keys. Without
+    // this the game page has no line score and the card no last scoring play,
+    // on every game, forever.
+    detail: mlbDetail },
 ];
 
 async function slate(league, now) {
@@ -151,7 +188,8 @@ async function loop(lg) {
       try {
         const r = await pollOnce(sql, {
           league: lg.slug, providerKey: lg.providerKey,
-          fetcher: () => lg.fetcher(now), normalise: lg.normalise, now, log,
+          fetcher: () => lg.fetcher(now), normalise: lg.normalise,
+          enrich: lg.enrich ?? null, now, log,
         });
         // THE LOST-FINAL SWEEP rides the same tick and the same window
         // (defect 2). Cheap - one indexed read that is empty on almost

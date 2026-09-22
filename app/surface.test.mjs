@@ -175,6 +175,11 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     // entry at all, which is the guard's own preferred answer.
     // The Scores tab v2 (SCORES TAB v2 relay), likewise.
     'app/scores/scoresV2.css': 12,
+    // The MLB game page (MLB B1 item 6), written to
+    // docs/design/mocks/mlb-scores-v0_1.html: the At Bat module's card ground
+    // and the line score's current-half cell, which the mock draws on
+    // --ink-2 and --ink-3. Both tokens resolve globally; counted on purpose.
+    'app/mlb/game/[slug]/mlbgame.css': 2,
     // The Today tab v2 (TODAY TAB v2 relay), on the global tokens.
     'components/gridiron/todayV2.css': 18,
     // The Rankings tab v2 (RANKINGS TAB v2 relay), on the global tokens.
@@ -203,7 +208,9 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   // app/games/lobbyV2.css's 22 with the v2 lobby. Neither replacement uses a
   // bare token, so neither has an entry above.
   // 102 -> 103 with the expanding power row's separator (POWER RANKINGS relay).
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 103,
+  // 103 -> 105 with the MLB game page's At Bat card and current-half cell
+  // (MLB B1 item 6, built to docs/design/mocks/mlb-scores-v0_1.html).
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 105,
     '18 were broken before the promotion; the rest were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.

@@ -52,10 +52,12 @@ import ModeSwitch from '@/components/today/ModeSwitch';
 import LeagueChips from '@/components/today/LeagueChips';
 import Band, { BandHead } from '@/components/today/Band';
 import GamesBand from '@/components/today/GamesBand';
-import { GridironBand, EplBand, ArchiveBand } from '@/components/today/LeagueBands';
+import { GridironBand, EplBand, DiamondBand, ArchiveBand } from '@/components/today/LeagueBands';
 import { LEAGUES, rankLeagues, contextLine, leagueById } from '@/lib/today/leagues';
 import { gatherSignals } from '@/lib/today/signals';
 import { weekSlate } from '@/lib/today/weekSlate';
+import { daySlate } from '@/lib/today/daySlate';
+import { weekdayOf } from '@/lib/gridiron/scoresV2Shape';
 import { getResolvedLayout } from '@/lib/dashboardLayout';
 import { pickemCardData } from '@/lib/pickem/entry';
 import { currentPickemBoard } from '@/lib/pickem/entry';
@@ -366,7 +368,7 @@ export default async function HomePage() {
   // read from `matches`. Every unit below is an existing reader; the carpentry
   // changed, the reads did not.
   const [signals, tunedLayout, pickem, board, eplTable, eplFixtures,
-    cfbReads, nflReads, eplReads] = await Promise.all([
+    cfbReads, nflReads, eplReads, mlbReads] = await Promise.all([
     gatherSignals({ now }).catch(() => []),
     getResolvedLayout(userId, 'today').catch(() => []),
     pickemCardData(userId).catch(() => null),
@@ -379,14 +381,19 @@ export default async function HomePage() {
     getTodaysReads({ ptDay, limit: 3, leagueSlugs: ['cfb'] }).catch(() => []),
     getTodaysReads({ ptDay, limit: 3, leagueSlugs: ['nfl'] }).catch(() => []),
     getTodaysReads({ ptDay, limit: 3, leagueSlugs: ['epl'] }).catch(() => []),
+    getTodaysReads({ ptDay, limit: 3, leagueSlugs: ['mlb'] }).catch(() => []),
   ]);
 
   // THE WEEK SLATES. One read per league, each deriving its own week span -
   // never a calendar week (CFB week 1 runs Aug 29 to Sep 7).
-  const [cfbWeekSlate, nflWeekSlate, eplWeekSlate] = await Promise.all([
+  // MLB'S IS A DAY, NOT A WEEK - lib/today/daySlate.js says why. Calling
+  // weekSlate('mlb') here would have returned null on every day of the season
+  // and the chip would have toggled an empty band.
+  const [cfbWeekSlate, nflWeekSlate, eplWeekSlate, mlbDaySlate] = await Promise.all([
     weekSlate('cfb', { now }).catch(() => null),
     weekSlate('nfl', { now }).catch(() => null),
     weekSlate('epl', { now }).catch(() => null),
+    daySlate('mlb', { now }).catch(() => null),
   ]);
   const slateOfLeague = { cfb: cfbWeekSlate, nfl: nflWeekSlate, epl: eplWeekSlate };
 
@@ -439,6 +446,15 @@ export default async function HomePage() {
         <Band id={id} off={off} key={id}>
           <EplBand context={ctx} weekSlate={eplWeekSlate} week={eplWeekSlate?.week ?? null}
             table={eplRows} reads={eplReads} />
+        </Band>
+      );
+    }
+    if (id === 'mlb') {
+      return (
+        <Band id={id} off={off} key={id}>
+          <DiamondBand context={ctx} daySlate={mlbDaySlate}
+            dayLabel={mlbDaySlate?.day ? weekdayOf(mlbDaySlate.day, true) : null}
+            reads={mlbReads} />
         </Band>
       );
     }

@@ -63,9 +63,14 @@ export default function LeagueChips({ leagues, initialOn, signedIn = false }) {
             {l.label}{l.note ? <span className="ct">{l.note}</span> : null}
           </button>
         ))}
-        {/* Dead by design: a locked-SOON chip states the year and does nothing.
-            It is not disabled-looking-clickable, it simply has no handler. */}
-        <span className="spill soon">MLB <i>2027</i></span>
+        {/* THE "MLB 2027" CHIP IS GONE because it had stopped being true: the
+            league row, its thirty clubs and their colours are in the database
+            as of 22 Sep 2026. It is NOT yet replaced by a live MLB chip, and
+            that is deliberate rather than unfinished - a chip toggles a band,
+            lib/today/leagues.js LEAGUES is what puts one in the rail, and MLB
+            has no band and no slate to put in one. Registering it here before
+            then would ship a control that visibly does nothing, which is the
+            same defect the dead chip was. It joins the registry with its band. */}
       </div>
       <div className="regline">
         <span className="dot" />

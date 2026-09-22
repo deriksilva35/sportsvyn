@@ -27,7 +27,7 @@ import { orderFor, connectorFor } from '@/lib/gridiron/teamOrder';
 // relay must not touch. A soccer match page exists, so linking these is a
 // defensible FUTURE change - but it is a change, not part of an extraction, and
 // it does not get made under cover of one.
-const GAME_ROUTE = { nfl: '/nfl/game', cfb: '/cfb/game' };
+const GAME_ROUTE = { nfl: '/nfl/game', cfb: '/cfb/game', mlb: '/mlb/game' };
 const abbr = (t) => t?.abbreviation ?? t?.name ?? 'TBD';
 
 /**

@@ -51,7 +51,11 @@ test('Helmet.js is untouched by this relay, and TeamMark has only its named user
     'components/rankings/RankRow.js',
     'components/rankings/AllTeams.js',
     // The You tab's followed-team rows (YOU TAB v1) - the same 22px mark.
-    'components/you/You.js'];
+    'components/you/You.js',
+    // The MLB game page's team rows (MLB B1 item 6) - the same mark at 26px.
+    // Baseball has no helmet, so Helmet.js was never the question here: the
+    // gridiron page's row draws a helmet and this one draws the disc.
+    'app/mlb/game/[slug]/page.js'];
   assert.ok(users.includes('components/scores/ScoresV2.js'), 'the Scores tab uses it (SCORES TAB v2)');
   assert.ok(!users.some((f) => !ALLOWED.includes(f)), `no other user: ${users}`);
 });
