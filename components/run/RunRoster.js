@@ -140,7 +140,7 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
             </>}
             <small>{live
               ? <>{view.aliveCount} alive · {view.outCount} done</>
-              : <>{counts.get(String(openClub)) ?? 0} of 3 used<br />{club?.opponent ? `vs ${club.opponent} · best of ${club.bestOf}` : ''}<br />{club?.lineupPosted ? 'lineup posted' : 'lineup not posted yet'}</>}</small>
+              : <>{counts.get(String(openClub)) ?? 0} of 3 used<br />{club?.opponent ? `vs ${club.opponent}${club.bestOf ? ` · best of ${club.bestOf}` : ''}` : ''}<br />{club?.lineupPosted ? 'lineup posted' : 'lineup not posted yet'}</>}</small>
           </div>
           <div className="rn-pan-b">
             {live

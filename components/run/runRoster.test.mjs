@@ -231,6 +231,14 @@ test('STARTERS: a panel row carries its batting order; the G1 arm keeps its flag
   // AND THE OPPONENT LINE SURVIVED THE ADDITION. It is the mock's own, and a
   // third line in that corner is not a reason to drop the second.
   assert.match(h, /vs CHW · best of 3/);
+  // AND A PREVIEW ROUND IS NOT A SERIES. bestOf is null on a preview club and
+  // the served panel read "vs COL · best of null" - a number printed because a
+  // template did not ask whether there was one.
+  const prev = SETTING();
+  prev.clubs = prev.clubs.map((c) => ({ ...c, bestOf: null }));
+  const ph = html({ view: prev, signedIn: true });
+  assert.match(ph, /vs CHW/);
+  assert.doesNotMatch(ph, /best of/);
 });
 
 test('STARTERS: before the card is up the panel says so', () => {
