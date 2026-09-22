@@ -79,8 +79,9 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
           <span className="oc-stp"><i>3</i><b>Slot</b></span>
         </div>
         <p className="oc-note">
-          One arm, four bats, only from today&apos;s games. Each slot locks at its
-          game&apos;s first pitch. <b>A player you use is gone for the rest of October.</b>
+          One arm, four bats, only from today&apos;s games{capPhrase(view)}. Each slot
+          locks at its game&apos;s first pitch.{' '}
+          <b>A player you use is gone for the rest of October.</b>
         </p>
       </div>
 
@@ -245,11 +246,24 @@ const teamLine = (s, view) => {
   return `${t}${t ? ' · ' : ''}${g.status === 'live' ? 'live' : g.status === 'final' ? 'F' : timeOf(g.kickoffAt)}`;
 };
 
+/**
+ * THE CAP IS THE DAY'S AND THE CARD SAYS IT. It is the one rule of this game
+ * that is not the same every day - ceil(5 / games) - and on a one-game night
+ * "two from one game" would be describing a rule that makes the card
+ * impossible. A day whose cap is five has no cap worth naming.
+ */
+function capPhrase(view) {
+  const cap = view?.contest?.maxPerGame ?? 2;
+  const games = view?.board?.length ?? 0;
+  if (games <= 1 || cap >= 5) return '';
+  return `, at most ${cap} from any one game`;
+}
+
 const REASON = {
   signed_out: 'Sign in to play.',
   used: 'You already used that player this October.',
   already_on_card: 'That player is already on your card.',
-  max_two_from_game: 'Two from one game is the limit.',
+  max_from_game: 'That is the most this slate allows from one game.',
   game_started: 'That game has started.',
   slot_locked: 'That slot locked at its first pitch.',
   wrong_kind: 'That slot takes a different kind of player.',

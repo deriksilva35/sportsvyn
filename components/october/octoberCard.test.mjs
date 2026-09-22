@@ -200,3 +200,33 @@ test("THE SERVER'S ANSWER WINS: a refused pick is repainted with its reason", as
   assert.equal(el.querySelector('[data-slot="bat4"]').dataset.state, 'open');
   assert.match(el.textContent, /You used that player on Sep 27\./);
 });
+
+test('THE CARD PRINTS THE DAY\'S OWN CAP, because it is the one rule that moves', () => {
+  // Three games: ceil(5/3) = 2, so the phrase names two.
+  const three = PICKING();
+  three.contest.maxPerGame = 2;
+  assert.match(html({ view: three, signedIn: true }), /only from today&#x27;s games, at most 2 from any one game\. Each slot/);
+
+  // Two games: ceil(5/2) = 3.
+  const two = PICKING();
+  two.contest.maxPerGame = 3;
+  two.board = BOARD.slice(0, 2);
+  assert.match(html({ view: two, signedIn: true }), /at most 3 from any one game/);
+
+  // A ONE-GAME DAY HAS NO CAP WORTH NAMING - all five come from it, and
+  // "at most 5 from any one game" would be noise on a card that has exactly
+  // one game to pick from.
+  const one = PICKING();
+  one.contest.maxPerGame = 5;
+  one.board = BOARD.slice(0, 1);
+  const h = html({ view: one, signedIn: true });
+  assert.match(h, /only from today&#x27;s games\. Each slot/);
+  assert.doesNotMatch(h, /from any one game/);
+
+  // AND THE CARD IS STILL FIVE, whatever the slate.
+  for (const v of [one, two, three]) {
+    assert.equal([...html({ view: v, signedIn: true }).matchAll(/data-slot="/g)].length, 5);
+    // /class="oc-pip/ also matches the container's own class="oc-pips".
+    assert.equal([...html({ view: v, signedIn: true }).matchAll(/<i class="oc-pip/g)].length, 5);
+  }
+});
