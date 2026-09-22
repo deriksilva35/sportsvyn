@@ -15,6 +15,7 @@
 
 import { useState, useTransition } from 'react';
 import { saveOctoberPickAction, clearOctoberPickAction } from '@/app/actions/october';
+import { ptTime } from '@/lib/gridiron/kickoff';
 
 const SLOT_LABEL = { arm: 'ARM', bat1: 'BAT', bat2: 'BAT', bat3: 'BAT', bat4: 'BAT' };
 
@@ -90,7 +91,7 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
         {view.board.map((g) => (
           <button
             key={g.matchId} type="button"
-            className={`oc-gc${String(g.matchId) === String(openGame) ? ' on' : ''}${g.status === 'live' ? ' live' : ''}${!g.pickable ? ' lk' : ''}`}
+            className={`oc-gc${String(g.matchId) === String(openGame) ? ' on' : ''}${g.status === 'live' ? ' live' : ''}${g.status === 'postponed' ? ' ppd' : ''}${!g.pickable ? ' lk' : ''}`}
             onClick={() => g.pickable && setOpenGame(g.matchId)}
             disabled={!g.pickable}
             data-game={g.slug}
@@ -99,7 +100,10 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
               <i style={{ background: two(g.away) }} /><i style={{ background: two(g.home) }} />
             </span>
             <b>{g.away.abbr} @ {g.home.abbr}</b>
-            <small>{g.status === 'live' ? 'live' : timeOf(g.kickoffAt)}</small>
+            {/* PPD IS A STATE, NOT A TIME. A postponed game printed its
+                original first pitch, which is a time nothing will happen at,
+                and the tile looked like every other pickable game. */}
+            <small>{g.status === 'postponed' ? 'PPD' : g.status === 'live' ? 'live' : timeOf(g.kickoffAt)}</small>
           </button>
         ))}
       </div>
@@ -291,14 +295,21 @@ const ordinal = (n) => {
 };
 
 const two = (t) => (t?.c1 && t?.c2 ? `linear-gradient(to bottom, ${t.c1} 0 58%, ${t.c2} 58%)` : 'var(--ink-3)');
-const timeOf = (iso) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
+// EVERY TIME ON THIS CARD GOES THROUGH THE HOUSE FORMATTER, in the house zone,
+// with the zone said out loud. It used to be a local Intl call pinned to
+// America/New_York - the only surface on the product printing Eastern - so a
+// Pacific reader read every first pitch three hours late and nothing on the
+// card admitted which zone it meant.
+const timeOf = (iso) => ptTime(iso) ?? '';
 const prettyDay = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 const stageLabel = (s) => ({ wild_card: 'Wild Card', division: 'Division Series', championship: 'Championship Series', world_series: 'World Series' }[s] ?? 'Postseason');
 const teamLine = (s, view) => {
   const g = view.board.find((x) => String(x.matchId) === String(s.matchId));
   if (!g) return '';
   const t = s.team ?? '';
-  return `${t}${t ? ' · ' : ''}${g.status === 'live' ? 'live' : g.status === 'final' ? 'F' : timeOf(g.kickoffAt)}`;
+  const when = g.status === 'postponed' ? 'PPD'
+    : g.status === 'live' ? 'live' : g.status === 'final' ? 'F' : timeOf(g.kickoffAt);
+  return `${t}${t ? ' · ' : ''}${when}`;
 };
 
 /**
@@ -320,6 +331,7 @@ const REASON = {
   already_on_card: 'That player is already on your card.',
   max_from_game: 'That is the most this slate allows from one game.',
   game_started: 'That game has started.',
+  postponed: 'That game was postponed. Its players are pickable again when it is rescheduled.',
   slot_locked: 'That slot locked at its first pitch.',
   wrong_kind: 'That slot takes a different kind of player.',
   not_today: 'That player is not in today\'s games.',

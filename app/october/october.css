@@ -56,6 +56,9 @@
    locked slot in it. */
 .oc-gc.live small { color: var(--live); font-weight: 700; }
 .oc-gc.lk { opacity: .45; cursor: default; }
+/* PPD IS DIMMED LIKE A STARTED GAME BUT NAMED IN TERRA, because "unpickable"
+   and "called off" are different facts and only one of them comes back. */
+.oc-gc.ppd small { color: var(--terra); font-weight: 700; }
 .oc-err { margin: 8px 12px 0; font: 500 12px var(--font-mono); color: var(--live); }
 
 .oc-duo { display: flex; gap: 8px; margin: 10px 10px 0; align-items: stretch; }

@@ -304,3 +304,40 @@ test('STARTERS: a LOCKED slot never shows a swap it cannot act on', () => {
   assert.doesNotMatch(h, /not starting · swap/);
   assert.match(h, /LOCKED/);
 });
+
+// --- POSTPONED, AND THE HOUSE CLOCK ----------------------------------------
+
+test('POSTPONED: the tile reads PPD, is dimmed, and cannot be tapped', () => {
+  const v = PICKING();
+  v.board = v.board.map((g) => (g.matchId === 3
+    ? { ...g, status: 'postponed', pickable: false } : g));
+  const h = html({ view: v, signedIn: true });
+  const tile = h.slice(h.indexOf('data-game="det-sea"') - 240, h.indexOf('data-game="det-sea"') + 420);
+  assert.match(tile, /<small>PPD<\/small>/);
+  assert.match(tile, /class="oc-gc[^"]* ppd[^"]*"/);
+  assert.match(tile, /disabled=""/);
+  // AND THE TIME IS GONE FROM IT. Printing the original first pitch is printing
+  // a time nothing will happen at.
+  assert.doesNotMatch(tile, /6:08 PM|3:08 PM/);
+});
+
+test('POSTPONED: a slot in a called-off game says PPD, not a kickoff time', () => {
+  const v = PICKING();
+  v.board = v.board.map((g) => (g.matchId === 3
+    ? { ...g, status: 'postponed', pickable: false } : g));
+  // The arm is picked out of game 3.
+  const h = html({ view: v, signedIn: true });
+  assert.match(h, /<span class="oc-tm">DET · PPD<\/span>/);
+});
+
+test('TIMES: every time on this card is Pacific, and says so', () => {
+  const h = html({ view: PICKING(), signedIn: true });
+  // 2026-09-29T18:08:00Z is 2:08 PM Eastern and 11:08 AM Pacific. The card
+  // printed the Eastern one, unlabelled, for its whole life.
+  assert.match(h, /11:08 AM PT/);
+  assert.doesNotMatch(h, /2:08 PM(?! PT)/);
+  // The next-lock label, the game tile and the slot sub-line all agree.
+  assert.match(h, /next lock<b>PHI-ATL · 11:08 AM PT<\/b>/);
+  assert.match(h, /<small>11:08 AM PT<\/small>/);
+  assert.match(h, /<span class="oc-tm">PHI · 11:08 AM PT<\/span>/);
+});
