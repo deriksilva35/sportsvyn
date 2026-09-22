@@ -13,6 +13,7 @@ import LiveRefresh from '@/components/scores/LiveRefresh';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import { possessionSide } from '@/lib/gridiron/possession';
+import { shortOf, BASEBALL, sportOf } from '@/lib/live/vocabulary';
 import { LEAGUE_LABEL, abbrOf, cardVariant, countLine, pickTone, statLineText, oddsLine, eplBar, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
 
 // THE SITE'S STRAIGHT APOSTROPHE, everywhere on this tab (GO rider 1).
@@ -32,6 +33,11 @@ const href = ({ date, sport = 'all', mine = false, top25 = false }) => {
 
 function liveLabel(g) {
   const ls = g.liveState ?? {};
+  // BASEBALL: the half and the inning, and NO CLOCK EVER. The scores feed
+  // sends clock 0 and "0:00" on every MLB row - scheduled, live and final
+  // alike - so the football branch below would put a stopped clock on a live
+  // game. lib/live/vocabulary.js hasClock() is where that is decided.
+  if (sportOf(g.leagueSlug) === BASEBALL) return shortOf(ls, BASEBALL) ?? 'Live';
   if (g.leagueSlug === 'epl') {
     const p = ls.period ?? null; const el = ls.elapsed ?? null;
     return p === 'HT' ? 'HT' : el != null ? `${el}'${ls.extra ? `+${ls.extra}` : ''}` : 'Live';
@@ -57,6 +63,40 @@ function TeamRow({ t, score, trail, record, pick, pct, scored, rank = null, hasB
       {pick ? <span className="pk">Your pick</span> : null}
       {scored ? <b className="n">{score ?? 0}</b> : pct != null ? <b className="n pct">{pct}%</b> : null}
     </div>
+  );
+}
+
+/**
+ * THE RUNNERS DIAMOND. Three squares, filled from the bases.
+ *
+ * IT RENDERS NOTHING AT ALL WHEN THE BASES ARE UNKNOWN, and that is the whole
+ * contract: the scores feed carries no runners at all, so with MLB_STATSAPI
+ * off `bases` is null on every game, and three empty squares would be a claim
+ * ("nobody on") made on every pitch of every game on no evidence.
+ * Known-and-empty is a different thing and DOES draw - three outlines.
+ *
+ * SECOND IS DRAWN ABOVE, first right and third left, which is the diamond as a
+ * reader looks at a field from behind the plate. The order in the DOM is
+ * second, third, first so a screen reader hears them in that same spatial
+ * order rather than in the order they happen to be stored.
+ */
+function Diamond({ bases }) {
+  // The mock's own `.dia.none` is a SPACER for the between-halves frame, not
+  // a state: with the strip's 1fr auto 1fr an absent middle column lays out
+  // identically, so there is nothing to render for it either.
+  if (!bases) return null;
+  const sq = (on, cls) => <i className={`d-b ${cls}${on ? ' on' : ''}`} />;
+  return (
+    <span className="sv2-diamond" role="img"
+      aria-label={[bases.first && '1st', bases.second && '2nd', bases.third && '3rd']
+        .filter(Boolean).join(', ') || 'bases empty'}>
+      {/* SECOND, THIRD, FIRST - the mock's own DOM order, which is also the
+          spatial one a reader behind the plate sees: top, then left, then
+          right. A screen reader hears the aria-label above and none of this. */}
+      {sq(bases.second, 'b2')}
+      {sq(bases.third, 'b3')}
+      {sq(bases.first, 'b1')}
+    </span>
   );
 }
 
@@ -99,6 +139,7 @@ function Card({ g, x, signedIn, signinHref, tz }) {
     leagueSlug: g.leagueSlug, status: g.status, possession: x.drive?.offenseAbbr ?? null,
     homeAbbr: abbrOf(g.home), awayAbbr: abbrOf(g.away), liveState: g.liveState,
   });
+  const baseball = sportOf(g.leagueSlug) === BASEBALL;
   const gameHref = g.leagueSlug === 'epl' ? `/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`;
   return (
     <a className={`sv2-card${live ? ' live' : ''}${final ? ' final' : ''}`} href={gameHref} data-variant={v} data-league={g.leagueSlug}>
@@ -123,6 +164,27 @@ function Card({ g, x, signedIn, signinHref, tz }) {
           />
         );
       })}
+      {/* THE BASEBALL STRIP TAKES THE DRIVE STRIP'S SLOT, and the two are
+          mutually exclusive by construction: `diamond` is null on every
+          non-MLB card and `drive` is null on every MLB one. */}
+      {live && x.diamond && (
+        <>
+          {/* THREE CELLS, LEFT TO RIGHT: outs and the half, the diamond, the
+              count. lib/mlb/strip.js decides every word in them - this file
+              writes no baseball vocabulary at all, which is why "changing
+              sides" and the half-into-the-lead rule are testable. */}
+          <div className="sv2-strip sv2-bb" data-baseball="1">
+            <span className="st">{x.diamond.lead}{x.diamond.sub ? <small>{x.diamond.sub}</small> : null}</span>
+            <Diamond bases={x.diamond.bases} />
+            <span className="cnt">{x.diamond.count ? <><small>count</small>{x.diamond.count}</> : null}</span>
+          </div>
+          {/* THE PLAY SITS BENEATH THE STRIP, not inside it - the mock's own
+              <p class="lp">. A scoring play is a sentence and the strip is a
+              row of three columns; putting it in the third column is what
+              turned it into an ellipsis on the football card. */}
+          {x.diamond.lastPlay ? <p className="sv2-lp">{x.diamond.lastPlay}</p> : null}
+        </>
+      )}
       {live && x.drive && (
         <div className="sv2-strip" data-drive="1">
           {/* DOWN, DISTANCE, SPOT - and nothing else. "ALA ball" used to sit
@@ -140,9 +202,22 @@ function Card({ g, x, signedIn, signinHref, tz }) {
         <div className="sv2-foot">
           {/* THE FOOT IS THE GAME, NOT THE READER (addendum 6): the stat
               line and the box score. The pick result lives in the stake row
-              and nowhere else, so a final never says it twice. */}
-          <span>{stat ? <b>{stat}</b> : 'Final'}</span>
+              and nowhere else, so a final never says it twice.
+
+              BASEBALL'S IS THE WINNING PITCHER AND THE BAT OF THE NIGHT, per
+              the mock - a different sentence from a different table, chosen
+              by the sport rather than by a league branch inside the shaper. */}
+          <span>{baseball ? (x.mlbFoot ? <b>{x.mlbFoot}</b> : 'Final') : (stat ? <b>{stat}</b> : 'Final')}</span>
           {x.hasStats ? <span className="go">Box score &rarr;</span> : null}
+        </div>
+      ) : !live && baseball ? (
+        /* PRE-GAME BASEBALL IS THE PROBABLES AND THE LINE, and NOT a Pick'em
+           call to action: there is no MLB board, so "Sign in to pick" would
+           offer a game that cannot be picked. The generic foot below still
+           serves the two football leagues and the EPL unchanged. */
+        <div className="sv2-foot" data-pre="mlb">
+          <span>{[x.probables, odds].filter(Boolean).join(' · ') || 'No line yet'}</span>
+          {x.preview ? <span className="go">Preview &rarr;</span> : null}
         </div>
       ) : !live ? (
         <div className="sv2-foot">
@@ -164,7 +239,7 @@ function Card({ g, x, signedIn, signinHref, tz }) {
 
 export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLabel = 'Eastern' }) {
   const signinHref = shellSigninHref('/scores', isShell);
-  const pills = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['epl', 'EPL']];
+  const pills = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['mlb', 'MLB'], ['epl', 'EPL']];
   return (
     <div className="sv2" data-surface="ink">
       {v.liveCount > 0 && <LiveRefresh />}

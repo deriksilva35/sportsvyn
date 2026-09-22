@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { writeFileSync, unlinkSync, readFileSync, readdirSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { JSDOM } from 'jsdom';
+import { baseballStrip } from '../../lib/mlb/strip.js';
 import { install } from '../../lib/testing/nextResolve.mjs';
 install();
 
@@ -443,4 +444,125 @@ test('the dot is ONE rule in ONE sheet, and it is volt, not the live red', () =>
   const decls = [...readFileSync(path.join(REPO, 'components/gridiron/gridiron.css'), 'utf8')
     .matchAll(/^\s*\.gi-poss\s*[,{]/gm)];
   assert.equal(decls.length, 1, 'and exactly once inside it - never a second declaration to win the cascade');
+});
+
+// ---------------------------------------------------------------------------
+// THE BASEBALL CARD (MLB B1 item 6), against docs/design/mocks/mlb-scores-v0_1.html.
+// ---------------------------------------------------------------------------
+
+function mlbFixture() {
+  // Mock frame 1: TB @ NYY, top 7th, 2 out, 3-2, runners on 1st and 3rd.
+  const live = game(31, 'mlb', 'live', '2026-09-22T17:05:00Z', team(61, 'NYY'), team(62, 'TB'), 2, 3, {
+    liveState: { period: 7, half: 'Top', outs: 2, balls: 3, strikes: 2,
+      bases: { first: true, second: false, third: true } },
+  });
+  // Mock frame 2: LAD @ PHI, Mid 4th - no count, no diamond.
+  const mid = game(32, 'mlb', 'live', '2026-09-22T22:40:00Z', team(63, 'PHI'), team(64, 'LAD'), 1, 1, {
+    liveState: { period: 4, half: 'Mid', outs: 3, balls: 1, strikes: 2,
+      bases: { first: true, second: true, third: false } },
+  });
+  // A live game with NO bases at all - MLB_STATSAPI off, or a feed that came
+  // back without them. The diamond must be ABSENT, not three empty squares.
+  const blind = game(33, 'mlb', 'live', '2026-09-22T22:45:00Z', team(65, 'BOS'), team(66, 'CLE'), 0, 0, {
+    liveState: { period: 2, half: 'Bottom', outs: 1, balls: 0, strikes: 0 },
+  });
+  // Mock frame 3: pre-game, probables and the line.
+  const pre = game(34, 'mlb', 'scheduled', '2026-09-23T01:40:00Z', team(67, 'SEA'), team(68, 'DET'));
+  // Mock frame 4: final, the winning pitcher and the bat of the night.
+  const fin = game(35, 'mlb', 'final', '2026-09-21T23:10:00Z', team(69, 'CLE'), team(70, 'HOU'), 2, 5);
+  const D = (ls, lastPlay = null) => ({
+    ...baseballStrip({ status: 'live', liveState: ls, scoringPlays: lastPlay ? [{ text: lastPlay }] : [] }),
+  });
+  const extras = new Map([
+    [31, X({ diamond: D(live.liveState, 'Y. Díaz singled to right, Lowe scored.') })],
+    [32, X({ diamond: D(mid.liveState, 'K. Schwarber homered to right center (398 feet).') })],
+    [33, X({ diamond: D(blind.liveState) })],
+    [34, X({ probables: 'T. Skubal vs L. Castillo', spreadHome: -1.5, total: 6.5, preview: '/article/det-sea' })],
+    [35, X({ mlbFoot: 'F. Valdez 7 IP · 9 K · 1 ER  ·  Y. Álvarez 2-4 · HR · 3 RBI', hasStats: true })],
+  ]);
+  return {
+    today: '2026-09-22', date: '2026-09-22', tz: 'America/New_York', sport: 'mlb',
+    mine: false, liveCount: 3, mineCount: 0,
+    days: [{ date: '2026-09-22', dow: 'Tue', day: 22, counts: { live: 3, final: 0, scheduled: 1, epl: 0 }, on: true }],
+    liveAway: null,
+    groups: [
+      { key: 'live', title: 'Live now', sub: '3 games', games: [live, mid, blind] },
+      { key: 'day', title: 'Today', sub: '1 game', games: [pre] },
+      { key: 'final', title: 'Final', sub: 'Mon', games: [fin] },
+    ],
+    extras,
+  };
+}
+
+test("MLB IS THE FOURTH PILL, and its card is the mock's", async () => {
+  const h = html({ v: mlbFixture(), signedIn: true, zoneLabel: 'Eastern' });
+  // The pills, in the mock's order.
+  assert.deepEqual([...h.matchAll(/sv2-pill[^"]*" href="\/scores\?[^"]*sport=(\w+)/g)].map((m) => m[1]),
+    ['nfl', 'cfb', 'mlb', 'epl']);
+  // THE LIVE LABEL IS THE HALF AND THE INNING, AND NEVER A CLOCK. BDL sends
+  // clock 0 and "0:00" on every MLB row - scheduled, live and final alike.
+  assert.match(h, /<span class="l">Top 7th<\/span>/);
+  assert.match(h, /<span class="l">Mid 4th<\/span>/);
+  assert.doesNotMatch(h, /Q\d/, 'no quarter, no clock, nowhere on this board');
+  assert.match(h, /MLB · FOX/);
+});
+
+test("THE STRIP IS THREE CELLS: outs and half, diamond, count", () => {
+  const h = html({ v: mlbFixture(), signedIn: true, zoneLabel: 'Eastern' });
+  const strips = [...h.matchAll(/<div class="sv2-strip sv2-bb" data-baseball="1">(.*?)<\/div>/gs)].map((m) => m[1]);
+  assert.equal(strips.length, 3, 'one per live MLB card and none on any other');
+  // Frame 1, off the mock: 2 out<small>Top 7th</small> ... <small>count</small>3-2
+  assert.match(strips[0], /<span class="st">2 out<small>Top 7th<\/small><\/span>/);
+  assert.match(strips[0], /<span class="cnt"><small>count<\/small>3-2<\/span>/);
+  // Frame 2: the half keeps its cell, the count cell is EMPTY.
+  assert.match(strips[1], /<span class="st">Mid 4th<small>changing sides<\/small><\/span>/);
+  assert.match(strips[1], /<span class="cnt"><\/span>/);
+  // THE PLAY IS A SIBLING PARAGRAPH, not the strip's third column.
+  assert.match(h, /<p class="sv2-lp">Y\. Díaz singled to right, Lowe scored\.<\/p>/);
+  assert.match(h, /<p class="sv2-lp">K\. Schwarber homered to right center \(398 feet\)\.<\/p>/);
+});
+
+test('THE DIAMOND IS ABSENT, NOT EMPTY, WHEN THE BASES ARE UNKNOWN', () => {
+  const h = html({ v: mlbFixture(), signedIn: true, zoneLabel: 'Eastern' });
+  const diamonds = [...h.matchAll(/<span class="sv2-diamond"[^>]*aria-label="([^"]*)"/g)].map((m) => m[1]);
+  // Card 31 draws one (1st and 3rd). Card 32 is between halves and drops it
+  // with the count. Card 33 has no bases at all - with MLB_STATSAPI off that
+  // is EVERY game, and three outlines would be "nobody on" claimed on every
+  // pitch of every game on no evidence.
+  assert.deepEqual(diamonds, ['1st, 3rd']);
+  // Second on top, then third, then first - the mock's own DOM order.
+  const one = h.match(/<span class="sv2-diamond"[^>]*>(.*?)<\/span>/s)[1];
+  assert.deepEqual([...one.matchAll(/class="d-b (b\d)( on)?"/g)].map((m) => [m[1], !!m[2]]),
+    [['b2', false], ['b3', true], ['b1', true]]);
+});
+
+test("PRE-GAME IS THE PROBABLES AND THE LINE, and NOT a Pick'em call to action", () => {
+  const h = html({ v: mlbFixture(), signedIn: true, zoneLabel: 'Eastern' });
+  const foot = h.match(/<div class="sv2-foot" data-pre="mlb">(.*?)<\/div>/s)[1];
+  assert.match(foot, /T\. Skubal vs L\. Castillo · Spread SEA -1\.5 · O\/U 6\.5/);
+  // There is no MLB board, so "Change pick" and "Sign in to pick" must not
+  // appear on a game that cannot be picked.
+  assert.doesNotMatch(foot, /pick/i);
+  assert.match(foot, /Preview/);
+  // Signed out, the same - the absence is about the sport, not the reader.
+  const out = html({ v: mlbFixture(), signedIn: false, zoneLabel: 'Eastern' });
+  assert.doesNotMatch(out.match(/<div class="sv2-foot" data-pre="mlb">(.*?)<\/div>/s)[1], /Sign in to pick/);
+});
+
+test("THE FINAL'S FOOT is the winning pitcher and the bat of the night", () => {
+  const h = html({ v: mlbFixture(), signedIn: true, zoneLabel: 'Eastern' });
+  assert.match(h, /<b>F\. Valdez 7 IP · 9 K · 1 ER {2}· {2}Y\. Álvarez 2-4 · HR · 3 RBI<\/b>/);
+  assert.match(h, /Box score/);
+  // AND NOT THE PASSING LEADER. statLineText reads pass_att, which a baseball
+  // final does not have; a card that fell through to it would print nothing
+  // and look like a game with no stats.
+  assert.doesNotMatch(h, /\d+\/\d+ · \d+ · \d+ TD/);
+});
+
+test('THE FOOTBALL DRIVE STRIP NEVER APPEARS ON A BASEBALL CARD, or the reverse', () => {
+  const h = html({ v: mlbFixture(), signedIn: true, zoneLabel: 'Eastern' });
+  assert.doesNotMatch(h, /data-drive="1"/, 'no drive strip anywhere on an MLB board');
+  const f = html({ v: fixture(), signedIn: true, zoneLabel: 'Pacific' });
+  assert.doesNotMatch(f, /data-baseball="1"/, 'and no baseball strip on a football one');
+  assert.doesNotMatch(f, /sv2-diamond/);
 });

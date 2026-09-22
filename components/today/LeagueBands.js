@@ -67,6 +67,35 @@ export function GridironBand({ id, label, week, context, weekSlate, boardIds, bo
   );
 }
 
+/**
+ * THE DIAMOND BAND. Today's games and the day's reads, and nothing else yet.
+ *
+ * NO TABLE MODULE, DELIBERATELY. The EPL band's second module is its table and
+ * the gridiron bands' is a ranking; baseball's equivalent is the standings, and
+ * there is no MLB standings reader in this tree. A module frame over a query
+ * that does not exist is the "coming soon" this file's header refuses.
+ *
+ * ITS SLATE IS A DAY, NOT A WEEK. lib/today/daySlate.js says why: baseball
+ * rows carry week NULL and weekSlate('mlb') is null on every day of the season.
+ */
+export function DiamondBand({ context, daySlate, dayLabel, reads }) {
+  return (
+    <>
+      <BandHead label="MLB" week={null} context={context}
+        moreHref="/scores?sport=mlb" moreLabel="Scores" />
+      <div className="bmods">
+        <WeekSlate slate={daySlate} scoresHref="/scores?sport=mlb" label="MLB"
+          title="Today" ctx={dayLabel} />
+        {reads?.length ? (
+          <Mod title="Latest MLB" cta="All MLB articles" ctaHref="/articles">
+            <ArticleRows reads={reads} />
+          </Mod>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
 export function EplBand({ context, weekSlate, table, reads, week }) {
   return (
     <>

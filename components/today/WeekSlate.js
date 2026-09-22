@@ -15,7 +15,7 @@ import SlateRow from '@/components/slate/SlateRow';
 import { orderSlate, SLATE_ROW_CAP } from '@/lib/today/slateRow';
 
 
-export default function WeekSlate({ slate, boardIds, boardNumber, scoresHref, label }) {
+export default function WeekSlate({ slate, boardIds, boardNumber, scoresHref, label, title = 'This week', ctx = null }) {
   if (!slate?.games?.length) return null;
   const ordered = orderSlate(slate.games);
   const shown = ordered.slice(0, SLATE_ROW_CAP);
@@ -26,10 +26,14 @@ export default function WeekSlate({ slate, boardIds, boardNumber, scoresHref, la
     : null;
   return (
     <div className="mod">
+      {/* THE HEADING IS THE CALLER'S, because not every league's slate is a
+          week. Baseball has no weeks at all - lib/today/daySlate.js says why -
+          and a module reading "This week · " over tonight's nine games would
+          be naming a unit the sport does not have. */}
       <div className="eb">
-        <span>This week</span>
+        <span>{title}</span>
         <span className="ctx">
-          {weekLabel}{boardIds?.size ? ` · Board ${boardNumber} marked` : ''}
+          {ctx ?? weekLabel}{boardIds?.size ? ` · Board ${boardNumber} marked` : ''}
         </span>
       </div>
       {shown.map((g) => (
