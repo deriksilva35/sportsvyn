@@ -58,7 +58,12 @@ test('THE OCTOBER ROW carries its state and its door', () => {
   // THE REAL THING NAMES ITS LOCK TIME instead of shouting PREVIEW.
   const real = octoberRowV3(octContest({ meta: { games: 4 } }), NOW);
   assert.equal(real.right, null);
-  assert.match(real.rightLabel, /^\d{1,2}:\d{2} (AM|PM)$/, 'ET, the one zone this site states locks in');
+  // PACIFIC, AND SAID OUT LOUD. This row names the SAME first pitch the October
+  // card names, and the card is PT (lib/gridiron/kickoff.js HOUSE_TZ) - a row in
+  // one zone and a card in the other is two answers to one question on two
+  // screens a tap apart. The old comment here claimed Eastern was "the one zone
+  // this site states locks in", which was never true of the app deck.
+  assert.match(real.rightLabel, /^\d{1,2}:\d{2} (AM|PM) PT$/, 'the house zone, named');
 });
 
 test('THE RUN ROW names the clock it locks on', () => {
@@ -66,7 +71,7 @@ test('THE RUN ROW names the clock it locks on', () => {
   assert.equal(open.key, 'run');
   assert.equal(open.name, 'The Run · nine a round');
   assert.equal(open.href, '/run');
-  assert.equal(open.line, 'Locks 12:35 PM · Thu');
+  assert.equal(open.line, 'Locks 9:35 AM PT · Thu');
   assert.equal(open.right, 'PREVIEW');
   assert.equal(open.tone, 'live');
 
