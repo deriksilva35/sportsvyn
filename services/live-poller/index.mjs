@@ -19,7 +19,7 @@ import { StatsTracker } from '../../lib/live/statsCadence.js';
 import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
-import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, mlbNewestPlay, fromCfbd, fromBdl, fromMlb } from './poll.mjs';
+import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich } from './poll.mjs';
 import { sportOf } from '../../lib/live/vocabulary.js';
 import { dispatch } from '../../lib/push/dispatch.js';
 import { drainPushCounts } from '../../lib/push/warn.js';
@@ -74,7 +74,19 @@ const LEAGUES = [
       });
       return { rows, calls: a.calls + b.calls };
     },
-    enrich: async (row) => mlbNewestPlay(row?.id) },
+    // TWO PROVIDERS IN ONE ENRICHMENT: BDL's newest play carries the outs and
+    // the count; statsapi's game feed carries the runners, the batter and the
+    // pitcher, which BDL does not have at all. mlbEnrich does the gamePk
+    // resolution once per game and stores it on the row.
+    enrich: mlbEnrich,
+    // THE LINE SCORE AND THE SCORING SUMMARY, which writeLive is forbidden and
+    // which are on the row we already hold. Football's equivalents arrive from
+    // a different provider on a different cadence and have their own jobs;
+    // baseball's do not exist anywhere else, so the poller writes them through
+    // lib/mlb/detail.js - a separate statement over separate keys. Without
+    // this the game page has no line score and the card no last scoring play,
+    // on every game, forever.
+    detail: mlbDetail },
 ];
 
 async function slate(league, now) {

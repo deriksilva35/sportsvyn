@@ -7,6 +7,9 @@ import { mapLiveStatus, liveState, parseBdlProse } from '../../lib/live/vocabula
 import { writeLive, scoreChanged } from '../../lib/live/write.js';
 import { toScoreRow } from '../../lib/live/scoreEvent.js';
 import { fromBdlMlb } from '../../lib/mlb/ingest.js';
+import { mlbDetailOf, writeMlbDetail, writeMlbGamePk } from '../../lib/mlb/detail.js';
+import { fetchScheduleByMatch, fetchLiveState, pickByKickoff, matchKey, statsApiEnabled } from '../../lib/mlb/statsapi.js';
+
 import { emit } from '../../lib/wire/emit.js';
 import { transitionsFor } from '../../lib/push/transitions.js';
 import { dispatch } from '../../lib/push/dispatch.js';
@@ -232,8 +235,8 @@ export function fromBdl(row, unmapped) {
  * the half and nothing else, which is an honest partial state rather than a
  * missing one.
  */
-export function fromMlb(row, unmapped, play = null) {
-  const n = fromBdlMlb(row, unmapped, { play });
+export function fromMlb(row, unmapped, extra = null) {
+  const n = fromBdlMlb(row, unmapped, { play: extra?.play ?? null, live: extra?.live ?? null });
   return {
     providerId: n.providerId,
     status: n.status,
@@ -241,6 +244,102 @@ export function fromMlb(row, unmapped, play = null) {
     awayScore: n.awayScore,
     liveState: n.liveState,
   };
+}
+
+/**
+ * THE MLB LEAGUE'S `detail` HOOK. Pure, and named here beside fromMlb so the
+ * registry in index.mjs stays a list of facts about a league rather than a
+ * place where parsing happens.
+ */
+export function mlbDetail(row) {
+  return mlbDetailOf(row);
+}
+
+// ---------------------------------------------------------------------------
+// THE SECOND PROVIDER, AND THE ID WE DO NOT HOLD.
+// ---------------------------------------------------------------------------
+
+/**
+ * ONE SCHEDULE FETCH PER DAY PER PROCESS WINDOW, not one per game per poll.
+ * Resolving a gamePk means asking statsapi for the whole day; sixteen live
+ * games would otherwise mean sixteen identical fetches every thirty seconds.
+ *
+ * THE TTL IS LONG BECAUSE THE ANSWER DOES NOT MOVE. A day's game list is set
+ * the previous evening; only a suspended game rescheduled mid-slate would
+ * change it, and that resolves on the next window rather than never, because
+ * the cache is keyed by day and the process restarts nightly anyway.
+ */
+const SCHED_TTL_MS = 15 * 60 * 1000;
+const schedCache = new Map();
+
+export function _resetMlbScheduleCache() { schedCache.clear(); }
+
+async function scheduleFor(dateIso, now = Date.now()) {
+  const hit = schedCache.get(dateIso);
+  if (hit && now - hit.at < SCHED_TTL_MS) return { byKey: hit.byKey, calls: 0 };
+  const byKey = await fetchScheduleByMatch(dateIso);
+  schedCache.set(dateIso, { at: now, byKey });
+  return { byKey, calls: 1 };
+}
+
+/**
+ * OUR ROW -> statsapi's gamePk, resolved once and then STORED on the row.
+ *
+ * THE KEY IS THE AMERICAN CALENDAR DAY, not the UTC one. statsapi's
+ * officialDate is ET, and a 01:45Z first pitch is the previous evening's game
+ * in every sense a reader has. toLocaleDateString with the ET zone is the one
+ * conversion here and it is a DISPLAY-CALENDAR question, not a provider
+ * datetime parse - lib/gridiron/ingest.js's boundary is about turning a
+ * provider's wall-clock string into an instant, and this turns an instant we
+ * already hold into the day it falls on.
+ */
+export function etDay(iso) {
+  const t = iso == null ? NaN : new Date(iso).getTime();
+  if (!Number.isFinite(t)) return null;
+  return new Date(t).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+}
+
+export async function resolveMlbGamePk(m, sql, { log = () => {} } = {}) {
+  const held = m?.external_ids?.statsapi_game_pk ?? null;
+  if (held) return { gamePk: String(held), calls: 0 };
+  const day = etDay(m?.kickoff_at);
+  const key = matchKey(m?.away_abbr, m?.home_abbr, day);
+  if (!key) return { gamePk: null, calls: 0 };
+  const { byKey, calls } = await scheduleFor(day);
+  // A DOUBLEHEADER WE CANNOT SEPARATE IS REFUSED, not guessed - putting one
+  // game's runners on the other game's diamond is worse than no diamond.
+  const pick = pickByKickoff(byKey.get(key) ?? [], m?.kickoff_at);
+  if (!pick) { log(`[mlb] no statsapi match for ${m?.slug} (${key})`); return { gamePk: null, calls }; }
+  // STORED SO THIS HAPPENS ONCE. Its failure costs a re-resolve next poll and
+  // nothing else, so it cannot be allowed to cost the enrichment.
+  try { await writeMlbGamePk(sql, m.id, pick.gamePk); } catch { /* re-resolves */ }
+  return { gamePk: pick.gamePk, calls };
+}
+
+/**
+ * THE MLB `enrich` HOOK: the newest play from BDL (outs and the count) and the
+ * game feed from statsapi (runners, the batter, the pitcher).
+ *
+ * THE FLAG GATES THE SECOND PROVIDER AND NOTHING ELSE. With MLB_STATSAPI off
+ * the play still arrives, the card still shows the half and the outs, and the
+ * diamond is simply ABSENT - which is the whole contract lib/mlb/strip.js is
+ * built on.
+ *
+ * NEVER THROWS. Both halves are enrichments on top of a scoreline that is
+ * already correct without either.
+ */
+export async function mlbEnrich(row, m, sql, { log = () => {} } = {}) {
+  let calls = 0;
+  const play = await mlbNewestPlay(row?.id);
+  if (play) calls += 1;
+  if (!statsApiEnabled(process.env)) return { play, live: null, calls };
+  let live = null;
+  try {
+    const r = await resolveMlbGamePk(m, sql, { log });
+    calls += r.calls;
+    if (r.gamePk) { live = await fetchLiveState(r.gamePk); if (live) calls += 1; }
+  } catch (e) { log(`[mlb] statsapi enrich failed for ${m?.slug}: ${e.message}`); }
+  return { play, live, calls };
 }
 
 /**
@@ -396,11 +495,11 @@ export async function sweepLostFinals(sql, { league, now = new Date(), dispatchF
 }
 
 export async function pollOnce(sql, {
-  league, providerKey, fetcher, normalise, enrich = null,
+  league, providerKey, fetcher, normalise, enrich = null, detail = null,
   now = new Date(), dryRun = false, push = true, log = () => {},
 }) {
   const out = {
-    league, considered: 0, matched: 0, unmatched: 0, written: 0,
+    league, considered: 0, matched: 0, unmatched: 0, written: 0, detail: 0,
     scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [],
     latencies: [], wouldWrite: [], pushes: [], pushErrors: [], pushAuthFailure: false,
     liveActivities: [],
@@ -418,6 +517,10 @@ export async function pollOnce(sql, {
            -- written.
            m.metadata->'live_state' AS before_live_state,
            m.external_ids->>${providerKey} AS pid,
+           -- THE WHOLE OBJECT, not one key: an enrichment may hold a second
+           -- provider's id for the same game (MLB's statsapi_game_pk), and a
+           -- per-league column in a shared query is how that gets forgotten.
+           m.external_ids AS external_ids,
            l.slug AS league_slug,
            h.abbreviation AS home_abbr, a.abbreviation AS away_abbr,
            -- THE FALLBACK CHAIN NEEDS MORE THAN THE ABBR COLUMN (defect 1).
@@ -455,8 +558,12 @@ export async function pollOnce(sql, {
     // spend a call to be told there are none.
     let extra = null;
     if (enrich && String(row?.status_state ?? '') === 'in_progress') {
-      extra = await enrich(row);
-      if (extra) out.calls += 1;
+      // THE CANDIDATE GOES WITH THE ROW. An enrichment may need to know which
+      // of OUR games this is - the MLB one does, to find the same game in a
+      // second provider whose ids we do not hold - and handing it `m` is what
+      // keeps that lookup out of this loop.
+      extra = await enrich(row, m, sql);
+      if (extra?.calls) out.calls += extra.calls;
     }
     const raw = normalise(row, out.unmapped, extra);
     // AN UNREADABLE STATUS WRITES NOTHING AT ALL. Not the score either: a
@@ -477,6 +584,23 @@ export async function pollOnce(sql, {
     const after = await writeLive(sql, m.id, upd);
     if (!after) continue;
     out.written += 1;
+
+    // THE SECOND WRITER, and it is second on purpose. writeLive owns status,
+    // the scores and live_state and is forbidden the rest (lib/live/write.js);
+    // the line score and the scoring summary are ON the row we already hold,
+    // so refusing to write them here would mean fetching the identical row a
+    // second time from a second job. lib/mlb/detail.js is that writer: its own
+    // statement, its own keys, and it cannot touch a score.
+    //
+    // ITS FAILURE IS CONTAINED, like the push rider's below. A missing line
+    // score is a thinner card; losing the scoreline the board depends on to
+    // get one is not a trade worth making.
+    if (detail) {
+      try {
+        const d = detail(row);
+        if (d && await writeMlbDetail(sql, m.id, d)) out.detail += 1;
+      } catch (e) { log(`[${league}] detail write failed match=${m.id}: ${e.message}`); }
+    }
     if (after.status === 'final' && m.status !== 'final') out.finals += 1;
 
     // THE PUSH RIDER. It is handed the transition this poll just made and asks

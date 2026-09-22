@@ -5,6 +5,12 @@
 //   node scripts/mlb-schedule-import.mjs --prod 2026-09-22 2026-09-23
 //   node scripts/mlb-schedule-import.mjs --prod --apply 2026-09-22
 //   node scripts/mlb-schedule-import.mjs --prod --apply --postseason 2026
+//   node scripts/mlb-schedule-import.mjs --prod --apply --probables 2026-09-22
+//
+// --probables is a SECOND PASS over days already imported: it asks statsapi
+// for the announced starters and writes them to metadata.probables, which is
+// what the pre-game card and the game page's PROBABLES module read. It needs
+// MLB_STATSAPI=on in the environment and it writes nothing without it.
 //
 // It runs again on every day of the season and once more when the postseason
 // bracket is set, so it lives here rather than in a scratchpad.
@@ -12,11 +18,14 @@
 import crypto from 'node:crypto';
 import { neon } from '@neondatabase/serverless';
 import { fetchMlbDay, fetchMlbPostseason, slugsFor, shapeMlbMatch, writeMlbMatches } from '../lib/mlb/schedule.js';
+import { fetchProbablesByMatch, matchKey, pickByKickoff, statsApiEnabled } from '../lib/mlb/statsapi.js';
+import { writeMlbProbables } from '../lib/mlb/detail.js';
 
 const args = process.argv.slice(2);
 const PROD = args.includes('--prod');
 const APPLY = args.includes('--apply');
 const POST = args.includes('--postseason');
+const PROBABLES = args.includes('--probables');
 const rest = args.filter((a) => !a.startsWith('--'));
 
 const url = PROD ? process.env.PROD_DATABASE_URL : process.env.DATABASE_URL;
@@ -30,6 +39,52 @@ const teams = await sql`
   SELECT id, external_ids->>'bdl_team_id' AS pid FROM teams
    WHERE league_id = ${league.id} AND jsonb_exists(external_ids, 'bdl_team_id')`;
 const teamIdByBdl = new Map(teams.map((t) => [t.pid, t.id]));
+
+// ---------------------------------------------------------------------------
+// --probables: the second pass. Days already imported, starters written.
+// ---------------------------------------------------------------------------
+if (PROBABLES) {
+  if (!statsApiEnabled(process.env)) {
+    console.error('REFUSE: MLB_STATSAPI is not on - there is nothing to fetch.');
+    process.exit(1);
+  }
+  let wrote = 0; const ambiguous = []; const unmatched = [];
+  for (const day of rest) {
+    const byKey = await fetchProbablesByMatch(day);
+    // OUR ROWS FOR THAT DAY, in ET - the same boundary the slate uses, because
+    // statsapi's officialDate is the American calendar day and a 01:45Z first
+    // pitch belongs to the day before it in UTC.
+    const ours = await sql`
+      SELECT m.id, m.slug, m.kickoff_at,
+             a.abbreviation AS away, h.abbreviation AS home,
+             to_char(m.kickoff_at AT TIME ZONE 'America/New_York', 'YYYY-MM-DD') AS et_day
+        FROM matches m
+        JOIN leagues l ON l.id = m.league_id AND l.slug = 'mlb'
+        LEFT JOIN teams h ON h.id = m.home_team_id
+        LEFT JOIN teams a ON a.id = m.away_team_id
+       WHERE m.kickoff_at AT TIME ZONE 'America/New_York' >= ${day}::date
+         AND m.kickoff_at AT TIME ZONE 'America/New_York' <  ${day}::date + 1`;
+    console.log(`${day}: ${ours.length} of our rows | ${byKey.size} statsapi keys`);
+    for (const m of ours) {
+      const key = matchKey(m.away, m.home, m.et_day);
+      const hits = (key && byKey.get(key)) || [];
+      if (!hits.length) { unmatched.push(m.slug); continue; }
+      // A DOUBLEHEADER HAS TWO ROWS UNDER ONE KEY AND DIFFERENT STARTERS, and
+      // the first pitch is what separates them - six hours apart for today's
+      // TB @ NYY. pickByKickoff refuses a pair it cannot separate by an hour
+      // rather than give one game the other's starter.
+      const hit = pickByKickoff(hits, m.kickoff_at);
+      if (!hit) { ambiguous.push(`${m.slug} (${hits.length})`); continue; }
+      const p = hit.probables;
+      console.log(`  ${m.slug.padEnd(30)} ${p.away?.name ?? 'TBA'} vs ${p.home?.name ?? 'TBA'}`);
+      if (APPLY && await writeMlbProbables(sql, m.id, p)) wrote += 1;
+    }
+  }
+  console.log(`\n${APPLY ? `APPLIED  probables written ${wrote}` : 'DRY RUN ONLY.'}`);
+  if (ambiguous.length) console.log(`AMBIGUOUS (doubleheader, refused): ${ambiguous.join(', ')}`);
+  if (unmatched.length) console.log(`no statsapi probables: ${unmatched.join(', ')}`);
+  process.exit(0);
+}
 
 let all = [];
 if (POST) {
