@@ -1,0 +1,249 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>October · five-a-day · mock v0.2</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--jade:#2A8A4F;--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--terra:#B8410F;--live:#E63946;
+--p:#38BDF8;--b:#4ADE80;--mono:'JetBrains Mono',monospace;--disp:'Saira',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#050506;color:var(--paper);font:14px/1.5 system-ui,sans-serif;padding:10px;display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start}
+.wrap{width:394px}
+.cap{color:var(--muted);font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+.app{background:var(--ink);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* header - the Daily's */
+.hd{padding:12px 14px 10px;border-bottom:1px solid var(--line);background:#111}
+.hd-top{display:flex;align-items:center;margin-bottom:8px}
+.eb{color:var(--volt);font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.hd-top .ed{color:var(--quiet);font:600 9px var(--mono);margin-left:auto}
+.crow{display:flex;align-items:center;gap:12px}
+.clk{display:flex;gap:3px;align-items:center}
+.dg{width:29px;height:42px;border-radius:4px;background:#17181a;box-shadow:inset 0 0 0 1px #000;font:800 29px/42px var(--mono);text-align:center;position:relative;overflow:hidden}
+.dg::after{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:#000}
+.cl{font:800 25px var(--mono);color:var(--quiet)}
+.crow .lbl{font:600 9px var(--mono);color:var(--quiet);letter-spacing:.11em;text-transform:uppercase;line-height:1.3}
+.crow .lbl b{display:block;color:var(--muted);font-size:10px;letter-spacing:0;text-transform:none}
+.tot{margin-left:auto;text-align:right}
+.tot b{display:block;font:800 29px var(--mono);letter-spacing:-.03em;line-height:1;color:var(--volt)}
+.tot span{font:600 9px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.pips{display:flex;gap:4px;margin-top:9px}
+.pip{flex:1;height:4px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line)}
+.pip.on{background:var(--volt);border-color:var(--volt)}
+.pip.lk{background:var(--jade);border-color:var(--jade)}
+.sub{display:flex;justify-content:space-between;margin-top:6px;font:500 10px var(--mono);color:var(--muted)}
+
+/* steps note */
+.steps{margin:10px 10px 0;border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:9px 11px 10px}
+.strip{display:flex;align-items:center;gap:6px}
+.stp{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.stp i{width:17px;height:17px;border-radius:50%;border:1px solid var(--line);color:var(--quiet);font:700 9px/15px var(--mono);text-align:center;font-style:normal}
+.stp b{font:700 9px var(--mono);letter-spacing:.12em;color:var(--quiet);text-transform:uppercase}
+.stp.on i{border-color:var(--volt);background:var(--volt);color:var(--ink)}
+.stp.on b{color:var(--volt)}
+.stp.done i{border-color:var(--jade);color:var(--jade)}
+.stp.done b{color:var(--muted)}
+.arw{flex:1;height:1px;background:var(--line)}
+.note{margin-top:8px;font-size:12px;line-height:1.45;color:var(--muted)}
+.note b{color:var(--paper);font-weight:600}
+
+/* games grid - the Daily's team grid, four wide */
+.sh{display:flex;align-items:baseline;justify-content:space-between;margin:11px 12px 6px}
+.sh h3{font:700 13px var(--disp);text-transform:uppercase}
+.sh span{color:var(--volt);font:600 10px var(--mono)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:0 10px}
+.gc{border-radius:9px;border:1px solid var(--line);background:var(--ink-2);padding:6px 4px 5px;text-align:center;position:relative}
+.gc .mks{display:flex;justify-content:center;gap:2px;margin-bottom:3px}
+.mk{width:17px;height:17px;border-radius:50%;border:1px solid var(--line)}
+.gc b{display:block;font:700 9px var(--mono)}
+.gc small{display:block;font:500 8px var(--mono);color:var(--quiet);margin-top:1px}
+.gc.on{border-color:var(--volt);background:rgba(212,255,0,.06)}
+.gc.live small{color:var(--live);font-weight:700}
+.gc.lk{opacity:.45}
+
+/* the diamond (form) + panel */
+.duo{display:flex;gap:8px;margin:10px 10px 0;align-items:stretch}
+.field{flex:0 0 150px;border-radius:14px;padding:10px 7px;border:1px solid var(--line);
+ background:repeating-linear-gradient(45deg,transparent 0 40px,rgba(255,255,255,.035) 40px 41px),linear-gradient(160deg,#101a12,#0a0f0b)}
+.form{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.form .slot:first-child{grid-column:1/-1;aspect-ratio:2.4}
+.slot{aspect-ratio:1/0.92;border-radius:10px;border:1.5px dashed var(--line);background:rgba(10,10,10,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;position:relative}
+.slot .pos{font:800 12px var(--disp);color:var(--quiet)}
+.slot.p .pos{color:var(--p)}.slot.b .pos{color:var(--b)}
+.slot.elig{border-style:solid;border-color:var(--volt);background:rgba(212,255,0,.09);box-shadow:0 0 14px rgba(212,255,0,.3)}
+.slot.filled{border-style:solid;background:var(--ink-2)}
+.slot.locked{border-color:var(--jade)}
+.slot .nm{font:700 10px var(--disp);text-transform:uppercase;line-height:1.05;text-align:center;padding:0 2px}
+.slot .tm{font:600 8px var(--mono);color:var(--muted)}
+.slot .pts{font:700 13px var(--mono);color:var(--volt)}
+.slot .pts.fin{color:var(--paper)}
+.slot .pts.wait{color:var(--quiet)}
+.slot .x{position:absolute;top:1px;right:5px;color:var(--quiet);font:700 12px var(--mono)}
+.slot .lk{position:absolute;top:2px;right:5px;color:var(--jade);font:700 9px var(--mono)}
+.panel{flex:1 1 auto;min-width:0;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);display:flex;flex-direction:column}
+.pan-h{display:flex;align-items:center;gap:7px;padding:7px 10px;border-bottom:1px solid var(--line);background:var(--ink-3);border-radius:12px 12px 0 0}
+.pan-h b{font:700 12px var(--disp);text-transform:uppercase}
+.pan-h small{color:var(--muted);font:500 9px var(--mono);margin-left:auto;text-align:right;line-height:1.3}
+.pan-b{flex:1;overflow:hidden}
+.prow{display:flex;align-items:center;gap:7px;padding:7px 9px;border-bottom:1px solid var(--line)}
+.prow:last-child{border:0}
+.prow.sel{background:rgba(212,255,0,.09);box-shadow:inset 3px 0 0 var(--volt)}
+.prow.gone{opacity:.26}
+.pb{width:24px;height:18px;border-radius:5px;display:grid;place-items:center;font:800 8px var(--disp);color:#0A0A0A;flex:0 0 auto}
+.pb.p{background:var(--p)}.pb.b{background:var(--b)}
+.prow .who{min-width:0}
+.prow .who b{display:block;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .who small{display:block;color:var(--muted);font:500 9px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .val{margin-left:auto;text-align:right}
+.prow .val b{display:block;font:700 14px var(--mono)}
+.prow .val small{font:600 8px var(--mono);color:var(--quiet)}
+.prow .val.live b{color:var(--volt)}
+
+/* footer */
+.ft{border-top:1px solid var(--line);margin-top:11px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.ft .pace{font:500 11px var(--mono);color:var(--muted);line-height:1.3}
+.ft .pace b{color:var(--paper);font-weight:700}
+.lock{margin-left:auto;background:var(--volt);color:var(--ink);border:0;border-radius:99px;padding:10px 18px;font:700 14px system-ui}
+.lock:disabled{background:var(--ink-3);color:var(--quiet)}
+.rcpt{margin-left:auto;font:700 11px var(--mono);color:var(--jade);letter-spacing:.06em}
+
+/* board */
+.me{margin:10px 10px 0;border:1px solid var(--volt);border-radius:13px;background:rgba(212,255,0,.05);padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.me b{display:block;font:800 26px var(--mono);letter-spacing:-.03em;line-height:1}
+.me span{font:600 9px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.me small{display:block;color:var(--muted);font:500 10px var(--mono);margin-top:3px}
+.lb{margin:10px 10px 0;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);overflow:hidden}
+.lr{display:grid;grid-template-columns:26px 1fr auto auto;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);font-size:12px}
+.lr:last-child{border:0}
+.lr .rk{color:var(--quiet);font:700 11px var(--mono)}
+.lr .h{color:var(--quiet);font:500 9px var(--mono)}
+.lr .d{color:var(--muted);font:500 10px var(--mono);text-align:right}
+.lr .t{font:700 13px var(--mono);text-align:right;min-width:48px}
+.lr.you{background:rgba(212,255,0,.07);box-shadow:inset 3px 0 0 var(--volt)}
+.lr.you .t{color:var(--volt)}
+.pool{margin:10px 10px 0;border:1px solid var(--line);border-radius:12px;background:var(--ink-2);padding:9px 11px 10px}
+.pool .row{display:flex;justify-content:space-between;font:500 10px var(--mono);color:var(--muted);margin-top:6px}
+.pool .row b{color:var(--paper)}
+.bar{height:5px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line);margin-top:7px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .g{background:var(--quiet);width:57%}.bar .a{background:var(--volt);width:30%}
+.rules{margin:10px 10px 0;font:500 10px/1.7 var(--mono);color:var(--muted)}
+.rules b{color:var(--paper)}
+</style></head><body>
+
+<!-- ============ 1 · PICKING ============ -->
+<div class="wrap"><div class="cap">October · picking · Wild Card day 1</div>
+<div class="app">
+  <div class="hd">
+    <div class="hd-top"><span class="eb">October</span><span class="ed">Wild Card · Day 1 · 4 games</span></div>
+    <div class="crow warn"><div class="clk"><div class="dg n">0</div><div class="dg n">4</div><span class="cl">:</span><div class="dg n">1</div><div class="dg n">2</div></div>
+      <div class="lbl">next lock<b>PHI @ ATL · 1:08</b></div>
+      <div class="tot"><b class="n">3</b><span>of 5</span></div></div>
+    <div class="pips"><div class="pip lk"></div><div class="pip on"></div><div class="pip on"></div><div class="pip"></div><div class="pip"></div></div>
+    <div class="sub"><span>1 locked · 2 picked · 2 open</span><span>17 unused on live clubs</span></div>
+  </div>
+  <div class="steps">
+    <div class="strip"><span class="stp done"><i>✓</i><b>Game</b></span><span class="arw"></span><span class="stp on"><i>2</i><b>Player</b></span><span class="arw"></span><span class="stp"><i>3</i><b>Slot</b></span></div>
+    <div class="note">One arm, four bats, only from today's games. Each slot locks at its game's first pitch. <b>A player you use is gone for the rest of October.</b></div>
+  </div>
+  <div class="sh"><h3>Today</h3><span>tap a game</span></div>
+  <div class="grid">
+    <div class="gc live lk"><div class="mks"><div class="mk" style="background:linear-gradient(to bottom,#092C5C 0 58%,#8FBCE6 58%)"></div><div class="mk" style="background:linear-gradient(to bottom,#0C2340 0 58%,#C4CED3 58%)"></div></div><b>TB @ NYY</b><small>Top 4th</small></div>
+    <div class="gc on"><div class="mks"><div class="mk" style="background:linear-gradient(to bottom,#E81828 0 58%,#002D72 58%)"></div><div class="mk" style="background:linear-gradient(to bottom,#CE1141 0 58%,#13274F 58%)"></div></div><b>PHI @ ATL</b><small>1:08 PM</small></div>
+    <div class="gc"><div class="mks"><div class="mk" style="background:linear-gradient(to bottom,#0C2340 0 58%,#E31937 58%)"></div><div class="mk" style="background:linear-gradient(to bottom,#0C2C56 0 58%,#005C5C 58%)"></div></div><b>DET @ SEA</b><small>5:08 PM</small></div>
+    <div class="gc"><div class="mks"><div class="mk" style="background:linear-gradient(to bottom,#2F241D 0 58%,#FFC425 58%)"></div><div class="mk" style="background:linear-gradient(to bottom,#0E3386 0 58%,#CC3433 58%)"></div></div><b>SD @ CHC</b><small>6:38 PM</small></div>
+  </div>
+  <div class="duo">
+    <div class="field"><div class="form">
+      <div class="slot p filled"><span class="x">×</span><span class="pos" style="font-size:9px">ARM</span><span class="nm">Skubal</span><span class="tm">DET · 5:08</span></div>
+      <div class="slot b filled locked"><span class="lk">LOCKED</span><span class="pos" style="font-size:9px">BAT</span><span class="nm">Díaz</span><span class="tm">TB · live</span></div>
+      <div class="slot b filled"><span class="x">×</span><span class="pos" style="font-size:9px">BAT</span><span class="nm">Harper</span><span class="tm">PHI · 1:08</span></div>
+      <div class="slot b elig"><span class="pos">BAT</span></div>
+      <div class="slot b elig"><span class="pos">BAT</span></div>
+    </div></div>
+    <div class="panel">
+      <div class="pan-h"><b>PHI @ ATL</b><small>1:08 PM<br>lineups in</small></div>
+      <div class="pan-b">
+        <div class="prow"><span class="pb p">P</span><span class="who"><b>Z. Wheeler</b><small>PHI · 2.61 ERA · 11 K/9</small></span><span class="val"><b class="n">18.4</b><small>PPG</small></span></div>
+        <div class="prow sel"><span class="pb b">B</span><span class="who"><b>R. Acuña Jr.</b><small>ATL · CF · bats 1st</small></span><span class="val"><b class="n">9.8</b><small>PPG</small></span></div>
+        <div class="prow"><span class="pb b">B</span><span class="who"><b>K. Schwarber</b><small>PHI · DH · bats 1st</small></span><span class="val"><b class="n">9.1</b><small>PPG</small></span></div>
+        <div class="prow gone"><span class="pb b">B</span><span class="who"><b>B. Harper</b><small>PHI · 1B · on your card</small></span><span class="val"><b class="n">8.6</b><small>PPG</small></span></div>
+        <div class="prow"><span class="pb b">B</span><span class="who"><b>M. Olson</b><small>ATL · 1B · bats 3rd</small></span><span class="val"><b class="n">8.0</b><small>PPG</small></span></div>
+        <div class="prow"><span class="pb b">B</span><span class="who"><b>T. Turner</b><small>PHI · SS · bats 2nd</small></span><span class="val"><b class="n">7.7</b><small>PPG</small></span></div>
+        <div class="prow gone"><span class="pb b">B</span><span class="who"><b>A. Riley</b><small>ATL · 3B · used Sep 29</small></span><span class="val"><b class="n">7.4</b><small>PPG</small></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="ft">
+    <div class="pace">Your five so far<br><b class="n">13.0</b> · Díaz in play</div>
+    <button class="lock" disabled>2 to go</button>
+  </div>
+</div></div>
+
+<!-- ============ 2 · LIVE / GRADED ============ -->
+<div class="wrap"><div class="cap">October · your five · live</div>
+<div class="app">
+  <div class="hd">
+    <div class="hd-top"><span class="eb">October</span><span class="ed">Wild Card · Day 1 · locked 1:08 PM</span></div>
+    <div class="crow"><div class="lbl">today<b>14th of 212</b></div>
+      <div class="lbl" style="margin-left:8px">October<b>14th · 31.5</b></div>
+      <div class="tot"><b class="n">31.5</b><span>Points</span></div></div>
+    <div class="pips"><div class="pip lk"></div><div class="pip lk"></div><div class="pip lk"></div><div class="pip on"></div><div class="pip on"></div></div>
+    <div class="sub"><span>1 final · 2 in play · 2 to come</span><span>best today 44.0</span></div>
+  </div>
+  <div class="duo">
+    <div class="field"><div class="form">
+      <div class="slot p filled"><span class="pos" style="font-size:9px">ARM</span><span class="nm">Skubal</span><span class="tm">DET · 5:08</span><span class="pts wait n">–</span></div>
+      <div class="slot b filled locked"><span class="pos" style="font-size:9px">BAT</span><span class="nm">Díaz</span><span class="tm">TB · F</span><span class="pts fin n">13.0</span></div>
+      <div class="slot b filled locked"><span class="pos" style="font-size:9px">BAT</span><span class="nm">Harper</span><span class="tm">PHI · B6</span><span class="pts n">14.0</span></div>
+      <div class="slot b filled locked"><span class="pos" style="font-size:9px">BAT</span><span class="nm">Acuña</span><span class="tm">ATL · B6</span><span class="pts n">4.5</span></div>
+      <div class="slot b filled"><span class="pos" style="font-size:9px">BAT</span><span class="nm">Tatis</span><span class="tm">SD · 6:38</span><span class="pts wait n">–</span></div>
+    </div></div>
+    <div class="panel">
+      <div class="pan-h"><b>Your five</b><small>points land<br>as the box does</small></div>
+      <div class="pan-b">
+        <div class="prow"><span class="pb b">B</span><span class="who"><b>Y. Díaz</b><small>2-4 · 2B · 2 RBI · Final</small></span><span class="val"><b class="n">13.0</b><small>FINAL</small></span></div>
+        <div class="prow"><span class="pb b">B</span><span class="who"><b>B. Harper</b><small>1-3 · HR · R · RBI · Bot 6th</small></span><span class="val live"><b class="n">14.0</b><small>LIVE</small></span></div>
+        <div class="prow"><span class="pb b">B</span><span class="who"><b>R. Acuña Jr.</b><small>1-2 · BB · SB · Bot 6th</small></span><span class="val live"><b class="n">4.5</b><small>LIVE</small></span></div>
+        <div class="prow"><span class="pb p">P</span><span class="who"><b>T. Skubal</b><small>DET at SEA · 5:08 PM</small></span><span class="val"><b class="n" style="color:var(--quiet)">–</b><small>5:08</small></span></div>
+        <div class="prow"><span class="pb b">B</span><span class="who"><b>F. Tatis Jr.</b><small>SD at CHC · 6:38 PM</small></span><span class="val"><b class="n" style="color:var(--quiet)">–</b><small>6:38</small></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="rules"><b>Bats</b> 1B 3 · 2B 5 · 3B 8 · HR 10 · RBI 2 · R 2 · BB 2 · SB 5 &nbsp;&nbsp; <b>Arms</b> IP 2.25 · K 2 · W 4 · ER −2 · H −0.6 · BB −0.6<br>An empty slot at first pitch is a DNF for the day.</div>
+  <div class="ft">
+    <div class="pace">Locked in<br><b>Tue Sep 29 · 1:08 PM</b></div>
+    <span class="rcpt">✓ RECEIPT · 5 OF 5</span>
+  </div>
+</div></div>
+
+<!-- ============ 3 · THE BOARD ============ -->
+<div class="wrap"><div class="cap">October · standings · day 6 of 30</div>
+<div class="app">
+  <div class="hd">
+    <div class="hd-top"><span class="eb">October</span><span class="ed">212 playing · the World Series decides it</span></div>
+    <div class="crow"><div class="lbl">you<b>9th · 41.0 back</b></div>
+      <div class="tot"><b class="n">188.5</b><span>October</span></div></div>
+    <div class="pips"><div class="pip lk"></div><div class="pip lk"></div><div class="pip lk"></div><div class="pip lk"></div><div class="pip lk"></div><div class="pip on"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+    <div class="sub"><span>Wild Card ✓ · Division day 2</span><span>26 days left</span></div>
+  </div>
+  <div class="lb">
+    <div class="lr"><span class="rk">1</span><span>the Closer <span class="h">· house</span></span><span class="d n">+4.5</span><span class="t n">229.5</span></div>
+    <div class="lr"><span class="rk">2</span><span>dsilva35</span><span class="d n">+31.0</span><span class="t n">221.0</span></div>
+    <div class="lr"><span class="rk">3</span><span>the Grinder <span class="h">· house</span></span><span class="d n">+19.5</span><span class="t n">214.5</span></div>
+    <div class="lr"><span class="rk">4</span><span>camilli_k</span><span class="d n">+0.0</span><span class="t n">206.0</span></div>
+    <div class="lr"><span class="rk">…</span><span></span><span></span><span></span></div>
+    <div class="lr you"><span class="rk">9</span><span>you</span><span class="d n">+31.5</span><span class="t n">188.5</span></div>
+    <div class="lr"><span class="rk">10</span><span>the Homer <span class="h">· house</span></span><span class="d">DNF</span><span class="t n">187.0</span></div>
+  </div>
+  <div class="pool">
+    <div class="eb">Your pool</div>
+    <div class="row"><span>used · gone for October</span><b class="n">17</b></div>
+    <div class="row"><span>unused · on clubs still alive</span><b class="n">9 · TB 4 · PHI 3 · LAD 2</b></div>
+    <div class="row"><span>unused · on clubs eliminated</span><b class="n">4 · MIL</b></div>
+    <div class="bar"><i class="g"></i><i class="a"></i></div>
+  </div>
+  <div class="ft">
+    <div class="pace">Milwaukee went out Sunday<br><b>and took three of your bats with them</b></div>
+  </div>
+</div></div>
+
+</body></html>
