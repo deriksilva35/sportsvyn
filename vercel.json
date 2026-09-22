@@ -98,6 +98,14 @@
       "schedule": "0 6-20 * * 0,1"
     },
     {
+      "path": "/api/cron/run-settle",
+      "schedule": "0 6-20 * * *"
+    },
+    {
+      "path": "/api/cron/run-nudge",
+      "schedule": "0 15 * * *"
+    },
+    {
       "path": "/api/cron/weekly-board",
       "schedule": "24 13 * * *"
     },
