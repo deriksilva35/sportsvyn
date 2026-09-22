@@ -49,6 +49,7 @@ import { writeMlbMatches, slugsFor, gameDay } from '../lib/mlb/schedule.js';
 import { stageFromGameType, stagesByBacktrack, STAGES, SERIES_IN_ROUND, STAGE_LABEL } from '../lib/mlb/postseason.js';
 import { ourAbbr, statsApiEnabled } from '../lib/mlb/statsapi.js';
 import { ensureSeriesBoard } from '../lib/mlb/seriesPickem.js';
+import { ensureOctoberDays } from '../lib/october/create.js';
 
 const args = process.argv.slice(2);
 const PROD = args.includes('--prod');
@@ -198,6 +199,15 @@ for (const season of seasons) {
   console.log(`\nAPPLIED  inserted ${res.inserted} | updated ${res.updated} | refused ${res.refused.length}`);
   if (res.refused.length) console.log(`  refused: ${res.refused.map((r) => r.slug ?? r.id).join(', ')}`);
   void slugs;
+
+  // OCTOBER'S DAYS. One contest per postseason date that has games - the
+  // relay's item 6, and this is the right owner for the same reason the round
+  // boards are: a day's card can only be built once its games exist, and this
+  // is the job that makes them exist.
+  console.log('\n  october days');
+  for (const d of await ensureOctoberDays(Number(season))) {
+    console.log(`    ${d.day}  ${d.created ? `CREATED id=${d.id} · ${d.games} games · first pitch ${String(d.firstPitch).slice(11, 16)}Z` : `${d.reason}${d.id ? ` id=${d.id}` : ''}`}`);
+  }
 
   // THE ROUND BOARDS, in bracket order. Every round that is WHOLE gets one;
   // the rest say why not and are tried again next run, which is how the
