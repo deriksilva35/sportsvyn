@@ -55,7 +55,11 @@ test('Helmet.js is untouched by this relay, and TeamMark has only its named user
     // The MLB game page's team rows (MLB B1 item 6) - the same mark at 26px.
     // Baseball has no helmet, so Helmet.js was never the question here: the
     // gridiron page's row draws a helmet and this one draws the disc.
-    'app/mlb/game/[slug]/page.js'];
+    'app/mlb/game/[slug]/page.js',
+    // The postseason bracket's slots (20px) and the round board's two sides
+    // (22px) - MLB B2 items 2 and 3, the same mark again.
+    'app/mlb/bracket/page.js',
+    'components/pickem/SeriesBoard.js'];
   assert.ok(users.includes('components/scores/ScoresV2.js'), 'the Scores tab uses it (SCORES TAB v2)');
   assert.ok(!users.some((f) => !ALLOWED.includes(f)), `no other user: ${users}`);
 });

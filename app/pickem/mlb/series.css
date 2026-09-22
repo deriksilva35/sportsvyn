@@ -1,0 +1,43 @@
+/* app/pickem/mlb/series.css - the round board.
+   Written on the global tokens; --ink-2 is declared in app/globals.css and
+   read from there, never restated as a hex. */
+.sb-wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 56px; }
+.sb-crumb { padding: 14px 0 6px; font: 500 12px var(--font-mono); }
+.sb-crumb a { color: var(--muted); text-decoration: none; }
+.sb-title { padding: 6px 0 14px; border-bottom: 1px solid var(--rule-dim); }
+.sb-title h1 { margin: 0; font: 700 clamp(24px, 6.4vw, 34px)/1.05 var(--font-display); }
+.sb-tsub { margin-top: 8px; font: 500 12px/1.55 var(--font-mono); color: var(--muted); }
+.sb-none { padding: 28px 0; font: 500 13px/1.6 var(--font-mono); color: var(--muted); }
+.sb-lock { padding: 12px 0; font: 500 11px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); }
+.sb-lock b { color: var(--volt); }
+
+.sb-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.sb-head h2 { margin: 0; font: 700 18px var(--font-display); }
+.sb-sub { margin-top: 4px; font: 500 11px var(--font-mono); color: var(--muted); }
+.sb-sub b { color: var(--volt); }
+.sb-count { font: 500 11px var(--font-mono); color: var(--muted); white-space: nowrap; }
+.sb-count b { color: var(--paper); font-size: 15px; font-weight: 700; }
+.sb-err { margin: 0 0 10px; font: 500 12px var(--font-mono); color: var(--live); }
+
+.sb-row { background: var(--ink-2); border: 1px solid var(--rule-dim); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+.sb-row.live { border-top: 2px solid var(--live); }
+.sb-meta { display: flex; align-items: center; gap: 10px; font: 500 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); margin-bottom: 8px; }
+.sb-live { color: var(--live); font-weight: 700; letter-spacing: 0; font-size: 11px; }
+.sb-rec { color: var(--volt); font-weight: 700; letter-spacing: 0; font-size: 11px; font-variant-numeric: tabular-nums; }
+.sb-pts { margin-left: auto; color: var(--volt); font-weight: 700; }
+.sb-grade { border-radius: 3px; padding: 1px 6px; font-weight: 700; letter-spacing: 0; }
+.sb-grade.w { background: var(--jade, #2A8A4F); color: var(--paper); }
+.sb-grade.l { background: var(--rule); color: var(--muted); }
+
+.sb-sides { display: grid; gap: 6px; }
+.sb-side { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 10px; border: 1px solid var(--rule-dim); border-radius: 9px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.sb-side:disabled { cursor: default; }
+/* THE PICK IS VOLT, the same mark every other board in this product uses for
+   "this is yours". */
+.sb-side.on { border-color: var(--volt); box-shadow: inset 0 0 0 1px var(--volt); }
+.sb-side.won .sb-nm { color: var(--paper); font-weight: 700; }
+.sb-seed { flex: none; width: 12px; font: 500 10px var(--font-mono); color: var(--muted-dim); text-align: right; }
+.sb-nm { flex: 1 1 auto; min-width: 0; font: 500 15px var(--font-display); color: var(--paper-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-w { flex: none; font: 700 18px var(--font-display); font-variant-numeric: tabular-nums; }
+.sb-cta { display: block; margin-top: 12px; padding: 12px; border-radius: 9px; background: var(--volt); color: var(--ink); font: 700 13px var(--font-mono); text-align: center; text-decoration: none; }
+.sb-note { margin-top: 12px; font: 500 12px var(--font-mono); color: var(--muted); }
