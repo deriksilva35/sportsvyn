@@ -73,7 +73,7 @@ function GameRow({ row, signedIn, signinHref }) {
 // THIS WEEK
 // ---------------------------------------------------------------------------
 function WeekPane({ v, signedIn, signinHref }) {
-  const { now, rows = [], practice = [], week = null } = v;
+  const { now, rows = [], mlb = [], practice = [], week = null } = v;
   return (
     <>
       <NowCard card={now} signedIn={signedIn} signinHref={signinHref} />
@@ -85,6 +85,26 @@ function WeekPane({ v, signedIn, signinHref }) {
       <div className="gv-list">
         {rows.map((r) => <GameRow key={r.key} row={r} signedIn={signedIn} signinHref={signinHref} />)}
       </div>
+
+      {/* THE MLB GROUP SITS UNDER THE FOUR, not among them (B3 addendum).
+          Those four are one league's week on one clock; these two are a
+          different sport on a different one, and a labelled group says so in
+          the layout rather than making the reader infer it from two rows
+          whose season does not match their neighbours'. Same row grammar. */}
+      {mlb.length ? (
+        <>
+          <div className="gv-sh" data-group="mlb">
+            <h3>MLB</h3>
+            {/* THE GROUP SAYS WHAT THE ROWS SAY. Labelling it POSTSEASON while
+                both rows read PREVIEW would be the heading contradicting its
+                own contents. */}
+            <span>{mlb.some((r) => r.right === 'PREVIEW') ? 'PREVIEW' : 'POSTSEASON'}</span>
+          </div>
+          <div className="gv-list">
+            {mlb.map((r) => <GameRow key={r.key} row={r} signedIn={signedIn} signinHref={signinHref} />)}
+          </div>
+        </>
+      ) : null}
 
       {/* PRACTICE IS TWO TILES AND STAYS TWO (addendum 6). The tracker's door
           moves to the Mock setup, where a league row carries "Track a live

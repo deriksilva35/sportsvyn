@@ -17,6 +17,7 @@ import { cadence, sleepUntilNext, kickoffDelta } from '../../lib/live/cadence.js
 import { addCalls, callsToday, applyCap, overCap, DEFAULT_CAP } from '../../lib/live/quota.js';
 import { StatsTracker } from '../../lib/live/statsCadence.js';
 import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
+import { syncMlbGameStats } from '../../lib/mlb/statsSync.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
 import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich } from './poll.mjs';
@@ -152,8 +153,12 @@ async function release(client, league) {
 async function loop(lg) {
   let lock = null, windowId = null, failures = 0, pending = 0, lastBeat = 0;
   const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0 };
-  // BOX SCORE PULLS (NFL): every 10th live poll per live game, once at final.
-  const stats = lg.slug === 'nfl' ? new StatsTracker() : null;
+  // BOX SCORE PULLS: every 10th live poll per live game, once at final.
+  // MLB JOINS ON THE SAME TRACKER. Its ingest existed and was called by
+  // nothing, so mlb_player_game_stats stayed empty on every game ever played -
+  // which would have settled every October card and every Run roster to zero,
+  // healthily. One shared cadence, two sports, one quota count.
+  const stats = (lg.slug === 'nfl' || lg.slug === 'mlb') ? new StatsTracker() : null;
   let statsCallsToday = 0;
 
   for (;;) {
@@ -231,14 +236,15 @@ async function loop(lg) {
           const seenIds = [...stats.seen.keys()];
           const watched = await sql`
             SELECT m.id, m.status FROM matches m JOIN leagues l ON l.id = m.league_id
-             WHERE l.slug = 'nfl' AND (m.status = 'live' OR m.id = ANY(${seenIds}::int[]))`;
+             WHERE l.slug = ${lg.slug} AND (m.status = 'live' OR m.id = ANY(${seenIds}::int[]))`;
+          const syncBox = lg.slug === 'mlb' ? syncMlbGameStats : syncGameStats;
           for (const d of stats.due({ polls: window.polls, matches: watched })) {
             try {
-              const g = await syncGameStats(d.id);
+              const g = await syncBox(d.id);
               pending += g.calls; window.calls += g.calls; window.statsCalls += g.calls; statsCallsToday += g.calls;
-              log(`[nfl] box score ${d.why} match=${g.matchId} rows=${g.rows} changed=${g.changed} calls=${g.calls}`);
+              log(`[${lg.slug}] box score ${d.why} match=${g.matchId} rows=${g.rows} changed=${g.changed} calls=${g.calls}`);
             } catch (e) {
-              log(`[nfl] box score ${d.why} match=${d.id} failed:`, String(e?.message ?? e).slice(0, 120));
+              log(`[${lg.slug}] box score ${d.why} match=${d.id} failed:`, String(e?.message ?? e).slice(0, 120));
             }
           }
         }
