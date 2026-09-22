@@ -91,6 +91,98 @@ test('THE REGISTRY HAS THREE LEAGUES, and only MLB carries an enrich', async () 
   // in every American sense and today in UTC; one day misses west-coast games.
   assert.match(mlbBlock, /day\(0\)/);
   assert.match(mlbBlock, /day\(-1\)/);
+  // AND IT IS THE ONLY LEAGUE ENRICHED BEFORE FIRST PITCH. The posted batting
+  // order is the pool of bats October and The Run offer, and it goes up hours
+  // BEFORE the game - an enrichment that only ran on live rows would see it for
+  // the first time when it was already too late to pick against. A football
+  // league that grew this flag would add a per-game call to every pre-kick poll
+  // of every Sunday.
+  assert.match(mlbBlock, /enrichScheduled: true/);
+  assert.equal((body.match(/enrichScheduled:/g) ?? []).length, 1);
+  // AND THE LOOP HANDS IT ON. Without this line the flag is a comment.
+  assert.match(src, /enrichScheduled: lg\.enrichScheduled === true/);
+});
+
+test('THE PRE-KICK PASS READS THE CARD AND NOTHING ELSE', async () => {
+  const src = await import('node:fs').then((fs) => fs.readFileSync(
+    new URL('./poll.mjs', import.meta.url), 'utf8'));
+  // THE LINEUP WRITE IS NOT HUNG OFF writeLive'S RESULT. writeLive returns null
+  // when nothing about the score changed, which is EVERY pre-kick poll, so a
+  // lineup write placed after `if (!after) continue` would never land on the
+  // one kind of row that has a lineup and no score.
+  const loop = src.slice(src.indexOf('for (const m of candidates)'));
+  const writeIdx = loop.indexOf('writeMlbLineups');
+  const afterIdx = loop.indexOf('const after = await writeLive');
+  assert.ok(writeIdx > -1 && afterIdx > -1);
+  assert.ok(writeIdx < afterIdx,
+    'the batting orders are written BEFORE the scoreline and independently of it');
+  // THE HELD VALUE IS SELECTED, or lineupDue() reads "never asked" every poll.
+  assert.match(src, /m\.metadata->'lineups' AS before_lineups/);
+});
+
+test('mlbEnrich: one feed fetch carries the diamond AND the card', async () => {
+  const { mlbEnrich } = await import('./poll.mjs');
+  const real = globalThis.fetch;
+  const seen = [];
+  globalThis.fetch = async (url) => {
+    seen.push(String(url));
+    return {
+      ok: true,
+      json: async () => ({
+        liveData: {
+          linescore: { currentInning: 7, inningState: 'Top', outs: 2, balls: 3, strikes: 2 },
+          boxscore: {
+            teams: {
+              away: { battingOrder: [1, 2], players: { ID1: { person: { id: 1, fullName: 'A One' }, position: { abbreviation: 'DH' } }, ID2: { person: { id: 2, fullName: 'B Two' }, position: { abbreviation: '2B' } } } },
+              home: { battingOrder: [], players: {} },
+            },
+          },
+        },
+      }),
+    };
+  };
+  const prev = process.env.MLB_STATSAPI;
+  process.env.MLB_STATSAPI = 'on';
+  try {
+    const m = { id: 1, slug: 'tb-nyy', kickoff_at: '2026-09-22T22:35:00Z', external_ids: { statsapi_game_pk: '823543' } };
+    // A SCHEDULED ROW: no /plays call at all, and the card comes back.
+    const r = await mlbEnrich({ id: 99, status_state: 'pre' }, m, null, { live: false, now: new Date('2026-09-22T21:00:00Z') });
+    assert.equal(r.play, null, 'asking /plays about a game that has not started spends a call for nothing');
+    assert.equal(r.lineups.away.length, 2);
+    assert.equal(r.lineups.away[1].order, 2);
+    assert.equal(r.lineups.home, null, 'an empty battingOrder is not a lineup');
+    // ONE FETCH, not two: the live state and the batting orders are on the same
+    // document, so the lineup is free on every live pass.
+    assert.equal(seen.filter((u) => u.includes('feed/live')).length, 1);
+    assert.equal(r.calls, 1);
+  } finally {
+    globalThis.fetch = real;
+    if (prev == null) delete process.env.MLB_STATSAPI; else process.env.MLB_STATSAPI = prev;
+  }
+});
+
+test('mlbEnrich: the pre-kick pass holds off when the card was just read', async () => {
+  const { mlbEnrich } = await import('./poll.mjs');
+  const real = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => { calls += 1; return { ok: true, json: async () => ({}) }; };
+  const prev = process.env.MLB_STATSAPI;
+  process.env.MLB_STATSAPI = 'on';
+  try {
+    const m = {
+      id: 1, slug: 'tb-nyy', kickoff_at: '2026-09-22T22:35:00Z',
+      external_ids: { statsapi_game_pk: '823543' },
+      before_lineups: { fetchedAt: '2026-09-22T20:58:00Z', away: [{ id: '1' }], home: null },
+    };
+    const r = await mlbEnrich({ id: 99, status_state: 'pre' }, m, null,
+      { live: false, now: new Date('2026-09-22T21:00:00Z') });
+    assert.equal(calls, 0, 'a card read two minutes ago is not read again');
+    assert.equal(r.lineups, null);
+    assert.equal(r.calls, 0);
+  } finally {
+    globalThis.fetch = real;
+    if (prev == null) delete process.env.MLB_STATSAPI; else process.env.MLB_STATSAPI = prev;
+  }
 });
 
 test('THE SECOND PROVIDER RIDES ON TOP, and never deletes what BDL just said', async () => {

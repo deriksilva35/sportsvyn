@@ -7,8 +7,8 @@ import { mapLiveStatus, liveState, parseBdlProse } from '../../lib/live/vocabula
 import { writeLive, scoreChanged } from '../../lib/live/write.js';
 import { toScoreRow } from '../../lib/live/scoreEvent.js';
 import { fromBdlMlb } from '../../lib/mlb/ingest.js';
-import { mlbDetailOf, writeMlbDetail, writeMlbGamePk } from '../../lib/mlb/detail.js';
-import { fetchScheduleByMatch, fetchLiveState, pickByKickoff, matchKey, statsApiEnabled } from '../../lib/mlb/statsapi.js';
+import { mlbDetailOf, writeMlbDetail, writeMlbGamePk, writeMlbLineups, lineupDue } from '../../lib/mlb/detail.js';
+import { fetchScheduleByMatch, fetchGameFeed, pickByKickoff, matchKey, statsApiEnabled } from '../../lib/mlb/statsapi.js';
 
 import { emit } from '../../lib/wire/emit.js';
 import { transitionsFor } from '../../lib/push/transitions.js';
@@ -328,18 +328,39 @@ export async function resolveMlbGamePk(m, sql, { log = () => {} } = {}) {
  * NEVER THROWS. Both halves are enrichments on top of a scoreline that is
  * already correct without either.
  */
-export async function mlbEnrich(row, m, sql, { log = () => {} } = {}) {
+export async function mlbEnrich(row, m, sql, { log = () => {}, live: isLive = true, now = new Date() } = {}) {
   let calls = 0;
-  const play = await mlbNewestPlay(row?.id);
+  // THE PLAY IS A LIVE-ONLY CALL. Asking /plays about a game that has not
+  // started spends a call to be told there are none.
+  const play = isLive ? await mlbNewestPlay(row?.id) : null;
   if (play) calls += 1;
-  if (!statsApiEnabled(process.env)) return { play, live: null, calls };
-  let live = null;
+  if (!statsApiEnabled(process.env)) return { play, live: null, lineups: null, calls };
+
+  // THE PRE-KICK PASS ASKS FOR ONE THING AND ON A CADENCE. A live game's feed
+  // is fetched anyway (the diamond), and the batting orders are on that same
+  // document, so a live lineup costs nothing; a scheduled game's costs a fetch,
+  // and lineupDue() is what keeps that from being every game every thirty
+  // seconds. See lib/mlb/detail.js.
+  if (!isLive && !lineupDue({ kickoff_at: m?.kickoff_at, lineups: m?.before_lineups ?? null }, { now })) {
+    return { play, live: null, lineups: null, calls };
+  }
+
+  let live = null; let lineups = null;
   try {
     const r = await resolveMlbGamePk(m, sql, { log });
     calls += r.calls;
-    if (r.gamePk) { live = await fetchLiveState(r.gamePk); if (live) calls += 1; }
+    if (r.gamePk) {
+      const feed = await fetchGameFeed(r.gamePk);
+      calls += feed.calls;
+      live = feed.live;
+      lineups = feed.lineups;
+      // NOT POSTED IS A READING TOO, and it must be written. Without a
+      // fetchedAt stamp on a game whose card is not up yet, lineupDue() reads
+      // "never asked" forever and asks again on every single poll.
+      if (!lineups && feed.calls) lineups = { away: null, home: null };
+    }
   } catch (e) { log(`[mlb] statsapi enrich failed for ${m?.slug}: ${e.message}`); }
-  return { play, live, calls };
+  return { play, live, lineups, calls };
 }
 
 /**
@@ -496,10 +517,11 @@ export async function sweepLostFinals(sql, { league, now = new Date(), dispatchF
 
 export async function pollOnce(sql, {
   league, providerKey, fetcher, normalise, enrich = null, detail = null,
+  enrichScheduled = false,
   now = new Date(), dryRun = false, push = true, log = () => {},
 }) {
   const out = {
-    league, considered: 0, matched: 0, unmatched: 0, written: 0, detail: 0,
+    league, considered: 0, matched: 0, unmatched: 0, written: 0, detail: 0, lineups: 0,
     scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [],
     latencies: [], wouldWrite: [], pushes: [], pushErrors: [], pushAuthFailure: false,
     liveActivities: [],
@@ -516,6 +538,10 @@ export async function pollOnce(sql, {
            -- the alerts sheet shipped. One column, and the rule works as
            -- written.
            m.metadata->'live_state' AS before_live_state,
+           -- THE HELD BATTING ORDERS, so the pre-kick pass can throttle on
+           -- their own fetchedAt instead of on a counter in a process's head
+           -- that a restart resets.
+           m.metadata->'lineups' AS before_lineups,
            m.external_ids->>${providerKey} AS pid,
            -- THE WHOLE OBJECT, not one key: an enrichment may hold a second
            -- provider's id for the same game (MLB's statsapi_game_pk), and a
@@ -557,13 +583,30 @@ export async function pollOnce(sql, {
     // games that have not started; asking /plays about a scheduled game would
     // spend a call to be told there are none.
     let extra = null;
-    if (enrich && String(row?.status_state ?? '') === 'in_progress') {
+    const liveRow = String(row?.status_state ?? '') === 'in_progress';
+    if (enrich && (liveRow || enrichScheduled)) {
       // THE CANDIDATE GOES WITH THE ROW. An enrichment may need to know which
       // of OUR games this is - the MLB one does, to find the same game in a
       // second provider whose ids we do not hold - and handing it `m` is what
       // keeps that lookup out of this loop.
-      extra = await enrich(row, m, sql);
+      //
+      // A SCHEDULED ROW IS ENRICHED ONLY WHERE THE LEAGUE ASKED FOR IT. MLB
+      // does, for one reason: the posted batting order is the whole pool of
+      // bats both October and The Run offer, and it goes up BEFORE first pitch.
+      // An enrichment that only ran on live games could never see it while it
+      // still mattered.
+      extra = await enrich(row, m, sql, { log, live: liveRow, now });
       if (extra?.calls) out.calls += extra.calls;
+    }
+
+    // THE BATTING ORDERS ARE WRITTEN BEFORE THE SCORELINE AND INDEPENDENTLY OF
+    // IT. writeLive returns null when nothing about the score changed - which
+    // is every pre-kick poll - so a lineup write hung off its result would
+    // never land on the one kind of row that has a lineup and no score.
+    if (extra?.lineups && !dryRun) {
+      try {
+        if (await writeMlbLineups(sql, m.id, extra.lineups, { at: now })) out.lineups += 1;
+      } catch (e) { log(`[${league}] lineup write failed match=${m.id}: ${e.message}`); }
     }
     const raw = normalise(row, out.unmapped, extra);
     // AN UNREADABLE STATUS WRITES NOTHING AT ALL. Not the score either: a

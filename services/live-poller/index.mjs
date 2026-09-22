@@ -80,6 +80,12 @@ const LEAGUES = [
     // pitcher, which BDL does not have at all. mlbEnrich does the gamePk
     // resolution once per game and stores it on the row.
     enrich: mlbEnrich,
+    // AND IT RUNS BEFORE FIRST PITCH, for MLB alone. The posted batting order
+    // is the bats October and The Run offer; it goes up two or three hours
+    // before the game and is changed again on a scratch, so an enrichment that
+    // only ran on live rows would see it for the first time when it was already
+    // too late to pick against. lineupDue() holds the call rate down.
+    enrichScheduled: true,
     // THE LINE SCORE AND THE SCORING SUMMARY, which writeLive is forbidden and
     // which are on the row we already hold. Football's equivalents arrive from
     // a different provider on a different cadence and have their own jobs;
@@ -152,7 +158,7 @@ async function release(client, league) {
 
 async function loop(lg) {
   let lock = null, windowId = null, failures = 0, pending = 0, lastBeat = 0;
-  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0 };
+  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0 };
   // BOX SCORE PULLS: every 10th live poll per live game, once at final.
   // MLB JOINS ON THE SAME TRACKER. Its ingest existed and was called by
   // nothing, so mlb_player_game_stats stayed empty on every game ever played -
@@ -184,7 +190,7 @@ async function loop(lg) {
     if (!active && lock) {
       await closeWindow(windowId, { ...window, closedState: decision.state });
       await release(lock, lg.slug); lock = null; windowId = null;
-      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0 });
+      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0 });
       log(`[${lg.slug}] window closed (${decision.state}) ${kickoffDelta(decision.nextKickoffAt, now)}`);
     }
 
@@ -194,7 +200,7 @@ async function loop(lg) {
         const r = await pollOnce(sql, {
           league: lg.slug, providerKey: lg.providerKey,
           fetcher: () => lg.fetcher(now), normalise: lg.normalise,
-          enrich: lg.enrich ?? null, now, log,
+          enrich: lg.enrich ?? null, enrichScheduled: lg.enrichScheduled === true, now, log,
         });
         // THE LOST-FINAL SWEEP rides the same tick and the same window
         // (defect 2). Cheap - one indexed read that is empty on almost
@@ -210,6 +216,10 @@ async function loop(lg) {
         pending += r.calls;
         window.polls += 1; window.calls += r.calls;
         window.scoreChanges += r.scoreChanges; window.finals += r.finals;
+        // LINEUP WRITES RIDE THE LEDGER. A window that posted no batting order
+        // and a window whose pre-kick pass silently stopped running look the
+        // same from outside without a count.
+        window.lineups += r.lineups ?? 0;
         window.events += r.events;
         window.latencies.push(...r.latencies);
         for (const u of r.unmapped) if (!window.unmapped.includes(u)) window.unmapped.push(u);
