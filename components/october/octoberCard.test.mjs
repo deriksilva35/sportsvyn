@@ -265,6 +265,10 @@ test('STARTERS: a picker row carries its batting order, and an unannounced arm s
   // 11th, not "11st" - the teens are the case every ordinal helper gets wrong.
   assert.match(h, /PHI · bats 11th/);
   assert.match(h, /PHI · starter not announced/);
+  // AND THE ANNOUNCED ONE SAYS "probable starter", NOT ITS BDL POSITION. That
+  // position is a season-long role: the served CHW @ KC panel labelled the
+  // announced starter "RP", which reads as a reliever left in by mistake.
+  assert.match(h, /Z\. Wheeler<\/b><small>PHI · probable starter<\/small>/);
   // THE PROBABLE IS NOT LABELLED WITH A BATTING ORDER. An arm has none.
   assert.doesNotMatch(h, /Z\. Wheeler<\/b><small>PHI · bats/);
   // AND THE PANEL SAYS WHOSE CARD IS UP, off the board and not off the
