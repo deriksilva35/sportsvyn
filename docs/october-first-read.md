@@ -92,3 +92,46 @@ game-row names are read directly in `fantasyPoints.js`.
 **Do not settle a day or a round until this reads clean.** A settled contest
 writes `score` and flips `settled`, and re-grading afterwards means explaining
 to everyone who played why their number moved.
+
+---
+
+## Done: 22 Sep 2026, against the preview's first final
+
+The read was owed the first time a game went final. The preview put one there
+before the postseason did — **TB @ NYY, `mlb-2026-09-22-tb-nyy`, match 39770** —
+so it was done against that, with one change to step 1's query: a regular-season
+day has `stage IS NULL`, and the query above filters `stage IS NOT NULL`. The
+slate, not the stage, is what makes a row real, so the filter became a kickoff
+window.
+
+**Step 1 — the rows exist and the nulls are the right nulls.** 23 rows. Every
+batting column is null on exactly 4 of them and every pitching column on exactly
+19: 4 pitchers, 19 batters, and no row that is null in both disciplines. The
+nulls are the *other* discipline's columns, which is the shape the scorer's
+`slotPoints` was written for — not a missing value dressed as a zero.
+
+**Step 2 — the scorer agrees with the box score.**
+
+    Nick Martinez  18 outs, 7 K, 0 W, 2 ER, 5 H, 1 BB
+      by hand  13.5 + 14 + 0 - 4 - 3 - 0.6 = 19.9    scorer 19.9
+    Cody Bellinger  1-for-4, HR, 2 RBI, 1 R
+      by hand  0*3 + 10 + 4 + 2 = 16                 scorer 16
+
+Bellinger is the home-run-is-a-hit case the doc warned about: 1 hit, 1 homer,
+`singlesOf` derives 0 singles, so he scores 10 for the swing and not 13. The
+two-way guard holds on the same row — `slotPoints('bat', martinez)` is 0, so an
+arm in a bat slot is paid nothing rather than paid twice.
+
+**Step 3 — the cards show the same number.** `scoreCard` on a five-slot lineup
+of that game's arm and its four best bats: 19.9 + 16 + 13 + 9 + 8 = **65.9**,
+which is the hand sum, with all five slots `final` and `complete: true`. The
+arm line prints `6.0 IP · 7 K · 2 ER` — 18 outs read as six innings, not
+eighteen. `scoreRoster` returns the same per-player numbers through its own
+path.
+
+**What is still unproven:** The Run sums *every* game a club played in a round,
+and no club has two finals in a one-day preview round. The single-game sum is
+proven; the multi-game sum waits for a doubleheader or a real round.
+
+**Nothing has been settled.** Step 4 refused, correctly: the day's other 15
+games are not final.
