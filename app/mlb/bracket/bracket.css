@@ -1,0 +1,50 @@
+/* app/mlb/bracket/bracket.css - four columns of series cards.
+   Written on the global tokens; --ink-2 and --ink-3 are declared in
+   app/globals.css and read from there, never restated as a hex. */
+.bk-wrap { max-width: 980px; margin: 0 auto; padding: 0 16px 56px; }
+.bk-crumb { padding: 14px 0 6px; font: 500 12px var(--font-mono); }
+.bk-crumb a { color: var(--muted); text-decoration: none; }
+.bk-head { padding: 8px 0 18px; border-bottom: 1px solid var(--rule-dim); }
+.bk-head h1 { margin: 0; font: 700 clamp(26px, 7vw, 38px)/1.05 var(--font-display); }
+.bk-sub { margin-top: 8px; font: 500 12px var(--font-mono); color: var(--muted); letter-spacing: .04em; }
+.bk-sub b { color: var(--paper); font-weight: 700; }
+.bk-sub .hot { color: var(--live); font-weight: 700; }
+.bk-empty { font: 500 13px var(--font-mono); color: var(--muted); padding: 24px 0; }
+
+.bk-col { padding: 20px 0; border-bottom: 1px solid var(--rule-dim); }
+.bk-kick { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.bk-kick h2 { margin: 0; font: 700 10px var(--font-mono); letter-spacing: .28em; color: var(--volt); text-transform: uppercase; }
+.bk-kick .rule { flex: 1; height: 1px; background: var(--rule-dim); }
+.bk-league { margin-bottom: 14px; }
+.bk-league h3 { margin: 0 0 8px; font: 500 10px var(--font-mono); letter-spacing: .18em; color: var(--muted-dim); text-transform: uppercase; }
+
+/* TWO UP ON A WIDE SCREEN, ONE ON A PHONE. auto-fit rather than a media
+   query, so the column that has one slot (the World Series) does not stretch
+   a card across the whole page. */
+.bk-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 10px; }
+
+.bk-slot { background: var(--ink-2); border: 1px solid var(--rule-dim); border-radius: 12px; padding: 10px 12px 8px; }
+/* A LIVE SERIES IS THE ONLY THING THAT GETS THE RED EDGE, the same mark the
+   Scores card uses for a live game. */
+.bk-slot.live { border-top: 2px solid var(--live); }
+.bk-slot.empty { opacity: .62; }
+.bk-top { display: flex; justify-content: space-between; align-items: baseline; font: 500 10px var(--font-mono); letter-spacing: .1em; color: var(--muted-dim); text-transform: uppercase; margin-bottom: 6px; }
+.bk-live { color: var(--live); font-weight: 700; }
+.bk-rec { color: var(--volt); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0; font-size: 12px; }
+.bk-rec.quiet { color: var(--muted-dim); }
+
+.bk-side { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
+.bk-side.quiet { color: var(--muted-dim); }
+/* THE CLUB THAT WENT THROUGH IS THE LOUD ONE, and the other is not struck
+   through - it lost a series, it is not an error. */
+.bk-side.won .bk-nm, .bk-side.won .bk-ab { color: var(--paper); font-weight: 700; }
+.bk-seed { flex: none; width: 14px; font: 500 10px var(--font-mono); color: var(--muted-dim); text-align: right; font-variant-numeric: tabular-nums; }
+.bk-ab { flex: none; font: 700 11px var(--font-mono); letter-spacing: .08em; color: var(--muted); }
+.bk-nm { flex: 1 1 auto; min-width: 0; font: 500 14px var(--font-display); color: var(--paper-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-bye { flex: none; font: 500 9px var(--font-mono); letter-spacing: .12em; color: var(--muted-dim); text-transform: uppercase; border: 1px solid var(--rule-dim); border-radius: 99px; padding: 1px 6px; }
+.bk-w { flex: none; font: 700 18px var(--font-display); font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; }
+.bk-w.live { color: var(--volt); }
+.bk-foot { margin-top: 6px; font: 500 11px var(--font-mono); color: var(--live); }
+.bk-games { display: flex; gap: 4px; margin-top: 8px; }
+.bk-games .bk-g { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1px solid var(--rule-dim); border-radius: 4px; font: 500 10px var(--font-mono); color: var(--muted); text-decoration: none; }
+.bk-games .bk-g.live { border-color: var(--live); color: var(--live); }

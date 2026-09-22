@@ -2,7 +2,7 @@
    Written on the global tokens - --ink-2 and --ink-3 are declared in
    app/globals.css and are read from there, never restated as a hex here. */
 .mg-wrap { max-width: 860px; margin: 0 auto; padding: 0 16px 48px; }
-.mg-crumb { padding: 14px 0 6px; font: 500 12px var(--font-mono); }
+.mg-crumb { display: flex; justify-content: space-between; gap: 12px; padding: 14px 0 6px; font: 500 12px var(--font-mono); }
 .mg-crumb a { color: var(--muted); text-decoration: none; }
 .mg-head { padding: 10px 0 14px; border-bottom: 1px solid var(--rule-dim); }
 .mg-chips { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
