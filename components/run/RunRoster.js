@@ -200,7 +200,9 @@ function Header({ view, filled, leagueLine }) {
     <div className="rn-hd">
       <div className="rn-hd-top">
         <span className="rn-eb">The Run</span>
-        <span className="rn-ed">{leagueLine ?? view.contest.label}</span>
+        {/* A LEAGUE NAME IF THERE IS ONE, else what this round IS - and for a
+            preview that is its own season label, not the round's name. */}
+        <span className="rn-ed">{leagueLine ?? view.contest.seasonLabel ?? view.contest.label}</span>
       </div>
       <div className="rn-crow">
         {view.phase === 'open' && view.contest.msToLock != null ? <Clock ms={view.contest.msToLock} /> : null}

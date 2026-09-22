@@ -195,7 +195,12 @@ function Header({ view, slots }) {
     <div className="oc-hd">
       <div className="oc-hd-top">
         <span className="oc-eb">October</span>
-        <span className="oc-ed">{stageLabel(view.contest.stage)} · {view.contest.games} game{view.contest.games === 1 ? '' : 's'}</span>
+        {/* THE PREVIEW NAMES ITSELF HERE. stageLabel() falls back to
+            "Postseason" on a null stage, which is what a regular-season
+            preview day has - so without this the card would have called six
+            days of September the postseason. seasonLabel is the contest's own
+            word for what it is. */}
+        <span className="oc-ed">{view.contest.seasonLabel ?? stageLabel(view.contest.stage)} · {view.contest.games} game{view.contest.games === 1 ? '' : 's'}</span>
       </div>
       <div className="oc-crow">
         {/* THE CLOCK COUNTS TO THE NEXT LOCK, NEVER TO MIDNIGHT - each slot

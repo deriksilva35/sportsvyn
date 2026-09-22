@@ -90,6 +90,15 @@ test("FRAME 1 - PICKING: the header, the pips and the mock's own counts", () => 
   const h = html({ view: PICKING(), signedIn: true });
   assert.match(h, /<span class="oc-eb">October<\/span>/);
   assert.match(h, /Wild Card · 3 games/);
+  // A PREVIEW NAMES ITSELF IN THE EYEBROW. stageLabel() falls back to
+  // "Postseason" on the null stage a regular-season day has, so without the
+  // contest's own label the card would call six days of September the
+  // postseason - which it did, on the first served page.
+  const prev = PICKING();
+  prev.contest.stage = null;
+  prev.contest.seasonLabel = 'PREVIEW · regular season';
+  assert.match(html({ view: prev, signedIn: true }), /PREVIEW · regular season · 3 games/);
+  assert.doesNotMatch(html({ view: prev, signedIn: true }), /Postseason/);
   // AND IT COUNTS IN ENGLISH. A World Series night is one game, not "1 games".
   const oneGame = PICKING(); oneGame.contest.games = 1;
   assert.match(html({ view: oneGame, signedIn: true }), /World Series · 1 game<|Wild Card · 1 game</);
