@@ -90,6 +90,9 @@ test("FRAME 1 - PICKING: the header, the pips and the mock's own counts", () => 
   const h = html({ view: PICKING(), signedIn: true });
   assert.match(h, /<span class="oc-eb">October<\/span>/);
   assert.match(h, /Wild Card · 3 games/);
+  // AND IT COUNTS IN ENGLISH. A World Series night is one game, not "1 games".
+  const oneGame = PICKING(); oneGame.contest.games = 1;
+  assert.match(html({ view: oneGame, signedIn: true }), /World Series · 1 game<|Wild Card · 1 game</);
   // FIVE PIPS, ONE PER SLOT: jade locked, volt picked, empty open.
   assert.deepEqual([...h.matchAll(/class="oc-pip( lk| on)?"/g)].map((m) => (m[1] ?? '').trim()),
     ['on', 'lk', 'on', '', '']);

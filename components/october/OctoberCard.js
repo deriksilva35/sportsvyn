@@ -195,7 +195,7 @@ function Header({ view, slots }) {
     <div className="oc-hd">
       <div className="oc-hd-top">
         <span className="oc-eb">October</span>
-        <span className="oc-ed">{stageLabel(view.contest.stage)} · {view.contest.games} games</span>
+        <span className="oc-ed">{stageLabel(view.contest.stage)} · {view.contest.games} game{view.contest.games === 1 ? '' : 's'}</span>
       </div>
       <div className="oc-crow">
         {/* THE CLOCK COUNTS TO THE NEXT LOCK, NEVER TO MIDNIGHT - each slot
