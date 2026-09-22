@@ -6,6 +6,7 @@
 import { mapLiveStatus, liveState, parseBdlProse } from '../../lib/live/vocabulary.js';
 import { writeLive, scoreChanged } from '../../lib/live/write.js';
 import { toScoreRow } from '../../lib/live/scoreEvent.js';
+import { fromBdlMlb } from '../../lib/mlb/ingest.js';
 import { emit } from '../../lib/wire/emit.js';
 import { transitionsFor } from '../../lib/push/transitions.js';
 import { dispatch } from '../../lib/push/dispatch.js';
@@ -135,6 +136,59 @@ export function bdlDay(dateIso) {
   };
 }
 
+/**
+ * ONE DAY OF MLB. Same route family as bdlDay, a different sport in the path -
+ * and it is a SEPARATE function rather than a parameter on that one because
+ * bdlDay's caller passes no sport and never will: adding one would change the
+ * NFL's call site to say something it has never needed to say.
+ *
+ * ONE CALL FOR THE WHOLE SLATE, like the NFL. The per-game cost in this sport
+ * is the PLAYS route, which takes a singular game_id - see mlbPlaysFor below.
+ */
+export function mlbDay(dateIso) {
+  return async () => {
+    const key = process.env.BDL_API_KEY;
+    if (!key) throw new Error('BDL_API_KEY missing in env');
+    const res = await fetch(`${BDL}/mlb/v1/games?dates[]=${dateIso}&per_page=100`,
+      { headers: { Authorization: key } });
+    if (!res.ok) throw new Error(`BDL ${res.status} on /mlb/v1/games`);
+    const j = await res.json();
+    return { rows: j?.data ?? [], calls: 1 };
+  };
+}
+
+/**
+ * THE NEWEST PLAY OF ONE LIVE GAME, which is where the outs and the count
+ * live - /games carries neither. One call per live game per poll, which is
+ * what the cadence is sized against: a fifteen-game slate is fifteen calls
+ * against a 600/minute key.
+ *
+ * NEVER THROWS. The count is an enrichment on top of a scoreline that is
+ * already correct without it; a plays route that 500s must not cost the poll
+ * its scores.
+ */
+export async function mlbNewestPlay(gameId) {
+  try {
+    const key = process.env.BDL_API_KEY;
+    if (!key) return null;
+    // per_page=1 with no cursor returns the OLDEST play, so the newest is
+    // reached by walking the cursor - which is a call per 100 plays and far
+    // too expensive per poll. The whole game is one page at per_page=100 only
+    // for the first 100 plays, so this asks for the largest page the route
+    // allows and takes the highest `order` it sees.
+    const res = await fetch(`${BDL}/mlb/v1/plays?game_id=${gameId}&per_page=100`,
+      { headers: { Authorization: key } });
+    if (!res.ok) return null;
+    const j = await res.json();
+    let best = null;
+    for (const r of j?.data ?? []) {
+      if (r?.order == null) continue;
+      if (!best || Number(r.order) > Number(best.order)) best = r;
+    }
+    return best;
+  } catch { return null; }
+}
+
 // ---------------------------------------------------------------------------
 // Normalisers. Provider row -> the four things we own. PURE-ish: no db.
 // ---------------------------------------------------------------------------
@@ -165,6 +219,27 @@ export function fromBdl(row, unmapped) {
     // 2026, the NE-SEA opener). parseBdlProse reads it; null when it does
     // not parse, and the headline builder drops the qualifier whole.
     liveState: status === 'live' ? parseBdlProse(row?.status) : null,
+  };
+}
+
+/**
+ * MLB. Delegates the field names to lib/mlb/ingest.js, which is where the
+ * "runs live in home_team_data, not in home_team_score" knowledge belongs -
+ * this file should not learn a second sport's vocabulary.
+ *
+ * THE PLAY IS OPTIONAL AND THE SCORE DOES NOT DEPEND ON IT. With a play the
+ * live state carries outs and the count; without one it carries the inning and
+ * the half and nothing else, which is an honest partial state rather than a
+ * missing one.
+ */
+export function fromMlb(row, unmapped, play = null) {
+  const n = fromBdlMlb(row, unmapped, { play });
+  return {
+    providerId: n.providerId,
+    status: n.status,
+    homeScore: n.homeScore,
+    awayScore: n.awayScore,
+    liveState: n.liveState,
   };
 }
 
@@ -321,7 +396,8 @@ export async function sweepLostFinals(sql, { league, now = new Date(), dispatchF
 }
 
 export async function pollOnce(sql, {
-  league, providerKey, fetcher, normalise, now = new Date(), dryRun = false, push = true, log = () => {},
+  league, providerKey, fetcher, normalise, enrich = null,
+  now = new Date(), dryRun = false, push = true, log = () => {},
 }) {
   const out = {
     league, considered: 0, matched: 0, unmatched: 0, written: 0,
@@ -370,7 +446,19 @@ export async function pollOnce(sql, {
     const row = m.pid == null ? null : byId.get(String(m.pid));
     if (!row) { out.unmatched += 1; continue; }
     out.matched += 1;
-    const raw = normalise(row, out.unmapped);
+    // THE ENRICHMENT IS PER LEAGUE AND PER LIVE GAME, and it is awaited only
+    // for a row the provider already calls live. A league without one - both
+    // football leagues - never enters this branch and its loop is unchanged.
+    //
+    // ONE EXTRA CALL PER LIVE GAME, NOT PER CANDIDATE. `candidates` includes
+    // games that have not started; asking /plays about a scheduled game would
+    // spend a call to be told there are none.
+    let extra = null;
+    if (enrich && String(row?.status_state ?? '') === 'in_progress') {
+      extra = await enrich(row);
+      if (extra) out.calls += 1;
+    }
+    const raw = normalise(row, out.unmapped, extra);
     // AN UNREADABLE STATUS WRITES NOTHING AT ALL. Not the score either: a
     // status we cannot map is not evidence that anything else on the row is
     // safe to believe.
