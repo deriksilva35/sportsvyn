@@ -123,7 +123,15 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
                   <span className="oc-pos">{SLOT_LABEL[base.slot]}</span>
                   {s.playerId ? <>
                     <span className="oc-nm">{s.name}</span>
-                    <span className="oc-tm">{teamLine(s, view)}</span>
+                    {/* THE POSTED CARD SAYS HE IS NOT IN IT, AND THE SLOT IS
+                        STILL OPEN. It replaces the club-and-time line rather
+                        than sitting beside it: a reader with three hours and a
+                        benched bat needs one sentence, not two. After the lock
+                        this never renders - see notStarting() - because there
+                        is nothing left to swap. */}
+                    {base.notStarting && !locked
+                      ? <span className="oc-tm swap">not starting · swap</span>
+                      : <span className="oc-tm">{teamLine(s, view)}</span>}
                     {/* POINTS LAND AS THE BOX SCORE DOES: a number when the
                         line exists, an em-dash while the game is ahead. */}
                     {base.points != null
@@ -139,7 +147,11 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
         <div className="oc-panel">
           <div className="oc-pan-h">
             <b>{game ? `${game.away.abbr} @ ${game.home.abbr}` : 'Your five'}</b>
-            <small>{game ? <>{timeOf(game.kickoffAt)}<br />{game.probables ? 'lineups in' : 'lineups pending'}</> : <>points land<br />as the box does</>}</small>
+            {/* WHAT THE PANEL IS ACTUALLY SHOWING. It used to read "lineups
+                in" off the PROBABLES, which are a pitcher and not a lineup at
+                all - so it said the lineups were in three hours before either
+                club had posted one. */}
+            <small>{game ? <>{timeOf(game.kickoffAt)}<br />{lineupWord(game)}</> : <>points land<br />as the box does</>}</small>
           </div>
           <div className="oc-pan-b">
             {pool.length ? pool.slice(0, 12).map((p) => {
@@ -158,7 +170,12 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
                         "on your card", or "used <date>". A spent player is
                         DIMMED, never hidden - the reader has to be able to see
                         where their October went. */}
-                    <small>{p.team} · {mine ? 'on your card' : usedOn ? `used ${prettyDay(usedOn)}` : p.position}</small>
+                    {/* THE MOCK'S OWN SUB-LINE, PLUS THE BATTING ORDER. A
+                        posted card is the best thing this row can say about a
+                        bat - "bats 4th" beats "RF" - and an arm with no
+                        announced start says so rather than looking like a
+                        confirmed starter. */}
+                    <small>{p.team} · {mine ? 'on your card' : usedOn ? `used ${prettyDay(usedOn)}` : slotWord(p)}</small>
                   </span>
                   <span className="oc-val"><b>{p.ppg ?? '–'}</b><small>PPG</small></span>
                 </button>
@@ -239,6 +256,33 @@ function Clock({ msAway }) {
     </span>
   );
 }
+
+/**
+ * WHAT A PICKER ROW SAYS ABOUT ITSELF. The batting order when the card is up,
+ * "starter not announced" for an arm offered before a probable exists, and the
+ * position otherwise - which is all the mock ever had.
+ */
+function slotWord(p) {
+  if (p?.order != null) return `bats ${ordinal(p.order)}`;
+  if (p?.probablePending) return 'starter not announced';
+  return p?.position ?? '';
+}
+
+/** "lineup posted" is a per-side fact and the panel covers two clubs. */
+function lineupWord(game) {
+  const l = game?.lineupPosted ?? null;
+  if (l?.away && l?.home) return 'lineups posted';
+  if (l?.away || l?.home) return 'one lineup posted';
+  return 'lineup not posted yet';
+}
+
+const ordinal = (n) => {
+  const i = Number(n);
+  if (!Number.isFinite(i)) return String(n);
+  const t = i % 100;
+  if (t >= 11 && t <= 13) return `${i}th`;
+  return `${i}${({ 1: 'st', 2: 'nd', 3: 'rd' })[i % 10] ?? 'th'}`;
+};
 
 const two = (t) => (t?.c1 && t?.c2 ? `linear-gradient(to bottom, ${t.c1} 0 58%, ${t.c2} 58%)` : 'var(--ink-3)');
 const timeOf = (iso) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });

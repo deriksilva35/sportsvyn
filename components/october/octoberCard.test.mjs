@@ -242,3 +242,61 @@ test('THE CARD PRINTS THE DAY\'S OWN CAP, because it is the one rule that moves'
     assert.equal([...html({ view: v, signedIn: true }).matchAll(/<i class="oc-pip/g)].length, 5);
   }
 });
+
+// --- STARTERS ONLY ---------------------------------------------------------
+
+test('STARTERS: a picker row carries its batting order, and an unannounced arm says so', () => {
+  const v = PICKING();
+  v.board = v.board.map((g) => (g.matchId === 2 ? { ...g, lineupPosted: { away: true, home: true } } : g));
+  v.pool = { byGame: { 2: [
+    { playerId: '90', short: 'Z. Wheeler', name: 'Zack Wheeler', kind: 'arm', team: 'PHI', position: 'SP', matchId: 2, ppg: 18.4, probable: true, order: null },
+    { playerId: '92', short: 'K. Schwarber', name: 'Kyle Schwarber', kind: 'bat', team: 'PHI', position: 'DH', matchId: 2, ppg: 9.1, order: 1 },
+    { playerId: '97', short: 'B. Marsh', name: 'Brandon Marsh', kind: 'bat', team: 'PHI', position: 'LF', matchId: 2, ppg: 8.6, order: 3 },
+    { playerId: '93', short: 'B. Harper', name: 'Bryce Harper', kind: 'bat', team: 'PHI', position: '1B', matchId: 2, ppg: 8.5, order: 4 },
+    { playerId: '95', short: 'T. Turner', name: 'Trea Turner', kind: 'bat', team: 'PHI', position: 'SS', matchId: 2, ppg: 7.9, order: 11 },
+    { playerId: '96', short: 'A. Nola', name: 'Aaron Nola', kind: 'arm', team: 'PHI', position: 'SP', matchId: 2, ppg: 12.0, probable: false, probablePending: true, order: null },
+  ] } };
+  const h = html({ view: v, signedIn: true });
+  assert.match(h, /PHI · bats 1st/);
+  assert.match(h, /PHI · bats 3rd/);
+  // A BAT ALREADY ON THE CARD KEEPS "on your card" - the reader's own state
+  // outranks the batting order, which is what every other row already did.
+  assert.match(h, /B\. Harper<\/b><small>PHI · on your card/);
+  // 11th, not "11st" - the teens are the case every ordinal helper gets wrong.
+  assert.match(h, /PHI · bats 11th/);
+  assert.match(h, /PHI · starter not announced/);
+  // THE PROBABLE IS NOT LABELLED WITH A BATTING ORDER. An arm has none.
+  assert.doesNotMatch(h, /Z\. Wheeler<\/b><small>PHI · bats/);
+  // AND THE PANEL SAYS WHOSE CARD IS UP, off the board and not off the
+  // probables - which are a pitcher and not a lineup at all.
+  assert.match(h, /lineups posted/);
+});
+
+test('STARTERS: the panel says "lineup not posted yet" before either club posts', () => {
+  const v = PICKING();
+  v.board = v.board.map((g) => (g.matchId === 2 ? { ...g, lineupPosted: { away: false, home: false } } : g));
+  assert.match(html({ view: v, signedIn: true }), /lineup not posted yet/);
+  const one = PICKING();
+  one.board = one.board.map((g) => (g.matchId === 2 ? { ...g, lineupPosted: { away: true, home: false } } : g));
+  assert.match(html({ view: one, signedIn: true }), /one lineup posted/);
+});
+
+test('STARTERS: a picked bat off the posted card reads "not starting · swap"', () => {
+  const v = PICKING();
+  // bat2 is Harper, in an OPEN game (2): the reader can still act.
+  v.slots = v.slots.map((s) => (s.slot === 'bat2' ? { ...s, notStarting: true } : s));
+  const h = html({ view: v, signedIn: true });
+  assert.match(h, /<span class="oc-tm swap">not starting · swap<\/span>/);
+  // ONE SENTENCE, NOT TWO: it replaces the club-and-time line rather than
+  // crowding in beside it.
+  assert.equal([...h.matchAll(/class="oc-tm swap"/g)].length, 1);
+});
+
+test('STARTERS: a LOCKED slot never shows a swap it cannot act on', () => {
+  const v = PICKING();
+  // bat1 is locked (game 1 is live). Even flagged, the card must not say swap.
+  v.slots = v.slots.map((s) => (s.slot === 'bat1' ? { ...s, notStarting: true } : s));
+  const h = html({ view: v, signedIn: true });
+  assert.doesNotMatch(h, /not starting · swap/);
+  assert.match(h, /LOCKED/);
+});

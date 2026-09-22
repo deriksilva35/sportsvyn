@@ -115,7 +115,14 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
                   <span className="rn-pos">{arm ? 'ARM' : 'BAT'}</span>
                   {s.playerId ? <>
                     <span className="rn-nm">{s.name}</span>
-                    <span className="rn-tm">{s.team}{out ? ' · out' : base.games ? ` · ${base.games}g` : ''}</span>
+                    {/* THE POSTED CARD SAYS HE IS NOT IN IT, AND THE ROUND IS
+                        STILL OPEN. October's sentence, October's colour, the
+                        same server-side check - see notStarting(). It cannot
+                        render after the round locks, because there is nothing
+                        left to swap. */}
+                    {base.notStarting && !live
+                      ? <span className="rn-tm swap">not starting · swap</span>
+                      : <span className="rn-tm">{s.team}{out ? ' · out' : base.games ? ` · ${base.games}g` : ''}</span>}
                     {/* A SWEPT CLUB'S SLOT KEEPS ITS POINTS. Nothing is zeroed. */}
                     {base.points != null ? <span className={`rn-pts${out ? ' out' : ''}`}>{base.points}</span> : null}
                   </> : null}
@@ -133,7 +140,7 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
             </>}
             <small>{live
               ? <>{view.aliveCount} alive · {view.outCount} done</>
-              : <>{counts.get(String(openClub)) ?? 0} of 3 used<br />{club?.opponent ? `vs ${club.opponent} · best of ${club.bestOf}` : ''}</>}</small>
+              : <>{counts.get(String(openClub)) ?? 0} of 3 used<br />{club?.opponent ? `vs ${club.opponent} · best of ${club.bestOf}` : ''}<br />{club?.lineupPosted ? 'lineup posted' : 'lineup not posted yet'}</>}</small>
           </div>
           <div className="rn-pan-b">
             {live
@@ -158,7 +165,9 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
                     <span className={`rn-pb ${p.kind === 'arm' ? 'p' : 'b'}`}>{p.kind === 'arm' ? 'P' : 'B'}</span>
                     <span className="rn-who">
                       <b>{p.short}</b>
-                      <small>{mine ? 'on your nine' : usedIn ? `used in the ${roundWord(usedIn)}` : p.g1 ? 'G1 starter' : p.position}</small>
+                      {/* THE BATTING ORDER WHEN THE CARD IS UP - "bats 4th"
+                          beats "RF" - then the G1 flag, then the position. */}
+                      <small>{mine ? 'on your nine' : usedIn ? `used in the ${roundWord(usedIn)}` : slotWord(p)}</small>
                     </span>
                     <span className="rn-val"><b>{p.ppg ?? '–'}</b><small>PPG</small></span>
                   </button>
@@ -244,6 +253,25 @@ function Clock({ ms }) {
     </span>
   );
 }
+
+/**
+ * WHAT A PANEL ROW SAYS ABOUT ITSELF. The batting order when the club's card is
+ * up, then the G1 flag, then the position - October's slotWord with The Run's
+ * one extra case.
+ */
+function slotWord(p) {
+  if (p?.order != null) return `bats ${ordinal(p.order)}`;
+  if (p?.g1) return 'G1 starter';
+  return p?.position ?? '';
+}
+
+const ordinal = (n) => {
+  const i = Number(n);
+  if (!Number.isFinite(i)) return String(n);
+  const t = i % 100;
+  if (t >= 11 && t <= 13) return `${i}th`;
+  return `${i}${({ 1: 'st', 2: 'nd', 3: 'rd' })[i % 10] ?? 'th'}`;
+};
 
 const two = (c) => (c?.primary && c?.secondary
   ? `linear-gradient(to bottom, ${c.primary} 0 58%, ${c.secondary} 58%)` : 'var(--ink-3)');

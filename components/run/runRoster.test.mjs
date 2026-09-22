@@ -212,3 +212,48 @@ test("THE SERVER'S ANSWER WINS: a refused pick is repainted with its reason", as
   await act(async () => { el.querySelector('[data-player="94"]').click(); });
   assert.match(el.textContent, /You used that player in the Division round\./);
 });
+
+// --- STARTERS ONLY ---------------------------------------------------------
+
+test('STARTERS: a panel row carries its batting order; the G1 arm keeps its flag', () => {
+  const v = SETTING();
+  v.clubs = v.clubs.map((c) => (c.teamId === 1 ? { ...c, lineupPosted: true } : c));
+  v.pool = { byClub: { 1: [
+    { playerId: '90', short: 'S. McClanahan', kind: 'arm', team: 'TB', teamId: 1, position: 'SP', ppg: 17.9, g1: true, order: null },
+    { playerId: '94', short: 'R. Arozarena', kind: 'bat', team: 'TB', teamId: 1, position: 'LF', ppg: 6.1, order: 2 },
+    { playerId: '93', short: 'B. Lowe', kind: 'bat', team: 'TB', teamId: 1, position: '2B', ppg: 6.8, order: 12 },
+  ] } };
+  const h = html({ view: v, signedIn: true });
+  assert.match(h, /S\. McClanahan<\/b><small>G1 starter<\/small>/);
+  assert.match(h, /R\. Arozarena<\/b><small>bats 2nd<\/small>/);
+  assert.match(h, /B\. Lowe<\/b><small>bats 12th<\/small>/);
+  assert.match(h, /lineup posted/);
+  // AND THE OPPONENT LINE SURVIVED THE ADDITION. It is the mock's own, and a
+  // third line in that corner is not a reason to drop the second.
+  assert.match(h, /vs CHW · best of 3/);
+});
+
+test('STARTERS: before the card is up the panel says so', () => {
+  const v = SETTING();
+  v.clubs = v.clubs.map((c) => (c.teamId === 1 ? { ...c, lineupPosted: false } : c));
+  assert.match(html({ view: v, signedIn: true }), /lineup not posted yet/);
+});
+
+test('STARTERS: a bat off the posted card reads "not starting · swap" while the round is open', () => {
+  const v = SETTING();
+  v.slots = v.slots.map((s) => (s.slot === 'bat1' ? { ...s, notStarting: true } : s));
+  const h = html({ view: v, signedIn: true });
+  assert.match(h, /<span class="rn-tm swap">not starting · swap<\/span>/);
+  assert.equal([...h.matchAll(/class="rn-tm swap"/g)].length, 1);
+});
+
+test('STARTERS: a LOCKED round never shows a swap nobody can make', () => {
+  // The Run locks as a WHOLE at the round's first pitch, so this is the round's
+  // state and not a slot's - unlike October, where each slot locks at its own
+  // game. A flagged pick on a locked round must still say nothing.
+  const v = SETTING();
+  v.phase = 'live';
+  v.progress = { ...v.progress, locked: true };
+  v.slots = v.slots.map((s) => (s.slot === 'bat1' ? { ...s, notStarting: true } : s));
+  assert.doesNotMatch(html({ view: v, signedIn: true }), /not starting · swap/);
+});

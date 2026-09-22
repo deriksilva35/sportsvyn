@@ -95,6 +95,9 @@
 .rn-slot.locked { border-color: var(--jade, #2A8A4F); }
 .rn-nm { font: 700 10px var(--font-display); text-transform: uppercase; line-height: 1.05; text-align: center; padding: 0 2px; }
 .rn-tm { font: 600 8px var(--font-mono); color: var(--muted); }
+/* NOT STARTING - SWAP. October's colour and October's rule, through the same
+   server-side check - see notStarting() in lib/october/pool.js. */
+.rn-tm.swap { color: var(--terra); font-weight: 700; }
 .rn-pts { font: 700 13px var(--font-mono); color: var(--volt); }
 
 .rn-x { position: absolute; top: 0; right: 3px; color: var(--muted-dim); font: 700 12px var(--font-mono); background: none; border: 0; cursor: pointer; padding: 2px 4px; }
