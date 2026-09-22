@@ -74,6 +74,27 @@ const render = async (b) => {
   return renderToStaticMarkup(await Page({ searchParams: Promise.resolve({ season: '2025' }) }));
 };
 
+test('THE TWELVE ARE SET only once somebody has stopped playing for them', async () => {
+  // ONE postseason game is enough: it is the only evidence that the field is
+  // no longer a standings snapshot. Here the wild card has started and
+  // nothing else has.
+  const wcOnly = ROWS.filter((r) => r.stage === 'wild_card');
+  const b = buildBracket({ series: shapeSeries(wcOnly), seeds: seedsFrom(ROWS) });
+  assert.equal(b.set, true);
+  const h = await render({ season: 2025, ...b });
+  assert.match(h, /the twelve are set/);
+  assert.doesNotMatch(h, /if the season ended today/);
+  assert.doesNotMatch(h, /the field is not set yet/);
+
+  // AND THE THIRD STATE IS UNCHANGED: no seeds and no games says neither.
+  const none = buildBracket({});
+  assert.equal(none.set, false);
+  assert.equal(none.seeded, 0);
+  const h2 = await render({ season: 2026, ...none });
+  assert.match(h2, /the field is not set yet/);
+  assert.doesNotMatch(h2, /if the season ended today/);
+});
+
 test('THE FINISHED 2025 BRACKET: eleven slots, every winner marked, a champion', async () => {
   const b = buildBracket({ series: shapeSeries(ROWS), seeds: seedsFrom(ROWS) });
   const h = await render({ season: 2025, ...b });
@@ -128,10 +149,16 @@ test('AN UNSET BRACKET SAYS SO, and names the day', async () => {
   assert.doesNotMatch(h, /win the World Series/);
 });
 
-test('SEEDS BUT NO GAMES: the matchups, not a result', async () => {
+test('SEEDS BUT NO GAMES: "if the season ended today", NOT "the twelve are set"', async () => {
+  // A SEED IS A LIVE NUMBER ALL SEASON. Twelve of them in September is a
+  // standings snapshot that will move again on Tuesday night, and "the twelve
+  // are set" said of it is a claim about a field nobody has qualified for.
   const b = buildBracket({ seeds: seedsFrom(ROWS) });
+  assert.equal(b.seeded, 12);
+  assert.equal(b.set, false, 'no postseason game exists, so nothing is set');
   const h = await render({ season: 2026, ...b });
-  assert.match(h, /the twelve are set/);
+  assert.match(h, /if the season ended today/);
+  assert.doesNotMatch(h, /the twelve are set/);
   // The four wild card slots know both clubs; the rest are still waiting.
   assert.equal([...h.matchAll(/data-status="scheduled"/g)].length, 4);
   assert.equal([...h.matchAll(/data-status="empty"/g)].length, 7);

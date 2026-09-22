@@ -97,11 +97,17 @@ export default async function MlbBracketPage({ searchParams }) {
           <h1>Postseason</h1>
           <div className="bk-sub">
             {season}
+            {/* SEEDS ARE PROVISIONAL UNTIL SOMEBODY STOPS PLAYING FOR THEM.
+                Twelve seeds in September is a standings snapshot that will
+                move again on Tuesday night; "the twelve are set" said of it
+                is a claim about a field nobody has qualified for. It is only
+                true once postseason games exist, which is what `set` means. */}
             {b?.champion
               ? <> · <b>{b.champion.name}</b> win the World Series</>
               : b?.liveCount
                 ? <> · <span className="hot">{b.liveCount} series live</span></>
-                : b?.seeded === 12 ? ' · the twelve are set'
+                : b?.seeded === 12
+                  ? (b.set ? ' · the twelve are set' : ' · if the season ended today')
                   : ' · the field is not set yet'}
           </div>
         </header>
