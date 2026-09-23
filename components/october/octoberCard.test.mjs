@@ -82,8 +82,14 @@ const PICKING = () => ({
   ],
   progress: { pips: ['picked', 'locked', 'picked', 'open', 'open'], filled: 3, locked: 1, picked: 2, open: 2, total: 5 },
   dayState: 'open', isDnf: false, total: 13,
-  nextLock: { matchId: 2, slug: 'phi-atl', kickoffAt: '2026-09-29T18:08:00Z', msAway: 68 * 60000 },
-  used: { 94: '2026-09-27' },
+  // THE LABEL IS WHAT THE HEADER PRINTS - gameLabel()'s "PHI @ ATL", never the
+  // slug. The slug rides along because the view still ships it; nothing renders it.
+  nextLock: {
+    matchId: 2, slug: 'phi-atl', label: 'PHI @ ATL',
+    kickoffAt: '2026-09-29T18:08:00Z', msAway: 68 * 60000,
+  },
+  // NO `used` MAP. October has no burn, so the view does not ship one.
+  todaysBest: null,
   pool: POOL, score: null,
 });
 
@@ -110,15 +116,24 @@ test("FRAME 1 - PICKING: the header, the pips and the mock's own counts", () => 
     ['on', 'lk', 'on', '', '']);
   assert.match(h, /<b>3<\/b><span>of 5<\/span>/);
   assert.match(h, /1 locked · 2 picked · 2 open/);
-  // THE CLOCK COUNTS TO THE NEXT LOCK, never to midnight.
-  assert.match(h, /next lock<b>PHI-ATL · /);
+  // THE CLOCK COUNTS TO THE NEXT LOCK, never to midnight - AND THE LABEL IS A
+  // MATCH-UP, NOT A SLUG. This line read next.slug.toUpperCase(), which put
+  // MLB-2026-09-23-MIN-SF-G2 in the header of the served card.
+  assert.match(h, /next lock<b>PHI @ ATL · /);
+  assert.doesNotMatch(h, /PHI-ATL/, 'no slug anywhere on the card');
+  // THE RIGHT-HAND STAT IS BLANK UNTIL A SLOT SETTLES - not "0", which would
+  // read as a card that scored nothing. It used to be the burn count.
+  assert.match(h, /1 locked · 2 picked · 2 open<\/span><span><\/span>/);
+  assert.doesNotMatch(h, /used in October/);
   // THE CLOCK IS A SERVER READING, shipped as a number: 68 minutes is 01:08.
   assert.match(h, /aria-label="01 hours 08 minutes to the next lock"/);
   // THE RULES ARE ON THE CARD, in full, and the DNF sentence with them.
   assert.match(h, /1B 3 · 2B 5 · 3B 8 · HR 10 · RBI 2 · R 2 · BB 2 · SB 5/);
   assert.match(h, /IP 2\.25 · K 2 · W 4 · ER -2 · H -0\.6 · BB -0\.6/);
   assert.match(h, /An empty slot at first pitch is a DNF for the day\./);
-  assert.match(h, /A player you use is gone for the rest of October\./);
+  // THE RULE THAT REPLACED THE BURN, in the one place the card states its rules.
+  assert.match(h, /<b>Tomorrow is a new five\.<\/b>/);
+  assert.doesNotMatch(h, /gone for the rest of October/);
   assert.match(h, /2 to go/);
 });
 
@@ -145,15 +160,18 @@ test('A LIVE GAME IS DIMMED AND UNPICKABLE, not removed', () => {
   assert.equal([...h.matchAll(/data-game="/g)].length, 3);
 });
 
-test('A SPENT PLAYER IS DIMMED AND SAYS WHEN, and one on the card says so', () => {
+test('ONLY A PLAYER ON YOUR OWN CARD IS SPENT - there is no "used <date>" row', () => {
   const h = html({ view: PICKING(), signedIn: true });
-  // The mock's own three sub-lines.
-  assert.match(h, /<b>A\. Riley<\/b><small>ATL · used Sep 27<\/small>/);
   assert.match(h, /<b>B\. Harper<\/b><small>PHI · on your card<\/small>/);
   assert.match(h, /<b>K\. Schwarber<\/b><small>PHI · DH<\/small>/);
-  // Both are DIMMED, never hidden - the reader has to see where October went.
-  assert.equal([...h.matchAll(/class="oc-prow gone"/g)].length, 2);
-  assert.match(h, /class="oc-prow gone" disabled="" data-player="94"/);
+  // A. RILEY WAS THE BURN'S OWN ROW - spent on Sep 27, dimmed, unpickable. With
+  // no burn he is an ordinary row: his position, and tappable.
+  assert.match(h, /<b>A\. Riley<\/b><small>ATL · 3B<\/small>/);
+  assert.doesNotMatch(h, /used Sep 27/);
+  assert.doesNotMatch(h, /class="oc-prow gone" disabled="" data-player="94"/);
+  // EXACTLY ONE DIMMED ROW, and it is the one already on the card.
+  assert.equal([...h.matchAll(/class="oc-prow gone"/g)].length, 1);
+  assert.match(h, /class="oc-prow gone" disabled="" data-player="93"/);
   // The arm is offered first and marked as the probable.
   const rows = [...h.matchAll(/data-player="(\d+)"/g)].map((m) => m[1]);
   assert.equal(rows[0], '90');
@@ -209,11 +227,13 @@ test("THE SERVER'S ANSWER WINS: a refused pick is repainted with its reason", as
   assert.equal(action.calls.at(-1).p.playerId, '92');
   assert.equal(el.querySelector('[data-slot="bat3"]').dataset.state, 'filled');
 
-  // A refusal repaints it back and names the rule.
-  action.setReply({ ok: false, reason: 'used', usedOn: '2026-09-27' });
+  // A refusal repaints it back and names the rule. 'used' is no longer one of
+  // them - October has no burn - so this drives the cap, which is.
+  action.setReply({ ok: false, reason: 'max_from_game' });
   await act(async () => { el.querySelector('[data-player="91"]').click(); });
   assert.equal(el.querySelector('[data-slot="bat4"]').dataset.state, 'open');
-  assert.match(el.textContent, /You used that player on Sep 27\./);
+  assert.match(el.textContent, /That is the most this slate allows from one game\./);
+  assert.doesNotMatch(el.textContent, /already used that player/);
 });
 
 test('THE CARD PRINTS THE DAY\'S OWN CAP, because it is the one rule that moves', () => {
@@ -340,7 +360,7 @@ test('TIMES: every time on this card is Pacific, and says so', () => {
   assert.match(h, /11:08 AM PT/);
   assert.doesNotMatch(h, /2:08 PM(?! PT)/);
   // The next-lock label, the game tile and the slot sub-line all agree.
-  assert.match(h, /next lock<b>PHI-ATL · 11:08 AM PT<\/b>/);
+  assert.match(h, /next lock<b>PHI @ ATL · 11:08 AM PT<\/b>/);
   assert.match(h, /<small>11:08 AM PT<\/small>/);
   assert.match(h, /<span class="oc-tm">PHI · 11:08 AM PT<\/span>/);
 });
@@ -360,7 +380,7 @@ const THREE_BATS = () => {
     slot('bat4'),
   ];
   v.progress = { pips: ['picked', 'picked', 'picked', 'picked', 'open'], filled: 4, locked: 0, picked: 4, open: 1, total: 5 };
-  v.used = {};
+  // NO v.used - October ships no burn map; the fixture must not invent one.
   v.pool = { byGame: { 2: [
     { playerId: '90', short: 'Z. Wheeler', name: 'Zack Wheeler', kind: 'arm', team: 'PHI', position: 'SP', matchId: 2, ppg: 18.4, probable: true },
     { playerId: '92', short: 'K. Schwarber', name: 'Kyle Schwarber', kind: 'bat', team: 'PHI', position: 'DH', matchId: 2, ppg: 9.1, order: 1 },
@@ -602,4 +622,51 @@ test('LOCKED: the Run 3x3 wears the same badge, and every tile there is a dot', 
   assert.match(/\.rn-form\s*\{([^}]*)\}/.exec(css)[1], /min-width:\s*0/);
   // The two fields are the SAME WIDTH - one number for both cards.
   assert.equal(field, px(CSS('../../app/october/october.css'), '.oc-field', 'flex'));
+});
+
+// ---------------------------------------- the header's counts, and their source
+
+/** Five bats-and-an-arm set, nothing locked yet - item 3's own card. */
+const FIVE_PICKED = () => {
+  const v = PICKING();
+  v.slots = [
+    slot('arm', { pip: 'picked', playerId: '90', name: 'Wheeler', matchId: 2, team: 'PHI' }),
+    slot('bat1', { pip: 'picked', playerId: '91', name: 'Acuña', matchId: 2, team: 'ATL' }),
+    slot('bat2', { pip: 'picked', playerId: '92', name: 'Schwarber', matchId: 2, team: 'PHI' }),
+    slot('bat3', { pip: 'picked', playerId: '94', name: 'Riley', matchId: 2, team: 'ATL' }),
+    slot('bat4', { pip: 'picked', playerId: '95', name: 'Turner', matchId: 3, team: 'DET' }),
+  ];
+  v.progress = { pips: ['picked', 'picked', 'picked', 'picked', 'picked'], filled: 5, locked: 0, picked: 5, open: 0, total: 5 };
+  return v;
+};
+
+test('THE HEADER COUNTS: picked is a FILLED UNLOCKED slot, so a full card reads 0 · 5 · 0', () => {
+  const h = html({ view: FIVE_PICKED(), signedIn: true });
+  assert.match(h, /<span>0 locked · 5 picked · 0 open<\/span>/);
+  // AND THE TWO READINGS AGREE. "of 5" above and this line both come off the
+  // same pips now; they used to come from different places - the live ones and
+  // the server's snapshot - so one could say "5 of 5" over "0 picked · 5 open".
+  assert.match(h, /<b>5<\/b><span>of 5<\/span>/);
+  // A LOCKED SLOT IS NOT PICKED. Lock two and the three counts move together.
+  const two = FIVE_PICKED();
+  two.slots[0].pip = 'locked'; two.slots[1].pip = 'locked';
+  assert.match(html({ view: two, signedIn: true }), /<span>2 locked · 3 picked · 0 open<\/span>/);
+  // AN EMPTY CARD IS ALL OPEN, and still not a zero-picked lie about a full one.
+  assert.match(html({ view: PICKING(), signedIn: true }), /<span>1 locked · 2 picked · 2 open<\/span>/);
+});
+
+test('THE COUNTS FOLLOW THE TAP, not the server snapshot', async () => {
+  // THE BUG THIS PINS: the sub-line read view.progress (the server's reading at
+  // render) while "of 5" read the live pips. A reader who filled their last slot
+  // saw "5 of 5" over "0 picked · 1 open" until something revalidated.
+  const el = document.getElementById('root');
+  const root = createRoot(el); roots.add(root);
+  action.calls.length = 0; action.setReply({ ok: true });
+  const v = PICKING();           // 1 locked, 2 picked, 2 open
+  await act(async () => { root.render(React.createElement(OctoberCard, { view: v, signedIn: true })); });
+  assert.match(el.textContent, /1 locked · 2 picked · 2 open/);
+  // Fill one open bat slot. The server's view object is UNCHANGED.
+  await act(async () => { el.querySelector('[data-player="92"]').click(); });
+  assert.equal(v.progress.picked, 2, 'the snapshot handed in is untouched');
+  assert.match(el.textContent, /1 locked · 3 picked · 1 open/);
 });

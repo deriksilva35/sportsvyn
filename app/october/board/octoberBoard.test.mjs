@@ -22,7 +22,6 @@ registerHooks({ resolve(spec, ctx, next) {
     '@/components/SiteFooter': 'foot',
     '@/lib/october/create': 'create',
     '@/lib/october/board': 'board',
-    '@/lib/october/pool': 'pool',
     '@/lib/mlb/series': 'series',
   };
   if (m[spec]) return { url: pathToFileURL(F(m[spec])).href, shortCircuit: true };
@@ -30,21 +29,22 @@ registerHooks({ resolve(spec, ctx, next) {
   return next(spec, ctx);
 } });
 
-let React, renderToStaticMarkup, Page, boardStub, poolStub, seriesStub, authStub;
+let React, renderToStaticMarkup, Page, boardStub, seriesStub, authStub;
 before(async () => {
   writeFileSync(F('link'), "import React from 'react'; export default function Link({href,children,...r}){return React.createElement('a',{...r,href:String(href)},children);}\n");
   writeFileSync(F('auth'), 'export let uid = null;\nexport function setUid(v) { uid = v; }\nexport async function auth() { return uid == null ? null : { user: { id: uid } }; }\n');
   writeFileSync(F('hdr'), 'export default function H() { return null; }\n');
   writeFileSync(F('foot'), 'export default function F() { return null; }\n');
   writeFileSync(F('create'), "export async function currentOctoberDay() { return { season_year: 2025 }; }\n");
-  writeFileSync(F('board'), 'export let rows = [];\nexport function setRows(v) { rows = v; }\nexport async function octoberBoard() { return rows; }\nexport function poolSplit(a) { return { used: a.used?.size ?? 0, aliveLeft: 0, deadLeft: 0, byTeam: [], deadTeams: [], pct: { used: 40, alive: 30 } }; }\n');
-  writeFileSync(F('pool'), 'export let used = new Map();\nexport function setUsed(v) { used = v; }\nexport async function usedPlayers() { return used; }\n');
+  // NO poolSplit AND NO usedPlayers IN THE STUBS. Both are deleted with the
+  // burn; a stub that still exported them would let this test pass over a page
+  // that had gone back to importing them.
+  writeFileSync(F('board'), 'export let rows = [];\nexport function setRows(v) { rows = v; }\nexport async function octoberBoard() { return rows; }\n');
   writeFileSync(F('series'), 'export let series = [];\nexport function setSeries(v) { series = v; }\nexport async function seriesFor() { return series; }\n');
   writeFileSync(F('css'), 'export default {};\n');
   React = await import('react');
   ({ renderToStaticMarkup } = await import('react-dom/server'));
   boardStub = await import(pathToFileURL(F('board')).href);
-  poolStub = await import(pathToFileURL(F('pool')).href);
   seriesStub = await import(pathToFileURL(F('series')).href);
   authStub = await import(pathToFileURL(F('auth')).href);
   Page = (await import('./page.js')).default;
@@ -62,7 +62,6 @@ const render = async () => renderToStaticMarkup(await Page());
 test('FRAME 3 - THE BOARD: one October total, today beside it', async () => {
   authStub.setUid(9);
   boardStub.setRows(ROWS);
-  poolStub.setUsed(new Map([['1', '2025-09-30'], ['2', '2025-10-01']]));
   seriesStub.setSeries([
     { winner: 7, teams: [{ id: 7, abbreviation: 'LAD' }, { id: 8, abbreviation: 'MIL' }] },
     { winner: null, teams: [{ id: 9, abbreviation: 'TOR' }, { id: 10, abbreviation: 'SEA' }] },
@@ -92,21 +91,23 @@ test('OPENLY THE HOUSE, and a DNF says DNF rather than +0', async () => {
   assert.doesNotMatch(h, /<span class="d">\+0<\/span>/);
 });
 
-test('THE POOL BAR splits the reader\'s October by whether the club is alive', async () => {
+test('THE BRACKET LINE names who is left - and there is no burn bar any more', async () => {
   authStub.setUid(9);
   boardStub.setRows(ROWS);
-  poolStub.setUsed(new Map([['1', '2025-09-30'], ['2', '2025-10-01'], ['3', '2025-10-02']]));
   seriesStub.setSeries([
     { winner: 7, teams: [{ id: 7, abbreviation: 'LAD' }, { id: 8, abbreviation: 'MIL' }] },
     { winner: null, teams: [{ id: 9, abbreviation: 'TOR' }, { id: 10, abbreviation: 'SEA' }] },
   ]);
   const h = await render();
-  assert.match(h, /used · gone for October<\/span><b>3<\/b>/);
   // MILWAUKEE WENT OUT - they lost a series, so they are eliminated and LAD,
-  // TOR and SEA are not. This is the fact the mock's last line is built on.
+  // TOR and SEA are not. Still true, and still worth a line.
   assert.match(h, /clubs eliminated<\/span><b>MIL<\/b>/);
   assert.match(h, /clubs still alive<\/span><b>LAD SEA TOR<\/b>/);
-  assert.match(h, /class="g" style="width:40%"/);
+  assert.match(h, /<div class="oc-eb">The bracket<\/div>/);
+  // THE BURN IS GONE FROM THIS PAGE: no spent count, and no bar to draw it in.
+  assert.doesNotMatch(h, /used · gone for October/);
+  assert.doesNotMatch(h, /class="ob-bar"/);
+  assert.doesNotMatch(h, /Your pool/);
 });
 
 test('AN EMPTY BOARD SAYS SO, and a stranger sees it without a "you" row', async () => {

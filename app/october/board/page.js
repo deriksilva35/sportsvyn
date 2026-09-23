@@ -8,8 +8,7 @@ import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { currentOctoberDay } from '@/lib/october/create';
-import { octoberBoard, poolSplit } from '@/lib/october/board';
-import { usedPlayers } from '@/lib/october/pool';
+import { octoberBoard } from '@/lib/october/board';
 import { seriesFor } from '@/lib/mlb/series';
 import '../../games/games.css';
 import '../october.css';
@@ -23,9 +22,8 @@ export default async function OctoberBoardPage() {
   const contest = await currentOctoberDay({ now: new Date() }).catch(() => null);
   const season = contest?.season_year ?? new Date().getUTCFullYear();
 
-  const [rows, used, series] = await Promise.all([
+  const [rows, series] = await Promise.all([
     octoberBoard(season).catch(() => []),
-    uid == null ? Promise.resolve(new Map()) : usedPlayers(Number(uid), season).catch(() => new Map()),
     seriesFor(null, season).catch(() => []),
   ]);
 
@@ -39,7 +37,6 @@ export default async function OctoberBoardPage() {
   const alive = new Set(series.flatMap((s) => s.teams.map((t) => t.abbreviation)).filter((a) => !eliminated.has(a)));
 
   const me = rows.find((r) => String(r.userId) === String(uid)) ?? null;
-  const split = poolSplit({ used, rosterTeamOf: new Map(), aliveTeams: alive, totalPool: used.size });
 
   return (
     <div className="gi ocpage" data-surface="ink">
@@ -75,15 +72,16 @@ export default async function OctoberBoardPage() {
           )) : <div className="ob-lr"><span className="rk">—</span><span>Nobody has played a day yet.</span><span /><span /></div>}
         </div>
 
+        {/* THE BRACKET, NOT "YOUR POOL". This module was the burn made visible -
+            "used · gone for October" over a bar splitting a reader's spent
+            players from their live ones - and with no burn there is no pool to
+            split. What is still true, and still worth a line on a standings
+            page, is which clubs are left: that is a fact about the tournament
+            rather than about anybody's card. */}
         <div className="ob-pool">
-          <div className="oc-eb">Your pool</div>
-          <div className="row"><span>used · gone for October</span><b>{split.used}</b></div>
+          <div className="oc-eb">The bracket</div>
           <div className="row"><span>clubs still alive</span><b>{alive.size ? [...alive].sort().join(' ') : '—'}</b></div>
           <div className="row"><span>clubs eliminated</span><b>{eliminated.size ? [...eliminated].sort().join(' ') : '—'}</b></div>
-          <div className="ob-bar">
-            <i className="g" style={{ width: `${split.pct.used}%` }} />
-            <i className="a" style={{ width: `${split.pct.alive}%` }} />
-          </div>
         </div>
       </div>
       <SiteFooter />

@@ -93,10 +93,15 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
           <span className="oc-arw" />
           <span className="oc-stp"><i>3</i><b>Slot</b></span>
         </div>
+        {/* THE LAST SENTENCE IS THE ONE THAT CHANGED. It read "A player you use is
+            gone for the rest of October" - the burn - and October has no burn now.
+            "Tomorrow is a new five" is the rule that replaced it, and it is stated
+            HERE, once, because this note is the card's own statement of its rules
+            and a second copy would be a second rule able to disagree. */}
         <p className="oc-note">
           One arm, four bats, only from today&apos;s games{capPhrase(view)}. Each slot
           locks at its game&apos;s first pitch.{' '}
-          <b>A player you use is gone for the rest of October.</b>
+          <b>Tomorrow is a new five.</b>
         </p>
       </div>
 
@@ -185,27 +190,24 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
                 the rest were unreachable and unmentioned. The panel scrolls
                 instead (.oc-pan-b). */}
             {pool.length ? pool.map((p) => {
+              // ONE REASON A ROW IS SPENT NOW, and it is about THIS card: the
+              // player is already in one of your five. There used to be a second -
+              // "used <date>", the burn - and it is gone with the rule.
               const mine = onCard.has(String(p.playerId));
-              const usedOn = view.used?.[String(p.playerId)] ?? null;
-              const gone = mine || usedOn != null;
               return (
                 <button key={p.playerId} type="button"
-                  className={`oc-prow${gone ? ' gone' : ''}`}
-                  onClick={() => !gone && choose(p)} disabled={gone || !signedIn}
+                  className={`oc-prow${mine ? ' gone' : ''}`}
+                  onClick={() => !mine && choose(p)} disabled={mine || !signedIn}
                   data-player={p.playerId}>
                   <span className={`oc-pb ${p.kind === 'arm' ? 'p' : 'b'}`}>{p.kind === 'arm' ? 'P' : 'B'}</span>
                   <span className="oc-who">
                     <b>{p.short}</b>
-                    {/* THE MOCK'S OWN THREE SUB-LINES: the club and position,
-                        "on your card", or "used <date>". A spent player is
-                        DIMMED, never hidden - the reader has to be able to see
-                        where their October went. */}
                     {/* THE MOCK'S OWN SUB-LINE, PLUS THE BATTING ORDER. A
                         posted card is the best thing this row can say about a
                         bat - "bats 4th" beats "RF" - and an arm with no
                         announced start says so rather than looking like a
                         confirmed starter. */}
-                    <small>{p.team} · {mine ? 'on your card' : usedOn ? `used ${prettyDay(usedOn)}` : slotWord(p)}</small>
+                    <small>{p.team} · {mine ? 'on your card' : slotWord(p)}</small>
                   </span>
                   <span className="oc-val"><b>{p.ppg ?? '–'}</b><small>PPG</small></span>
                 </button>
@@ -238,6 +240,16 @@ function Header({ view, slots }) {
   const next = view.nextLock;
   const pips = view.slots.map((s) => slots[s.slot]?.pip ?? s.pip);
   const filled = pips.filter((p) => p !== 'open').length;
+  // THE THREE COUNTS COME OFF THESE PIPS, NOT OFF view.progress.
+  //
+  // PICKED IS A FILLED UNLOCKED SLOT - that is the definition, and cardProgress
+  // computes it the same way. The bug was the SOURCE: "of 5" above read the live
+  // pips (which carry the tap the reader just made) while this line read the
+  // server's snapshot, so a card with five picks on it could show "0 picked ·
+  // 5 open" underneath "5 of 5" until something revalidated. One reading now.
+  const locked = pips.filter((p) => p === 'locked').length;
+  const picked = pips.filter((p) => p === 'picked').length;
+  const open = pips.filter((p) => p === 'open').length;
   return (
     <div className="oc-hd">
       <div className="oc-hd-top">
@@ -254,15 +266,23 @@ function Header({ view, slots }) {
             locks at its own first pitch, so the only deadline worth showing is
             the soonest one the reader can still act on. */}
         {next ? <Clock msAway={next.msAway} /> : null}
-        <div className="oc-lbl">{next ? <>next lock<b>{next.slug.toUpperCase()} · {timeOf(next.kickoffAt)}</b></> : <>all locked<b>points only</b></>}</div>
+        {/* THE MATCH-UP, NOT THE SLUG. gameLabel() (lib/october/rules.js) ships
+            "MIN @ SF · G2"; this line used to print next.slug.toUpperCase(),
+            which put MLB-2026-09-23-MIN-SF-G2 in the header of a live card. */}
+        <div className="oc-lbl">{next ? <>next lock<b>{next.label ?? ''}{next.label ? ' · ' : ''}{timeOf(next.kickoffAt)}</b></> : <>all locked<b>points only</b></>}</div>
         <div className="oc-tot"><b>{filled}</b><span>of {view.slots.length}</span></div>
       </div>
       <div className="oc-pips">
         {pips.map((p, i) => <i key={i} className={`oc-pip${p === 'locked' ? ' lk' : p === 'picked' ? ' on' : ''}`} />)}
       </div>
       <div className="oc-sub">
-        <span>{view.progress.locked} locked · {view.progress.picked} picked · {view.progress.open} open</span>
-        <span>{Object.keys(view.used ?? {}).length} used in October</span>
+        <span>{locked} locked · {picked} picked · {open} open</span>
+        {/* THE RIGHT-HAND STAT WAS "n used in October" - the burn count, and the
+            burn is gone. It is today's best settled slot now, and BLANK until one
+            settles: an empty span rather than a zero, because "0" here would read
+            as a card that has scored nothing rather than a slate that has not
+            started. */}
+        <span>{view.todaysBest == null ? '' : `today's best · ${view.todaysBest}`}</span>
       </div>
     </div>
   );
@@ -327,7 +347,6 @@ const two = (t) => (t?.c1 && t?.c2 ? `linear-gradient(to bottom, ${t.c1} 0 58%, 
 // Pacific reader read every first pitch three hours late and nothing on the
 // card admitted which zone it meant.
 const timeOf = (iso) => ptTime(iso) ?? '';
-const prettyDay = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 const stageLabel = (s) => ({ wild_card: 'Wild Card', division: 'Division Series', championship: 'Championship Series', world_series: 'World Series' }[s] ?? 'Postseason');
 const teamLine = (s, view) => {
   const g = view.board.find((x) => String(x.matchId) === String(s.matchId));
@@ -353,7 +372,7 @@ function capPhrase(view) {
 
 const REASON = {
   signed_out: 'Sign in to play.',
-  used: 'You already used that player this October.',
+  // NO 'used' REASON. October's refuseReason cannot return one any more.
   already_on_card: 'That player is already on your card.',
   max_from_game: 'That is the most this slate allows from one game.',
   game_started: 'That game has started.',
@@ -366,7 +385,6 @@ const REASON = {
   not_open: 'This card has not opened yet.',
 };
 function reasonText(r, view) {
-  if (r?.reason === 'used' && r.usedOn) return `You used that player on ${prettyDay(r.usedOn)}.`;
   void view;
   return REASON[r?.reason] ?? 'That pick did not save.';
 }
