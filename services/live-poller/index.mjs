@@ -86,6 +86,18 @@ const LEAGUES = [
     // only ran on live rows would see it for the first time when it was already
     // too late to pick against. lineupDue() holds the call rate down.
     enrichScheduled: true,
+    // AND THE CANDIDATE WINDOW REACHES AS FAR AHEAD AS lineupDue DOES. Four
+    // hours, because that is when batting orders start going up; with the
+    // default thirty minutes the pre-kick pass could never see a game in time
+    // to be worth picking against. Football keeps the default.
+    futureMinutes: 240,
+    // AND THE LOOP STAYS AWAKE THAT LONG, SLOWLY. The candidate window reaching
+    // four hours ahead buys nothing while the loop is IDLE - pollOnce does not
+    // run at all then - and the default pre-kick window is ten minutes, so a
+    // batting order posted at 1pm for a 4pm game was still unseen at 3:50.
+    // Four hours at five-minute polls, against ten minutes at thirty seconds
+    // for the football leagues, which are untouched.
+    cadenceOpts: { preKickMin: 240, preKickSec: 300 },
     // THE LINE SCORE AND THE SCORING SUMMARY, which writeLive is forbidden and
     // which are on the row we already hold. Football's equivalents arrive from
     // a different provider on a different cadence and have their own jobs;
@@ -171,7 +183,7 @@ async function loop(lg) {
     const now = new Date();
     let decision;
     try {
-      decision = cadence(await slate(lg.slug, now), now);
+      decision = cadence(await slate(lg.slug, now), now, lg.cadenceOpts ?? {});
     } catch (e) {
       log(`[${lg.slug}] slate read failed:`, e.message);
       await sleep(30000); continue;
@@ -200,7 +212,8 @@ async function loop(lg) {
         const r = await pollOnce(sql, {
           league: lg.slug, providerKey: lg.providerKey,
           fetcher: () => lg.fetcher(now), normalise: lg.normalise,
-          enrich: lg.enrich ?? null, enrichScheduled: lg.enrichScheduled === true, now, log,
+          enrich: lg.enrich ?? null, enrichScheduled: lg.enrichScheduled === true,
+          futureMinutes: lg.futureMinutes ?? 30, now, log,
         });
         // THE LOST-FINAL SWEEP rides the same tick and the same window
         // (defect 2). Cheap - one indexed read that is empty on almost

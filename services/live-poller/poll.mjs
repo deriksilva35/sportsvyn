@@ -567,7 +567,7 @@ export async function sweepLostFinals(sql, { league, now = new Date(), dispatchF
 
 export async function pollOnce(sql, {
   league, providerKey, fetcher, normalise, enrich = null, detail = null,
-  enrichScheduled = false,
+  enrichScheduled = false, futureMinutes = 30,
   now = new Date(), dryRun = false, push = true, log = () => {},
 }) {
   const out = {
@@ -610,8 +610,19 @@ export async function pollOnce(sql, {
       LEFT JOIN teams h ON h.id = m.home_team_id
       LEFT JOIN teams a ON a.id = m.away_team_id
      WHERE m.status IN ('live', 'scheduled')
+       -- THIRTY MINUTES AHEAD WAS THE WHOLE FUTURE, and it made lineupDue's
+       -- four-hour window unreachable: a batting order goes up two or three
+       -- hours before first pitch, and no game that far out was ever a
+       -- CANDIDATE, so the pre-kick pass could only ever see games about to
+       -- start. Caught by a game two hours away whose metadata.lineups was
+       -- still null an hour after the pass shipped.
+       --
+       -- IT IS PER LEAGUE AND DEFAULTS TO THE OLD VALUE. Both football leagues
+       -- keep their 30 minutes exactly - widening their blast radius to buy
+       -- baseball a lineup would be a trade nobody asked for.
        AND m.kickoff_at BETWEEN ${now.toISOString()}::timestamptz - interval '8 hours'
-                            AND ${now.toISOString()}::timestamptz + interval '30 minutes'`;
+                            AND ${now.toISOString()}::timestamptz
+                                + make_interval(mins => ${Number(futureMinutes) || 30})`;
   out.considered = candidates.length;
   if (!candidates.length) return out;
 
