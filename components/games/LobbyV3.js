@@ -272,9 +272,10 @@ function ResultsPane({ v }) {
         <div className="gv-lbh"><span className="on">DAILY</span></div>
         {dailyDays.length === 0 ? (
           <div className="gv-tr"><span className="gv-hn q">Nothing played yet this week</span></div>
-        ) : dailyDays.map((d) => (
-          <div className={`gv-tr${d.you ? ' you' : ''}`} key={d.date}>
-            <span className="gv-rk">{d.day}</span>
+        ) : dailyDays.map((d) => {
+          const inner = (
+            <>
+              <span className="gv-rk">{d.day}</span>
             <span className="gv-hn">
               {/* THE SEASON APPEARS ONLY ON A GRADED ROW (addendum 7 / the
                   mock's own rule): before you play, the season is the thing
@@ -282,9 +283,16 @@ function ResultsPane({ v }) {
               {d.season != null ? `${d.season} season` : 'not played'}
               <small>{[d.matched, d.elapsed].filter(Boolean).join(' · ')}</small>
             </span>
-            <span className="gv-sc n">{d.pct ?? '-'}</span>
-          </div>
-        ))}
+              <span className="gv-sc n">{d.pct ?? '-'}</span>
+            </>
+          );
+          // EACH DAY OPENS ITS OWN RESULTS SCREEN. A day with no board id - a run
+          // from before the id was carried - stays a plain row rather than a link
+          // to nowhere.
+          return d.href
+            ? <Link className={`gv-tr${d.you ? ' you' : ''}`} key={d.date} href={d.href}>{inner}</Link>
+            : <div className={`gv-tr${d.you ? ' you' : ''}`} key={d.date}>{inner}</div>;
+        })}
         {dailySummary && (
           <div className="gv-tr"><span className="gv-rk q">&hellip;</span><span className="gv-hn q">{dailySummary}</span><span className="gv-sc" /></div>
         )}

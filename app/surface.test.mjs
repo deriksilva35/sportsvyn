@@ -207,6 +207,11 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     // one border on a shell-only button - and it is gone with the control
     // (LIVE ACTIVITY DOOR relay). The lock-screen row that replaced it lives
     // in components/alerts/alerts.css and uses no bare token.
+    // THE RESULTS GRAMMAR (RESULTS relay): six, and every one is a real
+    // surface of the mock - the module card and its header band, the
+    // distribution's empty bars, the scoreboard's unplayed squares, and the
+    // Pick'em header row.
+    'components/results/results.css': 6,
   };
   const found = {};
   for (const f of CSS) {
@@ -229,7 +234,10 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   // 107 -> 119 with October's card and board - the mock is dense with ink
   // grounds and every one of them is a real surface.
   // 119 -> 132 with The Run's nine and its league board (MLB B3).
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 132,
+  // 132 -> 138 with the results grammar's one stylesheet (RESULTS relay) - it
+  // replaces nothing yet, because the four old grade components stay mounted
+  // until this route serves the same contest.
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 138,
     '18 were broken before the promotion; the rest were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.
@@ -254,6 +262,11 @@ const PAPER_BG_ALLOWED = [
   ['app/player/[slug]/player.css', '.gp-chip.rook - a light pill badge on a dark card'],
   ['components/gridiron/gridiron.css', '.gi-chip.live.active .gi-dot - a 6px live dot'],
   ['app/market/market.css', 'color-mix(paper 14%, graphite-up) - a dark tint, not paper'],
+  // THE CEILING TICK (RESULTS relay): .rs-bar u is 2px wide and 11px tall, a
+  // mark ON the dark progress bar saying where the ceiling is. It is the same
+  // kind of thing as the burger bars above - a light element on a dark ground,
+  // which is the opposite of a light ground.
+  ['components/results/results.css', '.rs-bar u - the 2px ceiling tick on the dark header bar'],
 ];
 
 test('NO NEW LIGHT GROUND - every paper background is on the argued list', () => {

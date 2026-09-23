@@ -294,7 +294,7 @@ function Clock({ msAway }) {
  */
 function slotWord(p) {
   if (p?.order != null) return `bats ${ordinal(p.order)}`;
-  // THE PROBABLE SAYS SO RATHER THAN SAYING "RP". BDL's position is a
+  // THE PROBABLE SAYS SO RATHER THAN SAYING "RP". The provider's position is a
   // season-long role and tonight's starter is often not the man it calls a
   // starter - the served CHW @ KC panel offered D. Lynch IV, the announced
   // starter, labelled "RP". The only arm on offer should not look like a
