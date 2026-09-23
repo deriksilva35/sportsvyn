@@ -512,15 +512,25 @@ async function liveActivityCount(sql, matchId) {
  * which is where the rider already gets them for the scoreline - no second
  * teams query for three letters this function was handed.
  */
-async function laLineFor(sql, m) {
+// EXPORTED FOR THE TEST THAT PROVES THE TEN KEYS. The rider composes
+// laLineFor -> stateFromMatch -> pushLiveActivities, and the only way to assert
+// what a card actually receives is to walk that same composition with a real
+// row - a test around pollOnce sees push COUNTS and never the payload.
+export async function laLineFor(sql, m) {
   // THE LINE IS PER SPORT, and it was not. liveLine() is the GRIDIRON reader -
   // down, distance, a spot on a field - and every MLB card was being built from
   // it, because stateFromMatch() only falls back to baseballLine() when the
   // caller passes NO line at all and this always passed one. A baseball card got
   // football's answer to three of its six fields.
   if (sportOfLeague(m.league_slug) === BASEBALL) {
+    // period AND inning_type ARE NOT OPTIONAL HERE. baseballLastPlay walks the
+    // half brackets, and playsTab SKIPS a row with no period at all - so a query
+    // that left them out returned no halves, found no at-bat, and fell back to
+    // the newest scoring play on every single card. Caught by the payload test,
+    // which is the only place the whole composition is visible.
     const rows = await sql`
-      SELECT play_number, provider_play_id, play_type, text, scoring, pitch_type
+      SELECT play_number, provider_play_id, play_type, text, scoring, pitch_type,
+             period, inning_type
         FROM plays WHERE match_id = ${m.id}
        ORDER BY play_number DESC NULLS LAST LIMIT 400`.catch(() => []);
     const scoringPlays = Array.isArray(m.scoring_plays) ? m.scoring_plays : [];
