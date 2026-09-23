@@ -7,6 +7,8 @@ import { mapLiveStatus, liveState, parseBdlProse } from '../../lib/live/vocabula
 import { writeLive, scoreChanged } from '../../lib/live/write.js';
 import { toScoreRow } from '../../lib/live/scoreEvent.js';
 import { fromBdlMlb } from '../../lib/mlb/ingest.js';
+import { baseballLastPlay } from '../../lib/mlb/playsTab.js';
+import { BASEBALL, sportOf as sportOfLeague } from '../../lib/live/vocabulary.js';
 import { mlbDetailOf, writeMlbDetail, writeMlbGamePk, writeMlbLineups, writeMlbProbables, lineupDue } from '../../lib/mlb/detail.js';
 import { fetchScheduleByMatch, fetchGameFeed, pickByKickoff, matchKey, statsApiEnabled } from '../../lib/mlb/statsapi.js';
 
@@ -511,6 +513,22 @@ async function liveActivityCount(sql, matchId) {
  * teams query for three letters this function was handed.
  */
 async function laLineFor(sql, m) {
+  // THE LINE IS PER SPORT, and it was not. liveLine() is the GRIDIRON reader -
+  // down, distance, a spot on a field - and every MLB card was being built from
+  // it, because stateFromMatch() only falls back to baseballLine() when the
+  // caller passes NO line at all and this always passed one. A baseball card got
+  // football's answer to three of its six fields.
+  if (sportOfLeague(m.league_slug) === BASEBALL) {
+    const rows = await sql`
+      SELECT play_number, provider_play_id, play_type, text, scoring, pitch_type
+        FROM plays WHERE match_id = ${m.id}
+       ORDER BY play_number DESC NULLS LAST LIMIT 400`.catch(() => []);
+    const scoringPlays = Array.isArray(m.scoring_plays) ? m.scoring_plays : [];
+    // ONLY THE LAST PLAY. possession and situation stay baseballLine's, off
+    // live_state - the side batting, the outs, the count, the runners - and
+    // stateFromMatch merges this over them.
+    return { lastPlay: baseballLastPlay(rows, scoringPlays) };
+  }
   const plays = await playsFor(m.id);
   return liveLine({
     plays,
@@ -592,6 +610,10 @@ export async function pollOnce(sql, {
            -- their own fetchedAt instead of on a counter in a process's head
            -- that a restart resets.
            m.metadata->'lineups' AS before_lineups,
+           -- THE CURATED SCORING SENTENCES, for the baseball card's last play:
+           -- when the newest completed at-bat IS the scoring one, this is the
+           -- text it prints. Same row, no extra read.
+           m.metadata->'scoring_plays' AS scoring_plays,
            m.external_ids->>${providerKey} AS pid,
            -- THE WHOLE OBJECT, not one key: an enrichment may hold a second
            -- provider's id for the same game (MLB's statsapi_game_pk), and a
