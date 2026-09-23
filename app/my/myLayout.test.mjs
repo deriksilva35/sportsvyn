@@ -115,8 +115,15 @@ test('the lock sub-line is stated short, and still says the load-bearing part', 
   // lockLabel itself is untouched - the board still spells the date out.
   assert.match(read, /return `\$\{parts\.weekday\} \$\{parts\.month\} \$\{parts\.day\}, \$\{clock\} ET`;/);
   // The dashboard rows use the short one.
+  //
+  // THE BOARD NUMBER IS DATA, NOT A LITERAL. This guard pinned `Board 1` and went
+  // red the day 1f84f68 made the number computed ("pickem: board number is
+  // computed, never a typed '1'") - correctly, since a hard-coded 1 would be the
+  // defect. It then stayed red for eighteen days under scoped suite runs. What
+  // this test is FOR is the short formatter; it must not also pin the data.
   const panels = src('components/my/panels.js');
-  assert.match(panels, /Board 1 - locks \$\{shortLockLabel\(pickem\.nextKickoff\)\}/);
+  assert.match(panels, /Board \$\{pickem\.boardNumber\} - locks \$\{shortLockLabel\(pickem\.nextKickoff\)\}/);
+  assert.doesNotMatch(panels, /Board 1 -/, 'a typed board number is the thing 1f84f68 removed');
   assert.match(panels, /locks \$\{shortLockLabel\(g\.kickoff_at\)\}/);
 });
 

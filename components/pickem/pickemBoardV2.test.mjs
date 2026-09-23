@@ -32,6 +32,25 @@ const HOUR = 3600_000;
 const future = (h = 3) => new Date(Date.now() + h * HOUR).toISOString();
 const past = (h = 3) => new Date(Date.now() - h * HOUR).toISOString();
 
+/**
+ * A KICKOFF ON THE ET CALENDAR DAY `offset` DAYS FROM NOW.
+ *
+ * The day-group tests below used to carry typed dates - '2026-09-18', '2026-09-20'
+ * - which were in the future on the day they were written (2026-09-17) and in the
+ * past five days later, at which point "2 still open" became "all locked" and two
+ * tests went red for nobody. A fixture that asserts something about OPEN games
+ * must be written relative to now or it is a dated cheque.
+ *
+ * ET, NOT UTC, because the board groups by the reader's calendar day. Any UTC time
+ * from 05:00Z to 23:59Z falls on the same calendar date in ET (UTC-4 or -5), so
+ * staying inside that band lets a date be built without a timezone library - the
+ * same trick, stated, that the CFB test's own comment relied on.
+ */
+const etDay = (offsetDays, hms = '20:00:00') => {
+  const d = new Date(Date.now() + offsetDays * 24 * HOUR);
+  return `${d.toISOString().slice(0, 10)}T${hms}.000Z`;
+};
+
 /** One board row, in lib/pickem/view.js's own gameRows() shape. */
 const game = (o = {}) => ({
   match_id: 1, slug: 'a-at-b', home: 'Bills', away: 'Lions',
@@ -289,9 +308,9 @@ test('the season line renders when there is one, and vanishes when there is not'
 
 test('day groups carry their own open count, and a spent day says so', () => {
   const c = render([
-    game({ match_id: 1, kickoff_at: '2026-09-18T00:15:00.000Z', status: 'final', kicked: true, home_score: 31, away_score: 24 }),
-    game({ match_id: 2, kickoff_at: '2026-09-20T17:00:00.000Z', home: 'Chiefs', away: 'Colts' }),
-    game({ match_id: 3, kickoff_at: '2026-09-20T20:25:00.000Z', home: 'Jets', away: 'Titans' }),
+    game({ match_id: 1, kickoff_at: etDay(-3, '20:15:00'), status: 'final', kicked: true, home_score: 31, away_score: 24 }),
+    game({ match_id: 2, kickoff_at: etDay(2, '17:00:00'), home: 'Chiefs', away: 'Colts' }),
+    game({ match_id: 3, kickoff_at: etDay(2, '20:25:00'), home: 'Jets', away: 'Titans' }),
   ]);
   const heads = [...c.querySelectorAll('.pkv-dh')];
   assert.equal(heads.length, 2, 'two calendar days');
@@ -303,10 +322,11 @@ test('day groups carry their own open count, and a spent day says so', () => {
 test('A CFB BOARD: 22 games, AP ranks on the rows, 22 pips', () => {
   const games = Array.from({ length: 22 }, (_, i) => game({
     match_id: 100 + i, home: `Home ${i}`, away: `Away ${i}`,
-    // FRIDAY vs SATURDAY IN ET, not in UTC: 2026-09-19T23:30Z is 7:30pm ET
-    // Friday and 2026-09-20T23:30Z is 7:30pm ET Saturday. A UTC-midnight split
-    // would have put both on the same ET day and tested nothing.
-    kickoff_at: i < 3 ? '2026-09-19T23:30:00.000Z' : '2026-09-20T23:30:00.000Z',
+    // TWO ADJACENT DAYS IN ET, not in UTC: 23:30Z is 7:30pm ET the same date, so
+    // these land on consecutive ET days. A UTC-midnight split would have put both
+    // on the same ET day and tested nothing. Both are in the future, because the
+    // footer below asserts all 22 are still to go.
+    kickoff_at: i < 3 ? etDay(2, '23:30:00') : etDay(3, '23:30:00'),
     home_rank: i === 0 ? 5 : null, away_rank: i === 0 ? 2 : null,
     home_record: '2-0', away_record: '1-1',
   }));

@@ -20,6 +20,49 @@ Rules for any CC session running ON the droplet:
 Restart the droplet's Remote Control session for this repo with:
   tmux new -d -s cc-sportsvyn 'cd ~/projects/sportsvyn && claude --remote-control --name sportsvyn'
 
+## THE SUITE IS THE WHOLE SUITE, and it is the default
+
+Any relay that commits, merges or deploys runs the FULL suite, with env sourced:
+
+    set -a && . ./.env.local && set +a && node --test $(git ls-files '*.test.mjs')
+
+Not the touched directories. Not the files this relay opened. The full run, every
+time, without being asked for it - "full suite" is the floor, and a relay that
+reports a green scoped run has reported nothing about the tree it is merging into.
+
+WHY, with the receipt. `lib/legal.test.mjs` - the guard that no user-facing string
+names a data vendor - went red in 985808c and stayed red through FOUR commits,
+because every relay in between ran the suite on the directories it had touched and
+lib/ was never one of them. The test that exists precisely to catch a slip nobody
+is looking for is the test a scoped run is guaranteed to skip: it lives nowhere
+near the code that breaks it. That is the whole point of it.
+
+AND IT WAS NOT THE WORST ONE. The first full run written under this rule found
+three more asleep, the oldest by eighteen days: `app/my/myLayout.test.mjs` pinned
+the literal `Board 1 - locks ...` and 1f84f68 (5 Sep, "board number is computed,
+never a typed '1'") made the number data. Two others in
+`components/pickem/pickemBoardV2.test.mjs` had typed kickoffs - '2026-09-18',
+'2026-09-20' - future on the day they were written and past five days later, so
+"2 still open" became "all locked" with nobody watching. A fixture asserting
+something about OPEN games is written relative to now, or it is a dated cheque.
+
+The rule is therefore about REACH, not about cost. Scoped runs are fine while
+iterating - run lib/october/ forty times while writing lib/october/. But the run
+that decides whether something ships is the one that has to see the files this
+relay never opened, and that is the full suite. Sourcing .env.local is part of
+the gate: without it ~128 tests fail for want of a connection string, and a relay
+that reads those as noise has taught itself to read real failures as noise too.
+
+TWO WAYS THE GATE LIES, both met while writing it:
+
+- `git ls-files` LISTS TRACKED FILES. A test file written this relay and not yet
+  added is not in the run, and the run is green because the new test was never
+  executed. `git add` the new tests BEFORE the gate run, or the guard you just
+  wrote guards nothing.
+- LINT AND THE SUITE DO NOT RUN AT THE SAME TIME. The mount tests write and unlink
+  `__*_stub.mjs` files; eslint walking the tree at that moment dies on an ENOENT
+  for a file that existed a millisecond earlier. Suite first, lint after.
+
 ## Commit hygiene: what never gets staged, and what scripts/ is for
 
 THE NEVER-STAGE LIST is short and it is about generated or secret files, not
