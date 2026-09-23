@@ -44,7 +44,17 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
     setSlots((m) => ({ ...m, [slot]: { ...m[slot], playerId: p.playerId, name: p.short, matchId: p.matchId, pip: 'picked' } }));
     setErr(null);
     start(async () => {
-      const r = await saveOctoberPickAction(view.contest.id, slot, p);
+      // A THROW IS A REFUSAL TOO, AND IT USED TO BE A LIE INSTEAD.
+      // `await action()` rejects on a network drop, a redeploy mid-flight or a
+      // serialisation error, and the rollback below was only reached on
+      // `ok: false` - so the throw left the OPTIMISTIC PAINT STANDING. The card
+      // then believed a pick the server had never taken: the slot showed a name,
+      // the reader's next tap found no free slot, and the card said "All four
+      // bat slots are filled" over a card whose fourth bat had never been saved.
+      // The database said three bats; the card behaved as if four.
+      let r;
+      try { r = await saveOctoberPickAction(view.contest.id, slot, p); }
+      catch { r = { ok: false, reason: 'unreachable' }; }
       // THE SERVER'S ANSWER WINS. An optimistic paint the server refuses is
       // repainted back, with its reason, rather than left standing as a pick
       // the reader believes they made.
@@ -57,7 +67,11 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
     const before = slots[slot];
     setSlots((m) => ({ ...m, [slot]: { slot, pip: 'open' } }));
     start(async () => {
-      const r = await clearOctoberPickAction(view.contest.id, slot);
+      // Same reasoning as choose(): a throw must repaint, or a slot the reader
+      // cleared stays cleared on screen and filled in the database.
+      let r;
+      try { r = await clearOctoberPickAction(view.contest.id, slot); }
+      catch { r = { ok: false, reason: 'unreachable' }; }
       if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(reasonText(r, view)); }
     });
   };
@@ -158,7 +172,11 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
             <small>{game ? <>{timeOf(game.kickoffAt)}<br />{lineupWord(game)}</> : <>points land<br />as the box does</>}</small>
           </div>
           <div className="oc-pan-b">
-            {pool.length ? pool.slice(0, 12).map((p) => {
+            {/* EVERY ROW, BOTH CLUBS. It used to render the first twelve, which
+                on a posted card is one club's nine plus three of the other's -
+                the rest were unreachable and unmentioned. The panel scrolls
+                instead (.oc-pan-b). */}
+            {pool.length ? pool.map((p) => {
               const mine = onCard.has(String(p.playerId));
               const usedOn = view.used?.[String(p.playerId)] ?? null;
               const gone = mine || usedOn != null;
@@ -332,6 +350,7 @@ const REASON = {
   max_from_game: 'That is the most this slate allows from one game.',
   game_started: 'That game has started.',
   postponed: 'That game was postponed. Its players are pickable again when it is rescheduled.',
+  unreachable: 'That pick did not reach the server. Tap it again.',
   slot_locked: 'That slot locked at its first pitch.',
   wrong_kind: 'That slot takes a different kind of player.',
   not_today: 'That player is not in today\'s games.',

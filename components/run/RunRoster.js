@@ -37,7 +37,14 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
     setSlots((m) => ({ ...m, [slot]: { ...m[slot], playerId: p.playerId, name: p.short, teamId: p.teamId, team: p.team } }));
     setErr(null);
     start(async () => {
-      const r = await saveRunPickAction(view.contest.id, slot, p);
+      // A THROW IS A REFUSAL TOO. `await action()` rejects on a network drop or
+      // a redeploy mid-flight, and a rollback reached only on `ok: false` left
+      // the optimistic paint standing - the card then believed a pick the server
+      // never took, and the next tap refused a slot that was actually free. It
+      // cost October a "All four bat slots are filled" over a card with three.
+      let r;
+      try { r = await saveRunPickAction(view.contest.id, slot, p); }
+      catch { r = { ok: false, reason: 'unreachable' }; }
       if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(reasonText(r)); }
     });
   };
@@ -47,7 +54,9 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
     const before = slots[slot];
     setSlots((m) => ({ ...m, [slot]: { slot } }));
     start(async () => {
-      const r = await clearRunPickAction(view.contest.id, slot);
+      let r;
+      try { r = await clearRunPickAction(view.contest.id, slot); }
+      catch { r = { ok: false, reason: 'unreachable' }; }
       if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(reasonText(r)); }
     });
   };
@@ -297,6 +306,7 @@ const REASON = {
   wrong_kind: 'That slot takes a different kind of player.',
   settled: 'This round is already graded.',
   not_open: 'This round has not opened yet.',
+  unreachable: 'That pick did not reach the server. Tap it again.',
 };
 function reasonText(r) {
   if (r?.reason === 'used' && r.usedIn) return `You used that player in the ${roundWord(r.usedIn)}.`;

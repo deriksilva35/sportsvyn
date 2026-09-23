@@ -90,7 +90,14 @@
 .oc-pan-h { display: flex; align-items: center; gap: 7px; padding: 7px 10px; border-bottom: 1px solid var(--rule-dim); background: var(--ink-3); border-radius: 12px 12px 0 0; }
 .oc-pan-h b { font: 700 12px var(--font-display); text-transform: uppercase; }
 .oc-pan-h small { color: var(--muted); font: 500 9px var(--font-mono); margin-left: auto; text-align: right; line-height: 1.3; }
-.oc-pan-b { flex: 1; overflow: hidden; }
+/* THE PANEL SCROLLS, AND IT HAS TO. `overflow: hidden` on a list of twenty
+   players showed whichever twelve the component happened to slice and silently
+   ate the rest - a reader looking for the eighth man in a batting order had no
+   way to reach him and nothing told them he was there. Both clubs' rows are
+   rendered now, so the box that holds them is the thing that must give.
+   max-height is in the viewport's units because the card above it is a fixed
+   height and the panel is the only part that can grow. */
+.oc-pan-b { flex: 1; overflow-y: auto; overflow-x: hidden; max-height: 52vh; -webkit-overflow-scrolling: touch; }
 .oc-prow { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-bottom: 1px solid var(--rule-dim); width: 100%; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .oc-prow:last-child { border-bottom: 0; }
 /* A SPENT PLAYER IS DIMMED, NEVER HIDDEN - the reader has to be able to see

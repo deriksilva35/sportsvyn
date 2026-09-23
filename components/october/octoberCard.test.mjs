@@ -25,9 +25,11 @@ before(async () => {
   writeFileSync(ACTION, [
     'export const calls = [];',
     'export let reply = { ok: true };',
+    'export let boom = false;',
     'export function setReply(r) { reply = r; }',
-    'export async function saveOctoberPickAction(c, s, p) { calls.push({ c, s, p }); return reply; }',
-    'export async function clearOctoberPickAction(c, s) { calls.push({ c, s, clear: true }); return reply; }',
+    "export function setThrow(b) { boom = b; }",
+    "export async function saveOctoberPickAction(c, s, p) { calls.push({ c, s, p }); if (boom) throw new Error('network'); return reply; }",
+    "export async function clearOctoberPickAction(c, s) { calls.push({ c, s, clear: true }); if (boom) throw new Error('network'); return reply; }",
   ].join('\n') + '\n');
   dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'https://sportsvyn.test/october' });
   global.window = dom.window; global.document = dom.window.document; global.self = dom.window;
@@ -340,4 +342,147 @@ test('TIMES: every time on this card is Pacific, and says so', () => {
   assert.match(h, /next lock<b>PHI-ATL · 11:08 AM PT<\/b>/);
   assert.match(h, /<small>11:08 AM PT<\/small>/);
   assert.match(h, /<span class="oc-tm">PHI · 11:08 AM PT<\/span>/);
+});
+
+// --- THE PANEL: SCROLL, SORT, AND THE FOURTH BAT ---------------------------
+
+/** A card with THREE bats set and the fourth slot open - item 3's state. */
+const THREE_BATS = () => {
+  const v = PICKING();
+  v.board = v.board.map((g) => (g.matchId === 2
+    ? { ...g, lineupPosted: { away: true, home: true } } : g));
+  v.slots = [
+    slot('arm', { pip: 'picked', name: 'Skubal', playerId: '50', matchId: 3, team: 'DET' }),
+    slot('bat1', { pip: 'picked', name: 'Schwarber', playerId: '92', matchId: 2, team: 'PHI' }),
+    slot('bat2', { pip: 'picked', name: 'Marsh', playerId: '97', matchId: 2, team: 'PHI' }),
+    slot('bat3', { pip: 'picked', name: 'Riley', playerId: '94', matchId: 2, team: 'ATL' }),
+    slot('bat4'),
+  ];
+  v.progress = { pips: ['picked', 'picked', 'picked', 'picked', 'open'], filled: 4, locked: 0, picked: 4, open: 1, total: 5 };
+  v.used = {};
+  v.pool = { byGame: { 2: [
+    { playerId: '90', short: 'Z. Wheeler', name: 'Zack Wheeler', kind: 'arm', team: 'PHI', position: 'SP', matchId: 2, ppg: 18.4, probable: true },
+    { playerId: '92', short: 'K. Schwarber', name: 'Kyle Schwarber', kind: 'bat', team: 'PHI', position: 'DH', matchId: 2, ppg: 9.1, order: 1 },
+    { playerId: '97', short: 'B. Marsh', name: 'Brandon Marsh', kind: 'bat', team: 'PHI', position: 'LF', matchId: 2, ppg: 8.6, order: 3 },
+    { playerId: '94', short: 'A. Riley', name: 'Austin Riley', kind: 'bat', team: 'ATL', position: '3B', matchId: 2, ppg: 7.4, order: 4 },
+    { playerId: '95', short: 'T. Turner', name: 'Trea Turner', kind: 'bat', team: 'PHI', position: 'SS', matchId: 2, ppg: 7.9, order: 2 },
+  ] } };
+  return v;
+};
+
+test('THE FOURTH BAT: three bats and an open slot accepts a fourth', async () => {
+  const el = dom.window.document.getElementById('root');
+  const root = createRoot(el); roots.add(root);
+  const v = THREE_BATS();
+  act(() => root.render(React.createElement(OctoberCard, { view: v, signedIn: true })));
+  action.calls.length = 0;
+  action.setReply({ ok: true });
+
+  // Trea Turner: a bat, not on the card, not used, in an open game.
+  const row = el.querySelector('[data-player="95"]');
+  assert.ok(row, 'the fourth bat is offered at all');
+  assert.equal(row.disabled, false, 'and is tappable');
+  await act(async () => { row.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })); });
+
+  // IT MUST REACH THE SERVER. "All four bat slots are filled" with an open slot
+  // is the component refusing a pick the card is showing as available.
+  assert.doesNotMatch(el.innerHTML, /All four bat slots are filled/);
+  assert.equal(action.calls.length, 1, 'the save was attempted');
+  assert.equal(action.calls[0].s, 'bat4', 'into the open slot, not into a filled one');
+  assert.equal(action.calls[0].p.playerId, '95');
+});
+
+test('THE FOURTH BAT: four filled bats DO refuse, and say so', async () => {
+  const el = dom.window.document.getElementById('root');
+  const root = createRoot(el); roots.add(root);
+  const v = THREE_BATS();
+  v.slots = v.slots.map((s) => (s.slot === 'bat4'
+    ? slot('bat4', { pip: 'picked', name: 'Olson', playerId: '96', matchId: 2, team: 'ATL' }) : s));
+  act(() => root.render(React.createElement(OctoberCard, { view: v, signedIn: true })));
+  action.calls.length = 0;
+  const row = el.querySelector('[data-player="95"]');
+  await act(async () => { row.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })); });
+  assert.match(el.innerHTML, /All four bat slots are filled/);
+  assert.equal(action.calls.length, 0, 'and nothing is sent');
+});
+
+test('THE PANEL: every posted bat of BOTH clubs is rendered', () => {
+  const v = PICKING();
+  v.board = v.board.map((g) => (g.matchId === 2
+    ? { ...g, lineupPosted: { away: true, home: true } } : g));
+  // Two full posted cards - nine and nine - plus both starters: twenty rows.
+  const phi = Array.from({ length: 9 }, (_, i) => ({
+    playerId: `p${i}`, short: `P. Bat${i + 1}`, name: `Phi Bat ${i + 1}`, kind: 'bat',
+    team: 'PHI', position: 'LF', matchId: 2, ppg: 9 - i * 0.1, order: i + 1,
+  }));
+  const atl = Array.from({ length: 9 }, (_, i) => ({
+    playerId: `a${i}`, short: `A. Bat${i + 1}`, name: `Atl Bat ${i + 1}`, kind: 'bat',
+    team: 'ATL', position: 'RF', matchId: 2, ppg: 8 - i * 0.1, order: i + 1,
+  }));
+  v.pool = { byGame: { 2: [
+    { playerId: '90', short: 'Z. Wheeler', name: 'Zack Wheeler', kind: 'arm', team: 'PHI', position: 'SP', matchId: 2, ppg: 18.4, probable: true },
+    { playerId: '91', short: 'S. Strider', name: 'Spencer Strider', kind: 'arm', team: 'ATL', position: 'SP', matchId: 2, ppg: 17.1, probable: true },
+    ...phi, ...atl,
+  ] } };
+  const h = html({ view: v, signedIn: true });
+  // TWENTY ROWS. It rendered the first TWELVE - one club's nine plus three of
+  // the other's - and the rest were unreachable and unmentioned.
+  assert.equal([...h.matchAll(/class="oc-prow/g)].length, 20);
+  for (const p of [...phi, ...atl]) {
+    assert.ok(h.includes(`data-player="${p.playerId}"`), `${p.short} is missing from the panel`);
+    assert.match(h, new RegExp(`<b>${p.short.replace('.', '\\.')}</b><small>${p.team} · bats `));
+  }
+});
+
+test('THE PANEL: arms first, then bats by PPG across both clubs', () => {
+  const v = PICKING();
+  v.board = v.board.map((g) => (g.matchId === 2
+    ? { ...g, lineupPosted: { away: true, home: true } } : g));
+  v.pool = { byGame: { 2: [
+    { playerId: '90', short: 'Z. Wheeler', name: 'Zack Wheeler', kind: 'arm', team: 'PHI', position: 'SP', matchId: 2, ppg: 18.4, probable: true },
+    { playerId: 'a', short: 'A. Riley', name: 'Austin Riley', kind: 'bat', team: 'ATL', position: '3B', matchId: 2, ppg: 9.9, order: 4 },
+    { playerId: 'b', short: 'K. Schwarber', name: 'Kyle Schwarber', kind: 'bat', team: 'PHI', position: 'DH', matchId: 2, ppg: 9.1, order: 1 },
+    { playerId: 'c', short: 'T. Turner', name: 'Trea Turner', kind: 'bat', team: 'PHI', position: 'SS', matchId: 2, ppg: 7.9, order: 2 },
+  ] } };
+  const h = html({ view: v, signedIn: true });
+  const order = [...h.matchAll(/data-player="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(order, ['90', 'a', 'b', 'c'],
+    'the arm, then 9.9, 9.1, 7.9 - the ATL bat ahead of both PHI bats');
+  // AND THE SUB-LINE STILL CARRIES THE ORDER: "CLUB · bats Nth".
+  assert.match(h, /A\. Riley<\/b><small>ATL · bats 4th<\/small>/);
+  assert.match(h, /K\. Schwarber<\/b><small>PHI · bats 1st<\/small>/);
+});
+
+test('THE FOURTH BAT, THE CAUSE: a save that THROWS must repaint the slot', async () => {
+  // THIS IS WHAT PRODUCED "All four bat slots are filled" OVER A CARD WITH
+  // THREE. `await action()` rejects on a network drop or a redeploy mid-flight,
+  // and the rollback used to be reached only on `ok: false` - so the throw left
+  // the optimistic paint standing. The card believed a pick the server never
+  // took, and the reader's next tap found no free slot.
+  const el = dom.window.document.getElementById('root');
+  const root = createRoot(el); roots.add(root);
+  act(() => root.render(React.createElement(OctoberCard, { view: THREE_BATS(), signedIn: true })));
+  action.calls.length = 0;
+  action.setThrow(true);
+  try {
+    // First tap: the save throws.
+    await act(async () => {
+      el.querySelector('[data-player="95"]').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+    });
+    // THE SLOT IS OPEN AGAIN, and the reader is told why in words they can act on.
+    assert.match(el.innerHTML, /did not reach the server/);
+    assert.equal(el.querySelector('[data-slot="bat4"]').dataset.state, 'open');
+
+    // AND THE NEXT TAP STILL HAS A SLOT TO GO IN. This is the assertion the bug
+    // failed: before the fix bat4 stayed painted and this said "All four bat
+    // slots are filled".
+    action.setThrow(false);
+    action.calls.length = 0;
+    await act(async () => {
+      el.querySelector('[data-player="95"]').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+    });
+    assert.doesNotMatch(el.innerHTML, /All four bat slots are filled/);
+    assert.equal(action.calls.length, 1);
+    assert.equal(action.calls[0].s, 'bat4');
+  } finally { action.setThrow(false); }
 });
