@@ -55,7 +55,17 @@ before(async () => {
   writeFileSync(NAV, "export function notFound() { throw new Error('notFound'); }\n");
   writeFileSync(HEADER, "export default function GlobalHeaderServer() { return null; }\n");
   writeFileSync(path.join(__dirname, '__css_stub.mjs'), 'export default {};\n');
-  writeFileSync(READER, "export let next = null; export function set(v) { next = v; } export async function getMlbGame() { return next; }\n");
+  writeFileSync(READER, [
+    "export let next = null;",
+    "export function set(v) { next = v; }",
+    "export async function getMlbGame() { return next; }",
+    "// THE PLAYS TAB'S OWN READER, stubbed beside the game's: the page calls it",
+    "// only when that tab is open, and the shaping it returns is unit-tested in",
+    "// lib/mlb/playsTab.test.mjs against real rows.",
+    "export let halves = [];",
+    "export function setHalves(v) { halves = v; }",
+    "export async function getMlbPlays() { return halves; }",
+  ].join('\n') + '\n');
   writeFileSync(BELL, [
     "import React from 'react';",
     'export default function AlertBell(props) {',
@@ -391,4 +401,68 @@ test('THE READER RETURNS THE LEAGUE, so the fixture above is not a fiction', () 
   const src = readFileSync(new URL('../../../lib/mlb/gameDetail.js', import.meta.url), 'utf8');
   assert.match(src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, ''),
     /leagueSlug: 'mlb'/);
+});
+
+// --- THE PLAYS TAB ---------------------------------------------------------
+
+test('THE PLAYS TAB IS THE THIRD TAB, and it is a LINK like the other two', async () => {
+  const h = await render(LIVE());
+  assert.match(h, /href="\/mlb\/game\/mlb-2026-09-22-tb-nyy\?box=plays"[^>]*>Plays</);
+  // Hitting is still the default, so an unknown ?box= cannot blank the page.
+  const bad = await render(LIVE(), { box: 'nonsense' });
+  assert.match(bad, /class="on"[^>]*>Hitting</);
+});
+
+test('THE PLAYS TAB RENDERS HALVES, AT-BATS AND PITCHES BENEATH THEM', async () => {
+  reader.setHalves([
+    {
+      key: '8:Bottom', period: 8, half: 'Bottom', label: 'Bottom 8th',
+      atBats: [
+        { key: 'b', batter: 'Brandon Marsh', batterId: '608',
+          result: 'Marsh doubled to center, Stott scored.', scoring: true,
+          score: { away: 3, home: 6 },
+          pitches: [{ key: 'p1', n: 1, line: '90 Sinker · in play' }] },
+        { key: 'ev', batter: null, batterId: null, result: 'Stott stole second.',
+          scoring: false, score: null, pitches: [], aside: true },
+        { key: 'a', batter: 'Bryson Stott', batterId: '700',
+          result: 'Stott singled to center.', scoring: false, score: null,
+          pitches: [
+            { key: 'q1', n: 1, line: '91 Sinker · ball' },
+            { key: 'q2', n: 2, line: '82 Slider · swinging strike' },
+          ] },
+      ],
+    },
+  ]);
+  const h = await render(LIVE(), { box: 'plays' });
+
+  assert.match(h, /<h3 class="mg-hlf">Bottom 8th<\/h3>/);
+  // THE RESULT IS IN BOLD, with the batter's name in front of it.
+  assert.match(h, /<span class="who">Brandon Marsh<\/span><b>Marsh doubled to center, Stott scored\.<\/b>/);
+  // THE SCORE AFTER, on the scoring row only.
+  assert.match(h, /class="mg-ab scored"/);
+  assert.match(h, /<span class="sc">3-6<\/span>/);
+  // COUNTED INSIDE THE TAB, because the SCORING module on the same page uses
+  // the same class - a count over the whole document would have "passed" on
+  // four scorelines it was not looking at.
+  const tabHtml = h.slice(h.indexOf('<h3 class="mg-hlf">'));
+  assert.equal([...tabHtml.matchAll(/<span class="sc">/g)].length, 1, 'an out carries no scoreline');
+  // THE PITCHES BENEATH, numbered, in quiet type.
+  assert.match(h, /<ol class="mg-pits"><li><i>1:<\/i> 90 Sinker · in play<\/li><\/ol>/);
+  assert.match(h, /<li><i>2:<\/i> 82 Slider · swinging strike<\/li>/);
+  // A BETWEEN-PITCH EVENT IS ITS OWN LINE, marked so it can be dimmed, and has
+  // no pitch list of its own.
+  assert.match(h, /class="mg-ab aside" data-ab="event"/);
+  assert.match(h, /data-ab="608"/);
+  // AND THE OTHER TWO TABS ARE NOT DRAWN - no batting table on the plays tab.
+  assert.doesNotMatch(h, /<th class="n">Batting<\/th>/);
+  reader.setHalves([]);
+});
+
+test('THE PLAYS TAB SAYS SO WHEN A GAME HAS NO PITCHES', async () => {
+  reader.setHalves([]);
+  const h = await render(LIVE(), { box: 'plays' });
+  // The importer runs on the poller's box-score cadence, so a game that just
+  // started has rows within a poll or two - and until then this says what is
+  // true rather than drawing an empty rail.
+  assert.match(h, /No pitches on this game yet\./);
 });

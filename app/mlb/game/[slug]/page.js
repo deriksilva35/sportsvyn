@@ -26,7 +26,7 @@ import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import TeamMark from '@/components/team/TeamMark';
 import StandaloneTime from '@/components/StandaloneTime';
-import { getMlbGame } from '@/lib/mlb/gameDetail';
+import { getMlbGame, getMlbPlays } from '@/lib/mlb/gameDetail';
 import { outsToInnings } from '@/lib/mlb/playsImport';
 import { stripCells } from '@/lib/mlb/strip';
 import { decisions, pitcherLine, shortName } from '@/lib/mlb/cardLines';
@@ -41,7 +41,7 @@ import './mlbgame.css';
 
 export const dynamic = 'force-dynamic';
 
-const TABS = [['hitting', 'Hitting'], ['pitching', 'Pitching']];
+const TABS = [['hitting', 'Hitting'], ['pitching', 'Pitching'], ['plays', 'Plays']];
 
 function TeamRow({ t, score, show, batting, signedIn = false, isShell = false, following = null }) {
   // THE STAR IS SIGNED-IN ONLY, and needs an id - the same two conditions
@@ -112,6 +112,11 @@ export default async function MlbGamePage({ params, searchParams }) {
   const cells = live ? stripCells(g.liveState) : null;
   const { hitters, pitchers } = g.box;
   const rows = tab === 'pitching' ? pitchers : hitters;
+  // READ ONLY WHEN THE TAB IS OPEN. A nine-inning game is 500+ play rows and
+  // the other two tabs need none of them - see getMlbPlays().
+  const halves = tab === 'plays'
+    ? await getMlbPlays(g.id, [...hitters, ...pitchers]).catch(() => [])
+    : null;
   const byTeam = (list, id) => list.filter((r) => r.team_id === id);
   // THE DECISION IS READ FROM THE BOX, which is the only place it exists - the
   // provider marks the W on the pitcher's line and nowhere on the game row.
@@ -287,7 +292,38 @@ export default async function MlbGamePage({ params, searchParams }) {
                   aria-current={tab === k ? 'page' : undefined}>{label}</Link>
               ))}
             </div>
-            {[g.away, g.home].map((team) => {
+            {tab === 'plays' ? (
+              halves?.length ? halves.map((h) => (
+                <div className="mg-half" key={h.key}>
+                  {/* NEWEST HALF FIRST - a reader opening this during a live
+                      game is looking for what just happened, and nine innings
+                      of scrolling to reach it is the reason a box score has
+                      tabs at all. */}
+                  <h3 className="mg-hlf">{h.label}</h3>
+                  {h.atBats.map((ab) => (
+                    <div className={`mg-ab${ab.scoring ? ' scored' : ''}${ab.aside ? ' aside' : ''}`}
+                      key={ab.key} data-ab={ab.batterId ?? 'event'}>
+                      <p className="mg-abr">
+                        {ab.batter ? <span className="who">{ab.batter}</span> : null}
+                        {/* THE RESULT IN BOLD, and the score AFTER it only on a
+                            play that scored: every row carries a scoreline and
+                            printing it beside a groundout would say nothing. */}
+                        <b>{ab.result ?? 'At bat'}</b>
+                        {ab.scoring && ab.score
+                          ? <span className="sc">{ab.score.away}-{ab.score.home}</span> : null}
+                      </p>
+                      {ab.pitches.length ? (
+                        <ol className="mg-pits">
+                          {ab.pitches.map((p) => (
+                            <li key={p.key}><i>{p.n}:</i> {p.line}</li>
+                          ))}
+                        </ol>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              )) : <p className="mg-empty">No pitches on this game yet.</p>
+            ) : [g.away, g.home].map((team) => {
               const mine = byTeam(rows, team?.id);
               if (!mine.length) return null;
               return (

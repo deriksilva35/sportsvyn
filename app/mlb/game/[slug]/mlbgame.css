@@ -92,3 +92,27 @@
    letters, a name and a score - the same call game.css makes. */
 .mg-follow .follow-star-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .mg-bell { display: flex; justify-content: flex-end; margin-top: 8px; }
+
+/* THE PLAYS TAB. One at-bat per block: the result in the page's own voice, the
+   pitches beneath it in quiet type. The half heading is the only thing that
+   carries weight above the result, because the reader navigates by half. */
+.mg-half { margin-top: 14px; }
+.mg-hlf { font: 800 11px var(--font-display); text-transform: uppercase; letter-spacing: .04em;
+  color: var(--volt); margin: 0 0 6px; }
+.mg-ab { border-top: 1px solid var(--rule-dim); padding: 7px 0 6px; }
+.mg-ab:first-of-type { border-top: 0; }
+.mg-abr { margin: 0; font: 500 12px var(--font-mono); color: var(--paper); display: flex;
+  flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.mg-abr .who { font: 700 10px var(--font-display); text-transform: uppercase; color: var(--muted-light); }
+.mg-abr b { font-weight: 700; }
+/* THE SCORE AFTER A SCORING PLAY, and only there - jade, the colour this page
+   already uses for a settled fact. */
+.mg-ab.scored .sc { font: 700 11px var(--font-mono); color: var(--jade, #2A8A4F);
+  border: 1px solid var(--jade, #2A8A4F); border-radius: 4px; padding: 0 4px; }
+/* A BETWEEN-PITCH EVENT - a stolen base, an overturned call - is a line of the
+   half in its own right and is dimmed, because nobody was at the plate for it. */
+.mg-ab.aside .mg-abr b { font-weight: 500; color: var(--muted-light); }
+.mg-pits { list-style: none; margin: 4px 0 0; padding: 0 0 0 2px; }
+.mg-pits li { font: 500 10px var(--font-mono); color: var(--muted); line-height: 1.5; }
+.mg-pits li i { font-style: normal; color: var(--muted-dim); display: inline-block; min-width: 14px; }
+.mg-empty { font: 500 11px var(--font-mono); color: var(--muted); margin: 12px 0 0; }

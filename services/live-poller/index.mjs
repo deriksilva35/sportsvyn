@@ -18,6 +18,7 @@ import { addCalls, callsToday, applyCap, overCap, DEFAULT_CAP } from '../../lib/
 import { StatsTracker } from '../../lib/live/statsCadence.js';
 import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
 import { syncMlbGameStats } from '../../lib/mlb/statsSync.js';
+import { syncMlbPlays } from '../../lib/mlb/playsSync.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
 import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich } from './poll.mjs';
@@ -170,7 +171,7 @@ async function release(client, league) {
 
 async function loop(lg) {
   let lock = null, windowId = null, failures = 0, pending = 0, lastBeat = 0;
-  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0 };
+  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0 };
   // BOX SCORE PULLS: every 10th live poll per live game, once at final.
   // MLB JOINS ON THE SAME TRACKER. Its ingest existed and was called by
   // nothing, so mlb_player_game_stats stayed empty on every game ever played -
@@ -202,7 +203,7 @@ async function loop(lg) {
     if (!active && lock) {
       await closeWindow(windowId, { ...window, closedState: decision.state });
       await release(lock, lg.slug); lock = null; windowId = null;
-      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0 });
+      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0 });
       log(`[${lg.slug}] window closed (${decision.state}) ${kickoffDelta(decision.nextKickoffAt, now)}`);
     }
 
@@ -267,6 +268,26 @@ async function loop(lg) {
               const g = await syncBox(d.id);
               pending += g.calls; window.calls += g.calls; window.statsCalls += g.calls; statsCallsToday += g.calls;
               log(`[${lg.slug}] box score ${d.why} match=${g.matchId} rows=${g.rows} changed=${g.changed} calls=${g.calls}`);
+              // THE PITCHES RIDE THE SAME CADENCE AS THE BOX, and the same
+              // decision: whatever stats.due() says is due gets both. A second
+              // tracker would be a second answer to "how often is often
+              // enough", and the two reads are about the same game at the same
+              // moment - a box score whose plays are a poll behind is a page
+              // that disagrees with itself.
+              //
+              // ITS FAILURE IS ITS OWN. The box score is what October and The
+              // Run settle against; the pitch list is a tab. Losing the tab
+              // must never cost the scoring.
+              if (lg.slug === 'mlb') {
+                try {
+                  const pl = await syncMlbPlays(d.id);
+                  pending += pl.calls; window.calls += pl.calls; window.statsCalls += pl.calls; statsCallsToday += pl.calls;
+                  window.plays += pl.changed ?? 0;
+                  log(`[mlb] plays ${d.why} match=${pl.matchId} rows=${pl.rows} changed=${pl.changed} calls=${pl.calls}`);
+                } catch (e) {
+                  log(`[mlb] plays ${d.why} match=${d.id} failed:`, String(e?.message ?? e).slice(0, 120));
+                }
+              }
             } catch (e) {
               log(`[${lg.slug}] box score ${d.why} match=${d.id} failed:`, String(e?.message ?? e).slice(0, 120));
             }
