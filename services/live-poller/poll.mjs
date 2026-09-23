@@ -669,6 +669,24 @@ export async function pollOnce(sql, {
         if (await writeMlbLineups(sql, m.id, extra.lineups, { at: now })) out.lineups += 1;
       } catch (e) { log(`[${league}] lineup write failed match=${m.id}: ${e.message}`); }
     }
+    // THE LINE SCORE AND THE SCORING SUMMARY, and they are HERE rather than
+    // after writeLive for the reason the lineups are: writeLive returns null
+    // when nothing about the SCORE changed, and a line score advances when an
+    // INNING passes. Hung off a score change it froze between runs - and once
+    // our row went final it stopped being a candidate at all, so the last
+    // reading it ever took was whatever the poll that flipped it happened to
+    // hold. Twenty-six of twenty-seven MLB rows carried a 0-0 grid tonight.
+    //
+    // ITS FAILURE IS CONTAINED, as before: a missing line score is a thinner
+    // page; losing the scoreline the board depends on to get one is not a trade
+    // worth making.
+    if (detail && !dryRun) {
+      try {
+        const d = detail(row);
+        if (d && await writeMlbDetail(sql, m.id, d)) out.detail += 1;
+      } catch (e) { log(`[${league}] detail write failed match=${m.id}: ${e.message}`); }
+    }
+
     // THE PROBABLES, on the same pass and the same reasoning: a pre-kick row
     // writes its starters whether or not its score moved. Its own writer and
     // its own top-level key, so it cannot touch the lineups beside it.
@@ -697,22 +715,6 @@ export async function pollOnce(sql, {
     if (!after) continue;
     out.written += 1;
 
-    // THE SECOND WRITER, and it is second on purpose. writeLive owns status,
-    // the scores and live_state and is forbidden the rest (lib/live/write.js);
-    // the line score and the scoring summary are ON the row we already hold,
-    // so refusing to write them here would mean fetching the identical row a
-    // second time from a second job. lib/mlb/detail.js is that writer: its own
-    // statement, its own keys, and it cannot touch a score.
-    //
-    // ITS FAILURE IS CONTAINED, like the push rider's below. A missing line
-    // score is a thinner card; losing the scoreline the board depends on to
-    // get one is not a trade worth making.
-    if (detail) {
-      try {
-        const d = detail(row);
-        if (d && await writeMlbDetail(sql, m.id, d)) out.detail += 1;
-      } catch (e) { log(`[${league}] detail write failed match=${m.id}: ${e.message}`); }
-    }
     if (after.status === 'final' && m.status !== 'final') out.finals += 1;
 
     // THE PUSH RIDER. It is handed the transition this poll just made and asks

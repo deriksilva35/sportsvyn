@@ -16,6 +16,7 @@ import { writeFileSync, unlinkSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { install } from '../../../lib/testing/nextResolve.mjs';
 install();
+import { lineScoreGrid } from '../../../lib/mlb/gameDetail.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LINK = path.join(__dirname, '__link_stub.mjs');
@@ -181,4 +182,68 @@ test('PRE-GAME IS THE PROBABLES; FINAL IS THE DECISION', async () => {
   assert.doesNotMatch(f, /SV/);
   // AND NO "NOW" COLUMN ON A FINAL.
   assert.doesNotMatch(f, /class="now"/);
+});
+
+// --- EIGHT INNINGS, EIGHT COLUMNS ------------------------------------------
+
+test('A ROW WITH EIGHT INNINGS RENDERS EIGHT COLUMNS PLUS R/H/E', async () => {
+  // The real MIL @ PHI grid, off the day feed the poller reads: the home side
+  // won in the bottom of the 8th and never batted a 9th, so the grid is EIGHT
+  // columns wide and the away row's 9th is the ragged edge.
+  const g = LIVE();
+  g.slug = 'mlb-2026-09-22-mil-phi';
+  g.status = 'final'; g.chip = 'Final'; g.liveState = null;
+  g.home = team('PHI', 'Phillies'); g.away = team('MIL', 'Brewers');
+  g.homeScore = 6; g.awayScore = 4;
+  g.lineScore = lineScoreGrid({
+    home: { innings: [0, 2, 1, 0, 0, 0, 0, 3], runs: 6, hits: 8, errors: 0 },
+    away: { innings: [0, 0, 0, 1, 0, 2, 0, 0, 1], runs: 4, hits: 6, errors: 2 },
+  });
+  const h = await render(g);
+
+  // EIGHT is what the grid is padded to... except the away side played a 9th,
+  // so the real width is NINE and the eight-inning home row keeps its ragged
+  // edge. Both numbers are asserted rather than assumed.
+  assert.equal(g.lineScore.columns.length, 9);
+  const heads = [...h.matchAll(/<th scope="col"[^>]*>(\d+)<\/th>/g)].map((m) => m[1]);
+  assert.deepEqual(heads, ['1', '2', '3', '4', '5', '6', '7', '8', '9']);
+
+  const rows = [...h.matchAll(/<tr><th class="t"[^>]*>(MIL|PHI)<\/th>(.*?)<\/tr>/gs)];
+  const [mil, phi] = rows.map((m) => m[2]);
+  // NINE inning cells on each row - the home side's ninth is BLANK, not a 0.
+  assert.equal((mil.match(/<td[^>]*>/g) ?? []).length, 9 + 3, 'nine innings plus R/H/E');
+  assert.equal((phi.match(/<td[^>]*>/g) ?? []).length, 9 + 3);
+  assert.match(phi, /<td><\/td><td class="tot r">6<\/td>/, "the home side's unplayed 9th is blank");
+  // AND R/H/E ARE THE LAST THREE, in that order, on both rows.
+  assert.match(mil, /<td class="tot r">4<\/td><td class="tot">6<\/td><td class="tot">2<\/td>/);
+  assert.match(phi, /<td class="tot r">6<\/td><td class="tot">8<\/td><td class="tot">0<\/td>/);
+
+  // AN EIGHT-INNING GAME BOTH SIDES PLAYED IS EXACTLY EIGHT COLUMNS - the rule
+  // the relay asked for, with no ragged edge to hide behind.
+  const even = LIVE();
+  even.liveState = null; even.status = 'final'; even.chip = 'Final';
+  even.lineScore = lineScoreGrid({
+    home: { innings: [0, 1, 0, 0, 2, 0, 0, 1], runs: 4, hits: 9, errors: 0 },
+    away: { innings: [0, 0, 1, 0, 0, 1, 0, 0], runs: 2, hits: 5, errors: 1 },
+  });
+  const h2 = await render(even);
+  assert.deepEqual([...h2.matchAll(/<th scope="col"[^>]*>(\d+)<\/th>/g)].map((m) => m[1]),
+    ['1', '2', '3', '4', '5', '6', '7', '8']);
+  const r2 = [...h2.matchAll(/<tr><th class="t"[^>]*>(TB|NYY)<\/th>(.*?)<\/tr>/gs)].map((m) => m[2]);
+  for (const row of r2) assert.equal((row.match(/<td[^>]*>/g) ?? []).length, 8 + 3);
+});
+
+test('THE GRID IS ABSENT ONLY WHEN THERE IS NO INNING AT ALL', async () => {
+  // This is what was served on every MLB game tonight: a well-formed line score
+  // of NOTHING, written from a pre-game row. lineScoreGrid says null for it, and
+  // the page then has no LINE SCORE section - which is correct behaviour on a
+  // wrong input, and is why the recon went to the writer and not to the grid.
+  assert.equal(lineScoreGrid({
+    home: { innings: [], runs: 0, hits: 0, errors: 0 },
+    away: { innings: [], runs: 0, hits: 0, errors: 0 },
+  }), null);
+  const g = LIVE();
+  g.lineScore = null;
+  const h = await render(g);
+  assert.doesNotMatch(h, /LINE SCORE/);
 });
