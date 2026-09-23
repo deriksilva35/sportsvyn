@@ -5,6 +5,7 @@
 // data is pre-fetched server-side and passed in as props; this
 // component is presentation + interaction only.
 
+import { maxOf } from '../../lib/util/scoresOf.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -96,10 +97,13 @@ function SvPointsTooltip() {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-function maxOf(rows, key) {
-  let m = 0;
-  for (const r of rows) if (Number(r[key]) > m) m = Number(r[key]);
-  return m;
+// THE BAR SCALE. Through the one reader (lib/util/scoresOf.js) rather than a
+// hand-rolled loop that coerced every cell: Number(null) is 0, which happened to
+// be harmless here because goals and assists never go below zero - and "harmless
+// for now" is how this shape gets copied into a column that does.
+// 0 ON AN EMPTY TABLE, not null, because the caller divides by it.
+function barMax(rows, key) {
+  return maxOf((rows ?? []).map((r) => r[key])) ?? 0;
 }
 
 function TeamLine({ row }) {
@@ -122,7 +126,7 @@ function PosPill({ row }) {
 // Leaderboard renderers
 // ---------------------------------------------------------------------------
 function ScorersTable({ rows }) {
-  const max = maxOf(rows, 'goals');
+  const max = barMax(rows, 'goals');
   return (
     <table className="stats-table">
       <thead>
@@ -152,7 +156,7 @@ function ScorersTable({ rows }) {
 }
 
 function AssistsTable({ rows }) {
-  const max = maxOf(rows, 'assists');
+  const max = barMax(rows, 'assists');
   return (
     <table className="stats-table">
       <thead>
