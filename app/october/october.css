@@ -62,19 +62,39 @@
 .oc-err { margin: 8px 12px 0; font: 500 12px var(--font-mono); color: var(--live); }
 
 .oc-duo { display: flex; gap: 8px; margin: 10px 10px 0; align-items: stretch; }
-.oc-field { flex: 0 0 150px; border-radius: 14px; padding: 10px 7px; border: 1px solid var(--rule-dim);
+/* A HARD WIDTH, AND THE PANEL GETS WHAT IS LEFT. `flex: 0 0 150px` was already
+   fixed, but nothing inside it was bounded: the grid could not shrink below its
+   content and a long name pushed the whole column wider than its basis, so at
+   390px the field spilled under the panel. 172px is the Run's own field width -
+   one number for both cards - and every box inside is now bounded (min-width 0
+   on the grid, overflow hidden on the slot, ellipsis on the name). */
+.oc-field { flex: 0 0 172px; min-width: 0; border-radius: 14px; padding: 10px 7px; border: 1px solid var(--rule-dim);
   background: repeating-linear-gradient(45deg, transparent 0 40px, rgba(255,255,255,.035) 40px 41px), linear-gradient(160deg, #101a12, #0a0f0b); }
-.oc-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+/* min-width: 0 IS THE WHOLE FIX FOR THE SPILL. A grid item's automatic minimum
+   size is its CONTENT, so `1fr` columns refuse to go below the widest name in
+   them and the track overflows its container instead of the text ellipsing. */
+.oc-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; min-width: 0; }
+.oc-form > * { min-width: 0; }
 /* THE ARM IS THE WIDE SLOT ACROSS THE TOP; the four bats fill beneath it. */
 .oc-form .oc-slot:first-child { grid-column: 1 / -1; aspect-ratio: 2.4; }
-.oc-slot { aspect-ratio: 1 / 0.92; border-radius: 10px; border: 1.5px dashed var(--rule-dim); background: rgba(10,10,10,.5); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; position: relative; }
-.oc-pos { font: 800 9px var(--font-display); color: var(--muted-dim); }
+.oc-slot { aspect-ratio: 1 / 0.92; border-radius: 10px; border: 1.5px dashed var(--rule-dim); background: rgba(10,10,10,.5); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; position: relative;
+  /* NOTHING LEAVES THE TILE, and the tile is the query container for the badge
+     below - a 76px bat tile and a 158px arm tile are the same component at two
+     widths, which is a container question and not a viewport one. */
+  overflow: hidden; min-width: 0; container-type: inline-size; padding: 11px 3px 3px; }
+/* THE TWO CORNERS, AND THEY NEVER STACK. The position label sat in the flex
+   column with the name, so on a locked tile the badge pushed it down and the
+   name lost a line; both are out of the flow now, in their own corners. */
+.oc-pos { position: absolute; top: 2px; left: 5px; font: 800 9px var(--font-display); color: var(--muted-dim); }
 .oc-slot.p .oc-pos { color: #38BDF8; }
 .oc-slot.b .oc-pos { color: #4ADE80; }
 .oc-slot.elig { border-style: solid; border-color: var(--volt); background: rgba(212,255,0,.09); box-shadow: 0 0 14px rgba(212,255,0,.3); }
 .oc-slot.filled { border-style: solid; background: var(--ink-2); }
 .oc-slot.locked { border-color: var(--jade, #2A8A4F); }
-.oc-nm { font: 700 10px var(--font-display); text-transform: uppercase; line-height: 1.05; text-align: center; padding: 0 2px; }
+/* ELLIPSED, NOT WRAPPED. "C. Encarnacion-Strand" in a 76px tile either ellipses
+   or pushes the column wider than the field - there is no third outcome. */
+.oc-nm { font: 700 10px var(--font-display); text-transform: uppercase; line-height: 1.05; text-align: center; padding: 0 2px;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .oc-tm { font: 600 8px var(--font-mono); color: var(--muted); }
 /* NOT STARTING - SWAP. Terra, the house's one warning colour, and it replaces
    the club-and-time line rather than crowding in beside it. It cannot render on
@@ -84,7 +104,18 @@
 .oc-pts.fin { color: var(--paper); }
 .oc-pts.wait { color: var(--muted-dim); }
 .oc-x { position: absolute; top: 0; right: 3px; color: var(--muted-dim); font: 700 12px var(--font-mono); background: none; border: 0; cursor: pointer; padding: 2px 4px; }
-.oc-lk { position: absolute; top: 2px; right: 5px; color: var(--jade, #2A8A4F); font: 700 8px var(--font-mono); }
+/* THE LOCKED BADGE: TOP-RIGHT CORNER, opposite the position label, out of the
+   flow so it can never stack with it. */
+.oc-lk { position: absolute; top: 2px; right: 5px; color: var(--jade, #2A8A4F); font: 700 8px var(--font-mono); line-height: 1; }
+.oc-lk i { display: none; }
+/* UNDER 90px THE WORD BECOMES A DOT. A 76px bat tile cannot hold "LOCKED", the
+   position label and a name; it held them by shrinking the name to nothing. The
+   span keeps its aria-label either way, so what a screen reader hears does not
+   depend on how wide the tile is. */
+@container (max-width: 89px) {
+  .oc-lk b { display: none; }
+  .oc-lk i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--jade, #2A8A4F); }
+}
 
 .oc-panel { flex: 1 1 auto; min-width: 0; border: 1px solid var(--rule-dim); border-radius: 13px; background: var(--ink-2); display: flex; flex-direction: column; }
 .oc-pan-h { display: flex; align-items: center; gap: 7px; padding: 7px 10px; border-bottom: 1px solid var(--rule-dim); background: var(--ink-3); border-radius: 12px 12px 0 0; }

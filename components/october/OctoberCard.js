@@ -135,9 +135,17 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
                 <div key={base.slot}
                   className={`oc-slot ${kind}${s.playerId ? ' filled' : ''}${locked ? ' locked' : ''}${!s.playerId && !locked ? ' elig' : ''}`}
                   data-slot={base.slot} data-state={locked ? 'locked' : s.playerId ? 'filled' : 'open'}>
-                  {locked ? <span className="oc-lk">LOCKED</span>
-                    : s.playerId && signedIn ? <button type="button" className="oc-x" aria-label={`Clear ${base.slot}`} onClick={() => clear(base.slot)}>×</button>
-                      : null}
+                  {/* THE BADGE CARRIES ITS OWN LABEL, so what a screen reader
+                      hears does not depend on how wide the tile is: under 90px
+                      the word is hidden and the <i> becomes a jade dot (see
+                      october.css's container query). */}
+                  {locked ? (
+                    <span className="oc-lk" aria-label="locked" role="img">
+                      <i aria-hidden="true" /><b>LOCKED</b>
+                    </span>
+                  ) : s.playerId && signedIn ? (
+                    <button type="button" className="oc-x" aria-label={`Clear ${base.slot}`} onClick={() => clear(base.slot)}>×</button>
+                  ) : null}
                   <span className="oc-pos">{SLOT_LABEL[base.slot]}</span>
                   {s.playerId ? <>
                     <span className="oc-nm">{s.name}</span>

@@ -6,7 +6,7 @@ import { test, before, after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { writeFileSync, unlinkSync } from 'node:fs';
+import { writeFileSync, unlinkSync, readFileSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { JSDOM } from 'jsdom';
 import { install } from '../../lib/testing/nextResolve.mjs';
@@ -129,7 +129,7 @@ test('THE ARM IS THE WIDE SLOT AND THE BATS ARE FOUR', () => {
   assert.match(h, /class="oc-slot p filled"/);
   assert.equal([...h.matchAll(/class="oc-slot b[^"]*"/g)].length, 4);
   // A LOCKED SLOT SAYS LOCKED AND HAS NO CLEAR BUTTON.
-  assert.match(h, /<span class="oc-lk">LOCKED<\/span>/);
+  assert.match(h, /<span class="oc-lk" aria-label="locked"[^>]*>.*?<b>LOCKED<\/b><\/span>/);
   assert.equal([...h.matchAll(/class="oc-x"/g)].length, 2, 'only the two unlocked picks can be cleared');
   // An open slot is the volt eligible target.
   assert.equal([...h.matchAll(/class="oc-slot b elig"/g)].length, 2);
@@ -485,4 +485,120 @@ test('THE FOURTH BAT, THE CAUSE: a save that THROWS must repaint the slot', asyn
     assert.equal(action.calls.length, 1);
     assert.equal(action.calls[0].s, 'bat4');
   } finally { action.setThrow(false); }
+});
+
+// --- THE FIELD COLUMN AT PHONE WIDTH ---------------------------------------
+//
+// JSDOM HAS NO LAYOUT ENGINE, so these do not measure a rendered box - they
+// read the geometry the STYLESHEET specifies and do the arithmetic, and they
+// read every number out of the CSS rather than restating it here. A test that
+// hard-coded 172 and compared it to 172 would pass on a stylesheet that said
+// 400.
+
+const CSS = (rel) => readFileSync(new URL(rel, import.meta.url), 'utf8');
+/**
+ * The block of the rule whose selector is EXACTLY `rule`. Anchored, because
+ * `.rn-slot.out .rn-nm { color: ... }` sits above `.rn-nm` in the stylesheet and
+ * an unanchored match reads the wrong four declarations - which it did, and the
+ * test "passed" against a rule that says nothing about text.
+ */
+const ruleOf = (src, rule) => {
+  const re = new RegExp(`(?:^|\\})\\s*\\${rule}\\s*\\{([^}]*)\\}`, 'm');
+  const m = re.exec(src);
+  assert.ok(m, `${rule} is not in the stylesheet as a rule of its own`);
+  return m[1];
+};
+const px = (src, rule, prop) => {
+  const block = [ruleOf(src, rule)];
+  assert.ok(block, `${rule} is not in the stylesheet`);
+  const m = new RegExp(`(?:^|;|\\s)${prop}\\s*:\\s*([^;]+)`).exec(block[0]);
+  assert.ok(m, `${rule} has no ${prop}`);
+  const n = /(-?[\d.]+)px/.exec(m[1]);
+  assert.ok(n, `${rule}'s ${prop} is not in px: ${m[1]}`);
+  return Number(n[1]);
+};
+
+test('LAYOUT: the field and the panel cannot overlap at 390px', () => {
+  const css = CSS('../../app/october/october.css');
+  // .oc-duo is `margin: 10px 10px 0` and `gap: 8px`; .oc-field is a hard basis.
+  const duo = /\.oc-duo\s*\{([^}]*)\}/.exec(css)[1];
+  const margin = Number(/margin:\s*[\d.]+px\s+([\d.]+)px/.exec(duo)[1]);
+  const gap = Number(/gap:\s*([\d.]+)px/.exec(duo)[1]);
+  const field = px(css, '.oc-field', 'flex').valueOf();
+
+  const VIEWPORT = 390;
+  const fieldLeft = margin;
+  const fieldRight = fieldLeft + field;
+  const panelLeft = fieldRight + gap;
+  const panelRight = VIEWPORT - margin;
+
+  assert.ok(fieldRight <= panelLeft, `field right ${fieldRight} > panel left ${panelLeft}`);
+  assert.ok(panelLeft < panelRight,
+    `the panel has no width left at 390px: ${panelLeft} >= ${panelRight}`);
+  // AND THE FIELD IS A HARD WIDTH, not a basis it can grow past: `flex: 0 0`.
+  assert.match(/\.oc-field\s*\{([^}]*)\}/.exec(css)[1], /flex:\s*0\s+0\s+[\d.]+px/);
+
+  // THE SPILL WAS NEVER THE BASIS, IT WAS THE CONTENT. A grid item's automatic
+  // minimum size is its content, so without these the column overflows its own
+  // basis and slides under the panel - which is what a 390px screen showed.
+  assert.match(/\.oc-form\s*\{([^}]*)\}/.exec(css)[1], /min-width:\s*0/);
+  assert.match(css, /\.oc-form\s*>\s*\*\s*\{[^}]*min-width:\s*0/);
+  assert.match(/\.oc-slot\s*\{([^}]*)\}/.exec(css)[1], /overflow:\s*hidden/);
+  assert.match(/\.oc-nm\s*\{([^}]*)\}/.exec(css)[1], /text-overflow:\s*ellipsis/);
+  assert.match(/\.oc-nm\s*\{([^}]*)\}/.exec(css)[1], /white-space:\s*nowrap/);
+});
+
+test('LAYOUT: a bat tile at phone width is under 90px, so the badge is a dot', () => {
+  const css = CSS('../../app/october/october.css');
+  const field = px(css, '.oc-field', 'flex');
+  const pad = Number(/padding:\s*[\d.]+px\s+([\d.]+)px/.exec(/\.oc-field\s*\{([^}]*)\}/.exec(css)[1])[1]);
+  const border = 1;
+  const gap = Number(/gap:\s*([\d.]+)px/.exec(/\.oc-form\s*\{([^}]*)\}/.exec(css)[1])[1]);
+  // Two columns inside the field's content box.
+  const inner = field - 2 * pad - 2 * border;
+  const tile = (inner - gap) / 2;
+  assert.ok(tile < 90, `a bat tile is ${tile}px, which is not under 90`);
+  // The arm spans both columns and IS over 90, so it keeps the word - one
+  // component, two widths, which is why this is a container query and not a
+  // media query.
+  assert.ok(inner > 90, `the arm tile is ${inner}px`);
+  assert.match(css, /@container \(max-width: 89px\)/);
+});
+
+test('LOCKED: the badge is top-right, the position label top-left, never stacked', () => {
+  const h = html({ view: PICKING(), signedIn: true });
+  // bat1 is the locked slot in this fixture.
+  const tile = h.slice(h.indexOf('data-slot="bat1"'), h.indexOf('data-slot="bat2"'));
+  // THE LABEL AND THE BADGE ARE BOTH OUT OF THE FLOW, in opposite corners.
+  const css = CSS('../../app/october/october.css');
+  for (const [rule, side] of [['.oc-pos', 'left'], ['.oc-lk', 'right']]) {
+    const block = ruleOf(css, rule);
+    assert.match(block, /position:\s*absolute/, `${rule} is still in the flex flow`);
+    assert.match(block, new RegExp(`${side}:\\s*[\\d.]+px`), `${rule} is not in the ${side} corner`);
+    assert.match(block, /top:\s*[\d.]+px/, `${rule} is not at the top`);
+  }
+  // THE BADGE CARRIES ITS OWN LABEL, so the dot and the word say the same thing.
+  assert.match(tile, /<span class="oc-lk" aria-label="locked" role="img"><i aria-hidden="true"><\/i><b>LOCKED<\/b><\/span>/);
+  assert.match(tile, /<span class="oc-pos">BAT<\/span>/);
+  // And the dot exists only as the narrow-tile form of that one badge.
+  assert.match(css, /\.oc-lk i \{ display: none; \}/);
+});
+
+test('LOCKED: the Run 3x3 wears the same badge, and every tile there is a dot', () => {
+  const css = CSS('../../app/run/run.css');
+  const field = px(css, '.rn-field', 'flex');
+  const pad = Number(/padding:\s*[\d.]+px\s+([\d.]+)px/.exec(/\.rn-field\s*\{([^}]*)\}/.exec(css)[1])[1]);
+  const gap = Number(/gap:\s*([\d.]+)px/.exec(/\.rn-form\s*\{([^}]*)\}/.exec(css)[1])[1]);
+  const tile = (field - 2 * pad - 2 - 2 * gap) / 3;
+  assert.ok(tile < 90, `a Run tile is ${tile}px`);
+  assert.match(css, /@container \(max-width: 89px\)/);
+  for (const [rule, side] of [['.rn-pos', 'left'], ['.rn-lk', 'right']]) {
+    const block = ruleOf(css, rule);
+    assert.match(block, /position:\s*absolute/);
+    assert.match(block, new RegExp(`${side}:\\s*[\\d.]+px`));
+  }
+  assert.match(ruleOf(css, '.rn-nm'), /text-overflow:\s*ellipsis/);
+  assert.match(/\.rn-form\s*\{([^}]*)\}/.exec(css)[1], /min-width:\s*0/);
+  // The two fields are the SAME WIDTH - one number for both cards.
+  assert.equal(field, px(CSS('../../app/october/october.css'), '.oc-field', 'flex'));
 });

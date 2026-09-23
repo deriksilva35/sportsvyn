@@ -116,11 +116,20 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
               const out = base.state === 'out';
               return (
                 <div key={base.slot}
-                  className={`rn-slot ${arm ? 'p' : 'b'}${s.playerId ? ' filled' : ''}${out ? ' out' : ''}${!s.playerId && !live ? ' elig' : ''}`}
+                  className={`rn-slot ${arm ? 'p' : 'b'}${s.playerId ? ' filled' : ''}${out ? ' out' : ''}${live ? ' locked' : ''}${!s.playerId && !live ? ' elig' : ''}`}
                   data-slot={base.slot} data-state={out ? 'out' : s.playerId ? 'filled' : 'open'}>
-                  {s.playerId && signedIn && !live
-                    ? <button type="button" className="rn-x" aria-label={`Clear ${base.slot}`} onClick={() => clear(base.slot)}>×</button>
-                    : null}
+                  {/* THE SAME BADGE IN THE SAME CORNER AS OCTOBER'S, and on this
+                      3x3 it is always the dot: every tile here is about 52px.
+                      The Run locks as a WHOLE round, so every filled slot wears
+                      it at once - which is the fact, and is why the card used to
+                      show nothing at all and left the reader to infer it. */}
+                  {live && s.playerId ? (
+                    <span className="rn-lk" aria-label="locked" role="img">
+                      <i aria-hidden="true" /><b>LOCKED</b>
+                    </span>
+                  ) : s.playerId && signedIn && !live ? (
+                    <button type="button" className="rn-x" aria-label={`Clear ${base.slot}`} onClick={() => clear(base.slot)}>×</button>
+                  ) : null}
                   <span className="rn-pos">{arm ? 'ARM' : 'BAT'}</span>
                   {s.playerId ? <>
                     <span className="rn-nm">{s.name}</span>
