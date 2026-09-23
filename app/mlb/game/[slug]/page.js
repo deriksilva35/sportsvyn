@@ -30,6 +30,12 @@ import { getMlbGame } from '@/lib/mlb/gameDetail';
 import { outsToInnings } from '@/lib/mlb/playsImport';
 import { stripCells } from '@/lib/mlb/strip';
 import { decisions, pitcherLine, shortName } from '@/lib/mlb/cardLines';
+import FollowStar from '@/components/team/FollowStar';
+import AlertBell from '@/components/alerts/AlertBell';
+import { auth } from '@/auth';
+import { getFollowedTeamIds } from '@/lib/follows';
+import { resolveShellMode } from '@/lib/shell/shell';
+import { stateFromMatch, gameUrlFor } from '@/lib/push/liveActivityState';
 import '@/components/gridiron/gridiron.css';
 import './mlbgame.css';
 
@@ -37,7 +43,12 @@ export const dynamic = 'force-dynamic';
 
 const TABS = [['hitting', 'Hitting'], ['pitching', 'Pitching']];
 
-function TeamRow({ t, score, show, batting }) {
+function TeamRow({ t, score, show, batting, signedIn = false, isShell = false, following = null }) {
+  // THE STAR IS SIGNED-IN ONLY, and needs an id - the same two conditions
+  // GameTeamRow applies on the football pages, for the same reasons: a game
+  // header is not the place to offer a stranger an unfollowable follow, and a
+  // star wired to null would write nothing and say nothing about why.
+  const canFollow = signedIn && t?.id != null;
   return (
     <div className="mg-team">
       <TeamMark primary={t?.colors?.primary} secondary={t?.colors?.secondary}
@@ -48,6 +59,17 @@ function TeamRow({ t, score, show, batting }) {
           same mark: this product already says "this side has it" with a volt
           dot, and baseball's version of that is who is at the plate. */}
       {batting ? <i className="gi-poss" role="img" aria-label={`${t?.abbreviation ?? ''} batting`} /> : null}
+      {canFollow ? (
+        <span className="mg-follow">
+          <FollowStar
+            teamId={t.id}
+            teamName={t.name ?? t.abbreviation ?? 'this team'}
+            isAuthed
+            initialFollowing={following === true}
+            isShell={isShell}
+          />
+        </span>
+      ) : null}
       <b className="sc">{show ? (score ?? 0) : ''}</b>
     </div>
   );
@@ -72,6 +94,16 @@ export default async function MlbGamePage({ params, searchParams }) {
   const tab = TABS.some(([k]) => k === q?.box) ? q.box : 'hitting';
   const g = await getMlbGame(slug).catch(() => null);
   if (!g) notFound();
+  // FOR THE BELL AND THE TWO STARS ONLY. The page itself is open to everyone;
+  // this decides whether the sheet shows toggles or a sign-in, and whether a
+  // star is drawn at all. One follow read for both sides, empty when signed
+  // out, and caught - a follow lookup must never cost a game page.
+  const viewerId = (await auth().catch(() => null))?.user?.id ?? null;
+  const [followedIds, isShell] = await Promise.all([
+    viewerId == null ? Promise.resolve([]) : getFollowedTeamIds(viewerId).catch(() => []),
+    resolveShellMode().catch(() => false),
+  ]);
+  const followed = new Set(followedIds);
   const live = g.status === 'live';
   const final = g.status === 'final';
   const show = live || final;
@@ -114,11 +146,36 @@ export default async function MlbGamePage({ params, searchParams }) {
           </div>
           {/* AWAY FIRST. Baseball reads "Away at Home" like every American
               sport, which lib/gridiron/teamOrder.js already defaults to. */}
-          <TeamRow t={g.away} score={g.awayScore} show={show} batting={batting === 'away'} />
-          <TeamRow t={g.home} score={g.homeScore} show={show} batting={batting === 'home'} />
+          <TeamRow t={g.away} score={g.awayScore} show={show} batting={batting === 'away'}
+            signedIn={viewerId != null} isShell={isShell} following={followed.has(g.away?.id)} />
+          <TeamRow t={g.home} score={g.homeScore} show={show} batting={batting === 'home'}
+            signedIn={viewerId != null} isShell={isShell} following={followed.has(g.home?.id)} />
           <div className="mg-foot">
             <span>MLB · {g.seasonYear}</span>
             {g.venue ? <span className="r">{g.venue}</span> : null}
+          </div>
+          {/* THE BELL IS THE FOOTBALL PAGES' BELL, not a baseball copy of one.
+              It carries the five triggers, the close row IN THIS SPORT'S WORDS
+              (rowsForSport, off the leagueSlug below), and the lock-screen
+              switch row - and the six Activity fields are built HERE, on the
+              server, by the same stateFromMatch()/gameUrlFor() pair the push
+              script uses, so the card on the lock screen and the page cannot
+              disagree about the score.
+              THE LINE IS NOT PASSED: stateFromMatch falls back to
+              baseballLine(game), which reads the batting side, the situation
+              and the newest scoring play off the very object this page is
+              already drawing. */}
+          <div className="mg-bell">
+            <AlertBell compact={false} signedIn={viewerId != null} match={{
+              id: g.id, slug: g.slug, leagueSlug: g.leagueSlug,
+              homeAbbr: g.home?.abbreviation ?? '', awayAbbr: g.away?.abbreviation ?? '',
+              homeTeamId: g.home?.id ?? null, homeSlug: g.home?.slug ?? null,
+              kickoffAt: g.kickoffAt,
+            }} liveActivity={{
+              url: gameUrlFor(g),
+              state: stateFromMatch(g),
+              final,
+            }} />
           </div>
         </header>
 

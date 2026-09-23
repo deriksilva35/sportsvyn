@@ -80,3 +80,15 @@
 .mg-tabs { display: flex; gap: 18px; margin: 0 0 14px; font: 500 12px var(--font-mono); }
 .mg-tabs a { color: var(--muted); text-decoration: none; padding-bottom: 5px; }
 .mg-tabs a.on { color: var(--paper); border-bottom: 2px solid var(--volt); }
+
+/* THE STAR AND THE BELL, the football header's two controls in a baseball
+   header. The star sits between the batting dot and the score, flex:none like
+   every other part of the row but the name; the bell is its own row under the
+   footer, the way /nfl/game and /cfb/game place theirs. */
+.mg-follow { flex: none; display: inline-flex; align-items: center; margin-left: 4px; }
+.mg-follow .follow-star-btn { padding: 10px; gap: 0; }
+/* The label is for the team page, where the star is the call to action. In a
+   game header it is one more word on a row that already carries a mark, three
+   letters, a name and a score - the same call game.css makes. */
+.mg-follow .follow-star-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.mg-bell { display: flex; justify-content: flex-end; margin-top: 8px; }

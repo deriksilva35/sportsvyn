@@ -12,7 +12,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { writeFileSync, unlinkSync } from 'node:fs';
+import { writeFileSync, unlinkSync, readFileSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { install } from '../../../lib/testing/nextResolve.mjs';
 install();
@@ -23,30 +23,87 @@ const LINK = path.join(__dirname, '__link_stub.mjs');
 const NAV = path.join(__dirname, '__nav_stub.mjs');
 const READER = path.join(__dirname, '__reader_stub.mjs');
 const HEADER = path.join(__dirname, '__header_stub.mjs');
+// THE TWO CLIENT CONTROLS ARE STUBBED, and the stubs ECHO THEIR PROPS. What
+// this page is responsible for is what it HANDS them - the league, the six
+// Activity fields, the deep link, which team id, whether it is followed - and
+// a stub that prints those is the only way to assert it without mounting a
+// browser. (They also import extensionless paths, which Next's bundler
+// resolves and node does not.)
+const BELL = path.join(__dirname, '__bell_stub.mjs');
+const STAR = path.join(__dirname, '__star_stub.mjs');
+const AUTH = path.join(__dirname, '__auth_stub.mjs');
+const FOLLOWS = path.join(__dirname, '__follows_stub.mjs');
+const SHELL = path.join(__dirname, '__shell_stub.mjs');
 
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === 'next/link') return { url: pathToFileURL(LINK).href, shortCircuit: true };
   if (spec === 'next/navigation') return { url: pathToFileURL(NAV).href, shortCircuit: true };
   if (spec.endsWith('lib/mlb/gameDetail')) return { url: pathToFileURL(READER).href, shortCircuit: true };
   if (spec.endsWith('components/GlobalHeaderServer')) return { url: pathToFileURL(HEADER).href, shortCircuit: true };
+  if (spec.endsWith('components/alerts/AlertBell')) return { url: pathToFileURL(BELL).href, shortCircuit: true };
+  if (spec.endsWith('components/team/FollowStar')) return { url: pathToFileURL(STAR).href, shortCircuit: true };
+  if (spec === '@/auth') return { url: pathToFileURL(AUTH).href, shortCircuit: true };
+  if (spec.endsWith('lib/follows')) return { url: pathToFileURL(FOLLOWS).href, shortCircuit: true };
+  if (spec.endsWith('lib/shell/shell')) return { url: pathToFileURL(SHELL).href, shortCircuit: true };
   if (spec.endsWith('.css')) return { url: pathToFileURL(path.join(__dirname, '__css_stub.mjs')).href, shortCircuit: true };
   return next(spec, ctx);
 } });
 
-let React, renderToStaticMarkup, Page, reader;
+let React, renderToStaticMarkup, Page, reader, authStub, followsStub;
 before(async () => {
   writeFileSync(LINK, "import React from 'react'; export default function Link({ href, children, ...rest }) { return React.createElement('a', { ...rest, href: String(href) }, children); }\n");
   writeFileSync(NAV, "export function notFound() { throw new Error('notFound'); }\n");
   writeFileSync(HEADER, "export default function GlobalHeaderServer() { return null; }\n");
   writeFileSync(path.join(__dirname, '__css_stub.mjs'), 'export default {};\n');
   writeFileSync(READER, "export let next = null; export function set(v) { next = v; } export async function getMlbGame() { return next; }\n");
+  writeFileSync(BELL, [
+    "import React from 'react';",
+    'export default function AlertBell(props) {',
+    "  return React.createElement('div', {",
+    "    'data-bell': '1',",
+    "    'data-league': props?.match?.leagueSlug ?? '',",
+    "    'data-signedin': String(props?.signedIn === true),",
+    "    'data-compact': String(props?.compact !== false),",
+    "    'data-la-url': props?.liveActivity?.url ?? '',",
+    "    'data-la-final': String(props?.liveActivity?.final === true),",
+    // THE STATE'S FIELDS ONE BY ONE, NOT AS JSON. The contract carries
+    // kickoffAt, and an ISO timestamp in the page's HTML contains "17:05" -
+    // which trips the page's own assertion that no football clock appears
+    // anywhere on it. The stub must not put a clock on the page to prove there
+    // is no clock on the page.
+    "    'data-la-period': props?.liveActivity?.state?.period ?? '',",
+    "    'data-la-clock': String(props?.liveActivity?.state?.clock ?? ''),",
+    "    'data-la-poss': props?.liveActivity?.state?.possession ?? '',",
+    "    'data-la-situation': props?.liveActivity?.state?.situation ?? '',",
+    "    'data-la-lastplay': props?.liveActivity?.state?.lastPlay ?? '',",
+    "    'data-home-team': String(props?.match?.homeTeamId ?? ''),",
+    "  }, 'ALERTS');",
+    '}',
+  ].join('\n') + '\n');
+  writeFileSync(STAR, [
+    "import React from 'react';",
+    'export default function FollowStar(props) {',
+    "  return React.createElement('button', {",
+    "    'data-star': String(props?.teamId ?? ''),",
+    "    'data-following': String(props?.initialFollowing === true),",
+    "    'data-shell': String(props?.isShell === true),",
+    "    'aria-label': `Follow ${props?.teamName ?? ''}`,",
+    "  }, '\u2606');",
+    '}',
+  ].join('\n') + '\n');
+  writeFileSync(AUTH, 'export let user = null;\nexport function setUser(u) { user = u; }\nexport async function auth() { return user ? { user } : null; }\n');
+  writeFileSync(FOLLOWS, 'export let ids = [];\nexport function setIds(v) { ids = v; }\nexport async function getFollowedTeamIds() { return ids; }\n');
+  writeFileSync(SHELL, 'export async function resolveShellMode() { return false; }\n');
   React = await import('react');
   ({ renderToStaticMarkup } = await import('react-dom/server'));
   reader = await import(pathToFileURL(READER).href);
+  authStub = await import(pathToFileURL(AUTH).href);
+  followsStub = await import(pathToFileURL(FOLLOWS).href);
   Page = (await import('./[slug]/page.js')).default;
 });
 after(() => {
-  for (const f of [LINK, NAV, HEADER, READER, path.join(__dirname, '__css_stub.mjs')]) {
+  for (const f of [LINK, NAV, HEADER, READER, BELL, STAR, AUTH, FOLLOWS, SHELL,
+    path.join(__dirname, '__css_stub.mjs')]) {
     try { unlinkSync(f); } catch { /* gone */ }
   }
 });
@@ -56,6 +113,10 @@ const team = (ab, name) => ({ id: ab, name, shortName: name, abbreviation: ab, c
 // The mock's own game: Rays at Yankees, top 7th, 2 out, 3-2, 1st and 3rd.
 const LIVE = () => ({
   id: 1, slug: 'mlb-2026-09-22-tb-nyy', status: 'live', kickoffAt: '2026-09-22T17:05:00Z',
+  // THE READER RETURNS THIS AND SO MUST THE FIXTURE - the bell's close wording,
+  // stateFromMatch's baseball branch and gameUrlFor's deep link are all chosen
+  // by it. Pinned against the reader itself below, so the two cannot drift.
+  leagueSlug: 'mlb',
   seasonYear: 2026, seasonPhase: 'POST', venue: 'Yankee Stadium',
   home: team('NYY', 'Yankees'), away: team('TB', 'Rays'),
   homeScore: 2, awayScore: 3,
@@ -246,4 +307,88 @@ test('THE GRID IS ABSENT ONLY WHEN THERE IS NO INNING AT ALL', async () => {
   g.lineScore = null;
   const h = await render(g);
   assert.doesNotMatch(h, /LINE SCORE/);
+});
+
+// --- THE STAR, THE BELL AND THE LOCK-SCREEN DOOR ---------------------------
+
+test('THE TEAM STAR IS ON EACH ROW, and only for a signed-in reader', async () => {
+  authStub.setUser(null);
+  followsStub.setIds([]);
+  const out = await render(LIVE());
+  // A STRANGER GETS THE ROW AS IT WAS. A game header is not the place to offer
+  // an unfollowable follow - the same call GameTeamRow makes on both football
+  // pages.
+  assert.doesNotMatch(out, /data-star=/);
+
+  authStub.setUser({ id: 7 });
+  followsStub.setIds(['NYY']);          // the fixture's team ids are abbreviations
+  const h = await render(LIVE());
+  const stars = [...h.matchAll(/data-star="([^"]*)" data-following="([^"]*)"/g)];
+  assert.equal(stars.length, 2, 'one star per row, away and home');
+  assert.deepEqual(stars.map((m) => m[1]), ['TB', 'NYY'], 'away first, as the rows are');
+  // AND THE FOLLOW STATE IS THE READER'S, off one read for both sides.
+  assert.deepEqual(stars.map((m) => m[2]), ['false', 'true']);
+  assert.match(h, /aria-label="Follow Rays"/);
+  assert.match(h, /aria-label="Follow Yankees"/);
+  authStub.setUser(null); followsStub.setIds([]);
+});
+
+test('THE ALERTS BELL IS THE FOOTBALL PAGES\' BELL, told which sport it is', async () => {
+  authStub.setUser({ id: 7 });
+  const h = await render(LIVE());
+  assert.match(h, /data-bell="1"/, 'the bell is mounted at all');
+  // THE LEAGUE IS WHAT PICKS THE CLOSE ROW'S WORDS (rowsForSport) and the
+  // baseball branch of stateFromMatch. Without it every reader of this mount
+  // silently answered as football.
+  assert.match(h, /data-league="mlb"/);
+  assert.match(h, /data-signedin="true"/);
+  // compact={false} - the game page's bell is the full pill, as on /nfl/game.
+  assert.match(h, /data-compact="false"/);
+  authStub.setUser(null);
+  assert.match(await render(LIVE()), /data-signedin="false"/,
+    'a signed-out reader still gets the sheet - it shows them a sign-in');
+});
+
+test('THE LOCK-SCREEN DOOR CARRIES THE SIX FIELDS, built on the server', async () => {
+  authStub.setUser({ id: 7 });
+  const h = await render(LIVE());
+  // THE DEEP LINK IS THE GAME'S OWN, built by gameUrlFor off the leagueSlug -
+  // which is why the reader had to start returning one.
+  assert.match(h, /data-la-url="[^"]*\/mlb\/game\/mlb-2026-09-22-tb-nyy"/);
+  assert.match(h, /data-la-final="false"/);
+  // BASEBALL'S FIELDS, not football's: the period is the half-inning, the clock
+  // is EMPTY (the contract's allowed "nothing" for a sport without one), and
+  // possession is the side batting.
+  assert.match(h, /data-la-period="Top 7th"/);
+  assert.match(h, /data-la-clock=""/);
+  assert.match(h, /data-la-poss="TB"/, 'the Rays are batting in the top');
+  // The situation drops its own leading "Top 7th" - period already says it.
+  assert.match(h, /data-la-situation="2 out[^"]*3-2[^"]*"/);
+  assert.doesNotMatch(h, /data-la-situation="Top 7th/);
+  // AND THE LAST PLAY IS THE NEWEST SCORING PLAY, off the same list the page
+  // draws its SCORING module from.
+  assert.match(h, /data-la-lastplay="D[^"]*az singled to right, Lowe scored\."/);
+  authStub.setUser(null);
+});
+
+test('A FINAL GAME TELLS THE DOOR IT IS FINAL', async () => {
+  authStub.setUser({ id: 7 });
+  const g = LIVE();
+  g.status = 'final'; g.chip = 'Final'; g.liveState = null;
+  const h = await render(g);
+  assert.match(h, /data-la-final="true"/);
+  // No live state, so no half-inning and no batting side - and the door is
+  // handed the empty strings the contract allows rather than an invented state.
+  assert.match(h, /data-la-poss=""/);
+  authStub.setUser(null);
+});
+
+test('THE READER RETURNS THE LEAGUE, so the fixture above is not a fiction', () => {
+  // The reader is a database call and cannot be unit-tested here, but the one
+  // field this page's three new mounts depend on can be read off its source.
+  // Without it stateFromMatch() falls through to football, gameUrlFor() returns
+  // null and the sheet words its close row with a clock baseball has not got.
+  const src = readFileSync(new URL('../../../lib/mlb/gameDetail.js', import.meta.url), 'utf8');
+  assert.match(src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, ''),
+    /leagueSlug: 'mlb'/);
 });
