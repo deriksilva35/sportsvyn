@@ -20,7 +20,8 @@ import { dayHeading, kickoffParts } from '@/lib/gridiron/kickoff';
 import { useViewerTz } from '@/components/gridiron/useViewerTz';
 import { tzOrUtc } from '@/lib/gridiron/viewerTz';
 import { enableAlerts } from './enable';
-import { summaryLine } from '@/lib/push/sheetRules';
+import { summaryLine, rowsForSport } from '@/lib/push/sheetRules';
+import { sportOf } from '@/lib/live/vocabulary';
 import { orderFor, connectorFor } from '@/lib/gridiron/teamOrder';
 import {
   startLiveActivity, endLiveActivity, canUseLiveActivityBridge,
@@ -37,6 +38,8 @@ const ROWS = [
     trigger: 'Every score, both teams · "SEA 14, NE 10 · Q2 8:41"',
     latency: 'usually within a minute' },
   { key: 'quarter', title: 'Quarter ends', trigger: 'End of each quarter' },
+  // The close row's sentence is per SPORT - see rowsForSport(). Baseball has no
+  // Q4 and no clock, and this wording promised a rule that could not fire.
   { key: 'close', title: 'Close game', trigger: 'Q4, one score apart, under five minutes' },
   { key: 'final', title: 'Final', trigger: 'The result, when the game ends' },
 ];
@@ -70,6 +73,10 @@ function Toggle({ on, onChange, label, disabled }) {
  *   six fields must not draw a switch that would post an empty one.
  */
 export default function AlertBell({ match, signedIn = false, compact = true, liveActivity = null }) {
+  // THE FIVE ROWS IN THIS SPORT'S WORDS. Football's wording is the default and
+  // the only thing that changes is a sentence that would otherwise describe a
+  // rule this sport does not have - see rowsForSport() and isCloseGame().
+  const rows = rowsForSport(ROWS, sportOf(match?.leagueSlug));
   const [open, setOpen] = useState(false);
   const [prefs, setPrefs] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -274,7 +281,7 @@ export default function AlertBell({ match, signedIn = false, compact = true, liv
                     them: the reader can see what comes back when they turn
                     the game on again. */}
                 <div className={`al-rows${p.master ? '' : ' al-dim'}`}>
-                  {ROWS.map((r) => (
+                  {rows.map((r) => (
                     <div className="al-row" key={r.key}>
                       <div className="al-txt">
                         <span className="al-title">{r.title}</span>
