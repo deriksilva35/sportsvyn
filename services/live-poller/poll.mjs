@@ -317,6 +317,40 @@ export async function resolveMlbGamePk(m, sql, { log = () => {} } = {}) {
 }
 
 /**
+ * THE PROBABLE STARTERS OFF THE DAY SCHEDULE - the SAME fetch resolveMlbGamePk
+ * consults, memoised for fifteen minutes, so this is one call a day and usually
+ * zero.
+ *
+ * THE SCHEDULE LEADS THE FEED AND THIS WAS MEASURED, not assumed. At 23:57Z on
+ * 2026-09-22, SD @ LAD (gamePk 823897, Pre-Game):
+ *
+ *   /v1/schedule?hydrate=probablePitcher  -> away Michael King, home Brock Stewart
+ *   /v1.1/game/823897/feed/live           -> probablePitchers: { away } only
+ *
+ * The feed had not caught up to the home announcement. Reading only the feed -
+ * which is free, because the lineups come from it - would have left the Dodgers
+ * reading "starter not announced" while their starter was public on the other
+ * endpoint. So the two are MERGED per side, schedule first, and the free read
+ * stays as the fallback rather than as the answer.
+ */
+async function mlbScheduleProbables(m, { now = new Date() } = {}) {
+  const day = etDay(m?.kickoff_at);
+  const key = matchKey(m?.away_abbr, m?.home_abbr, day);
+  if (!key) return { probables: null, calls: 0 };
+  const { byKey, calls } = await scheduleFor(day, new Date(now).getTime());
+  const pick = pickByKickoff(byKey.get(key) ?? [], m?.kickoff_at);
+  return { probables: pick?.probables ?? null, calls };
+}
+
+/** PURE. Two partial answers about the same game, side by side. */
+export function mergeProbables(primary, fallback) {
+  const side = (k) => primary?.[k] ?? fallback?.[k] ?? null;
+  const away = side('away'); const home = side('home');
+  if (!away && !home) return null;
+  return { away, home };
+}
+
+/**
  * THE MLB `enrich` HOOK: the newest play from BDL (outs and the count) and the
  * game feed from statsapi (runners, the batter, the pitcher).
  *
@@ -360,6 +394,16 @@ export async function mlbEnrich(row, m, sql, { log = () => {}, live: isLive = tr
       // build - which is tomorrow - so "starter not announced" was a permanent
       // state for the day it mattered on.
       probables = feed.probables;
+      // AND THE DAY SCHEDULE ON TOP OF IT, which leads the feed - see
+      // mlbScheduleProbables(). Pre-kick only: once a game is live its starter
+      // is a matter of record and the card has stopped asking.
+      if (!isLive) {
+        try {
+          const sp = await mlbScheduleProbables(m, { now });
+          calls += sp.calls;
+          probables = mergeProbables(sp.probables, probables);
+        } catch { /* the feed's answer stands */ }
+      }
       // NOT POSTED IS A READING TOO, and it must be written. Without a
       // fetchedAt stamp on a game whose card is not up yet, lineupDue() reads
       // "never asked" forever and asks again on every single poll.
