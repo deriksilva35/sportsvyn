@@ -1,0 +1,107 @@
+/* components/results/results.css - the results grammar, from
+   docs/design/mocks/results-grammar-v0_1.html.
+
+   THE MOCK'S OWN CLASS NAMES, PREFIXED rs-. The mock uses bare names (.hd,
+   .mod, .lr) that would collide with four other surfaces' stylesheets in a
+   shared bundle; every rule below is the mock's declaration with its selector
+   namespaced and nothing else changed. */
+
+.rs { padding-bottom: 12px; }
+
+.rs-hd { padding: 12px 14px 10px; border-bottom: 1px solid var(--rule-dim); background: #111; }
+.rs-hd-top { display: flex; align-items: center; margin-bottom: 8px; }
+.rs-eb { color: var(--volt); font: 700 10px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.rs-ed { color: var(--muted-dim); font: 600 9px var(--font-mono); margin-left: auto; }
+.rs-crow { display: flex; align-items: flex-end; gap: 14px; }
+.rs-lbl { font: 600 9px var(--font-mono); color: var(--muted-dim); letter-spacing: .11em; text-transform: uppercase; line-height: 1.3; }
+.rs-lbl b { display: block; color: var(--paper); font: 800 20px var(--font-mono); letter-spacing: 0; text-transform: none; }
+.rs-lbl b.v { color: var(--volt); }
+.rs-lbl small { display: block; color: var(--muted); font: 500 9px var(--font-mono); text-transform: none; letter-spacing: 0; }
+.rs-tot { margin-left: auto; text-align: right; }
+.rs-tot b { display: block; font: 800 30px var(--font-mono); letter-spacing: -.03em; line-height: 1; color: var(--volt); }
+.rs-tot span { font: 600 9px var(--font-mono); letter-spacing: .11em; color: var(--muted-dim); text-transform: uppercase; }
+.rs-pct { margin-top: 9px; display: flex; align-items: center; gap: 8px; font: 500 10px var(--font-mono); color: var(--muted); }
+.rs-bar { flex: 1; height: 5px; border-radius: 99px; background: var(--ink-3); border: 1px solid var(--rule-dim); overflow: visible; position: relative; }
+.rs-bar i { display: block; height: 100%; background: var(--volt); border-radius: 99px; }
+.rs-bar u { position: absolute; top: -3px; width: 2px; height: 11px; background: var(--paper); }
+.rs-pct b { color: var(--paper); }
+
+.rs-mod { margin: 10px 10px 0; border: 1px solid var(--rule-dim); border-radius: 13px; background: var(--ink-2); overflow: hidden; }
+.rs-mh { display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-bottom: 1px solid var(--rule-dim); background: var(--ink-3); }
+.rs-mh b { font: 700 12px var(--font-display); text-transform: uppercase; }
+.rs-mh small { margin-left: auto; color: var(--muted); font: 500 9px var(--font-mono); text-align: right; line-height: 1.3; white-space: pre-line; }
+
+/* YOU VS THE CEILING - two columns of slots */
+.rs-vs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px 11px; }
+.rs-col { min-width: 0; }
+.rs-col h4 { font: 700 9px var(--font-mono); letter-spacing: .12em; color: var(--muted-dim); text-transform: uppercase; margin-bottom: 5px; display: flex; justify-content: space-between; }
+.rs-col h4 b { color: var(--paper); }
+.rs-col.perf h4 b { color: var(--volt); }
+.rs-srow { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid var(--rule-dim); font: 500 11px var(--font-mono); min-width: 0; }
+.rs-srow:last-child { border-bottom: 0; }
+.rs-pb { width: 22px; height: 16px; border-radius: 4px; display: grid; place-items: center; font: 800 7px var(--font-display); color: #0A0A0A; flex: 0 0 auto; }
+.rs-who { min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rs-who small { display: block; color: var(--muted-dim); font-size: 8px; }
+.rs-v { font-weight: 700; }
+/* A MATCHED SLOT LIGHTS ON BOTH SIDES - the mock's one piece of colour in this
+   module, and the thing a reader scans for. */
+.rs-srow.hit { background: rgba(212, 255, 0, .08); box-shadow: inset 2px 0 0 var(--volt); padding-left: 4px; }
+.rs-srow.miss .rs-v { color: var(--muted); }
+.rs-delta { display: flex; justify-content: space-between; padding: 6px 11px 4px; border-top: 1px solid var(--rule-dim); font: 500 10px var(--font-mono); color: var(--muted); }
+.rs-delta b { color: var(--paper); }
+.rs-delta .t { color: var(--terra); }
+
+/* THE DISTRIBUTION */
+.rs-dist { display: flex; align-items: flex-end; gap: 2px; height: 44px; padding: 8px 11px 0; }
+.rs-dist i { flex: 1; background: var(--ink-3); border: 1px solid var(--rule-dim); border-bottom: 0; border-radius: 2px 2px 0 0; }
+.rs-dist i.me { background: var(--volt); border-color: var(--volt); }
+.rs-dist i.top { background: #3a4a10; }
+/* THE DNF BAR IS NOT A LOW SCORE, so it is not on the volt scale at all. */
+.rs-dist i.dnf { background: #2a1a1a; border-color: #3a2020; }
+.rs-axis { display: flex; justify-content: space-between; padding: 3px 11px 8px; font: 500 8px var(--font-mono); color: var(--muted-dim); gap: 4px; }
+.rs-axis span { white-space: nowrap; }
+
+/* THE BOARD */
+.rs-lr { display: grid; grid-template-columns: 26px 1fr auto auto; gap: 8px; align-items: center; padding: 7px 11px; border-bottom: 1px solid var(--rule-dim); font-size: 12px; color: inherit; text-decoration: none; }
+.rs-lr:last-child { border-bottom: 0; }
+.rs-rk { color: var(--muted-dim); font: 700 11px var(--font-mono); }
+.rs-h { color: var(--muted-dim); font: 500 9px var(--font-mono); }
+.rs-s { color: var(--muted); font: 500 10px var(--font-mono); text-align: right; }
+.rs-t { font: 700 13px var(--font-mono); text-align: right; min-width: 44px; }
+.rs-lr.you { background: rgba(212, 255, 0, .07); box-shadow: inset 3px 0 0 var(--volt); }
+.rs-lr.you .rs-t { color: var(--volt); }
+.rs-lr.best .rs-t { color: var(--jade); }
+.rs-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.rs-nm small { display: block; color: var(--muted-dim); font: 500 9px var(--font-mono); }
+
+/* THE DRAFT'S PICKS */
+.rs-pk { display: grid; grid-template-columns: 34px 22px 1fr auto; gap: 6px; align-items: center; padding: 5px 11px; border-bottom: 1px solid var(--rule-dim); font: 500 11px var(--font-mono); }
+.rs-pk:last-child { border-bottom: 0; }
+/* A PICK THAT DID NOT COUNT IS DIMMED, NOT HIDDEN - in best ball the bench is
+   the interesting part. */
+.rs-pk.out { opacity: .45; }
+.rs-at { color: var(--muted-dim); font-size: 10px; }
+.rs-pk .rs-who small { display: block; color: var(--muted-dim); font-size: 8px; }
+.rs-pk .rs-v { font-weight: 700; text-align: right; }
+.rs-pk .rs-v small { display: block; color: var(--jade); font-size: 8px; font-weight: 600; }
+.rs-pk .rs-v small.r { color: var(--terra); }
+
+/* PICK'EM'S SCOREBOARD */
+.rs-sbw { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.rs-sbg { min-width: max-content; }
+.rs-sb { display: grid; grid-template-columns: 26px 92px repeat(var(--games), 14px) 46px; gap: 4px; align-items: center; padding: 6px 11px; border-bottom: 1px solid var(--rule-dim); font: 500 11px var(--font-mono); }
+.rs-sb:last-child { border-bottom: 0; }
+.rs-sb.h { color: var(--muted-dim); font-size: 8px; text-transform: uppercase; background: var(--ink-3); }
+.rs-sb i { width: 12px; height: 12px; border-radius: 3px; background: var(--ink-3); border: 1px solid var(--rule-dim); display: block; }
+.rs-sb i.w { background: var(--jade); border-color: var(--jade); }
+.rs-sb i.l { background: #3a1a1a; border-color: #4a2020; }
+/* A DASHED SQUARE IS A GAME NOT YET DECIDED - a third state, not a loss. */
+.rs-sb i.p { background: transparent; border-style: dashed; }
+.rs-sb .rs-t { font-weight: 700; text-align: right; }
+.rs-sb.you { background: rgba(212, 255, 0, .07); box-shadow: inset 3px 0 0 var(--volt); }
+
+.rs-foot { margin: 10px 10px 0; font: 500 10px/1.6 var(--font-mono); color: var(--muted); }
+.rs-foot b { color: var(--paper); }
+
+/* THE ROUTE'S OWN WRAPPER, the width every other surface uses. */
+.rs-wrap { max-width: 480px; margin: 0 auto; }
