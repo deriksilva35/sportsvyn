@@ -1,0 +1,272 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sportsvyn · Results grammar · mock v0.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--jade:#2A8A4F;--ink:#0A0A0A;--ink-2:#141414;--ink-3:#1C1C1C;--line:#2A2A2A;--volt:#D4FF00;--paper:#F5F5F2;--muted:#9A9A94;--quiet:#6E6E68;--terra:#B8410F;--live:#E63946;--blue:#245BFF;
+--qb:#FF5C8A;--rb:#4ADE80;--wr:#38BDF8;--te:#FB923C;--k:#C084FC;--p:#38BDF8;--b:#4ADE80;--mono:'JetBrains Mono',monospace;--disp:'Saira',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#050506;color:var(--paper);font:14px/1.5 system-ui,sans-serif;padding:10px;display:flex;flex-wrap:wrap;gap:22px;justify-content:center;align-items:flex-start}
+.wrap{width:394px}
+.cap{color:var(--muted);font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+.cap span{display:block;text-transform:none;letter-spacing:0;font:400 12px system-ui;color:var(--muted);line-height:1.5;margin-top:4px}
+.app{background:var(--ink);border:1px solid var(--line);border-radius:22px;overflow:hidden;padding-bottom:12px}
+.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eb{color:var(--volt);font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+
+/* header */
+.hd{padding:12px 14px 10px;border-bottom:1px solid var(--line);background:#111}
+.hd-top{display:flex;align-items:center;margin-bottom:8px}
+.hd-top .ed{color:var(--quiet);font:600 9px var(--mono);margin-left:auto}
+.crow{display:flex;align-items:flex-end;gap:14px}
+.crow .lbl{font:600 9px var(--mono);color:var(--quiet);letter-spacing:.11em;text-transform:uppercase;line-height:1.3}
+.crow .lbl b{display:block;color:var(--paper);font:800 20px var(--mono);letter-spacing:-.02em;text-transform:none;letter-spacing:0}
+.crow .lbl b.v{color:var(--volt)}
+.crow .lbl small{display:block;color:var(--muted);font:500 9px var(--mono);text-transform:none;letter-spacing:0}
+.tot{margin-left:auto;text-align:right}
+.tot b{display:block;font:800 30px var(--mono);letter-spacing:-.03em;line-height:1;color:var(--volt)}
+.tot span{font:600 9px var(--mono);letter-spacing:.11em;color:var(--quiet);text-transform:uppercase}
+.pct{margin-top:9px;display:flex;align-items:center;gap:8px;font:500 10px var(--mono);color:var(--muted)}
+.pct .bar{flex:1;height:5px;border-radius:99px;background:var(--ink-3);border:1px solid var(--line);overflow:hidden;position:relative}
+.pct .bar i{display:block;height:100%;background:var(--volt)}
+.pct .bar u{position:absolute;top:-3px;width:2px;height:11px;background:var(--paper)}
+.pct b{color:var(--paper)}
+
+/* modules */
+.mod{margin:10px 10px 0;border:1px solid var(--line);border-radius:13px;background:var(--ink-2);overflow:hidden}
+.mh{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid var(--line);background:var(--ink-3)}
+.mh b{font:700 12px var(--disp);text-transform:uppercase}
+.mh small{margin-left:auto;color:var(--muted);font:500 9px var(--mono);text-align:right;line-height:1.3}
+.mb{padding:4px 11px 8px}
+
+/* you vs perfect - two columns of slots */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 11px}
+.col h4{font:700 9px var(--mono);letter-spacing:.12em;color:var(--quiet);text-transform:uppercase;margin-bottom:5px;display:flex;justify-content:space-between}
+.col h4 b{color:var(--paper)}
+.col.perf h4 b{color:var(--volt)}
+.srow{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--line);font:500 11px var(--mono)}
+.srow:last-child{border:0}
+.pb{width:22px;height:16px;border-radius:4px;display:grid;place-items:center;font:800 7px var(--disp);color:#0A0A0A;flex:0 0 auto}
+.srow .who{min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow .who small{display:block;color:var(--quiet);font-size:8px}
+.srow .v{font-weight:700}
+.srow.hit{background:rgba(212,255,0,.08);box-shadow:inset 2px 0 0 var(--volt);padding-left:4px}
+.srow.miss .v{color:var(--muted)}
+.delta{display:flex;justify-content:space-between;padding:6px 11px 4px;border-top:1px solid var(--line);font:500 10px var(--mono);color:var(--muted)}
+.delta b{color:var(--paper)}
+.delta .t{color:var(--terra)}
+
+/* distribution */
+.dist{display:flex;align-items:flex-end;gap:2px;height:44px;padding:8px 11px 0}
+.dist i{flex:1;background:var(--ink-3);border:1px solid var(--line);border-bottom:0;border-radius:2px 2px 0 0}
+.dist i.me{background:var(--volt);border-color:var(--volt)}
+.dist i.top{background:#3a4a10}
+.axis{display:flex;justify-content:space-between;padding:3px 11px 8px;font:500 8px var(--mono);color:var(--quiet)}
+
+/* leaderboard */
+.lr{display:grid;grid-template-columns:26px 1fr auto auto;gap:8px;align-items:center;padding:7px 11px;border-bottom:1px solid var(--line);font-size:12px}
+.lr:last-child{border:0}
+.lr .rk{color:var(--quiet);font:700 11px var(--mono)}
+.lr .h{color:var(--quiet);font:500 9px var(--mono)}
+.lr .s{color:var(--muted);font:500 10px var(--mono);text-align:right}
+.lr .t{font:700 13px var(--mono);text-align:right;min-width:44px}
+.lr.you{background:rgba(212,255,0,.07);box-shadow:inset 3px 0 0 var(--volt)}
+.lr.you .t{color:var(--volt)}
+.lr.best .t{color:var(--jade)}
+.lr .nm small{display:block;color:var(--quiet);font:500 9px var(--mono)}
+
+/* draft picks with where */
+.pk{display:grid;grid-template-columns:34px 22px 1fr auto;gap:6px;align-items:center;padding:5px 11px;border-bottom:1px solid var(--line);font:500 11px var(--mono)}
+.pk:last-child{border:0}
+.pk .at{color:var(--quiet);font-size:10px}
+.pk .who small{display:block;color:var(--quiet);font-size:8px}
+.pk .v{font-weight:700;text-align:right}
+.pk .v small{display:block;color:var(--jade);font-size:8px;font-weight:600}
+.pk .v small.r{color:var(--terra)}
+.chips{display:flex;gap:5px;padding:8px 11px 2px;flex-wrap:wrap}
+.chips span{border:1px solid var(--line);border-radius:99px;padding:3px 9px;font:600 9px var(--mono);color:var(--muted)}
+.chips .on{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+
+/* pickem scoreboard */
+.sb{display:grid;grid-template-columns:26px 1fr repeat(8,14px) auto;gap:4px;align-items:center;padding:6px 11px;border-bottom:1px solid var(--line);font:500 11px var(--mono)}
+.sb:last-child{border:0}
+.sb.h{color:var(--quiet);font-size:8px;text-transform:uppercase;background:var(--ink-3)}
+.sb i{width:12px;height:12px;border-radius:3px;background:var(--ink-3);border:1px solid var(--line);display:block}
+.sb i.w{background:var(--jade);border-color:var(--jade)}
+.sb i.l{background:#3a1a1a;border-color:#4a2020}
+.sb i.p{background:transparent;border-style:dashed}
+.sb .t{font-weight:700;text-align:right}
+.sb.you{background:rgba(212,255,0,.07);box-shadow:inset 3px 0 0 var(--volt)}
+.sb .rk{color:var(--quiet)}
+.foot{margin:10px 10px 0;font:500 10px/1.6 var(--mono);color:var(--muted)}
+.foot b{color:var(--paper)}
+</style></head><body>
+
+<!-- ============ 1 · THE DAILY ============ -->
+<div class="wrap"><div class="cap">1 · The Daily · results<span>Header: your points, % of the perfect board, rank of the field. Then you vs the perfect lineup slot by slot - the slots you got right light up - then where you sit in the field, then the board.</span></div>
+<div class="app">
+  <div class="hd">
+    <div class="hd-top"><span class="eb">The Daily · 2026</span><span class="ed">Edition 031 · graded</span></div>
+    <div class="crow">
+      <div class="lbl">Field<b>41st</b><small>of 1,204 · top 3.4%</small></div>
+      <div class="lbl">Of perfect<b class="v">91.6%</b><small>ceiling 1,868</small></div>
+      <div class="tot"><b class="n">1,712</b><span>Points</span></div>
+    </div>
+    <div class="pct"><span>you</span><div class="bar"><i style="width:91.6%"></i><u style="left:97%"></u></div><b>1,868</b></div>
+  </div>
+
+  <div class="mod">
+    <div class="mh"><b>You vs perfect</b><small>3 of 6 slots matched<br>−156 to the ceiling</small></div>
+    <div class="vs">
+      <div class="col"><h4>Your six <b class="n">1,712</b></h4>
+        <div class="srow hit"><span class="pb" style="background:var(--qb)">QB</span><span class="who">P. Mahomes<small>KC · 1999</small></span><span class="v n">412</span></div>
+        <div class="srow miss"><span class="pb" style="background:var(--rb)">RB</span><span class="who">J. Gibbs<small>DET · 2023</small></span><span class="v n">238</span></div>
+        <div class="srow hit"><span class="pb" style="background:var(--rb)">RB</span><span class="who">S. Barkley<small>PHI · 2024</small></span><span class="v n">344</span></div>
+        <div class="srow miss"><span class="pb" style="background:var(--wr)">WR</span><span class="who">J. Chase<small>CIN · 2024</small></span><span class="v n">301</span></div>
+        <div class="srow hit"><span class="pb" style="background:var(--wr)">WR</span><span class="who">C. Lamb<small>DAL · 2023</small></span><span class="v n">287</span></div>
+        <div class="srow miss"><span class="pb" style="background:var(--te)">TE</span><span class="who">T. Kelce<small>KC · 2022</small></span><span class="v n">130</span></div>
+      </div>
+      <div class="col perf"><h4>Perfect <b class="n">1,868</b></h4>
+        <div class="srow hit"><span class="pb" style="background:var(--qb)">QB</span><span class="who">P. Mahomes<small>KC · 1999</small></span><span class="v n">412</span></div>
+        <div class="srow"><span class="pb" style="background:var(--rb)">RB</span><span class="who">D. Henry<small>TEN · 2020</small></span><span class="v n">371</span></div>
+        <div class="srow hit"><span class="pb" style="background:var(--rb)">RB</span><span class="who">S. Barkley<small>PHI · 2024</small></span><span class="v n">344</span></div>
+        <div class="srow"><span class="pb" style="background:var(--wr)">WR</span><span class="who">T. Hill<small>MIA · 2023</small></span><span class="v n">334</span></div>
+        <div class="srow hit"><span class="pb" style="background:var(--wr)">WR</span><span class="who">C. Lamb<small>DAL · 2023</small></span><span class="v n">287</span></div>
+        <div class="srow"><span class="pb" style="background:var(--te)">TE</span><span class="who">M. Andrews<small>BAL · 2021</small></span><span class="v n">120</span></div>
+      </div>
+    </div>
+    <div class="delta"><span>Where you lost it: <b>Gibbs over Henry</b> <span class="t">−133</span> · Chase over Hill <span class="t">−33</span></span></div>
+  </div>
+
+  <div class="mod">
+    <div class="mh"><b>The field</b><small>1,204 played<br>median 1,488</small></div>
+    <div class="dist"><i style="height:6%"></i><i style="height:12%"></i><i style="height:24%"></i><i style="height:48%"></i><i style="height:82%"></i><i style="height:100%"></i><i style="height:76%"></i><i style="height:44%"></i><i style="height:22%"></i><i class="me" style="height:14%"></i><i class="top" style="height:6%"></i><i class="top" style="height:2%"></i></div>
+    <div class="axis"><span>900</span><span>1,200</span><span>1,500</span><span>you · 1,712</span><span>1,868</span></div>
+    <div class="lr best"><span class="rk">1</span><span class="nm">the Closer <span class="h">· house</span></span><span class="s n">98.9%</span><span class="t n">1,847</span></div>
+    <div class="lr"><span class="rk">2</span><span class="nm">camilli_k</span><span class="s n">96.1%</span><span class="t n">1,795</span></div>
+    <div class="lr"><span class="rk">3</span><span class="nm">dsilva35</span><span class="s n">95.2%</span><span class="t n">1,778</span></div>
+    <div class="lr you"><span class="rk">41</span><span class="nm">you</span><span class="s n">91.6%</span><span class="t n">1,712</span></div>
+  </div>
+</div></div>
+
+<!-- ============ 2 · THE WEEKLY ============ -->
+<div class="wrap"><div class="cap">2 · The Weekly · results<span>Same header, same three modules: you vs the optimal six from the week's slate, the field, and the board with each entry's six visible on tap.</span></div>
+<div class="app">
+  <div class="hd">
+    <div class="hd-top"><span class="eb">The Weekly · NFL week 2</span><span class="ed">Settled Tue 6:12 AM</span></div>
+    <div class="crow">
+      <div class="lbl">Field<b>7th</b><small>of 212 · top 3.3%</small></div>
+      <div class="lbl">Of optimal<b class="v">78.4%</b><small>optimal 153.9</small></div>
+      <div class="tot"><b class="n">120.7</b><span>Points</span></div>
+    </div>
+    <div class="pct"><span>you</span><div class="bar"><i style="width:78.4%"></i><u style="left:100%"></u></div><b>153.9</b></div>
+  </div>
+
+  <div class="mod">
+    <div class="mh"><b>You vs optimal</b><small>2 of 6 matched<br>the best six anyone could have set</small></div>
+    <div class="vs">
+      <div class="col"><h4>Your six <b class="n">120.7</b></h4>
+        <div class="srow hit"><span class="pb" style="background:var(--qb)">QB</span><span class="who">J. Allen<small>BUF · Thu</small></span><span class="v n">28.4</span></div>
+        <div class="srow miss"><span class="pb" style="background:var(--rb)">RB</span><span class="who">A. Jeanty<small>LV · Sun 1:05</small></span><span class="v n">14.2</span></div>
+        <div class="srow miss"><span class="pb" style="background:var(--rb)">RB</span><span class="who">K. Walker<small>SEA · Sun 1:25</small></span><span class="v n">19.1</span></div>
+        <div class="srow hit"><span class="pb" style="background:var(--wr)">WR</span><span class="who">P. Nacua<small>LAR · Mon</small></span><span class="v n">31.6</span></div>
+        <div class="srow miss"><span class="pb" style="background:var(--wr)">WR</span><span class="who">O. Beckham<small>MIA · Mon</small></span><span class="v n">9.4</span></div>
+        <div class="srow miss"><span class="pb" style="background:var(--te)">TE</span><span class="who">B. Bowers<small>LV · Sun</small></span><span class="v n">18.0</span></div>
+      </div>
+      <div class="col perf"><h4>Optimal <b class="n">153.9</b></h4>
+        <div class="srow hit"><span class="pb" style="background:var(--qb)">QB</span><span class="who">J. Allen<small>BUF</small></span><span class="v n">28.4</span></div>
+        <div class="srow"><span class="pb" style="background:var(--rb)">RB</span><span class="who">D. Achane<small>MIA</small></span><span class="v n">27.8</span></div>
+        <div class="srow"><span class="pb" style="background:var(--rb)">RB</span><span class="who">B. Robinson<small>ATL</small></span><span class="v n">24.3</span></div>
+        <div class="srow hit"><span class="pb" style="background:var(--wr)">WR</span><span class="who">P. Nacua<small>LAR</small></span><span class="v n">31.6</span></div>
+        <div class="srow"><span class="pb" style="background:var(--wr)">WR</span><span class="who">J. Jefferson<small>MIN</small></span><span class="v n">22.9</span></div>
+        <div class="srow"><span class="pb" style="background:var(--te)">TE</span><span class="who">T. McBride<small>ARI</small></span><span class="v n">18.9</span></div>
+      </div>
+    </div>
+    <div class="delta"><span>Where you lost it: <b>Jeanty</b> <span class="t">−13.6</span> · Beckham <span class="t">−13.5</span> · Walker <span class="t">−5.2</span></span></div>
+  </div>
+
+  <div class="mod">
+    <div class="mh"><b>The field</b><small>212 played · 14 DNF<br>median 96.3</small></div>
+    <div class="dist"><i style="height:10%"></i><i style="height:30%"></i><i style="height:62%"></i><i style="height:100%"></i><i style="height:70%"></i><i style="height:40%"></i><i class="me" style="height:18%"></i><i class="top" style="height:8%"></i><i class="top" style="height:3%"></i></div>
+    <div class="axis"><span>DNF</span><span>60</span><span>90</span><span>you · 120.7</span><span>153.9</span></div>
+    <div class="lr best"><span class="rk">1</span><span class="nm">uncle_ray<small>Allen · Achane · Robinson · Nacua · Chase · McBride</small></span><span class="s n">91.0%</span><span class="t n">140.1</span></div>
+    <div class="lr"><span class="rk">2</span><span class="nm">the Grinder <span class="h">· house</span></span><span class="s n">85.5%</span><span class="t n">131.6</span></div>
+    <div class="lr you"><span class="rk">7</span><span class="nm">you</span><span class="s n">78.4%</span><span class="t n">120.7</span></div>
+    <div class="lr"><span class="rk">8</span><span class="nm">camilli_k</span><span class="s n">77.9%</span><span class="t n">119.9</span></div>
+  </div>
+  <p class="foot">Tap any entry to see its six. <b>Optimal</b> is the best six anyone could have set from the slate at lock - it is the ceiling, not a person.</p>
+</div></div>
+
+<!-- ============ 3 · THE DRAFT ============ -->
+<div class="wrap"><div class="cap">3 · The Draft · results<span>Two ranks in the header - your room and the whole field - because both are true. Then the best draft in the field, pick by pick with where each player went, then your eight the same way, then the field.</span></div>
+<div class="app">
+  <div class="hd">
+    <div class="hd-top"><span class="eb">The Draft · NFL week 2</span><span class="ed">Contest 11 · 38 rooms · settled</span></div>
+    <div class="crow">
+      <div class="lbl">Room<b>2nd</b><small>of 8 · Silva Family</small></div>
+      <div class="lbl">Field<b>19th</b><small>of 304 · top 6.3%</small></div>
+      <div class="tot"><b class="n">1,912</b><span>Best six</span></div>
+    </div>
+    <div class="pct"><span>you</span><div class="bar"><i style="width:86%"></i><u style="left:100%"></u></div><b>2,224 · best draft</b></div>
+  </div>
+
+  <div class="mod">
+    <div class="mh"><b>The best draft</b><small>uncle_ray · room 14 · seat 6<br>2,224 · 8 picks, 6 counted</small></div>
+    <div class="pk"><span class="at">1.06</span><span class="pb" style="background:var(--rb)">RB</span><span class="who">S. Barkley<small>ADP 3 · taken 6th</small></span><span class="v n">344<small>+3 value</small></span></div>
+    <div class="pk"><span class="at">2.03</span><span class="pb" style="background:var(--qb)">QB</span><span class="who">J. Allen<small>ADP 18 · taken 11th</small></span><span class="v n">412<small class="r">−7 reach</small></span></div>
+    <div class="pk"><span class="at">3.06</span><span class="pb" style="background:var(--wr)">WR</span><span class="who">P. Nacua<small>ADP 14 · taken 22nd</small></span><span class="v n">371<small>+8 value</small></span></div>
+    <div class="pk"><span class="at">4.03</span><span class="pb" style="background:var(--wr)">WR</span><span class="who">J. Jefferson<small>ADP 9 · taken 27th</small></span><span class="v n">334<small>+18 value</small></span></div>
+    <div class="pk"><span class="at">5.06</span><span class="pb" style="background:var(--te)">TE</span><span class="who">T. McBride<small>ADP 31 · taken 38th</small></span><span class="v n">301<small>+7 value</small></span></div>
+    <div class="pk"><span class="at">6.03</span><span class="pb" style="background:var(--rb)">RB</span><span class="who">D. Achane<small>ADP 40 · taken 43rd</small></span><span class="v n">287<small>+3 value</small></span></div>
+    <div class="pk" style="opacity:.45"><span class="at">7.06</span><span class="pb" style="background:var(--wr)">WR</span><span class="who">N. Collins<small>ADP 52 · taken 54th</small></span><span class="v n">175<small>not counted</small></span></div>
+    <div class="pk" style="opacity:.45"><span class="at">8.03</span><span class="pb" style="background:var(--k)">K</span><span class="who">H. Butker<small>ADP 90 · taken 59th</small></span><span class="v n">102<small>not counted</small></span></div>
+  </div>
+
+  <div class="mod">
+    <div class="mh"><b>Your draft</b><small>room 3 · seat 5<br>1,912 · −312 to best</small></div>
+    <div class="pk"><span class="at">1.05</span><span class="pb" style="background:var(--qb)">QB</span><span class="who">J. Allen<small>ADP 18 · taken 5th</small></span><span class="v n">412<small class="r">−13 reach</small></span></div>
+    <div class="pk"><span class="at">2.04</span><span class="pb" style="background:var(--rb)">RB</span><span class="who">J. Cook<small>ADP 14 · taken 12th</small></span><span class="v n">240<small>+2 value</small></span></div>
+    <div class="pk"><span class="at">3.05</span><span class="pb" style="background:var(--wr)">WR</span><span class="who">P. Nacua<small>ADP 14 · taken 21st</small></span><span class="v n">371<small>+7 value</small></span></div>
+    <div class="pk"><span class="at">4.04</span><span class="pb" style="background:var(--rb)">RB</span><span class="who">S. Barkley<small>ADP 3 · taken 28th</small></span><span class="v n">344<small>+25 value</small></span></div>
+    <div class="pk"><span class="at">5.05</span><span class="pb" style="background:var(--te)">TE</span><span class="who">B. Bowers<small>ADP 22 · taken 37th</small></span><span class="v n">231<small>+15 value</small></span></div>
+    <div class="pk"><span class="at">6.04</span><span class="pb" style="background:var(--wr)">WR</span><span class="who">C. Lamb<small>ADP 8 · taken 44th</small></span><span class="v n">314<small>+36 value</small></span></div>
+    <div class="pk" style="opacity:.45"><span class="at">7.05</span><span class="pb" style="background:var(--wr)">WR</span><span class="who">O. Beckham<small>ADP 61 · taken 53rd</small></span><span class="v n">94<small>not counted</small></span></div>
+    <div class="pk" style="opacity:.45"><span class="at">8.04</span><span class="pb" style="background:var(--k)">K</span><span class="who">J. Tucker<small>ADP 88 · taken 60th</small></span><span class="v n">88<small>not counted</small></span></div>
+  </div>
+
+  <div class="mod">
+    <div class="mh"><b>The field</b><small>304 entries · 38 rooms<br>median 1,571</small></div>
+    <div class="chips"><span class="on">Everyone</span><span>Silva Family · room 3</span><span>By seat</span></div>
+    <div class="lr best"><span class="rk">1</span><span class="nm">uncle_ray<small>room 14 · seat 6 · Barkley, Allen, Nacua…</small></span><span class="s n">2,224</span><span class="t n">1st</span></div>
+    <div class="lr"><span class="rk">2</span><span class="nm">the Chalk <span class="h">· house</span><small>room 22 · seat 1</small></span><span class="s n">2,190</span><span class="t n">2nd</span></div>
+    <div class="lr"><span class="rk">3</span><span class="nm">camilli_k<small>room 3 · seat 2 · won your room</small></span><span class="s n">2,047</span><span class="t n">3rd</span></div>
+    <div class="lr you"><span class="rk">19</span><span class="nm">you<small>room 3 · seat 5</small></span><span class="s n">1,912</span><span class="t n">19th</span></div>
+  </div>
+  <p class="foot"><b>Seat</b> tells you where a draft happened - a 1.06 Barkley is a different draft from a 1.01. <b>By seat</b> ranks you against everyone who picked from the same spot.</p>
+</div></div>
+
+<!-- ============ 4 · PICK'EM ============ -->
+<div class="wrap"><div class="cap">4 · Pick'em · scoreboard<span>A scoreboard, not a lineup: one row per entry, one square per game, W/L/pending, the record on the right. Yours lit, the best on top.</span></div>
+<div class="app">
+  <div class="hd">
+    <div class="hd-top"><span class="eb">Pick'em · NFL week 2</span><span class="ed">16 games · 15 final · 1 tonight</span></div>
+    <div class="crow">
+      <div class="lbl">Field<b>12th</b><small>of 188 · top 6.4%</small></div>
+      <div class="lbl">Best<b class="v">13-2</b><small>3 entries tied</small></div>
+      <div class="tot"><b class="n">11-4</b><span>Record</span></div>
+    </div>
+    <div class="pct"><span>hit rate</span><div class="bar"><i style="width:73%"></i><u style="left:87%"></u></div><b>73.3%</b></div>
+  </div>
+
+  <div class="mod">
+    <div class="sb h"><span></span><span>entry</span><span>WAS</span><span>MIN</span><span>PHI</span><span>PIT</span><span>GB</span><span>CLE</span><span>NO</span><span>CIN</span><span class="t">W-L</span></div>
+    <div class="sb"><span class="rk">1</span><span>the Chalk <span class="h">· house</span></span><i class="w"></i><i class="w"></i><i class="w"></i><i class="l"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class="w"></i><span class="t n" style="color:var(--jade)">13-2</span></div>
+    <div class="sb"><span class="rk">1</span><span>dsilva35</span><i class="w"></i><i class="w"></i><i class="l"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class="w"></i><span class="t n" style="color:var(--jade)">13-2</span></div>
+    <div class="sb"><span class="rk">1</span><span>uncle_ray</span><i class="w"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class="l"></i><i class="w"></i><i class="w"></i><i class="w"></i><span class="t n" style="color:var(--jade)">13-2</span></div>
+    <div class="sb"><span class="rk">4</span><span>camilli_k</span><i class="w"></i><i class="l"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class="l"></i><i class="w"></i><span class="t n">12-3</span></div>
+    <div class="sb you"><span class="rk">12</span><span>you</span><i class="w"></i><i class="w"></i><i class="l"></i><i class="l"></i><i class="w"></i><i class="w"></i><i class="l"></i><i class="w"></i><span class="t n">11-4</span></div>
+    <div class="sb"><span class="rk">13</span><span>the Homer <span class="h">· house</span></span><i class="l"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class="l"></i><i class="w"></i><i class="w"></i><i class="l"></i><span class="t n">11-4</span></div>
+    <div class="sb"><span class="rk">…</span><span></span><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i><span class="t"></span></div>
+  </div>
+  <p class="foot">Swipe the squares for all 16. A dashed square is tonight's game - <b>IND @ KC</b> decides the tie at the top.</p>
+</div></div>
+
+</body></html>
