@@ -10,10 +10,11 @@ import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { transformSync } from '@babel/core';
 import { registerHooks } from 'node:module';
 import { install } from '../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STUB = path.join(__dirname, '__actions_stub.mjs');
+const STUB = stubPath('__actions_stub.mjs');
 // The three server-action modules pull in auth and the database; a pick test
 // needs none of that. One stub answers all three, and RECORDS every call.
 registerHooks({ resolve(spec, ctx, next) {
@@ -39,7 +40,7 @@ before(async () => {
   ({ act } = await import('react')); ({ createRoot } = await import('react-dom/client'));
   const src = path.join(__dirname, 'PickemBoard.js');
   const out = transformSync(readFileSync(src, 'utf8'), { filename: src, presets: [['@babel/preset-react', { runtime: 'automatic' }]], configFile: false, babelrc: false }).code;
-  tmp = path.join(__dirname, `__pickem_test_${process.pid}.mjs`);
+  tmp = stubPath(`__pickem_test_${process.pid}.mjs`);
   writeFileSync(tmp, out.replace(/^'use client';\s*/m, ''));
   PickemBoard = (await import(pathToFileURL(tmp).href)).default;
 });

@@ -13,10 +13,11 @@ import { writeFileSync, unlinkSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { JSDOM } from 'jsdom';
 import { install } from '../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ACTION = path.join(__dirname, '__series_action_stub.mjs');
+const ACTION = stubPath('__series_action_stub.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec.endsWith('app/actions/seriesPickem')) return { url: pathToFileURL(ACTION).href, shortCircuit: true };
   return next(spec, ctx);

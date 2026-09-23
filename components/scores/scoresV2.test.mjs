@@ -8,11 +8,12 @@ import { registerHooks } from 'node:module';
 import { JSDOM } from 'jsdom';
 import { baseballStrip } from '../../lib/mlb/strip.js';
 import { install } from '../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const LINK = path.join(__dirname, '__link_stub.mjs');
-const NAV = path.join(__dirname, '__nav_stub.mjs');
+const LINK = stubPath('__link_stub.mjs');
+const NAV = stubPath('__nav_stub.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === 'next/link') return { url: pathToFileURL(LINK).href, shortCircuit: true };
   if (spec === 'next/navigation') return { url: pathToFileURL(NAV).href, shortCircuit: true };

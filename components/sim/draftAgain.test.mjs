@@ -18,14 +18,14 @@ import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { registerHooks } from 'node:module';
 import { install } from '../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, '..', '..');
-const TMPDIR = process.env.TMPDIR || '/tmp';
-const STUB = path.join(TMPDIR, `__da_sim_${process.pid}.mjs`);
-const NAV = path.join(TMPDIR, `__da_nav_${process.pid}.mjs`);
+const STUB = stubPath('__da_sim.mjs');
+const NAV = stubPath('__da_nav.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === '@/app/actions/sim') return { url: pathToFileURL(STUB).href, shortCircuit: true };
   if (spec === 'next/navigation') return { url: pathToFileURL(NAV).href, shortCircuit: true };

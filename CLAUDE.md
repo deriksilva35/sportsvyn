@@ -22,13 +22,24 @@ Restart the droplet's Remote Control session for this repo with:
 
 ## THE SUITE IS THE WHOLE SUITE, and it is the default
 
-Any relay that commits, merges or deploys runs the FULL suite, with env sourced:
+ANY RELAY THAT MERGES RUNS THE FULL SUITE BEFORE THE MERGE. Not after it, not
+on the touched directories, not on the files the relay opened - THERE IS NO
+TOUCHED-DIR SHORTCUT, and the same applies to any relay that commits or deploys.
+With env sourced:
 
     set -a && . ./.env.local && set +a && node --test $(git ls-files '*.test.mjs')
 
-Not the touched directories. Not the files this relay opened. The full run, every
-time, without being asked for it - "full suite" is the floor, and a relay that
-reports a green scoped run has reported nothing about the tree it is merging into.
+Before the merge, because a suite run after it has nothing left to decide: the
+branch is already in main and the only remaining move is a revert. The run is the
+gate, so it happens while the gate can still be shut. "Full suite" is the floor,
+and a relay that reports a green scoped run has reported nothing at all about the
+tree it is merging into.
+
+A BASELINE IS ZERO. Not "zero new", not "the same failures as yesterday" - zero.
+A red test that is left red because it was red before is a test nobody will ever
+read again, and the four receipts below all began as somebody's "pre-existing".
+Where a failure is a fixture or data gap rather than a defect, the fixture is
+fixed in the test's own before(), with the cost of that repair written down.
 
 WHY, with the receipt. `lib/legal.test.mjs` - the guard that no user-facing string
 names a data vendor - went red in 985808c and stayed red through FOUR commits,
@@ -46,6 +57,15 @@ never a typed '1'") made the number data. Two others in
 "2 still open" became "all locked" with nobody watching. A fixture asserting
 something about OPEN games is written relative to now, or it is a dated cheque.
 
+TWO MORE WERE DATA, AND THEY GOT FIXTURES, NOT EXCUSES.
+`lib/fantasy/leagueShare.test.mjs` asserts migration 085's invariant across the
+whole table and DEV held 46 owned configs with no owner row; its before() now
+re-applies 085's backfill, and the comment there says what that costs.
+`lib/gridiron/topicEnvelope.test.mjs` wanted a populated NFL envelope from a
+database whose NFL anchor season had ONE played game; its before() seeds three
+finals in week 99 - outside any real schedule, so a parallel weekly-board fixture
+cannot find them - and its after() asserts its own teardown.
+
 The rule is therefore about REACH, not about cost. Scoped runs are fine while
 iterating - run lib/october/ forty times while writing lib/october/. But the run
 that decides whether something ships is the one that has to see the files this
@@ -59,9 +79,25 @@ TWO WAYS THE GATE LIES, both met while writing it:
   added is not in the run, and the run is green because the new test was never
   executed. `git add` the new tests BEFORE the gate run, or the guard you just
   wrote guards nothing.
-- LINT AND THE SUITE DO NOT RUN AT THE SAME TIME. The mount tests write and unlink
-  `__*_stub.mjs` files; eslint walking the tree at that moment dies on an ENOENT
-  for a file that existed a millisecond earlier. Suite first, lint after.
+- LINT AND THE SUITE USED TO RACE. The mount tests write and unlink real .mjs
+  stub files; eslint walking the tree at that moment died on an ENOENT for one
+  that existed a millisecond earlier, and a suite killed mid-run left the stubs
+  behind in app/ and components/ where the next lint counted them as thirty new
+  problems. Both are fixed at the cause rather than by sequencing:
+
+## MOUNT-TEST STUBS LIVE IN test-tmp/
+
+A test that stubs `next/link`, a `.css` import or a server action writes a real
+file. Every one of those goes through `stubPath()` from lib/testing/stubDir.mjs,
+which puts it in `test-tmp/` at the repo root - eslint-ignored (eslint.config.mjs)
+and git-ignored - and never next to the test. The test still creates and removes
+its own stubs; what changed is that a leftover lands somewhere that costs nothing
+and a linter never walks the directory at all.
+
+The name carries the pid, because `node --test` gives each test file its own
+process and four different files each wanted a stub called `__css_stub.mjs`. Next
+to the test those were four paths; in one directory they would have been one file
+and a race.
 
 ## Commit hygiene: what never gets staged, and what scripts/ is for
 

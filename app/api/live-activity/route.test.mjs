@@ -30,14 +30,15 @@ const REPO = path.resolve(__dirname, '..', '..', '..');
   }
 })(path.resolve(REPO, '.env.local'));
 
-const STUB = path.join(__dirname, '__auth_stub.mjs');
-const STATE = path.join(__dirname, '__auth_state.json');
+const STUB = stubPath('__auth_stub.mjs');
+const STATE = stubPath('__auth_state.json');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === '@/auth') return { url: pathToFileURL(STUB).href, shortCircuit: true };
   return next(spec, ctx);
 } });
 
 const { sql } = await import('../../../lib/db.js');
+import { stubPath } from '../../../lib/testing/stubDir.mjs';
 
 const NS = `sentinel-la-route-${Date.now()}`;
 const ACT = `${NS}-a1`;

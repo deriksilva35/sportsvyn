@@ -7,10 +7,11 @@ import { writeFileSync, unlinkSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { registerHooks } from 'node:module';
 import { install } from '../../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const F = (n) => path.join(__dirname, `__ob_${n}.mjs`);
+const F = (n) => stubPath(`__ob_${n}.mjs`);
 const STUBS = ['link', 'auth', 'hdr', 'foot', 'create', 'board', 'pool', 'series', 'css'];
 
 registerHooks({ resolve(spec, ctx, next) {

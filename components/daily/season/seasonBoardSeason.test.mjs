@@ -23,6 +23,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { transformSync } from '@babel/core';
 import { install } from '../../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -57,7 +58,7 @@ before(async () => {
   const out = transformSync(readFileSync(src, 'utf8'), {
     filename: src, presets: [['@babel/preset-react', { runtime: 'automatic' }]], configFile: false, babelrc: false,
   }).code;
-  tmp = path.join(__dirname, `__season_test_${process.pid}.mjs`);
+  tmp = stubPath(`__season_test_${process.pid}.mjs`);
   writeFileSync(tmp, out.replace(/^'use client';\s*/m, ''));
   SeasonBoard = (await import(pathToFileURL(tmp).href)).default;
 });

@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { transformSync } from '@babel/core';
 import { install } from '../../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../../lib/testing/stubDir.mjs';
 install();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 let React, createRoot, act, SeasonBoard, dom, tmp; const roots = new Set();
@@ -23,7 +24,7 @@ before(async () => {
   ({ act } = await import('react')); ({ createRoot } = await import('react-dom/client'));
   const src = path.join(__dirname, 'SeasonBoard.js');
   const out = transformSync(readFileSync(src, 'utf8'), { filename: src, presets: [['@babel/preset-react', { runtime: 'automatic' }]], configFile: false, babelrc: false }).code;
-  tmp = path.join(__dirname, `__rules_test_${process.pid}.mjs`); writeFileSync(tmp, out.replace(/^'use client';\s*/m, ''));
+  tmp = stubPath(`__rules_test_${process.pid}.mjs`); writeFileSync(tmp, out.replace(/^'use client';\s*/m, ''));
   SeasonBoard = (await import(pathToFileURL(tmp).href)).default;
 });
 afterEach(() => { for (const r of roots) { try { act(() => r.unmount()); } catch { /* gone */ } } roots.clear(); });

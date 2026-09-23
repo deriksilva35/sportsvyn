@@ -7,10 +7,11 @@ import { writeFileSync, unlinkSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { registerHooks } from 'node:module';
 import { install } from '../../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const F = (n) => path.join(__dirname, `__rb_${n}.mjs`);
+const F = (n) => stubPath(`__rb_${n}.mjs`);
 const NAMES = ['link', 'auth', 'hdr', 'foot', 'create', 'board', 'pool', 'rules', 'leagues', 'series', 'css'];
 const MAP = {
   'next/link': 'link', '@/auth': 'auth',

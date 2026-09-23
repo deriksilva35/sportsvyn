@@ -20,6 +20,7 @@ import { writeFileSync, unlinkSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { install } from '../../lib/testing/nextResolve.mjs';
 import { parseTrackerHandoff } from '../../lib/fantasy/handoff.js';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 
 install();
 
@@ -32,7 +33,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 // call useRouter; without a stub React throws "invariant expected app router
 // to be mounted" before a single row renders. Outside the repo, so eslint
 // never reads a file that is about to vanish.
-const NAV = path.join(process.env.TMPDIR || '/tmp', `__td_nav_${process.pid}.mjs`);
+const NAV = stubPath('__td_nav.mjs');
 writeFileSync(NAV, `
   export function useRouter() { return { push() {}, replace() {}, refresh() {} }; }
   export function useSearchParams() { return new URLSearchParams(); }

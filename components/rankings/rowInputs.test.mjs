@@ -20,10 +20,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { writeFileSync, unlinkSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { install } from '../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const C = path.join(__dirname, '__c_ri.mjs');
+const C = stubPath('__c_ri.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec.endsWith('.css')) return { url: pathToFileURL(C).href, shortCircuit: true };
   return next(spec, ctx);

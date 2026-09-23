@@ -16,10 +16,11 @@ import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { transformSync } from '@babel/core';
 import { registerHooks } from 'node:module';
 import { install } from '../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STUB = path.join(__dirname, `__v2_actions_${process.pid}.mjs`);
+const STUB = stubPath(`__v2_actions_${process.pid}.mjs`);
 registerHooks({ resolve(spec, ctx, next) {
   if (/^@\/app\/actions\/(pickem|confirm|handle)$/.test(spec)) return { url: pathToFileURL(STUB).href, shortCircuit: true };
   return next(spec, ctx);
@@ -82,7 +83,7 @@ before(async () => {
   const out = transformSync(readFileSync(src, 'utf8'), {
     filename: src, presets: [['@babel/preset-react', { runtime: 'automatic' }]], configFile: false, babelrc: false,
   }).code;
-  tmp = path.join(__dirname, `__pickem_v2_${process.pid}.mjs`);
+  tmp = stubPath(`__pickem_v2_${process.pid}.mjs`);
   writeFileSync(tmp, out.replace(/^'use client';\s*/m, ''));
   PickemBoard = (await import(pathToFileURL(tmp).href)).default;
 });

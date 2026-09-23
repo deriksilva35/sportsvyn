@@ -25,6 +25,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // THE MOUNT TESTS' STUBS (lib/testing/stubDir.mjs). They are real .mjs files
+    // written and unlinked while the suite runs, and eslint walking the tree at
+    // that moment died on an ENOENT for one that had existed a millisecond
+    // earlier. Ignoring the directory is half the fix; the other half is that
+    // they are no longer written into app/ and components/ at all.
+    "test-tmp/**",
   ]),
 ]);
 

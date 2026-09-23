@@ -9,13 +9,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { writeFileSync, unlinkSync, readFileSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { install } from '../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, '..', '..');
-const LINK = path.join(__dirname, '__l_tv.mjs');
-const NAV = path.join(__dirname, '__n_tv.mjs');
-const CSS = path.join(__dirname, '__c_tv.mjs');
+const LINK = stubPath('__l_tv.mjs');
+const NAV = stubPath('__n_tv.mjs');
+const CSS = stubPath('__c_tv.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === 'next/link') return { url: pathToFileURL(LINK).href, shortCircuit: true };
   if (spec === 'next/navigation') return { url: pathToFileURL(NAV).href, shortCircuit: true };

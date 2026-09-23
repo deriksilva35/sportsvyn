@@ -17,23 +17,24 @@ import { registerHooks } from 'node:module';
 import { install } from '../../../lib/testing/nextResolve.mjs';
 install();
 import { lineScoreGrid } from '../../../lib/mlb/gameDetail.js';
+import { stubPath } from '../../../lib/testing/stubDir.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const LINK = path.join(__dirname, '__link_stub.mjs');
-const NAV = path.join(__dirname, '__nav_stub.mjs');
-const READER = path.join(__dirname, '__reader_stub.mjs');
-const HEADER = path.join(__dirname, '__header_stub.mjs');
+const LINK = stubPath('__link_stub.mjs');
+const NAV = stubPath('__nav_stub.mjs');
+const READER = stubPath('__reader_stub.mjs');
+const HEADER = stubPath('__header_stub.mjs');
 // THE TWO CLIENT CONTROLS ARE STUBBED, and the stubs ECHO THEIR PROPS. What
 // this page is responsible for is what it HANDS them - the league, the six
 // Activity fields, the deep link, which team id, whether it is followed - and
 // a stub that prints those is the only way to assert it without mounting a
 // browser. (They also import extensionless paths, which Next's bundler
 // resolves and node does not.)
-const BELL = path.join(__dirname, '__bell_stub.mjs');
-const STAR = path.join(__dirname, '__star_stub.mjs');
-const AUTH = path.join(__dirname, '__auth_stub.mjs');
-const FOLLOWS = path.join(__dirname, '__follows_stub.mjs');
-const SHELL = path.join(__dirname, '__shell_stub.mjs');
+const BELL = stubPath('__bell_stub.mjs');
+const STAR = stubPath('__star_stub.mjs');
+const AUTH = stubPath('__auth_stub.mjs');
+const FOLLOWS = stubPath('__follows_stub.mjs');
+const SHELL = stubPath('__shell_stub.mjs');
 
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === 'next/link') return { url: pathToFileURL(LINK).href, shortCircuit: true };
@@ -45,7 +46,7 @@ registerHooks({ resolve(spec, ctx, next) {
   if (spec === '@/auth') return { url: pathToFileURL(AUTH).href, shortCircuit: true };
   if (spec.endsWith('lib/follows')) return { url: pathToFileURL(FOLLOWS).href, shortCircuit: true };
   if (spec.endsWith('lib/shell/shell')) return { url: pathToFileURL(SHELL).href, shortCircuit: true };
-  if (spec.endsWith('.css')) return { url: pathToFileURL(path.join(__dirname, '__css_stub.mjs')).href, shortCircuit: true };
+  if (spec.endsWith('.css')) return { url: pathToFileURL(stubPath('__css_stub.mjs')).href, shortCircuit: true };
   return next(spec, ctx);
 } });
 
@@ -54,7 +55,7 @@ before(async () => {
   writeFileSync(LINK, "import React from 'react'; export default function Link({ href, children, ...rest }) { return React.createElement('a', { ...rest, href: String(href) }, children); }\n");
   writeFileSync(NAV, "export function notFound() { throw new Error('notFound'); }\n");
   writeFileSync(HEADER, "export default function GlobalHeaderServer() { return null; }\n");
-  writeFileSync(path.join(__dirname, '__css_stub.mjs'), 'export default {};\n');
+  writeFileSync(stubPath('__css_stub.mjs'), 'export default {};\n');
   writeFileSync(READER, [
     "export let next = null;",
     "export function set(v) { next = v; }",
@@ -113,7 +114,7 @@ before(async () => {
 });
 after(() => {
   for (const f of [LINK, NAV, HEADER, READER, BELL, STAR, AUTH, FOLLOWS, SHELL,
-    path.join(__dirname, '__css_stub.mjs')]) {
+    stubPath('__css_stub.mjs')]) {
     try { unlinkSync(f); } catch { /* gone */ }
   }
 });

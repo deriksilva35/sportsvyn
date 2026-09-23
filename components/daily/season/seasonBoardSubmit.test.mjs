@@ -26,6 +26,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, '..', '..', '..');
 
 import { install } from '../../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../../lib/testing/stubDir.mjs';
 install();
 
 let React, createRoot, act, SeasonBoard, dom, tmp;
@@ -94,7 +95,7 @@ before(async () => {
     plugins: [],
     configFile: false, babelrc: false,
   }).code;
-  tmp = path.join(__dirname, `__submit_test_${process.pid}.mjs`);
+  tmp = stubPath(`__submit_test_${process.pid}.mjs`);
   writeFileSync(tmp, out.replace(/^'use client';\s*/m, ''));
   SeasonBoard = (await import(pathToFileURL(tmp).href)).default;
 });

@@ -17,6 +17,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { writeFileSync, unlinkSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { install } from '../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 
 install();
 
@@ -27,9 +28,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // eslint reads mid-run (the weekly-hdr relay lost an afternoon to that).
 // The two STUBS still have to be files, because they stand in for modules
 // that must not run; they live outside the repo for the same reason.
-const TMPDIR = process.env.TMPDIR || '/tmp';
-const STUB = path.join(TMPDIR, `__sfe_sim_${process.pid}.mjs`);
-const NAV = path.join(TMPDIR, `__sfe_nav_${process.pid}.mjs`);
+const STUB = stubPath('__sfe_sim.mjs');
+const NAV = stubPath('__sfe_nav.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === '@/app/actions/sim') return { url: pathToFileURL(STUB).href, shortCircuit: true };
   if (spec === 'next/navigation') return { url: pathToFileURL(NAV).href, shortCircuit: true };

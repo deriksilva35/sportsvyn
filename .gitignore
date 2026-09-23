@@ -56,3 +56,7 @@ scripts/spike-odds.mjs
 scripts/inspect-prod-rankings.mjs
 scripts/port-rankings-dev-to-prod.mjs
 .fantrax-probe/
+
+# Mount-test module stubs (lib/testing/stubDir.mjs). Written and removed by the
+# test; a run killed mid-flight leaves them here, where they cost nothing.
+test-tmp/

@@ -18,10 +18,11 @@ import { writeFileSync, unlinkSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { install } from '../../lib/testing/nextResolve.mjs';
 import { DEFAULTS, OFF } from '../../lib/push/prefs.js';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STUB = path.join(__dirname, '__enable_stub.mjs');
+const STUB = stubPath('__enable_stub.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === './enable' && ctx.parentURL?.endsWith('/AlertBell.js')) return { url: pathToFileURL(STUB).href, shortCircuit: true };
   return next(spec, ctx);

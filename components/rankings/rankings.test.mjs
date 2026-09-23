@@ -8,15 +8,16 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { writeFileSync, unlinkSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { install } from '../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, '..', '..');
 const src = (rel) => readFileSync(path.join(REPO, rel), 'utf8');
-const L = path.join(__dirname, '__l_rk.mjs');
-const N = path.join(__dirname, '__n_rk.mjs');
-const C = path.join(__dirname, '__c_rk.mjs');
-const A = path.join(__dirname, '__a_rk.mjs');
+const L = stubPath('__l_rk.mjs');
+const N = stubPath('__n_rk.mjs');
+const C = stubPath('__c_rk.mjs');
+const A = stubPath('__a_rk.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === 'next/link') return { url: pathToFileURL(L).href, shortCircuit: true };
   if (spec === 'next/navigation') return { url: pathToFileURL(N).href, shortCircuit: true };

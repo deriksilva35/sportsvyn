@@ -10,10 +10,11 @@ import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { transformSync } from '@babel/core';
 import { registerHooks } from 'node:module';
 import { install } from '../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 install();
 // next/navigation's useRouter needs the App Router context; outside Next it
 // throws. A stub router is enough here - this test never navigates.
-const STUB = pathToFileURL(path.join(path.dirname(fileURLToPath(import.meta.url)), '__nav_stub.mjs')).href;
+const STUB = pathToFileURL(stubPath('__nav_stub.mjs')).href;
 registerHooks({ resolve(spec, ctx, next) { return spec === 'next/navigation' ? { url: STUB, shortCircuit: true } : next(spec, ctx); } });
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -21,7 +22,7 @@ let React, createRoot, act, SeatSelect, dom, tmp; const roots = new Set();
 let fetchCalls = [];
 
 before(async () => {
-  writeFileSync(path.join(__dirname, '__nav_stub.mjs'), 'export const useRouter = () => ({ push() {}, replace() {}, refresh() {} });\nexport const usePathname = () => \'/draft\';\nexport const useSearchParams = () => new URLSearchParams();\nexport const redirect = () => {};\nexport const notFound = () => {};\n');
+  writeFileSync(stubPath('__nav_stub.mjs'), 'export const useRouter = () => ({ push() {}, replace() {}, refresh() {} });\nexport const usePathname = () => \'/draft\';\nexport const useSearchParams = () => new URLSearchParams();\nexport const redirect = () => {};\nexport const notFound = () => {};\n');
   dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'https://sportsvyn.test/draft' });
   global.window = dom.window; global.document = dom.window.document; global.self = dom.window;
   Object.defineProperty(global, 'navigator', { value: dom.window.navigator, configurable: true, writable: true });
@@ -31,12 +32,12 @@ before(async () => {
   ({ act } = await import('react')); ({ createRoot } = await import('react-dom/client'));
   const src = path.join(__dirname, 'SeatSelect.js');
   const out = transformSync(readFileSync(src, 'utf8'), { filename: src, presets: [['@babel/preset-react', { runtime: 'automatic' }]], configFile: false, babelrc: false }).code;
-  tmp = path.join(__dirname, `__seat_test_${process.pid}.mjs`);
+  tmp = stubPath(`__seat_test_${process.pid}.mjs`);
   writeFileSync(tmp, out.replace(/^'use client';\s*/m, ''));
   SeatSelect = (await import(pathToFileURL(tmp).href)).default;
 });
 afterEach(() => { for (const r of roots) { try { act(() => r.unmount()); } catch { /* gone */ } } roots.clear(); });
-after(() => { for (const f of [tmp, path.join(__dirname, '__nav_stub.mjs')]) { try { unlinkSync(f); } catch { /* gone */ } } });
+after(() => { for (const f of [tmp, stubPath('__nav_stub.mjs')]) { try { unlinkSync(f); } catch { /* gone */ } } });
 
 function render(hasHandle) {
   const container = document.getElementById('root'); const root = createRoot(container); roots.add(root);

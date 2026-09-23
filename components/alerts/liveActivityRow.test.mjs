@@ -22,6 +22,7 @@ import { registerHooks } from 'node:module';
 import { install } from '../../lib/testing/nextResolve.mjs';
 import { OFF } from '../../lib/push/prefs.js';
 import { SHELL_COOKIE, SHELL_VALUE } from '../../lib/shell/constants.js';
+import { stubPath } from '../../lib/testing/stubDir.mjs';
 
 install();
 
@@ -33,7 +34,7 @@ install();
 const realLog = console.log;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STUB = path.join(__dirname, '__enable_stub_la.mjs');
+const STUB = stubPath('__enable_stub_la.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === './enable' && ctx.parentURL?.endsWith('/AlertBell.js')) return { url: pathToFileURL(STUB).href, shortCircuit: true };
   return next(spec, ctx);

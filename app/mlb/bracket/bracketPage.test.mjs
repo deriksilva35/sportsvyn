@@ -15,13 +15,14 @@ import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { registerHooks } from 'node:module';
 import { install } from '../../../lib/testing/nextResolve.mjs';
+import { stubPath } from '../../../lib/testing/stubDir.mjs';
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const LINK = path.join(__dirname, '__link_stub.mjs');
-const HEADER = path.join(__dirname, '__header_stub.mjs');
-const READER = path.join(__dirname, '__bracket_stub.mjs');
-const CSS = path.join(__dirname, '__css_stub.mjs');
+const LINK = stubPath('__link_stub.mjs');
+const HEADER = stubPath('__header_stub.mjs');
+const READER = stubPath('__bracket_stub.mjs');
+const CSS = stubPath('__css_stub.mjs');
 
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === 'next/link') return { url: pathToFileURL(LINK).href, shortCircuit: true };

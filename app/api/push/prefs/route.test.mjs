@@ -29,13 +29,14 @@ const REPO = path.resolve(__dirname, '..', '..', '..', '..');
   }
 })(path.resolve(REPO, '.env.local'));
 
-const STUB = path.join(__dirname, '__auth_stub.mjs');
+const STUB = stubPath('__auth_stub.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === '@/auth') return { url: pathToFileURL(STUB).href, shortCircuit: true };
   return next(spec, ctx);
 } });
 
 const { sql } = await import('../../../../lib/db.js');
+import { stubPath } from '../../../../lib/testing/stubDir.mjs';
 const NS = `prefsroute-${Date.now()}`;
 const SCOPE_ID = 900000000 + (Date.now() % 1000000); // a match id nothing on DEV has
 let userId; let GET; let PUT; let DELETE;

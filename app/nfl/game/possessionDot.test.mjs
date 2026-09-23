@@ -24,6 +24,7 @@ import { install } from '../../../lib/testing/nextResolve.mjs';
 import { buildDriveChart } from '../../../lib/gridiron/driveStrip.js';
 import { possessionSide } from '../../../lib/gridiron/possession.js';
 import { orderFor } from '../../../lib/gridiron/teamOrder.js';
+import { stubPath } from '../../../lib/testing/stubDir.mjs';
 
 install();
 
@@ -32,7 +33,7 @@ install();
 // is not on trial here and never draws in these cases (it is signed-in only),
 // so its two actions are stubbed rather than the whole component: everything
 // else in the row, the dot included, stays the code the page ships.
-const ACTIONS = path.join(path.dirname(fileURLToPath(import.meta.url)), '__follows_stub.mjs');
+const ACTIONS = stubPath('__follows_stub.mjs');
 writeFileSync(ACTIONS, 'export async function followTeam() { return { ok: true }; }\nexport async function unfollowTeam() { return { ok: true }; }\n');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === '@/app/actions/follows') return { url: pathToFileURL(ACTIONS).href, shortCircuit: true };
