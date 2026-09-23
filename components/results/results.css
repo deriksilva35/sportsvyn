@@ -20,6 +20,13 @@
 .rs-tot { margin-left: auto; text-align: right; }
 .rs-tot b { display: block; font: 800 30px var(--font-mono); letter-spacing: -.03em; line-height: 1; color: var(--volt); }
 .rs-tot span { font: 600 9px var(--font-mono); letter-spacing: .11em; color: var(--muted-dim); text-transform: uppercase; }
+/* NO ENTRY. The line sits where the rank and the percent-of-ceiling sit, and it
+   is the only thing in the row besides the ceiling itself - see Header's own
+   comment for why a 0% bar is a lie about somebody who was not there. */
+.rs-none { font: 600 12px var(--font-mono); color: var(--paper); line-height: 1.35; }
+.rs-none small { display: block; margin-top: 3px; color: var(--muted-dim); font: 500 9px var(--font-mono); }
+/* ONE COLUMN, CENTRED IN THE SPACE TWO USED TO SHARE. */
+.rs-vs.one { grid-template-columns: minmax(0, 1fr); }
 .rs-pct { margin-top: 9px; display: flex; align-items: center; gap: 8px; font: 500 10px var(--font-mono); color: var(--muted); }
 .rs-bar { flex: 1; height: 5px; border-radius: 99px; background: var(--ink-3); border: 1px solid var(--rule-dim); overflow: visible; position: relative; }
 .rs-bar i { display: block; height: 100%; background: var(--volt); border-radius: 99px; }

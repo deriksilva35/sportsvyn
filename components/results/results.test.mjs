@@ -49,8 +49,13 @@ after(() => {
 // REACT'S COMMENT MARKERS ARE STRIPPED. renderToStaticMarkup separates adjacent
 // text children with <!-- -->, which is invisible to a reader and noise in a
 // regex - every assertion below is about markup a browser shows.
+// AND THE APOSTROPHE IS DECODED for the same reason. renderToStaticMarkup writes
+// "didn&#x27;t"; a browser shows "didn't", and an assertion about copy should be
+// written the way the copy reads.
 const html = (v, href = '/results/weekly/10') =>
-  renderToStaticMarkup(React.createElement(Results, { v, href })).replace(/<!-- -->/g, '');
+  renderToStaticMarkup(React.createElement(Results, { v, href }))
+    .replace(/<!-- -->/g, '')
+    .replace(/&#x27;/g, "'");
 
 const slot = (pos, name, points, hit = false) => ({
   slot: pos, pos, name, short: name, team: 'BUF', meta: null, points, hit,
@@ -231,19 +236,112 @@ test('FRAME 4 - PICK\'EM: a scoreboard, and a pending square is not a loss', () 
   assert.match(h, /A dashed\s+square is a game not yet decided/);
 });
 
-test('EVERY FRAME SURVIVES A SIGNED-OUT READER, with no `mine` at all', () => {
-  // THE FIELD AND THE CEILING ARE PUBLIC on a settled contest, so the screen
-  // still says something true rather than 404ing or printing zeros.
+// ------------------------------------------------- the reader who did not play
+
+/** The Daily frame as a reader with no entry gets it. */
+const NO_ENTRY = () => {
   const v = DAILY();
-  v.mine = []; v.ceiling = []; v.lostIt = []; v.matched = 0; v.toCeiling = null;
-  v.header = { ...v.header, rank: null, rankLabel: null, score: null, pctOfCeiling: null };
-  const h = html(v);
-  assert.match(h, /Field<b>-<\/b>/);
-  assert.match(h, /<b class="n">-<\/b><span>Points<\/span>/);
-  assert.match(h, /Of perfect<b class="v">-<\/b>/);
-  // NO "where you lost it" LINE WITH NOTHING IN IT.
+  v.played = false;
+  v.noEntryLine = "You didn't play this board";
+  // What the reader hands over in this state: no lineup of their own, no misses,
+  // no distance to a ceiling they never approached - and the ceiling itself kept.
+  v.mine = []; v.lostIt = []; v.matched = 0; v.toCeiling = null; v.slotCount = 3;
+  v.header = { ...v.header, rank: null, rankLabel: null, of: 1204, topPct: null, score: null, pctOfCeiling: null };
+  v.field.rows = v.field.rows.map((r) => ({ ...r, you: false, name: r.you ? 'S. Cole' : r.name }));
+  // THE FIELD AS THE READERS ACTUALLY BUILD IT with nobody to mark: no `me`
+  // bucket, and FOUR axis labels rather than five - the fourth slot is the
+  // reader's own mark and there is no reader. (axisFor used to fall back to the
+  // high value there, printing the ceiling twice.)
+  v.field.distribution = { ...v.field.distribution, myBucket: null, bars: v.field.distribution.bars.map((b) => ({ ...b, me: false })) };
+  v.field.axis = ['900', '1,200', '1,500', '1,868'];
+  return v;
+};
+
+test('NO ENTRY: the line replaces the rank and the points, and NOTHING reads as a zero', () => {
+  const h = html(NO_ENTRY(), '/results/daily/1735');
+  // THE LINE, where the rank and the percent-of-ceiling used to be.
+  assert.match(h, /<div class="rs-none">You didn't play this board<small>The field and the perfect are below<\/small><\/div>/);
+  // THE CEILING IS THE ONLY NUMBER IN THE HEADER, and it is labelled as the
+  // ceiling rather than as this reader's points.
+  assert.match(h, /<b class="n">1,868<\/b><span>perfect<\/span>/);
+  // AND NONE OF THE FOUR LIES IS PRINTED.
+  assert.doesNotMatch(h, /<span>Points<\/span>/, 'no "Points" total for somebody with none');
+  assert.doesNotMatch(h, /Field<b>/, 'no rank cell at all - not even a dash');
+  assert.doesNotMatch(h, /Of perfect<b/, 'no percent-of-ceiling');
+  assert.doesNotMatch(h, /class="rs-pct"/, 'and no bar, which would be painted to 0%');
+  assert.doesNotMatch(h, /width:0%/);
+  assert.doesNotMatch(h, />0</, 'no bare zero anywhere in the markup');
+  // THE CEILING LINEUP IS STILL THERE, in ONE column, under its own heading -
+  // not "You vs perfect" with a column of em-dashes.
+  assert.match(h, /<b>The perfect lineup<\/b>/);
+  assert.match(h, /class="rs-vs one"/);
+  assert.match(h, /<h4>Perfect <b class="n">1,868<\/b><\/h4>/);
+  assert.doesNotMatch(h, /You vs perfect/);
+  assert.doesNotMatch(h, /slots matched/);
+  assert.equal([...h.matchAll(/class="rs-col/g)].length, 1, 'one column, not two');
   assert.doesNotMatch(h, /Where you lost it/);
-  // The field still draws.
+  // THE FIELD IS WHOLE - it is the reason this screen is still worth serving.
   assert.match(h, /<b>The field<\/b>/);
   assert.match(h, /median 1,488/);
+  assert.match(h, /<div class="rs-axis"><span>900<\/span>/);
+  assert.doesNotMatch(h, /you · /, 'the axis carries no reader mark either');
+  assert.equal([...h.matchAll(/<div class="rs-axis">.*?<\/div>/gs)][0][0].match(/<span>/g).length, 4);
+  assert.doesNotMatch(h, /class="me"/, 'and no bucket is lit as this reader\'s');
+  assert.match(h, /href="\/results\/daily\/1735\?who=5" class="rs-lr best"/);
+  assert.doesNotMatch(h, /class="rs-lr you"/, 'nobody is "you" in a field this reader is not in');
+});
+
+test('NO ENTRY: every frame, and the period word is the game\'s own', () => {
+  // THE WEEKLY - a week.
+  const w = NO_ENTRY();
+  w.game = 'weekly'; w.title = 'The Weekly'; w.ceilingWord = 'optimal';
+  w.noEntryLine = "You didn't play this week";
+  const hw = html(w);
+  assert.match(hw, /You didn't play this week<small>The field and the optimal are below<\/small>/);
+  assert.match(hw, /<b>The optimal lineup<\/b>/);
+  assert.match(hw, /<span>optimal<\/span>/);
+  assert.doesNotMatch(hw, /<span>Points<\/span>/);
+
+  // THE DRAFT - a draft. The best draft stays; "Your draft" goes.
+  const d = NO_ENTRY();
+  d.game = 'draft'; d.title = 'The Draft'; d.ceilingWord = 'best draft';
+  d.noEntryLine = "You didn't play this draft";
+  d.header = { ...d.header, roomRank: null, ceiling: 1868 };
+  d.best = { name: 'the Closer', house: true, seat: 4, score: 1868, of: 16, counted: 6 };
+  d.bestPicks = [{ at: '1.04', pos: 'QB', name: 'P. Mahomes', short: 'P. Mahomes', points: 412, counted: true, adp: 6, takenLabel: 'taken 4th', gapLabel: '+2' }];
+  d.myPicks = [];
+  const hd = html(d);
+  assert.match(hd, /You didn't play this draft/);
+  assert.match(hd, /<b>The best draft<\/b>/);
+  assert.doesNotMatch(hd, /<b>Your draft<\/b>/, 'no empty pick list under a seat nobody sat in');
+  assert.doesNotMatch(hd, /seat unknown/);
+
+  // PICK'EM - a week, and the scoreboard IS the field.
+  const p = NO_ENTRY();
+  p.game = 'pickem'; p.title = "Pick'em"; p.ceilingWord = 'best';
+  p.noEntryLine = "You didn't play this week";
+  p.record = null; p.bestHitRate = null;
+  p.scoreboard = {
+    games: [{ key: 'g1', away: 'BUF' }],
+    rows: [{ userId: 5, rank: 1, name: 'the Closer', house: true, you: false, record: '1-0', squares: [{ key: 's1', state: 'win' }] }],
+  };
+  const hp = html(p);
+  assert.match(hp, /You didn't play this week/);
+  assert.match(hp, /class="rs-sbg"/, 'the scoreboard is still drawn');
+  assert.doesNotMatch(hp, /<span>Record<\/span>/, 'no 0-0 record');
+  assert.doesNotMatch(hp, /hit rate/, 'and no 0% hit rate bar');
+});
+
+test('A REAL ZERO STILL PRINTS: played with a score of 0 is not the no-entry state', () => {
+  // THE DISTINCTION THE STATE EXISTS FOR, from the other side. played is true and
+  // the score is 0, so the reader gets their zero, their rank and a 0% bar - all
+  // three of which are TRUE of somebody who played and scored nothing.
+  const v = DAILY();
+  v.played = true;
+  v.header = { ...v.header, rank: 1204, rankLabel: '1,204th', score: 0, pctOfCeiling: 0 };
+  const h = html(v);
+  assert.match(h, /<b class="n">0<\/b><span>Points<\/span>/);
+  assert.match(h, /Of perfect<b class="v">0%<\/b>/);
+  assert.match(h, /<i style="width:0%"><\/i>/);
+  assert.doesNotMatch(h, /didn't play/);
 });

@@ -25,6 +25,32 @@ const n1 = (v) => (v == null ? '-' : Number(v).toLocaleString('en-US'));
 /** THE THREE NUMBERS AND THE BAR. The mock's header, for every game. */
 function Header({ v }) {
   const h = v.header ?? {};
+  // NO ENTRY: THE LINE, AND THE CEILING, AND NOTHING THAT PRETENDS TO BE A SCORE.
+  //
+  // The rank, the percent-of-ceiling and the bar are all statements ABOUT THE
+  // READER, and there is no reader here. Rendering them empty printed "-" for the
+  // rank, "0" for the points and a bar painted to 0%, which reads as a last-place
+  // finish with nothing scored rather than as an absence. The ceiling stays,
+  // because the ceiling is a fact about the slate and the whole point of still
+  // showing this screen to somebody who did not play.
+  if (v.played === false) {
+    return (
+      <div className="rs-hd">
+        <div className="rs-hd-top">
+          <span className="rs-eb">{v.title}{v.subtitle ? ` · ${v.subtitle}` : ''}</span>
+          <span className="rs-ed">{v.edition}</span>
+        </div>
+        <div className="rs-crow">
+          <div className="rs-none">{v.noEntryLine}
+            <small>The field and the {v.ceilingWord} are below</small></div>
+          <div className="rs-tot">
+            <b className="n">{n1(h.ceiling)}</b>
+            <span>{v.ceilingWord}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
   // THE BAR IS THE READER AGAINST THE CEILING, with a tick where the ceiling is.
   // Capped at 100 so an entry that somehow beat its own ceiling cannot paint
   // past the end of the track.
@@ -79,6 +105,25 @@ function SlotRow({ p, hit }) {
 function Compare({ v }) {
   const matched = v.matched ?? 0;
   const of = v.slotCount ?? (v.mine?.length ?? 0);
+  // NO ENTRY: ONE COLUMN, NOT TWO EMPTY ONES. "You vs optimal" with no you is a
+  // column of em-dashes beside "0 of 6 slots matched", which says the reader set
+  // six wrong players rather than none at all.
+  if (v.played === false) {
+    return (
+      <div className="rs-mod">
+        <div className="rs-mh">
+          <b>The {v.ceilingWord} lineup</b>
+          <small>the best {of ? `${of} ` : ''}anyone could have set from this slate</small>
+        </div>
+        <div className="rs-vs one">
+          <div className="rs-col perf">
+            <h4>{v.ceilingWord === 'perfect' ? 'Perfect' : 'Optimal'} <b className="n">{n1(v.header?.ceiling)}</b></h4>
+            {(v.ceiling ?? []).map((p, i) => <SlotRow key={`c${i}`} p={p} hit={false} />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="rs-mod">
       <div className="rs-mh">
@@ -206,10 +251,15 @@ export default function Results({ v, href = null }) {
                 + `\n${v.best.score} · ${v.best.of} picks, ${v.best.counted} counted`}
               picks={v.bestPicks ?? []} />
           ) : null}
-          <Picks title="Your draft"
-            sub={`${v.seat != null ? `seat ${v.seat}` : 'seat unknown'}\n${n1(v.header?.score)}`
-              + `${v.toCeiling == null ? '' : ` · ${v.toCeiling} to best`}`}
-            picks={v.myPicks ?? []} />
+          {/* NO ENTRY: NO "YOUR DRAFT". An empty pick list under a seat nobody sat
+              in is not information, and the best draft above is the thing worth
+              reading without one. */}
+          {v.played === false ? null : (
+            <Picks title="Your draft"
+              sub={`${v.seat != null ? `seat ${v.seat}` : 'seat unknown'}\n${n1(v.header?.score)}`
+                + `${v.toCeiling == null ? '' : ` · ${v.toCeiling} to best`}`}
+              picks={v.myPicks ?? []} />
+          )}
         </>
       ) : null}
       {v.game === 'daily' || v.game === 'weekly' ? <Compare v={v} /> : null}
