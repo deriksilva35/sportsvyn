@@ -208,6 +208,17 @@ for (const season of seasons) {
   console.log('\n  october days');
   for (const d of await ensureOctoberDays(Number(season))) {
     console.log(`    ${d.day}  ${d.created ? `CREATED id=${d.id} · ${d.games} games · first pitch ${String(d.firstPitch).slice(11, 16)}Z` : `${d.reason}${d.id ? ` id=${d.id}` : ''}`}`);
+    // THE HOUSE FILED HERE, so the operator sees it here. A day that created but
+    // filed nobody is the interesting case and this is where it shows up - it
+    // would otherwise be a silent absence on the board hours later.
+    if (d.house?.filed) {
+      const line = Object.entries(d.house.filed)
+        .map(([k, r]) => (r.skipped ? `${k} skip` : r.ok ? `${k} ${r.filed}/${r.of}${r.short ? ' SHORT' : ''}` : `${k} FAIL ${r.reason}`))
+        .join(' · ');
+      console.log(`             house: ${line}`);
+    } else if (d.house?.error) {
+      console.log(`             house: ERROR ${d.house.error}`);
+    }
   }
 
   // THE RUN'S ROUNDS. Round 1 opens here - the relay's own instruction - and
