@@ -57,14 +57,29 @@ never a typed '1'") made the number data. Two others in
 "2 still open" became "all locked" with nobody watching. A fixture asserting
 something about OPEN games is written relative to now, or it is a dated cheque.
 
-TWO MORE WERE DATA, AND THEY GOT FIXTURES, NOT EXCUSES.
-`lib/fantasy/leagueShare.test.mjs` asserts migration 085's invariant across the
-whole table and DEV held 46 owned configs with no owner row; its before() now
-re-applies 085's backfill, and the comment there says what that costs.
+TWO MORE WERE DATA. One got a fixture; the other turned out to be the ASSERTION.
 `lib/gridiron/topicEnvelope.test.mjs` wanted a populated NFL envelope from a
 database whose NFL anchor season had ONE played game; its before() seeds three
 finals in week 99 - outside any real schedule, so a parallel weekly-board fixture
 cannot find them - and its after() asserts its own teardown.
+
+`lib/fantasy/leagueShare.test.mjs` is the other one, and it is the better lesson:
+A RED GUARD IS NOT ALWAYS A BROKEN FIXTURE - SOMETIMES THE GUARD IS WRONG. It
+asserted migration 085's invariant ("every owned draft_config has an owner row")
+across the whole table, and DEV held 46 without one. The first fix was a fixture
+that re-applied 085's backfill in before(). Then a READ-ONLY COUNT ON PROD said
+75 there, and NOT ONE of them a league: every single one comes from
+startCustomDraftFor ('manual') or startTrackerDraftFor ('tracker'), which build
+one reader's own draft room - no franchise to claim, never listed by getMyLeagues
+(fantrax-only), and the owner is resolved from draft_configs.user_id directly, so
+nothing is broken for anybody. Every FANTRAX config on PROD has its row.
+
+So the invariant is scoped to `source = 'fantrax'` and the backfill is gone. GO
+AND MEASURE THE OTHER DATABASE BEFORE REPAIRING THIS ONE: the fixture would have
+written 75 rows into PROD that the product never creates, and it had already
+written 40 into DEV, which were removed. The rule that survives is that a fixture
+which repairs data is a fixture that can no longer see a defect - so reach for it
+only once you know the data is genuinely wrong.
 
 The rule is therefore about REACH, not about cost. Scoped runs are fine while
 iterating - run lib/october/ forty times while writing lib/october/. But the run
