@@ -39,17 +39,28 @@ registerHooks({ resolve(spec, ctx, next) {
   return next(spec, ctx);
 } });
 
-let React, renderToStaticMarkup, Page, boardStub, seriesStub, authStub, leaguesStub;
+let React, renderToStaticMarkup, Page, boardStub, seriesStub, authStub, leaguesStub, createStub;
 before(async () => {
   writeFileSync(F('link'), "import React from 'react'; export default function Link({href,children,...r}){return React.createElement('a',{...r,href:String(href)},children);}\n");
   writeFileSync(F('auth'), 'export let uid = null;\nexport function setUid(v) { uid = v; }\nexport async function auth() { return uid == null ? null : { user: { id: uid } }; }\n');
   writeFileSync(F('hdr'), 'export default function H() { return null; }\n');
   writeFileSync(F('foot'), 'export default function F() { return null; }\n');
-  writeFileSync(F('create'), "export async function currentOctoberDay() { return { season_year: 2025 }; }\n");
+  writeFileSync(F('create'), [
+    "export let day = { season_year: 2025, meta: {} };",
+    'export function setDay(v) { day = v; }',
+    'export async function currentOctoberDay() { return day; }',
+  ].join('\n') + '\n');
   // NO poolSplit AND NO usedPlayers IN THE STUBS. Both are deleted with the
   // burn; a stub that still exported them would let this test pass over a page
   // that had gone back to importing them.
-  writeFileSync(F('board'), 'export let rows = [];\nexport function setRows(v) { rows = v; }\nexport async function octoberBoard() { return rows; }\n');
+  // THE STUB RECORDS ITS OPTIONS, so the page's own wiring is observable: which
+  // memberIds it scoped by, and WHICH TOURNAMENT it said it was asking about.
+  writeFileSync(F('board'), [
+    'export let rows = [];',
+    'export const calls = [];',
+    'export function setRows(v) { rows = v; }',
+    'export async function octoberBoard(season, opts) { calls.push({ season, ...opts }); return rows; }',
+  ].join('\n') + '\n');
   writeFileSync(F('leagues'), [
     'export let mine = [];',
     'export let members = [];',
@@ -71,6 +82,7 @@ before(async () => {
   boardStub = await import(pathToFileURL(F('board')).href);
   seriesStub = await import(pathToFileURL(F('series')).href);
   leaguesStub = await import(pathToFileURL(F('leagues')).href);
+  createStub = await import(pathToFileURL(F('create')).href);
   authStub = await import(pathToFileURL(F('auth')).href);
   Page = (await import('./page.js')).default;
 });
@@ -154,6 +166,35 @@ test('LEAGUE CHIPS: myLeagues, the ?league= filter, and the board scoped to memb
   const guessed = await render({ league: '9999' });
   assert.match(guessed, /class="oc-lg on" href="\/october\/board">Everyone<\/a>/);
   assert.doesNotMatch(guessed, /Invite/);
+});
+
+test("THE PAGE TELLS THE READER WHICH TOURNAMENT IT IS ASKING ABOUT", async () => {
+  // A PREVIEW DAY AND A REAL DAY ARE THE SAME season_year. The reader scopes by
+  // meta.preview (lib/october/board.test.mjs proves the SQL); this asserts the
+  // PAGE hands it the day it is actually showing, which is the half a reader test
+  // cannot see. Dropping `preview` from this call used to change nothing here.
+  authStub.setUid(9);
+  boardStub.setRows(ROWS);
+  leaguesStub.setMine([]);
+  seriesStub.setSeries([]);
+
+  createStub.setDay({ season_year: 2025, meta: { preview: true } });
+  boardStub.calls.length = 0;
+  await render({});
+  assert.equal(boardStub.calls.at(-1).preview, true, 'a preview day asks for the preview board');
+
+  createStub.setDay({ season_year: 2025, meta: {} });
+  boardStub.calls.length = 0;
+  await render({});
+  assert.equal(boardStub.calls.at(-1).preview, false, 'a postseason day asks for the postseason board');
+
+  // AND THE MEMBER SCOPE RIDES THE SAME CALL: null for Everyone.
+  assert.equal(boardStub.calls.at(-1).memberIds, null);
+  leaguesStub.setMine([{ id: 1, name: 'Silva Family' }]);
+  leaguesStub.setMembers([9, 5]);
+  boardStub.calls.length = 0;
+  await render({ league: '1' });
+  assert.deepEqual(boardStub.calls.at(-1).memberIds, [9, 5], 'a league scopes by its members');
 });
 
 test('ONE ENTRY, ANY NUMBER OF LEAGUES: the reader keeps one card and one number', async () => {

@@ -37,18 +37,24 @@ registerHooks({ resolve(spec, ctx, next) {
   return next(spec, ctx);
 } });
 
-let React, renderToStaticMarkup, Page, boardStub, authStub, leaguesStub;
+let React, renderToStaticMarkup, Page, boardStub, authStub, leaguesStub, createStub;
 before(async () => {
   writeFileSync(F('link'), "import React from 'react'; export default function Link({href,children,...r}){return React.createElement('a',{...r,href:String(href)},children);}\n");
   writeFileSync(F('auth'), 'export let uid = null;\nexport function setUid(v){uid=v;}\nexport async function auth(){return uid==null?null:{user:{id:uid}};}\n');
   writeFileSync(F('hdr'), 'export default function H(){return null;}\n');
   writeFileSync(F('foot'), 'export default function F(){return null;}\n');
   writeFileSync(F('css'), 'export default {};\n');
-  writeFileSync(F('create'), "export async function currentRunRound(){return {season_year:2026, board:{round:'division'}};}\nexport async function settledRounds(){return ['wild_card'];}\n");
+  writeFileSync(F('create'), [
+    "export let round = { season_year: 2026, board: { round: 'division' }, meta: {} };",
+    'export function setRound(v) { round = v; }',
+    'export async function currentRunRound() { return round; }',
+    "export async function settledRounds() { return ['wild_card']; }",
+  ].join('\n') + '\n');
   writeFileSync(F('board'), [
     'export let rows = [];',
     'export function setRows(v){rows=v;}',
-    'export async function runBoard(){return rows;}',
+    'export const calls = [];',
+    'export async function runBoard(season, opts){ calls.push({ season, ...opts }); return rows; }',
     "export const ROUND_COLUMNS = [{round:'wild_card',short:'WC'},{round:'division',short:'DIV'},{round:'championship',short:'LCS'},{round:'world_series',short:'WS'}];",
     // The stub SORTS, because lib/run/board.js poolSplit() sorts - a stub
     // that behaves differently from the module it stands in for is testing
@@ -70,6 +76,7 @@ before(async () => {
   React = await import('react');
   ({ renderToStaticMarkup } = await import('react-dom/server'));
   boardStub = await import(pathToFileURL(F('board')).href);
+  createStub = await import(pathToFileURL(F('create')).href);
   authStub = await import(pathToFileURL(F('auth')).href);
   leaguesStub = await import(pathToFileURL(F('leagues')).href);
   Page = (await import('./page.js')).default;
@@ -148,6 +155,26 @@ test('LEAGUE CHIPS, including Everyone, and the invite link', async () => {
   assert.doesNotMatch(everyone, /Create a league from \/leagues/);
   assert.match(everyone, /Join or create one above/);
   assert.match(everyone, /\+ Create<\/button>/);
+});
+
+test('THE PAGE TELLS THE READER WHICH TOURNAMENT IT IS ASKING ABOUT', async () => {
+  // runBoard has always scoped by meta.preview; this page never said which, so it
+  // always read the POSTSEASON - and a nine filed into a preview round would not
+  // have appeared. October's board says it now, and so does this one.
+  authStub.setUid(9);
+  boardStub.setRows(ROWS);
+  leaguesStub.setMine([]);
+
+  createStub.setRound({ season_year: 2026, board: { round: 'division' }, meta: { preview: true } });
+  boardStub.calls.length = 0;
+  await render({});
+  assert.equal(boardStub.calls.at(-1).preview, true, 'a preview round asks for the preview board');
+
+  createStub.setRound({ season_year: 2026, board: { round: 'division' }, meta: {} });
+  boardStub.calls.length = 0;
+  await render({});
+  assert.equal(boardStub.calls.at(-1).preview, false, 'a real round asks for the postseason board');
+  assert.equal(boardStub.calls.at(-1).memberIds, null, 'and Everyone is a null scope');
 });
 
 test('THE BOARD BUILDS THE HOUSE SIGN-IN HREF, not an invented param', () => {

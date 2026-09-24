@@ -47,7 +47,13 @@ export default async function RunBoardPage({ searchParams }) {
     settledRounds(season).catch(() => []),
     picked ? leagueDetail(picked.id, Number(uid)).catch(() => null) : Promise.resolve(null),
   ]);
-  const board = await runBoard(season, { memberIds }).catch(() => []);
+  // WHICH TOURNAMENT THIS BOARD IS ABOUT, the same way October's board says it.
+  // runBoard has always scoped by meta.preview; this page never told it which, so
+  // it always read the POSTSEASON - and the morning somebody files a nine into a
+  // preview round, that board would have shown nothing. A no-op today (PROD holds
+  // four preview rounds and zero entries), and correct the day it is not.
+  const preview = contest?.meta?.preview === true;
+  const board = await runBoard(season, { memberIds, preview }).catch(() => []);
   void rows;
 
   const eliminated = new Set();

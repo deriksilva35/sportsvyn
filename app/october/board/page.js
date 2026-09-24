@@ -39,8 +39,14 @@ export default async function OctoberBoardPage({ searchParams }) {
   const picked = leagues.find((l) => String(l.id) === wanted) ?? null;
 
   const memberIds = picked ? await leagueMemberIds(picked.id).catch(() => []) : null;
+  // WHICH TOURNAMENT THIS BOARD IS ABOUT. octoberBoard scopes by meta.preview the
+  // way runBoard does, and the CALLER says which - a preview day and a real day
+  // are the same season_year, so summing them would report a total nobody played
+  // for. The day the reader is looking at decides it: on a preview day the board
+  // is the preview's, and the morning the postseason days land it becomes theirs.
+  const preview = contest?.meta?.preview === true;
   const [rows, series, detail] = await Promise.all([
-    octoberBoard(season, { memberIds }).catch(() => []),
+    octoberBoard(season, { memberIds, preview }).catch(() => []),
     seriesFor(null, season).catch(() => []),
     picked ? leagueDetail(picked.id, Number(uid)).catch(() => null) : Promise.resolve(null),
   ]);
