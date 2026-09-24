@@ -163,7 +163,8 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
             </>}
             <small>{live
               ? <>{view.aliveCount} alive · {view.outCount} done</>
-              : <>{counts.get(String(openClub)) ?? 0} of 3 used<br />{club?.opponent ? `vs ${club.opponent}${club.bestOf ? ` · best of ${club.bestOf}` : ''}` : ''}<br />{club?.lineupPosted ? 'lineup posted' : 'lineup not posted yet'}</>}</small>
+              : <>{counts.get(String(openClub)) ?? 0} of 3 used<br />{club?.opponent ? `vs ${club.opponent}${club.bestOf ? ` · best of ${club.bestOf}` : ''}` : ''}<br />{club?.lineupPosted ? 'lineup posted' : 'lineup not posted yet'}<br />
+                <span className="rn-pan-n">arms {players.filter((p) => p.kind === 'arm').length} · bats {players.filter((p) => p.kind === 'bat').length}</span></>}</small>
           </div>
           <div className="rn-pan-b">
             {live
@@ -176,7 +177,9 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
                   </span>
                 </div>
               ))
-              : players.length ? players.slice(0, 10).map((p) => {
+              // EVERY ROW, AND THE PANEL SCROLLS (October's fix). A cut at ten
+              // served twelve Yankee arms and not one bat.
+              : players.length ? players.map((p) => {
                 const mine = onRoster.has(String(p.playerId));
                 const usedIn = view.used?.[String(p.playerId)] ?? null;
                 const gone = mine || usedIn != null || club?.started === true;
@@ -184,7 +187,7 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
                   <button key={p.playerId} type="button"
                     className={`rn-prow${gone ? ' gone' : ''}`}
                     onClick={() => !gone && choose(p)} disabled={gone || !signedIn}
-                    data-player={p.playerId}>
+                    data-player={p.playerId} data-kind={p.kind}{...(p.probable ? { 'data-probable': '1' } : {})}>
                     <span className={`rn-pb ${p.kind === 'arm' ? 'p' : 'b'}`}>{p.kind === 'arm' ? 'P' : 'B'}</span>
                     <span className="rn-who">
                       <b>{p.short}</b>
@@ -283,11 +286,12 @@ function Clock({ ms }) {
 }
 
 /**
- * WHAT A PANEL ROW SAYS ABOUT ITSELF. The batting order when the club's card is
- * up, then the G1 flag, then the position - October's slotWord with The Run's
- * one extra case.
+ * WHAT A PANEL ROW SAYS ABOUT ITSELF. Today's probable, then the batting order
+ * when the club's card is up, then the G1 flag, then the position - October's
+ * slotWord with The Run's extra cases.
  */
 function slotWord(p) {
+  if (p?.probable) return "today's starter";
   if (p?.order != null) return `bats ${ordinal(p.order)}`;
   if (p?.g1) return 'G1 starter';
   return p?.position ?? '';

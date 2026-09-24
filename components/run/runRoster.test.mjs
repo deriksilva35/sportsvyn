@@ -7,7 +7,7 @@ import { test, before, after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { writeFileSync, unlinkSync } from 'node:fs';
+import { writeFileSync, unlinkSync, readFileSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { JSDOM } from 'jsdom';
 import { install } from '../../lib/testing/nextResolve.mjs';
@@ -320,4 +320,48 @@ test('A REFUSED STARTED CLUB IS NAMED', async () => {
   await act(async () => { root.render(React.createElement(RunRoster, { view: SETTING(), signedIn: true })); });
   await act(async () => { el.querySelector('[data-player="93"]').click(); });
   assert.match(el.textContent, /That club has started this round - it is locked\./);
+});
+
+// --- THE PANEL: every row, scrolling (hotfix 24 Sep) -----------------------
+//
+// The served Yankees panel was twelve arms and no bat: the component cut the
+// list at ten and the panel was overflow: hidden.
+
+const NYY_ARMS = ['Schlittler', 'Cole', 'Fried', 'Rodon', 'Warren', 'Rodriguez', 'Gil', 'Schmidt',
+  'Stroman', 'Cortes', 'Montas', 'Severino'].map((n, i) => ({
+  playerId: `a${i}`, short: n, kind: 'arm', team: 'NYY', teamId: 3, position: 'SP', ppg: 20 - i, probable: i === 0,
+}));
+const NYY_BATS = ['Judge', 'Soto', 'Bellinger', 'Chisholm', 'Rice', 'Volpe', 'Wells', 'Dominguez', 'Grisham']
+  .map((n, i) => ({ playerId: `b${i}`, short: n, kind: 'bat', team: 'NYY', teamId: 3, position: 'OF', ppg: 12 - i, order: i + 1 }));
+
+test('EVERY POSTED BAT IS IN THE RENDERED PANEL, however many arms come first', async () => {
+  const v = SETTING();
+  v.clubs = v.clubs.map((c) => (c.teamId === 3 ? { ...c, lineupPosted: true } : c));
+  v.pool = { byClub: { 3: [...NYY_ARMS, ...NYY_BATS] } };
+  const el = document.getElementById('root');
+  const root = createRoot(el); roots.add(root);
+  await act(async () => { root.render(React.createElement(RunRoster, { view: v, signedIn: true })); });
+  await act(async () => { el.querySelector('[data-club="NYY"]').click(); });
+  const panel = el.querySelector('.rn-pan-b');
+  for (const b of NYY_BATS) assert.ok(panel.querySelector(`[data-player="${b.playerId}"]`), `${b.short} is in the panel`);
+  assert.equal(panel.querySelectorAll('[data-kind="bat"]').length, 9);
+  assert.equal(panel.querySelectorAll('[data-kind="arm"]').length, 12);
+  // Today's probable leads, and says so.
+  assert.equal(panel.querySelector('[data-player]').dataset.probable, '1');
+  assert.match(panel.innerHTML, /Schlittler<\/b><small>today's starter<\/small>/);
+  assert.match(panel.innerHTML, /Judge<\/b><small>bats 1st<\/small>/);
+  // THE HEADER COUNTS, beside the line that was already there.
+  const head = el.querySelector('.rn-pan-h').textContent;
+  assert.match(head, /arms 12 · bats 9/);
+  assert.match(head, /of 3 used/);
+  assert.match(head, /lineup posted/);
+});
+
+test('THE PANEL SCROLLS - overflow-y auto, max-height to the viewport', () => {
+  const css = readFileSync(new URL('../../app/run/run.css', import.meta.url), 'utf8');
+  const rule = /\.rn-pan-b \{([^}]*)\}/.exec(css)?.[1] ?? '';
+  assert.match(rule, /overflow-y: auto/);
+  assert.match(rule, /max-height: \d+vh/);
+  assert.doesNotMatch(rule, /overflow: hidden/);
+  assert.doesNotMatch(readFileSync(new URL('./RunRoster.js', import.meta.url), 'utf8'), /players\.slice\(/);
 });

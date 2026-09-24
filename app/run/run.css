@@ -130,7 +130,12 @@
 .rn-pan-h { display: flex; align-items: center; gap: 7px; padding: 7px 10px; border-bottom: 1px solid var(--rule-dim); background: var(--ink-3); border-radius: 12px 12px 0 0; }
 .rn-pan-h b { font: 700 12px var(--font-display); text-transform: uppercase; }
 .rn-pan-h small { color: var(--muted); font: 500 9px var(--font-mono); margin-left: auto; text-align: right; line-height: 1.3; }
-.rn-pan-b { flex: 1; overflow: hidden; }
+/* THE PANEL SCROLLS - October's fix (app/october/october.css .oc-pan-b). It
+   was overflow: hidden with a ten-row cut in the component, so a club with
+   more arms than that never showed a bat. max-height in the viewport's units
+   because the card above it is a fixed height and the field beside it is not. */
+.rn-pan-b { flex: 1; overflow-y: auto; overflow-x: hidden; max-height: 52vh; -webkit-overflow-scrolling: touch; }
+.rn-pan-n { color: var(--muted-dim); }
 .rn-prow { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-bottom: 1px solid var(--rule-dim); width: 100%; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .rn-prow:last-child { border-bottom: 0; }
 /* A SPENT PLAYER IS DIMMED, NEVER HIDDEN - the reader has to be able to see
