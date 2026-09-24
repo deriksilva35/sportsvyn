@@ -311,6 +311,7 @@ const REASON = {
   max_per_club: 'Three from one club is the limit.',
   club_has_bye: 'That club has a bye - they are not in this round.',
   club_not_alive: 'That club is not in this round.',
+  game_started: 'That club\'s game has already started.',
   round_locked: 'The round has started - your nine are sealed.',
   wrong_kind: 'That slot takes a different kind of player.',
   settled: 'This round is already graded.',
