@@ -65,8 +65,21 @@ test('NORMALIZATION: one alphabet (no 0/O/1/I/L), one normalizer, one input clea
   assert.match(ls, /export \{ CODE_ALPHABET, INVITE_CODE_LENGTH, normalizeInviteCode, joinPath, REFUSALS \} from '\.\/inviteCode\.js';/);
   assert.doesNotMatch(ls, /export function normalizeInviteCode/, 'no second normalizer');
   const core = stripComments(src('lib/leagues/core.js'));
-  assert.match(core, /import \{ CODE_ALPHABET \} from '\.\.\/fantasy\/inviteCode\.js';/, 'core.js mints from the same alphabet');
+  // ONE ALPHABET, NOW REACHED THROUGH ONE MORE HOP. core.js used to import
+  // CODE_ALPHABET straight from lib/fantasy/inviteCode.js; the six-character
+  // league code got its own pure module (lib/leagues/code.js) so a CLIENT sheet
+  // could read the length and the refusal sentence without core's DB import, and
+  // core reads the alphabet from there. Still exactly one literal in the tree -
+  // which is what this guard is for, so it follows the hop rather than pinning
+  // the old path.
+  const codeMod = stripComments(src('lib/leagues/code.js'));
+  assert.match(core, /from '\.\/code\.js';/, 'core.js takes the alphabet from lib/leagues/code.js');
+  assert.match(codeMod, /from '\.\.\/fantasy\/inviteCode\.js';/, 'which takes it from the one literal');
   assert.doesNotMatch(core, /CODE_ALPHABET = '/, 'no second alphabet literal');
+  assert.doesNotMatch(codeMod, /CODE_ALPHABET = '/, 'and none here either');
+  // AND THE SIX IS DECLARED ONCE TOO, beside it.
+  assert.match(codeMod, /export const CODE_LENGTH = 6;/);
+  assert.doesNotMatch(core, /CODE_LENGTH = \d/, 'core does not restate the length');
   // the pure module is pure: no DB, no request, no server-only import
   const pure = stripComments(src('lib/fantasy/inviteCode.js'));
   assert.doesNotMatch(pure, /from '\.\.\/db|neon|next\/headers|@\/auth|node:crypto/, 'client-safe');

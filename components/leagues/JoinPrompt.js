@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { joinLeagueAction } from '@/app/actions/leagues';
+import { REFUSALS } from '@/lib/leagues/code';
 
 export default function JoinPrompt({ invite, signedIn, alreadyIn, signinHref }) {
   const [busy, setBusy] = useState(false);
@@ -19,9 +20,13 @@ export default function JoinPrompt({ invite, signedIn, alreadyIn, signinHref }) 
   if (!invite) {
     return (
       <section className="mod mod--invite">
+        {/* THE REFUSAL IS THE SERVER'S OWN SENTENCE. This read "codes are six
+            characters" in its own words, a second copy of the string joinLeague()
+            returns - and two copies of a sentence are two sentences the day one
+            of them is reworded. lib/leagues/code.js holds the one. */}
         <p className="muted">
-          That league code doesn&rsquo;t match anything &mdash; codes are six
-          characters. Ask for a fresh link.
+          That league code doesn&rsquo;t match anything &mdash; {REFUSALS.not_a_code.toLowerCase()}.
+          Ask for a fresh link.
         </p>
       </section>
     );

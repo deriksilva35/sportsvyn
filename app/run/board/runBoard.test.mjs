@@ -3,11 +3,13 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { writeFileSync, unlinkSync } from 'node:fs';
+import { writeFileSync, unlinkSync, readFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { registerHooks } from 'node:module';
 import { install } from '../../../lib/testing/nextResolve.mjs';
 import { stubPath } from '../../../lib/testing/stubDir.mjs';
+
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -18,6 +20,16 @@ const MAP = {
   '@/components/GlobalHeaderServer': 'hdr', '@/components/SiteFooter': 'foot',
   '@/lib/run/create': 'create', '@/lib/run/board': 'board', '@/lib/run/pool': 'pool',
   '@/lib/run/rules': 'rules', '@/lib/leagues/core': 'leagues', '@/lib/mlb/series': 'series',
+  // THE CLIENT ISLAND'S ACTIONS. LeagueChipActions imports app/actions/leagues,
+  // which reaches auth and the DB through lib/leagues/core - stubbed here so the
+  // board renders without either, and so the chips themselves stay REAL.
+  '@/app/actions/leagues': 'lgactions',
+  // AND next/navigation. The island calls useRouter() at the top level, which
+  // throws "invariant expected app router to be mounted" under a bare
+  // renderToStaticMarkup - Next supplies that context in the real app, this
+  // harness does not.
+  'next/navigation': 'nav',
+  '@/lib/shell/shell': 'shell',
 };
 registerHooks({ resolve(spec, ctx, next) {
   if (MAP[spec]) return { url: pathToFileURL(F(MAP[spec])).href, shortCircuit: true };
@@ -51,6 +63,9 @@ before(async () => {
     'export async function leagueMemberIds(){return [1,2,3];}',
     "export async function leagueDetail(){return {id:1,name:'Silva Family',join_code:'HTR4MK'};}",
   ].join('\n') + '\n');
+  writeFileSync(F('shell'), 'export async function resolveShellMode() { return { isShell: false }; }\n');
+  writeFileSync(F('nav'), 'export function useRouter() { return { push() {}, refresh() {} }; }\nexport function useSearchParams() { return new URLSearchParams(); }\n');
+  writeFileSync(F('lgactions'), 'export async function joinLeagueAction() { return { ok: true, leagueId: 1 }; }\nexport async function createLeagueAction() { return { ok: true, leagueId: 2, joinCode: "ABC234" }; }\n');
   writeFileSync(F('series'), "export async function seriesFor(){return [{winner:7,teams:[{id:7,abbreviation:'LAD'},{id:8,abbreviation:'MIL'}]},{winner:null,teams:[{id:9,abbreviation:'TOR'},{id:10,abbreviation:'SEA'}]}];}\n");
   React = await import('react');
   ({ renderToStaticMarkup } = await import('react-dom/server'));
@@ -111,14 +126,52 @@ test('LEAGUE CHIPS, including Everyone, and the invite link', async () => {
   assert.match(picked, /class="rn-lg on" href="\/run\/board\?league=1">Silva Family<\/a>/);
   assert.match(picked, /class="rn-lg" href="\/run\/board\?league=2">CSM Office<\/a>/);
   assert.match(picked, /class="rn-lg" href="\/run\/board">Everyone<\/a>/);
-  // THE INVITE IS THE SPINE'S OWN JOIN CODE - no second notion of a league.
-  assert.match(picked, /sportsvyn\.com\/leagues\/join\/HTR4MK/);
+  // THE INVITE IS THE SPINE'S OWN JOIN CODE - no second notion of a league - and
+  // the SHARE PATH IS ONE THAT EXISTS. This asserted
+  // sportsvyn.com/leagues/join/HTR4MK, which 404s: there is no /leagues/join
+  // route, so the link the board told members to share was dead.
+  assert.match(picked, /<b>HTR4MK<\/b>/);
+  assert.match(picked, /\/leagues\?join=HTR4MK/);
+  assert.doesNotMatch(picked, /leagues\/join\/HTR4MK/);
+  assert.doesNotMatch(picked, /sportsvyn\.com/);
+
+  // + JOIN AND + CREATE SIT WITH THE CHIPS, on the board, signed in.
+  assert.match(picked, /class="lgc-chip"[^>]*>\+ Join<\/button>/);
+  assert.match(picked, /class="lgc-chip"[^>]*>\+ Create<\/button>/);
 
   // EVERYONE is the same board without the member filter, and has no invite.
   const everyone = await render({});
   assert.match(everyone, /Everyone · 5 playing/);
   assert.match(everyone, /class="rn-lg on" href="\/run\/board">Everyone<\/a>/);
-  assert.match(everyone, /Create a league from \/leagues/);
+  // NO WEB-ONLY STEP. This said "Create a league from /leagues" - an instruction
+  // to leave the app - and the chips above do it now.
+  assert.doesNotMatch(everyone, /Create a league from \/leagues/);
+  assert.match(everyone, /Join or create one above/);
+  assert.match(everyone, /\+ Create<\/button>/);
+});
+
+test('THE BOARD BUILDS THE HOUSE SIGN-IN HREF, not an invented param', () => {
+  // A SOURCE GUARD, DELIBERATELY. The sign-in line lives inside the sheet, which
+  // only exists after a chip is tapped, so a static render cannot see the href at
+  // all - asserting on the markup here would be asserting on nothing.
+  //
+  // /signin reads ?callbackUrl=, never ?next=, and shellSigninHref also carries
+  // the shell marker through the Apple round trip. The first draft of this island
+  // invented ?next= and would have signed nobody back to this board.
+  const board = readFileSync(path.join(REPO, 'app/run/board/page.js'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  assert.match(board, /shellSigninHref\('\/run\/board'/);
+  assert.doesNotMatch(board, /signin\?next=/);
+  assert.match(board, /signinHref=\{signinHref\}/);
+});
+
+test('THE CRUMB READS "Your nine · Bracket" - the separator was missing', async () => {
+  authStub.setUid(9);
+  boardStub.setRows(ROWS);
+  const h = await render({});
+  // Two adjacent anchors with nothing between them served as one run-together
+  // phrase; there was no float rule either.
+  assert.match(h, /Your nine<\/a><span class="rn-crumb-sep" aria-hidden="true">·<\/span><a href="\/mlb\/bracket">Bracket/);
 });
 
 test('THE POOL BAR splits used, alive and eliminated', async () => {

@@ -1,0 +1,29 @@
+/* components/leagues/leagueChips.css - the two action chips and their sheet.
+   Written on the global tokens; no hex, per app/globals.css. */
+.lgc-chip {
+  flex: 0 0 auto; padding: 6px 11px; border: 1px dashed var(--rule);
+  border-radius: 999px; background: transparent; color: var(--muted);
+  font: 600 11px var(--font-mono); cursor: pointer;
+}
+.lgc-chip[aria-expanded="true"] { border-style: solid; color: var(--volt); border-color: var(--volt); }
+/* THE SHEET TAKES THE WHOLE ROW under the chips - the chip strip is a flex row
+   that wraps, and a form squeezed between two chips is unusable at 390px. */
+.lgc-sheet { flex: 1 0 100%; margin-top: 8px; }
+.lgc-row { display: flex; gap: 8px; }
+.lgc-in {
+  flex: 1 1 auto; min-width: 0; padding: 9px 11px; border: 1px solid var(--rule);
+  border-radius: 10px; background: var(--ink-3); color: var(--paper);
+  font: 600 13px var(--font-mono); letter-spacing: .08em;
+}
+.lgc-in::placeholder { color: var(--muted-dim); letter-spacing: 0; }
+.lgc-go {
+  flex: 0 0 auto; padding: 9px 14px; border: 1px solid var(--volt); border-radius: 10px;
+  background: transparent; color: var(--volt); font: 700 12px var(--font-mono); cursor: pointer;
+}
+.lgc-go:disabled { opacity: .45; cursor: default; }
+.lgc-err { margin: 6px 0 0; color: var(--terra); font: 500 11px var(--font-mono); }
+.lgc-h { margin: 0 0 6px; color: var(--muted); font: 500 11px var(--font-mono); }
+.lgc-h a { color: var(--volt); }
+.lgc-made { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.lgc-code { margin: 0; color: var(--volt); font: 800 22px var(--font-mono); letter-spacing: .18em; }
+.lgc-link { color: var(--muted); font: 500 11px var(--font-mono); word-break: break-all; }

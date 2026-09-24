@@ -42,9 +42,13 @@ export default async function OctoberBoardPage() {
     <div className="gi ocpage" data-surface="ink">
       <GlobalHeaderServer activeNav="games" />
       <div className="oc-wrap">
+        {/* THE SAME MISSING SEPARATOR the Run's crumb had - the two boards share
+            this markup and shared it. October has no league chips yet, so the
+            chips half of that relay does not reach this page. */}
         <div className="oc-crumb">
           <Link href="/october">&#8249; Your five</Link>
-          <Link className="r" href="/mlb/bracket">Bracket &#8250;</Link>
+          <span className="oc-crumb-sep" aria-hidden="true">·</span>
+          <Link href="/mlb/bracket">Bracket &#8250;</Link>
         </div>
 
         <div className="oc-hd" style={{ borderRadius: '18px 18px 0 0' }}>

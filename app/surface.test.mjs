@@ -180,6 +180,10 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     // and the line score's current-half cell, which the mock draws on
     // --ink-2 and --ink-3. Both tokens resolve globally; counted on purpose.
     'app/mlb/game/[slug]/mlbgame.css': 2,
+    // The league join/create chips on a game's own board (THE RUN - join by code
+    // in the app): one --ink-3 ground on the code input, written on the global
+    // tokens and therefore never broken. Counted on purpose.
+    'components/leagues/leagueChips.css': 1,
     // The postseason bracket and the round board (MLB B2), both written on
     // the global tokens: one card ground each. Counted on purpose.
     'app/mlb/bracket/bracket.css': 1,
@@ -237,7 +241,9 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   // 132 -> 138 with the results grammar's one stylesheet (RESULTS relay) - it
   // replaces nothing yet, because the four old grade components stay mounted
   // until this route serves the same contest.
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 138,
+  // 138 -> 139 with the league join/create chips (THE RUN - join by code in the
+  // app): one ground, on the code input.
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 139,
     '18 were broken before the promotion; the rest were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.

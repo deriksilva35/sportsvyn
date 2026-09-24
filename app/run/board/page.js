@@ -14,6 +14,10 @@ import { runBoard, ROUND_COLUMNS, poolSplit } from '@/lib/run/board';
 import { usedPlayers } from '@/lib/run/pool';
 import { roundPips } from '@/lib/run/rules';
 import { myLeagues, leagueMemberIds, leagueDetail } from '@/lib/leagues/core';
+import { joinHref } from '@/lib/leagues/code';
+import { resolveShellMode } from '@/lib/shell/shell';
+import { shellSigninHref } from '@/lib/shell/signinHref';
+import LeagueChipActions from '@/components/leagues/LeagueChipActions';
 import { seriesFor } from '@/lib/mlb/series';
 import '../../games/games.css';
 import '../run.css';
@@ -29,6 +33,8 @@ export default async function RunBoardPage({ searchParams }) {
   const season = contest?.season_year ?? new Date().getUTCFullYear();
   const round = contest?.board?.round ?? null;
 
+  const shell = await resolveShellMode().catch(() => null);
+  const signinHref = shellSigninHref('/run/board', shell?.isShell ?? false);
   const leagues = uid == null ? [] : await myLeagues(Number(uid)).catch(() => []);
   const wanted = q?.league ? String(q.league) : null;
   const picked = leagues.find((l) => String(l.id) === wanted) ?? null;
@@ -59,9 +65,12 @@ export default async function RunBoardPage({ searchParams }) {
     <div className="gi rnpage" data-surface="ink">
       <GlobalHeaderServer activeNav="games" />
       <div className="rn-wrap">
+        {/* THE SEPARATOR WAS MISSING. Two adjacent anchors with no rule between
+            them served as "‹ Your nine Bracket ›" - one phrase, unreadable. */}
         <div className="rn-crumb">
           <Link href="/run">&#8249; Your nine</Link>
-          <Link className="r" href="/mlb/bracket">Bracket &#8250;</Link>
+          <span className="rn-crumb-sep" aria-hidden="true">·</span>
+          <Link href="/mlb/bracket">Bracket &#8250;</Link>
         </div>
 
         <div className="rn-hd" style={{ borderRadius: '18px 18px 0 0' }}>
@@ -86,6 +95,15 @@ export default async function RunBoardPage({ searchParams }) {
               href={`/run/board?league=${l.id}`}>{l.name}</Link>
           ))}
           <Link className={`rn-lg${picked ? '' : ' on'}`} href="/run/board">Everyone</Link>
+          {/* JOIN AND CREATE, HERE. Both writes belong on the board the reader is
+              looking at - see components/leagues/LeagueChipActions.js for why
+              "create one from /leagues" was not an instruction an app can give. */}
+          {/* THE SIGN-IN HREF IS THE HOUSE ONE. /signin reads ?callbackUrl=, not
+              ?next=, and shellSigninHref also carries the shell marker through
+              the Apple round trip - see lib/shell/signinHref.js. app/run/page.js
+              builds it the same way for the roster's own sign-in line. */}
+          <LeagueChipActions boardHref="/run/board" signedIn={uid != null}
+            signinHref={signinHref} />
         </div>
 
         <div className="rb-lb">
@@ -126,10 +144,16 @@ export default async function RunBoardPage({ searchParams }) {
         </div>
 
         <div className="rn-ft">
+          {/* THE SHARE LINK IS A PATH THAT EXISTS. This printed
+              sportsvyn.com/leagues/join/<code>, which 404s - there is no
+              /leagues/join route and app/leagues/[id] cannot match two segments.
+              joinHref() is the one that works, and it is the same one the create
+              sheet hands back. The no-league case no longer sends anybody to the
+              web: the chips above do it. */}
           <div className="rn-pace">
             {detail?.join_code
-              ? <>Invite<br /><b>sportsvyn.com/leagues/join/{detail.join_code}</b></>
-              : <>Play with friends<br /><b>Create a league from /leagues</b></>}
+              ? <>Invite<br /><b>{detail.join_code}</b><br /><span className="rn-inv">{joinHref(detail.join_code)}</span></>
+              : <>Play with friends<br /><b>Join or create one above</b></>}
           </div>
           <Link className="rn-lock" href="/run">Set your nine</Link>
         </div>
