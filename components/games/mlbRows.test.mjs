@@ -67,17 +67,24 @@ test('THE OCTOBER ROW carries its state and its door', () => {
   assert.match(real.rightLabel, /^\d{1,2}:\d{2} (AM|PM) PT$/, 'the house zone, named');
 });
 
-test('THE RUN ROW names the clock it locks on', () => {
+test('THE RUN ROW names its next CLUB lock', () => {
   const open = runRowV3(runContest(), NOW);
   assert.equal(open.key, 'run');
   assert.equal(open.name, 'The Run · nine a round');
   assert.equal(open.href, '/run');
-  assert.equal(open.line, 'Locks 9:35 AM PT · Thu');
+  assert.equal(open.line, 'Next lock 9:35 AM PT · Thu');
   assert.equal(open.right, 'PREVIEW');
   assert.equal(open.tone, 'live');
 
-  // A round that has locked names the round it is, not a clock that is past.
-  const locked = runRowV3(runContest(), new Date('2026-09-24T18:00:00Z'));
+  // THE LOCK IS PER CLUB. Past the round's first pitch, with clubs still ahead,
+  // the row is open and names the next one - not "locked" off meta.firstPitch.
+  const after = new Date('2026-09-24T18:00:00Z');
+  const still = runRowV3(runContest(), after, { kickoffAt: '2026-09-24T22:05:00Z' });
+  assert.equal(still.line, 'Next lock 3:05 PM PT · Thu');
+  assert.equal(still.tone, 'live');
+
+  // Every club started: the row names the round it is, not a clock that is past.
+  const locked = runRowV3(runContest(), after, null);
   assert.equal(locked.line, 'Wild Card · preview · locked');
   assert.equal(locked.tone, 'done');
 });

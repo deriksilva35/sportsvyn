@@ -1,6 +1,7 @@
 // components/run/runRoster.test.mjs - frames 1 and 2 of the mock, MOUNTED.
 // The setting screen and the live screen are the same component either side
-// of the round's lock, which is the claim this file tests.
+// of the moment every club has started, which is the claim this file tests -
+// and until then each slot seals on its own club's first pitch.
 
 import { test, before, after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -74,7 +75,8 @@ const slot = (s, o = {}) => ({ slot: s, state: 'pending', points: null, games: 0
 const SETTING = () => ({
   phase: 'open',
   contest: { id: 5, season: 2026, week: 1, round: 'wild_card', label: 'Wild Card',
-    locksAt: '2026-09-29T14:05:00Z', settled: false, rules: RULES, rosterSize: 9, msToLock: 19 * 3600000 + 40 * 60000 },
+    settled: false, rules: RULES, rosterSize: 9 },
+  nextLock: { matchId: '3', label: 'MIL @ PHI', kickoffAt: '2026-09-29T22:05:00Z', msAway: 19 * 3600000 + 40 * 60000 },
   pips: PIPS,
   clubs: CLUBS,
   slots: [
@@ -177,7 +179,7 @@ test('A DNF ROUND SAYS DNF ON THE CARD', () => {
   v.phase = 'live'; v.isDnf = true; v.rosterState = 'dnf';
   const h = html({ view: v, signedIn: true });
   assert.match(h, /This round is a <b>DNF<\/b>/);
-  assert.match(h, /the nine were not set by first pitch/);
+  assert.match(h, /no slot was filled/);
 });
 
 test('SIGNED OUT IS READ-ONLY, and the rules are on the card', () => {
@@ -186,7 +188,7 @@ test('SIGNED OUT IS READ-ONLY, and the rules are on the card', () => {
   assert.equal([...h.matchAll(/<button[^>]*class="rn-prow[^"]*"[^>]*disabled/g)].length, 5);
   // The scoring table and the DNF sentence, printed.
   assert.match(h, /1B 3 · 2B 5 · 3B 8 · HR 10 · RBI 2 · R 2 · BB 2 · SB 5/);
-  assert.match(h, /An unset nine at first pitch is a DNF for the round\./);
+  assert.match(h, /Each player locks when his club&#x27;s first game starts\. A slot still\s+empty when the round ends is a DNF\./);
   assert.match(h, /Anyone you use is gone for the rest of October\./);
   assert.match(h, /The 1 and 2 seeds sit this round out\./);
 });
@@ -257,12 +259,65 @@ test('STARTERS: a bat off the posted card reads "not starting · swap" while the
 });
 
 test('STARTERS: a LOCKED round never shows a swap nobody can make', () => {
-  // The Run locks as a WHOLE at the round's first pitch, so this is the round's
-  // state and not a slot's - unlike October, where each slot locks at its own
-  // game. A flagged pick on a locked round must still say nothing.
+  // Every club has started, so nothing on the nine can move. A flagged pick
+  // must still say nothing.
   const v = SETTING();
   v.phase = 'live';
   v.progress = { ...v.progress, locked: true };
   v.slots = v.slots.map((s) => (s.slot === 'bat1' ? { ...s, notStarting: true } : s));
   assert.doesNotMatch(html({ view: v, signedIn: true }), /not starting · swap/);
+});
+
+// --- THE LOCK IS THE CLUB'S (ruling of 24 Sep) -----------------------------
+
+test('THE HEADER COUNTS DOWN TO THE NEXT CLUB LOCK, October-style', () => {
+  const h = html({ view: SETTING(), signedIn: true });
+  assert.match(h, /next lock<b>MIL @ PHI · 3:05 PM PT<\/b>/);
+  assert.match(h, /aria-label="19 hours 40 minutes to the next lock"/);
+  assert.doesNotMatch(h, /round locks/);
+});
+
+test('A STARTED CLUB SEALS ITS OWN SLOTS AND NOTHING ELSE - no LOCKED until every club has', async () => {
+  const v = SETTING();
+  // TB is under way. Its two bats are sealed; everything else still moves.
+  v.clubs = v.clubs.map((c) => (c.teamId === 1 ? { ...c, started: true } : c));
+  v.slots = v.slots.map((s) => (s.teamId === 1 ? { ...s, locked: true } : s));
+  const h = html({ view: v, signedIn: true });
+  assert.equal(v.phase, 'open');
+  // bat1, bat2 (TB) and arm1 (a TB-filed arm) wear the badge; the rest do not.
+  assert.equal([...h.matchAll(/<b>LOCKED<\/b>/g)].length, 3);
+  assert.doesNotMatch(h, /aria-label="Clear bat1"/);
+  assert.match(h, /aria-label="Clear bat3"/, 'Judge is NYY, still ahead - he clears');
+  // The footer is a count while a club is ahead, never the LOCKED receipt.
+  assert.doesNotMatch(h, /✓ LOCKED/);
+  assert.match(h, /2 to go<\/button>/);
+  // The grid says the club has started, and the card opens on a club still
+  // ahead rather than on one nobody may pick from.
+  assert.match(h, /data-club="TB" data-bye="0" data-started="1"/);
+  assert.match(h, />started<\/small>/);
+  assert.match(h, /class="rn-tc on" data-club="CHW"/);
+  // Opened anyway, its panel is out of the pool and says why.
+  const el = document.getElementById('root');
+  const root = createRoot(el); roots.add(root);
+  await act(async () => { root.render(React.createElement(RunRoster, { view: v, signedIn: true })); });
+  await act(async () => { el.querySelector('[data-club="TB"]').click(); });
+  assert.match(el.innerHTML, /B\. Lowe<\/b><small>game started<\/small>/);
+  assert.ok(el.querySelector('[data-player="93"]').disabled);
+});
+
+test('A FULL NINE WITH CLUBS STILL AHEAD SAYS SET, not LOCKED', () => {
+  const v = SETTING();
+  v.slots = v.slots.map((s) => (s.playerId ? s : { ...s, playerId: `x${s.slot}`, name: 'X', teamId: 3, team: 'NYY' }));
+  const h = html({ view: v, signedIn: true });
+  assert.match(h, /✓ SET · 9 OF 9/);
+  assert.doesNotMatch(h, /✓ LOCKED/);
+});
+
+test('A REFUSED STARTED CLUB IS NAMED', async () => {
+  const el = document.getElementById('root');
+  const root = createRoot(el); roots.add(root);
+  action.setReply({ ok: false, reason: 'game_started' });
+  await act(async () => { root.render(React.createElement(RunRoster, { view: SETTING(), signedIn: true })); });
+  await act(async () => { el.querySelector('[data-player="93"]').click(); });
+  assert.match(el.textContent, /That club has started this round - it is locked\./);
 });

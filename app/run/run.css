@@ -190,3 +190,6 @@
 .rn-lg.on { background: var(--volt); color: var(--ink); border-color: var(--volt); font-weight: 700; }
 /* The pool bar is three parts here, not two: used, alive, eliminated. */
 .rb-bar .d { background: #3a1a1a; }
+/* A CLUB THAT HAS STARTED THE ROUND is out of everyone's pool - dimmed like a
+   bye, but still openable so its panel can say why. */
+.rn-tc.started { opacity: .45; }

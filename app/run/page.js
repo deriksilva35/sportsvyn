@@ -48,8 +48,8 @@ export default async function RunPage() {
         </div>
         {!view ? (
           <p className="rn-none">
-            The Run has not started. Round 1 opens with the Wild Card field and
-            locks at the first pitch of the round.
+            The Run has not started. Round 1 opens with the Wild Card field, and
+            each club locks at its own first pitch of the round.
           </p>
         ) : (
           <RunRoster view={view} signedIn={uid != null} signinHref={signinHref} leagueLine={leagueLine} />

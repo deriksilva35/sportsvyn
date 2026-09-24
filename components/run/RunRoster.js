@@ -3,19 +3,22 @@
 // components/run/RunRoster.js - the nine, frames 1 and 2 of
 // docs/design/mocks/the-run-v0_1.html.
 //
-// ONE COMPONENT, TWO FRAMES, and the difference is the ROUND'S clock, not the
-// slot's - unlike October, where it is per slot. Before the first pitch every
-// slot takes a tap; after it, every slot shows points and none of them move.
+// ONE COMPONENT, TWO FRAMES. The lock is the CLUB'S: a slot seals when its
+// player's club starts the round, a started club leaves the grid, and the
+// header counts down to the next club still ahead. The card turns to its live
+// frame only once every club in the round has started.
 //
 // SAVE ON CHANGE. The footer button is a COUNT ("2 to go"), not an action: a
 // roster that seals on a clock has no submit moment.
 
 import { useState, useTransition } from 'react';
 import { saveRunPickAction, clearRunPickAction } from '@/app/actions/run';
+import { ptTime } from '@/lib/gridiron/kickoff';
 
 export default function RunRoster({ view, signedIn = false, signinHref = '/signin', leagueLine = null }) {
   const [slots, setSlots] = useState(() => Object.fromEntries(view.slots.map((s) => [s.slot, s])));
-  const [openClub, setOpenClub] = useState(() => view.clubs.find((c) => !c.bye)?.teamId ?? null);
+  const [openClub, setOpenClub] = useState(() => (view.clubs.find((c) => !c.bye && !c.started)
+    ?? view.clubs.find((c) => !c.bye))?.teamId ?? null);
   const [err, setErr] = useState(null);
   const [, start] = useTransition();
 
@@ -50,7 +53,7 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
   };
 
   const clear = (slot) => {
-    if (!signedIn || live) return;
+    if (!signedIn || live || view.slots.find((s) => s.slot === slot)?.locked) return;
     const before = slots[slot];
     setSlots((m) => ({ ...m, [slot]: { slot } }));
     start(async () => {
@@ -92,13 +95,13 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
             {view.clubs.map((c) => (
               <button
                 key={c.teamId} type="button"
-                className={`rn-tc${String(c.teamId) === String(openClub) ? ' on' : ''}${c.bye ? ' bye' : ''}`}
+                className={`rn-tc${String(c.teamId) === String(openClub) ? ' on' : ''}${c.bye ? ' bye' : ''}${c.started ? ' started' : ''}`}
                 onClick={() => !c.bye && setOpenClub(c.teamId)} disabled={c.bye}
-                data-club={c.abbr} data-bye={c.bye ? '1' : '0'}>
+                data-club={c.abbr} data-bye={c.bye ? '1' : '0'} data-started={c.started ? '1' : '0'}>
                 {counts.get(String(c.teamId)) ? <span className="rn-cnt">{counts.get(String(c.teamId))}</span> : null}
                 <i className="rn-mk" style={{ background: two(c.colors) }} />
                 <b>{c.abbr}</b>
-                <small>{c.bye ? c.seed ?? '' : `${c.seed ?? ''}${c.opponent ? ` · vs ${c.opponent}` : ''}`.trim()}</small>
+                <small>{c.bye ? c.seed ?? '' : c.started ? 'started' : `${c.seed ?? ''}${c.opponent ? ` · vs ${c.opponent}` : ''}`.trim()}</small>
               </button>
             ))}
           </div>
@@ -114,31 +117,33 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
               const s = slots[base.slot] ?? base;
               const arm = base.slot.startsWith('arm');
               const out = base.state === 'out';
+              // SEALED PER SLOT: his club has started. The whole card is only
+              // sealed once every club has (live).
+              const sealed = live || (base.locked && s.playerId === base.playerId);
               return (
                 <div key={base.slot}
-                  className={`rn-slot ${arm ? 'p' : 'b'}${s.playerId ? ' filled' : ''}${out ? ' out' : ''}${live ? ' locked' : ''}${!s.playerId && !live ? ' elig' : ''}`}
+                  className={`rn-slot ${arm ? 'p' : 'b'}${s.playerId ? ' filled' : ''}${out ? ' out' : ''}${sealed ? ' locked' : ''}${!s.playerId && !live ? ' elig' : ''}`}
                   data-slot={base.slot} data-state={out ? 'out' : s.playerId ? 'filled' : 'open'}>
                   {/* THE SAME BADGE IN THE SAME CORNER AS OCTOBER'S, and on this
                       3x3 it is always the dot: every tile here is about 52px.
-                      The Run locks as a WHOLE round, so every filled slot wears
-                      it at once - which is the fact, and is why the card used to
-                      show nothing at all and left the reader to infer it. */}
-                  {live && s.playerId ? (
+                      A slot wears it the moment its club starts - per club,
+                      not all nine at once. */}
+                  {sealed && s.playerId ? (
                     <span className="rn-lk" aria-label="locked" role="img">
                       <i aria-hidden="true" /><b>LOCKED</b>
                     </span>
-                  ) : s.playerId && signedIn && !live ? (
+                  ) : s.playerId && signedIn && !sealed ? (
                     <button type="button" className="rn-x" aria-label={`Clear ${base.slot}`} onClick={() => clear(base.slot)}>×</button>
                   ) : null}
                   <span className="rn-pos">{arm ? 'ARM' : 'BAT'}</span>
                   {s.playerId ? <>
                     <span className="rn-nm">{s.name}</span>
-                    {/* THE POSTED CARD SAYS HE IS NOT IN IT, AND THE ROUND IS
-                        STILL OPEN. October's sentence, October's colour, the
+                    {/* THE POSTED CARD SAYS HE IS NOT IN IT, AND HIS SLOT CAN
+                        STILL MOVE. October's sentence, October's colour, the
                         same server-side check - see notStarting(). It cannot
-                        render after the round locks, because there is nothing
-                        left to swap. */}
-                    {base.notStarting && !live
+                        render once his club has started, because there is
+                        nothing left to swap. */}
+                    {base.notStarting && !sealed
                       ? <span className="rn-tm swap">not starting · swap</span>
                       : <span className="rn-tm">{s.team}{out ? ' · out' : base.games ? ` · ${base.games}g` : ''}</span>}
                     {/* A SWEPT CLUB'S SLOT KEEPS ITS POINTS. Nothing is zeroed. */}
@@ -174,7 +179,7 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
               : players.length ? players.slice(0, 10).map((p) => {
                 const mine = onRoster.has(String(p.playerId));
                 const usedIn = view.used?.[String(p.playerId)] ?? null;
-                const gone = mine || usedIn != null;
+                const gone = mine || usedIn != null || club?.started === true;
                 return (
                   <button key={p.playerId} type="button"
                     className={`rn-prow${gone ? ' gone' : ''}`}
@@ -185,7 +190,7 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
                       <b>{p.short}</b>
                       {/* THE BATTING ORDER WHEN THE CARD IS UP - "bats 4th"
                           beats "RF" - then the G1 flag, then the position. */}
-                      <small>{mine ? 'on your nine' : usedIn ? `used in the ${roundWord(usedIn)}` : slotWord(p)}</small>
+                      <small>{mine ? 'on your nine' : usedIn ? `used in the ${roundWord(usedIn)}` : club?.started ? 'game started' : slotWord(p)}</small>
                     </span>
                     <span className="rn-val"><b>{p.ppg ?? '–'}</b><small>PPG</small></span>
                   </button>
@@ -204,18 +209,20 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
         <div className="rn-rules">
           <b>Bats</b> {view.contest.rules.bats}<br />
           <b>Arms</b> {view.contest.rules.arms}<br />
-          An unset nine at first pitch is a DNF for the round.
+          Each player locks when his club&apos;s first game starts. A slot still
+          empty when the round ends is a DNF.
         </div>
       )}
 
       <div className="rn-ft">
         <div className="rn-pace">
-          {view.isDnf ? <>This round is a <b>DNF</b><br />the nine were not set by first pitch</>
+          {view.isDnf ? <>This round is a <b>DNF</b><br />no slot was filled</>
             : live ? <>Round {view.contest.week} so far<br /><b>{view.total}</b> · {view.aliveCount} still playing</>
               : leagueLine ?? <>Set your nine<br /><b>{filled}</b> of {view.slots.length}</>}
         </div>
         {!signedIn ? <a className="rn-lock" href={signinHref}>Sign in to play</a>
-          : live || toGo === 0 ? <span className="rn-rcpt">✓ LOCKED · {filled} OF {view.slots.length}</span>
+          : live ? <span className="rn-rcpt">✓ LOCKED · {filled} OF {view.slots.length}</span>
+            : toGo === 0 ? <span className="rn-rcpt">✓ SET · {filled} OF {view.slots.length}</span>
             : <button className="rn-lock" type="button" disabled>{toGo} to go</button>}
       </div>
     </div>
@@ -232,9 +239,12 @@ function Header({ view, filled, leagueLine }) {
         <span className="rn-ed">{leagueLine ?? view.contest.seasonLabel ?? view.contest.label}</span>
       </div>
       <div className="rn-crow">
-        {view.phase === 'open' && view.contest.msToLock != null ? <Clock ms={view.contest.msToLock} /> : null}
+        {/* THE CLOCK COUNTS TO THE NEXT CLUB LOCK - October's header, per club:
+            the soonest first pitch of a club nobody is locked out of yet. */}
+        {view.phase === 'open' && view.nextLock ? <Clock ms={view.nextLock.msAway} /> : null}
         <div className="rn-lbl">
-          {view.phase === 'open' ? <>round locks<b>{view.contest.label} · first pitch</b></>
+          {view.phase === 'open' && view.nextLock
+            ? <>next lock<b>{view.nextLock.label ?? ''}{view.nextLock.label ? ' · ' : ''}{ptTime(view.nextLock.kickoffAt) ?? ''}</b></>
             : <>round<b>{view.contest.label}</b></>}
         </div>
         <div className="rn-tot">
@@ -258,13 +268,13 @@ function Header({ view, filled, leagueLine }) {
   );
 }
 
-/** Static reading, taken on the server - see runView's msToLock. */
+/** Static reading, taken on the server - see runView's nextLock.msAway. */
 function Clock({ ms }) {
   const mins = Math.max(0, Math.floor((Number(ms) || 0) / 60000));
   const hh = String(Math.min(99, Math.floor(mins / 60))).padStart(2, '0');
   const mm = String(mins % 60).padStart(2, '0');
   return (
-    <span className="rn-clk" aria-label={`${hh} hours ${mm} minutes to the round lock`}>
+    <span className="rn-clk" aria-label={`${hh} hours ${mm} minutes to the next lock`}>
       <i className="rn-dg">{hh[0]}</i><i className="rn-dg">{hh[1]}</i>
       <span className="rn-cl">:</span>
       <i className="rn-dg">{mm[0]}</i><i className="rn-dg">{mm[1]}</i>
@@ -311,8 +321,7 @@ const REASON = {
   max_per_club: 'Three from one club is the limit.',
   club_has_bye: 'That club has a bye - they are not in this round.',
   club_not_alive: 'That club is not in this round.',
-  game_started: 'That club\'s game has already started.',
-  round_locked: 'The round has started - your nine are sealed.',
+  game_started: 'That club has started this round - it is locked.',
   wrong_kind: 'That slot takes a different kind of player.',
   settled: 'This round is already graded.',
   not_open: 'This round has not opened yet.',
