@@ -9,6 +9,11 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { currentOctoberDay } from '@/lib/october/create';
 import { octoberBoard } from '@/lib/october/board';
+import { myLeagues, leagueMemberIds, leagueDetail } from '@/lib/leagues/core';
+import { joinHref } from '@/lib/leagues/code';
+import LeagueChipActions from '@/components/leagues/LeagueChipActions';
+import { resolveShellMode } from '@/lib/shell/shell';
+import { shellSigninHref } from '@/lib/shell/signinHref';
 import { seriesFor } from '@/lib/mlb/series';
 import '../../games/games.css';
 import '../october.css';
@@ -16,15 +21,28 @@ import '../october.css';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'October · standings - Sportsvyn' };
 
-export default async function OctoberBoardPage() {
+export default async function OctoberBoardPage({ searchParams }) {
   const session = await auth();
   const uid = session?.user?.id ?? null;
+  const q = await searchParams;
   const contest = await currentOctoberDay({ now: new Date() }).catch(() => null);
   const season = contest?.season_year ?? new Date().getUTCFullYear();
+  const shell = await resolveShellMode().catch(() => null);
+  const signinHref = shellSigninHref('/october/board', shell?.isShell ?? false);
 
-  const [rows, series] = await Promise.all([
-    octoberBoard(season).catch(() => []),
+  // ?league=<id> PICKS ONE OF THE READER'S OWN, and anything else is Everyone -
+  // the same rule /run/board follows. A league id the reader is not in simply
+  // does not match, so a guessed id shows Everyone rather than somebody else's
+  // board: the filter is built from THEIR memberships, never from the URL.
+  const leagues = uid == null ? [] : await myLeagues(Number(uid)).catch(() => []);
+  const wanted = q?.league ? String(q.league) : null;
+  const picked = leagues.find((l) => String(l.id) === wanted) ?? null;
+
+  const memberIds = picked ? await leagueMemberIds(picked.id).catch(() => []) : null;
+  const [rows, series, detail] = await Promise.all([
+    octoberBoard(season, { memberIds }).catch(() => []),
     seriesFor(null, season).catch(() => []),
+    picked ? leagueDetail(picked.id, Number(uid)).catch(() => null) : Promise.resolve(null),
   ]);
 
   // WHO IS STILL ALIVE. A club is out when it has lost a series it was in;
@@ -54,12 +72,29 @@ export default async function OctoberBoardPage() {
         <div className="oc-hd" style={{ borderRadius: '18px 18px 0 0' }}>
           <div className="oc-hd-top">
             <span className="oc-eb">October</span>
-            <span className="oc-ed">{rows.length} playing · the World Series decides it</span>
+            {/* THE LEAGUE'S NAME WHEN ONE IS PICKED, and the Everyone line exactly
+                as it was otherwise - "the World Series decides it" is this
+                board's own copy and a league filter is no reason to delete it. */}
+            <span className="oc-ed">{picked
+              ? `${picked.name} · ${rows.length} playing`
+              : `${rows.length} playing · the World Series decides it`}</span>
           </div>
           <div className="oc-crow">
             <div className="oc-lbl">you<b>{me ? `${ordinal(me.rank)} · ${me.back} back` : 'not entered'}</b></div>
             <div className="oc-tot"><b>{me?.total ?? 0}</b><span>October</span></div>
           </div>
+        </div>
+
+        {/* THE CHIP ROW, the Run's own - one entry, any number of leagues: a
+            league filters WHO is on the board, never which card a reader filed.
+            See lib/october/board.js. */}
+        <div className="oc-lgs">
+          {leagues.map((l) => (
+            <Link key={l.id} className={`oc-lg${picked && picked.id === l.id ? ' on' : ''}`}
+              href={`/october/board?league=${l.id}`}>{l.name}</Link>
+          ))}
+          <Link className={`oc-lg${picked ? '' : ' on'}`} href="/october/board">Everyone</Link>
+          <LeagueChipActions boardHref="/october/board" signedIn={uid != null} signinHref={signinHref} />
         </div>
 
         <div className="ob-lb">
@@ -75,6 +110,16 @@ export default async function OctoberBoardPage() {
             </div>
           )) : <div className="ob-lr"><span className="rk">—</span><span>Nobody has played a day yet.</span><span /><span /></div>}
         </div>
+
+        {/* THE LEAGUE'S OWN CODE, when one is picked - the same share path the Run
+            prints and the create sheet hands back (/leagues?join=CODE, which
+            exists; /leagues/join/CODE does not). */}
+        {detail?.join_code ? (
+          <div className="oc-inv">
+            Invite<br /><b>{detail.join_code}</b><br />
+            <span className="oc-inv-p">{joinHref(detail.join_code)}</span>
+          </div>
+        ) : null}
 
         {/* THE BRACKET, NOT "YOUR POOL". This module was the burn made visible -
             "used · gone for October" over a bar splitting a reader's spent

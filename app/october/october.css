@@ -8,6 +8,17 @@
 /* THE SEPARATOR. The two crumb links had nothing between them and no
    float rule either, so they served as one run-together phrase. */
 .oc-crumb-sep { color: var(--muted-dim); margin: 0 6px; }
+
+/* THE LEAGUE CHIPS, the Run's own rules (app/run/run.css .rn-lgs) - two boards,
+   one look, because a reader moving between them should not have to re-learn a
+   chip. The + Join / + Create chips bring their own (components/leagues). */
+.oc-lgs { display: flex; gap: 6px; margin: 10px 0 0; flex-wrap: wrap; }
+.oc-lg { border: 1px solid var(--rule-dim); border-radius: 99px; padding: 5px 11px; font: 600 10px var(--font-mono); color: var(--muted); text-decoration: none; }
+.oc-lg.on { background: var(--volt); color: var(--ink); border-color: var(--volt); font-weight: 700; }
+/* THE INVITE, when a league is picked. The path wraps rather than overflowing. */
+.oc-inv { margin: 10px 0 0; font: 500 10px var(--font-mono); color: var(--muted); }
+.oc-inv b { color: var(--volt); font: 800 16px var(--font-mono); letter-spacing: .16em; }
+.oc-inv-p { color: var(--muted-dim); word-break: break-all; }
 .oc { border: 1px solid var(--rule-dim); border-radius: 18px; overflow: hidden; background: var(--ink); }
 
 /* header - the Daily's */

@@ -12,7 +12,8 @@ install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const F = (n) => stubPath(`__ob_${n}.mjs`);
-const STUBS = ['link', 'auth', 'hdr', 'foot', 'create', 'board', 'pool', 'series', 'css'];
+const STUBS = ['link', 'auth', 'hdr', 'foot', 'create', 'board', 'pool', 'series', 'css',
+  'leagues', 'lgactions', 'nav', 'shell'];
 
 registerHooks({ resolve(spec, ctx, next) {
   const m = {
@@ -23,13 +24,22 @@ registerHooks({ resolve(spec, ctx, next) {
     '@/lib/october/create': 'create',
     '@/lib/october/board': 'board',
     '@/lib/mlb/series': 'series',
+    // THE LEAGUE SPINE AND THE CLIENT ISLAND. LeagueChipActions imports
+    // app/actions/leagues (auth + DB) and calls useRouter() at the top level,
+    // which throws "invariant expected app router to be mounted" under a bare
+    // renderToStaticMarkup - Next supplies that context in the app, not here.
+    // The CHIPS THEMSELVES STAY REAL; only what they reach is stubbed.
+    '@/lib/leagues/core': 'leagues',
+    '@/app/actions/leagues': 'lgactions',
+    '@/lib/shell/shell': 'shell',
+    'next/navigation': 'nav',
   };
   if (m[spec]) return { url: pathToFileURL(F(m[spec])).href, shortCircuit: true };
   if (spec.endsWith('.css')) return { url: pathToFileURL(F('css')).href, shortCircuit: true };
   return next(spec, ctx);
 } });
 
-let React, renderToStaticMarkup, Page, boardStub, seriesStub, authStub;
+let React, renderToStaticMarkup, Page, boardStub, seriesStub, authStub, leaguesStub;
 before(async () => {
   writeFileSync(F('link'), "import React from 'react'; export default function Link({href,children,...r}){return React.createElement('a',{...r,href:String(href)},children);}\n");
   writeFileSync(F('auth'), 'export let uid = null;\nexport function setUid(v) { uid = v; }\nexport async function auth() { return uid == null ? null : { user: { id: uid } }; }\n');
@@ -40,12 +50,27 @@ before(async () => {
   // burn; a stub that still exported them would let this test pass over a page
   // that had gone back to importing them.
   writeFileSync(F('board'), 'export let rows = [];\nexport function setRows(v) { rows = v; }\nexport async function octoberBoard() { return rows; }\n');
+  writeFileSync(F('leagues'), [
+    'export let mine = [];',
+    'export let members = [];',
+    'export let detail = null;',
+    'export function setMine(v) { mine = v; }',
+    'export function setMembers(v) { members = v; }',
+    'export function setDetail(v) { detail = v; }',
+    'export async function myLeagues() { return mine; }',
+    'export async function leagueMemberIds() { return members; }',
+    'export async function leagueDetail() { return detail; }',
+  ].join('\n') + '\n');
+  writeFileSync(F('lgactions'), 'export async function joinLeagueAction() { return { ok: true, leagueId: 1 }; }\nexport async function createLeagueAction() { return { ok: true, leagueId: 2, joinCode: "ABC234" }; }\n');
+  writeFileSync(F('nav'), 'export function useRouter() { return { push() {}, refresh() {} }; }\nexport function useSearchParams() { return new URLSearchParams(); }\n');
+  writeFileSync(F('shell'), 'export async function resolveShellMode() { return { isShell: false }; }\n');
   writeFileSync(F('series'), 'export let series = [];\nexport function setSeries(v) { series = v; }\nexport async function seriesFor() { return series; }\n');
   writeFileSync(F('css'), 'export default {};\n');
   React = await import('react');
   ({ renderToStaticMarkup } = await import('react-dom/server'));
   boardStub = await import(pathToFileURL(F('board')).href);
   seriesStub = await import(pathToFileURL(F('series')).href);
+  leaguesStub = await import(pathToFileURL(F('leagues')).href);
   authStub = await import(pathToFileURL(F('auth')).href);
   Page = (await import('./page.js')).default;
 });
@@ -57,7 +82,7 @@ const ROWS = [
   { userId: 9, handle: 'you', house: false, total: 188.5, rank: 9, back: 41.0, todayPoints: 31.5, todayState: 'complete' },
   { userId: 10, handle: 'the Homer', house: true, total: 187.0, rank: 10, back: 42.5, todayPoints: 0, todayState: 'dnf' },
 ];
-const render = async () => renderToStaticMarkup(await Page());
+const render = async (q = {}) => renderToStaticMarkup(await Page({ searchParams: Promise.resolve(q) }));
 
 test('FRAME 3 - THE BOARD: one October total, today beside it', async () => {
   authStub.setUid(9);
@@ -89,6 +114,65 @@ test('OPENLY THE HOUSE, and a DNF says DNF rather than +0', async () => {
   assert.match(h, /<span class="d">DNF<\/span>/);
   assert.match(h, /<span class="d">\+31\.5<\/span>/);
   assert.doesNotMatch(h, /<span class="d">\+0<\/span>/);
+});
+
+test('LEAGUE CHIPS: myLeagues, the ?league= filter, and the board scoped to members', async () => {
+  authStub.setUid(9);
+  boardStub.setRows(ROWS);
+  leaguesStub.setMine([{ id: 1, name: 'Silva Family' }, { id: 2, name: 'CSM Office' }]);
+  seriesStub.setSeries([]);
+
+  // EVERYONE: no filter, and the board's own line is untouched.
+  const everyone = await render({});
+  assert.match(everyone, /class="oc-lg on" href="\/october\/board">Everyone<\/a>/);
+  assert.match(everyone, /class="oc-lg" href="\/october\/board\?league=1">Silva Family<\/a>/);
+  assert.match(everyone, /class="oc-lg" href="\/october\/board\?league=2">CSM Office<\/a>/);
+  assert.match(everyone, /4 playing · the World Series decides it/);
+
+  // ONE LEAGUE: the chip lights, the header names it, and the reader's OWN
+  // memberships decide the filter - leagueMemberIds is what scopes the read.
+  leaguesStub.setMembers([9, 5]);
+  leaguesStub.setDetail({ join_code: 'HTR4MK' });
+  const picked = await render({ league: '1' });
+  assert.match(picked, /class="oc-lg on" href="\/october\/board\?league=1">Silva Family<\/a>/);
+  assert.match(picked, /Silva Family · 4 playing/);
+  assert.doesNotMatch(picked, /the World Series decides it/, 'the league line replaces it');
+
+  // + JOIN AND + CREATE, the shared sheet, on this board too.
+  assert.match(picked, /class="lgc-chip"[^>]*>\+ Join<\/button>/);
+  assert.match(picked, /class="lgc-chip"[^>]*>\+ Create<\/button>/);
+
+  // THE INVITE IS THE LEAGUE'S OWN CODE and a path that EXISTS.
+  assert.match(picked, /<b>HTR4MK<\/b>/);
+  assert.match(picked, /\/leagues\?join=HTR4MK/);
+  assert.doesNotMatch(picked, /leagues\/join\/HTR4MK/);
+  assert.doesNotMatch(picked, /sportsvyn\.com/);
+
+  // A LEAGUE ID THE READER IS NOT IN IS NOT A BOARD. The filter is built from
+  // their own memberships, so a guessed id falls back to Everyone rather than
+  // showing somebody else's league.
+  const guessed = await render({ league: '9999' });
+  assert.match(guessed, /class="oc-lg on" href="\/october\/board">Everyone<\/a>/);
+  assert.doesNotMatch(guessed, /Invite/);
+});
+
+test('ONE ENTRY, ANY NUMBER OF LEAGUES: the reader keeps one card and one number', async () => {
+  // THE RULING, and it falls out of the shape: a league holds MEMBERS, not
+  // entries, so the same row appears on every board its owner is a member of -
+  // with the same total, because there is only one entry to read.
+  authStub.setUid(9);
+  boardStub.setRows(ROWS);
+  leaguesStub.setMine([{ id: 1, name: 'Silva Family' }, { id: 2, name: 'CSM Office' }]);
+  leaguesStub.setMembers([9, 5]);
+  leaguesStub.setDetail(null);
+  const one = await render({ league: '1' });
+  const two = await render({ league: '2' });
+  const mine = (h) => /<div class="ob-lr you" data-rank="(\d+)"><span class="rk">\d+<\/span><span>you<\/span><span class="d">([^<]*)<\/span><span class="t">([^<]*)<\/span>/.exec(h);
+  assert.ok(mine(one), 'a "you" row on the first league');
+  assert.deepEqual(mine(one).slice(1), mine(two).slice(1), 'same rank, same delta, same total');
+  // AND THE READER'S OWN HEADER NUMBER IS THE SAME ON BOTH.
+  const tot = (h) => /<div class="oc-tot"><b>([^<]*)<\/b>/.exec(h)[1];
+  assert.equal(tot(one), tot(two));
 });
 
 test('THE BRACKET LINE names who is left - and there is no burn bar any more', async () => {
