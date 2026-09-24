@@ -41,7 +41,10 @@ export default async function RunPage() {
       <div className="rn-wrap">
         <div className="rn-crumb">
           <Link href="/mlb/bracket">&#8249; Bracket</Link>
-          {view ? <Link className="r" href="/run/board">League board &#8250;</Link> : null}
+          {view ? <>
+            <span className="rn-crumb-sep" aria-hidden="true">·</span>
+            <Link href="/run/board">League board &#8250;</Link>
+          </> : null}
         </div>
         {!view ? (
           <p className="rn-none">
