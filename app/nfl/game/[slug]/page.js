@@ -374,6 +374,11 @@ export default async function GamePage({ params, searchParams }) {
           // first minutes are often empty). Pre-game copy on a live page reads
           // as a page that has not noticed the game started.
           <p className="gg-note gg-note-live" data-fallback="live">Drives and scoring appear as plays arrive.</p>
+        ) : final ? (
+          // FINAL WITH NOTHING BEHIND A TAB: the game is over and no play data
+          // was stored for it. Saying scoring "lands once the game is played"
+          // about a game that has been played is the one wrong thing to say.
+          <p className="gg-note" data-fallback="final">No play-by-play stored for this game.</p>
         ) : (
           <PreGameFacts game={game} />
         )}

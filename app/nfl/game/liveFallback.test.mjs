@@ -83,6 +83,7 @@ before(async () => {
   slugs.nflLive = await seed('nfl', 'live');
   slugs.nflPre = await seed('nfl', 'scheduled');
   slugs.cfbLive = await seed('cfb', 'live');
+  slugs.nflFinal = await seed('nfl', 'final');
 });
 after(async () => {
   await sql`DELETE FROM matches WHERE id = ANY(${ids})`;
@@ -111,4 +112,12 @@ test('CFB, LIVE, no plays yet: the same line in the drives panel, and the facts 
   assert.doesNotMatch(h, /Drive chart appears once the game kicks off/);
   assert.doesNotMatch(h, /<h2>KICKOFF<\/h2>/);
   assert.match(h, /<h2>DETAILS<\/h2>/);
+});
+
+test('NFL, FINAL, no panels: "No play-by-play stored for this game." - never pre-game copy', async () => {
+  const h = await render('nfl', slugs.nflFinal);
+  assert.match(h, /<p class="gg-note" data-fallback="final">No play-by-play stored for this game\.<\/p>/);
+  assert.doesNotMatch(h, /<h2>KICKOFF<\/h2>/);
+  assert.doesNotMatch(h, /land once the game is played/);
+  assert.doesNotMatch(h, /data-fallback="live"/);
 });
