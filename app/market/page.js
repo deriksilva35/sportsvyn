@@ -29,6 +29,7 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SportsvynSegment from '@/components/shell/SportsvynSegment';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import {
   pricedSlate, futuresBoards, bookCounts, latestSnapshotAt, boardMatchIds,
   hasMovement, MARKET_LEAGUES,
@@ -535,5 +536,20 @@ export async function MarketView({ sp, pinned = null, leagueHeader = null }) {
 
 
 export default async function MarketPage({ searchParams }) {
+  // TEMPORARY (25 Sep incident): who is sending /market ~1,100 requests a
+  // minute? Vercel's runtime logs carry no client fields and the project has
+  // no observability or firewall data, so 1 request in 20 logs its own - user
+  // agent, the forwarding IP, the ASN and country Vercel adds. Removed by the
+  // market-cache change that follows it.
+  if (Math.random() < 0.05) {
+    try {
+      const h = await headers();
+      console.log('[market-client]', JSON.stringify({
+        ua: h.get('user-agent'), ip: (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || h.get('x-real-ip'),
+        asn: h.get('x-vercel-ip-as-number'), country: h.get('x-vercel-ip-country'), ref: h.get('referer'),
+        q: Object.keys((await searchParams) ?? {}).join(','),
+      }));
+    } catch { /* a log line never costs the page */ }
+  }
   return MarketView({ sp: (await searchParams) ?? {} });
 }
