@@ -337,3 +337,15 @@ test('NO RANKINGS CLASS COLLIDES WITH gridiron.css', () => {
     assert.equal(/className="rk"/.test(src(f)), false, `${f} still uses the colliding bare .rk`);
   }
 });
+
+// HEADGEAR-WEB. A rankings row is a single team, so it falls back on its own;
+// the row is told its league by the view, never by the letters.
+test('HEADGEAR on a rankings row: NFL rows wear helmets facing right, CFB rows keep the disc', () => {
+  const h = render(React.createElement(Rankings, { v: base() }));
+  assert.match(h, /<img class="teammark teammark--headgear rk-mark" data-teammark="headgear" data-facing="right" src="\/headgear\/nfl\/PHI@1x\.webp"[^>]*width="22" height="22"/);
+  assert.match(h, /class="teammark teammark--headgear rk-mark fol"[^>]*src="\/headgear\/nfl\/DET@1x\.webp"/, 'the follow ring class rides on the helmet');
+  assert.doesNotMatch(h, /scaleX/);
+  const c = render(React.createElement(Rankings, { v: cfb() }));
+  assert.doesNotMatch(c, /data-teammark="headgear"/, 'cfb: no cutouts yet');
+  assert.match(c, /data-teammark="circle"/);
+});

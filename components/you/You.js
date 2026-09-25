@@ -124,7 +124,7 @@ function Follows({ follows }) {
           {follows.teams.map((t) => (
             <div className="yu-tm" key={t.id} data-team-id={t.id}>
               <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={t.abbreviation}
-                size={22} title={t.fullName ?? t.name} className="yu-mk" />
+                size={22} title={t.fullName ?? t.name} className="yu-mk" leagueSlug={t.leagueSlug} />
               <Link className="yu-tname" href={`/team/${t.slug}`}>{t.name}</Link>
               <span className="yu-lg">{leagueWord(t.leagueSlug, t.leagueName)}</span>
             </div>

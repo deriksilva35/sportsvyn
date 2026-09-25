@@ -14,6 +14,7 @@
 import { useState, useTransition } from 'react';
 import { saveRunPickAction, clearRunPickAction } from '@/app/actions/run';
 import { ptTime } from '@/lib/gridiron/kickoff';
+import TeamMark from '@/components/team/TeamMark';
 
 export default function RunRoster({ view, signedIn = false, signinHref = '/signin', leagueLine = null }) {
   const [slots, setSlots] = useState(() => Object.fromEntries(view.slots.map((s) => [s.slot, s])));
@@ -99,7 +100,8 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
                 onClick={() => !c.bye && setOpenClub(c.teamId)} disabled={c.bye}
                 data-club={c.abbr} data-bye={c.bye ? '1' : '0'} data-started={c.started ? '1' : '0'}>
                 {counts.get(String(c.teamId)) ? <span className="rn-cnt">{counts.get(String(c.teamId))}</span> : null}
-                <i className="rn-mk" style={{ background: two(c.colors) }} />
+                <span className="rn-mk"><TeamMark primary={c.colors?.primary} secondary={c.colors?.secondary}
+                  abbr={c.abbr} size={21} title={c.name ?? c.abbr} leagueSlug="mlb" /></span>
                 <b>{c.abbr}</b>
                 <small>{c.bye ? c.seed ?? '' : c.started ? 'started' : `${c.seed ?? ''}${c.opponent ? ` · vs ${c.opponent}` : ''}`.trim()}</small>
               </button>
@@ -158,7 +160,8 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
         <div className="rn-panel">
           <div className="rn-pan-h">
             {live ? <b>Your nine</b> : <>
-              <i className="rn-mk" style={{ background: two(club?.colors) }} />
+              <span className="rn-mk"><TeamMark primary={club?.colors?.primary} secondary={club?.colors?.secondary}
+                abbr={club?.abbr} size={21} title={club?.name ?? club?.abbr} leagueSlug="mlb" /></span>
               <b>{club?.name ?? club?.abbr ?? 'Clubs'}</b>
             </>}
             <small>{live
@@ -305,8 +308,6 @@ const ordinal = (n) => {
   return `${i}${({ 1: 'st', 2: 'nd', 3: 'rd' })[i % 10] ?? 'th'}`;
 };
 
-const two = (c) => (c?.primary && c?.secondary
-  ? `linear-gradient(to bottom, ${c.primary} 0 58%, ${c.secondary} 58%)` : 'var(--ink-3)');
 const countByClub = (slots) => {
   const m = new Map();
   for (const s of Object.values(slots)) {

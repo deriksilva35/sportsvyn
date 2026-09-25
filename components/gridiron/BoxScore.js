@@ -3,17 +3,21 @@
 // LINE SCORE grammar (.gg-ls: mono numerals, quiet headers, the same rules).
 // Server-rendered; on a live game it refreshes with the page, like the line
 // score. Renders nothing without rows - the tab is not offered then.
-import Helmet from '@/components/team/Helmet';
+import TeamMark from '@/components/team/TeamMark';
+import { pairHasHeadgear } from '@/lib/teams/headgear';
 
-export default function BoxScore({ boxScore, teams = [] }) {
+export default function BoxScore({ boxScore, teams = [], leagueSlug = null }) {
   if (!boxScore?.length) return null;
   const colorsOf = (id) => teams.find((t) => t?.id === id)?.colors ?? null;
+  // BOTH OR NEITHER across the two team blocks, the header's own rule.
+  const headgear = boxScore.length === 2 && pairHasHeadgear(leagueSlug, boxScore[0].abbr, boxScore[1].abbr);
   return (
     <section aria-label="Box score" className="gg-box">
       {boxScore.map((t) => (
         <div className="gg-boxteam" key={t.teamId}>
           <div className="gg-boxhead">
-            <Helmet primary={colorsOf(t.teamId)?.primary} secondary={colorsOf(t.teamId)?.secondary} facing="right" size={22} className="gg-hm" />
+            <TeamMark primary={colorsOf(t.teamId)?.primary} secondary={colorsOf(t.teamId)?.secondary} abbr={t.abbr}
+              size={22} className="gg-hm" leagueSlug={leagueSlug} headgear={headgear} />
             <span className="abbr">{t.abbr}</span>
           </div>
           {t.groups.map((g) => (

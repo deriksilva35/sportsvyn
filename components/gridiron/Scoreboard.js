@@ -17,7 +17,8 @@
 // gridiron match page, so the expand IS the destination rather than a stop on
 // the way to one.
 
-import Helmet from '@/components/team/Helmet';
+import TeamMark from '@/components/team/TeamMark';
+import { pairHasHeadgear } from '@/lib/teams/headgear';
 import { useState } from 'react';
 import Link from 'next/link';
 import { scoresHref, SPORT_CHIPS } from '@/lib/gridiron/scoresNav';
@@ -80,7 +81,7 @@ function Kickoff({ iso, tz, withDay = true }) {
 // the identifier typeface) and the full name is the name. The winner's name and
 // score go full white; the loser drops to muted, so a glance at a finished card
 // answers "who won" before it answers "what was the score".
-function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = null }) {
+function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = null, leagueSlug = null, headgear = true }) {
   // ONE DERIVED ABBREVIATION, EVERY SURFACE. This read t.abbreviation alone,
   // so an FCS visitor with none ("Monmouth") rendered an empty mono slot on a
   // live card while the same side read MON on the Scores tab and the lobby
@@ -105,9 +106,10 @@ function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = n
   const scoreClass = `sc${live ? ' live' : ''}${score == null ? ' none' : ''}`;
   return (
     <div className={`gi-team ${final && isWinner ? 'win' : ''} ${final && isLoser ? 'lose' : ''}`}>
-      {/* THE HELMET FACES THE SCORE. Null when the team has no colors - the
-          row then reads exactly as it did before, never with a grey helmet. */}
-      <Helmet primary={t.colors?.primary} secondary={t.colors?.secondary} facing="right" size={22} className="gi-hm" />
+      {/* THE MARK FACES THE SCORE: headgear where the league has it, else
+          the two-tone disc (components/team/TeamMark.js). */}
+      <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={abbr ?? undefined} size={22}
+        title={name || undefined} className="gi-hm" leagueSlug={leagueSlug} headgear={headgear} />
       {abbr ? <span className="abbr">{abbr}</span> : <span className="abbr" />}
       <RankBadge rank={t.apRank} />
       <span className="nm">{name}</span>
@@ -244,6 +246,8 @@ function Card({ g, records, tz, withDay = true, signedIn = false }) {
   const hw = g.homeScore, aw = g.awayScore;
   const homeWin = final && hw > aw, awayWin = final && aw > hw;
   const hasLine = Array.isArray(g.lineScores?.home);
+  // BOTH OR NEITHER: one cutout beside one disc reads as a favourite.
+  const headgear = pairHasHeadgear(g.leagueSlug, abbrOf(g.away) || null, abbrOf(g.home) || null);
 
   // THE WHOLE CARD IS THE CONTROL. It used to be the caret alone - a 12px
   // glyph - while the card it belonged to sat inert next to a dead "Full match
@@ -277,7 +281,8 @@ function Card({ g, records, tz, withDay = true, signedIn = false }) {
           const t = side === 'home' ? g.home : g.away;
           return (
             <TeamLine
-              key={side} t={t} score={side === 'home' ? hw : aw}
+              key={side} t={t} leagueSlug={g.leagueSlug} headgear={headgear}
+              score={side === 'home' ? hw : aw}
               isWinner={side === 'home' ? homeWin : awayWin} isLoser={side === 'home' ? awayWin : homeWin}
               final={final} live={g.status === 'live'} record={records?.get?.(t?.id) ?? null}
             />

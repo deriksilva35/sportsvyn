@@ -19,7 +19,7 @@
 // pushed to the right edge by margin-left:auto. Every part but the name is
 // flex:none; the name is the only child that gives way.
 
-import Helmet from '@/components/team/Helmet';
+import TeamMark from '@/components/team/TeamMark';
 import RankBadge from '@/components/gridiron/RankBadge';
 import FollowStar from '@/components/team/FollowStar';
 import PossessionDot from '@/components/gridiron/PossessionDot';
@@ -27,12 +27,13 @@ import PossessionDot from '@/components/gridiron/PossessionDot';
 export default function GameTeamRow({
   t, score, loser, show, rank = null, record = null,
   signedIn = false, isShell = false, following = null, hasBall = false,
+  leagueSlug = null, headgear = true,
 }) {
   // THE STAR IS SIGNED-IN ONLY HERE, and that is a deliberate difference from
   // the team page. On /team/[slug] the star is the page's own call to action
   // and a signed-out tap opens a prompt that explains itself. In a game
   // header it would be one more control on a row that already carries a rank,
-  // a helmet, a record and a score, offering an unfollowable follow to a
+  // a team mark, a record and a score, offering an unfollowable follow to a
   // reader who cannot use it. A stranger gets the row exactly as it was.
   //
   // It also needs an id. A row whose team failed to join has none, and a star
@@ -41,8 +42,10 @@ export default function GameTeamRow({
   return (
     <div className={`gg-teamrow${loser ? ' loser' : ''}`}>
       <RankBadge rank={rank} size="big" />
-      {/* helmet before the abbreviation, facing the score; none without colors */}
-      <Helmet primary={t?.colors?.primary} secondary={t?.colors?.secondary} facing="right" size={28} className="gg-hm" />
+      {/* the mark before the abbreviation, facing the score: headgear where
+          the league has it and the page says both sides do, else the disc */}
+      <TeamMark primary={t?.colors?.primary} secondary={t?.colors?.secondary} abbr={t?.abbreviation ?? null} size={28}
+        title={t?.name ?? undefined} className="gg-hm" leagueSlug={leagueSlug} headgear={headgear} />
       {/* THE VOLT DOT SITS WITH THE ABBREVIATION, which is what the Live
           Activity's card marks and what the strip's own sentence used to
           name. Inside the span, so it travels with the three letters rather

@@ -89,7 +89,8 @@ export default function FollowedTeams({ initialTeams = [], allTeams = [] }) {
         <ul className="ft-list">
           {teams.map((t) => (
             <li className="ft-row" key={t.id} data-team-id={t.id}>
-              <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={t.abbreviation} size={24} title={t.fullName ?? t.name} />
+              <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={t.abbreviation} size={24} title={t.fullName ?? t.name}
+                leagueSlug={t.leagueSlug} />
               <a className="ft-name" href={`/team/${t.slug}`}>{t.name}</a>
               <span className="ft-lg">{leagueLabel(t.leagueSlug, t.leagueName)}</span>
               <button type="button" className="ft-x" aria-label={`Unfollow ${t.fullName ?? t.name}`} onClick={() => remove(t)}>Remove</button>

@@ -475,3 +475,19 @@ test('THE PLAYS TAB SAYS SO WHEN A GAME HAS NO PITCHES', async () => {
   // true rather than drawing an empty rail.
   assert.match(h, /No pitches on this game yet\./);
 });
+
+// HEADGEAR-WEB. The header rows are STACKED (away above home), so both caps
+// face right; and they are a pair, so both or neither.
+test('THE HEADER WEARS CAPS, both facing right, and a half-known pair wears neither', async () => {
+  const h = await render(LIVE());
+  const rows = h.split('<div class="mg-team">').slice(1);
+  assert.equal(rows.length, 2);
+  assert.match(rows[0], /<img class="teammark teammark--headgear" data-teammark="headgear" data-facing="right" src="\/headgear\/mlb\/TB@1x\.webp"/, 'away: TB');
+  assert.match(rows[1], /data-teammark="headgear" data-facing="right" src="\/headgear\/mlb\/NYY@1x\.webp"/, 'home: NYY');
+  assert.match(rows[0], /width="26" height="26"/, 'the same 26 px box the disc had');
+  assert.doesNotMatch(h, /scaleX/, 'no mirror on a stacked header');
+  const half = LIVE(); half.away = { ...half.away, abbreviation: 'XYZ' };
+  const h2 = await render(half);
+  assert.equal((h2.match(/data-teammark="headgear"/g) ?? []).length, 0, 'XYZ has no cap, so NYY does not wear one either');
+  assert.equal((h2.match(/<svg class="teammark" [^>]*data-teammark="circle"/g) ?? []).length, 2, 'two discs');
+});

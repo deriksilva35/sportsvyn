@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import StandaloneTime from '@/components/StandaloneTime';
 import TeamMark from '@/components/team/TeamMark';
+import { pairHasHeadgear } from '@/lib/teams/headgear';
 import RankBadge from '@/components/gridiron/RankBadge';
 import PossessionDot from '@/components/gridiron/PossessionDot';
 import LiveRefresh from '@/components/scores/LiveRefresh';
@@ -46,11 +47,12 @@ function liveLabel(g) {
   return q ? `Q${q}${c ? ` · ${c}` : ''}` : 'Live';
 }
 
-function TeamRow({ t, score, trail, record, pick, pct, scored, rank = null, hasBall = false }) {
+function TeamRow({ t, score, trail, record, pick, pct, scored, rank = null, hasBall = false, leagueSlug = null, headgear = true }) {
   const ab = abbrOf(t);
   return (
     <div className={`sv2-team${trail ? ' trail' : ''}`}>
-      <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={ab} size={24} title={t.name} />
+      <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={ab} size={24} title={t.name}
+        leagueSlug={leagueSlug} headgear={headgear} />
       {/* THE DOT RIDES THE ABBREVIATION, not the situation line under it. The
           line used to end with "ALA ball"; the row it was describing is right
           there, and a mark on that row says it without spending a line on it.
@@ -140,6 +142,8 @@ function Card({ g, x, signedIn, signinHref, tz }) {
     homeAbbr: abbrOf(g.home), awayAbbr: abbrOf(g.away), liveState: g.liveState,
   });
   const baseball = sportOf(g.leagueSlug) === BASEBALL;
+  // BOTH OR NEITHER: one cutout beside one disc reads as a favourite.
+  const headgear = pairHasHeadgear(g.leagueSlug, abbrOf(g.away), abbrOf(g.home));
   const gameHref = g.leagueSlug === 'epl' ? `/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`;
   return (
     <a className={`sv2-card${live ? ' live' : ''}${final ? ' final' : ''}`} href={gameHref} data-variant={v} data-league={g.leagueSlug}>
@@ -156,7 +160,8 @@ function Card({ g, x, signedIn, signinHref, tz }) {
         const t = side === 'home' ? g.home : g.away;
         return (
           <TeamRow
-            key={side} t={t} score={side === 'home' ? g.homeScore : g.awayScore}
+            key={side} t={t} leagueSlug={g.leagueSlug} headgear={headgear}
+            score={side === 'home' ? g.homeScore : g.awayScore}
             trail={scored && (side === 'home' ? awayLeads : homeLeads)}
             record={x.record[side]} pick={pickAbbr != null && pickAbbr === abbrOf(t)}
             pct={pctFor(side)} scored={scored} rank={x.rank?.[side] ?? null}

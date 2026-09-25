@@ -82,7 +82,7 @@ export default function AllTeams({ league, label, teams = [], initialFollowed = 
       <div className="rk-row" key={t.id} data-team-id={t.id}>
         <span className="rnk-n">{t.powerRank ?? '–'}</span>
         <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={t.abbreviation}
-          size={22} title={t.fullName ?? t.name} className={on ? 'rk-mark fol' : 'rk-mark'} />
+          size={22} title={t.fullName ?? t.name} className={on ? 'rk-mark fol' : 'rk-mark'} leagueSlug={league} />
         <span className="rnk-nm">{t.name}<small>{[t.group, t.record, t.apRank == null ? null : `AP ${t.apRank}`].filter(Boolean).join(' · ')}</small></span>
         {signedIn ? (
           <button type="button" className={`rk-fol${on ? ' on' : ''}`} aria-pressed={on}

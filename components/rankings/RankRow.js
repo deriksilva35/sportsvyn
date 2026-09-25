@@ -15,7 +15,7 @@ import TeamMark from '@/components/team/TeamMark';
 
 export default function RankRow({
   rank = null, name, sub = null, value = null, second = null,
-  team = null, followed = false, you = false, right = null, expand = null,
+  team = null, followed = false, you = false, right = null, expand = null, leagueSlug = null,
 }) {
   const body = (
     <>
@@ -23,7 +23,7 @@ export default function RankRow({
       {team ? (
         <TeamMark
           primary={team.colors?.primary} secondary={team.colors?.secondary}
-          abbr={team.abbreviation} size={22} title={team.fullName ?? name}
+          abbr={team.abbreviation} size={22} title={team.fullName ?? name} leagueSlug={leagueSlug}
           className={followed ? 'rk-mark fol' : 'rk-mark'}
         />
       ) : null}

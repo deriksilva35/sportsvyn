@@ -1,16 +1,49 @@
 // components/team/TeamMark.js — one team mark at any size (GAMES TAB v2, item 6).
 //
-// Below 28 CSS px a helmet's decal and facemask are noise; the mark becomes a
-// two-tone split circle: primary fill, secondary across the bottom 42%, a
-// --line ring at 3/100 of the size. At 28 and up it IS the Helmet - wrapped,
-// not re-drawn, so Helmet.js stays the one helmet. The Tonight strip on the
-// lobby is the first user (24 px); nothing else switches in this relay.
+// THREE DRAWINGS, ONE BOX. Every one of them is `size` square, so a surface
+// that swaps one for another does not move:
+//   - HEADGEAR, when headgearFor(leagueSlug, abbr) has a cutout
+//     (lib/teams/headgear.js). The helmet or cap, facing right.
+//   - the two-tone split circle otherwise: primary fill, secondary across the
+//     bottom 42%, a --line ring at 3/100 of the size.
+//   - an ink-3 disc with the abbreviation when there are no colours.
+//
+// NO LEAGUE, NO HEADGEAR. The league is never inferred from the abbreviation -
+// ATL is two teams - so a caller that does not pass leagueSlug gets the disc.
+//
+// `headgear={false}` is how a PAIR says both-or-neither (pairHasHeadgear):
+// when one side of a game has no cutout, neither side draws one.
+//
+// `facing="left"` mirrors the cutout (scaleX(-1)). Only a facing pair asks for
+// it - the Pick'em board's home side. Everything else faces right. The disc is
+// symmetric and ignores it.
+//
+// The cartoon SVG helmet this used to become at 28 px and up is gone;
+// headgear replaced it (HEADGEAR-WEB).
 
-import Helmet from '@/components/team/Helmet';
+import { headgearFor } from '@/lib/teams/headgear';
 
-export const TEAMMARK_HELMET_MIN = 28;
-
-export default function TeamMark({ primary, secondary, size = 24, className, title, abbr = null }) {
+export default function TeamMark({
+  primary, secondary, size = 24, className, title, abbr = null,
+  leagueSlug = null, headgear = true, facing = 'right',
+}) {
+  const hg = headgear ? headgearFor(leagueSlug, abbr) : null;
+  // LAZY, deliberately: React 19 hoists a <link rel=preload> into <head> for
+  // every eager <img>, and a Scores board is sixty of them.
+  if (hg) {
+    const s = Number(size);
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- a fixed 96/192 px pair from public/, drawn at a known size; next/image's loader adds nothing here
+      <img
+        className={className ? `teammark teammark--headgear ${className}` : 'teammark teammark--headgear'}
+        data-teammark="headgear" data-facing={facing}
+        src={hg.src1x} srcSet={`${hg.src1x} 1x, ${hg.src2x} 2x`}
+        width={s} height={s} alt={title ?? abbr ?? ''} loading="lazy" decoding="async"
+        style={{ width: s, height: s, objectFit: 'contain', flex: '0 0 auto', display: 'inline-block',
+          transform: facing === 'left' ? 'scaleX(-1)' : undefined }}
+      />
+    );
+  }
   // NO COLORS (EPL, SCORES TAB v2 Part A 2): an ink-3 disc with the
   // abbreviation, the same --line ring. Never a grey helmet, never nothing.
   if (!primary || !secondary) {
@@ -26,9 +59,6 @@ export default function TeamMark({ primary, secondary, size = 24, className, tit
         {(abbr ?? '').slice(0, 3)}
       </span>
     );
-  }
-  if (size >= TEAMMARK_HELMET_MIN) {
-    return <Helmet primary={primary} secondary={secondary} size={size} className={className} title={title} />;
   }
   const s = Number(size);
   const ring = Math.max(1, (s * 3) / 100);

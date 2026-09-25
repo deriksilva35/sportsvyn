@@ -165,7 +165,8 @@ function TeamRow({ t }) {
   const lost = scored && mineScore != null && oppScore != null && mineScore < oppScore;
   return (
     <Link className="tv-gm" href={`/${t.leagueSlug}/game/${t.slug}`} data-team-id={t.followTeamId}>
-      <TeamMark primary={t.mine?.colors?.primary} secondary={t.mine?.colors?.secondary} abbr={abbrOf(t.mine)} size={20} title={t.mine?.name ?? t.followName} />
+      <TeamMark primary={t.mine?.colors?.primary} secondary={t.mine?.colors?.secondary} abbr={abbrOf(t.mine)} size={20} title={t.mine?.name ?? t.followName}
+        leagueSlug={t.leagueSlug} />
       {t.rank != null ? <RankBadge rank={t.rank} /> : null}
       <span className="ab">{abbrOf(t.mine) || t.followName}</span>
       <span className="nm">{t.forHome ? 'vs' : 'at'} {abbrOf(t.opp) || t.opp?.name}</span>

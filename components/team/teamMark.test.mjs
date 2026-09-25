@@ -1,4 +1,5 @@
-// components/team/teamMark.test.mjs — TeamMark: circle under 28, Helmet at 28 and up (GAMES TAB v2, item 6).
+// components/team/teamMark.test.mjs — TeamMark: headgear when the league has it, else the
+// two-tone circle, else the abbreviation disc (GAMES TAB v2 item 6; HEADGEAR-WEB).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -7,7 +8,6 @@ install();
 const { renderToStaticMarkup } = await import('react-dom/server');
 const React = await import('react');
 const TeamMark = (await import('./TeamMark.js')).default;
-const Helmet = (await import('./Helmet.js')).default;
 const html = (props) => renderToStaticMarkup(React.createElement(TeamMark, props));
 
 test('22 -> a two-tone split circle with both fills and the --line ring', () => {
@@ -22,46 +22,72 @@ test('22 -> a two-tone split circle with both fills and the --line ring', () => 
   assert.doesNotMatch(h, /helmet/i, 'no helmet markup under 28');
 });
 
-test('28 -> the existing Helmet, byte for byte', () => {
-  const via = html({ primary: '#CC0000', secondary: '#FFFFFF', size: 28, title: 'NC State' });
-  const direct = renderToStaticMarkup(React.createElement(Helmet, { primary: '#CC0000', secondary: '#FFFFFF', size: 28, title: 'NC State' }));
-  assert.equal(via, direct, 'TeamMark wraps Helmet, it does not redraw it');
-  assert.doesNotMatch(via, /data-teammark="circle"/);
-  assert.match(via, /#CC0000/); assert.match(via, /#FFFFFF/);
+test('headgear: nfl ATL is the Falcons file, same box as the disc, facing right', () => {
+  const h = html({ primary: '#A71930', secondary: '#000000', abbr: 'ATL', size: 28, title: 'Atlanta Falcons', leagueSlug: 'nfl', className: 'gg-hm' });
+  assert.match(h, /^<img /); assert.match(h, /data-teammark="headgear"/); assert.match(h, /data-facing="right"/);
+  assert.match(h, /src="\/headgear\/nfl\/ATL@1x\.webp"/);
+  assert.match(h, /srcSet="\/headgear\/nfl\/ATL@1x\.webp 1x, \/headgear\/nfl\/ATL@2x\.webp 2x"/);
+  assert.match(h, /width="28" height="28"/); assert.match(h, /alt="Atlanta Falcons"/);
+  assert.match(h, /loading="lazy"/); assert.doesNotMatch(h, /rel="preload"/, 'no preload hoisted per mark');
+  assert.match(h, /class="teammark teammark--headgear gg-hm"/, 'the caller\'s class rides along');
+  assert.doesNotMatch(h, /scaleX/, 'faces right unless told otherwise');
+  assert.match(html({ abbr: 'ATL', size: 22, leagueSlug: 'mlb' }), /src="\/headgear\/mlb\/ATL@1x\.webp"/, 'mlb ATL is the Braves file');
 });
 
-test('Helmet.js is untouched by this relay, and TeamMark has only its named users', async () => {
-  const src = readFileSync(new URL('./Helmet.js', import.meta.url), 'utf8');
-  assert.doesNotMatch(src, /TeamMark/);
+test('NO LEAGUE, NO HEADGEAR: the same abbreviation without leagueSlug draws the disc', () => {
+  const h = html({ primary: '#A71930', secondary: '#000000', abbr: 'ATL', size: 28 });
+  assert.match(h, /data-teammark="circle"/); assert.doesNotMatch(h, /headgear|<img/);
+  assert.match(html({ primary: null, secondary: null, abbr: 'ATL', size: 24 }), /data-teammark="abbr"/, 'and with no colours, the abbreviation disc');
+  assert.match(html({ primary: '#A71930', secondary: '#000000', abbr: 'ATL', size: 28, leagueSlug: 'cfb' }), /data-teammark="circle"/, 'cfb has no cutouts yet');
+  assert.match(html({ primary: '#A71930', secondary: '#000000', abbr: 'ZZZ', size: 28, leagueSlug: 'nfl' }), /data-teammark="circle"/, 'a missing file is the disc');
+});
+
+test('headgear={false} is the pair saying neither; facing="left" mirrors the cutout only', () => {
+  assert.match(html({ primary: '#A71930', secondary: '#000000', abbr: 'ATL', leagueSlug: 'nfl', headgear: false }), /data-teammark="circle"/);
+  const l = html({ abbr: 'GB', size: 26, leagueSlug: 'nfl', facing: 'left' });
+  assert.match(l, /data-facing="left"/); assert.match(l, /transform:scaleX\(-1\)/);
+  const disc = html({ primary: '#203731', secondary: '#FFB612', abbr: 'GB', size: 26, facing: 'left' });
+  assert.doesNotMatch(disc, /scaleX/, 'the disc is symmetric and ignores facing');
+});
+
+test('the SVG helmet is gone: no TeamMark size turns into it, and no file imports it', async () => {
+  const { existsSync } = await import('node:fs');
+  assert.equal(existsSync(new URL('./Helmet.js', import.meta.url)), false);
+  for (const size of [28, 40, 64]) assert.match(html({ primary: '#CC0000', secondary: '#FFFFFF', size }), /data-teammark="circle"/, `${size}`);
   const { execSync } = await import('node:child_process');
-  const users = execSync("grep -rl \"components/team/TeamMark\" --include=*.js app components lib | grep -v test || true", { cwd: new URL('../../', import.meta.url).pathname }).toString().trim().split('\n').filter(Boolean);
+  const importers = execSync("grep -rlE \"components/team/Helmet|from './Helmet'\" --include=*.js --include=*.mjs --exclude=teamMark.test.mjs app components lib || true",
+    { cwd: new URL('../../', import.meta.url).pathname }).toString().trim().split('\n').filter(Boolean);
+  assert.deepEqual(importers, [], 'nothing imports the helmet');
+});
+
+test('TeamMark has only its named users, and every one passes a league', async () => {
+  const { execSync } = await import('node:child_process');
+  const root = new URL('../../', import.meta.url).pathname;
+  const users = execSync("grep -rl \"components/team/TeamMark\" --include=*.js app components lib | grep -v test || true", { cwd: root }).toString().trim().split('\n').filter(Boolean)
+    .filter((f) => f !== 'components/team/TeamMark.js'); // its own header comment
   // The allowlist is deliberate, not a snapshot: a NEW user of the mark is a
   // design decision and has to be added here on purpose.
-  // components/games/LobbyV2.js was here and is gone: the v3 Games tab drops
-  // the Tonight strip, which was the lobby's only use of the mark.
-  const ALLOWED = ['components/scores/ScoresV2.js', 'components/team/TeamMark.js',
-    // "Teams you follow" on /account (TEAM FOLLOWING relay) - a list of teams
-    // wants the same 24px mark the lobby and the Scores tab draw.
-    'components/account/FollowedTeams.js',
-    // The Today tab's "Your teams" rows (TODAY TAB v2) - the same 24px-class
-    // mark, at 20px, beside a followed team's live or next game.
-    'components/gridiron/TodayV2.js',
-    // The Rankings tab's ranked rows and its All-teams list (RANKINGS TAB v2)
-    // - the same mark, at 22px, and the follow ring is drawn on it.
-    'components/rankings/RankRow.js',
-    'components/rankings/AllTeams.js',
-    // The You tab's followed-team rows (YOU TAB v1) - the same 22px mark.
-    'components/you/You.js',
-    // The MLB game page's team rows (MLB B1 item 6) - the same mark at 26px.
-    // Baseball has no helmet, so Helmet.js was never the question here: the
-    // gridiron page's row draws a helmet and this one draws the disc.
-    'app/mlb/game/[slug]/page.js',
-    // The postseason bracket's slots (20px) and the round board's two sides
-    // (22px) - MLB B2 items 2 and 3, the same mark again.
-    'app/mlb/bracket/page.js',
-    'components/pickem/SeriesBoard.js'];
-  assert.ok(users.includes('components/scores/ScoresV2.js'), 'the Scores tab uses it (SCORES TAB v2)');
-  assert.ok(!users.some((f) => !ALLOWED.includes(f)), `no other user: ${users}`);
+  const ALLOWED = [
+    // the Scores tab card (v2) and the v1 Scoreboard card
+    'components/scores/ScoresV2.js', 'components/gridiron/Scoreboard.js',
+    // the NFL/CFB game header and the NFL box score (the SVG helmet's old seats)
+    'components/gridiron/GameTeamRow.js', 'components/gridiron/BoxScore.js',
+    // the MLB game header, the postseason bracket and the series board
+    'app/mlb/game/[slug]/page.js', 'app/mlb/bracket/page.js', 'components/pickem/SeriesBoard.js',
+    // the Pick'em board - the site's one facing pair
+    'components/pickem/PickemBoard.js',
+    // single-team rows: rankings, All teams, Today's your-teams, /you, /account, the Run
+    'components/rankings/RankRow.js', 'components/rankings/AllTeams.js', 'components/gridiron/TodayV2.js',
+    'components/you/You.js', 'components/account/FollowedTeams.js', 'components/run/RunRoster.js',
+  ];
+  assert.deepEqual([...users].sort(), [...ALLOWED].sort());
+  // NEVER INFER THE LEAGUE: every <TeamMark .../> on the site says which one.
+  for (const f of ALLOWED) {
+    const src = readFileSync(root + f, 'utf8');
+    const tags = src.match(/<TeamMark\b[^]*?\/>/g) ?? [];
+    assert.ok(tags.length > 0, `${f} draws a mark`);
+    for (const t of tags) assert.match(t, /leagueSlug=/, `${f}: ${t.slice(0, 80)}`);
+  }
 });
 
 test('no colors -> an ink-3 disc with the abbreviation and the --line ring (EPL fallback, SCORES TAB v2 Part A 2)', () => {

@@ -14,6 +14,7 @@
 
 import { useState, useTransition } from 'react';
 import TeamMark from '@/components/team/TeamMark';
+import { pairHasHeadgear } from '@/lib/teams/headgear';
 import { saveSeriesPickAction } from '@/app/actions/seriesPickem';
 
 export default function SeriesBoard({ contest, rows, signedIn = false, signinHref = '/signin' }) {
@@ -75,7 +76,9 @@ export default function SeriesBoard({ contest, rows, signedIn = false, signinHre
             <span className="sb-pts">+{r.points}</span>
           </div>
           <div className="sb-sides">
-            {r.teams.map((t) => {
+            {r.teams.map((t, _i, both) => {
+              // BOTH OR NEITHER: one cutout beside one disc reads as a favourite.
+              const headgear = both.length === 2 && pairHasHeadgear('mlb', both[0]?.abbr, both[1]?.abbr);
               const on = (picks[r.seriesKey] ?? null) === String(t.team_id);
               return (
                 <button
@@ -87,7 +90,7 @@ export default function SeriesBoard({ contest, rows, signedIn = false, signinHre
                   onClick={() => choose(r.seriesKey, t.team_id)}
                 >
                   <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary}
-                    abbr={t.abbr} size={22} title={t.name} />
+                    abbr={t.abbr} size={22} title={t.name} leagueSlug="mlb" headgear={headgear} />
                   <span className="sb-seed">{t.seed ?? ''}</span>
                   <span className="sb-nm">{t.name}</span>
                   {/* WINS IN THE SERIES, not a score. A series is 2-1. */}

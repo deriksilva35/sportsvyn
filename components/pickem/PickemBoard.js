@@ -17,6 +17,8 @@ import { recordLine } from '@/lib/pickem/recordLine';
 import { savePickAction } from '@/app/actions/pickem';
 import { useHandleGate } from '@/components/handle/HandleGate';
 import { orderFor } from '@/lib/gridiron/teamOrder';
+import TeamMark from '@/components/team/TeamMark';
+import { pairHasHeadgear } from '@/lib/teams/headgear';
 import { confirmPickemEntry } from '@/app/actions/confirm';
 import StandaloneTime from '@/components/StandaloneTime';
 
@@ -322,8 +324,13 @@ export default function PickemBoard({
                           favourite, which is the thing this board must never
                           imply - so a row where either side has no colours
                           draws two neutral marks, not one of each. */}
-                      {orderFor(contest?.sport).map((side) => {
+                      {/* THE ONE FACING PAIR ON THE SITE. The two sides sit
+                          left and right, so the side drawn second - home, in
+                          every league this board runs - mirrors to face the
+                          first. Every other surface's mark faces right. */}
+                      {orderFor(contest?.sport).map((side, slot) => {
                         const dressed = Boolean(g.home_colors?.primary && g.away_colors?.primary);
+                        const headgear = pairHasHeadgear(contest?.sport, g.away_abbr, g.home_abbr);
                         const isAway = side === 'away';
                         const name = isAway ? g.away : g.home;
                         const score = isAway ? g.away_score : g.home_score;
@@ -336,15 +343,14 @@ export default function PickemBoard({
                         const cls = `pkv-side${won ? ' won' : lost ? ' lost' : isMine ? ' picked' : ''}`;
                         const content = (
                           <>
-                            {/* THE TWO-COLOUR MARK is Helmet's own colours in a
-                                disc - Helmet itself is unchanged and still
-                                draws the game page's helmet. */}
-                            <span
-                              className="pkv-mk"
-                              aria-hidden="true"
-                              style={dressed ? {
-                                background: `linear-gradient(to bottom, ${colors.primary} 0 58%, ${colors.secondary ?? colors.primary} 58% 100%)`,
-                              } : undefined}
+                            {/* THE ONE TEAM MARK (components/team/TeamMark.js):
+                                headgear when both sides have it, else the
+                                two-tone disc when both are dressed, else two
+                                neutral discs. */}
+                            <TeamMark
+                              primary={dressed ? colors.primary : null} secondary={dressed ? colors.secondary : null}
+                              abbr={(isAway ? g.away_abbr : g.home_abbr) ?? name} size={26} title={name}
+                              leagueSlug={contest?.sport} headgear={headgear} facing={slot === 1 ? 'left' : 'right'}
                             />
                             <span className="pkv-nm">
                               <b>{name}</b>

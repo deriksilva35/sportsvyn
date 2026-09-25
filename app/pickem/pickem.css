@@ -323,10 +323,6 @@
   color: var(--paper); text-align: left; border: 0; text-decoration: none;
 }
 .pkv-side:disabled { cursor: default; }
-.pkv-mk {
-  width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line, #2a2a2a);
-  flex: 0 0 auto; background: var(--ink-3, #1c1c1c);
-}
 .pkv-nm { min-width: 0; }
 .pkv-nm b {
   display: block; font: 700 13px var(--font-saira-cond, sans-serif); text-transform: uppercase;

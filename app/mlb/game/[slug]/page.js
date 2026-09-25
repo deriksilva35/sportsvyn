@@ -25,6 +25,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import TeamMark from '@/components/team/TeamMark';
+import { pairHasHeadgear } from '@/lib/teams/headgear';
 import StandaloneTime from '@/components/StandaloneTime';
 import { getMlbGame, getMlbPlays } from '@/lib/mlb/gameDetail';
 import { outsToInnings } from '@/lib/mlb/playsImport';
@@ -43,7 +44,7 @@ export const dynamic = 'force-dynamic';
 
 const TABS = [['hitting', 'Hitting'], ['pitching', 'Pitching'], ['plays', 'Plays']];
 
-function TeamRow({ t, score, show, batting, signedIn = false, isShell = false, following = null }) {
+function TeamRow({ t, score, show, batting, signedIn = false, isShell = false, following = null, headgear = true }) {
   // THE STAR IS SIGNED-IN ONLY, and needs an id - the same two conditions
   // GameTeamRow applies on the football pages, for the same reasons: a game
   // header is not the place to offer a stranger an unfollowable follow, and a
@@ -52,7 +53,7 @@ function TeamRow({ t, score, show, batting, signedIn = false, isShell = false, f
   return (
     <div className="mg-team">
       <TeamMark primary={t?.colors?.primary} secondary={t?.colors?.secondary}
-        abbr={t?.abbreviation} size={26} title={t?.name} />
+        abbr={t?.abbreviation} size={26} title={t?.name} leagueSlug="mlb" headgear={headgear} />
       <span className="ab">{t?.abbreviation ?? ''}</span>
       <span className="nm">{t?.shortName ?? t?.name ?? 'TBD'}</span>
       {/* THE BATTING MARK IS THE POSSESSION DOT'S SIBLING, and deliberately the
@@ -109,6 +110,8 @@ export default async function MlbGamePage({ params, searchParams }) {
   const show = live || final;
   const half = String(g.liveState?.half ?? '');
   const batting = live ? (half === 'Top' ? 'away' : half === 'Bottom' ? 'home' : null) : null;
+  // BOTH OR NEITHER (lib/teams/headgear.js).
+  const headgear = pairHasHeadgear('mlb', g.away?.abbreviation, g.home?.abbreviation);
   const cells = live ? stripCells(g.liveState) : null;
   const { hitters, pitchers } = g.box;
   const rows = tab === 'pitching' ? pitchers : hitters;
@@ -151,9 +154,9 @@ export default async function MlbGamePage({ params, searchParams }) {
           </div>
           {/* AWAY FIRST. Baseball reads "Away at Home" like every American
               sport, which lib/gridiron/teamOrder.js already defaults to. */}
-          <TeamRow t={g.away} score={g.awayScore} show={show} batting={batting === 'away'}
+          <TeamRow t={g.away} score={g.awayScore} show={show} batting={batting === 'away'} headgear={headgear}
             signedIn={viewerId != null} isShell={isShell} following={followed.has(g.away?.id)} />
-          <TeamRow t={g.home} score={g.homeScore} show={show} batting={batting === 'home'}
+          <TeamRow t={g.home} score={g.homeScore} show={show} batting={batting === 'home'} headgear={headgear}
             signedIn={viewerId != null} isShell={isShell} following={followed.has(g.home?.id)} />
           <div className="mg-foot">
             <span>MLB · {g.seasonYear}</span>

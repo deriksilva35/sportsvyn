@@ -16,6 +16,7 @@
 import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import TeamMark from '@/components/team/TeamMark';
+import { pairHasHeadgear } from '@/lib/teams/headgear';
 import { getBracket, LEAGUES, LEAGUE_LABEL, TBD } from '@/lib/mlb/bracket';
 import { STAGES, STAGE_LABEL } from '@/lib/mlb/postseason';
 import './bracket.css';
@@ -28,7 +29,7 @@ export const metadata = {
 };
 
 /** One club's row inside a slot. */
-function Side({ t, live }) {
+function Side({ t, live, headgear = true }) {
   // THE PLACEHOLDER IS A SENTENCE, NOT A BLANK. "Winner 4/5" is true; an empty
   // row is just a gap the reader has to interpret.
   if (!t.teamId) {
@@ -42,7 +43,8 @@ function Side({ t, live }) {
   return (
     <div className={`bk-side${t.winner ? ' won' : ''}`}>
       <span className="bk-seed">{t.seed ?? ''}</span>
-      <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={t.abbreviation} size={20} title={t.name} />
+      <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={t.abbreviation} size={20} title={t.name}
+        leagueSlug="mlb" headgear={headgear} />
       <span className="bk-ab">{t.abbreviation}</span>
       <span className="bk-nm">{t.name}</span>
       {t.bye ? <span className="bk-bye">bye</span> : null}
@@ -64,7 +66,10 @@ function Slot({ s }) {
           : s.status === 'final' ? <span className="bk-rec">{s.record}</span>
             : s.status === 'scheduled' ? <span className="bk-rec quiet">0-0</span> : null}
       </div>
-      {s.teams.map((t, i) => <Side key={t.teamId ?? `p${i}`} t={t} live={live} />)}
+      {/* BOTH OR NEITHER: a slot with one cutout and one disc reads as a
+          favourite, and a slot still waiting on a winner has one of each. */}
+      {s.teams.map((t, i) => <Side key={t.teamId ?? `p${i}`} t={t} live={live}
+        headgear={s.teams.length === 2 && pairHasHeadgear('mlb', s.teams[0]?.abbreviation, s.teams[1]?.abbreviation)} />)}
       {next ? <div className="bk-foot">{next}</div> : null}
       {/* THE GAMES ARE LINKS, because the series card is the index of them and
           a reader who wants the box score should not have to find /scores. */}

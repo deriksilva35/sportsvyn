@@ -74,7 +74,7 @@ test('THE SIGNED-OUT LINK CARRIES THE SHELL MARKER (R4)', () => {
 test('THE GAME TEAM ROW IS EXTRACTED, and both pages route through it (R3)', () => {
   const row = strip(src('components/gridiron/GameTeamRow.js'));
   // Everything the two copies drew, in the order they drew it.
-  for (const part of ['<RankBadge rank={rank} size="big" />', '<Helmet', 'className="abbr"',
+  for (const part of ['<RankBadge rank={rank} size="big" />', '<TeamMark', 'className="abbr"',
     'className="tname"', 'className="gg-rec"', 'className="score"']) {
     assert.ok(row.includes(part), `the extracted row kept ${part}`);
   }
@@ -93,7 +93,7 @@ test('THE GAME TEAM ROW IS EXTRACTED, and both pages route through it (R3)', () 
     'and the NFL page passes none, because it has no poll');
   // The imports the pages no longer use went with the copies.
   for (const p of ['app/nfl/game/[slug]/page.js', 'app/cfb/game/[slug]/page.js']) {
-    assert.equal(/^import Helmet /m.test(src(p)), false, `${p} dropped the now-unused Helmet import`);
+    assert.equal(/^import (Helmet|TeamMark) /m.test(src(p)), false, `${p} draws no mark of its own - the row does`);
   }
 });
 

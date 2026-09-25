@@ -142,44 +142,62 @@ test('4. a pick tap neither reads nor writes the spread', async () => {
 });
 
 // ---------------------------------------------------------------------------
-// HELMETS (relay HELMETS item 5c/6). A dressed row draws one helmet per side,
-// facing each other across the "at"; an undressed row draws none - never a
-// grey one; and a side with a helmet in it still saves the pick on tap.
+// THE MARK (HEADGEAR-WEB). Each side draws the one TeamMark: headgear when
+// both sides have a cutout, else the two-tone disc when both are dressed, else
+// two neutral discs. BOTH OR NEITHER at every step - one coloured mark beside
+// one grey one reads as a favourite, which this board must never imply. This
+// is the site's one FACING pair, so the side drawn second (home) mirrors.
 // ---------------------------------------------------------------------------
 const dressed = () => ({
   ...game(), home_team_id: 2, away_team_id: 1,
   home_colors: { primary: '#002244', secondary: '#69BE28' }, away_colors: { primary: '#002244', secondary: '#C60C30' },
 });
+const marksOf = (c) => [...c.querySelectorAll('[data-teammark]')];
 
-test('THE MARK: a dressed row draws two coloured, an undressed row draws two neutral', () => {
-  // v2 replaces the board's helmets with the mock's two-colour disc. Helmet
-  // itself is untouched and still dresses the game page. What carries over is
-  // the RULE the helmets established: BOTH OR NEITHER. One coloured mark beside
-  // one grey one reads as a favourite, which this board must never imply.
+test('THE MARK: a dressed row draws two coloured discs, an undressed row two neutral ones', () => {
   const c = render('nfl', dressed());
-  const marks = [...c.querySelectorAll('.pkv-mk')];
+  const marks = marksOf(c);
   assert.equal(marks.length, 2);
-  assert.equal(marks.every((m) => /linear-gradient/.test(m.getAttribute('style') ?? '')), true, 'both dressed');
-  for (const s2 of sides(c)) assert.equal(s2.firstElementChild.classList.contains('pkv-mk'), true, 'the mark comes first');
+  assert.equal(marks.every((m) => m.getAttribute('data-teammark') === 'circle'), true, 'both dressed, no abbreviations -> two discs');
+  assert.equal(marks[0].querySelector('circle[fill]').getAttribute('fill'), '#002244');
+  for (const s2 of sides(c)) assert.ok(s2.firstElementChild.hasAttribute('data-teammark'), 'the mark comes first');
   const bare = render('nfl', { ...game(), home_colors: null, away_colors: null });
-  assert.equal([...bare.querySelectorAll('.pkv-mk')].every((m) => !m.getAttribute('style')), true, 'no colours, two neutral marks');
-  assert.equal(bare.querySelectorAll('.pkv-mk').length, 2, 'the slot is always there - the layout does not move');
+  assert.equal(marksOf(bare).every((m) => m.getAttribute('data-teammark') === 'abbr'), true, 'no colours, two neutral marks');
+  assert.equal(marksOf(bare).length, 2, 'the slot is always there - the layout does not move');
+  assert.equal(c.querySelectorAll('.pkv-mk').length, 0, 'the hand-rolled CSS disc is gone');
 });
 
-test('THE MARK: BOTH OR NEITHER - an FCS-at-FBS row draws neither side coloured', () => {
+test('THE MARK: BOTH OR NEITHER on colour - an FCS-at-FBS row draws neither side coloured', () => {
   const famuAtMiami = { ...game(), slug: 'cfb-2026-reg-w2-florida-a-m-miami', home: 'Miami', away: 'Florida A&M', home_team_id: 2, away_team_id: 1,
     home_colors: { primary: '#F47321', secondary: '#005030' }, away_colors: null };
   const c1 = render('cfb', famuAtMiami);
-  assert.equal([...c1.querySelectorAll('.pkv-mk')].some((m) => m.getAttribute('style')), false,
+  assert.equal(marksOf(c1).some((m) => m.getAttribute('data-teammark') === 'circle'), false,
     'Miami is dressed and Florida A&M is not, so neither is coloured');
   const c2 = render('cfb', { ...famuAtMiami, away: 'Notre Dame', away_colors: { primary: '#0C2340', secondary: '#C99700' } });
-  assert.equal([...c2.querySelectorAll('.pkv-mk')].every((m) => /linear-gradient/.test(m.getAttribute('style') ?? '')), true, 'both dressed: both coloured');
+  assert.equal(marksOf(c2).every((m) => m.getAttribute('data-teammark') === 'circle'), true, 'both dressed: both coloured');
+});
+
+test('THE MARK: headgear on both sides, the home side mirrored to face the away side', () => {
+  const c = render('nfl', { ...dressed(), away_abbr: 'NE', home_abbr: 'SEA' });
+  const [away, home] = marksOf(c);
+  assert.equal(away.getAttribute('data-teammark'), 'headgear'); assert.equal(home.getAttribute('data-teammark'), 'headgear');
+  assert.equal(away.getAttribute('src'), '/headgear/nfl/NE@1x.webp'); assert.equal(home.getAttribute('src'), '/headgear/nfl/SEA@1x.webp');
+  assert.equal(away.getAttribute('data-facing'), 'right'); assert.doesNotMatch(away.getAttribute('style') ?? '', /scaleX/);
+  assert.equal(home.getAttribute('data-facing'), 'left'); assert.match(home.getAttribute('style') ?? '', /transform:\s*scaleX\(-1\)/);
+  assert.equal(away.getAttribute('width'), '26', 'the same 26 px box the disc had');
+});
+
+test('THE MARK: BOTH OR NEITHER on headgear - one side without a cutout, both draw the disc', () => {
+  const c = render('nfl', { ...dressed(), away_abbr: 'NE', home_abbr: 'XXX' });
+  assert.equal(marksOf(c).every((m) => m.getAttribute('data-teammark') === 'circle'), true, 'NE has a cutout, XXX does not: two discs');
+  const cfb = render('cfb', { ...dressed(), away_abbr: 'ATL', home_abbr: 'PIT' });
+  assert.equal(marksOf(cfb).some((m) => m.getAttribute('data-teammark') === 'headgear'), false, 'cfb has no headgear, whatever the letters');
 });
 
 test('THE MARK: tapping the mark still saves the pick', async () => {
   const { calls } = await stub(); const n = calls.length;
-  const c = render('nfl', dressed());
-  await click(byName(c, 'Seahawks').querySelector('.pkv-mk'));
+  const c = render('nfl', { ...dressed(), away_abbr: 'NE', home_abbr: 'SEA' });
+  await click(byName(c, 'Seahawks').querySelector('[data-teammark]'));
   assert.equal(calls.length, n + 1, 'one save');
   assert.match(JSON.stringify(calls[n]), /"home"/, 'the home side');
   assert.match(JSON.stringify(calls[n]), /20749/, 'this game');

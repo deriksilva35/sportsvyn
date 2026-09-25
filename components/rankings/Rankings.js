@@ -75,7 +75,7 @@ function TeamsNfl({ v }) {
           {t.power.map((r) => (
             // THE KEY IS THE TEAM, NOT THE RANK. Ties share a rank now, so
             // two rows can carry the same number and a rank key would collide.
-            <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r}
+            <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r} leagueSlug={v.league}
               followed={v.followed.has(r.teamId)} value={r.score}
               right={<Movement previousRank={r.previousRank} movement={r.rankMovement} />}
               expand={<RowInputs inputs={r.inputs} />} />
@@ -86,7 +86,7 @@ function TeamsNfl({ v }) {
         <Module section="group" title={t.division.group} sub={v.signedIn ? 'your division' : null}
           href={`/${v.league}/standings`} cta="Full standings →">
           {t.division.rows.map((r, i) => (
-            <RankRow key={r.teamId} rank={i + 1} name={r.name} team={r}
+            <RankRow key={r.teamId} rank={i + 1} name={r.name} team={r} leagueSlug={v.league}
               followed={v.followed.has(r.teamId)} value={rec(r)} />
           ))}
         </Module>
@@ -115,7 +115,7 @@ function TeamsCfb({ v }) {
         <Module section="ours" title="SPORTSVYN POWER" sub="computed"
           note={t.modelCase ? `The model's case: ${t.modelCase.name} · Elo ${Math.round(t.modelCase.elo)}` : null}>
           {t.ours.map((r) => (
-            <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r}
+            <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r} leagueSlug={v.league}
               followed={v.followed.has(r.teamId)} sub={r.vsAp?.text ?? null} value={r.score}
               right={<Movement previousRank={r.previousRank} movement={r.rankMovement} />}
               expand={<RowInputs inputs={r.inputs} />} />
@@ -127,7 +127,7 @@ function TeamsCfb({ v }) {
           href="/rankings/teams?league=cfb" cta="All 138 →">
           <div className="rk-cols"><span>CONF</span><span>OVR</span></div>
           {t.conference.rows.slice(0, 6).map((r, i) => (
-            <RankRow key={r.teamId} rank={i + 1} name={r.name} team={r}
+            <RankRow key={r.teamId} rank={i + 1} name={r.name} team={r} leagueSlug={v.league}
               followed={v.followed.has(r.teamId)} second={r.conf ?? '–'} value={rec(r)} />
           ))}
         </Module>

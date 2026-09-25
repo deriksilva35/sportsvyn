@@ -47,6 +47,7 @@ import { auth } from '@/auth';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import { possessionSide } from '@/lib/gridiron/possession';
 import GameTeamRow from '@/components/gridiron/GameTeamRow';
+import { pairHasHeadgear } from '@/lib/teams/headgear';
 import { getFollowedTeamIds } from '@/lib/follows';
 import { resolveShellMode } from '@/lib/shell/shell';
 import { parseGameTab } from '@/lib/gridiron/gameTabsNav';
@@ -171,6 +172,7 @@ export default async function CfbGamePage({ params, searchParams }) {
   // reason: a simulated ?asOf= cut must not be read against the clock as it
   // stands now. The strip beneath keeps the down, the distance and the spot;
   // it no longer says whose ball it is, because this says it.
+  const pairHeadgear = pairHasHeadgear(game.leagueSlug, game.away?.abbreviation, game.home?.abbreviation);
   const ballSide = possessionSide({
     leagueSlug: game.leagueSlug, status: sim.simulated ? 'live' : game.status,
     possession: currentDrive?.offenseAbbr ?? null,
@@ -290,11 +292,14 @@ export default async function CfbGamePage({ params, searchParams }) {
           </div>
 
           {/* League order, one rule: lib/gridiron/teamOrder.js. */}
+          {/* BOTH OR NEITHER (lib/teams/headgear.js): a header with one cutout
+              and one disc would read as a favourite. */}
           {orderFor(game.leagueSlug).map((side) => {
             const t = side === 'home' ? game.home : game.away;
             return (
               <GameTeamRow
                 key={side} record={side === 'home' ? homeRecord : awayRecord} t={t}
+                leagueSlug={game.leagueSlug} headgear={pairHeadgear}
                 score={side === 'home' ? game.homeScore : game.awayScore}
                 loser={winner === (side === 'home' ? 'away' : 'home')} show={final || live}
                 hasBall={ballSide === side}
