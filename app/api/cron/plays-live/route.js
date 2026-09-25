@@ -112,7 +112,7 @@ export async function GET(request) {
       }
       // CALLS PER CYCLE, so a Saturday's real burn can be summed from the
       // ledger and set against the estimate: one CFBD /live/plays per CFB game
-      // started, one BDL request (two past 100 plays) per NFL game.
+      // started, and one NFL provider request (two past 100 plays) per NFL game.
       const cfbdCalls = started.filter((g) => g.league === 'cfb').length;
       const nflGames = started.filter((g) => g.league === 'nfl').length;
       const skipped = due.length - started.length;
