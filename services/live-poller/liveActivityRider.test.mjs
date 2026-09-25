@@ -21,7 +21,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { pollOnce, LA_COALESCE_MS, recordLaPushes, laPushesPerHour, _resetLaCadence } from './poll.mjs';
-import { stateFromMatch } from '../../lib/push/liveActivityState.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, '..', '..');
@@ -46,6 +45,10 @@ const PID = `${NS}-pid`;
 const ACT = `${NS}-a1`;
 const TOKEN = 'd'.repeat(160);
 let matchId; let leagueId; let homeId; let awayId;
+// THE MLB SENTINEL - its own match and Activity, same namespace, same teardown.
+const MLB_PID = `${NS}-mlb-pid`;
+const MLB_ACT = `${NS}-mlb-a1`;
+let mlbMatchId;
 
 /** A provider payload for the sentinel game, in the one shape normalise reads. */
 const feed = (status, homeScore, awayScore, period, clock) => async () => ({
@@ -85,6 +88,19 @@ before(async () => {
   await sql`
     INSERT INTO live_activities (activity_id, push_token, user_id, match_id, started_at)
     VALUES (${ACT}, ${TOKEN}, NULL, ${matchId}, now())`;
+
+  const [mlb] = await sql`SELECT id FROM leagues WHERE slug = 'mlb'`;
+  const mt = await sql`SELECT id FROM teams WHERE league_id = ${mlb.id} ORDER BY id LIMIT 2`;
+  const [mm] = await sql`
+    INSERT INTO matches (league_id, slug, status, home_team_id, away_team_id, kickoff_at,
+                         home_score, away_score, external_ids)
+    VALUES (${mlb.id}, ${`${NS}-mlb`}, 'live', ${mt[0].id}, ${mt[1].id}, now(), 3, 3,
+            ${JSON.stringify({ bdl_game_id: MLB_PID })}::jsonb)
+    RETURNING id`;
+  mlbMatchId = mm.id;
+  await sql`
+    INSERT INTO live_activities (activity_id, push_token, user_id, match_id, started_at)
+    VALUES (${MLB_ACT}, ${TOKEN}, NULL, ${mlbMatchId}, now())`;
 });
 
 after(async () => {
@@ -103,6 +119,7 @@ after(async () => {
   // THE WIRE ROWS TOO. A score change emits a headline, and a sentinel game
   // leaking onto the wire is exactly the residue this teardown exists for.
   await sql`DELETE FROM news_items WHERE payload->>'matchId' = ${String(matchId)}
+               OR payload->>'matchId' = ${String(mlbMatchId ?? -1)}
                OR headline LIKE ${`%${NS}%`}`;
   await sql`DELETE FROM matches WHERE slug LIKE ${`${NS}%`}`;
   await sql`DELETE FROM matches WHERE slug LIKE 'sentinel-la-rider-%'
@@ -146,11 +163,14 @@ test('A QUARTER CHANGE PUSHES THE NEW QUARTER, not the one the game left', async
   assert.equal(out.liveActivities[0].event, 'update');
   const [row] = await sql`SELECT metadata->'live_state'->>'period' AS period FROM matches WHERE id = ${matchId}`;
   assert.equal(row.period, '3', 'and the row the state is built from holds the NEW period');
-  // What the card would carry, built the way the rider builds it.
-  assert.equal(stateFromMatch({
-    away: { abbreviation: 'X' }, home: { abbreviation: 'Y' },
-    awayScore: 7, homeScore: 10, liveState: { period: 3, clock: '14:52' },
-  }).period, 'Q3');
+  // WHAT THE CARD CARRIES - the rider's own state, the object it handed to
+  // the sender. This used to be a stateFromMatch call built here by hand,
+  // which proved the builder and nothing about the caller.
+  const st = out.liveActivities[0].state;
+  assert.equal(st.period, 'Q3');
+  assert.equal(st.clock, '14:52');
+  assert.equal(st.homeScore, 10);
+  assert.equal(st.awayScore, 7);
 });
 
 test('A POLL THAT CHANGES NOTHING PUSHES NOTHING', async () => {
@@ -383,4 +403,50 @@ test('THE LEDGER COUNTS WHAT WAS SENT, not what was attempted', () => {
   // failed or skipped push must never inflate a card's hourly count.
   assert.deepEqual(recordLaPushes([], t), {}, 'a dark or failed push records nothing');
   assert.deepEqual(laPushesPerHour(t), {});
+});
+
+// ---------------------------------------------------------------------------
+// THE MLB CARD, THROUGH THE RIDER (LIVE CARD LINE FIXES relay)
+// ---------------------------------------------------------------------------
+//
+// STANDING LAW: a sport-aware function proves nothing until the caller that
+// reaches the phone is tested. stateFromMatch had a baseball branch and its own
+// tests on 24 Sep; the rider called it with no league and every MLB update went
+// out as "Q3" with no situation. This polls a live MLB fixture through the real
+// pollOnce and asserts the state the rider handed to the sender.
+
+test('THE MLB RIDER PUSHES A BASEBALL CARD: "Bot 3rd", the batting side, a situation', async () => {
+  const mlbFeed = async () => ({
+    rows: [{ id: MLB_PID, status: 'live', homeScore: 4, awayScore: 3 }],
+    calls: 1,
+  });
+  // The live_state the MLB normaliser writes on PROD (match 40191, 24 Sep).
+  const mlbNormalise = (row) => ({
+    providerId: String(row.id), status: row.status, homeScore: row.homeScore, awayScore: row.awayScore,
+    liveState: { period: 3, half: 'Bottom', outs: 2, balls: 0, strikes: 1,
+      bases: { first: false, second: false, third: false }, batter: 'Donovan Walton', pitcher: 'Peter Lambert' },
+  });
+  const out = await pollOnce(sql, {
+    league: 'mlb', providerKey: 'bdl_game_id', fetcher: mlbFeed, normalise: mlbNormalise, now: new Date(), push: true,
+  });
+  const la = out.liveActivities.find((x) => x.matchId === mlbMatchId);
+  assert.ok(la, 'the rider pushed the MLB card');
+  const st = la.state;
+  assert.equal(st.period, 'Bot 3rd', 'the half and the inning, never a quarter');
+  assert.doesNotMatch(st.period, /^Q\d|^OT|^HT/);
+  assert.equal(st.clock, '', 'baseball has no clock');
+  const [home] = await sql`SELECT t.abbreviation FROM matches m JOIN teams t ON t.id = m.home_team_id WHERE m.id = ${mlbMatchId}`;
+  assert.ok(home.abbreviation, 'the fixture club carries an abbreviation');
+  assert.equal(st.possession, home.abbreviation, 'the bottom half: the home side is batting');
+  assert.ok(st.situation, 'the situation is not empty');
+  assert.equal(st.situation, '2 out · 0-1 · bases empty');
+  assert.equal(st.homeScore, 4);
+  assert.equal(st.awayScore, 3);
+});
+
+test('THE RIDER NAMES THE LEAGUE - a source guard beside the composition test', () => {
+  const src = readFileSync(path.join(REPO, 'services/live-poller/poll.mjs'), 'utf8');
+  const call = src.slice(src.indexOf('laState = stateFromMatch({'), src.indexOf('}, line);', src.indexOf('laState = stateFromMatch({')));
+  assert.match(call, /leagueSlug: m\.league_slug/);
+  assert.match(call, /scoringPlays:/);
 });

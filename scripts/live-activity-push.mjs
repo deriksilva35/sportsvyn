@@ -62,8 +62,11 @@ const [match] = await sql`
   -- the next person making.
   SELECT m.id, m.slug, m.status, m.home_score, m.away_score,
          m.metadata->'live_state' AS live_state,
+         m.metadata->'scoring_plays' AS scoring_plays,
+         l.slug AS league_slug,
          h.abbreviation AS home_abbr, a.abbreviation AS away_abbr
     FROM matches m
+    JOIN leagues l ON l.id = m.league_id
     JOIN teams h ON h.id = m.home_team_id
     JOIN teams a ON a.id = m.away_team_id
    WHERE m.id = ${matchId}`;
@@ -78,6 +81,9 @@ const [awayOverride, homeOverride] = scoreArg ? scoreArg.split('-').map((s) => N
 // fields mean. It speaks getGamePage()'s shape, so the flat SQL row is aliased
 // into that shape here rather than the six being assembled a second way.
 const base = stateFromMatch({
+  // THE LEAGUE, off the league row - stateFromMatch refuses to guess it.
+  leagueSlug: match.league_slug,
+  scoringPlays: Array.isArray(match.scoring_plays) ? match.scoring_plays : [],
   away: { abbreviation: match.away_abbr },
   home: { abbreviation: match.home_abbr },
   awayScore: match.away_score,

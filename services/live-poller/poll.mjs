@@ -896,6 +896,12 @@ export async function pollOnce(sql, {
       if (laListeners > 0) {
         const line = await laLineFor(sql, m).catch(() => ({ possession: '', situation: '', lastPlay: '' }));
         laState = stateFromMatch({
+          // THE SPORT, off the league row. Without it stateFromMatch took the
+          // football branch for every MLB card update: "Q3", no situation, on
+          // 24 Sep - while laLineFor above had already branched on the league
+          // correctly. scoringPlays is baseballLine's last-play fallback.
+          leagueSlug: m.league_slug,
+          scoringPlays: Array.isArray(m.scoring_plays) ? m.scoring_plays : [],
           // ALL THREE SOURCES, because the candidate row has all three and
           // abbrOf resolves in order. Passing the abbreviation alone made the
           // card disagree with the same game's Scores row.
@@ -978,7 +984,12 @@ export async function pollOnce(sql, {
             // were actually SENT, so a failed push is not counted as one the
             // card received.
             r.perHour = recordLaPushes(r.sentIds, new Date(now).getTime());
-            out.liveActivities.push(r);
+            // THE STATE IT PUSHED RIDES THE RECORD - the exact object handed to
+            // pushLiveActivities above - so a test asserts the card a phone
+            // receives, not a stateFromMatch call it built for itself (that
+            // is how every MLB update went out as football on 24 Sep with a
+            // green suite).
+            out.liveActivities.push({ ...r, state: laState });
           }
         } catch (e) {
           out.pushErrors.push(`liveActivity: ${String(e?.message ?? e).slice(0, 100)}`);
