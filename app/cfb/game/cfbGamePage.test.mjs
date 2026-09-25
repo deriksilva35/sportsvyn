@@ -87,7 +87,7 @@ test('the DRIVES section always renders - empty state, not a missing section', (
   );
   assert.match(sect, /sim\.plays\.length \? \(/, 'the CONTENT switches, not the section');
   assert.match(sect, /Drive chart appears once the game kicks off\./);
-  assert.match(sect, /Play data pending/);
+  assert.match(sect, /Drives and scoring appear as plays arrive\./, 'live: the one muted line (live-fallback)');
   assert.match(sect, /No play-by-play stored for this game\./);
 });
 

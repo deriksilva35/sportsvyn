@@ -368,6 +368,12 @@ export default async function GamePage({ params, searchParams }) {
               boxscore: game.boxScore?.length ? <BoxScore boxScore={game.boxScore} teams={teams} leagueSlug={game.leagueSlug} /> : null,
             }}
           />
+        ) : live ? (
+          // LIVE WITH NOTHING BEHIND A TAB YET: the plays poller has not written
+          // this game's first plays (it polls every other minute, and a feed's
+          // first minutes are often empty). Pre-game copy on a live page reads
+          // as a page that has not noticed the game started.
+          <p className="gg-note gg-note-live" data-fallback="live">Drives and scoring appear as plays arrive.</p>
         ) : (
           <PreGameFacts game={game} />
         )}

@@ -249,7 +249,7 @@ export default async function CfbGamePage({ params, searchParams }) {
       ) : (
         <div className="ds-empty">
           {live
-            ? 'Play data pending - the score and clock above are live.'
+            ? 'Drives and scoring appear as plays arrive.'
             : final
               ? 'No play-by-play stored for this game.'
               : 'Drive chart appears once the game kicks off.'}
@@ -411,7 +411,7 @@ export default async function CfbGamePage({ params, searchParams }) {
           />
         ) : drivesNode}
 
-        <GameFacts game={game} final={final} />
+        <GameFacts game={game} final={final} live={live} />
 
         <footer className="gg-foot">
           SPORTSVYN IS NOT AFFILIATED WITH, ENDORSED BY, OR SPONSORED BY THE NCAA,
@@ -434,16 +434,16 @@ export default async function CfbGamePage({ params, searchParams }) {
 // badge, and the badge renders null on a null rank, so the extract needed no
 // league branch.
 
-function GameFacts({ game, final }) {
+function GameFacts({ game, final, live = false }) {
   const place = [game.venue, game.venueCity].filter(Boolean).join(', ');
   const round = distinctLabel(game.weekLabel);
   if (!game.kickoffAt && !place && !round) return null;
-  // "KICKOFF" is a promise about the future. On a game already played it reads
-  // as a mistake, so the heading follows the game's state while the facts
+  // "KICKOFF" is a promise about the future. On a game under way or already
+  // played it reads as a mistake, so the heading follows the game's state while the facts
   // beneath it - when, where, which round - stay worth showing either way.
   return (
     <section className="gg-sect" aria-label="Game details">
-      <div className="gg-kick"><h2>{final ? 'DETAILS' : 'KICKOFF'}</h2><div className="rule" /></div>
+      <div className="gg-kick"><h2>{final || live ? 'DETAILS' : 'KICKOFF'}</h2><div className="rule" /></div>
       <dl className="gg-facts">
         {game.kickoffAt ? <div><dt>When</dt><dd>{fmtKick(game.kickoffAt)} ET</dd></div> : null}
         {place ? <div><dt>Where</dt><dd>{place}</dd></div> : null}
