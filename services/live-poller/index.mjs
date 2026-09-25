@@ -21,7 +21,7 @@ import { syncMlbGameStats } from '../../lib/mlb/statsSync.js';
 import { syncMlbPlays } from '../../lib/mlb/playsSync.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
-import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich } from './poll.mjs';
+import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff } from './poll.mjs';
 import { sportOf } from '../../lib/live/vocabulary.js';
 import { dispatch } from '../../lib/push/dispatch.js';
 import { drainPushCounts } from '../../lib/push/warn.js';
@@ -106,7 +106,10 @@ const LEAGUES = [
     // lib/mlb/detail.js - a separate statement over separate keys. Without
     // this the game page has no line score and the card no last scoring play,
     // on every game, forever.
-    detail: mlbDetail },
+    detail: mlbDetail,
+    // AND THE FIRST PITCH IS THE PROVIDER'S. A game moved on the day is
+    // corrected on the next poll rather than on the next schedule re-sync.
+    kickoffOf: mlbKickoff },
 ];
 
 async function slate(league, now) {
@@ -214,6 +217,12 @@ async function loop(lg) {
           league: lg.slug, providerKey: lg.providerKey,
           fetcher: () => lg.fetcher(now), normalise: lg.normalise,
           enrich: lg.enrich ?? null, enrichScheduled: lg.enrichScheduled === true,
+          // THE REGISTRY'S detail AND kickoffOf REACH pollOnce. detail was
+          // declared on MLB's entry from 22 Sep and never passed here, so the
+          // line score and scoring summary filled only when somebody re-ran
+          // the schedule import by hand: 0 of 17 finals on 24-25 Sep had a
+          // grid. cronWiring-style source test: services/live-poller/mlbBdl.test.mjs.
+          detail: lg.detail ?? null, kickoffOf: lg.kickoffOf ?? null,
           futureMinutes: lg.futureMinutes ?? 30, now, log,
         });
         // THE LOST-FINAL SWEEP rides the same tick and the same window

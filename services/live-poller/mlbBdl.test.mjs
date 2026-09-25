@@ -30,12 +30,15 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 for (const k of ['PUSH_ENABLED', 'APNS_KEY', 'APNS_KEY_PATH', 'APNS_KEY_ID', 'APNS_TEAM_ID']) delete process.env[k];
 
 const { sql } = await import('../../lib/db.js');
-const { pollOnce, fromMlb, mlbEnrich, mlbDetail, _resetMlbProbablesCache } = await import('./poll.mjs');
+const { pollOnce, fromMlb, mlbEnrich, mlbDetail, mlbKickoff, _resetMlbProbablesCache } = await import('./poll.mjs');
 const { _resetNameCache } = await import('../../lib/mlb/bdlLive.js');
 
 const NS = `sentinel-mlb-bdl-${process.pid}-${Date.now()}`;
 const PID = { live: `${NS}-live`, pre: `${NS}-pre` };
 const ids = {}; let away; let home;
+const KICK = { live: new Date(Date.now() - 2 * 3600e3), pre: new Date(Date.now() + 2 * 3600e3) };
+// BDL MOVED THE LIVE GAME'S FIRST PITCH 40 MINUTES EARLIER, the way CHC @ BOS moved on 25 Sep.
+const MOVED = new Date(KICK.live.getTime() - 40 * 60e3);
 const realFetch = globalThis.fetch; const seen = [];
 
 const inning = (n, runs) => Array.from({ length: n }, (_, i) => (i === 0 ? runs : 0));
@@ -54,8 +57,8 @@ before(async () => {
     INSERT INTO matches (league_id, slug, status, home_team_id, away_team_id, kickoff_at, home_score, away_score, season_year, season_phase, external_ids, metadata)
     VALUES (${lg.id}, ${`${NS}-${tag}`}, ${status}, ${home.id}, ${away.id}, ${kick.toISOString()}, ${status === 'live' ? 4 : null}, ${status === 'live' ? 3 : null},
             2026, 'REG', ${JSON.stringify({ bdl_game_id: PID[tag] })}::jsonb, '{}'::jsonb) RETURNING id`)[0].id;
-  ids.live = await mk('live', 'live', new Date(Date.now() - 2 * 3600e3));
-  ids.pre = await mk('pre', 'scheduled', new Date(Date.now() + 2 * 3600e3));
+  ids.live = await mk('live', 'live', KICK.live);
+  ids.pre = await mk('pre', 'scheduled', KICK.pre);
 
   globalThis.fetch = async (url, opts) => {
     const u = String(url?.url ?? url);
@@ -89,8 +92,8 @@ after(async () => {
 
 const poll = () => pollOnce(sql, {
   league: 'mlb', providerKey: 'bdl_game_id', normalise: fromMlb, enrich: mlbEnrich, enrichScheduled: true,
-  futureMinutes: 240, detail: mlbDetail, push: false, now: new Date(),
-  fetcher: async () => ({ rows: [gameRow(PID.live, 'in_progress'), gameRow(PID.pre, 'scheduled')], calls: 1 }),
+  futureMinutes: 240, detail: mlbDetail, kickoffOf: mlbKickoff, push: false, now: new Date(),
+  fetcher: async () => ({ rows: [gameRow(PID.live, 'in_progress', { date: MOVED.toISOString() }), gameRow(PID.pre, 'scheduled', { date: KICK.pre.toISOString() })], calls: 1 }),
 });
 
 test('THE CUTOVER, through the real poller: live state and the pre-game card from BDL, statsapi never called', async () => {
@@ -109,4 +112,27 @@ test('THE CUTOVER, through the real poller: live state and the pre-game card fro
   assert.deepEqual(pre.l.home, [{ id: '3', name: 'Home Leadoff', position: 'SS', order: 1 }]);
   assert.equal(pre.l.away, null, 'an unposted side is null');
   assert.ok(pre.l.fetchedAt, 'the read is stamped, so lineupDue throttles');
+});
+
+test('THE FIRST PITCH IS THE PROVIDER\'S: a game moved on the day is corrected on the next poll, an unmoved one is not written', async () => {
+  const [live] = await sql`SELECT kickoff_at FROM matches WHERE id = ${ids.live}`;
+  assert.equal(new Date(live.kickoff_at).toISOString(), MOVED.toISOString());
+  const [pre] = await sql`SELECT kickoff_at FROM matches WHERE id = ${ids.pre}`;
+  assert.equal(new Date(pre.kickoff_at).toISOString(), KICK.pre.toISOString());
+});
+
+test('THE LINE SCORE LANDS: the detail hook runs inside the poll, and a second poll with nothing new writes nothing', async () => {
+  const [a] = await sql`SELECT metadata->'line_score' AS ls, updated_at FROM matches WHERE id = ${ids.live}`;
+  assert.equal(a.ls?.home?.runs, 4, 'the grid carries the runs from the /games row');
+  const r = await poll();
+  assert.equal(r.detail, 0, 'no line score write when the line score has not moved');
+});
+
+test('THE POLLER PASSES THE REGISTRY\'S detail AND kickoffOf TO pollOnce (declared from 22 Sep, never passed until 25 Sep)', () => {
+  const src = readFileSync(path.join(REPO, 'services/live-poller/index.mjs'), 'utf8');
+  const call = src.slice(src.indexOf('await pollOnce(sql, {'), src.indexOf('});', src.indexOf('await pollOnce(sql, {')));
+  assert.match(call, /detail: lg\.detail \?\? null/);
+  assert.match(call, /kickoffOf: lg\.kickoffOf \?\? null/);
+  assert.match(src, /kickoffOf: mlbKickoff/);
+  assert.match(src, /detail: mlbDetail/);
 });

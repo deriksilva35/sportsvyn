@@ -228,6 +228,20 @@ export function mlbDetail(row) {
   return mlbDetailOf(row);
 }
 
+/** THE MLB LEAGUE'S `kickoffOf` HOOK: BDL's own first pitch, already UTC. */
+export function mlbKickoff(row) {
+  return row?.date ?? null;
+}
+
+/** kickoff_at, only when it differs. True when a row was written. */
+export async function writeKickoff(sql, matchId, iso) {
+  const r = await sql`
+    UPDATE matches SET kickoff_at = ${iso}::timestamptz, updated_at = now()
+     WHERE id = ${matchId} AND kickoff_at IS DISTINCT FROM ${iso}::timestamptz
+    RETURNING id`;
+  return r.length > 0;
+}
+
 /**
  * THE PROBABLE STARTERS FROM BDL's /mlb/v1/lineups (lib/mlb/probables.js),
  * one call per game per ten minutes and only before first pitch - once a game
@@ -488,7 +502,7 @@ export async function sweepLostFinals(sql, { league, now = new Date(), dispatchF
 
 export async function pollOnce(sql, {
   league, providerKey, fetcher, normalise, enrich = null, detail = null,
-  enrichScheduled = false, futureMinutes = 30,
+  enrichScheduled = false, futureMinutes = 30, kickoffOf = null,
   now = new Date(), dryRun = false, push = true, log = () => {},
 }) {
   const out = {
@@ -565,6 +579,24 @@ export async function pollOnce(sql, {
     const row = m.pid == null ? null : byId.get(String(m.pid));
     if (!row) { out.unmatched += 1; continue; }
     out.matched += 1;
+    // THE PROVIDER'S FIRST PITCH, where the league supplies one (MLB). A game
+    // moved on the day - CHC @ BOS on 25 Sep, 23:10Z to 21:30Z - is otherwise
+    // wrong on every card until the next schedule re-sync. Only a row the
+    // poller already holds as near can be corrected here; a game moved across
+    // days is lib/mlb/resync.js's to find.
+    if (kickoffOf && !dryRun) {
+      try {
+        const k = kickoffOf(row);
+        const t = k == null ? NaN : Date.parse(k);
+        if (Number.isFinite(t) && t !== new Date(m.kickoff_at).getTime()) {
+          if (await writeKickoff(sql, m.id, new Date(t).toISOString())) {
+            log(`[${league}] kickoff moved match=${m.id} ${new Date(m.kickoff_at).toISOString()} -> ${new Date(t).toISOString()}`);
+            m.kickoff_at = new Date(t);
+            out.kickoffs = (out.kickoffs ?? 0) + 1;
+          }
+        }
+      } catch (e) { log(`[${league}] kickoff write failed match=${m.id}: ${e.message}`); }
+    }
     // THE ENRICHMENT IS PER LEAGUE AND PER LIVE GAME, and it is awaited only
     // for a row the provider already calls live. A league without one - both
     // football leagues - never enters this branch and its loop is unchanged.
