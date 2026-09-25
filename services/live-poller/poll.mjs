@@ -15,9 +15,9 @@ import { fetchScheduleByMatch, fetchGameFeed, pickByKickoff, matchKey, statsApiE
 import { emit } from '../../lib/wire/emit.js';
 import { transitionsFor } from '../../lib/push/transitions.js';
 import { dispatch } from '../../lib/push/dispatch.js';
-import { scoreKindLabel } from '../../lib/push/payload.js';
-import { onScore, onTick, flush as flushFold, FOLD_WINDOW_MS } from '../../lib/push/scoreFold.js';
-import { scoringPlayFor } from '../../lib/push/scoringPlayRead.js';
+import { composeScorePush } from '../../lib/push/scoreCompose.js';
+import { onTick, flush as flushFold, FOLD_WINDOW_MS } from '../../lib/push/scoreFold.js';
+import { scoringPlayFor, baseballScoringText } from '../../lib/push/scoringPlayRead.js';
 import { activityEventFor, pushLiveActivities } from '../../lib/push/liveActivityStore.js';
 import { stateFromMatch, liveLine } from '../../lib/push/liveActivityState.js';
 import { playsFor } from '../../lib/gridiron/playsImport.js';
@@ -826,30 +826,29 @@ export async function pollOnce(sql, {
 
           const key = `${m.id}:${team}`;
           const teamAbbr = team === 'home' ? m.home_abbr : m.away_abbr;
+          // THE LEAGUE'S SPORT REACHES THE FOLD AND THE LABEL, through the one
+          // composition lib/push/scoreCompose.js tests. Without it both
+          // defaulted to football: "TB 3, NYY 0 · TB extra point" at 17:24 PT
+          // on 24 Sep. A baseball score is never held.
+          //
           // THE ENRICHMENT, NEVER THE DEPENDENCY. A null here - the play row
-          // has not landed, or the lookup threw - costs the scorer's name and
-          // nothing else.
-          const play = await scoringPlayFor(sql, m.id, { homeScore: after.home_score, awayScore: after.away_score });
-          const { pending: nextPending, emit } = onScore(
-            pendingScore.get(key) ?? null,
-            { delta, state: t.state, play, now: Date.now() },
-          );
+          // has not landed, or the lookup threw - costs the scorer's name (or
+          // baseball's "homers") and nothing else.
+          const baseball = sportOfLeague(m.league_slug) === BASEBALL;
+          const observed = { homeScore: after.home_score, awayScore: after.away_score };
+          const play = baseball ? null : await scoringPlayFor(sql, m.id, observed);
+          const scoringPlay = baseball ? await baseballScoringText(sql, m.id, observed) : null;
+          const { pending: nextPending, sends } = composeScorePush(pendingScore.get(key) ?? null, {
+            delta, teamAbbr, leagueSlug: m.league_slug, state: t.state,
+            play, scoringPlay, priorKind: lastScoreKind.get(key) ?? null, now: Date.now(),
+          });
           // THE MATCH RIDES THE HOLD. The timeout sweep below runs outside
           // this loop and has no other way back to the row it must send about.
           if (nextPending) pendingScore.set(key, { ...nextPending, match, teamAbbr });
           else pendingScore.delete(key);
-          for (const e of emit) {
-            // .endsWith, not ===, because the stored value is the full
-            // "TEAM touchdown" prefix, not the bare kind word.
-            const priorWasTouchdown = Boolean(lastScoreKind.get(key)?.endsWith('touchdown'));
-            // THE PLAY WINS WHERE IT SPOKE; the delta keeps the floor. The
-            // fallback is only ever reached when no play row named the kind,
-            // which is also the only path that leaves e.folded false.
-            const scoreKind = e.kind
-              ? `${teamAbbr} ${e.kind}`
-              : scoreKindLabel(delta, { priorWasTouchdown, teamAbbr });
-            if (scoreKind) lastScoreKind.set(key, scoreKind);
-            await sendOne('score', { ...e.state, scoreKind, scorer: e.scorer ?? null, credit: e.credit ?? null });
+          for (const st of sends) {
+            if (st.scoreKind) lastScoreKind.set(key, st.scoreKind);
+            await sendOne('score', st);
           }
         } catch (e) { out.pushErrors.push(String(e?.message ?? e).slice(0, 120)); }
       }
