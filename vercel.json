@@ -46,6 +46,10 @@
       "schedule": "0 8 * * *"
     },
     {
+      "path": "/api/cron/mlb-schedule",
+      "schedule": "50 * * * *"
+    },
+    {
       "path": "/api/cron/gridiron-games",
       "schedule": "*/5 * * * *"
     },
