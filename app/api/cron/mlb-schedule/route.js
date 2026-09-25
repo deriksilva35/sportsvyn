@@ -49,7 +49,7 @@ export async function GET(request) {
   }
   const res = outcome.result;
   const s = res.summary ?? {};
-  // A REFUSED GAME IS LOUD. It is a game BDL has and we cannot shape - an
+  // A REFUSED GAME IS LOUD. It is a game the provider has and we cannot shape - an
   // unmapped club or status - and it will be missing from every surface.
   if (!res.ok || s.refused?.length || Object.keys(s.unmapped ?? {}).length) {
     await maybeAlert(sql, {
