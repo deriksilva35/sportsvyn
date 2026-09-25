@@ -9,9 +9,9 @@ import { toScoreRow } from '../../lib/live/scoreEvent.js';
 import { fromBdlMlb } from '../../lib/mlb/ingest.js';
 import { baseballLastPlay } from '../../lib/mlb/playsTab.js';
 import { BASEBALL, sportOf as sportOfLeague } from '../../lib/live/vocabulary.js';
-import { mlbDetailOf, writeMlbDetail, writeMlbLineups, writeMlbProbables, lineupDue } from '../../lib/mlb/detail.js';
-import { probablesForGame, fetchLineupRows } from '../../lib/mlb/probables.js';
-import { bdlLiveState, lineupsFromRows } from '../../lib/mlb/bdlLive.js';
+import { mlbDetailOf, writeMlbDetail, writeMlbGamePk, writeMlbLineups, writeMlbProbables, lineupDue } from '../../lib/mlb/detail.js';
+import { fetchScheduleByMatch, fetchGameFeed, statsApiEnabled } from '../../lib/mlb/statsapi.js';
+import { probablesForGame, pickByKickoff, matchKey } from '../../lib/mlb/probables.js';
 
 import { emit } from '../../lib/wire/emit.js';
 import { transitionsFor } from '../../lib/push/transitions.js';
@@ -164,6 +164,37 @@ export function mlbDay(dateIso) {
   };
 }
 
+/**
+ * THE NEWEST PLAY OF ONE LIVE GAME, which is where the outs and the count
+ * live - /games carries neither. One call per live game per poll, which is
+ * what the cadence is sized against: a fifteen-game slate is fifteen calls
+ * against a 600/minute key.
+ *
+ * NEVER THROWS. The count is an enrichment on top of a scoreline that is
+ * already correct without it; a plays route that 500s must not cost the poll
+ * its scores.
+ */
+export async function mlbNewestPlay(gameId) {
+  try {
+    const key = process.env.BDL_API_KEY;
+    if (!key) return null;
+    // per_page=1 with no cursor returns the OLDEST play, so the newest is
+    // reached by walking the cursor - which is a call per 100 plays and far
+    // too expensive per poll. The whole game is one page at per_page=100 only
+    // for the first 100 plays, so this asks for the largest page the route
+    // allows and takes the highest `order` it sees.
+    const res = await fetch(`${BDL}/mlb/v1/plays?game_id=${gameId}&per_page=100`,
+      { headers: { Authorization: key } });
+    if (!res.ok) return null;
+    const j = await res.json();
+    let best = null;
+    for (const r of j?.data ?? []) {
+      if (r?.order == null) continue;
+      if (!best || Number(r.order) > Number(best.order)) best = r;
+    }
+    return best;
+  } catch { return null; }
+}
 
 // ---------------------------------------------------------------------------
 // Normalisers. Provider row -> the four things we own. PURE-ish: no db.
@@ -242,6 +273,67 @@ export async function writeKickoff(sql, matchId, iso) {
   return r.length > 0;
 }
 
+// ---------------------------------------------------------------------------
+// THE SECOND PROVIDER, AND THE ID WE DO NOT HOLD.
+// ---------------------------------------------------------------------------
+
+/**
+ * ONE SCHEDULE FETCH PER DAY PER PROCESS WINDOW, not one per game per poll.
+ * Resolving a gamePk means asking statsapi for the whole day; sixteen live
+ * games would otherwise mean sixteen identical fetches every thirty seconds.
+ *
+ * THE TTL IS LONG BECAUSE THE ANSWER DOES NOT MOVE. A day's game list is set
+ * the previous evening; only a suspended game rescheduled mid-slate would
+ * change it, and that resolves on the next window rather than never, because
+ * the cache is keyed by day and the process restarts nightly anyway.
+ */
+const SCHED_TTL_MS = 15 * 60 * 1000;
+const schedCache = new Map();
+
+export function _resetMlbScheduleCache() { schedCache.clear(); }
+
+async function scheduleFor(dateIso, now = Date.now()) {
+  const hit = schedCache.get(dateIso);
+  if (hit && now - hit.at < SCHED_TTL_MS) return { byKey: hit.byKey, calls: 0 };
+  const byKey = await fetchScheduleByMatch(dateIso);
+  schedCache.set(dateIso, { at: now, byKey });
+  return { byKey, calls: 1 };
+}
+
+/**
+ * OUR ROW -> statsapi's gamePk, resolved once and then STORED on the row.
+ *
+ * THE KEY IS THE AMERICAN CALENDAR DAY, not the UTC one. statsapi's
+ * officialDate is ET, and a 01:45Z first pitch is the previous evening's game
+ * in every sense a reader has. toLocaleDateString with the ET zone is the one
+ * conversion here and it is a DISPLAY-CALENDAR question, not a provider
+ * datetime parse - lib/gridiron/ingest.js's boundary is about turning a
+ * provider's wall-clock string into an instant, and this turns an instant we
+ * already hold into the day it falls on.
+ */
+export function etDay(iso) {
+  const t = iso == null ? NaN : new Date(iso).getTime();
+  if (!Number.isFinite(t)) return null;
+  return new Date(t).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+}
+
+export async function resolveMlbGamePk(m, sql, { log = () => {} } = {}) {
+  const held = m?.external_ids?.statsapi_game_pk ?? null;
+  if (held) return { gamePk: String(held), calls: 0 };
+  const day = etDay(m?.kickoff_at);
+  const key = matchKey(m?.away_abbr, m?.home_abbr, day);
+  if (!key) return { gamePk: null, calls: 0 };
+  const { byKey, calls } = await scheduleFor(day);
+  // A DOUBLEHEADER WE CANNOT SEPARATE IS REFUSED, not guessed - putting one
+  // game's runners on the other game's diamond is worse than no diamond.
+  const pick = pickByKickoff(byKey.get(key) ?? [], m?.kickoff_at);
+  if (!pick) { log(`[mlb] no statsapi match for ${m?.slug} (${key})`); return { gamePk: null, calls }; }
+  // STORED SO THIS HAPPENS ONCE. Its failure costs a re-resolve next poll and
+  // nothing else, so it cannot be allowed to cost the enrichment.
+  try { await writeMlbGamePk(sql, m.id, pick.gamePk); } catch { /* re-resolves */ }
+  return { gamePk: pick.gamePk, calls };
+}
+
 /**
  * THE PROBABLE STARTERS FROM BDL's /mlb/v1/lineups (lib/mlb/probables.js),
  * one call per game per ten minutes and only before first pitch - once a game
@@ -266,11 +358,17 @@ export async function mlbProbables(m, row, { now = new Date(), fetchOne = probab
   return { probables, calls: 1 };
 }
 
+/** PURE. Two partial answers about the same game, side by side. */
+export function mergeProbables(primary, fallback) {
+  const side = (k) => primary?.[k] ?? fallback?.[k] ?? null;
+  const away = side('away'); const home = side('home');
+  if (!away && !home) return null;
+  return { away, home };
+}
 
 /**
- * THE MLB `enrich` HOOK, all from BDL: the live state off the plate
- * appearances (the half, the outs, the runners, the count, the batter and the
- * pitcher), and before first pitch the starters and the posted batting orders.
+ * THE MLB `enrich` HOOK: the newest play from BDL (outs and the count) and the
+ * game feed from statsapi (runners, the batter, the pitcher).
  *
  * THE FLAG GATES THE SECOND PROVIDER AND NOTHING ELSE. With MLB_STATSAPI off
  * the play still arrives, the card still shows the half and the outs, and the
@@ -282,44 +380,47 @@ export async function mlbProbables(m, row, { now = new Date(), fetchOne = probab
  */
 export async function mlbEnrich(row, m, sql, { log = () => {}, live: isLive = true, now = new Date() } = {}) {
   let calls = 0;
-  // ALL FROM BDL (lib/mlb/bdlLive.js, lib/mlb/probables.js). No second
-  // provider, no gamePk to resolve: the game id is our row's own.
-  //
-  // LIVE: the plate appearances - one page per game - give the half, the
-  // outs, the runners, the count and who is at the plate. They replace the
-  // old read of /plays, whose first page of 100 froze the outs and the count
-  // around the third inning. play stays null: the live object carries all of
-  // it, merged by lib/mlb/ingest.js exactly where the statsapi feed's was.
-  let live = null;
-  if (isLive) {
-    try {
-      const r = await bdlLiveState(row?.id);
-      calls += r.calls;
-      live = r.live;
-    } catch (e) { log(`[mlb] live state failed for ${m?.slug}: ${e.message}`); }
-    return { play: null, live, lineups: null, probables: null, calls };
-  }
+  // THE PLAY IS A LIVE-ONLY CALL. Asking /plays about a game that has not
+  // started spends a call to be told there are none.
+  const play = isLive ? await mlbNewestPlay(row?.id) : null;
+  if (play) calls += 1;
 
-  // BEFORE FIRST PITCH: the starters (every ten minutes) and the posted
-  // batting orders (on lineupDue's cadence - see lib/mlb/detail.js).
+  // THE STARTERS, before first pitch, from BDL - with or without the flag.
   let probables = null;
-  try {
-    const p = await mlbProbables(m, row, { now });
-    calls += p.calls;
-    probables = p.probables;
-  } catch (e) { log(`[mlb] probables failed for ${m?.slug}: ${e.message}`); }
-
-  let lineups = null;
-  if (lineupDue({ kickoff_at: m?.kickoff_at, lineups: m?.before_lineups ?? null }, { now })) {
+  if (!isLive) {
     try {
-      const rows = await fetchLineupRows([row?.id]);
-      calls += 1;
-      // NOT POSTED IS A READING TOO, and it must be written: without a
-      // fetchedAt stamp lineupDue() reads "never asked" and asks every poll.
-      lineups = lineupsFromRows(rows, { awayAbbr: m?.away_abbr, homeAbbr: m?.home_abbr }) ?? { away: null, home: null };
-    } catch (e) { log(`[mlb] lineups failed for ${m?.slug}: ${e.message}`); }
+      const p = await mlbProbables(m, row, { now });
+      calls += p.calls;
+      probables = p.probables;
+    } catch (e) { log(`[mlb] probables failed for ${m?.slug}: ${e.message}`); }
   }
-  return { play: null, live: null, lineups, probables, calls };
+  if (!statsApiEnabled(process.env)) return { play, live: null, lineups: null, probables, calls };
+
+  // THE PRE-KICK PASS ASKS FOR ONE THING AND ON A CADENCE. A live game's feed
+  // is fetched anyway (the diamond), and the batting orders are on that same
+  // document, so a live lineup costs nothing; a scheduled game's costs a fetch,
+  // and lineupDue() is what keeps that from being every game every thirty
+  // seconds. See lib/mlb/detail.js.
+  if (!isLive && !lineupDue({ kickoff_at: m?.kickoff_at, lineups: m?.before_lineups ?? null }, { now })) {
+    return { play, live: null, lineups: null, probables, calls };
+  }
+
+  let live = null; let lineups = null;
+  try {
+    const r = await resolveMlbGamePk(m, sql, { log });
+    calls += r.calls;
+    if (r.gamePk) {
+      const feed = await fetchGameFeed(r.gamePk);
+      calls += feed.calls;
+      live = feed.live;
+      lineups = feed.lineups;
+      // NOT POSTED IS A READING TOO, and it must be written. Without a
+      // fetchedAt stamp on a game whose card is not up yet, lineupDue() reads
+      // "never asked" forever and asks again on every single poll.
+      if (!lineups && feed.calls) lineups = { away: null, home: null };
+    }
+  } catch (e) { log(`[mlb] statsapi enrich failed for ${m?.slug}: ${e.message}`); }
+  return { play, live, lineups, probables, calls };
 }
 
 /**

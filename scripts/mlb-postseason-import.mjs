@@ -2,7 +2,7 @@
 // DRY RUN BY DEFAULT.
 //
 //   set -a && . ./.env.local && set +a
-//   node scripts/mlb-postseason-import.mjs --prod 2026            # dry run (--bdl: the seeds)
+//   node scripts/mlb-postseason-import.mjs --prod 2026            # dry run
 //   node scripts/mlb-postseason-import.mjs --prod --apply 2026    # Monday
 //   node scripts/mlb-postseason-import.mjs --apply --backtrack 2025   # DEV fixture
 //
@@ -26,14 +26,14 @@
 // provider and the ROUND comes from somewhere else, and this script has three
 // somewheres:
 //
-//   --bdl (DEFAULT, and the Monday path - our own bracket). The stored seeds (team_records.playoff_seed) and
+//   --bdl (our own bracket). The stored seeds (team_records.playoff_seed) and
 //   who is playing whom: 3v6/4v5 is a Wild Card, a bye seed against a WC
 //   winner is a Division Series, the two halves of a league meeting is a
 //   Championship Series, the leagues meeting is the World Series. Needs no
 //   second provider and works while the bracket is being played. Backtested
 //   on the whole 2025 postseason on DEV: every game in its real round.
 //
-//   --statsapi (opt-in, until statsapi.js is deleted). The second provider's own
+//   --statsapi (DEFAULT, and the Monday path). The second provider's own
 //   gameType - F / D / L / W - asked per DAY, which is the only way that feed
 //   answers. A per-game fact from the competition's own schedule, no
 //   inference. Games it cannot place are REFUSED, named, and left unstaged.
@@ -64,11 +64,7 @@ const args = process.argv.slice(2);
 const PROD = args.includes('--prod');
 const APPLY = args.includes('--apply');
 const BACKTRACK = args.includes('--backtrack');
-// --bdl (THE SEEDS) IS THE DEFAULT since the 25 Sep cutover; --statsapi is kept
-// as an explicit opt-in only until lib/mlb/statsapi.js is deleted, after the
-// first postseason game.
-const BYSTATSAPI = args.includes('--statsapi');
-const BYSEEDS = !BACKTRACK && !BYSTATSAPI;
+const BYSEEDS = args.includes('--bdl');
 const seasons = args.filter((a) => !a.startsWith('--'));
 if (!seasons.length) { console.error('REFUSE: name a season, e.g. 2026'); process.exit(1); }
 
