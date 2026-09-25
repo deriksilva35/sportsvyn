@@ -399,9 +399,17 @@ test('THE READER RETURNS THE LEAGUE, so the fixture above is not a fiction', () 
   // field this page's three new mounts depend on can be read off its source.
   // Without it stateFromMatch() falls through to football, gameUrlFor() returns
   // null and the sheet words its close row with a clock baseball has not got.
-  const src = readFileSync(new URL('../../../lib/mlb/gameDetail.js', import.meta.url), 'utf8');
-  assert.match(src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, ''),
-    /leagueSlug: 'mlb'/);
+  //
+  // READ OFF THE LEAGUE ROW, NOT TYPED (LIVE ACTIVITY LEAGUE KEY relay): the
+  // Live Activity start message carries this value as `league`, and the rule
+  // is that it comes from the match's league row - l.slug, which the JOIN
+  // already pins to 'mlb' - exactly as lib/gridiron/gameDetail.js reads it.
+  const src = readFileSync(new URL('../../../lib/mlb/gameDetail.js', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  assert.match(src, /l\.slug AS league_slug/);
+  assert.match(src, /JOIN leagues l ON l\.id = m\.league_id AND l\.slug = 'mlb'/);
+  assert.match(src, /leagueSlug: m\.league_slug/);
+  assert.doesNotMatch(src, /leagueSlug: 'mlb'/, 'never a typed literal');
 });
 
 // --- THE PLAYS TAB ---------------------------------------------------------

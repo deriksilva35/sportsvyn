@@ -148,7 +148,7 @@ test('ON posts startLiveActivity with the url TOP LEVEL and the ten fields; OFF 
   // so the line is three empty strings here - which is the honest answer, not
   // a gap to paper over with a thinner reader in the component.
   assert.deepEqual(posted[0], {
-    type: 'startLiveActivity', matchId: 5591, url: URL_,
+    type: 'startLiveActivity', matchId: 5591, url: URL_, league: 'nfl',
     state: {
       awayAbbr: 'NYJ', awayScore: 7, homeAbbr: 'TEN', homeScore: 14, period: 'Q2', clock: '1:39',
       possession: '', situation: '', lastPlay: '', kickoffAt: '2026-09-13T17:00:00.000Z',
@@ -196,4 +196,23 @@ test('the door does not disturb the five triggers, master off or on', async () =
   assert.deepEqual(five, ['Kickoff', 'Score changes', 'Quarter ends', 'Close game', 'Final']);
   // and the lock-screen switch is not one of them: master off leaves it usable
   assert.equal(liveToggle(c).disabled, false, 'master off does not disable the lock screen row');
+});
+
+// THE LEAGUE KEY: the sheet hands the bridge the match's own leagueSlug - the
+// league row's value the page already passes - for every sport the door opens on.
+test('THE START MESSAGE CARRIES league FOR AN NFL, AN MLB AND A CFB MATCH', async () => {
+  for (const [leagueSlug, slug] of [['nfl', 'nfl-2026-reg-w1-nyj-ten'], ['mlb', 'mlb-2026-09-24-tb-nyy'], ['cfb', 'cfb-2026-w4-syr-clem']]) {
+    beNative();
+    posted.length = 0;
+    const url = `https://sportsvyn.com/${leagueSlug}/game/${slug}`;
+    const c = await openSheet({ match: { ...MATCH, slug, leagueSlug }, liveActivity: { ...LA, url } });
+    await click(liveToggle(c));
+    assert.equal(posted.length, 1, leagueSlug);
+    assert.equal(posted[0].type, 'startLiveActivity');
+    assert.equal(posted[0].league, leagueSlug);
+    assert.equal(posted[0].url, url);
+    assert.deepEqual(Object.keys(posted[0]), ['type', 'matchId', 'url', 'league', 'state']);
+    for (const r of roots) { try { act(() => r.unmount()); } catch { /* gone */ } }
+    roots.clear();
+  }
 });

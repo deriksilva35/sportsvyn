@@ -181,7 +181,7 @@ export default function AlertBell({ match, signedIn = false, compact = true, liv
 
   const toggleLive = (want) => {
     const posted = want
-      ? startLiveActivity({ matchId: match.id, url: liveActivity.url, state: liveActivity.state })
+      ? startLiveActivity({ matchId: match.id, url: liveActivity.url, league: match.leagueSlug ?? null, state: liveActivity.state })
       : endLiveActivity({ matchId: match.id });
     // THE SWITCH FOLLOWS THE POST, NOT THE DATABASE. live_activities is
     // written by the APP when it registers the Activity it actually started -
