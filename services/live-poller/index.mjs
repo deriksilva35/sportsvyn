@@ -13,7 +13,7 @@
 // writers on their own cadences.
 
 import { neon } from '@neondatabase/serverless';
-import { cadence, sleepUntilNext, kickoffDelta } from '../../lib/live/cadence.js';
+import { cadence, sleepUntilNext, kickoffDelta, afterPoll } from '../../lib/live/cadence.js';
 import { addCalls, callsToday, applyCap, overCap, DEFAULT_CAP } from '../../lib/live/quota.js';
 import { StatsTracker } from '../../lib/live/statsCadence.js';
 import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
@@ -183,11 +183,13 @@ async function loop(lg) {
   const stats = (lg.slug === 'nfl' || lg.slug === 'mlb') ? new StatsTracker() : null;
   let statsCallsToday = 0;
 
+  // THE LEAGUE'S CADENCE KNOBS, read once: the slate's decision and afterPoll use the same ones.
+  const copts = lg.cadenceOpts ?? {};
   for (;;) {
     const now = new Date();
     let decision;
     try {
-      decision = cadence(await slate(lg.slug, now), now, lg.cadenceOpts ?? {});
+      decision = cadence(await slate(lg.slug, now), now, copts);
     } catch (e) {
       log(`[${lg.slug}] slate read failed:`, e.message);
       await sleep(30000); continue;
@@ -236,6 +238,8 @@ async function loop(lg) {
           log(`[${lg.slug}] lost-final sweep failed:`, String(e?.message ?? e).slice(0, 120));
         }
         failures = 0;
+        // THE POLL THAT FLIPPED A GAME LIVE WAS A PRE-KICK POLL; the sleep after it is not.
+        decision = afterPoll(decision, { wentLive: r.wentLive ?? 0 }, copts);
         pending += r.calls;
         window.polls += 1; window.calls += r.calls;
         window.scoreChanges += r.scoreChanges; window.finals += r.finals;

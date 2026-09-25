@@ -608,7 +608,7 @@ export async function pollOnce(sql, {
 }) {
   const out = {
     league, considered: 0, matched: 0, unmatched: 0, written: 0, detail: 0, lineups: 0, probables: 0,
-    scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [],
+    scoreChanges: 0, finals: 0, wentLive: 0, events: 0, calls: 0, unmapped: [],
     latencies: [], wouldWrite: [], pushes: [], pushErrors: [], pushAuthFailure: false,
     liveActivities: [],
   };
@@ -795,6 +795,8 @@ export async function pollOnce(sql, {
     }
 
     if (after.status === 'final' && m.status !== 'final') out.finals += 1;
+    // A ROW THIS POLL TURNED LIVE: the loop's next sleep is the live one (lib/live/cadence.js afterPoll).
+    if (after.status === 'live' && m.status !== 'live') out.wentLive += 1;
 
     // THE PUSH RIDER. It is handed the transition this poll just made and asks
     // no provider anything - the loop that noticed is the loop that sends,
