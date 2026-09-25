@@ -76,10 +76,10 @@ const LEAGUES = [
       });
       return { rows, calls: a.calls + b.calls };
     },
-    // TWO PROVIDERS IN ONE ENRICHMENT: BDL's newest play carries the outs and
-    // the count; statsapi's game feed carries the runners, the batter and the
-    // pitcher, which BDL does not have at all. mlbEnrich does the gamePk
-    // resolution once per game and stores it on the row.
+    // ONE PROVIDER. BDL's plate appearances carry the half, the outs, the
+    // runners, the count and who is at the plate (lib/mlb/bdlLive.js); its
+    // /lineups carries the starters and the posted batting orders. The
+    // statsapi feed this used to read is not called (25 Sep cutover).
     enrich: mlbEnrich,
     // AND IT RUNS BEFORE FIRST PITCH, for MLB alone. The posted batting order
     // is the bats October and The Run offer; it goes up two or three hours

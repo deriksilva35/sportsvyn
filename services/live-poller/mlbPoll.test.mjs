@@ -120,73 +120,56 @@ test('THE PRE-KICK PASS READS THE CARD AND NOTHING ELSE', async () => {
   assert.match(src, /m\.metadata->'lineups' AS before_lineups/);
 });
 
-test('mlbEnrich: one feed fetch carries the diamond AND the card', async () => {
+test('mlbEnrich LIVE: one plate-appearance page carries the diamond, the outs, the count and who is at the plate - all BDL', async () => {
+  const { mlbEnrich, _resetMlbProbablesCache } = await import('./poll.mjs');
+  const { _resetNameCache } = await import('../../lib/mlb/bdlLive.js');
+  _resetMlbProbablesCache(); _resetNameCache();
+  const real = globalThis.fetch; const seen = [];
+  globalThis.fetch = async (url) => {
+    const u = String(url); seen.push(u);
+    if (u.includes('/mlb/v1/plate_appearances')) return { ok: true, json: async () => ({ data: [
+      { pa_number: 40, inning: 7, half_inning: 'top', outs: 2, runner_on_first: true, runner_on_second: false, runner_on_third: true,
+        batter_id: 11, pitcher_id: 22, result: 'Single', pitches: [] },
+      // THE NEWEST PA WINS, and "Batter Timeout" is not an outcome: still at bat, 1-2 after a foul.
+      { pa_number: 41, inning: 7, half_inning: 'top', outs: 2, runner_on_first: true, runner_on_second: true, runner_on_third: false,
+        batter_id: 33, pitcher_id: 22, result: 'Batter Timeout',
+        pitches: [{ balls: 0, strikes: 0, pitch_call_code: 'ball' }, { balls: 1, strikes: 0, pitch_call_code: 'called_strike' }, { balls: 1, strikes: 1, pitch_call_code: 'foul' }] },
+    ], meta: {} }) };
+    if (u.includes('/mlb/v1/players')) return { ok: true, json: async () => ({ data: [{ id: 33, full_name: 'Bat Ter' }, { id: 22, full_name: 'Pitch Er' }] }) };
+    return { ok: false, status: 404, json: async () => ({}) };
+  };
+  try {
+    const r = await mlbEnrich({ id: 99, status_state: 'in_progress' }, { id: 1, slug: 'tb-nyy' }, null, { live: true });
+    assert.equal(r.play, null, 'the old /plays read is gone');
+    assert.deepEqual(r.live, { period: 7, half: 'Top', outs: 2, balls: 1, strikes: 2,
+      bases: { first: true, second: true, third: false }, batter: 'Bat Ter', pitcher: 'Pitch Er' });
+    assert.equal(seen.filter((u) => u.includes('/plate_appearances?game_id=99&per_page=100')).length, 1, 'one page per game');
+    assert.equal(seen.some((u) => u.includes('statsapi') || u.includes('/mlb/v1/plays')), false, 'no second provider, no /plays');
+    assert.equal(r.calls, 2, 'one PA page + one name lookup');
+    // NAMES ARE CACHED: the same two players cost nothing the next poll.
+    seen.length = 0;
+    const again = await mlbEnrich({ id: 99, status_state: 'in_progress' }, { id: 1, slug: 'tb-nyy' }, null, { live: true });
+    assert.equal(seen.filter((u) => u.includes('/players')).length, 0); assert.equal(again.calls, 1);
+  } finally { globalThis.fetch = real; }
+});
+
+test('mlbEnrich: the pre-kick pass holds off the CARD when it was just read - only the starters are asked', async () => {
   const { mlbEnrich, _resetMlbProbablesCache } = await import('./poll.mjs');
   _resetMlbProbablesCache();
   const real = globalThis.fetch;
-  const seen = [];
-  globalThis.fetch = async (url) => {
-    seen.push(String(url));
-    return {
-      ok: true,
-      json: async () => ({
-        liveData: {
-          linescore: { currentInning: 7, inningState: 'Top', outs: 2, balls: 3, strikes: 2 },
-          boxscore: {
-            teams: {
-              away: { battingOrder: [1, 2], players: { ID1: { person: { id: 1, fullName: 'A One' }, position: { abbreviation: 'DH' } }, ID2: { person: { id: 2, fullName: 'B Two' }, position: { abbreviation: '2B' } } } },
-              home: { battingOrder: [], players: {} },
-            },
-          },
-        },
-      }),
-    };
-  };
-  const prev = process.env.MLB_STATSAPI;
-  process.env.MLB_STATSAPI = 'on';
-  try {
-    const m = { id: 1, slug: 'tb-nyy', kickoff_at: '2026-09-22T22:35:00Z', external_ids: { statsapi_game_pk: '823543' } };
-    // A SCHEDULED ROW: no /plays call at all, and the card comes back.
-    const r = await mlbEnrich({ id: 99, status_state: 'pre' }, m, null, { live: false, now: new Date('2026-09-22T21:00:00Z') });
-    assert.equal(r.play, null, 'asking /plays about a game that has not started spends a call for nothing');
-    assert.equal(r.lineups.away.length, 2);
-    assert.equal(r.lineups.away[1].order, 2);
-    assert.equal(r.lineups.home, null, 'an empty battingOrder is not a lineup');
-    // ONE FETCH, not two: the live state and the batting orders are on the same
-    // document, so the lineup is free on every live pass.
-    assert.equal(seen.filter((u) => u.includes('feed/live')).length, 1);
-    // AND ONE BDL CALL FOR THE STARTERS (lib/mlb/probables.js) - the feed no
-    // longer supplies them.
-    assert.equal(seen.filter((u) => u.includes('/mlb/v1/lineups?game_ids[]=99')).length, 1);
-    assert.equal(r.calls, 2);
-  } finally {
-    globalThis.fetch = real;
-    if (prev == null) delete process.env.MLB_STATSAPI; else process.env.MLB_STATSAPI = prev;
-  }
-});
-
-test('mlbEnrich: the pre-kick pass holds off when the card was just read', async () => {
-  const { mlbEnrich } = await import('./poll.mjs');
-  const real = globalThis.fetch;
   let calls = 0;
-  globalThis.fetch = async () => { calls += 1; return { ok: true, json: async () => ({}) }; };
-  const prev = process.env.MLB_STATSAPI;
-  process.env.MLB_STATSAPI = 'on';
+  globalThis.fetch = async () => { calls += 1; return { ok: true, json: async () => ({ data: [], meta: {} }) }; };
   try {
     const m = {
-      id: 1, slug: 'tb-nyy', kickoff_at: '2026-09-22T22:35:00Z',
-      external_ids: { statsapi_game_pk: '823543' },
+      id: 1, slug: 'tb-nyy', kickoff_at: '2026-09-22T22:35:00Z', away_abbr: 'TB', home_abbr: 'NYY',
       before_lineups: { fetchedAt: '2026-09-22T20:58:00Z', away: [{ id: '1' }], home: null },
     };
     const r = await mlbEnrich({ id: 99, status_state: 'pre' }, m, null,
       { live: false, now: new Date('2026-09-22T21:00:00Z') });
-    assert.equal(calls, 0, 'a card read two minutes ago is not read again');
-    assert.equal(r.lineups, null);
-    assert.equal(r.calls, 0);
-  } finally {
-    globalThis.fetch = real;
-    if (prev == null) delete process.env.MLB_STATSAPI; else process.env.MLB_STATSAPI = prev;
-  }
+    assert.equal(r.lineups, null, 'a card read two minutes ago is not read again');
+    assert.equal(calls, 1, 'one call, for the starters (their own ten-minute cadence)');
+    assert.equal(r.calls, 1);
+  } finally { globalThis.fetch = real; }
 });
 
 test('THE SECOND PROVIDER RIDES ON TOP, and never deletes what BDL just said', async () => {
@@ -214,68 +197,28 @@ test('THE SECOND PROVIDER RIDES ON TOP, and never deletes what BDL just said', a
   assert.equal(mergeStatsApi(bdl, { balls: 0, strikes: 0 }).balls, 0);
 });
 
-test('THE ET DAY IS THE AMERICAN CALENDAR DAY, which is the whole point', async () => {
-  const { etDay } = await import('./poll.mjs');
-  // A 01:45Z first pitch is the PREVIOUS evening's game in every sense a
-  // reader has, and statsapi's officialDate agrees. Keying the schedule
-  // lookup by the UTC day would miss every west-coast game by one.
-  assert.equal(etDay('2026-09-23T01:45:00Z'), '2026-09-22');
-  assert.equal(etDay('2026-09-22T17:05:00Z'), '2026-09-22');
-  assert.equal(etDay(null), null);
-  assert.equal(etDay('nonsense'), null);
-});
 
-test('THE gamePk IS RESOLVED ONCE AND THEN STORED ON THE ROW', async () => {
-  const { resolveMlbGamePk, _resetMlbScheduleCache } = await import('./poll.mjs');
-  _resetMlbScheduleCache();
-  // A row that already holds it asks statsapi nothing at all - no schedule
-  // fetch, no doubleheader judgement, and no chance to change its mind
-  // mid-game about which half of one it is watching.
-  let wrote = 0;
-  const sql = () => { wrote += 1; return Promise.resolve([]); };
-  const held = await resolveMlbGamePk(
-    { id: 1, slug: 'x', external_ids: { statsapi_game_pk: '823543' } }, sql);
-  assert.equal(held.gamePk, '823543');
-  assert.equal(held.calls, 0);
-  assert.equal(wrote, 0, 'and it does not rewrite what it already had');
 
-  // A row with no abbreviations cannot build the key, so it refuses before
-  // spending a call rather than fetching a day it cannot use.
-  const nokey = await resolveMlbGamePk(
-    { id: 2, slug: 'y', external_ids: {}, kickoff_at: '2026-09-22T17:05:00Z' }, sql);
-  assert.equal(nokey.gamePk, null);
-  assert.equal(nokey.calls, 0);
-  assert.equal(wrote, 0);
-});
-
-test('mlbEnrich with MLB_STATSAPI OFF still returns the starters, from BDL, and touches no statsapi URL', async () => {
+test('mlbEnrich PRE-KICK: the starters and the posted batting orders, both from BDL /lineups, no second provider', async () => {
   const { mlbEnrich, _resetMlbProbablesCache } = await import('./poll.mjs');
   _resetMlbProbablesCache();
   const real = globalThis.fetch; const seen = [];
-  globalThis.fetch = async (url) => {
-    seen.push(String(url));
-    return { ok: true, json: async () => ({ data: [
-      { game_id: 99, is_probable_pitcher: true, team: { abbreviation: 'TB' }, player: { id: 208, full_name: 'Shane McClanahan' } },
-      { game_id: 99, is_probable_pitcher: true, team: { abbreviation: 'NYY' }, player: { id: 19, full_name: 'Gerrit Cole' } },
-    ], meta: {} }) };
-  };
-  const prev = process.env.MLB_STATSAPI; delete process.env.MLB_STATSAPI;
+  const rows = [
+    { game_id: 99, is_probable_pitcher: true, team: { abbreviation: 'TB' }, player: { id: 208, full_name: 'Shane McClanahan' } },
+    { game_id: 99, is_probable_pitcher: true, team: { abbreviation: 'NYY' }, player: { id: 19, full_name: 'Gerrit Cole' } },
+    { game_id: 99, is_probable_pitcher: false, batting_order: 2, position: 'C', team: { abbreviation: 'TB' }, player: { id: 5, full_name: 'Second Up' } },
+    { game_id: 99, is_probable_pitcher: false, batting_order: 1, position: 'DH', team: { abbreviation: 'TB' }, player: { id: 4, full_name: 'Lead Off' } },
+  ];
+  globalThis.fetch = async (url) => { seen.push(String(url)); return { ok: true, json: async () => ({ data: rows, meta: {} }) }; };
   try {
     const m = { id: 1, slug: 'tb-nyy', kickoff_at: '2026-09-22T22:35:00Z', away_abbr: 'TB', home_abbr: 'NYY' };
-    const now = new Date('2026-09-22T21:00:00Z');
-    const r = await mlbEnrich({ id: 99, status_state: 'pre' }, m, null, { live: false, now });
+    const r = await mlbEnrich({ id: 99, status_state: 'pre' }, m, null, { live: false, now: new Date('2026-09-22T21:00:00Z') });
     assert.deepEqual(r.probables, { away: { id: '208', name: 'Shane McClanahan' }, home: { id: '19', name: 'Gerrit Cole' } });
-    assert.equal(r.live, null); assert.equal(r.lineups, null);
-    assert.equal(seen.some((u) => u.includes('statsapi')), false, 'no statsapi call with the flag off');
-    // TEN MINUTES, ONE CALL: the next poll inside the window asks nothing.
-    const again = await mlbEnrich({ id: 99, status_state: 'pre' }, m, null, { live: false, now: new Date(now.getTime() + 30_000) });
-    assert.equal(again.probables, null); assert.equal(seen.length, 1);
-    // AND A LIVE ROW DOES NOT ASK FOR STARTERS AT ALL.
-    _resetMlbProbablesCache(); seen.length = 0;
-    await mlbEnrich({ id: 99, status_state: 'in_progress' }, m, null, { live: true, now });
-    assert.equal(seen.some((u) => u.includes('/lineups')), false);
-  } finally {
-    globalThis.fetch = real;
-    if (prev == null) delete process.env.MLB_STATSAPI; else process.env.MLB_STATSAPI = prev;
-  }
+    assert.deepEqual(r.lineups, { away: [
+      { id: '4', name: 'Lead Off', position: 'DH', order: 1 }, { id: '5', name: 'Second Up', position: 'C', order: 2 },
+    ], home: null }, 'batting_order is the order; the starters are not batters; an unposted side is null');
+    assert.equal(r.live, null);
+    assert.equal(seen.some((u) => u.includes('statsapi')), false);
+    assert.ok(seen.every((u) => u.includes('/mlb/v1/lineups?game_ids[]=99')));
+  } finally { globalThis.fetch = real; }
 });
