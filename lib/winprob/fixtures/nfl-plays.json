@@ -1,0 +1,2808 @@
+{
+  "model": "sportsvyn-winprob-nfl",
+  "version": "1.0.0",
+  "tolerance": 1e-09,
+  "note": "Feed inputs through the artefact and compare to expected_p_home. ep_signed is DERIVED from down_f/ydstogo_f/yards_to_goal/posteam_is_home via ep_table, not supplied.",
+  "cases": [
+    {
+      "inputs": {
+        "score_diff": -1.0,
+        "secs_game": 1147.0,
+        "secs_half": 1147.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 18.0,
+        "yards_to_goal": 68.0,
+        "prior_logit": -1.0073320831,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3752776301
+    },
+    {
+      "inputs": {
+        "score_diff": 4.0,
+        "secs_game": 1314.0,
+        "secs_half": 1314.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 4.0,
+        "yards_to_goal": 46.0,
+        "prior_logit": 1.3128099274,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8436417569
+    },
+    {
+      "inputs": {
+        "score_diff": 10.0,
+        "secs_game": 340.0,
+        "secs_half": 340.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 25.0,
+        "prior_logit": 2.0158832639,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9736940423
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 1211.0,
+        "secs_half": 1211.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 13.0,
+        "yards_to_goal": 29.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7368657018
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3534.0,
+        "secs_half": 1734.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 15.0,
+        "yards_to_goal": 61.0,
+        "prior_logit": 0.9612732591,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8053118502
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 3231.0,
+        "secs_half": 1431.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 8.0,
+        "yards_to_goal": 65.0,
+        "prior_logit": 0.6097365909,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7490813468
+    },
+    {
+      "inputs": {
+        "score_diff": 10.0,
+        "secs_game": 2659.0,
+        "secs_half": 859.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": -1.0776394168,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4677293267
+    },
+    {
+      "inputs": {
+        "score_diff": -30.0,
+        "secs_game": 116.0,
+        "secs_half": 116.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 38.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 2.18879e-05
+    },
+    {
+      "inputs": {
+        "score_diff": -21.0,
+        "secs_game": 1613.0,
+        "secs_half": 1613.0,
+        "posteam_is_home": 0.0,
+        "down_f": 4.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 44.0,
+        "prior_logit": -0.6557954149,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0262625986
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 1800.0,
+        "secs_half": 1800.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": 1.0315805928,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.830254459
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 1810.0,
+        "secs_half": 10.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 70.0,
+        "prior_logit": 1.2425025937,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7921642865
+    },
+    {
+      "inputs": {
+        "score_diff": -22.0,
+        "secs_game": 833.0,
+        "secs_half": 833.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 4.0,
+        "yards_to_goal": 16.0,
+        "prior_logit": 0.8909659255,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0288218596
+    },
+    {
+      "inputs": {
+        "score_diff": 11.0,
+        "secs_game": 2047.0,
+        "secs_half": 247.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 60.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8036150086
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 356.0,
+        "secs_half": 356.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 91.0,
+        "prior_logit": -0.9370247495,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7013897791
+    },
+    {
+      "inputs": {
+        "score_diff": -13.0,
+        "secs_game": 63.0,
+        "secs_half": 63.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 11.0,
+        "yards_to_goal": 46.0,
+        "prior_logit": -0.8667174158,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0018081578
+    },
+    {
+      "inputs": {
+        "score_diff": -38.0,
+        "secs_game": 533.0,
+        "secs_half": 533.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 6.0,
+        "yards_to_goal": 6.0,
+        "prior_logit": -0.5151807476,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.000232658
+    },
+    {
+      "inputs": {
+        "score_diff": 26.0,
+        "secs_game": 963.0,
+        "secs_half": 963.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": 1.383117261,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9973522837
+    },
+    {
+      "inputs": {
+        "score_diff": 8.0,
+        "secs_game": 2377.0,
+        "secs_half": 577.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 43.0,
+        "prior_logit": -0.1636440793,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6617400431
+    },
+    {
+      "inputs": {
+        "score_diff": 1.0,
+        "secs_game": 1819.0,
+        "secs_half": 19.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 34.0,
+        "prior_logit": 0.7503512582,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7389038308
+    },
+    {
+      "inputs": {
+        "score_diff": 6.0,
+        "secs_game": 225.0,
+        "secs_half": 225.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 93.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8789027343
+    },
+    {
+      "inputs": {
+        "score_diff": -20.0,
+        "secs_game": 1476.0,
+        "secs_half": 1476.0,
+        "posteam_is_home": 0.0,
+        "down_f": 4.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0274071319
+    },
+    {
+      "inputs": {
+        "score_diff": -17.0,
+        "secs_game": 183.0,
+        "secs_half": 183.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 43.0,
+        "prior_logit": -0.6557954149,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.005978284
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 23.0,
+        "secs_half": 23.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 3.0,
+        "yards_to_goal": 3.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0503330099
+    },
+    {
+      "inputs": {
+        "score_diff": 6.0,
+        "secs_game": 374.0,
+        "secs_half": 374.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 24.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7357631439
+    },
+    {
+      "inputs": {
+        "score_diff": 1.0,
+        "secs_game": 1493.0,
+        "secs_half": 1493.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 72.0,
+        "prior_logit": -0.9370247495,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.366811842
+    },
+    {
+      "inputs": {
+        "score_diff": 10.0,
+        "secs_game": 2157.0,
+        "secs_half": 357.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": -0.7964100822,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6678261143
+    },
+    {
+      "inputs": {
+        "score_diff": -3.0,
+        "secs_game": 1630.0,
+        "secs_half": 1630.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 3.0,
+        "yards_to_goal": 83.0,
+        "prior_logit": 0.7503512582,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4964049406
+    },
+    {
+      "inputs": {
+        "score_diff": 1.0,
+        "secs_game": 2307.0,
+        "secs_half": 507.0,
+        "posteam_is_home": 0.0,
+        "down_f": 4.0,
+        "ydstogo_f": 8.0,
+        "yards_to_goal": 72.0,
+        "prior_logit": 0.7503512582,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7189372862
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 8.0,
+        "secs_half": 8.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 5.0,
+        "yards_to_goal": 5.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9871907956
+    },
+    {
+      "inputs": {
+        "score_diff": -16.0,
+        "secs_game": 455.0,
+        "secs_half": 455.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 4.0,
+        "yards_to_goal": 39.0,
+        "prior_logit": -0.233951413,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0250676441
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3564.0,
+        "secs_half": 1764.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 13.0,
+        "yards_to_goal": 77.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.5907397505
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 1919.0,
+        "secs_half": 119.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 18.0,
+        "prior_logit": 1.1018879264,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7514659208
+    },
+    {
+      "inputs": {
+        "score_diff": 10.0,
+        "secs_game": 261.0,
+        "secs_half": 261.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 8.0,
+        "yards_to_goal": 28.0,
+        "prior_logit": 0.4691219236,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9217002004
+    },
+    {
+      "inputs": {
+        "score_diff": -14.0,
+        "secs_game": 1875.0,
+        "secs_half": 75.0,
+        "posteam_is_home": 0.0,
+        "down_f": 4.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 41.0,
+        "prior_logit": -0.7964100822,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.070362875
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3270.0,
+        "secs_half": 1470.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 78.0,
+        "prior_logit": -0.233951413,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4095400713
+    },
+    {
+      "inputs": {
+        "score_diff": 6.0,
+        "secs_game": 30.0,
+        "secs_half": 30.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 3.0,
+        "yards_to_goal": 3.0,
+        "prior_logit": 0.7503512582,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.989724594
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 2468.0,
+        "secs_half": 668.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 4.0,
+        "yards_to_goal": 59.0,
+        "prior_logit": 1.7346539293,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8995236328
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 3188.0,
+        "secs_half": 1388.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 55.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7169437079
+    },
+    {
+      "inputs": {
+        "score_diff": -6.0,
+        "secs_game": 587.0,
+        "secs_half": 587.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 27.0,
+        "yards_to_goal": 82.0,
+        "prior_logit": -0.5151807476,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2118220627
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 3175.0,
+        "secs_half": 1375.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 54.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6168412296
+    },
+    {
+      "inputs": {
+        "score_diff": 4.0,
+        "secs_game": 2803.0,
+        "secs_half": 1003.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 65.0,
+        "prior_logit": 0.187892589,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6680513153
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3393.0,
+        "secs_half": 1593.0,
+        "posteam_is_home": 1.0,
+        "down_f": 4.0,
+        "ydstogo_f": 2.0,
+        "yards_to_goal": 56.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.5888339479
+    },
+    {
+      "inputs": {
+        "score_diff": -17.0,
+        "secs_game": 153.0,
+        "secs_half": 153.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 31.0,
+        "prior_logit": 0.187892589,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0013334163
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 1912.0,
+        "secs_half": 112.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 41.0,
+        "prior_logit": -1.0073320831,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.5071969257
+    },
+    {
+      "inputs": {
+        "score_diff": -6.0,
+        "secs_game": 1615.0,
+        "secs_half": 1615.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 3.0,
+        "yards_to_goal": 3.0,
+        "prior_logit": -1.0073320831,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1074879015
+    },
+    {
+      "inputs": {
+        "score_diff": -19.0,
+        "secs_game": 1044.0,
+        "secs_half": 1044.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 79.0,
+        "prior_logit": -1.2182540841,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0210361332
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 740.0,
+        "secs_half": 740.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.5865117973
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 2700.0,
+        "secs_half": 900.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 3.0,
+        "yards_to_goal": 41.0,
+        "prior_logit": -0.5854880812,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6312972701
+    },
+    {
+      "inputs": {
+        "score_diff": 10.0,
+        "secs_game": 1974.0,
+        "secs_half": 174.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 67.0,
+        "prior_logit": 1.383117261,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.902894358
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3600.0,
+        "secs_half": 1800.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": 1.9455759302,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9248755585
+    },
+    {
+      "inputs": {
+        "score_diff": 4.0,
+        "secs_game": 2866.0,
+        "secs_half": 1066.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 56.0,
+        "prior_logit": -0.233951413,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6017389612
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3401.0,
+        "secs_half": 1601.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 2.0,
+        "yards_to_goal": 61.0,
+        "prior_logit": 0.4691219236,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6896979319
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3195.0,
+        "secs_half": 1395.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 50.0,
+        "prior_logit": -0.5151807476,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3893510158
+    },
+    {
+      "inputs": {
+        "score_diff": -17.0,
+        "secs_game": 1316.0,
+        "secs_half": 1316.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": -0.9370247495,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0376165534
+    },
+    {
+      "inputs": {
+        "score_diff": 4.0,
+        "secs_game": 190.0,
+        "secs_half": 190.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 52.0,
+        "prior_logit": 0.8206585918,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8721106348
+    },
+    {
+      "inputs": {
+        "score_diff": 2.0,
+        "secs_game": 527.0,
+        "secs_half": 527.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": 0.5394292572,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6613834381
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 3009.0,
+        "secs_half": 1209.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 65.0,
+        "prior_logit": 0.6097365909,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.800793816
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 2889.0,
+        "secs_half": 1089.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 70.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.5640045439
+    },
+    {
+      "inputs": {
+        "score_diff": -3.0,
+        "secs_game": 956.0,
+        "secs_half": 956.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 9.0,
+        "yards_to_goal": 90.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.332018754
+    },
+    {
+      "inputs": {
+        "score_diff": 24.0,
+        "secs_game": 916.0,
+        "secs_half": 916.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 37.0,
+        "prior_logit": 2.1564979312,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9967738825
+    },
+    {
+      "inputs": {
+        "score_diff": 16.0,
+        "secs_game": 1683.0,
+        "secs_half": 1683.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 9.0,
+        "yards_to_goal": 98.0,
+        "prior_logit": -0.6557954149,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8666112867
+    },
+    {
+      "inputs": {
+        "score_diff": 13.0,
+        "secs_game": 507.0,
+        "secs_half": 507.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 8.0,
+        "yards_to_goal": 55.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9655117014
+    },
+    {
+      "inputs": {
+        "score_diff": -14.0,
+        "secs_game": 821.0,
+        "secs_half": 821.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 7.0,
+        "yards_to_goal": 7.0,
+        "prior_logit": 0.4691219236,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0441905866
+    },
+    {
+      "inputs": {
+        "score_diff": -10.0,
+        "secs_game": 1766.0,
+        "secs_half": 1766.0,
+        "posteam_is_home": 0.0,
+        "down_f": 4.0,
+        "ydstogo_f": 4.0,
+        "yards_to_goal": 64.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2378939281
+    },
+    {
+      "inputs": {
+        "score_diff": 20.0,
+        "secs_game": 1383.0,
+        "secs_half": 1383.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": 1.0315805928,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9752147223
+    },
+    {
+      "inputs": {
+        "score_diff": 34.0,
+        "secs_game": 327.0,
+        "secs_half": 327.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 38.0,
+        "prior_logit": 1.3128099274,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9999622533
+    },
+    {
+      "inputs": {
+        "score_diff": -9.0,
+        "secs_game": 380.0,
+        "secs_half": 380.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 34.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.160612006
+    },
+    {
+      "inputs": {
+        "score_diff": -3.0,
+        "secs_game": 2868.0,
+        "secs_half": 1068.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 77.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.5293573825
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 2268.0,
+        "secs_half": 468.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 56.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3885827159
+    },
+    {
+      "inputs": {
+        "score_diff": -9.0,
+        "secs_game": 1301.0,
+        "secs_half": 1301.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 5.0,
+        "yards_to_goal": 12.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2162993177
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 2594.0,
+        "secs_half": 794.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 9.0,
+        "yards_to_goal": 63.0,
+        "prior_logit": -1.2885614177,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2217912454
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3513.0,
+        "secs_half": 1713.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 7.0,
+        "yards_to_goal": 52.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6320393044
+    },
+    {
+      "inputs": {
+        "score_diff": -1.0,
+        "secs_game": 900.0,
+        "secs_half": 900.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 23.0,
+        "prior_logit": 1.0315805928,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6707330008
+    },
+    {
+      "inputs": {
+        "score_diff": -14.0,
+        "secs_game": 1453.0,
+        "secs_half": 1453.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 71.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0956673476
+    },
+    {
+      "inputs": {
+        "score_diff": -3.0,
+        "secs_game": 2324.0,
+        "secs_half": 524.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 11.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": 0.1175852553,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3448142812
+    },
+    {
+      "inputs": {
+        "score_diff": 5.0,
+        "secs_game": 120.0,
+        "secs_half": 120.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 7.0,
+        "yards_to_goal": 67.0,
+        "prior_logit": 0.8206585918,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9137854418
+    },
+    {
+      "inputs": {
+        "score_diff": -11.0,
+        "secs_game": 490.0,
+        "secs_half": 490.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 4.0,
+        "yards_to_goal": 29.0,
+        "prior_logit": -1.4994834187,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0277734183
+    },
+    {
+      "inputs": {
+        "score_diff": -11.0,
+        "secs_game": 747.0,
+        "secs_half": 747.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 45.0,
+        "prior_logit": 0.4691219236,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1515153217
+    },
+    {
+      "inputs": {
+        "score_diff": -32.0,
+        "secs_game": 1524.0,
+        "secs_half": 1524.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 29.0,
+        "prior_logit": -1.7807127533,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0013062481
+    },
+    {
+      "inputs": {
+        "score_diff": -21.0,
+        "secs_game": 285.0,
+        "secs_half": 285.0,
+        "posteam_is_home": 1.0,
+        "down_f": 4.0,
+        "ydstogo_f": 11.0,
+        "yards_to_goal": 67.0,
+        "prior_logit": -0.8667174158,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0019974691
+    },
+    {
+      "inputs": {
+        "score_diff": 13.0,
+        "secs_game": 342.0,
+        "secs_half": 342.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 49.0,
+        "prior_logit": 0.8909659255,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.960683999
+    },
+    {
+      "inputs": {
+        "score_diff": -3.0,
+        "secs_game": 209.0,
+        "secs_half": 209.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 9.0,
+        "yards_to_goal": 39.0,
+        "prior_logit": 1.0315805928,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4263232005
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3600.0,
+        "secs_half": 1800.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": 0.9612732591,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7647797786
+    },
+    {
+      "inputs": {
+        "score_diff": -11.0,
+        "secs_game": 1897.0,
+        "secs_half": 97.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 59.0,
+        "prior_logit": -0.5151807476,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1489945436
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 3206.0,
+        "secs_half": 1406.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 14.0,
+        "yards_to_goal": 75.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4276830708
+    },
+    {
+      "inputs": {
+        "score_diff": 5.0,
+        "secs_game": 145.0,
+        "secs_half": 145.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 13.0,
+        "yards_to_goal": 48.0,
+        "prior_logit": 1.0315805928,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9229029155
+    },
+    {
+      "inputs": {
+        "score_diff": 10.0,
+        "secs_game": 1807.0,
+        "secs_half": 7.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 60.0,
+        "prior_logit": 1.3128099274,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8821680063
+    },
+    {
+      "inputs": {
+        "score_diff": 14.0,
+        "secs_game": 2770.0,
+        "secs_half": 970.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 2.0,
+        "yards_to_goal": 16.0,
+        "prior_logit": 0.8206585918,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9527396433
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 3021.0,
+        "secs_half": 1221.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": -1.0776394168,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1313787344
+    },
+    {
+      "inputs": {
+        "score_diff": 5.0,
+        "secs_game": 302.0,
+        "secs_half": 302.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 5.0,
+        "yards_to_goal": 92.0,
+        "prior_logit": 0.187892589,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.819809633
+    },
+    {
+      "inputs": {
+        "score_diff": -20.0,
+        "secs_game": 1031.0,
+        "secs_half": 1031.0,
+        "posteam_is_home": 1.0,
+        "down_f": 4.0,
+        "ydstogo_f": 12.0,
+        "yards_to_goal": 51.0,
+        "prior_logit": 0.4691219236,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0265912035
+    },
+    {
+      "inputs": {
+        "score_diff": 34.0,
+        "secs_game": 340.0,
+        "secs_half": 340.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 53.0,
+        "prior_logit": 1.7346539293,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9999001295
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 2662.0,
+        "secs_half": 862.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 51.0,
+        "prior_logit": -0.233951413,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2709799292
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3360.0,
+        "secs_half": 1560.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 8.0,
+        "yards_to_goal": 41.0,
+        "prior_logit": -0.5151807476,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2648159482
+    },
+    {
+      "inputs": {
+        "score_diff": 31.0,
+        "secs_game": 119.0,
+        "secs_half": 119.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 25.0,
+        "prior_logit": -0.233951413,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9999969598
+    },
+    {
+      "inputs": {
+        "score_diff": 18.0,
+        "secs_game": 900.0,
+        "secs_half": 900.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 7.0,
+        "yards_to_goal": 75.0,
+        "prior_logit": 0.7503512582,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9786106641
+    },
+    {
+      "inputs": {
+        "score_diff": -3.0,
+        "secs_game": 48.0,
+        "secs_half": 48.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 59.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1404605395
+    },
+    {
+      "inputs": {
+        "score_diff": -11.0,
+        "secs_game": 129.0,
+        "secs_half": 129.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 5.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": -1.4994834187,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0110190094
+    },
+    {
+      "inputs": {
+        "score_diff": -16.0,
+        "secs_game": 827.0,
+        "secs_half": 827.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 58.0,
+        "prior_logit": 0.8206585918,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0648996858
+    },
+    {
+      "inputs": {
+        "score_diff": -10.0,
+        "secs_game": 1911.0,
+        "secs_half": 111.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1608411575
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 2569.0,
+        "secs_half": 769.0,
+        "posteam_is_home": 0.0,
+        "down_f": 4.0,
+        "ydstogo_f": 25.0,
+        "yards_to_goal": 85.0,
+        "prior_logit": 1.0315805928,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8928895865
+    },
+    {
+      "inputs": {
+        "score_diff": 15.0,
+        "secs_game": 1043.0,
+        "secs_half": 1043.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9204195192
+    },
+    {
+      "inputs": {
+        "score_diff": 10.0,
+        "secs_game": 1289.0,
+        "secs_half": 1289.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 5.0,
+        "yards_to_goal": 54.0,
+        "prior_logit": 1.8752685966,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.918733796
+    },
+    {
+      "inputs": {
+        "score_diff": -10.0,
+        "secs_game": 376.0,
+        "secs_half": 376.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 17.0,
+        "yards_to_goal": 61.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0572345128
+    },
+    {
+      "inputs": {
+        "score_diff": -10.0,
+        "secs_game": 1598.0,
+        "secs_half": 1598.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 25.0,
+        "prior_logit": 2.0158832639,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.5432823135
+    },
+    {
+      "inputs": {
+        "score_diff": -10.0,
+        "secs_game": 990.0,
+        "secs_half": 990.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 58.0,
+        "prior_logit": 0.187892589,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1462405439
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 1801.0,
+        "secs_half": 1.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 25.0,
+        "prior_logit": -0.233951413,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3295524572
+    },
+    {
+      "inputs": {
+        "score_diff": -11.0,
+        "secs_game": 1750.0,
+        "secs_half": 1750.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 70.0,
+        "prior_logit": -0.5854880812,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1270574596
+    },
+    {
+      "inputs": {
+        "score_diff": -11.0,
+        "secs_game": 1883.0,
+        "secs_half": 83.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 5.0,
+        "yards_to_goal": 30.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0857918823
+    },
+    {
+      "inputs": {
+        "score_diff": 13.0,
+        "secs_game": 866.0,
+        "secs_half": 866.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 21.0,
+        "prior_logit": 0.4691219236,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9637989167
+    },
+    {
+      "inputs": {
+        "score_diff": -4.0,
+        "secs_game": 1853.0,
+        "secs_half": 53.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 6.0,
+        "yards_to_goal": 40.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4779850989
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3490.0,
+        "secs_half": 1690.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 33.0,
+        "prior_logit": 0.4691219236,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7420679978
+    },
+    {
+      "inputs": {
+        "score_diff": -8.0,
+        "secs_game": 2012.0,
+        "secs_half": 212.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 2.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": 0.8909659255,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2504598561
+    },
+    {
+      "inputs": {
+        "score_diff": -10.0,
+        "secs_game": 1552.0,
+        "secs_half": 1552.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 4.0,
+        "yards_to_goal": 69.0,
+        "prior_logit": 0.6097365909,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2243033369
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 134.0,
+        "secs_half": 134.0,
+        "posteam_is_home": 0.0,
+        "down_f": 4.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 39.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0576515129
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 1049.0,
+        "secs_half": 1049.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 6.0,
+        "yards_to_goal": 6.0,
+        "prior_logit": 0.187892589,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6635472408
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3562.0,
+        "secs_half": 1762.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 58.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.5580747515
+    },
+    {
+      "inputs": {
+        "score_diff": 4.0,
+        "secs_game": 2501.0,
+        "secs_half": 701.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 69.0,
+        "prior_logit": 1.9455759302,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8949252465
+    },
+    {
+      "inputs": {
+        "score_diff": 10.0,
+        "secs_game": 1279.0,
+        "secs_half": 1279.0,
+        "posteam_is_home": 0.0,
+        "down_f": 4.0,
+        "ydstogo_f": 16.0,
+        "yards_to_goal": 65.0,
+        "prior_logit": 2.0158832639,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9406556144
+    },
+    {
+      "inputs": {
+        "score_diff": 31.0,
+        "secs_game": 735.0,
+        "secs_half": 735.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 22.0,
+        "prior_logit": 1.4534245947,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9994429041
+    },
+    {
+      "inputs": {
+        "score_diff": -10.0,
+        "secs_game": 1759.0,
+        "secs_half": 1759.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 9.0,
+        "yards_to_goal": 69.0,
+        "prior_logit": -0.5854880812,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1238893845
+    },
+    {
+      "inputs": {
+        "score_diff": -10.0,
+        "secs_game": 796.0,
+        "secs_half": 796.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 38.0,
+        "prior_logit": 0.187892589,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1752548048
+    },
+    {
+      "inputs": {
+        "score_diff": -3.0,
+        "secs_game": 742.0,
+        "secs_half": 742.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 99.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3318260715
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 3390.0,
+        "secs_half": 1590.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 11.0,
+        "yards_to_goal": 70.0,
+        "prior_logit": -1.429176085,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0683759086
+    },
+    {
+      "inputs": {
+        "score_diff": 9.0,
+        "secs_game": 939.0,
+        "secs_half": 939.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": 0.5394292572,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9024562431
+    },
+    {
+      "inputs": {
+        "score_diff": 9.0,
+        "secs_game": 1741.0,
+        "secs_half": 1741.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 90.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7270611578
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3286.0,
+        "secs_half": 1486.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 28.0,
+        "prior_logit": 0.8206585918,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6065745257
+    },
+    {
+      "inputs": {
+        "score_diff": -13.0,
+        "secs_game": 825.0,
+        "secs_half": 825.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 8.0,
+        "yards_to_goal": 27.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.12210384
+    },
+    {
+      "inputs": {
+        "score_diff": -5.0,
+        "secs_game": 361.0,
+        "secs_half": 361.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 2.0,
+        "yards_to_goal": 48.0,
+        "prior_logit": 1.3128099274,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3548796683
+    },
+    {
+      "inputs": {
+        "score_diff": 2.0,
+        "secs_game": 691.0,
+        "secs_half": 691.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 52.0,
+        "prior_logit": -0.3042587466,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6605431343
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3007.0,
+        "secs_half": 1207.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 67.0,
+        "prior_logit": 1.0315805928,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7295444242
+    },
+    {
+      "inputs": {
+        "score_diff": -3.0,
+        "secs_game": 3228.0,
+        "secs_half": 1428.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 8.0,
+        "yards_to_goal": 32.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4053447718
+    },
+    {
+      "inputs": {
+        "score_diff": -9.0,
+        "secs_game": 825.0,
+        "secs_half": 825.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 8.0,
+        "yards_to_goal": 68.0,
+        "prior_logit": -0.3042587466,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1246412307
+    },
+    {
+      "inputs": {
+        "score_diff": 14.0,
+        "secs_game": 3003.0,
+        "secs_half": 1203.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 70.0,
+        "prior_logit": -0.1636440793,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7710690829
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3600.0,
+        "secs_half": 1800.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3511885435
+    },
+    {
+      "inputs": {
+        "score_diff": 11.0,
+        "secs_game": 701.0,
+        "secs_half": 701.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 49.0,
+        "prior_logit": 0.6097365909,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8849130109
+    },
+    {
+      "inputs": {
+        "score_diff": 1.0,
+        "secs_game": 806.0,
+        "secs_half": 806.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 75.0,
+        "prior_logit": 1.1721952601,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.5899164443
+    },
+    {
+      "inputs": {
+        "score_diff": 13.0,
+        "secs_game": 477.0,
+        "secs_half": 477.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 56.0,
+        "prior_logit": 2.0158832639,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9804190836
+    },
+    {
+      "inputs": {
+        "score_diff": -3.0,
+        "secs_game": 1920.0,
+        "secs_half": 120.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 64.0,
+        "prior_logit": -0.1636440793,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2941885022
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3201.0,
+        "secs_half": 1401.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 47.0,
+        "prior_logit": 1.0315805928,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6893703299
+    },
+    {
+      "inputs": {
+        "score_diff": -10.0,
+        "secs_game": 1149.0,
+        "secs_half": 1149.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 2.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0801761026
+    },
+    {
+      "inputs": {
+        "score_diff": -11.0,
+        "secs_game": 1752.0,
+        "secs_half": 1752.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2156665659
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 1902.0,
+        "secs_half": 102.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 20.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6793091249
+    },
+    {
+      "inputs": {
+        "score_diff": -17.0,
+        "secs_game": 655.0,
+        "secs_half": 655.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 59.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0187056439
+    },
+    {
+      "inputs": {
+        "score_diff": -6.0,
+        "secs_game": 717.0,
+        "secs_half": 717.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 14.0,
+        "yards_to_goal": 62.0,
+        "prior_logit": -0.5854880812,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.157819789
+    },
+    {
+      "inputs": {
+        "score_diff": -12.0,
+        "secs_game": 2279.0,
+        "secs_half": 479.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 5.0,
+        "yards_to_goal": 5.0,
+        "prior_logit": -0.5151807476,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1742817498
+    },
+    {
+      "inputs": {
+        "score_diff": 14.0,
+        "secs_game": 1143.0,
+        "secs_half": 1143.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 5.0,
+        "yards_to_goal": 49.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8979012172
+    },
+    {
+      "inputs": {
+        "score_diff": -12.0,
+        "secs_game": 45.0,
+        "secs_half": 45.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 20.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0084134859
+    },
+    {
+      "inputs": {
+        "score_diff": 13.0,
+        "secs_game": 664.0,
+        "secs_half": 664.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 14.0,
+        "prior_logit": 0.4691219236,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9705751925
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 2373.0,
+        "secs_half": 573.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8177695647
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 2956.0,
+        "secs_half": 1156.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 41.0,
+        "prior_logit": -0.7964100822,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2086961701
+    },
+    {
+      "inputs": {
+        "score_diff": -3.0,
+        "secs_game": 1216.0,
+        "secs_half": 1216.0,
+        "posteam_is_home": 1.0,
+        "down_f": 4.0,
+        "ydstogo_f": 27.0,
+        "yards_to_goal": 86.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.263912539
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 1826.0,
+        "secs_half": 26.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 73.0,
+        "prior_logit": 0.4691219236,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2912602614
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 75.0,
+        "secs_half": 75.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 60.0,
+        "prior_logit": 0.8206585918,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.937241023
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3259.0,
+        "secs_half": 1459.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 88.0,
+        "prior_logit": -1.0073320831,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.215716086
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 1920.0,
+        "secs_half": 120.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 77.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.433312788
+    },
+    {
+      "inputs": {
+        "score_diff": -10.0,
+        "secs_game": 1822.0,
+        "secs_half": 22.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2381825208
+    },
+    {
+      "inputs": {
+        "score_diff": -3.0,
+        "secs_game": 2789.0,
+        "secs_half": 989.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": -1.3588687514,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1595070589
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 3275.0,
+        "secs_half": 1475.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 37.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1611120612
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 1915.0,
+        "secs_half": 115.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": 0.8206585918,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8427657467
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 2998.0,
+        "secs_half": 1198.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 80.0,
+        "prior_logit": 0.8206585918,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7654665251
+    },
+    {
+      "inputs": {
+        "score_diff": 10.0,
+        "secs_game": 1840.0,
+        "secs_half": 40.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 71.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7191853642
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 1882.0,
+        "secs_half": 82.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 6.0,
+        "yards_to_goal": 62.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3574852234
+    },
+    {
+      "inputs": {
+        "score_diff": -11.0,
+        "secs_game": 2865.0,
+        "secs_half": 1065.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 50.0,
+        "prior_logit": 0.8909659255,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4654446041
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 1228.0,
+        "secs_half": 1228.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 13.0,
+        "yards_to_goal": 99.0,
+        "prior_logit": -0.8667174158,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4924676901
+    },
+    {
+      "inputs": {
+        "score_diff": 15.0,
+        "secs_game": 238.0,
+        "secs_half": 238.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 67.0,
+        "prior_logit": 0.8206585918,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9888562896
+    },
+    {
+      "inputs": {
+        "score_diff": 5.0,
+        "secs_game": 365.0,
+        "secs_half": 365.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 56.0,
+        "prior_logit": -0.8667174158,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.836780386
+    },
+    {
+      "inputs": {
+        "score_diff": -15.0,
+        "secs_game": 1878.0,
+        "secs_half": 78.0,
+        "posteam_is_home": 1.0,
+        "down_f": 4.0,
+        "ydstogo_f": 2.0,
+        "yards_to_goal": 43.0,
+        "prior_logit": -0.7964100822,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0651060072
+    },
+    {
+      "inputs": {
+        "score_diff": 27.0,
+        "secs_game": 120.0,
+        "secs_half": 120.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 17.0,
+        "yards_to_goal": 23.0,
+        "prior_logit": -0.3042587466,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9999424198
+    },
+    {
+      "inputs": {
+        "score_diff": -6.0,
+        "secs_game": 584.0,
+        "secs_half": 584.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 61.0,
+        "prior_logit": -0.5854880812,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2231010218
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 2842.0,
+        "secs_half": 1042.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 8.0,
+        "yards_to_goal": 66.0,
+        "prior_logit": -0.6557954149,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2960663808
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3299.0,
+        "secs_half": 1499.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 1.0,
+        "prior_logit": -0.9370247495,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1604898919
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 3413.0,
+        "secs_half": 1613.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 70.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4310910791
+    },
+    {
+      "inputs": {
+        "score_diff": -17.0,
+        "secs_game": 1489.0,
+        "secs_half": 1489.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 59.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0593185586
+    },
+    {
+      "inputs": {
+        "score_diff": -4.0,
+        "secs_game": 2252.0,
+        "secs_half": 452.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 14.0,
+        "prior_logit": -0.8667174158,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1267148215
+    },
+    {
+      "inputs": {
+        "score_diff": -9.0,
+        "secs_game": 579.0,
+        "secs_half": 579.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 83.0,
+        "prior_logit": 0.4691219236,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1144215215
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 1198.0,
+        "secs_half": 1198.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 11.0,
+        "yards_to_goal": 25.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4371980273
+    },
+    {
+      "inputs": {
+        "score_diff": 21.0,
+        "secs_game": 762.0,
+        "secs_half": 762.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9871210708
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 900.0,
+        "secs_half": 900.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 15.0,
+        "yards_to_goal": 48.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.5084256733
+    },
+    {
+      "inputs": {
+        "score_diff": -1.0,
+        "secs_game": 1132.0,
+        "secs_half": 1132.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 7.0,
+        "yards_to_goal": 77.0,
+        "prior_logit": -0.5151807476,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3830805194
+    },
+    {
+      "inputs": {
+        "score_diff": 7.0,
+        "secs_game": 1946.0,
+        "secs_half": 146.0,
+        "posteam_is_home": 0.0,
+        "down_f": 4.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 5.0,
+        "prior_logit": 0.187892589,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7253189493
+    },
+    {
+      "inputs": {
+        "score_diff": -18.0,
+        "secs_game": 1246.0,
+        "secs_half": 1246.0,
+        "posteam_is_home": 1.0,
+        "down_f": 2.0,
+        "ydstogo_f": 6.0,
+        "yards_to_goal": 56.0,
+        "prior_logit": -0.5151807476,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.0418086538
+    },
+    {
+      "inputs": {
+        "score_diff": -6.0,
+        "secs_game": 2185.0,
+        "secs_half": 385.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 1.0,
+        "prior_logit": -0.6557954149,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1412312437
+    },
+    {
+      "inputs": {
+        "score_diff": -4.0,
+        "secs_game": 2139.0,
+        "secs_half": 339.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 35.0,
+        "prior_logit": -0.5151807476,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.2796186018
+    },
+    {
+      "inputs": {
+        "score_diff": -6.0,
+        "secs_game": 910.0,
+        "secs_half": 910.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 36.0,
+        "prior_logit": -0.6557954149,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1333239675
+    },
+    {
+      "inputs": {
+        "score_diff": 21.0,
+        "secs_game": 120.0,
+        "secs_half": 120.0,
+        "posteam_is_home": 0.0,
+        "down_f": 2.0,
+        "ydstogo_f": 4.0,
+        "yards_to_goal": 74.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9995819542
+    },
+    {
+      "inputs": {
+        "score_diff": 20.0,
+        "secs_game": 284.0,
+        "secs_half": 284.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 0.0,
+        "yards_to_goal": 15.0,
+        "prior_logit": 0.4691219236,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9974169765
+    },
+    {
+      "inputs": {
+        "score_diff": 8.0,
+        "secs_game": 264.0,
+        "secs_half": 264.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 21.0,
+        "yards_to_goal": 56.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9049538922
+    },
+    {
+      "inputs": {
+        "score_diff": -6.0,
+        "secs_game": 3220.0,
+        "secs_half": 1420.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 16.0,
+        "prior_logit": 0.8909659255,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.5055404459
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 927.0,
+        "secs_half": 927.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 18.0,
+        "prior_logit": 0.3285072563,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.7757939449
+    },
+    {
+      "inputs": {
+        "score_diff": 3.0,
+        "secs_game": 3166.0,
+        "secs_half": 1366.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 75.0,
+        "prior_logit": -0.3745660803,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4780277709
+    },
+    {
+      "inputs": {
+        "score_diff": 6.0,
+        "secs_game": 2377.0,
+        "secs_half": 577.0,
+        "posteam_is_home": 1.0,
+        "down_f": 3.0,
+        "ydstogo_f": 8.0,
+        "yards_to_goal": 58.0,
+        "prior_logit": 1.0315805928,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8443350713
+    },
+    {
+      "inputs": {
+        "score_diff": -13.0,
+        "secs_game": 2145.0,
+        "secs_half": 345.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 57.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1278560389
+    },
+    {
+      "inputs": {
+        "score_diff": 10.0,
+        "secs_game": 525.0,
+        "secs_half": 525.0,
+        "posteam_is_home": 1.0,
+        "down_f": 4.0,
+        "ydstogo_f": 1.0,
+        "yards_to_goal": 73.0,
+        "prior_logit": -0.7964100822,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.8963416652
+    },
+    {
+      "inputs": {
+        "score_diff": 2.0,
+        "secs_game": 24.0,
+        "secs_half": 24.0,
+        "posteam_is_home": 0.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 25.0,
+        "prior_logit": 0.8206585918,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.6283688737
+    },
+    {
+      "inputs": {
+        "score_diff": -9.0,
+        "secs_game": 2487.0,
+        "secs_half": 687.0,
+        "posteam_is_home": 0.0,
+        "down_f": 4.0,
+        "ydstogo_f": 14.0,
+        "yards_to_goal": 26.0,
+        "prior_logit": -0.4448734139,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.1887414207
+    },
+    {
+      "inputs": {
+        "score_diff": 0.0,
+        "secs_game": 3210.0,
+        "secs_half": 1410.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 44.0,
+        "prior_logit": -0.8667174158,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3228532408
+    },
+    {
+      "inputs": {
+        "score_diff": 10.0,
+        "secs_game": 416.0,
+        "secs_half": 416.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 74.0,
+        "prior_logit": -0.7964100822,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.9367019296
+    },
+    {
+      "inputs": {
+        "score_diff": -7.0,
+        "secs_game": 2735.0,
+        "secs_half": 935.0,
+        "posteam_is_home": 1.0,
+        "down_f": 1.0,
+        "ydstogo_f": 10.0,
+        "yards_to_goal": 80.0,
+        "prior_logit": 0.3988145899,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.3787910612
+    },
+    {
+      "inputs": {
+        "score_diff": 4.0,
+        "secs_game": 2311.0,
+        "secs_half": 511.0,
+        "posteam_is_home": 0.0,
+        "down_f": 3.0,
+        "ydstogo_f": 2.0,
+        "yards_to_goal": 21.0,
+        "prior_logit": -0.233951413,
+        "is_ot": 0.0
+      },
+      "expected_p_home": 0.4517626271
+    }
+  ]
+}

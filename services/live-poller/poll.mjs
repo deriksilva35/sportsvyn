@@ -21,6 +21,7 @@ import { scoringPlayFor, baseballScoringText } from '../../lib/push/scoringPlayR
 import { activityEventFor, pushLiveActivities } from '../../lib/push/liveActivityStore.js';
 import { stateFromMatch, liveLine } from '../../lib/push/liveActivityState.js';
 import { playsFor } from '../../lib/gridiron/playsImport.js';
+import { winProbTick, logWinProb, WINPROB_SPORTS } from '../../lib/winprob/live.js';
 
 const CFBD = 'https://apinext.collegefootballdata.com';
 const BDL = 'https://api.balldontlie.io';
@@ -620,6 +621,10 @@ export async function pollOnce(sql, {
            -- their own fetchedAt instead of on a counter in a process's head
            -- that a restart resets.
            m.metadata->'lineups' AS before_lineups,
+           -- THE FROZEN MARKET PRIOR and the season, for the win probability
+           -- (lib/winprob/live.js). Frozen once at kickoff; read every poll.
+           m.metadata->'market_prior' AS market_prior,
+           m.season_year,
            -- THE CURATED SCORING SENTENCES, for the baseball card's last play:
            -- when the newest completed at-bat IS the scoring one, this is the
            -- text it prints. Same row, no extra read.
@@ -743,9 +748,26 @@ export async function pollOnce(sql, {
       continue;
     }
 
+    // THE WIN PROBABILITY RIDES THE SAME WRITE. writeLive replaces live_state
+    // whole, so a value written after it would be wiped on the next poll and
+    // missing between the two. Computed here from the state being written and
+    // put inside it - NFL only; CFB is computed and logged, never shown. Its
+    // failure is contained: a card without a number, never a missed score.
+    let wp = null;
+    if (upd.status === 'live' && WINPROB_SPORTS.includes(m.league_slug)) {
+      try {
+        wp = await winProbTick(sql, m, { liveState: upd.liveState, homeScore: upd.homeScore ?? m.home_score, awayScore: upd.awayScore ?? m.away_score, now });
+        if (wp?.display != null) upd.liveState = { ...(upd.liveState ?? {}), win_prob: wp.display, win_prob_at: new Date(now).toISOString() };
+      } catch (e) { log(`[${league}] win prob failed match=${m.id}: ${e.message}`); }
+    }
+
     const after = await writeLive(sql, m.id, upd);
     if (!after) continue;
     out.written += 1;
+    if (wp) {
+      try { if (await logWinProb(sql, m.id, wp, { now })) out.winprob = (out.winprob ?? 0) + 1; }
+      catch (e) { log(`[${league}] win prob log failed match=${m.id}: ${e.message}`); }
+    }
 
     if (after.status === 'final' && m.status !== 'final') out.finals += 1;
 

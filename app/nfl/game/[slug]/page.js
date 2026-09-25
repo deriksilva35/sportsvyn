@@ -37,6 +37,7 @@ import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay, lastActionPlay, showGamecast } from '@/lib/gridiron/driveStrip';
 import OddsStrip from '@/components/gridiron/OddsStrip';
+import LiveWinProb from '@/components/gridiron/LiveWinProb';
 import PropsPanel from '@/components/gridiron/PropsPanel';
 import { propsSlate } from '@/lib/market/reads';
 import { isPreGame, showsProps } from '@/lib/gridiron/oddsFormat';
@@ -344,6 +345,10 @@ export default async function GamePage({ params, searchParams }) {
             joins scheduled matches. Renders null when there is no clean
             two-sided read: absence over inference. */}
         {isPreGame(game.status) && odds ? <OddsStrip odds={odds} leagueSlug="nfl" matchId={game.id} /> : null}
+        {/* OUR LIVE READ takes the market strip's place once the game is live
+            (components/gridiron/LiveWinProb.js): no line, no bar; stale past
+            90 s it dims, dead past 5 minutes it goes; at final it retires. */}
+        {live ? <LiveWinProb liveState={game.liveState} awayAbbr={game.away?.abbreviation ?? ''} homeAbbr={game.home?.abbreviation ?? ''} /> : null}
         {showsProps(game.status) && propsCard ? <PropsPanel card={propsCard} leagueSlug="nfl" matchId={game.id} /> : null}
 
         {panels.length ? (
