@@ -36,10 +36,13 @@ export default function LiveWinProb({ liveState, awayAbbr, homeAbbr, now = new D
   const homeFav = v.home >= v.away;
   return (
     <div className={`gi-odds gi-wp-live${v.stale ? ' stale' : ''}`} data-winprob="live" data-stale={v.stale ? '1' : '0'}>
-      <div className="gi-odds-h">
-        <span className="lbl">Win Probability · our live read <span className="gi-wp-cal">Calibrating</span></span>
-        {v.stale ? <span className="src">Paused — feed reconnecting</span> : null}
+      <div className="gi-odds-h gi-wp-h">
+        <span className="lbl">Win Probability · our live read</span>
+        <span className="gi-wp-cal">Calibrating</span>
       </div>
+      {/* ITS OWN LINE, AT FULL STRENGTH: the words that say the number is old
+          are the one thing on the block that must not fade with it. */}
+      {v.stale ? <div className="gi-wp-paused">Paused — feed reconnecting</div> : null}
       <div className="gi-odds-bar" role="img" aria-label={`Win probability: ${awayAbbr} ${v.away}%, ${homeAbbr} ${v.home}%`}>
         <div className={`seg away ${!homeFav ? 'fav' : ''}`} style={{ width: `${v.away}%` }} />
         <div className={`seg home ${homeFav ? 'fav' : ''}`} style={{ width: `${v.home}%` }} />

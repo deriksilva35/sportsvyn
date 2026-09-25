@@ -316,8 +316,13 @@
 .gi-odds-fine { margin-top: 12px; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-dim); }
 /* Our live read (components/gridiron/LiveWinProb.js): the CALIBRATING tag, and
    the whole block dimmed while the feed is stale. */
-.gi-wp-cal { display: inline-block; margin-left: 8px; padding: 1px 5px; border: 1px solid var(--muted-dim); border-radius: 3px; font-size: 8px; letter-spacing: 0.12em; color: var(--muted); vertical-align: 1px; }
-.gi-wp-live.stale { opacity: 0.45; }
+/* The header never wraps: label and tag on one line, the tag pushed right. */
+.gi-wp-h { flex-wrap: nowrap; gap: 8px; }
+.gi-wp-h .lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.gi-wp-cal { flex: 0 0 auto; padding: 1px 5px; border: 1px solid var(--muted-dim); border-radius: 3px; font-size: 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+/* Stale: the BAR and the numbers dim; the caption saying so does not. */
+.gi-wp-paused { margin: -4px 0 10px; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--paper); }
+.gi-wp-live.stale .gi-odds-bar, .gi-wp-live.stale .gi-odds-sides, .gi-wp-live.stale .gi-odds-fine { opacity: 0.4; }
 
 /* ---- lede zone (Today pages, standings) ----
    THIS BAND WAS THE LAST PAPER GROUND IN THE PRODUCT, and it had stopped

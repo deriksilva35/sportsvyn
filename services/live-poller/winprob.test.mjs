@@ -201,7 +201,8 @@ test('THE PAGE draws our live read from what the poller wrote - Calibrating, two
   const md = await meta(ids.nfl);
   const h = await render(`${NS}-nfl`);
   assert.match(h, /data-winprob="live" data-stale="0"/);
-  assert.match(h, /Win Probability · our live read <span class="gi-wp-cal">Calibrating<\/span>/);
+  assert.match(h, /<span class="lbl">Win Probability · our live read<\/span><span class="gi-wp-cal">Calibrating<\/span>/);
+  assert.doesNotMatch(h, /Paused/, 'fresh: no paused line');
   assert.match(h, /Our live model, still being validated against results\./);
   assert.match(h, new RegExp(`>${md.live_state.win_prob}%<`)); assert.match(h, new RegExp(`>${100 - md.live_state.win_prob}%<`));
   assert.doesNotMatch(h, /pre-kickoff consensus/i, 'once live, the market strip is gone');
