@@ -116,6 +116,19 @@ process and four different files each wanted a stub called `__css_stub.mjs`. Nex
 to the test those were four paths; in one directory they would have been one file
 and a race.
 
+## A KILLED TEST RUN SKIPS ALL OF ITS TEARDOWN
+
+After killing a test run, sweep DEV for EVERY fixture prefix the suite creates
+(leagues, contests, matches, teams, users), not just the table you expect. A
+killed run skips all of its teardown.
+
+    set -a && . ./.env.local && set +a && node scripts/dev-orphan-sweep.mjs
+
+It lists, by the tests' own conventions, and deletes nothing. The receipt, 25
+Sep: a suite stopped mid-file left pickem.test's league, teams, matches and
+contest on DEV; the check after the kill looked only for sentinel MATCHES, found
+none, and the next full run failed on a duplicate league slug.
+
 ## Commit hygiene: what never gets staged, and what scripts/ is for
 
 THE NEVER-STAGE LIST is short and it is about generated or secret files, not
