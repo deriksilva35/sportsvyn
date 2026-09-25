@@ -69,7 +69,7 @@ function siteFooterMarkup() {
           </div>
           <div className="footer-col">
             <h4>About</h4>
-            <a href="#">Methodology</a>
+            <Link href="/methodology">Methodology</Link>
             <a href="#">Voice Bible</a>
             <a href="/privacy">Privacy</a>
             <a href="/terms">Terms</a>
