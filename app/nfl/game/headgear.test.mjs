@@ -3,8 +3,8 @@
 //
 // The header is two STACKED rows (away above home), so both marks face right -
 // no mirror here; the Pick'em board is the one facing pair. The rows are a
-// pair, so both or neither. NFL wears helmets; CFB has no cutouts yet and
-// keeps the two-tone disc. The header mark is 40 px, both kinds.
+// pair, so both or neither. NFL and FBS wear helmets; an FCS side has none,
+// so an FBS v FCS header is two discs. The header mark is 40 px, both kinds.
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -68,11 +68,14 @@ test('a header with one unknown side draws two discs, never one helmet', () => {
   assert.equal((h.match(/data-teammark="circle"/g) ?? []).length, 2);
 });
 
-test('CFB keeps the disc: no cutouts yet, whatever the letters', () => {
+test('CFB: two FBS sides wear their helmets at 40 px; FBS v FCS is two discs', () => {
   const h = header('cfb', { ...ATL, abbreviation: 'ALA' }, { ...GB, abbreviation: 'UGA' });
-  assert.equal((h.match(/data-teammark="circle"/g) ?? []).length, 2);
-  assert.equal((h.match(/<svg [^>]*width="40" height="40"/g) ?? []).length, 2, 'the disc in the same 40 px box');
-  assert.doesNotMatch(h, /headgear/);
+  assert.deepEqual([...h.matchAll(/src="(\/headgear\/cfb\/[^"]+)"/g)].map((m) => m[1]), ['/headgear/cfb/ALA@1x.webp', '/headgear/cfb/UGA@1x.webp']);
+  assert.equal((h.match(/<img [^>]*width="40" height="40"/g) ?? []).length, 2);
+  // An FCS team has NO stored abbreviation - the page prints letters it derives.
+  const fcs = header('cfb', { ...ATL, abbreviation: null, name: 'Alabama A&M' }, { ...GB, abbreviation: 'ALA', name: 'Alabama' });
+  assert.doesNotMatch(fcs, /headgear/, 'Alabama A&M does not borrow Alabama\'s helmet, and Alabama drops to the disc too');
+  assert.equal((fcs.match(/<svg [^>]*width="40" height="40"/g) ?? []).length, 2, 'the disc in the same 40 px box');
 });
 
 test('BOTH PAGES hand the row their own league and one pair answer from their own teams', () => {

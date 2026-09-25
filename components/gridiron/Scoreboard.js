@@ -109,6 +109,7 @@ function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = n
       {/* THE MARK FACES THE SCORE: headgear where the league has it, else
           the two-tone disc (components/team/TeamMark.js). */}
       <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={abbr ?? undefined} size={22}
+        headgearKey={t.abbreviation ?? null}
         title={name || undefined} className="gi-hm" leagueSlug={leagueSlug} headgear={headgear} />
       {abbr ? <span className="abbr">{abbr}</span> : <span className="abbr" />}
       <RankBadge rank={t.apRank} />
@@ -247,7 +248,8 @@ function Card({ g, records, tz, withDay = true, signedIn = false }) {
   const homeWin = final && hw > aw, awayWin = final && aw > hw;
   const hasLine = Array.isArray(g.lineScores?.home);
   // BOTH OR NEITHER: one cutout beside one disc reads as a favourite.
-  const headgear = pairHasHeadgear(g.leagueSlug, abbrOf(g.away) || null, abbrOf(g.home) || null);
+  // THE STORED LETTERS (an FCS side prints derived ones - lib/teams/headgear.js).
+  const headgear = pairHasHeadgear(g.leagueSlug, g.away?.abbreviation ?? null, g.home?.abbreviation ?? null);
 
   // THE WHOLE CARD IS THE CONTROL. It used to be the caret alone - a 12px
   // glyph - while the card it belonged to sat inert next to a dead "Full match

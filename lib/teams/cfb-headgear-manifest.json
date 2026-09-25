@@ -1,0 +1,591 @@
+{
+ "generated": "2026-09-25",
+ "source": "Higgsfield gpt_image_2_5",
+ "pose": "side profile facing right, black background, 1024px",
+ "spec": "CFB FBS: shell = teams.color_primary, facemask = teams.color_secondary (PROD export, team-colors @ aa58296)",
+ "cfb": {
+  "AF": {
+   "file": "AF",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062448_133f18ce-87ea-4123-af23-79fbe5f3f7f5.png"
+  },
+  "AKR": {
+   "file": "AKR",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062449_f30c58b3-6271-477e-b431-1ff55d77c736.png"
+  },
+  "ALA": {
+   "file": "ALA",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062448_01381b95-2823-406d-9bb9-2ab6ae6e380b.png"
+  },
+  "APP": {
+   "file": "APP",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062448_9842797e-4aed-4f5d-b28b-d718c0a786c2.png"
+  },
+  "ARIZ": {
+   "file": "ARIZ",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062449_8b4adc7f-f327-49e6-b0a4-ba223d02a169.png"
+  },
+  "ARK": {
+   "file": "ARK",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062448_6a97229b-a892-4bf4-8274-327a6afaef3a.png"
+  },
+  "ARMY": {
+   "file": "ARMY",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062448_1ea1a3ba-ab5d-4683-a5ad-a12f23696bd7.png"
+  },
+  "ARST": {
+   "file": "ARST",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062449_9143796e-1a4f-421b-b0e2-c6ebcb25df6e.png"
+  },
+  "ASU": {
+   "file": "ASU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062449_5be9256a-e68a-48df-beec-934910a93864.png"
+  },
+  "AUB": {
+   "file": "AUB",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062448_7b6e75c4-a41d-4d80-b638-2086a6e134e2.png"
+  },
+  "BALL": {
+   "file": "BALL",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062448_046af237-d818-4bb8-acdf-184d0aad1236.png"
+  },
+  "BAY": {
+   "file": "BAY",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062449_627b435f-71ed-4931-884f-d1f8029fca0a.png"
+  },
+  "BC": {
+   "file": "BC",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062506_d1744a21-8cb3-4231-b84d-753c7248b9f1.png"
+  },
+  "BGSU": {
+   "file": "BGSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062506_fb6ba834-d258-40b0-bca8-bc7da2eebbb7.png"
+  },
+  "BOIS": {
+   "file": "BOIS",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062505_fa4b2eca-fa40-4601-bcd5-2f78b02371f6.png"
+  },
+  "BUF": {
+   "file": "BUF",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062505_7e25bef5-54ec-48e7-92e9-649b78aa7c32.png"
+  },
+  "BYU": {
+   "file": "BYU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062506_c74e42de-69b9-4fd8-af8b-162aa3c0b146.png"
+  },
+  "CAL": {
+   "file": "CAL",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062506_0b2f68ae-209b-4cc6-8636-7cb13404dbf0.png"
+  },
+  "CCU": {
+   "file": "CCU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062505_037936a5-529a-4d63-92b1-ec30d38623a1.png"
+  },
+  "CIN": {
+   "file": "CIN",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062505_7134e218-1cb0-4dfb-a234-c49b465bb336.png"
+  },
+  "CLEM": {
+   "file": "CLEM",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_064836_612fa90b-9743-4c9a-a582-337f49483328.png",
+   "note": "re-rolled: real shell colour"
+  },
+  "CLT": {
+   "file": "CLT",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_bf8d679e-5419-44d1-b016-74721e0346ed.png"
+  },
+  "CMU": {
+   "file": "CMU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062505_a0174719-587e-43f7-80cd-ee8752556e2c.png"
+  },
+  "COLO": {
+   "file": "COLO",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062505_c834ce6f-6aae-4e0a-bc7f-e28f6bf429f3.png"
+  },
+  "CONN": {
+   "file": "CONN",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_653126f8-b081-44d9-b0c4-9442883b77f1.png"
+  },
+  "CSU": {
+   "file": "CSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_1b46663a-d9ee-428b-88ea-9f8e42b8ffa2.png"
+  },
+  "DEL": {
+   "file": "DEL",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_a6d64a30-0079-4e92-bc60-3299bbb56e2a.png"
+  },
+  "DUKE": {
+   "file": "DUKE",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_fe2cd21b-33e0-4134-aeb2-cd332fd68083.png"
+  },
+  "ECU": {
+   "file": "ECU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_713aa2e4-358d-4f7e-a32b-4b813f82c705.png"
+  },
+  "EMU": {
+   "file": "EMU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_c70d2c72-c2c4-4bde-bd43-0f8d4db3e973.png"
+  },
+  "FAU": {
+   "file": "FAU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_63fa7ed8-1565-4b97-9f48-cb7c9f7e2adc.png"
+  },
+  "FIU": {
+   "file": "FIU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_11e83d6e-4f6f-43ac-901f-020ec6386484.png"
+  },
+  "FLA": {
+   "file": "FLA",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_eebd7251-878e-44ad-919e-b7c2e87f6553.png"
+  },
+  "FRES": {
+   "file": "FRES",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_9206455e-eec8-4058-8e4a-4e8fd38c9faf.png"
+  },
+  "FSU": {
+   "file": "FSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062522_6b25aef5-7881-453c-8c42-565845ba9f24.png"
+  },
+  "GASO": {
+   "file": "GASO",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062638_395d4702-3903-4ea9-a4c7-a986e3562ae0.png"
+  },
+  "GAST": {
+   "file": "GAST",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062542_3fdf200c-0fb5-43cc-9433-bb5e80cd3eb6.png"
+  },
+  "GT": {
+   "file": "GT",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062541_25257714-7b51-48ba-92a7-f565c89c9357.png"
+  },
+  "HAW": {
+   "file": "HAW",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062542_d9a6247a-063e-4a06-8374-48e740923bd3.png"
+  },
+  "HOU": {
+   "file": "HOU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062542_8f9498ba-3f04-45c6-815e-789d65da44ab.png"
+  },
+  "ILL": {
+   "file": "ILL",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062542_299ec077-fa28-4cbd-b886-c6fe15c22c34.png"
+  },
+  "IOWA": {
+   "file": "IOWA",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062542_6d6247f3-7e6d-4c6e-ba40-39d6257b433d.png"
+  },
+  "ISU": {
+   "file": "ISU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062542_375b75fc-0511-45a0-8d58-de3409cc0cd8.png"
+  },
+  "IU": {
+   "file": "IU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062542_8cf1f2e9-df99-4537-9811-68e9ca0f5787.png"
+  },
+  "JMU": {
+   "file": "JMU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062638_85217fa8-4d28-447b-9f4b-58eb68bff92c.png"
+  },
+  "JXST": {
+   "file": "JXST",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062638_93970339-8fe8-46b9-ab09-9a54be54f72d.png"
+  },
+  "KENN": {
+   "file": "KENN",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062541_fc05132d-6b2d-4104-9a1e-b733dd6cde0b.png"
+  },
+  "KENT": {
+   "file": "KENT",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062638_b5d9fe40-40b9-4b81-8bf0-367f7f40b1a2.png"
+  },
+  "KSU": {
+   "file": "KSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062638_7ef820ae-58ed-40b1-ba6f-673711616167.png"
+  },
+  "KU": {
+   "file": "KU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062638_4bb0a95f-6281-411b-9fc3-ec5e6005e45b.png"
+  },
+  "LIB": {
+   "file": "LIB",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062639_a552423f-a02e-49f9-83a3-908f77f922e2.png"
+  },
+  "LOU": {
+   "file": "LOU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062638_01b59170-e4e1-46fa-91cd-488cbb8cd858.png"
+  },
+  "LSU": {
+   "file": "LSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_064845_4b88fd4d-d7d2-44a8-8db0-808c3e52f6a6.png",
+   "note": "re-rolled: real shell colour"
+  },
+  "LT": {
+   "file": "LT",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062650_1b97c7bd-540c-489a-89ab-9d0c664a5d70.png"
+  },
+  "M-OH": {
+   "file": "MOH",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062650_5e77d75e-7ce7-48d0-8d32-f4ab3176ed9f.png"
+  },
+  "MASS": {
+   "file": "MASS",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062727_34f117de-f4bd-452c-bc14-9c9495a518c1.png"
+  },
+  "MD": {
+   "file": "MD",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062650_e682f3dd-3b74-4bdf-af31-2c819994e2c5.png"
+  },
+  "MEM": {
+   "file": "MEM",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062650_aa2ac497-9a4f-42c2-8640-01f923f6df4b.png"
+  },
+  "MIA": {
+   "file": "MIA",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_064845_79438f5a-7240-4e6c-a160-e9d782072b0c.png",
+   "note": "re-rolled: real shell colour"
+  },
+  "MICH": {
+   "file": "MICH",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062650_5899eccf-f9f0-49c0-9c46-21daefc65833.png"
+  },
+  "MINN": {
+   "file": "MINN",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062727_bd219695-9408-428f-9831-6a05c18683b4.png"
+  },
+  "MISS": {
+   "file": "MISS",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062727_2d4e1684-1a93-42a2-a7da-d534a425147c.png"
+  },
+  "MIZ": {
+   "file": "MIZ",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062727_9700271f-b0a9-4444-b2ac-9878a7b0c32f.png"
+  },
+  "MOST": {
+   "file": "MOST",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062727_77d0f41b-ccc6-4b58-99ee-29aa9de26aa3.png"
+  },
+  "MRSH": {
+   "file": "MRSH",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062727_67832622-c91e-4d84-874d-22612dbb434d.png"
+  },
+  "MSST": {
+   "file": "MSST",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062727_fed3ee3f-d0f1-40a3-b0f1-e9bd717a94a4.png"
+  },
+  "MSU": {
+   "file": "MSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062752_dc615fa7-b190-462e-9e01-3d80f543a04d.png"
+  },
+  "MTSU": {
+   "file": "MTSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062752_27930a90-a9c8-491f-a0d0-83cd4acfdfa9.png"
+  },
+  "NAVY": {
+   "file": "NAVY",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062753_b4179786-85e6-44a2-884d-02a9da57760a.png"
+  },
+  "NCSU": {
+   "file": "NCSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062752_37e87085-3b91-48d7-89d3-a9790fb06e0f.png"
+  },
+  "ND": {
+   "file": "ND",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_064940_f24b1d9e-e492-4c9d-99aa-1db9816727e4.png",
+   "note": "re-rolled: real shell colour"
+  },
+  "NDSU": {
+   "file": "NDSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062753_90ca1b34-3d2c-42d4-b4d7-c70ba913c3dd.png"
+  },
+  "NEB": {
+   "file": "NEB",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_064835_9c4817e8-13fb-40ee-a54d-f2cd4d52294b.png",
+   "note": "re-rolled: real shell colour"
+  },
+  "NEV": {
+   "file": "NEV",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062752_4d90f513-f7c7-4cb8-8c08-cd95511eac0d.png"
+  },
+  "NIU": {
+   "file": "NIU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062818_13ee3d48-c296-433d-84fc-e632dc98798c.png"
+  },
+  "NMSU": {
+   "file": "NMSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062818_99db29dd-9012-4752-8e33-3463bbf708d7.png"
+  },
+  "NU": {
+   "file": "NU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062818_4e11afcb-cf4c-4441-bd76-ae504c481b3f.png"
+  },
+  "ODU": {
+   "file": "ODU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062818_c8f0ceb0-eba4-4084-bc0f-3d58b9be18b9.png"
+  },
+  "OHIO": {
+   "file": "OHIO",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062818_4629685b-86ff-45eb-92c6-d257ca9aa5a9.png"
+  },
+  "OKST": {
+   "file": "OKST",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062818_af65c681-3bc1-4d8c-9492-18ba03eccc7a.png"
+  },
+  "ORE": {
+   "file": "ORE",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062818_d1036a18-56f3-4893-bab3-dc9676cad46b.png"
+  },
+  "ORST": {
+   "file": "ORST",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062818_b21a02e0-bbaf-4b47-b04c-3b996def22bc.png"
+  },
+  "OSU": {
+   "file": "OSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_064845_6cc14d30-67b6-4f5c-a72b-9594ae8e68ff.png",
+   "note": "re-rolled: real shell colour"
+  },
+  "OU": {
+   "file": "OU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062843_78a5c3b6-ab07-42ca-90f4-ed9cd69d54ea.png"
+  },
+  "PITT": {
+   "file": "PITT",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062844_3229b04e-13af-4e0c-af5b-e8e8e28f418f.png"
+  },
+  "PSU": {
+   "file": "PSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_064835_b0c1f6ff-8620-4187-b668-32636046ff58.png",
+   "note": "re-rolled: real shell colour"
+  },
+  "PUR": {
+   "file": "PUR",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062843_c13ac256-a833-48b0-8f10-e905e4adc34b.png"
+  },
+  "RICE": {
+   "file": "RICE",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062843_edb00edf-ea8f-4e2a-9b10-175e0d681935.png"
+  },
+  "RUTG": {
+   "file": "RUTG",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062843_a3a5a999-77b9-49e7-86a8-10420b3f6c65.png"
+  },
+  "SAC": {
+   "file": "SAC",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062844_68bae179-edd0-4035-8b37-dcb720783286.png"
+  },
+  "SC": {
+   "file": "SC",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062909_fba019df-2037-4293-aeb3-4844388ef3bd.png"
+  },
+  "SDSU": {
+   "file": "SDSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062910_a12ed4f2-5691-409a-808c-e48c66f66516.png"
+  },
+  "SHSU": {
+   "file": "SHSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062909_e6007460-6205-4695-92c5-a24fa8d35000.png"
+  },
+  "SJSU": {
+   "file": "SJSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062909_30519714-54e7-4d16-8564-5b2672d57731.png"
+  },
+  "SMU": {
+   "file": "SMU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062909_7e57d78a-1d3c-422f-97f8-0b986ba140de.png"
+  },
+  "STAN": {
+   "file": "STAN",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062909_f098fb13-844e-4866-b688-2d6fd0870166.png"
+  },
+  "SYR": {
+   "file": "SYR",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062909_06aebc2f-ae4c-43b4-86cb-fe14ab4f5d42.png"
+  },
+  "TA&M": {
+   "file": "TAM",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_064939_f73fc8b6-8394-4878-a584-5822f6573286.png",
+   "note": "re-rolled: real shell colour"
+  },
+  "TCU": {
+   "file": "TCU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062934_ec140e17-b153-4755-a722-e69da68eb60b.png"
+  },
+  "TEM": {
+   "file": "TEM",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062934_76f7a46b-8eac-4280-b889-cfb0993c6ba9.png"
+  },
+  "TENN": {
+   "file": "TENN",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_064835_b87dbe76-43e0-4921-8eff-8288fdf6e841.png",
+   "note": "re-rolled: real shell colour"
+  },
+  "TEX": {
+   "file": "TEX",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_064835_daed3496-2310-40b5-b62b-e045af24567e.png",
+   "note": "re-rolled: real shell colour"
+  },
+  "TLSA": {
+   "file": "TLSA",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062934_54c42249-25a7-46bc-a546-db31e3b591de.png"
+  },
+  "TOL": {
+   "file": "TOL",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062934_ce2c54d8-1829-4ff3-8bc7-52f1fa504c63.png"
+  },
+  "TROY": {
+   "file": "TROY",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062934_f5c11139-f40a-43cf-ab9c-9752c104ebcf.png"
+  },
+  "TTU": {
+   "file": "TTU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062934_9f620833-822d-48d7-be25-021dbe4caef0.png"
+  },
+  "TULN": {
+   "file": "TULN",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062959_5c9ff5fa-8458-4c2b-bf1b-c6c6eb53769e.png"
+  },
+  "TXST": {
+   "file": "TXST",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063000_fd8f1acf-85b9-4f35-9acc-915b60925e86.png"
+  },
+  "UAB": {
+   "file": "UAB",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062959_d47c63d4-a6c7-4b01-9a61-60a6ece60a4d.png"
+  },
+  "UCF": {
+   "file": "UCF",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062959_62787b7a-1ba4-4cfb-b84a-8c5e7deee2ee.png"
+  },
+  "UCLA": {
+   "file": "UCLA",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062959_4d37ee7d-ebc7-478b-bd6d-51a2bd4df8b7.png"
+  },
+  "UGA": {
+   "file": "UGA",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062959_55a21926-a6f3-48cf-9e38-53b15d3a2449.png"
+  },
+  "UK": {
+   "file": "UK",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062959_5938cb59-bd13-4d5d-805f-b3a206263c95.png"
+  },
+  "UL": {
+   "file": "UL",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_062959_d1aa0317-7f55-4c6c-8067-17c0fbd42873.png"
+  },
+  "ULM": {
+   "file": "ULM",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063025_103f6c63-6fbb-4054-9c5f-8202f13bde3e.png"
+  },
+  "UNC": {
+   "file": "UNC",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063025_97a7f9bb-6e95-42a2-98c0-471677bd3f85.png"
+  },
+  "UNLV": {
+   "file": "UNLV",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063025_aa239b9f-a7df-401b-8864-4e28c66e5c28.png"
+  },
+  "UNM": {
+   "file": "UNM",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063025_28f7a8cb-8744-4848-8dd6-1e9797c10c99.png"
+  },
+  "UNT": {
+   "file": "UNT",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063025_7dddb067-3100-48d0-b6a4-8a86e357d27b.png"
+  },
+  "USA": {
+   "file": "USA",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063025_73524c2f-4901-40b7-81ab-6dccbf232962.png"
+  },
+  "USC": {
+   "file": "USC",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063025_bafdd24d-f4a8-48d8-8312-8ef8111cf10b.png"
+  },
+  "USF": {
+   "file": "USF",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063025_787278a9-02c4-4818-9dfe-b63368c9a233.png"
+  },
+  "USM": {
+   "file": "USM",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063049_a25b2fa6-dcb1-4eb7-b877-bf3ea6fb76df.png"
+  },
+  "USU": {
+   "file": "USU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063049_c0413eb1-b748-4033-9b90-941853b21adf.png"
+  },
+  "UTAH": {
+   "file": "UTAH",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063049_52e7b967-5117-4d73-8519-0796d74fcd5c.png"
+  },
+  "UTEP": {
+   "file": "UTEP",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063049_04609bab-14ee-41bd-a285-376410ee7d59.png"
+  },
+  "UTSA": {
+   "file": "UTSA",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063049_57d1efac-40bc-4273-9321-adefbff01cdd.png"
+  },
+  "UVA": {
+   "file": "UVA",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063049_cf2f20b3-6d80-4fd0-a0b3-bed005b43b1e.png"
+  },
+  "VAN": {
+   "file": "VAN",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063049_3db9f1d8-c3ba-4507-baf3-584b8bdda613.png"
+  },
+  "VT": {
+   "file": "VT",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063049_a46d5ec6-71aa-4568-bb41-dab115b97a61.png"
+  },
+  "WAKE": {
+   "file": "WAKE",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063116_fef57044-30cd-4076-a434-49ae6da7733c.png"
+  },
+  "WASH": {
+   "file": "WASH",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063116_ae8a99e4-f597-49f4-9f1d-7da616fe2646.png"
+  },
+  "WIS": {
+   "file": "WIS",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_064835_eac78f0e-285e-4d37-abe6-11c01930b072.png",
+   "note": "re-rolled: real shell colour"
+  },
+  "WKU": {
+   "file": "WKU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063116_d0f3a7ad-bdc5-4394-a63a-a48c734dc53c.png"
+  },
+  "WMU": {
+   "file": "WMU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063116_a30707eb-d9a5-446e-b4da-3c32b672a06b.png"
+  },
+  "WSU": {
+   "file": "WSU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063116_1fdf7222-6998-4c31-b769-b13a16bfa30a.png"
+  },
+  "WVU": {
+   "file": "WVU",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063116_7ce27f19-12a2-426c-b6ef-cdadfcae7ba9.png"
+  },
+  "WYO": {
+   "file": "WYO",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063116_6ae54f51-4015-40cd-9c8a-0b42d4670944.png"
+  }
+ },
+ "mlb_replace": {
+  "TOR": {
+   "file": "TOR",
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3DbobibeUbnuLNJGE488eMmw6mN/hf_20260925_063116_128b6285-d6c4-44f0-9237-988e17385174.png",
+   "note": "replaces the TOR cap that matched LAD"
+  }
+ },
+ "rerolled": [
+  "TEX",
+  "PSU",
+  "NEB",
+  "CLEM",
+  "TENN",
+  "WIS",
+  "MIA",
+  "TA&M",
+  "LSU",
+  "ND",
+  "OSU"
+ ]
+}

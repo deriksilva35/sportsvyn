@@ -52,6 +52,7 @@ function TeamRow({ t, score, trail, record, pick, pct, scored, rank = null, hasB
   return (
     <div className={`sv2-team${trail ? ' trail' : ''}`}>
       <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={ab} size={24} title={t.name}
+        headgearKey={t.abbreviation ?? null}
         leagueSlug={leagueSlug} headgear={headgear} />
       {/* THE DOT RIDES THE ABBREVIATION, not the situation line under it. The
           line used to end with "ALA ball"; the row it was describing is right
@@ -143,7 +144,9 @@ function Card({ g, x, signedIn, signinHref, tz }) {
   });
   const baseball = sportOf(g.leagueSlug) === BASEBALL;
   // BOTH OR NEITHER: one cutout beside one disc reads as a favourite.
-  const headgear = pairHasHeadgear(g.leagueSlug, abbrOf(g.away), abbrOf(g.home));
+  // THE STORED LETTERS, not the printed ones: an FCS side prints letters it
+  // derived from its name, and some of them are an FBS team's key.
+  const headgear = pairHasHeadgear(g.leagueSlug, g.away?.abbreviation ?? null, g.home?.abbreviation ?? null);
   const gameHref = g.leagueSlug === 'epl' ? `/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`;
   return (
     <a className={`sv2-card${live ? ' live' : ''}${final ? ' final' : ''}`} href={gameHref} data-variant={v} data-league={g.leagueSlug}>

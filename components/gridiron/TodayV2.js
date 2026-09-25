@@ -166,6 +166,7 @@ function TeamRow({ t }) {
   return (
     <Link className="tv-gm" href={`/${t.leagueSlug}/game/${t.slug}`} data-team-id={t.followTeamId}>
       <TeamMark primary={t.mine?.colors?.primary} secondary={t.mine?.colors?.secondary} abbr={abbrOf(t.mine)} size={20} title={t.mine?.name ?? t.followName}
+        headgearKey={t.mine?.abbreviation ?? null}
         leagueSlug={t.leagueSlug} />
       {t.rank != null ? <RankBadge rank={t.rank} /> : null}
       <span className="ab">{abbrOf(t.mine) || t.followName}</span>

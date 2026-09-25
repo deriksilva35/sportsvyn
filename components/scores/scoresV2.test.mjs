@@ -80,11 +80,12 @@ test('groups render in order with their cards by status, TeamMark at 24 on every
   assert.deepEqual([...h.matchAll(/data-variant="(\w+)"/g)].map((m) => m[1]), ['live', 'live', 'upcoming', 'final']);
   assert.match(h, /<h2>Live now<\/h2><small>updates every 30s<\/small>/);
   assert.match(h, /<h2>Tomorrow · Sunday<\/h2>/); assert.match(h, /<h2>Final<\/h2>/);
-  // eight team rows, eight marks at 24: the NFL pair (TEN, DEN) in headgear,
-  // four CFB circles (no cutouts yet) and two EPL abbr discs
+  // eight team rows, eight marks at 24: TEN/DEN and ALA/USF in headgear,
+  // NCSU/RICH as two circles (Richmond is FCS: no helmet, so neither side
+  // wears one) and two EPL abbr discs
   assert.equal((h.match(/class="sv2-team/g) ?? []).length, 8);
-  assert.equal((h.match(/data-teammark="headgear"/g) ?? []).length, 2);
-  assert.equal((h.match(/data-teammark="circle"/g) ?? []).length, 4);
+  assert.equal((h.match(/data-teammark="headgear"/g) ?? []).length, 4);
+  assert.equal((h.match(/data-teammark="circle"/g) ?? []).length, 2);
   assert.equal((h.match(/data-teammark="abbr"/g) ?? []).length, 2);
   assert.equal((h.match(/width="24" height="24"/g) ?? []).length, 6);
   assert.match(h, /data-teammark="abbr"[^>]*>BRE</, 'the EPL fallback carries the abbreviation');
@@ -571,22 +572,29 @@ test('THE FOOTBALL DRIVE STRIP NEVER APPEARS ON A BASEBALL CARD, or the reverse'
 });
 
 // HEADGEAR-WEB: the board card through TeamMark, one card per league.
-test('HEADGEAR on the board: NFL and MLB cards wear cutouts facing right, CFB keeps the disc, a half-known pair keeps both discs', () => {
+test('HEADGEAR on the board: NFL, MLB and FBS cards wear cutouts facing right; FBS v FCS and a half-known pair keep both discs', () => {
   const v = fixture();
   const nfl = game(21, 'nfl', 'scheduled', '2026-09-13T17:00:00Z', team(31, 'GB'), team(32, 'ATL'));
   const mlb = game(22, 'mlb', 'scheduled', '2026-09-13T23:05:00Z', team(33, 'NYY'), team(34, 'ATL'));
   const cfb = game(23, 'cfb', 'scheduled', '2026-09-13T19:30:00Z', team(35, 'UGA'), team(36, 'ALA'));
   const half = game(24, 'nfl', 'scheduled', '2026-09-13T20:25:00Z', team(37, 'SEA'), team(38, 'XYZ'));
-  const extras = new Map([[21, X()], [22, X()], [23, X()], [24, X()]]);
-  const h = html({ v: { ...v, groups: [{ key: 'day', title: 'Sunday', sub: '', games: [nfl, mlb, cfb, half] }], extras }, signedIn: false });
+  // FBS v FCS, and the collision: Alabama A&M has no stored abbreviation, so the
+  // card derives "ALA" from its name - Alabama's key.
+  const aamu = { id: 39, abbreviation: null, name: 'Alabama A&M', shortName: 'Alabama A&M', colors: { primary: '#660000', secondary: '#FFFFFF' } };
+  const fcs = game(25, 'cfb', 'scheduled', '2026-09-13T23:00:00Z', team(40, 'ALA'), aamu);
+  const extras = new Map([[21, X()], [22, X()], [23, X()], [24, X()], [25, X()]]);
+  const h = html({ v: { ...v, groups: [{ key: 'day', title: 'Sunday', sub: '', games: [nfl, mlb, cfb, half, fcs] }], extras }, signedIn: false });
   const cards = h.split('<a class="sv2-card').slice(1);
   const marks = (c) => [...c.matchAll(/data-teammark="(\w+)"/g)].map((m) => m[1]);
   assert.deepEqual(marks(cards[0]), ['headgear', 'headgear'], 'NFL');
   assert.match(cards[0], /src="\/headgear\/nfl\/ATL@1x\.webp"/); assert.match(cards[0], /src="\/headgear\/nfl\/GB@1x\.webp"/);
   assert.deepEqual(marks(cards[1]), ['headgear', 'headgear'], 'MLB');
   assert.match(cards[1], /src="\/headgear\/mlb\/ATL@1x\.webp"/, 'the Braves, not the Falcons');
-  assert.deepEqual(marks(cards[2]), ['circle', 'circle'], 'CFB has no cutouts yet');
+  assert.deepEqual(marks(cards[2]), ['headgear', 'headgear'], 'FBS v FBS');
+  assert.match(cards[2], /src="\/headgear\/cfb\/UGA@1x\.webp"/);
   assert.deepEqual(marks(cards[3]), ['circle', 'circle'], 'SEA has one, XYZ does not: both or neither');
+  assert.deepEqual(marks(cards[4]), ['circle', 'circle'], 'FBS v FCS: discs on both sides');
+  assert.equal((cards[4].match(/<span class="ab">ALA/g) ?? []).length, 2, 'both rows print ALA - and neither wears Alabama\'s helmet');
   assert.doesNotMatch(h, /data-facing="left"|scaleX/, 'the board is stacked rows: everything faces right');
   assert.equal((cards[0].match(/<img[^>]*width="24" height="24"/g) ?? []).length, 2, 'the same 24 px box the disc had');
 });

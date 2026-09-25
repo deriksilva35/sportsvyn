@@ -25,9 +25,12 @@ import { headgearFor } from '@/lib/teams/headgear';
 
 export default function TeamMark({
   primary, secondary, size = 24, className, title, abbr = null,
-  leagueSlug = null, headgear = true, facing = 'right',
+  leagueSlug = null, headgear = true, facing = 'right', headgearKey = abbr,
 }) {
-  const hg = headgear ? headgearFor(leagueSlug, abbr) : null;
+  // headgearKey IS THE STORED ABBREVIATION when the printed one is derived: an
+  // FCS team prints three letters of its name (Alabama A&M -> ALA) and must not
+  // borrow the FBS helmet under the same letters. See lib/teams/headgear.js.
+  const hg = headgear ? headgearFor(leagueSlug, headgearKey) : null;
   // LAZY, deliberately: React 19 hoists a <link rel=preload> into <head> for
   // every eager <img>, and a Scores board is sixty of them.
   if (hg) {

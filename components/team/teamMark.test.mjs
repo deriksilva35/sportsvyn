@@ -98,3 +98,10 @@ test('no colors -> an ink-3 disc with the abbreviation and the --line ring (EPL 
   assert.match(html({ primary: '#111111', secondary: null, abbr: 'X', size: 24 }), /data-teammark="abbr"/, 'one colour is no colours');
   assert.match(html({ primary: null, secondary: null, abbr: 'ARSENAL', size: 24 }), />ARS<\/span>/, 'three letters at most');
 });
+
+test('headgearKey: the STORED letters decide, so an FCS side printing "ALA" never wears Alabama\'s helmet', () => {
+  assert.match(html({ abbr: 'ALA', size: 24, leagueSlug: 'cfb' }), /src="\/headgear\/cfb\/ALA@1x\.webp"/, 'Alabama: printed = stored');
+  const aamu = html({ primary: '#660000', secondary: '#FFFFFF', abbr: 'ALA', headgearKey: null, size: 24, leagueSlug: 'cfb' });
+  assert.match(aamu, /data-teammark="circle"/); assert.doesNotMatch(aamu, /headgear/);
+  assert.match(html({ abbr: 'TA&M', size: 24, leagueSlug: 'cfb' }), /src="\/headgear\/cfb\/TAM@1x\.webp"/);
+});
