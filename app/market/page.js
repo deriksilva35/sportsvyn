@@ -29,11 +29,11 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SportsvynSegment from '@/components/shell/SportsvynSegment';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import Link from 'next/link';
-import { headers } from 'next/headers';
+import { hasMovement, MARKET_LEAGUES } from '@/lib/market/reads';
 import {
-  pricedSlate, futuresBoards, bookCounts, latestSnapshotAt, boardMatchIds,
-  hasMovement, MARKET_LEAGUES,
-} from '@/lib/market/reads';
+  cachedPricedSlate, cachedFuturesBoards, cachedBookCounts, cachedLatestSnapshotAt, cachedBoardMatchIds,
+  cachedPropsBoard, cachedPropsGames,
+} from '@/lib/market/cachedReads';
 import PropsBoard from '@/components/market/PropsBoard';
 import PropsTable from '@/components/market/PropsTable';
 import PropsFilters from '@/components/market/PropsFilters';
@@ -44,11 +44,14 @@ import {
   flattenLines, flattenFutures, sortRows, teamShort, linesGames,
   LINES_COLUMNS, FUTURES_COLUMNS, LINES_PAGE, FUTURES_PAGE,
 } from '@/lib/market/lineTables';
-import { propsBoard, propsGames, shortName, MARKET_LABELS } from '@/lib/market/propsBoard';
+import { shortName, MARKET_LABELS } from '@/lib/market/propsBoard';
 import { marketHref, nextDir, hiddenFields } from '@/lib/market/marketUrl';
 import './market.css';
 
-export const dynamic = 'force-dynamic';
+// NOT force-dynamic any more (25 Sep). The page is still rendered per request -
+// its tabs and filters are the URL and its header is the reader's - but its
+// data comes from lib/market/cachedReads.js, which force-dynamic existed to
+// prevent. Default 'auto' lets the data cache work.
 
 // Shell mode opts into viewport-fit:cover so the safe-area insets resolve;
 // the web keeps the root viewport. Same contract as /scores and every /sim page.
@@ -296,10 +299,13 @@ export async function MarketView({ sp, pinned = null, leagueHeader = null }) {
     limit: view === 'index' ? 400 : undefined,
   };
 
+  // THE DATA IS CACHED FOR 60 s, SHARED (lib/market/cachedReads.js): none of
+  // it is per-user, and the page at ~1,100 requests a minute was exhausting
+  // the database's connection permits (25 Sep).
   const [byLeague, futures, books, snapAt, boardIds, board, games] = await Promise.all([
-    pricedSlate(), futuresBoards(), bookCounts(), latestSnapshotAt(), boardMatchIds(),
-    tab === 'props' ? propsBoard(boardState).catch(() => ({ rows: [], total: 0 })) : Promise.resolve(null),
-    tab === 'props' ? propsGames().catch(() => []) : Promise.resolve([]),
+    cachedPricedSlate(), cachedFuturesBoards(), cachedBookCounts(), cachedLatestSnapshotAt(), cachedBoardMatchIds(),
+    tab === 'props' ? cachedPropsBoard(boardState).catch(() => ({ rows: [], total: 0 })) : Promise.resolve(null),
+    tab === 'props' ? cachedPropsGames().catch(() => []) : Promise.resolve([]),
   ]);
 
   // BOARD GAMES FIRST, WITHIN CFB — the only editorial ordering on the page.
@@ -536,20 +542,5 @@ export async function MarketView({ sp, pinned = null, leagueHeader = null }) {
 
 
 export default async function MarketPage({ searchParams }) {
-  // TEMPORARY (25 Sep incident): who is sending /market ~1,100 requests a
-  // minute? Vercel's runtime logs carry no client fields and the project has
-  // no observability or firewall data, so 1 request in 20 logs its own - user
-  // agent, the forwarding IP, the ASN and country Vercel adds. Removed by the
-  // market-cache change that follows it.
-  if (Math.random() < 0.05) {
-    try {
-      const h = await headers();
-      console.log('[market-client]', JSON.stringify({
-        ua: h.get('user-agent'), ip: (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || h.get('x-real-ip'),
-        asn: h.get('x-vercel-ip-as-number'), country: h.get('x-vercel-ip-country'), ref: h.get('referer'),
-        q: Object.keys((await searchParams) ?? {}).join(','),
-      }));
-    } catch { /* a log line never costs the page */ }
-  }
   return MarketView({ sp: (await searchParams) ?? {} });
 }
