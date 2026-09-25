@@ -34,7 +34,7 @@
 
 import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
-import { liveBoardGames, lastPolledAt, dueForPoll } from '@/lib/pollers/playsScope';
+import { liveBoardGames, lastPolledAt, dueForPoll, cfbPlaysAll } from '@/lib/pollers/playsScope';
 import { PLAYS_POLL_INTERVAL_SEC } from '@/lib/pollers/cadence';
 import { importPlaysFor } from '@/lib/gridiron/playsImport';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
@@ -45,6 +45,15 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 const SOURCE = 'plays-live';
+
+// CFB_PLAYS_ALL WIDENS THE SLATE THREEFOLD, and this route imports one game at
+// a time inside a 60 s function: 19 Sep measured ~1 s per game at the median
+// and 4 s at p90, so thirty-odd due games in a row would time out. With the
+// flag on the due games are imported POOL at a time, and no new game starts
+// after DEADLINE_MS - one left over is simply due on the next tick. With the
+// flag off the loop below is main's, one at a time, unchanged.
+const POOL = 6;
+const DEADLINE_MS = 45_000;
 
 export async function GET(request) {
   if (!cronAuthorized(request)) return new Response('Unauthorized', { status: 401 });
@@ -75,7 +84,7 @@ export async function GET(request) {
     run: async () => {
       const games = [];
       let plays = 0, drives = 0, failed = 0;
-      for (const g of due) {
+      const one = async (g) => {
         try {
           const r = await importPlaysFor(g.id);
           plays += r.written; drives += r.drives;
@@ -87,9 +96,30 @@ export async function GET(request) {
           failed += 1;
           games.push({ slug: g.slug, error: String(e?.message ?? e).slice(0, 160) });
         }
+      };
+      const all = cfbPlaysAll();
+      const started = [];
+      if (!all) {
+        for (const g of due) { started.push(g); await one(g); }
+      } else {
+        const t0 = Date.now(); const queue = [...due];
+        const worker = async () => {
+          while (queue.length && Date.now() - t0 < DEADLINE_MS) {
+            const g = queue.shift(); started.push(g); await one(g);
+          }
+        };
+        await Promise.all(Array.from({ length: Math.min(POOL, due.length) }, worker));
       }
+      // CALLS PER CYCLE, so a Saturday's real burn can be summed from the
+      // ledger and set against the estimate: one CFBD /live/plays per CFB game
+      // started, one BDL request (two past 100 plays) per NFL game.
+      const cfbdCalls = started.filter((g) => g.league === 'cfb').length;
+      const nflGames = started.filter((g) => g.league === 'nfl').length;
+      const skipped = due.length - started.length;
+      console.log(`[plays-live] cycle cfb_plays_all=${all ? 'on' : 'off'} in_scope=${inScope.length} due=${due.length} cfbd_calls=${cfbdCalls} nfl_games=${nflGames} skipped_deadline=${skipped}`);
       return {
-        in_scope: inScope.length, due: due.length, requests: due.length,
+        in_scope: inScope.length, due: due.length, requests: started.length,
+        cfb_plays_all: all, cfbd_calls: cfbdCalls, nfl_games: nflGames, skipped_deadline: skipped,
         plays, drives, failed, games,
       };
     },
