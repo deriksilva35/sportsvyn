@@ -81,7 +81,7 @@ function Kickoff({ iso, tz, withDay = true }) {
 // the identifier typeface) and the full name is the name. The winner's name and
 // score go full white; the loser drops to muted, so a glance at a finished card
 // answers "who won" before it answers "what was the score".
-function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = null, leagueSlug = null, headgear = true }) {
+function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = null, leagueSlug = null, headgear = true, dressed = true }) {
   // ONE DERIVED ABBREVIATION, EVERY SURFACE. This read t.abbreviation alone,
   // so an FCS visitor with none ("Monmouth") rendered an empty mono slot on a
   // live card while the same side read MON on the Scores tab and the lobby
@@ -108,7 +108,7 @@ function TeamLine({ t, score, isWinner, isLoser, final, live = false, record = n
     <div className={`gi-team ${final && isWinner ? 'win' : ''} ${final && isLoser ? 'lose' : ''}`}>
       {/* THE MARK FACES THE SCORE: headgear where the league has it, else
           the two-tone disc (components/team/TeamMark.js). */}
-      <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={abbr ?? undefined} size={22}
+      <TeamMark primary={dressed ? t.colors?.primary : null} secondary={dressed ? t.colors?.secondary : null} abbr={abbr ?? undefined} size={22}
         headgearKey={t.abbreviation ?? null}
         title={name || undefined} className="gi-hm" leagueSlug={leagueSlug} headgear={headgear} />
       {abbr ? <span className="abbr">{abbr}</span> : <span className="abbr" />}
@@ -250,6 +250,8 @@ function Card({ g, records, tz, withDay = true, signedIn = false }) {
   // BOTH OR NEITHER: one cutout beside one disc reads as a favourite.
   // THE STORED LETTERS (an FCS side prints derived ones - lib/teams/headgear.js).
   const headgear = pairHasHeadgear(g.leagueSlug, g.away?.abbreviation ?? null, g.home?.abbreviation ?? null);
+  // The style is a pair too: one side without colours, both plain discs.
+  const dressed = Boolean(g.away?.colors && g.home?.colors);
 
   // THE WHOLE CARD IS THE CONTROL. It used to be the caret alone - a 12px
   // glyph - while the card it belonged to sat inert next to a dead "Full match
@@ -283,7 +285,7 @@ function Card({ g, records, tz, withDay = true, signedIn = false }) {
           const t = side === 'home' ? g.home : g.away;
           return (
             <TeamLine
-              key={side} t={t} leagueSlug={g.leagueSlug} headgear={headgear}
+              key={side} t={t} leagueSlug={g.leagueSlug} headgear={headgear} dressed={dressed}
               score={side === 'home' ? hw : aw}
               isWinner={side === 'home' ? homeWin : awayWin} isLoser={side === 'home' ? awayWin : homeWin}
               final={final} live={g.status === 'live'} record={records?.get?.(t?.id) ?? null}

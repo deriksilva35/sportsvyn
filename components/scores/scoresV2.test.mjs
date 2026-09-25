@@ -580,7 +580,8 @@ test('HEADGEAR on the board: NFL, MLB and FBS cards wear cutouts facing right; F
   const half = game(24, 'nfl', 'scheduled', '2026-09-13T20:25:00Z', team(37, 'SEA'), team(38, 'XYZ'));
   // FBS v FCS, and the collision: Alabama A&M has no stored abbreviation, so the
   // card derives "ALA" from its name - Alabama's key.
-  const aamu = { id: 39, abbreviation: null, name: 'Alabama A&M', shortName: 'Alabama A&M', colors: { primary: '#660000', secondary: '#FFFFFF' } };
+  // FCS clubs carry no colours on PROD (105 of 105), which is the real case.
+  const aamu = { id: 39, abbreviation: null, name: 'Alabama A&M', shortName: 'Alabama A&M', colors: null };
   const fcs = game(25, 'cfb', 'scheduled', '2026-09-13T23:00:00Z', team(40, 'ALA'), aamu);
   const extras = new Map([[21, X()], [22, X()], [23, X()], [24, X()], [25, X()]]);
   const h = html({ v: { ...v, groups: [{ key: 'day', title: 'Sunday', sub: '', games: [nfl, mlb, cfb, half, fcs] }], extras }, signedIn: false });
@@ -593,7 +594,7 @@ test('HEADGEAR on the board: NFL, MLB and FBS cards wear cutouts facing right; F
   assert.deepEqual(marks(cards[2]), ['headgear', 'headgear'], 'FBS v FBS');
   assert.match(cards[2], /src="\/headgear\/cfb\/UGA@1x\.webp"/);
   assert.deepEqual(marks(cards[3]), ['circle', 'circle'], 'SEA has one, XYZ does not: both or neither');
-  assert.deepEqual(marks(cards[4]), ['circle', 'circle'], 'FBS v FCS: discs on both sides');
+  assert.deepEqual(marks(cards[4]), ['abbr', 'abbr'], 'FBS v FCS: the plain abbreviation disc on BOTH sides - both-or-neither covers style');
   assert.equal((cards[4].match(/<span class="ab">ALA/g) ?? []).length, 2, 'both rows print ALA - and neither wears Alabama\'s helmet');
   assert.doesNotMatch(h, /data-facing="left"|scaleX/, 'the board is stacked rows: everything faces right');
   assert.equal((cards[0].match(/<img[^>]*width="24" height="24"/g) ?? []).length, 2, 'the same 24 px box the disc had');

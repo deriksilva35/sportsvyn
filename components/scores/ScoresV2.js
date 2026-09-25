@@ -47,11 +47,11 @@ function liveLabel(g) {
   return q ? `Q${q}${c ? ` · ${c}` : ''}` : 'Live';
 }
 
-function TeamRow({ t, score, trail, record, pick, pct, scored, rank = null, hasBall = false, leagueSlug = null, headgear = true }) {
+function TeamRow({ t, score, trail, record, pick, pct, scored, rank = null, hasBall = false, leagueSlug = null, headgear = true, dressed = true }) {
   const ab = abbrOf(t);
   return (
     <div className={`sv2-team${trail ? ' trail' : ''}`}>
-      <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={ab} size={24} title={t.name}
+      <TeamMark primary={dressed ? t.colors?.primary : null} secondary={dressed ? t.colors?.secondary : null} abbr={ab} size={24} title={t.name}
         headgearKey={t.abbreviation ?? null}
         leagueSlug={leagueSlug} headgear={headgear} />
       {/* THE DOT RIDES THE ABBREVIATION, not the situation line under it. The
@@ -147,6 +147,10 @@ function Card({ g, x, signedIn, signinHref, tz }) {
   // THE STORED LETTERS, not the printed ones: an FCS side prints letters it
   // derived from its name, and some of them are an FBS team's key.
   const headgear = pairHasHeadgear(g.leagueSlug, g.away?.abbreviation ?? null, g.home?.abbreviation ?? null);
+  // AND THE STYLE IS A PAIR TOO: when one side has no colours (an FCS club),
+  // both draw the plain abbreviation disc - a two-tone disc beside a plain one
+  // reads as a favourite just as a helmet beside a disc does.
+  const dressed = Boolean(g.away?.colors && g.home?.colors);
   const gameHref = g.leagueSlug === 'epl' ? `/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`;
   return (
     <a className={`sv2-card${live ? ' live' : ''}${final ? ' final' : ''}`} href={gameHref} data-variant={v} data-league={g.leagueSlug}>
@@ -163,7 +167,7 @@ function Card({ g, x, signedIn, signinHref, tz }) {
         const t = side === 'home' ? g.home : g.away;
         return (
           <TeamRow
-            key={side} t={t} leagueSlug={g.leagueSlug} headgear={headgear}
+            key={side} t={t} leagueSlug={g.leagueSlug} headgear={headgear} dressed={dressed}
             score={side === 'home' ? g.homeScore : g.awayScore}
             trail={scored && (side === 'home' ? awayLeads : homeLeads)}
             record={x.record[side]} pick={pickAbbr != null && pickAbbr === abbrOf(t)}
