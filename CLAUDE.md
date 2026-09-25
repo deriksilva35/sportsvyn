@@ -141,6 +141,18 @@ string, and never a URL pasted into a default argument. Source with
 on a command line, ever. A committed script with a credential in it is a leak
 that survives every future clone.
 
+## A read-only guard is proven only by a failed write probe
+
+A read-only guard is proven only by a failed write probe through the app's own
+driver.
+
+The receipt, 25 Sep: a PROD URL with
+`?options=-c default_transaction_read_only=on`, on the direct 5432 host, was
+meant to make a dev server safe to point at PROD. Through Neon's HTTP driver -
+the one lib/db.js uses - the option was ignored: `SHOW default_transaction_read_only`
+said `off`, and a `CREATE TEMP TABLE` probe succeeded. A guard checked any other
+way would have been believed.
+
 ## jsonb `||` is SHALLOW, and it appends to arrays
 
 Two production defects this month, both from the same operator:
