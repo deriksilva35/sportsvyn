@@ -20,6 +20,8 @@ Rules for any CC session running ON the droplet:
 Restart the droplet's Remote Control session for this repo with:
   tmux new -d -s cc-sportsvyn 'cd ~/projects/sportsvyn && claude --remote-control --name sportsvyn'
 
+- Memory: the droplet has 8 GB RAM and the kernel kills anything that exceeds it (a python process hit 6.5 GB on Sep 25 and took this session down). Never load a full table, query result, or large file into memory in python or node. Stream or batch rows, and use LIMIT when exploring data. Image and ML tools (rembg, image resizing, anything that loads a model) belong on the Mac, not the droplet; if they must run here, process one downscaled image at a time.
+
 ## THE SUITE IS THE WHOLE SUITE, and it is the default
 
 ANY RELAY THAT MERGES RUNS THE FULL SUITE BEFORE THE MERGE. Not after it, not
