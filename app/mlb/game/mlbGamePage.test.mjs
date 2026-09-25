@@ -484,10 +484,11 @@ test('THE HEADER WEARS CAPS, both facing right, and a half-known pair wears neit
   assert.equal(rows.length, 2);
   assert.match(rows[0], /<img class="teammark teammark--headgear" data-teammark="headgear" data-facing="right" src="\/headgear\/mlb\/TB@1x\.webp"/, 'away: TB');
   assert.match(rows[1], /data-teammark="headgear" data-facing="right" src="\/headgear\/mlb\/NYY@1x\.webp"/, 'home: NYY');
-  assert.match(rows[0], /width="26" height="26"/, 'the same 26 px box the disc had');
+  assert.match(rows[0], /<img [^>]*width="40" height="40"/, 'away cap at 40 px');
+  assert.match(rows[1], /<img [^>]*width="40" height="40"/, 'home cap at 40 px');
   assert.doesNotMatch(h, /scaleX/, 'no mirror on a stacked header');
   const half = LIVE(); half.away = { ...half.away, abbreviation: 'XYZ' };
   const h2 = await render(half);
   assert.equal((h2.match(/data-teammark="headgear"/g) ?? []).length, 0, 'XYZ has no cap, so NYY does not wear one either');
-  assert.equal((h2.match(/<svg class="teammark" [^>]*data-teammark="circle"/g) ?? []).length, 2, 'two discs');
+  assert.equal((h2.match(/<svg class="teammark" [^>]*width="40" height="40"[^>]*data-teammark="circle"/g) ?? []).length, 2, 'two discs, in the same 40 px box');
 });

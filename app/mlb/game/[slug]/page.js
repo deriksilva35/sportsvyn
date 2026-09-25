@@ -53,7 +53,7 @@ function TeamRow({ t, score, show, batting, signedIn = false, isShell = false, f
   return (
     <div className="mg-team">
       <TeamMark primary={t?.colors?.primary} secondary={t?.colors?.secondary}
-        abbr={t?.abbreviation} size={26} title={t?.name} leagueSlug="mlb" headgear={headgear} />
+        abbr={t?.abbreviation} size={40} title={t?.name} leagueSlug="mlb" headgear={headgear} />
       <span className="ab">{t?.abbreviation ?? ''}</span>
       <span className="nm">{t?.shortName ?? t?.name ?? 'TBD'}</span>
       {/* THE BATTING MARK IS THE POSSESSION DOT'S SIBLING, and deliberately the

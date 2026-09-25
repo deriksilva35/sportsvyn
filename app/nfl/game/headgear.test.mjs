@@ -4,7 +4,7 @@
 // The header is two STACKED rows (away above home), so both marks face right -
 // no mirror here; the Pick'em board is the one facing pair. The rows are a
 // pair, so both or neither. NFL wears helmets; CFB has no cutouts yet and
-// keeps the two-tone disc, in the same 28 px box.
+// keeps the two-tone disc. The header mark is 40 px, both kinds.
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -51,13 +51,13 @@ function header(leagueSlug, away, home) {
   }))).join('');
 }
 
-test('ATL @ GB: two helmets, away first, both facing right, in the 28 px box', () => {
+test('ATL @ GB: two helmets, away first, both facing right, at 40 px', () => {
   const h = header('nfl', ATL, GB);
   const imgs = [...h.matchAll(/<img class="teammark teammark--headgear gg-hm" data-teammark="headgear" data-facing="(\w+)" src="([^"]+)"/g)];
   assert.deepEqual(imgs.map((m) => m[2]), ['/headgear/nfl/ATL@1x.webp', '/headgear/nfl/GB@1x.webp']);
   assert.deepEqual(imgs.map((m) => m[1]), ['right', 'right'], 'stacked rows do not mirror');
   assert.doesNotMatch(h, /scaleX/);
-  assert.equal((h.match(/width="28" height="28"/g) ?? []).length, 2);
+  assert.equal((h.match(/<img [^>]*width="40" height="40"/g) ?? []).length, 2, 'both helmets at 40 px');
   // the order inside the row is unchanged: badge slot, mark, abbreviation
   assert.match(h, /data-teammark="headgear"[^>]*\/><span class="abbr">ATL<\/span>/);
 });
@@ -71,6 +71,7 @@ test('a header with one unknown side draws two discs, never one helmet', () => {
 test('CFB keeps the disc: no cutouts yet, whatever the letters', () => {
   const h = header('cfb', { ...ATL, abbreviation: 'ALA' }, { ...GB, abbreviation: 'UGA' });
   assert.equal((h.match(/data-teammark="circle"/g) ?? []).length, 2);
+  assert.equal((h.match(/<svg [^>]*width="40" height="40"/g) ?? []).length, 2, 'the disc in the same 40 px box');
   assert.doesNotMatch(h, /headgear/);
 });
 

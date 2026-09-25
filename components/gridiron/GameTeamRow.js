@@ -44,7 +44,7 @@ export default function GameTeamRow({
       <RankBadge rank={rank} size="big" />
       {/* the mark before the abbreviation, facing the score: headgear where
           the league has it and the page says both sides do, else the disc */}
-      <TeamMark primary={t?.colors?.primary} secondary={t?.colors?.secondary} abbr={t?.abbreviation ?? null} size={28}
+      <TeamMark primary={t?.colors?.primary} secondary={t?.colors?.secondary} abbr={t?.abbreviation ?? null} size={40}
         title={t?.name ?? undefined} className="gg-hm" leagueSlug={leagueSlug} headgear={headgear} />
       {/* THE VOLT DOT SITS WITH THE ABBREVIATION, which is what the Live
           Activity's card marks and what the strip's own sentence used to
