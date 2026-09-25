@@ -10,7 +10,8 @@ import { fromBdlMlb } from '../../lib/mlb/ingest.js';
 import { baseballLastPlay } from '../../lib/mlb/playsTab.js';
 import { BASEBALL, sportOf as sportOfLeague } from '../../lib/live/vocabulary.js';
 import { mlbDetailOf, writeMlbDetail, writeMlbGamePk, writeMlbLineups, writeMlbProbables, lineupDue } from '../../lib/mlb/detail.js';
-import { fetchScheduleByMatch, fetchGameFeed, pickByKickoff, matchKey, statsApiEnabled } from '../../lib/mlb/statsapi.js';
+import { fetchScheduleByMatch, fetchGameFeed, statsApiEnabled } from '../../lib/mlb/statsapi.js';
+import { probablesForGame, pickByKickoff, matchKey } from '../../lib/mlb/probables.js';
 
 import { emit } from '../../lib/wire/emit.js';
 import { transitionsFor } from '../../lib/push/transitions.js';
@@ -320,29 +321,27 @@ export async function resolveMlbGamePk(m, sql, { log = () => {} } = {}) {
 }
 
 /**
- * THE PROBABLE STARTERS OFF THE DAY SCHEDULE - the SAME fetch resolveMlbGamePk
- * consults, memoised for fifteen minutes, so this is one call a day and usually
- * zero.
+ * THE PROBABLE STARTERS FROM BDL's /mlb/v1/lineups (lib/mlb/probables.js),
+ * one call per game per ten minutes and only before first pitch - once a game
+ * is live its starter is a matter of record and the card has stopped asking.
  *
- * THE SCHEDULE LEADS THE FEED AND THIS WAS MEASURED, not assumed. At 23:57Z on
- * 2026-09-22, SD @ LAD (gamePk 823897, Pre-Game):
- *
- *   /v1/schedule?hydrate=probablePitcher  -> away Michael King, home Brock Stewart
- *   /v1.1/game/823897/feed/live           -> probablePitchers: { away } only
- *
- * The feed had not caught up to the home announcement. Reading only the feed -
- * which is free, because the lineups come from it - would have left the Dodgers
- * reading "starter not announced" while their starter was public on the other
- * endpoint. So the two are MERGED per side, schedule first, and the free read
- * stays as the fallback rather than as the answer.
+ * THIS NO LONGER WAITS ON THE SECOND PROVIDER. It used to be read off the
+ * statsapi schedule and game feed, behind MLB_STATSAPI; BDL carries the same
+ * announcement (84 of 86 identical on PROD, 25 Sep) and carries it earlier.
  */
-async function mlbScheduleProbables(m, { now = new Date() } = {}) {
-  const day = etDay(m?.kickoff_at);
-  const key = matchKey(m?.away_abbr, m?.home_abbr, day);
-  if (!key) return { probables: null, calls: 0 };
-  const { byKey, calls } = await scheduleFor(day, new Date(now).getTime());
-  const pick = pickByKickoff(byKey.get(key) ?? [], m?.kickoff_at);
-  return { probables: pick?.probables ?? null, calls };
+const PROB_TTL_MS = 10 * 60 * 1000;
+const probCache = new Map();
+export function _resetMlbProbablesCache() { probCache.clear(); }
+
+export async function mlbProbables(m, row, { now = new Date(), fetchOne = probablesForGame } = {}) {
+  const id = row?.id ?? m?.pid ?? null;
+  if (id == null) return { probables: null, calls: 0 };
+  const t = new Date(now).getTime();
+  const hit = probCache.get(String(id));
+  if (hit && t - hit.at < PROB_TTL_MS) return { probables: null, calls: 0 };
+  const probables = await fetchOne(id, { awayAbbr: m?.away_abbr, homeAbbr: m?.home_abbr });
+  probCache.set(String(id), { at: t });
+  return { probables, calls: 1 };
 }
 
 /** PURE. Two partial answers about the same game, side by side. */
@@ -371,7 +370,17 @@ export async function mlbEnrich(row, m, sql, { log = () => {}, live: isLive = tr
   // started spends a call to be told there are none.
   const play = isLive ? await mlbNewestPlay(row?.id) : null;
   if (play) calls += 1;
-  if (!statsApiEnabled(process.env)) return { play, live: null, lineups: null, calls };
+
+  // THE STARTERS, before first pitch, from BDL - with or without the flag.
+  let probables = null;
+  if (!isLive) {
+    try {
+      const p = await mlbProbables(m, row, { now });
+      calls += p.calls;
+      probables = p.probables;
+    } catch (e) { log(`[mlb] probables failed for ${m?.slug}: ${e.message}`); }
+  }
+  if (!statsApiEnabled(process.env)) return { play, live: null, lineups: null, probables, calls };
 
   // THE PRE-KICK PASS ASKS FOR ONE THING AND ON A CADENCE. A live game's feed
   // is fetched anyway (the diamond), and the batting orders are on that same
@@ -379,10 +388,10 @@ export async function mlbEnrich(row, m, sql, { log = () => {}, live: isLive = tr
   // and lineupDue() is what keeps that from being every game every thirty
   // seconds. See lib/mlb/detail.js.
   if (!isLive && !lineupDue({ kickoff_at: m?.kickoff_at, lineups: m?.before_lineups ?? null }, { now })) {
-    return { play, live: null, lineups: null, probables: null, calls };
+    return { play, live: null, lineups: null, probables, calls };
   }
 
-  let live = null; let lineups = null; let probables = null;
+  let live = null; let lineups = null;
   try {
     const r = await resolveMlbGamePk(m, sql, { log });
     calls += r.calls;
@@ -391,22 +400,6 @@ export async function mlbEnrich(row, m, sql, { log = () => {}, live: isLive = tr
       calls += feed.calls;
       live = feed.live;
       lineups = feed.lineups;
-      // THE STARTERS RIDE THE SAME DOCUMENT AS THE CARD, so refreshing them
-      // costs nothing and happens on exactly lineupDue's cadence. A starter
-      // announced at 4pm used to reach the picker only on the next daily pool
-      // build - which is tomorrow - so "starter not announced" was a permanent
-      // state for the day it mattered on.
-      probables = feed.probables;
-      // AND THE DAY SCHEDULE ON TOP OF IT, which leads the feed - see
-      // mlbScheduleProbables(). Pre-kick only: once a game is live its starter
-      // is a matter of record and the card has stopped asking.
-      if (!isLive) {
-        try {
-          const sp = await mlbScheduleProbables(m, { now });
-          calls += sp.calls;
-          probables = mergeProbables(sp.probables, probables);
-        } catch { /* the feed's answer stands */ }
-      }
       // NOT POSTED IS A READING TOO, and it must be written. Without a
       // fetchedAt stamp on a game whose card is not up yet, lineupDue() reads
       // "never asked" forever and asks again on every single poll.

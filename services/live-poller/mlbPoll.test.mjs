@@ -121,7 +121,8 @@ test('THE PRE-KICK PASS READS THE CARD AND NOTHING ELSE', async () => {
 });
 
 test('mlbEnrich: one feed fetch carries the diamond AND the card', async () => {
-  const { mlbEnrich } = await import('./poll.mjs');
+  const { mlbEnrich, _resetMlbProbablesCache } = await import('./poll.mjs');
+  _resetMlbProbablesCache();
   const real = globalThis.fetch;
   const seen = [];
   globalThis.fetch = async (url) => {
@@ -154,7 +155,10 @@ test('mlbEnrich: one feed fetch carries the diamond AND the card', async () => {
     // ONE FETCH, not two: the live state and the batting orders are on the same
     // document, so the lineup is free on every live pass.
     assert.equal(seen.filter((u) => u.includes('feed/live')).length, 1);
-    assert.equal(r.calls, 1);
+    // AND ONE BDL CALL FOR THE STARTERS (lib/mlb/probables.js) - the feed no
+    // longer supplies them.
+    assert.equal(seen.filter((u) => u.includes('/mlb/v1/lineups?game_ids[]=99')).length, 1);
+    assert.equal(r.calls, 2);
   } finally {
     globalThis.fetch = real;
     if (prev == null) delete process.env.MLB_STATSAPI; else process.env.MLB_STATSAPI = prev;
@@ -242,4 +246,36 @@ test('THE gamePk IS RESOLVED ONCE AND THEN STORED ON THE ROW', async () => {
   assert.equal(nokey.gamePk, null);
   assert.equal(nokey.calls, 0);
   assert.equal(wrote, 0);
+});
+
+test('mlbEnrich with MLB_STATSAPI OFF still returns the starters, from BDL, and touches no statsapi URL', async () => {
+  const { mlbEnrich, _resetMlbProbablesCache } = await import('./poll.mjs');
+  _resetMlbProbablesCache();
+  const real = globalThis.fetch; const seen = [];
+  globalThis.fetch = async (url) => {
+    seen.push(String(url));
+    return { ok: true, json: async () => ({ data: [
+      { game_id: 99, is_probable_pitcher: true, team: { abbreviation: 'TB' }, player: { id: 208, full_name: 'Shane McClanahan' } },
+      { game_id: 99, is_probable_pitcher: true, team: { abbreviation: 'NYY' }, player: { id: 19, full_name: 'Gerrit Cole' } },
+    ], meta: {} }) };
+  };
+  const prev = process.env.MLB_STATSAPI; delete process.env.MLB_STATSAPI;
+  try {
+    const m = { id: 1, slug: 'tb-nyy', kickoff_at: '2026-09-22T22:35:00Z', away_abbr: 'TB', home_abbr: 'NYY' };
+    const now = new Date('2026-09-22T21:00:00Z');
+    const r = await mlbEnrich({ id: 99, status_state: 'pre' }, m, null, { live: false, now });
+    assert.deepEqual(r.probables, { away: { id: '208', name: 'Shane McClanahan' }, home: { id: '19', name: 'Gerrit Cole' } });
+    assert.equal(r.live, null); assert.equal(r.lineups, null);
+    assert.equal(seen.some((u) => u.includes('statsapi')), false, 'no statsapi call with the flag off');
+    // TEN MINUTES, ONE CALL: the next poll inside the window asks nothing.
+    const again = await mlbEnrich({ id: 99, status_state: 'pre' }, m, null, { live: false, now: new Date(now.getTime() + 30_000) });
+    assert.equal(again.probables, null); assert.equal(seen.length, 1);
+    // AND A LIVE ROW DOES NOT ASK FOR STARTERS AT ALL.
+    _resetMlbProbablesCache(); seen.length = 0;
+    await mlbEnrich({ id: 99, status_state: 'in_progress' }, m, null, { live: true, now });
+    assert.equal(seen.some((u) => u.includes('/lineups')), false);
+  } finally {
+    globalThis.fetch = real;
+    if (prev == null) delete process.env.MLB_STATSAPI; else process.env.MLB_STATSAPI = prev;
+  }
 });

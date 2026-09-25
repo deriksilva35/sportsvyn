@@ -7,10 +7,12 @@
 //   node scripts/mlb-schedule-import.mjs --prod --apply --postseason 2026
 //   node scripts/mlb-schedule-import.mjs --prod --apply --probables 2026-09-22
 //
-// --probables is a SECOND PASS over days already imported: it asks statsapi
-// for the announced starters and writes them to metadata.probables, which is
-// what the pre-game card and the game page's PROBABLES module read. It needs
-// MLB_STATSAPI=on in the environment and it writes nothing without it.
+// --probables is a SECOND PASS over days already imported: it asks BDL's
+// /mlb/v1/lineups for the announced starters (is_probable_pitcher) and writes
+// them to metadata.probables, which is what the pre-game card and the game
+// page's PROBABLES module read. The join is our row's own bdl_game_id - the
+// game BDL gave us is the game we ask about, so a doubleheader has nothing to
+// disambiguate.
 //
 // It runs again on every day of the season and once more when the postseason
 // bracket is set, so it lives here rather than in a scratchpad.
@@ -18,7 +20,7 @@
 import crypto from 'node:crypto';
 import { neon } from '@neondatabase/serverless';
 import { fetchMlbDay, fetchMlbPostseason, slugsFor, shapeMlbMatch, writeMlbMatches } from '../lib/mlb/schedule.js';
-import { fetchProbablesByMatch, matchKey, pickByKickoff, statsApiEnabled } from '../lib/mlb/statsapi.js';
+import { fetchLineupRows, probablesFromLineupRows } from '../lib/mlb/probables.js';
 import { writeMlbProbables } from '../lib/mlb/detail.js';
 
 const args = process.argv.slice(2);
@@ -44,45 +46,37 @@ const teamIdByBdl = new Map(teams.map((t) => [t.pid, t.id]));
 // --probables: the second pass. Days already imported, starters written.
 // ---------------------------------------------------------------------------
 if (PROBABLES) {
-  if (!statsApiEnabled(process.env)) {
-    console.error('REFUSE: MLB_STATSAPI is not on - there is nothing to fetch.');
-    process.exit(1);
-  }
-  let wrote = 0; const ambiguous = []; const unmatched = [];
+  let wrote = 0; const noId = []; const unannounced = [];
   for (const day of rest) {
-    const byKey = await fetchProbablesByMatch(day);
-    // OUR ROWS FOR THAT DAY, in ET - the same boundary the slate uses, because
-    // statsapi's officialDate is the American calendar day and a 01:45Z first
-    // pitch belongs to the day before it in UTC.
+    // OUR ROWS FOR THAT DAY, in ET - the same boundary the slate uses: a 01:45Z
+    // first pitch belongs to the American day before it in UTC.
     const ours = await sql`
-      SELECT m.id, m.slug, m.kickoff_at,
-             a.abbreviation AS away, h.abbreviation AS home,
-             to_char(m.kickoff_at AT TIME ZONE 'America/New_York', 'YYYY-MM-DD') AS et_day
+      SELECT m.id, m.slug, m.external_ids->>'bdl_game_id' AS bdl,
+             a.abbreviation AS away, h.abbreviation AS home
         FROM matches m
         JOIN leagues l ON l.id = m.league_id AND l.slug = 'mlb'
         LEFT JOIN teams h ON h.id = m.home_team_id
         LEFT JOIN teams a ON a.id = m.away_team_id
        WHERE m.kickoff_at AT TIME ZONE 'America/New_York' >= ${day}::date
          AND m.kickoff_at AT TIME ZONE 'America/New_York' <  ${day}::date + 1`;
-    console.log(`${day}: ${ours.length} of our rows | ${byKey.size} statsapi keys`);
+    const rows = await fetchLineupRows(ours.map((m) => m.bdl).filter(Boolean));
+    const byGame = new Map();
+    for (const r of rows) {
+      if (!byGame.has(String(r.game_id))) byGame.set(String(r.game_id), []);
+      byGame.get(String(r.game_id)).push(r);
+    }
+    console.log(`${day}: ${ours.length} of our rows | ${byGame.size} BDL games with lineup rows`);
     for (const m of ours) {
-      const key = matchKey(m.away, m.home, m.et_day);
-      const hits = (key && byKey.get(key)) || [];
-      if (!hits.length) { unmatched.push(m.slug); continue; }
-      // A DOUBLEHEADER HAS TWO ROWS UNDER ONE KEY AND DIFFERENT STARTERS, and
-      // the first pitch is what separates them - six hours apart for today's
-      // TB @ NYY. pickByKickoff refuses a pair it cannot separate by an hour
-      // rather than give one game the other's starter.
-      const hit = pickByKickoff(hits, m.kickoff_at);
-      if (!hit) { ambiguous.push(`${m.slug} (${hits.length})`); continue; }
-      const p = hit.probables;
+      if (!m.bdl) { noId.push(m.slug); continue; }
+      const p = probablesFromLineupRows(byGame.get(String(m.bdl)) ?? [], { awayAbbr: m.away, homeAbbr: m.home });
+      if (!p) { unannounced.push(m.slug); continue; }
       console.log(`  ${m.slug.padEnd(30)} ${p.away?.name ?? 'TBA'} vs ${p.home?.name ?? 'TBA'}`);
       if (APPLY && await writeMlbProbables(sql, m.id, p)) wrote += 1;
     }
   }
   console.log(`\n${APPLY ? `APPLIED  probables written ${wrote}` : 'DRY RUN ONLY.'}`);
-  if (ambiguous.length) console.log(`AMBIGUOUS (doubleheader, refused): ${ambiguous.join(', ')}`);
-  if (unmatched.length) console.log(`no statsapi probables: ${unmatched.join(', ')}`);
+  if (noId.length) console.log(`no bdl_game_id: ${noId.join(', ')}`);
+  if (unannounced.length) console.log(`no starter announced on BDL: ${unannounced.join(', ')}`);
   process.exit(0);
 }
 

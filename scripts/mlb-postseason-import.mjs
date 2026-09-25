@@ -23,8 +23,15 @@
 // Measured before a line of this was written: the 2025 postseason comes back
 // as 47 rows whose only round-ish field is season_type: "postseason". No
 // round, no series number, no game-in-series. So the games come from one
-// provider and the ROUND comes from somewhere else, and this script has two
+// provider and the ROUND comes from somewhere else, and this script has three
 // somewheres:
+//
+//   --bdl (our own bracket). The stored seeds (team_records.playoff_seed) and
+//   who is playing whom: 3v6/4v5 is a Wild Card, a bye seed against a WC
+//   winner is a Division Series, the two halves of a league meeting is a
+//   Championship Series, the leagues meeting is the World Series. Needs no
+//   second provider and works while the bracket is being played. Backtested
+//   on the whole 2025 postseason on DEV: every game in its real round.
 //
 //   --statsapi (DEFAULT, and the Monday path). The second provider's own
 //   gameType - F / D / L / W - asked per DAY, which is the only way that feed
@@ -46,7 +53,8 @@
 import crypto from 'node:crypto';
 import { neon } from '@neondatabase/serverless';
 import { writeMlbMatches, slugsFor, gameDay } from '../lib/mlb/schedule.js';
-import { stageFromGameType, stagesByBacktrack, STAGES, SERIES_IN_ROUND, STAGE_LABEL } from '../lib/mlb/postseason.js';
+import { stageFromGameType, stagesByBacktrack, stagesBySeeds, STAGES, SERIES_IN_ROUND, STAGE_LABEL } from '../lib/mlb/postseason.js';
+import { fetchMlbStandings } from '../lib/mlb/standings.js';
 import { ourAbbr, statsApiEnabled } from '../lib/mlb/statsapi.js';
 import { ensureSeriesBoard } from '../lib/mlb/seriesPickem.js';
 import { ensureOctoberDays } from '../lib/october/create.js';
@@ -56,13 +64,14 @@ const args = process.argv.slice(2);
 const PROD = args.includes('--prod');
 const APPLY = args.includes('--apply');
 const BACKTRACK = args.includes('--backtrack');
+const BYSEEDS = args.includes('--bdl');
 const seasons = args.filter((a) => !a.startsWith('--'));
 if (!seasons.length) { console.error('REFUSE: name a season, e.g. 2026'); process.exit(1); }
 
 const url = PROD ? process.env.PROD_DATABASE_URL : process.env.DATABASE_URL;
 if (!url) { console.error('REFUSE: database url missing in env'); process.exit(1); }
 const sql = neon(url);
-console.log(`TARGET ${new URL(url).host} | FP ${crypto.createHash('sha256').update(url).digest('hex').slice(0, 12)} | ${APPLY ? 'APPLY' : 'DRY RUN'} | stage from ${BACKTRACK ? 'BACKTRACK' : 'statsapi'}`);
+console.log(`TARGET ${new URL(url).host} | FP ${crypto.createHash('sha256').update(url).digest('hex').slice(0, 12)} | ${APPLY ? 'APPLY' : 'DRY RUN'} | stage from ${BACKTRACK ? 'BACKTRACK' : BYSEEDS ? 'SEEDS (--bdl)' : 'statsapi'}`);
 
 const [league] = await sql`SELECT id FROM leagues WHERE slug = 'mlb' LIMIT 1`;
 if (!league) { console.error('REFUSE: no mlb league row - run mlb-league-import first'); process.exit(1); }
@@ -124,15 +133,15 @@ async function stagesFromStatsApi(rows) {
 
 const up = (v) => String(v ?? '').trim().toUpperCase();
 
-/** The backwards walk, on the whole season's rows. A finished bracket only. */
-function stagesFromBacktrack(rows) {
+/** The season's rows as series: one group per pair of clubs, oldest first. */
+function seriesGroups(rows) {
   const by = new Map();
   for (const r of rows) {
     const pair = [up(r?.away_team?.abbreviation), up(r?.home_team?.abbreviation)].sort().join('-');
     if (!by.has(pair)) by.set(pair, []);
     by.get(pair).push(r);
   }
-  const groups = [...by.entries()].map(([pair, gs]) => {
+  return [...by.entries()].map(([pair, gs]) => {
     gs.sort((a, b) => String(a.date).localeCompare(String(b.date)));
     return {
       key: pair,
@@ -144,17 +153,62 @@ function stagesFromBacktrack(rows) {
       ],
     };
   });
+}
+
+/** The backwards walk, on the whole season's rows. A finished bracket only. */
+function stagesFromBacktrack(rows) {
+  const groups = seriesGroups(rows);
   const stages = stagesByBacktrack(groups);
   if (!stages) {
     console.error('REFUSE: the backwards walk could not place this bracket.');
     console.error('        It needs exactly one cross-league series (the World Series),');
-    console.error('        which means a FINISHED postseason. Use --statsapi while it is');
+    console.error('        which means a FINISHED postseason. Use --bdl while it is');
     console.error(`        being played. Series seen: ${groups.length}.`);
     process.exit(1);
   }
   const out = new Map();
   for (const g of groups) for (const r of g.rows) out.set(String(r.id), stages.get(g.key));
   return { out, missed: [] };
+}
+
+/**
+ * THE ROUND FROM OUR OWN BRACKET: the seeds, and who is playing whom
+ * (lib/mlb/postseason.js stagesBySeeds). Works while the bracket is being
+ * played and needs no second provider.
+ *
+ * THE SEEDS ARE THE STORED ONES - team_records.playoff_seed, written by the
+ * standings import. Where none are stored for the season (DEV carries no
+ * team_records at all), they come from BDL's standings, the same feed the
+ * stored ones were written from, and the run says so.
+ */
+async function seedsForSeason(season) {
+  const stored = await sql`
+    SELECT t.abbreviation AS abbr, tr.playoff_seed AS seed
+      FROM team_records tr
+      JOIN leagues l ON l.id = tr.league_id AND l.slug = 'mlb'
+      JOIN teams t ON t.id = tr.team_id
+     WHERE tr.season = ${Number(season)} AND tr.season_type = 'regular'
+       AND tr.playoff_seed BETWEEN 1 AND 6`.catch(() => []);
+  if (stored.length) return { from: 'team_records', seedOf: new Map(stored.map((r) => [up(r.abbr), Number(r.seed)])) };
+  const rows = await fetchMlbStandings(season);
+  const seeded = rows.filter((r) => Number(r?.playoff_seed) >= 1 && Number(r?.playoff_seed) <= 6);
+  return { from: 'BDL standings (none stored)', seedOf: new Map(seeded.map((r) => [up(r?.team?.abbreviation), Number(r.playoff_seed)])) };
+}
+
+async function stagesFromSeeds(rows, season) {
+  const { from, seedOf } = await seedsForSeason(season);
+  console.log(`  seeds from ${from}: ${seedOf.size} clubs`);
+  if (seedOf.size !== 12) console.log(`  !! expected 12 seeded clubs, have ${seedOf.size}`);
+  const groups = seriesGroups(rows);
+  const { stages, unplaced } = stagesBySeeds(groups, seedOf);
+  const out = new Map();
+  for (const g of groups) {
+    const st = stages.get(g.key);
+    if (st) for (const r of g.rows) out.set(String(r.id), st);
+  }
+  const missed = unplaced.flatMap((u) => (groups.find((g) => g.key === u.key)?.rows ?? [])
+    .map((r) => ({ id: r.id, key: u.key, stages: [u.why] })));
+  return { out, missed };
 }
 
 for (const season of seasons) {
@@ -166,7 +220,8 @@ for (const season of seasons) {
   }
   const { out: stageById, missed } = BACKTRACK
     ? stagesFromBacktrack(rows)
-    : await stagesFromStatsApi(rows);
+    : BYSEEDS ? await stagesFromSeeds(rows, season)
+      : await stagesFromStatsApi(rows);
 
   const slugs = slugsFor(rows);
   const counts = {}; const series = new Map();
@@ -192,7 +247,7 @@ for (const season of seasons) {
   for (const [k, n] of [...series].sort()) console.log(`    ${k.padEnd(26)} ${n} games`);
   if (missed.length) {
     console.log('\n  COULD NOT PLACE (left unstaged, absent from the bracket):');
-    for (const m of missed) console.log(`    ${m.key}  statsapi said ${JSON.stringify(m.stages)}`);
+    for (const m of missed) console.log(`    ${m.key}  ${JSON.stringify(m.stages)}`);
   }
 
   if (!APPLY) { console.log('\nDRY RUN ONLY.\n'); continue; }

@@ -1,0 +1,1445 @@
+{
+ "capturedAt": "2026-09-25T06:43:17.066Z",
+ "source": "PROD metadata.probables (statsapi, written by the poller) vs BDL /mlb/v1/lineups, read-only",
+ "games": [
+  {
+   "slug": "mlb-2026-09-22-tb-nyy",
+   "bdlGameId": "8160916",
+   "awayAbbr": "TB",
+   "homeAbbr": "NYY",
+   "statsapi": {
+    "away": "Nick Martinez",
+    "home": "Carlos Rodón"
+   },
+   "bdlRows": [
+    {
+     "game_id": 8160916,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "TB"
+     },
+     "player": {
+      "id": 626,
+      "full_name": "Nick Martinez"
+     }
+    },
+    {
+     "game_id": 8160916,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "NYY"
+     },
+     "player": {
+      "id": 425,
+      "full_name": "Carlos Rodon"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-22-tor-bal",
+   "bdlGameId": "5060115",
+   "awayAbbr": "TOR",
+   "homeAbbr": "BAL",
+   "statsapi": {
+    "away": "Max Scherzer",
+    "home": "Chris Bassitt"
+   },
+   "bdlRows": []
+  },
+  {
+   "slug": "mlb-2026-09-22-mil-phi",
+   "bdlGameId": "5060116",
+   "awayAbbr": "MIL",
+   "homeAbbr": "PHI",
+   "statsapi": {
+    "away": "Dustin May",
+    "home": "Zack Wheeler"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060116,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "PHI"
+     },
+     "player": {
+      "id": 473,
+      "full_name": "Zack Wheeler"
+     }
+    },
+    {
+     "game_id": 5060116,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "MIL"
+     },
+     "player": {
+      "id": 6133,
+      "full_name": "Dustin May"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-22-stl-pit",
+   "bdlGameId": "5060117",
+   "awayAbbr": "STL",
+   "homeAbbr": "PIT",
+   "statsapi": {
+    "away": "Andre Pallante",
+    "home": "Jared Jones"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060117,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "STL"
+     },
+     "player": {
+      "id": 293,
+      "full_name": "Andre Pallante"
+     }
+    },
+    {
+     "game_id": 5060117,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "PIT"
+     },
+     "player": {
+      "id": 580,
+      "full_name": "Jared Jones"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-22-wsh-det",
+   "bdlGameId": "5060118",
+   "awayAbbr": "WSH",
+   "homeAbbr": "DET",
+   "statsapi": {
+    "away": "Riley Cornelio",
+    "home": "Drew Anderson"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060118,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "DET"
+     },
+     "player": {
+      "id": 6584,
+      "full_name": "Drew Anderson"
+     }
+    },
+    {
+     "game_id": 5060118,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "WSH"
+     },
+     "player": {
+      "id": 4788741,
+      "full_name": "Riley Cornelio"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-22-cle-bos",
+   "bdlGameId": "5060119",
+   "awayAbbr": "CLE",
+   "homeAbbr": "BOS",
+   "statsapi": {
+    "away": "Parker Messick",
+    "home": "Payton Tolle"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060119,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CLE"
+     },
+     "player": {
+      "id": 2975881,
+      "full_name": "Parker Messick"
+     }
+    },
+    {
+     "game_id": 5060119,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "BOS"
+     },
+     "player": {
+      "id": 3143201,
+      "full_name": "Payton Tolle"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-22-tb-nyy-g2",
+   "bdlGameId": "5060120",
+   "awayAbbr": "TB",
+   "homeAbbr": "NYY",
+   "statsapi": {
+    "away": "Drew Rasmussen",
+    "home": "Max Fried"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060120,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "TB"
+     },
+     "player": {
+      "id": 1005,
+      "full_name": "Drew Rasmussen"
+     }
+    },
+    {
+     "game_id": 5060120,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "NYY"
+     },
+     "player": {
+      "id": 5439,
+      "full_name": "Max Fried"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-22-cin-atl",
+   "bdlGameId": "5060121",
+   "awayAbbr": "CIN",
+   "homeAbbr": "ATL",
+   "statsapi": {
+    "away": "Brandon Williamson",
+    "home": "JR Ritchie"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060121,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CIN"
+     },
+     "player": {
+      "id": 2709,
+      "full_name": "Brandon Williamson"
+     }
+    },
+    {
+     "game_id": 5060121,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "ATL"
+     },
+     "player": {
+      "id": 4941190,
+      "full_name": "JR Ritchie"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-22-chw-kc",
+   "bdlGameId": "5060122",
+   "awayAbbr": "CHW",
+   "homeAbbr": "KC",
+   "statsapi": {
+    "away": "Anthony Kay",
+    "home": "Daniel Lynch IV"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060122,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CHW"
+     },
+     "player": {
+      "id": 6032,
+      "full_name": "Anthony Kay"
+     }
+    },
+    {
+     "game_id": 5060122,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "KC"
+     },
+     "player": {
+      "id": 1039,
+      "full_name": "Daniel Lynch IV"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-22-mia-chc",
+   "bdlGameId": "5060123",
+   "awayAbbr": "MIA",
+   "homeAbbr": "CHC",
+   "statsapi": {
+    "away": "Janson Junk",
+    "home": "Shota Imanaga"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060123,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "MIA"
+     },
+     "player": {
+      "id": 5349,
+      "full_name": "Janson Junk"
+     }
+    },
+    {
+     "game_id": 5060123,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CHC"
+     },
+     "player": {
+      "id": 713,
+      "full_name": "Shota Imanaga"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-nym-tex",
+   "bdlGameId": "5060124",
+   "awayAbbr": "NYM",
+   "homeAbbr": "TEX",
+   "statsapi": {
+    "away": "Sean Manaea",
+    "home": "MacKenzie Gore"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060124,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "NYM"
+     },
+     "player": {
+      "id": 239,
+      "full_name": "Sean Manaea"
+     }
+    },
+    {
+     "game_id": 5060124,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "TEX"
+     },
+     "player": {
+      "id": 903,
+      "full_name": "MacKenzie Gore"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-ari-col",
+   "bdlGameId": "5060125",
+   "awayAbbr": "ARI",
+   "homeAbbr": "COL",
+   "statsapi": {
+    "away": "Michael Soroka",
+    "home": "Kyle Freeland"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060125,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "COL"
+     },
+     "player": {
+      "id": 982,
+      "full_name": "Kyle Freeland"
+     }
+    },
+    {
+     "game_id": 5060125,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "ARI"
+     },
+     "player": {
+      "id": 4624,
+      "full_name": "Michael Soroka"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-hou-sea",
+   "bdlGameId": "5060127",
+   "awayAbbr": "HOU",
+   "homeAbbr": "SEA",
+   "statsapi": {
+    "away": "Cristian Javier",
+    "home": "Logan Gilbert"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060127,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "HOU"
+     },
+     "player": {
+      "id": 1568,
+      "full_name": "Cristian Javier"
+     }
+    },
+    {
+     "game_id": 5060127,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "SEA"
+     },
+     "player": {
+      "id": 393,
+      "full_name": "Logan Gilbert"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-laa-oak",
+   "bdlGameId": "5060126",
+   "awayAbbr": "LAA",
+   "homeAbbr": "OAK",
+   "statsapi": {
+    "away": "Yusei Kikuchi",
+    "home": "Brady Basso"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060126,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "OAK"
+     },
+     "player": {
+      "id": 307,
+      "full_name": "Brady Basso"
+     }
+    },
+    {
+     "game_id": 5060126,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "LAA"
+     },
+     "player": {
+      "id": 1727,
+      "full_name": "Yusei Kikuchi"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-min-sf",
+   "bdlGameId": "5060128",
+   "awayAbbr": "MIN",
+   "homeAbbr": "SF",
+   "statsapi": {
+    "away": "Taj Bradley",
+    "home": "Anthony Molina"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060128,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "SF"
+     },
+     "player": {
+      "id": 1064,
+      "full_name": "Anthony Molina"
+     }
+    },
+    {
+     "game_id": 5060128,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "MIN"
+     },
+     "player": {
+      "id": 878,
+      "full_name": "Taj Bradley"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-sd-lad",
+   "bdlGameId": "5060129",
+   "awayAbbr": "SD",
+   "homeAbbr": "LAD",
+   "statsapi": {
+    "away": "Michael King",
+    "home": "Brock Stewart"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060129,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "SD"
+     },
+     "player": {
+      "id": 291,
+      "full_name": "Michael King"
+     }
+    },
+    {
+     "game_id": 5060129,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "LAD"
+     },
+     "player": {
+      "id": 5525,
+      "full_name": "Brock Stewart"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-wsh-det",
+   "bdlGameId": "5060130",
+   "awayAbbr": "WSH",
+   "homeAbbr": "DET",
+   "statsapi": {
+    "away": "Richard Lovelady",
+    "home": "Framber Valdez"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060130,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "DET"
+     },
+     "player": {
+      "id": 481,
+      "full_name": "Framber Valdez"
+     }
+    },
+    {
+     "game_id": 5060130,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "WSH"
+     },
+     "player": {
+      "id": 964,
+      "full_name": "Richard Lovelady"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-min-sf-g2",
+   "bdlGameId": "5060131",
+   "awayAbbr": "MIN",
+   "homeAbbr": "SF",
+   "statsapi": {
+    "away": "Connor Prielipp",
+    "home": "Cesar Perdomo"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060131,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "SF"
+     },
+     "player": {
+      "id": 6003361,
+      "full_name": "Cesar Perdomo"
+     }
+    },
+    {
+     "game_id": 5060131,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "MIN"
+     },
+     "player": {
+      "id": 4667995,
+      "full_name": "Connor Prielipp"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-tor-bal",
+   "bdlGameId": "5060132",
+   "awayAbbr": "TOR",
+   "homeAbbr": "BAL",
+   "statsapi": {
+    "away": "CJ Van Eyk",
+    "home": "Trey Gibson"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060132,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "BAL"
+     },
+     "player": {
+      "id": 4926395,
+      "full_name": "Trey Gibson"
+     }
+    },
+    {
+     "game_id": 5060132,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "TOR"
+     },
+     "player": {
+      "id": 4840616,
+      "full_name": "CJ Van Eyk"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-mil-phi",
+   "bdlGameId": "5060133",
+   "awayAbbr": "MIL",
+   "homeAbbr": "PHI",
+   "statsapi": {
+    "away": "Logan Henderson",
+    "home": "Aaron Nola"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060133,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "PHI"
+     },
+     "player": {
+      "id": 373,
+      "full_name": "Aaron Nola"
+     }
+    },
+    {
+     "game_id": 5060133,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "MIL"
+     },
+     "player": {
+      "id": 596119,
+      "full_name": "Logan Henderson"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-stl-pit",
+   "bdlGameId": "5060134",
+   "awayAbbr": "STL",
+   "homeAbbr": "PIT",
+   "statsapi": {
+    "away": "Matthew Liberatore",
+    "home": "Lake Bachar"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060134,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "STL"
+     },
+     "player": {
+      "id": 240,
+      "full_name": "Matthew Liberatore"
+     }
+    },
+    {
+     "game_id": 5060134,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "PIT"
+     },
+     "player": {
+      "id": 258,
+      "full_name": "Lake Bachar"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-cle-bos",
+   "bdlGameId": "5060136",
+   "awayAbbr": "CLE",
+   "homeAbbr": "BOS",
+   "statsapi": {
+    "away": "Foster Griffin",
+    "home": "Sonny Gray"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060136,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "BOS"
+     },
+     "player": {
+      "id": 200,
+      "full_name": "Sonny Gray"
+     }
+    },
+    {
+     "game_id": 5060136,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CLE"
+     },
+     "player": {
+      "id": 8416,
+      "full_name": "Foster Griffin"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-tb-nyy",
+   "bdlGameId": "5060135",
+   "awayAbbr": "TB",
+   "homeAbbr": "NYY",
+   "statsapi": {
+    "away": "Mason Englert",
+    "home": "Gerrit Cole"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060135,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "NYY"
+     },
+     "player": {
+      "id": 380,
+      "full_name": "Gerrit Cole"
+     }
+    },
+    {
+     "game_id": 5060135,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "TB"
+     },
+     "player": {
+      "id": 52,
+      "full_name": "Mason Englert"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-cin-atl",
+   "bdlGameId": "5060137",
+   "awayAbbr": "CIN",
+   "homeAbbr": "ATL",
+   "statsapi": {
+    "away": "Andrew Abbott",
+    "home": "Chris Sale"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060137,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "ATL"
+     },
+     "player": {
+      "id": 736,
+      "full_name": "Chris Sale"
+     }
+    },
+    {
+     "game_id": 5060137,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CIN"
+     },
+     "player": {
+      "id": 533,
+      "full_name": "Andrew Abbott"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-chw-kc",
+   "bdlGameId": "5060138",
+   "awayAbbr": "CHW",
+   "homeAbbr": "KC",
+   "statsapi": {
+    "away": "Bryan Hudson",
+    "home": "Seth Lugo"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060138,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "KC"
+     },
+     "player": {
+      "id": 1035,
+      "full_name": "Seth Lugo"
+     }
+    },
+    {
+     "game_id": 5060138,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CHW"
+     },
+     "player": {
+      "id": 1070,
+      "full_name": "Bryan Hudson"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-23-mia-chc",
+   "bdlGameId": "5060139",
+   "awayAbbr": "MIA",
+   "homeAbbr": "CHC",
+   "statsapi": {
+    "away": "Ryan Gusto",
+    "home": "Kevin Gausman"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060139,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "MIA"
+     },
+     "player": {
+      "id": 416,
+      "full_name": "Ryan Gusto"
+     }
+    },
+    {
+     "game_id": 5060139,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CHC"
+     },
+     "player": {
+      "id": 741,
+      "full_name": "Kevin Gausman"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-nym-tex",
+   "bdlGameId": "5060140",
+   "awayAbbr": "NYM",
+   "homeAbbr": "TEX",
+   "statsapi": {
+    "away": "Nolan McLean",
+    "home": "Cody Bradford"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060140,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "NYM"
+     },
+     "player": {
+      "id": 2899770,
+      "full_name": "Nolan McLean"
+     }
+    },
+    {
+     "game_id": 5060140,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "TEX"
+     },
+     "player": {
+      "id": 969,
+      "full_name": "Cody Bradford"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-ari-col",
+   "bdlGameId": "5060141",
+   "awayAbbr": "ARI",
+   "homeAbbr": "COL",
+   "statsapi": {
+    "away": "Merrill Kelly",
+    "home": "Mason Adams"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060141,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "COL"
+     },
+     "player": {
+      "id": 4839163,
+      "full_name": "Mason Adams"
+     }
+    },
+    {
+     "game_id": 5060141,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "ARI"
+     },
+     "player": {
+      "id": 13,
+      "full_name": "Merrill Kelly"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-laa-oak",
+   "bdlGameId": "5060142",
+   "awayAbbr": "LAA",
+   "homeAbbr": "OAK",
+   "statsapi": {
+    "away": "Walbert Ureña",
+    "home": "Jeffrey Springs"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060142,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "OAK"
+     },
+     "player": {
+      "id": 1025,
+      "full_name": "Jeffrey Springs"
+     }
+    },
+    {
+     "game_id": 5060142,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "LAA"
+     },
+     "player": {
+      "id": 4667847,
+      "full_name": "Walbert Urena"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-hou-sea",
+   "bdlGameId": "5060143",
+   "awayAbbr": "HOU",
+   "homeAbbr": "SEA",
+   "statsapi": {
+    "away": "Ethan Pecko",
+    "home": "George Kirby"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060143,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "SEA"
+     },
+     "player": {
+      "id": 418,
+      "full_name": "George Kirby"
+     }
+    },
+    {
+     "game_id": 5060143,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "HOU"
+     },
+     "player": {
+      "id": 5942046,
+      "full_name": "Ethan Pecko"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-sd-lad",
+   "bdlGameId": "5060144",
+   "awayAbbr": "SD",
+   "homeAbbr": "LAD",
+   "statsapi": {
+    "away": "Robbie Ray",
+    "home": "Yoshinobu Yamamoto"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060144,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "SD"
+     },
+     "player": {
+      "id": 894,
+      "full_name": "Robbie Ray"
+     }
+    },
+    {
+     "game_id": 5060144,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "LAD"
+     },
+     "player": {
+      "id": 79,
+      "full_name": "Yoshinobu Yamamoto"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-stl-pit",
+   "bdlGameId": "5060145",
+   "awayAbbr": "STL",
+   "homeAbbr": "PIT",
+   "statsapi": {
+    "away": "Kyle Leahy",
+    "home": "Paul Skenes"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060145,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "PIT"
+     },
+     "player": {
+      "id": 647,
+      "full_name": "Paul Skenes"
+     }
+    },
+    {
+     "game_id": 5060145,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "STL"
+     },
+     "player": {
+      "id": 233,
+      "full_name": "Kyle Leahy"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-chw-kc",
+   "bdlGameId": "5060146",
+   "awayAbbr": "CHW",
+   "homeAbbr": "KC",
+   "statsapi": {
+    "away": "David Sandlin",
+    "home": "Randy Dobnak"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060146,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "KC"
+     },
+     "player": {
+      "id": 731,
+      "full_name": "Randy Dobnak"
+     }
+    },
+    {
+     "game_id": 5060146,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CHW"
+     },
+     "player": {
+      "id": 4667497,
+      "full_name": "David Sandlin"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-mia-chc",
+   "bdlGameId": "5060147",
+   "awayAbbr": "MIA",
+   "homeAbbr": "CHC",
+   "statsapi": {
+    "away": "Tyler Phillips",
+    "home": "Matthew Boyd"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060147,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "MIA"
+     },
+     "player": {
+      "id": 389,
+      "full_name": "Tyler Phillips"
+     }
+    },
+    {
+     "game_id": 5060147,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CHC"
+     },
+     "player": {
+      "id": 3224,
+      "full_name": "Matthew Boyd"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-nym-tex-g2",
+   "bdlGameId": "5060148",
+   "awayAbbr": "NYM",
+   "homeAbbr": "TEX",
+   "statsapi": {
+    "away": "Zac Thornton",
+    "home": "Kumar Rocker"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060148,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "NYM"
+     },
+     "player": {
+      "id": 5056668,
+      "full_name": "Zac Thornton"
+     }
+    },
+    {
+     "game_id": 5060148,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "TEX"
+     },
+     "player": {
+      "id": 83,
+      "full_name": "Kumar Rocker"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-ari-col-g2",
+   "bdlGameId": "5060149",
+   "awayAbbr": "ARI",
+   "homeAbbr": "COL",
+   "statsapi": {
+    "away": "Eduardo Rodriguez",
+    "home": "Tanner Gordon"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060149,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "ARI"
+     },
+     "player": {
+      "id": 32,
+      "full_name": "Eduardo Rodriguez"
+     }
+    },
+    {
+     "game_id": 5060149,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "COL"
+     },
+     "player": {
+      "id": 1012,
+      "full_name": "Tanner Gordon"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-mil-phi",
+   "bdlGameId": "5060150",
+   "awayAbbr": "MIL",
+   "homeAbbr": "PHI",
+   "statsapi": {
+    "away": "Shane Drohan",
+    "home": "Andrew Painter"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060150,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "PHI"
+     },
+     "player": {
+      "id": 4668116,
+      "full_name": "Andrew Painter"
+     }
+    },
+    {
+     "game_id": 5060150,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "MIL"
+     },
+     "player": {
+      "id": 4667487,
+      "full_name": "Shane Drohan"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-cle-bos",
+   "bdlGameId": "5060151",
+   "awayAbbr": "CLE",
+   "homeAbbr": "BOS",
+   "statsapi": {
+    "away": "Daniel Espino",
+    "home": "Ranger Suarez"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060151,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "BOS"
+     },
+     "player": {
+      "id": 429,
+      "full_name": "Ranger Suarez"
+     }
+    },
+    {
+     "game_id": 5060151,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CLE"
+     },
+     "player": {
+      "id": 747,
+      "full_name": "Daniel Espino"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-tb-nyy",
+   "bdlGameId": "5060152",
+   "awayAbbr": "TB",
+   "homeAbbr": "NYY",
+   "statsapi": {
+    "away": "Ian Seymour",
+    "home": "Cam Schlittler"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060152,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "NYY"
+     },
+     "player": {
+      "id": 2183925,
+      "full_name": "Cam Schlittler"
+     }
+    },
+    {
+     "game_id": 5060152,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "TB"
+     },
+     "player": {
+      "id": 1602862,
+      "full_name": "Ian Seymour"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-24-cin-atl",
+   "bdlGameId": "5060153",
+   "awayAbbr": "CIN",
+   "homeAbbr": "ATL",
+   "statsapi": {
+    "away": "Brady Singer",
+    "home": "Tyler Mahle"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060153,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "ATL"
+     },
+     "player": {
+      "id": 4100,
+      "full_name": "Tyler Mahle"
+     }
+    },
+    {
+     "game_id": 5060153,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "CIN"
+     },
+     "player": {
+      "id": 67,
+      "full_name": "Brady Singer"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-25-hou-oak",
+   "bdlGameId": "5060155",
+   "awayAbbr": "HOU",
+   "homeAbbr": "OAK",
+   "statsapi": {
+    "away": "Peter Lambert",
+    "home": "Mason Barnett"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060155,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "HOU"
+     },
+     "player": {
+      "id": 2402,
+      "full_name": "Peter Lambert"
+     }
+    },
+    {
+     "game_id": 5060155,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "OAK"
+     },
+     "player": {
+      "id": 5592239,
+      "full_name": "Mason Barnett"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-25-laa-sea",
+   "bdlGameId": "5060154",
+   "awayAbbr": "LAA",
+   "homeAbbr": "SEA",
+   "statsapi": {
+    "away": "Grayson Rodriguez",
+    "home": "Bryan Woo"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060154,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "LAA"
+     },
+     "player": {
+      "id": 738,
+      "full_name": "Grayson Rodriguez"
+     }
+    },
+    {
+     "game_id": 5060154,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "SEA"
+     },
+     "player": {
+      "id": 529,
+      "full_name": "Bryan Woo"
+     }
+    }
+   ]
+  },
+  {
+   "slug": "mlb-2026-09-25-sd-lad",
+   "bdlGameId": "5060156",
+   "awayAbbr": "SD",
+   "homeAbbr": "LAD",
+   "statsapi": {
+    "away": "Nick Pivetta",
+    "home": "Tyler Glasnow"
+   },
+   "bdlRows": [
+    {
+     "game_id": 5060156,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "SD"
+     },
+     "player": {
+      "id": 5161,
+      "full_name": "Nick Pivetta"
+     }
+    },
+    {
+     "game_id": 5060156,
+     "is_probable_pitcher": true,
+     "team": {
+      "abbreviation": "LAD"
+     },
+     "player": {
+      "id": 1865,
+      "full_name": "Tyler Glasnow"
+     }
+    }
+   ]
+  }
+ ]
+}
