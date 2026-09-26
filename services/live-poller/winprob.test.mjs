@@ -159,9 +159,22 @@ test('the prior is FROZEN: a later poll does not move it, and an unchanged state
   await poll('nfl', [row(PID.nfl)]);
   assert.deepEqual((await meta(ids.nfl)).market_prior, before);
   assert.equal((await logs(ids.nfl)).length, 1, 'same inputs, no new row');
+  // THE SCORE ARRIVES BEFORE ITS PLAY ROW (the score poller runs every 30 s,
+  // plays-live every one to two minutes): the tick HOLDS - no new row, and the
+  // card keeps its number with a fresh stamp rather than going to "Paused".
+  const shown = (await meta(ids.nfl)).live_state.win_prob;
+  await poll('nfl', [row(PID.nfl, { homeScore: 17, clock: '6:02' })]);
+  assert.equal((await logs(ids.nfl)).length, 1, 'plays behind the score: nothing logged');
+  const heldLs = (await meta(ids.nfl)).live_state;
+  assert.equal(heldLs.win_prob, shown, 'the last value is kept');
+  assert.ok(Date.now() - Date.parse(heldLs.win_prob_at) < 60_000, 'and stamped fresh, so it does not read Paused');
+  // THE TOUCHDOWN ROW LANDS, carrying the score after it: the plays have caught up.
+  await sql`INSERT INTO plays (match_id, provider_play_id, drive_id, drive_number, play_number, period, clock, down, distance,
+                               yards_to_goal, yards_gained, offense_team_id, play_type, text, home_score, away_score, scoring)
+            VALUES (${ids.nfl}, ${`${PID.nfl}-p2`}, 'd1', 5, 4, 3, '6:02', 1, 10, 30, 30, ${teams.nfl.home.id}, 'Pass Reception', 'A touchdown', 17, 7, true)`;
   await poll('nfl', [row(PID.nfl, { homeScore: 17, clock: '6:02' })]);
   const L = await logs(ids.nfl);
-  assert.equal(L.length, 2, 'a touchdown is a new state');
+  assert.equal(L.length, 2, 'a touchdown is a new state, once its row is in');
   assert.ok(L[1].p_home > L[0].p_home);
 });
 

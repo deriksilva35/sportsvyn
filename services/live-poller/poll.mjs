@@ -783,6 +783,13 @@ export async function pollOnce(sql, {
       try {
         wp = await winProbTick(sql, m, { liveState: upd.liveState, homeScore: upd.homeScore ?? m.home_score, awayScore: upd.awayScore ?? m.away_score, now });
         if (wp?.display != null) upd.liveState = { ...(upd.liveState ?? {}), win_prob: wp.display, win_prob_at: new Date(now).toISOString() };
+        // A HOLD KEEPS THE LAST VALUE, FRESH: the plays are behind the score, so
+        // there is no honest new number - but writeLive replaces live_state
+        // whole, so the old one must be written back, and with a fresh stamp,
+        // or the card would read "Paused" (90 s) during an ordinary score.
+        else if (wp?.hold && m.before_live_state?.win_prob != null) {
+          upd.liveState = { ...(upd.liveState ?? {}), win_prob: m.before_live_state.win_prob, win_prob_at: new Date(now).toISOString() };
+        }
       } catch (e) { log(`[${league}] win prob failed match=${m.id}: ${e.message}`); }
     }
 
