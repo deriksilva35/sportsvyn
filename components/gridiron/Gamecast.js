@@ -69,7 +69,7 @@ function Field({ geometry, homeAbbr, awayAbbr }) {
  * THE STRIP. One component, every state - the mock's frames 1 and 3 are modes
  * of the same thing, not three components.
  */
-export function DriveStrip({ state, lastPlay, drive, homeAbbr, awayAbbr, offenseAbbr, defenseAbbr, simulated }) {
+export function DriveStrip({ state, lastPlay, now = null, drive, homeAbbr, awayAbbr, offenseAbbr, defenseAbbr, simulated }) {
   if (state.mode === 'none' || state.mode === 'final') return null;
 
   // THE HONEST GAP. No play data means the strip says so - it does not draw an
@@ -92,12 +92,18 @@ export function DriveStrip({ state, lastPlay, drive, homeAbbr, awayAbbr, offense
     );
   }
 
-  const dd = downDistanceLabel(lastPlay?.down, lastPlay?.distance, lastPlay?.yardsToGoal);
-  const spot = spotLabel(lastPlay?.yardsToGoal, offenseAbbr, defenseAbbr);
-  const geometry = state.mode === 'between' ? null : stripGeometry({
+  // THE HEADLINE IS NOW, NOT THE LAST PLAY'S SNAP: `now` is
+  // lib/gridiron/situation.js situationNow(), the Live Activity's own reading,
+  // so the page and the lock screen say the same down. When it cannot be named
+  // (penalty, turnover, score, the half ended) the headline is the dash and no
+  // ball is drawn - never the snap of a play that has already happened. The
+  // play-by-play below keeps each play's own snap, which is right for a list.
+  const dd = now ? downDistanceLabel(now.down, now.distance, now.yardsToGoal) : null;
+  const spot = now ? spotLabel(now.yardsToGoal, offenseAbbr, defenseAbbr) : null;
+  const geometry = state.mode === 'between' || !now ? null : stripGeometry({
     offenseIsHome: drive?.offenseIsHome ?? false,
-    yardsToGoal: lastPlay?.yardsToGoal,
-    distance: lastPlay?.distance,
+    yardsToGoal: now.yardsToGoal,
+    distance: now.distance,
     driveStartYardsToGoal: drive?.startYardsToGoal,
   });
 

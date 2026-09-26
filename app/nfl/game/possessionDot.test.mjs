@@ -158,8 +158,9 @@ test('THE SENTENCE IS GONE FROM THE STRIP, and the spot is not', () => {
   assert.equal(/\$\{offenseAbbr\} ball/.test(gamecast), false, '"<TEAM> ball" no longer closes the situation line');
   assert.match(gamecast, /<div className="ds-at">at <b>\{spot\}<\/b><\/div>/, 'the spot stays, on its own');
   // down-distance-spot: both halves still come from the same two helpers.
-  assert.match(gamecast, /const dd = downDistanceLabel\(/);
-  assert.match(gamecast, /const spot = spotLabel\(/);
+  // (both read `now`, the state after the last play - lib/gridiron/situation.js)
+  assert.match(gamecast, /const dd = now \? downDistanceLabel\(now\.down, now\.distance, now\.yardsToGoal\)/);
+  assert.match(gamecast, /const spot = now \? spotLabel\(now\.yardsToGoal, /);
   // The board's own line lost the same words and kept the same parts.
   const boardSrc = stripComments(src('components/scores/ScoresV2.js'));
   assert.equal(/className="ball"/.test(boardSrc), false, 'the board\'s "<TEAM> ball" span is gone');

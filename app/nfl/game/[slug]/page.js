@@ -36,6 +36,7 @@ import { resolveShellMode } from '@/lib/shell/shell';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay, lastActionPlay, showGamecast } from '@/lib/gridiron/driveStrip';
+import { situationNow } from '@/lib/gridiron/situation';
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import LiveWinProb from '@/components/gridiron/LiveWinProb';
 import PropsPanel from '@/components/gridiron/PropsPanel';
@@ -134,6 +135,8 @@ export default async function GamePage({ params, searchParams }) {
   });
   const currentDrive = driveRows[0] ?? null;
   const stripLastPlay = lastLivePlay(sim.plays);
+  // THE HEADLINE'S SITUATION: the state after the last play, the phone's own reading.
+  const stripNow = situationNow(sim.plays);
   // A simulated cut is shown as the game stood THEN, so it renders live even
   // though the row's own status says final. Unsimulated, the status rules.
   // liveState only on a real cut - see the CFB page's note. A simulated
@@ -323,6 +326,7 @@ export default async function GamePage({ params, searchParams }) {
             <DriveStrip
               state={stripState}
               lastPlay={stripLastPlay}
+            now={stripNow}
               drive={currentDrive}
               homeAbbr={game.home?.abbreviation}
               awayAbbr={game.away?.abbreviation}

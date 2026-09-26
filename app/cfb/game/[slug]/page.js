@@ -36,6 +36,7 @@ import { distinctLabel } from '@/lib/gridiron/labels';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay } from '@/lib/gridiron/driveStrip';
+import { situationNow } from '@/lib/gridiron/situation';
 import { currentApRanks } from '@/lib/cfb/rankings';
 import { getTeamRecordChip } from '@/lib/standings/read';
 import OddsStrip from '@/components/gridiron/OddsStrip';
@@ -151,6 +152,8 @@ export default async function CfbGamePage({ params, searchParams }) {
   });
   const currentDrive = driveRows[0] ?? null;
   const stripLastPlay = lastLivePlay(sim.plays);
+  // THE HEADLINE'S SITUATION: the state after the last play, the phone's own reading.
+  const stripNow = situationNow(sim.plays);
   // liveState IS PASSED, and only when the cut is real. It is what makes the
   // halftime branch (driveStrip.js:105) reachable at all - without it that
   // branch reads two undefined fields and can never fire, so the strip would
@@ -236,6 +239,7 @@ export default async function CfbGamePage({ params, searchParams }) {
           <DriveStrip
             state={stripState}
             lastPlay={stripLastPlay}
+            now={stripNow}
             drive={currentDrive}
             homeAbbr={game.home?.abbreviation}
             awayAbbr={game.away?.abbreviation}
