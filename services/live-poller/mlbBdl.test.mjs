@@ -34,7 +34,7 @@ const { pollOnce, fromMlb, mlbEnrich, mlbDetail, mlbKickoff, _resetMlbProbablesC
 const { _resetNameCache } = await import('../../lib/mlb/bdlLive.js');
 
 const NS = `sentinel-mlb-bdl-${process.pid}-${Date.now()}`;
-const PID = { live: `${NS}-live`, pre: `${NS}-pre` };
+const PID = { live: `${NS}-live`, pre: `${NS}-pre`, swap: `${NS}-swap`, empty: `${NS}-empty` };
 const ids = {}; let away; let home;
 const KICK = { live: new Date(Date.now() - 2 * 3600e3), pre: new Date(Date.now() + 2 * 3600e3) };
 // BDL MOVED THE LIVE GAME'S FIRST PITCH 40 MINUTES EARLIER, the way CHC @ BOS moved on 25 Sep.
@@ -59,12 +59,21 @@ before(async () => {
             2026, 'REG', ${JSON.stringify({ bdl_game_id: PID[tag] })}::jsonb, '{}'::jsonb) RETURNING id`)[0].id;
   ids.live = await mk('live', 'live', KICK.live);
   ids.pre = await mk('pre', 'scheduled', KICK.pre);
+  ids.swap = await mk('swap', 'live', KICK.live);
+  ids.empty = await mk('empty', 'live', KICK.live);
 
   globalThis.fetch = async (url, opts) => {
     const u = String(url?.url ?? url);
     if (u.includes('statsapi')) { seen.push(u); throw new Error('statsapi must not be called'); }
     if (!u.includes('balldontlie.io')) return realFetch(url, opts);   // the database driver
     seen.push(u);
+    // THE SWAPPED DOUBLEHEADER (25 Sep): a game live in the 3rd whose plate
+    // appearances are another game's, ending in the 9th. And a live game with none.
+    if (u.includes('/plate_appearances') && u.includes(encodeURIComponent(PID.empty))) return Response.json({ data: [], meta: {} });
+    if (u.includes('/plate_appearances') && u.includes(encodeURIComponent(PID.swap))) return Response.json({ data: [
+      { pa_number: 84, inning: 9, half_inning: 'bottom', outs: 2, runner_on_first: true, runner_on_second: true, runner_on_third: true,
+        batter_id: 101, pitcher_id: 202, result: null, pitches: [{ balls: 3, strikes: 2, pitch_call_code: 'foul' }] },
+    ], meta: {} });
     if (u.includes('/plate_appearances')) return Response.json({ data: [
       { pa_number: 50, inning: 7, half_inning: 'top', outs: 1, runner_on_first: false, runner_on_second: false, runner_on_third: false,
         batter_id: 101, pitcher_id: 202, result: 'Single', pitches: [{ balls: 0, strikes: 0, pitch_call_code: 'hit_into_play' }] },
@@ -93,7 +102,12 @@ after(async () => {
 const poll = () => pollOnce(sql, {
   league: 'mlb', providerKey: 'bdl_game_id', normalise: fromMlb, enrich: mlbEnrich, enrichScheduled: true,
   futureMinutes: 240, detail: mlbDetail, kickoffOf: mlbKickoff, push: false, now: new Date(),
-  fetcher: async () => ({ rows: [gameRow(PID.live, 'in_progress', { date: MOVED.toISOString() }), gameRow(PID.pre, 'scheduled', { date: KICK.pre.toISOString() })], calls: 1 }),
+  fetcher: async () => ({ rows: [
+    gameRow(PID.live, 'in_progress', { date: MOVED.toISOString() }), gameRow(PID.pre, 'scheduled', { date: KICK.pre.toISOString() }),
+    gameRow(PID.swap, 'in_progress', { date: KICK.live.toISOString(), period: 3,
+      home_team_data: { runs: 1, hits: 2, errors: 0, inning_scores: [0, 1] }, away_team_data: { runs: 2, hits: 3, errors: 0, inning_scores: [2, 0, 0] } }),
+    gameRow(PID.empty, 'in_progress', { date: KICK.live.toISOString() }),
+  ], calls: 1 }),
 });
 
 test('THE CUTOVER, through the real poller: live state and the pre-game card from BDL, statsapi never called', async () => {
@@ -135,4 +149,17 @@ test('THE POLLER PASSES THE REGISTRY\'S detail AND kickoffOf TO pollOnce (declar
   assert.match(call, /kickoffOf: lg\.kickoffOf \?\? null/);
   assert.match(src, /kickoffOf: mlbKickoff/);
   assert.match(src, /detail: mlbDetail/);
+});
+
+test('EMPTY BEATS WRONG: another game\'s plate appearances, or none, leave the card on the row\'s inning, half and score', async () => {
+  for (const k of ['swap', 'empty']) {
+    const [r] = await sql`SELECT status, metadata->'live_state' AS ls FROM matches WHERE id = ${ids[k]}`;
+    assert.equal(r.status, 'live');
+    for (const f of ['outs', 'balls', 'strikes', 'bases', 'batter', 'pitcher']) {
+      assert.ok(r.ls?.[f] == null, `${k}: no ${f} - nothing of another game's at-bat, nothing guessed`);
+    }
+  }
+  const [swap] = await sql`SELECT home_score, away_score, metadata->'live_state' AS ls FROM matches WHERE id = ${ids.swap}`;
+  assert.equal(swap.ls.period, 3, 'the inning is the row\'s own, not the 9th the plate appearances claimed');
+  assert.equal(swap.home_score, 1); assert.equal(swap.away_score, 2);
 });

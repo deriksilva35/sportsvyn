@@ -293,9 +293,12 @@ export async function mlbEnrich(row, m, sql, { log = () => {}, live: isLive = tr
   let live = null;
   if (isLive) {
     try {
-      const r = await bdlLiveState(row?.id);
+      // THE ROW'S OWN INNING IS THE CHECK: plate appearances from another
+      // inning are another game's, or stale - either way not shown.
+      const r = await bdlLiveState(row?.id, { expectInning: row?.period });
       calls += r.calls;
       live = r.live;
+      if (r.rejected && r.rejected !== 'no-plate-appearances') log(`[mlb] live state refused for ${m?.slug}: ${r.rejected}`);
     } catch (e) { log(`[mlb] live state failed for ${m?.slug}: ${e.message}`); }
     return { play: null, live, lineups: null, probables: null, calls };
   }
