@@ -139,7 +139,7 @@ test('mlbEnrich LIVE: one plate-appearance page carries the diamond, the outs, t
     return { ok: false, status: 404, json: async () => ({}) };
   };
   try {
-    const r = await mlbEnrich({ id: 99, status_state: 'in_progress' }, { id: 1, slug: 'tb-nyy' }, null, { live: true });
+    const r = await mlbEnrich({ id: 99, status_state: 'in_progress', period: 7 }, { id: 1, slug: 'tb-nyy' }, null, { live: true });
     assert.equal(r.play, null, 'the old /plays read is gone');
     assert.deepEqual(r.live, { period: 7, half: 'Top', outs: 2, balls: 1, strikes: 2,
       bases: { first: true, second: true, third: false }, batter: 'Bat Ter', pitcher: 'Pitch Er' });
@@ -148,7 +148,7 @@ test('mlbEnrich LIVE: one plate-appearance page carries the diamond, the outs, t
     assert.equal(r.calls, 2, 'one PA page + one name lookup');
     // NAMES ARE CACHED: the same two players cost nothing the next poll.
     seen.length = 0;
-    const again = await mlbEnrich({ id: 99, status_state: 'in_progress' }, { id: 1, slug: 'tb-nyy' }, null, { live: true });
+    const again = await mlbEnrich({ id: 99, status_state: 'in_progress', period: 7 }, { id: 1, slug: 'tb-nyy' }, null, { live: true });
     assert.equal(seen.filter((u) => u.includes('/players')).length, 0); assert.equal(again.calls, 1);
   } finally { globalThis.fetch = real; }
 });
