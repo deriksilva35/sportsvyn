@@ -52,7 +52,10 @@ const SOURCE = 'plays-live';
 // flag on the due games are imported POOL at a time, and no new game starts
 // after DEADLINE_MS - one left over is simply due on the next tick. With the
 // flag off the loop below is main's, one at a time, unchanged.
-const POOL = 6;
+// THREE, NOT SIX (26 Sep): CFBD's /live/plays refuses concurrent requests
+// (429), and six at once lost 3-7 games a minute across the slate. Twenty
+// games at ~1 s each, three at a time, is still well inside DEADLINE_MS.
+const POOL = 3;
 const DEADLINE_MS = 45_000;
 
 export async function GET(request) {
