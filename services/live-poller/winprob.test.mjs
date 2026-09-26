@@ -176,6 +176,8 @@ test('the prior is FROZEN: a later poll does not move it, and an unchanged state
   const L = await logs(ids.nfl);
   assert.equal(L.length, 2, 'a touchdown is a new state, once its row is in');
   assert.ok(L[1].p_home > L[0].p_home);
+  assert.ok(heldLs.win_prob_hold_since, 'the hold was marked');
+  assert.equal((await meta(ids.nfl)).live_state.win_prob_hold_since, undefined, 'a computed value ends the hold, so the next one starts its 180 s afresh');
 });
 
 test('NO LINE, NO NUMBER: nothing frozen, nothing written, nothing logged', async () => {

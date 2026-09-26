@@ -22,7 +22,7 @@ import { scoringPlayFor, baseballScoringText } from '../../lib/push/scoringPlayR
 import { activityEventFor, pushLiveActivities } from '../../lib/push/liveActivityStore.js';
 import { stateFromMatch, liveLine } from '../../lib/push/liveActivityState.js';
 import { playsFor } from '../../lib/gridiron/playsImport.js';
-import { winProbTick, logWinProb, WINPROB_SPORTS } from '../../lib/winprob/live.js';
+import { winProbTick, logWinProb, WINPROB_SPORTS, heldWinProb } from '../../lib/winprob/live.js';
 
 const CFBD = 'https://apinext.collegefootballdata.com';
 const BDL = 'https://api.balldontlie.io';
@@ -783,12 +783,14 @@ export async function pollOnce(sql, {
       try {
         wp = await winProbTick(sql, m, { liveState: upd.liveState, homeScore: upd.homeScore ?? m.home_score, awayScore: upd.awayScore ?? m.away_score, now });
         if (wp?.display != null) upd.liveState = { ...(upd.liveState ?? {}), win_prob: wp.display, win_prob_at: new Date(now).toISOString() };
-        // A HOLD KEEPS THE LAST VALUE, FRESH: the plays are behind the score, so
-        // there is no honest new number - but writeLive replaces live_state
-        // whole, so the old one must be written back, and with a fresh stamp,
-        // or the card would read "Paused" (90 s) during an ordinary score.
-        else if (wp?.hold && m.before_live_state?.win_prob != null) {
-          upd.liveState = { ...(upd.liveState ?? {}), win_prob: m.before_live_state.win_prob, win_prob_at: new Date(now).toISOString() };
+        // A HOLD KEEPS THE LAST VALUE: the plays are behind the score, so there
+        // is no honest new number - but writeLive replaces live_state whole, so
+        // the old one must be written back. Fresh for the first 180 s of the
+        // hold (an ordinary score must not read "Paused"), then left to age so a
+        // feed that never catches up says so (lib/winprob/live.js heldWinProb).
+        else if (wp?.hold) {
+          const held = heldWinProb(m.before_live_state, now);
+          if (held) upd.liveState = { ...(upd.liveState ?? {}), ...held };
         }
       } catch (e) { log(`[${league}] win prob failed match=${m.id}: ${e.message}`); }
     }
