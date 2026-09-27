@@ -110,6 +110,10 @@
       "schedule": "30 6-20 * * *"
     },
     {
+      "path": "/api/cron/draft-bridge",
+      "schedule": "45 * * * *"
+    },
+    {
       "path": "/api/cron/run-nudge",
       "schedule": "0 15 * * *"
     },
