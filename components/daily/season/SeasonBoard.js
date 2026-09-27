@@ -135,7 +135,7 @@ const Crumb = () => (
  *   grade - these three, passed together, skip 'rules'/'board' entirely.
  */
 export default function SeasonBoard({
-  edition, year, teams: teamsProp, slots, ranked, userId = null, signInHref = null,
+  edition, year: yearProp, teams: teamsProp, slots, ranked, userId = null, signInHref = null,
   // THE OPEN-DAY REVEAL (1b, lib/daily/openReveal.js): a finished run on a day
   // that has not closed gets this instead of the grade. From the page on a
   // reload; from the submit response on a fresh finish (revealState below).
@@ -152,6 +152,10 @@ export default function SeasonBoard({
   // page hands over team keys with empty cards; handleStart swaps in the cards
   // from POST /api/daily/board/start. A resume or a receipt arrives with them.
   const [teams, setTeams] = useState(teamsProp);
+  // THE SEASON IS PART OF THE ANSWER (ruling 27 Sep): a year narrows the board
+  // to one real season, which is what the points are. Before Start the page
+  // sends none and the rules card says so; the start response carries it.
+  const [year, setYear] = useState(yearProp);
   const [revealState, setRevealState] = useState(null);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState(null);
@@ -238,6 +242,7 @@ export default function SeasonBoard({
           : 'Could not start. Try again.');
         return;
       }
+      if (body.year) setYear(String(body.year));
       if (Array.isArray(body.teams)) {
         setTeams(body.teams);
         setPlay(initBoardPlay(body.teams, slots));
@@ -699,7 +704,9 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
   return (
     <div className="sbd-rules">
       <div className="sbd-kick">{edition}</div>
-      <h2>{year}</h2>
+      {/* NO YEAR BEFORE THE CLOCK: the ranked edition's page withholds it with
+          the cards, and the season arrives when Start is recorded. */}
+      <h2>{year ?? '????'}</h2>
 
       <div className="sbd-rl">
         <span className="sbd-n">1</span>

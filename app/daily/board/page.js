@@ -89,7 +89,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         // the edition path only. dest back to /daily/board.
         return (
           <SeasonBoard
-            edition={edition} year={year} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked
+            edition={edition} year={null} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked
             boardId={board.id}
             signInHref={shellSigninHref(DAILY_V2_PATH, isShell)}
           />
@@ -120,7 +120,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         const reveal = await openRevealFor(sql, { board, run: existing, userId, editionDate });
         return (
           <SeasonBoard
-            edition={edition} year={year} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked userId={userId}
+            edition={edition} year={null} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked userId={userId}
             boardId={board.id} initialScreen="grade" openReveal={reveal} closesAt={board.closes_at}
           />
         );
@@ -258,7 +258,7 @@ export default async function SeasonBoardPage({ searchParams }) {
       const streak = await currentStreakFor(userId, editionDate);
       return (
         <SeasonBoard
-          edition={edition} year={year} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked userId={userId}
+          edition={edition} year={null} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked userId={userId}
           boardId={board.id}
           streak={streak} closesAt={board.closes_at}
         />

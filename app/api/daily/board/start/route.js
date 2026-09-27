@@ -49,5 +49,7 @@ export async function POST() {
     resumed: r.resumed,
     submitted: r.submitted,
     teams: board.board,
+    // AND THE SEASON, withheld from the page with the cards for the same reason.
+    year: String(board.season_year),
   });
 }

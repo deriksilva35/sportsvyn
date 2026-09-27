@@ -191,7 +191,7 @@
 .ob-bar .g { background: var(--muted-dim); }
 .ob-bar .a { background: var(--volt); }
 
-/* LIVE BOARD (lib/boards/mlb.js): today's live delta in magenta, a gap row for
+/* LIVE BOARD (lib/boards/mlb.js): today's live delta in volt, a gap row for
    elided ranks. */
-.ob-lr .d.live { color: #ff4fa3; font-weight: 700; }
+.ob-lr .d.live { color: var(--volt, #D4FF00); font-weight: 700; }
 .ob-lr.ob-gap { color: var(--muted-dim); }

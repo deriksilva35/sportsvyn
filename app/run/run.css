@@ -201,11 +201,11 @@
    bye, but still openable so its panel can say why. */
 .rn-tc.started { opacity: .45; }
 
-/* LIVE BOARDS (lib/boards/mlb.js): the round in play reads live in magenta, the
+/* LIVE BOARDS (lib/boards/mlb.js): the round in play reads live in volt, the
    picked round's column is bold, a gap row marks elided ranks, and the round
    chips sit above the table. */
-.rb-lr .r.live { color: #ff4fa3; font-weight: 700; }
+.rb-lr .r.live { color: var(--volt, #D4FF00); font-weight: 700; }
 .rb-lr .r.on { font-weight: 700; color: var(--paper, #f5f5f2); }
 .rb-lr.rb-gap { color: var(--muted-dim); text-align: center; }
 .rb-rounds { margin-top: 0; }
-.rn-lg.live { border-color: #ff4fa3; }
+.rn-lg.live { border-color: var(--volt, #D4FF00); }
