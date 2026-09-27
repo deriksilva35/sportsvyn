@@ -65,6 +65,15 @@
   color: var(--muted-dim, #6e6e68);
   text-transform: uppercase;
 }
+/* The live rank opens /weekly/board. A block link under the "of N · live" line,
+   44 px tall so a thumb can hit it. */
+.wkv-rt .wkv-board {
+  display: inline-flex; align-items: center; justify-content: flex-end; min-height: 44px;
+  font: 700 11px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--volt, #d4ff00);
+}
+.wkv-rt span { display: block; }
 .wkv-pips { display: flex; gap: 4px; margin-top: 10px; }
 .wkv-pip {
   flex: 1;

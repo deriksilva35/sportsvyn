@@ -19,6 +19,7 @@ import { StatsTracker } from '../../lib/live/statsCadence.js';
 import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
 import { syncMlbGameStats } from '../../lib/mlb/statsSync.js';
 import { syncMlbPlays } from '../../lib/mlb/playsSync.js';
+import { snapshotLiveBoards } from '../../lib/boards/live.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
 import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff } from './poll.mjs';
@@ -276,9 +277,11 @@ async function loop(lg) {
             SELECT m.id, m.status FROM matches m JOIN leagues l ON l.id = m.league_id
              WHERE l.slug = ${lg.slug} AND (m.status = 'live' OR m.id = ANY(${seenIds}::int[]))`;
           const syncBox = lg.slug === 'mlb' ? syncMlbGameStats : syncGameStats;
+          let boardsDue = false;
           for (const d of stats.due({ polls: window.polls, matches: watched })) {
             try {
               const g = await syncBox(d.id);
+              if (g.changed > 0 || d.why === 'final') boardsDue = true;
               pending += g.calls; window.calls += g.calls; window.statsCalls += g.calls; statsCallsToday += g.calls;
               log(`[${lg.slug}] box score ${d.why} match=${g.matchId} rows=${g.rows} changed=${g.changed} calls=${g.calls}`);
               // THE PITCHES RIDE THE SAME CADENCE AS THE BOX, and the same
@@ -303,6 +306,20 @@ async function loop(lg) {
               }
             } catch (e) {
               log(`[${lg.slug}] box score ${d.why} match=${d.id} failed:`, String(e?.message ?? e).slice(0, 120));
+            }
+          }
+          // THE LIVE BOARDS' MEMORY (lib/boards/live.js). A box score that moved
+          // a stat line moves Weekly and Draft totals; the snapshot is where each
+          // entry stood NOW, so the board can say where it stood ten minutes ago.
+          // Once per poll, after every box score, and only for the NFL - the two
+          // games it serves score from nfl_player_game_stats. ITS FAILURE IS ITS
+          // OWN: a missed snapshot costs a movement arrow, never the scoring.
+          if (boardsDue && lg.slug === 'nfl') {
+            try {
+              const b = await snapshotLiveBoards({ sport: 'nfl', now: new Date() });
+              if (b.written) log(`[nfl] live boards snapshot contests=${b.contests} rows=${b.written}`);
+            } catch (e) {
+              log('[nfl] live boards snapshot failed:', String(e?.message ?? e).slice(0, 120));
             }
           }
         }

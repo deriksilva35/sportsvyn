@@ -44,6 +44,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { SLOTS } from '@/lib/weekly/rules';
 import { slotState } from '@/lib/weekly/slotState';
 import { nextOpenSlot } from '@/lib/daily/play';
@@ -330,6 +331,8 @@ export default function WeeklyRoom({
               <div className="wkv-rt">
                 <b className="n">{ordinal(live.rank) ?? live.rank}</b>
                 <span>{live.of ? `of ${live.of} · live` : 'live'}</span>
+                {/* THE RANK OPENS THE BOARD IT IS A RANK ON (lib/boards/live.js). */}
+                <Link className="wkv-board" href="/weekly/board">Board &#8250;</Link>
               </div>
             ) : null}
           </div>
