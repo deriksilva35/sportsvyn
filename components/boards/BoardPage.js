@@ -18,11 +18,14 @@ import LiveBoard from '@/components/boards/LiveBoard';
 import { gameBoard, boardView, BOARD_GAMES, MOVEMENT_MIN } from '@/lib/boards/live';
 import { resolveShellMode } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
+import { myLeagues, leagueMemberIds } from '@/lib/leagues/core';
 
 export const BOARD_REVALIDATE_SEC = 30;
 
+// THE CACHE KEY CARRIES THE LEAGUE: unstable_cache keys on its arguments, so
+// National and each league are separate 30 s entries.
 const cachedBoard = unstable_cache(
-  async (game) => gameBoard(game, { now: new Date() }),
+  async (game, memberIds = null) => gameBoard(game, { now: new Date(), memberIds }),
   ['boards:gameBoard:v1'],
   { revalidate: BOARD_REVALIDATE_SEC, tags: ['live-boards'] },
 );
@@ -36,13 +39,22 @@ const etLabel = (iso) => (iso ? new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit',
 }).format(new Date(iso)) + ' ET' : null);
 
-export default async function BoardPage({ game }) {
+export default async function BoardPage({ game, searchParams = null }) {
   const g = BOARD_GAMES[game];
   const session = await auth();
   const uid = session?.user?.id ?? null;
   const shell = await resolveShellMode().catch(() => null);
   const signinHref = shellSigninHref(g.path, shell?.isShell ?? false);
-  const b = await cachedBoard(game).catch(() => null) ?? { state: 'none', rows: [], contest: null };
+  // ?league=<id> PICKS ONE OF THE READER'S OWN LEAGUES; anything else is
+  // National. The filter is built from their memberships, never from the URL,
+  // so a guessed id shows National rather than somebody else's league.
+  const q = (await searchParams) ?? {};
+  const leagues = uid == null ? [] : await myLeagues(Number(uid)).catch(() => []);
+  const picked = leagues.find((l) => String(l.id) === String(q.league ?? '')) ?? null;
+  const memberIds = picked ? (await leagueMemberIds(picked.id).catch(() => [])).map(Number).sort((a, b) => a - b) : null;
+  const b = await cachedBoard(game, memberIds).catch(() => null) ?? { state: 'none', rows: [], contest: null };
+  const chips = [{ label: 'National', href: g.path, on: picked == null },
+    ...leagues.map((l) => ({ label: l.name, href: `${g.path}?league=${l.id}`, on: picked?.id === l.id }))];
   const view = boardView(b.rows ?? [], uid, { top: 10 });
   return (
     <div className="lbpage">
@@ -52,7 +64,7 @@ export default async function BoardPage({ game }) {
         title={g.title} state={b.state} view={view} week={b.contest?.week ?? null}
         homeHref={g.home} signedIn={uid != null} signinHref={signinHref}
         firstKickoffLabel={etLabel(b.firstKickoff)} minutes={MOVEMENT_MIN}
-        liveNote={LIVE_NOTE[game]}
+        liveNote={LIVE_NOTE[game]} chips={chips}
       />
       <SiteFooter />
     </div>

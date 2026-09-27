@@ -69,3 +69,10 @@
    tokens without the frame. */
 .lb.lb-embed { max-width: none; padding: 0; margin: 12px 0; }
 .lb.lb-embed .lb-you { margin: 0; }
+
+/* National + the reader's leagues, the mock's chip row. Scrolls sideways inside
+   itself when there are many; the page never does. */
+.lb-chips { display: flex; gap: 8px; overflow-x: auto; padding: 0 0 12px; scrollbar-width: none; }
+.lb-chips::-webkit-scrollbar { display: none; }
+.lb-chip { flex: none; display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; box-sizing: border-box; border-radius: 999px; background: var(--lb-card); border: 1px solid var(--lb-line); color: var(--lb-ink); font-size: 13px; font-weight: 800; white-space: nowrap; }
+.lb-chip.on { background: var(--lb-navy); border-color: var(--lb-navy); color: var(--lb-volt); }

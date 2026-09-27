@@ -8,9 +8,10 @@
 // THE FRAME, TOP TO BOTTOM: title + live pill · the pinned "you" card (rank,
 // movement over the last 10 minutes, points, how many of the six have played,
 // the top-10% line) · the table (top ten, then the reader's own row with a
-// neighbour either side when they sit lower). The mock's League/Friends chips
-// and prize line are NOT drawn: the first is Phase 3, the second does not
-// exist in the product, and a control that goes nowhere is worse than none.
+// neighbour either side when they sit lower). The chips are National and the
+// reader's own leagues (a league ranks its members among themselves); the
+// mock's Friends chip and prize line are NOT drawn - neither exists in the
+// product, and a control that goes nowhere is worse than none.
 
 import Link from 'next/link';
 
@@ -49,6 +50,7 @@ export default function LiveBoard({
   title, state, view, week = null, homeHref = '/', signedIn = false, signinHref = '/signin',
   firstKickoffLabel = null, slots = 6, minutes = 10,
   liveNote = 'Live totals from the box scores (about five minutes behind play). The settle\'s score is the ruling.',
+  chips = [],
 }) {
   const live = state === 'live';
   const pill = live ? `Live · Week ${week}` : state === 'final' ? `Final · Week ${week}` : week ? `Week ${week}` : null;
@@ -67,6 +69,14 @@ export default function LiveBoard({
         </div>
         <span className="lb-sp" aria-hidden="true" />
       </div>
+
+      {chips.length > 1 ? (
+        <nav className="lb-chips" aria-label="Which board">
+          {chips.map((c) => (
+            <Link key={c.href} className={`lb-chip${c.on ? ' on' : ''}`} href={c.href} aria-current={c.on ? 'page' : undefined}>{c.label}</Link>
+          ))}
+        </nav>
+      ) : null}
 
       {state === 'none' || state === 'prekick' ? (
         <div className="lb-empty">

@@ -10,6 +10,6 @@ import '../../boards/board.css';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'The Draft · Board - Sportsvyn' };
 
-export default function Page() {
-  return <BoardPage game="draft" />;
+export default function Page({ searchParams }) {
+  return <BoardPage game="draft" searchParams={searchParams} />;
 }

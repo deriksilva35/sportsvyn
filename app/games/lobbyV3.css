@@ -102,3 +102,6 @@
 .gv-more { margin: 10px 0 0; }
 .gv-more .ghost { font-size: 12px; letter-spacing: .02em; }
 .gv-season { margin: 0 0 14px; }
+
+/* "Full board, live ›" under the Weekly and Draft tabs - a 44 px target. */
+.gv-foot .gv-full { display: inline-flex; align-items: center; min-height: 44px; color: var(--volt, #D4FF00); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }

@@ -27,6 +27,9 @@ import '@/components/house/house.css';
 import StandaloneTime from '@/components/StandaloneTime';
 import { V3_CHIPS, V3_CHIP_LABEL } from '@/lib/games/lobby';
 import SeasonBoard from '@/components/games/SeasonBoard';
+
+/** The games with an always-on board page (lib/boards/live.js, lib/boards/mlb.js). */
+const FULL_BOARD = { weekly: '/weekly/board', draft: '/draft/board', october: '/october/board', run: '/run/board' };
 import '@/components/games/season.css';
 
 // ---------------------------------------------------------------------------
@@ -257,6 +260,11 @@ function BoardsPane({ v, userId }) {
         {board?.note ? <>{board.note} · </> : null}
         Season standings on <b>Rankings</b> · week boards here
       </p>
+      {/* THE WHOLE BOARD, ONE TAP AWAY (live boards, Phase 3): the Weekly and the
+          Draft have an always-on page - every entry, the reader pinned, movement. */}
+      {FULL_BOARD[boardKey] ? (
+        <p className="gv-foot"><Link className="gv-full" href={FULL_BOARD[boardKey]}>Full board, live &#8250;</Link></p>
+      ) : null}
     </>
   );
 }
