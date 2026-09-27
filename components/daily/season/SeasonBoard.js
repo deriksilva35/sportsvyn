@@ -36,6 +36,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import OpenReveal from '@/components/daily/season/OpenReveal';
 import {
   initBoardPlay, teamIsDead, isRosterComplete, filledCount, teamsLeft,
   legalSlotIndexes, commitPick, clearSlot, startClock as canStartClock,
@@ -134,7 +135,11 @@ const Crumb = () => (
  *   grade - these three, passed together, skip 'rules'/'board' entirely.
  */
 export default function SeasonBoard({
-  edition, year, teams, slots, ranked, userId = null, signInHref = null,
+  edition, year, teams: teamsProp, slots, ranked, userId = null, signInHref = null,
+  // THE OPEN-DAY REVEAL (1b, lib/daily/openReveal.js): a finished run on a day
+  // that has not closed gets this instead of the grade. From the page on a
+  // reload; from the submit response on a fresh finish (revealState below).
+  openReveal = null,
   initialPlay = null, initialGrade = null, initialClockLabel = null, streak = null,
   closesAt = null, todayRows = null, boardId = null,
   // RESUMING A STARTED RUN (097). The server hands the stored started_at back
@@ -143,6 +148,11 @@ export default function SeasonBoard({
   initialStartedAt = null, initialScreen = null,
 }) {
   const [screen, setScreen] = useState(initialScreen ?? (initialGrade ? 'grade' : 'rules')); // 'rules' | 'board' | 'grade'
+  // THE CARDS ARRIVE WITH THE START (1b item 4). Before a start is recorded the
+  // page hands over team keys with empty cards; handleStart swaps in the cards
+  // from POST /api/daily/board/start. A resume or a receipt arrives with them.
+  const [teams, setTeams] = useState(teamsProp);
+  const [revealState, setRevealState] = useState(null);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState(null);
   // REHYDRATE A RECEIPT'S PLAY. initialPlay arrives across the RSC boundary
@@ -227,6 +237,10 @@ export default function SeasonBoard({
           ? 'This board has closed.'
           : 'Could not start. Try again.');
         return;
+      }
+      if (Array.isArray(body.teams)) {
+        setTeams(body.teams);
+        setPlay(initBoardPlay(body.teams, slots));
       }
       beginTimer(body.startedAt);
       setScreen('board');
@@ -322,6 +336,14 @@ export default function SeasonBoard({
         body: JSON.stringify({ boardId, picks: picksFromPlay(play), elapsedS }),
       });
       const body = await res.json().catch(() => ({}));
+      if (res.ok && body?.ok && body?.open && body?.reveal) {
+        // THE DAY IS OPEN: the reveal, never the grade (the route sends no grade).
+        clearInterval(tickRef.current);
+        setRevealState(body.reveal);
+        setFinishedMs(Date.now());
+        setScreen('grade');
+        return;
+      }
       if (!res.ok || !body?.ok || !body?.grade) {
         // TWO REFUSALS ARE FINAL, NOT RETRYABLE: the clock ran out on the
         // server, or it ran out with nothing on the board. Both are a DNF,
@@ -401,6 +423,17 @@ export default function SeasonBoard({
           ranked={ranked} onStart={handleStart} signInHref={signInHref}
           starting={starting} startError={startError}
         />
+      </div>
+    );
+  }
+
+  if (screen === 'grade' && (openReveal ?? revealState)) {
+    // THE PAGE'S REVEAL WINS once there is one: LiveRefresh inside OpenReveal
+    // re-renders the page, and the fresh prop carries the board as it now stands.
+    return (
+      <div className="sbd">
+        <Crumb />
+        <OpenReveal edition={edition} reveal={openReveal ?? revealState} />
       </div>
     );
   }

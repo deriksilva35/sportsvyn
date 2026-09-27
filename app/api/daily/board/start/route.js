@@ -8,12 +8,12 @@
  * which made "One attempt - this board is ranked" true only for a player who
  * did not reload.
  *
- * THE RESPONSE CARRIES NO BOARD. v1's /start hands back a stripped board
- * because v1 hides the answer; v2's board is already rendered by the server
- * component on the page (its whole premise is that the cards are public and
- * the clock is the game). So this route is the clock alone: startedAt and the
- * edition's closesAt, both server-issued, neither trusted back - submitRun
- * re-reads the stored row and re-checks the close itself.
+ * THE RESPONSE CARRIES THE BOARD (1b, 27 Sep; this used to say the opposite).
+ * v2's cards were rendered by the page from the first visit, so the board
+ * could be solved off the payload before Start. Now the page sends team keys
+ * only and the cards arrive here, after the row is written. startedAt and
+ * closesAt are server-issued and never trusted back - submitRun re-reads the
+ * stored row and re-checks the close itself.
  */
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
@@ -37,6 +37,10 @@ export async function POST() {
   const r = await startRun(sql, { boardId: board.id, userId: Number(userId) });
   if (!r.ok) return Response.json({ error: r.reason }, { status: r.status ?? 400 });
 
+  // THE CARDS, NOW AND ONLY NOW (1b item 4, 27 Sep). The page no longer
+  // renders them before a start is recorded (lib/daily/openReveal.js
+  // sealedTeams), so this response is where they come from: the row above
+  // exists, the attempt is spent, and the clock is running.
   return Response.json({
     editionDate,
     boardId: board.id,
@@ -44,5 +48,6 @@ export async function POST() {
     closesAt: r.closesAt,
     resumed: r.resumed,
     submitted: r.submitted,
+    teams: board.board,
   });
 }

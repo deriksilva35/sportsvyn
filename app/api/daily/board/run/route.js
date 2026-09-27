@@ -15,8 +15,27 @@ import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 
 import { submitRun, regradeStoredRun } from '@/lib/daily/seasonBoardRuns';
+import { openRevealFor } from '@/lib/daily/openReveal';
+import { todayEt } from '@/lib/daily/entries';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * WHILE THE DAY IS OPEN THE RESPONSE IS THE REVEAL, NOT THE GRADE (1b). The
+ * grade's rows carry the best roster, and a response is as public as a page:
+ * before closes_at the client gets its own slots, total, rank, beat-%, streak
+ * and the board of finished runs (lib/daily/openReveal.js), and nothing else.
+ * Returns null once the board has closed - then the grade is the answer.
+ */
+async function openResponse(boardId, userId) {
+  const [board] = await sql`SELECT *, now() < closes_at AS open FROM daily_boards WHERE id = ${boardId}`;
+  if (!board || board.open !== true) return null;
+  const [run] = await sql`
+    SELECT * FROM daily_board_runs WHERE board_id = ${boardId} AND user_id = ${userId} AND picks IS NOT NULL`;
+  if (!run) return null;
+  const reveal = await openRevealFor(sql, { board, run, userId, editionDate: await todayEt() });
+  return Response.json({ ok: true, open: true, reveal, score: Number(run.score), elapsedS: Number(run.elapsed_s) });
+}
 
 export async function POST(request) {
   const session = await auth();
@@ -36,6 +55,8 @@ export async function POST(request) {
     // message. The client renders it exactly as it renders a fresh submit.
     // Same shape, so the caller needs no second code path.
     if (r.reason === 'already ran this board') {
+      const open = await openResponse(boardId, Number(userId));
+      if (open) return open;
       const [board] = await sql`SELECT * FROM daily_boards WHERE id = ${boardId}`;
       const [row] = await sql`
         SELECT * FROM daily_board_runs WHERE board_id = ${boardId} AND user_id = ${Number(userId)}`;
@@ -52,6 +73,8 @@ export async function POST(request) {
     }
     return Response.json({ error: r.reason }, { status: r.status ?? 400 });
   }
+  const open = await openResponse(boardId, Number(userId));
+  if (open) return open;
   // THE WHOLE GRADE, NOT THREE NUMBERS. The grade screen renders rows, the
   // best roster, points-left and the glyph - if the route returned only
   // score/pct/matched the client would still have to compute the rest

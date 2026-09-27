@@ -54,6 +54,7 @@ import { todayEt } from '@/lib/daily/entries';
 import { ensureBoardForDate, isEditionLive, effectiveEpoch, metaFor } from '@/lib/daily/seasonBoardEditions';
 import { regradeStoredRun } from '@/lib/daily/seasonBoardRuns';
 import { todayLeaderboard, streakLeaderboard } from '@/lib/daily/seasonBoardLeaderboards';
+import { openRevealFor, sealedTeams } from '@/lib/daily/openReveal';
 import { displayTeamCode } from '@/lib/footballdb/historicalTeamDisplay';
 import SeasonBoard from '@/components/daily/season/SeasonBoard';
 
@@ -88,7 +89,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         // the edition path only. dest back to /daily/board.
         return (
           <SeasonBoard
-            edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked
+            edition={edition} year={year} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked
             boardId={board.id}
             signInHref={shellSigninHref(DAILY_V2_PATH, isShell)}
           />
@@ -112,6 +113,19 @@ export default async function SeasonBoardPage({ searchParams }) {
       //
       // Before 097 only the third state could exist, because nothing was
       // written until a submit.
+      if (existing && existing.picks != null && !closed) {
+        // FINISHED, DAY STILL OPEN (1b): the run's own reveal and today's board
+        // of finished runs - never the grade, whose rows carry the best roster
+        // (lib/daily/openReveal.js). The full grade is the closed branch below.
+        const reveal = await openRevealFor(sql, { board, run: existing, userId, editionDate });
+        return (
+          <SeasonBoard
+            edition={edition} year={year} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked userId={userId}
+            boardId={board.id} initialScreen="grade" openReveal={reveal} closesAt={board.closes_at}
+          />
+        );
+      }
+
       if (existing && existing.picks != null) {
         // A3: land on the STORED grade, rebuilt from the run's own picks -
         // never a fresh board, never re-solved.
@@ -154,9 +168,13 @@ export default async function SeasonBoardPage({ searchParams }) {
           // score, and the page must not offer Start again. Only the two
           // v1-specific nouns change - "lineup" -> "roster", and v1's "One
           // board a day" keeps its meaning here unchanged.
+          // THE BOARD IS FOR FINISHED RUNS (1b). A run that ran out of clock
+          // never finished, so until the day closes it sees no leaderboard -
+          // before, a throwaway account could start, wait out the round, and
+          // read today's field here.
           const [streak, todayRows] = await Promise.all([
             currentStreakFor(userId, editionDate),
-            todayLeaderboard(sql, board.id),
+            closed ? todayLeaderboard(sql, board.id) : Promise.resolve(null),
           ]);
           return (
             <div className="sbd">
@@ -172,7 +190,7 @@ export default async function SeasonBoardPage({ searchParams }) {
                   One board a day - the perfect roster and the leaderboard unlock at midnight ET.
                 </div>
               </div>
-              <div className="sbd-lb">
+              {todayRows ? <div className="sbd-lb">
                 <div className="sbd-lb-h"><span>Today</span><span>{todayRows.length} played</span></div>
                 {todayRows.map((r) => (
                   <div key={r.userId} className="sbd-lr">
@@ -181,7 +199,7 @@ export default async function SeasonBoardPage({ searchParams }) {
                     <span className="sbd-lr-sc">{r.primary.toLocaleString()}</span>
                   </div>
                 ))}
-              </div>
+              </div> : null}
             </div>
           );
         }
@@ -240,7 +258,7 @@ export default async function SeasonBoardPage({ searchParams }) {
       const streak = await currentStreakFor(userId, editionDate);
       return (
         <SeasonBoard
-          edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked userId={userId}
+          edition={edition} year={year} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked userId={userId}
           boardId={board.id}
           streak={streak} closesAt={board.closes_at}
         />
