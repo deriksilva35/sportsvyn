@@ -8,7 +8,10 @@ import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { currentOctoberDay } from '@/lib/october/create';
-import { octoberBoard } from '@/lib/october/board';
+import { octoberLive, withMlbMovement } from '@/lib/boards/mlb';
+import { boardView } from '@/lib/boards/view';
+import YouCard from '@/components/boards/YouCard';
+import LiveRefresh from '@/components/scores/LiveRefresh';
 import { myLeagues, leagueMemberIds, leagueDetail } from '@/lib/leagues/core';
 import { joinHref } from '@/lib/leagues/code';
 import LeagueChipActions from '@/components/leagues/LeagueChipActions';
@@ -17,6 +20,7 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { seriesFor } from '@/lib/mlb/series';
 import '../../games/games.css';
 import '../october.css';
+import '../../boards/board.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'October · standings - Sportsvyn' };
@@ -45,8 +49,12 @@ export default async function OctoberBoardPage({ searchParams }) {
   // for. The day the reader is looking at decides it: on a preview day the board
   // is the preview's, and the morning the postseason days land it becomes theirs.
   const preview = contest?.meta?.preview === true;
-  const [rows, series, detail] = await Promise.all([
-    octoberBoard(season, { memberIds, preview }).catch(() => []),
+  // LIVE, NOT SETTLED-ONLY (lib/boards/mlb.js): every open day with a game under
+  // way adds each card's scoreCard total, settled days keep the settle's score,
+  // and movement is where each entrant stood ten minutes ago.
+  const now = new Date();
+  const [live, series, detail] = await Promise.all([
+    octoberLive(season, { memberIds, preview, now }).catch(() => ({ rows: [], liveContestId: null, anyLive: false })),
     seriesFor(null, season).catch(() => []),
     picked ? leagueDetail(picked.id, Number(uid)).catch(() => null) : Promise.resolve(null),
   ]);
@@ -60,7 +68,11 @@ export default async function OctoberBoardPage({ searchParams }) {
   }
   const alive = new Set(series.flatMap((s) => s.teams.map((t) => t.abbreviation)).filter((a) => !eliminated.has(a)));
 
+  const rows = await withMlbMovement(live, now).catch(() => live.rows);
+  // THE READER IS FOUND IN THE WHOLE STANDING - octoberBoard used to return
+  // fifty rows and this looked inside them, so 51st and below read "not entered".
   const me = rows.find((r) => String(r.userId) === String(uid)) ?? null;
+  const view = boardView(rows, uid, { top: 10 });
 
   return (
     <div className="gi ocpage" data-surface="ink">
@@ -85,10 +97,14 @@ export default async function OctoberBoardPage({ searchParams }) {
               ? `${picked.name} · ${rows.length} playing`
               : `${rows.length} playing · the World Series decides it`}</span>
           </div>
-          <div className="oc-crow">
-            <div className="oc-lbl">you<b>{me ? `${ordinal(me.rank)} · ${me.back} back` : 'not entered'}</b></div>
-            <div className="oc-tot"><b>{me?.total ?? 0}</b><span>October</span></div>
-          </div>
+          <YouCard
+            me={me} count={rows.length} name={me?.name} label="You" sideTitle="October"
+            sub={me?.today ? `+${me.today.points} today${me.today.slotsLive ? ` · ${me.today.slotsLive} live` : ''}`
+              : me ? `${ordinal(me.rank)} · ${Math.round(((rows[0]?.points ?? 0) - me.points) * 10) / 10} back` : null}
+            live={live.liveContestId != null} signedIn={uid != null} signinHref={signinHref}
+            homeHref="/october" joinWord="Pick your five"
+          />
+          {live.anyLive ? <LiveRefresh everyMs={60_000} /> : null}
         </div>
 
         {/* THE CHIP ROW, the Run's own - one entry, any number of leagues: a
@@ -104,17 +120,20 @@ export default async function OctoberBoardPage({ searchParams }) {
         </div>
 
         <div className="ob-lb">
-          {rows.length ? rows.slice(0, 10).map((r) => (
+          {rows.length ? [...view.head, ...(view.gap ? [null] : []), ...view.around].map((r, i) => (r == null
+            ? <div key={`gap-${i}`} className="ob-lr ob-gap" aria-hidden="true"><span /><span>· · ·</span><span /><span /></div>
+            : (
             <div key={r.userId} className={`ob-lr${String(r.userId) === String(uid) ? ' you' : ''}`} data-rank={r.rank}>
               <span className="rk">{r.rank}</span>
               <span>{String(r.userId) === String(uid) ? 'you' : r.handle}{r.house ? <span className="h"> · house</span> : null}</span>
               {/* TODAY'S DELTA, and a DNF says DNF rather than +0.0 - a day
                   you did not field a card is a different fact from a day you
-                  played badly. */}
-              <span className="d">{r.todayState === 'dnf' ? 'DNF' : r.todayPoints == null ? '—' : `+${r.todayPoints}`}</span>
-              <span className="t">{r.total}</span>
+                  played badly. Live while the day is open (r.today, the
+                  scoreCard sum), the settle's number once it closes. */}
+              <span className={`d${r.today ? ' live' : ''}`}>{r.todayState === 'dnf' ? 'DNF' : r.today ? `+${r.today.points}` : r.todayPoints == null ? '—' : `+${r.todayPoints}`}</span>
+              <span className="t">{r.points}</span>
             </div>
-          )) : <div className="ob-lr"><span className="rk">—</span><span>Nobody has played a day yet.</span><span /><span /></div>}
+          ))) : <div className="ob-lr"><span className="rk">—</span><span>Nobody has played a day yet.</span><span /><span /></div>}
         </div>
 
         {/* THE LEAGUE'S OWN CODE, when one is picked - the same share path the Run

@@ -64,3 +64,8 @@
 .lb-empty b { font-size: 16px; }
 .lb-empty span { font-size: 13px; color: var(--lb-mut); }
 .lb-cta { align-self: flex-start; margin-top: 6px; padding: 10px 16px; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; border-radius: 999px; background: var(--lb-navy); color: var(--lb-volt); font-weight: 800; font-size: 13px; }
+
+/* THE CARD ALONE, inside another board's page (/october/board, /run/board): the
+   tokens without the frame. */
+.lb.lb-embed { max-width: none; padding: 0; margin: 12px 0; }
+.lb.lb-embed .lb-you { margin: 0; }

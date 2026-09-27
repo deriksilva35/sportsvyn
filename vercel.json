@@ -106,6 +106,10 @@
       "schedule": "0 6-20 * * *"
     },
     {
+      "path": "/api/cron/october-settle",
+      "schedule": "30 6-20 * * *"
+    },
+    {
       "path": "/api/cron/run-nudge",
       "schedule": "0 15 * * *"
     },

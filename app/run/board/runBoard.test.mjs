@@ -14,12 +14,16 @@ install();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const F = (n) => stubPath(`__rb_${n}.mjs`);
-const NAMES = ['link', 'auth', 'hdr', 'foot', 'create', 'board', 'pool', 'rules', 'leagues', 'series', 'css'];
+const NAMES = ['link', 'auth', 'hdr', 'foot', 'create', 'board', 'pool', 'rules', 'leagues', 'series', 'css', 'mlb'];
 const MAP = {
   'next/link': 'link', '@/auth': 'auth',
   '@/components/GlobalHeaderServer': 'hdr', '@/components/SiteFooter': 'foot',
   '@/lib/run/create': 'create', '@/lib/run/board': 'board', '@/lib/run/pool': 'pool',
   '@/lib/run/rules': 'rules', '@/lib/leagues/core': 'leagues', '@/lib/mlb/series': 'series',
+  // THE LIVE STANDING (lib/boards/mlb.js) IS WHAT THE PAGE READS NOW. Its stub
+  // hands back the board stub's rows as a live board would - points = total,
+  // no round in play - and records the options on the board stub's `calls`.
+  '@/lib/boards/mlb': 'mlb',
   // THE CLIENT ISLAND'S ACTIONS. LeagueChipActions imports app/actions/leagues,
   // which reaches auth and the DB through lib/leagues/core - stubbed here so the
   // board renders without either, and so the chips themselves stay REAL.
@@ -49,6 +53,12 @@ before(async () => {
     'export function setRound(v) { round = v; }',
     'export async function currentRunRound() { return round; }',
     "export async function settledRounds() { return ['wild_card']; }",
+  ].join('\n') + '\n');
+  writeFileSync(F('mlb'), [
+    `import { calls, rows } from ${JSON.stringify(pathToFileURL(F('board')).href)};`,
+    'export async function runLive(season, opts) { calls.push({ season, ...opts }); return { rows: rows.map((r) => ({ ...r, name: r.handle, points: r.total })), liveContestId: null, liveRound: null }; }',
+    'export async function withMlbMovement(b) { return b.rows; }',
+    'export function roundView(rows) { return rows; }',
   ].join('\n') + '\n');
   writeFileSync(F('board'), [
     'export let rows = [];',
@@ -100,8 +110,9 @@ test('FRAME 3 - THE BOARD: four round columns and a total', async () => {
   leaguesStub.setMine([{ id: 1, name: 'Silva Family' }, { id: 2, name: 'CSM Office' }]);
   const h = await render({ league: '1' });
   assert.match(h, /Silva Family · 5 playing/);
-  assert.match(h, /you<b>3rd · 23\.5 back<\/b>/);
-  assert.match(h, /<b>94\.5<\/b><span>Total<\/span>/);
+  // THE HYBRID "YOU" CARD (components/boards/YouCard.js): rank, total, how far back.
+  assert.match(h, /<div class="lb-you-rk"><b>#3<\/b><span>of 5<\/span><\/div>/);
+  assert.match(h, /<b>94\.5<\/b><span>3rd · 23\.5 back<\/span>/);
   // ONE COLUMN PER ROUND, in bracket order.
   assert.match(h, /<span class="r">WC<\/span><span class="r">DIV<\/span><span class="r">LCS<\/span><span class="r">WS<\/span>/);
   assert.deepEqual([...h.matchAll(/data-rank="(\d+)"/g)].map((m) => m[1]), ['1', '2', '3', '4', '10']);
@@ -222,6 +233,6 @@ test('AN EMPTY BOARD SAYS SO, and a stranger has no "you" row', async () => {
   leaguesStub.setMine([]);
   const h = await render({});
   assert.match(h, /Nobody has set a nine yet\./);
-  assert.match(h, /you<b>not entered<\/b>/);
+  assert.match(h, />Sign in to see your rank<\/a>/, 'a stranger is asked to sign in, not told they are unranked');
   assert.doesNotMatch(h, /class="rb-lr you"/);
 });

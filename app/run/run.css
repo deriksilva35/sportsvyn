@@ -171,7 +171,7 @@
 .rb-me small { display: block; color: var(--muted); font: 500 10px var(--font-mono); margin-top: 3px; }
 .rb-lb { margin: 10px 0 0; border: 1px solid var(--rule-dim); border-radius: 13px; background: var(--ink-2); overflow: hidden; }
 /* ONE COLUMN PER ROUND, plus the total - the mock's WC / DIV / LCS / WS. */
-.rb-lr { display: grid; grid-template-columns: 24px 1fr 46px 46px 46px 46px 52px; gap: 6px; align-items: center; padding: 8px 10px; border-bottom: 1px solid var(--rule-dim); font-size: 12px; }
+.rb-lr { display: grid; grid-template-columns: 36px minmax(0, 1fr) 42px 42px 42px 42px 52px; gap: 6px; align-items: center; padding: 8px 10px; border-bottom: 1px solid var(--rule-dim); font-size: 12px; }
 .rb-lr.hd2 { font: 600 8px var(--font-mono); letter-spacing: .1em; color: var(--muted-dim); text-transform: uppercase; background: var(--ink-3); }
 .rb-lr .r { font: 500 10px var(--font-mono); color: var(--muted); text-align: right; }
 /* "set" - committed but not yet played - is the one live thing in the row. */
@@ -200,3 +200,12 @@
 /* A CLUB THAT HAS STARTED THE ROUND is out of everyone's pool - dimmed like a
    bye, but still openable so its panel can say why. */
 .rn-tc.started { opacity: .45; }
+
+/* LIVE BOARDS (lib/boards/mlb.js): the round in play reads live in magenta, the
+   picked round's column is bold, a gap row marks elided ranks, and the round
+   chips sit above the table. */
+.rb-lr .r.live { color: #ff4fa3; font-weight: 700; }
+.rb-lr .r.on { font-weight: 700; color: var(--paper, #f5f5f2); }
+.rb-lr.rb-gap { color: var(--muted-dim); text-align: center; }
+.rb-rounds { margin-top: 0; }
+.rn-lg.live { border-color: #ff4fa3; }

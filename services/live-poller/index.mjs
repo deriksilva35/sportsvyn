@@ -20,6 +20,7 @@ import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
 import { syncMlbGameStats } from '../../lib/mlb/statsSync.js';
 import { syncMlbPlays } from '../../lib/mlb/playsSync.js';
 import { snapshotLiveBoards } from '../../lib/boards/live.js';
+import { snapshotMlbBoards } from '../../lib/boards/mlb.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
 import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff } from './poll.mjs';
@@ -320,6 +321,17 @@ async function loop(lg) {
               if (b.written) log(`[nfl] live boards snapshot contests=${b.contests} rows=${b.written}`);
             } catch (e) {
               log('[nfl] live boards snapshot failed:', String(e?.message ?? e).slice(0, 120));
+            }
+          }
+          // AND OCTOBER'S AND THE RUN'S (lib/boards/mlb.js): the same once-per-poll
+          // write after an MLB box score, holding each tournament's standing on the
+          // contest in play. Contained the same way.
+          if (boardsDue && lg.slug === 'mlb') {
+            try {
+              const b = await snapshotMlbBoards({ now: new Date() });
+              if (b.written) log(`[mlb] live boards snapshot boards=${b.boards} rows=${b.written}`);
+            } catch (e) {
+              log('[mlb] live boards snapshot failed:', String(e?.message ?? e).slice(0, 120));
             }
           }
         }

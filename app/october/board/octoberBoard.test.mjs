@@ -13,7 +13,7 @@ install();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const F = (n) => stubPath(`__ob_${n}.mjs`);
 const STUBS = ['link', 'auth', 'hdr', 'foot', 'create', 'board', 'pool', 'series', 'css',
-  'leagues', 'lgactions', 'nav', 'shell'];
+  'leagues', 'lgactions', 'nav', 'shell', 'mlb'];
 
 registerHooks({ resolve(spec, ctx, next) {
   const m = {
@@ -23,6 +23,11 @@ registerHooks({ resolve(spec, ctx, next) {
     '@/components/SiteFooter': 'foot',
     '@/lib/october/create': 'create',
     '@/lib/october/board': 'board',
+    // THE LIVE STANDING (lib/boards/mlb.js) IS WHAT THE PAGE READS NOW. Its stub
+    // hands back the board stub's rows as a live board would - points = total,
+    // nothing in play - and records the options on the board stub's `calls`, so
+    // every wiring assertion below still reads the call the page made.
+    '@/lib/boards/mlb': 'mlb',
     '@/lib/mlb/series': 'series',
     // THE LEAGUE SPINE AND THE CLIENT ISLAND. LeagueChipActions imports
     // app/actions/leagues (auth + DB) and calls useRouter() at the top level,
@@ -60,6 +65,12 @@ before(async () => {
     'export const calls = [];',
     'export function setRows(v) { rows = v; }',
     'export async function octoberBoard(season, opts) { calls.push({ season, ...opts }); return rows; }',
+  ].join('\n') + '\n');
+  writeFileSync(F('mlb'), [
+    `import { calls } from ${JSON.stringify(pathToFileURL(F('board')).href)};`,
+    `import { rows } from ${JSON.stringify(pathToFileURL(F('board')).href)};`,
+    'export async function octoberLive(season, opts) { calls.push({ season, ...opts }); return { rows: rows.map((r) => ({ ...r, name: r.handle, points: r.total })), liveContestId: null, anyLive: false }; }',
+    'export async function withMlbMovement(b) { return b.rows; }',
   ].join('\n') + '\n');
   writeFileSync(F('leagues'), [
     'export let mine = [];',
@@ -107,8 +118,9 @@ test('FRAME 3 - THE BOARD: one October total, today beside it', async () => {
   assert.match(h, /<span class="oc-eb">October<\/span>/);
   assert.match(h, /4 playing · the World Series decides it/);
   // THE READER'S OWN LINE: rank and how far back, and their total in volt.
-  assert.match(h, /you<b>9th · 41 back<\/b>/);
-  assert.match(h, /<b>188\.5<\/b><span>October<\/span>/);
+  // THE HYBRID "YOU" CARD (components/boards/YouCard.js): rank, total, how far back.
+  assert.match(h, /<div class="lb-you-rk"><b>#9<\/b><span>of 4<\/span><\/div>/);
+  assert.match(h, /<b>188\.5<\/b><span>9th · 41 back<\/span>/);
   // Four rows, ranked, and the reader's own is highlighted and says "you".
   assert.deepEqual([...h.matchAll(/data-rank="(\d+)"/g)].map((m) => m[1]), ['1', '2', '9', '10']);
   assert.match(h, /class="ob-lr you" data-rank="9"><span class="rk">9<\/span><span>you<\/span>/);
@@ -212,7 +224,7 @@ test('ONE ENTRY, ANY NUMBER OF LEAGUES: the reader keeps one card and one number
   assert.ok(mine(one), 'a "you" row on the first league');
   assert.deepEqual(mine(one).slice(1), mine(two).slice(1), 'same rank, same delta, same total');
   // AND THE READER'S OWN HEADER NUMBER IS THE SAME ON BOTH.
-  const tot = (h) => /<div class="oc-tot"><b>([^<]*)<\/b>/.exec(h)[1];
+  const tot = (h) => /<div class="lb-you-pts"><b>([^<]*)<\/b>/.exec(h)[1];
   assert.equal(tot(one), tot(two));
 });
 
@@ -241,7 +253,7 @@ test('AN EMPTY BOARD SAYS SO, and a stranger sees it without a "you" row', async
   seriesStub.setSeries([]);
   const h = await render();
   assert.match(h, /Nobody has played a day yet\./);
-  assert.match(h, /you<b>not entered<\/b>/);
+  assert.match(h, />Sign in to see your rank<\/a>/, 'a stranger is asked to sign in, not told they are unranked');
   assert.doesNotMatch(h, /class="ob-lr you"/);
   assert.match(h, /clubs still alive<\/span><b>—<\/b>/);
 });
