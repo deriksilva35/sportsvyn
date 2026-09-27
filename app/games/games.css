@@ -13,6 +13,14 @@
   background: var(--l-ink); color: var(--l-paper);
   font-family: var(--l-mono); font-size: 14px; line-height: 1.5;
   max-width: 960px; margin: 0 auto; padding: 22px 16px 60px;
+  /* A DEFINITE WIDTH, NOT SHRINK-TO-FIT. <main class="lob"> is a flex item of
+     body (a column), and `margin: 0 auto` turns off the stretch - so without
+     this it sized itself to its widest content: 411 px, set by one lobby row's
+     nowrap sub-line, which can only ellipsize once the row has a width to clip
+     to. Below 411 px the whole page was wider than the phone and the app's Games
+     tab loaded with its right edge cut off (27 Sep, iPhone). width: 100% keeps
+     the 960 cap and the centring and gives every row the viewport to fit in. */
+  width: 100%;
 }
 .lob-head { padding: 4px 2px 0; margin-bottom: 14px; }
 .lob-title {

@@ -384,8 +384,8 @@ test('signed out: every door becomes the sign-in door, and nothing is faked', ()
   for (const r of rows(c)) {
     assert.match(r.getAttribute('href'), /^\/signin\?callbackUrl=/, r.dataset.row);
   }
-  // the identity chip carries no handle it does not have
-  assert.equal(/@/.test(txt(c.querySelector('.gv-me'))), false);
+  // no identity chip in the lobby at all: the header above draws it (27 Sep)
+  assert.equal(c.querySelector('.gv-me'), null);
 });
 
 test('signed out on Alerts: one door, and no list of somebody else’s alerts', () => {
@@ -460,4 +460,21 @@ test('the pct-ranked season boards print their OWN figures, not the Daily\'s', (
   assert.deepEqual(cells(wk[1]), ['-', '@sportsvyn_og', '1 of 3 weeks']);
   // and no board printed a figure it does not have
   assert.equal(/ pts|undefined|NaN/.test(txt(c)), false);
+});
+
+test('THE HANDLE IS DRAWN ONCE: no identity chip next to GAMES, signed in or out (the header carries it)', () => {
+  for (const signedIn of [true, false]) {
+    const c = screen({ v: { handle: 'ovfsentinelx150', week: THU() }, chip: 'week', signedIn });
+    assert.equal(c.querySelector('.gv-me'), null);
+    assert.equal(/@ovfsentinelx150/.test(txt(c.querySelector('.gv-top'))), false);
+  }
+});
+
+test('THE LOBBY HAS A DEFINITE WIDTH: .lob is width 100%, not shrink-to-fit (27 Sep: 411 px on a 375 px phone)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../../app/games/games.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const lob = /\.lob \{([^}]*)\}/.exec(css)[1];
+  assert.match(lob, /width: 100%;/);
+  assert.match(lob, /max-width: 960px; margin: 0 auto;/);
+  assert.doesNotMatch(css, /body\s*\{[^}]*overflow-x:\s*hidden/, 'no blanket overflow clip on the page');
 });

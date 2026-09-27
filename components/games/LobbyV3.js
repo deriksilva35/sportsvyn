@@ -363,14 +363,14 @@ function AlertsPane({ v, signedIn, signinHref }) {
 
 // ---------------------------------------------------------------------------
 export default function LobbyV3({ v, chip = 'week', signedIn = false, signinHref = (h) => h, userId = null }) {
-  const initial = (v.handle ?? '').trim().charAt(0).toUpperCase() || 'Ȳ';
   return (
     <div className="gv">
+      {/* NO IDENTITY CHIP HERE. The mock's avatar + @handle belongs to the screen's
+          top bar - in the app, the shell's AppHeader; on the web, the global
+          header - and both already draw it. A second copy next to GAMES said the
+          same thing twice on one screen (27 Sep). */}
       <div className="gv-top">
         <h1>Games</h1>
-        <span className="gv-me">
-          <b>{initial}</b>{v.handle ? `@${v.handle}` : ''}
-        </span>
       </div>
 
       <div className="gv-chips">
