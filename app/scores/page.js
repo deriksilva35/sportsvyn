@@ -25,6 +25,7 @@ import { scoresV2 } from '@/lib/gridiron/scoresV2';
 import { ET } from '@/lib/gridiron/scoresV2Shape';
 import './scoresV2.css';
 import { zoneNameOf } from '@/lib/time/zoneName';
+import { plural } from '@/lib/text/plural';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Scores - Sportsvyn' };
@@ -148,7 +149,7 @@ export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
       <div className="gi-wrap">
         <div className="gi-kicker">
           <span className="k">Scoreboard</span>
-          <span className="cnt">{total} games</span>
+          <span className="cnt">{plural(total, 'game')}</span>
           <span className="rule" />
           {/* WEB CROSS-NAV to the board's sibling surface. Web only: in the
               shell the segment above owns this hop, and two controls for one

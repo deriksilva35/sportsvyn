@@ -20,6 +20,7 @@ import { navPills } from '@/lib/gridiron/leagueNav';
 import { resolveLeagueWeek, resolveEplWeek } from '@/lib/gridiron/leagueWeek';
 import { switcherRows } from '@/lib/gridiron/leagueSwitch';
 import LeagueSwitcher from '@/components/league/LeagueSwitcher';
+import { plural } from '@/lib/text/plural';
 
 export default async function LeagueHeader({
   label, week, phase, games, leagueSlug, pathname,
@@ -72,7 +73,7 @@ export default async function LeagueHeader({
           : <h1 className="lgh-h1">{label}</h1>}
       </div>
       {live ? (
-        <span className="lgh-live" aria-label={`${live} games live now`}>
+        <span className="lgh-live" aria-label={`${plural(live, 'game')} live now`}>
           <span className="lgh-dot" />{live} LIVE
         </span>
       ) : null}

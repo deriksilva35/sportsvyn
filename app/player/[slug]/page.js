@@ -53,6 +53,7 @@ import { cfbGameLog } from '@/lib/cfb/gameStats';
 import { getTeamMatches } from '@/lib/teams';
 
 import './player.css';
+import { plural } from '@/lib/text/plural';
 
 export const dynamic = 'force-dynamic';
 
@@ -154,14 +155,14 @@ async function GridironPlayer({ player, crumb, isAuthed = false, initialFollowin
                 Capped at two families by chartsFor - a glance holds two. */}
             {games.length > 0 && (
               <GameCharts games={games} charts={chartsFor(columns)}
-                seasonLabel={shownSeason ? `${shownSeason} · ${games.length} games` : ''}
+                seasonLabel={shownSeason ? `${shownSeason} · ${plural(games.length, 'game')}` : ''}
                 levelNote={levelNote} />
             )}
             {games.length > 0 && (
               <GameLog games={games} columns={columns}
                 seasons={seasonYears} activeSeason={shownSeason}
                 hrefFor={(y) => `?season=${y}#gamelog`}
-                seasonLabel={shownSeason ? `${shownSeason} · ${games.length} games` : ''} />
+                seasonLabel={shownSeason ? `${shownSeason} · ${plural(games.length, 'game')}` : ''} />
             )}
           </>
         ) : (

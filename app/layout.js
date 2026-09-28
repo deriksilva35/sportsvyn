@@ -5,6 +5,7 @@ import AppHeader from '@/components/shell/AppHeader';
 import ResumeManager from '@/components/shell/ResumeManager';
 import { Analytics } from '@vercel/analytics/next';
 import '@/components/shell/apptab.css';
+import { dataTheme } from '@/lib/brand/theme';
 
 const saira = Saira({
   variable: "--font-saira",
@@ -99,6 +100,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
+      data-theme={dataTheme()}
       className={`${saira.variable} ${sairaCondensed.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${archivo.variable} ${rubik.variable} ${rubikMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

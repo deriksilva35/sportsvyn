@@ -16,6 +16,7 @@ import {
 } from '@/lib/pickem/settledGrade';
 import StandaloneDateOnly from '@/components/StandaloneDateOnly';
 import StandaloneDate from '@/components/StandaloneDate';
+import { plural } from '@/lib/text/plural';
 
 const VD_LABEL = { right: 'Right', wrong: 'Wrong', push: 'Push' };
 
@@ -55,7 +56,7 @@ export default function PickemGrade({
         <div className="gg-perf">
           <b>How this board went</b>
           <p>
-            {finals.length} games played
+            {plural(finals.length, 'game')} played
             {faded > 0 && <> &middot; {faded} ranked {faded === 1 ? 'favourite' : 'favourites'} lost</>}
             <br />
             You did not pick this board.

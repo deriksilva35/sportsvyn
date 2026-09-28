@@ -6,7 +6,7 @@
 .sim-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px 40px; }
 
 /* local ink header band */
-.sim-head { display: flex; align-items: center; gap: 20px; padding: 14px 22px; background: rgba(10,10,10,.96); border-bottom: 1px solid var(--charcoal); position: sticky; top: 0; z-index: 40; }
+.sim-head { display: flex; align-items: center; gap: 20px; padding: 14px 22px; background: color-mix(in srgb, var(--tok-page) 96%, transparent); border-bottom: 1px solid var(--charcoal); position: sticky; top: 0; z-index: 40; }
 .sim-head .tag { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
 .sim-head .tag b { color: var(--volt); font-weight: 700; }
 .sim-head .right { margin-left: auto; display: flex; gap: 14px; align-items: center; }
@@ -21,7 +21,7 @@
      reads as misaligned over the Y.
    - color: it also muted the letters to var(--muted) grey, overriding
      .wordmark's color:var(--paper). The wordmark is never dimmed - restore the
-     brand paper (#F5F5F2). The .y-wrap keeps its own volt color (its rule beats
+     brand paper (var(--tok-ink)). The .y-wrap keeps its own volt color (its rule beats
      inheritance), so the Y + macron stay volt; only SPORTSV / N were grey.
    This .sim-head .wordmark selector (2 classes) beats .sim-head a (1 class + 1
    element) on both. Shell mode's 17px size override (3 classes) still wins the
@@ -110,7 +110,7 @@
 .mcard-cta:hover { background: var(--volt-dim); }
 .mcard-sec { display: block; width: 100%; background: none; border: none; margin-top: 9px; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-align: center; text-decoration: none; cursor: pointer; }
 .mcard-sec:hover { color: var(--volt); }
-.mcard-fine { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .06em; color: var(--muted-dim, #5A5A5A); text-align: center; margin-top: 10px; }
+.mcard-fine { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .06em; color: var(--muted-dim); text-align: center; margin-top: 10px; }
 
 /* ---- compact gate card (shell + IAP, above the fold on the DRAFT tab) ----
    Same card, tightened: it sits between the preset rail and the console on a
@@ -129,13 +129,13 @@
 /* ---- account page buy control, INSIDE the volt box ----
    .acct-upsell is volt-on-ink inverted (volt background, ink text), so the buy
    button has to invert with it or a volt button lands invisibly on volt. */
-.acct-iap { margin-top: 12px; border-top: 1px solid rgba(10,10,10,.22); padding-top: 12px; }
+.acct-iap { margin-top: 12px; border-top: 1px solid color-mix(in srgb, var(--tok-page) 22%, transparent); padding-top: 12px; }
 .acct-iap .mcard-iap-price b { color: var(--ink); }
-.acct-iap .mcard-iap-price span { color: rgba(10,10,10,.7); }
+.acct-iap .mcard-iap-price span { color: color-mix(in srgb, var(--tok-page) 70%, transparent); }
 .acct-iap .mcard-buy { background: var(--ink); color: var(--volt); }
 .acct-iap .mcard-buy:hover { background: var(--graphite); }
-.acct-iap .mcard-iap-msg { color: rgba(10,10,10,.85); }
-.acct-iap .mcard-iap-fine { color: rgba(10,10,10,.6); }
+.acct-iap .mcard-iap-msg { color: color-mix(in srgb, var(--tok-page) 85%, transparent); }
+.acct-iap .mcard-iap-fine { color: color-mix(in srgb, var(--tok-page) 60%, transparent); }
 
 /* ---- first-launch welcome sheet (components/sim/WelcomeSheet.js) ----
    Bottom sheet, not a centered modal: it is a phone surface and the actions want
@@ -143,7 +143,7 @@
    into env(safe-area-inset-*). */
 .wsheet-scrim {
   position: fixed; inset: 0; z-index: 120;
-  background: rgba(10,10,10,.72);
+  background: color-mix(in srgb, var(--tok-page) 72%, transparent);
   display: flex; align-items: flex-end; justify-content: center;
 }
 .wsheet {
@@ -202,7 +202,7 @@
 .mcard-buy:hover { background: var(--volt-dim); }
 .mcard-buy:disabled { opacity: .55; cursor: default; }
 .mcard-iap-msg { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; letter-spacing: .04em; color: var(--paper-dim); text-align: center; margin-top: 9px; }
-.mcard-iap-fine { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .06em; color: var(--muted-dim, #5A5A5A); text-align: center; margin-top: 8px; }
+.mcard-iap-fine { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; letter-spacing: .06em; color: var(--muted-dim); text-align: center; margin-top: 8px; }
 /* Restore Purchases — always visible, secondary to BUY. Apple requires a restore
    path for a non-consumable, and a reviewer must be able to find it without
    first provoking an error, so it is a permanent control rather than an
@@ -210,7 +210,7 @@
 .mcard-restore { display: block; width: 100%; margin-top: 9px; background: transparent; border: 1px solid var(--rule); color: var(--muted); font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 10px 0; cursor: pointer; }
 .mcard-restore:hover { border-color: var(--volt); color: var(--volt); }
 .mcard-restore:disabled { opacity: .5; cursor: default; }
-.acct-iap .mcard-restore { border-color: rgba(10,10,10,.35); color: rgba(10,10,10,.75); }
+.acct-iap .mcard-restore { border-color: color-mix(in srgb, var(--tok-page) 35%, transparent); color: color-mix(in srgb, var(--tok-page) 75%, transparent); }
 .acct-iap .mcard-restore:hover { border-color: var(--ink); color: var(--ink); }
 .setup-err { font-size: 10px; color: var(--terra); text-align: center; margin-top: 8px; letter-spacing: .04em; }
 .chiplab { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }
@@ -354,22 +354,22 @@
 .bg2 .bh { padding: 5px 0; text-align: center; font-size: 7px; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--rule); }
 .bg2 .bh.you { color: var(--ink); background: var(--volt); font-weight: 700; }
 .bg2 .br { display: flex; align-items: center; justify-content: center; font-size: 7.5px; font-weight: 700; color: var(--muted-dim); border-right: 1px solid var(--rule); }
-.bg2 .bc { min-height: 34px; border-bottom: 1px solid #111; border-right: 1px solid #111; padding: 2px 1px; overflow: hidden; }
+.bg2 .bc { min-height: 34px; border-bottom: 1px solid var(--tok-surface); border-right: 1px solid var(--tok-surface); padding: 2px 1px; overflow: hidden; }
 .bg2 .bc .n { font-size: 7.5px; font-weight: 600; color: var(--paper); line-height: 1.2; display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .bg2 .bc .p { font-size: 6.5px; font-weight: 700; display: block; }
 .bg2 .bc .pk { display: none; }  /* overall-pick number: shown only in the desktop BOARD view */
-.bg2 .bc.QB { background: rgba(184,65,15,.28); } .bg2 .bc.QB .p { color: #E8865A; }
-.bg2 .bc.RB { background: rgba(42,138,79,.28); } .bg2 .bc.RB .p { color: #5BC98A; }
-.bg2 .bc.WR { background: rgba(138,147,216,.22); } .bg2 .bc.WR .p { color: #8A93D8; }
-.bg2 .bc.TE { background: rgba(201,162,39,.22); } .bg2 .bc.TE .p { color: #C9A227; }
+.bg2 .bc.QB { background: color-mix(in srgb, var(--tok-down) 28%, transparent); } .bg2 .bc.QB .p { color: var(--tok-pos-qb); }
+.bg2 .bc.RB { background: color-mix(in srgb, var(--tok-up) 28%, transparent); } .bg2 .bc.RB .p { color: var(--tok-pos-rb); }
+.bg2 .bc.WR { background: color-mix(in srgb, var(--tok-pos-wr) 22%, transparent); } .bg2 .bc.WR .p { color: var(--tok-pos-wr); }
+.bg2 .bc.TE { background: color-mix(in srgb, var(--tok-pos-te) 22%, transparent); } .bg2 .bc.TE .p { color: var(--tok-pos-te); }
 .bg2 .bc.mine { outline: 1.5px solid var(--volt); outline-offset: -1.5px; }
-.bg2 .bc.otc2 { background: rgba(230,57,70,.18); outline: 1.5px solid var(--live); outline-offset: -1.5px; animation: sim-pulse 1.2s infinite; }
+.bg2 .bc.otc2 { background: color-mix(in srgb, var(--tok-live) 18%, transparent); outline: 1.5px solid var(--live); outline-offset: -1.5px; animation: sim-pulse 1.2s infinite; }
 .bg2 .bc.otc2 .n { color: var(--live); font-size: 6.5px; }
-.bg2 .bc.empty .n { color: #2A2A26; }
+.bg2 .bc.empty .n { color: var(--tok-line); }
 /* An unmade keeper's cell: owned, not yet committed. Dimmed under its position
    tint with a dashed inset rule, so it reads apart from a made pick (full) and
    from the live CLOCK cell (red pulse). The KEEPER tag rides the .p line. */
-.bg2 .bc.kp { opacity: .55; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.bg2 .bc.kp { opacity: .55; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tok-ink) 18%, transparent); }
 .bg2 .bc.kp .n { color: var(--muted); font-style: italic; }
 
 /* ---- desktop BOARD view (>900) ----
@@ -469,12 +469,12 @@
 .auto-toggle .sw::after { content: ''; position: absolute; top: 1px; left: 1px; width: 10px; height: 8px; background: var(--ink); transition: transform .12s ease; }
 /* ON is the LIVE state, not a brighter version of the same thing: the seat is
    being drafted for right now, and it reads as an alarm you can switch off. */
-.auto-toggle.on { background: var(--live); border-color: var(--live); color: #fff; }
-.auto-toggle.on .sw { border-color: #fff; }
-.auto-toggle.on .sw::after { background: #fff; transform: translateX(12px); }
+.auto-toggle.on { background: var(--live); border-color: var(--live); color: var(--tok-page); }
+.auto-toggle.on .sw { border-color: var(--tok-page); }
+.auto-toggle.on .sw::after { background: var(--tok-page); transform: translateX(12px); }
 
 /* on-the-clock banner */
-.on-clock { border: 1px solid var(--volt); background: rgba(212,255,0,.06); padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.on-clock { border: 1px solid var(--volt); background: color-mix(in srgb, var(--tok-accent) 6%, transparent); padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
 .on-clock .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--volt); animation: sim-pulse 1.4s infinite; }
 @keyframes sim-pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 .on-clock .txt { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--paper); }
@@ -500,7 +500,7 @@
 /* pick feed */
 .feed-row { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: baseline; padding: 6px 4px; border-bottom: 1px solid var(--rule-dim); }
 .feed-row .ov { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 15px; color: var(--muted); }
-.feed-row.user { background: rgba(212,255,0,.05); }
+.feed-row.user { background: color-mix(in srgb, var(--tok-accent) 5%, transparent); }
 .feed-row.user .ov { color: var(--volt); }
 .feed-row .nm { font-size: 13px; color: var(--paper); }
 .feed-row.ai .nm { color: var(--paper-dim); }
@@ -528,7 +528,7 @@
    chip", when what it actually does is change which board is on screen. */
 .avail-class .ncaa-toggle { margin-left: auto; }
 .avail-chips button.ncaa-toggle.on {
-  color: var(--paper); background: var(--terra, #E0602A); border-color: var(--terra, #E0602A);
+  color: var(--paper); background: var(--terra); border-color: var(--terra);
 }
 /* team filter: composes with the position chips; does not enable stat sorts */
 .avail-team { display: flex; gap: 6px; align-items: center; }
@@ -545,7 +545,7 @@
 .avail-sort button:disabled { opacity: .35; cursor: not-allowed; }
 .avail-sort .s-hint { font-size: 8px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-dim); }
 .p-item { border-bottom: 1px solid var(--rule-dim); }
-.p-item.open { background: rgba(255,255,255,.02); }
+.p-item.open { background: color-mix(in srgb, var(--tok-ink) 2%, transparent); }
 .p-row { display: flex; gap: 8px; align-items: center; padding: 7px 4px; }
 /* the whole identity block is the expand target; the Draft button stays a sibling */
 .p-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: transparent; border: 0; padding: 0; text-align: left; font-family: inherit; cursor: pointer; }
@@ -561,7 +561,7 @@
 .p-row .nm { font-size: 13px; color: var(--paper); }
 .p-row .rng { font-size: 9px; color: var(--muted-dim); }
 .p-row .draft { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: var(--volt); border: 0; padding: 5px 10px; cursor: pointer; }
-.p-row.armed { border: 1px solid var(--volt); background: rgba(212,255,0,.05); }
+.p-row.armed { border: 1px solid var(--volt); background: color-mix(in srgb, var(--tok-accent) 5%, transparent); }
 
 /* stat strip: season totals + game log, revealed on row expand */
 .p-stats { padding: 10px 6px 14px; border-top: 1px solid var(--rule-dim); }
@@ -621,7 +621,7 @@
    THE FALLBACKS ON --ink-2 AND --line ARE LOAD-BEARING, NOT DECORATION.
    Neither token is defined globally: both live only inside
    app/admin/console/console.css, which no route outside /admin/console
-   imports. Written bare, `background: var(--ink-2)` resolves to nothing and
+   imports. Written bare, `background: var(--tok-surface)` resolves to nothing and
    background falls to its initial value - transparent - so this card would
    have vanished into the page while every one of its four rules still read as
    correct. That is the same initial-value trap the surface flip hit and the
@@ -636,9 +636,9 @@
    editorial prose on a page of numbers, and muting it would rank it below the
    grade table it exists to explain. The label and source line stay recessive. */
 .read-prose {
-  background: var(--ink-2, #141414); color: var(--paper-warm);
+  background: var(--tok-surface); color: var(--paper-warm);
   padding: 22px 24px; margin: 16px 0; border-radius: 12px;
-  border: 1px solid var(--line, #2a2a2a); border-left: 4px solid var(--volt);
+  border: 1px solid var(--tok-line); border-left: 4px solid var(--volt);
 }
 .read-prose .k { font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-mut); margin-bottom: 8px; }
 .read-prose p { font-family: var(--font-source-serif), serif; font-size: 16px; line-height: 1.6; color: var(--paper-warm); margin: 0; }
@@ -674,7 +674,7 @@
 .simtab-i.soon { opacity: .55; cursor: default; }
 .simtab-i .soon-badge { position: absolute; top: 3px; right: 24%; font-family: var(--font-jetbrains-mono), monospace; font-size: 6.5px; font-weight: 700; letter-spacing: .04em; color: var(--ink); background: var(--volt); padding: 1px 3px; }
 @media (max-width: 900px) {
-  .simtab { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-width: 480px; margin: 0 auto; background: rgba(10,10,10,.98); border-top: 1px solid var(--rule); padding-bottom: env(safe-area-inset-bottom); }
+  .simtab { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-width: 480px; margin: 0 auto; background: color-mix(in srgb, var(--tok-page) 98%, transparent); border-top: 1px solid var(--rule); padding-bottom: env(safe-area-inset-bottom); }
   .sim--tabbar .sim-wrap { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 }
 
@@ -699,7 +699,7 @@
 .acct-row:last-child { border-bottom: none; }
 /* The Notifications row's action - a link-weight button, because the row grid
    is label/value and a full button in the value slot would outshout Sign Out. */
-.acct-link { background: none; border: none; padding: 0; color: var(--volt, #D4FF00); font: inherit; cursor: pointer; }
+.acct-link { background: none; border: none; padding: 0; color: var(--volt); font: inherit; cursor: pointer; }
 .acct-link:disabled { opacity: .6; cursor: default; }
 .acct-row .k { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-dim); }
 .acct-row .v { font-size: 13px; color: var(--paper); overflow: hidden; text-overflow: ellipsis; }
@@ -777,8 +777,8 @@
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
-    mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, var(--tok-ink) calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(to right, var(--tok-ink) calc(100% - 26px), transparent 100%);
   }
   .deck::-webkit-scrollbar { display: none; }
   /* 150px cards + 8px gaps in a ~366px content box shows 2 cards and a ~50px
@@ -805,7 +805,7 @@
   font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); text-decoration: none; }
 .sim-err-lobby:hover { color: var(--volt); }
 .sim-err-ref { margin-top: 22px; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px;
-  letter-spacing: .08em; color: #5A5A5A; }
+  letter-spacing: .08em; color: var(--tok-muted); }
 
 /* ---- My Team sort: the TWO FACTS behind the order ----
    Never the composite. The gap borrows the same value/reach colouring the room
@@ -927,22 +927,22 @@
 .sim-dailyband {
   display: flex; align-items: center; gap: 10px;
   margin: 0 0 14px; padding: 11px 14px;
-  border: 1px solid var(--volt, #D4FF00); border-radius: 10px;
-  background: linear-gradient(90deg, rgba(212,255,0,.10), rgba(212,255,0,.02));
+  border: 1px solid var(--volt); border-radius: 10px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--tok-accent) 10%, transparent), color-mix(in srgb, var(--tok-accent) 2%, transparent));
   text-decoration: none; color: inherit; min-height: 44px;
 }
 .sim-dailyband .sdb-kick {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
-  color: var(--volt, #D4FF00); white-space: nowrap;
+  color: var(--volt); white-space: nowrap;
 }
 .sim-dailyband .sdb-line {
-  flex: 1; min-width: 0; font-size: 13px; color: var(--paper, #F5F5F2);
+  flex: 1; min-width: 0; font-size: 13px; color: var(--paper);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .sim-dailyband .sdb-cta {
   font-weight: 800; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--ink, #0A0A0A); background: var(--volt, #D4FF00);
+  color: var(--ink); background: var(--volt);
   padding: 7px 12px; border-radius: 7px; white-space: nowrap;
 }
 @media (max-width: 420px) {
@@ -1023,21 +1023,21 @@
    =========================================================================== */
 .mock-exit {
   margin: 0 0 10px; padding: 15px 16px 16px;
-  border: 1px solid var(--volt, #D4FF00); border-radius: 14px;
-  background: var(--volt-dim, #1a2000);
+  border: 1px solid var(--volt); border-radius: 14px;
+  background: var(--volt-dim);
 }
 .me-eyebrow {
   font-family: var(--font-saira-cond, var(--font-saira)), sans-serif;
   font-weight: 700; font-size: 10px; letter-spacing: .16em;
-  text-transform: uppercase; color: var(--volt, #D4FF00); margin-bottom: 8px;
+  text-transform: uppercase; color: var(--volt); margin-bottom: 8px;
 }
 .me-line {
   margin: 0 0 13px; font-size: 15px; line-height: 1.45;
-  color: var(--paper, #F5F5F2); max-width: 46ch;
+  color: var(--paper); max-width: 46ch;
 }
 .me-cta {
   display: inline-block; padding: 13px 22px; border-radius: 10px;
-  background: var(--volt, #D4FF00); color: var(--ink, #0A0A0A);
+  background: var(--volt); color: var(--ink);
   font-family: var(--font-display, var(--font-saira)), sans-serif;
   font-style: italic; font-weight: 900; font-size: 16px;
   text-decoration: none;
@@ -1047,10 +1047,10 @@
 .mock-exit-ghost {
   display: inline-block; margin: 0 0 18px;
   font-family: var(--font-mono); font-size: 12px;
-  color: var(--muted, #8A8A85); text-decoration: none;
-  border-bottom: 1px solid var(--rule, #2A2A2A); padding-bottom: 2px;
+  color: var(--muted); text-decoration: none;
+  border-bottom: 1px solid var(--rule); padding-bottom: 2px;
 }
-.mock-exit-ghost:hover { color: var(--paper, #F5F5F2); border-color: var(--paper, #F5F5F2); }
+.mock-exit-ghost:hover { color: var(--paper); border-color: var(--paper); }
 
 /* ===========================================================================
    THE DRAFT ROOM, v2  (docs/design/mocks/draft-v2.html, screen 1)
@@ -1063,12 +1063,12 @@
    =========================================================================== */
 
 /* the clock hero */
-.dv-clk { padding: 12px 14px 0; background: #111; border-bottom: 1px solid var(--line, #2a2a2a); }
+.dv-clk { padding: 12px 14px 0; background: var(--tok-surface); border-bottom: 1px solid var(--tok-line); }
 .dv-otc { display: flex; align-items: flex-end; gap: 10px; }
 .dv-who { min-width: 0; }
 .dv-lab {
   font: 700 9px var(--font-mono, ui-monospace, monospace);
-  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-dim, #6e6e68);
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-dim);
 }
 .dv-who b {
   display: block; margin-top: 2px;
@@ -1076,54 +1076,54 @@
   text-transform: uppercase; line-height: 1;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.dv-who b.dv-you { color: var(--volt, #d4ff00); }
+.dv-who b.dv-you { color: var(--volt); }
 .dv-who small {
   display: block; margin-top: 3px;
-  font: 500 9px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94);
+  font: 500 9px var(--font-mono, ui-monospace, monospace); color: var(--muted);
 }
 .dv-t { margin-left: auto; text-align: right; flex: 0 0 auto; }
 .dv-t b {
-  display: block; color: var(--volt, #d4ff00);
+  display: block; color: var(--volt);
   font: 800 44px var(--font-mono, ui-monospace, monospace);
   letter-spacing: -0.05em; line-height: 0.85;
 }
-.dv-t b.dv-hot { color: var(--live, #e63946); }
+.dv-t b.dv-hot { color: var(--live); }
 .dv-t span {
   font: 600 9px var(--font-mono, ui-monospace, monospace);
-  letter-spacing: 0.11em; color: var(--muted-dim, #6e6e68); text-transform: uppercase;
+  letter-spacing: 0.11em; color: var(--muted-dim); text-transform: uppercase;
 }
 /* THE CLOCK IS ADVISORY AND THIS LINE IS WHERE IT SAYS SO. */
 .dv-sub {
   margin-top: 6px;
   font: 500 9px var(--font-mono, ui-monospace, monospace);
-  letter-spacing: 0.06em; color: var(--muted-dim, #6e6e68);
+  letter-spacing: 0.06em; color: var(--muted-dim);
 }
-.dv-drain { height: 3px; background: var(--ink-3, #1c1c1c); margin: 8px -14px 0; position: relative; }
-.dv-drain i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--volt, #d4ff00); }
-.dv-drain i.dv-hot { background: var(--live, #e63946); }
+.dv-drain { height: 3px; background: var(--tok-surface-2); margin: 8px -14px 0; position: relative; }
+.dv-drain i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--volt); }
+.dv-drain i.dv-hot { background: var(--live); }
 
 /* the seat strip */
 .dv-seats { display: flex; gap: 3px; padding: 9px 12px 0; }
 .dv-seat {
   flex: 1; height: 34px; position: relative;
-  border: 1px solid var(--line, #2a2a2a); border-radius: 7px;
-  background: var(--ink-2, #141414);
+  border: 1px solid var(--tok-line); border-radius: 7px;
+  background: var(--tok-surface);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
 }
-.dv-seat b { font: 800 10px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94); line-height: 1; }
+.dv-seat b { font: 800 10px var(--font-mono, ui-monospace, monospace); color: var(--muted); line-height: 1; }
 .dv-seat small {
   font: 600 6px var(--font-mono, ui-monospace, monospace);
-  color: var(--muted-dim, #6e6e68); letter-spacing: 0.04em; text-transform: uppercase; line-height: 1;
+  color: var(--muted-dim); letter-spacing: 0.04em; text-transform: uppercase; line-height: 1;
 }
 .dv-seat.done { opacity: 0.5; }
-.dv-seat.on { border-color: var(--volt, #d4ff00); background: rgba(212, 255, 0, 0.12); }
-.dv-seat.on b { color: var(--volt, #d4ff00); }
-.dv-seat.you { border-color: var(--paper, #f5f5f2); }
-.dv-seat.you.on { border-color: var(--volt, #d4ff00); }
+.dv-seat.on { border-color: var(--volt); background: color-mix(in srgb, var(--tok-accent) 12%, transparent); }
+.dv-seat.on b { color: var(--volt); }
+.dv-seat.you { border-color: var(--paper); }
+.dv-seat.you.on { border-color: var(--volt); }
 .dv-snake {
   display: flex; justify-content: space-between; padding: 6px 12px 0;
   font: 600 8px var(--font-mono, ui-monospace, monospace);
-  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dim, #6e6e68);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dim);
 }
 
 /* the pick ticker */
@@ -1131,53 +1131,53 @@
 .dv-tick::-webkit-scrollbar { display: none; }
 .dv-tk {
   flex: 0 0 auto; min-width: 96px; padding: 5px 8px;
-  border: 1px solid var(--line, #2a2a2a); border-radius: 9px; background: var(--ink-2, #141414);
+  border: 1px solid var(--tok-line); border-radius: 9px; background: var(--tok-surface);
 }
 .dv-tk small {
   display: block; font: 600 8px var(--font-mono, ui-monospace, monospace);
-  letter-spacing: 0.06em; color: var(--muted-dim, #6e6e68);
+  letter-spacing: 0.06em; color: var(--muted-dim);
 }
 .dv-tk b {
   display: block; max-width: 120px;
   font: 700 11px var(--font-display, system-ui, sans-serif); text-transform: uppercase;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.dv-tk i { font: 500 8px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94); font-style: normal; }
-.dv-tk.you { border-color: var(--volt, #d4ff00); }
-.dv-tk.you small { color: var(--volt, #d4ff00); }
+.dv-tk i { font: 500 8px var(--font-mono, ui-monospace, monospace); color: var(--muted); font-style: normal; }
+.dv-tk.you { border-color: var(--volt); }
+.dv-tk.you small { color: var(--volt); }
 
 /* a kicked row: on the board, greyed, and unpickable */
 .p-item.dv-gone { opacity: 0.34; }
 .dv-out {
   font: 700 8px var(--font-mono, ui-monospace, monospace);
-  letter-spacing: 0.08em; text-transform: uppercase; color: var(--terra, #b8410f);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--terra);
   white-space: nowrap;
 }
 
 /* your eight, as a rail */
 .dv-rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 12px 10px; }
 .dv-e {
-  border: 1.5px dashed var(--line, #2a2a2a); border-radius: 8px;
-  background: rgba(10, 10, 10, 0.5); padding: 5px 5px 4px; min-height: 46px;
+  border: 1.5px dashed var(--tok-line); border-radius: 8px;
+  background: color-mix(in srgb, var(--tok-page) 50%, transparent); padding: 5px 5px 4px; min-height: 46px;
 }
-.dv-e.f { border-style: solid; background: var(--ink-2, #141414); }
-.dv-r { font: 700 7px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.06em; color: var(--muted-dim, #6e6e68); }
+.dv-e.f { border-style: solid; background: var(--tok-surface); }
+.dv-r { font: 700 7px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.06em; color: var(--muted-dim); }
 .dv-e b {
   display: block; margin-top: 2px;
   font: 700 9px var(--font-display, system-ui, sans-serif); text-transform: uppercase; line-height: 1.05;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.dv-e small { display: block; margin-top: 1px; font: 500 7px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94); }
+.dv-e small { display: block; margin-top: 1px; font: 500 7px var(--font-mono, ui-monospace, monospace); color: var(--muted); }
 
 /* the footer */
 .dv-ft {
-  border-top: 1px solid var(--line, #2a2a2a); padding: 10px 12px;
+  border-top: 1px solid var(--tok-line); padding: 10px 12px;
   display: flex; align-items: center; gap: 10px;
 }
-.dv-pace { font: 500 11px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94); line-height: 1.3; }
-.dv-pace b { color: var(--paper, #f5f5f2); font-weight: 700; }
+.dv-pace { font: 500 11px var(--font-mono, ui-monospace, monospace); color: var(--muted); line-height: 1.3; }
+.dv-pace b { color: var(--paper); font-weight: 700; }
 .dv-btn {
-  margin-left: auto; background: var(--volt, #d4ff00); color: var(--ink, #0a0a0a);
+  margin-left: auto; background: var(--volt); color: var(--ink);
   border: 0; border-radius: 99px; padding: 10px 18px;
   font: 700 14px system-ui, sans-serif; cursor: pointer; white-space: nowrap;
   max-width: 62%; overflow: hidden; text-overflow: ellipsis;

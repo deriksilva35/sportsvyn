@@ -473,3 +473,6 @@
   .stats-table tbody td.hidem { display: none; }
   .sv-tip-popover { right: auto; left: 0; }
 }
+
+/* ARCADE (rebrand R1, behind ARCADE_THEME - app/globals.css). */
+:root[data-theme="arcade"] .stats-wrap { --paper-dim: var(--tok-muted); --rule-inner: var(--tok-line); }

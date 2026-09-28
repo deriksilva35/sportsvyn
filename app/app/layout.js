@@ -1,5 +1,6 @@
 import './app-shell.css';
 import NativeShellCookie from '@/components/shell/NativeShellCookie';
+import { themeColor } from '@/lib/brand/theme';
 
 export const metadata = {
   title: 'Sportsvyn — App',
@@ -14,7 +15,7 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#0A0A0A',
+  themeColor: themeColor(),
 };
 
 export default function AppLayout({ children }) {
