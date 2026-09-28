@@ -1,20 +1,88 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   TOKENS v2 - ONE SOURCE (rebrand R0, 28 Sep 2026)
+   ============================================================================
+   Two layers, and everything else points at the second.
+
+   --arcade-*  THE ARCADE PALETTE, the ruling's values verbatim ("Arcade on
+               white": page, surfaces, ink, muted, primary with volt on it,
+               chips, live, up, coin, line, radii, the card shadow). Constants.
+               Nothing reads them in R0; R1 points the semantic layer at them.
+
+   --tok-*     THE SEMANTIC LAYER - what a colour is FOR (the page, a surface,
+               body text, the live signal), not what it looks like. In R0 every
+               one holds TODAY'S DARK VALUE exactly, and every existing token
+               name below (--color-ink, --ink, --paper, --volt, --rule ...) now
+               resolves through it - so R0 changes no pixel, and R1 changes the
+               whole site by changing this one block.
+
+   THE MAPPING CARRIES MEANING, NOT NAMES. The old --ink is the dark GROUND,
+   so it maps to --tok-page; the arcade "ink" #0E0B2B is TEXT, so it is
+   --tok-ink, which today holds the old paper. app/tokens.test.mjs pins every
+   mapping and proves each old name still resolves to the value it had.
+
+   NOT MAPPED, on purpose: --line (#2A2A2A, a hair off --rule), --volt-dim
+   (its surface split is a separate decision, see the [data-surface] note
+   below), and the charcoal/graphite/dim greys - they have no role in the
+   arcade set and R2 retires their call sites rather than re-pointing them.
+   ========================================================================== */
+:root {
+  --arcade-page: #FFFFFF;
+  --arcade-surface: #F6F5FF;
+  --arcade-surface-2: #ECEAFB;
+  --arcade-ink: #0E0B2B;
+  --arcade-muted: #5A5680;
+  --arcade-primary: #1A1650;
+  --arcade-on-primary: #D4FF00;
+  --arcade-chip: #2447FF;
+  --arcade-live: #D6006F;
+  --arcade-up: #1B8A5A;
+  --arcade-coin: #B7791F;
+  --arcade-line: #DCD9F5;
+  --arcade-radius-lg: 20px;
+  --arcade-radius-md: 14px;
+  --arcade-shadow-card: 0 4px 0 #1A1650;
+
+  --tok-page: #0A0A0A;
+  --tok-surface: #141414;
+  --tok-surface-2: #1C1C1C;
+  --tok-ink: #F5F5F2;
+  --tok-muted: #888888;
+  --tok-primary: #141414;
+  --tok-on-primary: #D4FF00;
+  --tok-accent: #D4FF00;
+  --tok-chip: #245BFF;
+  --tok-live: #E63946;
+  --tok-up: #2A8A4F;
+  --tok-down: #B8410F;
+  --tok-coin: #B7791F;
+  --tok-line: #2E2E2E;
+  --tok-radius-lg: 18px;
+  --tok-radius-md: 14px;
+  --tok-shadow-card: none;
+  /* Rubik and Rubik Mono One are LOADED in R0 (app/layout.js) and read by
+     nothing: the three font roles still resolve to today's faces. */
+  --tok-font-display: var(--font-saira), ui-sans-serif, system-ui, sans-serif;
+  --tok-font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --tok-font-num: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
 /* Sportsvyn brand color tokens — registered with Tailwind v4 @theme */
 @theme {
-  --color-ink: #0A0A0A;
+  --color-ink: var(--tok-page);
   --color-graphite: #1A1A1A;
   --color-charcoal: #2A2A2A;
-  --color-paper-warm: #F5F5F2;
+  --color-paper-warm: var(--tok-ink);
   --color-paper-dim: #C5C5C2;
-  --color-volt: #D4FF00;
-  --color-muted: #888888;
+  --color-volt: var(--tok-accent);
+  --color-muted: var(--tok-muted);
 
   /* Added for team page + future bespoke editorial surfaces */
-  --color-jade: #2A8A4F;
-  --color-terra: #B8410F;
-  --color-live-red: #E63946;
-  --color-rule-dark: #2E2E2E;
+  --color-jade: var(--tok-up);
+  --color-terra: var(--tok-down);
+  --color-live-red: var(--tok-live);
+  --color-rule-dark: var(--tok-line);
   --color-rule-darker: #1F1F1F;
   --color-muted-light: #B5B5B5;
   --color-muted-dim: #5A5A5A;
@@ -48,10 +116,10 @@
      silently dead for the same reason. [data-surface] keeps its copy for
      scoping; :root is where a global token belongs. */
   --graphite-up: #242424;
-  --rule: #2E2E2E;
+  --rule: var(--tok-line);
   --rule-dim: #1F1F1F;
-  --paper: #F5F5F2;
-  --live: #E63946;
+  --paper: var(--tok-ink);
+  --live: var(--tok-live);
   /* THE v1.2 MODULE RAMP, PROMOTED. These three were written into the admin
      console's own .adm block and never anywhere else, while 46 call sites
      across home.css and player.css used them BARE - .readband, .gcard, .mod
@@ -63,10 +131,10 @@
      Values are console.css's verbatim, so nothing about /admin/console moves;
      it keeps its own copies (a test asserts the two agree) because .adm is a
      transcribed mock that must stay self-contained. */
-  --ink-2: #141414;
-  --ink-3: #1C1C1C;
+  --ink-2: var(--tok-surface);
+  --ink-3: var(--tok-surface-2);
   --line: #2A2A2A;
-  --blue: #245BFF;   /* v1.4 · Daily surface only */
+  --blue: var(--tok-chip);   /* v1.4 · Daily surface only */
   --font-saira-cond: var(--font-saira-condensed), var(--font-saira), sans-serif;
   --font-archivo-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 }
@@ -82,8 +150,7 @@
 body {
   background: var(--color-ink);
   color: var(--color-paper-warm);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, sans-serif;
+  font-family: var(--tok-font-body);
 }
 
 /* My Sportsvyn — followed-team name tint. Shared across /bracket,
@@ -118,21 +185,21 @@ body {
    New gridiron routes opt in via data-surface="ink" - the only value.
    ========================================================================== */
 [data-surface] {
-  --ink: #0A0A0A;
+  --ink: var(--tok-page);
   --graphite: #1A1A1A;
   --graphite-up: #242424;
   --charcoal: #2A2A2A;
-  --rule: #2E2E2E;
+  --rule: var(--tok-line);
   --rule-dim: #1F1F1F;
-  --paper: #F5F5F2;
+  --paper: var(--tok-ink);
   --paper-dim: #C5C5C2;
-  --muted: #888888;
+  --muted: var(--tok-muted);
   --muted-dim: #5A5A5A;
-  --volt: #D4FF00;
+  --volt: var(--tok-accent);
   --volt-dim: #8FAA00;
-  --live: #E63946;
-  --jade: #2A8A4F;
-  --terra: #B8410F;
+  --live: var(--tok-live);
+  --jade: var(--tok-up);
+  --terra: var(--tok-down);
   --font-saira-cond: var(--font-saira-condensed), var(--font-saira), sans-serif;
   --font-archivo-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 }

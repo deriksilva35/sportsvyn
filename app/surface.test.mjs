@@ -70,6 +70,19 @@ test('the attribute has exactly ONE legal value, and it is used', () => {
 // ------------------------------------------------- the tokens must RESOLVE
 
 const GLOBALS = readFileSync(path.join(REPO, 'app/globals.css'), 'utf8');
+
+/** A token's value at :root, following var(--x) chains through the :root blocks
+ * (tokens v2 put a semantic layer under the old names - rebrand R0). */
+function rootValue(name) {
+  const roots = [...GLOBALS.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(?:^|\n):root\s*\{([^}]*)\}/g)].map((m) => m[1]).join('\n');
+  let v = (new RegExp(`${name}:\\s*([^;]+);`).exec(roots) ?? [])[1]?.trim();
+  for (let i = 0; i < 10 && v; i++) {
+    const m = /^var\((--[\w-]+)\)$/.exec(v);
+    if (!m) return v;
+    v = (new RegExp(`${m[1]}:\\s*([^;]+);`).exec(roots) ?? [])[1]?.trim();
+  }
+  return v ?? null;
+}
 const PAPER_RAMP = ['--ink-soft', '--ink-mut', '--ink-dim', '--p-rule', '--p-rule-soft'];
 
 test('the five paper-ramp tokens RESOLVE under [data-surface="ink"]', () => {
@@ -130,12 +143,14 @@ test('THE MODULE RAMP IS GLOBAL NOW, and the console still agrees with it', () =
   // .adm is a transcribed mock and stays self-contained - so the risk is not
   // absence any more, it is DRIFT: two definitions that stop agreeing.
   const RAMP = { '--ink-2': '#141414', '--ink-3': '#1c1c1c', '--line': '#2a2a2a' };
-  const root = GLOBALS.slice(GLOBALS.indexOf(':root {'), GLOBALS.indexOf('\n}', GLOBALS.indexOf(':root {')));
+  // THROUGH THE SEMANTIC LAYER (tokens v2, rebrand R0): --ink-2 is now
+  // var(--tok-surface), so the value is found by following the chain in the
+  // :root blocks - the drift this guards against is the same.
   const adm = readFileSync(path.join(REPO, 'app/admin/console/console.css'), 'utf8');
   for (const [tok, hex] of Object.entries(RAMP)) {
-    const g = new RegExp(`${tok}:\\s*(#[0-9a-fA-F]{6})`).exec(root);
-    assert.ok(g, `${tok} must be defined at :root`);
-    assert.equal(g[1].toLowerCase(), hex, `${tok} at :root`);
+    const v = rootValue(tok);
+    assert.ok(v, `${tok} must be defined at :root`);
+    assert.equal(v.toLowerCase(), hex, `${tok} at :root`);
     const c = new RegExp(`${tok}:\\s*(#[0-9a-fA-F]{6})`).exec(adm);
     assert.ok(c, `${tok} must still be defined in console.css`);
     assert.equal(c[1].toLowerCase(), hex, `${tok} in console.css drifted from :root`);
@@ -248,7 +263,7 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.
   for (const t of ['--ink-2', '--ink-3', '--line']) {
-    assert.match(GLOBALS, new RegExp(`${t}: #`), `${t} must be a :root token`);
+    assert.match(rootValue(t) ?? '', /^#[0-9a-fA-F]{6}$/, `${t} must be a :root token`);
   }
 });
 

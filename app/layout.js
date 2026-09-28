@@ -1,4 +1,4 @@
-import { Saira, Saira_Condensed, Source_Serif_4, JetBrains_Mono, Archivo } from "next/font/google";
+import { Saira, Saira_Condensed, Source_Serif_4, JetBrains_Mono, Archivo, Rubik, Rubik_Mono_One } from "next/font/google";
 import "./globals.css";
 import AppTabBar from '@/components/shell/AppTabBar';
 import AppHeader from '@/components/shell/AppHeader';
@@ -47,6 +47,27 @@ const archivo = Archivo({
   display: "swap",
 });
 
+// THE ARCADE FACES (rebrand R0, 28 Sep). Rubik carries display (800/900) and
+// body (500/700); Rubik Mono One the numerals. LOADED, NOT USED: nothing reads
+// --font-rubik or --font-rubik-mono until R1 points the --tok-font-* roles at
+// them (app/globals.css), and preload is off until then so R0 adds no request
+// to a page that does not need the file.
+const rubik = Rubik({
+  variable: "--font-rubik",
+  weight: ["500", "700", "800", "900"],
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+});
+
+const rubikMono = Rubik_Mono_One({
+  variable: "--font-rubik-mono",
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+});
+
 export const metadata = {
   title: "Sportsvyn",
   description: "Sports editorial. Read the Game.",
@@ -78,7 +99,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${saira.variable} ${sairaCondensed.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${archivo.variable} h-full antialiased`}
+      className={`${saira.variable} ${sairaCondensed.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${archivo.variable} ${rubik.variable} ${rubikMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {/* HEADER ABOVE, TAB BAR BELOW, one gate on both. Mounted here rather
