@@ -54,6 +54,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/cron/gridiron-season",
+      "schedule": "0 9 * * *"
+    },
+    {
       "path": "/api/cron/nfl-stats-sweep",
       "schedule": "0 8 * * 2"
     },

@@ -25,19 +25,26 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision, lastGamesRunAt, probeCfbdBudget } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { refusalAlertBody } from '@/lib/gridiron/kickoffGuard';
-import { BASELINE_INTERVAL_MIN, LIVE_INTERVAL_MIN } from '@/lib/pollers/cadence';
+import { BASELINE_INTERVAL_MIN, LIVE_INTERVAL_MIN, GAMES_WINDOW_HOURS } from '@/lib/pollers/cadence';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+// 120, not 60: a Saturday run was measured at 87.7 s. The window below is the
+// fix; this is the headroom while a big CFB slate still sits inside it.
+export const maxDuration = 120;
+
+// EVERY KIND HERE IS WINDOWED - live-poll and baseline both ingest only games
+// kicking off within GAMES_WINDOW_HOURS of now. The whole season is
+// /api/cron/gridiron-season's, once a day at 09:00Z.
+const tickWindow = () => ({ now: new Date(), hours: GAMES_WINDOW_HOURS });
 
 const LEAGUES = [
   { slug: 'nfl', source: 'nfl-games', cfbd: false,
-    run: (leagueId, season, kind) => syncNflGames(leagueId, season, { broadcasts: kind === 'baseline' }) },
+    run: (leagueId, season, kind) => syncNflGames(leagueId, season, { broadcasts: kind === 'baseline', window: tickWindow() }) },
   // BROADCASTS ON THE BASELINE ONLY. Who is carrying a game is set days ahead
   // and does not change while it is being played; asking again every 5 minutes
   // would buy nothing and spend two provider calls a tick to buy it.
   { slug: 'cfb', source: 'cfb-games', cfbd: true,
-    run: (leagueId, season, kind) => syncCfbGames(leagueId, season, { broadcasts: kind === 'baseline' }) },
+    run: (leagueId, season, kind) => syncCfbGames(leagueId, season, { broadcasts: kind === 'baseline', window: tickWindow() }) },
 ];
 
 async function leagueIdBySlug(slug) {
