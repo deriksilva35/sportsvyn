@@ -80,6 +80,12 @@ export default function DraftRoom({
   // slept lands on a resolved room, because the read that produced these props
   // settled the expired turn before it rendered. Null in an untimed room.
   turnDeadlineAt = null,
+  // THE SERVER'S CLOCK AT RENDER. The first paint's remainder is computed from
+  // THIS on the server and in the browser alike, so the two agree - computing
+  // it from each side's own new Date() made the server say 32 and the browser
+  // say 31, a hydration mismatch on every timed room. The effect below then
+  // re-reads the real clock once, after hydration.
+  renderedAt = null,
   upcomingKeepers = [], franchise = null,
   // THE ROLLING POOL'S OTHER HALF (v2). Players whose game has kicked off:
   // the writer has always refused them ('player_kicked_off') and this list is
@@ -113,8 +119,18 @@ export default function DraftRoom({
   const [view, setView] = useState('list'); // desktop (>900) only: 'list' 3-col | 'board' full-width snake grid
   const pagerRef = useRef(null);
   const [clock, setClock] = useState(() => (
-    turnDeadlineAt != null ? remainingSeconds(turnDeadlineAt, timerSeconds, new Date()) : (timerSeconds ?? null)
+    turnDeadlineAt != null
+      ? remainingSeconds(turnDeadlineAt, timerSeconds, renderedAt ? new Date(renderedAt) : new Date())
+      : (timerSeconds ?? null)
   ));
+  // AFTER HYDRATION, THE REAL CLOCK: the seconds between the server's render
+  // and this mount come off here, once - on the next task, so the hydrating
+  // render itself is the server's.
+  useEffect(() => {
+    if (turnDeadlineAt == null) return undefined;
+    const id = setTimeout(() => setClock(remainingSeconds(turnDeadlineAt, timerSeconds, new Date())), 0);
+    return () => clearTimeout(id);
+  }, [turnDeadlineAt, timerSeconds]);
   const [auto, setAuto] = useState(initialAuto === true);
   const [expandedId, setExpandedId] = useState(null);
   const [statsById, setStatsById] = useState({}); // id -> 'loading' | null | SeasonStats
