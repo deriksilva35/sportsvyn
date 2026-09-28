@@ -9,19 +9,19 @@
 .st-tab {
   font-family: 'Saira Condensed', sans-serif; font-size: 11px; font-weight: 600;
   letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none;
-  color: var(--muted, #8a8a85); border: 1px solid var(--line, #2a2a2a);
+  color: var(--muted, var(--tok-muted)); border: 1px solid var(--line, var(--tok-line));
   border-radius: 99px; padding: 6px 14px; transition: color .12s, border-color .12s;
 }
-.st-tab:hover { color: var(--paper, #f5f5f2); }
-.st-tab.on { color: var(--ink, #0a0a0a); background: var(--volt, #d4ff00); border-color: var(--volt, #d4ff00); }
+.st-tab:hover { color: var(--paper, var(--tok-ink)); }
+.st-tab.on { color: var(--ink, var(--tok-on-action)); background: var(--volt, var(--tok-action)); border-color: var(--volt, var(--tok-action)); }
 
 .st-sect { margin-top: 26px; }
 .st-sect-h { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
 .st-sect-h h2 {
   font-family: 'Saira Condensed', sans-serif; font-size: 13px; font-weight: 700;
-  letter-spacing: 0.16em; text-transform: uppercase; color: var(--paper, #f5f5f2); margin: 0;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--paper, var(--tok-ink)); margin: 0;
 }
-.st-sect-h .rule { flex: 1; height: 1px; background: var(--line, #2a2a2a); }
+.st-sect-h .rule { flex: 1; height: 1px; background: var(--line, var(--tok-surface-2)); }
 
 /* THE TABLE SCROLLS INSIDE ITS OWN BOX, never the page. Eight columns of
    record splits do not fit a phone, and a horizontally scrolling PAGE is the
@@ -33,34 +33,38 @@
 .st-tbl thead th {
   font-family: 'Saira Condensed', sans-serif; font-size: 10px; font-weight: 600;
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim, #5a5a56);
-  text-align: right; border-bottom: 1px solid var(--line, #2a2a2a);
+  text-align: right; border-bottom: 1px solid var(--line, var(--tok-line));
 }
+:where(:root[data-theme="arcade"]) .st-tbl thead th { color: var(--dim, var(--tok-muted)); }
 .st-tbl thead th.l, .st-tbl tbody th.l { text-align: left; }
-.st-tbl td { text-align: right; color: var(--paper, #f5f5f2); }
+.st-tbl td { text-align: right; color: var(--paper, var(--tok-ink)); }
 .st-tbl tbody tr { border-bottom: 1px solid #1e1e1e; }
+:where(:root[data-theme="arcade"]) .st-tbl tbody tr { border-bottom: 1px solid var(--tok-line); }
 .st-tbl tbody tr:last-child { border-bottom: 0; }
 
 /* The team cell is STICKY so a reader scrolling to the seed column still
    knows whose row they are on. */
 .st-tbl tbody th.l, .st-tbl thead th.l {
-  position: sticky; left: 0; background: var(--ink, #0a0a0a);
+  position: sticky; left: 0; background: var(--ink, var(--tok-page));
   font-weight: 400; z-index: 1;
 }
 .st-abbr {
-  display: inline-block; width: 46px; color: var(--paper, #f5f5f2);
+  display: inline-block; width: 46px; color: var(--paper, var(--tok-ink));
   font-weight: 700; font-size: 11px;
 }
-.st-nm { color: var(--muted, #8a8a85); font-family: 'Saira Condensed', sans-serif; font-size: 12px; }
+.st-nm { color: var(--muted, var(--tok-muted)); font-family: 'Saira Condensed', sans-serif; font-size: 12px; }
 
 .st-empty {
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11.5px;
   color: var(--dim, #5a5a56); padding: 28px 12px; text-align: center;
-  border: 1px dashed var(--line, #2a2a2a); border-radius: 10px; margin-top: 22px;
+  border: 1px dashed var(--line, var(--tok-line)); border-radius: 10px; margin-top: 22px;
 }
+:where(:root[data-theme="arcade"]) .st-empty { color: var(--dim, var(--tok-muted)); }
 .st-note {
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10.5px;
   line-height: 1.6; color: var(--dim, #5a5a56); margin-top: 26px; max-width: 62ch;
 }
+:where(:root[data-theme="arcade"]) .st-note { color: var(--dim, var(--tok-muted)); }
 
 /* At phone width the name drops and the abbreviation carries the row - the
    sticky cell has to stay narrow or it eats the columns it exists to anchor. */

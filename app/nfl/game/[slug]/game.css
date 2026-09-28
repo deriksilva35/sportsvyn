@@ -36,9 +36,11 @@
 .gg-chips { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
 .gg-chip { font-size: 10px; letter-spacing: 0.14em; padding: 4px 9px; font-weight: 700; }
 .gg-chip.final { background: var(--jade); color: #fff; }
+:where(:root[data-theme="arcade"]) .gg-chip.final { color: var(--tok-ink); }
 .gg-chip.pre { border: 1px solid var(--muted-dim); color: var(--muted); }
 .gg-chip.time { border: 1px solid var(--rule); color: var(--muted); font-weight: 400; }
 .gg-chip.live { background: var(--live); color: #fff; animation: gg-pulse 1.6s ease-in-out infinite; }
+:where(:root[data-theme="arcade"]) .gg-chip.live { color: var(--tok-ink); }
 @keyframes gg-pulse { 50% { opacity: 0.65; } }
 
 /* THE HEADER ROW IS A FLEX LINE, AND IT USED TO BE A THREE-COLUMN GRID.
@@ -297,6 +299,7 @@
   color: var(--ink-3, #8a8f98);
   white-space: nowrap;
 }
+:where(:root[data-theme="arcade"]) .ggame .gg-teamrow .gg-rec { color: var(--ink-3, var(--tok-muted)); }
 
 /* WHAT THIS BOX SCORE IS, beside the section head.
    THE LIVE BADGE BORROWS THE SCOREBOARD'S PILL GRAMMAR verbatim - a hairline

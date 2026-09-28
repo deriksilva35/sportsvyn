@@ -68,9 +68,9 @@
 .mk-wrap .g .match { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mk-wrap .g .when { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
 /* The slate admits live games; a live card says its prices stopped at kickoff. */
-.mk-wrap .g .when .live { font-style: normal; color: var(--live, #E63946); font-weight: 700; }
+.mk-wrap .g .when .live { font-style: normal; color: var(--live, var(--tok-live)); font-weight: 700; }
 .mk-wrap .g .prek { font-size: 9px; color: var(--muted); letter-spacing: 0.06em; margin: -4px 0 6px; }
-.mk-wrap table.pt .gm .live { font-style: normal; color: var(--live, #E63946); font-weight: 700; }
+.mk-wrap table.pt .gm .live { font-style: normal; color: var(--live, var(--tok-live)); font-weight: 700; }
 .mk-wrap table.pt .gm .prek { font-size: 9px; color: var(--muted); }
 
 /* Board membership is a FACT ABOUT THE GAME, not a rating of the price, so it
@@ -115,8 +115,8 @@
   border-top: 1px solid var(--rule); padding-top: 12px; max-width: 860px;
 }
 
-.mk-wrap .jade { color: var(--jade, #2A8A4F); }
-.mk-wrap .terra { color: var(--terra, #B8410F); }
+.mk-wrap .jade { color: var(--jade, var(--tok-up)); }
+.mk-wrap .terra { color: var(--terra, var(--tok-down)); }
 .mk-wrap .mut { color: var(--muted); }
 
 /* Props: the counted overflow and the non-exclusivity note. Both are the card
@@ -202,7 +202,7 @@
 .mk-wrap .pb-row .imp { color: var(--muted); font-size: 11px; }
 .mk-wrap .pb-row .asoff { font-size: 9px; color: var(--muted); }
 /* The slate admits live games; a live row says its number stopped at kickoff. */
-.mk-wrap .pb-row .gm .live { font-style: normal; color: var(--live, #E63946); font-weight: 700; }
+.mk-wrap .pb-row .gm .live { font-style: normal; color: var(--live, var(--tok-live)); font-weight: 700; }
 .mk-wrap .pb-row .imp .prek { display: block; font-size: 9px; color: var(--muted); }
 .mk-wrap .pb-row .boardpill {
   font-family: var(--font-saira-cond); font-weight: 600; letter-spacing: .08em;
@@ -323,9 +323,13 @@
 }
 .px-chip.on { border-color: var(--volt); color: var(--volt); }
 .px-chip.qb.on { border-color: #FF5C8A; color: #FF5C8A; }
+:where(:root[data-theme="arcade"]) .px-chip.qb.on { border-color: var(--tok-live); color: var(--tok-live); }
 .px-chip.rb.on { border-color: #4ADE80; color: #4ADE80; }
+:where(:root[data-theme="arcade"]) .px-chip.rb.on { border-color: var(--tok-up); color: var(--tok-up); }
 .px-chip.wr.on { border-color: #38BDF8; color: #38BDF8; }
+:where(:root[data-theme="arcade"]) .px-chip.wr.on { border-color: var(--tok-chip); color: var(--tok-chip); }
 .px-chip.te.on { border-color: #FB923C; color: #FB923C; }
+:where(:root[data-theme="arcade"]) .px-chip.te.on { border-color: var(--tok-down); color: var(--tok-down); }
 .px-sortrow { display: flex; align-items: center; gap: 6px; padding: 8px 0 2px; }
 .px-sortrow .cnt {
   margin-left: auto; font-family: var(--font-jetbrains-mono), monospace;
@@ -335,7 +339,7 @@
 .px-gh { display: flex; align-items: center; gap: 8px; margin: 16px 0 6px; }
 .px-gh b { font-family: var(--font-saira), sans-serif; font-weight: 800; font-size: 12px; text-transform: uppercase; color: var(--paper); }
 .px-gh .t { margin-left: auto; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; font-weight: 600; color: var(--muted); }
-.px-gh .t .live { font-style: normal; color: var(--live, #E63946); font-weight: 700; }
+.px-gh .t .live { font-style: normal; color: var(--live, var(--tok-live)); font-weight: 700; }
 
 .px-list { border: 1px solid var(--rule); border-radius: 14px; background: var(--graphite); overflow: hidden; }
 .px-row {
@@ -348,8 +352,12 @@
   flex: 0 0 auto; width: 24px; height: 18px; border-radius: 5px; display: grid; place-items: center;
   font-family: var(--font-saira), sans-serif; font-weight: 800; font-size: 8px; color: #0A0A0A;
 }
-.px-pb.qb { background: #FF5C8A; } .px-pb.rb { background: #4ADE80; }
-.px-pb.wr { background: #38BDF8; } .px-pb.te { background: #FB923C; }
+.px-pb.qb { background: #FF5C8A; }
+:where(:root[data-theme="arcade"]) .px-pb.qb { background: var(--tok-live); } .px-pb.rb { background: #4ADE80; }
+:where(:root[data-theme="arcade"]) .px-pb.rb { background: var(--tok-up); }
+.px-pb.wr { background: #38BDF8; }
+:where(:root[data-theme="arcade"]) .px-pb.wr { background: var(--tok-chip); } .px-pb.te { background: #FB923C; }
+:where(:root[data-theme="arcade"]) .px-pb.te { background: var(--tok-down); }
 .px-pb.none { background: transparent; border: 1px solid var(--rule); color: var(--muted-dim); }
 .px-who { flex: 1; min-width: 0; }
 .px-who b { display: block; font-size: 12px; font-weight: 600; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -404,7 +412,7 @@
 }
 .ppc-strip b { font-family: var(--font-saira), sans-serif; font-weight: 800; font-size: 13px; text-transform: uppercase; color: var(--paper); }
 .ppc-strip span { margin-left: auto; font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; color: var(--muted); }
-.ppc-strip .live { font-style: normal; color: var(--live, #E63946); font-weight: 700; }
+.ppc-strip .live { font-style: normal; color: var(--live, var(--tok-live)); font-weight: 700; }
 .ppc-who h1 {
   font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
   text-transform: uppercase; font-size: 30px; line-height: 1.02; letter-spacing: -.02em;

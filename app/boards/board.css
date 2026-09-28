@@ -8,7 +8,7 @@
  * a global token behind a local name - retokening is this block and nothing else.
  * Scoped under .lb so nothing here reaches another page. */
 
-.lbpage { background: var(--ink, #0A0A0A); min-height: 100vh; }
+.lbpage { background: var(--ink, var(--tok-page)); min-height: 100vh; }
 .lb {
   --lb-bg: var(--ink, #0A0A0A); --lb-ink: var(--paper, #F5F5F2); --lb-navy: var(--ink-2, #141414);
   --lb-volt: var(--volt, #D4FF00); --lb-live: var(--volt, #D4FF00);

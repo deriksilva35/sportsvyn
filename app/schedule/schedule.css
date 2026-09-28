@@ -101,7 +101,8 @@
   cursor: pointer;
   transition: .15s;
 }
-.sch-arrow:hover { background: #242424; color: var(--paper); }
+:where(:root[data-theme="arcade"]) .sch-arrow { color: var(--paper-dim, var(--tok-ink-2)); }
+.sch-arrow:hover { background: var(--tok-surface-2); color: var(--paper); }
 .sch-arrow:disabled {
   opacity: 0.35;
   cursor: default;
@@ -109,6 +110,7 @@
   border-color: var(--charcoal);
 }
 .sch-arrow:disabled:hover { background: transparent; color: var(--paper-dim, #C5C5C2); }
+:where(:root[data-theme="arcade"]) .sch-arrow:disabled:hover { color: var(--paper-dim, var(--tok-ink-2)); }
 
 /* Date scrubber (7-day windowed strip) */
 .sch-scrub {
@@ -150,6 +152,7 @@
   display: block;
   margin-top: 3px;
 }
+:where(:root[data-theme="arcade"]) .sch-scrub-n { color: var(--paper-dim, var(--tok-ink-2)); }
 .sch-scrub button.active .sch-scrub-n { color: var(--paper); }
 .sch-scrub-dot {
   position: absolute;
@@ -187,8 +190,9 @@
   cursor: pointer;
   transition: .15s;
 }
-.sch-dd-btn:hover { background: #242424; color: var(--paper); }
-.sch-dd.open .sch-dd-btn { background: #242424; color: var(--paper); }
+:where(:root[data-theme="arcade"]) .sch-dd-btn { color: var(--paper-dim, var(--tok-ink-2)); }
+.sch-dd-btn:hover { background: var(--tok-surface-2); color: var(--paper); }
+.sch-dd.open .sch-dd-btn { background: var(--tok-surface-2); color: var(--paper); }
 .sch-dd.active .sch-dd-btn {
   background: var(--volt);
   border-color: var(--volt);
@@ -235,7 +239,8 @@
   border-radius: 4px;
   transition: .12s;
 }
-.sch-dd-list button:hover { background: #242424; color: var(--paper); }
+:where(:root[data-theme="arcade"]) .sch-dd-list button { color: var(--paper-dim, var(--tok-ink-2)); }
+.sch-dd-list button:hover { background: var(--tok-surface-2); color: var(--paper); }
 .sch-dd-list button.is-on { background: var(--volt); color: var(--ink); font-weight: 500; }
 
 /* Group panel: special — "All" pill above a 4×3 A–L grid */
@@ -257,7 +262,8 @@
   cursor: pointer;
   transition: .12s;
 }
-.sch-dd-gpall:hover { background: #242424; color: var(--paper); }
+:where(:root[data-theme="arcade"]) .sch-dd-gpall { color: var(--paper-dim, var(--tok-ink-2)); }
+.sch-dd-gpall:hover { background: var(--tok-surface-2); color: var(--paper); }
 .sch-dd-gpall.is-on { background: var(--volt); border-color: var(--volt); color: var(--ink); font-weight: 500; }
 .sch-dd-gpgrid {
   display: grid;
@@ -276,7 +282,8 @@
   cursor: pointer;
   transition: .12s;
 }
-.sch-dd-gpcell:hover { background: #242424; color: var(--paper); }
+:where(:root[data-theme="arcade"]) .sch-dd-gpcell { color: var(--paper-dim, var(--tok-ink-2)); }
+.sch-dd-gpcell:hover { background: var(--tok-surface-2); color: var(--paper); }
 .sch-dd-gpcell.is-on { background: var(--volt); border-color: var(--volt); color: var(--ink); }
 
 /* ---------- Section labels ---------- */
@@ -294,7 +301,7 @@
   text-transform: uppercase;
   color: var(--paper);
 }
-.sch-seclabel-lbl.live { color: var(--live, #E63946); }
+.sch-seclabel-lbl.live { color: var(--live, var(--tok-live)); }
 .sch-seclabel-lbl.cancelled { color: var(--muted); }
 .sch-seclabel-line {
   flex: 1;

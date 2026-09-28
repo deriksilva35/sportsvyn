@@ -8,6 +8,7 @@
 .mg-chips { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .mg-chip { font: 700 9px var(--font-mono); letter-spacing: .16em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; }
 .mg-chip.live { background: var(--live); color: #fff; }
+:where(:root[data-theme="arcade"]) .mg-chip.live { color: var(--tok-ink); }
 .mg-chip.time, .mg-chip.post { border: 1px solid var(--rule); color: var(--muted); }
 .mg-qc { font: 700 13px var(--font-mono); color: var(--live); }
 .mg-team { display: flex; align-items: baseline; gap: 8px; padding: 5px 0; flex-wrap: nowrap; }
@@ -70,6 +71,7 @@
    the same "absent, not empty" contract the card's carries. */
 .mg-dia { position: relative; display: block; width: 52px; height: 52px; margin: 0 auto; }
 .mg-dia .d-b { position: absolute; width: 16px; height: 16px; transform: rotate(45deg); border: 1.5px solid var(--muted-dim, #6E6E68); background: transparent; }
+:where(:root[data-theme="arcade"]) .mg-dia .d-b { border: 1.5px solid var(--muted-dim, var(--tok-line)); }
 .mg-dia .b2 { left: 18px; top: 2px; }
 .mg-dia .b3 { left: 2px; top: 18px; }
 .mg-dia .b1 { left: 34px; top: 18px; }
@@ -107,8 +109,8 @@
 .mg-abr b { font-weight: 700; }
 /* THE SCORE AFTER A SCORING PLAY, and only there - jade, the colour this page
    already uses for a settled fact. */
-.mg-ab.scored .sc { font: 700 11px var(--font-mono); color: var(--jade, #2A8A4F);
-  border: 1px solid var(--jade, #2A8A4F); border-radius: 4px; padding: 0 4px; }
+.mg-ab.scored .sc { font: 700 11px var(--font-mono); color: var(--jade, var(--tok-up));
+  border: 1px solid var(--jade, var(--tok-up)); border-radius: 4px; padding: 0 4px; }
 /* A BETWEEN-PITCH EVENT - a stolen base, an overturned call - is a line of the
    half in its own right and is dimmed, because nobody was at the plate for it. */
 .mg-ab.aside .mg-abr b { font-weight: 500; color: var(--muted-light); }

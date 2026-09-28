@@ -26,7 +26,7 @@
 .sb-rec { color: var(--volt); font-weight: 700; letter-spacing: 0; font-size: 11px; font-variant-numeric: tabular-nums; }
 .sb-pts { margin-left: auto; color: var(--volt); font-weight: 700; }
 .sb-grade { border-radius: 3px; padding: 1px 6px; font-weight: 700; letter-spacing: 0; }
-.sb-grade.w { background: var(--jade, #2A8A4F); color: var(--paper); }
+.sb-grade.w { background: var(--jade, var(--tok-up)); color: var(--paper); }
 .sb-grade.l { background: var(--rule); color: var(--muted); }
 
 .sb-sides { display: grid; gap: 6px; }

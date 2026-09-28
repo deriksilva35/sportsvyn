@@ -61,7 +61,9 @@
 }
 .rk-row .rk-mv.up { color: var(--volt); }
 .rk-row .rk-mv.dn { color: var(--terra, #E07A5F); }
+:where(:root[data-theme="arcade"]) .rk-row .rk-mv.dn { color: var(--terra, var(--tok-live)); }
 .rk-row .rk-mv.hold, .rk-row .rk-mv.new { color: var(--muted-dim, #6E6E68); }
+:where(:root[data-theme="arcade"]) .rk-row .rk-mv.hold, :where(:root[data-theme="arcade"]) .rk-row .rk-mv.new { color: var(--muted-dim, var(--tok-muted)); }
 
 /* THE EXPANDING ROW. The <summary> IS the row, so it keeps .rk-row's own
    layout; list-style is removed because the triangle would land inside the
@@ -77,21 +79,25 @@
   font: 700 9px var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
   color: var(--muted-dim, #6E6E68); cursor: pointer; padding: 2px 0;
 }
+:where(:root[data-theme="arcade"]) .rk-inputs > summary { color: var(--muted-dim, var(--tok-muted)); }
 .rk-inputs dl { margin: 6px 0 0; display: grid; gap: 5px; }
 .rk-inputs dl > div { display: flex; gap: 10px; align-items: baseline; }
 .rk-inputs dt {
   flex: none; width: 74px; font: 700 9px var(--font-mono);
   letter-spacing: .12em; text-transform: uppercase; color: var(--muted-dim, #6E6E68);
 }
+:where(:root[data-theme="arcade"]) .rk-inputs dt { color: var(--muted-dim, var(--tok-muted)); }
 .rk-inputs dd {
   margin: 0; flex: 1; min-width: 0; font: 500 11px var(--font-mono);
   color: var(--paper); font-variant-numeric: tabular-nums;
 }
 .rk-inputs dd small { color: var(--muted); margin-left: 6px; font-size: 10px; }
 .rk-inputs .rk-arrow { color: var(--muted-dim, #6E6E68); }
+:where(:root[data-theme="arcade"]) .rk-inputs .rk-arrow { color: var(--muted-dim, var(--tok-muted)); }
 .rk-inputs .rk-last3 { display: flex; flex-wrap: wrap; gap: 8px; }
 .rk-inputs .rk-res.w b { color: var(--volt); }
 .rk-inputs .rk-res.l b { color: var(--terra, #E07A5F); }
+:where(:root[data-theme="arcade"]) .rk-inputs .rk-res.l b { color: var(--terra, var(--tok-live)); }
 .rk-inputs .rk-res.t b { color: var(--muted); }
 .rk-mark { flex: none; }
 /* A FOLLOWED TEAM WEARS THE VOLT RING on every row that draws a mark. */

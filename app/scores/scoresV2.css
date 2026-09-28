@@ -10,6 +10,7 @@
 .sv2-days { display: flex; gap: 6px; margin: 14px 0 10px; overflow-x: auto; scrollbar-width: none; }
 .sv2-day { flex: 0 0 auto; border: 1px solid var(--line); background: var(--ink-2); border-radius: 12px; padding: 8px 10px; min-width: 56px; text-align: center; text-decoration: none; color: var(--paper); }
 .sv2-day small { display: block; font: 600 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim, #6E6E68); }
+:where(:root[data-theme="arcade"]) .sv2-day small { color: var(--muted-dim, var(--tok-muted)); }
 .sv2-day b { display: block; font: 700 15px var(--font-display); margin-top: 2px; }
 .sv2-day i { display: block; font: 500 10px var(--font-mono); color: var(--muted); font-style: normal; margin-top: 2px; }
 .sv2-day.on { border-color: var(--volt); background: var(--ink-3); }
@@ -60,6 +61,7 @@
    the same four letters wider - see the BOX MATH in app/nfl/game/[slug]/game.css. */
 .sv2-team .ab { font: 700 12px var(--font-mono); color: var(--muted); width: 44px; flex: none; white-space: nowrap; }
 .sv2-team .rec { color: var(--muted-dim, #6E6E68); font: 500 11px var(--font-mono); margin-left: 4px; }
+:where(:root[data-theme="arcade"]) .sv2-team .rec { color: var(--muted-dim, var(--tok-muted)); }
 .sv2-team b { margin-left: auto; font: 700 22px var(--font-mono); }
 .sv2-card.final .sv2-team b { font-size: 18px; }
 .sv2-team b.pct { font-size: 16px; color: var(--muted); }
@@ -105,6 +107,7 @@
   position: absolute; width: 11px; height: 11px; transform: rotate(45deg);
   border: 1.5px solid var(--muted-dim, #6E6E68); background: transparent;
 }
+:where(:root[data-theme="arcade"]) .sv2-diamond .d-b { border: 1.5px solid var(--muted-dim, var(--tok-line)); }
 .sv2-diamond .b2 { left: 11.5px; top: 1px; }
 .sv2-diamond .b3 { left: 1px; top: 11.5px; }
 .sv2-diamond .b1 { left: 22px; top: 11.5px; }
@@ -123,6 +126,7 @@
 .sv2-stake .bad b { color: var(--terra); }
 .sv2-stake .good b { color: var(--jade); }
 .sv2-stake .none { color: var(--muted-dim, #6E6E68); border-style: dashed; }
+:where(:root[data-theme="arcade"]) .sv2-stake .none { color: var(--muted-dim, var(--tok-muted)); }
 
 .sv2-foot { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; color: var(--muted); font: 500 11px var(--font-mono); display: flex; justify-content: space-between; gap: 8px; }
 .sv2-foot b { color: var(--paper); font-weight: 600; }
