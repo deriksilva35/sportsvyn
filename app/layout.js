@@ -6,7 +6,7 @@ import ResumeManager from '@/components/shell/ResumeManager';
 import SplashReady from '@/components/shell/SplashReady';
 import { Analytics } from '@vercel/analytics/next';
 import '@/components/shell/apptab.css';
-import { dataTheme } from '@/lib/brand/theme';
+import { firstPaintColor, dataTheme } from '@/lib/brand/theme';
 
 const saira = Saira({
   variable: "--font-saira",
@@ -102,6 +102,9 @@ export default function RootLayout({ children }) {
     <html
       lang="en"
       data-theme={dataTheme()}
+      // THE FIRST-PAINT GROUND: the page colour before any stylesheet has
+      // loaded - lib/brand/theme.js firstPaintColor.
+      style={{ backgroundColor: firstPaintColor() }}
       className={`${saira.variable} ${sairaCondensed.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${archivo.variable} ${rubik.variable} ${rubikMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
