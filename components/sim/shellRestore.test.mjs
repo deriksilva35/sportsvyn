@@ -92,10 +92,11 @@ test('the reload lives where the draft room actually mounts it', () => {
 // pageshow never fires at all).
 // ---------------------------------------------------------------------------
 
-test('Capacitor is configured to show our error page instead of WebKit default', () => {
-  const cfg = stripComments(src('capacitor.config.ts'));
-  assert.match(cfg, /errorPath:\s*'error\.html'/,
-    "without errorPath, didFailProvisionalNavigation only logs and the reader sees WebKit's page");
+// The errorPath: 'error.html' setting itself lives in the Mac's native repo now
+// (this repo's capacitor.config.ts was a dead copy, deleted by G-FIX; see
+// CLAUDE.md). What this repo owns is the page it points at, tested below.
+test('the dead web-repo capacitor config stays deleted - errorPath is the Mac\'s', () => {
+  assert.throws(() => src('capacitor.config.ts'));
 });
 
 test('the error page is self-contained and offers a route back to the entry', () => {
