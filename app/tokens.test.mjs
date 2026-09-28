@@ -82,13 +82,17 @@ test('R0 MOVES NO PIXEL: every old name reads the semantic layer and resolves to
   assert.match(css, /body \{[^}]*font-family: var\(--tok-font-body\)/, 'the body face is a token too');
 });
 
-test('THE ARCADE FACES are loaded - Rubik 500/700/800/900 and Rubik Mono One - and nothing reads them yet', () => {
+test('THE ARCADE FACES are loaded - Rubik 500/700/800/900 and Rubik Mono One - and read only under the arcade theme', () => {
   const layout = readFileSync(path.join(REPO, 'app/layout.js'), 'utf8');
   assert.match(layout, /Rubik\(\{\s*variable: "--font-rubik",\s*weight: \["500", "700", "800", "900"\]/);
   assert.match(layout, /Rubik_Mono_One\(\{\s*variable: "--font-rubik-mono"/);
   assert.match(layout, /\$\{rubik\.variable\} \$\{rubikMono\.variable\}/);
-  assert.equal((layout.match(/preload: false/g) ?? []).length, 2, 'no request until R1 uses them');
-  assert.doesNotMatch(css, /--font-rubik/, 'R0: no token points at Rubik yet');
+  assert.equal((layout.match(/preload: false/g) ?? []).length, 2, 'no preload: the dark theme never requests them');
+  // R1: only the arcade block reads Rubik; the dark :root roles still read Saira/JetBrains.
+  const arcade = css.slice(css.indexOf(':root[data-theme="arcade"] {'), css.indexOf('}', css.indexOf(':root[data-theme="arcade"] {')));
+  assert.match(arcade, /--tok-font-display: var\(--font-rubik\)/);
+  assert.match(arcade, /--tok-font-num: var\(--font-rubik-mono\)/);
+  assert.doesNotMatch(css.replace(/:root\[data-theme="arcade"\][^{]*\{[^}]*\}/g, ''), /--font-rubik/, 'outside the arcade block nothing reads Rubik');
 });
 
 test('THE RATCHET: no file gains a colour literal outside the tokens', () => {
@@ -97,4 +101,73 @@ test('THE RATCHET: no file gains a colour literal outside the tokens', () => {
   const grew = Object.entries(now.byFile).filter(([f, n]) => n > (base.byFile[f] ?? 0)).map(([f, n]) => `${f}: ${base.byFile[f] ?? 0} -> ${n}`);
   assert.deepEqual(grew, [], 'use a token (app/globals.css --tok-*) - or, when retiring literals, lower the ceiling with node scripts/hex-census.mjs --write');
   assert.ok(now.total <= base.total, `total ${now.total} > ceiling ${base.total}`);
+});
+
+// ---------------------------------------------------------------------------
+// R1: the arcade theme, behind ARCADE_THEME
+// ---------------------------------------------------------------------------
+
+const arcadeBlock = block(':root[data-theme="arcade"]', 0);
+const arcadeSurface = block(':root[data-theme="arcade"] [data-surface]', 0);
+const ARCADE_VALUES = new Set(Object.entries(rootTokens).filter(([k]) => k.startsWith('--arcade-')).map(([, v]) => v.toUpperCase()));
+const DOWN = '#B8410F';   // terra: the arcade set names no "down"; it stays, readable on white (5.3:1)
+
+test('NO STRAY DARK VALUE: under the arcade theme every colour token resolves to the arcade palette', () => {
+  const colourTokens = [...new Set([...Object.keys(theme), ...Object.keys(rootAliases), ...Object.keys(surface)])]
+    .filter((k) => /^#[0-9A-Fa-f]{6}$/.test(resolve(k) ?? '') || /^#[0-9A-Fa-f]{6}$/.test(resolve(k, surface) ?? ''));
+  const scope = { ...ALL, ...arcadeBlock };
+  const res = (k, extra = {}) => {
+    let v = extra[k] ?? scope[k];
+    for (let i = 0; i < 10 && v; i++) { const m = /^var\((--[\w-]+)\)$/.exec(v); if (!m) return v; v = extra[m[1]] ?? scope[m[1]]; }
+    return v;
+  };
+  const stray = [];
+  for (const k of colourTokens) {
+    for (const [where, extra] of [['page', {}], ['surface', { ...surface, ...arcadeSurface }]]) {
+      const v = String(res(k, extra) ?? '').toUpperCase();
+      if (!/^#/.test(v)) continue;
+      if (!ARCADE_VALUES.has(v) && v !== DOWN) stray.push(`${k} (${where}) = ${v}`);
+    }
+  }
+  assert.deepEqual(stray, [], 'every token read lands on the arcade palette');
+  assert.ok(colourTokens.length >= 30, `${colourTokens.length} colour tokens checked`);
+});
+
+test('THE FLAG: data-theme="arcade" only when ARCADE_THEME=on, and the bar tint follows', async () => {
+  const { arcadeOn, dataTheme, themeColor } = await import('../lib/brand/theme.js');
+  assert.equal(arcadeOn({ ARCADE_THEME: 'on' }), true);
+  for (const v of [undefined, '', 'off', '1', 'true']) assert.equal(arcadeOn({ ARCADE_THEME: v }), false, `${v} is not on`);
+  assert.equal(dataTheme({ ARCADE_THEME: 'on' }), 'arcade');
+  assert.equal(dataTheme({}), undefined, 'no attribute at all when off - today\'s dark, untouched');
+  assert.equal(themeColor({ ARCADE_THEME: 'on' }), '#FFFFFF');
+  assert.equal(themeColor({}), '#0A0A0A');
+  const layout = readFileSync(path.join(REPO, 'app/layout.js'), 'utf8');
+  assert.match(layout, /data-theme=\{dataTheme\(\)\}/);
+  for (const f of ['app/app/layout.js', 'lib/shell/shell.js']) {
+    const t = readFileSync(path.join(REPO, f), 'utf8');
+    assert.match(t, /themeColor: themeColor\(\)/, `${f} tints the bar from the flag`);
+    assert.doesNotMatch(t, /themeColor: '#/, `${f} has no literal tint left`);
+  }
+});
+
+test('the app chrome follows: the tab bar, the app header and /app read tokens under the arcade theme', () => {
+  const tab = readFileSync(path.join(REPO, 'components/shell/apptab.css'), 'utf8');
+  for (const sel of ['.apptab {', '.apptab-i.on {', '.gh--app {', '.svseg a.on {']) assert.ok(tab.includes(`:root[data-theme="arcade"] ${sel}`), sel);
+  const shell = readFileSync(path.join(REPO, 'app/app/app-shell.css'), 'utf8');
+  assert.match(shell, /:root\[data-theme="arcade"\] \.sv-app \{[^}]*--ink: var\(--tok-page\)/);
+});
+
+test('THE LOCAL PALETTES ARE RE-POINTED: each page palette reads the tokens under the arcade theme', () => {
+  const want = {
+    'app/games/games.css': [':root[data-theme="arcade"] .lob {', '--l-ink: var(--tok-page)', '--l-paper: var(--tok-ink)'],
+    'app/daily/daily.css': [':root[data-theme="arcade"] .daily, :root[data-theme="arcade"] .weekly {', '--d-ink: var(--tok-page)', '--d-paper: var(--tok-ink)'],
+    'app/account/account.css': [':root[data-theme="arcade"] .acct {', '--a-ink: var(--tok-page)'],
+    'app/stats/stats.css': [':root[data-theme="arcade"] .stats-wrap {'],
+    'components/sim/tracker.css': [':root[data-theme="arcade"] .trk {'],
+    'components/gridiron/gridiron.css': [':root[data-theme="arcade"] .gi-head {'],
+  };
+  for (const [f, needles] of Object.entries(want)) {
+    const t = readFileSync(path.join(REPO, f), 'utf8');
+    for (const n of needles) assert.ok(t.includes(n), `${f}: ${n}`);
+  }
 });

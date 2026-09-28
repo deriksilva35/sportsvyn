@@ -1,5 +1,5 @@
 {
- "total": 1764,
+ "total": 1762,
  "byFile": {
   "app/account/account.css": 10,
   "app/admin/console/console.css": 16,
@@ -10,7 +10,6 @@
   "app/api/email/unsubscribe/route.js": 4,
   "app/app/app-shell.css": 23,
   "app/app/app-shell.js": 3,
-  "app/app/layout.js": 1,
   "app/article/[slug]/article.css": 11,
   "app/articles/articles.css": 1,
   "app/boards/board.css": 15,
@@ -91,7 +90,6 @@
   "lib/emails/welcome.js": 10,
   "lib/gridiron/gameBrief.js": 1,
   "lib/import/squadImport.js": 1,
-  "lib/shell/shell.js": 1,
   "lib/testing/computedStyle.mjs": 1
  }
 }

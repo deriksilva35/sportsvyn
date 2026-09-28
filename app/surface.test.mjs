@@ -111,9 +111,12 @@ test('THE --volt-dim DISCRIMINATOR SURVIVED THIS RELAY, deliberately', () => {
   // Merging it into [data-surface="ink"] now that paper is gone would silently
   // repaint ~29 call sites. That collapse is its own relay; this pins that the
   // two blocks are still separate so the merge cannot happen by accident.
-  const shared = GLOBALS.indexOf('[data-surface] {');
-  const ink = GLOBALS.indexOf('[data-surface="ink"] {');
-  assert.ok(shared !== -1 && ink !== -1 && shared < ink, 'both blocks exist, shared first');
+  // AT A LINE START: the arcade theme (rebrand R1) adds a
+  // ':root[data-theme="arcade"] [data-surface] {' block above, which a bare
+  // substring search would take for this one.
+  const shared = GLOBALS.indexOf('\n[data-surface] {') + 1;
+  const ink = GLOBALS.indexOf('\n[data-surface="ink"] {') + 1;
+  assert.ok(shared > 0 && ink > 0 && shared < ink, 'both blocks exist, shared first');
   const sharedBlock = GLOBALS.slice(shared, GLOBALS.indexOf('\n}', shared));
   assert.match(sharedBlock, /--volt-dim: #8FAA00/);
   assert.match(GLOBALS.slice(0, shared), /--volt-dim: var\(--color-volt-dim\)/, ':root keeps its own value');

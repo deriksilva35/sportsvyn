@@ -658,3 +658,11 @@
   font-size: 11px; vertical-align: 1px;
 }
 .row--dropped .dr-count { display: none; }
+
+/* ARCADE (rebrand R1, behind ARCADE_THEME - app/globals.css). The Daily's and
+   the Weekly's shared palette, re-pointed at the tokens on the arcade page. */
+:root[data-theme="arcade"] .daily, :root[data-theme="arcade"] .weekly {
+  --d-ink: var(--tok-page); --d-ink-2: var(--tok-surface); --d-ink-3: var(--tok-surface-2);
+  --d-line: var(--tok-line); --d-volt: var(--tok-accent); --d-paper: var(--tok-ink);
+  --d-jade: var(--tok-up); --d-terra: var(--tok-down); --d-live: var(--tok-live); --d-mut: var(--tok-muted);
+}
