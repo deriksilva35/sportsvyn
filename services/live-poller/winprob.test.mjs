@@ -120,6 +120,7 @@ before(async () => {
   PID.cfb = await seedGame('cfb', 'cfb');
   PID.noline = await seedGame('noline', 'nfl', { line: false });
   PID.hold = await seedGame('hold', 'nfl');
+  PID.dup = await seedGame('dup', 'nfl');
 });
 
 after(async () => {
@@ -301,4 +302,61 @@ test('A HOLD IS LOGGED: one row when it starts, one when it ends with the second
   assert.equal(rows[2].inputs.secs_held, 95, 'held from t1 to t2');
   assert.equal(rows.length, 4, 'and the computed tick after it');
   assert.equal(rows[3].inputs.reason, undefined, 'a plain state row');
+});
+
+// ---------------------------------------------------------------------------
+// THE SAME MOMENT IS ONE ROW (droplet-mon-9 item 6)
+// ---------------------------------------------------------------------------
+
+test('sameMoment: play, clock and both scores equal to a STATE row - and never a hold/release/final row', async () => {
+  const { sameMoment } = await import('../../lib/winprob/live.js');
+  const st = { secs_game: 2310, home_score: 10, away_score: 7, score_diff: 3 };
+  const last = { play_seq: 41, inputs: { ...st, prior_logit: 0.1 } };
+  assert.equal(sameMoment(last, 41, { ...st, prior_logit: 0.2 }), true, 'a moved prior is still the same moment');
+  assert.equal(sameMoment(last, 42, st), false, 'a new play is a new moment');
+  assert.equal(sameMoment(last, 41, { ...st, secs_game: 2300 }), false, 'the clock moved');
+  assert.equal(sameMoment(last, 41, { ...st, home_score: 17, score_diff: 10 }), false, 'the score moved');
+  assert.equal(sameMoment(last, 41, { ...st, home_score: 14, away_score: 11 }), false, '14-11 is not 10-7 though both are +3');
+  for (const reason of ['hold', 'release', 'final']) {
+    assert.equal(sameMoment({ play_seq: 41, inputs: { ...st, reason } }, 41, st), false, `a ${reason} row is never the last state`);
+  }
+  assert.equal(sameMoment(null, 41, st), false, 'no row yet writes');
+});
+
+test('A REPEATED KICKOFF POLL WRITES ONE ROW (DEV sentinel)', async () => {
+  const count = async () => (await sql`SELECT count(*)::int n FROM winprob_log WHERE match_id = ${ids.dup}`)[0].n;
+  const now = Date.now();
+  await poll('nfl', [row(PID.dup)], new Date(now));
+  const one = await count();
+  assert.equal(one, 1, 'the first poll writes');
+  for (let i = 1; i <= 3; i++) await poll('nfl', [row(PID.dup)], new Date(now + i * 30_000));
+  assert.equal(await count(), one, 'three more polls of the same moment write nothing');
+});
+
+test('THE SAME MOMENT WITH A MOVED INPUT IS SKIPPED AND COUNTED; A CHANGED SCORE WRITES (DEV sentinel)', async () => {
+  const { logWinProb } = await import('../../lib/winprob/live.js');
+  const count = async () => (await sql`SELECT count(*)::int n FROM winprob_log WHERE match_id = ${ids.dup}`)[0].n;
+  const base = await count();
+  const tick = (priorLogit, home, away, secs = 1800) => ({
+    sport: 'nfl', p: 0.6, model: 'test', playSeq: 900001,
+    state: { score_diff: home - away, secs_game: secs, secs_half: 900, is_ot: 0 },
+    prior: { prior_logit: priorLogit, spread: -3.5 }, scores: { home, away },
+  });
+  let dups = 0; const onDup = () => { dups += 1; };
+  const t0 = Date.now() + 600_000;
+  assert.equal(await logWinProb(sql, ids.dup, tick(0.10, 10, 7), { now: new Date(t0), onDup }), true, 'a new moment writes');
+  assert.equal(await logWinProb(sql, ids.dup, tick(0.12, 10, 7), { now: new Date(t0 + 30_000), onDup }), false,
+    'same play, clock and score - only the prior moved - is not written');
+  assert.equal(dups, 1, 'and it is counted as dup_skipped');
+  assert.equal(await count(), base + 1);
+  assert.equal(await logWinProb(sql, ids.dup, tick(0.12, 17, 7), { now: new Date(t0 + 60_000), onDup }), true, 'a changed score writes');
+  assert.equal(await count(), base + 2);
+  assert.equal(dups, 1);
+});
+
+test('THE POLLER JOURNALS wrote= and dup_skipped=', () => {
+  const idx = readFileSync(new URL('./index.mjs', import.meta.url), 'utf8');
+  assert.match(idx, /winprob wrote=\$\{r\.winprob \?\? 0\} dup_skipped=\$\{r\.dup_skipped \?\? 0\}/);
+  const poll = readFileSync(new URL('./poll.mjs', import.meta.url), 'utf8');
+  assert.match(poll, /onDup: \(\) => \{ out\.dup_skipped = \(out\.dup_skipped \?\? 0\) \+ 1; \}/);
 });

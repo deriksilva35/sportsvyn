@@ -721,7 +721,7 @@ export async function pollOnce(sql, {
         if (wp.hold) { if (await logHoldStart(sql, m.id, { playSeq: wp.playSeq, reasonDetail: wp.reason, now })) out.winprob = (out.winprob ?? 0) + 1; }
         else {
           await logHoldRelease(sql, m.id, { now });
-          if (await logWinProb(sql, m.id, wp, { now })) out.winprob = (out.winprob ?? 0) + 1;
+          if (await logWinProb(sql, m.id, wp, { now, onDup: () => { out.dup_skipped = (out.dup_skipped ?? 0) + 1; } })) out.winprob = (out.winprob ?? 0) + 1;
         }
       } catch (e) { log(`[${league}] win prob log failed match=${m.id}: ${e.message}`); }
     }
