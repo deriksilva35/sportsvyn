@@ -242,3 +242,10 @@
 }
 :where(:root[data-theme="arcade"]) .ds-empty { color: var(--tok-muted); }
 :where(:root[data-theme="arcade"]) .ds-empty { color: var(--tok-muted); }
+
+/* R2 batch 2 ruling: the drive strip's olive frame is the line colour. Its dark
+   olive ground (not ruled) takes the surface, so the strip is not a dark block
+   on the arcade page. */
+:where(:root[data-theme="arcade"]) .ds-strip { border-color: var(--tok-line); background: var(--tok-surface); }
+:where(:root[data-theme="arcade"]) .ds-zone.l { border-right-color: var(--tok-line); }
+:where(:root[data-theme="arcade"]) .ds-zone.r { border-left-color: var(--tok-line); }

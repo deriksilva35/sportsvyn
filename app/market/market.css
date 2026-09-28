@@ -460,3 +460,6 @@
 .ppc-cap { font-family: var(--font-jetbrains-mono), monospace; font-size: 9px; color: var(--muted-dim); margin: 20px 0 0; }
 .ppc-ft { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; line-height: 1.6; color: var(--muted-dim); margin: 18px 0 0; }
 .ppc-ft b { color: var(--muted); font-weight: 700; }
+
+/* R2 batch 2 ruling: the dark ink here is navy on the arcade page. */
+:where(:root[data-theme="arcade"]) .px-pb { color: var(--tok-primary); }

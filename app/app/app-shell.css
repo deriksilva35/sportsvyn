@@ -2025,3 +2025,7 @@
 :where(:root[data-theme="arcade"]) .sv-app .sv-sched-gpip { background: var(--tok-action); color: var(--tok-on-action); }
 :where(:root[data-theme="arcade"]) .sv-app .sv-match-mpip--goal { background: var(--tok-action); color: var(--tok-on-action); }
 :where(:root[data-theme="arcade"]) .sv-app .sv-stats-tab.is-on { background: var(--tok-action); color: var(--tok-on-action); }
+
+/* R2 batch 2 ruling: the selected day is a selected state - volt fill, navy ink. */
+:where(:root[data-theme="arcade"]) .sv-app .sv-sched-daycell.is-sel { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .sv-app .sv-sched-daycell.is-sel * { color: var(--tok-on-action); }

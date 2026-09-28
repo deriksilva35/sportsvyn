@@ -692,3 +692,8 @@
 :where(:root[data-theme="arcade"]) .slot--active { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
 :where(:root[data-theme="arcade"]) .weekly .pip.full { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
 :where(:root[data-theme="arcade"]) .clock-bar i { background: var(--tok-accent); }
+
+/* R2 batch 2 rulings (28 Sep): the Daily's heroes sit on the hero wash with a
+   line-coloured frame; the reader's own row is the light volt tint. */
+:where(:root[data-theme="arcade"]) .hero, :where(:root[data-theme="arcade"]) .dhero { background: var(--tok-hero-wash); border-color: var(--tok-line); }
+:where(:root[data-theme="arcade"]) .row--me { background: color-mix(in srgb, var(--tok-action) 30%, var(--tok-page)); }

@@ -739,3 +739,7 @@ a.gi-props-row:hover .who { color: var(--paper); text-decoration: underline; }
 .gi-pz-how a { color: var(--muted); }
 /* The selected chip is a volt fill with navy ink (volt grammar, batch 2). */
 :where(:root[data-theme="arcade"]) .gi-chip.active { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+/* Volt grammar (batch 2): the tease CTA is a primary button; the nav and rank-tab
+   active underlines are the volt accent (a rule, like the open-row rule). */
+:where(:root[data-theme="arcade"]) .gi-tease-cta { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .gi-head-nav a.active::after, :where(:root[data-theme="arcade"]) .gi-rank-tabs a.active::after { background: var(--tok-accent); }

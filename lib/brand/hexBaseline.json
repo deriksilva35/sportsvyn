@@ -1,5 +1,5 @@
 {
- "total": 897,
+ "total": 896,
  "byFile": {
   "app/account/account.css": 10,
   "app/admin/console/console.css": 15,
@@ -42,7 +42,7 @@
   "app/team/[slug]/team.css": 25,
   "app/weekly/weekly.css": 4,
   "app/world-cup-2026/rankings/page.js": 6,
-  "app/world-cup-2026/rankings/players/rankings.css": 36,
+  "app/world-cup-2026/rankings/players/rankings.css": 35,
   "app/world-cup-2026/rankings/power/rankings.css": 26,
   "components/BackToAppBar.js": 3,
   "components/Countdown.js": 1,

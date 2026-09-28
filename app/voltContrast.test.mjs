@@ -109,7 +109,10 @@ test('NO --tok-action / --tok-accent TEXT ON A LIGHT GROUND on the arcade page',
 // fails. Structure (a lock badge, a card, the done tile) is allowed navy.
 const STEP3 = ['app/weekly/weekly.css', 'app/daily/daily.css', 'app/pickem/pickem.css', 'components/sim/sim.css',
   'components/games/grade.css', 'app/leagues/leagues.css', 'components/onboarding/onboarding.css',
-  'app/games/lobbyV3.css', 'components/site-chrome.css'];
+  'app/games/lobbyV3.css', 'components/site-chrome.css',
+  // batch 2 (mon-15): the scores and gridiron sheets
+  'app/scores/scoresV2.css', 'components/gridiron/gridiron.css', 'components/gridiron/drivestrip.css',
+  'components/gridiron/pollboard.css', 'app/schedule/schedule.css', 'app/app/app-shell.css'];
 // The lock BUTTONS are named explicitly (.expo-lock and .pcard .lock are badges -
 // structure); "you" is the reader's own selected row or column.
 const BUTTONISH = /(btn|cta|button|\.on\b|\.active\b|\.sel\b|\.pick\b|signin|start|primary|confirm|\.draft\b|\.play\b|-go\b|\.(wkv|pkv)-lock\b|--you\b|\.you\b|\.gg-cy\b)/;
@@ -117,10 +120,12 @@ const BUTTONISH = /(btn|cta|button|\.on\b|\.active\b|\.sel\b|\.pick\b|signin|sta
 export function navyFills(css, g) {
   const rs = rules(css).filter((r) => !/data-theme="(?!arcade)/.test(r.sel)).map((r) => ({ sel: r.sel.replace(ARC, ''), body: r.body }));
   const scope = { ...g, ...localVars(css) }; const by = new Map();
-  for (const { sel, body } of rs) { const c = by.get(sel) ?? {}; for (const [k, v] of decls(body)) if (!k.startsWith('--')) c[k] = resolve(v, scope); by.set(sel, c); }
+  // A comma list applies to EACH selector in it: key them one by one.
+  for (const { sel, body } of rs) for (const one of sel.split(',').map((x) => x.trim())) { const c = by.get(one) ?? {}; for (const [k, v] of decls(body)) if (!k.startsWith('--')) c[k] = resolve(v, scope); by.set(one, c); }
   // The hamburger's lines are the icon itself - structure, not a fill.
   // :not(.on) names the UNSELECTED state, so it is not read as a selected one.
-  return [...by].filter(([sel, d]) => BUTTONISH.test(sel.replace(/:not\([^)]*\)/g, '')) && !/hamburger-btn[^ ]* span/.test(sel) && /#1a1650/i.test(`${d.background ?? ''} ${d['background-color'] ?? ''}`)).map(([sel]) => sel);
+  // The AUTO toggle's knob is navy by ruling (a knob, not a fill).
+  return [...by].filter(([sel, d]) => BUTTONISH.test(sel.replace(/:not\([^)]*\)/g, '')) && !/hamburger-btn[^ ]* span/.test(sel) && !/\.sw::after$/.test(sel) && /#1a1650/i.test(`${d.background ?? ''} ${d['background-color'] ?? ''}`)).map(([sel]) => sel);
 }
 
 test('NO NAVY-FILLED BUTTON OR SELECTED STATE on the step-3 surfaces', () => {
@@ -135,7 +140,8 @@ test('NO NAVY-FILLED BUTTON OR SELECTED STATE on the step-3 surfaces', () => {
 export function lightOnVolt(css, g) {
   const rs = rules(css).filter((r) => !/data-theme="(?!arcade)/.test(r.sel)).map((r) => ({ sel: r.sel.replace(ARC, ''), body: r.body }));
   const scope = { ...g, ...localVars(css) }; const by = new Map();
-  for (const { sel, body } of rs) { const c = by.get(sel) ?? {}; for (const [k, v] of decls(body)) if (!k.startsWith('--')) c[k] = resolve(v, scope); by.set(sel, c); }
+  // A comma list applies to EACH selector in it: key them one by one.
+  for (const { sel, body } of rs) for (const one of sel.split(',').map((x) => x.trim())) { const c = by.get(one) ?? {}; for (const [k, v] of decls(body)) if (!k.startsWith('--')) c[k] = resolve(v, scope); by.set(one, c); }
   return [...by].filter(([, d]) => isVolt(`${d.background ?? ''} ${d['background-color'] ?? ''}`)
     // inherit/currentColor take the element's ink (navy on this page): only a
     // colour that resolves to a LIGHT hex is flagged.

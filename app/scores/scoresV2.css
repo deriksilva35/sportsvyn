@@ -131,3 +131,8 @@
 .sv2-foot { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; color: var(--muted); font: 500 11px var(--font-mono); display: flex; justify-content: space-between; gap: 8px; }
 .sv2-foot b { color: var(--paper); font-weight: 600; }
 .sv2-foot .go { color: var(--volt); font-weight: 700; }
+
+/* The selected sport chip is a selected state: volt fill, navy ink (volt grammar). */
+:where(:root[data-theme="arcade"]) .sv2-pill.on, :where(:root[data-theme="arcade"]) .sv2-pill.mine.on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+/* An occupied base is a live marker - the volt accent. */
+:where(:root[data-theme="arcade"]) .sv2-diamond .d-b.on { background: var(--tok-accent); border-color: var(--tok-accent); }

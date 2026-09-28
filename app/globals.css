@@ -83,6 +83,7 @@
   --tok-pos-wr: #38BDF8;
   --tok-pos-te: #FB923C;
   --tok-pos-k: #C084FC;
+  --tok-pos-gk: #C98DDF;
   --tok-font-display: var(--font-saira), ui-sans-serif, system-ui, sans-serif;
   --tok-font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --tok-font-num: var(--font-jetbrains-mono), ui-monospace, monospace;
@@ -160,6 +161,8 @@
   --tok-pos-wr: var(--arcade-chip);
   --tok-pos-te: var(--arcade-coin);
   --tok-pos-k: var(--arcade-primary);
+  /* GK (R2 batch 2 ruling): a purple of its own, 6.99:1 on the page. */
+  --tok-pos-gk: #7A3E9D;
   --tok-font-display: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   --tok-font-body: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   --tok-font-num: var(--font-rubik-mono), ui-monospace, monospace;

@@ -387,3 +387,5 @@
   .sch-controlbar { flex-direction: column; align-items: stretch; }
   .sch-scrubwrap { width: 100%; }
 }
+/* The schedule dropdown's selected items are selected states (volt grammar). */
+:where(:root[data-theme="arcade"]) .sch-dd.active .sch-dd-btn, :where(:root[data-theme="arcade"]) .sch-dd-list button.is-on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }

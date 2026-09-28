@@ -270,7 +270,7 @@
 }
 :where(:root[data-theme="arcade"]) .rankings-wrap .pos-chip[data-pos="DEF"] { color: var(--tok-chip); }
 .rankings-wrap .pos-chip[data-pos="GK"] {
-  color: #c98ddf;
+  color: var(--tok-pos-gk);
   border-color: rgba(201,141,223,0.35);
 }
 
