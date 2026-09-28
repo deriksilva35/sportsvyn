@@ -33,53 +33,40 @@ export default function SiteFooter() {
   );
 }
 
+/**
+ * R5: ONE ROW OF PRODUCTS, ONE ROW OF SMALL PRINT. The four headed columns
+ * (Read / Soccer / About / Follow) mapped an editorial site; the product is
+ * games now, and the footer says so in two rows. Every link that left still
+ * resolves - the routes were not removed, only this list of them - and
+ * lib/footerLinks.test.mjs holds that. The three that pointed at "#" (Voice
+ * Bible, Newsletter, RSS) were never destinations.
+ */
+export const FOOTER_PRODUCTS = Object.freeze([
+  ['Play', '/games'], ['Scores', '/scores'], ['Market', '/market'],
+  ['Rankings', '/rankings'], ['Leagues', '/leagues'],
+]);
+export const FOOTER_SMALL = Object.freeze([
+  ['Methodology', '/methodology'], ['Privacy', '/privacy'], ['Terms', '/terms'],
+  ['Contact', 'mailto:hello@sportsvyn.com'],
+]);
+
 function siteFooterMarkup() {
   return (
     <footer className="site-footer">
-      <div className="site-footer-inner">
+      <div className="site-footer-inner site-footer-inner--r5">
         <div className="footer-brand">
           <Wordmark sizeClassName="text-[28px]" />
-          <p className="tagline">Read the Game. Editorial sports coverage that takes the reader seriously.</p>
-          <p className="copyright">© 2026 Sportsvyn · Considered Network</p>
+          <p className="tagline">The arcade of sports games.</p>
         </div>
-        <div className="footer-links">
-          {/* THE DEAD SLOTS ARE WIRED. Daily Card, Rankings and Stats sat on
-              href="#" while the routes behind them existed, and the global-nav
-              unification took the last link to /schedule and /stats with it -
-              both were reachable only from the retiring header. A route with no
-              way in is not a decision anyone made, so the footer is where they
-              land. Market moves here for the same reason: it dropped out of the
-              top-level nav and had only the /my panel link left. */}
-          <div className="footer-col">
-            <h4>Read</h4>
-            <Link href="/">Daily Card</Link>
-            <Link href="/scores">Scores</Link>
-            <Link href="/nfl/fantasy">Fantasy</Link>
-            <Link href="/sim">Mock Draft</Link>
-            <Link href="/nfl/rankings">Rankings</Link>
-            <Link href="/market">Market</Link>
-          </div>
-          <div className="footer-col">
-            {/* The World Cup links retired with the tournament (final
-                19 Jul); the routes still serve for anyone holding a link. */}
-            <h4>Soccer</h4>
-            <Link href="/epl/standings">Premier League</Link>
-            <Link href="/schedule">Schedule</Link>
-            <Link href="/stats">Stats</Link>
-          </div>
-          <div className="footer-col">
-            <h4>About</h4>
-            <Link href="/methodology">Methodology</Link>
-            <a href="#">Voice Bible</a>
-            <a href="/privacy">Privacy</a>
-            <a href="/terms">Terms</a>
-          </div>
-          <div className="footer-col">
-            <h4>Follow</h4>
-            <a href="#">Newsletter</a>
-            <a href="#">RSS</a>
-          </div>
-        </div>
+        <nav className="footer-row" aria-label="Products">
+          {FOOTER_PRODUCTS.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}
+        </nav>
+        <nav className="footer-small" aria-label="About">
+          {FOOTER_SMALL.map(([label, href]) => (href.startsWith('mailto:')
+            ? <a key={href} href={href}>{label}</a>
+            : <Link key={href} href={href}>{label}</Link>))}
+        </nav>
+        <p className="copyright">© 2026 Sportsvyn</p>
       </div>
       <p className="footer-fine">{NFL_NON_AFFILIATION}</p>
     </footer>
