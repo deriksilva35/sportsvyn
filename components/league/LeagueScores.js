@@ -17,7 +17,6 @@
 import Link from 'next/link';
 import Scoreboard from '@/components/gridiron/Scoreboard';
 import { scoresSlice, leagueUnit, moduleHeading } from '@/lib/gridiron/leagueLanding';
-import { plural } from '@/lib/text/plural';
 
 export default function LeagueScores({ leagueSlug, label, games, records, cap = 6, initialTz = null, now = new Date(), signedIn = false }) {
   const { shown, total, overflow } = scoresSlice(games, cap);
@@ -39,7 +38,7 @@ export default function LeagueScores({ leagueSlug, label, games, records, cap = 
         <h2>{moduleHeading(unit, shown, initialTz ?? undefined, now)}</h2>
         {overflow ? (
           <Link className="lgsc-all" href={`/${leagueSlug}/scores`}>
-            All {plural(total, 'game')} →
+            All {total} games →
           </Link>
         ) : null}
       </div>

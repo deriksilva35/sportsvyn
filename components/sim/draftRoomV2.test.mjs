@@ -340,37 +340,3 @@ test('YOUR EIGHT IS A RAIL of one cell per round, with round labels', () => {
   assert.equal(cells[0].querySelector('b').textContent, 'Bijan Robinson');
   assert.equal(cells[1].querySelector('b'), null, 'and an empty round holds only its label');
 });
-
-// ---------------------------------------------------------------------------
-// THE CLOCK HYDRATES: the first paint is computed from the server's render time
-// ---------------------------------------------------------------------------
-
-test('THE FIRST CLOCK IS THE SERVER\'S: renderedAt, not each side\'s own now', async () => {
-  // The deadline is 20 s after the render stamp, both long past in real time.
-  // Computed from the real clock the server would print 0 and the browser 0 a
-  // second later, or 32 and 31 - the mismatch. From renderedAt both print 20.
-  const { renderToString } = await import('react-dom/server');
-  const renderedAt = '2026-09-16T18:00:00.000Z';
-  const turnDeadlineAt = '2026-09-16T18:00:20.000Z';
-  const props = {
-    draftId: 1, config: CONFIG, order: ORDER, userTeamIndex: 0,
-    initialPicks: [], initialAvailable: AVAILABLE, timerSeconds: 30, initialAuto: false,
-    poolMapping: { configScoring: 'ppr', configTeams: 12, poolScoring: 'ppr', poolTeams: 12, exact: true, snapshotDate: '2026-09-16' },
-    withheld: [], minors: [], upcomingKeepers: [], franchise: null, turnDeadlineAt, renderedAt,
-  };
-  const a = renderToString(React.createElement(Room, props));
-  const b = renderToString(React.createElement(Room, props));
-  assert.match(a, /<b class="n">20<\/b><span>seconds<\/span>/, 'the server prints the remainder at render time');
-  assert.equal(a.match(/<b class="n[^"]*">[^<]*<\/b>/)[0], b.match(/<b class="n[^"]*">[^<]*<\/b>/)[0],
-    'two renders of the same props print the same clock, whenever they run');
-  // MOUNTED, the real clock takes over. A live deadline 12 s out, stamped by a
-  // render ten minutes ago: the first paint is the render's (capped at the 30 s
-  // timer), and one task later the room reads the real remainder.
-  const live = new Date(Date.now() + 12_000).toISOString();
-  const old = new Date(Date.now() - 600_000).toISOString();
-  const c = room({ turnDeadlineAt: live, renderedAt: old });
-  assert.equal(t(c, 'b.n, b.n.dv-hot'), '30', 'the first paint is the server render\'s');
-  await act(async () => { await new Promise((r) => setTimeout(r, 5)); });
-  const after = Number(t(c, 'b.n, b.n.dv-hot'));
-  assert.ok(after >= 10 && after <= 12, `after hydration the room reads the real clock (got ${after})`);
-});

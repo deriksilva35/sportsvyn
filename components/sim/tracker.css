@@ -304,6 +304,3 @@
   .trk-p .nm { font-size: 14px; }
   .trk-p .go { padding: 10px 12px; }
 }
-
-/* ARCADE (rebrand R1, behind ARCADE_THEME - app/globals.css). */
-:root[data-theme="arcade"] .trk { --trk-panel: var(--tok-surface); --trk-hair: var(--tok-line); }

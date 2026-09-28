@@ -177,22 +177,3 @@ html[data-clock] body:has(.apptab) { padding-bottom: 0; }
   color: #8A8A86; text-decoration: none;
 }
 .appcrumb:hover { color: #F5F5F2; }
-
-/* ---------------------------------------------------------------------------
-   ARCADE (rebrand R1, behind ARCADE_THEME - app/globals.css). The bar, the app
-   header, the chip, the segment and the draft rows above are written in literal
-   dark values; on the arcade page they take the tokens instead. Token reads
-   only - no new literal (the ratchet in app/tokens.test.mjs).
-   --------------------------------------------------------------------------- */
-:root[data-theme="arcade"] .apptab { background: var(--tok-page); border-top-color: var(--tok-line); }
-:root[data-theme="arcade"] .apptab-i { color: var(--tok-muted); }
-:root[data-theme="arcade"] .apptab-i.on { color: var(--tok-primary); }
-:root[data-theme="arcade"] .gh--app { background: var(--tok-page); border-bottom-color: var(--tok-line); }
-:root[data-theme="arcade"] .gh-app-me { color: var(--tok-muted); }
-:root[data-theme="arcade"] .gh-app-me .in { background: var(--tok-primary); border-color: var(--tok-primary); color: var(--tok-on-primary); }
-:root[data-theme="arcade"] .svseg a { border-color: var(--tok-line); color: var(--tok-muted); }
-:root[data-theme="arcade"] .svseg a.on { color: var(--tok-on-primary); background: var(--tok-primary); border-color: var(--tok-primary); }
-:root[data-theme="arcade"] .yd-row { border-bottom-color: var(--tok-line); }
-:root[data-theme="arcade"] .yd-meta, :root[data-theme="arcade"] .yd-act, :root[data-theme="arcade"] .appcrumb { color: var(--tok-muted); }
-:root[data-theme="arcade"] .yd-grade { color: var(--tok-primary); }
-:root[data-theme="arcade"] .appcrumb:hover { color: var(--tok-ink); }

@@ -10,7 +10,6 @@
 
 import { lockLabel } from '@/lib/pickem/read';
 import { GAME_NAMES } from '@/lib/games/lobby';
-import { plural } from '@/lib/text/plural';
 
 function Card({ eyebrow, isNew, title, sub, cta, ctaClass = '', href, hot = false }) {
   return (
@@ -47,7 +46,7 @@ export default function GamesBand({ daily, yesterday, pickem, weekly, draft }) {
   const pickemSub = pickem?.settled
     ? (pickem.record ? `${pickem.record.correct} of ${pickem.record.played} · settled` : 'Settled')
     : pickem
-      ? `${plural(pickem.total, 'game')} · locks ${lockLabel(pickem.nextKickoff)}`
+      ? `${pickem.total} games · locks ${lockLabel(pickem.nextKickoff)}`
       : null;
 
   return (

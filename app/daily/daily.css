@@ -65,7 +65,7 @@
   text-transform: uppercase; font-size: 26px; line-height: 1.05;
   letter-spacing: -.04em; margin: 0;
 }
-.mod-lede { margin: 0; color: var(--tok-ink-2); font-size: 12px; line-height: 1.55; }
+.mod-lede { margin: 0; color: #CFCFC9; font-size: 12px; line-height: 1.55; }
 .mod-foot, .muted { margin: 0; color: var(--d-mut); font-size: 11px; }
 .err { color: var(--d-live); font-size: 12px; margin: 0; }
 
@@ -351,7 +351,7 @@
  * display:none, so it occupies no space and .daily is still the only thing in
  * the viewport - the 100dvh pin, the single scroll region and the pinned head
  * all behave exactly as before. */
-.daily-shell { display: flex; flex-direction: column; min-height: 100dvh; background: var(--tok-page); }
+.daily-shell { display: flex; flex-direction: column; min-height: 100dvh; background: #0A0A0A; }
 .daily-shell > .daily { flex: 1 1 auto; min-height: 0; }
 
 /* Off by default: outside a round, the global header is the header. */
@@ -595,7 +595,7 @@
 .weekly .pip.full .dot { background: var(--d-ink); color: #fff; }
 .weekly .prog .cap { margin-top: 7px; display: flex; justify-content: space-between; font-family: var(--d-mono); font-size: 10px; color: var(--d-mut); }
 
-.weekly .needline { padding: 10px 0 2px; font-size: 13px; color: var(--tok-ink-2); line-height: 1.4; font-family: var(--d-disp); }
+.weekly .needline { padding: 10px 0 2px; font-size: 13px; color: #CFCFC9; line-height: 1.4; font-family: var(--d-disp); }
 .weekly .needline b { color: var(--d-volt); font-weight: 600; }
 
 .weekly .secl { padding: 14px 0 7px; display: flex; align-items: baseline; justify-content: space-between; }
@@ -634,7 +634,7 @@
 .weekly .opt {
   text-align: center; border: 1px solid var(--d-line);
   border-radius: 9px; background: var(--d-ink); padding: 10px 6px; font-family: var(--d-cond);
-  font-weight: 600; font-size: 12px; color: var(--tok-ink-2);
+  font-weight: 600; font-size: 12px; color: #CFCFC9;
 }
 .weekly .opt.on { border-color: var(--d-volt); color: var(--d-volt); background: rgba(212, 255, 0, .08); }
 
@@ -658,18 +658,3 @@
   font-size: 11px; vertical-align: 1px;
 }
 .row--dropped .dr-count { display: none; }
-
-/* ARCADE (rebrand R1, behind ARCADE_THEME - app/globals.css). The Daily's and
-   the Weekly's shared palette, re-pointed at the tokens on the arcade page. */
-:root[data-theme="arcade"] .daily, :root[data-theme="arcade"] .weekly {
-  --d-ink: var(--tok-page); --d-ink-2: var(--tok-surface); --d-ink-3: var(--tok-surface-2);
-  --d-line: var(--tok-line); --d-volt: var(--tok-accent); --d-paper: var(--tok-ink);
-  --d-jade: var(--tok-up); --d-terra: var(--tok-down); --d-live: var(--tok-live); --d-mut: var(--tok-muted);
-}
-
-/* ARCADE, TWO LITERALS THE PALETTE ABOVE CANNOT REACH (rebrand R2, 2b item 2).
-   The Weekly's sub-line is #B8B8B3 - 1.9:1 on the white page - and a full
-   pip's dot is #fff on --d-ink, which is itself white here. Both keep their
-   dark values; the arcade page reads the roles. */
-:root[data-theme="arcade"] .weekly .yr .sub { color: var(--tok-muted); }
-:root[data-theme="arcade"] .weekly .pip.full .dot { color: var(--tok-ink); }

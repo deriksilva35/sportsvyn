@@ -111,12 +111,9 @@ test('THE --volt-dim DISCRIMINATOR SURVIVED THIS RELAY, deliberately', () => {
   // Merging it into [data-surface="ink"] now that paper is gone would silently
   // repaint ~29 call sites. That collapse is its own relay; this pins that the
   // two blocks are still separate so the merge cannot happen by accident.
-  // AT A LINE START: the arcade theme (rebrand R1) adds a
-  // ':root[data-theme="arcade"] [data-surface] {' block above, which a bare
-  // substring search would take for this one.
-  const shared = GLOBALS.indexOf('\n[data-surface] {') + 1;
-  const ink = GLOBALS.indexOf('\n[data-surface="ink"] {') + 1;
-  assert.ok(shared > 0 && ink > 0 && shared < ink, 'both blocks exist, shared first');
+  const shared = GLOBALS.indexOf('[data-surface] {');
+  const ink = GLOBALS.indexOf('[data-surface="ink"] {');
+  assert.ok(shared !== -1 && ink !== -1 && shared < ink, 'both blocks exist, shared first');
   const sharedBlock = GLOBALS.slice(shared, GLOBALS.indexOf('\n}', shared));
   assert.match(sharedBlock, /--volt-dim: #8FAA00/);
   assert.match(GLOBALS.slice(0, shared), /--volt-dim: var\(--color-volt-dim\)/, ':root keeps its own value');
@@ -131,17 +128,11 @@ test('.read-prose is an ink module, and its ground actually resolves', () => {
   assert.doesNotMatch(r, /color: var\(--ink\)/);
   assert.match(r, /border-left: 4px solid var\(--volt\)/, 'the volt edge stays');
   assert.match(r, /border-radius: 12px/);
-  // THE GROUND AND THE RULE RESOLVE. This used to demand hard-coded fallbacks
-  // (var(--ink-2, #141414)) because --ink-2 and --line once lived only in the
-  // admin console; they are :root tokens since v1.2 (the MODULE RAMP test below)
-  // and, since tokens v2, route through --tok-*. Rebrand R2 strips the dead
-  // fallbacks, so what is asserted now is the thing the fallback protected:
-  // both tokens are read here and both resolve at :root.
-  // RAMP RENAME (rebrand R2, relay mon-3): the swept files read the ROLES, not
-  // the ramp aliases - the card ground is --tok-surface, the rule --tok-line.
-  assert.match(r, /background: var\(--tok-surface\)/, 'the card ground is the surface role');
-  assert.match(r, /var\(--tok-line\)/);
-  assert.ok(rootValue('--tok-surface') && rootValue('--tok-line'), 'and both resolve at :root, so the card cannot vanish');
+  // --ink-2 and --line are NOT global tokens - they live only in
+  // app/admin/console/console.css, which no route outside /admin/console
+  // imports. Bare, they resolve to nothing and the card goes transparent.
+  assert.match(r, /var\(--ink-2, #141414\)/, '--ink-2 must carry a fallback or the card vanishes');
+  assert.match(r, /var\(--line, #2a2a2a\)/);
   assert.match(sim, /\.read-prose p \{[^}]*color: var\(--paper-warm\)/, 'the prose is full paper-warm');
 });
 
@@ -193,8 +184,7 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     'components/wire/wire.css': 6,
     // The Games tab v2 (GAMES TAB v2 relay), written on the global tokens.
     // The Pick'em board's sport switch (SPORT SWITCH addendum).
-    // REBRAND R2: the swept files (SWEPT, below) read the ROLES now - no ramp
-    // alias at all - so they have no entry here; pickem's one is gone with them.
+    'app/pickem/pickem.css': 1,
     // app/games/lobbyV2.css was 22 and is gone with the v2 lobby (GAMES v3);
     // lobbyV3.css is written entirely on the global tokens and so has no
     // entry at all, which is the guard's own preferred answer.
@@ -268,10 +258,7 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   // until this route serves the same contest.
   // 138 -> 139 with the league join/create chips (THE RUN - join by code in the
   // app): one ground, on the code input.
-  // RAMP RENAME (rebrand R2, relay mon-3): 268 were 130 in the nine swept files
-  // (now roles, 0) and 138 in the rest - a CEILING from here, which the sweep
-  // only lowers as it reaches each file.
-  assert.ok(Object.values(found).reduce((a, b) => a + b, 0) <= 138,
+  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 139,
     '18 were broken before the promotion; the rest were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.
@@ -328,19 +315,4 @@ test('THE LEDE BAND IS INK, and its text can be read on it', () => {
   const h1 = gi.slice(gi.indexOf('.gi-lede h1 {'), gi.indexOf('.gi-lede p {'));
   assert.match(h1, /color: var\(--paper\)/);
   assert.doesNotMatch(h1, /color: var\(--ink\)/);
-});
-
-// THE SWEPT FILES READ ROLES, NOT RAMP ALIASES (rebrand R2, relay mon-3).
-// var(--ink-2) / var(--ink-3) / var(--line) in these nine is the pre-token
-// naming; each has a role (--tok-surface / --tok-surface-2 / --tok-line), and
-// a new alias here is a regression of the sweep, not a style choice.
-const SWEPT = ['app/games/lobbyV3.css', 'components/daily/season/seasonBoard.css', 'app/pickem/pickem.css',
-  'app/weekly/weekly.css', 'components/sim/sim.css', 'components/games/grade.css',
-  'components/gridiron/drivestrip.css', 'app/leagues/leagues.css', 'components/onboarding/onboarding.css'];
-test('NO RAMP ALIAS in the swept files - the roles only', () => {
-  const hits = SWEPT.flatMap((f) => {
-    const n = [...stripCss(readFileSync(path.join(REPO, f), 'utf8')).matchAll(/var\(--(ink-2|ink-3|line)\)/g)].length;
-    return n ? [`${f}: ${n}`] : [];
-  });
-  assert.deepEqual(hits, [], 'use --tok-surface / --tok-surface-2 / --tok-line');
 });

@@ -9,7 +9,7 @@
      board behind it all read through, which made the sheet look like a
      misplaced card rather than a step you have to complete. It is a required
      step; the background should not offer itself as an alternative. */
-  background: color-mix(in srgb, var(--tok-page) 97%, transparent);
+  background: rgba(6, 6, 6, .97);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   /* Above the app tab bar AND clear of the home indicator: the sheet is modal,
@@ -20,34 +20,34 @@
 
 .onb {
   width: 100%; max-width: 460px;
-  background: var(--tok-page); border: 1px solid var(--tok-line); border-radius: 16px;
+  background: #0D0D0D; border: 1px solid #2E2E2E; border-radius: 16px;
   padding: 20px 18px calc(18px + env(safe-area-inset-bottom));
-  color: var(--tok-ink);
+  color: #F5F5F2;
 }
 
 /* Three marks, not a percentage. The reader can see the whole flow is short. */
 .onb-rail { display: flex; gap: 5px; margin-bottom: 16px; }
-.onb-rail i { flex: 1; height: 3px; border-radius: 2px; background: var(--tok-line); }
-.onb-rail i.on { background: var(--tok-accent); }
+.onb-rail i { flex: 1; height: 3px; border-radius: 2px; background: #2E2E2E; }
+.onb-rail i.on { background: #D4FF00; }
 
 .onb-kicker {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--tok-muted); margin-bottom: 6px;
+  color: #8A8A86; margin-bottom: 6px;
 }
 .onb-h { font-size: 22px; line-height: 1.2; letter-spacing: -.02em; margin: 0 0 8px; }
-.onb-lede { font-size: 13px; line-height: 1.55; color: var(--tok-muted); margin: 0 0 14px; }
+.onb-lede { font-size: 13px; line-height: 1.55; color: #8A8A86; margin: 0 0 14px; }
 
 .onb-in {
   width: 100%; box-sizing: border-box; padding: 12px;
-  background: var(--tok-surface); color: var(--tok-ink);
-  border: 1px solid var(--tok-line); border-radius: 10px;
+  background: #141414; color: #F5F5F2;
+  border: 1px solid #2E2E2E; border-radius: 10px;
   /* 16px MINIMUM on iOS or Safari zooms the page on focus - and this sheet is
      the very first thing a new reader touches. */
   font-size: 16px; font-family: inherit;
 }
-.onb-in:focus { outline: none; border-color: var(--tok-accent); }
-.onb-err { color: var(--tok-down); font-size: 12px; margin: 8px 0 0; }
+.onb-in:focus { outline: none; border-color: #D4FF00; }
+.onb-err { color: #EF4444; font-size: 12px; margin: 8px 0 0; }
 
 /* EQUAL WEIGHT IS THE WHOLE POINT of this row. Skip is the same element, the
    same size and the same row as the affirmative - not a grey link beneath a
@@ -56,16 +56,16 @@
 .onb-row { display: flex; gap: 10px; margin-top: 16px; }
 .onb-btn {
   flex: 1; min-height: 46px; padding: 12px;
-  background: transparent; color: var(--tok-ink);
-  border: 1px solid var(--tok-line); border-radius: 10px;
+  background: transparent; color: #F5F5F2;
+  border: 1px solid #2E2E2E; border-radius: 10px;
   font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
 }
-.onb-btn--go { background: var(--tok-accent); color: var(--tok-page); border-color: var(--tok-accent); }
+.onb-btn--go { background: #D4FF00; color: #0A0A0A; border-color: #D4FF00; }
 .onb-btn:disabled { opacity: .5; cursor: default; }
 
 /* The step-1 contract line. Quieter than the lede - it is a reassurance, not
    an instruction, and it sits under the control it describes. */
-.onb-note { font-size: 11px; color: var(--tok-muted); margin: 10px 0 0; }
+.onb-note { font-size: 11px; color: #8A8A86; margin: 10px 0 0; }
 
 /* ===========================================================================
    THE CLAIM UI, STYLED HERE - the cause, not the instance.
@@ -89,38 +89,38 @@
    fixed prefix rather than something the reader has to type. */
 .onb .hin {
   display: flex; align-items: center; gap: 2px;
-  background: var(--tok-surface); border: 1px solid var(--tok-line); border-radius: 10px;
+  background: #141414; border: 1px solid #2E2E2E; border-radius: 10px;
   padding: 0 12px; margin-top: 4px;
 }
-.onb .hin:focus-within { border-color: var(--tok-accent); }
-.onb .hin .at { color: var(--tok-muted); font-size: 17px; font-weight: 700; }
+.onb .hin:focus-within { border-color: #D4FF00; }
+.onb .hin .at { color: #8A8A86; font-size: 17px; font-weight: 700; }
 .onb .hin input {
   flex: 1; min-width: 0; background: none; border: 0; outline: none;
-  color: var(--tok-ink); font-family: inherit; font-weight: 700;
+  color: #F5F5F2; font-family: inherit; font-weight: 700;
   /* 16px MINIMUM or iOS zooms the page on focus - and this is the first field
      a new reader ever touches. */
   font-size: 17px; padding: 13px 0;
 }
-.onb .hin input::placeholder { color: var(--tok-muted); font-weight: 400; }
-.onb .hin--ok  { border-color: var(--tok-up); }
-.onb .hin--bad { border-color: var(--tok-down); }
+.onb .hin input::placeholder { color: #4A4A48; font-weight: 400; }
+.onb .hin--ok  { border-color: #4ADE80; }
+.onb .hin--bad { border-color: #EF4444; }
 
 /* Availability line: reserves its height so the button never jumps as you type. */
 .onb .avail { font-size: 12px; min-height: 16px; margin-top: 6px; }
-.onb .avail--ok   { color: var(--tok-up); }
-.onb .avail--bad  { color: var(--tok-down); }
-.onb .avail--wait { color: var(--tok-muted); }
-.onb .muted { font-size: 11px; color: var(--tok-muted); margin-top: 4px; }
+.onb .avail--ok   { color: #4ADE80; }
+.onb .avail--bad  { color: #EF4444; }
+.onb .avail--wait { color: #8A8A86; }
+.onb .muted { font-size: 11px; color: #8A8A86; margin-top: 4px; }
 
 /* The claim button: a real full-width control, volt on ink, visibly dead until
    the handle is actually available. */
 .onb .btn--volt {
   display: block; width: 100%; min-height: 48px;
-  background: var(--tok-accent); color: var(--tok-page);
+  background: #D4FF00; color: #0A0A0A;
   border: 0; border-radius: 10px;
   font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
 }
-.onb .btn--volt:disabled { background: var(--tok-line); color: var(--tok-muted); cursor: default; }
+.onb .btn--volt:disabled { background: #2E2E2E; color: #6A6A68; cursor: default; }
 
 /* Step 4's toggle - a labelled checkbox row, native control kept because the
    OS prompt that follows is native too and a custom switch promising a system
@@ -128,16 +128,16 @@
 .onb-toggle {
   display: flex; align-items: center; gap: 10px;
   margin: 14px 0 4px; padding: 12px 14px;
-  border: 1px solid var(--tok-line); border-radius: 10px;
-  font-size: 14px; color: var(--tok-ink);
+  border: 1px solid #232323; border-radius: 10px;
+  font-size: 14px; color: #F5F5F2;
 }
-.onb-toggle input { width: 18px; height: 18px; accent-color: var(--tok-accent); }
+.onb-toggle input { width: 18px; height: 18px; accent-color: #D4FF00; }
 
 /* The one-time post-entry nudge (components/push/AnswerNudge). Lives here
    because it borrows the sheet's button pair - one look for one decision,
    wherever it is asked. */
-.push-nudge { border: 1px solid var(--tok-line); border-radius: 12px; padding: 16px; }
-.push-nudge-q { font-size: 15px; color: var(--tok-ink); margin: 0 0 12px; font-weight: 600; }
+.push-nudge { border: 1px solid #232323; border-radius: 12px; padding: 16px; }
+.push-nudge-q { font-size: 15px; color: #F5F5F2; margin: 0 0 12px; font-weight: 600; }
 
 /* THE PUSH SWITCH (components/push/NotificationsRow) - lives here because
    both account surfaces already load this sheet via OnboardingGate. An
@@ -147,19 +147,19 @@
 .pushsw-wrap { display: inline-flex; align-items: center; gap: 9px; }
 .pushsw {
   position: relative; width: 44px; height: 26px; flex: 0 0 auto;
-  border-radius: 999px; border: 1px solid var(--tok-line);
-  background: var(--tok-surface-2); cursor: pointer; padding: 0;
+  border-radius: 999px; border: 1px solid #2A2A2A;
+  background: #1A1A1A; cursor: pointer; padding: 0;
   transition: background .15s, border-color .15s;
 }
 .pushsw .knob {
   position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
-  border-radius: 50%; background: var(--tok-muted); transition: transform .15s, background .15s;
+  border-radius: 50%; background: #8A8A86; transition: transform .15s, background .15s;
 }
-.pushsw.on { background: var(--tok-accent); border-color: var(--tok-accent); }
-.pushsw.on .knob { transform: translateX(18px); background: var(--tok-page); }
+.pushsw.on { background: #D4FF00; border-color: #D4FF00; }
+.pushsw.on .knob { transform: translateX(18px); background: #0A0A0A; }
 .pushsw.busy { opacity: .5; }
 .pushsw:disabled { cursor: default; }
 .pushsw-state {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
-  font-size: 10px; letter-spacing: .04em; color: var(--tok-muted); white-space: nowrap;
+  font-size: 10px; letter-spacing: .04em; color: #8A8A86; white-space: nowrap;
 }
