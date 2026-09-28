@@ -28,7 +28,8 @@
 .rn-crow { display: flex; align-items: center; gap: 12px; }
 .rn-clk { display: flex; gap: 3px; align-items: center; }
 .rn-dg { width: 29px; height: 42px; border-radius: 4px; background: var(--ink-3); box-shadow: inset 0 0 0 1px #000; font: 800 29px/42px var(--font-mono); text-align: center; font-style: normal; position: relative; overflow: hidden; }
-.rn-dg::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: #000; }
+:where(:root[data-theme="arcade"]) .rn-dg { box-shadow: inset 0 0 0 1px var(--tok-line); }
+.rn-dg::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--tok-page); }
 .rn-cl { font: 800 25px var(--font-mono); color: var(--muted-dim); }
 .rn-lbl { font: 600 9px var(--font-mono); color: var(--muted-dim); letter-spacing: .11em; text-transform: uppercase; line-height: 1.3; }
 .rn-lbl b { display: block; color: var(--muted); font-size: 10px; letter-spacing: 0; text-transform: none; }
@@ -42,7 +43,7 @@
 .rn-rd { flex: 1; text-align: center; }
 .rn-rd i { display: block; height: 4px; border-radius: 99px; background: var(--ink-3); border: 1px solid var(--rule-dim); }
 .rn-rd.on i { background: var(--volt); border-color: var(--volt); }
-.rn-rd.done i { background: var(--jade, #2A8A4F); border-color: var(--jade, #2A8A4F); }
+.rn-rd.done i { background: var(--jade, var(--tok-up)); border-color: var(--jade, var(--tok-up)); }
 .rn-rd b { display: block; font: 600 8px var(--font-mono); letter-spacing: .08em; color: var(--muted-dim); margin-top: 4px; text-transform: uppercase; }
 .rn-rd.on b { color: var(--volt); }
 .rn-rd.done b { color: var(--muted); }
@@ -55,7 +56,7 @@
 .rn-stp b { font: 700 9px var(--font-mono); letter-spacing: .12em; color: var(--muted-dim); text-transform: uppercase; }
 .rn-stp.on i { border-color: var(--volt); background: var(--volt); color: var(--ink); }
 .rn-stp.on b { color: var(--volt); }
-.rn-stp.done i { border-color: var(--jade, #2A8A4F); color: var(--jade, #2A8A4F); }
+.rn-stp.done i { border-color: var(--jade, var(--tok-up)); color: var(--jade, var(--tok-up)); }
 .rn-stp.done b { color: var(--muted); }
 .rn-arw { flex: 1; height: 1px; background: var(--rule-dim); }
 .rn-note { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
@@ -88,7 +89,8 @@
    app/october/october.css. Nine tiles of ~52px is the narrowest field on the
    product, so an unbounded name here spills soonest. */
 .rn-field { flex: 0 0 172px; min-width: 0; border-radius: 14px; padding: 10px 7px; border: 1px solid var(--rule-dim);
-  background: repeating-linear-gradient(45deg, transparent 0 40px, rgba(255,255,255,.035) 40px 41px), linear-gradient(160deg, #101a12, #0a0f0b); }
+  background: repeating-linear-gradient(45deg, transparent 0 40px, rgba(255,255,255,.035) 40px 41px), linear-gradient(160deg, #101a12, var(--tok-page)); }
+:where(:root[data-theme="arcade"]) .rn-field { background: repeating-linear-gradient(45deg, transparent 0 40px, rgba(255,255,255,.035) 40px 41px), linear-gradient(160deg, var(--tok-up), var(--tok-page)); }
 /* A 3x3 GRID. Nine slots, two arms then seven bats, and no slot is wider
    than another - the mock draws a square field, not a lineup card. */
 .rn-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; min-width: 0; }
@@ -101,13 +103,16 @@
 /* AN ELIMINATED CLUB'S SLOT IS MARKED, AND KEEPS ITS POINTS. Nothing is
    zeroed - the relay's rule, and the mock's own .slot.out. */
 .rn-slot.out { border-color: #3a1a1a; }
+:where(:root[data-theme="arcade"]) .rn-slot.out { border-color: var(--tok-live); }
 .rn-slot.out .rn-nm { color: var(--muted); }
 .rn-pts.out { color: var(--muted-dim); }
 .rn-slot.p .rn-pos { color: #38BDF8; }
+:where(:root[data-theme="arcade"]) .rn-slot.p .rn-pos { color: var(--tok-chip); }
 .rn-slot.b .rn-pos { color: #4ADE80; }
+:where(:root[data-theme="arcade"]) .rn-slot.b .rn-pos { color: var(--tok-up); }
 .rn-slot.elig { border-style: solid; border-color: var(--volt); background: rgba(212,255,0,.09); box-shadow: 0 0 14px rgba(212,255,0,.3); }
 .rn-slot.filled { border-style: solid; background: var(--ink-2); }
-.rn-slot.locked { border-color: var(--jade, #2A8A4F); }
+.rn-slot.locked { border-color: var(--jade, var(--tok-up)); }
 .rn-nm { font: 700 10px var(--font-display); text-transform: uppercase; line-height: 1.05; text-align: center; padding: 0 2px;
   max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rn-tm { font: 600 8px var(--font-mono); color: var(--muted); }
@@ -119,14 +124,14 @@
 /* THE LOCKED BADGE, October's badge at October's corner. Every tile on this 3x3
    is under 90px, so in practice it is always the dot - the word is here because
    the rule is the same rule, not because this grid will ever be wide enough. */
-.rn-lk { position: absolute; top: 2px; right: 5px; color: var(--jade, #2A8A4F); font: 700 8px var(--font-mono); line-height: 1; }
+.rn-lk { position: absolute; top: 2px; right: 5px; color: var(--jade, var(--tok-up)); font: 700 8px var(--font-mono); line-height: 1; }
 .rn-lk i { display: none; }
 @container (max-width: 89px) {
   .rn-lk b { display: none; }
-  .rn-lk i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--jade, #2A8A4F); }
+  .rn-lk i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--jade, var(--tok-up)); }
 }
 .rn-x { position: absolute; top: 0; right: 3px; color: var(--muted-dim); font: 700 12px var(--font-mono); background: none; border: 0; cursor: pointer; padding: 2px 4px; }
-.rn-lk { position: absolute; top: 2px; right: 5px; color: var(--jade, #2A8A4F); font: 700 8px var(--font-mono); }
+.rn-lk { position: absolute; top: 2px; right: 5px; color: var(--jade, var(--tok-up)); font: 700 8px var(--font-mono); }
 
 .rn-panel { flex: 1 1 auto; min-width: 0; border: 1px solid var(--rule-dim); border-radius: 13px; background: var(--ink-2); display: flex; flex-direction: column; }
 .rn-pan-h { display: flex; align-items: center; gap: 7px; padding: 7px 10px; border-bottom: 1px solid var(--rule-dim); background: var(--ink-3); border-radius: 12px 12px 0 0; }
@@ -145,7 +150,9 @@
 .rn-prow.gone { opacity: .26; cursor: default; }
 .rn-pb { width: 24px; height: 18px; border-radius: 5px; display: grid; place-items: center; font: 800 8px var(--font-display); color: var(--ink); flex: 0 0 auto; }
 .rn-pb.p { background: #38BDF8; }
+:where(:root[data-theme="arcade"]) .rn-pb.p { background: var(--tok-chip); }
 .rn-pb.b { background: #4ADE80; }
+:where(:root[data-theme="arcade"]) .rn-pb.b { background: var(--tok-up); }
 .rn-who { min-width: 0; }
 .rn-who b { display: block; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rn-who small { display: block; color: var(--muted); font: 500 9px var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -161,7 +168,7 @@
 .rn-pace b { color: var(--paper); font-weight: 700; }
 .rn-lock { margin-left: auto; background: var(--volt); color: var(--ink); border: 0; border-radius: 99px; padding: 10px 18px; font: 700 14px system-ui; text-decoration: none; }
 .rn-lock:disabled { background: var(--ink-3); color: var(--muted-dim); }
-.rn-rcpt { margin-left: auto; font: 700 11px var(--font-mono); color: var(--jade, #2A8A4F); letter-spacing: .06em; }
+.rn-rcpt { margin-left: auto; font: 700 11px var(--font-mono); color: var(--jade, var(--tok-up)); letter-spacing: .06em; }
 .rn-none { padding: 28px 12px; font: 500 13px/1.6 var(--font-mono); color: var(--muted); }
 
 /* the board */
@@ -197,6 +204,7 @@
 .rn-lg.on { background: var(--volt); color: var(--ink); border-color: var(--volt); font-weight: 700; }
 /* The pool bar is three parts here, not two: used, alive, eliminated. */
 .rb-bar .d { background: #3a1a1a; }
+:where(:root[data-theme="arcade"]) .rb-bar .d { background: var(--tok-live); }
 /* A CLUB THAT HAS STARTED THE ROUND is out of everyone's pool - dimmed like a
    bye, but still openable so its panel can say why. */
 .rn-tc.started { opacity: .45; }
@@ -205,7 +213,8 @@
    picked round's column is bold, a gap row marks elided ranks, and the round
    chips sit above the table. */
 .rb-lr .r.live { color: var(--volt, #D4FF00); font-weight: 700; }
-.rb-lr .r.on { font-weight: 700; color: var(--paper, #f5f5f2); }
+:where(:root[data-theme="arcade"]) .rb-lr .r.live { color: var(--volt, var(--tok-primary)); }
+.rb-lr .r.on { font-weight: 700; color: var(--paper, var(--tok-ink)); }
 .rb-lr.rb-gap { color: var(--muted-dim); text-align: center; }
 .rb-rounds { margin-top: 0; }
-.rn-lg.live { border-color: var(--volt, #D4FF00); }
+.rn-lg.live { border-color: var(--volt, var(--tok-action)); }

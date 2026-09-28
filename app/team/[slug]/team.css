@@ -672,7 +672,7 @@
 .player-photo {
   width: 72px;
   height: 90px;
-  background: linear-gradient(135deg, #2A2A2A 0%, #1A1A1A 50%, #0E0E0E 100%);
+  background: linear-gradient(135deg, var(--tok-surface-2) 0%, var(--tok-surface-2) 50%, var(--tok-page) 100%);
   border: 1px solid var(--rule-dark);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
@@ -868,10 +868,12 @@
 /* ============ FLAGS — gradient renditions for seeded teams ============ */
 .flag-arg, .flag-mini.flag-arg { background: linear-gradient(180deg, #74ACDF 33%, #FFFFFF 33% 66%, #74ACDF 66%); }
 .flag-aus, .flag-mini.flag-aus { background: #00008B; position: relative; }
+:where(:root[data-theme="arcade"]) .flag-aus, :where(:root[data-theme="arcade"]) .flag-mini.flag-aus { background: var(--tok-chip); }
 .flag-aus::after, .flag-mini.flag-aus::after {
   content: '★'; position: absolute; top: 0; right: 0;
   color: #FFFFFF; font-size: 8px; padding: 0 1px; line-height: 1;
 }
+:where(:root[data-theme="arcade"]) .flag-aus::after, :where(:root[data-theme="arcade"]) .flag-mini.flag-aus::after { color: var(--tok-ink); }
 .flag-nga, .flag-mini.flag-nga { background: linear-gradient(90deg, #008751 33%, #FFFFFF 33% 66%, #008751 66%); }
 .flag-cro, .flag-mini.flag-cro { background: linear-gradient(180deg, #FF0000 50%, #FFFFFF 50%); }
 .flag-mex, .flag-mini.flag-mex { background: linear-gradient(90deg, #006847 33%, #FFFFFF 33% 66%, #CE1126 66%); }
@@ -881,7 +883,9 @@
   top: 50%; left: 50%; transform: translate(-50%, -50%);
   width: 50%; height: 65%; background: #BC002D; border-radius: 50%;
 }
+:where(:root[data-theme="arcade"]) .flag-jpn::after, :where(:root[data-theme="arcade"]) .flag-mini.flag-jpn::after { background: var(--tok-live); }
 .flag-isl, .flag-mini.flag-isl { background: #003897; position: relative; }
+:where(:root[data-theme="arcade"]) .flag-isl, :where(:root[data-theme="arcade"]) .flag-mini.flag-isl { background: var(--tok-chip); }
 .flag-isl::after, .flag-mini.flag-isl::after {
   content: ''; position: absolute; inset: 0;
   background:

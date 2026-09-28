@@ -525,3 +525,5 @@
 :where(:root[data-theme="arcade"]) .sbd-btn:not(.sbd-ghost) { background: var(--tok-action); color: var(--tok-on-action); }
 /* The dashed clock box sits on the hero wash. */
 :where(:root[data-theme="arcade"]) .sbd-rnote { background: var(--tok-hero-wash); }
+/* THE READER'S OWN ROW: a light volt tint with navy ink (volt grammar, batch 2 ruling). */
+:where(:root[data-theme="arcade"]) .sbd-lr--you { background: color-mix(in srgb, var(--tok-action) 30%, var(--tok-page)); }

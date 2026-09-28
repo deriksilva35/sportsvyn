@@ -93,12 +93,15 @@
   content: ''; position: absolute; top: 0; left: 0;
   width: 40%; height: 53%; background: #3C3B6E;
 }
+:where(:root[data-theme="arcade"]) .flag-usa::after { background: var(--tok-chip); }
 .flag-sen { background: linear-gradient(90deg, #00853F 33%, #FDEF42 33% 66%, #E31B23 66%); position: relative; }
+:where(:root[data-theme="arcade"]) .flag-sen { background: linear-gradient(90deg, var(--tok-up) 33%, var(--tok-coin) 33% 66%, var(--tok-live) 66%); }
 .flag-sen::after {
   content: '★'; position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%); color: #00853F;
   font-size: 0.65em; line-height: 1;
 }
+:where(:root[data-theme="arcade"]) .flag-sen::after { color: var(--tok-up); }
 
 /* ============ BREADCRUMB ============ */
 .breadcrumb {
@@ -417,6 +420,7 @@
 }
 .stream-event-tag.GOAL    { background: var(--jade);     color: var(--paper-warm); }
 .stream-event-tag.YELLOW  { background: #C8A800;          color: var(--ink); }
+:where(:root[data-theme="arcade"]) .stream-event-tag.YELLOW { background: var(--tok-coin); }
 .stream-event-tag.RED     { background: var(--terra);    color: var(--paper-warm); }
 .stream-event-tag.SUB     { background: var(--charcoal); color: var(--paper-warm); border: 1px solid var(--rule-dark); }
 .stream-event-tag.CHANCE  { background: var(--volt);     color: var(--ink); }
@@ -1167,10 +1171,11 @@
   max-width: 480px;
   aspect-ratio: 2 / 3;
   background:
-    linear-gradient(180deg, #0b1612 0%, #060c0a 100%);
+    linear-gradient(180deg, #0b1612 0%, var(--tok-page) 100%);
   border: 1px solid var(--rule-darker);
   margin: 0 auto 24px;
 }
+:where(:root[data-theme="arcade"]) .lineup-pitch { background: linear-gradient(180deg, var(--tok-up) 0%, var(--tok-page) 100%); }
 .lineup-pitch-markings {
   position: absolute;
   inset: 0;
@@ -1844,6 +1849,7 @@
 .km-icon.goal         { border-color: var(--volt); }
 .km-icon.goal svg     { color: var(--volt); }
 .km-icon.yellow svg   { color: #E8C547; }
+:where(:root[data-theme="arcade"]) .km-icon.yellow svg { color: var(--tok-coin); }
 .km-icon.red          { border-color: var(--live-red); }
 .km-icon.red svg      { color: var(--live-red); }
 .km-icon.sub svg      { color: var(--muted-light); }
@@ -1942,6 +1948,7 @@
     -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
     mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
   }
+:where(:root[data-theme="arcade"]) .tab-bar { -webkit-mask-image: linear-gradient(to right, var(--tok-line) calc(100% - 26px), transparent 100%); mask-image: linear-gradient(to right, var(--tok-line) calc(100% - 26px), transparent 100%); }
   /* At the far right there is nothing more to promise - drop the fade so the
      last tab is not permanently dimmed. */
   .tab-bar.at-end {

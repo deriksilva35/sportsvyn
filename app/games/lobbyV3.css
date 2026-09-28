@@ -162,3 +162,5 @@
 :where(:root[data-theme="arcade"]) .gv-g[data-row="weekly"] .gv-r b { display: inline-block; background: var(--tok-action); color: var(--tok-on-action); border-radius: 8px; padding: 3px 7px; }
 /* The MLB tiles keep their green, open or done. */
 :where(:root[data-theme="arcade"]) .gv-g[data-row="october"] .gv-ic, :where(:root[data-theme="arcade"]) .gv-g[data-row="run"] .gv-ic { background: var(--tok-up); border-color: var(--tok-up); color: var(--tok-page); }
+/* THE READER'S OWN ROW: a light volt tint with navy ink (volt grammar, batch 2 ruling). */
+:where(:root[data-theme="arcade"]) .gv-tr.you { background: color-mix(in srgb, var(--tok-action) 30%, var(--tok-page)); }

@@ -44,6 +44,7 @@
    own seat - the one distinction that must never be misread. */
 .trk-who { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 30px; letter-spacing: -.03em; color: var(--volt); line-height: 1.05; }
 .trk-who.me { color: #fff; }
+:where(:root[data-theme="arcade"]) .trk-who.me { color: var(--tok-ink); }
 .trk-who .pick { font-family: var(--font-saira-cond); font-style: normal; font-weight: 500; font-size: 13px; letter-spacing: .14em; color: var(--muted); margin-left: 8px; }
 
 /* UNDO is ALWAYS visible - it is what replaces a confirm step. One tap commits,
@@ -58,6 +59,7 @@
 .trk-search { margin: 12px 16px 0; display: flex; align-items: center; gap: 8px; background: var(--trk-panel); border: 1px solid var(--rule-dim); padding: 12px 14px; }
 .trk-search .q { color: var(--muted-dim); }
 .trk-search input { background: none; border: none; outline: none; color: #fff; font-family: var(--font-jetbrains-mono), monospace; font-size: 15px; width: 100%; min-width: 0; }
+:where(:root[data-theme="arcade"]) .trk-search input { color: var(--tok-ink); }
 .trk-search input::placeholder { color: var(--muted-dim); }
 .trk-hint { font-family: var(--font-saira-cond); font-size: 10px; letter-spacing: .12em; color: var(--muted-dim); white-space: nowrap; }
 .trk-pos { display: flex; gap: 6px; padding: 10px 16px 4px; overflow-x: auto; }
@@ -73,6 +75,7 @@
 .trk-p { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--trk-hair); }
 /* The sort-value rail is .nrail - sized in numcols.css, never here. */
 .trk-p .nm { font-weight: 700; color: #fff; font-size: 15px; }
+:where(:root[data-theme="arcade"]) .trk-p .nm { color: var(--tok-ink); }
 .trk-p .tag { font-family: var(--font-saira-cond); font-size: 11px; letter-spacing: .1em; color: var(--muted-dim); }
 .trk-gap { font-size: 11px; font-weight: 700; margin-left: 2px; font-family: var(--font-jetbrains-mono), monospace; }
 .trk-gap.val { color: var(--jade); }
@@ -92,6 +95,7 @@
 .trk-b .team { font-family: var(--font-saira-cond); font-size: 12px; letter-spacing: .12em; color: var(--muted); width: 64px; flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .trk-b .team.me { color: var(--volt); }
 .trk-b .nm { font-weight: 700; color: #fff; font-size: 14px; }
+:where(:root[data-theme="arcade"]) .trk-b .nm { color: var(--tok-ink); }
 .trk-b .pt { font-family: var(--font-saira-cond); font-size: 10px; letter-spacing: .1em; color: var(--muted-dim); }
 .trk-b .v { margin-left: auto; font-size: 11px; font-weight: 700; flex: none; }
 .trk-b .v.val { color: var(--jade); }
@@ -109,6 +113,7 @@
 .trk-need .line b { color: var(--volt); font-style: normal; font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 12.5px; }
 .trk-ba { display: flex; align-items: center; gap: 10px; padding-top: 10px; }
 .trk-ba .nm { font-weight: 700; color: #fff; font-size: 14px; }
+:where(:root[data-theme="arcade"]) .trk-ba .nm { color: var(--tok-ink); }
 .trk-ba .tag { font-family: var(--font-saira-cond); font-size: 11px; color: var(--muted-dim); }
 .trk-ba .gap { margin-left: auto; color: var(--jade); font-weight: 700; font-size: 12px; flex: none; }
 .trk-ba .gap.gone { color: var(--muted-dim); }
@@ -118,6 +123,7 @@
 .trk-slot { display: flex; align-items: baseline; gap: 12px; padding: 9px 16px; border-bottom: 1px solid var(--trk-hair); }
 .trk-slot .pos-t { font-family: var(--font-saira-cond); font-size: 11px; letter-spacing: .14em; color: var(--muted-dim); width: 44px; flex: none; }
 .trk-slot .nm { font-weight: 700; color: #fff; font-size: 14px; }
+:where(:root[data-theme="arcade"]) .trk-slot .nm { color: var(--tok-ink); }
 .trk-slot .rdd { font-family: var(--font-saira-cond); font-size: 10px; color: var(--muted-dim); margin-left: auto; flex: none; }
 /* An open slot is a hole, not a player: serif italic in the dim ramp, with the
    position tag lifted to volt so the eye finds what is missing. */
@@ -141,7 +147,7 @@
 .trk-start-row label, .trk-start-grid label { display: flex; flex-direction: column; gap: 5px; }
 .trk-start-row span, .trk-start-grid span { font-family: var(--font-saira-cond); font-size: 9.5px; font-weight: 700; letter-spacing: .12em; color: var(--muted-dim); }
 .trk-start select, .trk-start input {
-  background: #121212; border: 1px solid var(--rule-dim); color: var(--paper);
+  background: var(--tok-surface); border: 1px solid var(--rule-dim); color: var(--paper);
   font-family: var(--font-jetbrains-mono), monospace; font-size: 13px; padding: 8px 10px; min-width: 92px;
 }
 .trk-start input { min-width: 0; width: 100%; }
@@ -210,6 +216,7 @@
   -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent 100%);
   mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent 100%);
 }
+:where(:root[data-theme="arcade"]) .trk-grid-wrap { -webkit-mask-image: linear-gradient(to right, var(--tok-line) calc(100% - 22px), transparent 100%); mask-image: linear-gradient(to right, var(--tok-line) calc(100% - 22px), transparent 100%); }
 .trk-grid-wrap::-webkit-scrollbar { display: none; }
 .trk-grid { display: table; border-collapse: collapse; min-width: 100%; }
 .trk-grid-row { display: flex; }
@@ -237,6 +244,7 @@
   display: flex; flex-direction: column; justify-content: center; gap: 1px; overflow: hidden;
 }
 .trk-grid .cell b { font-size: 11px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .trk-grid .cell b { color: var(--tok-ink); }
 .trk-grid .cell i { font-style: normal; font-family: var(--font-saira-cond); font-size: 9px; letter-spacing: .08em; color: var(--muted-dim); }
 .trk-grid .cell.mine { background: rgba(212, 255, 0, .04); }
 .trk-grid .cell.now { background: rgba(212, 255, 0, .12); box-shadow: inset 0 0 0 1px var(--volt); }
@@ -284,14 +292,16 @@
    select, and the uppercase pill law the Mock's chips already obey. */
 .trk-pos button, .trk-sortlbl { text-transform: uppercase; }
 .trk-quick { color: var(--muted-dim, #5A5A56); }
+:where(:root[data-theme="arcade"]) .trk-quick { color: var(--muted-dim, var(--tok-muted)); }
 .trk-teamsel {
-  background: var(--graphite, #1C1C1C); border: 1px solid var(--rule, #2A2A2A);
-  border-radius: 8px; color: var(--paper, #F5F5F2); font: inherit;
+  background: var(--graphite, var(--tok-surface-2)); border: 1px solid var(--rule, var(--tok-line));
+  border-radius: 8px; color: var(--paper, var(--tok-ink)); font: inherit;
   font-size: 12px; padding: 6px 8px; text-transform: uppercase;
 }
 /* PPG / ADP / VAL are .ncols/.ncol - the grid lives in numcols.css, shared
    with the Mock; sizing them here is forbidden by test. */
 .s-hint { font-size: 10px; color: var(--muted-dim, #5A5A56); align-self: center; }
+:where(:root[data-theme="arcade"]) .s-hint { color: var(--muted-dim, var(--tok-muted)); }
 /* THE BUTTON WINS THE WIDTH FIGHT: the row is flex; DRAFT and the fixed
    columns never shrink - the name cell (.ncell, numcols.css) is the one
    child that gives, and it gives by ellipsis. Nothing wraps, any width. */

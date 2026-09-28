@@ -170,3 +170,5 @@
 :where(:root[data-theme="arcade"]) .gg-colhead .gg-cy { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
 :where(:root[data-theme="arcade"]) .gg-lr--you { background: var(--tok-action); color: var(--tok-on-action); }
 :where(:root[data-theme="arcade"]) .gg-lr--you .gg-lr-who, :where(:root[data-theme="arcade"]) .gg-lr--you .gg-lr-rk, :where(:root[data-theme="arcade"]) .gg-lr--you .gg-lr-sc { color: var(--tok-on-action); }
+/* THE READER'S OWN ROW: a light volt tint with navy ink (volt grammar, batch 2 ruling). */
+:where(:root[data-theme="arcade"]) .gg-lr--you { background: color-mix(in srgb, var(--tok-action) 30%, var(--tok-page)); }

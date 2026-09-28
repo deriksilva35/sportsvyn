@@ -38,6 +38,20 @@ const darkBg = (v) => { const m = /#([0-9a-f]{6}|[0-9a-f]{3})\b/i.exec(v ?? '');
 // TEXT THAT SITS ON A NAVY ANCESTOR, not on the page. Each entry names the
 // ancestor, and the check below proves that ancestor's own background resolves
 // dark on the arcade page - so an entry cannot quietly outlive its navy card.
+
+// ARCADE CUSTOM PROPERTIES BY SPECIFICITY. A :root[data-theme="arcade"] block
+// out-ranks a :where(:root[data-theme="arcade"]) one whatever the order, so a
+// "last wins" read would believe a :where() re-mapping the browser ignores.
+// Base values first, then :where(arcade), then :root[data-theme=arcade].
+function localVars(css) {
+  const base = {}; const soft = {}; const hard = {};
+  for (const { sel, body } of rules(css)) {
+    const bucket = /:root\[data-theme="arcade"\]/.test(sel.replace(/:where\([^)]*\)/g, '')) ? hard : (/data-theme="arcade"/.test(sel) ? soft : base);
+    for (const [k, v] of decls(body)) if (k.startsWith('--') && (bucket !== base || !(k in base))) bucket[k] = v;
+  }
+  return { ...base, ...soft, ...hard };
+}
+
 export const ON_DARK_ANCESTOR = Object.freeze({
   '.gv-now-l': '.gv-now', // the Tonight card's kicker (volt grammar: navy card, volt kicker)
 });
@@ -45,8 +59,7 @@ export const ON_DARK_ANCESTOR = Object.freeze({
 export function voltOnLight(css, g) {
   const rs = rules(css).filter((r) => !/data-theme="(?!arcade)/.test(r.sel))
     .map((r) => ({ sel: r.sel.replace(ARC, ''), body: r.body }));
-  const local = {}; for (const { body } of rs) for (const [k, v] of decls(body)) if (k.startsWith('--')) local[k] = v;
-  const scope = { ...g, ...local };
+  const scope = { ...g, ...localVars(css) };
   const bySel = new Map();
   for (const { sel, body } of rs) {
     const cur = bySel.get(sel) ?? {};
@@ -103,9 +116,7 @@ const BUTTONISH = /(btn|cta|button|\.on\b|\.active\b|\.sel\b|\.pick\b|signin|sta
 
 export function navyFills(css, g) {
   const rs = rules(css).filter((r) => !/data-theme="(?!arcade)/.test(r.sel)).map((r) => ({ sel: r.sel.replace(ARC, ''), body: r.body }));
-  const local = {};
-  for (const { sel, body } of rules(css)) for (const [k, v] of decls(body)) if (k.startsWith('--') && (/data-theme="arcade"/.test(sel) || !(k in local))) local[k] = v;
-  const scope = { ...g, ...local }; const by = new Map();
+  const scope = { ...g, ...localVars(css) }; const by = new Map();
   for (const { sel, body } of rs) { const c = by.get(sel) ?? {}; for (const [k, v] of decls(body)) if (!k.startsWith('--')) c[k] = resolve(v, scope); by.set(sel, c); }
   // The hamburger's lines are the icon itself - structure, not a fill.
   // :not(.on) names the UNSELECTED state, so it is not read as a selected one.
@@ -123,9 +134,7 @@ test('NO NAVY-FILLED BUTTON OR SELECTED STATE on the step-3 surfaces', () => {
 // it is what a base rule reading --tok-page for its text produces here.
 export function lightOnVolt(css, g) {
   const rs = rules(css).filter((r) => !/data-theme="(?!arcade)/.test(r.sel)).map((r) => ({ sel: r.sel.replace(ARC, ''), body: r.body }));
-  const local = {};
-  for (const { sel, body } of rules(css)) for (const [k, v] of decls(body)) if (k.startsWith('--') && (/data-theme="arcade"/.test(sel) || !(k in local))) local[k] = v;
-  const scope = { ...g, ...local }; const by = new Map();
+  const scope = { ...g, ...localVars(css) }; const by = new Map();
   for (const { sel, body } of rs) { const c = by.get(sel) ?? {}; for (const [k, v] of decls(body)) if (!k.startsWith('--')) c[k] = resolve(v, scope); by.set(sel, c); }
   return [...by].filter(([, d]) => isVolt(`${d.background ?? ''} ${d['background-color'] ?? ''}`)
     // inherit/currentColor take the element's ink (navy on this page): only a

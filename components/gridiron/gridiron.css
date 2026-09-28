@@ -735,3 +735,5 @@ a.gi-props-row:hover .who { color: var(--paper); text-decoration: underline; }
 .gi-pz-table td a { color: inherit; text-decoration: none; }
 .gi-pz-how { font-size: 13px; margin-top: 14px; }
 .gi-pz-how a { color: var(--muted); }
+/* The selected chip is a volt fill with navy ink (volt grammar, batch 2). */
+:where(:root[data-theme="arcade"]) .gi-chip.active { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }

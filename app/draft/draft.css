@@ -38,43 +38,49 @@
    =========================================================================== */
 
 .dvg {
-  background: var(--ink, #0a0a0a);
-  border: 1px solid var(--line, #2a2a2a);
+  background: var(--ink, var(--tok-page));
+  border: 1px solid var(--line, var(--tok-line));
   border-radius: 18px;
   overflow: hidden;
 }
 .dvg .n { font-family: var(--font-mono, ui-monospace, monospace); font-variant-numeric: tabular-nums; }
 
-.dvg-hd { padding: 12px 14px 11px; border-bottom: 1px solid var(--line, #2a2a2a); background: #111; }
+.dvg-hd { padding: 12px 14px 11px; border-bottom: 1px solid var(--line, var(--tok-line)); background: var(--tok-surface); }
 .dvg-hd-top { display: flex; align-items: center; margin-bottom: 9px; }
 .dvg-eb {
   color: var(--volt, #d4ff00);
   font: 700 10px var(--font-mono, ui-monospace, monospace);
   letter-spacing: 0.14em; text-transform: uppercase;
 }
+:where(:root[data-theme="arcade"]) .dvg-eb { color: var(--volt, var(--tok-primary)); }
 .dvg-eb.dvg-quiet { color: var(--muted-dim, #6e6e68); display: block; margin-bottom: 2px; }
+:where(:root[data-theme="arcade"]) .dvg-eb.dvg-quiet { color: var(--muted-dim, var(--tok-muted)); }
 .dvg-ed { margin-left: auto; color: var(--muted-dim, #6e6e68); font: 600 9px var(--font-mono, ui-monospace, monospace); }
+:where(:root[data-theme="arcade"]) .dvg-ed { color: var(--muted-dim, var(--tok-muted)); }
 .dvg-rec { display: flex; align-items: flex-end; gap: 12px; }
 .dvg-big { font: 800 40px var(--font-mono, ui-monospace, monospace); letter-spacing: -0.03em; line-height: 0.9; }
 .dvg-big small { font: 700 15px var(--font-mono, ui-monospace, monospace); color: var(--muted-dim, #6e6e68); margin-left: 3px; }
+:where(:root[data-theme="arcade"]) .dvg-big small { color: var(--muted-dim, var(--tok-muted)); }
 .dvg-pips { display: flex; gap: 4px; margin-top: 10px; }
 .dvg-pip {
   flex: 1; height: 4px; border-radius: 99px;
-  background: var(--ink-3, #1c1c1c); border: 1px solid var(--line, #2a2a2a);
+  background: var(--ink-3, var(--tok-surface-2)); border: 1px solid var(--line, var(--tok-line));
 }
-.dvg-pip.on { background: var(--volt, #d4ff00); border-color: var(--volt, #d4ff00); }
-.dvg-pip.live { background: var(--live, #e63946); border-color: var(--live, #e63946); }
-.dvg-pip.done { background: var(--jade, #2a8a4f); border-color: var(--jade, #2a8a4f); }
+.dvg-pip.on { background: var(--volt, var(--tok-action)); border-color: var(--volt, var(--tok-action)); }
+.dvg-pip.live { background: var(--live, var(--tok-live)); border-color: var(--live, var(--tok-live)); }
+.dvg-pip.done { background: var(--jade, var(--tok-up)); border-color: var(--jade, var(--tok-up)); }
 /* THE TWO THAT DROP are outlined, not filled: on the card but not counting. */
-.dvg-pip.drop { background: var(--ink-3, #1c1c1c); border-color: var(--muted-dim, #6e6e68); }
+.dvg-pip.drop { background: var(--ink-3, var(--tok-surface-2)); border-color: var(--muted-dim, #6e6e68); }
+:where(:root[data-theme="arcade"]) .dvg-pip.drop { border-color: var(--muted-dim, var(--tok-line)); }
 .dvg-sub {
   display: flex; justify-content: space-between; margin-top: 7px;
   font: 500 10px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94);
 }
+:where(:root[data-theme="arcade"]) .dvg-sub { color: var(--muted, var(--tok-muted)); }
 
 .dvg-steps {
   margin: 10px 12px 0; padding: 9px 11px 10px;
-  border: 1px solid var(--line, #2a2a2a); border-radius: 12px; background: var(--ink-2, #141414);
+  border: 1px solid var(--line, var(--tok-line)); border-radius: 12px; background: var(--ink-2, var(--tok-surface));
 }
 .dvg-strip { display: flex; align-items: center; gap: 6px; }
 .dvg-stpwrap { display: flex; align-items: center; gap: 6px; flex: 0 1 auto; min-width: 0; }
@@ -82,41 +88,48 @@
 .dvg-stp { display: flex; align-items: center; gap: 6px; }
 .dvg-stp i {
   width: 17px; height: 17px; border-radius: 50%; flex: 0 0 auto;
-  border: 1px solid var(--line, #2a2a2a); color: var(--muted-dim, #6e6e68);
+  border: 1px solid var(--line, var(--tok-line)); color: var(--muted-dim, #6e6e68);
   font: 700 9px/15px var(--font-mono, ui-monospace, monospace); text-align: center; font-style: normal;
 }
+:where(:root[data-theme="arcade"]) .dvg-stp i { color: var(--muted-dim, var(--tok-muted)); }
 .dvg-stp b {
   font: 700 9px var(--font-mono, ui-monospace, monospace);
   letter-spacing: 0.12em; color: var(--muted-dim, #6e6e68); text-transform: uppercase; white-space: nowrap;
 }
-.dvg-stp.on i { border-color: var(--volt, #d4ff00); background: var(--volt, #d4ff00); color: var(--ink, #0a0a0a); }
+:where(:root[data-theme="arcade"]) .dvg-stp b { color: var(--muted-dim, var(--tok-muted)); }
+.dvg-stp.on i { border-color: var(--volt, var(--tok-action)); background: var(--volt, var(--tok-action)); color: var(--ink, var(--tok-on-action)); }
 .dvg-stp.on b { color: var(--volt, #d4ff00); }
-.dvg-stp.done i { border-color: var(--jade, #2a8a4f); color: var(--jade, #2a8a4f); }
+:where(:root[data-theme="arcade"]) .dvg-stp.on b { color: var(--volt, var(--tok-primary)); }
+.dvg-stp.done i { border-color: var(--jade, var(--tok-up)); color: var(--jade, var(--tok-up)); }
 .dvg-stp.done b { color: var(--muted, #9a9a94); }
-.dvg-arw { flex: 1; height: 1px; background: var(--line, #2a2a2a); min-width: 6px; }
+:where(:root[data-theme="arcade"]) .dvg-stp.done b { color: var(--muted, var(--tok-muted)); }
+.dvg-arw { flex: 1; height: 1px; background: var(--line, var(--tok-surface-2)); min-width: 6px; }
 .dvg-note { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted, #9a9a94); }
-.dvg-note b { color: var(--paper, #f5f5f2); font-weight: 600; }
+:where(:root[data-theme="arcade"]) .dvg-note { color: var(--muted, var(--tok-muted)); }
+.dvg-note b { color: var(--paper, var(--tok-ink)); font-weight: 600; }
 
 .dvg-ros {
   margin: 10px 12px 0; overflow: hidden;
-  border: 1px solid var(--line, #2a2a2a); border-radius: 13px; background: var(--ink-2, #141414);
+  border: 1px solid var(--line, var(--tok-line)); border-radius: 13px; background: var(--ink-2, var(--tok-surface));
 }
 .dvg-rr {
   display: flex; align-items: center; gap: 8px; padding: 8px 10px;
-  border-bottom: 1px solid var(--line, #2a2a2a);
+  border-bottom: 1px solid var(--line, var(--tok-line));
 }
 .dvg-rr:last-child { border-bottom: 0; }
-.dvg-rr.live { box-shadow: inset 3px 0 0 var(--live, #e63946); }
+.dvg-rr.live { box-shadow: inset 3px 0 0 var(--live, var(--tok-live)); }
 /* THE TWO THAT DROP: dimmed, and the name struck through, because "not
    counting" is a fact about the row and not a shade of emphasis. */
 .dvg-rr.drop { opacity: 0.45; }
-.dvg-rr.drop .dvg-who b { text-decoration: line-through; text-decoration-color: var(--terra, #b8410f); }
+.dvg-rr.drop .dvg-who b { text-decoration: line-through; text-decoration-color: var(--terra, var(--tok-down)); }
 .dvg-rr.drop .dvg-pts { color: var(--muted-dim, #6e6e68); font-size: 12px; }
+:where(:root[data-theme="arcade"]) .dvg-rr.drop .dvg-pts { color: var(--muted-dim, var(--tok-muted)); }
 .dvg-pb {
   width: 26px; flex: 0 0 auto; text-align: center;
   font: 800 9px var(--font-display, system-ui, sans-serif);
   color: var(--muted, #9a9a94); letter-spacing: 0.04em;
 }
+:where(:root[data-theme="arcade"]) .dvg-pb { color: var(--muted, var(--tok-muted)); }
 .dvg-who { min-width: 0; flex: 1; }
 .dvg-who b {
   display: block;
@@ -129,14 +142,17 @@
   font: 500 9px var(--font-mono, ui-monospace, monospace); color: var(--muted-dim, #6e6e68);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.dvg-who small.dvg-l { color: var(--live, #e63946); }
-.dvg-count { color: var(--jade, #2a8a4f); }
+:where(:root[data-theme="arcade"]) .dvg-who small { color: var(--muted-dim, var(--tok-muted)); }
+.dvg-who small.dvg-l { color: var(--live, var(--tok-live)); }
+.dvg-count { color: var(--jade, var(--tok-up)); }
 .dvg-pts {
   width: 56px; text-align: right;
   font: 700 16px var(--font-mono, ui-monospace, monospace); color: var(--volt, #d4ff00);
 }
-.dvg-rr.fin .dvg-pts { color: var(--paper, #f5f5f2); }
+:where(:root[data-theme="arcade"]) .dvg-pts { color: var(--volt, var(--tok-primary)); }
+.dvg-rr.fin .dvg-pts { color: var(--paper, var(--tok-ink)); }
 
-.dvg-ft { border-top: 1px solid var(--line, #2a2a2a); margin-top: 12px; padding: 10px 12px; }
+.dvg-ft { border-top: 1px solid var(--line, var(--tok-line)); margin-top: 12px; padding: 10px 12px; }
 .dvg-pace { margin: 0; font: 500 11px var(--font-mono, ui-monospace, monospace); color: var(--muted, #9a9a94); line-height: 1.35; }
-.dvg-pace b { color: var(--paper, #f5f5f2); font-weight: 700; }
+:where(:root[data-theme="arcade"]) .dvg-pace { color: var(--muted, var(--tok-muted)); }
+.dvg-pace b { color: var(--paper, var(--tok-ink)); font-weight: 700; }

@@ -76,12 +76,16 @@
    variant="account") - link-weight, volt, same reasoning as sim.css's copy:
    a full button in a value slot would outshout Sign Out. */
 .acct-link { background: none; border: none; padding: 0; color: #D4FF00; font: inherit; cursor: pointer; }
+:where(:root[data-theme="arcade"]) .acct-link { color: var(--tok-primary); }
 .acct-link:disabled { opacity: .6; cursor: default; }
 
 /* ARCADE (rebrand R1, behind ARCADE_THEME - app/globals.css): the account
    palette, re-pointed at the tokens. */
 :root[data-theme="arcade"] .acct {
   --a-ink: var(--tok-page); --a-ink-2: var(--tok-surface); --a-ink-3: var(--tok-surface-2);
-  --a-line: var(--tok-line); --a-volt: var(--tok-accent); --a-paper: var(--tok-ink);
+  --a-line: var(--tok-line); --a-volt: var(--tok-primary); --a-paper: var(--tok-ink);
   --a-jade: var(--tok-up); --a-mut: var(--tok-muted);
 }
+
+/* R2 batch 2: --a-volt reads NAVY on the arcade page (it is a text colour here;
+   volt grammar) - set in the R1 block above, which out-ranks a :where() rule. */

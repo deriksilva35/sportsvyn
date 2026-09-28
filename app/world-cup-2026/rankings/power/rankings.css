@@ -7,8 +7,8 @@
   max-width: 880px;
   margin: 0 auto;
   padding: 0 24px;
-  color: var(--paper-warm, #F5F5F2);
-  background: var(--ink, #0A0A0A);
+  color: var(--paper-warm, var(--tok-ink));
+  background: var(--ink, var(--tok-page));
 }
 
 /* ---- article hero ---- */
@@ -18,6 +18,7 @@
   font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
   color: var(--volt, #D4FF00); margin-bottom: 20px;
 }
+:where(:root[data-theme="arcade"]) .rankings-wrap .kicker { color: var(--volt, var(--tok-primary)); }
 .rankings-wrap h1 {
   font-family: var(--font-saira), sans-serif;
   font-weight: 900; font-style: italic;
@@ -26,24 +27,25 @@
   margin-bottom: 22px;
 }
 .rankings-wrap h1 .accent { color: var(--volt, #D4FF00); }
+:where(:root[data-theme="arcade"]) .rankings-wrap h1 .accent { color: var(--volt, var(--tok-primary)); }
 .rankings-wrap .dek {
   font-family: var(--font-source-serif), serif;
   font-style: italic; font-weight: 400;
   font-size: clamp(18px, 2.4vw, 22px); line-height: 1.5;
-  color: #cfcfca; max-width: 640px; margin-bottom: 28px;
+  color: var(--tok-ink-2); max-width: 640px; margin-bottom: 28px;
 }
 .rankings-wrap .meta-row {
   display: flex; flex-wrap: wrap; gap: 0 28px; align-items: center;
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 12px; letter-spacing: 0.06em;
-  color: #888; padding-top: 22px;
+  color: var(--tok-muted); padding-top: 22px;
   border-top: 1px solid rgba(245,245,242,0.08);
 }
-.rankings-wrap .meta-row .v { color: var(--paper-warm, #F5F5F2); }
+.rankings-wrap .meta-row .v { color: var(--paper-warm, var(--tok-ink)); }
 
 /* ---- methodology strip ---- */
 .rankings-wrap .method {
-  background: #1A1A1A; border-left: 3px solid var(--volt, #D4FF00);
+  background: var(--tok-surface-2); border-left: 3px solid var(--volt, var(--tok-action));
   padding: 20px 24px; margin: 8px 0 44px; border-radius: 2px;
 }
 .rankings-wrap .method-label {
@@ -51,18 +53,19 @@
   font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--volt, #D4FF00); margin-bottom: 10px;
 }
+:where(:root[data-theme="arcade"]) .rankings-wrap .method-label { color: var(--volt, var(--tok-primary)); }
 .rankings-wrap .method p {
   font-family: var(--font-source-serif), serif;
-  font-style: italic; font-size: 16px; line-height: 1.55; color: #cfcfca;
+  font-style: italic; font-size: 16px; line-height: 1.55; color: var(--tok-ink-2);
 }
 .rankings-wrap .method .layers {
   display: flex; gap: 24px; margin-top: 16px; flex-wrap: wrap;
 }
 .rankings-wrap .layer {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
-  font-size: 11px; letter-spacing: 0.04em; color: #888;
+  font-size: 11px; letter-spacing: 0.04em; color: var(--tok-muted);
 }
-.rankings-wrap .layer .w { color: var(--paper-warm, #F5F5F2); font-weight: 700; }
+.rankings-wrap .layer .w { color: var(--paper-warm, var(--tok-ink)); font-weight: 700; }
 .rankings-wrap .layer.off { opacity: 0.45; }
 
 /* ---- list header ---- */
@@ -78,13 +81,13 @@
 }
 .rankings-wrap .list-head .count {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
-  font-size: 12px; color: #888; letter-spacing: 0.1em;
+  font-size: 12px; color: var(--tok-muted); letter-spacing: 0.1em;
 }
 
 /* ---- blurbed card (top 10) ---- */
 .rankings-wrap .rank-card {
   display: block;
-  background: #1A1A1A;
+  background: var(--tok-surface-2);
   border: 1px solid rgba(245,245,242,0.08);
   border-radius: 3px;
   padding: 22px 24px; margin-bottom: 12px;
@@ -93,7 +96,7 @@
 }
 .rankings-wrap .rank-card:hover {
   border-color: rgba(212,255,0,0.3);
-  background: #1d1d1d;
+  background: var(--tok-surface-2);
 }
 .rankings-wrap .rc-top {
   display: flex; align-items: center; gap: 18px;
@@ -102,9 +105,10 @@
   font-family: var(--font-saira), sans-serif;
   font-weight: 900; font-style: italic;
   font-size: 38px; line-height: 1; letter-spacing: -0.04em;
-  min-width: 56px; color: var(--paper-warm, #F5F5F2);
+  min-width: 56px; color: var(--paper-warm, var(--tok-ink));
 }
 .rankings-wrap .rank-card.top3 .rc-rank { color: var(--volt, #D4FF00); }
+:where(:root[data-theme="arcade"]) .rankings-wrap .rank-card.top3 .rc-rank { color: var(--volt, var(--tok-primary)); }
 
 /* Flag sizes — scoped to .rankings-wrap so we don't pollute the global
    namespace. Mirrors app/match/[slug]/match.css's flag-* convention so
@@ -138,7 +142,7 @@
 .rankings-wrap .rc-score {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-weight: 700; font-size: 30px; letter-spacing: -0.02em;
-  color: var(--paper-warm, #F5F5F2);
+  color: var(--paper-warm, var(--tok-ink));
 }
 .rankings-wrap .mvmt {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
@@ -146,36 +150,43 @@
   padding: 3px 8px; border-radius: 2px; min-width: 52px; text-align: center;
 }
 .rankings-wrap .mvmt.new   { color: var(--volt, #D4FF00); border: 1px solid rgba(212,255,0,0.4); }
-.rankings-wrap .mvmt.up    { color: #2A8A4F; border: 1px solid rgba(42,138,79,0.5); }
-.rankings-wrap .mvmt.down  { color: #B8410F; border: 1px solid rgba(184,65,15,0.5); }
-.rankings-wrap .mvmt.hold  { color: #888;   border: 1px solid rgba(245,245,242,0.08); }
+:where(:root[data-theme="arcade"]) .rankings-wrap .mvmt.new { color: var(--volt, var(--tok-primary)); }
+.rankings-wrap .mvmt.up    { color: var(--tok-up); border: 1px solid rgba(42,138,79,0.5); }
+.rankings-wrap .mvmt.down  { color: var(--tok-down); border: 1px solid rgba(184,65,15,0.5); }
+.rankings-wrap .mvmt.hold  { color: var(--tok-muted);   border: 1px solid rgba(245,245,242,0.08); }
 .rankings-wrap .rc-record {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 11px; letter-spacing: 0.08em;
   color: #b8b8b3; margin: 12px 0 0; padding-left: 74px;
 }
-.rankings-wrap .rc-record .rec-wdl { color: var(--paper-warm, #F5F5F2); font-weight: 700; }
+:where(:root[data-theme="arcade"]) .rankings-wrap .rc-record { color: var(--tok-ink-2); }
+.rankings-wrap .rc-record .rec-wdl { color: var(--paper-warm, var(--tok-ink)); font-weight: 700; }
 .rankings-wrap .rc-record .rec-gd  { color: #b8b8b3; }
-.rankings-wrap .rc-record .rec-pts { color: #888; }
+:where(:root[data-theme="arcade"]) .rankings-wrap .rc-record .rec-gd { color: var(--tok-ink-2); }
+.rankings-wrap .rc-record .rec-pts { color: var(--tok-muted); }
 .rankings-wrap .rc-split {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 11px; letter-spacing: 0.08em;
-  color: #888; margin: 6px 0 0; padding-left: 74px;
+  color: var(--tok-muted); margin: 6px 0 0; padding-left: 74px;
 }
 .rankings-wrap .rc-split .lab { color: #666; }
+:where(:root[data-theme="arcade"]) .rankings-wrap .rc-split .lab { color: var(--tok-muted); }
 .rankings-wrap .rc-split .ed,
 .rankings-wrap .rc-split .si { color: #b8b8b3; }
+:where(:root[data-theme="arcade"]) .rankings-wrap .rc-split .ed, :where(:root[data-theme="arcade"]) .rankings-wrap .rc-split .si { color: var(--tok-ink-2); }
 .rankings-wrap .b-record {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 11px; color: #b8b8b3; letter-spacing: 0.04em;
   margin-right: 8px; white-space: nowrap;
 }
+:where(:root[data-theme="arcade"]) .rankings-wrap .b-record { color: var(--tok-ink-2); }
 .rankings-wrap .rc-blurb {
   font-family: var(--font-source-serif), serif;
   font-style: italic; font-weight: 400;
   font-size: 16.5px; line-height: 1.6; color: #d8d8d3;
   margin: 14px 0 0; padding-left: 74px; max-width: 700px;
 }
+:where(:root[data-theme="arcade"]) .rankings-wrap .rc-blurb { color: var(--tok-ink-2); }
 
 /* Tighten card bottom slightly when no blurb is present, so the
    blurb-absent card reads as intentional rather than truncated.
@@ -197,7 +208,7 @@
 .rankings-wrap .bare:hover { background: rgba(255,255,255,0.015); }
 .rankings-wrap .b-rank {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
-  font-weight: 500; font-size: 15px; color: #888; min-width: 32px;
+  font-weight: 500; font-size: 15px; color: var(--tok-muted); min-width: 32px;
 }
 .rankings-wrap .b-name {
   font-family: var(--font-saira), sans-serif;
@@ -208,9 +219,10 @@
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 11px; color: #666; letter-spacing: 0.04em; margin-right: 4px;
 }
+:where(:root[data-theme="arcade"]) .rankings-wrap .b-split { color: var(--tok-muted); }
 .rankings-wrap .b-score {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
-  font-weight: 700; font-size: 17px; color: var(--paper-warm, #F5F5F2);
+  font-weight: 700; font-size: 17px; color: var(--paper-warm, var(--tok-ink));
   min-width: 46px; text-align: right;
 }
 .rankings-wrap .b-mvmt {
@@ -218,9 +230,10 @@
   font-size: 10px; color: var(--volt, #D4FF00);
   min-width: 42px; text-align: right; letter-spacing: 0.04em;
 }
-.rankings-wrap .b-mvmt.up   { color: #2A8A4F; }
-.rankings-wrap .b-mvmt.down { color: #B8410F; }
-.rankings-wrap .b-mvmt.hold { color: #888; }
+:where(:root[data-theme="arcade"]) .rankings-wrap .b-mvmt { color: var(--volt, var(--tok-primary)); }
+.rankings-wrap .b-mvmt.up   { color: var(--tok-up); }
+.rankings-wrap .b-mvmt.down { color: var(--tok-down); }
+.rankings-wrap .b-mvmt.hold { color: var(--tok-muted); }
 
 /* ---- footer copy (rankings-specific, sits above SiteFooter) ---- */
 .rankings-wrap .foot {
@@ -229,7 +242,7 @@
 }
 .rankings-wrap .foot p {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
-  font-size: 11px; color: #888; letter-spacing: 0.05em; line-height: 1.8;
+  font-size: 11px; color: var(--tok-muted); letter-spacing: 0.05em; line-height: 1.8;
 }
 
 @media (max-width: 600px) {

@@ -367,15 +367,19 @@
 .bg2 .bc .pk { display: none; }  /* overall-pick number: shown only in the desktop BOARD view */
 .bg2 .bc.QB { background: rgba(184,65,15,.28); }
 :where(:root[data-theme="arcade"]) .bg2 .bc.QB { background: color-mix(in srgb, var(--tok-down) 28%, transparent); } .bg2 .bc.QB .p { color: #e8865a; }
+:where(:root[data-theme="arcade"]) .bg2 .bc.QB .p { color: var(--tok-down); }
 :where(:root[data-theme="arcade"]) .bg2 .bc.QB .p { color: var(--tok-pos-qb); }
 .bg2 .bc.RB { background: rgba(42,138,79,.28); }
 :where(:root[data-theme="arcade"]) .bg2 .bc.RB { background: color-mix(in srgb, var(--tok-up) 28%, transparent); } .bg2 .bc.RB .p { color: #5bc98a; }
+:where(:root[data-theme="arcade"]) .bg2 .bc.RB .p { color: var(--tok-up); }
 :where(:root[data-theme="arcade"]) .bg2 .bc.RB .p { color: var(--tok-pos-rb); }
 .bg2 .bc.WR { background: rgba(138,147,216,.22); }
 :where(:root[data-theme="arcade"]) .bg2 .bc.WR { background: color-mix(in srgb, var(--tok-pos-wr) 22%, transparent); } .bg2 .bc.WR .p { color: #8a93d8; }
+:where(:root[data-theme="arcade"]) .bg2 .bc.WR .p { color: var(--tok-chip); }
 :where(:root[data-theme="arcade"]) .bg2 .bc.WR .p { color: var(--tok-pos-wr); }
 .bg2 .bc.TE { background: rgba(201,162,39,.22); }
 :where(:root[data-theme="arcade"]) .bg2 .bc.TE { background: color-mix(in srgb, var(--tok-pos-te) 22%, transparent); } .bg2 .bc.TE .p { color: #c9a227; }
+:where(:root[data-theme="arcade"]) .bg2 .bc.TE .p { color: var(--tok-coin); }
 :where(:root[data-theme="arcade"]) .bg2 .bc.TE .p { color: var(--tok-pos-te); }
 .bg2 .bc.mine { outline: 1.5px solid var(--volt); outline-offset: -1.5px; }
 .bg2 .bc.otc2 { background: rgba(230,57,70,.18); outline: 1.5px solid var(--live); outline-offset: -1.5px; animation: sim-pulse 1.2s infinite; }
@@ -487,6 +491,7 @@
 /* ON is the LIVE state, not a brighter version of the same thing: the seat is
    being drafted for right now, and it reads as an alarm you can switch off. */
 .auto-toggle.on { background: var(--live); border-color: var(--live); color: #fff; }
+:where(:root[data-theme="arcade"]) .auto-toggle.on { color: var(--tok-ink); }
 :where(:root[data-theme="arcade"]) .auto-toggle.on { color: var(--tok-page); }
 .auto-toggle.on .sw { border-color: #fff; }
 :where(:root[data-theme="arcade"]) .auto-toggle.on .sw { border-color: var(--tok-page); }
@@ -805,6 +810,7 @@
     -webkit-mask-image: linear-gradient(to right,#000 calc(100% - 26px),transparent 100%);
     mask-image: linear-gradient(to right,#000 calc(100% - 26px),transparent 100%);
   }
+:where(:root[data-theme="arcade"]) .deck { -webkit-mask-image: linear-gradient(to right,var(--tok-line) calc(100% - 26px),transparent 100%); mask-image: linear-gradient(to right,var(--tok-line) calc(100% - 26px),transparent 100%); }
 :where(:root[data-theme="arcade"]) .deck { -webkit-mask-image: linear-gradient(to right, var(--tok-ink) calc(100% - 26px), transparent 100%); mask-image: linear-gradient(to right, var(--tok-ink) calc(100% - 26px), transparent 100%); }
   .deck::-webkit-scrollbar { display: none; }
   /* 150px cards + 8px gaps in a ~366px content box shows 2 cards and a ~50px
@@ -832,6 +838,7 @@
 .sim-err-lobby:hover { color: var(--volt); }
 .sim-err-ref { margin-top: 22px; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px;
   letter-spacing: .08em; color: #5a5a5a; }
+:where(:root[data-theme="arcade"]) .sim-err-ref { color: var(--tok-muted); }
 :where(:root[data-theme="arcade"]) .sim-err-ref { color: var(--tok-muted); }
 
 /* ---- My Team sort: the TWO FACTS behind the order ----

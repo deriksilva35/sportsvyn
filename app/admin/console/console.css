@@ -6,7 +6,7 @@
   --ink: #0a0a0a; --ink-2: #141414; --ink-3: #1c1c1c; --line: #2a2a2a;
   --volt: #d4ff00; --paper: #f5f5f2; --jade-bright: #3fbf6f;
   --terra: #b8410f; --muted: #8a8a85; --dim: #5a5a56;
-  background: #050505; color: var(--paper); min-height: 100vh;
+  background: var(--tok-page); color: var(--paper); min-height: 100vh;
   font-family: 'Saira', system-ui, sans-serif;
 }
 .adm * { box-sizing: border-box; }
@@ -38,6 +38,7 @@
 /* Disabled placeholders. Dimmer than the live items and not clickable, so the
    rail tells the truth about what exists rather than dead-ending a click. */
 .adm-rail span.navoff { color: #3a3a37; cursor: default; }
+:where(:root[data-theme="arcade"]) .adm-rail span.navoff { color: var(--tok-muted); }
 .adm-rail .ic { width: 16px; text-align: center; font-size: 13px; }
 
 .adm-main { flex: 1; padding: 26px 30px; max-width: 1180px; min-width: 0; }
@@ -100,6 +101,7 @@
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px;
   padding: 9px 16px; border-bottom: 1px solid #1e1e1e; color: var(--paper); white-space: nowrap;
 }
+:where(:root[data-theme="arcade"]) .adm td { border-bottom: 1px solid var(--tok-line); }
 .adm tr:last-child td { border-bottom: 0; }
 .adm tbody tr:hover td { background: rgba(212, 255, 0, 0.03); }
 .adm .handle { color: var(--volt); text-decoration: none; }
@@ -114,6 +116,7 @@
 .adm .chip.daily { color: var(--volt); }
 .adm .chip.mock { color: var(--jade-bright); }
 .adm .chip.pickem { color: #8ab4ff; }
+:where(:root[data-theme="arcade"]) .adm .chip.pickem { color: var(--tok-chip); }
 .adm .chip.tracker { color: var(--muted); }
 
 .adm-searchbar { display: flex; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
@@ -169,3 +172,9 @@
   .adm-main { padding: 18px 14px; }
   .adm-statgrid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* R2 BATCH 2 (volt grammar, arcade only): this file's own palette on .adm reads the
+   roles; its volt is TEXT here, so it reads navy, and the 1 rules that FILL with it
+   get the action fill with navy ink. */
+:where(:root[data-theme="arcade"]) .adm { --ink: var(--tok-page); --ink-2: var(--tok-surface); --ink-3: var(--tok-surface-2); --line: var(--tok-line); --volt: var(--tok-primary); --paper: var(--tok-ink); --jade-bright: var(--tok-up); --terra: var(--tok-down); --muted: var(--tok-muted); --dim: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .adm-searchbar button { background: var(--tok-action); color: var(--tok-on-action); }
