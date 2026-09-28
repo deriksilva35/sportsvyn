@@ -37,13 +37,13 @@
 .sbd-crumb-row { padding: 10px 16px 0; }
 .sbd-hdr .sbd-streak { font-family: var(--font-mono); font-size: 11px; color: var(--paper-dim); }
 
-.sbd-mid-wait { margin: 16px 12px 0; padding: 11px 13px; border: 1px dashed var(--line); border-radius: 11px; font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim); line-height: 1.6; }
+.sbd-mid-wait { margin: 16px 12px 0; padding: 11px 13px; border: 1px dashed var(--tok-line); border-radius: 11px; font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim); line-height: 1.6; }
 
 /* THE TODAY BOARD (D1, post-close) - same .lb/.lr shape as docs/design/
    daily-full-mock-v3.html's own #s-mid screen, adapted to the sbd- prefix. */
-.sbd-lb { margin: 20px 12px 0; border: 1px solid var(--line); border-radius: 14px; background: var(--ink-2); overflow: hidden; }
-.sbd-lb-h { padding: 11px 14px; border-bottom: 1px solid var(--line); font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
-.sbd-lr { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--line); }
+.sbd-lb { margin: 20px 12px 0; border: 1px solid var(--tok-line); border-radius: 14px; background: var(--tok-surface); overflow: hidden; }
+.sbd-lb-h { padding: 11px 14px; border-bottom: 1px solid var(--tok-line); font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+.sbd-lr { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--tok-line); }
 .sbd-lr:first-of-type { border-top: 0; }
 .sbd-lr-rk { flex: none; width: 26px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 .sbd-lr-who { flex: 1 1 auto; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -61,8 +61,8 @@
 .sbd-prog { padding: 10px 12px 4px; }
 .sbd-rrow { display: flex; gap: 3px; }
 .sbd-pip {
-  flex: 1; min-width: 0; height: 52px; border: 1px solid var(--line); border-radius: 8px;
-  background: var(--ink-2); display: flex; flex-direction: column; align-items: center;
+  flex: 1; min-width: 0; height: 52px; border: 1px solid var(--tok-line); border-radius: 8px;
+  background: var(--tok-surface); display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 3px; padding: 0 1px;
 }
 .sbd-pip.sbd-full { background: var(--volt); border-color: var(--volt); }
@@ -97,7 +97,7 @@
 
 .sbd-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; padding: 0 12px 16px; }
 .sbd-tc {
-  text-align: center; border: 1px solid var(--line); border-radius: 11px; background: var(--ink-2);
+  text-align: center; border: 1px solid var(--tok-line); border-radius: 11px; background: var(--tok-surface);
   padding: 10px 3px; color: var(--paper); font: inherit; cursor: pointer;
 }
 .sbd-tc b { display: block; font-family: var(--font-saira-cond); font-weight: 700; font-size: 15px; letter-spacing: .03em; }
@@ -122,7 +122,7 @@
    which ancestor turns out to be the culprit. */
 .sbd-sheet {
   position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%); width: calc(100% - 24px); max-width: 366px;
-  background: var(--ink-3); border: 2px solid var(--volt); border-radius: 16px; z-index: 11;
+  background: var(--tok-surface-2); border: 2px solid var(--volt); border-radius: 16px; z-index: 11;
   max-height: 76vh; overflow: auto;
 }
 .sbd-sh { position: sticky; top: 0; background: var(--volt); color: var(--ink); padding: 11px 14px; border-radius: 14px 14px 0 0; }
@@ -130,7 +130,7 @@
 .sbd-sh span { display: block; margin-top: 2px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
 
 .sbd-pr {
-  display: flex; align-items: center; gap: 9px; padding: 9px 14px; border-top: 1px solid var(--line);
+  display: flex; align-items: center; gap: 9px; padding: 9px 14px; border-top: 1px solid var(--tok-line);
   width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; font: inherit; cursor: pointer; text-align: left;
 }
 .sbd-pr .sbd-pos { flex: none; width: 44px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .08em; color: var(--muted); }
@@ -142,9 +142,9 @@
    mechanism as a dead team chip - "no way to pick this" is enforced here,
    not merely implied by graying it out. */
 .sbd-pr.sbd-gone { opacity: .3; pointer-events: none; }
-.sbd-pr.sbd-gone .sbd-tk { border-color: var(--line); color: var(--muted-dim); }
+.sbd-pr.sbd-gone .sbd-tk { border-color: var(--tok-line); color: var(--muted-dim); }
 
-.sbd-slotq { padding: 14px; border-top: 1px solid var(--line); }
+.sbd-slotq { padding: 14px; border-top: 1px solid var(--tok-line); }
 .sbd-slotq p { font-size: 13px; color: var(--paper-dim); margin: 0 0 10px; }
 .sbd-slotq p b { color: var(--volt); }
 .sbd-slotbtns { display: flex; gap: 7px; flex-wrap: wrap; }
@@ -166,7 +166,7 @@
   color: var(--ink); background: var(--volt); border: 0; border-radius: 10px; padding: 13px; cursor: pointer;
 }
 .sbd-btn.sbd-ghost {
-  background: none; border: 1px solid var(--line); color: var(--paper); font-family: var(--font-saira-cond); font-style: normal;
+  background: none; border: 1px solid var(--tok-line); color: var(--paper); font-family: var(--font-saira-cond); font-style: normal;
   font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
 }
 
@@ -174,7 +174,7 @@
 .sbd-rules { padding: 34px 16px 24px; }
 .sbd-rules .sbd-kick { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--volt); }
 .sbd-rules h2 { margin-top: 9px; font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 36px; letter-spacing: -.05em; line-height: .98; color: var(--paper); }
-.sbd-rl { display: flex; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
+.sbd-rl { display: flex; gap: 12px; padding: 14px 0; border-top: 1px solid var(--tok-line); }
 .sbd-rl:first-of-type { margin-top: 16px; }
 .sbd-rl .sbd-n {
   flex: none; width: 26px; height: 26px; border-radius: 99px; border: 1px solid var(--volt); color: var(--volt);
@@ -184,7 +184,7 @@
 .sbd-rl .sbd-t b { display: block; font-size: 15px; font-weight: 600; margin-bottom: 3px; color: var(--paper); }
 .sbd-rl .sbd-t p { font-size: 13px; color: var(--muted); line-height: 1.45; margin: 0; }
 .sbd-rnote {
-  margin-top: 14px; padding: 11px 13px; border: 1px dashed var(--line); border-radius: 11px;
+  margin-top: 14px; padding: 11px 13px; border: 1px dashed var(--tok-line); border-radius: 11px;
   font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim); line-height: 1.6;
 }
 
@@ -192,17 +192,17 @@
    COMPACT REVEAL sizing (the mock's own second, denser pass for these same
    selectors, since eight rows have to read on one screen without excess
    scrolling) applied directly rather than layered as a later override. ===== */
-.sbd-grade { margin: 0 12px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--ink-2); overflow: hidden; }
+.sbd-grade { margin: 0 12px 12px; border: 1px solid var(--tok-line); border-radius: 14px; background: var(--tok-surface); overflow: hidden; }
 .sbd-grade-top { background: var(--volt); color: var(--ink); padding: 10px 13px; display: flex; align-items: baseline; justify-content: space-between; }
 .sbd-grade-top b { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 17px; letter-spacing: -.03em; }
 .sbd-grade-top span { font-family: var(--font-mono); font-weight: 700; font-size: 12px; }
 
-.sbd-colhead { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 10px; background: var(--ink-2); border-bottom: 1px solid var(--line); }
+.sbd-colhead { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 10px; background: var(--tok-surface); border-bottom: 1px solid var(--tok-line); }
 .sbd-colhead div { font-family: var(--font-saira-cond); font-weight: 700; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; text-align: center; padding: 3px 0; border-radius: 7px; }
 .sbd-colhead .sbd-cy { color: var(--ink); background: var(--volt); }
 .sbd-colhead .sbd-cb { color: var(--jade); border: 1px solid var(--jade); }
 
-.sbd-sbr { padding: 6px 10px; border-top: 1px solid var(--line); }
+.sbd-sbr { padding: 6px 10px; border-top: 1px solid var(--tok-line); }
 .sbd-sbr .sbd-top2 { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
 .sbd-sbr .sbd-pos { font-family: var(--font-saira-cond); font-weight: 700; font-size: 9px; letter-spacing: .08em; color: var(--muted); min-width: 26px; }
 .sbd-sbr .sbd-vd { font-family: var(--font-saira-cond); font-weight: 600; font-size: 8px; letter-spacing: .10em; text-transform: uppercase; border: 1px solid; border-radius: 99px; padding: 1px 6px; }
@@ -214,7 +214,7 @@
 .sbd-sbr.sbd-hit .sbd-dif { color: var(--jade); }
 
 .sbd-two { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.sbd-bx { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: var(--ink); }
+.sbd-bx { border: 1px solid var(--tok-line); border-radius: 8px; padding: 6px 8px; background: var(--ink); }
 .sbd-bx .sbd-nm { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--paper); }
 .sbd-bx .sbd-mt { margin-top: 1px; font-family: var(--font-mono); font-size: 8px; color: var(--muted-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sbd-bx .sbd-pt { margin-top: 2px; font-family: var(--font-mono); font-weight: 700; font-size: 14px; color: var(--paper); }
@@ -228,14 +228,14 @@
 .sbd-bx.sbd-same .sbd-sm { margin-top: 1px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 8px; letter-spacing: .10em; text-transform: uppercase; color: var(--muted); }
 .sbd-sbr .sbd-swap { margin-top: 3px; font-family: var(--font-mono); font-size: 9px; color: var(--muted-dim); }
 
-.sbd-mathline { margin: 0 12px 12px; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 11px; font-family: var(--font-mono); font-size: 10px; color: var(--muted); line-height: 1.5; }
+.sbd-mathline { margin: 0 12px 12px; padding: 8px 12px; border: 1px dashed var(--tok-line); border-radius: 11px; font-family: var(--font-mono); font-size: 10px; color: var(--muted); line-height: 1.5; }
 .sbd-mathline b { color: var(--terra); font-weight: 700; }
 
-.sbd-perf { margin: 0 12px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--ink-2); padding: 9px 12px; }
+.sbd-perf { margin: 0 12px 12px; border: 1px solid var(--tok-line); border-radius: 11px; background: var(--tok-surface); padding: 9px 12px; }
 .sbd-perf b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--jade); display: block; margin-bottom: 5px; }
 .sbd-perf p { font-family: var(--font-mono); font-size: 10px; color: var(--muted); line-height: 1.5; margin: 0; }
 
-.sbd-story { margin: 0 12px 12px; border: 1px solid var(--line); border-left: 3px solid var(--volt); border-radius: 11px; background: var(--ink-2); padding: 10px 12px; }
+.sbd-story { margin: 0 12px 12px; border: 1px solid var(--tok-line); border-left: 3px solid var(--volt); border-radius: 11px; background: var(--tok-surface); padding: 10px 12px; }
 .sbd-story b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--volt); display: block; margin-bottom: 6px; }
 .sbd-story p { font-family: var(--font-source-serif), Georgia, serif; font-style: italic; font-size: 12px; line-height: 1.4; color: var(--paper-dim); margin: 0; }
 
@@ -244,7 +244,7 @@
    have done nothing. It sits between the header and the grade rows now and
    needs to clear both. The border, radius, padding and background are
    untouched and still match .share in the Daily mock exactly. */
-.sbd-share { margin: 14px 12px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--ink-2); padding: 15px 14px; }
+.sbd-share { margin: 14px 12px 16px; border: 1px solid var(--tok-line); border-radius: 14px; background: var(--tok-surface); padding: 15px 14px; }
 .sbd-share .sbd-g { font-family: var(--font-mono); font-size: 18px; letter-spacing: .09em; line-height: 1.5; }
 .sbd-share .sbd-cap { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); line-height: 1.55; }
 .sbd-copy {
@@ -302,7 +302,7 @@
 .sbd-v2 { --qb: var(--tok-pos-qb); --rb: var(--tok-pos-rb); --wr: var(--tok-pos-wr); --te: var(--tok-pos-te); --k: var(--tok-pos-k); }
 
 /* header: clock, points, pips */
-.sbd-v2 .sbd-hd { padding: 12px 14px 10px; border-bottom: 1px solid var(--line); }
+.sbd-v2 .sbd-hd { padding: 12px 14px 10px; border-bottom: 1px solid var(--tok-line); }
 .sbd-v2 .sbd-hd-top { display: flex; align-items: center; margin-bottom: 8px; }
 .sbd-v2 .sbd-eb {
   color: var(--volt); font-family: var(--mono, ui-monospace, monospace);
@@ -339,7 +339,7 @@
 .sbd-v2 .sbd-pips { display: flex; gap: 4px; margin-top: 9px; }
 .sbd-v2 .sbd-pip2 {
   flex: 1; height: 4px; border-radius: 99px;
-  background: var(--ink-3); border: 1px solid var(--line);
+  background: var(--tok-surface-2); border: 1px solid var(--tok-line);
 }
 .sbd-v2 .sbd-pip2.sbd-on { background: var(--volt); border-color: var(--volt); }
 .sbd-v2 .sbd-sub2 {
@@ -350,15 +350,15 @@
 
 /* the step strip */
 .sbd-v2 .sbd-steps {
-  margin: 10px 10px 0; border: 1px solid var(--line); border-radius: 12px;
-  background: var(--ink-2); padding: 9px 11px 10px;
+  margin: 10px 10px 0; border: 1px solid var(--tok-line); border-radius: 12px;
+  background: var(--tok-surface); padding: 9px 11px 10px;
 }
 .sbd-v2 .sbd-strip { display: flex; align-items: center; gap: 6px; }
 .sbd-v2 .sbd-stpwrap { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; }
 .sbd-v2 .sbd-stpwrap:last-child { flex: 0 0 auto; }
 .sbd-v2 .sbd-stp { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .sbd-v2 .sbd-stp i {
-  width: 17px; height: 17px; border-radius: 50%; border: 1px solid var(--line);
+  width: 17px; height: 17px; border-radius: 50%; border: 1px solid var(--tok-line);
   color: var(--muted-dim); font-family: var(--mono, ui-monospace, monospace);
   font-weight: 700; font-size: 9px; line-height: 15px; text-align: center; font-style: normal;
 }
@@ -370,7 +370,7 @@
 .sbd-v2 .sbd-stp.on b { color: var(--volt); }
 .sbd-v2 .sbd-stp.done i { border-color: var(--jade); color: var(--jade); }
 .sbd-v2 .sbd-stp.done b { color: var(--muted); }
-.sbd-v2 .sbd-arw { flex: 1; height: 1px; background: var(--line); }
+.sbd-v2 .sbd-arw { flex: 1; height: 1px; background: var(--tok-line); }
 .sbd-v2 .sbd-note { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .sbd-v2 .sbd-note b { color: var(--paper); font-weight: 600; }
 
@@ -382,7 +382,7 @@
 .sbd-v2 .sbd-sh2 span { color: var(--volt); font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 10px; }
 .sbd-v2 .sbd-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; padding: 0 10px; }
 .sbd-v2 .sbd-tc2 {
-  border-radius: 9px; border: 1px solid var(--line); background: var(--ink-2);
+  border-radius: 9px; border: 1px solid var(--tok-line); background: var(--tok-surface);
   padding: 6px 2px 5px; text-align: center; position: relative; color: var(--paper);
 }
 .sbd-v2 .sbd-tc2 b { display: block; font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 9px; }
@@ -394,21 +394,21 @@
 }
 .sbd-v2 .sbd-mk {
   display: block; width: 21px; height: 21px; border-radius: 50%; margin: 0 auto 3px;
-  border: 1px solid var(--line); background: var(--ink-3);
+  border: 1px solid var(--tok-line); background: var(--tok-surface-2);
 }
 .sbd-v2 .sbd-panh .sbd-mk { width: 17px; height: 17px; margin: 0; }
 
 /* the roster beside the panel */
 .sbd-v2 .sbd-duo { display: flex; gap: 8px; margin: 10px 10px 0; align-items: stretch; }
 .sbd-v2 .sbd-field {
-  flex: 0 0 150px; border-radius: 14px; padding: 10px 7px; border: 1px solid var(--line);
+  flex: 0 0 150px; border-radius: 14px; padding: 10px 7px; border: 1px solid var(--tok-line);
   background:
     repeating-linear-gradient(90deg, transparent 0 46px, color-mix(in srgb, var(--tok-ink) 3.5%, transparent) 46px 47px),
     var(--tok-surface);
 }
 .sbd-v2 .sbd-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
 .sbd-v2 .sbd-slot {
-  aspect-ratio: 1 / 0.92; border-radius: 10px; border: 1.5px dashed var(--line);
+  aspect-ratio: 1 / 0.92; border-radius: 10px; border: 1.5px dashed var(--tok-line);
   background: color-mix(in srgb, var(--tok-page) 50%, transparent); display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 1px; position: relative; color: var(--paper);
 }
@@ -423,7 +423,7 @@
   border-style: solid; border-color: var(--volt); background: color-mix(in srgb, var(--tok-accent) 9%, transparent);
   box-shadow: 0 0 14px color-mix(in srgb, var(--tok-accent) 30%, transparent);
 }
-.sbd-v2 .sbd-slot.filled { border-style: solid; background: var(--ink-2); }
+.sbd-v2 .sbd-slot.filled { border-style: solid; background: var(--tok-surface); }
 .sbd-v2 .sbd-slot.filled .sbd-spos { font-size: 9px; }
 .sbd-v2 .sbd-nm {
   font-family: var(--font-saira-cond, sans-serif); font-weight: 700; font-size: 10px;
@@ -438,12 +438,12 @@
 
 /* the player panel - ALWAYS PRESENT, only its contents change */
 .sbd-v2 .sbd-panel {
-  flex: 1 1 auto; min-width: 0; border: 1px solid var(--line); border-radius: 13px;
-  background: var(--ink-2); display: flex; flex-direction: column;
+  flex: 1 1 auto; min-width: 0; border: 1px solid var(--tok-line); border-radius: 13px;
+  background: var(--tok-surface); display: flex; flex-direction: column;
 }
 .sbd-v2 .sbd-panh {
   display: flex; align-items: center; gap: 7px; padding: 7px 10px;
-  border-bottom: 1px solid var(--line); background: var(--ink-3);
+  border-bottom: 1px solid var(--tok-line); background: var(--tok-surface-2);
   border-radius: 12px 12px 0 0;
 }
 .sbd-v2 .sbd-panh b { font-family: var(--font-saira-cond, sans-serif); font-weight: 700; font-size: 12px; text-transform: uppercase; }
@@ -461,7 +461,7 @@
 }
 .sbd-v2 .sbd-prow {
   display: flex; align-items: center; gap: 7px; padding: 7px 9px; width: 100%;
-  border-bottom: 1px solid var(--line); background: transparent; color: var(--paper); text-align: left;
+  border-bottom: 1px solid var(--tok-line); background: transparent; color: var(--paper); text-align: left;
 }
 .sbd-v2 .sbd-prow:last-child { border-bottom: 0; }
 .sbd-v2 .sbd-prow.sel { background: color-mix(in srgb, var(--tok-accent) 9%, transparent); box-shadow: inset 3px 0 0 var(--volt); }
@@ -488,7 +488,7 @@
 
 /* the lock */
 .sbd-v2 .sbd-ft {
-  border-top: 1px solid var(--line); margin-top: 11px; padding: 10px 12px;
+  border-top: 1px solid var(--tok-line); margin-top: 11px; padding: 10px 12px;
   display: flex; align-items: center; gap: 10px;
 }
 .sbd-v2 .sbd-pace {
@@ -500,7 +500,7 @@
   margin-left: auto; background: var(--volt); color: var(--ink); border: 0;
   border-radius: 99px; padding: 10px 18px; font-weight: 700; font-size: 14px;
 }
-.sbd-v2 .sbd-lock:disabled { background: var(--ink-3); color: var(--muted-dim); }
+.sbd-v2 .sbd-lock:disabled { background: var(--tok-surface-2); color: var(--muted-dim); }
 /* A TEAM THAT CAN NO LONGER FILL ANYTHING dims, but wears no tick - the tick
    means "you spent this one", and only a real pick earns it. */
 .sbd-v2 .sbd-tc2.sbd-dead2 { opacity: 0.3; }

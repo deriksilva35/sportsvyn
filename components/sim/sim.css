@@ -621,7 +621,7 @@
    THE FALLBACKS ON --ink-2 AND --line ARE LOAD-BEARING, NOT DECORATION.
    Neither token is defined globally: both live only inside
    app/admin/console/console.css, which no route outside /admin/console
-   imports. Written bare, `background: var(--ink-2)` resolves to nothing and
+   imports. Written bare, `background: var(--tok-surface)` resolves to nothing and
    background falls to its initial value - transparent - so this card would
    have vanished into the page while every one of its four rules still read as
    correct. That is the same initial-value trap the surface flip hit and the
@@ -636,9 +636,9 @@
    editorial prose on a page of numbers, and muting it would rank it below the
    grade table it exists to explain. The label and source line stay recessive. */
 .read-prose {
-  background: var(--ink-2); color: var(--paper-warm);
+  background: var(--tok-surface); color: var(--paper-warm);
   padding: 22px 24px; margin: 16px 0; border-radius: 12px;
-  border: 1px solid var(--line); border-left: 4px solid var(--volt);
+  border: 1px solid var(--tok-line); border-left: 4px solid var(--volt);
 }
 .read-prose .k { font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-mut); margin-bottom: 8px; }
 .read-prose p { font-family: var(--font-source-serif), serif; font-size: 16px; line-height: 1.6; color: var(--paper-warm); margin: 0; }
@@ -1063,7 +1063,7 @@
    =========================================================================== */
 
 /* the clock hero */
-.dv-clk { padding: 12px 14px 0; background: var(--tok-surface); border-bottom: 1px solid var(--line); }
+.dv-clk { padding: 12px 14px 0; background: var(--tok-surface); border-bottom: 1px solid var(--tok-line); }
 .dv-otc { display: flex; align-items: flex-end; gap: 10px; }
 .dv-who { min-width: 0; }
 .dv-lab {
@@ -1098,7 +1098,7 @@
   font: 500 9px var(--font-mono, ui-monospace, monospace);
   letter-spacing: 0.06em; color: var(--muted-dim);
 }
-.dv-drain { height: 3px; background: var(--ink-3); margin: 8px -14px 0; position: relative; }
+.dv-drain { height: 3px; background: var(--tok-surface-2); margin: 8px -14px 0; position: relative; }
 .dv-drain i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--volt); }
 .dv-drain i.dv-hot { background: var(--live); }
 
@@ -1106,8 +1106,8 @@
 .dv-seats { display: flex; gap: 3px; padding: 9px 12px 0; }
 .dv-seat {
   flex: 1; height: 34px; position: relative;
-  border: 1px solid var(--line); border-radius: 7px;
-  background: var(--ink-2);
+  border: 1px solid var(--tok-line); border-radius: 7px;
+  background: var(--tok-surface);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
 }
 .dv-seat b { font: 800 10px var(--font-mono, ui-monospace, monospace); color: var(--muted); line-height: 1; }
@@ -1131,7 +1131,7 @@
 .dv-tick::-webkit-scrollbar { display: none; }
 .dv-tk {
   flex: 0 0 auto; min-width: 96px; padding: 5px 8px;
-  border: 1px solid var(--line); border-radius: 9px; background: var(--ink-2);
+  border: 1px solid var(--tok-line); border-radius: 9px; background: var(--tok-surface);
 }
 .dv-tk small {
   display: block; font: 600 8px var(--font-mono, ui-monospace, monospace);
@@ -1157,10 +1157,10 @@
 /* your eight, as a rail */
 .dv-rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 12px 10px; }
 .dv-e {
-  border: 1.5px dashed var(--line); border-radius: 8px;
+  border: 1.5px dashed var(--tok-line); border-radius: 8px;
   background: color-mix(in srgb, var(--tok-page) 50%, transparent); padding: 5px 5px 4px; min-height: 46px;
 }
-.dv-e.f { border-style: solid; background: var(--ink-2); }
+.dv-e.f { border-style: solid; background: var(--tok-surface); }
 .dv-r { font: 700 7px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.06em; color: var(--muted-dim); }
 .dv-e b {
   display: block; margin-top: 2px;
@@ -1171,7 +1171,7 @@
 
 /* the footer */
 .dv-ft {
-  border-top: 1px solid var(--line); padding: 10px 12px;
+  border-top: 1px solid var(--tok-line); padding: 10px 12px;
   display: flex; align-items: center; gap: 10px;
 }
 .dv-pace { font: 500 11px var(--font-mono, ui-monospace, monospace); color: var(--muted); line-height: 1.3; }

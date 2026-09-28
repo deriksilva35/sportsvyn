@@ -14,7 +14,7 @@
 
 .wkv {
   background: var(--ink);
-  border: 1px solid var(--line);
+  border: 1px solid var(--tok-line);
   border-radius: 22px;
   overflow: hidden;
   margin: 0 12px 14px;
@@ -24,7 +24,7 @@
 /* ---- the header ---------------------------------------------------------- */
 .wkv-hd {
   padding: 12px 14px 11px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--tok-line);
   background: var(--tok-surface);
 }
 .wkv-hd-top { display: flex; align-items: center; margin-bottom: 9px; }
@@ -79,8 +79,8 @@
   flex: 1;
   height: 4px;
   border-radius: 99px;
-  background: var(--ink-3);
-  border: 1px solid var(--line);
+  background: var(--tok-surface-2);
+  border: 1px solid var(--tok-line);
 }
 .wkv-pip.on { background: var(--volt); border-color: var(--volt); }
 .wkv-pip.live { background: var(--live); border-color: var(--live); }
@@ -96,9 +96,9 @@
 /* ---- the step strip ----------------------------------------------------- */
 .wkv-steps {
   margin: 10px 12px 0;
-  border: 1px solid var(--line);
+  border: 1px solid var(--tok-line);
   border-radius: 12px;
-  background: var(--ink-2);
+  background: var(--tok-surface);
   padding: 9px 11px 10px;
 }
 .wkv-strip { display: flex; align-items: center; gap: 6px; }
@@ -108,7 +108,7 @@
 .wkv-stp i {
   width: 17px; height: 17px;
   border-radius: 50%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--tok-line);
   color: var(--muted-dim);
   font: 700 9px/15px var(--font-mono, ui-monospace, monospace);
   text-align: center;
@@ -126,7 +126,7 @@
 .wkv-stp.on b { color: var(--volt); }
 .wkv-stp.done i { border-color: var(--jade); color: var(--jade); }
 .wkv-stp.done b { color: var(--muted); }
-.wkv-arw { flex: 1; height: 1px; background: var(--line); min-width: 6px; }
+.wkv-arw { flex: 1; height: 1px; background: var(--tok-line); min-width: 6px; }
 .wkv-note { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .wkv-note b { color: var(--paper); font-weight: 600; }
 
@@ -158,12 +158,12 @@
 }
 .wkv-slot {
   position: relative;
-  border: 1.5px dashed var(--line);
+  border: 1.5px dashed var(--tok-line);
   border-radius: 12px;
   background: color-mix(in srgb, var(--tok-page) 50%, transparent);
   min-height: 74px;
 }
-.wkv-slot.filled { border-style: solid; background: var(--ink-2); }
+.wkv-slot.filled { border-style: solid; background: var(--tok-surface); }
 .wkv-slot.sel {
   border-style: solid;
   border-color: var(--volt);
@@ -275,9 +275,9 @@
 /* ---- the player panel --------------------------------------------------- */
 .wkv-panel {
   margin: 10px 12px 0;
-  border: 1px solid var(--line);
+  border: 1px solid var(--tok-line);
   border-radius: 13px;
-  background: var(--ink-2);
+  background: var(--tok-surface);
   overflow: hidden;
 }
 .wkv-pan-h {
@@ -285,8 +285,8 @@
   align-items: center;
   gap: 6px;
   padding: 7px 10px;
-  border-bottom: 1px solid var(--line);
-  background: var(--ink-3);
+  border-bottom: 1px solid var(--tok-line);
+  background: var(--tok-surface-2);
   flex-wrap: wrap;
 }
 .wkv-pan-h > b {
@@ -299,7 +299,7 @@
 .wkv-find input {
   width: 118px;
   background: var(--ink);
-  border: 1px solid var(--line);
+  border: 1px solid var(--tok-line);
   border-radius: 99px;
   padding: 3px 9px;
   color: var(--paper);
@@ -309,7 +309,7 @@
 .wkv-find input:focus-visible { outline: 1px solid var(--volt); }
 .wkv-tabs { display: flex; gap: 4px; }
 .wkv-tab {
-  border: 1px solid var(--line);
+  border: 1px solid var(--tok-line);
   border-radius: 99px;
   padding: 2px 8px;
   font: 700 9px var(--font-mono, ui-monospace, monospace);
@@ -341,7 +341,7 @@
   width: 100%;
   padding: 7px 9px;
   border: 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--tok-line);
   background: none;
   color: inherit;
   text-align: left;
@@ -392,7 +392,7 @@
 
 /* ---- the footer, which is the confirm control --------------------------- */
 .wkv-ft {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--tok-line);
   margin-top: 13px;
   padding: 11px 12px;
   display: flex;
@@ -417,4 +417,4 @@
   cursor: pointer;
   white-space: nowrap;
 }
-.wkv-lock:disabled { background: var(--ink-3); color: var(--muted-dim); cursor: default; }
+.wkv-lock:disabled { background: var(--tok-surface-2); color: var(--muted-dim); cursor: default; }

@@ -137,9 +137,11 @@ test('.read-prose is an ink module, and its ground actually resolves', () => {
   // and, since tokens v2, route through --tok-*. Rebrand R2 strips the dead
   // fallbacks, so what is asserted now is the thing the fallback protected:
   // both tokens are read here and both resolve at :root.
-  assert.match(r, /background: var\(--ink-2\)/, 'the card ground is the module-ramp token');
-  assert.match(r, /var\(--line\)/);
-  assert.ok(rootValue('--ink-2') && rootValue('--line'), 'and both resolve at :root, so the card cannot vanish');
+  // RAMP RENAME (rebrand R2, relay mon-3): the swept files read the ROLES, not
+  // the ramp aliases - the card ground is --tok-surface, the rule --tok-line.
+  assert.match(r, /background: var\(--tok-surface\)/, 'the card ground is the surface role');
+  assert.match(r, /var\(--tok-line\)/);
+  assert.ok(rootValue('--tok-surface') && rootValue('--tok-line'), 'and both resolve at :root, so the card cannot vanish');
   assert.match(sim, /\.read-prose p \{[^}]*color: var\(--paper-warm\)/, 'the prose is full paper-warm');
 });
 
@@ -191,16 +193,8 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     'components/wire/wire.css': 6,
     // The Games tab v2 (GAMES TAB v2 relay), written on the global tokens.
     // The Pick'em board's sport switch (SPORT SWITCH addendum).
-    'app/pickem/pickem.css': 19,
-    // REBRAND R2 (28 Sep): the sweep strips dead fallbacks from global tokens
-    // (var(--ink-2, #141414) -> var(--ink-2)) and maps the dark palette's
-    // literals to roles, so the first eight files of the sweep now read the ramp
-    // bare - resolvable by construction, counted on purpose. pickem 1 -> 19.
-    'app/weekly/weekly.css': 19,
-    'components/daily/season/seasonBoard.css': 50,
-    'components/games/grade.css': 18,
-    'components/gridiron/drivestrip.css': 13,
-    'components/sim/sim.css': 11,
+    // REBRAND R2: the swept files (SWEPT, below) read the ROLES now - no ramp
+    // alias at all - so they have no entry here; pickem's one is gone with them.
     // app/games/lobbyV2.css was 22 and is gone with the v2 lobby (GAMES v3);
     // lobbyV3.css is written entirely on the global tokens and so has no
     // entry at all, which is the guard's own preferred answer.
@@ -274,9 +268,10 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   // until this route serves the same contest.
   // 138 -> 139 with the league join/create chips (THE RUN - join by code in the
   // app): one ground, on the code input.
-  // 139 -> 268 with rebrand R2's first eight files (the sweep reads the ramp
-  // bare once its dead fallbacks are stripped; see the table above).
-  assert.equal(Object.values(found).reduce((a, b) => a + b, 0), 268,
+  // RAMP RENAME (rebrand R2, relay mon-3): 268 were 130 in the nine swept files
+  // (now roles, 0) and 138 in the rest - a CEILING from here, which the sweep
+  // only lowers as it reaches each file.
+  assert.ok(Object.values(found).reduce((a, b) => a + b, 0) <= 138,
     '18 were broken before the promotion; the rest were written after it');
   // and all three resolve, which is what makes those 18 correct rather than
   // merely present.
@@ -333,4 +328,19 @@ test('THE LEDE BAND IS INK, and its text can be read on it', () => {
   const h1 = gi.slice(gi.indexOf('.gi-lede h1 {'), gi.indexOf('.gi-lede p {'));
   assert.match(h1, /color: var\(--paper\)/);
   assert.doesNotMatch(h1, /color: var\(--ink\)/);
+});
+
+// THE SWEPT FILES READ ROLES, NOT RAMP ALIASES (rebrand R2, relay mon-3).
+// var(--ink-2) / var(--ink-3) / var(--line) in these nine is the pre-token
+// naming; each has a role (--tok-surface / --tok-surface-2 / --tok-line), and
+// a new alias here is a regression of the sweep, not a style choice.
+const SWEPT = ['app/games/lobbyV3.css', 'components/daily/season/seasonBoard.css', 'app/pickem/pickem.css',
+  'app/weekly/weekly.css', 'components/sim/sim.css', 'components/games/grade.css',
+  'components/gridiron/drivestrip.css', 'app/leagues/leagues.css', 'components/onboarding/onboarding.css'];
+test('NO RAMP ALIAS in the swept files - the roles only', () => {
+  const hits = SWEPT.flatMap((f) => {
+    const n = [...stripCss(readFileSync(path.join(REPO, f), 'utf8')).matchAll(/var\(--(ink-2|ink-3|line)\)/g)].length;
+    return n ? [`${f}: ${n}`] : [];
+  });
+  assert.deepEqual(hits, [], 'use --tok-surface / --tok-surface-2 / --tok-line');
 });
