@@ -14,7 +14,7 @@
 // fetch, still nothing that behaves differently on a cold load.
 
 import Link from 'next/link';
-import { shortName, TABLE_COLUMNS } from '@/lib/market/propsBoard';
+import { shortName, TABLE_COLUMNS } from '@/lib/market/propsShape';
 import { nextDir } from '@/lib/market/marketUrl';
 
 const WHEN = new Intl.DateTimeFormat('en-US', {
