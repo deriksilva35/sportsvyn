@@ -3,6 +3,7 @@ import "./globals.css";
 import AppTabBar from '@/components/shell/AppTabBar';
 import AppHeader from '@/components/shell/AppHeader';
 import ResumeManager from '@/components/shell/ResumeManager';
+import SplashReady from '@/components/shell/SplashReady';
 import { Analytics } from '@vercel/analytics/next';
 import '@/components/shell/apptab.css';
 import { dataTheme } from '@/lib/brand/theme';
@@ -111,6 +112,8 @@ export default function RootLayout({ children }) {
         {/* Shell-only, self-gating like the header and bar: owns where an app
             ACTIVATION lands (the opens that never load a document). */}
         <ResumeManager />
+        {/* The native splash goes after the first paint - components/shell/SplashReady. */}
+        <SplashReady />
         {children}
         <AppTabBar />
         {/* WEB ANALYTICS. The project-level feature was already provisioned;
