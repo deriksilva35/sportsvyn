@@ -119,6 +119,7 @@ before(async () => {
   PID.nfl = await seedGame('nfl', 'nfl');
   PID.cfb = await seedGame('cfb', 'cfb');
   PID.noline = await seedGame('noline', 'nfl', { line: false });
+  PID.hold = await seedGame('hold', 'nfl');
 });
 
 after(async () => {
@@ -160,11 +161,15 @@ test('the prior is FROZEN: a later poll does not move it, and an unchanged state
   assert.deepEqual((await meta(ids.nfl)).market_prior, before);
   assert.equal((await logs(ids.nfl)).length, 1, 'same inputs, no new row');
   // THE SCORE ARRIVES BEFORE ITS PLAY ROW (the score poller runs every 30 s,
-  // plays-live every one to two minutes): the tick HOLDS - no new row, and the
+  // plays-live every one to two minutes): the tick HOLDS - no new STATE, and the
   // card keeps its number with a fresh stamp rather than going to "Paused".
+  // SINCE relay mon-3 D THE HOLD ITSELF IS LOGGED: one 'hold' row carrying the
+  // held value (lib/winprob/live.js logHoldStart), so audits need no sampler.
   const shown = (await meta(ids.nfl)).live_state.win_prob;
   await poll('nfl', [row(PID.nfl, { homeScore: 17, clock: '6:02' })]);
-  assert.equal((await logs(ids.nfl)).length, 1, 'plays behind the score: nothing logged');
+  const H = await logs(ids.nfl);
+  assert.equal(H.length, 2, 'plays behind the score: no state row - the hold row only');
+  assert.equal(H[1].inputs.reason, 'hold');
   const heldLs = (await meta(ids.nfl)).live_state;
   assert.equal(heldLs.win_prob, shown, 'the last value is kept');
   assert.ok(Date.now() - Date.parse(heldLs.win_prob_at) < 60_000, 'and stamped fresh, so it does not read Paused');
@@ -174,8 +179,9 @@ test('the prior is FROZEN: a later poll does not move it, and an unchanged state
             VALUES (${ids.nfl}, ${`${PID.nfl}-p2`}, 'd1', 5, 4, 3, '6:02', 1, 10, 30, 30, ${teams.nfl.home.id}, 'Pass Reception', 'A touchdown', 17, 7, true)`;
   await poll('nfl', [row(PID.nfl, { homeScore: 17, clock: '6:02' })]);
   const L = await logs(ids.nfl);
-  assert.equal(L.length, 2, 'a touchdown is a new state, once its row is in');
-  assert.ok(L[1].p_home > L[0].p_home);
+  assert.deepEqual(L.map((r) => r.inputs.reason ?? 'state'), ['state', 'hold', 'release', 'state'],
+    'the hold is closed by a release, then the touchdown is a new state, once its row is in');
+  assert.ok(L[3].p_home > L[0].p_home);
   assert.ok(heldLs.win_prob_hold_since, 'the hold was marked');
   assert.equal((await meta(ids.nfl)).live_state.win_prob_hold_since, undefined, 'a computed value ends the hold, so the next one starts its 180 s afresh');
 });
@@ -259,4 +265,40 @@ test('A GAME THE MODEL NEVER PRICED HAS NO CURVE TO CLOSE, and an away win close
   assert.equal(terminalRow({ homeScore: 3, awayScore: 6 }).p, 0, 'the away side won: home 0');
   assert.equal(terminalRow({ homeScore: 21, awayScore: 21 }).p, 0.5, 'a tie closes at 50');
   assert.equal(terminalRow({ homeScore: null, awayScore: 6 }), null, 'no score, no row');
+});
+
+// ---------------------------------------------------------------------------
+// HOLDS ARE WRITTEN DOWN (relay mon-3 D): the poll that starts a hold writes a
+// 'hold' row with the held value; the tick that ends it writes a 'release' row
+// with the seconds held, then its own row. Through the real poller.
+// ---------------------------------------------------------------------------
+
+test('A HOLD IS LOGGED: one row when it starts, one when it ends with the seconds held - never two starts', async () => {
+  const t0 = new Date(Date.now() + 10_000);
+  await poll('nfl', [row(PID.hold, { homeScore: 10, awayScore: 7 })], t0);
+  const base = await logs(ids.hold);
+  assert.equal(base.length, 1, 'a normal tick first');
+  // the score moves ahead of the plays (a touchdown the feed has not filed): hold
+  const t1 = new Date(t0.getTime() + 30_000);
+  await poll('nfl', [row(PID.hold, { homeScore: 17, awayScore: 7 })], t1);
+  let rows = await logs(ids.hold);
+  assert.equal(rows.length, 2);
+  assert.equal(rows[1].inputs.reason, 'hold');
+  assert.equal(Number(rows[1].p_home), Number(base[0].p_home), 'the hold row carries the value being held');
+  assert.equal(new Date(rows[1].inputs.since).getTime(), t1.getTime());
+  // still behind: nothing more
+  await poll('nfl', [row(PID.hold, { homeScore: 17, awayScore: 7 })], new Date(t1.getTime() + 30_000));
+  assert.equal((await logs(ids.hold)).length, 2, 'a hold is started once');
+  // the touchdown lands in the plays: release, then the computed row
+  const { home } = teams.hold;
+  await sql`INSERT INTO plays (match_id, provider_play_id, drive_id, drive_number, play_number, period, clock, down, distance,
+                               yards_to_goal, yards_gained, offense_team_id, play_type, text, home_score, away_score, scoring)
+            VALUES (${ids.hold}, ${`${PID.hold}-p2`}, 'd1', 5, 4, 3, '8:10', 1, 10, 0, 45, ${home.id}, 'Passing Touchdown', 'A score', 17, 7, true)`;
+  const t2 = new Date(t1.getTime() + 95_000);
+  await poll('nfl', [row(PID.hold, { homeScore: 17, awayScore: 7, clock: '8:05' })], t2);
+  rows = await logs(ids.hold);
+  assert.equal(rows[2].inputs.reason, 'release');
+  assert.equal(rows[2].inputs.secs_held, 95, 'held from t1 to t2');
+  assert.equal(rows.length, 4, 'and the computed tick after it');
+  assert.equal(rows[3].inputs.reason, undefined, 'a plain state row');
 });
