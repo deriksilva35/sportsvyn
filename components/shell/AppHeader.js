@@ -57,15 +57,20 @@ export default function AppHeader() {
     <header className="gh gh--app">
       {/* NOT A LINK. Home is a tab; a header that navigates on tap competes
           with the bar for the same job. */}
-      <span className="gh-app-mark" aria-label="DRAFTVYN">
+      {/* SPORTSVYN, THE SAME MARK AS THE WEB HEADER (28 Sep, Derik): an
+          unauthenticated launch lands on /signin, whose body says SPORTSVYN, under
+          a header that said DRAFTVYN. The asset and size are
+          components/gridiron/Wordmark's (1568x336, 1.8em); it stays a span, not
+          a link - home is a tab. */}
+      <span className="gh-app-mark" aria-label="SPORTSVYN">
         <img
-          src="/brand/draftvynwordmarkwhite1500x300transparent.png"
-          alt="DRAFTVYN"
-          width={1500}
-          height={300}
+          src="/brand/sportsvynwordmarkwhite3000x600truealpha.png"
+          alt="SPORTSVYN"
+          width={1568}
+          height={336}
           fetchPriority="high"
           decoding="async"
-          style={{ height: '2.12em', width: 'auto', display: 'block' }}
+          style={{ height: '1.8em', width: 'auto', display: 'block' }}
         />
       </span>
       {/* PROFILE LIVES HERE NOW, not on the bar - the v0.3 trade that freed
