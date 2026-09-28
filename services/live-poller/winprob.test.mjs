@@ -226,3 +226,37 @@ test('THE PAGE draws our live read from what the poller wrote - Calibrating, two
   assert.doesNotMatch(none, /data-winprob/, 'no line: no bar, no 50/50');
   void React;
 });
+
+// ---------------------------------------------------------------------------
+// THE CURVE ENDS AT THE RESULT (27 Sep audit): on a final the log gets one
+// terminal row after the last play row - the winner 1, the loser 0 - through
+// the real poller, once, and only for a game the model priced.
+// ---------------------------------------------------------------------------
+
+test('A FINAL CLOSES THE CURVE: one terminal row, the winner at 100, after the last play row - and only once', async () => {
+  const before = await logs(ids.nfl);
+  assert.ok(before.length >= 1, 'the game has a curve to close');
+  const lastPlay = before.at(-1);
+  await poll('nfl', [row(PID.nfl, { status: 'final', homeScore: 24, awayScore: 17 })], new Date(Date.now() + 1000));
+  const rows = await logs(ids.nfl);
+  const term = rows.at(-1);
+  assert.equal(rows.length, before.length + 1, 'exactly one row more');
+  assert.equal(term.inputs.reason, 'final');
+  assert.equal(Number(term.p_home), 1, 'the home side won 24-17: 100');
+  assert.equal(term.inputs.secs_game, 0, 'so the fourth-quarter read includes it');
+  assert.equal(String(term.play_seq), String(lastPlay.play_seq), 'it carries the last play row\'s play_seq');
+  assert.equal(term.model_version, lastPlay.model_version);
+  assert.ok(new Date(term.ts) > new Date(lastPlay.ts), 'and it lands after it');
+  // the next poll still sees final (the window's 3 minutes): nothing more
+  await poll('nfl', [row(PID.nfl, { status: 'final', homeScore: 24, awayScore: 17 })], new Date(Date.now() + 2000));
+  assert.equal((await logs(ids.nfl)).length, rows.length, 'never twice');
+});
+
+test('A GAME THE MODEL NEVER PRICED HAS NO CURVE TO CLOSE, and an away win closes at 0', async () => {
+  await poll('nfl', [row(PID.noline, { status: 'final', homeScore: 3, awayScore: 6 })]);
+  assert.equal((await logs(ids.noline)).length, 0, 'no line, no curve, no terminal row');
+  const { terminalRow } = await import('../../lib/winprob/live.js');
+  assert.equal(terminalRow({ homeScore: 3, awayScore: 6 }).p, 0, 'the away side won: home 0');
+  assert.equal(terminalRow({ homeScore: 21, awayScore: 21 }).p, 0.5, 'a tie closes at 50');
+  assert.equal(terminalRow({ homeScore: null, awayScore: 6 }), null, 'no score, no row');
+});
