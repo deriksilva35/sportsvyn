@@ -1255,3 +1255,5 @@
    the white off-state toggle they vanished. Navy strokes when off. */
 :where(:root[data-theme="arcade"]) .auto-toggle:not(.on) .sw { border-color: var(--tok-primary); }
 :where(:root[data-theme="arcade"]) .auto-toggle:not(.on) .sw::after { background: var(--tok-primary); }
+/* The draft board's YOU column head is the selected column: volt fill, navy ink. */
+:where(:root[data-theme="arcade"]) .bg2 .bh.you { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }

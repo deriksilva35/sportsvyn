@@ -97,7 +97,9 @@ test('NO --tok-action / --tok-accent TEXT ON A LIGHT GROUND on the arcade page',
 const STEP3 = ['app/weekly/weekly.css', 'app/daily/daily.css', 'app/pickem/pickem.css', 'components/sim/sim.css',
   'components/games/grade.css', 'app/leagues/leagues.css', 'components/onboarding/onboarding.css',
   'app/games/lobbyV3.css', 'components/site-chrome.css'];
-const BUTTONISH = /(btn|cta|button|\.on\b|\.active\b|\.sel\b|\.pick\b|signin|start|primary|confirm|\.draft\b|\.play\b|-go\b)/;
+// The lock BUTTONS are named explicitly (.expo-lock and .pcard .lock are badges -
+// structure); "you" is the reader's own selected row or column.
+const BUTTONISH = /(btn|cta|button|\.on\b|\.active\b|\.sel\b|\.pick\b|signin|start|primary|confirm|\.draft\b|\.play\b|-go\b|\.(wkv|pkv)-lock\b|--you\b|\.you\b|\.gg-cy\b)/;
 
 export function navyFills(css, g) {
   const rs = rules(css).filter((r) => !/data-theme="(?!arcade)/.test(r.sel)).map((r) => ({ sel: r.sel.replace(ARC, ''), body: r.body }));

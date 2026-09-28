@@ -187,3 +187,7 @@
 /* Navy ink on the volt fill (volt grammar: white on volt is 1.1:1). */
 :where(:root[data-theme="arcade"]) .lg-tab.on { color: var(--tok-on-action); }
 :where(:root[data-theme="arcade"]) .lg-join-primary { color: var(--tok-on-action); }
+/* CREATE is the page's primary action (volt grammar, 28 Sep): a volt fill with
+   navy ink. JOIN stays the secondary .ghost. .lgf .lgf-create outranks .ghost
+   whichever stylesheet loads first. */
+:where(:root[data-theme="arcade"]) .lgf .lgf-create { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }

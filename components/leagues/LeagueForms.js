@@ -26,7 +26,7 @@ export default function LeagueForms() {
     <div className="lgf">
       <form className="lgf-row" onSubmit={(e) => { e.preventDefault(); run(createLeagueAction, e.currentTarget); }}>
         <input name="name" placeholder="League name" maxLength={40} autoComplete="off" aria-label="New league name" />
-        <button type="submit" className="ghost" disabled={busy}>Create</button>
+        <button type="submit" className="ghost lgf-create" disabled={busy}>Create</button>
       </form>
       <form className="lgf-row" onSubmit={(e) => { e.preventDefault(); run(joinLeagueAction, e.currentTarget); }}>
         <input name="code" placeholder="Join code" maxLength={8} autoComplete="off"

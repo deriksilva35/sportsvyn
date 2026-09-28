@@ -417,3 +417,5 @@
 :where(:root[data-theme="arcade"]) .pk-bar i { background: var(--tok-accent); }
 :where(:root[data-theme="arcade"]) .pkv-hd { background: var(--tok-hero-wash); }
 :where(:root[data-theme="arcade"]) .pk-hero { background: var(--tok-hero-wash); }
+/* "Lock it in" is the page's primary button (volt grammar). */
+:where(:root[data-theme="arcade"]) .pkv-lock { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }

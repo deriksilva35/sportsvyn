@@ -164,3 +164,9 @@
    ========================================================================== */
 :where(:root[data-theme="arcade"]) .gg-btn { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
 :where(:root[data-theme="arcade"]) .gg-hdr { background: var(--tok-hero-wash); }
+/* YOU is the selected column head, and the reader's own leaderboard row is the
+   selected row: volt fill, navy ink (it read --volt-dim, navy here, with dark
+   ink on it - the score was unreadable). */
+:where(:root[data-theme="arcade"]) .gg-colhead .gg-cy { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .gg-lr--you { background: var(--tok-action); color: var(--tok-on-action); }
+:where(:root[data-theme="arcade"]) .gg-lr--you .gg-lr-who, :where(:root[data-theme="arcade"]) .gg-lr--you .gg-lr-rk, :where(:root[data-theme="arcade"]) .gg-lr--you .gg-lr-sc { color: var(--tok-on-action); }

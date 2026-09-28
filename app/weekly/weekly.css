@@ -431,3 +431,5 @@
 :where(:root[data-theme="arcade"]) .wkv-pip.on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
 :where(:root[data-theme="arcade"]) .wkv-stp.on i { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
 :where(:root[data-theme="arcade"]) .wkv-hd { background: var(--tok-hero-wash); }
+/* The Weekly's lock button (WeeklyRoom.js .wkv-lock) - a button, not a badge. */
+:where(:root[data-theme="arcade"]) .wkv-lock { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
