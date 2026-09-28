@@ -171,3 +171,37 @@ test('THE LOCAL PALETTES ARE RE-POINTED: each page palette reads the tokens unde
     for (const n of needles) assert.ok(t.includes(n), `${f}: ${n}`);
   }
 });
+
+// ── 2b item 2: the arcade page's text contrast ─────────────────────────────
+const lumOf = (hex) => {
+  const h = hex.replace('#', '');
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const ratio = (a, b) => { const [x, y] = [lumOf(a), lumOf(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+const arcadeValue = (name) => resolve(name, { ...arcadeBlock });
+
+test('SECONDARY TEXT IS A ROLE: --tok-ink-2 keeps its dark value and reads muted on arcade', () => {
+  assert.equal(rootTokens['--tok-ink-2'], '#CFCFC9', 'the dark page is unchanged');
+  assert.equal(arcadeBlock['--tok-ink-2'], 'var(--arcade-muted)');
+});
+
+test('ARCADE TEXT ROLES CLEAR 4.5:1 on the page and both surfaces', () => {
+  for (const fg of ['--tok-ink', '--tok-muted', '--tok-ink-2']) {
+    for (const bg of ['--tok-page', '--tok-surface', '--tok-surface-2']) {
+      const r = ratio(arcadeValue(fg), arcadeValue(bg));
+      assert.ok(r >= 4.5, `${fg} ${arcadeValue(fg)} on ${bg} ${arcadeValue(bg)} is ${r.toFixed(2)}:1`);
+    }
+  }
+});
+
+test('THE LITERAL #CFCFC9 IS GONE from every stylesheet but the role\'s own line', () => {
+  const files = ['app/daily/daily.css', 'app/games/games.css', 'app/games/how-it-works/howItWorks.css'];
+  for (const f of files) {
+    const s = readFileSync(path.join(REPO, f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    assert.doesNotMatch(s, /#CFCFC9/i, f);
+  }
+  const d = readFileSync(path.join(REPO, 'app/daily/daily.css'), 'utf8');
+  assert.match(d, /\.daily-shell \{[^}]*background: var\(--tok-page\)/, 'the Weekly\'s page ground is the role');
+});

@@ -45,6 +45,7 @@ import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
 import { sendHaptic } from '@/lib/shell/bridge';
 import RookieChip from '@/components/fantasy/RookieChip';
+import { plural } from '@/lib/text/plural';
 
 const PAGES = ['BOARD', 'PICK', 'ROSTER']; // swipe pager order; PICK is the default landing
 
@@ -834,7 +835,7 @@ export default function DraftRoom({
                               a man who played and was useless. */}
                           <span className="ncol">
                             <span className={`v${sum ? '' : ' empty'}`} title={sum && collegeView
-                              ? `${sum.season} college season${sum.school ? ` · ${sum.school}` : ''} · ${sum.games} games`
+                              ? `${sum.season} college season${sum.school ? ` · ${sum.school}` : ''} · ${plural(sum.games, 'game')}`
                               : (approx ? 'Partial: kicker distance tiers and defensive points allowed are not in the data' : undefined)}>
                               {sum ? `${approx && !collegeView ? '~' : ''}${fmt1(sum.ppg)}` : '-'}
                             </span>

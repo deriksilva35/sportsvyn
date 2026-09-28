@@ -49,6 +49,11 @@
   --tok-surface-2: #1C1C1C;
   --tok-ink: #F5F5F2;
   --tok-muted: #888888;
+  /* SECONDARY TEXT: a lede, a sub-line - brighter than muted on the dark page.
+     It was the literal #CFCFC9 in ten rules, which the arcade page could not
+     reach: 1.56:1 on white (the rebrand R2 preview's faint Weekly and Leagues
+     copy). Arcade maps it to muted, 6.82:1 on the page. */
+  --tok-ink-2: #CFCFC9;
   --tok-primary: #141414;
   --tok-on-primary: #D4FF00;
   --tok-accent: #D4FF00;
@@ -122,6 +127,7 @@
   --tok-surface-2: var(--arcade-surface-2);
   --tok-ink: var(--arcade-ink);
   --tok-muted: var(--arcade-muted);
+  --tok-ink-2: var(--arcade-muted);
   --tok-primary: var(--arcade-primary);
   --tok-on-primary: var(--arcade-on-primary);
   --tok-accent: var(--arcade-primary);
