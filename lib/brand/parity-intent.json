@@ -1,3 +1,9 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "app/games/lobbyV3.css",
+      "key": ".gv-foot + .lob-stranger { margin-top }",
+      "after": "12px"
+    }
+  ]
 }
