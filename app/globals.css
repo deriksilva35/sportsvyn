@@ -63,6 +63,14 @@
   --tok-shadow-card: none;
   /* Rubik and Rubik Mono One are LOADED in R0 (app/layout.js) and read by
      nothing: the three font roles still resolve to today's faces. */
+  /* THE POSITION HUES (QB RB WR TE K) - a data colour on every roster surface.
+     Dark keeps today's pastels; the arcade block gives each a hue from the arcade
+     set, because the pastels fail contrast as text on white. */
+  --tok-pos-qb: #FF5C8A;
+  --tok-pos-rb: #4ADE80;
+  --tok-pos-wr: #38BDF8;
+  --tok-pos-te: #FB923C;
+  --tok-pos-k: #C084FC;
   --tok-font-display: var(--font-saira), ui-sans-serif, system-ui, sans-serif;
   --tok-font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --tok-font-num: var(--font-jetbrains-mono), ui-monospace, monospace;
@@ -125,6 +133,11 @@
   --tok-radius-lg: var(--arcade-radius-lg);
   --tok-radius-md: var(--arcade-radius-md);
   --tok-shadow-card: var(--arcade-shadow-card);
+  --tok-pos-qb: var(--arcade-live);
+  --tok-pos-rb: var(--arcade-up);
+  --tok-pos-wr: var(--arcade-chip);
+  --tok-pos-te: var(--arcade-coin);
+  --tok-pos-k: var(--arcade-primary);
   --tok-font-display: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   --tok-font-body: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   --tok-font-num: var(--font-rubik-mono), ui-monospace, monospace;

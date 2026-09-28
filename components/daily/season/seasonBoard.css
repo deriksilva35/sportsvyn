@@ -7,7 +7,7 @@
    different game, wired into its own route, not a restyle of the live one.
 
    --volt/--ink/--paper/--jade/--terra are the site's own global tokens
-   (see app/daily/daily.css's own var(--volt, #D4FF00) usage) - not redefined
+   (see app/daily/daily.css's own var(--volt) usage) - not redefined
    here, just consumed. FONTS ARE THE POLISH-PASS FIX: the mock's body sets
    font-family:var(--display) (Saira) once and everything cascades from it;
    this file has no body to set, so .sbd itself carries that default and
@@ -30,42 +30,42 @@
 .sbd { font-family: var(--font-display), sans-serif; }
 
 .sbd-hdr { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 16px 4px; }
-.sbd-hdr .sbd-ed { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted, #8A8A85); }
-.sbd-hdr .sbd-clock { font-family: var(--font-mono); font-size: 12px; color: var(--volt, #D4FF00); }
+.sbd-hdr .sbd-ed { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.sbd-hdr .sbd-clock { font-family: var(--font-mono); font-size: 12px; color: var(--volt); }
 /* UNDER THIRTY SECONDS the clock turns terra - the same tone the grade uses for a miss. */
-.sbd-hdr .sbd-clock--terra { color: var(--terra, #B8410F); }
+.sbd-hdr .sbd-clock--terra { color: var(--terra); }
 .sbd-crumb-row { padding: 10px 16px 0; }
-.sbd-hdr .sbd-streak { font-family: var(--font-mono); font-size: 11px; color: var(--paper-dim, #B8B8B3); }
+.sbd-hdr .sbd-streak { font-family: var(--font-mono); font-size: 11px; color: var(--paper-dim); }
 
-.sbd-mid-wait { margin: 16px 12px 0; padding: 11px 13px; border: 1px dashed var(--line, #2A2A2A); border-radius: 11px; font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim, #5A5A56); line-height: 1.6; }
+.sbd-mid-wait { margin: 16px 12px 0; padding: 11px 13px; border: 1px dashed var(--line); border-radius: 11px; font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim); line-height: 1.6; }
 
 /* THE TODAY BOARD (D1, post-close) - same .lb/.lr shape as docs/design/
    daily-full-mock-v3.html's own #s-mid screen, adapted to the sbd- prefix. */
-.sbd-lb { margin: 20px 12px 0; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); overflow: hidden; }
-.sbd-lb-h { padding: 11px 14px; border-bottom: 1px solid var(--line, #2A2A2A); font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted, #8A8A85); display: flex; justify-content: space-between; }
-.sbd-lr { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--line, #2A2A2A); }
+.sbd-lb { margin: 20px 12px 0; border: 1px solid var(--line); border-radius: 14px; background: var(--ink-2); overflow: hidden; }
+.sbd-lb-h { padding: 11px 14px; border-bottom: 1px solid var(--line); font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+.sbd-lr { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--line); }
 .sbd-lr:first-of-type { border-top: 0; }
-.sbd-lr-rk { flex: none; width: 26px; font-family: var(--font-mono); font-size: 12px; color: var(--muted, #8A8A85); }
+.sbd-lr-rk { flex: none; width: 26px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 .sbd-lr-who { flex: 1 1 auto; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sbd-lr-sc { flex: none; font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
-.sbd-lr--you { background: var(--volt-dim, rgba(212,255,0,.12)); }
-.sbd-lr--you .sbd-lr-who { color: var(--volt, #D4FF00); font-weight: 600; }
-.sbd-lr--you .sbd-lr-rk { color: var(--volt, #D4FF00); }
+.sbd-lr--you { background: var(--volt-dim); }
+.sbd-lr--you .sbd-lr-who { color: var(--volt); font-weight: 600; }
+.sbd-lr--you .sbd-lr-rk { color: var(--volt); }
 
 .sbd-yr { padding: 2px 16px 6px; }
-.sbd-yr h1 { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 46px; letter-spacing: -.05em; line-height: .92; color: var(--paper, #F5F5F2); margin: 0; }
-.sbd-yr .sbd-sub { margin-top: 5px; font-size: 13px; color: var(--paper-dim, #B8B8B3); line-height: 1.45; }
+.sbd-yr h1 { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 46px; letter-spacing: -.05em; line-height: .92; color: var(--paper); margin: 0; }
+.sbd-yr .sbd-sub { margin-top: 5px; font-size: 13px; color: var(--paper-dim); line-height: 1.45; }
 
-.sbd-warn { margin: 8px 16px 0; font-family: var(--font-mono); font-size: 11px; color: var(--terra, #B8410F); line-height: 1.5; }
+.sbd-warn { margin: 8px 16px 0; font-family: var(--font-mono); font-size: 11px; color: var(--terra); line-height: 1.5; }
 
 .sbd-prog { padding: 10px 12px 4px; }
 .sbd-rrow { display: flex; gap: 3px; }
 .sbd-pip {
-  flex: 1; min-width: 0; height: 52px; border: 1px solid var(--line, #2A2A2A); border-radius: 8px;
-  background: var(--ink-2, #141414); display: flex; flex-direction: column; align-items: center;
+  flex: 1; min-width: 0; height: 52px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--ink-2); display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 3px; padding: 0 1px;
 }
-.sbd-pip.sbd-full { background: var(--volt, #D4FF00); border-color: var(--volt, #D4FF00); }
+.sbd-pip.sbd-full { background: var(--volt); border-color: var(--volt); }
 /* COLOUR GLYPHS, EVERY STATE (relay: colour glyphs ruling). The emoji is
    never greyscale, filled or not - a slot's identity glyph is the same
    glyph everywhere it appears (the roster row, the grade row), and dimming
@@ -81,36 +81,36 @@
    is what now carries "not yet filled", since the glyph itself no longer
    does. */
 .sbd-pip .sbd-dot {
-  width: 22px; height: 22px; flex: none; border-radius: 99px; background: var(--ink, #0A0A0A);
+  width: 22px; height: 22px; flex: none; border-radius: 99px; background: var(--ink);
   display: flex; align-items: center; justify-content: center; font-family: var(--font-saira-cond);
-  font-weight: 700; font-size: 9px; letter-spacing: .02em; color: #fff; line-height: 1; opacity: .5;
+  font-weight: 700; font-size: 9px; letter-spacing: .02em; color: var(--tok-page); line-height: 1; opacity: .5;
 }
 .sbd-pip.sbd-full .sbd-dot { opacity: 1; }
-.sbd-prog .sbd-cap { margin-top: 7px; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); }
+.sbd-prog .sbd-cap { margin-top: 7px; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
 
-.sbd-needline { padding: 10px 16px 2px; font-size: 13px; color: var(--paper-dim, #B8B8B3); line-height: 1.4; }
-.sbd-needline b { color: var(--volt, #D4FF00); font-weight: 600; }
+.sbd-needline { padding: 10px 16px 2px; font-size: 13px; color: var(--paper-dim); line-height: 1.4; }
+.sbd-needline b { color: var(--volt); font-weight: 600; }
 
 .sbd-secl { padding: 14px 16px 7px; display: flex; align-items: baseline; justify-content: space-between; }
-.sbd-secl b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--volt, #D4FF00); }
-.sbd-secl span { font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); }
+.sbd-secl b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--volt); }
+.sbd-secl span { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
 
 .sbd-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; padding: 0 12px 16px; }
 .sbd-tc {
-  text-align: center; border: 1px solid var(--line, #2A2A2A); border-radius: 11px; background: var(--ink-2, #141414);
-  padding: 10px 3px; color: var(--paper, #F5F5F2); font: inherit; cursor: pointer;
+  text-align: center; border: 1px solid var(--line); border-radius: 11px; background: var(--ink-2);
+  padding: 10px 3px; color: var(--paper); font: inherit; cursor: pointer;
 }
 .sbd-tc b { display: block; font-family: var(--font-saira-cond); font-weight: 700; font-size: 15px; letter-spacing: .03em; }
-.sbd-tc small { display: block; margin-top: 3px; font-family: var(--font-mono); font-size: 9px; color: var(--volt, #D4FF00); }
+.sbd-tc small { display: block; margin-top: 3px; font-family: var(--font-mono); font-size: 9px; color: var(--volt); }
 /* DEAD: already used, OR nothing on the card fits anything still open.
    pointer-events:none is load-bearing, not decorative - this is the actual
    mechanism that makes a dead chip un-openable, not just visually muted. */
 .sbd-tc.sbd-dead { opacity: .24; pointer-events: none; cursor: default; }
-.sbd-tc.sbd-dead small { color: var(--muted-dim, #5A5A56); }
+.sbd-tc.sbd-dead small { color: var(--muted-dim); }
 .sbd-tc.sbd-dead b { text-decoration: line-through; }
-.sbd-tc:active { border-color: var(--volt, #D4FF00); }
+.sbd-tc:active { border-color: var(--volt); }
 
-.sbd-back { position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 10; }
+.sbd-back { position: fixed; inset: 0; background: color-mix(in srgb, var(--tok-ink) 80%, transparent); z-index: 10; }
 /* CENTERED MODAL, NOT A BOTTOM DRAWER. max-width:366px matches the mock
    exactly (previously 420px - drifted, now corrected). Rendered through a
    React portal to document.body (see SeasonBoard.js) rather than in normal
@@ -122,137 +122,137 @@
    which ancestor turns out to be the culprit. */
 .sbd-sheet {
   position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%); width: calc(100% - 24px); max-width: 366px;
-  background: var(--ink-3, #1C1C1C); border: 2px solid var(--volt, #D4FF00); border-radius: 16px; z-index: 11;
+  background: var(--ink-3); border: 2px solid var(--volt); border-radius: 16px; z-index: 11;
   max-height: 76vh; overflow: auto;
 }
-.sbd-sh { position: sticky; top: 0; background: var(--volt, #D4FF00); color: var(--ink, #0A0A0A); padding: 11px 14px; border-radius: 14px 14px 0 0; }
+.sbd-sh { position: sticky; top: 0; background: var(--volt); color: var(--ink); padding: 11px 14px; border-radius: 14px 14px 0 0; }
 .sbd-sh b { display: block; font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 20px; letter-spacing: -.03em; }
 .sbd-sh span { display: block; margin-top: 2px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
 
 .sbd-pr {
-  display: flex; align-items: center; gap: 9px; padding: 9px 14px; border-top: 1px solid var(--line, #2A2A2A);
+  display: flex; align-items: center; gap: 9px; padding: 9px 14px; border-top: 1px solid var(--line);
   width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; font: inherit; cursor: pointer; text-align: left;
 }
-.sbd-pr .sbd-pos { flex: none; width: 44px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .08em; color: var(--muted, #8A8A85); }
+.sbd-pr .sbd-pos { flex: none; width: 44px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .08em; color: var(--muted); }
 .sbd-pr .sbd-nm { flex: 1 1 auto; min-width: 0; }
-.sbd-pr .sbd-nm b { display: block; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--paper, #F5F5F2); }
-.sbd-pr .sbd-nm small { display: block; margin-top: 2px; font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); }
-.sbd-pr .sbd-tk { flex: none; font-family: var(--font-saira-cond); font-weight: 600; font-size: 9px; letter-spacing: .10em; color: var(--volt, #D4FF00); border: 1px solid var(--volt, #D4FF00); border-radius: 99px; padding: 4px 9px; }
+.sbd-pr .sbd-nm b { display: block; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--paper); }
+.sbd-pr .sbd-nm small { display: block; margin-top: 2px; font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+.sbd-pr .sbd-tk { flex: none; font-family: var(--font-saira-cond); font-weight: 600; font-size: 9px; letter-spacing: .10em; color: var(--volt); border: 1px solid var(--volt); border-radius: 99px; padding: 4px 9px; }
 /* A player with NO legal slot: greyed and inert (pointer-events:none), same
    mechanism as a dead team chip - "no way to pick this" is enforced here,
    not merely implied by graying it out. */
 .sbd-pr.sbd-gone { opacity: .3; pointer-events: none; }
-.sbd-pr.sbd-gone .sbd-tk { border-color: var(--line, #2A2A2A); color: var(--muted-dim, #5A5A56); }
+.sbd-pr.sbd-gone .sbd-tk { border-color: var(--line); color: var(--muted-dim); }
 
-.sbd-slotq { padding: 14px; border-top: 1px solid var(--line, #2A2A2A); }
-.sbd-slotq p { font-size: 13px; color: var(--paper-dim, #B8B8B3); margin: 0 0 10px; }
-.sbd-slotq p b { color: var(--volt, #D4FF00); }
+.sbd-slotq { padding: 14px; border-top: 1px solid var(--line); }
+.sbd-slotq p { font-size: 13px; color: var(--paper-dim); margin: 0 0 10px; }
+.sbd-slotq p b { color: var(--volt); }
 .sbd-slotbtns { display: flex; gap: 7px; flex-wrap: wrap; }
 .sbd-slotbtn {
-  flex: 1; min-width: 74px; text-align: center; border: 1px solid var(--volt, #D4FF00); border-radius: 9px;
-  padding: 11px 6px; font-family: var(--font-saira-cond); font-weight: 700; font-size: 13px; letter-spacing: .06em; color: var(--volt, #D4FF00);
+  flex: 1; min-width: 74px; text-align: center; border: 1px solid var(--volt); border-radius: 9px;
+  padding: 11px 6px; font-family: var(--font-saira-cond); font-weight: 700; font-size: 13px; letter-spacing: .06em; color: var(--volt);
   background: none; cursor: pointer;
 }
 
 .sbd-toast {
   position: fixed; left: 12px; right: 12px; bottom: 16px; max-width: 366px; margin: 0 auto;
-  background: var(--volt, #D4FF00); color: var(--ink, #0A0A0A); border-radius: 12px; padding: 12px 14px; z-index: 12;
+  background: var(--volt); color: var(--ink); border-radius: 12px; padding: 12px 14px; z-index: 12;
 }
 .sbd-toast b { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 16px; }
 .sbd-toast p { margin: 3px 0 0; font-family: var(--font-mono); font-size: 11px; }
 
 .sbd-btn {
   display: block; width: 100%; text-align: center; font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 16px;
-  color: var(--ink, #0A0A0A); background: var(--volt, #D4FF00); border: 0; border-radius: 10px; padding: 13px; cursor: pointer;
+  color: var(--ink); background: var(--volt); border: 0; border-radius: 10px; padding: 13px; cursor: pointer;
 }
 .sbd-btn.sbd-ghost {
-  background: none; border: 1px solid var(--line, #2A2A2A); color: var(--paper, #F5F5F2); font-family: var(--font-saira-cond); font-style: normal;
+  background: none; border: 1px solid var(--line); color: var(--paper); font-family: var(--font-saira-cond); font-style: normal;
   font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
 }
 
 /* rules card */
 .sbd-rules { padding: 34px 16px 24px; }
-.sbd-rules .sbd-kick { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--volt, #D4FF00); }
-.sbd-rules h2 { margin-top: 9px; font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 36px; letter-spacing: -.05em; line-height: .98; color: var(--paper, #F5F5F2); }
-.sbd-rl { display: flex; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line, #2A2A2A); }
+.sbd-rules .sbd-kick { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--volt); }
+.sbd-rules h2 { margin-top: 9px; font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 36px; letter-spacing: -.05em; line-height: .98; color: var(--paper); }
+.sbd-rl { display: flex; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
 .sbd-rl:first-of-type { margin-top: 16px; }
 .sbd-rl .sbd-n {
-  flex: none; width: 26px; height: 26px; border-radius: 99px; border: 1px solid var(--volt, #D4FF00); color: var(--volt, #D4FF00);
+  flex: none; width: 26px; height: 26px; border-radius: 99px; border: 1px solid var(--volt); color: var(--volt);
   display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; font-size: 11px;
 }
 .sbd-rl .sbd-t { flex: 1 1 auto; }
-.sbd-rl .sbd-t b { display: block; font-size: 15px; font-weight: 600; margin-bottom: 3px; color: var(--paper, #F5F5F2); }
-.sbd-rl .sbd-t p { font-size: 13px; color: var(--muted, #8A8A85); line-height: 1.45; margin: 0; }
+.sbd-rl .sbd-t b { display: block; font-size: 15px; font-weight: 600; margin-bottom: 3px; color: var(--paper); }
+.sbd-rl .sbd-t p { font-size: 13px; color: var(--muted); line-height: 1.45; margin: 0; }
 .sbd-rnote {
-  margin-top: 14px; padding: 11px 13px; border: 1px dashed var(--line, #2A2A2A); border-radius: 11px;
-  font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim, #5A5A56); line-height: 1.6;
+  margin-top: 14px; padding: 11px 13px; border: 1px dashed var(--line); border-radius: 11px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim); line-height: 1.6;
 }
 
 /* ===== grade (Part A) - per the mock's .grade/.sbr/.two/.bx family,
    COMPACT REVEAL sizing (the mock's own second, denser pass for these same
    selectors, since eight rows have to read on one screen without excess
    scrolling) applied directly rather than layered as a later override. ===== */
-.sbd-grade { margin: 0 12px 12px; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); overflow: hidden; }
-.sbd-grade-top { background: var(--volt, #D4FF00); color: var(--ink, #0A0A0A); padding: 10px 13px; display: flex; align-items: baseline; justify-content: space-between; }
+.sbd-grade { margin: 0 12px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--ink-2); overflow: hidden; }
+.sbd-grade-top { background: var(--volt); color: var(--ink); padding: 10px 13px; display: flex; align-items: baseline; justify-content: space-between; }
 .sbd-grade-top b { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 17px; letter-spacing: -.03em; }
 .sbd-grade-top span { font-family: var(--font-mono); font-weight: 700; font-size: 12px; }
 
-.sbd-colhead { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 10px; background: var(--ink-2, #141414); border-bottom: 1px solid var(--line, #2A2A2A); }
+.sbd-colhead { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 10px; background: var(--ink-2); border-bottom: 1px solid var(--line); }
 .sbd-colhead div { font-family: var(--font-saira-cond); font-weight: 700; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; text-align: center; padding: 3px 0; border-radius: 7px; }
-.sbd-colhead .sbd-cy { color: var(--ink, #0A0A0A); background: var(--volt, #D4FF00); }
-.sbd-colhead .sbd-cb { color: var(--jade, #2A8A4F); border: 1px solid var(--jade, #2A8A4F); }
+.sbd-colhead .sbd-cy { color: var(--ink); background: var(--volt); }
+.sbd-colhead .sbd-cb { color: var(--jade); border: 1px solid var(--jade); }
 
-.sbd-sbr { padding: 6px 10px; border-top: 1px solid var(--line, #2A2A2A); }
+.sbd-sbr { padding: 6px 10px; border-top: 1px solid var(--line); }
 .sbd-sbr .sbd-top2 { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
-.sbd-sbr .sbd-pos { font-family: var(--font-saira-cond); font-weight: 700; font-size: 9px; letter-spacing: .08em; color: var(--muted, #8A8A85); min-width: 26px; }
+.sbd-sbr .sbd-pos { font-family: var(--font-saira-cond); font-weight: 700; font-size: 9px; letter-spacing: .08em; color: var(--muted); min-width: 26px; }
 .sbd-sbr .sbd-vd { font-family: var(--font-saira-cond); font-weight: 600; font-size: 8px; letter-spacing: .10em; text-transform: uppercase; border: 1px solid; border-radius: 99px; padding: 1px 6px; }
-.sbd-sbr.sbd-hit .sbd-vd { color: var(--jade, #2A8A4F); border-color: var(--jade, #2A8A4F); }
-.sbd-sbr.sbd-miss .sbd-vd { color: var(--terra, #B8410F); border-color: var(--terra, #B8410F); }
-.sbd-sbr.sbd-ahead .sbd-vd { color: var(--volt, #D4FF00); border-color: var(--volt, #D4FF00); }
-.sbd-sbr.sbd-ahead .sbd-dif { color: var(--volt, #D4FF00); }
-.sbd-sbr .sbd-dif { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--terra, #B8410F); }
-.sbd-sbr.sbd-hit .sbd-dif { color: var(--jade, #2A8A4F); }
+.sbd-sbr.sbd-hit .sbd-vd { color: var(--jade); border-color: var(--jade); }
+.sbd-sbr.sbd-miss .sbd-vd { color: var(--terra); border-color: var(--terra); }
+.sbd-sbr.sbd-ahead .sbd-vd { color: var(--volt); border-color: var(--volt); }
+.sbd-sbr.sbd-ahead .sbd-dif { color: var(--volt); }
+.sbd-sbr .sbd-dif { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--terra); }
+.sbd-sbr.sbd-hit .sbd-dif { color: var(--jade); }
 
 .sbd-two { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.sbd-bx { border: 1px solid var(--line, #2A2A2A); border-radius: 8px; padding: 6px 8px; background: var(--ink, #0A0A0A); }
-.sbd-bx .sbd-nm { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--paper, #F5F5F2); }
-.sbd-bx .sbd-mt { margin-top: 1px; font-family: var(--font-mono); font-size: 8px; color: var(--muted-dim, #5A5A56); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sbd-bx .sbd-pt { margin-top: 2px; font-family: var(--font-mono); font-weight: 700; font-size: 14px; color: var(--paper, #F5F5F2); }
-.sbd-bx.sbd-you { border-color: var(--volt, #D4FF00); }
-.sbd-bx.sbd-you .sbd-pt { color: var(--volt, #D4FF00); }
-.sbd-bx.sbd-best .sbd-pt { color: var(--jade, #2A8A4F); }
-.sbd-sbr.sbd-hit .sbd-bx.sbd-you { border-color: var(--jade, #2A8A4F); }
-.sbd-sbr.sbd-hit .sbd-bx.sbd-you .sbd-pt { color: var(--jade, #2A8A4F); }
+.sbd-bx { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: var(--ink); }
+.sbd-bx .sbd-nm { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--paper); }
+.sbd-bx .sbd-mt { margin-top: 1px; font-family: var(--font-mono); font-size: 8px; color: var(--muted-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sbd-bx .sbd-pt { margin-top: 2px; font-family: var(--font-mono); font-weight: 700; font-size: 14px; color: var(--paper); }
+.sbd-bx.sbd-you { border-color: var(--volt); }
+.sbd-bx.sbd-you .sbd-pt { color: var(--volt); }
+.sbd-bx.sbd-best .sbd-pt { color: var(--jade); }
+.sbd-sbr.sbd-hit .sbd-bx.sbd-you { border-color: var(--jade); }
+.sbd-sbr.sbd-hit .sbd-bx.sbd-you .sbd-pt { color: var(--jade); }
 .sbd-bx.sbd-same { border-style: dashed; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; padding: 8px; }
-.sbd-bx.sbd-same .sbd-tick { font-family: var(--font-mono); font-size: 16px; color: var(--jade, #2A8A4F); }
-.sbd-bx.sbd-same .sbd-sm { margin-top: 1px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 8px; letter-spacing: .10em; text-transform: uppercase; color: var(--muted, #8A8A85); }
-.sbd-sbr .sbd-swap { margin-top: 3px; font-family: var(--font-mono); font-size: 9px; color: var(--muted-dim, #5A5A56); }
+.sbd-bx.sbd-same .sbd-tick { font-family: var(--font-mono); font-size: 16px; color: var(--jade); }
+.sbd-bx.sbd-same .sbd-sm { margin-top: 1px; font-family: var(--font-saira-cond); font-weight: 600; font-size: 8px; letter-spacing: .10em; text-transform: uppercase; color: var(--muted); }
+.sbd-sbr .sbd-swap { margin-top: 3px; font-family: var(--font-mono); font-size: 9px; color: var(--muted-dim); }
 
-.sbd-mathline { margin: 0 12px 12px; padding: 8px 12px; border: 1px dashed var(--line, #2A2A2A); border-radius: 11px; font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); line-height: 1.5; }
-.sbd-mathline b { color: var(--terra, #B8410F); font-weight: 700; }
+.sbd-mathline { margin: 0 12px 12px; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 11px; font-family: var(--font-mono); font-size: 10px; color: var(--muted); line-height: 1.5; }
+.sbd-mathline b { color: var(--terra); font-weight: 700; }
 
-.sbd-perf { margin: 0 12px 12px; border: 1px solid var(--line, #2A2A2A); border-radius: 11px; background: var(--ink-2, #141414); padding: 9px 12px; }
-.sbd-perf b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--jade, #2A8A4F); display: block; margin-bottom: 5px; }
-.sbd-perf p { font-family: var(--font-mono); font-size: 10px; color: var(--muted, #8A8A85); line-height: 1.5; margin: 0; }
+.sbd-perf { margin: 0 12px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--ink-2); padding: 9px 12px; }
+.sbd-perf b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--jade); display: block; margin-bottom: 5px; }
+.sbd-perf p { font-family: var(--font-mono); font-size: 10px; color: var(--muted); line-height: 1.5; margin: 0; }
 
-.sbd-story { margin: 0 12px 12px; border: 1px solid var(--line, #2A2A2A); border-left: 3px solid var(--volt, #D4FF00); border-radius: 11px; background: var(--ink-2, #141414); padding: 10px 12px; }
-.sbd-story b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--volt, #D4FF00); display: block; margin-bottom: 6px; }
-.sbd-story p { font-family: var(--font-source-serif), Georgia, serif; font-style: italic; font-size: 12px; line-height: 1.4; color: var(--paper-dim, #B8B8B3); margin: 0; }
+.sbd-story { margin: 0 12px 12px; border: 1px solid var(--line); border-left: 3px solid var(--volt); border-radius: 11px; background: var(--ink-2); padding: 10px 12px; }
+.sbd-story b { font-family: var(--font-saira-cond); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--volt); display: block; margin-bottom: 6px; }
+.sbd-story p { font-family: var(--font-source-serif), Georgia, serif; font-style: italic; font-size: 12px; line-height: 1.4; color: var(--paper-dim); margin: 0; }
 
 /* MARGIN IS NOW SYMMETRIC (relay 6 item 2). This card used to be the last
    thing on the screen, so `20px 12px 0` was enough - a bottom margin would
    have done nothing. It sits between the header and the grade rows now and
    needs to clear both. The border, radius, padding and background are
    untouched and still match .share in the Daily mock exactly. */
-.sbd-share { margin: 14px 12px 16px; border: 1px solid var(--line, #2A2A2A); border-radius: 14px; background: var(--ink-2, #141414); padding: 15px 14px; }
+.sbd-share { margin: 14px 12px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--ink-2); padding: 15px 14px; }
 .sbd-share .sbd-g { font-family: var(--font-mono); font-size: 18px; letter-spacing: .09em; line-height: 1.5; }
-.sbd-share .sbd-cap { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--muted, #8A8A85); line-height: 1.55; }
+.sbd-share .sbd-cap { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); line-height: 1.55; }
 .sbd-copy {
   margin-top: 10px; font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-  color: var(--volt, #D4FF00); background: transparent; border: 1px solid var(--volt, #D4FF00);
+  color: var(--volt); background: transparent; border: 1px solid var(--volt);
   border-radius: 8px; padding: 6px 12px; cursor: pointer;
 }
-.sbd-lbd-link { display: block; text-align: center; margin: 16px 12px 24px; font-size: 13px; font-weight: 700; color: var(--volt, #D4FF00); text-decoration: none; }
+.sbd-lbd-link { display: block; text-align: center; margin: 16px 12px 24px; font-size: 13px; font-weight: 700; color: var(--volt); text-decoration: none; }
 
 /* ROLLING LOCK - a slot that has kicked off is grey and inert; a pool row
    whose team has kicked cannot be taken. */
@@ -299,34 +299,34 @@
    TOKENS, NOT HEXES: the mock's --qb/--rb/--wr/--te/--k are the only new
    colours, declared here because no global token covers a position.
    ========================================================================== */
-.sbd-v2 { --qb: #FF5C8A; --rb: #4ADE80; --wr: #38BDF8; --te: #FB923C; --k: #C084FC; }
+.sbd-v2 { --qb: var(--tok-pos-qb); --rb: var(--tok-pos-rb); --wr: var(--tok-pos-wr); --te: var(--tok-pos-te); --k: var(--tok-pos-k); }
 
 /* header: clock, points, pips */
-.sbd-v2 .sbd-hd { padding: 12px 14px 10px; border-bottom: 1px solid var(--line, #2a2a2a); }
+.sbd-v2 .sbd-hd { padding: 12px 14px 10px; border-bottom: 1px solid var(--line); }
 .sbd-v2 .sbd-hd-top { display: flex; align-items: center; margin-bottom: 8px; }
 .sbd-v2 .sbd-eb {
   color: var(--volt); font-family: var(--mono, ui-monospace, monospace);
   font-weight: 700; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
 }
 .sbd-v2 .sbd-ed2 {
-  margin-left: auto; color: var(--muted-dim, #6e6e68);
+  margin-left: auto; color: var(--muted-dim);
   font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 9px;
 }
 .sbd-v2 .sbd-crow { display: flex; align-items: center; gap: 12px; }
 .sbd-v2 .sbd-clk { display: flex; gap: 3px; align-items: center; }
 .sbd-v2 .sbd-dg {
-  width: 29px; height: 42px; border-radius: 4px; background: #17181a;
-  box-shadow: inset 0 0 0 1px #000; font-family: var(--mono, ui-monospace, monospace);
+  width: 29px; height: 42px; border-radius: 4px; background: var(--tok-surface-2);
+  box-shadow: inset 0 0 0 1px var(--tok-ink); font-family: var(--mono, ui-monospace, monospace);
   font-weight: 800; font-size: 29px; line-height: 42px; text-align: center;
 }
 .sbd-v2 .sbd-cl {
   font-family: var(--mono, ui-monospace, monospace); font-weight: 800; font-size: 25px;
-  color: var(--muted-dim, #6e6e68);
+  color: var(--muted-dim);
 }
 /* THE LAST MINUTE, THEN THE LAST THIRTY SECONDS. Two steps, not a fade: a
    colour that drifts tells a reader nothing they can act on. */
-.sbd-v2 .sbd-crow.sbd-warn2 .sbd-dg { color: var(--terra, #b8410f); }
-.sbd-v2 .sbd-crow.sbd-crit .sbd-dg { color: var(--live, #e63946); }
+.sbd-v2 .sbd-crow.sbd-warn2 .sbd-dg { color: var(--terra); }
+.sbd-v2 .sbd-crow.sbd-crit .sbd-dg { color: var(--live); }
 .sbd-v2 .sbd-tot { margin-left: auto; text-align: right; }
 .sbd-v2 .sbd-tot b {
   display: block; font-family: var(--mono, ui-monospace, monospace); font-weight: 800;
@@ -334,12 +334,12 @@
 }
 .sbd-v2 .sbd-tot span {
   font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 9px;
-  letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted-dim, #6e6e68);
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted-dim);
 }
 .sbd-v2 .sbd-pips { display: flex; gap: 4px; margin-top: 9px; }
 .sbd-v2 .sbd-pip2 {
   flex: 1; height: 4px; border-radius: 99px;
-  background: var(--ink-3, #1c1c1c); border: 1px solid var(--line, #2a2a2a);
+  background: var(--ink-3); border: 1px solid var(--line);
 }
 .sbd-v2 .sbd-pip2.sbd-on { background: var(--volt); border-color: var(--volt); }
 .sbd-v2 .sbd-sub2 {
@@ -350,27 +350,27 @@
 
 /* the step strip */
 .sbd-v2 .sbd-steps {
-  margin: 10px 10px 0; border: 1px solid var(--line, #2a2a2a); border-radius: 12px;
-  background: var(--ink-2, #141414); padding: 9px 11px 10px;
+  margin: 10px 10px 0; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--ink-2); padding: 9px 11px 10px;
 }
 .sbd-v2 .sbd-strip { display: flex; align-items: center; gap: 6px; }
 .sbd-v2 .sbd-stpwrap { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; }
 .sbd-v2 .sbd-stpwrap:last-child { flex: 0 0 auto; }
 .sbd-v2 .sbd-stp { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .sbd-v2 .sbd-stp i {
-  width: 17px; height: 17px; border-radius: 50%; border: 1px solid var(--line, #2a2a2a);
-  color: var(--muted-dim, #6e6e68); font-family: var(--mono, ui-monospace, monospace);
+  width: 17px; height: 17px; border-radius: 50%; border: 1px solid var(--line);
+  color: var(--muted-dim); font-family: var(--mono, ui-monospace, monospace);
   font-weight: 700; font-size: 9px; line-height: 15px; text-align: center; font-style: normal;
 }
 .sbd-v2 .sbd-stp b {
   font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 9px;
-  letter-spacing: 0.12em; color: var(--muted-dim, #6e6e68); text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--muted-dim); text-transform: uppercase;
 }
-.sbd-v2 .sbd-stp.on i { border-color: var(--volt); background: var(--volt); color: var(--ink, #0a0a0a); }
+.sbd-v2 .sbd-stp.on i { border-color: var(--volt); background: var(--volt); color: var(--ink); }
 .sbd-v2 .sbd-stp.on b { color: var(--volt); }
-.sbd-v2 .sbd-stp.done i { border-color: var(--jade, #2a8a4f); color: var(--jade, #2a8a4f); }
+.sbd-v2 .sbd-stp.done i { border-color: var(--jade); color: var(--jade); }
 .sbd-v2 .sbd-stp.done b { color: var(--muted); }
-.sbd-v2 .sbd-arw { flex: 1; height: 1px; background: var(--line, #2a2a2a); }
+.sbd-v2 .sbd-arw { flex: 1; height: 1px; background: var(--line); }
 .sbd-v2 .sbd-note { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .sbd-v2 .sbd-note b { color: var(--paper); font-weight: 600; }
 
@@ -382,11 +382,11 @@
 .sbd-v2 .sbd-sh2 span { color: var(--volt); font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 10px; }
 .sbd-v2 .sbd-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; padding: 0 10px; }
 .sbd-v2 .sbd-tc2 {
-  border-radius: 9px; border: 1px solid var(--line, #2a2a2a); background: var(--ink-2, #141414);
+  border-radius: 9px; border: 1px solid var(--line); background: var(--ink-2);
   padding: 6px 2px 5px; text-align: center; position: relative; color: var(--paper);
 }
 .sbd-v2 .sbd-tc2 b { display: block; font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 9px; }
-.sbd-v2 .sbd-tc2.sbd-tcon { border-color: var(--volt); background: rgba(212, 255, 0, 0.06); }
+.sbd-v2 .sbd-tc2.sbd-tcon { border-color: var(--volt); background: color-mix(in srgb, var(--tok-accent) 6%, transparent); }
 .sbd-v2 .sbd-tc2.sbd-used { opacity: 0.3; }
 .sbd-v2 .sbd-tc2.sbd-used::after {
   content: '✓'; position: absolute; top: 1px; right: 4px; color: var(--volt);
@@ -394,25 +394,25 @@
 }
 .sbd-v2 .sbd-mk {
   display: block; width: 21px; height: 21px; border-radius: 50%; margin: 0 auto 3px;
-  border: 1px solid var(--line, #2a2a2a); background: var(--ink-3, #1c1c1c);
+  border: 1px solid var(--line); background: var(--ink-3);
 }
 .sbd-v2 .sbd-panh .sbd-mk { width: 17px; height: 17px; margin: 0; }
 
 /* the roster beside the panel */
 .sbd-v2 .sbd-duo { display: flex; gap: 8px; margin: 10px 10px 0; align-items: stretch; }
 .sbd-v2 .sbd-field {
-  flex: 0 0 150px; border-radius: 14px; padding: 10px 7px; border: 1px solid var(--line, #2a2a2a);
+  flex: 0 0 150px; border-radius: 14px; padding: 10px 7px; border: 1px solid var(--line);
   background:
-    repeating-linear-gradient(90deg, transparent 0 46px, rgba(255, 255, 255, 0.035) 46px 47px),
-    linear-gradient(160deg, #101a12, #0a0f0b);
+    repeating-linear-gradient(90deg, transparent 0 46px, color-mix(in srgb, var(--tok-ink) 3.5%, transparent) 46px 47px),
+    var(--tok-surface);
 }
 .sbd-v2 .sbd-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
 .sbd-v2 .sbd-slot {
-  aspect-ratio: 1 / 0.92; border-radius: 10px; border: 1.5px dashed var(--line, #2a2a2a);
-  background: rgba(10, 10, 10, 0.5); display: flex; flex-direction: column;
+  aspect-ratio: 1 / 0.92; border-radius: 10px; border: 1.5px dashed var(--line);
+  background: color-mix(in srgb, var(--tok-page) 50%, transparent); display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 1px; position: relative; color: var(--paper);
 }
-.sbd-v2 .sbd-spos { font-family: var(--font-saira-cond, sans-serif); font-weight: 800; font-size: 12px; color: var(--muted-dim, #6e6e68); }
+.sbd-v2 .sbd-spos { font-family: var(--font-saira-cond, sans-serif); font-weight: 800; font-size: 12px; color: var(--muted-dim); }
 .sbd-v2 .sbd-slot.qb .sbd-spos { color: var(--qb); }
 .sbd-v2 .sbd-slot.rb .sbd-spos { color: var(--rb); }
 .sbd-v2 .sbd-slot.wr .sbd-spos { color: var(--wr); }
@@ -420,10 +420,10 @@
 .sbd-v2 .sbd-slot.k .sbd-spos { color: var(--k); }
 /* A LIT SLOT IS THE ONLY THING A HELD PLAYER CAN LAND IN. */
 .sbd-v2 .sbd-slot.elig {
-  border-style: solid; border-color: var(--volt); background: rgba(212, 255, 0, 0.09);
-  box-shadow: 0 0 14px rgba(212, 255, 0, 0.3);
+  border-style: solid; border-color: var(--volt); background: color-mix(in srgb, var(--tok-accent) 9%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--tok-accent) 30%, transparent);
 }
-.sbd-v2 .sbd-slot.filled { border-style: solid; background: var(--ink-2, #141414); }
+.sbd-v2 .sbd-slot.filled { border-style: solid; background: var(--ink-2); }
 .sbd-v2 .sbd-slot.filled .sbd-spos { font-size: 9px; }
 .sbd-v2 .sbd-nm {
   font-family: var(--font-saira-cond, sans-serif); font-weight: 700; font-size: 10px;
@@ -432,18 +432,18 @@
 .sbd-v2 .sbd-tm { font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 8px; color: var(--muted); }
 .sbd-v2 .sbd-pts { font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 13px; color: var(--volt); }
 .sbd-v2 .sbd-x {
-  position: absolute; top: 1px; right: 5px; color: var(--muted-dim, #6e6e68);
+  position: absolute; top: 1px; right: 5px; color: var(--muted-dim);
   font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 12px;
 }
 
 /* the player panel - ALWAYS PRESENT, only its contents change */
 .sbd-v2 .sbd-panel {
-  flex: 1 1 auto; min-width: 0; border: 1px solid var(--line, #2a2a2a); border-radius: 13px;
-  background: var(--ink-2, #141414); display: flex; flex-direction: column;
+  flex: 1 1 auto; min-width: 0; border: 1px solid var(--line); border-radius: 13px;
+  background: var(--ink-2); display: flex; flex-direction: column;
 }
 .sbd-v2 .sbd-panh {
   display: flex; align-items: center; gap: 7px; padding: 7px 10px;
-  border-bottom: 1px solid var(--line, #2a2a2a); background: var(--ink-3, #1c1c1c);
+  border-bottom: 1px solid var(--line); background: var(--ink-3);
   border-radius: 12px 12px 0 0;
 }
 .sbd-v2 .sbd-panh b { font-family: var(--font-saira-cond, sans-serif); font-weight: 700; font-size: 12px; text-transform: uppercase; }
@@ -455,21 +455,21 @@
 .sbd-v2 .sbd-panb { flex: 1; overflow-y: auto; scrollbar-width: none; }
 .sbd-v2 .sbd-empty {
   height: 100%; display: flex; align-items: center; justify-content: center; text-align: center;
-  padding: 0 14px; color: var(--muted-dim, #6e6e68);
+  padding: 0 14px; color: var(--muted-dim);
   font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 10px;
   letter-spacing: 0.05em; line-height: 1.6;
 }
 .sbd-v2 .sbd-prow {
   display: flex; align-items: center; gap: 7px; padding: 7px 9px; width: 100%;
-  border-bottom: 1px solid var(--line, #2a2a2a); background: transparent; color: var(--paper); text-align: left;
+  border-bottom: 1px solid var(--line); background: transparent; color: var(--paper); text-align: left;
 }
 .sbd-v2 .sbd-prow:last-child { border-bottom: 0; }
-.sbd-v2 .sbd-prow.sel { background: rgba(212, 255, 0, 0.09); box-shadow: inset 3px 0 0 var(--volt); }
+.sbd-v2 .sbd-prow.sel { background: color-mix(in srgb, var(--tok-accent) 9%, transparent); box-shadow: inset 3px 0 0 var(--volt); }
 .sbd-v2 .sbd-prow.gone { opacity: 0.26; }
 .sbd-v2 .sbd-pb {
   width: 24px; height: 18px; border-radius: 5px; display: grid; place-items: center;
   font-family: var(--font-saira-cond, sans-serif); font-weight: 800; font-size: 8px;
-  color: #0a0a0a; flex: 0 0 auto; background: var(--muted);
+  color: var(--tok-page); flex: 0 0 auto; background: var(--muted);
 }
 .sbd-v2 .sbd-pb.qb { background: var(--qb); }
 .sbd-v2 .sbd-pb.rb { background: var(--rb); }
@@ -484,11 +484,11 @@
 }
 .sbd-v2 .sbd-val { margin-left: auto; text-align: right; }
 .sbd-v2 .sbd-val b { display: block; font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 14px; }
-.sbd-v2 .sbd-val small { font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 8px; color: var(--muted-dim, #6e6e68); }
+.sbd-v2 .sbd-val small { font-family: var(--mono, ui-monospace, monospace); font-weight: 600; font-size: 8px; color: var(--muted-dim); }
 
 /* the lock */
 .sbd-v2 .sbd-ft {
-  border-top: 1px solid var(--line, #2a2a2a); margin-top: 11px; padding: 10px 12px;
+  border-top: 1px solid var(--line); margin-top: 11px; padding: 10px 12px;
   display: flex; align-items: center; gap: 10px;
 }
 .sbd-v2 .sbd-pace {
@@ -497,10 +497,10 @@
 }
 .sbd-v2 .sbd-pace b { color: var(--paper); font-weight: 700; }
 .sbd-v2 .sbd-lock {
-  margin-left: auto; background: var(--volt); color: var(--ink, #0a0a0a); border: 0;
+  margin-left: auto; background: var(--volt); color: var(--ink); border: 0;
   border-radius: 99px; padding: 10px 18px; font-weight: 700; font-size: 14px;
 }
-.sbd-v2 .sbd-lock:disabled { background: var(--ink-3, #1c1c1c); color: var(--muted-dim, #6e6e68); }
+.sbd-v2 .sbd-lock:disabled { background: var(--ink-3); color: var(--muted-dim); }
 /* A TEAM THAT CAN NO LONGER FILL ANYTHING dims, but wears no tick - the tick
    means "you spent this one", and only a real pick earns it. */
 .sbd-v2 .sbd-tc2.sbd-dead2 { opacity: 0.3; }
