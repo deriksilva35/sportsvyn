@@ -11,7 +11,7 @@
 // selected game.
 
 import Link from 'next/link';
-import { MARKET_GROUPS } from '@/lib/market/propsBoard';
+import { MARKET_GROUPS } from '@/lib/market/propsShape';
 import { hiddenFields } from '@/lib/market/marketUrl';
 import GameFilter from './GameFilter';
 

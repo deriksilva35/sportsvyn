@@ -10,7 +10,7 @@
 // one in this codebase because we do not sell them.
 
 import Link from 'next/link';
-import { shortName, MARKET_LABELS } from '@/lib/market/propsBoard';
+import { shortName, MARKET_LABELS } from '@/lib/market/propsShape';
 
 const WHEN = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit',

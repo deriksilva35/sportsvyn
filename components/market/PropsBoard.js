@@ -13,7 +13,7 @@
 
 import Link from 'next/link';
 import { barsFor } from '@/lib/gridiron/gameChart';
-import { shortName, MARKET_GROUPS, SORTS } from '@/lib/market/propsBoard';
+import { shortName, MARKET_GROUPS, SORTS } from '@/lib/market/propsShape';
 
 const WHEN = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit',
