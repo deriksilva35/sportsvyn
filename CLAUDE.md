@@ -216,3 +216,20 @@ lib/gridiron/ingest.js:
 - Ad-hoc `AT TIME ZONE` SQL for provider time conversion is FORBIDDEN outside the
   exported easternLocalToUtc() helper (the single sanctioned ET-local -> UTC
   conversion, done DST-aware in Postgres).
+
+## The native app's config is NOT in this repo
+
+The shipping iOS container (Capacitor config, Xcode project, start URL, UA
+token) lives in the Mac's native repo. This repo's `capacitor.config.ts` and
+`ios/` stub were dead copies - they said the app starts at /app, while the
+shipping binary starts at `/sim?shell=sim-app` - and were deleted on 28 Sep
+(G-FIX). Comments in app/app/page.js and proxy.js that cite
+capacitor.config.ts describe that dead copy. For anything about what the
+binary loads or sends, ask the Mac relay; do not recon it from here. Two
+settings the web side depends on live there: `server.appendUserAgent`
+('SportsvynApp/1', lib/shell/constants.js) and `errorPath: 'error.html'`
+(www/error.html here). The app icon the monogram is traced from is kept at
+lib/brand/fixtures/AppIcon-512@2x.png.
+
+The start URL is handled in proxy.js step 0b: `/sim?shell=sim-app` -> 307
+/games with the sv_shell cookie set, so a cold launch paints Games first.

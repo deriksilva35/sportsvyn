@@ -13,7 +13,10 @@ import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import path from 'node:path';
 
-export const ICON = 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png';
+// The shipped app icon, kept as a brand fixture: the web repo's ios/ stub it
+// used to live in was deleted (G-FIX, 28 Sep) - the real Xcode project is on
+// the Mac. Same bytes, so the constants still re-trace to the pixel.
+export const ICON = 'lib/brand/fixtures/AppIcon-512@2x.png';
 
 export function decodePng(buf) {
   let p = 8; let W, H, ct; const idat = [];

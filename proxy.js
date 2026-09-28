@@ -133,6 +133,25 @@ export async function proxy(request) {
   };
 
   // -------------------------------------------------------------------------
+  // 0b. THE NATIVE START URL LANDS ON GAMES (G-FIX, droplet-mon-7).
+  //
+  //    The shipping binary starts at /sim?shell=sim-app (its config lives on
+  //    the Mac, not in this repo). /sim then painted the mock-draft page before
+  //    ResumeManager's client push to /games - the "sim flash" on every cold
+  //    launch. Answering the start URL here with a bare 307 means the first
+  //    document the webview paints is Games. The cookie is written exactly as
+  //    before (withCookie), and the query is dropped so the shell param does
+  //    not ride into /games. Only this exact entry: /sim without the param,
+  //    with or without the cookie, is untouched, and ResumeManager is too.
+  // -------------------------------------------------------------------------
+  if (pathname === '/sim' && paramSaysShell) {
+    const dest = request.nextUrl.clone();
+    dest.pathname = '/games';
+    dest.search = '';
+    return withCookie(NextResponse.redirect(dest, 307));
+  }
+
+  // -------------------------------------------------------------------------
   // 1. APP STORE 3.1.1 — the pricing page must not exist inside the native app.
   //
   //    This lives in the proxy rather than in the route so the route is NEVER
@@ -273,6 +292,15 @@ export const config = {
       source: '/:path*',
       has: [{ type: 'query', key: 'shell', value: 'sim-app' }],
       missing: [{ type: 'cookie', key: 'sv_shell', value: 'sim-app' }],
+    },
+    // THE NATIVE START URL (0b above), WITH OR WITHOUT THE COOKIE. The
+    // param-without-cookie rule above stops matching after the first launch,
+    // and the binary sends /sim?shell=sim-app on EVERY cold start; this entry
+    // is what keeps launch two onward on Games. Exact path, query required:
+    // a plain /sim never reaches the proxy through it.
+    {
+      source: '/sim',
+      has: [{ type: 'query', key: 'shell', value: 'sim-app' }],
     },
     // THE SAME RULE FOR THE CONTAINER'S OWN MARK. /app arrives with no param,
     // so the param clause above would never fire for the shipped binary; this
