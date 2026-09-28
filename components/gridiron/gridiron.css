@@ -714,3 +714,16 @@
    editorialising our own coverage. */
 a.gi-props-row { text-decoration: none; color: inherit; }
 a.gi-props-row:hover .who { color: var(--paper); text-decoration: underline; }
+
+/* nfl-power-z table (hidden tab ?tab=power-z, 27 Sep): the table scrolls inside
+   its own box on a phone, never the page. */
+.gi-pz { overflow-x: auto; }
+.gi-pz-kick { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.gi-pz-note { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+.gi-pz-table { width: 100%; min-width: 560px; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+.gi-pz-table th { text-align: right; font-weight: 600; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--rule-dim); }
+.gi-pz-table td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--rule-dim); color: var(--paper); }
+.gi-pz-table th:nth-child(2), .gi-pz-table td:nth-child(2) { text-align: left; }
+.gi-pz-table td a { color: inherit; text-decoration: none; }
+.gi-pz-how { font-size: 13px; margin-top: 14px; }
+.gi-pz-how a { color: var(--muted); }

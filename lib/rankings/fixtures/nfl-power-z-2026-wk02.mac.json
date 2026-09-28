@@ -1,0 +1,982 @@
+{
+  "artefact": "nfl-power-ranking",
+  "season": 2026,
+  "through_week": 2,
+  "games_used": 32,
+  "filter": "game_type == REG, final scores only",
+  "fade": 0,
+  "carryover": "none \u2014 current season only",
+  "weights": {
+    "adjPF": 25.0,
+    "adjPA": 12.0,
+    "win": 55.0,
+    "qorB": 8.0,
+    "qorC": 0.0,
+    "oppWin": 0.0
+  },
+  "component_order": [
+    "adjPF",
+    "adjPA",
+    "win",
+    "qorB",
+    "qorC",
+    "oppWin"
+  ],
+  "power_score": "dot(z, weights) / 100; 0 = league average, units = SD",
+  "conventions": {
+    "adjPA": "raw adjPA is points allowed minus opponent scoring average, so LOWER is better; it is negated before standardisation, and the table column PA/g adj shows the negated value",
+    "qorB": "mean(result - (1 - oppWin)); result is 1/0.5/0",
+    "qorC": "mean(result - sigma(-r_opp)); r = Bradley-Terry rating, ridge LAM=1.0, league mean 0, refit excluding the subject team",
+    "oppWin": "unweighted mean of opponent win%, each excluding games vs the subject team",
+    "skipped_games": "a game is SKIPPED (not scored 0) when the opponent has no games left after removing games vs the subject team; win% is still computed over ALL games"
+  },
+  "standardisation": {
+    "note": "applied to the sign-corrected raw vector (adjPA negated)",
+    "mean": {
+      "adjPF": 0.0,
+      "adjPA": 0.0,
+      "win": 0.5,
+      "qorB": 0.0,
+      "qorC": 4.404900432422587e-06,
+      "oppWin": 0.5
+    },
+    "sd": {
+      "adjPF": 10.523040197585487,
+      "adjPA": 11.27427935612738,
+      "win": 0.3535533905932738,
+      "qorB": 0.5,
+      "qorC": 0.3559205612832796,
+      "oppWin": 0.39528470752104744
+    }
+  },
+  "teams": [
+    {
+      "rank": 1,
+      "team": "SEA",
+      "record": {
+        "w": 2,
+        "l": 0,
+        "t": 0,
+        "text": "2-0"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 13.5,
+        "adjPA": -14.5,
+        "win": 1.0,
+        "qorB": 1.0,
+        "qorC": 0.5854289086456338,
+        "oppWin": 1.0
+      },
+      "z": {
+        "adjPF": 1.2828992141546296,
+        "adjPA": 1.2861132443129941,
+        "win": 1.414213562373095,
+        "qorB": 2.0,
+        "qorC": 1.644817881929721,
+        "oppWin": 1.2649110640673518
+      },
+      "power": 1.4128758521614189
+    },
+    {
+      "rank": 2,
+      "team": "SF",
+      "record": {
+        "w": 2,
+        "l": 0,
+        "t": 0,
+        "text": "2-0"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 14.5,
+        "adjPA": -10.5,
+        "win": 1.0,
+        "qorB": 0.5,
+        "qorC": 0.5133911753004745,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": 1.377928785573491,
+        "adjPA": 0.9313233838128578,
+        "win": 1.414213562373095,
+        "qorB": 1.0,
+        "qorC": 1.4424195347102582,
+        "oppWin": 0.0
+      },
+      "power": 1.314058461756118
+    },
+    {
+      "rank": 3,
+      "team": "MIN",
+      "record": {
+        "w": 2,
+        "l": 0,
+        "t": 0,
+        "text": "2-0"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -3.0,
+        "adjPA": -27.0,
+        "win": 1.0,
+        "qorB": 1.0,
+        "qorC": 0.597020182602342,
+        "oppWin": 1.0
+      },
+      "z": {
+        "adjPF": -0.28508871425658433,
+        "adjPA": 2.39483155837592,
+        "win": 1.414213562373095,
+        "qorB": 2.0,
+        "qorC": 1.6773849073213298,
+        "oppWin": 1.2649110640673518
+      },
+      "power": 1.1539250677461665
+    },
+    {
+      "rank": 4,
+      "team": "BUF",
+      "record": {
+        "w": 2,
+        "l": 0,
+        "t": 0,
+        "text": "2-0"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 13.5,
+        "adjPA": 12.5,
+        "win": 1.0,
+        "qorB": 0.5,
+        "qorC": 0.5133455773010452,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": 1.2828992141546296,
+        "adjPA": -1.108718314062926,
+        "win": 1.414213562373095,
+        "qorB": 1.0,
+        "qorC": 1.4422914218547804,
+        "oppWin": 0.0
+      },
+      "power": 1.0454960651563083
+    },
+    {
+      "rank": 5,
+      "team": "KC",
+      "record": {
+        "w": 2,
+        "l": 0,
+        "t": 0,
+        "text": "2-0"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 5.0,
+        "adjPA": -1.5,
+        "win": 1.0,
+        "qorB": 0.5,
+        "qorC": 0.4996517854293291,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": 0.47514785709430724,
+        "adjPA": 0.13304619768755113,
+        "win": 1.414213562373095,
+        "qorB": 1.0,
+        "qorC": 1.4038171291015242,
+        "oppWin": 0.0
+      },
+      "power": 0.9925699673012851
+    },
+    {
+      "rank": 6,
+      "team": "CIN",
+      "record": {
+        "w": 2,
+        "l": 0,
+        "t": 0,
+        "text": "2-0"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -3.0,
+        "adjPA": -8.5,
+        "win": 1.0,
+        "qorB": 0.0,
+        "qorC": 0.413878416048866,
+        "oppWin": 0.0
+      },
+      "z": {
+        "adjPF": -0.28508871425658433,
+        "adjPA": 0.7539284535627897,
+        "win": 1.414213562373095,
+        "qorB": 0.0,
+        "qorC": 1.1628269231094757,
+        "oppWin": -1.2649110640673518
+      },
+      "power": 0.7970166951685909
+    },
+    {
+      "rank": 7,
+      "team": "LV",
+      "record": {
+        "w": 2,
+        "l": 0,
+        "t": 0,
+        "text": "2-0"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -4.0,
+        "adjPA": 0.0,
+        "win": 1.0,
+        "qorB": 0.0,
+        "qorC": 0.41657952510070795,
+        "oppWin": 0.0
+      },
+      "z": {
+        "adjPF": -0.3801182856754458,
+        "adjPA": -0.0,
+        "win": 1.414213562373095,
+        "qorB": 0.0,
+        "qorC": 1.1704160015322087,
+        "oppWin": -1.2649110640673518
+      },
+      "power": 0.6827878878863407
+    },
+    {
+      "rank": 8,
+      "team": "CHI",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 18.5,
+        "adjPA": -13.5,
+        "win": 0.5,
+        "qorB": 0.5,
+        "qorC": 0.08582899077676867,
+        "oppWin": 1.0
+      },
+      "z": {
+        "adjPF": 1.7580470712489369,
+        "adjPA": 1.19741577918796,
+        "win": 0.0,
+        "qorB": 1.0,
+        "qorC": 0.2411341046633939,
+        "oppWin": 1.2649110640673518
+      },
+      "power": 0.6632016613147894
+    },
+    {
+      "rank": 9,
+      "team": "PHI",
+      "record": {
+        "w": 2,
+        "l": 0,
+        "t": 0,
+        "text": "2-0"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -6.0,
+        "adjPA": 6.0,
+        "win": 1.0,
+        "qorB": 0.0,
+        "qorC": 0.39831520524029734,
+        "oppWin": 0.0
+      },
+      "z": {
+        "adjPF": -0.5701774285131687,
+        "adjPA": -0.5321847907502045,
+        "win": 1.414213562373095,
+        "qorB": 0.0,
+        "qorC": 1.1191002815452593,
+        "oppWin": -1.2649110640673518
+      },
+      "power": 0.5714109272868855
+    },
+    {
+      "rank": 10,
+      "team": "NE",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 5.0,
+        "adjPA": -17.5,
+        "win": 0.5,
+        "qorB": 0.5,
+        "qorC": 0.08381670799389696,
+        "oppWin": 1.0
+      },
+      "z": {
+        "adjPF": 0.47514785709430724,
+        "adjPA": 1.5522056396880966,
+        "win": 0.0,
+        "qorB": 1.0,
+        "qorC": 0.23548036334646524,
+        "oppWin": 1.2649110640673518
+      },
+      "power": 0.38505164103614836
+    },
+    {
+      "rank": 11,
+      "team": "GB",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 14.5,
+        "adjPA": 12.0,
+        "win": 0.5,
+        "qorB": 0.5,
+        "qorC": 0.08767635988735428,
+        "oppWin": 1.0
+      },
+      "z": {
+        "adjPF": 1.377928785573491,
+        "adjPA": -1.064369581500409,
+        "win": 0.0,
+        "qorB": 1.0,
+        "qorC": 0.24632450193610242,
+        "oppWin": 1.2649110640673518
+      },
+      "power": 0.29675784661332366
+    },
+    {
+      "rank": 12,
+      "team": "LA",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 1.0,
+        "adjPA": -15.0,
+        "win": 0.5,
+        "qorB": 0.5,
+        "qorC": 0.0857199786867699,
+        "oppWin": 1.0
+      },
+      "z": {
+        "adjPF": 0.09502957141886145,
+        "adjPA": 1.3304619768755113,
+        "win": 0.0,
+        "qorB": 1.0,
+        "qorC": 0.24082782258290458,
+        "oppWin": 1.2649110640673518
+      },
+      "power": 0.26341283007977667
+    },
+    {
+      "rank": 13,
+      "team": "DET",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 7.0,
+        "adjPA": 5.5,
+        "win": 0.5,
+        "qorB": 0.5,
+        "qorC": 0.08576741173825678,
+        "oppWin": 1.0
+      },
+      "z": {
+        "adjPF": 0.6652069999320301,
+        "adjPA": -0.48783605818768744,
+        "win": 0.0,
+        "qorB": 1.0,
+        "qorC": 0.2409610912294696,
+        "oppWin": 1.2649110640673518
+      },
+      "power": 0.18776142300048504
+    },
+    {
+      "rank": 14,
+      "team": "CAR",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 21.0,
+        "adjPA": 23.0,
+        "win": 0.5,
+        "qorB": -0.5,
+        "qorC": -0.08577348779012384,
+        "oppWin": 0.0
+      },
+      "z": {
+        "adjPF": 1.9956209997960905,
+        "adjPA": -2.040041697875784,
+        "win": 0.0,
+        "qorB": -1.0,
+        "qorC": -0.24100291475514124,
+        "oppWin": -1.2649110640673518
+      },
+      "power": 0.1741002462039286
+    },
+    {
+      "rank": 15,
+      "team": "DEN",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -5.0,
+        "adjPA": -11.5,
+        "win": 0.5,
+        "qorB": 0.5,
+        "qorC": 0.08375722313904074,
+        "oppWin": 1.0
+      },
+      "z": {
+        "adjPF": -0.47514785709430724,
+        "adjPA": 1.020020848937892,
+        "win": 0.0,
+        "qorB": 1.0,
+        "qorC": 0.23531323376383664,
+        "oppWin": 1.2649110640673518
+      },
+      "power": 0.08361553759897021
+    },
+    {
+      "rank": 16,
+      "team": "NO",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -5.0,
+        "adjPA": -12.0,
+        "win": 0.5,
+        "qorB": 0.0,
+        "qorC": 0.00027695615468664725,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": -0.47514785709430724,
+        "adjPA": 1.064369581500409,
+        "win": 0.0,
+        "qorB": 0.0,
+        "qorC": 0.0007657642853549539,
+        "oppWin": 0.0
+      },
+      "power": 0.008937385506472282
+    },
+    {
+      "rank": 17,
+      "team": "JAX",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -1.5,
+        "adjPA": -1.5,
+        "win": 0.5,
+        "qorB": 0.0,
+        "qorC": -0.00027695615468664725,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": -0.14254435712829217,
+        "adjPA": 0.13304619768755113,
+        "win": 0.0,
+        "qorB": 0.0,
+        "qorC": -0.0007905164402545788,
+        "oppWin": 0.0
+      },
+      "power": -0.019670545559566904
+    },
+    {
+      "rank": 18,
+      "team": "BAL",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -3.0,
+        "adjPA": -6.5,
+        "win": 0.5,
+        "qorB": -0.5,
+        "qorC": -0.08375722313904066,
+        "oppWin": 0.0
+      },
+      "z": {
+        "adjPF": -0.28508871425658433,
+        "adjPA": 0.5765335233127216,
+        "win": 0.0,
+        "qorB": -1.0,
+        "qorC": -0.23533798591873606,
+        "oppWin": -1.2649110640673518
+      },
+      "power": -0.0820881557666195
+    },
+    {
+      "rank": 19,
+      "team": "DAL",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 2.5,
+        "adjPA": 10.0,
+        "win": 0.5,
+        "qorB": -0.5,
+        "qorC": -0.08603411436211039,
+        "oppWin": 0.0
+      },
+      "z": {
+        "adjPF": 0.23757392854715362,
+        "adjPA": -0.8869746512503408,
+        "win": 0.0,
+        "qorB": -1.0,
+        "qorC": -0.24173517526587673,
+        "oppWin": -1.2649110640673518
+      },
+      "power": -0.1270434760132525
+    },
+    {
+      "rank": 20,
+      "team": "ARI",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -1.5,
+        "adjPA": 9.0,
+        "win": 0.5,
+        "qorB": 0.0,
+        "qorC": 0.013601823543099578,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": -0.14254435712829217,
+        "adjPA": -0.7982771861253067,
+        "win": 0.0,
+        "qorB": 0.0,
+        "qorC": 0.038203521015030315,
+        "oppWin": 0.0
+      },
+      "power": -0.13142935161710984
+    },
+    {
+      "rank": 21,
+      "team": "NYG",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -6.5,
+        "adjPA": 2.0,
+        "win": 0.5,
+        "qorB": 0.0,
+        "qorC": -4.356065183269697e-05,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": -0.6176922142225995,
+        "adjPA": -0.17739493025006817,
+        "win": 0.0,
+        "qorB": 0.0,
+        "qorC": -0.00013476476911639687,
+        "oppWin": 0.0
+      },
+      "power": -0.17571044518565807
+    },
+    {
+      "rank": 22,
+      "team": "NYJ",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -11.5,
+        "adjPA": -6.0,
+        "win": 0.5,
+        "qorB": -0.5,
+        "qorC": -0.07249424223444006,
+        "oppWin": 0.0
+      },
+      "z": {
+        "adjPF": -1.0928400713169066,
+        "adjPA": 0.5321847907502045,
+        "win": 0.0,
+        "qorB": -1.0,
+        "qorC": -0.20369333784335747,
+        "oppWin": -1.2649110640673518
+      },
+      "power": -0.28934784293920207
+    },
+    {
+      "rank": 23,
+      "team": "CLE",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -10.0,
+        "adjPA": 6.5,
+        "win": 0.5,
+        "qorB": -0.5,
+        "qorC": -0.0857674117382568,
+        "oppWin": 0.0
+      },
+      "z": {
+        "adjPF": -0.9502957141886145,
+        "adjPA": -0.5765335233127216,
+        "win": 0.0,
+        "qorB": -1.0,
+        "qorC": -0.2409858433843693,
+        "oppWin": -1.2649110640673518
+      },
+      "power": -0.38675795134468016
+    },
+    {
+      "rank": 24,
+      "team": "PIT",
+      "record": {
+        "w": 1,
+        "l": 1,
+        "t": 0,
+        "text": "1-1"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -12.0,
+        "adjPA": 10.0,
+        "win": 0.5,
+        "qorB": -0.5,
+        "qorC": -0.08605746489887733,
+        "oppWin": 0.0
+      },
+      "z": {
+        "adjPF": -1.1403548570263373,
+        "adjPA": -0.8869746512503408,
+        "win": 0.0,
+        "qorB": -1.0,
+        "qorC": -0.2418007813007817,
+        "oppWin": -1.2649110640673518
+      },
+      "power": -0.4715256724066252
+    },
+    {
+      "rank": 25,
+      "team": "MIA",
+      "record": {
+        "w": 0,
+        "l": 2,
+        "t": 0,
+        "text": "0-2"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 2.5,
+        "adjPA": 4.5,
+        "win": 0.0,
+        "qorB": 0.0,
+        "qorC": -0.4134871691630896,
+        "oppWin": 1.0
+      },
+      "z": {
+        "adjPF": 0.23757392854715362,
+        "adjPA": -0.39913859306265337,
+        "win": -1.414213562373095,
+        "qorB": 0.0,
+        "qorC": -1.1617524218681519,
+        "oppWin": 1.2649110640673518
+      },
+      "power": -0.7663206083359322
+    },
+    {
+      "rank": 26,
+      "team": "IND",
+      "record": {
+        "w": 0,
+        "l": 2,
+        "t": 0,
+        "text": "0-2"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 9.5,
+        "adjPA": 13.0,
+        "win": 0.0,
+        "qorB": -0.5,
+        "qorC": -0.4996517854293291,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": 0.9027809284791838,
+        "adjPA": -1.1530670466254431,
+        "win": -1.414213562373095,
+        "qorB": -1.0,
+        "qorC": -1.4038418812564237,
+        "oppWin": 0.0
+      },
+      "power": -0.7704902727804595
+    },
+    {
+      "rank": 27,
+      "team": "TB",
+      "record": {
+        "w": 0,
+        "l": 2,
+        "t": 0,
+        "text": "0-2"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": 3.0,
+        "adjPA": 13.0,
+        "win": 0.0,
+        "qorB": -0.5,
+        "qorC": -0.5133455773010452,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": 0.28508871425658433,
+        "adjPA": -1.1530670466254431,
+        "win": -1.414213562373095,
+        "qorB": -1.0,
+        "qorC": -1.44231617400968,
+        "oppWin": 0.0
+      },
+      "power": -0.9249133263361093
+    },
+    {
+      "rank": 28,
+      "team": "HOU",
+      "record": {
+        "w": 0,
+        "l": 2,
+        "t": 0,
+        "text": "0-2"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -10.5,
+        "adjPA": -9.0,
+        "win": 0.0,
+        "qorB": 0.0,
+        "qorC": -0.413878416048866,
+        "oppWin": 1.0
+      },
+      "z": {
+        "adjPF": -0.9978104998980453,
+        "adjPA": 0.7982771861253067,
+        "win": -1.414213562373095,
+        "qorB": 0.0,
+        "qorC": -1.1628516752643752,
+        "oppWin": 1.2649110640673518
+      },
+      "power": -0.9314768219446767
+    },
+    {
+      "rank": 29,
+      "team": "WAS",
+      "record": {
+        "w": 0,
+        "l": 2,
+        "t": 0,
+        "text": "0-2"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -3.0,
+        "adjPA": 8.5,
+        "win": 0.0,
+        "qorB": -0.5,
+        "qorC": -0.5155633077446286,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": -0.28508871425658433,
+        "adjPA": -0.7539284535627897,
+        "win": -1.414213562373095,
+        "qorB": -1.0,
+        "qorC": -1.4485471443014417,
+        "oppWin": 0.0
+      },
+      "power": -1.0195610522968832
+    },
+    {
+      "rank": 30,
+      "team": "TEN",
+      "record": {
+        "w": 0,
+        "l": 2,
+        "t": 0,
+        "text": "0-2"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -6.0,
+        "adjPA": 3.0,
+        "win": 0.0,
+        "qorB": -0.5,
+        "qorC": -0.5132710708185063,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": -0.5701774285131687,
+        "adjPA": -0.26609239537510226,
+        "win": -1.414213562373095,
+        "qorB": -1.0,
+        "qorC": -1.442106839425945,
+        "oppWin": 0.0
+      },
+      "power": -1.0322929038785067
+    },
+    {
+      "rank": 31,
+      "team": "LAC",
+      "record": {
+        "w": 0,
+        "l": 2,
+        "t": 0,
+        "text": "0-2"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -8.0,
+        "adjPA": 9.0,
+        "win": 0.0,
+        "qorB": -0.5,
+        "qorC": -0.4977740352497415,
+        "oppWin": 0.5
+      },
+      "z": {
+        "adjPF": -0.7602365713508916,
+        "adjPA": -0.7982771861253067,
+        "win": -1.414213562373095,
+        "qorB": -1.0,
+        "qorC": -1.398566124855003,
+        "oppWin": 0.0
+      },
+      "power": -1.143669864477962
+    },
+    {
+      "rank": 32,
+      "team": "ATL",
+      "record": {
+        "w": 0,
+        "l": 2,
+        "t": 0,
+        "text": "0-2"
+      },
+      "games_played": 2,
+      "games_skipped_for_opponent_baseline": 0,
+      "components": {
+        "adjPF": -31.5,
+        "adjPA": 7.0,
+        "win": 0.0,
+        "qorB": -1.0,
+        "qorC": -0.5967394480501573,
+        "oppWin": 0.0
+      },
+      "z": {
+        "adjPF": -2.9934314996941356,
+        "adjPA": -0.6208822558752386,
+        "win": -1.414213562373095,
+        "qorB": -2.0,
+        "qorC": -1.6766209032684607,
+        "oppWin": -1.2649110640673518
+      },
+      "power": -1.7606812049337646
+    }
+  ]
+}

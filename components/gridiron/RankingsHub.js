@@ -8,7 +8,9 @@ import LeagueHeader from '@/components/league/LeagueHeader';
 import '@/components/league/league.css';
 import { getEditorialBoard, getLeagueIdBySlug } from '@/lib/gridiron/readers';
 import { getTitleContenders } from '@/lib/gridiron/oddsReader';
-import { RANKING_TABS, resolveActiveTab } from '@/lib/gridiron/rankingsHub';
+import { RANKING_TABS, resolveActiveTab, stripTabs } from '@/lib/gridiron/rankingsHub';
+import { getPowerZBoard } from '@/lib/rankings/nflPowerZReads';
+import PowerZBoard from '@/components/gridiron/PowerZBoard';
 import EditorialBoard from '@/components/gridiron/EditorialBoard';
 import PlayoffPicture from '@/components/gridiron/PlayoffPicture';
 import PollBoard from '@/components/gridiron/PollBoard';
@@ -23,7 +25,10 @@ export default async function RankingsHub({ leagueSlug, leagueLabel, searchParam
   let board = null;
   let contenders = [];
   let poll = null;
-  if (active?.kind === 'editorial') {
+  let powerZ = null;
+  if (active?.kind === 'power-z') {
+    powerZ = await getPowerZBoard();
+  } else if (active?.kind === 'editorial') {
     board = await getEditorialBoard(active.list, leagueSlug);
   } else if (active?.kind === 'market') {
     const leagueId = await getLeagueIdBySlug(leagueSlug);
@@ -55,7 +60,7 @@ export default async function RankingsHub({ leagueSlug, leagueLabel, searchParam
 
       <div className="gi-wrap">
         <div className="gi-rank-tabs" role="tablist">
-          {tabs.map((t) => (
+          {stripTabs(tabs, active).map((t) => (
             <a
               key={t.key}
               role="tab"
@@ -69,7 +74,9 @@ export default async function RankingsHub({ leagueSlug, leagueLabel, searchParam
         </div>
 
         <div className="gi-rank-body">
-          {active?.kind === 'poll'
+          {active?.kind === 'power-z'
+            ? <PowerZBoard board={powerZ} />
+            : active?.kind === 'poll'
             ? <PollBoard poll={poll} />
             : active?.kind === 'market'
               ? <PlayoffPicture contenders={contenders} leagueLabel={leagueLabel} />
