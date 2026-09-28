@@ -26,7 +26,10 @@ import { recordRun, recordDecision, probeCfbdBudget } from '@/lib/pollers/runRec
 import { maybeAlert } from '@/lib/pollers/alerts';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 120;
+// 300, NOT THE TICK'S 120: this is the whole of both seasons plus broadcasts -
+// the work the old unwindowed tick did, measured at 87.7 s on Vercel and
+// 170.7 s from the droplet on DEV. It runs once a day, so headroom is cheap.
+export const maxDuration = 300;
 
 const LEAGUES = [
   { slug: 'nfl', source: 'nfl-games', cfbd: false,
