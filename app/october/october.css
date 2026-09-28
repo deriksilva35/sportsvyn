@@ -209,6 +209,10 @@
 :where(:root[data-theme="arcade"]) .oc-field { background: var(--tok-up); }
 :where(:root[data-theme="arcade"]) .oc-slot { background: var(--tok-up); border-color: color-mix(in srgb, var(--tok-page) 55%, transparent); }
 :where(:root[data-theme="arcade"]) .oc-slot.p .oc-pos, :where(:root[data-theme="arcade"]) .oc-slot.b .oc-pos { color: var(--tok-page); }
-:where(:root[data-theme="arcade"]) .oc-slot.elig { background: color-mix(in srgb, var(--tok-action) 30%, var(--tok-page)); border-color: var(--tok-primary); box-shadow: none; }
-:where(:root[data-theme="arcade"]) .oc-slot.elig .oc-pos { color: var(--tok-primary); }
+/* .elig is every EMPTY, unlocked slot (OctoberCard.js:141), not a selection:
+   it stays flat green. The reader's chosen tile - a FILLED slot - is the light
+   volt tint with a navy frame. */
+:where(:root[data-theme="arcade"]) .oc-slot.elig { background: var(--tok-up); box-shadow: none; }
+:where(:root[data-theme="arcade"]) .oc-slot.filled { background: color-mix(in srgb, var(--tok-action) 30%, var(--tok-page)); border-color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .oc-slot.filled .oc-pos { color: var(--tok-primary); }
 :where(:root[data-theme="arcade"]) .oc-lock { background: var(--tok-action); color: var(--tok-on-action); }
