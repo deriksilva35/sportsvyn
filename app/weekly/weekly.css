@@ -160,16 +160,18 @@
   position: relative;
   border: 1.5px dashed var(--tok-line);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--tok-page) 50%, transparent);
+  background: rgba(10,10,10,0.5);
   min-height: 74px;
 }
+:where(:root[data-theme="arcade"]) .wkv-slot { background: color-mix(in srgb, var(--tok-page) 50%, transparent); }
 .wkv-slot.filled { border-style: solid; background: var(--tok-surface); }
 .wkv-slot.sel {
   border-style: solid;
   border-color: var(--volt);
-  background: color-mix(in srgb, var(--tok-accent) 9%, transparent);
-  box-shadow: 0 0 14px color-mix(in srgb, var(--tok-accent) 25%, transparent);
+  background: rgba(212,255,0,0.09);
+  box-shadow: 0 0 14px rgba(212,255,0,0.25);
 }
+:where(:root[data-theme="arcade"]) .wkv-slot.sel { background: color-mix(in srgb, var(--tok-accent) 9%, transparent); box-shadow: 0 0 14px color-mix(in srgb, var(--tok-accent) 25%, transparent); }
 .wkv-slot.kicked { border-style: solid; }
 .wkv-slot.live { box-shadow: inset 0 2px 0 var(--live); }
 .wkv-slot.final { opacity: 0.75; }
@@ -349,7 +351,8 @@
   cursor: pointer;
 }
 .wkv-prow:last-child { border-bottom: 0; }
-.wkv-prow.sel { background: color-mix(in srgb, var(--tok-accent) 9%, transparent); box-shadow: inset 3px 0 0 var(--volt); }
+.wkv-prow.sel { background: rgba(212,255,0,0.09); box-shadow: inset 3px 0 0 var(--volt); }
+:where(:root[data-theme="arcade"]) .wkv-prow.sel { background: color-mix(in srgb, var(--tok-accent) 9%, transparent); }
 .wkv-prow.gone { opacity: 0.3; cursor: default; }
 .wkv-pb {
   width: 24px; height: 18px;

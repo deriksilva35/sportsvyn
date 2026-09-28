@@ -12,9 +12,10 @@
 .pk-mono { font-family: var(--font-jetbrains-mono), monospace; letter-spacing: 0; text-transform: none; }
 
 .pk-hero {
-  background: var(--tok-surface);
+  background: linear-gradient(160deg,#1a2000,#141414);
   border: 1px solid var(--tok-line); border-radius: 14px; padding: 18px;
 }
+:where(:root[data-theme="arcade"]) .pk-hero { background: var(--tok-surface); }
 .pk-hero h1 {
   font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
   font-size: 29px; letter-spacing: -.04em; line-height: 1.05; margin: 8px 0 4px;
@@ -71,23 +72,33 @@
 }
 .pk-side.on { background: var(--volt); border-color: var(--volt); }
 .pk-side.on .pk-nm { color: var(--ink); }
-.pk-side.on .pk-tag { color: color-mix(in srgb, var(--tok-page) 60%, transparent); }
+.pk-side.on .pk-tag { color: rgba(10,10,10,.6); }
+:where(:root[data-theme="arcade"]) .pk-side.on .pk-tag { color: color-mix(in srgb, var(--tok-page) 60%, transparent); }
 /* sealed variants - mock frame 2 verbatim */
-.pk-side.pick { border-color: var(--tok-primary); background: color-mix(in srgb, var(--tok-primary) 8%, transparent); }
+.pk-side.pick { border-color: #4a4a00; background: #1a1d00; }
+:where(:root[data-theme="arcade"]) .pk-side.pick { background: color-mix(in srgb, var(--tok-primary) 8%, transparent); border-color: var(--tok-primary); }
 .pk-side.pick .pk-nm { color: var(--volt); }
-.pk-side.win { border-color: var(--tok-up); background: color-mix(in srgb, var(--tok-up) 12%, transparent); }
-.pk-side.win .pk-nm { color: var(--tok-up); }
-.pk-side.loss { border-color: var(--tok-down); background: color-mix(in srgb, var(--tok-down) 10%, transparent); }
-.pk-side.loss .pk-nm { color: var(--tok-down); }
+.pk-side.win { border-color: var(--tok-up); background: rgba(42,138,79,.12); }
+:where(:root[data-theme="arcade"]) .pk-side.win { background: color-mix(in srgb, var(--tok-up) 12%, transparent); }
+.pk-side.win .pk-nm { color: #3fbf6f; }
+:where(:root[data-theme="arcade"]) .pk-side.win .pk-nm { color: var(--tok-up); }
+.pk-side.loss { border-color: var(--tok-down); background: rgba(184,65,15,.10); }
+:where(:root[data-theme="arcade"]) .pk-side.loss { background: color-mix(in srgb, var(--tok-down) 10%, transparent); }
+.pk-side.loss .pk-nm { color: #e0602a; }
+:where(:root[data-theme="arcade"]) .pk-side.loss .pk-nm { color: var(--tok-down); }
 .pk-side.dim .pk-nm { color: var(--muted-dim); }
 .pk-res { font-family: var(--font-jetbrains-mono), monospace; font-weight: 700; font-size: 12px; flex: none; }
-.pk-res.w { color: var(--tok-up); }
-.pk-res.l { color: var(--tok-down); }
+.pk-res.w { color: #3fbf6f; }
+:where(:root[data-theme="arcade"]) .pk-res.w { color: var(--tok-up); }
+.pk-res.l { color: #e0602a; }
+:where(:root[data-theme="arcade"]) .pk-res.l { color: var(--tok-down); }
 .pk-res.live { color: var(--live); font-size: 9px; }
 
 .pk-savebar { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--muted-dim); text-align: center; }
-.pk-savebar b { color: var(--tok-up); font-weight: 700; }
-.pk-lockedmsg { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: var(--tok-down); text-align: center; }
+.pk-savebar b { color: #3fbf6f; font-weight: 700; }
+:where(:root[data-theme="arcade"]) .pk-savebar b { color: var(--tok-up); }
+.pk-lockedmsg { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; color: #e0602a; text-align: center; }
+:where(:root[data-theme="arcade"]) .pk-lockedmsg { color: var(--tok-down); }
 .pk-signin {
   display: block; text-align: center; background: var(--volt); color: var(--ink);
   font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900;
@@ -121,7 +132,8 @@
   font-size: 10px; color: var(--volt); text-decoration: none;
   padding: 6px 8px; margin: -6px -8px -6px 0; border-radius: 6px;
 }
-.pk-gamelink:active { background: color-mix(in srgb, var(--tok-accent) 12%, transparent); }
+.pk-gamelink:active { background: rgba(212,255,0,.12); }
+:where(:root[data-theme="arcade"]) .pk-gamelink:active { background: color-mix(in srgb, var(--tok-accent) 12%, transparent); }
 
 /* THE NAME + RECORD LINE (relay 2c item 4 - rank folded into the record
    line as text, "#12 · 3-0", replacing the separate rank badge). Stacked,
@@ -131,9 +143,10 @@
 .pk-nmwrap { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
 .pk-rec {
   display: block; font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 10px; color: var(--tok-muted);
+  font-size: 10px; color: #5a5a56;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
+:where(:root[data-theme="arcade"]) .pk-rec { color: var(--tok-muted); }
 .pk-spread {
   display: inline-flex; align-items: baseline; min-width: 0;
   font-family: 'JetBrains Mono', ui-monospace, monospace;
@@ -168,7 +181,8 @@
    is why a long name truncates and the record never wraps under it. */
 /* On the selected (volt) side the chip has to invert with everything else, or
    a dim grey sits on a bright ground and disappears. */
-.pk-side.on .pk-rec { color: color-mix(in srgb, var(--tok-page) 55%, transparent); }
+.pk-side.on .pk-rec { color: rgba(10,10,10,.55); }
+:where(:root[data-theme="arcade"]) .pk-side.on .pk-rec { color: color-mix(in srgb, var(--tok-page) 55%, transparent); }
 
 /* ===========================================================================
    RELAY 2a item 8 - the open-state header, pip row, and day-group sections,
@@ -333,11 +347,14 @@
   font: 500 9px var(--font-mono, ui-monospace, monospace); margin-top: 1px;
 }
 .pkv-sc { margin-left: auto; font: 700 19px var(--font-mono, ui-monospace, monospace); color: var(--muted); }
-.pkv-side.picked { background: color-mix(in srgb, var(--tok-accent) 10%, transparent); box-shadow: inset 0 0 0 1.5px var(--volt); }
+.pkv-side.picked { background: rgba(212,255,0,0.1); box-shadow: inset 0 0 0 1.5px var(--volt); }
+:where(:root[data-theme="arcade"]) .pkv-side.picked { background: color-mix(in srgb, var(--tok-accent) 10%, transparent); }
 .pkv-side.picked .pkv-nm b { color: var(--volt); }
-.pkv-side.won { background: color-mix(in srgb, var(--tok-up) 14%, transparent); box-shadow: inset 0 0 0 1.5px var(--jade); }
+.pkv-side.won { background: rgba(42,138,79,0.14); box-shadow: inset 0 0 0 1.5px var(--jade); }
+:where(:root[data-theme="arcade"]) .pkv-side.won { background: color-mix(in srgb, var(--tok-up) 14%, transparent); }
 .pkv-side.won .pkv-nm b { color: var(--jade); }
-.pkv-side.lost { background: color-mix(in srgb, var(--tok-down) 12%, transparent); box-shadow: inset 0 0 0 1.5px var(--terra); }
+.pkv-side.lost { background: rgba(184,65,15,0.12); box-shadow: inset 0 0 0 1.5px var(--terra); }
+:where(:root[data-theme="arcade"]) .pkv-side.lost { background: color-mix(in srgb, var(--tok-down) 12%, transparent); }
 .pkv-side.lost .pkv-nm b { color: var(--terra); }
 .pkv-tick { position: absolute; top: 4px; right: 6px; font: 700 11px var(--font-mono, ui-monospace, monospace); }
 .pkv-tick.w { color: var(--jade); }
@@ -381,5 +398,6 @@
   display: block; font: 500 9px var(--font-mono, ui-monospace, monospace);
   color: var(--muted-dim); margin-top: 2px; letter-spacing: 0;
 }
-.pk-sw.on { border-color: var(--volt); background: color-mix(in srgb, var(--tok-accent) 6%, transparent); color: var(--volt); cursor: default; }
+.pk-sw.on { border-color: var(--volt); background: rgba(212,255,0,0.06); color: var(--volt); cursor: default; }
+:where(:root[data-theme="arcade"]) .pk-sw.on { background: color-mix(in srgb, var(--tok-accent) 6%, transparent); }
 .pk-sw.on small { color: var(--muted-dim); }

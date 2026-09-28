@@ -9,13 +9,14 @@
      board behind it all read through, which made the sheet look like a
      misplaced card rather than a step you have to complete. It is a required
      step; the background should not offer itself as an alternative. */
-  background: color-mix(in srgb, var(--tok-page) 97%, transparent);
+  background: rgba(6,6,6,.97);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   /* Above the app tab bar AND clear of the home indicator: the sheet is modal,
      so the bar underneath is unreachable and must not appear tappable. */
   padding: 16px 12px calc(16px + env(safe-area-inset-bottom));
 }
+:where(:root[data-theme="arcade"]) .onb-scrim { background: color-mix(in srgb, var(--tok-page) 97%, transparent); }
 @media (min-width: 520px) { .onb-scrim { align-items: center; } }
 
 .onb {
@@ -47,7 +48,8 @@
   font-size: 16px; font-family: inherit;
 }
 .onb-in:focus { outline: none; border-color: var(--tok-accent); }
-.onb-err { color: var(--tok-down); font-size: 12px; margin: 8px 0 0; }
+.onb-err { color: #ef4444; font-size: 12px; margin: 8px 0 0; }
+:where(:root[data-theme="arcade"]) .onb-err { color: var(--tok-down); }
 
 /* EQUAL WEIGHT IS THE WHOLE POINT of this row. Skip is the same element, the
    same size and the same row as the affirmative - not a grey link beneath a
@@ -101,14 +103,19 @@
      a new reader ever touches. */
   font-size: 17px; padding: 13px 0;
 }
-.onb .hin input::placeholder { color: var(--tok-muted); font-weight: 400; }
-.onb .hin--ok  { border-color: var(--tok-up); }
-.onb .hin--bad { border-color: var(--tok-down); }
+.onb .hin input::placeholder { color: #4a4a48; font-weight: 400; }
+:where(:root[data-theme="arcade"]) .onb .hin input::placeholder { color: var(--tok-muted); }
+.onb .hin--ok  { border-color: #4ade80; }
+:where(:root[data-theme="arcade"]) .onb .hin--ok { border-color: var(--tok-up); }
+.onb .hin--bad { border-color: #ef4444; }
+:where(:root[data-theme="arcade"]) .onb .hin--bad { border-color: var(--tok-down); }
 
 /* Availability line: reserves its height so the button never jumps as you type. */
 .onb .avail { font-size: 12px; min-height: 16px; margin-top: 6px; }
-.onb .avail--ok   { color: var(--tok-up); }
-.onb .avail--bad  { color: var(--tok-down); }
+.onb .avail--ok   { color: #4ade80; }
+:where(:root[data-theme="arcade"]) .onb .avail--ok { color: var(--tok-up); }
+.onb .avail--bad  { color: #ef4444; }
+:where(:root[data-theme="arcade"]) .onb .avail--bad { color: var(--tok-down); }
 .onb .avail--wait { color: var(--tok-muted); }
 .onb .muted { font-size: 11px; color: var(--tok-muted); margin-top: 4px; }
 
@@ -120,7 +127,8 @@
   border: 0; border-radius: 10px;
   font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
 }
-.onb .btn--volt:disabled { background: var(--tok-line); color: var(--tok-muted); cursor: default; }
+.onb .btn--volt:disabled { background: var(--tok-line); color: #6a6a68; cursor: default; }
+:where(:root[data-theme="arcade"]) .onb .btn--volt:disabled { color: var(--tok-muted); }
 
 /* Step 4's toggle - a labelled checkbox row, native control kept because the
    OS prompt that follows is native too and a custom switch promising a system

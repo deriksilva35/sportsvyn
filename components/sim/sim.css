@@ -6,7 +6,8 @@
 .sim-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px 40px; }
 
 /* local ink header band */
-.sim-head { display: flex; align-items: center; gap: 20px; padding: 14px 22px; background: color-mix(in srgb, var(--tok-page) 96%, transparent); border-bottom: 1px solid var(--charcoal); position: sticky; top: 0; z-index: 40; }
+.sim-head { display: flex; align-items: center; gap: 20px; padding: 14px 22px; background: rgba(10,10,10,.96); border-bottom: 1px solid var(--charcoal); position: sticky; top: 0; z-index: 40; }
+:where(:root[data-theme="arcade"]) .sim-head { background: color-mix(in srgb, var(--tok-page) 96%, transparent); }
 .sim-head .tag { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
 .sim-head .tag b { color: var(--volt); font-weight: 700; }
 .sim-head .right { margin-left: auto; display: flex; gap: 14px; align-items: center; }
@@ -129,13 +130,17 @@
 /* ---- account page buy control, INSIDE the volt box ----
    .acct-upsell is volt-on-ink inverted (volt background, ink text), so the buy
    button has to invert with it or a volt button lands invisibly on volt. */
-.acct-iap { margin-top: 12px; border-top: 1px solid color-mix(in srgb, var(--tok-page) 22%, transparent); padding-top: 12px; }
+.acct-iap { margin-top: 12px; border-top: 1px solid rgba(10,10,10,.22); padding-top: 12px; }
+:where(:root[data-theme="arcade"]) .acct-iap { border-top: 1px solid color-mix(in srgb, var(--tok-page) 22%, transparent); }
 .acct-iap .mcard-iap-price b { color: var(--ink); }
-.acct-iap .mcard-iap-price span { color: color-mix(in srgb, var(--tok-page) 70%, transparent); }
+.acct-iap .mcard-iap-price span { color: rgba(10,10,10,.7); }
+:where(:root[data-theme="arcade"]) .acct-iap .mcard-iap-price span { color: color-mix(in srgb, var(--tok-page) 70%, transparent); }
 .acct-iap .mcard-buy { background: var(--ink); color: var(--volt); }
 .acct-iap .mcard-buy:hover { background: var(--graphite); }
-.acct-iap .mcard-iap-msg { color: color-mix(in srgb, var(--tok-page) 85%, transparent); }
-.acct-iap .mcard-iap-fine { color: color-mix(in srgb, var(--tok-page) 60%, transparent); }
+.acct-iap .mcard-iap-msg { color: rgba(10,10,10,.85); }
+:where(:root[data-theme="arcade"]) .acct-iap .mcard-iap-msg { color: color-mix(in srgb, var(--tok-page) 85%, transparent); }
+.acct-iap .mcard-iap-fine { color: rgba(10,10,10,.6); }
+:where(:root[data-theme="arcade"]) .acct-iap .mcard-iap-fine { color: color-mix(in srgb, var(--tok-page) 60%, transparent); }
 
 /* ---- first-launch welcome sheet (components/sim/WelcomeSheet.js) ----
    Bottom sheet, not a centered modal: it is a phone surface and the actions want
@@ -143,9 +148,10 @@
    into env(safe-area-inset-*). */
 .wsheet-scrim {
   position: fixed; inset: 0; z-index: 120;
-  background: color-mix(in srgb, var(--tok-page) 72%, transparent);
+  background: rgba(10,10,10,.72);
   display: flex; align-items: flex-end; justify-content: center;
 }
+:where(:root[data-theme="arcade"]) .wsheet-scrim { background: color-mix(in srgb, var(--tok-page) 72%, transparent); }
 .wsheet {
   width: 100%; max-width: 560px;
   background: var(--graphite);
@@ -210,7 +216,8 @@
 .mcard-restore { display: block; width: 100%; margin-top: 9px; background: transparent; border: 1px solid var(--rule); color: var(--muted); font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 10px 0; cursor: pointer; }
 .mcard-restore:hover { border-color: var(--volt); color: var(--volt); }
 .mcard-restore:disabled { opacity: .5; cursor: default; }
-.acct-iap .mcard-restore { border-color: color-mix(in srgb, var(--tok-page) 35%, transparent); color: color-mix(in srgb, var(--tok-page) 75%, transparent); }
+.acct-iap .mcard-restore { border-color: rgba(10,10,10,.35); color: rgba(10,10,10,.75); }
+:where(:root[data-theme="arcade"]) .acct-iap .mcard-restore { border-color: color-mix(in srgb, var(--tok-page) 35%, transparent); color: color-mix(in srgb, var(--tok-page) 75%, transparent); }
 .acct-iap .mcard-restore:hover { border-color: var(--ink); color: var(--ink); }
 .setup-err { font-size: 10px; color: var(--terra); text-align: center; margin-top: 8px; letter-spacing: .04em; }
 .chiplab { font-family: var(--font-jetbrains-mono), monospace; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }
@@ -358,18 +365,28 @@
 .bg2 .bc .n { font-size: 7.5px; font-weight: 600; color: var(--paper); line-height: 1.2; display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .bg2 .bc .p { font-size: 6.5px; font-weight: 700; display: block; }
 .bg2 .bc .pk { display: none; }  /* overall-pick number: shown only in the desktop BOARD view */
-.bg2 .bc.QB { background: color-mix(in srgb, var(--tok-down) 28%, transparent); } .bg2 .bc.QB .p { color: var(--tok-pos-qb); }
-.bg2 .bc.RB { background: color-mix(in srgb, var(--tok-up) 28%, transparent); } .bg2 .bc.RB .p { color: var(--tok-pos-rb); }
-.bg2 .bc.WR { background: color-mix(in srgb, var(--tok-pos-wr) 22%, transparent); } .bg2 .bc.WR .p { color: var(--tok-pos-wr); }
-.bg2 .bc.TE { background: color-mix(in srgb, var(--tok-pos-te) 22%, transparent); } .bg2 .bc.TE .p { color: var(--tok-pos-te); }
+.bg2 .bc.QB { background: rgba(184,65,15,.28); }
+:where(:root[data-theme="arcade"]) .bg2 .bc.QB { background: color-mix(in srgb, var(--tok-down) 28%, transparent); } .bg2 .bc.QB .p { color: #e8865a; }
+:where(:root[data-theme="arcade"]) .bg2 .bc.QB .p { color: var(--tok-pos-qb); }
+.bg2 .bc.RB { background: rgba(42,138,79,.28); }
+:where(:root[data-theme="arcade"]) .bg2 .bc.RB { background: color-mix(in srgb, var(--tok-up) 28%, transparent); } .bg2 .bc.RB .p { color: #5bc98a; }
+:where(:root[data-theme="arcade"]) .bg2 .bc.RB .p { color: var(--tok-pos-rb); }
+.bg2 .bc.WR { background: rgba(138,147,216,.22); }
+:where(:root[data-theme="arcade"]) .bg2 .bc.WR { background: color-mix(in srgb, var(--tok-pos-wr) 22%, transparent); } .bg2 .bc.WR .p { color: #8a93d8; }
+:where(:root[data-theme="arcade"]) .bg2 .bc.WR .p { color: var(--tok-pos-wr); }
+.bg2 .bc.TE { background: rgba(201,162,39,.22); }
+:where(:root[data-theme="arcade"]) .bg2 .bc.TE { background: color-mix(in srgb, var(--tok-pos-te) 22%, transparent); } .bg2 .bc.TE .p { color: #c9a227; }
+:where(:root[data-theme="arcade"]) .bg2 .bc.TE .p { color: var(--tok-pos-te); }
 .bg2 .bc.mine { outline: 1.5px solid var(--volt); outline-offset: -1.5px; }
-.bg2 .bc.otc2 { background: color-mix(in srgb, var(--tok-live) 18%, transparent); outline: 1.5px solid var(--live); outline-offset: -1.5px; animation: sim-pulse 1.2s infinite; }
+.bg2 .bc.otc2 { background: rgba(230,57,70,.18); outline: 1.5px solid var(--live); outline-offset: -1.5px; animation: sim-pulse 1.2s infinite; }
+:where(:root[data-theme="arcade"]) .bg2 .bc.otc2 { background: color-mix(in srgb, var(--tok-live) 18%, transparent); }
 .bg2 .bc.otc2 .n { color: var(--live); font-size: 6.5px; }
 .bg2 .bc.empty .n { color: var(--tok-line); }
 /* An unmade keeper's cell: owned, not yet committed. Dimmed under its position
    tint with a dashed inset rule, so it reads apart from a made pick (full) and
    from the live CLOCK cell (red pulse). The KEEPER tag rides the .p line. */
-.bg2 .bc.kp { opacity: .55; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tok-ink) 18%, transparent); }
+.bg2 .bc.kp { opacity: .55; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+:where(:root[data-theme="arcade"]) .bg2 .bc.kp { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tok-ink) 18%, transparent); }
 .bg2 .bc.kp .n { color: var(--muted); font-style: italic; }
 
 /* ---- desktop BOARD view (>900) ----
@@ -469,12 +486,16 @@
 .auto-toggle .sw::after { content: ''; position: absolute; top: 1px; left: 1px; width: 10px; height: 8px; background: var(--ink); transition: transform .12s ease; }
 /* ON is the LIVE state, not a brighter version of the same thing: the seat is
    being drafted for right now, and it reads as an alarm you can switch off. */
-.auto-toggle.on { background: var(--live); border-color: var(--live); color: var(--tok-page); }
-.auto-toggle.on .sw { border-color: var(--tok-page); }
-.auto-toggle.on .sw::after { background: var(--tok-page); transform: translateX(12px); }
+.auto-toggle.on { background: var(--live); border-color: var(--live); color: #fff; }
+:where(:root[data-theme="arcade"]) .auto-toggle.on { color: var(--tok-page); }
+.auto-toggle.on .sw { border-color: #fff; }
+:where(:root[data-theme="arcade"]) .auto-toggle.on .sw { border-color: var(--tok-page); }
+.auto-toggle.on .sw::after { background: #fff; transform: translateX(12px); }
+:where(:root[data-theme="arcade"]) .auto-toggle.on .sw::after { background: var(--tok-page); }
 
 /* on-the-clock banner */
-.on-clock { border: 1px solid var(--volt); background: color-mix(in srgb, var(--tok-accent) 6%, transparent); padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.on-clock { border: 1px solid var(--volt); background: rgba(212,255,0,.06); padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+:where(:root[data-theme="arcade"]) .on-clock { background: color-mix(in srgb, var(--tok-accent) 6%, transparent); }
 .on-clock .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--volt); animation: sim-pulse 1.4s infinite; }
 @keyframes sim-pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 .on-clock .txt { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--paper); }
@@ -500,7 +521,8 @@
 /* pick feed */
 .feed-row { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: baseline; padding: 6px 4px; border-bottom: 1px solid var(--rule-dim); }
 .feed-row .ov { font-family: var(--font-saira), sans-serif; font-style: italic; font-weight: 900; font-size: 15px; color: var(--muted); }
-.feed-row.user { background: color-mix(in srgb, var(--tok-accent) 5%, transparent); }
+.feed-row.user { background: rgba(212,255,0,.05); }
+:where(:root[data-theme="arcade"]) .feed-row.user { background: color-mix(in srgb, var(--tok-accent) 5%, transparent); }
 .feed-row.user .ov { color: var(--volt); }
 .feed-row .nm { font-size: 13px; color: var(--paper); }
 .feed-row.ai .nm { color: var(--paper-dim); }
@@ -545,7 +567,8 @@
 .avail-sort button:disabled { opacity: .35; cursor: not-allowed; }
 .avail-sort .s-hint { font-size: 8px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-dim); }
 .p-item { border-bottom: 1px solid var(--rule-dim); }
-.p-item.open { background: color-mix(in srgb, var(--tok-ink) 2%, transparent); }
+.p-item.open { background: rgba(255,255,255,.02); }
+:where(:root[data-theme="arcade"]) .p-item.open { background: color-mix(in srgb, var(--tok-ink) 2%, transparent); }
 .p-row { display: flex; gap: 8px; align-items: center; padding: 7px 4px; }
 /* the whole identity block is the expand target; the Draft button stays a sibling */
 .p-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: transparent; border: 0; padding: 0; text-align: left; font-family: inherit; cursor: pointer; }
@@ -561,7 +584,8 @@
 .p-row .nm { font-size: 13px; color: var(--paper); }
 .p-row .rng { font-size: 9px; color: var(--muted-dim); }
 .p-row .draft { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: var(--volt); border: 0; padding: 5px 10px; cursor: pointer; }
-.p-row.armed { border: 1px solid var(--volt); background: color-mix(in srgb, var(--tok-accent) 5%, transparent); }
+.p-row.armed { border: 1px solid var(--volt); background: rgba(212,255,0,.05); }
+:where(:root[data-theme="arcade"]) .p-row.armed { background: color-mix(in srgb, var(--tok-accent) 5%, transparent); }
 
 /* stat strip: season totals + game log, revealed on row expand */
 .p-stats { padding: 10px 6px 14px; border-top: 1px solid var(--rule-dim); }
@@ -674,7 +698,8 @@
 .simtab-i.soon { opacity: .55; cursor: default; }
 .simtab-i .soon-badge { position: absolute; top: 3px; right: 24%; font-family: var(--font-jetbrains-mono), monospace; font-size: 6.5px; font-weight: 700; letter-spacing: .04em; color: var(--ink); background: var(--volt); padding: 1px 3px; }
 @media (max-width: 900px) {
-  .simtab { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-width: 480px; margin: 0 auto; background: color-mix(in srgb, var(--tok-page) 98%, transparent); border-top: 1px solid var(--rule); padding-bottom: env(safe-area-inset-bottom); }
+  .simtab { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-width: 480px; margin: 0 auto; background: rgba(10,10,10,.98); border-top: 1px solid var(--rule); padding-bottom: env(safe-area-inset-bottom); }
+:where(:root[data-theme="arcade"]) .simtab { background: color-mix(in srgb, var(--tok-page) 98%, transparent); }
   .sim--tabbar .sim-wrap { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 }
 
@@ -777,9 +802,10 @@
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(to right, var(--tok-ink) calc(100% - 26px), transparent 100%);
-    mask-image: linear-gradient(to right, var(--tok-ink) calc(100% - 26px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right,#000 calc(100% - 26px),transparent 100%);
+    mask-image: linear-gradient(to right,#000 calc(100% - 26px),transparent 100%);
   }
+:where(:root[data-theme="arcade"]) .deck { -webkit-mask-image: linear-gradient(to right, var(--tok-ink) calc(100% - 26px), transparent 100%); mask-image: linear-gradient(to right, var(--tok-ink) calc(100% - 26px), transparent 100%); }
   .deck::-webkit-scrollbar { display: none; }
   /* 150px cards + 8px gaps in a ~366px content box shows 2 cards and a ~50px
      peek of the third, which the fade above resolves into a scroll cue. */
@@ -805,7 +831,8 @@
   font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-dim); text-decoration: none; }
 .sim-err-lobby:hover { color: var(--volt); }
 .sim-err-ref { margin-top: 22px; font-family: var(--font-jetbrains-mono), monospace; font-size: 9px;
-  letter-spacing: .08em; color: var(--tok-muted); }
+  letter-spacing: .08em; color: #5a5a5a; }
+:where(:root[data-theme="arcade"]) .sim-err-ref { color: var(--tok-muted); }
 
 /* ---- My Team sort: the TWO FACTS behind the order ----
    Never the composite. The gap borrows the same value/reach colouring the room
@@ -928,9 +955,10 @@
   display: flex; align-items: center; gap: 10px;
   margin: 0 0 14px; padding: 11px 14px;
   border: 1px solid var(--volt); border-radius: 10px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--tok-accent) 10%, transparent), color-mix(in srgb, var(--tok-accent) 2%, transparent));
+  background: linear-gradient(90deg,rgba(212,255,0,.10),rgba(212,255,0,.02));
   text-decoration: none; color: inherit; min-height: 44px;
 }
+:where(:root[data-theme="arcade"]) .sim-dailyband { background: linear-gradient(90deg, color-mix(in srgb, var(--tok-accent) 10%, transparent), color-mix(in srgb, var(--tok-accent) 2%, transparent)); }
 .sim-dailyband .sdb-kick {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
@@ -1116,7 +1144,8 @@
   color: var(--muted-dim); letter-spacing: 0.04em; text-transform: uppercase; line-height: 1;
 }
 .dv-seat.done { opacity: 0.5; }
-.dv-seat.on { border-color: var(--volt); background: color-mix(in srgb, var(--tok-accent) 12%, transparent); }
+.dv-seat.on { border-color: var(--volt); background: rgba(212,255,0,0.12); }
+:where(:root[data-theme="arcade"]) .dv-seat.on { background: color-mix(in srgb, var(--tok-accent) 12%, transparent); }
 .dv-seat.on b { color: var(--volt); }
 .dv-seat.you { border-color: var(--paper); }
 .dv-seat.you.on { border-color: var(--volt); }
@@ -1158,8 +1187,9 @@
 .dv-rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 12px 10px; }
 .dv-e {
   border: 1.5px dashed var(--tok-line); border-radius: 8px;
-  background: color-mix(in srgb, var(--tok-page) 50%, transparent); padding: 5px 5px 4px; min-height: 46px;
+  background: rgba(10,10,10,0.5); padding: 5px 5px 4px; min-height: 46px;
 }
+:where(:root[data-theme="arcade"]) .dv-e { background: color-mix(in srgb, var(--tok-page) 50%, transparent); }
 .dv-e.f { border-style: solid; background: var(--tok-surface); }
 .dv-r { font: 700 7px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.06em; color: var(--muted-dim); }
 .dv-e b {

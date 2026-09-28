@@ -7,10 +7,11 @@
    height and typography only. */
 
 .ds-strip {
-  background: var(--tok-surface);
-  border: 1px solid var(--tok-line); border-radius: 12px; padding: 13px 14px 12px;
+  background: linear-gradient(150deg,#141a00,#141414 60%);
+  border: 1px solid #3a4400; border-radius: 12px; padding: 13px 14px 12px;
   margin-bottom: 12px;
 }
+:where(:root[data-theme="arcade"]) .ds-strip { background: var(--tok-surface); border: 1px solid var(--tok-line); }
 .ds-strip.quietbg { background: var(--tok-surface); border-color: var(--tok-line); }
 .ds-strip.pending {
   background: var(--tok-surface); border-color: var(--tok-line); border-style: dashed;
@@ -22,7 +23,8 @@
   color: var(--volt);
 }
 .ds-dd.quiet { color: var(--muted); font-size: 18px; }
-.ds-strip.pending .ds-dd.quiet { color: var(--tok-muted); font-size: 17px; }
+.ds-strip.pending .ds-dd.quiet { color: #5a5a56; font-size: 17px; }
+:where(:root[data-theme="arcade"]) .ds-strip.pending .ds-dd.quiet { color: var(--tok-muted); }
 .ds-at { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: var(--muted); }
 .ds-at b { color: var(--paper); font-weight: 700; }
 
@@ -30,45 +32,55 @@
   position: relative; height: 52px; background: var(--tok-surface-2);
   border: 1px solid var(--tok-line); border-radius: 6px; overflow: hidden;
 }
-.ds-zone { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--tok-accent) 10%, transparent); }
-.ds-zone.l { left: 0; border-right: 1px solid var(--tok-line); }
-.ds-zone.r { right: 0; border-left: 1px solid var(--tok-line); }
+.ds-zone { position: absolute; top: 0; bottom: 0; background: rgba(212,255,0,0.1); }
+:where(:root[data-theme="arcade"]) .ds-zone { background: color-mix(in srgb, var(--tok-accent) 10%, transparent); }
+.ds-zone.l { left: 0; border-right: 1px solid #3a4400; }
+:where(:root[data-theme="arcade"]) .ds-zone.l { border-right: 1px solid var(--tok-line); }
+.ds-zone.r { right: 0; border-left: 1px solid #3a4400; }
+:where(:root[data-theme="arcade"]) .ds-zone.r { border-left: 1px solid var(--tok-line); }
 .ds-zone span {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%) rotate(-90deg);
   font-family: 'Saira Condensed', sans-serif; font-weight: 600; font-size: 8px;
-  letter-spacing: 0.1em; color: color-mix(in srgb, var(--tok-accent) 50%, transparent); white-space: nowrap;
+  letter-spacing: 0.1em; color: rgba(212,255,0,0.5); white-space: nowrap;
 }
+:where(:root[data-theme="arcade"]) .ds-zone span { color: color-mix(in srgb, var(--tok-accent) 50%, transparent); }
 .ds-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--tok-line); }
 .ds-tick.five { top: auto; height: 6px; bottom: 0; background: var(--tok-line); }
-.ds-tick.mid { background: var(--tok-line); }
+.ds-tick.mid { background: #3a3a3a; }
+:where(:root[data-theme="arcade"]) .ds-tick.mid { background: var(--tok-line); }
 .ds-num {
   position: absolute; top: 3px; transform: translateX(-50%); font-style: normal;
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 8px;
-  color: var(--tok-muted); font-variant-numeric: tabular-nums;
+  color: #4d4d4d; font-variant-numeric: tabular-nums;
 }
+:where(:root[data-theme="arcade"]) .ds-num { color: var(--tok-muted); }
 .ds-hash { position: absolute; height: 1px; width: 3px; background: var(--tok-surface-2); }
 .ds-span {
   position: absolute; top: 16px; height: 20px;
-  background: color-mix(in srgb, var(--tok-accent) 20%, transparent); border-left: 2px solid var(--volt);
+  background: rgba(212,255,0,0.2); border-left: 2px solid var(--volt);
 }
+:where(:root[data-theme="arcade"]) .ds-span { background: color-mix(in srgb, var(--tok-accent) 20%, transparent); }
 .ds-ball {
   position: absolute; top: 12px; width: 3px; height: 28px;
-  background: var(--volt); box-shadow: 0 0 8px color-mix(in srgb, var(--tok-accent) 70%, transparent);
+  background: var(--volt); box-shadow: 0 0 8px rgba(212,255,0,0.7);
 }
+:where(:root[data-theme="arcade"]) .ds-ball { box-shadow: 0 0 8px color-mix(in srgb, var(--tok-accent) 70%, transparent); }
 .ds-ball::after {
   content: ""; position: absolute; top: -5px; left: -3px;
   border-left: 4.5px solid transparent; border-right: 4.5px solid transparent;
   border-top: 5px solid var(--volt);
 }
-.ds-togo { position: absolute; top: 12px; width: 2px; height: 28px; background: color-mix(in srgb, var(--tok-ink) 60%, transparent); }
+.ds-togo { position: absolute; top: 12px; width: 2px; height: 28px; background: rgba(245,245,242,0.6); }
+:where(:root[data-theme="arcade"]) .ds-togo { background: color-mix(in srgb, var(--tok-ink) 60%, transparent); }
 
 .ds-foot {
   display: flex; align-items: center; justify-content: space-between; margin-top: 14px;
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px;
   color: var(--muted); gap: 10px;
 }
-.ds-strip.pending .ds-foot, .ds-strip.quietbg .ds-foot { margin-top: 2px; color: var(--tok-muted); }
+.ds-strip.pending .ds-foot, .ds-strip.quietbg .ds-foot { margin-top: 2px; color: #5a5a56; }
+:where(:root[data-theme="arcade"]) .ds-strip.pending .ds-foot, :where(:root[data-theme="arcade"]) .ds-strip.quietbg .ds-foot { color: var(--tok-muted); }
 .ds-foot b { color: var(--paper); font-weight: 700; }
 .ds-sim {
   font-family: 'Saira Condensed', sans-serif; font-weight: 600; text-transform: uppercase;
@@ -96,8 +108,9 @@
 }
 .ds-eyebrow .mono {
   font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0;
-  text-transform: none; font-size: 10.5px; color: var(--tok-muted);
+  text-transform: none; font-size: 10.5px; color: #5a5a56;
 }
+:where(:root[data-theme="arcade"]) .ds-eyebrow .mono { color: var(--tok-muted); }
 
 /* The chart's drive card. Distinct from .ds-span (the field's travelled
    stripe) - one class for two things would have made the field's absolute
@@ -141,13 +154,16 @@
   border-radius: 99px; padding: 2px 8px; white-space: nowrap;
 }
 .ds-chart .tag.td { color: var(--volt); }
-.ds-chart .tag.fg { color: var(--tok-up); }
+.ds-chart .tag.fg { color: #3fbf6f; }
+:where(:root[data-theme="arcade"]) .ds-chart .tag.fg { color: var(--tok-up); }
 .ds-chart .tag.punt { color: var(--muted); }
-.ds-chart .tag.to { color: var(--tok-down); }
+.ds-chart .tag.to { color: #e0602a; }
+:where(:root[data-theme="arcade"]) .ds-chart .tag.to { color: var(--tok-down); }
 .ds-chart .dsub {
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
-  color: var(--tok-muted); padding: 7px 12px 0;
+  color: #5a5a56; padding: 7px 12px 0;
 }
+:where(:root[data-theme="arcade"]) .ds-chart .dsub { color: var(--tok-muted); }
 .ds-chart .plays { padding: 4px 12px 10px; }
 /* THREE COLUMNS, AND ONLY THE MIDDLE ONE IS ALLOWED TO GIVE.
    The delta used to sit at the right edge of a row whose text WRAPPED beneath
@@ -163,8 +179,9 @@
 .ds-chart .play:last-child { border-bottom: 0; }
 .ds-chart .play .dn {
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
-  color: var(--tok-muted); width: 62px; flex: none;
+  color: #5a5a56; width: 62px; flex: none;
 }
+:where(:root[data-theme="arcade"]) .ds-chart .play .dn { color: var(--tok-muted); }
 /* min-width:0 IS THE LOAD-BEARING LINE, and it is the .lineup-toggle lesson
    restated: a flex child will not shrink past its min-content width without
    it, so the long play text would push the row wider than the card instead of
@@ -186,9 +203,12 @@
   font-weight: 700; flex: none; width: 38px; text-align: right;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.ds-chart .yd.pos { color: var(--tok-up); }
-.ds-chart .yd.neg { color: var(--tok-down); }
-.ds-chart .yd.zero { color: var(--tok-muted); }
+.ds-chart .yd.pos { color: #3fbf6f; }
+:where(:root[data-theme="arcade"]) .ds-chart .yd.pos { color: var(--tok-up); }
+.ds-chart .yd.neg { color: #e0602a; }
+:where(:root[data-theme="arcade"]) .ds-chart .yd.neg { color: var(--tok-down); }
+.ds-chart .yd.zero { color: #5a5a56; }
+:where(:root[data-theme="arcade"]) .ds-chart .yd.zero { color: var(--tok-muted); }
 
 /* THE APP IS THE PRIMARY SURFACE FOR THIS COMPONENT, so the narrow case is
    tuned rather than tolerated. At 375px the three fixed columns and their
@@ -205,6 +225,7 @@
 
 .ds-empty {
   font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11.5px;
-  color: var(--tok-muted); padding: 18px 12px; text-align: center;
+  color: #5a5a56; padding: 18px 12px; text-align: center;
   border: 1px dashed var(--tok-line); border-radius: 10px;
 }
+:where(:root[data-theme="arcade"]) .ds-empty { color: var(--tok-muted); }

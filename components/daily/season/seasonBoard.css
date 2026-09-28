@@ -83,8 +83,9 @@
 .sbd-pip .sbd-dot {
   width: 22px; height: 22px; flex: none; border-radius: 99px; background: var(--ink);
   display: flex; align-items: center; justify-content: center; font-family: var(--font-saira-cond);
-  font-weight: 700; font-size: 9px; letter-spacing: .02em; color: var(--tok-page); line-height: 1; opacity: .5;
+  font-weight: 700; font-size: 9px; letter-spacing: .02em; color: #fff; line-height: 1; opacity: .5;
 }
+:where(:root[data-theme="arcade"]) .sbd-pip .sbd-dot { color: var(--tok-page); }
 .sbd-pip.sbd-full .sbd-dot { opacity: 1; }
 .sbd-prog .sbd-cap { margin-top: 7px; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
 
@@ -110,7 +111,8 @@
 .sbd-tc.sbd-dead b { text-decoration: line-through; }
 .sbd-tc:active { border-color: var(--volt); }
 
-.sbd-back { position: fixed; inset: 0; background: color-mix(in srgb, var(--tok-ink) 80%, transparent); z-index: 10; }
+.sbd-back { position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 10; }
+:where(:root[data-theme="arcade"]) .sbd-back { background: color-mix(in srgb, var(--tok-ink) 80%, transparent); }
 /* CENTERED MODAL, NOT A BOTTOM DRAWER. max-width:366px matches the mock
    exactly (previously 420px - drifted, now corrected). Rendered through a
    React portal to document.body (see SeasonBoard.js) rather than in normal
@@ -316,9 +318,10 @@
 .sbd-v2 .sbd-clk { display: flex; gap: 3px; align-items: center; }
 .sbd-v2 .sbd-dg {
   width: 29px; height: 42px; border-radius: 4px; background: var(--tok-surface-2);
-  box-shadow: inset 0 0 0 1px var(--tok-ink); font-family: var(--mono, ui-monospace, monospace);
+  box-shadow: inset 0 0 0 1px #000; font-family: var(--mono, ui-monospace, monospace);
   font-weight: 800; font-size: 29px; line-height: 42px; text-align: center;
 }
+:where(:root[data-theme="arcade"]) .sbd-v2 .sbd-dg { box-shadow: inset 0 0 0 1px var(--tok-ink); }
 .sbd-v2 .sbd-cl {
   font-family: var(--mono, ui-monospace, monospace); font-weight: 800; font-size: 25px;
   color: var(--muted-dim);
@@ -386,7 +389,8 @@
   padding: 6px 2px 5px; text-align: center; position: relative; color: var(--paper);
 }
 .sbd-v2 .sbd-tc2 b { display: block; font-family: var(--mono, ui-monospace, monospace); font-weight: 700; font-size: 9px; }
-.sbd-v2 .sbd-tc2.sbd-tcon { border-color: var(--volt); background: color-mix(in srgb, var(--tok-accent) 6%, transparent); }
+.sbd-v2 .sbd-tc2.sbd-tcon { border-color: var(--volt); background: rgba(212,255,0,0.06); }
+:where(:root[data-theme="arcade"]) .sbd-v2 .sbd-tc2.sbd-tcon { background: color-mix(in srgb, var(--tok-accent) 6%, transparent); }
 .sbd-v2 .sbd-tc2.sbd-used { opacity: 0.3; }
 .sbd-v2 .sbd-tc2.sbd-used::after {
   content: '✓'; position: absolute; top: 1px; right: 4px; color: var(--volt);
@@ -403,15 +407,17 @@
 .sbd-v2 .sbd-field {
   flex: 0 0 150px; border-radius: 14px; padding: 10px 7px; border: 1px solid var(--tok-line);
   background:
-    repeating-linear-gradient(90deg, transparent 0 46px, color-mix(in srgb, var(--tok-ink) 3.5%, transparent) 46px 47px),
-    var(--tok-surface);
+    repeating-linear-gradient(90deg,transparent 0 46px,rgba(255,255,255,0.035) 46px 47px),linear-gradient(160deg,#101a12,#0a0f0b);
 }
+:where(:root[data-theme="arcade"]) .sbd-v2 .sbd-field { background: repeating-linear-gradient(90deg, transparent 0 46px, color-mix(in srgb, var(--tok-ink) 3.5%, transparent) 46px 47px),
+    var(--tok-surface); }
 .sbd-v2 .sbd-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
 .sbd-v2 .sbd-slot {
   aspect-ratio: 1 / 0.92; border-radius: 10px; border: 1.5px dashed var(--tok-line);
-  background: color-mix(in srgb, var(--tok-page) 50%, transparent); display: flex; flex-direction: column;
+  background: rgba(10,10,10,0.5); display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 1px; position: relative; color: var(--paper);
 }
+:where(:root[data-theme="arcade"]) .sbd-v2 .sbd-slot { background: color-mix(in srgb, var(--tok-page) 50%, transparent); }
 .sbd-v2 .sbd-spos { font-family: var(--font-saira-cond, sans-serif); font-weight: 800; font-size: 12px; color: var(--muted-dim); }
 .sbd-v2 .sbd-slot.qb .sbd-spos { color: var(--qb); }
 .sbd-v2 .sbd-slot.rb .sbd-spos { color: var(--rb); }
@@ -420,9 +426,10 @@
 .sbd-v2 .sbd-slot.k .sbd-spos { color: var(--k); }
 /* A LIT SLOT IS THE ONLY THING A HELD PLAYER CAN LAND IN. */
 .sbd-v2 .sbd-slot.elig {
-  border-style: solid; border-color: var(--volt); background: color-mix(in srgb, var(--tok-accent) 9%, transparent);
-  box-shadow: 0 0 14px color-mix(in srgb, var(--tok-accent) 30%, transparent);
+  border-style: solid; border-color: var(--volt); background: rgba(212,255,0,0.09);
+  box-shadow: 0 0 14px rgba(212,255,0,0.3);
 }
+:where(:root[data-theme="arcade"]) .sbd-v2 .sbd-slot.elig { background: color-mix(in srgb, var(--tok-accent) 9%, transparent); box-shadow: 0 0 14px color-mix(in srgb, var(--tok-accent) 30%, transparent); }
 .sbd-v2 .sbd-slot.filled { border-style: solid; background: var(--tok-surface); }
 .sbd-v2 .sbd-slot.filled .sbd-spos { font-size: 9px; }
 .sbd-v2 .sbd-nm {
@@ -464,7 +471,8 @@
   border-bottom: 1px solid var(--tok-line); background: transparent; color: var(--paper); text-align: left;
 }
 .sbd-v2 .sbd-prow:last-child { border-bottom: 0; }
-.sbd-v2 .sbd-prow.sel { background: color-mix(in srgb, var(--tok-accent) 9%, transparent); box-shadow: inset 3px 0 0 var(--volt); }
+.sbd-v2 .sbd-prow.sel { background: rgba(212,255,0,0.09); box-shadow: inset 3px 0 0 var(--volt); }
+:where(:root[data-theme="arcade"]) .sbd-v2 .sbd-prow.sel { background: color-mix(in srgb, var(--tok-accent) 9%, transparent); }
 .sbd-v2 .sbd-prow.gone { opacity: 0.26; }
 .sbd-v2 .sbd-pb {
   width: 24px; height: 18px; border-radius: 5px; display: grid; place-items: center;

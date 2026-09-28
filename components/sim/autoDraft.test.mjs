@@ -64,9 +64,12 @@ test('VOLT FILL, not volt text on grey', () => {
 
 test('the ON state is the LIVE colour, because the seat is being drafted for', () => {
   // ON is not a brighter version of OFF - it is a condition you can switch off.
-  // White text on the live colour - a token since rebrand R2 (--tok-page is the
-  // arcade page's white), not a literal.
-  assert.match(css, /\.auto-toggle\.on \{ background: var\(--live\); border-color: var\(--live\); color: var\(--tok-page\); \}/);
+  // White text on the live colour. On the DARK page that is #fff; --tok-page is
+  // #0A0A0A there, and pinning the token here is how the R2 sweep shipped
+  // near-black-on-red past a green suite (28 Sep). The arcade page's white is
+  // --tok-page, in its own zero-specificity rule right after.
+  assert.match(css, /\.auto-toggle\.on \{ background: var\(--live\); border-color: var\(--live\); color: #fff; \}/);
+  assert.match(css, /:where\(:root\[data-theme="arcade"\]\) \.auto-toggle\.on \{ color: var\(--tok-page\); \}/);
 });
 
 test('BEHAVIOUR IS UNCHANGED: same action, same engine path', () => {
