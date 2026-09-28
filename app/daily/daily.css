@@ -673,3 +673,15 @@
    dark values; the arcade page reads the roles. */
 :root[data-theme="arcade"] .weekly .yr .sub { color: var(--tok-muted); }
 :root[data-theme="arcade"] .weekly .pip.full .dot { color: var(--tok-ink); }
+
+/* ============================================================================
+   THE VOLT GRAMMAR, STEP 3 (Derik, 28 Sep; arcade page only). Primary buttons
+   and selected states are a volt fill with navy ink; bars and dots are the volt
+   accent; heroes sit on the wash. Navy is never a filled button or a selected
+   state. :where()-scoped - zero added specificity; the dark page is untouched.
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .btn--volt { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .dhero-play { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .slot--active { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .weekly .pip.full { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .clock-bar i { background: var(--tok-accent); }

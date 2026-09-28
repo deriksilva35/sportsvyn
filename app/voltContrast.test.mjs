@@ -89,3 +89,50 @@ test('NO --tok-action / --tok-accent TEXT ON A LIGHT GROUND on the arcade page',
   const bad = files.flatMap((f) => voltOnLight(read(f), g).map((b) => `${f}: ${b}`));
   assert.equal(bad.length, 0, `${bad.length} rule(s) put volt text on a light ground:\n${bad.join('\n')}`);
 });
+
+// NAVY IS NEVER A FILLED BUTTON OR A SELECTED STATE (volt grammar, step 3).
+// Scope: the seven step-3 surfaces, the lobby and the header. A rule whose name
+// says button / CTA / selected and whose arcade background resolves to navy
+// fails. Structure (a lock badge, a card, the done tile) is allowed navy.
+const STEP3 = ['app/weekly/weekly.css', 'app/daily/daily.css', 'app/pickem/pickem.css', 'components/sim/sim.css',
+  'components/games/grade.css', 'app/leagues/leagues.css', 'components/onboarding/onboarding.css',
+  'app/games/lobbyV3.css', 'components/site-chrome.css'];
+const BUTTONISH = /(btn|cta|button|\.on\b|\.active\b|\.sel\b|\.pick\b|signin|start|primary|confirm|\.draft\b|\.play\b|-go\b)/;
+
+export function navyFills(css, g) {
+  const rs = rules(css).filter((r) => !/data-theme="(?!arcade)/.test(r.sel)).map((r) => ({ sel: r.sel.replace(ARC, ''), body: r.body }));
+  const local = {};
+  for (const { sel, body } of rules(css)) for (const [k, v] of decls(body)) if (k.startsWith('--') && (/data-theme="arcade"/.test(sel) || !(k in local))) local[k] = v;
+  const scope = { ...g, ...local }; const by = new Map();
+  for (const { sel, body } of rs) { const c = by.get(sel) ?? {}; for (const [k, v] of decls(body)) if (!k.startsWith('--')) c[k] = resolve(v, scope); by.set(sel, c); }
+  // The hamburger's lines are the icon itself - structure, not a fill.
+  // :not(.on) names the UNSELECTED state, so it is not read as a selected one.
+  return [...by].filter(([sel, d]) => BUTTONISH.test(sel.replace(/:not\([^)]*\)/g, '')) && !/hamburger-btn[^ ]* span/.test(sel) && /#1a1650/i.test(`${d.background ?? ''} ${d['background-color'] ?? ''}`)).map(([sel]) => sel);
+}
+
+test('NO NAVY-FILLED BUTTON OR SELECTED STATE on the step-3 surfaces', () => {
+  const g = arcadeGlobals(read('app/globals.css'));
+  const bad = STEP3.flatMap((f) => navyFills(read(f), g).map((s) => `${f}: ${s}`));
+  assert.equal(bad.length, 0, `${bad.length} navy-filled button/selected rule(s):\n${bad.join('\n')}`);
+});
+
+// A VOLT FILL CARRIES DARK INK. The mirror of the rule above: volt as a
+// background needs navy (or any dark) text on it - white on volt is 1.1:1, and
+// it is what a base rule reading --tok-page for its text produces here.
+export function lightOnVolt(css, g) {
+  const rs = rules(css).filter((r) => !/data-theme="(?!arcade)/.test(r.sel)).map((r) => ({ sel: r.sel.replace(ARC, ''), body: r.body }));
+  const local = {};
+  for (const { sel, body } of rules(css)) for (const [k, v] of decls(body)) if (k.startsWith('--') && (/data-theme="arcade"/.test(sel) || !(k in local))) local[k] = v;
+  const scope = { ...g, ...local }; const by = new Map();
+  for (const { sel, body } of rs) { const c = by.get(sel) ?? {}; for (const [k, v] of decls(body)) if (!k.startsWith('--')) c[k] = resolve(v, scope); by.set(sel, c); }
+  return [...by].filter(([, d]) => isVolt(`${d.background ?? ''} ${d['background-color'] ?? ''}`)
+    // inherit/currentColor take the element's ink (navy on this page): only a
+    // colour that resolves to a LIGHT hex is flagged.
+    && d.color && /#[0-9a-f]{3,6}\b/i.test(d.color) && !darkBg(d.color)).map(([sel, d]) => `${sel} { color: ${d.color.trim()} } on volt`);
+}
+
+test('EVERY VOLT FILL CARRIES DARK INK on the step-3 surfaces', () => {
+  const g = arcadeGlobals(read('app/globals.css'));
+  const bad = STEP3.flatMap((f) => lightOnVolt(read(f), g).map((s) => `${f}: ${s}`));
+  assert.equal(bad.length, 0, `${bad.length} light-on-volt rule(s):\n${bad.join('\n')}`);
+});

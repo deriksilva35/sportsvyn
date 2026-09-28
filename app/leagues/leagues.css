@@ -175,3 +175,15 @@
 :where(:root[data-theme="arcade"]) .lg-code { color: var(--tok-primary); }
 :where(:root[data-theme="arcade"]) .lg-codechip b { color: var(--tok-primary); }
 :where(:root[data-theme="arcade"]) .lob .volt { color: var(--tok-primary); }
+
+/* ============================================================================
+   THE VOLT GRAMMAR, STEP 3 (Derik, 28 Sep; arcade page only). Primary buttons
+   and selected states are a volt fill with navy ink; bars and dots are the volt
+   accent; heroes sit on the wash. Navy is never a filled button or a selected
+   state. :where()-scoped - zero added specificity; the dark page is untouched.
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .lg-head { background: var(--tok-hero-wash); }
+:where(:root[data-theme="arcade"]) .lg-preview-hero { background: var(--tok-hero-wash); }
+/* Navy ink on the volt fill (volt grammar: white on volt is 1.1:1). */
+:where(:root[data-theme="arcade"]) .lg-tab.on { color: var(--tok-on-action); }
+:where(:root[data-theme="arcade"]) .lg-join-primary { color: var(--tok-on-action); }

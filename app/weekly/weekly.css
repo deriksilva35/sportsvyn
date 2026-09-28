@@ -421,3 +421,13 @@
   white-space: nowrap;
 }
 .wkv-lock:disabled { background: var(--tok-surface-2); color: var(--muted-dim); cursor: default; }
+
+/* ============================================================================
+   THE VOLT GRAMMAR, STEP 3 (Derik, 28 Sep; arcade page only). Primary buttons
+   and selected states are a volt fill with navy ink; bars and dots are the volt
+   accent; heroes sit on the wash. Navy is never a filled button or a selected
+   state. :where()-scoped - zero added specificity; the dark page is untouched.
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .wkv-pip.on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .wkv-stp.on i { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .wkv-hd { background: var(--tok-hero-wash); }

@@ -171,3 +171,9 @@
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 10px; letter-spacing: .04em; color: var(--tok-muted); white-space: nowrap;
 }
+
+/* VOLT GRAMMAR, STEP 3 (arcade only): the primary button is a volt fill with
+   NAVY ink - its base rule reads --tok-page for the text, which is white here. */
+:where(:root[data-theme="arcade"]) .onb-btn--go { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+/* Navy ink on the volt fill (volt grammar: white on volt is 1.1:1). */
+:where(:root[data-theme="arcade"]) .onb .btn--volt { color: var(--tok-on-action); }

@@ -401,3 +401,19 @@
 .pk-sw.on { border-color: var(--volt); background: rgba(212,255,0,0.06); color: var(--volt); cursor: default; }
 :where(:root[data-theme="arcade"]) .pk-sw.on { background: color-mix(in srgb, var(--tok-accent) 6%, transparent); }
 .pk-sw.on small { color: var(--muted-dim); }
+
+/* ============================================================================
+   THE VOLT GRAMMAR, STEP 3 (Derik, 28 Sep; arcade page only). Primary buttons
+   and selected states are a volt fill with navy ink; bars and dots are the volt
+   accent; heroes sit on the wash. Navy is never a filled button or a selected
+   state. :where()-scoped - zero added specificity; the dark page is untouched.
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .pk-side.on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .pk-side.pick { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .pk-signin { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .pip.tiny.full { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .pkv-pip.on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .pkv-stp.on i { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .pk-bar i { background: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .pkv-hd { background: var(--tok-hero-wash); }
+:where(:root[data-theme="arcade"]) .pk-hero { background: var(--tok-hero-wash); }

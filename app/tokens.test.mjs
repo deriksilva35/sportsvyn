@@ -47,7 +47,7 @@ test('THE ARCADE PALETTE is the ruling\'s, verbatim', () => {
     // VOLT GRAMMAR (28 Sep): the surfaces and line drop the lavender tint -
     // surface is an off-white a hair below the page - and volt joins the set.
     '--arcade-page': '#FFFFFF', '--arcade-surface': '#FAFAF8', '--arcade-surface-2': '#F1F1EE', '--arcade-volt': '#D4FF00',
-    '--arcade-ink': '#0E0B2B', '--arcade-muted': '#5A5680', '--arcade-primary': '#1A1650',
+    '--arcade-ink': '#0E0B2B', '--arcade-muted': '#666666', '--arcade-primary': '#1A1650',
     '--arcade-on-primary': '#D4FF00', '--arcade-chip': '#2447FF', '--arcade-live': '#D6006F',
     '--arcade-up': '#1B8A5A', '--arcade-coin': '#B7791F', '--arcade-line': '#E3E3E0',
     '--arcade-radius-lg': '20px', '--arcade-radius-md': '14px', '--arcade-shadow-card': '0 4px 0 #1A1650',
@@ -222,4 +222,15 @@ test('THE VOLT GRAMMAR: action is volt with navy ink, primary is navy structure,
   // The dark page keeps volt as its action, and the new roles exist there too.
   assert.equal(rootTokens['--tok-action'], '#D4FF00');
   assert.equal(rootTokens['--tok-on-action'], '#0A0A0A');
+});
+
+test('ARCADE MUTED IS A NEUTRAL GREY at >= 4.5:1 on the page and both surfaces (volt grammar step 3)', () => {
+  const m = rootTokens['--arcade-muted'];
+  assert.equal(m, '#666666', 'no violet cast: R = G = B');
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(m.slice(i, i + 2), 16));
+  assert.ok(r === g && g === b);
+  for (const bg of ['--arcade-page', '--arcade-surface', '--arcade-surface-2']) {
+    const x = ratio(m, rootTokens[bg]);
+    assert.ok(x >= 4.5, `${m} on ${bg} ${rootTokens[bg]} is ${x.toFixed(2)}:1`);
+  }
 });

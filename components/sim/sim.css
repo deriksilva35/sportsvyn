@@ -1217,3 +1217,41 @@
    reader came for. */
 .sim-record { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .06em; color: var(--muted); margin: -4px 0 16px; }
 .sim-record b { color: var(--paper); font-weight: 700; }
+
+/* ============================================================================
+   THE VOLT GRAMMAR, STEP 3 (Derik, 28 Sep; arcade page only). Primary buttons
+   and selected states are a volt fill with navy ink; bars and dots are the volt
+   accent; heroes sit on the wash. Navy is never a filled button or a selected
+   state. :where()-scoped - zero added specificity; the dark page is untouched.
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .sim-cta { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .sml-start { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .sim-start { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .sim-upgrade { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .startbtn.bar { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .mcard-cta { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .mcard-cta:hover { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .wsheet-primary { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .wsheet-primary:hover { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .mcard-buy { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .mcard-buy:hover { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .copt.on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .rseg.on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .avail-chips button.on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .p-row .draft { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .p-row .confirm { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .acct-upsell { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .expo-cta { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .ld-resume { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .sim-dailyband .sdb-cta { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .seatpill.on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .me-cta { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .dv-btn { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .on-clock .dot { background: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .dv-drain i { background: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .setup-head { background: var(--tok-hero-wash); }
+:where(:root[data-theme="arcade"]) .auto-toggle:not(.on) { background: var(--tok-page); border-color: var(--tok-primary); color: var(--tok-primary); }
+/* The switch strokes read --ink, which is the page white on the arcade page: on
+   the white off-state toggle they vanished. Navy strokes when off. */
+:where(:root[data-theme="arcade"]) .auto-toggle:not(.on) .sw { border-color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .auto-toggle:not(.on) .sw::after { background: var(--tok-primary); }

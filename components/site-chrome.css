@@ -425,3 +425,23 @@
   .gh .gh-cta { flex: 0 0 auto; margin-left: auto; }
   .gh .gh-burger { flex: 0 0 auto; margin-left: 0; }
 }
+
+/* ============================================================================
+   THE VOLT GRAMMAR, STEP 3 (Derik, 28 Sep; arcade page only). Primary buttons
+   and selected states are a volt fill with navy ink; bars and dots are the volt
+   accent; heroes sit on the wash. Navy is never a filled button or a selected
+   state. :where()-scoped - zero added specificity; the dark page is untouched.
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .gh-cta { background: var(--tok-action); color: var(--tok-on-action) !important; border-color: var(--tok-action); }
+/* The base rule's ink is !important (color: var(--ink) !important), and --ink is the
+   page white on the arcade page - so the navy ink has to be !important too. */
+:where(:root[data-theme="arcade"]) .gh-cta:hover, :where(:root[data-theme="arcade"]) .gh-drawer .gh-cta { color: var(--tok-on-action) !important; }
+/* The older site header's CTAs (no component renders them today) follow the
+   grammar too, so no navy button survives anywhere in this file. */
+:where(:root[data-theme="arcade"]) .site-header .header-cta .member-btn { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .site-header .nav-cta { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .site-header .nav-cta:hover { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+@media (max-width: 767px) {
+  :where(:root[data-theme="arcade"]) .mobile-drawer .member-btn { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+  :where(:root[data-theme="arcade"]) .mobile-drawer .nav-cta { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+}
