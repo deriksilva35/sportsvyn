@@ -27,6 +27,7 @@
 
 import GlobalHeaderClient from '@/components/GlobalHeaderClient';
 import MarketClient from '@/components/market/MarketClient';
+import SiteFooter from '@/components/SiteFooter';
 import {
   cachedPricedSlate, cachedFuturesBoards, cachedBookCounts, cachedLatestSnapshotAt, cachedBoardMatchIds,
   cachedPropsBoardRows, cachedPropsGames,
@@ -91,6 +92,16 @@ export async function MarketView({ pinned = null, leagueHeader = null }) {
   );
 }
 
+// THE SITE FOOTER ON THE NETWORK /market ONLY (R5 follow-up). It is static-safe
+// - no auth, no cookies; HideInShell reads the shell cookie in the browser, the
+// same way it does on the prerendered /privacy and /terms - so the page stays
+// ○. The league wearings (/nfl/market, /cfb/market) render MarketView without
+// it, as every other league route does.
 export default async function MarketPage() {
-  return MarketView({});
+  return (
+    <>
+      {await MarketView({})}
+      <SiteFooter />
+    </>
+  );
 }
