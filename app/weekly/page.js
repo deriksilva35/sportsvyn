@@ -260,7 +260,10 @@ export default async function WeeklyPage({ searchParams }) {
                   <div className="score-big">{live.total}</div>
                   <div className="score-meta">
                     <span className="muted">
-                      live &middot; {live.playedCount} of {live.slots} played &middot; before drop-worst
+                      {/* ONE STRING, not JSX text between expressions: the text after
+                          {live.slots} ran to a line break and the compiler dropped its
+                          leading space - "0 of 6played" on the rebrand preview. */}
+                      {`live · ${live.playedCount} of ${live.slots} played · before drop-worst`}
                     </span>
                   </div>
                 </div>

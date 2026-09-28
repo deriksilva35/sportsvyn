@@ -1988,3 +1988,18 @@
 .sv-app .sv-stats-yc { color: #E7C200; }
 .sv-app .sv-stats-rc { color: var(--muted); }
 .sv-app .sv-stats-rc.has { color: var(--live-red); }
+
+/* ARCADE (rebrand R1, behind ARCADE_THEME - app/globals.css). .sv-app sets its
+   own palette on the element, which out-ranks the page's; on the arcade page
+   the same names read the tokens. Token reads only. */
+:root[data-theme="arcade"] .sv-app {
+  --ink: var(--tok-page);
+  --volt: var(--tok-accent);
+  --paper: var(--tok-ink);
+  --paper-dim: var(--tok-muted);
+  --graphite: var(--tok-surface);
+  --charcoal: var(--tok-surface-2);
+  --muted: var(--tok-muted);
+  --hairline: var(--tok-line);
+  --live-red: var(--tok-live);
+}

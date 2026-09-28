@@ -109,6 +109,7 @@ export default async function DraftRoomPage({ params, searchParams }) {
         initialAvailable={room.available}
         timerSeconds={room.timerSeconds}
         turnDeadlineAt={room.turnDeadlineAt}
+        renderedAt={new Date().toISOString()}
         initialAuto={room.isAuto}
         poolMapping={room.poolMapping}
         withheld={room.withheld ?? []}
