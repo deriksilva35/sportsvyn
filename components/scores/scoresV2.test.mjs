@@ -636,3 +636,11 @@ test('one spelling of the zone on both sides', async () => {
   const page = readFileSync(path.join(__dirname, '../../app/scores/page.js'), 'utf8');
   assert.match(page, /const zoneLabel = \(tz\) => zoneNameOf\(tz\);/);
 });
+
+test('EPL leaves the sport chips on the arcade page only (mon-17); the route stays', () => {
+  const src = readFileSync(new URL('./ScoresV2.js', import.meta.url), 'utf8');
+  assert.match(src, /\.\.\.\(arcade \? \[\] : \[\['epl', 'EPL'\]\]\)/);
+  const page = readFileSync(new URL('../../app/scores/page.js', import.meta.url), 'utf8');
+  assert.match(page, /arcade=\{arcadeOn\(\)\}/);
+  assert.match(page, /\['nfl', 'cfb', 'mlb', 'epl'\]\.includes\(sportRaw\)/, '/scores?sport=epl still resolves');
+});

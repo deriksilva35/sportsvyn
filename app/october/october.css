@@ -202,3 +202,13 @@
 .ob-lr .d.live { color: var(--volt, #D4FF00); font-weight: 700; }
 :where(:root[data-theme="arcade"]) .ob-lr .d.live { color: var(--volt, var(--tok-primary)); }
 .ob-lr.ob-gap { color: var(--muted-dim); }
+
+/* R2 batch 2 (mon-17, arcade only): the diamond is flat MLB green - no gradient,
+   no stripes - and so are its ARM/BAT tiles; the tile being filled is the light
+   volt tint; "Sign in to play" is the primary button - volt fill, navy ink. */
+:where(:root[data-theme="arcade"]) .oc-field { background: var(--tok-up); }
+:where(:root[data-theme="arcade"]) .oc-slot { background: var(--tok-up); border-color: color-mix(in srgb, var(--tok-page) 55%, transparent); }
+:where(:root[data-theme="arcade"]) .oc-slot.p .oc-pos, :where(:root[data-theme="arcade"]) .oc-slot.b .oc-pos { color: var(--tok-page); }
+:where(:root[data-theme="arcade"]) .oc-slot.elig { background: color-mix(in srgb, var(--tok-action) 30%, var(--tok-page)); border-color: var(--tok-primary); box-shadow: none; }
+:where(:root[data-theme="arcade"]) .oc-slot.elig .oc-pos { color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .oc-lock { background: var(--tok-action); color: var(--tok-on-action); }

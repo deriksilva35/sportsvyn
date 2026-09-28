@@ -26,6 +26,7 @@ import { ET } from '@/lib/gridiron/scoresV2Shape';
 import './scoresV2.css';
 import { zoneNameOf } from '@/lib/time/zoneName';
 import { plural } from '@/lib/text/plural';
+import { arcadeOn } from '@/lib/brand/theme';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Scores - Sportsvyn' };
@@ -205,7 +206,7 @@ export default async function ScoresPage({ searchParams }) {
           the header and the day strip stayed on Eastern for the whole first
           session. From the second request on, both read the viewer's zone. */}
       <TzCookie />
-      <ScoresV2 v={v} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} />
+      <ScoresV2 v={v} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} arcade={arcadeOn()} />
     </div>
   );
 }
