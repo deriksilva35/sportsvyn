@@ -44,6 +44,7 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { publish, LEAGUE_CONFIG } from '@/lib/rankings/publishGridironEdition';
+import { publishNflPowerZ } from '@/lib/rankings/publishNflPowerZ';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -78,6 +79,27 @@ export async function GET(request) {
   }
 
   const res = outcome.result;
+  // THE NFL'S SECOND BOARD, nfl-power-z (lib/rankings/publishNflPowerZ.js) - the
+  // formula Derik chose, current season only, published beside the Elo board and
+  // HIDDEN until he publishes it (the hub reaches it by URL only). Its own ledger
+  // row and its own alarm: a failure here never costs the Elo edition above, and
+  // the Elo edition's never costs this one.
+  let powerZ = null;
+  if (league === 'nfl') {
+    const z = await withAdvisoryLock(`${SOURCE}:nfl-power-z`, async () => recordRun(sql, {
+      source: SOURCE,
+      kind: 'nfl-power-z',
+      run: async () => (await publishNflPowerZ({ apply: true })).summary,
+    }));
+    powerZ = z.locked ? { decision: 'skipped-locked' } : z.result;
+    if (!z.locked && (!z.result.ok || z.result.summary?.ok === false)) {
+      await maybeAlert(sql, {
+        source: SOURCE,
+        subject: `[pollers] ${SOURCE} FAILED for nfl-power-z`,
+        body: `source: ${SOURCE}\nlist: nfl-power-z\n\n${z.result.error ?? JSON.stringify(z.result.summary, null, 1)}`,
+      });
+    }
+  }
   // A FAILED PUBLISH IS AN ALARM. The board is a weekly artifact: if this
   // fails on a Monday nobody sees a stale board until the following Monday,
   // and a stale board looks exactly like a fresh one.
@@ -89,5 +111,5 @@ export async function GET(request) {
     });
   }
 
-  return Response.json({ league, ok: res.ok, id: res.id, summary: res.summary });
+  return Response.json({ league, ok: res.ok, id: res.id, summary: res.summary, ...(powerZ ? { powerZ } : {}) });
 }

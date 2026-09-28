@@ -46,6 +46,45 @@ export default function MethodologyPage() {
             against how the games actually ended. It is context for following a
             game, not advice: we explain, we don&rsquo;t pick.
           </p>
+
+          <h2 id="power-ranking">NFL power ranking</h2>
+          <p>
+            Our NFL power ranking uses this season&rsquo;s games only &mdash; nothing
+            carries over from last year &mdash; and is recomputed after each
+            week&rsquo;s last game, once Monday night is final. Early weeks are small
+            samples, and the ranking says so.
+          </p>
+          <p>It combines four measures of each team&rsquo;s season so far:</p>
+          <ul>
+            <li>
+              <strong>Scoring, adjusted (25%).</strong> Points per game against what
+              those opponents usually allow. Scoring 30 on a defence that usually
+              allows 20 counts as +10.
+            </li>
+            <li>
+              <strong>Defence, adjusted (12%).</strong> Points allowed per game against
+              what those opponents usually score, turned so that higher is better.
+            </li>
+            <li>
+              <strong>Win percentage (55%).</strong> Wins over games played; a tie
+              counts as half a win.
+            </li>
+            <li>
+              <strong>Quality of record (8%).</strong> Each result against what a
+              typical team would expect against that opponent. Beating a team that
+              wins 80% of its games is worth +0.8; losing to it costs only 0.2; losing
+              to a team that wins 20% of its games costs 0.8.
+            </li>
+          </ul>
+          <p>
+            Every opponent figure leaves out the opponent&rsquo;s game against the
+            team being rated, so no team helps rate itself. A game against an
+            opponent with no other games yet is left out of the three adjusted
+            measures, but still counts toward win percentage. Each measure is put on
+            the same scale &mdash; how many standard deviations a team sits from the
+            league average &mdash; and the four are combined with the weights above.
+            A power of 0 is a league-average team.
+          </p>
         </article>
       </main>
 

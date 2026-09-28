@@ -25,200 +25,56 @@
  * opportunity. Movement is jade/terra because direction is a fact.
  */
 
-import GlobalHeaderServer from '@/components/GlobalHeaderServer';
-import SportsvynSegment from '@/components/shell/SportsvynSegment';
-import { resolveShellMode, simViewport } from '@/lib/shell/shell';
-import Link from 'next/link';
-import { hasMovement, MARKET_LEAGUES } from '@/lib/market/reads';
+import GlobalHeaderClient from '@/components/GlobalHeaderClient';
+import MarketClient from '@/components/market/MarketClient';
 import {
   cachedPricedSlate, cachedFuturesBoards, cachedBookCounts, cachedLatestSnapshotAt, cachedBoardMatchIds,
-  cachedPropsBoard, cachedPropsGames,
+  cachedPropsBoardRows, cachedPropsGames,
 } from '@/lib/market/cachedReads';
-import PropsBoard from '@/components/market/PropsBoard';
-import PropsTable from '@/components/market/PropsTable';
-import PropsFilters from '@/components/market/PropsFilters';
-import PropsIndex from '@/components/market/PropsIndex';
-import { LinesTable, FuturesTable } from '@/components/market/LineTable';
-import GameFilter from '@/components/market/GameFilter';
-import {
-  flattenLines, flattenFutures, sortRows, teamShort, linesGames,
-  LINES_COLUMNS, FUTURES_COLUMNS, LINES_PAGE, FUTURES_PAGE,
-} from '@/lib/market/lineTables';
-import { shortName, MARKET_LABELS } from '@/lib/market/propsBoard';
-import { marketHref, nextDir, hiddenFields } from '@/lib/market/marketUrl';
 import './market.css';
 
-// NOT force-dynamic any more (25 Sep). The page is still rendered per request -
-// its tabs and filters are the URL and its header is the reader's - but its
-// data comes from lib/market/cachedReads.js, which force-dynamic existed to
-// prevent. Default 'auto' lets the data cache work.
+// STATIC (droplet-mon-4, B). The page is prerendered and revalidated every
+// 60 s - the same clock as lib/market/cachedReads.js - and the URL is applied
+// in the browser by components/market/MarketClient.js. It was rendered per
+// request because the filters are the URL and the header is the reader's; at
+// ~1,100 requests a minute that was a database-bound function per hit. The
+// three per-request reads are gone from this file:
+//   - searchParams      -> useSearchParams in MarketClient
+//   - resolveShellMode  -> the sv_shell cookie, read client-side
+//   - GlobalHeaderServer (auth + cookies) -> GlobalHeaderClient + /api/session
+export const dynamic = 'force-static';
+export const revalidate = 60;
 
-// Shell mode opts into viewport-fit:cover so the safe-area insets resolve;
-// the web keeps the root viewport. Same contract as /scores and every /sim page.
-export async function generateViewport() {
-  return simViewport(await resolveShellMode());
-}
+// ONE VIEWPORT FOR WEB AND SHELL. The shell needs viewport-fit:cover for its
+// safe-area insets, and a static page cannot ask which one it is serving.
+// cover is inert on a browser without a notch and on every desktop.
+export const viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' };
 
 export const metadata = {
   title: 'The Market - Sportsvyn',
   description: 'Where the market is actually pricing NFL, CFB and Premier League games, and how that has changed. Consensus lines across books, de-vigged.',
 };
 
-const LEAGUE_LABEL = { nfl: 'NFL', cfb: 'CFB', epl: 'EPL' };
-const CHIPS = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['epl', 'EPL'], ['movers', 'Movers only']];
-
 /**
- * THE THREE BOARDS THIS PAGE HOLDS.
- *
- * Until now all three rendered stacked on one scroll, which worked while props
- * was a five-card band and stops working the moment it becomes a full board.
- * Tabs give each one a home without changing what any of them says.
- *
- * LEDGER IS PHASE B AND IS ABSENT, NOT DISABLED. A greyed-out tab promises a
- * feature; no tab promises nothing, which is the truth.
+ * THE WHOLE DATA SET, ONCE. Every priced game, every future and EVERY prop
+ * row across the three leagues - the client narrows it. Plain arrays, not
+ * Maps and Sets, because this crosses into a client component.
  */
-const TABS = [['lines', 'Lines'], ['props', 'Props'], ['futures', 'Futures']];
-const DEFAULT_TAB = 'lines';
-
-const WHEN = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit',
-});
-const DAY = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
-
-function stamp(d) {
-  if (!d) return null;
-  const p = DAY.formatToParts(new Date(d)).reduce((a, x) => (a[x.type] = x.value, a), {});
-  return `${p.year}-${p.month}-${p.day}`;
-}
-const american = (n) => (n == null ? '—' : n > 0 ? `+${n}` : `${n}`);
-const pct = (n) => (n == null ? '' : `${n.toFixed(1)}%`);
-
-/**
- * BOTH AXES SURVIVE EVERY LINK. The league filter and the tab are independent -
- * a reader on PROPS who picks CFB stays on PROPS, and the tab row keeps
- * whatever filter is already applied. Building each href from both is what
- * stops one control silently resetting the other, which is the same fix the
- * /scores toolbar needed when its filters lived in component state.
- *
- * The default tab is omitted from the URL so /market stays /market.
- */
-/*
- * THREE HAND-BUILT HREF HELPERS LIVED HERE and are gone. Each knew about a
- * different subset of the page's state, so a sort header on the LINES table
- * dropped ?view=table and returned the reader to the cards - invisible on
- * PROPS only because table is that tab's unmarked default. Every control now
- * goes through lib/market/marketUrl.js, which starts from the CURRENT state
- * and lets a control change only its own parameter. A second hand-built href
- * is how this class recurs, so there is deliberately nowhere left to add one.
- */
-
-/**
- * THE MOVEMENT GLYPH. Three states, and the third is the one that matters:
- * a dash is NOT zero. Null means no 24h baseline has been stamped for this
- * selection yet, which is "not observed", not "did not move" — and printing
- * ▲0.0 for it would invent an observation.
- */
-function Move({ v }) {
-  if (v == null || v === 0) return <span className="mv mut">—</span>;
-  const up = v > 0;
-  return (
-    <span className={`mv ${up ? 'jade' : 'terra'}`}>
-      {up ? '▲' : '▼'}{Math.abs(v).toFixed(1)}
-    </span>
-  );
-}
-
-function Row({ label, sel, price, implied, move }) {
-  return (
-    <div className="mrow">
-      <span className="lbl">{label}</span>
-      <span className="sel">{sel}</span>
-      <span className="px">{price}</span>
-      <span className="imp">{implied}</span>
-      <Move v={move} />
-    </div>
-  );
-}
-
-function Card({ card, onBoard }) {
-  const live = card.matchStatus === 'live';
-  const away = card.away.abbreviation || card.away.name || 'TBD';
-  const home = card.home.abbreviation || card.home.name || 'TBD';
-  const spread = card.spread.length ? card.spread[0] : null;
-  const over = card.total.find((s) => s.label === 'Over') ?? null;
-  return (
-    <div className="g">
-      <div className="top">
-        <span className="match">
-          {away} at {home}
-          {onBoard ? <> <span className="boardpill">Board</span></> : null}
-        </span>
-        {/* A LIVE CARD SAYS SO INSTEAD OF SHOWING A KICKOFF THAT HAS PASSED.
-            The slate admits live games; printing "SAT 3:30 PM" beside one
-            already being played reads as a game still to come. */}
-        <span className="when">
-          {live
-            ? <i className="live">LIVE</i>
-            : (card.kickoffAt ? WHEN.format(new Date(card.kickoffAt)).toUpperCase() : 'TBD')}
-        </span>
-      </div>
-      {/* THE NUMBERS FROZE AT KICKOFF. The consensus stops updating once play
-          starts, so a live card stamps its prices rather than letting them
-          read as a running line. Same word the props surfaces use. */}
-      {live ? <div className="prek">Prices are pre-kick</div> : null}
-
-      {/* SHORT NAMES, THE ONE EDIT TO A HOMED TAB - and the SOURCE matters.
-          Full club names truncate to nonsense in this column at phone width, a
-          live defect today. The fix is the TEAM'S OWN ABBREVIATION from the
-          teams table, not a name-shortening rule: the props board's
-          first-initial-plus-surname is right for people and produces garbage
-          for clubs ("TCU Horned Frogs" -> "T. Frogs"). Two different kinds of
-          name, two different sources. A club with no abbreviation keeps its
-          full name, and Draw is neither team. */}
-      {card.h2h.map((s, i) => (
-        <Row key={s.label}
-          label={i === 0 ? (card.threeWay ? '1X2' : 'ML') : ''}
-          sel={teamShort(s.label, card)}
-          price={american(s.american)} implied={pct(s.impliedPct)} move={s.moveProb} />
-      ))}
-
-      {/* The spread's own price is near-constant at -110; the LINE is the news,
-          so the line is the selection and the juice is the price. Soccer's is
-          an Asian handicap and reads the same way. */}
-      {spread ? (
-        <Row label="Spread" sel={`${teamShort(spread.label, card)} ${spread.value ?? ''}`.trim()}
-          price={american(spread.american)} implied="" move={spread.moveProb} />
-      ) : null}
-
-      {over ? (
-        <Row label="Total" sel={`O/U ${over.value ?? ''}`.trim()}
-          price={american(over.american)} implied="" move={over.moveProb} />
-      ) : null}
-    </div>
-  );
-}
-
-function Band({ slug, cards, boardIds, books }) {
-  const n = books.get(slug);
-  const note = [
-    cards.length ? `${cards.length} priced` : null,
-    n ? `median of ${n} books, de-vigged` : null,
-  ].filter(Boolean).join(' · ');
-  return (
-    <section key={slug}>
-      <div className="bandhead">
-        <span className="b">{LEAGUE_LABEL[slug] ?? slug.toUpperCase()}</span>
-        <span className="c">{note}</span>
-      </div>
-      {cards.length === 0 ? (
-        <div className="emptyband">No priced {LEAGUE_LABEL[slug] ?? slug} markets right now.</div>
-      ) : (
-        <div className="grid">
-          {cards.map((c) => <Card key={c.matchId} card={c} onBoard={boardIds.has(c.matchId)} />)}
-        </div>
-      )}
-    </section>
-  );
+export async function marketData() {
+  const [slate, futures, books, snapAt, boardIds, propsRows, propsGames] = await Promise.all([
+    cachedPricedSlate(), cachedFuturesBoards(), cachedBookCounts(), cachedLatestSnapshotAt(), cachedBoardMatchIds(),
+    cachedPropsBoardRows('all').catch(() => []),
+    cachedPropsGames().catch(() => []),
+  ]);
+  return {
+    slate: [...slate.entries()],
+    futures,
+    books: [...books.entries()],
+    snapAt: snapAt ? new Date(snapAt).toISOString() : null,
+    boardIds: [...boardIds],
+    propsRows,
+    propsGames,
+  };
 }
 
 /**
@@ -227,320 +83,14 @@ function Band({ slug, cards, boardIds, books }) {
  * component with `pinned` set, under the league header and without the league
  * chips. MOVERS ONLY survives the pin because it is state, not a league.
  */
-export async function MarketView({ sp, pinned = null, leagueHeader = null }) {
-  // THE SHELL GATE STAYS AT THE CALL SITE, server-side: web HTML carries no
-  // segment markup at all. Same contract the other three tabs already keep.
-  const isShell = await resolveShellMode();
-  const raw = typeof sp.f === 'string' ? sp.f : 'all';
-  // THE PIN DECIDES THE LEAGUE; the URL still decides everything else. 'movers'
-  // is not a league, so a pinned board can still be narrowed to movers.
-  const urlFilter = CHIPS.some(([k]) => k === raw) ? raw : 'all';
-  const filter = pinned && urlFilter !== 'movers' ? pinned : urlFilter;
-  const rawTab = typeof sp.tab === 'string' ? sp.tab : DEFAULT_TAB;
-  const tab = TABS.some(([k]) => k === rawTab) ? rawTab : DEFAULT_TAB;
-
-  // BOARD STATE IS ALL URL STATE, so a board a reader has narrowed is a board
-  // they can share. Nothing here is component state.
-  // TABLE IS THE DEFAULT VIEW, so it carries no param and every existing props
-  // deep link lands on it. Charts is the marked alternate.
-  // TWO DEFAULTS, DELIBERATELY OPPOSITE. On PROPS the table is the default
-  // (?view=charts is marked); on LINES and FUTURES the CARDS are the default
-  // (?view=table is marked). Each tab's unmarked URL renders exactly what it
-  // rendered before its second view existed, which is what makes every shipped
-  // link safe.
-  // THE WHOLE URL STATE, IN ONE OBJECT. Every control builds its href from
-  // this and changes only its own key, so nothing can be dropped by a helper
-  // that did not know about it.
-  const urlState = {
-    tab,
-    view: typeof sp.view === 'string' ? sp.view : null,
-    f: typeof sp.f === 'string' ? sp.f : null,
-    g: typeof sp.g === 'string' ? sp.g : null,
-    game: typeof sp.game === 'string' && sp.game !== '' ? sp.game : null,
-    sort: typeof sp.sort === 'string' ? sp.sort : null,
-    dir: sp.dir === 'asc' || sp.dir === 'desc' ? sp.dir : null,
-    q: typeof sp.q === 'string' ? sp.q : null,
-    board: sp.board === '1' ? '1' : null,
-    movers: sp.movers === '1' ? '1' : null,
-    // The index's four filters (Player Props Part B). Null when unset, so a
-    // URL that never touched them is byte-identical to the one that shipped.
-    team: typeof sp.team === 'string' && sp.team !== 'all' ? sp.team : null,
-    pos: typeof sp.pos === 'string' && sp.pos !== 'all' ? sp.pos : null,
-    mkt: typeof sp.mkt === 'string' && sp.mkt !== 'all' ? sp.mkt : null,
-    hit: typeof sp.hit === 'string' && sp.hit !== '0' ? sp.hit : null,
-  };
-  const href = (patch) => marketHref(urlState, patch);
-
-  // THE PROPS TAB LEADS WITH THE INDEX (Player Props Part B) and keeps both
-  // views that shipped: ?view=table and ?view=charts render exactly what they
-  // rendered before, so no URL anybody holds changed meaning. Only the
-  // UNMARKED props URL moved, and it moved to the screen the mock describes.
-  const view = tab === 'props'
-    ? (sp.view === 'charts' ? 'charts' : sp.view === 'table' ? 'table' : 'index')
-    : (sp.view === 'table' ? 'table' : 'cards');
-  const boardState = {
-    league: filter === 'movers' ? 'all' : filter,
-    game: typeof sp.game === 'string' && sp.game !== '' ? sp.game : null,
-    dir: sp.dir === 'asc' || sp.dir === 'desc' ? sp.dir : null,
-    group: typeof sp.g === 'string' ? sp.g : 'all',
-    // THE INDEX SORTS BY KICKOFF, the table by 24h move - each view's default
-    // is the question that view exists to answer, and an explicit ?sort= still
-    // wins on both.
-    sort: typeof sp.sort === 'string' ? sp.sort
-      : (typeof sp.s === 'string' ? sp.s : (view === 'index' ? 'kickoff' : 'move')),
-    q: typeof sp.q === 'string' ? sp.q : '',
-    boardOnly: sp.board === '1',
-    moversOnly: sp.movers === '1' || filter === 'movers',
-    team: typeof sp.team === 'string' ? sp.team : 'all',
-    pos: typeof sp.pos === 'string' ? sp.pos : 'all',
-    marketType: typeof sp.mkt === 'string' ? sp.mkt : 'all',
-    minHitPct: Number(sp.hit) || 0,
-    // The index shows a slate, not a page of forty.
-    limit: view === 'index' ? 400 : undefined,
-  };
-
-  // THE DATA IS CACHED FOR 60 s, SHARED (lib/market/cachedReads.js): none of
-  // it is per-user, and the page at ~1,100 requests a minute was exhausting
-  // the database's connection permits (25 Sep).
-  const [byLeague, futures, books, snapAt, boardIds, board, games] = await Promise.all([
-    cachedPricedSlate(), cachedFuturesBoards(), cachedBookCounts(), cachedLatestSnapshotAt(), cachedBoardMatchIds(),
-    tab === 'props' ? cachedPropsBoard(boardState).catch(() => ({ rows: [], total: 0 })) : Promise.resolve(null),
-    tab === 'props' ? cachedPropsGames().catch(() => []) : Promise.resolve([]),
-  ]);
-
-  // BOARD GAMES FIRST, WITHIN CFB — the only editorial ordering on the page.
-  // Everything else is kickoff order, because a record of what the market is
-  // doing has no other opinion about which game matters.
-  const cfb = byLeague.get('cfb') ?? [];
-  cfb.sort((a, b) => (boardIds.has(b.matchId) ? 1 : 0) - (boardIds.has(a.matchId) ? 1 : 0));
-
-  // THE INDEX'S CHIP LISTS COME FROM THE BOARD ITSELF, not from a constant.
-  // A team chip for a team with nothing priced is a filter that can only
-  // return the empty state, and a stat chip for a market the feed is not
-  // carrying today is the same. Both lists are what the slate actually holds.
-  const indexTeams = board
-    ? [...new Set(board.rows.flatMap((r) => [r.home.abbr, r.away.abbr]).filter(Boolean))].sort()
-    : [];
-  const indexStats = board
-    ? [...new Set(board.rows.map((r) => r.marketType))].sort()
-      .map((m) => [m, (MARKET_LABELS[m] ?? m).toUpperCase()])
-    : [];
-
-  const leagues = MARKET_LEAGUES.filter((s) => filter === 'all' || filter === 'movers' || filter === s);
-  const shown = new Map();
-  for (const s of leagues) {
-    const list = byLeague.get(s) ?? [];
-    const moved = filter === 'movers' ? list.filter(hasMovement) : list;
-    // A GAME SELECTION NARROWS THE CARDS AS WELL AS THE TABLE. The table half
-    // shipped with the lines-table relay; without this the dropdown would work
-    // in one view and silently do nothing in the other - which is worse than
-    // not offering it, because the control would look like it had failed.
-    shown.set(s, boardState.game ? moved.filter((c) => c.matchId === Number(boardState.game)) : moved);
-  }
-  const total = [...shown.values()].reduce((a, l) => a + l.length, 0);
-  // A SELECTED GAME BELONGS TO EXACTLY ONE LEAGUE, so the other bands are not
-  // empty results - they are questions nobody asked. Printing "No priced NFL
-  // markets right now" underneath a chosen CFB game would report an absence
-  // this filter invented rather than one the market has. The surviving band
-  // keeps its own count, which is honestly 1.
-  const cardBands = boardState.game
-    ? leagues.filter((s) => (shown.get(s) ?? []).length) : leagues;
-  const snap = stamp(snapAt);
-
-  // FLATTENED FROM THE READS THE CARDS ALREADY USE - no new queries and no new
-  // numbers, so the table cannot disagree with the cards beside it.
-  const lineGameOptions = tab === 'lines' ? linesGames(byLeague, { boardIds, leagues: MARKET_LEAGUES }) : [];
-  const linesSort = typeof sp.sort === 'string' ? sp.sort : 'game';
-  const futuresSort = typeof sp.sort === 'string' ? sp.sort : 'implied';
-  const allLines = tab === 'lines' && view === 'table'
-    ? flattenLines(byLeague, { boardIds, leagues, game: boardState.game }) : [];
-  const linesTotal = allLines.length;
-  const linesRows = sortRows(allLines, LINES_COLUMNS, linesSort, boardState.dir, 'game').slice(0, LINES_PAGE);
-  const allFutures = tab === 'futures' && view === 'table' ? flattenFutures(futures) : [];
-  const futuresTotal = allFutures.length;
-  const futuresRows = sortRows(allFutures, FUTURES_COLUMNS, futuresSort, boardState.dir, 'implied').slice(0, FUTURES_PAGE);
-
+export async function MarketView({ pinned = null, leagueHeader = null }) {
+  const data = await marketData();
   return (
-    <div className="gi" data-surface="ink">
-      {/* THE WORDMARK BAND RENDERS ON EVERY ROUTE. It was gated on the pin,
-          which meant the league wearings of this board had no global header at
-          all - no wordmark, no way out to the rest of the site. The league
-          header goes UNDER it, not instead of it. */}
-      <GlobalHeaderServer activeNav="market" />
-      {leagueHeader ?? null}
-      {isShell && <SportsvynSegment />}
-      <div className="mk-wrap">
-        <div className="mk-head">
-          <div className="kicker">NFL · CFB · EPL · Lines</div>
-          {/* THE REVERSE DOOR. /scores points here; this points back. A
-              cross-link that only runs one way teaches readers the two boards
-              are a hierarchy rather than siblings. */}
-          <Link className="gi-cross" href="/scores">Scoreboard &rarr;</Link>
-        </div>
-        <h1 className="h1">The Market</h1>
-        <p className="stance">
-          Where the market is actually pricing games, and how that has changed. Not a pick.
-          Not a recommendation. A record of what the books are doing.
-        </p>
-        <div className="meta">
-          {snap ? `SNAPSHOT ${snap} · ` : ''}CONSENSUS ACROSS BOOKS, DE-VIGGED · UPDATED EVERY 15 MIN
-        </div>
-
-        <div className="tabs">
-          {TABS.map(([k, label]) => (
-            <Link key={k} className={`tab ${tab === k ? 'on' : ''}`} href={href({ tab: k })}>{label}</Link>
-          ))}
-        </div>
-
-        {/* FILTER DEDUPE: the page-level chip row retires on PROPS, where the
-            LEAGUE filter row is the single control. Two rows both writing ?f=
-            was a control that could disagree with itself on screen. LINES and
-            FUTURES keep it - it is the only control they have. */}
-        {/* PINNED HIDES THE LEAGUE CHIPS but keeps MOVERS ONLY - it is state,
-            not a league, and it is as useful inside /nfl as outside it. */}
-        {tab === 'props' ? null : (
-          <div className="chips">
-            {CHIPS.filter(([k]) => !pinned || k === 'movers').map(([k, label]) => (
-              <Link key={k} className={`ch ${filter === k ? 'on' : ''}`} href={href({ f: k })}>{label}</Link>
-            ))}
-          </div>
-        )}
-
-        {/* LINES — the shipped board, MOVED not edited. Every element below is
-            the markup it always was; only its address changed. */}
-        {tab === 'lines' && filter === 'movers' && total === 0 ? (
-          <div className="emptyband">Nothing has moved in the last 24 hours.</div>
-        ) : null}
-
-        {tab === 'lines' ? (
-          <>
-            <div className="pb-frow">
-              <span className="flbl">View</span>
-              <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={href({ view: null })}>Cards</Link>
-              <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={href({ view: 'table' })}>Table</Link>
-            </div>
-            <GameFilter tab="lines" urlState={urlState} games={lineGameOptions}
-              current={boardState.game} hrefFor={href} />
-            {view === 'table' ? (
-              <LinesTable rows={linesRows} total={linesTotal} columns={LINES_COLUMNS}
-                sort={linesSort} dir={boardState.dir || undefined}
-                hrefFor={href} />
-            ) : cardBands.length === 0 ? (
-              // The league chip and the game dropdown can be set to disagree -
-              // a CFB game with the NFL chip on. Say which one is hiding it
-              // rather than leaving a blank page to be read as no prices.
-              <div className="emptyband">
-                That game is not in the selected league. <Link href={href({ f: null })}>Show all leagues</Link>.
-              </div>
-            ) : cardBands.map((s) => (
-              <Band key={s} slug={s} cards={shown.get(s) ?? []} boardIds={boardIds} books={books} />
-            ))}
-          </>
-        ) : null}
-
-        {/* THE FULL BOARD replaces the five-card band. The band's PropsCard is
-            retired with it - one props presentation, not two. */}
-        {tab === 'props' && board ? (
-          <section>
-            <PropsFilters state={boardState} games={games} view={view} urlState={urlState}
-              hrefFor={href} />
-            {view === 'index' ? (
-              /* THE INDEX carries its own filter stack (sport / team / pos /
-                 stat / hit) and its own empty state, because "loosen a filter"
-                 is the only useful thing to say to a reader who narrowed five
-                 of them. It is not wrapped in the rows.length check above for
-                 that reason. */
-              <PropsIndex
-                rows={board.rows}
-                filtered={board.filtered ?? board.rows.length}
-                state={boardState}
-                /* ONE KEY PER PATCH, and this is not style. marketHref merges
-                   { ...current, ...patch }, so a key present-but-undefined
-                   OVERWRITES the current value and then serialises to nothing -
-                   which would make every chip tap silently clear the other four
-                   filters. The patch is built from the key actually being set. */
-                hrefFor={(patch) => {
-                  const out = {};
-                  if ('league' in patch) { out.f = patch.league === 'all' ? null : patch.league; out.team = null; }
-                  if ('team' in patch) out.team = patch.team === 'all' ? null : patch.team;
-                  if ('pos' in patch) out.pos = patch.pos === 'all' ? null : patch.pos;
-                  if ('marketType' in patch) out.mkt = patch.marketType === 'all' ? null : patch.marketType;
-                  if ('minHitPct' in patch) out.hit = Number(patch.minHitPct) > 0 ? String(patch.minHitPct) : null;
-                  if ('sort' in patch) out.sort = patch.sort;
-                  return href(out);
-                }}
-                teams={indexTeams}
-                stats={indexStats}
-                cardHref={(r) => (r.playerSlug
-                  ? `/market/props/${r.playerSlug}?match=${r.matchId}` : null)}
-              />
-            ) : board.rows.length === 0 ? (
-              <div className="emptyband">No priced props match those filters.</div>
-            ) : view === 'charts' ? (
-              <PropsBoard rows={board.rows} total={board.total} state={boardState} chromeless
-                hrefFor={href} />
-            ) : (
-              <PropsTable rows={board.rows} total={board.total}
-                sort={boardState.sort} dir={boardState.dir || undefined}
-                hrefFor={href} />
-            )}
-          </section>
-        ) : null}
-
-        {tab === 'futures' ? (
-          <section>
-            <div className="pb-frow">
-              <span className="flbl">View</span>
-              <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={href({ view: null })}>Cards</Link>
-              <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={href({ view: 'table' })}>Table</Link>
-            </div>
-            {/* NO GAME DROPDOWN ON FUTURES, and not as an oversight: a title
-                market has no game to be filtered to. A control that could
-                only ever empty the tab is worse than an absent one. */}
-            {view === 'table' ? (
-              <FuturesTable rows={futuresRows} total={futuresTotal} columns={FUTURES_COLUMNS}
-                sort={futuresSort} dir={boardState.dir || undefined}
-                counts={futures.map((f) => ({ leagueSlug: f.leagueSlug, priced: f.priced }))}
-                hrefFor={href} />
-            ) : (
-            <>
-            <div className="bandhead">
-              <span className="b">Futures</span>
-              <span className="c">Championship winners · top 5 shown</span>
-            </div>
-            <div className="grid">
-              {futures.map((f) => (
-                <div className="g" key={f.leagueSlug}>
-                  <div className="top">
-                    <span className="match">{LEAGUE_LABEL[f.leagueSlug] ?? f.leagueSlug.toUpperCase()} · Title</span>
-                    <span className="when">{f.priced} priced</span>
-                  </div>
-                  {f.top.map((t) => (
-                    <div className="frow" key={t.label}>
-                      <span className="sel">{t.label}</span>
-                      <span className="r">{american(t.american)} <span className="mut">{pct(t.impliedPct)}</span></span>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-            </>
-            )}
-          </section>
-        ) : null}
-
-        <p className="note">
-          Consensus is the median price across the books we read, with the overround removed so
-          the outcomes of a market sum to 100%. Movement is the change in de-vigged probability
-          against a baseline stamped once a day. A dash means no baseline yet, which is not the
-          same as no movement. No picks, no units, no sportsbook links.
-        </p>
-      </div>
-    </div>
+    <MarketClient data={data} pinned={pinned} leagueHeader={leagueHeader}
+      header={<GlobalHeaderClient activeNav="market" />} />
   );
 }
 
-
-export default async function MarketPage({ searchParams }) {
-  return MarketView({ sp: (await searchParams) ?? {} });
+export default async function MarketPage() {
+  return MarketView({});
 }

@@ -22,7 +22,7 @@ import { scoringPlayFor, baseballScoringText } from '../../lib/push/scoringPlayR
 import { activityEventFor, pushLiveActivities } from '../../lib/push/liveActivityStore.js';
 import { stateFromMatch, liveLine } from '../../lib/push/liveActivityState.js';
 import { playsFor } from '../../lib/gridiron/playsImport.js';
-import { winProbTick, logWinProb, WINPROB_SPORTS, heldWinProb } from '../../lib/winprob/live.js';
+import { winProbTick, logWinProb, logFinalWinProb, logHoldStart, logHoldRelease, WINPROB_SPORTS, heldWinProb } from '../../lib/winprob/live.js';
 
 const CFBD = 'https://apinext.collegefootballdata.com';
 const BDL = 'https://api.balldontlie.io';
@@ -698,11 +698,32 @@ export async function pollOnce(sql, {
     }
 
     const after = await writeLive(sql, m.id, upd);
+    // THE CURVE ENDS AT THE RESULT (lib/winprob/live.js logFinalWinProb): on a
+    // poll that sees the game FINAL - the flip itself, or a later poll when
+    // another writer flipped it first - the log gets its terminal row, once.
+    // Before the `!after` skip, because an unchanged final row writes nothing.
+    // Its failure is its own, like the tick's.
+    if (upd.status === 'final' && WINPROB_SPORTS.includes(m.league_slug)) {
+      try {
+        // A HOLD STILL OPEN AT THE FINAL IS RELEASED FIRST, so the log reads
+        // hold -> release -> final and every hold has an end.
+        await logHoldRelease(sql, m.id, { now });
+        if (await logFinalWinProb(sql, m.id, { homeScore: upd.homeScore ?? m.home_score, awayScore: upd.awayScore ?? m.away_score, now })) out.winprob = (out.winprob ?? 0) + 1;
+      } catch (e) { log(`[${league}] win prob final row failed match=${m.id}: ${e.message}`); }
+    }
     if (!after) continue;
     out.written += 1;
     if (wp) {
-      try { if (await logWinProb(sql, m.id, wp, { now })) out.winprob = (out.winprob ?? 0) + 1; }
-      catch (e) { log(`[${league}] win prob log failed match=${m.id}: ${e.message}`); }
+      try {
+        // HOLDS ARE WRITTEN DOWN (lib/winprob/live.js logHoldStart/Release): the
+        // first held poll opens one, the next computed tick closes it before its
+        // own row. A hold logs no state (logWinProb returns false for it).
+        if (wp.hold) { if (await logHoldStart(sql, m.id, { playSeq: wp.playSeq, reasonDetail: wp.reason, now })) out.winprob = (out.winprob ?? 0) + 1; }
+        else {
+          await logHoldRelease(sql, m.id, { now });
+          if (await logWinProb(sql, m.id, wp, { now })) out.winprob = (out.winprob ?? 0) + 1;
+        }
+      } catch (e) { log(`[${league}] win prob log failed match=${m.id}: ${e.message}`); }
     }
 
     if (after.status === 'final' && m.status !== 'final') out.finals += 1;

@@ -15,8 +15,8 @@
 // and the footer says so on the page rather than only in this comment.
 
 import Link from 'next/link';
-import { shortName, MARKET_LABELS } from '@/lib/market/propsBoard';
-import { lineFor } from '@/lib/market/propStats';
+import { shortName, MARKET_LABELS } from '@/lib/market/propsShape';
+import { lineFor } from '@/lib/market/propLine';
 
 const WHEN = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit',

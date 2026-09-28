@@ -9,12 +9,15 @@
  *
  * data-surface="ink" is the same hook every other dark surface uses, so this
  * inherits the shell's own background rather than declaring a second one.
- * No client JS: a 404 must render even when something else on the page is
- * what failed.
+ * The 404 BODY needs no client JS: it must render even when something else on
+ * the page is what failed. The HEADER is the static one (GlobalHeaderClient):
+ * Next builds the root not-found element for EVERY route, so the auth() and
+ * cookies() inside GlobalHeaderServer here made every route in the app
+ * dynamic - /privacy and /terms included.
  */
 
 import Link from 'next/link';
-import GlobalHeaderServer from '@/components/GlobalHeaderServer';
+import GlobalHeaderClient from '@/components/GlobalHeaderClient';
 import './daily/daily.css';
 
 export const metadata = { title: 'Not found - Sportsvyn' };
@@ -22,7 +25,7 @@ export const metadata = { title: 'Not found - Sportsvyn' };
 export default function NotFound() {
   return (
     <div className="daily-shell">
-      <GlobalHeaderServer />
+      <GlobalHeaderClient />
       <main className="daily-main" data-surface="ink" style={{ minHeight: '70vh' }}>
         <section className="hero">
           <div className="hero-eyebrow">404</div>
