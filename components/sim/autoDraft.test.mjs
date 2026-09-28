@@ -64,7 +64,9 @@ test('VOLT FILL, not volt text on grey', () => {
 
 test('the ON state is the LIVE colour, because the seat is being drafted for', () => {
   // ON is not a brighter version of OFF - it is a condition you can switch off.
-  assert.match(css, /\.auto-toggle\.on \{ background: var\(--live\); border-color: var\(--live\); color: #fff; \}/);
+  // White text on the live colour - a token since rebrand R2 (--tok-page is the
+  // arcade page's white), not a literal.
+  assert.match(css, /\.auto-toggle\.on \{ background: var\(--live\); border-color: var\(--live\); color: var\(--tok-page\); \}/);
 });
 
 test('BEHAVIOUR IS UNCHANGED: same action, same engine path', () => {
