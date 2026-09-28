@@ -307,6 +307,6 @@
    the tokens. Token reads only - the faces follow at the source (--font-saira). */
 :root[data-theme="arcade"] .lob {
   --l-ink: var(--tok-page); --l-ink2: var(--tok-surface); --l-ink3: var(--tok-surface-2); --l-line: var(--tok-line);
-  --l-volt: var(--tok-accent); --l-paper: var(--tok-ink); --l-jade: var(--tok-up); --l-terra: var(--tok-down);
+  --l-volt: var(--tok-primary); --l-paper: var(--tok-ink); --l-jade: var(--tok-up); --l-terra: var(--tok-down);
   --l-mut: var(--tok-muted);
 }

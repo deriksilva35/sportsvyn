@@ -44,10 +44,12 @@ function resolve(name, scope = {}) {
 
 test('THE ARCADE PALETTE is the ruling\'s, verbatim', () => {
   const spec = {
-    '--arcade-page': '#FFFFFF', '--arcade-surface': '#F6F5FF', '--arcade-surface-2': '#ECEAFB',
+    // VOLT GRAMMAR (28 Sep): the surfaces and line drop the lavender tint -
+    // surface is an off-white a hair below the page - and volt joins the set.
+    '--arcade-page': '#FFFFFF', '--arcade-surface': '#FAFAF8', '--arcade-surface-2': '#F1F1EE', '--arcade-volt': '#D4FF00',
     '--arcade-ink': '#0E0B2B', '--arcade-muted': '#5A5680', '--arcade-primary': '#1A1650',
     '--arcade-on-primary': '#D4FF00', '--arcade-chip': '#2447FF', '--arcade-live': '#D6006F',
-    '--arcade-up': '#1B8A5A', '--arcade-coin': '#B7791F', '--arcade-line': '#DCD9F5',
+    '--arcade-up': '#1B8A5A', '--arcade-coin': '#B7791F', '--arcade-line': '#E3E3E0',
     '--arcade-radius-lg': '20px', '--arcade-radius-md': '14px', '--arcade-shadow-card': '0 4px 0 #1A1650',
   };
   for (const [k, v] of Object.entries(spec)) assert.equal(rootTokens[k], v, k);
@@ -204,4 +206,20 @@ test('THE LITERAL #CFCFC9 IS GONE from every stylesheet but the role\'s own line
   }
   const d = readFileSync(path.join(REPO, 'app/daily/daily.css'), 'utf8');
   assert.match(d, /\.daily-shell \{[^}]*background: var\(--tok-page\)/, 'the Weekly\'s page ground is the role');
+});
+
+test('THE VOLT GRAMMAR: action is volt with navy ink, primary is navy structure, legacy volt reads navy', () => {
+  assert.equal(arcadeBlock['--tok-action'], 'var(--arcade-volt)');
+  assert.equal(arcadeBlock['--tok-on-action'], 'var(--arcade-primary)');
+  assert.equal(arcadeBlock['--tok-accent'], 'var(--arcade-volt)');
+  assert.equal(arcadeBlock['--tok-primary'], 'var(--arcade-primary)', 'navy is structure');
+  assert.match(arcadeBlock['--tok-hero-wash'], /linear-gradient\(180deg, color-mix\(in srgb, var\(--arcade-volt\) 18%, var\(--arcade-page\)\), var\(--arcade-page\)\)/);
+  // Every var(--volt) on the site was written as a dark-page text or rule colour;
+  // on the arcade page they stay navy, and the grammar is applied per element.
+  assert.equal(arcadeBlock['--volt'], 'var(--tok-primary)');
+  assert.equal(arcadeBlock['--color-volt'], 'var(--tok-primary)');
+  assert.equal(arcadeSurface['--volt'], 'var(--tok-primary)');
+  // The dark page keeps volt as its action, and the new roles exist there too.
+  assert.equal(rootTokens['--tok-action'], '#D4FF00');
+  assert.equal(rootTokens['--tok-on-action'], '#0A0A0A');
 });

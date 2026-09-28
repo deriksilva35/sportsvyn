@@ -136,3 +136,29 @@
 
 /* "Full board, live ›" under the Weekly and Draft tabs - a 44 px target. */
 .gv-foot .gv-full { display: inline-flex; align-items: center; min-height: 44px; color: var(--volt); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* ============================================================================
+   THE VOLT GRAMMAR - the lobby (Derik, 28 Sep; arcade page only).
+   Volt is the action colour with navy ink on it; navy is structure; surfaces
+   are white. Every rule here is :where()-scoped - zero added specificity - and
+   the dark page is untouched (app/darkParity.test.mjs).
+   ========================================================================== */
+/* The tab chips: selected is a volt fill with navy text; the rest are white
+   with a navy hairline. */
+:where(:root[data-theme="arcade"]) .gv-chip { background: var(--tok-page); border-color: var(--tok-primary); color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .gv-chip.on { background: var(--tok-action); border-color: var(--tok-action); color: var(--tok-on-action); }
+/* The Tonight card: a navy surface, a volt kicker, a volt Play pill with navy
+   text. (Volt text is allowed here: the ground is navy.) */
+:where(:root[data-theme="arcade"]) .gv-now-l { color: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .gv-now-go { background: var(--tok-action); color: var(--tok-on-action); }
+/* The game rows: white, a navy letter tile, a volt left rule on any row still
+   open to play, a navy fill only for done. */
+:where(:root[data-theme="arcade"]) .gv-list { background: var(--tok-page); }
+:where(:root[data-theme="arcade"]) .gv-ic { background: var(--tok-page); border-color: var(--tok-primary); color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .gv-ic.live { background: var(--tok-page); border-color: var(--tok-primary); color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .gv-ic.done { background: var(--tok-primary); border-color: var(--tok-primary); color: var(--tok-page); }
+:where(:root[data-theme="arcade"]) .gv-g[data-tone="open"], :where(:root[data-theme="arcade"]) .gv-g[data-tone="live"] { box-shadow: inset 3px 0 0 var(--tok-accent); }
+/* The Weekly's 6/6 is the "do this" number: a volt fill badge. */
+:where(:root[data-theme="arcade"]) .gv-g[data-row="weekly"] .gv-r b { display: inline-block; background: var(--tok-action); color: var(--tok-on-action); border-radius: 8px; padding: 3px 7px; }
+/* The MLB tiles keep their green, open or done. */
+:where(:root[data-theme="arcade"]) .gv-g[data-row="october"] .gv-ic, :where(:root[data-theme="arcade"]) .gv-g[data-row="run"] .gv-ic { background: var(--tok-up); border-color: var(--tok-up); color: var(--tok-page); }

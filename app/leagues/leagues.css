@@ -168,3 +168,10 @@
   text-decoration: none; min-height: 44px;
 }
 .lg-join-primary:disabled { opacity: .6; }
+
+/* VOLT GRAMMAR (28 Sep): these three read --tok-accent as TEXT, which was navy on
+   the arcade page and is volt now - volt is never text on white. Navy here; the
+   dark page keeps its volt. The leagues surfaces get the full grammar in step 3. */
+:where(:root[data-theme="arcade"]) .lg-code { color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .lg-codechip b { color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .lob .volt { color: var(--tok-primary); }

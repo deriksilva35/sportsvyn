@@ -57,7 +57,9 @@ function GameRow({ row, signedIn, signinHref }) {
   if (!row) return null;
   const href = signedIn ? row.href : signinHref(row.href);
   return (
-    <Link className="gv-g" href={href} data-row={row.key}>
+    // data-tone: open (null tone), live or done - the volt grammar's open-row
+    // rule and done tile read it (lobbyV3.css, arcade page only).
+    <Link className="gv-g" href={href} data-row={row.key} data-tone={row.tone ?? 'open'}>
       <span className={`gv-ic${row.tone === 'live' ? ' live' : row.tone === 'done' ? ' done' : ''}`}>{row.mark}</span>
       <span className="gv-t">
         <b>{row.name}</b>

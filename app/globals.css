@@ -29,8 +29,8 @@
    ========================================================================== */
 :root {
   --arcade-page: #FFFFFF;
-  --arcade-surface: #F6F5FF;
-  --arcade-surface-2: #ECEAFB;
+  --arcade-surface: #FAFAF8;
+  --arcade-surface-2: #F1F1EE;
   --arcade-ink: #0E0B2B;
   --arcade-muted: #5A5680;
   --arcade-primary: #1A1650;
@@ -39,7 +39,8 @@
   --arcade-live: #D6006F;
   --arcade-up: #1B8A5A;
   --arcade-coin: #B7791F;
-  --arcade-line: #DCD9F5;
+  --arcade-line: #E3E3E0;
+  --arcade-volt: #D4FF00;
   --arcade-radius-lg: 20px;
   --arcade-radius-md: 14px;
   --arcade-shadow-card: 0 4px 0 #1A1650;
@@ -57,6 +58,12 @@
   --tok-primary: #141414;
   --tok-on-primary: #D4FF00;
   --tok-accent: #D4FF00;
+  /* VOLT GRAMMAR (droplet-mon-10): action is the fill a reader presses, on-action
+     the ink on it; the hero wash sits behind heroes. On the dark page action is
+     the volt it has always been. */
+  --tok-action: #D4FF00;
+  --tok-on-action: #0A0A0A;
+  --tok-hero-wash: none;
   --tok-chip: #245BFF;
   --tok-live: #E63946;
   --tok-up: #2A8A4F;
@@ -130,7 +137,16 @@
   --tok-ink-2: var(--arcade-muted);
   --tok-primary: var(--arcade-primary);
   --tok-on-primary: var(--arcade-on-primary);
-  --tok-accent: var(--arcade-primary);
+  /* THE VOLT GRAMMAR (Derik, 28 Sep). Volt is the ACTION colour - the fill of a
+     primary button, a selected chip, the Tonight card's Play pill, a "do this"
+     number - with navy ink on it. Navy (--tok-primary) is STRUCTURE: headings,
+     body ink, borders, the Tonight card, the done tile; never a button fill,
+     never a selected state. Accent is volt too: live dots, the open-row rule,
+     the wash. Volt is NEVER text on white (app/voltContrast.test.mjs). */
+  --tok-action: var(--arcade-volt);
+  --tok-on-action: var(--arcade-primary);
+  --tok-accent: var(--arcade-volt);
+  --tok-hero-wash: linear-gradient(180deg, color-mix(in srgb, var(--arcade-volt) 18%, var(--arcade-page)), var(--arcade-page));
   --tok-chip: var(--arcade-chip);
   --tok-live: var(--arcade-live);
   --tok-up: var(--arcade-up);
@@ -167,7 +183,11 @@
   --color-rule-darker: var(--tok-line);
   --color-muted-light: var(--tok-muted);
   --color-muted-dim: var(--tok-muted);
-  --color-volt-dim: var(--tok-accent);
+  --color-volt-dim: var(--tok-primary);
+  /* LEGACY VOLT READS NAVY on the arcade page (see the grammar above): --volt /
+     --color-volt are written as text colours all over the dark page. */
+  --color-volt: var(--tok-primary);
+  --volt: var(--tok-primary);
   --graphite-up: var(--tok-surface-2);
   --rule-dim: var(--tok-line);
   --line: var(--tok-line);
@@ -175,13 +195,14 @@
 /* THE SAME GREYS WHERE A SURFACE RE-DECLARES THEM ([data-surface] below sets
    them on the element, which would otherwise out-rank the inherited value). */
 :root[data-theme="arcade"] [data-surface] {
+  --volt: var(--tok-primary);
   --graphite: var(--tok-surface-2);
   --graphite-up: var(--tok-surface-2);
   --charcoal: var(--tok-surface-2);
   --rule-dim: var(--tok-line);
   --paper-dim: var(--tok-muted);
   --muted-dim: var(--tok-muted);
-  --volt-dim: var(--tok-accent);
+  --volt-dim: var(--tok-primary);
 }
 /* THE WORDMARKS ARE WHITE PNGs (light-on-dark). Until R3 swaps in the brand
    kit's marks, they are drawn dark on the arcade page rather than vanishing. */

@@ -44,7 +44,7 @@
   font-family: 'Saira Condensed', sans-serif; font-weight: 600; font-size: 8px;
   letter-spacing: 0.1em; color: rgba(212,255,0,0.5); white-space: nowrap;
 }
-:where(:root[data-theme="arcade"]) .ds-zone span { color: color-mix(in srgb, var(--tok-accent) 50%, transparent); }
+:where(:root[data-theme="arcade"]) .ds-zone span { color: color-mix(in srgb, var(--tok-primary) 50%, transparent); }
 .ds-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--tok-line); }
 .ds-tick.five { top: auto; height: 6px; bottom: 0; background: var(--tok-line); }
 .ds-tick.mid { background: #3a3a3a; }

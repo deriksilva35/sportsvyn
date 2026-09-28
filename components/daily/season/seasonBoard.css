@@ -512,3 +512,16 @@
 /* A TEAM THAT CAN NO LONGER FILL ANYTHING dims, but wears no tick - the tick
    means "you spent this one", and only a real pick earns it. */
 .sbd-v2 .sbd-tc2.sbd-dead2 { opacity: 0.3; }
+
+/* ============================================================================
+   THE VOLT GRAMMAR - the Daily's rules card (Derik, 28 Sep; arcade page only).
+   ========================================================================== */
+/* The ???? title stays navy - structure. */
+:where(:root[data-theme="arcade"]) .sbd-rules h2 { color: var(--tok-primary); }
+/* Step numbers: navy rings. */
+:where(:root[data-theme="arcade"]) .sbd-rl .sbd-n { border-color: var(--tok-primary); color: var(--tok-primary); }
+/* The primary button - "Sign in to play" and "Start the clock" - is a volt fill
+   with navy text; the ghost button keeps its outline. */
+:where(:root[data-theme="arcade"]) .sbd-btn:not(.sbd-ghost) { background: var(--tok-action); color: var(--tok-on-action); }
+/* The dashed clock box sits on the hero wash. */
+:where(:root[data-theme="arcade"]) .sbd-rnote { background: var(--tok-hero-wash); }
