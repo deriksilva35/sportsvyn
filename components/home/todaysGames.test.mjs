@@ -336,27 +336,14 @@ test('section sub-navs are NOT unified away', () => {
 // Nothing went dark
 // ---------------------------------------------------------------------------
 
-test('EVERY ROUTE THE OLD NAV CARRIED STILL HAS A WAY IN', () => {
-  // /schedule and /stats had ZERO link sites outside the retiring header, and
-  // /market dropped to a single panel link on /my. The footer is where they
-  // land. A route with no way in is not a decision anyone made.
-  //
-  // THE WORLD CUP ROUTES ARE THE EXCEPTION, AND THEY PROVE THE RULE: their
-  // delisting IS a decision someone made (EPL relay 1, 23 Aug - the
-  // tournament ended 19 Jul and soccer's front door is no longer a bracket).
-  // The routes still SERVE for anyone holding a link; they are simply not
-  // advertised. Everything else here would be an accident, which is what
-  // this pin exists to catch.
-  for (const href of ['/schedule', '/stats', '/market',
-    '/nfl/fantasy', '/nfl/rankings', '/scores', '/sim', '/']) {
-    assert.ok(footer.includes(`href="${href}"`), `${href} must be reachable from the footer`);
+test('R5: THE FOOTER IS TWO ROWS - products, then small print', () => {
+  // Play - Scores - Market - Rankings - Leagues, then Methodology - Privacy -
+  // Terms - Contact (droplet-mon-6, R5). Everything the old four columns
+  // carried that is not here was dropped on purpose; lib/footerLinks.test.mjs
+  // holds that each of those routes still serves.
+  for (const href of ['/games', '/scores', '/market', '/rankings', '/leagues',
+    '/methodology', '/privacy', '/terms', 'mailto:hello@sportsvyn.com']) {
+    assert.ok(footer.includes(href), `${href} must be in the footer`);
   }
-});
-
-test('the footer no longer points its own links at nothing', () => {
-  // Daily Card, Rankings and Stats sat on href="#" while the routes existed.
-  const read = footer.slice(footer.indexOf('<h4>Read</h4>'), footer.indexOf('<h4>About</h4>'));
-  assert.ok(!/href="#"/.test(read), 'no dead hrefs in the Read column');
-  const soccer = footer.slice(footer.indexOf('<h4>Soccer</h4>'), footer.indexOf('<h4>About</h4>'));
-  assert.ok(!/href="#"/.test(soccer), 'nor in Soccer');
+  assert.ok(!/href="#"/.test(footer), 'no link points at nothing');
 });
