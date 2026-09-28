@@ -24,6 +24,7 @@ import TzCookie from '@/components/gridiron/TzCookie';
 import { scoresV2 } from '@/lib/gridiron/scoresV2';
 import { ET } from '@/lib/gridiron/scoresV2Shape';
 import './scoresV2.css';
+import { zoneNameOf } from '@/lib/time/zoneName';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Scores - Sportsvyn' };
@@ -184,12 +185,9 @@ export async function ScoresView({ sp, pinned = null, leagueHeader = null }) {
 // /scores is the tab. /nfl/scores and /cfb/scores still mount ScoresView
 // above, untouched (relay item 9).
 const one = (v) => (Array.isArray(v) ? v[0] : v);
-function zoneLabel(tz) {
-  try {
-    const name = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'long' }).formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value ?? tz;
-    return name.replace(/ (Standard|Daylight) Time$/, '');
-  } catch { return tz; }
-}
+// ONE SPELLING FOR THE ZONE, shared with the header's client half
+// (components/scores/ZoneLabel) - lib/time/zoneName.js.
+const zoneLabel = (tz) => zoneNameOf(tz);
 export default async function ScoresPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
   const [session, viewerTz, isShell] = await Promise.all([auth().catch(() => null), readViewerTz(), resolveShellMode()]);

@@ -599,3 +599,40 @@ test('HEADGEAR on the board: NFL, MLB and FBS cards wear cutouts facing right; F
   assert.doesNotMatch(h, /data-facing="left"|scaleX/, 'the board is stacked rows: everything faces right');
   assert.equal((cards[0].match(/<img[^>]*width="24" height="24"/g) ?? []).length, 2, 'the same 24 px box the disc had');
 });
+
+// ---------------------------------------------------------------------------
+// ONE ZONE ON THE PAGE (28 Sep). The header was rendered in the reader's zone
+// (the sv_tz cookie) while the cards were rendered in ET and only switched after
+// mount - "all times Pacific" over "1:00 PM ET" until, and unless, the browser
+// ran its code. Now the cards' first render is in the same zone as the header,
+// and both settle on the viewer's own zone after mount.
+// ---------------------------------------------------------------------------
+
+test('THE HEADER AND THE CARDS AGREE FROM THE FIRST PAINT: a Pacific reader gets Pacific on both', () => {
+  const h = html({ v: fixture(), signedIn: true, zoneLabel: 'Pacific' });
+  assert.match(h, /all times Pacific/);
+  // TEN @ DEN, 17:00Z: 10:00 AM in Los Angeles - not "1:00 PM ET"
+  assert.match(h, /10:00 AM PDT/);
+  assert.doesNotMatch(h, /1:00 PM ET/);
+});
+
+test('A FIRST VISIT (no cookie) is Eastern on both - and both then settle on the viewer\'s zone', () => {
+  const v = { ...fixture(), tz: 'America/New_York' };
+  const h = html({ v, signedIn: true, zoneLabel: 'Eastern' });
+  assert.match(h, /all times Eastern/);
+  assert.match(h, /1:00 PM EDT/);
+  const src = readFileSync(path.join(__dirname, 'ZoneLabel.js'), 'utf8');
+  assert.match(src, /useEffect\(\(\) => \{ setName\(zoneNameOf\(\)\); \}, \[\]\)/, 'the header settles on the browser zone after mount, like the cards');
+  const v2 = readFileSync(path.join(__dirname, 'ScoresV2.js'), 'utf8');
+  assert.match(v2, /all times <ZoneLabel initial=\{zoneLabel\} \/>/);
+  assert.match(v2, /<StandaloneTime iso=\{g\.kickoffAt\} serverTz=\{tz\} \/>/);
+});
+
+test('one spelling of the zone on both sides', async () => {
+  const { zoneNameOf } = await import('../../lib/time/zoneName.js');
+  assert.equal(zoneNameOf('America/Los_Angeles', new Date('2026-09-28T00:00:00Z')), 'Pacific');
+  assert.equal(zoneNameOf('America/New_York', new Date('2026-01-10T00:00:00Z')), 'Eastern');
+  assert.equal(zoneNameOf('Not/AZone'), 'Not/AZone');
+  const page = readFileSync(path.join(__dirname, '../../app/scores/page.js'), 'utf8');
+  assert.match(page, /const zoneLabel = \(tz\) => zoneNameOf\(tz\);/);
+});

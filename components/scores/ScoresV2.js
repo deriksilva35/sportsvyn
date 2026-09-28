@@ -6,6 +6,7 @@
 
 import Link from 'next/link';
 import StandaloneTime from '@/components/StandaloneTime';
+import ZoneLabel from '@/components/scores/ZoneLabel';
 import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import RankBadge from '@/components/gridiron/RankBadge';
@@ -157,7 +158,7 @@ function Card({ g, x, signedIn, signinHref, tz }) {
       <div className="sv2-lbl">
         {live ? <span className="l">{liveLabel(g)}</span>
           : final ? <span>Final · {g.etWeekday ?? weekdayOf(g.kickoffAt.slice(0, 10))}</span>
-            : <span><StandaloneTime iso={g.kickoffAt} /></span>}
+            : <span><StandaloneTime iso={g.kickoffAt} serverTz={tz} /></span>}
         <span>{LEAGUE_LABEL[g.leagueSlug]}{g.network ? ` · ${g.network}` : ''}</span>
         <span className="bell">{x.stake?.alerts ? (live ? 'Alerts on' : 'Alerts') : ''}</span>
       </div>
@@ -256,7 +257,7 @@ export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLab
     <div className="sv2" data-surface="ink">
       {v.liveCount > 0 && <LiveRefresh />}
       <div className="sv2-head">
-        <div><h1>Scores</h1><div className="sv2-eb q">{weekdayOf(v.date, true)} · all times {zoneLabel}</div></div>
+        <div><h1>Scores</h1><div className="sv2-eb q">{weekdayOf(v.date, true)} · all times <ZoneLabel initial={zoneLabel} /></div></div>
         <div className="sv2-eb" data-live-count={v.liveCount}>{v.liveCount > 0 ? `${v.liveCount} live` : ''}</div>
       </div>
       <div className="sv2-days" data-section="days">

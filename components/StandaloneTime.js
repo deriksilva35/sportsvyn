@@ -40,13 +40,19 @@
  * that must not be copied; a second file would be a second chance to get the
  * fallback wrong, and this file's own header is already an argument against
  * two formatters for one question.
+ *
+ * serverTz (added for /scores, 28 Sep): the zone the SERVER already knows the
+ * reader is in (the sv_tz cookie). When given, the first render - server and
+ * client alike, so hydration still matches - is in that zone instead of ET, and
+ * the page's header ("all times Pacific") and its cards agree from the first
+ * paint rather than only after mount. Omitted, nothing changes for any caller.
  */
 
 import { useEffect, useState } from 'react';
 import { standaloneTimeLabel } from '@/lib/time/standaloneLabel';
 
-export default function StandaloneTime({ iso, weekday = false, zone = true }) {
-  const [label, setLabel] = useState(() => standaloneTimeLabel(iso, { weekday, zone, tz: null }));
+export default function StandaloneTime({ iso, weekday = false, zone = true, serverTz = null }) {
+  const [label, setLabel] = useState(() => standaloneTimeLabel(iso, { weekday, zone, tz: serverTz ?? null }));
   useEffect(() => { setLabel(standaloneTimeLabel(iso, { weekday, zone, tz: undefined })); }, [iso, weekday, zone]);
   return <>{label}</>;
 }
