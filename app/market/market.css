@@ -43,6 +43,12 @@
 }
 .mk-wrap .ch:hover { border-color: var(--muted-dim); }
 .mk-wrap .ch.on { background: var(--volt); color: var(--ink); border-color: var(--volt); }
+/* VOLT GRAMMAR (tue-12). Under arcade --volt is the navy primary, so the rule
+   above drew a navy-filled selected chip - navy is structure, never a selected
+   state. A selected chip is the action fill with its ink. Dark page untouched. */
+:where(:root[data-theme="arcade"]) .mk-wrap .ch.on {
+  background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action);
+}
 
 .mk-wrap .bandhead {
   display: flex; align-items: baseline; gap: 10px;
@@ -152,6 +158,9 @@
   content: ''; position: absolute; left: 10px; right: 10px; bottom: -1px;
   height: 2px; background: var(--volt);
 }
+/* The selected tab's underline is a selected state too: volt under arcade (an
+   accent rule, not text - the tab's WORD stays navy, never volt on white). */
+:where(:root[data-theme="arcade"]) .mk-wrap .tab.on::after { background: var(--tok-action); }
 
 /* ---- the full props board (mock v0.5). The threshold line lives HERE and not
    on the player page: a dashed line compares production to a PRICE, and this

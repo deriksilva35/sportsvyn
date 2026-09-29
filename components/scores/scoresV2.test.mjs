@@ -269,7 +269,7 @@ test('addendum 5: the Scores tab mounts TzCookie so sv_tz is written on the firs
   assert.ok(page.indexOf('<TzCookie />') < page.indexOf('<ScoresV2'), 'mounted with the tab, above the board');
 });
 
-test('no em dashes; /nfl/scores and /cfb/scores still mount ScoresView; LeagueScores untouched', () => {
+test('no em dashes; /nfl/scores and /cfb/scores are 308s to /scores (tue-12); LeagueScores untouched', () => {
   const REPO = path.resolve(__dirname, '..', '..');
   for (const f of ['components/scores/ScoresV2.js', 'components/scores/LiveRefresh.js', 'lib/gridiron/scoresV2.js', 'lib/gridiron/scoresV2Shape.js', 'app/scores/scoresV2.css', 'app/scores/page.js']) {
     assert.ok(!/—/.test(readFileSync(path.join(REPO, f), 'utf8')), `${f} carries an em dash`);
@@ -280,7 +280,8 @@ test('no em dashes; /nfl/scores and /cfb/scores still mount ScoresView; LeagueSc
   }
   const page = readFileSync(path.join(REPO, 'app/scores/page.js'), 'utf8');
   assert.match(page, /export async function ScoresView\(/); assert.match(page, /<ScoresV2 v=\{v\} signedIn=\{userId != null\}/);
-  for (const f of ['app/nfl/scores/page.js', 'app/cfb/scores/page.js']) assert.match(readFileSync(path.join(REPO, f), 'utf8'), /import \{ ScoresView \} from '@\/app\/scores\/page'/);
+  // Retired to /scores?sport=<league>: lib/scores/leagueScoreboards.test.mjs pins the redirect.
+  for (const f of ['app/nfl/scores/page.js', 'app/cfb/scores/page.js']) assert.match(readFileSync(path.join(REPO, f), 'utf8'), /permanentRedirect\(scoreboardRedirectFromParams\(/);
 });
 
 // ---------------------------------------------------------------------------

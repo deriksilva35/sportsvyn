@@ -55,6 +55,7 @@ import { NextResponse } from 'next/server';
 import { SHELL_COOKIE, SHELL_VALUE, SHELL_PARAM, SHELL_UA_TOKEN } from '@/lib/shell/constants';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { resolveCurrentEditionForFamily } from './lib/competition.js';
+import { scoreboardRedirect } from './lib/scores/leagueScoreboards.js';
 
 const REALM = 'Sportsvyn Admin';
 const EVERGREEN_FAMILY = 'world-cup';
@@ -185,6 +186,16 @@ export async function proxy(request) {
   }
 
   // -------------------------------------------------------------------------
+  // 2b. League scoreboards -> /scores?sport=<league> (permanent, 308; tue-12).
+  //    The query rides along and sport= is set from the path. The two route
+  //    files redirect too, as a second line if the matcher is ever narrowed.
+  // -------------------------------------------------------------------------
+  const scoreboard = scoreboardRedirect(pathname, request.nextUrl.search);
+  if (scoreboard) {
+    return withCookie(NextResponse.redirect(new URL(scoreboard, request.url), 308));
+  }
+
+  // -------------------------------------------------------------------------
   // 3. Evergreen alias (temporary redirect, 307). /world-cup/<sub> forwards
   //    to /<currentEdition.urlSlug>/<sub>. If no current edition exists
   //    (data-config gap) we fall through and let Next render the natural
@@ -276,6 +287,11 @@ export const config = {
     '/power-rankings',
     '/world-cup',
     '/world-cup/:path*',
+    // League scoreboards retired to /scores?sport= (tue-12). Literals: Next
+    // reads this object statically. leagueScoreboards.test.mjs pins them to
+    // LEAGUE_SCOREBOARDS.
+    '/nfl/scores',
+    '/cfb/scores',
     // App Store 3.1.1: the shell block above needs this route to reach the proxy.
     '/membership',
     '/membership/:path*',

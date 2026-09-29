@@ -122,7 +122,10 @@ const STEP3 = ['app/weekly/weekly.css', 'app/daily/daily.css', 'app/pickem/picke
   'app/scores/scoresV2.css', 'components/gridiron/gridiron.css', 'components/gridiron/drivestrip.css',
   'components/gridiron/pollboard.css', 'app/schedule/schedule.css', 'app/app/app-shell.css',
   // mon-19: the sign-in buttons
-  'app/signin/signin.css'];
+  'app/signin/signin.css',
+  // tue-12: the market's filter chips (market.css was outside this list, and
+  // its selected chip resolved navy under arcade)
+  'app/market/market.css'];
 // The lock BUTTONS are named explicitly (.expo-lock and .pcard .lock are badges -
 // structure); "you" is the reader's own selected row or column.
 const BUTTONISH = /(btn|cta|button|\.on\b|\.active\b|\.sel\b|\.pick\b|signin|start|primary|confirm|\.draft\b|\.play\b|-go\b|\.(wkv|pkv)-lock\b|--you\b|\.you\b|\.gg-cy\b)/;
