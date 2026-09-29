@@ -16,6 +16,7 @@
 import { useState, useTransition } from 'react';
 import { saveOctoberPickAction, clearOctoberPickAction } from '@/app/actions/october';
 import { ptTime } from '@/lib/gridiron/kickoff';
+import { probablesShort } from '@/lib/mlb/cardLines';
 
 const SLOT_LABEL = { arm: 'ARM', bat1: 'BAT', bat2: 'BAT', bat3: 'BAT', bat4: 'BAT' };
 
@@ -123,6 +124,10 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
                 original first pitch, which is a time nothing will happen at,
                 and the tile looked like every other pickable game. */}
             <small>{g.status === 'postponed' ? 'PPD' : g.status === 'live' ? 'live' : timeOf(g.kickoffAt)}</small>
+            {/* WHO IS PITCHING, before first pitch only: the arm slot's whole
+                question, answered on the tile before the panel opens. */}
+            {g.status === 'scheduled' && probablesShort(g.probables)
+              ? <em className="oc-sp" data-probables="1">{probablesShort(g.probables)}</em> : null}
           </button>
         ))}
       </div>
@@ -319,7 +324,7 @@ function slotWord(p) {
   // starter - the served CHW @ KC panel offered D. Lynch IV, the announced
   // starter, labelled "RP". The only arm on offer should not look like a
   // reliever somebody left in by mistake.
-  if (p?.probable) return 'probable starter';
+  if (p?.probable) return p.starting ? 'starting' : 'probable';
   if (p?.probablePending) return 'starter not announced';
   return p?.position ?? '';
 }

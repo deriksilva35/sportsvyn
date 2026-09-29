@@ -288,10 +288,11 @@ test('STARTERS: a picker row carries its batting order, and an unannounced arm s
   // 11th, not "11st" - the teens are the case every ordinal helper gets wrong.
   assert.match(h, /PHI · bats 11th/);
   assert.match(h, /PHI · starter not announced/);
-  // AND THE ANNOUNCED ONE SAYS "probable starter", NOT ITS BDL POSITION. That
+  // AND THE ANNOUNCED ONE SAYS "probable", NOT ITS BDL POSITION. That
   // position is a season-long role: the served CHW @ KC panel labelled the
   // announced starter "RP", which reads as a reliever left in by mistake.
-  assert.match(h, /Z\. Wheeler<\/b><small>PHI · probable starter<\/small>/);
+  // "starting" once his club's card is posted (tue-4) - see the next test.
+  assert.match(h, /Z\. Wheeler<\/b><small>PHI · probable<\/small>/);
   // THE PROBABLE IS NOT LABELLED WITH A BATTING ORDER. An arm has none.
   assert.doesNotMatch(h, /Z\. Wheeler<\/b><small>PHI · bats/);
   // AND THE PANEL SAYS WHOSE CARD IS UP, off the board and not off the
@@ -669,4 +670,15 @@ test('THE COUNTS FOLLOW THE TAP, not the server snapshot', async () => {
   await act(async () => { el.querySelector('[data-player="92"]').click(); });
   assert.equal(v.progress.picked, 2, 'the snapshot handed in is untouched');
   assert.match(el.textContent, /1 locked · 3 picked · 1 open/);
+});
+
+test('THE ARM: "probable" until his club posts, "starting" after; the tile names both starters (tue-4)', () => {
+  const v = PICKING();
+  v.board = v.board.map((g) => (g.matchId === 2
+    ? { ...g, status: 'scheduled', probables: { away: { id: '1', name: 'Zack Wheeler', hand: 'R' }, home: { id: '2', name: 'Chris Sale', hand: 'L' } } } : g));
+  const arm = { playerId: '90', short: 'Z. Wheeler', name: 'Zack Wheeler', kind: 'arm', team: 'PHI', position: 'SP', matchId: 2, ppg: 18.4, probable: true, order: null };
+  v.pool = { byGame: { 2: [{ ...arm, starting: true }] } };
+  const h = html({ view: v, signedIn: true });
+  assert.match(h, /Z\. Wheeler<\/b><small>PHI · starting<\/small>/);
+  assert.match(h, /<em class="oc-sp" data-probables="1">Wheeler v Sale<\/em>/, 'the tile says who is pitching');
 });

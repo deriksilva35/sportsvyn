@@ -143,6 +143,10 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
         <Team key={side} g={g} side={side} x={x} variant={variant} ball={ball === side}
           headgear={headgear} dressed={dressed} lead={lead} />
       ))}
+      {/* THE STARTERS SIT UNDER THE TEAMS they pitch for (tue-4), not in the
+          foot beside the line: "RHP Z. Wheeler vs LHP C. Sale" is who is
+          playing, and the foot is the market. Pre-game baseball only. */}
+      {baseball && !live && !final && x.probables ? <p className="sv4-prob" data-probables="1">{x.probables}</p> : null}
       {live && x.drive && (
         <div className="sv4-field" data-drive="1">
           {/* mon-21. THE SITUATION FIRST: down & distance · spot, the strip
@@ -185,7 +189,7 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
         </div>
       ) : baseball ? (
         <div className="sv4-foot" data-pre="mlb">
-          <span>{[x.probables, odds].filter(Boolean).join(' · ') || 'No line yet'}</span>
+          <span>{odds ?? 'No line yet'}</span>
           {x.preview ? <Link className="go" href={x.preview}>Preview &rarr;</Link> : null}
         </div>
       ) : (

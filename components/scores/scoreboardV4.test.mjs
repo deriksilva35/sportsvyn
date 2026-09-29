@@ -266,3 +266,20 @@ test('header zone == card zone for a Pacific reader, server-rendered', async () 
     assert.match(want, /PDT|PT/, 'and it is the Pacific clock, not Eastern');
   }
 });
+
+test('THE STARTERS SIT UNDER THE TEAMS on a scheduled MLB card, and the foot keeps the line (tue-4)', async () => {
+  const d = doc(v4html(fixture(), true));
+  const card = d.querySelector('.sv4-card[data-league="mlb"][data-variant="upcoming"]');
+  assert.ok(card, 'the scheduled MLB card');
+  const prob = card.querySelector('.sv4-prob[data-probables="1"]');
+  assert.equal(prob?.textContent, 'Yamamoto vs Darvish');
+  const kids = [...prob.parentElement.children];
+  const teamsBefore = kids.slice(0, kids.indexOf(prob)).filter((e) => e.matches('.sv4-team')).length;
+  assert.ok(teamsBefore >= 2, 'both team rows come before it');
+  assert.ok(!card.querySelector('.sv4-foot').textContent.includes('Yamamoto'), 'not repeated in the foot');
+  // Only pre-game baseball: a live or final card never carries the line.
+  for (const el of d.querySelectorAll('.sv4-card:not([data-variant="upcoming"])')) assert.equal(el.querySelector('.sv4-prob'), null);
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../../app/scores/scoresV4.css', import.meta.url), 'utf8');
+  assert.match(css, /\.sv4-prob \{[^}]*white-space: nowrap[^}]*text-overflow: ellipsis/, 'one line at 390');
+});

@@ -109,6 +109,7 @@
    of card, and still overflow at 9 px on a double-digit spread. In Rubik (the
    arcade body face), tabular, they need 238-261 px at 11 px. The odds span
    ellipsizes as a backstop; the win read and the CTA never shrink. */
+:where(:root[data-theme="arcade"]) .sv4-prob { margin: 2px 0 8px; font: 600 12px var(--tok-font-body); letter-spacing: .01em; color: var(--tok-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 :where(:root[data-theme="arcade"]) .sv4-foot { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid var(--tok-line); font: 500 11px var(--tok-font-body); font-variant-numeric: tabular-nums; letter-spacing: .02em; color: var(--tok-muted); white-space: nowrap; }
 :where(:root[data-theme="arcade"]) .sv4-foot > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 :where(:root[data-theme="arcade"]) .sv4-foot .go { flex: none; font-weight: 700; color: var(--tok-primary); text-decoration: none; text-transform: uppercase; letter-spacing: .06em; }
