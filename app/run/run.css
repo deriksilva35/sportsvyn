@@ -161,6 +161,7 @@
 .rn-who { min-width: 0; }
 .rn-who b { display: block; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rn-who small { display: block; color: var(--muted); font: 500 9px var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rn-who small.wrap { white-space: normal; }
 .rn-val { margin-left: auto; text-align: right; }
 .rn-val b { display: block; font: 700 14px var(--font-mono); }
 .rn-val small { font: 600 8px var(--font-mono); color: var(--muted-dim); }

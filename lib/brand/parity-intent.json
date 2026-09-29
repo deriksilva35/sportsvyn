@@ -154,6 +154,11 @@
       "file": "app/run/run.css",
       "key": ".rn-tc .rn-sp[data-probable=\"0\"] { color }",
       "after": "#5a5a5a"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-who small.wrap { white-space }",
+      "after": "normal"
     }
   ]
 }
