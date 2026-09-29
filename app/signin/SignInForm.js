@@ -21,6 +21,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { verifyEmailCode } from '@/app/actions/emailOtp';
+import './signin.css';
 
 const ERROR_MESSAGES = {
   EmailSignin:     "Couldn't send the link. Try again.",
@@ -114,7 +115,7 @@ export default function SignInForm({ initialError = null, callbackUrl = '/' }) {
           <button
             type="submit"
             disabled={verifying || code.length !== 6}
-            className="mt-3 w-full px-4 py-3 bg-volt text-ink font-mono font-medium uppercase tracking-widest text-sm rounded hover:bg-volt/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="si-cta mt-3 w-full px-4 py-3 bg-volt text-ink font-mono font-medium uppercase tracking-widest text-sm rounded hover:bg-volt/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {verifying ? 'Verifying…' : 'Verify code'}
           </button>
@@ -149,7 +150,7 @@ export default function SignInForm({ initialError = null, callbackUrl = '/' }) {
       <button
         type="submit"
         disabled={submitting}
-        className="mt-3 w-full px-4 py-3 bg-volt text-ink font-mono font-medium uppercase tracking-widest text-sm rounded hover:bg-volt/90 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="si-cta mt-3 w-full px-4 py-3 bg-volt text-ink font-mono font-medium uppercase tracking-widest text-sm rounded hover:bg-volt/90 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {submitting ? 'Sending…' : 'Email me a code'}
       </button>
