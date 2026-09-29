@@ -135,9 +135,6 @@ export function ArchiveBand() {
         <Mod title="The bracket" cta="Open the bracket" ctaHref="/world-cup-2026/bracket">
           <Rows rows={[{ label: 'Final + full path', value: 'View', dim: true }]} />
         </Mod>
-        <Mod title="Golden Boot race" cta="The race, kept" ctaHref="/world-cup-2026/golden-boot">
-          <Rows rows={[{ label: 'Final standings', value: 'View', dim: true }]} />
-        </Mod>
       </div>
     </>
   );

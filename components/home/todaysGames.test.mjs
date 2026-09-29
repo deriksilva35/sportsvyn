@@ -158,7 +158,8 @@ test('NOTHING TRUNCATES: every hidden label is in the drawer', () => {
   // This still asserts the DRAWER renders the whole list rather than a subset.
   const nav = src('lib/nav.js');
   const drawer = header.slice(header.indexOf('{drawerOpen && ('));
-  for (const label of ['TODAY', 'GAMES', 'SCORES', 'NFL', 'CFB', 'SOCCER']) {
+  // SOCCER left the list with soccer (tue-14).
+  for (const label of ['TODAY', 'GAMES', 'SCORES', 'NFL', 'CFB']) {
     assert.ok(nav.includes(`label: '${label}'`) || drawer.includes(label), `${label} reachable`);
   }
   // MY SPORTSVYN USED TO BE PINNED HERE, because the desktop bar hid it and the

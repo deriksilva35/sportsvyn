@@ -43,11 +43,13 @@ export const maxDuration = 60;
 const LEAGUES = [
   { sport: 'nfl', slug: 'nfl', source: 'nfl-odds', futures: true },
   { sport: 'cfb', slug: 'cfb', source: 'cfb-odds', futures: true },
-  { sport: 'epl', slug: 'epl', source: 'epl-odds', futures: false },
+  // No EPL leg: soccer is retired (tue-14). It was ~149 credits/day, and with
+  // the API-Sports ingest stopped its rows would sit 'scheduled' past kickoff
+  // and keep drawing polls.
 ];
 const FUTURES_LEAGUES = LEAGUES.filter((l) => l.futures);
-// Drives the tight-window test: an EPL kickoff inside the window now earns the
-// 15-minute cadence exactly as a gridiron one does.
+// Drives the tight-window test: a kickoff inside the window earns the
+// 15-minute cadence.
 const SLUGS = LEAGUES.map((l) => l.slug);
 
 // Daily outrights sub-step: title futures per league -> odds_markets futures rows,

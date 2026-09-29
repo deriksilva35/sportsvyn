@@ -81,7 +81,7 @@ function EmptyState() {
         coverage gather here. Or follow a player from any player page to track
         their output.
       </p>
-      <a className="my-empty-cta" href="/world-cup-2026/bracket">Browse the bracket</a>
+      <a className="my-empty-cta" href="/scores">Browse the scores</a>
     </section>
   );
 }

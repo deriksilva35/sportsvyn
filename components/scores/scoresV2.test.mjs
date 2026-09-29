@@ -503,7 +503,7 @@ test("MLB IS THE FOURTH PILL, and its card is the mock's", async () => {
   const h = html({ v: mlbFixture(), signedIn: true, zoneLabel: 'Eastern' });
   // The pills, in the mock's order.
   assert.deepEqual([...h.matchAll(/sv2-pill[^"]*" href="\/scores\?[^"]*sport=(\w+)/g)].map((m) => m[1]),
-    ['nfl', 'cfb', 'mlb', 'epl']);
+    ['nfl', 'cfb', 'mlb'], 'no EPL pill: soccer is retired (tue-14)');
   // THE LIVE LABEL IS THE HALF AND THE INNING, AND NEVER A CLOCK. BDL sends
   // clock 0 and "0:00" on every MLB row - scheduled, live and final alike.
   assert.match(h, /<span class="l">Top 7th<\/span>/);
@@ -637,12 +637,12 @@ test('one spelling of the zone on both sides', async () => {
   assert.match(page, /const zoneLabel = \(tz\) => zoneNameOf\(tz\);/);
 });
 
-test('EPL leaves the sport chips on the arcade page only (mon-17); the route stays', () => {
+test('EPL is gone from the sport chips on both pages (tue-14, was arcade-only since mon-17)', () => {
   const src = readFileSync(new URL('./ScoresV2.js', import.meta.url), 'utf8');
-  assert.match(src, /\.\.\.\(arcade \? \[\] : \[\['epl', 'EPL'\]\]\)/);
+  assert.doesNotMatch(src, /\['epl', 'EPL'\]/);
   const page = readFileSync(new URL('../../app/scores/page.js', import.meta.url), 'utf8');
   // tue-0: the flag is per request - ARCADE_THEME, or ARCADE_SHELL for the shell.
   assert.match(page, /const arcade = arcadeFor\(isShell\);/);
   assert.match(page, /arcade=\{arcade\}/);
-  assert.match(page, /\['nfl', 'cfb', 'mlb', 'epl'\]\.includes\(sportRaw\)/, '/scores?sport=epl still resolves');
+  assert.match(page, /\['nfl', 'cfb', 'mlb'\]\.includes\(sportRaw\)/, '/scores?sport=epl falls back to all');
 });

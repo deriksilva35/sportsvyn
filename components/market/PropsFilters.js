@@ -15,7 +15,7 @@ import { MARKET_GROUPS } from '@/lib/market/propsShape';
 import { hiddenFields } from '@/lib/market/marketUrl';
 import GameFilter from './GameFilter';
 
-const LEAGUES = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['epl', 'EPL']];
+const LEAGUES = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB']];
 
 function Chips({ label, items, active, hrefFor, children }) {
   return (

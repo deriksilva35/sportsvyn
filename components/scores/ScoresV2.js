@@ -255,7 +255,7 @@ export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLab
   // EPL LEAVES THE ROW ON THE ARCADE PAGE (mon-17): the route stays live
   // (/scores?sport=epl), the chip does not show. Flag-gated with the theme, so
   // the dark page's row is unchanged until the flip.
-  const pills = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['mlb', 'MLB'], ...(arcade ? [] : [['epl', 'EPL']])];
+  const pills = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['mlb', 'MLB']];
   return (
     <div className="sv2" data-surface="ink">
       {v.liveCount > 0 && <LiveRefresh />}

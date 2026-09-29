@@ -13,7 +13,8 @@
  */
 
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { isRetiredLeague } from '@/lib/retired';
 import { auth } from '@/auth';
 import { resolveShellMode } from '@/lib/shell/shell';
 import Wordmark from '@/components/Wordmark';
@@ -81,6 +82,9 @@ export default async function TeamPage({ params }) {
   const { slug } = await params;
   const team = await getTeamBySlug(slug);
   if (!team) notFound();
+  // SOCCER IS RETIRED (tue-14): a soccer club's page is history, not a page.
+  // Before any reader runs; gridiron and MLB rows are untouched.
+  if (isRetiredLeague(team.leagueSlug ?? team.league_slug)) permanentRedirect('/scores');
 
   const matches = await getTeamMatches(team.id);
   const { recent, next } = pickRecentAndNext(matches);
