@@ -59,6 +59,9 @@ export const ON_DARK_ANCESTOR = Object.freeze({
   '.sv4-card.live .sv4-team.lead .sc': '.sv4-card.live',
   '.sv4-card.live .sv4-stake b': '.sv4-card.live',
   '.sv4-card.live .sv4-foot .wp': '.sv4-card.live',
+  // step 2: the drawer's scoring plays and its game-page link, on the same navy card.
+  '.sv4-card.live .sv4-xs li.sc .tx': '.sv4-card.live',
+  '.sv4-card.live .sv4-xgo': '.sv4-card.live',
 });
 
 export function voltOnLight(css, g) {

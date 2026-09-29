@@ -108,3 +108,36 @@
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-foot { border-top-color: color-mix(in srgb, var(--tok-on-primary) 14%, var(--tok-primary)); color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-foot .wp { flex: none; font-weight: 700; color: var(--tok-accent); }
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-foot .wp.stale { opacity: .6; }
+
+/* THE DRAWER (step 2): the line score from the row, then key moments and the
+   last five plays from /api/scores/expand. On the navy live card its ink is
+   --tok-on-primary (white) and a scoring play is the volt accent. */
+:where(:root[data-theme="arcade"]) button.sv4-hit { appearance: none; background: transparent; border: 0; padding: 0; margin: 0; cursor: pointer; }
+:where(:root[data-theme="arcade"]) .sv4-card[data-open="1"] { gap: 12px; }
+:where(:root[data-theme="arcade"]) .sv4-x { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px; padding-top: 12px; border-top: 1px solid var(--tok-line); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-x { border-top-color: color-mix(in srgb, var(--tok-on-primary) 14%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-ls { width: 100%; border-collapse: collapse; font: 500 13px var(--tok-font-num); font-variant-numeric: tabular-nums; }
+:where(:root[data-theme="arcade"]) .sv4-ls th, :where(:root[data-theme="arcade"]) .sv4-ls td { padding: 5px 0; text-align: right; }
+:where(:root[data-theme="arcade"]) .sv4-ls thead th { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-ls tbody th { text-align: left; font-weight: 700; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .sv4-ls td { color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-ls td.t { font-weight: 700; color: var(--tok-ink); padding-left: 10px; }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls thead th, :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls td { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls tbody th, :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls td.t { color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-xs h3 { margin: 0 0 6px; font: 700 11px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs h3 { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-xs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+:where(:root[data-theme="arcade"]) .sv4-xs li { display: grid; grid-template-columns: 64px auto 1fr; gap: 8px; align-items: baseline; font-size: 12px; line-height: 1.4; }
+:where(:root[data-theme="arcade"]) .sv4-xs .w { font: 700 11px var(--tok-font-num); color: var(--tok-muted); white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .sv4-xs .s { font: 700 12px var(--tok-font-num); font-variant-numeric: tabular-nums; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .sv4-xs .tx { grid-column: 3; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .sv4-xs li:not(:has(.s)) .tx { grid-column: 2 / -1; }
+:where(:root[data-theme="arcade"]) .sv4-xs .tx em { font-style: normal; font-weight: 700; }
+:where(:root[data-theme="arcade"]) .sv4-xs .none { margin: 0; font: 500 12px var(--tok-font-num); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs .w { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs .s, :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs .tx { color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs li.sc .tx { color: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .sv4-xl { margin: 0; font: 500 12px var(--tok-font-num); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xl { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-xgo { align-self: flex-end; font: 700 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-primary); text-decoration: none; }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xgo { color: var(--tok-accent); }

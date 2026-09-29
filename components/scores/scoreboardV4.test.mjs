@@ -205,7 +205,11 @@ test('final and scheduled: winner ink / loser muted, the moment and the link; th
   assert.equal(out.querySelector('.go').textContent, 'Sign in to pick');
   // the card is one tap target without wrapping its own links in another link
   assert.equal(d4.querySelectorAll('a a').length, 0, 'no nested anchors');
-  assert.equal(s.querySelector('.sv4-hit').getAttribute('href'), '/nfl/game/g-6');
+  // STEP 2: the tap target is the drawer's button, closed until tapped; the
+  // game page is a link inside the drawer.
+  assert.equal(s.querySelector('.sv4-hit').tagName, 'BUTTON');
+  assert.equal(s.querySelector('.sv4-hit').getAttribute('aria-expanded'), 'false');
+  assert.equal(s.dataset.open, '0');
 });
 
 test('the Yours strip sits above the day rail, exactly the band scoresV2 built', () => {
@@ -217,4 +221,12 @@ test('the Yours strip sits above the day rail, exactly the band scoresV2 built',
   assert.deepEqual(order, ['yours', 'days', 'chips', 'live', 'day', 'final']);
   // a view never hides the band
   assert.match(v4html(v, true, { view: 'tonight' }), /data-group="yours"/);
+});
+
+test('no down, no situation line: a turnover leaves the field and the play, not the offense\'s letters alone', () => {
+  const v = fixture();
+  v.extras.get(7).drive = { label: null, spot: null, offenseAbbr: 'PHI', pct: null, togo: null, lastPlay: 'J. Hurts pass ... FUMBLES, RECOVERED by CHI.' };
+  const c = doc(v4html(v, true)).querySelector('[data-slug="g-7"]');
+  assert.equal(c.querySelector('.sit'), null);
+  assert.match(c.querySelector('.lp').textContent, /FUMBLES/);
 });

@@ -191,7 +191,9 @@ html[data-clock] body:has(.apptab) { padding-bottom: 0; }
 :root[data-theme="arcade"] .gh-app-me { color: var(--tok-muted); }
 :root[data-theme="arcade"] .gh-app-me .in { background: var(--tok-primary); border-color: var(--tok-primary); color: var(--tok-on-primary); }
 :root[data-theme="arcade"] .svseg a { border-color: var(--tok-line); color: var(--tok-muted); }
-:root[data-theme="arcade"] .svseg a.on { color: var(--tok-on-primary); background: var(--tok-primary); border-color: var(--tok-primary); }
+/* SELECTED IS VOLT (mon-20): a volt fill with navy ink, the volt grammar's
+   selected state - it was a navy fill, which the grammar reserves for structure. */
+:root[data-theme="arcade"] .svseg a.on { color: var(--tok-on-action); background: var(--tok-action); border-color: var(--tok-action); }
 :root[data-theme="arcade"] .yd-row { border-bottom-color: var(--tok-line); }
 :root[data-theme="arcade"] .yd-meta, :root[data-theme="arcade"] .yd-act, :root[data-theme="arcade"] .appcrumb { color: var(--tok-muted); }
 :root[data-theme="arcade"] .yd-grade { color: var(--tok-primary); }

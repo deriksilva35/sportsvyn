@@ -20,6 +20,7 @@ import ZoneLabel from '@/components/scores/ZoneLabel';
 import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import LiveRefresh from '@/components/scores/LiveRefresh';
+import ExpandCard from '@/components/scores/ExpandCard';
 import { liveWinProbView } from '@/components/gridiron/LiveWinProb';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { orderFor } from '@/lib/gridiron/teamOrder';
@@ -121,11 +122,14 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
   const bell = x.stake?.alerts ? (live ? 'Alerts on' : 'Alerts') : null;
   const label = `${g.away?.shortName ?? g.away?.name} at ${g.home?.shortName ?? g.home?.name}`;
   return (
-    <article className={`sv4-card ${variant}`} data-variant={variant} data-league={g.leagueSlug} data-slug={g.slug}>
-      {/* THE WHOLE CARD IS THE TAP TARGET, stretched under the content: an
-          <a> around the card would swallow the links inside it (No pick yet,
-          Recap, Sign in). Step 2 turns this into the expand control. */}
-      <a className="sv4-hit" href={gameHref} aria-label={label} />
+    // THE WHOLE CARD IS THE TAP TARGET (step 2): ExpandCard stretches a button
+    // under the face, so the links on it (No pick yet, Recap, Sign in) still
+    // work, and a tap anywhere else opens the drawer. EPL keeps no drawer - it
+    // left the arcade chip row - and stays one link to its match page.
+    <ExpandCard
+      articleProps={{ className: `sv4-card ${variant}`, 'data-variant': variant, 'data-league': g.leagueSlug, 'data-slug': g.slug }}
+      league={g.leagueSlug} slug={g.slug} live={live} label={label} gameHref={gameHref}
+      line={x.line ?? null} expandable={g.leagueSlug !== 'epl'}>
       <div className="sv4-lbl">
         {live
           ? <span className="clock"><i className="dot" />{liveLabel(g)}</span>
@@ -147,9 +151,13 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
               <i style={{ left: `${x.drive.pct}%` }} />
             </div>
           )}
-          <div className="sit">
-            <span>{[x.drive.offenseAbbr, x.drive.label, x.drive.spot].filter(Boolean).join(' · ')}</span>
-          </div>
+          {/* NO DOWN, NO LINE: after a turnover or a score the situation cannot
+              be named, and the offense's letters alone said nothing. */}
+          {x.drive.label ? (
+            <div className="sit">
+              <span>{[x.drive.offenseAbbr, x.drive.label, x.drive.spot].filter(Boolean).join(' · ')}</span>
+            </div>
+          ) : null}
           {x.drive.lastPlay ? <p className="lp">{x.drive.lastPlay}</p> : null}
         </div>
       )}
@@ -192,7 +200,7 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
                 : null}
         </div>
       )}
-    </article>
+    </ExpandCard>
   );
 }
 
