@@ -1,0 +1,151 @@
+/* app/scores/scoresV4.css - the arcade Scoreboard (scores-v4).
+
+   EVERY RULE IS ARCADE-SCOPED. ScoreboardV4 renders only under
+   data-theme="arcade", and each selector here carries
+   :where(:root[data-theme="arcade"]) so the dark page's resolved
+   declarations are unchanged (the dark-parity guard) and nothing here can
+   outrank a rule it sits beside. Colours are tokens only: navy (--tok-primary)
+   is the live card's ground and structure, volt (--tok-action) the selected
+   chip with navy ink on it, volt (--tok-accent) the marks on navy, and
+   --tok-on-primary (white) the words on navy. */
+
+:where(:root[data-theme="arcade"]) .sv4 { max-width: 640px; margin: 0 auto; padding: 8px 16px 48px; background: var(--tok-page); color: var(--tok-ink); font-family: var(--tok-font-body); }
+:where(:root[data-theme="arcade"]) .sv4 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 99px; background: var(--tok-live); flex: none; }
+:where(:root[data-theme="arcade"]) .sv4-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding-top: 6px; }
+:where(:root[data-theme="arcade"]) .sv4-head h1 { margin: 0; font: italic 900 34px/1 var(--tok-font-display); letter-spacing: -0.02em; text-transform: uppercase; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .sv4-sub { font: 500 11px var(--tok-font-num); color: var(--tok-muted); white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .sv4-eb { margin-top: 6px; font: 600 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-muted); }
+
+:where(:root[data-theme="arcade"]) .sv4-days { display: flex; gap: 6px; overflow-x: auto; margin: 14px -16px 0; padding: 0 16px 2px; scrollbar-width: none; }
+:where(:root[data-theme="arcade"]) .sv4-days::-webkit-scrollbar { display: none; }
+:where(:root[data-theme="arcade"]) .sv4-day { flex: none; min-width: 64px; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 6px; border: 1px solid var(--tok-line); border-radius: 12px; background: var(--tok-page); color: var(--tok-primary); text-decoration: none; }
+:where(:root[data-theme="arcade"]) .sv4-day small { font: 700 10px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-day b { font: 700 18px/1.1 var(--tok-font-num); color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .sv4-day i { font: 500 10px var(--tok-font-num); font-style: normal; color: var(--tok-muted); white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .sv4-day.live i { color: var(--tok-live); font-weight: 700; }
+:where(:root[data-theme="arcade"]) .sv4-day.on { background: var(--tok-action); border-color: var(--tok-action); }
+:where(:root[data-theme="arcade"]) .sv4-day.on small, :where(:root[data-theme="arcade"]) .sv4-day.on b, :where(:root[data-theme="arcade"]) .sv4-day.on i { color: var(--tok-on-action); }
+
+:where(:root[data-theme="arcade"]) .sv4-chips { display: flex; align-items: center; gap: 6px; overflow-x: auto; margin: 12px -16px 0; padding: 0 16px 2px; scrollbar-width: none; }
+:where(:root[data-theme="arcade"]) .sv4-chips::-webkit-scrollbar { display: none; }
+:where(:root[data-theme="arcade"]) .sv4-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: 99px; border: 1px solid var(--tok-line); background: var(--tok-page); color: var(--tok-primary); font: 700 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; text-decoration: none; white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .sv4-chip.on { background: var(--tok-action); border-color: var(--tok-action); color: var(--tok-on-action); }
+:where(:root[data-theme="arcade"]) .sv4-chips .sep { flex: none; width: 1px; height: 22px; background: var(--tok-line); margin: 0 2px; }
+:where(:root[data-theme="arcade"]) .sv4-conf { margin-top: 8px; }
+:where(:root[data-theme="arcade"]) .sv4-conf .sv4-chip { padding: 7px 11px; font-size: 10px; }
+
+:where(:root[data-theme="arcade"]) .sv4-liveaway { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--tok-line); background: var(--tok-surface); color: var(--tok-live); font: 700 12px var(--tok-font-num); text-decoration: none; }
+:where(:root[data-theme="arcade"]) .sv4-liveaway span { margin-left: auto; color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .sv4-empty { margin: 18px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--tok-surface); border: 1px dashed var(--tok-line); font: 500 12px var(--tok-font-num); color: var(--tok-muted); }
+
+:where(:root[data-theme="arcade"]) .sv4-group { margin-top: 22px; }
+:where(:root[data-theme="arcade"]) .sv4-group.yours { margin-top: 14px; padding: 12px; border-radius: 18px; background: var(--tok-hero-wash); border: 1px solid var(--tok-line); }
+:where(:root[data-theme="arcade"]) .sv4-group.yours .sv4-gh { padding-top: 0; }
+:where(:root[data-theme="arcade"]) .sv4-gh { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 8px; }
+:where(:root[data-theme="arcade"]) .sv4-gh h2 { margin: 0; font: 700 13px var(--tok-font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .sv4-gh small { font: 500 11px var(--tok-font-num); color: var(--tok-muted); text-align: right; }
+:where(:root[data-theme="arcade"]) .sv4-list { display: flex; flex-direction: column; gap: 12px; }
+
+:where(:root[data-theme="arcade"]) .sv4-card { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 16px; background: var(--tok-page); border: 1px solid var(--tok-line); color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .sv4-card.live { background: var(--tok-primary); border-color: var(--tok-primary); color: var(--tok-on-primary); box-shadow: 0 8px 24px color-mix(in srgb, var(--tok-primary) 18%, transparent); }
+:where(:root[data-theme="arcade"]) .sv4-hit { position: absolute; inset: 0; border-radius: inherit; z-index: 0; }
+:where(:root[data-theme="arcade"]) .sv4-card a:not(.sv4-hit) { position: relative; z-index: 1; }
+
+:where(:root[data-theme="arcade"]) .sv4-lbl { display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 500 11px var(--tok-font-num); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-lbl .clock { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 99px; background: var(--tok-action); color: var(--tok-on-action); font: 700 12px var(--tok-font-num); letter-spacing: .08em; }
+:where(:root[data-theme="arcade"]) .sv4-lbl .fin { padding: 5px 10px; border-radius: 99px; border: 1px solid var(--tok-primary); color: var(--tok-primary); font: 700 12px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; }
+:where(:root[data-theme="arcade"]) .sv4-lbl .ko { color: var(--tok-primary); font: 700 12px var(--tok-font-num); letter-spacing: .08em; }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-lbl .where { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+
+:where(:root[data-theme="arcade"]) .sv4-team { display: flex; align-items: center; gap: 12px; }
+:where(:root[data-theme="arcade"]) .sv4-team .who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+:where(:root[data-theme="arcade"]) .sv4-team .nm { display: flex; align-items: center; gap: 8px; min-width: 0; }
+:where(:root[data-theme="arcade"]) .sv4-team .nm .n { font: italic 900 20px/1 var(--tok-font-display); letter-spacing: -0.01em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-team .nm .n { font-size: 22px; }
+:where(:root[data-theme="arcade"]) .sv4-team .meta { font: 500 11px var(--tok-font-num); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-team .meta { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-team .ball { flex: none; width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 9px solid var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-team .ball { border-left-color: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .sv4-team .pk { flex: none; font: 700 9px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 99px; background: var(--tok-action); color: var(--tok-on-action); }
+:where(:root[data-theme="arcade"]) .sv4-team .sc { flex: none; font: 700 32px/1 var(--tok-font-num); font-variant-numeric: tabular-nums; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-team .sc { font-size: 40px; color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-team.lead .sc { color: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .sv4-card.final .sv4-team.trail .n, :where(:root[data-theme="arcade"]) .sv4-card.final .sv4-team.trail .sc { color: var(--tok-muted); }
+
+:where(:root[data-theme="arcade"]) .sv4-field { display: flex; flex-direction: column; gap: 6px; }
+:where(:root[data-theme="arcade"]) .sv4-field .track { position: relative; height: 10px; border-radius: 99px; background: color-mix(in srgb, var(--tok-on-primary) 14%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-field .track u { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; background: color-mix(in srgb, var(--tok-accent) 28%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-field .track i { position: absolute; top: -3px; width: 16px; height: 16px; margin-left: -8px; border-radius: 99px; background: var(--tok-accent); border: 2px solid var(--tok-primary); box-sizing: border-box; }
+:where(:root[data-theme="arcade"]) .sv4-field .track em { position: absolute; top: -2px; width: 2px; height: 14px; margin-left: -1px; background: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-field .sit { display: flex; justify-content: space-between; font: 500 11px var(--tok-font-num); color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-field .lp, :where(:root[data-theme="arcade"]) .sv4-bb .lp { margin: 0; font-size: 12px; line-height: 1.4; color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+/* THE LAST PLAY IS ONE LINE on the football card (mon-21); the full sentence is its title and the drawer's. */
+:where(:root[data-theme="arcade"]) .sv4-field .lp { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+:where(:root[data-theme="arcade"]) .sv4-bb { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+:where(:root[data-theme="arcade"]) .sv4-bb .st { font: 700 12px var(--tok-font-num); color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-bb .st small { margin-left: 8px; font-weight: 400; color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-bb .cnt { text-align: right; font: 700 12px var(--tok-font-num); font-variant-numeric: tabular-nums; color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-bb .cnt small { margin-right: 8px; font-weight: 400; color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-bb .lp { grid-column: 1 / -1; }
+:where(:root[data-theme="arcade"]) .sv4-diamond { position: relative; display: block; width: 34px; height: 34px; }
+:where(:root[data-theme="arcade"]) .sv4-diamond .d-b { position: absolute; width: 11px; height: 11px; transform: rotate(45deg); border: 1.5px solid color-mix(in srgb, var(--tok-on-primary) 55%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-diamond .b2 { left: 11.5px; top: 1px; }
+:where(:root[data-theme="arcade"]) .sv4-diamond .b3 { left: 1px; top: 11.5px; }
+:where(:root[data-theme="arcade"]) .sv4-diamond .b1 { left: 22px; top: 11.5px; }
+:where(:root[data-theme="arcade"]) .sv4-diamond .d-b.on { background: var(--tok-accent); border-color: var(--tok-accent); }
+
+:where(:root[data-theme="arcade"]) .sv4-stake { display: flex; flex-wrap: wrap; gap: 6px; }
+:where(:root[data-theme="arcade"]) .sv4-stake span, :where(:root[data-theme="arcade"]) .sv4-stake a { padding: 4px 9px; border-radius: 99px; border: 1px solid var(--tok-line); font: 600 11px var(--tok-font-num); color: var(--tok-ink); text-decoration: none; }
+:where(:root[data-theme="arcade"]) .sv4-stake b { font-weight: 700; color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .sv4-stake .good b { color: var(--tok-up); }
+:where(:root[data-theme="arcade"]) .sv4-stake .bad b { color: var(--tok-down); }
+:where(:root[data-theme="arcade"]) .sv4-stake .none { border-style: dashed; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-stake span, :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-stake a { border-color: color-mix(in srgb, var(--tok-on-primary) 22%, var(--tok-primary)); color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-stake b { color: var(--tok-accent); }
+
+/* THE FOOT IS ONE LINE AT 390 (mon-21), measured in the served fonts: the line
+   and the win read need 384-407 px in Rubik Mono One at 11 px against 328 px
+   of card, and still overflow at 9 px on a double-digit spread. In Rubik (the
+   arcade body face), tabular, they need 238-261 px at 11 px. The odds span
+   ellipsizes as a backstop; the win read and the CTA never shrink. */
+:where(:root[data-theme="arcade"]) .sv4-foot { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid var(--tok-line); font: 500 11px var(--tok-font-body); font-variant-numeric: tabular-nums; letter-spacing: .02em; color: var(--tok-muted); white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .sv4-foot > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+:where(:root[data-theme="arcade"]) .sv4-foot .go { flex: none; font-weight: 700; color: var(--tok-primary); text-decoration: none; text-transform: uppercase; letter-spacing: .06em; }
+:where(:root[data-theme="arcade"]) .sv4-foot .moment { color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-foot { border-top-color: color-mix(in srgb, var(--tok-on-primary) 14%, var(--tok-primary)); color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-foot .wp { flex: none; margin-left: auto; font-weight: 700; color: var(--tok-accent); text-transform: uppercase; letter-spacing: .06em; }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-foot .wp.stale { opacity: .6; }
+
+/* THE DRAWER (step 2): the line score from the row, then key moments and the
+   last five plays from /api/scores/expand. On the navy live card its ink is
+   --tok-on-primary (white) and a scoring play is the volt accent. */
+:where(:root[data-theme="arcade"]) button.sv4-hit { appearance: none; background: transparent; border: 0; padding: 0; margin: 0; cursor: pointer; }
+:where(:root[data-theme="arcade"]) .sv4-card[data-open="1"] { gap: 12px; }
+:where(:root[data-theme="arcade"]) .sv4-x { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px; padding-top: 12px; border-top: 1px solid var(--tok-line); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-x { border-top-color: color-mix(in srgb, var(--tok-on-primary) 14%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-ls { width: 100%; border-collapse: collapse; font: 500 13px var(--tok-font-num); font-variant-numeric: tabular-nums; }
+:where(:root[data-theme="arcade"]) .sv4-ls th, :where(:root[data-theme="arcade"]) .sv4-ls td { padding: 5px 0; text-align: right; }
+:where(:root[data-theme="arcade"]) .sv4-ls thead th { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-ls tbody th { text-align: left; font-weight: 700; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .sv4-ls td { color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-ls td.t { font-weight: 700; color: var(--tok-ink); padding-left: 10px; }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls thead th, :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls td { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls tbody th, :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls td.t { color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-xs h3 { margin: 0 0 6px; font: 700 11px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs h3 { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-xs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+:where(:root[data-theme="arcade"]) .sv4-xs li { display: grid; grid-template-columns: 78px auto 1fr; gap: 8px; align-items: baseline; font-size: 12px; line-height: 1.4; }
+:where(:root[data-theme="arcade"]) .sv4-xs .w { font: 700 11px var(--tok-font-num); color: var(--tok-muted); white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .sv4-xs .s { font: 700 12px var(--tok-font-num); font-variant-numeric: tabular-nums; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .sv4-xs .tx { grid-column: 3; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .sv4-xs li:not(:has(.s)) .tx { grid-column: 2 / -1; }
+:where(:root[data-theme="arcade"]) .sv4-xs .tx em { font-style: normal; font-weight: 700; }
+:where(:root[data-theme="arcade"]) .sv4-xs .none { margin: 0; font: 500 12px var(--tok-font-num); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs .w { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs .s, :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs .tx { color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs li.sc .tx { color: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .sv4-xl { margin: 0; font: 500 12px var(--tok-font-num); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xl { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-xgo { align-self: flex-end; font: 700 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-primary); text-decoration: none; }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xgo { color: var(--tok-accent); }

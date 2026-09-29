@@ -31,13 +31,13 @@
 :where(:root[data-theme="arcade"]) .gv-now.done { box-shadow: none; color: var(--tok-ink); }
 .gv-now-t { min-width: 0; flex: 1; }
 .gv-now-l { font: 700 9px var(--font-mono), monospace; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--tok-on-primary); }
+  color: var(--tok-accent); }
 .gv-now.done .gv-now-l { color: var(--tok-up); }
 .gv-now-t b { display: block; font: 800 20px var(--font-saira), sans-serif; text-transform: uppercase;
   line-height: 1.05; margin-top: 3px; letter-spacing: -.01em; }
 .gv-now-t small { display: block; font: 500 11px var(--font-mono), monospace; color: #888888; margin-top: 4px; }
 :where(:root[data-theme="arcade"]) .gv-now-t small { color: color-mix(in srgb, currentColor 72%, transparent); }
-.gv-now-go { background: var(--tok-on-primary); color: var(--tok-primary); border-radius: 99px;
+.gv-now-go { background: var(--tok-action); color: var(--tok-primary); border-radius: 99px;
   padding: 10px 16px; font: 700 14px system-ui, sans-serif; white-space: nowrap; flex: 0 0 auto; }
 .gv-now.done .gv-now-go { background: var(--gvink3); color: var(--tok-muted); }
 

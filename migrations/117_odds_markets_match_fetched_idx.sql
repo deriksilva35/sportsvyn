@@ -1,0 +1,23 @@
+-- 117_odds_markets_match_fetched_idx.sql - the opening-line read, indexed.
+--
+-- NUMBERED 117: 116 is live_board_snapshots (on main). The relay named 116.
+--
+-- WHY. lib/gridiron/openingLine.js reads the EARLIEST spread snapshot per match
+-- (scores-v4, "opened -2.5"). odds_markets keeps every hourly snapshot - 1.49M
+-- rows on PROD, 29 Sep - and its only match_id index is partial on
+-- is_current = true, so any read of history by match is a sequential scan:
+-- 2.2 s measured for 132 matches. (match_id, fetched_at) serves "earliest per
+-- match" as an index range read.
+--
+-- THE COLUMN IS fetched_at. The relay said captured_at; odds_markets has no
+-- such column (014_odds_markets.sql: fetched_at timestamptz NOT NULL).
+--
+-- CONCURRENTLY, so PROD keeps writing odds while it builds. That cannot run
+-- inside a transaction block, so this file is ONE statement and nothing else:
+-- scripts/apply-migrations.mjs sends a file as one simple query, and a second
+-- statement would wrap both in an implicit transaction and fail.
+--
+-- NOT APPLIED on 29 Sep. It runs in the post-MNF window with the dedupe
+-- restart. Idempotent (IF NOT EXISTS). Reversible:
+--   DROP INDEX CONCURRENTLY IF EXISTS idx_odds_markets_match_fetched;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_odds_markets_match_fetched ON odds_markets (match_id, fetched_at);
