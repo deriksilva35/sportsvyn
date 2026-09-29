@@ -254,6 +254,9 @@ async function loop(lg) {
         window.latencies.push(...r.latencies);
         for (const u of r.unmapped) if (!window.unmapped.includes(u)) window.unmapped.push(u);
         if (r.scoreChanges) log(`[${lg.slug}] ${r.scoreChanges} score change(s), ${r.events} event(s)`);
+        // THE WIN-PROB LOG, IN THE JOURNAL: rows written and ticks skipped as the
+        // same moment (lib/winprob/live.js sameMoment). Silent when both are 0.
+        if (r.winprob || r.dup_skipped) log(`[${lg.slug}] winprob wrote=${r.winprob ?? 0} dup_skipped=${r.dup_skipped ?? 0}`);
         // THE LIVE ACTIVITY RIDER, IN THE JOURNAL. Without a line here the
         // rider is invisible: a night where every card froze and a night where
         // nobody had one open read exactly the same. Only polls that found an
