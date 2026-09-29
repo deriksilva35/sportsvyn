@@ -45,6 +45,7 @@ import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { publish, LEAGUE_CONFIG } from '@/lib/rankings/publishGridironEdition';
 import { publishNflPowerZ } from '@/lib/rankings/publishNflPowerZ';
+import { pushPublishFailure } from '@/lib/rankings/failurePush';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -98,6 +99,7 @@ export async function GET(request) {
         subject: `[pollers] ${SOURCE} FAILED for nfl-power-z`,
         body: `source: ${SOURCE}\nlist: nfl-power-z\n\n${z.result.error ?? JSON.stringify(z.result.summary, null, 1)}`,
       });
+      await pushPublishFailure({ list: 'nfl-power-z' });
     }
   }
   // A FAILED PUBLISH IS AN ALARM. The board is a weekly artifact: if this
@@ -109,6 +111,8 @@ export async function GET(request) {
       subject: `[pollers] ${SOURCE} FAILED for ${league}`,
       body: `source: ${SOURCE}\nleague: ${league}\n\n${res.error ?? JSON.stringify(res.summary, null, 1)}`,
     });
+    // AND THE PHONE (tue-6): an email alone let the NFL board sit a week stale.
+    await pushPublishFailure({ list: LEAGUE_CONFIG[league].listSlug });
   }
 
   return Response.json({ league, ok: res.ok, id: res.id, summary: res.summary, ...(powerZ ? { powerZ } : {}) });
