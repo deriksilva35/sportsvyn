@@ -158,3 +158,48 @@ test('EVERY VOLT FILL CARRIES DARK INK on the step-3 surfaces', () => {
   const bad = STEP3.flatMap((f) => lightOnVolt(read(f), g).map((s) => `${f}: ${s}`));
   assert.equal(bad.length, 0, `${bad.length} light-on-volt rule(s):\n${bad.join('\n')}`);
 });
+
+// TEXT ON NAVY RESOLVES LIGHT (mon-18). --tok-on-primary is the ink role for
+// the navy primary, and on the arcade page it resolved VOLT: every word a
+// component wrote in that role on a navy card came out volt (the first
+// scores-v4 preview drew every team name that way). Two checks:
+//   1. the role itself resolves to a light colour that is NOT volt - volt on
+//      navy is --tok-accent (a mark) or --tok-action (a button), by name;
+//   2. every rule, in every stylesheet, whose arcade background resolves to
+//      the navy primary and which sets a text colour, sets a light one.
+const NAVY = /#1a1650\b/i;
+export function darkOnNavy(css, g) {
+  const rs = rules(css).filter((r) => !/data-theme="(?!arcade)/.test(r.sel)).map((r) => ({ sel: r.sel.replace(ARC, ''), body: r.body }));
+  const scope = { ...g, ...localVars(css) }; const by = new Map();
+  for (const { sel, body } of rs) for (const one of sel.split(',').map((x) => x.trim())) { const c = by.get(one) ?? {}; for (const [k, v] of decls(body)) if (!k.startsWith('--')) c[k] = resolve(v, scope); by.set(one, c); }
+  // A SOLID NAVY GROUND, not a tint: color-mix(navy 7%, transparent) is a
+  // wash over the page, and the page's ink is right on it.
+  const solid = (v) => NAVY.test(v ?? '') && !/color-mix|gradient|rgba/i.test(v ?? '');
+  return [...by].filter(([, d]) => (solid(d.background) || solid(d['background-color']))
+    && d.color && /#[0-9a-f]{3,6}\b/i.test(d.color) && lum(/#[0-9a-f]{6}|#[0-9a-f]{3}/i.exec(d.color)[0]) < 0.5)
+    .map(([sel, d]) => `${sel} { color: ${d.color.trim()} } on navy`);
+}
+
+test('the checker catches dark text on navy and passes light', () => {
+  const g = { '--tok-primary': '#1A1650', '--tok-on-primary': '#FFFFFF', '--tok-ink': '#0E0B2B' };
+  assert.equal(darkOnNavy('.a { background: var(--tok-primary); color: var(--tok-ink); }', g).length, 1);
+  assert.equal(darkOnNavy('.a { background: var(--tok-primary); color: var(--tok-on-primary); }', g).length, 0);
+  assert.equal(darkOnNavy('.a { background: var(--tok-primary); }', g).length, 0, 'no colour of its own: inherits');
+  assert.equal(darkOnNavy('.a { background: color-mix(in srgb, var(--tok-primary) 7%, transparent); color: var(--tok-primary); }', g).length, 0, 'a tint is not a navy ground');
+});
+
+test('--tok-on-primary resolves LIGHT and is not volt on the arcade page', () => {
+  const g = arcadeGlobals(read('app/globals.css'));
+  const v = resolve('var(--tok-on-primary)', g);
+  const hex = /#[0-9a-f]{6}|#[0-9a-f]{3}/i.exec(v)?.[0];
+  assert.ok(hex, `--tok-on-primary resolves to a colour (got ${v})`);
+  assert.ok(lum(hex) > 0.5, `--tok-on-primary is light on navy (got ${hex})`);
+  assert.ok(!isVolt(hex), 'volt on navy is --tok-accent or --tok-action, never the ink role');
+});
+
+test('NO DARK TEXT ON A NAVY GROUND on the arcade page, in any stylesheet', () => {
+  const g = arcadeGlobals(read('app/globals.css'));
+  const files = execFileSync('git', ['-C', REPO, 'ls-files', '*.css'], { encoding: 'utf8' }).split('\n').filter(Boolean);
+  const bad = files.flatMap((f) => darkOnNavy(read(f), g).map((b) => `${f}: ${b}`));
+  assert.equal(bad.length, 0, `${bad.length} rule(s) put dark text on navy:\n${bad.join('\n')}`);
+});

@@ -48,7 +48,9 @@ test('THE ARCADE PALETTE is the ruling\'s, verbatim', () => {
     // surface is an off-white a hair below the page - and volt joins the set.
     '--arcade-page': '#FFFFFF', '--arcade-surface': '#FAFAF8', '--arcade-surface-2': '#F1F1EE', '--arcade-volt': '#D4FF00',
     '--arcade-ink': '#0E0B2B', '--arcade-muted': '#666666', '--arcade-primary': '#1A1650',
-    '--arcade-on-primary': '#D4FF00', '--arcade-chip': '#2447FF', '--arcade-live': '#D6006F',
+    // ON-PRIMARY IS WHITE (mon-18 addendum): the ink on navy. It was volt, and
+    // words written in the role on a navy card came out volt.
+    '--arcade-on-primary': '#FFFFFF', '--arcade-chip': '#2447FF', '--arcade-live': '#D6006F',
     '--arcade-up': '#1B8A5A', '--arcade-coin': '#B7791F', '--arcade-line': '#E3E3E0',
     '--arcade-radius-lg': '20px', '--arcade-radius-md': '14px', '--arcade-shadow-card': '0 4px 0 #1A1650',
   };

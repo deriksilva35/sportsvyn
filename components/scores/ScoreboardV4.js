@@ -171,7 +171,8 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
         ) : null
       ) : final ? (
         <div className="sv4-foot">
-          <span className="moment">{moment ?? 'Final'}</span>
+          {/* NO MOMENT, NO WORD: the pill already says Final. */}
+          <span className="moment">{moment ?? ''}</span>
           <Link className="go" href={gameHref}>{x.hasStats ? 'Box score' : 'Recap'} &rarr;</Link>
         </div>
       ) : baseball ? (

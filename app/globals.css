@@ -34,7 +34,11 @@
   --arcade-ink: #0E0B2B;
   --arcade-muted: #666666;
   --arcade-primary: #1A1650;
-  --arcade-on-primary: #D4FF00;
+  /* THE INK ON NAVY IS WHITE (mon-18). It was volt, and every word written in
+     this role on a navy card came out volt - the first scores-v4 preview drew
+     every team name that way. Volt marks on navy use --tok-accent; a volt
+     button on navy uses --tok-action. app/voltContrast.test.mjs holds it. */
+  --arcade-on-primary: #FFFFFF;
   --arcade-chip: #2447FF;
   --arcade-live: #D6006F;
   --arcade-up: #1B8A5A;
@@ -125,8 +129,9 @@
 
    VOLT ON WHITE IS UNREADABLE, so the ACCENT role becomes the navy primary:
    volt text turns navy, a volt button with ink text turns navy with white text
-   (the old --ink is the page, which is now white). Volt itself survives as
-   --tok-on-primary, for the volt-on-navy pieces R2 builds on purpose.
+   (the old --ink is the page, which is now white). --tok-on-primary is the
+   WHITE ink on navy; volt on navy is --tok-accent (a mark) or --tok-action
+   (a button), never the on-primary role (mon-18).
    ========================================================================== */
 :root[data-theme="arcade"] {
   color-scheme: light;
