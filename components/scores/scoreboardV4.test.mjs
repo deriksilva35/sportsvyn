@@ -81,7 +81,7 @@ const doc = (h) => new JSDOM(`<!doctype html><body>${h}</body>`).window.document
  * THE ATOMS A V2 CARD SHOWS: every text node, split on the house separator
  * " · " and the arrow. Two spellings differ by design and are normalised
  * here, in the open, rather than exempted: V2 prefixes the line with
- * "Spread " (V4's foot is "TEN -5.5 · O/U 43.5 · opened -4"), and V2's
+ * "Spread " and the total with "O/U " (V4's foot is "TEN -5.5 · 43.5 · opened -4"), and V2's
  * "3 live"-style pill words are chrome, not card fields.
  */
 function atoms(el) {
@@ -89,7 +89,8 @@ function atoms(el) {
   const walk = (n) => {
     if (n.nodeType === 3) {
       for (const a of n.textContent.split(/ · |→/)) {
-        const t = a.replace(/^Spread /, '').trim();
+        // V2 labels the total "O/U 43.5"; V4's foot prints the number alone (mon-21).
+        const t = a.replace(/^Spread /, '').replace(/^O\/U /, '').trim();
         if (t) out.push(t);
       }
     }
@@ -175,8 +176,9 @@ test('the live NFL card: volt clock pill, the leader\'s score, the ball, the fie
   assert.ok(c.querySelector('.sv4-team[data-side="away"] .ball'), 'PHI has the ball');
   assert.equal(c.querySelector('.track u').getAttribute('style'), 'width:70%');
   assert.equal(c.querySelector('.track em').getAttribute('style'), 'left:72%');
-  assert.equal(c.querySelector('.sit').textContent, 'PHI · 3rd & 2 · CHI 30');
-  assert.equal(c.querySelector('.sv4-foot span').textContent, 'PHI -1.5 · O/U 44.5 · opened -2.5');
+  assert.equal(c.querySelector('.sit').textContent, '3rd & 2 · CHI 30', 'down & distance · spot (mon-21)');
+  assert.deepEqual([...c.querySelector('.sv4-field').children].map((e) => e.className), ['sit', 'track', 'lp'], 'the line, the strip under it, then the play');
+  assert.equal(c.querySelector('.sv4-foot span').textContent, 'PHI -1.5 · 44.5 · opened -2.5');
   assert.equal(c.querySelector('[data-winprob="nfl"]').textContent, 'PHI 64% win');
   // CFB and MLB: the win-prob slot renders nothing (ruling f)
   assert.equal(d4.querySelector('[data-slug="g-3"] [data-winprob]'), null);
@@ -199,7 +201,7 @@ test('final and scheduled: winner ink / loser muted, the moment and the link; th
   assert.equal(f.querySelector('.moment').textContent, 'Bailey 13/17 · 281 · 1 TD');
   assert.equal(f.querySelector('.go').getAttribute('href'), '/cfb/game/g-2');
   const s = d4.querySelector('[data-slug="g-6"]');
-  assert.equal(s.querySelector('.sv4-foot span').textContent, 'TEN -5.5 · O/U 43.5 · opened -4');
+  assert.equal(s.querySelector('.sv4-foot span').textContent, 'TEN -5.5 · 43.5 · opened -4');
   assert.equal(s.querySelector('.go').textContent, 'Change pick →');
   const out = doc(v4html(fixture({ signedIn: false }), false)).querySelector('[data-slug="g-6"]');
   assert.equal(out.querySelector('.go').textContent, 'Sign in to pick');
@@ -223,10 +225,25 @@ test('the Yours strip sits above the day rail, exactly the band scoresV2 built',
   assert.match(v4html(v, true, { view: 'tonight' }), /data-group="yours"/);
 });
 
-test('no down, no situation line: a turnover leaves the field and the play, not the offense\'s letters alone', () => {
+test('no down: the last snap\'s spot and the play, the strip drawn from the spot, no tick (mon-21)', () => {
   const v = fixture();
-  v.extras.get(7).drive = { label: null, spot: null, offenseAbbr: 'PHI', pct: null, togo: null, lastPlay: 'J. Hurts pass ... FUMBLES, RECOVERED by CHI.' };
+  v.extras.get(7).drive = { label: null, spot: null, offenseAbbr: 'PHI', pct: null, togo: 5, snapSpot: 'PHI 15', snapPct: 15, lastPlay: 'J. Hurts pass ... FUMBLES, RECOVERED by CHI.' };
   const c = doc(v4html(v, true)).querySelector('[data-slug="g-7"]');
-  assert.equal(c.querySelector('.sit'), null);
+  assert.equal(c.querySelector('.sit').textContent, 'PHI 15');
+  assert.equal(c.querySelector('.sit').dataset.sit, 'spot');
+  assert.equal(c.querySelector('.track i').getAttribute('style'), 'left:15%');
+  assert.equal(c.querySelector('.track em'), null, 'no first-down tick without a down');
   assert.match(c.querySelector('.lp').textContent, /FUMBLES/);
+  // and with no snap spot either: no line, no strip, just the play
+  v.extras.get(7).drive = { ...v.extras.get(7).drive, snapSpot: null, snapPct: null };
+  const c2 = doc(v4html(v, true)).querySelector('[data-slug="g-7"]');
+  assert.equal(c2.querySelector('.sit'), null); assert.equal(c2.querySelector('.track'), null);
+});
+
+test('the foot and the play line are declared one line (mon-21; widths measured in the preview)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../../app/scores/scoresV4.css', import.meta.url), 'utf8');
+  assert.match(css, /\.sv4-foot \{[^}]*flex-wrap: nowrap;[^}]*white-space: nowrap;/);
+  assert.match(css, /\.sv4-foot > span \{ min-width: 0; overflow: hidden; text-overflow: ellipsis; \}/);
+  assert.match(css, /\.sv4-field \.lp \{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; \}/);
 });

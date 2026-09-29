@@ -27,7 +27,7 @@ import { orderFor } from '@/lib/gridiron/teamOrder';
 import { possessionSide } from '@/lib/gridiron/possession';
 import { shortOf, BASEBALL, sportOf } from '@/lib/live/vocabulary';
 import { LEAGUE_LABEL, abbrOf, cardVariant, countLine, pickTone, statLineText, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
-import { SPORTS, hrefs, applyView, chipCounts, oddsFoot, winProbRead, firstDownPct, leaderOf } from '@/lib/scores/v4';
+import { SPORTS, hrefs, applyView, chipCounts, oddsFoot, winProbRead, firstDownPct, leaderOf, fieldLine } from '@/lib/scores/v4';
 
 const PICKEM = "Pick'em";
 
@@ -117,7 +117,8 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
   const wp = live ? winProbRead(g, liveWinProbView(g.liveState, now)) : null;
   const boardOpen = !live && !final && (g.leagueSlug === 'nfl' || g.leagueSlug === 'cfb');
   const moment = final ? (baseball ? x.mlbFoot ?? null : statLineText(x.stat, g.leagueSlug)) : null;
-  const tick = live ? firstDownPct(x.drive) : null;
+  const field = fieldLine(x.drive);
+  const tick = live && field.named ? firstDownPct(x.drive) : null;
   const where = `${LEAGUE_LABEL[g.leagueSlug] ?? ''}${g.network ? ` · ${g.network}` : ''}`;
   const bell = x.stake?.alerts ? (live ? 'Alerts on' : 'Alerts') : null;
   const label = `${g.away?.shortName ?? g.away?.name} at ${g.home?.shortName ?? g.home?.name}`;
@@ -144,21 +145,20 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
       ))}
       {live && x.drive && (
         <div className="sv4-field" data-drive="1">
-          {x.drive.pct != null && (
+          {/* mon-21. THE SITUATION FIRST: down & distance · spot, the strip
+              under it (ball + first-down tick), then the last play on ONE line.
+              NO DOWN (a turnover, a score): the last snap's spot alone, the
+              strip still drawn from it and no tick - nothing is claimed about
+              a down that cannot be named. */}
+          {field.line ? <div className="sit" data-sit={field.named ? 'down' : 'spot'}><span>{field.line}</span></div> : null}
+          {field.pct != null && (
             <div className="track">
-              <u style={{ width: `${x.drive.pct}%` }} />
+              <u style={{ width: `${field.pct}%` }} />
               {tick != null ? <em style={{ left: `${tick}%` }} aria-hidden="true" /> : null}
-              <i style={{ left: `${x.drive.pct}%` }} />
+              <i style={{ left: `${field.pct}%` }} />
             </div>
           )}
-          {/* NO DOWN, NO LINE: after a turnover or a score the situation cannot
-              be named, and the offense's letters alone said nothing. */}
-          {x.drive.label ? (
-            <div className="sit">
-              <span>{[x.drive.offenseAbbr, x.drive.label, x.drive.spot].filter(Boolean).join(' · ')}</span>
-            </div>
-          ) : null}
-          {x.drive.lastPlay ? <p className="lp">{x.drive.lastPlay}</p> : null}
+          {x.drive.lastPlay ? <p className="lp" title={x.drive.lastPlay}>{x.drive.lastPlay}</p> : null}
         </div>
       )}
       {live && x.diamond && (
