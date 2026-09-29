@@ -26,6 +26,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { isShellClient } from '@/lib/shell/appTabs';
+import HeaderWordmark from '@/components/brand/HeaderWordmark';
 
 const subscribe = () => () => {};
 const getSnapshot = () => isShellClient({ cookie: document.cookie });
@@ -59,19 +60,11 @@ export default function AppHeader() {
           with the bar for the same job. */}
       {/* SPORTSVYN, THE SAME MARK AS THE WEB HEADER (28 Sep, Derik): an
           unauthenticated launch lands on /signin, whose body says SPORTSVYN, under
-          a header that said DRAFTVYN. The asset and size are
-          components/gridiron/Wordmark's (1568x336, 1.8em); it stays a span, not
-          a link - home is a tab. */}
+          a header that said DRAFTVYN. The mark is the web header's
+          (components/brand/HeaderWordmark, R3); it stays a span, not a link -
+          home is a tab. */}
       <span className="gh-app-mark" aria-label="SPORTSVYN">
-        <img
-          src="/brand/sportsvynwordmarkwhite3000x600truealpha.png"
-          alt="SPORTSVYN"
-          width={1568}
-          height={336}
-          fetchPriority="high"
-          decoding="async"
-          style={{ height: '1.8em', width: 'auto', display: 'block' }}
-        />
+        <HeaderWordmark display="block" />
       </span>
       {/* PROFILE LIVES HERE NOW, not on the bar - the v0.3 trade that freed
           the fourth tab for SPORTSVYN. Absolutely placed so the wordmark stays

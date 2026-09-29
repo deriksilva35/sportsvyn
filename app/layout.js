@@ -73,6 +73,19 @@ const rubikMono = Rubik_Mono_One({
 export const metadata = {
   title: "Sportsvyn",
   description: "Sports editorial. Read the Game.",
+  // R3 ICONS (mock-app brand/web @ 84ae53d, README "Markup"): the SVG first,
+  // the two PNGs for browsers that do not take an SVG icon, the 180 for iOS
+  // (square and opaque - iOS applies its own mask). The manifest is
+  // app/manifest.js. /favicon.ico (public/) is the same 16 and 32 PNGs packed
+  // as an ICO, for the request browsers make without reading any of this.
+  icons: {
+    icon: [
+      { url: '/brand/favicon.svg', type: 'image/svg+xml' },
+      { url: '/brand/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/brand/favicon-16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: [{ url: '/brand/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
 };
 
 // Next.js App Router requires viewport to be exported separately from

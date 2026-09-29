@@ -1,3 +1,10 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "app/globals.css",
+      "key": ".wm-on-light { display }",
+      "after": "none !important",
+      "why": "R3 mark swap: the indigo (light-ground) wordmark renders beside the white one and is hidden on the dark page"
+    }
+  ]
 }
