@@ -233,3 +233,43 @@ lib/brand/fixtures/AppIcon-512@2x.png.
 
 The start URL is handled in proxy.js step 0b: `/sim?shell=sim-app` -> 307
 /games with the sv_shell cookie set, so a cold launch paints Games first.
+
+## MLB postseason: the advance runs itself (tue-2)
+
+THE ROUND IS NOT IN THE FEED. BDL lists postseason games with no round, so
+`matches.stage` is written by `scripts/mlb-postseason-import.mjs` from the
+stored seeds (team_records.playoff_seed, 3v6/4v5 = Wild Card, and so on). The
+same run opens what hangs off a round: October's day cards, The Run's rounds
+and the Pick'em series boards. Nothing about a new round appears until it runs.
+
+WHAT RUNS: `services/mlb-advance` (user units, like the poller) - the import
+with `--prod --apply <year>` through the prod preload. Idempotent; no standings
+import (the seeds are final once the postseason starts - refresh them by hand
+with `scripts/mlb-standings-import.mjs --prod --apply <year>` only if they were
+never finalised).
+
+WHEN:
+- the live poller, when an ET day's LAST MLB postseason game goes final
+  (nothing else that day live or still to play; doubleheaders count), starts
+  `sportsvyn-mlb-advance@event` five minutes later via a transient
+  `systemd-run` unit named for the day (lib/mlb/advanceKick.js) - once per day;
+- `sportsvyn-mlb-advance.timer` at 10:00Z daily starts `@timer`, the safety net.
+A lock ($XDG_RUNTIME_DIR/sportsvyn-mlb-advance.lock) keeps runs from overlapping.
+
+READING IT: one line per run -
+    journalctl --user -u 'sportsvyn-mlb-advance@*' -o cat | grep '\[mlb-advance\]'
+    [mlb-advance] event staged 12 / opened {october days 3, run rounds 1, boards 1} / refused 41 / unplaced none
+`refused` is BDL's placeholder games for series not yet decided (clubs "UNK") -
+expected, they come in as the bracket fills. `opened` is what this run created.
+
+IF THE PUSH ARRIVES ("Postseason import: <series> unplaced", also emailed): a
+series with two KNOWN clubs got no round. The only cause seen so far is stale
+seeds - check them, then rerun by hand:
+    set -a && . ./.env.local && set +a
+    node scripts/mlb-standings-import.mjs --prod 2026            # dry run: are the twelve right?
+    node scripts/mlb-standings-import.mjs --prod --apply 2026     # only if they were wrong
+    DATABASE_URL="$PROD_DATABASE_URL" node scripts/mlb-postseason-import.mjs --prod --apply 2026
+The last command's DATABASE_URL is required (fa80e73): the import opens days,
+rounds and boards through lib/db.js, and without it they would be looked for on
+DEV while the stages land on PROD. A run that did not apply says
+"DID NOT APPLY" or "REFUSED" in the journal and emails the tail of its output.

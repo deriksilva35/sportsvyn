@@ -1,0 +1,12 @@
+# sportsvyn-mlb-advance.timer - trigger (b), the safety net: 10:00Z daily, the
+# hour before any MLB lineup, whether or not the poller's day-over kick fired.
+[Unit]
+Description=Sportsvyn MLB postseason advance, 10:00Z daily
+
+[Timer]
+OnCalendar=*-*-* 10:00:00 UTC
+Persistent=true
+Unit=sportsvyn-mlb-advance@timer.service
+
+[Install]
+WantedBy=timers.target

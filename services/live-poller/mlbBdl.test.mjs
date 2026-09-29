@@ -163,3 +163,15 @@ test('EMPTY BEATS WRONG: another game\'s plate appearances, or none, leave the c
   assert.equal(swap.ls.period, 3, 'the inning is the row\'s own, not the 9th the plate appearances claimed');
   assert.equal(swap.home_score, 1); assert.equal(swap.away_score, 2);
 });
+
+// THE POSTSEASON ADVANCE, TRIGGER (a) (tue-2): the poll says WHICH games went
+// final, and the loop hands MLB's to the day-over detector, contained.
+test('the poller reports finalIds and kicks the MLB postseason advance with them', async () => {
+  const { readFileSync } = await import('node:fs');
+  const poll = readFileSync(new URL('./poll.mjs', import.meta.url), 'utf8');
+  const index = readFileSync(new URL('./index.mjs', import.meta.url), 'utf8');
+  assert.match(poll, /finals: 0, finalIds: \[\]/);
+  assert.match(poll, /\{ out\.finals \+= 1; out\.finalIds\.push\(m\.id\); \}/);
+  assert.match(index, /import \{ kickIfDayDone \} from '\.\.\/\.\.\/lib\/mlb\/advanceKick\.js';/);
+  assert.match(index, /if \(lg\.slug === 'mlb' && r\.finalIds\?\.length\) \{\s*try \{ await kickIfDayDone\(sql, r\.finalIds, \{ log \}\); \} catch/);
+});

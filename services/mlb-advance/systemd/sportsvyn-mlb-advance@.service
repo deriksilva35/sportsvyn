@@ -1,0 +1,37 @@
+# sportsvyn-mlb-advance@.service - the MLB postseason advance (tue-2).
+#
+# ONE JOB, TWO TRIGGERS, the instance name says which:
+#   @timer   sportsvyn-mlb-advance.timer, 10:00Z daily (the safety net)
+#   @event   the live poller, five minutes after an ET day's last MLB game goes
+#            final (lib/mlb/advanceKick.js, a transient systemd-run timer)
+#   @manual  by hand: systemctl --user start sportsvyn-mlb-advance@manual
+# systemd never runs one instance twice at once; the job's own lock
+# ($XDG_RUNTIME_DIR/sportsvyn-mlb-advance.lock) keeps the instances apart.
+#
+# INSTALL (user units, like the poller - no root on this box):
+#   cp services/mlb-advance/systemd/sportsvyn-mlb-advance@.service ~/.config/systemd/user/
+#   cp services/mlb-advance/systemd/sportsvyn-mlb-advance.timer ~/.config/systemd/user/
+#   systemctl --user daemon-reload && systemctl --user enable --now sportsvyn-mlb-advance.timer
+#   journalctl --user -u 'sportsvyn-mlb-advance@*' -o cat | grep '\[mlb-advance\]'
+
+[Unit]
+Description=Sportsvyn MLB postseason advance (%i)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/derik/projects/sportsvyn
+EnvironmentFile=/home/derik/projects/sportsvyn/.env.local
+ExecStart=/home/derik/.nvm/versions/node/v22.23.1/bin/node --import ./services/_preload/prod-db.mjs services/mlb-advance/index.mjs --trigger %i
+TimeoutStartSec=15min
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sportsvyn-mlb-advance
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+# The lock lives in the user runtime dir, shared with a manual run.
+ReadWritePaths=%t

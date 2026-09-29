@@ -21,6 +21,7 @@ import { syncMlbGameStats } from '../../lib/mlb/statsSync.js';
 import { syncMlbPlays } from '../../lib/mlb/playsSync.js';
 import { snapshotLiveBoards } from '../../lib/boards/live.js';
 import { snapshotMlbBoards } from '../../lib/boards/mlb.js';
+import { kickIfDayDone } from '../../lib/mlb/advanceKick.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
 import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff } from './poll.mjs';
@@ -273,6 +274,13 @@ async function loop(lg) {
           log(`[${lg.slug}] live activity ${la.event} match=${la.matchId} of=${la.activities} sent=${la.sent} failed=${la.failed} revoked=${la.revoked} skipped=${la.skipped}${per ? ` hr[${per}]` : ''}`);
         }
         if (r.unmapped.length) log(`[${lg.slug}] UNMAPPED STATUS:`, r.unmapped.join(', '));
+        // THE POSTSEASON ADVANCE, TRIGGER (a) (tue-2, lib/mlb/advanceKick.js): when
+        // this poll ended an ET day's last MLB game, the import that opens the next
+        // round runs five minutes later. Contained: a failure here is logged and the
+        // 10:00Z timer runs the same job.
+        if (lg.slug === 'mlb' && r.finalIds?.length) {
+          try { await kickIfDayDone(sql, r.finalIds, { log }); } catch (e) { log('[mlb] postseason advance check failed:', String(e?.message ?? e).slice(0, 120)); }
+        }
         if (stats) {
           // the games this window is watching: live now, or seen live earlier
           // (so a flip to final is caught once). One row read, no provider call.
