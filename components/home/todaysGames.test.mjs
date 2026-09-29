@@ -176,7 +176,7 @@ test('A BOARD TITLE NEVER BREAKS MID-PHRASE', () => {
   // rail, which reads as a title that ran out of room rather than a label
   // somebody chose. Name and slice are two facts on two lines.
   const board = stripComments(src('components/gridiron/EditorialBoard.js'));
-  assert.match(board, /function Head\(\{ title, slice, editionNumber \}\)/);
+  assert.match(board, /function Head\(\{ title, slice, editionNumber, editionLabel \}\)/);
   assert.match(board, /<span className="gi-ed-title">\{title\}<\/span>/);
   assert.match(board, /\{slice \? <span className="gi-ed-slice">\{slice\}<\/span> : null\}/);
   const grid = src('components/gridiron/gridiron.css');
