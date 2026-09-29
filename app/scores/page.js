@@ -27,6 +27,10 @@ import './scoresV2.css';
 import { zoneNameOf } from '@/lib/time/zoneName';
 import { plural } from '@/lib/text/plural';
 import { arcadeOn } from '@/lib/brand/theme';
+import ScoreboardV4 from '@/components/scores/ScoreboardV4';
+import { parseV4 } from '@/lib/scores/v4';
+import { cachedOpeningSpreads } from '@/lib/gridiron/openingCache';
+import './scoresV4.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Scores - Sportsvyn' };
@@ -197,6 +201,20 @@ export default async function ScoresPage({ searchParams }) {
   const tz = viewerTz ?? ET;
   const sportRaw = one(sp.sport);
   const sport = ['nfl', 'cfb', 'mlb', 'epl'].includes(sportRaw) ? sportRaw : 'all';
+  // THE ARCADE BOARD (scores-v4), flag-gated with the theme: under
+  // data-theme="arcade" /scores draws ScoreboardV4; the dark page below is
+  // ScoresV2 exactly as it was. Same reader, plus the opening lines.
+  if (arcadeOn()) {
+    const q = parseV4(sp);
+    const v = await scoresV2({ userId, date: q.date, sport: q.sport, mine: userId != null && q.mine, top25: q.top25, tz, openings: cachedOpeningSpreads });
+    return (
+      <div className="gi" data-surface="ink">
+        <ScoresChrome isShell={isShell} />
+        <TzCookie />
+        <ScoreboardV4 v={v} view={q.view} conf={q.conf} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} />
+      </div>
+    );
+  }
   const v = await scoresV2({ userId, date: one(sp.date) ?? null, sport, mine: userId != null && one(sp.mine) === '1', top25: one(sp.top25) === '1', tz });
   return (
     <div className="gi" data-surface="ink">

@@ -68,8 +68,8 @@ test('TeamMark has only its named users, and every one passes a league', async (
   // The allowlist is deliberate, not a snapshot: a NEW user of the mark is a
   // design decision and has to be added here on purpose.
   const ALLOWED = [
-    // the Scores tab card (v2) and the v1 Scoreboard card
-    'components/scores/ScoresV2.js', 'components/gridiron/Scoreboard.js',
+    // the Scores tab card (v2), the arcade Scoreboard card (scores-v4) and the v1 Scoreboard card
+    'components/scores/ScoresV2.js', 'components/scores/ScoreboardV4.js', 'components/gridiron/Scoreboard.js',
     // the NFL/CFB game header and the NFL box score (the SVG helmet's old seats)
     'components/gridiron/GameTeamRow.js', 'components/gridiron/BoxScore.js',
     // the MLB game header, the postseason bracket and the series board
