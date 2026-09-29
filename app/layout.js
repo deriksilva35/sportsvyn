@@ -6,7 +6,8 @@ import ResumeManager from '@/components/shell/ResumeManager';
 import SplashReady from '@/components/shell/SplashReady';
 import { Analytics } from '@vercel/analytics/next';
 import '@/components/shell/apptab.css';
-import { firstPaintColor, dataTheme } from '@/lib/brand/theme';
+import { firstPaintColor, dataTheme, shellThemeScript } from '@/lib/brand/theme';
+import { SHELL_COOKIE, SHELL_VALUE } from '@/lib/shell/constants';
 
 const saira = Saira({
   variable: "--font-saira",
@@ -111,15 +112,28 @@ export const viewport = {
  * pages stay static.
  */
 export default function RootLayout({ children }) {
+  // THE APP FLIP (tue-0): with ARCADE_SHELL on, this script - first in <head>,
+  // run before any frame - gives shell requests data-theme="arcade" and the
+  // white ground in one tick. Null (no tag at all) when the flag is off.
+  const shellScript = shellThemeScript(process.env, { cookie: SHELL_COOKIE, value: SHELL_VALUE });
   return (
     <html
       lang="en"
+      // The shell script above may set data-theme and the ground before
+      // hydration; React must not warn about (or undo) that on <html> alone.
+      suppressHydrationWarning
       data-theme={dataTheme()}
       // THE FIRST-PAINT GROUND: the page colour before any stylesheet has
       // loaded - lib/brand/theme.js firstPaintColor.
       style={{ backgroundColor: firstPaintColor() }}
       className={`${saira.variable} ${sairaCondensed.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${archivo.variable} ${rubik.variable} ${rubikMono.variable} h-full antialiased`}
     >
+      {shellScript ? (
+        <head>
+          {/* A fixed, build-time string from lib/brand/theme.js - no user input. */}
+          <script id="sv-shell-theme" dangerouslySetInnerHTML={{ __html: shellScript }} />
+        </head>
+      ) : null}
       <body className="min-h-full flex flex-col">
         {/* HEADER ABOVE, TAB BAR BELOW, one gate on both. Mounted here rather
             than inside GlobalHeader because the /sim routes never render that

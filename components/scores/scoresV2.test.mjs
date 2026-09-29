@@ -641,6 +641,8 @@ test('EPL leaves the sport chips on the arcade page only (mon-17); the route sta
   const src = readFileSync(new URL('./ScoresV2.js', import.meta.url), 'utf8');
   assert.match(src, /\.\.\.\(arcade \? \[\] : \[\['epl', 'EPL'\]\]\)/);
   const page = readFileSync(new URL('../../app/scores/page.js', import.meta.url), 'utf8');
-  assert.match(page, /arcade=\{arcadeOn\(\)\}/);
+  // tue-0: the flag is per request - ARCADE_THEME, or ARCADE_SHELL for the shell.
+  assert.match(page, /const arcade = arcadeFor\(isShell\);/);
+  assert.match(page, /arcade=\{arcade\}/);
   assert.match(page, /\['nfl', 'cfb', 'mlb', 'epl'\]\.includes\(sportRaw\)/, '/scores?sport=epl still resolves');
 });

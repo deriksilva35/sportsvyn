@@ -138,7 +138,7 @@ test('NO STRAY DARK VALUE: under the arcade theme every colour token resolves to
 });
 
 test('THE FLAG: data-theme="arcade" only when ARCADE_THEME=on, and the bar tint follows', async () => {
-  const { arcadeOn, dataTheme, themeColor } = await import('../lib/brand/theme.js');
+  const { arcadeOn, dataTheme, themeColor, themeColorFor } = await import('../lib/brand/theme.js');
   assert.equal(arcadeOn({ ARCADE_THEME: 'on' }), true);
   for (const v of [undefined, '', 'off', '1', 'true']) assert.equal(arcadeOn({ ARCADE_THEME: v }), false, `${v} is not on`);
   assert.equal(dataTheme({ ARCADE_THEME: 'on' }), 'arcade');
@@ -147,9 +147,13 @@ test('THE FLAG: data-theme="arcade" only when ARCADE_THEME=on, and the bar tint 
   assert.equal(themeColor({}), '#0A0A0A');
   const layout = readFileSync(path.join(REPO, 'app/layout.js'), 'utf8');
   assert.match(layout, /data-theme=\{dataTheme\(\)\}/);
+  // THE APP FLIP (tue-0): the shell's bar tint follows the REQUEST - ARCADE_THEME,
+  // or ARCADE_SHELL for the shell - via themeColorFor (lib/brand/shellFlip.test.mjs).
+  assert.equal(themeColorFor(true, { ARCADE_SHELL: 'on' }), '#FFFFFF');
+  assert.equal(themeColorFor(true, {}), '#0A0A0A');
   for (const f of ['app/app/layout.js', 'lib/shell/shell.js']) {
     const t = readFileSync(path.join(REPO, f), 'utf8');
-    assert.match(t, /themeColor: themeColor\(\)/, `${f} tints the bar from the flag`);
+    assert.match(t, /themeColor: themeColorFor\(true\)/, `${f} tints the bar from the flag, per request`);
     assert.doesNotMatch(t, /themeColor: '#/, `${f} has no literal tint left`);
   }
 });

@@ -26,7 +26,7 @@ import { ET } from '@/lib/gridiron/scoresV2Shape';
 import './scoresV2.css';
 import { zoneNameOf } from '@/lib/time/zoneName';
 import { plural } from '@/lib/text/plural';
-import { arcadeOn } from '@/lib/brand/theme';
+import { arcadeFor } from '@/lib/brand/theme';
 import ScoreboardV4 from '@/components/scores/ScoreboardV4';
 import { parseV4 } from '@/lib/scores/v4';
 import { cachedOpeningSpreads } from '@/lib/gridiron/openingCache';
@@ -204,7 +204,10 @@ export default async function ScoresPage({ searchParams }) {
   // THE ARCADE BOARD (scores-v4), flag-gated with the theme: under
   // data-theme="arcade" /scores draws ScoreboardV4; the dark page below is
   // ScoresV2 exactly as it was. Same reader, plus the opening lines.
-  if (arcadeOn()) {
+  // THE APP FLIP (tue-0): the whole deployment's flag, or ARCADE_SHELL for a
+  // request carrying the shell cookie. /scores is dynamic, so it can ask.
+  const arcade = arcadeFor(isShell);
+  if (arcade) {
     const q = parseV4(sp);
     const v = await scoresV2({ userId, date: q.date, sport: q.sport, mine: userId != null && q.mine, top25: q.top25, tz, openings: cachedOpeningSpreads });
     return (
@@ -224,7 +227,7 @@ export default async function ScoresPage({ searchParams }) {
           the header and the day strip stayed on Eastern for the whole first
           session. From the second request on, both read the viewer's zone. */}
       <TzCookie />
-      <ScoresV2 v={v} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} arcade={arcadeOn()} />
+      <ScoresV2 v={v} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} arcade={arcade} />
     </div>
   );
 }
