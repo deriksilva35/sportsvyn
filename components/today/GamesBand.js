@@ -5,10 +5,10 @@
 // turned EPL off has said nothing about whether they want to play the Daily.
 //
 // EVERY NUMBER HERE IS REAL STATE. The mock's "1/8 picked" is pickemCardData's
-// {picked}/{total}; the lock line is lockLabel(locksAt), never a hardcoded
-// weekday - the same class of defect as the Week 0 label.
+// {picked}/{total}; the lock line is pickemLockLine() (lib/today/gamesBandCards.js), never a
+// hardcoded weekday - the same class of defect as the Week 0 label.
 
-import { lockLabel } from '@/lib/pickem/read';
+import { pickemLockLine } from '@/lib/today/gamesBandCards';
 import { GAME_NAMES } from '@/lib/games/lobby';
 import { plural } from '@/lib/text/plural';
 
@@ -47,8 +47,9 @@ export default function GamesBand({ daily, yesterday, pickem, weekly, draft }) {
   const pickemSub = pickem?.settled
     ? (pickem.record ? `${pickem.record.correct} of ${pickem.record.played} · settled` : 'Settled')
     : pickem
-      ? `${plural(pickem.total, 'game')} · locks ${lockLabel(pickem.nextKickoff)}`
+      ? [plural(pickem.total, 'game'), pickemLockLine(pickem)].filter(Boolean).join(' · ')
       : null;
+
 
   return (
     <>
