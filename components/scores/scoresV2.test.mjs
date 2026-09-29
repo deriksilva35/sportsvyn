@@ -56,7 +56,7 @@ function fixture({ signedIn = true } = {}) {
     liveAway: null,
     groups: [
       { key: 'live', title: 'Live now', sub: 'updates every 30s', games: [live, epl] },
-      { key: 'day', title: 'Tomorrow · Sunday', sub: '1 game · your picks lock at kick', games: [up] },
+      { key: 'day', title: 'Tomorrow · Sunday', sub: '1 game · your picks lock at kickoff', games: [up] },
       { key: 'final', title: 'Final', sub: 'Fri', games: [fin] },
     ],
     extras,

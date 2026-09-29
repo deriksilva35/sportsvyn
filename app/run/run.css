@@ -107,7 +107,6 @@
 .rn-slot.out .rn-nm { color: var(--muted); }
 .rn-pts.out { color: var(--muted-dim); }
 .rn-slot.p .rn-pos { color: #38BDF8; }
-:where(:root[data-theme="arcade"]) .rn-slot.p .rn-pos { color: var(--tok-chip); }
 .rn-slot.b .rn-pos { color: #4ADE80; }
 :where(:root[data-theme="arcade"]) .rn-slot.b .rn-pos { color: var(--tok-up); }
 .rn-slot.elig { border-style: solid; border-color: var(--volt); background: rgba(212,255,0,.09); box-shadow: 0 0 14px rgba(212,255,0,.3); }
@@ -150,7 +149,6 @@
 .rn-prow.gone { opacity: .26; cursor: default; }
 .rn-pb { width: 24px; height: 18px; border-radius: 5px; display: grid; place-items: center; font: 800 8px var(--font-display); color: var(--ink); flex: 0 0 auto; }
 .rn-pb.p { background: #38BDF8; }
-:where(:root[data-theme="arcade"]) .rn-pb.p { background: var(--tok-chip); }
 .rn-pb.b { background: #4ADE80; }
 :where(:root[data-theme="arcade"]) .rn-pb.b { background: var(--tok-up); }
 .rn-who { min-width: 0; }
@@ -218,3 +216,17 @@
 .rb-lr.rb-gap { color: var(--muted-dim); text-align: center; }
 .rb-rounds { margin-top: 0; }
 .rn-lg.live { border-color: var(--volt, var(--tok-action)); }
+
+/* tue-1 (arcade only): The Run wears October's grammar. The diamond is flat MLB
+   green - no gradient, no stripes - and so are its empty tiles; a FILLED or a
+   LOCKED tile is the light volt tint with a navy frame. The ARM/P chip is navy
+   (white ink) and the BAT/B chip green: no blue anywhere. */
+:where(:root[data-theme="arcade"]) .rn-field { background: var(--tok-up); }
+:where(:root[data-theme="arcade"]) .rn-slot { background: var(--tok-up); border-color: color-mix(in srgb, var(--tok-page) 55%, transparent); }
+:where(:root[data-theme="arcade"]) .rn-slot.p .rn-pos, :where(:root[data-theme="arcade"]) .rn-slot.b .rn-pos { color: var(--tok-page); }
+:where(:root[data-theme="arcade"]) .rn-slot.elig { background: var(--tok-up); box-shadow: none; }
+:where(:root[data-theme="arcade"]) .rn-slot.filled, :where(:root[data-theme="arcade"]) .rn-slot.locked { background: color-mix(in srgb, var(--tok-action) 30%, var(--tok-page)); border-style: solid; border-color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .rn-slot.filled .rn-pos, :where(:root[data-theme="arcade"]) .rn-slot.locked .rn-pos { color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .rn-lk { color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .rn-pb.p { background: var(--tok-primary); color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .rn-pb.b { background: var(--tok-up); color: var(--tok-page); }

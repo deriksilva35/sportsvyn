@@ -194,6 +194,13 @@ html[data-clock] body:has(.apptab) { padding-bottom: 0; }
 /* SELECTED IS VOLT (mon-20): a volt fill with navy ink, the volt grammar's
    selected state - it was a navy fill, which the grammar reserves for structure. */
 :root[data-theme="arcade"] .svseg a.on { color: var(--tok-on-action); background: var(--tok-action); border-color: var(--tok-action); }
+/* THE TAB BAR IS THE NAV (tue-1). Under the arcade shell the HOME · SCOREBOARD ·
+   FANTASY · MARKET row is gone: Scoreboard and Market are tabs already, the
+   Movement Board (/nfl/fantasy) is reached from /nfl's Movement card, and Play
+   (/games) is the app's landing. The dark shell keeps the row. The component
+   still renders (it is what marks the active area for BackToAppBar's tab-root
+   check); only its row is not drawn. */
+:root[data-theme="arcade"] .svseg { display: none; }
 :root[data-theme="arcade"] .yd-row { border-bottom-color: var(--tok-line); }
 :root[data-theme="arcade"] .yd-meta, :root[data-theme="arcade"] .yd-act, :root[data-theme="arcade"] .appcrumb { color: var(--tok-muted); }
 :root[data-theme="arcade"] .yd-grade { color: var(--tok-primary); }

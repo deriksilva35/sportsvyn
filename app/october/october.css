@@ -103,7 +103,6 @@
    name lost a line; both are out of the flow now, in their own corners. */
 .oc-pos { position: absolute; top: 2px; left: 5px; font: 800 9px var(--font-display); color: var(--muted-dim); }
 .oc-slot.p .oc-pos { color: #38BDF8; }
-:where(:root[data-theme="arcade"]) .oc-slot.p .oc-pos { color: var(--tok-chip); }
 .oc-slot.b .oc-pos { color: #4ADE80; }
 :where(:root[data-theme="arcade"]) .oc-slot.b .oc-pos { color: var(--tok-up); }
 .oc-slot.elig { border-style: solid; border-color: var(--volt); background: rgba(212,255,0,.09); box-shadow: 0 0 14px rgba(212,255,0,.3); }
@@ -154,7 +153,6 @@
 .oc-prow.gone { opacity: .26; cursor: default; }
 .oc-pb { width: 24px; height: 18px; border-radius: 5px; display: grid; place-items: center; font: 800 8px var(--font-display); color: var(--ink); flex: 0 0 auto; }
 .oc-pb.p { background: #38BDF8; }
-:where(:root[data-theme="arcade"]) .oc-pb.p { background: var(--tok-chip); }
 .oc-pb.b { background: #4ADE80; }
 :where(:root[data-theme="arcade"]) .oc-pb.b { background: var(--tok-up); }
 .oc-who { min-width: 0; }
@@ -216,3 +214,15 @@
 :where(:root[data-theme="arcade"]) .oc-slot.filled { background: color-mix(in srgb, var(--tok-action) 30%, var(--tok-page)); border-color: var(--tok-primary); }
 :where(:root[data-theme="arcade"]) .oc-slot.filled .oc-pos { color: var(--tok-primary); }
 :where(:root[data-theme="arcade"]) .oc-lock { background: var(--tok-action); color: var(--tok-on-action); }
+
+/* tue-1 (arcade only): a LOCKED tile is the light volt tint with a navy frame,
+   like a filled one; the ARM/P chip is navy (white ink) and the BAT/B chip
+   green - no blue. The crumb's separator is drawn here, arcade only: the .r
+   link is the second crumb, and the markup has no separator of its own
+   (ae7682b gave The Run a span; October only its CSS). */
+:where(:root[data-theme="arcade"]) .oc-slot.locked { background: color-mix(in srgb, var(--tok-action) 30%, var(--tok-page)); border-style: solid; border-color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .oc-slot.locked .oc-pos { color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .oc-lk { color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .oc-pb.p { background: var(--tok-primary); color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .oc-pb.b { background: var(--tok-up); color: var(--tok-page); }
+:where(:root[data-theme="arcade"]) .oc-crumb a.r::before { content: '\00B7'; display: inline-block; margin: 0 6px; color: var(--tok-muted); }

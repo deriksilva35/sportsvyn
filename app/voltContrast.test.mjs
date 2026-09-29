@@ -222,3 +222,14 @@ test('NO DARK TEXT ON A NAVY GROUND on the arcade page, in any stylesheet', () =
   const bad = files.flatMap((f) => darkOnNavy(read(f), g).map((b) => `${f}: ${b}`));
   assert.equal(bad.length, 0, `${bad.length} rule(s) put dark text on navy:\n${bad.join('\n')}`);
 });
+
+// THE DIAMOND GAMES CARRY NO BLUE (tue-1). October and The Run: the ARM/P chip
+// is navy and the BAT/B chip green on the arcade page; --tok-chip (the blue
+// role) had painted the ARM label and the P chip.
+test('October and The Run use no --tok-chip (blue) on the arcade page', () => {
+  for (const f of ['app/october/october.css', 'app/run/run.css']) {
+    const arcadeRules = rules(read(f)).filter((r) => /data-theme="arcade"/.test(r.sel));
+    const blue = arcadeRules.filter((r) => /--tok-chip/.test(r.body)).map((r) => r.sel);
+    assert.deepEqual(blue, [], `${f}: ${blue.join(', ')}`);
+  }
+});

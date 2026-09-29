@@ -66,7 +66,7 @@ function fixture({ signedIn = true } = {}) {
     liveAway: null,
     groups: [
       { key: 'live', title: 'Live now', sub: 'updates every 30s', games: [live, nfl, mlb, epl] },
-      { key: 'day', title: 'Tomorrow · Sunday', sub: '2 games · your picks lock at kick', subTail: ' · your picks lock at kick', games: [up, mlbUp] },
+      { key: 'day', title: 'Tomorrow · Sunday', sub: '2 games · your picks lock at kickoff', subTail: ' · your picks lock at kickoff', games: [up, mlbUp] },
       { key: 'final', title: 'Final', sub: 'Fri', games: [fin] },
     ],
     extras,
@@ -246,4 +246,23 @@ test('the foot and the play line are declared one line (mon-21; widths measured 
   assert.match(css, /\.sv4-foot \{[^}]*flex-wrap: nowrap;[^}]*white-space: nowrap;/);
   assert.match(css, /\.sv4-foot > span \{ min-width: 0; overflow: hidden; text-overflow: ellipsis; \}/);
   assert.match(css, /\.sv4-field \.lp \{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; \}/);
+});
+
+// ONE ZONE ON THE PAGE (tue-1): the header's zone and every card's time come
+// from the reader's zone from the first paint - the same fix V2 got (d8bd6aa):
+// the cards' StandaloneTime takes serverTz = v.tz, the same zone the header's
+// label was built from.
+test('header zone == card zone for a Pacific reader, server-rendered', async () => {
+  const { zoneNameOf } = await import('../../lib/time/zoneName.js');
+  const { standaloneTimeLabel } = await import('../../lib/time/standaloneLabel.js');
+  const v = { ...fixture(), tz: 'America/Los_Angeles' };
+  const d = doc(v4html(v, true, { zoneLabel: zoneNameOf('America/Los_Angeles') }));
+  assert.match(flat(d.body), /all times Pacific/);
+  const ko = [...d.querySelectorAll('.sv4-card.upcoming .ko')].map((e) => e.textContent);
+  assert.ok(ko.length >= 2, 'the fixture has scheduled cards');
+  for (const [i, g] of v.groups.find((x) => x.key === 'day').games.entries()) {
+    const want = standaloneTimeLabel(g.kickoffAt, { tz: 'America/Los_Angeles' });
+    assert.ok(ko[i].startsWith(want), `card ${g.slug}: "${ko[i]}" should start with the Pacific "${want}"`);
+    assert.match(want, /PDT|PT/, 'and it is the Pacific clock, not Eastern');
+  }
 });
