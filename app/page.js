@@ -59,6 +59,7 @@ import ModeSwitch from '@/components/today/ModeSwitch';
 import LeagueChips from '@/components/today/LeagueChips';
 import Band, { BandHead } from '@/components/today/Band';
 import GamesBand from '@/components/today/GamesBand';
+import { nextOpensAt } from '@/lib/today/nextOpens';
 import { GridironBand, EplBand, DiamondBand, ArchiveBand } from '@/components/today/LeagueBands';
 import { LEAGUES, rankLeagues, contextLine, leagueById } from '@/lib/today/leagues';
 import { gatherSignals } from '@/lib/today/signals';
@@ -337,7 +338,7 @@ export async function FrontPage() {
   }).format(now);
 
   const [todaysReads, followedSet, movement, nflBoard, cfbBoard, slate, dailyHome, yesterday,
-    weeklyHome, draftHome] = await Promise.all([
+    weeklyHome, draftHome, weeklyNextOpensAt, draftNextOpensAt] = await Promise.all([
     getTodaysReads({ ptDay, limit: 4, leagueSlugs: FOOTBALL_READS_SLUGS }),
     getFollowedTeamIds(userId),
     // Same call the /nfl entry card makes. Null rather than a thrown page if
@@ -364,6 +365,10 @@ export async function FrontPage() {
     getWeeklyHome(userId).catch(() => null),
     // The Draft's own state. Same posture as every other unit on this page.
     getDraftHome(userId).catch(() => null),
+    // THE NEXT BOARDS' OPENING DATES (tue-3), for a card with no board open yet:
+    // "Opens <date>" from the contest row, not the typed 'Opens Sep 8'.
+    nextOpensAt('weekly').catch(() => null),
+    nextOpensAt('draft').catch(() => null),
   ]);
 
   // THE WEEK NUMBERS ON THE SEASON STRIP ARE DERIVED, never typed. The strip
@@ -516,7 +521,8 @@ export async function FrontPage() {
           <BandHead top label="The Games" context="One account, one handle, every board"
             moreHref="/games" moreLabel="Games hub" />
           <GamesBand daily={dailyHome} yesterday={yesterday} pickem={pickem}
-            weekly={weeklyHome} draft={draftHome} />
+            weekly={weeklyHome} draft={draftHome}
+            weeklyNextOpensAt={weeklyNextOpensAt} draftNextOpensAt={draftNextOpensAt} />
         </Band>
 
         {/* Bands in ranker order - computed from `matches` every render. */}

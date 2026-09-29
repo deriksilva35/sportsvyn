@@ -8,7 +8,7 @@
 // {picked}/{total}; the lock line is pickemLockLine() (lib/today/gamesBandCards.js), never a
 // hardcoded weekday - the same class of defect as the Week 0 label.
 
-import { pickemLockLine } from '@/lib/today/gamesBandCards';
+import { pickemLockLine, seasonGameCard } from '@/lib/today/gamesBandCards';
 import { GAME_NAMES } from '@/lib/games/lobby';
 import { plural } from '@/lib/text/plural';
 
@@ -28,7 +28,7 @@ function Card({ eyebrow, isNew, title, sub, cta, ctaClass = '', href, hot = fals
   );
 }
 
-export default function GamesBand({ daily, yesterday, pickem, weekly, draft }) {
+export default function GamesBand({ daily, yesterday, pickem, weekly, draft, weeklyNextOpensAt = null, draftNextOpensAt = null }) {
   // Yesterday's result leads the Daily card, because it is what a returning
   // player wants first. Real fields: `perfect` is the day's perfect score and
   // `winner.score` the best anyone actually posted.
@@ -49,7 +49,11 @@ export default function GamesBand({ daily, yesterday, pickem, weekly, draft }) {
     : pickem
       ? [plural(pickem.total, 'game'), pickemLockLine(pickem)].filter(Boolean).join(' · ')
       : null;
-
+  // THE SEASON GAMES FROM THEIR OWN STATE (lib/today/gamesBandCards.js) - these
+  // read weekly?.cta and weekly?.open, which no view ever had, so every card fell
+  // through to a typed 'Opens Sep 8'.
+  const wk = seasonGameCard('weekly', weekly, { nextOpensAt: weeklyNextOpensAt });
+  const dr = seasonGameCard('draft', draft, { nextOpensAt: draftNextOpensAt });
 
   return (
     <>
@@ -70,13 +74,9 @@ export default function GamesBand({ daily, yesterday, pickem, weekly, draft }) {
         {/* The ghost states are the readers' own: a game that has not opened
             says when it opens rather than pretending to be playable. */}
         <Card eyebrow="Season game" title="The Weekly"
-          sub={weekly?.sub ?? 'Six NFL players, best five count'}
-          cta={weekly?.cta ?? 'Opens Sep 8'} ctaClass={weekly?.open ? '' : 'ghosted'}
-          href={weekly?.open ? '/weekly' : null} />
+          sub={wk.sub} cta={wk.cta} ctaClass={wk.open ? '' : 'ghosted'} href={wk.href} />
         <Card eyebrow="Season game" title="The Draft"
-          sub={draft?.sub ?? 'Eight picks feed a best six'}
-          cta={draft?.cta ?? 'Opens Sep 8'} ctaClass={draft?.open ? '' : 'ghosted'}
-          href={draft?.open ? '/draft' : null} />
+          sub={dr.sub} cta={dr.cta} ctaClass={dr.open ? '' : 'ghosted'} href={dr.href} />
       </div>
     </>
   );
