@@ -294,7 +294,7 @@ function Clock({ ms }) {
  * slotWord with The Run's extra cases.
  */
 function slotWord(p) {
-  if (p?.probable) return "today's starter";
+  if (p?.probable) return p.starting ? 'starting' : 'probable';
   if (p?.order != null) return `bats ${ordinal(p.order)}`;
   if (p?.g1) return 'G1 starter';
   return p?.position ?? '';
