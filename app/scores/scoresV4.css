@@ -127,7 +127,7 @@
 :where(:root[data-theme="arcade"]) .sv4-xs h3 { margin: 0 0 6px; font: 700 11px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs h3 { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
 :where(:root[data-theme="arcade"]) .sv4-xs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-:where(:root[data-theme="arcade"]) .sv4-xs li { display: grid; grid-template-columns: 64px auto 1fr; gap: 8px; align-items: baseline; font-size: 12px; line-height: 1.4; }
+:where(:root[data-theme="arcade"]) .sv4-xs li { display: grid; grid-template-columns: 78px auto 1fr; gap: 8px; align-items: baseline; font-size: 12px; line-height: 1.4; }
 :where(:root[data-theme="arcade"]) .sv4-xs .w { font: 700 11px var(--tok-font-num); color: var(--tok-muted); white-space: nowrap; }
 :where(:root[data-theme="arcade"]) .sv4-xs .s { font: 700 12px var(--tok-font-num); font-variant-numeric: tabular-nums; color: var(--tok-ink); }
 :where(:root[data-theme="arcade"]) .sv4-xs .tx { grid-column: 3; color: var(--tok-ink); }
