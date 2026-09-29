@@ -22,6 +22,7 @@ import { syncMlbPlays } from '../../lib/mlb/playsSync.js';
 import { snapshotLiveBoards } from '../../lib/boards/live.js';
 import { snapshotMlbBoards } from '../../lib/boards/mlb.js';
 import { kickIfDayDone } from '../../lib/mlb/advanceKick.js';
+import { refreshMlbProbables, REFRESH_MS as PROBABLES_MS } from '../../lib/mlb/probablesRefresh.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
 import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff } from './poll.mjs';
@@ -176,7 +177,7 @@ async function release(client, league) {
 }
 
 async function loop(lg) {
-  let lock = null, windowId = null, failures = 0, pending = 0, lastBeat = 0;
+  let lock = null, windowId = null, failures = 0, pending = 0, lastBeat = 0, lastProbables = 0;
   const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0 };
   // BOX SCORE PULLS: every 10th live poll per live game, once at final.
   // MLB JOINS ON THE SAME TRACKER. Its ingest existed and was called by
@@ -358,6 +359,22 @@ async function loop(lg) {
           }).catch(() => {});
           failures = 0;
         }
+      }
+    }
+
+    // --- MLB starters, 36 hours ahead (tue-4) -------------------------------
+    // IN EVERY STATE, like the heartbeat, because the pre-kick pass only sees
+    // a game four hours out and the starters are announced a day ahead: the
+    // card and October's arm picker read metadata.probables all morning.
+    // One BDL call per 25 games, every fifteen minutes. Contained.
+    if (lg.slug === 'mlb' && Date.now() - lastProbables >= PROBABLES_MS) {
+      lastProbables = Date.now();
+      try {
+        const r = await refreshMlbProbables({ sql, now: new Date() });
+        if (r.considered) pending += Math.ceil(r.considered / 25);
+        if (r.wrote) log(`[mlb] probables refreshed games=${r.considered} wrote=${r.wrote}`);
+      } catch (e) {
+        log('[mlb] probables refresh failed:', String(e?.message ?? e).slice(0, 120));
       }
     }
 
