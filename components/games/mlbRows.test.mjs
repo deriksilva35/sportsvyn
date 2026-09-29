@@ -55,6 +55,9 @@ test('THE OCTOBER ROW carries its state and its door', () => {
   const locked = octoberRowV3(octContest(), new Date('2026-09-23T03:00:00Z'));
   assert.equal(locked.line, "16 games · today's card is locked");
   assert.equal(locked.tone, 'done');
+  // A one-game day says "1 game", not "1 games".
+  const one = octoberRowV3(octContest({ meta: { games: 1 } }), new Date('2026-09-23T03:00:00Z'));
+  assert.equal(one.line, "1 game · today's card is locked");
 
   // THE REAL THING NAMES ITS LOCK TIME instead of shouting PREVIEW.
   const real = octoberRowV3(octContest({ meta: { games: 4 } }), NOW);

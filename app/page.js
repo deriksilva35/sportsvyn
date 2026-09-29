@@ -47,11 +47,19 @@ import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { boardHref } from '@/lib/gridiron/rankingsHub';
 import '@/components/gridiron/gridiron.css';
 import { resolveShellMode } from '@/lib/shell/shell';
+import { arcadeFor } from '@/lib/brand/theme';
+import LobbyMain from '@/components/games/LobbyMain';
+import { requireSignInInShell } from '@/lib/shell/signedOut';
+import { lobbyV3 } from '@/lib/games/lobbyV3';
+import { normalizeChip } from '@/lib/games/lobby';
+import '@/app/games/games.css';
+import '@/app/games/lobbyV3.css';
 import SportsvynSegment from '@/components/shell/SportsvynSegment';
 import ModeSwitch from '@/components/today/ModeSwitch';
 import LeagueChips from '@/components/today/LeagueChips';
 import Band, { BandHead } from '@/components/today/Band';
 import GamesBand from '@/components/today/GamesBand';
+import { nextOpensAt } from '@/lib/today/nextOpens';
 import { GridironBand, EplBand, DiamondBand, ArchiveBand } from '@/components/today/LeagueBands';
 import { LEAGUES, rankLeagues, contextLine, leagueById } from '@/lib/today/leagues';
 import { gatherSignals } from '@/lib/today/signals';
@@ -287,7 +295,13 @@ function SubscribeBand({ shell = false }) {
 // =============================================================================
 // MAIN PAGE
 // =============================================================================
-export default async function HomePage() {
+/**
+ * THE EDITORIAL FRONT PAGE (the Daily Card, "the network's front page", MY
+ * SPORTSVYN). Under the arcade theme it is no longer the homepage - it lives at
+ * /today (app/today/page.js), reachable by URL, linked from no nav - and on the
+ * dark page it is still exactly what / renders.
+ */
+export async function FrontPage() {
   // 3.1.1: the homepage is reachable inside the native container, and the
   // subscribe band carries a price. Cookie-resolved (this page takes no
   // searchParams).
@@ -324,7 +338,7 @@ export default async function HomePage() {
   }).format(now);
 
   const [todaysReads, followedSet, movement, nflBoard, cfbBoard, slate, dailyHome, yesterday,
-    weeklyHome, draftHome] = await Promise.all([
+    weeklyHome, draftHome, weeklyNextOpensAt, draftNextOpensAt] = await Promise.all([
     getTodaysReads({ ptDay, limit: 4, leagueSlugs: FOOTBALL_READS_SLUGS }),
     getFollowedTeamIds(userId),
     // Same call the /nfl entry card makes. Null rather than a thrown page if
@@ -351,6 +365,10 @@ export default async function HomePage() {
     getWeeklyHome(userId).catch(() => null),
     // The Draft's own state. Same posture as every other unit on this page.
     getDraftHome(userId).catch(() => null),
+    // THE NEXT BOARDS' OPENING DATES (tue-3), for a card with no board open yet:
+    // "Opens <date>" from the contest row, not the typed 'Opens Sep 8'.
+    nextOpensAt('weekly').catch(() => null),
+    nextOpensAt('draft').catch(() => null),
   ]);
 
   // THE WEEK NUMBERS ON THE SEASON STRIP ARE DERIVED, never typed. The strip
@@ -503,7 +521,8 @@ export default async function HomePage() {
           <BandHead top label="The Games" context="One account, one handle, every board"
             moreHref="/games" moreLabel="Games hub" />
           <GamesBand daily={dailyHome} yesterday={yesterday} pickem={pickem}
-            weekly={weeklyHome} draft={draftHome} />
+            weekly={weeklyHome} draft={draftHome}
+            weeklyNextOpensAt={weeklyNextOpensAt} draftNextOpensAt={draftNextOpensAt} />
         </Band>
 
         {/* Bands in ranker order - computed from `matches` every render. */}
@@ -519,6 +538,39 @@ export default async function HomePage() {
 
       <SubscribeBand shell={isShell} />
 
+      <SiteFooter />
+    </>
+  );
+}
+
+// =============================================================================
+// THE HOMEPAGE, PER THEME (tue-3)
+// =============================================================================
+/**
+ * HOME = LOBBY UNDER THE ARCADE. The arcade's front door is the Games lobby -
+ * the same render /games draws (components/games/GamesLobby), signed-out
+ * included: a web visitor gets the lobby's signed-out state, the Tonight card
+ * with Sign in, not the sign-in page. The dark page is untouched: FrontPage,
+ * exactly as before. arcadeFor() is ARCADE_THEME for everyone, or ARCADE_SHELL
+ * for a request from the app.
+ */
+export default async function HomePage({ searchParams }) {
+  const isShell = await resolveShellMode();
+  if (!arcadeFor(isShell)) return <FrontPage />;
+  // THE LOBBY, AS /games DRAWS IT (app/games/page.js): the same guard, the same
+  // read, the same <main>. The shell asks a signed-out reader to sign in; the
+  // web gets the lobby's signed-out state.
+  const sp = (await searchParams) ?? {};
+  const chip = normalizeChip(sp.pane);
+  const boardKey = sp.b == null ? null : String(sp.b);
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  requireSignInInShell({ isShell, userId, dest: '/' });
+  const v = await lobbyV3(userId, { chip, boardKey }).catch(() => null);
+  return (
+    <>
+      <GlobalHeaderServer activeNav="games" />
+      <LobbyMain v={v} chip={chip} userId={userId} isShell={isShell} />
       <SiteFooter />
     </>
   );

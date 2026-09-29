@@ -25,7 +25,9 @@ const subscribe = () => () => {};
 const getShell = () => isShellClient({ cookie: document.cookie });
 const getServerShell = () => false;
 
-export default function GlobalHeaderClient({ activeNav = null }) {
+// `arcade` comes from the SERVER page that renders this (arcadeOn() there) - a
+// client component cannot read the flag. tue-3.
+export default function GlobalHeaderClient({ activeNav = null, arcade = false }) {
   const shell = useSyncExternalStore(subscribe, getShell, getServerShell);
   const [me, setMe] = useState({ user: null, isMember: false });
   useEffect(() => {
@@ -43,6 +45,7 @@ export default function GlobalHeaderClient({ activeNav = null }) {
         activeNav={activeNav}
         shell={shell}
         isMember={!!me.isMember}
+        arcade={arcade}
       />
       <PushReRegister />
     </>

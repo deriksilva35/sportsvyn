@@ -36,7 +36,7 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { signOutTarget } from '@/lib/shell/signOutTarget';
 import { logOutPurchases } from '@/lib/shell/purchaseBridge';
-import { NAV, resolveActive, accountMenu, signinHrefFor } from '@/lib/nav';
+import { navFor, accountMenu, signinHrefFor } from '@/lib/nav';
 import Link from 'next/link';
 import Wordmark from '@/components/gridiron/Wordmark';
 import NavDropdown from '@/components/NavDropdown';
@@ -51,13 +51,16 @@ function shortLabel(email) {
 }
 
 export default function GlobalHeader({
-  activeNav = null, session = null, shell = false, isMember = false,
+  activeNav = null, arcadeNav = null, session = null, shell = false, isMember = false, arcade = false,
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
   const isAuthed = !!session?.user;
   const label = isAuthed ? shortLabel(session.user.email) : '';
-  const active = resolveActive(activeNav);
+  // THE ARCADE NAV (tue-3, lib/nav.js ARCADE_NAV): `arcade` is decided on the
+  // server (arcadeOn) and handed in - this is a client component and cannot read
+  // the flag itself.
+  const { items: NAV, active } = navFor(arcade, activeNav, arcadeNav);
   const signinHref = signinHrefFor(pathname);
 
   // SIGN OUT ALSO LOGS OUT OF REVENUECAT. The sim's SignOutButton has always
