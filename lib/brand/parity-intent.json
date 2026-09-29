@@ -1,3 +1,44 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-gc .oc-sp { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-gc .oc-sp { display }",
+      "after": "block"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-gc .oc-sp { font }",
+      "after": "600 8px ?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-gc .oc-sp { font-style }",
+      "after": "normal"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-gc .oc-sp { margin-top }",
+      "after": "2px"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-gc .oc-sp { overflow }",
+      "after": "hidden"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-gc .oc-sp { text-overflow }",
+      "after": "ellipsis"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-gc .oc-sp { white-space }",
+      "after": "nowrap"
+    }
+  ]
 }

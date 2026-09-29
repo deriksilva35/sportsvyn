@@ -346,9 +346,10 @@ test('EVERY POSTED BAT IS IN THE RENDERED PANEL, however many arms come first', 
   for (const b of NYY_BATS) assert.ok(panel.querySelector(`[data-player="${b.playerId}"]`), `${b.short} is in the panel`);
   assert.equal(panel.querySelectorAll('[data-kind="bat"]').length, 9);
   assert.equal(panel.querySelectorAll('[data-kind="arm"]').length, 12);
-  // Today's probable leads, and says so.
+  // Today's probable leads, and says so: "probable" until the club's card
+  // confirms him (starting: true from clubStarters), then "starting" (tue-4).
   assert.equal(panel.querySelector('[data-player]').dataset.probable, '1');
-  assert.match(panel.innerHTML, /Schlittler<\/b><small>today's starter<\/small>/);
+  assert.match(panel.innerHTML, /Schlittler<\/b><small>probable<\/small>/);
   assert.match(panel.innerHTML, /Judge<\/b><small>bats 1st<\/small>/);
   // THE HEADER COUNTS, beside the line that was already there.
   const head = el.querySelector('.rn-pan-h').textContent;

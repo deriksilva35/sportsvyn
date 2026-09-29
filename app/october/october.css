@@ -66,6 +66,7 @@
 .oc-gc .oc-mks i { width: 17px; height: 17px; border-radius: 50%; border: 1px solid var(--rule-dim); }
 .oc-gc b { display: block; font: 700 9px var(--font-mono); }
 .oc-gc small { display: block; font: 500 8px var(--font-mono); color: var(--muted-dim); margin-top: 1px; }
+.oc-gc .oc-sp { display: block; font: 600 8px var(--font-mono); font-style: normal; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .oc-gc.on { border-color: var(--volt); background: rgba(212, 255, 0, .06); }
 /* A LIVE GAME IS DIMMED AND UNPICKABLE, not removed - the reader may have a
    locked slot in it. */
