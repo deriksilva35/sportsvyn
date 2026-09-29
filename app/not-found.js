@@ -18,6 +18,7 @@
 
 import Link from 'next/link';
 import GlobalHeaderClient from '@/components/GlobalHeaderClient';
+import { arcadeOn } from '@/lib/brand/theme';
 import './daily/daily.css';
 
 export const metadata = { title: 'Not found - Sportsvyn' };
@@ -25,7 +26,7 @@ export const metadata = { title: 'Not found - Sportsvyn' };
 export default function NotFound() {
   return (
     <div className="daily-shell">
-      <GlobalHeaderClient />
+      <GlobalHeaderClient arcade={arcadeOn()} />
       <main className="daily-main" data-surface="ink" style={{ minHeight: '70vh' }}>
         <section className="hero">
           <div className="hero-eyebrow">404</div>

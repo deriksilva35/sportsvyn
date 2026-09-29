@@ -19,6 +19,7 @@ import { auth } from '@/auth';
 import { resolveShellMode } from '@/lib/shell/shell';
 import { getEntitlements } from '@/lib/membership';
 import GlobalHeader from '@/components/GlobalHeader';
+import { arcadeOn } from '@/lib/brand/theme';
 import OnboardingGate from '@/components/onboarding/OnboardingGate';
 import PushReRegister from '@/components/push/PushReRegister';
 
@@ -39,6 +40,7 @@ export default async function GlobalHeaderServer({ activeNav = null }) {
         activeNav={activeNav}
         shell={isShell}
         isMember={!!ent?.sim}
+        arcade={arcadeOn()}
       />
       {/* THE SHEET RIDES WITH THE CHROME. Mounting it in the ROOT LAYOUT would
           be tidier, but OnboardingGate calls auth() and cookies() in a root

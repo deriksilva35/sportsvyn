@@ -26,9 +26,8 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
-import { shellSigninHref } from '@/lib/shell/signinHref';
 import { lobbyV3 } from '@/lib/games/lobbyV3';
-import LobbyV3 from '@/components/games/LobbyV3';
+import LobbyMain from '@/components/games/LobbyMain';
 import { normalizeChip } from '@/lib/games/lobby';
 import './games.css';
 import './lobbyV3.css';
@@ -59,23 +58,9 @@ export default async function GamesPage({ searchParams }) {
   return (
     <>
       <GlobalHeaderServer activeNav="games" />
-      <main className="lob lv" data-surface="ink">
-        {v
-          ? (
-            <LobbyV3
-              v={v}
-              chip={chip}
-              signedIn={userId != null}
-              signinHref={(dest) => shellSigninHref(dest, isShell)}
-              userId={userId == null ? null : Number(userId)}
-            />
-          )
-          : (
-            <section className="mod">
-              <p className="muted">The lobby is having a moment. Try again shortly.</p>
-            </section>
-          )}
-      </main>
+      {/* THE LOBBY'S DRAWING IS SHARED with / under the arcade theme (tue-3,
+          components/games/LobbyMain); the guard and the read above stay here. */}
+      <LobbyMain v={v} chip={chip} userId={userId} isShell={isShell} />
       <SiteFooter />
     </>
   );

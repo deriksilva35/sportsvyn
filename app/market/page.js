@@ -26,6 +26,7 @@
  */
 
 import GlobalHeaderClient from '@/components/GlobalHeaderClient';
+import { arcadeOn } from '@/lib/brand/theme';
 import MarketClient from '@/components/market/MarketClient';
 import SiteFooter from '@/components/SiteFooter';
 import {
@@ -88,7 +89,7 @@ export async function MarketView({ pinned = null, leagueHeader = null }) {
   const data = await marketData();
   return (
     <MarketClient data={data} pinned={pinned} leagueHeader={leagueHeader}
-      header={<GlobalHeaderClient activeNav="market" />} />
+      header={<GlobalHeaderClient activeNav="market" arcade={arcadeOn()} />} />
   );
 }
 
