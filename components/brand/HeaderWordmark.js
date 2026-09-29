@@ -17,11 +17,17 @@
 // 1.36em draws the same 0.71em caps; the box is shorter because the bar and
 // the lockup's padding are gone.
 export const WORDMARK_EM = 1.36;
+// AND THE SAME BOX. The PNG's box was 1.8em tall (caps, macron, bar and the
+// lockup's padding); the headers' heights were built around it - the web bar
+// measured 63 px at 390, and 60 without this. The difference is padded back
+// evenly, so every header keeps its height and the letters sit centred in it.
+export const LOCKUP_BOX_EM = 1.8;
+const PAD_EM = Math.round(((LOCKUP_BOX_EM - WORDMARK_EM) / 2) * 1000) / 1000;
 export const WORDMARK_ON_DARK = '/brand/sportsvyn-header-wordmark-dark.svg';
 export const WORDMARK_ON_LIGHT = '/brand/sportsvyn-header-wordmark-light.svg';
 
 export default function HeaderWordmark({ display = 'block' }) {
-  const style = { height: `${WORDMARK_EM}em`, width: 'auto', display, verticalAlign: 'baseline' };
+  const style = { height: `${WORDMARK_EM}em`, width: 'auto', display, verticalAlign: 'baseline', padding: `${PAD_EM}em 0`, boxSizing: 'content-box' };
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element -- a fixed vector asset from public/, sized in em by its container */}
