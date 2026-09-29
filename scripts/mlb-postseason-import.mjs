@@ -3,7 +3,15 @@
 //
 //   set -a && . ./.env.local && set +a
 //   node scripts/mlb-postseason-import.mjs --prod 2026            # dry run (--bdl: the seeds)
-//   node scripts/mlb-postseason-import.mjs --prod --apply 2026    # Monday
+//   DATABASE_URL="$PROD_DATABASE_URL" node scripts/mlb-postseason-import.mjs --prod --apply 2026   # Monday
+//
+// --prod --apply NEEDS DATABASE_URL = PROD_DATABASE_URL (29 Sep). This script
+// writes matches through its own PROD connection, but October's days, The
+// Run's rounds and the series boards are opened by lib/ helpers that query
+// through lib/db.js - DATABASE_URL. Run with only --prod, the stages landed on
+// PROD while those helpers looked at DEV, found no series and opened nothing:
+// the Wild Card day went up staged but with no October card, no Run round and
+// no board. So the apply refuses unless both point at the same database.
 //   node scripts/mlb-postseason-import.mjs --apply --backtrack 2025   # DEV fixture
 //
 // ON --apply IT ALSO OPENS THE ROUND'S PICK'EM BOARD, which is the relay's
@@ -74,6 +82,12 @@ if (!seasons.length) { console.error('REFUSE: name a season, e.g. 2026'); proces
 
 const url = PROD ? process.env.PROD_DATABASE_URL : process.env.DATABASE_URL;
 if (!url) { console.error('REFUSE: database url missing in env'); process.exit(1); }
+if (PROD && APPLY && process.env.DATABASE_URL !== process.env.PROD_DATABASE_URL) {
+  console.error('REFUSE: --prod --apply opens October days, Run rounds and series boards through lib/db.js,');
+  console.error('which reads DATABASE_URL - and it is not PROD here. Run it as:');
+  console.error('  DATABASE_URL="$PROD_DATABASE_URL" node scripts/mlb-postseason-import.mjs --prod --apply <season>');
+  process.exit(1);
+}
 const sql = neon(url);
 console.log(`TARGET ${new URL(url).host} | FP ${crypto.createHash('sha256').update(url).digest('hex').slice(0, 12)} | ${APPLY ? 'APPLY' : 'DRY RUN'} | stage from ${BACKTRACK ? 'BACKTRACK' : BYSEEDS ? 'SEEDS (--bdl)' : 'statsapi'}`);
 
