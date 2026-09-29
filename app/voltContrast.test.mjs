@@ -112,7 +112,9 @@ const STEP3 = ['app/weekly/weekly.css', 'app/daily/daily.css', 'app/pickem/picke
   'app/games/lobbyV3.css', 'components/site-chrome.css',
   // batch 2 (mon-15): the scores and gridiron sheets
   'app/scores/scoresV2.css', 'components/gridiron/gridiron.css', 'components/gridiron/drivestrip.css',
-  'components/gridiron/pollboard.css', 'app/schedule/schedule.css', 'app/app/app-shell.css'];
+  'components/gridiron/pollboard.css', 'app/schedule/schedule.css', 'app/app/app-shell.css',
+  // mon-19: the sign-in buttons
+  'app/signin/signin.css'];
 // The lock BUTTONS are named explicitly (.expo-lock and .pcard .lock are badges -
 // structure); "you" is the reader's own selected row or column.
 const BUTTONISH = /(btn|cta|button|\.on\b|\.active\b|\.sel\b|\.pick\b|signin|start|primary|confirm|\.draft\b|\.play\b|-go\b|\.(wkv|pkv)-lock\b|--you\b|\.you\b|\.gg-cy\b)/;
@@ -152,4 +154,18 @@ test('EVERY VOLT FILL CARRIES DARK INK on the step-3 surfaces', () => {
   const g = arcadeGlobals(read('app/globals.css'));
   const bad = STEP3.flatMap((f) => lightOnVolt(read(f), g).map((s) => `${f}: ${s}`));
   assert.equal(bad.length, 0, `${bad.length} light-on-volt rule(s):\n${bad.join('\n')}`);
+});
+
+// THE SIGN-IN BUTTONS WEAR THE CLASS THE GUARD READS (mon-19). The CSS checks
+// above prove .si-cta is a volt fill with dark ink; this proves both of the
+// page's submit buttons carry it - a third button added without it is caught.
+test('both sign-in submit buttons are .si-cta (volt fill, navy ink under arcade)', () => {
+  const src = read('app/signin/SignInForm.js');
+  // THE SUBMIT BUTTONS: the third <button> is the "use a different email" text link.
+  const buttons = [...src.matchAll(/<button\s+type="submit"[\s\S]*?className="([^"]*)"/g)].map((m) => m[1]);
+  assert.equal(buttons.length, 2, 'Email me a code, Verify code');
+  for (const c of buttons) assert.match(c, /(^|\s)si-cta(\s|$)/);
+  assert.match(src, /import '\.\/signin\.css'/);
+  const css = read('app/signin/signin.css');
+  assert.match(css, /\.si-cta \{ background: var\(--tok-action\); color: var\(--tok-on-action\); \}/);
 });

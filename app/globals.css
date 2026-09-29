@@ -207,9 +207,15 @@
   --muted-dim: var(--tok-muted);
   --volt-dim: var(--tok-primary);
 }
-/* THE WORDMARKS ARE WHITE PNGs (light-on-dark). Until R3 swaps in the brand
-   kit's marks, they are drawn dark on the arcade page rather than vanishing. */
-:root[data-theme="arcade"] img[src*="wordmark"] { filter: brightness(0); }
+/* THE WORDMARK, ONE PER GROUND (R3, components/brand/HeaderWordmark). Both
+   render; the dark page shows the white-letter mark and the arcade page the
+   indigo one. !important because the mark's height and display ride its
+   inline style. (The brightness(0) filter that darkened the white PNG on the
+   arcade page is gone with the PNG - it would blacken the indigo mark.) */
+.wm-on-light { display: none !important; }
+:root[data-theme="arcade"] .wm-on-dark { display: none !important; }
+:root[data-theme="arcade"] .wm-on-light { display: block !important; }
+:root[data-theme="arcade"] .wm-on-light.wm-inline { display: inline-block !important; }
 
 /* Mockup-name aliases so bespoke page CSS can write var(--ink) etc.
    These are aliases, not duplicates — single source of truth above. */

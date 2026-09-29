@@ -1,0 +1,9 @@
+/* app/signin/signin.css - the sign-in page's two buttons under arcade (mon-19).
+
+   "Email me a code" and "Verify code" are Tailwind's bg-volt / text-ink, and
+   under arcade --volt reads NAVY and --ink reads the white page: a navy button
+   with white ink, which the volt grammar reserves for structure. A button is
+   the volt fill with navy ink. Tailwind v4's utilities sit in a cascade layer,
+   so these unlayered rules win without specificity games. Dark page untouched. */
+:where(:root[data-theme="arcade"]) .si-cta { background: var(--tok-action); color: var(--tok-on-action); }
+:where(:root[data-theme="arcade"]) .si-cta:hover { background: var(--tok-action); filter: brightness(.94); }

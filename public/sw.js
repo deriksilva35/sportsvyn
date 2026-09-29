@@ -19,8 +19,8 @@ self.addEventListener('push', (event) => {
     tag: data.tag || 'sportsvyn',
     renotify: true,
     data: { url: data.url || '/' },
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: '/brand/icon-192.png',
+    badge: '/brand/icon-192.png',
   }));
 });
 
