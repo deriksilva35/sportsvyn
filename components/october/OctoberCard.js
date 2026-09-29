@@ -80,6 +80,32 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
   const filled = view.slots.filter((s) => slots[s.slot]?.playerId).length;
   const toGo = view.slots.length - filled;
 
+  // ONE PICKER ROW, shared by the probable, the bullpen and the bats.
+  const prow = (p) => {
+    // ONE REASON A ROW IS SPENT NOW, and it is about THIS card: the
+    // player is already in one of your five. There used to be a second -
+    // "used <date>", the burn - and it is gone with the rule.
+    const mine = onCard.has(String(p.playerId));
+    return (
+      <button key={p.playerId} type="button"
+        className={`oc-prow${mine ? ' gone' : ''}`}
+        onClick={() => !mine && choose(p)} disabled={mine || !signedIn}
+        data-player={p.playerId}>
+        <span className={`oc-pb ${p.kind === 'arm' ? 'p' : 'b'}`}>{p.kind === 'arm' ? 'P' : 'B'}</span>
+        <span className="oc-who">
+          <b>{p.short}</b>
+          {/* THE MOCK'S OWN SUB-LINE, PLUS THE BATTING ORDER. A
+              posted card is the best thing this row can say about a
+              bat - "bats 4th" beats "RF" - and an arm with no
+              announced start says so rather than looking like a
+              confirmed starter. */}
+          <small>{p.team} · {mine ? 'on your card' : slotWord(p)}</small>
+        </span>
+        <span className="oc-val"><b>{p.ppg ?? '–'}</b><small>PPG</small></span>
+      </button>
+    );
+  };
+
   return (
     <div className="oc" data-phase={view.phase}>
       <Header view={view} slots={slots} />
@@ -194,30 +220,17 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
                 on a posted card is one club's nine plus three of the other's -
                 the rest were unreachable and unmentioned. The panel scrolls
                 instead (.oc-pan-b). */}
-            {pool.length ? pool.map((p) => {
-              // ONE REASON A ROW IS SPENT NOW, and it is about THIS card: the
-              // player is already in one of your five. There used to be a second -
-              // "used <date>", the burn - and it is gone with the rule.
-              const mine = onCard.has(String(p.playerId));
-              return (
-                <button key={p.playerId} type="button"
-                  className={`oc-prow${mine ? ' gone' : ''}`}
-                  onClick={() => !mine && choose(p)} disabled={mine || !signedIn}
-                  data-player={p.playerId}>
-                  <span className={`oc-pb ${p.kind === 'arm' ? 'p' : 'b'}`}>{p.kind === 'arm' ? 'P' : 'B'}</span>
-                  <span className="oc-who">
-                    <b>{p.short}</b>
-                    {/* THE MOCK'S OWN SUB-LINE, PLUS THE BATTING ORDER. A
-                        posted card is the best thing this row can say about a
-                        bat - "bats 4th" beats "RF" - and an arm with no
-                        announced start says so rather than looking like a
-                        confirmed starter. */}
-                    <small>{p.team} · {mine ? 'on your card' : slotWord(p)}</small>
-                  </span>
-                  <span className="oc-val"><b>{p.ppg ?? '–'}</b><small>PPG</small></span>
-                </button>
-              );
-            }) : <p className="oc-empty">{game ? 'The pool for this game is still building.' : 'Tap a game above.'}</p>}
+            {/* THE PROBABLE, THEN THE BULLPEN COLLAPSED, THEN THE BATS (tue-5). */}
+            {pool.length ? <>
+              {pool.filter((p) => !(p.kind === 'arm' && p.bullpen)).filter((p) => p.kind === 'arm').map(prow)}
+              {pool.some((p) => p.kind === 'arm' && p.bullpen) ? (
+                <details className="oc-more" data-group="bullpen">
+                  <summary>Bullpen · {pool.filter((p) => p.kind === 'arm' && p.bullpen).length}</summary>
+                  {pool.filter((p) => p.kind === 'arm' && p.bullpen).map(prow)}
+                </details>
+              ) : null}
+              {pool.filter((p) => p.kind !== 'arm').map(prow)}
+            </> : <p className="oc-empty">{game ? 'The pool for this game is still building.' : 'Tap a game above.'}</p>}
           </div>
         </div>
       </div>
