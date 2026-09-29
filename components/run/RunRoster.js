@@ -69,7 +69,7 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
           {/* "projected · bats 4th" MAY BREAK after the dot: at 390 the panel is
               ~166px and one line ellipsized away the batting slot itself. */}
           <small className={p.projected && !mine && !usedIn ? 'wrap' : undefined}>{mine ? 'on your nine' : usedIn ? `used in the ${roundWord(usedIn)}` : club?.started ? 'game started'
-            : p.projected ? <>projected ·<wbr /> {slotWord(p).replace(/^projected · /, '')}</> : slotWord(p)}</small>
+            : p.projected ? <>projected ·<wbr /> <span className="nw">{slotWord(p).replace(/^projected · /, '')}</span></> : slotWord(p)}</small>
         </span>
         <span className="rn-val"><b>{p.ppg ?? '–'}</b><small>PPG</small></span>
       </button>
