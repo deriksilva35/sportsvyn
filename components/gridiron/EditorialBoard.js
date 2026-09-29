@@ -7,6 +7,7 @@
 // PRESEASON · EDITION N kicker; no movement chips (Edition 0 has no prior).
 
 import { previewEntries, darkHorseCount } from '@/lib/gridiron/rankingsHub';
+import { editionKicker } from '@/lib/rankings/editionKicker';
 
 // Render markdown **bold** inline (the footer's team names) -> <strong>.
 function inlineBold(text) {
@@ -24,14 +25,14 @@ function inlineBold(text) {
  * Callers that pass no slice (the league Today pages, the rankings hub) render
  * exactly as before.
  */
-function Head({ title, slice, editionNumber }) {
+function Head({ title, slice, editionNumber, editionLabel }) {
   return (
     <div className="gi-instrument-h gi-ed-h">
       <span className="gi-ed-name">
         <span className="gi-ed-title">{title}</span>
         {slice ? <span className="gi-ed-slice">{slice}</span> : null}
       </span>
-      <span className="gi-ed-kick">Preseason · Edition {editionNumber}</span>
+      <span className="gi-ed-kick">{editionKicker(editionLabel, editionNumber)}</span>
     </div>
   );
 }
@@ -44,7 +45,7 @@ export default function EditorialBoard({ title, slice = null, board, preview = f
     const dh = darkHorseCount(board.entries);
     return (
       <section className="gi-instrument gi-ed" data-surface="ink">
-        <Head title={title} slice={slice} editionNumber={board.editionNumber} />
+        <Head title={title} slice={slice} editionNumber={board.editionNumber} editionLabel={board.editionLabel} />
         <ol className="gi-ed-list gi-ed-list--compact">
           {top.map((e) => (
             <li key={e.rank} className="gi-ed-row compact">
@@ -78,7 +79,7 @@ export default function EditorialBoard({ title, slice = null, board, preview = f
 
   return (
     <section className="gi-instrument gi-ed" data-surface="ink">
-      <Head title={title} slice={slice} editionNumber={board.editionNumber} />
+      <Head title={title} slice={slice} editionNumber={board.editionNumber} editionLabel={board.editionLabel} />
       <ol className="gi-ed-list">{rows}</ol>
       {board.footer && <div className="gi-ed-footer">{inlineBold(board.footer)}</div>}
     </section>
