@@ -47,7 +47,8 @@ export default async function RankingsHub({ leagueSlug, leagueLabel, searchParam
 
   return (
     <div className="gi" data-surface="ink">
-      <GlobalHeaderServer activeNav={leagueSlug} />
+      {/* The dark header lights the league; the arcade header lights RANKINGS. */}
+      <GlobalHeaderServer activeNav={leagueSlug} arcadeNav="rankings" />
 
       {/* ONE HEADER, EVERY LEAGUE PAGE. This hub used to hand-write three of
           the league's destinations, which is how a reader who tapped Rankings

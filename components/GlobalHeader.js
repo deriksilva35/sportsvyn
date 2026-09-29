@@ -51,7 +51,7 @@ function shortLabel(email) {
 }
 
 export default function GlobalHeader({
-  activeNav = null, session = null, shell = false, isMember = false, arcade = false,
+  activeNav = null, arcadeNav = null, session = null, shell = false, isMember = false, arcade = false,
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
@@ -60,7 +60,7 @@ export default function GlobalHeader({
   // THE ARCADE NAV (tue-3, lib/nav.js ARCADE_NAV): `arcade` is decided on the
   // server (arcadeOn) and handed in - this is a client component and cannot read
   // the flag itself.
-  const { items: NAV, active } = navFor(arcade, activeNav);
+  const { items: NAV, active } = navFor(arcade, activeNav, arcadeNav);
   const signinHref = signinHrefFor(pathname);
 
   // SIGN OUT ALSO LOGS OUT OF REVENUECAT. The sim's SignOutButton has always

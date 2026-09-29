@@ -23,7 +23,7 @@ import { arcadeOn } from '@/lib/brand/theme';
 import OnboardingGate from '@/components/onboarding/OnboardingGate';
 import PushReRegister from '@/components/push/PushReRegister';
 
-export default async function GlobalHeaderServer({ activeNav = null }) {
+export default async function GlobalHeaderServer({ activeNav = null, arcadeNav = null }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const [isShell, ent] = await Promise.all([
@@ -38,6 +38,7 @@ export default async function GlobalHeaderServer({ activeNav = null }) {
       <GlobalHeader
         session={session}
         activeNav={activeNav}
+        arcadeNav={arcadeNav}
         shell={isShell}
         isMember={!!ent?.sim}
         arcade={arcadeOn()}
