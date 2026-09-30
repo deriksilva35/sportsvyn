@@ -17,7 +17,7 @@
 
 import Link from 'next/link';
 import TeamMark from '@/components/team/TeamMark';
-import { SERVED, workingFor, signed } from '@/lib/rankings/servedBoard';
+import { SERVED, workingFor, powerRating, tiedRanks, rankLabel } from '@/lib/rankings/servedBoard';
 import { boardTitle, editionLine } from '@/lib/rankings/editionKicker';
 import './arcadeBoard.css';
 
@@ -43,9 +43,11 @@ function Mv({ previousRank, movement }) {
   return <span className="rka-mv hold" aria-label="unchanged">·</span>;
 }
 
-/** The score as the list stores it: signed SDs for the z model, 0-10 for the blend. */
-const power = (league, score) => (score == null ? '–'
-  : SERVED[league]?.model === 'z' ? signed(score, 2) : Number(score).toFixed(2));
+/** The z model's power as its 0-100 rating (wed-6); the blend's 0-10 score as stored. */
+function power(league, row) {
+  if (SERVED[league]?.model === 'z') return powerRating(row.inputs?.power ?? row.score) ?? '–';
+  return row.score == null ? '–' : Number(row.score).toFixed(2);
+}
 
 function Working({ league, row, weights, id }) {
   const w = workingFor(league, row, weights);
@@ -65,7 +67,7 @@ function Working({ league, row, weights, id }) {
           </div>
         ))}
         <div className="rka-work-line rka-work-total" data-line="total">
-          <dt>{w.total.label}</dt><dd><b>{w.total.value ?? '–'}</b></dd>
+          <dt>{w.total.label}</dt><dd><b>{w.total.value ?? '–'}</b>{w.total.z != null ? <small>{w.total.z} z</small> : null}</dd>
         </div>
       </dl>
     </div>
@@ -85,6 +87,10 @@ export default function ArcadeBoard({ leagueSlug, leagueLabel, board, all = fals
   const showAll = all || (openIdx >= 0 && !inTop(rows[openIdx]));
   const shown = showAll ? rows : rows.filter(inTop);
   const openKey = openIdx >= 0 ? open : null;
+  // TIES ARE READ OFF THE WHOLE BOARD, so "T-25" shows on the row above the
+  // cut even when its partner is the row just below it (which the top-N-by-rank
+  // rule draws anyway).
+  const tied = tiedRanks(rows.map((r) => r.rank));
 
   return (
     <main className="rka" data-league={leagueSlug} data-board={board?.list ?? 'none'}>
@@ -123,15 +129,15 @@ export default function ArcadeBoard({ leagueSlug, leagueLabel, board, all = fals
                   <Link className="rka-row" scroll={false}
                     href={boardHref(leagueSlug, { all: showAll, open: isOpen ? null : k })}
                     aria-expanded={isOpen} aria-controls={isOpen ? wid : undefined}
-                    aria-label={`${r.rank}. ${r.fullName ?? r.name}${isOpen ? ', hide the working' : ', show the working'}`}>
-                    <span className="rka-n">{r.rank}</span>
+                    aria-label={`${rankLabel(r.rank, tied)}. ${r.fullName ?? r.name}${isOpen ? ', hide the working' : ', show the working'}`}>
+                    <span className="rka-n">{rankLabel(r.rank, tied)}</span>
                     <Mv previousRank={r.previousRank} movement={r.rankMovement} />
                     <TeamMark primary={r.colors?.primary} secondary={r.colors?.secondary}
                       abbr={r.abbreviation} size={22} title={r.fullName ?? r.name} leagueSlug={leagueSlug}
                       className="rka-mk" />
                     <span className="rka-nm">{r.name}</span>
                     <span className="rka-rec">{r.record ?? '–'}</span>
-                    <span className="rka-pw">{power(leagueSlug, r.score)}</span>
+                    <span className="rka-pw">{power(leagueSlug, r)}</span>
                   </Link>
                   {isOpen ? <Working league={leagueSlug} row={r} weights={board.weights} id={wid} /> : null}
                 </li>

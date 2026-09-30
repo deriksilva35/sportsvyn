@@ -8,11 +8,11 @@
    next/font faces app/layout.js already loads, read through the arcade roles
    (--tok-font-body, --tok-font-num), so this sheet adds no font request.
 
-   THE SELECTED CHIP IS NAVY WITH VOLT INK, as the canvas draws it. That is the
-   opposite of the volt grammar's "navy is never a selected state", which
-   app/voltContrast.test.mjs enforces on its listed sheets only; this sheet is
-   deliberately not on that list and the contradiction is reported, not hidden.
-   Volt ink on navy passes the volt-on-light guard, which does read every sheet. */
+   THE SELECTED CHIP IS VOLT WITH NAVY INK (Derik, wed-6) - the volt grammar:
+   volt is the thing a reader pressed, navy is structure. This sheet is on
+   app/voltContrast.test.mjs's STEP3 list, so the no-navy-fill and
+   light-on-volt guards read it.
+ */
 
 .rka {
   background: var(--tok-page);
@@ -57,7 +57,7 @@
   color: var(--tok-primary);
   text-decoration: none;
 }
-.rka-chip.on { background: var(--tok-primary); border-color: var(--tok-primary); color: var(--tok-action); }
+.rka-chip.on { background: var(--tok-action); border-color: var(--tok-action); color: var(--tok-on-action); }
 .rka-chip.rka-all { margin-left: auto; }
 
 .rka-cols, .rka-row {

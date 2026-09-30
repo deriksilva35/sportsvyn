@@ -125,7 +125,9 @@ const STEP3 = ['app/weekly/weekly.css', 'app/daily/daily.css', 'app/pickem/picke
   'app/signin/signin.css',
   // tue-12: the market's filter chips (market.css was outside this list, and
   // its selected chip resolved navy under arcade)
-  'app/market/market.css'];
+  'app/market/market.css',
+  // wed-6: the rankings board (board A) - its selected chip is volt/navy
+  'components/rankings/arcadeBoard.css'];
 // The lock BUTTONS are named explicitly (.expo-lock and .pcard .lock are badges -
 // structure); "you" is the reader's own selected row or column.
 const BUTTONISH = /(btn|cta|button|\.on\b|\.active\b|\.sel\b|\.pick\b|signin|start|primary|confirm|\.draft\b|\.play\b|-go\b|\.(wkv|pkv)-lock\b|--you\b|\.you\b|\.gg-cy\b)/;

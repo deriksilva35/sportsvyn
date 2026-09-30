@@ -97,7 +97,7 @@ export default function TeamHero({ team, isAuthed = false, initialFollowing = fa
             </div>
             {p.score != null && (
               <div>
-                <div className="team-rank-composite">{Number(p.score).toFixed(1)}</div>
+                <div className="team-rank-composite">{p.rating ? p.score : Number(p.score).toFixed(1)}</div>
                 <div className="team-rank-composite-label">{p.label ?? 'Composite'}</div>
               </div>
             )}
