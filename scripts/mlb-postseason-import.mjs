@@ -31,7 +31,7 @@
 // Measured before a line of this was written: the 2025 postseason comes back
 // as 47 rows whose only round-ish field is season_type: "postseason". No
 // round, no series number, no game-in-series. So the games come from one
-// provider and the ROUND comes from somewhere else, and this script has three
+// provider and the ROUND comes from somewhere else, and this script has two
 // somewheres:
 //
 //   --bdl (DEFAULT, and the Monday path - our own bracket). The stored seeds (team_records.playoff_seed) and
@@ -41,10 +41,8 @@
 //   second provider and works while the bracket is being played. Backtested
 //   on the whole 2025 postseason on DEV: every game in its real round.
 //
-//   --statsapi (opt-in, until statsapi.js is deleted). The second provider's own
-//   gameType - F / D / L / W - asked per DAY, which is the only way that feed
-//   answers. A per-game fact from the competition's own schedule, no
-//   inference. Games it cannot place are REFUSED, named, and left unstaged.
+//   (--statsapi, the second provider's per-day gameType, left with
+//   lib/mlb/statsapi.js on 30 Sep: BDL is the only MLB provider now.)
 //
 //   --backtrack (a FINISHED bracket only). Derives the rounds from the shape
 //   of the tournament: the World Series is the one series whose clubs come
@@ -61,9 +59,8 @@
 import crypto from 'node:crypto';
 import { neon } from '@neondatabase/serverless';
 import { writeMlbMatches, slugsFor, gameDay } from '../lib/mlb/schedule.js';
-import { stageFromGameType, stagesByBacktrack, stagesBySeeds, STAGES, SERIES_IN_ROUND, STAGE_LABEL } from '../lib/mlb/postseason.js';
+import { stagesByBacktrack, stagesBySeeds, STAGES, SERIES_IN_ROUND, STAGE_LABEL } from '../lib/mlb/postseason.js';
 import { fetchMlbStandings } from '../lib/mlb/standings.js';
-import { ourAbbr, statsApiEnabled } from '../lib/mlb/statsapi.js';
 import { ensureSeriesBoard } from '../lib/mlb/seriesPickem.js';
 import { ensureOctoberDays } from '../lib/october/create.js';
 import { ensureRunRounds } from '../lib/run/create.js';
@@ -72,11 +69,7 @@ const args = process.argv.slice(2);
 const PROD = args.includes('--prod');
 const APPLY = args.includes('--apply');
 const BACKTRACK = args.includes('--backtrack');
-// --bdl (THE SEEDS) IS THE DEFAULT since the 25 Sep cutover; --statsapi is kept
-// as an explicit opt-in only until lib/mlb/statsapi.js is deleted, after the
-// first postseason game.
-const BYSTATSAPI = args.includes('--statsapi');
-const BYSEEDS = !BACKTRACK && !BYSTATSAPI;
+// --bdl (THE SEEDS) is the path; --backtrack is for a finished bracket.
 const seasons = args.filter((a) => !a.startsWith('--'));
 if (!seasons.length) { console.error('REFUSE: name a season, e.g. 2026'); process.exit(1); }
 
@@ -89,7 +82,7 @@ if (PROD && APPLY && process.env.DATABASE_URL !== process.env.PROD_DATABASE_URL)
   process.exit(1);
 }
 const sql = neon(url);
-console.log(`TARGET ${new URL(url).host} | FP ${crypto.createHash('sha256').update(url).digest('hex').slice(0, 12)} | ${APPLY ? 'APPLY' : 'DRY RUN'} | stage from ${BACKTRACK ? 'BACKTRACK' : BYSEEDS ? 'SEEDS (--bdl)' : 'statsapi'}`);
+console.log(`TARGET ${new URL(url).host} | FP ${crypto.createHash('sha256').update(url).digest('hex').slice(0, 12)} | ${APPLY ? 'APPLY' : 'DRY RUN'} | stage from ${BACKTRACK ? 'BACKTRACK' : 'SEEDS (--bdl)'}`);
 
 const [league] = await sql`SELECT id FROM leagues WHERE slug = 'mlb' LIMIT 1`;
 if (!league) { console.error('REFUSE: no mlb league row - run mlb-league-import first'); process.exit(1); }
@@ -102,51 +95,6 @@ async function fetchPostseason(season) {
     { headers: { Authorization: key } });
   if (!res.ok) throw new Error(`BDL ${res.status} on /mlb/v1/games`);
   return (await res.json())?.data ?? [];
-}
-
-/** statsapi's rounds for the days this slate actually spans. One call a day. */
-async function stagesFromStatsApi(rows) {
-  if (!statsApiEnabled(process.env)) {
-    console.error('REFUSE: MLB_STATSAPI is not on, and it is where the round comes from.');
-    console.error('        Use --backtrack for a finished bracket, or set the flag.');
-    process.exit(1);
-  }
-  const days = [...new Set(rows.map(gameDay).filter(Boolean))].sort();
-  const byKey = new Map();
-  for (const d of days) {
-    const j = await (await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${d}&hydrate=team`)).json();
-    let n = 0;
-    for (const dd of j?.dates ?? []) {
-      for (const g of dd?.games ?? []) {
-        const stage = stageFromGameType(g?.gameType);
-        if (!stage) continue;
-        // THE SAME JOIN THE PROBABLES USE, and the same three-club alias:
-        // AZ/ARI, CWS/CHW, ATH/OAK. Without it three clubs' games go unstaged
-        // and look like games the feed had not published yet.
-        const a = ourAbbr(g?.teams?.away?.team?.abbreviation);
-        const h = ourAbbr(g?.teams?.home?.team?.abbreviation);
-        if (!a || !h) continue;
-        const key = `${g.officialDate ?? dd.date}:${a}@${h}`;
-        if (!byKey.has(key)) byKey.set(key, []);
-        byKey.get(key).push({ gamePk: String(g.gamePk), stage, gameDate: g.gameDate ?? null });
-        n += 1;
-      }
-    }
-    console.log(`  statsapi ${d}: ${n} postseason games`);
-  }
-  const out = new Map(); const missed = [];
-  for (const r of rows) {
-    const key = `${gameDay(r)}:${up(r?.away_team?.abbreviation)}@${up(r?.home_team?.abbreviation)}`;
-    const hits = byKey.get(key) ?? [];
-    // A DOUBLEHEADER IS TWO GAMES UNDER ONE KEY, and in October both halves
-    // are the SAME round, so unlike the probables join there is nothing to
-    // disambiguate - but only when they agree. If they do not, we do not
-    // understand the day and the games stay unstaged.
-    const stages = [...new Set(hits.map((x) => x.stage))];
-    if (stages.length === 1) out.set(String(r.id), stages[0]);
-    else missed.push({ id: r.id, key, stages });
-  }
-  return { out, missed };
 }
 
 const up = (v) => String(v ?? '').trim().toUpperCase();
@@ -238,8 +186,7 @@ for (const season of seasons) {
   }
   const { out: stageById, missed } = BACKTRACK
     ? stagesFromBacktrack(rows)
-    : BYSEEDS ? await stagesFromSeeds(rows, season)
-      : await stagesFromStatsApi(rows);
+    : await stagesFromSeeds(rows, season);
 
   const slugs = slugsFor(rows);
   const counts = {}; const series = new Map();

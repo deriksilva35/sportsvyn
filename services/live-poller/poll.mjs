@@ -248,7 +248,7 @@ export async function writeKickoff(sql, matchId, iso) {
  * is live its starter is a matter of record and the card has stopped asking.
  *
  * THIS NO LONGER WAITS ON THE SECOND PROVIDER. It used to be read off the
- * statsapi schedule and game feed, behind MLB_STATSAPI; BDL carries the same
+ * statsapi schedule and game feed (removed 30 Sep); BDL carries the same
  * announcement (84 of 86 identical on PROD, 25 Sep) and carries it earlier.
  */
 const PROB_TTL_MS = 10 * 60 * 1000;
@@ -272,10 +272,9 @@ export async function mlbProbables(m, row, { now = new Date(), fetchOne = probab
  * appearances (the half, the outs, the runners, the count, the batter and the
  * pitcher), and before first pitch the starters and the posted batting orders.
  *
- * THE FLAG GATES THE SECOND PROVIDER AND NOTHING ELSE. With MLB_STATSAPI off
- * the play still arrives, the card still shows the half and the outs, and the
- * diamond is simply ABSENT - which is the whole contract lib/mlb/strip.js is
- * built on.
+ * WITHOUT THE PLATE APPEARANCES the play still arrives, the card still shows
+ * the half and the outs, and the diamond is simply ABSENT - which is the whole
+ * contract lib/mlb/strip.js is built on.
  *
  * NEVER THROWS. Both halves are enrichments on top of a scoreline that is
  * already correct without either.

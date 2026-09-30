@@ -465,8 +465,8 @@ function mlbFixture() {
     liveState: { period: 4, half: 'Mid', outs: 3, balls: 1, strikes: 2,
       bases: { first: true, second: true, third: false } },
   });
-  // A live game with NO bases at all - MLB_STATSAPI off, or a feed that came
-  // back without them. The diamond must be ABSENT, not three empty squares.
+  // A live game with NO bases at all - plate appearances that came back
+  // without them. The diamond must be ABSENT, not three empty squares.
   const blind = game(33, 'mlb', 'live', '2026-09-22T22:45:00Z', team(65, 'BOS'), team(66, 'CLE'), 0, 0, {
     liveState: { period: 2, half: 'Bottom', outs: 1, balls: 0, strikes: 0 },
   });
@@ -530,8 +530,7 @@ test('THE DIAMOND IS ABSENT, NOT EMPTY, WHEN THE BASES ARE UNKNOWN', () => {
   const h = html({ v: mlbFixture(), signedIn: true, zoneLabel: 'Eastern' });
   const diamonds = [...h.matchAll(/<span class="sv2-diamond"[^>]*aria-label="([^"]*)"/g)].map((m) => m[1]);
   // Card 31 draws one (1st and 3rd). Card 32 is between halves and drops it
-  // with the count. Card 33 has no bases at all - with MLB_STATSAPI off that
-  // is EVERY game, and three outlines would be "nobody on" claimed on every
+  // with the count. Card 33 has no bases at all - and three outlines would be "nobody on" claimed on every
   // pitch of every game on no evidence.
   assert.deepEqual(diamonds, ['1st, 3rd']);
   // Second on top, then third, then first - the mock's own DOM order.

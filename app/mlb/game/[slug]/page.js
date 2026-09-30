@@ -228,9 +228,9 @@ export default async function MlbGamePage({ params, searchParams }) {
             own caption, and they are one block because they answer one
             question - what is the state of this game right now.
 
-            PRE-GAME IT NEEDS THE STATSAPI SEAM. With MLB_STATSAPI off the
-            probables are unknown and the block does not render, which is
-            correct rather than degraded: we do not know them. */}
+            PRE-GAME IT NEEDS THE PROBABLES (the lineups feed). Until they are
+            announced the block does not render, which is correct rather
+            than degraded: we do not know them. */}
         {live && cells ? (
           <section className="mg-mod">
             <div className="mg-eb">AT BAT</div>

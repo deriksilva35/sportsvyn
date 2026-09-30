@@ -74,9 +74,9 @@ function TeamRow({ t, score, trail, record, pick, pct, scored, rank = null, hasB
  * THE RUNNERS DIAMOND. Three squares, filled from the bases.
  *
  * IT RENDERS NOTHING AT ALL WHEN THE BASES ARE UNKNOWN, and that is the whole
- * contract: the scores feed carries no runners at all, so with MLB_STATSAPI
- * off `bases` is null on every game, and three empty squares would be a claim
- * ("nobody on") made on every pitch of every game on no evidence.
+ * contract: the scores feed carries no runners, so a game whose plate
+ * appearances have not come back has `bases` null, and three empty squares
+ * would be a claim ("nobody on") made on no evidence.
  * Known-and-empty is a different thing and DOES draw - three outlines.
  *
  * SECOND IS DRAWN ABOVE, first right and third left, which is the diamond as a

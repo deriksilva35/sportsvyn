@@ -189,7 +189,7 @@ test('THE AT BAT MODULE is the count, the diamond and who is in the box', async 
 test('THE DIAMOND IS ABSENT, NOT EMPTY, ON THE GAME PAGE TOO', async () => {
   const g = LIVE(); delete g.liveState.bases;
   const h = await render(g);
-  assert.doesNotMatch(h, /mg-dia/, 'with MLB_STATSAPI off this is EVERY game');
+  assert.doesNotMatch(h, /mg-dia/, 'no bases read, no diamond');
   // The rest of the module survives - the count and the outs come from the
   // scores feed, not from the second provider.
   assert.match(h, /<div class="big">2 out<small>Top 7th<\/small><\/div>/);
