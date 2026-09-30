@@ -21,6 +21,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { servedList } from '../lib/rankings/servedBoard.js';
 import {
   boardHref, previewEntries, darkHorseCount, RANKING_TABS, resolveActiveTab,
 } from '../lib/gridiron/rankingsHub.js';
@@ -47,8 +48,8 @@ test('the homepage renders the real EditorialBoard, not a homepage variant', () 
 });
 
 test('the boards are fed by the same reader the league pages use', () => {
-  assert.match(page, /getEditorialBoard\('nfl-power', 'nfl'\)/, 'NFL Power Rankings');
-  assert.match(page, /getEditorialBoard\('cfb-top25', 'cfb'\)/, 'CFB Top 25');
+  assert.match(page, /getEditorialBoard\(servedList\('nfl'\), 'nfl'\)/, 'NFL Power Rankings');
+  assert.match(page, /getEditorialBoard\(servedList\('cfb'\), 'cfb'\)/, 'CFB Top 25');
   // THE OTHER CALLER MOVED. This used to name the Today page, which read both
   // slugs through getEditorialBoard. v1.3 relay B replaced that page's boards:
   // nfl-power is now the league landing's RAIL, read through leagueRail.js, and
@@ -57,7 +58,8 @@ test('the boards are fed by the same reader the league pages use', () => {
   // The rule is unchanged - two surfaces must not drift about which list they
   // mean - so it now pins the slug against its real co-consumer.
   const rail = stripComments(src('lib/gridiron/leagueRail.js'));
-  assert.match(rail, /rl\.slug = 'nfl-power'/,
+  // tue-13: both name it through servedList('nfl') (nfl-power-z), never a literal.
+  assert.match(rail, /rl\.slug = \$\{servedList\('nfl'\)\}/,
     'the landing rail and the homepage must name the same power-rankings list');
 });
 
@@ -73,7 +75,7 @@ test('the stylesheet the component needs is actually loaded', () => {
 // ---------------------------------------------------------------------------
 
 test('each board read is caught independently and cannot fail the page', () => {
-  for (const call of ["getEditorialBoard('nfl-power', 'nfl')", "getEditorialBoard('cfb-top25', 'cfb')"]) {
+  for (const call of ["getEditorialBoard(servedList('nfl'), 'nfl')", "getEditorialBoard(servedList('cfb'), 'cfb')"]) {
     const i = page.indexOf(call);
     assert.ok(i > -1, `${call} must be present`);
     assert.match(page.slice(i, i + call.length + 24), /\.catch\(\(\) => null\)/,
@@ -111,8 +113,8 @@ test('THE BOARDS MOVED INTO THEIR LEAGUE BANDS', () => {
   assert.ok(!/<RailBoards/.test(page), 'RailBoards is gone with it');
   // The boards are still READ - the relay's rule was that the carpentry changes
   // and the reads survive.
-  assert.match(page, /getEditorialBoard\('nfl-power', 'nfl'\)/);
-  assert.match(page, /getEditorialBoard\('cfb-top25', 'cfb'\)/);
+  assert.match(page, /getEditorialBoard\(servedList\('nfl'\), 'nfl'\)/);
+  assert.match(page, /getEditorialBoard\(servedList\('cfb'\), 'cfb'\)/);
   // And they are rendered inside a band, not a rail.
   assert.match(page, /boardTitle=\{isCfb \? 'The Sportsvyn 25' : 'Power Rankings'\}/);
 });
@@ -159,10 +161,13 @@ test('each board links to a full-rankings route that EXISTS', () => {
 test('the tab keys the links carry are real tabs on those hubs', () => {
   // A href to ?tab=power on a hub with no 'power' tab silently falls back to
   // the first tab - the link would "work" and land on the wrong board.
-  assert.equal(resolveActiveTab(RANKING_TABS.nfl, 'power').list, 'nfl-power',
+  // tue-13: both sides read the SERVED list (nfl-power-z / cfb-top25).
+  assert.equal(resolveActiveTab(RANKING_TABS.nfl, 'power').list, servedList('nfl'),
     'the NFL link must land on the board the homepage previewed');
-  assert.equal(resolveActiveTab(RANKING_TABS.cfb, 'top25').list, 'cfb-top25',
+  assert.equal(resolveActiveTab(RANKING_TABS.cfb, 'top25').list, servedList('cfb'),
     'the CFB link must land on the board the homepage previewed');
+  assert.match(page, /getEditorialBoard\(servedList\('nfl'\), 'nfl'\)/, 'and the preview reads it');
+  assert.match(page, /getEditorialBoard\(servedList\('cfb'\), 'cfb'\)/);
 });
 
 // ---------------------------------------------------------------------------
