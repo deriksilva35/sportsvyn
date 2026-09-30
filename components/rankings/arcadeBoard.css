@@ -78,21 +78,31 @@
 
 .rka-rows { list-style: none; margin: 0; padding: 0 16px; }
 .rka-li { border-bottom: 1px solid var(--tok-line); }
+/* TOP-ALIGNED, NOT CENTRED (wed-9): a long team name wraps to a second line
+   rather than ellipsizing, and the rank, movement, mark, record and number
+   stay level with its FIRST line. Every cell shares one 22px line box - the
+   mark's own height - so "first line" is the same 22px band in every column,
+   whatever the face. 13px + 22px + 13px keeps a one-line row at 48px. */
 .rka-row {
   min-height: 48px;
+  align-items: start;
+  padding: 13px 0;
   color: var(--tok-primary);
   text-decoration: none;
 }
+.rka-row > * { line-height: 22px; }
 .rka-row:focus-visible { outline: 2px solid var(--tok-primary); outline-offset: 2px; }
-.rka-n { font: 16px/1 var(--tok-font-num); color: var(--tok-primary); }
+.rka-n { font: 16px/22px var(--tok-font-num); color: var(--tok-primary); }
 .rka-mv { font-size: 12px; font-variant-numeric: tabular-nums; text-align: center; color: var(--tok-muted); }
 .rka-mv.up { color: var(--tok-up); }
 .rka-mv.dn { color: var(--tok-down); }
 .rka-mv.new { font-size: 10px; letter-spacing: .02em; }
-.rka-mk { display: block; }
+.rka-mk { display: block; height: 22px; }
 .rka-nm {
   font-size: 15px; font-weight: 700;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  /* the whole name, always: wrap between words, and break a single word only
+     if it cannot fit at all */
+  overflow-wrap: anywhere;
 }
 .rka-rec { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--tok-muted); text-align: right; }
 .rka-pw { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }

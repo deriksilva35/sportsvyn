@@ -79,7 +79,7 @@ function TeamsNfl({ v }) {
             // two rows can carry the same number and a rank key would collide.
             <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r} leagueSlug={v.league}
               followed={v.followed.has(r.teamId)} value={powerRating(r.inputs?.power ?? r.score)}
-              right={<Movement previousRank={r.previousRank} movement={r.rankMovement} />}
+              right={<Movement previousRank={r.previousRank} movement={r.rankMovement} label={r.movementLabel} />}
               expand={<RowInputs inputs={r.inputs} />} />
           ))}
         </Module>
@@ -120,7 +120,7 @@ function TeamsCfb({ v }) {
           {t.ours.map((r) => (
             <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r} leagueSlug={v.league}
               followed={v.followed.has(r.teamId)} sub={r.vsAp?.text ?? null} value={r.score}
-              right={<Movement previousRank={r.previousRank} movement={r.rankMovement} />}
+              right={<Movement previousRank={r.previousRank} movement={r.rankMovement} label={r.movementLabel} />}
               expand={<RowInputs inputs={r.inputs} />} />
           ))}
         </Module>

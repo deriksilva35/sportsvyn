@@ -34,8 +34,15 @@ export function boardHref(league, { all = false, open = null } = {}) {
 
 const rowKey = (r) => r.slug ?? (r.teamId == null ? null : String(r.teamId));
 
-/** The movement cell: a number iff the team was on the previous edition. */
-function Mv({ previousRank, movement }) {
+/**
+ * The movement cell: a number iff the team was on the previous edition.
+ * THREE DIFFERENT NOTHINGS (wed-9): movement 0 is a hold ("·"); a team the
+ * previous edition did not carry is 'new'; and an edition that stored NO
+ * movement at all (movement_label NULL - the CFB gate when the baseline was
+ * model-only) draws an EMPTY cell, because there is nothing to compare.
+ */
+function Mv({ previousRank, movement, label }) {
+  if (previousRank == null && label == null) return <span className="rka-mv none" aria-hidden="true" />;
   if (previousRank == null) return <span className="rka-mv new" aria-label="new this edition">new</span>;
   const m = Number(movement ?? 0);
   if (m > 0) return <span className="rka-mv up" aria-label={`up ${m}`}>+{m}</span>;
@@ -139,7 +146,7 @@ export default function ArcadeBoard({ leagueSlug, leagueLabel, board, all = fals
                     aria-expanded={isOpen} aria-controls={isOpen ? wid : undefined}
                     aria-label={`${rankLabel(r.rank, tied)}. ${r.fullName ?? r.name}${isOpen ? ', hide the working' : ', show the working'}`}>
                     <span className="rka-n">{rankLabel(r.rank, tied)}</span>
-                    <Mv previousRank={r.previousRank} movement={r.rankMovement} />
+                    <Mv previousRank={r.previousRank} movement={r.rankMovement} label={r.movementLabel} />
                     <TeamMark primary={r.colors?.primary} secondary={r.colors?.secondary}
                       abbr={r.abbreviation} size={22} title={r.fullName ?? r.name} leagueSlug={leagueSlug}
                       className="rka-mk" />

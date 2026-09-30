@@ -101,7 +101,11 @@ export default function RowInputs({ inputs = null, total = 5 }) {
 
 /** The movement glyph, and the rule for when there is one. Exported so the
  *  modules cannot each invent their own threshold. */
-export function Movement({ previousRank = null, movement = null }) {
+export function Movement({ previousRank = null, movement = null, label = undefined }) {
+  // NO MOVEMENT STORED (wed-9): a row whose edition stored none - movement
+  // label NULL, not 'new' - draws an EMPTY cell, distinct from a hold (0).
+  // `label` undefined is a caller that does not carry it, and keeps the old rule.
+  if (previousRank == null && label === null) return <span className="rk-mv none" aria-hidden="true" />;
   // A GLYPH IFF previous_rank IS SET. previousRank answers "was this team on
   // the last edition" and movement answers "which way" - a team that HELD its
   // rank has movement 0 and must show a hold, which is not the same as the
