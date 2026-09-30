@@ -1,4 +1,5 @@
-// components/gridiron/PowerZBoard.js - the nfl-power-z table (hidden tab, 27 Sep).
+// components/gridiron/PowerZBoard.js - the nfl-power-z table: the dark page's
+// NFL Power tab (served since tue-13; the arcade page draws ArcadeBoard).
 // Server component; the numbers arrive computed (lib/rankings/nflPowerZ.js).
 
 const sign = (x, d = 1) => (x == null ? '—' : `${x > 0 ? '+' : x < 0 ? '−' : ''}${Math.abs(x).toFixed(d)}`);

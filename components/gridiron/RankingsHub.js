@@ -16,11 +16,36 @@ import PlayoffPicture from '@/components/gridiron/PlayoffPicture';
 import PollBoard from '@/components/gridiron/PollBoard';
 import { pollTable, latestWeek } from '@/lib/cfb/rankings';
 import '@/components/gridiron/pollboard.css';
+import { resolveShellMode } from '@/lib/shell/shell';
+import { arcadeFor } from '@/lib/brand/theme';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
+import { SERVED, getServedBoard } from '@/lib/rankings/servedBoard';
+import ArcadeBoard from '@/components/rankings/ArcadeBoard';
 
 export default async function RankingsHub({ leagueSlug, leagueLabel, searchParams }) {
   const sp = (await searchParams) ?? {};
   const tabs = RANKING_TABS[leagueSlug] ?? [];
   const active = resolveActiveTab(tabs, sp.tab);
+
+  // THE ARCADE BOARD (board A, tue-13). Under data-theme="arcade" the league's
+  // SERVED board - nfl-power-z, cfb-top25 - is the page, drawn as the canvas
+  // draws it; the dark page below is exactly what it was. The flag is the
+  // deployment's, or ARCADE_SHELL for a request carrying the shell cookie, the
+  // same per-request answer /scores uses. Only a bare URL or the served tab's
+  // own key opens it: every other ?tab= keeps its board, so boardHref links to
+  // MVP, Heisman or the polls still land somewhere under arcade.
+  const served = SERVED[leagueSlug] ?? null;
+  const isShell = await resolveShellMode().catch(() => false);
+  if (served && arcadeFor(isShell) && (sp.tab == null || sp.tab === served.tab)) {
+    const [board, tz] = await Promise.all([getServedBoard(leagueSlug).catch(() => null), readViewerTz()]);
+    return (
+      <div className="gi" data-surface="ink">
+        <GlobalHeaderServer activeNav={leagueSlug} arcadeNav="rankings" />
+        <ArcadeBoard leagueSlug={leagueSlug} leagueLabel={leagueLabel} board={board}
+          all={one(sp.all) === '1'} open={one(sp.open) ?? null} tz={tz ?? undefined} />
+      </div>
+    );
+  }
 
   let board = null;
   let contenders = [];
@@ -87,6 +112,8 @@ export default async function RankingsHub({ leagueSlug, leagueLabel, searchParam
     </div>
   );
 }
+
+const one = (v) => (Array.isArray(v) ? v[0] : v);
 
 /**
  * The newest season we hold a poll for. Read from the rankings themselves

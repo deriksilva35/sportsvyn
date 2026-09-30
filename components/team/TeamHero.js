@@ -5,6 +5,7 @@
 
 import Flag from './Flag';
 import FollowStar from './FollowStar';
+import { heroPower } from './heroPower.js';
 
 function coachShortName(name) {
   if (!name) return null;
@@ -23,7 +24,10 @@ function MovementChip({ movement }) {
   return <span className="team-rank-mvmt down">▼ Down {Math.abs(movement)}</span>;
 }
 
-export default function TeamHero({ team, isAuthed = false, initialFollowing = false, isShell = false }) {
+export default function TeamHero({ team, isAuthed = false, initialFollowing = false, isShell = false, power = undefined }) {
+  // The served list's numbers for a gridiron team, the columns for the rest -
+  // the rule, and why, is in heroPower.js.
+  const p = heroPower(team, power);
   return (
     <section className="team-hero">
       <div className="team-hero-left">
@@ -83,23 +87,23 @@ export default function TeamHero({ team, isAuthed = false, initialFollowing = fa
         </div>
       </div>
 
-      {team.current_power_rank != null && (
+      {p != null && p.rank != null && (
         <div className="team-rank-block">
           <div className="team-rank-kicker">Sportsvyn Power Ranking</div>
           <div className="team-rank-num-row">
             <div className="team-rank-num">
               <span className="hash">#</span>
-              {team.current_power_rank}
+              {p.rank}
             </div>
-            {team.current_power_score != null && (
+            {p.score != null && (
               <div>
-                <div className="team-rank-composite">{Number(team.current_power_score).toFixed(1)}</div>
-                <div className="team-rank-composite-label">Composite</div>
+                <div className="team-rank-composite">{Number(p.score).toFixed(1)}</div>
+                <div className="team-rank-composite-label">{p.label ?? 'Composite'}</div>
               </div>
             )}
           </div>
           <div className="team-rank-mvmt-row">
-            <MovementChip movement={team.current_rank_movement} />
+            <MovementChip movement={p.movement} />
           </div>
         </div>
       )}
