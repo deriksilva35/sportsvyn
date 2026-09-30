@@ -366,3 +366,53 @@ test('THE PANEL SCROLLS - overflow-y auto, max-height to the viewport', () => {
   assert.doesNotMatch(rule, /overflow: hidden/);
   assert.doesNotMatch(readFileSync(new URL('./RunRoster.js', import.meta.url), 'utf8'), /players\.slice\(/);
 });
+
+test('THE CLUB TILE names its G1 starter under "3 · vs CHW", TBA when BDL has nobody (tue-5)', () => {
+  const v = SETTING();
+  v.clubs = v.clubs.map((c) => (c.abbr === 'TB' ? { ...c, probableShort: 'McClanahan' } : c));
+  const d = new JSDOM(`<body>${html({ view: v, signedIn: true })}</body>`).window.document;
+  const tile = (abbr) => d.querySelector(`[data-club="${abbr}"]`);
+  assert.equal(tile('TB').querySelector('small').textContent, '3 · vs CHW');
+  assert.equal(tile('TB').querySelector('.rn-sp').textContent, 'McClanahan');
+  assert.equal(tile('CHW').querySelector('.rn-sp').textContent, 'TBA');
+  assert.equal(tile('CHW').querySelector('.rn-sp').dataset.probable, '0');
+  assert.equal(tile('TEX').querySelector('.rn-sp'), null, 'a bye has no starter to name');
+});
+
+test('THE PANEL: G1 · G2, the Bullpen collapsed, the nine in order, the Bench collapsed; the header says where the nine came from (tue-5)', () => {
+  const v = SETTING();
+  const A = (id, short, o) => ({ playerId: id, short, name: short, kind: 'arm', team: 'TB', teamId: 1, position: 'SP', ppg: 10, ...o });
+  const B = (id, short, o) => ({ playerId: id, short, name: short, kind: 'bat', team: 'TB', teamId: 1, position: 'OF', ppg: 5, ...o });
+  v.clubs = v.clubs.map((c) => (c.abbr === 'TB' ? { ...c, lineupNote: "projected from Sun's game" } : c));
+  v.pool = { byClub: { 1: [
+    A('a1', 'S. McClanahan', { group: 'lead', probable: true, gameNo: 1 }),
+    A('a2', 'D. Rasmussen', { group: 'lead', probable: true, gameNo: 2 }),
+    A('a3', 'P. Fairbanks', { group: 'bullpen', position: 'RP' }),
+    B('b1', 'Y. Díaz', { group: 'nine', order: 1, projected: true }),
+    B('b2', 'J. Caminero', { group: 'nine', order: 2, projected: true }),
+    B('b3', 'C. Walls', { group: 'bench' }),
+  ] } };
+  const d = new JSDOM(`<body>${html({ view: v, signedIn: true })}</body>`).window.document;
+  const body = d.querySelector('.rn-pan-b');
+  const top = [...body.children].map((e) => e.tagName === 'DETAILS' ? `[${e.dataset.group}]` : e.querySelector('b').textContent);
+  assert.deepEqual(top, ['S. McClanahan', 'D. Rasmussen', '[bullpen]', 'Y. Díaz', 'J. Caminero', '[bench]']);
+  const sub = (id) => body.querySelector(`[data-player="${id}"] small`).textContent;
+  assert.equal(sub('a1'), 'G1 · probable');
+  assert.equal(sub('a2'), 'G2 · probable');
+  assert.equal(sub('b1'), 'projected · bats 1st');
+  for (const g of ['bullpen', 'bench']) {
+    const det = body.querySelector(`details[data-group="${g}"]`);
+    assert.equal(det.hasAttribute('open'), false, `${g} starts collapsed`);
+    assert.match(det.querySelector('summary').textContent, /^(Bullpen|Bench) · 1$/);
+  }
+  assert.equal(body.querySelector('details[data-group="bench"] [data-player="b3"] small').textContent, 'OF', 'the bench row shows its position, with PPG beside it');
+  assert.match(d.querySelector('.rn-pan-h small').textContent, /projected from Sun's game/);
+  // POSTED: the same rows, the real card - "G1 · starting", "bats 1st".
+  v.pool.byClub[1] = v.pool.byClub[1].map((p) => (p.playerId === 'a1' ? { ...p, starting: true } : p.kind === 'bat' && p.group === 'nine' ? { ...p, projected: false } : p));
+  v.clubs = v.clubs.map((c) => (c.abbr === 'TB' ? { ...c, lineupPosted: true, lineupNote: 'lineup posted 9:12 AM PT' } : c));
+  const d2 = new JSDOM(`<body>${html({ view: v, signedIn: true })}</body>`).window.document;
+  assert.equal(d2.querySelector('[data-player="a1"] small').textContent, 'G1 · starting');
+  assert.equal(d2.querySelector('[data-player="a2"] small').textContent, 'G2 · probable', 'G2 is never starting today');
+  assert.equal(d2.querySelector('[data-player="b1"] small').textContent, 'bats 1st');
+  assert.match(d2.querySelector('.rn-pan-h small').textContent, /lineup posted 9:12 AM PT/);
+});

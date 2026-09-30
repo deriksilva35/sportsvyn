@@ -72,6 +72,8 @@
 .rn-pan-h .rn-mk { margin: 0; }
 .rn-tc b { display: block; font: 700 9px var(--font-mono); }
 .rn-tc small { display: block; font: 600 8px var(--font-mono); color: var(--muted-dim); }
+.rn-tc .rn-sp { display: block; font: 600 8px var(--font-mono); font-style: normal; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rn-tc .rn-sp[data-probable="0"] { color: var(--muted-dim); }
 .rn-tc.on { border-color: var(--volt); background: rgba(212, 255, 0, .06); }
 /* A BYE CLUB IS DIMMED AND LABELLED, not hidden - the reader has to be able
    to see who is waiting for them in the next round. */
@@ -143,6 +145,11 @@
 .rn-pan-b { flex: 1; overflow-y: auto; overflow-x: hidden; max-height: 52vh; -webkit-overflow-scrolling: touch; }
 .rn-pan-n { color: var(--muted-dim); }
 .rn-prow { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-bottom: 1px solid var(--rule-dim); width: 100%; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.rn-more { border-bottom: 1px solid var(--rule-dim); }
+.rn-more > summary { cursor: pointer; padding: 8px 9px; font: 700 9px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); list-style: none; }
+.rn-more > summary::-webkit-details-marker { display: none; }
+.rn-more > summary::after { content: ' +'; }
+.rn-more[open] > summary::after { content: ' −'; }
 .rn-prow:last-child { border-bottom: 0; }
 /* A SPENT PLAYER IS DIMMED, NEVER HIDDEN - the reader has to be able to see
    where their October went. */
@@ -154,6 +161,8 @@
 .rn-who { min-width: 0; }
 .rn-who b { display: block; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rn-who small { display: block; color: var(--muted); font: 500 9px var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rn-who small.wrap { white-space: normal; }
+.rn-who small .nw { white-space: nowrap; }
 .rn-val { margin-left: auto; text-align: right; }
 .rn-val b { display: block; font: 700 14px var(--font-mono); }
 .rn-val small { font: 600 8px var(--font-mono); color: var(--muted-dim); }

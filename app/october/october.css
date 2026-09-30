@@ -147,6 +147,11 @@
    max-height is in the viewport's units because the card above it is a fixed
    height and the panel is the only part that can grow. */
 .oc-pan-b { flex: 1; overflow-y: auto; overflow-x: hidden; max-height: 52vh; -webkit-overflow-scrolling: touch; }
+.oc-more { border-bottom: 1px solid var(--rule-dim); }
+.oc-more > summary { cursor: pointer; padding: 8px 9px; font: 700 9px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); list-style: none; }
+.oc-more > summary::-webkit-details-marker { display: none; }
+.oc-more > summary::after { content: ' +'; }
+.oc-more[open] > summary::after { content: ' −'; }
 .oc-prow { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-bottom: 1px solid var(--rule-dim); width: 100%; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .oc-prow:last-child { border-bottom: 0; }
 /* A SPENT PLAYER IS DIMMED, NEVER HIDDEN - the reader has to be able to see

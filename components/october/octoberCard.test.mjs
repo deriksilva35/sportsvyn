@@ -682,3 +682,20 @@ test('THE ARM: "probable" until his club posts, "starting" after; the tile names
   assert.match(h, /Z\. Wheeler<\/b><small>PHI · starting<\/small>/);
   assert.match(h, /<em class="oc-sp" data-probables="1">Wheeler v Sale<\/em>/, 'the tile says who is pitching');
 });
+
+test('THE ARM PICKER: the probable first, every other arm in a collapsed Bullpen, then the bats (tue-5)', () => {
+  const v = PICKING();
+  v.pool = { byGame: { 2: [
+    { playerId: '90', short: 'Z. Wheeler', name: 'Zack Wheeler', kind: 'arm', team: 'PHI', position: 'SP', matchId: 2, ppg: 18.4, probable: true, order: null },
+    { playerId: '96', short: 'A. Nola', name: 'Aaron Nola', kind: 'arm', team: 'PHI', position: 'SP', matchId: 2, ppg: 12.0, bullpen: true, order: null },
+    { playerId: '98', short: 'J. Alvarado', name: 'Jose Alvarado', kind: 'arm', team: 'PHI', position: 'RP', matchId: 2, ppg: 3.1, bullpen: true, order: null },
+    { playerId: '92', short: 'K. Schwarber', name: 'Kyle Schwarber', kind: 'bat', team: 'PHI', position: 'DH', matchId: 2, ppg: 9.1, order: null },
+  ] } };
+  const h = html({ view: v, signedIn: true });
+  const i = (s) => h.indexOf(s);
+  assert.ok(i('Z. Wheeler') < i('<details class="oc-more" data-group="bullpen">'), 'the probable leads');
+  assert.ok(i('<details class="oc-more" data-group="bullpen">') < i('A. Nola') && i('J. Alvarado') < i('</details>'), 'both other arms are inside the Bullpen');
+  assert.ok(i('</details>') < i('K. Schwarber'), 'the bats follow');
+  assert.match(h, /<summary>Bullpen · 2<\/summary>/);
+  assert.doesNotMatch(h, /<details[^>]*open/, 'collapsed');
+});

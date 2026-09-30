@@ -53,6 +53,29 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
     });
   };
 
+  // ONE PANEL ROW. Defined once so the four groups render the same button.
+  const row = (p) => {
+    const mine = onRoster.has(String(p.playerId));
+    const usedIn = view.used?.[String(p.playerId)] ?? null;
+    const gone = mine || usedIn != null || club?.started === true;
+    return (
+      <button key={p.playerId} type="button"
+        className={`rn-prow${gone ? ' gone' : ''}`}
+        onClick={() => !gone && choose(p)} disabled={gone || !signedIn}
+        data-player={p.playerId} data-kind={p.kind} data-group={p.group ?? 'nine'}{...(p.probable ? { 'data-probable': '1' } : {})}>
+        <span className={`rn-pb ${p.kind === 'arm' ? 'p' : 'b'}`}>{p.kind === 'arm' ? 'P' : 'B'}</span>
+        <span className="rn-who">
+          <b>{p.short}</b>
+          {/* "projected · bats 4th" MAY BREAK after the dot: at 390 the panel is
+              ~166px and one line ellipsized away the batting slot itself. */}
+          <small className={p.projected && !mine && !usedIn ? 'wrap' : undefined}>{mine ? 'on your nine' : usedIn ? `used in the ${roundWord(usedIn)}` : club?.started ? 'game started'
+            : p.projected ? <>projected ·<wbr /> <span className="nw">{slotWord(p).replace(/^projected · /, '')}</span></> : slotWord(p)}</small>
+        </span>
+        <span className="rn-val"><b>{p.ppg ?? '–'}</b><small>PPG</small></span>
+      </button>
+    );
+  };
+
   const clear = (slot) => {
     if (!signedIn || live || view.slots.find((s) => s.slot === slot)?.locked) return;
     const before = slots[slot];
@@ -104,6 +127,9 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
                   abbr={c.abbr} size={21} title={c.name ?? c.abbr} leagueSlug="mlb" /></span>
                 <b>{c.abbr}</b>
                 <small>{c.bye ? c.seed ?? '' : c.started ? 'started' : `${c.seed ?? ''}${c.opponent ? ` · vs ${c.opponent}` : ''}`.trim()}</small>
+                {/* WHO STARTS G1 (tue-5): the probable's surname, TBA until one is
+                    announced. Not on a bye or a started club - nothing to pick. */}
+                {!c.bye && !c.started ? <em className="rn-sp" data-probable={c.probableShort ? '1' : '0'}>{c.probableShort ?? 'TBA'}</em> : null}
               </button>
             ))}
           </div>
@@ -166,7 +192,7 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
             </>}
             <small>{live
               ? <>{view.aliveCount} alive · {view.outCount} done</>
-              : <>{counts.get(String(openClub)) ?? 0} of 3 used<br />{club?.opponent ? `vs ${club.opponent}${club.bestOf ? ` · best of ${club.bestOf}` : ''}` : ''}<br />{club?.lineupPosted ? 'lineup posted' : 'lineup not posted yet'}<br />
+              : <>{counts.get(String(openClub)) ?? 0} of 3 used<br />{club?.opponent ? `vs ${club.opponent}${club.bestOf ? ` · best of ${club.bestOf}` : ''}` : ''}<br />{club?.lineupNote ?? (club?.lineupPosted ? 'lineup posted' : 'lineup not posted yet')}<br />
                 <span className="rn-pan-n">arms {players.filter((p) => p.kind === 'arm').length} · bats {players.filter((p) => p.kind === 'bat').length}</span></>}</small>
           </div>
           <div className="rn-pan-b">
@@ -182,26 +208,25 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
               ))
               // EVERY ROW, AND THE PANEL SCROLLS (October's fix). A cut at ten
               // served twelve Yankee arms and not one bat.
-              : players.length ? players.map((p) => {
-                const mine = onRoster.has(String(p.playerId));
-                const usedIn = view.used?.[String(p.playerId)] ?? null;
-                const gone = mine || usedIn != null || club?.started === true;
-                return (
-                  <button key={p.playerId} type="button"
-                    className={`rn-prow${gone ? ' gone' : ''}`}
-                    onClick={() => !gone && choose(p)} disabled={gone || !signedIn}
-                    data-player={p.playerId} data-kind={p.kind}{...(p.probable ? { 'data-probable': '1' } : {})}>
-                    <span className={`rn-pb ${p.kind === 'arm' ? 'p' : 'b'}`}>{p.kind === 'arm' ? 'P' : 'B'}</span>
-                    <span className="rn-who">
-                      <b>{p.short}</b>
-                      {/* THE BATTING ORDER WHEN THE CARD IS UP - "bats 4th"
-                          beats "RF" - then the G1 flag, then the position. */}
-                      <small>{mine ? 'on your nine' : usedIn ? `used in the ${roundWord(usedIn)}` : club?.started ? 'game started' : slotWord(p)}</small>
-                    </span>
-                    <span className="rn-val"><b>{p.ppg ?? '–'}</b><small>PPG</small></span>
-                  </button>
-                );
-              }) : <p className="rn-empty">The pool for this club is still building.</p>}
+              // FOUR GROUPS, IN ORDER (tue-5): the lead arms, the Bullpen
+              // (collapsed), the nine, the Bench (collapsed). A <details> is
+              // the collapse: no state, keyboard and screen-reader native.
+              : players.length ? <>
+                {players.filter((p) => (p.group ?? 'nine') === 'lead').map(row)}
+                {players.some((p) => p.group === 'bullpen') ? (
+                  <details className="rn-more" data-group="bullpen">
+                    <summary>Bullpen · {players.filter((p) => p.group === 'bullpen').length}</summary>
+                    {players.filter((p) => p.group === 'bullpen').map(row)}
+                  </details>
+                ) : null}
+                {players.filter((p) => (p.group ?? 'nine') === 'nine').map(row)}
+                {players.some((p) => p.group === 'bench') ? (
+                  <details className="rn-more" data-group="bench">
+                    <summary>Bench · {players.filter((p) => p.group === 'bench').length}</summary>
+                    {players.filter((p) => p.group === 'bench').map(row)}
+                  </details>
+                ) : null}
+              </> : <p className="rn-empty">The pool for this club is still building.</p>}
           </div>
         </div>
       </div>
@@ -294,8 +319,9 @@ function Clock({ ms }) {
  * slotWord with The Run's extra cases.
  */
 function slotWord(p) {
-  if (p?.probable) return p.starting ? 'starting' : 'probable';
-  if (p?.order != null) return `bats ${ordinal(p.order)}`;
+  // "G1 · probable" -> "G1 · starting" when G1's card posts; G2 stays probable.
+  if (p?.probable) return `${p.gameNo ? `G${p.gameNo} · ` : ''}${p.starting ? 'starting' : 'probable'}`;
+  if (p?.order != null) return `${p.projected ? 'projected · ' : ''}bats ${ordinal(p.order)}`;
   if (p?.g1) return 'G1 starter';
   return p?.position ?? '';
 }

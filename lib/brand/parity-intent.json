@@ -1,3 +1,169 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-more > summary { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-more > summary { cursor }",
+      "after": "pointer"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-more > summary { font }",
+      "after": "700 9px ?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-more > summary { letter-spacing }",
+      "after": ".08em"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-more > summary { list-style }",
+      "after": "none"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-more > summary { padding }",
+      "after": "8px 9px"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-more > summary { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-more > summary::-webkit-details-marker { display }",
+      "after": "none"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-more > summary::after { content }",
+      "after": "' +'"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-more { border-bottom }",
+      "after": "1px solid #1f1f1f"
+    },
+    {
+      "file": "app/october/october.css",
+      "key": ".oc-more[open] > summary::after { content }",
+      "after": "' \u2212'"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-more > summary { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-more > summary { cursor }",
+      "after": "pointer"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-more > summary { font }",
+      "after": "700 9px ?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-more > summary { letter-spacing }",
+      "after": ".08em"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-more > summary { list-style }",
+      "after": "none"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-more > summary { padding }",
+      "after": "8px 9px"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-more > summary { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-more > summary::-webkit-details-marker { display }",
+      "after": "none"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-more > summary::after { content }",
+      "after": "' +'"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-more { border-bottom }",
+      "after": "1px solid #1f1f1f"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-more[open] > summary::after { content }",
+      "after": "' \u2212'"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-tc .rn-sp { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-tc .rn-sp { display }",
+      "after": "block"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-tc .rn-sp { font }",
+      "after": "600 8px ?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-tc .rn-sp { font-style }",
+      "after": "normal"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-tc .rn-sp { margin-top }",
+      "after": "1px"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-tc .rn-sp { overflow }",
+      "after": "hidden"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-tc .rn-sp { text-overflow }",
+      "after": "ellipsis"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-tc .rn-sp { white-space }",
+      "after": "nowrap"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-tc .rn-sp[data-probable=\"0\"] { color }",
+      "after": "#5a5a5a"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-who small.wrap { white-space }",
+      "after": "normal"
+    },
+    {
+      "file": "app/run/run.css",
+      "key": ".rn-who small .nw { white-space }",
+      "after": "nowrap"
+    }
+  ]
 }
