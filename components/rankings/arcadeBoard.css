@@ -62,7 +62,8 @@
 
 .rka-cols, .rka-row {
   display: grid;
-  grid-template-columns: 28px 30px 22px minmax(0, 1fr) 40px 48px;
+  /* the last column fits "AP 25" as well as a 0-100 rating */
+  grid-template-columns: 28px 30px 22px minmax(0, 1fr) 40px 52px;
   align-items: center;
   column-gap: 10px;
 }

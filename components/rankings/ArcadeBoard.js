@@ -43,11 +43,19 @@ function Mv({ previousRank, movement }) {
   return <span className="rka-mv hold" aria-label="unchanged">·</span>;
 }
 
-/** The z model's power as its 0-100 rating (wed-6); the blend's 0-10 score as stored. */
-function power(league, row) {
+/**
+ * THE RIGHT-HAND COLUMN. NFL: the z model's power as its 0-100 rating (wed-6).
+ * CFB (wed-7): the team's AP rank, "AP 8", or an em dash when the AP does not
+ * rank it - read from the entry's stored inputs.ap, the poll this edition
+ * blended. The CFB composite score is not a column; it is the Score line of
+ * the row's working, where it sits beside the numbers it was built from.
+ */
+function rightCell(league, row) {
   if (SERVED[league]?.model === 'z') return powerRating(row.inputs?.power ?? row.score) ?? '–';
-  return row.score == null ? '–' : Number(row.score).toFixed(2);
+  const ap = row.inputs?.ap?.rank ?? null;
+  return ap == null ? '—' : `AP ${ap}`;
 }
+const rightHead = (league) => (SERVED[league]?.model === 'z' ? 'PWR' : 'AP');
 
 function Working({ league, row, weights, id }) {
   const w = workingFor(league, row, weights);
@@ -117,7 +125,7 @@ export default function ArcadeBoard({ leagueSlug, leagueLabel, board, all = fals
         <>
           <div className="rka-cols" aria-hidden="true">
             <span className="c-n">#</span><span className="c-mv">MV</span><span className="c-mk" />
-            <span className="c-tm">TEAM</span><span className="c-rec">REC</span><span className="c-pw">PWR</span>
+            <span className="c-tm">TEAM</span><span className="c-rec">REC</span><span className="c-pw">{rightHead(leagueSlug)}</span>
           </div>
           <ol className="rka-rows">
             {shown.map((r) => {
@@ -137,7 +145,7 @@ export default function ArcadeBoard({ leagueSlug, leagueLabel, board, all = fals
                       className="rka-mk" />
                     <span className="rka-nm">{r.name}</span>
                     <span className="rka-rec">{r.record ?? '–'}</span>
-                    <span className="rka-pw">{power(leagueSlug, r)}</span>
+                    <span className="rka-pw">{rightCell(leagueSlug, r)}</span>
                   </Link>
                   {isOpen ? <Working league={leagueSlug} row={r} weights={board.weights} id={wid} /> : null}
                 </li>
