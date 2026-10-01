@@ -265,7 +265,7 @@ function FiveRows({ view, final = false }) {
                 {final ? (s.state === 'off' ? 'OFF' : 'FT') : s.chip ? s.chip.text : s.kickoffAt ? <StandaloneTime iso={s.kickoffAt} weekday zone={false} /> : ''}
               </span>
             ) : null}
-            <span className="e5-fr-p">{s.points ?? 0}</span>
+            <span className="e5-fr-p">{s.points ?? '–'}</span>
           </div>
           {s.parts?.length ? (
             <div className="e5-parts">{s.parts.map((p, i) => <span key={i} className={`e5-part${p.pts < 0 ? ' neg' : ''}`}>{p.text}</span>)}</div>

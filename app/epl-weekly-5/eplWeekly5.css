@@ -50,7 +50,7 @@
 .e5-pos { flex: none; width: 34px; height: 24px; border-radius: 6px; background: var(--tok-surface-2); display: flex; align-items: center; justify-content: center; font: 400 10px var(--tok-font-num); }
 .e5-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .e5-who b { font: 600 15px var(--tok-font-body); display: flex; align-items: center; gap: 6px; }
-.e5-who small { font: 400 11px var(--tok-font-body); color: var(--tok-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.e5-who small { font: 400 11px/1.35 var(--tok-font-body); color: var(--tok-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .e5-flag { font: 400 8px var(--tok-font-num); font-style: normal; letter-spacing: .04em; padding: 2px 5px; border-radius: 4px; color: var(--tok-page); background: var(--tok-live); }
 .e5-flag.doubt { background: var(--tok-coin); }
 .e5-ppg { display: flex; flex-direction: column; align-items: flex-end; }
