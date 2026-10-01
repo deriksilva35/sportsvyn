@@ -58,7 +58,7 @@ export const AUTO_CONFIRM = 'Let the room make your picks? Auto Draft fills ever
 // Class filter. Composes with position and team rather than replacing them.
 const ERR = {
   illegal_pick: "Roster can't fit that pick", player_unavailable: 'Already drafted',
-  not_your_turn: 'Not your turn', not_in_progress: 'Draft is over', no_legal_pick: 'No legal pick',
+  not_your_turn: 'Not your turn', turn_expired: 'Time ran out - auto-picked', not_in_progress: 'Draft is over', no_legal_pick: 'No legal pick',
   not_found_or_not_owner: 'Not your draft', unauthenticated: 'Please sign in',
 };
 // The board renders at most this many rows. It has always been 120; what is new
@@ -349,6 +349,9 @@ export default function DraftRoom({
     setClock(res.turnDeadlineAt != null
       ? remainingSeconds(res.turnDeadlineAt, timerSeconds, new Date())
       : (timerSeconds ?? null));
+    // The tap arrived after 0:00: the server auto-picked the expired turn and
+    // dropped the tap (thu-25). Say so, or the room looks like it ignored them.
+    if (res.turnExpired) setErr({ reason: 'turn_expired' });
     if (res.status === 'completed') router.refresh(); // server re-renders as results
   }, [router, timerSeconds]);
 
