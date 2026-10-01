@@ -89,7 +89,8 @@ export async function GET(request) {
         });
       }
       // THE KEY / BUDGET GUARD, on every successful run.
-      const warn = keyAlert(res.summary?.budget);
+      // A SKIP MADE NO CALL, so it has no budget headers to read (thu-33).
+      const warn = res.summary?.skipped ? null : keyAlert(res.summary?.budget);
       if (warn) {
         await maybeAlert(sql, {
           source: lg.source,
