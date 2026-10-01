@@ -9,7 +9,8 @@
  * link can open a specific tab.
  *
  * NON-MEMBERS get frame 3: the sealed preview as a hero - name + member
- * count, one JOIN button, nothing else. No identities, no boards; the
+ * count and a field for the invite code, nothing else. No join by id: the
+ * id in this URL is serial, so it is not an invitation - the code is. No identities, no boards; the
  * preview pin extends to this route by test. Signed-out riders carry this
  * exact destination through the sign-in law.
  *
@@ -29,7 +30,7 @@ import { leagueDetail, leaguePreview, leagueMemberIds } from '@/lib/leagues/core
 import { LEAGUE_TABS, parseLeagueTab, leagueHref } from '@/lib/leagues/nav';
 import { firstLockLabel } from '@/lib/pickem/read';
 import { lastRevealedDate, dayBoard, overall } from '@/lib/daily/boards';
-import { CodeChip, CopyLinkButton, JoinLeagueButton } from '@/components/leagues/LeagueChrome';
+import { CodeChip, CopyLinkButton, JoinWithCodeForm } from '@/components/leagues/LeagueChrome';
 import SeasonBoard from '@/components/games/SeasonBoard';
 import '../../games/games.css';
 import '../leagues.css';
@@ -92,8 +93,9 @@ export default async function LeaguePage({ params, searchParams }) {
             {uid == null ? (
               <a className="lg-join-primary" href={shellSigninHref(dest, isShell)}>Sign in to join</a>
             ) : (
-              <JoinLeagueButton leagueId={leagueId} name={preview.name} />
+              <JoinWithCodeForm leagueId={leagueId} />
             )}
+            <p className="muted lg-ask-code">Ask a member for the invite code.</p>
           </section>
           <p className="muted lg-hero-sub">
             Boards are members-only. Join and tonight&rsquo;s Daily counts.
