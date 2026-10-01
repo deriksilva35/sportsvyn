@@ -104,10 +104,11 @@ function Stake({ stake, g, boardOpen, signedIn }) {
 /**
  * THE CARD'S FACE, UNWRAPPED (game-page-arcade, wed-8). /scores mounts it
  * inside ExpandCard (Card, below); the game page mounts the SAME component in
- * its own <article> - one face, not a copy. `onPage` is the game page's four
+ * its own <article> - one face, not a copy. `onPage` is the game page's five
  * differences and nothing else: the quarter line score sits on the face once
  * the game has started, the stake chips stay on the board (the page has its
- * own In your games module), the
+ * own In your games module), the last play rides the face when no field can
+ * be drawn, the
  * final foot carries the closing line (x.closing) where the board has its
  * link, and the pre-game foot is the line alone (the page's In your games
  * module is where a pick is made). With `onPage` false the markup is the
@@ -170,6 +171,12 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
           {x.drive.lastPlay ? <p className="lp" title={x.drive.lastPlay}>{x.drive.lastPlay}</p> : null}
         </div>
       )}
+      {/* THE GAME PAGE'S LAST PLAY when the field cannot be drawn (thu-5): no
+          down to name means no x.drive, but the page has no drive module any
+          more, so its card still says what just happened. Page only. */}
+      {onPage && live && !x.drive && x.lastPlay ? (
+        <div className="sv4-field" data-drive="0"><p className="lp" title={x.lastPlay}>{x.lastPlay}</p></div>
+      ) : null}
       {live && x.diamond && (
         <div className="sv4-bb" data-baseball="1">
           <span className="st">{x.diamond.lead}{x.diamond.sub ? <small>{x.diamond.sub}</small> : null}</span>

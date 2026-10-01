@@ -16,7 +16,6 @@
 
 import Link from 'next/link';
 import { CardFace } from '@/components/scores/ScoreboardV4';
-import { DriveStrip, LastPlay } from '@/components/gridiron/Gamecast';
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
 import ArcadeChips from '@/components/gridiron/ArcadeChips';
@@ -69,38 +68,41 @@ export function WinProb({ wp }) {
   );
 }
 
-function PlayCard({ href, signedIn }) {
-  // THE ONE CALL TO ACTION on the page.
+/**
+ * "PLAY THIS GAME" OFFERS ONLY WHAT IS STILL OPEN for this match (thu-5):
+ * Pick'em until its kickoff, the Weekly and the Draft until their locks
+ * (lib/gridiron/inYourGames.js openGames). Nothing open, no card - signed in
+ * or out.
+ */
+function PlayCard({ href, signedIn, open }) {
+  if (!open?.length || !href) return null;
+  const names = open.map((o) => o.label).join(' · ');
   return (
-    <Link className="gpa-play" href={href} data-gpa="play" data-play-card="1">
+    <Link className="gpa-play" href={href} data-gpa="play" data-play-card="1" data-offers={open.map((o) => o.kind).join(' ')}>
       <span className="t">Play this game</span>
-      <span className="s">{signedIn ? "Pick the winner in Pick'em" : "Sign in to pick the winner in Pick'em"}</span>
+      <span className="s">{signedIn ? names : `Sign in to play · ${names}`}</span>
       <span className="go" aria-hidden="true">&rsaquo;</span>
     </Link>
   );
 }
 
-/**
- * Signed out: the Play card and nothing else. Signed in: the reader's rows;
- * before kickoff, with no pick made on this game, the Play card under them
- * (wed-8: "the user's pick if made, else a Play this game card").
- */
+/** Signed out: the Play card, if anything is open. Signed in: the reader's rows, then the Play card if anything is still open. */
 export function InYourGames({ yours }) {
-  const { rows, signedIn, playHref, pre = false } = yours;
-  const play = !rows.length || (pre && !rows.some((r) => r.kind === 'pickem'));
-  if (!rows.length) return <div data-gpa="yours"><PlayCard href={playHref} signedIn={signedIn} /></div>;
+  const { rows, signedIn, playHref, open = [] } = yours;
   return (
     <div data-gpa="yours">
-      <section className="gpa-yours" aria-label="In your games">
-        <span className="gpa-pill">In your games</span>
-        {rows.map((r) => (
-          <Link key={r.kind} className="gpa-yrow" href={r.href} data-kind={r.kind}>
-            <span className="l"><b>{r.label}</b><span>{r.line}</span></span>
-            <span className="v">{r.value}</span>
-          </Link>
-        ))}
-      </section>
-      {play ? <PlayCard href={playHref} signedIn={signedIn} /> : null}
+      {rows.length ? (
+        <section className="gpa-yours" aria-label="In your games">
+          <span className="gpa-pill">In your games</span>
+          {rows.map((r) => (
+            <Link key={r.kind} className="gpa-yrow" href={r.href} data-kind={r.kind}>
+              <span className="l"><b>{r.label}</b><span>{r.line}</span></span>
+              <span className="v">{r.value}</span>
+            </Link>
+          ))}
+        </section>
+      ) : null}
+      <PlayCard href={playHref} signedIn={signedIn} open={open} />
     </div>
   );
 }
@@ -123,16 +125,18 @@ export function PlaysList({ plays, allHref }) {
   );
 }
 
+/** ONE LINE EACH (thu-5): "Q1 8:47 · CHI · C.Keenum 8-yd TD pass to L.Burden · PHI 0 - CHI 7". */
 export function ScoringPlays({ list, g }) {
   const ab = (side) => (side === 'home' ? g.home : g.away)?.abbreviation ?? '';
   return (
     <Box label="Scoring plays" mod="scoring" right={<span className="gpa-sub">{list.length}</span>}>
       <ol className="gpa-scoring">
         {list.map((s, i) => (
-          <li key={i} data-side={s.side}>
-            <span className="w">{whenLabel(s.period, s.clock)}<b>{ab(s.side)}</b></span>
-            <span className="tx">{s.text}</span>
-            <span className="sc">{ab('away')} {s.awayScore} · {ab('home')} {s.homeScore}</span>
+          <li key={i} data-side={s.side} title={s.text ?? undefined}>
+            <span className="w">{whenLabel(s.period, s.clock)}</span>
+            <b className="t">{ab(s.side)}</b>
+            <span className="tx">{s.summary}</span>
+            <span className="sc">{ab('away')} {s.awayScore} - {ab('home')} {s.homeScore}</span>
           </li>
         ))}
       </ol>
@@ -193,14 +197,6 @@ export default function GamePageArcade({ view, now = new Date() }) {
   const draw = {
     card: () => <Card view={view} now={now} />,
     market: () => (view.odds ? <div className="gpa-market" data-gpa="market"><OddsStrip odds={view.odds} leagueSlug={g.leagueSlug} matchId={g.id} /></div> : null),
-    drive: () => (view.drive ? (
-      <Box label="This drive" mod="drive">
-        <DriveStrip state={view.drive.state} lastPlay={view.drive.lastPlay} now={view.drive.now} drive={view.drive.drive}
-          homeAbbr={view.drive.homeAbbr} awayAbbr={view.drive.awayAbbr} offenseAbbr={view.drive.offenseAbbr}
-          defenseAbbr={view.drive.defenseAbbr} simulated={view.drive.simulated} />
-        <LastPlay play={view.drive.last} />
-      </Box>
-    ) : null),
     winprob: () => <WinProb wp={view.winprob} />,
     yours: () => <InYourGames yours={view.yours} />,
     chips: () => (

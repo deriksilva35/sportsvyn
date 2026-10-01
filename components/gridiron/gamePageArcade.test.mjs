@@ -43,21 +43,22 @@ const LINE = { columns: ['1', '2', '3', '4'], total: 'T', extra: [], rows: [
   { side: 'home', abbr: 'CHI', cells: ['7', '3', '10', '7'], total: 27, extra: [] }] };
 const X = (o = {}) => ({ rank: { home: null, away: null }, record: { home: '2-1', away: '1-2' }, spreadHome: null, total: null, openHome: null, preview: null, drive: null, diamond: null, stat: null, hasStats: true, mlbFoot: null, probables: null, prob: null, stake: null, open: false, line: LINE, closing: null, ...o });
 
-function view({ state = 'final', league = 'nfl', closing = 'Closing line PHI -3.5', signedIn = false, rows = [], wp = true, plays = null } = {}) {
+function view({ state = 'final', league = 'nfl', closing = 'Closing line PHI -3.5', signedIn = false, rows = [], wp = true, plays = null, open = null, lastPlay = null } = {}) {
   const status = state === 'pre' ? 'scheduled' : state;
   const g = { id: 9, slug: 'nfl-2026-reg-w3-phi-chi', leagueSlug: league, status, kickoffAt: '2026-09-29T00:15:00Z', homeScore: state === 'pre' ? null : 27, awayScore: state === 'pre' ? null : 7, home: HOME, away: AWAY, network: 'NBC', etWeekday: 'Sun', liveState: state === 'live' ? { period: 3, clock: '6:42' } : null };
   const hasCurve = wp && league === 'nfl';
+  const offers = open ?? (state === 'pre' ? [{ kind: 'pickem', label: "Pick'em", href: '/pickem/nfl' }] : []);
   return {
-    state, league, simulated: false, g, x: X({ closing: state === 'final' ? closing : null }), signinHref: '/signin?callbackUrl=x',
-    modules: A.arcadeModules({ state, league, hasCurve, hasNow: hasCurve, hasMarket: false, hasDrive: false }),
+    state, league, simulated: false, g, x: X({ closing: state === 'final' ? closing : null, lastPlay }), signinHref: '/signin?callbackUrl=x',
+    modules: A.arcadeModules({ state, league, hasCurve, hasNow: hasCurve, hasMarket: false, hasYours: rows.length > 0 || offers.length > 0 }),
     odds: null, drive: null,
     winprob: hasCurve ? { path: '0,32 179,20 358,4', marks: [89.5, 179, 268.5], dot: '358,4', now: state === 'final' ? 'CHI won' : 'CHI 71%', stale: false, homeAbbr: 'CHI', awayAbbr: 'PHI', ot: false } : null,
-    yours: { signedIn, rows, playHref: signedIn ? '/pickem/nfl' : '/signin?callbackUrl=x' },
+    yours: { signedIn, rows, open: offers, pre: state === 'pre', playHref: signedIn ? (offers[0]?.href ?? null) : '/signin?callbackUrl=x' },
     chips: state === 'live' ? A.liveChips({ plays: 165, box: false, stats: true, market: true }) : [],
     plays: plays ?? { latest: [{ when: 'Q3 6:42', abbr: 'CHI', text: 'C.Williams pass short right to D.Moore for 9 yards' }], total: 165, all: false },
     box: [], leaders: [{ cat: 'PASS', away: { name: 'Hurts', line: '18/30 · 190' }, home: { name: 'Williams', line: '24/33 · 281 · 2 TD' } }], teamBox: null,
     market: { closing, propsCard: null },
-    scoring: state === 'final' ? [{ period: 1, clock: '8:47', side: 'home', text: 'TD pass', homeScore: 7, awayScore: 0, points: 7 }] : [],
+    scoring: state === 'final' ? [{ period: 1, clock: '8:47', side: 'home', text: '(Shotgun) C.Keenum pass short middle to L.Burden for 8 yards, TOUCHDOWN.', summary: 'C.Keenum 8-yd TD pass to L.Burden', homeScore: 7, awayScore: 0, points: 7 }] : [],
     crumb: 'NFL · Week 3 · Sun',
   };
 }
@@ -70,14 +71,17 @@ const modsOf = (h) => [...h.matchAll(/data-mod="([a-z]+)"/g)].map((m) => m[1]);
 test('MODULE ORDER, per state (wed-8)', () => {
   assert.deepEqual(A.arcadeModules({ state: 'pre', league: 'nfl' }), ['card', 'market', 'yours']);
   assert.deepEqual(A.arcadeModules({ state: 'pre', league: 'nfl', hasMarket: false }), ['card', 'yours'], 'no two-sided read, no market module');
-  assert.deepEqual(A.arcadeModules({ state: 'live', league: 'nfl', hasCurve: true }), ['card', 'drive', 'winprob', 'yours', 'chips']);
+  assert.deepEqual(A.arcadeModules({ state: 'live', league: 'nfl', hasCurve: true }), ['card', 'winprob', 'yours', 'chips'],
+    'thu-5: no drive module - the live card carries the field and the last play');
+  assert.deepEqual(A.arcadeModules({ state: 'live', league: 'nfl', hasCurve: true, hasYours: false }), ['card', 'winprob', 'chips'],
+    'nothing of yours and nothing open: no yours module at all');
   assert.deepEqual(A.arcadeModules({ state: 'final', league: 'nfl', hasCurve: true }), ['card', 'winprob', 'yours', 'scoring', 'leaders']);
   assert.deepEqual(A.arcadeModules({ state: 'final', league: 'nfl', hasCurve: false }), ['card', 'yours', 'scoring', 'leaders'],
     'a final with no winprob_log rows has no win-probability module at all');
   assert.deepEqual(A.liveChips({ plays: 3, box: true, stats: true, market: true }).map((c) => c.label), ['Plays', 'Box', 'Stats', 'Market']);
   // ...and the page draws exactly that list, in that order.
-  assert.deepEqual(modsOf(html(view({ state: 'final' }))), ['card', 'winprob', 'yours', 'scoring', 'leaders']);
-  assert.deepEqual(modsOf(html(view({ state: 'live' }))), ['card', 'winprob', 'yours', 'chips']);
+  assert.deepEqual(modsOf(html(view({ state: 'final', signedIn: true, rows: [{ kind: 'pickem', label: "PICK'EM", line: 'You had CHI', value: 'Won', href: '/pickem/nfl' }] }))), ['card', 'winprob', 'yours', 'scoring', 'leaders']);
+  assert.deepEqual(modsOf(html(view({ state: 'live' }))), ['card', 'winprob', 'chips'], 'signed out after kickoff: nothing is open, no card');
   assert.deepEqual(modsOf(html(view({ state: 'pre' }))), ['card', 'yours']);
 });
 
@@ -168,7 +172,8 @@ test('SCORING PLAYS are every score change, in game order, with the new score', 
   ], 'the PAT counts though unflagged; the late-stored END QUARTER row and the stale 0-0 timeout are not scores; a null score is skipped');
   assert.equal(A.whenLabel(5, '4:10'), 'OT 4:10');
   const h = html(view({ state: 'final' }));
-  assert.match(h, /data-gpa="scoring"[\s\S]*Q1 8:47<b>CHI<\/b>[\s\S]*PHI 0 · CHI 7/);
+  assert.match(h, /<li data-side="home" title="[^"]*"><span class="w">Q1 8:47<\/span><b class="t">CHI<\/b><span class="tx">C.Keenum 8-yd TD pass to L.Burden<\/span><span class="sc">PHI 0 - CHI 7<\/span><\/li>/,
+    'one line: when · team · summary · score (the dots are the sheet\'s ::before)');
 });
 
 test('LEADERS: PASS / RUSH / REC for both teams from regTeamTables rows', () => {
@@ -258,7 +263,8 @@ test('IN YOUR GAMES: three reads at most, and never stakeForMatches or draftStat
     { nfl_player_id: 131, rec: 8, rec_yds: 92, rec_td: 1 },
     { nfl_player_id: 40, rec: 2, rec_yds: 15 },
   ];
-  const rows = await Y.inYourGames({ userId: 1, game, statRows, db });
+  const { rows, open } = await Y.inYourGames({ userId: 1, game, statRows, db });
+  assert.deepEqual(open, [], 'a final offers nothing');
   assert.equal(calls.length, 3, calls.join('\n'));
   assert.match(calls[0], /FROM contests WHERE game_type = ANY\(\?\) AND sport = \? AND season_year = \? AND week = \?/);
   assert.match(calls[1], /FROM contest_entries WHERE user_id = \? AND contest_id = ANY\(\?\)/);
@@ -274,10 +280,11 @@ test('IN YOUR GAMES: three reads at most, and never stakeForMatches or draftStat
     : db(strings, ...v));
   await Y.inYourGames({ userId: 1, game, statRows, db: db2 });
   assert.ok(calls.length <= 2, `${calls.length} reads`);
-  // signed out: no read at all
+  // signed out: the contests read alone (the open games come from it), no rows
   calls.length = 0;
-  assert.deepEqual(await Y.inYourGames({ userId: null, game, db }), []);
-  assert.equal(calls.length, 0);
+  assert.deepEqual(await Y.inYourGames({ userId: null, game, db }), { rows: [], open: [] });
+  assert.equal(calls.length, 1);
+  assert.match(calls[0], /FROM contests/);
 });
 
 test('the contest key: NFL REG week; CFB the ISO week of its ET Monday; preseason none', () => {
@@ -290,23 +297,76 @@ test('the contest key: NFL REG week; CFB the ISO week of its ET Monday; preseaso
   assert.equal(Y.isoWeekOfEtMonday('2026-09-28T16:00:00Z'), 40);
 });
 
-test('SIGNED OUT: ONE "Play this game" card; signed in with rows: the rows, no card', () => {
-  const out = html(view({ state: 'pre', signedIn: false }));
+test('PLAY THIS GAME offers only what is OPEN for this match; nothing open, no card (thu-5)', () => {
+  // the page: signed out before kickoff, one card, to sign-in, naming what is open
+  const out = html(view({ state: 'pre', signedIn: false, open: [{ kind: 'pickem', label: "Pick'em", href: '/pickem/nfl' }, { kind: 'weekly', label: 'Weekly', href: '/weekly' }] }));
   assert.equal((out.match(/data-play-card="1"/g) ?? []).length, 1);
   assert.match(out, /<a class="gpa-play"[^>]*href="\/signin\?callbackUrl=x"/);
-  assert.match(out, />Play this game</);
-  const inn = html(view({ state: 'final', signedIn: true, rows: [{ kind: 'pickem', label: "PICK'EM", line: 'You had CHI', value: 'Won · 2 of 3 this week', href: '/pickem/nfl' }] }));
-  assert.ok(!/data-play-card/.test(inn));
-  assert.match(inn, /In your games[\s\S]*PICK&#x27;EM[\s\S]*You had CHI[\s\S]*Won · 2 of 3 this week/);
-  const pre = view({ state: 'pre', signedIn: true, rows: [{ kind: 'weekly', label: 'WEEKLY', line: 'Allen in your six', value: '1 player', href: '/weekly' }] });
-  pre.yours.pre = true;
-  const preH = html(pre);
-  assert.match(preH, /Allen in your six[\s\S]*data-play-card="1"/, 'before kickoff with no pick: the rows, then the Play card');
-  const picked = view({ state: 'pre', signedIn: true, rows: [{ kind: 'pickem', label: "PICK'EM", line: 'You have CHI', value: 'Pending', href: '/pickem/nfl' }] });
-  picked.yours.pre = true;
-  assert.ok(!/data-play-card/.test(html(picked)), 'a pick made: no Play card');
-  const none = html(view({ state: 'pre', signedIn: true }));
-  assert.match(none, /<a class="gpa-play"[^>]*href="\/pickem\/nfl"/, 'signed in, nothing of yours: the card goes to the board');
+  assert.match(out, />Play this game<\/span><span class="s">Sign in to play · Pick&#x27;em · Weekly</);
+  // signed out, nothing open (after kickoff): no card and no module
+  for (const state of ['live', 'final']) {
+    const h = html(view({ state, signedIn: false }));
+    assert.ok(!/data-play-card|data-gpa="yours"/.test(h), state);
+  }
+  assert.ok(!/data-play-card/.test(html(view({ state: 'pre', signedIn: true, open: [] }))), 'signed in, nothing open: no card');
+  // signed in with rows and an open game: the rows, then the card to that game
+  const inn = html(view({ state: 'pre', signedIn: true, rows: [{ kind: 'weekly-38', label: 'WEEKLY', line: 'Allen · 22.4 ppg', value: 'In your six', href: '/weekly' }] }));
+  assert.match(inn, /In your games[\s\S]*Allen · 22.4 ppg[\s\S]*<a class="gpa-play"[^>]*href="\/pickem\/nfl"/);
+  const fin = html(view({ state: 'final', signedIn: true, rows: [{ kind: 'pickem', label: "PICK'EM", line: 'You had CHI', value: 'Won · 2 of 3 this week', href: '/pickem/nfl' }] }));
+  assert.ok(!/data-play-card/.test(fin));
+  assert.match(fin, /In your games[\s\S]*PICK&#x27;EM[\s\S]*You had CHI[\s\S]*Won · 2 of 3 this week/);
+
+  // the rule itself
+  const NOW2 = new Date('2026-10-01T12:00:00Z');
+  const g = { id: 5637, leagueSlug: 'nfl', status: 'scheduled', kickoffAt: '2026-10-04T17:00:00Z' };
+  const contests = [
+    { id: 33, game_type: 'pickem', locks_at: '2026-10-06T00:15:00Z', board: [{ match_id: 5637, kickoff_at: '2026-10-04T17:00:00Z' }] },
+    { id: 34, game_type: 'weekly', locks_at: '2026-10-06T00:15:00Z', board: [] },
+    { id: 35, game_type: 'draft', locks_at: '2026-10-02T00:15:00Z', board: [] },
+  ];
+  const kinds = (o) => Y.openGames({ game: g, contests, now: NOW2, ...o }).map((x) => x.kind);
+  assert.deepEqual(kinds({}), ['pickem', 'weekly', 'draft']);
+  assert.deepEqual(kinds({ now: new Date('2026-10-03T12:00:00Z') }), ['pickem', 'weekly'], 'the Draft locked at its own locks_at');
+  assert.deepEqual(kinds({ entries: [{ contest_id: 33, lineup: { 5637: 'home' } }, { contest_id: 34, lineup: {} }] }), ['draft'], 'already picked / already entered: not offered');
+  assert.deepEqual(kinds({ entries: [{ contest_id: 33, lineup: { 9999: 'home' } }] }), ['pickem', 'weekly', 'draft'], 'a pick on another game leaves this one open');
+  assert.deepEqual(kinds({ now: new Date('2026-10-04T17:00:00Z') }), [], 'at kickoff: nothing (Pick\'em is gone, and every other game has locked for this match)');
+  assert.deepEqual(Y.openGames({ game: { ...g, status: 'live' }, contests, now: NOW2 }), [], 'a live game offers nothing');
+  assert.deepEqual(Y.openGames({ game: { ...g, id: 1 }, contests: [contests[0]], now: NOW2 }), [], 'not on the board: no Pick\'em');
+});
+
+test('PRE-GAME WEEKLY: one row per player in the six from this game, "<Surname> · <ppg> ppg" (thu-5)', async () => {
+  const game = { id: 5637, leagueSlug: 'nfl', seasonYear: 2026, seasonPhase: 'REG', week: 4, status: 'scheduled', kickoffAt: '2099-10-04T17:00:00Z', homeScore: null, awayScore: null, home: { id: 1, abbreviation: 'BUF' }, away: { id: 2, abbreviation: 'NE' } };
+  const db = (strings) => {
+    const q = strings.join('?');
+    if (/FROM contests/.test(q)) return Promise.resolve([{ id: 34, game_type: 'weekly', locks_at: '2099-10-06T00:15:00Z', board: [{ id: 38, name: 'Josh Allen', team: 'BUF' }, { id: 7, name: 'Rhamondre Stevenson', team: 'NE' }, { id: 9, name: 'Rookie Guy', team: 'NE' }, { id: 131, name: 'Jahmyr Gibbs', team: 'DET' }] }]);
+    if (/FROM contest_entries/.test(q)) return Promise.resolve([{ contest_id: 34, lineup: { QB: 38, RB: 7, FLEX: 9, RB2: 131 }, meta: {} }]);
+    return Promise.reject(new Error(q));
+  };
+  let asked = null;
+  const ppgFor = async (season, ids) => { asked = [season, ids]; return new Map([[38, 22.4], [7, 11]]); };
+  const { rows } = await Y.inYourGames({ userId: 1, game, db, ppgFor, now: new Date('2099-10-01T00:00:00Z') });
+  assert.deepEqual(asked, [2026, [38, 7, 9]], 'PPG is asked only for the six in THIS game');
+  assert.deepEqual(rows.map((r) => [r.label, r.line, r.value]), [
+    ['WEEKLY', 'Allen · 22.4 ppg', 'In your six'],
+    ['WEEKLY', 'Stevenson · 11.0 ppg', 'In your six'],
+    ['WEEKLY', 'Guy · no games yet', 'In your six'],
+  ]);
+  // the source is the Weekly room's: lib/weekly/seasonLine.js, scored ppr per game
+  const s = src('lib/gridiron/inYourGames.js');
+  assert.match(s, /import \{ seasonTotals \} from '\.\.\/weekly\/seasonLine\.js';/);
+  assert.match(s, /fantasyPoints\(t\.totals, 'ppr'\) \/ t\.gp/);
+});
+
+test('LIVE: no drive module; the card carries the field strip and the last play', () => {
+  const page = src('components/gridiron/GamePageArcade.js');
+  assert.ok(!/DriveStrip|LastPlay|data-gpa="drive"|This drive/.test(page), 'the THIS DRIVE module is gone');
+  const withField = html({ ...view({ state: 'live' }), x: X({ drive: { label: '2nd & 6', spot: 'PHI 38', offenseAbbr: 'CHI', pct: 62, togo: 6, lastPlay: 'C.Williams pass short right to D.Moore for 9 yards' } }) });
+  assert.match(withField, /<div class="sv4-field" data-drive="1">[\s\S]*<p class="lp"[^>]*>C.Williams pass short right to D.Moore for 9 yards<\/p>/);
+  const noDown = html(view({ state: 'live', lastPlay: 'C.Santos 48 yard field goal is GOOD' }));
+  assert.match(noDown, /<div class="sv4-field" data-drive="0"><p class="lp" title="C.Santos 48 yard field goal is GOOD">C.Santos 48 yard field goal is GOOD<\/p><\/div>/,
+    'no down to name: the page card still says what happened');
+  const board = src('components/scores/ScoreboardV4.js');
+  assert.match(board, /\{onPage && live && !x\.drive && x\.lastPlay \?/, 'the fallback is page-only; /scores is unchanged');
 });
 
 test('PLAYS LIST: latest first, five shown, "All plays · N" from the count', () => {
