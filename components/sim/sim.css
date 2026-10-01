@@ -362,10 +362,14 @@
 .bg2 .bh.you { color: var(--ink); background: var(--volt); font-weight: 700; }
 .bg2 .br { display: flex; align-items: center; justify-content: center; font-size: 7.5px; font-weight: 700; color: var(--muted-dim); border-right: 1px solid var(--rule); }
 .bg2 .bc { min-height: 34px; border-bottom: 1px solid var(--tok-surface); border-right: 1px solid var(--tok-surface); padding: 2px 1px; overflow: hidden; }
-/* THE NAME GETS TWO LINES BEFORE THE ELLIPSIS (thu-25). One line cut most
-   surnames to four letters in a twelve-column phone grid; a surname that still
-   does not fit breaks anywhere and ellipsizes on its second line. */
-.bg2 .bc .n { font-size: 7.5px; font-weight: 600; color: var(--paper); line-height: 1.2; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; white-space: normal; overflow-wrap: anywhere; text-overflow: ellipsis; }
+/* THE NAME GETS TWO LINES BEFORE THE ELLIPSIS (thu-25), AND NEVER BREAKS
+   MID-WORD (thu-31): lines break between words only. A name whose word is wider
+   than the cell takes ONE font step (data-fit="sm", set by the room after
+   measuring - lib/fantasy/boardFit.js); still too wide, it is ellipsized. */
+.bg2 .bc .n { font-size: 7.5px; font-weight: 600; color: var(--paper); line-height: 1.2; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; white-space: normal; word-break: normal; overflow-wrap: normal; hyphens: none; text-overflow: ellipsis; }
+/* The one step: the grid's next size down, tracked in, and the cell's 1px side
+   padding given back to the name - "Etienne" fits a 390px phone's column whole. */
+.bg2 .bc .n[data-fit="sm"] { font-size: 6.5px; letter-spacing: -.06em; margin: 0 -1px; }
 .bg2 .bc .p { font-size: 6.5px; font-weight: 700; display: block; }
 .bg2 .bc .pk { display: none; }  /* overall-pick number: shown only in the desktop BOARD view */
 .bg2 .bc.QB { background: rgba(184,65,15,.28); }

@@ -45,6 +45,7 @@ import { remainingSeconds } from '@/lib/draft/deadline';
 import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/scoring';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
+import { fitBoardNames } from '@/lib/fantasy/boardFit';
 import { sendHaptic } from '@/lib/shell/bridge';
 import { isShellClient } from '@/lib/shell/appTabs';
 import RookieChip from '@/components/fantasy/RookieChip';
@@ -1153,8 +1154,21 @@ function posClass(pos) { return TINTED.has(pos) ? pos : ''; }
 // through every round. Cells are populated from live pick state.
 function BoardGrid({ board }) {
   const { teams, columns, rows } = board;
+  // ONE FONT STEP FOR A NAME THAT DOES NOT FIT, never a mid-word break
+  // (thu-31, lib/fantasy/boardFit.js). After every board change and on every
+  // resize of the grid - the desktop view and a rotation both change the cell.
+  const gridRef = useRef(null);
+  useLayoutEffect(() => {
+    const el = gridRef.current;
+    if (!el) return undefined;
+    const fit = () => fitBoardNames(el.querySelectorAll('.bc .n'));
+    fit();
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [board]);
   return (
-    <div className="bg2" style={{ gridTemplateColumns: `22px repeat(${teams}, minmax(0, 1fr))` }}>
+    <div ref={gridRef} className="bg2" style={{ gridTemplateColumns: `22px repeat(${teams}, minmax(0, 1fr))` }}>
       <div className="bh corner" />
       {columns.map((c) => (
         <div key={c.teamIndex} className={`bh${c.isYou ? ' you' : ''}`}>{c.label}</div>
