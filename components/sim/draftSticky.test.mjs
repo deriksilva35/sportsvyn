@@ -62,3 +62,19 @@ test('the draft room header still names all three columns', () => {
   const head = room.slice(room.indexOf('className="p-row nhead"'), room.indexOf('</div>', room.indexOf('className="p-row nhead"')) + 6);
   for (const c of ['PPG', 'ADP', 'VAL']) assert.ok(head.includes(c), `${c} label`);
 });
+
+test('ARCADE (thu-7): the scroller is the PAGE, and the header offset is the stack\'s TOKENS, not a measurement', () => {
+  // On the arcade phone page the pager stopped scrolling (draftOneScroll.test.mjs),
+  // so the column header sticks to the window under the clock bar and the tabs.
+  // Its offset is the sum of two fixed heights the same sheet declares, plus
+  // the measured site header - never a hand-measured height of another element,
+  // which is the failure this file exists for.
+  const arc = ':where(:root[data-theme="arcade"])';
+  assert.ok(simCss.includes(`${arc} .pager .page .nhead { --nhead-top: var(--dv-stack); }`));
+  assert.match(simCss, /--dv-stack: calc\(var\(--dv-stick, 0px\) \+ var\(--dv-clk-h\) \+ var\(--dv-seg-h\)\);/);
+  assert.match(simCss, /\.dv-clk \{[^}]*height: var\(--dv-clk-h\)/);
+  assert.match(simCss, /\.room-seg \{[^}]*height: var\(--dv-seg-h\)/);
+  // .plabel stays static there too: one more sticky edge would be one more
+  // height to agree with.
+  assert.ok(!new RegExp(`${arc.replace(/[()[\]"=]/g, '\\$&')} [^{]*\\.plabel \\{[^}]*sticky`).test(simCss));
+});

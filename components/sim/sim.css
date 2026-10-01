@@ -1269,3 +1269,146 @@
 :where(:root[data-theme="arcade"]) .auto-toggle.on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
 :where(:root[data-theme="arcade"]) .auto-toggle.on .sw { border-color: var(--tok-on-action); }
 :where(:root[data-theme="arcade"]) .auto-toggle.on .sw::after { background: var(--tok-on-action); }
+
+/* ============================================================================
+   ONE SCROLL (thu-7; arcade page, phone width only). At 390 x 844 the room was
+   a 68dvh swipe pager whose three pages each scrolled inside a page that also
+   scrolled, with the BOARD / PICK / ROSTER tabs below the pager - off screen
+   until the page moved - and the first player row ~660 px down. Now the PAGE
+   is the only vertical scroll:
+
+     .dv-clk     the clock, compacted to one bar with AUTO in it - sticky
+     .room-seg   the tabs, moved ABOVE the list (order 1) - sticky under it
+     .nhead      the list's column header - sticky under the tabs (PICK)
+     .bg2 .bh    the board's seat row - sticky under the tabs (BOARD)
+     .dv-ft      the Best available / Draft bar - sticky at the BOTTOM
+
+   The pager is not a scroller: its pages are sections, and .room[data-page]
+   (DraftRoom.js) shows one. Swipe is gone on this page - a horizontal
+   scroller makes every page its own vertical scroll container (overflow-x
+   that is not visible turns overflow-y to auto), which is the very thing
+   being removed. The heights are fixed tokens so the layers stack without
+   measuring each other; --dv-stick is the web's sticky .sim-head, measured by
+   the room (unset - 0 - in the app, where the header scrolls away).
+   EVERY RULE IS :where()-SCOPED TO ARCADE, so the dark page resolves exactly
+   as before (app/darkParity.test.mjs), and inside max-width: 900px, so the
+   desktop three-column room is untouched.
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .dv-auto { display: none; }
+@media (min-width: 901px) {
+  /* Desktop shows every filter row: the fold opens itself (DraftRoom.js) and
+     its one-line summary is not drawn. */
+  :where(:root[data-theme="arcade"]) .dv-filt > summary { display: none; }
+  /* the rows keep the column's 8 px rhythm inside the fold */
+  :where(:root[data-theme="arcade"]) .dv-filt > div + div { margin-top: 8px; }
+}
+@media (max-width: 900px) {
+  :where(:root[data-theme="arcade"]) .room {
+    --dv-clk-h: 64px;
+    --dv-seg-h: 40px;
+    --dv-stack: calc(var(--dv-stick, 0px) + var(--dv-clk-h) + var(--dv-seg-h));
+  }
+
+  /* ---- the clock bar: sticky, one fixed height ----------------------------- */
+  :where(:root[data-theme="arcade"]) .dv-clk {
+    position: sticky; top: var(--dv-stick, 0px); z-index: 8;
+    height: var(--dv-clk-h); box-sizing: border-box;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 0 12px 3px;
+    background: var(--tok-surface);
+  }
+  :where(:root[data-theme="arcade"]) .dv-otc { align-items: center; gap: 8px; }
+  :where(:root[data-theme="arcade"]) .dv-who {
+    flex: 1 1 auto;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  :where(:root[data-theme="arcade"]) .dv-who b { display: inline; margin-top: 0; font-size: 17px; }
+  :where(:root[data-theme="arcade"]) .dv-who small { display: inline; margin: 0 0 0 6px; }
+  :where(:root[data-theme="arcade"]) .dv-t { display: flex; align-items: baseline; gap: 3px; }
+  :where(:root[data-theme="arcade"]) .dv-t b { font-size: 28px; line-height: 1; }
+  :where(:root[data-theme="arcade"]) .dv-t span { font-size: 8px; }
+  :where(:root[data-theme="arcade"]) .dv-sub { margin-top: 2px; }
+  :where(:root[data-theme="arcade"]) .dv-drain {
+    position: absolute; left: 0; right: 0; bottom: 0; margin: 0;
+  }
+  /* AUTO, in the bar: the same toggle as the room-head switch (which is folded
+     away at this width with the rest of .room-head). Off reads as an outline,
+     on as the volt fill with navy ink - the switch's own grammar. */
+  :where(:root[data-theme="arcade"]) .dv-auto {
+    display: inline-flex; flex: 0 0 auto; flex-direction: column;
+    align-items: center; justify-content: center; gap: 1px;
+    min-width: 44px; height: 40px; padding: 0 8px; box-sizing: border-box;
+    border: 1px solid var(--tok-primary); border-radius: 10px;
+    background: var(--tok-page); color: var(--tok-primary);
+    font: 700 8px var(--font-mono, ui-monospace, monospace);
+    letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+  }
+  :where(:root[data-theme="arcade"]) .dv-auto b { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; }
+  :where(:root[data-theme="arcade"]) .dv-auto.on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+  :where(:root[data-theme="arcade"]) .room-head { display: none; }
+
+  /* ---- the tabs: above the list, sticky under the clock --------------------- */
+  :where(:root[data-theme="arcade"]) .room-seg {
+    order: 1;
+    position: sticky; top: calc(var(--dv-stick, 0px) + var(--dv-clk-h)); z-index: 7;
+    height: var(--dv-seg-h); box-sizing: border-box;
+    padding: 0;
+    background: var(--tok-page);
+  }
+  :where(:root[data-theme="arcade"]) .room-seg .rseg { padding: 0; }
+
+  /* ---- the pager: sections of the page, one shown --------------------------- */
+  :where(:root[data-theme="arcade"]) .pager {
+    display: block; height: auto; overflow: visible; scroll-snap-type: none;
+  }
+  :where(:root[data-theme="arcade"]) .room .pager .page { display: none; overflow: visible; }
+  :where(:root[data-theme="arcade"]) .room[data-page="BOARD"] .pager .page.pg-board,
+  :where(:root[data-theme="arcade"]) .room[data-page="PICK"] .pager .page.pg-pick,
+  :where(:root[data-theme="arcade"]) .room[data-page="ROSTER"] .pager .page.pg-roster { display: flex; }
+  :where(:root[data-theme="arcade"]) .pager .page .zone-body { overflow: visible; }
+
+  /* ---- the list header and the board's seat row stick under the tabs ------- */
+  :where(:root[data-theme="arcade"]) .pager .page .nhead { --nhead-top: var(--dv-stack); }
+  :where(:root[data-theme="arcade"]) .pager .page .p-row { scroll-margin-top: calc(var(--dv-stack) + 34px); }
+  :where(:root[data-theme="arcade"]) .pg-board .bg2 .bh {
+    position: sticky; top: var(--dv-stack); z-index: 3;
+    background: var(--tok-page);
+  }
+
+  /* ---- the folded filters: one row, the sort named in it -------------------- */
+  :where(:root[data-theme="arcade"]) .dv-filt > summary {
+    list-style: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    min-height: 32px; padding: 0 2px;
+    font: 700 9px var(--font-mono, ui-monospace, monospace);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  :where(:root[data-theme="arcade"]) .dv-filt > summary::-webkit-details-marker { display: none; }
+  :where(:root[data-theme="arcade"]) .dv-filt > summary::after { content: '+'; font-size: 14px; color: var(--muted-dim); }
+  :where(:root[data-theme="arcade"]) .dv-filt[open] > summary::after { content: '\2212'; }
+  :where(:root[data-theme="arcade"]) .dv-filt > div { margin-top: 8px; }
+
+  /* ---- the expanded player's game log: no box of its own -------------------- */
+  /* overflow-x stays: the log is wider than a phone and pans sideways. With
+     no max-height it never scrolls vertically, so the row grows instead. */
+  :where(:root[data-theme="arcade"]) .s-scroll { max-height: none; }
+
+  /* ---- the pick bar: sticky at the bottom ----------------------------------- */
+  /* Last in the room (order 4), so at the end of the list it rests in flow
+     below the last row rather than over it. It pays the home-indicator inset
+     itself - unless the app's tab bar is showing under it, which is only in an
+     UNTIMED room (a timed one raises data-clock and the bar hides): there it
+     sits on top of that bar, whose height apptab.css publishes. data-appbar is
+     stamped by AppTabBar in the app only, so the web never takes the offset. */
+  :where(:root[data-theme="arcade"]) .dv-ft {
+    order: 4;
+    position: sticky; bottom: 0; z-index: 9;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--tok-page);
+  }
+  :where(:root[data-theme="arcade"][data-appbar]:not([data-clock])) .dv-ft {
+    bottom: var(--sv-appbar-h);
+    padding-bottom: 10px;
+  }
+}
