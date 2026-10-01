@@ -43,9 +43,8 @@ export const maxDuration = 60;
 const LEAGUES = [
   { sport: 'nfl', slug: 'nfl', source: 'nfl-odds', futures: true },
   { sport: 'cfb', slug: 'cfb', source: 'cfb-odds', futures: true },
-  // No EPL leg: soccer is retired (tue-14). It was ~149 credits/day, and with
-  // the API-Sports ingest stopped its rows would sit 'scheduled' past kickoff
-  // and keep drawing polls.
+  // EPL is back (thu-24; retired tue-14): ~149 credits/day measured 17-30 Sep.
+  { sport: 'epl', slug: 'epl', source: 'epl-odds', futures: false },
 ];
 const FUTURES_LEAGUES = LEAGUES.filter((l) => l.futures);
 // Drives the tight-window test: a kickoff inside the window earns the

@@ -224,7 +224,8 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
   );
 }
 
-const gameHrefOf = (g) => (g.leagueSlug === 'epl' ? `/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`);
+// EPL's page is its own match center (thu-24); /match/<epl slug> 308s there anyway.
+const gameHrefOf = (g) => (g.leagueSlug === 'epl' ? `/epl/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`);
 
 export function Card(props) {
   const { g } = props;

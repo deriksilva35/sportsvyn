@@ -252,10 +252,9 @@ function Card({ g, x, signedIn, signinHref, tz }) {
 
 export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLabel = 'Eastern', arcade = false }) {
   const signinHref = shellSigninHref('/scores', isShell);
-  // EPL LEAVES THE ROW ON THE ARCADE PAGE (mon-17): the route stays live
-  // (/scores?sport=epl), the chip does not show. Flag-gated with the theme, so
-  // the dark page's row is unchanged until the flip.
-  const pills = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['mlb', 'MLB']];
+  // EPL IS A PILL AGAIN (thu-24), on both pages: it left the arcade row on
+  // mon-17 and both rows with soccer on tue-14.
+  const pills = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['mlb', 'MLB'], ['epl', 'EPL']];
   return (
     <div className="sv2" data-surface="ink">
       {v.liveCount > 0 && <LiveRefresh />}

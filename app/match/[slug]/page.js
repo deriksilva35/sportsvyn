@@ -397,8 +397,9 @@ export default async function MatchPage({ params }) {
   // worse than having no page at all, because it looked like a real one. Same
   // 308 the other two get, so anything already shared keeps working.
   if (match.league_slug === 'cfb') permanentRedirect(`/cfb/game/${slug}`);
-  // SOCCER IS RETIRED (tue-14): EPL, the World Cup and friendlies all go to
-  // the one board. (EPL used to 308 to its own match center, now retired too.)
+  // EPL HAS ITS OWN MATCH CENTER AGAIN (thu-24) - before the retired check,
+  // which still sends the World Cup and the friendlies to the one board.
+  if (match.league_slug === 'epl') permanentRedirect(`/epl/match/${slug}`);
   if (isRetiredLeague(match.league_slug)) permanentRedirect('/scores');
 
   // The crumb's destination, from the league itself: each competition's own
