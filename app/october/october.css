@@ -232,3 +232,43 @@
 :where(:root[data-theme="arcade"]) .oc-pb.p { background: var(--tok-primary); color: var(--tok-on-primary); }
 :where(:root[data-theme="arcade"]) .oc-pb.b { background: var(--tok-up); color: var(--tok-page); }
 :where(:root[data-theme="arcade"]) .oc-crumb a.r::before { content: '\00B7'; display: inline-block; margin: 0 6px; color: var(--tok-muted); }
+
+/* ============================================================================
+   ONE SCROLL (thu-7; arcade page only) - the Weekly's pattern. The pick list
+   was a 52vh box scrolling inside a page that also scrolled. Now the game
+   chips, the five slots (one row of five) and the list's own header are ONE
+   sticky dock, and the player rows are the page's own scroll. "How it works"
+   is a single <details> row. :where()-scoped - the dark page resolves exactly
+   as before (app/darkParity.test.mjs). --gi-stick is the web's sticky site bar
+   (components/games/useStickyOffset.js); 0 in the app, where it scrolls away.
+   ========================================================================== */
+/* clip, not hidden: hidden makes the card the sticky dock's scrollport. */
+:where(:root[data-theme="arcade"]) .oc { overflow: clip; }
+:where(:root[data-theme="arcade"]) .oc-how { padding: 0; }
+:where(:root[data-theme="arcade"]) .oc-how > summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 34px; padding: 0 11px;
+  font: 700 10px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+}
+:where(:root[data-theme="arcade"]) .oc-how > summary::-webkit-details-marker { display: none; }
+:where(:root[data-theme="arcade"]) .oc-how > summary::after { content: '+'; font-size: 14px; color: var(--muted-dim); }
+:where(:root[data-theme="arcade"]) .oc-how[open] > summary::after { content: '\2212'; }
+:where(:root[data-theme="arcade"]) .oc-how[open] { padding-bottom: 10px; }
+:where(:root[data-theme="arcade"]) .oc-how > .oc-strip, :where(:root[data-theme="arcade"]) .oc-how > .oc-note { margin-left: 11px; margin-right: 11px; }
+
+:where(:root[data-theme="arcade"]) .oc-dock {
+  position: sticky; top: var(--gi-stick, 0px); z-index: 3;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 6px 10px 0;
+  background: var(--ink);
+}
+:where(:root[data-theme="arcade"]) .oc-dock .oc-grid { padding: 0; }
+:where(:root[data-theme="arcade"]) .oc-dock .oc-field { flex: none; padding: 6px; border-radius: 12px; }
+:where(:root[data-theme="arcade"]) .oc-dock .oc-form { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+:where(:root[data-theme="arcade"]) .oc-dock .oc-form .oc-slot:first-child { grid-column: auto; aspect-ratio: auto; }
+:where(:root[data-theme="arcade"]) .oc-dock .oc-slot { aspect-ratio: auto; height: 56px; padding: 12px 3px 3px; }
+:where(:root[data-theme="arcade"]) .oc-dock .oc-pan-h { border: 1px solid var(--rule-dim); }
+/* The rows continue the list header's box below it, as one card. */
+:where(:root[data-theme="arcade"]) .oc-panel { margin: 0 10px; border-top: 0; border-radius: 0 0 13px 13px; overflow: clip; }
+:where(:root[data-theme="arcade"]) .oc-pan-b { max-height: none; overflow: visible; }
