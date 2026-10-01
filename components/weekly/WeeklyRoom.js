@@ -400,22 +400,14 @@ export default function WeeklyRoom({
         </div>
       ) : null}
 
-      {/* ---- PROGRESS: six segments and ONE line under them ---------------
-          The count is the client's own lineup state (relay 3 item 1). The
-          right-hand words are THE ONE DEADLINE ON THIS SCREEN and the only
-          zone suffix: the next lock among filled open slots, or the rule. */}
+      {/* ---- THE DEADLINE LINE ---------------------------------------------
+          THE ONE DEADLINE ON THIS SCREEN and the only zone suffix: the next
+          lock among filled open slots, or the rule. The COUNT and the six
+          segments moved to the lock bar at the bottom (thu-6), so the count
+          appears once. */}
       <div className="wkv-prog">
-        <div className="wkv-pips">
-          {SLOTS.map((s2) => {
-            const { st } = stateFor(s2);
-            const kind = st?.kind ?? null;
-            const cls = kind === 'final' ? ' done' : kind === 'live' ? ' live' : lineup[s2] != null ? ' on' : '';
-            return <span key={s2} className={`wkv-pip${cls}`} data-slot-state={kind ?? 'empty'} />;
-          })}
-        </div>
         <div className="wkv-sub">
-          <span className="wkv-count">
-            {filledSlots.length} of {SLOTS.length} &middot;{' '}
+          <span className="wkv-when">
             {nextLockIso
               ? <>next lock <StandaloneTime iso={nextLockIso} weekday /></>
               : openSlots.length > 0 ? 'each slot locks at its kickoff' : 'all locked'}
@@ -607,10 +599,9 @@ export default function WeeklyRoom({
         </div>
       </div>
 
-      {/* ---- THE FOOTER = THE CONFIRM CONTROL ----------------------------
-          The Pick'em v2 board's shape: the receipt is a footer button, not a
-          card below the board. It writes meta.confirmed_at and nothing else;
-          an unconfirmed entry counts at lock exactly the same. */}
+      {/* ---- THE FOOTER: what the week means, in words ---------------------
+          The confirm control is no longer here (thu-6): it is the lock bar
+          below, which stays on screen over the list. */}
       <div className="wkv-ft">
         <p className="wkv-pace">
           {locked ? (
@@ -623,14 +614,38 @@ export default function WeeklyRoom({
             <>Every change saves<br /><b>Six filled or the week does not count</b></>
           )}
         </p>
-        {!locked && openSlots.length > 0 ? (
-          <button type="button" className="wkv-lock"
-            disabled={!allSet || confirmedAt != null || confirming}
-            onClick={lockItIn}>
-            {!allSet ? `${unfilled.length} to fill` : confirmedAt ? 'Locked in' : confirming ? 'Locking…' : 'Lock it in'}
-          </button>
-        ) : null}
       </div>
+
+      {/* ---- THE LOCK BAR (thu-6) -------------------------------------------
+          Sticky at the bottom - above the app's tab bar in the shell, at the
+          viewport's bottom on the web - for as long as the room is open: some
+          slot can still change and the week has not closed. Below six it is
+          the count and the six segments; at six of six it IS the button, the
+          same lockItIn the footer button used to call. Confirming is a
+          RECEIPT (meta.confirmed_at) - an unconfirmed six counts the same. */}
+      {!locked && openSlots.length > 0 ? (
+        <div className="wkv-bar" data-full={allSet ? 'yes' : 'no'}>
+          {allSet ? (
+            <button type="button" className="wkv-lock"
+              disabled={confirmedAt != null || confirming}
+              onClick={lockItIn}>
+              {confirmedAt ? 'Locked in' : confirming ? 'Locking…' : 'Lock it in'}
+            </button>
+          ) : (
+            <>
+              <span className="wkv-count">{filledSlots.length} of {SLOTS.length}</span>
+              <div className="wkv-pips" aria-hidden="true">
+                {SLOTS.map((s2) => {
+                  const { st } = stateFor(s2);
+                  const kind = st?.kind ?? null;
+                  const cls = kind === 'final' ? ' done' : kind === 'live' ? ' live' : lineup[s2] != null ? ' on' : '';
+                  return <span key={s2} className={`wkv-pip${cls}`} data-slot-state={kind ?? 'empty'} />;
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      ) : null}
     </section>
   );
 }

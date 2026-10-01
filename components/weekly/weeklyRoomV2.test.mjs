@@ -166,7 +166,10 @@ const slots = (c) => [...c.querySelectorAll('.wkv-slot')];
 const prows = (c) => [...c.querySelectorAll('.wkv-prow')];
 const txt = (c, sel) => c.querySelector(sel)?.textContent ?? null;
 // THE PROGRESS LINE (thu-2): one line, "<n> of 6 · <the deadline or the rule>".
-const count = (c) => c.querySelector('.wkv-count')?.textContent ?? null;
+const count = (c) => c.querySelector('.wkv-bar .wkv-count')?.textContent ?? null;
+// THE DEADLINE LINE at the top (thu-6: the count moved to the lock bar).
+const when = (c) => c.querySelector('.wkv-when')?.textContent ?? null;
+const bar = (c) => c.querySelector('.wkv-bar');
 // Open slot i unless it is already the selected one (thu-2: the first empty
 // slot arrives selected, and tapping the selected slot closes it).
 const openAt = (c, i) => { if (!slots(c)[i].className.includes(' sel')) click(slots(c)[i].querySelector('.wkv-slot-tap')); };
@@ -201,13 +204,13 @@ test('EMPTY: six empty slots, stage 1, and a footer that counts what is missing'
   assert.equal(slots(c).filter((s) => s.textContent.includes('Tap to fill')).length, 5);
   assert.match(slots(c)[0].textContent, /Pick below/);
   assert.ok(slots(c)[0].className.includes(' sel'));
-  assert.equal(count(c), '0 of 6 · each slot locks at its kickoff');
+  assert.equal(count(c), '0 of 6');
+  assert.equal(when(c), 'each slot locks at its kickoff');
   // the rules live in the folded "How it works", not in a step strip
   assert.equal(c.querySelector('.wkv-stp'), null);
   assert.match(txt(c, '.wkv-how .wkv-note'), /six filled or the week does not count/);
   // the footer
-  assert.equal(txt(c, '.wkv-lock'), '6 to fill');
-  assert.equal(c.querySelector('.wkv-lock').disabled, true);
+  assert.equal(c.querySelector('.wkv-lock'), null, 'below six the bar is a count, not a button');
   assert.match(txt(c, '.wkv-pace'), /Six filled or the week does not count/);
   // and the list is already on screen - no tap needed for the first row
   assert.match(txt(c, '.wkv-pan-h b'), /^QB · Quarterbacks$/);
@@ -235,12 +238,12 @@ test('THE MOCK\'S WRONG RULE IS NOWHERE ON THE SCREEN', () => {
 
 test('PARTIAL: the count, the next lock, and the first empty slot open', () => {
   const c = room({ initialLineup: { QB: 2, RB: 11, WR: 20 } });
-  assert.match(count(c), /^3 of 6 · next lock /);
+  assert.equal(count(c), '3 of 6');
+  assert.match(when(c), /^next lock /);
   // the first EMPTY slot is the one that arrives selected - TE, not QB
   assert.ok(slots(c)[3].className.includes(' sel'));
   assert.match(txt(c, '.wkv-pan-h b'), /^TE · Tight ends$/);
-  assert.equal(txt(c, '.wkv-lock'), '3 to fill');
-  assert.equal(c.querySelector('.wkv-lock').disabled, true);
+  assert.equal(c.querySelector('.wkv-lock'), null);
 });
 
 // ---------------------------------------------------------------------------
@@ -249,11 +252,12 @@ test('PARTIAL: the count, the next lock, and the first empty slot open', () => {
 
 test('FULL, ALL OPEN: nothing selected, and the button becomes the receipt', () => {
   const c = room({ initialLineup: OPEN_SIX });
-  assert.match(count(c), /^6 of 6 · next lock /);
+  assert.equal(count(c), null, 'at six the bar is the button, not a count');
+  assert.match(when(c), /^next lock /);
   assert.equal(c.querySelector('.wkv-slot.sel'), null, 'a full lineup arrives with nothing selected');
   assert.equal(txt(c, '.wkv-lock'), 'Lock it in');
   assert.equal(c.querySelector('.wkv-lock').disabled, false);
-  assert.equal(c.querySelectorAll('.wkv-pip.on').length, 6, 'six pips lit, none live or done');
+  assert.equal(bar(c).getAttribute('data-full'), 'yes');
 });
 
 // ---------------------------------------------------------------------------
@@ -307,9 +311,11 @@ test('AN OPEN SLOT: the position and the SURNAME, nothing else (thu-2)', () => {
 });
 
 test('THE PIPS CARRY THE THREE STATES', () => {
-  const c = room({ initialLineup: MIXED, live: LIVE_LAYER });
-  const kinds = [...c.querySelectorAll('.wkv-pip')].map((n) => n.getAttribute('data-slot-state'));
-  assert.deepEqual(kinds, ['final', 'live', 'live', 'scheduled', 'live', 'scheduled']);
+  // FIVE OF SIX, so the bar still draws its segments (at six it is the button).
+  const { FLEX2: _drop, ...five } = MIXED;
+  const c = room({ initialLineup: five, live: LIVE_LAYER });
+  const kinds = [...c.querySelectorAll('.wkv-bar .wkv-pip')].map((n) => n.getAttribute('data-slot-state'));
+  assert.deepEqual(kinds, ['final', 'live', 'live', 'scheduled', 'live', 'empty']);
   assert.equal(c.querySelectorAll('.wkv-pip.done').length, 1);
   assert.equal(c.querySelectorAll('.wkv-pip.live').length, 3);
 });
@@ -341,8 +347,8 @@ test('PRESSING THE × EMPTIES THE SLOT AND WRITES THE LINEUP WITHOUT IT', async 
   click(slots(c)[0].querySelector('.wkv-x'));
   // the slot is empty on screen at once
   assert.match(slots(c)[0].textContent, /Pick below/, 'and the panel opens on it');
-  assert.match(count(c), /^5 of 6 · /);
-  assert.equal(txt(c, '.wkv-lock'), '1 to fill');
+  assert.equal(count(c), '5 of 6');
+  assert.equal(c.querySelector('.wkv-lock'), null, 'five of six: the bar is a count again');
   // and the debounced save carries the lineup with that key gone
   await act(async () => { await sleep(900); });
   assert.equal(saves.length, 1, 'one write, not one per keystroke');
@@ -365,23 +371,24 @@ test('NEXT LOCK is the earliest kickoff among FILLED, UNKICKED slots', () => {
   // SF (+1h) and DAL (+1h) are filled and open; KC (+5h) and LAR (+28h) are not
   // in this lineup, and the kicked ones cannot contribute.
   const c = room({ initialLineup: MIXED, live: LIVE_LAYER });
-  const cell = count(c);
+  const cell = when(c);
   // THE ONE DEADLINE ON THE SCREEN, and the one place the zone is stated.
-  assert.match(cell, /^6 of 6 · next lock (Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2}:\d{2} (AM|PM) [A-Z]{2,5}$/,
+  assert.match(cell, /^next lock (Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2}:\d{2} (AM|PM) [A-Z]{2,5}$/,
     'day, time AND zone - this line is where the suffix lands');
-  const iso = c.querySelectorAll('.wkv-count time');
+  const iso = c.querySelectorAll('.wkv-when time');
   if (iso.length) assert.ok(iso[0].getAttribute('dateTime') ?? true);
 });
 
 test('NO FILLED OPEN SLOT: the line states the rule instead of a time', () => {
   const c = room({ initialLineup: {} });
-  assert.equal(count(c), '0 of 6 · each slot locks at its kickoff');
+  assert.equal(when(c), 'each slot locks at its kickoff');
 });
 
 test('EVERY SLOT KICKED: "all locked", and no button at all', () => {
   const c = room({ initialLineup: ALL_KICKED, live: LIVE_LAYER });
-  assert.equal(count(c), '6 of 6 · all locked');
+  assert.equal(when(c), 'all locked');
   assert.equal(c.querySelector('.wkv-lock'), null, 'nothing left to confirm');
+  assert.equal(bar(c), null, 'and no lock bar - nothing in the room can change');
   assert.match(txt(c, '.wkv-pace'), /All six locked\./);
   assert.match(txt(c, '.wkv-pace'), /Worst pick drops at settle/);
   assert.match(txt(c, '.wkv-pace'), /Results Tuesday morning/);
@@ -572,7 +579,8 @@ test('PICKING FILLS THE SLOT, ADVANCES, AND WRITES ONCE', async () => {
   openAt(c, 0);
   click(prows(c).find((r) => r.textContent.includes('Patrick Mahomes')));
   assert.equal(slots(c)[0].querySelector('.wkv-nm').textContent, 'Mahomes', 'the slot shows the surname');
-  assert.match(count(c), /^1 of 6 · next lock /);
+  assert.equal(count(c), '1 of 6');
+  assert.match(when(c), /^next lock /);
   assert.match(txt(c, '.wkv-pan-h b'), /^RB · Running backs$/, 'and it advanced to the next empty slot');
   await act(async () => { await sleep(900); });
   assert.deepEqual(saves.map((s) => s.body.lineup), [{ QB: 4 }]);
@@ -606,7 +614,8 @@ test('AN ALREADY-CONFIRMED ENTRY ARRIVES CONFIRMED', () => {
 test('EDITING AFTER CONFIRMING UN-CONFIRMS IT', () => {
   const c = room({ initialLineup: OPEN_SIX, initialConfirmedAt: '2026-09-20T19:40:00.000Z' });
   click(slots(c)[0].querySelector('.wkv-x'));
-  assert.equal(txt(c, '.wkv-lock'), '1 to fill');
+  assert.equal(c.querySelector('.wkv-lock'), null);
+  assert.equal(count(c), '5 of 6');
   assert.match(txt(c, '.wkv-pace'), /Six filled or the week does not count/);
   assert.doesNotMatch(txt(c, '.wkv-pace'), /Locked in/);
 });
@@ -652,7 +661,7 @@ test('THE HANDLE GATE STILL PAINTS A HELD SLOT, and the tap re-opens the claim',
   const c = room({ hasHandle: false, initialLineup: OPEN_SIX });
   assert.equal(slots(c).filter((s) => s.className.includes('wkv-pending')).length, 0,
     'nothing is held until a write is attempted');
-  assert.ok(c.querySelector('.wkv-lock'), 'and the footer is unchanged');
+  assert.ok(c.querySelector('.wkv-bar .wkv-lock'), 'and the lock bar is unchanged');
 });
 
 // ---------------------------------------------------------------------------
@@ -676,14 +685,44 @@ test('THE HEADER IS ONE LINE, AND EVERY WORD OF IT IS DATA', async () => {
   assert.equal(c.querySelectorAll('h1').length, 1);
 });
 
-test('PROGRESS: six segments and one line under them, counted from the lineup', () => {
+test('THE COUNT APPEARS ONCE, in the lock bar; the top line is the deadline (thu-6)', () => {
   const c = room({ initialLineup: { QB: 2, RB: 11, WR: 20 } });
-  assert.equal(c.querySelectorAll('.wkv-prog .wkv-pip').length, 6);
-  assert.equal(c.querySelectorAll('.wkv-prog .wkv-pip.on').length, 3);
-  assert.equal(c.querySelectorAll('.wkv-prog .wkv-count').length, 1);
-  assert.match(count(c), /^3 of 6 · /);
-  const empty = room();
-  assert.equal(count(empty), '0 of 6 · each slot locks at its kickoff');
+  assert.equal(c.querySelectorAll('.wkv-count').length, 1);
+  assert.equal(c.querySelector('.wkv-prog .wkv-count'), null, 'no duplicate at the top');
+  assert.equal(c.querySelectorAll('.wkv-prog .wkv-pip').length, 0);
+  assert.equal(c.querySelectorAll('.wkv-bar .wkv-pip').length, 6);
+  assert.equal(c.querySelectorAll('.wkv-bar .wkv-pip.on').length, 3);
+  assert.equal(count(c), '3 of 6');
+  assert.equal(count(room()), '0 of 6');
+  assert.doesNotMatch(when(c), /of 6/);
+});
+
+test('THE LOCK BAR: present while the room is open, the LAST thing in the room', () => {
+  const c = room();
+  const b = bar(c);
+  assert.ok(b, 'present in the pick phase');
+  assert.equal(b.parentElement.className, 'wkv');
+  assert.equal(b.parentElement.lastElementChild, b, 'last child, so it rests in flow at the end');
+  assert.equal(b.getAttribute('data-full'), 'no');
+});
+
+test('AT SIX OF SIX THE BAR BECOMES LOCK IT IN, with the same action', async () => {
+  const c = room({ initialLineup: OPEN_SIX });
+  const btn = bar(c).querySelector('button.wkv-lock');
+  assert.ok(btn);
+  assert.equal(btn.textContent, 'Lock it in', 'CSS sets it in capitals');
+  assert.equal(btn.disabled, false);
+  assert.equal(count(c), null, 'no count beside it');
+  await act(async () => { btn.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })); });
+  assert.deepEqual(stub.confirms, [[10]], 'confirmWeeklyEntry(contest.id) - the action the old button ran');
+  assert.equal(bar(c).querySelector('.wkv-lock').textContent, 'Locked in');
+});
+
+test('THE IN-FLOW LOCK BUTTON IS GONE: one .wkv-lock, and it is in the bar', () => {
+  const c = room({ initialLineup: OPEN_SIX });
+  assert.equal(c.querySelectorAll('.wkv-lock').length, 1);
+  assert.equal(c.querySelector('.wkv-ft .wkv-lock'), null);
+  assert.equal(c.querySelectorAll('.wkv-ft button').length, 0);
 });
 
 test('HOW IT WORKS: one <details>, open only on a first visit', () => {

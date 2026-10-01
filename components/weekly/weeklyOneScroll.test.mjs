@@ -59,7 +59,8 @@ test('NO ANCESTOR IN THE ROOM IS A SCROLL CONTAINER: clip, never hidden/auto', (
 });
 
 test('THE LIST CONTAINER HAS NO overflow AT ALL - the rows are the page\'s scroll', () => {
-  assert.deepEqual(anyRule('.wkv-list'), [], 'no rule styles .wkv-list');
+  // (thu-6: one rule now - the bottom padding that clears the lock bar.)
+  for (const r of anyRule('.wkv-list')) assert.doesNotMatch(r.body, /overflow|max-height/, `${r.sel} makes no scroll box`);
   assert.match(ROOM, /className="wkv-list"/);
   assert.doesNotMatch(ROOM, /wkv-pan-b/, 'the retired scroll box is rendered nowhere');
   for (const sel of ['.wkv-dock', '.wkv-lineup', '.wkv-panel', '.wkv-pan-h']) {
@@ -109,4 +110,38 @@ test('THE HEADER READS ITS WORDS FROM DATA, never a typed week or format', () =>
   const code = ROOM.replace(/\/\*[\s\S]*?\*\//g, '');
   assert.doesNotMatch(code, /PPR, drop worst/, 'the format words are not typed in the room');
   assert.doesNotMatch(code, /Week \d/, 'nor is a week number');
+});
+
+test('THE LOCK BAR STICKS AT THE BOTTOM, above the app tab bar, paying the inset on the web', () => {
+  const b = arcade('.wkv-bar');
+  assert.match(b, /position:\s*sticky/);
+  // On the web: the viewport's bottom, paying the home-indicator inset itself.
+  assert.match(b, /bottom:\s*0/);
+  assert.match(b, /padding:[^;]*env\(safe-area-inset-bottom, 0px\)/, 'the home indicator is cleared on the web');
+  // In the app: above the tab bar, keyed on the stamp AppTabBar sets only when
+  // it renders (apptab.css, and so --sv-appbar-h, loads on every page).
+  const appRule = [...CSS.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .find((m) => m[1].trim() === ':where(:root[data-theme="arcade"][data-appbar="1"]) .wkv-bar')?.[2] ?? '';
+  assert.match(appRule, /bottom:\s*calc\(var\(--sv-appbar-h\) \+ 1px\)/);
+  assert.match(appRule, /padding-bottom:\s*8px/, 'and the inset is not paid twice');
+  assert.match(read('components/shell/AppTabBar.js'), /setAttribute\('data-appbar', '1'\)/);
+  assert.match(read('components/shell/apptab.css'), /--sv-appbar-h:\s*calc\(62px \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(b, /min-height:\s*var\(--wkv-bar-h\)/);
+  assert.match(arcade('.wkv-bar .wkv-lock'), /min-height:\s*44px/, 'a 44 px target');
+  assert.match(arcade('.wkv-bar .wkv-lock'), /text-transform:\s*uppercase/, 'LOCK IT IN');
+  // the volt fill with navy ink is the existing .wkv-lock arcade rule
+  assert.match(arcade('.wkv-lock'), /background:\s*var\(--tok-action\);\s*color:\s*var\(--tok-on-action\)/);
+});
+
+test('THE LIST\'S LAST ROW CLEARS THE BAR: bottom padding >= the bar\'s height', () => {
+  const h = Number(/--wkv-bar-h:\s*(\d+)px/.exec(arcade('.wkv'))?.[1]);
+  assert.ok(h >= 44 + 16, `bar height ${h}`);
+  assert.match(arcade('.wkv-list'), /padding-bottom:\s*var\(--wkv-bar-h\)/);
+});
+
+test('THE BAR IS THE ROOM\'S LAST CHILD and the footer holds no button', () => {
+  const tail = ROOM.slice(ROOM.indexOf('<div className="wkv-ft">'));
+  const ft = tail.slice(0, tail.indexOf('THE LOCK BAR'));
+  assert.doesNotMatch(ft, /<button/, 'no in-flow lock button');
+  assert.match(tail, /<div className="wkv-bar"[\s\S]*onClick=\{lockItIn\}[\s\S]*<\/section>/);
 });

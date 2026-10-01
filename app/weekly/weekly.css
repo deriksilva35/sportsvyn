@@ -565,3 +565,43 @@
 }
 /* The × keeps its own corner and stays clear of the surname line below it. */
 :where(:root[data-theme="arcade"]) .wkv-slot .wkv-x { top: 0; right: 0; width: 24px; height: 24px; font-size: 12px; }
+
+/* ============================================================================
+   THE LOCK BAR (thu-6; arcade page only). Sticky at the bottom of the room for
+   as long as the room is open. On the web it sits at the viewport's bottom and
+   pays the home-indicator inset in its own padding. In the app it sits on top
+   of the tab bar: AppTabBar stamps <html data-appbar="1"> only when it renders,
+   and --sv-appbar-h (components/shell/apptab.css, 62 px + the inset) is that
+   bar's height less its 1 px top border - so the offset is that plus 1px, and
+   the inset is not paid twice. (apptab.css loads on every page, so the
+   variable alone cannot tell the app from the web; the stamp can.) Last
+   child of .wkv, so at the end of the room it rests in flow below the footer
+   rather than over it.
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .wkv { --wkv-bar-h: 60px; }
+:where(:root[data-theme="arcade"]) .wkv-bar {
+  position: sticky; bottom: 0; z-index: 5;
+  min-height: var(--wkv-bar-h); box-sizing: border-box;
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+  background: var(--ink);
+  border-top: 1px solid var(--tok-line);
+}
+/* In the app: above the tab bar, which has already paid the inset. */
+:where(:root[data-theme="arcade"][data-appbar="1"]) .wkv-bar { bottom: calc(var(--sv-appbar-h) + 1px); padding-bottom: 8px; }
+:where(:root[data-theme="arcade"]) .wkv-bar .wkv-count {
+  flex: 0 0 auto;
+  font: 700 13px var(--font-mono, ui-monospace, monospace);
+  color: var(--tok-primary);
+  white-space: nowrap;
+}
+:where(:root[data-theme="arcade"]) .wkv-bar .wkv-pips { flex: 1; margin-top: 0; }
+:where(:root[data-theme="arcade"]) .wkv-bar .wkv-pip { height: 6px; }
+:where(:root[data-theme="arcade"]) .wkv-bar .wkv-lock {
+  width: 100%; min-height: 44px; margin-left: 0;
+  font: 800 14px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+/* The last row clears the bar: the list ends a bar's height above it. */
+:where(:root[data-theme="arcade"]) .wkv-list { padding-bottom: var(--wkv-bar-h); }
+:where(:root[data-theme="arcade"]) .wkv-ft { margin-top: 0; }
