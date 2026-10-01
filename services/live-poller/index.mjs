@@ -329,14 +329,16 @@ async function loop(lg) {
               // ITS FAILURE IS ITS OWN. The box score is what October and The
               // Run settle against; the pitch list is a tab. Losing the tab
               // must never cost the scoring.
-              // THE NBA'S LAST PLAY rides the same due list: one /plays call
-              // per due game (every tenth live poll, and the final), into
-              // metadata.detail.last_play. Contained like MLB's pitches.
+              // THE NBA'S PLAYS ride the same due list: one /plays call per
+              // due game (every tenth live poll, and the final), into `plays`
+              // (the game page's list, nba-card) and metadata.detail.last_play
+              // (the card's line). Contained like MLB's pitches.
               if (lg.slug === 'nba') {
                 try {
                   const lp = await syncNbaLastPlay(d.id);
                   pending += lp.calls; window.calls += lp.calls; window.statsCalls += lp.calls; statsCallsToday += lp.calls;
                   window.plays += lp.changed ?? 0;
+                  if (lp.playsError) log(`[nba] plays ${d.why} match=${d.id} write failed:`, String(lp.playsError).slice(0, 120));
                 } catch (e) {
                   log(`[nba] last play ${d.why} match=${d.id} failed:`, String(e?.message ?? e).slice(0, 120));
                 }

@@ -25,7 +25,8 @@ import { liveWinProbView } from '@/components/gridiron/LiveWinProb';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import { possessionSide } from '@/lib/gridiron/possession';
-import { shortOf, BASEBALL, sportOf } from '@/lib/live/vocabulary';
+import { shortOf, BASEBALL, BASKETBALL, sportOf } from '@/lib/live/vocabulary';
+import { nbaLiveLabel, nbaFinalLabel, timeoutsText } from '@/lib/nba/card';
 import { LEAGUE_LABEL, abbrOf, cardVariant, countLine, pickTone, statLineText, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
 import { SPORTS, sportChipShown, hrefs, applyView, chipCounts, oddsFoot, winProbRead, firstDownPct, leaderOf, fieldLine } from '@/lib/scores/v4';
 
@@ -35,6 +36,8 @@ const PICKEM = "Pick'em";
 export function liveLabel(g) {
   const ls = g.liveState ?? {};
   if (sportOf(g.leagueSlug) === BASEBALL) return shortOf(ls, BASEBALL) ?? 'Live';
+  // BASKETBALL (nba-card): "Q4 · 2:14", "Half", "End Q3", "OT · 0:45", "2OT · 1:02".
+  if (sportOf(g.leagueSlug) === BASKETBALL) return nbaLiveLabel(ls);
   if (g.leagueSlug === 'epl') {
     const p = ls.period ?? null; const el = ls.elapsed ?? null;
     return p === 'HT' ? 'HT' : el != null ? `${el}'${ls.extra ? `+${ls.extra}` : ''}` : 'Live';
@@ -43,7 +46,7 @@ export function liveLabel(g) {
   return q ? `${Number(q) >= 5 ? 'OT' : `Q${q}`}${c ? ` · ${c}` : ''}` : 'Live';
 }
 
-function Team({ g, side, x, variant, ball, headgear, dressed, lead }) {
+function Team({ g, side, x, variant, ball, headgear, dressed, lead, bonus = false, won = false }) {
   const t = side === 'home' ? g.home : g.away;
   const ab = abbrOf(t);
   const score = side === 'home' ? g.homeScore : g.awayScore;
@@ -62,6 +65,10 @@ function Team({ g, side, x, variant, ball, headgear, dressed, lead }) {
         <div className="nm">
           <span className="n">{t.shortName ?? t.name}</span>
           {ball ? <span className="ball" role="img" aria-label={`${ab} ball`} /> : null}
+          {/* BASKETBALL ONLY (nba-card): BONUS on the side the feed says is in
+              it (it shoots the bonus), live only; W on a final's winner. */}
+          {bonus ? <span className="bonus" data-bonus={side}>Bonus</span> : null}
+          {won ? <span className="w" data-won={side}>W</span> : null}
           {pick ? <span className="pk">Your pick</span> : null}
         </div>
         <div className="meta"><span className="ab">{ab}</span>{meta ? ` · ${meta}` : ''}</div>
@@ -118,6 +125,9 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
   const variant = cardVariant(g);
   const live = variant === 'live', final = variant === 'final';
   const baseball = sportOf(g.leagueSlug) === BASEBALL;
+  // BASKETBALL'S EXTRAS (lib/nba/card.js nbaCardExtras + performerLine): the
+  // bonus and timeouts (live), the period a final ended in, the top-scorer line.
+  const nba = sportOf(g.leagueSlug) === BASKETBALL ? (x.nba ?? {}) : null;
   const lead = leaderOf(g);
   const ball = possessionSide({
     leagueSlug: g.leagueSlug, status: g.status, possession: x.drive?.offenseAbbr ?? null,
@@ -129,7 +139,9 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
   const odds = oddsFoot(g, { spreadHome: x.spreadHome, total: x.total, openHome: x.openHome ?? null });
   const wp = live ? winProbRead(g, liveWinProbView(g.liveState, now)) : null;
   const boardOpen = !live && !final && (g.leagueSlug === 'nfl' || g.leagueSlug === 'cfb');
-  const moment = final ? (baseball ? x.mlbFoot ?? null : statLineText(x.stat, g.leagueSlug)) : null;
+  const moment = final ? (nba ? nba.perf ?? null : baseball ? x.mlbFoot ?? null : statLineText(x.stat, g.leagueSlug)) : null;
+  const order = orderFor(g.leagueSlug);
+  const to = nba && onPage ? timeoutsText(nba.timeouts, order) : null;
   const field = fieldLine(x.drive);
   const tick = live && field.named ? firstDownPct(x.drive) : null;
   const where = `${LEAGUE_LABEL[g.leagueSlug] ?? ''}${g.network ? ` · ${g.network}` : ''}`;
@@ -140,13 +152,14 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
         {live
           ? <span className="clock"><i className="dot" />{liveLabel(g)}</span>
           : final
-            ? <span className="fin">Final · {g.etWeekday ?? weekdayOf(g.kickoffAt.slice(0, 10))}</span>
+            ? <span className="fin">{nba ? nbaFinalLabel(nba.finalPeriod) : `Final · ${g.etWeekday ?? weekdayOf(g.kickoffAt.slice(0, 10))}`}</span>
             : <span className="ko"><StandaloneTime iso={g.kickoffAt} serverTz={tz} />{g.network ? ` · ${g.network}` : ''}</span>}
         <span className="where">{live || final ? where : LEAGUE_LABEL[g.leagueSlug]}{bell ? <span className="bell"> · {bell}</span> : null}</span>
       </div>
-      {orderFor(g.leagueSlug).map((side) => (
+      {order.map((side) => (
         <Team key={side} g={g} side={side} x={x} variant={variant} ball={ball === side}
-          headgear={headgear} dressed={dressed} lead={lead} />
+          headgear={headgear} dressed={dressed} lead={lead}
+          bonus={Boolean(nba && live && nba.bonus?.[side])} won={Boolean(nba && final && lead === side)} />
       ))}
       {onPage && x.line && variant !== 'upcoming' ? <ExpandLine line={x.line} /> : null}
       {/* THE STARTERS SIT UNDER THE TEAMS they pitch for (tue-4), not in the
@@ -186,7 +199,16 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
         </div>
       )}
       {onPage ? null : <Stake stake={x.stake} g={g} boardOpen={boardOpen} signedIn={signedIn} />}
-      {live ? (
+      {live && nba ? (
+        /* THE NBA LIVE FOOT: the top scorer each side, one line; on the game
+           page the timeouts left beside it. No odds and no win read live. */
+        (nba.perf || to) ? (
+          <div className="sv4-foot" data-nba="live">
+            <span className="perf" data-perf="1">{nba.perf ?? ''}</span>
+            {to ? <span className="to" data-timeouts="1">{to}</span> : null}
+          </div>
+        ) : null
+      ) : live ? (
         (odds || wp) ? (
           <div className="sv4-foot">
             <span>{odds}</span>
@@ -203,6 +225,10 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
             ? (x.closing ? <span className="close" data-closing="1">{x.closing}</span> : null)
             : <Link className="go" href={gameHref}>{x.hasStats ? 'Box score' : 'Recap'} &rarr;</Link>}
         </div>
+      ) : nba ? (
+        /* THE NBA PRE-GAME FOOT: the line when one exists, and nothing when
+           not - the Pick'em strip under the board is where a pick is made. */
+        odds ? <div className="sv4-foot" data-pre="nba"><span>{odds}</span></div> : null
       ) : baseball ? (
         <div className="sv4-foot" data-pre="mlb">
           <span>{odds ?? 'No line yet'}</span>
@@ -242,6 +268,26 @@ export function Card(props) {
       line={props.x.line ?? null} expandable={g.leagueSlug !== 'epl'}>
       <CardFace {...props} />
     </ExpandCard>
+  );
+}
+
+/**
+ * THE NBA PICK'EM STRIP (nba-card, thu-37): "1 of 3 picked · next lock 4:00 PM
+ * PDT", one link to /pickem/nba. Read by lib/nba/yours.js nbaPickemStrip and
+ * present only on the NBA chip when today has an NBA board. The lock time is
+ * in the PAGE zone (StandaloneTime with the page's serverTz), the same clock as
+ * the header's ZoneLabel and every card's tip.
+ */
+export function NbaPickemStrip({ s, tz }) {
+  if (!s) return null;
+  return (
+    <Link className="sv4-pkstrip" href={s.href} data-nba-pickem="1">
+      <span className="t">
+        <b>{s.kicker}</b>
+        <span className="l">{s.line}{s.nextLock ? <> · next lock <StandaloneTime iso={s.nextLock} serverTz={tz} /></> : null}</span>
+      </span>
+      <span className="go">{s.cta} &rsaquo;</span>
+    </Link>
   );
 }
 
@@ -326,6 +372,7 @@ export default function ScoreboardV4({ v, view = null, conf = null, signedIn = f
       )}
       {rest.length === 0 && !yours && <p className="sv4-empty">{emptyLine(v, view)}</p>}
       {rest.map((grp) => <Group key={grp.key} grp={grp} {...cardProps} />)}
+      <NbaPickemStrip s={v.nbaPickem ?? null} tz={v.tz} />
     </div>
   );
 }
