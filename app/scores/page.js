@@ -200,7 +200,7 @@ export default async function ScoresPage({ searchParams }) {
   const userId = session?.user?.id ?? null;
   const tz = viewerTz ?? ET;
   const sportRaw = one(sp.sport);
-  const sport = ['nfl', 'cfb', 'mlb'].includes(sportRaw) ? sportRaw : 'all';
+  const sport = ['nfl', 'cfb', 'mlb', 'nba'].includes(sportRaw) ? sportRaw : 'all';
   // THE ARCADE BOARD (scores-v4), flag-gated with the theme: under
   // data-theme="arcade" /scores draws ScoreboardV4; the dark page below is
   // ScoresV2 exactly as it was. Same reader, plus the opening lines.
