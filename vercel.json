@@ -22,6 +22,10 @@
       "schedule": "0 9 * * *"
     },
     {
+      "path": "/api/cron/odds-budget",
+      "schedule": "5 9 * * *"
+    },
+    {
       "path": "/api/cron/nfl-stats-sweep",
       "schedule": "0 8 * * 2"
     },
