@@ -131,7 +131,7 @@ function Card({ g, x, signedIn, signinHref, tz }) {
   const awayLeads = g.homeScore != null && g.awayScore != null && g.awayScore > g.homeScore;
   const bar = !scored || live ? eplBar(x.prob, g) : null;
   const pctFor = (side) => (x.prob && !scored ? Math.round(side === 'home' ? x.prob.home : x.prob.away) : null);
-  const odds = oddsLine(g, x.spreadHome, x.total);
+  const odds = oddsLine(g, x.spreadHome, x.total, x.moneyline ?? null);
   const boardOpen = !scored && (g.leagueSlug === 'nfl' || g.leagueSlug === 'cfb');
   const stat = final ? statLineText(x.stat, g.leagueSlug) : null;
   const pickAbbr = x.stake?.pick?.abbr ?? null;

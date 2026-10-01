@@ -152,7 +152,7 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
   const headgear = pairHasHeadgear(g.leagueSlug, g.away?.abbreviation ?? null, g.home?.abbreviation ?? null);
   const dressed = Boolean(g.away?.colors && g.home?.colors);
   const gameHref = gameHrefOf(g);
-  const odds = oddsFoot(g, { spreadHome: x.spreadHome, total: x.total, openHome: x.openHome ?? null });
+  const odds = oddsFoot(g, { spreadHome: x.spreadHome, total: x.total, openHome: x.openHome ?? null, moneyline: x.moneyline ?? null });
   const wp = live ? winProbRead(g, liveWinProbView(g.liveState, now)) : null;
   const boardOpen = !live && !final && (g.leagueSlug === 'nfl' || g.leagueSlug === 'cfb');
   // EPL's scorers sit on the face (SoccerMoments), so its foot names no moment.
