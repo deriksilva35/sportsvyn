@@ -25,7 +25,7 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { currentNationalPool, poolWeek, weekBoard, entryWithPicks, poolCounts } from '@/lib/survivor/read';
-import { entriesOpen } from '@/lib/survivor/rules';
+import { entriesOpen, entryCutoff } from '@/lib/survivor/rules';
 import { roomModel, SURVIVOR_SEEN_COOKIE } from '@/lib/survivor/view';
 import SurvivorRoom from '@/components/survivor/SurvivorRoom';
 import '../daily/daily.css';
@@ -87,11 +87,12 @@ export default async function SurvivorPage() {
     poolCounts(pool.id).catch(() => ({ entries: 0, alive: 0 })),
     cookies(),
   ]);
-  const start = weeks.find((w) => w.week === pool.start_week);
-  const open = uid == null ? true : entriesOpen(pool, start?.first_kickoff ?? null, now);
+  // LATE ENTRY until the cutoff week's first kickoff (from matches); a late
+  // entrant's path starts at their own first week.
+  const open = uid == null ? true : entriesOpen(pool, entryCutoff(pool, weeks), now);
   const model = roomModel({
     rows: board.rows, picks: mine.picks, entry: mine.entry, week,
-    entriesOpen: open, now, startWeek: pool.start_week,
+    entriesOpen: open, now, startWeek: mine.entry?.first_week ?? week, cutoffWeek: pool.entry_until_week,
   });
 
   return (

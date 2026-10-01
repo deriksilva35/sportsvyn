@@ -6,32 +6,55 @@
    restates the dock height the three sticky layers stack by. No colour
    literals: tokens only (lib/brand/hexBaseline.json ratchet). */
 
-/* ---- the path: one cell per week from the start, oldest first ------------ */
+/* ---- the path: weeks 1-18, swiped sideways ------------------------------
+   THE ONLY HORIZONTAL SCROLLER ON THE PAGE, and it never scrolls vertically:
+   overflow-y is hidden, and nothing else in the room is a scroll box. Cells
+   snap to the centre so a swipe lands on a week, not between two. */
 .svv-path {
   list-style: none;
   margin: 0;
   padding: 0;
+  height: 48px;
   display: flex;
   gap: 6px;
   overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 .svv-path::-webkit-scrollbar { display: none; }
 .svv-cell {
-  flex: 1 0 56px;
-  min-height: 44px;
+  flex: 0 0 56px;
+  height: 44px;
+  scroll-snap-align: center;
   box-sizing: border-box;
   border-radius: 10px;
   border: 1px solid var(--tok-line);
   background: var(--tok-surface);
+}
+.svv-cell-b {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
 }
-.svv-cell.cur { border-color: var(--tok-primary); }
-.svv-cell.loss, .svv-cell.missed { opacity: 0.55; }
+button.svv-cell-b { cursor: pointer; }
+.svv-cell.current { border: 2px solid var(--tok-primary); }
+.svv-cell.open { border-color: var(--tok-primary); }
+.svv-cell.before, .svv-cell.out { opacity: 0.4; }
+.svv-cell.future { background: none; border-style: solid; }
+.svv-cell.lost .svv-tm, .svv-cell.missed .svv-tm { text-decoration: line-through; }
+.svv-cell.lost, .svv-cell.missed { opacity: 0.7; }
 .svv-wk {
   font: 700 9px var(--font-mono, ui-monospace, monospace);
   letter-spacing: 0.08em;
@@ -42,11 +65,23 @@
   color: var(--tok-primary);
   white-space: nowrap;
 }
+/* The tapped week's game, in place - one line, fixed height. */
+.svv-detail {
+  margin: 4px 0 0;
+  height: 16px;
+  line-height: 16px;
+  font: 600 11px var(--font-mono, ui-monospace, monospace);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-/* Signed out, the dock carries the pitch where the path would be - same 44 px. */
+/* Signed out, the dock carries the pitch where the path would be - the strip
+   and its detail line's 68 px. */
 .svv-pitch {
   margin: 0;
-  min-height: 44px;
+  min-height: 68px;
   box-sizing: border-box;
   padding: 7px 12px;
   line-height: 15px;
@@ -106,6 +141,6 @@
 .svv-bar .svv-line { flex: 1; }
 
 /* ---- arcade: the dock is the path, so it is shorter than the 3 x 2 grid -- */
-/* padding 6 + a 44 px cell + padding 10 = 60. */
-:where(:root[data-theme="arcade"]) .wkv.svv { --wkv-dock-h: 60px; }
-:where(:root[data-theme="arcade"]) .svv-dock { padding: 6px 12px 10px; }
+/* padding 6 + the 48 px strip + 4 + the 16 px detail line + padding 8 = 82. */
+:where(:root[data-theme="arcade"]) .wkv.svv { --wkv-dock-h: 82px; }
+:where(:root[data-theme="arcade"]) .svv-dock { padding: 6px 12px 8px; }

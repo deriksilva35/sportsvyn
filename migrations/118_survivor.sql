@@ -27,8 +27,12 @@
 -- from the pick rows by every grading run (lib/survivor/grade.js), so a crash
 -- between two statements cannot strand a life.
 --
--- ENTRIES CLOSE AT THE START WEEK'S FIRST KICKOFF unless late_entry is true.
--- That is the standard survivor rule; a league pool can open it.
+-- LATE ENTRY HAS A CUTOFF (ruled 1 Oct): entries are open until the FIRST
+-- KICKOFF of survivor_pools.entry_until_week, read from matches - never a typed
+-- time. NULL = never closes. A late entrant starts at their own first week
+-- (survivor_entries.first_week = the open week when they joined) with the
+-- pool's full lives, and weeks before it are never counted against them: no
+-- auto-pick, no missed row, no lost life (lib/survivor/grade.js).
 
 CREATE TABLE IF NOT EXISTS survivor_pools (
   id           serial PRIMARY KEY,
@@ -38,9 +42,10 @@ CREATE TABLE IF NOT EXISTS survivor_pools (
   start_week   integer NOT NULL CHECK (start_week BETWEEN 1 AND 18),
   lives        integer NOT NULL DEFAULT 1 CHECK (lives IN (1, 2)),
   missed       text    NOT NULL DEFAULT 'auto' CHECK (missed IN ('out', 'auto')),
-  late_entry   boolean NOT NULL DEFAULT false,
+  entry_until_week integer,   -- entries close at this week's first kickoff; NULL = never
   name         text,
-  created_at   timestamptz NOT NULL DEFAULT now()
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT survivor_pools_entry_cutoff CHECK (entry_until_week IS NULL OR entry_until_week >= start_week)
 );
 
 -- One national pool per sport-season; one pool per league per sport-season.
@@ -54,6 +59,7 @@ CREATE TABLE IF NOT EXISTS survivor_entries (
   user_id          integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   lives_left       integer NOT NULL CHECK (lives_left >= 0),
   eliminated_week  integer,
+  first_week       integer NOT NULL,   -- the open week when they joined; earlier weeks never count
   joined_at        timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (pool_id, user_id)
 );
@@ -85,7 +91,8 @@ CREATE INDEX IF NOT EXISTS survivor_picks_pending_idx
 CREATE INDEX IF NOT EXISTS survivor_picks_match_idx ON survivor_picks (match_id);
 
 -- THE NATIONAL POOL, 2026: starts NFL Week 5, one life, a missed pick is auto-
--- assigned (ruled 1 Oct). Idempotent - a second apply changes nothing.
-INSERT INTO survivor_pools (league_id, sport, season_year, start_week, lives, missed, late_entry, name)
-VALUES (NULL, 'nfl', 2026, 5, 1, 'auto', false, 'National')
+-- assigned, late entry open until Week 6's first kickoff (start_week + 1)
+-- (ruled 1 Oct). Idempotent - a second apply changes nothing.
+INSERT INTO survivor_pools (league_id, sport, season_year, start_week, lives, missed, entry_until_week, name)
+VALUES (NULL, 'nfl', 2026, 5, 1, 'auto', 6, 'National')
 ON CONFLICT (sport, season_year) WHERE league_id IS NULL DO NOTHING;

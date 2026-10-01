@@ -24,7 +24,7 @@ import Link from 'next/link';
 import StandaloneTime from '@/components/StandaloneTime';
 import { pickSurvivorTeam } from '@/app/actions/survivor';
 import { REFUSALS } from '@/lib/survivor/rules';
-import { SURVIVOR_SEEN_COOKIE } from '@/lib/survivor/view';
+import { SURVIVOR_SEEN_COOKIE, centerScrollLeft } from '@/lib/survivor/view';
 
 export default function SurvivorRoom({ poolId, week, model, alive = null, entries = null, lives = 1, livesLeft = null, firstVisit = false, signedIn = true, signinHref = '/signin' }) {
   const router = useRouter();
@@ -32,6 +32,21 @@ export default function SurvivorRoom({ poolId, week, model, alive = null, entrie
   const [busy, setBusy] = useState(null);
   const [err, setErr] = useState(null);
   const { list, path, bar, out } = model;
+  const stripRef = useRef(null);
+  const [shown, setShown] = useState(null);
+  const shownCell = path.find((c) => c.week === shown) ?? null;
+
+  // THE CURRENT WEEK, CENTRED ON LOAD - by the strip's own scrollLeft, so the
+  // page itself never moves.
+  useEffect(() => {
+    const strip = stripRef.current;
+    const cell = strip?.querySelector('[data-current="yes"]');
+    if (!strip || !cell) return;
+    strip.scrollLeft = centerScrollLeft({
+      cellLeft: cell.offsetLeft - strip.offsetLeft, cellWidth: cell.offsetWidth,
+      stripWidth: strip.clientWidth, scrollWidth: strip.scrollWidth,
+    });
+  }, [week]);
 
   // THE STICKY LAYERS START UNDER THE SITE'S OWN STICKY BAR - measured, the
   // Weekly room's way (WeeklyRoom.js), never typed.
@@ -105,14 +120,36 @@ export default function SurvivorRoom({ poolId, week, model, alive = null, entrie
         {!signedIn ? (
           <p className="svv-pitch"><b>One team a week.</b> Never the same one twice. Lose and you&rsquo;re out.</p>
         ) : (
-        <ol className="svv-path" aria-label="Your path">
-          {path.map((c) => (
-            <li key={c.week} className={`svv-cell${c.current ? ' cur' : ''}${c.result ? ` ${c.result}` : ''}`} data-result={c.result ?? 'none'}>
-              <span className="svv-wk">WK {c.week}</span>
-              <span className="svv-tm">{c.abbr ?? (c.current ? '—' : '·')}{c.mark ? <> {c.mark}</> : null}</span>
-            </li>
-          ))}
-        </ol>
+        <>
+          {/* THE STRIP: all eighteen weeks, swiped sideways (scroll-snap x) -
+              the only horizontal scroller on the page, and nothing in the room
+              scrolls vertically but the page. The current week is centred on
+              load. A past week is a button: its game shows in the line below,
+              in place - no navigation, no sheet. */}
+          <ol className="svv-path" aria-label="Your path, weeks 1 to 18" ref={stripRef}>
+            {path.map((c) => {
+              const tappable = c.detail != null;
+              const inner = (
+                <>
+                  <span className="svv-wk">WK {c.week}</span>
+                  <span className="svv-tm">{c.label ?? ''}{c.mark ? <> {c.mark}</> : null}</span>
+                </>
+              );
+              return (
+                <li key={c.week} className={`svv-cell ${c.state}${shown === c.week ? ' open' : ''}`}
+                  data-state={c.state} data-week={c.week} data-current={c.current ? 'yes' : undefined}>
+                  {tappable ? (
+                    <button type="button" className="svv-cell-b" aria-pressed={shown === c.week}
+                      onClick={() => setShown(shown === c.week ? null : c.week)}>{inner}</button>
+                  ) : <span className="svv-cell-b">{inner}</span>}
+                </li>
+              );
+            })}
+          </ol>
+          <p className="svv-detail" aria-live="polite">
+            {shownCell?.detail ?? 'Tap a past week for its result'}
+          </p>
+        </>
         )}
       </div>
 
@@ -152,7 +189,7 @@ export default function SurvivorRoom({ poolId, week, model, alive = null, entrie
         <span className="svv-line">
           {!signedIn ? <Link className="svv-signin" href={signinHref}>Sign in to pick</Link>
             : bar.kind === 'out' ? <><b>You&rsquo;re out</b> &middot; week {bar.week}</>
-            : bar.kind === 'closed' ? <><b>Entries are closed</b> &middot; the pool started at its first kickoff</>
+            : bar.kind === 'closed' ? <><b>Entries closed</b>{bar.week != null ? <> at week {bar.week} kickoff</> : null}</>
               : bar.kind === 'missed' ? <><b>No pick this week</b> &middot; a life is gone</>
                 : bar.kind === 'locked' ? <><b>{bar.abbr}</b> &middot; locked in</>
                   : bar.kind === 'picked' ? <><b>{bar.abbr}</b>{bar.auto ? ' (auto)' : ''} &middot; change it until <StandaloneTime iso={bar.kickoff_at} weekday zone={false} /></>
