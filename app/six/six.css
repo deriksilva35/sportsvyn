@@ -63,7 +63,9 @@
 .sx-nm { font: 700 10px var(--font-display); text-transform: uppercase; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sx-tm { font: 600 8px var(--font-mono); color: var(--muted); white-space: nowrap; }
 .sx-em { font: 600 9px var(--font-mono); color: var(--muted-dim); text-transform: uppercase; letter-spacing: .06em; }
-.sx-pts { position: absolute; bottom: 3px; right: 6px; font: 800 11px var(--font-mono); color: var(--volt); }
+.sx-pts { font: 800 12px var(--font-mono); color: var(--volt); line-height: 1.1; }
+/* ONCE POINTS LAND THE SLOT GROWS A LINE for them - never laid over the team. */
+.sx:not([data-phase="open"]) .sx-slot { height: 70px; }
 .sx-pts.fin { color: var(--paper); }
 .sx-err { margin: 8px 12px 0; font: 500 12px var(--font-mono); color: var(--live); }
 

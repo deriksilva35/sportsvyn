@@ -243,7 +243,8 @@ function Header({ view, lineup, locked }) {
       <div className="sx-pips">{pips.map((p, i) => <i key={i} className={`sx-pip${p === 'locked' ? ' lk' : p === 'picked' ? ' on' : ''}`} />)}</div>
       <div className="sx-sub">
         <span>{pips.filter((p) => p === 'locked').length} locked · {pips.filter((p) => p === 'picked').length} picked · {pips.filter((p) => p === 'open').length} open</span>
-        <span>{view.me ? `${ordinal(view.me.rank)} of ${view.me.of}` : ''}</span>
+        {/* A RANK ONLY ONCE THERE ARE POINTS: before the first tip every card is 0. */}
+        <span>{view.me && view.phase !== 'open' ? `${ordinal(view.me.rank)} of ${view.me.of}` : ''}</span>
       </div>
     </div>
   );
