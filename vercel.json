@@ -102,6 +102,10 @@
       "schedule": "0 10-21 * * 2"
     },
     {
+      "path": "/api/cron/epl-live",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/cron/epl-fixtures",
       "schedule": "25 13 * * *"
     },
