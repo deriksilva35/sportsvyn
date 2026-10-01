@@ -374,3 +374,155 @@ test('THE FIRST CLOCK IS THE SERVER\'S: renderedAt, not each side\'s own now', a
   const after = Number(t(c, 'b.n, b.n.dv-hot'));
   assert.ok(after >= 10 && after <= 12, `after hydration the room reads the real clock (got ${after})`);
 });
+
+// ---------------------------------------------------------------------------
+// ONE SCROLL (thu-7, arcade): the pager's pages are sections of the page's own
+// scroll, the tabs swap them, each tab keeps its scroll, the sticky stack
+// starts under the web's sticky header, AUTO lives in the clock bar and the
+// class / team / sort rows fold into one row. The CSS half is in
+// draftOneScroll.test.mjs; this half is what jsdom CAN see - the DOM and the
+// scroll calls. Every action is the stub above: nothing here reaches a draft.
+// ---------------------------------------------------------------------------
+
+/** Swap window scroll + rect reads for the length of one test. */
+function scrollRig() {
+  const w = dom.window;
+  const calls = [];
+  const saved = { scrollTo: w.scrollTo, scrollBy: w.scrollBy, rect: w.HTMLElement.prototype.getBoundingClientRect };
+  let y = 0;
+  Object.defineProperty(w, 'scrollY', { configurable: true, get: () => y });
+  w.scrollTo = (x, top) => { calls.push(['to', top]); y = top; };
+  w.scrollBy = (x, dy) => { calls.push(['by', dy]); y += dy; };
+  const rects = new Map(); // className fragment -> {top, bottom, height}
+  w.HTMLElement.prototype.getBoundingClientRect = function rect() {
+    for (const [k, r] of rects) if (String(this.className).includes(k)) return { top: 0, bottom: 0, height: 0, left: 0, right: 0, width: 0, ...r };
+    return { top: 0, bottom: 0, height: 0, left: 0, right: 0, width: 0 };
+  };
+  return {
+    calls, rects, setY: (v) => { y = v; },
+    restore: () => {
+      w.scrollTo = saved.scrollTo; w.scrollBy = saved.scrollBy;
+      w.HTMLElement.prototype.getBoundingClientRect = saved.rect;
+      delete w.scrollY;
+    },
+  };
+}
+const seg = (c, label) => [...c.querySelectorAll('.room-seg .rseg')].find((b) => b.textContent === label);
+
+test('ONE SCROLL: the room names the page it shows, PICK first, and a tab swaps it', () => {
+  const c = room({ arcade: true });
+  const r = c.querySelector('.room');
+  assert.equal(r.getAttribute('data-page'), 'PICK', 'PICK is the landing page');
+  click(seg(c, 'BOARD'));
+  assert.equal(r.getAttribute('data-page'), 'BOARD');
+  assert.equal(c.querySelector('.room-seg .rseg.on').textContent, 'BOARD');
+  click(seg(c, 'ROSTER'));
+  assert.equal(r.getAttribute('data-page'), 'ROSTER');
+  // all three sections stay in the DOM - CSS shows the one data-page names
+  assert.ok(c.querySelector('.pg-board') && c.querySelector('.pg-pick') && c.querySelector('.pg-roster'));
+});
+
+test('ONE SCROLL: each tab keeps its scroll; a new tab opens at its top, under the stack', () => {
+  const rig = scrollRig();
+  try {
+    const c = room({ arcade: true });
+    rig.setY(900); // forty rows into PICK
+    // ROSTER is unvisited: its top has scrolled 500 px up, the tabs' bottom is at 104.
+    rig.rects.set('room-seg', { top: 64, bottom: 104 });
+    rig.rects.set('pg-roster', { top: -500 });
+    click(seg(c, 'ROSTER'));
+    assert.deepEqual(rig.calls.at(-1), ['by', -604], 'the new tab\'s top lands just under the tabs');
+    rig.setY(40);
+    click(seg(c, 'PICK'));
+    assert.deepEqual(rig.calls.at(-1), ['to', 900], 'PICK comes back to the row it was left on');
+    // a section already under the stack is left alone
+    rig.calls.length = 0;
+    rig.rects.set('pg-board', { top: 104 });
+    click(seg(c, 'BOARD'));
+    assert.equal(rig.calls.length, 0, 'no scroll when the top is already in view');
+  } finally { rig.restore(); }
+});
+
+test('ONE SCROLL IS ARCADE ONLY: the dark room never touches the window scroll', () => {
+  const rig = scrollRig();
+  try {
+    const c = room();
+    rig.setY(900);
+    rig.rects.set('room-seg', { bottom: 104 });
+    rig.rects.set('pg-roster', { top: -500 });
+    click(seg(c, 'ROSTER'));
+    assert.equal(rig.calls.length, 0);
+    assert.equal(c.querySelector('.dv-auto'), null, 'no AUTO in the clock bar');
+    assert.equal(c.querySelector('details.dv-filt'), null, 'no fold');
+    assert.ok(c.querySelector('.avail-tools > .avail-sort'), 'the dark page keeps its three rows unfolded');
+  } finally { rig.restore(); }
+});
+
+test('THE STACK STARTS UNDER THE WEB\'S STICKY HEADER, measured; not in the app', () => {
+  const rig = scrollRig();
+  const head = document.createElement('header');
+  head.className = 'sim-head'; head.style.position = 'sticky';
+  document.body.prepend(head);
+  try {
+    rig.rects.set('sim-head', { height: 57.4 });
+    let c = room({ arcade: true });
+    assert.equal(c.querySelector('.room').style.getPropertyValue('--dv-stick'), '57px');
+    act(() => { for (const r of roots) r.unmount(); }); roots.clear();
+    head.style.position = 'static';
+    c = room({ arcade: true });
+    assert.equal(c.querySelector('.room').style.getPropertyValue('--dv-stick'), '', 'a header that does not stick adds nothing');
+    act(() => { for (const r of roots) r.unmount(); }); roots.clear();
+    head.style.position = 'sticky';
+    document.cookie = 'sv_shell=sim-app; path=/';
+    c = room({ arcade: true });
+    assert.equal(c.querySelector('.room').style.getPropertyValue('--dv-stick'), '', 'in the app the header is about to go: not measured');
+  } finally {
+    head.remove(); rig.restore();
+    document.cookie = 'sv_shell=; path=/; max-age=0';
+  }
+});
+
+test('AUTO IN THE CLOCK BAR: tapping it is the room\'s own toggle - confirm on, then setAutoDraft', async () => {
+  const w = dom.window;
+  const confirmWas = w.confirm;
+  let asked = 0;
+  w.confirm = () => { asked += 1; return true; };
+  try {
+    // Somebody else's turn: with AUTO on during the reader's OWN turn the room
+    // would drive timerAutoPick, and this stub (which returns no picks) would
+    // never let that turn end.
+    const c = room({ arcade: true, userTeamIndex: 3 });
+    const b = c.querySelector('.dv-clk .dv-auto');
+    assert.ok(b, 'the switch is in the clock bar');
+    assert.equal(b.getAttribute('aria-pressed'), 'false');
+    assert.equal(b.querySelector('b').textContent, 'off');
+    await act(async () => { b.dispatchEvent(new w.MouseEvent('click', { bubbles: true })); });
+    assert.equal(asked, 1, 'turning it ON asks first, exactly like the room-head switch');
+    assert.deepEqual(stub.calls.find((x) => x[0] === 'setAutoDraft'), ['setAutoDraft', 1, true]);
+    assert.equal(b.getAttribute('aria-pressed'), 'true');
+    assert.equal(b.querySelector('b').textContent, 'on');
+    assert.ok(c.querySelector('.room-head .auto-toggle.on'), 'one state: the room-head switch reads on too');
+    stub.calls.length = 0;
+    await act(async () => { b.dispatchEvent(new w.MouseEvent('click', { bubbles: true })); });
+    assert.equal(asked, 1, 'turning it OFF does not ask');
+    assert.deepEqual(stub.calls.find((x) => x[0] === 'setAutoDraft'), ['setAutoDraft', 1, false]);
+  } finally { w.confirm = confirmWas; }
+});
+
+test('THE FILTERS FOLD INTO ONE ROW whose summary names the sort, and counts what is on', () => {
+  const c = room({ arcade: true });
+  const d = c.querySelector('.avail-tools > details.dv-filt');
+  assert.ok(d, 'the fold is in the tools');
+  assert.equal(d.open, false, 'closed on a phone');
+  assert.equal(d.querySelector('summary').textContent, 'Filters · Sort: ADP');
+  for (const sel of ['.avail-class', '.avail-team', '.avail-sort']) assert.ok(d.querySelector(sel), `${sel} is inside the fold`);
+  // search and the position chips stay out of it
+  assert.ok(c.querySelector('.avail-tools > .avail-search'));
+  assert.ok(c.querySelector('.avail-tools > .avail-chips:not(.avail-class)'));
+  // the summary is the sort the list is ACTUALLY on: My Team needs no stats
+  click([...d.querySelectorAll('.avail-sort button')].find((b) => b.textContent === 'My Team'));
+  assert.equal(d.querySelector('summary').textContent, 'Filters · Sort: My Team');
+  // a folded filter that narrows the list is counted, so a short list says why
+  click(d.querySelector('.ncaa-toggle'));
+  assert.match(d.querySelector('summary').textContent, /^Filters \(1\) · Sort: /);
+});

@@ -25,7 +25,7 @@
 // for why this moved off the route: the tracker room shares this URL and has no
 // clock at all.
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { makePick, timerAutoPick, setAutoDraft, fetchPlayerStats, fetchPlayerSummaries } from '@/app/actions/sim';
 import { SCORING_LABEL } from '@/lib/fantasy/config';
@@ -44,6 +44,7 @@ import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/sco
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
 import { sendHaptic } from '@/lib/shell/bridge';
+import { isShellClient } from '@/lib/shell/appTabs';
 import RookieChip from '@/components/fantasy/RookieChip';
 import { plural } from '@/lib/text/plural';
 
@@ -92,6 +93,11 @@ export default function DraftRoom({
   // what lets the room say so BEFORE the tap rather than after it. Empty for
   // a practice mock, which has no week and no slate.
   withheld = [],
+  // THE ARCADE PAGE (thu-7), resolved by the page from arcadeFor(isShell). It
+  // gates the MARKUP that only the one-scroll phone layout uses - the AUTO
+  // switch in the clock bar and the folded filters - so the dark page's DOM is
+  // exactly what it was. The layout itself is CSS, :where()-scoped to arcade.
+  arcade = false,
 }) {
   const router = useRouter();
   const [picks, setPicks] = useState(initialPicks);
@@ -228,15 +234,28 @@ export default function DraftRoom({
   // cancels a programmatic smooth scroll (the snap yanks it back to the current
   // page mid-animation), so smooth would leave the pager stuck. 'auto' lands on
   // the target snap point reliably. Swipes stay smooth (they are user-driven).
+  //
+  // ONE SCROLL (thu-7, arcade): the pager is not a scroller any more - the
+  // three pages are sections of the PAGE's scroll and the tabs swap which one
+  // is shown, so the scrollTo below finds nothing to scroll. What the page
+  // scroll needs instead is a memory: each tab keeps the window's scroll from
+  // when it was left, so a reader forty rows into PICK who checks ROSTER comes
+  // back to the same row. A tab not yet visited opens at its own top, under
+  // the sticky stack (the layout effect below).
+  const pageRef = useRef(1);
+  const scrollMem = useRef({});
   const jump = useCallback((i) => {
+    if (arcade && typeof window !== 'undefined') scrollMem.current[PAGES[pageRef.current]] = window.scrollY;
     const el = pagerRef.current;
-    if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'auto' });
+    if (el && typeof el.scrollTo === 'function') el.scrollTo({ left: i * el.clientWidth, behavior: 'auto' });
+    pageRef.current = i;
     setPage(i);
-  }, []);
+  }, [arcade]);
   const onPagerScroll = useCallback(() => {
     const el = pagerRef.current;
     if (!el) return;
     const i = Math.round(el.scrollLeft / el.clientWidth);
+    pageRef.current = i;
     setPage((prev) => (prev === i ? prev : i));
   }, []);
   // Land on PICK once mounted: set the pager scroll directly (no setState in the
@@ -245,6 +264,61 @@ export default function DraftRoom({
     const el = pagerRef.current;
     if (el) el.scrollLeft = el.clientWidth;
   }, []);
+
+  // ---- ONE SCROLL (thu-7, arcade) ----------------------------------------
+  // THE STICKY STACK STARTS UNDER THE SITE'S OWN STICKY BAR. On the web the
+  // sim header (.sim-head) is sticky at top 0; in the app it is not rendered
+  // at all (HideInShell) and the app header scrolls away. Measured, not typed:
+  // --dv-stick is that bar's height, or unset (0px) when there is none. The
+  // shell check is HideInShell's own gate - the header is still in the DOM for
+  // the first hydrated frame in the app, and measuring it then would push the
+  // whole stack down by a bar that is about to vanish.
+  // (Same shape as WeeklyRoom's --wkv-stick and oct-run-scroll's
+  // useStickyOffset, which measure .gi-head; neither is on main for a
+  // .sim-head, so this is written out here.)
+  const rootRef = useRef(null);
+  const segRef = useRef(null);
+  const filtRef = useRef(null);
+  useEffect(() => {
+    if (!arcade) return undefined;
+    const el = rootRef.current;
+    const bar = document.querySelector('.sim-head');
+    if (!el || !bar || isShellClient({ cookie: document.cookie })) return undefined;
+    if (window.getComputedStyle(bar).position !== 'sticky') return undefined;
+    const set = () => el.style.setProperty('--dv-stick', `${Math.round(bar.getBoundingClientRect().height)}px`);
+    set();
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(set) : null;
+    ro?.observe(bar);
+    return () => ro?.disconnect();
+  }, [arcade]);
+
+  // THE FILTERS FOLD ON A PHONE ONLY. Desktop has the room for every row, so
+  // the fold opens itself there (and its summary is hidden by CSS) - set on the
+  // element, not in state, so the server's closed render is the hydrated one.
+  useEffect(() => {
+    const d = filtRef.current;
+    if (d && typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 901px)').matches) d.open = true;
+  }, []);
+
+  /** Scroll so `el`'s top sits just under the sticky tabs - only if it has gone above them. */
+  const underStack = useCallback((el) => {
+    const seg = segRef.current;
+    if (!el || !seg || typeof window.scrollBy !== 'function') return;
+    const gap = el.getBoundingClientRect().top - seg.getBoundingClientRect().bottom;
+    if (gap < 0) window.scrollBy(0, gap);
+  }, []);
+
+  // A TAB SWAP RESTORES THAT TAB'S SCROLL, or opens a new one at its top.
+  // Layout effect: the section has just been shown, and the scroll must land
+  // before the frame is painted or the reader sees the old position flash.
+  const firstPage = useRef(true);
+  useLayoutEffect(() => {
+    if (firstPage.current) { firstPage.current = false; return; }
+    if (!arcade || typeof window === 'undefined') return;
+    const saved = scrollMem.current[PAGES[page]];
+    if (saved != null && typeof window.scrollTo === 'function') { window.scrollTo(0, saved); return; }
+    underStack(rootRef.current?.querySelector(`.pg-${PAGES[page].toLowerCase()}`));
+  }, [page, arcade, underStack]);
 
   // --- apply an action result (staggered reveal) ---
   const applyResult = useCallback(async (res) => {
@@ -466,6 +540,16 @@ export default function DraftRoom({
     return sortPlayers(list, sortOpts.find((o) => o.key === activeSort), summaries, seatValuation);
   }, [poolAll, filter, team, search, cls, college, sortOpts, activeSort, summaries, seatValuation]);
 
+  // A FILTER THAT SHRINKS THE LIST brings its first row back under the sticky
+  // stack if the reader had scrolled past it - the list is the page's scroll
+  // now, so a 3-row result would otherwise sit somewhere above the screen.
+  const pickBodyRef = useRef(null);
+  const firstFilter = useRef(true);
+  useEffect(() => {
+    if (firstFilter.current) { firstFilter.current = false; return; }
+    if (arcade) underStack(pickBodyRef.current);
+  }, [filter, cls, college, team, search, sort, arcade, underStack]);
+
   // ---- THE CLOCK HERO (v2) ------------------------------------------------
   // WHOSE PICK, WHICH PICK, AND WHEN YOURS COMES BACK. The banner this
   // replaced said "Team 7 on the clock · Pick 31" and nothing else; the mock's
@@ -489,8 +573,73 @@ export default function DraftRoom({
   const bestAvailable = shown.find((p) => !p.kicked) ?? null;
 
   const rounds = board.rounds;
+  // THE FOLD'S ONE LINE (thu-7, arcade): the sort it is on, and how many of the
+  // folded filters are narrowing the list - a team filter nobody can see is a
+  // list that looks short for no reason.
+  const filtOn = (cls !== 'ALL' ? 1 : 0) + (team !== 'ALL' ? 1 : 0) + (college ? 1 : 0);
+  const filtSummary = `Filters${filtOn ? ` (${filtOn})` : ''} · Sort: ${sortOpts.find((o) => o.key === activeSort)?.label ?? 'ADP'}`;
+  const moreFilters = (
+    <>
+      <div className="avail-chips avail-class">
+        {CLASS_FILTERS.map(([k, label]) => (
+          <button key={k} className={cls === k ? 'on' : ''} onClick={() => setCls(k)}>{label}</button>
+        ))}
+        {/* THE LEAGUE TOGGLE, beside the class row rather than in the
+            position row. A league is not a position: in the position row it
+            was mutually exclusive with QB/RB/WR/TE, so choosing it gave up
+            position filtering over 927 rows. Here both axes stay live and
+            "college QBs by NCAAF ADP" is two taps.
+            THE SORT FOLLOWS THE VIEW. Entering the college view lands on
+            NCAAF ADP - the order the reader came for - and leaving returns
+            to ADP, because the sort that was chosen for one board is not
+            offered on the other and a stale key would silently fall back. */}
+        <button
+          className={`ncaa-toggle${college ? ' on' : ''}`}
+          aria-pressed={college}
+          onClick={() => {
+            const next = !college;
+            setCollege(next);
+            setSort(next ? COLLEGE_DEFAULT_SORT : 'adp');
+          }}
+        >NCAA</button>
+      </div>
+      <div className="avail-team">
+        <span className="s-lbl">Team</span>
+        <select className="team-select" value={team} onChange={(e) => setTeam(e.target.value)}>
+          <option value="ALL">All teams</option>
+          {teamOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+      <div className="avail-sort">
+        <span className="s-lbl">Sort</span>
+        {sortOpts.map((o) => {
+          // My Team needs a next pick, not season stats. Gating it on
+          // statsReady would disable it for the whole of a live draft.
+          const locked = o.seat ? myNextOverall == null : (o.key !== 'adp' && !statsReady);
+          return (
+            <button
+              key={o.key}
+              className={activeSort === o.key ? 'on' : ''}
+              disabled={locked}
+              title={locked
+                ? (o.seat ? 'Opens once you have another pick coming' : 'Needs season stats, which land with the data backfill')
+                : undefined}
+              onClick={() => setSort(o.key)}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+        {/* Under MY TEAM the rows carry the gap as a bare number; the pick
+            it is measured at is the same on every row, so it is said here,
+            once. */}
+        {seatSort && <span className="s-hint">{seatSortHint(myNextOverall)}</span>}
+        {filter === 'ALL' && !seatSort && <span className="s-hint">Pick a position for stat sorts</span>}
+      </div>
+    </>
+  );
   return (
-    <div className={`room${view === 'board' ? ' room--board' : ''}`}>
+    <div ref={rootRef} className={`room${view === 'board' ? ' room--board' : ''}`} data-page={PAGES[page]}>
       {/* THIS IS THE PRACTICE SECTION, and it owns the screen only when a clock
           is running. An untimed mock keeps the tab bar - there is nothing to
           protect - and the tracker room, which shares this route, declares
@@ -530,6 +679,23 @@ export default function DraftRoom({
             </b>
             <span>{timerSeconds == null ? 'clock' : 'seconds'}</span>
           </div>
+          {/* AUTO IN THE CLOCK BAR (thu-7, arcade). The bar is what stays on
+              screen, so the one control that hands the seat to the engine
+              lives in it - THE SAME toggleAuto as the room-head switch, so
+              the confirm on ON and the single tap on OFF are unchanged.
+              Rendered on the arcade page only; CSS shows it at phone width,
+              where the room-head that carries the other one is folded away. */}
+          {arcade && !complete && (
+            <button
+              type="button"
+              className={`dv-auto${auto ? ' on' : ''}`}
+              onClick={toggleAuto}
+              aria-pressed={auto}
+              title={auto ? 'Auto-draft is making your picks' : 'Let the draft engine make your picks'}
+            >
+              Auto<b>{auto ? 'on' : 'off'}</b>
+            </button>
+          )}
         </div>
         <div className="dv-sub">
           {timerSeconds == null ? 'untimed · take as long as you like'
@@ -620,7 +786,7 @@ export default function DraftRoom({
       {/* mobile page tabs: full-width segmented thirds, sync with swipe + jump on
           tap. The PICK segment nudges (never yanks) when it is the user's turn but
           they are looking at another page. */}
-      <div className="room-seg">
+      <div className="room-seg" ref={segRef}>
         {PAGES.map((label, i) => (
           <button
             key={label}
@@ -676,64 +842,17 @@ export default function DraftRoom({
           <div className="avail-chips">
             {POS_FILTERS.map((f) => <button key={f} className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>{f}</button>)}
           </div>
-          <div className="avail-chips avail-class">
-            {CLASS_FILTERS.map(([k, label]) => (
-              <button key={k} className={cls === k ? 'on' : ''} onClick={() => setCls(k)}>{label}</button>
-            ))}
-            {/* THE LEAGUE TOGGLE, beside the class row rather than in the
-                position row. A league is not a position: in the position row it
-                was mutually exclusive with QB/RB/WR/TE, so choosing it gave up
-                position filtering over 927 rows. Here both axes stay live and
-                "college QBs by NCAAF ADP" is two taps.
-                THE SORT FOLLOWS THE VIEW. Entering the college view lands on
-                NCAAF ADP - the order the reader came for - and leaving returns
-                to ADP, because the sort that was chosen for one board is not
-                offered on the other and a stale key would silently fall back. */}
-            <button
-              className={`ncaa-toggle${college ? ' on' : ''}`}
-              aria-pressed={college}
-              onClick={() => {
-                const next = !college;
-                setCollege(next);
-                setSort(next ? COLLEGE_DEFAULT_SORT : 'adp');
-              }}
-            >NCAA</button>
-          </div>
-          <div className="avail-team">
-            <span className="s-lbl">Team</span>
-            <select className="team-select" value={team} onChange={(e) => setTeam(e.target.value)}>
-              <option value="ALL">All teams</option>
-              {teamOptions.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div className="avail-sort">
-            <span className="s-lbl">Sort</span>
-            {sortOpts.map((o) => {
-              // My Team needs a next pick, not season stats. Gating it on
-              // statsReady would disable it for the whole of a live draft.
-              const locked = o.seat ? myNextOverall == null : (o.key !== 'adp' && !statsReady);
-              return (
-                <button
-                  key={o.key}
-                  className={activeSort === o.key ? 'on' : ''}
-                  disabled={locked}
-                  title={locked
-                    ? (o.seat ? 'Opens once you have another pick coming' : 'Needs season stats, which land with the data backfill')
-                    : undefined}
-                  onClick={() => setSort(o.key)}
-                >
-                  {o.label}
-                </button>
-              );
-            })}
-            {/* Under MY TEAM the rows carry the gap as a bare number; the pick
-                it is measured at is the same on every row, so it is said here,
-                once. */}
-            {seatSort && <span className="s-hint">{seatSortHint(myNextOverall)}</span>}
-            {filter === 'ALL' && !seatSort && <span className="s-hint">Pick a position for stat sorts</span>}
-          </div>
+          {/* THE FOLD (thu-7, arcade): search and the position chips stay out;
+              class, team and sort fold into ONE row whose summary names the
+              sort. The dark page renders the same three rows unfolded. */}
+          {arcade ? (
+            <details className="dv-filt" ref={filtRef}>
+              <summary>{filtSummary}</summary>
+              {moreFilters}
+            </details>
+          ) : moreFilters}
         </div>
-        <div className="zone-body">
+        <div className="zone-body" ref={pickBodyRef}>
           {/* One header row of labels; the rows carry values only. Same
               container class as a row, hidden Draft phantom for the button
               column - the labels are seated by geometry, not padding. */}
