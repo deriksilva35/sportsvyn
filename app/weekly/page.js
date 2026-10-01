@@ -19,6 +19,7 @@
  */
 
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -29,7 +30,7 @@ import { currentContest, nextContest, getEntry } from '@/lib/weekly/entries';
 import { slateBounds, teamKickoffs, rowKickoff } from '@/lib/contests/slateBounds';
 import StandaloneDate from '@/components/StandaloneDate';
 import StandaloneTime from '@/components/StandaloneTime';
-import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI } from '@/lib/weekly/view';
+import { weeklyState, settledView, lineupRows, SLOT_LABEL, SLOT_EMOJI, WEEKLY_SEEN_COOKIE, howOpenByDefault } from '@/lib/weekly/view';
 import { liveEntryRows, liveScoredBoard, liveBoard } from '@/lib/weekly/live';
 import { slotStates } from '@/lib/weekly/slotState';
 import { weekTeamGames } from '@/lib/gridiron/todayV2';
@@ -66,7 +67,9 @@ const Stamp = ({ iso, fallback = null }) => (
   iso && Number.isFinite(new Date(iso).getTime()) ? <StandaloneDate iso={iso} /> : fallback
 );
 
-function Shell({ children }) {
+// `crumb` is false only for the builder (thu-2), whose room carries its own
+// one-line header with the same way back to /games in it.
+function Shell({ children, crumb = true }) {
   return (
     <div className="daily-shell">
       <GlobalHeaderServer activeNav="daily" />
@@ -80,7 +83,7 @@ function Shell({ children }) {
               same component, same class, first child of <main> - so all three
               games walk back to the lobby the same way, signed in or out.
               Inside Shell, which every return path on this page goes through. */}
-          <Link className="appcrumb" href="/games">&larr; Games</Link>
+          {crumb ? <Link className="appcrumb" href="/games">&larr; Games</Link> : null}
           {children}
         </main>
       </div>
@@ -369,30 +372,18 @@ export default async function WeeklyPage({ searchParams }) {
       of: board2.length,
     };
   })().catch(() => null);
+  // FIRST VISIT, WITHOUT A WRITE: no entry this week and no sv_wk_seen
+  // cookie (the room sets it on mount). Read here so "How it works" is
+  // server-rendered in its final state.
+  const seenCookie = (await cookies()).get(WEEKLY_SEEN_COOKIE)?.value ?? null;
+  const firstVisit = howOpenByDefault({ seenCookie, entry });
   return (
-    <Shell>
-      {/* THE HEADER, FOLDED (weekly-hdr relay item 2). What was here said the
-          same things three times and one of them was no longer true.
-          GONE, AND WHY EACH:
-            .clock  "first kickoff <date>" / "locks <date>" in the eyebrow's
-                    right slot. The Weekly has not had a single lock since the
-                    rolling lock shipped - each slot locks at its own player's
-                    kickoff - so a page-level deadline stamp was a fourth
-                    answer to a question the room already answers once, in
-                    "next lock". D12: ONE deadline per screen.
-            .yr sub "...whatever is saved at first kickoff is your entry"
-                    states that retired single lock outright.
-            .warn   "you are graded against the best six this pool could have
-                    made" - the .perf line under the lineup says exactly this,
-                    beside the six it is a claim about.
-          WHAT STAYS: the eyebrow and the week title, which are the only two
-          things on this block that name where you are. */}
-      <header className="hdr">
-        <span className="ed">The Weekly &middot; Week {contest.week}</span>
-      </header>
-      <div className="yr">
-        <h1>Week {contest.week}</h1>
-      </div>
+    <Shell crumb={false}>
+      {/* THE HEADER IS THE ROOM'S NOW (thu-2). The eyebrow, the giant
+          "Week N" title and the "← Games" crumb were three lines - about
+          110 px at 390 - saying where you are before the lineup began, and
+          the room's card said it a fourth time. One line in WeeklyRoom
+          (.wkv-top) carries the way back, the week and the format. */}
       {/* THE COUNTERS LIVE IN WeeklyRoom NOW (relay 3 item 1). They were
           here, computed from entry.lineup - the server's copy, frozen at
           page load - while the six rows below were driven by WeeklyRoom's
@@ -411,6 +402,7 @@ export default async function WeeklyPage({ searchParams }) {
         hasHandle={hasHandle}
         games={gamesByTeam}
         live={live}
+        firstVisit={firstVisit}
       />
 
       {/* THE .perf BOX MOVED INTO THE ROOM (v2, ruling L). It is one line under

@@ -37,6 +37,18 @@
  *      never emptied. mergeSlotWrites already deletes the key on a null, so
  *      this needed no writer change.
  *
+ * ONE SCROLL (thu-2, 1 Oct). At 390 x 844 the first player row sat ~80% down
+ * the screen - and only after a tap - inside a 262 px box that scrolled within
+ * a page that also scrolled. Now: ONE header line (.wkv-top: the way back,
+ * the week, the format, all from data), a six-segment progress bar with one
+ * line under it, "How it works" folded into a <details> that is open only on
+ * a first visit, the lineup as a 3 x 2 grid of 56 px slots (position and
+ * SURNAME) that sticks under the header, the list's own header sticking under
+ * that, and the rows as the PAGE's scroll. The first empty slot arrives
+ * selected so the list is on screen without a tap. Items 1 and 2 above still
+ * hold, except that an open slot no longer repeats its matchup - the list row
+ * carries it; a live, final or bye slot keeps its line.
+ *
  * THE COPY DOES NOT SAY "SCORES 0". The mock's footer does, and it is wrong:
  * a lineup short of six at settle is a DNF, not a five-man score. "Six filled
  * or the week does not count" is the ruled line.
@@ -48,7 +60,7 @@ import Link from 'next/link';
 import { SLOTS } from '@/lib/weekly/rules';
 import { slotState } from '@/lib/weekly/slotState';
 import { nextOpenSlot } from '@/lib/daily/play';
-import { poolRows, poolCountLabel } from '@/lib/weekly/view';
+import { poolRows, poolCountLabel, headerParts, surnameOf, WEEKLY_SEEN_COOKIE } from '@/lib/weekly/view';
 import { ordinal } from '@/lib/standings/view';
 import { useHandleGate, HELD } from '@/components/handle/HandleGate';
 import StandaloneTime from '@/components/StandaloneTime';
@@ -62,7 +74,6 @@ const POOL_LABEL = {
 // The tabs a FLEX slot offers. A single-position slot has no tabs at all -
 // one tab is a label pretending to be a control.
 const FLEX_TABS = ['RB', 'WR', 'TE'];
-const STEP_NAMES = ['Pick', 'Fill the lineup', 'Locked in'];
 // THE POSITION CLASS, for the slot's own colour. FLEX2 shares FLEX's.
 const POS_CLASS = { QB: 'qb', RB: 'rb', WR: 'wr', TE: 'te', FLEX: 'flex', FLEX2: 'flex' };
 
@@ -93,6 +104,10 @@ export default function WeeklyRoom({
   //   byId   playerId -> { points, played }
   //   total, startedCount, slots, rank, of
   live = null,
+  // FIRST VISIT (thu-2): the page decides it - no entry and no sv_wk_seen
+  // cookie (lib/weekly/view.js howOpenByDefault) - and "How it works" is
+  // server-rendered open only then. The room sets the cookie on mount.
+  firstVisit = false,
 }) {
   // THE HANDLE IS ASKED FOR AT THE FIRST SLOT SAVED, not on page load
   // (components/handle/HandleGate.js). It guards the WRITE, so browsing the
@@ -103,7 +118,13 @@ export default function WeeklyRoom({
   // NOTHING SELECTED IS A REAL STATE NOW. The pool is inline, so the panel
   // has an empty state of its own and the reader can close it again; v1's
   // `active` was always one of the six because the pool lived in a sheet.
-  const [active, setActive] = useState(null);
+  //
+  // ONE SLOT IS OPEN ON ARRIVAL (thu-2): the first empty slot, for a signed-in
+  // reader, so the first player row is on screen without a tap. A full lineup
+  // arrives with nothing selected; a signed-out reader's tap is still the door.
+  const [active, setActive] = useState(() => (
+    signedIn ? (SLOTS.find((s) => (initialLineup ?? {})[s] == null) ?? null) : null
+  ));
   const [flexTab, setFlexTab] = useState('RB');
   const [save, setSave] = useState('clean');   // clean | saving | saved | error | held
   const [locked, setLocked] = useState(false);
@@ -126,6 +147,43 @@ export default function WeeklyRoom({
   const router = useRouter();
   const timer = useRef(null);
   const pending = useRef(null);
+  const listRef = useRef(null);
+  const headRef = useRef(null);
+  const rootRef = useRef(null);
+
+  // THE STICKY LAYERS START UNDER THE SITE'S OWN STICKY BAR. On the web the
+  // global header (.gi-head) is sticky at top 0 and 63-69 px tall depending
+  // on the width; in the app it is not sticky at all. Measured, not typed:
+  // --wkv-stick is that bar's height, or unset (0) when there is none.
+  useEffect(() => {
+    const el = rootRef.current;
+    const bar = document.querySelector('.gi-head');
+    if (!el || !bar || getComputedStyle(bar).position !== 'sticky') return undefined;
+    const set = () => el.style.setProperty('--wkv-stick', `${Math.round(bar.getBoundingClientRect().height)}px`);
+    set();
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(set) : null;
+    ro?.observe(bar);
+    return () => ro?.disconnect();
+  }, []);
+
+  // SEEN, FOR NEXT TIME. A year-long first-party cookie, no database row: the
+  // next render of /weekly reads it and serves "How it works" closed.
+  useEffect(() => {
+    try { document.cookie = `${WEEKLY_SEEN_COOKIE}=1; path=/; max-age=31536000; samesite=lax`; } catch { /* blocked */ }
+  }, []);
+
+  // ONE SCROLL (thu-2): the list is the page's own scroll, so a pick made
+  // forty rows down would leave the NEXT slot's list scrolled forty rows in.
+  // When the slot or tab changes, bring the list's first row back up to just
+  // under the stuck header - and only if it has gone above it.
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    const list = listRef.current; const head = headRef.current;
+    if (!list || !head || typeof window.scrollBy !== 'function') return;
+    const gap = list.getBoundingClientRect().top - head.getBoundingClientRect().bottom;
+    if (gap < 0) window.scrollBy(0, gap);
+  }, [active, flexTab]);
 
   const flush = useCallback(async (payload) => {
     setSave('saving'); setErr(null);
@@ -299,192 +357,168 @@ export default function WeeklyRoom({
     return { p, st, showPoints: live != null && st.started };
   }
 
-  const stage = allSet ? 3 : (filledSlots.length > 0 ? 2 : 1);
+  const hd = headerParts(contest);
 
   return (
-    <section className="wkv">
+    <section className="wkv" ref={rootRef}>
       {handleModal}
 
-      {/* ---- THE HEADER --------------------------------------------------
-          The week's identity, then the week's numbers, then the two counts.
-          .wkv-rec renders ONLY with a live layer: before the first kickoff
-          there is no total and no rank, and stating them as zeros would be
-          the one reading that is certainly wrong. */}
-      <header className="wkv-hd">
-        <div className="wkv-hd-top">
-          <span className="wkv-eb">The Weekly</span>
-          <span className="wkv-ed">Week {contest.week} &middot; NFL &middot; PPR, drop worst</span>
-        </div>
-        {live && live.startedCount > 0 ? (
-          <div className="wkv-rec">
-            <div>
-              <span className="wkv-eb wkv-quiet">Your lineup</span>
-              <div className="wkv-big n">
-                {live.total}
-                <small className="n"> &middot; {live.startedCount} of {live.slots} started</small>
-              </div>
-            </div>
-            {/* RANK ONLY WHEN THERE IS A LIVE BOARD TO BE RANKED ON. liveBoard
-                is an aggregate over entries and carries no lineups - the leak
-                law's shape for this window (lib/weekly/live.js). */}
-            {live.rank != null ? (
-              <div className="wkv-rt">
-                <b className="n">{ordinal(live.rank) ?? live.rank}</b>
-                <span>{live.of ? `of ${live.of} · live` : 'live'}</span>
-                {/* THE RANK OPENS THE BOARD IT IS A RANK ON (lib/boards/live.js). */}
-                <Link className="wkv-board" href="/weekly/board">Board &#8250;</Link>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-        <div className="wkv-pips">
-          {SLOTS.map((s2) => {
-            const { st } = stateFor(s2);
-            const kind = st?.kind ?? null;
-            const cls = kind === 'final' ? ' done' : kind === 'live' ? ' live' : lineup[s2] != null ? ' on' : '';
-            return <span key={s2} className={`wkv-pip${cls}`} data-slot-state={kind ?? 'empty'} />;
-          })}
-        </div>
-        <div className="wkv-sub">
-          <span>{filledSlots.length} of {SLOTS.length} filled</span>
-          <span>
-            {/* THE ONE DEADLINE ON THIS SCREEN, AND THE ONLY ZONE SUFFIX.
-                A Weekly slate runs Thursday to Monday, so every kickoff on
-                the page carries its day; the reader's own zone is stated
-                ONCE, here, rather than repeated down eight rows. */}
-            {nextLockIso
-              ? <>next lock <StandaloneTime iso={nextLockIso} weekday /></>
-              : openSlots.length > 0 ? 'open slots lock at kickoff' : 'all locked'}
-          </span>
-        </div>
+      {/* ---- THE HEADER, ONE LINE (thu-2) ---------------------------------
+          "← THE WEEKLY · WEEK 4 · PPR, drop worst". It replaces the page's
+          eyebrow, its giant "Week N" title and this card's own duplicate
+          header - three statements of where you are, now one. The week is
+          the contest row's; the format words are WEEKLY_FORMAT's. Sticky,
+          so the way out and the week stay on screen over the list. */}
+      <header className="wkv-top">
+        <Link className="wkv-back" href="/games" aria-label="Back to Games">&larr;</Link>
+        <h1 className="wkv-title"><b>{hd.title}</b> &middot; {hd.format}</h1>
       </header>
 
-      {/* ---- THE STEP STRIP ----------------------------------------------
-          Pick / Fill the lineup / Locked in - the same three words the
-          Pick'em v2 board uses, deliberately: two games, one grammar. The
-          line under it says the next thing to do, and while slots are empty
-          it IS the needline. */}
-      <div className="wkv-steps">
-        <div className="wkv-strip">
-          {STEP_NAMES.map((name, i) => {
-            const cls = i + 1 === stage ? 'on' : (i + 1 < stage ? 'done' : '');
+      {/* ---- THE WEEK'S NUMBERS - only with a live layer -------------------
+          Before the first kickoff there is no total and no rank, and stating
+          them as zeros would be the one reading that is certainly wrong. */}
+      {live && live.startedCount > 0 ? (
+        <div className="wkv-rec">
+          <div>
+            <span className="wkv-eb wkv-quiet">Your lineup</span>
+            <div className="wkv-big n">
+              {live.total}
+              <small className="n"> &middot; {live.startedCount} of {live.slots} started</small>
+            </div>
+          </div>
+          {/* RANK ONLY WHEN THERE IS A LIVE BOARD TO BE RANKED ON. liveBoard
+              is an aggregate over entries and carries no lineups - the leak
+              law's shape for this window (lib/weekly/live.js). */}
+          {live.rank != null ? (
+            <div className="wkv-rt">
+              <b className="n">{ordinal(live.rank) ?? live.rank}</b>
+              <span>{live.of ? `of ${live.of} · live` : 'live'}</span>
+              {/* THE RANK OPENS THE BOARD IT IS A RANK ON (lib/boards/live.js). */}
+              <Link className="wkv-board" href="/weekly/board">Board &#8250;</Link>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* ---- THE DEADLINE LINE ---------------------------------------------
+          THE ONE DEADLINE ON THIS SCREEN and the only zone suffix: the next
+          lock among filled open slots, or the rule. The COUNT and the six
+          segments moved to the lock bar at the bottom (thu-6), so the count
+          appears once. */}
+      <div className="wkv-prog">
+        <div className="wkv-sub">
+          <span className="wkv-when">
+            {nextLockIso
+              ? <>next lock <StandaloneTime iso={nextLockIso} weekday /></>
+              : openSlots.length > 0 ? 'each slot locks at its kickoff' : 'all locked'}
+          </span>
+          <span className={`wkv-save wkv-save--${save}`}>{saveLabel}</span>
+        </div>
+        {err && <p className="wkv-err">{err}</p>}
+      </div>
+
+      {/* ---- HOW IT WORKS, one row (thu-2) ----------------------------------
+          A <details>, open by default only on a reader's first visit (the
+          page decides; see lib/weekly/view.js howOpenByDefault). Everything
+          the old step strip and its paragraph said lives in here now. */}
+      <details className="wkv-how" open={firstVisit || undefined}>
+        <summary>How it works</summary>
+        <div className="wkv-how-b">
+          <div className="row"><span>Your lineup</span><span className="r">QB &middot; RB &middot; WR &middot; TE &middot; 2 FLEX</span></div>
+          <div className="row"><span>Each slot</span><span className="r">locks at its player&rsquo;s kickoff</span></div>
+          <div className="row"><span>Scoring</span><span className="r">{hd.format}</span></div>
+          <div className="row"><span>Results</span><span className="r">Tuesday morning</span></div>
+          <p className="wkv-note">
+            Every change saves - <b>six filled or the week does not count</b>, and a
+            player already kicked cannot be added.
+          </p>
+          {/* THE CEILING, NAMED WITH THE RULES - the grade is your six as a
+              share of the best six this pool allowed. */}
+          <p className="wkv-perf">
+            best six this pool allows &middot; {poolCountLabel(board.length)} players
+          </p>
+        </div>
+      </details>
+
+      {/* ---- THE LINEUP, 3 x 2, STICKY (thu-2) -----------------------------
+          Six compact slots, 56 px at most: the position, then the SURNAME
+          (or "Tap to fill"). A kicked slot adds its game's line - the score
+          is what a reader needs on a Sunday. It sticks under the header so
+          the list below can be the page's own scroll. */}
+      <div className="wkv-dock">
+        <div className="wkv-lineup">
+          {SLOTS.map((s) => {
+            const { p, st, showPoints } = stateFor(s);
+            const isLocked = slotLocked(s);
+            const held = heldSlots.has(s);
+            const sel = active === s;
+            const kindCls = st && isLocked ? ` kicked ${st.kind}` : '';
             return (
-              <span key={name} className="wkv-stpwrap">
-                <span className={`wkv-stp ${cls}`}>
-                  <i>{cls === 'done' ? '✓' : i + 1}</i>
-                  <b>{name}</b>
-                </span>
-                {i < STEP_NAMES.length - 1 ? <span className="wkv-arw" /> : null}
-              </span>
+              <div
+                key={s}
+                className={`wkv-slot ${POS_CLASS[s]}${p ? ' filled' : ''}${sel ? ' sel' : ''}${kindCls}${held ? ' wkv-pending' : ''}`}
+                data-game={st ? st.kind : undefined}
+              >
+                <button
+                  type="button"
+                  className="wkv-slot-tap"
+                  disabled={isLocked}
+                  aria-label={p ? `${SLOT_LABEL[s]}: ${p.name}` : `${SLOT_LABEL[s]}: empty`}
+                  onClick={() => (held ? reopenHandle() : openSlot(s))}
+                >
+                  <span className="wkv-pos">
+                    {SLOT_LABEL[s]}
+                    {(s === 'FLEX' || s === 'FLEX2') && p ? ` · ${p.pos}` : ''}
+                  </span>
+                  {p ? (
+                    <>
+                      <span className="wkv-nm">{surnameOf(p.name)}</span>
+                      {/* THE GAME'S LINE, ONLY WHEN IT CHANGES THE READING:
+                            live   TM vs OPP · Q3 7:28
+                            final  TM · Final 31-24
+                            bye    TM · bye   (he will not play this week)
+                          An open slot with a game to come carries no line -
+                          its matchup and kickoff are on his row in the list. */}
+                      {held ? <span className="wkv-st">Needs a handle</span>
+                        : st?.kind === 'final'
+                          ? <span className="wkv-st">{`${p.team}${st.score != null ? ` · Final ${st.score}-${st.oppScore}` : ' · final'}`}</span>
+                          : st?.kind === 'live'
+                            ? <span className="wkv-st l">{`${matchupOf(p.team, st)} · ${st.period ?? 'Live'}${st.clock ? ` ${st.clock}` : ''}`}</span>
+                            : st?.kind === 'bye'
+                              ? <span className="wkv-st">{`${p.team} · bye`}</span>
+                              : null}
+                    </>
+                  ) : (
+                    <span className="wkv-empty">{sel ? 'Pick below' : 'Tap to fill'}</span>
+                  )}
+                  {showPoints ? <span className="wkv-pts n">{st.points}</span> : null}
+                  {isLocked ? <span className="wkv-lk">{st?.kind === 'live' ? 'LIVE' : 'FINAL'}</span> : null}
+                </button>
+                {/* THE ×, ON AN OPEN FILLED SLOT ONLY. A kicked slot has no ×
+                    at all rather than one that refuses - the server rejects
+                    that write ('held', lib/weekly/rules.js:80). Its own button
+                    beside the tap target, because a button in a button is not
+                    a button. */}
+                {p && !isLocked && !locked && !held ? (
+                  <button
+                    type="button"
+                    className="wkv-x"
+                    onClick={() => clear(s)}
+                    aria-label={`Clear ${SLOT_LABEL[s]}`}
+                  >×</button>
+                ) : null}
+              </div>
             );
           })}
         </div>
-        <p className="wkv-note">
-          {stage === 1 ? (
-            <>Six slots from <b>this week&rsquo;s actives</b>. QB, RB, WR, TE and two FLEX.
-              Full PPR, your worst pick dropped at settle. Each slot locks when its
-              player&rsquo;s game kicks off.</>
-          ) : stage === 2 ? (
-            <>Still need <b>{unfilled.map((s2) => SLOT_LABEL[s2]).join(' · ')}</b>. Tap a slot,
-              then a player. Every change saves - <b>six filled or the week does not
-              count</b>, and a player already kicked cannot be added.</>
-          ) : (
-            <>Every slot is filled. Keep changing the open ones right up to their
-              kickoff - <b>nothing is final until the game starts</b>.</>
-          )}
-        </p>
       </div>
 
-      {/* ---- THE LINEUP, 2x3 --------------------------------------------- */}
-      <div className="wkv-sh">
-        <h3>Lineup</h3>
-        <span>{openSlots.length > 0 ? `${openSlots.length} not yet kicked` : 'all kicked'}</span>
-      </div>
-      <div className="wkv-lineup">
-        {SLOTS.map((s) => {
-          const { p, st, showPoints } = stateFor(s);
-          const isLocked = slotLocked(s);
-          const held = heldSlots.has(s);
-          const sel = active === s;
-          const kindCls = st && isLocked ? ` kicked ${st.kind}` : '';
-          return (
-            <div
-              key={s}
-              className={`wkv-slot ${POS_CLASS[s]}${p ? ' filled' : ''}${sel ? ' sel' : ''}${kindCls}${held ? ' wkv-pending' : ''}`}
-              data-game={st ? st.kind : undefined}
-            >
-              <button
-                type="button"
-                className="wkv-slot-tap"
-                disabled={isLocked}
-                onClick={() => (held ? reopenHandle() : openSlot(s))}
-              >
-                <span className="wkv-pos">
-                  {SLOT_LABEL[s]}
-                  {(s === 'FLEX' || s === 'FLEX2') && p ? ` · ${p.pos}` : ''}
-                </span>
-                {p ? (
-                  <>
-                    <span className="wkv-nm">{p.name}</span>
-                    {/* THE SLOT'S OWN LINE, one of four shapes:
-                          open   TM vs OPP · <kickoff>
-                          live   TM vs OPP · Q3 7:28
-                          final  TM · Final 31-24
-                          bye    TM · bye
-                        The same three facts, ordered by what the game is
-                        actually doing. */}
-                    <span className={`wkv-st${st?.kind === 'live' ? ' l' : ''}`}>
-                      {held ? 'Needs a handle'
-                        : st?.kind === 'final'
-                          ? `${p.team}${st.score != null ? ` · Final ${st.score}-${st.oppScore}` : ' · final'}`
-                          : st?.kind === 'live'
-                            ? `${matchupOf(p.team, st)} · ${st.period ?? 'Live'}${st.clock ? ` ${st.clock}` : ''}`
-                            : st?.kind === 'bye'
-                              ? `${p.team} · bye`
-                              : <>{matchupOf(p.team, st)} &middot; {p.kickoff_at ? <StandaloneTime iso={p.kickoff_at} weekday zone={false} /> : 'kickoff'}</>}
-                    </span>
-                  </>
-                ) : (
-                  <span className="wkv-empty">{sel ? 'PICK BELOW' : 'TAP TO FILL'}</span>
-                )}
-                {showPoints ? <span className="wkv-pts n">{st.points}</span> : null}
-                {isLocked ? <span className="wkv-lk">{st?.kind === 'live' ? 'LIVE' : 'FINAL'}</span> : null}
-              </button>
-              {/* THE ×, ON AN OPEN FILLED SLOT ONLY. A kicked slot has no ×
-                  at all rather than one that refuses - the server rejects
-                  that write ('held', lib/weekly/rules.js:80) and an
-                  affordance that cannot work is worse than none. Its own
-                  button beside the tap target rather than inside it,
-                  because a button in a button is not a button. */}
-              {p && !isLocked && !locked && !held ? (
-                <button
-                  type="button"
-                  className="wkv-x"
-                  onClick={() => clear(s)}
-                  aria-label={`Clear ${SLOT_LABEL[s]}`}
-                >×</button>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* THE CEILING, NAMED WHERE THE LINEUP IS - it was a box of prose under
-          the board. The grade is your six as a share of the best six this
-          pool allowed, and the pool size is the honest scale of that claim. */}
-      <p className="wkv-perf">
-        best six this pool allows &middot; {poolCountLabel(board.length)} players
-      </p>
-
-      <div className={`wkv-save wkv-save--${save}`}>{saveLabel}</div>
-      {err && <p className="wkv-err">{err}</p>}
-
-      {/* ---- THE PANEL ---------------------------------------------------
-          Inline, one position at a time, searchable, PPG-sorted. The search
-          field sits in the header BEFORE the tabs, because it narrows what
-          the tabs are showing. */}
+      {/* ---- THE LIST --------------------------------------------------------
+          One position at a time, searchable, PPG-sorted. Its header (QB ·
+          search · 2026) sticks under the lineup; the rows are the PAGE's
+          scroll - there is no inner scroll box (thu-2). */}
       <div className="wkv-panel">
-        <div className="wkv-pan-h">
+        <div className="wkv-pan-h" ref={headRef}>
           <b>{active == null ? 'Tap an open slot' : `${SLOT_LABEL[active]} · ${POOL_LABEL[poolSlot] ?? POOL_LABEL[active]}`}</b>
           {active != null ? (
             <>
@@ -516,7 +550,7 @@ export default function WeeklyRoom({
             </>
           ) : null}
         </div>
-        <div className="wkv-pan-b">
+        <div className="wkv-list" ref={listRef}>
           {active == null ? (
             <p className="wkv-empty-p">
               A KICKED SLOT IS LOCKED<br />THE OPEN ONES ARE YOURS UNTIL KICKOFF
@@ -541,9 +575,7 @@ export default function WeeklyRoom({
                 <span className="wkv-who">
                   <b>{p2.name}</b>
                   {/* LINE ONE IS THE GAME. Who he plays, home or away, and
-                      when - the same four shapes the lineup slots use, off
-                      the same slate value. A reader choosing between two
-                      backs is choosing between two matchups. */}
+                      when - off the same slate value the slots read. */}
                   <small className={st?.kind === 'live' ? 'wkv-l' : undefined}>
                     {used ? 'in your lineup'
                       : kicked ? <>Kicked &middot; <StandaloneTime iso={p2.kickoff_at} weekday zone={false} /></>
@@ -553,17 +585,11 @@ export default function WeeklyRoom({
                             ? `${p2.team} · bye`
                             : <>{matchupOf(p2.team, st)}{p2.kickoff_at ? <> &middot; <StandaloneTime iso={p2.kickoff_at} weekday zone={false} /></> : null}</>}
                   </small>
-                  {/* LINE TWO IS THIS SEASON, or nothing at all. The career
-                      rate and the college/draft resume no longer render here
-                      (ruled): they are facts about a decade ago on a row
-                      about this week. The resume string still rides the wire
-                      untouched - poolRows uses it as the sort tiebreak. */}
+                  {/* LINE TWO IS THIS SEASON, or nothing at all (ruled). */}
                   {p2.season?.line ? <small>{p2.season.line}</small> : null}
                 </span>
                 <span className="wkv-val">
-                  {/* BLANK, NOT A ZERO, FOR A PLAYER WITH NO FINAL GAME YET.
-                      A blank sorts last in poolRows; a 0.0 would read as a
-                      man who played and did nothing. */}
+                  {/* BLANK, NOT A ZERO, FOR A PLAYER WITH NO FINAL GAME YET. */}
                   <b className="n">{p2.season ? p2.season.ppg.toFixed(1) : ''}</b>
                   <small>{p2.season ? `ppg · ${p2.season.gp} g` : ''}</small>
                 </span>
@@ -573,10 +599,9 @@ export default function WeeklyRoom({
         </div>
       </div>
 
-      {/* ---- THE FOOTER = THE CONFIRM CONTROL ----------------------------
-          The Pick'em v2 board's shape: the receipt is a footer button, not a
-          card below the board. It writes meta.confirmed_at and nothing else;
-          an unconfirmed entry counts at lock exactly the same. */}
+      {/* ---- THE FOOTER: what the week means, in words ---------------------
+          The confirm control is no longer here (thu-6): it is the lock bar
+          below, which stays on screen over the list. */}
       <div className="wkv-ft">
         <p className="wkv-pace">
           {locked ? (
@@ -589,14 +614,38 @@ export default function WeeklyRoom({
             <>Every change saves<br /><b>Six filled or the week does not count</b></>
           )}
         </p>
-        {!locked && openSlots.length > 0 ? (
-          <button type="button" className="wkv-lock"
-            disabled={!allSet || confirmedAt != null || confirming}
-            onClick={lockItIn}>
-            {!allSet ? `${unfilled.length} to fill` : confirmedAt ? 'Locked in' : confirming ? 'Locking…' : 'Lock it in'}
-          </button>
-        ) : null}
       </div>
+
+      {/* ---- THE LOCK BAR (thu-6) -------------------------------------------
+          Sticky at the bottom - above the app's tab bar in the shell, at the
+          viewport's bottom on the web - for as long as the room is open: some
+          slot can still change and the week has not closed. Below six it is
+          the count and the six segments; at six of six it IS the button, the
+          same lockItIn the footer button used to call. Confirming is a
+          RECEIPT (meta.confirmed_at) - an unconfirmed six counts the same. */}
+      {!locked && openSlots.length > 0 ? (
+        <div className="wkv-bar" data-full={allSet ? 'yes' : 'no'}>
+          {allSet ? (
+            <button type="button" className="wkv-lock"
+              disabled={confirmedAt != null || confirming}
+              onClick={lockItIn}>
+              {confirmedAt ? 'Locked in' : confirming ? 'Locking…' : 'Lock it in'}
+            </button>
+          ) : (
+            <>
+              <span className="wkv-count">{filledSlots.length} of {SLOTS.length}</span>
+              <div className="wkv-pips" aria-hidden="true">
+                {SLOTS.map((s2) => {
+                  const { st } = stateFor(s2);
+                  const kind = st?.kind ?? null;
+                  const cls = kind === 'final' ? ' done' : kind === 'live' ? ' live' : lineup[s2] != null ? ' on' : '';
+                  return <span key={s2} className={`wkv-pip${cls}`} data-slot-state={kind ?? 'empty'} />;
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -86,7 +86,9 @@ test('EACH FOOTER STATES ITS OWN RULE: the Weekly what is missing, the Pickem a 
   // slots are on screen above it, so restating them under the board was the
   // duplication the v2 footer removed. What it must say is the rule.
   const room = strip(src(WEEKLY_ROOM));
-  assert.match(room, /\$\{unfilled\.length\} to fill/, 'the Weekly counts what is still empty');
+  // (thu-6: the count lives in the sticky lock bar as "N of 6"; at six of six
+  // the bar becomes the LOCK IT IN button.)
+  assert.match(room, /<span className="wkv-count">\{filledSlots\.length\} of \{SLOTS\.length\}<\/span>/, 'the Weekly counts its lineup in the bar');
   assert.match(room, /Six filled or the week does not count/, 'and states the DNF rule');
   assert.doesNotMatch(room, /scores 0/, "and never the mock's wrong version of it");
   // D4 STILL HOLDS, in the footer: the count is the PICKABLE games, so a
