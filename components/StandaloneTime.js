@@ -53,6 +53,19 @@ import { standaloneTimeLabel } from '@/lib/time/standaloneLabel';
 
 export default function StandaloneTime({ iso, weekday = false, zone = true, serverTz = null }) {
   const [label, setLabel] = useState(() => standaloneTimeLabel(iso, { weekday, zone, tz: serverTz ?? null }));
-  useEffect(() => { setLabel(standaloneTimeLabel(iso, { weekday, zone, tz: undefined })); }, [iso, weekday, zone]);
+  // THE PAGE ZONE WINS (thu-26). With serverTz given, the page has already
+  // told the reader which clock it is on ("All times Pacific"); re-formatting
+  // in the DEVICE's zone after mount put Eastern times under that header
+  // whenever the two differed. Only a caller with no page zone falls back to
+  // the device's own.
+  useEffect(() => {
+    setLabel(standaloneTimeLabel(iso, { weekday, zone, tz: serverTz ?? browserZone() }));
+  }, [iso, weekday, zone, serverTz]);
   return <>{label}</>;
+}
+
+// The device's zone, by name - never `undefined`, which a destructuring default
+// would quietly turn into the ET fallback (thu-26).
+function browserZone() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined; } catch { return undefined; }
 }

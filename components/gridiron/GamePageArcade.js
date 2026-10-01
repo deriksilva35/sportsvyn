@@ -22,12 +22,12 @@ import ArcadeChips from '@/components/gridiron/ArcadeChips';
 import { cardVariant } from '@/lib/gridiron/scoresV2Shape';
 import { whenLabel } from '@/lib/gridiron/gamePageArcade';
 
-function Card({ view, now }) {
+function Card({ view, now, tz }) {
   const { g, x } = view;
   const variant = cardVariant(g);
   return (
     <article className={`sv4-card ${variant} gpa-card`} data-variant={variant} data-league={g.leagueSlug} data-slug={g.slug} data-gpa="card">
-      <CardFace g={g} x={x} signedIn={view.yours.signedIn} signinHref={view.signinHref} tz="America/New_York" now={now} onPage />
+      <CardFace g={g} x={x} signedIn={view.yours.signedIn} signinHref={view.signinHref} tz={tz} now={now} onPage />
     </article>
   );
 }
@@ -191,11 +191,11 @@ function TeamStats({ box, g }) {
   );
 }
 
-export default function GamePageArcade({ view, now = new Date() }) {
+export default function GamePageArcade({ view, now = new Date(), tz = 'America/New_York' }) {
   const { g } = view;
   const allHref = `/${g.leagueSlug}/game/${g.slug}?plays=all#gpa-plays`;
   const draw = {
-    card: () => <Card view={view} now={now} />,
+    card: () => <Card view={view} now={now} tz={tz} />,
     market: () => (view.odds ? <div className="gpa-market" data-gpa="market"><OddsStrip odds={view.odds} leagueSlug={g.leagueSlug} matchId={g.id} /></div> : null),
     winprob: () => <WinProb wp={view.winprob} />,
     yours: () => <InYourGames yours={view.yours} />,

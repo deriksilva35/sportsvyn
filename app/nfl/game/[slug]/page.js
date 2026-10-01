@@ -51,6 +51,7 @@ import { arcadeFor } from '@/lib/brand/theme';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { arcadeGameView } from '@/lib/gridiron/gamePageArcadeView';
 import GamePageArcade from '@/components/gridiron/GamePageArcade';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 import '@/components/gridiron/gridiron.css';
 import '@/components/gridiron/drivestrip.css';
 import './game.css';
@@ -123,7 +124,7 @@ export default async function GamePage({ params, searchParams }) {
       <div className="gi" data-surface="ink">
         <BackToAppBar />
         <GlobalHeaderServer activeNav="nfl" />
-        <GamePageArcade view={view} />
+        <GamePageArcade view={view} tz={(await readViewerTz()) ?? 'America/New_York'} />
       </div>
     );
   }
