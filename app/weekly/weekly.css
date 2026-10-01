@@ -551,7 +551,21 @@
   min-height: 0; height: 100%;
   gap: 1px; padding: 6px 8px;
 }
-:where(:root[data-theme="arcade"]) .wkv-slot .wkv-nm { font-size: 13px; }
+/* A SURNAME NEVER ELLIPSIZES (thu-7). It wraps to a second line inside the
+   slot - at the hyphen of "Smith-Njigba", or anywhere as the last resort for
+   one unbroken word - and the type is sized so that two lines always fit the
+   56 px slot: 6 + 13 (position) + 1 + 2 x 12.6 (name) + 6 = 51.2 px. A kicked
+   slot also carries its game line, so its name is 11 px on a tighter padding:
+   4 + 13 + 1 + 2 x 11 + 1 + 11 + 4 = 56 px. Never a clamp, never an ellipsis. */
+:where(:root[data-theme="arcade"]) .wkv-slot .wkv-nm {
+  font-size: 12px; line-height: 1.05;
+  white-space: normal; overflow: visible; text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+:where(:root[data-theme="arcade"]) .wkv-slot .wkv-pos { line-height: 13px; }
+:where(:root[data-theme="arcade"]) .wkv-slot.kicked .wkv-slot-tap { padding-top: 4px; padding-bottom: 4px; }
+:where(:root[data-theme="arcade"]) .wkv-slot.kicked .wkv-nm { font-size: 11px; line-height: 1; }
+:where(:root[data-theme="arcade"]) .wkv-slot.kicked .wkv-st { line-height: 11px; }
 :where(:root[data-theme="arcade"]) .wkv-slot .wkv-empty { margin-top: 3px; letter-spacing: 0.02em; }
 :where(:root[data-theme="arcade"]) .wkv-slot.kicked .wkv-st { padding-right: 30px; }
 :where(:root[data-theme="arcade"]) .wkv-slot .wkv-pts { font-size: 13px; bottom: 6px; right: 8px; }

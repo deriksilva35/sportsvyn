@@ -145,3 +145,32 @@ test('THE BAR IS THE ROOM\'S LAST CHILD and the footer holds no button', () => {
   assert.doesNotMatch(ft, /<button/, 'no in-flow lock button');
   assert.match(tail, /<div className="wkv-bar"[\s\S]*onClick=\{lockItIn\}[\s\S]*<\/section>/);
 });
+
+// A SURNAME NEVER ELLIPSIZES (thu-7). Measured at 390 on PROD's week-4 pool
+// (671 distinct surnames, in an open slot and in a kicked slot with its game
+// line): two lines at most, nothing clipped. "Smith-Njigba", "Edwards-Helaire"
+// and "Westbrook-Ikhine" (the longest) break at the hyphen.
+test('THE SLOT NAME WRAPS - no ellipsis, no nowrap, no clamp - and the slot stays 56 px', () => {
+  const nm = arcade('.wkv-slot .wkv-nm');
+  assert.match(nm, /white-space:\s*normal/);
+  assert.match(nm, /text-overflow:\s*clip/);
+  assert.match(nm, /overflow:\s*visible/);
+  assert.match(nm, /overflow-wrap:\s*anywhere/, 'one unbroken word still breaks rather than spill');
+  // no arcade rule anywhere puts an ellipsis, a nowrap or a clamp back on the name
+  for (const m of CSS.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (!/arcade/.test(m[1]) || !/\.wkv-nm\b/.test(m[1])) continue;
+    assert.doesNotMatch(m[2], /ellipsis|nowrap|line-clamp/, `${m[1].trim()} must not truncate the name`);
+  }
+  // and the markup renders the whole surname, never a cut one
+  assert.match(ROOM, /<span className="wkv-nm">\{surnameOf\(p\.name\)\}<\/span>/);
+  // TWO LINES FIT: line-heights are fixed so the sum is a fact, not a hope.
+  assert.match(arcade('.wkv-slot'), /max-height:\s*56px/);
+  assert.match(arcade('.wkv-slot .wkv-pos'), /line-height:\s*13px/);
+  assert.match(nm, /font-size:\s*12px;\s*line-height:\s*1\.05/);
+  assert.ok(6 + 13 + 1 + 2 * 12 * 1.05 + 6 <= 56, 'open slot: two name lines fit');
+  // a kicked slot also carries its game line: smaller name, tighter padding
+  assert.match(arcade('.wkv-slot.kicked .wkv-nm'), /font-size:\s*11px;\s*line-height:\s*1\b/);
+  assert.match(arcade('.wkv-slot.kicked .wkv-slot-tap'), /padding-top:\s*4px;\s*padding-bottom:\s*4px/);
+  assert.match(arcade('.wkv-slot.kicked .wkv-st'), /line-height:\s*11px/);
+  assert.ok(4 + 13 + 1 + 2 * 11 + 1 + 11 + 4 <= 56, 'kicked slot: two name lines and the game line fit');
+});
