@@ -36,6 +36,8 @@ import AppleSignInButton from './AppleSignInButton';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import JoinByCode from '@/components/sim/JoinByCode';
 import { codeFromCallback } from '@/lib/fantasy/inviteCode';
+import { safeCallback } from '@/lib/auth/safeCallback';
+import { headers } from 'next/headers';
 
 // noindex: an auth flow has nothing to rank and should never be a search result.
 // This was PUBLICLY INDEXABLE until the noindex-lift audit — it had no robots block
@@ -56,8 +58,9 @@ export default async function SignInPage({ searchParams }) {
   const params = await searchParams;
   const initialError =
     typeof params?.error === 'string' ? params.error : null;
-  const callbackUrl =
-    typeof params?.callbackUrl === 'string' ? params.callbackUrl : '/';
+  // SAME ORIGIN ONLY (lib/auth/safeCallback.js): a callbackUrl to another host
+  // becomes '/' here, before it reaches either sign-in button.
+  const callbackUrl = safeCallback(params?.callbackUrl, { host: (await headers()).get('host') });
   // Shell-aware (via ?shell=sim-app param, or the sv_shell cookie set on /sim).
   // Web version is unaffected — isShell is false there.
   const isShell = await resolveShellMode();

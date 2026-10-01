@@ -36,6 +36,7 @@ import { buildMagicLinkEmail } from '@/lib/emails/magicLink';
 import { appleConfigured, getAppleClientSecret } from '@/lib/auth/appleClientSecret';
 import { sql } from '@/lib/db';
 import { generateCode, sha256, attachCode, CODE_TTL_SECONDS } from '@/lib/auth/emailOtp';
+import { authRedirect } from '@/lib/auth/safeCallback';
 
 // Async factory: Apple's clientSecret is a signed JWT we mint at config
 // time (getAppleClientSecret is memoized, so this awaits real work only on
@@ -206,6 +207,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
       error: '/signin',
     },
     providers,
+    // SAME-ORIGIN CALLBACKS ONLY. Every redirect Auth.js makes after sign-in
+    // or sign-out (Apple, magic link, the stored callback-url cookie) passes
+    // the one rule in lib/auth/safeCallback.js: a relative path or our own
+    // host, else the site root.
+    callbacks: {
+      redirect: authRedirect,
+    },
     trustHost: true,
     // Apple returns its OAuth result via a cross-site POST (response_mode=
     // form_post). Auth.js already relaxes the state + nonce cookies to

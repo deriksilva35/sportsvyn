@@ -13,19 +13,21 @@
  */
 import { sql } from '@/lib/db';
 import { verifyClick } from '@/lib/email/linkSecret';
+import { safeCallback } from '@/lib/auth/safeCallback';
 
 export const dynamic = 'force-dynamic';
 
 const SITE = 'https://sportsvyn.com';
 
+// The same-origin rule every sign-in path uses (lib/auth/safeCallback.js), with
+// no request host: an email link may only name our public hosts.
 export function safeDestination(to) {
   if (typeof to !== 'string' || !to) return null;
-  if (to.startsWith('/') && !to.startsWith('//')) return `${SITE}${to}`;
-  try {
-    const u = new URL(to);
-    if (u.protocol === 'https:' && (u.hostname === 'sportsvyn.com' || u.hostname === 'www.sportsvyn.com')) return u.toString();
-  } catch { /* not a URL */ }
-  return null;
+  const safe = safeCallback(to);
+  if (safe !== to) return null;
+  if (safe.startsWith('/')) return `${SITE}${safe}`;
+  const u = new URL(safe);
+  return u.protocol === 'https:' ? u.toString() : null;
 }
 
 export async function GET(request) {

@@ -21,6 +21,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { verifyEmailCode } from '@/app/actions/emailOtp';
+import { safeCallback } from '@/lib/auth/safeCallback';
 import './signin.css';
 
 const ERROR_MESSAGES = {
@@ -37,8 +38,13 @@ const CODE_ERRORS = {
   invalid:  'That code is not valid. Send a fresh one.',
 };
 
-export default function SignInForm({ initialError = null, callbackUrl = '/' }) {
+export default function SignInForm({ initialError = null, callbackUrl: rawCallbackUrl = '/' }) {
   const router = useRouter();
+  // The page already sanitised it; re-checked here because router.push is the
+  // redirect, and a prop is only as safe as its every future caller.
+  const callbackUrl = safeCallback(rawCallbackUrl, {
+    host: typeof window !== 'undefined' ? window.location.host : undefined,
+  });
   const [email, setEmail] = useState('');
   const [phase, setPhase] = useState('email'); // 'email' | 'code'
   const [submitting, setSubmitting] = useState(false);
