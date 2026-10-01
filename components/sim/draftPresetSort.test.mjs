@@ -162,9 +162,66 @@ test('THE ROOM OPENS ON THE PRESET\'S SORT, not on the board order', async () =>
   if (on) assert.match(on.textContent, /PPG/);
 });
 
-test('A CONFIG THAT NAMES NO SORT STILL OPENS ON THE BOARD', async () => {
+// THU-25: EVERY ROOM OPENS ON PPG NOW. Before, a config that named nothing
+// opened on the board order; the ranked room's reader asked for this season's
+// points per game first, so the default moved and the board order is a tap away.
+test('A CONFIG THAT NAMES NO SORT OPENS ON PPG (thu-25)', async () => {
   const c = await room({ config: { ...CONFIG, default_sort: null } });
+  assert.deepEqual(names(c), ['Board Fifth', 'Board Fourth', 'Board Third', 'Board Second', 'Board First']);
+});
+
+test('A CONFIG THAT NAMES ADP STILL OPENS ON THE BOARD, and ADP stays a sort', async () => {
+  const c = await room({ config: { ...CONFIG, default_sort: 'adp' } });
   assert.deepEqual(names(c), ['Board First', 'Board Second', 'Board Third', 'Board Fourth', 'Board Fifth']);
+  const c2 = await room({ config: { ...CONFIG, default_sort: null } });
+  const adp = [...c2.querySelectorAll('.avail-sort button')].find((b) => b.textContent.trim() === 'ADP');
+  assert.ok(adp, 'ADP is offered');
+  await act(async () => { adp.dispatchEvent(new window.MouseEvent('click', { bubbles: true })); });
+  assert.equal(names(c2)[0], 'Board First', 'and choosing it orders by the board');
+});
+
+test('A PLAYER WITH NO SEASON SORTS AFTER THE ONES WITH DATA, never as a zero above them', async () => {
+  const extra = { ffcPlayerId: '99', name: 'No Season Yet', position: 'WR', team: 'KC', adp: 0.5, adpHigh: null,
+    adpLow: null, timesDrafted: null, stdev: null, bye: 7, league: 'nfl', rookie: false, vor: null };
+  const c = await room({ initialAvailable: [extra, ...AVAILABLE] });
+  const shown = names(c);
+  assert.equal(shown[shown.length - 1], 'No Season Yet', `got ${shown.join(' | ')}`);
+});
+
+test('THE FLEX CHIP sits after TE and narrows to RB + WR + TE', async () => {
+  const qb = { ...AVAILABLE[0], ffcPlayerId: '50', name: 'A Quarterback', position: 'QB', adp: 6 };
+  const c = await room({ initialAvailable: [...AVAILABLE, qb] });
+  const chips = [...c.querySelectorAll('.pg-pick .avail-chips:not(.avail-class) button')].map((b) => b.textContent);
+  assert.deepEqual(chips, ['ALL', 'QB', 'RB', 'WR', 'TE', 'FLEX', 'K', 'DST']);
+  assert.ok(names(c).includes('A Quarterback'));
+  const flex = [...c.querySelectorAll('.pg-pick .avail-chips button')].find((b) => b.textContent === 'FLEX');
+  await act(async () => { flex.dispatchEvent(new window.MouseEvent('click', { bubbles: true })); });
+  const shown = names(c);
+  assert.ok(!shown.includes('A Quarterback'), 'the QB leaves under FLEX');
+  assert.equal(shown.length, AVAILABLE.length, 'every RB and WR stays');
+});
+
+const opps = (c) => [...c.querySelectorAll('.pg-pick .p-item .nopp')].map((n) => n.textContent.trim());
+test('A RANKED ROOM NAMES THIS WEEK\'S GAME ON EACH ROW: "@KC" / "vs KC" and the kickoff', async () => {
+  const LV = { ...AVAILABLE[0], ffcPlayerId: '60', name: 'A Raider', team: 'LV', adp: 7 };
+  const c = await room({
+    config: { ...CONFIG, default_sort: 'adp' },
+    initialAvailable: [...AVAILABLE, LV],
+    matchups: {
+      KC: { opp: 'LV', home: true, kickoffAt: '2026-10-11T17:00:00.000Z' },
+      LV: { opp: 'KC', home: false, kickoffAt: '2026-10-11T17:00:00.000Z' },
+    },
+  });
+  const o = opps(c);
+  assert.equal(o.length, AVAILABLE.length + 1, 'one per row');
+  assert.match(o[0], /^vs LV · Sun \d{1,2}:00 [AP]M$/, `home row: ${o[0]}`);
+  assert.match(o[o.length - 1], /^@KC · Sun \d{1,2}:00 [AP]M$/, `away row: ${o[o.length - 1]}`);
+});
+
+test('A PRACTICE MOCK (no week) OMITS THE OPPONENT CLEANLY - no tag, no dash', async () => {
+  const c = await room();
+  assert.equal(opps(c).length, 0);
+  assert.equal(c.querySelectorAll('.pg-pick .nopp').length, 0);
 });
 
 test('RANK IS STILL A COLUMN under the PPG sort', async () => {

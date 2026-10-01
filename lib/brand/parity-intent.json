@@ -1,3 +1,59 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "components/sim/sim.css",
+      "key": ".bg2 .bc .n { -webkit-box-orient }",
+      "after": "vertical"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".bg2 .bc .n { -webkit-line-clamp }",
+      "after": "2"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".bg2 .bc .n { display }",
+      "after": "-webkit-box"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".bg2 .bc .n { line-clamp }",
+      "after": "2"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".bg2 .bc .n { overflow-wrap }",
+      "after": "anywhere"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".bg2 .bc .n { white-space }",
+      "after": "normal"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".p-row .nopp { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".p-row .nopp { flex }",
+      "after": "none"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".p-row .nopp { font-size }",
+      "after": "9px"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".p-row .nopp { font-variant-numeric }",
+      "after": "tabular-nums"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".p-row .nopp { white-space }",
+      "after": "nowrap"
+    }
+  ]
 }
