@@ -1,0 +1,123 @@
+/* components/gridiron/gamePageArcade.css - the gridiron game page under arcade
+   (game-page-arcade, wed-8).
+
+   EVERY RULE IS ARCADE-SCOPED, like app/scores/scoresV4.css beside it: each
+   selector carries :where(:root[data-theme="arcade"]), so the dark page's
+   resolved declarations are unchanged (app/darkParity.test.mjs). Colours are
+   tokens only. Navy (--tok-primary) is the card's ground in EVERY state on this
+   page, with --tok-on-primary (white) words on it and volt (--tok-accent) for
+   the marks; volt as a FILL (--tok-action) carries navy ink (--tok-on-action);
+   volt is never text on white (app/voltContrast.test.mjs). */
+
+:where(:root[data-theme="arcade"]) .gpa { max-width: 640px; margin: 0 auto; padding: 4px 16px 48px; background: var(--tok-page); color: var(--tok-ink); font-family: var(--tok-font-body); }
+:where(:root[data-theme="arcade"]) .gpa-crumb { display: flex; align-items: center; gap: 8px; padding: 10px 0 12px; font: 500 12px var(--tok-font-body); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-crumb a { color: var(--tok-ink); text-decoration: none; }
+:where(:root[data-theme="arcade"]) .gpa-simtag { margin-left: auto; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--tok-line); font: 700 9px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-mod + .gpa-mod { margin-top: 12px; }
+
+/* ---- THE CARD: the board's face, navy in every state ------------------------
+   scoresV4.css draws only .sv4-card.live navy; the final card there is white.
+   These are the same overrides for any .gpa-card, one class deeper so they
+   outrank the board's .final / .live rules whatever order the sheets load in. */
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card { background: var(--tok-primary); border-color: var(--tok-primary); color: var(--tok-on-primary); border-radius: 18px; padding: 16px; gap: 12px; box-shadow: 0 8px 24px color-mix(in srgb, var(--tok-primary) 18%, transparent); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-lbl .where { color: color-mix(in srgb, var(--tok-on-primary) 70%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-lbl .fin { border-color: var(--tok-accent); color: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-lbl .ko { color: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-team .nm .n { color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-team .meta { color: color-mix(in srgb, var(--tok-on-primary) 70%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-team .ball { border-left-color: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-team .sc { font-size: 40px; color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card.live .sv4-team .sc { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card.live .sv4-team.lead .sc { color: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card.final .sv4-team.trail .n,
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card.final .sv4-team.trail .sc { color: color-mix(in srgb, var(--tok-on-primary) 55%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-ls { margin-top: 2px; }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-ls thead th,
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-ls td { color: color-mix(in srgb, var(--tok-on-primary) 70%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-ls tbody th,
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-ls td.t { color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-foot { border-top-color: color-mix(in srgb, var(--tok-on-primary) 14%, var(--tok-primary)); color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-foot .moment { color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-foot .close { flex: none; color: color-mix(in srgb, var(--tok-on-primary) 70%, var(--tok-primary)); }
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-foot .wp { flex: none; margin-left: auto; font-weight: 700; color: var(--tok-accent); text-transform: uppercase; letter-spacing: .06em; }
+
+/* ---- the white modules ---------------------------------------------------- */
+:where(:root[data-theme="arcade"]) .gpa-box { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--tok-line); border-radius: 14px; background: var(--tok-page); }
+:where(:root[data-theme="arcade"]) .gpa-bh { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+:where(:root[data-theme="arcade"]) .gpa-kick { display: inline-flex; align-items: center; gap: 8px; font: 400 10px var(--tok-font-num); letter-spacing: .06em; text-transform: uppercase; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-sub { font: 500 11px var(--tok-font-body); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-cal { padding: 2px 5px; border: 1.5px solid var(--tok-primary); border-radius: 4px; font: 400 9px var(--tok-font-num); letter-spacing: .02em; color: var(--tok-primary); }
+
+/* the drive strip sits in a module of its own */
+:where(:root[data-theme="arcade"]) .gpa-box[data-gpa="drive"] .ds-strip { margin: 0; }
+
+/* win probability: navy line, a volt dot ringed in navy */
+:where(:root[data-theme="arcade"]) .gpa-wpnow { font: 600 14px var(--tok-font-body); font-variant-numeric: tabular-nums; color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .gpa-wpnow.stale { opacity: .6; }
+:where(:root[data-theme="arcade"]) .gpa-curve { display: block; overflow: visible; }
+:where(:root[data-theme="arcade"]) .gpa-curve line { stroke: var(--tok-line); stroke-width: 1; }
+:where(:root[data-theme="arcade"]) .gpa-curve .ln { fill: none; stroke: var(--tok-primary); stroke-width: 2.5; stroke-linejoin: round; }
+:where(:root[data-theme="arcade"]) .gpa-curve .dot { fill: var(--tok-accent); stroke: var(--tok-primary); stroke-width: 2; }
+:where(:root[data-theme="arcade"]) .gpa-axis { display: flex; justify-content: space-around; font: 400 10px var(--tok-font-num); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-axis .sides { flex-basis: 100%; margin-top: 4px; text-align: right; font: 500 10px var(--tok-font-body); letter-spacing: .02em; }
+:where(:root[data-theme="arcade"]) .gpa-axis { flex-wrap: wrap; }
+:where(:root[data-theme="arcade"]) .gpa-axis .sides b { color: var(--tok-ink); }
+
+/* in your games: a navy-ruled card, its pill a volt fill with navy ink */
+:where(:root[data-theme="arcade"]) .gpa-yours { display: flex; flex-direction: column; padding: 12px 12px 0; border: 1.5px solid var(--tok-primary); border-radius: 14px; background: var(--tok-page); }
+:where(:root[data-theme="arcade"]) .gpa-pill { align-self: flex-start; margin-bottom: 10px; padding: 3px 8px; border-radius: 99px; background: var(--tok-action); color: var(--tok-on-action); font: 400 10px var(--tok-font-num); letter-spacing: .06em; text-transform: uppercase; }
+:where(:root[data-theme="arcade"]) .gpa-yrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 6px 0; border-top: 1px solid var(--tok-line); text-decoration: none; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .gpa-yrow .l { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+:where(:root[data-theme="arcade"]) .gpa-yrow .l b { font: 400 10px var(--tok-font-num); letter-spacing: .06em; color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .gpa-yrow .l span { font: 400 13px var(--tok-font-body); color: var(--tok-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .gpa-yrow .v { flex: none; font: 600 13px var(--tok-font-body); font-variant-numeric: tabular-nums; color: var(--tok-primary); text-align: right; }
+
+/* the one call to action when there is nothing of yours on the game */
+:where(:root[data-theme="arcade"]) .gpa-yours + .gpa-play { margin-top: 10px; }
+:where(:root[data-theme="arcade"]) .gpa-play { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; padding: 14px 16px; border-radius: 14px; background: var(--tok-action); color: var(--tok-on-action); text-decoration: none; }
+:where(:root[data-theme="arcade"]) .gpa-play .t { font: 400 14px var(--tok-font-num); letter-spacing: .02em; text-transform: uppercase; color: var(--tok-on-action); }
+:where(:root[data-theme="arcade"]) .gpa-play .s { grid-column: 1; font: 500 12px var(--tok-font-body); color: var(--tok-on-action); }
+:where(:root[data-theme="arcade"]) .gpa-play .go { grid-column: 2; grid-row: 1 / span 2; font: 700 22px var(--tok-font-body); color: var(--tok-on-action); }
+
+/* the chip row: a selected chip is a volt fill with navy ink, never navy */
+:where(:root[data-theme="arcade"]) .gpa-sect { margin-top: 4px; }
+:where(:root[data-theme="arcade"]) .gpa-chips { display: flex; gap: 8px; overflow-x: auto; margin: 4px -16px 8px; padding: 4px 16px; scrollbar-width: none; }
+:where(:root[data-theme="arcade"]) .gpa-chips::-webkit-scrollbar { display: none; }
+:where(:root[data-theme="arcade"]) .gpa-chip { flex: none; min-height: 34px; padding: 8px 14px; border-radius: 99px; border: 1.5px solid var(--tok-line); background: var(--tok-page); color: var(--tok-primary); font: 400 11px var(--tok-font-num); letter-spacing: .04em; text-transform: uppercase; cursor: pointer; }
+:where(:root[data-theme="arcade"]) .gpa-chip.on { background: var(--tok-action); border-color: var(--tok-action); color: var(--tok-on-action); }
+
+/* the plays list */
+:where(:root[data-theme="arcade"]) .gpa-plays ol { list-style: none; margin: 0; padding: 0; }
+:where(:root[data-theme="arcade"]) .gpa-plays li { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--tok-line); }
+:where(:root[data-theme="arcade"]) .gpa-plays .w { flex: none; width: 56px; font: 500 11px var(--tok-font-body); font-variant-numeric: tabular-nums; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-plays .b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+:where(:root[data-theme="arcade"]) .gpa-plays .b b { font: 400 10px var(--tok-font-num); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-plays .b span { font: 400 13px/1.35 var(--tok-font-body); color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .gpa-all { display: inline-block; padding: 12px 0 4px; font: 500 12px var(--tok-font-body); color: var(--tok-primary); text-decoration: none; }
+
+/* scoring plays */
+:where(:root[data-theme="arcade"]) .gpa-scoring { list-style: none; margin: 0; padding: 0; }
+:where(:root[data-theme="arcade"]) .gpa-scoring li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 9px 0; border-top: 1px solid var(--tok-line); }
+:where(:root[data-theme="arcade"]) .gpa-scoring .w { font: 400 10px var(--tok-font-num); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-scoring .w b { margin-left: 6px; font-weight: 400; color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .gpa-scoring .sc { grid-column: 2; grid-row: 1 / span 2; align-self: center; font: 600 12px var(--tok-font-body); font-variant-numeric: tabular-nums; color: var(--tok-primary); white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .gpa-scoring .tx { grid-column: 1; font: 400 13px/1.35 var(--tok-font-body); color: var(--tok-ink); }
+
+/* leaders: PASS / RUSH / REC, away left, home right */
+:where(:root[data-theme="arcade"]) .gpa-lrow { display: grid; grid-template-columns: 44px 1fr 1fr; gap: 8px; padding: 9px 0; border-top: 1px solid var(--tok-line); font: 400 12px var(--tok-font-body); font-variant-numeric: tabular-nums; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .gpa-lrow.head { padding-top: 0; border-top: 0; font: 400 10px var(--tok-font-num); letter-spacing: .06em; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-lrow .cat { padding-top: 2px; font: 400 10px var(--tok-font-num); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-lrow .r { text-align: right; }
+:where(:root[data-theme="arcade"]) .gpa-lrow .pl { display: flex; flex-direction: column; min-width: 0; }
+:where(:root[data-theme="arcade"]) .gpa-lrow .pl b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .gpa-lrow .pl span { color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-lrow .pl.none { color: var(--tok-muted); }
+
+/* the box and team stats under the chips */
+:where(:root[data-theme="arcade"]) .gpa-boxsc { display: flex; flex-direction: column; gap: 12px; overflow-x: auto; }
+:where(:root[data-theme="arcade"]) .gpa-tbl { width: 100%; border-collapse: collapse; font: 400 12px var(--tok-font-body); font-variant-numeric: tabular-nums; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .gpa-tbl th, :where(:root[data-theme="arcade"]) .gpa-tbl td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--tok-line); white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .gpa-tbl thead th { font: 400 9px var(--tok-font-num); letter-spacing: .04em; text-transform: uppercase; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-tbl th:first-child { text-align: left; }
+:where(:root[data-theme="arcade"]) .gpa-tbl tbody th { font-weight: 600; text-transform: capitalize; }
+:where(:root[data-theme="arcade"]) .gpa-closing { margin: 0 0 10px; font: 600 13px var(--tok-font-body); color: var(--tok-primary); }

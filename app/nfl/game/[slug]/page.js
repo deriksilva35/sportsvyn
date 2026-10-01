@@ -47,9 +47,19 @@ import BackToAppBar from '@/components/BackToAppBar';
 import { stateFromMatch, liveLine, gameUrlFor } from '@/lib/push/liveActivityState';
 import { getTeamRecordChip } from '@/lib/standings/read';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
+import { arcadeFor } from '@/lib/brand/theme';
+import { shellSigninHref } from '@/lib/shell/signinHref';
+import { arcadeGameView } from '@/lib/gridiron/gamePageArcadeView';
+import GamePageArcade from '@/components/gridiron/GamePageArcade';
 import '@/components/gridiron/gridiron.css';
 import '@/components/gridiron/drivestrip.css';
 import './game.css';
+// THE ARCADE PAGE'S SHEETS. Both are arcade-scoped rule by rule, so the dark
+// page resolves exactly as before (app/darkParity.test.mjs): the board's card
+// sheet, because the page mounts the board's card face, and the page's own.
+import '@/app/scores/scoresV4.css';
+import '@/components/gridiron/gamePageArcade.css';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -94,6 +104,29 @@ export default async function GamePage({ params, searchParams }) {
   // A soccer slug reaching a gridiron route is a 404, not a redirect loop back
   // to /match: getGamePage only resolves rows in the two gridiron leagues.
   if (!game || game.leagueSlug !== 'nfl') notFound();
+
+  // THE ARCADE PAGE (game-page-arcade, wed-8): under data-theme="arcade" the
+  // game page is the board's card and the modules below it, drawn by
+  // components/gridiron/GamePageArcade.js from one view
+  // (lib/gridiron/gamePageArcadeView.js). Everything after this branch is the
+  // dark page, unchanged.
+  if (arcadeFor(isShell)) {
+    const one = (v) => (Array.isArray(v) ? v[0] : v);
+    const rawAsOf = one(sp.asOf);
+    const view = await arcadeGameView({
+      game, viewerId,
+      asOf: rawAsOf != null && /^\d+$/.test(String(rawAsOf)) ? Number(rawAsOf) : null,
+      allPlays: one(sp.plays) === 'all',
+      signinHref: shellSigninHref(`/nfl/game/${game.slug}`, isShell),
+    });
+    return (
+      <div className="gi" data-surface="ink">
+        <BackToAppBar />
+        <GlobalHeaderServer activeNav="nfl" />
+        <GamePageArcade view={view} />
+      </div>
+    );
+  }
 
   const final = game.status === 'final';
   const live = game.status === 'live';

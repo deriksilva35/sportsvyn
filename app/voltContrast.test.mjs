@@ -62,6 +62,11 @@ export const ON_DARK_ANCESTOR = Object.freeze({
   // step 2: the drawer's scoring plays and its game-page link, on the same navy card.
   '.sv4-card.live .sv4-xs li.sc .tx': '.sv4-card.live',
   '.sv4-card.live .sv4-xgo': '.sv4-card.live',
+  // wed-8: the game page's card is navy in EVERY state (components/gridiron/gamePageArcade.css).
+  '.sv4-card.gpa-card .sv4-lbl .fin': '.sv4-card.gpa-card',
+  '.sv4-card.gpa-card .sv4-lbl .ko': '.sv4-card.gpa-card',
+  '.sv4-card.gpa-card.live .sv4-team.lead .sc': '.sv4-card.gpa-card',
+  '.sv4-card.gpa-card .sv4-foot .wp': '.sv4-card.gpa-card',
 });
 
 export function voltOnLight(css, g) {
@@ -127,7 +132,9 @@ const STEP3 = ['app/weekly/weekly.css', 'app/daily/daily.css', 'app/pickem/picke
   // its selected chip resolved navy under arcade)
   'app/market/market.css',
   // wed-6: the rankings board (board A) - its selected chip is volt/navy
-  'components/rankings/arcadeBoard.css'];
+  'components/rankings/arcadeBoard.css',
+  // wed-8: the arcade game page - its selected chip, its pill and its Play card are volt/navy
+  'components/gridiron/gamePageArcade.css'];
 // The lock BUTTONS are named explicitly (.expo-lock and .pcard .lock are badges -
 // structure); "you" is the reader's own selected row or column.
 const BUTTONISH = /(btn|cta|button|\.on\b|\.active\b|\.sel\b|\.pick\b|signin|start|primary|confirm|\.draft\b|\.play\b|-go\b|\.(wkv|pkv)-lock\b|--you\b|\.you\b|\.gg-cy\b)/;
