@@ -1,12 +1,13 @@
 'use client';
 
 // components/leagues/LeagueChrome.js - the league header's two copy actions
-// and the non-member JOIN button. Client because clipboard and a pending
+// and the non-member CODE field. Client because clipboard and a pending
 // state are the whole job; everything real is a server action or a string.
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { joinLeagueByIdAction } from '@/app/actions/leagues';
+import { joinLeagueAction } from '@/app/actions/leagues';
+import { CODE_LENGTH, REFUSALS, cleanLeagueInput } from '@/lib/leagues/code';
 import { leagueShareLink } from '@/lib/leagues/nav';
 
 async function copy(text) {
@@ -43,29 +44,42 @@ export function CopyLinkButton({ code }) {
   );
 }
 
-/** Frame 3's single primary action. Post-join: the league page, DAILY tab,
- * as a member - refresh() re-renders the server view with the membership. */
-export function JoinLeagueButton({ leagueId, name = null }) {
+/** Frame 3's one action: THE CODE. A league id in the URL is not an
+ * invitation (ids are serial - anybody can count), so the preview never joins
+ * on it; the reader types the code a member gave them, and the join is the
+ * same joinLeagueAction every other code field uses. Post-join: the league
+ * that code names, as a member. */
+export function JoinWithCodeForm({ leagueId }) {
+  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const router = useRouter();
   return (
-    <>
-      <button
-        type="button"
-        className="lg-join-primary"
-        disabled={busy}
-        onClick={async () => {
-          setBusy(true); setErr(null);
-          const res = await joinLeagueByIdAction(leagueId).catch(() => ({ ok: false, reason: 'Could not join' }));
-          setBusy(false);
-          if (!res.ok) { setErr(res.reason); return; }
-          router.refresh();
-        }}
-      >
-        {busy ? 'Joining…' : `Join ${name ?? 'the league'}`}
+    <form
+      className="lg-join-code"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setErr(null);
+        if (code.length !== CODE_LENGTH) { setErr(REFUSALS.not_a_code); return; }
+        setBusy(true);
+        const fd = new FormData();
+        fd.set('code', code);
+        const res = await joinLeagueAction(fd).catch(() => ({ ok: false, reason: REFUSALS.failed }));
+        setBusy(false);
+        if (!res.ok) { setErr(res.reason); return; }
+        if (Number(res.leagueId) === Number(leagueId)) router.refresh();
+        else router.replace(`/leagues/${res.leagueId}`);
+      }}
+    >
+      <input
+        name="code" value={code} onChange={(e) => setCode(cleanLeagueInput(e.target.value))}
+        placeholder="Invite code" maxLength={CODE_LENGTH} autoComplete="off" autoCapitalize="characters"
+        aria-label="Invite code" style={{ textTransform: 'uppercase' }}
+      />
+      <button type="submit" className="lg-join-primary" disabled={busy}>
+        {busy ? 'Joining…' : 'Join with code'}
       </button>
       {err && <p className="err">{err}</p>}
-    </>
+    </form>
   );
 }

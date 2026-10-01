@@ -191,3 +191,14 @@
    navy ink. JOIN stays the secondary .ghost. .lgf .lgf-create outranks .ghost
    whichever stylesheet loads first. */
 :where(:root[data-theme="arcade"]) .lgf .lgf-create { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+
+/* The non-member preview joins by CODE only (league-join-code-only): one field,
+   the primary button under it, the ask line beneath. */
+.lg-join-code { display: grid; gap: 8px; }
+.lg-join-code input {
+  width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--tok-line); background: var(--tok-surface); color: var(--tok-ink);
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace; font-size: 16px;
+  letter-spacing: .2em; text-align: center;
+}
+.lg-ask-code { font-family: var(--font-jetbrains-mono), ui-monospace, monospace; font-size: 12.5px; margin-top: 10px; }
