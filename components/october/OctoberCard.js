@@ -13,10 +13,11 @@
 // the mock's footer button is a COUNT ("2 to go"), not an action, because a
 // card with a rolling lock has no single moment to submit at.
 
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { saveOctoberPickAction, clearOctoberPickAction } from '@/app/actions/october';
 import { ptTime } from '@/lib/gridiron/kickoff';
 import { probablesShort } from '@/lib/mlb/cardLines';
+import { useStickyOffset } from '@/components/games/useStickyOffset';
 
 const SLOT_LABEL = { arm: 'ARM', bat1: 'BAT', bat2: 'BAT', bat3: 'BAT', bat4: 'BAT' };
 
@@ -25,6 +26,22 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
   const [openGame, setOpenGame] = useState(() => view.board.find((g) => g.pickable)?.matchId ?? null);
   const [err, setErr] = useState(null);
   const [, start] = useTransition();
+  // ONE SCROLL (thu-7): the dock sticks under the site's sticky bar on the web.
+  const rootRef = useRef(null);
+  useStickyOffset(rootRef);
+  // A NEW GAME'S LIST STARTS AT ITS TOP. The chips are in the stuck dock, so a
+  // reader forty rows into one game can tap another; bring the new list's
+  // first row back up under the dock - only if it has gone above it.
+  const dockRef = useRef(null);
+  const listRef = useRef(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    const d = dockRef.current; const l = listRef.current;
+    if (!d || !l || typeof window.scrollBy !== 'function') return;
+    const gap = l.getBoundingClientRect().top - d.getBoundingClientRect().bottom;
+    if (gap < 0) window.scrollBy(0, gap);
+  }, [openGame]);
 
   const pool = view.pool?.byGame?.[String(openGame)] ?? [];
   const game = view.board.find((g) => String(g.matchId) === String(openGame)) ?? null;
@@ -107,12 +124,16 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
   };
 
   return (
-    <div className="oc" data-phase={view.phase}>
+    <div className="oc" data-phase={view.phase} ref={rootRef}>
       <Header view={view} slots={slots} />
 
       {/* THE STEPS NOTE, and the rules on the card - written once, shown on
           the card, never changed mid-tournament. */}
-      <div className="oc-steps">
+      {/* HOW IT WORKS, FOLDED (thu-7). The steps and the rule sentence are a
+          <details> now - one row - so the picker starts higher; the words are
+          unchanged and one tap away. */}
+      <details className="oc-steps oc-how">
+        <summary>How it works</summary>
         <div className="oc-strip">
           <span className={`oc-stp${openGame ? ' done' : ' on'}`}><i>{openGame ? '✓' : '1'}</i><b>Game</b></span>
           <span className="oc-arw" />
@@ -130,37 +151,40 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
           locks at its game&apos;s first pitch.{' '}
           <b>Tomorrow is a new five.</b>
         </p>
-      </div>
+      </details>
 
       <div className="oc-sh"><h3>Today</h3><span>tap a game</span></div>
-      <div className="oc-grid">
-        {view.board.map((g) => (
-          <button
-            key={g.matchId} type="button"
-            className={`oc-gc${String(g.matchId) === String(openGame) ? ' on' : ''}${g.status === 'live' ? ' live' : ''}${g.status === 'postponed' ? ' ppd' : ''}${!g.pickable ? ' lk' : ''}`}
-            onClick={() => g.pickable && setOpenGame(g.matchId)}
-            disabled={!g.pickable}
-            data-game={g.slug}
-          >
-            <span className="oc-mks">
-              <i style={{ background: two(g.away) }} /><i style={{ background: two(g.home) }} />
-            </span>
-            <b>{g.away.abbr} @ {g.home.abbr}</b>
-            {/* PPD IS A STATE, NOT A TIME. A postponed game printed its
-                original first pitch, which is a time nothing will happen at,
-                and the tile looked like every other pickable game. */}
-            <small>{g.status === 'postponed' ? 'PPD' : g.status === 'live' ? 'live' : timeOf(g.kickoffAt)}</small>
-            {/* WHO IS PITCHING, before first pitch only: the arm slot's whole
-                question, answered on the tile before the panel opens. */}
-            {g.status === 'scheduled' && probablesShort(g.probables)
-              ? <em className="oc-sp" data-probables="1">{probablesShort(g.probables)}</em> : null}
-          </button>
-        ))}
-      </div>
 
-      {err ? <p className="oc-err" role="alert">{err}</p> : null}
+      {/* ---- THE DOCK, STICKY (thu-7) ---------------------------------------
+          The Weekly's one-scroll pattern: the game chips, the five slots and
+          the list's own header stick together at the top; the player rows
+          below are the PAGE's scroll. There is no inner scroll box. */}
+      <div className="oc-dock" ref={dockRef}>
+        <div className="oc-grid">
+          {view.board.map((g) => (
+            <button
+              key={g.matchId} type="button"
+              className={`oc-gc${String(g.matchId) === String(openGame) ? ' on' : ''}${g.status === 'live' ? ' live' : ''}${g.status === 'postponed' ? ' ppd' : ''}${!g.pickable ? ' lk' : ''}`}
+              onClick={() => g.pickable && setOpenGame(g.matchId)}
+              disabled={!g.pickable}
+              data-game={g.slug}
+            >
+              <span className="oc-mks">
+                <i style={{ background: two(g.away) }} /><i style={{ background: two(g.home) }} />
+              </span>
+              <b>{g.away.abbr} @ {g.home.abbr}</b>
+              {/* PPD IS A STATE, NOT A TIME. A postponed game printed its
+                  original first pitch, which is a time nothing will happen at,
+                  and the tile looked like every other pickable game. */}
+              <small>{g.status === 'postponed' ? 'PPD' : g.status === 'live' ? 'live' : timeOf(g.kickoffAt)}</small>
+              {/* WHO IS PITCHING, before first pitch only: the arm slot's whole
+                  question, answered on the tile before the panel opens. */}
+              {g.status === 'scheduled' && probablesShort(g.probables)
+                ? <em className="oc-sp" data-probables="1">{probablesShort(g.probables)}</em> : null}
+            </button>
+          ))}
+        </div>
 
-      <div className="oc-duo">
         <div className="oc-field">
           <div className="oc-form">
             {view.slots.map((base) => {
@@ -206,32 +230,36 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
           </div>
         </div>
 
-        <div className="oc-panel">
-          <div className="oc-pan-h">
-            <b>{game ? `${game.away.abbr} @ ${game.home.abbr}` : 'Your five'}</b>
-            {/* WHAT THE PANEL IS ACTUALLY SHOWING. It used to read "lineups
-                in" off the PROBABLES, which are a pitcher and not a lineup at
-                all - so it said the lineups were in three hours before either
-                club had posted one. */}
-            <small>{game ? <>{timeOf(game.kickoffAt)}<br />{lineupWord(game)}</> : <>points land<br />as the box does</>}</small>
-          </div>
-          <div className="oc-pan-b">
-            {/* EVERY ROW, BOTH CLUBS. It used to render the first twelve, which
-                on a posted card is one club's nine plus three of the other's -
-                the rest were unreachable and unmentioned. The panel scrolls
-                instead (.oc-pan-b). */}
-            {/* THE PROBABLE, THEN THE BULLPEN COLLAPSED, THEN THE BATS (tue-5). */}
-            {pool.length ? <>
-              {pool.filter((p) => !(p.kind === 'arm' && p.bullpen)).filter((p) => p.kind === 'arm').map(prow)}
-              {pool.some((p) => p.kind === 'arm' && p.bullpen) ? (
-                <details className="oc-more" data-group="bullpen">
-                  <summary>Bullpen · {pool.filter((p) => p.kind === 'arm' && p.bullpen).length}</summary>
-                  {pool.filter((p) => p.kind === 'arm' && p.bullpen).map(prow)}
-                </details>
-              ) : null}
-              {pool.filter((p) => p.kind !== 'arm').map(prow)}
-            </> : <p className="oc-empty">{game ? 'The pool for this game is still building.' : 'Tap a game above.'}</p>}
-          </div>
+        <div className="oc-pan-h">
+          <b>{game ? `${game.away.abbr} @ ${game.home.abbr}` : 'Your five'}</b>
+          {/* WHAT THE PANEL IS ACTUALLY SHOWING. It used to read "lineups
+              in" off the PROBABLES, which are a pitcher and not a lineup at
+              all - so it said the lineups were in three hours before either
+              club had posted one. */}
+          <small>{game ? <>{timeOf(game.kickoffAt)}<br />{lineupWord(game)}</> : <>points land<br />as the box does</>}</small>
+        </div>
+      </div>
+
+      {err ? <p className="oc-err" role="alert">{err}</p> : null}
+
+      <div className="oc-panel">
+        <div className="oc-pan-b" ref={listRef}>
+          {/* EVERY ROW, BOTH CLUBS. It used to render the first twelve, which
+              on a posted card is one club's nine plus three of the other's -
+              the rest were unreachable and unmentioned. Every row renders,
+              and under arcade they are the PAGE's scroll (thu-7) - the
+              .oc-pan-b box no longer scrolls on its own. */}
+          {/* THE PROBABLE, THEN THE BULLPEN COLLAPSED, THEN THE BATS (tue-5). */}
+          {pool.length ? <>
+            {pool.filter((p) => !(p.kind === 'arm' && p.bullpen)).filter((p) => p.kind === 'arm').map(prow)}
+            {pool.some((p) => p.kind === 'arm' && p.bullpen) ? (
+              <details className="oc-more" data-group="bullpen">
+                <summary>Bullpen · {pool.filter((p) => p.kind === 'arm' && p.bullpen).length}</summary>
+                {pool.filter((p) => p.kind === 'arm' && p.bullpen).map(prow)}
+              </details>
+            ) : null}
+            {pool.filter((p) => p.kind !== 'arm').map(prow)}
+          </> : <p className="oc-empty">{game ? 'The pool for this game is still building.' : 'Tap a game above.'}</p>}
         </div>
       </div>
 
