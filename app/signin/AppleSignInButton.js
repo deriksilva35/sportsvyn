@@ -22,6 +22,7 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
+import { safeCallback } from '@/lib/auth/safeCallback';
 
 export default function AppleSignInButton({ callbackUrl = '/' }) {
   const [busy, setBusy] = useState(false);
@@ -32,7 +33,7 @@ export default function AppleSignInButton({ callbackUrl = '/' }) {
       disabled={busy}
       onClick={() => {
         setBusy(true);
-        signIn('apple', { callbackUrl });
+        signIn('apple', { callbackUrl: safeCallback(callbackUrl, { host: window.location.host }) });
       }}
       className="w-full flex items-center justify-center gap-2.5 px-4 py-3 bg-black text-white border border-charcoal rounded font-medium text-[15px] hover:bg-charcoal disabled:opacity-50 disabled:cursor-not-allowed"
     >

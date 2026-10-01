@@ -38,7 +38,7 @@ function Tile({ tile, signedIn, wide }) {
       {open ? (
         <Link className="lgt-btn" href={href}>Play</Link>
       ) : (
-        <Link className="lgt-link" href={signedIn ? href : `/signin?next=${encodeURIComponent(href)}`}>
+        <Link className="lgt-link" href={signedIn ? href : `/signin?callbackUrl=${encodeURIComponent(href)}`}>
           {signedIn ? 'Open' : 'Sign in to play'}
         </Link>
       )}
