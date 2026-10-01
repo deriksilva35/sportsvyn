@@ -19,13 +19,14 @@ import { StatsTracker } from '../../lib/live/statsCadence.js';
 import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
 import { syncMlbGameStats } from '../../lib/mlb/statsSync.js';
 import { syncMlbPlays } from '../../lib/mlb/playsSync.js';
+import { syncNbaGameStats, syncNbaLastPlay } from '../../lib/nba/statsSync.js';
 import { snapshotLiveBoards } from '../../lib/boards/live.js';
 import { snapshotMlbBoards } from '../../lib/boards/mlb.js';
 import { kickIfDayDone } from '../../lib/mlb/advanceKick.js';
 import { refreshMlbProbables, REFRESH_MS as PROBABLES_MS } from '../../lib/mlb/probablesRefresh.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
-import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff } from './poll.mjs';
+import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff, nbaDay, fromNba, nbaDetail, nbaKickoff, writeNbaDetail } from './poll.mjs';
 import { sportOf } from '../../lib/live/vocabulary.js';
 import { dispatch } from '../../lib/push/dispatch.js';
 import { drainPushCounts } from '../../lib/push/warn.js';
@@ -114,6 +115,24 @@ const LEAGUES = [
     // AND THE FIRST PITCH IS THE PROVIDER'S. A game moved on the day is
     // corrected on the next poll rather than on the next schedule re-sync.
     kickoffOf: mlbKickoff },
+  // THE NBA (nba-core, Phase A). One /games call for today and yesterday per
+  // poll, plus one /box_scores/live while anything is on - every live game in
+  // one call (poll.mjs nbaDay). No enrichment hook: the game row already carries the
+  // period, the clock, the line score, the timeouts and the bonus.
+  //
+  // detail + writeDetail: the line score, timeouts and bonus nest under
+  // metadata.detail beside final_seen_at, so the NBA's writer merges one level
+  // down (lib/nba/detail.js) instead of MLB's top-level one.
+  //
+  // kickoffOf: THE TIP IS THE FEED'S, corrected on the poll that sees it move.
+  // The 20 Oct opener is filed at a placeholder time; a lock reads kickoff_at
+  // and this, with the hourly nba-schedule re-sync, is what keeps it true.
+  //
+  // LIVE ACTIVITIES STAY OFF for basketball (liveActivitySupported, thu-18).
+  { slug: 'nba', providerKey: 'bdl_game_id', normalise: fromNba,
+    fetcher: (now) => nbaDay(now)(),
+    detail: nbaDetail, writeDetail: writeNbaDetail,
+    kickoffOf: nbaKickoff },
 ];
 
 async function slate(league, now) {
@@ -184,7 +203,9 @@ async function loop(lg) {
   // nothing, so mlb_player_game_stats stayed empty on every game ever played -
   // which would have settled every October card and every Run roster to zero,
   // healthily. One shared cadence, two sports, one quota count.
-  const stats = (lg.slug === 'nfl' || lg.slug === 'mlb') ? new StatsTracker() : null;
+  // THE NBA JOINS TOO (nba-core): nba_player_game_stats is what Tonight's Six
+  // will settle against, and an ingest nothing calls is the October lesson.
+  const stats = (lg.slug === 'nfl' || lg.slug === 'mlb' || lg.slug === 'nba') ? new StatsTracker() : null;
   let statsCallsToday = 0;
 
   // THE LEAGUE'S CADENCE KNOBS, read once: the slate's decision and afterPoll use the same ones.
@@ -229,6 +250,7 @@ async function loop(lg) {
           // the schedule import by hand: 0 of 17 finals on 24-25 Sep had a
           // grid. cronWiring-style source test: services/live-poller/mlbBdl.test.mjs.
           detail: lg.detail ?? null, kickoffOf: lg.kickoffOf ?? null,
+          ...(lg.writeDetail ? { writeDetail: lg.writeDetail } : {}),
           futureMinutes: lg.futureMinutes ?? 30, now, log,
         });
         // THE LOST-FINAL SWEEP rides the same tick and the same window
@@ -289,7 +311,7 @@ async function loop(lg) {
           const watched = await sql`
             SELECT m.id, m.status FROM matches m JOIN leagues l ON l.id = m.league_id
              WHERE l.slug = ${lg.slug} AND (m.status = 'live' OR m.id = ANY(${seenIds}::int[]))`;
-          const syncBox = lg.slug === 'mlb' ? syncMlbGameStats : syncGameStats;
+          const syncBox = lg.slug === 'mlb' ? syncMlbGameStats : lg.slug === 'nba' ? syncNbaGameStats : syncGameStats;
           let boardsDue = false;
           for (const d of stats.due({ polls: window.polls, matches: watched })) {
             try {
@@ -307,6 +329,18 @@ async function loop(lg) {
               // ITS FAILURE IS ITS OWN. The box score is what October and The
               // Run settle against; the pitch list is a tab. Losing the tab
               // must never cost the scoring.
+              // THE NBA'S LAST PLAY rides the same due list: one /plays call
+              // per due game (every tenth live poll, and the final), into
+              // metadata.detail.last_play. Contained like MLB's pitches.
+              if (lg.slug === 'nba') {
+                try {
+                  const lp = await syncNbaLastPlay(d.id);
+                  pending += lp.calls; window.calls += lp.calls; window.statsCalls += lp.calls; statsCallsToday += lp.calls;
+                  window.plays += lp.changed ?? 0;
+                } catch (e) {
+                  log(`[nba] last play ${d.why} match=${d.id} failed:`, String(e?.message ?? e).slice(0, 120));
+                }
+              }
               if (lg.slug === 'mlb') {
                 try {
                   const pl = await syncMlbPlays(d.id);
