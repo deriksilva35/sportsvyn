@@ -326,6 +326,10 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+/* RETIRED (thu-2): no element carries .wkv-pan-b any more - the list is
+   .wkv-list and it is the page's own scroll, never a box inside it. The rule
+   stays only because the dark page's resolved sheet is pinned
+   (app/darkParity.test.mjs); it goes with the dark sheet. */
 .wkv-pan-b { max-height: 262px; overflow-y: auto; scrollbar-width: none; }
 .wkv-empty-p, .wkv-find-none {
   margin: 0;
@@ -433,3 +437,131 @@
 :where(:root[data-theme="arcade"]) .wkv-hd { background: var(--tok-hero-wash); }
 /* The Weekly's lock button (WeeklyRoom.js .wkv-lock) - a button, not a badge. */
 :where(:root[data-theme="arcade"]) .wkv-lock { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+
+/* ============================================================================
+   ONE SCROLL (thu-2; arcade page only). At 390 x 844 the first player row sat
+   ~80% down the screen and the list scrolled inside a page that also
+   scrolled. Now: one header line, a progress line, "How it works" folded to a
+   row, a 3 x 2 lineup of 56 px slots that STICKS under the header, the list's
+   own header sticking under that, and the rows as the page's own scroll.
+   EVERY RULE IS :where()-SCOPED TO ARCADE, so the dark page resolves exactly
+   as before (app/darkParity.test.mjs). The two heights below are fixed so the
+   three sticky layers stack without measuring themselves; --wkv-stick is the
+   site's own sticky bar above them (set by WeeklyRoom on the web, 0 in the
+   app, where that bar scrolls away).
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .wkv {
+  --wkv-top-h: 40px;
+  --wkv-dock-h: 134px;
+  /* clip, not hidden: hidden makes the card a scroll container and a sticky
+     child would stick to IT - which never scrolls - instead of the page. */
+  overflow: clip;
+  margin: 0 0 14px;
+  border-radius: 18px;
+}
+
+/* ---- the one-line header, sticky ---------------------------------------- */
+:where(:root[data-theme="arcade"]) .wkv-top {
+  position: sticky; top: var(--wkv-stick, 0px); z-index: 4;
+  height: var(--wkv-top-h); box-sizing: border-box;
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 12px 0 6px;
+  background: var(--ink);
+  border-bottom: 1px solid var(--tok-line);
+}
+:where(:root[data-theme="arcade"]) .wkv-back {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: var(--wkv-top-h);
+  font: 700 16px var(--font-mono, ui-monospace, monospace);
+  color: var(--tok-primary); text-decoration: none;
+}
+:where(:root[data-theme="arcade"]) .wkv-title {
+  margin: 0; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font: 600 11px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+:where(:root[data-theme="arcade"]) .wkv-title b {
+  font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--tok-primary);
+}
+
+/* ---- live numbers (only with a live layer) ------------------------------- */
+:where(:root[data-theme="arcade"]) .wkv-rec { padding: 10px 12px 0; }
+
+/* ---- progress: six segments, one line ----------------------------------- */
+:where(:root[data-theme="arcade"]) .wkv-prog { padding: 9px 12px 8px; }
+:where(:root[data-theme="arcade"]) .wkv-prog .wkv-pips { margin-top: 0; }
+:where(:root[data-theme="arcade"]) .wkv-prog .wkv-sub { margin-top: 6px; gap: 10px; white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .wkv-count { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+:where(:root[data-theme="arcade"]) .wkv-prog .wkv-save { flex: 0 0 auto; margin: 0; min-height: 0; }
+:where(:root[data-theme="arcade"]) .wkv-prog .wkv-err { margin: 4px 0 0; }
+
+/* ---- how it works, one row ---------------------------------------------- */
+:where(:root[data-theme="arcade"]) .wkv-how {
+  margin: 0 12px 4px;
+  border: 1px solid var(--tok-line);
+  border-radius: 10px;
+  background: var(--tok-surface);
+}
+:where(:root[data-theme="arcade"]) .wkv-how > summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 34px; padding: 0 12px;
+  font: 700 10px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted);
+}
+:where(:root[data-theme="arcade"]) .wkv-how > summary::-webkit-details-marker { display: none; }
+:where(:root[data-theme="arcade"]) .wkv-how > summary::after { content: '+'; font-size: 14px; color: var(--muted-dim); }
+:where(:root[data-theme="arcade"]) .wkv-how[open] > summary::after { content: '\2212'; }
+:where(:root[data-theme="arcade"]) .wkv-how-b { padding: 0 12px 10px; }
+:where(:root[data-theme="arcade"]) .wkv-how-b .row {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 5px 0; border-top: 1px solid var(--tok-line);
+  font-size: 12px;
+}
+:where(:root[data-theme="arcade"]) .wkv-how-b .row .r { color: var(--muted); text-align: right; }
+:where(:root[data-theme="arcade"]) .wkv-how-b .wkv-note { margin: 6px 0 0; }
+:where(:root[data-theme="arcade"]) .wkv-how-b .wkv-perf { margin: 4px 0 0; }
+
+/* ---- the lineup: 3 x 2, 56 px slots, sticky under the header ------------- */
+:where(:root[data-theme="arcade"]) .wkv-dock {
+  position: sticky; top: calc(var(--wkv-stick, 0px) + var(--wkv-top-h)); z-index: 3;
+  height: var(--wkv-dock-h); box-sizing: border-box;
+  padding: 6px 12px 10px;
+  background: var(--ink);
+}
+:where(:root[data-theme="arcade"]) .wkv-dock .wkv-lineup {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 56px;
+  gap: 6px;
+  padding: 0;
+}
+/* NO DASHED BOXES: an empty slot is a quiet solid box; selected keeps the
+   navy ring (--volt reads navy here) and the volt tint from the block above. */
+:where(:root[data-theme="arcade"]) .wkv-slot {
+  border-style: solid;
+  border-radius: 10px;
+  min-height: 0; height: 56px; max-height: 56px;
+  overflow: hidden;
+}
+:where(:root[data-theme="arcade"]) .wkv-slot-tap {
+  min-height: 0; height: 100%;
+  gap: 1px; padding: 6px 8px;
+}
+:where(:root[data-theme="arcade"]) .wkv-slot .wkv-nm { font-size: 13px; }
+:where(:root[data-theme="arcade"]) .wkv-slot .wkv-empty { margin-top: 3px; letter-spacing: 0.02em; }
+:where(:root[data-theme="arcade"]) .wkv-slot.kicked .wkv-st { padding-right: 30px; }
+:where(:root[data-theme="arcade"]) .wkv-slot .wkv-pts { font-size: 13px; bottom: 6px; right: 8px; }
+:where(:root[data-theme="arcade"]) .wkv-slot .wkv-lk { top: 6px; right: 8px; }
+
+/* ---- the list: its header sticks under the lineup, its rows are the page - */
+:where(:root[data-theme="arcade"]) .wkv-panel { overflow: clip; margin: 0 12px; }
+:where(:root[data-theme="arcade"]) .wkv-pan-h {
+  position: sticky; top: calc(var(--wkv-stick, 0px) + var(--wkv-top-h) + var(--wkv-dock-h)); z-index: 2;
+  min-height: 38px; box-sizing: border-box;
+}
+/* The × keeps its own corner and stays clear of the surname line below it. */
+:where(:root[data-theme="arcade"]) .wkv-slot .wkv-x { top: 0; right: 0; width: 24px; height: 24px; font-size: 12px; }

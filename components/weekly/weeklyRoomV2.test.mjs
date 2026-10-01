@@ -165,7 +165,11 @@ const click = (node) => act(() => { node.dispatchEvent(new dom.window.MouseEvent
 const slots = (c) => [...c.querySelectorAll('.wkv-slot')];
 const prows = (c) => [...c.querySelectorAll('.wkv-prow')];
 const txt = (c, sel) => c.querySelector(sel)?.textContent ?? null;
-const sub = (c) => [...c.querySelectorAll('.wkv-sub span')].map((s) => s.textContent);
+// THE PROGRESS LINE (thu-2): one line, "<n> of 6 · <the deadline or the rule>".
+const count = (c) => c.querySelector('.wkv-count')?.textContent ?? null;
+// Open slot i unless it is already the selected one (thu-2: the first empty
+// slot arrives selected, and tapping the selected slot closes it).
+const openAt = (c, i) => { if (!slots(c)[i].className.includes(' sel')) click(slots(c)[i].querySelector('.wkv-slot-tap')); };
 const lineOf = (slot) => slot.querySelector('.wkv-st')?.textContent ?? null;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /**
@@ -193,20 +197,21 @@ test('EMPTY: six empty slots, stage 1, and a footer that counts what is missing'
   const c = room();
   assert.equal(slots(c).length, 6);
   assert.equal(slots(c).filter((s) => s.className.includes('filled')).length, 0);
-  assert.equal(slots(c).filter((s) => s.textContent.includes('TAP TO FILL')).length, 6);
-  assert.deepEqual(sub(c), ['0 of 6 filled', 'open slots lock at kickoff']);
-  assert.equal(txt(c, '.wkv-sh span'), '6 not yet kicked');
-  // stage 1 names the game, not the gap
-  assert.equal(c.querySelector('.wkv-stp.on b').textContent, 'Pick');
-  assert.match(txt(c, '.wkv-note'), /^Six slots from this week’s actives\./);
-  assert.match(txt(c, '.wkv-note'), /Each slot locks when its player’s game kicks off\.$/);
+  // THE FIRST EMPTY SLOT ARRIVES SELECTED (thu-2), so the list is open on QB.
+  assert.equal(slots(c).filter((s) => s.textContent.includes('Tap to fill')).length, 5);
+  assert.match(slots(c)[0].textContent, /Pick below/);
+  assert.ok(slots(c)[0].className.includes(' sel'));
+  assert.equal(count(c), '0 of 6 · each slot locks at its kickoff');
+  // the rules live in the folded "How it works", not in a step strip
+  assert.equal(c.querySelector('.wkv-stp'), null);
+  assert.match(txt(c, '.wkv-how .wkv-note'), /six filled or the week does not count/);
   // the footer
   assert.equal(txt(c, '.wkv-lock'), '6 to fill');
   assert.equal(c.querySelector('.wkv-lock').disabled, true);
   assert.match(txt(c, '.wkv-pace'), /Six filled or the week does not count/);
-  // and the panel has nothing selected
-  assert.match(txt(c, '.wkv-empty-p'), /A KICKED SLOT IS LOCKED/);
-  assert.equal(prows(c).length, 0);
+  // and the list is already on screen - no tap needed for the first row
+  assert.match(txt(c, '.wkv-pan-h b'), /^QB · Quarterbacks$/);
+  assert.ok(prows(c).length > 0);
 });
 
 test('NO PERCENTAGE, NO ZERO, NO RANK before anything has kicked off', () => {
@@ -228,13 +233,12 @@ test('THE MOCK\'S WRONG RULE IS NOWHERE ON THE SCREEN', () => {
 // STATE 2: PARTIAL
 // ---------------------------------------------------------------------------
 
-test('PARTIAL: the counts disagree on purpose, and the strip IS the needline', () => {
+test('PARTIAL: the count, the next lock, and the first empty slot open', () => {
   const c = room({ initialLineup: { QB: 2, RB: 11, WR: 20 } });
-  assert.deepEqual(sub(c).slice(0, 1), ['3 of 6 filled']);
-  assert.equal(txt(c, '.wkv-sh span'), '6 not yet kicked', 'nothing has kicked, so all six are still open');
-  assert.equal(c.querySelector('.wkv-stp.on b').textContent, 'Fill the lineup');
-  assert.match(txt(c, '.wkv-note'), /^Still need TE · FLEX · FLEX\./);
-  assert.match(txt(c, '.wkv-note'), /six filled or the week does not count/);
+  assert.match(count(c), /^3 of 6 · next lock /);
+  // the first EMPTY slot is the one that arrives selected - TE, not QB
+  assert.ok(slots(c)[3].className.includes(' sel'));
+  assert.match(txt(c, '.wkv-pan-h b'), /^TE · Tight ends$/);
   assert.equal(txt(c, '.wkv-lock'), '3 to fill');
   assert.equal(c.querySelector('.wkv-lock').disabled, true);
 });
@@ -243,12 +247,10 @@ test('PARTIAL: the counts disagree on purpose, and the strip IS the needline', (
 // STATE 3: FULL AND ALL OPEN
 // ---------------------------------------------------------------------------
 
-test('FULL, ALL OPEN: stage 3, and the button becomes the receipt', () => {
+test('FULL, ALL OPEN: nothing selected, and the button becomes the receipt', () => {
   const c = room({ initialLineup: OPEN_SIX });
-  assert.deepEqual(sub(c).slice(0, 1), ['6 of 6 filled']);
-  assert.equal(c.querySelectorAll('.wkv-stp.done').length, 2);
-  assert.equal(c.querySelector('.wkv-stp.on b').textContent, 'Locked in');
-  assert.match(txt(c, '.wkv-note'), /^Every slot is filled\./);
+  assert.match(count(c), /^6 of 6 · next lock /);
+  assert.equal(c.querySelector('.wkv-slot.sel'), null, 'a full lineup arrives with nothing selected');
   assert.equal(txt(c, '.wkv-lock'), 'Lock it in');
   assert.equal(c.querySelector('.wkv-lock').disabled, false);
   assert.equal(c.querySelectorAll('.wkv-pip.on').length, 6, 'six pips lit, none live or done');
@@ -291,13 +293,14 @@ test('A FINAL SLOT: the team, the score it ended on, and no kickoff time', () =>
   assert.doesNotMatch(lineOf(qb), /AM|PM/, 'a time beside a final score is the one reading that is wrong');
 });
 
-test('AN OPEN SLOT: the matchup and its kickoff, through the island', () => {
+test('AN OPEN SLOT: the position and the SURNAME, nothing else (thu-2)', () => {
   const c = room({ initialLineup: MIXED, live: LIVE_LAYER });
   const te = slots(c)[3];                            // George Kittle, SF vs MIA
-  // THE DAY IS ON IT NOW (weekly-hdr). A Weekly slate runs Thursday to Monday
-  // and this line used to read "5:15 PM" on two rows four days apart.
-  assert.match(lineOf(te), /^SF vs MIA · (Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2}:\d{2} (AM|PM)$/,
-    'the matchup, the day, the time - and no zone on a row');
+  assert.equal(te.querySelector('.wkv-pos').textContent, 'TE');
+  assert.equal(te.querySelector('.wkv-nm').textContent, 'Kittle', 'the surname, not "George Kittle"');
+  // Its matchup and kickoff are on his row in the list; the 56 px slot does
+  // not repeat them.
+  assert.equal(lineOf(te), null);
   assert.equal(te.querySelector('.wkv-pts'), null, 'no number before he has played');
   assert.equal(te.querySelector('.wkv-lk'), null, 'and no badge');
   assert.equal(te.querySelector('.wkv-slot-tap').disabled, false);
@@ -337,8 +340,8 @@ test('PRESSING THE × EMPTIES THE SLOT AND WRITES THE LINEUP WITHOUT IT', async 
   const c = room({ initialLineup: OPEN_SIX });
   click(slots(c)[0].querySelector('.wkv-x'));
   // the slot is empty on screen at once
-  assert.match(slots(c)[0].textContent, /PICK BELOW/, 'and the panel opens on it');
-  assert.deepEqual(sub(c).slice(0, 1), ['5 of 6 filled']);
+  assert.match(slots(c)[0].textContent, /Pick below/, 'and the panel opens on it');
+  assert.match(count(c), /^5 of 6 · /);
   assert.equal(txt(c, '.wkv-lock'), '1 to fill');
   // and the debounced save carries the lineup with that key gone
   await act(async () => { await sleep(900); });
@@ -362,23 +365,22 @@ test('NEXT LOCK is the earliest kickoff among FILLED, UNKICKED slots', () => {
   // SF (+1h) and DAL (+1h) are filled and open; KC (+5h) and LAR (+28h) are not
   // in this lineup, and the kicked ones cannot contribute.
   const c = room({ initialLineup: MIXED, live: LIVE_LAYER });
-  const cell = sub(c)[1];
+  const cell = count(c);
   // THE ONE DEADLINE ON THE SCREEN, and the one place the zone is stated.
-  assert.match(cell, /^next lock (Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2}:\d{2} (AM|PM) [A-Z]{2,5}$/,
+  assert.match(cell, /^6 of 6 · next lock (Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2}:\d{2} (AM|PM) [A-Z]{2,5}$/,
     'day, time AND zone - this line is where the suffix lands');
-  const iso = c.querySelectorAll('.wkv-sub time');
+  const iso = c.querySelectorAll('.wkv-count time');
   if (iso.length) assert.ok(iso[0].getAttribute('dateTime') ?? true);
 });
 
 test('NO FILLED OPEN SLOT: the line states the rule instead of a time', () => {
   const c = room({ initialLineup: {} });
-  assert.equal(sub(c)[1], 'open slots lock at kickoff');
+  assert.equal(count(c), '0 of 6 · each slot locks at its kickoff');
 });
 
 test('EVERY SLOT KICKED: "all locked", and no button at all', () => {
   const c = room({ initialLineup: ALL_KICKED, live: LIVE_LAYER });
-  assert.equal(sub(c)[1], 'all locked');
-  assert.equal(txt(c, '.wkv-sh span'), 'all kicked');
+  assert.equal(count(c), '6 of 6 · all locked');
   assert.equal(c.querySelector('.wkv-lock'), null, 'nothing left to confirm');
   assert.match(txt(c, '.wkv-pace'), /All six locked\./);
   assert.match(txt(c, '.wkv-pace'), /Worst pick drops at settle/);
@@ -419,9 +421,8 @@ test('NO LIVE LAYER, NO NUMBERS - not even on a final game', () => {
 // THE PANEL: tabs, search, legality
 // ---------------------------------------------------------------------------
 
-test('TAPPING AN OPEN SLOT OPENS ITS POOL, SORTED BY THIS SEASON', () => {
+test('THE FIRST EMPTY SLOT\'S POOL IS OPEN ON ARRIVAL, SORTED BY THIS SEASON', () => {
   const c = room();
-  click(slots(c)[0].querySelector('.wkv-slot-tap'));
   assert.match(txt(c, '.wkv-pan-h b'), /^QB · Quarterbacks$/);
   const names = prows(c).map((r) => r.querySelector('.wkv-who b').textContent);
   // Purdy (31.2 this season, 17.6 career) leads Allen (28.4 / 22.4) and
@@ -433,20 +434,20 @@ test('TAPPING AN OPEN SLOT OPENS ITS POOL, SORTED BY THIS SEASON', () => {
 
 test('THE SORT LABEL IS THE SEASON, READ FROM THE CONTEST', () => {
   const c = room();
-  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  openAt(c, 0);
   assert.equal(txt(c, '.wkv-srt'), '2026');
   assert.doesNotMatch(txt(c, '.wkv-srt'), /career/);
   // and a contest with no season still labels the column with a word
   act(() => { for (const r of roots) r.unmount(); }); roots.clear();
   const c2 = room({ contest: { id: 10, week: 2, locks_at: future(100) } });
-  click(slots(c2)[0].querySelector('.wkv-slot-tap'));
+  openAt(c2, 0);
   assert.equal(txt(c2, '.wkv-srt'), 'season');
 });
 
 test('NO CAREER PPG AND NO COLLEGE RESUME RENDER ON THE PANEL ANY MORE', () => {
   const c = room();
-  click(slots(c)[0].querySelector('.wkv-slot-tap'));
-  const html = c.querySelector('.wkv-pan-b').textContent;
+  openAt(c, 0);
+  const html = c.querySelector('.wkv-list').textContent;
   assert.doesNotMatch(html, /PPG/, 'the frozen career string is not on screen');
   assert.doesNotMatch(html, /42 g\b/, 'nor its games count');
   assert.doesNotMatch(html, /career/);
@@ -457,7 +458,7 @@ test('NO CAREER PPG AND NO COLLEGE RESUME RENDER ON THE PANEL ANY MORE', () => {
 
 test('THE TWO SMALL LINES: the game, then this season', () => {
   const c = room();
-  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  openAt(c, 0);
   const purdy = prows(c)[0];
   const lines = [...purdy.querySelectorAll('.wkv-who small')].map((x) => x.textContent);
   assert.equal(lines.length, 2);
@@ -471,7 +472,7 @@ test('THE TWO SMALL LINES: the game, then this season', () => {
 
 test('A LIVE ROW SAYS THE PERIOD AND THE CLOCK, in the live colour', () => {
   const c = room();
-  click(slots(c)[1].querySelector('.wkv-slot-tap'));      // RB tab
+  openAt(c, 1);      // RB tab
   const bijan = prows(c).find((r) => r.textContent.includes('Bijan Robinson'));
   const line = bijan.querySelector('.wkv-who small');
   // ATL is live in this fixture, so he is also KICKED and unpickable - the
@@ -486,15 +487,14 @@ test('A LIVE ROW SAYS THE PERIOD AND THE CLOCK, in the live colour', () => {
 test('A BYE READS AS A BYE ON A PANEL ROW TOO', () => {
   const board = [...BOARD, { id: 98, pos: 'QB', name: 'Bye Passer', team: 'CLE', resume: '9.0 PPG · 20 g', kickoff_at: future(200), season: szn(12.0, 1, '150 yds · 1 TD · 0 INT · 0 rush') }];
   const c = room({ board });
-  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  openAt(c, 0);
   const bye = prows(c).find((r) => r.textContent.includes('Bye Passer'));
   assert.equal(bye.querySelectorAll('.wkv-who small')[0].textContent, 'CLE · bye');
 });
 
 test('TAPPING THE SAME SLOT AGAIN CLOSES THE PANEL', () => {
   const c = room();
-  click(slots(c)[0].querySelector('.wkv-slot-tap'));
-  assert.ok(prows(c).length > 0);
+  assert.ok(prows(c).length > 0, 'QB arrives open');
   click(slots(c)[0].querySelector('.wkv-slot-tap'));
   assert.equal(prows(c).length, 0);
   assert.match(txt(c, '.wkv-pan-h b'), /Tap an open slot/);
@@ -502,7 +502,7 @@ test('TAPPING THE SAME SLOT AGAIN CLOSES THE PANEL', () => {
 
 test('A KICKED PLAYER IS IN THE LIST AND CANNOT BE TAKEN', () => {
   const c = room();
-  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  openAt(c, 0);
   const allen = prows(c).find((r) => r.textContent.includes('Josh Allen'));
   assert.ok(allen.className.includes('gone'));
   assert.equal(allen.disabled, true);
@@ -513,7 +513,7 @@ test('A KICKED PLAYER IS IN THE LIST AND CANNOT BE TAKEN', () => {
 
 test('FLEX OFFERS RB / WR / TE, and the tab narrows the SAME legality rule', () => {
   const c = room();
-  click(slots(c)[4].querySelector('.wkv-slot-tap'));      // FLEX
+  openAt(c, 4);      // FLEX
   const tabs = [...c.querySelectorAll('.wkv-tab')].map((t) => t.textContent);
   assert.deepEqual(tabs, ['RB', 'WR', 'TE']);
   assert.equal(c.querySelector('.wkv-tab.on').textContent, 'RB');
@@ -526,13 +526,13 @@ test('FLEX OFFERS RB / WR / TE, and the tab narrows the SAME legality rule', () 
 
 test('A SINGLE-POSITION SLOT HAS NO TABS - one tab is a label pretending to be a control', () => {
   const c = room();
-  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  openAt(c, 0);
   assert.equal(c.querySelectorAll('.wkv-tab').length, 0);
 });
 
 test('SEARCH NARROWS THE OPEN TAB, and says so when nothing matches', () => {
   const c = room();
-  click(slots(c)[2].querySelector('.wkv-slot-tap'));      // WR
+  openAt(c, 2);      // WR
   assert.equal(prows(c).length, 5);
   const input = c.querySelector('.wkv-find input');
   type(input, 'lamb');
@@ -544,7 +544,7 @@ test('SEARCH NARROWS THE OPEN TAB, and says so when nothing matches', () => {
 
 test('A ROOKIE WITH NO CAREER RATE GETS A BLANK, NOT A ZERO - and his resume still names him', () => {
   const c = room();
-  click(slots(c)[2].querySelector('.wkv-slot-tap'));      // WR
+  openAt(c, 2);      // WR
   const rookie = prows(c).find((r) => r.textContent.includes('Carson Beck'));
   assert.equal(rookie.querySelector('.wkv-val b').textContent, '', 'no season, no number');
   assert.equal(rookie.querySelector('.wkv-val small').textContent, '');
@@ -559,7 +559,7 @@ test('A ROOKIE WITH NO CAREER RATE GETS A BLANK, NOT A ZERO - and his resume sti
 
 test('A PLAYER ALREADY IN THE LINEUP IS MARKED AND UNPICKABLE', () => {
   const c = room({ initialLineup: { RB: 11 } });
-  click(slots(c)[4].querySelector('.wkv-slot-tap'));      // FLEX, RB tab
+  openAt(c, 4);      // FLEX, RB tab
   const cmc = prows(c).find((r) => r.textContent.includes('Christian McCaffrey'));
   assert.ok(cmc.className.includes('gone'));
   assert.equal(cmc.disabled, true);
@@ -569,10 +569,10 @@ test('A PLAYER ALREADY IN THE LINEUP IS MARKED AND UNPICKABLE', () => {
 
 test('PICKING FILLS THE SLOT, ADVANCES, AND WRITES ONCE', async () => {
   const c = room();
-  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  openAt(c, 0);
   click(prows(c).find((r) => r.textContent.includes('Patrick Mahomes')));
-  assert.match(slots(c)[0].textContent, /Patrick Mahomes/);
-  assert.deepEqual(sub(c).slice(0, 1), ['1 of 6 filled']);
+  assert.equal(slots(c)[0].querySelector('.wkv-nm').textContent, 'Mahomes', 'the slot shows the surname');
+  assert.match(count(c), /^1 of 6 · next lock /);
   assert.match(txt(c, '.wkv-pan-h b'), /^RB · Running backs$/, 'and it advanced to the next empty slot');
   await act(async () => { await sleep(900); });
   assert.deepEqual(saves.map((s) => s.body.lineup), [{ QB: 4 }]);
@@ -613,7 +613,7 @@ test('EDITING AFTER CONFIRMING UN-CONFIRMS IT', () => {
 
 test('AND SO DOES REPLACING A PLAYER', () => {
   const c = room({ initialLineup: OPEN_SIX, initialConfirmedAt: '2026-09-20T19:40:00.000Z' });
-  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  openAt(c, 0);
   click(prows(c).find((r) => r.textContent.includes('Patrick Mahomes')));
   assert.equal(txt(c, '.wkv-lock'), 'Lock it in', 'still six, but the receipt is gone');
   assert.match(txt(c, '.wkv-pace'), /Every change saves/);
@@ -625,7 +625,7 @@ test('AND SO DOES REPLACING A PLAYER', () => {
 
 test('SIGNED OUT: a tap is the door, not a dead end - and nothing is written', () => {
   const c = room({ signedIn: false });
-  click(slots(c)[0].querySelector('.wkv-slot-tap'));
+  openAt(c, 0);
   assert.deepEqual(nav.pushes, ['/signin?d=/weekly']);
   assert.equal(prows(c).length, 0, 'no pool opened');
   assert.equal(saves.length, 0);
@@ -653,4 +653,69 @@ test('THE HANDLE GATE STILL PAINTS A HELD SLOT, and the tap re-opens the claim',
   assert.equal(slots(c).filter((s) => s.className.includes('wkv-pending')).length, 0,
     'nothing is held until a write is attempted');
   assert.ok(c.querySelector('.wkv-lock'), 'and the footer is unchanged');
+});
+
+// ---------------------------------------------------------------------------
+// ONE SCROLL (thu-2): the header, the progress line, the folded rules, the
+// 3 x 2 lineup and the list that is the page's own scroll.
+// ---------------------------------------------------------------------------
+
+test('THE HEADER IS ONE LINE, AND EVERY WORD OF IT IS DATA', async () => {
+  const { WEEKLY_FORMAT } = await import('../../lib/weekly/rules.js');
+  const c = room({ contest: { id: 10, week: 7, locks_at: future(100), season_year: 2026 } });
+  const tops = c.querySelectorAll('.wkv-top');
+  assert.equal(tops.length, 1, 'one header');
+  const h1 = tops[0].querySelector('h1');
+  assert.equal(h1.textContent, `The Weekly · Week 7 · ${WEEKLY_FORMAT.scoring}, ${WEEKLY_FORMAT.drop}`);
+  assert.equal(h1.querySelector('b').textContent, 'The Weekly · Week 7', 'the week is the contest row\'s');
+  assert.equal(tops[0].querySelector('a.wkv-back').getAttribute('href'), '/games', 'and the way back is on it');
+  // the card's own duplicate header and the strip are gone
+  assert.equal(c.querySelector('.wkv-hd'), null);
+  assert.equal(c.querySelector('.wkv-strip'), null);
+  assert.equal(c.querySelector('.wkv-sh'), null);
+  assert.equal(c.querySelectorAll('h1').length, 1);
+});
+
+test('PROGRESS: six segments and one line under them, counted from the lineup', () => {
+  const c = room({ initialLineup: { QB: 2, RB: 11, WR: 20 } });
+  assert.equal(c.querySelectorAll('.wkv-prog .wkv-pip').length, 6);
+  assert.equal(c.querySelectorAll('.wkv-prog .wkv-pip.on').length, 3);
+  assert.equal(c.querySelectorAll('.wkv-prog .wkv-count').length, 1);
+  assert.match(count(c), /^3 of 6 · /);
+  const empty = room();
+  assert.equal(count(empty), '0 of 6 · each slot locks at its kickoff');
+});
+
+test('HOW IT WORKS: one <details>, open only on a first visit', () => {
+  const first = room({ firstVisit: true });
+  const d = first.querySelector('details.wkv-how');
+  assert.ok(d, 'a details element');
+  assert.equal(d.querySelector('summary').textContent, 'How it works');
+  assert.equal(d.open, true, 'open on the first visit');
+  act(() => { for (const r of roots) r.unmount(); }); roots.clear();
+  const back = room();
+  assert.equal(back.querySelector('details.wkv-how').open, false, 'closed on every visit after');
+  // and the room marks the visit for next time - a cookie, never a DB write
+  assert.match(document.cookie, /(^|; )sv_wk_seen=1(;|$)/);
+});
+
+test('THE LINEUP IS SIX SLOTS IN THE STICKY DOCK, surname or "Tap to fill"', () => {
+  const c = room({ initialLineup: { QB: 4, WR: 40 } });
+  const dock = c.querySelector('.wkv-dock .wkv-lineup');
+  assert.ok(dock);
+  assert.equal(dock.querySelectorAll('.wkv-slot').length, 6);
+  const nm = [...dock.querySelectorAll('.wkv-slot')].map((s) => s.querySelector('.wkv-nm')?.textContent ?? s.querySelector('.wkv-empty')?.textContent);
+  // Mahomes, an RB slot selected (the first empty one), Beck (suffix dropped), and three empties
+  assert.deepEqual(nm, ['Mahomes', 'Pick below', 'Beck', 'Tap to fill', 'Tap to fill', 'Tap to fill']);
+});
+
+test('THE LIST IS NOT A SCROLL BOX: rows sit in .wkv-list, and .wkv-pan-b is gone', () => {
+  const c = room();
+  assert.equal(c.querySelector('.wkv-pan-b'), null);
+  const list = c.querySelector('.wkv-panel > .wkv-list');
+  assert.ok(list);
+  assert.equal(list.querySelectorAll('.wkv-prow').length, prows(c).length);
+  assert.ok(prows(c).length > 0);
+  // and the list's header is a sibling above it, so it can stick on its own
+  assert.equal(list.previousElementSibling.className, 'wkv-pan-h');
 });

@@ -29,12 +29,17 @@ test('D12: ONE deadline per Weekly screen - and the room owns it now', () => {
 
   // THE HEADER STATES NO DEADLINE AT ALL. This is the assertion the old one
   // inverted: what used to be required is now forbidden.
+  // THE HEADER MOVED INTO THE ROOM (thu-2): the page's eyebrow and its giant
+  // "Week N" are gone from the builder, and the room's ONE header line
+  // (.wkv-top: the way back, the week, the format) is the only header. It
+  // still names no deadline.
   const page = strip(src('app/weekly/page.js'));
-  const header = page.slice(page.indexOf('<header className="hdr">'), page.indexOf('<WeeklyRoom'));
-  assert.doesNotMatch(header, /StandaloneDate|StandaloneTime|first kickoff|locks_at/,
-    'the page header names no deadline - the room does');
-  assert.match(header, /The Weekly &middot; Week \{contest\.week\}/, 'the eyebrow stays');
-  assert.match(header, /<h1>Week \{contest\.week\}<\/h1>/, 'and the title');
+  const builder = page.slice(page.indexOf('const reminderAt'), page.indexOf('<WeeklyRoom'));
+  assert.doesNotMatch(builder, /<header className="hdr">|<h1>Week/, 'the builder stacks no page header over the room');
+  const header = room.slice(room.indexOf('<header className="wkv-top">'), room.indexOf('</header>'));
+  assert.doesNotMatch(header, /StandaloneDate|StandaloneTime|first kickoff|locks_at|lock/,
+    'the header names no deadline - the progress line does');
+  assert.match(header, /<h1 className="wkv-title"><b>\{hd\.title\}<\/b> &middot; \{hd\.format\}<\/h1>/, 'the week and the format, from data');
 
   // EXACTLY ONE LOCK OR KICKOFF STAMP OUTSIDE THE SLOT ROWS. The room's own
   // per-slot kickoffs are inside the rows and do not count; "next lock" is the
@@ -46,7 +51,9 @@ test('D12: ONE deadline per Weekly screen - and the room owns it now', () => {
   // PER-SLOT TIMES STAY, still through the island, and now carry their day:
   // a slate that runs Thursday to Monday printed "5:15 PM" on two rows four
   // days apart with nothing to tell them apart.
-  assert.match(room, /<StandaloneTime iso=\{p\.kickoff_at\} weekday zone=\{false\} \/>/);
+  // (thu-2: a 56 px slot carries position and surname only, so the per-player
+  // kickoff now lives on the player's row in the list - same island, same day.)
+  assert.match(room, /<StandaloneTime iso=\{p2\.kickoff_at\} weekday zone=\{false\} \/>/);
   assert.match(room, /next lock <StandaloneTime iso=\{nextLockIso\} weekday \/>/, 'and so does the next lock');
 
   // THE ZONE SUFFIX LANDS ONCE. Only the next-lock stamp keeps it; every other
