@@ -78,7 +78,7 @@ function GameRow({ row, signedIn, signinHref }) {
 // THIS WEEK
 // ---------------------------------------------------------------------------
 function WeekPane({ v, signedIn, signinHref }) {
-  const { now, rows = [], mlb = [], practice = [], week = null } = v;
+  const { now, rows = [], mlb = [], epl = [], practice = [], week = null } = v;
   return (
     <>
       <NowCard card={now} signedIn={signedIn} signinHref={signinHref} />
@@ -107,6 +107,19 @@ function WeekPane({ v, signedIn, signinHref }) {
           </div>
           <div className="gv-list">
             {mlb.map((r) => <GameRow key={r.key} row={r} signedIn={signedIn} signinHref={signinHref} />)}
+          </div>
+        </>
+      ) : null}
+
+      {/* EPL WEEKLY 5 (thu-34): its own group, same row grammar, under MLB. */}
+      {epl.length ? (
+        <>
+          <div className="gv-sh" data-group="epl">
+            <h3>Premier League</h3>
+            <span>FANTASY</span>
+          </div>
+          <div className="gv-list">
+            {epl.map((r) => <GameRow key={r.key} row={r} signedIn={signedIn} signinHref={signinHref} />)}
           </div>
         </>
       ) : null}

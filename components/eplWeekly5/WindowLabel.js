@@ -1,18 +1,18 @@
 'use client';
 
-// The gameweek's date window in the VIEWER's zone - StandaloneTime's
-// hydration-safe pattern: the ET fallback on the server and the first client
-// render, the device's zone after mount (lib/eplWeekly5/labels.js).
+// The gameweek's date window in the VIEWER's zone, hydration-safe: the server
+// and the hydrating render read the ET fallback (getServerSnapshot -> null),
+// then React re-renders with the device's zone (lib/eplWeekly5/labels.js).
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { windowLabel } from '@/lib/eplWeekly5/labels';
 
+const subscribe = () => () => {};
+function browserZone() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined; } catch { return undefined; }
+}
+
 export default function WindowLabel({ first, last }) {
-  const [label, setLabel] = useState(() => windowLabel(first, last, { tz: null }));
-  useEffect(() => {
-    let tz;
-    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || undefined; } catch { tz = undefined; }
-    setLabel(windowLabel(first, last, { tz }));
-  }, [first, last]);
-  return <>{label}</>;
+  const tz = useSyncExternalStore(subscribe, browserZone, () => null);
+  return <>{windowLabel(first, last, { tz })}</>;
 }
