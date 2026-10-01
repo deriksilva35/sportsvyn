@@ -14,12 +14,13 @@
 .ept-tbl th, .ept-tbl td { padding: 8px 0; text-align: center; font: 500 12px/1.25 var(--tok-font-body); font-variant-numeric: tabular-nums; color: var(--tok-ink); border-bottom: 1px solid var(--tok-line); }
 .ept-tbl thead th { font: 10px/1 var(--tok-font-num); letter-spacing: .06em; color: var(--tok-muted); background: var(--tok-surface-2); }
 .ept-tbl tbody tr:last-child th, .ept-tbl tbody tr:last-child td { border-bottom: 0; }
-.ept-tbl .rk { width: 26px; font-family: var(--tok-font-num); font-size: 11px; color: var(--tok-muted); }
-.ept-tbl .club { width: auto; text-align: left; padding-left: 4px; padding-right: 4px; font-weight: 700; color: var(--tok-primary); overflow-wrap: anywhere; }
-.ept-tbl th:not(.rk):not(.club):not(.fm), .ept-tbl td:not(.rk):not(.fm) { width: 24px; }
-.ept-tbl .pts { width: 30px; font-weight: 800; color: var(--tok-primary); }
-.ept-tbl .fm { width: 74px; padding-right: 6px; }
-.ept-tbl tbody tr[data-rail] .rk { box-shadow: inset 3px 0 0 var(--ept-rail, var(--tok-line)); }
+.ept-tbl .ept-rk { width: 26px; font-family: var(--tok-font-num); font-size: 11px; color: var(--tok-muted); background: none; }
+.ept-tbl .ept-club { width: auto; text-align: left; padding-left: 6px; padding-right: 4px; font-weight: 700; color: var(--tok-primary); overflow-wrap: break-word; hyphens: manual; }
+.ept-tbl :is(th, td):where(:not(.ept-rk, .ept-club, .ept-fm)) { width: 20px; }
+.ept-tbl .ept-gd { width: 30px; }
+.ept-tbl .ept-pts { width: 28px; font-weight: 800; color: var(--tok-primary); }
+.ept-tbl .ept-fm { width: 70px; padding-right: 6px; }
+.ept-tbl tbody tr[data-rail] .ept-rk { box-shadow: inset 3px 0 0 var(--ept-rail, var(--tok-line)); }
 .ept-tbl tbody tr[data-rail="ucl"] { --ept-rail: var(--tok-up); }
 .ept-tbl tbody tr[data-rail="uel"] { --ept-rail: var(--tok-accent); }
 .ept-tbl tbody tr[data-rail="drop"] { --ept-rail: var(--tok-down); }
@@ -37,3 +38,7 @@
 .epl-rc { display: inline-block; width: 8px; height: 11px; margin-right: 6px; border-radius: 1.5px; background: var(--tok-down); vertical-align: -1px; }
 .epl-stats th, .epl-stats td { text-align: center; }
 .epl-stats tbody th { font-weight: 500; color: var(--tok-muted); }
+
+/* The game page's card is navy in every state (gamePageArcade.css .gpa-card),
+   so its soccer lines take the on-primary ink a live /scores card uses. */
+:where(:root[data-theme="arcade"]) .gpa-card .sv4-soc li { color: var(--tok-on-primary); }

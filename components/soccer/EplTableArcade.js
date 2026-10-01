@@ -33,19 +33,19 @@ export default function EplTableArcade({ table }) {
           <table className="ept-tbl" aria-label="Premier League table">
             <thead>
               <tr>
-                <th scope="col" className="rk">#</th><th scope="col" className="club">Club</th>
+                <th scope="col" className="ept-rk">#</th><th scope="col" className="ept-club">Club</th>
                 <th scope="col">P</th><th scope="col">W</th><th scope="col">D</th><th scope="col">L</th>
-                <th scope="col">GD</th><th scope="col" className="pts">Pts</th><th scope="col" className="fm">Form</th>
+                <th scope="col" className="ept-gd">GD</th><th scope="col" className="ept-pts">Pts</th><th scope="col" className="ept-fm">Form</th>
               </tr>
             </thead>
             <tbody>
               {table.rows.map((r) => (
                 <tr key={r.teamId ?? r.rank} data-rail={railFor(r.note) ?? undefined}>
-                  <td className="rk">{r.rank}</td>
-                  <th scope="row" className="club">{r.team}</th>
+                  <td className="ept-rk">{r.rank}</td>
+                  <th scope="row" className="ept-club">{r.team}</th>
                   <td>{r.played}</td><td>{r.win}</td><td>{r.draw}</td><td>{r.lose}</td>
-                  <td>{gd(r.goalsDiff)}</td><td className="pts">{r.points}</td>
-                  <td className="fm"><Form form={r.form} /></td>
+                  <td className="ept-gd">{gd(r.goalsDiff)}</td><td className="ept-pts">{r.points}</td>
+                  <td className="ept-fm"><Form form={r.form} /></td>
                 </tr>
               ))}
             </tbody>

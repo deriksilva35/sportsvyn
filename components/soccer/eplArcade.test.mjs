@@ -101,8 +101,8 @@ test('THE TABLE: #, club, P, W, D, L, GD, Pts, form; GD signed; the rails; the e
   ] };
   const h = render(React.createElement(EplTableArcade, { table }));
   assert.deepEqual([...h.matchAll(/<th scope="col"[^>]*>([^<]*)<\/th>/g)].map((m) => m[1]), ['#', 'Club', 'P', 'W', 'D', 'L', 'GD', 'Pts', 'Form']);
-  assert.match(h, /<tr data-rail="ucl"><td class="rk">1<\/td><th scope="row" class="club">Manchester City<\/th><td>5<\/td><td>5<\/td><td>0<\/td><td>0<\/td><td>\+11<\/td><td class="pts">15<\/td>/);
-  assert.match(h, /<tr data-rail="drop">.*<td>-7<\/td>/);
+  assert.match(h, /<tr data-rail="ucl"><td class="ept-rk">1<\/td><th scope="row" class="ept-club">Manchester City<\/th><td>5<\/td><td>5<\/td><td>0<\/td><td>0<\/td><td class="ept-gd">\+11<\/td><td class="ept-pts">15<\/td>/);
+  assert.match(h, /<tr data-rail="drop">.*<td class="ept-gd">-7<\/td>/);
   assert.match(h, /aria-label="Last five: L L D L L"/);
   assert.match(h, /Matchweek 5/);
   assert.match(render(React.createElement(EplTableArcade, { table: null })), /The table lands with the first sync\./);
