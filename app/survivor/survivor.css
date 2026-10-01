@@ -1,0 +1,111 @@
+/* app/survivor/survivor.css - what Survivor adds to the Weekly room's grammar.
+   The room IS .wkv (app/weekly/weekly.css): the sticky header, the status line,
+   the folded rules, the sticky dock, the sticky list header, the rows as the
+   page's scroll and the lock bar all come from there. This file only swaps the
+   lineup grid for the PATH strip, adds the team mark and the row tags, and
+   restates the dock height the three sticky layers stack by. No colour
+   literals: tokens only (lib/brand/hexBaseline.json ratchet). */
+
+/* ---- the path: one cell per week from the start, oldest first ------------ */
+.svv-path {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.svv-path::-webkit-scrollbar { display: none; }
+.svv-cell {
+  flex: 1 0 56px;
+  min-height: 44px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1px solid var(--tok-line);
+  background: var(--tok-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.svv-cell.cur { border-color: var(--tok-primary); }
+.svv-cell.loss, .svv-cell.missed { opacity: 0.55; }
+.svv-wk {
+  font: 700 9px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.svv-tm {
+  font: 800 12px var(--font-mono, ui-monospace, monospace);
+  color: var(--tok-primary);
+  white-space: nowrap;
+}
+
+/* Signed out, the dock carries the pitch where the path would be - same 44 px. */
+.svv-pitch {
+  margin: 0;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 7px 12px;
+  line-height: 15px;
+  border-radius: 10px;
+  background: var(--tok-surface);
+  border: 1px solid var(--tok-line);
+  font: 500 12px var(--font-mono, ui-monospace, monospace);
+  color: var(--muted);
+}
+.svv-pitch b { color: var(--tok-primary); }
+
+/* ---- a team row --------------------------------------------------------- */
+.svv-row { min-height: 56px; }
+.svv-ab {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font: 800 11px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.02em;
+  background: var(--tok-surface-2);
+  color: var(--tok-primary);
+}
+.svv-row .wkv-who { flex: 1; min-width: 0; }
+.svv-tag {
+  font: 800 9px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.06em;
+  padding: 3px 7px;
+  border-radius: 99px;
+  background: var(--tok-surface-2);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.svv-tag.on { background: var(--tok-primary); color: var(--tok-on-primary); }
+
+/* ---- the lock bar's one sentence ---------------------------------------- */
+.svv-line {
+  font: 500 12px var(--font-mono, ui-monospace, monospace);
+  color: var(--muted);
+  line-height: 1.3;
+}
+.svv-line b { color: var(--tok-primary); font-weight: 800; }
+.svv-signin {
+  display: block;
+  text-align: center;
+  font: 800 13px var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 12px 0;
+  border-radius: 12px;
+  background: var(--tok-action, var(--volt));
+  color: var(--tok-on-action, var(--ink));
+}
+.svv-bar .svv-line { flex: 1; }
+
+/* ---- arcade: the dock is the path, so it is shorter than the 3 x 2 grid -- */
+/* padding 6 + a 44 px cell + padding 10 = 60. */
+:where(:root[data-theme="arcade"]) .wkv.svv { --wkv-dock-h: 60px; }
+:where(:root[data-theme="arcade"]) .svv-dock { padding: 6px 12px 10px; }

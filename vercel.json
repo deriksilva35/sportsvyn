@@ -66,6 +66,10 @@
       "schedule": "23 13 * * *"
     },
     {
+      "path": "/api/cron/survivor-grade",
+      "schedule": "25 * * * *"
+    },
+    {
       "path": "/api/cron/pickem-settle",
       "schedule": "0 6-20 * * 0,1"
     },
