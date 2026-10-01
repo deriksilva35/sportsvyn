@@ -72,7 +72,8 @@ export async function GET(request) {
   }
   // PUSH HOOK: results, for the boards THIS fire graded. Send-once keys on
   // the board id; caught so push can never un-settle a settle.
-  const settled = (summary.results ?? []).filter((r) => r.settled).map((r) => r.contestId);
+  // NOT A DAY BOARD (NBA): no push copy for it yet, so none is sent.
+  const settled = (summary.results ?? []).filter((r) => r.settled && !r.dayBoard).map((r) => r.contestId);
   if (settled.length && pushEnabled()) {
     await notifyPickemSettled(settled).catch(() => {});
   }

@@ -16,6 +16,10 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { resyncNbaSchedule, NBA_RESYNC_SOURCE } from '@/lib/nba/schedule';
+import { nbaPickemTick } from '@/lib/nba/dayPickem';
+
+/** The daily NBA Pick'em's own run (lib/nba/dayPickem.js), logged apart. */
+export const PICKEM_SOURCE = 'nba-pickem';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -50,5 +54,35 @@ export async function GET(request) {
     }
   }
   const moved = (s.changes ?? []).filter((c) => c.action === 'update' && c.kickoffFrom !== c.kickoffTo);
-  return Response.json({ ok: res.ok, from: s.from, to: s.to, changes: s.changes?.length ?? 0, tipsMoved: moved.length, cancelled: s.cancelled?.length ?? 0, refused: s.refused?.length ?? 0, dryRun });
+
+  // THE DAILY PICK'EM, AFTER THE RE-SYNC - so its locks and its settle read the
+  // tips this run just wrote. It runs whether or not the re-sync succeeded: a
+  // provider hiccup must not keep last night's board from settling. Its own
+  // source, its own lock, its own alert. A dry run touches no board.
+  let pickem = null;
+  if (!dryRun) {
+    const pk = await withAdvisoryLock(PICKEM_SOURCE, async () => recordRun(sql, {
+      source: PICKEM_SOURCE,
+      kind: 'tick',
+      run: async () => {
+        const t = await nbaPickemTick({ now });
+        const errored = [t.board?.error, t.locks?.error, t.settle?.error,
+          ...((t.settle?.results ?? []).filter((r) => r.error).map((r) => `contest ${r.contestId}: ${r.error}`))].filter(Boolean);
+        // A FAILED STEP FAILS THE RUN, so sync_runs says so and the alert fires.
+        if (errored.length) throw new Error(`${errored.join('\n')}\n${JSON.stringify(t).slice(0, 1500)}`);
+        return t;
+      },
+    }));
+    if (!pk.locked) {
+      pickem = pk.result?.summary ?? null;
+      if (!pk.result?.ok) {
+        await maybeAlert(sql, {
+          source: PICKEM_SOURCE,
+          subject: '[nba-pickem] tick FAILED',
+          body: String(pk.result?.error ?? 'unknown error').slice(0, 4000),
+        });
+      }
+    }
+  }
+  return Response.json({ ok: res.ok, from: s.from, to: s.to, changes: s.changes?.length ?? 0, tipsMoved: moved.length, cancelled: s.cancelled?.length ?? 0, refused: s.refused?.length ?? 0, dryRun, pickem });
 }
