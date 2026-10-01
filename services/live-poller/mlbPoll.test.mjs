@@ -70,11 +70,12 @@ test('THE FOOTBALL NORMALISER IS UNTOUCHED by the third argument', () => {
   assert.equal(a.awayScore, 14);
 });
 
-test('THE REGISTRY HAS THREE LEAGUES, and only MLB carries an enrich', async () => {
+test('THE REGISTRY HAS FOUR LEAGUES, and only MLB carries an enrich', async () => {
   const src = await import('node:fs').then((fs) => fs.readFileSync(
     new URL('./index.mjs', import.meta.url), 'utf8'));
   const body = src.slice(src.indexOf('const LEAGUES = ['), src.indexOf('async function slate'));
-  for (const slug of ['cfb', 'nfl', 'mlb']) assert.ok(body.includes(`slug: '${slug}'`), slug);
+  // The NBA joined in nba-core, with no enrich: its game row carries the clock.
+  for (const slug of ['cfb', 'nfl', 'mlb', 'nba']) assert.ok(body.includes(`slug: '${slug}'`), slug);
   // ONE ENRICH, AND IT IS MLB'S. A football league that grew one silently
   // would add a per-game call to every poll of every Sunday.
   assert.equal((body.match(/enrich:/g) ?? []).length, 1);
