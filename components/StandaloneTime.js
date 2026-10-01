@@ -53,14 +53,14 @@ import { standaloneTimeLabel } from '@/lib/time/standaloneLabel';
 
 export default function StandaloneTime({ iso, weekday = false, zone = true, serverTz = null }) {
   const [label, setLabel] = useState(() => standaloneTimeLabel(iso, { weekday, zone, tz: serverTz ?? null }));
-  // THE PAGE ZONE WINS (thu-26). With serverTz given, the page has already
-  // told the reader which clock it is on ("All times Pacific"); re-formatting
-  // in the DEVICE's zone after mount put Eastern times under that header
-  // whenever the two differed. Only a caller with no page zone falls back to
-  // the device's own.
+  // AFTER MOUNT, THE DEVICE'S ZONE - BY NAME (thu-26). The header beside it
+  // (components/scores/ZoneLabel.js) switches to the device's zone on mount,
+  // so the card does the same and the two always agree. It used to pass
+  // an undefined tz, which the label's old `tz = null` default turned into the
+  // ET fallback: every card read "5:00 PM ET" under "all times Pacific".
   useEffect(() => {
-    setLabel(standaloneTimeLabel(iso, { weekday, zone, tz: serverTz ?? browserZone() }));
-  }, [iso, weekday, zone, serverTz]);
+    setLabel(standaloneTimeLabel(iso, { weekday, zone, tz: browserZone() }));
+  }, [iso, weekday, zone]);
   return <>{label}</>;
 }
 
