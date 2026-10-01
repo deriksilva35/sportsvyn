@@ -20,7 +20,7 @@ import ZoneLabel from '@/components/scores/ZoneLabel';
 import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import LiveRefresh from '@/components/scores/LiveRefresh';
-import ExpandCard from '@/components/scores/ExpandCard';
+import ExpandCard, { ExpandLine } from '@/components/scores/ExpandCard';
 import { liveWinProbView } from '@/components/gridiron/LiveWinProb';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { orderFor } from '@/lib/gridiron/teamOrder';
@@ -101,7 +101,20 @@ function Stake({ stake, g, boardOpen, signedIn }) {
   return <div className="sv4-stake" data-stake="1">{chips}</div>;
 }
 
-export function Card({ g, x, signedIn, signinHref, tz, now }) {
+/**
+ * THE CARD'S FACE, UNWRAPPED (game-page-arcade, wed-8). /scores mounts it
+ * inside ExpandCard (Card, below); the game page mounts the SAME component in
+ * its own <article> - one face, not a copy. `onPage` is the game page's five
+ * differences and nothing else: the quarter line score sits on the face once
+ * the game has started, the stake chips stay on the board (the page has its
+ * own In your games module), the last play rides the face when no field can
+ * be drawn, the
+ * final foot carries the closing line (x.closing) where the board has its
+ * link, and the pre-game foot is the line alone (the page's In your games
+ * module is where a pick is made). With `onPage` false the markup is the
+ * board's, byte for byte.
+ */
+export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }) {
   const variant = cardVariant(g);
   const live = variant === 'live', final = variant === 'final';
   const baseball = sportOf(g.leagueSlug) === BASEBALL;
@@ -112,7 +125,7 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
   });
   const headgear = pairHasHeadgear(g.leagueSlug, g.away?.abbreviation ?? null, g.home?.abbreviation ?? null);
   const dressed = Boolean(g.away?.colors && g.home?.colors);
-  const gameHref = g.leagueSlug === 'epl' ? `/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`;
+  const gameHref = gameHrefOf(g);
   const odds = oddsFoot(g, { spreadHome: x.spreadHome, total: x.total, openHome: x.openHome ?? null });
   const wp = live ? winProbRead(g, liveWinProbView(g.liveState, now)) : null;
   const boardOpen = !live && !final && (g.leagueSlug === 'nfl' || g.leagueSlug === 'cfb');
@@ -121,16 +134,8 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
   const tick = live && field.named ? firstDownPct(x.drive) : null;
   const where = `${LEAGUE_LABEL[g.leagueSlug] ?? ''}${g.network ? ` · ${g.network}` : ''}`;
   const bell = x.stake?.alerts ? (live ? 'Alerts on' : 'Alerts') : null;
-  const label = `${g.away?.shortName ?? g.away?.name} at ${g.home?.shortName ?? g.home?.name}`;
   return (
-    // THE WHOLE CARD IS THE TAP TARGET (step 2): ExpandCard stretches a button
-    // under the face, so the links on it (No pick yet, Recap, Sign in) still
-    // work, and a tap anywhere else opens the drawer. EPL keeps no drawer - it
-    // left the arcade chip row - and stays one link to its match page.
-    <ExpandCard
-      articleProps={{ className: `sv4-card ${variant}`, 'data-variant': variant, 'data-league': g.leagueSlug, 'data-slug': g.slug }}
-      league={g.leagueSlug} slug={g.slug} live={live} label={label} gameHref={gameHref}
-      line={x.line ?? null} expandable={g.leagueSlug !== 'epl'}>
+    <>
       <div className="sv4-lbl">
         {live
           ? <span className="clock"><i className="dot" />{liveLabel(g)}</span>
@@ -143,6 +148,7 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
         <Team key={side} g={g} side={side} x={x} variant={variant} ball={ball === side}
           headgear={headgear} dressed={dressed} lead={lead} />
       ))}
+      {onPage && x.line && variant !== 'upcoming' ? <ExpandLine line={x.line} /> : null}
       {/* THE STARTERS SIT UNDER THE TEAMS they pitch for (tue-4), not in the
           foot beside the line: "RHP Z. Wheeler vs LHP C. Sale" is who is
           playing, and the foot is the market. Pre-game baseball only. */}
@@ -165,6 +171,12 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
           {x.drive.lastPlay ? <p className="lp" title={x.drive.lastPlay}>{x.drive.lastPlay}</p> : null}
         </div>
       )}
+      {/* THE GAME PAGE'S LAST PLAY when the field cannot be drawn (thu-5): no
+          down to name means no x.drive, but the page has no drive module any
+          more, so its card still says what just happened. Page only. */}
+      {onPage && live && !x.drive && x.lastPlay ? (
+        <div className="sv4-field" data-drive="0"><p className="lp" title={x.lastPlay}>{x.lastPlay}</p></div>
+      ) : null}
       {live && x.diamond && (
         <div className="sv4-bb" data-baseball="1">
           <span className="st">{x.diamond.lead}{x.diamond.sub ? <small>{x.diamond.sub}</small> : null}</span>
@@ -173,7 +185,7 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
           {x.diamond.lastPlay ? <p className="lp">{x.diamond.lastPlay}</p> : null}
         </div>
       )}
-      <Stake stake={x.stake} g={g} boardOpen={boardOpen} signedIn={signedIn} />
+      {onPage ? null : <Stake stake={x.stake} g={g} boardOpen={boardOpen} signedIn={signedIn} />}
       {live ? (
         (odds || wp) ? (
           <div className="sv4-foot">
@@ -185,7 +197,11 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
         <div className="sv4-foot">
           {/* NO MOMENT, NO WORD: the pill already says Final. */}
           <span className="moment">{moment ?? ''}</span>
-          <Link className="go" href={gameHref}>{x.hasStats ? 'Box score' : 'Recap'} &rarr;</Link>
+          {/* ON THE GAME PAGE the link is the page itself, so the foot carries
+              the closing line instead - metadata.market_prior, or nothing. */}
+          {onPage
+            ? (x.closing ? <span className="close" data-closing="1">{x.closing}</span> : null)
+            : <Link className="go" href={gameHref}>{x.hasStats ? 'Box score' : 'Recap'} &rarr;</Link>}
         </div>
       ) : baseball ? (
         <div className="sv4-foot" data-pre="mlb">
@@ -195,7 +211,7 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
       ) : (
         <div className="sv4-foot">
           <span>{odds ?? 'No line yet'}</span>
-          {!signedIn
+          {onPage ? null : !signedIn
             ? <Link className="go" href={signinHref}>Sign in to pick</Link>
             : x.stake?.pick && x.open
               ? <Link className="go" href={`/pickem/${g.leagueSlug}`}>Change pick &rarr;</Link>
@@ -204,6 +220,27 @@ export function Card({ g, x, signedIn, signinHref, tz, now }) {
                 : null}
         </div>
       )}
+    </>
+  );
+}
+
+const gameHrefOf = (g) => (g.leagueSlug === 'epl' ? `/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`);
+
+export function Card(props) {
+  const { g } = props;
+  const variant = cardVariant(g);
+  const live = variant === 'live';
+  const label = `${g.away?.shortName ?? g.away?.name} at ${g.home?.shortName ?? g.home?.name}`;
+  return (
+    // THE WHOLE CARD IS THE TAP TARGET (step 2): ExpandCard stretches a button
+    // under the face, so the links on it (No pick yet, Recap, Sign in) still
+    // work, and a tap anywhere else opens the drawer. EPL keeps no drawer - it
+    // left the arcade chip row - and stays one link to its match page.
+    <ExpandCard
+      articleProps={{ className: `sv4-card ${variant}`, 'data-variant': variant, 'data-league': g.leagueSlug, 'data-slug': g.slug }}
+      league={g.leagueSlug} slug={g.slug} live={live} label={label} gameHref={gameHrefOf(g)}
+      line={props.x.line ?? null} expandable={g.leagueSlug !== 'epl'}>
+      <CardFace {...props} />
     </ExpandCard>
   );
 }

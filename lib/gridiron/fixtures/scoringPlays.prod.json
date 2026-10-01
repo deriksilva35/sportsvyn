@@ -1,0 +1,227 @@
+{
+ "note": "REAL rows, read-only from PROD plays (SELECT, 1 Oct 2026). games: 21586 PHI@CHI wk3, 21571 ATL@GB wk3 (scoring = true). extra: other 2026 NFL rows for shapes those two games lack, cited by plays.id and match_id.",
+ "games": [
+  {
+   "id": 2002586,
+   "match_id": 21586,
+   "period": 1,
+   "clock": "8:47",
+   "play_type": "passing-touchdown",
+   "home_score": 7,
+   "away_score": 0,
+   "text": "(Shotgun) C.Keenum pass short middle to L.Burden for 8 yards, TOUCHDOWN. C.Santos extra point is GOOD, Center-S.Daly, Holder-T.Taylor."
+  },
+  {
+   "id": 2003900,
+   "match_id": 21586,
+   "period": 2,
+   "clock": "1:52",
+   "play_type": "field-goal-good",
+   "home_score": 10,
+   "away_score": 0,
+   "text": "C.Santos 29 yard field goal is GOOD, Center-S.Daly, Holder-T.Taylor."
+  },
+  {
+   "id": 2004382,
+   "match_id": 21586,
+   "period": 2,
+   "clock": "0:00",
+   "play_type": "rushing-touchdown",
+   "home_score": 10,
+   "away_score": 7,
+   "text": "(No Huddle) J.Hurts up the middle for 1 yard, TOUCHDOWN. J.Elliott extra point is GOOD, Center-R.Underwood, Holder-B.Mann."
+  },
+  {
+   "id": 2005560,
+   "match_id": 21586,
+   "period": 3,
+   "clock": "10:17",
+   "play_type": "field-goal-good",
+   "home_score": 13,
+   "away_score": 7,
+   "text": " C.Santos 48 yard field goal is GOOD, Center-S.Daly, Holder-T.Taylor."
+  },
+  {
+   "id": 2006201,
+   "match_id": 21586,
+   "period": 3,
+   "clock": "5:47",
+   "play_type": "passing-touchdown",
+   "home_score": 20,
+   "away_score": 7,
+   "text": "C.Keenum pass short middle to K.Raymond for 41 yards, TOUCHDOWN. C.Santos extra point is GOOD, Center-S.Daly, Holder-T.Taylor."
+  },
+  {
+   "id": 2008393,
+   "match_id": 21586,
+   "period": 4,
+   "clock": "7:19",
+   "play_type": "rushing-touchdown",
+   "home_score": 27,
+   "away_score": 7,
+   "text": "C.Keenum up the middle for 1 yard, TOUCHDOWN. C.Santos extra point is GOOD, Center-S.Daly, Holder-T.Taylor.PENALTY on CHI-J.Jackson, Unnecessary Roughness, 15 yards, enforced between downs."
+  },
+  {
+   "id": 1124435,
+   "match_id": 21571,
+   "period": 1,
+   "clock": "5:13",
+   "play_type": "passing-touchdown",
+   "home_score": 7,
+   "away_score": 0,
+   "text": "J.Love pass short middle to C.Watson for 4 yards, TOUCHDOWN. T.Smack extra point is GOOD, Center-M.Orzech, Holder-D.Whelan."
+  },
+  {
+   "id": 1126389,
+   "match_id": 21571,
+   "period": 1,
+   "clock": "1:32",
+   "play_type": "rushing-touchdown",
+   "home_score": 7,
+   "away_score": 7,
+   "text": "Bi.Robinson left tackle for 3 yards, TOUCHDOWN. N.Folk extra point is GOOD, Center-L.McCullough, Holder-J.Bailey."
+  },
+  {
+   "id": 1133568,
+   "match_id": 21571,
+   "period": 2,
+   "clock": "4:48",
+   "play_type": "field-goal-good",
+   "home_score": 7,
+   "away_score": 10,
+   "text": "N.Folk 44 yard field goal is GOOD, Center-L.McCullough, Holder-J.Bailey."
+  },
+  {
+   "id": 1136324,
+   "match_id": 21571,
+   "period": 2,
+   "clock": "0:59",
+   "play_type": "passing-touchdown",
+   "home_score": 7,
+   "away_score": 17,
+   "text": "(Shotgun) M.Penix pass short left to A.Hooper for 5 yards, TOUCHDOWN. N.Folk extra point is GOOD, Center-L.McCullough, Holder-J.Bailey."
+  },
+  {
+   "id": 1144558,
+   "match_id": 21571,
+   "period": 3,
+   "clock": "3:38",
+   "play_type": "rushing-touchdown",
+   "home_score": 7,
+   "away_score": 24,
+   "text": "J.Taylor reported in as eligible.  Br.Robinson left guard for 7 yards, TOUCHDOWN. N.Folk extra point is GOOD, Center-L.McCullough, Holder-J.Bailey."
+  },
+  {
+   "id": 1148004,
+   "match_id": 21571,
+   "period": 4,
+   "clock": "10:57",
+   "play_type": "field-goal-good",
+   "home_score": 7,
+   "away_score": 27,
+   "text": "N.Folk 31 yard field goal is GOOD, Center-L.McCullough, Holder-J.Bailey."
+  },
+  {
+   "id": 1149227,
+   "match_id": 21571,
+   "period": 4,
+   "clock": "8:18",
+   "play_type": "passing-touchdown",
+   "home_score": 14,
+   "away_score": 27,
+   "text": "(Shotgun) J.Love pass short right to M.Golden for 15 yards, TOUCHDOWN. T.Smack extra point is GOOD, Center-M.Orzech, Holder-D.Whelan."
+  },
+  {
+   "id": 1151631,
+   "match_id": 21571,
+   "period": 4,
+   "clock": "3:33",
+   "play_type": "rushing-touchdown",
+   "home_score": 14,
+   "away_score": 35,
+   "text": "C.Levin and M.Jerrell reported in as eligible.  Bi.Robinson left guard for 2 yards, TOUCHDOWN. TWO-POINT CONVERSION ATTEMPT. M.Penix pass to C.Blair is complete. ATTEMPT SUCCEEDS."
+  }
+ ],
+ "extra": [
+  {
+   "id": 273300,
+   "match_id": 21539,
+   "period": 2,
+   "clock": "9:11",
+   "play_type": "passing-touchdown",
+   "home_score": 0,
+   "away_score": 7,
+   "text": "G.Van Roten reported in as eligible.  D.Maye pass short left to E.Raridon for 2 yards, TOUCHDOWN. A.Borregales extra point is GOOD, Center-J.Ashby, Holder-M.Wishnowsky."
+  },
+  {
+   "id": 511976,
+   "match_id": 21541,
+   "period": 3,
+   "clock": "2:16",
+   "play_type": "interception-return-touchdown",
+   "home_score": 27,
+   "away_score": 20,
+   "text": "(No Huddle, Shotgun) J.Burrow pass short right intended for A.Iosivas INTERCEPTED by J.Trotter [V.Vea] at CIN 38. J.Trotter for 38 yards, TOUCHDOWN. C.McLaughlin extra point is GOOD, Center-E.Deckers, Holder-R.Dixon."
+  },
+  {
+   "id": 544123,
+   "match_id": 21548,
+   "period": 4,
+   "clock": "1:36",
+   "play_type": "passing-touchdown",
+   "home_score": 31,
+   "away_score": 36,
+   "text": "(Shotgun) J.Allen pass deep middle to J.Palmer for 34 yards, TOUCHDOWN. TWO-POINT CONVERSION ATTEMPT. J.Allen pass to K.Coleman is incomplete. ATTEMPT FAILS."
+  },
+  {
+   "id": 802749,
+   "match_id": 21562,
+   "period": 1,
+   "clock": "2:52",
+   "play_type": "rushing-touchdown",
+   "home_score": 7,
+   "away_score": 0,
+   "text": "(Shotgun) C.Vinson reported in as eligible. Direct snap to D.Henry.  D.Henry right end for 1 yard, TOUCHDOWN. T.Loop extra point is GOOD, Center-N.Moore, Holder-R.Eckley."
+  },
+  {
+   "id": 838572,
+   "match_id": 21562,
+   "period": 4,
+   "clock": "9:42",
+   "play_type": "passing-touchdown",
+   "home_score": 17,
+   "away_score": 17,
+   "text": "(Shotgun) T.Shough pass deep middle to C.Olave for 21 yards, TOUCHDOWN. TWO-POINT CONVERSION ATTEMPT. T.Etienne rushes right end. ATTEMPT SUCCEEDS."
+  },
+  {
+   "id": 840962,
+   "match_id": 21559,
+   "period": 4,
+   "clock": "13:37",
+   "play_type": "sack-opp-fumble-recovery",
+   "home_score": 20,
+   "away_score": 3,
+   "text": "(Shotgun) A.Rodgers sacked at PIT 21 for -9 yards (C.Barmore). FUMBLES (C.Barmore) [C.Barmore], RECOVERED by NE-E.Ponder at PIT 19. E.Ponder for 19 yards, TOUCHDOWN. A.Borregales extra point is GOOD, Center-J.Ashby, Holder-M.Wishnowsky."
+  },
+  {
+   "id": 916544,
+   "match_id": 21565,
+   "period": 4,
+   "clock": "1:41",
+   "play_type": "penalty",
+   "home_score": 14,
+   "away_score": 26,
+   "text": "(Shotgun) J.Herbert pass incomplete deep left to D.Davis.PENALTY on LAC-J.Alt, Offensive Holding, 6 yards, enforced in End Zone, SAFETY - No Play."
+  },
+  {
+   "id": 1910735,
+   "match_id": 21582,
+   "period": 1,
+   "clock": "8:43",
+   "play_type": "punt-return-touchdown",
+   "home_score": 0,
+   "away_score": 10,
+   "text": "R.Dixon punts 41 yards to MIN 14, Center-E.Deckers. M.Price for 86 yards, TOUCHDOWN.PENALTY on MIN, Unsportsmanlike Conduct, 15 yards, enforced between downs. W.Reichard extra point is GOOD, Center-A.DePaola, Holder-J.Hekker."
+  }
+ ]
+}

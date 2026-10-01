@@ -58,6 +58,10 @@ import { isPreGame, showsProps } from '@/lib/gridiron/oddsFormat';
 import { getH2hOdds } from '@/lib/gridiron/oddsReader';
 import BackToAppBar from '@/components/BackToAppBar';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
+import { arcadeFor } from '@/lib/brand/theme';
+import { shellSigninHref } from '@/lib/shell/signinHref';
+import { arcadeGameView } from '@/lib/gridiron/gamePageArcadeView';
+import GamePageArcade from '@/components/gridiron/GamePageArcade';
 import '@/components/gridiron/gridiron.css';
 import '@/components/gridiron/drivestrip.css';
 // The .gg-* chrome is one stylesheet, imported rather than copied. Duplicating
@@ -65,6 +69,12 @@ import '@/components/gridiron/drivestrip.css';
 // sibling law is meant to avoid - siblings get their own MARKUP, not their own
 // copy of shared paint.
 import '../../../nfl/game/[slug]/game.css';
+// THE ARCADE PAGE'S SHEETS. Both are arcade-scoped rule by rule, so the dark
+// page resolves exactly as before (app/darkParity.test.mjs): the board's card
+// sheet, because the page mounts the board's card face, and the page's own.
+import '@/app/scores/scoresV4.css';
+import '@/components/gridiron/gamePageArcade.css';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -110,6 +120,29 @@ export default async function CfbGamePage({ params, searchParams }) {
   // resolves both gridiron leagues, so without this an NFL slug would render
   // here too and the two routes would both answer for the same game.
   if (!game || game.leagueSlug !== 'cfb') notFound();
+
+  // THE ARCADE PAGE (game-page-arcade, wed-8): under data-theme="arcade" the
+  // game page is the board's card and the modules below it, drawn by
+  // components/gridiron/GamePageArcade.js from one view
+  // (lib/gridiron/gamePageArcadeView.js). Everything after this branch is the
+  // dark page, unchanged.
+  if (arcadeFor(isShell)) {
+    const one = (v) => (Array.isArray(v) ? v[0] : v);
+    const rawAsOf = one(sp.asOf);
+    const view = await arcadeGameView({
+      game, viewerId,
+      asOf: rawAsOf != null && /^\d+$/.test(String(rawAsOf)) ? Number(rawAsOf) : null,
+      allPlays: one(sp.plays) === 'all',
+      signinHref: shellSigninHref(`/cfb/game/${game.slug}`, isShell),
+    });
+    return (
+      <div className="gi" data-surface="ink">
+        <BackToAppBar />
+        <GlobalHeaderServer activeNav="cfb" />
+        <GamePageArcade view={view} />
+      </div>
+    );
+  }
 
   const final = game.status === 'final';
   const live = game.status === 'live';
