@@ -14,6 +14,7 @@ import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
 import GetTheAppBanner from '@/components/appstore/GetTheAppBanner';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
+import { arcadeFor } from '@/lib/brand/theme';
 import { getDraft, getDraftForRoom } from '@/lib/fantasy/drafts';
 import { getOrCreateRead, getOrCreateTrackerRead } from '@/lib/fantasy/readWriter';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
@@ -116,6 +117,7 @@ export default async function DraftRoomPage({ params, searchParams }) {
         minors={room.minors}
         upcomingKeepers={room.upcomingKeepers ?? []}
         franchise={room.franchise ?? null}
+        arcade={arcadeFor(isShell)}
       />
     );
   } else if (status === 'completed') {
@@ -174,7 +176,8 @@ export default async function DraftRoomPage({ params, searchParams }) {
         </header>
       </HideInShell>
       {/* Same predicate as the tab bar, for the same reason: a live draft room is
-          a locked one-viewport console with a pick clock running, and chrome that
+          a console with a pick clock running (one scroll on the arcade page since
+          thu-7 - the clock bar and tabs stick, the list is the page), and chrome that
           pushes it down or competes for the tap does not belong there. On the
           results and abandoned views the page scrolls normally and the banner is
           just the next block. The live TRACKER room returns earlier (above) and
