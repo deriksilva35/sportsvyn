@@ -20,6 +20,9 @@ import { probablesShort } from '@/lib/mlb/cardLines';
 import { useStickyOffset } from '@/components/games/useStickyOffset';
 
 const SLOT_LABEL = { arm: 'ARM', bat1: 'BAT', bat2: 'BAT', bat3: 'BAT', bat4: 'BAT' };
+// A game that will not be played (thu-26): the feed dropped it, or its series
+// was decided (lib/mlb/notNeeded.js). The tile says so instead of a time.
+const OFF = new Set(['cancelled', 'not_needed']);
 
 export default function OctoberCard({ view, signedIn = false, signinHref = '/signin' }) {
   const [slots, setSlots] = useState(() => Object.fromEntries(view.slots.map((s) => [s.slot, s])));
@@ -176,7 +179,7 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
               {/* PPD IS A STATE, NOT A TIME. A postponed game printed its
                   original first pitch, which is a time nothing will happen at,
                   and the tile looked like every other pickable game. */}
-              <small>{g.status === 'postponed' ? 'PPD' : g.status === 'live' ? 'live' : timeOf(g.kickoffAt)}</small>
+              <small>{g.status === 'postponed' ? 'PPD' : OFF.has(g.status) ? 'OFF' : g.status === 'live' ? 'live' : timeOf(g.kickoffAt)}</small>
               {/* WHO IS PITCHING, before first pitch only: the arm slot's whole
                   question, answered on the tile before the panel opens. */}
               {g.status === 'scheduled' && probablesShort(g.probables)
@@ -398,7 +401,7 @@ const teamLine = (s, view) => {
   const g = view.board.find((x) => String(x.matchId) === String(s.matchId));
   if (!g) return '';
   const t = s.team ?? '';
-  const when = g.status === 'postponed' ? 'PPD'
+  const when = g.status === 'postponed' ? 'PPD' : OFF.has(g.status) ? 'OFF'
     : g.status === 'live' ? 'live' : g.status === 'final' ? 'F' : timeOf(g.kickoffAt);
   return `${t}${t ? ' · ' : ''}${when}`;
 };
@@ -422,6 +425,7 @@ const REASON = {
   already_on_card: 'That player is already on your card.',
   max_from_game: 'That is the most this slate allows from one game.',
   game_started: 'That game has started.',
+  not_played: 'That game will not be played.',
   postponed: 'That game was postponed. Its players are pickable again when it is rescheduled.',
   unreachable: 'That pick did not reach the server. Tap it again.',
   slot_locked: 'That slot locked at its first pitch.',

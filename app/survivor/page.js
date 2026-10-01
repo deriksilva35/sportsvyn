@@ -18,6 +18,8 @@
  */
 
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { survivorOn } from '@/lib/survivor/flag';
 import { cookies } from 'next/headers';
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -68,6 +70,7 @@ function NotOpen({ line }) {
 }
 
 export default async function SurvivorPage() {
+  if (!survivorOn()) notFound();   // pulled (thu-27) - lib/survivor/flag.js
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode();

@@ -60,6 +60,18 @@ test('open: the line score from the row BEFORE the fetch answers, then the momen
   assert.equal(el.querySelector('.sv4-xgo').getAttribute('href'), '/nfl/game/g-7');
 });
 
+test('UPCOMING: no plays fetched and no Key moments / Last 5 plays boxes before the start (thu-26)', async () => {
+  const calls = [];
+  const el = mount({ articleProps: { className: 'sv4-card upcoming', 'data-variant': 'upcoming', 'data-slug': 'g-7' },
+    line: null, fetcher: (u) => { calls.push(u); return Promise.resolve(PAYLOAD); } });
+  await act(async () => { el.querySelector('button.sv4-hit').click(); });
+  assert.equal(calls.length, 0, 'nothing to read before the first pitch');
+  assert.equal(el.querySelector('[data-x="scoring"]'), null);
+  assert.equal(el.querySelector('[data-x="last"]'), null);
+  assert.equal(el.querySelector('[data-loading="1"]'), null);
+  assert.equal(el.querySelector('.sv4-xgo').getAttribute('href'), '/nfl/game/g-7', 'the link to the game page stays');
+});
+
 test('a live card re-reads on every open; a final reads once', async () => {
   for (const [live, want] of [[true, 2], [false, 1]]) {
     const calls = [];

@@ -12,11 +12,13 @@
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { makePick } from '@/lib/survivor/pick';
+import { survivorOn } from '@/lib/survivor/flag';
 
 export async function pickSurvivorTeam(poolId, teamId) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  if (!survivorOn()) return { ok: false, reason: 'closed' };   // pulled (thu-27)
   try {
     const res = await makePick(Number(userId), Number(poolId), Number(teamId), { now: new Date() });
     if (res.ok) revalidatePath('/survivor');

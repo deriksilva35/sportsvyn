@@ -114,7 +114,7 @@ test('THE CARD FACE IS SHARED: one component, imported by /scores and the game p
   for (const r of ['app/nfl/game/[slug]/page.js', 'app/cfb/game/[slug]/page.js']) {
     const s = src(r);
     assert.match(s, /import GamePageArcade from '@\/components\/gridiron\/GamePageArcade';/, r);
-    assert.match(s, /if \(arcadeFor\(isShell\)\) \{[\s\S]*?<GamePageArcade view=\{view\} \/>/, `${r}: arcade only`);
+    assert.match(s, /if \(arcadeFor\(isShell\)\) \{[\s\S]*?<GamePageArcade view=\{view\} tz=\{\(await readViewerTz\(\)\) \?\? 'America\/New_York'\} \/>/, `${r}: arcade only, in the reader's zone (thu-26)`);
   }
 });
 

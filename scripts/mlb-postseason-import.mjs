@@ -64,6 +64,8 @@ import { fetchMlbStandings } from '../lib/mlb/standings.js';
 import { ensureSeriesBoard } from '../lib/mlb/seriesPickem.js';
 import { ensureOctoberDays } from '../lib/october/create.js';
 import { ensureRunRounds } from '../lib/run/create.js';
+import { seriesFor } from '../lib/mlb/series.js';
+import { markNotNeeded } from '../lib/mlb/notNeeded.js';
 
 const args = process.argv.slice(2);
 const PROD = args.includes('--prod');
@@ -214,6 +216,15 @@ for (const season of seasons) {
     console.log('\n  COULD NOT PLACE (left unstaged, absent from the bracket):');
     for (const m of missed) console.log(`    ${m.key}  ${JSON.stringify(m.stages)}`);
   }
+
+  // NOT NEEDED (thu-26): a decided series' leftover games, marked by us before
+  // October, The Run or the boards are opened from them - so a day whose only
+  // games are moot is never created, and one that exists is re-locked.
+  const moot = await markNotNeeded(sql, await seriesFor(null, Number(season)), { dryRun: !APPLY });
+  const mootList = APPLY ? moot.marked : moot.wouldMark;
+  console.log(`\n  not needed ${mootList.length}${APPLY ? '' : ' (dry run - would mark)'}`);
+  for (const g of mootList) console.log(`    ${g.slug}  ${g.series}  was ${g.from}`);
+  for (const r of moot.relocked) console.log(`    october contest ${r.id} relocked ${r.from.slice(0, 16)}Z -> ${r.to.slice(0, 16)}Z`);
 
   if (!APPLY) { console.log('\nDRY RUN ONLY.\n'); continue; }
   const res = await writeMlbMatches(sql, league.id, rows, stageById);

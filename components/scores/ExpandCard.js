@@ -74,10 +74,16 @@ export default function ExpandCard({ articleProps, league, slug, live = false, l
     }
   }
 
+  // A GAME THAT HAS NOT STARTED HAS NO PLAYS (thu-26). The panel used to
+  // fetch them anyway and print "Key moments - No scoring yet / Last 5 plays -
+  // No plays yet" under a 7:00 PM first pitch: two empty boxes saying what the
+  // time already said. Before the start the panel is the line and the link.
+  const upcoming = articleProps?.['data-variant'] === 'upcoming';
+
   function toggle() {
     const next = !open;
     setOpen(next);
-    if (next) load();
+    if (next && !upcoming) load();
   }
 
   // THE LINE FROM THE ROW UNTIL THE FETCH HAS ONE: the payload's line is the
@@ -98,9 +104,9 @@ export default function ExpandCard({ articleProps, league, slug, live = false, l
       {open ? (
         <div className="sv4-x" data-expanded="1">
           <ExpandLine line={shown} />
-          {state === 'loading' ? <p className="sv4-xl" data-loading="1">Loading plays…</p> : null}
-          {state === 'error' ? <p className="sv4-xl">Plays did not load. Tap to close and try again.</p> : null}
-          {data ? (
+          {!upcoming && state === 'loading' ? <p className="sv4-xl" data-loading="1">Loading plays…</p> : null}
+          {!upcoming && state === 'error' ? <p className="sv4-xl">Plays did not load. Tap to close and try again.</p> : null}
+          {data && !upcoming ? (
             <>
               <Plays title="Key moments" section="scoring" list={data.scoring ?? []} empty="No scoring yet." />
               <Plays title="Last 5 plays" section="last" list={data.last ?? []} empty="No plays yet." />
