@@ -71,7 +71,7 @@
     },
     {
       "path": "/api/cron/pickem-settle",
-      "schedule": "0 6-20 * * 0,1"
+      "schedule": "0 6-20 * * 0,1,2"
     },
     {
       "path": "/api/cron/run-settle",

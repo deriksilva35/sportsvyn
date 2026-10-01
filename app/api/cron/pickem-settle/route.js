@@ -1,15 +1,22 @@
 /**
  * /api/cron/pickem-settle — settle every due Pick'em board.
  *
- * SAT-SHAPED, GATE-DECIDED. A board's games run Thursday night through late
+ * GATE-DECIDED. A CFB board's games run Thursday night through late
  * Saturday (Sunday in UTC); CFBD flips `completed` within the gridiron-games
- * cadence, so the ordinary settle lands Sunday morning. The cron fires hourly
- * across SUNDAY AND MONDAY (a window's slate can reach Sunday-evening ET,
- * final near 04Z Monday) and the completeness gate - every snapshot game
- * final - decides which firing actually settles. A refusal is not a failure
- * (the weekly-settle law verbatim).
+ * cadence, so the ordinary CFB settle lands Sunday morning. The cron fires
+ * hourly across SUNDAY, MONDAY AND TUESDAY and the completeness gate - every
+ * snapshot game final - decides which firing actually settles. A refusal is
+ * not a failure (the weekly-settle law verbatim).
  *
- * 0 6-20 * * 0,1 UTC = hourly 2 AM-4 PM ET Sundays and Mondays in EDT
+ * TUESDAY IS FOR THE NFL. An NFL week ends on Monday Night Football, which
+ * kicks off ~00:15Z TUESDAY and is final by ~04Z. With Sunday+Monday only,
+ * the first firing after MNF was the NEXT Sunday - weeks 1 and 2 of 2026
+ * settled five days late (last kickoff 09-15 00:15Z, settled 09-20 06:00Z).
+ * Tuesday 06Z-20Z gives fifteen chances after the last final; a CFB board
+ * already settled on Sunday is excluded by settleDuePickem's WHERE, so the
+ * extra firings cost a refusal and nothing else.
+ *
+ * 0 6-20 * * 0,1,2 UTC = hourly 2 AM-4 PM ET Sun/Mon/Tue in EDT
  * (1 AM-3 PM in EST); the window runs long enough either way.
  *
  * THE STALE ALARM is this route's second job: a cancelled game never turns
