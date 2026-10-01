@@ -129,6 +129,24 @@ Sep: a suite stopped mid-file left pickem.test's league, teams, matches and
 contest on DEV; the check after the kill looked only for sentinel MATCHES, found
 none, and the next full run failed on a duplicate league slug.
 
+## NO SILENT FINISHES: CHECK A BUILDER'S BRANCH BEFORE TRUSTING IT
+
+When a delegated builder reports "finished", or goes quiet for 20+ minutes,
+check its branch before trusting the report:
+  - committed?            `git -C <worktree> status --short` is clean, HEAD has the work
+  - pushed?               `git rev-parse origin/<branch>` equals the worktree HEAD
+  - suite on THIS tree?   a full-suite run on the current HEAD (after any rebase), not an older one
+  - shots?                the files it names exist, and they show the current build
+If any is missing, take the work over and finish it: commit, rebase, run the
+suite, push, re-shoot. Do not wait for the builder to resume.
+
+THE RECEIPT, 1 Oct (thu-23): two builders reported "completed" while their
+work sat staged and unpushed. Survivor P0 was one of them, with a hard
+deadline: its late-entry and path-strip commit existed only locally, with no
+suite run on it. The branch check found it, the parent finished it, and it
+merged. A "done" that was never pushed would have sat until the deadline
+passed.
+
 ## Commit hygiene: what never gets staged, and what scripts/ is for
 
 THE NEVER-STAGE LIST is short and it is about generated or secret files, not
