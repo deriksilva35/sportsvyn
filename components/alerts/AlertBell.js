@@ -26,6 +26,7 @@ import { orderFor, connectorFor } from '@/lib/gridiron/teamOrder';
 import {
   startLiveActivity, endLiveActivity, canUseLiveActivityBridge,
 } from '@/lib/shell/liveActivityBridge';
+import { liveActivitySupported } from '@/lib/push/liveActivityState';
 import './alerts.css';
 
 // The five trigger rows, in the order the sheet draws them. Data, not markup,
@@ -177,7 +178,9 @@ export default function AlertBell({ match, signedIn = false, compact = true, liv
   // build the six fields. Final: there is nothing left to follow, and an
   // Activity started on a finished game is a card that never updates and
   // never ends on its own.
-  const showLive = Boolean(canBridge && liveActivity && !liveActivity.final);
+  // No Live Activity for basketball yet (thu-18): the switch is not offered.
+  const showLive = Boolean(canBridge && liveActivity && !liveActivity.final
+    && liveActivitySupported(match?.leagueSlug));
 
   const toggleLive = (want) => {
     const posted = want
