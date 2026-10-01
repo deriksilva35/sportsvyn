@@ -44,7 +44,8 @@ export const maxDuration = 300;
 const LEAGUES = [
   { sport: 'nfl', slug: 'nfl', source: 'nfl-props' },
   { sport: 'cfb', slug: 'cfb', source: 'cfb-props' },
-  // No EPL leg: soccer is retired (tue-14); ~157 credits/day.
+  // EPL is back (thu-24; retired tue-14): ~153 credits/day measured 17-30 Sep.
+  { sport: 'epl', slug: 'epl', source: 'epl-props' },
 ];
 
 export async function GET(request) {
@@ -88,7 +89,8 @@ export async function GET(request) {
         });
       }
       // THE KEY / BUDGET GUARD, on every successful run.
-      const warn = keyAlert(res.summary?.budget);
+      // A SKIP MADE NO CALL, so it has no budget headers to read (thu-33).
+      const warn = res.summary?.skipped ? null : keyAlert(res.summary?.budget);
       if (warn) {
         await maybeAlert(sql, {
           source: lg.source,

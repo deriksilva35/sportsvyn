@@ -246,14 +246,13 @@ export const config = {
     '/admin/:path*',
     '/api/admin',
     '/api/admin/:path*',
-    // RETIRED editorial and soccer (tue-14): literals, because Next reads this
+    // RETIRED editorial and soccer (tue-14; EPL back thu-24): literals, because Next reads this
     // object statically. retired.test.mjs pins them to RETIRED_ROUTES.
     '/today', '/today/:path*',
     '/articles', '/articles/:path*',
     '/article', '/article/:path*',
     '/nfl/wire', '/nfl/wire/:path*',
     '/cfb/wire', '/cfb/wire/:path*',
-    '/epl', '/epl/:path*',
     '/schedule', '/schedule/:path*',
     '/stats', '/stats/:path*',
     '/world-cup', '/world-cup/:path*',

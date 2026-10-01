@@ -183,7 +183,7 @@ function MarketBody({ data, sp, pinned = null, leagueHeader = null, header = nul
       {isShell && <SportsvynSegment />}
       <div className="mk-wrap">
         <div className="mk-head">
-          <div className="kicker">NFL · CFB · Lines</div>
+          <div className="kicker">NFL · CFB · EPL · Lines</div>
           {/* THE REVERSE DOOR. /scores points here; this points back. A
               cross-link that only runs one way teaches readers the two boards
               are a hierarchy rather than siblings. */}

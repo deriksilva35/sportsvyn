@@ -106,6 +106,22 @@
       "schedule": "0 10-21 * * 2"
     },
     {
+      "path": "/api/cron/epl-live",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/epl-fixtures",
+      "schedule": "25 13 * * *"
+    },
+    {
+      "path": "/api/cron/epl-standings",
+      "schedule": "26 13 * * *"
+    },
+    {
+      "path": "/api/cron/epl-player-stats",
+      "schedule": "30 20,2 * * *"
+    },
+    {
       "path": "/api/cron/gridiron-props",
       "schedule": "0 13,17,21,23 * * *"
     },

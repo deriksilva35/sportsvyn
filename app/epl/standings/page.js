@@ -17,6 +17,11 @@ import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { getEplStandings, railFor } from '@/lib/soccer/standings';
+import { arcadeFor } from '@/lib/brand/theme';
+import { resolveShellMode } from '@/lib/shell/shell';
+import BackToAppBar from '@/components/BackToAppBar';
+import EplTableArcade from '@/components/soccer/EplTableArcade';
+import '@/components/soccer/eplArcade.css';
 import '@/components/gridiron/gridiron.css';
 import './standings.css';
 
@@ -40,6 +45,20 @@ function Form({ form }) {
 
 export default async function EplStandingsPage() {
   const table = await getEplStandings().catch(() => null);
+
+  // THE ARCADE TABLE (thu-24): #, club, P, W, D, L, GD, Pts, form. The dark
+  // page below is unchanged.
+  const isShell = await resolveShellMode().catch(() => false);
+  if (arcadeFor(isShell)) {
+    return (
+      <>
+        <BackToAppBar />
+        <GlobalHeaderServer activeNav="soccer" />
+        <EplTableArcade table={table} />
+        <SiteFooter />
+      </>
+    );
+  }
 
   return (
     <>

@@ -173,7 +173,7 @@ export default function PropsIndex({
 
   return (
     <div className="px">
-      <Chips label="Sport" items={[['all', 'ALL'], ['cfb', 'CFB'], ['nfl', 'NFL']]}
+      <Chips label="Sport" items={[['all', 'ALL'], ['cfb', 'CFB'], ['nfl', 'NFL'], ['epl', 'EPL']]}
         active={state.league} hrefFor={(k) => hrefFor({ league: k, team: null })} />
       <Chips label="Team" items={[['all', 'ALL'], ...teams.map((t) => [t, t])]}
         active={state.team} hrefFor={(k) => hrefFor({ team: k })} />

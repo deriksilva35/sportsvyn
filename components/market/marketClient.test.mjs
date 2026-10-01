@@ -84,8 +84,8 @@ test('PRESS NFL: the URL takes ?f=nfl and the board drops every other league', (
   host = document.getElementById('root');
   root = createRoot(host);
   act(() => root.render(React.createElement(MarketClient, globalThis.__mkProps)));
-  // The fixture still carries an EPL card; the board draws no EPL band (tue-14).
-  assert.deepEqual(matches(), ['UGA at BAMA', 'KC at BUF', 'DAL at PHI'], 'unfiltered: both leagues, no soccer');
+  // EPL is back on the board (thu-24).
+  assert.deepEqual(matches(), ['UGA at BAMA', 'KC at BUF', 'DAL at PHI', 'ARS at CHE'], 'unfiltered: all three leagues');
   assert.equal(chip('All').className.includes('on'), true);
 
   act(() => chip('NFL').dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true })));

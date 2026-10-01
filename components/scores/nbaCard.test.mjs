@@ -129,7 +129,7 @@ test('SHARED WIRING: CardFace asks the sport once; scoresV2 reads the NBA extras
   const face = src('components/scores/ScoreboardV4.js');
   assert.match(face, /const nba = sportOf\(g\.leagueSlug\) === BASKETBALL \? \(x\.nba \?\? \{\}\) : null;/);
   assert.match(face, /if \(sportOf\(g\.leagueSlug\) === BASKETBALL\) return nbaLiveLabel\(ls\);/);
-  assert.match(face, /nba \? nbaFinalLabel\(nba\.finalPeriod\)/);
+  assert.match(face, /\(nba\s*\?\s*<span className="fin">\{nbaFinalLabel\(nba\.finalPeriod\)\}<\/span>/);
   assert.match(face, /<NbaPickemStrip s=\{v\.nbaPickem \?\? null\} tz=\{v\.tz\} \/>/);
   const reader = src('lib/gridiron/scoresV2.js');
   assert.match(reader, /nbaDetail: r\.league_slug === 'nba' \? r\.metadata\?\.detail \?\? null : null/);

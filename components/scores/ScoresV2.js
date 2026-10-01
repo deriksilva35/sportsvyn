@@ -131,7 +131,7 @@ function Card({ g, x, signedIn, signinHref, tz }) {
   const awayLeads = g.homeScore != null && g.awayScore != null && g.awayScore > g.homeScore;
   const bar = !scored || live ? eplBar(x.prob, g) : null;
   const pctFor = (side) => (x.prob && !scored ? Math.round(side === 'home' ? x.prob.home : x.prob.away) : null);
-  const odds = oddsLine(g, x.spreadHome, x.total);
+  const odds = oddsLine(g, x.spreadHome, x.total, x.moneyline ?? null);
   const boardOpen = !scored && (g.leagueSlug === 'nfl' || g.leagueSlug === 'cfb');
   const stat = final ? statLineText(x.stat, g.leagueSlug) : null;
   const pickAbbr = x.stake?.pick?.abbr ?? null;
@@ -252,10 +252,9 @@ function Card({ g, x, signedIn, signinHref, tz }) {
 
 export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLabel = 'Eastern', arcade = false }) {
   const signinHref = shellSigninHref('/scores', isShell);
-  // EPL LEAVES THE ROW ON THE ARCADE PAGE (mon-17): the route stays live
-  // (/scores?sport=epl), the chip does not show. Flag-gated with the theme, so
-  // the dark page's row is unchanged until the flip.
-  const pills = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['mlb', 'MLB']];
+  // EPL IS A PILL AGAIN (thu-24), on both pages: it left the arcade row on
+  // mon-17 and both rows with soccer on tue-14.
+  const pills = [['all', 'All'], ['nfl', 'NFL'], ['cfb', 'CFB'], ['mlb', 'MLB'], ['epl', 'EPL']];
   return (
     <div className="sv2" data-surface="ink">
       {v.liveCount > 0 && <LiveRefresh />}
