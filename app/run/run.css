@@ -239,3 +239,43 @@
 :where(:root[data-theme="arcade"]) .rn-lk { color: var(--tok-primary); }
 :where(:root[data-theme="arcade"]) .rn-pb.p { background: var(--tok-primary); color: var(--tok-on-primary); }
 :where(:root[data-theme="arcade"]) .rn-pb.b { background: var(--tok-up); color: var(--tok-page); }
+
+/* ============================================================================
+   ONE SCROLL (thu-7; arcade page only) - the Weekly's pattern. The pick list
+   was a 52vh box scrolling inside a page that also scrolled. Now the nine
+   tiles (5 + 4) and the list's own header are ONE sticky dock, and the player
+   rows are the page's own scroll; the clubs grid scrolls away above it. "How
+   it works" is a single <details> row. :where()-scoped - the dark page
+   resolves exactly as before. --gi-stick: see components/games/useStickyOffset.js.
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .rn { overflow: clip; }
+:where(:root[data-theme="arcade"]) .rn-how { padding: 0; }
+:where(:root[data-theme="arcade"]) .rn-how > summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 34px; padding: 0 11px;
+  font: 700 10px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+}
+:where(:root[data-theme="arcade"]) .rn-how > summary::-webkit-details-marker { display: none; }
+:where(:root[data-theme="arcade"]) .rn-how > summary::after { content: '+'; font-size: 14px; color: var(--muted-dim); }
+:where(:root[data-theme="arcade"]) .rn-how[open] > summary::after { content: '\2212'; }
+:where(:root[data-theme="arcade"]) .rn-how[open] { padding-bottom: 10px; }
+:where(:root[data-theme="arcade"]) .rn-how > .rn-strip, :where(:root[data-theme="arcade"]) .rn-how > .rn-note { margin-left: 11px; margin-right: 11px; }
+
+:where(:root[data-theme="arcade"]) .rn-dock {
+  position: sticky; top: var(--gi-stick, 0px); z-index: 3;
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 10px; padding: 6px 10px 0;
+  background: var(--ink);
+}
+:where(:root[data-theme="arcade"]) .rn-dock .rn-field { flex: none; padding: 6px; border-radius: 12px; }
+:where(:root[data-theme="arcade"]) .rn-dock .rn-form { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+:where(:root[data-theme="arcade"]) .rn-dock .rn-slot { aspect-ratio: auto; height: 50px; }
+/* THE LIST HEADER ON TWO LINES: the club, then its facts on one line with dots
+   (the same spans the dark page stacks with <br>). */
+:where(:root[data-theme="arcade"]) .rn-dock .rn-pan-h { border: 1px solid var(--rule-dim); flex-wrap: wrap; row-gap: 2px; }
+:where(:root[data-theme="arcade"]) .rn-dock .rn-pan-h small { flex-basis: 100%; margin-left: 0; text-align: left; }
+:where(:root[data-theme="arcade"]) .rn-dock .rn-pan-h small br { display: none; }
+:where(:root[data-theme="arcade"]) .rn-dock .rn-pan-h small .rn-ph + br + .rn-ph::before { content: '\00A0\00B7\00A0'; }
+:where(:root[data-theme="arcade"]) .rn-panel { margin: 0 10px; border-top: 0; border-radius: 0 0 13px 13px; overflow: clip; }
+:where(:root[data-theme="arcade"]) .rn-pan-b { max-height: none; overflow: visible; }

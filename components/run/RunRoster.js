@@ -11,10 +11,11 @@
 // SAVE ON CHANGE. The footer button is a COUNT ("2 to go"), not an action: a
 // roster that seals on a clock has no submit moment.
 
-import { useState, useTransition } from 'react';
+import { Fragment, useRef, useState, useTransition } from 'react';
 import { saveRunPickAction, clearRunPickAction } from '@/app/actions/run';
 import { ptTime } from '@/lib/gridiron/kickoff';
 import TeamMark from '@/components/team/TeamMark';
+import { useStickyOffset } from '@/components/games/useStickyOffset';
 
 export default function RunRoster({ view, signedIn = false, signinHref = '/signin', leagueLine = null }) {
   const [slots, setSlots] = useState(() => Object.fromEntries(view.slots.map((s) => [s.slot, s])));
@@ -22,6 +23,9 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
     ?? view.clubs.find((c) => !c.bye))?.teamId ?? null);
   const [err, setErr] = useState(null);
   const [, start] = useTransition();
+  // ONE SCROLL (thu-7): the dock sticks under the site's sticky bar on the web.
+  const rootRef = useRef(null);
+  useStickyOffset(rootRef);
 
   const live = view.phase !== 'open';
   const club = view.clubs.find((c) => String(c.teamId) === String(openClub)) ?? null;
@@ -92,11 +96,13 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
   const toGo = view.slots.length - filled;
 
   return (
-    <div className="rn" data-phase={view.phase}>
+    <div className="rn" data-phase={view.phase} ref={rootRef}>
       <Header view={view} filled={filled} leagueLine={leagueLine} />
 
       {!live ? (
-        <div className="rn-steps">
+        // HOW IT WORKS, FOLDED (thu-7): one row, the same words one tap away.
+        <details className="rn-steps rn-how">
+          <summary>How it works</summary>
           <div className="rn-strip">
             <span className={`rn-stp${openClub ? ' done' : ' on'}`}><i>{openClub ? '✓' : '1'}</i><b>Club</b></span>
             <span className="rn-arw" />
@@ -109,7 +115,7 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
             games, a full series five. <b>Anyone you use is gone for the rest of October.</b>
             {view.contest.round === 'wild_card' ? ' The 1 and 2 seeds sit this round out.' : ''}
           </p>
-        </div>
+        </details>
       ) : null}
 
       {!live ? (
@@ -138,7 +144,11 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
 
       {err ? <p className="rn-err" role="alert">{err}</p> : null}
 
-      <div className="rn-duo">
+      {/* ---- THE DOCK, STICKY (thu-7) ---------------------------------------
+          The Weekly's one-scroll pattern: the nine tiles and the list's own
+          header stick together at the top; the player rows below are the
+          PAGE's scroll. There is no inner scroll box. */}
+      <div className="rn-dock">
         <div className="rn-field">
           <div className="rn-form">
             {view.slots.map((base) => {
@@ -183,51 +193,56 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
           </div>
         </div>
 
-        <div className="rn-panel">
-          <div className="rn-pan-h">
+        <div className="rn-pan-h">
             {live ? <b>Your nine</b> : <>
               <span className="rn-mk"><TeamMark primary={club?.colors?.primary} secondary={club?.colors?.secondary}
                 abbr={club?.abbr} size={21} title={club?.name ?? club?.abbr} leagueSlug="mlb" /></span>
               <b>{club?.name ?? club?.abbr ?? 'Clubs'}</b>
             </>}
-            <small>{live
-              ? <>{view.aliveCount} alive · {view.outCount} done</>
-              : <>{counts.get(String(openClub)) ?? 0} of 3 used<br />{club?.opponent ? `vs ${club.opponent}${club.bestOf ? ` · best of ${club.bestOf}` : ''}` : ''}<br />{club?.lineupNote ?? (club?.lineupPosted ? 'lineup posted' : 'lineup not posted yet')}<br />
-                <span className="rn-pan-n">arms {players.filter((p) => p.kind === 'arm').length} · bats {players.filter((p) => p.kind === 'bat').length}</span></>}</small>
-          </div>
-          <div className="rn-pan-b">
-            {live
-              ? view.slots.filter((s) => s.playerId).slice(0, 6).map((s) => (
-                <div key={s.slot} className={`rn-prow${s.state === 'out' ? ' gone' : ''}`} data-slot={s.slot}>
-                  <span className={`rn-pb ${s.slot.startsWith('arm') ? 'p' : 'b'}`}>{s.slot.startsWith('arm') ? 'P' : 'B'}</span>
-                  <span className="rn-who"><b>{s.name}</b><small>{[s.line, s.state === 'out' ? `${s.team} out` : null].filter(Boolean).join(' · ')}</small></span>
-                  <span className={`rn-val${s.state === 'live' ? ' live' : ''}`}>
-                    <b>{s.points ?? '–'}</b><small>{s.state === 'out' ? 'OUT' : s.state === 'live' ? 'LIVE' : '—'}</small>
-                  </span>
-                </div>
-              ))
-              // EVERY ROW, AND THE PANEL SCROLLS (October's fix). A cut at ten
-              // served twelve Yankee arms and not one bat.
-              // FOUR GROUPS, IN ORDER (tue-5): the lead arms, the Bullpen
-              // (collapsed), the nine, the Bench (collapsed). A <details> is
-              // the collapse: no state, keyboard and screen-reader native.
-              : players.length ? <>
-                {players.filter((p) => (p.group ?? 'nine') === 'lead').map(row)}
-                {players.some((p) => p.group === 'bullpen') ? (
-                  <details className="rn-more" data-group="bullpen">
-                    <summary>Bullpen · {players.filter((p) => p.group === 'bullpen').length}</summary>
-                    {players.filter((p) => p.group === 'bullpen').map(row)}
-                  </details>
-                ) : null}
-                {players.filter((p) => (p.group ?? 'nine') === 'nine').map(row)}
-                {players.some((p) => p.group === 'bench') ? (
-                  <details className="rn-more" data-group="bench">
-                    <summary>Bench · {players.filter((p) => p.group === 'bench').length}</summary>
-                    {players.filter((p) => p.group === 'bench').map(row)}
-                  </details>
-                ) : null}
-              </> : <p className="rn-empty">The pool for this club is still building.</p>}
-          </div>
+          <small>{live
+            ? <>{view.aliveCount} alive · {view.outCount} done</>
+            // ONE SPAN A FACT (thu-7), with the same line breaks as before:
+            // the arcade dock lays them out on one line with dots instead.
+            : panFacts(counts.get(String(openClub)) ?? 0, club, players).map((f, i) => (
+              <Fragment key={f.k}>{i ? <br /> : null}<span className={`rn-ph${f.k === 'n' ? ' rn-pan-n' : ''}`}>{f.t}</span></Fragment>
+            ))}</small>
+        </div>
+      </div>
+
+      <div className="rn-panel">
+        <div className="rn-pan-b">
+          {live
+            ? view.slots.filter((s) => s.playerId).slice(0, 6).map((s) => (
+              <div key={s.slot} className={`rn-prow${s.state === 'out' ? ' gone' : ''}`} data-slot={s.slot}>
+                <span className={`rn-pb ${s.slot.startsWith('arm') ? 'p' : 'b'}`}>{s.slot.startsWith('arm') ? 'P' : 'B'}</span>
+                <span className="rn-who"><b>{s.name}</b><small>{[s.line, s.state === 'out' ? `${s.team} out` : null].filter(Boolean).join(' · ')}</small></span>
+                <span className={`rn-val${s.state === 'live' ? ' live' : ''}`}>
+                  <b>{s.points ?? '–'}</b><small>{s.state === 'out' ? 'OUT' : s.state === 'live' ? 'LIVE' : '—'}</small>
+                </span>
+              </div>
+            ))
+            // EVERY ROW (October's fix): a cut at ten served twelve Yankee
+            // arms and not one bat. Under arcade the rows are the PAGE's
+            // scroll (thu-7); .rn-pan-b no longer scrolls on its own.
+            // FOUR GROUPS, IN ORDER (tue-5): the lead arms, the Bullpen
+            // (collapsed), the nine, the Bench (collapsed). A <details> is
+            // the collapse: no state, keyboard and screen-reader native.
+            : players.length ? <>
+              {players.filter((p) => (p.group ?? 'nine') === 'lead').map(row)}
+              {players.some((p) => p.group === 'bullpen') ? (
+                <details className="rn-more" data-group="bullpen">
+                  <summary>Bullpen · {players.filter((p) => p.group === 'bullpen').length}</summary>
+                  {players.filter((p) => p.group === 'bullpen').map(row)}
+                </details>
+              ) : null}
+              {players.filter((p) => (p.group ?? 'nine') === 'nine').map(row)}
+              {players.some((p) => p.group === 'bench') ? (
+                <details className="rn-more" data-group="bench">
+                  <summary>Bench · {players.filter((p) => p.group === 'bench').length}</summary>
+                  {players.filter((p) => p.group === 'bench').map(row)}
+                </details>
+              ) : null}
+            </> : <p className="rn-empty">The pool for this club is still building.</p>}
         </div>
       </div>
 
@@ -258,6 +273,16 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
       </div>
     </div>
   );
+}
+
+/** The list header's facts about the open club, in the order they always read. */
+function panFacts(used, club, players) {
+  return [
+    { k: 'used', t: `${used} of 3 used` },
+    club?.opponent ? { k: 'vs', t: `vs ${club.opponent}${club.bestOf ? ` · best of ${club.bestOf}` : ''}` } : null,
+    { k: 'lu', t: club?.lineupNote ?? (club?.lineupPosted ? 'lineup posted' : 'lineup not posted yet') },
+    { k: 'n', t: `arms ${players.filter((p) => p.kind === 'arm').length} · bats ${players.filter((p) => p.kind === 'bat').length}` },
+  ].filter(Boolean);
 }
 
 function Header({ view, filled, leagueLine }) {

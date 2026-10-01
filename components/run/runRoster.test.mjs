@@ -358,7 +358,10 @@ test('EVERY POSTED BAT IS IN THE RENDERED PANEL, however many arms come first', 
   assert.match(head, /lineup posted/);
 });
 
-test('THE PANEL SCROLLS - overflow-y auto, max-height to the viewport', () => {
+// THE DARK PAGE'S RULE, unchanged (darkParity pins it). Under arcade the box
+// does not scroll at all - the rows are the page's scroll (thu-7); see
+// components/games/octRunOneScroll.test.mjs.
+test('THE PANEL SCROLLS ON THE DARK PAGE - overflow-y auto, max-height to the viewport', () => {
   const css = readFileSync(new URL('../../app/run/run.css', import.meta.url), 'utf8');
   const rule = /\.rn-pan-b \{([^}]*)\}/.exec(css)?.[1] ?? '';
   assert.match(rule, /overflow-y: auto/);
@@ -415,4 +418,36 @@ test('THE PANEL: G1 · G2, the Bullpen collapsed, the nine in order, the Bench c
   assert.equal(d2.querySelector('[data-player="a2"] small').textContent, 'G2 · probable', 'G2 is never starting today');
   assert.equal(d2.querySelector('[data-player="b1"] small').textContent, 'bats 1st');
   assert.match(d2.querySelector('.rn-pan-h small').textContent, /lineup posted 9:12 AM PT/);
+});
+
+// ---------------------------------------------------------------- ONE SCROLL (thu-7)
+
+test('ONE SCROLL: the nine tiles and the list header are one dock; the clubs and the rows are not in it', () => {
+  const d = new JSDOM(`<body>${html({ view: SETTING(), signedIn: true })}</body>`).window.document;
+  const dock = d.querySelector('.rn > .rn-dock');
+  assert.ok(dock);
+  assert.deepEqual([...dock.children].map((e) => e.className), ['rn-field', 'rn-pan-h']);
+  assert.equal(dock.querySelectorAll('.rn-slot').length, 9);
+  assert.equal(dock.querySelector('.rn-grid'), null, 'the clubs grid scrolls away above the dock');
+  assert.ok(d.querySelector('.rn > .rn-panel > .rn-pan-b'), 'the rows are outside the dock');
+  assert.equal(d.querySelector('.rn-duo'), null);
+});
+
+test('THE LIST HEADER\'S FACTS are one span each, the same words as before', () => {
+  const v = SETTING();
+  const d = new JSDOM(`<body>${html({ view: v, signedIn: true })}</body>`).window.document;
+  const spans = [...d.querySelectorAll('.rn-pan-h small .rn-ph')].map((s) => s.textContent);
+  assert.match(spans[0], /^\d of 3 used$/);
+  assert.match(spans.at(-1), /^arms \d+ · bats \d+$/);
+  assert.ok(d.querySelector('.rn-pan-h small .rn-pan-n'), 'the count span keeps its class');
+  // still separated by <br> for the dark page, which stacks them
+  assert.equal(d.querySelectorAll('.rn-pan-h small br').length, spans.length - 1);
+});
+
+test('HOW IT WORKS is one <details> row, closed, with the burn rule in it', () => {
+  const d = new JSDOM(`<body>${html({ view: SETTING(), signedIn: true })}</body>`).window.document;
+  const how = d.querySelector('details.rn-how');
+  assert.ok(how);
+  assert.equal(how.open, false);
+  assert.match(how.querySelector('.rn-note').textContent, /Anyone you use is gone for the rest of October\./);
 });

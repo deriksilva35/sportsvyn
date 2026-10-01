@@ -693,9 +693,38 @@ test('THE ARM PICKER: the probable first, every other arm in a collapsed Bullpen
   ] } };
   const h = html({ view: v, signedIn: true });
   const i = (s) => h.indexOf(s);
-  assert.ok(i('Z. Wheeler') < i('<details class="oc-more" data-group="bullpen">'), 'the probable leads');
-  assert.ok(i('<details class="oc-more" data-group="bullpen">') < i('A. Nola') && i('J. Alvarado') < i('</details>'), 'both other arms are inside the Bullpen');
-  assert.ok(i('</details>') < i('K. Schwarber'), 'the bats follow');
+  // (thu-7: "How it works" is a <details> too, so the Bullpen's close is the
+  // first </details> AFTER the Bullpen opens.)
+  const pen = i('<details class="oc-more" data-group="bullpen">');
+  const penEnd = h.indexOf('</details>', pen);
+  assert.ok(i('Z. Wheeler') < pen, 'the probable leads');
+  assert.ok(pen < i('A. Nola') && i('J. Alvarado') < penEnd, 'both other arms are inside the Bullpen');
+  assert.ok(penEnd < i('K. Schwarber'), 'the bats follow');
   assert.match(h, /<summary>Bullpen · 2<\/summary>/);
   assert.doesNotMatch(h, /<details[^>]*open/, 'collapsed');
+});
+
+// ---------------------------------------------------------------- ONE SCROLL (thu-7)
+
+test('ONE SCROLL: chips, five slots and the list header are one dock; the rows sit below it', () => {
+  const d = new JSDOM(`<body>${html({ view: PICKING(), signedIn: true })}</body>`).window.document;
+  const dock = d.querySelector('.oc > .oc-dock');
+  assert.ok(dock, 'a dock, directly in the card');
+  assert.deepEqual([...dock.children].map((e) => e.className), ['oc-grid', 'oc-field', 'oc-pan-h']);
+  assert.equal(dock.querySelectorAll('.oc-slot').length, 5);
+  assert.ok(dock.querySelectorAll('.oc-gc').length > 0, 'the game chips are in it');
+  const list = d.querySelector('.oc > .oc-panel > .oc-pan-b');
+  assert.ok(list, 'the rows are outside the dock');
+  assert.equal(dock.querySelector('.oc-prow'), null);
+  assert.ok(list.querySelectorAll('.oc-prow').length > 0);
+  assert.equal(d.querySelector('.oc-duo'), null, 'no side-by-side duo any more');
+});
+
+test('HOW IT WORKS is one <details> row, closed, with the same words in it', () => {
+  const d = new JSDOM(`<body>${html({ view: PICKING(), signedIn: true })}</body>`).window.document;
+  const how = d.querySelector('details.oc-how');
+  assert.ok(how);
+  assert.equal(how.open, false);
+  assert.equal(how.querySelector('summary').textContent, 'How it works');
+  assert.match(how.querySelector('.oc-note').textContent, /Tomorrow is a new five\./);
 });
