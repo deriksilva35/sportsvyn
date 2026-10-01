@@ -23,6 +23,8 @@ import RankRow from './RankRow.js';
 import RowInputs, { Movement } from './RowInputs.js';
 import { LEAGUE_LABEL, LEAGUES, VIEWS, GAMES, rankingsHref } from '@/lib/rankings/view';
 import { STAT_KEYS, statLabel } from '@/lib/rankings/reads';
+// THE NFL POWER IS SHOWN AS ITS 0-100 RATING (wed-6), made in one place.
+import { powerRating } from '@/lib/rankings/served';
 import './rankings.css';
 
 const VIEW_LABEL = { teams: 'Teams', players: 'Players', people: 'People' };
@@ -76,8 +78,8 @@ function TeamsNfl({ v }) {
             // THE KEY IS THE TEAM, NOT THE RANK. Ties share a rank now, so
             // two rows can carry the same number and a rank key would collide.
             <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r} leagueSlug={v.league}
-              followed={v.followed.has(r.teamId)} value={r.score}
-              right={<Movement previousRank={r.previousRank} movement={r.rankMovement} />}
+              followed={v.followed.has(r.teamId)} value={powerRating(r.inputs?.power ?? r.score)}
+              right={<Movement previousRank={r.previousRank} movement={r.rankMovement} label={r.movementLabel} />}
               expand={<RowInputs inputs={r.inputs} />} />
           ))}
         </Module>
@@ -110,14 +112,15 @@ function TeamsCfb({ v }) {
       )}
       {t.ours.length > 0 && (
         // THE MODEL'S CASE sits under the board as the module's note: ranks
-        // 1-25 are the editor's list by ruling, so the team the model rates
-        // highest of everyone left off has nowhere else to be seen.
+        // 1-25 are the editor's list, in the editor's order (wed-6), so the
+        // best unlisted team - the head of the 26+ band, by composite - is
+        // named here with its rank and score.
         <Module section="ours" title="SPORTSVYN POWER" sub="computed"
-          note={t.modelCase ? `The model's case: ${t.modelCase.name} · Elo ${Math.round(t.modelCase.elo)}` : null}>
+          note={t.modelCase ? `The model's case: ${t.modelCase.name} · #${t.modelCase.rank} · ${t.modelCase.score?.toFixed(2) ?? '–'}` : null}>
           {t.ours.map((r) => (
             <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r} leagueSlug={v.league}
               followed={v.followed.has(r.teamId)} sub={r.vsAp?.text ?? null} value={r.score}
-              right={<Movement previousRank={r.previousRank} movement={r.rankMovement} />}
+              right={<Movement previousRank={r.previousRank} movement={r.rankMovement} label={r.movementLabel} />}
               expand={<RowInputs inputs={r.inputs} />} />
           ))}
         </Module>

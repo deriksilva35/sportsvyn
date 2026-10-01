@@ -34,6 +34,7 @@ import { isFollowingTeam } from '@/lib/follows';
 import { NFL_NON_AFFILIATION } from '@/lib/legal';
 
 import TeamHero from '@/components/team/TeamHero';
+import { servedList, servedRankFor } from '@/lib/rankings/servedBoard';
 import SportsvynOutlook from '@/components/team/SportsvynOutlook';
 import FormStrip from '@/components/team/FormStrip';
 import RecentNext from '@/components/team/RecentNext';
@@ -99,7 +100,11 @@ export default async function TeamPage({ params }) {
   const userId = session?.user?.id ?? null;
   const isAuthed = !!session?.user;
 
-  const [stats, players, squad, trajectory, odds, broadcasters, initialFollowing] = await Promise.all([
+  // THE HERO'S RANK COMES FROM THE SERVED LIST for a gridiron team (tue-13):
+  // nfl-power-z / cfb-top25, not the Elo columns on `team`. undefined for every
+  // other league, which keeps the World Cup hero on its own columns.
+  const leagueSlug = team.leagueSlug ?? team.league_slug;
+  const [stats, players, squad, trajectory, odds, broadcasters, initialFollowing, power] = await Promise.all([
     getTeamStats(team.id),
     getTopPlayers(team.id),
     getTeamSquad(team.id),
@@ -107,6 +112,7 @@ export default async function TeamPage({ params }) {
     getTeamOdds(team.id, next?.id ?? null),
     next ? getNextMatchBroadcasters(next.id) : Promise.resolve([]),
     isFollowingTeam(userId, team.id),
+    servedList(leagueSlug) ? servedRankFor(leagueSlug, team.id).catch(() => null) : Promise.resolve(undefined),
   ]);
 
   const nextInfo = nextMatchOpponentInfo(next, team.id);
@@ -142,7 +148,7 @@ export default async function TeamPage({ params }) {
           <span className="current">{team.name}</span>
         </div>
 
-        <TeamHero team={team} isAuthed={isAuthed} initialFollowing={initialFollowing} isShell={isShell} />
+        <TeamHero team={team} isAuthed={isAuthed} initialFollowing={initialFollowing} isShell={isShell} power={power} />
         <SportsvynOutlook team={team} odds={odds} nextMatch={nextInfo} />
         <FormStrip matches={matches} teamId={team.id} stats={stats} />
 

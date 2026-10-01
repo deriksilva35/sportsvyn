@@ -77,7 +77,7 @@ test('TeamMark has only its named users, and every one passes a league', async (
     // the Pick'em board - the site's one facing pair
     'components/pickem/PickemBoard.js',
     // single-team rows: rankings, All teams, Today's your-teams, /you, /account, the Run
-    'components/rankings/RankRow.js', 'components/rankings/AllTeams.js', 'components/gridiron/TodayV2.js',
+    'components/rankings/RankRow.js', 'components/rankings/AllTeams.js', 'components/rankings/ArcadeBoard.js', 'components/gridiron/TodayV2.js',
     'components/you/You.js', 'components/account/FollowedTeams.js', 'components/run/RunRoster.js',
   ];
   assert.deepEqual([...users].sort(), [...ALLOWED].sort());

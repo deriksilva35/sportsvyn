@@ -45,6 +45,7 @@ import TodaysGames from '@/components/home/TodaysGames';
 import { getEditorialBoard, getSlateByDate, getNearestUpcomingWeek } from '@/lib/gridiron/readers';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { boardHref } from '@/lib/gridiron/rankingsHub';
+import { servedList } from '@/lib/rankings/servedBoard';
 import '@/components/gridiron/gridiron.css';
 import { resolveShellMode } from '@/lib/shell/shell';
 import { arcadeFor } from '@/lib/brand/theme';
@@ -347,8 +348,9 @@ export async function FrontPage() {
     // The same two reads the /nfl and /cfb Today pages make. Caught
     // independently: one league's board failing must not take the other's
     // down, and neither may take the page down.
-    getEditorialBoard('nfl-power', 'nfl').catch(() => null),
-    getEditorialBoard('cfb-top25', 'cfb').catch(() => null),
+    // THE SERVED LISTS (tue-13): the preview is the board its link lands on.
+    getEditorialBoard(servedList('nfl'), 'nfl').catch(() => null),
+    getEditorialBoard(servedList('cfb'), 'cfb').catch(() => null),
     // One read for both leagues. Null on failure: the sidebar loses a unit, the
     // page does not lose a column.
     getSlateByDate(etDay).catch(() => null),

@@ -12,6 +12,7 @@ import { auth } from '@/auth';
 import { getFollowedTeamIds } from '@/lib/follows';
 import { getLeagueRecords } from '@/lib/standings/read';
 import { apTop25, powerRankByTeam } from '@/lib/rankings/reads';
+import { servedList } from '@/lib/rankings/served';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { resolveShellMode } from '@/lib/shell/shell';
@@ -32,7 +33,8 @@ export default async function AllTeamsPage({ searchParams }) {
   // THE LIST IS ORDERED BY THE POWER RANK NOW, not by the poll. EPL has no
   // gridiron power board, so it keeps a null map and sorts by name - the same
   // behaviour it had when no team on it carried an AP rank either.
-  const listSlug = league === 'nfl' ? 'nfl-power' : league === 'cfb' ? 'cfb-top25' : null;
+  // THE SERVED LIST (wed-6): nfl-power-z / cfb-top25, null for EPL.
+  const listSlug = servedList(league);
   const [rows, followed, ap, power] = await Promise.all([
     getLeagueRecords(league, season, league === 'cfb' ? { classification: 'fbs' } : {}).catch(() => []),
     userId == null ? Promise.resolve(new Set()) : getFollowedTeamIds(userId).catch(() => new Set()),
