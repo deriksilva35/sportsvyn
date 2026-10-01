@@ -18,7 +18,7 @@ import { composeScorePush } from '../../lib/push/scoreCompose.js';
 import { onTick, flush as flushFold, FOLD_WINDOW_MS } from '../../lib/push/scoreFold.js';
 import { scoringPlayFor, baseballScoringText } from '../../lib/push/scoringPlayRead.js';
 import { activityEventFor, pushLiveActivities } from '../../lib/push/liveActivityStore.js';
-import { stateFromMatch, liveLine } from '../../lib/push/liveActivityState.js';
+import { stateFromMatch, liveLine, liveActivitySupported } from '../../lib/push/liveActivityState.js';
 import { playsFor } from '../../lib/gridiron/playsImport.js';
 import { winProbTick, logWinProb, logFinalWinProb, logHoldStart, logHoldRelease, WINPROB_SPORTS, heldWinProb } from '../../lib/winprob/live.js';
 
@@ -869,7 +869,10 @@ export async function pollOnce(sql, {
       // not pay for it, so the count comes first and it is the cheap indexed
       // one.
       const laFinal = activityEventFor(evs) === 'end';
-      const laListeners = await liveActivityCount(sql, m.id).catch(() => 0);
+      // NO BASKETBALL ACTIVITY UPDATES (thu-18): not even a count, so no card
+      // is ever pushed for an NBA game until its own trigger rule is built.
+      const laListeners = liveActivitySupported(m.league_slug)
+        ? await liveActivityCount(sql, m.id).catch(() => 0) : 0;
       let laEvent = null;
       let laState = null;
       if (laListeners > 0) {

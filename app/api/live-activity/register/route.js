@@ -20,6 +20,7 @@
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { parseRegister, registerActivity } from '@/lib/push/liveActivityStore';
+import { liveActivitySupported } from '@/lib/push/liveActivityState';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,16 @@ export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const parsed = parseRegister(body);
   if (!parsed.ok) return Response.json({ error: parsed.reason }, { status: 400 });
+
+  // NO LIVE ACTIVITY FOR BASKETBALL YET (thu-18). The bell never offers it;
+  // this refuses a client that asks anyway, so no card can start and then
+  // sit on a lock screen that the poller will never update.
+  const [m] = await sql`
+    SELECT l.slug AS league_slug FROM matches m JOIN leagues l ON l.id = m.league_id
+     WHERE m.id = ${parsed.value.matchId}`;
+  if (m && !liveActivitySupported(m.league_slug)) {
+    return Response.json({ error: 'live activity not supported for this sport' }, { status: 400 });
+  }
 
   try {
     await registerActivity(sql, { ...parsed.value, userId: Number(userId) });
