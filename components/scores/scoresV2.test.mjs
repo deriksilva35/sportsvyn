@@ -644,5 +644,6 @@ test('EPL is gone from the sport chips on both pages (tue-14, was arcade-only si
   // tue-0: the flag is per request - ARCADE_THEME, or ARCADE_SHELL for the shell.
   assert.match(page, /const arcade = arcadeFor\(isShell\);/);
   assert.match(page, /arcade=\{arcade\}/);
-  assert.match(page, /\['nfl', 'cfb', 'mlb'\]\.includes\(sportRaw\)/, '/scores?sport=epl falls back to all');
+  // nba joined the list in the thu-17 seam; epl stays out of it.
+  assert.match(page, /\['nfl', 'cfb', 'mlb', 'nba'\]\.includes\(sportRaw\)/, '/scores?sport=epl falls back to all');
 });
