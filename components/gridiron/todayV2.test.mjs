@@ -92,7 +92,9 @@ const sections = (h) => [...h.matchAll(/data-section="([a-z]+)"/g)].map((m) => m
 
 test('THE MOCK ORDER, signed in', () => {
   const h = html(base());
-  assert.deepEqual(sections(h), ['read', 'weekly', 'picks', 'daily', 'teams', 'switch', 'rail', 'wire']);
+  // No 'wire': the Wire retired with editorial (tue-14), even with items in hand.
+  assert.deepEqual(sections(h), ['read', 'weekly', 'picks', 'daily', 'teams', 'switch', 'rail']);
+  assert.doesNotMatch(h, /\/wire/, 'no door to the retired wire');
   assert.match(h, /data-signed-in="1"/);
   assert.match(h, /<h1 class="tv-h1">Your day<\/h1>/);
   assert.match(h, /<div class="tv-eb">Sunday · Week 1 · 10:42 AM<\/div>/);
@@ -100,7 +102,7 @@ test('THE MOCK ORDER, signed in', () => {
 
 test('THE MOCK ORDER, signed out - the same page minus the personal blocks (R3)', () => {
   const h = html(base({ signedIn: false, title: 'Today', hero: null, picks: null, daily: null, teams: [], riding: false, followed: new Set() }));
-  assert.deepEqual(sections(h), ['read', 'empty', 'kicks', 'switch', 'rail', 'wire']);
+  assert.deepEqual(sections(h), ['read', 'empty', 'kicks', 'switch', 'rail']);
   assert.match(h, /<h1 class="tv-h1">Today<\/h1>/);
   assert.equal(/data-section="weekly"|data-section="picks"|data-section="daily"|data-section="teams"/.test(h), false);
 });

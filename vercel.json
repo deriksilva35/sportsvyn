@@ -2,48 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
-      "path": "/api/cron/poll-live",
-      "schedule": "* * * * *"
-    },
-    {
       "path": "/api/cron/plays-live",
       "schedule": "* * * * *"
-    },
-    {
-      "path": "/api/cron/refresh-odds",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/poll-lineups",
-      "schedule": "*/10 * * * *"
-    },
-    {
-      "path": "/api/cron/generate-briefs",
-      "schedule": "*/2 * * * *"
-    },
-    {
-      "path": "/api/cron/generate-gloss",
-      "schedule": "*/2 * * * *"
-    },
-    {
-      "path": "/api/cron/publish-player-edition",
-      "schedule": "0 12 * * *"
-    },
-    {
-      "path": "/api/cron/publish-team-edition",
-      "schedule": "30 12 * * *"
-    },
-    {
-      "path": "/api/cron/resolve-bracket",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "path": "/api/cron/prematch-analyst",
-      "schedule": "*/30 * * * *"
-    },
-    {
-      "path": "/api/cron/map-ko-fixtures",
-      "schedule": "0 8 * * *"
     },
     {
       "path": "/api/cron/mlb-schedule",
@@ -51,6 +11,10 @@
     },
     {
       "path": "/api/cron/gridiron-games",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/stuck-live",
       "schedule": "*/5 * * * *"
     },
     {
@@ -90,10 +54,6 @@
       "schedule": "0 11 * * *"
     },
     {
-      "path": "/api/cron/nfl-preseason",
-      "schedule": "* * * * *"
-    },
-    {
       "path": "/api/cron/daily-puzzle",
       "schedule": "13 9 * * *"
     },
@@ -126,14 +86,6 @@
       "schedule": "24 13 * * *"
     },
     {
-      "path": "/api/cron/epl-fixtures",
-      "schedule": "25 13 * * *"
-    },
-    {
-      "path": "/api/cron/epl-standings",
-      "schedule": "26 13 * * *"
-    },
-    {
       "path": "/api/cron/daily-close",
       "schedule": "*/15 * * * *"
     },
@@ -150,10 +102,6 @@
       "schedule": "0 13,17,21,23 * * *"
     },
     {
-      "path": "/api/cron/epl-player-stats",
-      "schedule": "30 20,2 * * *"
-    },
-    {
       "path": "/api/cron/standings-cfb",
       "schedule": "20 * * * *"
     },
@@ -164,10 +112,6 @@
     {
       "path": "/api/cron/house-entries",
       "schedule": "40 * * * *"
-    },
-    {
-      "path": "/api/cron/wire",
-      "schedule": "7,22,37,52 * * * *"
     }
   ]
 }

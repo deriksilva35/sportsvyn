@@ -17,14 +17,9 @@
  *      signal /app has - it loads with no query string and is also a
  *      real web page - and that is read here too.
  *
- *   2. Competition-namespacing REDIRECTS.
- *      Old canonical paths (/bracket, /power-rankings) issue 308
- *      (Permanent Redirect) to their dated namespaced canonicals. The
- *      evergreen alias family (/world-cup/<sub>) issues 307 (Temporary
- *      Redirect) to the current edition resolved from
- *      leagues.metadata.family + is_current_edition, because the
- *      target moves between editions (the 2030 cycle will repoint
- *      these aliases to /world-cup-2030/<sub>).
+ *   2. RETIRED ROUTES (tue-14). Editorial and soccer answer one 301 to a
+ *      page that is drawn (lib/retired.js). This replaced the World Cup's
+ *      old-canonical 308s and the /world-cup/<sub> evergreen 307.
  *
  *   3. Admin auth gate (existing).
  *      Basic Auth on /admin/* and /api/admin/*, constant-time
@@ -36,36 +31,26 @@
  * structural paths it handles; everything else falls through to the
  * admin-auth code unchanged.
  *
- * Runtime is Node (cannot be configured to Edge), so node:crypto +
- * the Neon HTTP driver work natively. The DB call required by the
- * evergreen alias resolution adds one HTTPS round trip per alias hit
- * (cached per request by React.cache inside the resolver, though
- * only one call per request is ever made for that family).
+ * Runtime is Node (cannot be configured to Edge), so node:crypto works
+ * natively. No DB call is made here since tue-14 retired the evergreen
+ * World Cup alias, which was the only one.
  *
  * Matcher discipline (see config.matcher below):
  *   - Catches ONLY the paths this proxy actually handles. Anything
  *     not on the list never invokes the function and is unaffected.
- *   - Does NOT catch shared-library routes (/schedule, /match/*,
- *     /team/*, /player/*, /article/*), global routes (/, /my,
- *     /signin*, /confirmed), the new namespaced routes
- *     (/world-cup-2026/*), static assets, or non-admin API endpoints.
+ *   - Does NOT catch shared-library routes (/match/*, /team/*,
+ *     /player/* - their soccer rows redirect in the page, by league),
+ *     global routes (/, /my, /signin*, /confirmed), static assets, or
+ *     non-admin API endpoints.
  */
 
 import { NextResponse } from 'next/server';
 import { SHELL_COOKIE, SHELL_VALUE, SHELL_PARAM, SHELL_UA_TOKEN } from '@/lib/shell/constants';
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { resolveCurrentEditionForFamily } from './lib/competition.js';
 import { scoreboardRedirect } from './lib/scores/leagueScoreboards.js';
+import { retiredRedirect } from './lib/retired.js';
 
 const REALM = 'Sportsvyn Admin';
-const EVERGREEN_FAMILY = 'world-cup';
-
-// Old canonical to new canonical. Permanent (308): these moves are not
-// going to revert; the migration is committed.
-const PERMANENT_REDIRECTS = {
-  '/bracket':        '/world-cup-2026/bracket',
-  '/power-rankings': '/world-cup-2026/rankings/power',
-};
 
 function challenge() {
   return new NextResponse('Authentication required.', {
@@ -177,12 +162,15 @@ export async function proxy(request) {
   }
 
   // -------------------------------------------------------------------------
-  // 2. Old canonical (permanent redirect, 308).
+  // 2. RETIRED: editorial and soccer (tue-14). One permanent 301 to a page that
+  //    is drawn - /games, a league landing or /scores - per lib/retired.js.
+  //    This replaced the World Cup's old-canonical 308s (/bracket,
+  //    /power-rankings) and the /world-cup/* evergreen 307, which were chains
+  //    to pages nobody reads. The query is dropped; it addressed retired content.
   // -------------------------------------------------------------------------
-  if (Object.prototype.hasOwnProperty.call(PERMANENT_REDIRECTS, pathname)) {
-    const dest = request.nextUrl.clone();
-    dest.pathname = PERMANENT_REDIRECTS[pathname];
-    return withCookie(NextResponse.redirect(dest, 308));
+  const retired = retiredRedirect(pathname);
+  if (retired) {
+    return withCookie(NextResponse.redirect(new URL(retired, request.url), 301));
   }
 
   // -------------------------------------------------------------------------
@@ -193,30 +181,6 @@ export async function proxy(request) {
   const scoreboard = scoreboardRedirect(pathname, request.nextUrl.search);
   if (scoreboard) {
     return withCookie(NextResponse.redirect(new URL(scoreboard, request.url), 308));
-  }
-
-  // -------------------------------------------------------------------------
-  // 3. Evergreen alias (temporary redirect, 307). /world-cup/<sub> forwards
-  //    to /<currentEdition.urlSlug>/<sub>. If no current edition exists
-  //    (data-config gap) we fall through and let Next render the natural
-  //    404 rather than synthesizing one here.
-  // -------------------------------------------------------------------------
-  if (pathname.startsWith('/world-cup/')) {
-    const sub = pathname.slice('/world-cup'.length);
-    const comp = await resolveCurrentEditionForFamily(EVERGREEN_FAMILY);
-    if (comp?.urlSlug) {
-      const dest = request.nextUrl.clone();
-      dest.pathname = `/${comp.urlSlug}${sub}`;
-      return withCookie(NextResponse.redirect(dest, 307));
-    }
-    return withCookie(NextResponse.next());
-  }
-
-  // Bare /world-cup (no subpath). Phase 3 does not define a redirect for
-  // this; Phase 4 may add a thin overview page or alias it. Until then,
-  // pass through and let Next render the natural 404.
-  if (pathname === '/world-cup') {
-    return withCookie(NextResponse.next());
   }
 
   // -------------------------------------------------------------------------
@@ -282,11 +246,20 @@ export const config = {
     '/admin/:path*',
     '/api/admin',
     '/api/admin/:path*',
-    // Competition-namespacing redirect scope (Phase 3 additions).
-    '/bracket',
-    '/power-rankings',
-    '/world-cup',
-    '/world-cup/:path*',
+    // RETIRED editorial and soccer (tue-14): literals, because Next reads this
+    // object statically. retired.test.mjs pins them to RETIRED_ROUTES.
+    '/today', '/today/:path*',
+    '/articles', '/articles/:path*',
+    '/article', '/article/:path*',
+    '/nfl/wire', '/nfl/wire/:path*',
+    '/cfb/wire', '/cfb/wire/:path*',
+    '/epl', '/epl/:path*',
+    '/schedule', '/schedule/:path*',
+    '/stats', '/stats/:path*',
+    '/world-cup', '/world-cup/:path*',
+    '/world-cup-2026', '/world-cup-2026/:path*',
+    '/bracket', '/bracket/:path*',
+    '/power-rankings', '/power-rankings/:path*',
     // League scoreboards retired to /scores?sport= (tue-12). Literals: Next
     // reads this object statically. leagueScoreboards.test.mjs pins them to
     // LEAGUE_SCOREBOARDS.

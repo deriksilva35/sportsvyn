@@ -5,7 +5,6 @@
 
 import { mapLiveStatus, liveState, parseBdlProse } from '../../lib/live/vocabulary.js';
 import { writeLive, scoreChanged } from '../../lib/live/write.js';
-import { toScoreRow } from '../../lib/live/scoreEvent.js';
 import { fromBdlMlb } from '../../lib/mlb/ingest.js';
 import { baseballLastPlay } from '../../lib/mlb/playsTab.js';
 import { BASEBALL, sportOf as sportOfLeague } from '../../lib/live/vocabulary.js';
@@ -13,7 +12,6 @@ import { mlbDetailOf, writeMlbDetail, writeMlbLineups, writeMlbProbables, lineup
 import { probablesForGame, fetchLineupRows } from '../../lib/mlb/probables.js';
 import { bdlLiveState, lineupsFromRows } from '../../lib/mlb/bdlLive.js';
 
-import { emit } from '../../lib/wire/emit.js';
 import { transitionsFor } from '../../lib/push/transitions.js';
 import { dispatch } from '../../lib/push/dispatch.js';
 import { composeScorePush } from '../../lib/push/scoreCompose.js';
@@ -576,7 +574,6 @@ export async function pollOnce(sql, {
   out.calls = calls ?? 1;
   const byId = new Map((rows ?? []).map((r) => [String(r?.id), r]));
 
-  const events = [];
   for (const m of candidates) {
     const row = m.pid == null ? null : byId.get(String(m.pid));
     if (!row) { out.unmatched += 1; continue; }
@@ -990,11 +987,6 @@ export async function pollOnce(sql, {
       // say plainly that the provider's half is unmeasurable from here, rather
       // than quoting the poll interval and calling it latency.
       out.latencies.push({ matchId: m.id, ourMs: Date.now() - fetchedAt });
-      const ev = toScoreRow({ ...m, ...{
-        home_score: after.home_score, away_score: after.away_score,
-        seen_at: new Date().toISOString(),
-      } }, upd.liveState);
-      if (ev) events.push(ev);
     }
   }
 
@@ -1034,12 +1026,8 @@ export async function pollOnce(sql, {
     }
   }
 
-  if (events.length) {
-    // ONE EVENT PER SCORE STATE, EVER - the dedupe_hash is the match and the
-    // two scores, so a poll that sees the same scoreline again writes nothing.
-    const ins = await emit(events);
-    out.events = Array.isArray(ins) ? ins.length : (ins?.length ?? 0);
-  }
+  // THE WIRE IS RETIRED (tue-14): the poller no longer emits score events to it.
+  // out.events stays 0 so the journal line keeps its shape.
   out.unmapped = [...new Set(out.unmapped)];
   return out;
 }

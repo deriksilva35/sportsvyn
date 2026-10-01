@@ -22,7 +22,8 @@
  * Next 16: params is Promise-shaped — must be awaited.
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { isRetiredLeague } from '@/lib/retired';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import BackToAppBar from '@/components/BackToAppBar';
 
@@ -194,6 +195,8 @@ export default async function PlayerPage({ params, searchParams }) {
   const sp = (await searchParams) ?? {};
   const player = await getPlayerBySlug(slug);
   if (!player) notFound();
+  // SOCCER IS RETIRED (tue-14): gridiron and MLB rows are untouched.
+  if (isRetiredLeague(player.league_slug)) permanentRedirect('/scores');
 
   if (isGridiron(player.league_slug)) {
     // The follow state the soccer arm already resolves - the gridiron arm now

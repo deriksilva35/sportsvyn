@@ -42,6 +42,7 @@
  */
 
 import { notFound, permanentRedirect } from 'next/navigation';
+import { isRetiredLeague } from '@/lib/retired';
 import { sql } from '@/lib/db';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
@@ -396,9 +397,9 @@ export default async function MatchPage({ params }) {
   // worse than having no page at all, because it looked like a real one. Same
   // 308 the other two get, so anything already shared keeps working.
   if (match.league_slug === 'cfb') permanentRedirect(`/cfb/game/${slug}`);
-  // EPL has its own match center (the league furniture this page lacks); the
-  // same 308 the NFL redirect uses, so shared links keep working.
-  if (match.league_slug === 'epl') permanentRedirect(`/epl/match/${slug}`);
+  // SOCCER IS RETIRED (tue-14): EPL, the World Cup and friendlies all go to
+  // the one board. (EPL used to 308 to its own match center, now retired too.)
+  if (isRetiredLeague(match.league_slug)) permanentRedirect('/scores');
 
   // The crumb's destination, from the league itself: each competition's own
   // index, with the scoreboard as the honest fallback for one that has none.

@@ -44,7 +44,7 @@ export const maxDuration = 300;
 const LEAGUES = [
   { sport: 'nfl', slug: 'nfl', source: 'nfl-props' },
   { sport: 'cfb', slug: 'cfb', source: 'cfb-props' },
-  { sport: 'epl', slug: 'epl', source: 'epl-props' },
+  // No EPL leg: soccer is retired (tue-14); ~157 credits/day.
 ];
 
 export async function GET(request) {

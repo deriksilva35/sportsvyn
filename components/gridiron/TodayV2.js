@@ -188,14 +188,14 @@ function TeamRow({ t }) {
 function Numbers({ v, signinHref }) {
   const isNfl = v.leagueSlug === 'nfl';
   const mine = (id) => id != null && v.followed?.has?.(id) === true;
-  const others = ['nfl', 'cfb', 'epl'].filter((s) => s !== v.leagueSlug);
+  const others = ['nfl', 'cfb'].filter((s) => s !== v.leagueSlug);
   return (
     <>
       <SectionHead title="The numbers" href={`/${v.leagueSlug}`} label={`${LEAGUE_LABEL[v.leagueSlug]} home →`} />
       <div className="tv-sw" data-section="switch">
         <span className="on">{LEAGUE_LABEL[v.leagueSlug]}</span>
         {others.map((s) => (
-          <Link key={s} href={s === 'epl' ? '/epl/standings' : `/${s}`}>{LEAGUE_LABEL[s]}</Link>
+          <Link key={s} href={`/${s}`}>{LEAGUE_LABEL[s]}</Link>
         ))}
         {/* THE WAY OUT TO EVERY GAME, both states. The tab shows a reader
             their own day; /scores is the whole board, and without this the
@@ -291,19 +291,7 @@ export default function TodayV2({ v, isShell = false }) {
 
       <Numbers v={v} signinHref={signinHref} />
 
-      {v.wire.items.length > 0 && (
-        <>
-          <SectionHead title="The wire" href={`/${v.leagueSlug}/wire`} label="All &rarr;" />
-          <div className="tv-card" data-section="wire">
-            {v.wire.items.slice(0, 3).map((w) => (
-              <a className="tv-wire" key={w.id} href={w.url}>
-                <span className={`ln${w.lane === 'MOVE' ? '' : ' q'}`}>{w.lane}</span>
-                <p>{w.headline}<small>{w.source}</small></p>
-              </a>
-            ))}
-          </div>
-        </>
-      )}
+      {/* THE WIRE IS RETIRED (tue-14): no section, and no door to /<league>/wire. */}
     </div>
   );
 }
