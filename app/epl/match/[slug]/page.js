@@ -24,6 +24,7 @@ import { eplPositionChips } from '@/lib/standings/read';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { soccerLiveChip } from '@/lib/soccer/liveChip';
+import { matchweekLabel } from '@/lib/soccer/roundLabel';
 import { compareRows, fullStatRows, timelineRows, halfTimeScore, pitchRows } from '@/lib/soccer/matchCenter';
 import MatchCenter from '@/components/soccer/MatchCenter';
 import { arcadeFor } from '@/lib/brand/theme';
@@ -121,7 +122,7 @@ export default async function EplMatchPage({ params }) {
           <div className="gi-kicker">
             <Link className="lnk" href="/epl/standings">&#8249; {m.league_name}</Link>
             <span className="rule" />
-            <span className="cnt">{m.week != null ? `Matchweek ${m.week}` : ''}</span>
+            <span className="cnt">{matchweekLabel(m.week) ?? ''}</span>
           </div>
 
           <MatchCenter

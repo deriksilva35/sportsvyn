@@ -11,6 +11,7 @@
  */
 
 import KickoffTime from './KickoffTime';
+import { matchweekLabel } from '@/lib/soccer/roundLabel';
 
 function MetaItem({ label, value, className = '' }) {
   if (value == null || value === '') return null;
@@ -42,7 +43,7 @@ export default function MatchMetaStrip({ match }) {
   const stageLabel = match?.stage
     ? (STAGE_DISPLAY[match.stage] ?? match.stage) +
       (match.group_code ? ` · Group ${match.group_code}` : '')
-    : (match?.week != null ? `Matchweek ${match.week}` : 'Friendly');
+    : (matchweekLabel(match?.week) ?? 'Friendly');
 
   return (
     <div className="match-meta-strip">
