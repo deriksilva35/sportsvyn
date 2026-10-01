@@ -49,9 +49,15 @@ export async function generateViewport() {
   return simViewport(await resolveShellMode());
 }
 
+// THE ROUTE'S SPORTS: the two football boards, and the daily NBA board
+// (lib/nba/dayPickem.js). NBA is NOT in PICKEM_SPORTS - that list is the
+// football pair the bare /pickem redirect and the sport switch choose between,
+// and a board that opens every day would win that race every day.
+const ROUTE_SPORTS = [...PICKEM_SPORTS, 'nba'];
+
 export async function generateMetadata({ params }) {
   const { sport } = await params;
-  if (!PICKEM_SPORTS.includes(sport)) return { title: `${GAME_NAMES.pickem} - Sportsvyn` };
+  if (!ROUTE_SPORTS.includes(sport)) return { title: `${GAME_NAMES.pickem} - Sportsvyn` };
   return { title: `${GAME_NAMES.pickem} ${sport.toUpperCase()} - Sportsvyn` };
 }
 
@@ -59,7 +65,7 @@ export default async function PickemSportPage({ params, searchParams }) {
   const { sport } = await params;
   // THE ONLY TWO SPORTS THIS BOARD KNOWS (relay 2c item 6) - a third
   // segment 404s rather than silently rendering an empty/global board.
-  if (!PICKEM_SPORTS.includes(sport)) notFound();
+  if (!ROUTE_SPORTS.includes(sport)) notFound();
 
   const session = await auth();
   const userId = session?.user?.id ?? null;
@@ -73,7 +79,8 @@ export default async function PickemSportPage({ params, searchParams }) {
   const view = await pickemBoardView(uid, { sport, now }).catch(() => ({ phase: 'preopen', contest: null, games: [] }));
   // BOTH BOARDS' STATE, for the switch. A sport with no current board is
   // simply absent, and one board renders no switch at all.
-  const boards = (await Promise.all(PICKEM_SPORTS.map(async (s) => {
+  // THE NBA BOARD HAS NO SWITCH: it is one sport's day, not one of a pair.
+  const boards = sport === 'nba' ? [] : (await Promise.all(PICKEM_SPORTS.map(async (s) => {
     const d = await pickemCardData(uid, { sport: s, now }).catch(() => null);
     return d ? { sport: s, pickedOpen: d.pickedOpen, pickable: d.pickable, settled: Boolean(d.settled) } : null;
   }))).filter(Boolean);
