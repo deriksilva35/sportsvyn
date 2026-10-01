@@ -27,6 +27,7 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { ODDS_TICK_MIN, ODDS_FINAL_WINDOW_HOURS, isFuturesTick } from '@/lib/pollers/cadence';
+import { legDue } from '@/lib/gridiron/oddsLegs';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -43,14 +44,19 @@ export const maxDuration = 60;
 const LEAGUES = [
   { sport: 'nfl', slug: 'nfl', source: 'nfl-odds', futures: true },
   { sport: 'cfb', slug: 'cfb', source: 'cfb-odds', futures: true },
-  // No EPL leg: soccer is retired (tue-14). It was ~149 credits/day, and with
-  // the API-Sports ingest stopped its rows would sit 'scheduled' past kickoff
-  // and keep drawing polls.
+  // EPL is back (thu-24; retired tue-14): ~149 credits/day measured 17-30 Sep.
+  { sport: 'epl', slug: 'epl', source: 'epl-odds', futures: false },
+  // MLB, POSTSEASON ONLY (thu-28): h2h + totals (lib/theOddsApi.js
+  // SPORT_MARKETS), one region, so 2 credits a call - and only at the top of
+  // these two UTC hours, never on a tight window. 2 runs x 2 = 4 credits/day.
+  { sport: 'mlb', slug: 'mlb', source: 'mlb-odds', futures: false, hours: [13, 21] },
 ];
+
 const FUTURES_LEAGUES = LEAGUES.filter((l) => l.futures);
 // Drives the tight-window test: a kickoff inside the window earns the
 // 15-minute cadence.
-const SLUGS = LEAGUES.map((l) => l.slug);
+// A fixed-clock leg's kickoffs do not open a tight window for the others.
+const SLUGS = LEAGUES.filter((l) => !l.hours).map((l) => l.slug);
 
 // Daily outrights sub-step: title futures per league -> odds_markets futures rows,
 // recorded as nfl-futures / cfb-futures. Runs only at the daily hour.
@@ -110,13 +116,14 @@ export async function GET(request) {
     // One noop sample per hour (the :15 tick) for liveness parity with the games cron.
     const recordNoop = now.getUTCMinutes() >= ODDS_TICK_MIN && now.getUTCMinutes() < 2 * ODDS_TICK_MIN;
     if (recordNoop) {
-      for (const lg of LEAGUES) await recordDecision(sql, { source: lg.source, kind: 'noop', summary: {} });
+      for (const lg of LEAGUES.filter((l) => !l.hours)) await recordDecision(sql, { source: lg.source, kind: 'noop', summary: {} });
     }
     return Response.json({ decision: 'noop' });
   }
 
   const decisions = [];
   for (const lg of LEAGUES) {
+    if (!legDue(lg, now)) continue;   // a fixed-clock leg off its hours
     const outcome = await withAdvisoryLock(lg.source, async () => {
       const res = await recordRun(sql, {
         source: lg.source,

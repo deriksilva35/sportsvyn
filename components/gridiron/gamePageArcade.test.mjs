@@ -134,7 +134,8 @@ test('NO DRAWER AND NO RECAP on the game page; the card is navy in every state',
 
 test('/scores keeps its drawer and its link: onPage is off there', () => {
   const board = src('components/scores/ScoreboardV4.js');
-  assert.match(board, /onPage\s*\?\s*\(x\.closing[\s\S]*?: <Link className="go" href=\{gameHref\}>\{x\.hasStats \? 'Box score' : 'Recap'\}/);
+  // EPL's link reads 'Match' (thu-24); every other league's is unchanged.
+  assert.match(board, /onPage\s*\?\s*\(x\.closing[\s\S]*?: <Link className="go" href=\{gameHref\}>\{soccer \? 'Match' : x\.hasStats \? 'Box score' : 'Recap'\}/);
   assert.match(board, /export function CardFace\(\{ g, x, signedIn, signinHref, tz, now, onPage = false \}\)/);
 });
 

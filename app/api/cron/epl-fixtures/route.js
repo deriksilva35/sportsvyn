@@ -22,7 +22,7 @@ import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
-import { syncEpl } from '@/lib/soccer/epl';
+import { syncEpl, apiSportsPlan } from '@/lib/soccer/epl';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -35,7 +35,16 @@ export async function GET(request) {
   const outcome = await withAdvisoryLock(SOURCE, async () => recordRun(sql, {
     source: SOURCE,
     kind: 'sync',
-    run: async () => syncEpl(),
+    // THE PLAN RIDES IN THE SUMMARY (thu-24): the first PROD run after the
+    // upgrade must say which plan answered - and so must a failed one.
+    run: async () => {
+      const apiSportsAccount = await apiSportsPlan();
+      try {
+        return { ...(await syncEpl()), apiSports: apiSportsAccount };
+      } catch (e) {
+        throw new Error(`${e?.message ?? e} [api-sports plan: ${apiSportsAccount.plan ?? apiSportsAccount.error}]`);
+      }
+    },
   }));
 
   if (outcome.locked) {

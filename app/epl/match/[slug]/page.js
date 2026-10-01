@@ -26,7 +26,15 @@ import SiteFooter from '@/components/SiteFooter';
 import { soccerLiveChip } from '@/lib/soccer/liveChip';
 import { compareRows, fullStatRows, timelineRows, halfTimeScore, pitchRows } from '@/lib/soccer/matchCenter';
 import MatchCenter from '@/components/soccer/MatchCenter';
+import { arcadeFor } from '@/lib/brand/theme';
+import { resolveShellMode } from '@/lib/shell/shell';
+import BackToAppBar from '@/components/BackToAppBar';
+import { eplArcadeView } from '@/lib/soccer/eplPageArcade';
+import EplPageArcade from '@/components/soccer/EplPageArcade';
 import '@/components/gridiron/gridiron.css';
+import '@/app/scores/scoresV4.css';
+import '@/components/gridiron/gamePageArcade.css';
+import '@/components/soccer/eplArcade.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,6 +76,22 @@ export default async function EplMatchPage({ params }) {
   const { slug } = await params;
   const m = await getMatch(slug);
   if (!m) notFound();
+
+  // THE ARCADE PAGE (thu-24): the board's card face, then goals and cards,
+  // team stats and top players - lib/soccer/eplPageArcade.js. The dark match
+  // center below is unchanged.
+  const isShell = await resolveShellMode().catch(() => false);
+  if (arcadeFor(isShell)) {
+    const view = await eplArcadeView(slug);
+    if (!view) notFound();
+    return (
+      <div className="gi" data-surface="ink">
+        <BackToAppBar />
+        <GlobalHeaderServer activeNav="soccer" />
+        <EplPageArcade view={view} />
+      </div>
+    );
+  }
 
   const [stats, events, lineups, chips] = await Promise.all([
     sql`SELECT team_side, stats FROM match_statistics WHERE match_id = ${m.id} AND is_current`,

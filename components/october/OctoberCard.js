@@ -164,7 +164,9 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
           below are the PAGE's scroll. There is no inner scroll box. */}
       <div className="oc-dock" ref={dockRef}>
         <div className="oc-grid">
-          {view.board.map((g) => (
+          {/* A NOT-NEEDED GAME IS NOT ON THE ROW (thu-30): a decided series'
+              game 3 is not a game of the day. A one-game day shows one tile. */}
+          {view.board.filter((g) => g.status !== 'not_needed').map((g) => (
             <button
               key={g.matchId} type="button"
               className={`oc-gc${String(g.matchId) === String(openGame) ? ' on' : ''}${g.status === 'live' ? ' live' : ''}${g.status === 'postponed' ? ' ppd' : ''}${!g.pickable ? ' lk' : ''}`}
