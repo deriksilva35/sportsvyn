@@ -27,7 +27,7 @@ import { orderFor } from '@/lib/gridiron/teamOrder';
 import { possessionSide } from '@/lib/gridiron/possession';
 import { shortOf, BASEBALL, sportOf } from '@/lib/live/vocabulary';
 import { LEAGUE_LABEL, abbrOf, cardVariant, countLine, pickTone, statLineText, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
-import { SPORTS, hrefs, applyView, chipCounts, oddsFoot, winProbRead, firstDownPct, leaderOf, fieldLine } from '@/lib/scores/v4';
+import { SPORTS, sportChipShown, hrefs, applyView, chipCounts, oddsFoot, winProbRead, firstDownPct, leaderOf, fieldLine } from '@/lib/scores/v4';
 
 const PICKEM = "Pick'em";
 
@@ -300,7 +300,7 @@ export default function ScoreboardV4({ v, view = null, conf = null, signedIn = f
       </div>
 
       <div className="sv4-chips" data-section="chips">
-        {SPORTS.map(([k, label]) => (
+        {SPORTS.filter(([k]) => sportChipShown(k, { leagues: v.leagues, selected: v.sport })).map(([k, label]) => (
           <Link key={k} className={`sv4-chip${v.sport === k ? ' on' : ''}`} href={h.sport(k)} data-chip={`sport:${k}`}>{label}</Link>
         ))}
         <span className="sep" aria-hidden="true" />
