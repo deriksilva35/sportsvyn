@@ -95,6 +95,17 @@
 :where(:root[data-theme="arcade"]) .sv4-diamond .b1 { left: 22px; top: 11.5px; }
 :where(:root[data-theme="arcade"]) .sv4-diamond .d-b.on { background: var(--tok-accent); border-color: var(--tok-accent); }
 
+/* THE SOCCER LINES (thu-24, EPL only): each side's scorers and sendings-off,
+   two columns, home first as the rows are. Names wrap; nothing ellipsizes. */
+:where(:root[data-theme="arcade"]) .sv4-soc { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+:where(:root[data-theme="arcade"]) .sv4-soc .side { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+:where(:root[data-theme="arcade"]) .sv4-soc .side[data-side="away"] { text-align: right; align-items: flex-end; }
+:where(:root[data-theme="arcade"]) .sv4-soc li { display: flex; align-items: baseline; gap: 6px; font: 500 12px/1.35 var(--tok-font-body); font-variant-numeric: tabular-nums; color: var(--tok-ink); overflow-wrap: anywhere; }
+:where(:root[data-theme="arcade"]) .sv4-soc .side[data-side="away"] li { flex-direction: row-reverse; }
+:where(:root[data-theme="arcade"]) .sv4-soc .gl { flex: none; width: 7px; height: 7px; border-radius: 99px; background: currentColor; opacity: .55; transform: translateY(-1px); }
+:where(:root[data-theme="arcade"]) .sv4-soc .rc { flex: none; width: 8px; height: 11px; border-radius: 1.5px; background: var(--tok-down); transform: translateY(1px); }
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-soc li { color: var(--tok-on-primary); }
+
 :where(:root[data-theme="arcade"]) .sv4-stake { display: flex; flex-wrap: wrap; gap: 6px; }
 :where(:root[data-theme="arcade"]) .sv4-stake span, :where(:root[data-theme="arcade"]) .sv4-stake a { padding: 4px 9px; border-radius: 99px; border: 1px solid var(--tok-line); font: 600 11px var(--tok-font-num); color: var(--tok-ink); text-decoration: none; }
 :where(:root[data-theme="arcade"]) .sv4-stake b { font-weight: 700; color: var(--tok-primary); }
