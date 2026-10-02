@@ -90,6 +90,22 @@ test('LIVE (board): navy card, "Q4 · 2:14", BONUS on the side in it, the one-li
   assert.equal(c.querySelector('[data-winprob]'), null);
 });
 
+test('NO BALL FOR BASKETBALL, EVER (thu-40): not drawn even when an offense is handed in, and nothing in lib/nba infers one', () => {
+  const v = board();
+  v.extras.get(11).drive = { offenseAbbr: 'BOS', label: null, pct: null };
+  const d = doc(render(React.createElement(ScoreboardV4, { v, signedIn: true, zoneLabel: 'Pacific', now: NOW })));
+  assert.equal(card(d, 'nba-11').querySelector('.ball'), null);
+  for (const f of ['lib/nba/card.js', 'lib/nba/gamePageView.js', 'lib/nba/ingest.js', 'lib/nba/statsSync.js', 'lib/nba/detail.js']) {
+    assert.ok(!/possession\s*[:=]/i.test(src(f)), `${f} stores or derives no possession`);
+  }
+  assert.equal(pageView('live').x.drive, null, 'the page hands the card no drive');
+});
+
+test('BONUS IS THE TAG ALONE (thu-40): no "in the bonus" words anywhere on the card or the page', () => {
+  assert.ok(!/in the bonus/i.test(card(boardDoc(), 'nba-11').textContent));
+  assert.ok(!/in the bonus/i.test(pageDoc('live').body.textContent));
+});
+
 test('UPCOMING (board): white card, the tip in the PAGE zone, and NO "No line yet" when there is no line', () => {
   const c = card(boardDoc(), 'nba-12');
   assert.equal(c.getAttribute('data-variant'), 'upcoming');
