@@ -70,6 +70,7 @@ export default function UclTableArcade({ table }) {
             <i className="sw playoff" /> 9-24 {UCL_BAND_NAME.playoff}
             <i className="sw out" /> 25-36 {UCL_BAND_NAME.out}
           </p>
+          <p className="ept-key" data-cross="epl"><Link href="/epl/standings">Premier League table &rsaquo;</Link></p>
         </>
       )}
     </div>

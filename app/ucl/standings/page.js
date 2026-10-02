@@ -98,6 +98,7 @@ export default async function UclStandingsPage() {
                 <i className="ep-swatch rail-ucl" /> 1-8 {UCL_BAND_NAME.r16}
                 <i className="ep-swatch rail-uel" /> 9-24 {UCL_BAND_NAME.playoff}
               </p>
+              <p className="ep-key" data-cross="epl"><Link className="lnk" href="/epl/standings">Premier League table &rarr;</Link></p>
             </>
           )}
         </div>

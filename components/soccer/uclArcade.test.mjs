@@ -110,3 +110,15 @@ test('THE UCL CSS is scoped to .ucl-t and tokens only', () => {
     assert.match(rule.split('{')[0], /^\.ucl-t /, `scoped: ${rule.split('{')[0]}`);
   }
 });
+
+// NO NAV ENTRY (fri-4): the two tables link each other, one line each, on both themes.
+test('THE TABLES LINK EACH OTHER: /epl/standings <-> /ucl/standings, arcade and dark', async () => {
+  const EplTableArcade = (await import('./EplTableArcade.js')).default;
+  const t = { rows: [ROW(1, 'A')] };
+  assert.match(render(React.createElement(EplTableArcade, { table: t })), /<p class="ept-key" data-cross="ucl"><a href="\/ucl\/standings">Champions League table/);
+  assert.match(render(React.createElement(UclTableArcade, { table: t })), /<p class="ept-key" data-cross="epl"><a href="\/epl\/standings">Premier League table/);
+  const src = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), 'utf8');
+  assert.match(src('app/epl/standings/page.js'), /data-cross="ucl"><Link className="lnk" href="\/ucl\/standings">/);
+  assert.match(src('app/ucl/standings/page.js'), /data-cross="epl"><Link className="lnk" href="\/epl\/standings">/);
+  assert.doesNotMatch(src('lib/nav.js'), /ucl/i, 'no primary-nav entry');
+});
