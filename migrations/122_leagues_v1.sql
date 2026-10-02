@@ -70,13 +70,17 @@ CREATE UNIQUE INDEX IF NOT EXISTS player_leagues_invite_token_key
 -- One row per (game, sport) a league counts. A multi-sport game (Pick'em: NFL
 -- and CFB) is one row per sport; a game with no sport (The Daily) is 'all'.
 -- "One game" for the scoring rule is one DISTINCT game_type.
+-- NO CHECK ON game_type: the registry is lib/leagues/gameTypes.js and it grows
+-- (epl_weekly_5 and six both landed in the week this was written). A CHECK
+-- list here would be a second registry that every new game has to remember;
+-- lib/leagues/settings.js refuses an unregistered key before any write.
 CREATE TABLE IF NOT EXISTS player_league_games (
   league_id  integer NOT NULL REFERENCES player_leagues(id) ON DELETE CASCADE,
-  game_type  text    NOT NULL CHECK (game_type IN
-               ('pickem', 'weekly', 'survivor', 'draft', 'daily', 'october', 'run', 'six')),
+  game_type  text    NOT NULL,
   sport      text    NOT NULL DEFAULT 'all',
   PRIMARY KEY (league_id, game_type, sport)
 );
+ALTER TABLE player_league_games DROP CONSTRAINT IF EXISTS player_league_games_game_type_check;
 
 -- GUILLOTINE (P3): the ONE persisted decision, so a chop never flips on a
 -- re-read after a stat correction. One row per chopped member.
