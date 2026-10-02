@@ -123,3 +123,14 @@
 :where(:root[data-theme="arcade"]) .gpa-tbl th:first-child { text-align: left; }
 :where(:root[data-theme="arcade"]) .gpa-tbl tbody th { font-weight: 600; text-transform: capitalize; }
 :where(:root[data-theme="arcade"]) .gpa-closing { margin: 0 0 10px; font: 600 13px var(--tok-font-body); color: var(--tok-primary); }
+
+/* THE BELL ON THE CARD'S TOP ROW (thu-41). The pill is the alerts sheet's own
+   trigger; on the navy card it reads in the card's on-primary ink, and its
+   target is 44px both ways. */
+:where(:root[data-theme="arcade"]) .gpa-card .gpa-bell { display: inline-flex; margin-left: 8px; }
+:where(:root[data-theme="arcade"]) .gpa-card .gpa-bell .al-pill {
+  min-height: 44px; min-width: 44px; padding: 0 14px; margin-left: 0;
+  color: var(--tok-on-primary);
+  border-color: color-mix(in srgb, var(--tok-on-primary) 45%, transparent);
+}
+:where(:root[data-theme="arcade"]) .gpa-card .gpa-bell .al-pill.on { color: var(--tok-on-primary); border-color: var(--tok-on-primary); }

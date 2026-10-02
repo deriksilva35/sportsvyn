@@ -20,6 +20,11 @@ const src = (rel) => strip(readFileSync(path.join(REPO, rel), 'utf8'));
 const LINK = stubPath('__link_stub_gpa.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === 'next/link') return { url: pathToFileURL(LINK).href, shortCircuit: true };
+  // AlertBell (mounted on the card since thu-41) imports './enable' the Next
+  // way, extensionless; node needs the .js.
+  if (/^\.\.?\//.test(spec) && !/\.[a-z]+$/i.test(spec)) {
+    try { return next(`${spec}.js`, ctx); } catch { /* fall through */ }
+  }
   return next(spec, ctx);
 } });
 
@@ -109,12 +114,13 @@ test('THE CARD FACE IS SHARED: one component, imported by /scores and the game p
   assert.match(board, /export function CardFace\(/);
   assert.match(board, /<ExpandCard[\s\S]*?<CardFace \{\.\.\.props\} \/>[\s\S]*?<\/ExpandCard>/, '/scores wraps the face in its drawer');
   assert.match(page, /import \{ CardFace \} from '@\/components\/scores\/ScoreboardV4';/);
-  assert.match(page, /<CardFace [^>]*onPage \/>/);
+  // onPage, and the bell in the top row (thu-41)
+  assert.match(page, /<CardFace [^>]*onPage\s+topRight=\{alerts \? <AlertBell /);
   assert.ok(!/sv4-team|sv4-lbl/.test(page), 'the page draws no card markup of its own');
   for (const r of ['app/nfl/game/[slug]/page.js', 'app/cfb/game/[slug]/page.js']) {
     const s = src(r);
     assert.match(s, /import GamePageArcade from '@\/components\/gridiron\/GamePageArcade';/, r);
-    assert.match(s, /if \(arcadeFor\(isShell\)\) \{[\s\S]*?<GamePageArcade view=\{view\} tz=\{\(await readViewerTz\(\)\) \?\? 'America\/New_York'\} \/>/, `${r}: arcade only, in the reader's zone (thu-26)`);
+    assert.match(s, /if \(arcadeFor\(isShell\)\) \{[\s\S]*?<GamePageArcade view=\{view\} tz=\{\(await readViewerTz\(\)\) \?\? 'America\/New_York'\}\s+alerts=\{gamePageAlerts\(game, \{ signedIn: viewerId != null \}\)\} \/>/, `${r}: arcade only, in the reader's zone (thu-26)`);
   }
 });
 
@@ -136,7 +142,7 @@ test('/scores keeps its drawer and its link: onPage is off there', () => {
   const board = src('components/scores/ScoreboardV4.js');
   // EPL's link reads 'Match' (thu-24); every other league's is unchanged.
   assert.match(board, /onPage\s*\?\s*\(x\.closing[\s\S]*?: <Link className="go" href=\{gameHref\}>\{soccer \? 'Match' : x\.hasStats \? 'Box score' : 'Recap'\}/);
-  assert.match(board, /export function CardFace\(\{ g, x, signedIn, signinHref, tz, now, onPage = false \}\)/);
+  assert.match(board, /export function CardFace\(\{ g, x, signedIn, signinHref, tz, now, onPage = false, topRight = null \}\)/);
 });
 
 test('CLOSING LINE: in the final foot when market_prior is present, absent otherwise', () => {
@@ -389,4 +395,59 @@ test('NO PROSE: no brief, no gloss, no notes, no article links', () => {
   }
   const page = src('components/gridiron/GamePageArcade.js') + src('lib/gridiron/gamePageArcadeView.js');
   assert.ok(!/getBriefForMatch|LiveWinProb from|BriefPanel|gg-note/.test(page));
+});
+
+// ---------------------------------------------------------------------------
+// the bell and the Live Activity start (thu-41): the arcade rebuild dropped them
+// ---------------------------------------------------------------------------
+test('THE BELL: a scheduled NFL game page draws the alerts bell on the card top row, with the Live Activity start', async () => {
+  const { gamePageAlerts } = await import('../../lib/gridiron/gamePageAlerts.js');
+  const v = view({ state: 'pre' });
+  const alerts = gamePageAlerts(v.g, { signedIn: true });
+  assert.ok(alerts, 'NFL has the bell');
+  assert.ok(alerts.liveActivity && alerts.liveActivity.url && alerts.liveActivity.state, 'and the Activity start rides its sheet');
+  assert.equal(alerts.liveActivity.final, false);
+  const h = render(React.createElement(GamePageArcade, { view: v, now: NOW, alerts }));
+  const top = h.slice(h.indexOf('sv4-lbl'), h.indexOf('sv4-lbl') + 1200);
+  assert.match(top, /data-gpa="bell"[^]*class="al-pill al-pill--lg"/, 'the bell pill sits in the card\'s top row');
+  // the Activity row itself is drawn inside the sheet; its gate is the thu-18 rule
+  assert.match(src('components/alerts/AlertBell.js'), /const showLive = Boolean\([^;]*liveActivitySupported\(match\?\.leagueSlug\)\)/s);
+});
+
+test('THE BELL: CFB and MLB get it too; NBA gets neither the bell nor the Activity', async () => {
+  const { gamePageAlerts } = await import('../../lib/gridiron/gamePageAlerts.js');
+  const g = view({ state: 'pre' }).g;
+  assert.ok(gamePageAlerts({ ...g, leagueSlug: 'cfb' })?.liveActivity);
+  assert.ok(gamePageAlerts({ ...g, leagueSlug: 'mlb' })?.liveActivity);
+  assert.equal(gamePageAlerts({ ...g, leagueSlug: 'nba' }), null);
+  const h = render(React.createElement(GamePageArcade, { view: view({ state: 'pre' }), now: NOW, alerts: gamePageAlerts({ ...g, leagueSlug: 'nba' }) }));
+  assert.ok(!/data-gpa="bell"|al-pill/.test(h), 'no bell on an NBA page');
+  assert.ok(!/al-pill/.test(render(React.createElement(GamePageArcade, { view: view({ state: 'pre' }), now: NOW }))), 'no alerts given, no bell');
+});
+
+test('THE BELL: both arcade game routes pass it, and the board never draws it', () => {
+  for (const r of ['app/nfl/game/[slug]/page.js', 'app/cfb/game/[slug]/page.js']) {
+    assert.match(src(r), /alerts=\{gamePageAlerts\(game, \{ signedIn: viewerId != null \}\)\}/, r);
+  }
+  assert.match(src('components/scores/ScoreboardV4.js'), /\{onPage && topRight \? <span className="gpa-bell"/);
+  assert.match(src('components/gridiron/gamePageArcade.css'), /\.gpa-bell \.al-pill \{\s*min-height: 44px; min-width: 44px;/);
+});
+
+test('IN YOUR GAMES, PRE-GAME: the Draft names each man as the Weekly does - "<Surname> · <ppg> ppg"', () => {
+  const game = { id: 9, leagueSlug: 'nfl', status: 'scheduled', home: { abbreviation: 'CHI' }, away: { abbreviation: 'PHI' } };
+  const contests = [
+    { id: 14, game_type: 'weekly', board: [{ id: 38, name: 'Jalen Hurts', team: 'PHI' }] },
+    { id: 15, game_type: 'draft', board: [] },
+  ];
+  const entries = [
+    { contest_id: 14, lineup: { QB: 38 }, meta: {} },
+    { contest_id: 15, lineup: {}, meta: { roster: [{ id: 40, name: 'Cole Kmet', team: 'CHI' }, { id: 41, name: 'Rome Odunze', team: 'CHI' }, { id: 7, name: 'Josh Allen', team: 'BUF' }] } },
+  ];
+  const ppg = new Map([[38, 21.4], [40, 6.25]]);
+  const rows = Y.yourGamesRows({ game, contests, entries, ppg });
+  assert.deepEqual(rows.map((r) => [r.label, r.line, r.value]), [
+    ['WEEKLY', 'Hurts · 21.4 ppg', 'In your six'],
+    ['THE DRAFT', 'Kmet · 6.3 ppg', 'On your roster'],
+    ['THE DRAFT', 'Odunze · no games yet', 'On your roster'],
+  ]);
 });
