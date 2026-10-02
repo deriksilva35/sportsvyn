@@ -120,8 +120,8 @@ export default function SixCard({ view, signedIn = false, signinHref = '/signin'
             Six players from tonight&apos;s NBA games: two guards, two forwards, a
             center and a utility. At most <b>{view.contest.cap} from any one team</b>.
             Each slot locks at its player&apos;s tip; swap freely before it. A
-            player who sits after his tip scores 0. An empty slot when the last
-            game tips makes the night a DNF. <b>Tomorrow is a new six.</b>
+            player who sits after his tip scores 0, and so does an empty slot -
+            the rest of your card still counts. <b>Tomorrow is a new six.</b>
           </p>
         </details>
       ) : null}
@@ -162,7 +162,7 @@ export default function SixCard({ view, signedIn = false, signinHref = '/signin'
                   <span className="sx-nm">{p.name}</span>
                   <span className="sx-tm">{v?.dnp ? 'DNP' : `${p.team ?? ''}${p.opp ? ` v ${p.opp}` : ''}`}</span>
                   {showChips && v?.points != null ? <span className={`sx-pts${v.state === 'final' ? ' fin' : ''}`}>{v.points}</span> : null}
-                </> : <span className="sx-em">{final || (view.isDnf && !isLocked) ? 'DNF' : on ? 'pick below' : 'open'}</span>}
+                </> : <span className="sx-em">{final || view.nightState === 'closed' ? 'empty · 0' : on ? 'pick below' : 'open'}</span>}
               </div>
             );
           })}
@@ -206,13 +206,13 @@ export default function SixCard({ view, signedIn = false, signinHref = '/signin'
 
       <div className="sx-ft">
         <div className="sx-pace">
-          {final ? <>Final<br /><b>{view.isDnf ? 'DNF' : view.total}</b>{view.rank ? ` · ${ordinal(view.rank)} of ${view.of}` : ''}</>
-            : view.isDnf ? <>This night is a <b>DNF</b><br />a slot was empty at the last tip</>
-              : <>Your six so far<br /><b>{view.total}</b>{view.progress.locked ? ` · ${view.progress.locked} in play` : ''}</>}
+          {final ? <>Final<br /><b>{view.total}</b>{view.rank ? ` · ${ordinal(view.rank)} of ${view.of}` : ''}</>
+            : <>Your six so far<br /><b>{view.total}</b>{view.progress.locked ? ` · ${view.progress.locked} in play` : ''}</>}
         </div>
         {!signedIn ? <a className="sx-lock" href={signinHref}>Sign in to play</a>
           : final ? null
             : filled === SLOTS.length ? <span className="sx-rcpt">✓ 6 OF 6</span>
+              : view.nightState === 'closed' ? <span className="sx-rcpt">{filled} OF 6 · empty slots score 0</span>
               : <button className="sx-lock" type="button" disabled>{SLOTS.length - filled} to go</button>}
       </div>
     </div>
@@ -237,7 +237,7 @@ function Header({ view, lineup, locked }) {
           <div className="sx-lbl">next tip<b>{next.label} · <StandaloneTime iso={next.tipAt} /></b></div>
         </> : <div className="sx-lbl">all tipped<b>points only</b></div>}
         <div className="sx-tot">
-          {view.phase === 'open' ? <><b>{filled}</b><span>of 6</span></> : <><b>{view.isDnf ? 'DNF' : view.total}</b><span>{view.phase === 'final' ? 'final' : 'live'}</span></>}
+          {view.phase === 'open' ? <><b>{filled}</b><span>of 6</span></> : <><b>{view.total}</b><span>{view.phase === 'final' ? 'final' : 'live'}</span></>}
         </div>
       </div>
       <div className="sx-pips">{pips.map((p, i) => <i key={i} className={`sx-pip${p === 'locked' ? ' lk' : p === 'picked' ? ' on' : ''}`} />)}</div>
@@ -287,7 +287,7 @@ function Final({ view }) {
   return (
     <>
       <div className="sx-res" data-block="result">
-        <div><b>{view.isDnf ? 'DNF' : view.total}</b><span>your six</span></div>
+        <div><b>{view.total}</b><span>your six</span></div>
         <div><b>{view.rank ? ordinal(view.rank) : '–'}</b><span>of {view.of}</span></div>
         <div><b>{p?.score ?? '–'}</b><span>perfect six</span></div>
       </div>
@@ -310,7 +310,7 @@ function Final({ view }) {
             <div key={r.userId} className={`sx-br${r.isMe ? ' you' : ''}`} data-rank={r.rank}>
               <span className="rk">{r.rank}</span>
               <span>{r.isMe ? 'you' : r.handle}{r.house ? <i> · house</i> : null}</span>
-              <span className="t">{r.state === 'dnf' ? 'DNF' : r.points}</span>
+              <span className="t">{r.points}</span>
             </div>
           ))) : <div className="sx-br"><span className="rk">–</span><span>Nobody played tonight.</span><span /></div>}
       </div>

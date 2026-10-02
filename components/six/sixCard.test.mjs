@@ -67,7 +67,7 @@ const OPEN = () => ({
     slot('c'), slot('util'),
   ],
   progress: { pips: ['picked', 'open', 'open', 'picked', 'open', 'open'], filled: 2, locked: 0, picked: 2, open: 4, total: 6 },
-  nightState: 'open', isDnf: false, total: 0,
+  nightState: 'open', total: 0,
   nextLock: { matchId: 1, label: 'DAL @ ORL', tipAt: '2026-10-21T23:00:00.000Z', msAway: 3_600_000 },
   pool: POOL, anyLive: false, me: null, rank: null, of: 0, perfect: null, boardRows: { head: [], around: [], gap: false, count: 0 }, signedIn: true,
 });
@@ -152,7 +152,7 @@ test('THE FINAL: total, rank, the perfect six and the national board', () => {
   v.phase = 'final'; v.contest.settled = true; v.total = 239; v.rank = 2; v.of = 3;
   v.slots = v.slots.map((s) => ({ ...s, pip: s.playerId ? 'locked' : 'open', state: s.playerId ? 'final' : 'empty', points: s.playerId ? 20 : null }));
   v.perfect = { score: 308.3, players: [{ slot: 'c', name: 'Nikola Jokic', position: 'C', team: 'DEN', points: 66.5 }, { slot: 'g1', name: 'Luka Doncic', position: 'F-G', team: 'LAL', points: 60.8 }] };
-  v.boardRows = { head: [{ userId: 2, handle: 'kd', rank: 1, points: 270.5 }, { userId: 1, handle: 'me', rank: 2, points: 239, isMe: true }, { userId: 3, handle: 'cc', rank: 3, points: 0, state: 'dnf' }], around: [], gap: false, count: 3 };
+  v.boardRows = { head: [{ userId: 2, handle: 'kd', rank: 1, points: 270.5 }, { userId: 1, handle: 'me', rank: 2, points: 239, isMe: true }, { userId: 3, handle: 'cc', rank: 3, points: 129.5 }], around: [], gap: false, count: 3 };
   const h = html({ view: v, signedIn: true });
   assert.match(h, /data-block="result"/);
   assert.match(h, /<b>239<\/b><span>your six<\/span>/);
@@ -161,7 +161,8 @@ test('THE FINAL: total, rank, the perfect six and the national board', () => {
   assert.match(h, /data-block="perfect"/);
   assert.match(h, /Nikola Jokic/);
   assert.match(h, /class="sx-br you" data-rank="2"/);
-  assert.match(h, /<span class="t">DNF<\/span>/);
+  assert.match(h, /<span class="t">129\.5<\/span>/);
+  assert.doesNotMatch(h, /DNF/, 'no DNF anywhere in the Six UI');
   assert.doesNotMatch(h, /data-player=/, 'no pool on a graded night');
 });
 
@@ -169,4 +170,15 @@ test('SIGNED OUT the card is read-only', () => {
   const h = html({ view: OPEN(), signedIn: false, signinHref: '/signin?next=six' });
   assert.match(h, /<a class="sx-lock" href="\/signin\?next=six">Sign in to play<\/a>/);
   assert.equal([...h.matchAll(/<button[^>]*class="sx-row[^"]*"[^>]*disabled/g)].length, 8);
+});
+
+test('NO DNF IN THE SIX UI: a closed card with an empty slot says it scores 0', () => {
+  const v = OPEN();
+  v.phase = 'live'; v.nightState = 'closed'; v.total = 88;
+  v.slots = v.slots.map((s) => ({ ...s, pip: s.playerId ? 'locked' : 'open' }));
+  const h = html({ view: v, signedIn: true });
+  assert.doesNotMatch(h, /DNF/);
+  assert.match(h, /empty · 0/);
+  assert.match(h, /2 OF 6 · empty slots score 0/);
+  assert.match(html({ view: OPEN(), signedIn: true }), /so does an empty slot/);
 });
