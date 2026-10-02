@@ -27,6 +27,7 @@ import { orderFor } from '@/lib/gridiron/teamOrder';
 import { possessionSide } from '@/lib/gridiron/possession';
 import { shortOf, BASEBALL, sportOf } from '@/lib/live/vocabulary';
 import { LEAGUE_LABEL, abbrOf, cardVariant, countLine, pickTone, statLineText, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
+import { cardMoments } from '@/lib/soccer/moments';
 import { SPORTS, sportChipShown, hrefs, applyView, chipCounts, oddsFoot, winProbRead, firstDownPct, leaderOf, fieldLine } from '@/lib/scores/v4';
 
 const PICKEM = "Pick'em";
@@ -82,6 +83,30 @@ function Diamond({ bases }) {
   );
 }
 
+/**
+ * THE SOCCER LINES (thu-24, EPL only): under each side, its scorers with their
+ * minutes and its sendings-off. Home first, as the card's rows are. Nothing
+ * here renders for any other league.
+ */
+function SoccerMoments({ moments, g }) {
+  const m = cardMoments(moments);
+  if (!m) return null;
+  return (
+    <div className="sv4-soc" data-soccer="1">
+      {orderFor(g.leagueSlug).map((side) => (
+        <ul key={side} className="side" data-side={side} aria-label={`${side === 'home' ? g.home?.name : g.away?.name} goals and cards`}>
+          {m[side].map((l) => (
+            <li key={l.key} className={l.kind} aria-label={l.label}>
+              {l.kind === 'red' ? <i className="rc" aria-hidden="true" /> : <i className="gl" aria-hidden="true" />}
+              <span>{l.text}</span>
+            </li>
+          ))}
+        </ul>
+      ))}
+    </div>
+  );
+}
+
 function Stake({ stake, g, boardOpen, signedIn }) {
   if (!signedIn) return null;
   const chips = [];
@@ -118,6 +143,7 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
   const variant = cardVariant(g);
   const live = variant === 'live', final = variant === 'final';
   const baseball = sportOf(g.leagueSlug) === BASEBALL;
+  const soccer = g.leagueSlug === 'epl';
   const lead = leaderOf(g);
   const ball = possessionSide({
     leagueSlug: g.leagueSlug, status: g.status, possession: x.drive?.offenseAbbr ?? null,
@@ -126,10 +152,11 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
   const headgear = pairHasHeadgear(g.leagueSlug, g.away?.abbreviation ?? null, g.home?.abbreviation ?? null);
   const dressed = Boolean(g.away?.colors && g.home?.colors);
   const gameHref = gameHrefOf(g);
-  const odds = oddsFoot(g, { spreadHome: x.spreadHome, total: x.total, openHome: x.openHome ?? null });
+  const odds = oddsFoot(g, { spreadHome: x.spreadHome, total: x.total, openHome: x.openHome ?? null, moneyline: x.moneyline ?? null });
   const wp = live ? winProbRead(g, liveWinProbView(g.liveState, now)) : null;
   const boardOpen = !live && !final && (g.leagueSlug === 'nfl' || g.leagueSlug === 'cfb');
-  const moment = final ? (baseball ? x.mlbFoot ?? null : statLineText(x.stat, g.leagueSlug)) : null;
+  // EPL's scorers sit on the face (SoccerMoments), so its foot names no moment.
+  const moment = final ? (baseball ? x.mlbFoot ?? null : soccer ? null : statLineText(x.stat, g.leagueSlug)) : null;
   const field = fieldLine(x.drive);
   const tick = live && field.named ? firstDownPct(x.drive) : null;
   const where = `${LEAGUE_LABEL[g.leagueSlug] ?? ''}${g.network ? ` · ${g.network}` : ''}`;
@@ -140,7 +167,7 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
         {live
           ? <span className="clock"><i className="dot" />{liveLabel(g)}</span>
           : final
-            ? <span className="fin">Final · {g.etWeekday ?? weekdayOf(g.kickoffAt.slice(0, 10))}</span>
+            ? <span className="fin">{soccer ? 'FT' : 'Final'} · {g.etWeekday ?? weekdayOf(g.kickoffAt.slice(0, 10))}</span>
             : <span className="ko"><StandaloneTime iso={g.kickoffAt} serverTz={tz} />{g.network ? ` · ${g.network}` : ''}</span>}
         <span className="where">{live || final ? where : LEAGUE_LABEL[g.leagueSlug]}{bell ? <span className="bell"> · {bell}</span> : null}</span>
       </div>
@@ -148,6 +175,7 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
         <Team key={side} g={g} side={side} x={x} variant={variant} ball={ball === side}
           headgear={headgear} dressed={dressed} lead={lead} />
       ))}
+      {soccer && (live || final) ? <SoccerMoments moments={x.soccer} g={g} /> : null}
       {onPage && x.line && variant !== 'upcoming' ? <ExpandLine line={x.line} /> : null}
       {/* THE STARTERS SIT UNDER THE TEAMS they pitch for (tue-4), not in the
           foot beside the line: "RHP Z. Wheeler vs LHP C. Sale" is who is
@@ -201,7 +229,7 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
               the closing line instead - metadata.market_prior, or nothing. */}
           {onPage
             ? (x.closing ? <span className="close" data-closing="1">{x.closing}</span> : null)
-            : <Link className="go" href={gameHref}>{x.hasStats ? 'Box score' : 'Recap'} &rarr;</Link>}
+            : <Link className="go" href={gameHref}>{soccer ? 'Match' : x.hasStats ? 'Box score' : 'Recap'} &rarr;</Link>}
         </div>
       ) : baseball ? (
         <div className="sv4-foot" data-pre="mlb">
@@ -224,7 +252,8 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
   );
 }
 
-const gameHrefOf = (g) => (g.leagueSlug === 'epl' ? `/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`);
+// EPL's page is its own match center (thu-24); /match/<epl slug> 308s there anyway.
+const gameHrefOf = (g) => (g.leagueSlug === 'epl' ? `/epl/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`);
 
 export function Card(props) {
   const { g } = props;

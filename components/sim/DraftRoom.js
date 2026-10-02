@@ -32,8 +32,10 @@ import { SCORING_LABEL } from '@/lib/fantasy/config';
 import RoomScope from '@/components/shell/RoomScope';
 import {
   viewFor, sortsFor, sortPlayers, displayPosition, teamsInPool, filterPlayers, rookieIdSet,
-  POS_FILTERS, CLASS_FILTERS, COLLEGE_DEFAULT_SORT, fmt1, signed1, adpRange, quickTokens,
+  POS_CHIPS, CLASS_FILTERS, COLLEGE_DEFAULT_SORT, fmt1, signed1, adpRange, quickTokens, roomDefaultSort,
 } from '@/lib/fantasy/statView';
+import { matchupFor, oppLabel } from '@/lib/draft/matchup';
+import StandaloneTime from '@/components/StandaloneTime';
 import { computeSeatValuation } from '@/lib/fantasy/seatValuation';
 import { lineTwoTokens, seatSortHint } from '@/lib/fantasy/lineTwo';
 import { valueGap } from '@/lib/fantasy/needs';
@@ -43,6 +45,7 @@ import { remainingSeconds } from '@/lib/draft/deadline';
 import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/scoring';
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
+import { fitBoardNames } from '@/lib/fantasy/boardFit';
 import { sendHaptic } from '@/lib/shell/bridge';
 import { isShellClient } from '@/lib/shell/appTabs';
 import RookieChip from '@/components/fantasy/RookieChip';
@@ -98,6 +101,10 @@ export default function DraftRoom({
   // switch in the clock bar and the folded filters - so the dark page's DOM is
   // exactly what it was. The layout itself is CSS, :where()-scoped to arcade.
   arcade = false,
+  // THIS WEEK'S OPPONENT PER TEAM (thu-25): { KC: { opp, home, kickoffAt } },
+  // from the ranked room's week. Null for a practice mock - no week, so the
+  // rows say nothing about an opponent.
+  matchups = null,
 }) {
   const router = useRouter();
   const [picks, setPicks] = useState(initialPicks);
@@ -109,17 +116,15 @@ export default function DraftRoom({
   const [cls, setCls] = useState('ALL');
   const [college, setCollege] = useState(false);
   const [team, setTeam] = useState('ALL');
-  // THE SORT THE ROOM OPENS ON COMES FROM THE CONFIG, not from this file.
-  // "The Draft" preset names 'ppg' in draft_configs.default_sort so its room
-  // opens on this season's points per game - the Weekly's number, for the
-  // format the Weekly's game settles. Every other config names nothing and
-  // opens on the board's own order, exactly as before.
+  // THE ROOM OPENS ON THIS SEASON'S PPG (thu-25), best first, and a player
+  // with no season sorts after every real number (statView.ppgOf). A config
+  // may still name its own default_sort; ADP stays on offer as a sort.
   //
   // NOT VALIDATED HERE. A key the current filter does not offer degrades to
   // 'adp' in activeSort below, which is the same path a filter change already
   // takes when it strips the active key out from under the sort - so a bad
   // value in the column costs a fallback, never a broken room.
-  const [sort, setSort] = useState(config?.default_sort ?? 'adp');
+  const [sort, setSort] = useState(() => roomDefaultSort(config));
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1); // swipe pager index: 0 BOARD / 1 PICK / 2 ROSTER
   const [view, setView] = useState('list'); // desktop (>900) only: 'list' 3-col | 'board' full-width snake grid
@@ -637,7 +642,7 @@ export default function DraftRoom({
             it is measured at is the same on every row, so it is said here,
             once. */}
         {seatSort && <span className="s-hint">{seatSortHint(myNextOverall)}</span>}
-        {filter === 'ALL' && !seatSort && <span className="s-hint">Pick a position for stat sorts</span>}
+        {(filter === 'ALL' || filter === 'FLEX') && !seatSort && <span className="s-hint">Pick a position for stat sorts</span>}
       </div>
     </>
   );
@@ -843,7 +848,7 @@ export default function DraftRoom({
           <div className="avail-tools">
           <input className="avail-search" placeholder="Search players" value={search} onChange={(e) => setSearch(e.target.value)} />
           <div className="avail-chips">
-            {POS_FILTERS.map((f) => <button key={f} className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>{f}</button>)}
+            {POS_CHIPS.map((f) => <button key={f} className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>{f}</button>)}
           </div>
           {/* THE FOLD (thu-7, arcade): search and the position chips stay out;
               class, team and sort fold into ONE row whose summary names the
@@ -904,6 +909,8 @@ export default function DraftRoom({
             const quick = quickTokens(sum, p.position);
             const seatRead = seatValuation.get(p.ffcPlayerId) ?? null;
             const approx = sum && !isExactlyScored(slot);
+            const mu = collegeView ? null : matchupFor(matchups, p.team);
+            const opp = oppLabel(mu);
             return (
               <div key={p.ffcPlayerId} className={`p-item${open ? ' open' : ''}${p.kicked ? ' dv-gone' : ''}`}>
                 <div className={`p-row${armedId === p.ffcPlayerId ? ' armed' : ''}`}>
@@ -916,6 +923,15 @@ export default function DraftRoom({
                     <span className="ndeck">
                       <span className="nline1">
                         <span className="nm">{p.name}<RookieChip rookie={p.rookie} /></span>
+                        {/* THIS WEEK'S GAME (thu-25): "@KC · Sun 1:00 PM", the
+                            time in the viewer's zone through the site's one
+                            formatter. No week (a practice mock), no team, or a
+                            bye: nothing at all, not a dash. */}
+                        {opp && (
+                          <span className="nopp">
+                            {opp}{mu.kickoffAt ? <> · <StandaloneTime iso={mu.kickoffAt} weekday zone={false} /></> : null}
+                          </span>
+                        )}
                       </span>
                       <span className="nline2">
                         <span className="rng">
@@ -1138,8 +1154,21 @@ function posClass(pos) { return TINTED.has(pos) ? pos : ''; }
 // through every round. Cells are populated from live pick state.
 function BoardGrid({ board }) {
   const { teams, columns, rows } = board;
+  // ONE FONT STEP FOR A NAME THAT DOES NOT FIT, never a mid-word break
+  // (thu-31, lib/fantasy/boardFit.js). After every board change and on every
+  // resize of the grid - the desktop view and a rotation both change the cell.
+  const gridRef = useRef(null);
+  useLayoutEffect(() => {
+    const el = gridRef.current;
+    if (!el) return undefined;
+    const fit = () => fitBoardNames(el.querySelectorAll('.bc .n'));
+    fit();
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [board]);
   return (
-    <div className="bg2" style={{ gridTemplateColumns: `22px repeat(${teams}, minmax(0, 1fr))` }}>
+    <div ref={gridRef} className="bg2" style={{ gridTemplateColumns: `22px repeat(${teams}, minmax(0, 1fr))` }}>
       <div className="bh corner" />
       {columns.map((c) => (
         <div key={c.teamIndex} className={`bh${c.isYou ? ' you' : ''}`}>{c.label}</div>
