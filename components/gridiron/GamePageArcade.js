@@ -117,6 +117,9 @@ export function PlaysList({ plays, allHref }) {
           <li key={i}>
             <span className="w">{p.when}</span>
             <span className="b">{p.abbr ? <b>{p.abbr}</b> : null}<span>{p.text}</span></span>
+            {/* THE RUNNING SCORE (nba-card): basketball's rows carry the score
+                after a scoring play; football's carry none and draw nothing. */}
+            {p.score ? <span className="s" data-score="1">{p.score}</span> : null}
           </li>
         ))}
       </ol>
@@ -162,7 +165,7 @@ export function Leaders({ rows, g }) {
 
 function BoxTables({ teams }) {
   return (
-    <div className="gpa-boxsc" data-gpa="box">
+    <div className="gpa-boxsc" data-gpa="box" id="gpa-box">
       {teams.map((t) => (
         <div key={t.side} className="team">
           {t.tables.filter((tb) => tb.primary !== false).map((tb) => (
@@ -221,6 +224,11 @@ export default function GamePageArcade({ view, now = new Date(), tz = 'America/N
     ),
     scoring: () => <ScoringPlays list={view.scoring} g={g} />,
     leaders: () => <Leaders rows={view.leaders} g={g} />,
+    // THE NBA FINAL'S THREE (nba-card, thu-37). Never in a gridiron module list
+    // (lib/gridiron/gamePageArcade.js arcadeModules), so the NFL page is unchanged.
+    teamstats: () => (view.teamBox ? <Box label="Team stats" mod="teamstats-box"><TeamStats box={view.teamBox} g={g} /></Box> : null),
+    fullbox: () => (view.boxHref ? <Link className="gpa-all gpa-fullbox" href={view.boxHref} data-gpa="fullbox">Full box score &rsaquo;</Link> : null),
+    box: () => (view.box.length ? <Box label="Box score" mod="box-full"><BoxTables teams={view.box} /></Box> : null),
   };
   return (
     <div className="gpa" data-state={view.state} data-league={view.league} data-modules={view.modules.join(' ')}>

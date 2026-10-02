@@ -15,7 +15,7 @@
 import { neon } from '@neondatabase/serverless';
 import { cadence, sleepUntilNext, kickoffDelta, afterPoll } from '../../lib/live/cadence.js';
 import { addCalls, callsToday, applyCap, overCap, DEFAULT_CAP } from '../../lib/live/quota.js';
-import { StatsTracker } from '../../lib/live/statsCadence.js';
+import { StatsTracker, nbaPlaysDue } from '../../lib/live/statsCadence.js';
 import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
 import { syncMlbGameStats } from '../../lib/mlb/statsSync.js';
 import { syncMlbPlays } from '../../lib/mlb/playsSync.js';
@@ -313,7 +313,8 @@ async function loop(lg) {
              WHERE l.slug = ${lg.slug} AND (m.status = 'live' OR m.id = ANY(${seenIds}::int[]))`;
           const syncBox = lg.slug === 'mlb' ? syncMlbGameStats : lg.slug === 'nba' ? syncNbaGameStats : syncGameStats;
           let boardsDue = false;
-          for (const d of stats.due({ polls: window.polls, matches: watched })) {
+          const dueList = stats.due({ polls: window.polls, matches: watched });
+          for (const d of dueList) {
             try {
               const g = await syncBox(d.id);
               if (g.changed > 0 || d.why === 'final') boardsDue = true;
@@ -329,18 +330,6 @@ async function loop(lg) {
               // ITS FAILURE IS ITS OWN. The box score is what October and The
               // Run settle against; the pitch list is a tab. Losing the tab
               // must never cost the scoring.
-              // THE NBA'S LAST PLAY rides the same due list: one /plays call
-              // per due game (every tenth live poll, and the final), into
-              // metadata.detail.last_play. Contained like MLB's pitches.
-              if (lg.slug === 'nba') {
-                try {
-                  const lp = await syncNbaLastPlay(d.id);
-                  pending += lp.calls; window.calls += lp.calls; window.statsCalls += lp.calls; statsCallsToday += lp.calls;
-                  window.plays += lp.changed ?? 0;
-                } catch (e) {
-                  log(`[nba] last play ${d.why} match=${d.id} failed:`, String(e?.message ?? e).slice(0, 120));
-                }
-              }
               if (lg.slug === 'mlb') {
                 try {
                   const pl = await syncMlbPlays(d.id);
@@ -353,6 +342,25 @@ async function loop(lg) {
               }
             } catch (e) {
               log(`[${lg.slug}] box score ${d.why} match=${d.id} failed:`, String(e?.message ?? e).slice(0, 120));
+            }
+          }
+          // THE NBA'S PLAYS: EVERY POLL WHILE LIVE - the explicit exception to
+          // the one-cadence rule above (Derik, thu-40; the reason and the cost
+          // are written at lib/live/statsCadence.js nbaPlaysDue). One /plays
+          // call per live game per poll, into `plays` (the game page's list)
+          // and metadata.detail.last_play (the card's line), and once more at
+          // the final. The box score keeps the due() cadence. Contained: a
+          // failed plays read never costs the box or the poll.
+          if (lg.slug === 'nba') {
+            for (const d of nbaPlaysDue({ matches: watched, due: dueList })) {
+              try {
+                const lp = await syncNbaLastPlay(d.id);
+                pending += lp.calls; window.calls += lp.calls; window.statsCalls += lp.calls; statsCallsToday += lp.calls;
+                window.plays += lp.changed ?? 0;
+                if (lp.playsError) log(`[nba] plays ${d.why} match=${d.id} write failed:`, String(lp.playsError).slice(0, 120));
+              } catch (e) {
+                log(`[nba] plays ${d.why} match=${d.id} failed:`, String(e?.message ?? e).slice(0, 120));
+              }
             }
           }
           // THE LIVE BOARDS' MEMORY (lib/boards/live.js). A box score that moved

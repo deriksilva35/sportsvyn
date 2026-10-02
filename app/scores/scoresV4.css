@@ -161,3 +161,17 @@
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xl { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
 :where(:root[data-theme="arcade"]) .sv4-xgo { align-self: flex-end; font: 700 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-primary); text-decoration: none; }
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xgo { color: var(--tok-accent); }
+
+/* THE NBA CARD (nba-card, thu-37). BONUS and W are volt FILLS with navy ink
+   (the clock pill's pair), on the white card and the navy one alike - never
+   volt text (app/voltContrast.test.mjs). The
+   timeouts sit at the right of the live foot; the Pick'em strip closes the
+   NBA board on the volt wash with a navy rule. */
+:where(:root[data-theme="arcade"]) .sv4-team .bonus { flex: none; font: 700 9px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; padding: 3px 6px; border-radius: 4px; background: var(--tok-action); color: var(--tok-on-action); }
+:where(:root[data-theme="arcade"]) .sv4-team .w { flex: none; font: 700 9px var(--tok-font-num); letter-spacing: .08em; padding: 3px 6px; border-radius: 4px; background: var(--tok-action); color: var(--tok-on-action); }
+:where(:root[data-theme="arcade"]) .sv4-foot .to { flex: none; margin-left: auto; }
+:where(:root[data-theme="arcade"]) .sv4-pkstrip { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; padding: 14px; border-radius: var(--tok-radius-lg); border: 1.5px solid var(--tok-primary); background: var(--tok-hero-wash); color: var(--tok-ink); text-decoration: none; }
+:where(:root[data-theme="arcade"]) .sv4-pkstrip .t { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+:where(:root[data-theme="arcade"]) .sv4-pkstrip b { font: 700 10px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .sv4-pkstrip .l { font: 500 13px var(--tok-font-body); color: var(--tok-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:where(:root[data-theme="arcade"]) .sv4-pkstrip .go { flex: none; font: 700 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-primary); }

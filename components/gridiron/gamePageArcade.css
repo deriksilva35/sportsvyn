@@ -124,6 +124,11 @@
 :where(:root[data-theme="arcade"]) .gpa-tbl tbody th { font-weight: 600; text-transform: capitalize; }
 :where(:root[data-theme="arcade"]) .gpa-closing { margin: 0 0 10px; font: 600 13px var(--tok-font-body); color: var(--tok-primary); }
 
+/* THE NBA PAGE (nba-card, thu-37): the running score on a scoring play, and
+   the final's full-box link. */
+:where(:root[data-theme="arcade"]) .gpa-plays li .s { flex: none; width: 60px; text-align: right; font: 600 12px var(--tok-font-body); font-variant-numeric: tabular-nums; color: var(--tok-ink-2); }
+:where(:root[data-theme="arcade"]) .gpa-fullbox { display: block; padding: 12px 0; font: 700 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; }
+
 /* THE BELL ON THE CARD'S TOP ROW (thu-41). The pill is the alerts sheet's own
    trigger; on the navy card it reads in the card's on-primary ink, and its
    target is 44px both ways. */

@@ -108,7 +108,9 @@ export default function ExpandCard({ articleProps, league, slug, live = false, l
           {!upcoming && state === 'error' ? <p className="sv4-xl">Plays did not load. Tap to close and try again.</p> : null}
           {data && !upcoming ? (
             <>
-              <Plays title="Key moments" section="scoring" list={data.scoring ?? []} empty="No scoring yet." />
+              {/* scoring: null is "no such section" (basketball, nba-card); an
+                  array - empty or not - is the football and baseball list. */}
+              {data.scoring === null ? null : <Plays title="Key moments" section="scoring" list={data.scoring ?? []} empty="No scoring yet." />}
               <Plays title="Last 5 plays" section="last" list={data.last ?? []} empty="No plays yet." />
             </>
           ) : null}
