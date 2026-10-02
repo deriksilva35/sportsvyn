@@ -11,6 +11,8 @@ import { BASEBALL, sportOf as sportOfLeague } from '../../lib/live/vocabulary.js
 import { mlbDetailOf, writeMlbDetail, writeMlbLineups, writeMlbProbables, lineupDue } from '../../lib/mlb/detail.js';
 import { probablesForGame, fetchLineupRows } from '../../lib/mlb/probables.js';
 import { bdlLiveState, lineupsFromRows } from '../../lib/mlb/bdlLive.js';
+import { fromBdlNba, nbaDetailOf } from '../../lib/nba/ingest.js';
+import { writeNbaDetail } from '../../lib/nba/detail.js';
 
 import { transitionsFor } from '../../lib/push/transitions.js';
 import { dispatch } from '../../lib/push/dispatch.js';
@@ -162,6 +164,66 @@ export function mlbDay(dateIso) {
   };
 }
 
+
+/**
+ * ONE NBA POLL'S FEED: the games filed TODAY AND YESTERDAY (a 01:30Z tip is
+ * filed under the previous American day, as MLB's is), plus - only when one
+ * of them is in progress - ONE /box_scores/live call that covers every live
+ * game at once. Its rows carry the same game fields as /games and are laid
+ * OVER the /games row for the same id, so the live score, period, clock, line
+ * score, timeouts and bonus come from the live route whenever it has the game.
+ * A game the live route does not list keeps its /games row whole.
+ *
+ * { fetchImpl } is the replay harness's door (lib/nba/replay.js).
+ */
+export function nbaDay(now, { fetchImpl = fetch, key = process.env.BDL_API_KEY } = {}) {
+  return async () => {
+    if (!key) throw new Error('BDL_API_KEY missing in env');
+    const day = (offset) => new Date(new Date(now).getTime() + offset * 86_400_000).toISOString().slice(0, 10);
+    const get = async (path) => {
+      const res = await fetchImpl(`${BDL}${path}`, { headers: { Authorization: key } });
+      if (!res.ok) throw new Error(`BDL ${res.status} on ${path.split('?')[0]}`);
+      return (await res.json())?.data ?? [];
+    };
+    const games = await get(`/nba/v1/games?dates[]=${day(-1)}&dates[]=${day(0)}&per_page=100`);
+    let calls = 1;
+    const byId = new Map(games.filter((r) => r?.id != null).map((r) => [String(r.id), r]));
+    // LIVE, OR PAST ITS TIP AND STILL CALLED SCHEDULED: the two routes may not
+    // flip a game at the same instant, and the live route is the fresher one.
+    const t = new Date(now).getTime();
+    const due = (r) => String(r?.status_state ?? '') === 'in_progress'
+      || (String(r?.status_state ?? '') === 'scheduled' && Date.parse(r?.datetime ?? '') <= t);
+    if ([...byId.values()].some(due)) {
+      const live = await get('/nba/v1/box_scores/live');
+      calls += 1;
+      for (const b of live) {
+        if (b?.id == null) continue;
+        const { home_team: ht, visitor_team: vt, ...game } = b;
+        const prev = byId.get(String(b.id));
+        if (prev) byId.set(String(b.id), { ...prev, ...game });
+      }
+    }
+    return { rows: [...byId.values()], calls };
+  };
+}
+
+/** THE NBA LEAGUE'S normalise HOOK. lib/nba/ingest.js owns the field names. */
+export function fromNba(row, unmapped) {
+  const n = fromBdlNba(row, unmapped);
+  return { providerId: n.providerId, status: n.status, homeScore: n.homeScore, awayScore: n.awayScore, liveState: n.liveState };
+}
+
+/** THE NBA LEAGUE'S detail HOOK: line score, timeouts, bonus (nested under detail). */
+export function nbaDetail(row) {
+  return nbaDetailOf(row);
+}
+
+/** THE NBA LEAGUE'S kickoffOf HOOK: the tip as the feed states it now, already UTC. */
+export function nbaKickoff(row) {
+  return row?.datetime ?? null;
+}
+
+export { writeNbaDetail };
 
 // ---------------------------------------------------------------------------
 // Normalisers. Provider row -> the four things we own. PURE-ish: no db.
@@ -504,6 +566,15 @@ export async function pollOnce(sql, {
   league, providerKey, fetcher, normalise, enrich = null, detail = null,
   enrichScheduled = false, futureMinutes = 30, kickoffOf = null,
   now = new Date(), dryRun = false, push = true, log = () => {},
+  // THE DETAIL WRITER IS THE LEAGUE'S. MLB's writes top-level keys
+  // (line_score, scoring_plays); the NBA's nests under metadata.detail beside
+  // final_seen_at and must merge one level down (lib/nba/detail.js). Default:
+  // MLB's, so every existing caller is unchanged.
+  writeDetail = writeMlbDetail,
+  // THE SENDER, injectable so the NBA replay harness (lib/nba/replay.js) can
+  // run the real transition and fold path on DEV without reaching a device.
+  // Default: the real dispatcher.
+  dispatchFn = dispatch,
 }) {
   const out = {
     league, considered: 0, matched: 0, unmatched: 0, written: 0, detail: 0, lineups: 0, probables: 0,
@@ -643,7 +714,7 @@ export async function pollOnce(sql, {
     if (detail && !dryRun) {
       try {
         const d = detail(row);
-        if (d && await writeMlbDetail(sql, m.id, d)) out.detail += 1;
+        if (d && await writeDetail(sql, m.id, d)) out.detail += 1;
       } catch (e) { log(`[${league}] detail write failed match=${m.id}: ${e.message}`); }
     }
 
@@ -761,7 +832,7 @@ export async function pollOnce(sql, {
           // never be told the game ended and then told about a touchdown from
           // before the whistle.
           const sendOne = async (event, state) => {
-            const r = await dispatch(sql, { match, event, state, log });
+            const r = await dispatchFn(sql, { match, event, state, log });
             out.pushes.push({ event, sent: r.sent, skipped: r.skipped, failed: r.failed });
             if (r.authFailure) out.pushAuthFailure = true;
           };
@@ -1011,7 +1082,7 @@ export async function pollOnce(sql, {
       if (still) pendingScore.set(k, still); else pendingScore.delete(k);
       for (const e of due) {
         try {
-          const r = await dispatch(sql, {
+          const r = await dispatchFn(sql, {
             match: p.match,
             event: 'score',
             state: {
