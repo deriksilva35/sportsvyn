@@ -208,7 +208,6 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     // The league join/create chips on a game's own board (THE RUN - join by code
     // in the app): one --ink-3 ground on the code input, written on the global
     // tokens and therefore never broken. Counted on purpose.
-    'components/leagues/leagueChips.css': 1,
     // The postseason bracket and the round board (MLB B2), both written on
     // the global tokens: one card ground each. Counted on purpose.
     'app/mlb/bracket/bracket.css': 1,
