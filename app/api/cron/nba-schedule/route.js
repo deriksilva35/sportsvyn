@@ -17,9 +17,12 @@ import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { resyncNbaSchedule, NBA_RESYNC_SOURCE } from '@/lib/nba/schedule';
 import { nbaPickemTick } from '@/lib/nba/dayPickem';
+import { sixTick, tickErrors } from '@/lib/six/tick';
 
 /** The daily NBA Pick'em's own run (lib/nba/dayPickem.js), logged apart. */
 export const PICKEM_SOURCE = 'nba-pickem';
+/** Tonight's Six's own run (lib/six/tick.js), logged apart the same way. */
+export const SIX_SOURCE = 'nba-six';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -84,5 +87,31 @@ export async function GET(request) {
       }
     }
   }
-  return Response.json({ ok: res.ok, from: s.from, to: s.to, changes: s.changes?.length ?? 0, tipsMoved: moved.length, cancelled: s.cancelled?.length ?? 0, refused: s.refused?.length ?? 0, dryRun, pickem });
+  // TONIGHT'S SIX, AFTER THE PICK'EM - the same hook, the same reasons: it
+  // reads the tips the re-sync wrote, and runs whether or not the re-sync
+  // succeeded. Its own source, lock and alert (lib/six/tick.js).
+  let six = null;
+  if (!dryRun) {
+    const sx = await withAdvisoryLock(SIX_SOURCE, async () => recordRun(sql, {
+      source: SIX_SOURCE,
+      kind: 'tick',
+      run: async () => {
+        const t = await sixTick({ now });
+        const errored = tickErrors(t);
+        if (errored.length) throw new Error(`${errored.join('\n')}\n${JSON.stringify(t).slice(0, 1500)}`);
+        return t;
+      },
+    }));
+    if (!sx.locked) {
+      six = sx.result?.summary ?? null;
+      if (!sx.result?.ok) {
+        await maybeAlert(sql, {
+          source: SIX_SOURCE,
+          subject: "[nba-six] tick FAILED",
+          body: String(sx.result?.error ?? 'unknown error').slice(0, 4000),
+        });
+      }
+    }
+  }
+  return Response.json({ ok: res.ok, from: s.from, to: s.to, changes: s.changes?.length ?? 0, tipsMoved: moved.length, cancelled: s.cancelled?.length ?? 0, refused: s.refused?.length ?? 0, dryRun, pickem, six });
 }

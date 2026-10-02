@@ -1,0 +1,148 @@
+/* app/six/six.css - Tonight's Six: the pick room, the live card and the final.
+   October's card grammar (app/october/october.css) on the house's legacy role
+   names, which the arcade theme re-maps (--volt reads navy there, --ink the
+   page). NO COLOUR LITERALS: every colour is a token or a color-mix of one
+   (lib/brand/hexCensus.js). Position badges use the position tokens. */
+.sx-wrap { max-width: 460px; margin: 0 auto; padding: 0 12px 48px; }
+.sx-crumb { padding: 14px 0 6px; font: 500 12px var(--font-mono); }
+.sx-crumb a { color: var(--muted); text-decoration: none; }
+.sx-crumb-sep { color: var(--muted-dim); margin: 0 6px; }
+.sx-none { padding: 28px 12px; font: 500 13px/1.6 var(--font-mono); color: var(--muted); }
+
+.sx { border: 1px solid var(--rule-dim); border-radius: 18px; background: var(--ink); overflow: clip; }
+
+/* ---- header ------------------------------------------------------------ */
+.sx-hd { padding: 12px 14px 10px; border-bottom: 1px solid var(--rule-dim); background: var(--tok-surface); }
+.sx-hd-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.sx-eb { color: var(--volt); font: 700 10px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.sx-ed { color: var(--muted-dim); font: 600 9px var(--font-mono); margin-left: auto; text-align: right; }
+.sx-crow { display: flex; align-items: center; gap: 12px; }
+.sx-clk { display: flex; gap: 3px; align-items: center; }
+.sx-dg { width: 27px; height: 40px; border-radius: 4px; background: var(--tok-surface-2); box-shadow: inset 0 0 0 1px var(--rule-dim); font: 800 27px/40px var(--font-mono); text-align: center; font-style: normal; color: var(--paper); }
+.sx-cl { font: 800 23px var(--font-mono); color: var(--muted-dim); }
+.sx-lbl { font: 600 9px var(--font-mono); color: var(--muted-dim); letter-spacing: .11em; text-transform: uppercase; line-height: 1.3; min-width: 0; }
+.sx-lbl b { display: block; color: var(--muted); font-size: 10px; letter-spacing: 0; text-transform: none; }
+.sx-tot { margin-left: auto; text-align: right; }
+.sx-tot b { display: block; font: 800 29px var(--font-mono); letter-spacing: -.03em; line-height: 1; color: var(--volt); }
+.sx-tot span { font: 600 9px var(--font-mono); letter-spacing: .11em; color: var(--muted-dim); text-transform: uppercase; }
+.sx-pips { display: flex; gap: 4px; margin-top: 9px; }
+.sx-pip { flex: 1; height: 4px; border-radius: 99px; background: var(--tok-surface-2); border: 1px solid var(--rule-dim); }
+.sx-pip.on { background: var(--volt); border-color: var(--volt); }
+.sx-pip.lk { background: var(--jade); border-color: var(--jade); }
+.sx-sub { display: flex; justify-content: space-between; margin-top: 6px; font: 500 10px var(--font-mono); color: var(--muted); }
+
+.sx-how { margin: 10px 10px 0; border: 1px solid var(--rule-dim); border-radius: 12px; background: var(--tok-surface); padding: 8px 11px; }
+.sx-how > summary { cursor: pointer; font: 700 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.sx-how p { margin: 8px 0 2px; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.sx-how b { color: var(--paper); font-weight: 600; }
+
+/* ---- the dock: games + slots, sticky under the site bar ------------------ */
+.sx-dock { position: sticky; top: var(--gi-stick, 0px); z-index: 3; background: var(--ink); padding: 8px 10px 6px; display: flex; flex-direction: column; gap: 7px; border-bottom: 1px solid var(--rule-dim); }
+.sx-games { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; }
+.sx-games::-webkit-scrollbar { display: none; }
+.sx-gc { flex: 0 0 auto; min-width: 74px; border-radius: 9px; border: 1px solid var(--rule-dim); background: var(--tok-surface); padding: 5px 7px; text-align: center; color: inherit; font: inherit; cursor: pointer; }
+.sx-gc b { display: block; font: 700 10px var(--font-mono); white-space: nowrap; }
+.sx-gc small { display: block; font: 500 9px var(--font-mono); color: var(--muted-dim); margin-top: 1px; white-space: nowrap; }
+.sx-gc.on { border-color: var(--volt); background: color-mix(in srgb, var(--volt) 9%, var(--tok-surface)); }
+.sx-gc.live small { color: var(--live); font-weight: 700; }
+.sx-gc.fin small { color: var(--paper); font-weight: 600; }
+.sx-gc.off { opacity: .45; }
+.sx-gc.off small { color: var(--terra); font-weight: 700; }
+
+.sx-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.sx-slot { position: relative; min-width: 0; height: 58px; border-radius: 10px; border: 1.5px dashed var(--rule-dim); background: var(--tok-surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 12px 4px 3px; overflow: hidden; cursor: default; }
+.sx-slot.elig { border-style: solid; border-color: color-mix(in srgb, var(--volt) 55%, var(--rule-dim)); cursor: pointer; }
+.sx-slot.on { border-color: var(--volt); background: color-mix(in srgb, var(--volt) 12%, var(--tok-surface)); }
+.sx-slot.filled { border-style: solid; border-color: var(--rule-dim); }
+.sx-slot.locked { border-style: solid; border-color: var(--jade); }
+.sx-pos { position: absolute; top: 3px; left: 6px; font: 800 9px var(--font-display); color: var(--muted-dim); }
+.sx-x { position: absolute; top: 0; right: 2px; color: var(--muted-dim); font: 700 13px var(--font-mono); background: none; border: 0; cursor: pointer; padding: 2px 5px; }
+.sx-lk { position: absolute; top: 5px; right: 6px; }
+.sx-lk i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--jade); }
+.sx-nm { font: 700 10px var(--font-display); text-transform: uppercase; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sx-tm { font: 600 8px var(--font-mono); color: var(--muted); white-space: nowrap; }
+.sx-em { font: 600 9px var(--font-mono); color: var(--muted-dim); text-transform: uppercase; letter-spacing: .06em; }
+.sx-pts { font: 800 12px var(--font-mono); color: var(--volt); line-height: 1.1; }
+/* ONCE POINTS LAND THE SLOT GROWS A LINE for them - never laid over the team. */
+.sx:not([data-phase="open"]) .sx-slot { height: 70px; }
+.sx-pts.fin { color: var(--paper); }
+.sx-err { margin: 8px 12px 0; font: 500 12px var(--font-mono); color: var(--live); }
+
+/* ---- the pool: the page's one scroll ---------------------------------- */
+.sx-pool { margin: 10px 10px 0; border: 1px solid var(--rule-dim); border-radius: 13px; background: var(--tok-surface); overflow: clip; }
+.sx-pool-h { display: flex; align-items: center; padding: 7px 10px; background: var(--tok-surface-2); border-bottom: 1px solid var(--rule-dim); }
+.sx-pool-h b { font: 700 12px var(--font-display); text-transform: uppercase; }
+.sx-pool-h small { margin-left: auto; color: var(--muted-dim); font: 600 9px var(--font-mono); }
+.sx-row { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 10px; border: 0; border-bottom: 1px solid var(--rule-dim); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.sx-row:last-child { border-bottom: 0; }
+.sx-row.dim { cursor: default; }
+.sx-row.dim .sx-who b, .sx-row.dim .sx-val b, .sx-row.dim .sx-pb { opacity: .4; }
+.sx-pb { flex: 0 0 auto; min-width: 26px; height: 18px; padding: 0 3px; border-radius: 5px; display: grid; place-items: center; font: 800 8px var(--font-display); color: var(--tok-on-action); background: var(--muted-dim); }
+.sx-pb.g { background: var(--tok-pos-wr); }
+.sx-pb.f { background: var(--tok-pos-rb); }
+.sx-pb.c { background: var(--tok-pos-te); }
+.sx-who { min-width: 0; flex: 1 1 auto; }
+.sx-who b { display: block; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sx-who small { display: block; color: var(--muted); font: 500 9px var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sx-q { margin-left: 5px; font: 700 8px var(--font-mono); font-style: normal; color: var(--terra); border: 1px solid var(--terra); border-radius: 3px; padding: 0 3px; vertical-align: 1px; }
+.sx-why { font-style: normal; color: var(--muted-dim); }
+.sx-why.max_from_team { color: var(--terra); font-weight: 700; }
+.sx-out { flex: 0 0 auto; font: 800 9px var(--font-mono); letter-spacing: .06em; color: var(--live); border: 1px solid var(--live); border-radius: 4px; padding: 1px 5px; }
+.sx-val { margin-left: auto; text-align: right; flex: 0 0 auto; }
+.sx-val b { display: block; font: 700 14px var(--font-mono); }
+.sx-val small { display: block; font: 600 8px var(--font-mono); color: var(--muted-dim); }
+.sx-empty { padding: 14px 10px; font: 500 11px var(--font-mono); color: var(--muted); margin: 0; }
+
+/* ---- your six: chips per stat -------------------------------------------- */
+.sx-sh { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 6px; }
+.sx-sh h3 { margin: 0; font: 700 13px var(--font-display); text-transform: uppercase; }
+.sx-sh span { color: var(--muted); font: 600 10px var(--font-mono); }
+.sx-six, .sx-perfect, .sx-board { margin: 12px 10px 0; }
+.sx-line { border: 1px solid var(--rule-dim); border-radius: 11px; background: var(--tok-surface); padding: 7px 9px; margin-bottom: 6px; }
+.sx-line.live { border-color: color-mix(in srgb, var(--live) 45%, var(--rule-dim)); }
+.sx-line-h { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.sx-line-h b { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sx-line-h small { color: var(--muted); font: 500 9px var(--font-mono); white-space: nowrap; }
+.sx-line.live .sx-line-h small { color: var(--live); font-weight: 700; }
+.sx-line-p { margin-left: auto; font: 800 15px var(--font-mono); color: var(--paper); }
+.sx-line.live .sx-line-p { color: var(--volt); }
+.sx-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.sx-chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--rule-dim); border-radius: 99px; padding: 2px 7px; font: 600 9px var(--font-mono); color: var(--paper); background: var(--tok-surface-2); }
+.sx-chip i { font-style: normal; color: var(--muted); }
+.sx-chip.z { color: var(--muted-dim); }
+.sx-chip.bonus { border-color: var(--volt); color: var(--volt); }
+.sx-dnp { margin: 5px 0 0; font: 500 10px var(--font-mono); color: var(--muted); }
+
+/* ---- the final ----------------------------------------------------------- */
+.sx-res { margin: 12px 10px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.sx-res > div { border: 1px solid var(--rule-dim); border-radius: 12px; background: var(--tok-surface); padding: 9px 10px; }
+.sx-res b { display: block; font: 800 22px var(--font-mono); letter-spacing: -.02em; line-height: 1.05; color: var(--paper); }
+.sx-res > div:first-child { border-color: var(--volt); }
+.sx-res > div:first-child b { color: var(--volt); }
+.sx-res span { font: 600 9px var(--font-mono); color: var(--muted-dim); text-transform: uppercase; letter-spacing: .08em; }
+.sx-pr { display: flex; align-items: center; gap: 8px; padding: 6px 9px; border: 1px solid var(--rule-dim); border-bottom-width: 0; background: var(--tok-surface); font-size: 12px; }
+.sx-pr:first-of-type { border-radius: 11px 11px 0 0; }
+.sx-pr:last-child { border-bottom-width: 1px; border-radius: 0 0 11px 11px; }
+.sx-pr b { font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sx-pr small { color: var(--muted); font: 500 9px var(--font-mono); }
+.sx-pr > span:last-child { margin-left: auto; font: 700 13px var(--font-mono); }
+.sx-br { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 10px; border: 1px solid var(--rule-dim); border-bottom-width: 0; background: var(--tok-surface); font-size: 12px; }
+.sx-board .sx-br:last-child { border-bottom-width: 1px; border-radius: 0 0 11px 11px; }
+.sx-board .sx-sh + .sx-br { border-radius: 11px 11px 0 0; }
+.sx-br .rk { color: var(--muted-dim); font: 700 11px var(--font-mono); }
+.sx-br i { color: var(--muted-dim); font: 500 9px var(--font-mono); font-style: normal; }
+.sx-br .t { font: 700 13px var(--font-mono); text-align: right; }
+.sx-br.you { background: color-mix(in srgb, var(--volt) 8%, var(--tok-surface)); box-shadow: inset 3px 0 0 var(--volt); }
+.sx-br.you .t { color: var(--volt); }
+.sx-br.gap { color: var(--muted-dim); }
+
+/* ---- rules + the lock bar ------------------------------------------------ */
+.sx-rules { margin: 12px 10px 0; font: 500 10px/1.7 var(--font-mono); color: var(--muted); }
+.sx-rules b { color: var(--paper); }
+.sx-ft { position: sticky; bottom: 0; z-index: 2; border-top: 1px solid var(--rule-dim); margin-top: 11px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; background: var(--ink); }
+.sx-pace { font: 500 11px var(--font-mono); color: var(--muted); line-height: 1.3; }
+.sx-pace b { color: var(--paper); font-weight: 700; }
+.sx-lock { margin-left: auto; background: var(--volt); color: var(--ink); border: 0; border-radius: 99px; padding: 10px 18px; font: 700 14px system-ui; text-decoration: none; }
+.sx-lock:disabled { background: var(--tok-surface-2); color: var(--muted-dim); }
+.sx-rcpt { margin-left: auto; font: 700 11px var(--font-mono); color: var(--jade); letter-spacing: .06em; }
