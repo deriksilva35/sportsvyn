@@ -21,14 +21,10 @@ import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
-import { myLeagues, leagueDetail } from '@/lib/leagues/core';
-import { leagueTable } from '@/lib/leagues/table';
-import { ordinal } from '@/lib/leagues/standings';
+import { myLeagueCards } from '@/lib/leagues/cards';
 import { invitePreview } from '@/lib/leagues/invite';
 import { REFUSALS } from '@/lib/leagues/code';
-import { leagueChips } from '@/lib/leagues/settings';
-import { cardMeta, hasStarted, inviteLine } from '@/lib/leagues/describe';
-import { leagueHref } from '@/lib/leagues/nav';
+import { inviteLine } from '@/lib/leagues/describe';
 import { LeagueActions, InvitedCard } from '@/components/leagues/LeaguesHome';
 import './leaguesV1.css';
 
@@ -55,23 +51,10 @@ export default async function LeaguesPage({ searchParams }) {
   requireSignInInShell({ isShell, userId, dest: joinDest });
 
   const uid = userId == null ? null : Number(userId);
-  const leagues = uid == null ? [] : await myLeagues(uid).catch(() => []);
   const invite = joinRaw ? await invitePreview(joinRaw, uid).catch(() => null) : null;
   const now = new Date();
-  // One derived table per card - a handful of leagues, each a few reads.
-  const corners = new Map();
-  for (const lg of leagues) {
-    const detail = await leagueDetail(lg.id, uid).catch(() => null);
-    const t = detail ? await leagueTable(detail, { now }).catch(() => null) : null;
-    if (t?.guillotine) {
-      // A guillotine card: are you still standing, and how many are.
-      const out = t.guillotine.chopped.some((c) => c.userId === uid);
-      corners.set(lg.id, out ? 'Chopped' : t.guillotine.chopped.length ? `You're in · ${t.guillotine.standing.length} left` : null);
-      continue;
-    }
-    const me = t?.standings.buckets.length ? t.standings.rows.find((r) => r.userId === uid) : null;
-    corners.set(lg.id, me ? `You ${ordinal(me.place)}` : null);
-  }
+  // The cards - lib/leagues/cards.js, the same reader the Play lobby uses.
+  const cards = uid == null ? [] : await myLeagueCards(uid, { now }).catch(() => []);
 
   return (
     <>
@@ -92,31 +75,28 @@ export default async function LeaguesPage({ searchParams }) {
 
         {uid != null && (
           <>
-            <p className="lv-kicker">Your leagues &middot; {leagues.length}</p>
-            {leagues.length === 0 ? (
+            <p className="lv-kicker">Your leagues &middot; {cards.length}</p>
+            {cards.length === 0 ? (
               <p className="lv-empty">
                 No leagues yet. Create one and drop the link in your group chat - whoever joins is on your board.
               </p>
             ) : (
               <div className="lv-list">
-                {leagues.map((lg, i) => {
-                  const live = hasStarted(lg, now);
-                  return (
-                    <Link className={`lv-card${i === 0 ? ' lv-card--lead' : ''}`} key={lg.id} href={leagueHref(lg.id)} data-league-card={lg.id}>
-                      <div className="lv-card-top">
-                        <span className="lv-card-name">{lg.name}</span>
-                        {live && <span className="lv-chip lv-chip--live">Live</span>}
-                      </div>
-                      <div className="lv-chips">
-                        {leagueChips(lg).map((c) => <span className="lv-chip" key={c}>{c}</span>)}
-                      </div>
-                      <div className="lv-card-foot">
-                        <span className="lv-card-meta">{cardMeta(lg, now)}</span>
-                        <span className="lv-card-you">{corners.get(lg.id) ?? (lg.mine ? 'Your league' : "You're in")}</span>
-                      </div>
-                    </Link>
-                  );
-                })}
+                {cards.map((c, i) => (
+                  <Link className={`lv-card${i === 0 ? ' lv-card--lead' : ''}`} key={c.id} href={c.href} data-league-card={c.id}>
+                    <div className="lv-card-top">
+                      <span className="lv-card-name">{c.name}</span>
+                      {c.live && <span className="lv-chip lv-chip--live">Live</span>}
+                    </div>
+                    <div className="lv-chips">
+                      {c.chips.map((x) => <span className="lv-chip" key={x}>{x}</span>)}
+                    </div>
+                    <div className="lv-card-foot">
+                      <span className="lv-card-meta">{c.meta}</span>
+                      <span className="lv-card-you">{c.corner ?? (c.mine ? 'Your league' : "You're in")}</span>
+                    </div>
+                  </Link>
+                ))}
               </div>
             )}
           </>

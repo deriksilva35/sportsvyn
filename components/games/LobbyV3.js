@@ -185,6 +185,7 @@ function PlayPane({ v, signedIn, signinHref }) {
           {leagues.map((l) => (
             <Link key={l.id} className="pl-league" href={l.href}>
               <span className="pl-t"><b>{l.name}</b><small>{l.sub}</small></span>
+              {l.corner && <span className="pl-corner" style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', color: 'var(--tok-ink)', fontVariantNumeric: 'tabular-nums' }}>{l.corner}</span>}
               <span className="gv-chev" aria-hidden="true">&rsaquo;</span>
             </Link>
           ))}
