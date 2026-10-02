@@ -16,6 +16,7 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import { possessionSide } from '@/lib/gridiron/possession';
 import { shortOf, BASEBALL, sportOf } from '@/lib/live/vocabulary';
+import { isSoccerSlug } from '@/lib/soccer/leagues';
 import { LEAGUE_LABEL, abbrOf, cardVariant, countLine, pickTone, statLineText, oddsLine, eplBar, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
 
 // THE SITE'S STRAIGHT APOSTROPHE, everywhere on this tab (GO rider 1).
@@ -40,7 +41,7 @@ function liveLabel(g) {
   // alike - so the football branch below would put a stopped clock on a live
   // game. lib/live/vocabulary.js hasClock() is where that is decided.
   if (sportOf(g.leagueSlug) === BASEBALL) return shortOf(ls, BASEBALL) ?? 'Live';
-  if (g.leagueSlug === 'epl') {
+  if (isSoccerSlug(g.leagueSlug)) {
     const p = ls.period ?? null; const el = ls.elapsed ?? null;
     return p === 'HT' ? 'HT' : el != null ? `${el}'${ls.extra ? `+${ls.extra}` : ''}` : 'Live';
   }
@@ -152,7 +153,7 @@ function Card({ g, x, signedIn, signinHref, tz }) {
   // both draw the plain abbreviation disc - a two-tone disc beside a plain one
   // reads as a favourite just as a helmet beside a disc does.
   const dressed = Boolean(g.away?.colors && g.home?.colors);
-  const gameHref = g.leagueSlug === 'epl' ? `/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`;
+  const gameHref = isSoccerSlug(g.leagueSlug) ? `/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`;
   return (
     <a className={`sv2-card${live ? ' live' : ''}${final ? ' final' : ''}`} href={gameHref} data-variant={v} data-league={g.leagueSlug}>
       <div className="sv2-lbl">

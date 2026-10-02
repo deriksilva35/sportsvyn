@@ -26,6 +26,8 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import { possessionSide } from '@/lib/gridiron/possession';
 import { shortOf, BASEBALL, BASKETBALL, sportOf } from '@/lib/live/vocabulary';
+import { isSoccerSlug, matchHref } from '@/lib/soccer/leagues';
+import { roundLabelFor } from '@/lib/soccer/roundLabel';
 import { nbaLiveLabel, nbaFinalLabel, timeoutsText } from '@/lib/nba/card';
 import { LEAGUE_LABEL, abbrOf, cardVariant, countLine, pickTone, statLineText, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
 import { cardMoments } from '@/lib/soccer/moments';
@@ -39,7 +41,7 @@ export function liveLabel(g) {
   if (sportOf(g.leagueSlug) === BASEBALL) return shortOf(ls, BASEBALL) ?? 'Live';
   // BASKETBALL (nba-card): "Q4 · 2:14", "Half", "End Q3", "OT · 0:45", "2OT · 1:02".
   if (sportOf(g.leagueSlug) === BASKETBALL) return nbaLiveLabel(ls);
-  if (g.leagueSlug === 'epl') {
+  if (isSoccerSlug(g.leagueSlug)) {
     const p = ls.period ?? null; const el = ls.elapsed ?? null;
     return p === 'HT' ? 'HT' : el != null ? `${el}'${ls.extra ? `+${ls.extra}` : ''}` : 'Live';
   }
@@ -153,7 +155,10 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false, 
   // BASKETBALL'S EXTRAS (lib/nba/card.js nbaCardExtras + performerLine): the
   // bonus and timeouts (live), the period a final ended in, the top-scorer line.
   const nba = sportOf(g.leagueSlug) === BASKETBALL ? (x.nba ?? {}) : null;
-  const soccer = g.leagueSlug === 'epl';
+  const soccer = isSoccerSlug(g.leagueSlug);
+  // THE CHAMPIONS LEAGUE HAS NO GAME AND NO LINE (fri-3): its pre-match foot
+  // is the round ("Matchday 2", "Round of 16"), never "Sign in to pick".
+  const ucl = g.leagueSlug === 'ucl';
   const lead = leaderOf(g);
   const ball = possessionSide({
     leagueSlug: g.leagueSlug, status: g.status, possession: x.drive?.offenseAbbr ?? null,
@@ -262,6 +267,8 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false, 
         /* THE NBA PRE-GAME FOOT: the line when one exists, and nothing when
            not - the Pick'em strip under the board is where a pick is made. */
         odds ? <div className="sv4-foot" data-pre="nba"><span>{odds}</span></div> : null
+      ) : ucl ? (
+        <div className="sv4-foot" data-pre="ucl"><span>{roundLabelFor('ucl', { week: g.week, stage: g.stage }) ?? ''}</span></div>
       ) : baseball ? (
         <div className="sv4-foot" data-pre="mlb">
           <span>{odds ?? 'No line yet'}</span>
@@ -283,8 +290,9 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false, 
   );
 }
 
-// EPL's page is its own match center (thu-24); /match/<epl slug> 308s there anyway.
-const gameHrefOf = (g) => (g.leagueSlug === 'epl' ? `/epl/match/${g.slug}` : `/${g.leagueSlug}/game/${g.slug}`);
+// EPL's page is its own match center (thu-24), and so is the Champions
+// League's (fri-3): /<league>/match/<slug>. /match/<slug> 308s there anyway.
+const gameHrefOf = (g) => (isSoccerSlug(g.leagueSlug) ? matchHref(g.leagueSlug, g.slug) : `/${g.leagueSlug}/game/${g.slug}`);
 
 export function Card(props) {
   const { g } = props;
@@ -299,7 +307,7 @@ export function Card(props) {
     <ExpandCard
       articleProps={{ className: `sv4-card ${variant}`, 'data-variant': variant, 'data-league': g.leagueSlug, 'data-slug': g.slug }}
       league={g.leagueSlug} slug={g.slug} live={live} label={label} gameHref={gameHrefOf(g)}
-      line={props.x.line ?? null} expandable={g.leagueSlug !== 'epl'}>
+      line={props.x.line ?? null} expandable={!isSoccerSlug(g.leagueSlug)}>
       <CardFace {...props} />
     </ExpandCard>
   );

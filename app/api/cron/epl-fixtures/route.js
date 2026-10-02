@@ -14,6 +14,11 @@
  * separate Ultra subscription at 75,000 requests/day; the 2,000/day cap that
  * governs the american-football poller cannot be touched from here.
  *
+ * THE CHAMPIONS LEAGUE RIDES ALONG (ucl, fri-3): two more requests (its
+ * teams + its fixtures) after the EPL's, in the same run. Its failure is its
+ * own - recorded under `ucl` in the summary and alerted - and never costs the
+ * Premier League its sync.
+ *
  * Auth: Bearer ${CRON_SECRET}.
  */
 
@@ -22,7 +27,7 @@ import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
-import { syncEpl, apiSportsPlan } from '@/lib/soccer/epl';
+import { syncEpl, syncUcl, apiSportsPlan } from '@/lib/soccer/epl';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -39,8 +44,11 @@ export async function GET(request) {
     // upgrade must say which plan answered - and so must a failed one.
     run: async () => {
       const apiSportsAccount = await apiSportsPlan();
+      // The UCL first, caught to its summary: an EPL failure below still
+      // throws (and names the plan) exactly as it did.
+      const ucl = await syncUcl().catch((e) => ({ error: String(e?.message ?? e).slice(0, 300) }));
       try {
-        return { ...(await syncEpl()), apiSports: apiSportsAccount };
+        return { ...(await syncEpl()), ucl, apiSports: apiSportsAccount };
       } catch (e) {
         throw new Error(`${e?.message ?? e} [api-sports plan: ${apiSportsAccount.plan ?? apiSportsAccount.error}]`);
       }
@@ -54,6 +62,14 @@ export async function GET(request) {
 
   const res = outcome.result;
   const summary = res.summary ?? {};
+  const ucl = summary.ucl ?? {};
+  if (res.ok && (ucl.error || (ucl.skipped ?? 0) > 0)) {
+    await maybeAlert(sql, {
+      source: SOURCE,
+      subject: `[ucl] fixture sync ${ucl.error ? 'FAILED' : 'incomplete'}`,
+      body: [ucl.error ?? '', ...(ucl.skippedReasons ?? [])].filter(Boolean).join('\n'),
+    });
+  }
   if (!res.ok || (summary.skipped ?? 0) > 0) {
     await maybeAlert(sql, {
       source: SOURCE,

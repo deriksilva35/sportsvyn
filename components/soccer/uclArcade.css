@@ -1,0 +1,17 @@
+/* components/soccer/uclArcade.css - the Champions League's league-phase table
+   under arcade (fri-3), on top of the EPL table's .ept grid (eplArcade.css).
+   Every selector is scoped to .ucl-t, a class only the arcade UCL table
+   carries, so no dark page can see a rule of it. TOKENS ONLY. */
+
+/* the band: a quiet rail on the rank cell, the EPL table's rail grammar */
+.ucl-t .ept-tbl tbody tr[data-band] .ept-rk { box-shadow: inset 3px 0 0 var(--ucl-band, transparent); }
+.ucl-t .ept-tbl tbody tr[data-band="r16"] { --ucl-band: var(--tok-up); }
+.ucl-t .ept-tbl tbody tr[data-band="playoff"] { --ucl-band: var(--tok-accent); }
+.ucl-t .ept-tbl tbody tr[data-band="out"] { --ucl-band: transparent; }
+/* and a hairline where one band gives way to the next */
+.ucl-t .ept-tbl tbody tr[data-band-start] > :is(th, td) { border-top: 1px dashed var(--tok-muted); }
+.ucl-t .ept-tbl tbody tr[data-band="out"] .ept-club { color: var(--tok-muted); }
+
+.ucl-t .ept-key .sw.r16 { background: var(--tok-up); }
+.ucl-t .ept-key .sw.playoff { background: var(--tok-accent); }
+.ucl-t .ept-key .sw.out { background: transparent; box-shadow: inset 0 0 0 1px var(--tok-muted); }
