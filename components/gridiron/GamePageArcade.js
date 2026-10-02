@@ -16,18 +16,20 @@
 
 import Link from 'next/link';
 import { CardFace } from '@/components/scores/ScoreboardV4';
+import AlertBell from '@/components/alerts/AlertBell';
 import OddsStrip from '@/components/gridiron/OddsStrip';
 import PropsPanel from '@/components/gridiron/PropsPanel';
 import ArcadeChips from '@/components/gridiron/ArcadeChips';
 import { cardVariant } from '@/lib/gridiron/scoresV2Shape';
 import { whenLabel } from '@/lib/gridiron/gamePageArcade';
 
-function Card({ view, now, tz }) {
+function Card({ view, now, tz, alerts = null }) {
   const { g, x } = view;
   const variant = cardVariant(g);
   return (
     <article className={`sv4-card ${variant} gpa-card`} data-variant={variant} data-league={g.leagueSlug} data-slug={g.slug} data-gpa="card">
-      <CardFace g={g} x={x} signedIn={view.yours.signedIn} signinHref={view.signinHref} tz={tz} now={now} onPage />
+      <CardFace g={g} x={x} signedIn={view.yours.signedIn} signinHref={view.signinHref} tz={tz} now={now} onPage
+        topRight={alerts ? <AlertBell compact={false} signedIn={alerts.signedIn} match={alerts.match} liveActivity={alerts.liveActivity} /> : null} />
     </article>
   );
 }
@@ -115,6 +117,9 @@ export function PlaysList({ plays, allHref }) {
           <li key={i}>
             <span className="w">{p.when}</span>
             <span className="b">{p.abbr ? <b>{p.abbr}</b> : null}<span>{p.text}</span></span>
+            {/* THE RUNNING SCORE (nba-card): basketball's rows carry the score
+                after a scoring play; football's carry none and draw nothing. */}
+            {p.score ? <span className="s" data-score="1">{p.score}</span> : null}
           </li>
         ))}
       </ol>
@@ -160,7 +165,7 @@ export function Leaders({ rows, g }) {
 
 function BoxTables({ teams }) {
   return (
-    <div className="gpa-boxsc" data-gpa="box">
+    <div className="gpa-boxsc" data-gpa="box" id="gpa-box">
       {teams.map((t) => (
         <div key={t.side} className="team">
           {t.tables.filter((tb) => tb.primary !== false).map((tb) => (
@@ -191,11 +196,11 @@ function TeamStats({ box, g }) {
   );
 }
 
-export default function GamePageArcade({ view, now = new Date(), tz = 'America/New_York' }) {
+export default function GamePageArcade({ view, now = new Date(), tz = 'America/New_York', alerts = null }) {
   const { g } = view;
   const allHref = `/${g.leagueSlug}/game/${g.slug}?plays=all#gpa-plays`;
   const draw = {
-    card: () => <Card view={view} now={now} tz={tz} />,
+    card: () => <Card view={view} now={now} tz={tz} alerts={alerts} />,
     market: () => (view.odds ? <div className="gpa-market" data-gpa="market"><OddsStrip odds={view.odds} leagueSlug={g.leagueSlug} matchId={g.id} /></div> : null),
     winprob: () => <WinProb wp={view.winprob} />,
     yours: () => <InYourGames yours={view.yours} />,
@@ -219,6 +224,11 @@ export default function GamePageArcade({ view, now = new Date(), tz = 'America/N
     ),
     scoring: () => <ScoringPlays list={view.scoring} g={g} />,
     leaders: () => <Leaders rows={view.leaders} g={g} />,
+    // THE NBA FINAL'S THREE (nba-card, thu-37). Never in a gridiron module list
+    // (lib/gridiron/gamePageArcade.js arcadeModules), so the NFL page is unchanged.
+    teamstats: () => (view.teamBox ? <Box label="Team stats" mod="teamstats-box"><TeamStats box={view.teamBox} g={g} /></Box> : null),
+    fullbox: () => (view.boxHref ? <Link className="gpa-all gpa-fullbox" href={view.boxHref} data-gpa="fullbox">Full box score &rsaquo;</Link> : null),
+    box: () => (view.box.length ? <Box label="Box score" mod="box-full"><BoxTables teams={view.box} /></Box> : null),
   };
   return (
     <div className="gpa" data-state={view.state} data-league={view.league} data-modules={view.modules.join(' ')}>

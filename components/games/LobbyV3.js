@@ -79,7 +79,7 @@ function GameRow({ row, signedIn, signinHref }) {
 // THIS WEEK
 // ---------------------------------------------------------------------------
 function WeekPane({ v, signedIn, signinHref }) {
-  const { now, rows = [], mlb = [], epl = [], practice = [], week = null } = v;
+  const { now, rows = [], mlb = [], nba = [], epl = [], practice = [], week = null } = v;
   return (
     <>
       <NowCard card={now} signedIn={signedIn} signinHref={signinHref} />
@@ -108,6 +108,21 @@ function WeekPane({ v, signedIn, signinHref }) {
           </div>
           <div className="gv-list">
             {mlb.map((r) => <GameRow key={r.key} row={r} signedIn={signedIn} signinHref={signinHref} />)}
+          </div>
+        </>
+      ) : null}
+
+      {/* THE NBA GROUP: one row, and only on a day with an NBA board
+          (lib/games/lobbyV3.js nbaRowsV3). Its own labelled group for the
+          MLB group's reason - another sport on another clock. */}
+      {nba.length ? (
+        <>
+          <div className="gv-sh" data-group="nba">
+            <h3>NBA</h3>
+            <span>TODAY</span>
+          </div>
+          <div className="gv-list">
+            {nba.map((r) => <GameRow key={r.key} row={r} signedIn={signedIn} signinHref={signinHref} />)}
           </div>
         </>
       ) : null}

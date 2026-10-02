@@ -10,6 +10,10 @@
       "schedule": "50 * * * *"
     },
     {
+      "path": "/api/cron/nba-schedule",
+      "schedule": "52 * * * *"
+    },
+    {
       "path": "/api/cron/gridiron-games",
       "schedule": "*/5 * * * *"
     },

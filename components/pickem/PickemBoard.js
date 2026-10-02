@@ -21,6 +21,15 @@ import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import { confirmPickemEntry } from '@/app/actions/confirm';
 import StandaloneTime from '@/components/StandaloneTime';
+import { isVoidStatus, dayLabel } from '@/lib/nba/dayRules';
+
+// THE WORDS FOR THE MOMENT A GAME STARTS. Football kicks off; the NBA tips.
+// One table so a day board (lib/nba/dayPickem.js) never says "kickoff".
+const VOCAB = {
+  football: { start: 'kickoff', started: 'kicked', startsVerb: 'kicks off' },
+  nba: { start: 'tip', started: 'tipped', startsVerb: 'tips' },
+};
+const vocabFor = (sport) => (sport === 'nba' ? VOCAB.nba : VOCAB.football);
 
 // Where a board game's "Game" affordance points. Keyed by the contest's own
 // sport so a future NFL board cannot silently link college routes.
@@ -112,6 +121,9 @@ export default function PickemBoard({
   const [confirmedAt, setConfirmedAt] = useState(initialConfirmedAt);
   const [confirming, setConfirming] = useState(false);
   const { contest, games: initialGames } = view;
+  const W = vocabFor(contest?.sport);
+  // THE NBA HAS NO LINE ON THIS BOARD (no spread copy at all): straight up.
+  const hasLine = contest?.sport !== 'nba';
   // Optimistic overlay: matchId -> side. The server payload stays the truth
   // for everything else.
   const [mine, setMine] = useState({});
@@ -168,8 +180,10 @@ export default function PickemBoard({
     if (!res.ok) {
       setMine((m) => ({ ...m, [g.match_id]: was ?? undefined }));
       if (res.reason === 'game_locked') {
-        setLockedMsg(`${g.away} @ ${g.home} kicked - that pick is sealed`);
+        setLockedMsg(`${g.away} @ ${g.home} ${W.started} - that pick is sealed`);
         setNow(Date.now());
+      } else if (res.reason === 'game_off') {
+        setLockedMsg(`${g.away} @ ${g.home} is off - it counts for nobody`);
       }
       return;
     }
@@ -211,6 +225,7 @@ export default function PickemBoard({
           <span className="pkv-ed">
             Board {contest.boardNumber ?? ''} &middot; {contest.sport.toUpperCase()}
             {contest.displayWeek != null && <> Week {contest.displayWeek}</>}
+            {contest.dayEt ? <> &middot; {dayLabel(contest.dayEt)}</> : null}
           </span>
         </div>
         <div className="pkv-rec">
@@ -266,11 +281,13 @@ export default function PickemBoard({
             copy, with its em dash written as a hyphen per the house rule. */}
         <p className="pkv-note">
           {stage === 1 ? (
-            <>Pick the <b>winner</b> of every game, straight up. The line is shown for reference and does not change the scoring. Each game locks at its own kickoff.</>
+            hasLine
+              ? <>Pick the <b>winner</b> of every game, straight up. The line is shown for reference and does not change the scoring. Each game locks at its own kickoff.</>
+              : <>Pick the <b>winner</b> of every game, straight up. Each game locks at its own {W.start}. A game that is called off counts for nobody.</>
           ) : stage === 2 ? (
-            <><b>{toGo} still open.</b> Tap a side to change a pick any time before that game kicks off. A game you never picked scores nothing.</>
+            <><b>{toGo} still open.</b> Tap a side to change a pick any time before that game {W.startsVerb}. A game you never picked scores nothing.</>
           ) : (
-            <>Every open game is picked. Keep changing them right up to each kickoff - <b>nothing is final until the game starts</b>.</>
+            <>Every open game is picked. Keep changing them right up to each {W.start} - <b>nothing is final until the game starts</b>.</>
           )}
         </p>
       </div>
@@ -290,7 +307,9 @@ export default function PickemBoard({
                 const held = heldRows?.has?.(g.match_id);
                 const locked = g.kicked;
                 const live = g.status === 'live';
-                const showScores = g.status !== 'scheduled';
+                // A CALLED-OFF GAME (day boards): void for everyone, no scores.
+                const off = isVoidStatus(g.status);
+                const showScores = g.status !== 'scheduled' && !off;
                 return (
                   <div className={`pkv-g${locked ? ' locked' : ''}${live ? ' live' : ''}${held ? ' pk-pending' : ''}`} key={g.match_id}>
                     <div className="pkv-gtop">
@@ -300,7 +319,7 @@ export default function PickemBoard({
                         // nothing more rather than an invented quarter.
                         <span className="pkv-l">{g.period ? `${g.period}${g.clock ? ` ${g.clock}` : ''}` : 'LIVE'}</span>
                       ) : (
-                        <span>{held ? <span className="pk-pending-lbl">Needs a handle</span> : <StandaloneTime iso={g.kickoff_at} />}</span>
+                        <span>{held ? <span className="pk-pending-lbl">Needs a handle</span> : off ? <>Off &middot; void</> : <StandaloneTime iso={g.kickoff_at} />}</span>
                       )}
                       <span className="pkv-gtopr">
                         {/* THE WAY OUT TO THE GAME PAGE stays. The mock does not
@@ -380,12 +399,14 @@ export default function PickemBoard({
 
                     <div className="pkv-gfoot">
                       {(() => {
-                        if (!isPreGame(g.status)) return null;
+                        if (!hasLine || !isPreGame(g.status)) return null;
                         const p = spreadParts({ spreadHome: g.spread_home, homeAbbr: g.home, awayAbbr: g.away });
                         if (!p) return null;
                         return <span className="pkv-line">{p.fav}{' '}{p.mag}</span>;
                       })()}
-                      {g.my_side != null ? (
+                      {off ? (
+                        <span className="pkv-pick pkv-nopick">void</span>
+                      ) : g.my_side != null ? (
                         <span className={`pkv-pick${g.graded === 'W' ? ' j' : g.graded === 'L' ? ' t' : ' v'}`}>
                           {g.my_side === 'away' ? g.away : g.home}
                           {g.graded === 'W' ? ' ✓' : g.graded === 'L' ? ' ✗' : ''}
@@ -413,11 +434,13 @@ export default function PickemBoard({
       <div className="pkv-ft">
         <div className="pkv-pace">
           {confirmedAt ? (
-            <>Locked in<br /><b><StandaloneTime iso={confirmedAt} /></b> &middot; edit any pick until its kickoff</>
+            <>Locked in<br /><b><StandaloneTime iso={confirmedAt} /></b> &middot; edit any pick until its {W.start}</>
           ) : savedTick ? (
-            <><b>Saved</b><br />edit any pick until its kickoff</>
-          ) : (
+            <><b>Saved</b><br />edit any pick until its {W.start}</>
+          ) : hasLine ? (
             <>Straight up, no spread<br />The line is <b>for reference only</b></>
+          ) : (
+            <>Straight up<br />One point a <b>winner</b></>
           )}
         </div>
         {signedIn && pickable > 0 ? (
