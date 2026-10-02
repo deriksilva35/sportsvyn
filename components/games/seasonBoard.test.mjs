@@ -68,14 +68,16 @@ test('tier colors come from config, and this surface writes none of its own', ()
   assert.ok(!/tier--\w+ \{[^}]*color/.test(css), 'no hand-written tier colors in season.css');
 });
 
-test('ONE definition, BOTH scopes: the lobby and the league page render it', () => {
+test('ONE definition: the lobby renders it (the league page has its own derived table since Leagues V1)', () => {
   // GAMES v3: the lobby's half moved from the page into the pane, because the
   // page no longer renders panes - the Boards chip's SEASON tab draws it.
   // Same component, same props, one definition.
   assert.match(src('components/games/LobbyV3.js'), /import SeasonBoard from '@\/components\/games\/SeasonBoard'/);
   assert.match(src('components/games/LobbyV3.js'), /<SeasonBoard table=\{sec\.table\} userId=\{userId\} \/>/);
-  assert.match(src('app/leagues/[id]/page.js'), /import SeasonBoard from '@\/components\/games\/SeasonBoard'/);
-  assert.match(src('app/leagues/[id]/page.js'), /<SeasonBoard table=\{season\} userId=\{uid\} \/>/);
+  // LEAGUES V1 (P2): /leagues/[id] no longer draws the v1 Daily season board -
+  // its table is lib/leagues/table.js across every game the league plays,
+  // rendered by components/leagues/LeagueBoard.js.
+  assert.match(src('app/leagues/[id]/page.js'), /<LeagueBoard /);
 });
 
 test('points keep the numcols discipline - fixed ch, right-aligned, tabular', () => {
