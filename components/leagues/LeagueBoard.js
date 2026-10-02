@@ -117,7 +117,7 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
           <section aria-label="Standings">
             <div className="lv-trow lv-trow--head">
               <span>#</span><span /><span>Player</span>
-              <span>{(table.tableLabel ?? '').replace(/^Week /, 'Wk ')}</span><span>{league.span === 'season' ? 'Total' : 'Pts'}</span>
+              <span>{unit === 'week' ? 'Last wk' : 'Last day'}</span><span>{league.span === 'season' ? 'Total' : 'Pts'}</span>
             </div>
             {standings.rows.map((r) => (
               <div className={`lv-trow${r.userId === uid ? ' lv-trow--me' : ''}`} key={r.userId} data-standing={r.userId}>

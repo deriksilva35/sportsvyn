@@ -14,7 +14,6 @@ import YouCard from '@/components/boards/YouCard';
 import LiveRefresh from '@/components/scores/LiveRefresh';
 import { myLeagues, leagueMemberIds, leagueDetail } from '@/lib/leagues/core';
 import { joinHref } from '@/lib/leagues/code';
-import LeagueChipActions from '@/components/leagues/LeagueChipActions';
 import { resolveShellMode } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { seriesFor } from '@/lib/mlb/series';
@@ -116,7 +115,8 @@ export default async function OctoberBoardPage({ searchParams }) {
               href={`/october/board?league=${l.id}`}>{l.name}</Link>
           ))}
           <Link className={`oc-lg${picked ? '' : ' on'}`} href="/october/board">Everyone</Link>
-          <LeagueChipActions boardHref="/october/board" signedIn={uid != null} signinHref={signinHref} />
+          {/* A new league is made on /leagues/new (Derik, fri-2) - no quick-create here. */}
+          <Link className="oc-lg" href="/leagues/new">+ League</Link>
         </div>
 
         <div className="ob-lb">

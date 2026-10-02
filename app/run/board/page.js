@@ -21,7 +21,6 @@ import { myLeagues, leagueMemberIds, leagueDetail } from '@/lib/leagues/core';
 import { joinHref } from '@/lib/leagues/code';
 import { resolveShellMode } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
-import LeagueChipActions from '@/components/leagues/LeagueChipActions';
 import { seriesFor } from '@/lib/mlb/series';
 import '../../games/games.css';
 import '../run.css';
@@ -124,15 +123,11 @@ export default async function RunBoardPage({ searchParams }) {
               href={`/run/board?league=${l.id}`}>{l.name}</Link>
           ))}
           <Link className={`rn-lg${picked ? '' : ' on'}`} href="/run/board">Everyone</Link>
-          {/* JOIN AND CREATE, HERE. Both writes belong on the board the reader is
-              looking at - see components/leagues/LeagueChipActions.js for why
-              "create one from /leagues" was not an instruction an app can give. */}
-          {/* THE SIGN-IN HREF IS THE HOUSE ONE. /signin reads ?callbackUrl=, not
-              ?next=, and shellSigninHref also carries the shell marker through
-              the Apple round trip - see lib/shell/signinHref.js. app/run/page.js
-              builds it the same way for the roster's own sign-in line. */}
-          <LeagueChipActions boardHref="/run/board" signedIn={uid != null}
-            signinHref={signinHref} />
+          {/* A NEW LEAGUE IS MADE ON /leagues/new (Derik, fri-2): the board's
+              quick-create made a name-only league with no games, span or
+              format, so it is gone; this chip goes to the real create sheet,
+              and joining is the code or the /j/ link. */}
+          <Link className="rn-lg" href="/leagues/new">+ League</Link>
         </div>
 
         {/* ONE ROUND AT A TIME, or the whole run. A chip per round opens that
@@ -194,7 +189,7 @@ export default async function RunBoardPage({ searchParams }) {
           <div className="rn-pace">
             {detail?.join_code
               ? <>Invite<br /><b>{detail.join_code}</b><br /><span className="rn-inv">{joinHref(detail.join_code)}</span></>
-              : <>Play with friends<br /><b>Join or create one above</b></>}
+              : <>Play with friends<br /><b>Start a league above</b></>}
           </div>
           <Link className="rn-lock" href="/run">Set your nine</Link>
         </div>

@@ -125,7 +125,7 @@ export default function CreateLeagueForm({ choices, anchors, survivor = false })
       <Step n={3} title="How it's scored">
         <div role="radiogroup" aria-label="How it's scored" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Radio on={effScoring === 'rank'} title="Rank points" onPick={() => setScoring('rank')}
-            body={`${rankPointsCopy(unit)} Required for bundles.`} />
+            body={rankPointsCopy()} />
           <Radio on={effScoring === 'total'} title="Total points" disabled={bundle} onPick={() => setScoring('total')}
             body="Add up each game's own score. One game only." />
         </div>

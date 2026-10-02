@@ -23,14 +23,15 @@ async function uid() {
 }
 
 /**
- * The V1 create sheet sends the settings; a bare name (the board chips' quick
- * create) gets lib/leagues/core's LEGACY_SETTINGS - The Daily, total points.
+ * The create sheet (/leagues/new) is the ONLY way a league is made. The board
+ * chips' name-only quick-create is gone (Derik, fri-2): a league without its
+ * games, span and format is refused here rather than defaulted.
  */
 export async function createLeagueAction(formData) {
   const userId = await uid();
   if (userId == null) return { ok: false, reason: 'Sign in first' };
-  const settings = formData.has('span')
-    ? {
+  if (!formData.has('span')) return { ok: false, reason: 'Make a league from the create sheet' };
+  const settings = {
         games: formData.getAll('games').flatMap((g) => String(g).split(',')),
         span: formData.get('span'),
         scoring: formData.get('scoring'),
@@ -38,8 +39,7 @@ export async function createLeagueAction(formData) {
         dropWorst: formData.get('dropWorst'),
         maxMembers: formData.get('maxMembers'),
         lateJoins: formData.get('lateJoins'),
-      }
-    : null;
+      };
   try {
     return await createLeague(userId, formData.get('name'), settings);
   } catch {

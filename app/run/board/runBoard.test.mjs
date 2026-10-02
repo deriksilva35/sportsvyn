@@ -24,7 +24,7 @@ const MAP = {
   // hands back the board stub's rows as a live board would - points = total,
   // no round in play - and records the options on the board stub's `calls`.
   '@/lib/boards/mlb': 'mlb',
-  // THE CLIENT ISLAND'S ACTIONS. LeagueChipActions imports app/actions/leagues,
+  // THE CLIENT ISLAND'S ACTIONS (stubbed; kept for any island that imports app/actions/leagues),
   // which reaches auth and the DB through lib/leagues/core - stubbed here so the
   // board renders without either, and so the chips themselves stay REAL.
   '@/app/actions/leagues': 'lgactions',
@@ -153,9 +153,10 @@ test('LEAGUE CHIPS, including Everyone, and the invite link', async () => {
   assert.doesNotMatch(picked, /leagues\/join\/HTR4MK/);
   assert.doesNotMatch(picked, /sportsvyn\.com/);
 
-  // + JOIN AND + CREATE SIT WITH THE CHIPS, on the board, signed in.
-  assert.match(picked, /class="lgc-chip"[^>]*>\+ Join<\/button>/);
-  assert.match(picked, /class="lgc-chip"[^>]*>\+ Create<\/button>/);
+  // NO QUICK-CREATE (Derik, fri-2): the chip row's one action is the real
+  // create sheet, /leagues/new.
+  assert.match(picked, /class="rn-lg" href="\/leagues\/new">\+ League<\/a>/);
+  assert.doesNotMatch(picked, /lgc-chip|\+ Create<\/button>|\+ Join<\/button>/);
 
   // EVERYONE is the same board without the member filter, and has no invite.
   const everyone = await render({});
@@ -164,8 +165,8 @@ test('LEAGUE CHIPS, including Everyone, and the invite link', async () => {
   // NO WEB-ONLY STEP. This said "Create a league from /leagues" - an instruction
   // to leave the app - and the chips above do it now.
   assert.doesNotMatch(everyone, /Create a league from \/leagues/);
-  assert.match(everyone, /Join or create one above/);
-  assert.match(everyone, /\+ Create<\/button>/);
+  assert.match(everyone, /Start a league above/);
+  assert.match(everyone, /href="\/leagues\/new">\+ League<\/a>/);
 });
 
 test('THE PAGE TELLS THE READER WHICH TOURNAMENT IT IS ASKING ABOUT', async () => {

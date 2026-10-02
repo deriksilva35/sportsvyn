@@ -162,9 +162,9 @@ test('LEAGUE CHIPS: myLeagues, the ?league= filter, and the board scoped to memb
   assert.match(picked, /Silva Family · 4 playing/);
   assert.doesNotMatch(picked, /the World Series decides it/, 'the league line replaces it');
 
-  // + JOIN AND + CREATE, the shared sheet, on this board too.
-  assert.match(picked, /class="lgc-chip"[^>]*>\+ Join<\/button>/);
-  assert.match(picked, /class="lgc-chip"[^>]*>\+ Create<\/button>/);
+  // NO QUICK-CREATE (Derik, fri-2): the chip row's one action is /leagues/new.
+  assert.match(picked, /class="oc-lg" href="\/leagues\/new">\+ League<\/a>/);
+  assert.doesNotMatch(picked, /lgc-chip|\+ Create<\/button>|\+ Join<\/button>/);
 
   // THE INVITE IS THE LEAGUE'S OWN CODE and a path that EXISTS.
   assert.match(picked, /<b>HTR4MK<\/b>/);
