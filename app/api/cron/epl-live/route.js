@@ -22,7 +22,11 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { apiSports } from '@/lib/apiSports';
-import { runEplLive, eplWindowOpen } from '@/lib/soccer/eplLive';
+import { runEplLive, eplWindowOpen, RESETTLE_HOOKS } from '@/lib/soccer/eplLive';
+import { registerResettle } from '@/lib/eplWeekly5/settle';
+
+// EPL Weekly 5 re-grades a settled gameweek when the +24h re-sync changes a stat.
+registerResettle(RESETTLE_HOOKS);
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;

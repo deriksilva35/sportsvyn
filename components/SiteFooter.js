@@ -13,7 +13,7 @@
 import Link from 'next/link';
 import Wordmark from '@/components/Wordmark';
 import HideInShell from '@/components/shell/HideInShell';
-import { NFL_NON_AFFILIATION } from '@/lib/legal';
+import { NON_AFFILIATION } from '@/lib/legal';
 
 import './site-chrome.css';
 
@@ -68,7 +68,7 @@ function siteFooterMarkup() {
         </nav>
         <p className="copyright">© 2026 Sportsvyn</p>
       </div>
-      <p className="footer-fine">{NFL_NON_AFFILIATION}</p>
+      <p className="footer-fine">{NON_AFFILIATION}</p>
     </footer>
   );
 }

@@ -21,6 +21,7 @@
 //
 // THE BOTTOM NAV IS UNTOUCHED. This is the Play tab's content and nothing else.
 
+import { NON_AFFILIATION } from '@/lib/legal';
 import Link from 'next/link';
 import HouseTag from '@/components/house/HouseTag';
 import '@/components/house/house.css';
@@ -78,7 +79,7 @@ function GameRow({ row, signedIn, signinHref }) {
 // THIS WEEK
 // ---------------------------------------------------------------------------
 function WeekPane({ v, signedIn, signinHref }) {
-  const { now, rows = [], mlb = [], nba = [], practice = [], week = null } = v;
+  const { now, rows = [], mlb = [], nba = [], epl = [], practice = [], week = null } = v;
   return (
     <>
       <NowCard card={now} signedIn={signedIn} signinHref={signinHref} />
@@ -126,6 +127,19 @@ function WeekPane({ v, signedIn, signinHref }) {
         </>
       ) : null}
 
+      {/* EPL WEEKLY 5 (thu-34): its own group, same row grammar, under MLB. */}
+      {epl.length ? (
+        <>
+          <div className="gv-sh" data-group="epl">
+            <h3>Premier League</h3>
+            <span>FANTASY</span>
+          </div>
+          <div className="gv-list">
+            {epl.map((r) => <GameRow key={r.key} row={r} signedIn={signedIn} signinHref={signinHref} />)}
+          </div>
+        </>
+      ) : null}
+
       {/* PRACTICE IS TWO TILES AND STAYS TWO (addendum 6). The tracker's door
           moves to the Mock setup, where a league row carries "Track a live
           draft" - not here. */}
@@ -160,8 +174,8 @@ function WeekPane({ v, signedIn, signinHref }) {
 
       {/* THE LEGAL LINE STAYS, as the last line of This week (addendum 5). */}
       <p className="gv-legal">
-        One account · one handle · one leaderboard spine. Not affiliated with the
-        NFL. nflverse data CC-BY-4.0.
+        One account · one handle · one leaderboard spine. {NON_AFFILIATION}{' '}
+        nflverse data CC-BY-4.0.
       </p>
     </>
   );
