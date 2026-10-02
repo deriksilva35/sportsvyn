@@ -36,6 +36,7 @@ import AppleSignInButton from './AppleSignInButton';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import JoinByCode from '@/components/sim/JoinByCode';
 import { codeFromCallback } from '@/lib/fantasy/inviteCode';
+import { inviteKeyFromCallback } from '@/lib/leagues/code';
 import { safeCallback } from '@/lib/auth/safeCallback';
 import { headers } from 'next/headers';
 
@@ -67,6 +68,8 @@ export default async function SignInPage({ searchParams }) {
   // A league code riding the callbackUrl (/join/CODE…): say so, so a reader
   // who typed it a moment ago sees it survived the turn to this screen.
   const joinCode = codeFromCallback(callbackUrl);
+  // A PLAYER-LEAGUE invite (/j/KEY, Leagues V1) rides the same way.
+  const leagueInvite = joinCode ? null : inviteKeyFromCallback(callbackUrl);
 
   return (
     <main
@@ -111,12 +114,17 @@ export default async function SignInPage({ searchParams }) {
           League code {joinCode} comes with you - sign in and pick your team.
         </p>
       )}
+      {leagueInvite && (
+        <p className="font-mono text-[11px] uppercase tracking-widest text-volt mt-8" data-league-invite={leagueInvite}>
+          Your league invite comes with you - sign in and you&rsquo;re one tap from joining.
+        </p>
+      )}
       {/* SHELL, SIGNED OUT: this screen is the whole app, so a friend's code
           has to be typeable HERE. Submit goes through /join/{code}, which
           sends the reader straight back to this form with the code in the
           callbackUrl (the line above) - no Safari, no second path. The web's
           signed-out /sim hero carries the same field. */}
-      {isShell && !joinCode && <JoinByCode variant="signin" />}
+      {isShell && !joinCode && !leagueInvite && <JoinByCode variant="signin" />}
 
       {/* SHELL (App Store 3.1.1): the pricing page is a purchase path, so the
           link is not rendered inside the app at all. Web unchanged. */}

@@ -1,18 +1,20 @@
 'use server';
 
 /**
- * app/actions/leagues.js - create and join, the two writes a league needs.
+ * app/actions/leagues.js - the writes a league needs: create, join (by the
+ * typed code or the link token), and the owner's invite reset.
  *
- * Both fail soft with a sentence: a league form must never strand somebody
- * mid-group-chat with a stack trace. Validation lives in lib/leagues/core -
- * these are auth + delegation.
+ * All fail soft with a sentence: a league form must never strand somebody
+ * mid-group-chat with a stack trace. Validation lives in lib/leagues - these
+ * are auth + delegation.
  *
- * JOIN IS BY CODE ONLY - there is no join-by-league-id action. League ids are
- * serial; a join keyed on one lets anybody walk into every league.
+ * JOIN IS BY CODE OR TOKEN ONLY - there is no join-by-league-id action. League
+ * ids are serial; a join keyed on one lets anybody walk into every league.
  */
 
 import { auth } from '@/auth';
 import { createLeague, joinLeague } from '@/lib/leagues/core';
+import { joinByInvite, resetInvite } from '@/lib/leagues/invite';
 
 async function uid() {
   const session = await auth();
@@ -20,11 +22,26 @@ async function uid() {
   return id == null ? null : Number(id);
 }
 
+/**
+ * The V1 create sheet sends the settings; a bare name (the board chips' quick
+ * create) gets lib/leagues/core's LEGACY_SETTINGS - The Daily, total points.
+ */
 export async function createLeagueAction(formData) {
   const userId = await uid();
   if (userId == null) return { ok: false, reason: 'Sign in first' };
+  const settings = formData.has('span')
+    ? {
+        games: formData.getAll('games').flatMap((g) => String(g).split(',')),
+        span: formData.get('span'),
+        scoring: formData.get('scoring'),
+        format: formData.get('format'),
+        dropWorst: formData.get('dropWorst'),
+        maxMembers: formData.get('maxMembers'),
+        lateJoins: formData.get('lateJoins'),
+      }
+    : null;
   try {
-    return await createLeague(userId, formData.get('name'));
+    return await createLeague(userId, formData.get('name'), settings);
   } catch {
     return { ok: false, reason: 'Could not create the league' };
   }
@@ -37,5 +54,27 @@ export async function joinLeagueAction(formData) {
     return await joinLeague(userId, formData.get('code'));
   } catch {
     return { ok: false, reason: 'Could not join' };
+  }
+}
+
+/** /j/<key>'s JOIN tap. The key is the code or the token the link carried. */
+export async function joinInviteAction(key) {
+  const userId = await uid();
+  if (userId == null) return { ok: false, reason: 'Sign in first' };
+  try {
+    return await joinByInvite(userId, key);
+  } catch {
+    return { ok: false, reason: 'Could not join' };
+  }
+}
+
+/** The owner's reset: a new code and a new link; the old ones stop working. */
+export async function resetInviteAction(leagueId) {
+  const userId = await uid();
+  if (userId == null) return { ok: false, reason: 'Sign in first' };
+  try {
+    return await resetInvite(userId, Number(leagueId));
+  } catch {
+    return { ok: false, reason: 'Could not reset the invite' };
   }
 }

@@ -1,31 +1,38 @@
 /**
- * /leagues - your leagues: create, join, and each league's Weekly board.
+ * /leagues - YOUR LEAGUES (canvas "Leagues V1", board Main): CREATE A LEAGUE and
+ * JOIN WITH CODE, then one card per league - its name, its games, how long and
+ * which format, and a foot line (members, live or when it starts).
  *
- * THE CARD IS A DOOR, NOT A DASHBOARD (mock v0_1 frame 1): name, count,
- * code, and ONE headline - the latest revealed Daily leader among members.
- * The boards themselves live on /leagues/[id], where the tab rail holds
- * every game in calendar order.
+ * THE INVITED CARD leads whenever a code rides the URL (?join=CODE - the share
+ * link every league printed before /j/ existed, still in group chats). It is a
+ * preview: lib/leagues/invite.js invitePreview() never writes, and the JOIN tap
+ * is a server action. A dud code is a sentence, never a 404 - a dead link
+ * punishes the friend for the member's typo.
+ *
+ * P2 puts the reader's place in each card's corner; until standings exist the
+ * corner says whose league it is.
  */
 
 import { auth } from '@/auth';
+import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
-import LeagueForms from '@/components/leagues/LeagueForms';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
-import { myLeagues, leagueMemberIds, leagueByCode } from '@/lib/leagues/core';
-import JoinPrompt from '@/components/leagues/JoinPrompt';
-import Link from 'next/link';
-import { lastRevealedDate, dayBoard } from '@/lib/daily/boards';
+import { myLeagues } from '@/lib/leagues/core';
+import { invitePreview } from '@/lib/leagues/invite';
+import { REFUSALS } from '@/lib/leagues/code';
+import { leagueChips } from '@/lib/leagues/settings';
+import { cardMeta, hasStarted, inviteLine } from '@/lib/leagues/describe';
 import { leagueHref } from '@/lib/leagues/nav';
-import '../games/games.css';
-import './leagues.css';
+import { LeagueActions, InvitedCard } from '@/components/leagues/LeaguesHome';
+import './leaguesV1.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'Leagues - Sportsvyn',
-  description: 'Your people, one board. Create a league, share the code.',
+  description: 'Play the games with your people. Free, always.',
 };
 
 export async function generateViewport() {
@@ -37,94 +44,93 @@ export default async function LeaguesPage({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode();
-  // THE SHARE TARGET: /leagues?join=CODE is what actually rides a group chat.
-  // The dest must CARRY the code through the sign-in law, or a signed-out
-  // friend tapping the link would authenticate into a page that forgot why
-  // they came.
+  // THE SHARE TARGET: /leagues?join=CODE. The dest must CARRY the code through
+  // the sign-in law, or a signed-out friend tapping the link would authenticate
+  // into a page that forgot why they came.
   const joinRaw = Array.isArray(sp.join) ? sp.join[0] : sp.join;
   const joinDest = joinRaw ? `/leagues?join=${encodeURIComponent(joinRaw)}` : '/leagues';
   requireSignInInShell({ isShell, userId, dest: joinDest });
 
   const uid = userId == null ? null : Number(userId);
   const leagues = uid == null ? [] : await myLeagues(uid).catch(() => []);
-  // The code-holder's preview: name + member count, never a null page. A dud
-  // code renders a sentence, because a share target that 404s punishes the
-  // FRIEND for the member's typo.
-  const invite = joinRaw ? await leagueByCode(joinRaw).catch(() => null) : null;
-  const alreadyIn = invite != null && leagues.some((l) => l.id === invite.id);
-
-  // THE CARD IS A DOOR, NOT A DASHBOARD (mock v0_1 frame 1): one headline
-  // per league - the latest revealed Daily leader among members, read through
-  // the same scoped dayBoard, top row only. The boards themselves live on
-  // /leagues/[id].
-  const revealedDate = await lastRevealedDate().catch(() => null);
-  const headlines = new Map();
-  for (const lg of leagues) {
-    const members = await leagueMemberIds(lg.id).catch(() => []);
-    const board = revealedDate
-      ? await dayBoard(revealedDate, uid, 1, { memberIds: members }).catch(() => null)
-      : null;
-    const lead = board?.top?.find((r) => !r.dnf) ?? null;
-    headlines.set(lg.id, lead ? <>{lead.name} leads &middot; <b>{lead.score}</b></> : null);
-  }
+  const invite = joinRaw ? await invitePreview(joinRaw, uid).catch(() => null) : null;
+  const now = new Date();
 
   return (
     <>
-      <GlobalHeaderServer activeNav="games" />
-      <main className="lob" data-surface="ink">
-        <header className="lob-head">
-          <h1 className="lob-title">Leagues</h1>
-          <p className="lob-sub">Your people, one board. Share the code, own the season.</p>
+      <GlobalHeaderServer activeNav="leagues" />
+      <main className="lv" data-surface="ink">
+        <header className="lv-head">
+          <h1 className="lv-title">Leagues</h1>
+          <p className="lv-sub">Play the games with your people. Free, always.</p>
         </header>
 
-        {/* The invitation card leads whenever a code rides the URL - it is
-            the whole reason this page load exists. */}
-        {joinRaw && (
-          <JoinPrompt
-            invite={invite ? { name: invite.name, members: invite.members, code: invite.join_code } : null}
-            signedIn={uid != null}
-            alreadyIn={alreadyIn}
-            signinHref={shellSigninHref(joinDest, isShell)}
-          />
+        {uid == null ? (
+          <div className="lv-actions">
+            <a className="lv-btn lv-btn--primary" href={shellSigninHref(joinDest, isShell)}>Sign in to start one</a>
+          </div>
+        ) : (
+          <LeagueActions />
         )}
 
-        {uid == null ? (
-          <section className="mod">
-            <p className="muted">
-              A league is a board of just your people - every game, one code.
-            </p>
-            <a className="ghost" href={shellSigninHref(joinDest, isShell)}>Sign in to start one &rarr;</a>
-          </section>
-        ) : (
+        {uid != null && (
           <>
-            <LeagueForms />
-
-            {leagues.length === 0 && (
-              <section className="mod">
-                <p className="muted">
-                  No leagues yet. Create one and drop the code in your group
-                  chat - whoever joins is on your board.
-                </p>
-              </section>
+            <p className="lv-kicker">Your leagues &middot; {leagues.length}</p>
+            {leagues.length === 0 ? (
+              <p className="lv-empty">
+                No leagues yet. Create one and drop the link in your group chat - whoever joins is on your board.
+              </p>
+            ) : (
+              <div className="lv-list">
+                {leagues.map((lg, i) => {
+                  const live = hasStarted(lg, now);
+                  return (
+                    <Link className={`lv-card${i === 0 ? ' lv-card--lead' : ''}`} key={lg.id} href={leagueHref(lg.id)} data-league-card={lg.id}>
+                      <div className="lv-card-top">
+                        <span className="lv-card-name">{lg.name}</span>
+                        {live && <span className="lv-chip lv-chip--live">Live</span>}
+                      </div>
+                      <div className="lv-chips">
+                        {leagueChips(lg).map((c) => <span className="lv-chip" key={c}>{c}</span>)}
+                      </div>
+                      <div className="lv-card-foot">
+                        <span className="lv-card-meta">{cardMeta(lg, now)}</span>
+                        <span className="lv-card-you">{lg.mine ? 'Your league' : "You're in"}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
             )}
-
-            {leagues.map((lg) => (
-              <Link className="lg-door" key={lg.id} href={leagueHref(lg.id)}>
-                <div className="lg-door-top">
-                  <span className="lg-door-name">{lg.name}</span>
-                  <span className="memberpill">{lg.members} {lg.members === 1 ? 'member' : 'members'}</span>
-                </div>
-                <div className="lg-door-headline">
-                  <span className="lbl">The Daily</span>
-                  <span className="lead-line">{headlines.get(lg.id) ?? <span className="muted">fills as members play</span>}</span>
-                </div>
-                <div className="lg-door-go">
-                  <span>Join code&nbsp; <span className="lg-code">{lg.join_code}</span></span>
-                  <span className="arrow">Open &rarr;</span>
-                </div>
-              </Link>
-            ))}
           </>
+        )}
+
+        {/* The invitation - after your own leagues, as the canvas draws it. */}
+        {joinRaw && (
+          invite?.league ? (
+            uid == null ? (
+              <section className="lv-invited" aria-label="Invited">
+                <span className="lv-kicker" style={{ padding: 0 }}>Invited</span>
+                <p className="lv-invited-name"><b>{invite.league.name}</b>, {inviteLine(invite.league)}</p>
+                <a className="lv-btn lv-btn--primary" href={shellSigninHref(joinDest, isShell)}>Sign in to join</a>
+              </section>
+            ) : (
+              <InvitedCard
+                inviteKey={joinRaw}
+                name={invite.league.name}
+                line={inviteLine(invite.league)}
+                already={invite.already}
+                leagueId={invite.league.id}
+                refusal={invite.reason && !invite.already ? REFUSALS[invite.reason] ?? REFUSALS.failed : null}
+              />
+            )
+          ) : (
+            <section className="lv-invited" aria-label="Invited">
+              <p className="lv-refusal">
+                {REFUSALS[invite?.reason] ?? REFUSALS.no_league}. Ask for a fresh link.
+              </p>
+            </section>
+          )
         )}
       </main>
       <SiteFooter />

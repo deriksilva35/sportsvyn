@@ -8,7 +8,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { joinLeagueAction } from '@/app/actions/leagues';
 import { CODE_LENGTH, REFUSALS, cleanLeagueInput } from '@/lib/leagues/code';
-import { leagueShareLink } from '@/lib/leagues/nav';
 
 async function copy(text) {
   try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
@@ -26,20 +25,6 @@ export function CodeChip({ code }) {
     >
       <span>Join code</span>
       <b>{done ? 'copied' : code}</b>
-    </button>
-  );
-}
-
-/** The share button - copies the full invite link. */
-export function CopyLinkButton({ code }) {
-  const [done, setDone] = useState(false);
-  return (
-    <button
-      type="button"
-      className="lg-invitebtn"
-      onClick={async () => { if (await copy(leagueShareLink(code))) { setDone(true); setTimeout(() => setDone(false), 1500); } }}
-    >
-      {done ? 'Link copied' : 'Copy link'}
     </button>
   );
 }

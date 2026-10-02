@@ -13,6 +13,7 @@
 // HOW A ROW IS RECOGNISED - by the conventions the tests already follow, not
 // by a list of prefixes that would go stale the next time a test is written:
 //   users     an email on a reserved test domain (@example.invalid, *.test)
+//   player_leagues  a name with "test"/"sentinel", or a sentinel owner
 //   leagues   a slug that starts with sentinel- or contains "test"
 //   teams     in a fixture league, or a slug like a fixture's
 //   matches   in a fixture league, or a slug like a fixture's
@@ -56,6 +57,13 @@ const contests = await sql`
 const users = await sql`SELECT id, email, created_at FROM users WHERE email ~* ${EMAIL_RX} ORDER BY created_at DESC LIMIT 50`;
 const [{ n: userCount }] = await sql`SELECT count(*)::int n FROM users WHERE email ~* ${EMAIL_RX}`;
 
+// PLAYER LEAGUES (Leagues V1): a test's league is named with "test" or owned by
+// a sentinel user; an owner deleted first leaves owner_id NULL, so a "test"
+// name is enough on its own.
+const playerLeagues = await sql`
+  SELECT l.id, l.name, l.created_at FROM player_leagues l LEFT JOIN users u ON u.id = l.owner_id
+   WHERE l.name ~* 'test|sentinel' OR u.email ~* ${EMAIL_RX} ORDER BY l.created_at LIMIT 200`;
+
 const day = (d) => new Date(d).toISOString().slice(0, 16).replace('T', ' ');
 const show = (name, rows, fmt) => {
   console.log(`\n${name}: ${rows.length}`);
@@ -66,8 +74,9 @@ show('leagues', leagues, (r) => `${String(r.id).padStart(6)}  ${r.slug}  (${day(
 show('teams', teams, (r) => `${String(r.id).padStart(6)}  ${r.slug}  league ${r.league_id}  (${day(r.created_at)})`);
 show('matches', matches, (r) => `${String(r.id).padStart(6)}  ${r.slug}  ${r.status}  (${day(r.created_at)})`);
 show('contests', contests, (r) => `${String(r.id).padStart(6)}  ${r.game_type} ${r.sport} ${r.season_year ?? ''}  (${day(r.created_at)})`);
+show('player_leagues', playerLeagues, (r) => `${String(r.id).padStart(6)}  ${r.name}  (${day(r.created_at)})`);
 console.log(`\nusers: ${userCount}${userCount > users.length ? ` (newest ${users.length} shown)` : ''}`);
 for (const r of users) console.log(`  ${String(r.id).padStart(6)}  ${r.email}  (${day(r.created_at)})`);
 
-const total = leagues.length + teams.length + matches.length + contests.length + userCount;
+const total = leagues.length + teams.length + matches.length + contests.length + playerLeagues.length + userCount;
 console.log(`\n${total ? `${total} fixture row(s) on DEV. Read them before deleting; nothing was changed.` : 'DEV is clean: no fixture rows.'}`);

@@ -30,10 +30,13 @@ import { leagueDetail, leaguePreview, leagueMemberIds } from '@/lib/leagues/core
 import { LEAGUE_TABS, parseLeagueTab, leagueHref } from '@/lib/leagues/nav';
 import { firstLockLabel } from '@/lib/pickem/read';
 import { lastRevealedDate, dayBoard, overall } from '@/lib/daily/boards';
-import { CodeChip, CopyLinkButton, JoinWithCodeForm } from '@/components/leagues/LeagueChrome';
+import { CodeChip, JoinWithCodeForm } from '@/components/leagues/LeagueChrome';
+import InviteSheet from '@/components/leagues/InviteSheet';
+import { startLabel, gameLabel } from '@/lib/leagues/settings';
 import SeasonBoard from '@/components/games/SeasonBoard';
 import '../../games/games.css';
 import '../leagues.css';
+import '../leaguesV1.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,8 +90,8 @@ export default async function LeaguePage({ params, searchParams }) {
             <div className="eb">You&rsquo;re invited</div>
             <h1 className="lg-hero-name">{preview.name}</h1>
             <p className="ctx">
-              {preview.members} {preview.members === 1 ? 'member' : 'members'} &middot; The
-              Daily, Pick&rsquo;em, The Weekly, The Draft
+              {preview.members} {preview.members === 1 ? 'member' : 'members'}
+              {preview.games?.length ? <> &middot; {preview.games.map(gameLabel).join(', ')}</> : null}
             </p>
             {uid == null ? (
               <a className="lg-join-primary" href={shellSigninHref(dest, isShell)}>Sign in to join</a>
@@ -135,7 +138,18 @@ export default async function LeaguePage({ params, searchParams }) {
           </div>
           <div className="lg-meta">
             <CodeChip code={league.join_code} />
-            <CopyLinkButton code={league.join_code} />
+            {/* THE SHARE SHEET (Leagues V1): the /j/ link, the code, native
+                share, and the owner's reset. ?invite=1 opens it - the create
+                sheet lands here with it up. */}
+            <InviteSheet
+              league={{
+                id: league.id, name: league.name, code: league.join_code, token: league.invite_token,
+                members: league.members.length, max: league.max_members, lateJoins: league.late_joins,
+                startLabel: startLabel({ startsAt: league.starts_at ? new Date(league.starts_at).toISOString() : null, startWeek: league.start_week }),
+              }}
+              isOwner={league.owner_id != null && Number(league.owner_id) === uid}
+              openInitially={sp.invite === '1'}
+            />
           </div>
         </header>
 

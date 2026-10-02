@@ -1,0 +1,179 @@
+/* Leagues V1 (fri-1) - your leagues, the create sheet, the invite sheet and
+   /j/<key>. Built on the canvas "Leagues V1" (Main, Create), translated onto the
+   house tokens: no colour literal here (lib/brand/hexCensus.js), every colour a
+   --tok-* role, so the arcade page and the dark page each read their own.
+
+   THE VOLT GRAMMAR (28 Sep) OVER THE CANVAS where they differ: a primary button
+   and a SELECTED state are a volt fill with navy ink (--tok-action /
+   --tok-on-action), never a navy fill - the canvas's navy-on-volt segmented
+   pill is drawn as the house's volt pill. Volt is text only on a dark fill
+   (the step numerals, the LIVE pill). */
+
+.lv {
+  background: var(--tok-page); color: var(--tok-ink);
+  font-family: var(--tok-font-body); font-size: 14px; line-height: 1.45;
+  width: 100%; max-width: 560px; margin: 0 auto; padding: 0 16px 96px; box-sizing: border-box;
+}
+.lv * { box-sizing: border-box; }
+.lv-mono { font-family: var(--tok-font-num); letter-spacing: .04em; }
+
+.lv-head { padding: 20px 0 8px; display: flex; flex-direction: column; gap: 6px; }
+.lv-title { font-family: var(--tok-font-num); font-size: 26px; letter-spacing: -.02em; margin: 0; line-height: 1.1; text-transform: uppercase; }
+.lv-sub { font-size: 13px; color: var(--tok-muted); margin: 0; }
+
+.lv-actions { display: flex; gap: 10px; padding: 12px 0; }
+.lv-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: var(--tok-font-num); font-size: 11px; letter-spacing: 0; text-transform: uppercase; white-space: nowrap;
+  min-height: 48px; padding: 0 12px; border-radius: var(--tok-radius-md);
+  border: 1.5px solid var(--tok-ink); background: var(--tok-page); color: var(--tok-ink);
+  text-decoration: none; cursor: pointer; flex: 1; text-align: center;
+}
+.lv-btn--primary { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+.lv-btn:disabled { opacity: .5; cursor: default; }
+.lv-btn--quiet { border-color: var(--tok-line); }
+.lv-btn--block { width: 100%; flex: none; }
+
+.lv-kicker { font-family: var(--tok-font-num); font-size: 10px; letter-spacing: .06em; color: var(--tok-muted); text-transform: uppercase; padding: 14px 0 6px; margin: 0; }
+
+.lv-list { display: flex; flex-direction: column; gap: 12px; }
+.lv-card {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px;
+  border: 1.5px solid var(--tok-line); border-radius: 16px; background: var(--tok-page);
+  text-decoration: none; color: var(--tok-ink);
+}
+.lv-card--lead { border-color: var(--tok-ink); }
+.lv-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.lv-card-name { font-family: var(--tok-font-num); font-size: 15px; line-height: 1.2; text-transform: uppercase; }
+.lv-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.lv-chip {
+  font-family: var(--tok-font-num); font-size: 9px; letter-spacing: .05em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 99px; background: var(--tok-surface-2); color: var(--tok-ink);
+}
+.lv-chip--live { background: var(--tok-primary); color: var(--tok-accent); }
+.lv-card-foot {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  border-top: 1px solid var(--tok-line); padding-top: 10px;
+}
+.lv-card-meta { font-size: 13px; color: var(--tok-muted); }
+.lv-card-you { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.lv-empty { padding: 18px 14px; border: 1.5px dashed var(--tok-line); border-radius: 16px; color: var(--tok-muted); font-size: 13px; }
+
+/* JOIN WITH CODE - the field the second button opens. */
+.lv-codeform { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 0 0 8px; }
+.lv-input {
+  width: 100%; min-height: 48px; border-radius: 12px; border: 1.5px solid var(--tok-line);
+  background: var(--tok-page); color: var(--tok-ink); padding: 0 12px; font-size: 15px; font-family: var(--tok-font-body);
+}
+.lv-input--code { font-family: var(--tok-font-num); letter-spacing: .2em; text-transform: uppercase; text-align: center; }
+.lv-err { color: var(--tok-down); font-size: 13px; margin: 4px 0 0; }
+.lv-note { font-size: 12px; line-height: 1.4; color: var(--tok-muted); margin: 0; }
+
+/* INVITED - the card a ?join= link or an invite leads with. */
+.lv-invited { margin: 18px 0 0; padding: 14px; background: var(--tok-surface-2); border-radius: 16px; display: flex; flex-direction: column; gap: 6px; }
+.lv-invited-name { font-size: 14px; color: var(--tok-ink); margin: 0; }
+.lv-invited-row { display: flex; gap: 8px; padding-top: 6px; }
+
+/* ---------------------------------------------------------------------------
+   CREATE - five numbered steps and a summary bar pinned to the bottom.
+   ------------------------------------------------------------------------- */
+.lv-create { padding-bottom: 150px; }
+.lv-topbar {
+  display: flex; align-items: center; justify-content: space-between; padding: 14px 0;
+  border-bottom: 1px solid var(--tok-line); position: sticky; top: 0; background: var(--tok-page); z-index: 2;
+}
+.lv-topbar a { font-size: 13px; color: var(--tok-muted); text-decoration: none; min-width: 52px; }
+.lv-topbar-title { font-family: var(--tok-font-num); font-size: 13px; text-transform: uppercase; }
+.lv-step { padding: 16px 0; border-top: 1px solid var(--tok-line); display: flex; flex-direction: column; gap: 10px; }
+.lv-step:first-of-type { border-top: 0; }
+.lv-step-head { display: flex; align-items: center; gap: 8px; margin: 0; }
+.lv-step-n {
+  width: 22px; height: 22px; border-radius: 99px; background: var(--tok-primary); color: var(--tok-accent);
+  font-family: var(--tok-font-num); font-size: 11px; display: inline-flex; align-items: center; justify-content: center; flex: none;
+}
+.lv-step-t { font-family: var(--tok-font-num); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+
+.lv-games { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lv-game {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; min-height: 56px;
+  border-radius: var(--tok-radius-md); border: 1.5px solid var(--tok-line); background: var(--tok-page);
+  text-align: left; cursor: pointer; color: var(--tok-ink);
+}
+.lv-game[aria-pressed="true"] { border-color: var(--tok-ink); background: color-mix(in srgb, var(--tok-action) 16%, var(--tok-page)); }
+.lv-game-name { font-family: var(--tok-font-num); font-size: 11px; text-transform: uppercase; }
+.lv-game-sub { font-size: 11px; color: var(--tok-muted); }
+
+.lv-seg { display: flex; padding: 4px; background: var(--tok-surface-2); border-radius: var(--tok-radius-md); gap: 4px; }
+.lv-seg button {
+  flex: 1; min-height: 40px; border-radius: 10px; border: 0; background: transparent; color: var(--tok-ink);
+  font-family: var(--tok-font-num); font-size: 11px; letter-spacing: .03em; text-transform: uppercase; cursor: pointer;
+}
+.lv-seg button[aria-pressed="true"] { background: var(--tok-action); color: var(--tok-on-action); }
+.lv-seg button:disabled { opacity: .4; cursor: default; }
+
+.lv-radio {
+  display: flex; gap: 10px; align-items: flex-start; padding: 12px; width: 100%;
+  border-radius: var(--tok-radius-md); border: 1.5px solid var(--tok-line); background: var(--tok-page);
+  text-align: left; cursor: pointer; color: var(--tok-ink);
+}
+.lv-radio[aria-checked="true"] { border-color: var(--tok-ink); }
+.lv-radio:disabled { opacity: .45; cursor: default; }
+.lv-radio-dot { width: 18px; height: 18px; border-radius: 99px; flex: none; margin-top: 1px; border: 2px solid var(--tok-ink); background: var(--tok-page); }
+.lv-radio[aria-checked="true"] .lv-radio-dot { background: var(--tok-action); }
+.lv-radio-body { display: flex; flex-direction: column; gap: 3px; }
+.lv-radio-t { font-family: var(--tok-font-num); font-size: 12px; text-transform: uppercase; }
+
+.lv-toggle { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; font-size: 13px; color: var(--tok-ink); }
+.lv-toggle input { width: 22px; height: 22px; accent-color: var(--tok-primary); flex: none; }
+.lv-toggle--off { color: var(--tok-muted); }
+
+.lv-field { display: flex; flex-direction: column; gap: 6px; font-family: var(--tok-font-num); font-size: 11px; color: var(--tok-muted); text-transform: uppercase; }
+.lv-stepper { display: flex; justify-content: space-between; align-items: center; min-height: 48px; font-size: 13px; }
+.lv-stepper-ctl { display: flex; align-items: center; gap: 14px; }
+.lv-stepper-ctl button {
+  width: 40px; height: 40px; border-radius: 99px; border: 1.5px solid var(--tok-line); background: var(--tok-page);
+  font-size: 18px; color: var(--tok-ink); cursor: pointer;
+}
+.lv-stepper-n { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 2ch; text-align: center; }
+
+.lv-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  padding: 12px 16px calc(20px + env(safe-area-inset-bottom)); background: var(--tok-page);
+  border-top: 1px solid var(--tok-line);
+}
+.lv-bar-in { max-width: 528px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+.lv-bar-sum { font-size: 12px; color: var(--tok-muted); text-align: center; margin: 0; }
+
+/* ---------------------------------------------------------------------------
+   THE INVITE SHEET - a bottom sheet over a scrim.
+   ------------------------------------------------------------------------- */
+.lv-scrim { position: fixed; inset: 0; z-index: 40; background: color-mix(in srgb, var(--tok-ink) 45%, transparent); display: flex; align-items: flex-end; justify-content: center; }
+.lv-sheet {
+  width: 100%; max-width: 560px; background: var(--tok-page); color: var(--tok-ink);
+  border-radius: 20px 20px 0 0; padding: 10px 16px calc(20px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 12px; font-family: var(--tok-font-body);
+}
+.lv-grab { width: 40px; height: 4px; border-radius: 99px; background: var(--tok-line); margin: 0 auto 4px; }
+.lv-sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.lv-sheet-title { font-family: var(--tok-font-num); font-size: 15px; text-transform: uppercase; margin: 0; }
+.lv-x { background: none; border: 0; color: var(--tok-muted); font-size: 13px; min-height: 44px; min-width: 44px; cursor: pointer; }
+.lv-linkbox {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 12px; border: 1.5px solid var(--tok-line); border-radius: 12px; background: var(--tok-surface);
+  font-size: 13px; overflow: hidden;
+}
+.lv-linkbox span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lv-codebig { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.lv-codebig b { font-family: var(--tok-font-num); font-size: 24px; letter-spacing: .18em; font-weight: 400; }
+.lv-row { display: flex; gap: 8px; }
+.lv-reset { background: none; border: 0; padding: 8px 0; color: var(--tok-down); font-size: 13px; text-align: left; cursor: pointer; min-height: 44px; }
+
+/* ---------------------------------------------------------------------------
+   /j/<key> - the invitation, before the join.
+   ------------------------------------------------------------------------- */
+.lv-hero { margin-top: 16px; padding: 20px 16px; border-radius: 20px; background: var(--tok-hero-wash); border: 1.5px solid var(--tok-line); display: flex; flex-direction: column; gap: 10px; }
+.lv-hero-eb { font-family: var(--tok-font-num); font-size: 10px; letter-spacing: .06em; color: var(--tok-muted); text-transform: uppercase; margin: 0; }
+.lv-hero-name { font-family: var(--tok-font-num); font-size: 26px; line-height: 1.1; text-transform: uppercase; margin: 0; }
+.lv-hero-line { font-size: 13px; color: var(--tok-muted); margin: 0; }
+.lv-refusal { padding: 12px; border-radius: 12px; border: 1.5px solid var(--tok-down); color: var(--tok-ink); font-size: 14px; margin: 0; }
