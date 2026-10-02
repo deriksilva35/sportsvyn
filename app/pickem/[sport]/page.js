@@ -39,6 +39,9 @@ import '../../games/games.css';
 import '../pickem.css';
 import '@/components/games/grade.css';
 import SportSwitch from '@/components/pickem/SportSwitch';
+import '../../boards/board.css';
+import { boardScope } from '@/lib/leagues/boardScope';
+import { leagueChips } from '@/lib/boards/view';
 
 // ONE TIME ZONE PER SCREEN (relay 3b item 2) - see app/weekly/page.js. Every
 // clock this page renders goes through StandaloneDate/StandaloneTime.
@@ -121,7 +124,7 @@ export default async function PickemSportPage({ params, searchParams }) {
         )}
 
         {view.phase === 'settled' && (
-          <PickemSettled sport={sport} view={view} uid={uid} now={now} />
+          <PickemSettled sport={sport} view={view} uid={uid} now={now} league={sp.league ?? null} dest={dest} />
         )}
       </main>
       <SiteFooter />
@@ -136,8 +139,15 @@ export default async function PickemSportPage({ params, searchParams }) {
  * per-game verdict treatment, not a replacement for a fact receiptFor()
  * already computes correctly.
  */
-async function PickemSettled({ sport, view, uid, now }) {
-  const leaderboard = await pickemBoardLeaderboard(view.contest.id, uid, { limit: 5 });
+async function PickemSettled({ sport, view, uid, now, league, dest }) {
+  // ?league=<id> PICKS ONE OF THE READER'S OWN LEAGUES; anything else is the
+  // national board (lib/leagues/boardScope.js - the Weekly/Draft rule). The
+  // league filters the board's LEADERBOARD, which only the settled grade
+  // screen has - a living board has no field table to filter, so it draws no
+  // chips (a control that goes nowhere is worse than none).
+  const scope = await boardScope(uid, league);
+  const chips = leagueChips(dest, scope.leagues, scope.picked);
+  const leaderboard = await pickemBoardLeaderboard(view.contest.id, uid, { limit: 5, memberIds: scope.memberIds });
   // NULL WHEN THE NEXT BOARD ALREADY EXISTS (relay 4 item 2). boardPlan now
   // refuses to plan a board that is already in the table, so this line
   // stops advertising an opening for a board a reader could already play -
@@ -152,7 +162,7 @@ async function PickemSettled({ sport, view, uid, now }) {
       <PickemGrade
         view={view} sport={sport} settledAtIso={view.contest.settledAt}
         leaderboard={leaderboard} next={next} nextBoardNumber={nextNumber}
-        userId={uid}
+        userId={uid} chips={chips} leagueName={scope.picked?.name ?? null}
       />
       {view.receipt?.best && (
         <div className="gg-mathline">
