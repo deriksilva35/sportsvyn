@@ -82,6 +82,10 @@
       "schedule": "30 6-20 * * *"
     },
     {
+      "path": "/api/cron/leagues-tick",
+      "schedule": "25 * * * *"
+    },
+    {
       "path": "/api/cron/draft-bridge",
       "schedule": "45 * * * *"
     },

@@ -63,6 +63,12 @@ export default async function LeaguesPage({ searchParams }) {
   for (const lg of leagues) {
     const detail = await leagueDetail(lg.id, uid).catch(() => null);
     const t = detail ? await leagueTable(detail, { now }).catch(() => null) : null;
+    if (t?.guillotine) {
+      // A guillotine card: are you still standing, and how many are.
+      const out = t.guillotine.chopped.some((c) => c.userId === uid);
+      corners.set(lg.id, out ? 'Chopped' : t.guillotine.chopped.length ? `You're in · ${t.guillotine.standing.length} left` : null);
+      continue;
+    }
     const me = t?.standings.buckets.length ? t.standings.rows.find((r) => r.userId === uid) : null;
     corners.set(lg.id, me ? `You ${ordinal(me.place)}` : null);
   }

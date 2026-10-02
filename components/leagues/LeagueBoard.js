@@ -75,7 +75,36 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
         ))}
       </nav>
 
-      {tab === 'standings' && (
+      {tab === 'standings' && table.guillotine && (
+        <section aria-label="Guillotine">
+          <div className="lv-standing"><b>{table.guillotine.standing.length}</b><span className="lv-note">of {n} still standing</span></div>
+          <p className="lv-kicker">Still standing{table.liveLabel ? ` · ${table.liveLabel}${table.liveFinal ? '' : ' so far'}` : ''}</p>
+          {table.guillotine.standing.map((r) => (
+            <div className={`lv-grow${r.userId === uid ? ' lv-trow--me' : ''}`} key={r.userId} data-standing={r.userId}>
+              <span className="lv-trow-name">{who(r, uid)}</span>
+              <span className={`lv-gtag${r.onBlock ? ' lv-gtag--block' : ''}`}>{r.onBlock ? 'On the block' : 'Safe so far'}</span>
+              <span className="lv-trow-t">{fmt(r.current)}</span>
+            </div>
+          ))}
+          <p className="lv-note" style={{ padding: '10px 0' }}>
+            Lowest score when the {unitWord} is final is out. A tie goes to the higher season total; tied on both, everyone tied survives.
+          </p>
+          {table.guillotine.chopped.length > 0 && (
+            <>
+              <p className="lv-kicker">Chopped · {table.guillotine.chopped.length}</p>
+              {table.guillotine.chopped.map((c) => (
+                <div className="lv-grow lv-grow--out" key={c.userId}>
+                  <span className="lv-trow-name">{c.userId === uid ? 'You' : c.handle ? `@${c.handle}` : 'A member'}</span>
+                  <span className="lv-gtag">Chopped · {c.label}</span>
+                  <span className="lv-trow-t">&mdash;</span>
+                </div>
+              ))}
+            </>
+          )}
+        </section>
+      )}
+
+      {tab === 'standings' && !table.guillotine && (
         hasTable ? (
           <section aria-label="Standings">
             <div className="lv-trow lv-trow--head">
