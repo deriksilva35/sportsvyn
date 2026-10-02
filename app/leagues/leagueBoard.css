@@ -1,0 +1,48 @@
+/* Leagues V1 P2 - the league page (canvas board League). Tokens only, like
+   leaguesV1.css; the selected tab is the house's volt pill. */
+
+.lv-league { padding-top: 4px; }
+.lv-lhead { padding: 16px 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.lv-lhead-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.lv-lhead-invite .lv-btn { min-height: 40px; padding: 0 16px; flex: none; }
+.lv-lname { font-family: var(--tok-font-num); font-size: 24px; line-height: 1.1; text-transform: uppercase; margin: 0; }
+.lv-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding-top: 6px; }
+.lv-tile { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: var(--tok-radius-md); background: var(--tok-surface-2); }
+.lv-tile-k { font-family: var(--tok-font-num); font-size: 9px; letter-spacing: .05em; color: var(--tok-muted); text-transform: uppercase; }
+.lv-tile-v { font-family: var(--tok-font-num); font-size: 20px; font-variant-numeric: tabular-nums; color: var(--tok-ink); }
+
+.lv-tabs { margin: 4px 0 10px; }
+.lv-tabs a {
+  flex: 1; min-height: 40px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--tok-font-num); font-size: 11px; text-transform: uppercase; color: var(--tok-ink); text-decoration: none;
+}
+.lv-tabs a.on { background: var(--tok-action); color: var(--tok-on-action); }
+
+.lv-trow {
+  display: grid; grid-template-columns: 22px 26px 1fr 40px 48px; align-items: center; gap: 6px;
+  padding: 10px 0; border-bottom: 1px solid var(--tok-line); color: var(--tok-ink); text-decoration: none;
+}
+.lv-trow--head { font-family: var(--tok-font-num); font-size: 9px; letter-spacing: .05em; color: var(--tok-muted); text-transform: uppercase; padding: 6px 0; }
+.lv-trow--head span:nth-child(n+4) { text-align: right; }
+.lv-trow--me { background: color-mix(in srgb, var(--tok-action) 14%, var(--tok-page)); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+.lv-trow--week { grid-template-columns: 22px 1fr 56px; }
+.lv-trow--member { grid-template-columns: 1fr auto; }
+.lv-trow-n { font-family: var(--tok-font-num); font-size: 13px; font-variant-numeric: tabular-nums; }
+.lv-trow-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lv-trow-name { font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lv-trow-v { text-align: right; font-size: 13px; color: var(--tok-muted); font-variant-numeric: tabular-nums; }
+.lv-trow-t { text-align: right; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.lv-move { font-size: 11px; color: var(--tok-muted); text-align: center; font-variant-numeric: tabular-nums; }
+.lv-move--up { color: var(--tok-up); }
+.lv-move--down { color: var(--tok-down); }
+.lv-foot { padding-top: 14px; }
+
+/* P3: the guillotine board. */
+.lv-standing { display: flex; align-items: baseline; gap: 8px; padding-top: 4px; }
+.lv-standing b { font-family: var(--tok-font-num); font-size: 32px; font-weight: 400; }
+.lv-gtag { font-family: var(--tok-font-num); font-size: 9px; letter-spacing: .05em; text-transform: uppercase; padding: 3px 7px; border-radius: 99px; background: var(--tok-surface-2); color: var(--tok-ink); justify-self: start; }
+.lv-gtag--block { background: var(--tok-down); color: var(--tok-page); }
+.lv-grow { display: grid; grid-template-columns: 1fr auto 56px; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--tok-line); }
+.lv-grow--out { color: var(--tok-muted); }
+.lv-grow--out .lv-trow-name { font-weight: 400; text-decoration: line-through; }
+.lv-crumb { display: inline-block; padding: 12px 0 0; font-size: 13px; color: var(--tok-muted); text-decoration: none; }

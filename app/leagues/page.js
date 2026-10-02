@@ -9,8 +9,9 @@
  * is a server action. A dud code is a sentence, never a 404 - a dead link
  * punishes the friend for the member's typo.
  *
- * P2 puts the reader's place in each card's corner; until standings exist the
- * corner says whose league it is.
+ * THE CORNER IS YOUR PLACE (P2): each card reads its league's derived table
+ * (lib/leagues/table.js) and names the reader's place once a period is final;
+ * before that it says whose league it is.
  */
 
 import { auth } from '@/auth';
@@ -20,7 +21,9 @@ import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
-import { myLeagues } from '@/lib/leagues/core';
+import { myLeagues, leagueDetail } from '@/lib/leagues/core';
+import { leagueTable } from '@/lib/leagues/table';
+import { ordinal } from '@/lib/leagues/standings';
 import { invitePreview } from '@/lib/leagues/invite';
 import { REFUSALS } from '@/lib/leagues/code';
 import { leagueChips } from '@/lib/leagues/settings';
@@ -55,6 +58,14 @@ export default async function LeaguesPage({ searchParams }) {
   const leagues = uid == null ? [] : await myLeagues(uid).catch(() => []);
   const invite = joinRaw ? await invitePreview(joinRaw, uid).catch(() => null) : null;
   const now = new Date();
+  // One derived table per card - a handful of leagues, each a few reads.
+  const corners = new Map();
+  for (const lg of leagues) {
+    const detail = await leagueDetail(lg.id, uid).catch(() => null);
+    const t = detail ? await leagueTable(detail, { now }).catch(() => null) : null;
+    const me = t?.standings.buckets.length ? t.standings.rows.find((r) => r.userId === uid) : null;
+    corners.set(lg.id, me ? `You ${ordinal(me.place)}` : null);
+  }
 
   return (
     <>
@@ -95,7 +106,7 @@ export default async function LeaguesPage({ searchParams }) {
                       </div>
                       <div className="lv-card-foot">
                         <span className="lv-card-meta">{cardMeta(lg, now)}</span>
-                        <span className="lv-card-you">{lg.mine ? 'Your league' : "You're in"}</span>
+                        <span className="lv-card-you">{corners.get(lg.id) ?? (lg.mine ? 'Your league' : "You're in")}</span>
                       </div>
                     </Link>
                   );
