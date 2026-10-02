@@ -16,6 +16,7 @@
  * is everything true about it.
  */
 
+import { NON_AFFILIATION } from '@/lib/legal';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getGamePage, scoringByQuarter, scoringFromPlays, linesByGroup, fantasyLeaders, SCORING_FORMATS } from '@/lib/gridiron/gameDetail';
@@ -431,10 +432,7 @@ export default async function GamePage({ params, searchParams }) {
             A debug control that has been superseded by a shipped one is not a
             safety net, it is a second way to start the same Activity. */}
 
-        <footer className="gg-foot">
-          SPORTSVYN IS NOT AFFILIATED WITH, ENDORSED BY, OR SPONSORED BY THE NATIONAL
-          FOOTBALL LEAGUE, ITS TEAMS, OR ITS PLAYERS.
-        </footer>
+        <footer className="gg-foot">{NON_AFFILIATION.toUpperCase()}</footer>
       </div>
     </div>
   );

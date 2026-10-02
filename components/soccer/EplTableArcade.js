@@ -6,6 +6,7 @@
 
 import Link from 'next/link';
 import { railFor } from '@/lib/soccer/standings';
+import { matchweekLabel } from '@/lib/soccer/roundLabel';
 
 const gd = (n) => (Number(n) > 0 ? `+${n}` : String(n ?? 0));
 
@@ -25,7 +26,7 @@ export default function EplTableArcade({ table }) {
       <div className="ept-head">
         <span className="ept-eb">Premier League</span>
         <h1 className="ept-title">The table</h1>
-        <p className="ept-ed">{table ? `Matchweek ${Math.max(...table.rows.map((r) => Number(r.played) || 0))}` : ''}
+        <p className="ept-ed">{table ? matchweekLabel(Math.max(...table.rows.map((r) => Number(r.played) || 0))) : ''}
           <Link href="/scores?sport=epl">Scores &rsaquo;</Link></p>
       </div>
       {!table ? <p className="ept-empty">The table lands with the first sync.</p> : (

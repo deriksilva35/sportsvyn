@@ -28,6 +28,7 @@
  * tab - not an empty frame.
  */
 
+import { NON_AFFILIATION } from '@/lib/legal';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getGamePage } from '@/lib/gridiron/gameDetail';
@@ -453,10 +454,7 @@ export default async function CfbGamePage({ params, searchParams }) {
 
         <GameFacts game={game} final={final} live={live} />
 
-        <footer className="gg-foot">
-          SPORTSVYN IS NOT AFFILIATED WITH, ENDORSED BY, OR SPONSORED BY THE NCAA,
-          ITS MEMBER INSTITUTIONS, OR THEIR ATHLETES.
-        </footer>
+        <footer className="gg-foot">{NON_AFFILIATION.toUpperCase()}</footer>
       </div>
     </div>
   );
