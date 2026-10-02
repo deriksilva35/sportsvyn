@@ -68,8 +68,8 @@ test('the CFB page renders what CFB has, and does not fake what it lacks', () =>
   assert.match(code, /boxTeams\.length \? \{ key: 'players'/, 'and PLAYER LINES only when a team has tables');
 });
 
-test('the footer names the NCAA, not the NFL', () => {
-  assert.match(CFB, /NOT AFFILIATED WITH[\s\S]{0,80}NCAA/);
+test('the footer is the one site-wide line (thu-42), and never names the NFL', () => {
+  assert.match(CFB, /<footer className="gg-foot">\{NON_AFFILIATION\.toUpperCase\(\)\}<\/footer>/);
   assert.doesNotMatch(CFB, /NATIONAL\s+FOOTBALL\s+LEAGUE/);
 });
 

@@ -56,6 +56,7 @@
 .e5-ppg { display: flex; flex-direction: column; align-items: flex-end; }
 .e5-ppg b { font: 700 15px var(--tok-font-body); font-variant-numeric: tabular-nums; }
 .e5-ppg small { font: 400 9px var(--tok-font-num); color: var(--tok-muted); }
+.e5-ppg .e5-gp { font: 400 10px var(--tok-font-body); }
 .e5-add { flex: none; min-height: 40px; min-width: 52px; padding: 0 12px; border-radius: 10px; border: 0; background: var(--tok-action); color: var(--tok-on-action); font: 400 10px var(--tok-font-num); display: inline-flex; align-items: center; justify-content: center; text-decoration: none; cursor: pointer; }
 .e5-add.off { background: var(--tok-surface-2); color: var(--tok-ink); cursor: default; }
 .e5-showmore { display: block; width: calc(100% - 32px); margin: 12px 16px; min-height: 44px; border-radius: 12px; border: 1.5px solid var(--tok-line); background: var(--tok-page); color: var(--tok-ink); font: 400 11px var(--tok-font-num); cursor: pointer; }
@@ -102,6 +103,8 @@
 .e5-parts { display: flex; gap: 6px; flex-wrap: wrap; padding-left: 54px; }
 .e5-part { font: 400 11px var(--tok-font-body); padding: 3px 8px; border-radius: 99px; background: var(--tok-surface-2); color: var(--tok-ink); }
 .e5-part.neg { color: var(--tok-live); }
+/* THE PROVISIONAL CLEAN SHEET: dimmed and dashed - held, not yet counted. */
+.e5-part.prov { opacity: .55; background: var(--tok-page); border: 1px dashed var(--tok-line); }
 .e5-note { margin: 14px 16px 20px; padding: 12px; border-radius: 12px; background: var(--tok-surface-2); font: 400 12px/1.4 var(--tok-font-body); color: var(--tok-muted); }
 
 .e5-more { margin: 12px 16px 0; border: 1px solid var(--tok-line); border-radius: 12px; padding: 10px 12px; }

@@ -31,7 +31,7 @@ import {
 } from '@/lib/teams';
 import { getTeamSquad } from '@/lib/players';
 import { isFollowingTeam } from '@/lib/follows';
-import { NFL_NON_AFFILIATION } from '@/lib/legal';
+import { NON_AFFILIATION } from '@/lib/legal';
 
 import TeamHero from '@/components/team/TeamHero';
 import { servedList, servedRankFor } from '@/lib/rankings/servedBoard';
@@ -209,7 +209,7 @@ export default async function TeamPage({ params }) {
             </div>
           </div>
         </div>
-        <p className="footer-fine">{NFL_NON_AFFILIATION}</p>
+        <p className="footer-fine">{NON_AFFILIATION}</p>
       </footer>
     </>
   );

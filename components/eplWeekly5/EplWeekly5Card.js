@@ -30,7 +30,7 @@ const FILTERS = [
   { key: 'fwd', label: 'FWD', slot: 'fwd' },
   { key: 'flex', label: 'FLEX', slot: 'flex1' },
 ];
-const LIST_HEAD = { all: 'ALL PLAYERS', defgk: 'DEFENDERS & KEEPERS', mid: 'MIDFIELDERS', fwd: 'FORWARDS', flex: 'ALL PLAYERS' };
+const LIST_HEAD = { all: 'ALL PLAYERS', defgk: 'DEFENDERS & KEEPERS', mid: 'MIDFIELDERS', fwd: 'FORWARDS', flex: 'OUTFIELD' };
 const PAGE = 60;
 
 const surname = (n) => {
@@ -82,6 +82,8 @@ function Picker({ view, signedIn, signinHref, compact = false }) {
       if (filter === 'defgk' && !(p.pos === 'GK' || p.pos === 'DEF')) return false;
       if (filter === 'mid' && p.pos !== 'MID') return false;
       if (filter === 'fwd' && p.pos !== 'FWD') return false;
+      // FLEX IS OUTFIELD ONLY (thu-42): the FLEX chip lists no keepers.
+      if (filter === 'flex' && p.pos === 'GK') return false;
       if (needle && !`${p.name} ${p.club}`.toLowerCase().includes(needle)) return false;
       return true;
     });
@@ -154,7 +156,7 @@ function Picker({ view, signedIn, signinHref, compact = false }) {
           </p>
           <details className="e5-how">
             <summary>How it works</summary>
-            <p>Pick five: one DEF/GK, one MID, one FWD and two FLEX (any position). At most {MAX_PER_CLUB} from one club.
+            <p>Pick five: one DEF/GK, one MID, one FWD and two FLEX (any outfield player - a keeper only fills DEF/GK). At most {MAX_PER_CLUB} from one club.
               Each pick locks at its own kickoff; swap freely before it.</p>
             <ul>{view.contest.rules.map((r) => <li key={r}>{r}</li>)}</ul>
           </details>
@@ -220,7 +222,7 @@ function Picker({ view, signedIn, signinHref, compact = false }) {
                   {p.flag?.reason ? ` · ${p.flag.reason}` : ''}
                 </small>
               </span>
-              <span className="e5-ppg"><b>{p.ppg ?? '–'}</b><small>PTS/G</small></span>
+              <span className="e5-ppg"><b>{p.ppg ?? '–'}</b><small>PTS/G</small><small className="e5-gp">{p.games} GP</small></span>
               {!signedIn ? <a className="e5-add" href={signinHref}>ADD</a>
                 : <button type="button" className={`e5-add${state === 'open' ? '' : ' off'}`} disabled={state !== 'open'} onClick={() => add(p)}>
                   {mine ? 'IN' : gone ? 'LOCKED' : max ? 'MAX' : 'ADD'}
@@ -268,7 +270,7 @@ function FiveRows({ view, final = false }) {
             <span className="e5-fr-p">{s.points ?? '–'}</span>
           </div>
           {s.parts?.length ? (
-            <div className="e5-parts">{s.parts.map((p, i) => <span key={i} className={`e5-part${p.pts < 0 ? ' neg' : ''}`}>{p.text}</span>)}</div>
+            <div className="e5-parts">{s.parts.map((p, i) => <span key={i} className={`e5-part${p.pts < 0 ? ' neg' : ''}${p.provisional ? ' prov' : ''}`} title={p.provisional ? 'Clean sheet so far - counts at full time' : undefined}>{p.text}</span>)}</div>
           ) : s.state === 'pending' && s.kickoffAt ? (
             <div className="e5-parts"><span className="e5-part">Kicks off <StandaloneTime iso={s.kickoffAt} weekday /></span></div>
           ) : s.state === 'live' ? (

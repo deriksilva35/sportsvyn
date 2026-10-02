@@ -6,6 +6,7 @@
  * YOUR breakdown to the page.
  */
 
+import { NON_AFFILIATION } from '@/lib/legal';
 import { notFound, redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -207,7 +208,7 @@ export default async function DailyReveal({ params, searchParams }) {
             <a href="https://github.com/nflverse/nflverse-data" rel="noopener noreferrer" target="_blank">nflverse</a>,
             used under{' '}
             <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener noreferrer" target="_blank">CC BY 4.0</a>.
-            Not affiliated with or endorsed by the National Football League.
+            {NON_AFFILIATION}
           </p>
         </section>
 
