@@ -124,7 +124,7 @@ export default async function SignInPage({ searchParams }) {
           sends the reader straight back to this form with the code in the
           callbackUrl (the line above) - no Safari, no second path. The web's
           signed-out /sim hero carries the same field. */}
-      {isShell && !joinCode && !leagueInvite && <JoinByCode variant="signin" />}
+      {isShell && !joinCode && <JoinByCode variant="signin" />}
 
       {/* SHELL (App Store 3.1.1): the pricing page is a purchase path, so the
           link is not rendered inside the app at all. Web unchanged. */}
