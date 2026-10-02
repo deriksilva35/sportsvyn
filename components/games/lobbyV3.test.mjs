@@ -23,8 +23,9 @@ import { test, before, afterEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { install } from '../../lib/testing/nextResolve.mjs';
-import { nowCard } from '../../lib/games/nowCard.js';
-import { weeklyRowV3, pickemRowV3, dailyRowV3, draftRowV3, pickemRecord, elapsedOf } from '../../lib/games/v3Rows.js';
+import { elapsedOf } from '../../lib/games/v3Rows.js';
+import { playLobby } from '../../lib/games/playLobby.js';
+import { PLAY_REGISTRY, weeklyItem, pickemItem, draftItem, octoberItem, runItem, nbaPickemItem, sixItem, dailyItem } from '../../lib/games/playRegistry.js';
 import { normalizeChip } from '../../lib/games/lobby.js';
 
 install();
@@ -70,194 +71,136 @@ const txt = (el) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
 // thing. cells() reads the row the way the screen draws it - one cell at a
 // time, in order.
 const cells = (el, sel = ':scope > *') => [...(el?.querySelectorAll(sel) ?? [])].map(txt);
-const rows = (c) => [...c.querySelectorAll('.gv-g')];
 const chips = (c) => [...c.querySelectorAll('.gv-chip')];
-const rowBy = (c, key) => c.querySelector(`.gv-g[data-row="${key}"]`);
 const click = (node) => act(() => {
   node.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
 });
 
 // ===========================================================================
-// THE FOUR DEMO DAYS, each built from the shapers the reader feeds
+// THE PLAY LOBBY (thu-38 + fri-1) - the default screen, from the real shapers
 // ===========================================================================
-const week = (v) => ({ now: v.now, rows: v.rows, week: 2, practice: [
-  { key: 'draft', label: 'Mock draft', title: 'The Draft', href: '/sim', sub: '12 · 8 rounds · this season' },
-  { key: 'league', label: 'Mock draft', title: 'Your league', href: '/leagues', sub: 'your rules' },
-], foot: v.foot ?? 'Everything scores on its own · graded Tuesday' });
+// THE v3 "This week" PANE IS RETIRED, and its eight tests with it (the now
+// card on four demo days, the four football rows, the streak on the Daily row).
+// The approved Play-tab canvas replaced that screen: the facts those rows drew
+// are the registry's items now (lib/games/playRegistry.test.mjs pins their
+// words), and these tests press the new screen the way the old ones pressed
+// the old one. nowCard.js and v3Rows.js keep their own pure tests.
 
-// THU, PRE-KICK: the board is open, nothing is live, nothing is graded.
-const THU = () => {
-  const now = nowCard({
-    daily: { state: 'play', closesAt: ahead(6), shape: '8 slots · 12 teams · about 3 minutes', streakLine: '4-day streak' },
-    weekly: { state: 'open' }, draft: { state: 'none' },
-  });
-  return week({ now, rows: [
-    dailyRowV3({ pct: '99.7%', matched: '7 of 8 matched', streak: 4, state: 'play', opensAt: ahead(6) }),
-    weeklyRowV3({ rows: [{ id: 1, name: 'Josh Allen' }, { id: 2, name: 'Kenneth Walker' }, { id: 3, name: 'Jahmyr Gibbs' },
-      { id: 4, name: 'A' }, { id: 5, name: 'B' }, { id: 6, name: 'C' }], state: 'open', filled: 6 }),
-    pickemRowV3({ nfl: { record: { correct: 0, played: 0, pending: 38 } }, cfb: null }),
-    draftRowV3({ state: 'drafting' }),
-  ] });
+const E = (key) => PLAY_REGISTRY.find((e) => e.key === key);
+const PLAY = ({ signedIn = true, chip = 'all', leagues = [] } = {}) => {
+  const now = new Date();
+  const o = { signedIn, now };
+  const items = [
+    octoberItem(E('mlb-october'), { contest: { board: [{ kickoff_at: ahead(2) }, { kickoff_at: ahead(5) }], meta: { games: 2 } }, filled: signedIn ? 2 : 0, size: 5 }, o),
+    // Signed out the Draft is a "Sign in to draft" row, never a move (fri-2).
+    draftItem(E('nfl-draft'), { home: { state: 'drafting', week: 4, locksAt: ahead(2.5) }, round: 4 }, o),
+    weeklyItem(E('nfl-weekly'), { home: { state: 'play', week: 4, locksAt: ahead(60) } }, o),
+    pickemItem(E('nfl-pickem'), { card: { total: 16, picked: 16, pickable: 13, pickedOpen: 13, nextKickoff: ahead(8), displayWeek: 4 } }, o),
+    runItem(E('mlb-run'), { contest: { meta: { label: 'Wild Card' } }, next: null, filled: 9, size: 9 }, o),
+    nbaPickemItem(E('nba-pickem'), { st: null, plan: { opensAt: ahead(19 * 24), board: [{}, {}, {}] } }, o),
+    sixItem(E('nba-six'), { st: null, plan: { opensAt: ahead(19 * 24) } }, o),
+    pickemItem(E('cfb-pickem'), { card: null, plan: { opensAt: ahead(30) } }, o),
+    dailyItem(E('daily'), { state: signedIn ? 'play' : 'signed-out', closesAt: ahead(10) }, o),
+  ].filter(Boolean);
+  const view = playLobby(items, { now, signedIn, chip, nextGameBySport: { nfl: ahead(30), mlb: ahead(2), cfb: ahead(30) } });
+  return {
+    handle: signedIn ? 'sportsvyn_og' : null, chip: 'week',
+    play: { ...view, now: now.toISOString(), tz: 'America/Los_Angeles', leagues,
+      practice: [{ key: 'mock', title: 'Mock draft', href: '/sim', sub: '12 teams · 8 rounds · any seat' },
+        { key: 'league', title: 'Start a league', href: '/leagues', sub: 'Your rules, your people' }],
+      foot: 'Every game scores on its own · times in your zone' },
+  };
 };
-
-// FRI, MORNING: last night's board closed and is graded - the card leads with it.
-const FRI = () => {
-  const now = nowCard({
-    daily: { state: 'done', closesAt: ago(9), stats: [{ label: 'Yesterday', value: '99.7%' }],
-      edition: '2024 season', gradedLine: '7 of 8 · 5-day streak' },
-    weekly: { state: 'locked', live: true, scored: 34.2 }, draft: { state: 'none' },
-  });
-  return week({ now, rows: [
-    dailyRowV3({ pct: '99.7%', streak: 5, state: 'done', opensAt: ahead(12) }),
-    weeklyRowV3({ rows: [], state: 'locked', live: true, scored: 34.2, toPlay: 5 }),
-    // THE LIVE GAME IS OFF THE RECORD. 15 NFL games are pending; the record
-    // reads 1-0, not 1-15 and not 16-0.
-    pickemRowV3({
-      nfl: { record: pickemRecord({
-        picks: { 1: 'home', 2: 'away', 3: 'home' },
-        games: [{ id: 1, status: 'final', winner: 'home' }, { id: 2, status: 'live', winner: null },
-          { id: 3, status: 'scheduled', winner: null }] }) },
-      cfb: { record: { correct: 0, played: 0, pending: 22 } },
-    }),
-    draftRowV3({ state: 'none' }),
-  ] });
-};
-
-// SUN, LIVE: a lineup is being played right now and outranks every result.
-const SUN = () => {
-  const now = nowCard({
-    daily: { state: 'done', closesAt: ahead(6) },
-    weekly: { state: 'locked', live: true, scored: 48.2, toPlay: 3, rank: 14, of: 61 },
-    draft: { state: 'none' },
-  });
-  return week({ now, rows: [
-    dailyRowV3({ pct: '96.1%', matched: '6 of 8', streak: 6, state: 'done', opensAt: ahead(6) }),
-    weeklyRowV3({ rows: [], state: 'locked', live: true, scored: 48.2, toPlay: 3 }),
-    pickemRowV3({ nfl: { record: { correct: 5, played: 7, pending: 4 } }, cfb: { record: { correct: 12, played: 20, pending: 5 } } }),
-    draftRowV3({ state: 'none' }),
-  ] });
-};
-
-// TUE, GRADED: the week settled, and nothing is open yet.
-const TUE = () => {
-  const now = nowCard({
-    daily: { state: 'closed', closesAt: ahead(9) },
-    weekly: { state: 'settled', settledAt: ago(2), week: 2, rank: 3, of: 61, score: 141.6 },
-    draft: { state: 'none' },
-  });
-  return week({ now, rows: [
-    dailyRowV3({ state: 'closed', streak: 6, opensAt: ahead(9) }),
-    weeklyRowV3({ rows: [], state: 'settled', rank: 3, of: 61, score: 141.6 }),
-    pickemRowV3({ nfl: { record: { correct: 21, played: 32, pending: 0 } }, cfb: null }),
-    draftRowV3({ state: 'none' }),
-  ] });
-};
-
-// ===========================================================================
-test('THU pre-kick: the now card is the open board, and it is not marked done', () => {
-  const c = screen({ v: { handle: 'sportsvyn_og', week: THU() }, chip: 'week' });
-  const card = c.querySelector('.gv-now');
-  assert.equal(card.dataset.kind, 'daily-open');
-  assert.match(txt(card), /Tonight/);
-  assert.match(txt(card), /The Daily/);
-  assert.match(txt(card), /season revealed when you start/);
-  assert.equal(card.className.includes('done'), false);
-  assert.equal(card.getAttribute('href'), '/daily/board');
-  assert.match(txt(card.querySelector('.gv-now-go')), /^Play$/);
-});
-
-test('FRI morning: the graded Daily leads, marked done, and carries its own score', () => {
-  const c = screen({ v: { handle: 'x', week: FRI() }, chip: 'week' });
-  const card = c.querySelector('.gv-now');
-  assert.equal(card.dataset.kind, 'daily-graded');
-  assert.match(txt(card), /Graded overnight/);
-  assert.match(txt(card), /Your Daily · 99\.7%/);
-  assert.equal(card.className.includes('done'), true);
-  assert.match(txt(card.querySelector('.gv-now-go')), /See results/);
-});
-
-test('SUN live: a live lineup outranks the graded Daily on the same screen', () => {
-  const c = screen({ v: { handle: 'x', week: SUN() }, chip: 'week' });
-  const card = c.querySelector('.gv-now');
-  assert.equal(card.dataset.kind, 'live');
-  assert.match(txt(card), /Live now/);
-  assert.match(txt(card), /Your Weekly · 48\.2/);
-  assert.match(txt(card), /3 to play/);
-  assert.match(txt(card), /14th of 61/);
-  assert.equal(card.getAttribute('href'), '/weekly');
-});
-
-test('TUE graded: the settled week leads and the screen is a receipt', () => {
-  const c = screen({ v: { handle: 'x', week: TUE() }, chip: 'week' });
-  const card = c.querySelector('.gv-now');
-  assert.equal(card.dataset.kind, 'week-graded');
-  assert.match(txt(card), /Week 2 is in/);
-  assert.match(txt(card), /3rd of 61/);
-  assert.equal(card.className.includes('done'), true);
-});
-
-// ---- all four row states, per game ----------------------------------------
-test('every game draws a row on every demo day, in the mock order', () => {
-  for (const [name, day] of [['thu', THU], ['fri', FRI], ['sun', SUN], ['tue', TUE]]) {
-    const c = screen({ v: { handle: 'x', week: day() }, chip: 'week' });
-    assert.deepEqual(rows(c).map((r) => r.dataset.row), ['daily', 'weekly', 'pickem', 'draft'], name);
-    assert.deepEqual(rows(c).map((r) => txt(r.querySelector('.gv-ic'))), ['D', 'W', 'P', 'R'], name);
-    afterEachInline();
-  }
-});
 function afterEachInline() {
   for (const r of roots) { try { act(() => r.unmount()); } catch { /* gone */ } }
   roots.clear(); document.getElementById('root').innerHTML = '';
 }
+const cards = (c) => [...c.querySelectorAll('.pl-card')];
+const prow = (c, key) => c.querySelector(`.pl-row[data-row="${key}"]`);
 
-test('the Weekly row: set, then live, then final - three states, three tones', () => {
-  const open = screen({ v: { week: THU() }, chip: 'week' });
-  const w1 = rowBy(open, 'weekly');
-  assert.match(txt(w1), /Allen · Walker · Gibbs \+3/);
-  assert.deepEqual(cells(w1.querySelector('.gv-r')), ['6/6', 'set']);
-  assert.equal(w1.querySelector('.gv-ic').className.includes('live'), false);
+test('PLAY: the top says PLAY, the date and the zone, once', () => {
+  const c = screen({ v: PLAY(), chip: 'week' });
+  assert.equal(txt(c.querySelector('.pl-top h1')), 'Play');
+  assert.match(txt(c.querySelector('.pl-zone')), /^\w{3} \d{1,2} \w{3} · \w+/);
+  assert.equal(c.querySelectorAll('.gv-now').length, 0, 'the now card is retired');
+});
+
+test('YOUR MOVE: only what the reader can act on, soonest lock first, LOCKS SOON under 3h, CTA as drawn', () => {
+  const c = screen({ v: PLAY(), chip: 'week' });
+  assert.deepEqual(cards(c).map((x) => x.dataset.key), ['mlb-october', 'nfl-draft', 'daily', 'nfl-weekly'],
+    "Pick'em is complete, the Run is locked, the NBA and CFB games are not open");
+  assert.deepEqual(cards(c).map((x) => Boolean(x.querySelector('.pl-soon'))), [true, true, false, false]);
+  assert.deepEqual(cards(c).map((x) => txt(x.querySelector('.pl-cta'))), ['FINISH CARD', 'BACK TO ROOM', 'PLAY TODAY', 'SET YOUR SIX']);
+  assert.match(txt(c.querySelector('.pl-move .pl-sh h3')), /Your move · 4/);
+  const bar = cards(c)[0].querySelector('.pl-bar');
+  assert.equal(bar.children.length, 5, 'one segment per slot');
+  assert.equal(bar.querySelectorAll('.on').length, 2, 'two filled');
+  assert.match(txt(cards(c)[0].querySelector('.pl-card-s')), /^2 of 5 picked · next lock \d{1,2}:\d{2} [AP]M$/, 'the time is a clock reading, no zone repeated');
+  assert.equal(cards(c)[1].getAttribute('href'), '/draft');
+});
+
+test('CHIPS: ALL + each sport with a game in 14 days, the selected one marked, each a ?sport= URL', () => {
+  const c = screen({ v: PLAY(), chip: 'week' });
+  const ch = [...c.querySelectorAll('.pl-chip')];
+  assert.deepEqual(ch.map((x) => txt(x)), ['ALL', 'NFL', 'MLB', 'CFB']);
+  assert.deepEqual(ch.map((x) => x.className.includes(' on')), [true, false, false, false]);
+  assert.deepEqual(ch.map((x) => x.getAttribute('href')), ['/games', '/games?sport=nfl', '/games?sport=mlb', '/games?sport=cfb']);
+  assert.equal(c.querySelectorAll('.gv-chips').length, 0, 'the pane chips are not on the lobby');
+});
+
+test('GROUPS: by soonest open lock; rows are mark, name, status, progress, chevron; NBA collapses', () => {
+  const c = screen({ v: PLAY(), chip: 'week' });
+  const groups = [...c.querySelectorAll('.pl-group')].map((g) => g.dataset.group);
+  assert.deepEqual(groups, ['mlb', 'nfl', 'cfb', 'all'], 'MLB locks first; CFB has only a door; The Daily last');
+  const w = prow(c, 'nfl-weekly');
+  assert.deepEqual(cells(w).slice(0, 1), ['W']);
+  assert.equal(txt(w.querySelector('.pl-t b')), 'The Weekly');
+  assert.equal(txt(w.querySelector('.pl-r')), '0 / 6');
+  assert.ok(w.querySelector('.gv-chev'));
+  assert.equal(prow(c, 'cfb-pickem').dataset.phase, 'upcoming', 'not open yet: dimmed');
+  assert.match(txt(prow(c, 'cfb-pickem').querySelector('.pl-r')), /^\d{1,2} \w{3}$/, 'with its open date');
+  const later = [...c.querySelectorAll('.pl-col')];
+  assert.deepEqual(later.map((x) => x.dataset.group), ['nba'], 'nothing open in 7 days: one line at the bottom');
+  assert.match(txt(later[0]), /^NBA\s*opens \w{3} \d{1,2} \w{3}/);
+});
+
+test('THE NBA CHIP filters everything, YOUR MOVE included, and its group stays open with dimmed rows', () => {
+  const c = screen({ v: PLAY({ chip: 'nba' }), chip: 'week' });
+  assert.equal(cards(c).length, 0, 'nothing in the NBA is your move yet');
+  assert.deepEqual([...c.querySelectorAll('.pl-group')].map((g) => g.dataset.group), ['nba']);
+  assert.deepEqual([...c.querySelectorAll('.pl-row')].map((r) => r.dataset.phase), ['upcoming', 'upcoming']);
+  assert.equal(c.querySelectorAll('.pl-col').length, 0);
+  assert.ok([...c.querySelectorAll('.pl-chip')].find((x) => txt(x) === 'NBA').className.includes(' on'));
+  const nfl = screen({ v: PLAY({ chip: 'nfl' }), chip: 'week' });
+  assert.deepEqual(cards(nfl).map((x) => x.dataset.key), ['nfl-draft', 'nfl-weekly']);
+});
+
+test('YOUR LEAGUES: listed by name when the reader has any; PRACTICE always', () => {
+  const none = screen({ v: PLAY(), chip: 'week' });
+  assert.equal(none.querySelectorAll('.pl-league').length, 0, 'no league, no section');
+  assert.deepEqual([...none.querySelectorAll('.pl-tile b')].map(txt), ['Mock draft', 'Start a league']);
   afterEachInline();
+  const two = screen({ v: PLAY({ leagues: [{ id: 3, name: 'Sunday Crew', href: '/leagues/3', sub: '6 members' }] }), chip: 'week' });
+  const l = two.querySelector('.pl-league');
+  assert.equal(l.getAttribute('href'), '/leagues/3');
+  assert.match(txt(l), /Sunday Crew/);
+});
 
-  const live = screen({ v: { week: SUN() }, chip: 'week' });
-  const w2 = rowBy(live, 'weekly');
-  assert.equal(w2.querySelector('.gv-ic').className.includes('live'), true);
-  assert.deepEqual(cells(w2.querySelector('.gv-r')), ['48.2', 'live']);
+test('the three panes stay one tap away from the lobby, and their chips lead back to Play', () => {
+  const c = screen({ v: PLAY(), chip: 'week' });
+  assert.deepEqual([...c.querySelectorAll('.pl-panes a')].map((a) => a.getAttribute('href')),
+    ['/games?pane=boards', '/games?pane=results', '/games?pane=alerts']);
   afterEachInline();
-
-  const done = screen({ v: { week: TUE() }, chip: 'week' });
-  const w3 = rowBy(done, 'weekly');
-  assert.equal(w3.querySelector('.gv-ic').className.includes('done'), true);
-  assert.deepEqual(cells(w3.querySelector('.gv-r')), ['3rd', 'of 61']);
-});
-
-test("the Pick'em row ignores a live game: 1-0, not 1-15 and not 16-0", () => {
-  const c = screen({ v: { week: FRI() }, chip: 'week' });
-  const p = rowBy(c, 'pickem');
-  assert.match(txt(p), /NFL 1-0/);
-  assert.match(txt(p), /CFB 22 pending/);
-  assert.equal(/1-15|16-0/.test(txt(p)), false);
-});
-
-test('the streak renders on the Daily row and in the now card, and nowhere else', () => {
-  const c = screen({ v: { handle: 'og', week: THU() }, chip: 'week' });
-  assert.match(txt(rowBy(c, 'daily')), /4-day streak/);
-  assert.match(txt(c.querySelector('.gv-now')), /4-day streak/);
-  // THE HEADER CHIP IS GONE (the addendum): the streak moved into the line.
-  assert.equal(/streak/.test(txt(c.querySelector('.gv-top'))), false);
-});
-
-// ---- the chips -------------------------------------------------------------
-test('four chips, the current one marked, each carrying the URL it claims', () => {
-  const c = screen({ v: { handle: 'x', week: THU() }, chip: 'week' });
-  assert.deepEqual(chips(c).map((x) => x.dataset.chip), ['week', 'boards', 'results', 'alerts']);
-  assert.deepEqual(chips(c).map((x) => txt(x)), ['This week', 'Boards', 'Results', 'Alerts']);
-  assert.deepEqual(chips(c).map((x) => x.className.includes('on')), [true, false, false, false]);
-  assert.deepEqual(chips(c).map((x) => x.getAttribute('href')),
+  const b = screen({ chip: 'boards', v: { boards: { boardKey: 'weekly', boards: [{ key: 'weekly', label: 'WEEKLY', rows: [], empty: 'none' }] } } });
+  assert.deepEqual(chips(b).map((x) => x.dataset.chip), ['week', 'boards', 'results', 'alerts']);
+  assert.deepEqual(chips(b).map((x) => txt(x)), ['Play', 'Boards', 'Results', 'Alerts']);
+  assert.deepEqual(chips(b).map((x) => x.className.includes('on')), [false, true, false, false]);
+  assert.deepEqual(chips(b).map((x) => x.getAttribute('href')),
     ['/games', '/games?pane=boards', '/games?pane=results', '/games?pane=alerts']);
 });
 
 test('tapping Boards asks for ?pane=boards, and that URL renders the Boards pane', () => {
-  const c = screen({ v: { handle: 'x', week: THU() }, chip: 'week' });
+  const c = screen({ chip: 'results', v: { handle: 'x', results: { dailyDays: [], gradedWeek: [] } } });
   const boards = chips(c).find((x) => x.dataset.chip === 'boards');
   click(boards);
   const url = boards.getAttribute('href');
@@ -278,7 +221,7 @@ test('tapping Boards asks for ?pane=boards, and that URL renders the Boards pane
     { key: 'draft', label: 'DRAFT', rows: [] },
     { key: 'daily', label: 'DAILY', rows: [] },
   ] } } });
-  assert.equal(c2.querySelectorAll('.gv-now').length, 0, 'the now card belongs to This week only');
+  assert.equal(c2.querySelectorAll('.pl-card').length, 0, 'YOUR MOVE belongs to the Play lobby only');
   const trs = [...c2.querySelectorAll('.gv-tr')];
   assert.equal(trs.length, 4);                                  // three rows + the footer line
   assert.deepEqual(cells(trs[0]), ['1', 'jakebutler', '152.4']);
@@ -305,9 +248,9 @@ test('v2 ?pane= URLs all land on a chip: games->week, leaderboards->boards, hist
   assert.equal(normalizeChip(undefined), 'week');
   assert.equal(normalizeChip('nonsense'), 'week');
   // and each of those renders its pane without the others' payload
-  for (const [pane, sel] of [['games', '.gv-now'], ['leaderboards', '.gv-lb'], ['history', '.gv-lb'], ['answer', '.gv-lb']]) {
+  for (const [pane, sel] of [['games', '.pl-chips'], ['leaderboards', '.gv-lb'], ['history', '.gv-lb'], ['answer', '.gv-lb']]) {
     const chip = normalizeChip(pane);
-    const v = chip === 'week' ? { week: THU() }
+    const v = chip === 'week' ? PLAY()
       : chip === 'boards' ? { boards: { boardKey: 'weekly', boards: [{ key: 'weekly', label: 'WEEKLY', rows: [], empty: 'none' }] } }
         : { results: { dailyDays: [], gradedWeek: [] } };
     const c = screen({ chip, v });
@@ -376,15 +319,21 @@ test('Alerts with none set offers the two doors that exist', () => {
 });
 
 // ---- signed out ------------------------------------------------------------
-test('signed out: every door becomes the sign-in door, and nothing is faked', () => {
-  const c = screen({ v: { handle: null, week: THU() }, chip: 'week', signedIn: false });
-  const card = c.querySelector('.gv-now');
-  assert.match(txt(card.querySelector('.gv-now-go')), /^Sign in$/);
-  assert.equal(card.getAttribute('href'), '/signin?callbackUrl=%2Fdaily%2Fboard');
-  for (const r of rows(c)) {
-    assert.match(r.getAttribute('href'), /^\/signin\?callbackUrl=/, r.dataset.row);
+test('signed out: every door becomes the sign-in door, and YOUR MOVE is the three soonest-locking games', () => {
+  const c = screen({ v: PLAY({ signedIn: false }), chip: 'week', signedIn: false });
+  assert.deepEqual(cards(c).map((x) => x.dataset.key), ['mlb-october', 'nfl-pickem', 'daily'],
+    'three, open, by lock - the Weekly (60h) is the fourth and is left out');
+  for (const k of cards(c)) {
+    assert.match(k.getAttribute('href'), /^\/signin\?callbackUrl=/, k.dataset.key);
+    assert.equal(txt(k.querySelector('.pl-cta')), 'SIGN IN TO PLAY');
+    assert.equal(k.querySelector('.pl-bar'), null, 'no progress is faked');
   }
-  // no identity chip in the lobby at all: the header above draws it (27 Sep)
+  for (const r of c.querySelectorAll('.pl-row')) assert.match(r.getAttribute('href'), /^\/signin\?callbackUrl=/, r.dataset.row);
+  const draft = prow(c, 'nfl-draft');
+  assert.match(txt(draft.querySelector('.pl-t small')), /^Sign in to draft$/, 'the Draft row shows signed out (fri-2)');
+  assert.equal(draft.getAttribute('href'), '/signin?callbackUrl=%2Fdraft', 'sign in, then the room');
+  assert.equal(c.querySelectorAll('.pl-league').length, 0);
+  assert.ok(c.querySelector('.lob-stranger'), 'the free-to-play lines');
   assert.equal(c.querySelector('.gv-me'), null);
 });
 
@@ -462,11 +411,12 @@ test('the pct-ranked season boards print their OWN figures, not the Daily\'s', (
   assert.equal(/ pts|undefined|NaN/.test(txt(c)), false);
 });
 
-test('THE HANDLE IS DRAWN ONCE: no identity chip next to GAMES, signed in or out (the header carries it)', () => {
+test('THE HANDLE IS DRAWN ONCE: no identity chip next to PLAY, signed in or out (the header carries it)', () => {
   for (const signedIn of [true, false]) {
-    const c = screen({ v: { handle: 'ovfsentinelx150', week: THU() }, chip: 'week', signedIn });
+    const c = screen({ v: { ...PLAY({ signedIn }), handle: 'ovfsentinelx150' }, chip: 'week', signedIn });
     assert.equal(c.querySelector('.gv-me'), null);
-    assert.equal(/@ovfsentinelx150/.test(txt(c.querySelector('.gv-top'))), false);
+    assert.equal(/@ovfsentinelx150/.test(txt(c.querySelector('.pl-top'))), false);
+    afterEachInline();
   }
 });
 

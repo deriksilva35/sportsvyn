@@ -6,10 +6,14 @@
 // shared, so the two doors cannot drift apart.
 import LobbyV3 from '@/components/games/LobbyV3';
 import { shellSigninHref } from '@/lib/shell/signinHref';
+import TzCookie from '@/components/gridiron/TzCookie';
 
 export default function LobbyMain({ v, chip, userId = null, isShell = false }) {
   return (
     <main className="lob lv" data-surface="ink">
+      {/* sv_tz, so the Play lobby's next server paint is already in the
+          reader's zone (its times and its header's zone label agree). */}
+      <TzCookie />
       {v
         ? (
           <LobbyV3

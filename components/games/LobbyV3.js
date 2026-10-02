@@ -1,167 +1,216 @@
-// components/games/LobbyV3.js - the Games tab, v3 (docs/design/mocks/games-v3.html).
+// components/games/LobbyV3.js - the Games tab: the Play lobby, and three panes.
 //
 // ============================================================================
-// ONE THING TO DO NOW, FOUR GAMES, FOUR CHIPS
+// THE PLAY LOBBY IS THE DEFAULT SCREEN (thu-38 + fri-1)
 // ============================================================================
-// v2 answered "what is there" and not "what should I do": a reader arriving at
-// nine in the morning met a graded Daily, an unplayed board, a room on the
-// clock and a live lineup, all equally loud, under a headline that counted
-// them. v3 leads with ONE card and lets the rest be a list.
+// The approved canvas "Play tab lobby": YOUR MOVE first (the entries the
+// reader can act on, soonest lock first), then a chip per sport with a game in
+// the next fourteen days, then a group per sport, then the reader's leagues and
+// practice. It replaced v3's "This week" pane - one now card over four
+// football rows - because the arcade now runs five sports on five clocks, and
+// a list of one league's week could not say which of them needed you first.
 //
-// THE CHIPS ARE URL STATE (?pane=), not an island, for the three reasons v2's
-// panes were: server-rendered complete so there is no hydration flash, each
-// pane's payload testable on its own, and a shareable link to any of them.
-// normalizeChip() in lib/games/lobby.js maps every v2 pane onto a chip, so
-// every bookmark that exists today still lands somewhere sensible.
+// THE CHIPS ARE URL STATE (?sport= on the lobby, ?pane= for the panes), not an
+// island, for the three reasons v2's panes were: server-rendered complete so
+// there is no hydration flash, each payload testable on its own, and a
+// shareable link to any of them. normalizeChip() in lib/games/lobby.js maps
+// every v2 pane onto a chip, so every bookmark that exists today still lands.
 //
 // EVERY NUMBER COMES FROM THE VIEW. This file computes nothing: the shapes are
-// lib/games/nowCard.js and lib/games/v3Rows.js, both pure, both tested against
-// fixtures. R1 - every number on screen is one the site already computes - is
-// therefore true by construction here, not by review.
+// lib/games/playLobby.js and lib/games/playRegistry.js (the lobby) and
+// lib/games/lobbyV3.js (the panes). R1 - every number on screen is one the
+// site already computes - is therefore true by construction here.
 //
 // THE BOTTOM NAV IS UNTOUCHED. This is the Play tab's content and nothing else.
 
-import { NON_AFFILIATION } from '@/lib/legal';
 import Link from 'next/link';
 import HouseTag from '@/components/house/HouseTag';
 import '@/components/house/house.css';
 import StandaloneTime from '@/components/StandaloneTime';
 import { V3_CHIPS, V3_CHIP_LABEL } from '@/lib/games/lobby';
+import { SPORT_LABEL } from '@/lib/games/playLobby';
+import { zoneNameOf } from '@/lib/time/zoneName';
 import SeasonBoard from '@/components/games/SeasonBoard';
+import PlayWhen from '@/components/games/PlayWhen';
+import ZoneLabel from '@/components/scores/ZoneLabel';
 
 /** The games with an always-on board page (lib/boards/live.js, lib/boards/mlb.js). */
 const FULL_BOARD = { weekly: '/weekly/board', draft: '/draft/board', october: '/october/board', run: '/run/board' };
 import '@/components/games/season.css';
+import '@/components/games/play.css';
 
 // ---------------------------------------------------------------------------
-// the now card
+// THE PLAY LOBBY (thu-38 + fri-1) - the approved canvas "Play tab lobby"
 // ---------------------------------------------------------------------------
-function NowCard({ card, signedIn, signinHref }) {
-  if (!card) return null;
-  const href = signedIn ? card.href : signinHref(card.href);
-  return (
-    <Link className={`gv-now${card.done ? ' done' : ''}`} href={href} data-kind={card.kind}>
-      <span className="gv-now-t">
-        <span className="gv-now-l">{card.label}</span>
-        <b>{card.title}</b>
-        {card.line && <small>{card.line}</small>}
+// EVERYTHING ON IT COMES FROM THE VIEW. lib/games/playLobby.js decided which
+// items are YOUR MOVE, which carry LOCKS SOON, which sports get a chip and
+// which groups collapse; lib/games/playRegistry.js built each item from its
+// game's own reader. This file draws, and every instant goes through PlayWhen
+// so it is in the zone the header names.
+
+/** The progress bar: one segment per slot up to twelve, a single fill beyond. */
+function Progress({ p }) {
+  if (!p || !(p.total > 0)) return null;
+  const done = Math.max(0, Math.min(p.done, p.total));
+  if (p.total > 12) {
+    return (
+      <span className="pl-bar one" role="img" aria-label={`${done} of ${p.total}`}>
+        <span className="on" style={{ width: `${Math.round((done / p.total) * 100)}%` }} />
       </span>
-      <span className="gv-now-go">{signedIn ? card.cta : 'Sign in'}</span>
+    );
+  }
+  return (
+    <span className="pl-bar" role="img" aria-label={`${done} of ${p.total}`}>
+      {Array.from({ length: p.total }, (_, k) => <span key={k} className={k < done ? 'on' : undefined} />)}
+    </span>
+  );
+}
+
+/** "0 of 6 · locks Sun 10:00 AM" - the status, then the item's own time clause. */
+function Status({ i, now, tz }) {
+  return (
+    <>
+      {i.status}
+      {i.at?.iso ? <>{i.status ? ' · ' : ''}{i.at.words} <PlayWhen iso={i.at.iso} now={now} serverTz={tz} /></> : null}
+    </>
+  );
+}
+
+function MoveCard({ i, now, tz, signedIn, signinHref }) {
+  return (
+    <Link className={`pl-card${i.locksSoon ? ' soon' : ''}`} href={signedIn ? i.href : signinHref(i.href)} data-key={i.key}>
+      <span className="pl-card-h">
+        <span className="pl-kick">{i.kicker}</span>
+        {i.locksSoon && <span className="pl-soon">LOCKS SOON</span>}
+      </span>
+      <b className="pl-card-t">{i.title}</b>
+      <span className="pl-card-s"><Status i={i} now={now} tz={tz} /></span>
+      <Progress p={i.progress} />
+      <span className="pl-cta">{signedIn ? i.cta : 'SIGN IN TO PLAY'}</span>
     </Link>
   );
 }
 
-// ---------------------------------------------------------------------------
-// one game row - the mock's shape: mark, name, one line, number + label, chevron
-// ---------------------------------------------------------------------------
-function GameRow({ row, signedIn, signinHref }) {
-  if (!row) return null;
-  const href = signedIn ? row.href : signinHref(row.href);
+/** One game row: letter mark, name, one-line status, your progress, chevron. */
+function PlayRow({ r, now, tz, signedIn, signinHref }) {
+  const right = r.phase === 'upcoming' && r.opensAt
+    ? <PlayWhen iso={r.opensAt} kind="date" serverTz={tz} />
+    : r.progress ? `${r.progress.done} / ${r.progress.total}` : (r.right ?? '—');
   return (
-    // data-tone: open (null tone), live or done - the volt grammar's open-row
-    // rule and done tile read it (lobbyV3.css, arcade page only).
-    <Link className="gv-g" href={href} data-row={row.key} data-tone={row.tone ?? 'open'}>
-      <span className={`gv-ic${row.tone === 'live' ? ' live' : row.tone === 'done' ? ' done' : ''}`}>{row.mark}</span>
-      <span className="gv-t">
-        <b>{row.name}</b>
-        {row.line && <small>{row.line}</small>}
+    <Link className="pl-row" href={signedIn ? r.href : signinHref(r.href)} data-row={r.key} data-phase={r.phase}>
+      <span className="pl-mk">{r.mark}</span>
+      <span className="pl-t">
+        <b>{r.name}</b>
+        <small>
+          {r.phase === 'upcoming' && r.opensAt
+            ? <>{r.status} · opens <PlayWhen iso={r.opensAt} kind="day" serverTz={tz} /></>
+            : <Status i={r} now={now} tz={tz} />}
+        </small>
       </span>
-      <span className="gv-r">
-        {row.right != null && <b className={row.tone === 'live' || row.tone === 'done' ? 'v' : undefined}>{row.right}</b>}
-        {row.rightLabel && <span>{row.rightLabel}</span>}
-      </span>
+      <span className="pl-r">{right}</span>
       <span className="gv-chev" aria-hidden="true">&rsaquo;</span>
     </Link>
   );
 }
 
-// ---------------------------------------------------------------------------
-// THIS WEEK
-// ---------------------------------------------------------------------------
-function WeekPane({ v, signedIn, signinHref }) {
-  const { now, rows = [], mlb = [], nba = [], epl = [], practice = [], week = null } = v;
+function PlayGroup({ g, now, tz, signedIn, signinHref }) {
+  return (
+    <section className="pl-group" data-group={g.sport}>
+      <div className="pl-sh"><h3>{g.label}</h3>{g.note && <span>{g.note}</span>}</div>
+      {g.rows.map((r) => <PlayRow key={r.key} r={r} now={now} tz={tz} signedIn={signedIn} signinHref={signinHref} />)}
+    </section>
+  );
+}
+
+function PlayPane({ v, signedIn, signinHref }) {
+  const { chip = 'all', chips = ['all'], yourMove = [], groups = [], daily = null, collapsed = [],
+    leagues = [], practice = [], now = null, tz = null } = v;
+  const rowProps = { now, tz, signedIn, signinHref };
   return (
     <>
-      <NowCard card={now} signedIn={signedIn} signinHref={signinHref} />
-
-      <div className="gv-sh">
-        <h3>This week</h3>
-        {week != null && <span>NFL WEEK {week}</span>}
+      <div className="pl-top">
+        <h1>Play</h1>
+        {/* THE ZONE IS NAMED ONCE, here, and every time below is in it: both
+            this label and each PlayWhen start in the server's zone and settle
+            on the device's after mount, together. */}
+        {now && (
+          <span className="pl-zone">
+            <PlayWhen iso={now} kind="day" serverTz={tz} /> · <ZoneLabel initial={zoneNameOf(tz ?? 'America/New_York')} />
+          </span>
+        )}
       </div>
-      <div className="gv-list">
-        {rows.map((r) => <GameRow key={r.key} row={r} signedIn={signedIn} signinHref={signinHref} />)}
-      </div>
 
-      {/* THE MLB GROUP SITS UNDER THE FOUR, not among them (B3 addendum).
-          Those four are one league's week on one clock; these two are a
-          different sport on a different one, and a labelled group says so in
-          the layout rather than making the reader infer it from two rows
-          whose season does not match their neighbours'. Same row grammar. */}
-      {mlb.length ? (
-        <>
-          <div className="gv-sh" data-group="mlb">
-            <h3>MLB</h3>
-            {/* THE GROUP SAYS WHAT THE ROWS SAY. Labelling it POSTSEASON while
-                both rows read PREVIEW would be the heading contradicting its
-                own contents. */}
-            <span>{mlb.some((r) => r.right === 'PREVIEW') ? 'PREVIEW' : 'POSTSEASON'}</span>
+      {yourMove.length > 0 && (
+        <section className="pl-move" aria-label="Your move">
+          <div className="pl-sh">
+            <h3>Your move{chip !== 'all' ? ` · ${SPORT_LABEL[chip]}` : ''} · {yourMove.length}</h3>
+            <span>{signedIn ? 'soonest lock first' : 'locking soonest'}</span>
           </div>
-          <div className="gv-list">
-            {mlb.map((r) => <GameRow key={r.key} row={r} signedIn={signedIn} signinHref={signinHref} />)}
+          <div className="pl-cards">
+            {yourMove.map((i) => <MoveCard key={i.key} i={i} {...rowProps} />)}
           </div>
-        </>
-      ) : null}
+        </section>
+      )}
 
-      {/* THE NBA GROUP: one row, and only on a day with an NBA board
-          (lib/games/lobbyV3.js nbaRowsV3). Its own labelled group for the
-          MLB group's reason - another sport on another clock. */}
-      {nba.length ? (
-        <>
-          <div className="gv-sh" data-group="nba">
-            <h3>NBA</h3>
-            <span>TODAY</span>
-          </div>
-          <div className="gv-list">
-            {nba.map((r) => <GameRow key={r.key} row={r} signedIn={signedIn} signinHref={signinHref} />)}
-          </div>
-        </>
-      ) : null}
+      {/* THE CHIPS ARE URL STATE (?sport=), for the reason the panes are: no
+          hydration flash, and a shareable link to any sport. The selected
+          chip filters everything below it, YOUR MOVE included. */}
+      <nav className="pl-chips" aria-label="Sports">
+        {chips.map((c) => (
+          <Link key={c} href={c === 'all' ? '/games' : `/games?sport=${c}`}
+            className={`gv-chip pl-chip${chip === c ? ' on' : ''}`} data-chip={c}>
+            {c === 'all' ? 'ALL' : SPORT_LABEL[c]}
+          </Link>
+        ))}
+      </nav>
 
-      {/* EPL WEEKLY 5 (thu-34): its own group, same row grammar, under MLB. */}
-      {epl.length ? (
-        <>
-          <div className="gv-sh" data-group="epl">
-            <h3>Premier League</h3>
-            <span>FANTASY</span>
-          </div>
-          <div className="gv-list">
-            {epl.map((r) => <GameRow key={r.key} row={r} signedIn={signedIn} signinHref={signinHref} />)}
-          </div>
-        </>
-      ) : null}
+      {groups.map((g) => <PlayGroup key={g.sport} g={g} {...rowProps} />)}
+      {daily && <PlayGroup g={daily} {...rowProps} />}
 
-      {/* PRACTICE IS TWO TILES AND STAYS TWO (addendum 6). The tracker's door
-          moves to the Mock setup, where a league row carries "Track a live
-          draft" - not here. */}
-      <div className="gv-sh"><h3>Practice</h3><span>UNLIMITED · FREE</span></div>
-      <div className="gv-two">
+      {collapsed.length > 0 && (
+        <section className="pl-later" aria-label="Later">
+          {collapsed.map((c) => (
+            <Link key={c.sport} className="pl-col" href={`/games?sport=${c.sport}`} data-group={c.sport}>
+              <b>{c.label}</b>
+              <small>{c.opensAt ? <>opens <PlayWhen iso={c.opensAt} kind="day" serverTz={tz} /></> : 'nothing open this week'}</small>
+              <span className="gv-chev" aria-hidden="true">&rsaquo;</span>
+            </Link>
+          ))}
+        </section>
+      )}
+
+      {signedIn && leagues.length > 0 && (
+        <section className="pl-leagues">
+          <div className="pl-sh"><h3>Your leagues</h3><Link href="/leagues">ALL &rsaquo;</Link></div>
+          {leagues.map((l) => (
+            <Link key={l.id} className="pl-league" href={l.href}>
+              <span className="pl-t"><b>{l.name}</b><small>{l.sub}</small></span>
+              <span className="gv-chev" aria-hidden="true">&rsaquo;</span>
+            </Link>
+          ))}
+        </section>
+      )}
+
+      <div className="pl-sh"><h3>Practice · unlimited</h3></div>
+      <div className="pl-two">
         {practice.map((t) => (
-          <Link className="gv-tile" key={t.key} href={signedIn ? t.href : signinHref(t.href)}>
-            <span className="gv-tl">{t.label}</span>
+          <Link className="pl-tile" key={t.key} href={signedIn ? t.href : signinHref(t.href)}>
             <b>{t.title}</b>
             {t.sub && <small>{t.sub}</small>}
           </Link>
         ))}
       </div>
 
+      <p className="pl-panes">
+        <Link href="/games?pane=boards">Boards</Link> · <Link href="/games?pane=results">Results</Link> · <Link href="/games?pane=alerts">Alerts</Link>
+      </p>
       <p className="gv-foot">{v.foot}</p>
 
       {/* RELAY 6'S TWO ENTRANCES TO THE EXPLAINER SURVIVE THE MOCK, which
           draws neither. They are not layout: the launch email points at
           /games/how-it-works, relay 6 pinned the count at two on purpose, and
           the stranger lines are the free-to-play statement a first-time
-          visitor is owed. Dropping them because a layout mock is quiet about
-          them would be a product change wearing a redesign's clothes. */}
+          visitor is owed. */}
       {!signedIn && (
         <div className="lob-stranger">
           <p className="lob-free">Free. An email and a handle. Nothing to install.</p>
@@ -172,10 +221,10 @@ function WeekPane({ v, signedIn, signinHref }) {
         <Link className="ghost" href="/games/how-it-works">How the games work &rarr;</Link>
       </p>
 
-      {/* THE LEGAL LINE STAYS, as the last line of This week (addendum 5). */}
+      {/* THE NOT-AFFILIATED SENTENCE IS THE SITE FOOTER'S (fri-2): /games no
+          longer repeats it in the page. The data licence line stays here. */}
       <p className="gv-legal">
-        One account · one handle · one leaderboard spine. {NON_AFFILIATION}{' '}
-        nflverse data CC-BY-4.0.
+        One account · one handle · one leaderboard spine. nflverse data CC-BY-4.0.
       </p>
     </>
   );
@@ -402,12 +451,21 @@ function AlertsPane({ v, signedIn, signinHref }) {
 
 // ---------------------------------------------------------------------------
 export default function LobbyV3({ v, chip = 'week', signedIn = false, signinHref = (h) => h, userId = null }) {
+  // THE PLAY LOBBY IS THE DEFAULT SCREEN and draws its own top (PLAY, the
+  // date, the zone) and its own sport chips. The three panes keep the v3 top
+  // and the four pane chips, whose first one leads back here.
+  if (chip === 'week') {
+    return (
+      <div className="gv pl">
+        <PlayPane v={v.play ?? {}} signedIn={signedIn} signinHref={signinHref} />
+      </div>
+    );
+  }
   return (
     <div className="gv">
       {/* NO IDENTITY CHIP HERE. The mock's avatar + @handle belongs to the screen's
           top bar - in the app, the shell's AppHeader; on the web, the global
-          header - and both already draw it. A second copy next to GAMES said the
-          same thing twice on one screen (27 Sep). */}
+          header - and both already draw it. */}
       <div className="gv-top">
         <h1>Games</h1>
       </div>
@@ -424,7 +482,6 @@ export default function LobbyV3({ v, chip = 'week', signedIn = false, signinHref
       {/* ONE PANE'S PAYLOAD IS ALL THE READER FETCHED (lib/games/lobbyV3.js
           reads only the selected chip), so every other key is absent by
           design rather than by failure - hence the ?? {}. */}
-      {chip === 'week' && <WeekPane v={v.week ?? {}} signedIn={signedIn} signinHref={signinHref} />}
       {chip === 'boards' && <BoardsPane v={v.boards ?? {}} userId={userId} />}
       {chip === 'results' && <ResultsPane v={v.results ?? {}} />}
       {chip === 'alerts' && <AlertsPane v={v.alerts ?? {}} signedIn={signedIn} signinHref={signinHref} />}

@@ -27,6 +27,7 @@ import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { lobbyV3 } from '@/lib/games/lobbyV3';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 import LobbyMain from '@/components/games/LobbyMain';
 import { normalizeChip } from '@/lib/games/lobby';
 import './games.css';
@@ -53,7 +54,10 @@ export default async function GamesPage({ searchParams }) {
   // container got the lobby - four cards, none of them playable. Same rule.
   requireSignInInShell({ isShell, userId, dest: '/games' });
 
-  const v = await lobbyV3(userId, { chip, boardKey }).catch(() => null);
+  // THE PLAY LOBBY'S SPORT CHIP (?sport=) and the zone the server knows the
+  // reader is in (sv_tz), so its first paint names the same zone as its times.
+  const tz = await readViewerTz();
+  const v = await lobbyV3(userId, { chip, boardKey, sport: sp.sport, tz }).catch(() => null);
 
   return (
     <>

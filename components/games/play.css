@@ -1,0 +1,92 @@
+/* components/games/play.css - the Play lobby (thu-38 + fri-1), the approved
+   canvas "Play tab lobby" at 390.
+
+   TOKENS ONLY (lib/brand/hexCensus.js). The base rules read the semantic
+   tokens, which resolve on the dark page as well as the arcade one; the volt
+   grammar (app/voltContrast.test.mjs) is stated in the arcade block at the
+   foot: volt is a FILL with navy ink (the CTA, the selected chip), navy is
+   structure (the card border, the filled progress segment, the letter mark),
+   surfaces are white. LOCKS SOON is the terra role (--tok-down). */
+
+.pl { padding-bottom: 8px; }
+
+/* top: PLAY, then the date and the zone every time below is in */
+.pl-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 18px 16px 0; }
+.pl-top h1 { font: 400 26px var(--tok-font-num); letter-spacing: -.02em; text-transform: uppercase; color: var(--tok-ink); }
+.pl-zone { font: 400 11px var(--tok-font-body); color: var(--tok-muted); white-space: nowrap; }
+
+/* section heads */
+.pl-sh { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 18px 16px 4px; }
+.pl-sh h3 { font: 400 11px var(--tok-font-num); letter-spacing: .06em; text-transform: uppercase; color: var(--tok-ink); }
+.pl-sh span { font: 400 11px var(--tok-font-body); color: var(--tok-muted); }
+.pl-sh a { font: 400 11px var(--tok-font-num); color: var(--tok-ink); text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; }
+
+/* YOUR MOVE: horizontal cards */
+.pl-move .pl-sh { margin-top: 14px; }
+.pl-cards { display: flex; gap: 10px; padding: 6px 16px 4px; overflow-x: auto; scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.pl-cards::-webkit-scrollbar { display: none; }
+.pl-card { flex: none; width: 244px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 10px;
+  padding: 14px; border-radius: 16px; border: 1.5px solid var(--tok-line); background: var(--tok-surface);
+  color: var(--tok-ink); text-decoration: none; }
+.pl-card.soon { background: color-mix(in srgb, var(--tok-accent) 12%, var(--tok-surface)); }
+.pl-card-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pl-kick { font: 400 9px var(--tok-font-num); letter-spacing: .06em; text-transform: uppercase; color: var(--tok-muted); }
+.pl-soon { flex: none; font: 400 9px var(--tok-font-num); padding: 3px 7px; border-radius: 99px;
+  background: var(--tok-down); color: var(--tok-ink); }
+.pl-card-t { font: 400 17px var(--tok-font-num); line-height: 1.1; text-transform: none; }
+.pl-card-s { font: 400 12px var(--tok-font-body); color: var(--tok-muted); }
+.pl-cta { align-self: flex-start; min-height: 36px; display: inline-flex; align-items: center; padding: 0 12px;
+  border-radius: 10px; font: 400 11px var(--tok-font-num); background: var(--tok-action); color: var(--tok-on-action); }
+
+/* the progress bar: one segment per slot */
+.pl-bar { display: flex; gap: 3px; width: 100%; }
+.pl-bar > span { flex: 1; height: 4px; border-radius: 2px; background: var(--tok-line); }
+.pl-bar > span.on { background: var(--tok-accent); }
+.pl-bar.one > span { flex: none; }
+.pl-bar.one { background: var(--tok-line); border-radius: 2px; height: 4px; }
+
+/* sport chips: ALL + each sport with a game in the next fourteen days */
+.pl-chips { display: flex; gap: 6px; padding: 16px 16px 0; overflow-x: auto; scrollbar-width: none; }
+.pl-chips::-webkit-scrollbar { display: none; }
+.gv-chip.pl-chip { flex: none; min-height: 36px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 99px; }
+
+/* groups: one per sport; rows are mark, name, status, progress, chevron */
+.pl-group .pl-sh { margin-bottom: 0; }
+.pl-row, .pl-league { display: flex; align-items: center; gap: 12px; min-height: 56px; margin: 0 16px; padding: 6px 4px;
+  border-bottom: 1px solid var(--tok-line); color: var(--tok-ink); text-decoration: none; }
+.pl-row[data-phase="upcoming"] { opacity: .55; }
+.pl-mk { flex: none; width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid var(--tok-ink);
+  display: grid; place-items: center; font: 400 11px var(--tok-font-num); }
+.pl-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pl-t b { font: 400 13px var(--tok-font-num); text-transform: uppercase; font-weight: 400; }
+.pl-t small { font: 400 12px var(--tok-font-body); color: var(--tok-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-r { flex: none; font: 600 12px var(--tok-font-body); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* the collapsed sports, one line each, at the bottom of the groups */
+.pl-later { margin: 18px 16px 0; border-top: 1px solid var(--tok-line); }
+.pl-col { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 4px; border-bottom: 1px solid var(--tok-line);
+  color: var(--tok-ink); text-decoration: none; }
+.pl-col b { font: 400 11px var(--tok-font-num); letter-spacing: .06em; }
+.pl-col small { flex: 1; font: 400 12px var(--tok-font-body); color: var(--tok-muted); }
+
+/* your leagues + practice */
+.pl-league { margin-bottom: 6px; padding: 12px 14px; border: 0; border-radius: 14px; background: var(--tok-surface-2); }
+.pl-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 16px 0; }
+.pl-tile { display: flex; flex-direction: column; gap: 3px; padding: 14px; border-radius: 14px; border: 1px solid var(--tok-line);
+  color: var(--tok-ink); text-decoration: none; min-height: 44px; }
+.pl-tile b { font: 400 12px var(--tok-font-num); text-transform: uppercase; font-weight: 400; }
+.pl-tile small { font: 400 11px var(--tok-font-body); color: var(--tok-muted); }
+.pl-panes { margin: 16px 16px 0; font: 400 11px var(--tok-font-num); color: var(--tok-muted); }
+.pl-panes a { color: var(--tok-ink); text-decoration: none; display: inline-flex; min-height: 36px; align-items: center; }
+
+/* ============================================================================
+   THE VOLT GRAMMAR - arcade page only, :where()-scoped (zero specificity).
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .pl-card { border-color: var(--tok-primary); background: var(--tok-page); }
+:where(:root[data-theme="arcade"]) .pl-card.soon { background: color-mix(in srgb, var(--tok-action) 16%, var(--tok-page)); }
+:where(:root[data-theme="arcade"]) .pl-soon { color: var(--tok-page); }
+:where(:root[data-theme="arcade"]) .pl-bar > span.on { background: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .pl-mk { border-color: var(--tok-primary); color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .pl-t b, :where(:root[data-theme="arcade"]) .pl-card-t,
+:where(:root[data-theme="arcade"]) .pl-sh h3, :where(:root[data-theme="arcade"]) .pl-top h1 { color: var(--tok-primary); }
