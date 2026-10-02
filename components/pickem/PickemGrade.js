@@ -105,7 +105,7 @@ export default function PickemGrade({
           Weekly/Draft row). A league view is this board's members only, ranked
           among themselves - the header names the league so a place is never
           read as a national one. */}
-      <BoardChips chips={chips} embed />
+      <BoardChips chips={chips} embed style={{ margin: '12px 12px 0', width: 'auto' }} />
       <div className="gg-lb">
         <div className="gg-lb-h"><span>{leagueName ?? `Board ${view.contest.boardNumber}`}</span><span>{leaderboard.played} played</span></div>
         {leaderboard.top.map((r) => (

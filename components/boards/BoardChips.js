@@ -13,7 +13,7 @@
 
 import Link from 'next/link';
 
-export default function BoardChips({ chips = [], embed = false }) {
+export default function BoardChips({ chips = [], embed = false, style = undefined }) {
   if (chips.length < 2) return null;
   const nav = (
     <nav className="lb-chips" aria-label="Which board">
@@ -22,5 +22,5 @@ export default function BoardChips({ chips = [], embed = false }) {
       ))}
     </nav>
   );
-  return embed ? <div className="lb lb-embed">{nav}</div> : nav;
+  return embed ? <div className="lb lb-embed" style={style}>{nav}</div> : nav;
 }
