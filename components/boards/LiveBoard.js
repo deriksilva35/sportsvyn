@@ -14,6 +14,7 @@
 // product, and a control that goes nowhere is worse than none.
 
 import Link from 'next/link';
+import BoardChips from './BoardChips.js';
 
 const fmt = (n) => (n == null ? '–' : (Math.round(Number(n) * 10) / 10).toFixed(1));
 const num = (n) => Number(n).toLocaleString('en-US');
@@ -70,13 +71,7 @@ export default function LiveBoard({
         <span className="lb-sp" aria-hidden="true" />
       </div>
 
-      {chips.length > 1 ? (
-        <nav className="lb-chips" aria-label="Which board">
-          {chips.map((c) => (
-            <Link key={c.href} className={`lb-chip${c.on ? ' on' : ''}`} href={c.href} aria-current={c.on ? 'page' : undefined}>{c.label}</Link>
-          ))}
-        </nav>
-      ) : null}
+      <BoardChips chips={chips} />
 
       {state === 'none' || state === 'prekick' ? (
         <div className="lb-empty">

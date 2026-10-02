@@ -17,11 +17,13 @@ import {
 import StandaloneDateOnly from '@/components/StandaloneDateOnly';
 import StandaloneDate from '@/components/StandaloneDate';
 import { plural } from '@/lib/text/plural';
+import BoardChips from '@/components/boards/BoardChips';
 
 const VD_LABEL = { right: 'Right', wrong: 'Wrong', push: 'Push' };
 
 export default function PickemGrade({
   view, sport, settledAtIso, leaderboard, next, nextBoardNumber, userId,
+  chips = [], leagueName = null,
 }) {
   const rows = pickemGradeRows(view.games);
   const { right, wrong, push } = pickemMathline(rows);
@@ -99,8 +101,13 @@ export default function PickemGrade({
         </div>
       )}
 
+      {/* NATIONAL + THE READER'S LEAGUES (components/boards/BoardChips.js, the
+          Weekly/Draft row). A league view is this board's members only, ranked
+          among themselves - the header names the league so a place is never
+          read as a national one. */}
+      <BoardChips chips={chips} embed style={{ margin: '12px 12px 0', width: 'auto' }} />
       <div className="gg-lb">
-        <div className="gg-lb-h"><span>Board {view.contest.boardNumber}</span><span>{leaderboard.played} played</span></div>
+        <div className="gg-lb-h"><span>{leagueName ?? `Board ${view.contest.boardNumber}`}</span><span>{leaderboard.played} played</span></div>
         {leaderboard.top.map((r) => (
           <div className={`gg-lr${myRow && r.userId === myRow.userId ? ' gg-lr--you' : ''}`} key={r.userId}>
             <span className="gg-lr-rk">{r.rank}</span>
@@ -120,7 +127,9 @@ export default function PickemGrade({
       {entered && (
         <ShareGrade
           glyph={glyph}
-          caption={`Pick'em Board ${view.contest.boardNumber} · ${right} of ${played} · ${pct}%${myRow?.rank && leaderboard.played > 1 ? ` · ${myRow.rank} of ${leaderboard.played}` : ''}`}
+          // THE SHARE CARD CARRIES THE NATIONAL PLACE ONLY: "2 of 3" from a
+          // league view would read as a place on the whole board.
+          caption={`Pick'em Board ${view.contest.boardNumber} · ${right} of ${played} · ${pct}%${myRow?.rank && leaderboard.played > 1 && !leaderboard.league ? ` · ${myRow.rank} of ${leaderboard.played}` : ''}`}
           url={`sportsvyn.com/pickem/${sport}`}
         />
       )}
