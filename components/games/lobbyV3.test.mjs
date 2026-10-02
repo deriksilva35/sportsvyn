@@ -92,8 +92,8 @@ const PLAY = ({ signedIn = true, chip = 'all', leagues = [] } = {}) => {
   const o = { signedIn, now };
   const items = [
     octoberItem(E('mlb-october'), { contest: { board: [{ kickoff_at: ahead(2) }, { kickoff_at: ahead(5) }], meta: { games: 2 } }, filled: signedIn ? 2 : 0, size: 5 }, o),
-    // getDraftHome() is never read signed out, so the room is no item there.
-    signedIn ? draftItem(E('nfl-draft'), { home: { state: 'drafting', week: 4, locksAt: ahead(2.5) }, round: 4 }) : null,
+    // Signed out the Draft is a "Sign in to draft" row, never a move (fri-2).
+    draftItem(E('nfl-draft'), { home: { state: 'drafting', week: 4, locksAt: ahead(2.5) }, round: 4 }, o),
     weeklyItem(E('nfl-weekly'), { home: { state: 'play', week: 4, locksAt: ahead(60) } }, o),
     pickemItem(E('nfl-pickem'), { card: { total: 16, picked: 16, pickable: 13, pickedOpen: 13, nextKickoff: ahead(8), displayWeek: 4 } }, o),
     runItem(E('mlb-run'), { contest: { meta: { label: 'Wild Card' } }, next: null, filled: 9, size: 9 }, o),
@@ -329,6 +329,9 @@ test('signed out: every door becomes the sign-in door, and YOUR MOVE is the thre
     assert.equal(k.querySelector('.pl-bar'), null, 'no progress is faked');
   }
   for (const r of c.querySelectorAll('.pl-row')) assert.match(r.getAttribute('href'), /^\/signin\?callbackUrl=/, r.dataset.row);
+  const draft = prow(c, 'nfl-draft');
+  assert.match(txt(draft.querySelector('.pl-t small')), /^Sign in to draft$/, 'the Draft row shows signed out (fri-2)');
+  assert.equal(draft.getAttribute('href'), '/signin?callbackUrl=%2Fdraft', 'sign in, then the room');
   assert.equal(c.querySelectorAll('.pl-league').length, 0);
   assert.ok(c.querySelector('.lob-stranger'), 'the free-to-play lines');
   assert.equal(c.querySelector('.gv-me'), null);

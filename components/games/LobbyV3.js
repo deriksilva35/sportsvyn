@@ -23,7 +23,6 @@
 //
 // THE BOTTOM NAV IS UNTOUCHED. This is the Play tab's content and nothing else.
 
-import { NON_AFFILIATION } from '@/lib/legal';
 import Link from 'next/link';
 import HouseTag from '@/components/house/HouseTag';
 import '@/components/house/house.css';
@@ -222,10 +221,10 @@ function PlayPane({ v, signedIn, signinHref }) {
         <Link className="ghost" href="/games/how-it-works">How the games work &rarr;</Link>
       </p>
 
-      {/* THE LEGAL LINE STAYS, as the last line of the lobby (addendum 5). */}
+      {/* THE NOT-AFFILIATED SENTENCE IS THE SITE FOOTER'S (fri-2): /games no
+          longer repeats it in the page. The data licence line stays here. */}
       <p className="gv-legal">
-        One account · one handle · one leaderboard spine. {NON_AFFILIATION}{' '}
-        nflverse data CC-BY-4.0.
+        One account · one handle · one leaderboard spine. nflverse data CC-BY-4.0.
       </p>
     </>
   );
