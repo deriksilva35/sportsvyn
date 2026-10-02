@@ -46,6 +46,10 @@ export async function generateMetadata({ params }) {
     title: lg ? `Join ${lg.name} - Sportsvyn` : 'League invite - Sportsvyn',
     description: lg ? inviteLine(lg) : 'Play the games with your people. Free, always.',
     robots: { index: false, follow: false },
+    // The invite card (./opengraph-image.js) needs an absolute URL in the
+    // unfurl; app/layout.js sets no metadataBase, so this route does.
+    metadataBase: new URL('https://sportsvyn.com'),
+    openGraph: { title: lg ? `Join ${lg.name}` : 'League invite', description: lg ? inviteLine(lg) : undefined, siteName: 'Sportsvyn' },
   };
 }
 

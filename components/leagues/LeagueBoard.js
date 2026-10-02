@@ -59,11 +59,19 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
         </div>
         <h1 className="lv-lname">{league.name}</h1>
         <p className="lv-sub">{summaryLine(league)} · {n} {n === 1 ? 'member' : 'members'}</p>
-        <div className="lv-tiles">
-          <div className="lv-tile"><span className="lv-tile-k">You</span><span className="lv-tile-v">{me && hasTable ? ordinal(me.place).toUpperCase() : '—'}</span></div>
-          <div className="lv-tile"><span className="lv-tile-k">Back of 1st</span><span className="lv-tile-v">{me && lead && hasTable ? fmt(Math.max(0, lead.total - me.total)) : '—'}</span></div>
-          <div className="lv-tile"><span className="lv-tile-k">This {unitWord}</span><span className="lv-tile-v">{meNow ? fmt(meNow.current) : '—'}</span></div>
-        </div>
+        {table.guillotine ? (
+          <div className="lv-tiles">
+            <div className="lv-tile"><span className="lv-tile-k">You</span><span className="lv-tile-v">{table.guillotine.chopped.some((c) => c.userId === uid) ? 'OUT' : 'IN'}</span></div>
+            <div className="lv-tile"><span className="lv-tile-k">Standing</span><span className="lv-tile-v">{table.guillotine.standing.length}</span></div>
+            <div className="lv-tile"><span className="lv-tile-k">This {unitWord}</span><span className="lv-tile-v">{meNow ? fmt(meNow.current) : '—'}</span></div>
+          </div>
+        ) : (
+          <div className="lv-tiles">
+            <div className="lv-tile"><span className="lv-tile-k">You</span><span className="lv-tile-v">{me && hasTable ? ordinal(me.place).toUpperCase() : '—'}</span></div>
+            <div className="lv-tile"><span className="lv-tile-k">Back of 1st</span><span className="lv-tile-v">{me && lead && hasTable ? fmt(Math.max(0, lead.total - me.total)) : '—'}</span></div>
+            <div className="lv-tile"><span className="lv-tile-k">This {unitWord}</span><span className="lv-tile-v">{meNow ? fmt(meNow.current) : '—'}</span></div>
+          </div>
+        )}
       </header>
 
       <nav className="lv-seg lv-tabs" aria-label="League sections">
