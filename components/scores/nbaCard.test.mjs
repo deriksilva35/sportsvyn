@@ -25,6 +25,11 @@ const LINK = stubPath('__link_stub_nba.mjs');
 const NAV = stubPath('__nav_stub_nba.mjs');
 registerHooks({ resolve(spec, ctx, next) {
   if (spec === 'next/link') return { url: pathToFileURL(LINK).href, shortCircuit: true };
+  // AlertBell (on the arcade card's top row since thu-41) imports './enable'
+  // the Next way, extensionless; node needs the .js.
+  if (/^\.\.?\//.test(spec) && !/\.[a-z]+$/i.test(spec)) {
+    try { return next(`${spec}.js`, ctx); } catch { /* fall through */ }
+  }
   if (spec === 'next/navigation') return { url: pathToFileURL(NAV).href, shortCircuit: true };
   return next(spec, ctx);
 } });

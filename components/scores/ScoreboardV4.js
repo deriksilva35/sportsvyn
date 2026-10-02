@@ -146,7 +146,7 @@ function Stake({ stake, g, boardOpen, signedIn }) {
  * module is where a pick is made). With `onPage` false the markup is the
  * board's, byte for byte.
  */
-export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }) {
+export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false, topRight = null }) {
   const variant = cardVariant(g);
   const live = variant === 'live', final = variant === 'final';
   const baseball = sportOf(g.leagueSlug) === BASEBALL;
@@ -184,6 +184,9 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false }
               : <span className="fin">{soccer ? 'FT' : 'Final'} · {g.etWeekday ?? weekdayOf(g.kickoffAt.slice(0, 10))}</span>)
             : <span className="ko"><StandaloneTime iso={g.kickoffAt} serverTz={tz} />{g.network ? ` · ${g.network}` : ''}</span>}
         <span className="where">{live || final ? where : LEAGUE_LABEL[g.leagueSlug]}{bell ? <span className="bell"> · {bell}</span> : null}</span>
+        {/* THE GAME PAGE'S BELL (thu-41): the alerts sheet and its Live
+            Activity row, on the card's top row. Never on the board. */}
+        {onPage && topRight ? <span className="gpa-bell" data-gpa="bell">{topRight}</span> : null}
       </div>
       {order.map((side) => (
         <Team key={side} g={g} side={side} x={x} variant={variant} ball={ball === side}
