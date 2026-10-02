@@ -30,6 +30,7 @@ import { abbrOf } from '@/lib/gridiron/scoresV2Shape';
 // otherwise mean remembering to edit an if-chain.
 const GAME_ROUTE = { nfl: '/nfl/game', cfb: '/cfb/game' };
 import { soccerLiveChip } from '@/lib/soccer/liveChip';
+import { matchweekLabel } from '@/lib/soccer/roundLabel';
 import OddsStrip from './OddsStrip';
 import RankBadge from './RankBadge';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
@@ -395,7 +396,7 @@ function SoccerCard({ g, records, tz, withDay = true }) {
   };
   // League · matchweek left, venue right - the two-piece row gridiron
   // renders as 'NFL · PRE W2' / city. Every field already rides the DTO.
-  const compLabel = [g.leagueName, g.week != null ? `Matchweek ${g.week}` : null]
+  const compLabel = [g.leagueName, matchweekLabel(g.week)]
     .filter(Boolean).join(' · ');
   return (
     <div className="gi-card gi-card--soccer">

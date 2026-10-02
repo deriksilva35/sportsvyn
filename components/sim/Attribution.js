@@ -5,7 +5,7 @@
 // vendor's ToS denies name/likeness use — no name, not a smaller name).
 // Presentational; the FFC text is single-sourced by the callers, the disclaimer
 // by lib/legal.
-import { NFL_NON_AFFILIATION } from '@/lib/legal';
+import { NON_AFFILIATION } from '@/lib/legal';
 
 export default function Attribution({ text, url }) {
   return (
@@ -13,7 +13,7 @@ export default function Attribution({ text, url }) {
       <div>
         {text} · <a href={url} target="_blank" rel="noopener noreferrer">fantasyfootballcalculator.com</a>
       </div>
-      <div className="sim-foot-noaff">{NFL_NON_AFFILIATION}</div>
+      <div className="sim-foot-noaff">{NON_AFFILIATION}</div>
     </footer>
   );
 }

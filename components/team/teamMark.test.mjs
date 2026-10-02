@@ -79,6 +79,8 @@ test('TeamMark has only its named users, and every one passes a league', async (
     // single-team rows: rankings, All teams, Today's your-teams, /you, /account, the Run
     'components/rankings/RankRow.js', 'components/rankings/AllTeams.js', 'components/rankings/ArcadeBoard.js', 'components/gridiron/TodayV2.js',
     'components/you/You.js', 'components/account/FollowedTeams.js', 'components/run/RunRoster.js',
+    // EPL Weekly 5 (thu-34): the club disc on a pool row and on a slot of your five
+    'components/eplWeekly5/EplWeekly5Card.js',
   ];
   assert.deepEqual([...users].sort(), [...ALLOWED].sort());
   // NEVER INFER THE LEAGUE: every <TeamMark .../> on the site says which one.
