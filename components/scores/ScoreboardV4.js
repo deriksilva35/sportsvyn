@@ -250,7 +250,9 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false, 
         (odds || wp) ? (
           <div className="sv4-foot">
             <span>{odds}</span>
-            {wp ? <b className={`wp${wp.stale ? ' stale' : ''}`} data-winprob="nfl">{wp.abbr} {wp.pct}% win</b> : null}
+            {wp ? <b className={`wp${wp.stale ? ' stale' : ''}`} data-winprob={g.leagueSlug}>{wp.abbr} {wp.pct}% win</b> : null}
+            {/* THE TAG IS THE SPORT'S (lib/winprob/display.js): CFB, not NFL (sat-1). */}
+            {wp?.calibrating ? <span className="wp-cal" data-calibrating="1">Calibrating</span> : null}
           </div>
         ) : null
       ) : final ? (

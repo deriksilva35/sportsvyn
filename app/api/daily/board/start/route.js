@@ -20,6 +20,7 @@ import { sql } from '@/lib/db';
 import { startRun } from '@/lib/daily/seasonBoardRuns';
 import { ensureBoardForDate, isEditionLive, effectiveEpoch } from '@/lib/daily/seasonBoardEditions';
 import { todayEt } from '@/lib/daily/entries';
+import { ageGateResponse } from '@/lib/auth/ageGateDb';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,7 @@ export async function POST() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return Response.json({ error: 'unauthorized' }, { status: 401 });
+  const ageRefused = await ageGateResponse(userId); if (ageRefused) return ageRefused;
 
   const editionDate = await todayEt();
   if (!isEditionLive(editionDate, effectiveEpoch())) {

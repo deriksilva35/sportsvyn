@@ -745,8 +745,9 @@ export async function pollOnce(sql, {
     // THE WIN PROBABILITY RIDES THE SAME WRITE. writeLive replaces live_state
     // whole, so a value written after it would be wiped on the next poll and
     // missing between the two. Computed here from the state being written and
-    // put inside it - NFL only; CFB is computed and logged, never shown. Its
-    // failure is contained: a card without a number, never a missed score.
+    // put inside it - for the sports lib/winprob/display.js displays (NFL; CFB
+    // since relay sat-1, tagged Calibrating by the surfaces). Its failure is
+    // contained: a card without a number, never a missed score.
     let wp = null;
     if (upd.status === 'live' && WINPROB_SPORTS.includes(m.league_slug)) {
       try {

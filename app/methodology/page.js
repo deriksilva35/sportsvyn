@@ -3,8 +3,9 @@
  * server component (no state), the /terms chrome and legal.css.
  *
  * ONE SECTION FOR NOW: win probability, the one model a reader sees live. It
- * says what the model is, what it is anchored on, and why it carries the
- * Calibrating label - model/winprob/GATE-nfl.md is the record behind it.
+ * says what the model is, what it is anchored on, and why the college number
+ * carries the Calibrating label (relay sat-1: NFL's label is gone; CFB's
+ * stays until the blind re-score, model/winprob/GATE-cfb.md).
  */
 
 import Link from 'next/link';
@@ -34,16 +35,17 @@ export default function MethodologyPage() {
 
           <h2 id="win-probability">Win probability</h2>
           <p>
-            The live win probability on an NFL game page is our own in-game model.
+            The live win probability on an NFL or college football game page is
+            our own in-game model, one per sport.
             It reads the state of the game &mdash; the score, the clock, down and
             distance, field position and who has the ball &mdash; and is anchored on
             the pre-game market spread, taken once at kickoff. A game with no
             pre-game line gets no number.
           </p>
           <p>
-            It is labelled <strong>Calibrating</strong> until our own 2026 results
-            validate it. Every live reading is kept, so the model can be checked
-            against how the games actually ended. It is context for following a
+            The college football number is labelled <strong>Calibrating</strong> until
+            our own 2026 results validate it. Every live reading is kept, so each
+            model can be checked against how the games actually ended. It is context for following a
             game, not advice: we explain, we don&rsquo;t pick.
           </p>
 

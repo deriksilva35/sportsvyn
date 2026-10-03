@@ -25,10 +25,12 @@ const { renderToStaticMarkup } = await import('react-dom/server');
 const { default: Page } = await import('./page.js');
 const html = renderToStaticMarkup(React.createElement(Page));
 
-test('the win probability section: in-game, anchored on the pre-game market spread, Calibrating', () => {
+test('the win probability section: in-game, anchored on the pre-game market spread; Calibrating is COLLEGE only (sat-1)', () => {
   assert.match(html, /<h2 id="win-probability">Win probability<\/h2>/);
   assert.match(html, /anchored on\s+the pre-game market spread/);
-  assert.match(html, /<strong>Calibrating<\/strong> until our own 2026 results\s+validate it/);
+  // sat-1: NFL's label is gone, CFB's stays (lib/winprob/display.js CALIBRATING).
+  assert.match(html, /The college football number is labelled <strong>Calibrating<\/strong> until\s+our own 2026 results validate it/);
+  assert.doesNotMatch(html, /It is labelled <strong>Calibrating<\/strong>/, 'the old all-models label is gone');
   assert.match(html, /A game with no\s+pre-game line gets no number\./, 'no line, no number - said, not just done');
 });
 

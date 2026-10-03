@@ -6,10 +6,12 @@
 
 import { auth } from '@/auth';
 import { saveSeriesPick } from '@/lib/mlb/seriesPickem';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 export async function saveSeriesPickAction(contestId, seriesKey, teamId) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   return saveSeriesPick(Number(userId), Number(contestId), String(seriesKey), Number(teamId));
 }

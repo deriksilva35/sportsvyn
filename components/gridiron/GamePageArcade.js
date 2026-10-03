@@ -12,7 +12,9 @@
 // <article>, navy in every state, with no drawer and no Recap link.
 //
 // NO PROSE. No brief, no recap headline, no article link, no win-probability
-// gloss, no explanatory note: the page is numbers, plays and names.
+// gloss, no explanatory note: the page is numbers, plays and names. The one
+// line under the win-probability module is the method note (sat-1), exactly
+// lib/winprob/display.js WINPROB_METHOD_NOTE - a source, not a gloss.
 
 import Link from 'next/link';
 import { CardFace } from '@/components/scores/ScoreboardV4';
@@ -46,10 +48,14 @@ function Box({ label, children, tag = null, right = null, mod, className = '' })
   );
 }
 
+/**
+ * THE TAG IS THE SPORT'S (lib/winprob/display.js CALIBRATING, via the view's
+ * wp.calibrating): CFB carries it, NFL does not (sat-1).
+ */
 export function WinProb({ wp }) {
   if (!wp) return null;
   return (
-    <Box label="Win probability" mod="winprob" tag={<span className="gpa-cal">Calibrating</span>}
+    <Box label="Win probability" mod="winprob" tag={wp.calibrating ? <span className="gpa-cal" data-calibrating="1">Calibrating</span> : null}
       right={wp.now ? <b className={`gpa-wpnow${wp.stale ? ' stale' : ''}`} data-wpnow="1">{wp.now}</b> : null}>
       {wp.path ? (
         <svg className="gpa-curve" viewBox="0 0 358 64" width="100%" height="64" role="img"
@@ -66,6 +72,30 @@ export function WinProb({ wp }) {
           <span className="sides"><b>{wp.homeAbbr}</b> top · {wp.awayAbbr} bottom</span>
         </div>
       ) : null}
+      {wp.note ? <p className="gpa-wpnote" data-wpnote="1">{wp.note}</p> : null}
+    </Box>
+  );
+}
+
+/**
+ * BIGGEST SWINGS (sat-1): NFL finals only, the top three moves of the curve,
+ * biggest first (lib/gridiron/gamePageArcade.js biggestSwings). One row each:
+ * "Q4 1:52 · PHI · <the play> · PHI +18%".
+ */
+export function Swings({ list }) {
+  if (!list?.length) return null;
+  return (
+    <Box label="Biggest swings" mod="swings">
+      <ol className="gpa-swings">
+        {list.map((s, i) => (
+          <li key={i} data-swing={i + 1}>
+            <span className="w">{s.when}</span>
+            {s.team ? <b className="t">{s.team}</b> : <span className="t" />}
+            <span className="tx" title={s.text}>{s.text}</span>
+            <b className="d" data-delta={s.deltaHome > 0 ? 'home' : 'away'}>{s.label}</b>
+          </li>
+        ))}
+      </ol>
     </Box>
   );
 }
@@ -203,6 +233,7 @@ export default function GamePageArcade({ view, now = new Date(), tz = 'America/N
     card: () => <Card view={view} now={now} tz={tz} alerts={alerts} />,
     market: () => (view.odds ? <div className="gpa-market" data-gpa="market"><OddsStrip odds={view.odds} leagueSlug={g.leagueSlug} matchId={g.id} /></div> : null),
     winprob: () => <WinProb wp={view.winprob} />,
+    swings: () => <Swings list={view.swings} />,
     yours: () => <InYourGames yours={view.yours} />,
     chips: () => (
       <ArcadeChips panels={view.chips} nodes={{

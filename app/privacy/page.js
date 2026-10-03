@@ -9,10 +9,13 @@
  *     config (no posthog dependency, zero code references in the app as of this
  *     writing). If analytics is ever wired in, disclose it here.
  *   · Deletion requests go to privacy@sportsvyn.com — that alias must exist.
+ *   · Date of birth (age-gate, fri-5): asked once on /age, stored only when 13+,
+ *     never public. Under-13 reports go to the same alias and are deleted.
  */
 
 import Link from 'next/link';
 import SiteFooter from '@/components/SiteFooter';
+import { LEGAL_EFFECTIVE_DATE } from '@/lib/legal';
 import '@/components/legal.css';
 
 export const metadata = {
@@ -35,7 +38,7 @@ export default function PrivacyPage() {
         <article className="legal-prose">
           <p className="legal-eyebrow">Privacy</p>
           <h1>Privacy Policy</h1>
-          <p className="legal-effective">Effective July 20, 2026</p>
+          <p className="legal-effective">Effective {LEGAL_EFFECTIVE_DATE}</p>
           <p className="legal-lede">
             This policy explains what Sportsvyn collects, why, and the choices you
             have. It covers the website at sportsvyn.com and the Draftvyn iOS app.
@@ -53,6 +56,13 @@ export default function PrivacyPage() {
               to hide your address, we receive an Apple private-relay address and
               that works fine — it is the only email we get, and we treat it the
               same as any other.
+            </li>
+            <li>
+              <strong>Your date of birth.</strong> We ask for it once, before you
+              play, to confirm you are old enough to use Sportsvyn. It is stored
+              privately with your account and is never shown on your profile, on a
+              board, or anywhere else public. If the date shows you are under 13, we
+              don&rsquo;t create an account and we don&rsquo;t keep the date.
             </li>
             <li>
               <strong>Your account activity.</strong> The drafts you run and other
@@ -119,8 +129,17 @@ export default function PrivacyPage() {
 
           <h2>Children</h2>
           <p>
-            Sportsvyn is not directed to children, and we do not knowingly collect
-            data from anyone under 13.
+            Sportsvyn is for people <strong>13 and older</strong> and is not directed
+            to children. We don&rsquo;t knowingly collect personal information from
+            children under 13. If someone enters a date of birth that shows they are
+            under 13, we delete the account their sign-in created, along with
+            anything tied to it, and we don&rsquo;t keep the date they entered.
+          </p>
+          <p>
+            If you believe a child under 13 has a Sportsvyn account, email{' '}
+            <a href="mailto:privacy@sportsvyn.com">privacy@sportsvyn.com</a> with the
+            account&rsquo;s email address or handle. We will delete the account and its
+            data on request.
           </p>
 
           <h2>Changes to this policy</h2>

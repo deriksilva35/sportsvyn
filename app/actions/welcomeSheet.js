@@ -15,6 +15,7 @@
  */
 
 import { auth } from '@/auth';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 import { recordSheetShown, recordSheetDismissed } from '@/lib/auth/welcomeSheetLedger';
 
 export async function sheetShown() {
@@ -22,6 +23,7 @@ export async function sheetShown() {
     const session = await auth();
     const userId = session?.user?.id ?? null;
     if (userId == null) return null;
+    if (await ageGateRefusal(userId)) return null;
     return await recordSheetShown(userId);
   } catch {
     return null;

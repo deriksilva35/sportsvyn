@@ -7,6 +7,7 @@ import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { DEFAULTS, SELECT_FIELDS, nextRow, resolvePrefs } from '@/lib/push/prefs';
 import { viewerActivityFor } from '@/lib/push/liveActivityStore';
+import { ageGateResponse } from '@/lib/auth/ageGateDb';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,6 +88,7 @@ export async function PUT(request) {
   const session = await auth().catch(() => null);
   const userId = session?.user?.id ?? null;
   if (!userId) return Response.json({ error: 'sign-in required' }, { status: 401 });
+  const ageRefused = await ageGateResponse(userId); if (ageRefused) return ageRefused;
   let body;
   try { body = await request.json(); } catch { return Response.json({ error: 'bad json' }, { status: 400 }); }
   const { scope, scopeId } = body ?? {};
