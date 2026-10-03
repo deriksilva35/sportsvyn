@@ -22,6 +22,7 @@ import {
   leaveLeague as leaveLeagueFor, kickMember as kickMemberFor,
   invitePreview,
 } from '@/lib/fantasy/leagueShare';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 async function currentUserId() {
   const session = await auth();
@@ -32,6 +33,7 @@ async function currentUserId() {
 export async function createInvite(configId) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const res = await createInviteFor(userId, Number(configId));
   if (res.ok) revalidatePath('/sim');
   return res;
@@ -41,6 +43,7 @@ export async function createInvite(configId) {
 export async function revokeInvites(configId) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const res = await revokeInvitesFor(userId, Number(configId));
   if (res.ok) revalidatePath('/sim');
   return res;
@@ -63,6 +66,7 @@ export async function previewInvite(code) {
 export async function redeemInvite(code, fantraxTeamId = null) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const team = fantraxTeamId == null || fantraxTeamId === '' ? null : String(fantraxTeamId);
   const res = await redeemInviteFor(userId, String(code ?? ''), team);
   if (res.ok) { revalidatePath('/sim'); revalidatePath(`/join/${String(code ?? '')}`); }
@@ -73,6 +77,7 @@ export async function redeemInvite(code, fantraxTeamId = null) {
 export async function claimFranchise(configId, fantraxTeamId = null) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const team = fantraxTeamId == null || fantraxTeamId === '' ? null : String(fantraxTeamId);
   const res = await claimFranchiseFor(userId, Number(configId), team);
   if (res.ok) revalidatePath('/sim');
@@ -92,6 +97,7 @@ export async function leaveLeague(configId) {
 export async function kickMember(configId, targetUserId) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const res = await kickMemberFor(userId, Number(configId), Number(targetUserId));
   if (res.ok) revalidatePath('/sim');
   return res;

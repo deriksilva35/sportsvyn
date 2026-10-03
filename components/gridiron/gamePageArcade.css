@@ -40,6 +40,8 @@
 :where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-foot .moment { color: var(--tok-on-primary); }
 :where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-foot .close { flex: none; color: color-mix(in srgb, var(--tok-on-primary) 70%, var(--tok-primary)); }
 :where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-foot .wp { flex: none; margin-left: auto; font-weight: 700; color: var(--tok-accent); text-transform: uppercase; letter-spacing: .06em; }
+/* CFB's CALIBRATING tag beside the win read (sat-1; lib/winprob/display.js) */
+:where(:root[data-theme="arcade"]) .sv4-card.gpa-card .sv4-foot .wp-cal { flex: none; min-width: auto; overflow: visible; margin-left: -4px; padding: 1px 4px; border: 1px solid var(--tok-on-primary); border-radius: 4px; font: 400 8px var(--tok-font-num); letter-spacing: .02em; text-transform: uppercase; color: var(--tok-on-primary); }
 
 /* ---- the white modules ---------------------------------------------------- */
 :where(:root[data-theme="arcade"]) .gpa-box { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--tok-line); border-radius: 14px; background: var(--tok-page); }
@@ -62,6 +64,15 @@
 :where(:root[data-theme="arcade"]) .gpa-axis .sides { flex-basis: 100%; margin-top: 4px; text-align: right; font: 500 10px var(--tok-font-body); letter-spacing: .02em; }
 :where(:root[data-theme="arcade"]) .gpa-axis { flex-wrap: wrap; }
 :where(:root[data-theme="arcade"]) .gpa-axis .sides b { color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .gpa-wpnote { margin: 0; font: 400 10px var(--tok-font-body); letter-spacing: .02em; color: var(--tok-muted); }
+
+/* biggest swings (sat-1): when · team · delta on one line, the play under it */
+:where(:root[data-theme="arcade"]) .gpa-swings { list-style: none; margin: 0; padding: 0; }
+:where(:root[data-theme="arcade"]) .gpa-swings li { display: grid; grid-template-columns: auto auto 1fr; column-gap: 6px; row-gap: 2px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--tok-line); font: 400 11px var(--tok-font-body); font-variant-numeric: tabular-nums; }
+:where(:root[data-theme="arcade"]) .gpa-swings .w { color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-swings .t { font-weight: 700; color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .gpa-swings .d { justify-self: end; font: 600 13px var(--tok-font-body); color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .gpa-swings .tx { grid-column: 1 / -1; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; color: var(--tok-ink); line-height: 1.35; }
 
 /* in your games: a navy-ruled card, its pill a volt fill with navy ink */
 :where(:root[data-theme="arcade"]) .gpa-yours { display: flex; flex-direction: column; padding: 12px 12px 0; border: 1.5px solid var(--tok-primary); border-radius: 14px; background: var(--tok-page); }

@@ -16,6 +16,7 @@ import { sql } from '@/lib/db';
 import {
   validateHandle, canonical, canRename, renameAvailableAt, RECLAIM_BLOCK_DAYS, refuseClaimOverExisting,
 } from '@/lib/daily/handles';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 async function blockedByCooldown(lower) {
   const r = await sql`
@@ -60,6 +61,7 @@ export async function claimHandle(raw) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, message: 'Sign in first.' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
 
   const v = validateHandle(raw);
   if (!v.ok) return { ok: false, reason: v.reason, message: v.message };
@@ -83,6 +85,7 @@ export async function renameHandle(raw) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, message: 'Sign in first.' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
 
   const v = validateHandle(raw);
   if (!v.ok) return { ok: false, reason: v.reason, message: v.message };

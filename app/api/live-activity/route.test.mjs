@@ -48,7 +48,9 @@ let userId; let matchId; let registerPOST; let endPOST;
 const signedInAs = (id) => writeFileSync(STATE, JSON.stringify({ userId: id }));
 
 before(async () => {
-  const [u] = await sql`INSERT INTO users (email) VALUES (${`${NS}@example.invalid`}) RETURNING id`;
+  // AGE GATE (fri-5): the write doors refuse an account that has not answered
+  // the age screen, so the fixture reader has (an adult date, DEV only).
+  const [u] = await sql`INSERT INTO users (email, date_of_birth) VALUES (${`${NS}@example.invalid`}, '1990-01-01') RETURNING id`;
   userId = u.id;
   const [m] = await sql`SELECT id FROM matches ORDER BY id ASC LIMIT 1`;
   matchId = m.id;

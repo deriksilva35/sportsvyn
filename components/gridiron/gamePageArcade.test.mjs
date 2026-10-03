@@ -1,6 +1,7 @@
 // components/gridiron/gamePageArcade.test.mjs - the gridiron game page under
-// arcade (game-page-arcade, wed-8): module order per state, CFB without win
-// probability, one shared card face, no drawer and no Recap, scoring plays from
+// arcade (game-page-arcade, wed-8; sat-1): module order per state, CFB win
+// probability with its CALIBRATING tag and NFL's without, biggest swings on
+// NFL finals after the fri-4 fix, one shared card face, no drawer and no Recap, scoring plays from
 // score changes, leaders, In your games (its reads and what it never calls),
 // the signed-out card, the plays count, and the closing line.
 import { test, before, after } from 'node:test';
@@ -28,7 +29,7 @@ registerHooks({ resolve(spec, ctx, next) {
   return next(spec, ctx);
 } });
 
-let React, render, GamePageArcade, parts, A, Y;
+let React, render, GamePageArcade, parts, A, Y, D;
 before(async () => {
   writeFileSync(LINK, "import React from 'react'; export default function Link({ href, children, ...rest }) { return React.createElement('a', { ...rest, href: String(href) }, children); }\n");
   React = await import('react');
@@ -37,6 +38,7 @@ before(async () => {
   GamePageArcade = parts.default;
   A = await import('../../lib/gridiron/gamePageArcade.js');
   Y = await import('../../lib/gridiron/inYourGames.js');
+  D = await import('../../lib/winprob/display.js');
 });
 after(() => { try { unlinkSync(LINK); } catch { /* gone */ } });
 
@@ -48,16 +50,16 @@ const LINE = { columns: ['1', '2', '3', '4'], total: 'T', extra: [], rows: [
   { side: 'home', abbr: 'CHI', cells: ['7', '3', '10', '7'], total: 27, extra: [] }] };
 const X = (o = {}) => ({ rank: { home: null, away: null }, record: { home: '2-1', away: '1-2' }, spreadHome: null, total: null, openHome: null, preview: null, drive: null, diamond: null, stat: null, hasStats: true, mlbFoot: null, probables: null, prob: null, stake: null, open: false, line: LINE, closing: null, ...o });
 
-function view({ state = 'final', league = 'nfl', closing = 'Closing line PHI -3.5', signedIn = false, rows = [], wp = true, plays = null, open = null, lastPlay = null } = {}) {
+function view({ state = 'final', league = 'nfl', closing = 'Closing line PHI -3.5', signedIn = false, rows = [], wp = true, plays = null, open = null, lastPlay = null, swings = [] } = {}) {
   const status = state === 'pre' ? 'scheduled' : state;
   const g = { id: 9, slug: 'nfl-2026-reg-w3-phi-chi', leagueSlug: league, status, kickoffAt: '2026-09-29T00:15:00Z', homeScore: state === 'pre' ? null : 27, awayScore: state === 'pre' ? null : 7, home: HOME, away: AWAY, network: 'NBC', etWeekday: 'Sun', liveState: state === 'live' ? { period: 3, clock: '6:42' } : null };
-  const hasCurve = wp && league === 'nfl';
+  const hasCurve = wp && A.winProbShown(league);
   const offers = open ?? (state === 'pre' ? [{ kind: 'pickem', label: "Pick'em", href: '/pickem/nfl' }] : []);
   return {
     state, league, simulated: false, g, x: X({ closing: state === 'final' ? closing : null, lastPlay }), signinHref: '/signin?callbackUrl=x',
-    modules: A.arcadeModules({ state, league, hasCurve, hasNow: hasCurve, hasMarket: false, hasYours: rows.length > 0 || offers.length > 0 }),
-    odds: null, drive: null,
-    winprob: hasCurve ? { path: '0,32 179,20 358,4', marks: [89.5, 179, 268.5], dot: '358,4', now: state === 'final' ? 'CHI won' : 'CHI 71%', stale: false, homeAbbr: 'CHI', awayAbbr: 'PHI', ot: false } : null,
+    modules: A.arcadeModules({ state, league, hasCurve, hasNow: hasCurve, hasSwings: swings.length > 0, hasMarket: false, hasYours: rows.length > 0 || offers.length > 0 }),
+    odds: null, drive: null, swings,
+    winprob: hasCurve ? { path: '0,32 179,20 358,4', marks: [89.5, 179, 268.5], dot: '358,4', now: state === 'final' ? 'CHI won' : 'CHI 71%', stale: false, homeAbbr: 'CHI', awayAbbr: 'PHI', ot: false, calibrating: D.winProbCalibrating(league), note: D.WINPROB_METHOD_NOTE } : null,
     yours: { signedIn, rows, open: offers, pre: state === 'pre', playHref: signedIn ? (offers[0]?.href ?? null) : '/signin?callbackUrl=x' },
     chips: state === 'live' ? A.liveChips({ plays: 165, box: false, stats: true, market: true }) : [],
     plays: plays ?? { latest: [{ when: 'Q3 6:42', abbr: 'CHI', text: 'C.Williams pass short right to D.Moore for 9 yards' }], total: 165, all: false },
@@ -90,19 +92,67 @@ test('MODULE ORDER, per state (wed-8)', () => {
   assert.deepEqual(modsOf(html(view({ state: 'pre' }))), ['card', 'yours']);
 });
 
-test('CFB HAS NO WIN PROBABILITY anywhere (shadow: lib/winprob/cfb.json)', () => {
+// RELAY sat-1 (3 Oct): CFB's win probability is SHOWN, as cfb.json 0.1.0
+// shipped, and TAGGED Calibrating; NFL's tag is gone. This test used to be
+// "CFB HAS NO WIN PROBABILITY anywhere" (wed-8: shadow) - the ruling changed,
+// so the guard now pins the new contract instead of the old exclusion.
+test('CFB WIN PROBABILITY IS DISPLAYED, with the CALIBRATING tag (sat-1)', () => {
   for (const state of ['live', 'final']) {
     const m = A.arcadeModules({ state, league: 'cfb', hasCurve: true, hasNow: true });
-    assert.ok(!m.includes('winprob'), `${state}: ${m}`);
+    assert.ok(m.includes('winprob'), `${state}: ${m}`);
   }
-  assert.equal(A.winProbShown('cfb'), false);
+  assert.equal(A.winProbShown('cfb'), true);
   assert.equal(A.winProbShown('nfl'), true);
-  const h = html(view({ state: 'final', league: 'cfb' }));
-  assert.ok(!/data-gpa="winprob"|Win probability|Calibrating/i.test(h));
-  // The reader is not even asked for CFB: the view gates the read on the same flag.
+  for (const state of ['live', 'final']) {
+    const h = html(view({ state, league: 'cfb' }));
+    assert.match(h, /data-gpa="winprob"/, state);
+    assert.match(h, /<span class="gpa-cal" data-calibrating="1">Calibrating<\/span>/, `${state}: CFB carries the tag`);
+    assert.match(h, /data-wpnow="1">CHI (71%|won)</, `${state}: the number`);
+    assert.match(h, /<polyline class="ln"/, `${state}: the curve`);
+  }
+  // The reader asks for the GAME'S OWN sport's rows - no longer NFL only.
   const vsrc = src('lib/gridiron/gamePageArcadeView.js');
-  assert.match(vsrc, /winProbShown\(league\) && state !== 'pre' \? caught\(winProbRows\(game\.id\)/);
-  assert.match(src('lib/gridiron/gamePageArcade.js'), /sport = 'nfl'/, 'the curve query reads NFL rows only');
+  assert.match(vsrc, /winProbShown\(league\) && state !== 'pre' \? caught\(winProbRows\(game\.id, \{ sport: league \}\)/);
+  const asrc = src('lib/gridiron/gamePageArcade.js');
+  assert.match(asrc, /sport = \$\{sport\}/, 'the curve query is bound to the sport asked for');
+  assert.doesNotMatch(asrc, /sport = 'nfl'\s*\n\s*ORDER BY ts, id/, 'the curve read is no longer NFL-only');
+});
+
+test('NFL: NO Calibrating tag anywhere on the page; the method note stands under the module (sat-1)', () => {
+  for (const state of ['live', 'final']) {
+    const h = html(view({ state, league: 'nfl' }));
+    assert.match(h, /data-gpa="winprob"/);
+    assert.doesNotMatch(h, /Calibrating|gpa-cal|data-calibrating/i, `${state}: no tag`);
+    assert.match(h, /<p class="gpa-wpnote" data-wpnote="1">Sportsvyn model · market prior \+ game state<\/p>/, `${state}: the note, exactly`);
+  }
+  assert.equal(D.WINPROB_METHOD_NOTE, 'Sportsvyn model · market prior + game state');
+});
+
+test('THE TAG REGISTRY IS PINNED: one line flips CFB when the Mac\'s re-score passes', () => {
+  assert.deepEqual(D.CALIBRATING, { nfl: false, cfb: true });
+  assert.deepEqual(D.DISPLAYED, { nfl: true, cfb: true });
+  assert.ok(Object.isFrozen(D.CALIBRATING) && Object.isFrozen(D.DISPLAYED));
+  assert.equal(D.winProbCalibrating('mlb'), false, 'an unknown sport is never tagged');
+  assert.equal(D.winProbDisplayed('mlb'), false, 'and never displayed');
+  // The surfaces read the registry, never a typed literal of their own.
+  assert.doesNotMatch(src('components/gridiron/GamePageArcade.js'), /tag=\{<span className="gpa-cal">Calibrating<\/span>\}/);
+  assert.match(src('lib/gridiron/gamePageArcadeView.js'), /calibrating: winProbCalibrating\(league\)/);
+  assert.match(src('components/gridiron/LiveWinProb.js'), /winProbCalibrating\(sport\) \?/);
+  assert.match(src('lib/scores/v4.js'), /calibrating: winProbCalibrating\(g\.leagueSlug\)/);
+});
+
+test('PER-PLAY WP DELTAS STAY OFF: the plays list carries none (sat-1 item 4)', () => {
+  const h = html(view({ state: 'live' }));
+  const plays = h.slice(h.indexOf('data-gpa="plays"'), h.indexOf('</ol>', h.indexOf('data-gpa="plays"')));
+  assert.ok(plays.length > 20, 'the plays list rendered');
+  assert.doesNotMatch(plays, /%|data-delta|wp/i, 'no probability, no delta on a play row');
+  // ...and the feed read itself selects no win probability.
+  const asrc = src('lib/gridiron/gamePageArcade.js');
+  const feed = asrc.slice(asrc.indexOf('export async function playsFeed'), asrc.indexOf('export async function networkFor'));
+  assert.doesNotMatch(feed, /winprob|p_home|delta/i);
+  const vsrc = src('lib/gridiron/gamePageArcadeView.js');
+  assert.match(vsrc, /plays\.latest = plays\.latest\.map\(\(p\) => \(\{ when: whenOf\(p\), abbr: abbrOf\(p\.offenseTeamId\) \?\? '', text: p\.text \?\? '' \}\)\);/,
+    'a play row is when, team and text - nothing else');
 });
 
 // ---------------------------------------------------------------------------

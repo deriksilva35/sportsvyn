@@ -15,6 +15,7 @@
 import { auth } from '@/auth';
 import { createLeague, joinLeague } from '@/lib/leagues/core';
 import { joinByInvite, resetInvite } from '@/lib/leagues/invite';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 async function uid() {
   const session = await auth();
@@ -30,6 +31,7 @@ async function uid() {
 export async function createLeagueAction(formData) {
   const userId = await uid();
   if (userId == null) return { ok: false, reason: 'Sign in first' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   if (!formData.has('span')) return { ok: false, reason: 'Make a league from the create sheet' };
   const settings = {
         games: formData.getAll('games').flatMap((g) => String(g).split(',')),
@@ -50,6 +52,7 @@ export async function createLeagueAction(formData) {
 export async function joinLeagueAction(formData) {
   const userId = await uid();
   if (userId == null) return { ok: false, reason: 'Sign in first' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   try {
     return await joinLeague(userId, formData.get('code'));
   } catch {
@@ -61,6 +64,7 @@ export async function joinLeagueAction(formData) {
 export async function joinInviteAction(key) {
   const userId = await uid();
   if (userId == null) return { ok: false, reason: 'Sign in first' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   try {
     return await joinByInvite(userId, key);
   } catch {
@@ -72,6 +76,7 @@ export async function joinInviteAction(key) {
 export async function resetInviteAction(leagueId) {
   const userId = await uid();
   if (userId == null) return { ok: false, reason: 'Sign in first' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   try {
     return await resetInvite(userId, Number(leagueId));
   } catch {

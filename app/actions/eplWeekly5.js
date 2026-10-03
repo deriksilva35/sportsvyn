@@ -6,11 +6,13 @@
 
 import { auth } from '@/auth';
 import { saveEpl5Pick, clearEpl5Pick } from '@/lib/eplWeekly5/entry';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 export async function saveEplWeekly5PickAction(contestId, slot, playerId) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   return saveEpl5Pick(Number(userId), Number(contestId), String(slot), String(playerId));
 }
 
@@ -18,5 +20,6 @@ export async function clearEplWeekly5PickAction(contestId, slot) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   return clearEpl5Pick(Number(userId), Number(contestId), String(slot));
 }
