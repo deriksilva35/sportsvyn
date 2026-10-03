@@ -23,6 +23,8 @@ import { syncNbaGameStats, syncNbaLastPlay } from '../../lib/nba/statsSync.js';
 import { snapshotLiveBoards } from '../../lib/boards/live.js';
 import { snapshotMlbBoards } from '../../lib/boards/mlb.js';
 import { kickIfDayDone } from '../../lib/mlb/advanceKick.js';
+import { createKickThrottle, newFinals } from '../../lib/cfb/finalKick.js';
+import { cfbFinalWeeks, runKickedImport } from '../../lib/cfb/finalKickRun.js';
 import { refreshMlbProbables, REFRESH_MS as PROBABLES_MS } from '../../lib/mlb/probablesRefresh.js';
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
@@ -39,6 +41,13 @@ if (!DB) { console.error('PROD_DATABASE_URL missing'); process.exit(1); }
 const sql = neon(DB);
 
 const HEARTBEAT_MS = 5 * 60 * 1000;
+
+// THE CFB BOX-SCORE KICK (sun-6 item 2, lib/cfb/finalKick.js). One throttle for
+// the process: at most one CFBD week import per ten minutes, a trailing run for
+// finals inside the window, and the hourly cron as the backstop. The run is
+// fired off the poll loop's await chain and never throws into it.
+const cfbKick = createKickThrottle({ run: (batch) => runKickedImport(batch, { sql, log }), log });
+const cfbKicked = new Set();
 const ALERT_AFTER_FAILURES = 3;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(new Date().toISOString(), ...a);
@@ -303,6 +312,20 @@ async function loop(lg) {
         // 10:00Z timer runs the same job.
         if (lg.slug === 'mlb' && r.finalIds?.length) {
           try { await kickIfDayDone(sql, r.finalIds, { log }); } catch (e) { log('[mlb] postseason advance check failed:', String(e?.message ?? e).slice(0, 120)); }
+        }
+        // THE CFB BOX SCORE, KICKED BY THE FINAL (sun-6 item 2, lib/cfb/finalKick.js):
+        // the CFBD week import for each game this poll turned final, throttled to one
+        // run per ten minutes. enqueue() returns at once - the import runs off this
+        // await chain - and the hourly cron still catches anything this misses.
+        if (lg.slug === 'cfb' && r.finalIds?.length) {
+          const ids = newFinals(r.finalIds, cfbKicked);
+          try {
+            if (ids.length) cfbKick.enqueue(await cfbFinalWeeks(sql, ids));
+          } catch (e) {
+            // Unmarked, so a later flip of the same game may still kick it.
+            for (const id of ids) cfbKicked.delete(id);
+            log('[cfb] box-score kick failed:', String(e?.message ?? e).slice(0, 120));
+          }
         }
         if (stats) {
           // the games this window is watching: live now, or seen live earlier

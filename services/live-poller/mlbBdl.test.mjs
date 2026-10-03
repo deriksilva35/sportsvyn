@@ -171,7 +171,7 @@ test('the poller reports finalIds and kicks the MLB postseason advance with them
   const poll = readFileSync(new URL('./poll.mjs', import.meta.url), 'utf8');
   const index = readFileSync(new URL('./index.mjs', import.meta.url), 'utf8');
   assert.match(poll, /finals: 0, finalIds: \[\]/);
-  assert.match(poll, /\{ out\.finals \+= 1; out\.finalIds\.push\(m\.id\); \}/);
+  assert.match(poll, /if \(turnedFinal\(m\.status, after\.status\)\) \{ out\.finals \+= 1; out\.finalIds\.push\(m\.id\); \}/);
   assert.match(index, /import \{ kickIfDayDone \} from '\.\.\/\.\.\/lib\/mlb\/advanceKick\.js';/);
   assert.match(index, /if \(lg\.slug === 'mlb' && r\.finalIds\?\.length\) \{\s*try \{ await kickIfDayDone\(sql, r\.finalIds, \{ log \}\); \} catch/);
 });
