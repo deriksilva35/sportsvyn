@@ -7,11 +7,13 @@
 
 import { auth } from '@/auth';
 import { saveOctoberPick, clearOctoberPick } from '@/lib/october/entry';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 export async function saveOctoberPickAction(contestId, slot, player) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   return saveOctoberPick(Number(userId), Number(contestId), String(slot), {
     playerId: String(player?.playerId),
     matchId: Number(player?.matchId),
@@ -24,5 +26,6 @@ export async function clearOctoberPickAction(contestId, slot) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   return clearOctoberPick(Number(userId), Number(contestId), String(slot));
 }

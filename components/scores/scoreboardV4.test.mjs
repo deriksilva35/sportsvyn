@@ -180,9 +180,21 @@ test('the live NFL card: volt clock pill, the leader\'s score, the ball, the fie
   assert.deepEqual([...c.querySelector('.sv4-field').children].map((e) => e.className), ['sit', 'track', 'lp'], 'the line, the strip under it, then the play');
   assert.equal(c.querySelector('.sv4-foot span').textContent, 'PHI -1.5 · 44.5 · opened -2.5');
   assert.equal(c.querySelector('[data-winprob="nfl"]').textContent, 'PHI 64% win');
-  // CFB and MLB: the win-prob slot renders nothing (ruling f)
+  assert.equal(c.querySelector('[data-calibrating]'), null, 'NFL: no Calibrating tag (sat-1)');
+  assert.doesNotMatch(c.outerHTML, /Calibrating/);
+  // g-3 (CFB) carries no stored number, so nothing; MLB has no model at all.
   assert.equal(d4.querySelector('[data-slug="g-3"] [data-winprob]'), null);
   assert.equal(d4.querySelector('[data-slug="g-8"] [data-winprob]'), null);
+});
+
+test('the live CFB card (sat-1): the win read, TAGGED Calibrating', () => {
+  const f = fixture();
+  const withWp = (x) => (x.id === 3 ? { ...x, liveState: { ...x.liveState, win_prob: 71, win_prob_at: '2026-09-12T23:39:30Z' } } : x);
+  f.groups = f.groups.map((gr) => ({ ...gr, games: gr.games.map(withWp) }));
+  const c = doc(v4html(f, true)).querySelector('[data-slug="g-3"]');
+  assert.equal(c.querySelector('[data-winprob="cfb"]').textContent, 'ALA 71% win');
+  assert.equal(c.querySelector('[data-calibrating="1"]').textContent, 'Calibrating');
+  assert.equal(c.querySelector('[data-calibrating="1"]').className, 'wp-cal');
 });
 
 test('the MLB live card: inning and half, count, bases - no field strip', () => {

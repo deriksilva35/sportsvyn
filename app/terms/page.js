@@ -2,11 +2,13 @@
  * /terms — Terms of Service. PAPER-surface prose, server component (no state).
  * Short and honest: editorial/entertainment product, "explain, don't pick"
  * (no picks or betting advice), membership billed via Stripe, cancel anytime,
- * no warranty, California law. Mirrors /privacy chrome + legal.css.
+ * no warranty, California law, minimum age 13 (age-gate, fri-5: the /age
+ * screen enforces it). Mirrors /privacy chrome + legal.css.
  */
 
 import Link from 'next/link';
 import SiteFooter from '@/components/SiteFooter';
+import { LEGAL_EFFECTIVE_DATE } from '@/lib/legal';
 import '@/components/legal.css';
 
 export const metadata = {
@@ -29,7 +31,7 @@ export default function TermsPage() {
         <article className="legal-prose">
           <p className="legal-eyebrow">Terms</p>
           <h1>Terms of Service</h1>
-          <p className="legal-effective">Effective July 20, 2026</p>
+          <p className="legal-effective">Effective {LEGAL_EFFECTIVE_DATE}</p>
           <p className="legal-lede">
             These terms cover your use of Sportsvyn (sportsvyn.com) and the Draftvyn
             iOS app. By using the product, you agree to them.
@@ -44,6 +46,22 @@ export default function TermsPage() {
             guidance of any kind, and nothing here should be relied on for placing
             bets. Any numbers, rankings, or model outputs are for context and
             entertainment only.
+          </p>
+
+          <h2>Minimum age</h2>
+          <p>
+            You must be <strong>at least 13 years old</strong> to create an account
+            or to play, join leagues, or use any other account feature. Scores and
+            public pages can be read without an account. We ask for your date of
+            birth once, before you play; if it shows you are under 13, we don&rsquo;t
+            create an account and we don&rsquo;t keep the date you entered.
+          </p>
+          <p>
+            We don&rsquo;t knowingly collect personal information from children under
+            13. If you believe an account belongs to someone under 13, email{' '}
+            <a href="mailto:privacy@sportsvyn.com">privacy@sportsvyn.com</a> with the
+            account&rsquo;s email address or handle, and we will delete the account
+            and its data.
           </p>
 
           <h2>Your account</h2>

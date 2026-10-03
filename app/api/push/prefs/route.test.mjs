@@ -42,7 +42,9 @@ const SCOPE_ID = 900000000 + (Date.now() % 1000000); // a match id nothing on DE
 let userId; let GET; let PUT; let DELETE;
 
 before(async () => {
-  const [u] = await sql`INSERT INTO users (email) VALUES (${`${NS}@example.invalid`}) RETURNING id`;
+  // AGE GATE (fri-5): the write doors refuse an account that has not answered
+  // the age screen, so the fixture reader has (an adult date, DEV only).
+  const [u] = await sql`INSERT INTO users (email, date_of_birth) VALUES (${`${NS}@example.invalid`}, '1990-01-01') RETURNING id`;
   userId = u.id;
   writeFileSync(STUB, `export async function auth() { return { user: { id: ${userId} } }; }\n`);
   ({ GET, PUT, DELETE } = await import('./route.js'));

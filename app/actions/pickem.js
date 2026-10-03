@@ -6,10 +6,12 @@
 
 import { auth } from '@/auth';
 import { savePick } from '@/lib/pickem/entry';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 export async function savePickAction(contestId, matchId, side) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   return savePick(Number(userId), Number(contestId), Number(matchId), side);
 }

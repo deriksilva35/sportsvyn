@@ -6,7 +6,7 @@
 //   NFL  a pre-kick consensus line and one scrimmage snap -> the prior is
 //        frozen, live_state carries win_prob, winprob_log gets a row, and the
 //        page draws OUR live read with the Calibrating tag
-//   CFB  the same inputs -> computed and LOGGED, never written for display
+//   CFB  the same inputs -> computed, LOGGED and written for display (sat-1)
 //   NFL-NOLINE  no odds at all -> no prior, no number, no log, no bar
 // The provider is a synthetic payload handed to pollOnce as its fetcher; the
 // Live Activity sender is dark (no APNs env), so nothing leaves the machine.
@@ -197,11 +197,14 @@ test('NO LINE, NO NUMBER: nothing frozen, nothing written, nothing logged', asyn
   assert.equal((await logs(ids.noline)).length, 0);
 });
 
-test('CFB is SHADOW: computed and logged, never written for display', async () => {
+// sat-1: CFB was SHADOW (computed and logged, never written for display);
+// it is now displayed, tagged Calibrating by the surfaces (lib/winprob/display.js).
+test('CFB is DISPLAYED (sat-1): computed, logged, and written for display', async () => {
   await poll('cfb', [row(PID.cfb)]);
   const md = await meta(ids.cfb);
   assert.equal(md.market_prior.spread, -3.5);
-  assert.equal(md.live_state?.win_prob ?? null, null, 'no display value');
+  assert.ok(Number.isInteger(md.live_state?.win_prob) && md.live_state.win_prob >= 0 && md.live_state.win_prob <= 100, 'a display value');
+  assert.ok(md.live_state.win_prob_at, 'stamped');
   const L = await logs(ids.cfb);
   assert.equal(L.length, 1); assert.equal(L[0].sport, 'cfb'); assert.equal(L[0].model_version, 'sportsvyn-winprob-cfb@0.1.0-shadow');
   assert.equal(L[0].inputs.season, 2026);
@@ -218,7 +221,7 @@ test('THE PHONE GETS NOTHING: the Live Activity state carries no winProb with WI
   } finally { delete process.env.WINPROB_PHONE; }
 });
 
-test('THE PAGE draws our live read from what the poller wrote - Calibrating, two-way, no market strip', async () => {
+test('THE PAGE draws our live read from what the poller wrote - no tag (sat-1), the method note, two-way, no market strip', async () => {
   const React = (await import('react')).default;
   const { renderToStaticMarkup } = await import('react-dom/server');
   const Page = (await import('../../app/nfl/game/[slug]/page.js')).default;
@@ -226,9 +229,10 @@ test('THE PAGE draws our live read from what the poller wrote - Calibrating, two
   const md = await meta(ids.nfl);
   const h = await render(`${NS}-nfl`);
   assert.match(h, /data-winprob="live" data-stale="0"/);
-  assert.match(h, /<span class="lbl">Win Probability · our live read<\/span><span class="gi-wp-cal">Calibrating<\/span>/);
+  assert.match(h, /<span class="lbl">Win Probability · our live read<\/span><\/div>/);
+  assert.doesNotMatch(h, /Calibrating|gi-wp-cal/, 'NFL: no tag (sat-1)');
   assert.doesNotMatch(h, /Paused/, 'fresh: no paused line');
-  assert.match(h, /Our live model, still being validated against results\./);
+  assert.match(h, /Sportsvyn model · market prior \+ game state/, 'the method note');
   assert.match(h, new RegExp(`>${md.live_state.win_prob}%<`)); assert.match(h, new RegExp(`>${100 - md.live_state.win_prob}%<`));
   assert.doesNotMatch(h, /pre-kickoff consensus/i, 'once live, the market strip is gone');
   assert.doesNotMatch(h, /Draw/);

@@ -13,11 +13,13 @@ import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { makePick } from '@/lib/survivor/pick';
 import { survivorOn } from '@/lib/survivor/flag';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 export async function pickSurvivorTeam(poolId, teamId) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   if (!survivorOn()) return { ok: false, reason: 'closed' };   // pulled (thu-27)
   try {
     const res = await makePick(Number(userId), Number(poolId), Number(teamId), { now: new Date() });

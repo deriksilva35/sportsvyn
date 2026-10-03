@@ -25,6 +25,7 @@ import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { FOLLOW_CAP_PER_LEAGUE } from '@/lib/follows';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 // Same shape for both return values so the client can branch on .ok
 // without remembering which action returned what.
@@ -70,6 +71,7 @@ export async function followTeam(teamId) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   if (!Number.isInteger(teamId) || teamId <= 0) {
     return { ok: false, reason: 'team_not_found' };
   }
@@ -112,6 +114,7 @@ export async function unfollowTeam(teamId) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   if (!Number.isInteger(teamId) || teamId <= 0) {
     return { ok: false, reason: 'team_not_found' };
   }
@@ -145,6 +148,7 @@ export async function followPlayer(playerId) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   if (!Number.isInteger(playerId) || playerId <= 0) {
     return { ok: false, reason: 'player_not_found' };
   }
@@ -165,6 +169,7 @@ export async function unfollowPlayer(playerId) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   if (!Number.isInteger(playerId) || playerId <= 0) {
     return { ok: false, reason: 'player_not_found' };
   }
