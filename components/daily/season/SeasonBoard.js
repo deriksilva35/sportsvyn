@@ -744,7 +744,7 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
         {/* sat-5 Y8: picks are held in this tab until submit (the run route
             is the only write), so a closed tab loses them. */}
         {signInHref
-          ? 'Three minutes from Start. The clock is on the server. Sign in to start it. One attempt - this board is ranked. A new board opens at midnight ET.'
+          ? 'Three minutes from Start. The clock is on the server. Sign in to start it. One attempt - this board is ranked. Your picks stay on this device until you lock in; close the tab and they are lost. A new board opens at midnight ET.'
           : ranked
             ? 'Three minutes from Start. The clock is on the server. One attempt - this board is ranked. Your picks stay on this device until you lock in; close the tab and they are lost. A new board opens at midnight ET.'
             : 'Three minutes from Start. Practice is unranked and touches no leaderboard.'}
