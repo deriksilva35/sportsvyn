@@ -36,7 +36,7 @@ const LEAGUES = [
     run: (leagueId, season) => syncNflGames(leagueId, season, { broadcasts: true, window: null }) },
   { slug: 'cfb', source: 'cfb-games', cfbd: true,
     run: (leagueId, season) => syncCfbGames(leagueId, season, {
-      broadcasts: true, liveScores: false, liveLines: false, window: null,
+      broadcasts: true, liveScores: false, window: null,
     }) },
 ];
 
