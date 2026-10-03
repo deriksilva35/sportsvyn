@@ -72,7 +72,8 @@ const SECTIONS = [
       { n: 2, t: 'Draft', d: 'Eight rounds against the room, thirty seconds a pick, no bench.' },
       { n: 3, t: 'Score', d: 'Best six of your eight count, against every other drafter that week.' },
     ],
-    graded: 'Best ball, PPR, drop worst.',
+    graded: 'Best ball, PPR. Best six of your eight count.',
+    rule: 'A game not final 48 hours after the week settles is void - its players score 0. A stat correction within 7 days of a game re-grades the week.',
     href: '/draft',
     cta: 'Take a seat',
   },
@@ -89,6 +90,7 @@ const SECTIONS = [
       { n: 3, t: 'Grade', d: 'Tuesday you are graded against the best six that pool could have made.' },
     ],
     graded: 'PPR, worst pick dropped.',
+    rule: 'A game not final 48 hours after the week settles is void - its players score 0. A stat correction within 7 days of a game re-grades the week.',
     href: '/weekly',
     cta: 'Set your six',
   },
@@ -102,7 +104,8 @@ const SECTIONS = [
       { n: 2, t: 'Lock', d: 'Each game locks at its own kickoff. Change a pick until then.' },
       { n: 3, t: 'Tally', d: 'One season table across both sports, ranked on correct percentage.' },
     ],
-    graded: 'Right, wrong, push.',
+    graded: 'Right or wrong. A tie counts for nobody.',
+    rule: 'A game not final 48 hours after the board settles is void and counts for nobody. A score correction within 7 days of a game re-grades the board.',
     href: '/pickem',
     cta: 'Make your picks',
   },
@@ -161,6 +164,9 @@ export default async function HowItWorksPage() {
             )}
 
             <p className="hiw-graded"><b>Graded</b> {s.graded}</p>
+            {/* THE VOID AND RE-GRADE RULE (sat-5, rulings 2 and 3) - the three
+                football games only; the Daily has no live games to wait on. */}
+            {s.rule && <p className="hiw-graded"><b>Late games</b> {s.rule}</p>}
             <Link className="hiw-go" href={s.href}>{s.cta} &rarr;</Link>
           </section>
         ))}
