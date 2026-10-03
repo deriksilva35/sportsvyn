@@ -19,6 +19,7 @@ import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
+import { maybeAlert } from '@/lib/pollers/alerts';
 import { runHouseTick } from '@/lib/house/run';
 import { HOMER_TEAMS } from '@/lib/house/personas';
 import { openPickemBoards } from '@/lib/pickem/sequence';
@@ -98,5 +99,17 @@ export async function GET(request) {
     return Response.json({ decision: 'skipped-locked' });
   }
   const res = outcome.result;
+  // A FAILED TICK ALERTS (ruling sun-6). The October arm reads club rosters
+  // from the secondary stats feed; a 4xx/5xx there is caught and the tick goes
+  // on, but recordRun now marks the run failed - and until this line nothing
+  // read that. The body is res.error, which names statuses and endpoints only,
+  // so the same outage every hour mails once and is counted after.
+  if (!res.ok) {
+    await maybeAlert(sql, {
+      source: SOURCE,
+      subject: `[pollers] ${SOURCE} FAILED`,
+      body: `source: ${SOURCE}\n\n${res.error}`,
+    }).catch(() => {});
+  }
   return Response.json({ ok: res.ok, ...(res.summary ?? {}) });
 }
