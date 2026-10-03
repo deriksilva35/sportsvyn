@@ -1,16 +1,17 @@
 /**
  * POST /api/draft/start - claim the week's ranked entry and open the room.
  *
- * START IS CONSUMED. The contest_entries row is written BEFORE the draft is
- * created, so a request that dies between the two leaves a claimed entry with
- * no room - a DNF - rather than a room with no claim, which would be a free
- * look at the board. The failure direction is the point.
+ * START IS CONSUMED, AND THE CLAIM COMES FIRST (ruling D7). openRankedRoom
+ * (lib/draft/entry.js) writes the contest_entries row BEFORE the room, and the
+ * room is created already linked to it in one statement. A request that dies
+ * between the two leaves a claimed entry with no room - nobody has seen a
+ * board, so the next tap opens the room for that claim, and at lock it is a
+ * DNF. A room with no claim, which would be a free look at the board, cannot
+ * be produced by any order of failures.
  */
 import { auth } from '@/auth';
 import { currentDraftContest, DRAFT_CONFIG } from '@/lib/draft/contest';
-import { claimEntry, getDraftEntry } from '@/lib/draft/entry';
-import { startCustomDraftFor } from '@/lib/fantasy/drafts';
-import { sql } from '@/lib/db';
+import { openRankedRoom } from '@/lib/draft/entry';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,27 +33,15 @@ export async function POST(request) {
     return Response.json({ error: 'locked' }, { status: 409 });
   }
 
-  // Already claimed? Send them back to their room rather than refusing - a
-  // reload must not read as a lockout.
-  const existing = await getDraftEntry(contest.id, Number(userId));
-  if (existing?.meta?.draftId) {
-    return Response.json({ ok: true, draftId: existing.meta.draftId, resumed: true });
-  }
-
   // RANKED BYPASSES THE SIM'S ENTITLEMENT GATES, deliberately. The 3-free limit
   // and the members-only custom config exist to price the practice range; a
   // ranked week is one draft against one fixed config and is not a sandbox.
-  const started = await startCustomDraftFor(Number(userId), DRAFT_CONFIG, seat, { ranked: true });
-  if (!started?.ok) {
-    return Response.json({ error: started?.reason ?? 'could not start' }, { status: 400 });
+  //
+  // ALREADY CLAIMED WITH A ROOM? openRankedRoom sends them back to it rather
+  // than refusing - a reload must not read as a lockout.
+  const opened = await openRankedRoom(contest, Number(userId), seat);
+  if (!opened.ok) {
+    return Response.json({ error: opened.reason ?? 'could not start' }, { status: 400 });
   }
-
-  const claim = await claimEntry(contest.id, Number(userId), started.draftId);
-  if (!claim.ok) {
-    // Lost a race against another tab. Abandon the room we just made rather
-    // than leaving an orphan the history page would show as a real draft.
-    await sql`UPDATE drafts SET status = 'abandoned' WHERE id = ${started.draftId}`;
-    return Response.json({ error: claim.reason, draftId: claim.draftId }, { status: 409 });
-  }
-  return Response.json({ ok: true, draftId: started.draftId });
+  return Response.json({ ok: true, draftId: opened.draftId, ...(opened.resumed ? { resumed: true } : {}) });
 }

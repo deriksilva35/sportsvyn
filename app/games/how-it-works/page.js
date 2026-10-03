@@ -68,7 +68,7 @@ const SECTIONS = [
     cadence: WEEKLY_CADENCE,
     tagline: 'Pick your seat, draft your team, compete against the field.',
     steps: [
-      { n: 1, t: 'Seat', d: 'Take one of twelve. It is yours all season.' },
+      { n: 1, t: 'Seat', d: 'Take one of twelve. You choose again every week.' },
       { n: 2, t: 'Draft', d: 'Eight rounds against the room, thirty seconds a pick, no bench.' },
       { n: 3, t: 'Score', d: 'Best six of your eight count, against every other drafter that week.' },
     ],

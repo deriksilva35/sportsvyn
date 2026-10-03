@@ -144,7 +144,7 @@ test('the nine relay-5b steps are verbatim', () => {
   // Transcribed copy, so it is checked character for character. Anything
   // reworded here is a change to ratified copy and should fail loudly.
   const STEPS = [
-    ['Seat', 'Take one of twelve. It is yours all season.'],
+    ['Seat', 'Take one of twelve. You choose again every week.'],
     ['Draft', 'Eight rounds against the room, thirty seconds a pick, no bench.'],
     ['Score', 'Best six of your eight count, against every other drafter that week.'],
     ['Pick', 'Six slots: QB, RB, WR, TE and two flex. Any player, nobody is taken.'],

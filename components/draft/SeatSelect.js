@@ -104,7 +104,7 @@ export default function SeatSelect({
   return (
     <>
       {handleModal}
-      <div className="secl"><b>Your seat</b><span>your room, same seed for everyone</span></div>
+      <div className="secl"><b>Your seat</b><span>same start for everyone at your seat</span></div>
       <section className="mod">
         <div className="opts">
           {seats.map((s) => (
@@ -122,8 +122,11 @@ export default function SeatSelect({
         <div className="mathline" style={{ marginTop: '10px' }}>
           {picked
             ? <>Seat {picked.seat} picks {ordinal(picked.round1Pick)} and {ordinal(picked.round2Pick)}. Any seat is
-              open - it is your room against {teamsCount - 1} bots. Everyone who takes seat {picked.seat} faces
-              the same room.</>
+              open - it is your room against {teamsCount - 1} bots.{' '}
+              {/* RULING D1, VERBATIM. True because the bots are seeded by
+                  (contest, seat, pick) and the week has one board -
+                  lib/draft/roomSeed.js, lib/draft/frozenBoard.js. */}
+              Everyone at seat {picked.seat} starts from the same room; bots react to your picks.</>
             : <>{teamsCount} teams &middot; {rounds} rounds &middot; {clockSeconds}s per pick. Any seat is open -
               it is your room against {teamsCount - 1} bots.</>}
         </div>

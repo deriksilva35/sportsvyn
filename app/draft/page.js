@@ -313,8 +313,8 @@ export default async function DraftPage({ searchParams }) {
       <div className="yr">
         <h1>Week {contest.week}</h1>
         <div className="sub">
-          Eight rounds. No bench. Same pool as The Weekly, drafted against a room of
-          eleven. Your best six of eight count.
+          Eight rounds. No bench. Drafted from the Sportsvyn board against a room of
+          eleven, scored on that week&apos;s stats. Your best six of eight count.
         </div>
       </div>
       <div className="warn">

@@ -14,7 +14,7 @@
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import {
-  startDraftFor, startCustomDraftFor, startLeagueDraftFor, makePickFor, timerAutoPickFor, abandonDraftFor, setAutoDraftFor,
+  startDraftFor, startCustomDraftFor, startLeagueDraftFor, makePickFor, timerAutoPickFor, setAutoDraftFor,
   startTrackerDraftFor, logPickFor, undoLastPickFor,
 } from '@/lib/fantasy/drafts';
 import { deleteAccountFor } from '@/lib/account';
@@ -197,11 +197,8 @@ export async function deleteAccount() {
   return deleteAccountFor(userId, session.user?.email ?? null);
 }
 
-// Abandon an in-progress draft (frees the entitlement gate).
-export async function abandonDraft(draftId) {
-  const userId = await currentUserId();
-  if (userId == null) return { ok: false, reason: 'unauthenticated' };
-  const res = await abandonDraftFor(userId, draftId);
-  if (res.ok) revalidatePath('/sim');
-  return res;
-}
+// NO abandonDraft ACTION (ruling D5). It had no UI behind it, and a server
+// action is callable by any client that knows its id - so it was a way for a
+// ranked room to step out of the lock-time auto-complete with nothing on
+// screen offering it. lib/fantasy/drafts.js abandonDraftFor stays, refuses a
+// ranked room, and is reachable from no client.
