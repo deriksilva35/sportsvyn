@@ -147,14 +147,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
         WHERE id = ${Number(id)} AND (last_seen_at IS NULL OR last_seen_at < now() - interval '1 hour')`
       .catch((e) => console.error('[last-seen]', { id, message: e?.message }));
   };
+  // THE DATE OF BIRTH NEVER RIDES THE SESSION (age-gate, fri-5). The pg
+  // adapter reads users with SELECT *, and next-auth hands that whole row to
+  // auth() as session.user - which GlobalHeaderServer passes, as a prop, into a
+  // client component. Without this every page's RSC payload would carry the
+  // reader's date of birth. The gate reads the column itself (ageGateDb.js);
+  // nothing that holds a session needs it.
+  const withoutDob = (u) => {
+    if (!u || typeof u !== 'object' || !('date_of_birth' in u)) return u;
+    const { date_of_birth: _private, ...rest } = u;
+    return rest;
+  };
   const adapter = {
     ...baseAdapter,
     useVerificationToken: async () => null,
     async getSessionAndUser(sessionToken) {
       const r = await baseAdapter.getSessionAndUser(sessionToken);
       if (r?.user?.id) touchLastSeen(r.user.id);
-      return r;
+      return r ? { ...r, user: withoutDob(r.user) } : r;
     },
+    getUser: async (id) => withoutDob(await baseAdapter.getUser(id)),
+    getUserByEmail: async (email) => withoutDob(await baseAdapter.getUserByEmail(email)),
+    getUserByAccount: async (acct) => withoutDob(await baseAdapter.getUserByAccount(acct)),
   };
 
   return {

@@ -7,6 +7,7 @@
  */
 import { auth } from '@/auth';
 import { startEntry, todayEt } from '@/lib/daily/entries';
+import { ageGateResponse } from '@/lib/auth/ageGateDb';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,7 @@ export async function POST() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return Response.json({ error: 'unauthorized' }, { status: 401 });
+  const ageRefused = await ageGateResponse(userId); if (ageRefused) return ageRefused;
 
   const date = await todayEt();
   const r = await startEntry(Number(userId), date);

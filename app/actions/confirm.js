@@ -26,11 +26,13 @@ import { confirmVerdict } from '@/lib/games/confirmRules';
 import { isDayBoard, currentGames, withCurrentTips } from '@/lib/nba/dayPickem';
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 async function confirmEntry(contestId, gameType) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
 
   // THE LOCK IS STILL THE LOCK. Confirming a locked week would write a
   // reassurance about an entry that can no longer change, which is at best
