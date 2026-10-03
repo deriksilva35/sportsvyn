@@ -154,9 +154,9 @@ export default async function SimLobby({ searchParams }) {
                     midnight, so the band is the difference between a game that
                     exists and a game that gets found. Above everything,
                     volt-forward, one line. */}
-                <Link className="sim-dailyband" href="/daily">
+                <Link className="sim-dailyband" href="/daily/board">
                   <span className="sdb-kick">The Daily</span>
-                  <span className="sdb-line">Today&rsquo;s board is live. Three minutes, best six.</span>
+                  <span className="sdb-line">Today&rsquo;s board is live. Three minutes, eight slots.</span>
                   <span className="sdb-cta">Play &rarr;</span>
                 </Link>
                 {/* ABOVE THE DECK, because a draft you are already in outranks

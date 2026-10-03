@@ -562,9 +562,9 @@ export default function SeasonBoard({
             its two em dashes written as hyphens per the house rule. */}
         <p className="sbd-note">
           {stage === 1 ? (
-            <>Fill <b>eight slots</b> from <b>twelve teams</b>, one player each. Their real <b>{year}</b> season points are your score. Tap a team to see its six.</>
+            <>Fill <b>eight slots</b> from <b>twelve teams</b>, one player each. Their real <b>{year}</b> season points are your score. Tap a team to see its players.</>
           ) : stage === 2 ? (
-            <>Six from the <b>{curTeam?.abbr}</b>. Dimmed ones fit no slot you have left. Tap one.</>
+            <>The <b>{curTeam?.abbr}</b> card. Dimmed ones fit no slot you have left. Tap one.</>
           ) : stage === 3 ? (
             <><b>{held.player.name}</b> fits the lit slots. Tap one to place him - or tap another player to change your mind.</>
           ) : (
@@ -715,7 +715,7 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
           {/* THE RULE THIS CARD USED TO STATE IS GONE (v2.0). It read "tap one
               and you are committed", which is no longer true and was the first
               thing a player would have found out by tapping. */}
-          <p>Twelve team cards. Open any of them and look - a team is only spent once one of its players is on your board.</p>
+          <p>Twelve team cards, 4 to 6 players each. Open any of them and look - a team is only spent once one of its players is on your board.</p>
         </div>
       </div>
       <div className="sbd-rl">
@@ -729,22 +729,24 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
         <span className="sbd-n">3</span>
         <div className="sbd-t">
           <b>{slotCount === 8 ? 'Eight' : slotCount} slots, {unused} team{unused === 1 ? '' : 's'} unused</b>
-          <p>QB, two RB, two WR, a TE, a FLEX and a kicker. Choosing which teams to skip is part of it, and scoring is season fantasy points, PPR.</p>
+          <p>QB, two RB, two WR, a TE, a FLEX and a kicker. Choosing which teams to skip is part of it. Scoring is season fantasy points, PPR, and nothing is dropped: kickers get 3 per field goal and 1 per extra point, and there is no fumble penalty.</p>
         </div>
       </div>
       <div className="sbd-rl">
         <span className="sbd-n">4</span>
         <div className="sbd-t">
           <b>You are graded against the board</b>
-          <p>Not against a season all-star team - against the best roster these twelve teams could actually have produced, one player per team.</p>
+          <p>Not against a season all-star team - against the best roster these twelve teams could actually have produced, one player per team. Same score, same place; within a tie, more matched slots list first, then the earliest lock-in.</p>
         </div>
       </div>
 
       <div className="sbd-rnote">
+        {/* sat-5 Y8: picks are held in this tab until submit (the run route
+            is the only write), so a closed tab loses them. */}
         {signInHref
-          ? 'Three minutes from Start. The clock is on the server. Sign in to start it. One attempt - this board is ranked.'
+          ? 'Three minutes from Start. The clock is on the server. Sign in to start it. One attempt - this board is ranked. A new board opens at midnight ET.'
           : ranked
-            ? 'Three minutes from Start. The clock is on the server. One attempt - this board is ranked.'
+            ? 'Three minutes from Start. The clock is on the server. One attempt - this board is ranked. Your picks stay on this device until you lock in; close the tab and they are lost. A new board opens at midnight ET.'
             : 'Three minutes from Start. Practice is unranked and touches no leaderboard.'}
       </div>
 
