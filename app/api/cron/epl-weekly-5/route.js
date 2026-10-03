@@ -3,6 +3,8 @@
  *
  *   1. OPEN the next gameweek (lib/eplWeekly5/create.js) - the lowest round
  *      with a fixture still to play; idempotent, so most runs create nothing.
+ *      Then APPEND to every open, unsettled board any fixture re-dated into
+ *      its window after it opened (ruling sun-1, create.js appendCarried).
  *   2. FLAGS: the feed's injured/suspended list for the open gameweek's
  *      fixtures still ahead (lib/eplWeekly5/availability.js) - ONE API-Sports
  *      request per run, none when nothing is ahead. 8 runs a day = at most 8
@@ -18,7 +20,7 @@ import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
-import { ensureNextGameweek } from '@/lib/eplWeekly5/create';
+import { ensureNextGameweek, appendCarried } from '@/lib/eplWeekly5/create';
 import { refreshAvailability } from '@/lib/eplWeekly5/availability';
 import { settleDueGameweeks } from '@/lib/eplWeekly5/settle';
 
@@ -36,9 +38,10 @@ export async function GET(request) {
     run: async () => {
       const now = new Date();
       const opened = await ensureNextGameweek({ now });
+      const carried = await appendCarried({ now });
       const flags = await refreshAvailability(sql, { now }).catch((e) => ({ error: String(e?.message ?? e).slice(0, 200) }));
       const graded = await settleDueGameweeks({ now });
-      return { opened, flags, graded };
+      return { opened, carried, flags, graded };
     },
   }));
 
