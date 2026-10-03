@@ -17,6 +17,7 @@ import { sql } from '@/lib/db';
 import { submitRun, regradeStoredRun } from '@/lib/daily/seasonBoardRuns';
 import { openRevealFor } from '@/lib/daily/openReveal';
 import { todayEt } from '@/lib/daily/entries';
+import { ageGateResponse } from '@/lib/auth/ageGateDb';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,7 @@ export async function POST(request) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return Response.json({ error: 'unauthorized' }, { status: 401 });
+  const ageRefused = await ageGateResponse(userId); if (ageRefused) return ageRefused;
 
   let body; try { body = await request.json(); } catch { return Response.json({ error: 'bad json' }, { status: 400 }); }
   const boardId = Number(body?.boardId);

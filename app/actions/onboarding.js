@@ -20,6 +20,7 @@
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { validateContactEmail, normalizeName } from '@/lib/onboarding';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 async function currentUserId() {
   const session = await auth();
@@ -31,6 +32,7 @@ async function currentUserId() {
 export async function saveContactEmail(raw) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
 
   const v = validateContactEmail(raw);
   if (!v.ok) return { ok: false, reason: v.reason };
@@ -49,6 +51,7 @@ export async function saveContactEmail(raw) {
 export async function saveName(raw) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const name = normalizeName(raw);
   if (!name) return { ok: true, skipped: true };
   try {
@@ -70,6 +73,7 @@ export async function saveName(raw) {
 export async function completeOnboarding() {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   try {
     await sql`UPDATE users SET onboarded_at = now() WHERE id = ${userId} AND onboarded_at IS NULL`;
     return { ok: true };
@@ -95,6 +99,7 @@ export async function completeOnboarding() {
 export async function savePushChoice(choice) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   if (!['enabled', 'not-now', 'denied', 'disabled'].includes(choice)) {
     return { ok: false, reason: 'bad choice' };
   }

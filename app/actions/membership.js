@@ -11,6 +11,7 @@
  */
 
 import { auth } from '@/auth';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { createCheckoutSession, createBillingPortalSession, resolvePriceId } from '@/lib/stripe';
@@ -41,6 +42,8 @@ export async function startCheckout(planKey) {
   const userId = session?.user?.id ?? null;
   const email = session?.user?.email ?? null;
   if (!userId) redirect('/signin?callbackUrl=/membership');
+  // AGE GATE: no purchase before the age screen is answered.
+  if (await ageGateRefusal(userId)) redirect('/age?next=/membership');
 
   const plan = PLAN_BY_KEY[planKey];
   if (!plan) redirect('/membership'); // unknown plan — bounce back

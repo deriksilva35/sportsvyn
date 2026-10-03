@@ -6,11 +6,13 @@
 
 import { auth } from '@/auth';
 import { saveRunPick, clearRunPick } from '@/lib/run/entry';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 export async function saveRunPickAction(contestId, slot, player) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   return saveRunPick(Number(userId), Number(contestId), String(slot), {
     playerId: String(player?.playerId), teamId: Number(player?.teamId),
     kind: String(player?.kind), name: player?.name ?? null, team: player?.team ?? null,
@@ -21,5 +23,6 @@ export async function clearRunPickAction(contestId, slot) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   return clearRunPick(Number(userId), Number(contestId), String(slot));
 }

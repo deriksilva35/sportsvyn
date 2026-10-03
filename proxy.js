@@ -21,7 +21,10 @@
  *      page that is drawn (lib/retired.js). This replaced the World Cup's
  *      old-canonical 308s and the /world-cup/<sub> evergreen 307.
  *
- *   3. Admin auth gate (existing).
+ *   3. THE AGE SCREEN. A signed-in page navigation whose session has not
+ *      passed /age is sent to /age/check first (lib/auth/ageGate.js).
+ *
+ *   4. Admin auth gate (existing).
  *      Basic Auth on /admin/* and /api/admin/*, constant-time
  *      comparison, fail-closed when ADMIN_USERNAME or ADMIN_SECRET
  *      are missing.
@@ -49,6 +52,8 @@ import { SHELL_COOKIE, SHELL_VALUE, SHELL_PARAM, SHELL_UA_TOKEN } from '@/lib/sh
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { scoreboardRedirect } from './lib/scores/leagueScoreboards.js';
 import { retiredRedirect } from './lib/retired.js';
+import { ageRedirectTarget, sessionTokenFrom, AGE_OK_COOKIE } from './lib/auth/ageGate.js';
+import { ageCookieValue } from './lib/auth/ageCookie.js';
 
 const REALM = 'Sportsvyn Admin';
 
@@ -184,6 +189,41 @@ export async function proxy(request) {
   }
 
   // -------------------------------------------------------------------------
+  // 3. THE AGE SCREEN COMES FIRST (age-gate, fri-5).
+  //
+  //    A SIGNED-IN page navigation whose session has not passed the age screen
+  //    goes to /age/check, which reads the account once and either sets the
+  //    per-session marker and sends it straight back, or shows /age. This is
+  //    how a new sign-up meets the screen right after auth (both the code form
+  //    and Apple land on a callbackUrl, and that request comes through here)
+  //    and how an existing account meets it once, on its next visit.
+  //
+  //    NO DATABASE HERE. The marker is a hash of this session's token
+  //    (lib/auth/ageCookie.js), so the decision is a cookie compare. It is a
+  //    router, not the gate: every write door checks the stored birth date
+  //    itself (lib/auth/ageGateDb.js).
+  //
+  //    SIGNED-OUT READERS NEVER GET HERE: the matcher entries below run this
+  //    function only when a session cookie is present, and ageRedirectTarget
+  //    returns null without one. GET/HEAD only - a server action is a POST to
+  //    a page path and must reach its own gate, not a redirect. Admin, /api,
+  //    /signin, /age, the legal pages and account deletion are exempt
+  //    (isAgeExempt), so this clause cannot widen the admin gate below.
+  // -------------------------------------------------------------------------
+  const sessionToken = sessionTokenFrom((n) => request.cookies.get(n)?.value);
+  if (sessionToken) {
+    const ageDest = ageRedirectTarget({
+      method: request.method,
+      pathname,
+      search: request.nextUrl.search,
+      sessionToken,
+      ageCookie: request.cookies.get(AGE_OK_COOKIE)?.value ?? null,
+      expected: ageCookieValue(sessionToken),
+    });
+    if (ageDest) return withCookie(NextResponse.redirect(new URL(ageDest, request.url), 307));
+  }
+
+  // -------------------------------------------------------------------------
   // 4. Admin auth gate.
   //
   //    IT USED TO SAY "anything not handled above falls into this block, which
@@ -298,6 +338,19 @@ export const config = {
       source: '/:path*',
       has: [{ type: 'header', key: 'user-agent', value: '(.*)SportsvynApp/1(.*)' }],
       missing: [{ type: 'cookie', key: 'sv_shell', value: 'sim-app' }],
+    },
+    // THE AGE SCREEN (3 above): SIGNED-IN REQUESTS ONLY. One entry per name
+    // Auth.js gives its database-session cookie (https / http). A reader with
+    // no session cookie never invokes the proxy through these, so signed-out
+    // browsing costs nothing. Static assets and /api are excluded here; the
+    // function's own isAgeExempt is the authoritative list.
+    {
+      source: '/((?!_next/|api/|favicon.ico).*)',
+      has: [{ type: 'cookie', key: '__Secure-authjs.session-token' }],
+    },
+    {
+      source: '/((?!_next/|api/|favicon.ico).*)',
+      has: [{ type: 'cookie', key: 'authjs.session-token' }],
     },
   ],
 };

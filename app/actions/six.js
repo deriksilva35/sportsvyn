@@ -8,11 +8,13 @@
 
 import { auth } from '@/auth';
 import { saveSixPick, clearSixPick } from '@/lib/six/entry';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 export async function saveSixPickAction(contestId, slot, player) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   return saveSixPick(Number(userId), Number(contestId), String(slot), {
     playerId: String(player?.playerId),
     matchId: Number(player?.matchId),
@@ -23,5 +25,6 @@ export async function clearSixPickAction(contestId, slot) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   return clearSixPick(Number(userId), Number(contestId), String(slot));
 }
