@@ -23,7 +23,7 @@
  */
 
 import { confirmVerdict } from '@/lib/games/confirmRules';
-import { isDayBoard, currentGames, withCurrentTips } from '@/lib/nba/dayPickem';
+import { currentGames, withCurrentTips } from '@/lib/nba/dayPickem';
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { ageGateRefusal } from '@/lib/auth/ageGateDb';
@@ -41,9 +41,10 @@ async function confirmEntry(contestId, gameType) {
     SELECT id, locks_at, settled, board, meta FROM contests
      WHERE id = ${Number(contestId)} AND game_type = ${gameType}`;
   if (!c) return { ok: false, reason: 'no such contest' };
-  // A DAY BOARD (NBA) CLOSES ON ITS CURRENT LAST TIP, not the frozen one -
-  // the lock reads matches.kickoff_at at decision time (lib/nba/dayPickem.js).
-  if (gameType === 'pickem' && isDayBoard(c)) c.board = withCurrentTips(c.board, await currentGames(c.board));
+  // A PICK'EM BOARD CLOSES ON ITS CURRENT LAST TIP, not the frozen one - the
+  // lock reads matches.kickoff_at at decision time (lib/nba/dayPickem.js for
+  // the NBA day board; every football board too since ruling P1, sat-5).
+  if (gameType === 'pickem') c.board = withCurrentTips(c.board, await currentGames(c.board));
   // ROLLING LOCK: a Pick'em entry confirms while ANY row is still unkicked;
   // the Weekly and the Draft keep the contest gate (lib/games/confirmRules.js).
   const verdict = confirmVerdict(gameType, c);
