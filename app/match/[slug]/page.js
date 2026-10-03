@@ -400,6 +400,8 @@ export default async function MatchPage({ params }) {
   // EPL HAS ITS OWN MATCH CENTER AGAIN (thu-24) - before the retired check,
   // which still sends the World Cup and the friendlies to the one board.
   if (match.league_slug === 'epl') permanentRedirect(`/epl/match/${slug}`);
+  // THE CHAMPIONS LEAGUE'S, likewise (fri-3).
+  if (match.league_slug === 'ucl') permanentRedirect(`/ucl/match/${slug}`);
   if (isRetiredLeague(match.league_slug)) permanentRedirect('/scores');
 
   // The crumb's destination, from the league itself: each competition's own

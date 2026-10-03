@@ -110,6 +110,7 @@ export default async function EplStandingsPage() {
                 <i className="ep-swatch rail-uel" /> Europa / Conference
                 <i className="ep-swatch rail-drop" /> Relegation
               </p>
+              <p className="ep-key" data-cross="ucl"><Link className="lnk" href="/ucl/standings">Champions League table &rarr;</Link></p>
             </>
           )}
         </div>

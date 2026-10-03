@@ -54,6 +54,7 @@ export default function EplTableArcade({ table }) {
           <p className="ept-key">
             <i className="sw ucl" /> Champions League <i className="sw uel" /> Europa / Conference <i className="sw drop" /> Relegation
           </p>
+          <p className="ept-key" data-cross="ucl"><Link href="/ucl/standings">Champions League table &rsaquo;</Link></p>
         </>
       )}
     </div>

@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import { CardFace } from '@/components/scores/ScoreboardV4';
 import { cardVariant } from '@/lib/gridiron/scoresV2Shape';
+import { standingsHref } from '@/lib/soccer/leagues';
 
 function Box({ label, mod, right = null, children, className = '' }) {
   return (
@@ -73,7 +74,7 @@ export default function EplPageArcade({ view, now = new Date() }) {
   const variant = cardVariant(g);
   const draw = {
     card: () => (
-      <article className={`sv4-card ${variant} gpa-card`} data-variant={variant} data-league="epl" data-slug={g.slug} data-gpa="card">
+      <article className={`sv4-card ${variant} gpa-card`} data-variant={variant} data-league={g.leagueSlug} data-slug={g.slug} data-gpa="card">
         <CardFace g={g} x={x} signedIn={false} signinHref="/signin" tz="America/New_York" now={now} onPage />
       </article>
     ),
@@ -82,13 +83,13 @@ export default function EplPageArcade({ view, now = new Date() }) {
     players: () => <TopPlayers players={view.players} g={g} />,
   };
   return (
-    <div className="gpa" data-state={view.state} data-league="epl" data-modules={view.modules.join(' ')}>
+    <div className="gpa" data-state={view.state} data-league={g.leagueSlug} data-modules={view.modules.join(' ')}>
       <div className="gpa-crumb">
-        <Link href="/scores?sport=epl">&lsaquo; Scores</Link>
+        <Link href={`/scores?sport=${g.leagueSlug}`}>&lsaquo; Scores</Link>
         <span aria-hidden="true">·</span>
         <span>{view.crumb}</span>
         <span aria-hidden="true">·</span>
-        <Link href="/epl/standings">Table</Link>
+        <Link href={standingsHref(g.leagueSlug)}>Table</Link>
       </div>
       {view.modules.map((m) => <div key={m} className="gpa-mod" data-mod={m}>{draw[m]()}</div>)}
     </div>

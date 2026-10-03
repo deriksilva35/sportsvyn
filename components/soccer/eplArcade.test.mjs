@@ -110,7 +110,7 @@ test('THE TABLE: #, club, P, W, D, L, GD, Pts, form; GD signed; the rails; the e
 
 test('THE PAGES BRANCH ON THE FLAG, and the dark pages stay below the branch', () => {
   const src = (p) => readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8');
-  for (const [p, comp] of [['app/epl/standings/page.js', 'EplTableArcade'], ['app/epl/match/[slug]/page.js', 'EplPageArcade']]) {
+  for (const [p, comp] of [['app/epl/standings/page.js', 'EplTableArcade'], ['components/soccer/SoccerMatchPage.js', 'EplPageArcade'], ['app/ucl/standings/page.js', 'UclTableArcade']]) {
     const s = src(p);
     assert.match(s, /if \(arcadeFor\(isShell\)\) \{/, p);
     assert.ok(s.indexOf(`<${comp}`) > s.indexOf('if (arcadeFor(isShell))'), `${p} draws ${comp} in the branch`);

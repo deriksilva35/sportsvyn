@@ -645,5 +645,6 @@ test('EPL is a sport chip again on both pages (thu-24; gone tue-14, arcade-only 
   assert.match(page, /const arcade = arcadeFor\(isShell\);/);
   assert.match(page, /arcade=\{arcade\}/);
   // nba joined the list in the thu-17 seam; epl came back (thu-24).
-  assert.match(page, /\['nfl', 'cfb', 'mlb', 'nba', 'epl'\]\.includes\(sportRaw\)/, '/scores?sport=epl resolves');
+  // and the Champions League joined (fri-3).
+  assert.match(page, /\['nfl', 'cfb', 'mlb', 'nba', 'epl', 'ucl'\]\.includes\(sportRaw\)/, '/scores?sport=epl resolves');
 });

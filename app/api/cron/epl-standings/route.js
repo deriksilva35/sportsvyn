@@ -9,6 +9,10 @@
  * a minute AFTER the fixtures sync is deliberate: results land first, the
  * table that reflects them second.
  *
+ * THE CHAMPIONS LEAGUE'S LEAGUE-PHASE TABLE rides along (ucl, fri-3): one
+ * more request, caught to its own summary key and alerted on its own, so a
+ * UCL failure never costs the Premier League its table.
+ *
  * Auth: Bearer ${CRON_SECRET}.
  */
 
@@ -17,7 +21,7 @@ import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
-import { syncEplStandings } from '@/lib/soccer/standings';
+import { syncEplStandings, syncSoccerStandings } from '@/lib/soccer/standings';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -30,7 +34,10 @@ export async function GET(request) {
   const outcome = await withAdvisoryLock(SOURCE, async () => recordRun(sql, {
     source: SOURCE,
     kind: 'sync',
-    run: async () => syncEplStandings(),
+    run: async () => {
+      const ucl = await syncSoccerStandings('ucl').catch((e) => ({ error: String(e?.message ?? e).slice(0, 300) }));
+      return { ...(await syncEplStandings()), ucl };
+    },
   }));
 
   if (outcome.locked) {
@@ -39,6 +46,9 @@ export async function GET(request) {
   }
 
   const res = outcome.result;
+  if (res.ok && res.summary?.ucl?.error) {
+    await maybeAlert(sql, { source: SOURCE, subject: '[ucl] standings sync FAILED', body: String(res.summary.ucl.error) });
+  }
   if (!res.ok) {
     await maybeAlert(sql, {
       source: SOURCE,

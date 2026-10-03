@@ -153,7 +153,10 @@ test('NFL: the poll freezes the LAST pre-kick line, writes win_prob into live_st
   assert.equal(L.length, 1); assert.equal(L[0].sport, 'nfl'); assert.equal(L[0].model_version, 'sportsvyn-winprob-nfl@1.0.0');
   assert.equal(Math.round(L[0].p_home * 100), wp, 'the card shows the logged number, rounded');
   assert.equal(L[0].inputs.spread, -3.5); assert.equal(L[0].inputs.down_f, 2); assert.equal(L[0].inputs.posteam_is_home, 1);
-  assert.equal(L[0].inputs.secs_game, 900 + 521, 'Q3 8:41 is 1,421 regulation seconds');
+  // THE SNAP'S OWN CLOCK, NOT THE SCOREBOARD'S (relay fri-4 c): the play was
+  // snapped at Q3 8:50 while the scoreboard already reads 8:41, and training
+  // read each play's own time.
+  assert.equal(L[0].inputs.secs_game, 900 + 530, 'Q3 8:50 - the snap - is 1,430 regulation seconds; the scoreboard\'s 8:41 is not used');
 });
 
 test('the prior is FROZEN: a later poll does not move it, and an unchanged state logs nothing new', async () => {
