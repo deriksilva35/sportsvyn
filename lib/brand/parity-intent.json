@@ -1,3 +1,109 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw { align-items }",
+      "after": "center"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw { display }",
+      "after": "flex"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw { flex-wrap }",
+      "after": "wrap"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw { gap }",
+      "after": "6px"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw { padding-left }",
+      "after": "54px"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f b { font-variant-numeric }",
+      "after": "tabular-nums"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f b { font-weight }",
+      "after": "400"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f { align-items }",
+      "after": "center"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f { border }",
+      "after": "1px solid #2e2e2e"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f { border-radius }",
+      "after": "99px"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f { color }",
+      "after": "#f5f5f2"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f { display }",
+      "after": "inline-flex"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f { font }",
+      "after": "400 11px ?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f { gap }",
+      "after": "6px"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f { padding }",
+      "after": "3px 8px"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f.live { border-color }",
+      "after": "#f5f5f2"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-f.off { color }",
+      "after": "#e63946"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-t { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-t { font }",
+      "after": "400 9px ?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-dgw-t { letter-spacing }",
+      "after": ".06em"
+    },
+    {
+      "file": "app/epl-weekly-5/eplWeekly5.css",
+      "key": ".e5-flag.dgw { background }",
+      "after": "#f5f5f2"
+    }
+  ]
 }

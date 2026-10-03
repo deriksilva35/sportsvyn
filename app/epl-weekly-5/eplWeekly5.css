@@ -106,7 +106,7 @@
 .e5-dgw { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding-left: 54px; }
 .e5-dgw-t { font: 400 9px var(--tok-font-num); letter-spacing: .06em; color: var(--tok-muted); }
 .e5-dgw-f { display: inline-flex; gap: 6px; align-items: center; font: 400 11px var(--tok-font-num); padding: 3px 8px; border-radius: 99px; border: 1px solid var(--tok-line); color: var(--tok-ink); }
-.e5-dgw-f.live { border-color: var(--tok-primary); }
+.e5-dgw-f.live { border-color: var(--tok-ink); }
 .e5-dgw-f.off { color: var(--tok-live); }
 .e5-dgw-f b { font-weight: 400; font-variant-numeric: tabular-nums; }
 .e5-parts { display: flex; gap: 6px; flex-wrap: wrap; padding-left: 54px; }
