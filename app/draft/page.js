@@ -179,7 +179,7 @@ export default async function DraftPage({ searchParams }) {
     const roster = entry?.meta?.roster ?? [];
     // LIVE BEST-6 (v0.2 live totals): best ball over LIVE scores - the best
     // six AS OF NOW, which can differ from the final six; the label carries
-    // it. Same read the Weekly's window uses; drop-worst waits for settle.
+    // it. Same read the Weekly's window uses; from 2026 week 5 all six count (ruling D2), nothing drops at settle.
     const live = roster.length
       ? await (async () => {
         const [{ scored, playedIds }, gamesByTeam] = await Promise.all([
