@@ -15,6 +15,7 @@
 
 import Link from 'next/link';
 import SiteFooter from '@/components/SiteFooter';
+import { LEGAL_EFFECTIVE_DATE } from '@/lib/legal';
 import '@/components/legal.css';
 
 export const metadata = {
@@ -37,7 +38,7 @@ export default function PrivacyPage() {
         <article className="legal-prose">
           <p className="legal-eyebrow">Privacy</p>
           <h1>Privacy Policy</h1>
-          <p className="legal-effective">Effective October 3, 2026</p>
+          <p className="legal-effective">Effective {LEGAL_EFFECTIVE_DATE}</p>
           <p className="legal-lede">
             This policy explains what Sportsvyn collects, why, and the choices you
             have. It covers the website at sportsvyn.com and the Draftvyn iOS app.

@@ -8,6 +8,7 @@
 
 import Link from 'next/link';
 import SiteFooter from '@/components/SiteFooter';
+import { LEGAL_EFFECTIVE_DATE } from '@/lib/legal';
 import '@/components/legal.css';
 
 export const metadata = {
@@ -30,7 +31,7 @@ export default function TermsPage() {
         <article className="legal-prose">
           <p className="legal-eyebrow">Terms</p>
           <h1>Terms of Service</h1>
-          <p className="legal-effective">Effective October 3, 2026</p>
+          <p className="legal-effective">Effective {LEGAL_EFFECTIVE_DATE}</p>
           <p className="legal-lede">
             These terms cover your use of Sportsvyn (sportsvyn.com) and the Draftvyn
             iOS app. By using the product, you agree to them.
