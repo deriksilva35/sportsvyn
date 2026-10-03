@@ -9,7 +9,7 @@ import InviteSheet from '@/components/leagues/InviteSheet';
 import { ordinal } from '@/lib/leagues/standings';
 import { gameLabel, summaryLine, startLabel, rankPointsCopy } from '@/lib/leagues/settings';
 import { hasStarted } from '@/lib/leagues/describe';
-import { leagueHref, LEAGUE_TABS } from '@/lib/leagues/nav';
+import { leagueHref, LEAGUE_TABS, pickemBoardLinks } from '@/lib/leagues/nav';
 
 
 const fmt = (x) => (Number.isInteger(x) ? String(x) : Number(x).toFixed(1));
@@ -178,6 +178,16 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
         {league.drop_worst && league.span === 'season' ? ` Each player's worst ${unitWord} is dropped.` : ''}
         {' '}Only final results count; this {unitWord} so far is on the second tab.
       </p>
+      {/* THE LEAGUE'S OWN PICK'EM BOARDS - the board filtered to these members
+          (/pickem/<sport>?league=<id>), one per Pick'em sport. */}
+      {pickemBoardLinks(league.id, league.games).length > 0 && (
+        <p className="lv-note lv-foot" data-pickem-links>
+          League boards:{' '}
+          {pickemBoardLinks(league.id, league.games).map((l, i) => (
+            <span key={l.sport}>{i ? ' · ' : ''}<Link href={l.href}>{l.label}</Link></span>
+          ))}
+        </p>
+      )}
     </div>
   );
 }

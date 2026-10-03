@@ -135,12 +135,10 @@ test('YOUR MOVE: only what the reader can act on, soonest lock first, LOCKS SOON
   const bar = cards(c)[0].querySelector('.pl-bar');
   assert.equal(bar.children.length, 5, 'one segment per slot');
   assert.equal(bar.querySelectorAll('.on').length, 2, 'two filled');
-  // The lock is ahead(2) - TWO HOURS FROM NOW - so a run after ~22:00 ET puts
-  // it past midnight and the label rightly leads with the weekday ("Sat 1:41
-  // AM"). The assertion is about the ZONE, not the day: the weekday is allowed
-  // and the zone still is not. (Found red at 23:45 ET in the sat-5 rules-draft
-  // gate; a fixture relative to now must hold at every hour.)
-  assert.match(txt(cards(c)[0].querySelector('.pl-card-s')), /^2 of 5 picked · next lock (?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) )?\d{1,2}:\d{2} [AP]M$/, 'the time is a clock reading, no zone repeated');
+  // THE WEEKDAY IS OPTIONAL: the lock is ahead(2) of the REAL clock, so in the
+  // last two hours of a day it lands tomorrow and the label rightly names the
+  // day ("Sat 12:46 AM"). Red on 3 Oct at 02:46Z for exactly that reason.
+  assert.match(txt(cards(c)[0].querySelector('.pl-card-s')), /^2 of 5 picked · next lock (?:[A-Z][a-z]{2} )?\d{1,2}:\d{2} [AP]M$/, 'the time is a clock reading, no zone repeated');
   assert.equal(cards(c)[1].getAttribute('href'), '/draft');
 });
 

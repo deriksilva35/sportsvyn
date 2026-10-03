@@ -22,6 +22,7 @@ import { getPlayerSeasonStats, getPlayerSeasonSummaries } from '@/lib/fantasy/pl
 import { getCollegeSeasonSummaries } from '@/lib/fantasy/collegeStats';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
 import { sql } from '@/lib/db';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 async function currentUserId() {
   const session = await auth();
@@ -34,6 +35,7 @@ async function currentUserId() {
 export async function startDraft(presetId, pickPosition, opts = {}) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const res = await startDraftFor(userId, presetId, pickPosition, opts);
   if (res.ok) revalidatePath('/sim');
   return res;
@@ -46,6 +48,7 @@ export async function startDraft(presetId, pickPosition, opts = {}) {
 export async function startCustomDraft(config, pickPosition, opts = {}) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const res = await startCustomDraftFor(userId, config, pickPosition, opts);
   if (res.ok) revalidatePath('/sim');
   return res;
@@ -57,6 +60,7 @@ export async function startCustomDraft(config, pickPosition, opts = {}) {
 export async function startLeagueDraft(configId, opts = {}) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   // opts.seat (084): the seat tapped on the card, 1..teams_count, this run only.
   // Whitelisted, not spread: the flow-core's opts are ours to name, not the wire's.
   const clean = { auto: opts?.auto === true, ...(opts?.seat != null ? { seat: Number(opts.seat) } : {}) };
@@ -69,6 +73,7 @@ export async function startLeagueDraft(configId, opts = {}) {
 export async function makePick(draftId, ffcPlayerId) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const res = await makePickFor(userId, draftId, ffcPlayerId);
   if (res.ok) revalidatePath(`/sim/${draftId}`);
   return res;
@@ -83,6 +88,7 @@ export async function makePick(draftId, ffcPlayerId) {
 export async function startTrackerDraft(config, pickPosition, teamLabels = null) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const res = await startTrackerDraftFor(userId, config, pickPosition, teamLabels);
   if (res.ok) revalidatePath('/sim');
   return res;
@@ -93,6 +99,7 @@ export async function startTrackerDraft(config, pickPosition, teamLabels = null)
 export async function logPick(draftId, ffcPlayerId) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const res = await logPickFor(userId, draftId, ffcPlayerId);
   if (res.ok) revalidatePath(`/sim/draft/${draftId}`);
   return res;
@@ -102,6 +109,7 @@ export async function logPick(draftId, ffcPlayerId) {
 export async function undoLastPick(draftId) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const res = await undoLastPickFor(userId, draftId);
   if (res.ok) revalidatePath(`/sim/draft/${draftId}`);
   return res;
@@ -111,6 +119,7 @@ export async function undoLastPick(draftId) {
 export async function timerAutoPick(draftId) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const res = await timerAutoPickFor(userId, draftId);
   if (res.ok) revalidatePath(`/sim/${draftId}`);
   return res;
@@ -122,6 +131,7 @@ export async function timerAutoPick(draftId) {
 export async function setAutoDraft(draftId, on) {
   const userId = await currentUserId();
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   const res = await setAutoDraftFor(userId, draftId, on);
   if (res.ok) revalidatePath(`/sim/draft/${draftId}`);
   return res;

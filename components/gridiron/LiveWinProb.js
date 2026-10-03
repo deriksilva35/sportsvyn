@@ -3,15 +3,18 @@
 // (components/gridiron/OddsStrip.js keeps the pre-kickoff read), in the same
 // two-way form: away left, home right, no draw row.
 //
-// THE RULES IT DRAWS BY (Derik, 26 Sep, carried from the soccer draft):
-//   - captioned "Win Probability · our live read" with a CALIBRATING tag and
-//     one line of gloss - the model shipped by override (GATE-nfl.md)
+// THE RULES IT DRAWS BY (Derik, 26 Sep, carried from the soccer draft; sat-1):
+//   - captioned "Win Probability · our live read"; the CALIBRATING tag only
+//     where lib/winprob/display.js says so for the sport (NFL: no, since
+//     sat-1), and one method line under it, exactly WINPROB_METHOD_NOTE
 //   - no number, no bar: a game with no line has no live_state.win_prob and
 //     this renders nothing - never a 50/50
 //   - the feed stale past 90 s: dimmed, captioned "Paused - feed reconnecting"
 //   - past 5 minutes: gone
 //   - at the final whistle it retires; the recap owns full time (the page only
 //     mounts this while the game is live)
+
+import { winProbCalibrating, WINPROB_METHOD_NOTE } from '../../lib/winprob/display.js';
 
 export const STALE_SEC = 90;
 export const DEAD_SEC = 300;
@@ -30,7 +33,7 @@ export function liveWinProbView(liveState, now = new Date()) {
   return { home, away: 100 - home, stale: age > STALE_SEC };
 }
 
-export default function LiveWinProb({ liveState, awayAbbr, homeAbbr, now = new Date() }) {
+export default function LiveWinProb({ liveState, awayAbbr, homeAbbr, sport = 'nfl', now = new Date() }) {
   const v = liveWinProbView(liveState, now);
   if (!v) return null;
   const homeFav = v.home >= v.away;
@@ -38,7 +41,7 @@ export default function LiveWinProb({ liveState, awayAbbr, homeAbbr, now = new D
     <div className={`gi-odds gi-wp-live${v.stale ? ' stale' : ''}`} data-winprob="live" data-stale={v.stale ? '1' : '0'}>
       <div className="gi-odds-h gi-wp-h">
         <span className="lbl">Win Probability · our live read</span>
-        <span className="gi-wp-cal">Calibrating</span>
+        {winProbCalibrating(sport) ? <span className="gi-wp-cal">Calibrating</span> : null}
       </div>
       {/* ITS OWN LINE, AT FULL STRENGTH: the words that say the number is old
           are the one thing on the block that must not fade with it. */}
@@ -51,7 +54,7 @@ export default function LiveWinProb({ liveState, awayAbbr, homeAbbr, now = new D
         <div className={`gi-odds-side ${!homeFav ? 'fav' : ''}`}><div className="abbr">{awayAbbr}</div><div className="pct">{v.away}%</div></div>
         <div className={`gi-odds-side ${homeFav ? 'fav' : ''}`}><div className="abbr">{homeAbbr}</div><div className="pct">{v.home}%</div></div>
       </div>
-      <div className="gi-odds-fine">Our live model, still being validated against results.</div>
+      <div className="gi-odds-fine">{WINPROB_METHOD_NOTE}</div>
     </div>
   );
 }

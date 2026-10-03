@@ -21,6 +21,7 @@ import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { parseRegister, registerActivity } from '@/lib/push/liveActivityStore';
 import { liveActivitySupported } from '@/lib/push/liveActivityState';
+import { ageGateResponse } from '@/lib/auth/ageGateDb';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,7 @@ export async function POST(request) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return Response.json({ error: 'unauthenticated' }, { status: 401 });
+  const ageRefused = await ageGateResponse(userId); if (ageRefused) return ageRefused;
 
   const body = await request.json().catch(() => ({}));
   const parsed = parseRegister(body);
