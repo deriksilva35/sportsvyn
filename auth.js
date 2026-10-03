@@ -26,7 +26,6 @@
 import { shouldTouch } from '@/lib/auth/lastSeen';
 import NextAuth from 'next-auth';
 import PostgresAdapter from '@auth/pg-adapter';
-import { fireWelcomeEmail } from './lib/auth/welcomeEmail.js';
 import { firstSeenContext, resolveSurface, markFirstSeen, AUTH_APPLE } from './lib/auth/firstSeen.js';
 import { Pool } from '@neondatabase/serverless';
 import Resend from 'next-auth/providers/resend';
@@ -147,39 +146,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
         WHERE id = ${Number(id)} AND (last_seen_at IS NULL OR last_seen_at < now() - interval '1 hour')`
       .catch((e) => console.error('[last-seen]', { id, message: e?.message }));
   };
+  // THE DATE OF BIRTH NEVER RIDES THE SESSION (age-gate, fri-5). The pg
+  // adapter reads users with SELECT *, and next-auth hands that whole row to
+  // auth() as session.user - which GlobalHeaderServer passes, as a prop, into a
+  // client component. Without this every page's RSC payload would carry the
+  // reader's date of birth. The gate reads the column itself (ageGateDb.js);
+  // nothing that holds a session needs it.
+  const withoutDob = (u) => {
+    if (!u || typeof u !== 'object' || !('date_of_birth' in u)) return u;
+    const { date_of_birth: _private, ...rest } = u;
+    return rest;
+  };
   const adapter = {
     ...baseAdapter,
     useVerificationToken: async () => null,
     async getSessionAndUser(sessionToken) {
       const r = await baseAdapter.getSessionAndUser(sessionToken);
       if (r?.user?.id) touchLastSeen(r.user.id);
-      return r;
+      return r ? { ...r, user: withoutDob(r.user) } : r;
     },
+    getUser: async (id) => withoutDob(await baseAdapter.getUser(id)),
+    getUserByEmail: async (email) => withoutDob(await baseAdapter.getUserByEmail(email)),
+    getUserByAccount: async (acct) => withoutDob(await baseAdapter.getUserByAccount(acct)),
   };
 
   return {
     adapter,
-    // ONE HOOK, EVERY AUTH PATH. Auth.js fires createUser from the adapter, so
-    // this runs for magic link and Sign in with Apple alike - and for anything
-    // added later - without either provider knowing an email exists.
-    //
-    // NOT AWAITED, deliberately. fireWelcomeEmail starts the send and returns;
-    // the signup commits without waiting on a mail vendor, and a Resend outage
-    // can never turn into a failed account creation. Failures are recorded in
-    // sync_runs, not retried inline. Gated off unless WELCOME_EMAIL_ENABLED=1.
+    // The ADAPTER path's creation hook - Sign in with Apple. The code sign-in
+    // does NOT reach here (it writes its own user row in lib/auth/emailOtp.js).
+    // It stamps provenance only; the welcome email is sent from the age
+    // screen's passing answer (lib/auth/ageGateDb.js), not from creation.
     events: {
-      // The ADAPTER path - Sign in with Apple. The magic-link flow does NOT
-      // reach here (it writes its own user row in lib/auth/emailOtp.js), which
-      // is why both sites are wired separately and why hooking only this one
-      // meant the first production magic-link signup got no mail at all.
       async createUser({ user }) {
-        // AWAITED. fireWelcomeEmail registers the send with after(), so this
-        // returns as soon as the work is scheduled rather than when the mail is
-        // out - the signup still does not block on a vendor. Awaiting matters
-        // for the fallback path: outside a request scope the entry point does
-        // the work inline, and a bare call there would be the same floating
-        // promise that lost user 19's email on 2026-08-09.
-        await fireWelcomeEmail(user);
+        // NO WELCOME AT CREATION (age-gate, sat-2). It used to fire here; it
+        // now fires from the age screen's passing answer, only for an account
+        // created in the last 24h (lib/auth/ageGateDb.js applyAnswer), so a
+        // child who signs up with Apple is never mailed before the screen
+        // deletes the account.
         // Stamped AFTER creation rather than in the insert, because the adapter
         // owns that statement. markFirstSeen writes only where the column IS
         // NULL, so this cannot overwrite provenance and cannot run twice to any

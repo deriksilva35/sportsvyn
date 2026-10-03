@@ -15,6 +15,7 @@
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { canRevive, STRIKE_LIMIT } from '@/lib/push/tokenHealth';
+import { ageGateResponse } from '@/lib/auth/ageGateDb';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,7 @@ export async function POST(request) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return Response.json({ error: 'unauthenticated' }, { status: 401 });
+  const ageRefused = await ageGateResponse(userId); if (ageRefused) return ageRefused;
 
   const body = await request.json().catch(() => ({}));
   const token = String(body?.token ?? '').trim();

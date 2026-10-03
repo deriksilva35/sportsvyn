@@ -128,6 +128,8 @@
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-foot { border-top-color: color-mix(in srgb, var(--tok-on-primary) 14%, var(--tok-primary)); color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-foot .wp { flex: none; margin-left: auto; font-weight: 700; color: var(--tok-accent); text-transform: uppercase; letter-spacing: .06em; }
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-foot .wp.stale { opacity: .6; }
+/* CFB's CALIBRATING tag beside the win read (sat-1; lib/winprob/display.js) */
+:where(:root[data-theme="arcade"]) .sv4-card.live .sv4-foot .wp-cal { flex: none; min-width: auto; overflow: visible; margin-left: -4px; padding: 1px 4px; border: 1px solid var(--tok-on-primary); border-radius: 4px; font: 400 8px var(--tok-font-num); letter-spacing: .02em; text-transform: uppercase; color: var(--tok-on-primary); }
 
 /* THE DRAWER (step 2): the line score from the row, then key moments and the
    last five plays from /api/scores/expand. On the navy live card its ink is

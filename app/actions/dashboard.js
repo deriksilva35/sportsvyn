@@ -38,6 +38,7 @@ import { revalidatePath } from 'next/cache';
 import { PANELS } from '@/lib/panels';
 import { PANEL_BINDINGS } from '@/lib/panelLoaders';
 import { vocabularyFor } from '@/lib/scopeVocabulary';
+import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 // SCOPES ARE VOCABULARIES NOW, not a name whitelist. 'today' stores league ids
 // against the same table (migration 039's scope column, exactly its stated
@@ -51,6 +52,7 @@ export async function saveUserLayout(layout, scope = 'my') {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'unauthenticated' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
 
   // 2. Validate + sanitize the incoming layout. This is the safety boundary.
   if (!Array.isArray(layout)) return { ok: false, reason: 'bad_input' };
