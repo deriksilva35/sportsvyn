@@ -135,7 +135,10 @@ test('YOUR MOVE: only what the reader can act on, soonest lock first, LOCKS SOON
   const bar = cards(c)[0].querySelector('.pl-bar');
   assert.equal(bar.children.length, 5, 'one segment per slot');
   assert.equal(bar.querySelectorAll('.on').length, 2, 'two filled');
-  assert.match(txt(cards(c)[0].querySelector('.pl-card-s')), /^2 of 5 picked · next lock \d{1,2}:\d{2} [AP]M$/, 'the time is a clock reading, no zone repeated');
+  // THE WEEKDAY IS OPTIONAL: the lock is ahead(2) of the REAL clock, so in the
+  // last two hours of a day it lands tomorrow and the label rightly names the
+  // day ("Sat 12:46 AM"). Red on 3 Oct at 02:46Z for exactly that reason.
+  assert.match(txt(cards(c)[0].querySelector('.pl-card-s')), /^2 of 5 picked · next lock (?:[A-Z][a-z]{2} )?\d{1,2}:\d{2} [AP]M$/, 'the time is a clock reading, no zone repeated');
   assert.equal(cards(c)[1].getAttribute('href'), '/draft');
 });
 
