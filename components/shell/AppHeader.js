@@ -25,7 +25,9 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { isShellClient } from '@/lib/shell/appTabs';
+import { shellSigninHref } from '@/lib/shell/signinHref';
 import HeaderWordmark from '@/components/brand/HeaderWordmark';
 
 const subscribe = () => () => {};
@@ -42,16 +44,26 @@ export default function AppHeader() {
   // handle-less; both render the generic mark, and the generic mark is
   // transient by construction - the onboarding gate closes handle-less and the
   // launch flow closes signed-out.
-  const [handle, setHandle] = useState(null);
+  //
+  // SIGNED OUT IS ITS OWN ANSWER NOW (sun-14): /api/me says `signedIn`, and a
+  // signed-out reader gets SIGN IN on the right edge instead of the generic
+  // chip. Until the answer lands the right edge is empty - never a guess, so a
+  // signed-in reader never sees SIGN IN flash. The mark is anchored left, so
+  // nothing moves when the right edge fills.
+  const [me, setMe] = useState(null);
+  const handle = me?.handle ?? null;
   useEffect(() => {
     if (!inShell) return;
     let dead = false;
     fetch('/api/me')
       .then((r) => (r.ok ? r.json() : null))
-      .then((j) => { if (!dead && j?.handle) setHandle(j.handle); })
+      .then((j) => { if (!dead && j) setMe({ signedIn: j.signedIn === true || !!j.handle, handle: j.handle ?? null }); })
       .catch(() => {});
     return () => { dead = true; };
   }, [inShell]);
+  const pathname = usePathname() || '/';
+  // On the sign-in pages themselves the button would link to the page it is on.
+  const onSignin = pathname.startsWith('/signin');
 
   if (!inShell) return null;
   return (
@@ -63,16 +75,23 @@ export default function AppHeader() {
           a header that said DRAFTVYN. The mark is the web header's
           (components/brand/HeaderWordmark, R3); it stays a span, not a link -
           home is a tab. */}
+      {/* LEFT, ON THE CONTENT EDGE, 1.4x (sun-14) - apptab.css. `tight`
+          drops the lockup box so the bar keeps its height. */}
       <span className="gh-app-mark" aria-label="SPORTSVYN">
-        <HeaderWordmark display="block" />
+        <HeaderWordmark display="block" tight />
       </span>
       {/* PROFILE LIVES HERE NOW, not on the bar - the v0.3 trade that freed
-          the fourth tab for SPORTSVYN. Absolutely placed so the wordmark stays
-          centred whether or not a handle has loaded. */}
-      <Link href="/account" className="gh-app-me" aria-label="Your account">
-        <span className="in" aria-hidden="true">{handle ? handle[0] : '@'}</span>
-        {handle && <span className="hn">@{handle}</span>}
-      </Link>
+          the fourth tab for SPORTSVYN. Right edge; the @handle drops below
+          430px (apptab.css) and the avatar stays. */}
+      {me?.signedIn && (
+        <Link href="/account" className="gh-app-me" aria-label="Your account">
+          <span className="in" aria-hidden="true">{handle ? handle[0] : '@'}</span>
+          {handle && <span className="hn">@{handle}</span>}
+        </Link>
+      )}
+      {me && !me.signedIn && !onSignin && (
+        <Link href={shellSigninHref(pathname, true)} className="gh-app-signin">Sign in</Link>
+      )}
     </header>
   );
 }

@@ -325,6 +325,15 @@
 
 .gh { gap: 22px; }
 
+/* THE WORDMARK, LEFT AND 1.4x (sun-14). `header.gh` (0,1,1) so it beats the
+   .gi-head and .gh paddings (0,1,0) in whatever order the chunks arrive; the
+   app header carries .gh too and takes the same edge. --sv-header-left is the
+   PLAY title's x at every width (app/globals.css). The mark drops its lockup
+   box (HeaderWordmark `tight`), so the bar keeps its height while the letters
+   grow. */
+header.gh { padding-left: var(--sv-header-left); }
+.gh .wordmark { flex: 0 0 auto; font-size: calc(22px * var(--sv-wordmark-scale)); }
+
 /* The bar must survive a narrow phone without the wordmark shrinking or the
    nav wrapping into two rows, so the nav is the thing that scrolls. */
 .gh-nav { overflow-x: auto; scrollbar-width: none; }
@@ -401,8 +410,14 @@
 
    NOTHING TRUNCATES. Below this width the bar is three things that always fit -
    wordmark, the volt CTA, hamburger - and everything else is in the drawer.
-   A label clipped to two letters is worse than a label you tapped once to see. */
-@media (max-width: 900px) {
+   A label clipped to two letters is worse than a label you tapped once to see.
+
+   1140, NOT 900 (sun-14). The wordmark grew 1.4x and moved onto the content
+   edge, which is (width - 960) / 2 + 32 from the left above 1024. Between 901
+   and ~1124 the full nav no longer fit beside them and scrolled - clipped, the
+   failure this block exists to prevent - so the bar collapses earlier. At 1140
+   the signed-in bar (mark, nav, MOCK DRAFT, MEMBER, account) fits whole. */
+@media (max-width: 1140px) {
   .gh .gh-nav { display: none; }
   /* The right cluster STAYS as a flex box but loses everything except the
      volt CTA. Hiding the container would take MOCK DRAFT with it, and the CTA
@@ -421,9 +436,25 @@
      squeezed: the wordmark is an <img> with width:auto, so a flex parent under
      pressure compresses it into the sliver the field report describes. */
   .gh { gap: 12px; padding: 12px 16px; }
-  .gh .wordmark { flex: 0 0 auto; font-size: 19px; }
+  /* The gap again at (0,1,1): .gi-head's 28px is the same specificity as .gh
+     and arrives in a later chunk on some routes - it was the 28 the bar used. */
+  header.gh { gap: 12px; }
+  .gh .wordmark { flex: 0 0 auto; font-size: calc(19px * var(--sv-wordmark-scale)); }
   .gh .gh-cta { flex: 0 0 auto; margin-left: auto; }
   .gh .gh-burger { flex: 0 0 auto; margin-left: 0; }
+}
+
+/* ---- the phone bar, with the 1.4x mark (sun-14) ----
+   Mark on the content edge (32) + MOCK DRAFT + burger is 396px at full size, so
+   below 430 the CTA tightens its padding and tracking - the same label, the
+   same fill, still on the bar - and below 390 the mark's edge comes in to the
+   bar's own 16px, the only place the page edge gives. The app header has no
+   CTA and keeps its edge. */
+@media (max-width: 429px) {
+  .gh .gh-right .gh-cta { padding: 7px 9px; letter-spacing: 0.06em; }
+}
+@media (max-width: 389px) {
+  header.gh:not(.gh--app) { padding-left: 16px; gap: 8px; }
 }
 
 /* ============================================================================

@@ -10,6 +10,10 @@
  * Returns 200 always - a signed-out reader gets { handle: null } rather than
  * a 401, because "who am I" having no answer is a normal state for chrome,
  * not an error to retry.
+ *
+ * `signedIn` (sun-14): handle-less and signed-out both had handle: null, and
+ * the header now answers them differently - the generic chip for an account
+ * still choosing a handle, SIGN IN for nobody.
  */
 
 import { auth } from '@/auth';
@@ -20,8 +24,8 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  if (userId == null) return Response.json({ handle: null });
+  if (userId == null) return Response.json({ signedIn: false, handle: null });
   const [row] = await sql`SELECT handle FROM users WHERE id = ${Number(userId)}`
     .catch(() => [null]);
-  return Response.json({ handle: row?.handle ?? null });
+  return Response.json({ signedIn: true, handle: row?.handle ?? null });
 }

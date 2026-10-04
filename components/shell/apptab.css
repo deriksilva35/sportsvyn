@@ -74,22 +74,35 @@ html[data-clock] body:has(.apptab) { padding-bottom: 0; }
 /* ---------------------------------------------------------------------------
    THE APP HEADER. Rendered instead of the web header when the shell marker is
    present - see components/GlobalHeader.js for why replaced rather than
-   trimmed. The wordmark, centred, and nothing else.
+   trimmed.
+
+   THE WORDMARK LEFT, THE CHIP RIGHT (sun-14). It was centred and small; it is
+   now on the page's content edge - the PLAY title's x (--sv-header-left,
+   app/globals.css, applied by header.gh in site-chrome.css AND below, because
+   /signin and the /sim tabs never load that sheet) - and 1.4x its old height.
    --------------------------------------------------------------------------- */
 .gh--app {
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 10px 16px;
   /* THE STATUS BAR IS ABOVE THIS. Without the inset the wordmark sits under the
      clock and the notch on every device that has one. */
   padding-top: calc(10px + env(safe-area-inset-top));
   background: #0A0A0A; border-bottom: 1px solid #232323;
-  /* Drives the lockup height in components/shell/AppHeader. The DRAFTVYN
-     export is mostly padding - its ink is 152 of 300 rows against the Sportsvyn
-     mark's 285 of 336 - so a cap height matched to the web header's read
-     undersized on a phone. 2.12em puts the caps at 15.0px here. */
-  font-size: 17px;
+  /* Drives the mark's height (HeaderWordmark, 1.36em, tight): 17px was the old
+     size; the scale is the sun-14 1.4x. */
+  font-size: calc(17px * var(--sv-wordmark-scale));
 }
-.gh--app .gh-app-mark { display: block; }
+/* THE INSET COULD BE LOST, AND WAS. site-chrome.css's phone rule
+   `.gh { padding: 12px 16px }` is the same specificity as .gh--app and sits in
+   a chunk that loads later on every page with the web header - /games among
+   them - so in the app the status-bar inset was replaced by a flat 12px and the
+   mark sat under the clock. (0,2,0) wins in any chunk order. */
+.gh.gh--app {
+  padding-top: calc(10px + env(safe-area-inset-top));
+  padding-bottom: 10px; padding-right: 16px;
+  padding-left: var(--sv-header-left);
+}
+.gh--app .gh-app-mark { display: block; flex: 0 0 auto; }
 
 /* THE SPORTSVYN TAB'S Y-MONOGRAM. The icon slot everywhere else holds an
    emoji; this one holds the brand's own letterform (Y with macron), so it is
@@ -103,17 +116,16 @@ html[data-clock] body:has(.apptab) { padding-bottom: 0; }
 
 /* ---------------------------------------------------------------------------
    THE PROFILE CHIP (v0.3) - Profile left the bar for the header's right edge.
-   The header stays centred on the wordmark; the chip is absolutely placed so
-   adding it cannot shift the mark. Handle-less accounts show the generic mark
-   - transient by construction, the onboarding gate closes it.
+   Handle-less accounts show the generic mark - transient by construction, the
+   onboarding gate closes it. IN THE FLOW NOW (sun-14): the mark is anchored
+   left, so the chip no longer has to be lifted out of the row to keep a centred
+   mark still. The negative margin keeps the 44px target from growing the bar.
    --------------------------------------------------------------------------- */
-.gh--app { position: relative; }
 .gh-app-me {
-  position: absolute; right: 12px; top: 50%;
-  transform: translateY(calc(-50% + env(safe-area-inset-top) / 2));
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 6px; min-width: 0;
   text-decoration: none; color: #8A8A86;
   min-height: 44px; /* same target rule as the tabs */
+  margin: -6px 0;
 }
 .gh-app-me .in {
   display: flex; align-items: center; justify-content: center;
@@ -125,6 +137,21 @@ html[data-clock] body:has(.apptab) { padding-bottom: 0; }
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 10px; letter-spacing: .04em; max-width: 84px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* BELOW 430px THE AVATAR STANDS ALONE (sun-14): the @handle gives its width
+   to the wordmark. 430 is the widest phone (Pro Max); every narrower one is
+   avatar-only. */
+@media (max-width: 429px) {
+  .gh--app .gh-app-me .hn { display: none; }
+}
+/* SIGNED OUT, THE RIGHT EDGE IS SIGN IN (sun-14) - the action grammar's fill
+   (volt, navy ink on the arcade page), from tokens that resolve in both themes. */
+.gh-app-signin {
+  display: inline-flex; align-items: center; min-height: 32px; flex: 0 0 auto;
+  padding: 0 14px; border-radius: 999px; white-space: nowrap; text-decoration: none;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  background: var(--tok-action); color: var(--tok-on-action);
 }
 
 /* ---------------------------------------------------------------------------

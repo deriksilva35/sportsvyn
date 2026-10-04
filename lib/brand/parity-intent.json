@@ -1,3 +1,339 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh--app .gh-app-mark { flex }",
+      "after": "0 0 auto"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh--app { font-size }",
+      "after": "calc(17px * 1.4)"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh--app { gap }",
+      "after": "12px"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh--app { justify-content }",
+      "after": "space-between"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh--app { position }",
+      "after": null
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-me { margin }",
+      "after": "-6px 0"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-me { min-width }",
+      "after": "0"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-me { position }",
+      "after": null
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-me { right }",
+      "after": null
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-me { top }",
+      "after": null
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-me { transform }",
+      "after": null
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { align-items }",
+      "after": "center"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { background }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { border-radius }",
+      "after": "999px"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { color }",
+      "after": "#0a0a0a"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { display }",
+      "after": "inline-flex"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { flex }",
+      "after": "0 0 auto"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { font-family }",
+      "after": "?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { font-size }",
+      "after": "11px"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { font-weight }",
+      "after": "700"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { letter-spacing }",
+      "after": ".12em"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { min-height }",
+      "after": "32px"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { padding }",
+      "after": "0 14px"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { text-decoration }",
+      "after": "none"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh-app-signin { white-space }",
+      "after": "nowrap"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh.gh--app { padding-bottom }",
+      "after": "10px"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh.gh--app { padding-left }",
+      "after": "max(32px,calc((100% - 960px) / 2 + 32px))"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh.gh--app { padding-right }",
+      "after": "16px"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": ".gh.gh--app { padding-top }",
+      "after": "calc(10px + env(safe-area-inset-top))"
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": "@media (max-width: 429px) .gh--app .gh-app-me .hn { display }",
+      "after": "none"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": ".gh .wordmark { flex }",
+      "after": "0 0 auto"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": ".gh .wordmark { font-size }",
+      "after": "calc(22px * 1.4)"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .gh-burger { display }",
+      "after": "flex"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .gh-burger { flex }",
+      "after": "0 0 auto"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .gh-burger { margin-left }",
+      "after": "0"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .gh-cta { flex }",
+      "after": "0 0 auto"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .gh-cta { margin-left }",
+      "after": "auto"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .gh-nav { display }",
+      "after": "none"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .gh-right .gh-my, .gh .gh-right .gh-signin, .gh .gh-right .gh-account { display }",
+      "after": "none"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .gh-right { gap }",
+      "after": "0"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .gh-right { margin-left }",
+      "after": "auto"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .wordmark { flex }",
+      "after": "0 0 auto"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .wordmark { font-size }",
+      "after": "calc(19px * 1.4)"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh { gap }",
+      "after": "12px"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh { padding }",
+      "after": "12px 16px"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh-drawer { display }",
+      "after": "flex"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) header.gh { gap }",
+      "after": "12px"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 389px) header.gh:not(.gh--app) { gap }",
+      "after": "8px"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 389px) header.gh:not(.gh--app) { padding-left }",
+      "after": "16px"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 429px) .gh .gh-right .gh-cta { letter-spacing }",
+      "after": "0.06em"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 429px) .gh .gh-right .gh-cta { padding }",
+      "after": "7px 9px"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh .gh-burger { display }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh .gh-burger { flex }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh .gh-burger { margin-left }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh .gh-cta { flex }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh .gh-cta { margin-left }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh .gh-nav { display }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh .gh-right .gh-my, .gh .gh-right .gh-signin, .gh .gh-right .gh-account { display }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh .gh-right { gap }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh .gh-right { margin-left }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh .wordmark { flex }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh .wordmark { font-size }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh { gap }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh { padding }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 900px) .gh-drawer { display }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "header.gh { padding-left }",
+      "after": "max(32px,calc((100% - 960px) / 2 + 32px))"
+    }
+  ]
 }
