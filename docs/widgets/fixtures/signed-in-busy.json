@@ -115,7 +115,11 @@
       "startAt": "2026-10-04T16:00:00.000Z",
       "nextAt": "2026-10-11T17:30:00.000Z",
       "result": null,
-      "href": "/nfl/game/nyj-at-buf-2026-10-04"
+      "href": "/nfl/game/nyj-at-buf-2026-10-04",
+      "oppColor": "#125740",
+      "oppAltColor": "#FFFFFF",
+      "possession": "BUF",
+      "fieldPos": "NYJ 35"
     },
     {
       "teamId": 3305,
@@ -159,7 +163,9 @@
       "startAt": "2026-10-04T00:30:00.000Z",
       "nextAt": "2026-10-10T17:30:00.000Z",
       "result": "W",
-      "href": "/cfb/game/uga-at-ala-2026-10-03"
+      "href": "/cfb/game/uga-at-ala-2026-10-03",
+      "oppColor": "#9E1B32",
+      "oppAltColor": "#FFFFFF"
     },
     {
       "teamId": 3301,
@@ -199,13 +205,15 @@
       "startAt": "2026-10-04T16:00:00.000Z",
       "pick": "BUF",
       "pickState": "winning",
-      "players": 2,
+      "players": 3,
       "points": 31.2,
       "via": [
         "pickem",
-        "weekly"
+        "weekly",
+        "draft"
       ],
-      "href": "/nfl/game/nyj-at-buf-2026-10-04"
+      "href": "/nfl/game/nyj-at-buf-2026-10-04",
+      "topPlayer": "K. Shakir"
     },
     {
       "gameId": 9102,

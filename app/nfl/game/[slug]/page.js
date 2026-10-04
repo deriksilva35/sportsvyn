@@ -326,6 +326,7 @@ export default async function GamePage({ params, searchParams }) {
                 teamAbbr: gamecast?.teamAbbr ?? new Map(),
               })),
               final: game.status === 'final',
+              live: game.status === 'live',
             }} />
           </div>
         </header>

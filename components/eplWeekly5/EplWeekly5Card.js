@@ -17,6 +17,7 @@
 import Link from 'next/link';
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { saveEplWeekly5PickAction, clearEplWeekly5PickAction } from '@/app/actions/eplWeekly5';
+import { sendPicksChanged } from '@/lib/shell/bridge';
 import { refuseReason, clubCount, SLOTS, SLOT_LABEL, REASON_TEXT, MAX_PER_CLUB, slotAccepts } from '@/lib/eplWeekly5/rules';
 import StandaloneTime from '@/components/StandaloneTime';
 import TeamMark from '@/components/team/TeamMark';
@@ -120,7 +121,7 @@ function Picker({ view, signedIn, signinHref, compact = false }) {
     start(async () => {
       let r;
       try { r = await saveEplWeekly5PickAction(view.contest.id, slot, p.playerId); } catch { r = { ok: false, reason: 'unreachable' }; }
-      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(REASON_TEXT[r?.reason] ?? 'That pick did not save.'); }
+      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(REASON_TEXT[r?.reason] ?? 'That pick did not save.'); } else sendPicksChanged('epl5');
     });
   };
 
@@ -133,7 +134,7 @@ function Picker({ view, signedIn, signinHref, compact = false }) {
     start(async () => {
       let r;
       try { r = await clearEplWeekly5PickAction(view.contest.id, slot); } catch { r = { ok: false, reason: 'unreachable' }; }
-      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(REASON_TEXT[r?.reason] ?? 'That did not save.'); }
+      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(REASON_TEXT[r?.reason] ?? 'That did not save.'); } else sendPicksChanged('epl5');
     });
   };
 

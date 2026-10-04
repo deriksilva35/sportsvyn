@@ -16,6 +16,7 @@ import { useState, useTransition } from 'react';
 import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import { saveSeriesPickAction } from '@/app/actions/seriesPickem';
+import { sendPicksChanged } from '@/lib/shell/bridge';
 
 export default function SeriesBoard({ contest, rows, signedIn = false, signinHref = '/signin' }) {
   const [picks, setPicks] = useState(() => {
@@ -43,7 +44,9 @@ export default function SeriesBoard({ contest, rows, signedIn = false, signinHre
         // standing as a pick the reader believes they made.
         setPicks((p) => ({ ...p, [seriesKey]: before }));
         setErr(REASON[r?.reason] ?? 'That pick did not save.');
+        return;
       }
+      sendPicksChanged('series'); // the widgets reload (sun-24); saved only
     });
   };
 

@@ -27,6 +27,7 @@ import {
   startLiveActivity, endLiveActivity, canUseLiveActivityBridge,
 } from '@/lib/shell/liveActivityBridge';
 import { liveActivitySupported } from '@/lib/push/liveActivityState';
+import { wantsLaPrompt, withoutLaParams } from '@/lib/shell/laDeepLink';
 import './alerts.css';
 
 // The five trigger rows, in the order the sheet draws them. Data, not markup,
@@ -181,6 +182,19 @@ export default function AlertBell({ match, signedIn = false, compact = true, liv
   // No Live Activity for basketball yet (thu-18): the switch is not offered.
   const showLive = Boolean(canBridge && liveActivity && !liveActivity.final
     && liveActivitySupported(match?.leagueSlug));
+
+  // THE WIDGET'S LINK (sun-24): ?sv_la=1&sv_match=<this id> on a LIVE game in
+  // the shell opens the sheet, so the lock-screen row is in front of the
+  // reader. Opening is all it does - starting still takes the row's own tap.
+  // The params are then dropped from the address, so a reload is a plain page.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const search = window.location.search;
+    if (!wantsLaPrompt({ search, matchId: match?.id, canBridge, liveActivity, supported: liveActivitySupported(match?.leagueSlug) })) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the address bar exists only after mount, like PlayWhen's zone
+    setOpen(true);
+    try { window.history.replaceState(window.history.state, '', `${window.location.pathname}${withoutLaParams(search)}${window.location.hash}`); } catch { /* keep the page */ }
+  }, [canBridge, liveActivity, match?.id, match?.leagueSlug]);
 
   const toggleLive = (want) => {
     const posted = want

@@ -51,6 +51,7 @@ import { DAILY_V2_PATH, DAILY_ROUND_SECONDS } from '@/lib/daily/boardShape';
 const SHARE_URL = `sportsvyn.com${DAILY_V2_PATH}`;
 import './seasonBoard.css';
 import StandaloneTime from '@/components/StandaloneTime';
+import { sendPicksChanged } from '@/lib/shell/bridge';
 
 const DOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FX', K: 'K' };
 
@@ -343,6 +344,7 @@ export default function SeasonBoard({
       const body = await res.json().catch(() => ({}));
       if (res.ok && body?.ok && body?.open && body?.reveal) {
         // THE DAY IS OPEN: the reveal, never the grade (the route sends no grade).
+        sendPicksChanged('daily'); // locked in - the widgets reload (sun-24)
         clearInterval(tickRef.current);
         setRevealState(body.reveal);
         setFinishedMs(Date.now());
@@ -366,6 +368,7 @@ export default function SeasonBoard({
       }
       // Includes the alreadyRan case: the server hands back the STORED grade
       // with the same shape, so this renders it rather than an error.
+      sendPicksChanged('daily'); // locked in - the widgets reload (sun-24)
       clearInterval(tickRef.current);
       setServerGrade(body.grade);
       setServerElapsedS(Number(body.elapsedS ?? elapsedS));

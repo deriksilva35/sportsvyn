@@ -15,6 +15,7 @@ import { spreadParts } from '@/lib/standings/view';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { recordLine } from '@/lib/pickem/recordLine';
 import { savePickAction } from '@/app/actions/pickem';
+import { sendPicksChanged } from '@/lib/shell/bridge';
 import { useHandleGate } from '@/components/handle/HandleGate';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import TeamMark from '@/components/team/TeamMark';
@@ -188,6 +189,7 @@ export default function PickemBoard({
       return;
     }
     setSavedTick(true);
+    sendPicksChanged('pickem'); // the widgets reload (sun-24); saved only
     // EDITING AFTER CONFIRMING drops the confirmation until it is re-pressed.
     setConfirmedAt(null);
     setTimeout(() => setSavedTick(false), 1600);

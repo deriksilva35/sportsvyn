@@ -65,6 +65,7 @@ import { ordinal } from '@/lib/standings/view';
 import { useHandleGate, HELD } from '@/components/handle/HandleGate';
 import StandaloneTime from '@/components/StandaloneTime';
 import { confirmWeeklyEntry } from '@/app/actions/confirm';
+import { sendPicksChanged } from '@/lib/shell/bridge';
 
 const SLOT_LABEL = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLEX', FLEX2: 'FLEX' };
 const POOL_LABEL = {
@@ -192,12 +193,13 @@ export default function WeeklyRoom({
       body: JSON.stringify({ lineup: payload }),
     });
     const j = await res.json().catch(() => ({}));
-    if (res.ok) { setSave('saved'); return; }
+    if (res.ok) { setSave('saved'); sendPicksChanged('weekly'); return; }
     setSave('error');
     if (res.status === 409 && j.error === 'slot_locked') {
       // ROLLING LOCK: one slot was refused at its kickoff, the others in the
       // same save were stored. Put the server's copy back and name the slot.
       if (j.lineup) setLineup(j.lineup);
+      sendPicksChanged('weekly'); // the other slots in this save WERE stored
       setErr(`${SLOT_LABEL[j.slot] ?? j.slot} locked at its kickoff. The rest saved.`);
       return;
     }
@@ -333,7 +335,7 @@ export default function WeeklyRoom({
     if (pending.current) await flush(pending.current).catch(() => {});
     const r = await confirmWeeklyEntry(contest.id).catch(() => null);
     setConfirming(false);
-    if (r?.ok) setConfirmedAt(r.confirmedAt);
+    if (r?.ok) { setConfirmedAt(r.confirmedAt); sendPicksChanged('weekly'); }
     else if (r?.reason === 'locked') setLocked(true);
   }
 
