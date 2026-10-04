@@ -33,6 +33,7 @@ import { SPORT_LABEL } from '@/lib/games/playLobby';
 import { zoneNameOf } from '@/lib/time/zoneName';
 import SeasonBoard from '@/components/games/SeasonBoard';
 import PlayWhen from '@/components/games/PlayWhen';
+import PlayCloses from '@/components/games/PlayCloses';
 import ZoneLabel from '@/components/scores/ZoneLabel';
 import { PlayOpenProvider, PlayChip, PlayCard } from '@/components/games/PlayCollapse';
 
@@ -130,9 +131,11 @@ function CardSummary({ k, now, tz }) {
       : 'Nothing open this week';
   }
   const { parts = [], nextLock = null } = k.summary ?? {};
-  const bits = parts.map((p) => (p.opensAt
-    ? <span key={p.key}>{p.text} <PlayWhen iso={p.opensAt} kind="day" serverTz={tz} /></span>
-    : <span key={p.key}>{p.text}</span>));
+  const bits = parts.flatMap((p) => (p.opensAt
+    ? [<span key={p.key}>{p.text} <PlayWhen iso={p.opensAt} kind="day" serverTz={tz} /></span>]
+    : p.closesAt
+      ? [<span key={p.key}>{p.text}</span>, <span key={`${p.key}-c`}><PlayCloses iso={p.closesAt} now={now} serverTz={tz} /></span>]
+      : [<span key={p.key}>{p.text}</span>]));
   if (nextLock) bits.push(<span key="__lock">next lock <PlayWhen iso={nextLock} now={now} serverTz={tz} /></span>);
   return bits.flatMap((b, n) => (n ? [' · ', b] : [b]));
 }

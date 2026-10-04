@@ -162,10 +162,10 @@ test('CHIPS: ALL + each sport with a game in 14 days, ALL pressed, each a ?sport
   assert.equal(c.querySelectorAll('.gv-chips').length, 0, 'the pane chips are not on the lobby');
 });
 
-test('CARDS: every group is one card, COLLAPSED by default, soonest lock first, out of season dimmed, The Daily as ALL SPORTS', () => {
+test('CARDS: every group is one card, COLLAPSED by default, soonest lock first, then ALL SPORTS, out of season dimmed and last', () => {
   const c = screen({ v: PLAY(), chip: 'week' });
-  assert.deepEqual(scards(c).map((g) => g.dataset.group), ['mlb', 'nfl', 'cfb', 'nba', 'all-sports'],
-    'MLB locks first; CFB has only a door; NBA is out of season; the cross-sport card last');
+  assert.deepEqual(scards(c).map((g) => g.dataset.group), ['mlb', 'nfl', 'cfb', 'all-sports', 'nba'],
+    'MLB locks first; CFB has only a door; then the cross-sport card; NBA is out of season, last');
   assert.deepEqual(openIds(c), [], 'nothing open on ALL');
   for (const k of scards(c)) {
     const h = k.querySelector('.pl-sc-h');
@@ -176,8 +176,8 @@ test('CARDS: every group is one card, COLLAPSED by default, soonest lock first, 
     assert.ok(rows, 'aria-controls names the rows');
     assert.equal(rows.hidden, true, 'a closed card hides its rows');
   }
-  assert.deepEqual(scards(c).map((k) => txt(k.querySelector('.pl-sc-name'))), ['MLB', 'NFL', 'CFB', 'NBA', 'ALL SPORTS']);
-  assert.deepEqual(scards(c).map((k) => txt(k.querySelector('.pl-sc-n'))), ['2 games', '3 games', '1 game', '2 games', '1 game']);
+  assert.deepEqual(scards(c).map((k) => txt(k.querySelector('.pl-sc-name'))), ['MLB', 'NFL', 'CFB', 'ALL SPORTS', 'NBA']);
+  assert.deepEqual(scards(c).map((k) => txt(k.querySelector('.pl-sc-n'))), ['2 games', '3 games', '1 game', '1 game', '2 games']);
   const nba = c.querySelector('.pl-sc[data-group="nba"]');
   assert.ok(nba.className.includes('dim'), 'out of season: dimmed');
   assert.match(txt(nba.querySelector('.pl-sc-sum')), /^Opens \w{3} \d{1,2} \w{3}$/, 'with its open date');
@@ -187,10 +187,10 @@ test('CARDS: every group is one card, COLLAPSED by default, soonest lock first, 
 test('THE SUMMARY is built from the rows it carries: progress, door, lock state, then the next lock', () => {
   const c = screen({ v: PLAY(), chip: 'week' });
   const sum = (id) => txt(c.querySelector(`.pl-sc[data-group="${id}"] .pl-sc-sum`));
-  assert.match(sum('nfl'), /^The Draft · The Weekly 0\/6 · Pick'em 16\/16 · next lock (?:[A-Z][a-z]{2} )?\d{1,2}:\d{2} [AP]M$/);
-  assert.match(sum('mlb'), /^October 2\/5 · The Run locked · next lock /);
+  assert.match(sum('nfl'), /^The Draft · The Weekly · 0 of 6 set · Pick'em · 16 of 16 picked · next lock (?:[A-Z][a-z]{2} )?\d{1,2}:\d{2} [AP]M$/);
+  assert.match(sum('mlb'), /^October · 2 of 5 picked · The Run locked · next lock /);
   assert.match(sum('cfb'), /^Pick'em opens \w{3} \d{1,2} \w{3}$/);
-  assert.match(sum('all-sports'), /^The Daily · next lock /);
+  assert.match(sum('all-sports'), /^Today's board is open · closes (?:midnight|(?:[A-Z][a-z]{2} )?\d{1,2}:\d{2} [AP]M)$/);
 });
 
 test('YOUR MOVE TAG: on a card exactly when one of its rows is a YOUR MOVE card (the shared predicate)', () => {
@@ -223,7 +223,7 @@ test('?sport= OPENS THAT CARD in the server render, and only that card; YOUR MOV
   assert.equal(chipBy(c, 'all').getAttribute('aria-pressed'), 'false');
   assert.deepEqual(cards(c).map((x) => x.dataset.key), ['mlb-october', 'nfl-draft', 'daily', 'nfl-weekly'],
     'every sport\'s moves stay on top');
-  assert.deepEqual(scards(c).map((g) => g.dataset.group), ['mlb', 'nfl', 'cfb', 'nba', 'all-sports'], 'every card stays');
+  assert.deepEqual(scards(c).map((g) => g.dataset.group), ['mlb', 'nfl', 'cfb', 'all-sports', 'nba'], 'every card stays');
   afterEachInline();
   const nba = screen({ v: PLAY({ open: 'nba' }), chip: 'week' });
   assert.deepEqual(openIds(nba), ['nba'], 'an out-of-season card opens too');
@@ -271,6 +271,16 @@ test('CHIP TOGGLE: a chip opens its card; the open chip again returns to ALL; AL
   window.history.replaceState(null, '', '/games');
   act(() => { window.dispatchEvent(new dom.window.PopStateEvent('popstate')); });
   assert.deepEqual(openIds(c), []);
+});
+
+test('CLOSES: "midnight" only when the close IS 00:00 in the viewer\'s zone, else the clock reading', async () => {
+  const { closesLabel, isMidnightIn } = await import('./PlayCloses.js');
+  const etMidnight = '2026-10-05T04:00:00.000Z'; // 00:00 EDT on 5 Oct
+  const now = '2026-10-04T19:00:00.000Z';
+  assert.equal(isMidnightIn(etMidnight, 'America/New_York'), true);
+  assert.equal(closesLabel(etMidnight, { now, tz: 'America/New_York' }), 'midnight');
+  assert.equal(closesLabel(etMidnight, { now, tz: 'America/Los_Angeles' }), '9:00 PM', 'the same instant is 9 PM in Pacific');
+  assert.equal(closesLabel(etMidnight, { now, tz: null }), 'midnight', 'null is the ET fallback the server paints');
 });
 
 test('44px TARGETS are pinned in CSS: the card header and the sport chips', () => {
