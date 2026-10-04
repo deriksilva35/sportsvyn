@@ -33,7 +33,9 @@ export function CodeChip({ code }) {
  * invitation (ids are serial - anybody can count), so the preview never joins
  * on it; the reader types the code a member gave them, and the join is the
  * same joinLeagueAction every other code field uses. Post-join: the league
- * that code names, as a member. */
+ * that code names, as a member. Rendered by the private-league 404
+ * (app/leagues/[id]/not-found.js), which knows no league - leagueId is then
+ * absent and the join always navigates to the league the code named. */
 export function JoinWithCodeForm({ leagueId }) {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
