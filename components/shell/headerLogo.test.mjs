@@ -92,7 +92,8 @@ test('BELOW 430px THE @HANDLE GOES, the avatar stays', () => {
 test('SIGNED OUT: SIGN IN on the right, from a /api/me that says who is signed in', () => {
   const s = code('components/shell/AppHeader.js');
   assert.match(s, /\{me && !me\.signedIn && !onSignin && \(\s*<Link href=\{shellSigninHref\(pathname, true\)\} className="gh-app-signin">Sign in<\/Link>/);
-  assert.match(s, /\{me\?\.signedIn && \(\s*<Link href="\/account" className="gh-app-me"/);
+  // /you since sun-16 D: /account is a 308 there.
+  assert.match(s, /\{me\?\.signedIn && \(\s*<Link href="\/you" className="gh-app-me"/);
   const app = css('components/shell/apptab.css');
   const btn = ruleBody(app, '.gh-app-signin');
   assert.equal(decl(btn, 'background'), 'var(--tok-action)', 'the action fill, a token in both themes');

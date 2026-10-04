@@ -23,6 +23,16 @@
  *                                    Today's-boards pill) and "unranked ·
  *                                    nothing here counts" (the Practice row)
  *
+ * THE GAME LIST IS GENERATED (sun-16 D). The page used to open on "Three
+ * weekly games and one every day" and stop there - true in August, and
+ * blind to October, The Run, Series Pick'em, Tonight's Six and EPL Weekly 5
+ * once they shipped. The list, the count in the intro and the description
+ * now come from lib/games/playRegistry.js (listedGames, each entry's `about`
+ * and `season`), so a game added there is a game this page names, and a
+ * pulled one (Survivor, behind its flag) is a game it does not. A game whose
+ * season is over is still listed, marked SEASONAL. The per-game rules below
+ * stay here, where they have always lived.
+ *
  * THE STEPS SHIPPED IN TWO PASSES, and it is worth knowing why. Relay 5
  * built the page with only the Daily's three, because the Daily's were the
  * only step copy that existed anywhere in this codebase and writing the
@@ -36,15 +46,19 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { GAME_NAMES } from '@/lib/games/lobby';
 import { DAILY_V2_PATH } from '@/lib/daily/boardShape';
+import { listedGames } from '@/lib/games/playRegistry';
+import { introLine, gameGroups } from '@/lib/games/howItWorks';
 import '../games.css';
 import './howItWorks.css';
 
 export const dynamic = 'force-static';
+// HOURLY, so the SEASONAL marks turn over with the calendar without a deploy.
+// Still static to every reader: a stranger is served the cached page.
+export const revalidate = 3600;
 
 export const metadata = {
   title: 'How the games work - Sportsvyn',
-  description:
-    'Three weekly games and one every day. All free, an email and a handle.',
+  description: introLine(listedGames()),
 };
 
 // THE CADENCE PILL, verbatim from the relay. Three of the four share one
@@ -100,11 +114,13 @@ const SECTIONS = [
     key: 'pickem',
     name: GAME_NAMES.pickem,
     cadence: WEEKLY_CADENCE,
-    tagline: 'Pick the winners. No odds, no problem.',
+    // sun-16 D: "No odds" was untrue - the board shows the line (step 1).
+    tagline: 'Pick the winners, straight up.',
     steps: [
       { n: 1, t: 'Call', d: 'Every game on the board, straight up. The spread is shown, never required.' },
       { n: 2, t: 'Lock', d: 'Each game locks at its own kickoff. Change a pick until then.' },
-      { n: 3, t: 'Tally', d: 'One season table across both sports, ranked on correct percentage.' },
+      // sun-16 D: "across both sports" - Pick'em runs in four now.
+      { n: 3, t: 'Tally', d: 'One season table, ranked on correct percentage.' },
     ],
     graded: 'Right or wrong. A tie counts for nobody.',
     rule: 'A game not final 48 hours after the board settles is void and counts for nobody. A score correction within 7 days of a game re-grades the board.',
@@ -154,16 +170,42 @@ const SECTIONS = [
 ];
 
 export default async function HowItWorksPage() {
+  const games = listedGames();
+  const groups = gameGroups(games);
   return (
     <>
       <GlobalHeaderServer />
       <main className="lob hiw" data-surface="ink">
         <div className="lob-head">
           <h1 className="lob-title">How the games work</h1>
-          <p className="lob-sub">
-            Three weekly games and one every day. All free, an email and a handle.
-          </p>
+          <p className="lob-sub">{introLine(games)}</p>
         </div>
+
+        {/* EVERY GAME, FROM THE REGISTRY. A game out of season is listed and
+            says so - a stranger reading in May should still learn October. */}
+        <nav className="hiw-list" aria-label="Every game">
+          {groups.map((grp) => (
+            <div className="hiw-grp" key={grp.sport} data-sport={grp.sport}>
+              <h2 className="hiw-grp-h">{grp.label}</h2>
+              {grp.games.map((g) => (
+                <Link className="hiw-game" key={g.key} href={g.href} data-game={g.key}
+                  data-seasonal={g.seasonal ? '1' : '0'}>
+                  <span className="hiw-mk" aria-hidden="true">{g.mark}</span>
+                  <span className="hiw-gt">
+                    <b>{g.name}</b>
+                    <small>{g.about}</small>
+                    {g.seasonal ? (
+                      <span className="hiw-season">Seasonal{g.seasonWords ? ` · runs ${g.seasonWords}` : ''}</span>
+                    ) : null}
+                  </span>
+                  <span className="hiw-chev" aria-hidden="true">&rsaquo;</span>
+                </Link>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        <h2 className="hiw-rules-h">The rules, game by game</h2>
 
         {SECTIONS.map((s) => (
           <section className="hiw-sec" key={s.key}>

@@ -169,7 +169,6 @@ test('THE LOCAL PALETTES ARE RE-POINTED: each page palette reads the tokens unde
   const want = {
     'app/games/games.css': [':root[data-theme="arcade"] .lob {', '--l-ink: var(--tok-page)', '--l-paper: var(--tok-ink)'],
     'app/daily/daily.css': [':root[data-theme="arcade"] .daily, :root[data-theme="arcade"] .weekly {', '--d-ink: var(--tok-page)', '--d-paper: var(--tok-ink)'],
-    'app/account/account.css': [':root[data-theme="arcade"] .acct {', '--a-ink: var(--tok-page)'],
     'app/stats/stats.css': [':root[data-theme="arcade"] .stats-wrap {'],
     'components/sim/tracker.css': [':root[data-theme="arcade"] .trk {'],
     'components/gridiron/gridiron.css': [':root[data-theme="arcade"] .gi-head {'],

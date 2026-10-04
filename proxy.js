@@ -43,7 +43,7 @@
  *     not on the list never invokes the function and is unaffected.
  *   - Does NOT catch shared-library routes (/match/*, /team/*,
  *     /player/* - their soccer rows redirect in the page, by league),
- *     global routes (/, /my, /signin*, /confirmed), static assets, or
+ *     global routes (/, /signin*, /confirmed), static assets, or
  *     non-admin API endpoints.
  */
 
@@ -52,6 +52,7 @@ import { SHELL_COOKIE, SHELL_VALUE, SHELL_PARAM, SHELL_UA_TOKEN } from '@/lib/sh
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { scoreboardRedirect } from './lib/scores/leagueScoreboards.js';
 import { retiredRedirect } from './lib/retired.js';
+import { youRedirect } from './lib/you/legacyRedirect.js';
 import { ageRedirectTarget, sessionTokenFrom, AGE_OK_COOKIE } from './lib/auth/ageGate.js';
 import { ageCookieValue } from './lib/auth/ageCookie.js';
 
@@ -189,6 +190,17 @@ export async function proxy(request) {
   }
 
   // -------------------------------------------------------------------------
+  // 2c. /my AND /account ARE /you (sun-16 D). Permanent 308, query kept, every
+  //    subpath caught (lib/you/legacyRedirect.js). Before the age clause, so an
+  //    old link costs one hop, not two: /you then meets the age screen itself.
+  //    /sim/account (draft settings, account deletion) is untouched.
+  // -------------------------------------------------------------------------
+  const you = youRedirect(pathname, request.nextUrl.search);
+  if (you) {
+    return withCookie(NextResponse.redirect(new URL(you, request.url), 308));
+  }
+
+  // -------------------------------------------------------------------------
   // 3. THE AGE SCREEN COMES FIRST (age-gate, fri-5).
   //
   //    A SIGNED-IN page navigation whose session has not passed the age screen
@@ -304,6 +316,10 @@ export const config = {
     // LEAGUE_SCOREBOARDS.
     '/nfl/scores',
     '/cfb/scores',
+    // /my and /account are /you (sun-16 D): literals, pinned to
+    // LEGACY_YOU_ROOTS by lib/you/legacyRedirect.test.mjs.
+    '/my', '/my/:path*',
+    '/account', '/account/:path*',
     // App Store 3.1.1: the shell block above needs this route to reach the proxy.
     '/membership',
     '/membership/:path*',

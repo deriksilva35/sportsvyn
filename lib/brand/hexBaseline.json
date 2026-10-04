@@ -1,7 +1,6 @@
 {
- "total": 896,
+ "total": 877,
  "byFile": {
-  "app/account/account.css": 10,
   "app/admin/console/console.css": 15,
   "app/admin/prematch/[id]/page.js": 29,
   "app/admin/prematch/page.js": 43,
@@ -28,7 +27,6 @@
   "app/match/[slug]/match.css": 27,
   "app/membership/membership.css": 4,
   "app/mlb/game/[slug]/mlbgame.css": 2,
-  "app/my/my.css": 9,
   "app/nfl/game/[slug]/game.css": 3,
   "app/nfl/game/[slug]/page.js": 1,
   "app/october/october.css": 15,

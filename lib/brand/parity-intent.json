@@ -1,3 +1,549 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-chev { color }",
+      "after": "?--l-mut"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-chev { flex }",
+      "after": "none"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-chev { font-size }",
+      "after": "18px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-game { align-items }",
+      "after": "center"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-game { border-bottom }",
+      "after": "1px solid ?--l-line"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-game { color }",
+      "after": "?--l-paper"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-game { display }",
+      "after": "flex"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-game { gap }",
+      "after": "12px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-game { min-height }",
+      "after": "56px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-game { padding }",
+      "after": "8px 0"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-game { text-decoration }",
+      "after": "none"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-game:hover .hiw-gt b { color }",
+      "after": "?--l-volt"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-game[data-seasonal=\"1\"] .hiw-mk, .hiw-game[data-seasonal=\"1\"] .hiw-gt b { color }",
+      "after": "?--l-mut"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-grp + .hiw-grp { margin-top }",
+      "after": "14px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-grp-h { color }",
+      "after": "?--l-mut"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-grp-h { font-family }",
+      "after": "?--l-cond"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-grp-h { font-size }",
+      "after": "10px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-grp-h { font-weight }",
+      "after": "600"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-grp-h { letter-spacing }",
+      "after": ".12em"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-grp-h { margin }",
+      "after": "0 0 2px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-grp-h { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt b { font-family }",
+      "after": "?--l-cond"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt b { font-size }",
+      "after": "13px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt b { font-weight }",
+      "after": "700"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt b { letter-spacing }",
+      "after": ".06em"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt b { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt small { color }",
+      "after": "#cfcfc9"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt small { font-size }",
+      "after": "13px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt small { line-height }",
+      "after": "1.4"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt { display }",
+      "after": "flex"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt { flex }",
+      "after": "1"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt { flex-direction }",
+      "after": "column"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt { gap }",
+      "after": "2px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-gt { min-width }",
+      "after": "0"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-list { margin }",
+      "after": "8px 0 20px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-mk { border }",
+      "after": "1.5px solid currentcolor"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-mk { border-radius }",
+      "after": "8px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-mk { display }",
+      "after": "grid"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-mk { flex }",
+      "after": "none"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-mk { font-family }",
+      "after": "?--l-mono"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-mk { font-size }",
+      "after": "11px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-mk { height }",
+      "after": "30px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-mk { place-items }",
+      "after": "center"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-mk { width }",
+      "after": "30px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-rules-h { border-top }",
+      "after": "1px solid ?--l-line"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-rules-h { color }",
+      "after": "?--l-mut"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-rules-h { font-family }",
+      "after": "?--l-cond"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-rules-h { font-size }",
+      "after": "10px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-rules-h { font-weight }",
+      "after": "600"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-rules-h { letter-spacing }",
+      "after": ".12em"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-rules-h { margin }",
+      "after": "8px 0 6px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-rules-h { padding-top }",
+      "after": "16px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-rules-h { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-season { align-self }",
+      "after": "flex-start"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-season { border }",
+      "after": "1px solid ?--l-line"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-season { border-radius }",
+      "after": "99px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-season { color }",
+      "after": "?--l-mut"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-season { font-family }",
+      "after": "?--l-mono"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-season { font-size }",
+      "after": "10px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-season { letter-spacing }",
+      "after": ".06em"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-season { margin-top }",
+      "after": "3px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-season { padding }",
+      "after": "2px 8px"
+    },
+    {
+      "file": "app/games/how-it-works/howItWorks.css",
+      "key": ".hiw-season { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": ".gh-mock { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": ".gh-mock { font-size }",
+      "after": "11px"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": ".gh-mock { letter-spacing }",
+      "after": "0.1em"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": ".gh-mock { text-decoration }",
+      "after": "none"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": ".gh-mock { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": ".gh-mock { white-space }",
+      "after": "nowrap"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": ".gh-mock:hover { color }",
+      "after": "#f5f5f2"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 1140px) .gh .gh-right .gh-mock { display }",
+      "after": "none"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 339px) header.gh:not(.gh--app) { gap }",
+      "after": "8px"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 339px) header.gh:not(.gh--app) { padding-left }",
+      "after": "16px"
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 389px) header.gh:not(.gh--app) { gap }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 389px) header.gh:not(.gh--app) { padding-left }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 429px) .gh .gh-right .gh-cta { letter-spacing }",
+      "after": null
+    },
+    {
+      "file": "components/site-chrome.css",
+      "key": "@media (max-width: 429px) .gh .gh-right .gh-cta { padding }",
+      "after": null
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-act button { background }",
+      "after": "none"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-act button { border }",
+      "after": "0"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-act button { color }",
+      "after": "#f5f5f2"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-act button { cursor }",
+      "after": "pointer"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-act button { font-family }",
+      "after": "inherit"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-act button { font-size }",
+      "after": "13px"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-act button { font-weight }",
+      "after": "600"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-act button { padding }",
+      "after": "0"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-act button { text-align }",
+      "after": "left"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-act button:hover { color }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-del > button { color }",
+      "after": "#b8410f"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-del div button:disabled { cursor }",
+      "after": "default"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-del div button:disabled { opacity }",
+      "after": ".55"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-del div button:first-child { color }",
+      "after": "#b8410f"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-del div div { display }",
+      "after": "flex"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-del div div { gap }",
+      "after": "16px"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-del p { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-del p { font-size }",
+      "after": "12px"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-del p { line-height }",
+      "after": "1.5"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-del p { margin }",
+      "after": "0 0 10px"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-del { display }",
+      "after": "block"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-dg + .yu-dg { margin-top }",
+      "after": "10px"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-dg .yu-set:first-of-type { border-top }",
+      "after": "0"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-dgh { color }",
+      "after": "?--quiet"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-dgh { font }",
+      "after": "600 9px ?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-dgh { letter-spacing }",
+      "after": ".1em"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-dgh { padding }",
+      "after": "2px 0 4px"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-dgh { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-k + .yu-chev { margin-left }",
+      "after": "auto"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": ".yu-mem--free { border-color }",
+      "after": "#2a2a2a"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": "a.yu-tm { color }",
+      "after": "#f5f5f2"
+    },
+    {
+      "file": "components/you/you.css",
+      "key": "a.yu-tm { text-decoration }",
+      "after": "none"
+    }
+  ]
 }

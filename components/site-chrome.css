@@ -356,6 +356,12 @@ header.gh { padding-left: var(--sv-header-left); }
   font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--muted); text-decoration: none; white-space: nowrap;
 }
+/* MOCK DRAFT, the quiet door (sun-16 D): SIGN IN's type, beside the volt PLAY. */
+.gh-mock {
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; white-space: nowrap;
+}
+.gh-mock:hover { color: var(--paper); }
 .gh-signin:hover { color: var(--paper); }
 .gh-account { display: inline-flex; align-items: center; gap: 10px; }
 
@@ -428,6 +434,8 @@ header.gh { padding-left: var(--sv-header-left); }
   .gh .gh-right .gh-my,
   .gh .gh-right .gh-signin,
   .gh .gh-right .gh-account { display: none; }
+  /* MOCK DRAFT too (sun-16 D) - it is a line in the drawer down here. */
+  .gh .gh-right .gh-mock { display: none; }
   .gh .gh-right { margin-left: auto; gap: 0; }
   .gh .gh-burger { display: flex; }
   .gh-drawer { display: flex; }
@@ -444,16 +452,13 @@ header.gh { padding-left: var(--sv-header-left); }
   .gh .gh-burger { flex: 0 0 auto; margin-left: 0; }
 }
 
-/* ---- the phone bar, with the 1.4x mark (sun-14) ----
-   Mark on the content edge (32) + MOCK DRAFT + burger is 396px at full size, so
-   below 430 the CTA tightens its padding and tracking - the same label, the
-   same fill, still on the bar - and below 390 the mark's edge comes in to the
-   bar's own 16px, the only place the page edge gives. The app header has no
-   CTA and keeps its edge. */
-@media (max-width: 429px) {
-  .gh .gh-right .gh-cta { padding: 7px 9px; letter-spacing: 0.06em; }
-}
-@media (max-width: 389px) {
+/* ---- the phone bar, with the 1.4x mark (sun-14; PLAY since sun-16 D) ----
+   Mark on the content edge (32, 181px wide) + PLAY (51) + burger (24), two 12px
+   gaps and the bar's 16px right edge is 328px, so PLAY keeps its full padding
+   at every phone width (MOCK DRAFT needed it tightened below 430), and the
+   mark's edge comes in to the bar's own 16px only below 340 - it was 390 while
+   the button said MOCK DRAFT. The app header has no CTA and keeps its edge. */
+@media (max-width: 339px) {
   header.gh:not(.gh--app) { padding-left: 16px; gap: 8px; }
 }
 

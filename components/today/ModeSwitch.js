@@ -1,4 +1,5 @@
-// components/today/ModeSwitch.js - the Today / My Sportsvyn switcher.
+// components/today/ModeSwitch.js - the Today / You switcher (Today / My
+// Sportsvyn until sun-16 D, when /my became a 308 to /you).
 //
 // TWO ROUTES, NOT A QUERY PARAM, and the reason is auth rather than taste.
 // /my is force-dynamic, redirects to /signin with a callbackUrl, and carries

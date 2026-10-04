@@ -1,6 +1,6 @@
-/* components/account/followedTeams.css - "Teams you follow" on /account.
-   Written on the account page's own token namespace (--a-*), which that page
-   declares on .acct; this module renders nowhere else. */
+/* components/account/followedTeams.css - "Teams you follow" (the You tab since sun-16 D).
+   Written on its own token namespace (--a-*), which its host declares - the
+   You tab maps it onto the global tokens on .yu-ft (components/you/you.css). */
 
 .ft-empty, .ft-hint {
   margin: 0; color: var(--a-mut); font-size: 12px; line-height: 1.5;

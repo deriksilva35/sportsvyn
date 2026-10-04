@@ -1,13 +1,12 @@
 // app/you/page.js - the You tab.
 //
-// IT ABSORBS /account's CONTENT, and /account is untouched this relay (Q1):
-// two pages overlap briefly, which is safer than landing a redirect in the
-// same merge as a new route. The redirect, the shell chip repoint and
-// YourDrafts' new home are the relay after this one.
+// IT ABSORBED /account's AND /my's CONTENT, and both are now 308s here
+// (sun-16 D, lib/you/legacyRedirect.js). Each page's file lists what it had
+// and where on this tab it went.
 //
-// SIGNED OUT IS A REAL PAGE, not a redirect. /account throws a signed-out
-// reader at /signin; this tab shows them what an account is for first, which
-// is the only reason a stranger would want one.
+// SIGNED OUT IS A REAL PAGE, not a redirect. /account used to throw a
+// signed-out reader at /signin; this tab shows them what an account is for
+// first, which is the only reason a stranger would want one.
 
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
@@ -32,7 +31,7 @@ export default async function YouPage() {
   return (
     <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav="you" />
-      <You v={v} signinHref={shellSigninHref('/you', isShell)} />
+      <You v={v} signinHref={shellSigninHref('/you', isShell)} isShell={isShell} />
       {!isShell && <SiteFooter />}
     </div>
   );

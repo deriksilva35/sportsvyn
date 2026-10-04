@@ -10,6 +10,7 @@
 
 import { test } from 'node:test';
 import { rowState } from '../../lib/today/slateRow.js';
+import { HEADER_CTA, MOCK_DRAFT, accountMenu } from '../../lib/nav.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -139,7 +140,7 @@ test('THE MOBILE RULES ARE PARENT-SCOPED, because import order is not a mechanis
   const chrome = src('components/site-chrome.css');
   const mobile = chrome.slice(chrome.indexOf(COLLAPSE));
   for (const sel of ['.gh .gh-nav', '.gh .gh-burger', '.gh .wordmark',
-    '.gh .gh-right .gh-my', '.gh .gh-right .gh-signin', '.gh .gh-right .gh-account']) {
+    '.gh .gh-right .gh-my', '.gh .gh-right .gh-mock', '.gh .gh-right .gh-signin', '.gh .gh-right .gh-account']) {
     assert.ok(mobile.includes(sel), `${sel} must be parent-scoped`);
   }
   // The unscoped forms must be gone - they are the ones that lost.
@@ -147,7 +148,7 @@ test('THE MOBILE RULES ARE PARENT-SCOPED, because import order is not a mechanis
 });
 
 test('THE CTA SURVIVES THE COLLAPSE - the funnel does not shrink on phones', () => {
-  // Hiding .gh-right wholesale would have taken MOCK DRAFT with it. The
+  // Hiding .gh-right wholesale would have taken the CTA (PLAY) with it. The
   // container stays; its other children go.
   const chrome = src('components/site-chrome.css');
   const mobile = chrome.slice(chrome.indexOf(COLLAPSE));
@@ -294,8 +295,21 @@ test('THE MEMBER CHIP TELLS THE TRUTH', () => {
 });
 
 test('the funnel keeps its place in BOTH auth states', () => {
-  const cta = header.match(/<Link href="\/sim" className="gh-cta">MOCK DRAFT<\/Link>/g) ?? [];
+  // sun-16 D, DELIBERATELY: the funnel is PLAY -> /games now, not MOCK DRAFT
+  // -> /sim. The label and href live in lib/nav.js HEADER_CTA, read here so
+  // the assertion is about the value, not a literal copied into this file.
+  assert.deepEqual({ ...HEADER_CTA }, { label: 'PLAY', href: '/games' });
+  const cta = header.match(/<Link href=\{HEADER_CTA\.href\} className="gh-cta">\{HEADER_CTA\.label\}<\/Link>/g) ?? [];
   assert.equal(cta.length, 2, 'desktop bar and mobile drawer');
+  assert.ok(!/className="gh-cta">MOCK DRAFT/.test(header), 'the mock draft is no longer the volt button');
+  // ...and the mock draft keeps a door on both: a quiet link on the wide bar,
+  // a line in the drawer.
+  assert.deepEqual({ ...MOCK_DRAFT }, { label: 'MOCK DRAFT', href: '/sim' });
+  assert.match(header, /\{!isAuthed && <Link href=\{MOCK_DRAFT\.href\} className="gh-mock">\{MOCK_DRAFT\.label\}<\/Link>\}/,
+    'signed out, on the bar');
+  assert.ok(accountMenu({ shell: false }).some((i) => i.href === '/sim'), 'signed in, in the account menu');
+  const drawer = header.slice(header.indexOf('className="gh-drawer"'));
+  assert.match(drawer, /<Link href=\{MOCK_DRAFT\.href\} className="gh-drawer-mock">/);
   // It sits outside the isAuthed branch, so signing in cannot remove it.
   const authBranch = header.indexOf('{isAuthed');
   assert.ok(header.indexOf('className="gh-cta"') < authBranch);

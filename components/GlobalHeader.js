@@ -36,7 +36,7 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { signOutTarget } from '@/lib/shell/signOutTarget';
 import { logOutPurchases } from '@/lib/shell/purchaseBridge';
-import { navFor, accountMenu, signinHrefFor } from '@/lib/nav';
+import { navFor, accountMenu, signinHrefFor, HEADER_CTA, MOCK_DRAFT } from '@/lib/nav';
 import Link from 'next/link';
 import Wordmark from '@/components/gridiron/Wordmark';
 import NavDropdown from '@/components/NavDropdown';
@@ -108,10 +108,20 @@ export default function GlobalHeader({
               second, quieter link to the same dashboard is exactly the kind of
               duplicate route the switcher exists to remove. The locked mock's
               nav shows it gone; this is that. */}
+          {/* MOCK DRAFT IS A DOOR, NOT THE FUNNEL (sun-16 D). It was the volt
+              CTA; the games are the product now, so the button is PLAY and the
+              mock draft keeps a quiet link here (signed out, above the
+              collapse), an entry in the account menu (signed in) and a line in
+              the drawer (below the collapse). It is the mock draft's only door
+              in the chrome - the footer lost it in R5. Signed in, the bar
+              carries the account label, whose width is the reader's own email:
+              with the link too, the nav clipped 18px at 1141, so there it moves
+              into the menu. */}
+          {!isAuthed && <Link href={MOCK_DRAFT.href} className="gh-mock">{MOCK_DRAFT.label}</Link>}
           {/* The funnel. It is the one thing on this bar a first-time visitor
               can act on, so it keeps the volt and it keeps its place in both
               auth states. */}
-          <Link href="/sim" className="gh-cta">MOCK DRAFT</Link>
+          <Link href={HEADER_CTA.href} className="gh-cta">{HEADER_CTA.label}</Link>
           {isAuthed
             ? (
               <span className="gh-account">
@@ -140,14 +150,16 @@ export default function GlobalHeader({
               {n.label}
             </Link>
           ))}
+          <Link href={MOCK_DRAFT.href} className="gh-drawer-mock">{MOCK_DRAFT.label}</Link>
           {/* Gone from the drawer too - see the desktop bar above. */}
-          <Link href="/sim" className="gh-cta">MOCK DRAFT</Link>
+          <Link href={HEADER_CTA.href} className="gh-cta">{HEADER_CTA.label}</Link>
           {isAuthed ? (
             <>
               <div className="gh-drawer-label">
                 {label}{isMember ? <span className="gi-member">MEMBER</span> : null}
               </div>
-              {accountItems.map((it) => (it.onClick
+              {/* The menu's Mock Draft is the wide bar's door; the drawer has its own line above. */}
+              {accountItems.filter((it) => it.href !== MOCK_DRAFT.href).map((it) => (it.onClick
                 ? <button key={it.label} type="button" className="gh-drawer-sub gh-signout" onClick={it.onClick}>{it.label}</button>
                 : <Link key={it.label} href={it.href} className="gh-drawer-sub">{it.label}</Link>))}
             </>

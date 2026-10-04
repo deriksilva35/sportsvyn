@@ -93,3 +93,41 @@
   .hiw .dsteps { flex-direction: column; }
   .hiw-name { font-size: 26px; }
 }
+
+/* EVERY GAME (sun-16 D) - the list generated from lib/games/playRegistry.js.
+   The lobby's row grammar (mark, name over one line, chevron) in the lobby's
+   own --l-* tokens; a seasonal game keeps its row and says so. */
+.hiw-list { margin: 8px 0 20px; }
+.hiw-grp + .hiw-grp { margin-top: 14px; }
+.hiw-grp-h {
+  margin: 0 0 2px; font-family: var(--l-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--l-mut);
+}
+.hiw-game {
+  display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 0;
+  border-bottom: 1px solid var(--l-line); color: var(--l-paper); text-decoration: none;
+}
+.hiw-mk {
+  flex: none; width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid currentColor;
+  display: grid; place-items: center; font-family: var(--l-mono); font-size: 11px;
+}
+.hiw-gt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hiw-gt b {
+  font-family: var(--l-cond); font-weight: 700; font-size: 13px;
+  letter-spacing: .06em; text-transform: uppercase;
+}
+.hiw-gt small { font-size: 13px; line-height: 1.4; color: var(--tok-ink-2); }
+.hiw-season {
+  align-self: flex-start; margin-top: 3px;
+  font-family: var(--l-mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--l-mut); border: 1px solid var(--l-line); border-radius: 99px; padding: 2px 8px;
+}
+.hiw-game[data-seasonal="1"] .hiw-mk,
+.hiw-game[data-seasonal="1"] .hiw-gt b { color: var(--l-mut); }
+.hiw-chev { flex: none; color: var(--l-mut); font-size: 18px; }
+.hiw-game:hover .hiw-gt b { color: var(--l-volt); }
+.hiw-rules-h {
+  margin: 8px 0 6px; padding-top: 16px; border-top: 1px solid var(--l-line);
+  font-family: var(--l-cond); font-weight: 600; font-size: 10px;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--l-mut);
+}

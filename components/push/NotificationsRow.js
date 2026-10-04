@@ -30,7 +30,7 @@ import { useEffect, useState } from 'react';
 import { canOfferPush, enablePush, disablePush, devicePermission } from '@/lib/push/client';
 import { savePushChoice } from '@/app/actions/onboarding';
 
-export default function NotificationsRow({ choice = null, variant = 'sim' }) {
+export default function NotificationsRow({ choice = null, variant = 'sim', fallback = null }) {
   const [serverChoice, setServerChoice] = useState(choice);
   const [perm, setPerm] = useState('checking');   // checking | granted | denied | prompt | null
   const [busy, setBusy] = useState(false);
@@ -42,7 +42,9 @@ export default function NotificationsRow({ choice = null, variant = 'sim' }) {
     return () => { dead = true; };
   }, []);
 
-  if (!canOfferPush()) return null;
+  // `fallback` is what the You tab shows where there is no plugin (the web, the
+  // v1.1 binary): its read-only state row. Every other variant renders nothing.
+  if (!canOfferPush()) return fallback;
 
   const on = perm === 'granted' && serverChoice === 'enabled';
   const stale = perm !== 'checking' && perm !== 'granted' && serverChoice === 'enabled';
@@ -100,17 +102,14 @@ export default function NotificationsRow({ choice = null, variant = 'sim' }) {
     </span>
   );
 
-  if (variant === 'account') {
+  // THE YOU TAB'S ROW (sun-16 D): /account's switch, moved when /account became
+  // a redirect to /you, in the tab's own row grammar.
+  if (variant === 'you') {
     return (
-      <section className="acct-mod">
-        <h2 className="acct-eyebrow">Notifications</h2>
-        <div className="acct-rows">
-          <div className="acct-row">
-            <span>Board live &amp; answer drops</span>
-            <span className="acct-r">{control}</span>
-          </div>
-        </div>
-      </section>
+      <div className="yu-set" data-row="push">
+        <span className="yu-k">Push notifications<small>Board live &amp; answer drops</small></span>
+        <span className="yu-v">{control}</span>
+      </div>
     );
   }
 
