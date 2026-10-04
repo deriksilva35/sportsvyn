@@ -14,28 +14,36 @@ import { SHELL_COOKIE, SHELL_VALUE } from '@/lib/shell/constants';
 // 1 Oct and two previews on 3-4 Oct ("Can't resolve ...font/google/font"). The
 // files in app/fonts/ are the exact Latin woff2 Google served for these weights
 // (OFL - the licences sit beside them), so a build never touches the network.
-// Each family keeps its Google name (the font-family declaration), its CSS
-// variable, display: swap and the same metric-adjusted fallback (Arial, or
-// Times New Roman for the serif - what next/font/google picked), so the
-// computed stacks are what they were. The options are literals: next/font
-// rejects anything computed. JetBrains Mono, Archivo and Rubik are
-// variable fonts: Google served one file for every weight, so each weight is
-// its own @font-face on that one file, as before. lib/brand/fontsLocal.test.mjs
-// keeps next/font/google out.
+// Each family keeps its CSS variable, display: swap, preload and the same
+// metric-adjusted fallback (Arial, or Times New Roman for the serif - what
+// next/font/google picked). JetBrains Mono, Archivo and Rubik are variable
+// fonts: Google served one file for every weight, so each weight is its own
+// @font-face on that one file, as before. The options are literals: next/font
+// rejects anything computed. lib/brand/fontsLocal.test.mjs keeps
+// next/font/google out.
+//
+// THE FAMILY NAME. next/font/local names a face after the const ("saira",
+// "sairaCondensed"), and Turbopack builds the --font-* variable from that name
+// even when a font-family declaration renames the face - so the variable fonts
+// below carry NO declaration, or the variable would point at a face that does
+// not exist. Single-word names still match the stylesheets that write 'Saira',
+// 'Archivo' or 'Rubik' (family names match case-insensitively). The four
+// MULTI-WORD names are written literally in ~90 places ('Saira Condensed',
+// 'JetBrains Mono', 'Source Serif 4', 'Rubik Mono One'); the *Face loaders at
+// the end of this block declare those names over the SAME files with the same
+// options, so the emitted URL is the same and nothing downloads twice.
 const saira = localFont({
   variable: "--font-saira",
   src: [
     { path: "./fonts/Saira-900.woff2", weight: "900", style: "normal" },
     { path: "./fonts/Saira-900Italic.woff2", weight: "900", style: "italic" },
   ],
-  declarations: [{ prop: "font-family", value: "'Saira'" }],
   display: "swap",
 });
 
 const sourceSerif = localFont({
   variable: "--font-source-serif",
   src: [{ path: "./fonts/SourceSerif4-400Italic.woff2", weight: "400", style: "italic" }],
-  declarations: [{ prop: "font-family", value: "'Source Serif 4'" }],
   adjustFontFallback: "Times New Roman",
   display: "swap",
 });
@@ -47,7 +55,6 @@ const jetbrainsMono = localFont({
     { path: "./fonts/JetBrainsMono-wght.woff2", weight: "500", style: "normal" },
     { path: "./fonts/JetBrainsMono-wght.woff2", weight: "700", style: "normal" },
   ],
-  declarations: [{ prop: "font-family", value: "'JetBrains Mono'" }],
   display: "swap",
 });
 
@@ -61,7 +68,6 @@ const sairaCondensed = localFont({
     { path: "./fonts/SairaCondensed-600.woff2", weight: "600", style: "normal" },
     { path: "./fonts/SairaCondensed-700.woff2", weight: "700", style: "normal" },
   ],
-  declarations: [{ prop: "font-family", value: "'Saira Condensed'" }],
   display: "swap",
 });
 
@@ -71,7 +77,6 @@ const archivo = localFont({
     { path: "./fonts/Archivo-wght.woff2", weight: "400", style: "normal" },
     { path: "./fonts/Archivo-wght.woff2", weight: "500", style: "normal" },
   ],
-  declarations: [{ prop: "font-family", value: "'Archivo'" }],
   display: "swap",
 });
 
@@ -88,13 +93,51 @@ const rubik = localFont({
     { path: "./fonts/Rubik-wght.woff2", weight: "800", style: "normal" },
     { path: "./fonts/Rubik-wght.woff2", weight: "900", style: "normal" },
   ],
-  declarations: [{ prop: "font-family", value: "'Rubik'" }],
   display: "swap",
   preload: false,
 });
 
 const rubikMono = localFont({
   variable: "--font-rubik-mono",
+  src: [{ path: "./fonts/RubikMonoOne-400.woff2", weight: "400", style: "normal" }],
+  display: "swap",
+  preload: false,
+});
+
+// THE GOOGLE NAMES, for the stylesheets that write them literally (see above).
+// Same files and options as the loaders they shadow; the variables are unused.
+const sairaCondensedFace = localFont({
+  variable: "--font-face-saira-condensed",
+  src: [
+    { path: "./fonts/SairaCondensed-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/SairaCondensed-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/SairaCondensed-700.woff2", weight: "700", style: "normal" },
+  ],
+  declarations: [{ prop: "font-family", value: "'Saira Condensed'" }],
+  display: "swap",
+});
+
+const sourceSerifFace = localFont({
+  variable: "--font-face-source-serif",
+  src: [{ path: "./fonts/SourceSerif4-400Italic.woff2", weight: "400", style: "italic" }],
+  declarations: [{ prop: "font-family", value: "'Source Serif 4'" }],
+  adjustFontFallback: "Times New Roman",
+  display: "swap",
+});
+
+const jetbrainsMonoFace = localFont({
+  variable: "--font-face-jetbrains-mono",
+  src: [
+    { path: "./fonts/JetBrainsMono-wght.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/JetBrainsMono-wght.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/JetBrainsMono-wght.woff2", weight: "700", style: "normal" },
+  ],
+  declarations: [{ prop: "font-family", value: "'JetBrains Mono'" }],
+  display: "swap",
+});
+
+const rubikMonoFace = localFont({
+  variable: "--font-face-rubik-mono",
   src: [{ path: "./fonts/RubikMonoOne-400.woff2", weight: "400", style: "normal" }],
   declarations: [{ prop: "font-family", value: "'Rubik Mono One'" }],
   display: "swap",
@@ -156,7 +199,7 @@ export default function RootLayout({ children }) {
       // THE FIRST-PAINT GROUND: the page colour before any stylesheet has
       // loaded - lib/brand/theme.js firstPaintColor.
       style={{ backgroundColor: firstPaintColor() }}
-      className={`${saira.variable} ${sairaCondensed.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${archivo.variable} ${rubik.variable} ${rubikMono.variable} h-full antialiased`}
+      className={`${saira.variable} ${sairaCondensed.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${archivo.variable} ${rubik.variable} ${rubikMono.variable} ${sairaCondensedFace.variable} ${sourceSerifFace.variable} ${jetbrainsMonoFace.variable} ${rubikMonoFace.variable} h-full antialiased`}
     >
       {shellScript ? (
         <head>

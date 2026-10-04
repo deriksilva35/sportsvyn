@@ -91,10 +91,9 @@ test('THE ARCADE FACES are loaded - Rubik 500/700/800/900 and Rubik Mono One - a
   // Self-hosted since sun-12 item 4: next/font/local, one @font-face per weight.
   const rubikCall = /const rubik = localFont\(\{\s*variable: "--font-rubik",([\s\S]*?)\n\}\);/.exec(layout)?.[1] ?? '';
   assert.deepEqual([...rubikCall.matchAll(/weight: "(\d+)"/g)].map((m) => m[1]), ['500', '700', '800', '900']);
-  assert.match(rubikCall, /value: "'Rubik'"/);
   assert.match(layout, /const rubikMono = localFont\(\{\s*variable: "--font-rubik-mono"/);
   assert.match(layout, /\$\{rubik\.variable\} \$\{rubikMono\.variable\}/);
-  assert.equal((layout.match(/preload: false/g) ?? []).length, 2, 'no preload: the dark theme never requests them');
+  assert.equal((layout.match(/preload: false/g) ?? []).length, 3, 'no preload: the dark theme never requests them (rubik, rubikMono and its Google-name twin rubikMonoFace)');
   // R1: only the arcade block reads Rubik; the dark :root roles still read Saira/JetBrains.
   const arcade = css.slice(css.indexOf(':root[data-theme="arcade"] {'), css.indexOf('}', css.indexOf(':root[data-theme="arcade"] {')));
   assert.match(arcade, /--tok-font-display: var\(--font-rubik\)/);
