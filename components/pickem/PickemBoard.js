@@ -21,6 +21,8 @@ import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import { confirmPickemEntry } from '@/app/actions/confirm';
 import StandaloneTime from '@/components/StandaloneTime';
+import { groupByLockDay } from '@/lib/pickem/dayGroups';
+import { useViewerZone } from '@/components/time/ViewerTz';
 import { isVoidStatus, dayLabel } from '@/lib/nba/dayRules';
 
 // THE WORDS FOR THE MOMENT A GAME STARTS. Football kicks off; the NBA tips.
@@ -40,44 +42,7 @@ const GAME_ROUTE = { cfb: '/cfb/game', nfl: '/nfl/game' };
 // pick stops being editable.
 const STEP_NAMES = ['Pick', 'Fill the board', 'Locked in'];
 
-// THESE TWO ARE A GROUPING KEY, NOT A CLOCK (relay 3b item 2). The slate's
-// sections are the NFL/CFB week's own ET calendar days - which games belong
-// to "Sunday" is a property of the schedule, not of where the reader is
-// sitting, and regrouping them by viewer-local date would move a Thursday
-// night game into Friday for anyone east of the Atlantic. Every rendered
-// TIME on this board goes through StandaloneDate/StandaloneTime; no
-// timestamp is formatted here.
-const ET_WEEKDAY_LONG = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'long' });
-const ET_YMD = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
-
-/**
- * Games grouped by their kickoff's ET CALENDAR DAY (relay 2a item 8's
- * .secl day sections) - not by lock day-of-week generically, this specific
- * board's own dates, in the order the games already come in (kickoff-time
- * order, per lib/pickem/entry.js's gameRows()). Each group also carries
- * whether every game in it shares one lock instant ('lock {local}') or not
- * ('lock per game' - the common case once a day has more than one window).
- */
-function groupByLockDay(games) {
-  const groups = [];
-  const byKey = new Map();
-  for (const g of games) {
-    const d = new Date(g.kickoff_at);
-    const key = ET_YMD.format(d);
-    if (!byKey.has(key)) {
-      const group = { key, label: ET_WEEKDAY_LONG.format(d), games: [] };
-      byKey.set(key, group);
-      groups.push(group);
-    }
-    byKey.get(key).games.push(g);
-  }
-  for (const group of groups) {
-    const first = group.games[0].kickoff_at;
-    group.sameLock = group.games.every((g) => g.kickoff_at === first);
-    group.lockAt = group.sameLock ? first : null;
-  }
-  return groups;
-}
+// The day sections: lib/pickem/dayGroups.js (the reader's days, sun-16 item B).
 
 /** A board game's page, or null when we have no route for its sport. */
 function gameHref(contest, g) {
@@ -193,7 +158,8 @@ export default function PickemBoard({
     setTimeout(() => setSavedTick(false), 1600);
   }
 
-  const dayGroups = useMemo(() => groupByLockDay(games), [games]);
+  const tz = useViewerZone();
+  const dayGroups = useMemo(() => groupByLockDay(games, tz), [games, tz]);
 
   async function lockItIn() {
     if (confirming) return;

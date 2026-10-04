@@ -4,6 +4,7 @@ import AppTabBar from '@/components/shell/AppTabBar';
 import AppHeader from '@/components/shell/AppHeader';
 import ResumeManager from '@/components/shell/ResumeManager';
 import SplashReady from '@/components/shell/SplashReady';
+import TzCookie from '@/components/gridiron/TzCookie';
 import { Analytics } from '@vercel/analytics/next';
 import '@/components/shell/apptab.css';
 import { firstPaintColor, dataTheme, shellThemeScript } from '@/lib/brand/theme';
@@ -144,6 +145,12 @@ export default function RootLayout({ children }) {
         <ResumeManager />
         {/* The native splash goes after the first paint - components/shell/SplashReady. */}
         <SplashReady />
+        {/* THE READER'S ZONE, written once a session on EVERY page (sun-16 item
+            B) - so the next server render of any surface can print its times in
+            that zone with no swap (components/time/ViewerTz.js). Writing it
+            only from /scores and /games left a reader who landed on /october
+            on the labelled ET fallback for the whole visit. */}
+        <TzCookie />
         {children}
         <AppTabBar />
         {/* WEB ANALYTICS. The project-level feature was already provisioned;

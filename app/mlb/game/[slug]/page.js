@@ -27,6 +27,7 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import StandaloneTime from '@/components/StandaloneTime';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 import { getMlbGame, getMlbPlays } from '@/lib/mlb/gameDetail';
 import { outsToInnings } from '@/lib/mlb/playsImport';
 import { stripCells } from '@/lib/mlb/strip';
@@ -100,9 +101,12 @@ export default async function MlbGamePage({ params, searchParams }) {
   // star is drawn at all. One follow read for both sides, empty when signed
   // out, and caught - a follow lookup must never cost a game page.
   const viewerId = (await auth().catch(() => null))?.user?.id ?? null;
-  const [followedIds, isShell] = await Promise.all([
+  const [followedIds, isShell, viewerTz] = await Promise.all([
     viewerId == null ? Promise.resolve([]) : getFollowedTeamIds(viewerId).catch(() => []),
     resolveShellMode().catch(() => false),
+    // The reader's zone (sv_tz): the first-pitch chip paints in it, not in the
+    // ET fallback that then swapped to the device's zone (sun-16 item B).
+    readViewerTz(),
   ]);
   const followed = new Set(followedIds);
   const live = g.status === 'live';
@@ -149,7 +153,7 @@ export default async function MlbGamePage({ params, searchParams }) {
           <div className="mg-chips">
             {live ? <span className="mg-chip live">LIVE</span> : null}
             {g.chip ? <span className="mg-qc">{g.chip}</span> : null}
-            {!show && g.kickoffAt ? <span className="mg-chip time"><StandaloneTime iso={g.kickoffAt} /></span> : null}
+            {!show && g.kickoffAt ? <span className="mg-chip time"><StandaloneTime iso={g.kickoffAt} serverTz={viewerTz} /></span> : null}
             {g.seasonPhase === 'POST' ? <span className="mg-chip post">POSTSEASON</span> : null}
           </div>
           {/* AWAY FIRST. Baseball reads "Away at Home" like every American

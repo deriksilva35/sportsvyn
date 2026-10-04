@@ -69,13 +69,13 @@ export function TopPlayers({ players, g }) {
   );
 }
 
-export default function EplPageArcade({ view, now = new Date() }) {
+export default function EplPageArcade({ view, now = new Date(), tz = null }) {
   const { g, x } = view;
   const variant = cardVariant(g);
   const draw = {
     card: () => (
       <article className={`sv4-card ${variant} gpa-card`} data-variant={variant} data-league={g.leagueSlug} data-slug={g.slug} data-gpa="card">
-        <CardFace g={g} x={x} signedIn={false} signinHref="/signin" tz="America/New_York" now={now} onPage />
+        <CardFace g={g} x={x} signedIn={false} signinHref="/signin" tz={tz} now={now} onPage />
       </article>
     ),
     moments: () => <Moments list={view.moments} />,

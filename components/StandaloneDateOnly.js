@@ -15,27 +15,12 @@
  * a clock reading does.
  */
 
-import { useEffect, useState } from 'react';
+import { dateLabel } from '@/lib/time/display';
+import { useViewerZone } from '@/components/time/ViewerTz';
 
-function formatFromParts(parts) {
-  const v = (t) => parts.find((p) => p.type === t)?.value ?? '';
-  return `${v('weekday')} ${v('month')} ${v('day')}`;
-}
-
-function formatEasternFallback(iso) {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/New_York',
-  });
-  return formatFromParts(fmt.formatToParts(new Date(iso)));
-}
-
-function formatLocal(iso) {
-  const fmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  return formatFromParts(fmt.formatToParts(new Date(iso)));
-}
-
-export default function StandaloneDateOnly({ iso }) {
-  const [label, setLabel] = useState(() => formatEasternFallback(iso));
-  useEffect(() => { setLabel(formatLocal(iso)); }, [iso]);
-  return <>{label}</>;
+// The date in the reader's zone (sun-16 item B): lib/time/display.js's
+// dateLabel, zone from useViewerZone.
+export default function StandaloneDateOnly({ iso, serverTz = null }) {
+  const tz = useViewerZone(serverTz);
+  return <>{dateLabel(iso, { tz })}</>;
 }

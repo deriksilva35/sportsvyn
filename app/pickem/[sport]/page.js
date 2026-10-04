@@ -35,6 +35,8 @@ import { mySeason } from '@/lib/pickem/seasonPct';
 import { userHasHandle } from '@/lib/onboarding';
 import StandaloneDate from '@/components/StandaloneDate';
 import StandaloneDateOnly from '@/components/StandaloneDateOnly';
+import { ViewerTzProvider } from '@/components/time/ViewerTz';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 import '../../games/games.css';
 import '../pickem.css';
 import '@/components/games/grade.css';
@@ -79,6 +81,9 @@ export default async function PickemSportPage({ params, searchParams }) {
 
   const uid = userId == null ? null : Number(userId);
   const now = new Date();
+  // The reader's zone (sv_tz): the board's times AND its day headings paint in
+  // it from the first byte (components/time/ViewerTz.js).
+  const tz = await readViewerTz();
   const view = await pickemBoardView(uid, { sport, now }).catch(() => ({ phase: 'preopen', contest: null, games: [] }));
   // BOTH BOARDS' STATE, for the switch. A sport with no current board is
   // simply absent, and one board renders no switch at all.
@@ -103,6 +108,7 @@ export default async function PickemSportPage({ params, searchParams }) {
     <>
       <GlobalHeaderServer activeNav="games" />
       <main className="lob pk-main" data-surface="ink">
+        <ViewerTzProvider tz={tz}>
         <Link className="appcrumb" href="/games">&larr; Games</Link>
 
         {/* The switch rides with the board when there is one; on the other
@@ -126,6 +132,7 @@ export default async function PickemSportPage({ params, searchParams }) {
         {view.phase === 'settled' && (
           <PickemSettled sport={sport} view={view} uid={uid} now={now} league={sp.league ?? null} dest={dest} />
         )}
+        </ViewerTzProvider>
       </main>
       <SiteFooter />
     </>

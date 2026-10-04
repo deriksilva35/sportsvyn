@@ -354,16 +354,25 @@ test('POSTPONED: a slot in a called-off game says PPD, not a kickoff time', () =
   assert.match(h, /<span class="oc-tm">DET · PPD<\/span>/);
 });
 
-test('TIMES: every time on this card is Pacific, and says so', () => {
-  const h = html({ view: PICKING(), signedIn: true });
-  // 2026-09-29T18:08:00Z is 2:08 PM Eastern and 11:08 AM Pacific. The card
-  // printed the Eastern one, unlabelled, for its whole life.
-  assert.match(h, /11:08 AM PT/);
-  assert.doesNotMatch(h, /2:08 PM(?! PT)/);
+test('TIMES: every time on this card is in the READER\'s zone, and says so (sun-16 item B)', async () => {
+  // 2026-09-29T18:08:00Z is 2:08 PM Eastern, 11:08 AM Pacific, 7:08 PM London.
+  // The card printed Eastern unlabelled, then "11:08 AM PT" to everybody.
+  const { ViewerTzProvider } = await import('../time/ViewerTz.js');
+  const inZone = (tz) => renderToStaticMarkup(React.createElement(ViewerTzProvider, { tz },
+    React.createElement(OctoberCard, { view: PICKING(), signedIn: true })));
+  const la = inZone('America/Los_Angeles');
   // The next-lock label, the game tile and the slot sub-line all agree.
-  assert.match(h, /next lock<b>PHI @ ATL · 11:08 AM PT<\/b>/);
-  assert.match(h, /<small>11:08 AM PT<\/small>/);
-  assert.match(h, /<span class="oc-tm">PHI · 11:08 AM PT<\/span>/);
+  assert.match(la, /next lock<b>PHI @ ATL · 11:08 AM PDT<\/b>/);
+  assert.match(la, /<small>11:08 AM PDT<\/small>/);
+  assert.match(la, /<span class="oc-tm">PHI · 11:08 AM PDT<\/span>/);
+  const ldn = inZone('Europe/London');
+  assert.match(ldn, /next lock<b>PHI @ ATL · 7:08 PM BST<\/b>/);
+  assert.match(ldn, /<span class="oc-tm">PHI · 7:08 PM BST<\/span>/);
+  assert.doesNotMatch(ldn, /\bPT\b|PDT|11:08 AM/);
+  // No cookie yet: the Eastern fallback, labelled - never a bare clock.
+  const h = html({ view: PICKING(), signedIn: true });
+  assert.match(h, /next lock<b>PHI @ ATL · 2:08 PM ET<\/b>/);
+  assert.doesNotMatch(h, /2:08 PM(?! ET)/);
 });
 
 // --- THE PANEL: SCROLL, SORT, AND THE FOURTH BAT ---------------------------

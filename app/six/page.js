@@ -17,6 +17,8 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { currentSixNight } from '@/lib/six/night';
 import { sixView } from '@/lib/six/entry';
 import SixCard from '@/components/six/SixCard';
+import { ViewerTzProvider } from '@/components/time/ViewerTz';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 import '../games/games.css';
 import './six.css';
 
@@ -27,6 +29,8 @@ export default async function SixPage() {
   const session = await auth();
   const uid = session?.user?.id ?? null;
   const shell = await resolveShellMode();
+  // The reader's zone (sv_tz): every tip time on the card paints in it.
+  const tz = await readViewerTz();
   const signinHref = shellSigninHref('/six', shell?.isShell ?? false);
   const now = new Date();
 
@@ -51,7 +55,9 @@ export default async function SixPage() {
           </p>
         ) : (
           <>
-            <SixCard view={view} signedIn={uid != null} signinHref={signinHref} />
+            <ViewerTzProvider tz={tz}>
+              <SixCard view={view} signedIn={uid != null} signinHref={signinHref} />
+            </ViewerTzProvider>
             {view.anyLive ? <LiveRefresh everyMs={60_000} /> : null}
           </>
         )}

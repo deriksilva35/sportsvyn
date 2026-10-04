@@ -18,6 +18,8 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { currentOctoberDay } from '@/lib/october/create';
 import { octoberView } from '@/lib/october/entry';
 import OctoberCard from '@/components/october/OctoberCard';
+import { ViewerTzProvider } from '@/components/time/ViewerTz';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 import '../games/games.css';
 import './october.css';
 
@@ -28,6 +30,8 @@ export default async function OctoberPage() {
   const session = await auth();
   const uid = session?.user?.id ?? null;
   const shell = await resolveShellMode();
+  // The reader's zone (sv_tz), so the card's first paint is already in it.
+  const tz = await readViewerTz();
   const signinHref = shellSigninHref('/october', shell?.isShell ?? false);
 
   const contest = await currentOctoberDay({ now: new Date() }).catch(() => null);
@@ -49,7 +53,9 @@ export default async function OctoberPage() {
             field is set, and locks at the first pitch of the day.
           </p>
         ) : (
-          <OctoberCard view={view} signedIn={uid != null} signinHref={signinHref} />
+          <ViewerTzProvider tz={tz}>
+            <OctoberCard view={view} signedIn={uid != null} signinHref={signinHref} />
+          </ViewerTzProvider>
         )}
       </div>
       <SiteFooter />
