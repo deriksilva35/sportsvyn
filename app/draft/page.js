@@ -22,7 +22,7 @@ import { liveEntryRows, liveScoredBoard } from '@/lib/weekly/live';
 import { draftLiveRows } from '@/lib/draft/liveCard';
 import { weekTeamGames } from '@/lib/gridiron/todayV2';
 import { weekStatLines } from '@/lib/weekly/pool';
-import { draftState, draftSettledView, seatOptions } from '@/lib/draft/view';
+import { draftState, draftSettledView, seatOptions, lockedNoRosterLine } from '@/lib/draft/view';
 import { draftState as readDraftState, fieldBestRoster } from '@/lib/draft/entry';
 import { DRAFT_CONFIG, DRAFT_ROUNDS, nextDraftContest } from '@/lib/draft/contest';
 import SeatSelect from '@/components/draft/SeatSelect';
@@ -194,6 +194,9 @@ export default async function DraftPage({ searchParams }) {
       })().catch(() => null)
       : null;
     const card = live?.card ?? null;
+    // NO ROSTER: the line names when the next room opens, from the schedule
+    // when the next week's row exists, else the standing Tuesday promise.
+    const upcoming = roster.length ? null : await nextDraftContest().catch(() => null);
     // THE SEAT LINE, IN POINTS, WHICH IS WHAT WE HOLD. draftBySeat averages
     // POINTS per seat over settled draft entries - not finishing place, which
     // would need a rank-per-contest window query nobody has written. The floor
@@ -221,8 +224,10 @@ export default async function DraftPage({ searchParams }) {
             </>
           ) : (
             <p className="mod-lede">
-              This week locked before your room finished, so there is no roster to
-              score. The next rooms open Tuesday morning.
+              {lockedNoRosterLine({ signedIn: userId != null, entered: entry != null, week: contest.week })}{' '}
+              {upcoming
+                ? <>The next room opens <StandaloneDate iso={upcoming.opens_at} />.</>
+                : 'The next rooms open Tuesday morning.'}
             </p>
           )}
         </section>
