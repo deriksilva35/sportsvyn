@@ -1,14 +1,14 @@
 # sportsvyn-daily-tick.service
 #
-# INSTALL (--user unit, same reason and same three-line conversion as
-# sportsvyn-live-poller.service - this box has no passwordless sudo):
-#   cp services/daily-tick/systemd/sportsvyn-daily-tick.service ~/.config/systemd/user/
-#   cp services/daily-tick/systemd/sportsvyn-daily-tick.timer ~/.config/systemd/user/
-#   systemctl --user daemon-reload
-#   # NOT enabled here - HOLDING for Derik's GO (5b Part F3), after his phone
-#   # confirms the C1 proof push:
+# INSTALL (--user unit, like the poller - this box has no passwordless sudo):
+# installed and kept current by scripts/deploy-poller.sh --install-units
+# (docs/ops/poller-deploy.md); the timer is enabled once, by hand:
 #   systemctl --user enable --now sportsvyn-daily-tick.timer
 #   journalctl --user -u sportsvyn-daily-tick -f
+#
+# RUNS FROM THE DEPLOY FOLDER (sun-12 item 7): systemd resolves
+# %h/deploy/sportsvyn/current at each tick, so a deploy reaches the next tick
+# with no restart, and a tick never runs a half-edited working checkout.
 #
 # A TIMER + ONESHOT SERVICE, NOT A LOOP - unlike sportsvyn-live-poller
 # (a long-running process with its own 30s internal loop), this one exits
@@ -34,13 +34,18 @@ StartLimitIntervalSec=0
 [Service]
 Type=oneshot
 # user unit: already runs as derik
-WorkingDirectory=/home/derik/projects/sportsvyn
-EnvironmentFile=/home/derik/projects/sportsvyn/.env.local
-ExecStart=/home/derik/.nvm/versions/node/v22.23.1/bin/node --import ./services/_preload/prod-db.mjs services/daily-tick/index.mjs
+WorkingDirectory=%h/deploy/sportsvyn/current
+EnvironmentFile=%h/projects/sportsvyn/.env.local
+ExecStart=%h/.nvm/versions/node/v22.23.1/bin/node --import ./services/_preload/prod-db.mjs services/daily-tick/index.mjs
 
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=sportsvyn-daily-tick
+# MEMORY CAP: a five-minute oneshot; 512M is several times any node process it
+# has needed, and a wall rather than swap if one ever runs away.
+MemoryHigh=384M
+MemoryMax=512M
+MemorySwapMax=128M
 
 NoNewPrivileges=true
 PrivateTmp=true

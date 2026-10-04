@@ -1,27 +1,31 @@
 # sportsvyn-live-poller.service
 #
-# INSTALL (on the droplet, as root):
-#   cp services/live-poller/systemd/sportsvyn-live-poller.service /etc/systemd/system/
-#   systemctl daemon-reload && systemctl enable --now sportsvyn-live-poller
-#   journalctl -u sportsvyn-live-poller -f
+# A --user UNIT (since 1 Sep 2026: this box has no passwordless sudo, and
+# `loginctl enable-linger derik` is what makes it survive logout and reboot).
+# THIS FILE IS THE INSTALLED FILE, byte for byte - no sed conversion step.
 #
-# INSTALLED AS A --user UNIT INSTEAD, 1 Sep 2026, because this box has no
-# passwordless sudo and a system unit needs root. Same file, three differences,
-# and `loginctl enable-linger derik` (which a user may do for itself) is what
-# makes it survive logout and reboot:
-#   cp .../sportsvyn-live-poller.service ~/.config/systemd/user/
-#   sed -i 's/^User=derik$/# user unit/;s/multi-user.target/default.target/' ...
-#   systemctl --user daemon-reload && systemctl --user enable --now sportsvyn-live-poller
-# Promote it to a system unit whenever root is at hand; nothing in the process
-# depends on which it is.
+# INSTALL / DEPLOY / ROLLBACK: docs/ops/poller-deploy.md. In one line:
+#   scripts/deploy-poller.sh <sha> --install-units     (first time, or when a unit changed)
+#   scripts/deploy-poller.sh <sha>                     (every deploy after that)
+#   scripts/deploy-poller.sh --rollback
 #
-# EnvironmentFile IS THE PROJECT'S OWN .env.local, not a copy. A second copy of
-# a credential is a second thing to rotate and a second thing to leak, and the
-# one that gets forgotten is always the copy. systemd parses KEY=value lines,
+# RUNS FROM THE DEPLOY FOLDER, NOT THE WORKING CHECKOUT (sun-12 item 7).
+# %h/deploy/sportsvyn/current is a symlink to releases/<sha>, a detached git
+# worktree pinned to one commit. A restart starts THAT commit - never whatever
+# the checkout at ~/projects/sportsvyn happens to have on it that minute.
+# systemd resolves the symlink when the process starts, so a running poller
+# keeps its release until it is restarted, and the deploy script switches the
+# link atomically before it restarts.
+#
+# EnvironmentFile IS THE MAIN TREE'S OWN .env.local, not a copy in ~/deploy.
+# A second copy of a credential is a second thing to rotate and a second thing
+# to leak, and the one that gets forgotten is always the copy. The cost: an
+# edit to .env.local reaches the poller on its next restart, deployed or not -
+# which is what a rotated key needs anyway. systemd parses KEY=value lines,
 # which is the shape that file already has.
 
 [Unit]
-Description=Sportsvyn live score poller (30s, NFL + CFB)
+Description=Sportsvyn live score poller (30s; NFL, CFB, MLB, NBA)
 After=network-online.target
 Wants=network-online.target
 # StartLimitIntervalSec belongs in [Unit], not [Service] - systemd logs
@@ -32,9 +36,9 @@ StartLimitIntervalSec=0
 
 [Service]
 Type=simple
-User=derik
-WorkingDirectory=/home/derik/projects/sportsvyn
-EnvironmentFile=/home/derik/projects/sportsvyn/.env.local
+# user unit: already runs as derik
+WorkingDirectory=%h/deploy/sportsvyn/current
+EnvironmentFile=%h/projects/sportsvyn/.env.local
 # THE ABSOLUTE PATH, NOT `env node`. node here is nvm-installed under the
 # user's home and is not on systemd's PATH - `/usr/bin/env node` exits 127
 # ("No such file or directory") the moment the unit starts, which is how this
@@ -48,14 +52,36 @@ EnvironmentFile=/home/derik/projects/sportsvyn/.env.local
 # DATABASE_URL at DEV, every emit() call silently queried a database with no
 # news_items table at all. Every droplet service uses this same preload now,
 # one mechanism, not a per-service assignment that only some entrypoints had.
-ExecStart=/home/derik/.nvm/versions/node/v22.23.1/bin/node --import ./services/_preload/prod-db.mjs services/live-poller/index.mjs
+ExecStart=%h/.nvm/versions/node/v22.23.1/bin/node --import ./services/_preload/prod-db.mjs services/live-poller/index.mjs
 
-# RESTART ALWAYS, AND THE QUOTA COUNTER IS PERSISTED BECAUSE OF THIS LINE. A
-# crash loop with an in-memory tally would spend a month's provider budget in an
-# afternoon and the cap would never see it. RestartSec keeps a fast crash loop
-# from becoming a fast request loop.
-Restart=always
+# RESTART ON FAILURE, AND THE QUOTA COUNTER IS PERSISTED BECAUSE OF THIS LINE.
+# A crash loop with an in-memory tally would spend a month's provider budget in
+# an afternoon and the cap would never see it. The poller never exits 0 on its
+# own (its loops run forever; every exit path is exit 1), so on-failure covers
+# every real stop - a crash, a dead loop, an OOM kill at MemoryMax - while a
+# deliberate `systemctl --user stop` stays stopped.
+#
+# NEVER GIVE UP (StartLimitIntervalSec=0 in [Unit]), BUT BACK OFF: 10 s, growing
+# over five restarts to 5 min. A poller that systemd stops restarting is silently
+# off all slate; a poller retried every 10 s against a dead provider is a request
+# loop. RestartSteps/RestartMaxDelaySec need systemd >= 254 (this box: 255).
+Restart=on-failure
 RestartSec=10
+RestartSteps=5
+RestartMaxDelaySec=5min
+
+# MEMORY CAP. Measured: 37-46 MB steady, 93 MB the highest "memory peak" any run
+# has logged (journal, Sep-Oct 2026). MemoryHigh at ~4x that peak makes the
+# kernel reclaim from this unit first; MemoryMax at ~5.5x is the hard wall - a
+# leak is OOM-killed and restarted here instead of swapping the 8 GB box under
+# the Claude sessions and dev servers that share it. Swap is capped too, so the
+# wall cannot be walked around through swap. The memory controller is delegated
+# to the user manager on this box (cgroup.controllers: cpu memory pids), so
+# these lines are enforced, not decorative: check MemoryMax in
+# `systemctl --user show sportsvyn-live-poller -p MemoryMax,MemoryHigh`.
+MemoryHigh=384M
+MemoryMax=512M
+MemorySwapMax=128M
 
 StandardOutput=journal
 StandardError=journal
@@ -70,4 +96,4 @@ ProtectHome=read-only
 ReadWritePaths=
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
