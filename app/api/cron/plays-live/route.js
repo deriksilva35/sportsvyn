@@ -37,10 +37,10 @@
 import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { liveBoardGames, lastPolledAt, cfbPlaysAll, recordPlaysPoll } from '@/lib/pollers/playsScope';
-import { dueByState } from '@/lib/pollers/playsCadence';
+import { dueByState, drainWithBudget, PLAYS_BUDGET } from '@/lib/pollers/playsCadence';
 import { importPlaysFor } from '@/lib/gridiron/playsImport';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
-import { recordRun, recordDecision, probeCfbdBudget } from '@/lib/pollers/runRecorder';
+import { recordRun, recordDecision, probeCfbdBudget, closeAbandonedRuns } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 
 export const dynamic = 'force-dynamic';
@@ -58,11 +58,16 @@ const SOURCE = 'plays-live';
 // (429), and six at once lost 3-7 games a minute across the slate. Twenty
 // games at ~1 s each, three at a time, is still well inside DEADLINE_MS.
 const POOL = 3;
-const DEADLINE_MS = 45_000;
+// THE TIME BUDGET is lib/pollers/playsCadence.js PLAYS_BUDGET (sun-12): no new
+// game after 45 s from the handler's first line, every provider call bounded
+// by the 55 s hard stop. It replaces the CFB_PLAYS_ALL-only DEADLINE_MS, which
+// timed from the start of the pool rather than of the function and let a
+// 25 s call started at 44 s run to ~70 s - 23 kills on 3 Oct.
 
 export async function GET(request) {
   if (!cronAuthorized(request)) return new Response('Unauthorized', { status: 401 });
-  const now = new Date();
+  const handlerStart = Date.now();
+  const now = new Date(handlerStart);
 
   // THE SCOPE IS THE QUERY. Nothing outside an open Pick'em board is even
   // enumerated here, let alone fetched.
@@ -84,16 +89,20 @@ export async function GET(request) {
     return Response.json({ inScope: inScope.length, polled: 0, decision: 'throttled' });
   }
 
-  const outcome = await withAdvisoryLock(SOURCE, async () => recordRun(sql, {
+  const deadlineAt = handlerStart + PLAYS_BUDGET.hardStopMs;   // the budget probe's limit too
+  const outcome = await withAdvisoryLock(SOURCE, async () => {
+    // A killed run cannot close its own row; the next one does (backstop).
+    const abandoned = await closeAbandonedRuns(sql, SOURCE).catch(() => 0);
+    return recordRun(sql, {
     source: SOURCE,
     kind: 'live-plays',
-    budget: probeCfbdBudget,
+    budget: (ctx) => probeCfbdBudget({ ...ctx, deadlineAt }),
     run: async () => {
       const games = [];
       let plays = 0, drives = 0, failed = 0;
       const one = async (g) => {
         try {
-          const r = await importPlaysFor(g.id);
+          const r = await importPlaysFor(g.id, undefined, { deadlineAt: g.deadlineAt });
           plays += r.written; drives += r.drives;
           // What CFBD said decides when we ask again. A failed write here
           // costs only the cadence hint, never the plays just written.
@@ -115,32 +124,30 @@ export async function GET(request) {
         }
       };
       const all = cfbPlaysAll();
-      const started = [];
-      if (!all) {
-        for (const g of due) { started.push(g); await one(g); }
-      } else {
-        const t0 = Date.now(); const queue = [...due];
-        const worker = async () => {
-          while (queue.length && Date.now() - t0 < DEADLINE_MS) {
-            const g = queue.shift(); started.push(g); await one(g);
-          }
-        };
-        await Promise.all(Array.from({ length: Math.min(POOL, due.length) }, worker));
-      }
+      // Flag off: one at a time, as main. Flag on: POOL at a time. Either way
+      // under the same budget, oldest-due first (dueByState's order).
+      const { started, skipped: notStarted } = await drainWithBudget(due, {
+        pool: all ? POOL : 1,
+        startedAt: handlerStart,
+        work: (g, { deadlineAt: hardStop }) => one({ ...g, deadlineAt: hardStop }),
+      });
       // CALLS PER CYCLE, so a Saturday's real burn can be summed from the
       // ledger and set against the estimate: one CFBD /live/plays per CFB game
       // started, and one NFL provider request (two past 100 plays) per NFL game.
       const cfbdCalls = started.filter((g) => g.league === 'cfb').length;
       const nflGames = started.filter((g) => g.league === 'nfl').length;
-      const skipped = due.length - started.length;
-      console.log(`[plays-live] cycle cfb_plays_all=${all ? 'on' : 'off'} in_scope=${inScope.length} due=${due.length} cfbd_calls=${cfbdCalls} nfl_games=${nflGames} skipped_deadline=${skipped}`);
+      const skippedForBudget = notStarted.length;
+      console.log(`[plays-live] cycle cfb_plays_all=${all ? 'on' : 'off'} in_scope=${inScope.length} due=${due.length} cfbd_calls=${cfbdCalls} nfl_games=${nflGames} skipped_for_budget=${skippedForBudget} elapsed_ms=${Date.now() - handlerStart}`);
       return {
         in_scope: inScope.length, due: due.length, requests: started.length,
-        cfb_plays_all: all, cfbd_calls: cfbdCalls, nfl_games: nflGames, skipped_deadline: skipped,
+        cfb_plays_all: all, cfbd_calls: cfbdCalls, nfl_games: nflGames,
+        skippedForBudget, skipped_slugs: notStarted.map((g) => g.slug),
+        elapsed_ms: Date.now() - handlerStart, abandoned_closed: abandoned,
         plays, drives, failed, games,
       };
     },
-  }));
+    });
+  });
 
   if (outcome.locked) {
     await recordDecision(sql, { source: SOURCE, kind: 'skipped-locked', summary: { in_scope: inScope.length } });
