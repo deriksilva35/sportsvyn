@@ -148,6 +148,10 @@
     {
       "path": "/api/cron/house-entries",
       "schedule": "40 * * * *"
+    },
+    {
+      "path": "/api/cron/cron-watchdog",
+      "schedule": "17 15 * * *"
     }
   ]
 }
