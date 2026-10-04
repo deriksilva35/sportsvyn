@@ -34,7 +34,7 @@ export default function GamesBand({ daily, yesterday, pickem, weekly, draft, wee
   // `winner.score` the best anyone actually posted.
   const dailySub = yesterday?.perfect != null
     ? `Yesterday's perfect ${yesterday.perfect}${yesterday.winner?.score != null ? ` · top ${yesterday.winner.score}` : ''}`
-    : 'One board a day · PPR, drop worst';
+    : 'One board a day · eight slots, three minutes';  // sat-5 Y2: v2 drops nothing
 
   // The lock line is DERIVED from the board's own first kickoff - a Pick'em
   // board seals per game at kickoff - and never a typed weekday. Same class of

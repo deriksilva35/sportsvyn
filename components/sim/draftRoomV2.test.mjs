@@ -184,9 +184,10 @@ test('YOUR PICK: the hero names you, the pick, your seat and your next', () => {
   assert.equal(t(c, '.dv-t span'), 'seconds');
 });
 
-test('THE CLOCK SAYS IT IS ADVISORY, because it is', () => {
+test('THE CLOCK IS THE SERVER DEADLINE, and the label no longer calls it advisory (ruling D6)', () => {
   const c = room();
-  assert.equal(t(c, '.dv-sub'), 'advisory · auto-picks at 0');
+  assert.equal(t(c, '.dv-sub'), 'auto-picks at 0 · runs while you are away');
+  assert.doesNotMatch(t(c, '.dv-sub'), /advisory/);
   assert.ok(c.querySelector('.dv-drain'), 'and the drain bar is there while there is a clock');
   assert.equal(c.querySelector('.dv-drain i').style.width, '100%');
 });

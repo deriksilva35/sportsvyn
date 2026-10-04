@@ -21,6 +21,7 @@
 // this file only prints what it is handed.
 
 import { shellSigninHref } from '@/lib/shell/signinHref';
+import Link from 'next/link';
 
 export default function DailyModule({ view, isShell = false, signedIn = false }) {
   if (!view) return null;                      // pending / missing: render nothing
@@ -35,7 +36,7 @@ export default function DailyModule({ view, isShell = false, signedIn = false })
 
   // ---- 1. NOT PLAYED -------------------------------------------------------
   if (view.state === 'play') {
-    const href = signedIn ? '/daily' : shellSigninHref('/daily', isShell);
+    const href = signedIn ? '/daily/board' : shellSigninHref('/daily/board', isShell);
     return (
       <section className="dly" data-surface="ink" data-state="play">
         {eyebrow}
@@ -111,9 +112,9 @@ export default function DailyModule({ view, isShell = false, signedIn = false })
         </p>
       )}
 
-      <a className="dly-link" href={`/daily/${view.date}`}>
+      <Link className="dly-link" href="/daily/board">
         See the perfect lineup and the whole board →
-      </a>
+      </Link>
     </section>
   );
 }

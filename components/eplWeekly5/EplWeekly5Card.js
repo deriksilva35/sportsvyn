@@ -157,7 +157,7 @@ function Picker({ view, signedIn, signinHref, compact = false }) {
           <details className="e5-how">
             <summary>How it works</summary>
             <p>Pick five: one DEF/GK, one MID, one FWD and two FLEX (any outfield player - a keeper only fills DEF/GK). At most {MAX_PER_CLUB} from one club.
-              Each pick locks at its own kickoff; swap freely before it.</p>
+              Each pick locks at its own kickoff; swap freely before it. A player whose club plays twice this gameweek scores both fixtures and locks at the first.</p>
             <ul>{view.contest.rules.map((r) => <li key={r}>{r}</li>)}</ul>
           </details>
         </>
@@ -215,7 +215,7 @@ function Picker({ view, signedIn, signinHref, compact = false }) {
               <span className="e5-pos">{p.pos}</span>
               <TeamMark abbr={p.club} size={24} leagueSlug="epl" />
               <span className="e5-who">
-                <b>{p.name}{p.flag ? <em className={`e5-flag ${p.flag.kind}`} title={p.flag.reason ?? undefined}>{p.flag.label}</em> : null}</b>
+                <b>{p.name}{p.flag ? <em className={`e5-flag ${p.flag.kind}`} title={p.flag.reason ?? undefined}>{p.flag.label}</em> : null}{p.double ? <em className="e5-flag dgw" title="Two fixtures this gameweek - he scores both">×2</em> : null}</b>
                 <small>
                   {p.club} · {p.opp} · <StandaloneTime iso={p.kickoffAt} weekday zone={false} />
                   {max ? ` · ${fromClub} from ${p.club} already` : ''}
@@ -269,6 +269,17 @@ function FiveRows({ view, final = false }) {
             ) : null}
             <span className="e5-fr-p">{s.points ?? '–'}</span>
           </div>
+          {s.fixtures?.length > 1 ? (
+            <div className="e5-dgw" data-dgw={s.fixtures.length}>
+              <span className="e5-dgw-t">{s.fixtures.length} FIXTURES</span>
+              {s.fixtures.map((f) => (
+                <span key={f.matchId} className={`e5-dgw-f ${f.state}`}>
+                  {f.opp} · {f.chip ? f.chip.text : f.state === 'pending' ? <StandaloneTime iso={f.kickoffAt} weekday zone={false} /> : ''}
+                  {f.points != null && f.state !== 'pending' ? <b>{f.points}</b> : null}
+                </span>
+              ))}
+            </div>
+          ) : null}
           {s.parts?.length ? (
             <div className="e5-parts">{s.parts.map((p, i) => <span key={i} className={`e5-part${p.pts < 0 ? ' neg' : ''}${p.provisional ? ' prov' : ''}`} title={p.provisional ? 'Clean sheet so far - counts at full time' : undefined}>{p.text}</span>)}</div>
           ) : s.state === 'pending' && s.kickoffAt ? (

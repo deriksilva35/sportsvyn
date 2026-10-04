@@ -282,8 +282,8 @@ export default function PickemBoard({
         <p className="pkv-note">
           {stage === 1 ? (
             hasLine
-              ? <>Pick the <b>winner</b> of every game, straight up. The line is shown for reference and does not change the scoring. Each game locks at its own kickoff.</>
-              : <>Pick the <b>winner</b> of every game, straight up. Each game locks at its own {W.start}. A game that is called off counts for nobody.</>
+              ? <>Pick the <b>winner</b> of every game, straight up. The line is shown for reference and does not change the scoring. Each game locks at its own kickoff. A tie or a called-off game counts for nobody.</>
+              : <>Pick the <b>winner</b> of every game, straight up. Each game locks at its own {W.start}. A tie or a called-off game counts for nobody.</>
           ) : stage === 2 ? (
             <><b>{toGo} still open.</b> Tap a side to change a pick any time before that game {W.startsVerb}. A game you never picked scores nothing.</>
           ) : (
@@ -307,7 +307,7 @@ export default function PickemBoard({
                 const held = heldRows?.has?.(g.match_id);
                 const locked = g.kicked;
                 const live = g.status === 'live';
-                // A CALLED-OFF GAME (day boards): void for everyone, no scores.
+                // A CALLED-OFF GAME (any board): void for everyone, no scores.
                 const off = isVoidStatus(g.status);
                 const showScores = g.status !== 'scheduled' && !off;
                 return (

@@ -424,7 +424,7 @@ export default function DraftRoom({
     if (canPick && clock != null && clock > 0 && clock <= 10) sendHaptic('tick');
   }, [clock, canPick]);
 
-  // --- advisory timer: counts down on the user's turn; auto-picks on expiry ---
+  // --- the turn timer: the server deadline counted down; auto-picks at 0 ---
   // clock resets to timerSeconds after each turn (in applyResult) and at mount
   // (initial state), so the interval effect only needs to tick - no reset here.
   // Both effects are gated on canPick: under AUTO the drive effect above owns
@@ -657,12 +657,14 @@ export default function DraftRoom({
           Whose pick it is, which pick that is, when the reader's own comes
           back, and the countdown as the biggest thing on the screen.
 
-          THE CLOCK IS ADVISORY AND THE SUB-LABEL SAYS SO. It counts down in
-          this browser and asks the server to auto-pick at zero
-          (timerAutoPick); there is no server deadline, a reload restarts it,
-          and the engine - not this number - decides what happens. Drawing it
-          as a countdown without saying that would be the one thing the mock
-          could have made us imply. */}
+          THE SERVER'S DEADLINE IS THE CLOCK (ruling D6). drafts.turn_deadline_at
+          (lib/draft/deadline.js) is written when the room comes to rest on
+          this seat; this number is that deadline counted down, and a reload
+          resumes it rather than restarting it. At zero the browser asks for
+          the auto-pick (timerAutoPick), and if the browser is gone the next
+          read of the room makes it anyway (settleExpiredTurn). So the
+          sub-label says the turn is taken at zero whether or not the reader
+          is here - it is not advisory. */}
       <div className="dv-clk">
         <div className="dv-otc">
           <div className="dv-who">
@@ -707,7 +709,7 @@ export default function DraftRoom({
         </div>
         <div className="dv-sub">
           {timerSeconds == null ? 'untimed · take as long as you like'
-            : 'advisory · auto-picks at 0'}
+            : 'auto-picks at 0 · runs while you are away'}
         </div>
         {timerSeconds != null && (
           <div className="dv-drain">
