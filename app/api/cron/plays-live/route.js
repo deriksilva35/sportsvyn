@@ -108,6 +108,10 @@ export async function GET(request) {
           // is counted, named, and the run reports it.
           failed += 1;
           games.push({ slug: g.slug, error: String(e?.message ?? e).slice(0, 160) });
+          // A failed CFB read is still a poll: stamp it, so a feed that is
+          // not up yet ("No plays found") is asked at the game's interval,
+          // not every minute.
+          if (g.league === 'cfb') await recordPlaysPoll(g, null).catch(() => {});
         }
       };
       const all = cfbPlaysAll();
