@@ -53,6 +53,8 @@
 .e5-who small { font: 400 11px/1.35 var(--tok-font-body); color: var(--tok-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .e5-flag { font: 400 8px var(--tok-font-num); font-style: normal; letter-spacing: .04em; padding: 2px 5px; border-radius: 4px; color: var(--tok-page); background: var(--tok-live); }
 .e5-flag.doubt { background: var(--tok-coin); }
+/* A DOUBLE GAMEWEEK (sat-5 E2): two fixtures, both scored. */
+.e5-flag.dgw { background: var(--tok-ink); }
 .e5-ppg { display: flex; flex-direction: column; align-items: flex-end; }
 .e5-ppg b { font: 700 15px var(--tok-font-body); font-variant-numeric: tabular-nums; }
 .e5-ppg small { font: 400 9px var(--tok-font-num); color: var(--tok-muted); }
@@ -100,6 +102,13 @@
 .e5-st.off { color: var(--tok-live); }
 .e5-fr-p { flex: none; width: 44px; text-align: right; font: 400 20px var(--tok-font-num); font-variant-numeric: tabular-nums; }
 .e5-fr.pending .e5-fr-p { color: var(--tok-muted); }
+/* THE DOUBLE GAMEWEEK ROW: each fixture's own line under the slot. */
+.e5-dgw { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding-left: 54px; }
+.e5-dgw-t { font: 400 9px var(--tok-font-num); letter-spacing: .06em; color: var(--tok-muted); }
+.e5-dgw-f { display: inline-flex; gap: 6px; align-items: center; font: 400 11px var(--tok-font-num); padding: 3px 8px; border-radius: 99px; border: 1px solid var(--tok-line); color: var(--tok-ink); }
+.e5-dgw-f.live { border-color: var(--tok-ink); }
+.e5-dgw-f.off { color: var(--tok-live); }
+.e5-dgw-f b { font-weight: 400; font-variant-numeric: tabular-nums; }
 .e5-parts { display: flex; gap: 6px; flex-wrap: wrap; padding-left: 54px; }
 .e5-part { font: 400 11px var(--tok-font-body); padding: 3px 8px; border-radius: 99px; background: var(--tok-surface-2); color: var(--tok-ink); }
 .e5-part.neg { color: var(--tok-live); }

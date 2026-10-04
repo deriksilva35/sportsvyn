@@ -75,7 +75,7 @@ function Dots({ daily }) {
   if (!daily?.dots?.length) return null;
   return (
     <>
-      <SectionHead title="The Daily" href="/daily" label="History →" />
+      <SectionHead title="The Daily" href="/daily/board" label="History →" />
       <div className="yu-card" data-section="dots">
         <div className="yu-dots">
           {daily.dots.map((d) => (

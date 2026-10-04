@@ -5,6 +5,11 @@
  * write nothing; the one that follows Thursday's lock does the week's work, and
  * any room that finishes late is picked up an hour later instead of on Tuesday.
  *
+ * IT ALSO FREEZES THE WEEK'S BOARD (ruling sat-6): the first firing after a
+ * Draft contest's opens_at freezes the one board every room of that contest
+ * drafts, if the first room start has not already (lib/draft/lockBridge.js
+ * freezeOpenDraftBoards). A board failure alerts like a bridge failure.
+ *
  * Auth: Bearer ${CRON_SECRET}.
  */
 
@@ -13,7 +18,7 @@ import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
-import { bridgeLockedDrafts } from '@/lib/draft/lockBridge';
+import { bridgeLockedDrafts, freezeOpenDraftBoards } from '@/lib/draft/lockBridge';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -26,7 +31,12 @@ export async function GET(request) {
   const outcome = await withAdvisoryLock(SOURCE, async () => recordRun(sql, {
     source: SOURCE,
     kind: 'bridge',
-    run: async () => bridgeLockedDrafts({ now: new Date() }),
+    run: async () => {
+      const now = new Date();
+      const bridged = await bridgeLockedDrafts({ now });
+      const boards = await freezeOpenDraftBoards({ now });
+      return { ...bridged, boards };
+    },
   }));
 
   if (outcome.locked) {
@@ -36,7 +46,11 @@ export async function GET(request) {
 
   const res = outcome.result;
   const summary = res.summary ?? {};
-  const errored = (summary.results ?? []).filter((r) => r.error);
+  const errored = [
+    ...(summary.results ?? []).filter((r) => r.error),
+    ...(summary.boards?.results ?? []).filter((r) => r.error || r.ok === false)
+      .map((r) => ({ contestId: r.contestId, error: `board: ${r.error ?? r.reason}` })),
+  ];
   if (!res.ok || errored.length) {
     await maybeAlert(sql, {
       source: SOURCE,

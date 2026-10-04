@@ -151,10 +151,6 @@ export default async function SeasonBoardPage({ searchParams }) {
       if (existing) {
         // STARTED, NEVER SUBMITTED.
         //
-        // THE DEADLINE IS THE BOARD'S OWN CLOSE. v2 has no per-run limit - its
-        // clock counts up and elapsed_s is a record, not a budget - so the one
-        // thing a started run can run out of is the edition's day. `closed` is
-        // the Postgres now() >= closes_at compare already made above.
         // THE DEADLINE IS THREE MINUTES FROM started_at (plus grace), OR THE
         // BOARD'S CLOSE, WHICHEVER COMES FIRST. Computed in Postgres against
         // the stored instant - the same compare submitRun makes - so a reload

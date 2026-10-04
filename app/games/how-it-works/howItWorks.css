@@ -44,6 +44,15 @@
   text-transform: uppercase; letter-spacing: .08em; margin-right: 6px;
 }
 
+/* THE DAILY'S HOUSE RULES (sat-5) - the graded line's own type, one rule
+   per line, so the small print reads as small print. */
+.hiw-rules {
+  margin: 8px 0 0; padding: 0 0 0 14px;
+  font-family: var(--l-mono); font-size: 10px;
+  color: var(--l-mut); line-height: 1.5;
+}
+.hiw-rules li { margin: 2px 0; }
+
 .hiw-go {
   display: inline-block; margin-top: 12px;
   font-family: var(--l-cond); font-weight: 700; font-size: 12px;

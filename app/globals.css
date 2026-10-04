@@ -91,6 +91,17 @@
   --tok-font-display: var(--font-saira), ui-sans-serif, system-ui, sans-serif;
   --tok-font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --tok-font-num: var(--font-jetbrains-mono), ui-monospace, monospace;
+  /* THE HEADER GEOMETRY (sun-14), read by BOTH shared headers - the web's
+     (components/site-chrome.css) and the app's (components/shell/apptab.css).
+     The wordmark is drawn 1.4x the size it had, and sits LEFT on the page's
+     content edge: the edge the PLAY title stands on (/games: .lob is 960 wide,
+     centred, 16px padding, and .pl-top pads 16 more). `100%` resolves where the
+     property is USED - a header's padding, against the page width - so the
+     edge tracks the column at every width, scrollbar or none. */
+  --sv-wordmark-scale: 1.4;
+  --sv-content-max: 960px;
+  --sv-content-inset: 32px;
+  --sv-header-left: max(var(--sv-content-inset), calc((100% - var(--sv-content-max)) / 2 + var(--sv-content-inset)));
 }
 
 /* Sportsvyn brand color tokens — registered with Tailwind v4 @theme */

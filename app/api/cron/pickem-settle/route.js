@@ -19,6 +19,14 @@
  * 0 6-20 * * 0,1,2 UTC = hourly 2 AM-4 PM ET Sun/Mon/Tue in EDT
  * (1 AM-3 PM in EST); the window runs long enough either way.
  *
+ * MLB SERIES BOARDS SETTLE DAILY (ruling P5, sat-5). A series ends on any
+ * night of the week, and a Sun-Tue window left a series decided on a
+ * Wednesday waiting until Sunday. The SAME route is fired a second way,
+ * `?scope=series`, at 15 6-20 * * * - every day - and with that scope it
+ * settles series boards ONLY (settleDuePickem's `only: 'series'`). The
+ * football cadence above is unchanged: the unscoped firing is still Sun-Tue.
+ * Both firings take the one 'pickem-settle' advisory lock.
+ *
  * THE STALE ALARM is this route's second job: a cancelled game never turns
  * final in CFBD's vocabulary, so a board that cannot complete would
  * otherwise wait in silence forever. settles_at + 48h without a settle
@@ -43,11 +51,12 @@ export const SOURCE = 'pickem-settle';
 
 export async function GET(request) {
   if (!cronAuthorized(request)) return new Response('Unauthorized', { status: 401 });
+  const series = new URL(request.url).searchParams.get('scope') === 'series';
 
   const outcome = await withAdvisoryLock(SOURCE, async () => recordRun(sql, {
     source: SOURCE,
-    kind: 'settle',
-    run: async () => settleDuePickem(),
+    kind: series ? 'settle-series' : 'settle',
+    run: async () => (series ? settleDuePickem({ only: 'series' }) : settleDuePickem()),
   }));
 
   if (outcome.locked) {
@@ -58,7 +67,9 @@ export async function GET(request) {
   const res = outcome.result;
   const summary = res.summary ?? {};
   const errored = (summary.results ?? []).filter((r) => r.error);
-  const stale = await stalePickemBoards().catch(() => []);
+  // The stall alarm belongs to the unscoped (football) firing; the daily
+  // series firing would otherwise repeat it every hour of every day.
+  const stale = series ? [] : await stalePickemBoards().catch(() => []);
   if (!res.ok || errored.length || stale.length) {
     await maybeAlert(sql, {
       source: SOURCE,

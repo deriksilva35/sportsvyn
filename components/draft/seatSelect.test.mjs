@@ -73,3 +73,12 @@ test('WITHOUT a handle: the same tap opens the claim modal and writes nothing', 
   assert.equal(fetchCalls.length, 0, 'no POST behind the modal');
   assert.ok(document.body.querySelector('input') || /handle/i.test(document.body.textContent), 'the claim modal is up');
 });
+
+// RULING D1, RENDERED: the sentence is exact, and it names the chosen seat.
+test('the seat line says everyone at seat N starts from the same room', async () => {
+  const c = render(true);
+  await click(seatButton(c));
+  const line = c.querySelector('.mathline').textContent.replace(/\s+/g, ' ');
+  assert.ok(line.includes('Everyone at seat 7 starts from the same room; bots react to your picks.'), line);
+  assert.doesNotMatch(c.textContent, /same seed for everyone/);
+});

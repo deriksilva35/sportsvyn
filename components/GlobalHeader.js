@@ -90,7 +90,9 @@ export default function GlobalHeader({
   return (
     <>
       <header className="gi-head gh">
-        <Wordmark href="/" />
+        {/* LEFT, ON THE CONTENT EDGE, 1.4x (sun-14): the padding and the size
+            are site-chrome.css's (header.gh, .gh .wordmark). */}
+        <Wordmark href="/" tight />
 
         <nav className="gi-head-nav gh-nav" aria-label="Primary">
           {NAV.map((n) => (
