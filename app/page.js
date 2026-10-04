@@ -32,7 +32,8 @@ import DailyModule from '@/components/home/DailyModule';
 import WeeklyModule from '@/components/home/WeeklyModule';
 import DraftModule from '@/components/home/DraftModule';
 import YesterdayStrip from '@/components/home/YesterdayStrip';
-import { getDailyHome, getYesterday } from '@/lib/daily/entries';
+import { dailyV2Band } from '@/lib/daily/seasonBoardHome';
+import { editionLabel, editionNo } from '@/lib/daily/homeModule';
 import { getWeeklyHome } from '@/lib/weekly/entries';
 import { getDraftHome } from '@/lib/draft/entry';
 import SimPromoCard from '@/components/home/SimPromoCard';
@@ -75,6 +76,7 @@ import { getEplStandings } from '@/lib/soccer/standings';
 import { eplBandFixtures } from '@/lib/soccer/fixtures';
 
 import './home.css';
+import Link from 'next/link';
 
 
 
@@ -339,7 +341,7 @@ export async function FrontPage() {
     timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric',
   }).format(now);
 
-  const [todaysReads, followedSet, movement, nflBoard, cfbBoard, slate, dailyHome, yesterday,
+  const [todaysReads, followedSet, movement, nflBoard, cfbBoard, slate, dailyBand,
     weeklyHome, draftHome, weeklyNextOpensAt, draftNextOpensAt] = await Promise.all([
     getTodaysReads({ ptDay, limit: 4, leagueSlugs: FOOTBALL_READS_SLUGS }),
     getFollowedTeamIds(userId),
@@ -355,13 +357,11 @@ export async function FrontPage() {
     // One read for both leagues. Null on failure: the sidebar loses a unit, the
     // page does not lose a column.
     getSlateByDate(etDay).catch(() => null),
-    // The Daily's own state. Null on any failure AND on a day with no board -
-    // the module is one unit on the page, never the page, and an absent Daily
-    // must not take the homepage down.
-    getDailyHome(userId).catch(() => null),
-    // Yesterday's answer. A revealed day is public, so this needs no auth and
-    // has no leak surface; it is caught to null like every other unit.
-    getYesterday(userId).catch(() => null),
+    // The Daily's own state, FROM THE SEASON BOARD (sat-5 Y1 - v1 is retired).
+    // { daily, yesterday } for GamesBand; null on any failure - the card is one
+    // unit on the page, never the page, and an absent Daily must not take the
+    // homepage down. Yesterday is the newest CLOSED edition, which is public.
+    dailyV2Band({ editionLabel: (d) => editionLabel(editionNo(d)) }).catch(() => null),
     // The Weekly's own state. Caught to null like every other unit, and null is
     // also the correct answer before the first board exists - which is what PROD
     // returns today. A missing contests table renders no module, not a 500.
@@ -517,13 +517,13 @@ export async function FrontPage() {
             <h2>{ptDateLabel}</h2>
             <DailyCardByline ptDateLabel={ptDateLabel} />
           </div>
-          <a className="go" href="/daily">Read the card &rarr;</a>
+          <Link className="go" href="/daily/board">Read the card &rarr;</Link>
         </section>
 
         <Band id={null}>
           <BandHead top label="The Games" context="One account, one handle, every board"
             moreHref="/games" moreLabel="Games hub" />
-          <GamesBand daily={dailyHome} yesterday={yesterday} pickem={pickem}
+          <GamesBand daily={dailyBand?.daily ?? null} yesterday={dailyBand?.yesterday ?? null} pickem={pickem}
             weekly={weeklyHome} draft={draftHome}
             weeklyNextOpensAt={weeklyNextOpensAt} draftNextOpensAt={draftNextOpensAt} />
         </Band>

@@ -7,8 +7,9 @@
  * runs often and does nothing, rather than four that each have to be right
  * about when their board appears.
  *
- * IT READS THE BOARDS, IT DOES NOT MAKE THEM. daily-puzzle, pickem-board and
- * weekly-board own creation; this one only ever finds what they made. A board
+ * IT READS THE BOARDS, IT DOES NOT MAKE THEM. The Daily's edition
+ * (ensureBoardForDate, on first read), pickem-board and weekly-board own
+ * creation; this one only ever finds what they made. A board
  * that does not exist yet is a tick with one fewer game in its summary, never
  * an error.
  *

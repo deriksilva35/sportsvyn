@@ -37,6 +37,7 @@ import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { getMembership } from '@/lib/membership';
 import { isMember } from '@/lib/fantasy/drafts';
 import './account.css';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
@@ -141,7 +142,7 @@ export default async function AccountPage({ searchParams }) {
           <h2 className="acct-eyebrow">Elsewhere</h2>
           <div className="acct-rows">
             <a className="acct-row acct-row--link" href="/my"><span>My Sportsvyn</span><span className="acct-r">&rarr;</span></a>
-            <a className="acct-row acct-row--link" href="/daily"><span>The Daily</span><span className="acct-r">&rarr;</span></a>
+            <Link className="acct-row acct-row--link" href="/daily/board"><span>The Daily</span><span className="acct-r">&rarr;</span></Link>
             <a className="acct-row acct-row--link" href="/sim/account"><span>Draft settings and account deletion</span><span className="acct-r">&rarr;</span></a>
           </div>
         </section>

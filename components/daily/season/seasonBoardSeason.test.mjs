@@ -100,7 +100,7 @@ test('A 1987 BOARD: the same header carries 1987, and no 2024 anywhere', () => {
 test('THE STRIP LINE NAMES THE SEASON ONCE, in the relay\'s words', () => {
   const c = play({ year: '2024' });
   assert.equal(note(c),
-    'Fill eight slots from twelve teams, one player each. Their real 2024 season points are your score. Tap a team to see its six.');
+    'Fill eight slots from twelve teams, one player each. Their real 2024 season points are your score. Tap a team to see its players.');
 });
 
 test('and it is the board\'s year on the 1987 board too', () => {

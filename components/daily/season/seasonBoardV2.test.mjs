@@ -95,7 +95,7 @@ test('step 1 is lit and the line is the mock\'s first line', () => {
   const on = c.querySelector('.sbd-stp.on');
   assert.equal(on.querySelector('b').textContent, 'Team');
   assert.match(noteText(c), /^Fill eight slots from twelve teams, one player each\./);
-  assert.match(noteText(c), /Tap a team to see its six\.$/);
+  assert.match(noteText(c), /Tap a team to see its players\.$/);
 });
 
 test('the slots are the RANKED eight, in order, with a TE', () => {
@@ -124,7 +124,7 @@ test('tapping a team fills the panel with its six, and step 2 lights', () => {
   assert.equal(rows(c).length, 6);
   assert.equal(c.querySelector('.sbd-panh b').textContent, 'T0');
   assert.equal(c.querySelector('.sbd-stp.on b').textContent, 'Player');
-  assert.match(noteText(c), /^Six from the T0\. Dimmed ones fit no slot you have left\. Tap one\.$/);
+  assert.match(noteText(c), /^The T0 card\. Dimmed ones fit no slot you have left\. Tap one\.$/);
   assert.equal(c.querySelector('.sbd-tc2.sbd-tcon').textContent.includes('T0'), true);
   assert.equal(c.querySelector('.sbd-empty'), null, 'the empty state is gone');
 });

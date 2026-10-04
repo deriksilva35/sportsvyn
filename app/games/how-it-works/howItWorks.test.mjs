@@ -36,7 +36,9 @@ test('the four taglines are verbatim', () => {
 
 test('the two cadence lines are verbatim, and three games share one', () => {
   assert.ok(PAGE.includes('Weekly · opens Tuesday, locks at first kickoff'));
-  assert.ok(PAGE.includes('Daily · a new board every morning'));
+  // sat-5 Y4: the board opens at 00:00 ET; "every morning" was the push.
+  assert.ok(PAGE.includes('Daily · a new board at midnight ET'));
+  assert.ok(!PAGE.includes('every morning'), 'no surface on this page says morning for the Daily');
   // One constant, used three times - not three copies that can drift apart.
   assert.equal((PAGE.match(/WEEKLY_CADENCE/g) ?? []).length, 4,
     'one declaration and three uses');
@@ -63,14 +65,16 @@ test('the two cadence lines are verbatim, and three games share one', () => {
 test("the explainer's Daily steps are the season board's, pinned to this page", () => {
   for (const [t, d] of [
     ['Deal', 'Twelve teams from one past season'],
-    ['Commit', 'Open a team and you must take somebody'],
+    ['Place', 'Open any team and put a player in a slot. Clear it to get the team back'],
     ['Skip', 'Four teams go unused, and you choose which'],
   ]) {
     assert.ok(PAGE.includes(`t: '${t}', d: '${d}'`),
       `the explainer no longer says "${t}: ${d}"`);
   }
-  assert.ok(PAGE.includes("graded: 'Season fantasy points, PPR, against the board.'"),
+  assert.ok(PAGE.includes("graded: 'Season fantasy points, PPR, against the board. Nothing is dropped.'"),
     'the Daily grading line no longer describes the season board');
+  // sat-5 Y3: opening a team commits nothing - a slot can be cleared.
+  assert.ok(!/must take somebody/.test(PAGE), 'the commit-on-open rule is back');
   // The uncoupling, asserted rather than trusted: v1's step copy must not
   // reappear here. A well-meaning revert would otherwise pass silently.
   for (const gone of ['Six players, any position mix', 'Name the season for a bonus']) {
@@ -79,7 +83,8 @@ test("the explainer's Daily steps are the season board's, pinned to this page", 
 });
 
 test("DailyRoom keeps v1's own three steps, word for word", () => {
-  // v1 is still served at /daily and this is still the only guard on its step
+  // v1 is RETIRED (sat-5 Y1: /daily 308s to the board) but DailyRoom stays as
+  // history with the v1 data, and this is still the only guard on its step
   // cards. Pinned here, to DailyRoom alone, so the room's words cannot be
   // quietly rewritten to match an explainer that no longer describes it.
   const room = src('components/daily/DailyRoom.js');
@@ -158,4 +163,35 @@ test('the nine relay-5b steps are verbatim', () => {
     assert.ok(PAGE.includes(`t: '${t}', d: '${d}' }`),
       `missing or altered: ${t} - ${d}`);
   }
+});
+
+// sat-5 Y2-Y8: THE DAILY'S HOUSE RULES, each one what the code does today.
+// Copy pins, plus the facts behind them read from the code that owns them, so
+// a rule change that forgets this page fails here.
+test("the Daily's house rules are stated, and match the code", async () => {
+  const rules = [
+    'Each team card holds 4 to 6 players.',
+    'A new board opens every day at midnight ET. One attempt per board.',
+    'The clock is 3 minutes from Start, kept on the server.',
+    'Your picks stay on your device until you lock in. Close the tab and they are lost; a run that never locks in is a DNF.',
+    'Kickers score 3 per field goal and 1 per extra point. There is no fumble penalty.',
+    'Ties: the same score shares a place, so every perfect board is 1st. Within a tie, more matched slots list first, then the earliest lock-in.',
+  ];
+  for (const r of rules) assert.ok(PAGE.includes(`'${r}'`), `missing or altered: ${r}`);
+  const daily = PAGE.slice(PAGE.indexOf("key: 'daily'"), PAGE.indexOf('export default'));
+  assert.doesNotMatch(daily, /drop(ped)? worst|worst pick/i, 'no drop-worst on the Daily');
+
+  const gen = await import('../../../lib/daily/boardGenerator.js');
+  assert.equal(gen.CARD_MIN, 4); assert.equal(gen.CARD_MAX, 6);
+  const shape = await import('../../../lib/daily/boardShape.js');
+  assert.equal(shape.DAILY_ROUND_SECONDS, 180);
+  const { SCORING } = await import('../../../lib/fantasy/scoring.js');
+  assert.equal(SCORING.fieldGoal, 3); assert.equal(SCORING.extraPoint, 1);
+  assert.match(src('lib/daily/seasonStatLine.js'), /fumbles_lost is NULL across the WHOLE/);
+  const editions = src('lib/daily/seasonBoardEditions.js');
+  assert.match(editions, /const opensAt = await easternLocalToUtc\(`\$\{editionDate\} 00:00:00`\)/);
+  const lb = src('lib/daily/seasonBoardLeaderboards.js');
+  const today = lb.slice(lb.indexOf('export async function todayLeaderboard'));
+  assert.match(today, /dense_rank\(\) OVER \(ORDER BY r\.score DESC\) AS rank/);
+  assert.match(today, /ORDER BY r\.score DESC, r\.matched DESC, r\.completed_at ASC/);
 });

@@ -62,10 +62,6 @@
       "schedule": "0 11 * * *"
     },
     {
-      "path": "/api/cron/daily-puzzle",
-      "schedule": "13 9 * * *"
-    },
-    {
       "path": "/api/cron/pickem-board",
       "schedule": "23 13 * * *"
     },

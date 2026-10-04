@@ -44,13 +44,15 @@ export const dynamic = 'force-static';
 export const metadata = {
   title: 'How the games work - Sportsvyn',
   description:
-    'Three weekly games and one every morning. All free, an email and a handle.',
+    'Three weekly games and one every day. All free, an email and a handle.',
 };
 
 // THE CADENCE PILL, verbatim from the relay. Three of the four share one
 // line because they share one clock: Tuesday open, first kickoff locks.
 const WEEKLY_CADENCE = 'Weekly · opens Tuesday, locks at first kickoff';
-const DAILY_CADENCE = 'Daily · a new board every morning';
+// sat-5 Y4: the board opens at 00:00 ET (seasonBoardEditions.js); "every
+// morning" was the 10:00 ET push, not the board.
+const DAILY_CADENCE = 'Daily · a new board at midnight ET';
 
 /**
  * THE FOUR SECTIONS, in the order item 2 fixes: Draft, Weekly, Pick'em,
@@ -121,10 +123,28 @@ const SECTIONS = [
     // separately.
     steps: [
       { n: 1, t: 'Deal', d: 'Twelve teams from one past season' },
-      { n: 2, t: 'Commit', d: 'Open a team and you must take somebody' },
+      // sat-5 Y3: the old step said opening a team commits you. Opening a
+      // team commits nothing; clearing a slot gives the team back
+      // (seasonBoardPlay.js), which is what the in-game rules card says.
+      { n: 2, t: 'Place', d: 'Open any team and put a player in a slot. Clear it to get the team back' },
       { n: 3, t: 'Skip', d: 'Four teams go unused, and you choose which' },
     ],
-    graded: 'Season fantasy points, PPR, against the board.',
+    graded: 'Season fantasy points, PPR, against the board. Nothing is dropped.',
+    // THE DAILY'S HOUSE RULES (sat-5 Y2-Y8), each one what the code does
+    // today: cards from boardGenerator.js (CARD_MIN/CARD_MAX), the window
+    // from seasonBoardEditions.js, the clock from boardShape.js
+    // (DAILY_ROUND_SECONDS), picks held client-side until /api/daily/board/run,
+    // scoring from lib/fantasy/scoring.js (season totals carry no fumbles),
+    // ties from seasonBoardLeaderboards.js todayLeaderboard (dense rank on
+    // score; ORDER BY matched DESC, completed_at ASC).
+    rules: [
+      'Each team card holds 4 to 6 players.',
+      'A new board opens every day at midnight ET. One attempt per board.',
+      'The clock is 3 minutes from Start, kept on the server.',
+      'Your picks stay on your device until you lock in. Close the tab and they are lost; a run that never locks in is a DNF.',
+      'Kickers score 3 per field goal and 1 per extra point. There is no fumble penalty.',
+      'Ties: the same score shares a place, so every perfect board is 1st. Within a tie, more matched slots list first, then the earliest lock-in.',
+    ],
     href: DAILY_V2_PATH,
     cta: 'Play now',
   },
@@ -138,7 +158,7 @@ export default async function HowItWorksPage() {
         <div className="lob-head">
           <h1 className="lob-title">How the games work</h1>
           <p className="lob-sub">
-            Three weekly games and one every morning. All free, an email and a handle.
+            Three weekly games and one every day. All free, an email and a handle.
           </p>
         </div>
 
@@ -161,6 +181,11 @@ export default async function HowItWorksPage() {
             )}
 
             <p className="hiw-graded"><b>Graded</b> {s.graded}</p>
+            {s.rules ? (
+              <ul className="hiw-rules">
+                {s.rules.map((r) => <li key={r}>{r}</li>)}
+              </ul>
+            ) : null}
             <Link className="hiw-go" href={s.href}>{s.cta} &rarr;</Link>
           </section>
         ))}
