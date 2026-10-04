@@ -133,8 +133,9 @@ function Rules({ contest, firstKickoff = null }) {
       <p className="muted">
         Every change saves - there is no submit. Whatever is in your six slots at
         the first kickoff is your entry. Scores settle once the last game is final,
-        which is why results land <b>Tuesday morning</b> rather than Monday night, and
-        a settled week does not move again.
+        which is why results land <b>Tuesday morning</b> rather than Monday night. A
+        game not final 48 hours after the week settles is void and its players score
+        0. A stat correction within 7 days of a game re-grades the week.
       </p>
     </section>
   );

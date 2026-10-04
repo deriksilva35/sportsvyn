@@ -121,7 +121,7 @@ test('an untouched board: two tap targets a game, no ticks, step 1 lit', () => {
   assert.equal(c.querySelectorAll('.pkv-tick').length, 0);
   assert.equal(c.querySelector('.pkv-stp.on b').textContent, 'Pick');
   assert.match(note(c), /^Pick the winner of every game, straight up\./);
-  assert.match(note(c), /Each game locks at its own kickoff\.$/);
+  assert.match(note(c), /Each game locks at its own kickoff\. A tie or a called-off game counts for nobody\.$/);
 });
 
 test('THE FOOTER IS A COUNTER, and it counts only open games', () => {
