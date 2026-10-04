@@ -22,7 +22,7 @@ function Chips({ label, items, active, hrefFor, children }) {
     <div className="pb-frow">
       <span className="flbl">{label}</span>
       {items.map(([k, text]) => (
-        <Link key={k} className={`ch ${active === k ? 'on' : ''}`} href={hrefFor(k)}>{text}</Link>
+        <Link prefetch={false} key={k} className={`ch ${active === k ? 'on' : ''}`} href={hrefFor(k)}>{text}</Link>
       ))}
       {children}
     </div>
@@ -39,8 +39,8 @@ export default function PropsFilters({ state, games, hrefFor, view, urlState }) 
     <>
       <Chips label="League" items={LEAGUES} active={state.league} hrefFor={(k) => hrefFor({ f: k })}>
         <div className="pb-viewtog">
-          <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={hrefFor({ view: null })}>Table</Link>
-          <Link className={`ch ${view === 'charts' ? 'on' : ''}`} href={hrefFor({ view: 'charts' })}>Charts</Link>
+          <Link prefetch={false} className={`ch ${view === 'table' ? 'on' : ''}`} href={hrefFor({ view: null })}>Table</Link>
+          <Link prefetch={false} className={`ch ${view === 'charts' ? 'on' : ''}`} href={hrefFor({ view: 'charts' })}>Charts</Link>
         </div>
       </Chips>
 
@@ -55,9 +55,9 @@ export default function PropsFilters({ state, games, hrefFor, view, urlState }) 
 
       <div className="pb-frow">
         <span className="flbl">Show</span>
-        <Link className={`ch ${state.boardOnly ? 'on' : ''}`}
+        <Link prefetch={false} className={`ch ${state.boardOnly ? 'on' : ''}`}
           href={hrefFor({ board: state.boardOnly ? null : '1' })}>Board games</Link>
-        <Link className={`ch ${state.moversOnly ? 'on' : ''}`}
+        <Link prefetch={false} className={`ch ${state.moversOnly ? 'on' : ''}`}
           href={hrefFor({ movers: state.moversOnly ? null : '1' })}>Movers only</Link>
         <form className="pb-search" action="/market" method="get">
           <input type="hidden" name="tab" value="props" />

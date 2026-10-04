@@ -39,22 +39,31 @@ const pct = (n) => (n == null ? null : `${Number(n).toFixed(1)}%`);
  * column is null); a bar drawn at zero for it would read as a player who
  * showed up and did nothing.
  */
-function Spark({ chart, line }) {
-  if (!chart?.points?.length) return null;
-  const pts = chart.points.slice(-5);
+function Spark({ values, line }) {
+  if (!values?.length) return null;
   return (
     <span className="px-spark" aria-hidden="true">
-      {pts.map((p, i) => {
-        const dnp = p.value == null;
-        const over = !dnp && p.value > line;
+      {values.map((v, i) => {
+        const dnp = v == null;
+        const over = !dnp && v > line;
         return (
-          <i key={`${p.week ?? i}-${i}`}
+          <i key={i}
             className={dnp ? 'dnp' : over ? 'o' : 'u'}
             style={{ height: dnp ? '40%' : over ? '100%' : '55%' }} />
         );
       })}
     </span>
   );
+}
+
+/**
+ * THE FIVE VALUES. The wire (lib/market/propsWire.js) carries them as
+ * r.spark so the index needs no chart history; a row that still carries the
+ * full chart (the Charts view's, or a server caller's) yields the same five.
+ */
+function sparkOf(r) {
+  if (r.spark?.length) return r.spark;
+  return r.chart?.points?.length ? r.chart.points.slice(-5).map((p) => p.value) : null;
 }
 
 function PropRow({ r, href }) {
@@ -93,7 +102,7 @@ function PropRow({ r, href }) {
       {/* A SPARKLINE IS A CLAIM ABOUT GAMES WE HOLD. An unlinked row has no
           player behind it, so it gets none - the gap is ours, and drawing
           flat bars would hide it. */}
-      {r.chart && ruleLine != null ? <Spark chart={r.chart} line={ruleLine} /> : <span className="px-spark empty" />}
+      {sparkOf(r) && ruleLine != null ? <Spark values={sparkOf(r)} line={ruleLine} /> : <span className="px-spark empty" />}
       <span className="px-num">
         {/* AS-OFFERED CARRIES NO PERCENTAGE. It was never de-vigged; a number
             in this column would imply a normalisation that did not happen.
@@ -113,7 +122,7 @@ function PropRow({ r, href }) {
   );
 
   return href
-    ? <Link className="px-row" href={href}>{body}</Link>
+    ? <Link prefetch={false} className="px-row" href={href}>{body}</Link>
     : <div className="px-row">{body}</div>;
 }
 
@@ -136,7 +145,7 @@ function Chips({ label, items, active, hrefFor }) {
     <div className="px-frow">
       <span className="l">{label}</span>
       {items.map(([k, text, cls]) => (
-        <Link key={String(k)} className={`px-chip${cls ? ` ${cls}` : ''}${String(active) === String(k) ? ' on' : ''}`}
+        <Link prefetch={false} key={String(k)} className={`px-chip${cls ? ` ${cls}` : ''}${String(active) === String(k) ? ' on' : ''}`}
           href={hrefFor(k)}>{text}</Link>
       ))}
     </div>
@@ -189,7 +198,7 @@ export default function PropsIndex({
       <div className="px-sortrow">
         <span className="l">Sort</span>
         {[['kickoff', 'KICKOFF'], ['implied', 'MARKET %'], ['hit', 'HIT RATE']].map(([k, t]) => (
-          <Link key={k} className={`px-chip${(state.sort ?? 'kickoff') === k ? ' on' : ''}`}
+          <Link prefetch={false} key={k} className={`px-chip${(state.sort ?? 'kickoff') === k ? ' on' : ''}`}
             href={hrefFor({ sort: k })}>{t}</Link>
         ))}
         {/* THE COUNT MUST NOT OUTRUN THE ROWS. filtered is the whole matching

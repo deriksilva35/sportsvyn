@@ -42,7 +42,7 @@ function Head({ columns, sort, dir, hrefFor }) {
           const next = nextDir(c.key, sort, dir);
           return (
             <th key={c.key} className={`${c.align === 'l' ? 'l' : ''}${on ? ' sorted' : ''}`}>
-              <Link href={hrefFor({ sort: c.key, dir: next })}>
+              <Link prefetch={false} href={hrefFor({ sort: c.key, dir: next })}>
                 {c.label}
                 {on ? <span className="arr">{dir === 'asc' ? '▲' : '▼'}</span> : null}
               </Link>
