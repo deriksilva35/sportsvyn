@@ -19,6 +19,8 @@
 //   matches   in a fixture league, or a slug like a fixture's
 //   contests  a sport that is not a real league's slug, or a board naming a
 //             fixture match
+//   schemas   zz_migledger_* (lib/migrations/ledger.db.test.mjs's throwaway
+//             schema; drop it with DROP SCHEMA ... CASCADE)
 // Anything it prints is a candidate, not a verdict: read it before deleting.
 //
 // IT DELETES NOTHING, and it refuses to run against PROD - PROD's fixtures
@@ -64,6 +66,9 @@ const playerLeagues = await sql`
   SELECT l.id, l.name, l.created_at FROM player_leagues l LEFT JOIN users u ON u.id = l.owner_id
    WHERE l.name ~* 'test|sentinel' OR u.email ~* ${EMAIL_RX} ORDER BY l.created_at LIMIT 200`;
 
+// THROWAWAY SCHEMAS: the migration-ledger DB test works in its own schema.
+const schemas = await sql`SELECT nspname FROM pg_namespace WHERE nspname LIKE 'zz\\_migledger\\_%' ORDER BY nspname`;
+
 const day = (d) => new Date(d).toISOString().slice(0, 16).replace('T', ' ');
 const show = (name, rows, fmt) => {
   console.log(`\n${name}: ${rows.length}`);
@@ -75,8 +80,9 @@ show('teams', teams, (r) => `${String(r.id).padStart(6)}  ${r.slug}  league ${r.
 show('matches', matches, (r) => `${String(r.id).padStart(6)}  ${r.slug}  ${r.status}  (${day(r.created_at)})`);
 show('contests', contests, (r) => `${String(r.id).padStart(6)}  ${r.game_type} ${r.sport} ${r.season_year ?? ''}  (${day(r.created_at)})`);
 show('player_leagues', playerLeagues, (r) => `${String(r.id).padStart(6)}  ${r.name}  (${day(r.created_at)})`);
+show('schemas', schemas, (r) => r.nspname);
 console.log(`\nusers: ${userCount}${userCount > users.length ? ` (newest ${users.length} shown)` : ''}`);
 for (const r of users) console.log(`  ${String(r.id).padStart(6)}  ${r.email}  (${day(r.created_at)})`);
 
-const total = leagues.length + teams.length + matches.length + contests.length + playerLeagues.length + userCount;
+const total = leagues.length + teams.length + matches.length + contests.length + playerLeagues.length + schemas.length + userCount;
 console.log(`\n${total ? `${total} fixture row(s) on DEV. Read them before deleting; nothing was changed.` : 'DEV is clean: no fixture rows.'}`);
