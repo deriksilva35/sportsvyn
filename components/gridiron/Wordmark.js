@@ -5,10 +5,12 @@
 // one per ground, no underline).
 import HeaderWordmark from '@/components/brand/HeaderWordmark';
 
-export default function Wordmark({ href = '/scores' }) {
+// `tight` - the shared web header's mark (GlobalHeader): no lockup padding,
+// sized by `.gh .wordmark` in components/site-chrome.css.
+export default function Wordmark({ href = '/scores', tight = false }) {
   return (
     <a className="wordmark" href={href} aria-label="SPORTSVYN">
-      <HeaderWordmark display="block" />
+      <HeaderWordmark display="block" tight={tight} />
     </a>
   );
 }

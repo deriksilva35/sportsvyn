@@ -124,6 +124,11 @@ test('only a FINAL promotes a winner', () => {
 // The phone. Every rule below shipped broken once.
 // ---------------------------------------------------------------------------
 
+// THE COLLAPSE MOVED FROM 900 TO 1140 (sun-14): the 1.4x wordmark on the content
+// edge left the full nav no room between 901 and ~1124, and it scrolled clipped.
+// Every assertion below still reads the collapse block - the block just starts wider.
+const COLLAPSE = '@media (max-width: 1140px)';
+
 test('THE MOBILE RULES ARE PARENT-SCOPED, because import order is not a mechanism', () => {
   // .gh-right and .gi-head-right are both (0,1,0) and live in DIFFERENT CSS
   // chunks, so the winner was decided by whichever chunk the route loaded last.
@@ -132,7 +137,7 @@ test('THE MOBILE RULES ARE PARENT-SCOPED, because import order is not a mechanis
   // collapsed at any width - the nav crushed the wordmark to a sliver and
   // truncated TODAY to "TC". `.gh .gh-nav` is (0,2,0) and wins in any order.
   const chrome = src('components/site-chrome.css');
-  const mobile = chrome.slice(chrome.indexOf('@media (max-width: 900px)'));
+  const mobile = chrome.slice(chrome.indexOf(COLLAPSE));
   for (const sel of ['.gh .gh-nav', '.gh .gh-burger', '.gh .wordmark',
     '.gh .gh-right .gh-my', '.gh .gh-right .gh-signin', '.gh .gh-right .gh-account']) {
     assert.ok(mobile.includes(sel), `${sel} must be parent-scoped`);
@@ -145,7 +150,7 @@ test('THE CTA SURVIVES THE COLLAPSE - the funnel does not shrink on phones', () 
   // Hiding .gh-right wholesale would have taken MOCK DRAFT with it. The
   // container stays; its other children go.
   const chrome = src('components/site-chrome.css');
-  const mobile = chrome.slice(chrome.indexOf('@media (max-width: 900px)'));
+  const mobile = chrome.slice(chrome.indexOf(COLLAPSE));
   assert.ok(!/\.gh \.gh-right \{ display: none/.test(mobile), 'the container is not hidden');
   assert.ok(!/\.gh-cta[^{]*\{[^}]*display: none/.test(mobile), 'and neither is the CTA');
   assert.match(mobile, /\.gh \.wordmark \{ flex: 0 0 auto;/,
@@ -256,7 +261,8 @@ test('THERE IS EXACTLY ONE HEADER, and the old one is gone', () => {
 test('THE WORDMARK ALWAYS GOES HOME', () => {
   // It used to land in three different places: /scores by default, /nfl or /cfb
   // wherever a caller overrode it.
-  assert.match(header, /<Wordmark href="\/" \/>/);
+  // `tight` (sun-14): the header's 1.4x mark drops the lockup box; the href is the point here.
+  assert.match(header, /<Wordmark href="\/" tight \/>/);
   const hub = stripComments(src('components/gridiron/RankingsHub.js'));
   const today = stripComments(src('components/gridiron/TodayPage.js'));
   for (const [name, s] of [['RankingsHub', hub], ['TodayPage', today]]) {
@@ -303,7 +309,7 @@ test('the mobile drawer survived the merge', () => {
   const chrome = src('components/site-chrome.css');
   // Parent-scoped now - see the mobile-rules test for why the unscoped form
   // could not be relied on.
-  assert.match(chrome, /@media \(max-width: 900px\) \{\s*\n\s*\.gh \.gh-nav \{ display: none; \}/);
+  assert.match(chrome, /@media \(max-width: 1140px\) \{\s*\n\s*\.gh \.gh-nav \{ display: none; \}/);
 });
 
 const navMod = await import('../../lib/gridiron/leagueNav.js');

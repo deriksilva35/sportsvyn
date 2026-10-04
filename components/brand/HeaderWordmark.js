@@ -26,8 +26,13 @@ const PAD_EM = Math.round(((LOCKUP_BOX_EM - WORDMARK_EM) / 2) * 1000) / 1000;
 export const WORDMARK_ON_DARK = '/brand/sportsvyn-header-wordmark-dark.svg';
 export const WORDMARK_ON_LIGHT = '/brand/sportsvyn-header-wordmark-light.svg';
 
-export default function HeaderWordmark({ display = 'block' }) {
-  const style = { height: `${WORDMARK_EM}em`, width: 'auto', display, verticalAlign: 'baseline', padding: `${PAD_EM}em 0`, boxSizing: 'content-box' };
+// TIGHT (sun-14): the two shared headers draw the mark 1.4x (--sv-wordmark-scale,
+// app/globals.css) and drop the lockup box's padding, so the letters grow and
+// the bar barely does - the box was the PNG's, and the headers' own padding
+// now gives the mark its air. Same asset, same em height, same proportions:
+// a scale, never a redraw. Every other caller keeps the PNG's box.
+export default function HeaderWordmark({ display = 'block', tight = false }) {
+  const style = { height: `${WORDMARK_EM}em`, width: 'auto', display, verticalAlign: 'baseline', padding: tight ? 0 : `${PAD_EM}em 0`, boxSizing: 'content-box' };
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element -- a fixed vector asset from public/, sized in em by its container */}
