@@ -1,4 +1,4 @@
--- 126_contest_entries_submitted_at.sql - WHEN THE READER COMMITTED.
+-- 127_contest_entries_submitted_at.sql - WHEN THE READER COMMITTED.
 --
 -- RULING sun-16 item C: tied scores share the higher place (1, 1, 3) on every
 -- board, and within a tie the EARLIEST SUBMISSION is listed first
