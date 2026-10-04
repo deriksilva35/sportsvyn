@@ -435,7 +435,7 @@ async function loop(lg) {
       window.bdlErrors += bdlErrors.length;
       try {
         const rep = await reportBdlErrors(sql, { source: `live-poller-${lg.slug}`, kind: 'bdl-errors', bdlErrors, context: `league: ${lg.slug}` });
-        log(`[${lg.slug}] tick FAILED on the secondary feed #${rep?.id ?? '?'}: ${rep?.error ?? ''}`);
+        log(`[${lg.slug}] tick FAILED on the secondary feed (${rep?.folded ? 'counted on this hour\'s' : 'new'} row #${rep?.id ?? '?'}): ${rep?.error ?? ''}`);
       } catch (e) {
         log(`[${lg.slug}] secondary-feed failure report failed:`, String(e?.message ?? e).slice(0, 120));
       }
