@@ -119,7 +119,8 @@ export default function SixCard({ view, signedIn = false, signinHref = '/signin'
           <p>
             Six players from tonight&apos;s NBA games: two guards, two forwards, a
             center and a utility. At most <b>{view.contest.cap} from any one team</b>.
-            Each slot locks at its player&apos;s tip; swap freely before it. A
+            Each slot locks at its player&apos;s tip; swap freely before it. A slot
+            on a postponed or cancelled game never locks - swap him out. A
             player who sits after his tip scores 0, and so does an empty slot -
             the rest of your card still counts. <b>Tomorrow is a new six.</b>
           </p>
@@ -160,7 +161,7 @@ export default function SixCard({ view, signedIn = false, signinHref = '/signin'
                   : p && signedIn && !final ? <button type="button" className="sx-x" aria-label={`Clear ${SLOT_POS[s]}`} onClick={(e) => { e.stopPropagation(); clear(s); }}>×</button> : null}
                 {p ? <>
                   <span className="sx-nm">{p.name}</span>
-                  <span className="sx-tm">{v?.dnp ? 'DNP' : `${p.team ?? ''}${p.opp ? ` v ${p.opp}` : ''}`}</span>
+                  <span className="sx-tm">{v?.dnp ? 'DNP' : v?.state === 'void' && !final ? 'GAME OFF · SWAP' : `${p.team ?? ''}${p.opp ? ` v ${p.opp}` : ''}`}</span>
                   {showChips && v?.points != null ? <span className={`sx-pts${v.state === 'final' ? ' fin' : ''}`}>{v.points}</span> : null}
                 </> : <span className="sx-em">{final || view.nightState === 'closed' ? 'empty · 0' : on ? 'pick below' : 'open'}</span>}
               </div>
@@ -274,7 +275,7 @@ function YourSix({ view }) {
               ))}
             </div>
           ) : s.dnp ? <p className="sx-dnp">Did not play - scores 0, the slot still counts.</p>
-            : s.state === 'void' ? <p className="sx-dnp">Game not played tonight - scores 0.</p> : null}
+            : s.state === 'void' ? <p className="sx-dnp">Game not played tonight - scores 0.{view.phase !== 'final' ? ' The slot never locks: swap him out.' : ''}</p> : null}
         </div>
       ))}
     </div>

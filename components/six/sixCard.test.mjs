@@ -182,3 +182,14 @@ test('NO DNF IN THE SIX UI: a closed card with an empty slot says it scores 0', 
   assert.match(h, /2 OF 6 · empty slots score 0/);
   assert.match(html({ view: OPEN(), signedIn: true }), /so does an empty slot/);
 });
+
+test('sat-5 S1: a slot on a VOID game is not locked - it shows the game is off and can be cleared', () => {
+  const v = OPEN();
+  v.board = v.board.map((g) => (g.matchId === 2 ? { ...g, status: 'postponed', void: true, pickable: false } : g));
+  v.slots = v.slots.map((s) => (s.slot === 'g1' ? { ...s, state: 'void', points: 0 } : s));
+  const h = html({ view: v, signedIn: true });
+  assert.match(h, /data-slot="g1" data-state="filled"/, 'not locked');
+  assert.match(h, /aria-label="Clear G"/, 'the clear button is there');
+  assert.match(h, /GAME OFF · SWAP/);
+  assert.match(h, /A slot\s+on a postponed or cancelled game never locks/);
+});
