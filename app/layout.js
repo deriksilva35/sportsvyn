@@ -1,5 +1,6 @@
 import localFont from "next/font/local";
 import "./globals.css";
+import "./fonts/latin-ext.css";
 import AppTabBar from '@/components/shell/AppTabBar';
 import AppHeader from '@/components/shell/AppHeader';
 import ResumeManager from '@/components/shell/ResumeManager';
@@ -22,6 +23,11 @@ import { SHELL_COOKIE, SHELL_VALUE } from '@/lib/shell/constants';
 // rejects anything computed. lib/brand/fontsLocal.test.mjs keeps
 // next/font/google out.
 //
+// THE SUBSETS (sun-13). Each loader is Google's "latin" file with Google's
+// latin unicode-range; ./fonts/latin-ext.css adds the "latin-ext" file of every
+// face under the same family names, so names like Dončić and Szczęsny render in
+// the brand face. The browser fetches an -ext file only when a glyph needs it.
+//
 // THE FAMILY NAME. next/font/local names a face after the const ("saira",
 // "sairaCondensed"), and Turbopack builds the --font-* variable from that name
 // even when a font-family declaration renames the face - so the variable fonts
@@ -38,6 +44,7 @@ const saira = localFont({
     { path: "./fonts/Saira-900.woff2", weight: "900", style: "normal" },
     { path: "./fonts/Saira-900Italic.woff2", weight: "900", style: "italic" },
   ],
+  declarations: [{ prop: "unicode-range", value: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD" }],
   display: "swap",
 });
 
@@ -45,6 +52,7 @@ const sourceSerif = localFont({
   variable: "--font-source-serif",
   src: [{ path: "./fonts/SourceSerif4-400Italic.woff2", weight: "400", style: "italic" }],
   adjustFontFallback: "Times New Roman",
+  declarations: [{ prop: "unicode-range", value: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD" }],
   display: "swap",
 });
 
@@ -55,6 +63,7 @@ const jetbrainsMono = localFont({
     { path: "./fonts/JetBrainsMono-wght.woff2", weight: "500", style: "normal" },
     { path: "./fonts/JetBrainsMono-wght.woff2", weight: "700", style: "normal" },
   ],
+  declarations: [{ prop: "unicode-range", value: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD" }],
   display: "swap",
 });
 
@@ -68,6 +77,7 @@ const sairaCondensed = localFont({
     { path: "./fonts/SairaCondensed-600.woff2", weight: "600", style: "normal" },
     { path: "./fonts/SairaCondensed-700.woff2", weight: "700", style: "normal" },
   ],
+  declarations: [{ prop: "unicode-range", value: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD" }],
   display: "swap",
 });
 
@@ -77,6 +87,7 @@ const archivo = localFont({
     { path: "./fonts/Archivo-wght.woff2", weight: "400", style: "normal" },
     { path: "./fonts/Archivo-wght.woff2", weight: "500", style: "normal" },
   ],
+  declarations: [{ prop: "unicode-range", value: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD" }],
   display: "swap",
 });
 
@@ -93,6 +104,7 @@ const rubik = localFont({
     { path: "./fonts/Rubik-wght.woff2", weight: "800", style: "normal" },
     { path: "./fonts/Rubik-wght.woff2", weight: "900", style: "normal" },
   ],
+  declarations: [{ prop: "unicode-range", value: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD" }],
   display: "swap",
   preload: false,
 });
@@ -100,6 +112,7 @@ const rubik = localFont({
 const rubikMono = localFont({
   variable: "--font-rubik-mono",
   src: [{ path: "./fonts/RubikMonoOne-400.woff2", weight: "400", style: "normal" }],
+  declarations: [{ prop: "unicode-range", value: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD" }],
   display: "swap",
   preload: false,
 });
@@ -113,14 +126,20 @@ const sairaCondensedFace = localFont({
     { path: "./fonts/SairaCondensed-600.woff2", weight: "600", style: "normal" },
     { path: "./fonts/SairaCondensed-700.woff2", weight: "700", style: "normal" },
   ],
-  declarations: [{ prop: "font-family", value: "'Saira Condensed'" }],
+  declarations: [
+    { prop: "font-family", value: "'Saira Condensed'" },
+    { prop: "unicode-range", value: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD" },
+  ],
   display: "swap",
 });
 
 const sourceSerifFace = localFont({
   variable: "--font-face-source-serif",
   src: [{ path: "./fonts/SourceSerif4-400Italic.woff2", weight: "400", style: "italic" }],
-  declarations: [{ prop: "font-family", value: "'Source Serif 4'" }],
+  declarations: [
+    { prop: "font-family", value: "'Source Serif 4'" },
+    { prop: "unicode-range", value: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD" },
+  ],
   adjustFontFallback: "Times New Roman",
   display: "swap",
 });
@@ -132,14 +151,20 @@ const jetbrainsMonoFace = localFont({
     { path: "./fonts/JetBrainsMono-wght.woff2", weight: "500", style: "normal" },
     { path: "./fonts/JetBrainsMono-wght.woff2", weight: "700", style: "normal" },
   ],
-  declarations: [{ prop: "font-family", value: "'JetBrains Mono'" }],
+  declarations: [
+    { prop: "font-family", value: "'JetBrains Mono'" },
+    { prop: "unicode-range", value: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD" },
+  ],
   display: "swap",
 });
 
 const rubikMonoFace = localFont({
   variable: "--font-face-rubik-mono",
   src: [{ path: "./fonts/RubikMonoOne-400.woff2", weight: "400", style: "normal" }],
-  declarations: [{ prop: "font-family", value: "'Rubik Mono One'" }],
+  declarations: [
+    { prop: "font-family", value: "'Rubik Mono One'" },
+    { prop: "unicode-range", value: "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD" },
+  ],
   display: "swap",
   preload: false,
 });
