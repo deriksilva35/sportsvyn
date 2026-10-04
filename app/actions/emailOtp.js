@@ -8,9 +8,10 @@
  * token otherwise. Failures return a typed reason; the raw code/secret never leave.
  */
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { sql } from '@/lib/db';
 import { redeemEmailCode } from '@/lib/auth/emailOtp';
+import { clientIp } from '@/lib/auth/rateLimit';
 import { firstSeenContext, resolveSurface, AUTH_EMAIL } from '@/lib/auth/firstSeen';
 
 export async function verifyEmailCode(email, code) {
@@ -19,7 +20,12 @@ export async function verifyEmailCode(email, code) {
   // is the magic-link creation path, so the auth axis is fixed; only the surface
   // has to be looked up. resolveSurface never throws.
   const ctx = firstSeenContext(AUTH_EMAIL, await resolveSurface());
-  const res = await redeemEmailCode(sql, { email, code, secret, firstSeenContext: ctx });
+  // THE IP, FOR THE PER-IP WRONG-CODE LIMIT (sun-13). Verification never goes
+  // through next-auth - this server action is the whole verify path - so the IP
+  // is read from the action's own request with headers(), the same
+  // x-forwarded-for / x-real-ip pair the send path reads from Auth.js's request.
+  const ip = clientIp(await headers());
+  const res = await redeemEmailCode(sql, { email, code, secret, firstSeenContext: ctx, ip });
   if (!res.ok) return { ok: false, reason: res.reason, remaining: res.remaining };
 
   const secure = process.env.NODE_ENV === 'production';

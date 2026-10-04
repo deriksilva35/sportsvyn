@@ -43,6 +43,8 @@ const CODE_ERRORS = {
   invalid:  'That code is not valid. Send a fresh one.',
   // 10 wrong codes for this address in 24h (lib/auth/rateLimit.js).
   locked:   'Too many wrong codes for this email. Code sign-in for it is paused for up to 24 hours.',
+  // 20 wrong codes from this connection in an hour, any address (sun-13).
+  throttled: 'Too many tries right now. Wait up to an hour, then try again.',
 };
 
 export default function SignInForm({ initialError = null, callbackUrl: rawCallbackUrl = '/' }) {

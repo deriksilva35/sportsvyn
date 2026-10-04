@@ -14,7 +14,9 @@
 --                  request the cap turned away; refused rows are NOT counted
 --                  against the cap, so hammering a capped address does not
 --                  extend its own lock-out.
---   kind = 'fail'  one wrong 6-digit code for that identifier (lib/auth/emailOtp.js).
+--   kind = 'fail'  one wrong 6-digit code for that identifier (lib/auth/emailOtp.js),
+--                  with the guessing IP: counted per identifier (10 / 24h) and
+--                  per ip across all identifiers (20 / hour, RULING sun-13).
 --
 -- identifier is the normalised (trimmed, lower-cased) email. ip is the
 -- caller's address as Vercel reports it, or NULL when there is none.
