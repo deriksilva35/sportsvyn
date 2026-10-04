@@ -239,6 +239,24 @@ function Scoreboard({ v }) {
 }
 
 export default function Results({ v, href = null }) {
+  // AN ALL-VOID CLOSE (ruling sun-11 item 1): the contest's own line and the
+  // label. No bar, no field, no ceiling - every one of them is a statement
+  // about a score, and nobody scored.
+  if (v.voidAll) {
+    return (
+      <div className="rs" data-game={v.game}>
+        <div className="rs-hd">
+          <div className="rs-hd-top">
+            <span className="rs-eb">{v.title}{v.subtitle ? ` · ${v.subtitle}` : ''}</span>
+            <span className="rs-ed">{v.edition}</span>
+          </div>
+          <div className="rs-crow">
+            <div className="rs-none" data-void-all="">{v.voidLabel}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="rs" data-game={v.game}>
       <Header v={v} />

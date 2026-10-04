@@ -118,6 +118,9 @@ export default function DraftModule({ view, isShell = false, signedIn = false })
           </div>
           <div className="dly-bar"><i style={{ width: `${pctWidth}%` }} /></div>
         </>
+      ) : view.voidAll ? (
+        // AN ALL-VOID CLOSE (ruling sun-11 item 1): no perfect lineup to quote.
+        <p className="dly-sub" data-void-all="">{view.voidLabel}</p>
       ) : (
         <p className="dly-sub">This week is final. The perfect lineup scored {view.perfect ?? '—'}.</p>
       )}

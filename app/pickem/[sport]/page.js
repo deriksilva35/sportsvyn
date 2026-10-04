@@ -28,6 +28,7 @@ import { plannedBoardNumberFor } from '@/lib/pickem/sequence';
 import { sql } from '@/lib/db';
 import PickemBoard from '@/components/pickem/PickemBoard';
 import PickemGrade from '@/components/pickem/PickemGrade';
+import VoidAllLabel from '@/components/games/VoidAllLabel';
 import { GAME_NAMES } from '@/lib/games/lobby';
 import { pickemBoardLeaderboard } from '@/lib/games/leaderboard';
 import { pickemTable } from '@/lib/games/read';
@@ -123,7 +124,12 @@ export default async function PickemSportPage({ params, searchParams }) {
           />
         )}
 
-        {view.phase === 'settled' && (
+        {/* AN ALL-VOID CLOSE (ruling sun-11 item 1): no grade card, no field -
+            the label. */}
+        {view.phase === 'settled' && view.contest?.voidAll && (
+          <VoidAllLabel style={{ margin: '12px' }} />
+        )}
+        {view.phase === 'settled' && !view.contest?.voidAll && (
           <PickemSettled sport={sport} view={view} uid={uid} now={now} league={sp.league ?? null} dest={dest} />
         )}
       </main>

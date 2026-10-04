@@ -27,6 +27,7 @@ import { draftState as readDraftState, fieldBestRoster } from '@/lib/draft/entry
 import { DRAFT_CONFIG, DRAFT_ROUNDS, nextDraftContest } from '@/lib/draft/contest';
 import SeatSelect from '@/components/draft/SeatSelect';
 import DraftGrade from '@/components/draft/DraftGrade';
+import VoidAllLabel from '@/components/games/VoidAllLabel';
 import StandaloneDate from '@/components/StandaloneDate';
 import DraftLiveCard from '@/components/draft/DraftLiveCard';
 import { DraftPreOpenLine } from '@/components/games/preOpenLine';
@@ -142,6 +143,15 @@ export default async function DraftPage({ searchParams }) {
   // ---- SETTLED -------------------------------------------------------------
   if (state === 'settled') {
     const v = draftSettledView({ contest, entry, board: contest.board });
+    // AN ALL-VOID CLOSE (ruling sun-11 item 1): no grade, no field, no DNF.
+    if (v.voidAll) {
+      return (
+        <Shell>
+          <p className="muted" style={{ margin: '12px 12px 4px' }}>Week {contest.week}</p>
+          <VoidAllLabel style={{ margin: '0 12px 12px' }} />
+        </Shell>
+      );
+    }
     const seat = draft?.pick_position ?? null;
     const room = entry?.meta?.room ?? null;
     const fieldBest = contest.perfect?.entry_id != null

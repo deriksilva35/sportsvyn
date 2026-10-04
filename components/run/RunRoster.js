@@ -262,7 +262,9 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
 
       <div className="rn-ft">
         <div className="rn-pace">
-          {view.isDnf ? <>This round is a <b>DNF</b><br />no slot was filled</>
+          {/* AN ALL-VOID CLOSE (ruling sun-11 item 1): the label, no DNF, no total. */}
+          {view.contest.voidAll ? <span data-void-all="">{view.contest.voidLabel}</span>
+            : view.isDnf ? <>This round is a <b>DNF</b><br />no slot was filled</>
             : live ? <>Round {view.contest.week} so far<br /><b>{view.total}</b> · {view.aliveCount} still playing</>
               : leagueLine ?? <>Set your nine<br /><b>{filled}</b> of {view.slots.length}</>}
         </div>
@@ -304,7 +306,7 @@ function Header({ view, filled, leagueLine }) {
             : <>round<b>{view.contest.label}</b></>}
         </div>
         <div className="rn-tot">
-          <b>{view.phase === 'open' ? filled : view.total}</b>
+          <b>{view.phase === 'open' ? filled : view.contest.voidAll ? '-' : view.total}</b>
           <span>{view.phase === 'open' ? `of ${view.slots.length}` : 'Round'}</span>
         </div>
       </div>
