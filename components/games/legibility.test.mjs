@@ -16,8 +16,11 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const src = (rel) => readFileSync(path.join(REPO, rel), 'utf8');
 
 test('the hook copy is the ratified copy, word for word', () => {
+  // sat-5 Y3: the old Daily hook said opening a team commits you. It does not -
+  // a placed pick can be cleared and the team given back.
   assert.equal(GAME_META.daily.hook,
-    'Twelve team cards from one past season. Open one and you **must** take somebody, and that team is **spent**.');
+    'Twelve team cards from one past season. Fill **eight slots**, one player per team, and **four teams** go unused.');
+  assert.equal(GAME_META.daily.blurb, 'Twelve teams. Eight slots. Three minutes.');
   assert.equal(GAME_META.pickem.hook,
     'Call the winner of **every game** on the board - college Saturdays, NFL Sundays.');
   assert.equal(GAME_META.weekly.hook,
@@ -27,7 +30,8 @@ test('the hook copy is the ratified copy, word for word', () => {
 });
 
 test('every card carries meta chips: time cost first, cadence second', () => {
-  assert.deepEqual(GAME_META.daily.chips, ['2 min', 'every day', 'four teams unused']);
+  // sat-5: the clock is three minutes (DAILY_ROUND_SECONDS = 180), not two.
+  assert.deepEqual(GAME_META.daily.chips, ['3 min', 'every day', 'four teams unused']);
   assert.deepEqual(GAME_META.pickem.chips, ['1 min', 'weekly', 'locks per game']);
   assert.deepEqual(GAME_META.weekly.chips, ['90 sec', 'every NFL week']);
   assert.deepEqual(GAME_META.draft.chips, ['10 min', 'weekly · ranked']);
@@ -54,11 +58,9 @@ test('chrome still owns Hook/MetaChips/Pulse; Daily still renders through it', (
   for (const name of ['export function Hook', 'export function MetaChips', 'export function Pulse']) {
     assert.ok(chrome.includes(name), `chrome owns ${name.split(' ').pop()}`);
   }
-  assert.match(src('app/daily/page.js'), /from '@\/components\/games\/chrome'/);
-  // No hand-copied chip renderers: the class is written once, in chrome.
-  for (const rel of ['app/daily/page.js']) {
-    assert.ok(!/className="gchip"[^-]/.test(src(rel).replace(/gchip gchip--/g, 'CHIPVARIANT')) || true);
-  }
+  // /daily (v1) was the last page rendering through chrome; it 308s to the
+  // season board since sat-5 Y1 (app/daily/v1Retired.test.mjs), so there is
+  // no page left to pin here.
 });
 
 test('pulse facts come from the readers - the page writes no SQL', () => {
@@ -85,17 +87,5 @@ test('the steps row teaches the loop: draft, reveal, guess', () => {
   assert.match(steps, /Name the season for a bonus/);
 });
 
-test('the stat row is TWO stats - rank and best day; the streak waits for phase 3', () => {
-  const page = src('app/daily/page.js');
-  const row = page.slice(page.indexOf('className="dstatrow"'), page.indexOf('yesterdayLine ='));
-  assert.match(row, /Season rank/);
-  assert.match(row, /Best day/);
-  assert.ok(!/[Ss]treak/.test(row), 'no faked streak stat');
-});
-
-test("yesterday's winner line reads the revealed edition and links the board", () => {
-  const page = src('app/daily/page.js');
-  assert.match(page, /y\.winner\.name} took №\{y\.edition/);
-  assert.match(page, /vs perfect \{y\.perfect/);
-  assert.match(page, /href=\{y\.href\}/);
-});
+// The v1 page's stat-row and yesterday-line tests left with the page (sat-5
+// Y1): /daily is a 308 now, pinned in app/daily/v1Retired.test.mjs.

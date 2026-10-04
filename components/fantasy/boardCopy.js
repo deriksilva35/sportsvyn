@@ -10,7 +10,7 @@
 // board reports what the market did and stops. Nothing here recommends a player
 // or predicts anything.
 
-import { MIN_D3_HISTORY, MIN_D7_HISTORY, MIN_DRIFT_HISTORY, STREAK, SV_MIN_DRAFTS, BAND_MIN_DRAFTS } from '@/lib/fantasy/movement';
+import { MIN_D3_HISTORY, MIN_D7_HISTORY, MIN_DRIFT_HISTORY, STREAK, SV_MIN_DRAFTS, BAND_MIN_DRAFTS } from '@/lib/fantasy/movementGates';
 // The licensed phrase has exactly ONE definition. Restating it here by hand is
 // how a credit drifts out of compliance the next time someone edits copy, and a
 // test in lib/fantasy/attribution.test.mjs fails the build if any surface does.

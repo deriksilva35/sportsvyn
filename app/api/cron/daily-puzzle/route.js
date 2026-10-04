@@ -1,6 +1,10 @@
 /**
  * /api/cron/daily-puzzle — create the Daily's board for today and tomorrow ET.
  *
+ * RETIRED (sat-5 Y1): unscheduled - v1 of The Daily is no longer played and
+ * /daily 308s to the season board. Kept, Bearer-gated, as history, like the
+ * puzzle_days rows it wrote. Do not reschedule without bringing v1 back.
+ *
  * THE PREMISE: the answers are public record. A board with Peyton Manning and
  * Todd Gurley on it is 2015-2016 to anyone who follows football, and the box
  * score is a search away. THE CLOCK IS THE GAME — three minutes, enforced

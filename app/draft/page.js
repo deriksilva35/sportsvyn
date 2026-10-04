@@ -88,15 +88,16 @@ function Rules({ contest }) {
         <div className="row"><span>The room</span><span className="r">{DRAFT_CONFIG.teamsCount} teams, snake</span></div>
         <div className="row"><span>Your roster</span><span className="r">QB &middot; 2 RB &middot; 3 WR &middot; TE &middot; FLEX</span></div>
         <div className="row"><span>The clock</span><span className="r">{DRAFT_CONFIG.clockSeconds}s per pick</span></div>
-        <div className="row"><span>Scoring</span><span className="r">Best ball, PPR, drop worst</span></div>
+        <div className="row"><span>Scoring</span><span className="r">Best ball, PPR, best six count</span></div>
         <div className="row"><span>Drafts until</span><span className="r"><Stamp iso={contest?.locks_at} fallback="First kickoff" /></span></div>
         <div className="row"><span>Results</span><span className="r">Tuesday morning</span></div>
       </div>
       <p className="muted">
-        Best ball means you never set a lineup: your best six score automatically from
-        what your players actually did. Every pick counts, so there is no bench to hide
-        a miss on. One ranked draft a week - results land <b>Tuesday morning</b>,
-        and a settled week does not move again.
+        Best ball means you never set a lineup: your best six of eight score
+        automatically from what your players actually did, and all six count.
+        One ranked draft a week - results land <b>Tuesday morning</b>. A game not
+        final 48 hours after the week settles is void and its players score 0.
+        A stat correction within 7 days of a game re-grades the week.
       </p>
     </section>
   );
@@ -178,7 +179,7 @@ export default async function DraftPage({ searchParams }) {
     const roster = entry?.meta?.roster ?? [];
     // LIVE BEST-6 (v0.2 live totals): best ball over LIVE scores - the best
     // six AS OF NOW, which can differ from the final six; the label carries
-    // it. Same read the Weekly's window uses; drop-worst waits for settle.
+    // it. Same read the Weekly's window uses; from 2026 week 5 all six count (ruling D2), nothing drops at settle.
     const live = roster.length
       ? await (async () => {
         const [{ scored, playedIds }, gamesByTeam] = await Promise.all([
@@ -313,8 +314,8 @@ export default async function DraftPage({ searchParams }) {
       <div className="yr">
         <h1>Week {contest.week}</h1>
         <div className="sub">
-          Eight rounds. No bench. Same pool as The Weekly, drafted against a room of
-          eleven. Your best six of eight count.
+          Eight rounds. No bench. Drafted from the Sportsvyn board against a room of
+          eleven, scored on that week&apos;s stats. Your best six of eight count.
         </div>
       </div>
       <div className="warn">

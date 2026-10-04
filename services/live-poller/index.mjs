@@ -27,6 +27,7 @@ import { refreshMlbProbables, REFRESH_MS as PROBABLES_MS } from '../../lib/mlb/p
 import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withBdlErrors } from '../../lib/bdl/http.js';
 import { reportBdlErrors } from '../../lib/pollers/bdlFailure.js';
+import { checkWatchdogAlive, CHECK_EVERY_MS as WATCHDOG_CHECK_MS } from '../../lib/ops/watchdogWatch.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
 import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff, nbaDay, fromNba, nbaDetail, nbaKickoff, writeNbaDetail } from './poll.mjs';
 import { sportOf } from '../../lib/live/vocabulary.js';
@@ -465,4 +466,23 @@ log(`live-poller starting: pid=${process.pid} head=${HEAD} leagues=${LEAGUES.map
 for (const lg of LEAGUES) {
   loop(lg).catch((e) => { console.error(`[${lg.slug}] loop died:`, e); process.exit(1); });
 }
+
+// --- who watches the watchdog (sun-8) -------------------------------------
+// Once an hour, OFF every league loop: is the daily cron watchdog still
+// passing? checkWatchdogAlive never throws, and this loop catches anyway - it
+// can log, it can never take the poller down (lib/ops/watchdogWatch.js).
+(async function watchTheWatchdog() {
+  const since = new Date();   // the 26h clock starts no earlier than this process
+  for (;;) {
+    try {
+      const { maybeAlert } = await import('../../lib/pollers/alerts.js');
+      const r = await checkWatchdogAlive({ sql, since, alert: (a) => maybeAlert(sql, a) });
+      if (r.error) log('[watchdog-watch] check failed:', r.error);
+      else if (r.stale) log(`[watchdog-watch] cron watchdog STALE, last ${r.last}${r.skipped ? ` (${r.skipped})` : ' - alerted'}`);
+    } catch (e) {
+      log('[watchdog-watch] check failed:', String(e?.message ?? e).slice(0, 120));
+    }
+    await sleep(WATCHDOG_CHECK_MS);
+  }
+})().catch(() => {});
 log('live-poller up:', LEAGUES.map((l) => l.slug).join(', '));

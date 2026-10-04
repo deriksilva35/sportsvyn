@@ -2,7 +2,7 @@
  * components/pickem/PickemGrade.js - Pick'em's settled grade card
  * (relay 2b item 4), per docs/design/games-remock-v2.html's #s-pickem .g
  * screen: '{correct} of {played} · {pct}%' mid line, a glyph row (🟩 right,
- * ⬛ wrong, ⬜ push), rows for every picked game with the winner's score
+ * ⬛ wrong, ⬜ tie or void), rows for every picked game with the winner's score
  * line, the math line naming faded ranked favourites, the board
  * leaderboard, Share (reusing item 2's ShareGrade), and a forward-looking
  * ghost line.
@@ -12,22 +12,24 @@ import ShareGrade from '@/components/games/ShareGrade';
 import { HouseMark } from '@/components/house/HouseTag';
 import '@/components/house/house.css';
 import {
-  pickemGradeRows, fadedFavourites, pickemMathline, pickemGlyphRow,
+  pickemGradeRows, fadedFavourites, pickemMathline, pickemGlyphRow, NOBODY_COPY,
 } from '@/lib/pickem/settledGrade';
 import StandaloneDateOnly from '@/components/StandaloneDateOnly';
 import StandaloneDate from '@/components/StandaloneDate';
 import { plural } from '@/lib/text/plural';
 import BoardChips from '@/components/boards/BoardChips';
 
-const VD_LABEL = { right: 'Right', wrong: 'Wrong', push: 'Push' };
+const VD_LABEL = { right: 'Right', wrong: 'Wrong', tie: 'Tie', void: 'Void' };
 
 export default function PickemGrade({
   view, sport, settledAtIso, leaderboard, next, nextBoardNumber, userId,
   chips = [], leagueName = null,
 }) {
   const rows = pickemGradeRows(view.games);
-  const { right, wrong, push } = pickemMathline(rows);
-  const played = right + wrong + push;
+  // A TIE AND A VOID COUNT FOR NOBODY (rulings P4 and 2): they are out of
+  // `played`, so the percentage is right over the games that had a winner.
+  const { right, wrong, tie, void: voided } = pickemMathline(rows);
+  const played = right + wrong;
   const pct = played ? Math.round((right / played) * 1000) / 10 : 0;
   const { faded, hadThem } = fadedFavourites(view.games);
   const glyph = pickemGlyphRow(rows);
@@ -74,7 +76,7 @@ export default function PickemGrade({
         </div>
         <div className="gg-colhead"><div className="gg-cy">You</div><div className="gg-cb">Result</div></div>
         {rows.map((r) => (
-          <div className={`gg-sbr gg-${r.verdict === 'right' ? 'hit' : r.verdict === 'wrong' ? 'miss' : 'push'}`} key={r.matchId}>
+          <div className={`gg-sbr gg-${r.verdict === 'right' ? 'hit' : r.verdict === 'wrong' ? 'miss' : 'push'}`} data-verdict={r.verdict} key={r.matchId}>
             <div className="gg-top2">
               <span className="gg-pos">{VD_LABEL[r.verdict]}</span>
               <span className="gg-vd">{VD_LABEL[r.verdict]}</span>
@@ -82,11 +84,11 @@ export default function PickemGrade({
             <div className="gg-two">
               <div className="gg-bx gg-you">
                 <div className="gg-nm">{r.you}{r.youRank != null && <> &middot; #{r.youRank}</>}</div>
-                <div className="gg-pt">{r.verdict === 'push' ? '-' : r.verdict === 'right' ? 'W' : 'L'}</div>
+                <div className="gg-pt">{r.verdict === 'right' ? 'W' : r.verdict === 'wrong' ? 'L' : '-'}</div>
               </div>
               <div className="gg-bx">
-                <div className="gg-nm">{r.winner ?? 'Cancelled'}</div>
-                <div className="gg-mt">{r.winnerScore ?? 'off the board'}</div>
+                <div className="gg-nm">{r.winner ?? (r.verdict === 'tie' ? 'No winner' : 'Not played')}</div>
+                <div className="gg-mt">{NOBODY_COPY[r.verdict] ?? r.winnerScore}{r.verdict === 'tie' && r.winnerScore ? <> &middot; {r.winnerScore}</> : null}</div>
               </div>
             </div>
           </div>
@@ -96,7 +98,9 @@ export default function PickemGrade({
 
       {entered && (
         <div className="gg-mathline">
-          {right} right &middot; {wrong} wrong &middot; {push} push
+          {right} right &middot; {wrong} wrong
+          {tie > 0 && <> &middot; {tie} tied, counted for nobody</>}
+          {voided > 0 && <> &middot; {voided} void, counted for nobody</>}
           {faded > 0 && <> &middot; <b>{faded} ranked favourites lost</b>, you had {hadThem} of them.</>}
         </div>
       )}
