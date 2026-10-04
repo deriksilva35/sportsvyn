@@ -24,7 +24,8 @@ import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { install } from '../../lib/testing/nextResolve.mjs';
 import { elapsedOf } from '../../lib/games/v3Rows.js';
-import { playLobby } from '../../lib/games/playLobby.js';
+import { playLobbyOpen, isMoveCandidate } from '../../lib/games/playLobby.js';
+import { readFileSync } from 'node:fs';
 import { PLAY_REGISTRY, weeklyItem, pickemItem, draftItem, octoberItem, runItem, nbaPickemItem, sixItem, dailyItem } from '../../lib/games/playRegistry.js';
 import { normalizeChip } from '../../lib/games/lobby.js';
 
@@ -87,7 +88,7 @@ const click = (node) => act(() => {
 // the old one. nowCard.js and v3Rows.js keep their own pure tests.
 
 const E = (key) => PLAY_REGISTRY.find((e) => e.key === key);
-const PLAY = ({ signedIn = true, chip = 'all', leagues = [] } = {}) => {
+const PLAY = ({ signedIn = true, open = 'all', leagues = [] } = {}) => {
   const now = new Date();
   const o = { signedIn, now };
   const items = [
@@ -102,7 +103,7 @@ const PLAY = ({ signedIn = true, chip = 'all', leagues = [] } = {}) => {
     pickemItem(E('cfb-pickem'), { card: null, plan: { opensAt: ahead(30) } }, o),
     dailyItem(E('daily'), { state: signedIn ? 'play' : 'signed-out', closesAt: ahead(10) }, o),
   ].filter(Boolean);
-  const view = playLobby(items, { now, signedIn, chip, nextGameBySport: { nfl: ahead(30), mlb: ahead(2), cfb: ahead(30) } });
+  const view = playLobbyOpen(items, { now, signedIn, open, nextGameBySport: { nfl: ahead(30), mlb: ahead(2), cfb: ahead(30) } });
   return {
     handle: signedIn ? 'sportsvyn_og' : null, chip: 'week',
     play: { ...view, now: now.toISOString(), tz: 'America/Los_Angeles', leagues,
@@ -142,40 +143,144 @@ test('YOUR MOVE: only what the reader can act on, soonest lock first, LOCKS SOON
   assert.equal(cards(c)[1].getAttribute('href'), '/draft');
 });
 
-test('CHIPS: ALL + each sport with a game in 14 days, the selected one marked, each a ?sport= URL', () => {
+// ===========================================================================
+// THE COLLAPSED CARDS (sun-19) - one card per sport, closed by default
+// ===========================================================================
+const scards = (c) => [...c.querySelectorAll('.pl-sc')];
+const head = (c, id) => c.querySelector(`.pl-sc[data-group="${id}"] > .pl-sc-h`);
+const openIds = (c) => scards(c).filter((x) => x.querySelector('.pl-sc-h').getAttribute('aria-expanded') === 'true').map((x) => x.dataset.group);
+const chipBy = (c, id) => c.querySelector(`.pl-chip[data-chip="${id}"]`);
+
+test('CHIPS: ALL + each sport with a game in 14 days, ALL pressed, each a ?sport= URL, 44px pinned', () => {
   const c = screen({ v: PLAY(), chip: 'week' });
   const ch = [...c.querySelectorAll('.pl-chip')];
   assert.deepEqual(ch.map((x) => txt(x)), ['ALL', 'NFL', 'MLB', 'CFB']);
+  assert.deepEqual(ch.map((x) => x.getAttribute('aria-pressed')), ['true', 'false', 'false', 'false']);
   assert.deepEqual(ch.map((x) => x.className.includes(' on')), [true, false, false, false]);
-  assert.deepEqual(ch.map((x) => x.getAttribute('href')), ['/games', '/games?sport=nfl', '/games?sport=mlb', '/games?sport=cfb']);
+  assert.deepEqual(ch.map((x) => x.getAttribute('href')), ['/games', '/games?sport=nfl', '/games?sport=mlb', '/games?sport=cfb'],
+    'a real link: cmd-click and no-JS land on the server-rendered open card');
   assert.equal(c.querySelectorAll('.gv-chips').length, 0, 'the pane chips are not on the lobby');
 });
 
-test('GROUPS: by soonest open lock; rows are mark, name, status, progress, chevron; NBA collapses', () => {
+test('CARDS: every group is one card, COLLAPSED by default, soonest lock first, out of season dimmed, The Daily as ALL SPORTS', () => {
   const c = screen({ v: PLAY(), chip: 'week' });
-  const groups = [...c.querySelectorAll('.pl-group')].map((g) => g.dataset.group);
-  assert.deepEqual(groups, ['mlb', 'nfl', 'cfb', 'all'], 'MLB locks first; CFB has only a door; The Daily last');
-  const w = prow(c, 'nfl-weekly');
-  assert.deepEqual(cells(w).slice(0, 1), ['W']);
-  assert.equal(txt(w.querySelector('.pl-t b')), 'The Weekly');
-  assert.equal(txt(w.querySelector('.pl-r')), '0 / 6');
-  assert.ok(w.querySelector('.gv-chev'));
-  assert.equal(prow(c, 'cfb-pickem').dataset.phase, 'upcoming', 'not open yet: dimmed');
-  assert.match(txt(prow(c, 'cfb-pickem').querySelector('.pl-r')), /^\d{1,2} \w{3}$/, 'with its open date');
-  const later = [...c.querySelectorAll('.pl-col')];
-  assert.deepEqual(later.map((x) => x.dataset.group), ['nba'], 'nothing open in 7 days: one line at the bottom');
-  assert.match(txt(later[0]), /^NBA\s*opens \w{3} \d{1,2} \w{3}/);
+  assert.deepEqual(scards(c).map((g) => g.dataset.group), ['mlb', 'nfl', 'cfb', 'nba', 'all-sports'],
+    'MLB locks first; CFB has only a door; NBA is out of season; the cross-sport card last');
+  assert.deepEqual(openIds(c), [], 'nothing open on ALL');
+  for (const k of scards(c)) {
+    const h = k.querySelector('.pl-sc-h');
+    assert.equal(h.tagName, 'BUTTON', 'a real button');
+    assert.equal(h.getAttribute('type'), 'button');
+    assert.equal(h.getAttribute('aria-expanded'), 'false');
+    const rows = c.querySelector(`#${h.getAttribute('aria-controls')}`);
+    assert.ok(rows, 'aria-controls names the rows');
+    assert.equal(rows.hidden, true, 'a closed card hides its rows');
+  }
+  assert.deepEqual(scards(c).map((k) => txt(k.querySelector('.pl-sc-name'))), ['MLB', 'NFL', 'CFB', 'NBA', 'ALL SPORTS']);
+  assert.deepEqual(scards(c).map((k) => txt(k.querySelector('.pl-sc-n'))), ['2 games', '3 games', '1 game', '2 games', '1 game']);
+  const nba = c.querySelector('.pl-sc[data-group="nba"]');
+  assert.ok(nba.className.includes('dim'), 'out of season: dimmed');
+  assert.match(txt(nba.querySelector('.pl-sc-sum')), /^Opens \w{3} \d{1,2} \w{3}$/, 'with its open date');
+  assert.ok(!c.querySelector('.pl-sc[data-group="nfl"]').className.includes('dim'));
 });
 
-test('THE NBA CHIP filters everything, YOUR MOVE included, and its group stays open with dimmed rows', () => {
-  const c = screen({ v: PLAY({ chip: 'nba' }), chip: 'week' });
-  assert.equal(cards(c).length, 0, 'nothing in the NBA is your move yet');
-  assert.deepEqual([...c.querySelectorAll('.pl-group')].map((g) => g.dataset.group), ['nba']);
-  assert.deepEqual([...c.querySelectorAll('.pl-row')].map((r) => r.dataset.phase), ['upcoming', 'upcoming']);
-  assert.equal(c.querySelectorAll('.pl-col').length, 0);
-  assert.ok([...c.querySelectorAll('.pl-chip')].find((x) => txt(x) === 'NBA').className.includes(' on'));
-  const nfl = screen({ v: PLAY({ chip: 'nfl' }), chip: 'week' });
-  assert.deepEqual(cards(nfl).map((x) => x.dataset.key), ['nfl-draft', 'nfl-weekly']);
+test('THE SUMMARY is built from the rows it carries: progress, door, lock state, then the next lock', () => {
+  const c = screen({ v: PLAY(), chip: 'week' });
+  const sum = (id) => txt(c.querySelector(`.pl-sc[data-group="${id}"] .pl-sc-sum`));
+  assert.match(sum('nfl'), /^The Draft · The Weekly 0\/6 · Pick'em 16\/16 · next lock (?:[A-Z][a-z]{2} )?\d{1,2}:\d{2} [AP]M$/);
+  assert.match(sum('mlb'), /^October 2\/5 · The Run locked · next lock /);
+  assert.match(sum('cfb'), /^Pick'em opens \w{3} \d{1,2} \w{3}$/);
+  assert.match(sum('all-sports'), /^The Daily · next lock /);
+});
+
+test('YOUR MOVE TAG: on a card exactly when one of its rows is a YOUR MOVE card (the shared predicate)', () => {
+  for (const signedIn of [true, false]) {
+    const v = PLAY({ signedIn });
+    const c = screen({ v, chip: 'week', signedIn });
+    const moveKeys = new Set(cards(c).map((x) => x.dataset.key));
+    for (const k of scards(c)) {
+      const want = v.play.cards.find((x) => x.id === k.dataset.group).rows.some((r) => moveKeys.has(r.key));
+      assert.equal(Boolean(k.querySelector('.pl-sc-move')), want, `${k.dataset.group} signed ${signedIn ? 'in' : 'out'}`);
+    }
+    // and the YOUR MOVE cards are exactly the items the predicate admits (signed out: the first three)
+    const now = new Date(v.play.now);
+    const admitted = v.play.cards.flatMap((x) => x.rows).filter((r) => isMoveCandidate(r, { now, signedIn })).map((r) => r.key);
+    for (const key of moveKeys) assert.ok(admitted.includes(key), key);
+    afterEachInline();
+  }
+  const c = screen({ v: PLAY(), chip: 'week' });
+  assert.deepEqual(scards(c).filter((k) => k.querySelector('.pl-sc-move')).map((k) => k.dataset.group), ['mlb', 'nfl', 'all-sports'],
+    "CFB and NBA have nothing open; NFL's Draft and Weekly are moves");
+  assert.equal(txt(c.querySelector('.pl-sc-move')), 'YOUR MOVE');
+});
+
+test('?sport= OPENS THAT CARD in the server render, and only that card; YOUR MOVE is not filtered', () => {
+  const c = screen({ v: PLAY({ open: 'nfl' }), chip: 'week' });
+  assert.deepEqual(openIds(c), ['nfl']);
+  assert.equal(c.querySelector('#pl-card-nfl-rows').hidden, false);
+  assert.deepEqual([...c.querySelectorAll('#pl-card-nfl-rows .pl-row')].map((r) => r.dataset.row), ['nfl-draft', 'nfl-weekly', 'nfl-pickem'], 'today\'s rows, in their order');
+  assert.equal(chipBy(c, 'nfl').getAttribute('aria-pressed'), 'true');
+  assert.equal(chipBy(c, 'all').getAttribute('aria-pressed'), 'false');
+  assert.deepEqual(cards(c).map((x) => x.dataset.key), ['mlb-october', 'nfl-draft', 'daily', 'nfl-weekly'],
+    'every sport\'s moves stay on top');
+  assert.deepEqual(scards(c).map((g) => g.dataset.group), ['mlb', 'nfl', 'cfb', 'nba', 'all-sports'], 'every card stays');
+  afterEachInline();
+  const nba = screen({ v: PLAY({ open: 'nba' }), chip: 'week' });
+  assert.deepEqual(openIds(nba), ['nba'], 'an out-of-season card opens too');
+  assert.ok(chipBy(nba, 'nba'), 'and the sport the reader is on keeps its chip');
+  assert.deepEqual([...nba.querySelectorAll('#pl-card-nba-rows .pl-row')].map((r) => r.dataset.phase), ['upcoming', 'upcoming']);
+  afterEachInline();
+  assert.deepEqual(openIds(screen({ v: PLAY({ open: 'bogus' }), chip: 'week' })), [], 'an unknown ?sport= is ALL');
+});
+
+test('ONE OPEN AT A TIME: a header tap opens in place and closes the other; a second tap closes; the URL follows', () => {
+  window.history.replaceState(null, '', '/games');
+  const c = screen({ v: PLAY(), chip: 'week' });
+  click(head(c, 'nfl'));
+  assert.deepEqual(openIds(c), ['nfl']);
+  assert.equal(window.location.pathname + window.location.search, '/games?sport=nfl');
+  click(head(c, 'mlb'));
+  assert.deepEqual(openIds(c), ['mlb'], 'opening MLB closed NFL');
+  assert.equal(c.querySelector('#pl-card-nfl-rows').hidden, true);
+  assert.equal(window.location.search, '?sport=mlb');
+  assert.equal(chipBy(c, 'mlb').getAttribute('aria-pressed'), 'true');
+  click(head(c, 'mlb'));
+  assert.deepEqual(openIds(c), []);
+  assert.equal(window.location.search, '', 'closed: back to ALL');
+  click(head(c, 'all-sports'));
+  assert.equal(window.location.search, '?sport=all-sports');
+});
+
+test('CHIP TOGGLE: a chip opens its card; the open chip again returns to ALL; ALL closes everything; Back restores', () => {
+  window.history.replaceState(null, '', '/games');
+  const c = screen({ v: PLAY(), chip: 'week' });
+  click(chipBy(c, 'cfb'));
+  assert.deepEqual(openIds(c), ['cfb']);
+  assert.equal(window.location.search, '?sport=cfb');
+  click(chipBy(c, 'cfb'));
+  assert.deepEqual(openIds(c), [], 'the open chip tapped again');
+  assert.equal(chipBy(c, 'all').getAttribute('aria-pressed'), 'true');
+  assert.equal(window.location.search, '');
+  click(chipBy(c, 'nfl'));
+  click(chipBy(c, 'all'));
+  assert.deepEqual(openIds(c), [], 'ALL = everything collapsed');
+  // BACK: the address bar moves first, then popstate - the card follows it
+  window.history.replaceState(null, '', '/games?sport=nfl');
+  act(() => { window.dispatchEvent(new dom.window.PopStateEvent('popstate')); });
+  assert.deepEqual(openIds(c), ['nfl']);
+  window.history.replaceState(null, '', '/games');
+  act(() => { window.dispatchEvent(new dom.window.PopStateEvent('popstate')); });
+  assert.deepEqual(openIds(c), []);
+});
+
+test('44px TARGETS are pinned in CSS: the card header and the sport chips', () => {
+  const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '');
+  const pc = strip(readFileSync(new URL('./playCollapse.css', import.meta.url), 'utf8'));
+  const pl = strip(readFileSync(new URL('./play.css', import.meta.url), 'utf8'));
+  assert.match(pc, /\.pl-sc-h \{[^}]*min-height: 44px/);
+  assert.match(pl, /\.gv-chip\.pl-chip \{[^}]*min-height: 44px/);
+  assert.match(pc, /\.pl-sc\.dim \{[^}]*opacity: \.6/, 'out of season is dimmed');
+  assert.doesNotMatch(pc, /#[0-9a-fA-F]{3,8}\b/, 'tokens only - no mock hexes');
 });
 
 test('YOUR LEAGUES: listed by name when the reader has any; PRACTICE always', () => {

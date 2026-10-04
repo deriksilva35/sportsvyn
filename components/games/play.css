@@ -49,7 +49,7 @@
 /* sport chips: ALL + each sport with a game in the next fourteen days */
 .pl-chips { display: flex; gap: 6px; padding: 16px 16px 0; overflow-x: auto; scrollbar-width: none; }
 .pl-chips::-webkit-scrollbar { display: none; }
-.gv-chip.pl-chip { flex: none; min-height: 36px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 99px; }
+.gv-chip.pl-chip { flex: none; min-height: 44px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 99px; }
 
 /* groups: one per sport; rows are mark, name, status, progress, chevron */
 .pl-group .pl-sh { margin-bottom: 0; }
@@ -62,13 +62,6 @@
 .pl-t b { font: 400 13px var(--tok-font-num); text-transform: uppercase; font-weight: 400; }
 .pl-t small { font: 400 12px var(--tok-font-body); color: var(--tok-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pl-r { flex: none; font: 600 12px var(--tok-font-body); text-align: right; font-variant-numeric: tabular-nums; }
-
-/* the collapsed sports, one line each, at the bottom of the groups */
-.pl-later { margin: 18px 16px 0; border-top: 1px solid var(--tok-line); }
-.pl-col { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 4px; border-bottom: 1px solid var(--tok-line);
-  color: var(--tok-ink); text-decoration: none; }
-.pl-col b { font: 400 11px var(--tok-font-num); letter-spacing: .06em; }
-.pl-col small { flex: 1; font: 400 12px var(--tok-font-body); color: var(--tok-muted); }
 
 /* your leagues + practice */
 .pl-league { margin-bottom: 6px; padding: 12px 14px; border: 0; border-radius: 14px; background: var(--tok-surface-2); }
