@@ -36,6 +36,8 @@ import { appleConfigured, getAppleClientSecret } from '@/lib/auth/appleClientSec
 import { sql } from '@/lib/db';
 import { generateCode, sha256, attachCode, CODE_TTL_SECONDS } from '@/lib/auth/emailOtp';
 import { authRedirect } from '@/lib/auth/safeCallback';
+import { reserveSendSafe, clientIp } from '@/lib/auth/rateLimit';
+import { SendThrottled } from '@/lib/auth/sendThrottled';
 
 // Async factory: Apple's clientSecret is a signed JWT we mint at config
 // time (getAppleClientSecret is memoized, so this awaits real work only on
@@ -65,7 +67,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
       // store its hash (and token_hash = sha256(rawToken+AUTH_SECRET), which
       // equals verification_token.token) in email_otp, independent of the
       // adapter's token insert. lib/auth/emailOtp.js verifies + consumes it.
-      async sendVerificationRequest({ identifier, url, token, expires }) {
+      //
+      // CAPPED (sun-12 item 2): 5 per address and 20 per IP, per rolling hour
+      // (lib/auth/rateLimit.js AUTH_LIMITS). Checked BEFORE the code is made or
+      // the mail goes out. A refusal throws SendThrottled, which Auth.js passes
+      // to the client as error=AccessDenied - the form shows one generic line,
+      // the same for every address, so it says nothing about whether an
+      // account exists. The adapter's verification_token row for this request
+      // may still be written (Auth.js runs the two in parallel); with no code
+      // attached it cannot be redeemed, and it expires in 10 minutes.
+      async sendVerificationRequest({ identifier, url, token, expires, request }) {
+        const ip = clientIp(request?.headers);
+        const gate = await reserveSendSafe(sql, { identifier, ip, purpose: 'signin' });
+        if (!gate.ok) {
+          console.warn('[auth-throttle] sign-in send refused', { by: gate.reason, identifier, ip });
+          throw new SendThrottled();
+        }
         const secret = process.env.AUTH_SECRET;
         const code = generateCode();
         await attachCode(sql, {

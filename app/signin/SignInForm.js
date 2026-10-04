@@ -24,6 +24,11 @@ import { verifyEmailCode } from '@/app/actions/emailOtp';
 import { safeCallback } from '@/lib/auth/safeCallback';
 import './signin.css';
 
+// A capped send (lib/auth/rateLimit.js, surfaced by Auth.js as
+// error=AccessDenied). The same words for every address, account or not - it
+// must not say whether the email is registered.
+const THROTTLED = "We can't send another code right now. Wait up to an hour, then try again.";
+
 const ERROR_MESSAGES = {
   EmailSignin:     "Couldn't send the link. Try again.",
   Callback:        'That sign-in link expired or was invalid. Send a fresh one below.',
@@ -36,6 +41,8 @@ const CODE_ERRORS = {
   too_many: 'Too many tries. Send yourself a fresh code below.',
   expired:  'That code expired. Send a fresh one.',
   invalid:  'That code is not valid. Send a fresh one.',
+  // 10 wrong codes for this address in 24h (lib/auth/rateLimit.js).
+  locked:   'Too many wrong codes for this email. Code sign-in for it is paused for up to 24 hours.',
 };
 
 export default function SignInForm({ initialError = null, callbackUrl: rawCallbackUrl = '/' }) {
@@ -61,7 +68,7 @@ export default function SignInForm({ initialError = null, callbackUrl: rawCallba
     try {
       const res = await signIn('resend', { email, redirect: false, redirectTo: callbackUrl });
       if (!res || res.error) {
-        setStatus('error');
+        setStatus(res?.error === 'AccessDenied' ? 'throttled' : 'error');
         return;
       }
       setPhase('code'); // reveal the code field; the link is also on its way
@@ -92,7 +99,9 @@ export default function SignInForm({ initialError = null, callbackUrl: rawCallba
   }
 
   const errorText =
-    status === 'error'
+    status === 'throttled'
+      ? THROTTLED
+      : status === 'error'
       ? 'Something went wrong. Try again.'
       : initialError
         ? (ERROR_MESSAGES[initialError] ?? 'Something went wrong. Try again.')

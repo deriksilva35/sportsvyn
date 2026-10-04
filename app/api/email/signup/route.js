@@ -24,9 +24,14 @@
  *   row with confirmation_token populated but never confirmed --
  *   that's the manual debug path for Phase 0.
  *
+ * Rate limiting (sun-12 item 2): every confirmation send goes through
+ *   lib/auth/rateLimit.js reserveSend with purpose 'signup_confirm', sharing
+ *   the sign-in caps (5 per address, 20 per IP, per rolling hour). A refused
+ *   send is SILENT - same { success: true }, logged - for the reason above,
+ *   and the unconfirmed-dupe path checks the cap BEFORE rotating the token so
+ *   a refused resend cannot kill the link already in the inbox.
+ *
  * Deferred concerns (intentionally NOT here yet):
- *   - Rate limiting. Endpoint is open; abuse mitigation likely lands
- *     as Routing Middleware + Upstash in a later session.
  *   - Bounce/complaint webhooks. Resend dashboard is the manual
  *     triage surface for Phase 0; webhook signature verification is
  *     deferred (Session 3c.1 or later).
@@ -38,6 +43,13 @@ import { randomBytes } from 'node:crypto';
 import { sql } from '@/lib/db';
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from '@/lib/resend';
 import { buildConfirmationEmail } from '@/lib/emails/confirmation';
+import { reserveSendSafe, clientIp } from '@/lib/auth/rateLimit';
+
+async function mayConfirm(email, ip) {
+  const gate = await reserveSendSafe(sql, { identifier: email, ip, purpose: 'signup_confirm' });
+  if (!gate.ok) console.warn('[auth-throttle] signup confirmation refused', { by: gate.reason, email, ip });
+  return gate.ok;
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const BASE_URL =
@@ -83,6 +95,7 @@ export async function POST(request) {
   }
 
   const normalizedEmail = email.toLowerCase();
+  const ip = clientIp(request.headers);
 
   const safeSource =
     typeof source === 'string' && source.length <= 128 ? source : 'homepage';
@@ -114,7 +127,7 @@ export async function POST(request) {
         now()
       )
     `;
-    await sendConfirmation(normalizedEmail, insertToken);
+    if (await mayConfirm(normalizedEmail, ip)) await sendConfirmation(normalizedEmail, insertToken);
     return Response.json({ success: true });
   } catch (err) {
     if (err?.code === '23505') {
@@ -128,6 +141,8 @@ export async function POST(request) {
       if (!existing || existing.confirmed_at) {
         return Response.json({ success: true });
       }
+
+      if (!(await mayConfirm(normalizedEmail, ip))) return Response.json({ success: true });
 
       const resendToken = randomBytes(32).toString('hex');
       await sql`
