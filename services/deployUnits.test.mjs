@@ -68,7 +68,7 @@ test('the poller: 512M wall over a 93 MB worst peak; restart on failure, backing
   const k = keys(text);
   assert.deepEqual(k.MemoryMax, ['512M']);
   assert.ok(toBytes(k.MemoryMax[0]) >= 5 * 93 * 1024 ** 2, 'at least 5x the highest logged peak');
-  assert.deepEqual(k.Restart, ['on-failure']);
+  assert.deepEqual(k.Restart, ['always']);
   assert.deepEqual(k.RestartSec, ['10']);
   assert.ok(k.RestartMaxDelaySec && k.RestartSteps, 'backs off instead of a 10 s request loop');
   assert.deepEqual(k.StartLimitIntervalSec, ['0']);

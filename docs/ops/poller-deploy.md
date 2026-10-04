@@ -163,9 +163,9 @@ child in the same cgroup: `768M / 1G / 256M`. The daily tick: `384M / 512M / 128
 The memory controller is delegated to the user manager on this droplet
 (`cgroup.controllers: cpu memory pids`), so the caps are enforced.
 
-**Restart=on-failure, backing off, never giving up.** The poller never exits 0 on
-its own, so on-failure covers every real stop (crash, dead loop, OOM kill) while a
-deliberate `systemctl --user stop` stays stopped. `RestartSec=10` growing over
+**Restart=always, backing off, never giving up.** Every real stop (crash, dead loop,
+OOM kill, an unexpected clean exit) restarts, while a deliberate
+`systemctl --user stop` stays stopped (systemd never restarts a unit it was told to stop). `RestartSec=10` growing over
 `RestartSteps=5` to `RestartMaxDelaySec=5min`; `StartLimitIntervalSec=0` in
 `[Unit]` so systemd never gives up (a poller systemd stopped restarting is a
 poller silently off all slate).
@@ -194,7 +194,7 @@ Then check:
 
 ```sh
 readlink /proc/$(systemctl --user show -p MainPID --value sportsvyn-live-poller)/cwd   # .../deploy/sportsvyn/releases/<sha>
-systemctl --user show sportsvyn-live-poller -p MemoryMax,MemoryHigh,MemorySwapMax,Restart  # 536870912 / 402653184 / 134217728 / on-failure
+systemctl --user show sportsvyn-live-poller -p MemoryMax,MemoryHigh,MemorySwapMax,Restart  # 536870912 / 402653184 / 134217728 / always
 systemctl --user cat sportsvyn-daily-tick.service 'sportsvyn-mlb-advance@timer.service' | grep WorkingDirectory
 systemctl --user list-timers 'sportsvyn*'                 # both timers still scheduled
 journalctl --user -u sportsvyn-daily-tick -n 5 -f         # the next tick (<= 5 min) succeeds from the release

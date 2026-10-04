@@ -57,15 +57,17 @@ ExecStart=%h/.nvm/versions/node/v22.23.1/bin/node --import ./services/_preload/p
 # RESTART ON FAILURE, AND THE QUOTA COUNTER IS PERSISTED BECAUSE OF THIS LINE.
 # A crash loop with an in-memory tally would spend a month's provider budget in
 # an afternoon and the cap would never see it. The poller never exits 0 on its
-# own (its loops run forever; every exit path is exit 1), so on-failure covers
-# every real stop - a crash, a dead loop, an OOM kill at MemoryMax - while a
-# deliberate `systemctl --user stop` stays stopped.
+# own (its loops run forever; every exit path is exit 1). Restart=always, as
+# before this unit moved (lib/live/live.test.mjs pins it: the quota tally is
+# persisted BECAUSE the process can be restarted at any moment), also covers an
+# unexpected clean exit; a deliberate `systemctl --user stop` still stays
+# stopped - systemd never restarts a unit it was told to stop.
 #
 # NEVER GIVE UP (StartLimitIntervalSec=0 in [Unit]), BUT BACK OFF: 10 s, growing
 # over five restarts to 5 min. A poller that systemd stops restarting is silently
 # off all slate; a poller retried every 10 s against a dead provider is a request
 # loop. RestartSteps/RestartMaxDelaySec need systemd >= 254 (this box: 255).
-Restart=on-failure
+Restart=always
 RestartSec=10
 RestartSteps=5
 RestartMaxDelaySec=5min
