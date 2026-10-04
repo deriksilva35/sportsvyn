@@ -26,16 +26,18 @@
  *   board-bounded (lib/pollers/playsScope.js). Putting a narrow scope inside a
  *   wide one invites the next edit to widen it by accident.
  *
- * Fires every minute; the 90s per-game throttle lives in dueForPoll, so a game
- * is polled on the first tick at or past 90s since its last successful write.
+ * Fires every minute; the per-game throttle lives in dueByState
+ * (lib/pollers/playsCadence.js, sun-9): a game is polled on the first tick at
+ * or past ITS interval since its last poll - 90 s on an open board, 5 min off
+ * one, 12 min at halftime, never again after Final plus one.
  *
  * Auth: Bearer ${CRON_SECRET}, the same secret as every other cron.
  */
 
 import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
-import { liveBoardGames, lastPolledAt, dueForPoll, cfbPlaysAll } from '@/lib/pollers/playsScope';
-import { PLAYS_POLL_INTERVAL_SEC } from '@/lib/pollers/cadence';
+import { liveBoardGames, lastPolledAt, cfbPlaysAll, recordPlaysPoll } from '@/lib/pollers/playsScope';
+import { dueByState } from '@/lib/pollers/playsCadence';
 import { importPlaysFor } from '@/lib/gridiron/playsImport';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision, probeCfbdBudget } from '@/lib/pollers/runRecorder';
@@ -75,7 +77,9 @@ export async function GET(request) {
   }
 
   const last = await lastPolledAt(inScope.map((g) => g.id));
-  const due = dueForPoll(inScope, last, PLAYS_POLL_INTERVAL_SEC, now);
+  // CADENCE BY STATE (sun-9 f, lib/pollers/playsCadence.js): 90 s on a board,
+  // 5 min off it, 12 min at halftime, stop after Final. NFL stays at 90 s.
+  const due = dueByState(inScope, last, now);
   if (!due.length) {
     return Response.json({ inScope: inScope.length, polled: 0, decision: 'throttled' });
   }
@@ -91,7 +95,13 @@ export async function GET(request) {
         try {
           const r = await importPlaysFor(g.id);
           plays += r.written; drives += r.drives;
-          games.push({ slug: g.slug, plays: r.written, drives: r.drives, status: r.providerStatus });
+          // What CFBD said decides when we ask again. A failed write here
+          // costs only the cadence hint, never the plays just written.
+          if (g.league === 'cfb') {
+            try { await recordPlaysPoll(g, r.providerStatus); }
+            catch (e) { console.warn(`[plays-live] plays_poll not recorded for ${g.slug}: ${String(e?.message ?? e).slice(0, 120)}`); }
+          }
+          games.push({ slug: g.slug, plays: r.written, drives: r.drives, status: r.providerStatus, every_sec: g.interval_sec });
         } catch (e) {
           // ONE BAD GAME MUST NOT ABANDON THE SLATE. A provider hiccup on one
           // fixture cannot cost the other seven their drive strips; the failure

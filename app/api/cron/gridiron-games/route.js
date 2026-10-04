@@ -40,11 +40,17 @@ const tickWindow = () => ({ now: new Date(), hours: GAMES_WINDOW_HOURS });
 const LEAGUES = [
   { slug: 'nfl', source: 'nfl-games', cfbd: false,
     run: (leagueId, season, kind) => syncNflGames(leagueId, season, { broadcasts: kind === 'baseline', window: tickWindow() }) },
-  // BROADCASTS ON THE BASELINE ONLY. Who is carrying a game is set days ahead
-  // and does not change while it is being played; asking again every 5 minutes
-  // would buy nothing and spend two provider calls a tick to buy it.
+  // CFB BROADCASTS ARE NOT ON THIS CRON AT ALL (sun-9 f). Who is carrying a
+  // game is set days ahead; the 30-min baseline re-asked it with two CFBD
+  // /games/media calls, ~96 a day for a fact that changes weekly.
+  // gridiron-season reads media once a day at 09:00Z (broadcasts: true there),
+  // which is the whole of the CFB outlet's cadence now. The NFL arm above is
+  // ESPN, not CFBD quota, and keeps its baseline read.
+  //
+  // timings.nfl: the NFL league's wall time on THIS tick, carried into the CFB
+  // row (sun-9 a) - they share one 120 s function, so a slow NFL is a slow CFB.
   { slug: 'cfb', source: 'cfb-games', cfbd: true,
-    run: (leagueId, season, kind) => syncCfbGames(leagueId, season, { broadcasts: kind === 'baseline', window: tickWindow() }) },
+    run: (leagueId, season, kind, ctx) => syncCfbGames(leagueId, season, { broadcasts: false, window: tickWindow(), timings: { nfl: ctx.elapsed['nfl-games'] ?? 0 } }) },
 ];
 
 async function leagueIdBySlug(slug) {
@@ -60,8 +66,10 @@ export async function GET(request) {
   // Sample noop rows: only the first tick of each hour records one.
   const recordNoop = now.getUTCMinutes() < LIVE_INTERVAL_MIN;
   const decisions = [];
+  const elapsed = {};   // source -> ms this tick spent on it
 
   for (const lg of LEAGUES) {
+    const leagueStart = Date.now();
     const leagueId = await leagueIdBySlug(lg.slug);
     if (leagueId == null) { decisions.push({ source: lg.source, decision: 'no-league-row' }); continue; }
 
@@ -97,7 +105,7 @@ export async function GET(request) {
         source: lg.source,
         kind,
         budget: lg.cfbd ? probeCfbdBudget : null,
-        run: () => lg.run(leagueId, season, kind),
+        run: () => lg.run(leagueId, season, kind, { elapsed }),
       });
       const unknown = res.summary?.unknownStatus ?? 0;
       // KICKOFF DRIFT IS ITS OWN ALARM, not a line inside the generic one. A
@@ -129,6 +137,7 @@ export async function GET(request) {
       return res;
     });
 
+    elapsed[lg.source] = Date.now() - leagueStart;
     if (outcome.locked) {
       await recordDecision(sql, { source: lg.source, kind: 'skipped-locked', summary: { season, ...windowCtx } });
       decisions.push({ source: lg.source, decision: 'skipped-locked', ...windowCtx });
