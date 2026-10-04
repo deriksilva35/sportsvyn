@@ -1,4 +1,4 @@
-import { Saira, Saira_Condensed, Source_Serif_4, JetBrains_Mono, Archivo, Rubik, Rubik_Mono_One } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import AppTabBar from '@/components/shell/AppTabBar';
 import AppHeader from '@/components/shell/AppHeader';
@@ -9,44 +9,69 @@ import '@/components/shell/apptab.css';
 import { firstPaintColor, dataTheme, shellThemeScript } from '@/lib/brand/theme';
 import { SHELL_COOKIE, SHELL_VALUE } from '@/lib/shell/constants';
 
-const saira = Saira({
+// THE FACES ARE SELF-HOSTED (sun-12 item 4). They were next/font/google, which
+// fetches from Google DURING THE BUILD; that fetch failed a production build on
+// 1 Oct and two previews on 3-4 Oct ("Can't resolve ...font/google/font"). The
+// files in app/fonts/ are the exact Latin woff2 Google served for these weights
+// (OFL - the licences sit beside them), so a build never touches the network.
+// Each family keeps its Google name (the font-family declaration), its CSS
+// variable, display: swap and the same metric-adjusted fallback (Arial, or
+// Times New Roman for the serif - what next/font/google picked), so the
+// computed stacks are what they were. The options are literals: next/font
+// rejects anything computed. JetBrains Mono, Archivo and Rubik are
+// variable fonts: Google served one file for every weight, so each weight is
+// its own @font-face on that one file, as before. lib/brand/fontsLocal.test.mjs
+// keeps next/font/google out.
+const saira = localFont({
   variable: "--font-saira",
-  weight: "900",
-  style: ["normal", "italic"],
-  subsets: ["latin"],
+  src: [
+    { path: "./fonts/Saira-900.woff2", weight: "900", style: "normal" },
+    { path: "./fonts/Saira-900Italic.woff2", weight: "900", style: "italic" },
+  ],
+  declarations: [{ prop: "font-family", value: "'Saira'" }],
   display: "swap",
 });
 
-const sourceSerif = Source_Serif_4({
+const sourceSerif = localFont({
   variable: "--font-source-serif",
-  weight: "400",
-  style: "italic",
-  subsets: ["latin"],
+  src: [{ path: "./fonts/SourceSerif4-400Italic.woff2", weight: "400", style: "italic" }],
+  declarations: [{ prop: "font-family", value: "'Source Serif 4'" }],
+  adjustFontFallback: "Times New Roman",
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const jetbrainsMono = localFont({
   variable: "--font-jetbrains-mono",
-  weight: ["400", "500", "700"],
-  subsets: ["latin"],
+  src: [
+    { path: "./fonts/JetBrainsMono-wght.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/JetBrainsMono-wght.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/JetBrainsMono-wght.woff2", weight: "700", style: "normal" },
+  ],
+  declarations: [{ prop: "font-family", value: "'JetBrains Mono'" }],
   display: "swap",
 });
 
 // Added for the gridiron surfaces (design tokens v1.1). Additive: new CSS
 // variables on <html>; existing pages do not reference them, so they render
 // identically.
-const sairaCondensed = Saira_Condensed({
+const sairaCondensed = localFont({
   variable: "--font-saira-condensed",
-  weight: ["500", "600", "700"],
-  style: "normal",
-  subsets: ["latin"],
+  src: [
+    { path: "./fonts/SairaCondensed-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/SairaCondensed-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/SairaCondensed-700.woff2", weight: "700", style: "normal" },
+  ],
+  declarations: [{ prop: "font-family", value: "'Saira Condensed'" }],
   display: "swap",
 });
 
-const archivo = Archivo({
+const archivo = localFont({
   variable: "--font-archivo",
-  weight: ["400", "500"],
-  subsets: ["latin"],
+  src: [
+    { path: "./fonts/Archivo-wght.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Archivo-wght.woff2", weight: "500", style: "normal" },
+  ],
+  declarations: [{ prop: "font-family", value: "'Archivo'" }],
   display: "swap",
 });
 
@@ -55,18 +80,23 @@ const archivo = Archivo({
 // --font-rubik or --font-rubik-mono until R1 points the --tok-font-* roles at
 // them (app/globals.css), and preload is off until then so R0 adds no request
 // to a page that does not need the file.
-const rubik = Rubik({
+const rubik = localFont({
   variable: "--font-rubik",
-  weight: ["500", "700", "800", "900"],
-  subsets: ["latin"],
+  src: [
+    { path: "./fonts/Rubik-wght.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/Rubik-wght.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/Rubik-wght.woff2", weight: "800", style: "normal" },
+    { path: "./fonts/Rubik-wght.woff2", weight: "900", style: "normal" },
+  ],
+  declarations: [{ prop: "font-family", value: "'Rubik'" }],
   display: "swap",
   preload: false,
 });
 
-const rubikMono = Rubik_Mono_One({
+const rubikMono = localFont({
   variable: "--font-rubik-mono",
-  weight: "400",
-  subsets: ["latin"],
+  src: [{ path: "./fonts/RubikMonoOne-400.woff2", weight: "400", style: "normal" }],
+  declarations: [{ prop: "font-family", value: "'Rubik Mono One'" }],
   display: "swap",
   preload: false,
 });
