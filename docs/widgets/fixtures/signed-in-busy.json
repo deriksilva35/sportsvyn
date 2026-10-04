@@ -11,6 +11,14 @@
       "at": "2026-10-04T17:55:00.000Z"
     }
   },
+  "nextOpening": {
+    "key": "nba-pickem",
+    "sport": "NBA",
+    "name": "Pick'em",
+    "title": "Next slate",
+    "opensAt": "2026-10-20T10:00:00.000Z",
+    "href": "/pickem/nba"
+  },
   "games": [
     {
       "key": "nfl-pickem",
@@ -20,7 +28,6 @@
       "line": "9 of 14 picked",
       "count": 5,
       "lockAt": "2026-10-04T17:55:00.000Z",
-      "opensAt": null,
       "urgent": true,
       "href": "/pickem/nfl"
     },
@@ -32,7 +39,6 @@
       "line": "4 of 6",
       "count": 2,
       "lockAt": "2026-10-04T17:55:00.000Z",
-      "opensAt": null,
       "urgent": true,
       "href": "/weekly"
     },
@@ -44,7 +50,6 @@
       "line": "2 of 5 picked",
       "count": 3,
       "lockAt": "2026-10-04T20:00:00.000Z",
-      "opensAt": null,
       "urgent": false,
       "href": "/october"
     },
@@ -56,7 +61,6 @@
       "line": "0 of 9 set",
       "count": 9,
       "lockAt": "2026-10-04T20:00:00.000Z",
-      "opensAt": null,
       "urgent": false,
       "href": "/run"
     },
@@ -68,7 +72,6 @@
       "line": "0 of 4 series picked",
       "count": 4,
       "lockAt": "2026-10-05T03:30:00.000Z",
-      "opensAt": null,
       "urgent": false,
       "href": "/pickem/mlb"
     },
@@ -80,7 +83,6 @@
       "line": "Roster in · waiting for lock",
       "count": null,
       "lockAt": "2026-10-04T17:55:00.000Z",
-      "opensAt": null,
       "urgent": false,
       "href": "/draft"
     }

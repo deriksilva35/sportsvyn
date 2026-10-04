@@ -16,7 +16,6 @@
       "line": "14 of 14 picked",
       "count": 0,
       "lockAt": "2026-10-04T20:35:00.000Z",
-      "opensAt": null,
       "urgent": false,
       "href": "/pickem/nfl"
     },
@@ -28,7 +27,6 @@
       "line": "6 of 6",
       "count": 0,
       "lockAt": "2026-10-04T20:35:00.000Z",
-      "opensAt": null,
       "urgent": false,
       "href": "/weekly"
     }

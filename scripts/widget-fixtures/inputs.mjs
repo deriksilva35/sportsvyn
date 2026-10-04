@@ -39,6 +39,8 @@ const BUSY_ITEMS = [
   item({ key: 'mlb-series', sport: 'mlb', game: 'pickem', name: "Series Pick'em", title: 'Division Series', status: '0 of 4 series picked', locksAt: at(600), progress: { done: 0, total: 4 }, href: '/pickem/mlb' }),
   item({ key: 'epl-weekly-5', sport: 'epl', game: 'epl_weekly_5', name: 'EPL Weekly 5', title: gameweekLabel(7), status: `${gameweekLabel(7)} · in play`, locksAt: null, progress: { done: 5, total: 5 }, href: '/epl-weekly-5' }),
   item({ key: 'daily', sport: 'all', game: 'daily', name: 'The Daily', title: "Today's board", status: "Today's puzzle · 8 slots", locksAt: at(630), href: '/daily/board' }),
+  // NOT OPEN YET: the feed's nextOpening (NBA opening night, 6 AM ET 20 Oct)
+  item({ key: 'nba-pickem', sport: 'nba', game: 'pickem', name: "Pick'em", title: 'Next slate', status: 'Daily · 2 games', opensAt: '2026-10-20T10:00:00.000Z', locksAt: null, href: '/pickem/nba' }),
 ];
 
 const QUIET_ITEMS = [

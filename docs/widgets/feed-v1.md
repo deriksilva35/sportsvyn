@@ -61,8 +61,9 @@ The only non-200 response is **429** `{ "v": 1, "state": "rate_limited", "genera
 - **Strings** are short and clipped with `…` at their caps (below).
 - **Teams are never nested objects.** A row carries a team's id, abbreviation, short name and two colours as flat fields.
 - **Colours** are `#RRGGBB`, or null.
-- **Size**: under 8 KB. A test fills every list to its cap and every string to its maximum, and asserts the result (it measures 6,068 bytes with every `via` kind on every stake). The busy fixture is 4,255 bytes.
-- `v` is the version. A breaking change ships as `/api/widget/v2`. v1 only ever **adds** optional fields, so ignore unknown keys.
+- **Size**: under 8 KB. A test fills every list to its cap and every string to its maximum, and asserts the result (it measures 6,267 bytes, with `nextOpening` present and every `via` kind on every stake). The busy fixture is 4,310 bytes.
+- `v` is the version. A breaking change ships as `/api/widget/v2`. v1 only ever **adds**: optional fields (absent when empty, never null) and new values in enum-like lists such as `via`. So ignore unknown keys, and treat an unknown `via` value as "a game you're in".
+- **Optional fields** (marked *opt*) are absent rather than null when there is nothing to say. Decode them as optionals.
 
 ## `GET /api/widget/v1`: field by field
 
@@ -78,6 +79,7 @@ Types: `string(n)` means at most n characters. `?` means the value can be null. 
 | `cta` | `{label: string(24), href: string(64)}?` | Null when `ok` |
 | `yourMove` | object | |
 | `games` | array, max 6 | |
+| `nextOpening` | object *opt* | Absent when no door is ahead |
 | `daily` | object? | |
 | `teams` | array, max 4 | |
 | `inYourGames` | array, max 4 | |
@@ -95,7 +97,7 @@ Every game the reader can act on right now: open, with something left for them t
 
 The YOUR MOVE games first, in lock order. Then the reader's other open or in-play games, in the Play tab's group order. The Daily is left out (it has its own block), and so are settled games and games whose door has not opened.
 
-**When that leaves the list empty, it holds one row instead: the next opening.** That is the soonest door among games not yet open (never The Daily). The row has `line: "Opens"`, `opensAt` set to the instant, and `lockAt: null`, `count: null`, `urgent: false`. The words never carry a time or a zone. Draw it as `name` + "opens" + `opensAt` formatted in the device's zone, e.g. "CFB Pick'em · opens Tue 6:00 AM".
+The list can be empty on a quiet day. The next door is then in the top-level `nextOpening` (below), never a row here.
 
 | Field | Type | Example |
 |---|---|---|
@@ -103,12 +105,24 @@ The YOUR MOVE games first, in lock order. Then the reader's other open or in-pla
 | `sport` | string(12) | `"NFL"` |
 | `name` | string(40) | `"Pick'em"` |
 | `title` | string(40)? | `"Week 5"` |
-| `line` | string(40)? | `"9 of 14 picked"`: the lobby's status line, with no time in it. `"Opens"` on the next-opening row |
+| `line` | string(40)? | `"9 of 14 picked"`: the lobby's status line, with no time in it |
 | `count` | int? | Picks or slots still to make (`total - done` from the game's own progress). Null for games that have no count |
-| `lockAt` | ISO Z? | The next lock the reader can still beat. Null when nothing is left to beat (in play, grading), and on the next-opening row |
-| `opensAt` | ISO Z? | Only on the next-opening row: when it opens. Null on every other row |
+| `lockAt` | ISO Z? | The next lock the reader can still beat. Null when nothing is left to beat (in play, grading) |
 | `urgent` | bool | **Urgent** = the game is open, the reader still has something to do on it, and `lockAt` is at most **60 minutes** away. A finished card is never urgent |
 | `href` | string(64)? | `"/pickem/nfl"` |
+
+### `nextOpening` *opt*
+
+The soonest game door that has not opened yet. The Daily is never included, because it opens every midnight. The key is **present whenever a door is ahead and absent when there is none** (never null). It sits at the top level, not as a `games[]` row (sun-25). Draw it on a quiet day when `games` is empty, e.g. "NBA Pick'em · opens Tue 6:00 AM", with `opensAt` formatted in the device's zone. No word in it carries a time or a zone.
+
+| Field | Type | Example |
+|---|---|---|
+| `key` | string(32) | `"nba-pickem"` |
+| `sport` | string(12) | `"NBA"` |
+| `name` | string(40) | `"Pick'em"` |
+| `title` | string(40)? | `"Next slate"` |
+| `opensAt` | ISO Z | `"2026-10-20T10:00:00.000Z"` |
+| `href` | string(64)? | `"/pickem/nba"` |
 
 ### `daily`
 
@@ -193,8 +207,8 @@ See `docs/widgets/fixtures/`:
 
 | File | What it shows |
 |---|---|
-| `signed-in-busy.json` | Every list full: two urgent games, a live NFL team with a win probability (switch on), a live MLB team, a fresh CFB final, live and final stakes, and PHI@MIL in your games via a series pick, an October bat and a Run arm |
-| `signed-in-quiet.json` | Nothing to do: The Daily done, `games[]` shows the next opening (The Weekly, `opensAt`), one team with its next game a week out |
+| `signed-in-busy.json` | Every list full, plus `nextOpening` (NBA opening night): two urgent games, a live NFL team with a win probability (switch on), a live MLB team, a fresh CFB final, live and final stakes, and PHI@MIL in your games via a series pick, an October bat and a Run arm |
+| `signed-in-quiet.json` | Nothing to do: The Daily done, `games` empty, `nextOpening` = The Weekly, one team with its next game a week out |
 | `live-game.json` | One live game, Q3 7:22, followed and picked, with Weekly players in it |
 | `signed-out.json` | The sign-in state |
 | `age-pending.json` | The age-screen state |
@@ -207,7 +221,7 @@ A trimmed `signed-in-busy`:
   "v": 1, "state": "ok", "generatedAt": "2026-10-04T17:30:00.000Z", "cta": null,
   "yourMove": { "count": 6, "nextLock": { "game": "Pick'em", "sport": "NFL", "at": "2026-10-04T17:55:00.000Z" } },
   "games": [ { "key": "nfl-pickem", "sport": "NFL", "name": "Pick'em", "title": "Week 5", "line": "9 of 14 picked",
-               "count": 5, "lockAt": "2026-10-04T17:55:00.000Z", "opensAt": null, "urgent": true, "href": "/pickem/nfl" } ],
+               "count": 5, "lockAt": "2026-10-04T17:55:00.000Z", "urgent": true, "href": "/pickem/nfl" } ],
   "daily": { "state": "play", "open": true, "closesAt": "2026-10-05T04:00:00.000Z", "streak": 12, "href": "/daily/board" },
   "teams": [ { "teamId": 4, "team": "BUF", "teamName": "Bills", "league": "nfl", "color": "#00338D", "altColor": "#C60C30",
                "gameId": 9101, "home": true, "oppId": 25, "opp": "NYJ", "oppName": "Jets", "status": "live",
