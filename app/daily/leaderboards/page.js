@@ -11,7 +11,7 @@
  *
  * SERVER-SIDE SORT OR THE HEADER LIES - every leaderboard function already
  * returns its rows in final display order (ORDER BY in SQL, with rank as a
- * SQL dense_rank()); this page renders them as given, no client re-sort.
+ * SQL rank(), ties 1-1-3, lib/games/rank.js); this page renders them as given, no client re-sort.
  */
 
 import { pctOfCeiling } from '@/lib/daily/format';
