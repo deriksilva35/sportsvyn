@@ -7,7 +7,20 @@
     "count": 0,
     "nextLock": null
   },
-  "games": [],
+  "games": [
+    {
+      "key": "nfl-weekly",
+      "sport": "NFL",
+      "name": "The Weekly",
+      "title": "Week 6",
+      "line": "Opens",
+      "count": null,
+      "lockAt": null,
+      "opensAt": "2026-10-06T09:30:00.000Z",
+      "urgent": false,
+      "href": "/weekly"
+    }
+  ],
   "daily": {
     "state": "done",
     "open": false,

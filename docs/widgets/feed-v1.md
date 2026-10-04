@@ -6,7 +6,7 @@ The iOS widgets read two endpoints. The droplet repo serves the data and the Mac
 - Schema, as data, with a validator: `lib/widget/schema.js`
 - Reads: `lib/widget/reads.js`
 - Auth: `lib/widget/session.js`
-- Fixtures: `docs/widgets/fixtures/*.json`. They are the real serializer's output on stub inputs (`lib/widget/fixtureInputs.js`), written by `node scripts/widget-fixtures.mjs`. `lib/widget/feed.test.mjs` fails if they drift from the code or stop validating.
+- Fixtures: `docs/widgets/fixtures/*.json`. They are the real serializer's output on stub inputs (`scripts/widget-fixtures/inputs.mjs`), written by `node scripts/widget-fixtures.mjs`. `lib/widget/feed.test.mjs` fails if they drift from the code or stop validating.
 
 ## Endpoints
 
@@ -61,7 +61,7 @@ The only non-200 response is **429** `{ "v": 1, "state": "rate_limited", "genera
 - **Strings** are short and clipped with `…` at their caps (below).
 - **Teams are never nested objects.** A row carries a team's id, abbreviation, short name and two colours as flat fields.
 - **Colours** are `#RRGGBB`, or null.
-- **Size**: under 8 KB. A test fills every list to its cap and every string to its maximum, and asserts the result (it measures 5,770 bytes). The busy fixture is 4,067 bytes.
+- **Size**: under 8 KB. A test fills every list to its cap and every string to its maximum, and asserts the result (it measures 6,068 bytes with every `via` kind on every stake). The busy fixture is 4,255 bytes.
 - `v` is the version. A breaking change ships as `/api/widget/v2`. v1 only ever **adds** optional fields, so ignore unknown keys.
 
 ## `GET /api/widget/v1`: field by field
@@ -95,15 +95,18 @@ Every game the reader can act on right now: open, with something left for them t
 
 The YOUR MOVE games first, in lock order. Then the reader's other open or in-play games, in the Play tab's group order. The Daily is left out (it has its own block), and so are settled games and games whose door has not opened.
 
+**When that leaves the list empty, it holds one row instead: the next opening.** That is the soonest door among games not yet open (never The Daily). The row has `line: "Opens"`, `opensAt` set to the instant, and `lockAt: null`, `count: null`, `urgent: false`. The words never carry a time or a zone. Draw it as `name` + "opens" + `opensAt` formatted in the device's zone, e.g. "CFB Pick'em · opens Tue 6:00 AM".
+
 | Field | Type | Example |
 |---|---|---|
 | `key` | string(32) | `"nfl-pickem"`: stable per game, so use it to pick an icon |
 | `sport` | string(12) | `"NFL"` |
 | `name` | string(40) | `"Pick'em"` |
 | `title` | string(40)? | `"Week 5"` |
-| `line` | string(40)? | `"9 of 14 picked"`: the lobby's status line, with no time in it |
+| `line` | string(40)? | `"9 of 14 picked"`: the lobby's status line, with no time in it. `"Opens"` on the next-opening row |
 | `count` | int? | Picks or slots still to make (`total - done` from the game's own progress). Null for games that have no count |
-| `lockAt` | ISO Z? | The next lock the reader can still beat. Null when nothing is left to beat (in play, grading) |
+| `lockAt` | ISO Z? | The next lock the reader can still beat. Null when nothing is left to beat (in play, grading), and on the next-opening row |
+| `opensAt` | ISO Z? | Only on the next-opening row: when it opens. Null on every other row |
 | `urgent` | bool | **Urgent** = the game is open, the reader still has something to do on it, and `lockAt` is at most **60 minutes** away. A finished card is never urgent |
 | `href` | string(64)? | `"/pickem/nfl"` |
 
@@ -136,7 +139,7 @@ The reader's followed teams (or the `?teams=` selection). The order is: live, th
 | `status` | `"pre" \| "live" \| "final" \| "none"` | |
 | `score`, `oppScore` | int? | The team's and the opponent's. Null before a game, never 0 |
 | `clock` | string(16)? | Live: `"Q3 7:22"`, `"HT"`, `"OT 3:10"`, `"Top 7th"`, `"Q4 5:55"`. Final: `"Final"`, `"F/OT"`, `"F/10"`. Null before |
-| `winProb` | int 0-100? | **This team's** live win probability. Shown only while live, only for sports that display one (NFL and CFB), only when the stored number is under 5 minutes old, and **only when the server's `WINPROB_PHONE` switch is on**. That is the same switch the Live Activity obeys, and it is **off today**, so expect null |
+| `winProb` | int 0-100? | **This team's** live win probability. Shown only while live, only when the stored number is under 5 minutes old, and **only where the phone switch is on for that league**: `lib/winprob/display.js` `PHONE`, which is the same switch the Live Activity obeys. Ruling sun-23: **NFL on, CFB off** until CFB's sealed re-score passes. That map ships on branch `winprob-phone-nfl`. Until it merges, the switch is the old env flag, which is off, so expect null |
 | `startAt` | ISO Z? | Kickoff of the focus game |
 | `nextAt` | ISO Z? | Kickoff of the team's next game after the focus game |
 | `result` | `"W" \| "L" \| "T"`? | Finals only |
@@ -144,7 +147,18 @@ The reader's followed teams (or the `?teams=` selection). The order is: live, th
 
 ### `inYourGames[]`
 
-Games from the last 12 h, games live now, and games in the next 24 h where the reader has **something riding**: a Pick'em pick on the game or Weekly players in it (stakeForMatches, lib/gridiron/scoresV2.js). A follow alone does not count (that is the teams block). Live games come first, then games by kickoff.
+Games from the last 12 h, games live now, and games in the next 24 h where the reader has **something riding**. That comes from their picks and lineups only:
+
+| `via` | Source |
+|---|---|
+| `pickem` | A Pick'em pick on this game: NFL, CFB, NBA daily (stakeForMatches, lib/gridiron/scoresV2.js) |
+| `series` | A Series Pick'em pick on the series these two clubs are playing (currentSeriesBoard). `pick` is the club picked |
+| `weekly` | Weekly players in this game (stakeForMatches) |
+| `october` | An October player whose slot names this game (currentOctoberDay) |
+| `run` | A Run player whose club plays in this game (currentRunRound) |
+| `six` | A Tonight's Six player whose slot names this game (currentSixNight) |
+
+A follow alone does not count (that is the teams block), and neither does an alert. Live games come first, then games by kickoff.
 
 | Field | Type | Example |
 |---|---|---|
@@ -158,8 +172,9 @@ Games from the last 12 h, games live now, and games in the next 24 h where the r
 | `startAt` | ISO Z? | |
 | `pick` | string(6)? | The abbreviation the reader picked |
 | `pickState` | `"pending" \| "winning" \| "losing" \| "tied" \| "won" \| "lost" \| "push"`? | |
-| `players` | int | The reader's Weekly players in this game (NFL) |
-| `points` | number? | Those players' fantasy points so far (1 dp). Null when `players` is 0 |
+| `players` | int | The reader's players in this game, across Weekly, October, The Run and Tonight's Six |
+| `points` | number? | The Weekly players' fantasy points so far (1 dp). Null when the reader has no Weekly player in this game. The other games score on their own pages |
+| `via` | array of `"pickem" \| "series" \| "weekly" \| "october" \| "run" \| "six"` | Why this game is listed, in that fixed order; at least one |
 | `href` | string(64)? | The game page |
 
 ## `GET /api/widget/v1/teams`
@@ -178,8 +193,8 @@ See `docs/widgets/fixtures/`:
 
 | File | What it shows |
 |---|---|
-| `signed-in-busy.json` | Every list full: two urgent games, a live NFL team with a win probability (switch on), a live MLB team, a fresh CFB final, live and final stakes |
-| `signed-in-quiet.json` | Nothing to do: The Daily done, one team with its next game a week out |
+| `signed-in-busy.json` | Every list full: two urgent games, a live NFL team with a win probability (switch on), a live MLB team, a fresh CFB final, live and final stakes, and PHI@MIL in your games via a series pick, an October bat and a Run arm |
+| `signed-in-quiet.json` | Nothing to do: The Daily done, `games[]` shows the next opening (The Weekly, `opensAt`), one team with its next game a week out |
 | `live-game.json` | One live game, Q3 7:22, followed and picked, with Weekly players in it |
 | `signed-out.json` | The sign-in state |
 | `age-pending.json` | The age-screen state |
@@ -192,7 +207,7 @@ A trimmed `signed-in-busy`:
   "v": 1, "state": "ok", "generatedAt": "2026-10-04T17:30:00.000Z", "cta": null,
   "yourMove": { "count": 6, "nextLock": { "game": "Pick'em", "sport": "NFL", "at": "2026-10-04T17:55:00.000Z" } },
   "games": [ { "key": "nfl-pickem", "sport": "NFL", "name": "Pick'em", "title": "Week 5", "line": "9 of 14 picked",
-               "count": 5, "lockAt": "2026-10-04T17:55:00.000Z", "urgent": true, "href": "/pickem/nfl" } ],
+               "count": 5, "lockAt": "2026-10-04T17:55:00.000Z", "opensAt": null, "urgent": true, "href": "/pickem/nfl" } ],
   "daily": { "state": "play", "open": true, "closesAt": "2026-10-05T04:00:00.000Z", "streak": 12, "href": "/daily/board" },
   "teams": [ { "teamId": 4, "team": "BUF", "teamName": "Bills", "league": "nfl", "color": "#00338D", "altColor": "#C60C30",
                "gameId": 9101, "home": true, "oppId": 25, "opp": "NYJ", "oppName": "Jets", "status": "live",
@@ -200,11 +215,11 @@ A trimmed `signed-in-busy`:
                "nextAt": "2026-10-11T17:30:00.000Z", "result": null, "href": "/nfl/game/nyj-at-buf-2026-10-04" } ],
   "inYourGames": [ { "gameId": 9101, "league": "nfl", "away": "NYJ", "home": "BUF", "awayColor": "#125740", "homeColor": "#00338D",
                      "awayScore": 17, "homeScore": 24, "status": "live", "clock": "Q3 7:22", "startAt": "2026-10-04T16:00:00.000Z",
-                     "pick": "BUF", "pickState": "winning", "players": 2, "points": 31.2, "href": "/nfl/game/nyj-at-buf-2026-10-04" } ]
+                     "pick": "BUF", "pickState": "winning", "players": 2, "points": 31.2, "via": ["pickem", "weekly"], "href": "/nfl/game/nyj-at-buf-2026-10-04" } ]
 }
 ```
 
 ## Known gaps in v1
 
-- `inYourGames` covers Pick'em picks keyed by match (NFL, CFB, NBA daily) and Weekly players. It does not cover MLB October, The Run, Series Pick'em (keyed by series), or Tonight's Six players. Each of those still appears in `games[]` with its own count and lock.
-- `winProb` stays null until `WINPROB_PHONE=on`.
+- `points` is Weekly-only. October, The Run and Tonight's Six points are on their own pages.
+- `winProb` stays null until `winprob-phone-nfl` merges (NFL on, CFB off).

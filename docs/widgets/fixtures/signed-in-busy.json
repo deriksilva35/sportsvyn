@@ -20,6 +20,7 @@
       "line": "9 of 14 picked",
       "count": 5,
       "lockAt": "2026-10-04T17:55:00.000Z",
+      "opensAt": null,
       "urgent": true,
       "href": "/pickem/nfl"
     },
@@ -31,6 +32,7 @@
       "line": "4 of 6",
       "count": 2,
       "lockAt": "2026-10-04T17:55:00.000Z",
+      "opensAt": null,
       "urgent": true,
       "href": "/weekly"
     },
@@ -42,6 +44,7 @@
       "line": "2 of 5 picked",
       "count": 3,
       "lockAt": "2026-10-04T20:00:00.000Z",
+      "opensAt": null,
       "urgent": false,
       "href": "/october"
     },
@@ -53,6 +56,7 @@
       "line": "0 of 9 set",
       "count": 9,
       "lockAt": "2026-10-04T20:00:00.000Z",
+      "opensAt": null,
       "urgent": false,
       "href": "/run"
     },
@@ -64,6 +68,7 @@
       "line": "0 of 4 series picked",
       "count": 4,
       "lockAt": "2026-10-05T03:30:00.000Z",
+      "opensAt": null,
       "urgent": false,
       "href": "/pickem/mlb"
     },
@@ -75,6 +80,7 @@
       "line": "Roster in · waiting for lock",
       "count": null,
       "lockAt": "2026-10-04T17:55:00.000Z",
+      "opensAt": null,
       "urgent": false,
       "href": "/draft"
     }
@@ -193,6 +199,10 @@
       "pickState": "winning",
       "players": 2,
       "points": 31.2,
+      "via": [
+        "pickem",
+        "weekly"
+      ],
       "href": "/nfl/game/nyj-at-buf-2026-10-04"
     },
     {
@@ -211,7 +221,33 @@
       "pickState": "winning",
       "players": 0,
       "points": null,
+      "via": [
+        "pickem"
+      ],
       "href": "/nfl/game/kc-at-jax-2026-10-04"
+    },
+    {
+      "gameId": 7741,
+      "league": "mlb",
+      "away": "PHI",
+      "home": "MIL",
+      "awayColor": "#E81828",
+      "homeColor": "#12284B",
+      "awayScore": 3,
+      "homeScore": 2,
+      "status": "live",
+      "clock": "Top 4th",
+      "startAt": "2026-10-04T16:50:00.000Z",
+      "pick": "PHI",
+      "pickState": "winning",
+      "players": 2,
+      "points": null,
+      "via": [
+        "series",
+        "october",
+        "run"
+      ],
+      "href": "/mlb/game/phi-at-mil-2026-10-04"
     },
     {
       "gameId": 9099,
@@ -229,25 +265,10 @@
       "pickState": "won",
       "players": 0,
       "points": null,
+      "via": [
+        "pickem"
+      ],
       "href": "/nfl/game/det-at-min-2026-10-04"
-    },
-    {
-      "gameId": 9105,
-      "league": "nfl",
-      "away": "SF",
-      "home": "LAR",
-      "awayColor": "#AA0000",
-      "homeColor": "#003594",
-      "awayScore": null,
-      "homeScore": null,
-      "status": "pre",
-      "clock": null,
-      "startAt": "2026-10-04T20:35:00.000Z",
-      "pick": "SF",
-      "pickState": "pending",
-      "players": 1,
-      "points": 0,
-      "href": "/nfl/game/sf-at-lar-2026-10-04"
     }
   ]
 }

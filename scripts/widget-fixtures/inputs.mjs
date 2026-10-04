@@ -1,4 +1,10 @@
-// lib/widget/fixtureInputs.js - STUB INPUTS for the widget fixtures (sun-22).
+// scripts/widget-fixtures/inputs.mjs - STUB INPUTS for the widget fixtures (sun-22).
+//
+// OUT OF lib/ ON PURPOSE (sun-24 A): these are documentation inputs - typed
+// team colours and copy for the Mac's offline fixtures - not product code, so
+// they live beside the script that writes them, outside the trees the colour
+// ratchet (lib/brand/hexCensus.js) and the round-label guard walk. Round words
+// still go through lib/soccer/roundLabel.js like everywhere else.
 //
 // docs/widgets/fixtures/*.json are the REAL serializer (lib/widget/shape.js)
 // run over these inputs at a fixed clock - scripts/widget-fixtures.mjs writes
@@ -9,8 +15,9 @@
 // EVERY TIME IS RELATIVE TO FIXTURE_NOW, which is fixed: the fixtures are a
 // document for the Mac to build against offline, not a test of today.
 
-import { playLobby } from '../games/playLobby.js';
-import { serializeFeed, signedOutFeed, ageFeed, pickerFeed } from './shape.js';
+import { playLobby } from '../../lib/games/playLobby.js';
+import { serializeFeed, signedOutFeed, ageFeed, pickerFeed } from '../../lib/widget/shape.js';
+import { gameweekLabel } from '../../lib/soccer/roundLabel.js';
 
 /** Sunday 4 Oct 2026, 1:30 PM ET. */
 export const FIXTURE_NOW = new Date('2026-10-04T17:30:00.000Z');
@@ -30,7 +37,7 @@ const BUSY_ITEMS = [
   item({ key: 'mlb-october', sport: 'mlb', game: 'october', name: 'October', title: 'Five a day', status: '2 of 5 picked', locksAt: at(150), progress: { done: 2, total: 5 }, href: '/october' }),
   item({ key: 'mlb-run', sport: 'mlb', game: 'run', name: 'The Run', title: 'Wild Card', status: '0 of 9 set', locksAt: at(150), progress: { done: 0, total: 9 }, href: '/run' }),
   item({ key: 'mlb-series', sport: 'mlb', game: 'pickem', name: "Series Pick'em", title: 'Division Series', status: '0 of 4 series picked', locksAt: at(600), progress: { done: 0, total: 4 }, href: '/pickem/mlb' }),
-  item({ key: 'epl-weekly-5', sport: 'epl', game: 'epl_weekly_5', name: 'EPL Weekly 5', title: 'Gameweek 7', status: 'Gameweek 7 · in play', locksAt: null, progress: { done: 5, total: 5 }, href: '/epl-weekly-5' }),
+  item({ key: 'epl-weekly-5', sport: 'epl', game: 'epl_weekly_5', name: 'EPL Weekly 5', title: gameweekLabel(7), status: `${gameweekLabel(7)} · in play`, locksAt: null, progress: { done: 5, total: 5 }, href: '/epl-weekly-5' }),
   item({ key: 'daily', sport: 'all', game: 'daily', name: 'The Daily', title: "Today's board", status: "Today's puzzle · 8 slots", locksAt: at(630), href: '/daily/board' }),
 ];
 
@@ -101,6 +108,22 @@ const G_DET = game({ id: 9099, slug: 'det-at-min-2026-10-04', status: 'final', k
   home: { id: 21, name: 'Vikings', abbreviation: 'MIN', colors: { primary: '#4F2683', secondary: '#FFC62F' } },
   away: { id: 11, name: 'Lions', abbreviation: 'DET', colors: { primary: '#0076B6', secondary: '#B0B7BC' } } });
 
+const G_PHI = game({ id: 7741, slug: 'phi-at-mil-2026-10-04', leagueSlug: 'mlb', status: 'live', kickoffAt: at(-40), homeScore: 2, awayScore: 3,
+  liveState: { period: 4, half: 'top' },
+  home: { id: 3312, name: 'Brewers', abbreviation: 'MIL', colors: { primary: '#12284B', secondary: '#FFC52F' } },
+  away: { id: 3305, name: 'Phillies', abbreviation: 'PHI', colors: { primary: '#E81828', secondary: '#002D72' } } });
+
+// THE LINEUP STAKES: an October bat and a Run arm in PHI@MIL, and the series picked for PHI.
+const LINEUPS = {
+  october: { bat1: { playerId: '501', matchId: 7741, kind: 'bat', name: 'K. Schwarber', team: 'PHI' } },
+  run: { arm: { playerId: '777', teamId: 3312, kind: 'arm', name: 'F. Peralta', team: 'MIL' } },
+  series: {
+    board: [{ series_key: '2026-nlds-phi-mil', teams: [{ team_id: 3305, abbr: 'PHI' }, { team_id: 3312, abbr: 'MIL' }] }],
+    lineup: { '2026-nlds-phi-mil': 3305 },
+  },
+  six: null,
+};
+
 const stake = (pick, weekly = []) => ({ pick, weekly, alerts: false, follow: null });
 
 // ---- the feeds -------------------------------------------------------------
@@ -111,10 +134,11 @@ const dailyCard = (state, closesMin = 630) => ({ state, closesAt: at(closesMin) 
 export function fixtureFeeds() {
   return {
     'signed-in-busy': serializeFeed({
-      view: view(BUSY_ITEMS),
+      view: view(BUSY_ITEMS), items: BUSY_ITEMS,
       daily: dailyCard('play'), streak: 12,
       teamRows: [NEXT_LAD, NONE_ARS, FINAL_GA, LIVE_BUF, LIVE_PHI],
-      stakeGames: [G_SF, G_DAL, G_DET, G_KC, G_BUF],
+      stakeGames: [G_SF, G_DAL, G_DET, G_KC, G_BUF, G_PHI],
+      lineups: LINEUPS,
       stakes: new Map([
         [9101, stake({ side: 'home', abbr: 'BUF', state: 'winning' }, [{ name: 'J. Allen', pos: 'QB', points: 21.36 }, { name: 'J. Cook', pos: 'RB', points: 9.8 }])],
         [9102, stake({ side: 'away', abbr: 'KC', state: 'winning' })],
@@ -125,14 +149,14 @@ export function fixtureFeeds() {
       phoneOn: true,
     }, FIXTURE_NOW),
     'signed-in-quiet': serializeFeed({
-      view: view(QUIET_ITEMS),
+      view: view(QUIET_ITEMS), items: QUIET_ITEMS,
       daily: dailyCard('done'), streak: 3,
       teamRows: [team({ teamId: 4, gameId: 9201, gameSlug: 'buf-at-ne-2026-10-11', status: 'scheduled', kickoffAt: at(60 * 24 * 7 - 30), homeTeamId: 19,
         oppId: 19, oppAbbr: 'NE', oppName: 'Patriots', nextAt: at(60 * 24 * 14) })],
       stakeGames: [], stakes: new Map(), phoneOn: false,
     }, FIXTURE_NOW),
     'live-game': serializeFeed({
-      view: view(LIVE_ITEMS),
+      view: view(LIVE_ITEMS), items: LIVE_ITEMS,
       daily: dailyCard('in-progress'), streak: 0,
       teamRows: [LIVE_BUF],
       stakeGames: [G_BUF],

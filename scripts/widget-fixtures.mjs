@@ -1,6 +1,6 @@
 // scripts/widget-fixtures.mjs - write docs/widgets/fixtures/*.json from the
 // real widget serializer (lib/widget/shape.js) over the stub inputs in
-// lib/widget/fixtureInputs.js. No database, no env. Re-run after any change to
+// scripts/widget-fixtures/inputs.mjs. No database, no env. Re-run after any change to
 // the feed's shape; lib/widget/feed.test.mjs fails until you do.
 //
 //   node scripts/widget-fixtures.mjs          write
@@ -9,7 +9,7 @@
 import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fixtureFeeds, fixturePicker } from '../lib/widget/fixtureInputs.js';
+import { fixtureFeeds, fixturePicker } from './widget-fixtures/inputs.mjs';
 
 const DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'widgets', 'fixtures');
 
