@@ -8,9 +8,12 @@
  * silently writing a World Cup draft for a caller that asked for the NFL is the
  * kind of wrong that only shows up after publication.
  *
- * Programmatic trigger for the prompt-attached topic_draft pipeline. Auth gate
- * copies the cron routes' shape (Bearer token -> 401), but keyed on ADMIN_SECRET
- * because this is admin-triggered, not a cron. Runs lib/topicDraft.js inline and
+ * Programmatic trigger for the prompt-attached topic_draft pipeline. AUTH IS
+ * THE ADMIN BASIC CREDENTIAL (requireAdmin, sun-12 item 1), the same one
+ * proxy.js demands on /api/admin/*. It used to be `Bearer ADMIN_SECRET`, which
+ * could never be satisfied: a request carries one Authorization header, and the
+ * proxy refuses anything that is not Basic before this handler runs. So call it
+ * with `curl -u "$ADMIN_USERNAME:$ADMIN_SECRET"`. Runs lib/topicDraft.js inline and
  * returns a JSON summary. The admin UI's Generate button uses a Server Action
  * (repo-native admin pattern) rather than this route; the route exists for
  * scripted / out-of-band triggers. NEVER auto-publishes.
@@ -21,13 +24,15 @@
 
 import { runTopicDraft } from '@/lib/topicDraft';
 import { TOPIC_DRAFT_LEAGUE_SLUGS, WC_LEAGUE_SLUG } from '@/lib/topicDraftLeagues';
+import { requireAdmin } from '@/lib/admin/requireAdmin';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 export async function POST(request) {
-  const authHeader = request.headers.get('authorization');
-  if (!process.env.ADMIN_SECRET || authHeader !== `Bearer ${process.env.ADMIN_SECRET}`) {
+  try {
+    await requireAdmin();
+  } catch {
     return new Response('Unauthorized', { status: 401 });
   }
 

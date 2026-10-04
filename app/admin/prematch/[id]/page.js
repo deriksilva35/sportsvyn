@@ -7,7 +7,7 @@
  * row from render without deleting it.
  *
  * Auth: gated by proxy.js at the /admin/* matcher; the Server Actions
- * themselves re-verify ADMIN_SECRET presence (defense-in-depth).
+ * themselves call requireAdmin() first - the same Basic credential check.
  */
 
 import { sql } from '@/lib/db';

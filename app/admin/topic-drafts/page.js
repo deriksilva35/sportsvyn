@@ -1,8 +1,8 @@
 /**
  * /admin/topic-drafts - prompt-attached AI draft admin surface.
  *
- * Proxy-gated (same as the other /admin pages); Server Actions re-assert the
- * admin env fail-closed. A league picker + a textarea + Generate runs
+ * Proxy-gated (same as the other /admin pages); every Server Action calls
+ * requireAdmin() first, the same Basic check the proxy makes. A league picker + a textarea + Generate runs
  * lib/topicDraft.js; drafts appear in a status-ordered list with a
  * PROMPTED - AI DRAFT badge and the original prompt shown above the draft.
  * Review is read-only here: no diff view, no inline editing. Discard
@@ -25,6 +25,7 @@
 import { sql } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { runTopicDraft } from '@/lib/topicDraft';
 import { TOPIC_DRAFT_LEAGUES, TOPIC_DRAFT_LEAGUE_SLUGS, WC_LEAGUE_SLUG } from '@/lib/topicDraftLeagues';
 import { publishTopicDraft } from '@/lib/articleReader';
@@ -42,15 +43,9 @@ const BORDER = 'rgba(245,245,242,0.16)';
 const CARD = 'rgba(245,245,242,0.05)';
 const LINK = '#58a6ff';
 
-function assertAdminEnv() {
-  if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_SECRET) {
-    throw new Error('Admin auth misconfigured');
-  }
-}
-
 async function generateTopicDraft(formData) {
   'use server';
-  assertAdminEnv();
+  await requireAdmin();
   const prompt = (formData.get('prompt') ?? '').toString().trim();
   if (!prompt) return;
   // Whitelisted here rather than trusted from the form: a hand-posted league
@@ -64,7 +59,7 @@ async function generateTopicDraft(formData) {
 
 async function discardTopicDraft(formData) {
   'use server';
-  assertAdminEnv();
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!Number.isInteger(id) || id <= 0) return;
   await sql`UPDATE topic_drafts SET status = 'discarded', updated_at = now() WHERE id = ${id} AND status <> 'published'`;
@@ -82,7 +77,7 @@ async function discardTopicDraft(formData) {
 // This is the thin caller: admin gate, then revalidate and go read the piece.
 async function publishTopicDraftAction(formData) {
   'use server';
-  assertAdminEnv();
+  await requireAdmin();
   const r = await publishTopicDraft(Number(formData.get('id')));
   revalidatePath('/admin/topic-drafts');
   revalidatePath('/');
