@@ -43,7 +43,9 @@ try {
   console.log(
     `[daily-tick] ${now} ensured=${r.ensured?.edition_date ?? 'n/a'} `
     + `live=${r.live.map((x) => x.edition).join(',') || 'none'} `
-    + `revealed=${r.revealed.map((x) => x.edition).join(',') || 'none'}`,
+    + `revealed=${r.revealed.map((x) => x.edition).join(',') || 'none'} `
+    + `morning=${r.morning.map((x) => `${x.eventId}(${x.recipients})`).join(',') || 'none'}`
+    + (r.morningError ? ` morningError=${r.morningError}` : ''),
   );
 } catch (e) {
   console.error(`[daily-tick] ERROR: ${e.message}`);

@@ -1,3 +1,74 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { background }",
+      "after": "?--lb-volt"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { border }",
+      "after": "0"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { border-radius }",
+      "after": "12px"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { color }",
+      "after": "?--lb-navy"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { cursor }",
+      "after": "pointer"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { display }",
+      "after": "block"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { font-family }",
+      "after": "?--lb-mono"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { font-size }",
+      "after": "13px"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { font-weight }",
+      "after": "700"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { letter-spacing }",
+      "after": "0.04em"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { margin-top }",
+      "after": "12px"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { min-height }",
+      "after": "44px"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { padding }",
+      "after": "11px 14px"
+    },
+    {
+      "file": "components/daily/season/openReveal.css",
+      "key": ".dr-share { width }",
+      "after": "100%"
+    }
+  ]
 }
