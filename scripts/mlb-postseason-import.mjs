@@ -238,7 +238,7 @@ for (const season of seasons) {
   // is the job that makes them exist.
   console.log('\n  october days');
   for (const d of await ensureOctoberDays(Number(season))) {
-    console.log(`    ${d.day}  ${d.created ? `CREATED id=${d.id} · ${d.games} games · first pitch ${String(d.firstPitch).slice(11, 16)}Z` : `${d.reason}${d.id ? ` id=${d.id}` : ''}`}`);
+    console.log(`    ${d.day}  ${d.created ? `CREATED id=${d.id} · ${d.games} games · first pitch ${String(d.firstPitch).slice(11, 16)}Z` : `${d.reason}${d.id ? ` id=${d.id}` : ''}${d.joined ? ` · +${d.joined.added} late: ${d.joined.slugs.join(', ')}` : ''}`}`);
     // THE HOUSE FILED HERE, so the operator sees it here. A day that created but
     // filed nobody is the interesting case and this is where it shows up - it
     // would otherwise be a silent absence on the board hours later.
