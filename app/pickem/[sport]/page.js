@@ -24,6 +24,7 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { pickemBoardView, PICKEM_SPORTS, pickemCardData } from '@/lib/pickem/entry';
 import { boardPlan } from '@/lib/pickem/create';
+import { preOpenHeadline } from '@/lib/pickem/view';
 import { plannedBoardNumberFor } from '@/lib/pickem/sequence';
 import { sql } from '@/lib/db';
 import PickemBoard from '@/components/pickem/PickemBoard';
@@ -202,14 +203,14 @@ async function PreOpen({ sport, now }) {
   if (!plan) {
     return (
       <section className="pk-ghost">
-        <div className="big">Pick&rsquo;em lights up with the board</div>
+        <div className="big">{preOpenHeadline(sport, { planned: false })}</div>
       </section>
     );
   }
   const n = await plannedBoardNumberFor({ sport, locksAt: plan.locksAt });
   return (
     <section className="pk-ghost">
-      <div className="big">Pick&rsquo;em lights up with the board</div>
+      <div className="big">{preOpenHeadline(sport, { planned: true })}</div>
       <div className="when">
         Board {n} opens <StandaloneDateOnly iso={plan.opensAt} /> &middot; first lock <StandaloneDate iso={plan.firstKickoff ?? plan.locksAt} />
       </div>
