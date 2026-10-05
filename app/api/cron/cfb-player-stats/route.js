@@ -2,15 +2,21 @@
  * /api/cron/cfb-player-stats — CFB box scores, one call per week that has
  * played.
  *
- * WEEKLY, NOT ALWAYS-ON. This is a once-a-week cron, not a poller: the relay's
- * "+1 call per week" budget, and it costs exactly that in the steady state.
+ * HOURLY (vercel.json "0 * * * *"), AND NOW THE BACKSTOP. Since 29 Aug the
+ * cron fires every hour: the Monday 14:00 UTC fire is the weekly SETTLING pass
+ * (isSettlingPass below - the three newest weeks re-read whether or not they
+ * changed), and every other fire is the cheap CATCH-UP pass
+ * (weeksMissingStats - only weeks holding a final we have no rows for, so an
+ * off-day tick costs zero provider calls). The old "weekly, 30 14 * * 1" header
+ * described a schedule this job has not had since August.
  *
- * 30 14 * * 1 UTC = 10:30 AM ET in EDT (9:30 in EST), Monday — fifteen minutes
- * after cfb-rankings' Monday fire, the same deliberate stagger pickem-board and
- * weekly-board use so two CFB jobs never contend for a tick and their ledger
- * rows read apart. Monday because a CFB week's last game is Saturday night at
- * the earliest, and this must run AFTER games settle rather than after the
- * calendar day turns — the sports-day law.
+ * THE FIRST WRITER OF A SATURDAY BOX IS NO LONGER THIS ROUTE (sun-6 item 2):
+ * the live poller kicks the same importCfbWeek when it sees a CFB game go
+ * final, throttled to one run per ten minutes (lib/cfb/finalKick.js,
+ * lib/cfb/finalKickRun.js). It takes THIS route's advisory lock (SOURCE), so
+ * the two never run at once, and records under its own source
+ * ('cfb-player-stats-kick'). Whatever the kick misses - poller down, CFBD late
+ * past its retries - this hour's catch-up pass picks up.
  *
  * "COMPLETED" IS NOT "THE WEEK IS OVER", and that distinction is load-bearing
  * here. 2026 week 1 opens Saturday Aug 29 and does not finish until Monday

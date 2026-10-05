@@ -553,6 +553,14 @@ export async function sweepLostFinals(sql, { league, now = new Date(), dispatchF
   return out;
 }
 
+/**
+ * THE FINAL TRANSITION: this poll moved the row to final from anything else.
+ * An already-final row seen again on a later tick is NOT a transition, which
+ * is what keeps finalIds - and everything kicked off it (the MLB postseason
+ * advance, the CFB box-score kick) - to once per game.
+ */
+export const turnedFinal = (before, after) => after === 'final' && before !== 'final';
+
 export async function pollOnce(sql, {
   league, providerKey, fetcher, normalise, enrich = null, detail = null,
   enrichScheduled = false, futureMinutes = 30, kickoffOf = null,
@@ -787,7 +795,7 @@ export async function pollOnce(sql, {
 
     // WHICH games, not just how many: the MLB postseason advance (lib/mlb/advanceKick.js)
     // asks whether the day each one belongs to is now over.
-    if (after.status === 'final' && m.status !== 'final') { out.finals += 1; out.finalIds.push(m.id); }
+    if (turnedFinal(m.status, after.status)) { out.finals += 1; out.finalIds.push(m.id); }
     // A ROW THIS POLL TURNED LIVE: the loop's next sleep is the live one (lib/live/cadence.js afterPoll).
     if (after.status === 'live' && m.status !== 'live') out.wentLive += 1;
 
