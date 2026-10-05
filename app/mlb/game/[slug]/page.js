@@ -28,7 +28,7 @@ import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import StandaloneTime from '@/components/StandaloneTime';
 import { getMlbGame, getMlbPlays } from '@/lib/mlb/gameDetail';
-import { outsToInnings } from '@/lib/mlb/playsImport';
+import { outsToInnings } from '@/lib/mlb/innings';
 import { stripCells } from '@/lib/mlb/strip';
 import { decisions, pitcherLine, shortName } from '@/lib/mlb/cardLines';
 import FollowStar from '@/components/team/FollowStar';

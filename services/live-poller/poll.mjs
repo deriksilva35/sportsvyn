@@ -25,7 +25,7 @@ import { playsFor } from '../../lib/gridiron/playsImport.js';
 import { winProbTick, logWinProb, logFinalWinProb, logHoldStart, logHoldRelease, WINPROB_SPORTS, heldWinProb } from '../../lib/winprob/live.js';
 
 const CFBD = 'https://apinext.collegefootballdata.com';
-const BDL = 'https://api.balldontlie.io';
+import { bdlFetch } from '../../lib/bdl/http.js';
 
 // LAST SCORE KIND, PER TEAM, PER MATCH - in-memory, one process's worth.
 // A restart loses it, which only matters for the very next delta-of-2 for a
@@ -135,9 +135,7 @@ export function bdlDay(dateIso) {
   return async () => {
     const key = process.env.BDL_API_KEY;
     if (!key) throw new Error('BDL_API_KEY missing in env');
-    const res = await fetch(`${BDL}/nfl/v1/games?dates[]=${dateIso}&per_page=100`,
-      { headers: { Authorization: key } });
-    if (!res.ok) throw new Error(`BDL ${res.status} on /nfl/v1/games`);
+    const res = await bdlFetch(`/nfl/v1/games?dates[]=${dateIso}&per_page=100`, { key, describe: (s) => `BDL ${s} on /nfl/v1/games` });
     const j = await res.json();
     return { rows: j?.data ?? [], calls: 1 };
   };
@@ -156,9 +154,7 @@ export function mlbDay(dateIso) {
   return async () => {
     const key = process.env.BDL_API_KEY;
     if (!key) throw new Error('BDL_API_KEY missing in env');
-    const res = await fetch(`${BDL}/mlb/v1/games?dates[]=${dateIso}&per_page=100`,
-      { headers: { Authorization: key } });
-    if (!res.ok) throw new Error(`BDL ${res.status} on /mlb/v1/games`);
+    const res = await bdlFetch(`/mlb/v1/games?dates[]=${dateIso}&per_page=100`, { key, describe: (s) => `BDL ${s} on /mlb/v1/games` });
     const j = await res.json();
     return { rows: j?.data ?? [], calls: 1 };
   };
@@ -181,8 +177,7 @@ export function nbaDay(now, { fetchImpl = fetch, key = process.env.BDL_API_KEY }
     if (!key) throw new Error('BDL_API_KEY missing in env');
     const day = (offset) => new Date(new Date(now).getTime() + offset * 86_400_000).toISOString().slice(0, 10);
     const get = async (path) => {
-      const res = await fetchImpl(`${BDL}${path}`, { headers: { Authorization: key } });
-      if (!res.ok) throw new Error(`BDL ${res.status} on ${path.split('?')[0]}`);
+      const res = await bdlFetch(path, { key, fetchImpl, describe: (s) => `BDL ${s} on ${path.split('?')[0]}` });
       return (await res.json())?.data ?? [];
     };
     const games = await get(`/nba/v1/games?dates[]=${day(-1)}&dates[]=${day(0)}&per_page=100`);
