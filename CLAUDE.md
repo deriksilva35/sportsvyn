@@ -222,6 +222,40 @@ scratch file, or prior session note - those rot as the tree advances. Scan the
 target objects against the migrations between the number you expect and the
 actual highest before applying; do not assume the repo matches the plan.
 
+THE LEDGER (sun-18 item 4). Each database records what it has had in
+`schema_migrations` (number PK, name, checksum = sha256 of the file bytes,
+applied_at, applied_by, ledgered_at, note), created by the
+`*_schema_migrations.sql` migration (128 as numbered for after Tuesday's 126
+and 127; it is found by that suffix, so renumbering is a file rename).
+`scripts/apply-migrations.mjs` is the only way a migration goes on:
+- EVERY run refuses if two files in migrations/ share a number, whatever was
+  asked for. The one exception is 081 (081_news_items + 081_news_feeds_seed),
+  grandfathered as ONE unit of two files, checksummed together; a third 081
+  file, or any other duplicate, is refused (lib/migrations/ledger.mjs).
+- Per requested file: in the ledger with the same checksum -> skipped;
+  with a DIFFERENT checksum -> REFUSED before anything runs. A migration that
+  ran somewhere is never edited: the change goes in a NEW file.
+- Otherwise the file and its ledger row commit in ONE transaction. A file's
+  own top-level BEGIN/COMMIT (120, 122) are folded into that transaction; a
+  file Postgres will not run in a transaction (117, CREATE INDEX
+  CONCURRENTLY) runs statement by statement with the row written after the
+  last, so a failure part-way leaves no row and the idempotent file is
+  re-run.
+- `--status` lists applied / pending / CHANGED / ledger-only, read-only.
+- No ledger table on the target -> the ledger migration is applied first
+  and records itself. A request for an OLDER migration on a target whose
+  ledger has no backfill is refused (`--fresh` only for a brand-new DB):
+  it means `scripts/migrations-backfill.mjs` has not run there yet.
+- seed_argentina_dev.sql / teardown_argentina_dev.sql are unnumbered and
+  DEV-only: runnable by exact name, never ledgered, refused on PROD.
+
+`scripts/migrations-backfill.mjs` (`--prod` for PROD, dry run by default)
+checks every pre-ledger migration's objects against the catalog, SELECT
+only, before it writes rows (applied_at NULL, note 'backfilled ...'). Run it
+once per database; after that, a new migration goes on ONLY through
+apply-migrations.mjs, never pasted into a console, or the ledger stops being
+true.
+
 ## Gridiron datetime / timezone boundary (lib/gridiron/ingest.js)
 
 Provider datetimes for the NFL/CFB feeds pass through ONE module,
