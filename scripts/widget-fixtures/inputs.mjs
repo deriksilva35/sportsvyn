@@ -15,8 +15,7 @@
 // EVERY TIME IS RELATIVE TO FIXTURE_NOW, which is fixed: the fixtures are a
 // document for the Mac to build against offline, not a test of today.
 
-import { playLobby } from '../../lib/games/playLobby.js';
-import { serializeFeed, signedOutFeed, ageFeed, pickerFeed } from '../../lib/widget/shape.js';
+import { serializeFeed, signedOutFeed, ageFeed, pickerFeed, widgetView } from '../../lib/widget/shape.js';
 import { gameweekLabel } from '../../lib/soccer/roundLabel.js';
 
 /** Sunday 4 Oct 2026, 1:30 PM ET. */
@@ -136,7 +135,7 @@ const stake = (pick, weekly = []) => ({ pick, weekly, alerts: false, follow: nul
 
 // ---- the feeds -------------------------------------------------------------
 
-const view = (items) => playLobby(items, { now: FIXTURE_NOW, signedIn: true, chip: 'all' });
+const view = (items) => widgetView(items, FIXTURE_NOW);
 const dailyCard = (state, closesMin = 630) => ({ state, closesAt: at(closesMin) });
 
 export function fixtureFeeds() {
