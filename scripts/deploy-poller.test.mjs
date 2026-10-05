@@ -187,3 +187,39 @@ test('changed dependencies -> npm ci --omit=dev in the release, not a hardlink',
   assert.equal(existsSync(path.join(ROOT, 'releases', e, 'node_modules', 'fresh')), true);
   git('checkout', '--', 'package.json');
 });
+
+// THE BOOT CHECK (mon-3 item 2, lib/ops/bootCheck.mjs). F carries the real checker
+// and the real preload with entries that gate; G is F with the 5 Oct TDZ in the
+// poller (a const read above its declaration). G parses - `node --check` passes -
+// and must still be refused before `current` moves or anything restarts.
+test('boot check: a release whose entry dies at import is refused; current and the poller are untouched', () => {
+  const REAL = path.resolve(path.dirname(SCRIPT), '..');
+  const gated = (name, extra = '') => `import { bootCheckGate } from '../../lib/ops/bootCheck.mjs';\n${extra}await bootCheckGate('${name}');\nexport const v = 1;\n`;
+  const f = commit('F boot-checked', {
+    'lib/ops/bootCheck.mjs': readFileSync(path.join(REAL, 'lib/ops/bootCheck.mjs'), 'utf8'),
+    'services/_preload/prod-db.mjs': readFileSync(path.join(REAL, 'services/_preload/prod-db.mjs'), 'utf8'),
+    'services/live-poller/index.mjs': gated('live-poller'),
+    'services/daily-tick/index.mjs': gated('daily-tick'),
+    'services/mlb-advance/index.mjs': gated('mlb-advance'),
+  });
+  const g = commit('G the 5 Oct TDZ', {
+    'services/live-poller/index.mjs': gated('live-poller', 'const kick = { log };\nconst log = () => {};\n'),
+  });
+  git('push', '-q', 'origin', 'main');
+
+  let r = deploy([f]);
+  assert.equal(r.status, 0, out(r));
+  assert.match(r.stdout, /\[boot-check\] live-poller: ok\n\[boot-check\] daily-tick: ok\n\[boot-check\] mlb-advance: ok/);
+  assert.match(r.stdout, /boot check passed/);
+  assert.equal(current(), f);
+
+  const restarts = (log().match(/restart sportsvyn-live-poller/g) ?? []).length;
+  r = deploy([g]);
+  assert.equal(r.status, 1, out(r));
+  assert.match(r.stderr, /\[boot-check\] live-poller: FAILED - exit 1/);
+  assert.match(r.stderr, /ReferenceError: Cannot access 'log' before initialization/);
+  assert.match(r.stderr, new RegExp(`BOOT CHECK FAILED for ${g.slice(0, 12)} .*current is unchanged \\(still ${f}\\); nothing was restarted`));
+  assert.equal(current(), f, 'current still F');
+  assert.equal((log().match(/restart sportsvyn-live-poller/g) ?? []).length, restarts, 'the poller was not restarted');
+  assert.doesNotMatch(readFileSync(path.join(ROOT, 'history'), 'utf8'), new RegExp(g), 'G never entered history');
+});

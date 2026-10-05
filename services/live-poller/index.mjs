@@ -37,6 +37,7 @@ import { dispatch } from '../../lib/push/dispatch.js';
 import { drainPushCounts } from '../../lib/push/warn.js';
 import { execSync } from 'node:child_process';
 import * as neonmod from '@neondatabase/serverless';
+import { bootCheckGate } from '../../lib/ops/bootCheck.mjs';
 
 const { Client } = neonmod;
 const DB = process.env.PROD_DATABASE_URL;
@@ -485,6 +486,13 @@ async function loop(lg) {
     await sleep(sleepUntilNext(decision, now) * 1000);
   }
 }
+
+// THE BOOT CHECK (lib/ops/bootCheck.mjs): with --boot-check, everything above
+// has been imported and built - the 5 Oct TDZ died above this line - and the
+// process exits 0 here, before the first loop, lock, connection or ledger row.
+// Without the flag this returns and the poller starts. Keep it the last thing
+// before the loops start.
+await bootCheckGate('live-poller', [() => import('../../lib/pollers/alerts.js')]);
 
 log(`live-poller starting: pid=${process.pid} head=${HEAD} leagues=${LEAGUES.map((l) => l.slug).join(',')}`);
 

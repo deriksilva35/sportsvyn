@@ -14,6 +14,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { acquireLock } from '../../lib/ops/runLock.js';
 import { parseImportOutput, journalLine } from '../../lib/mlb/advance.js';
+import { bootCheckGate } from '../../lib/ops/bootCheck.mjs';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const args = process.argv.slice(2);
@@ -26,6 +27,14 @@ if (!process.env.PROD_DATABASE_URL || process.env.DATABASE_URL !== process.env.P
   console.log(`[mlb-advance] ${trigger} REFUSED: DATABASE_URL is not PROD - run through services/_preload/prod-db.mjs`);
   process.exit(1);
 }
+
+// THE BOOT CHECK (lib/ops/bootCheck.mjs): with --boot-check, exit 0 here -
+// after the PROD guard, before the lock, the import and any alert - having
+// loaded every module alert() imports lazily. A no-op otherwise.
+await bootCheckGate('mlb-advance', [
+  () => import('../../lib/db.js'), () => import('../../lib/pollers/alerts.js'),
+  () => import('../../lib/push/notify.js'), () => import('../../lib/admin/gate.js'),
+]);
 
 const lock = acquireLock(LOCK);
 if (!lock.ok) { console.log(`[mlb-advance] ${trigger} SKIPPED: another run holds the lock (pid ${lock.holder})`); process.exit(0); }

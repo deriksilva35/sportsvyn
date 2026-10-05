@@ -30,6 +30,11 @@ console.log(new Date().toISOString(), `daily-tick starting: pid=${process.pid} h
 const { neon } = await import('@neondatabase/serverless');
 const { tick } = await import('../../lib/daily/seasonBoardTick.js');
 
+// THE BOOT CHECK (lib/ops/bootCheck.mjs): with --boot-check, exit 0 here,
+// imported and built, before the tick writes anything. A no-op otherwise.
+const { bootCheckGate } = await import('../../lib/ops/bootCheck.mjs');
+await bootCheckGate('daily-tick');
+
 const sql = neon(process.env.DATABASE_URL);
 const now = new Date().toISOString();
 

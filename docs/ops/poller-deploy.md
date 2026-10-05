@@ -57,6 +57,12 @@ What it does, in order (nothing before step 6 touches a running service):
 4. symlinks `.env.local` from the main tree
 5. `node --check` on every entrypoint a unit starts, and checks the unit's pinned
    node binary exists
+5b. **boot check** (`lib/ops/bootCheck.mjs`, see below): every entry is started
+   from the release, with the unit's node, exactly as its unit starts it plus
+   `--boot-check`. Any failure exits 1 with `BOOT CHECK FAILED` and the entry's
+   output; `current` has NOT moved and nothing was restarted. Runs on every
+   deploy, a reused release included; a commit older than the check is deployed
+   with a `predates the boot check` warning.
 6. atomic switch: a new symlink renamed over `current` (`mv -T`, one rename(2));
    `previous` <- the old `current`
 7. `systemctl --user restart sportsvyn-live-poller`
@@ -230,3 +236,69 @@ systemctl --user daemon-reload && systemctl --user restart sportsvyn-live-poller
   invoked from (override with `SV_MAIN`; `SV_DEPLOY_ROOT`, `SV_UNIT_DIR` likewise -
   the test harness, scripts/deploy-poller.test.mjs, runs it entirely in a temp
   directory with stub `systemctl`/`journalctl`/`npm`).
+
+## Boot check (mon-3 item 2)
+
+**Why.** On 5 Oct a merge put `const cfbKick = createKickThrottle({ ... log ... })`
+above `const log = ...` in `services/live-poller/index.mjs`. That is a TDZ
+`ReferenceError` the moment the module evaluates - but it parses, so `node --check`
+passed, and no test imports an entry file (importing one starts it), so the full
+suite passed. The poller restart-looped after the deploy (fixed in ee6ccd2).
+
+**What.** Each entry calls `await bootCheckGate(name, lazy)` at the last point
+before its first connection, loop, lock or write:
+
+| entry | gate is placed | lazy modules it also loads |
+|---|---|---|
+| `services/live-poller/index.mjs` | after every top-level object (LEAGUES, cfbKick, ...), before the `starting` line and the loops | `lib/pollers/alerts.js` |
+| `services/daily-tick/index.mjs` | after its imports, before `tick()` | - |
+| `services/mlb-advance/index.mjs` | after the PROD guard, before the lock and the import | `lib/db.js`, `lib/pollers/alerts.js`, `lib/push/notify.js`, `lib/admin/gate.js` |
+
+Without `--boot-check` on argv the gate returns and nothing changes. With it, the
+gate prints a loud banner, loads the lazy modules, prints
+`[boot-check] <name> ok` and exits 0.
+
+**Why an explicit mode, not "run it for 10 s with a fake DB".** A real start
+with a fake DB would retry and log connection errors - indistinguishable from a
+crash by output, and a timer is a guess (a slow import and a healthy loop look the
+same). The gate is deterministic, needs no network, and takes ~0.3 s for all three.
+
+**Why it cannot switch on in production.** It is an **argv** flag only: the units
+read `.env.local` through `EnvironmentFile`, so an env-var switch could be set
+there by accident and turn the poller into a process that exits 0 on every start.
+argv comes only from `ExecStart`, and `services/bootCheck.test.mjs` asserts no unit
+passes `--boot-check`. In boot-check mode the gate also **refuses** (exit 1) any
+`DATABASE_URL` other than the stub `boot-check.invalid` host.
+
+**Hermetic.** The runner (`runBootCheck` / `node lib/ops/bootCheck.mjs`) spawns
+`node --import ./services/_preload/prod-db.mjs <entry> --boot-check` with a
+scrubbed environment: `PATH`, `HOME`, a stub `PROD_DATABASE_URL`
+(`postgres://...@boot-check.invalid`), a stub `RESEND_API_KEY`. No real secret is
+passed through. It fails an entry on a non-zero exit, a timeout, an error name
+(`ReferenceError`, `SyntaxError`, `TypeError`, module-not-found ...) in the output,
+or a missing `ok` line (an entry that exits 0 without reaching its gate proves
+nothing).
+
+**By hand**, from a release or a checkout:
+
+```sh
+cd ~/deploy/sportsvyn/current && node lib/ops/bootCheck.mjs
+# [boot-check] live-poller: ok
+# [boot-check] daily-tick: ok
+# [boot-check] mlb-advance: ok
+```
+
+**In the suite.** `services/bootCheck.test.mjs` runs all three entries (~1.5 s),
+plus a negative control that replays the 5 Oct order (the real poller source with
+`log` moved below `cfbKick`, written to `test-tmp/`) and must fail with
+`ReferenceError: Cannot access 'log' before initialization`.
+`scripts/deploy-poller.test.mjs` deploys a sandbox release with the same TDZ and
+asserts the deploy is refused with `current` and the poller untouched.
+
+**A new unit / entry** must be added to `ENTRIES` in `lib/ops/bootCheck.mjs` and
+call `bootCheckGate`; the suite fails if a unit's `ExecStart` names an entry that
+`ENTRIES` does not check.
+
+**Not covered:** `scripts/mlb-postseason-import.mjs`, which mlb-advance spawns as
+a child process - it is not booted here.
+`--rollback` does not boot-check (it returns to a release that was running).
