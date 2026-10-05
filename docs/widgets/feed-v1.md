@@ -194,6 +194,7 @@ A follow alone does not count (that is the teams block), and neither does an ale
 | `points` | number? | The Weekly players' fantasy points so far (1 dp). Null when the reader has no Weekly player in this game. The other games score on their own pages |
 | `via` | array of `"pickem" \| "series" \| "weekly" \| "draft" \| "october" \| "run" \| "six"` | Why this game is listed, in that fixed order; at least one. New values may be added |
 | `topPlayer` | string(24) *opt* | The reader's highest-scoring **Weekly or Draft** player in this game, by points so far. Before kickoff it is the first one listed (sun-24) |
+| `topPlayerPoints` | number *opt* | `topPlayer`'s points so far (1 dp). Absent before kickoff, where `topPlayer` is only the first listed (mon-9) |
 | `href` | string(64)? | The game page |
 
 ## `GET /api/widget/v1/teams`
@@ -212,7 +213,7 @@ See `docs/widgets/fixtures/`:
 
 | File | What it shows |
 |---|---|
-| `signed-in-busy.json` | Every list full, plus every optional field: `nextOpening` (NBA opening night), two urgent games, a live NFL team with a win probability (switch on), a live MLB team, a fresh CFB final, live and final stakes, and PHI@MIL in your games via a series pick, an October bat and a Run arm; BUF carries `possession`, `fieldPos` and `oppColor`/`oppAltColor`, and NYJ@BUF has a Draft player as `topPlayer` |
+| `signed-in-busy.json` | Every list full, plus every optional field: `nextOpening` (NBA opening night), two urgent games, a live NFL team with a win probability (switch on), a live MLB team, a fresh CFB final, live and final stakes, and PHI@MIL in your games via a series pick, an October bat and a Run arm; BUF carries `possession`, `fieldPos` and `oppColor`/`oppAltColor`, and NYJ@BUF has a Draft player as `topPlayer` with `topPlayerPoints` |
 | `signed-in-quiet.json` | Nothing to do: The Daily done, `games` empty, `nextOpening` = The Weekly, one team with its next game a week out |
 | `live-game.json` | One live game, Q3 7:22, followed and picked, with Weekly players in it |
 | `signed-out.json` | The sign-in state |
