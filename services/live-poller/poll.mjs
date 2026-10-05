@@ -22,9 +22,9 @@ import { scoringPlayFor, baseballScoringText } from '../../lib/push/scoringPlayR
 import { activityEventFor, pushLiveActivities } from '../../lib/push/liveActivityStore.js';
 import { stateFromMatch, liveLine, liveActivitySupported } from '../../lib/push/liveActivityState.js';
 import { playsFor } from '../../lib/gridiron/playsImport.js';
+import { cfbdGet } from '../../lib/cfbd/client.js';
 import { winProbTick, logWinProb, logFinalWinProb, logHoldStart, logHoldRelease, WINPROB_SPORTS, heldWinProb } from '../../lib/winprob/live.js';
 
-const CFBD = 'https://apinext.collegefootballdata.com';
 import { bdlFetch } from '../../lib/bdl/http.js';
 
 // LAST SCORE KIND, PER TEAM, PER MATCH - in-memory, one process's worth.
@@ -118,12 +118,8 @@ export function _resetLaCadence() {
 
 export function cfbdScoreboard({ classification = null } = {}) {
   return async () => {
-    const key = process.env.CFBD_API_KEY;
-    if (!key) throw new Error('CFBD_API_KEY missing in env');
     const q = classification ? `?classification=${classification}` : '';
-    const res = await fetch(`${CFBD}/scoreboard${q}`, { headers: { Authorization: `Bearer ${key}` } });
-    if (!res.ok) throw new Error(`CFBD ${res.status} on /scoreboard${q}`);
-    return { rows: await res.json(), calls: 1 };
+    return { rows: await cfbdGet(`/scoreboard${q}`), calls: 1 };
   };
 }
 
