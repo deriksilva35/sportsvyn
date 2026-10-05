@@ -210,14 +210,21 @@ test('CFB is DISPLAYED (sat-1): computed, logged, and written for display', asyn
   assert.equal(L[0].inputs.season, 2026);
 });
 
-test('THE PHONE GETS NOTHING: the Live Activity state carries no winProb with WINPROB_PHONE off', async () => {
-  const md = await meta(ids.nfl);
-  const st = stateFromMatch({ leagueSlug: 'nfl', liveState: md.live_state, homeScore: 17, awayScore: 7, away: { abbreviation: 'A' }, home: { abbreviation: 'H' } });
-  assert.equal('winProb' in st, false);
+test('THE PHONE (sun-23): the Live Activity state carries NFL\'s winProb and never CFB\'s', async () => {
+  const st = async (lg, id) => {
+    const md = await meta(id);
+    return { md, st: stateFromMatch({ leagueSlug: lg, liveState: md.live_state, homeScore: 17, awayScore: 7, away: { abbreviation: 'A' }, home: { abbreviation: 'H' } }) };
+  };
+  const nfl = await st('nfl', ids.nfl);
+  assert.ok(Number.isInteger(nfl.md.live_state.win_prob), 'the poller wrote an NFL number');
+  assert.equal(nfl.st.winProb, nfl.md.live_state.win_prob, 'NFL: on the lock screen');
+  const cfb = await st('cfb', ids.cfb);
+  assert.ok(Number.isInteger(cfb.md.live_state.win_prob), 'the poller wrote a CFB number (displayed on the web)');
+  assert.equal('winProb' in cfb.st, false, 'CFB: not on the phone until its sealed re-score passes');
+  // NO ENV CAN TURN IT ON OR OFF ANY MORE: the switch is lib/winprob/display.js PHONE.
   process.env.WINPROB_PHONE = 'on';
   try {
-    const on = stateFromMatch({ leagueSlug: 'nfl', liveState: md.live_state, homeScore: 17, awayScore: 7, away: { abbreviation: 'A' }, home: { abbreviation: 'H' } });
-    assert.equal(on.winProb, md.live_state.win_prob, 'the flag is the only thing between them');
+    assert.equal('winProb' in (await st('cfb', ids.cfb)).st, false);
   } finally { delete process.env.WINPROB_PHONE; }
 });
 
