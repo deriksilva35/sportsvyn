@@ -24,33 +24,12 @@
  * a DST boundary.
  */
 
-import { useEffect, useState } from 'react';
+import { dateTimeLabel } from '@/lib/time/display';
+import { useViewerZone } from '@/components/time/ViewerTz';
 
-function formatFromParts(parts, zoneLabel) {
-  const v = (t) => parts.find((p) => p.type === t)?.value ?? '';
-  return `${v('weekday')} ${v('month')} ${v('day')} · ${v('hour')}:${v('minute')} ${v('dayPeriod')} ${zoneLabel}`;
-}
-
-function formatEasternFallback(iso) {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric',
-    hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York',
-  });
-  return formatFromParts(fmt.formatToParts(new Date(iso)), 'ET');
-}
-
-function formatLocal(iso) {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric',
-    hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short',
-  });
-  const parts = fmt.formatToParts(new Date(iso));
-  const zoneLabel = parts.find((p) => p.type === 'timeZoneName')?.value ?? '';
-  return formatFromParts(parts, zoneLabel);
-}
-
-export default function StandaloneDate({ iso }) {
-  const [label, setLabel] = useState(() => formatEasternFallback(iso));
-  useEffect(() => { setLabel(formatLocal(iso)); }, [iso]);
-  return <>{label}</>;
+// The formatting is lib/time/display.js's dateTimeLabel; the zone is
+// useViewerZone's (the page's sv_tz, then the device's) - sun-16 item B.
+export default function StandaloneDate({ iso, serverTz = null }) {
+  const tz = useViewerZone(serverTz);
+  return <>{dateTimeLabel(iso, { tz })}</>;
 }

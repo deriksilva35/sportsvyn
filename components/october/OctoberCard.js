@@ -15,7 +15,8 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { saveOctoberPickAction, clearOctoberPickAction } from '@/app/actions/october';
-import { ptTime } from '@/lib/gridiron/kickoff';
+import { timeLabel } from '@/lib/time/display';
+import { useViewerZone } from '@/components/time/ViewerTz';
 import { probablesShort } from '@/lib/mlb/cardLines';
 import { useStickyOffset } from '@/components/games/useStickyOffset';
 
@@ -29,6 +30,8 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
   const [openGame, setOpenGame] = useState(() => view.board.find((g) => g.pickable)?.matchId ?? null);
   const [err, setErr] = useState(null);
   const [, start] = useTransition();
+  // THE READER'S ZONE for every time on the card (sun-16 item B).
+  const tz = useViewerZone();
   // ONE SCROLL (thu-7): the dock sticks under the site's sticky bar on the web.
   const rootRef = useRef(null);
   useStickyOffset(rootRef);
@@ -128,7 +131,7 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
 
   return (
     <div className="oc" data-phase={view.phase} ref={rootRef}>
-      <Header view={view} slots={slots} />
+      <Header view={view} slots={slots} tz={tz} />
 
       {/* THE STEPS NOTE, and the rules on the card - written once, shown on
           the card, never changed mid-tournament. */}
@@ -181,7 +184,7 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
               {/* PPD IS A STATE, NOT A TIME. A postponed game printed its
                   original first pitch, which is a time nothing will happen at,
                   and the tile looked like every other pickable game. */}
-              <small>{g.status === 'postponed' ? 'PPD' : OFF.has(g.status) ? 'OFF' : g.status === 'live' ? 'live' : timeOf(g.kickoffAt)}</small>
+              <small>{g.status === 'postponed' ? 'PPD' : OFF.has(g.status) ? 'OFF' : g.status === 'live' ? 'live' : timeOf(g.kickoffAt, tz)}</small>
               {/* WHO IS PITCHING, before first pitch only: the arm slot's whole
                   question, answered on the tile before the panel opens. */}
               {g.status === 'scheduled' && probablesShort(g.probables)
@@ -222,7 +225,7 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
                         is nothing left to swap. */}
                     {base.notStarting && !locked
                       ? <span className="oc-tm swap">not starting · swap</span>
-                      : <span className="oc-tm">{teamLine(s, view)}</span>}
+                      : <span className="oc-tm">{teamLine(s, view, tz)}</span>}
                     {/* POINTS LAND AS THE BOX SCORE DOES: a number when the
                         line exists, an em-dash while the game is ahead. */}
                     {base.points != null
@@ -241,7 +244,7 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
               in" off the PROBABLES, which are a pitcher and not a lineup at
               all - so it said the lineups were in three hours before either
               club had posted one. */}
-          <small>{game ? <>{timeOf(game.kickoffAt)}<br />{lineupWord(game)}</> : <>points land<br />as the box does</>}</small>
+          <small>{game ? <>{timeOf(game.kickoffAt, tz)}<br />{lineupWord(game)}</> : <>points land<br />as the box does</>}</small>
         </div>
       </div>
 
@@ -289,7 +292,7 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
   );
 }
 
-function Header({ view, slots }) {
+function Header({ view, slots, tz }) {
   const next = view.nextLock;
   const pips = view.slots.map((s) => slots[s.slot]?.pip ?? s.pip);
   const filled = pips.filter((p) => p !== 'open').length;
@@ -322,7 +325,7 @@ function Header({ view, slots }) {
         {/* THE MATCH-UP, NOT THE SLUG. gameLabel() (lib/october/rules.js) ships
             "MIN @ SF · G2"; this line used to print next.slug.toUpperCase(),
             which put MLB-2026-09-23-MIN-SF-G2 in the header of a live card. */}
-        <div className="oc-lbl">{next ? <>next lock<b>{next.label ?? ''}{next.label ? ' · ' : ''}{timeOf(next.kickoffAt)}</b></> : <>all locked<b>points only</b></>}</div>
+        <div className="oc-lbl">{next ? <>next lock<b>{next.label ?? ''}{next.label ? ' · ' : ''}{timeOf(next.kickoffAt, tz)}</b></> : <>all locked<b>points only</b></>}</div>
         <div className="oc-tot"><b>{filled}</b><span>of {view.slots.length}</span></div>
       </div>
       <div className="oc-pips">
@@ -394,19 +397,19 @@ const ordinal = (n) => {
 };
 
 const two = (t) => (t?.c1 && t?.c2 ? `linear-gradient(to bottom, ${t.c1} 0 58%, ${t.c2} 58%)` : 'var(--ink-3)');
-// EVERY TIME ON THIS CARD GOES THROUGH THE HOUSE FORMATTER, in the house zone,
-// with the zone said out loud. It used to be a local Intl call pinned to
-// America/New_York - the only surface on the product printing Eastern - so a
-// Pacific reader read every first pitch three hours late and nothing on the
-// card admitted which zone it meant.
-const timeOf = (iso) => ptTime(iso) ?? '';
+// EVERY TIME ON THIS CARD IS IN THE READER'S ZONE, with the zone said out loud
+// (sun-16 item B). It was Eastern unlabelled, then Pacific labelled ("1:00 PM
+// PT") - right for one coast, while the MLB game page said "4:00 PM EDT" for
+// the same first pitch. lib/time/display.js, the one formatter, in the zone
+// useViewerZone gives (sv_tz on the server, the device's after mount).
+const timeOf = (iso, tz) => (iso ? timeLabel(iso, { tz }) : '');
 const stageLabel = (s) => ({ wild_card: 'Wild Card', division: 'Division Series', championship: 'Championship Series', world_series: 'World Series' }[s] ?? 'Postseason');
-const teamLine = (s, view) => {
+const teamLine = (s, view, tz) => {
   const g = view.board.find((x) => String(x.matchId) === String(s.matchId));
   if (!g) return '';
   const t = s.team ?? '';
   const when = g.status === 'postponed' ? 'PPD' : OFF.has(g.status) ? 'OFF'
-    : g.status === 'live' ? 'live' : g.status === 'final' ? 'F' : timeOf(g.kickoffAt);
+    : g.status === 'live' ? 'live' : g.status === 'final' ? 'F' : timeOf(g.kickoffAt, tz);
   return `${t}${t ? ' · ' : ''}${when}`;
 };
 

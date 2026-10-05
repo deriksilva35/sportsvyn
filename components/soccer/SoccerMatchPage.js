@@ -37,11 +37,9 @@ import { resolveShellMode } from '@/lib/shell/shell';
 import BackToAppBar from '@/components/BackToAppBar';
 import { soccerArcadeView } from '@/lib/soccer/eplPageArcade';
 import EplPageArcade from '@/components/soccer/EplPageArcade';
+import StandaloneDate from '@/components/StandaloneDate';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 
-const ET = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric',
-  hour: 'numeric', minute: '2-digit',
-});
 
 async function getMatch(slug, leagueSlug) {
   const r = await sql`
@@ -87,6 +85,9 @@ export default async function SoccerMatchPage({ slug, leagueSlug }) {
   // team stats and top players - lib/soccer/eplPageArcade.js. The dark match
   // center below is unchanged.
   const isShell = await resolveShellMode().catch(() => false);
+  // The reader's zone (sv_tz) for the kickoff, on both pages (sun-16 item B):
+  // the arcade card used to be handed Eastern, the match center "... ET".
+  const tz = await readViewerTz();
   if (arcadeFor(isShell)) {
     const view = await soccerArcadeView(slug, leagueSlug);
     if (!view) notFound();
@@ -94,7 +95,7 @@ export default async function SoccerMatchPage({ slug, leagueSlug }) {
       <div className="gi" data-surface="ink">
         <BackToAppBar />
         <GlobalHeaderServer activeNav={leagueSlug === 'epl' ? 'soccer' : 'scores'} />
-        <EplPageArcade view={view} />
+        <EplPageArcade view={view} tz={tz} />
       </div>
     );
   }
@@ -137,7 +138,7 @@ export default async function SoccerMatchPage({ slug, leagueSlug }) {
               // The minute counts UP from the poller's snapshot - never a
               // client tick, the same law the gridiron chip carries.
               chip: live ? soccerLiveChip(m.live_state) : null,
-              kickoffLabel: m.kickoff_at ? `${ET.format(new Date(m.kickoff_at))} ET` : '',
+              kickoffLabel: m.kickoff_at ? <StandaloneDate iso={new Date(m.kickoff_at).toISOString()} serverTz={tz} /> : '',
               homeAbbr: m.home_abbr ?? (m.home_name ?? '').slice(0, 3).toUpperCase(),
               awayAbbr: m.away_abbr ?? (m.away_name ?? '').slice(0, 3).toUpperCase(),
               homeName: m.home_name, awayName: m.away_name,

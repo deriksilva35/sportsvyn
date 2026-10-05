@@ -270,9 +270,15 @@ test('STARTERS: a LOCKED round never shows a swap nobody can make', () => {
 
 // --- THE LOCK IS THE CLUB'S (ruling of 24 Sep) -----------------------------
 
-test('THE HEADER COUNTS DOWN TO THE NEXT CLUB LOCK, October-style', () => {
+test('THE HEADER COUNTS DOWN TO THE NEXT CLUB LOCK, October-style', async () => {
   const h = html({ view: SETTING(), signedIn: true });
-  assert.match(h, /next lock<b>MIL @ PHI · 3:05 PM PT<\/b>/);
+  // The reader's zone, labelled (sun-16 item B) - with no sv_tz yet, the
+  // Eastern fallback; it used to say "3:05 PM PT" to everybody.
+  assert.match(h, /next lock<b>MIL @ PHI · 6:05 PM ET<\/b>/);
+  const { ViewerTzProvider } = await import('../time/ViewerTz.js');
+  const la = renderToStaticMarkup(React.createElement(ViewerTzProvider, { tz: 'America/Los_Angeles' },
+    React.createElement(RunRoster, { view: SETTING(), signedIn: true })));
+  assert.match(la, /next lock<b>MIL @ PHI · 3:05 PM PDT<\/b>/);
   assert.match(h, /aria-label="19 hours 40 minutes to the next lock"/);
   assert.doesNotMatch(h, /round locks/);
 });

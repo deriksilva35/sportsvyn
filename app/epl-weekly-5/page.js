@@ -20,6 +20,8 @@ import { currentGameweek, gameweek } from '@/lib/eplWeekly5/create';
 import { epl5View } from '@/lib/eplWeekly5/entry';
 import { GAME_NAME, roundShort } from '@/lib/eplWeekly5/rules';
 import EplWeekly5Card from '@/components/eplWeekly5/EplWeekly5Card';
+import { ViewerTzProvider } from '@/components/time/ViewerTz';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
 import './eplWeekly5.css';
 
 export const dynamic = 'force-dynamic';
@@ -30,6 +32,8 @@ export default async function EplWeekly5Page({ searchParams }) {
   const session = await auth();
   const uid = session?.user?.id ?? null;
   const shell = await resolveShellMode();
+  // The reader's zone (sv_tz): every kickoff on the card paints in it.
+  const tz = await readViewerTz();
   const signinHref = shellSigninHref('/epl-weekly-5', shell?.isShell ?? false);
   const now = new Date();
 
@@ -57,8 +61,10 @@ export default async function EplWeekly5Page({ searchParams }) {
             one club, each locking at its own kickoff.
           </p>
         ) : (
-          <EplWeekly5Card view={view} signedIn={uid != null} signinHref={signinHref}
-            boardHref={`/epl-weekly-5/board?gw=${view.contest.week}`} />
+          <ViewerTzProvider tz={tz}>
+            <EplWeekly5Card view={view} signedIn={uid != null} signinHref={signinHref}
+              boardHref={`/epl-weekly-5/board?gw=${view.contest.week}`} />
+          </ViewerTzProvider>
         )}
         {view && view.contest.week > 1 && view.phase !== 'final' ? (
           <p className="e5-prev"><Link href={`/epl-weekly-5?gw=${view.contest.week - 1}`}>Last gameweek&apos;s result &rsaquo;</Link></p>

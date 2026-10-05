@@ -48,24 +48,14 @@
  * paint rather than only after mount. Omitted, nothing changes for any caller.
  */
 
-import { useEffect, useState } from 'react';
-import { standaloneTimeLabel } from '@/lib/time/standaloneLabel';
+import { timeLabel } from '@/lib/time/display';
+import { useViewerZone } from '@/components/time/ViewerTz';
 
+// ONE ZONE SOURCE (sun-16 item B): useViewerZone - the page's sv_tz (serverTz
+// or the ViewerTzProvider) for the server render and hydration, the device's
+// own zone straight after. No effect and no hand-rolled browser read: those
+// were where the thu-26 "undefined became Eastern" bug lived.
 export default function StandaloneTime({ iso, weekday = false, zone = true, serverTz = null }) {
-  const [label, setLabel] = useState(() => standaloneTimeLabel(iso, { weekday, zone, tz: serverTz ?? null }));
-  // AFTER MOUNT, THE DEVICE'S ZONE - BY NAME (thu-26). The header beside it
-  // (components/scores/ZoneLabel.js) switches to the device's zone on mount,
-  // so the card does the same and the two always agree. It used to pass
-  // an undefined tz, which the label's old `tz = null` default turned into the
-  // ET fallback: every card read "5:00 PM ET" under "all times Pacific".
-  useEffect(() => {
-    setLabel(standaloneTimeLabel(iso, { weekday, zone, tz: browserZone() }));
-  }, [iso, weekday, zone]);
-  return <>{label}</>;
-}
-
-// The device's zone, by name - never `undefined`, which a destructuring default
-// would quietly turn into the ET fallback (thu-26).
-function browserZone() {
-  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined; } catch { return undefined; }
+  const tz = useViewerZone(serverTz);
+  return <>{timeLabel(iso, { weekday, zone, tz })}</>;
 }

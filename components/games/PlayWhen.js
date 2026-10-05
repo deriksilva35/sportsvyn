@@ -11,8 +11,8 @@
 //   kind 'date'   "20 Oct"
 //   kind 'day'    "Tue 20 Oct"
 
-import { useEffect, useState } from 'react';
 import { playDateLabel, playTimeLabel } from '@/lib/games/playTime';
+import { useViewerZone } from '@/components/time/ViewerTz';
 
 function label(kind, iso, now, tz) {
   if (kind === 'time') return playTimeLabel(iso, { now, tz });
@@ -20,8 +20,6 @@ function label(kind, iso, now, tz) {
 }
 
 export default function PlayWhen({ iso, kind = 'time', now = null, serverTz = null }) {
-  const [text, setText] = useState(() => label(kind, iso, now, serverTz ?? null));
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- the device's zone exists only after mount; StandaloneTime does the same
-  useEffect(() => { setText(label(kind, iso, now, undefined)); }, [kind, iso, now]);
-  return <>{text}</>;
+  const tz = useViewerZone(serverTz);
+  return <>{label(kind, iso, now, tz)}</>;
 }

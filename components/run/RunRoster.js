@@ -13,7 +13,8 @@
 
 import { Fragment, useRef, useState, useTransition } from 'react';
 import { saveRunPickAction, clearRunPickAction } from '@/app/actions/run';
-import { ptTime } from '@/lib/gridiron/kickoff';
+import { timeLabel } from '@/lib/time/display';
+import { useViewerZone } from '@/components/time/ViewerTz';
 import TeamMark from '@/components/team/TeamMark';
 import { useStickyOffset } from '@/components/games/useStickyOffset';
 
@@ -288,6 +289,8 @@ function panFacts(used, club, players) {
 }
 
 function Header({ view, filled, leagueLine }) {
+  // The reader's zone for the next-lock time (sun-16 item B; was Pacific).
+  const tz = useViewerZone();
   return (
     <div className="rn-hd">
       <div className="rn-hd-top">
@@ -302,7 +305,7 @@ function Header({ view, filled, leagueLine }) {
         {view.phase === 'open' && view.nextLock ? <Clock ms={view.nextLock.msAway} /> : null}
         <div className="rn-lbl">
           {view.phase === 'open' && view.nextLock
-            ? <>next lock<b>{view.nextLock.label ?? ''}{view.nextLock.label ? ' · ' : ''}{ptTime(view.nextLock.kickoffAt) ?? ''}</b></>
+            ? <>next lock<b>{view.nextLock.label ?? ''}{view.nextLock.label ? ' · ' : ''}{view.nextLock.kickoffAt ? timeLabel(view.nextLock.kickoffAt, { tz }) : ''}</b></>
             : <>round<b>{view.contest.label}</b></>}
         </div>
         <div className="rn-tot">
