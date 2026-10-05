@@ -49,13 +49,22 @@ import Articles from '@/components/team/Articles';
 
 import './team.css';
 
+// NOINDEX UNTIL REBUILT (sun-12 item 3). Every team page still renders the
+// retired World Cup template, so none is offered to a search index and none is
+// in the sitemap (lib/seo/sitemapPlan.js). follow stays true: the links out of
+// a team page (players, matches) are live pages a crawler may still reach.
+// /team is deliberately NOT in robots.txt Disallow - a crawler that cannot fetch
+// the page never reads this noindex, and already-indexed URLs would linger.
+const TEAM_ROBOTS = Object.freeze({ index: false, follow: true });
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const team = await getTeamBySlug(slug);
-  if (!team) return { title: 'Team not found — Sportsvyn' };
+  if (!team) return { title: 'Team not found — Sportsvyn', robots: TEAM_ROBOTS };
   return {
     title: `${team.name} — Sportsvyn`,
     description: `Power ranking, form, stats, top performers, and schedule for ${team.name}.`,
+    robots: TEAM_ROBOTS,
   };
 }
 
