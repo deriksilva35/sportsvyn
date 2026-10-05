@@ -8,11 +8,13 @@
 //        teams.external_ids->>'cfbd_team_id' = CFBD id; color + alternateColor,
 //        exactly what syncCfbTeams (lib/gridiron/sync.js) keeps for FBS. The
 //        FCS stubs the game sync creates carry the id and nothing else.
+//        A CFBD primary with no alternateColor is written PRIMARY-ONLY (the
+//        secondary stays NULL; readers draw the abbreviation ring disc). Where
+//        CFBD has no colour at all, the reviewed lib/cfb/teamColors.js applies.
 //   EPL  the reviewed static table lib/soccer/teamColors.js, joined on slug.
 //        No provider is called.
 //
-// A team is filled only when BOTH columns are NULL and the source has BOTH
-// colours; the UPDATE re-checks both-NULL in SQL, so a colour written between
+// A team is filled only when BOTH columns are NULL; the UPDATE re-checks both-NULL in SQL, so a colour written between
 // the read and the write is never overwritten. Abbreviation is not touched;
 // the count of CFB teams without one is reported.
 //
@@ -26,6 +28,7 @@ import crypto from 'node:crypto';
 import { neon } from '@neondatabase/serverless';
 import { cfbdGet, withCfbdLedger } from '../lib/cfbd/client.js';
 import { EPL_COLORS } from '../lib/soccer/teamColors.js';
+import { CFB_STATIC_COLORS } from '../lib/cfb/teamColors.js';
 import { cfbdColourMap, staticColourMap, planColourFill } from '../lib/teams/colourFill.js';
 
 const args = process.argv.slice(2);
@@ -55,7 +58,7 @@ async function counts(slug) {
       FROM teams t JOIN leagues l ON l.id = t.league_id WHERE l.slug = ${slug}`;
   return r;
 }
-const fmt = (c) => `${c.teams} teams, ${c.teams - c.none - c.half} coloured, ${c.none} with none, ${c.half} half`;
+const fmt = (c) => `${c.teams} teams, ${c.teams - c.none - c.half} with a pair, ${c.half} primary-only/half, ${c.none} with none`;
 
 async function leagueTeams(slug, keyExpr) {
   const rows = await sql`
@@ -77,20 +80,21 @@ async function writeFills(fills) {
   return { updated, skipped };
 }
 
-async function runLeague(slug, label, teams, colours, extra = () => {}) {
+async function runLeague(slug, label, teams, colours, extra = () => {}, fallback = null) {
   const before = await counts(slug);
-  const plan = planColourFill(teams, colours);
+  const plan = planColourFill(teams, colours, { fallback });
   console.log(`\n--- ${label} (league '${slug}') ---`);
   console.log(`before   ${fmt(before)}`);
   extra(before, teams);
-  console.log(`plan     ${plan.fills.length} to fill, ${plan.unfilled.length} unfilled, ${plan.alreadyColoured} already coloured (untouched)`);
-  for (const f of plan.fills) console.log(`  FILL  ${slug}  ${f.name.padEnd(28)} id=${String(f.id).padEnd(5)} ${f.primary} ${f.secondary}  ${f.source}`);
+  console.log(`plan     ${plan.fills.length} to fill (${plan.fills.filter((f) => f.primaryOnly).length} primary-only), ${plan.unfilled.length} unfilled, ${plan.alreadyColoured} already coloured (untouched)`);
+  for (const f of plan.fills) console.log(`  FILL  ${slug}  ${f.name.padEnd(28)} id=${String(f.id).padEnd(5)} ${f.primary} ${f.secondary ?? '(null)  '}  ${f.source}${f.primaryOnly ? '  [PRIMARY ONLY]' : ''}`);
   for (const u of plan.unfilled) console.log(`  UNFILLED  ${slug}  ${u.name.padEnd(28)} id=${String(u.id).padEnd(5)} key=${u.key ?? '-'}  ${u.reason}`);
   if (apply) {
     const w = await writeFills(plan.fills);
     console.log(`applied  ${w.updated} updated${w.skipped.length ? `, ${w.skipped.length} skipped (a colour appeared since the read): ${w.skipped.join(', ')}` : ''}`);
   }
-  const after = apply ? await counts(slug) : { ...before, none: before.none - plan.fills.length };
+  const po = plan.fills.filter((f) => f.primaryOnly).length;
+  const after = apply ? await counts(slug) : { ...before, none: before.none - plan.fills.length, half: before.half + po };
   console.log(`after    ${fmt(after)}${apply ? '' : '   (projected)'}`);
   return { slug, before, after, fills: plan.fills.length, unfilled: plan.unfilled };
 }
@@ -112,7 +116,7 @@ if (!only || only === 'cfb') {
   results.push(await runLeague('cfb', 'CFB', teams, colours, (_b, ts) => {
     const fcs = ts.filter((t) => t.metadata?.classification === 'fcs');
     console.log(`abbr     ${ts.filter((t) => t.abbreviation == null).length} CFB teams have NULL abbreviation (${fcs.filter((t) => t.abbreviation == null).length} of ${fcs.length} FCS) - not touched here`);
-  }));
+  }, staticColourMap(CFB_STATIC_COLORS, 'lib/cfb/teamColors.js')));
 }
 
 if (!only || only === 'epl') {
@@ -126,5 +130,5 @@ if (!only || only === 'epl') {
 
 console.log(`\n${'='.repeat(74)}\nSUMMARY (${apply ? 'applied' : 'dry run'}, fingerprint ${fingerprint})`);
 for (const r of results) {
-  console.log(`  ${r.slug.padEnd(4)} none ${r.before.none} -> ${r.after.none}   fill ${r.fills}   unfilled ${r.unfilled.length}${r.unfilled.length ? `: ${r.unfilled.map((u) => `${u.name} (${u.reason})`).join('; ')}` : ''}`);
+  console.log(`  ${r.slug.padEnd(4)} none ${r.before.none} -> ${r.after.none}   primary-only/half ${r.before.half} -> ${r.after.half}   fill ${r.fills}   unfilled ${r.unfilled.length}${r.unfilled.length ? `: ${r.unfilled.map((u) => `${u.name} (${u.reason})`).join('; ')}` : ''}`);
 }
