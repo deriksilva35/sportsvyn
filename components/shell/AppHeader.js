@@ -30,6 +30,9 @@ import { isShellClient } from '@/lib/shell/appTabs';
 import { sendSessionChangedIfNew } from '@/lib/shell/bridge';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import HeaderWordmark from '@/components/brand/HeaderWordmark';
+import { isPlayHeaderPath } from '@/lib/shell/playHeader';
+import { TAGLINE_CAPS } from '@/lib/brand/tagline';
+import './playHeader.css';
 
 const subscribe = () => () => {};
 const getSnapshot = () => isShellClient({ cookie: document.cookie });
@@ -74,9 +77,15 @@ export default function AppHeader() {
   // On the sign-in pages themselves the button would link to the page it is on.
   const onSignin = pathname.startsWith('/signin');
 
+  // THE PLAY LOBBY DRAWS THE LOCKUP (mon-15): mark centred, the caps tagline
+  // under it, the right edge lifted out of the row so the mark stays on the
+  // centre line whatever sits there. Every other route: the slim header below,
+  // unchanged. playHeader.css.
+  const play = isPlayHeaderPath(pathname);
+
   if (!inShell) return null;
   return (
-    <header className="gh gh--app">
+    <header className={play ? 'gh gh--app gh--play' : 'gh gh--app'}>
       {/* NOT A LINK. Home is a tab; a header that navigates on tap competes
           with the bar for the same job. */}
       {/* SPORTSVYN, THE SAME MARK AS THE WEB HEADER (28 Sep, Derik): an
@@ -89,6 +98,7 @@ export default function AppHeader() {
       <span className="gh-app-mark" aria-label="SPORTSVYN">
         <HeaderWordmark display="block" tight />
       </span>
+      {play && <span className="gh-play-tag">{TAGLINE_CAPS}</span>}
       {/* PROFILE LIVES HERE NOW, not on the bar - the v0.3 trade that freed
           the fourth tab for SPORTSVYN. Right edge; the @handle drops below
           430px (apptab.css) and the avatar stays. */}

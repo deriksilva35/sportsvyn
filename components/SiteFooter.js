@@ -14,8 +14,10 @@ import Link from 'next/link';
 import Wordmark from '@/components/Wordmark';
 import HideInShell from '@/components/shell/HideInShell';
 import { NON_AFFILIATION } from '@/lib/legal';
+import { TAGLINE_CAPS } from '@/lib/brand/tagline';
 
 import './site-chrome.css';
+import '@/components/brand/lockup.css';
 
 /**
  * NOT RENDERED IN THE APP CONTAINER. It is the largest web artifact left in the
@@ -54,9 +56,11 @@ function siteFooterMarkup() {
   return (
     <footer className="site-footer">
       <div className="site-footer-inner site-footer-inner--r5">
-        <div className="footer-brand">
+        {/* THE LOCKUP (mon-15): the mark with the caps line under it - the same
+            lockup as the Play header and the emails (lib/brand/tagline.js). */}
+        <div className="footer-brand sv-lockup">
           <Wordmark sizeClassName="text-[28px]" />
-          <p className="tagline">The arcade of sports games.</p>
+          <p className="sv-lockup-tag">{TAGLINE_CAPS}</p>
         </div>
         <nav className="footer-row" aria-label="Products">
           {FOOTER_PRODUCTS.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}

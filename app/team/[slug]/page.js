@@ -46,6 +46,8 @@ import { isGridiron, breadcrumbFor, anchorPillsFor, scheduleHeadingFor } from '@
 import Trajectory from '@/components/team/Trajectory';
 import Schedule from '@/components/team/Schedule';
 import Articles from '@/components/team/Articles';
+import { TAGLINE_CAPS } from '@/lib/brand/tagline';
+import '@/components/brand/lockup.css';
 
 import './team.css';
 
@@ -191,9 +193,9 @@ export default async function TeamPage({ params }) {
 
       <footer className="site-footer">
         <div className="site-footer-inner">
-          <div className="footer-brand">
+          <div className="footer-brand sv-lockup">
             <Wordmark sizeClassName="text-[28px]" />
-            <p className="tagline">Read the Game. Editorial sports coverage that takes the reader seriously.</p>
+            <p className="sv-lockup-tag">{TAGLINE_CAPS}</p>
             <p className="copyright">© 2026 Sportsvyn · Considered Network</p>
           </div>
           <div className="footer-links">

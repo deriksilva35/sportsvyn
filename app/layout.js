@@ -10,6 +10,7 @@ import { Analytics } from '@vercel/analytics/next';
 import '@/components/shell/apptab.css';
 import { firstPaintColor, dataTheme, shellThemeScript } from '@/lib/brand/theme';
 import { SHELL_COOKIE, SHELL_VALUE } from '@/lib/shell/constants';
+import { TAGLINE } from '@/lib/brand/tagline';
 
 // THE FACES ARE SELF-HOSTED (sun-12 item 4). They were next/font/google, which
 // fetches from Google DURING THE BUILD; that fetch failed a production build on
@@ -172,7 +173,8 @@ const rubikMonoFace = localFont({
 
 export const metadata = {
   title: "Sportsvyn",
-  description: "Sports editorial. Read the Game.",
+  // THE TAGLINE (mon-15): lib/brand/tagline.js, the one place it is written.
+  description: TAGLINE,
   // R3 ICONS (mock-app brand/web @ 84ae53d, README "Markup"): the SVG first,
   // the two PNGs for browsers that do not take an SVG icon, the 180 for iOS
   // (square and opaque - iOS applies its own mask). The manifest is
