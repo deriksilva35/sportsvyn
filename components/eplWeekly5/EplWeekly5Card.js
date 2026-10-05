@@ -14,6 +14,7 @@
 // card shows comes from lib/eplWeekly5/rules.js refuseReason(), the function
 // the server runs.
 
+import VoidAllLabel from '@/components/games/VoidAllLabel';
 import Link from 'next/link';
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { saveEplWeekly5PickAction, clearEplWeekly5PickAction } from '@/app/actions/eplWeekly5';
@@ -327,6 +328,7 @@ function FinalScreen({ view, boardHref }) {
           <span className="e5-kick">{view.contest.label.toUpperCase()} · FINAL</span>
           <span>{view.contest.settledAt ? <>settled <StandaloneTime iso={view.contest.settledAt} weekday zone={false} /></> : ''}</span>
         </div>
+        {view.contest.voidAll && <VoidAllLabel />}
         <div className="e5-tri">
           <div><small>YOUR FIVE</small><b>{view.score ?? view.total}</b></div>
           <div><small>RANK</small><b>{me?.rank ? `#${me.rank.toLocaleString('en-US')}` : '–'}</b></div>

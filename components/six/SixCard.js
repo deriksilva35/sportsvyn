@@ -18,6 +18,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { saveSixPickAction, clearSixPickAction } from '@/app/actions/six';
 import StandaloneTime from '@/components/StandaloneTime';
 import { useStickyOffset } from '@/components/games/useStickyOffset';
+import VoidAllLabel from '@/components/games/VoidAllLabel';
 import {
   SLOTS, SLOT_POS, refuseReason, targetSlot, eligible, countFromTeam,
 } from '@/lib/six/rules';
@@ -231,14 +232,16 @@ function Header({ view, lineup, locked }) {
         <span className="sx-ed">{view.contest.dayLabel ? `${view.contest.dayLabel} · ` : ''}{view.contest.games} game{view.contest.games === 1 ? '' : 's'} · cap {view.contest.cap}/team</span>
       </div>
       <div className="sx-crow">
-        {view.phase === 'final' ? (
+        {view.phase === 'final' && view.contest.voidAll ? (
+          <VoidAllLabel as="div" className="sx-lbl" />
+        ) : view.phase === 'final' ? (
           <div className="sx-lbl">graded<b>{view.perfect?.score != null ? `perfect six ${view.perfect.score}` : 'the night is in'}</b></div>
         ) : next ? <>
           <Clock msAway={next.msAway} />
           <div className="sx-lbl">next tip<b>{next.label} · <StandaloneTime iso={next.tipAt} /></b></div>
         </> : <div className="sx-lbl">all tipped<b>points only</b></div>}
         <div className="sx-tot">
-          {view.phase === 'open' ? <><b>{filled}</b><span>of 6</span></> : <><b>{view.total}</b><span>{view.phase === 'final' ? 'final' : 'live'}</span></>}
+          {view.phase === 'open' ? <><b>{filled}</b><span>of 6</span></> : <><b>{view.total ?? '–'}</b><span>{view.phase === 'final' ? 'final' : 'live'}</span></>}
         </div>
       </div>
       <div className="sx-pips">{pips.map((p, i) => <i key={i} className={`sx-pip${p === 'locked' ? ' lk' : p === 'picked' ? ' on' : ''}`} />)}</div>
