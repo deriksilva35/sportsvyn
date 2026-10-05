@@ -51,6 +51,9 @@
 .sb-row.you {
   border-color: #3a4400;
   background: linear-gradient(90deg, rgba(212, 255, 0, .07), #141414 60%);
-  position: sticky; bottom: 8px;
+  /* 8px clear of the screen's foot on the web, of the app bar in the app -
+     the shared room-bar rule, components/shell/apptab.css. */
+  --sv-roombar-gap: 8px;
+  position: sticky; bottom: var(--sv-roombar-gap);
 }
 .sb-row.you .sb-rank { color: var(--volt, #D4FF00); }

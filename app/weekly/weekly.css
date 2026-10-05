@@ -585,10 +585,10 @@
    as long as the room is open. On the web it sits at the viewport's bottom and
    pays the home-indicator inset in its own padding. In the app it sits on top
    of the tab bar: AppTabBar stamps <html data-appbar="1"> only when it renders,
-   and --sv-appbar-h (components/shell/apptab.css, 62 px + the inset) is that
-   bar's height less its 1 px top border - so the offset is that plus 1px, and
-   the inset is not paid twice. (apptab.css loads on every page, so the
-   variable alone cannot tell the app from the web; the stamp can.) Last
+   and the shared room-bar rule (components/shell/apptab.css, mon-11) keys on
+   that stamp to lift the bar by --sv-appbar-h - the tab bar's whole height,
+   its 1 px top rule included, so the "+ 1px" this room once typed is gone - and
+   to zero --sv-roombar-inset, so the inset is not paid twice. Last
    child of .wkv, so at the end of the room it rests in flow below the footer
    rather than over it.
    ========================================================================== */
@@ -597,12 +597,10 @@
   position: sticky; bottom: 0; z-index: 5;
   min-height: var(--wkv-bar-h); box-sizing: border-box;
   display: flex; align-items: center; gap: 12px;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 12px calc(8px + var(--sv-roombar-inset));
   background: var(--ink);
   border-top: 1px solid var(--tok-line);
 }
-/* In the app: above the tab bar, which has already paid the inset. */
-:where(:root[data-theme="arcade"][data-appbar="1"]) .wkv-bar { bottom: calc(var(--sv-appbar-h) + 1px); padding-bottom: 8px; }
 :where(:root[data-theme="arcade"]) .wkv-bar .wkv-count {
   flex: 0 0 auto;
   font: 700 13px var(--font-mono, ui-monospace, monospace);

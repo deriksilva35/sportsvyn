@@ -57,7 +57,9 @@ test('the viewer pins at the bottom AND stays in the list - the ratified lean', 
   const t = src('components/games/SeasonBoard.js');
   assert.match(t, /table\.top\.find\(\(r\) => r\.userId === uid\) \?\? table\.self \?\? null/);
   assert.match(t, /mine && uid != null && <Row r=\{mine\} me pinned \/>/);
-  assert.match(src('components/games/season.css'), /\.sb-row\.you \{[^}]*position: sticky; bottom: 8px;/);
+  // 8px off the foot on the web; in the app 8px off the tab bar, by the shared
+  // room-bar rule (components/shell/apptab.css, app/roomBars.test.mjs).
+  assert.match(src('components/games/season.css'), /\.sb-row\.you \{[^}]*--sv-roombar-gap: 8px;\s*position: sticky; bottom: var\(--sv-roombar-gap\);/);
 });
 
 test('tier colors come from config, and this surface writes none of its own', () => {

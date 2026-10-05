@@ -64,7 +64,8 @@
 .e5-showmore { display: block; width: calc(100% - 32px); margin: 12px 16px; min-height: 44px; border-radius: 12px; border: 1.5px solid var(--tok-line); background: var(--tok-page); color: var(--tok-ink); font: 400 11px var(--tok-font-num); cursor: pointer; }
 .e5-empty { margin: 16px; font: 400 13px var(--tok-font-body); color: var(--tok-muted); }
 
-/* THE LOCK BAR, at the foot of the viewport. */
+/* THE LOCK BAR, at the foot of the viewport - and in the app on top of the tab
+   bar, by the shared room-bar rule in components/shell/apptab.css. */
 .e5-pick:not(.compact) { padding-bottom: 76px; }
 .e5-lockbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 3; max-width: 460px; margin: 0 auto; box-sizing: border-box; padding: 10px 16px 14px; background: var(--tok-page); border-top: 1px solid var(--tok-line); display: flex; flex-direction: column; gap: 8px; font: 400 12px var(--tok-font-body); color: var(--tok-muted); }
 .e5-lockbar a { color: var(--tok-ink); font-weight: 600; }

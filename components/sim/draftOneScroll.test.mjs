@@ -94,12 +94,17 @@ test('THE PICK BAR STICKS TO THE BOTTOM, above the app tab bar only where that b
   assert.match(ft, /position:\s*sticky/);
   assert.match(ft, /bottom:\s*0/);
   assert.match(ft, /order:\s*4/, 'last in the room - it used to render ABOVE the pager');
-  assert.match(ft, /padding-bottom:\s*calc\(10px \+ env\(safe-area-inset-bottom, 0px\)\)/);
-  const app = body(`${PHONE} :where(:root[data-theme="arcade"][data-appbar]:not([data-clock])) .dv-ft`);
-  assert.match(app, /bottom:\s*var\(--sv-appbar-h\)/);
+  // The inset on the web, nothing on the app bar: --sv-roombar-inset.
+  assert.match(ft, /padding-bottom:\s*calc\(10px \+ var\(--sv-roombar-inset\)\)/);
+  // ABOVE THE APP BAR is the SHARED room-bar rule (mon-11), not a private one:
+  // components/shell/apptab.css names .dv-ft, and app/roomBars.test.mjs pins
+  // that rule and walks every stylesheet for a bar it does not name.
+  const shared = read('components/shell/apptab.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.match(shared, /html\[data-appbar\]:not\(\[data-clock\]\) :is\([^)]*\.dv-ft[^)]*\)\s*\{\s*bottom:\s*calc\(var\(--sv-appbar-h\)/);
   // --sv-appbar-h is on :root EVERYWHERE (apptab.css loads in the root
   // layout), so the offset must be gated on data-appbar, never on the var.
   assert.doesNotMatch(ft, /--sv-appbar-h/);
+  assert.doesNotMatch(CSS.replace(/\/\*[\s\S]*?\*\//g, ''), /--sv-appbar-h/, 'no private offset left in sim.css');
 });
 
 test('AUTO IS IN THE CLOCK BAR, on the phone page only; the room-head that held it folds away', () => {

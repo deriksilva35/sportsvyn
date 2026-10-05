@@ -156,8 +156,12 @@
   background: none; cursor: pointer;
 }
 
+/* --sv-roombar-gap: the toast floats 16px clear of the screen's foot on the web
+   and 16px clear of the app bar in the app (the shared room-bar rule,
+   components/shell/apptab.css) - one distance, two floors. */
 .sbd-toast {
-  position: fixed; left: 12px; right: 12px; bottom: 16px; max-width: 366px; margin: 0 auto;
+  --sv-roombar-gap: 16px;
+  position: fixed; left: 12px; right: 12px; bottom: var(--sv-roombar-gap); max-width: 366px; margin: 0 auto;
   background: var(--volt); color: var(--ink); border-radius: 12px; padding: 12px 14px; z-index: 12;
 }
 .sbd-toast b { font-family: var(--font-display); font-style: italic; font-weight: 900; font-size: 16px; }
@@ -498,6 +502,18 @@
 .sbd-v2 .sbd-ft {
   border-top: 1px solid var(--tok-line); margin-top: 11px; padding: 10px 12px;
   display: flex; align-items: center; gap: 10px;
+}
+/* THE LOCK IS PINNED IN THE APP (mon-11). In the container the board runs
+   longer than the screen and the app's tab bar is fixed over the foot of it, so
+   "0 of 8 in" and Lock it in sat UNDER the bar - the one control the clock is
+   running towards. In the app it sticks to the bottom of the viewport and the
+   shared room-bar rule (components/shell/apptab.css) lifts it onto the tab bar;
+   it pays the home-indicator inset itself only when no tab bar is there.
+   ON THE WEB IT IS UNCHANGED: in flow at the end of the board. */
+html[data-appbar] .sbd-v2 .sbd-ft {
+  position: sticky; bottom: 0; z-index: 5;
+  background: var(--tok-page);
+  padding-bottom: calc(10px + var(--sv-roombar-inset));
 }
 .sbd-v2 .sbd-pace {
   font-family: var(--mono, ui-monospace, monospace); font-weight: 500; font-size: 11px;
