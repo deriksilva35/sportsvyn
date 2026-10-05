@@ -81,7 +81,12 @@ export default function AppHeader() {
   // under it, the right edge lifted out of the row so the mark stays on the
   // centre line whatever sits there. Every other route: the slim header below,
   // unchanged. playHeader.css.
-  const play = isPlayHeaderPath(pathname);
+  // / is the lobby too when it renders it - the arcade theme (app/page.js),
+  // which is <html data-theme="arcade"> by the time this renders: inShell is
+  // false through hydration, so this read only ever runs on the client.
+  const play = inShell && isPlayHeaderPath(pathname, {
+    lobbyAtRoot: document.documentElement.getAttribute('data-theme') === 'arcade',
+  });
 
   if (!inShell) return null;
   return (

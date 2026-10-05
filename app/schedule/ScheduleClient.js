@@ -335,7 +335,9 @@ export default function ScheduleClient({
   return (
     <div className="sch-shell">
       <div className="sch-pagehead">
-        <div className="sch-kicker">{kickerText}</div>
+        {/* THE KICKER IS OPTIONAL (mon-16): the World Cup schedule dropped its
+            "Read the Game" - the old editorial line. No kicker, no empty div. */}
+        {kickerText && <div className="sch-kicker">{kickerText}</div>}
         <h1 className="sch-title">
           Scores <span className="sch-title-ctx">&amp; Schedule</span>
         </h1>

@@ -98,7 +98,6 @@ export default async function SchedulePage({ searchParams }) {
           initialStageFilter={initialStageFilter}
           initialGroupFilter={initialGroupFilter}
           initialStatusFilter={initialStatusFilter}
-          kickerText="Read the Game"
           subheadText="48 nations · 12 groups · one tournament"
           followedTeamIds={followedTeamIds}
         />

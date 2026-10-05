@@ -1,0 +1,32 @@
+/* components/playHeaderWeb.css - THE PLAY LOBBY'S WEB HEADER ON A PHONE (mon-16).
+   The app's lockup header (components/shell/playHeader.css), drawn by the web
+   header on /games (and / when it renders the lobby) - ONLY below the nav's
+   own collapse, 1140px (site-chrome.css "the mobile collapse"). Above it the
+   bar is the full nav, untouched, and the tagline is not drawn.
+
+   Below 1140 the collapsed bar is mark + PLAY + burger. Here the PLAY button
+   goes (this IS Play) and the burger is pinned right, so the mark sits on the
+   centre line. Every selector is scoped to .gh--play-web, so no other page's
+   header can move; tokens only (app/tokens.test.mjs). */
+.gh--play-web .gh-play-tag { display: none; }
+@media (max-width: 1140px) {
+  header.gi-head.gh.gh--play-web {
+    flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    padding: 14px 64px 12px;
+  }
+  header.gh.gh--play-web .wordmark { font-size: 25px; margin: 0; }
+  .gh--play-web .gh-play-tag {
+    display: block;
+    font-family: var(--font-rubik-mono), ui-monospace, monospace;
+    font-size: 9px; line-height: 1; letter-spacing: 0.22em;
+    margin-right: -0.22em;
+    color: var(--tok-muted);
+    white-space: nowrap;
+  }
+  .gh.gh--play-web .gh-right { display: none; }
+  .gh.gh--play-web .gh-burger {
+    position: absolute; right: 16px; top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+  }
+}

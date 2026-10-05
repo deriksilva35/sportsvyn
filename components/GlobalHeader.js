@@ -40,9 +40,12 @@ import { navFor, accountMenu, signinHrefFor, HEADER_CTA, MOCK_DRAFT } from '@/li
 import Link from 'next/link';
 import Wordmark from '@/components/gridiron/Wordmark';
 import NavDropdown from '@/components/NavDropdown';
+import { isPlayHeaderPath } from '@/lib/shell/playHeader';
+import { TAGLINE_CAPS } from '@/lib/brand/tagline';
 
 import './site-chrome.css';
 import '@/components/gridiron/gridiron.css';
+import './playHeaderWeb.css';
 
 function shortLabel(email) {
   if (!email || typeof email !== 'string') return '';
@@ -62,6 +65,11 @@ export default function GlobalHeader({
   // the flag itself.
   const { items: NAV, active } = navFor(arcade, activeNav, arcadeNav);
   const signinHref = signinHrefFor(pathname);
+  // THE PLAY LOBBY ON A PHONE (mon-16, Derik): below the nav's collapse the
+  // bar draws the centred lockup, as the app does (components/shell/AppHeader);
+  // above it the full nav bar is unchanged. / counts when it renders the lobby,
+  // which on the web is the arcade theme (app/page.js arcadeFor(false)).
+  const play = isPlayHeaderPath(pathname, { lobbyAtRoot: arcade });
 
   // SIGN OUT ALSO LOGS OUT OF REVENUECAT. The sim's SignOutButton has always
   // done this; the header did not, so signing out from the chrome left the
@@ -89,10 +97,11 @@ export default function GlobalHeader({
 
   return (
     <>
-      <header className="gi-head gh">
+      <header className={play ? 'gi-head gh gh--play-web' : 'gi-head gh'}>
         {/* LEFT, ON THE CONTENT EDGE, 1.4x (sun-14): the padding and the size
             are site-chrome.css's (header.gh, .gh .wordmark). */}
         <Wordmark href="/" tight />
+        {play && <span className="gh-play-tag">{TAGLINE_CAPS}</span>}
 
         <nav className="gi-head-nav gh-nav" aria-label="Primary">
           {NAV.map((n) => (

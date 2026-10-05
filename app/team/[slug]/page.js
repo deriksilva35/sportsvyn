@@ -17,7 +17,6 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { isRetiredLeague } from '@/lib/retired';
 import { auth } from '@/auth';
 import { resolveShellMode } from '@/lib/shell/shell';
-import Wordmark from '@/components/Wordmark';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import BackToAppBar from '@/components/BackToAppBar';
 import {
@@ -31,7 +30,6 @@ import {
 } from '@/lib/teams';
 import { getTeamSquad } from '@/lib/players';
 import { isFollowingTeam } from '@/lib/follows';
-import { NON_AFFILIATION } from '@/lib/legal';
 
 import TeamHero from '@/components/team/TeamHero';
 import { servedList, servedRankFor } from '@/lib/rankings/servedBoard';
@@ -46,8 +44,7 @@ import { isGridiron, breadcrumbFor, anchorPillsFor, scheduleHeadingFor } from '@
 import Trajectory from '@/components/team/Trajectory';
 import Schedule from '@/components/team/Schedule';
 import Articles from '@/components/team/Articles';
-import { TAGLINE_CAPS } from '@/lib/brand/tagline';
-import '@/components/brand/lockup.css';
+import SiteFooter from '@/components/SiteFooter';
 
 import './team.css';
 
@@ -191,37 +188,9 @@ export default async function TeamPage({ params }) {
         <Articles team={team} />
       </main>
 
-      <footer className="site-footer">
-        <div className="site-footer-inner">
-          <div className="footer-brand sv-lockup">
-            <Wordmark sizeClassName="text-[28px]" />
-            <p className="sv-lockup-tag">{TAGLINE_CAPS}</p>
-            <p className="copyright">© 2026 Sportsvyn · Considered Network</p>
-          </div>
-          <div className="footer-links">
-            <div className="footer-col">
-              <h4>Read</h4>
-              <a href="#">Daily Card</a>
-              <a href="#">Bracket</a>
-              <a href="#">Rankings</a>
-              <a href="#">Stats</a>
-            </div>
-            <div className="footer-col">
-              <h4>About</h4>
-              <a href="#">Methodology</a>
-              <a href="#">Voice Bible</a>
-              <a href="/privacy">Privacy</a>
-              <a href="/terms">Terms</a>
-            </div>
-            <div className="footer-col">
-              <h4>Follow</h4>
-              <a href="#">Newsletter</a>
-              <a href="#">RSS</a>
-            </div>
-          </div>
-        </div>
-        <p className="footer-fine">{NON_AFFILIATION}</p>
-      </footer>
+      {/* THE STANDARD FOOTER (mon-16): this page carried its own pre-R5 copy
+          - four headed columns, "#" links and the old editorial line. */}
+      <SiteFooter />
     </>
   );
 }
