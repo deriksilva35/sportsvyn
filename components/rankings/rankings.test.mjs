@@ -349,3 +349,16 @@ test('HEADGEAR on a rankings row: NFL and CFB rows wear helmets facing right', (
   assert.match(c, /data-teammark="headgear" data-facing="right" src="\/headgear\/cfb\/OSU@1x\.webp"/, 'Ohio State, AP 1');
   assert.match(c, /src="\/headgear\/cfb\/MISS@1x\.webp"/);
 });
+
+test('CFB power rows carry no score column; the NFL computed board keeps its own (mon-8)', () => {
+  // The CFB order is the editor's list, so a blended score beside the rank
+  // read out of order (Texas #1 9.58 under Georgia #2 9.68, 5 Oct).
+  const h = html(cfb());
+  const ours = h.slice(h.indexOf('data-module="ours"'), h.indexOf('data-module="group"'));
+  assert.equal(/94\.1|88\.2/.test(ours), false, 'no stored score is drawn on a CFB power row');
+  assert.equal(/class="rnk-v/.test(ours), false, 'and no value cell at all');
+  assert.match(ours, /Ole Miss/); assert.match(ours, /AP 9 · we have them higher/, 'rank, team and the AP sub-line stay');
+  const nfl = html(base());
+  const power = nfl.slice(nfl.indexOf('data-module="power"'), nfl.indexOf('data-module="group"'));
+  assert.match(power, /class="rnk-v/, 'the NFL board still shows its score');
+});
