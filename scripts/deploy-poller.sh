@@ -21,6 +21,12 @@
 #   4. .env.local: a symlink to the main tree's (one copy of every secret)
 #   5. smoke: `node --check` on every entrypoint a unit starts; the pinned node
 #      binary in the unit file exists
+#   5b. BOOT CHECK (lib/ops/bootCheck.mjs, from the release, with the unit's node):
+#      every entry is started exactly as its unit starts it plus --boot-check, with
+#      a stub environment (no DB, no network); each must evaluate its whole top
+#      level and exit 0 at its gate. Any failure aborts HERE, with `current`
+#      untouched and nothing restarted. This is what `node --check` cannot see:
+#      the 5 Oct TDZ (cfbKick above log) parsed fine and died at import.
 #   6. atomic switch: current.tmp -> mv -T over current; previous <- old current
 #   7. restart sportsvyn-live-poller (the oneshots pick up `current` on their next
 #      fire; there is nothing of theirs to restart)
@@ -212,6 +218,22 @@ fi
 if [[ $DRY_RUN == 0 ]]; then
   NODE_BIN="$(sed -n 's/^ExecStart=\([^ ]*\).*/\1/p' "$REL/services/live-poller/systemd/sportsvyn-live-poller.service" | sed "s#%h#$HOME#")"
   [[ -x $NODE_BIN ]] || die "the unit's pinned node ($NODE_BIN) does not exist - fix ExecStart first"
+
+  # --- 5b. boot check: every entry evaluates, before anything switches ---------
+  # Run on EVERY deploy, a reused release included: it is the release's own
+  # checker against the release's own code and node_modules.
+  if [[ -f "$REL/lib/ops/bootCheck.mjs" ]]; then
+    if ! BC_OUT="$(cd "$REL" && "$NODE_BIN" lib/ops/bootCheck.mjs --node "$NODE_BIN" 2>&1)"; then
+      printf '%s\n' "$BC_OUT" >&2
+      die "BOOT CHECK FAILED for ${SHA:0:12} - an entry would crash at start. current is unchanged (still ${CUR:-none}); nothing was restarted"
+    fi
+    printf '%s\n' "$BC_OUT"
+    say "boot check passed: every entry imports and builds"
+  else
+    say "WARNING: ${SHA:0:12} predates the boot check (no lib/ops/bootCheck.mjs) - not checked"
+  fi
+else
+  say "would: boot check every entry from releases/${SHA:0:12} (lib/ops/bootCheck.mjs)"
 fi
 check_installed_units "$REL"
 
