@@ -162,7 +162,7 @@ const SECTIONS = [
       'The clock is 3 minutes from Start, kept on the server.',
       'Your picks stay on your device until you lock in. Close the tab and they are lost; a run that never locks in is a DNF.',
       'Kickers score 3 per field goal and 1 per extra point. There is no fumble penalty.',
-      'Ties: the same score shares a place, so every perfect board is 1st. Within a tie, more matched slots list first, then the earliest lock-in.',
+      'Ties: the same score shares a place, so every perfect board is 1st. Within a tie, the earliest lock-in lists first.',
     ],
     href: DAILY_V2_PATH,
     cta: 'Play now',

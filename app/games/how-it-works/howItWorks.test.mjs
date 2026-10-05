@@ -178,7 +178,7 @@ test("the Daily's house rules are stated, and match the code", async () => {
     'The clock is 3 minutes from Start, kept on the server.',
     'Your picks stay on your device until you lock in. Close the tab and they are lost; a run that never locks in is a DNF.',
     'Kickers score 3 per field goal and 1 per extra point. There is no fumble penalty.',
-    'Ties: the same score shares a place, so every perfect board is 1st. Within a tie, more matched slots list first, then the earliest lock-in.',
+    'Ties: the same score shares a place, so every perfect board is 1st. Within a tie, the earliest lock-in lists first.',
   ];
   for (const r of rules) assert.ok(PAGE.includes(`'${r}'`), `missing or altered: ${r}`);
   const daily = PAGE.slice(PAGE.indexOf("key: 'daily'"), PAGE.indexOf('export default'));
@@ -196,9 +196,8 @@ test("the Daily's house rules are stated, and match the code", async () => {
   const lb = src('lib/daily/seasonBoardLeaderboards.js');
   const today = lb.slice(lb.indexOf('export async function todayLeaderboard'));
   // THE TIE RULE (sun-16 C, lib/games/rank.js): rank() not dense_rank(), and
-  // matched no longer orders a tie. The page's Daily ties line still says
-  // "more matched slots list first" - owed by the stale-pages relay, which
-  // owns How It Works copy.
+  // matched no longer orders a tie, and the page's Daily ties line says so
+  // ("the earliest lock-in lists first", ruling sun-18).
   assert.match(today, /rank\(\) OVER \(ORDER BY r\.score DESC\) AS rank/);
   assert.doesNotMatch(today, /dense_rank/);
   assert.match(today, /ORDER BY r\.score DESC, r\.completed_at ASC/);

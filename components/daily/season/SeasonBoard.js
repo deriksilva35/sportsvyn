@@ -736,7 +736,7 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
         <span className="sbd-n">4</span>
         <div className="sbd-t">
           <b>You are graded against the board</b>
-          <p>Not against a season all-star team - against the best roster these twelve teams could actually have produced, one player per team. Same score, same place; within a tie, more matched slots list first, then the earliest lock-in.</p>
+          <p>Not against a season all-star team - against the best roster these twelve teams could actually have produced, one player per team. Same score, same place; within a tie, the earliest lock-in lists first.</p>
         </div>
       </div>
 

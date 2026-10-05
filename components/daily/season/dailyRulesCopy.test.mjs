@@ -24,7 +24,7 @@ test('the in-game rules card states the house rules', () => {
     'Twelve team cards, 4 to 6 players each.',
     'Tap a filled slot to clear it and get the team back.',
     'nothing is dropped: kickers get 3 per field goal and 1 per extra point, and there is no fumble penalty.',
-    'Same score, same place; within a tie, more matched slots list first, then the earliest lock-in.',
+    'Same score, same place; within a tie, the earliest lock-in lists first.',
     'Your picks stay on this device until you lock in; close the tab and they are lost.',
     'A new board opens at midnight ET.',
     'Three minutes from Start. The clock is on the server.',
