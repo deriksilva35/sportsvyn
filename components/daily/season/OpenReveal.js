@@ -18,6 +18,8 @@
 // (openReveal.css). No timers, so a re-render never replays it half-way.
 
 import LiveRefresh from '@/components/scores/LiveRefresh';
+import DailyShare from '@/components/daily/season/DailyShare';
+import { shareCardModel, shareText, CARD_PATH } from '@/lib/daily/shareCard';
 import '@/app/boards/board.css';
 import './openReveal.css';
 
@@ -40,10 +42,21 @@ function BoardRow({ r, you }) {
   );
 }
 
-export default function OpenReveal({ edition, reveal, refreshMs = 60_000 }) {
+/**
+ * THE SAME-DAY SHARE (relay mon-12): the card with every pick hidden. The text
+ * is built from the same pure model the image is (lib/daily/shareCard.js), from
+ * the slot LABELS only - this component holds the run's names, the share never
+ * receives them.
+ */
+export function openShareText({ editionDate, season, streak, total, slots }) {
+  return shareText(shareCardModel({ phase: 'open', editionDate, seasonYear: season, streak, score: total, slots }));
+}
+
+export default function OpenReveal({ edition, reveal, refreshMs = 60_000, share = null }) {
   const { rows = [], total, rank, of, beatPct, streak, board } = reveal ?? {};
   const meId = board?.me?.userId ?? null;
   const line = beatLine(beatPct, of);
+  const canShare = share?.editionDate && share?.season;
   return (
     <div className="lb dr" data-state="open">
       {refreshMs ? <LiveRefresh everyMs={refreshMs} /> : null}
@@ -85,6 +98,15 @@ export default function OpenReveal({ edition, reveal, refreshMs = 60_000 }) {
           <span>{streak != null && streak > 0 ? `🔥 ${streak} day streak` : 'Streak starts today'}</span>
           <span>Perfect roster at midnight ET</span>
         </div>
+        {canShare ? (
+          <DailyShare
+            className="dr-share"
+            label="Share your score"
+            cardUrl={CARD_PATH(share.editionDate)}
+            editionDate={share.editionDate}
+            text={openShareText({ editionDate: share.editionDate, season: share.season, streak, total, slots: rows.map((r) => r.slot) })}
+          />
+        ) : null}
       </div>
 
       <div className="lb-table dr-table">

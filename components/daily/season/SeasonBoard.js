@@ -43,6 +43,8 @@ import {
 } from '@/lib/daily/seasonBoardPlay';
 import { gradeBoard, boardStory } from '@/lib/daily/seasonBoardGrade';
 import { pctOfCeiling } from '@/lib/daily/format';
+import { shareCardModel, shareText as cardShareText, CARD_PATH } from '@/lib/daily/shareCard';
+import DailyShare from '@/components/daily/season/DailyShare';
 import { DAILY_V2_PATH, DAILY_ROUND_SECONDS } from '@/lib/daily/boardShape';
 
 // THE ONE PLACE THE DOMAIN-QUALIFIED SHARE URL IS BUILT (relay 5b item 7) -
@@ -147,6 +149,12 @@ export default function SeasonBoard({
   // as an ISO string; the clock is drawn from it, so a reload shows the time
   // already spent instead of restarting at 0:00.
   initialStartedAt = null, initialScreen = null,
+  // THE IMAGE SHARE (relay mon-12). editionDate names the edition the card
+  // route draws (app/daily/board/[date]/card); without it - practice, the
+  // ?season preview - the share stays the text-only one below. shareSeason is
+  // the season for a finished run the page sealed (year withheld from the
+  // page); shareStreak is the streak AS OF this edition, for a past result.
+  editionDate = null, shareSeason = null, shareStreak = null,
 }) {
   const [screen, setScreen] = useState(initialScreen ?? (initialGrade ? 'grade' : 'rules')); // 'rules' | 'board' | 'grade'
   // THE CARDS ARRIVE WITH THE START (1b item 4). Before a start is recorded the
@@ -441,7 +449,10 @@ export default function SeasonBoard({
     return (
       <div className="sbd">
         <Crumb />
-        <OpenReveal edition={edition} reveal={openReveal ?? revealState} />
+        <OpenReveal
+          edition={edition} reveal={openReveal ?? revealState}
+          share={ranked && editionDate ? { editionDate, season: shareSeason ?? year } : null}
+        />
       </div>
     );
   }
@@ -482,6 +493,7 @@ export default function SeasonBoard({
         <GradeScreen
           edition={edition} year={year} grade={grade} play={play} teams={teams} clockLabel={clockLabel} ranked={ranked}
           streak={streak} closesAt={closesAt} todayRows={todayRows} userId={userId}
+          editionDate={editionDate} shareStreak={shareStreak}
         />
       </div>
     );
@@ -775,7 +787,7 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
  */
 function GradeScreen({
   edition, year, grade, play, teams, clockLabel, ranked, streak,
-  closesAt = null, todayRows = null, userId = null,
+  closesAt = null, todayRows = null, userId = null, editionDate = null, shareStreak = null,
 }) {
   // THE HOOK COMES BEFORE THE EARLY RETURN - React's own rule, and an
   // eslint error otherwise (a conditional useState call). copied/setCopied
@@ -810,6 +822,15 @@ function GradeScreen({
   // Clipboard stays as the fallback, and it is reached two ways: no
   // navigator.share at all (desktop), or a share that throws mid-call
   // (cancelled, or refused). The tap never does nothing.
+  // THE ROSTER CARD (relay mon-12): a ranked edition the reader played shares
+  // the IMAGE - every pick, the stars, % of perfect - with the card's own three
+  // lines. Practice and the preview have no stored run to draw, so they keep
+  // the text share above.
+  const imageShare = ranked && editionDate && userId != null
+    ? cardShareText(shareCardModel({
+      phase: 'closed', editionDate, seasonYear: year, streak: shareStreak ?? streak, score: grade.mine, grade,
+    }))
+    : null;
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -856,9 +877,13 @@ function GradeScreen({
           {grade.mine.toLocaleString()} pts{pctLabel ? ` · ${pctLabel}` : ''} · {clockLabel}<br />
           {SHARE_URL}
         </div>
-        <button type="button" className="sbd-copy" onClick={handleShare}>
-          {copied ? 'Copied' : 'Share your board'}
-        </button>
+        {imageShare ? (
+          <DailyShare cardUrl={CARD_PATH(editionDate)} editionDate={editionDate} text={imageShare} label="Share your board" />
+        ) : (
+          <button type="button" className="sbd-copy" onClick={handleShare}>
+            {copied ? 'Copied' : 'Share your board'}
+          </button>
+        )}
       </div>
 
       <div className="sbd-grade">
