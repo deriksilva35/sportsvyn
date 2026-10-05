@@ -6,7 +6,7 @@
    grammar (app/voltContrast.test.mjs) is stated in the arcade block at the
    foot: volt is a FILL with navy ink (the CTA, the selected chip), navy is
    structure (the card border, the filled progress segment, the letter mark),
-   surfaces are white. LOCKS SOON is the terra role (--tok-down). */
+   surfaces are white. SOON is the terra role (--tok-down), in moveGrid.css. */
 
 .pl { padding-bottom: 8px; }
 
@@ -21,23 +21,8 @@
 .pl-sh span { font: 400 11px var(--tok-font-body); color: var(--tok-muted); }
 .pl-sh a { font: 400 11px var(--tok-font-num); color: var(--tok-ink); text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; }
 
-/* YOUR MOVE: horizontal cards */
+/* YOUR MOVE: the section head here; the 2x2 grid is moveGrid.css (mon-2) */
 .pl-move .pl-sh { margin-top: 14px; }
-.pl-cards { display: flex; gap: 10px; padding: 6px 16px 4px; overflow-x: auto; scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.pl-cards::-webkit-scrollbar { display: none; }
-.pl-card { flex: none; width: 244px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 10px;
-  padding: 14px; border-radius: 16px; border: 1.5px solid var(--tok-line); background: var(--tok-surface);
-  color: var(--tok-ink); text-decoration: none; }
-.pl-card.soon { background: color-mix(in srgb, var(--tok-accent) 12%, var(--tok-surface)); }
-.pl-card-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.pl-kick { font: 400 9px var(--tok-font-num); letter-spacing: .06em; text-transform: uppercase; color: var(--tok-muted); }
-.pl-soon { flex: none; font: 400 9px var(--tok-font-num); padding: 3px 7px; border-radius: 99px;
-  background: var(--tok-down); color: var(--tok-ink); }
-.pl-card-t { font: 400 17px var(--tok-font-num); line-height: 1.1; text-transform: none; }
-.pl-card-s { font: 400 12px var(--tok-font-body); color: var(--tok-muted); }
-.pl-cta { align-self: flex-start; min-height: 36px; display: inline-flex; align-items: center; padding: 0 12px;
-  border-radius: 10px; font: 400 11px var(--tok-font-num); background: var(--tok-action); color: var(--tok-on-action); }
 
 /* the progress bar: one segment per slot */
 .pl-bar { display: flex; gap: 3px; width: 100%; }
@@ -76,10 +61,7 @@
 /* ============================================================================
    THE VOLT GRAMMAR - arcade page only, :where()-scoped (zero specificity).
    ========================================================================== */
-:where(:root[data-theme="arcade"]) .pl-card { border-color: var(--tok-primary); background: var(--tok-page); }
-:where(:root[data-theme="arcade"]) .pl-card.soon { background: color-mix(in srgb, var(--tok-action) 16%, var(--tok-page)); }
-:where(:root[data-theme="arcade"]) .pl-soon { color: var(--tok-page); }
 :where(:root[data-theme="arcade"]) .pl-bar > span.on { background: var(--tok-primary); }
 :where(:root[data-theme="arcade"]) .pl-mk { border-color: var(--tok-primary); color: var(--tok-primary); }
-:where(:root[data-theme="arcade"]) .pl-t b, :where(:root[data-theme="arcade"]) .pl-card-t,
+:where(:root[data-theme="arcade"]) .pl-t b,
 :where(:root[data-theme="arcade"]) .pl-sh h3, :where(:root[data-theme="arcade"]) .pl-top h1 { color: var(--tok-primary); }

@@ -35,13 +35,15 @@ import SeasonBoard from '@/components/games/SeasonBoard';
 import PlayWhen from '@/components/games/PlayWhen';
 import PlayCloses from '@/components/games/PlayCloses';
 import ZoneLabel from '@/components/scores/ZoneLabel';
-import { PlayOpenProvider, PlayChip, PlayCard } from '@/components/games/PlayCollapse';
+import { PlayOpenProvider, PlayChip, PlayCard, PlayMore } from '@/components/games/PlayCollapse';
+import DailyBanner from '@/components/games/DailyBanner';
 
 /** The games with an always-on board page (lib/boards/live.js, lib/boards/mlb.js). */
 const FULL_BOARD = { weekly: '/weekly/board', draft: '/draft/board', october: '/october/board', run: '/run/board' };
 import '@/components/games/season.css';
 import '@/components/games/play.css';
 import '@/components/games/playCollapse.css';
+import '@/components/games/moveGrid.css';
 
 // ---------------------------------------------------------------------------
 // THE PLAY LOBBY (thu-38 + fri-1) - the approved canvas "Play tab lobby"
@@ -80,18 +82,61 @@ function Status({ i, now, tz }) {
   );
 }
 
+/** The compact card's button: SET for a lineup, DRAFT for the room, PICK for the rest. */
+const CTA_SHORT = { weekly: 'SET', six: 'SET', run: 'SET', draft: 'DRAFT' };
+export const ctaShort = (i) => CTA_SHORT[i?.game] ?? 'PICK';
+
+/**
+ * ONE YOUR MOVE CARD, COMPACT (mon-2): sport · game, the title, "N of M ·
+ * locks <time>", the segmented bar, a small PICK/SET. SOON inside the hour.
+ */
 function MoveCard({ i, now, tz, signedIn, signinHref }) {
+  const p = i.progress;
+  const count = p && p.total > 0 ? `${Math.max(0, Math.min(p.done, p.total))} of ${p.total}` : i.status;
   return (
-    <Link className={`pl-card${i.locksSoon ? ' soon' : ''}`} href={signedIn ? i.href : signinHref(i.href)} data-key={i.key}>
-      <span className="pl-card-h">
-        <span className="pl-kick">{i.kicker}</span>
-        {i.locksSoon && <span className="pl-soon">LOCKS SOON</span>}
+    <Link className={`pl-mv${i.soon ? ' soon' : ''}`} href={signedIn ? i.href : signinHref(i.href)} data-key={i.key}>
+      <span className="pl-mv-h">
+        <span className="pl-mv-k">{i.kicker}</span>
+        {i.soon && <span className="pl-mv-soon">SOON</span>}
       </span>
-      <b className="pl-card-t">{i.title}</b>
-      <span className="pl-card-s"><Status i={i} now={now} tz={tz} /></span>
-      <Progress p={i.progress} />
-      <span className="pl-cta">{signedIn ? i.cta : 'SIGN IN TO PLAY'}</span>
+      <b className="pl-mv-t">{i.title}</b>
+      <span className="pl-mv-s">
+        {count}
+        {i.locksAt ? <>{count ? ' · ' : ''}locks <PlayWhen iso={i.locksAt} now={now} serverTz={tz} /></> : null}
+      </span>
+      <Progress p={p} />
+      <span className="pl-mv-b">{signedIn ? ctaShort(i) : 'SIGN IN'} <span aria-hidden="true">&rarr;</span></span>
     </Link>
+  );
+}
+
+/**
+ * THE GRID (mon-2): 2x2, no swiping, laid out by the count lib/games/
+ * playLobby.js moveGrid() drew - 0 a line, 1 full width, 2 side by side, 3 two
+ * + one full width, 4 a square - and past four, "+N more", which opens the
+ * card of the soonest sport left (PlayMore, the cards' own open mechanism).
+ */
+function MoveGrid({ grid, total, signedIn, rowProps }) {
+  const { shown = [], layout = 0, more = null } = grid ?? {};
+  return (
+    <section className="pl-move" aria-label="Your move">
+      <div className="pl-sh">
+        <h3>Your move{total > 0 ? ` · ${total}` : ''}</h3>
+        {total > 0 && <span>{signedIn ? 'soonest lock first' : 'locking soonest'}</span>}
+      </div>
+      {layout === 0
+        ? <p className="pl-mv-none">{signedIn ? 'All caught up. Nothing to set right now.' : 'Nothing open right now.'}</p>
+        : (
+          <div className="pl-mg" data-n={layout}>
+            {shown.map((i) => <MoveCard key={i.key} i={i} {...rowProps} />)}
+          </div>
+        )}
+      {more && (
+        <PlayMore id={more.target} href={`/games?sport=${more.target}`}>
+          +{more.count} more · {more.sports.map((x) => SPORT_LABEL[x] ?? x).join(', ')}
+        </PlayMore>
+      )}
+    </section>
   );
 }
 
@@ -160,7 +205,7 @@ function SportCard({ k, now, tz, signedIn, signinHref }) {
 }
 
 function PlayPane({ v, signedIn, signinHref }) {
-  const { chips = ['all'], yourMove = [], cards = [], open = 'all',
+  const { chips = ['all'], yourMove = [], cards = [], open = 'all', grid = null,
     leagues = [], practice = [], now = null, tz = null } = v;
   const rowProps = { now, tz, signedIn, signinHref };
   return (
@@ -177,23 +222,16 @@ function PlayPane({ v, signedIn, signinHref }) {
         )}
       </div>
 
-      {yourMove.length > 0 && (
-        <section className="pl-move" aria-label="Your move">
-          <div className="pl-sh">
-            <h3>Your move · {yourMove.length}</h3>
-            <span>{signedIn ? 'soonest lock first' : 'locking soonest'}</span>
-          </div>
-          <div className="pl-cards">
-            {yourMove.map((i) => <MoveCard key={i.key} i={i} {...rowProps} />)}
-          </div>
-        </section>
-      )}
+      <DailyBanner b={v.daily ?? null} signedIn={signedIn} signinHref={signinHref} now={now} tz={tz} />
 
-      {/* THE CHIPS AND THE CARDS SHARE ONE OPEN STATE (sun-19). ?sport= names
-          the open card, so the server paints it open; once hydrated a chip
-          opens its card in place and scrolls to it, the open chip tapped again
-          (or ALL) closes everything, and each change is a history entry. */}
+      {/* THE CHIPS, THE CARDS AND "+N more" SHARE ONE OPEN STATE (sun-19).
+          ?sport= names the open card, so the server paints it open; once
+          hydrated a chip opens its card in place and scrolls to it, the open
+          chip tapped again (or ALL) closes everything, and each change is a
+          history entry. YOUR MOVE sits inside it for its "+N more". */}
       <PlayOpenProvider initial={open} ids={cards.map((k) => k.id)}>
+        <MoveGrid grid={grid} total={yourMove.length} signedIn={signedIn} rowProps={rowProps} />
+
         <nav className="pl-chips" aria-label="Sports">
           {chips.map((c) => (
             <PlayChip key={c} id={c} href={c === 'all' ? '/games' : `/games?sport=${c}`}>

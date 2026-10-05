@@ -63,7 +63,11 @@ export function PlayOpenProvider({ initial = 'all', ids = [], children }) {
   const toggle = useCallback((id) => go(open === id ? 'all' : id), [go, open]);
   const chip = useCallback((id) => go(id === 'all' || open === id ? 'all' : id, { scroll: true }), [go, open]);
 
-  return <Ctx.Provider value={{ open, toggle, chip }}>{children}</Ctx.Provider>;
+  // "+N more" (mon-2) only ever OPENS its card and scrolls to it - a second tap
+  // must not close what the reader just asked to see.
+  const show = useCallback((id) => go(id, { scroll: true }), [go]);
+
+  return <Ctx.Provider value={{ open, toggle, chip, show }}>{children}</Ctx.Provider>;
 }
 
 /** A sport chip: a real link (?sport=) that, once hydrated, toggles in place. */
@@ -100,5 +104,24 @@ export function PlayCard({ id, dim = false, head, children }) {
       </button>
       <div id={`pl-card-${id}-rows`} className="pl-sc-rows" hidden={!open}>{children}</div>
     </section>
+  );
+}
+
+/**
+ * YOUR MOVE's "+N more" (mon-2): a real ?sport= link to the card of the
+ * soonest sport left over, which once hydrated opens that card in place and
+ * scrolls to it - the chips' own mechanism, never a second one.
+ */
+export function PlayMore({ id, href, children }) {
+  const c = useContext(Ctx);
+  const act = (e) => {
+    if (!c || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    c.show(id);
+  };
+  return (
+    <a href={href} className="pl-mv-more" data-target={id} aria-controls={`pl-card-${id}`} onClick={act}>
+      {children}
+    </a>
   );
 }

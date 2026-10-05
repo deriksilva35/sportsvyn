@@ -116,7 +116,7 @@ function afterEachInline() {
   for (const r of roots) { try { act(() => r.unmount()); } catch { /* gone */ } }
   roots.clear(); document.getElementById('root').innerHTML = '';
 }
-const cards = (c) => [...c.querySelectorAll('.pl-card')];
+const cards = (c) => [...c.querySelectorAll('.pl-mv')];
 const prow = (c, key) => c.querySelector(`.pl-row[data-row="${key}"]`);
 
 test('PLAY: the top says PLAY, the date and the zone, once', () => {
@@ -126,21 +126,23 @@ test('PLAY: the top says PLAY, the date and the zone, once', () => {
   assert.equal(c.querySelectorAll('.gv-now').length, 0, 'the now card is retired');
 });
 
-test('YOUR MOVE: only what the reader can act on, soonest lock first, LOCKS SOON under 3h, CTA as drawn', () => {
+test('YOUR MOVE: only what the reader can act on, soonest lock first, compact cards, no Daily (mon-2)', () => {
   const c = screen({ v: PLAY(), chip: 'week' });
-  assert.deepEqual(cards(c).map((x) => x.dataset.key), ['mlb-october', 'nfl-draft', 'daily', 'nfl-weekly'],
-    "Pick'em is complete, the Run is locked, the NBA and CFB games are not open");
-  assert.deepEqual(cards(c).map((x) => Boolean(x.querySelector('.pl-soon'))), [true, true, false, false]);
-  assert.deepEqual(cards(c).map((x) => txt(x.querySelector('.pl-cta'))), ['FINISH CARD', 'BACK TO ROOM', 'PLAY TODAY', 'SET YOUR SIX']);
-  assert.match(txt(c.querySelector('.pl-move .pl-sh h3')), /Your move · 4/);
+  assert.deepEqual(cards(c).map((x) => x.dataset.key), ['mlb-october', 'nfl-draft', 'nfl-weekly'],
+    "Pick'em is complete, the Run is locked, the NBA and CFB games are not open, the Daily is the banner's");
+  assert.deepEqual(cards(c).map((x) => Boolean(x.querySelector('.pl-mv-soon'))), [false, false, false], 'nothing locks inside the hour');
+  assert.deepEqual(cards(c).map((x) => txt(x.querySelector('.pl-mv-b'))), ['PICK →', 'DRAFT →', 'SET →']);
+  assert.deepEqual(cards(c).map((x) => txt(x.querySelector('.pl-mv-k'))), ['MLB · OCTOBER', 'NFL · THE DRAFT', 'NFL · THE WEEKLY']);
+  assert.match(txt(c.querySelector('.pl-move .pl-sh h3')), /Your move · 3/);
   const bar = cards(c)[0].querySelector('.pl-bar');
   assert.equal(bar.children.length, 5, 'one segment per slot');
   assert.equal(bar.querySelectorAll('.on').length, 2, 'two filled');
   // THE WEEKDAY IS OPTIONAL: the lock is ahead(2) of the REAL clock, so in the
   // last two hours of a day it lands tomorrow and the label rightly names the
   // day ("Sat 12:46 AM"). Red on 3 Oct at 02:46Z for exactly that reason.
-  assert.match(txt(cards(c)[0].querySelector('.pl-card-s')), /^2 of 5 picked · next lock (?:[A-Z][a-z]{2} )?\d{1,2}:\d{2} [AP]M$/, 'the time is a clock reading, no zone repeated');
+  assert.match(txt(cards(c)[0].querySelector('.pl-mv-s')), /^2 of 5 · locks (?:[A-Z][a-z]{2} )?\d{1,2}:\d{2} [AP]M$/, 'N of M · locks <time>, no zone repeated');
   assert.equal(cards(c)[1].getAttribute('href'), '/draft');
+  assert.equal(c.querySelectorAll('.pl-cards').length, 0, 'no horizontal strip');
 });
 
 // ===========================================================================
@@ -162,10 +164,10 @@ test('CHIPS: ALL + each sport with a game in 14 days, ALL pressed, each a ?sport
   assert.equal(c.querySelectorAll('.gv-chips').length, 0, 'the pane chips are not on the lobby');
 });
 
-test('CARDS: every group is one card, COLLAPSED by default, soonest lock first, then ALL SPORTS, out of season dimmed and last', () => {
+test('CARDS: every group is one card, COLLAPSED by default, soonest lock first, out of season dimmed and last', () => {
   const c = screen({ v: PLAY(), chip: 'week' });
-  assert.deepEqual(scards(c).map((g) => g.dataset.group), ['mlb', 'nfl', 'cfb', 'all-sports', 'nba'],
-    'MLB locks first; CFB has only a door; then the cross-sport card; NBA is out of season, last');
+  assert.deepEqual(scards(c).map((g) => g.dataset.group), ['mlb', 'nfl', 'cfb', 'nba'],
+    'MLB locks first; CFB has only a door; NBA is out of season, last; no ALL SPORTS card (mon-2)');
   assert.deepEqual(openIds(c), [], 'nothing open on ALL');
   for (const k of scards(c)) {
     const h = k.querySelector('.pl-sc-h');
@@ -176,8 +178,8 @@ test('CARDS: every group is one card, COLLAPSED by default, soonest lock first, 
     assert.ok(rows, 'aria-controls names the rows');
     assert.equal(rows.hidden, true, 'a closed card hides its rows');
   }
-  assert.deepEqual(scards(c).map((k) => txt(k.querySelector('.pl-sc-name'))), ['MLB', 'NFL', 'CFB', 'ALL SPORTS', 'NBA']);
-  assert.deepEqual(scards(c).map((k) => txt(k.querySelector('.pl-sc-n'))), ['2 games', '3 games', '1 game', '1 game', '2 games']);
+  assert.deepEqual(scards(c).map((k) => txt(k.querySelector('.pl-sc-name'))), ['MLB', 'NFL', 'CFB', 'NBA']);
+  assert.deepEqual(scards(c).map((k) => txt(k.querySelector('.pl-sc-n'))), ['2 games', '3 games', '1 game', '2 games']);
   const nba = c.querySelector('.pl-sc[data-group="nba"]');
   assert.ok(nba.className.includes('dim'), 'out of season: dimmed');
   assert.match(txt(nba.querySelector('.pl-sc-sum')), /^Opens \w{3} \d{1,2} \w{3}$/, 'with its open date');
@@ -190,7 +192,6 @@ test('THE SUMMARY is built from the rows it carries: progress, door, lock state,
   assert.match(sum('nfl'), /^The Draft · The Weekly · 0 of 6 set · Pick'em · 16 of 16 picked · next lock (?:[A-Z][a-z]{2} )?\d{1,2}:\d{2} [AP]M$/);
   assert.match(sum('mlb'), /^October · 2 of 5 picked · The Run locked · next lock /);
   assert.match(sum('cfb'), /^Pick'em opens \w{3} \d{1,2} \w{3}$/);
-  assert.match(sum('all-sports'), /^Today's board is open · closes (?:midnight|(?:[A-Z][a-z]{2} )?\d{1,2}:\d{2} [AP]M)$/);
 });
 
 test('YOUR MOVE TAG: on a card exactly when one of its rows is a YOUR MOVE card (the shared predicate)', () => {
@@ -209,7 +210,7 @@ test('YOUR MOVE TAG: on a card exactly when one of its rows is a YOUR MOVE card 
     afterEachInline();
   }
   const c = screen({ v: PLAY(), chip: 'week' });
-  assert.deepEqual(scards(c).filter((k) => k.querySelector('.pl-sc-move')).map((k) => k.dataset.group), ['mlb', 'nfl', 'all-sports'],
+  assert.deepEqual(scards(c).filter((k) => k.querySelector('.pl-sc-move')).map((k) => k.dataset.group), ['mlb', 'nfl'],
     "CFB and NBA have nothing open; NFL's Draft and Weekly are moves");
   assert.equal(txt(c.querySelector('.pl-sc-move')), 'YOUR MOVE');
 });
@@ -221,9 +222,9 @@ test('?sport= OPENS THAT CARD in the server render, and only that card; YOUR MOV
   assert.deepEqual([...c.querySelectorAll('#pl-card-nfl-rows .pl-row')].map((r) => r.dataset.row), ['nfl-draft', 'nfl-weekly', 'nfl-pickem'], 'today\'s rows, in their order');
   assert.equal(chipBy(c, 'nfl').getAttribute('aria-pressed'), 'true');
   assert.equal(chipBy(c, 'all').getAttribute('aria-pressed'), 'false');
-  assert.deepEqual(cards(c).map((x) => x.dataset.key), ['mlb-october', 'nfl-draft', 'daily', 'nfl-weekly'],
+  assert.deepEqual(cards(c).map((x) => x.dataset.key), ['mlb-october', 'nfl-draft', 'nfl-weekly'],
     'every sport\'s moves stay on top');
-  assert.deepEqual(scards(c).map((g) => g.dataset.group), ['mlb', 'nfl', 'cfb', 'all-sports', 'nba'], 'every card stays');
+  assert.deepEqual(scards(c).map((g) => g.dataset.group), ['mlb', 'nfl', 'cfb', 'nba'], 'every card stays');
   afterEachInline();
   const nba = screen({ v: PLAY({ open: 'nba' }), chip: 'week' });
   assert.deepEqual(openIds(nba), ['nba'], 'an out-of-season card opens too');
@@ -247,8 +248,8 @@ test('ONE OPEN AT A TIME: a header tap opens in place and closes the other; a se
   click(head(c, 'mlb'));
   assert.deepEqual(openIds(c), []);
   assert.equal(window.location.search, '', 'closed: back to ALL');
-  click(head(c, 'all-sports'));
-  assert.equal(window.location.search, '?sport=all-sports');
+  click(head(c, 'cfb'));
+  assert.equal(window.location.search, '?sport=cfb');
 });
 
 test('CHIP TOGGLE: a chip opens its card; the open chip again returns to ALL; ALL closes everything; Back restores', () => {
@@ -291,6 +292,129 @@ test('44px TARGETS are pinned in CSS: the card header and the sport chips', () =
   assert.match(pl, /\.gv-chip\.pl-chip \{[^}]*min-height: 44px/);
   assert.match(pc, /\.pl-sc\.dim \{[^}]*opacity: \.6/, 'out of season is dimmed');
   assert.doesNotMatch(pc, /#[0-9a-fA-F]{3,8}\b/, 'tokens only - no mock hexes');
+});
+
+// ===========================================================================
+// THE DAILY BANNER + THE YOUR MOVE GRID (mon-2)
+// ===========================================================================
+const GSPORTS = ['nfl', 'mlb', 'epl', 'cfb', 'nba', 'nfl'];
+/** n open moves, locking 30 min, 2h, 3h ... apart - the first inside the hour. */
+const GRID = (n, { signedIn = true, daily = null } = {}) => {
+  const now = new Date();
+  const items = Array.from({ length: n }, (_, k) => ({
+    key: `g${k}`, sport: GSPORTS[k], game: k % 2 ? 'weekly' : 'pickem', name: `Game ${k}`, title: `Week ${k + 1}`,
+    kicker: `${GSPORTS[k].toUpperCase()} · GAME ${k}`, href: `/g${k}`, cta: 'GO', status: `${k} of 5 picked`,
+    progress: { done: k, total: 5 }, opensAt: null, locksAt: k === 0 ? ahead(0.5) : ahead(k + 1), settled: false, complete: false,
+  }));
+  const view = playLobbyOpen(items, { now, signedIn });
+  return { handle: null, chip: 'week', play: { ...view, daily, now: now.toISOString(), tz: 'America/Los_Angeles', practice: [], leagues: [] } };
+};
+
+test('THE GRID by count: 0 a line, 1 full width, 2 side by side, 3 two + one, 4 a square, 6 four + "+2 more"', () => {
+  const zero = screen({ v: GRID(0) });
+  assert.equal(cards(zero).length, 0);
+  assert.match(txt(zero.querySelector('.pl-mv-none')), /^All caught up/);
+  assert.equal(zero.querySelector('.pl-mg'), null);
+  assert.equal(txt(zero.querySelector('.pl-move .pl-sh h3')), 'Your move');
+  afterEachInline();
+  for (const n of [1, 2, 3, 4]) {
+    const c = screen({ v: GRID(n) });
+    assert.equal(c.querySelector('.pl-mg').dataset.n, String(n));
+    assert.equal(cards(c).length, n);
+    assert.equal(c.querySelector('.pl-mv-more'), null, `${n}: no more`);
+    assert.equal(c.querySelector('.pl-mv-none'), null);
+    afterEachInline();
+  }
+  const six = screen({ v: GRID(6) });
+  assert.equal(six.querySelector('.pl-mg').dataset.n, '4');
+  assert.deepEqual(cards(six).map((x) => x.dataset.key), ['g0', 'g1', 'g2', 'g3'], 'the four soonest, soonest first');
+  assert.match(txt(six.querySelector('.pl-move .pl-sh h3')), /Your move · 6/, 'the head counts every move');
+  assert.equal(txt(six.querySelector('.pl-mv-more')), '+2 more · NBA, NFL');
+  // the CSS that makes the counts a layout
+  const mg = readFileSync(new URL('./moveGrid.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.match(mg, /\.pl-mg \{[^}]*grid-template-columns: 1fr 1fr/);
+  assert.match(mg, /\.pl-mg\[data-n="1"\] > \.pl-mv \{ grid-column: 1 \/ -1;/);
+  assert.match(mg, /\.pl-mg\[data-n="3"\] > \.pl-mv:nth-child\(3\) \{ grid-column: 1 \/ -1;/);
+  assert.doesNotMatch(mg, /overflow-x|scroll-snap/, 'no horizontal swiping');
+  assert.match(mg, /\.pl-mv-more \{[^}]*min-height: 44px/, '+N more is a 44px target');
+  assert.doesNotMatch(mg, /#[0-9a-fA-F]{3,8}\b/, 'tokens only');
+});
+
+test('SOON: only on a card whose lock is inside the hour', () => {
+  const c = screen({ v: GRID(3) });
+  assert.deepEqual(cards(c).map((x) => txt(x.querySelector('.pl-mv-soon'))), ['SOON', '', '']);
+  assert.ok(cards(c)[0].className.includes('soon'));
+});
+
+test('"+N more" is a real ?sport= link that opens the soonest leftover sport\'s card in place', () => {
+  window.history.replaceState(null, '', '/games');
+  const c = screen({ v: GRID(6) });
+  const more = c.querySelector('.pl-mv-more');
+  assert.equal(more.getAttribute('href'), '/games?sport=nba');
+  assert.equal(more.dataset.target, 'nba');
+  assert.ok(c.querySelector('#pl-card-nba'), 'the card it names exists');
+  click(more);
+  assert.deepEqual(openIds(c), ['nba']);
+  assert.equal(window.location.search, '?sport=nba');
+  click(more);
+  assert.deepEqual(openIds(c), ['nba'], 'a second tap keeps it open - it never toggles shut');
+});
+
+const BAN = (o = {}) => ({ editionDate: '2026-10-05', date: 'OCT 5', href: '/daily/board', streak: null, ...o });
+
+test('THE DAILY BANNER, before: right under PLAY, the pitch, PLAY to the board; N played only when given', () => {
+  const c = screen({ v: GRID(2, { daily: BAN({ state: 'before', streak: 4, playedToday: 214 }) }) });
+  const b = c.querySelector('.pd');
+  assert.equal(b.dataset.state, 'before');
+  assert.equal(b.previousElementSibling.className, 'pl-top', 'alone, right under PLAY + the date');
+  assert.equal(b.nextElementSibling.className, 'pl-move', 'and YOUR MOVE follows');
+  assert.equal(txt(b.querySelector('.pd-eb')), 'THE DAILY · OCT 5');
+  assert.equal(txt(b.querySelector('.pd-streak')), '🔥 STREAK 4');
+  assert.match(txt(b.querySelector('.pd-pitch')), /^Build the best lineup from one season$/);
+  assert.equal(txt(b.querySelector('.pd-line')), 'Three minutes. The same board for everyone. A new one every midnight.');
+  const play = b.querySelector('.pd-play');
+  assert.equal(txt(play), 'Play');
+  assert.equal(play.getAttribute('href'), '/daily/board');
+  assert.equal(b.querySelectorAll('a, button').length, 1, 'one button');
+  assert.equal(txt(b.querySelector('.pd-played')), '214 played today');
+  afterEachInline();
+  const few = screen({ v: GRID(2, { daily: BAN({ state: 'before', playedToday: null }) }) });
+  assert.equal(few.querySelector('.pd-played'), null, 'under 25: omitted, never a small number');
+  assert.equal(few.querySelector('.pd-streak'), null, 'no streak, no pill');
+});
+
+test('THE DAILY BANNER, signed out: the before state, PLAY goes to sign-in and back to the board', () => {
+  const c = screen({ v: GRID(1, { signedIn: false, daily: BAN({ state: 'before' }) }), signedIn: false });
+  assert.equal(c.querySelector('.pd').dataset.state, 'before');
+  assert.equal(c.querySelector('.pd-play').getAttribute('href'), '/signin?callbackUrl=%2Fdaily%2Fboard');
+});
+
+test('THE DAILY BANNER, after: the score, BEAT N%, #rank of N, SHARE + SEE BOARD, the countdown', () => {
+  const c = screen({ v: GRID(1, { daily: BAN({ state: 'after', streak: 5, score: 142.6, beatPct: 82, rank: 38, of: 214, pctOfPerfect: null, nextAt: ahead(5.2) }) }) });
+  const b = c.querySelector('.pd');
+  assert.equal(b.dataset.state, 'after');
+  assert.equal(txt(b.querySelector('.pd-pts')), '142.6');
+  assert.equal(txt(b.querySelector('.pd-beat-n')), 'BEAT 82%');
+  assert.equal(txt(b.querySelector('.pd-sub')), '#38 of 214', 'no pct while the board is open');
+  assert.equal(txt(b.querySelector('.pd-share')), 'Share');
+  assert.equal(b.querySelector('.pd-share').tagName, 'BUTTON');
+  assert.equal(b.querySelector('.pd-ghost').getAttribute('href'), '/daily/board');
+  assert.equal(txt(b.querySelector('.pd-streak')), '🔥 STREAK 5');
+  assert.match(txt(b.querySelector('.pd-next')), /^Next board in 5h 1[12]m · \d{1,2}:\d{2} [AP]M$/);
+  assert.equal(b.querySelector('.pd-play'), null, 'played: no PLAY');
+  afterEachInline();
+  const first = screen({ v: GRID(1, { daily: BAN({ state: 'after', score: 99, beatPct: null, rank: 1, of: 1, nextAt: ahead(1) }) }) });
+  assert.equal(txt(first.querySelector('.pd-beat-n')), 'FIRST TO FINISH');
+  assert.equal(txt(first.querySelector('.pd-sub')), '#1 of 1');
+});
+
+test('THE DAILY BANNER: no edition, no banner; 44px buttons; tokens only', () => {
+  const c = screen({ v: GRID(1) });
+  assert.equal(c.querySelector('.pd'), null);
+  const css = readFileSync(new URL('./dailyBanner.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.match(css, /\.pd-btn \{[^}]*min-height: 44px/);
+  assert.match(css, /\.pd \{[^}]*background: var\(--tok-daily\)/);
+  assert.doesNotMatch(css, /#[0-9a-fA-F]{3,8}\b/, 'tokens only - no mock hexes');
 });
 
 test('YOUR LEAGUES: listed by name when the reader has any; PRACTICE always', () => {
@@ -339,7 +463,8 @@ test('tapping Boards asks for ?pane=boards, and that URL renders the Boards pane
     { key: 'draft', label: 'DRAFT', rows: [] },
     { key: 'daily', label: 'DAILY', rows: [] },
   ] } } });
-  assert.equal(c2.querySelectorAll('.pl-card').length, 0, 'YOUR MOVE belongs to the Play lobby only');
+  assert.equal(c2.querySelectorAll('.pl-mv').length, 0, 'YOUR MOVE belongs to the Play lobby only');
+  assert.equal(c2.querySelectorAll('.pd').length, 0, 'and so does the Daily banner');
   const trs = [...c2.querySelectorAll('.gv-tr')];
   assert.equal(trs.length, 4);                                  // three rows + the footer line
   assert.deepEqual(cells(trs[0]), ['1', 'jakebutler', '152.4']);
@@ -439,11 +564,12 @@ test('Alerts with none set offers the two doors that exist', () => {
 // ---- signed out ------------------------------------------------------------
 test('signed out: every door becomes the sign-in door, and YOUR MOVE is the three soonest-locking games', () => {
   const c = screen({ v: PLAY({ signedIn: false }), chip: 'week', signedIn: false });
-  assert.deepEqual(cards(c).map((x) => x.dataset.key), ['mlb-october', 'nfl-pickem', 'daily'],
-    'three, open, by lock - the Weekly (60h) is the fourth and is left out');
+  assert.deepEqual(cards(c).map((x) => x.dataset.key), ['mlb-october', 'nfl-pickem', 'nfl-weekly'],
+    'three, open, by lock - the Daily is on its banner now (mon-2), so the Weekly (60h) is the third');
+  assert.equal(c.querySelector('.pl-mg').dataset.n, '3', 'two + one full width');
   for (const k of cards(c)) {
     assert.match(k.getAttribute('href'), /^\/signin\?callbackUrl=/, k.dataset.key);
-    assert.equal(txt(k.querySelector('.pl-cta')), 'SIGN IN TO PLAY');
+    assert.equal(txt(k.querySelector('.pl-mv-b')), 'SIGN IN →');
     assert.equal(k.querySelector('.pl-bar'), null, 'no progress is faked');
   }
   for (const r of c.querySelectorAll('.pl-row')) assert.match(r.getAttribute('href'), /^\/signin\?callbackUrl=/, r.dataset.row);

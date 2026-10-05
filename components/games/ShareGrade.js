@@ -20,8 +20,11 @@ import { useState } from 'react';
  * @param {string} caption  everything under the glyph row, newline-joined -
  *   the caller owns its own wording (points/pct/rank differ per game)
  * @param {string} url      e.g. 'sportsvyn.com/weekly'
+ * @param {string} [buttonClass]  set, and ONLY the button is drawn, with this
+ *   class - the Play lobby's Daily banner (mon-2) draws its own score above it,
+ *   so the caption block would say everything twice.
  */
-export default function ShareGrade({ glyph, caption, url }) {
+export default function ShareGrade({ glyph, caption, url, buttonClass = null }) {
   const [copied, setCopied] = useState(false);
   const shareText = [glyph, caption, url].filter(Boolean).join('\n');
 
@@ -44,6 +47,14 @@ export default function ShareGrade({ glyph, caption, url }) {
       // visible on screen to select by hand.
     }
   };
+
+  if (buttonClass) {
+    return (
+      <button type="button" className={buttonClass} onClick={handleShare}>
+        {copied ? 'Copied' : 'Share'}
+      </button>
+    );
+  }
 
   return (
     <div className="gg-share">

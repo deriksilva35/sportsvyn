@@ -69,6 +69,11 @@
   --tok-on-action: #0A0A0A;
   --tok-hero-wash: none;
   --tok-chip: #245BFF;
+  /* THE DAILY BLUE (mon-2): the Play lobby's Daily banner and nothing else -
+     app/dailyBlue.test.mjs walks every stylesheet and holds it there. The
+     same in both themes; its ink is white, its button volt. */
+  --tok-daily: #245BFF;
+  --tok-on-daily: #FFFFFF;
   --tok-live: #E63946;
   --tok-up: #2A8A4F;
   --tok-down: #B8410F;
@@ -165,6 +170,8 @@
   --tok-accent: var(--arcade-volt);
   --tok-hero-wash: linear-gradient(180deg, color-mix(in srgb, var(--arcade-volt) 18%, var(--arcade-page)), var(--arcade-page));
   --tok-chip: var(--arcade-chip);
+  --tok-daily: #245BFF;
+  --tok-on-daily: #FFFFFF;
   --tok-live: var(--arcade-live);
   --tok-up: var(--arcade-up);
   --tok-coin: var(--arcade-coin);

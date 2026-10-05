@@ -1,3 +1,249 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { background }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { border }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { border-radius }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { color }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { display }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { flex }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { flex-direction }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { gap }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { padding }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { scroll-snap-align }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { text-decoration }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card { width }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card-h { align-items }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card-h { display }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card-h { gap }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card-h { justify-content }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card-s { color }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card-s { font }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card-t { font }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card-t { line-height }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card-t { text-transform }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-card.soon { background }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cards { -webkit-overflow-scrolling }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cards { display }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cards { gap }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cards { overflow-x }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cards { padding }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cards { scroll-snap-type }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cards { scrollbar-width }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cards::-webkit-scrollbar { display }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cta { align-items }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cta { align-self }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cta { background }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cta { border-radius }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cta { color }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cta { display }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cta { font }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cta { min-height }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-cta { padding }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-kick { color }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-kick { font }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-kick { letter-spacing }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-kick { text-transform }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-soon { background }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-soon { border-radius }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-soon { color }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-soon { flex }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-soon { font }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-soon { padding }",
+      "after": null
+    }
+  ]
 }
