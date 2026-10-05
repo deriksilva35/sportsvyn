@@ -115,11 +115,18 @@ function TeamsCfb({ v }) {
         // 1-25 are the editor's list, in the editor's order (wed-6), so the
         // best unlisted team - the head of the 26+ band, by composite - is
         // named here with its rank and score.
+        //
+        // NO SCORE COLUMN ON THESE ROWS (mon-8). The order is the editor's,
+        // and the number was 0.7 x composite + 0.3 x AP curve - so Texas #1
+        // read 9.58 under Georgia #2's 9.68, a rank and a score disagreeing in
+        // plain sight. Rank, movement and the working stay; the working
+        // (RowInputs) is where the number's inputs sit. The NFL board is
+        // computed - its order IS its score - and keeps the column.
         <Module section="ours" title="SPORTSVYN POWER" sub="computed"
           note={t.modelCase ? `The model's case: ${t.modelCase.name} · #${t.modelCase.rank} · ${t.modelCase.score?.toFixed(2) ?? '–'}` : null}>
           {t.ours.map((r) => (
             <RankRow key={r.teamId ?? r.rank} rank={r.rank} name={r.name} team={r} leagueSlug={v.league}
-              followed={v.followed.has(r.teamId)} sub={r.vsAp?.text ?? null} value={r.score}
+              followed={v.followed.has(r.teamId)} sub={r.vsAp?.text ?? null}
               right={<Movement previousRank={r.previousRank} movement={r.rankMovement} label={r.movementLabel} />}
               expand={<RowInputs inputs={r.inputs} />} />
           ))}
