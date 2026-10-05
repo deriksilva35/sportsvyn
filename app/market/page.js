@@ -31,7 +31,7 @@ import MarketClient from '@/components/market/MarketClient';
 import SiteFooter from '@/components/SiteFooter';
 import {
   cachedPricedSlate, cachedFuturesBoards, cachedBookCounts, cachedLatestSnapshotAt, cachedBoardMatchIds,
-  cachedPropsBoardRows, cachedPropsGames,
+  cachedPropsGames,
 } from '@/lib/market/cachedReads';
 import './market.css';
 
@@ -58,14 +58,19 @@ export const metadata = {
 };
 
 /**
- * THE WHOLE DATA SET, ONCE. Every priced game, every future and EVERY prop
- * row across the three leagues - the client narrows it. Plain arrays, not
- * Maps and Sets, because this crosses into a client component.
+ * THE PAGE'S DATA SET, ONCE. Every priced game and every future across the
+ * three leagues - the client narrows it. Plain arrays, not Maps and Sets,
+ * because this crosses into a client component.
+ *
+ * NO PROP ROWS (market-diet, sun-13). They were 2.43 MB of a 2.53 MB flight
+ * payload, shipped in the HTML and in every RSC prefetch of every /market
+ * variant, for a tab the default view never opens. The PROPS tab fetches them
+ * from /api/market/props, edge-cached (lib/market/propsWire.js). The game
+ * list stays: it is ~6 KB and it is the dropdown.
  */
 export async function marketData() {
-  const [slate, futures, books, snapAt, boardIds, propsRows, propsGames] = await Promise.all([
+  const [slate, futures, books, snapAt, boardIds, propsGames] = await Promise.all([
     cachedPricedSlate(), cachedFuturesBoards(), cachedBookCounts(), cachedLatestSnapshotAt(), cachedBoardMatchIds(),
-    cachedPropsBoardRows('all').catch(() => []),
     cachedPropsGames().catch(() => []),
   ]);
   return {
@@ -74,7 +79,6 @@ export async function marketData() {
     books: [...books.entries()],
     snapAt: snapAt ? new Date(snapAt).toISOString() : null,
     boardIds: [...boardIds],
-    propsRows,
     propsGames,
   };
 }

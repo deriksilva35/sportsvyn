@@ -119,7 +119,7 @@ function Chips({ label, items, active, hrefFor }) {
     <div className="pb-frow">
       <span className="flbl">{label}</span>
       {items.map(([k, text]) => (
-        <Link key={k} className={`ch ${active === k ? 'on' : ''}`} href={hrefFor(k)}>{text}</Link>
+        <Link prefetch={false} key={k} className={`ch ${active === k ? 'on' : ''}`} href={hrefFor(k)}>{text}</Link>
       ))}
     </div>
   );
@@ -167,8 +167,8 @@ export default function PropsBoard({ rows, total, state, hrefFor, leagueChips, c
       <Chips label="Sort" items={SORTS} active={state.sort} hrefFor={(k) => hrefFor({ s: k })} />
       <div className="pb-frow">
         <span className="flbl" />
-        <Link className={`ch ${state.boardOnly ? 'on' : ''}`} href={hrefFor({ board: state.boardOnly ? null : '1' })}>Board games</Link>
-        <Link className={`ch ${state.moversOnly ? 'on' : ''}`} href={hrefFor({ movers: state.moversOnly ? null : '1' })}>Movers only</Link>
+        <Link prefetch={false} className={`ch ${state.boardOnly ? 'on' : ''}`} href={hrefFor({ board: state.boardOnly ? null : '1' })}>Board games</Link>
+        <Link prefetch={false} className={`ch ${state.moversOnly ? 'on' : ''}`} href={hrefFor({ movers: state.moversOnly ? null : '1' })}>Movers only</Link>
         <form className="pb-search" action="/market" method="get">
           <input type="hidden" name="tab" value="props" />
           {state.league !== 'all' ? <input type="hidden" name="f" value={state.league} /> : null}

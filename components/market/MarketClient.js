@@ -10,12 +10,26 @@
 // server used to run per request. The URL grammar did not change and every
 // href is still marketHref's: there is no second URL builder in this file.
 //
+// FILTERS ARE HISTORY ENTRIES, NOT NAVIGATIONS (market-diet, sun-13). Every
+// control is still a real <a href> / GET form built by marketHref - so a
+// filtered board is still a URL you can open, share and reload - but a plain
+// click on one that stays on this path is caught here (onClickCapture /
+// onSubmitCapture on the board's root) and becomes window.history.pushState.
+// Next keeps useSearchParams in step with it, the board re-derives in the
+// browser, and NO RSC REQUEST is made: the data is already on the page. The
+// Links themselves carry prefetch={false}; with default prefetch each load
+// fetched ~7 /market variants of 2.5 MB each, and every one was identical.
+//
+// PROPS ARE FETCHED, NOT SHIPPED. The static page carries no prop rows; the
+// PROPS tab asks /api/market/props for its league or game (edge-cached,
+// lib/market/propsWire.js), and the Charts view adds ?part=charts.
+//
 // THE PRERENDER IS THE UNFILTERED BOARD. useSearchParams on a static page
 // renders on the client only, up to the nearest Suspense; the fallback here is
 // the same board with no params, so the static HTML is the default /market -
 // real rows, not a skeleton - and a filtered URL settles on hydration.
 
-import { Suspense, useSyncExternalStore } from 'react';
+import { Suspense, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import SportsvynSegment from '@/components/shell/SportsvynSegment';
@@ -27,8 +41,9 @@ import { LinesTable, FuturesTable } from '@/components/market/LineTable';
 import GameFilter from '@/components/market/GameFilter';
 import { teamShort, LINES_COLUMNS, FUTURES_COLUMNS } from '@/lib/market/lineTables';
 import { marketHref } from '@/lib/market/marketUrl';
-import { marketModel, spFrom, CHIPS, TABS } from '@/lib/market/marketModel';
+import { marketModel, parseMarketUrl, spFrom, CHIPS, TABS } from '@/lib/market/marketModel';
 import { isShellClient } from '@/lib/shell/appTabs';
+import { propsUrl, unpackProps, unpackCharts, withCharts } from '@/lib/market/propsWire';
 
 const LEAGUE_LABEL = { nfl: 'NFL', cfb: 'CFB', epl: 'EPL' };
 
@@ -49,6 +64,81 @@ const pct = (n) => (n == null ? '' : `${n.toFixed(1)}%`);
 // snapshot is false, so the static HTML carries no segment markup (the web
 // never did) and the shell adds it on hydration.
 const subscribe = () => () => {};
+
+// ---------------------------------------------------------------------------
+// THE PROPS FETCH. One answer per endpoint URL per minute in this tab - the
+// same clock as the edge cache behind it - so flipping between tabs and views
+// does not refetch. A failure is forgotten at once, never served for a minute.
+// A 404 is an answer (no priced props for that game), not an error.
+// ---------------------------------------------------------------------------
+const WIRE_TTL_MS = 60_000;
+const wireMemo = new Map();
+export function _resetWireMemo() { wireMemo.clear(); }
+function fetchWire(url) {
+  const hit = wireMemo.get(url);
+  if (hit && Date.now() - hit.at < WIRE_TTL_MS) return hit.p;
+  const p = fetch(url).then((r) => {
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error(`props ${r.status}`);
+    return r.json();
+  });
+  wireMemo.set(url, { at: Date.now(), p });
+  p.catch(() => { if (wireMemo.get(url)?.p === p) wireMemo.delete(url); });
+  return p;
+}
+
+/** { ready, data, error } for an endpoint URL; a null URL is ready with nothing. */
+function useWire(url) {
+  const [got, setGot] = useState({ url: null, data: null, error: null });
+  useEffect(() => {
+    if (!url) return undefined;
+    let live = true;
+    fetchWire(url).then(
+      (data) => { if (live) setGot({ url, data, error: null }); },
+      (error) => { if (live) setGot({ url, data: null, error }); },
+    );
+    return () => { live = false; };
+  }, [url]);
+  if (!url) return { ready: true, data: null, error: null };
+  return got.url === url ? { ready: true, data: got.data, error: got.error } : { ready: false, data: null, error: null };
+}
+
+// ---------------------------------------------------------------------------
+// SAME-PATH LINKS AND FORMS BECOME pushState. Anything else - another path, a
+// modified click, a new tab, the pinned /nfl/market chips that lead to the
+// network /market - is left to the browser and to Link, exactly as before.
+// ---------------------------------------------------------------------------
+function samePathUrl(href) {
+  if (typeof window === 'undefined' || !href) return null;
+  const u = new URL(href, window.location.href);
+  if (u.origin !== window.location.origin || u.pathname !== window.location.pathname) return null;
+  return u.pathname + u.search;
+}
+function onBoardClick(e) {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const a = e.target?.closest?.('a[href]');
+  if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+  const to = samePathUrl(a.getAttribute('href'));
+  if (!to) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (to !== window.location.pathname + window.location.search) window.history.pushState(null, '', to);
+}
+function onBoardSubmit(e) {
+  const form = e.target;
+  if (!form || form.tagName !== 'FORM' || (form.method || 'get').toLowerCase() !== 'get') return;
+  const base = samePathUrl(form.getAttribute('action') || window.location.pathname);
+  if (!base) return;
+  e.preventDefault();
+  e.stopPropagation();
+  // THE SAME BUILDER AS EVERY LINK. A GET form serialises every named field;
+  // marketHref reads them as the patch, drops the emptied ones (All games, a
+  // cleared search) and writes the canonical URL the form would have reached.
+  const patch = {};
+  for (const [k, v] of new FormData(form)) if (typeof v === 'string' && v !== '') patch[k] = v;
+  const to = marketHref({}, patch);
+  if (to !== window.location.pathname + window.location.search) window.history.pushState(null, '', to);
+}
 const getShell = () => isShellClient({ cookie: document.cookie });
 const getServerShell = () => false;
 
@@ -163,16 +253,31 @@ function Band({ slug, cards, boardIds, books }) {
 
 function MarketBody({ data, sp, pinned = null, leagueHeader = null, header = null }) {
   const isShell = useSyncExternalStore(subscribe, getShell, getServerShell);
+  // PROPS ON DEMAND. The URL decides the scope (a game, or a league) before
+  // any data exists, so the fetch is keyed on it; LINES and FUTURES ask for
+  // nothing. Charts add the ten-game history for the same scope.
+  const pre = parseMarketUrl(sp, pinned);
+  const wantProps = pre.tab === 'props';
+  const rowsWire = useWire(wantProps ? propsUrl(pre.boardState) : null);
+  const chartsWire = useWire(wantProps && pre.view === 'charts' ? propsUrl(pre.boardState, 'charts') : null);
+  const propsRows = useMemo(() => unpackProps(rowsWire.data), [rowsWire.data]);
+  const charts = useMemo(() => unpackCharts(chartsWire.data), [chartsWire.data]);
+  const propsReady = rowsWire.ready && chartsWire.ready;
+  const propsError = rowsWire.error ?? chartsWire.error;
+  const model = useMemo(
+    () => marketModel({ ...data, propsRows: withCharts(propsRows, charts) }, sp, pinned),
+    [data, propsRows, charts, sp, pinned],
+  );
   const {
     filter, tab, view, urlState, boardState, board, games, boardIds, books, futures,
     indexTeams, indexStats, shown, total, cardBands, lineGameOptions,
     linesSort, futuresSort, linesRows, linesTotal, futuresRows, futuresTotal,
-  } = marketModel(data, sp, pinned);
+  } = model;
   const href = (patch) => marketHref(urlState, patch);
   const snap = stamp(data.snapAt);
 
   return (
-    <div className="gi" data-surface="ink">
+    <div className="gi" data-surface="ink" onClickCapture={onBoardClick} onSubmitCapture={onBoardSubmit}>
       {/* THE WORDMARK BAND RENDERS ON EVERY ROUTE. It was gated on the pin,
           which meant the league wearings of this board had no global header at
           all - no wordmark, no way out to the rest of the site. The league
@@ -200,7 +305,7 @@ function MarketBody({ data, sp, pinned = null, leagueHeader = null, header = nul
 
         <div className="tabs">
           {TABS.map(([k, label]) => (
-            <Link key={k} className={`tab ${tab === k ? 'on' : ''}`} href={href({ tab: k })}>{label}</Link>
+            <Link key={k} prefetch={false} className={`tab ${tab === k ? 'on' : ''}`} href={href({ tab: k })}>{label}</Link>
           ))}
         </div>
 
@@ -213,7 +318,7 @@ function MarketBody({ data, sp, pinned = null, leagueHeader = null, header = nul
         {tab === 'props' ? null : (
           <div className="chips">
             {CHIPS.filter(([k]) => !pinned || k === 'movers').map(([k, label]) => (
-              <Link key={k} className={`ch ${filter === k ? 'on' : ''}`} href={href({ f: k })}>{label}</Link>
+              <Link key={k} prefetch={false} className={`ch ${filter === k ? 'on' : ''}`} href={href({ f: k })}>{label}</Link>
             ))}
           </div>
         )}
@@ -228,8 +333,8 @@ function MarketBody({ data, sp, pinned = null, leagueHeader = null, header = nul
           <>
             <div className="pb-frow">
               <span className="flbl">View</span>
-              <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={href({ view: null })}>Cards</Link>
-              <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={href({ view: 'table' })}>Table</Link>
+              <Link prefetch={false} className={`ch ${view === 'cards' ? 'on' : ''}`} href={href({ view: null })}>Cards</Link>
+              <Link prefetch={false} className={`ch ${view === 'table' ? 'on' : ''}`} href={href({ view: 'table' })}>Table</Link>
             </div>
             <GameFilter tab="lines" urlState={urlState} games={lineGameOptions}
               current={boardState.game} hrefFor={href} />
@@ -242,7 +347,7 @@ function MarketBody({ data, sp, pinned = null, leagueHeader = null, header = nul
               // a CFB game with the NFL chip on. Say which one is hiding it
               // rather than leaving a blank page to be read as no prices.
               <div className="emptyband">
-                That game is not in the selected league. <Link href={href({ f: null })}>Show all leagues</Link>.
+                That game is not in the selected league. <Link prefetch={false} href={href({ f: null })}>Show all leagues</Link>.
               </div>
             ) : cardBands.map((s) => (
               <Band key={s} slug={s} cards={shown.get(s) ?? []} boardIds={boardIds} books={books} />
@@ -256,7 +361,11 @@ function MarketBody({ data, sp, pinned = null, leagueHeader = null, header = nul
           <section>
             <PropsFilters state={boardState} games={games} view={view} urlState={urlState}
               hrefFor={href} />
-            {view === 'index' ? (
+            {!propsReady ? (
+              <div className="emptyband">Loading props...</div>
+            ) : propsError ? (
+              <div className="emptyband">Props could not be loaded just now. Try again in a minute.</div>
+            ) : view === 'index' ? (
               /* THE INDEX carries its own filter stack (sport / team / pos /
                  stat / hit) and its own empty state, because "loosen a filter"
                  is the only useful thing to say to a reader who narrowed five
@@ -303,8 +412,8 @@ function MarketBody({ data, sp, pinned = null, leagueHeader = null, header = nul
           <section>
             <div className="pb-frow">
               <span className="flbl">View</span>
-              <Link className={`ch ${view === 'cards' ? 'on' : ''}`} href={href({ view: null })}>Cards</Link>
-              <Link className={`ch ${view === 'table' ? 'on' : ''}`} href={href({ view: 'table' })}>Table</Link>
+              <Link prefetch={false} className={`ch ${view === 'cards' ? 'on' : ''}`} href={href({ view: null })}>Cards</Link>
+              <Link prefetch={false} className={`ch ${view === 'table' ? 'on' : ''}`} href={href({ view: 'table' })}>Table</Link>
             </div>
             {/* NO GAME DROPDOWN ON FUTURES, and not as an oversight: a title
                 market has no game to be filtered to. A control that could

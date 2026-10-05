@@ -34,7 +34,7 @@ export default function GameFilter({ tab, urlState, games, current, hrefFor }) {
         </select>
         <button type="submit" className="ch">Go</button>
       </form>
-      {current ? <Link className="ch" href={hrefFor({ game: null })}>Clear game</Link> : null}
+      {current ? <Link prefetch={false} className="ch" href={hrefFor({ game: null })}>Clear game</Link> : null}
     </div>
   );
 }
