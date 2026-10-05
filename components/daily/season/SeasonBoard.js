@@ -43,14 +43,14 @@ import {
 } from '@/lib/daily/seasonBoardPlay';
 import { gradeBoard, boardStory } from '@/lib/daily/seasonBoardGrade';
 import { pctOfCeiling } from '@/lib/daily/format';
-import { shareCardModel, shareText as cardShareText, CARD_PATH } from '@/lib/daily/shareCard';
+import { shareCardModel, shareText as cardShareText, CARD_PATH, SHARE_URL as CARD_SHARE_URL } from '@/lib/daily/shareCard';
 import DailyShare from '@/components/daily/season/DailyShare';
-import { DAILY_V2_PATH, DAILY_ROUND_SECONDS } from '@/lib/daily/boardShape';
+import { DAILY_ROUND_SECONDS } from '@/lib/daily/boardShape';
 
-// THE ONE PLACE THE DOMAIN-QUALIFIED SHARE URL IS BUILT (relay 5b item 7) -
-// DAILY_V2_PATH is the same constant lib/push/copy.js's url fields use, so
-// there is exactly one '/daily/board' literal in the whole v2 surface.
-const SHARE_URL = `sportsvyn.com${DAILY_V2_PATH}`;
+// THE SHORT LINK (relay mon-18): sportsvyn.com/daily, the one the share card
+// and its text carry (lib/daily/shareCard.js) - app/daily/page.js 308s it to
+// DAILY_V2_PATH, so a friend lands on today's board.
+const SHARE_URL = CARD_SHARE_URL;
 import './seasonBoard.css';
 import StandaloneTime from '@/components/StandaloneTime';
 import { sendPicksChanged } from '@/lib/shell/bridge';
@@ -874,8 +874,10 @@ function GradeScreen({
         <div className="sbd-g">{grade.glyph}</div>
         <div className="sbd-cap">
           {ranked ? edition : 'Practice'} · {year}<br />
-          {grade.mine.toLocaleString()} pts{pctLabel ? ` · ${pctLabel}` : ''} · {clockLabel}<br />
-          {SHARE_URL}
+          {grade.mine.toLocaleString()} pts{pctLabel ? ` · ${pctLabel}` : ''} · {clockLabel}
+          {/* THE OLD URL LINE IS RETIRED (relay mon-18 item 4): the link travels
+              in what the button sends - sportsvyn.com/daily, the short form
+              that opens today's board - not as a caption under the glyphs. */}
         </div>
         {imageShare ? (
           <DailyShare cardUrl={CARD_PATH(editionDate)} editionDate={editionDate} text={imageShare} label="Share your board" />

@@ -7,11 +7,9 @@
 // this file only draws the model it is handed, so a name the model does not
 // carry cannot appear here.
 //
-// FONTS ARE READ, NOT FETCHED - the invite card's pattern
-// (app/j/[code]/opengraph-image.js): Rubik Mono One and Rubik Bold from
-// assets/fonts via process.cwd(). Satori takes ttf/otf/woff only, and the
-// app's own self-hosted faces (app/fonts) are woff2, so those two committed
-// ttf files are what an image can use. THE WORDMARK IS THE BRAND SVG
+// FONTS ARE READ, NOT FETCHED (lib/daily/shareCardFonts.js): Rubik Mono One
+// and static Rubik 400/600 TTFs from assets/fonts - with Rubik Bold standing
+// in for any weight whose file has not landed yet. THE WORDMARK IS THE BRAND SVG
 // (public/brand/sportsvyn-header-wordmark-dark.svg: white letters, the volt
 // circumflex), embedded as a data URI - the mark itself, not a re-typesetting
 // of it. The lock, flame and star are drawn as SVG paths: an emoji in Satori
@@ -27,6 +25,7 @@ import { sql } from '@/lib/db';
 import { shareCardFor } from '@/lib/daily/shareCardData';
 import { CARD_WIDTH, CARD_HEIGHT } from '@/lib/daily/shareCard';
 import { DAILY_CARD as C } from '@/lib/brand/dailyCardPalette';
+import { shareCardFonts } from '@/lib/daily/shareCardFonts';
 
 export const dynamic = 'force-dynamic';
 
@@ -143,7 +142,7 @@ function ClosedCard({ m }) {
           <div key={i} style={{ ...flex, alignItems: 'center', gap: 30, padding: '21px 0', borderTop: `3px solid ${C.rule}` }}>
             <Chip slot={r.slot} ink={r.ink} />
             <div style={{ ...flex, flex: 1, alignItems: 'baseline', gap: 14, overflow: 'hidden' }}>
-              <div style={{ ...flex, fontSize: 45 }}>{r.name ?? 'Empty slot'}</div>
+              <div style={{ ...flex, fontSize: 45, fontWeight: 600 }}>{r.name ?? 'Empty slot'}</div>
               {r.team ? <div style={{ ...flex, fontSize: 36, color: C.soft }}>{r.team}</div> : null}
             </div>
             <div style={{ ...flex, fontFamily: MONO, fontSize: 39 }}>{r.points ?? '0.0'}</div>
@@ -172,26 +171,22 @@ export async function GET(_req, { params }) {
   const model = await shareCardFor(sql, { date, userId: Number(userId) });
   if (!model) return new Response('Not found', { status: 404 });
 
-  const [mono, bold, mark] = await Promise.all([
-    readFile(join(process.cwd(), 'assets/fonts/RubikMonoOne-Regular.ttf')),
-    readFile(join(process.cwd(), 'assets/fonts/Rubik-Bold.ttf')),
+  const [{ fonts }, mark] = await Promise.all([
+    shareCardFonts(),
     readFile(join(process.cwd(), 'public/brand/sportsvyn-header-wordmark-dark.svg')),
   ]);
   const m = { ...model, wordmark: `data:image/svg+xml;base64,${mark.toString('base64')}` };
 
   return new ImageResponse(
     (
-      <div style={{ ...flex, flexDirection: 'column', width: CARD_WIDTH, height: CARD_HEIGHT, boxSizing: 'border-box', padding: 72, background: C.ground, color: C.ink, fontFamily: 'Rubik' }}>
+      <div style={{ ...flex, flexDirection: 'column', width: CARD_WIDTH, height: CARD_HEIGHT, boxSizing: 'border-box', padding: 72, background: C.ground, color: C.ink, fontFamily: 'Rubik', fontWeight: 400 }}>
         {m.phase === 'open' ? <OpenCard m={m} /> : <ClosedCard m={m} />}
       </div>
     ),
     {
       width: CARD_WIDTH,
       height: CARD_HEIGHT,
-      fonts: [
-        { name: MONO, data: mono, weight: 400, style: 'normal' },
-        { name: 'Rubik', data: bold, weight: 700, style: 'normal' },
-      ],
+      fonts,
       headers: { 'Cache-Control': 'private, no-store' },
     },
   );
