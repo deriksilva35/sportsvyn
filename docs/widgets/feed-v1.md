@@ -185,6 +185,7 @@ A follow alone does not count (that is the teams block), and neither does an ale
 | `league` | string(8) | `"nfl"` |
 | `away`, `home` | string(6) | `"NYJ"`, `"BUF"` |
 | `awayColor`, `homeColor` | `#RRGGBB`? | |
+| `awayAltColor`, `homeAltColor` | `#RRGGBB` *opt* | Each side's second colour, for a two-tone badge on a team the reader does not follow. Absent when the team has none (mon-23) |
 | `awayScore`, `homeScore` | int? | Null before kickoff |
 | `status` | `"pre" \| "live" \| "final"` | |
 | `clock` | string(16)? | Same as `teams[].clock` |

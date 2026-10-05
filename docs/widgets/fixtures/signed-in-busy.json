@@ -216,7 +216,9 @@
       ],
       "href": "/nfl/game/nyj-at-buf-2026-10-04",
       "topPlayer": "K. Shakir",
-      "topPlayerPoints": 24.1
+      "topPlayerPoints": 24.1,
+      "awayAltColor": "#FFFFFF",
+      "homeAltColor": "#C60C30"
     },
     {
       "gameId": 9102,
@@ -237,7 +239,9 @@
       "via": [
         "pickem"
       ],
-      "href": "/nfl/game/kc-at-jax-2026-10-04"
+      "href": "/nfl/game/kc-at-jax-2026-10-04",
+      "awayAltColor": "#FFB81C",
+      "homeAltColor": "#D7A22A"
     },
     {
       "gameId": 7741,
@@ -260,7 +264,9 @@
         "october",
         "run"
       ],
-      "href": "/mlb/game/phi-at-mil-2026-10-04"
+      "href": "/mlb/game/phi-at-mil-2026-10-04",
+      "awayAltColor": "#002D72",
+      "homeAltColor": "#FFC52F"
     },
     {
       "gameId": 9099,
@@ -281,7 +287,9 @@
       "via": [
         "pickem"
       ],
-      "href": "/nfl/game/det-at-min-2026-10-04"
+      "href": "/nfl/game/det-at-min-2026-10-04",
+      "awayAltColor": "#B0B7BC",
+      "homeAltColor": "#FFC62F"
     }
   ]
 }
