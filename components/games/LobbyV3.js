@@ -5,8 +5,9 @@
 // ============================================================================
 // The approved canvas "Play tab lobby": YOUR MOVE first (the entries the
 // reader can act on, soonest lock first), then a chip per sport with a game in
-// the next fourteen days, then a group per sport, then the reader's leagues and
-// practice. It replaced v3's "This week" pane - one now card over four
+// the next fourteen days, then a card per sport, then the reader's leagues and
+// practice. SINCE sun-19 EACH SPORT IS ONE COLLAPSED CARD (components/games/
+// PlayCollapse.js): ?sport= opens one in place rather than filtering the page. It replaced v3's "This week" pane - one now card over four
 // football rows - because the arcade now runs five sports on five clocks, and
 // a list of one league's week could not say which of them needed you first.
 //
@@ -32,12 +33,15 @@ import { SPORT_LABEL } from '@/lib/games/playLobby';
 import { zoneNameOf } from '@/lib/time/zoneName';
 import SeasonBoard from '@/components/games/SeasonBoard';
 import PlayWhen from '@/components/games/PlayWhen';
+import PlayCloses from '@/components/games/PlayCloses';
 import ZoneLabel from '@/components/scores/ZoneLabel';
+import { PlayOpenProvider, PlayChip, PlayCard } from '@/components/games/PlayCollapse';
 
 /** The games with an always-on board page (lib/boards/live.js, lib/boards/mlb.js). */
 const FULL_BOARD = { weekly: '/weekly/board', draft: '/draft/board', october: '/october/board', run: '/run/board' };
 import '@/components/games/season.css';
 import '@/components/games/play.css';
+import '@/components/games/playCollapse.css';
 
 // ---------------------------------------------------------------------------
 // THE PLAY LOBBY (thu-38 + fri-1) - the approved canvas "Play tab lobby"
@@ -113,17 +117,50 @@ function PlayRow({ r, now, tz, signedIn, signinHref }) {
   );
 }
 
-function PlayGroup({ g, now, tz, signedIn, signinHref }) {
+/** "games" agrees with the count: 1 game, 3 games. */
+const gamesWord = (n) => `${n} game${n === 1 ? '' : 's'}`;
+
+/**
+ * THE CARD'S SUMMARY LINE, from playLobby's cardSummary(): each row's own
+ * words, then the soonest open lock. An out-of-season card says only its door.
+ */
+function CardSummary({ k, now, tz }) {
+  if (k.dim) {
+    return k.opensAt
+      ? <>Opens <PlayWhen iso={k.opensAt} kind="day" serverTz={tz} /></>
+      : 'Nothing open this week';
+  }
+  const { parts = [], nextLock = null } = k.summary ?? {};
+  const bits = parts.flatMap((p) => (p.opensAt
+    ? [<span key={p.key}>{p.text} <PlayWhen iso={p.opensAt} kind="day" serverTz={tz} /></span>]
+    : p.closesAt
+      ? [<span key={p.key}>{p.text}</span>, <span key={`${p.key}-c`}><PlayCloses iso={p.closesAt} now={now} serverTz={tz} /></span>]
+      : [<span key={p.key}>{p.text}</span>]));
+  if (nextLock) bits.push(<span key="__lock">next lock <PlayWhen iso={nextLock} now={now} serverTz={tz} /></span>);
+  return bits.flatMap((b, n) => (n ? [' · ', b] : [b]));
+}
+
+/** One sport, collapsed by default: a header button over the rows of today. */
+function SportCard({ k, now, tz, signedIn, signinHref }) {
+  const head = (
+    <span className="pl-sc-t">
+      <span className="pl-sc-l1">
+        <b className="pl-sc-name">{k.label}</b>
+        <span className="pl-sc-n">{gamesWord(k.count)}</span>
+        {k.move && <span className="pl-sc-move">YOUR MOVE</span>}
+      </span>
+      <span className="pl-sc-sum"><CardSummary k={k} now={now} tz={tz} /></span>
+    </span>
+  );
   return (
-    <section className="pl-group" data-group={g.sport}>
-      <div className="pl-sh"><h3>{g.label}</h3>{g.note && <span>{g.note}</span>}</div>
-      {g.rows.map((r) => <PlayRow key={r.key} r={r} now={now} tz={tz} signedIn={signedIn} signinHref={signinHref} />)}
-    </section>
+    <PlayCard id={k.id} dim={k.dim} head={head}>
+      {k.rows.map((r) => <PlayRow key={r.key} r={r} now={now} tz={tz} signedIn={signedIn} signinHref={signinHref} />)}
+    </PlayCard>
   );
 }
 
 function PlayPane({ v, signedIn, signinHref }) {
-  const { chip = 'all', chips = ['all'], yourMove = [], groups = [], daily = null, collapsed = [],
+  const { chips = ['all'], yourMove = [], cards = [], open = 'all',
     leagues = [], practice = [], now = null, tz = null } = v;
   const rowProps = { now, tz, signedIn, signinHref };
   return (
@@ -143,7 +180,7 @@ function PlayPane({ v, signedIn, signinHref }) {
       {yourMove.length > 0 && (
         <section className="pl-move" aria-label="Your move">
           <div className="pl-sh">
-            <h3>Your move{chip !== 'all' ? ` · ${SPORT_LABEL[chip]}` : ''} · {yourMove.length}</h3>
+            <h3>Your move · {yourMove.length}</h3>
             <span>{signedIn ? 'soonest lock first' : 'locking soonest'}</span>
           </div>
           <div className="pl-cards">
@@ -152,32 +189,23 @@ function PlayPane({ v, signedIn, signinHref }) {
         </section>
       )}
 
-      {/* THE CHIPS ARE URL STATE (?sport=), for the reason the panes are: no
-          hydration flash, and a shareable link to any sport. The selected
-          chip filters everything below it, YOUR MOVE included. */}
-      <nav className="pl-chips" aria-label="Sports">
-        {chips.map((c) => (
-          <Link key={c} href={c === 'all' ? '/games' : `/games?sport=${c}`}
-            className={`gv-chip pl-chip${chip === c ? ' on' : ''}`} data-chip={c}>
-            {c === 'all' ? 'ALL' : SPORT_LABEL[c]}
-          </Link>
-        ))}
-      </nav>
-
-      {groups.map((g) => <PlayGroup key={g.sport} g={g} {...rowProps} />)}
-      {daily && <PlayGroup g={daily} {...rowProps} />}
-
-      {collapsed.length > 0 && (
-        <section className="pl-later" aria-label="Later">
-          {collapsed.map((c) => (
-            <Link key={c.sport} className="pl-col" href={`/games?sport=${c.sport}`} data-group={c.sport}>
-              <b>{c.label}</b>
-              <small>{c.opensAt ? <>opens <PlayWhen iso={c.opensAt} kind="day" serverTz={tz} /></> : 'nothing open this week'}</small>
-              <span className="gv-chev" aria-hidden="true">&rsaquo;</span>
-            </Link>
+      {/* THE CHIPS AND THE CARDS SHARE ONE OPEN STATE (sun-19). ?sport= names
+          the open card, so the server paints it open; once hydrated a chip
+          opens its card in place and scrolls to it, the open chip tapped again
+          (or ALL) closes everything, and each change is a history entry. */}
+      <PlayOpenProvider initial={open} ids={cards.map((k) => k.id)}>
+        <nav className="pl-chips" aria-label="Sports">
+          {chips.map((c) => (
+            <PlayChip key={c} id={c} href={c === 'all' ? '/games' : `/games?sport=${c}`}>
+              {c === 'all' ? 'ALL' : SPORT_LABEL[c]}
+            </PlayChip>
           ))}
-        </section>
-      )}
+        </nav>
+
+        <div className="pl-cardlist">
+          {cards.map((k) => <SportCard key={k.id} k={k} {...rowProps} />)}
+        </div>
+      </PlayOpenProvider>
 
       {signedIn && leagues.length > 0 && (
         <section className="pl-leagues">

@@ -1,3 +1,84 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "components/games/play.css",
+      "key": ".gv-chip.pl-chip { min-height }",
+      "after": "44px"
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col b { font }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col b { letter-spacing }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col small { color }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col small { flex }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col small { font }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col { align-items }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col { border-bottom }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col { color }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col { display }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col { gap }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col { min-height }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col { padding }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-col { text-decoration }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-later { border-top }",
+      "after": null
+    },
+    {
+      "file": "components/games/play.css",
+      "key": ".pl-later { margin }",
+      "after": null
+    }
+  ]
 }

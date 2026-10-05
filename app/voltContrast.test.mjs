@@ -67,6 +67,9 @@ export const ON_DARK_ANCESTOR = Object.freeze({
   '.sv4-card.gpa-card .sv4-lbl .ko': '.sv4-card.gpa-card',
   '.sv4-card.gpa-card.live .sv4-team.lead .sc': '.sv4-card.gpa-card',
   '.sv4-card.gpa-card .sv4-foot .wp': '.sv4-card.gpa-card',
+  // sun-19: the Play lobby's OPEN sport card - its header is navy, the name and chevron volt on it.
+  '.pl-sc.open .pl-sc-name': '.pl-sc.open .pl-sc-h',
+  '.pl-sc.open .pl-sc-chev': '.pl-sc.open .pl-sc-h',
 });
 
 export function voltOnLight(css, g) {

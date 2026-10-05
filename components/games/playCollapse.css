@@ -1,0 +1,64 @@
+/* components/games/playCollapse.css - the Play lobby's collapsed sport cards
+   (sun-19, Derik's "Option B" mock at 390).
+
+   TOKENS ONLY. The base rules resolve on the dark page; the arcade block at
+   the foot is the mock's look - navy structure, volt fills with navy ink,
+   white-ish surfaces. The mock's colours map onto the roles that already
+   mean them: the card fill is --tok-surface-2, its border --tok-line, the
+   secondary text --tok-muted, navy --tok-primary (arcade) / --tok-ink (dark),
+   the volt pill --tok-action on --tok-on-action, the open card's name and
+   chevron --tok-accent ON the navy header (app/voltContrast.test.mjs).
+
+   44px TARGETS: the header button and the chips are pinned here and in
+   play.css, and components/games/lobbyV3.test.mjs reads both. */
+
+.pl-cardlist { display: flex; flex-direction: column; gap: 10px; margin: 14px 16px 0; }
+
+.pl-sc { border: 1px solid var(--tok-line); border-radius: 16px; background: var(--tok-surface-2);
+  overflow: hidden; scroll-margin-top: 72px; }
+.pl-sc.dim { opacity: .6; }
+.pl-sc.open { opacity: 1; border: 2px solid var(--tok-accent); background: var(--tok-surface); }
+
+.pl-sc-h { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 16px;
+  border: 0; margin: 0; background: transparent; color: var(--tok-ink); text-align: left;
+  font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.pl-sc-h:focus-visible { outline: 2px solid var(--tok-accent); outline-offset: -4px; }
+.pl-sc.open .pl-sc-h { background: var(--tok-surface-2); }
+
+.pl-sc-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pl-sc-l1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pl-sc-name { font: 400 15px var(--tok-font-num); letter-spacing: .02em; text-transform: uppercase; color: var(--tok-ink); }
+.pl-sc-n { font: 400 13px var(--tok-font-body); color: var(--tok-muted); }
+.pl-sc-move { font: 400 9px var(--tok-font-num); letter-spacing: .04em; padding: 3px 8px; border-radius: 99px;
+  background: var(--tok-action); color: var(--tok-on-action); border: 1.5px solid var(--tok-action); }
+.pl-sc-sum { font: 400 13px var(--tok-font-body); color: var(--tok-muted); line-height: 1.35; }
+.pl-sc-chev { flex: none; color: var(--tok-muted); transition: transform .15s ease; }
+
+.pl-sc.open .pl-sc-name { color: var(--tok-accent); }
+.pl-sc.open .pl-sc-chev { color: var(--tok-accent); }
+.pl-sc.open .pl-sc-n, .pl-sc.open .pl-sc-sum { color: var(--tok-ink-2); }
+.pl-sc.open .pl-sc-chev { transform: rotate(180deg); }
+
+/* the rows inside are today's rows, edge to edge in the card */
+.pl-sc-rows .pl-row { margin: 0; padding: 6px 16px; }
+.pl-sc-rows .pl-row:last-child { border-bottom: 0; }
+
+@media (min-width: 720px) {
+  .pl-sc-h { padding: 18px 20px; }
+  .pl-sc-rows .pl-row { padding: 6px 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) { .pl-sc-chev { transition: none; } }
+
+/* ============================================================================
+   ARCADE - the mock's look, :where()-scoped (zero specificity).
+   ========================================================================== */
+:where(:root[data-theme="arcade"]) .pl-sc-name { color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .pl-sc-chev { color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .pl-sc-move { border-color: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .pl-sc.open { border-color: var(--tok-primary); background: var(--tok-page); }
+:where(:root[data-theme="arcade"]) .pl-sc.open .pl-sc-h { background: var(--tok-primary); }
+:where(:root[data-theme="arcade"]) .pl-sc.open .pl-sc-name { color: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .pl-sc.open .pl-sc-chev { color: var(--tok-accent); }
+:where(:root[data-theme="arcade"]) .pl-sc.open .pl-sc-n,
+:where(:root[data-theme="arcade"]) .pl-sc.open .pl-sc-sum { color: color-mix(in srgb, var(--tok-on-primary) 85%, var(--tok-primary)); }
