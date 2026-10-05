@@ -27,6 +27,7 @@ import { todayEt } from '@/lib/daily/entries';
 import { regradeStoredRun } from '@/lib/daily/seasonBoardRuns';
 import { todayLeaderboard, streakLeaderboard } from '@/lib/daily/seasonBoardLeaderboards';
 import { bestRosterLines } from '@/lib/daily/seasonBoardResults';
+import { streakEndingAt } from '@/lib/daily/shareCardData';
 import { editionLabel, editionNo } from '@/lib/daily/homeModule';
 import SeasonBoard from '@/components/daily/season/SeasonBoard';
 import '../../../../components/daily/season/seasonBoard.css';
@@ -69,6 +70,9 @@ export default async function DailyResultsPage({ params }) {
     // THE RECEIPT THE PLAYER SAW AT SUBMIT, regraded from the stored picks.
     const regraded = regradeStoredRun(board, run.picks);
     if (regraded.ok) {
+      // THE ROSTER CARD'S STREAK IS THE STREAK AS OF THIS EDITION - the same
+      // number the image draws (lib/daily/shareCardData.js), never today's.
+      const shareStreak = await streakEndingAt(sql, Number(userId), board.edition_ymd);
       return (
         <SeasonBoard
           edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked userId={userId}
@@ -76,6 +80,7 @@ export default async function DailyResultsPage({ params }) {
           initialPlay={regraded.play} initialGrade={regraded.grade}
           initialClockLabel={mmss(Math.min(DAILY_ROUND_SECONDS, Number(run.elapsed_s ?? 0)) * 1000)}
           streak={streak} closesAt={board.closes_at} todayRows={rows}
+          editionDate={board.edition_ymd} shareStreak={shareStreak}
         />
       );
     }

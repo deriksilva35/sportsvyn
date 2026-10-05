@@ -122,6 +122,7 @@ export default async function SeasonBoardPage({ searchParams }) {
           <SeasonBoard
             edition={edition} year={null} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked userId={userId}
             boardId={board.id} initialScreen="grade" openReveal={reveal} closesAt={board.closes_at}
+            editionDate={editionDate} shareSeason={year}
           />
         );
       }
@@ -144,6 +145,7 @@ export default async function SeasonBoardPage({ searchParams }) {
             boardId={board.id}
             initialPlay={regraded.play} initialGrade={regraded.grade} initialClockLabel={clockLabel}
             streak={streak} closesAt={board.closes_at} todayRows={todayRows}
+            editionDate={editionDate}
           />
         );
       }
@@ -212,6 +214,7 @@ export default async function SeasonBoardPage({ searchParams }) {
             streak={streak} closesAt={board.closes_at}
             initialStartedAt={String(new Date(existing.started_at).toISOString())}
             initialScreen="board"
+            editionDate={editionDate}
           />
         );
       }
@@ -257,6 +260,7 @@ export default async function SeasonBoardPage({ searchParams }) {
           edition={edition} year={null} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked userId={userId}
           boardId={board.id}
           streak={streak} closesAt={board.closes_at}
+          editionDate={editionDate}
         />
       );
     }
