@@ -3,23 +3,25 @@
 /**
  * Server Actions for /admin/prematch/[id] edit form.
  *
- * Two actions:
+ * Three actions:
  *   - saveEdit(formData) — write the edited values back, recompute composite
  *                          server-side (flat mean), set edited_at = now().
  *   - publishHeld(id)    — flip status from 'preview' → 'published' for a
  *                          pending_review row.
+ *   - unpublish(id)      — status -> 'unpublished' (hidden, not deleted).
  *
- * Both actions are server-side ONLY. They are reachable through the form
- * action prop in the edit page; the proxy.js Basic Auth matcher covers
- * /admin/:path*, but Next 16 Server Actions land at /_next/... — for
- * defense-in-depth, BOTH actions re-verify ADMIN_SECRET presence on the
- * server (the proxy catches the rendered page request; a deferred POST
- * could theoretically miss it).
+ * Every action calls requireAdmin() first (sun-12 item 1). The proxy's Basic
+ * Auth gates requests by PATH, and a Server Action can be POSTed to any page
+ * path with its Next-Action id - Next forwards it to the owning worker - so
+ * the proxy alone does not cover it. requireAdmin() re-checks the same Basic
+ * credential, through the same function, inside the action. The previous
+ * assertAdminEnv() checked only that the env vars existed.
  */
 
 import { sql } from '@/lib/db';
 import { recomputeCompositeFromRow } from '@/lib/aiPrematch';
 import { revalidatePath } from 'next/cache';
+import { requireAdmin } from '@/lib/admin/requireAdmin';
 
 function clamp10(v) {
   const n = Number(v);
@@ -27,18 +29,8 @@ function clamp10(v) {
   return Math.max(0, Math.min(10, Math.round(n * 10) / 10));
 }
 
-function assertAdminEnv() {
-  // Defense-in-depth: the proxy already gates /admin/* page requests, but
-  // a Server Action POST is dispatched through /_next/... which the
-  // matcher doesn't cover by default. Refuse to act if the admin env is
-  // missing — same fail-closed shape as proxy.js itself.
-  if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_SECRET) {
-    throw new Error('Admin auth misconfigured');
-  }
-}
-
 export async function saveEdit(formData) {
-  assertAdminEnv();
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!Number.isInteger(id) || id <= 0) throw new Error('Invalid article id');
 
@@ -107,7 +99,7 @@ export async function saveEdit(formData) {
 }
 
 export async function publishHeld(formData) {
-  assertAdminEnv();
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!Number.isInteger(id) || id <= 0) throw new Error('Invalid article id');
 
@@ -125,7 +117,7 @@ export async function publishHeld(formData) {
 }
 
 export async function unpublish(formData) {
-  assertAdminEnv();
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!Number.isInteger(id) || id <= 0) throw new Error('Invalid article id');
 

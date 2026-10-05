@@ -12,19 +12,21 @@
  *   · (Re-generate is via scripts/generate-daily-card-intro.mjs — UPSERT
  *     on pt_day overwrites the prior draft.)
  *
- * Auth: same proxy/middleware layer as /admin/prematch (handled at the
- * routing layer, not this file). If the user reaches this page they're
- * already authenticated as admin.
+ * Auth: proxy.js gates the PAGE (Basic Auth on /admin/*). Each server action
+ * calls requireAdmin() first as well: an action can be POSTed to a non-admin
+ * path, where the proxy never runs (sun-12 item 1).
  */
 
 import { sql } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { requireAdmin } from '@/lib/admin/requireAdmin';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { robots: { index: false, follow: false } };
 
 async function approveIntro(formData) {
   'use server';
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!Number.isFinite(id) || id < 1) return;
   await sql`
@@ -45,6 +47,7 @@ async function approveIntro(formData) {
 
 async function rejectIntro(formData) {
   'use server';
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!Number.isFinite(id) || id < 1) return;
   await sql`

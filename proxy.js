@@ -49,7 +49,7 @@
 
 import { NextResponse } from 'next/server';
 import { SHELL_COOKIE, SHELL_VALUE, SHELL_PARAM, SHELL_UA_TOKEN } from '@/lib/shell/constants';
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { checkAdminBasic } from './lib/admin/adminAuth.js';
 import { scoreboardRedirect } from './lib/scores/leagueScoreboards.js';
 import { retiredRedirect } from './lib/retired.js';
 import { ageRedirectTarget, sessionTokenFrom, AGE_OK_COOKIE } from './lib/auth/ageGate.js';
@@ -62,14 +62,6 @@ function challenge() {
     status: 401,
     headers: { 'WWW-Authenticate': `Basic realm="${REALM}", charset="UTF-8"` },
   });
-}
-
-// Constant-time compare. Hashing first guarantees equal-length buffers
-// (timingSafeEqual throws on length mismatch) and hides input length.
-function safeEqual(a, b) {
-  const ah = createHash('sha256').update(a).digest();
-  const bh = createHash('sha256').update(b).digest();
-  return timingSafeEqual(ah, bh);
 }
 
 export async function proxy(request) {
@@ -247,32 +239,18 @@ export async function proxy(request) {
     return withCookie(NextResponse.next());
   }
 
-  const expectedUser = process.env.ADMIN_USERNAME;
-  const expectedSecret = process.env.ADMIN_SECRET;
-
-  if (!expectedUser || !expectedSecret) {
+  // The credential check itself lives in lib/admin/adminAuth.js (constant-time,
+  // fail-closed) so the admin Server Actions can run the identical check through
+  // lib/admin/requireAdmin.js - an action can be POSTed to a non-admin path, where
+  // this gate never runs.
+  const verdict = checkAdminBasic(request.headers.get('authorization'), {
+    ADMIN_USERNAME: process.env.ADMIN_USERNAME,
+    ADMIN_SECRET: process.env.ADMIN_SECRET,
+  });
+  if (verdict === 'unconfigured') {
     return new NextResponse('Admin auth is not configured.', { status: 500 });
   }
-
-  const header = request.headers.get('authorization');
-  if (!header || !header.startsWith('Basic ')) {
-    return challenge();
-  }
-
-  let user, pass;
-  try {
-    const decoded = Buffer.from(header.slice(6), 'base64').toString('utf-8');
-    const sep = decoded.indexOf(':');
-    if (sep === -1) return challenge();
-    user = decoded.slice(0, sep);
-    pass = decoded.slice(sep + 1);
-  } catch {
-    return challenge();
-  }
-
-  const userOk = safeEqual(user, expectedUser);
-  const passOk = safeEqual(pass, expectedSecret);
-  if (!userOk || !passOk) {
+  if (verdict !== 'ok') {
     return challenge();
   }
 

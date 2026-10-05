@@ -6,8 +6,9 @@
  * context. Type filter at top so the same queue can serve team_outlook,
  * player_outlook, ranking_row_blurb, and stats_framing as they come online.
  *
- * Auth: gated by proxy.js at the route layer (HTTP Basic Auth on /admin/*).
- * If the user reaches this page they're already authenticated.
+ * Auth: proxy.js gates the PAGE (HTTP Basic Auth on /admin/*). Every server
+ * action below calls requireAdmin() first as well: an action can be POSTed to
+ * a non-admin path, where the proxy never runs (sun-12 item 1).
  *
  * The publish path goes through lib/blurbs.publishBlurb which demotes the
  * prior current row in the same transaction — never two is_current=true
@@ -15,6 +16,7 @@
  */
 
 import { revalidatePath } from 'next/cache';
+import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { getPendingBlurbs, getRecentlyReviewed, publishBlurb, publishAllPending, rejectBlurb } from '@/lib/blurbs';
 
 export const dynamic = 'force-dynamic';
@@ -33,6 +35,7 @@ function entityHref(kind, slug) {
 
 async function approveAction(formData) {
   'use server';
+  await requireAdmin();
   const id = Number(formData.get('id'));
   if (!Number.isFinite(id) || id < 1) return;
   const updated = await publishBlurb({ id, reviewedBy: 'admin' });
@@ -53,6 +56,7 @@ async function approveAction(formData) {
 
 async function rejectAction(formData) {
   'use server';
+  await requireAdmin();
   const id = Number(formData.get('id'));
   const notes = formData.get('notes')?.toString().trim() || null;
   if (!Number.isFinite(id) || id < 1) return;
@@ -65,6 +69,7 @@ async function rejectAction(formData) {
 // to type "APPROVE" in the confirm field, so a stray click can't fire it.
 async function bulkApproveAction(formData) {
   'use server';
+  await requireAdmin();
   const blurbType = formData.get('blurbType')?.toString().trim();
   const confirm = formData.get('confirm')?.toString().trim();
   const reviewedBy = formData.get('reviewedBy')?.toString().trim() || 'admin';
