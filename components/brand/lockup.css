@@ -1,0 +1,20 @@
+/* components/brand/lockup.css - THE LOCKUP: the wordmark with the caps tagline
+   under it (mon-15, the Play tab mock's "Tagline header", option A). Rubik Mono
+   One (self-hosted, app/fonts), 9px, 0.22em, muted ink. Token reads only - no
+   colour literal (app/tokens.test.mjs), and --tok-muted resolves on both pages.
+
+   The footer and the emails draw it left-aligned; the Play header centres it
+   (components/shell/playHeader.css). */
+.sv-lockup { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+/* THE 6px UNDER THE MARK IS THE MARK'S OWN: Wordmark draws HeaderWordmark with
+   the lockup box (0.22em of padding under the letters, 6px at the footer's
+   28px), so the column adds no gap, and the h1's line box is closed up so the
+   strut adds none either. */
+.sv-lockup > h1 { line-height: 0; }
+.sv-lockup-tag {
+  margin: 0;
+  font-family: var(--font-rubik-mono), ui-monospace, monospace;
+  font-size: 9px; line-height: 1; letter-spacing: 0.22em;
+  color: var(--tok-muted);
+  white-space: nowrap;
+}

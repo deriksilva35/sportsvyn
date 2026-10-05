@@ -1,0 +1,50 @@
+/* components/shell/playHeader.css - THE PLAY LOBBY'S HEADER (mon-15, the Play
+   tab mock's "Tagline header", option A). Only /games carries .gh--play
+   (lib/shell/playHeader.js); every other route keeps the slim left-aligned
+   header in apptab.css, which nothing here touches.
+
+   THE MARK IS CENTRED AND ~34px TALL: HeaderWordmark draws 1.36em (tight), so
+   25px of font-size is 34px of mark. The caps tagline sits 6px under it in the
+   lockup's type (components/brand/lockup.css). The avatar - or SIGN IN - is
+   lifted out of the row and pinned right, so the mark stays on the centre line
+   whatever the right edge holds; 64px of side padding keeps the two apart.
+
+   THE STATUS BAR IS STILL ABOVE IT: the top padding carries the safe-area
+   inset, and the right edge is centred on the header BELOW the inset, not on
+   the whole box. header.gh.gh--app.gh--play is (0,3,1), over .gh.gh--app's
+   (0,2,0) and site-chrome's header.gh (0,1,1) in any chunk order.
+
+   Token reads only - no colour literal (app/tokens.test.mjs). */
+header.gh.gh--app.gh--play {
+  position: relative;
+  flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  padding: calc(14px + env(safe-area-inset-top)) 64px 12px;
+  font-size: 25px;
+}
+.gh--play .gh-app-mark { display: block; flex: 0 0 auto; }
+.gh--play .gh-play-tag {
+  display: block;
+  font-family: var(--font-rubik-mono), ui-monospace, monospace;
+  font-size: 9px; line-height: 1; letter-spacing: 0.22em;
+  /* the tracking hangs after the last letter; pull it back so the line centres
+     on the same axis as the mark */
+  margin-right: -0.22em;
+  color: var(--tok-muted);
+  white-space: nowrap;
+}
+.gh--play .gh-app-me,
+.gh--play .gh-app-signin {
+  position: absolute; right: 16px;
+  top: calc(50% + env(safe-area-inset-top) / 2);
+  transform: translateY(-50%);
+  margin: 0;
+}
+/* THE AVATAR AT FULL TARGET SIZE, as drawn: a 44px disc with the initial in
+   the lockup's face. The @handle never shows here - beside a centred mark it
+   would run into the letters at any width. */
+.gh--play .gh-app-me .in {
+  width: 44px; height: 44px;
+  font-family: var(--font-rubik-mono), ui-monospace, monospace;
+  font-size: 16px; font-weight: 400;
+}
+.gh--play .gh-app-me .hn { display: none; }
