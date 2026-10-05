@@ -1,0 +1,66 @@
+{
+  "v": 1,
+  "state": "ok",
+  "generatedAt": "2026-10-04T17:30:00.000Z",
+  "cta": null,
+  "followed": [
+    {
+      "id": 4,
+      "abbr": "BUF",
+      "name": "Bills",
+      "league": "nfl",
+      "color": "#00338D",
+      "altColor": "#C60C30"
+    },
+    {
+      "id": 210,
+      "abbr": "UGA",
+      "name": "Georgia",
+      "league": "cfb",
+      "color": "#BA0C2F",
+      "altColor": "#000000"
+    }
+  ],
+  "teams": [
+    {
+      "id": 211,
+      "abbr": "ALA",
+      "name": "Alabama",
+      "league": "cfb",
+      "color": "#9E1B32",
+      "altColor": "#FFFFFF"
+    },
+    {
+      "id": 501,
+      "abbr": "ARS",
+      "name": "Arsenal",
+      "league": "epl",
+      "color": "#EF0107",
+      "altColor": "#063672"
+    },
+    {
+      "id": 3301,
+      "abbr": "LAD",
+      "name": "Dodgers",
+      "league": "mlb",
+      "color": "#005A9C",
+      "altColor": "#EF3E42"
+    },
+    {
+      "id": 2201,
+      "abbr": "BOS",
+      "name": "Celtics",
+      "league": "nba",
+      "color": "#007A33",
+      "altColor": "#BA9653"
+    },
+    {
+      "id": 16,
+      "abbr": "KC",
+      "name": "Chiefs",
+      "league": "nfl",
+      "color": "#E31837",
+      "altColor": "#FFB81C"
+    }
+  ]
+}

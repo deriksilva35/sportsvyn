@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "state": "signed_out",
+  "generatedAt": "2026-10-04T17:30:00.000Z",
+  "cta": {
+    "label": "Sign in",
+    "href": "/signin"
+  },
+  "yourMove": {
+    "count": 0,
+    "nextLock": null
+  },
+  "games": [],
+  "daily": null,
+  "teams": [],
+  "inYourGames": []
+}

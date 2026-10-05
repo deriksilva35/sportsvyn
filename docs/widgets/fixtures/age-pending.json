@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "state": "age_required",
+  "generatedAt": "2026-10-04T17:30:00.000Z",
+  "cta": {
+    "label": "Confirm your age",
+    "href": "/age"
+  },
+  "yourMove": {
+    "count": 0,
+    "nextLock": null
+  },
+  "games": [],
+  "daily": null,
+  "teams": [],
+  "inYourGames": []
+}
