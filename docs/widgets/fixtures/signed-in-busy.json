@@ -141,7 +141,8 @@
       "startAt": "2026-10-04T16:50:00.000Z",
       "nextAt": "2026-10-05T18:30:00.000Z",
       "result": null,
-      "href": "/mlb/game/phi-at-mil-2026-10-04"
+      "href": "/mlb/game/phi-at-mil-2026-10-04",
+      "series": "NLDS · Game 2 · PHI leads 1-0 · best of 5"
     },
     {
       "teamId": 210,
@@ -187,7 +188,8 @@
       "startAt": "2026-10-04T20:00:00.000Z",
       "nextAt": "2026-10-05T19:30:00.000Z",
       "result": null,
-      "href": "/mlb/game/sd-at-lad-2026-10-04"
+      "href": "/mlb/game/sd-at-lad-2026-10-04",
+      "series": "NLDS · Game 1 · best of 5"
     }
   ],
   "inYourGames": [

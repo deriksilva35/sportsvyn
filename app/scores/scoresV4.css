@@ -55,6 +55,7 @@
 :where(:root[data-theme="arcade"]) .sv4-lbl .clock { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 99px; background: var(--tok-action); color: var(--tok-on-action); font: 700 12px var(--tok-font-num); letter-spacing: .08em; }
 :where(:root[data-theme="arcade"]) .sv4-lbl .fin { padding: 5px 10px; border-radius: 99px; border: 1px solid var(--tok-primary); color: var(--tok-primary); font: 700 12px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; }
 :where(:root[data-theme="arcade"]) .sv4-lbl .ko { color: var(--tok-primary); font: 700 12px var(--tok-font-num); letter-spacing: .08em; }
+:where(:root[data-theme="arcade"]) .sv4-series { margin: 4px 0 2px; font: 600 11px var(--tok-font-num); letter-spacing: .04em; color: var(--tok-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-lbl .where { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
 
 :where(:root[data-theme="arcade"]) .sv4-team { display: flex; align-items: center; gap: 12px; }

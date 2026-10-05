@@ -1,3 +1,14 @@
 {
-  "changes": []
+  "changes": [
+    { "file": "app/mlb/game/[slug]/mlbgame.css", "key": ".mg-series { color }", "after": "#888888" },
+    { "file": "app/mlb/game/[slug]/mlbgame.css", "key": ".mg-series { font }", "after": "600 11px ?--font-jetbrains-mono,ui-monospace,monospace" },
+    { "file": "app/mlb/game/[slug]/mlbgame.css", "key": ".mg-series { letter-spacing }", "after": ".04em" },
+    { "file": "app/mlb/game/[slug]/mlbgame.css", "key": ".mg-series { margin }", "after": "-4px 0 10px" },
+    { "file": "components/gridiron/todayV2.css", "key": ".tv-gm .tv-series { color }", "after": "#888888" },
+    { "file": "components/gridiron/todayV2.css", "key": ".tv-gm .tv-series { flex-basis }", "after": "100%" },
+    { "file": "components/gridiron/todayV2.css", "key": ".tv-gm .tv-series { font }", "after": "600 11px ?--font-jetbrains-mono,ui-monospace,monospace" },
+    { "file": "components/gridiron/todayV2.css", "key": ".tv-gm .tv-series { letter-spacing }", "after": ".04em" },
+    { "file": "components/gridiron/todayV2.css", "key": ".tv-gm .tv-series { margin-top }", "after": "-4px" },
+    { "file": "components/gridiron/todayV2.css", "key": ".tv-gm:has(.tv-series) { flex-wrap }", "after": "wrap" }
+  ]
 }

@@ -79,6 +79,7 @@ const NEXT_LAD = team({
   teamId: 3301, teamAbbr: 'LAD', teamName: 'Dodgers', teamSlug: 'los-angeles-dodgers', leagueSlug: 'mlb', color: '#005A9C', altColor: '#EF3E42',
   gameId: 7740, gameSlug: 'sd-at-lad-2026-10-04', status: 'scheduled', kickoffAt: at(150), homeTeamId: 3301,
   oppId: 3310, oppAbbr: 'SD', oppName: 'Padres', nextAt: at(60 * 26),
+  series: 'NLDS · Game 1 · best of 5',
 });
 const NONE_ARS = team({ teamId: 501, teamAbbr: 'ARS', teamName: 'Arsenal', teamSlug: 'arsenal', leagueSlug: 'epl', color: '#EF0107', altColor: '#063672' });
 const LIVE_PHI = team({
@@ -86,6 +87,7 @@ const LIVE_PHI = team({
   gameId: 7741, gameSlug: 'phi-at-mil-2026-10-04', status: 'live', kickoffAt: at(-40), homeTeamId: 3312,
   homeScore: 2, awayScore: 3, oppId: 3312, oppAbbr: 'MIL', oppName: 'Brewers', nextAt: at(60 * 25),
   liveState: { period: 4, half: 'top' },
+  series: 'NLDS · Game 2 · PHI leads 1-0 · best of 5',
 });
 
 // ---- in your games (rowToGame shape + stakeForMatches stakes) ---------------

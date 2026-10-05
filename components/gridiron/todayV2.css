@@ -64,6 +64,8 @@
 
 /* your teams, and the signed-out kickoff list - one row shape */
 .tv-gm { display: flex; align-items: center; gap: 9px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13px; color: var(--paper); text-decoration: none; }
+.tv-gm:has(.tv-series) { flex-wrap: wrap; }
+.tv-gm .tv-series { flex-basis: 100%; margin-top: -4px; font: 600 11px var(--font-mono); letter-spacing: .04em; color: var(--muted); }
 .tv-gm:first-child { border-top: 0; }
 .tv-gm .ab { font: 700 11px var(--font-mono); color: var(--muted); min-width: 42px; flex: none; }
 .tv-gm .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

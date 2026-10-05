@@ -161,6 +161,7 @@ The reader's followed teams (or the `?teams=` selection). The order is: live, th
 | `oppColor`, `oppAltColor` | `#RRGGBB` *opt* | The opponent's badge colours (sun-24) |
 | `possession` | string(6) *opt* | Live football only: who has the ball, as badge letters (`"BUF"`). It comes from the play feed, using the Scores card's own drive-strip derivation (sun-24) |
 | `fieldPos` | string(12) *opt* | Live football only: the ball's spot, `"NYJ 35"` (on the Jets' side) or `"50"`. After a turnover or a score, before the next down is known, it is where the last snap was (sun-24) |
+| `series` | string(64) *opt* | Postseason only: the series line, worded as the Scores card words it: `"ALDS · Game 3 · NYY leads 2-0 · best of 5"`, `"NLCS · Game 2 · Series tied 1-1"`, `"ALDS · Game 4 · NYY can clinch"`, `"ALDS · Game 5 · winner advances"`, `"ALDS · NYY wins series 3-1"` on the clinching final, `"Wild Card · Game 1 · best of 3"` before a game is played. Absent outside a staged postseason game (mon-17) |
 
 ### `inYourGames[]`
 

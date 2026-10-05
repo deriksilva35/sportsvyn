@@ -193,6 +193,9 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false, 
             Activity row, on the card's top row. Never on the board. */}
         {onPage && topRight ? <span className="gpa-bell" data-gpa="bell">{topRight}</span> : null}
       </div>
+      {/* THE SERIES LINE (mon-17): a postseason game's round, game and record,
+          under the time/network row. lib/playoffs/seriesLine.js words it. */}
+      {x.series ? <p className="sv4-series" data-series="1">{x.series}</p> : null}
       {order.map((side) => (
         <Team key={side} g={g} side={side} x={x} variant={variant} ball={ball === side}
           headgear={headgear} dressed={dressed} lead={lead}

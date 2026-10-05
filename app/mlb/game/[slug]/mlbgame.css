@@ -6,6 +6,7 @@
 .mg-crumb a { color: var(--muted); text-decoration: none; }
 .mg-head { padding: 10px 0 14px; border-bottom: 1px solid var(--rule-dim); }
 .mg-chips { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.mg-series { margin: -4px 0 10px; font: 600 11px var(--font-mono); letter-spacing: .04em; color: var(--muted); }
 .mg-chip { font: 700 9px var(--font-mono); letter-spacing: .16em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; }
 .mg-chip.live { background: var(--live); color: #fff; }
 :where(:root[data-theme="arcade"]) .mg-chip.live { color: var(--tok-ink); }

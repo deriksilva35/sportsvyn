@@ -178,6 +178,7 @@ function TeamRow({ t }) {
         ? <span className="tag lv">{(t.liveLabel ?? 'Live').replace(/^Live · /, '')}</span>
         : t.status === 'final' ? <span className={`tag ${won ? 'w' : lost ? 'l' : ''}`}>{won ? 'W' : lost ? 'L' : 'T'}</span>
           : null}
+      {t.series ? <span className="tv-series" data-series="1">{t.series}</span> : null}
     </Link>
   );
 }

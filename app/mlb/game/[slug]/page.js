@@ -29,6 +29,7 @@ import { pairHasHeadgear } from '@/lib/teams/headgear';
 import StandaloneTime from '@/components/StandaloneTime';
 import { readViewerTz } from '@/lib/gridiron/serverTz';
 import { getMlbGame, getMlbPlays } from '@/lib/mlb/gameDetail';
+import { mlbSeriesLines } from '@/lib/playoffs/mlbSeriesLines';
 import { outsToInnings } from '@/lib/mlb/innings';
 import { stripCells } from '@/lib/mlb/strip';
 import { decisions, pitcherLine, shortName } from '@/lib/mlb/cardLines';
@@ -101,13 +102,16 @@ export default async function MlbGamePage({ params, searchParams }) {
   // star is drawn at all. One follow read for both sides, empty when signed
   // out, and caught - a follow lookup must never cost a game page.
   const viewerId = (await auth().catch(() => null))?.user?.id ?? null;
-  const [followedIds, isShell, viewerTz] = await Promise.all([
+  const [followedIds, isShell, viewerTz, seriesLines] = await Promise.all([
     viewerId == null ? Promise.resolve([]) : getFollowedTeamIds(viewerId).catch(() => []),
     resolveShellMode().catch(() => false),
     // The reader's zone (sv_tz): the first-pitch chip paints in it, not in the
     // ET fallback that then swapped to the device's zone (sun-16 item B).
     readViewerTz(),
+    // THE SERIES LINE (mon-17): null outside a staged postseason game.
+    mlbSeriesLines([g]).catch(() => new Map()),
   ]);
+  const seriesText = seriesLines.get(g.id) ?? null;
   const followed = new Set(followedIds);
   const live = g.status === 'live';
   const final = g.status === 'final';
@@ -156,6 +160,7 @@ export default async function MlbGamePage({ params, searchParams }) {
             {!show && g.kickoffAt ? <span className="mg-chip time"><StandaloneTime iso={g.kickoffAt} serverTz={viewerTz} /></span> : null}
             {g.seasonPhase === 'POST' ? <span className="mg-chip post">POSTSEASON</span> : null}
           </div>
+          {seriesText ? <p className="mg-series" data-series="1">{seriesText}</p> : null}
           {/* AWAY FIRST. Baseball reads "Away at Home" like every American
               sport, which lib/gridiron/teamOrder.js already defaults to. */}
           <TeamRow t={g.away} score={g.awayScore} show={show} batting={batting === 'away'} headgear={headgear}
