@@ -4,8 +4,18 @@
    present, so nothing here can reach a web browser. */
 
 /* THE BAR'S OWN HEIGHT, published so a room can sit above it rather than under
-   it. 44px of target + 8px top padding + 10px bottom = 62px, plus the inset. */
-:root { --sv-appbar-h: calc(62px + env(safe-area-inset-bottom)); }
+   it. 1px top rule + 8px top padding + 44px of target + 10px bottom = 63px,
+   plus the inset. THE RULE IS COUNTED (mon-11): it used to say 62, so every
+   room bar stacked on it covered the bar's top border and Weekly typed its own
+   "+ 1px" to make up the difference - a second number for one height.
+
+   --sv-roombar-inset is what a room bar pays for the home indicator in its own
+   padding: the inset on the web, and nothing while it sits on the app bar,
+   which has already paid it. */
+:root {
+  --sv-appbar-h: calc(63px + env(safe-area-inset-bottom));
+  --sv-roombar-inset: env(safe-area-inset-bottom, 0px);
+}
 
 .apptab {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
@@ -29,8 +39,14 @@
      constraint; height is. */
   min-height: 44px; justify-content: center;
 }
-.apptab-i .ic { font-size: 18px; line-height: 1; }
-.apptab-i .lb {
+/* apptab-ic / apptab-lb, NEVER the bare .ic / .lb (mon-11). app/boards/board.css
+   owns a bare .lb - width 100%, max-width 560px, padding 12px 16px 40px - and
+   every page that loads it (the Daily via its open reveal, Pick'em, every
+   /board) grew this bar from 63px to 113px, which pushed it over the room bars
+   that offset by --sv-appbar-h. The prefix keeps the bar's own classes its own;
+   appTabBar.test pins it. */
+.apptab-ic { font-size: 18px; line-height: 1; }
+.apptab-lb {
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 9px; font-weight: 600; letter-spacing: .08em;
   text-transform: uppercase; white-space: nowrap;
@@ -40,7 +56,7 @@
 /* THE PAGE MUST NOT END UNDER THE BAR. Applied to the body rather than to each
    surface, because the bar is global and every surface would otherwise have to
    remember - and the one that forgot would hide its own last row. */
-body:has(.apptab) { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
+body:has(.apptab) { padding-bottom: var(--sv-appbar-h); }
 
 /* ===========================================================================
    A ROOM'S OWN BOTTOM BAR STACKS ABOVE THE APP BAR, it does not fight it.
@@ -60,8 +76,28 @@ body:has(.apptab) { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
 
    The offset applies only when the app bar is actually present - AppTabBar
    stamps data-appbar on <html> - so the web room is untouched.
-   =========================================================================== */
-html[data-appbar] .trk-tabs { bottom: var(--sv-appbar-h); z-index: 55; }
+
+   ONE RULE FOR EVERY ROOM BAR (mon-11). The Daily's lock bar ("0 of 8 in" +
+   Lock it in) was the same bug a second time, and Six, EPL Weekly 5 and the
+   league builder had it too, unreported: each room that pins something to the
+   bottom of the screen had to remember the app bar, and the ones that forgot
+   were buried. So the offset lives HERE, once, and a room joins by adding its
+   bar to this list. app/roomBars.test.mjs walks every stylesheet for a fixed or
+   sticky bottom rule and fails on one this list does not name.
+
+   NOT WHILE A CLOCK RUNS: data-clock hides the app bar (the chrome-isolation
+   law below), and a bar offset for a bar that is not there floats mid-air.
+   --sv-roombar-gap is a room's own distance from the bar - 0 for a bar that
+   sits on it, a few px for a floating toast or a pinned row. */
+html[data-appbar]:not([data-clock]) {
+  --sv-roombar-inset: 0px;
+  /* focus and scrollIntoView stop above the bar, not under it */
+  scroll-padding-bottom: var(--sv-appbar-h);
+}
+html[data-appbar]:not([data-clock]) :is(
+  .trk-tabs, .dv-ft, .wkv-bar, .sbd-ft, .sbd-toast, .sx-ft, .e5-lockbar, .lv-bar, .sb-row.you
+) { bottom: calc(var(--sv-appbar-h) + var(--sv-roombar-gap, 0px)); }
+html[data-appbar] .trk-tabs { z-index: 55; }
 /* And the page must clear BOTH bars, not just one. */
 html[data-appbar] body:has(.apptab) .trk-in { padding-bottom: var(--sv-appbar-h); }
 
@@ -108,7 +144,7 @@ html[data-clock] body:has(.apptab) { padding-bottom: 0; }
    emoji; this one holds the brand's own letterform (Y with macron), so it is
    set in the brand's own face - Saira 900 italic - not the emoji font. Sized
    up slightly because a letterform at emoji-size reads lighter than an emoji. */
-.apptab-i[data-key="sportsvyn"] .ic {
+.apptab-i[data-key="sportsvyn"] .apptab-ic {
   font-family: var(--font-saira), sans-serif;
   font-style: italic; font-weight: 900;
   font-size: 19px; line-height: 1;

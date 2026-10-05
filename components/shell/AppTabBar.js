@@ -78,8 +78,8 @@ export default function AppTabBar() {
           className={`apptab-i${active === t.key ? ' on' : ''}`}
           aria-current={active === t.key ? 'page' : undefined}
         >
-          <span className="ic" aria-hidden="true">{t.icon}</span>
-          <span className="lb">{t.label}</span>
+          <span className="apptab-ic" aria-hidden="true">{t.icon}</span>
+          <span className="apptab-lb">{t.label}</span>
         </Link>
       ))}
     </nav>

@@ -118,15 +118,17 @@ test('THE LOCK BAR STICKS AT THE BOTTOM, above the app tab bar, paying the inset
   assert.match(b, /position:\s*sticky/);
   // On the web: the viewport's bottom, paying the home-indicator inset itself.
   assert.match(b, /bottom:\s*0/);
-  assert.match(b, /padding:[^;]*env\(safe-area-inset-bottom, 0px\)/, 'the home indicator is cleared on the web');
-  // In the app: above the tab bar, keyed on the stamp AppTabBar sets only when
-  // it renders (apptab.css, and so --sv-appbar-h, loads on every page).
-  const appRule = [...CSS.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-    .find((m) => m[1].trim() === ':where(:root[data-theme="arcade"][data-appbar="1"]) .wkv-bar')?.[2] ?? '';
-  assert.match(appRule, /bottom:\s*calc\(var\(--sv-appbar-h\) \+ 1px\)/);
-  assert.match(appRule, /padding-bottom:\s*8px/, 'and the inset is not paid twice');
+  assert.match(b, /padding:[^;]*var\(--sv-roombar-inset\)/, 'the home indicator is cleared on the web');
+  // In the app: above the tab bar, by the SHARED room-bar rule (mon-11), keyed
+  // on the stamp AppTabBar sets only when it renders (apptab.css, and so
+  // --sv-appbar-h, loads on every page). No private offset, no "+ 1px".
+  const app = read('components/shell/apptab.css');
+  const shared = app.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.match(shared, /html\[data-appbar\]:not\(\[data-clock\]\) :is\([^)]*\.wkv-bar[^)]*\)\s*\{\s*bottom:\s*calc\(var\(--sv-appbar-h\)/);
+  assert.match(shared, /html\[data-appbar\]:not\(\[data-clock\]\) \{\s*--sv-roombar-inset:\s*0px;/, 'and the inset is not paid twice');
+  assert.doesNotMatch(CSS.replace(/\/\*[\s\S]*?\*\//g, ''), /--sv-appbar-h/, 'no private offset left in weekly.css');
   assert.match(read('components/shell/AppTabBar.js'), /setAttribute\('data-appbar', '1'\)/);
-  assert.match(read('components/shell/apptab.css'), /--sv-appbar-h:\s*calc\(62px \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(app, /--sv-appbar-h:\s*calc\(63px \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(b, /min-height:\s*var\(--wkv-bar-h\)/);
   assert.match(arcade('.wkv-bar .wkv-lock'), /min-height:\s*44px/, 'a 44 px target');
   assert.match(arcade('.wkv-bar .wkv-lock'), /text-transform:\s*uppercase/, 'LOCK IT IN');

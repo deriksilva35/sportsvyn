@@ -137,9 +137,11 @@
 }
 .lv-stepper-n { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 2ch; text-align: center; }
 
+/* In the app it sits on the tab bar (the shared room-bar rule,
+   components/shell/apptab.css), which has paid the inset already. */
 .lv-bar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
-  padding: 12px 16px calc(20px + env(safe-area-inset-bottom)); background: var(--tok-page);
+  padding: 12px 16px calc(20px + var(--sv-roombar-inset)); background: var(--tok-page);
   border-top: 1px solid var(--tok-line);
 }
 .lv-bar-in { max-width: 528px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }

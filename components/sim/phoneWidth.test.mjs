@@ -229,8 +229,10 @@ test('THE ROOM\'S VIEW SWITCHER STACKS ABOVE THE APP BAR, not under it', () => {
   // at 60, so the switcher was BURIED - which on a device reads as the room
   // losing its tabs. The offset applies only when the bar is actually present.
   const css = readFileSync(path.join(REPO, 'components/shell/apptab.css'), 'utf8');
-  assert.match(css, /html\[data-appbar\] \.trk-tabs \{ bottom: var\(--sv-appbar-h\)/,
+  // The SHARED room-bar rule (mon-11) - one offset for every room's bottom bar.
+  assert.match(css, /html\[data-appbar\]:not\(\[data-clock\]\) :is\([^)]*\.trk-tabs[^)]*\)\s*\{\s*bottom:\s*calc\(var\(--sv-appbar-h\)/,
     'the room bar must sit above the app bar');
+  assert.match(css, /html\[data-appbar\] \.trk-tabs \{ z-index: 55; \}/, 'and above the room it stacks on');
   assert.match(css, /--sv-appbar-h/, 'the app bar must publish its own height');
   const bar = readFileSync(path.join(REPO, 'components/shell/AppTabBar.js'), 'utf8');
   assert.match(bar, /setAttribute\('data-appbar'/, 'declared by the bar, not assumed by the room');

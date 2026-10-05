@@ -1409,16 +1409,14 @@
      below the last row rather than over it. It pays the home-indicator inset
      itself - unless the app's tab bar is showing under it, which is only in an
      UNTIMED room (a timed one raises data-clock and the bar hides): there it
-     sits on top of that bar, whose height apptab.css publishes. data-appbar is
-     stamped by AppTabBar in the app only, so the web never takes the offset. */
+     sits on top of that bar. Both halves are the shared room-bar rule in
+     components/shell/apptab.css (mon-11): it lifts the bar by --sv-appbar-h and
+     zeroes --sv-roombar-inset, keyed on the data-appbar stamp AppTabBar sets in
+     the app only, so the web never takes the offset. */
   :where(:root[data-theme="arcade"]) .dv-ft {
     order: 4;
     position: sticky; bottom: 0; z-index: 9;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(10px + var(--sv-roombar-inset));
     background: var(--tok-page);
-  }
-  :where(:root[data-theme="arcade"][data-appbar]:not([data-clock])) .dv-ft {
-    bottom: var(--sv-appbar-h);
-    padding-bottom: 10px;
   }
 }

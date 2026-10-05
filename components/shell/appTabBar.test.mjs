@@ -77,7 +77,7 @@ test('THE BAR RENDERS FIVE TABS, in order, each a real link', () => {
   assert.equal(list.length, 5, 'five tabs reach the DOM, not four and not an array of five');
   assert.deepEqual(list.map((a) => a.getAttribute('data-key')),
     ['games', 'scores', 'market', 'rankings', 'you']);
-  assert.deepEqual(list.map((a) => txt(a.querySelector('.lb'))),
+  assert.deepEqual(list.map((a) => txt(a.querySelector('.apptab-lb'))),
     ['Play', 'Scores', 'Market', 'Rankings', 'You']);
   // Every one is a link with an internal href - the bar is the only way out.
   for (const a of list) {
@@ -93,7 +93,7 @@ test('THE MARKET TAB SITS THIRD and opens the props view', () => {
   const market = tabs(c)[2];
   assert.equal(market.getAttribute('data-key'), 'market');
   assert.equal(market.getAttribute('href'), '/market?tab=props');
-  assert.equal(txt(market.querySelector('.ic')), '📈');
+  assert.equal(txt(market.querySelector('.apptab-ic')), '📈');
 });
 
 test('A LEAGUE MARKET PAGE LIGHTS MARKET, not Scores', () => {
