@@ -16,7 +16,16 @@ const src = (rel) => readFileSync(path.join(REPO, rel), 'utf8');
 const L = stubPath('__l_yu.mjs');
 const N = stubPath('__n_yu.mjs');
 const C = stubPath('__c_yu.mjs');
+// THE CONTROLS /account HELD (sun-16 D) are client components whose imports
+// reach server actions and next-auth; each has its own tests. Here they are
+// stubs that render a marker - NotificationsRow renders its `fallback`, which
+// is exactly what it does on the web, where the push plugin is absent.
+const W = stubPath('__w_yu.mjs');
+const STUBBED = { '@/components/push/NotificationsRow': 'NotificationsRow',
+  '@/components/sim/SignOutButton': 'SignOutButton', '@/components/sim/DeleteAccount': 'DeleteAccount',
+  '@/components/account/FollowedTeams': 'FollowedTeams' };
 registerHooks({ resolve(spec, ctx, next) {
+  if (STUBBED[spec]) return { url: `${pathToFileURL(W).href}?c=${STUBBED[spec]}`, shortCircuit: true };
   if (spec === 'next/link') return { url: pathToFileURL(L).href, shortCircuit: true };
   if (spec === 'next/navigation') return { url: pathToFileURL(N).href, shortCircuit: true };
   if (spec.endsWith('.css')) return { url: pathToFileURL(C).href, shortCircuit: true };
@@ -28,11 +37,22 @@ before(async () => {
   writeFileSync(L, "import React from 'react'; export default function Link({ href, children, ...rest }) { return React.createElement('a', { ...rest, href: String(href) }, children); }\n");
   writeFileSync(N, "export function usePathname(){ return '/you'; }\n");
   writeFileSync(C, 'export default {};\n');
+  writeFileSync(W, [
+    "import React from 'react';",
+    "const which = new URL(import.meta.url).searchParams.get('c');",
+    "export default function Stub(props) {",
+    "  if (which === 'NotificationsRow') return props.fallback ?? null;",
+    "  if (which === 'FollowedTeams') return React.createElement('div', { 'data-stub': which,",
+    "    'data-teams': (props.initialTeams ?? []).map((t) => t.id).join(','), 'data-all': String((props.allTeams ?? []).length),",
+    "    'data-cap': String(props.cap), 'data-heading': String(props.heading) });",
+    "  return React.createElement('button', { 'data-stub': which, 'data-shell': String(!!props.shell) }, which);",
+    "}",
+  ].join('\n'));
   React = await import('react');
   ({ renderToStaticMarkup: render } = await import('react-dom/server'));
   You = (await import('./You.js')).default;
 });
-after(() => { for (const f of [L, N, C]) { try { unlinkSync(f); } catch { /* gone */ } } });
+after(() => { for (const f of [L, N, C, W]) { try { unlinkSync(f); } catch { /* gone */ } } });
 
 const dots = (spec) => spec.split('').map((c, i) => ({
   day: `2026-09-${String(i + 1).padStart(2, '0')}`,
@@ -124,14 +144,19 @@ test('SEASON: the row renders ranked or not, and unranked states the distance (R
   assert.equal(sections(html(base({ season: [] }))).includes('season'), false, 'no games, no module');
 });
 
-test('TEAMS: the cap is on the control, so a sixth follow is never a surprise (R4)', () => {
-  const h = html(base());
-  assert.match(h, /Follow a team · 2 of 5 NFL, 1 of 5 CFB/);
-  assert.match(h, /data-team-id="1"/);
-  assert.match(h, /<span class="yu-lg">CFB<\/span>/);
-  const none = html(base({ follows: { teams: [], cap: 5, counts: [], capLine: null } }));
-  assert.match(none, /No teams yet/);
-  assert.match(none, />Follow a team<\/a>/, 'and the control still offers the first one');
+test('TEAMS: /account\'s FollowedTeams, under the tab\'s own head, with the cap (R4)', () => {
+  // sun-16 D, DELIBERATELY: the read-only list became /account's control (the
+  // only place a follow could be undone), and the cap rides into it as a prop -
+  // the add button counts "2 of 5 NFL" from the live list (FollowedTeams.js).
+  const h = html(base({ allTeams: [{ id: 1 }, { id: 2 }] }));
+  const t = h.slice(h.indexOf('data-section="teams"'));
+  assert.match(t, /data-stub="FollowedTeams" data-teams="1" data-all="2" data-cap="5" data-heading="false"/);
+  assert.match(h, /<h3>Teams you follow<\/h3>/, 'one head, the tab\'s');
+  const ft = src('components/account/FollowedTeams.js');
+  assert.match(ft, /`Follow a team\$\{capLine \? ` · \$\{capLine\}` : ''\}`/);
+  assert.match(ft, /`\$\{n\} of \$\{cap\} \$\{label\}`/);
+  assert.match(ft, /\[teams, cap\]/, 'counted from the live list, not a server snapshot');
+  assert.match(ft, /No teams yet/);
 });
 
 test('ALERTS: read and link only - every row points somewhere and none writes (R3)', () => {
@@ -140,7 +165,9 @@ test('ALERTS: read and link only - every row points somewhere and none writes (R
   // 'redzone' JOINED (NFL RED ZONE), between the game rows and the email row:
   // it is an alert, so it belongs in this card, and it is the broadest one, so
   // it sits after the narrower two.
-  assert.deepEqual(rows, ['push', 'games', 'redzone', 'email', 'tz', 'handle', 'signout']);
+  // sun-16 D: Settings gained what /account had - signed in as, the draft
+  // settings door, and the two real controls, sign out and delete.
+  assert.deepEqual(rows, ['push', 'games', 'redzone', 'email', 'account', 'tz', 'handle', 'draftsettings', 'signout', 'delete']);
   assert.match(h, /Push notifications<small>ios<\/small><\/span><span class="yu-v on">On/);
   assert.match(h, /4 games subscribed<\/small><\/span><span class="yu-v">kickoff, score, final/);
   assert.match(h, /Email<small>d\*\*\*@gmail\.com<\/small><\/span><span class="yu-v on">On/);
@@ -154,8 +181,14 @@ test('ALERTS: read and link only - every row points somewhere and none writes (R
   // ever appears here, this assertion is what it has to argue with.
   const c = src('components/you/You.js');
   assert.equal(/<button|onClick|'use client'/.test(c), false, 'You.js itself still writes nothing');
-  const writers = [...c.matchAll(/<([A-Z]\w+)Row\b/g)].map((m) => `${m[1]}Row`);
-  assert.deepEqual(writers, ['RedZoneRow'], 'exactly one control on this tab');
+  // sun-16 D, DELIBERATELY: /account became a redirect to this tab, and the
+  // controls it held came with it - follow/unfollow, the push switch, sign
+  // out, account deletion. There is no other surface they could point at (that is the
+  // argument the R3 paragraph in You.js asked for), and each is /account's own
+  // component, never a second copy.
+  const writers = [...c.matchAll(/<([A-Z]\w+)(Row|Button|Account|Teams)\b/g)].map((m) => `${m[1]}${m[2]}`);
+  assert.deepEqual(writers, ['FollowedTeams', 'NotificationsRow', 'RedZoneRow', 'SignOutButton', 'DeleteAccount'],
+    'the red-zone switch plus the four /account controls, and nothing else');
   // And it states its cost before a reader turns it on.
   assert.match(src('components/you/RedZoneRow.js'), /about 130 a Sunday/);
 });
@@ -172,9 +205,21 @@ test('MEMBERSHIP: a pass runs THROUGH, a subscription RENEWS, and neither shows 
   assert.match(html(base({ membership: { member: true, kind: 'subscription', verb: 'Renews', date: 'Jun 12, 2027' } })), /Renews Jun 12, 2027/);
   const h = html(base());
   assert.equal(/\$/.test(h), false, 'no price anywhere on the tab');
-  // A member with no date still gets the badge; a non-member gets no module.
+  // A member with no date still gets the badge.
   assert.match(html(base({ membership: { member: true, kind: null, verb: 'Renews', date: null } })), /data-section="membership"/);
-  assert.equal(sections(html(base({ membership: { member: false } }))).includes('membership'), false);
+  // sun-16 D, DELIBERATELY: a free account gets the module too - /account
+  // named the state for everybody, and it is a redirect to here now.
+  const free = html(base({ membership: { member: false } }));
+  assert.match(free, /<div class="yu-mt">Free<\/div>/);
+  assert.match(free, /href="\/membership">See membership</);
+  // 3.1.1: no pricing link inside the container, for a member or not.
+  for (const m of [{ member: false }, { member: true, verb: 'Renews', date: 'Jun 12, 2027' }]) {
+    assert.equal(/href="\/membership"/.test(html(base({ membership: m }), { isShell: true })), false);
+  }
+  assert.match(html(base(), { isShell: true }), /managed on sportsvyn\.com/);
+  // The plan and where it is billed, /account's rows.
+  assert.match(html(base({ membership: { member: true, verb: 'Renews', date: 'Jun 12, 2027', tier: 'founding', source: 'Stripe' } })),
+    /<div class="yu-ms">founding · billed through Stripe<\/div>/);
 });
 
 test('NO CLASS COLLIDES WITH gridiron.css', () => {
@@ -199,4 +244,63 @@ test('no em dash in the tab or its reader', () => {
   for (const f of ['components/you/You.js', 'components/you/you.css', 'lib/you/reads.js', 'app/you/page.js']) {
     assert.equal(/—/.test(src(f)), false, `${f} carries an em dash`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// sun-16 D: /my AND /account REDIRECT HERE, so what only they had lives here.
+// ---------------------------------------------------------------------------
+
+test('NO LINK ON THIS TAB POINTS AT /account OR /my - they are redirects now', () => {
+  for (const shell of [false, true]) {
+    const h = html(base({ drafts: { open: [], tracker: [], done: [] }, players: [] }), { isShell: shell });
+    assert.equal(/href="\/(account|my)(["?/#])/.test(h), false, `a link into a redirect (shell=${shell})`);
+  }
+  assert.equal(/href="\/(account|my)["?/]/.test(html({ signedIn: false })), false);
+  // And the foot's explainer link is the real route, not the old 404.
+  assert.match(html(base()), /href="\/games\/how-it-works">How the games work/);
+  assert.equal(/href="\/how-it-works"/.test(src('components/you/You.js')), false);
+});
+
+test('SIGN OUT AND DELETE ACCOUNT ARE ON THE TAB, signed in, carrying shell mode (5.1.1(v))', () => {
+  const h = html(base(), { isShell: true });
+  const settings = h.slice(h.indexOf('data-section="settings"'));
+  assert.match(settings, /data-row="signout"><button data-stub="SignOutButton" data-shell="true"/);
+  assert.match(settings, /data-row="delete"><button data-stub="DeleteAccount" data-shell="true"/);
+  assert.match(settings, /data-row="draftsettings" href="\/sim\/account"/, 'draft settings keep their door');
+  assert.match(settings, /Signed in as<\/span><span class="yu-v">d\*\*\*@gmail\.com/);
+  // Signed out there is nothing to sign out of or delete.
+  const out = html({ signedIn: false });
+  assert.equal(/SignOutButton|DeleteAccount/.test(out), false);
+  // The same components /account mounted, imported here - not copies.
+  const c = src('components/you/You.js');
+  assert.match(c, /import SignOutButton from '@\/components\/sim\/SignOutButton'/);
+  assert.match(c, /import DeleteAccount from '@\/components\/sim\/DeleteAccount'/);
+  assert.match(c, /import NotificationsRow from '@\/components\/push\/NotificationsRow'/);
+});
+
+test('YOUR DRAFTS: the three buckets, every row, and no module when there are none', () => {
+  const row = (id, extra = {}) => ({ id, label: '12-team PPR', seat: 4, picks: 15, grade: null, startedAt: '2026-09-20T18:00:00Z', completedAt: null, status: 'in_progress', mode: 'sim', href: `/sim/draft/${id}`, ...extra });
+  const h = html(base({ drafts: { open: [row(7)], tracker: [row(8, { mode: 'tracker' })], done: [row(9, { status: 'completed', grade: 'B+', completedAt: '2026-09-21T18:00:00Z' })] } }));
+  const d = h.slice(h.indexOf('data-section="drafts"'));
+  assert.deepEqual([...d.matchAll(/data-group="(\w+)"/g)].map((m) => m[1]), ['open', 'tracker', 'done']);
+  for (const id of [7, 8, 9]) assert.match(d, new RegExp(`data-draft="${id}" href="/sim/draft/${id}"`));
+  assert.match(d, /<b class="yu-n">B\+<\/b>/);
+  assert.equal(sections(html(base({ drafts: { open: [], tracker: [], done: [] } }))).includes('drafts'), false);
+});
+
+test('PLAYERS YOU FOLLOW: from /my, linked to each player, absent when none', () => {
+  const h = html(base({ players: [{ id: 3, slug: 'bijan-robinson', name: 'Bijan Robinson', position: 'RB', team: 'ATL', league: 'NFL' }] }));
+  assert.match(h, /data-player-id="3" href="\/player\/bijan-robinson"/);
+  assert.match(h, /<span class="yu-lg">RB · ATL · NFL<\/span>/);
+  assert.equal(sections(html(base({ players: [] }))).includes('players'), false);
+});
+
+test('THE PUSH ROW: the switch where the plugin is, the stated state everywhere else', () => {
+  // The stub renders NotificationsRow's `fallback`, which is the web: the row
+  // still states On/Off with no link into a redirect.
+  const h = html(base());
+  assert.match(h, /<div class="yu-set" data-row="push"><span class="yu-k">Push notifications<small>ios<\/small><\/span><span class="yu-v on">On<\/span><\/div>/);
+  const nr = src('components/push/NotificationsRow.js');
+  assert.match(nr, /if \(!canOfferPush\(\)\) return fallback;/);
+  assert.match(nr, /variant === 'you'/);
 });

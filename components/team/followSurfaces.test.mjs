@@ -140,10 +140,12 @@ test('THE ACCOUNT LIST USES THE SAME TWO WRITERS, and reverts on failure', () =>
   // Nothing until narrowed - every team at once is a directory, not a control.
   assert.match(c, /if \(!needle && league === 'all'\) return \[\];/);
   assert.match(c, /\.slice\(0, 40\)/);
-  const page = strip(src('app/account/page.js'));
-  assert.match(page, /<FollowedTeams initialTeams=\{followedTeams\} allTeams=\{allTeams\} \/>/);
-  assert.match(page, /getFollowedTeams\(userId\)\.catch\(\(\) => \[\]\)/, 'caught - this page holds sign-out');
-  assert.match(page, /followableTeams\(\)\.catch\(\(\) => \[\]\)/);
+  // On the You tab since sun-16 D (/account is a 308 there).
+  const you = strip(src('components/you/You.js'));
+  assert.match(you, /<FollowedTeams initialTeams=\{follows\.teams\} allTeams=\{allTeams\} cap=\{follows\.cap\} heading=\{false\} \/>/);
+  const reads = strip(src('lib/you/reads.js'));
+  assert.match(reads, /empty\(\[\]\)\(getFollowedTeams\(userId\)\)/, 'caught - this page holds sign-out');
+  assert.match(reads, /empty\(\[\]\)\(followableTeams\(\)\)/);
 });
 
 test('a follow is a stake, stated once', () => {

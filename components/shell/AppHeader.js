@@ -84,7 +84,7 @@ export default function AppHeader() {
           the fourth tab for SPORTSVYN. Right edge; the @handle drops below
           430px (apptab.css) and the avatar stays. */}
       {me?.signedIn && (
-        <Link href="/account" className="gh-app-me" aria-label="Your account">
+        <Link href="/you" className="gh-app-me" aria-label="Your account">
           <span className="in" aria-hidden="true">{handle ? handle[0] : '@'}</span>
           {handle && <span className="hn">@{handle}</span>}
         </Link>

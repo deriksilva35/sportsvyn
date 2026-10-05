@@ -1,175 +1,33 @@
-/**
- * /account — who you are signed in as, what you hold, and how to stop.
- *
- * WHY THIS EXISTS. The only real account page was /sim/account, reachable only
- * from inside the sim: a reader who arrived through the Daily or a box score
- * and wanted to sign out had to find their way into a fantasy product first.
- * The header's account menu offered "My Sportsvyn" (a dashboard) and
- * "Membership" (a price list), neither of which answers "who am I and how do I
- * leave".
- *
- * IT DOES NOT REBUILD MEMBERSHIP LOGIC. getMembership and isMember are the same
- * reads /sim/account makes, and SignOutButton is the same component - which
- * matters beyond reuse, because that button also logs out of RevenueCat.
- * Anything that ships a second sign-out path will eventually ship one that
- * forgets to.
- *
- * BILLING AND DELETION STAY WHERE THEY ARE. This page names the state and links
- * onward; it is deliberately not a second billing surface, because two places
- * that can cancel a subscription is one place too many.
- *
- * Ink, v1.2 module grammar. Ownership-scoped, noindex.
- */
+// app/account/page.js - /account is /you (sun-16 D).
+//
+// The proxy answers /account and /account/* with a 308 before this file is
+// reached (lib/you/legacyRedirect.js). This is the second line, in case the
+// matcher is ever narrowed: the same destination, the query kept.
+//
+// WHAT /account HAD, AND WHERE IT WENT (the audit, sun-16 D) - all on /you:
+//   signed in as (email)              -> Settings, "Signed in as"
+//   push notifications toggle (shell) -> Alerts, the same NotificationsRow
+//   membership: status, plan, billed
+//     through, renews, manage / what
+//     is free (web only, 3.1.1)       -> Membership, for members AND free
+//   your drafts                       -> "Your drafts", the same YourDrafts
+//   teams you follow                  -> "Teams you follow" (each team's page
+//                                        star undoes it; Follow a team adds)
+//   draft settings, account deletion  -> Settings: Delete account inline (the
+//                                        same DeleteAccount, 5.1.1(v)) and a
+//                                        Draft settings row to /sim/account
+//   privacy, terms                    -> the foot
+//   sign out                          -> Settings, the same SignOutButton (it
+//                                        also logs out of RevenueCat)
 
-import { redirect } from 'next/navigation';
-import { auth } from '@/auth';
-import GlobalHeaderServer from '@/components/GlobalHeaderServer';
-import SiteFooter from '@/components/SiteFooter';
-import YourDrafts from '@/components/sim/YourDrafts';
-import FollowedTeams from '@/components/account/FollowedTeams';
-import { getFollowedTeams, followableTeams } from '@/lib/follows';
-import { getDraftHistory } from '@/lib/fantasy/drafts';
-import { splitDrafts } from '@/lib/fantasy/yourDrafts';
-import SignOutButton from '@/components/sim/SignOutButton';
-import NotificationsRow from '@/components/push/NotificationsRow';
-import { sql } from '@/lib/db';
-import { resolveShellMode, simViewport } from '@/lib/shell/shell';
-import { getMembership } from '@/lib/membership';
-import { isMember } from '@/lib/fantasy/drafts';
-import './account.css';
-import Link from 'next/link';
+import { permanentRedirect } from 'next/navigation';
+import { youRedirectFromParams } from '@/lib/you/legacyRedirect';
 
 export const dynamic = 'force-dynamic';
-export const metadata = {
-  title: 'Account - Sportsvyn',
-  robots: { index: false, follow: false },
-};
-
-export async function generateViewport() {
-  return simViewport(await resolveShellMode());
-}
+// Private, like every route under the prefix (lib/seo/routes.js) - a fallback
+// that ever rendered must not be the one indexable copy.
+export const metadata = { robots: { index: false, follow: false } };
 
 export default async function AccountPage({ searchParams }) {
-  const session = await auth();
-  const userId = session?.user?.id ?? null;
-  if (userId == null) redirect('/signin?callbackUrl=/account');
-
-  const isShell = await resolveShellMode();
-  // Neither read may cost the page: a membership lookup that fails reads as
-  // "not a member", which is the safe direction for a status line.
-  const [member, membership, me, draftRows, followedTeams, allTeams] = await Promise.all([
-    isMember(userId).catch(() => false),
-    getMembership(userId).catch(() => null),
-    sql`SELECT push_choice FROM users WHERE id = ${Number(userId)}`.then((r) => r[0] ?? null).catch(() => null),
-    // Caught to an empty list: a history read must never be able to cost
-    // somebody their account page, which is also where sign-out lives.
-    getDraftHistory(userId).catch(() => []),
-    // Same rule for the follow reads: a list that fails renders the empty
-    // state, and the adder simply has nothing to offer. Neither may cost the
-    // page that holds sign-out.
-    getFollowedTeams(userId).catch(() => []),
-    followableTeams().catch(() => []),
-  ]);
-  const yourDrafts = splitDrafts(draftRows);
-
-  const email = session.user?.email ?? '';
-  const renews = member && membership?.current_period_end
-    ? new Date(membership.current_period_end).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric',
-    })
-    : null;
-  const source = membership?.source === 'apple' ? 'Apple' : membership?.source === 'stripe' ? 'Stripe' : null;
-
-  return (
-    <>
-      <GlobalHeaderServer activeNav={null} />
-      <main className="acct" data-surface="ink">
-
-        <section className="acct-mod">
-          <h1 className="acct-eyebrow">Signed in as</h1>
-          <div className="acct-email">{email || 'your account'}</div>
-        </section>
-
-        {/* THE PUSH DOOR FOR EVERY PRE-v1.2 ACCOUNT. The onboarding sheet only
-            fires on a null handle, so the ~60 existing users will never see
-            step 4 - this section is their only road to notifications, which is
-            why it sits second on the PROFILE tab rather than inside
-            /sim/account (found undiscoverable on Derik's device pass).
-            Renders nothing without the push plugin: web and v1.1 see no
-            section at all. */}
-        <NotificationsRow variant="account" choice={me?.push_choice ?? null} />
-
-        <section className="acct-mod">
-          <h2 className="acct-eyebrow">Membership</h2>
-          <div className="acct-rows">
-            <div className="acct-row">
-              <span>Status</span>
-              <span className={`acct-r${member ? ' acct-r--on' : ''}`}>
-                {member ? 'Active' : 'Free'}
-              </span>
-            </div>
-            {membership?.tier && (
-              <div className="acct-row"><span>Plan</span><span className="acct-r">{membership.tier}</span></div>
-            )}
-            {source && (
-              <div className="acct-row"><span>Billed through</span><span className="acct-r">{source}</span></div>
-            )}
-            {renews && (
-              <div className="acct-row"><span>Renews</span><span className="acct-r">{renews}</span></div>
-            )}
-          </div>
-          {/* 3.1.1: no pricing entry inside the native container. */}
-          {!isShell && (
-            <a className="acct-ghost" href="/membership">
-              {member ? 'Manage membership' : 'What is free this season'} &rarr;
-            </a>
-          )}
-        </section>
-
-        {/* YOUR DRAFTS. The brief's rule is that nothing should be reachable
-            only by remembering a URL, and before this an unfinished mock was
-            exactly that once its resume card scrolled off Practice. Renders
-            nothing at all for a reader with no drafts - a heading over an empty
-            list reads as a feature that failed to load. */}
-        <YourDrafts split={yourDrafts} />
-
-        {/* TEAMS YOU FOLLOW. The account page is where a standing choice gets
-            reviewed and undone; the star on a team page can only make one.
-            Both call the same two server actions. */}
-        <FollowedTeams initialTeams={followedTeams} allTeams={allTeams} />
-
-        <section className="acct-mod">
-          <h2 className="acct-eyebrow">Elsewhere</h2>
-          <div className="acct-rows">
-            <a className="acct-row acct-row--link" href="/my"><span>My Sportsvyn</span><span className="acct-r">&rarr;</span></a>
-            <Link className="acct-row acct-row--link" href="/daily/board"><span>The Daily</span><span className="acct-r">&rarr;</span></Link>
-            <a className="acct-row acct-row--link" href="/sim/account"><span>Draft settings and account deletion</span><span className="acct-r">&rarr;</span></a>
-          </div>
-        </section>
-
-        {/* LEGAL, REACHABLE IN-APP. The site footer carries Privacy and Terms
-            on the web and the footer is not rendered in the container - so
-            without this the two documents would be reachable only by typing a
-            URL the app has no bar to type it in. The App Store expects both
-            in-app, and two quiet links in the account section is the native
-            pattern for it. Rendered on the web too: a second path to the legal
-            pages costs nothing and the account page is where people look. */}
-        <section className="acct-mod">
-          <h2 className="acct-eyebrow">Legal</h2>
-          <div className="acct-rows">
-            <a className="acct-row acct-row--link" href="/privacy"><span>Privacy</span><span className="acct-r">&rarr;</span></a>
-            <a className="acct-row acct-row--link" href="/terms"><span>Terms</span><span className="acct-r">&rarr;</span></a>
-          </div>
-        </section>
-
-        <section className="acct-mod">
-          {/* The same component the sim uses, so there is exactly one sign-out
-              path and it is the one that also logs out of RevenueCat. */}
-          <SignOutButton shell={isShell} />
-        </section>
-
-      </main>
-      <SiteFooter />
-    </>
-  );
+  permanentRedirect(youRedirectFromParams('/account', (await searchParams) ?? {}));
 }

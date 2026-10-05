@@ -261,7 +261,7 @@ export default function TodayV2({ v, isShell = false }) {
           <DailyCard daily={v.daily} signedIn signinHref={signinHref} />
           {v.teams.length > 0 && (
             <>
-              <SectionHead title="Your teams" href="/account" label="Edit &rarr;" />
+              <SectionHead title="Your teams" href="/you" label="Edit &rarr;" />
               <div className="tv-card" data-section="teams">
                 {v.teams.map((t) => <TeamRow key={t.followTeamId} t={t} />)}
               </div>

@@ -6,7 +6,7 @@
 //
 // ALERTS ARE READ AND LINK ONLY (R3), WITH EXACTLY ONE EXCEPTION. Every row
 // states what is true and points at the surface that changes it, and the
-// AlertBell sheet and /account's rows are still untouched.
+// AlertBell sheet is still untouched.
 //
 // THE EXCEPTION IS THE RED-ZONE SWITCH, and it is not a crack in the rule so
 // much as the case the rule did not cover. R3 works because every alert has a
@@ -15,6 +15,19 @@
 // is no screen it could point at - so a read-only row would point at nothing
 // and the preference would be unreachable. It writes. Nothing else here does,
 // and the next row that wants to should have to argue with this paragraph.
+//
+// /account AND /my ARE NOW REDIRECTS HERE (sun-16 D), and what only they had
+// moved in rather than being lost: unfollow and the team search, the push
+// switch (shell), sign out, account deletion (App Store 5.1.1(v)) and a door
+// to the draft settings; the plan and billing lines and the membership link
+// for members and free accounts alike; your drafts; the players you follow.
+// FOUR WRITERS CAME WITH THEM, and they are the argument the R3 paragraph
+// above asked for: /account was the place a reader undid a follow, turned
+// push off, signed out and deleted the account, and with it gone there is no
+// other surface those controls can point at. Each is the SAME component
+// /account mounted (FollowedTeams, NotificationsRow, SignOutButton, DeleteAccount),
+// never a second copy - one sign-out path, the one that also logs out of
+// RevenueCat. You.js itself still has no handler of its own.
 //
 // THREE ROWS THE MOCK DRAWS ARE NOT HERE, each for a stated reason:
 //   BOARD REMINDERS - there is no preference in the schema to read. No
@@ -30,8 +43,11 @@
 
 import Link from 'next/link';
 import RedZoneRow from '@/components/you/RedZoneRow';
-import TeamMark from '@/components/team/TeamMark';
-import { leagueWord } from '@/lib/you/reads';
+import NotificationsRow from '@/components/push/NotificationsRow';
+import FollowedTeams from '@/components/account/FollowedTeams';
+import SignOutButton from '@/components/sim/SignOutButton';
+import DeleteAccount from '@/components/sim/DeleteAccount';
+import { draftDate, draftAction } from '@/lib/fantasy/yourDrafts';
 import './you.css';
 
 function SectionHead({ title, href, label }) {
@@ -55,7 +71,7 @@ function Identity({ me }) {
         <h1>{me.display}</h1>
         {sub ? <div className="yu-sub">{sub}</div> : null}
       </div>
-      <Link className="yu-edit" href="/account">Edit</Link>
+      <a className="yu-edit" href="#settings">Settings</a>
     </div>
   );
 }
@@ -115,45 +131,37 @@ function Season({ season }) {
   );
 }
 
-function Follows({ follows }) {
+// TEAMS YOU FOLLOW IS /account's CONTROL (sun-16 D): the list, Remove on each
+// row, and the searchable Follow a team - the one place a follow could be
+// undone (a team page's star only makes one), so it moved here with the rest
+// of /account. The cap still sits on the add control (R4), counted live.
+function Follows({ follows, allTeams = [] }) {
   return (
     <>
-      <SectionHead title="Teams you follow" href="/rankings/teams?league=nfl" label="Add →" />
-      {follows.teams.length > 0 ? (
-        <div className="yu-card" data-section="teams">
-          {follows.teams.map((t) => (
-            <div className="yu-tm" key={t.id} data-team-id={t.id}>
-              <TeamMark primary={t.colors?.primary} secondary={t.colors?.secondary} abbr={t.abbreviation}
-                size={22} title={t.fullName ?? t.name} className="yu-mk" leagueSlug={t.leagueSlug} />
-              <Link className="yu-tname" href={`/team/${t.slug}`}>{t.name}</Link>
-              <span className="yu-lg">{leagueWord(t.leagueSlug, t.leagueName)}</span>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="yu-card" data-section="teams">
-          <p className="yu-empty">No teams yet. Following one marks its games as yours across the site.</p>
-        </div>
-      )}
-      {/* R4: the cap is on the control, so a sixth follow is never a surprise. */}
-      <Link className="yu-add" href={`/rankings/teams?league=${follows.teams[0]?.leagueSlug ?? 'nfl'}`}>
-        Follow a team{follows.capLine ? ` · ${follows.capLine}` : ''}
-      </Link>
+      <SectionHead title="Teams you follow" />
+      <div className="yu-card yu-ft" data-section="teams">
+        <FollowedTeams initialTeams={follows.teams} allTeams={allTeams} cap={follows.cap} heading={false} />
+      </div>
     </>
   );
 }
 
 function Alerts({ alerts }) {
   if (!alerts) return null;
+  // THE PUSH ROW IS THE SWITCH WHERE THERE IS ONE. Inside the app (the push
+  // plugin present) it is NotificationsRow, the control /account carried;
+  // everywhere else the plugin is absent and the row states what is true.
+  const pushState = (
+    <div className="yu-set" data-row="push">
+      <span className="yu-k">Push notifications<small>{alerts.push.where}</small></span>
+      <span className={`yu-v${alerts.push.on ? ' on' : ''}`}>{alerts.push.on ? 'On' : 'Off'}</span>
+    </div>
+  );
   return (
     <>
-      <SectionHead title="Alerts" href="/account" label="All →" />
+      <SectionHead title="Alerts" />
       <div className="yu-card" data-section="alerts">
-        <Link className="yu-set" href="/account" data-row="push">
-          <span className="yu-k">Push notifications<small>{alerts.push.where}</small></span>
-          <span className={`yu-v${alerts.push.on ? ' on' : ''}`}>{alerts.push.on ? 'On' : 'Off'}</span>
-          <span className="yu-chev">›</span>
-        </Link>
+        <NotificationsRow variant="you" choice={alerts.push.choice ?? null} fallback={pushState} />
         {alerts.games.count > 0 ? (
           <Link className="yu-set" href="/scores" data-row="games">
             <span className="yu-k">Game alerts<small>{alerts.games.count} game{alerts.games.count === 1 ? '' : 's'} subscribed</small></span>
@@ -164,47 +172,121 @@ function Alerts({ alerts }) {
         {/* THE ONE WRITER ON THIS TAB. A league-wide standing instruction has
             no other surface to point at - see RedZoneRow's own note. */}
         <RedZoneRow league="nfl" label="NFL red zone" />
-        <Link className="yu-set" href="/account" data-row="email">
+        <div className="yu-set" data-row="email">
           <span className="yu-k">Email<small>{alerts.emailMasked ?? 'your address'}</small></span>
           <span className={`yu-v${alerts.email.optedOut ? '' : ' on'}`}>{alerts.email.optedOut ? 'Unsubscribed' : 'On'}</span>
-          <span className="yu-chev">›</span>
-        </Link>
+        </div>
       </div>
     </>
   );
 }
 
-function Membership({ membership }) {
-  if (!membership?.member) return null;
+// FOR MEMBERS AND FREE ACCOUNTS ALIKE (sun-16 D): /account named the state
+// for everybody, and a free reader asking "what am I on" deserves the answer
+// too. 3.1.1: no pricing link inside the native container - a member there is
+// told where billing lives instead, the line /sim/account already uses.
+function Membership({ membership, isShell = false }) {
+  if (!membership) return null;
+  const m = membership;
+  const plan = [m.tier, m.source ? `billed through ${m.source}` : null].filter(Boolean).join(' · ');
   return (
-    <div className="yu-mem" data-section="membership">
+    <div className={`yu-mem${m.member ? '' : ' yu-mem--free'}`} data-section="membership">
       <div>
-        <div className="yu-mt">Member</div>
-        {membership.date ? <div className="yu-ms">{membership.verb} {membership.date}</div> : null}
+        <div className="yu-mt">{m.member ? 'Member' : 'Free'}</div>
+        {m.member && m.date ? <div className="yu-ms">{m.verb} {m.date}</div> : null}
+        {m.member && plan ? <div className="yu-ms">{plan}</div> : null}
+        {!m.member ? <div className="yu-ms">Everything is free this season.</div> : null}
+        {m.member && isShell ? <div className="yu-ms">Membership is managed on sportsvyn.com from any browser.</div> : null}
       </div>
-      <Link className="yu-mgo" href="/account">Manage</Link>
+      {isShell ? null : <Link className="yu-mgo" href="/membership">{m.member ? 'Manage' : 'See membership'}</Link>}
     </div>
   );
 }
 
-function Settings({ me }) {
+// YOUR DRAFTS, from /account (sun-16 D): the same three buckets, every row,
+// in this tab's row grammar. Nothing at all when there are none - a heading
+// over an empty list reads as a feature that failed to load.
+const DRAFT_GROUPS = [['open', 'Unfinished mocks'], ['tracker', 'Tracked drafts'], ['done', 'Completed mocks']];
+function Drafts({ drafts }) {
+  const groups = DRAFT_GROUPS.map(([k, t]) => [k, t, drafts?.[k] ?? []]).filter(([, , rows]) => rows.length > 0);
+  if (!groups.length) return null;
+  return (
+    <>
+      <SectionHead title="Your drafts" href="/sim" label="Mock draft →" />
+      <div className="yu-card" data-section="drafts">
+        {groups.map(([k, t, rows]) => (
+          <div className="yu-dg" key={k} data-group={k}>
+            <div className="yu-dgh">{t}</div>
+            {rows.map((d) => {
+              const when = draftDate(d.completedAt ?? d.startedAt);
+              const meta = [d.seat != null ? `pick ${d.seat}` : null, `${d.picks} picks`, when].filter(Boolean).join(' · ');
+              return (
+                <Link className="yu-set" key={d.id} href={d.href} data-draft={d.id}>
+                  <span className="yu-k">{d.label}<small>{meta}</small></span>
+                  <span className="yu-v">{d.grade ? <b className="yu-n">{d.grade}</b> : null} {draftAction(d)}</span>
+                  <span className="yu-chev">›</span>
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// PLAYERS YOU FOLLOW, from /my (sun-16 D). Rendered only when there are some:
+// the follow is made on a player's page, which is where it is undone too.
+function Players({ players }) {
+  if (!players?.length) return null;
+  return (
+    <>
+      <SectionHead title="Players you follow" />
+      <div className="yu-card" data-section="players">
+        {players.map((p) => (
+          <Link className="yu-tm" key={p.id} href={`/player/${p.slug}`} data-player-id={p.id}>
+            <span className="yu-tname">{p.name}</span>
+            <span className="yu-lg">{[p.position, p.team, p.league].filter(Boolean).join(' · ')}</span>
+          </Link>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// SIGN OUT AND DELETE ARE THE REAL CONTROLS (sun-16 D). These rows used to
+// link to /account, which held them; /account is a redirect to here now, so
+// they live here - the same SignOutButton (it also logs out of RevenueCat) and
+// the same DeleteAccount (App Store 5.1.1(v): deletion reachable in-app, in
+// the account surface, behind one confirm). Draft settings stay on
+// /sim/account, which keeps its own copy of both.
+function Settings({ me, isShell = false }) {
   return (
     <>
       <SectionHead title="Settings" />
-      <div className="yu-card" data-section="settings">
+      <div className="yu-card" data-section="settings" id="settings">
+        <div className="yu-set" data-row="account">
+          <span className="yu-k">Signed in as</span>
+          <span className="yu-v">{me?.emailMasked ?? 'your account'}</span>
+        </div>
         <div className="yu-set" data-row="tz">
           <span className="yu-k">Time zone<small>from this device</small></span>
           <span className="yu-v">{me?.zone ?? 'not set'}</span>
         </div>
-        <Link className="yu-set" href="/account" data-row="handle">
+        <div className="yu-set" data-row="handle">
           <span className="yu-k">Handle<small>{me?.handleChanged ? 'changed once' : 'not changed'}</small></span>
           <span className="yu-v">{me?.display}</span>
+        </div>
+        <Link className="yu-set" href="/sim/account" data-row="draftsettings">
+          <span className="yu-k">Draft settings<small>the mock draft&apos;s account page</small></span>
           <span className="yu-chev">›</span>
         </Link>
-        <Link className="yu-set" href="/account" data-row="signout">
-          <span className="yu-k">Sign out</span>
-          <span className="yu-chev">›</span>
-        </Link>
+        <div className="yu-set yu-act" data-row="signout">
+          <SignOutButton shell={isShell} />
+        </div>
+        <div className="yu-set yu-act yu-del" data-row="delete">
+          <DeleteAccount shell={isShell} />
+        </div>
       </div>
     </>
   );
@@ -213,7 +295,8 @@ function Settings({ me }) {
 function Foot({ build = null }) {
   return (
     <div className="yu-foot">
-      <Link href="/how-it-works">How the games work</Link>
+      {/* /games/how-it-works: the bare /how-it-works this linked was a 404. */}
+      <Link href="/games/how-it-works">How the games work</Link>
       <Link href="/terms">Terms</Link>
       <Link href="/privacy">Privacy</Link>
       <Link href="/contact">Contact</Link>
@@ -228,7 +311,7 @@ const PROMISES = [
   ['★', 'Your teams', 'Scores and alerts for the ones you pick'],
 ];
 
-export default function You({ v, signinHref = '/signin' }) {
+export default function You({ v, signinHref = '/signin', isShell = false }) {
   if (!v.signedIn) {
     return (
       <div className="yu" data-surface="ink" data-signed-in="0">
@@ -257,10 +340,12 @@ export default function You({ v, signinHref = '/signin' }) {
       <Streak daily={v.daily} />
       <Dots daily={v.daily} />
       <Season season={v.season} />
-      <Follows follows={v.follows} />
+      <Follows follows={v.follows} allTeams={v.allTeams ?? []} />
+      <Players players={v.players} />
+      <Drafts drafts={v.drafts} />
       <Alerts alerts={v.alerts ? { ...v.alerts, emailMasked: v.me?.emailMasked ?? null } : null} />
-      <Membership membership={v.membership} />
-      <Settings me={v.me} />
+      <Membership membership={v.membership} isShell={isShell} />
+      <Settings me={v.me} isShell={isShell} />
       <Foot build={v.build} />
     </div>
   );

@@ -1,8 +1,12 @@
 'use client';
 
 /**
- * FollowedTeams - "Teams you follow" on /account: the list, each row
- * removable, and a searchable add-by-league below it.
+ * FollowedTeams - "Teams you follow": the list, each row removable, and a
+ * searchable add-by-league below it. It lived on /account; since sun-16 D it
+ * is the You tab's teams card (/account is a 308 to /you), which supplies its
+ * own section head (`heading={false}`) and the per-league cap (`cap`), so the
+ * add control states "2 of 5 NFL" before a sixth follow can surprise anyone -
+ * counted from the list as it stands, so an add or a remove updates it.
  *
  * ONE WRITER, THE SAME ONE. Every button here calls followTeam /
  * unfollowTeam from app/actions/follows.js - the same two server actions the
@@ -38,7 +42,7 @@ const leagueLabel = (slug, fallback) => LEAGUE_LABEL[slug] ?? fallback ?? String
 // The searchable haystack for one team, built per row at filter time.
 const hay = (t) => `${t.name} ${t.fullName ?? ''} ${t.abbreviation ?? ''} ${leagueLabel(t.leagueSlug, t.leagueName)}`.toLowerCase();
 
-export default function FollowedTeams({ initialTeams = [], allTeams = [] }) {
+export default function FollowedTeams({ initialTeams = [], allTeams = [], heading = true, cap = null }) {
   const [teams, setTeams] = useState(initialTeams);
   const [adding, setAdding] = useState(false);
   const [q, setQ] = useState('');
@@ -59,6 +63,15 @@ export default function FollowedTeams({ initialTeams = [], allTeams = [] }) {
     if (needle) pool = pool.filter((t) => hay(t).includes(needle));
     return pool.slice(0, 40);
   }, [q, league, allTeams]);
+
+  // R4 (the You tab): the cap is on the control. Leagues in the order the list
+  // shows them, counted from the live list.
+  const capLine = useMemo(() => {
+    if (!cap) return null;
+    const by = new Map();
+    for (const t of teams) by.set(t.leagueSlug, { label: leagueLabel(t.leagueSlug, t.leagueName), n: (by.get(t.leagueSlug)?.n ?? 0) + 1 });
+    return [...by.values()].map(({ label, n }) => `${n} of ${cap} ${label}`).join(', ') || null;
+  }, [teams, cap]);
 
   function remove(team) {
     const before = teams;
@@ -81,7 +94,7 @@ export default function FollowedTeams({ initialTeams = [], allTeams = [] }) {
 
   return (
     <section className="acct-mod ft" data-section="followed-teams">
-      <h2 className="acct-eyebrow">Teams you follow</h2>
+      {heading ? <h2 className="acct-eyebrow">Teams you follow</h2> : null}
 
       {teams.length === 0 ? (
         <p className="ft-empty">No teams yet. Following one marks its games as yours across the site.</p>
@@ -100,7 +113,7 @@ export default function FollowedTeams({ initialTeams = [], allTeams = [] }) {
       )}
 
       <button type="button" className="ft-add" aria-expanded={adding} onClick={() => setAdding((v) => !v)}>
-        {adding ? 'Done adding' : 'Follow a team'}
+        {adding ? 'Done adding' : `Follow a team${capLine ? ` · ${capLine}` : ''}`}
       </button>
 
       {adding && (

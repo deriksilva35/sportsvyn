@@ -180,7 +180,6 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
   // report.
   const EXPECTED = {
     'app/home.css': 8,                      // .readband .gcard .gcard.hot .mod
-    'app/my/my.css': 4,
     'app/player/[slug]/player.css': 4,      // .gp-hero .gp-mod
     'components/gridiron/gridiron.css': 1,
     'components/today/modeswitch.css': 1,
@@ -230,7 +229,7 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
     // <details> wrapper now owns the separator the <summary> gave up.
     'components/rankings/rankings.css': 18,
     // The You tab (YOU TAB v1), on the global tokens.
-    'components/you/you.css': 17,
+    'components/you/you.css': 20,           // +3 sun-16 D: the FollowedTeams card maps --a-* onto them
     // app/nfl/game/[slug]/game.css was 1 - the Live Activity debug control's
     // one border on a shell-only button - and it is gone with the control
     // (LIVE ACTIVITY DOOR relay). The lock-screen row that replaced it lives
@@ -291,7 +290,6 @@ test('THE PREVIOUSLY-UNRESOLVED CALL SITES, named and counted', () => {
 // failure on four routes. A guard that enumerates beats a guard that greps.
 const PAPER_BG_ALLOWED = [
   ['components/site-chrome.css', 'the mobile burger bars - 2px light rules on the dark header'],
-  ['app/my/my.css', 'the toggle knob - a switch handle, not a surface'],
   ['app/player/[slug]/player.css', '.gp-chip.rook - a light pill badge on a dark card'],
   ['components/gridiron/gridiron.css', '.gi-chip.live.active .gi-dot - a 6px live dot'],
   ['app/market/market.css', 'color-mix(paper 14%, graphite-up) - a dark tint, not paper'],

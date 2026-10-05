@@ -83,3 +83,29 @@
 .yu-so p { color: var(--muted); font-size: 13px; line-height: 1.55; max-width: 30ch; margin: 8px auto 16px; }
 .yu-cta { background: var(--volt); color: var(--ink); border-radius: 99px; padding: 12px 20px; font-weight: 700; font-size: 14px; display: inline-block; text-decoration: none; }
 .yu-alt { display: block; margin-top: 12px; color: var(--volt); font: 600 12px var(--font-mono); text-decoration: none; }
+
+/* sun-16 D: what /account and /my had, in this tab's grammar. */
+.yu-mem--free { border-color: var(--line); }
+.yu-dg + .yu-dg { margin-top: 10px; }
+.yu-dgh { font: 600 9px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--quiet); padding: 2px 0 4px; }
+.yu-dg .yu-set:first-of-type { border-top: 0; }
+a.yu-tm { color: var(--paper); text-decoration: none; }
+/* The controls /account held. They are its components (SignOutButton,
+   DeleteAccount), so they are styled by position, never by their own class
+   names - every class this sheet names is yu- prefixed. */
+.yu-act button { background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--paper); text-align: left; }
+.yu-act button:hover { color: var(--volt); }
+.yu-del { display: block; }
+.yu-del > button { color: var(--terra); }
+.yu-del p { margin: 0 0 10px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.yu-del div div { display: flex; gap: 16px; }
+.yu-del div button:first-child { color: var(--terra); }
+.yu-del div button:disabled { opacity: .55; cursor: default; }
+/* FollowedTeams (components/account/FollowedTeams.js) is written on --a-*;
+   this card declares them from the global tokens, so it follows the theme. */
+.yu-ft {
+  --a-ink: var(--ink); --a-ink-3: var(--ink-3); --a-line: var(--line); --a-volt: var(--volt);
+  --a-paper: var(--paper); --a-jade: var(--jade); --a-mut: var(--muted);
+  --a-cond: var(--font-mono); --a-mono: var(--font-mono);
+}
+.yu-k + .yu-chev { margin-left: auto; }

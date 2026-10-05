@@ -20,7 +20,9 @@ const PAGE = src('app/games/how-it-works/page.js');
 test('the four taglines are verbatim', () => {
   for (const t of [
     'Pick your seat, draft your team, compete against the field.',
-    'Pick the winners. No odds, no problem.',
+    // sun-16 D, deliberately: "No odds, no problem" was untrue - the board
+    // shows the line.
+    'Pick the winners, straight up.',
     'One season from NFL history. Twelve teams. Eight slots. Four regrets.',
   ]) {
     assert.ok(PAGE.includes(t), `missing or altered: ${t}`);
@@ -157,7 +159,8 @@ test('the nine relay-5b steps are verbatim', () => {
     ['Grade', 'Tuesday you are graded against the best six that pool could have made.'],
     ['Call', 'Every game on the board, straight up. The spread is shown, never required.'],
     ['Lock', 'Each game locks at its own kickoff. Change a pick until then.'],
-    ['Tally', 'One season table across both sports, ranked on correct percentage.'],
+    // sun-16 D, deliberately: "across both sports" - Pick'em runs in four.
+    ['Tally', 'One season table, ranked on correct percentage.'],
   ];
   for (const [t, d] of STEPS) {
     assert.ok(PAGE.includes(`t: '${t}', d: '${d}' }`),
@@ -194,4 +197,64 @@ test("the Daily's house rules are stated, and match the code", async () => {
   const today = lb.slice(lb.indexOf('export async function todayLeaderboard'));
   assert.match(today, /dense_rank\(\) OVER \(ORDER BY r\.score DESC\) AS rank/);
   assert.match(today, /ORDER BY r\.score DESC, r\.matched DESC, r\.completed_at ASC/);
+});
+
+// ---------------------------------------------------------------------------
+// THE GAME LIST IS THE REGISTRY'S (sun-16 D). The page said "three weekly
+// games and one every day" for a month in which five more shipped. Now the
+// list, the intro count and the description are generated, and these tests
+// hold the page to the registry rather than to a list typed twice.
+// ---------------------------------------------------------------------------
+
+test('EVERY LISTED REGISTRY GAME APPEARS, and Survivor (flag off) does not', async () => {
+  const { PLAY_REGISTRY, listedGames } = await import('../../../lib/games/playRegistry.js');
+  const { gameGroups, introLine } = await import('../../../lib/games/howItWorks.js');
+  const off = listedGames(PLAY_REGISTRY, { SURVIVOR: '' });
+  const keys = gameGroups(off, new Date('2026-10-04T16:00:00Z')).flatMap((g) => g.games.map((x) => x.key));
+  const want = PLAY_REGISTRY.filter((e) => e.key !== 'nfl-survivor').map((e) => e.key);
+  assert.deepEqual([...keys].sort(), [...want].sort(), 'every registry game but the flagged one');
+  assert.ok(!keys.includes('nfl-survivor'), 'Survivor is pulled, so it is not listed');
+  for (const k of ['mlb-october', 'mlb-run', 'mlb-series', 'nba-six', 'epl-weekly-5', 'daily']) {
+    assert.ok(keys.includes(k), `${k} is on the explainer`);
+  }
+  // The flag is the only thing hiding it: switched on, it is listed.
+  assert.ok(listedGames(PLAY_REGISTRY, { SURVIVOR: 'on' }).some((e) => e.key === 'nfl-survivor'));
+  // Each row carries the registry's own words, never a blank.
+  for (const g of gameGroups(off).flatMap((x) => x.games)) {
+    const e = PLAY_REGISTRY.find((r) => r.key === g.key);
+    assert.equal(g.name, e.name); assert.equal(g.mark, e.mark); assert.equal(g.href, e.href);
+    assert.ok(typeof g.about === 'string' && g.about.length > 10, `${g.key} has its one line`);
+  }
+  // The intro is counted, not typed: 11 games, five sports (the Daily is every day, not a sport).
+  assert.equal(introLine(off), 'Eleven games across five sports. All free, an email and a handle.');
+});
+
+test('the page renders the registry list and says nothing stale', () => {
+  assert.match(PAGE, /import \{ listedGames \} from '@\/lib\/games\/playRegistry'/);
+  assert.match(PAGE, /const games = listedGames\(\);/);
+  assert.match(PAGE, /description: introLine\(listedGames\(\)\)/, 'the description is counted too');
+  assert.match(PAGE, /<p className="lob-sub">\{introLine\(games\)\}<\/p>/);
+  for (const stale of ['Three weekly games', 'No odds', 'across both sports', 'one every day.']) {
+    assert.ok(!PAGE.includes(`'${stale}`) && !PAGE.includes(`${stale}'`) && !new RegExp(`>[^<]*${stale}`).test(PAGE),
+      `stale copy on the page: ${stale}`);
+  }
+  assert.match(PAGE, /data-seasonal=\{g\.seasonal \? '1' : '0'\}/);
+});
+
+test('a game out of season is LISTED, marked seasonal; in season it is not marked', async () => {
+  const { PLAY_REGISTRY, listedGames } = await import('../../../lib/games/playRegistry.js');
+  const { gameGroups, inSeason } = await import('../../../lib/games/howItWorks.js');
+  const games = listedGames(PLAY_REGISTRY, {});
+  const row = (now, key) => gameGroups(games, now).flatMap((g) => g.games).find((x) => x.key === key);
+  const MAY = new Date('2027-05-15T16:00:00Z');
+  const OCT = new Date('2026-10-04T16:00:00Z');
+  assert.equal(row(MAY, 'mlb-october').seasonal, true, 'October in May is still on the page');
+  assert.match(row(MAY, 'mlb-october').seasonWords, /postseason/);
+  assert.equal(row(OCT, 'mlb-october').seasonal, false);
+  assert.equal(row(MAY, 'nfl-weekly').seasonal, true);
+  assert.equal(row(new Date('2027-01-20T16:00:00Z'), 'nfl-weekly').seasonal, false, 'the NFL window wraps the new year');
+  assert.equal(row(MAY, 'daily').seasonal, false, 'the Daily is every day');
+  assert.equal(inSeason({ season: null }, MAY), true);
+  // ET, not UTC: 03:00Z on 1 Sep is still 31 Aug in New York.
+  assert.equal(inSeason({ season: { from: '09-01', to: '02-15' } }, new Date('2026-09-01T03:00:00Z')), false);
 });
