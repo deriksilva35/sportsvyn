@@ -14,6 +14,11 @@
 .dr-who small { font-weight: 600; color: var(--lb-mut); font-size: 12px; }
 .dr-pts { font-family: var(--lb-mono); font-size: 15px; font-weight: 700; }
 .dr-you { animation: dr-in 0.42s ease both; animation-delay: calc(var(--i, 8) * 140ms + 120ms); }
+.dr-share {
+  display: block; width: 100%; margin-top: 12px; min-height: 44px; padding: 11px 14px;
+  font-family: var(--lb-mono); font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--lb-navy); background: var(--lb-volt); border: 0; border-radius: 12px; cursor: pointer;
+}
 .dr-table .lb-row { grid-template-columns: 56px minmax(0, 1fr) auto; }
 
 @keyframes dr-in {

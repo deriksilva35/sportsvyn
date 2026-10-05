@@ -21,6 +21,8 @@ import { startRun } from '@/lib/daily/seasonBoardRuns';
 import { ensureBoardForDate, isEditionLive, effectiveEpoch } from '@/lib/daily/seasonBoardEditions';
 import { todayEt } from '@/lib/daily/entries';
 import { ageGateResponse } from '@/lib/auth/ageGateDb';
+import { readViewerTz } from '@/lib/gridiron/serverTz';
+import { stampRunTz } from '@/lib/daily/morningPush';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,6 +40,11 @@ export async function POST() {
 
   const r = await startRun(sql, { boardId: board.id, userId: Number(userId) });
   if (!r.ok) return Response.json({ error: r.reason }, { status: r.status ?? 400 });
+
+  // THE READER'S ZONE, ON THE RUN (migration 129): the morning-after push goes
+  // out at 9:00 AM there (lib/daily/morningPush.js). Best-effort and once - a
+  // missing cookie or a pre-129 table leaves the run on ET.
+  await stampRunTz(sql, { boardId: board.id, userId: Number(userId), tz: await readViewerTz() });
 
   // THE CARDS, NOW AND ONLY NOW (1b item 4, 27 Sep). The page no longer
   // renders them before a start is recorded (lib/daily/openReveal.js
