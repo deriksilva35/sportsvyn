@@ -27,6 +27,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { isShellClient } from '@/lib/shell/appTabs';
+import { sendSessionChangedIfNew } from '@/lib/shell/bridge';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import HeaderWordmark from '@/components/brand/HeaderWordmark';
 
@@ -57,7 +58,15 @@ export default function AppHeader() {
     let dead = false;
     fetch('/api/me')
       .then((r) => (r.ok ? r.json() : null))
-      .then((j) => { if (!dead && j) setMe({ signedIn: j.signedIn === true || !!j.handle, handle: j.handle ?? null }); })
+      .then((j) => {
+        if (dead || !j) return;
+        const next = { signedIn: j.signedIn === true || !!j.handle, handle: j.handle ?? null };
+        setMe(next);
+        // THE WIDGETS' SESSION NUDGE (sun-24): sign-in, sign-out or another
+        // account since this device last looked - every path lands on a fresh
+        // document, so one check per mount sees them all (lib/shell/bridge.js).
+        sendSessionChangedIfNew(next);
+      })
       .catch(() => {});
     return () => { dead = true; };
   }, [inShell]);

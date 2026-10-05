@@ -61,9 +61,9 @@ The only non-200 response is **429** `{ "v": 1, "state": "rate_limited", "genera
 - **Strings** are short and clipped with `…` at their caps (below).
 - **Teams are never nested objects.** A row carries a team's id, abbreviation, short name and two colours as flat fields.
 - **Colours** are `#RRGGBB`, or null.
-- **Size**: under 8 KB. A test fills every list to its cap and every string to its maximum, and asserts the result (it measures 6,267 bytes, with `nextOpening` present and every `via` kind on every stake). The busy fixture is 4,310 bytes.
+- **Size**: under 8 KB. A test fills every list to its cap and every string to its maximum, and asserts the result (it measures 6,819 bytes, with every optional field present and six `via` kinds on every stake). The busy fixture is 4,471 bytes.
 - `v` is the version. A breaking change ships as `/api/widget/v2`. v1 only ever **adds**: optional fields (absent when empty, never null) and new values in enum-like lists such as `via`. So ignore unknown keys, and treat an unknown `via` value as "a game you're in".
-- **Optional fields** (marked *opt*) are absent rather than null when there is nothing to say. Decode them as optionals.
+- **Optional fields** (marked *opt* below) are absent rather than null when there is nothing to say. Decode them as optionals.
 
 ## `GET /api/widget/v1`: field by field
 
@@ -158,6 +158,9 @@ The reader's followed teams (or the `?teams=` selection). The order is: live, th
 | `nextAt` | ISO Z? | Kickoff of the team's next game after the focus game |
 | `result` | `"W" \| "L" \| "T"`? | Finals only |
 | `href` | string(64)? | The game page, or the team page when there is no game |
+| `oppColor`, `oppAltColor` | `#RRGGBB` *opt* | The opponent's badge colours (sun-24) |
+| `possession` | string(6) *opt* | Live football only: who has the ball, as badge letters (`"BUF"`). It comes from the play feed, using the Scores card's own drive-strip derivation (sun-24) |
+| `fieldPos` | string(12) *opt* | Live football only: the ball's spot, `"NYJ 35"` (on the Jets' side) or `"50"`. After a turnover or a score, before the next down is known, it is where the last snap was (sun-24) |
 
 ### `inYourGames[]`
 
@@ -168,6 +171,7 @@ Games from the last 12 h, games live now, and games in the next 24 h where the r
 | `pickem` | A Pick'em pick on this game: NFL, CFB, NBA daily (stakeForMatches, lib/gridiron/scoresV2.js) |
 | `series` | A Series Pick'em pick on the series these two clubs are playing (currentSeriesBoard). `pick` is the club picked |
 | `weekly` | Weekly players in this game (stakeForMatches) |
+| `draft` | Players from the reader's ranked Draft roster (the best-ball six that count) whose club plays in this game (currentDraftContest + liveEntryRows, sun-24) |
 | `october` | An October player whose slot names this game (currentOctoberDay) |
 | `run` | A Run player whose club plays in this game (currentRunRound) |
 | `six` | A Tonight's Six player whose slot names this game (currentSixNight) |
@@ -186,9 +190,10 @@ A follow alone does not count (that is the teams block), and neither does an ale
 | `startAt` | ISO Z? | |
 | `pick` | string(6)? | The abbreviation the reader picked |
 | `pickState` | `"pending" \| "winning" \| "losing" \| "tied" \| "won" \| "lost" \| "push"`? | |
-| `players` | int | The reader's players in this game, across Weekly, October, The Run and Tonight's Six |
+| `players` | int | The reader's players in this game, across Weekly, The Draft, October, The Run and Tonight's Six |
 | `points` | number? | The Weekly players' fantasy points so far (1 dp). Null when the reader has no Weekly player in this game. The other games score on their own pages |
-| `via` | array of `"pickem" \| "series" \| "weekly" \| "october" \| "run" \| "six"` | Why this game is listed, in that fixed order; at least one |
+| `via` | array of `"pickem" \| "series" \| "weekly" \| "draft" \| "october" \| "run" \| "six"` | Why this game is listed, in that fixed order; at least one. New values may be added |
+| `topPlayer` | string(24) *opt* | The reader's highest-scoring **Weekly or Draft** player in this game, by points so far. Before kickoff it is the first one listed (sun-24) |
 | `href` | string(64)? | The game page |
 
 ## `GET /api/widget/v1/teams`
@@ -207,7 +212,7 @@ See `docs/widgets/fixtures/`:
 
 | File | What it shows |
 |---|---|
-| `signed-in-busy.json` | Every list full, plus `nextOpening` (NBA opening night): two urgent games, a live NFL team with a win probability (switch on), a live MLB team, a fresh CFB final, live and final stakes, and PHI@MIL in your games via a series pick, an October bat and a Run arm |
+| `signed-in-busy.json` | Every list full, plus every optional field: `nextOpening` (NBA opening night), two urgent games, a live NFL team with a win probability (switch on), a live MLB team, a fresh CFB final, live and final stakes, and PHI@MIL in your games via a series pick, an October bat and a Run arm; BUF carries `possession`, `fieldPos` and `oppColor`/`oppAltColor`, and NYJ@BUF has a Draft player as `topPlayer` |
 | `signed-in-quiet.json` | Nothing to do: The Daily done, `games` empty, `nextOpening` = The Weekly, one team with its next game a week out |
 | `live-game.json` | One live game, Q3 7:22, followed and picked, with Weekly players in it |
 | `signed-out.json` | The sign-in state |
@@ -235,5 +240,35 @@ A trimmed `signed-in-busy`:
 
 ## Known gaps in v1
 
-- `points` is Weekly-only. October, The Run and Tonight's Six points are on their own pages.
+- `points` is Weekly-only. Draft, October, The Run and Tonight's Six points are on their own pages (`topPlayer` does rank Draft players by points).
 - `winProb` stays null until `winprob-phone-nfl` merges (NFL on, CFB off).
+
+## Web to native: when to reload (sun-24)
+
+The web view tells the native side when the widgets are stale, using the same channel as the shell's haptic and share messages (`lib/shell/bridge.js`): `window.postMessage(msg, '*')`. Messages are sent only in shell mode (the `sv_shell=sim-app` cookie) and only when a native container is present (`window.Capacitor` or `window.webkit.messageHandlers`). The native WKUserScript that already listens for `haptic` / `share` receives these the same way.
+
+```js
+{ type: 'picksChanged', game: 'pickem' | 'series' | 'weekly' | 'draft' | 'october' | 'run' | 'six' | 'epl5' | 'daily' }
+{ type: 'sessionChanged', signedIn: true | false }
+```
+
+- **`picksChanged`** is posted after a save **the server accepted**, never on a refusal or a network failure. The doors:
+  - Pick'em (NFL, CFB and NBA boards)
+  - Series Pick'em
+  - Weekly: a lineup save, a save where one slot was refused at its kickoff but the rest stored, and the confirm button
+  - The Draft: when the room completes
+  - October, The Run, Tonight's Six and EPL Weekly 5: a slot saved or cleared
+  - The Daily: lock-in, both the reveal and the grade
+
+  On receipt: `WidgetCenter.shared.reloadAllTimelines()`. The feed may serve its 60 s memo once, which is fine.
+- **`sessionChanged`** is posted when the shell header's account check (`/api/me`, once per page load) differs from the last value this device stored (`localStorage['sv_widget_session']`). That covers sign-in, sign-out and a different account. It is also posted on the very first check after install. On receipt, re-read the session cookie into the app group (or delete the stored token when `signedIn` is false), then reload all timelines.
+
+## Widget to app: "Follow on Lock Screen" (sun-24)
+
+For a live game, the widget can open the game with two extra params:
+
+```
+https://sportsvyn.com<href>?sv_la=1&sv_match=<gameId>
+```
+
+`lib/shell/laDeepLink.js` `laDeepLinkPath(href, gameId)` builds exactly this. In the app shell, when the game is **live** and `sv_match` is that page's game, the game page opens its alerts sheet so the existing "Live on lock screen" row is in front of the reader. It **does not start** a Live Activity; the row's own tap does. The params are then removed from the address bar. They are ignored outside the shell, on a different game's page, before kickoff, after the final, and for leagues with no Live Activity (NBA).

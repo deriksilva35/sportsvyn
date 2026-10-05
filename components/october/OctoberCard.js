@@ -17,6 +17,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { saveOctoberPickAction, clearOctoberPickAction } from '@/app/actions/october';
 import { timeLabel } from '@/lib/time/display';
 import { useViewerZone } from '@/components/time/ViewerTz';
+import { sendPicksChanged } from '@/lib/shell/bridge';
 import { probablesShort } from '@/lib/mlb/cardLines';
 import { useStickyOffset } from '@/components/games/useStickyOffset';
 
@@ -82,7 +83,7 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
       // THE SERVER'S ANSWER WINS. An optimistic paint the server refuses is
       // repainted back, with its reason, rather than left standing as a pick
       // the reader believes they made.
-      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(reasonText(r, view)); }
+      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(reasonText(r, view)); } else sendPicksChanged('october');
     });
   };
 
@@ -96,7 +97,7 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
       let r;
       try { r = await clearOctoberPickAction(view.contest.id, slot); }
       catch { r = { ok: false, reason: 'unreachable' }; }
-      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(reasonText(r, view)); }
+      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(reasonText(r, view)); } else sendPicksChanged('october');
     });
   };
 

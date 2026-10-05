@@ -187,6 +187,7 @@ export default async function MlbGamePage({ params, searchParams }) {
               url: gameUrlFor(g),
               state: stateFromMatch(g),
               final,
+              live: g.status === 'live',
             }} />
           </div>
         </header>

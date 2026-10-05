@@ -46,7 +46,7 @@ import { seasonSummary, fantasyPoints, isExactlyScored } from '@/lib/fantasy/sco
 import { buildRoster, BENCH } from '@/lib/fantasy/roster';
 import { buildBoard, boardName } from '@/lib/fantasy/board';
 import { fitBoardNames } from '@/lib/fantasy/boardFit';
-import { sendHaptic } from '@/lib/shell/bridge';
+import { sendHaptic, sendPicksChanged } from '@/lib/shell/bridge';
 import { isShellClient } from '@/lib/shell/appTabs';
 import RookieChip from '@/components/fantasy/RookieChip';
 import { plural } from '@/lib/text/plural';
@@ -357,7 +357,8 @@ export default function DraftRoom({
     // The tap arrived after 0:00: the server auto-picked the expired turn and
     // dropped the tap (thu-25). Say so, or the room looks like it ignored them.
     if (res.turnExpired) setErr({ reason: 'turn_expired' });
-    if (res.status === 'completed') router.refresh(); // server re-renders as results
+    // DRAFT FINISH: the roster is final - the widgets reload (sun-24).
+    if (res.status === 'completed') { sendPicksChanged('draft'); router.refresh(); } // server re-renders as results
   }, [router, timerSeconds]);
 
   async function confirm(player) {

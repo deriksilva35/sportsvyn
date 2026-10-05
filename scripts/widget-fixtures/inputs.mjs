@@ -64,12 +64,16 @@ const team = (o) => ({
 const LIVE_BUF = team({
   teamId: 4, gameId: 9101, gameSlug: 'nyj-at-buf-2026-10-04', status: 'live', kickoffAt: at(-90), homeTeamId: 4,
   homeScore: 24, awayScore: 17, oppId: 25, oppAbbr: 'NYJ', oppName: 'Jets', nextAt: at(60 * 24 * 7),
+  oppColor: '#125740', oppAltColor: '#FFFFFF',
   liveState: { period: 3, clock: '7:22', win_prob: 81, win_prob_at: at(-0.5) },
+  // the recent plays (lib/gridiron/scoresV2.js latestPlays): possession + field position
+  plays: [{ period: 3, clock: '7:30', down: 1, distance: 10, yardsToGoal: 39, yardsGained: 4, offenseTeamId: 4, playType: 'Rush', text: 'J. Cook 4 yd run' }],
 });
 const FINAL_GA = team({
   teamId: 210, teamAbbr: 'UGA', teamName: 'Georgia', teamSlug: 'georgia-bulldogs', leagueSlug: 'cfb', color: '#BA0C2F', altColor: '#000000',
   gameId: 8802, gameSlug: 'uga-at-ala-2026-10-03', status: 'final', kickoffAt: at(-60 * 17), homeTeamId: 211,
   homeScore: 27, awayScore: 31, oppId: 211, oppAbbr: 'ALA', oppName: 'Alabama', nextAt: at(60 * 24 * 6),
+  oppColor: '#9E1B32', oppAltColor: '#FFFFFF',
   liveState: { period: 5 },
 });
 const NEXT_LAD = team({
@@ -124,6 +128,8 @@ const LINEUPS = {
     lineup: { '2026-nlds-phi-mil': 3305 },
   },
   six: null,
+  // THE DRAFT's counting six (liveEntryRows rows): a Bills receiver in NYJ@BUF
+  draft: [{ slot: 'WR1', id: 9001, name: 'K. Shakir', team: 'BUF', points: 24.1, played: true }],
 };
 
 const stake = (pick, weekly = []) => ({ pick, weekly, alerts: false, follow: null });

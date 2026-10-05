@@ -15,6 +15,7 @@ import { Fragment, useRef, useState, useTransition } from 'react';
 import { saveRunPickAction, clearRunPickAction } from '@/app/actions/run';
 import { timeLabel } from '@/lib/time/display';
 import { useViewerZone } from '@/components/time/ViewerTz';
+import { sendPicksChanged } from '@/lib/shell/bridge';
 import TeamMark from '@/components/team/TeamMark';
 import { useStickyOffset } from '@/components/games/useStickyOffset';
 
@@ -54,7 +55,7 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
       let r;
       try { r = await saveRunPickAction(view.contest.id, slot, p); }
       catch { r = { ok: false, reason: 'unreachable' }; }
-      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(reasonText(r)); }
+      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(reasonText(r)); } else sendPicksChanged('run');
     });
   };
 
@@ -89,7 +90,7 @@ export default function RunRoster({ view, signedIn = false, signinHref = '/signi
       let r;
       try { r = await clearRunPickAction(view.contest.id, slot); }
       catch { r = { ok: false, reason: 'unreachable' }; }
-      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(reasonText(r)); }
+      if (!r?.ok) { setSlots((m) => ({ ...m, [slot]: before })); setErr(reasonText(r)); } else sendPicksChanged('run');
     });
   };
 
