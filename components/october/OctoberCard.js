@@ -276,7 +276,9 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
 
       <div className="oc-ft">
         <div className="oc-pace">
-          {view.isDnf ? <>This day is a <b>DNF</b><br />an empty slot passed its first pitch</>
+          {/* AN ALL-VOID CLOSE (ruling sun-11 item 1): the label, no DNF, no total. */}
+          {view.contest.voidAll ? <span data-void-all="">{view.contest.voidLabel}</span>
+            : view.isDnf ? <>This day is a <b>DNF</b><br />an empty slot passed its first pitch</>
             : <>Your five so far<br /><b>{view.total}</b>{view.progress.locked ? ` · ${view.progress.locked} in play` : ''}</>}
         </div>
         {!signedIn ? <a className="oc-lock" href={signinHref}>Sign in to play</a>

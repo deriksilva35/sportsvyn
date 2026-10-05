@@ -101,7 +101,8 @@ test('THE PAGE STACKS NOTHING OVER THE ROOM in the builder', () => {
   assert.match(builder, /howOpenByDefault\(\{ seenCookie, entry \}\)/);
   assert.match(builder, /\(await cookies\(\)\)\.get\(WEEKLY_SEEN_COOKIE\)/, 'first visit is read from a cookie, not the DB');
   // every other state keeps its crumb
-  assert.equal((PAGE.match(/<Shell>/g) ?? []).length, 3, 'none, settled and locked still render <Shell> with the crumb');
+  // FOUR since sun-11 item 1: a void_all week is a settled state of its own.
+  assert.equal((PAGE.match(/<Shell>/g) ?? []).length, 4, 'none, settled, settled-void and locked still render <Shell> with the crumb');
 });
 
 test('THE HEADER READS ITS WORDS FROM DATA, never a typed week or format', () => {

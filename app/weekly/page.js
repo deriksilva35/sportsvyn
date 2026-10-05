@@ -38,6 +38,7 @@ import { weekStatLines } from '@/lib/weekly/pool';
 import { seasonStats } from '@/lib/weekly/seasonLine';
 import WeeklyRoom from '@/components/weekly/WeeklyRoom';
 import WeeklyGrade from '@/components/weekly/WeeklyGrade';
+import VoidAllLabel from '@/components/games/VoidAllLabel';
 import { WeeklyPreOpenLine } from '@/components/games/preOpenLine';
 import { scoreLeaderboard } from '@/lib/games/leaderboard';
 import { userHasHandle } from '@/lib/onboarding';
@@ -202,6 +203,16 @@ export default async function WeeklyPage({ searchParams }) {
   // score itself. Every module below the hero is the Daily's, unchanged.
   if (state === 'settled') {
     const v = settledView({ contest, entry, board });
+    // AN ALL-VOID CLOSE (ruling sun-11 item 1): no grade, no board, no DNF -
+    // nobody played it. The label, and the week's own line.
+    if (v.voidAll) {
+      return (
+        <Shell>
+          <p className="muted" style={{ margin: '12px 12px 4px' }}>Week {contest.week}</p>
+          <VoidAllLabel style={{ margin: '0 12px 12px' }} />
+        </Shell>
+      );
+    }
     const leaderboard = await scoreLeaderboard(contest.id, userId != null ? Number(userId) : null, { limit: 5, game: 'weekly' });
     const next = await nextContest().catch(() => null);
     // The ~12 players actually on the card - yours and the ceiling's -
