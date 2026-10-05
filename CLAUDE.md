@@ -295,7 +295,10 @@ same run opens what hangs off a round: October's day cards, The Run's rounds
 and the Pick'em series boards. Nothing about a new round appears until it runs.
 
 WHAT RUNS: `services/mlb-advance` (user units, like the poller) - the import
-with `--prod --apply <year>` through the prod preload. Idempotent; no standings
+with `--prod --apply <year>` through the prod preload, FROM THE DEPLOYED RELEASE
+(~/deploy/sportsvyn/current, see "Droplet services run a deployed commit"), not
+the working checkout: a fix to the import reaches the advance only once it is
+deployed. Idempotent; no standings
 import (the seeds are final once the postseason starts - refresh them by hand
 with `scripts/mlb-standings-import.mjs --prod --apply <year>` only if they were
 never finalised).
@@ -321,7 +324,29 @@ seeds - check them, then rerun by hand:
     node scripts/mlb-standings-import.mjs --prod 2026            # dry run: are the twelve right?
     node scripts/mlb-standings-import.mjs --prod --apply 2026     # only if they were wrong
     DATABASE_URL="$PROD_DATABASE_URL" node scripts/mlb-postseason-import.mjs --prod --apply 2026
-The last command's DATABASE_URL is required (fa80e73): the import opens days,
+These hand runs use the working checkout (cd ~/projects/sportsvyn) - make sure
+it is on the commit you mean. The last command's DATABASE_URL is required (fa80e73): the import opens days,
 rounds and boards through lib/db.js, and without it they would be looked for on
 DEV while the stages land on PROD. A run that did not apply says
 "DID NOT APPLY" or "REFUSED" in the journal and emails the tail of its output.
+
+## Droplet services run a deployed commit, not the checkout (sun-12 item 7)
+
+The live poller, the daily tick and the MLB advance run from
+`~/deploy/sportsvyn/current` -> `releases/<sha>`, a detached, locked git worktree
+pinned to one commit, with node_modules hardlinked from the main tree and
+`.env.local` read from the main tree. A restart starts the DEPLOYED commit,
+never whatever ~/projects/sportsvyn has checked out. Units are capped
+(poller MemoryMax=512M; it peaks under 100 MB).
+
+AFTER A MERGE, "restart the poller" MEANS DEPLOY:
+
+    cd ~/projects/sportsvyn && git pull --ff-only
+    scripts/deploy-poller.sh origin/main      # build, switch, restart, prove
+    scripts/deploy-poller.sh --rollback       # if the proof or the next poll looks wrong
+
+A bare `systemctl --user restart sportsvyn-live-poller` restarts the SAME
+release; it ships nothing. The script refuses a commit not on origin/main
+(--force overrides), prints the poller's own `live-poller starting: ... head=<sha>`
+journal line as proof, exits 1 if the head is wrong, and keeps three releases.
+Runbook, first install and journal reading: docs/ops/poller-deploy.md.
