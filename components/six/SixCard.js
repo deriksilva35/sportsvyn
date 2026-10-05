@@ -16,6 +16,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { saveSixPickAction, clearSixPickAction } from '@/app/actions/six';
+import { sendPicksChanged } from '@/lib/shell/bridge';
 import StandaloneTime from '@/components/StandaloneTime';
 import { useStickyOffset } from '@/components/games/useStickyOffset';
 import VoidAllLabel from '@/components/games/VoidAllLabel';
@@ -80,7 +81,7 @@ export default function SixCard({ view, signedIn = false, signinHref = '/signin'
     start(async () => {
       let r;
       try { r = await saveSixPickAction(view.contest.id, slot, p); } catch { r = { ok: false, reason: 'unreachable' }; }
-      if (!r?.ok) { setLineup((m) => ({ ...m, [slot]: before })); setErr(REASON[r?.reason] ?? 'That pick did not save.'); }
+      if (!r?.ok) { setLineup((m) => ({ ...m, [slot]: before })); setErr(REASON[r?.reason] ?? 'That pick did not save.'); } else sendPicksChanged('six');
     });
   };
 
@@ -91,7 +92,7 @@ export default function SixCard({ view, signedIn = false, signinHref = '/signin'
     start(async () => {
       let r;
       try { r = await clearSixPickAction(view.contest.id, slot); } catch { r = { ok: false, reason: 'unreachable' }; }
-      if (!r?.ok) { setLineup((m) => ({ ...m, [slot]: before })); setErr(REASON[r?.reason] ?? 'That did not save.'); }
+      if (!r?.ok) { setLineup((m) => ({ ...m, [slot]: before })); setErr(REASON[r?.reason] ?? 'That did not save.'); } else sendPicksChanged('six');
     });
   };
 

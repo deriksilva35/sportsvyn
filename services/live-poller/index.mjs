@@ -45,15 +45,17 @@ const sql = neon(DB);
 
 const HEARTBEAT_MS = 5 * 60 * 1000;
 
+const ALERT_AFTER_FAILURES = 3;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const log = (...a) => console.log(new Date().toISOString(), ...a);
 // THE CFB BOX-SCORE KICK (sun-6 item 2, lib/cfb/finalKick.js). One throttle for
 // the process: at most one CFBD week import per ten minutes, a trailing run for
 // finals inside the window, and the hourly cron as the backstop. The run is
 // fired off the poll loop's await chain and never throws into it.
+// After `log`: a const used in a top-level initializer must already exist (TDZ) -
+// placed above it, the poller died at import on 5 Oct (06:50Z) and restart-looped.
 const cfbKick = createKickThrottle({ run: (batch) => runKickedImport(batch, { sql, log }), log });
 const cfbKicked = new Set();
-const ALERT_AFTER_FAILURES = 3;
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const log = (...a) => console.log(new Date().toISOString(), ...a);
 
 // THE RUNNING COMMIT, RESOLVED ONCE AT STARTUP (defect 4). Node caches
 // modules at import, so a process started before a deploy runs the OLD code

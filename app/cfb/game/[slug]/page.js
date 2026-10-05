@@ -384,6 +384,7 @@ export default async function CfbGamePage({ params, searchParams }) {
                 teamAbbr: gamecast?.teamAbbr ?? new Map(),
               })),
               final: game.status === 'final',
+              live: game.status === 'live',
             }} />
           </div>
         </header>

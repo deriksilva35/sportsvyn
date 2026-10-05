@@ -1,0 +1,94 @@
+{
+  "v": 1,
+  "state": "ok",
+  "generatedAt": "2026-10-04T17:30:00.000Z",
+  "cta": null,
+  "yourMove": {
+    "count": 0,
+    "nextLock": null
+  },
+  "games": [
+    {
+      "key": "nfl-pickem",
+      "sport": "NFL",
+      "name": "Pick'em",
+      "title": "Week 5",
+      "line": "14 of 14 picked",
+      "count": 0,
+      "lockAt": "2026-10-04T20:35:00.000Z",
+      "urgent": false,
+      "href": "/pickem/nfl"
+    },
+    {
+      "key": "nfl-weekly",
+      "sport": "NFL",
+      "name": "The Weekly",
+      "title": "Week 5",
+      "line": "6 of 6",
+      "count": 0,
+      "lockAt": "2026-10-04T20:35:00.000Z",
+      "urgent": false,
+      "href": "/weekly"
+    }
+  ],
+  "daily": {
+    "state": "in-progress",
+    "open": true,
+    "closesAt": "2026-10-05T04:00:00.000Z",
+    "streak": 0,
+    "href": "/daily/board"
+  },
+  "teams": [
+    {
+      "teamId": 4,
+      "team": "BUF",
+      "teamName": "Bills",
+      "league": "nfl",
+      "color": "#00338D",
+      "altColor": "#C60C30",
+      "gameId": 9101,
+      "home": true,
+      "oppId": 25,
+      "opp": "NYJ",
+      "oppName": "Jets",
+      "status": "live",
+      "score": 24,
+      "oppScore": 17,
+      "clock": "Q3 7:22",
+      "winProb": 81,
+      "startAt": "2026-10-04T16:00:00.000Z",
+      "nextAt": "2026-10-11T17:30:00.000Z",
+      "result": null,
+      "href": "/nfl/game/nyj-at-buf-2026-10-04",
+      "oppColor": "#125740",
+      "oppAltColor": "#FFFFFF",
+      "possession": "BUF",
+      "fieldPos": "NYJ 35"
+    }
+  ],
+  "inYourGames": [
+    {
+      "gameId": 9101,
+      "league": "nfl",
+      "away": "NYJ",
+      "home": "BUF",
+      "awayColor": "#125740",
+      "homeColor": "#00338D",
+      "awayScore": 17,
+      "homeScore": 24,
+      "status": "live",
+      "clock": "Q3 7:22",
+      "startAt": "2026-10-04T16:00:00.000Z",
+      "pick": "BUF",
+      "pickState": "winning",
+      "players": 1,
+      "points": 21.4,
+      "via": [
+        "pickem",
+        "weekly"
+      ],
+      "href": "/nfl/game/nyj-at-buf-2026-10-04",
+      "topPlayer": "J. Allen"
+    }
+  ]
+}

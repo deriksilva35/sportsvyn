@@ -8,10 +8,18 @@
 # systemd never runs one instance twice at once; the job's own lock
 # ($XDG_RUNTIME_DIR/sportsvyn-mlb-advance.lock) keeps the instances apart.
 #
-# INSTALL (user units, like the poller - no root on this box):
-#   cp services/mlb-advance/systemd/sportsvyn-mlb-advance@.service ~/.config/systemd/user/
-#   cp services/mlb-advance/systemd/sportsvyn-mlb-advance.timer ~/.config/systemd/user/
-#   systemctl --user daemon-reload && systemctl --user enable --now sportsvyn-mlb-advance.timer
+# INSTALL (user units, like the poller - no root on this box): installed and
+# kept current by scripts/deploy-poller.sh --install-units (docs/ops/poller-deploy.md);
+# the timer is enabled once, by hand:
+#   systemctl --user enable --now sportsvyn-mlb-advance.timer
+#
+# RUNS FROM THE DEPLOY FOLDER (sun-12 item 7), like the poller: the commit that
+# was deployed, not the working checkout. The @event kick (lib/mlb/advanceKick.js)
+# only runs `systemctl --user start sportsvyn-mlb-advance@event.service`, so it
+# inherits this WorkingDirectory - there is no second path to keep in step.
+# systemd resolves `current` when each run starts: a deploy reaches the next run
+# with no restart. EnvironmentFile is the main tree's .env.local, for the reason
+# in sportsvyn-live-poller.service.
 #   journalctl --user -u 'sportsvyn-mlb-advance@*' -o cat | grep '\[mlb-advance\]'
 
 [Unit]
@@ -22,10 +30,16 @@ StartLimitIntervalSec=0
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/derik/projects/sportsvyn
-EnvironmentFile=/home/derik/projects/sportsvyn/.env.local
-ExecStart=/home/derik/.nvm/versions/node/v22.23.1/bin/node --import ./services/_preload/prod-db.mjs services/mlb-advance/index.mjs --trigger %i
+WorkingDirectory=%h/deploy/sportsvyn/current
+EnvironmentFile=%h/projects/sportsvyn/.env.local
+ExecStart=%h/.nvm/versions/node/v22.23.1/bin/node --import ./services/_preload/prod-db.mjs services/mlb-advance/index.mjs --trigger %i
 TimeoutStartSec=15min
+# MEMORY CAP: the job spawns the postseason import as a child node process, and
+# the child is in this unit's cgroup, so the cap covers both. No run has logged a
+# memory peak yet; 1G is generous for two node processes and still a wall.
+MemoryHigh=768M
+MemoryMax=1G
+MemorySwapMax=256M
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=sportsvyn-mlb-advance
