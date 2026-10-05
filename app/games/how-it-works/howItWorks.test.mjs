@@ -195,8 +195,13 @@ test("the Daily's house rules are stated, and match the code", async () => {
   assert.match(editions, /const opensAt = await easternLocalToUtc\(`\$\{editionDate\} 00:00:00`\)/);
   const lb = src('lib/daily/seasonBoardLeaderboards.js');
   const today = lb.slice(lb.indexOf('export async function todayLeaderboard'));
-  assert.match(today, /dense_rank\(\) OVER \(ORDER BY r\.score DESC\) AS rank/);
-  assert.match(today, /ORDER BY r\.score DESC, r\.matched DESC, r\.completed_at ASC/);
+  // THE TIE RULE (sun-16 C, lib/games/rank.js): rank() not dense_rank(), and
+  // matched no longer orders a tie. The page's Daily ties line still says
+  // "more matched slots list first" - owed by the stale-pages relay, which
+  // owns How It Works copy.
+  assert.match(today, /rank\(\) OVER \(ORDER BY r\.score DESC\) AS rank/);
+  assert.doesNotMatch(today, /dense_rank/);
+  assert.match(today, /ORDER BY r\.score DESC, r\.completed_at ASC/);
 });
 
 // ---------------------------------------------------------------------------
