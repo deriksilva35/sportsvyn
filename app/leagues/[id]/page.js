@@ -9,11 +9,14 @@
  * pre-V1 Daily tab read. ?invite=1 opens the share sheet (the create sheet
  * lands here with it up).
  *
- * NON-MEMBERS get the sealed preview: name, member count, the games, and a
- * field for the invite code - nothing else. No join by id: the id in this URL
- * is serial, so it is not an invitation - the code is. No identities, no
- * boards. Signed-out riders carry this exact destination through the sign-in
- * law.
+ * NON-MEMBERS GET A 404, AND NOTHING ELSE (ruling sun-12 item 8). Signed out,
+ * signed in but not a member, or an id that was never issued: all three call
+ * notFound(), and ./not-found.js renders the sign-in prompt or "This league is
+ * private" - the same body and the same status for "not yours" and "does not
+ * exist", because the id in this URL is serial and a probe must not learn which
+ * ids are leagues. Not the name, not the member count, not the games: nothing
+ * is read for a non-member at all. generateMetadata follows the same rule. The
+ * invite link (/j/<key>) still shows the name - holding it is the invitation.
  *
  * No ad-hoc entry SQL on this page (pinned by test): the readers are the
  * league modules'.
@@ -26,12 +29,9 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
-import { shellSigninHref } from '@/lib/shell/signinHref';
-import { leagueDetail, leaguePreview } from '@/lib/leagues/core';
+import { leagueDetail } from '@/lib/leagues/core';
 import { parseLeagueTab, leagueHref } from '@/lib/leagues/nav';
-import { gameLabel } from '@/lib/leagues/settings';
 import { leagueTable } from '@/lib/leagues/table';
-import { JoinWithCodeForm } from '@/components/leagues/LeagueChrome';
 import LeagueBoard from '@/components/leagues/LeagueBoard';
 import '../../games/games.css';
 import '../leagues.css';
@@ -44,10 +44,21 @@ export async function generateViewport() {
   return simViewport(await resolveShellMode());
 }
 
+// THE TITLE IS A MEMBER'S. A non-member's tab, unfurl and search snippet read
+// the generic title - the name only ever comes from the member-scoped reader.
+// Never indexed: a league is private either way.
+const LEAGUE_ROBOTS = Object.freeze({ index: false, follow: false });
+const GENERIC_TITLE = 'Leagues - Sportsvyn';
+
 export async function generateMetadata({ params }) {
   const { id } = await params;
-  const lg = await leaguePreview(Number(id)).catch(() => null);
-  return { title: lg ? `${lg.name} - Leagues - Sportsvyn` : 'Leagues - Sportsvyn' };
+  const leagueId = Number(id);
+  const session = await auth().catch(() => null);
+  const uid = session?.user?.id == null ? null : Number(session.user.id);
+  const lg = uid == null || !Number.isInteger(leagueId)
+    ? null
+    : await leagueDetail(leagueId, uid).catch(() => null);
+  return { title: lg ? `${lg.name} - Leagues - Sportsvyn` : GENERIC_TITLE, robots: LEAGUE_ROBOTS };
 }
 
 export default async function LeaguePage({ params, searchParams }) {
@@ -66,37 +77,9 @@ export default async function LeaguePage({ params, searchParams }) {
   const uid = userId == null ? null : Number(userId);
   const league = uid == null ? null : await leagueDetail(leagueId, uid).catch(() => null);
 
-  // ---- NON-MEMBER (or signed-out web): the sealed preview -----------------
-  if (!league) {
-    const preview = await leaguePreview(leagueId).catch(() => null);
-    if (!preview) notFound();
-    return (
-      <>
-        <GlobalHeaderServer activeNav="leagues" />
-        <main className="lob" data-surface="ink">
-          <Link className="appcrumb" href="/leagues">&larr; Leagues</Link>
-          <section className="lg-preview-hero">
-            <div className="eb">You&rsquo;re invited</div>
-            <h1 className="lg-hero-name">{preview.name}</h1>
-            <p className="ctx">
-              {preview.members} {preview.members === 1 ? 'member' : 'members'}
-              {preview.games?.length ? <> &middot; {preview.games.map(gameLabel).join(', ')}</> : null}
-            </p>
-            {uid == null ? (
-              <a className="lg-join-primary" href={shellSigninHref(dest, isShell)}>Sign in to join</a>
-            ) : (
-              <JoinWithCodeForm leagueId={leagueId} />
-            )}
-            <p className="muted lg-ask-code">Ask a member for the invite code.</p>
-          </section>
-          <p className="muted lg-hero-sub">
-            Boards are members-only. Join and your next game counts.
-          </p>
-        </main>
-        <SiteFooter />
-      </>
-    );
-  }
+  // ---- NON-MEMBER, SIGNED OUT, OR NO SUCH LEAGUE: one 404 ---------------
+  // Nothing about the league is read on this path - ./not-found.js is the body.
+  if (!league) notFound();
 
   // ---- MEMBER: the board ----------------------------------------------------
   const table = await leagueTable(league).catch(() => null);
