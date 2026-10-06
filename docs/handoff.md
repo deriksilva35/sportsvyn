@@ -9,7 +9,7 @@
   - forged-referer-all-paths (Deny), market-filter-crawl (Log) unchanged.
   - Counts: vercel metrics vercel.request.count --since 1h --group-by waf_rule_id
     --group-by waf_action [-f "asn_id eq '45102'"] -g 1h   (CLI works; MCP firewall read 404s)
-- Alibaba is NOT quiet: it returned after 17:30Z (172 challenged 17:30-17:59, 331 in 17:44-18:14).
+- Alibaba is NOT quiet: back after 17:30Z; 726 challenged 17:59-18:59Z.
   The "zero for 24h" clock has not started. Rule A retirement: not yet.
 
 ## Branch daily-guest-play  (pushed, a488505, preview READY for that exact SHA)
