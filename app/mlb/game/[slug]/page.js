@@ -366,7 +366,9 @@ export default async function MlbGamePage({ params, searchParams }) {
                       <thead><tr><th className="n">Batting</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>K</th></tr></thead>
                       <tbody>
                         {mine.map((r) => (
-                          <tr key={r.bdl_player_id}>
+                          <tr key={r.bdl_player_id} className={r.sub ? 'sub' : undefined}>
+                            {/* BATTING ORDER, subs indented under the man they replaced, with
+                                THIS game's position (lib/mlb/boxOrder.js). */}
                             <td className="n">{r.player_name}{r.position ? <small> {r.position}</small> : null}</td>
                             <td>{r.at_bats ?? ''}</td><td>{r.runs ?? ''}</td><td>{r.hits ?? ''}</td>
                             <td>{r.rbi ?? ''}</td><td>{r.walks ?? ''}</td><td>{r.strikeouts ?? ''}</td>
