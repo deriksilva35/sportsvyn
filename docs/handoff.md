@@ -31,4 +31,4 @@
 - Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
 
 ## Next step
-Review the 30-min PROD error result in the report; then FCS abbreviation fill.
+30-min PROD errors checked 21:40Z: none. Next: FCS abbreviation fill.
