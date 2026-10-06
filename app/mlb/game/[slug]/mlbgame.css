@@ -46,6 +46,7 @@
 .mg-bt th { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-dim); }
 .mg-bt .n { text-align: left; color: var(--paper); }
 .mg-bt .n small { color: var(--muted-dim); margin-left: 5px; }
+.mg-bt tr.sub .n { padding-left: 18px; color: var(--paper-dim); }
 
 /* THE CURRENT HALF IN VOLT, the mock's `.now`. The header cell of the inning
    being played, and the cell of the side actually batting - the other side has
