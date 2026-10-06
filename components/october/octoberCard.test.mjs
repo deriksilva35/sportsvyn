@@ -163,10 +163,10 @@ test('A LIVE GAME IS DIMMED AND UNPICKABLE, not removed', () => {
 test('ONLY A PLAYER ON YOUR OWN CARD IS SPENT - there is no "used <date>" row', () => {
   const h = html({ view: PICKING(), signedIn: true });
   assert.match(h, /<b>B\. Harper<\/b><small>PHI · on your card<\/small>/);
-  assert.match(h, /<b>K\. Schwarber<\/b><small>PHI · DH<\/small>/);
+  assert.match(h, /<b>K\. Schwarber<\/b><small>PHI · DH · projected<\/small>/);
   // A. RILEY WAS THE BURN'S OWN ROW - spent on Sep 27, dimmed, unpickable. With
   // no burn he is an ordinary row: his position, and tappable.
-  assert.match(h, /<b>A\. Riley<\/b><small>ATL · 3B<\/small>/);
+  assert.match(h, /<b>A\. Riley<\/b><small>ATL · 3B · projected<\/small>/);
   assert.doesNotMatch(h, /used Sep 27/);
   assert.doesNotMatch(h, /class="oc-prow gone" disabled="" data-player="94"/);
   // EXACTLY ONE DIMMED ROW, and it is the one already on the card.
@@ -709,7 +709,7 @@ test('THE ARM PICKER: the probable first, every other arm in a collapsed Bullpen
   assert.ok(i('Z. Wheeler') < pen, 'the probable leads');
   assert.ok(pen < i('A. Nola') && i('J. Alvarado') < penEnd, 'both other arms are inside the Bullpen');
   assert.ok(penEnd < i('K. Schwarber'), 'the bats follow');
-  assert.match(h, /<summary>Bullpen · 2<\/summary>/);
+  assert.match(h, /<summary>Bullpen · 2 arms, both clubs<\/summary>/);
   assert.doesNotMatch(h, /<details[^>]*open/, 'collapsed');
 });
 
@@ -736,4 +736,14 @@ test('HOW IT WORKS is one <details> row, closed, with the same words in it', () 
   assert.equal(how.open, false);
   assert.equal(how.querySelector('summary').textContent, 'How it works');
   assert.match(how.querySelector('.oc-note').textContent, /Tomorrow is a new five\./);
+});
+
+test('tue-9 C: a bat on an unposted card says "projected" beside his position; a posted bat says his order', () => {
+  const v = PICKING();
+  const h = html({ view: v, signedIn: true });
+  const bats = (v.pool ?? v.picker?.pool ?? []).filter?.((p) => p.kind === 'bat') ?? [];
+  for (const p of bats) {
+    if (p.order == null && p.position) assert.ok(h.includes(`${p.position} · projected`), `${p.short} projected`);
+  }
+  assert.doesNotMatch(h, /bats \d+\w+ · projected/);
 });

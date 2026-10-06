@@ -263,7 +263,9 @@ export default function OctoberCard({ view, signedIn = false, signinHref = '/sig
             {pool.filter((p) => !(p.kind === 'arm' && p.bullpen)).filter((p) => p.kind === 'arm').map(prow)}
             {pool.some((p) => p.kind === 'arm' && p.bullpen) ? (
               <details className="oc-more" data-group="bullpen">
-                <summary>Bullpen · {pool.filter((p) => p.kind === 'arm' && p.bullpen).length}</summary>
+                {/* THE NUMBER IS ARMS, BOTH CLUBS (tue-9 C): "Bullpen · 38 +" read as a
+                    score. It says what it counts now. */}
+                <summary>Bullpen · {pool.filter((p) => p.kind === 'arm' && p.bullpen).length} arms, both clubs</summary>
                 {pool.filter((p) => p.kind === 'arm' && p.bullpen).map(prow)}
               </details>
             ) : null}
@@ -378,6 +380,10 @@ function slotWord(p) {
   // reliever somebody left in by mistake.
   if (p?.probable) return p.starting ? 'starting' : 'probable';
   if (p?.probablePending) return 'starter not announced';
+  // A BAT WITH NO ORDER IS ON AN UNPOSTED CARD (lib/october/pool.js offers the
+  // posted nine only once a side posts), so his position is the roster's guess,
+  // not tonight's: "projected" until the club posts (tue-9 C).
+  if (p?.kind === 'bat' && p?.position) return `${p.position} · projected`;
   return p?.position ?? '';
 }
 
