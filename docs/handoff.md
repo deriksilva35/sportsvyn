@@ -1,51 +1,41 @@
-# Handoff - droplet relay tue-3, 6 Oct 2026 ~19:00Z
+# Handoff - droplet relay tue-4, 6 Oct 2026 ~20:00Z
 
 ## Live (PROD)
-- main 3d6d4de (unchanged; this handoff is the only new main commit). Poller release 1cd19ef.
-- Firewall (4 custom rules, all published):
-  - meta-externalagent-block  rule_meta_externalagent_block_28B5Jy  DENY, UA contains
-    meta-externalagent, site-wide, published ~17:58Z (first hour: 6,817 denied). facebookexternalhit untouched.
-  - alibaba-market-challenge  rule_alibaba_market_challenge_vaoGuY  CHALLENGE (/market + AS45102)
-  - forged-referer-all-paths (Deny), market-filter-crawl (Log) unchanged.
-  - Counts: vercel metrics vercel.request.count --since 1h --group-by waf_rule_id
-    --group-by waf_action [-f "asn_id eq '45102'"] -g 1h   (CLI works; MCP firewall read 404s)
-- Alibaba is NOT quiet: back after 17:30Z; 726 challenged 17:59-18:59Z.
-  The "zero for 24h" clock has not started. Rule A retirement: not yet.
+- main: docs-only commits on top of 3d6d4de (pushed this window). Code unchanged. Poller 1cd19ef.
+- PROD DB now has migrations 130 + 131 (applied via apply-migrations.mjs, ledgered, objects verified:
+  daily_guest_runs, uq_daily_guest_runs_claim_day, idx_daily_guest_runs_ip, daily_board_runs.late_claim
+  NOT NULL default false, daily_guest_runs.claimed_day). Pre-check: daily_guest_runs did not exist on
+  PROD, so 0 rows could violate the unique index. daily_board_runs 88 rows, 0 late. Nothing on PROD
+  reads the new objects until the branch deploys. Undo steps are in the 131 header.
+- Firewall unchanged: meta-externalagent-block (rule_meta_externalagent_block_28B5Jy, deny),
+  alibaba-market-challenge (challenge), forged-referer (deny), market-filter-crawl (log).
+  Alibaba still hitting /market (726 challenged 17:59-18:59Z): no retirement of rule A.
 
-## Branch daily-guest-play  (pushed, a488505, preview READY for that exact SHA)
-- Preview: sportsvyn-c0el3w209-deriksilva35s-projects.vercel.app. NOT merged. NO PROD migration.
-- Full suite on a488505 (env sourced, new files git-added): 6200 / 0 fail. eslint clean on touched files.
-- Rulings built (tue-3):
-  1. Claim after the ET close -> run saved to the account (entry + streak) but flagged
-     daily_board_runs.late_claim; board-scoped reads skip it (todayLeaderboard, played count,
-     band top, history tops, league day, morning push). Account aggregates (streak, own history,
-     main/perfect/played/best boards) still include it - say so if you want those excluded too.
-  2. One claim per account per ET day (claim day, not edition day); newest edition first;
-     second refused 'one claim per day'; unique index (claimed_by, claimed_day) settles races.
-  3. Age screen at claim: unchanged.
-- Migrations: 130 (daily_guest_runs) and 131 (late_claim + claimed_day + unique index) are on DEV
-  only, ledgered. PROD has 129. Order for ship: apply 130, 131 to PROD via apply-migrations.mjs,
-  THEN deploy.
-- Guard added: guestRuns.test classifies every file naming daily_board_runs as board- or
-  account-scoped; a new reader fails the suite until classified. zoneGuard pin for guestRuns.js 1 -> 2.
-- Preview caveat: if Preview env points at PROD DB, guest play will error there (no 130/131).
-  Check which DB Preview uses before judging the preview.
+## Branch daily-guest-play  (pushed, 896dddd; HELD, not merged)
+- Preview: https://sportsvyn-2gqlmiec3-deriksilva35s-projects.vercel.app  (Ready, exact SHA).
+  Behind Vercel Authentication (open it logged in to Vercel). Preview DB = DEV
+  (ep-rough-mouse), which has 130+131. Signed-out /daily/board renders 200 with Start, no sign-in
+  redirect (checked with `vercel curl`). Guest play against a 130+131 DB: yes.
+- Full suite on 896dddd: 6204 / 0 fail (env sourced, new tests git-added).
+- tue-4 rulings built: late claims count in streak + played/main/perfect/best boards; only the
+  closed day's own board/field/counts/league day/push exclude them (late_claim).
+  HARD RULE: guest submit UPDATE carries `now() < closes_at` at the write; claim requires
+  completed_at < closes_at; start refused at/after close. Tests pin start, straddling submit,
+  forged post-close completed_at, and the source guard.
+- Ship order now: deploy only (migrations done). Merge needs your GO.
 
 ## Open questions for Derik
-- Account aggregates and late claims (above): keep included?
 - Cookie clearing gives a second guest play (6/IP/hour cap only). Accept?
-- Late claimer sees nothing on /daily/board for the closed day (lands on today's rules card).
-  Want a "saved to your streak" note?
-- Alibaba: still hitting /market; keep challenge rule.
+- A late claimer sees no note on /daily/board for the closed day. Add "saved to your streak"?
 
 ## Queue
-1. Your review of the preview -> GO for PROD migrations 130+131, deploy, merge.
+1. Your preview review -> GO to merge daily-guest-play + deploy.
 2. FCS abbreviation fill; 9 colourless CFB schools; morning email gameOfTheDay.
 
 ## Notes
-- Lint: 2 pre-existing errors DailyRoom.js / HandleClaim.js (set-state-in-effect), also red on main.
-- No dev servers started this window. No killed test runs.
+- Lint: 2 pre-existing errors DailyRoom.js / HandleClaim.js, also red on main.
+- No dev servers, no killed runs. scripts/gridiron-backfill.mjs untracked, not mine.
 - Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
 
 ## Next step
-HOLDING-FOR-GO: PROD migrations 130+131, deploy, merge of daily-guest-play.
+HOLDING-FOR-GO: merge daily-guest-play.
