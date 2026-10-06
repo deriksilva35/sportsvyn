@@ -1,5 +1,21 @@
 @AGENTS.md
 
+## Session hygiene (tue-1, standing)
+
+1. ONE SESSION PER WORKING WINDOW. At the end of each window, or when context
+   passes ~50%, write docs/handoff.md (what's live, what's held, the queue,
+   open questions for Derik, the next step; under 60 lines), commit it, and
+   tell Derik "good time to /clear". Never resume an old session with
+   --continue / --resume. A new session starts by reading docs/handoff.md.
+2. BACKGROUND WORK REPORTS ONCE, when done. No interim notices, no "still
+   running", no "nothing new"; a background-task notification with no new
+   information gets no reply. No polling loop shorter than 30 minutes.
+3. REPORTS: one box, 25 lines max, outcomes only (shipped / held / needs
+   Derik). Details go in a file under docs/reports/ that Derik can ask for.
+   Never resend a report.
+4. MODELS: builders and gates run on Sonnet (Haiku for pure suite/merge
+   steps); only architecture or tricky debugging uses Opus.
+
 ## Remote Dev Environment (considered-cc droplet)
 
 This repo is cloned on an always-on DigitalOcean droplet (host: considered-cc,
