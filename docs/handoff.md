@@ -4,7 +4,7 @@
 - main 3d6d4de (unchanged; this handoff is the only new main commit). Poller release 1cd19ef.
 - Firewall (4 custom rules, all published):
   - meta-externalagent-block  rule_meta_externalagent_block_28B5Jy  DENY, UA contains
-    meta-externalagent, site-wide, published ~17:58Z. facebookexternalhit untouched.
+    meta-externalagent, site-wide, published ~17:58Z (first hour: 6,817 denied). facebookexternalhit untouched.
   - alibaba-market-challenge  rule_alibaba_market_challenge_vaoGuY  CHALLENGE (/market + AS45102)
   - forged-referer-all-paths (Deny), market-filter-crawl (Log) unchanged.
   - Counts: vercel metrics vercel.request.count --since 1h --group-by waf_rule_id
