@@ -383,10 +383,10 @@ test('THE DAILY BANNER, before: right under PLAY, the pitch, PLAY to the board; 
   assert.equal(few.querySelector('.pd-streak'), null, 'no streak, no pill');
 });
 
-test('THE DAILY BANNER, signed out: the before state, PLAY goes to sign-in and back to the board', () => {
+test('THE DAILY BANNER, signed out: the before state, PLAY goes straight to the board (a guest play, Option A)', () => {
   const c = screen({ v: GRID(1, { signedIn: false, daily: BAN({ state: 'before' }) }), signedIn: false });
   assert.equal(c.querySelector('.pd').dataset.state, 'before');
-  assert.equal(c.querySelector('.pd-play').getAttribute('href'), '/signin?callbackUrl=%2Fdaily%2Fboard');
+  assert.equal(c.querySelector('.pd-play').getAttribute('href'), '/daily/board', 'not /signin: the board plays signed out and offers sign-in itself');
 });
 
 test('THE DAILY BANNER, after: the score, BEAT N%, #rank of N, SHARE + SEE BOARD, the countdown', () => {

@@ -25,7 +25,6 @@ import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
-import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { lobbyV3 } from '@/lib/games/lobbyV3';
 import { readViewerTz } from '@/lib/gridiron/serverTz';
 import LobbyMain from '@/components/games/LobbyMain';
@@ -50,10 +49,12 @@ export default async function GamesPage({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode();
-  // GAMES WAS THE ODD ONE: no signed-out branch at all, so a stranger in the
-  // container got the lobby - four cards, none of them playable. Same rule.
-  requireSignInInShell({ isShell, userId, dest: '/games' });
-
+  // PLAY IS WHERE A SIGNED-OUT APP LAUNCH LANDS (Option A, tue-2). The native
+  // start URL 307s here (proxy.js step 0b), and this used to bounce a stranger
+  // to /signin in the container. Now they land on the lobby, whose Daily card
+  // plays signed out (a guest run, claimed at sign-in - lib/daily/guestRuns.js).
+  // The other tabs keep their sign-in guard. The redirect lived in THIS web
+  // route, not in the iOS shell, so no binary change is involved.
   // THE PLAY LOBBY'S SPORT CHIP (?sport=) and the zone the server knows the
   // reader is in (sv_tz), so its first paint names the same zone as its times.
   const tz = await readViewerTz();

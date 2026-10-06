@@ -40,6 +40,7 @@
  * show no record on any path, because there is nothing real to put there.
  */
 
+import { cookies } from 'next/headers';
 import { auth } from '@/auth';
 import HouseTag from '@/components/house/HouseTag';
 import '@/components/house/house.css';
@@ -57,6 +58,9 @@ import { todayLeaderboard, streakLeaderboard } from '@/lib/daily/seasonBoardLead
 import { openRevealFor, sealedTeams } from '@/lib/daily/openReveal';
 import { displayTeamCode } from '@/lib/footballdb/historicalTeamDisplay';
 import SeasonBoard from '@/components/daily/season/SeasonBoard';
+import {
+  GUEST_COOKIE, verifyDevice, signStartToken, guestRunFor, guestRevealFor, claimGuestRuns,
+} from '@/lib/daily/guestRuns';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,13 +89,88 @@ export default async function SeasonBoardPage({ searchParams }) {
       const year = String(board.season_year);
 
       if (userId == null) {
-        // A2: the rules card, sign-in in place of Start - every platform,
-        // the edition path only. dest back to /daily/board.
+        // SIGNED OUT (Option A): ONE GUEST PLAY PER DEVICE. The run lives in
+        // daily_guest_runs - on no board, in no count - until a sign-in claims
+        // it (lib/daily/guestRuns.js). dest is back to /daily/board, where the
+        // claim happens on load.
+        const signInHref = shellSigninHref(DAILY_V2_PATH, isShell);
+        const deviceId = verifyDevice((await cookies()).get(GUEST_COOKIE)?.value);
+        const g = await guestRunFor(sql, { boardId: board.id, deviceId });
+        const [{ closed: gClosed, claimable }] = await sql`
+          SELECT now() >= ${board.closes_at}::timestamptz AS closed,
+                 ${g?.claim_expires_at ?? null}::timestamptz > now() AS claimable`;
+        const canClaim = g != null && g.picks != null && g.claimed_by == null && claimable === true;
+
+        if (g == null) {
+          if (gClosed) {
+            return (
+              <SeasonBoard
+                edition={edition} year={null} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked
+                boardId={board.id} signInHref={signInHref}
+              />
+            );
+          }
+          return (
+            <SeasonBoard
+              edition={edition} year={null} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked
+              boardId={board.id} closesAt={board.closes_at} editionDate={editionDate}
+              guest={{ signInHref }}
+            />
+          );
+        }
+
+        if (g.picks != null && !gClosed) {
+          // FINISHED, DAY OPEN: their own reveal - no rank, no "you" row - and
+          // the claim.
+          const reveal = await guestRevealFor(sql, { board, run: g });
+          return (
+            <SeasonBoard
+              edition={edition} year={null} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked
+              boardId={board.id} initialScreen="grade" openReveal={reveal} closesAt={board.closes_at}
+              guest={{ signInHref: canClaim ? signInHref : null, claimed: g.claimed_by != null }}
+            />
+          );
+        }
+
+        if (g.picks != null) {
+          // FINISHED, DAY CLOSED: the stored grade, and the claim while it lasts.
+          const regraded = regradeStoredRun(board, g.picks);
+          const clockLabel = mmss(Math.min(DAILY_ROUND_SECONDS, Number(g.elapsed_s)) * 1000);
+          return (
+            <SeasonBoard
+              edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked
+              boardId={board.id} initialPlay={regraded.play} initialGrade={regraded.grade} initialClockLabel={clockLabel}
+              closesAt={board.closes_at} editionDate={editionDate}
+              guest={{ signInHref: canClaim ? signInHref : null, claimed: g.claimed_by != null }}
+            />
+          );
+        }
+
+        const [{ expired }] = await sql`
+          SELECT now() > ${g.started_at}::timestamptz + make_interval(secs => ${DAILY_ROUND_SECONDS + DAILY_ROUND_GRACE_SECONDS}) AS expired`;
+        if (gClosed || expired) {
+          // Same words as a signed-in DNF; nothing is offered but the way in.
+          return (
+            <div className="sbd">
+              <div className="sbd-crumb-row"><Link className="appcrumb" href="/games">&larr; Games</Link></div>
+              <header className="sbd-hdr"><span className="sbd-ed">{edition}</span></header>
+              <div className="sbd-mid-wait" style={{ margin: '16px 12px 0' }}>
+                <b>Ran out of clock</b>
+                <div style={{ marginTop: 6 }}>
+                  You opened today&rsquo;s board but never locked a roster, so there&rsquo;s no score.
+                  One board a day - a new one opens at midnight ET.
+                </div>
+              </div>
+            </div>
+          );
+        }
+        // STILL OPEN: resume on the SAME clock, with a fresh signed token.
         return (
           <SeasonBoard
-            edition={edition} year={null} teams={sealedTeams(board.board)} slots={slotsOf(board)} ranked
-            boardId={board.id}
-            signInHref={shellSigninHref(DAILY_V2_PATH, isShell)}
+            edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked
+            boardId={board.id} closesAt={board.closes_at} editionDate={editionDate}
+            initialStartedAt={String(new Date(g.started_at).toISOString())} initialScreen="board"
+            guest={{ signInHref, token: signStartToken({ runId: g.id, boardId: board.id, deviceId }) }}
           />
         );
       }
@@ -101,8 +180,40 @@ export default async function SeasonBoardPage({ searchParams }) {
       // render) and the same discipline the rest of this feature already
       // follows for every other instant comparison.
       const [{ closed }] = await sql`SELECT now() >= ${board.closes_at}::timestamptz AS closed`;
-      const existing = (await sql`
+      const runFor = async () => (await sql`
         SELECT * FROM daily_board_runs WHERE board_id = ${board.id} AND user_id = ${userId}`)[0] ?? null;
+      let existing = await runFor();
+
+      // A GUEST PLAY ON THIS DEVICE IS CLAIMED HERE, ON THE WAY BACK FROM SIGN-IN
+      // (Option A): the finished run becomes this account's run - rank, streak
+      // and all - and everything below renders it like any other. If the device
+      // played as a guest and there is nothing to claim (it ran out of clock, or
+      // the claim lapsed), the board stays spent: no second attempt.
+      if (!existing) {
+        const deviceId = verifyDevice((await cookies()).get(GUEST_COOKIE)?.value);
+        if (deviceId) {
+          const c = await claimGuestRuns(sql, { deviceId, userId: Number(userId) });
+          if (c.ok) existing = await runFor();
+          else if (!closed) {
+            const g = await guestRunFor(sql, { boardId: board.id, deviceId });
+            if (g && g.claimed_by == null) {
+              return (
+                <div className="sbd">
+                  <div className="sbd-crumb-row"><Link className="appcrumb" href="/games">&larr; Games</Link></div>
+                  <header className="sbd-hdr"><span className="sbd-ed">{edition}</span></header>
+                  <div className="sbd-mid-wait" style={{ margin: '16px 12px 0' }}>
+                    <b>Already played on this device</b>
+                    <div style={{ marginTop: 6 }}>
+                      Today&rsquo;s board was opened here before you signed in, so it can&rsquo;t be started again.
+                      One board a day - a new one opens at midnight ET.
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+          }
+        }
+      }
 
       // THREE STATES, NOT TWO (097). The row is now written at START, so its
       // mere existence no longer means "played" - picks is the discriminator:
@@ -140,13 +251,20 @@ export default async function SeasonBoardPage({ searchParams }) {
           closed ? todayLeaderboard(sql, board.id) : Promise.resolve(null),
         ]);
         return (
-          <SeasonBoard
-            edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked userId={userId}
-            boardId={board.id}
-            initialPlay={regraded.play} initialGrade={regraded.grade} initialClockLabel={clockLabel}
-            streak={streak} closesAt={board.closes_at} todayRows={todayRows}
-            editionDate={editionDate}
-          />
+          <>
+            {existing.late_claim === true ? (
+              <p className="sbd-late-claim" style={{ margin: '12px 12px 0', fontSize: 13 }}>
+                Saved to your streak. Today&rsquo;s board had already closed.
+              </p>
+            ) : null}
+            <SeasonBoard
+              edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked userId={userId}
+              boardId={board.id}
+              initialPlay={regraded.play} initialGrade={regraded.grade} initialClockLabel={clockLabel}
+              streak={streak} closesAt={board.closes_at} todayRows={todayRows}
+              editionDate={editionDate}
+            />
+          </>
         );
       }
 
