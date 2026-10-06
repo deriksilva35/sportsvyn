@@ -251,13 +251,20 @@ export default async function SeasonBoardPage({ searchParams }) {
           closed ? todayLeaderboard(sql, board.id) : Promise.resolve(null),
         ]);
         return (
-          <SeasonBoard
-            edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked userId={userId}
-            boardId={board.id}
-            initialPlay={regraded.play} initialGrade={regraded.grade} initialClockLabel={clockLabel}
-            streak={streak} closesAt={board.closes_at} todayRows={todayRows}
-            editionDate={editionDate}
-          />
+          <>
+            {existing.late_claim === true ? (
+              <p className="sbd-late-claim" style={{ margin: '12px 12px 0', fontSize: 13 }}>
+                Saved to your streak. Today&rsquo;s board had already closed.
+              </p>
+            ) : null}
+            <SeasonBoard
+              edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked userId={userId}
+              boardId={board.id}
+              initialPlay={regraded.play} initialGrade={regraded.grade} initialClockLabel={clockLabel}
+              streak={streak} closesAt={board.closes_at} todayRows={todayRows}
+              editionDate={editionDate}
+            />
+          </>
         );
       }
 
