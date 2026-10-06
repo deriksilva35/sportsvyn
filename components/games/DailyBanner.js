@@ -5,7 +5,8 @@
 // lib/games/dailyBanner.js decided every word; this file draws one of two
 // states:
 //   before  THE DAILY · OCT 4, the streak, the pitch, PLAY (volt) - signed out
-//           PLAY goes to sign-in and back to the board - and "N played today"
+//           PLAY goes straight to the board (Option A, tue-2: a signed-out play
+//           is a guest run, claimed at sign-in) - and "N played today"
 //           once N >= 25
 //   after   the score, BEAT N%, #rank of N, SHARE + SEE BOARD, the streak and
 //           the countdown to the next board
@@ -63,7 +64,7 @@ export default function DailyBanner({ b, signedIn = false, signinHref = (h) => h
       <b className="pd-pitch">Build the best lineup from one season</b>
       <p className="pd-line">Three minutes. The same board for everyone. A new one every midnight.</p>
       <div className="pd-row">
-        <Link className="pd-btn pd-play" href={signedIn ? b.href : signinHref(b.href)}>Play</Link>
+        <Link className="pd-btn pd-play" href={b.href}>Play</Link>
         {b.playedToday != null && <span className="pd-played">{num(b.playedToday)} played today</span>}
       </div>
     </section>
