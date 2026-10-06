@@ -34,6 +34,14 @@ export default function PickemGrade({
   const { faded, hadThem } = fadedFavourites(view.games);
   const glyph = pickemGlyphRow(rows);
 
+  // A CONFIDENCE BOARD (ruling tue-7): points first, record second, every game a
+  // row with what it scored. conf is view.confidence, null on a regular board.
+  const conf = view.confidence?.points != null ? view.confidence : null;
+  const confRows = conf
+    ? [...view.games].sort((a, b) => (b.my_rank ?? 0) - (a.my_rank ?? 0))
+    : [];
+  const confRecord = conf ? `${conf.correct}-${conf.played - conf.correct}` : null;
+
   const myRow = leaderboard.top.find((r) => r.userId === userId) ?? leaderboard.self ?? null;
 
   // NO ENTRY MEANS NO GRADE (relay 2b-fix item 2). A reader who never
@@ -68,7 +76,39 @@ export default function PickemGrade({
         </div>
       )}
 
-      {entered && (
+      {conf && (
+        <div className="cfd-grade" data-scoring="confidence">
+          <div className="cfd-grade-pts n">{conf.points}<small>of {conf.max}</small></div>
+          <p className="cfd-grade-line">
+            {confRecord}
+            {conf.beatPct != null && <> &middot; beat {conf.beatPct}% of the field</>}
+          </p>
+          {conf.voidCount > 0 && (
+            <p className="cfd-grade-void">
+              {conf.voidCount === 1 ? 'One game postponed' : `${plural(conf.voidCount, 'game')} postponed`}, so its {conf.voidPoints} came off your max.
+            </p>
+          )}
+          <div style={{ marginTop: 8 }}>
+            {confRows.map((g) => {
+              const you = g.my_side === 'home' ? g.home : g.my_side === 'away' ? g.away : null;
+              return (
+                <div className="cfd-gr" key={g.match_id} data-points={g.void ? 'void' : (g.my_points ?? 0)}>
+                  <div className="cfd-rk n">{g.my_rank}</div>
+                  <div className="cfd-gr-nm">
+                    {g.away} @ {g.home}
+                    <small>{you ? `you: ${you}` : 'no pick'}</small>
+                  </div>
+                  {g.void
+                    ? <span className="cfd-pts v">void</span>
+                    : <span className={`cfd-pts ${g.my_points > 0 ? 'j' : 't'} n`}>{g.my_points > 0 ? `+${g.my_points}` : '0'}</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {entered && !conf && (
       <div className="gg-grade">
         <div className="gg-grade-top">
           <b>Board {view.contest.boardNumber}</b>
@@ -96,7 +136,7 @@ export default function PickemGrade({
       </div>
       )}
 
-      {entered && (
+      {entered && !conf && (
         <div className="gg-mathline">
           {right} right &middot; {wrong} wrong
           {tie > 0 && <> &middot; {tie} tied, counted for nobody</>}
@@ -116,14 +156,14 @@ export default function PickemGrade({
           <div className={`gg-lr${myRow && r.userId === myRow.userId ? ' gg-lr--you' : ''}`} key={r.userId}>
             <span className="gg-lr-rk">{r.rank}</span>
             <span className="gg-lr-who">{myRow && r.userId === myRow.userId ? 'you' : r.name}<HouseMark row={r} /></span>
-            <span className="gg-lr-sc">{r.score}</span>
+            <span className="gg-lr-sc">{leaderboard.confidence && r.max != null ? `${r.score} of ${r.max}` : r.score}</span>
           </div>
         ))}
         {leaderboard.self && (
           <div className="gg-lr gg-lr--you">
             <span className="gg-lr-rk">{leaderboard.self.rank}</span>
             <span className="gg-lr-who">you</span>
-            <span className="gg-lr-sc">{leaderboard.self.score}</span>
+            <span className="gg-lr-sc">{leaderboard.confidence && leaderboard.self.max != null ? `${leaderboard.self.score} of ${leaderboard.self.max}` : leaderboard.self.score}</span>
           </div>
         )}
       </div>
@@ -133,7 +173,7 @@ export default function PickemGrade({
           glyph={glyph}
           // THE SHARE CARD CARRIES THE NATIONAL PLACE ONLY: "2 of 3" from a
           // league view would read as a place on the whole board.
-          caption={`Pick'em Board ${view.contest.boardNumber} · ${right} of ${played} · ${pct}%${myRow?.rank && leaderboard.played > 1 && !leaderboard.league ? ` · ${myRow.rank} of ${leaderboard.played}` : ''}`}
+          caption={`Pick'em Board ${view.contest.boardNumber} · ${conf ? `${conf.points} of ${conf.max} · ${confRecord}` : `${right} of ${played} · ${pct}%`}${myRow?.rank && leaderboard.played > 1 && !leaderboard.league ? ` · ${myRow.rank} of ${leaderboard.played}` : ''}`}
           url={`sportsvyn.com/pickem/${sport}`}
         />
       )}

@@ -76,6 +76,8 @@ test('TeamMark has only its named users, and every one passes a league', async (
     'app/mlb/game/[slug]/page.js', 'app/mlb/bracket/page.js', 'components/pickem/SeriesBoard.js',
     // the Pick'em board - the site's one facing pair
     'components/pickem/PickemBoard.js',
+    // the confidence sheet's two team pills (tue-7) - the same facing pair, in a row
+    'components/pickem/ConfidenceBoard.js',
     // single-team rows: rankings, All teams, Today's your-teams, the follow list
     // (FollowedTeams - /account's, on /you since sun-16 D), the Run
     'components/rankings/RankRow.js', 'components/rankings/AllTeams.js', 'components/rankings/ArcadeBoard.js', 'components/gridiron/TodayV2.js',

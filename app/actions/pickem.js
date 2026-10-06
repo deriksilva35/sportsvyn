@@ -5,7 +5,7 @@
 // lock included - the server clock is the only clock).
 
 import { auth } from '@/auth';
-import { savePick } from '@/lib/pickem/entry';
+import { savePick, saveSheet } from '@/lib/pickem/entry';
 import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 export async function savePickAction(contestId, matchId, side) {
@@ -14,4 +14,13 @@ export async function savePickAction(contestId, matchId, side) {
   if (userId == null) return { ok: false, reason: 'signed_out' };
   const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   return savePick(Number(userId), Number(contestId), Number(matchId), side);
+}
+
+/** Confidence boards: the whole sheet - picks and ranks - in one call. */
+export async function saveSheetAction(contestId, picks, ranks) {
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  if (userId == null) return { ok: false, reason: 'signed_out' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
+  return saveSheet(Number(userId), Number(contestId), { picks, ranks });
 }
