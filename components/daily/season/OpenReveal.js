@@ -52,7 +52,7 @@ export function openShareText({ editionDate, season, streak, total, slots }) {
   return shareText(shareCardModel({ phase: 'open', editionDate, seasonYear: season, streak, score: total, slots }));
 }
 
-export default function OpenReveal({ edition, reveal, refreshMs = 60_000, share = null }) {
+export default function OpenReveal({ edition, reveal, refreshMs = 60_000, share = null, claim = null }) {
   const { rows = [], total, rank, of, beatPct, streak, board } = reveal ?? {};
   const meId = board?.me?.userId ?? null;
   const line = beatLine(beatPct, of);
@@ -94,8 +94,13 @@ export default function OpenReveal({ edition, reveal, refreshMs = 60_000, share 
             <span>points</span>
           </div>
         </div>
+        {claim?.signInHref ? (
+          <a className="sbd-btn dr-claim" style={{ display: 'block', marginTop: 12, textAlign: 'center', textDecoration: 'none' }} href={claim.signInHref}>
+            Sign in to keep your streak
+          </a>
+        ) : null}
         <div className="lb-cut">
-          <span>{streak != null && streak > 0 ? `🔥 ${streak} day streak` : 'Streak starts today'}</span>
+          <span>{claim ? 'Not on the board yet' : streak != null && streak > 0 ? `🔥 ${streak} day streak` : 'Streak starts today'}</span>
           <span>Perfect roster at midnight ET</span>
         </div>
         {canShare ? (

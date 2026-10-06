@@ -133,12 +133,16 @@ const Crumb = () => (
  *                  practice has no sign-in requirement of its own.
  * @param signInHref  when set (edition path, signed out), the rules card
  *                    shows a sign-in link in place of Start.
+ * @param guest   Option A: a signed-out play. { signInHref, token?, claimed? }.
+ *                Start and the submit go to /api/daily/guest/*, the rules card
+ *                keeps Start, and the result carries the claim. token arrives
+ *                with a resumed run; a fresh start returns its own.
  * @param initialPlay/initialGrade/initialClockLabel  A3: a returning user
  *   who already has a run for this board lands straight on their STORED
  *   grade - these three, passed together, skip 'rules'/'board' entirely.
  */
 export default function SeasonBoard({
-  edition, year: yearProp, teams: teamsProp, slots, ranked, userId = null, signInHref = null,
+  edition, year: yearProp, teams: teamsProp, slots, ranked, userId = null, signInHref = null, guest = null,
   // THE OPEN-DAY REVEAL (1b, lib/daily/openReveal.js): a finished run on a day
   // that has not closed gets this instead of the grade. From the page on a
   // reload; from the submit response on a fresh finish (revealState below).
@@ -168,6 +172,9 @@ export default function SeasonBoard({
   const [revealState, setRevealState] = useState(null);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState(null);
+  // A SIGNED-OUT PLAY'S SIGNED START TOKEN (Option A): from the page on a resume, from the start response otherwise.
+  const guestMode = guest != null && userId == null;
+  const [guestToken, setGuestToken] = useState(guest?.token ?? null);
   // REHYDRATE A RECEIPT'S PLAY. initialPlay arrives across the RSC boundary
   // with `used` as an ARRAY (a Set cannot cross it); everything on this side
   // - teamIsDead, commitPick, boardStory's play.used.size - wants the Set
@@ -238,17 +245,21 @@ export default function SeasonBoard({
   // screen only changes on a response - a failed or offline start leaves the
   // rules card up rather than handing out a board that was never claimed.
   const handleStart = async () => {
-    if (!canStartClock(userId).ok) return;
+    if (!guestMode && !canStartClock(userId).ok) return;
     if (starting) return;                       // double-tap is not two attempts
     setStarting(true);
     setStartError(null);
     try {
-      const res = await fetch('/api/daily/board/start', { method: 'POST' });
+      const res = await fetch(guestMode ? '/api/daily/guest/start' : '/api/daily/board/start', { method: 'POST' });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         setStartError(body?.error === 'board closed'
           ? 'This board has closed.'
-          : 'Could not start. Try again.');
+          : body?.error === 'already played'
+            ? 'You already played today\u2019s board on this device. Sign in to claim it.'
+            : body?.error === 'rate limited'
+              ? 'Too many new plays from this connection. Try again later, or sign in.'
+              : 'Could not start. Try again.');
         return;
       }
       if (body.year) setYear(String(body.year));
@@ -256,6 +267,7 @@ export default function SeasonBoard({
         setTeams(body.teams);
         setPlay(initBoardPlay(body.teams, slots));
       }
+      if (body.token) setGuestToken(body.token);
       beginTimer(body.startedAt);
       setScreen('board');
     } catch {
@@ -344,10 +356,12 @@ export default function SeasonBoard({
     setFinishError(null);
     const elapsedS = startedAt ? Math.max(0, Math.round((Date.now() - startedAt) / 1000)) : 0;
     try {
-      const res = await fetch('/api/daily/board/run', {
+      const res = await fetch(guestMode ? '/api/daily/guest/run' : '/api/daily/board/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ boardId, picks: picksFromPlay(play), elapsedS }),
+        body: JSON.stringify(guestMode
+          ? { token: guestToken, picks: picksFromPlay(play) }
+          : { boardId, picks: picksFromPlay(play), elapsedS }),
       });
       const body = await res.json().catch(() => ({}));
       if (res.ok && body?.ok && body?.open && body?.reveal) {
@@ -436,7 +450,7 @@ export default function SeasonBoard({
         <Crumb />
         <RulesCard
           edition={edition} year={year} slotCount={slots.length} teamCount={teams.length}
-          ranked={ranked} onStart={handleStart} signInHref={signInHref}
+          ranked={ranked} onStart={handleStart} signInHref={signInHref} guest={guestMode ? guest : null}
           starting={starting} startError={startError}
         />
       </div>
@@ -450,7 +464,7 @@ export default function SeasonBoard({
       <div className="sbd">
         <Crumb />
         <OpenReveal
-          edition={edition} reveal={openReveal ?? revealState}
+          edition={edition} reveal={openReveal ?? revealState} claim={guestMode ? guest : null}
           share={ranked && editionDate ? { editionDate, season: shareSeason ?? year } : null}
         />
       </div>
@@ -493,7 +507,7 @@ export default function SeasonBoard({
         <GradeScreen
           edition={edition} year={year} grade={grade} play={play} teams={teams} clockLabel={clockLabel} ranked={ranked}
           streak={streak} closesAt={closesAt} todayRows={todayRows} userId={userId}
-          editionDate={editionDate} shareStreak={shareStreak}
+          editionDate={editionDate} shareStreak={shareStreak} claim={guestMode ? guest : null}
         />
       </div>
     );
@@ -714,7 +728,7 @@ export default function SeasonBoard({
 // were unreachable the moment the new screen landed - and an unreachable
 // component is how a second, stale interaction model survives a redesign.
 
-function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signInHref, starting = false, startError = null }) {
+function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signInHref, guest = null, starting = false, startError = null }) {
   const unused = teamCount - slotCount;
   return (
     <div className="sbd-rules">
@@ -758,7 +772,9 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
       <div className="sbd-rnote">
         {/* sat-5 Y8: picks are held in this tab until submit (the run route
             is the only write), so a closed tab loses them. */}
-        {signInHref
+        {guest
+          ? 'Three minutes from Start. The clock is on the server. One play a day on this device - sign in afterwards to keep it: your streak and a place on the board only start once you do. Your picks stay on this device until you lock in; close the tab and they are lost. A new board opens at midnight ET.'
+          : signInHref
           ? 'Three minutes from Start. The clock is on the server. Sign in to start it. One attempt - this board is ranked. Your picks stay on this device until you lock in; close the tab and they are lost. A new board opens at midnight ET.'
           : ranked
             ? 'Three minutes from Start. The clock is on the server. One attempt - this board is ranked. Your picks stay on this device until you lock in; close the tab and they are lost. A new board opens at midnight ET.'
@@ -773,6 +789,9 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
             {starting ? 'Starting…' : 'Start the 3:00 clock'}
           </button>
           {startError ? <div className="sbd-warn" style={{ marginTop: 10 }}>{startError}</div> : null}
+          {guest?.signInHref ? (
+            <a className="sbd-copy" style={{ marginTop: 12, textDecoration: 'none', textAlign: 'center', display: 'block' }} href={guest.signInHref}>Sign in instead</a>
+          ) : null}
         </>
       )}
     </div>
@@ -787,7 +806,7 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
  */
 function GradeScreen({
   edition, year, grade, play, teams, clockLabel, ranked, streak,
-  closesAt = null, todayRows = null, userId = null, editionDate = null, shareStreak = null,
+  closesAt = null, todayRows = null, userId = null, editionDate = null, shareStreak = null, claim = null,
 }) {
   // THE HOOK COMES BEFORE THE EARLY RETURN - React's own rule, and an
   // eslint error otherwise (a conditional useState call). copied/setCopied
@@ -887,6 +906,12 @@ function GradeScreen({
           </button>
         )}
       </div>
+
+      {claim?.signInHref ? (
+        <a className="sbd-btn" style={{ margin: '12px 12px 0', textDecoration: 'none', textAlign: 'center', display: 'block' }} href={claim.signInHref}>
+          Sign in to keep your streak
+        </a>
+      ) : null}
 
       <div className="sbd-grade">
         <div className="sbd-grade-top">

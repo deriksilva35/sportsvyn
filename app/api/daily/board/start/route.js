@@ -15,6 +15,7 @@
  * closesAt are server-issued and never trusted back - submitRun re-reads the
  * stored row and re-checks the close itself.
  */
+import { cookies } from 'next/headers';
 import { auth } from '@/auth';
 import { sql } from '@/lib/db';
 import { startRun } from '@/lib/daily/seasonBoardRuns';
@@ -23,6 +24,7 @@ import { todayEt } from '@/lib/daily/entries';
 import { ageGateResponse } from '@/lib/auth/ageGateDb';
 import { readViewerTz } from '@/lib/gridiron/serverTz';
 import { stampRunTz } from '@/lib/daily/morningPush';
+import { GUEST_COOKIE, verifyDevice, guestBlocksStart } from '@/lib/daily/guestRuns';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +39,15 @@ export async function POST() {
     return Response.json({ error: 'no edition' }, { status: 404 });
   }
   const board = await ensureBoardForDate(sql, editionDate);
+
+  // A DEVICE THAT ALREADY PLAYED THIS BOARD AS A GUEST has seen the cards: no
+  // second attempt by signing in and pressing Start. A finished guest run is
+  // claimed here (the page does it on load); anything else is refused.
+  const blocked = await guestBlocksStart(sql, {
+    boardId: board.id, deviceId: verifyDevice((await cookies()).get(GUEST_COOKIE)?.value), userId: Number(userId),
+  });
+  if (blocked?.claimed) return Response.json({ error: 'claimed your guest run' }, { status: 409 });
+  if (blocked?.blocked) return Response.json({ error: 'played as guest' }, { status: 409 });
 
   const r = await startRun(sql, { boardId: board.id, userId: Number(userId) });
   if (!r.ok) return Response.json({ error: r.reason }, { status: r.status ?? 400 });
