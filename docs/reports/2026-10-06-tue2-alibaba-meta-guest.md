@@ -8,7 +8,7 @@
   firewall read 404s on this project; the CLI works).
 - Match count: query it any time with
     vercel metrics vercel.request.count --since 1h --group-by waf_rule_id --group-by waf_action -f "asn_id eq '45102'" -g 1h
-  First 14 minutes: 240 challenged. First full hour: see the report box / handoff.
+  First 14 minutes: 240 challenged. First full hour (16:26-17:26Z): 360 challenged, 0 after 17:00Z.
 - Context: AS45102 also trips managed_bot_protection (log): 5,160 requests in the
   hour before, across all paths, not just /market.
 

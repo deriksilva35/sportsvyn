@@ -5,7 +5,8 @@
 - Firewall: NEW rule alibaba-market-challenge (rule_alibaba_market_challenge_vaoGuY),
   path eq /market AND AS45102 -> challenge, published 16:26Z. Rule A (forged
   referer, Deny) unchanged. Rule B (market-filter-crawl) still LOG.
-  Match count: vercel metrics vercel.request.count --since 1h --group-by waf_rule_id
+  FIRST HOUR (16:26-17:26Z): 360 challenged, all in the first ~35 min, 0 after 17:00 (Alibaba stopped hitting /market).
+  Re-query: vercel metrics vercel.request.count --since 1h --group-by waf_rule_id
   --group-by waf_action -f "asn_id eq '45102'" -g 1h
 - Recon: docs/reports/2026-10-06-tue2-alibaba-meta-guest.md (meta-externalagent
   ignores robots.txt: 799k hits/24h, 0 robots fetches, 57k on disallowed /signin).
