@@ -5,7 +5,7 @@
  * card (app/daily/board/[date]/card, 1080x1680) plus its lines of text.
  *
  * THREE ROUTES, CHOSEN BY FEATURE TEST (lib/daily/shareRoute.js):
- *   1. navigator.canShare({ files, text, url }) -> navigator.share with the file
+ *   1. navigator.canShare({ files, text }) -> navigator.share with the file
  *   2. the app shell's existing bridge (lib/shell/bridge.js sendShare,
  *      postMessage { type: 'share', url, title })
  *   3. download the image + copy the text (desktop)
