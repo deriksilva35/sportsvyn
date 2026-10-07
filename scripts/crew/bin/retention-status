@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# retention-status [--dev] - Watcher rule G5 (data-retention job not ok) and its last runs. Read-only.
+. "$HOME/crew/lib/common.sh"
+which=prod; [ "${1:-}" = --dev ] && which=dev
+db_env "$which"
+node "$CREW/lib/q.mjs" -e "SELECT started_at, finished_at, ok, kind, left(coalesce(error, ''), 80) AS error FROM sync_runs WHERE source = 'data-retention' ORDER BY started_at DESC LIMIT 5" || true
+exec node "$CREW/lib/rules.mjs" G5

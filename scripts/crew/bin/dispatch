@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# ~/crew/bin/dispatch - the WATCHER key's forced command (authorized_keys command=).
+# Runs ONE script from ~/crew/bin by name, with simple arguments. Nothing else.
+set -euo pipefail
+BIN="$HOME/crew/bin"
+read -r -a argv <<< "${SSH_ORIGINAL_COMMAND:-}"
+name="${argv[0]:-}"
+if [ -z "$name" ] || [ "$name" = help ]; then
+  echo "crew watcher: available:"; for f in "$BIN"/*; do b=$(basename "$f"); [ "$b" = dispatch ] || echo "  $b"; done; exit 0
+fi
+[[ "$name" =~ ^[a-z][a-z0-9-]*$ ]] && [ "$name" != dispatch ] && [ -x "$BIN/$name" ] || { echo "not allowed: $name" >&2; exit 126; }
+for a in "${argv[@]:1}"; do [[ "$a" =~ ^[A-Za-z0-9=_.:,-]+$ ]] || { echo "argument not allowed: $a" >&2; exit 126; }; done
+exec "$BIN/$name" "${argv[@]:1}"

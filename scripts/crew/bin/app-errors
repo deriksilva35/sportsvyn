@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# app-errors [HOURS=24] [--dev] - uncaught errors the droplet services recorded (app_errors). Read-only.
+. "$HOME/crew/lib/common.sh"
+h=24; which=prod
+for a in "$@"; do case "$a" in --dev) which=dev;; *) [[ "$a" =~ ^[0-9]+$ ]] && h="$a" || die "usage: app-errors [HOURS] [--dev]";; esac; done
+db_env "$which"
+node "$CREW/lib/q.mjs" -e "SELECT service, count, ts AS last_seen, first_seen, stack_hash, left(message, 100) AS message
+  FROM app_errors WHERE ts > now() - interval '$h hours' ORDER BY ts DESC LIMIT 50"
