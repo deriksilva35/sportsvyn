@@ -80,7 +80,7 @@ function MatchCard({ match, teamId, broadcasters, kind }) {
             output ("Thu, 7:00 PM PDT"), so the meta line just shows the
             date now. Cleaner, no duplication. */}
         <div className="match-card-meta">
-          <LocalDate iso={match.kickoff_at} />
+          <LocalDate iso={match.kickoff_at} tbd={match.kickoff_tbd === true} />
         </div>
       </div>
       <div className="match-card-body">
@@ -91,7 +91,7 @@ function MatchCard({ match, teamId, broadcasters, kind }) {
           </div>
           <div className="match-scoreline-center">
             <div className="match-time-display">
-              <LocalTime iso={match.kickoff_at} />
+              <LocalTime iso={match.kickoff_at} tbd={match.kickoff_tbd === true} />
               {/* "ET · {venue}" prefix removed — LocalTime above now
                   carries the visitor's zone abbreviation, so the
                   hardcoded "ET" prefix was redundant + wrong for

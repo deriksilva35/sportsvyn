@@ -13,7 +13,7 @@
 
 import { Fragment, useRef, useState, useTransition } from 'react';
 import { saveRunPickAction, clearRunPickAction } from '@/app/actions/run';
-import { timeLabel } from '@/lib/time/display';
+import { kickoffTimeLabel } from '@/lib/time/display';
 import { useViewerZone } from '@/components/time/ViewerTz';
 import { sendPicksChanged } from '@/lib/shell/bridge';
 import TeamMark from '@/components/team/TeamMark';
@@ -303,10 +303,10 @@ function Header({ view, filled, leagueLine }) {
       <div className="rn-crow">
         {/* THE CLOCK COUNTS TO THE NEXT CLUB LOCK - October's header, per club:
             the soonest first pitch of a club nobody is locked out of yet. */}
-        {view.phase === 'open' && view.nextLock ? <Clock ms={view.nextLock.msAway} /> : null}
+        {view.phase === 'open' && view.nextLock && view.nextLock.tbd !== true ? <Clock ms={view.nextLock.msAway} /> : null}
         <div className="rn-lbl">
           {view.phase === 'open' && view.nextLock
-            ? <>next lock<b>{view.nextLock.label ?? ''}{view.nextLock.label ? ' · ' : ''}{view.nextLock.kickoffAt ? timeLabel(view.nextLock.kickoffAt, { tz }) : ''}</b></>
+            ? <>next lock<b>{view.nextLock.label ?? ''}{view.nextLock.label ? ' · ' : ''}{view.nextLock.kickoffAt ? kickoffTimeLabel(view.nextLock.kickoffAt, { tz, tbd: view.nextLock.tbd === true }) : ''}</b></>
             : <>round<b>{view.contest.label}</b></>}
         </div>
         <div className="rn-tot">

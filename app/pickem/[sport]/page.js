@@ -48,6 +48,7 @@ import SportSwitch from '@/components/pickem/SportSwitch';
 import '../../boards/board.css';
 import { boardScope } from '@/lib/leagues/boardScope';
 import { leagueChips } from '@/lib/boards/view';
+import { isPlaceholderKickoff } from '@/lib/mlb/kickoffTbd';
 
 // ONE TIME ZONE PER SCREEN (relay 3b item 2) - see app/weekly/page.js. Every
 // clock this page renders goes through StandaloneDate/StandaloneTime.
@@ -226,7 +227,7 @@ async function PreOpen({ sport, now }) {
     <section className="pk-ghost">
       <div className="big">{preOpenHeadline(sport, { planned: true })}</div>
       <div className="when">
-        Board {n} opens <StandaloneDateOnly iso={plan.opensAt} /> &middot; first lock <StandaloneDate iso={plan.firstKickoff ?? plan.locksAt} />
+        Board {n} opens <StandaloneDateOnly iso={plan.opensAt} /> &middot; first lock <StandaloneDate iso={plan.firstKickoff ?? plan.locksAt} tbd={sport === 'mlb' && isPlaceholderKickoff(plan.firstKickoff ?? plan.locksAt)} />
       </div>
     </section>
   );

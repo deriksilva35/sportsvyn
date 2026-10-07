@@ -25,6 +25,7 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { seriesBoardView } from '@/lib/mlb/seriesPickem';
 import SeriesBoard from '@/components/pickem/SeriesBoard';
 import '../../games/games.css';
+import { isPlaceholderKickoff } from '@/lib/mlb/kickoffTbd';
 import '../pickem.css';
 import './series.css';
 
@@ -69,7 +70,7 @@ export default async function MlbPickemPage() {
             <div className="sb-lock">
               {v.phase === 'settled'
                 ? <>Graded · <b>{v.score ?? 0}</b> of {v.contest.maxPoints}</>
-                : <>Locks at first pitch · <StandaloneDate iso={v.contest.locksAt} /></>}
+                : <>Locks at first pitch · <StandaloneDate iso={v.contest.locksAt} tbd={isPlaceholderKickoff(v.contest.locksAt)} /></>}
             </div>
             <SeriesBoard
               contest={{ ...v.contest, phase: v.phase, made: v.made, total: v.total, score: v.score }}

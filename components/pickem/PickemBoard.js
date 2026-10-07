@@ -122,7 +122,7 @@ export default function PickemBoard({
   const losses = games.filter((g) => g.graded === 'L').length;
   const pending = games.filter((g) => g.status !== 'final').length;
   const anyKicked = games.some((g) => g.kicked);
-  const nextKick = games.find((g) => !g.kicked)?.kickoff_at ?? null;
+  const nextKick = games.find((g) => !g.kicked && g.kickoff_tbd !== true)?.kickoff_at ?? null;
   const cd = nextKick ? countdownTo(nextKick, now) : null;
 
   function tap(g, side) {
@@ -198,7 +198,7 @@ export default function PickemBoard({
         </div>
         <div className="pkv-rec">
           <div>
-            <div className="pkv-eb pkv-quiet">Your board {nextKick == null ? '· locked' : ''}</div>
+            <div className="pkv-eb pkv-quiet">Your board {games.some((g) => !g.kicked) ? '' : '· locked'}</div>
             {/* W-L AND PENDING, the same three numbers the old .pk-record
                 block carried - recordOf's own arithmetic, not a second count. */}
             <div className="pkv-big n">
@@ -287,7 +287,7 @@ export default function PickemBoard({
                         // nothing more rather than an invented quarter.
                         <span className="pkv-l">{g.period ? `${g.period}${g.clock ? ` ${g.clock}` : ''}` : 'LIVE'}</span>
                       ) : (
-                        <span>{held ? <span className="pk-pending-lbl">Needs a handle</span> : off ? <>Off &middot; void</> : <StandaloneTime iso={g.kickoff_at} />}</span>
+                        <span>{held ? <span className="pk-pending-lbl">Needs a handle</span> : off ? <>Off &middot; void</> : <StandaloneTime iso={g.kickoff_at} tbd={g.kickoff_tbd === true} />}</span>
                       )}
                       <span className="pkv-gtopr">
                         {/* THE WAY OUT TO THE GAME PAGE stays. The mock does not

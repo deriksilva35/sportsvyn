@@ -157,7 +157,7 @@ export default async function MlbGamePage({ params, searchParams }) {
           <div className="mg-chips">
             {live ? <span className="mg-chip live">LIVE</span> : null}
             {g.chip ? <span className="mg-qc">{g.chip}</span> : null}
-            {!show && g.kickoffAt ? <span className="mg-chip time">{g.kickoffTbd ? 'Time TBD' : <StandaloneTime iso={g.kickoffAt} serverTz={viewerTz} />}</span> : null}
+            {!show && g.kickoffAt ? <span className="mg-chip time"><StandaloneTime iso={g.kickoffAt} serverTz={viewerTz} tbd={g.kickoffTbd === true} /></span> : null}
             {g.seasonPhase === 'POST' ? <span className="mg-chip post">POSTSEASON</span> : null}
           </div>
           {seriesText ? <p className="mg-series" data-series="1">{seriesText}</p> : null}
