@@ -1,14 +1,3 @@
 {
-  "changes": [
-    {
-      "file": "app/mlb/game/[slug]/mlbgame.css",
-      "key": ".mg-bt tr.sub .n { color }",
-      "after": "#c5c5c2"
-    },
-    {
-      "file": "app/mlb/game/[slug]/mlbgame.css",
-      "key": ".mg-bt tr.sub .n { padding-left }",
-      "after": "18px"
-    }
-  ]
+  "changes": []
 }
