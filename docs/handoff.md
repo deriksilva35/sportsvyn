@@ -1,36 +1,45 @@
-# Handoff - droplet relay tue-10, 7 Oct 2026 ~03:25Z
+# Handoff - droplet relay wed-1, 7 Oct 2026
 
 ## Live (PROD)
-- main d3ad0c9 (Vercel). Poller/daily-tick/mlb-advance release d3ad0c9.
-- Confidence Pick'em S1: boards opening >= 20 Oct 2026 (NFL/CFB/NBA) are stamped at creation.
-  Migration 132 applied + ledgered on PROD. Season table = total earned / total max for everyone.
-- Time TBD: midnight-ET placeholder flagged (matches.metadata.kickoff_tbd), never locked on or
-  counted to; Run refuses to open a round with a TBD first day. 5 October boards repaired.
-- Box score: unnamed subs labelled "sub". October A-D from tue-9 unchanged.
-- PROD errors after both deploys: none (Vercel runtime + poller journal).
+- main 77327ca (Vercel deploys from main): merge of tbd-everywhere. "Time TBD" now shows on every MLB
+  list and card: Scores, team pages, Pick'em boards, lobby, The Run, October and the game page. There is
+  one formatter, kickoffTimeLabel in lib/time/display.js, and a guard test.
+- NOT YET CHECKED: Vercel production deploy of 77327ca and its runtime errors.
+- Poller, daily-tick and mlb-advance are still on release d3ad0c9. `scripts/deploy-poller.sh origin/main`
+  was DENIED by the auto-mode classifier, and the relay stopped there (standing rule).
 
 ## Held
-- Nothing.
+- league-formats-s2 @ d85e287 (S2, DEV only). Migration 133 is applied and ledgered on DEV. Preview is Ready.
+  Its earlier full run had 12 failures:
+  - 1 was dark parity, fixed by moving the CSS to its own file.
+  - 1 was settings.test, fixed.
+  - 10 were the nba replay collision; the file passes alone.
+  NEEDS before GO: merge main (77327ca) INTO the branch (no rebase), re-run the FULL suite alone, then a
+  fresh preview.
+- At GO: `apply-migrations.mjs --status` on PROD, then 133 on PROD, then merge.
 
 ## Queue
-1. Watch 13 Oct: the NFL/CFB week boards created that morning must be REGULAR (no meta.scoring);
-   20 Oct boards must carry meta.scoring='confidence'.
-2. S2 leagues pick_format (REGULAR|CONFIDENCE), then ATS.
-3. FCS abbreviation fill; 9 colourless CFB schools; morning email gameOfTheDay.
+1. Deploy the poller release to 77327ca (needs Derik to allow, or run it himself), then prove the head.
+2. S2: merge main in, full suite, preview, then HOLDING-FOR-GO.
+3. 13 Oct watch: that morning's NFL/CFB boards must be REGULAR; the 20 Oct boards must be confidence.
+4. ATS (S3), FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
 
 ## Open questions for Derik
-1. A no-sheet confidence entry scores on the kickoff-order default (carried from tue-7): OK?
-2. TBD display covers October, The Run's lock and the MLB game page; other MLB lists still print
-   the stored date. Extend?
+1. A TBD MLB game on a Pick'em series board still LOCKS at the midnight-ET placeholder (server lock and
+   client `kicked`). Should it lock only when a real time posts?
+2. S2 card copy is mine, because no mock exists on the droplet (PICK_FORMAT_COPY in lib/leagues/pickFormat.js).
+   OK, or send the mock?
+3. After the lock, a non-switch league is refused with "a change starts next season". Nothing queues the
+   change for next season. OK?
+4. The league-filtered Pick'em board (?league=) still ranks on the public scoring, not the league format. Align?
 
 ## Notes
-- Standing rule (tue-10): main comes into a branch by MERGE; no rebase, no force-push; any
-  permission prompt -> stop and report.
-- scripts/gridiron-backfill.mjs sits in ~/scratch/ (moved, not committed).
-- Undo files (scratchpad, session 08939bc1): sweep-undo.jsonl (DEV, tue-9),
-  repair-tbd-undo.jsonl (PROD boards, tue-10).
-- Detail: docs/reports/2026-10-07-tue10.md, docs/reports/2026-10-06-tue9-october-ds.md
+- Settled (wed-1): a no-sheet confidence entry scores on the kickoff-order default. Do not raise it again.
+- lib/nba/replay.test.mjs fails whenever two suites share DEV, because every run uses the same sentinel prefix.
+  Run gates alone.
+- Builder worktree: .claude/worktrees/agent-a780fc5ddc0290b35 (branch tbd-everywhere, merged).
+- Detail: docs/reports/2026-10-07-wed1.md
 - Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
 
 ## Next step
-Queue item 1 on 13 Oct, then S2.
+Allow or run the poller deploy, then S2's merge-main + suite + preview, then GO.
