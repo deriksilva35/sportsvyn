@@ -44,7 +44,7 @@ export default function ConfidenceBoard({
 
   const games = useMemo(() => initial.map((g) => ({
     ...g,
-    kicked: g.kicked || new Date(g.kickoff_at).getTime() <= now,
+    kicked: g.kicked || (g.kickoff_tbd !== true && new Date(g.kickoff_at).getTime() <= now),
   })), [initial, now]);
   const rows = useMemo(() => [...games].sort((a, b) => ranks[b.match_id] - ranks[a.match_id]), [games, ranks]);
 
