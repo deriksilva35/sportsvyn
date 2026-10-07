@@ -25,6 +25,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { TIME_TBD } from '@/lib/time/display';
 
 const OPTIONS = {
   weekday: 'short',
@@ -41,8 +42,9 @@ function formatLocal(iso) {
   return new Intl.DateTimeFormat(undefined, OPTIONS).format(new Date(iso));
 }
 
-export default function LocalTime({ iso }) {
+export default function LocalTime({ iso, tbd = false }) {
   const [label, setLabel] = useState(() => formatUtc(iso));
   useEffect(() => { setLabel(formatLocal(iso)); }, [iso]);
+  if (tbd) return <>{TIME_TBD}</>; // unset first pitch (lib/mlb/kickoffTbd.js)
   return <>{label}</>;
 }

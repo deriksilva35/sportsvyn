@@ -14,12 +14,12 @@
 import { playDateLabel, playTimeLabel } from '@/lib/games/playTime';
 import { useViewerZone } from '@/components/time/ViewerTz';
 
-function label(kind, iso, now, tz) {
-  if (kind === 'time') return playTimeLabel(iso, { now, tz });
+function label(kind, iso, now, tz, tbd) {
+  if (kind === 'time') return playTimeLabel(iso, { now, tz, tbd });
   return playDateLabel(iso, { tz, weekday: kind === 'day' });
 }
 
-export default function PlayWhen({ iso, kind = 'time', now = null, serverTz = null }) {
+export default function PlayWhen({ iso, kind = 'time', now = null, serverTz = null, tbd = false }) {
   const tz = useViewerZone(serverTz);
-  return <>{label(kind, iso, now, tz)}</>;
+  return <>{label(kind, iso, now, tz, tbd)}</>;
 }

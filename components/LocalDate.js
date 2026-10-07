@@ -20,11 +20,16 @@
  */
 
 import { useEffect, useState } from 'react';
+import { FALLBACK_TZ } from '@/lib/time/display';
 
 const OPTIONS = { month: 'short', day: 'numeric' };
 
 function formatUtc(iso) {
   return new Intl.DateTimeFormat('en-US', { ...OPTIONS, timeZone: 'UTC' }).format(new Date(iso));
+}
+
+function formatEt(iso) {
+  return new Intl.DateTimeFormat('en-US', { ...OPTIONS, timeZone: FALLBACK_TZ }).format(new Date(iso));
 }
 
 function formatLocal(iso) {
@@ -33,8 +38,11 @@ function formatLocal(iso) {
   return new Intl.DateTimeFormat(undefined, OPTIONS).format(new Date(iso));
 }
 
-export default function LocalDate({ iso }) {
-  const [label, setLabel] = useState(() => formatUtc(iso));
-  useEffect(() => { setLabel(formatLocal(iso)); }, [iso]);
+// tbd: an unset MLB first pitch is midnight ET of the game's DATE (lib/mlb/
+// kickoffTbd.js), so its day is the ET day - in the viewer's own zone the
+// instant would read as the evening before.
+export default function LocalDate({ iso, tbd = false }) {
+  const [label, setLabel] = useState(() => (tbd ? formatEt(iso) : formatUtc(iso)));
+  useEffect(() => { setLabel(tbd ? formatEt(iso) : formatLocal(iso)); }, [iso, tbd]);
   return <>{label}</>;
 }

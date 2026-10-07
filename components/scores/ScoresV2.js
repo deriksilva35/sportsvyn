@@ -159,7 +159,7 @@ function Card({ g, x, signedIn, signinHref, tz }) {
       <div className="sv2-lbl">
         {live ? <span className="l">{liveLabel(g)}</span>
           : final ? <span>Final · {g.etWeekday ?? weekdayOf(g.kickoffAt.slice(0, 10))}</span>
-            : <span><StandaloneTime iso={g.kickoffAt} serverTz={tz} /></span>}
+            : <span><StandaloneTime iso={g.kickoffAt} serverTz={tz} tbd={g.kickoffTbd === true} /></span>}
         <span>{LEAGUE_LABEL[g.leagueSlug]}{g.network ? ` · ${g.network}` : ''}</span>
         <span className="bell">{x.stake?.alerts ? (live ? 'Alerts on' : 'Alerts') : ''}</span>
       </div>

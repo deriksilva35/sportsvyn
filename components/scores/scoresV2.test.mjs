@@ -625,7 +625,7 @@ test('A FIRST VISIT (no cookie) is Eastern on both - and both then settle on the
   assert.match(src, /useEffect\(\(\) => \{ setName\(zoneNameOf\(\)\); \}, \[\]\)/, 'the header settles on the browser zone after mount, like the cards');
   const v2 = readFileSync(path.join(__dirname, 'ScoresV2.js'), 'utf8');
   assert.match(v2, /all times <ZoneLabel initial=\{zoneLabel\} \/>/);
-  assert.match(v2, /<StandaloneTime iso=\{g\.kickoffAt\} serverTz=\{tz\} \/>/);
+  assert.match(v2, /<StandaloneTime iso=\{g\.kickoffAt\} serverTz=\{tz\} tbd=\{g\.kickoffTbd === true\} \/>/);
 });
 
 test('one spelling of the zone on both sides', async () => {

@@ -46,16 +46,20 @@
  * client alike, so hydration still matches - is in that zone instead of ET, and
  * the page's header ("all times Pacific") and its cards agree from the first
  * paint rather than only after mount. Omitted, nothing changes for any caller.
+ *
+ * tbd (tue-10, Time TBD everywhere): the game's first pitch is unset (the provider's
+ * midnight-ET placeholder) - prints "Time TBD" instead of a fake clock time.
+ * Callers pass the flag from their data layer (lib/mlb/kickoffTbd.js isKickoffTbd).
  */
 
-import { timeLabel } from '@/lib/time/display';
+import { kickoffTimeLabel } from '@/lib/time/display';
 import { useViewerZone } from '@/components/time/ViewerTz';
 
 // ONE ZONE SOURCE (sun-16 item B): useViewerZone - the page's sv_tz (serverTz
 // or the ViewerTzProvider) for the server render and hydration, the device's
 // own zone straight after. No effect and no hand-rolled browser read: those
 // were where the thu-26 "undefined became Eastern" bug lived.
-export default function StandaloneTime({ iso, weekday = false, zone = true, serverTz = null }) {
+export default function StandaloneTime({ iso, weekday = false, zone = true, serverTz = null, tbd = false }) {
   const tz = useViewerZone(serverTz);
-  return <>{timeLabel(iso, { weekday, zone, tz })}</>;
+  return <>{kickoffTimeLabel(iso, { weekday, zone, tz, tbd })}</>;
 }
