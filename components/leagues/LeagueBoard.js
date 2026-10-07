@@ -10,8 +10,8 @@ import { ordinal } from '@/lib/leagues/standings';
 import { gameLabel, summaryLine, startLabel, rankPointsCopy } from '@/lib/leagues/settings';
 import { hasStarted } from '@/lib/leagues/describe';
 import { leagueHref, LEAGUE_TABS, pickemBoardLinks } from '@/lib/leagues/nav';
-import { PICK_FORMAT_LABEL, leaguePlaysPickem, recordLine, switchOffer } from '@/lib/leagues/pickFormat';
-import PickFormatSwitch from '@/components/leagues/PickFormatSwitch';
+import { PICK_FORMAT_LABEL, leaguePlaysPickem, recordLine, switchOffer, pendingLine } from '@/lib/leagues/pickFormat';
+import PickFormatSwitch, { PendingPickFormat } from '@/components/leagues/PickFormatSwitch';
 import { dateLabel } from '@/lib/time/display';
 
 
@@ -202,6 +202,7 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
       {leaguePlaysPickem(league.games ?? []) && (
         <div className="lv-note lv-foot" data-pick-format-line={league.pick_format ?? 'regular'}>
           <p className="lv-note">{pickFormatLine(league)}</p>
+          {pendingLine(league) && <PendingPickFormat leagueId={league.id} line={pendingLine(league)} canUndo={isOwner} />}
           {offer && <PickFormatSwitch leagueId={league.id} to={offer.to} kind={offer.kind} />}
         </div>
       )}

@@ -14,7 +14,7 @@
  */
 
 import { auth } from '@/auth';
-import { createLeague, joinLeague, setLeaguePickFormat } from '@/lib/leagues/core';
+import { createLeague, joinLeague, setLeaguePickFormat, undoPendingPickFormat } from '@/lib/leagues/core';
 import { joinByInvite, resetInvite } from '@/lib/leagues/invite';
 import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
@@ -88,7 +88,8 @@ export async function resetInviteAction(leagueId) {
 
 /**
  * The commissioner's Pick'em format: a free change before the first week locks,
- * then a pre-S2 league's one-time switch (lib/leagues/pickFormat.js).
+ * then a pre-S2 league's one-time switch, else the change is queued for next
+ * season (lib/leagues/pickFormat.js).
  */
 export async function setLeaguePickFormatAction(leagueId, pickFormat) {
   const userId = await uid();
@@ -98,5 +99,17 @@ export async function setLeaguePickFormatAction(leagueId, pickFormat) {
     return await setLeaguePickFormat(userId, Number(leagueId), pickFormat);
   } catch {
     return { ok: false, reason: 'Could not change the format' };
+  }
+}
+
+/** Undo a queued Pick'em format change (commissioner only). */
+export async function undoPendingPickFormatAction(leagueId) {
+  const userId = await uid();
+  if (userId == null) return { ok: false, reason: 'Sign in first' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
+  try {
+    return await undoPendingPickFormat(userId, Number(leagueId));
+  } catch {
+    return { ok: false, reason: 'Could not undo the change' };
   }
 }

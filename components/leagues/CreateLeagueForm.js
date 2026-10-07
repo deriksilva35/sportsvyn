@@ -18,7 +18,7 @@ import {
   MEMBERS_MIN, MEMBERS_MAX, MEMBERS_DEFAULT, SPANS, SPAN_LABEL, rankPointsCopy,
 } from '@/lib/leagues/settings';
 import { validateLeagueName } from '@/lib/leagues/name';
-import { PICK_FORMATS, PICK_FORMAT_LABEL, PICK_FORMAT_COPY, PICK_FORMAT_LOCK_NOTE, leaguePlaysPickem } from '@/lib/leagues/pickFormat';
+import { PICK_FORMATS, PICK_FORMAT_LABEL, PICK_FORMAT_COPY, PICK_FORMAT_TAG, PICK_FORMAT_TITLE, PICK_FORMAT_LOCK_NOTE, leaguePlaysPickem } from '@/lib/leagues/pickFormat';
 
 function Step({ n, title, children }) {
   return (
@@ -31,13 +31,14 @@ function Step({ n, title, children }) {
   );
 }
 
-function Radio({ on, title, body, disabled, onPick }) {
+function Radio({ on, title, body, tag, disabled, onPick }) {
   return (
     <button type="button" role="radio" aria-checked={on} className="lv-radio" disabled={disabled} onClick={onPick}>
       <span className="lv-radio-dot" aria-hidden="true" />
       <span className="lv-radio-body">
         <span className="lv-radio-t">{title}</span>
         <span className="lv-note">{body}</span>
+        {tag && <span className="lv-note lv-radio-tag">{tag}</span>}
       </span>
     </button>
   );
@@ -119,10 +120,10 @@ export default function CreateLeagueForm({ choices, anchors, survivor = false })
       </Step>
 
       {pickem && (
-        <Step n={2} title="How should your league score?">
-          <div role="radiogroup" aria-label="How should your league score?" style={{ display: 'flex', flexDirection: 'column', gap: 8 }} data-pick-format>
+        <Step n={2} title={PICK_FORMAT_TITLE}>
+          <div role="radiogroup" aria-label={PICK_FORMAT_TITLE} style={{ display: 'flex', flexDirection: 'column', gap: 8 }} data-pick-format>
             {PICK_FORMATS.map((f) => (
-              <Radio key={f} on={effPick === f} title={PICK_FORMAT_LABEL[f]} onPick={() => setPickFormat(f)} body={PICK_FORMAT_COPY[f]} />
+              <Radio key={f} on={effPick === f} title={PICK_FORMAT_LABEL[f]} onPick={() => setPickFormat(f)} body={PICK_FORMAT_COPY[f]} tag={PICK_FORMAT_TAG[f]} />
             ))}
           </div>
           <p className="lv-note">{PICK_FORMAT_LOCK_NOTE}</p>
