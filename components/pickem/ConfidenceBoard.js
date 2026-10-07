@@ -144,7 +144,7 @@ export default function ConfidenceBoard({
                 <div className="cfd-foot">
                   {locked
                     ? <span className="cfd-lk">{g.void ? 'Void' : 'Locked'}</span>
-                    : <span><StandaloneTime iso={g.kickoff_at} /></span>}
+                    : <span><StandaloneTime iso={g.kickoff_at} tbd={g.kickoff_tbd === true} /></span>}
                   {graded ? <span className={`cfd-pts ${g.my_points > 0 ? 'j' : 't'} n`}>{g.my_points > 0 ? `+${g.my_points}` : '0'}</span> : null}
                   {g.void ? <span className="cfd-pts v">void</span> : null}
                   {locked && !graded && !g.void && sideOf == null ? <span className="cfd-pts v">no pick</span> : null}

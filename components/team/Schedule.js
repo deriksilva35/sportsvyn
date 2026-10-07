@@ -32,7 +32,7 @@ function ScheduleRow({ match, teamId }) {
     const code = us > them ? 'win' : us < them ? 'loss' : 'draw';
     resultEl = <span className={`schedule-result ${code}`}>{us}—{them}</span>;
   } else if (isUpcoming) {
-    resultEl = <span className="schedule-result tbd"><LocalTime iso={match.kickoff_at} /></span>;
+    resultEl = <span className="schedule-result tbd"><LocalTime iso={match.kickoff_at} tbd={match.kickoff_tbd === true} /></span>;
   } else {
     resultEl = <span className="schedule-result tbd">{match.status}</span>;
   }
@@ -43,7 +43,7 @@ function ScheduleRow({ match, teamId }) {
 
   return (
     <div className={`schedule-row${isUpcoming ? ' upcoming' : ''}`}>
-      <span className="schedule-date"><LocalDate iso={match.kickoff_at} /></span>
+      <span className="schedule-date"><LocalDate iso={match.kickoff_at} tbd={match.kickoff_tbd === true} /></span>
       <span className="schedule-stage">{stage}</span>
       <div className="schedule-matchup">
         <Flag abbreviation={usAbbr} colorPrimary={usColor} variant="mini" />

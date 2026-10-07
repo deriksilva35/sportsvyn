@@ -44,6 +44,7 @@ import '@/components/games/season.css';
 import '@/components/games/play.css';
 import '@/components/games/playCollapse.css';
 import '@/components/games/moveGrid.css';
+import { isPlaceholderKickoff } from '@/lib/mlb/kickoffTbd';
 
 // ---------------------------------------------------------------------------
 // THE PLAY LOBBY (thu-38 + fri-1) - the approved canvas "Play tab lobby"
@@ -72,12 +73,15 @@ function Progress({ p }) {
   );
 }
 
+/** An MLB item whose lock instant is the midnight-ET placeholder: "Time TBD", never a fake clock. */
+const lockTbd = (i, iso) => i?.sport === 'mlb' && isPlaceholderKickoff(iso);
+
 /** "0 of 6 · locks Sun 10:00 AM" - the status, then the item's own time clause. */
 function Status({ i, now, tz }) {
   return (
     <>
       {i.status}
-      {i.at?.iso ? <>{i.status ? ' · ' : ''}{i.at.words} <PlayWhen iso={i.at.iso} now={now} serverTz={tz} /></> : null}
+      {i.at?.iso ? <>{i.status ? ' · ' : ''}{i.at.words} <PlayWhen iso={i.at.iso} now={now} serverTz={tz} tbd={lockTbd(i, i.at.iso)} /></> : null}
     </>
   );
 }
@@ -102,7 +106,7 @@ function MoveCard({ i, now, tz, signedIn, signinHref }) {
       <b className="pl-mv-t">{i.title}</b>
       <span className="pl-mv-s">
         {count}
-        {i.locksAt ? <>{count ? ' · ' : ''}locks <PlayWhen iso={i.locksAt} now={now} serverTz={tz} /></> : null}
+        {i.locksAt ? <>{count ? ' · ' : ''}locks <PlayWhen iso={i.locksAt} now={now} serverTz={tz} tbd={lockTbd(i, i.locksAt)} /></> : null}
       </span>
       <Progress p={p} />
       <span className="pl-mv-b">{signedIn ? ctaShort(i) : 'SIGN IN'} <span aria-hidden="true">&rarr;</span></span>
@@ -175,13 +179,13 @@ function CardSummary({ k, now, tz }) {
       ? <>Opens <PlayWhen iso={k.opensAt} kind="day" serverTz={tz} /></>
       : 'Nothing open this week';
   }
-  const { parts = [], nextLock = null } = k.summary ?? {};
+  const { parts = [], nextLock = null, nextLockTbd = false } = k.summary ?? {};
   const bits = parts.flatMap((p) => (p.opensAt
     ? [<span key={p.key}>{p.text} <PlayWhen iso={p.opensAt} kind="day" serverTz={tz} /></span>]
     : p.closesAt
       ? [<span key={p.key}>{p.text}</span>, <span key={`${p.key}-c`}><PlayCloses iso={p.closesAt} now={now} serverTz={tz} /></span>]
       : [<span key={p.key}>{p.text}</span>]));
-  if (nextLock) bits.push(<span key="__lock">next lock <PlayWhen iso={nextLock} now={now} serverTz={tz} /></span>);
+  if (nextLock) bits.push(<span key="__lock">next lock <PlayWhen iso={nextLock} now={now} serverTz={tz} tbd={nextLockTbd} /></span>);
   return bits.flatMap((b, n) => (n ? [' · ', b] : [b]));
 }
 
@@ -510,7 +514,7 @@ function AlertsPane({ v, signedIn, signinHref }) {
       </div>
       <p className="gv-foot">
         Game alerts follow your teams and any game you set them on.
-        {v.nextAlertAt && <> Next: <StandaloneTime iso={v.nextAlertAt} weekday /></>}
+        {v.nextAlertAt && <> Next: <StandaloneTime iso={v.nextAlertAt} weekday tbd={v.nextAlertTbd === true} /></>}
       </p>
     </>
   );

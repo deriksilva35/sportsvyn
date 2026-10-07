@@ -24,12 +24,12 @@
  * a DST boundary.
  */
 
-import { dateTimeLabel } from '@/lib/time/display';
+import { dateTimeKickoffLabel } from '@/lib/time/display';
 import { useViewerZone } from '@/components/time/ViewerTz';
 
 // The formatting is lib/time/display.js's dateTimeLabel; the zone is
 // useViewerZone's (the page's sv_tz, then the device's) - sun-16 item B.
-export default function StandaloneDate({ iso, serverTz = null }) {
+export default function StandaloneDate({ iso, serverTz = null, tbd = false }) {
   const tz = useViewerZone(serverTz);
-  return <>{dateTimeLabel(iso, { tz })}</>;
+  return <>{dateTimeKickoffLabel(iso, { tz, tbd })}</>;
 }

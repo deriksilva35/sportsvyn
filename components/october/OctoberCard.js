@@ -15,7 +15,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { saveOctoberPickAction, clearOctoberPickAction } from '@/app/actions/october';
-import { timeLabel } from '@/lib/time/display';
+import { kickoffTimeLabel } from '@/lib/time/display';
 import { useViewerZone } from '@/components/time/ViewerTz';
 import { sendPicksChanged } from '@/lib/shell/bridge';
 import { probablesShort } from '@/lib/mlb/cardLines';
@@ -410,7 +410,7 @@ const two = (t) => (t?.c1 && t?.c2 ? `linear-gradient(to bottom, ${t.c1} 0 58%, 
 // the same first pitch. lib/time/display.js, the one formatter, in the zone
 // useViewerZone gives (sv_tz on the server, the device's after mount).
 // NO TIME IS "Time TBD" (tue-10): the view ships null for a first pitch nobody has set.
-const timeOf = (iso, tz) => (iso ? timeLabel(iso, { tz }) : 'Time TBD');
+const timeOf = (iso, tz) => kickoffTimeLabel(iso, { tz, tbd: !iso });
 const stageLabel = (s) => ({ wild_card: 'Wild Card', division: 'Division Series', championship: 'Championship Series', world_series: 'World Series' }[s] ?? 'Postseason');
 const teamLine = (s, view, tz) => {
   const g = view.board.find((x) => String(x.matchId) === String(s.matchId));

@@ -187,7 +187,7 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false, 
             ? (nba
               ? <span className="fin">{nbaFinalLabel(nba.finalPeriod)}</span>
               : <span className="fin">{soccer ? 'FT' : 'Final'} · {g.etWeekday ?? weekdayOf(g.kickoffAt.slice(0, 10))}</span>)
-            : <span className="ko"><StandaloneTime iso={g.kickoffAt} serverTz={tz} />{g.network ? ` · ${g.network}` : ''}</span>}
+            : <span className="ko"><StandaloneTime iso={g.kickoffAt} serverTz={tz} tbd={g.kickoffTbd === true} />{g.network ? ` · ${g.network}` : ''}</span>}
         <span className="where">{live || final ? where : LEAGUE_LABEL[g.leagueSlug]}{bell ? <span className="bell"> · {bell}</span> : null}</span>
         {/* THE GAME PAGE'S BELL (thu-41): the alerts sheet and its Live
             Activity row, on the card's top row. Never on the board. */}
