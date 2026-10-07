@@ -103,7 +103,7 @@ export default function PickemBoard({
 
   const games = useMemo(() => initialGames.map((g) => ({
     ...g,
-    kicked: g.kicked || new Date(g.kickoff_at).getTime() <= now,
+    kicked: g.kicked || (g.kickoff_tbd !== true && new Date(g.kickoff_at).getTime() <= now),
     my_side: mine[g.match_id] ?? g.my_side,
   })), [initialGames, mine, now]);
 
