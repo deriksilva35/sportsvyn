@@ -1,45 +1,39 @@
-# Handoff - droplet relay wed-1, 7 Oct 2026
+# Handoff - droplet relay wed-2, 7 Oct 2026
 
 ## Live (PROD)
-- main 77327ca (Vercel deploys from main): merge of tbd-everywhere. "Time TBD" now shows on every MLB
-  list and card: Scores, team pages, Pick'em boards, lobby, The Run, October and the game page. There is
-  one formatter, kickoffTimeLabel in lib/time/display.js, and a guard test.
-- NOT YET CHECKED: Vercel production deploy of 77327ca and its runtime errors.
-- Poller, daily-tick and mlb-advance are still on release d3ad0c9. `scripts/deploy-poller.sh origin/main`
-  was DENIED by the auto-mode classifier, and the relay stopped there (standing rule).
+- main 7d7caf3 = merge of tbd-locks: a TBD MLB game never locks at its midnight-ET placeholder on any
+  board (Pick'em incl. series, day boards, The Run, lobby, settle). One rule: isGameLocked() in
+  lib/mlb/kickoffTbd.js. Vercel prod READY; 0 runtime errors.
+- Poller, daily-tick, mlb-advance on release 7d7caf3 (deploy-poller.sh proof 05:17:25Z); 0 errors.
+- 77327ca (Time TBD everywhere) verified: poller + Vercel, 0 errors.
 
-## Held
-- league-formats-s2 @ d85e287 (S2, DEV only). Migration 133 is applied and ledgered on DEV. Preview is Ready.
-  Its earlier full run had 12 failures:
-  - 1 was dark parity, fixed by moving the CSS to its own file.
-  - 1 was settings.test, fixed.
-  - 10 were the nba replay collision; the file passes alone.
-  NEEDS before GO: merge main (77327ca) INTO the branch (no rebase), re-run the FULL suite alone, then a
-  fresh preview.
-- At GO: `apply-migrations.mjs --status` on PROD, then 133 on PROD, then merge.
+## Held - HOLDING-FOR-GO
+- league-formats-s2 @ b75fcfe (S2). Mock copy exact; after the lock a change queues
+  (pick_format_pending, migration 134) with "Switches to <Format> next season" + Undo; applied on read
+  at the first board of the next season (lib/leagues/rollover.js). Main merged in, full suite alone
+  6315/6315, preview READY.
+- PROD --status: 133 and 134 pending, CHANGED 0.
+- At GO: `DATABASE_URL="$PROD_DATABASE_URL" node scripts/apply-migrations.mjs 133_league_pick_format.sql`
+  then 134, then `--status`, then merge league-formats-s2 into main (no rebase) and push.
 
 ## Queue
-1. Deploy the poller release to 77327ca (needs Derik to allow, or run it himself), then prove the head.
-2. S2: merge main in, full suite, preview, then HOLDING-FOR-GO.
-3. 13 Oct watch: that morning's NFL/CFB boards must be REGULAR; the 20 Oct boards must be confidence.
-4. ATS (S3), FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
+1. S2 GO (above).
+2. 13 Oct watch: that morning's NFL/CFB boards must be REGULAR; 20 Oct boards confidence.
+3. ATS (S3), FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
+4. Pre-existing eslint error on main: react-hooks/purity at components/pickem/PickemBoard.js:150.
 
 ## Open questions for Derik
-1. A TBD MLB game on a Pick'em series board still LOCKS at the midnight-ET placeholder (server lock and
-   client `kicked`). Should it lock only when a real time posts?
-2. S2 card copy is mine, because no mock exists on the droplet (PICK_FORMAT_COPY in lib/leagues/pickFormat.js).
-   OK, or send the mock?
-3. After the lock, a non-switch league is refused with "a change starts next season". Nothing queues the
-   change for next season. OK?
-4. The league-filtered Pick'em board (?league=) still ranks on the public scoring, not the league format. Align?
+1. S2's rollover applies on the first READ of the league after the next season's first board exists
+   (there is no season job). OK, or want it on a cron?
+2. The league-filtered Pick'em board (?league=) still ranks on the public scoring, not the league format.
+   Align?
 
 ## Notes
-- Settled (wed-1): a no-sheet confidence entry scores on the kickoff-order default. Do not raise it again.
-- lib/nba/replay.test.mjs fails whenever two suites share DEV, because every run uses the same sentinel prefix.
-  Run gates alone.
-- Builder worktree: .claude/worktrees/agent-a780fc5ddc0290b35 (branch tbd-everywhere, merged).
-- Detail: docs/reports/2026-10-07-wed1.md
+- Worktrees: ../sv-tbd-locks (merged), ../sv-s2 (held).
+- entryFlow.test's two DEV tests flake only when lib/pickem/* files run in parallel by hand.
+- lib/nba/replay.test.mjs collides when two suites share DEV: run gates alone.
+- Detail: docs/reports/2026-10-07-wed2.md
 - Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
 
 ## Next step
-Allow or run the poller deploy, then S2's merge-main + suite + preview, then GO.
+On Derik's GO: migrations 133+134 on PROD, then merge S2.
