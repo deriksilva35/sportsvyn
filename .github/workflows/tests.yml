@@ -63,6 +63,15 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: The database is the "ci" branch, never DEV or PROD
+        run: |
+          host=$(node -e "try{console.log(new URL(process.env.DATABASE_URL).host)}catch{console.log('')}")
+          if [ -z "$host" ]; then echo "CI_DATABASE_URL is not set"; exit 1; fi
+          case "$host" in
+            ep-rough-mouse-*|ep-winter-dawn-*) echo "refusing: CI_DATABASE_URL points at DEV or PROD ($host)"; exit 1;;
+          esac
+          echo "database host: $host"
+
       - name: Install
         run: npm ci
 
