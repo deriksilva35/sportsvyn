@@ -28,6 +28,7 @@ import { preOpenHeadline } from '@/lib/pickem/view';
 import { plannedBoardNumberFor } from '@/lib/pickem/sequence';
 import { sql } from '@/lib/db';
 import PickemBoard from '@/components/pickem/PickemBoard';
+import ConfidenceBoard from '@/components/pickem/ConfidenceBoard';
 import PickemGrade from '@/components/pickem/PickemGrade';
 import VoidAllLabel from '@/components/games/VoidAllLabel';
 import { GAME_NAMES } from '@/lib/games/lobby';
@@ -41,6 +42,7 @@ import { ViewerTzProvider } from '@/components/time/ViewerTz';
 import { readViewerTz } from '@/lib/gridiron/serverTz';
 import '../../games/games.css';
 import '../pickem.css';
+import '../confidence.css';
 import '@/components/games/grade.css';
 import SportSwitch from '@/components/pickem/SportSwitch';
 import '../../boards/board.css';
@@ -118,7 +120,19 @@ export default async function PickemSportPage({ params, searchParams }) {
         {view.phase !== 'living' && sportSwitch}
         {view.phase === 'preopen' && <PreOpen sport={sport} now={now} />}
 
-        {view.phase === 'living' && (
+        {/* A CONFIDENCE BOARD (contests.meta.scoring, stamped at creation) is its
+            own sheet; every board opened before the start keeps the one below. */}
+        {view.phase === 'living' && view.contest?.scoring === 'confidence' && (
+          <ConfidenceBoard
+            view={view}
+            signedIn={uid != null}
+            signinHref={shellSigninHref(dest, isShell)}
+            hasHandle={hasHandle}
+            sportSwitch={sportSwitch}
+            season={season}
+          />
+        )}
+        {view.phase === 'living' && view.contest?.scoring !== 'confidence' && (
           <PickemBoard
             view={view}
             signedIn={uid != null}

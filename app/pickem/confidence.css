@@ -1,0 +1,55 @@
+/* app/pickem/confidence.css - the CONFIDENCE board and its graded card
+   (components/pickem/ConfidenceBoard.js, PickemGrade.js; ruling tue-7).
+
+   A FILE OF ITS OWN, not more rules in pickem.css, so the dark-page parity
+   guard (app/darkParity.test.mjs) sees a new stylesheet rather than 140
+   declarations added to an old one - and so the colour ratchet has nothing to
+   count: every colour here is a token or a color-mix of one. */
+/* ---- CONFIDENCE BOARD (components/pickem/ConfidenceBoard.js, tue-7) -------
+   One row a game: a rank chip, two team pills, small up / down buttons. The
+   top three numbers wear volt; a started game dims and says Locked. */
+.cfd-hd .cfd-h { margin: 10px 0 2px; font: 800 22px var(--font-saira-cond, sans-serif); text-transform: uppercase; letter-spacing: 0.01em; }
+.cfd-sub { margin: 0; font-size: 13px; line-height: 1.4; color: var(--muted); }
+.cfd-sub b { color: var(--paper); }
+.cfd-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.cfd-chip { border: 1px solid var(--tok-line); border-radius: 99px; padding: 4px 10px; font: 600 10px var(--font-mono, ui-monospace, monospace); color: var(--muted); letter-spacing: 0.04em; }
+.cfd-chip b { color: var(--paper); font-weight: 700; }
+.cfd-chip--up b { color: var(--jade); }
+.cfd-list { display: grid; gap: 7px; margin-top: 14px; }
+.cfd-row { display: flex; align-items: stretch; gap: 8px; border: 1px solid var(--tok-line); border-radius: 12px; background: var(--tok-surface); padding: 8px; }
+.cfd-row.locked { opacity: 0.55; }
+.cfd-row.void { opacity: 0.5; }
+.cfd-rk { flex: none; width: 38px; min-height: 38px; display: grid; place-items: center; border-radius: 10px; background: var(--tok-surface-2); color: var(--muted); font: 800 17px var(--font-mono, ui-monospace, monospace); align-self: center; }
+.cfd-rk.top { background: var(--volt); color: var(--ink); }
+.cfd-mid { flex: 1; min-width: 0; display: grid; gap: 5px; }
+.cfd-pills { display: flex; gap: 6px; }
+.cfd-pill { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; padding: 7px 8px; border: 0; border-radius: 9px; background: var(--tok-surface-2); color: var(--paper); text-decoration: none; text-align: left; min-height: 40px; }
+.cfd-pill b { font: 700 12px var(--font-saira-cond, sans-serif); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cfd-pill:disabled { cursor: default; }
+.cfd-pill.picked { background: color-mix(in srgb, var(--volt) 10%, transparent); box-shadow: inset 0 0 0 1.5px var(--volt); }
+.cfd-pill.picked b { color: var(--volt); }
+.cfd-pill.won { background: color-mix(in srgb, var(--jade) 14%, transparent); box-shadow: inset 0 0 0 1.5px var(--jade); }
+.cfd-pill.won b { color: var(--jade); }
+.cfd-pill.lost { background: color-mix(in srgb, var(--terra) 12%, transparent); box-shadow: inset 0 0 0 1.5px var(--terra); }
+.cfd-pill.lost b { color: var(--terra); }
+.cfd-foot { display: flex; align-items: center; gap: 8px; font: 600 9px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.07em; color: var(--muted-dim); text-transform: uppercase; }
+.cfd-pts { margin-left: auto; font-weight: 700; font-size: 12px; }
+.cfd-pts.j { color: var(--jade); }
+.cfd-pts.t { color: var(--terra); }
+.cfd-pts.v { color: var(--muted-dim); font-weight: 500; font-size: 10px; }
+.cfd-mv { flex: none; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.cfd-mv button { width: 30px; height: 30px; border: 1px solid var(--tok-line); border-radius: 8px; background: transparent; color: var(--paper); font-size: 14px; line-height: 1; }
+.cfd-mv button:disabled { opacity: 0.25; }
+.cfd-save { min-width: 130px; }
+
+/* the graded card */
+.cfd-grade { margin: 12px 0 0; border: 1px solid var(--tok-line); border-radius: 12px; background: var(--tok-surface); padding: 14px; }
+.cfd-grade-pts { font: 800 44px var(--font-mono, ui-monospace, monospace); line-height: 1; color: var(--paper); }
+.cfd-grade-pts small { font: 600 13px var(--font-mono, ui-monospace, monospace); color: var(--muted); margin-left: 6px; }
+.cfd-grade-line { margin: 6px 0 0; font: 500 12px var(--font-mono, ui-monospace, monospace); color: var(--muted); }
+.cfd-grade-void { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.cfd-gr { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--tok-line); font-size: 13px; }
+.cfd-gr:first-of-type { border-top: 0; }
+.cfd-gr .cfd-rk { width: 30px; min-height: 30px; font-size: 14px; }
+.cfd-gr-nm { flex: 1; min-width: 0; font: 700 12px var(--font-saira-cond, sans-serif); text-transform: uppercase; }
+.cfd-gr-nm small { display: block; color: var(--muted-dim); font: 500 10px var(--font-mono, ui-monospace, monospace); text-transform: none; }
