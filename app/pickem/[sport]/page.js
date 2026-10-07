@@ -176,7 +176,7 @@ async function PickemSettled({ sport, view, uid, now, league, dest }) {
   // chips (a control that goes nowhere is worse than none).
   const scope = await boardScope(uid, league);
   const chips = leagueChips(dest, scope.leagues, scope.picked);
-  const leaderboard = await pickemBoardLeaderboard(view.contest.id, uid, { limit: 5, memberIds: scope.memberIds });
+  const leaderboard = await pickemBoardLeaderboard(view.contest.id, uid, { limit: 5, memberIds: scope.memberIds, leagueRow: scope.picked });
   // NULL WHEN THE NEXT BOARD ALREADY EXISTS (relay 4 item 2). boardPlan now
   // refuses to plan a board that is already in the table, so this line
   // stops advertising an opening for a board a reader could already play -

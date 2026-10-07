@@ -18,6 +18,7 @@ import {
   MEMBERS_MIN, MEMBERS_MAX, MEMBERS_DEFAULT, SPANS, SPAN_LABEL, rankPointsCopy,
 } from '@/lib/leagues/settings';
 import { validateLeagueName } from '@/lib/leagues/name';
+import { PICK_FORMATS, PICK_FORMAT_LABEL, PICK_FORMAT_COPY, PICK_FORMAT_TAG, PICK_FORMAT_TITLE, PICK_FORMAT_LOCK_NOTE, leaguePlaysPickem } from '@/lib/leagues/pickFormat';
 
 function Step({ n, title, children }) {
   return (
@@ -30,13 +31,14 @@ function Step({ n, title, children }) {
   );
 }
 
-function Radio({ on, title, body, disabled, onPick }) {
+function Radio({ on, title, body, tag, disabled, onPick }) {
   return (
     <button type="button" role="radio" aria-checked={on} className="lv-radio" disabled={disabled} onClick={onPick}>
       <span className="lv-radio-dot" aria-hidden="true" />
       <span className="lv-radio-body">
         <span className="lv-radio-t">{title}</span>
         <span className="lv-note">{body}</span>
+        {tag && <span className="lv-note lv-radio-tag">{tag}</span>}
       </span>
     </button>
   );
@@ -51,6 +53,7 @@ export default function CreateLeagueForm({ choices, anchors, survivor = false })
   const [dropWorst, setDropWorst] = useState(false);
   const [maxMembers, setMaxMembers] = useState(MEMBERS_DEFAULT);
   const [lateJoins, setLateJoins] = useState(false);
+  const [pickFormat, setPickFormat] = useState('regular');
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -63,7 +66,11 @@ export default function CreateLeagueForm({ choices, anchors, survivor = false })
   const effSpan = spanHolds(span, ordered) ? span : 'season';
   const effFormat = effSpan === 'season' ? format : 'table';
   const effDrop = dropWorst && effSpan === 'season' && effFormat === 'table';
-  const settings = { games: ordered, span: effSpan, scoring: effScoring, format: effFormat, dropWorst: effDrop, maxMembers, lateJoins };
+  // HOW PICK'EM SCORES (S2): a step of its own, only when Pick'em is in the league.
+  const pickem = leaguePlaysPickem(ordered);
+  const effPick = pickem ? pickFormat : 'regular';
+  const settings = { games: ordered, span: effSpan, scoring: effScoring, format: effFormat, dropWorst: effDrop, maxMembers, lateJoins, pickFormat: effPick };
+  const n0 = pickem ? 1 : 0;
   const check = validateLeagueSettings(settings, { survivor });
   const nameOk = validateLeagueName(name);
   const when = startLabel(chooseStart(ordered, anchors));
@@ -81,6 +88,7 @@ export default function CreateLeagueForm({ choices, anchors, survivor = false })
     fd.set('games', ordered.join(','));
     fd.set('span', effSpan); fd.set('scoring', effScoring); fd.set('format', effFormat);
     fd.set('dropWorst', effDrop ? 'on' : ''); fd.set('maxMembers', String(maxMembers)); fd.set('lateJoins', lateJoins ? 'on' : '');
+    fd.set('pickFormat', effPick);
     const res = await createLeagueAction(fd).catch(() => ({ ok: false, reason: 'Could not create the league' }));
     if (!res.ok) { setBusy(false); setErr(res.reason); return; }
     // Land on the league with the invite sheet open - a league of one is a
@@ -111,7 +119,18 @@ export default function CreateLeagueForm({ choices, anchors, survivor = false })
         <p className="lv-note">Pick one game, or more for a bundle. A bundle ranks everyone in each game, then adds up the places.</p>
       </Step>
 
-      <Step n={2} title="How long">
+      {pickem && (
+        <Step n={2} title={PICK_FORMAT_TITLE}>
+          <div role="radiogroup" aria-label={PICK_FORMAT_TITLE} style={{ display: 'flex', flexDirection: 'column', gap: 8 }} data-pick-format>
+            {PICK_FORMATS.map((f) => (
+              <Radio key={f} on={effPick === f} title={PICK_FORMAT_LABEL[f]} onPick={() => setPickFormat(f)} body={PICK_FORMAT_COPY[f]} tag={PICK_FORMAT_TAG[f]} />
+            ))}
+          </div>
+          <p className="lv-note">{PICK_FORMAT_LOCK_NOTE}</p>
+        </Step>
+      )}
+
+      <Step n={2 + n0} title="How long">
         <div className="lv-seg" role="group" aria-label="How long">
           {SPANS.map((s) => (
             <button key={s} type="button" aria-pressed={effSpan === s} disabled={!spanHolds(s, ordered)} onClick={() => setSpan(s)}>
@@ -122,7 +141,7 @@ export default function CreateLeagueForm({ choices, anchors, survivor = false })
         <p className="lv-note">{spanLine(effSpan, ordered.length ? ordered : ['pickem'], anchors)}</p>
       </Step>
 
-      <Step n={3} title="How it's scored">
+      <Step n={3 + n0} title="How it's scored">
         <div role="radiogroup" aria-label="How it's scored" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Radio on={effScoring === 'rank'} title="Rank points" onPick={() => setScoring('rank')}
             body={rankPointsCopy()} />
@@ -136,7 +155,7 @@ export default function CreateLeagueForm({ choices, anchors, survivor = false })
         </label>
       </Step>
 
-      <Step n={4} title="Format">
+      <Step n={4 + n0} title="Format">
         <div role="radiogroup" aria-label="Format" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Radio on={effFormat === 'table'} title="Table" onPick={() => setFormat('table')}
             body="Everyone against everyone. Best total wins." />
@@ -145,7 +164,7 @@ export default function CreateLeagueForm({ choices, anchors, survivor = false })
         </div>
       </Step>
 
-      <Step n={5} title="Details">
+      <Step n={5 + n0} title="Details">
         <label className="lv-field">Name
           <input className="lv-input" value={name} maxLength={40} placeholder="Sunday Crew" autoComplete="off"
             onChange={(e) => setName(e.target.value)} name="name" />
