@@ -46,3 +46,7 @@
 .lv-grow--out { color: var(--tok-muted); }
 .lv-grow--out .lv-trow-name { font-weight: 400; text-decoration: line-through; }
 .lv-crumb { display: inline-block; padding: 12px 0 0; font-size: 13px; color: var(--tok-muted); text-decoration: none; }
+/* S2: the Pick'em record under a member's total, and the commissioner's format switch. */
+.lv-trow-rec { display: block; font-weight: 400; font-size: 11px; color: var(--tok-muted); }
+.lv-pfswitch { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
+.lv-pfswitch-row { display: flex; gap: 8px; flex-wrap: wrap; }

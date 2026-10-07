@@ -2,7 +2,8 @@
 
 /**
  * app/actions/leagues.js - the writes a league needs: create, join (by the
- * typed code or the link token), and the owner's invite reset.
+ * typed code or the link token), the owner's invite reset, and the owner's
+ * Pick'em format change (S2).
  *
  * All fail soft with a sentence: a league form must never strand somebody
  * mid-group-chat with a stack trace. Validation lives in lib/leagues - these
@@ -13,7 +14,7 @@
  */
 
 import { auth } from '@/auth';
-import { createLeague, joinLeague } from '@/lib/leagues/core';
+import { createLeague, joinLeague, setLeaguePickFormat } from '@/lib/leagues/core';
 import { joinByInvite, resetInvite } from '@/lib/leagues/invite';
 import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
@@ -41,6 +42,7 @@ export async function createLeagueAction(formData) {
         dropWorst: formData.get('dropWorst'),
         maxMembers: formData.get('maxMembers'),
         lateJoins: formData.get('lateJoins'),
+        pickFormat: formData.get('pickFormat'),
       };
   try {
     return await createLeague(userId, formData.get('name'), settings);
@@ -81,5 +83,20 @@ export async function resetInviteAction(leagueId) {
     return await resetInvite(userId, Number(leagueId));
   } catch {
     return { ok: false, reason: 'Could not reset the invite' };
+  }
+}
+
+/**
+ * The commissioner's Pick'em format: a free change before the first week locks,
+ * then a pre-S2 league's one-time switch (lib/leagues/pickFormat.js).
+ */
+export async function setLeaguePickFormatAction(leagueId, pickFormat) {
+  const userId = await uid();
+  if (userId == null) return { ok: false, reason: 'Sign in first' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
+  try {
+    return await setLeaguePickFormat(userId, Number(leagueId), pickFormat);
+  } catch {
+    return { ok: false, reason: 'Could not change the format' };
   }
 }

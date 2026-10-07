@@ -10,6 +10,9 @@ import { ordinal } from '@/lib/leagues/standings';
 import { gameLabel, summaryLine, startLabel, rankPointsCopy } from '@/lib/leagues/settings';
 import { hasStarted } from '@/lib/leagues/describe';
 import { leagueHref, LEAGUE_TABS, pickemBoardLinks } from '@/lib/leagues/nav';
+import { PICK_FORMAT_LABEL, leaguePlaysPickem, recordLine, switchOffer } from '@/lib/leagues/pickFormat';
+import PickFormatSwitch from '@/components/leagues/PickFormatSwitch';
+import { dateLabel } from '@/lib/time/display';
 
 
 const fmt = (x) => (Number.isInteger(x) ? String(x) : Number(x).toFixed(1));
@@ -18,6 +21,19 @@ const gamesLine = (games = []) => games
   .slice().sort((a, b) => a.place - b.place)
   .map((g) => `${gameLabel(g.game)}${g.sport !== 'all' && g.sport !== 'nfl' ? ` ${g.sport.toUpperCase()}` : ''} ${ordinal(g.place)}`)
   .join(' · ');
+
+// A sports week starts Tuesday 00:00 ET, so its date is read in ET (tz null).
+const fmtFrom = (iso) => dateLabel(iso, { weekday: false, tz: null });
+
+/** "Pick'em scores Confidence: a right pick scores its rank." (+ the switch's line) */
+function pickFormatLine(lg) {
+  const f = lg.pick_format ?? 'regular';
+  const how = f === 'confidence' ? 'a right pick scores its rank number' : 'a point for every right pick';
+  const from = lg.pick_format_from
+    ? ` From the week of ${fmtFrom(lg.pick_format_from)}; earlier weeks scored ${PICK_FORMAT_LABEL[lg.pick_format_prev ?? 'regular']}.`
+    : '';
+  return `Pick'em scores ${PICK_FORMAT_LABEL[f]}: ${how}.${from}`;
+}
 
 function Move({ m }) {
   if (m == null || m === 0) return <span className="lv-move">&middot;</span>;
@@ -37,6 +53,7 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
   const hasTable = standings.buckets.length > 0;
   const isOwner = league.owner_id != null && Number(league.owner_id) === uid;
   const n = league.members.length;
+  const offer = switchOffer(league, { now, isOwner });
 
   return (
     <div className="lv lv-league">
@@ -128,7 +145,11 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
                   <span className="lv-note">{gamesLine(r.games) || (r.current ? '' : `No entry this ${unitWord}`)}</span>
                 </span>
                 <span className="lv-trow-v">{fmt(r.current)}</span>
-                <span className="lv-trow-t">{fmt(r.total)}</span>
+                {/* POINTS, THEN THE RECORD (S2): a Pick'em league's W-L sits under its total. */}
+                <span className="lv-trow-t">
+                  {fmt(r.total)}
+                  {r.record ? <span className="lv-trow-rec" data-record>{recordLine(r.record)}</span> : null}
+                </span>
               </div>
             ))}
           </section>
@@ -178,6 +199,12 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
         {league.drop_worst && league.span === 'season' ? ` Each player's worst ${unitWord} is dropped.` : ''}
         {' '}Only final results count; this {unitWord} so far is on the second tab.
       </p>
+      {leaguePlaysPickem(league.games ?? []) && (
+        <div className="lv-note lv-foot" data-pick-format-line={league.pick_format ?? 'regular'}>
+          <p className="lv-note">{pickFormatLine(league)}</p>
+          {offer && <PickFormatSwitch leagueId={league.id} to={offer.to} kind={offer.kind} />}
+        </div>
+      )}
       {/* THE LEAGUE'S OWN PICK'EM BOARDS - the board filtered to these members
           (/pickem/<sport>?league=<id>), one per Pick'em sport. */}
       {pickemBoardLinks(league.id, league.games).length > 0 && (
