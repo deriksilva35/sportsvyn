@@ -37,6 +37,7 @@ import '../../games/games.css';
 import '../leagues.css';
 import '../leaguesV1.css';
 import '../leagueBoard.css';
+import '../pickFormat.css';
 
 export const dynamic = 'force-dynamic';
 

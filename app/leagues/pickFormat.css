@@ -1,0 +1,6 @@
+/* app/leagues/pickFormat.css - league Pick'em formats (S2): the record under a
+   member's total, and the commissioner's format switch. Its own file, like
+   app/pickem/confidence.css. */
+.lv-trow-rec { display: block; font-weight: 400; font-size: 11px; color: var(--tok-muted); }
+.lv-pfswitch { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
+.lv-pfswitch-row { display: flex; gap: 8px; flex-wrap: wrap; }
