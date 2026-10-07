@@ -747,3 +747,14 @@ test('tue-9 C: a bat on an unposted card says "projected" beside his position; a
   }
   assert.doesNotMatch(h, /bats \d+\w+ · projected/);
 });
+
+test('tue-10: a first pitch nobody has set reads "Time TBD" on the tile, the panel and the next lock; the clock says TBD', () => {
+  const v = PICKING();
+  v.board = v.board.map((g) => (g.matchId === 2 ? { ...g, kickoffAt: null } : g));
+  v.nextLock = { matchId: 2, slug: 'phi-atl', label: 'PHI @ ATL', kickoffAt: null, msAway: null, tbd: true };
+  const h = html({ view: v, signedIn: true });
+  assert.match(h, /next lock<b>PHI @ ATL · Time TBD<\/b>/);
+  assert.match(h, /aria-label="next lock time not set">TBD</);
+  assert.doesNotMatch(h, /00 hours 00 minutes/);
+  assert.match(h, /<b>PHI @ ATL<\/b><small>Time TBD<\/small>/);
+});

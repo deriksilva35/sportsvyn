@@ -324,7 +324,7 @@ function Header({ view, slots, tz }) {
         {/* THE CLOCK COUNTS TO THE NEXT LOCK, NEVER TO MIDNIGHT - each slot
             locks at its own first pitch, so the only deadline worth showing is
             the soonest one the reader can still act on. */}
-        {next ? <Clock msAway={next.msAway} /> : null}
+        {next ? (next.msAway == null ? <span className="oc-clk oc-tbd" aria-label="next lock time not set">TBD</span> : <Clock msAway={next.msAway} />) : null}
         {/* THE MATCH-UP, NOT THE SLUG. gameLabel() (lib/october/rules.js) ships
             "MIN @ SF · G2"; this line used to print next.slug.toUpperCase(),
             which put MLB-2026-09-23-MIN-SF-G2 in the header of a live card. */}
@@ -409,7 +409,8 @@ const two = (t) => (t?.c1 && t?.c2 ? `linear-gradient(to bottom, ${t.c1} 0 58%, 
 // PT") - right for one coast, while the MLB game page said "4:00 PM EDT" for
 // the same first pitch. lib/time/display.js, the one formatter, in the zone
 // useViewerZone gives (sv_tz on the server, the device's after mount).
-const timeOf = (iso, tz) => (iso ? timeLabel(iso, { tz }) : '');
+// NO TIME IS "Time TBD" (tue-10): the view ships null for a first pitch nobody has set.
+const timeOf = (iso, tz) => (iso ? timeLabel(iso, { tz }) : 'Time TBD');
 const stageLabel = (s) => ({ wild_card: 'Wild Card', division: 'Division Series', championship: 'Championship Series', world_series: 'World Series' }[s] ?? 'Postseason');
 const teamLine = (s, view, tz) => {
   const g = view.board.find((x) => String(x.matchId) === String(s.matchId));
