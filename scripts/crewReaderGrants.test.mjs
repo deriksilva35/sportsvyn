@@ -22,7 +22,7 @@ test('auth/session/token tables are never granted; withheld columns never listed
 });
 
 test('the exclusion lists name the auth tables and every email/token/identity column', () => {
-  for (const t of ['accounts', 'sessions', 'verification_token', 'email_otp', 'email_signups', 'device_tokens']) assert.ok(EXCLUDED_TABLES.includes(t), t);
+  for (const t of ['accounts', 'sessions', 'verification_token', 'email_otp', 'email_signups', 'device_tokens', 'daily_guest_runs']) assert.ok(EXCLUDED_TABLES.includes(t), t);
   for (const c of ['email', 'contact_email', 'date_of_birth', 'emailVerified']) assert.ok(EXCLUDED_COLUMNS.users.includes(c), c);
   assert.ok(EXCLUDED_COLUMNS.player_leagues.includes('invite_token'));
 });

@@ -26,6 +26,8 @@ const APPLY = process.argv.includes('--apply');
 export const EXCLUDED_TABLES = Object.freeze([
   'accounts', 'sessions', 'verification_token', 'email_otp', 'auth_throttle',
   'email_signups', 'device_tokens', 'live_activities',
+  // Guest runs are read by lib/daily/guestRuns.js alone (its guard test).
+  'daily_guest_runs',
 ]);
 
 /** Columns withheld from tables the crew does read. */
@@ -33,7 +35,6 @@ export const EXCLUDED_COLUMNS = Object.freeze({
   users: ['email', 'emailVerified', 'contact_email', 'contact_email_at', 'email_opted_out_at', 'date_of_birth', 'name', 'image'],
   player_leagues: ['join_code', 'invite_token'],
   draft_config_invites: ['code'],
-  daily_guest_runs: ['ip', 'device_id'],
   memberships: ['stripe_customer_id', 'stripe_subscription_id'],
   push_sends: ['device_token'],
 });
