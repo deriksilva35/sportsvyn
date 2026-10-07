@@ -17,6 +17,10 @@
 
 const { execSync } = await import('node:child_process');
 
+// Uncaught errors -> app_errors, then exit 1 as node would (lib/ops/appErrors.js).
+const { installAppErrorHooks, recordWithin } = await import('../../lib/ops/appErrors.js');
+installAppErrorHooks('daily-tick');
+
 // THE RUNNING COMMIT (defect 4) - same reason as the poller's: a scheduled
 // process runs whatever was on disk when it started, and nothing on the
 // outside says which commit that was. 89b168e sat on disk unused for 22
@@ -49,5 +53,6 @@ try {
   );
 } catch (e) {
   console.error(`[daily-tick] ERROR: ${e.message}`);
+  await recordWithin('daily-tick', e);
   process.exit(1);
 }

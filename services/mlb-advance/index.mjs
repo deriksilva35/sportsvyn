@@ -15,6 +15,10 @@ import { fileURLToPath } from 'node:url';
 import { acquireLock } from '../../lib/ops/runLock.js';
 import { parseImportOutput, journalLine } from '../../lib/mlb/advance.js';
 import { bootCheckGate } from '../../lib/ops/bootCheck.mjs';
+import { installAppErrorHooks } from '../../lib/ops/appErrors.js';
+
+// Uncaught errors -> app_errors, then exit 1 as node would (lib/ops/appErrors.js).
+installAppErrorHooks('mlb-advance');
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const args = process.argv.slice(2);

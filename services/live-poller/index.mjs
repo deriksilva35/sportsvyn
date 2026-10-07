@@ -38,6 +38,10 @@ import { drainPushCounts } from '../../lib/push/warn.js';
 import { execSync } from 'node:child_process';
 import * as neonmod from '@neondatabase/serverless';
 import { bootCheckGate } from '../../lib/ops/bootCheck.mjs';
+import { installAppErrorHooks, recordWithin } from '../../lib/ops/appErrors.js';
+
+// Uncaught errors -> app_errors, then exit 1 exactly as node would (lib/ops/appErrors.js).
+installAppErrorHooks('live-poller');
 
 const { Client } = neonmod;
 const DB = process.env.PROD_DATABASE_URL;
@@ -497,7 +501,7 @@ await bootCheckGate('live-poller', [() => import('../../lib/pollers/alerts.js')]
 log(`live-poller starting: pid=${process.pid} head=${HEAD} leagues=${LEAGUES.map((l) => l.slug).join(',')}`);
 
 for (const lg of LEAGUES) {
-  loop(lg).catch((e) => { console.error(`[${lg.slug}] loop died:`, e); process.exit(1); });
+  loop(lg).catch(async (e) => { console.error(`[${lg.slug}] loop died:`, e); await recordWithin('live-poller', e); process.exit(1); });
 }
 
 // --- who watches the watchdog (sun-8) -------------------------------------
