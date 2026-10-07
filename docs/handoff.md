@@ -1,39 +1,40 @@
-# Handoff - droplet relay wed-2, 7 Oct 2026
+# Handoff - droplet relay wed-3, 7 Oct 2026
 
 ## Live (PROD)
-- main 7d7caf3 = merge of tbd-locks: a TBD MLB game never locks at its midnight-ET placeholder on any
-  board (Pick'em incl. series, day boards, The Run, lobby, settle). One rule: isGameLocked() in
-  lib/mlb/kickoffTbd.js. Vercel prod READY; 0 runtime errors.
-- Poller, daily-tick, mlb-advance on release 7d7caf3 (deploy-poller.sh proof 05:17:25Z); 0 errors.
-- 77327ca (Time TBD everywhere) verified: poller + Vercel, 0 errors.
+- main 0ce3057 = merge of league-formats-s2 (S2, league Pick'em formats). Vercel prod READY.
+  - Create step: "How should your league score?" Regular / Confidence (mock copy, exact).
+  - After a league's first week locks, a change is queued: "Switches to <Format> next season" + Undo.
+  - The queued format applies when the next season's board is CREATED (ensurePickemBoard /
+    NBA day board / MLB series board, the step that stamps scoring); never on a read.
+  - ?league= Pick'em board ranks by the league's format (REGULAR = wins, CONFIDENCE = points).
+- Migrations 133 + 134 applied and ledgered on PROD (and DEV). PROD --status: pending 0, CHANGED 0.
+- Poller / daily-tick / mlb-advance on release 0ce3057 (proof 16:30:53Z).
+- PROD's 8 existing leagues: all REGULAR, nothing queued, other columns byte-identical (md5).
+- 30 min after: Vercel 0 runtime errors, poller 0 error lines.
 
-## Held - HOLDING-FOR-GO
-- league-formats-s2 @ b75fcfe (S2). Mock copy exact; after the lock a change queues
-  (pick_format_pending, migration 134) with "Switches to <Format> next season" + Undo; applied on read
-  at the first board of the next season (lib/leagues/rollover.js). Main merged in, full suite alone
-  6315/6315, preview READY.
-- PROD --status: 133 and 134 pending, CHANGED 0.
-- At GO: `DATABASE_URL="$PROD_DATABASE_URL" node scripts/apply-migrations.mjs 133_league_pick_format.sql`
-  then 134, then `--status`, then merge league-formats-s2 into main (no rebase) and push.
+## Held
+- Nothing.
 
 ## Queue
-1. S2 GO (above).
-2. 13 Oct watch: that morning's NFL/CFB boards must be REGULAR; 20 Oct boards confidence.
-3. ATS (S3), FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
-4. Pre-existing eslint error on main: react-hooks/purity at components/pickem/PickemBoard.js:150.
+1. 13 Oct watch: that morning's NFL/CFB boards must be REGULAR; the 20 Oct boards confidence.
+2. ATS (S3: pick_format 'ats' is already allowed by 133's CHECK), FCS abbreviation fill,
+   9 colourless CFB schools, morning email gameOfTheDay.
+3. Pre-existing eslint error on main: react-hooks/purity at components/pickem/PickemBoard.js:150.
+4. lib/pickem/entryFlow.test: two DEV tests are order-dependent in hand-run batches (green alone
+   and in every full suite). Worth isolating its fixture.
 
 ## Open questions for Derik
-1. S2's rollover applies on the first READ of the league after the next season's first board exists
-   (there is no season job). OK, or want it on a cron?
-2. The league-filtered Pick'em board (?league=) still ranks on the public scoring, not the league format.
-   Align?
+- None new.
 
 ## Notes
-- Worktrees: ../sv-tbd-locks (merged), ../sv-s2 (held).
-- entryFlow.test's two DEV tests flake only when lib/pickem/* files run in parallel by hand.
+- PICK_FORMAT_REFUSALS.locked is unreachable now (kept).
+- Signed-in PROD page check: sentinel user (example.invalid, adult DOB, 10-min session), deleted
+  after; the age screen is passed via /age/check following redirects (droplet cannot sign the
+  age cookie itself).
+- Worktrees: ../sv-tbd-locks and ../sv-s2 are both merged.
 - lib/nba/replay.test.mjs collides when two suites share DEV: run gates alone.
-- Detail: docs/reports/2026-10-07-wed2.md
+- Detail: docs/reports/2026-10-07-wed3.md
 - Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
 
 ## Next step
-On Derik's GO: migrations 133+134 on PROD, then merge S2.
+Watch the 13 Oct boards; then S3 (ATS).
