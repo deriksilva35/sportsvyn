@@ -18,7 +18,7 @@ import {
   MEMBERS_MIN, MEMBERS_MAX, MEMBERS_DEFAULT, SPANS, SPAN_LABEL, rankPointsCopy,
 } from '@/lib/leagues/settings';
 import { validateLeagueName } from '@/lib/leagues/name';
-import { PICK_FORMATS, PICK_FORMAT_LABEL, PICK_FORMAT_COPY, PICK_FORMAT_TAG, PICK_FORMAT_TITLE, PICK_FORMAT_LOCK_NOTE, leaguePlaysPickem } from '@/lib/leagues/pickFormat';
+import { eligibleFormats, PICK_FORMAT_LABEL, PICK_FORMAT_COPY, PICK_FORMAT_TAG, PICK_FORMAT_TITLE, PICK_FORMAT_LOCK_NOTE, leaguePlaysPickem } from '@/lib/leagues/pickFormat';
 
 function Step({ n, title, children }) {
   return (
@@ -122,7 +122,7 @@ export default function CreateLeagueForm({ choices, anchors, survivor = false })
       {pickem && (
         <Step n={2} title={PICK_FORMAT_TITLE}>
           <div role="radiogroup" aria-label={PICK_FORMAT_TITLE} style={{ display: 'flex', flexDirection: 'column', gap: 8 }} data-pick-format>
-            {PICK_FORMATS.map((f) => (
+            {eligibleFormats().map((f) => (
               <Radio key={f} on={effPick === f} title={PICK_FORMAT_LABEL[f]} onPick={() => setPickFormat(f)} body={PICK_FORMAT_COPY[f]} tag={PICK_FORMAT_TAG[f]} />
             ))}
           </div>
