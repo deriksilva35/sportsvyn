@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { spreadParts } from '@/lib/standings/view';
+import { spreadFor } from '@/lib/pickem/ats';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { recordLine } from '@/lib/pickem/recordLine';
 import { savePickAction } from '@/app/actions/pickem';
@@ -79,6 +80,9 @@ export default function PickemBoard({
   // from the same table the lobby ranks with; null for a reader with no
   // settled board, and then the header simply has no season on it.
   season = null,
+  // AGAINST THE SPREAD (S3): this reader's league scores the week against the
+  // line frozen when it opened. Shows that line; a straight-up mark would mislead.
+  ats = false,
 }) {
   const { guard, modal: handleModal, pending: heldRows } = useHandleGate(hasHandle);
   // CONFIRM AND RECEIPT (relay 3 item 3), the Weekly's own model: picks
@@ -249,7 +253,9 @@ export default function PickemBoard({
             copy, with its em dash written as a hyphen per the house rule. */}
         <p className="pkv-note">
           {stage === 1 ? (
-            hasLine
+            ats
+              ? <>Pick who <b>covers the spread</b> in every game. The line was set when the week opened and does not move. A push, or a game with no line, counts for nobody. Each game locks at its own kickoff.</>
+              : hasLine
               ? <>Pick the <b>winner</b> of every game, straight up. The line is shown for reference and does not change the scoring. Each game locks at its own kickoff. A tie or a called-off game counts for nobody.</>
               : <>Pick the <b>winner</b> of every game, straight up. Each game locks at its own {W.start}. A tie or a called-off game counts for nobody.</>
           ) : stage === 2 ? (
@@ -366,7 +372,13 @@ export default function PickemBoard({
                     </div>
 
                     <div className="pkv-gfoot">
-                      {(() => {
+                      {ats ? (
+                        <span className="pkv-line" data-ats-line>
+                          {g.frozen_spread_home == null
+                            ? 'No line, so this game is void'
+                            : `${g.away} ${spreadFor(g.frozen_spread_home, 'away')} · ${g.home} ${spreadFor(g.frozen_spread_home, 'home')}`}
+                        </span>
+                      ) : (() => {
                         if (!hasLine || !isPreGame(g.status)) return null;
                         const p = spreadParts({ spreadHome: g.spread_home, homeAbbr: g.home, awayAbbr: g.away });
                         if (!p) return null;
@@ -377,7 +389,7 @@ export default function PickemBoard({
                       ) : g.my_side != null ? (
                         <span className={`pkv-pick${g.graded === 'W' ? ' j' : g.graded === 'L' ? ' t' : ' v'}`}>
                           {g.my_side === 'away' ? g.away : g.home}
-                          {g.graded === 'W' ? ' ✓' : g.graded === 'L' ? ' ✗' : ''}
+                          {ats ? '' : g.graded === 'W' ? ' ✓' : g.graded === 'L' ? ' ✗' : ''}
                         </span>
                       ) : (
                         <span className="pkv-pick pkv-nopick">{locked ? 'no pick' : 'no pick'}</span>
@@ -405,6 +417,8 @@ export default function PickemBoard({
             <>Locked in<br /><b><StandaloneTime iso={confirmedAt} /></b> &middot; edit any pick until its {W.start}</>
           ) : savedTick ? (
             <><b>Saved</b><br />edit any pick until its {W.start}</>
+          ) : ats ? (
+            <>Against the spread<br />Lines froze when the week opened. A <b>push</b> counts for nobody</>
           ) : hasLine ? (
             <>Straight up, no spread<br />The line is <b>for reference only</b></>
           ) : (

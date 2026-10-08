@@ -31,7 +31,9 @@ export function PendingPickFormat({ leagueId, line, canUndo }) {
   );
 }
 
-export default function PickFormatSwitch({ leagueId, to, kind }) {
+// showNote: with two offers (S3: regular -> ATS or Confidence) the lock note is the
+// same sentence for both, so the league page prints it over the first one only.
+export default function PickFormatSwitch({ leagueId, to, kind, showNote = true }) {
   const router = useRouter();
   const [armed, setArmed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -51,7 +53,7 @@ export default function PickFormatSwitch({ leagueId, to, kind }) {
 
   return (
     <div className="lv-pfswitch" data-pick-format-switch={kind}>
-      <p className="lv-note">{note}</p>
+      {showNote && <p className="lv-note">{note}</p>}
       {armed ? (
         <span className="lv-pfswitch-row">
           <button type="button" className="lv-btn lv-btn--primary" disabled={busy} onClick={go}>

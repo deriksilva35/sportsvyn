@@ -48,6 +48,7 @@ import '@/components/games/grade.css';
 import SportSwitch from '@/components/pickem/SportSwitch';
 import '../../boards/board.css';
 import { boardScope } from '@/lib/leagues/boardScope';
+import { formatAt } from '@/lib/leagues/pickFormat';
 import { leagueChips } from '@/lib/boards/view';
 import { isPlaceholderKickoff } from '@/lib/mlb/kickoffTbd';
 
@@ -99,6 +100,10 @@ export default async function PickemSportPage({ params, searchParams }) {
     return d ? { sport: s, pickedOpen: d.pickedOpen, pickable: d.pickable, settled: Boolean(d.settled) } : null;
   }))).filter(Boolean);
   const sportSwitch = <SportSwitch boards={boards} sport={sport} />;
+  // AGAINST THE SPREAD (S3): ?league= picks one of the reader's own leagues; if it
+  // scores this board against the spread, the sheet shows the frozen lines.
+  const atsScope = view.phase === 'living' && sp.league != null ? await boardScope(uid, sp.league).catch(() => null) : null;
+  const ats = Boolean(atsScope?.picked) && view.contest?.locksAt != null && formatAt(atsScope.picked, view.contest.locksAt) === 'ats';
   const hasHandle = await userHasHandle(uid, sql);
   // THE SEASON LINE (v2 reader ruling b). One call to the table the lobby
   // already computes, narrowed to this sport, and then the reader's own row out
@@ -144,6 +149,7 @@ export default async function PickemSportPage({ params, searchParams }) {
             locksAt={view.contest.locksAt}
             sportSwitch={sportSwitch}
             season={season}
+            ats={ats}
           />
         )}
 

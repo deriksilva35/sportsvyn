@@ -28,7 +28,9 @@ const fmtFrom = (iso) => dateLabel(iso, { weekday: false, tz: null });
 /** "Pick'em scores Confidence: a right pick scores its rank." (+ the switch's line) */
 function pickFormatLine(lg) {
   const f = lg.pick_format ?? 'regular';
-  const how = f === 'confidence' ? 'a right pick scores its rank number' : 'a point for every right pick';
+  const how = f === 'confidence' ? 'a right pick scores its rank number'
+    : f === 'ats' ? 'a point for every pick on the side that covers the spread set when the week opened. A push counts for nobody'
+    : 'a point for every right pick';
   const from = lg.pick_format_from
     ? ` From the week of ${fmtFrom(lg.pick_format_from)}; earlier weeks scored ${PICK_FORMAT_LABEL[lg.pick_format_prev ?? 'regular']}.`
     : '';
@@ -203,7 +205,7 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
         <div className="lv-note lv-foot" data-pick-format-line={league.pick_format ?? 'regular'}>
           <p className="lv-note">{pickFormatLine(league)}</p>
           {pendingLine(league) && <PendingPickFormat leagueId={league.id} line={pendingLine(league)} canUndo={isOwner} />}
-          {offer && <PickFormatSwitch leagueId={league.id} to={offer.to} kind={offer.kind} />}
+          {offer && (offer.options ?? [offer.to]).map((to, i) => <PickFormatSwitch key={to} leagueId={league.id} to={to} kind={offer.kind} showNote={i === 0 || offer.kind === 'switch'} />)}
         </div>
       )}
       {/* THE LEAGUE'S OWN PICK'EM BOARDS - the board filtered to these members
