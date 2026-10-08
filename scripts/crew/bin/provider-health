@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# provider-health [--feeds|--game|--all] [--dev] - Watcher rules P1-P8 (feeds) and G1-G4 (game)
+# from docs/crew/watch-rules.md of the DEPLOYED release. Exit 1 when a rule fires. Read-only.
+. "$HOME/crew/lib/common.sh"
+which=prod; set_="P"
+for a in "$@"; do case "$a" in --dev) which=dev;; --feeds) set_="P";; --game) set_="G1,G2,G3,G4";; --all) set_="P,G1,G2,G3,G4";; *) die "usage: provider-health [--feeds|--game|--all] [--dev]";; esac; done
+db_env "$which"
+exec node "$CREW/lib/rules.mjs" --prefix "$set_"

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# cost-watch - month-to-date spend vs pace: Vercel usage, Odds API credits, Neon compute. Read-only.
+. "$HOME/crew/lib/common.sh"
+day=$(date -u +%-d); dim=$(date -u -d "$(date -u +%Y-%m-01) +1 month -1 day" +%-d)
+echo "== Vercel (month to date, day $day of $dim)"
+cd /tmp && timeout 90 vercel usage --scope "$VERCEL_SCOPE" --format json 2>/dev/null | python3 -c "
+import json,sys
+raw=sys.stdin.read(); d=json.loads(raw[raw.index('{'):])
+def num(v):
+  try: return float(str(v).replace('\$','').replace(',',''))
+  except Exception: return 0.0
+items=d.get('services') or d.get('usage') or d.get('items') or []
+billed=sum(num(i.get('billedCost', i.get('billed_cost', 0))) for i in items)
+print(f'  billed so far \${billed:.2f}; month pace \${billed/$day*$dim:.2f}')
+for i in sorted(items, key=lambda i: -num(i.get('billedCost', 0)))[:5]: print(f\"    {i.get('name', i.get('service','?'))[:40]:<40} \${num(i.get('billedCost',0)):.2f}\")
+" 2>/dev/null || echo "  (vercel usage unavailable)"
+echo "== Odds API"
+set -a; . "$HOME/projects/sportsvyn/.env.local"; set +a
+curl -s -D - -o /dev/null "https://api.the-odds-api.com/v4/sports?apiKey=$ODDS_API_KEY" | tr -d '\r' | python3 -c "
+import sys
+h={k.lower():v.strip() for k,_,v in (l.partition(':') for l in sys.stdin if ':' in l)}
+rem=int(h.get('x-requests-remaining',0)); used=int(h.get('x-requests-used',0)); tot=rem+used
+pace=used/$day*$dim
+flag='OVER PACE' if pace>tot else 'ok'
+print(f'  used {used} of {tot}, remaining {rem}; month pace {pace:.0f} -> {flag}')"
+unset ODDS_API_KEY
+echo "== Neon"
+if [ -r "$SECRETS/neon.env" ]; then
+  set -a; . "$SECRETS/neon.env"; set +a
+  curl -sf -H "Authorization: Bearer $NEON_API_KEY" "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}" | python3 -c "
+import json,sys
+p=json.load(sys.stdin)['project']
+print(f\"  compute {p.get('compute_time_seconds',0)/3600:.1f} h, active {p.get('active_time_seconds',0)/3600:.1f} h, written {p.get('written_data_bytes',0)/1e9:.2f} GB, storage {p.get('synthetic_storage_size',0)/1e9:.2f} GB (since {p.get('consumption_period_start','?')[:10]})\")"
+else
+  echo "  not configured - put NEON_API_KEY (read-only org key) and NEON_PROJECT_ID in $SECRETS/neon.env (chmod 600)"
+fi

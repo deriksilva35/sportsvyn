@@ -1,0 +1,79 @@
+name: tests
+
+# THE FULL SUITE, on every PR and every push to main (CLAUDE.md: "the suite is
+# the whole suite"). No touched-dir shortcut: the run is node --test over every
+# tracked *.test.mjs, same command as the droplet gate.
+#
+# DATABASE: secrets.CI_DATABASE_URL is a DEDICATED Neon branch named "ci".
+# NEVER DEV, NEVER PROD. The DB tests write and tear down real rows, so two runs
+# must never share the branch at once: the `ci-db` concurrency group queues them
+# (cancel-in-progress: false, so a queued run is not thrown away mid-teardown).
+#
+# ENV VARS the tests and the code they import read (grep of process.env across
+# the *.test.mjs files; each maps to a secret of the same name). Many are set by
+# the tests themselves; they are passed through only so a test that reads one it
+# does not set sees the same shape as on the droplet. An unset secret arrives as
+# an empty string, which every reader here treats as missing.
+#   DATABASE_URL        <- CI_DATABASE_URL (the "ci" Neon branch; the one required var)
+#   CFBD_API_KEY        cfbd client tests (dummy value is enough, no network)
+#   ODDS_API_KEY        lib/theOddsApi.test.mjs
+#   AUTH_SECRET         auth / admin tests
+#   EMAIL_LINK_SECRET   lib/email/linkSecret.test.mjs, welcome email
+#   ADMIN_USERNAME      lib/admin/requireAdmin.test.mjs
+#   ADMIN_SECRET        lib/admin tests
+#   CRON_SECRET         lib/pollers/cronAuth.test.mjs
+#   NEXT_PUBLIC_BASE_URL  link-building tests
+# Tests do NOT need PROD_DATABASE_URL: the ones that mention it either refuse
+# to run when DATABASE_URL equals it (it is unset here) or only assert on
+# source text. lib/fantasy/collegeSurface.test.mjs falls back to DATABASE_URL
+# and passes vacuously if the ci branch holds no Fantrax draft_config.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-db
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.CI_DATABASE_URL }}
+      CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      EMAIL_LINK_SECRET: ${{ secrets.EMAIL_LINK_SECRET }}
+      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+      ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: The database is the "ci" branch, never DEV or PROD
+        run: |
+          host=$(node -e "try{console.log(new URL(process.env.DATABASE_URL).host)}catch{console.log('')}")
+          if [ -z "$host" ]; then echo "CI_DATABASE_URL is not set"; exit 1; fi
+          case "$host" in
+            ep-rough-mouse-*|ep-winter-dawn-*) echo "refusing: CI_DATABASE_URL points at DEV or PROD ($host)"; exit 1;;
+          esac
+          echo "database host: $host"
+
+      - name: Install
+        run: npm ci
+
+      - name: Full suite
+        run: node --test $(git ls-files '*.test.mjs')
