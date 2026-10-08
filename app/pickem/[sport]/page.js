@@ -24,6 +24,7 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { pickemBoardView, PICKEM_SPORTS, pickemCardData } from '@/lib/pickem/entry';
 import { boardPlan } from '@/lib/pickem/create';
+import { NBA_THIN_NIGHT } from '@/lib/nba/dayPickem';
 import { preOpenHeadline } from '@/lib/pickem/view';
 import { plannedBoardNumberFor } from '@/lib/pickem/sequence';
 import { sql } from '@/lib/db';
@@ -220,7 +221,16 @@ async function PickemSettled({ sport, view, uid, now, league, dest }) {
  * whatsoever) - no chip may claim knowledge it doesn't have.
  */
 async function PreOpen({ sport, now }) {
-  const { plan } = await boardPlan({ leagueSlug: sport, now }).catch(() => ({ plan: null }));
+  const { plan, reason } = await boardPlan({ leagueSlug: sport, now }).catch(() => ({ plan: null }));
+  // A CONFIDENCE NIGHT WITH FEWER THAN THREE GAMES HAS NO BOARD (lib/nba/dayPickem.js
+  // NBA_MIN_GAMES) - said in words, not as an empty ghost (wed-6, Derik's copy).
+  if (!plan && reason === 'thin-slate') {
+    return (
+      <section className="pk-ghost">
+        <div className="big">{NBA_THIN_NIGHT}</div>
+      </section>
+    );
+  }
   if (!plan) {
     return (
       <section className="pk-ghost">
