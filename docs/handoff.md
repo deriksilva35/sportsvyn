@@ -1,44 +1,39 @@
-# Handoff - droplet relay wed-5, 8 Oct 2026
+# Handoff - droplet relay wed-6, 8 Oct 2026
 
 ## Live (PROD)
-- main = ca7825f (crew-setup merged) + docs. Vercel production READY at ca7825f.
-- Droplet services deployed: current=ca7825f, previous=0ce3057 (deploy-poller.sh proof ok).
-- PROD migration 135 app_errors ledgered. Write path proven by sentinel through the deployed
-  release; 30 min after deploy app_errors = 0 rows, poller active.
-- Firewall (6 Oct): Meta deny + Alibaba challenge firing; invocations/day ~130k -> ~7k.
+- main = d1d39f3 (cfb-tbd + cfb-tbd-2) + docs. Vercel production at d1d39f3; droplet services
+  current=d1d39f3, previous=8a1cd78.
+- CFB Time TBD: 245 future CFB games flagged kickoff_tbd (41 in 12-28 Oct); flag rewritten every
+  sync. 13 Oct board plan: 15 games, 3 TBD (ranks 1-3 if confidence; 13 Oct is REGULAR).
+  20 Oct plan: 17 games, 15 TBD -> ranks 1-15. CFB game page prints "Time TBD".
+- NBA thin night copy live. Docs-only commits now skip Vercel builds (ignoreCommand).
+- app_errors after the d1d39f3 deploy: 0 rows at +21 min and at +30 min; poller active.
 
 ## Held - HOLDING-FOR-GO
-- ats-s3 @ 469ecde (S3 ATS, NFL/CFB, spread frozen at board creation, push/no-line = void).
-  Full suite 6341/6341 under the lock. No migration. NOT yet: preview check, browser pass,
-  DB-backed freeze test on a football board (~30 min). Design: docs/reports/2026-10-08-ats-s3.md
-  on the branch. Decisions for Derik: (1) no spread at open = void? (2) boards created before
-  deploy carry no frozen line -> ATS counts from the first board after deploy (vs backfill);
-  (3) frozen line shown only in ?league= view; national view shows the live line.
-- PROD crew_reader role: still held for the crew turn (step 2 of wed-4's list). Until then
-  ~/crew/bin/app-errors works only with --dev.
+- ats-s3 @ 3b12af1 (main merged, suite 6353/6353, pushed). Rulings match the code. Held for:
+  duplicate lock note on the league page, a DEV week-5 board voided by a suite run and reset by
+  hand, the builder's lock slips; preview for 3b12af1 not yet checked. Shots on the branch.
+- PROD crew_reader role (crew turn).
 
 ## Needs Derik
-- AUTH_SECRET: set on production AND preview. Single error came from PRODUCTION dpl_6gSox (efc050f),
-  POST /api/daily/guest/start, 7 Oct 03:31Z. Throws when unset OR <16 chars; checking the length
-  needs a decrypt - your call.
-- Neon "ci" branch + CI_DATABASE_URL secret (or a Neon API key); Cloudflare token; move mini keys.
-- Vercel: billing lags ~1 day; judge the firewall saving on the 9-10 Oct bills. Optional: ignoreCommand
-  for docs-only builds (~$5-15/mo); Seats/Speed Insights ~$40/mo if unused.
+- AUTH_SECRET: CONFIG. Guest play has never worked on PROD (1 guest start ever, failed; reproduced
+  by probe). auth() works, so the var is present - most likely < 16 chars. Recommend a dedicated
+  DAILY_GUEST_SECRET (>= 32 chars) on Vercel prod+preview + a one-line guestRuns.js change; or
+  lengthen AUTH_SECRET (may sign people out).
+- S3: GO after the nits above (or say ship as is).
+- From wed-4: Neon "ci" branch/key, Cloudflare token, move mini keys.
 
 ## Queue
-1. CFB placeholder kickoffs (M, 3-5 h, before 20 Oct): 41 CFB games 12-28 Oct sit at midnight ET
-   without kickoff_tbd -> lock at 00:00 ET and take the top default confidence rank. 3 of 15 on the
-   13 Oct board, 15 of 17 on 20 Oct. Re-check Mon 12 Oct.
-2. NBA no-board night copy (S, ~1 h, before 20 Oct): 22 Oct has 2 games -> thin-slate; page copy unchecked.
-3. Watch: 13 Oct 13:23Z boards REGULAR; 20 Oct 13:23Z boards CONFIDENCE; 20 Oct 10:52Z NBA board.
-4. /market fix is already shipped (b2f248a, 817263c) - drop it from the recon list.
-5. FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
+1. Watch 13 Oct 13:23Z: CFB/NFL boards REGULAR; TBD rows carry kickoff_tbd. 20 Oct 13:23Z
+   CONFIDENCE; 20 Oct 10:52Z NBA board; 22 Oct NBA thin night shows the copy.
+2. Find the suite test that voids a non-fixture DEV board (S3 builder's report).
+3. FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
 
 ## Notes
-- MODULE_TYPELESS_PACKAGE_JSON warning per service start (lib/ops/appErrors.js); harmless.
-- Reports: docs/reports/2026-10-08-{wed5,vercel-cost,oct20-readiness}.md
+- Two suites cannot overlap (lock); pass SV_SUITE_WAIT=1800 when a builder is also gating.
+- A builder's DEV fixture writes outside the lock break other gates - say so in its brief.
+- Reports: docs/reports/2026-10-08-wed6.md (+ wed5, vercel-cost, oct20-readiness).
 - Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
 
 ## Next step
-Derik: decisions on ATS (1-3) and GO; then preview + freeze test + browser pass, merge ats-s3.
-Build the CFB placeholder-kickoff fix before 20 Oct.
+Derik: AUTH_SECRET choice; S3 GO. Then: preview 3b12af1, merge ats-s3, deploy, 30-min app_errors.
