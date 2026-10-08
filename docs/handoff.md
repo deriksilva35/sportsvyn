@@ -1,40 +1,38 @@
-# Handoff - droplet relay wed-3, 7 Oct 2026
+# Handoff - droplet relay wed-4, 7 Oct 2026 (crew setup)
 
 ## Live (PROD)
-- main 0ce3057 = merge of league-formats-s2 (S2, league Pick'em formats). Vercel prod READY.
-  - Create step: "How should your league score?" Regular / Confidence (mock copy, exact).
-  - After a league's first week locks, a change is queued: "Switches to <Format> next season" + Undo.
-  - The queued format applies when the next season's board is CREATED (ensurePickemBoard /
-    NBA day board / MLB series board, the step that stamps scoring); never on a read.
-  - ?league= Pick'em board ranks by the league's format (REGULAR = wins, CONFIDENCE = points).
-- Migrations 133 + 134 applied and ledgered on PROD (and DEV). PROD --status: pending 0, CHANGED 0.
-- Poller / daily-tick / mlb-advance on release 0ce3057 (proof 16:30:53Z).
-- PROD's 8 existing leagues: all REGULAR, nothing queued, other columns byte-identical (md5).
-- 30 min after: Vercel 0 runtime errors, poller 0 error lines.
+- main = 0ce3057 + docs (S2). Nothing product-side changed this relay.
+- Droplet (outside git): ~/crew/{bin,lib,secrets,worktrees}; two mini keys in ~/.ssh/authorized_keys
+  (watcher forced to ~/crew/bin/dispatch; fixer normal shell). Backup: ~/.ssh/authorized_keys.bak-wed4.
+- DEV: migration 135 app_errors; role crew_reader (87 tables); sentinel user 117499.
 
-## Held
-- Nothing.
+## Held - HOLDING-FOR-GO
+- crew-setup @ 2bac60b: app_errors + service hooks, scripts/suite.sh lock, crew docs, CI workflow,
+  crew_reader grant script, scripts/crew/. Full suite 6329/6329 (722 s), preview READY.
+- At GO, in this order:
+  1. `DATABASE_URL="$PROD_DATABASE_URL" node scripts/apply-migrations.mjs 135_app_errors.sql`
+  2. PROD role: new password into ~/crew/secrets/crew-reader-prod.env (quoted, chmod 600), then
+     `node scripts/crew-reader-grants.mjs --prod --apply`; write crew-reader-prod.url
+     (CREW_PROD_DATABASE_URL='...', QUOTED - unquoted & leaked the first DEV password); probe writes.
+  3. Merge crew-setup into main (no rebase); `scripts/deploy-poller.sh origin/main` (services get
+     the hooks; ~/crew rules read the deployed watch-rules.md).
+  4. Verify: `~/crew/bin/app-errors`, `provider-health --all`, `retention-status` against PROD.
+
+## Needs Derik
+- Neon: create branch "ci" (from DEV) + add GitHub secret CI_DATABASE_URL; then a test PR for "tests".
+  Or drop a Neon API key in ~/crew/secrets/neon.env and the relay does both (also enables cost-watch).
+- Cloudflare: CF_API_TOKEN (Zone Analytics:Read) + CF_ZONE_ID in ~/crew/secrets/cloudflare.env.
+- Move ~/crew/secrets/mini-keys/mini-{watcher,fixer} to the mini, then delete them here.
 
 ## Queue
-1. 13 Oct watch: that morning's NFL/CFB boards must be REGULAR; the 20 Oct boards confidence.
-2. ATS (S3: pick_format 'ats' is already allowed by 133's CHECK), FCS abbreviation fill,
-   9 colourless CFB schools, morning email gameOfTheDay.
-3. Pre-existing eslint error on main: react-hooks/purity at components/pickem/PickemBoard.js:150.
-4. lib/pickem/entryFlow.test: two DEV tests are order-dependent in hand-run batches (green alone
-   and in every full suite). Worth isolating its fixture.
-
-## Open questions for Derik
-- None new.
+1. 13 Oct watch: that morning's NFL/CFB boards REGULAR; 20 Oct boards confidence.
+2. One PROD error seen: "AUTH_SECRET is not set - refusing to sign a guest token" (6 Oct, old deploy).
+3. ATS (S3), FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
 
 ## Notes
-- PICK_FORMAT_REFUSALS.locked is unreachable now (kept).
-- Signed-in PROD page check: sentinel user (example.invalid, adult DOB, 10-min session), deleted
-  after; the age screen is passed via /age/check following redirects (droplet cannot sign the
-  age cookie itself).
-- Worktrees: ../sv-tbd-locks and ../sv-s2 are both merged.
-- lib/nba/replay.test.mjs collides when two suites share DEV: run gates alone.
-- Detail: docs/reports/2026-10-07-wed3.md
+- Suite: `scripts/suite.sh` (or `npm test`) holds ~/.sportsvyn-suite.lock; ~12 min.
+- Detail: docs/reports/2026-10-07-wed4.md
 - Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
 
 ## Next step
-Watch the 13 Oct boards; then S3 (ATS).
+Derik's GO for crew-setup (135 + PROD role + merge), and the Neon "ci" branch.
