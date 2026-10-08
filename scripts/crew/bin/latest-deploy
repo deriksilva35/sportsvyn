@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# latest-deploy - the newest Vercel production deployment, and the droplet services' release.
+. "$HOME/crew/lib/common.sh"
+T=$(vercel_token)
+curl -sf -H "Authorization: Bearer $T" "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT&teamId=$VERCEL_TEAM&target=production&limit=3" \
+ | python3 -c "
+import json,sys,time
+for d in json.load(sys.stdin)['deployments']:
+  age=int(time.time()-d['created']/1000)//60
+  print(f\"vercel  {d['state']:<9} {d['meta'].get('githubCommitSha','')[:7]}  {age} min ago  {d['meta'].get('githubCommitMessage','').splitlines()[0][:60]}\")"
+rel=$(readlink -f "$RELEASE" 2>/dev/null || echo none)
+echo "droplet release $(basename "$rel" | cut -c1-7)"
+for u in sportsvyn-live-poller sportsvyn-daily-tick.timer sportsvyn-mlb-advance.timer; do
+  echo "  $u: $(XDG_RUNTIME_DIR=/run/user/$(id -u) systemctl --user is-active $u 2>/dev/null || echo unknown)"
+done
+echo "  poller head: $(XDG_RUNTIME_DIR=/run/user/$(id -u) journalctl --user -u sportsvyn-live-poller -o cat 2>/dev/null | grep 'live-poller starting' | tail -1 | grep -o 'head=[0-9a-f]*' || echo unknown)"

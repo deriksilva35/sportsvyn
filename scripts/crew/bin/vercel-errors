@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# vercel-errors [MINUTES=30] - production runtime errors, grouped. Read-only.
+. "$HOME/crew/lib/common.sh"
+m="${1:-30}"; [[ "$m" =~ ^[0-9]+$ ]] || die "minutes must be a number"
+cd /tmp && timeout 90 vercel logs --project "$VERCEL_PROJECT" --scope "$VERCEL_SCOPE" --environment production \
+  --level error --since "${m}m" --json --no-branch -n 500 2>/dev/null | python3 -c "
+import sys,json,collections
+c=collections.Counter(); paths=collections.defaultdict(set); last={}
+for l in sys.stdin:
+  try: d=json.loads(l)
+  except Exception: continue
+  k=(d.get('message') or '').split('\n')[0][:120] or f\"HTTP {d.get('responseStatusCode')}\"
+  c[k]+=1; paths[k].add(d.get('requestPath') or '-'); last[k]=max(last.get(k,0), d.get('timestamp',0))
+print(f'vercel production errors, last ${m} min: {sum(c.values())}')
+import datetime
+for k,v in c.most_common(20):
+  t=datetime.datetime.utcfromtimestamp(last[k]/1000).strftime('%H:%MZ')
+  print(f'  {v:>4}  last {t}  {k}  [{\",\".join(sorted(paths[k]))[:80]}]')"

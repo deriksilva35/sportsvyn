@@ -45,7 +45,15 @@ on the touched directories, not on the files the relay opened - THERE IS NO
 TOUCHED-DIR SHORTCUT, and the same applies to any relay that commits or deploys.
 With env sourced:
 
-    set -a && . ./.env.local && set +a && node --test $(git ls-files '*.test.mjs')
+    scripts/suite.sh        # or: npm test
+
+scripts/suite.sh holds the host-wide suite lock (~/.sportsvyn-suite.lock, flock):
+sessions on this host share DEV and 8 GB of RAM, so two full suites never run at
+once. A second run waits up to 10 minutes and names the holder; it sources
+.env.local, runs `node --test $(git ls-files '*.test.mjs')` from its own worktree,
+passes extra args through, prints the wall-clock and exits with node's code. The
+bare `set -a && . ./.env.local && set +a && node --test ...` form is for SCOPED
+runs only, never the gate.
 
 Before the merge, because a suite run after it has nothing left to decide: the
 branch is already in main and the only remaining move is a revert. The run is the

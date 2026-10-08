@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# cf-top [MINUTES=60] - Cloudflare firewall events: top client IPs, paths and actions. Read-only.
+# Needs ~/crew/secrets/cloudflare.env: CF_API_TOKEN (Zone Analytics:Read only) and CF_ZONE_ID.
+. "$HOME/crew/lib/common.sh"
+m="${1:-60}"; [[ "$m" =~ ^[0-9]+$ ]] || die "minutes must be a number"
+[ -r "$SECRETS/cloudflare.env" ] || { echo "cf-top: not configured - put CF_API_TOKEN (Zone Analytics:Read) and CF_ZONE_ID in $SECRETS/cloudflare.env (chmod 600)"; exit 3; }
+set -a; . "$SECRETS/cloudflare.env"; set +a
+since=$(date -u -d "-${m} min" +%Y-%m-%dT%H:%M:%SZ)
+q=$(python3 -c "import json,sys;print(json.dumps({'query':'query(\$z:String!,\$s:Time!){viewer{zones(filter:{zoneTag:\$z}){top:firewallEventsAdaptiveGroups(limit:15,filter:{datetime_geq:\$s},orderBy:[count_DESC]){count dimensions{clientIP clientCountryName clientRequestPath action source}}}}}','variables':{'z':sys.argv[1],'s':sys.argv[2]}}))" "$CF_ZONE_ID" "$since")
+curl -sf -H "Authorization: Bearer $CF_API_TOKEN" -H 'Content-Type: application/json' -d "$q" https://api.cloudflare.com/client/v4/graphql \
+ | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+if d.get('errors'): print('cf-top: API error:', d['errors'][0].get('message')); sys.exit(1)
+rows=d['data']['viewer']['zones'][0]['top']
+print(f'cloudflare firewall events, last ${m} min (top {len(rows)}):')
+for r in rows:
+  x=r['dimensions']; print(f\"  {r['count']:>6}  {x['action']:<10} {x['clientIP']:<40} {x['clientCountryName']:<3} {x['source']:<12} {x['clientRequestPath'][:50]}\")"
