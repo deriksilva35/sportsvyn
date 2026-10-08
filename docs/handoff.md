@@ -1,39 +1,41 @@
-# Handoff - droplet relay wed-6, 8 Oct 2026
+# Handoff - droplet relay wed-7, 8 Oct 2026
 
 ## Live (PROD)
-- main = d1d39f3 (cfb-tbd + cfb-tbd-2) + docs. Vercel production at d1d39f3; droplet services
-  current=d1d39f3, previous=8a1cd78.
-- CFB Time TBD: 245 future CFB games flagged kickoff_tbd (41 in 12-28 Oct); flag rewritten every
-  sync. 13 Oct board plan: 15 games, 3 TBD (ranks 1-3 if confidence; 13 Oct is REGULAR).
-  20 Oct plan: 17 games, 15 TBD -> ranks 1-15. CFB game page prints "Time TBD".
-- NBA thin night copy live. Docs-only commits now skip Vercel builds (ignoreCommand).
-- app_errors after the d1d39f3 deploy: 0 rows at +21 min and at +30 min; poller active.
-
-## Held - HOLDING-FOR-GO
-- ats-s3 @ 3b12af1 (main merged, suite 6353/6353, pushed). Rulings match the code. Held for:
-  duplicate lock note on the league page, a DEV week-5 board voided by a suite run and reset by
-  hand, the builder's lock slips; preview for 3b12af1 not yet checked. Shots on the branch.
-- PROD crew_reader role (crew turn).
+- main = ecca1e9 (guest-secret 5701a3b + ats-s3) + docs. Vercel prod READY at ecca1e9; droplet
+  services current=ecca1e9, previous=d1d39f3.
+- Guest play WORKS: guest tokens sign with DAILY_GUEST_SECRET (48 chars, prod + preview).
+  Verified signed out on sportsvyn.com: start 200 -> 8/8 -> run 200 -> "Sign in to keep your streak".
+- AUTH_SECRET rotated (was < 16 chars; now 48, prod + preview). Database sessions, so sign-ins
+  should survive. /api/auth/* and /signin answer 200.
+- S3 ATS live: league Pick'em format ATS (NFL/CFB); one lock note over two switch offers.
+- +30 min (07:50Z): Vercel runtime errors none new; droplet journals 0 error lines; poller active.
 
 ## Needs Derik
-- AUTH_SECRET: CONFIG. Guest play has never worked on PROD (1 guest start ever, failed; reproduced
-  by probe). auth() works, so the var is present - most likely < 16 chars. Recommend a dedicated
-  DAILY_GUEST_SECRET (>= 32 chars) on Vercel prod+preview + a one-line guestRuns.js change; or
-  lengthen AUTH_SECRET (may sign people out).
-- S3: GO after the nits above (or say ship as is).
-- From wed-4: Neon "ci" branch/key, Cloudflare token, move mini keys.
+- PROD DB access was refused this session by the permission classifier ("Production Reads"), so:
+  (a) the probe's unused guest row (7 Oct 02:48Z) and this relay's completed guest row
+      (8 Oct ~07:20Z) are still in daily_guest_runs - delete, or allow a PROD-write relay;
+  (b) app_errors was not read (Vercel + journals used instead);
+  (c) magic-link sign-in was NOT proven end to end. Quickest proof: sign in once on
+      sportsvyn.com yourself; or allow PROD writes for the sentinel verification_token round trip.
+- From wed-4: Neon "ci" branch/key, Cloudflare token, move mini keys. PROD crew_reader role.
 
 ## Queue
 1. Watch 13 Oct 13:23Z: CFB/NFL boards REGULAR; TBD rows carry kickoff_tbd. 20 Oct 13:23Z
    CONFIDENCE; 20 Oct 10:52Z NBA board; 22 Oct NBA thin night shows the copy.
-2. Find the suite test that voids a non-fixture DEV board (S3 builder's report).
+2. TICKET (wed-7 item 4, not started): tests that mutate real DEV boards must use their own
+   fixtures. Receipt: an S3-era suite run set a REAL DEV week-5 Pick'em board to void_all and the
+   builder reset it by hand. Find the test (grep suite writers of contests/board/void_all that
+   select by week/sport rather than by a fixture prefix), give it a sentinel board created in
+   before() and torn down in after(), and assert in after() that no non-fixture board changed.
 3. FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
 
 ## Notes
-- Two suites cannot overlap (lock); pass SV_SUITE_WAIT=1800 when a builder is also gating.
-- A builder's DEV fixture writes outside the lock break other gates - say so in its brief.
-- Reports: docs/reports/2026-10-08-wed6.md (+ wed5, vercel-cost, oct20-readiness).
-- Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
+- `vercel env pull` returns sensitive vars EMPTY - a length check from a pull proves nothing.
+- Headless Chromium here needs LD_LIBRARY_PATH=~/projects/travault/scripts/vendor/chromium-libs/
+  usr/lib/x86_64-linux-gnu (libasound missing); playwright at ~/.npm/_npx/705bc6b22212b352.
+- Two suites cannot overlap (lock); SV_SUITE_WAIT=1800 when another gate may hold it.
+- Report: docs/reports/2026-10-08-wed7.md. Scheduled: CFBD quota wiring not before 12 Oct;
+  CFB win-prob re-score 26 Oct.
 
 ## Next step
-Derik: AUTH_SECRET choice; S3 GO. Then: preview 3b12af1, merge ats-s3, deploy, 30-min app_errors.
+Derik: the three PROD-access items above. Then queue item 2 (the DEV-board test ticket).
