@@ -32,6 +32,7 @@ import { NON_AFFILIATION } from '@/lib/legal';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getGamePage } from '@/lib/gridiron/gameDetail';
+import { TIME_TBD } from '@/lib/time/display';
 import { lineScoreGrid, liveChip } from '@/lib/gridiron/lineScore';
 import { distinctLabel } from '@/lib/gridiron/labels';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
@@ -89,6 +90,9 @@ const fmtKick = (d) => new Intl.DateTimeFormat('en-US', {
 const fmtDay = (d) => new Intl.DateTimeFormat('en-US', {
   timeZone: ET, weekday: 'short', month: 'short', day: 'numeric',
 }).format(new Date(d));
+// A game with no time yet prints its day and "Time TBD", never the midnight-ET
+// placeholder as 12:00 AM (wed-6, lib/gridiron/cfbKickoffTbd.js).
+const kickLabel = (game) => (game.kickoffTbd ? `${fmtDay(game.kickoffAt)} · ${TIME_TBD}` : `${fmtKick(game.kickoffAt)} ET`);
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -329,7 +333,7 @@ export default async function CfbGamePage({ params, searchParams }) {
               </>
             ) : null}
             {!final && !live && game.kickoffAt
-              ? <span className="gg-chip time">{fmtKick(game.kickoffAt)} ET</span> : null}
+              ? <span className="gg-chip time">{kickLabel(game)}</span> : null}
           </div>
 
           {/* League order, one rule: lib/gridiron/teamOrder.js. */}
@@ -484,7 +488,7 @@ function GameFacts({ game, final, live = false }) {
     <section className="gg-sect" aria-label="Game details">
       <div className="gg-kick"><h2>{final || live ? 'DETAILS' : 'KICKOFF'}</h2><div className="rule" /></div>
       <dl className="gg-facts">
-        {game.kickoffAt ? <div><dt>When</dt><dd>{fmtKick(game.kickoffAt)} ET</dd></div> : null}
+        {game.kickoffAt ? <div><dt>When</dt><dd>{kickLabel(game)}</dd></div> : null}
         {place ? <div><dt>Where</dt><dd>{place}</dd></div> : null}
         {round ? <div><dt>Round</dt><dd>{round}</dd></div> : null}
       </dl>
