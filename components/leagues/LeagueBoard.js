@@ -205,7 +205,7 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
         <div className="lv-note lv-foot" data-pick-format-line={league.pick_format ?? 'regular'}>
           <p className="lv-note">{pickFormatLine(league)}</p>
           {pendingLine(league) && <PendingPickFormat leagueId={league.id} line={pendingLine(league)} canUndo={isOwner} />}
-          {offer && (offer.options ?? [offer.to]).map((to) => <PickFormatSwitch key={to} leagueId={league.id} to={to} kind={offer.kind} />)}
+          {offer && (offer.options ?? [offer.to]).map((to, i) => <PickFormatSwitch key={to} leagueId={league.id} to={to} kind={offer.kind} showNote={i === 0 || offer.kind === 'switch'} />)}
         </div>
       )}
       {/* THE LEAGUE'S OWN PICK'EM BOARDS - the board filtered to these members
