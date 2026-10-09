@@ -1,4 +1,4 @@
-# Handoff - droplet relay thu-1, 8 Oct 2026
+# Handoff - droplet relay thu-2, 9 Oct 2026 (thu-1 + thu-2)
 
 ## Live (PROD)
 - main = ecca1e9 (guest-secret + ats-s3) + docs. Vercel prod and droplet services at ecca1e9
@@ -20,8 +20,10 @@
 - From wed-7, still open (PROD writes - not mine to ask for): delete the 2 unclaimed guest rows
   (7 Oct 02:48Z probe; 8 Oct ~07:20Z check); magic-link sign-in not proven end to end - sign in
   once yourself.
-- Draft -> season bridge: pick A (season tracker, 4-6 days) or B (full league, 3-5 weeks), or
-  neither. docs/reports/2026-10-08-draft-season-bridge.md.
+- DRAFT PER GAME (ruled thu-2; recon docs/reports/2026-10-08-draft-per-game-recon.md). Decide:
+  (a) room shape - proposed 4 seats x 5 picks, slot-free, best 4 count (NBA 4x4, best 3);
+  (b) K/DST in the NFL pool; (c) CFB final-only scoring OK (~35 min after final);
+  (d) retire the weekly ranked Draft after the first clean per-game week.
 - From wed-4: Neon "ci" branch/key, Cloudflare token. PROD crew_reader role (crew turn).
 
 ## Queue
@@ -31,7 +33,11 @@
    run set a REAL DEV week-5 Pick'em board to void_all, reset by hand. Find the writer that selects
    by week/sport instead of a fixture prefix; give it a before()-made sentinel board, and assert in
    after() that no non-fixture board changed.
-3. FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
+3. DRAFT PER GAME build, after Derik's (a)-(d): slice 1 schema (contests.match_id + unique
+   (game_type, match_id)), 'draft_game', NFL board cron, 2-team pool, small room (4-5 d); slice 2
+   settle/results/lobby/game-page entry -> NFL live (4-5 d); 3 NBA (4-6 d); 4 retire weekly Draft
+   (2-3 d); 5 CFB final-only (3-4 d); 6 League A (4-6 d); 7 League B (3-5 wk).
+4. FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
 
 ## Notes
 - PROD SELECTs hit the "Production Reads" permission check here; ask Derik per read, never writes.
@@ -41,4 +47,4 @@
 - Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
 
 ## Next step
-13 Oct 13:23Z+: launch-oct20.md checks 1-5. Meanwhile queue item 2 or a bridge decision.
+Derik: per-game (a)-(d). 13 Oct 13:23Z+: launch-oct20.md checks 1-5. Then per-game slice 1.
