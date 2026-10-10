@@ -7,6 +7,9 @@
  * and moves any open board's lock to its game's current kickoff. Most fires
  * create nothing; a missed hour is made up by the next.
  *
+ * OFF UNLESS DRAFT_GAME_BOARDS=on (fri-1): until S2 can settle a board, PROD
+ * runs with the switch off and every fire records { disabled: true }.
+ *
  * Every fire lands a recordRun row (created / refused / raced / locks moved) in
  * sync_runs, and a run that throws alerts through maybeAlert - the
  * pickem-board pattern.

@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { pickGameDraftAction } from '@/app/actions/draftGame';
-import { COPY, ROUNDS } from '@/lib/draftGame/rules';
+import { COPY, ROUNDS, seatLabels } from '@/lib/draftGame/rules';
 
 const REASON = {
   locked: 'The game has kicked off. Your remaining picks were made for you.',
@@ -20,7 +20,6 @@ const REASON = {
   done: 'Your draft is complete.',
 };
 
-const seatName = (s) => (s.you ? 'You' : `Bot ${s.seat}`);
 
 // Seconds left on the reader's clock, or null (no clock, or not yet ticked - the
 // first tick lands after mount, so the server render and hydration agree).
@@ -56,6 +55,8 @@ export default function GameDraftRoom({ view }) {
   }
 
   const mine = view.seats.find((s) => s.you)?.picks ?? [];
+  const names = seatLabels(view.seat);
+  const seatName = (s) => names[s.seat];
   return (
     <section className="dgm-room" data-draft-game-room data-your-turn={view.yourTurn ? '1' : '0'}>
       <div className="dgm-room-top">
