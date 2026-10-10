@@ -29,7 +29,9 @@ export default function GameDraftResult({ view, eyebrow }) {
         <div className="dgm-big n" data-draft-game-points>{pts(me.score)}</div>
         <div className="dgm-hd-sub">points · {ordinal(me.place)} of {res.seats.length}{final ? '' : ' · live'}</div>
         {final && res.top_pct != null && (
-          <div className="dgm-top">Top {res.top_pct}% of everyone who drafted this game</div>
+          <div className="dgm-top">
+            {res.entrants > 1 ? `Top ${res.top_pct}% of everyone who drafted this game` : 'Nobody else drafted this game yet'}
+          </div>
         )}
       </div>
 
