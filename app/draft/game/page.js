@@ -25,7 +25,6 @@ export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'Draft one game - Sportsvyn',
   description: COPY.listSub,
-  robots: { index: false },
 };
 
 export async function generateViewport() {

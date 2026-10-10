@@ -1,7 +1,7 @@
 /**
  * /api/cron/draft-game-board - create the per-game Draft boards (thu-3 S1).
  *
- * HOURLY, IDEMPOTENT. lib/draftGame/create.js ensureGameBoards makes a board for
+ * HOURLY AT :33, IDEMPOTENT. lib/draftGame/create.js ensureGameBoards makes a board for
  * every NFL game whose open (72 h before kickoff) has arrived and that has not
  * kicked, one per game against migration 136's UNIQUE (game_type, match_id),
  * and moves any open board's lock to its game's current kickoff. Most fires

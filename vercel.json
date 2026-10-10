@@ -72,7 +72,7 @@
     },
     {
       "path": "/api/cron/draft-game-board",
-      "schedule": "17 * * * *"
+      "schedule": "33 * * * *"
     },
     {
       "path": "/api/cron/pickem-settle",

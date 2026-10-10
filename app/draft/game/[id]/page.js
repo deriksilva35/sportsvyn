@@ -24,7 +24,7 @@ import '../../draft.css';
 import '../game.css';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Draft one game - Sportsvyn', robots: { index: false } };
+export const metadata = { title: 'Draft one game - Sportsvyn' };
 
 export async function generateViewport() {
   return simViewport(await resolveShellMode());
