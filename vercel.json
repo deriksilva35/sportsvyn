@@ -75,6 +75,10 @@
       "schedule": "33 * * * *"
     },
     {
+      "path": "/api/cron/draft-game-settle",
+      "schedule": "4-59/10 * * * *"
+    },
+    {
       "path": "/api/cron/pickem-settle",
       "schedule": "0 6-20 * * 0,1,2"
     },

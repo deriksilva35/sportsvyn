@@ -32,7 +32,7 @@ export default function StartGameDraft({ contestId, inRoom = false }) {
   }
   return (
     <>
-      <button type="button" className="dgm-btn dgm-btn--go" disabled={busy} onClick={go}>
+      <button type="button" className="dgm-pill" disabled={busy} onClick={go}>
         {busy ? 'Taking a seat…' : 'Draft'}
       </button>
       {err && <p className="dgm-err" role="alert">{err}</p>}

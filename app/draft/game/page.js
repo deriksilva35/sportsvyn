@@ -1,21 +1,22 @@
 /**
- * /draft/game - the per-game Draft's list of open games (thu-3 S1).
+ * /draft/game - the per-game Draft's list of open games (S1, to the fri-1 mock in S2).
  *
- * One card per open board (lib/draftGame/room.js listOpenBoards): the game, its
- * kickoff, and the reader's state in it. Not linked from the lobby yet - S2
- * adds the lobby row and the game-page entry once boards settle.
+ * "Draft one game." and its subline, then one group per ET game day under a
+ * lime chip "NFL · Sunday · N of M drafted", one row per game: the matchup bold,
+ * the kickoff in the reader's zone under it, and a pill on the right - "Draft"
+ * (filled) or "Your draft" (outline) once the reader has a room.
  */
 
 import Link from 'next/link';
 import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
-import StandaloneDate from '@/components/StandaloneDate';
+import StandaloneTime from '@/components/StandaloneTime';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { listOpenBoards } from '@/lib/draftGame/room';
-import { COPY, ROUNDS } from '@/lib/draftGame/rules';
+import { COPY, groupByDay, dayChip } from '@/lib/draftGame/rules';
 import StartGameDraft from '@/components/draftGame/StartGameDraft';
 import '../../daily/daily.css';
 import '../draft.css';
@@ -37,6 +38,7 @@ export default async function GameDraftList() {
   const isShell = await resolveShellMode();
   requireSignInInShell({ isShell, userId, dest: '/draft/game' });
   const boards = await listOpenBoards(userId).catch(() => []);
+  const days = groupByDay(boards);
 
   return (
     <div className="daily-shell">
@@ -46,35 +48,34 @@ export default async function GameDraftList() {
           <Wordmark href="/" />
           <span className="tag">The <b>Draft</b></span>
         </header>
-        <main className="daily-main">
+        <main className="daily-main dgm">
           <Link className="appcrumb" href="/games">&larr; Games</Link>
-          <section className="hero">
-            <h1 className="dgm-title">{COPY.listTitle}</h1>
-            <p className="dgm-sub">{COPY.listSub}</p>
-          </section>
-          {boards.length === 0 ? (
+          <h1 className="dgm-title">{COPY.listTitle}</h1>
+          <p className="dgm-sub">{COPY.listSub}</p>
+          {days.length === 0 ? (
             <p className="dgm-empty" data-draft-game-empty>No games open to draft right now. Boards open three days before kickoff.</p>
-          ) : (
-            <ul className="dgm-list" data-draft-game-list>
-              {boards.map((b) => (
-                <li key={b.contestId} className="dgm-card">
-                  <div className="dgm-match">
-                    <b>{b.away}</b> <span className="dgm-at">@</span> <b>{b.home}</b>
-                  </div>
-                  <div className="dgm-kick"><StandaloneDate iso={b.kickoffAt} /></div>
-                  {userId == null ? (
-                    <a className="dgm-btn" href={shellSigninHref('/draft/game', isShell)}>Sign in to draft</a>
-                  ) : b.started ? (
-                    <Link className="dgm-btn" href={`/draft/game/${b.contestId}`}>
-                      {b.picks >= ROUNDS ? 'Your team' : `Resume · ${b.picks} of ${ROUNDS} picked`}
-                    </Link>
-                  ) : (
-                    <StartGameDraft contestId={b.contestId} />
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+          ) : days.map((d) => (
+            <section key={d.dayKey} className="dgm-day" data-draft-game-day={d.dayKey}>
+              <span className="dgm-chip">{dayChip('nfl', d.day, d.boards.filter((b) => b.started).length, d.boards.length)}</span>
+              <ul className="dgm-list" data-draft-game-list>
+                {d.boards.map((b) => (
+                  <li key={b.contestId} className="dgm-row">
+                    <div className="dgm-row-main">
+                      <div className="dgm-match"><b>{b.away} @ {b.home}</b></div>
+                      <div className="dgm-kick"><StandaloneTime iso={b.kickoffAt} /></div>
+                    </div>
+                    {userId == null ? (
+                      <a className="dgm-pill" href={shellSigninHref('/draft/game', isShell)}>Draft</a>
+                    ) : b.started ? (
+                      <Link className="dgm-pill dgm-pill--outline" href={`/draft/game/${b.contestId}`}>Your draft</Link>
+                    ) : (
+                      <StartGameDraft contestId={b.contestId} />
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
           <p className="dgm-foot">{COPY.poolFoot}</p>
         </main>
       </div>
