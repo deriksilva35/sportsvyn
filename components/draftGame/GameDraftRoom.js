@@ -1,15 +1,19 @@
 'use client';
 
-// The per-game Draft room (thu-3 S1): header, the four seats, the board, the
-// clock. Everything it shows comes from the server's roomView; a pick goes
-// through pickGameDraftAction and the page re-reads. When the clock reaches
-// zero the page re-reads too, and the server's sweep makes the auto-pick - the
-// client never decides a pick it did not send.
+// The per-game Draft room (S1; to the fri-1 mock in S2): the clock, a row of four
+// seat tiles (You in lime, the bots in navy: name + pick count), and the whole
+// pool best first - position chip, name, "TEAM · proj N", a "Draft" pill; a row
+// already taken is faded and carries its drafter's name.
+//
+// Everything comes from the server's roomView; a pick goes through
+// pickGameDraftAction and the page re-reads. When the clock reaches zero the
+// page re-reads too and the server's sweep makes the auto-pick - the client
+// never decides a pick it did not send.
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { pickGameDraftAction } from '@/app/actions/draftGame';
-import { COPY, ROUNDS, seatLabels } from '@/lib/draftGame/rules';
+import { ROUNDS } from '@/lib/draftGame/rules';
 
 const REASON = {
   locked: 'The game has kicked off. Your remaining picks were made for you.',
@@ -19,7 +23,6 @@ const REASON = {
   conflict: 'The room moved. Showing it now.',
   done: 'Your draft is complete.',
 };
-
 
 // Seconds left on the reader's clock, or null (no clock, or not yet ticked - the
 // first tick lands after mount, so the server render and hydration agree).
@@ -54,15 +57,8 @@ export default function GameDraftRoom({ view }) {
     router.refresh();
   }
 
-  const mine = view.seats.find((s) => s.you)?.picks ?? [];
-  const names = seatLabels(view.seat);
-  const seatName = (s) => names[s.seat];
   return (
     <section className="dgm-room" data-draft-game-room data-your-turn={view.yourTurn ? '1' : '0'}>
-      <div className="dgm-room-top">
-        <span className="dgm-round" data-room-header>{view.header}</span>
-        <span className="dgm-count">{COPY.count}</span>
-      </div>
       {view.yourTurn && left != null && (
         <div className={`dgm-clock${left <= 10 ? ' dgm-clock--low' : ''}`} aria-live="polite">
           <b className="n">{left}</b>s to pick
@@ -70,39 +66,33 @@ export default function GameDraftRoom({ view }) {
       )}
       {msg && <p className="dgm-err" role="alert">{msg}</p>}
 
-      <div className="dgm-seats">
+      <div className="dgm-tiles">
         {view.seats.map((s) => (
-          <div key={s.seat} className={`dgm-seat${s.you ? ' dgm-seat--you' : ''}`}>
-            <div className="dgm-seat-hd">{seatName(s)} <span className="dgm-seat-n">{s.picks.length}/{ROUNDS}</span></div>
-            <ol className="dgm-picks">
-              {s.picks.map((p) => (
-                <li key={p.id}><span className="dgm-pos">{p.pos}</span> {p.name} <span className="dgm-tm">{p.team}</span></li>
-              ))}
-            </ol>
+          <div key={s.seat} className={`dgm-tile${s.you ? ' dgm-tile--you' : ''}`} data-seat={s.seat}>
+            <b>{s.label}</b>
+            <span className="n">{s.picks.length}/{ROUNDS}</span>
           </div>
         ))}
       </div>
 
-      {view.done ? (
-        <p className="dgm-done" data-draft-game-done>
-          Your four: {mine.map((p) => p.name).join(', ')}. Your best three score. Over when the game ends.
-        </p>
-      ) : view.locked ? (
-        <p className="dgm-done">The game has kicked off. The draft is closed.</p>
-      ) : (
-        <ul className="dgm-board" aria-label="Available players">
-          {view.available.map((p) => (
-            <li key={p.id} className="dgm-prow">
-              <span className="dgm-pos">{p.pos}</span>
-              <span className="dgm-who"><b>{p.name}</b> <small>{p.team}</small></span>
-              <span className="dgm-proj n">{Number(p.proj).toFixed(1)}</span>
-              <button type="button" className="dgm-pick" disabled={!view.yourTurn || busy} onClick={() => pick(p.id)}>
-                Pick
+      <ul className="dgm-pool" aria-label="The pool">
+        {view.pool.map((p) => (
+          <li key={p.id} className={`dgm-prow${p.takenBy ? ' dgm-prow--taken' : ''}`}>
+            <span className={`dgm-pos dgm-pos--${String(p.pos).toLowerCase()}`}>{p.pos}</span>
+            <span className="dgm-who">
+              <b>{p.name}</b>
+              <small>{p.team} · proj {Number(p.proj).toFixed(1)}</small>
+            </span>
+            {p.takenBy ? (
+              <span className="dgm-by">{p.takenBy}</span>
+            ) : (
+              <button type="button" className="dgm-pill dgm-pill--sm" disabled={!view.yourTurn || busy} onClick={() => pick(p.id)}>
+                Draft
               </button>
-            </li>
-          ))}
-        </ul>
-      )}
+            )}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

@@ -210,19 +210,23 @@ test("the Daily's house rules are stated, and match the code", async () => {
 // hold the page to the registry rather than to a list typed twice.
 // ---------------------------------------------------------------------------
 
-test('EVERY LISTED REGISTRY GAME APPEARS, and Survivor (flag off) does not', async () => {
+test('EVERY LISTED REGISTRY GAME APPEARS, and the flagged ones (Survivor, Game Drafts) do not while off', async () => {
   const { PLAY_REGISTRY, listedGames } = await import('../../../lib/games/playRegistry.js');
   const { gameGroups, introLine } = await import('../../../lib/games/howItWorks.js');
-  const off = listedGames(PLAY_REGISTRY, { SURVIVOR: '' });
+  const off = listedGames(PLAY_REGISTRY, { SURVIVOR: '', DRAFT_GAME_BOARDS: '' });
   const keys = gameGroups(off, new Date('2026-10-04T16:00:00Z')).flatMap((g) => g.games.map((x) => x.key));
-  const want = PLAY_REGISTRY.filter((e) => e.key !== 'nfl-survivor').map((e) => e.key);
-  assert.deepEqual([...keys].sort(), [...want].sort(), 'every registry game but the flagged one');
+  const FLAGGED = ['nfl-survivor', 'nfl-draft-game'];
+  const want = PLAY_REGISTRY.filter((e) => !FLAGGED.includes(e.key)).map((e) => e.key);
+  assert.deepEqual([...keys].sort(), [...want].sort(), 'every registry game but the flagged ones');
   assert.ok(!keys.includes('nfl-survivor'), 'Survivor is pulled, so it is not listed');
   for (const k of ['mlb-october', 'mlb-run', 'mlb-series', 'nba-six', 'epl-weekly-5', 'daily']) {
     assert.ok(keys.includes(k), `${k} is on the explainer`);
   }
   // The flag is the only thing hiding it: switched on, it is listed.
   assert.ok(listedGames(PLAY_REGISTRY, { SURVIVOR: 'on' }).some((e) => e.key === 'nfl-survivor'));
+  // Game Drafts (fri-1) the same way, behind DRAFT_GAME_BOARDS.
+  assert.ok(listedGames(PLAY_REGISTRY, { DRAFT_GAME_BOARDS: 'on' }).some((e) => e.key === 'nfl-draft-game'));
+  assert.ok(!keys.includes('nfl-draft-game'), 'Game Drafts is off, so it is not listed');
   // Each row carries the registry's own words, never a blank.
   for (const g of gameGroups(off).flatMap((x) => x.games)) {
     const e = PLAY_REGISTRY.find((r) => r.key === g.key);

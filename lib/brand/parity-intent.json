@@ -1,3 +1,1299 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm .n { font-family }",
+      "after": "?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm .n { font-variant-numeric }",
+      "after": "tabular-nums"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-actions { display }",
+      "after": "flex"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-actions { flex-wrap }",
+      "after": "wrap"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-actions { gap }",
+      "after": "10px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-actions { margin }",
+      "after": "16px 0 4px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-at { color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-big { color }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-big { font-size }",
+      "after": "56px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-big { font-weight }",
+      "after": "800"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-big { line-height }",
+      "after": "1"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-big { margin-top }",
+      "after": "8px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-board { border-top }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-board { list-style }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-board { margin }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-board { padding }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { background }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { border }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { border-radius }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { cursor }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { display }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { font }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { font-weight }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { min-height }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { padding }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { text-align }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn { text-decoration }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn--go { background }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn--go { border-color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn--go { color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn:disabled { cursor }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-btn:disabled { opacity }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-by { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-by { font-size }",
+      "after": "12px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-by { font-weight }",
+      "after": "700"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-card .dgm-btn, .dgm-card .dgm-err { grid-column }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-card .dgm-btn, .dgm-card .dgm-err { grid-row }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-card { align-items }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-card { background }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-card { border }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-card { border-radius }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-card { display }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-card { gap }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-card { grid-template-columns }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-card { padding }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-chip { background }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-chip { border-radius }",
+      "after": "999px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-chip { color }",
+      "after": "#0a0a0a"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-chip { display }",
+      "after": "inline-block"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-chip { font }",
+      "after": "700 11px ?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-chip { letter-spacing }",
+      "after": ".06em"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-chip { padding }",
+      "after": "4px 10px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-chip { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-clock b { color }",
+      "after": "#f5f5f2"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-clock { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-clock { margin }",
+      "after": "4px 0 8px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-clock--low b { color }",
+      "after": "#b8410f"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-count { color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-count { font-size }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-count { letter-spacing }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-count { text-transform }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-day { margin }",
+      "after": "14px 0 6px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-empty { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-empty { margin }",
+      "after": "14px 0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-empty, .dgm-done { color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-empty, .dgm-done { margin }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-eyebrow { color }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-eyebrow { font }",
+      "after": "700 11px ?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-eyebrow { letter-spacing }",
+      "after": ".12em"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-eyebrow { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-foot { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-h2 { font-size }",
+      "after": "16px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-h2 { margin }",
+      "after": "18px 0 6px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd { background }",
+      "after": "#141414"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd { border-radius }",
+      "after": "14px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd { color }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd { margin }",
+      "after": "8px 0 12px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd { padding }",
+      "after": "14px 16px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd-sub { font-size }",
+      "after": "13px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd-sub { margin-top }",
+      "after": "4px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd-sub { opacity }",
+      "after": ".8"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd-title { color }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd-title { font-size }",
+      "after": "22px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd-title { line-height }",
+      "after": "1.15"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-hd-title { margin }",
+      "after": "6px 0 0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-kick { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-kick { grid-column }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-kick { margin-top }",
+      "after": "2px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-list { border-top }",
+      "after": "1px solid #2e2e2e"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-list { display }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-list { gap }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-list { margin }",
+      "after": "8px 0 0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-match--big { font-size }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-mine li { border-bottom }",
+      "after": "1px solid #2e2e2e"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-mine li { padding }",
+      "after": "8px 0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-note { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-note { font-size }",
+      "after": "12px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-note { list-style }",
+      "after": "none"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-note { padding-top }",
+      "after": "6px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick { background }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick { border }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick { border-radius }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick { color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick { cursor }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick { font }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick { font-weight }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick { min-height }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick { padding }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick:disabled { border-color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick:disabled { color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pick:disabled { cursor }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-picks li { overflow }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-picks li { text-overflow }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-picks li { white-space }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-picks { font-size }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-picks { margin }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-picks { padding }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { align-items }",
+      "after": "center"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { background }",
+      "after": "#141414"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { border }",
+      "after": "1.5px solid #141414"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { border-radius }",
+      "after": "999px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { color }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { cursor }",
+      "after": "pointer"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { display }",
+      "after": "inline-flex"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { font }",
+      "after": "inherit"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { font-weight }",
+      "after": "800"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { justify-content }",
+      "after": "center"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { min-height }",
+      "after": "40px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { padding }",
+      "after": "8px 18px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { text-decoration }",
+      "after": "none"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill { white-space }",
+      "after": "nowrap"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill--lime { background }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill--lime { border-color }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill--lime { color }",
+      "after": "#0a0a0a"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill--outline { background }",
+      "after": "transparent"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill--outline { color }",
+      "after": "#141414"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill--sm { font-size }",
+      "after": "13px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill--sm { min-height }",
+      "after": "34px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill--sm { padding }",
+      "after": "6px 14px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill:disabled { cursor }",
+      "after": "default"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pill:disabled { opacity }",
+      "after": ".45"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-place { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-place { font-weight }",
+      "after": "700"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pool, .dgm-scored, .dgm-mine { border-top }",
+      "after": "1px solid #2e2e2e"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pool, .dgm-scored, .dgm-mine { list-style }",
+      "after": "none"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pool, .dgm-scored, .dgm-mine { margin }",
+      "after": "0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pool, .dgm-scored, .dgm-mine { padding }",
+      "after": "0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos { background }",
+      "after": "#2e2e2e"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos { border-radius }",
+      "after": "6px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos { color }",
+      "after": "#0a0a0a"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos { display }",
+      "after": "inline-flex"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos { font }",
+      "after": "700 10px ?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos { font-size }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos { font-weight }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos { justify-content }",
+      "after": "center"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos { min-width }",
+      "after": "30px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos { padding }",
+      "after": "2px 4px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos--qb { background }",
+      "after": "#ff5c8a"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos--rb { background }",
+      "after": "#4ade80"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos--te { background }",
+      "after": "#fb923c"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pos--wr { background }",
+      "after": "#38bdf8"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-proj { color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-proj { font-variant-numeric }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow { align-items }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow { border-bottom }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow { display }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow { gap }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow { grid-template-columns }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow { padding }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow, .dgm-srow { align-items }",
+      "after": "center"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow, .dgm-srow { border-bottom }",
+      "after": "1px solid #2e2e2e"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow, .dgm-srow { display }",
+      "after": "grid"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow, .dgm-srow { gap }",
+      "after": "10px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow, .dgm-srow { grid-template-columns }",
+      "after": "34px minmax(0,1fr) auto"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow, .dgm-srow { padding }",
+      "after": "9px 0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow--taken, .dgm-srow--out { opacity }",
+      "after": ".45"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-pts { font-weight }",
+      "after": "800"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-rank--you b { color }",
+      "after": "#141414"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-ranking li { border-bottom }",
+      "after": "1px solid #2e2e2e"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-ranking li { display }",
+      "after": "grid"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-ranking li { gap }",
+      "after": "10px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-ranking li { grid-template-columns }",
+      "after": "44px 1fr auto"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-ranking li { padding }",
+      "after": "9px 0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-ranking { border-top }",
+      "after": "1px solid #2e2e2e"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-ranking { list-style }",
+      "after": "none"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-ranking { margin }",
+      "after": "0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-ranking { padding }",
+      "after": "0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-room-hd { margin }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-room-top { align-items }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-room-top { display }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-room-top { flex-wrap }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-room-top { gap }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-room-top { justify-content }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-round { font-size }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-round { font-weight }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-row { align-items }",
+      "after": "center"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-row { border-bottom }",
+      "after": "1px solid #2e2e2e"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-row { display }",
+      "after": "flex"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-row { gap }",
+      "after": "12px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-row { justify-content }",
+      "after": "space-between"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-row { padding }",
+      "after": "12px 0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-row-main { min-width }",
+      "after": "0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat { background }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat { border }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat { border-radius }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat { min-width }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat { padding }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat--you { border-color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat-hd { display }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat-hd { font-size }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat-hd { font-weight }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat-hd { justify-content }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat-hd { margin-bottom }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat-n { color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seat-n { font-weight }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seats { display }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seats { gap }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seats { grid-template-columns }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-seats { margin }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-sub { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile b { max-width }",
+      "after": "100%"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile b { overflow }",
+      "after": "hidden"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile b { text-overflow }",
+      "after": "ellipsis"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile b { white-space }",
+      "after": "nowrap"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile { align-items }",
+      "after": "center"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile { background }",
+      "after": "#141414"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile { border-radius }",
+      "after": "10px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile { color }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile { display }",
+      "after": "flex"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile { flex-direction }",
+      "after": "column"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile { font-size }",
+      "after": "13px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile { gap }",
+      "after": "2px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile { min-width }",
+      "after": "0"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile { padding }",
+      "after": "8px 4px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile--you { background }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tile--you { color }",
+      "after": "#0a0a0a"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tiles { display }",
+      "after": "grid"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tiles { gap }",
+      "after": "6px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tiles { grid-template-columns }",
+      "after": "repeat(4,minmax(0,1fr))"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tiles { margin }",
+      "after": "4px 0 12px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-title { font-size }",
+      "after": "30px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-title { line-height }",
+      "after": "1.05"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-title { margin }",
+      "after": "8px 0 4px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tm { color }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tm { font-size }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-top { font-size }",
+      "after": "13px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-top { font-weight }",
+      "after": "700"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-top { margin-top }",
+      "after": "8px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-who b { overflow }",
+      "after": "hidden"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-who b { text-overflow }",
+      "after": "ellipsis"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-who b { white-space }",
+      "after": "nowrap"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-who small { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-who small { font-size }",
+      "after": "12px"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-who { display }",
+      "after": "flex"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-who { flex-direction }",
+      "after": "column"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-who { overflow }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-who { text-overflow }",
+      "after": null
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-who { white-space }",
+      "after": null
+    }
+  ]
 }
