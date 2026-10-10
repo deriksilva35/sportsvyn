@@ -70,6 +70,9 @@ export const ON_DARK_ANCESTOR = Object.freeze({
   // sun-19: the Play lobby's OPEN sport card - its header is navy, the name and chevron volt on it.
   '.pl-sc.open .pl-sc-name': '.pl-sc.open .pl-sc-h',
   '.pl-sc.open .pl-sc-chev': '.pl-sc.open .pl-sc-h',
+  // fri-1: the per-game Draft's navy header (app/draft/game/game.css) - the lime eyebrow and the big points on it.
+  '.dgm-eyebrow': '.dgm-hd',
+  '.dgm-big': '.dgm-hd',
 });
 
 export function voltOnLight(css, g) {
