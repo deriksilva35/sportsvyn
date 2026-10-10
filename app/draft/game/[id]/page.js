@@ -64,7 +64,7 @@ export default async function GameDraftRoomPage({ params }) {
           ) : (
             <div className="dgm-startbox">
               <p className="dgm-sub">{COPY.listSub}</p>
-              <StartGameDraft contestId={v.contestId} />
+              <StartGameDraft contestId={v.contestId} inRoom />
             </div>
           )}
           <p className="dgm-foot">{COPY.poolFoot}</p>
