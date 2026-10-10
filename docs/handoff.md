@@ -48,15 +48,12 @@
 4. FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
 
 ## Notes
+- draftGame db test tears down `dgtest-%@example.invalid` users: never use that prefix by hand.
 - PROD SELECTs hit the "Production Reads" permission check here; ask Derik per read, never writes.
 - neon tagged template: `interval ${'24 hours'}` is a syntax error - write the literal in SQL.
 - Headless Chromium: LD_LIBRARY_PATH=~/projects/travault/scripts/vendor/chromium-libs/usr/lib/
   x86_64-linux-gnu; playwright at ~/.npm/_npx/705bc6b22212b352.
 - Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
-
-## Notes (thu-3)
-- My draftGame db test deletes `dgtest-%@example.invalid` users in teardown - never give a
-  manual sentinel that prefix (it cost one sentinel this relay).
 
 ## Next step
 Derik: GO / no-GO on draft-game-s1. 13 Oct 13:23Z+: launch-oct20.md checks 1-5.
