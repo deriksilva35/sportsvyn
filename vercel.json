@@ -71,6 +71,10 @@
       "schedule": "23 13 * * *"
     },
     {
+      "path": "/api/cron/draft-game-board",
+      "schedule": "17 * * * *"
+    },
+    {
       "path": "/api/cron/pickem-settle",
       "schedule": "0 6-20 * * 0,1,2"
     },

@@ -1,0 +1,61 @@
+/* The per-game Draft (thu-3 S1): list + room. Prefixed dgm- so nothing here
+   reaches the weekly Draft's own classes; colours are the Weekly/Draft tokens
+   from app/daily/daily.css (.daily, .weekly scope). */
+
+.dgm-title { margin: 6px 0 4px; font-size: 28px; line-height: 1.1; }
+.dgm-sub { margin: 0 0 14px; color: var(--d-mut); }
+.dgm-empty, .dgm-done { color: var(--d-mut); margin: 14px 0; }
+.dgm-foot { margin: 18px 0 8px; font-size: 12px; color: var(--d-mut); }
+.dgm-err { margin: 8px 0 0; color: var(--tok-down, #ff6b6b); font-size: 13px; }
+
+.dgm-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.dgm-card {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center;
+  padding: 12px 14px; background: var(--d-card); border: 1px solid var(--d-line); border-radius: 12px;
+}
+.dgm-match { font-size: 18px; }
+.dgm-match--big { font-size: 24px; }
+.dgm-at { color: var(--d-mut); }
+.dgm-kick { grid-column: 1; color: var(--d-mut); font-size: 13px; }
+.dgm-card .dgm-btn, .dgm-card .dgm-err { grid-column: 2; grid-row: 1 / span 2; }
+
+.dgm-btn {
+  display: inline-block; min-height: 44px; padding: 11px 16px; border-radius: 10px;
+  border: 1px solid var(--d-line); background: transparent; color: var(--d-paper);
+  font: inherit; font-weight: 700; text-decoration: none; text-align: center; cursor: pointer;
+}
+.dgm-btn--go { background: var(--d-volt); color: var(--d-ink, #0b0b0b); border-color: var(--d-volt); }
+.dgm-btn:disabled { opacity: .6; cursor: default; }
+
+.dgm-room-hd { margin: 6px 0 12px; }
+.dgm-startbox { margin: 10px 0; }
+.dgm-room-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.dgm-round { font-weight: 700; font-size: 16px; }
+.dgm-count { color: var(--d-mut); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.dgm-clock { margin: 8px 0; color: var(--d-mut); }
+.dgm-clock b { color: var(--d-paper); font-size: 20px; }
+.dgm-clock--low b { color: var(--d-volt); }
+
+.dgm-seats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+.dgm-seat { padding: 10px; border: 1px solid var(--d-line); border-radius: 10px; background: var(--d-card); min-width: 0; }
+.dgm-seat--you { border-color: var(--d-volt); }
+.dgm-seat-hd { display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+.dgm-seat-n { color: var(--d-mut); font-weight: 400; }
+.dgm-picks { margin: 0; padding: 0 0 0 18px; font-size: 13px; }
+.dgm-picks li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dgm-pos { display: inline-block; min-width: 26px; font-size: 11px; color: var(--d-mut); font-weight: 700; }
+.dgm-tm { color: var(--d-mut); font-size: 11px; }
+
+.dgm-board { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--d-line); }
+.dgm-prow {
+  display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; gap: 10px; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--d-line);
+}
+.dgm-who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dgm-who small { color: var(--d-mut); }
+.dgm-proj { color: var(--d-mut); font-variant-numeric: tabular-nums; }
+.dgm-pick {
+  min-height: 36px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--d-volt);
+  background: transparent; color: var(--d-volt); font: inherit; font-weight: 700; cursor: pointer;
+}
+.dgm-pick:disabled { border-color: var(--d-line); color: var(--d-mut); cursor: default; }

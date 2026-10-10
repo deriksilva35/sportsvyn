@@ -17,8 +17,8 @@
 //   leagues   a slug that starts with sentinel- or contains "test"
 //   teams     in a fixture league, or a slug like a fixture's
 //   matches   in a fixture league, or a slug like a fixture's
-//   contests  a sport that is not a real league's slug, or a board naming a
-//             fixture match
+//   contests  a sport that is not a real league's slug, a board naming a
+//             fixture match, or a match_id (136, per-game Draft) on one
 //   schemas   zz_migledger_* (lib/migrations/ledger.db.test.mjs's throwaway
 //             schema; drop it with DROP SCHEMA ... CASCADE)
 // Anything it prints is a candidate, not a verdict: read it before deleting.
@@ -53,6 +53,7 @@ const real = (await sql`SELECT slug FROM leagues WHERE NOT (slug ~* ${SLUG_RX})`
 const contests = await sql`
   SELECT c.id, c.game_type, c.sport, c.season_year, c.created_at FROM contests c
    WHERE NOT (c.sport = ANY(${real}))
+      OR c.match_id = ANY(${matchIds})
       OR EXISTS (SELECT 1 FROM jsonb_array_elements(CASE WHEN jsonb_typeof(c.board) = 'array' THEN c.board ELSE '[]'::jsonb END) g
                   WHERE (g->>'match_id') ~ '^[0-9]+$' AND (g->>'match_id')::int = ANY(${matchIds}))
    ORDER BY c.created_at LIMIT 500`;
