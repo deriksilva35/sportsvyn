@@ -1,4 +1,4 @@
-# Handoff - droplet relay sun-6, Sun 11 Oct 2026 (clock ~18:00Z)
+# Handoff - droplet relay sun-7, Sun 11 Oct 2026 (clock ~23:15Z)
 
 ## Live (PROD)
 - main = 3d6eb60 (mock-nba merged; code tree 93a2fbb, suite 6409/6409, preview READY). Vercel
@@ -16,6 +16,14 @@
 - Game Drafts primetime only; DRAFT_GAME_BOARDS=on, DRAFT_GAME_NBA=off.
 
 ## HOLDING-FOR-GO
+- mock-nba-2 (sun-7 + ADP addendum v2), head e401e8f, target ship Wed 14 Oct. Report:
+  docs/reports/2026-10-11-mock-nba-2.md (on the branch). Shots sent to Derik (preview 9b85e52).
+  - Migration 138 is on DEV only (mock_nba_adp, nba_mock_drafts, nba_mock_settings). The DEV pool
+    was rebuilt in the new shape (531 rows) and the DEV ADP was imported (426 matched).
+  - AT GO: apply 138 on PROD; merge; reset parity-intent.json (137 entries for mock.css); deploy;
+    rebuild the PROD pool (old rows have no `s`; rank.js tolerates them meanwhile); then
+    DATABASE_URL="$PROD_DATABASE_URL" node scripts/mock-nba-adp-import.mjs --apply.
+  - Open: preset names (brand rule) and the auto-draft ~A+ grade; see the report.
 - draft-look (sun-3), held by sun-5: head 0039287, suite 6404/6404. Not done: the preview check
   and the shots. Ships after 20 Oct (ruled).
 
@@ -23,7 +31,6 @@
 1. Sunday review of the 14 Game Draft boards: all settled? spot-check 3 rooms (best 3, no-shows
    0); app_errors since Sat 10 Oct 21:52Z.
 2. Weekly Draft week 6 settled clean.
-3. (done) League formats - superseded by sun-4: docs/reports/2026-10-11-leagues-phased.md.
 4. docs/launch-oct20.md checks 1-5 after the 13:23Z board job.
 
 ## Needs Derik
@@ -48,7 +55,6 @@
 - PROD SELECTs hit the "Production Reads" check; ask Derik per read, never writes.
 - neon tagged template: `interval ${'..'}` is a syntax error; write the literal.
 - A Next route file must not export helpers; a card font is read with readFileSync.
-- Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
 
 ## Next step
-Tue 13 Oct: items 1, 2, 4 above. Watch the NBA mock's 10:41Z pool rebuild (sync_runs source='nba-mock-pool').
+Derik's GO on mock-nba-2 (steps above). Tue 13 Oct: items 1, 2, 4 above. Watch the NBA mock's 10:41Z pool rebuild (sync_runs source='nba-mock-pool').
