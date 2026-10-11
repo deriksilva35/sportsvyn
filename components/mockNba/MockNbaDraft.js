@@ -69,7 +69,7 @@ export default function MockNbaDraft({ pool, builtAt }) {
           ))}
         </div>
         <button type="button" className="dgm-pill dgm-pill--lime mnb-start" onClick={start} data-mock-nba-start>Start the draft</button>
-        <p className="dgm-foot">Pool: {pool.length} players on current NBA rosters{builtAt ? `, updated ${builtAt.slice(0, 10)}` : ''}. Positions are BDL&apos;s G / F / C.</p>
+        <p className="dgm-foot">Pool: {pool.length} players on current NBA rosters{builtAt ? `, updated ${builtAt.slice(0, 10)}` : ''}. Positions are listed as G, F or C: a G plays PG, SG or G, an F plays SF, PF or F.</p>
       </section>
     );
   }

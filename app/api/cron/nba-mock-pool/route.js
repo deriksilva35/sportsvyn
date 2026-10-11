@@ -1,8 +1,8 @@
 /**
  * /api/cron/nba-mock-pool - rebuild the NBA mock draft's pool, daily (sun-5).
  *
- * lib/mockNba/pool.js: BDL active rosters + last season's averages (about 13
- * calls through the BDL door) -> the ranked pool -> nba_mock_pool (one row per
+ * lib/mockNba/pool.js: active rosters + last season's averages (about 13
+ * calls through the stats feed's door) -> the ranked pool -> nba_mock_pool (one row per
  * season). A pool too small to draft is refused and the old one stays.
  * Auth: Bearer ${CRON_SECRET}.
  */
