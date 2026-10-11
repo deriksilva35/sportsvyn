@@ -1,0 +1,36 @@
+/* The NBA mock draft (sun-5): what it adds to Game Drafts' dgm-* look (app/draft/
+   game/game.css): seat picker, 12-seat scrolling strip, tabs, search, chips, the
+   armed row, the board. Prefixed mnb-. Tokens only; no lime text on a light ground. */
+
+.mnb-seats { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
+.mnb-start { width: 100%; min-height: 48px; font-size: 16px; }
+
+.mnb-strip { display: flex; gap: 6px; overflow-x: auto; margin: 4px 0 12px; padding-bottom: 4px; }
+.mnb-strip .dgm-tile { flex: 0 0 auto; width: 84px; }
+.mnb-tile-sub { font-size: 11px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+.mnb-tabs { display: flex; gap: 6px; margin: 4px 0 10px; }
+.mnb-tab {
+  flex: 1; min-height: 40px; border-radius: 999px; border: 1.5px solid var(--tok-primary);
+  background: transparent; color: var(--tok-primary); font: inherit; font-weight: 800; cursor: pointer;
+}
+.mnb-tab--on { background: var(--tok-primary); color: var(--tok-on-primary); }
+
+.mnb-search {
+  width: 100%; min-height: 42px; padding: 8px 12px; border-radius: 10px; box-sizing: border-box;
+  border: 1px solid var(--tok-line); background: var(--tok-surface); color: var(--tok-ink); font: inherit;
+}
+.mnb-chips { display: flex; gap: 6px; margin: 8px 0; overflow-x: auto; }
+.mnb-chip {
+  flex: none; min-height: 34px; padding: 4px 14px; border-radius: 999px; border: 1px solid var(--tok-line);
+  background: transparent; color: var(--tok-ink); font: 700 12px var(--tok-font-num); cursor: pointer;
+}
+.mnb-chip--on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+
+.mnb-prow--armed { background: var(--tok-action); color: var(--tok-on-action); }
+.mnb-prow--armed .dgm-who small { color: var(--tok-on-action); }
+
+.mnb-board { overflow-x: auto; }
+.mnb-board table { border-collapse: collapse; font-size: 11px; }
+.mnb-board th, .mnb-board td { padding: 4px 6px; border: 1px solid var(--tok-line); white-space: nowrap; }
+.mnb-board .mnb-you { background: var(--tok-action); color: var(--tok-on-action); }
