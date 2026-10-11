@@ -1,29 +1,23 @@
-# Handoff - droplet relays sun-3 / sun-4 / sun-5, Sun 11 Oct 2026 (clock ~17:30Z)
+# Handoff - droplet relay sun-6, Sun 11 Oct 2026 (clock ~18:00Z)
 
-## Live (PROD) - unchanged this relay
-- main = 3ca0729 + docs. Game Drafts are primetime only (TNF/MNF/weekday games); switches
-  DRAFT_GAME_BOARDS=on, DRAFT_GAME_NBA=off. The 14 week-5 boards (ids 58-71) settle normally.
+## Live (PROD)
+- main = 3d6eb60 (mock-nba merged; code tree 93a2fbb, suite 6409/6409, preview READY). Vercel
+  production at 3d6eb60; poller head=3d6eb60 (previous 3ca0729).
+- NBA MOCK DRAFT LIVE: sportsvyn.com/mock/nba, public, in the sitemap (static-0.xml), title
+  "NBA Mock Draft 2026 - Sportsvyn", plays signed out.
+  - ESPN standard roster: PG SG SF PF C G F UTIL UTIL UTIL + 3 BN.
+  - Migration 137 is on PROD (ledgered); the PROD pool was built at 17:52Z (260 players), and the
+    cron rebuilds it daily at 10:41Z.
+  - Verified signed out: a draft to its result, and the share card 200. +30 min: app_errors
+    empty, Vercel runtime errors none on production, poller clean.
+- NFL MOCK CARD FIXED (readFileSync font). Preview: 200 for the owner, 401 signed out (it 500'd
+  before). PROD: 401 signed out as designed. A PROD 200 needs an owner's session.
+  Guard: lib/brand/cardFont.test.mjs.
+- Game Drafts primetime only; DRAFT_GAME_BOARDS=on, DRAFT_GAME_NBA=off.
 
 ## HOLDING-FOR-GO
-1. mock-nba (sun-5, PRIORITY, target ship Thu 15 - Fri 16 Oct). /mock/nba is a public,
-   indexable NBA mock draft, playable signed out.
-   - Code head 9a11c8c, suite 6408/6408, preview READY. Shots and report:
-     docs/reports/2026-10-11-mock-nba.md.
-   - ON GO: apply 137 on PROD (DATABASE_URL="$PROD_DATABASE_URL" scripts/apply-migrations.mjs
-     137_nba_mock_pool.sql), merge, deploy, then build the pool once (the cron, or wait for
-     10:41Z).
-2. draft-look (sun-3) - HELD by sun-5.
-   - Head 0039287, suite 6404/6404, pushed.
-   - Not done: the preview check and the shots.
-   - Shared header / seat strip / pool row / result; the weekly room in the new look
-     (components/draft/RankedRoom.js); weekly results on the shared result screen.
-   - Ships after 20 Oct (ruled).
-
-## Findings
-- The NFL mock share card (app/sim/draft/[id]/card/route.js:28) loads its font with
-  fetch(new URL(..., import.meta.url)). That is "not implemented" on Vercel's Node runtime
-  (seen on the NBA card's preview), so it is very likely 500ing on PROD now. One-line fix:
-  readFileSync, as app/daily/[date]/card does. Not touched.
+- draft-look (sun-3), held by sun-5: head 0039287, suite 6404/6404. Not done: the preview check
+  and the shots. Ships after 20 Oct (ruled).
 
 ## TUE 13 OCT - still owed (the games had not been played when tue-1 ran)
 1. Sunday review of the 14 Game Draft boards: all settled? spot-check 3 rooms (best 3, no-shows
@@ -33,7 +27,6 @@
 4. docs/launch-oct20.md checks 1-5 after the 13:23Z board job.
 
 ## Needs Derik
-- GO on mock-nba.
 - Leagues (sun-4 report):
   - P1 total points: every drafted player, or the best N per week?
   - Bots in 4-7 team leagues?
@@ -58,4 +51,4 @@
 - Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
 
 ## Next step
-Derik: GO on mock-nba. Tue 13 Oct: items 1, 2, 4 above.
+Tue 13 Oct: items 1, 2, 4 above. Watch the NBA mock's 10:41Z pool rebuild (sync_runs source='nba-mock-pool').
