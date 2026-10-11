@@ -58,7 +58,7 @@ export default function MockNbaDraft({ pool, builtAt }) {
         <div className="dgm-hd">
           <div className="dgm-eyebrow">NBA MOCK DRAFT · 12 TEAMS · 13 ROUNDS</div>
           <h1 className="dgm-hd-title">NBA Mock Draft 2026</h1>
-          <div className="dgm-hd-sub">Points league. PG SG SF PF C G F UTIL UTIL + 4 bench. You against 11 bots.</div>
+          <div className="dgm-hd-sub">Points league, ESPN standard roster: PG SG SF PF C G F + 3 UTIL + 3 bench. You against 11 bots.</div>
         </div>
         <p className="dgm-sub">Pick your seat, then draft. Players are ranked by SV rank: last season&apos;s fantasy points per game times games played; rookies by draft slot.</p>
         <div className="mnb-seats">

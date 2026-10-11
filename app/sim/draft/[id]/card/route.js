@@ -5,6 +5,7 @@
 // a fallback (Satori throws if a glyph has no matching font). Google Fonts CDN
 // inside og render is not reliable; hence the committed asset.
 
+import { readFileSync } from 'node:fs';
 import { ImageResponse } from 'next/og';
 import { auth } from '@/auth';
 import { getResults } from '@/lib/fantasy/drafts';
@@ -25,7 +26,9 @@ export async function GET(_req, { params }) {
   const r = await getResults(Number(id), userId);
   if (!r || r.draft?.status !== 'completed') return new Response('Not found', { status: 404 });
 
-  const saira = await fetch(new URL('./Saira-BlackItalic.woff', import.meta.url)).then((res) => res.arrayBuffer());
+  // readFileSync, NOT fetch(new URL(..., import.meta.url)): Vercel's Node runtime has no
+  // file:// fetch ('not implemented... yet') and this card 500'd (sun-6; the Daily card's fix).
+  const saira = readFileSync(new URL('./Saira-BlackItalic.woff', import.meta.url));
   const starters = r.userPicks
     .filter((p) => p.rosterSlot !== 'BN')
     .sort((a, b) => (STARTER_ORDER[a.rosterSlot] ?? 9) - (STARTER_ORDER[b.rosterSlot] ?? 9));
