@@ -1,7 +1,7 @@
 /**
  * /draft/game - the per-game Draft's list of open games (S1, to the fri-1 mock in S2).
  *
- * "Draft one game." and its subline, then one group per ET game day under a
+ * "Draft one game." and its subline, then one group per sport and ET game day under a
  * lime chip "NFL · Sunday · N of M drafted", one row per game: the matchup bold,
  * the kickoff in the reader's zone under it, and a pill on the right - "Draft"
  * (filled) or "Your draft" (outline) once the reader has a room.
@@ -37,8 +37,12 @@ export default async function GameDraftList() {
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode();
   requireSignInInShell({ isShell, userId, dest: '/draft/game' });
-  const boards = await listOpenBoards(userId).catch(() => []);
-  const days = groupByDay(boards);
+  // NFL then NBA (S3), each grouped by its ET game day under its own chip.
+  const days = [];
+  for (const sport of ['nfl', 'nba']) {
+    const boards = await listOpenBoards(userId, { sport }).catch(() => []);
+    for (const d of groupByDay(boards)) days.push({ ...d, sport, key: `${sport}-${d.dayKey}` });
+  }
 
   return (
     <div className="daily-shell">
@@ -55,8 +59,8 @@ export default async function GameDraftList() {
           {days.length === 0 ? (
             <p className="dgm-empty" data-draft-game-empty>No games open to draft right now. Boards open three days before kickoff.</p>
           ) : days.map((d) => (
-            <section key={d.dayKey} className="dgm-day" data-draft-game-day={d.dayKey}>
-              <span className="dgm-chip">{dayChip('nfl', d.day, d.boards.filter((b) => b.started).length, d.boards.length)}</span>
+            <section key={d.key} className="dgm-day" data-draft-game-day={d.key}>
+              <span className="dgm-chip">{dayChip(d.sport, d.day, d.boards.filter((b) => b.started).length, d.boards.length)}</span>
               <ul className="dgm-list" data-draft-game-list>
                 {d.boards.map((b) => (
                   <li key={b.contestId} className="dgm-row">

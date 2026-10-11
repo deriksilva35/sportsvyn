@@ -215,7 +215,7 @@ test('EVERY LISTED REGISTRY GAME APPEARS, and the flagged ones (Survivor, Game D
   const { gameGroups, introLine } = await import('../../../lib/games/howItWorks.js');
   const off = listedGames(PLAY_REGISTRY, { SURVIVOR: '', DRAFT_GAME_BOARDS: '' });
   const keys = gameGroups(off, new Date('2026-10-04T16:00:00Z')).flatMap((g) => g.games.map((x) => x.key));
-  const FLAGGED = ['nfl-survivor', 'nfl-draft-game'];
+  const FLAGGED = ['nfl-survivor', 'nfl-draft-game', 'nba-draft-game'];
   const want = PLAY_REGISTRY.filter((e) => !FLAGGED.includes(e.key)).map((e) => e.key);
   assert.deepEqual([...keys].sort(), [...want].sort(), 'every registry game but the flagged ones');
   assert.ok(!keys.includes('nfl-survivor'), 'Survivor is pulled, so it is not listed');
@@ -226,6 +226,9 @@ test('EVERY LISTED REGISTRY GAME APPEARS, and the flagged ones (Survivor, Game D
   assert.ok(listedGames(PLAY_REGISTRY, { SURVIVOR: 'on' }).some((e) => e.key === 'nfl-survivor'));
   // Game Drafts (fri-1) the same way, behind DRAFT_GAME_BOARDS.
   assert.ok(listedGames(PLAY_REGISTRY, { DRAFT_GAME_BOARDS: 'on' }).some((e) => e.key === 'nfl-draft-game'));
+  // NBA needs its own switch too (sat-2).
+  assert.ok(!listedGames(PLAY_REGISTRY, { DRAFT_GAME_BOARDS: 'on' }).some((e) => e.key === 'nba-draft-game'));
+  assert.ok(listedGames(PLAY_REGISTRY, { DRAFT_GAME_BOARDS: 'on', DRAFT_GAME_NBA: 'on' }).some((e) => e.key === 'nba-draft-game'));
   assert.ok(!keys.includes('nfl-draft-game'), 'Game Drafts is off, so it is not listed');
   // Each row carries the registry's own words, never a blank.
   for (const g of gameGroups(off).flatMap((x) => x.games)) {
