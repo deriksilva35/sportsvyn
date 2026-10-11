@@ -34,3 +34,54 @@
 .mnb-board table { border-collapse: collapse; font-size: 11px; }
 .mnb-board th, .mnb-board td { padding: 4px 6px; border: 1px solid var(--tok-line); white-space: nowrap; }
 .mnb-board .mnb-you { background: var(--tok-action); color: var(--tok-on-action); }
+
+/* sun-7: the setup form (dropdowns), the custom editors, the pool's filters,
+   the pick clock, the player card sheet, the finish buttons. */
+.mnb-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; margin: 12px 0; }
+.mnb-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mnb-label { font: 700 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-muted); }
+.mnb-select, .mnb-num {
+  width: 100%; min-height: 42px; padding: 8px 10px; border-radius: 10px; box-sizing: border-box;
+  border: 1px solid var(--tok-line); background: var(--tok-surface); color: var(--tok-ink); font: inherit;
+}
+.mnb-select:disabled { opacity: .6; }
+.mnb-custom { border: 1px solid var(--tok-line); border-radius: 12px; padding: 10px 12px; margin: 0 0 12px; }
+.mnb-custom legend { padding: 0 6px; font-weight: 800; }
+.mnb-crow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0; }
+.mnb-crow .mnb-num { width: 96px; min-height: 36px; text-align: right; }
+.mnb-custom--grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; }
+.mnb-roster-line { font: 600 12px var(--tok-font-num); }
+.mnb-setup-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0 0; font-size: 13px; }
+.mnb-link { background: none; border: 0; padding: 6px 0; color: var(--tok-primary); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
+.mnb-saved { color: var(--tok-muted); }
+
+.mnb-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0 2px; }
+.mnb-info { padding-top: 2px; }
+.mnb-whobtn { background: none; border: 0; padding: 0; text-align: left; color: inherit; font: inherit; cursor: pointer; flex: 1; }
+
+.mnb-clock { font-weight: 800; }
+.mnb-clock--low { color: var(--tok-action); }
+
+.mnb-finish { justify-content: center; }
+
+.mnb-scrim {
+  position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center;
+  background: color-mix(in srgb, var(--tok-ink) 55%, transparent);
+}
+.mnb-sheet {
+  width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto; box-sizing: border-box;
+  background: var(--tok-surface); color: var(--tok-ink); border-radius: 18px 18px 0 0; padding: 16px 16px 24px;
+}
+@media (min-width: 560px) { .mnb-scrim { align-items: center; } .mnb-sheet { border-radius: 18px; } }
+.mnb-sheet-hd { display: flex; align-items: center; gap: 10px; }
+.mnb-sheet-name { font-size: 20px; }
+.mnb-x { margin-left: auto; width: 36px; height: 36px; border-radius: 999px; border: 1px solid var(--tok-line); background: transparent; color: var(--tok-ink); font-size: 20px; cursor: pointer; }
+.mnb-sheet-cap { margin: 14px 0 6px; font: 700 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-muted); }
+.mnb-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0; }
+.mnb-stats div { border: 1px solid var(--tok-line); border-radius: 10px; padding: 6px 8px; }
+.mnb-stats dt { font: 700 10px var(--tok-font-num); color: var(--tok-muted); }
+.mnb-stats dd { margin: 2px 0 0; font-size: 18px; font-weight: 800; }
+.mnb-sheet-big { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; margin: 12px 0 4px; }
+.mnb-sheet-big div { display: flex; flex-direction: column; align-items: center; padding: 10px 6px; border-radius: 12px; background: var(--tok-primary); color: var(--tok-on-primary); }
+.mnb-sheet-big .n { font-size: 26px; font-weight: 800; }
+.mnb-sheet-big small { font-size: 11px; opacity: .85; text-align: center; }
