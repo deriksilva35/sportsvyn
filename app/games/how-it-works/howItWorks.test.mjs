@@ -226,7 +226,9 @@ test('EVERY LISTED REGISTRY GAME APPEARS, and the flagged ones (Survivor, Game D
   assert.ok(listedGames(PLAY_REGISTRY, { SURVIVOR: 'on' }).some((e) => e.key === 'nfl-survivor'));
   // Game Drafts (fri-1) the same way, behind DRAFT_GAME_BOARDS.
   assert.ok(listedGames(PLAY_REGISTRY, { DRAFT_GAME_BOARDS: 'on' }).some((e) => e.key === 'nfl-draft-game'));
-  assert.ok(listedGames(PLAY_REGISTRY, { DRAFT_GAME_BOARDS: 'on' }).some((e) => e.key === 'nba-draft-game'));
+  // NBA needs its own switch too (sat-2).
+  assert.ok(!listedGames(PLAY_REGISTRY, { DRAFT_GAME_BOARDS: 'on' }).some((e) => e.key === 'nba-draft-game'));
+  assert.ok(listedGames(PLAY_REGISTRY, { DRAFT_GAME_BOARDS: 'on', DRAFT_GAME_NBA: 'on' }).some((e) => e.key === 'nba-draft-game'));
   assert.ok(!keys.includes('nfl-draft-game'), 'Game Drafts is off, so it is not listed');
   // Each row carries the registry's own words, never a blank.
   for (const g of gameGroups(off).flatMap((x) => x.games)) {
