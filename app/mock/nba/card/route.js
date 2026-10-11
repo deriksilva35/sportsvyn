@@ -5,6 +5,7 @@
  * player ids; names come from the season's stored pool. No session needed: it
  * is a picture of a draft the reader chose to share. A malformed payload 404s.
  */
+import { readFileSync } from 'node:fs';
 import { ImageResponse } from 'next/og';
 import { decodeShare } from '@/lib/mockNba/share';
 import { readNbaMockPool } from '@/lib/mockNba/pool';
@@ -21,7 +22,9 @@ export async function GET(req) {
   if (!share) return new Response('Not found', { status: 404 });
   const pool = await readNbaMockPool().catch(() => null);
   const roster = rosterFromIds(share.ids, pool?.rows ?? []);
-  const saira = await fetch(new URL('./Saira-BlackItalic.woff', import.meta.url)).then((res) => res.arrayBuffer());
+  // readFileSync, NOT fetch(new URL(..., import.meta.url)): the Node runtime has no
+  // file:// fetch ('not implemented... yet') - the Daily card's fix (app/daily/[date]/card).
+  const saira = readFileSync(new URL('./Saira-BlackItalic.woff', import.meta.url));
   const S = { display: 'flex', fontFamily: 'Saira', fontStyle: 'italic', color: PAPER };
   return new ImageResponse(
     (
