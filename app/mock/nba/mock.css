@@ -60,7 +60,7 @@
 .mnb-whobtn { background: none; border: 0; padding: 0; text-align: left; color: inherit; font: inherit; cursor: pointer; flex: 1; }
 
 .mnb-clock { font-weight: 800; }
-.mnb-clock--low { color: var(--tok-action); }
+.mnb-clock--low { text-decoration: underline; text-underline-offset: 3px; }
 
 .mnb-finish { justify-content: center; }
 
