@@ -5,6 +5,7 @@ import Wordmark from '@/components/gridiron/Wordmark';
 import HideInShell from '@/components/shell/HideInShell';
 import Attribution from '@/components/sim/Attribution';
 import DraftRoom from '@/components/sim/DraftRoom';
+import RankedRoom from '@/components/draft/RankedRoom';
 import TrackerRoom from '@/components/sim/TrackerRoom';
 import TrackerResults from '@/components/sim/TrackerResults';
 import DraftResults from '@/components/sim/DraftResults';
@@ -98,7 +99,29 @@ export default async function DraftRoomPage({ params, searchParams }) {
   }
 
   let body;
-  if (status === 'in_progress') {
+  if (status === 'in_progress' && isRanked) {
+    // THE WEEKLY ROOM IN THE DRAFT LOOK (sun-3): same data, same actions, the
+    // Game Drafts header / seat strip / pool rows. Practice mocks, league runs
+    // (keepers, minors, franchises) and the tracker keep their rooms.
+    const room = await getDraftForRoom(draftId, userId);
+    body = (
+      <RankedRoom
+        draftId={draftId}
+        config={room.config}
+        order={room.order}
+        userTeamIndex={room.userTeamIndex}
+        initialPicks={room.picks}
+        initialAvailable={room.available}
+        timerSeconds={room.timerSeconds}
+        turnDeadlineAt={room.turnDeadlineAt}
+        renderedAt={new Date().toISOString()}
+        initialAuto={room.isAuto}
+        withheld={room.withheld ?? []}
+        matchups={room.matchups ?? null}
+        week={ranked.week}
+      />
+    );
+  } else if (status === 'in_progress') {
     const room = await getDraftForRoom(draftId, userId);
     body = (
       <DraftRoom

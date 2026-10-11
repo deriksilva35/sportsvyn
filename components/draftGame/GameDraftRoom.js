@@ -14,6 +14,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { pickGameDraftAction } from '@/app/actions/draftGame';
 import { ROUNDS } from '@/lib/draftGame/rules';
+import SeatStrip from '@/components/draftRoom/SeatStrip';
+import PoolRow from '@/components/draftRoom/PoolRow';
 
 const REASON = {
   locked: 'The game has kicked off. Your remaining picks were made for you.',
@@ -66,31 +68,12 @@ export default function GameDraftRoom({ view }) {
       )}
       {msg && <p className="dgm-err" role="alert">{msg}</p>}
 
-      <div className="dgm-tiles">
-        {view.seats.map((s) => (
-          <div key={s.seat} className={`dgm-tile${s.you ? ' dgm-tile--you' : ''}`} data-seat={s.seat}>
-            <b>{s.label}</b>
-            <span className="n">{s.picks.length}/{ROUNDS}</span>
-          </div>
-        ))}
-      </div>
+      <SeatStrip seats={view.seats.map((s) => ({ key: s.seat, label: s.label, sub: `${s.picks.length}/${ROUNDS}`, you: s.you, numeric: true }))} />
 
       <ul className="dgm-pool" aria-label="The pool">
         {view.pool.map((p) => (
-          <li key={p.id} className={`dgm-prow${p.takenBy ? ' dgm-prow--taken' : ''}`}>
-            <span className={`dgm-pos dgm-pos--${String(p.pos).toLowerCase()}`}>{p.pos}</span>
-            <span className="dgm-who">
-              <b>{p.name}</b>
-              <small>{p.team} · proj {Number(p.proj).toFixed(1)}</small>
-            </span>
-            {p.takenBy ? (
-              <span className="dgm-by">{p.takenBy}</span>
-            ) : (
-              <button type="button" className="dgm-pill dgm-pill--sm" disabled={!view.yourTurn || busy} onClick={() => pick(p.id)}>
-                Draft
-              </button>
-            )}
-          </li>
+          <PoolRow key={p.id} pos={p.pos} name={p.name} sub={`${p.team} · proj ${Number(p.proj).toFixed(1)}`}
+            takenBy={p.takenBy} disabled={!view.yourTurn || busy} onPick={() => pick(p.id)} />
         ))}
       </ul>
     </section>

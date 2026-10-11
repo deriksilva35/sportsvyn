@@ -1,0 +1,62 @@
+/* THE DRAFT LOOK (sun-3) - what the weekly room adds to Game Drafts' dgm-* look
+   (app/draft/game/game.css): the header's clock slot, a sideways-scrolling
+   12-seat strip, the armed (tap-then-confirm) row, tabs, search, position chips,
+   the My team slots and the board grid. Prefixed drm-. Tokens only: navy is
+   --tok-primary on --tok-on-primary, lime is --tok-action on --tok-on-action.
+   Lime TEXT only ever sits on a navy ground declared in the same rule. */
+
+.drm-hd-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.drm-hd-main { min-width: 0; }
+.drm-hd-right {
+  flex: none; padding: 2px 0 0; background: var(--tok-primary); color: var(--tok-action);
+  font: 800 30px var(--tok-font-num); line-height: 1; font-variant-numeric: tabular-nums;
+}
+.drm-hd-right small { display: block; font: 700 10px var(--tok-font-num); letter-spacing: .1em; text-align: right; }
+
+/* 12 seats: one row that scrolls sideways; the seat on the clock is ringed. */
+.drm-strip {
+  display: flex; gap: 6px; overflow-x: auto; margin: 4px 0 12px; padding-bottom: 4px;
+  scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+}
+.drm-strip .dgm-tile { flex: 0 0 auto; width: 84px; scroll-snap-align: center; }
+.drm-tile--clock { outline: 2px solid var(--tok-action); outline-offset: -2px; }
+.drm-tile-sub { font-size: 11px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+/* Tap-then-confirm: the armed row turns lime. */
+.drm-prow--armed { background: var(--tok-action); color: var(--tok-on-action); opacity: 1; }
+.drm-prow--armed .dgm-who small { color: var(--tok-on-action); }
+
+.drm-tabs { display: flex; gap: 6px; margin: 4px 0 10px; }
+.drm-tab {
+  flex: 1; min-height: 40px; border-radius: 999px; border: 1.5px solid var(--tok-primary);
+  background: transparent; color: var(--tok-primary); font: inherit; font-weight: 800; cursor: pointer;
+}
+.drm-tab--on { background: var(--tok-primary); color: var(--tok-on-primary); }
+.drm-auto { flex: 0 0 auto; padding: 0 12px; }
+
+.drm-search {
+  width: 100%; min-height: 42px; padding: 8px 12px; border-radius: 10px; box-sizing: border-box;
+  border: 1px solid var(--tok-line); background: var(--tok-surface); color: var(--tok-ink); font: inherit;
+}
+.drm-chips { display: flex; gap: 6px; margin: 8px 0; overflow-x: auto; }
+.drm-chip {
+  flex: none; min-height: 34px; padding: 4px 14px; border-radius: 999px; border: 1px solid var(--tok-line);
+  background: transparent; color: var(--tok-ink); font: 700 12px var(--tok-font-num); cursor: pointer;
+}
+.drm-chip--on { background: var(--tok-action); color: var(--tok-on-action); border-color: var(--tok-action); }
+
+.drm-team-hd { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 0 8px; }
+.drm-team-hd b { font: 800 12px var(--tok-font-num); letter-spacing: .1em; }
+.drm-slots { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.drm-slot { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--tok-line); }
+.drm-slot-key { font: 700 11px var(--tok-font-num); color: var(--tok-muted); }
+.drm-slot--filled .drm-slot-key { background: var(--tok-action); color: var(--tok-on-action); border-radius: 6px; text-align: center; padding: 2px 0; }
+.drm-slot--empty { color: var(--tok-muted); background: var(--tok-surface); }
+.drm-need { margin: 10px 0 2px; font-size: 13px; color: var(--tok-muted); }
+.drm-next { margin: 2px 0 8px; font-weight: 800; }
+
+.drm-board { overflow-x: auto; }
+.drm-board table { border-collapse: collapse; font-size: 11px; }
+.drm-board th, .drm-board td { padding: 4px 6px; border: 1px solid var(--tok-line); white-space: nowrap; }
+.drm-board th.drm-you, .drm-board td.drm-you { background: var(--tok-action); color: var(--tok-on-action); }
+.drm-board td.drm-clock { outline: 2px solid var(--tok-primary); outline-offset: -2px; }

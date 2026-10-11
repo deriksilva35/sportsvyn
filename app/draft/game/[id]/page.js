@@ -20,6 +20,7 @@ import { shellSigninHref } from '@/lib/shell/signinHref';
 import { readRoom } from '@/lib/draftGame/room';
 import { COPY } from '@/lib/draftGame/rules';
 import GameDraftRoom from '@/components/draftGame/GameDraftRoom';
+import RoomHeader from '@/components/draftRoom/RoomHeader';
 import GameDraftResult from '@/components/draftGame/GameDraftResult';
 import StartGameDraft from '@/components/draftGame/StartGameDraft';
 import '../../../daily/daily.css';
@@ -70,13 +71,13 @@ export default async function GameDraftRoomPage({ params }) {
             <GameDraftResult view={v} eyebrow={<Eyebrow v={v} />} />
           ) : (
             <>
-              <section className="dgm-hd" data-draft-game-phase={v.phase}>
-                <div className="dgm-eyebrow"><Eyebrow v={v} /></div>
-                <h1 className="dgm-hd-title" data-room-header>
-                  {v.phase === 'drafting' ? v.header : v.phase === 'live' ? 'Scoring starts with the first stat' : TITLE[v.phase] ?? ''}
-                </h1>
-                {v.phase === 'drafting' && <div className="dgm-hd-sub">{COPY.count}</div>}
-              </section>
+              <RoomHeader
+                phase={v.phase}
+                eyebrow={<Eyebrow v={v} />}
+                title={v.phase === 'drafting' ? v.header : v.phase === 'live' ? 'Scoring starts with the first stat' : TITLE[v.phase] ?? ''}
+                titleProps={{ 'data-room-header': '' }}
+                sub={v.phase === 'drafting' ? COPY.count : null}
+              />
               {v.phase === 'drafting' ? (
                 <GameDraftRoom view={v} />
               ) : v.phase === 'waiting' ? (
