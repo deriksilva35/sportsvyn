@@ -1,52 +1,52 @@
-# Handoff - droplet relay tue-1, run Sun 11 Oct 15:52Z (clock), after sun-2
+# Handoff - droplet relays sun-3 / sun-4 / sun-5, Sun 11 Oct 2026 (clock ~17:30Z)
 
-## Live (PROD)
-- main = 3ca0729 (draft-game-primetime merged; tree = 307ed93, suite 6397/6397, preview READY).
-  Vercel production builds from it; poller deployed head=3ca0729 (previous b70c177).
-- GAME DRAFTS ARE PRIMETIME ONLY (sun-2 ruling). NFL boards are made only for games whose ET day
-  is Mon-Fri: TNF, MNF and standalone weekday games. No board for the Sunday slate, SNF or late
-  Saturdays.
-  - PROD dry run: on Sat 17 Oct, 13 games are due and only MNF WSH@SF gets a board (12 skipped).
-    TNF SEA@DEN opens Tue 13 Oct 00:15Z.
-  - The cron summary carries bySport.nfl.skipped.
-  - Today's 14 week-5 boards (ids 58-71, made before the rule) stay and settle normally. They
-    were not deleted: no PROD write was GO'd.
-- Switches: DRAFT_GAME_BOARDS=on, DRAFT_GAME_NBA=off (set off in sun-2). The NBA code is live
-  but dark; NBA boards need both switches on.
+## Live (PROD) - unchanged this relay
+- main = 3ca0729 + docs. Game Drafts are primetime only (TNF/MNF/weekday games); switches
+  DRAFT_GAME_BOARDS=on, DRAFT_GAME_NBA=off. The 14 week-5 boards (ids 58-71) settle normally.
 
-## tue-1 ran early (clock Sun 11 Oct 15:52Z): items 1, 2 and 4 are still owed
-- Snapshot at 15:52Z: 14 Game Draft boards, 1 live (PHI@JAX), 13 scheduled, 0 settled, 8
-  entries; 0 failed settle runs ever; app_errors since Sat 21:52Z empty. The weekly Draft's week 5
-  (id 50, 4 entries) is locked and unsettled (settles Tue); week 6 does not exist yet (opens Tue).
-- Item 3 is DONE: docs/reports/2026-10-11-league-draft-formats.md (A 12-15 d, B +20-28 d).
+## HOLDING-FOR-GO
+1. mock-nba (sun-5, PRIORITY, target ship Thu 15 - Fri 16 Oct). /mock/nba is a public,
+   indexable NBA mock draft, playable signed out.
+   - Code head 9a11c8c, suite 6408/6408, preview READY. Shots and report:
+     docs/reports/2026-10-11-mock-nba.md.
+   - ON GO: apply 137 on PROD (DATABASE_URL="$PROD_DATABASE_URL" scripts/apply-migrations.mjs
+     137_nba_mock_pool.sql), merge, deploy, then build the pool once (the cron, or wait for
+     10:41Z).
+2. draft-look (sun-3) - HELD by sun-5.
+   - Head 0039287, suite 6404/6404, pushed.
+   - Not done: the preview check and the shots.
+   - Shared header / seat strip / pool row / result; the weekly room in the new look
+     (components/draft/RankedRoom.js); weekly results on the shared result screen.
+   - Ships after 20 Oct (ruled).
 
-## TUE 13 OCT - DO THESE (they could not run on Sat 10 Oct: the games had not been played)
-1. SUNDAY REVIEW (read-only, PROD reads need approval):
-   - All 14 draft_game boards settled? Entries per board, anything stuck (sync_runs
-     source='draft-game-settle', summary.waiting).
-   - Spot-check 3 rooms against the box: best 3 summed right, no-shows 0, a 3rd/4th tie to the
-     earlier pick.
-   - app_errors since Sat 10 Oct 21:52Z.
-   - Verdict: clean NFL week yes/no.
-2. WEEKLY RANKED DRAFT, week 6: settled cleanly, side by side with (1).
-3. (done tue-1) League draft formats A and B, built on the weekly Draft - recon. (S4, retiring
-   the weekly Draft, is CANCELLED: the weekly Draft is the permanent public Draft.)
-4. docs/launch-oct20.md checks 1-5, after the 13:23Z board job: REGULAR stamp, TBD games,
-   locks, pages.
+## Findings
+- The NFL mock share card (app/sim/draft/[id]/card/route.js:28) loads its font with
+  fetch(new URL(..., import.meta.url)). That is "not implemented" on Vercel's Node runtime
+  (seen on the NBA card's preview), so it is very likely 500ing on PROD now. One-line fix:
+  readFileSync, as app/daily/[date]/card does. Not touched.
+
+## TUE 13 OCT - still owed (the games had not been played when tue-1 ran)
+1. Sunday review of the 14 Game Draft boards: all settled? spot-check 3 rooms (best 3, no-shows
+   0); app_errors since Sat 10 Oct 21:52Z.
+2. Weekly Draft week 6 settled clean.
+3. (done) League formats - superseded by sun-4: docs/reports/2026-10-11-leagues-phased.md.
+4. docs/launch-oct20.md checks 1-5 after the 13:23Z board job.
 
 ## Needs Derik
-- League formats (report above): slow draft or live room; 14 or 8 rounds for A; total points or
-  head-to-head; bots allowed in league seats.
+- GO on mock-nba.
+- Leagues (sun-4 report):
+  - P1 total points: every drafted player, or the best N per week?
+  - Bots in 4-7 team leagues?
+  - LIVE sync: polling or SSE?
+  - K/DST in the presets?
+  - Sizes: P1 22-28 d; P2 25-35 d; P3 12-18 d.
 - From wed-7 (PROD writes): the 2 unclaimed guest rows; one real magic-link sign-in.
 - From wed-4: Neon "ci" key, Cloudflare token, PROD crew_reader role.
 
 ## Queue
-1. 20 Oct: launch-oct20.md checks 6-13 (NBA opening night, CONFIDENCE, ATS, guest play). NBA
-   Game Drafts stay OFF until Derik flips DRAFT_GAME_NBA.
-2. DRAFT LOOK (ruled tue-1): share header / seat strip / pool row / result across Game Drafts
-   and the weekly room + results, AFTER 20 Oct. Recon: docs/reports/2026-10-11-one-draft-look.md
-   (C-lite, 8-10 d).
-3. Per-game: S5 CFB final-only. Leagues: format A then B on the weekly Draft (S4 cancelled).
+1. 20 Oct: launch-oct20.md checks 6-13. NBA Game Drafts stay OFF until DRAFT_GAME_NBA flips.
+2. After 20 Oct: draft-look (above), then leagues P1 (slow draft first).
+3. Per-game S5 CFB final-only.
 4. TICKET: suite tests that mutate real DEV boards (the week-5 void_all) must use own fixtures.
 5. FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
 
@@ -54,7 +54,8 @@
 - Test-owned prefixes: dgtest-, dgsettle(test)-, dgnba(test)-. Manual sentinels: dgshot-.
 - PROD SELECTs hit the "Production Reads" check; ask Derik per read, never writes.
 - neon tagged template: `interval ${'..'}` is a syntax error; write the literal.
+- A Next route file must not export helpers; a card font is read with readFileSync.
 - Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
 
 ## Next step
-Tue 13 Oct: items 1-4 above; TNF board appears 00:15Z. 20 Oct: launch checks 6-13.
+Derik: GO on mock-nba. Tue 13 Oct: items 1, 2, 4 above.
