@@ -46,7 +46,7 @@ yet. S4 recon is gated on that verdict and was not started. Re-run items 1-3 on 
   - last-3 from boxed games, including the DNP case and opening night with no filter;
   - an NBA settle with the 3 h grace, DNP 0 and best 3.
 - how-it-works: nba-draft-game is a third flagged game.
-- Full suite: see the handoff.
+- Full suite: 98e61f2 6391/6393 (two BDL-census guards: the pool named the key without the door; two routes newly reach BDL), fixed in edde16e: 6393/6393. Preview READY.
 
 ## AT GO - read this before saying go
 - DRAFT_GAME_BOARDS is already ON in production. Merging this branch means NBA boards appear
