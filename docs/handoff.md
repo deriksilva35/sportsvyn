@@ -1,4 +1,4 @@
-# Handoff - droplet relay sat-1, 10 Oct 2026
+# Handoff - droplet relay mon-1 (clock: Sat 10 Oct late), after sat-1
 
 ## Live (PROD)
 - main = f9d437f: the draft-game-s2 merge (82279ea) plus parity-intent emptied. Vercel prod READY
@@ -17,8 +17,18 @@
     floor or the cap of 30.
   - There is NO per-player injury data: BDL NFL injuries reach us only as news headlines
     (lib/wire/injuries.js), so the last-3 rule stands alone.
-- DEV is clean: the 15 test boards and test user 123882 are deleted (undo file in the
-  scratchpad).
+
+## mon-1: items 1-3 BLOCKED ON THE CALENDAR
+- The relay was briefed as Monday but the droplet clock read Sat 10 Oct 23:29Z: the 14 week-5
+  boards were open (scheduled, 0 entries, none settled); the settle cron ran ok every 10 min with
+  0 failed runs; app_errors since Sat 21:52Z were empty. Sunday review, the week-6 weekly Draft
+  check and the S4 recon all wait for real results: re-run them on or after Tue 13 Oct.
+
+## HOLDING-FOR-GO
+- draft-game-nba (S3): NBA per-game - roster pool minus Out, last-3 once a club has a box,
+  24 h boards from 20 Oct, NBA settle. Report docs/reports/2026-10-10-draft-game-nba.md.
+  Code head edde16e, suite 6393/6393, preview READY. Real 20 Oct pools 30/30/26. NOTE: the switch is already ON in production, so a merge opens
+  NBA boards from about Mon 19 Oct 19:00Z; say if NBA needs its own switch first.
 
 ## Watch (Sun 11 Oct)
 1. Boards lock at each kickoff (13:30Z first). Settles land about kickoff + 3.5 h:
@@ -26,11 +36,10 @@
 2. An entry's score equals its best 3 (open /draft/game/<id> after FINAL).
 3. Real breakage: set DRAFT_GAME_BOARDS=off on production and redeploy FIRST, then look.
    Existing boards still settle (settle is not behind the switch).
-4. Week-6 boards appear 72 h before each kickoff (TNF first), made by the :33 cron.
 
 ## Needs Derik
 - From wed-7 (PROD writes): the 2 unclaimed guest rows; one real magic-link sign-in.
-- From wed-4: Neon "ci" branch/key, Cloudflare token. PROD crew_reader role (crew turn).
+- From wed-4: Neon "ci" key, Cloudflare token, PROD crew_reader role.
 
 ## Queue
 1. 13 Oct after 13:23Z and 20 Oct: docs/launch-oct20.md (PROD reads need approval).
@@ -42,13 +51,10 @@
 ## Notes
 - Vercel production env values come back EMPTY from `vercel env pull` (sensitive by default), so
   a value is proven by behaviour (the cron's summary), never by a pull.
-- Test-owned prefixes: dgtest- (draftGame.db), dgsettle-/dgsettletest- (settle.db). Manual
-  sentinels: dgshot-.
-- apply-migrations targets PROD via DATABASE_URL="$PROD_DATABASE_URL" (no --prod flag).
+- Test-owned prefixes: dgtest-, dgsettle(test)-, dgnba(test)-. Manual sentinels: dgshot-.
 - neon tagged template: `interval ${'..'}` is a syntax error; write the literal (bit twice more).
-- Headless Chromium: LD_LIBRARY_PATH=~/projects/travault/scripts/vendor/chromium-libs/usr/lib/
-  x86_64-linux-gnu; playwright at ~/.npm/_npx/705bc6b22212b352.
-- Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
+- Headless Chromium: LD_LIBRARY_PATH=~/projects/travault/scripts/vendor/chromium-libs/usr/lib/x86_64-linux-gnu.
 
 ## Next step
-Sun 11 Oct: watch the first locks and settles (Watch 1-3). Then S3 NBA per-game.
+Tue 13 Oct+: re-run mon-1 items 1-3 (week-5 boards + weekly Draft wk 6). Derik: GO on S3 NBA.
+Scheduled: CFBD quota wiring not before 12 Oct; CFB win-prob re-score 26 Oct.
