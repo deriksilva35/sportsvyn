@@ -232,6 +232,61 @@
     },
     {
       "file": "app/mock/nba/mock.css",
+      "key": ".mnb-out { background }",
+      "after": "#b8410f"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-out { border-radius }",
+      "after": "6px"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-out { color }",
+      "after": "#d4ff00"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-out { display }",
+      "after": "inline-block"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-out { font }",
+      "after": "800 10px ?--font-jetbrains-mono,ui-monospace,monospace"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-out { letter-spacing }",
+      "after": ".06em"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-out { margin-left }",
+      "after": "4px"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-out { padding }",
+      "after": "1px 6px"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-out { text-transform }",
+      "after": "uppercase"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-out { vertical-align }",
+      "after": "2px"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-proj { margin }",
+      "after": "10px 0 0"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
       "key": ".mnb-roster-line { font }",
       "after": "600 12px ?--font-jetbrains-mono,ui-monospace,monospace"
     },
