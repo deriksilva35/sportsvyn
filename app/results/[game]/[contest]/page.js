@@ -19,6 +19,8 @@
 import { notFound } from 'next/navigation';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import Results from '@/components/results/Results';
+import DraftResultView from '@/components/draftRoom/DraftResultView';
+import { weeklyDraftResultProps } from '@/lib/results/draftLook';
 import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
@@ -56,11 +58,16 @@ export default async function ResultsPage({ params, searchParams }) {
   // results screen, which would read as "you scored nothing".
   if (!v) notFound();
 
+  // THE DRAFT LOOK (sun-3): a reader's own settled weekly Draft gets the Game
+  // Drafts result screen. No entry (a signed-out visitor, ?who= of a non-player)
+  // and a void week keep the field view.
+  const look = game === 'draft' ? weeklyDraftResultProps(v) : null;
+
   return (
     <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav="games" />
       <div className="rs-wrap">
-        <Results v={v} href={`/results/${game}/${id}`} />
+        {look ? <div className="dgm drm-result-wrap"><DraftResultView {...look} /></div> : <Results v={v} href={`/results/${game}/${id}`} />}
       </div>
     </div>
   );
