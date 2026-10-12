@@ -1,16 +1,21 @@
 /**
- * /mock/nba - the NBA mock draft (sun-5). PUBLIC, indexable, playable signed out.
+ * /mock/nba - the NBA mock draft (sun-5, sun-7). PUBLIC, indexable, playable signed out.
  *
  * The page reads the season's pool (one row, nba_mock_pool - built daily by
- * /api/cron/nba-mock-pool) and hands it to the client, which runs the whole
- * draft in the browser (components/mockNba/MockNbaDraft.js). Nothing is stored,
- * so a signed-out reader needs nothing - no guest row, no cookie.
+ * /api/cron/nba-mock-pool) and the ADP list matched to it (mock_nba_adp), merges
+ * the two, and hands them to the client, which runs the whole draft in the
+ * browser (components/mockNba/MockNbaDraft.js). MOCK_ADP_SOURCE=off drops the ADP
+ * column entirely (lib/mockNba/adp.js). A signed-in reader's saved setup comes
+ * with the page; a guest's lives in their browser.
  */
 import Link from 'next/link';
+import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import MockNbaDraft from '@/components/mockNba/MockNbaDraft';
 import { readNbaMockPool } from '@/lib/mockNba/pool';
+import { adpEnabled, readAdp, withAdp } from '@/lib/mockNba/adp';
+import { readMockSettings } from '@/lib/mockNba/record';
 import '../../daily/daily.css';
 import '../../draft/game/game.css';
 import './mock.css';
@@ -18,12 +23,20 @@ import './mock.css';
 export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'NBA Mock Draft 2026 - Sportsvyn',
-  description: 'A free 12-team NBA mock draft for 2026: points league, 13 rounds, you against 11 bots. Players ranked by last season\'s fantasy points; rookies by draft slot. Get a team grade and a share card.',
+  description: 'A free NBA mock draft for 2026: 8 to 14 teams, points scoring or your own, any roster. You against the bots, with ADP and our own ranking side by side. Get a team grade and a share card.',
   alternates: { canonical: '/mock/nba' },
 };
 
 export default async function MockNbaPage() {
-  const pool = await readNbaMockPool().catch(() => null);
+  const adpOn = adpEnabled();
+  const [pool, adp, session] = await Promise.all([
+    readNbaMockPool().catch(() => null),
+    adpOn ? readAdp().catch(() => new Map()) : Promise.resolve(new Map()),
+    auth().catch(() => null),
+  ]);
+  const userId = session?.user?.id ?? null;
+  const saved = userId != null ? await readMockSettings(Number(userId)).catch(() => null) : null;
+  const rows = pool?.rows?.length ? withAdp(pool.rows, adp, { on: adpOn }) : null;
   return (
     <div className="daily-shell">
       <GlobalHeaderServer activeNav="games" />
@@ -34,8 +47,8 @@ export default async function MockNbaPage() {
         </header>
         <main className="daily-main dgm mnb">
           <Link className="appcrumb" href="/games">&larr; Games</Link>
-          {pool?.rows?.length ? (
-            <MockNbaDraft pool={pool.rows} builtAt={pool.builtAt} />
+          {rows ? (
+            <MockNbaDraft pool={rows} builtAt={pool.builtAt} adpOn={adpOn && adp.size > 0} signedIn={userId != null} saved={saved} />
           ) : (
             <p className="dgm-empty" data-mock-nba-empty>The NBA mock draft is getting its player pool ready. Try again in a few minutes.</p>
           )}
