@@ -176,7 +176,7 @@ export default async function SimLobby({ searchParams }) {
                     the reader's own - a draft in progress (above), leagues and
                     keepers (above), the tracker, and the record line. */}
                 <section className="sim-newmock" data-sim-newmock>
-                  <div className="sim-kicker">New mock draft</div>
+                  <h2 className="sim-newmock-h">New mock draft</h2>
                   {/* YOUR DRAFTS - the two numbers that are one query, shown only
                       once there is something to report. */}
                   {summary.drafts > 0 && (
@@ -188,7 +188,7 @@ export default async function SimLobby({ searchParams }) {
                   <p className="sim-newmock-sub">Any league setup - teams, scoring, roster, clock - against the bots, with a grade and a share card.</p>
                   <div className="sim-newmock-row">
                     <Link className="sim-cta" href="/mock/nfl" data-sim-newmock-nfl>NFL</Link>
-                    <Link className="sim-cta sim-cta--ghost" href="/mock/nba" data-sim-newmock-nba>NBA</Link>
+                    <Link className="sim-cta" href="/mock/nba" data-sim-newmock-nba>NBA</Link>
                   </div>
                   <Link className="sim-trklink" href="/sim/tracker" data-sim-tracker>Track a live draft with The Tracker &rarr;</Link>
                 </section>
