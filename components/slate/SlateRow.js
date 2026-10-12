@@ -28,6 +28,9 @@ import { orderFor, connectorFor } from '@/lib/gridiron/teamOrder';
 // defensible FUTURE change - but it is a change, not part of an extraction, and
 // it does not get made under cover of one.
 const GAME_ROUTE = { nfl: '/nfl/game', cfb: '/cfb/game', mlb: '/mlb/game' };
+// AP rank for a side, CFB only by construction: the Map is the AP poll's and
+// only the CFB band passes one. Absent -> null -> no element at all.
+const rankOf = (ranks, t) => (ranks && t?.id != null ? ranks.get(t.id) ?? null : null);
 const abbr = (t) => t?.abbreviation ?? t?.name ?? 'TBD';
 
 /**
@@ -40,7 +43,7 @@ const abbr = (t) => t?.abbreviation ?? t?.name ?? 'TBD';
  * @param state    override the right-hand state word (defaults Live/FT/Preview)
  * @param href     override the destination; null disables the link entirely
  */
-export default function SlateRow({ g, onBoard = false, boardNumber, tag, state, href }) {
+export default function SlateRow({ g, onBoard = false, boardNumber, tag, state, href, ranks = null }) {
   const { live, final, played, homeWin, awayWin, isPreseason, when, day } = rowState(g);
   const body = (
     <>
@@ -55,6 +58,7 @@ export default function SlateRow({ g, onBoard = false, boardNumber, tag, state, 
             <Fragment key={side}>
               {i === 1 ? <>{' '}<span className="at">{connectorFor(g.leagueSlug)}</span>{' '}</> : null}
               <span className={(side === 'home' ? homeWin : awayWin) ? 'win' : (side === 'home' ? awayWin : homeWin) ? 'dim' : undefined}>
+                {rankOf(ranks, side === 'home' ? g.home : g.away) != null ? <span className="rk">{rankOf(ranks, side === 'home' ? g.home : g.away)}</span> : null}
                 {abbr(side === 'home' ? g.home : g.away)}
               </span>
             </Fragment>

@@ -15,6 +15,7 @@
 // sideways), the conference picker on CFB, then the groups.
 
 import Link from 'next/link';
+import Top25Link from '@/components/scores/Top25Link';
 import StandaloneTime from '@/components/StandaloneTime';
 import ZoneLabel from '@/components/scores/ZoneLabel';
 import TeamMark from '@/components/team/TeamMark';
@@ -399,7 +400,7 @@ export default function ScoreboardV4({ v, view = null, conf = null, signedIn = f
         <span className="sep" aria-hidden="true" />
         {shown('live') && <Link className={`sv4-chip live${view === 'live' ? ' on' : ''}`} href={h.view('live')} data-chip="live"><i className="dot" />Live {counts.live}</Link>}
         {signedIn && <Link className={`sv4-chip${v.mine ? ' on' : ''}`} href={h.mine()} data-chip="mine" data-mine-count={v.mineCount}>Yours {v.mineCount}</Link>}
-        {v.rankedToday && <Link className={`sv4-chip${v.top25 ? ' on' : ''}`} href={h.top25()} data-chip="top25">Top 25</Link>}
+        {v.rankedToday && <Top25Link next={!v.top25} className={`sv4-chip${v.top25 ? ' on' : ''}`} href={h.top25()} data-chip="top25">Top 25</Top25Link>}
         {shown('close') && <Link className={`sv4-chip${view === 'close' ? ' on' : ''}`} href={h.view('close')} data-chip="close">Close {counts.close}</Link>}
         {shown('tonight') && <Link className={`sv4-chip${view === 'tonight' ? ' on' : ''}`} href={h.view('tonight')} data-chip="tonight">Tonight {counts.tonight}</Link>}
       </div>
