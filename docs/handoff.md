@@ -1,8 +1,8 @@
-# Handoff - droplet relay mon-1, Mon 12 Oct 2026 (clock ~01:15Z)
+# Handoff - droplet relays mon-2 + mon-3, Mon 12 Oct 2026 (clock ~07:00Z)
 
 ## Live (PROD)
-- main = 9bed157 (svp-v2 merged 75caf5b on top of mock-nba-2 c406de2). Vercel production + poller
-  head=9bed157 (poller previous 3332e73). parity-intent reset after each merge.
+- main = 4e96909 (mock-presets merged d609d56: saved NBA league setups, migration 139 on PROD,
+  verified with a throwaway PROD user, deleted; app_errors clean 30 min). Vercel + poller at 4e96909.
 - NBA MOCK DRAFT v2 at sportsvyn.com/mock/nba (public, signed out):
   - Setup dropdowns (8-14 teams, slot, clock), ESPN-style / Yahoo-style points or custom,
     ESPN / Yahoo standard roster or custom; settings saved (account or browser) + Reset.
@@ -13,12 +13,19 @@
     (426 of 500 matched). MOCK_ADP_SOURCE unset = on; set it to off to hide ADP (no redeploy needed
     beyond the env change). Cron rebuilds the pool daily 10:41Z (re-reads injuries).
   - SV ADP: accrue nba_mock_drafts to ~300, then build (plan in docs/reports/2026-10-11-mock-nba-2.md).
-- NFL mock card fixed (readFileSync font; guard lib/brand/cardFont.test.mjs).
 - Game Drafts primetime only (BOARDS on, NBA off). Test prefixes dgtest-, dgnba(test)-; shots dgshot-.
 
 ## HOLDING-FOR-GO
-- draft-look (sun-3), held by sun-5: head 0039287, suite 6404/6404. Not done: the preview check
-  and the shots. Ships after 20 Oct (ruled).
+- mock-nfl-2 (mon-3) @ 45f99f0, suite 6434/6434, preview READY, shots sent. /mock/nfl on the NBA
+  engine. Report docs/reports/2026-10-12-mock-nfl-2.md (on the branch).
+  - DEV has migrations 140 + 141 (nfl_mock_pool; sport columns; nba_mock_settings restored to one row
+    per user by 141 - 140 alone broke main's NBA save on DEV). DEV nfl pool built from PROD data.
+  - AT GO: apply 140 + 141 on PROD together; merge; reset parity-intent; deploy Vercel + poller;
+    build the PROD pool once (lib/mockNfl/pool.js); verify /mock/nfl signed out.
+  - Open: /sim itself not redirected (doors re-pointed); ADP is the 9 Sep board (boards shrink in season).
+- draft-look @ d8d65ee (main merged), suite 6430/6430 on 7d2bf4e, preview READY, shots sent.
+  Report docs/reports/2026-10-12-draft-look.md: 5 look differences vs the mock for Derik to rule.
+  Ship window: before week 7 drafting gets busy.
 
 ## TUE 13 OCT - still owed (the games had not been played when tue-1 ran)
 1. Sunday review of the 14 Game Draft boards: all settled? spot-check 3 rooms (best 3, no-shows
@@ -45,8 +52,9 @@
 
 ## Notes
 - PROD SELECTs hit the "Production Reads" check; ask Derik per read, never writes.
-- neon tagged template: `interval ${'..'}` is a syntax error; write the literal.
-- A Next route file must not export helpers; a card font is read with readFileSync.
+- neon: `interval ${'..'}` is a syntax error; route files export no helpers; card fonts via readFileSync.
+- DEV: draft contest id 55759 (week 99, made 7 Oct by a test) shadows the current weekly contest;
+  the orphan sweep lists 3,779 old test users. Listed only, nothing deleted (list + undo first).
 
 ## Next step
-Watch the 10:41Z NBA pool rebuild (sync_runs source='nba-mock-pool'). Tue 13 Oct: items 1, 2, 4 above.
+Derik's GO on mock-nfl-2 and draft-look (steps above). Tue 13 Oct: items 1, 2, 4 above.

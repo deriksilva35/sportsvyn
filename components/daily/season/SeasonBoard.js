@@ -38,8 +38,8 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import OpenReveal from '@/components/daily/season/OpenReveal';
 import {
-  initBoardPlay, teamIsDead, isRosterComplete, filledCount, teamsLeft,
-  legalSlotIndexes, commitPick, clearSlot, startClock as canStartClock,
+  initBoardPlay, teamIsDead, isRosterComplete, filledCount,
+  legalSlotIndexes, commitPick, startClock as canStartClock,
 } from '@/lib/daily/seasonBoardPlay';
 import { gradeBoard, boardStory } from '@/lib/daily/seasonBoardGrade';
 import { pctOfCeiling } from '@/lib/daily/format';
@@ -141,6 +141,22 @@ const Crumb = () => (
  *   who already has a run for this board lands straight on their STORED
  *   grade - these three, passed together, skip 'rules'/'board' entirely.
  */
+/** The teams with `team`'s card swapped in (a committed team's card, from the server). */
+function withCard(teams, team) {
+  if (!team?.key) return teams;
+  return teams.map((t) => (t.key === team.key ? { ...t, card: team.card ?? [] } : t));
+}
+
+/** A play state rebuilt from recorded progress ({ picks: [{ slotIndex, teamKey, player }] }). */
+function playFromProgress(teams, slots, progress) {
+  let p = initBoardPlay(teams, slots);
+  for (const k of progress?.picks ?? []) {
+    if (!k?.player) continue;
+    p = commitPick(p, teams.find((t) => t.key === k.teamKey) ?? { key: k.teamKey }, k.player, k.slotIndex);
+  }
+  return p;
+}
+
 export default function SeasonBoard({
   edition, year: yearProp, teams: teamsProp, slots, ranked, userId = null, signInHref = null, guest = null,
   // THE OPEN-DAY REVEAL (1b, lib/daily/openReveal.js): a finished run on a day
@@ -152,7 +168,7 @@ export default function SeasonBoard({
   // RESUMING A STARTED RUN (097). The server hands the stored started_at back
   // as an ISO string; the clock is drawn from it, so a reload shows the time
   // already spent instead of restarting at 0:00.
-  initialStartedAt = null, initialScreen = null,
+  initialStartedAt = null, initialScreen = null, initialProgress = null,
   // THE IMAGE SHARE (relay mon-12). editionDate names the edition the card
   // route draws (app/daily/board/[date]/card); without it - practice, the
   // ?season preview - the share stays the text-only one below. shareSeason is
@@ -164,7 +180,10 @@ export default function SeasonBoard({
   // THE CARDS ARRIVE WITH THE START (1b item 4). Before a start is recorded the
   // page hands over team keys with empty cards; handleStart swaps in the cards
   // from POST /api/daily/board/start. A resume or a receipt arrives with them.
-  const [teams, setTeams] = useState(teamsProp);
+  // THE LOCK-IN (mon-4): a ranked run's teams arrive SEALED (names, no cards),
+  // and a resumed run brings its recorded progress - placed picks, and the team
+  // it is committed to, whose card is the only one the page holds.
+  const [teams, setTeams] = useState(() => withCard(teamsProp, initialProgress?.committed));
   // THE SEASON IS PART OF THE ANSWER (ruling 27 Sep): a year narrows the board
   // to one real season, which is what the points are. Before Start the page
   // sends none and the rules card says so; the start response carries it.
@@ -180,13 +199,19 @@ export default function SeasonBoard({
   // - teamIsDead, commitPick, boardStory's play.used.size - wants the Set
   // initBoardPlay makes. Convert once, here, and nowhere else has to know.
   const hydratePlay = (p) => (p && !(p.used instanceof Set) ? { ...p, used: new Set(p.used ?? []) } : p);
-  const [play, setPlay] = useState(() => hydratePlay(initialPlay) ?? initBoardPlay(teams, slots));
+  const [play, setPlay] = useState(() => hydratePlay(initialPlay)
+    ?? playFromProgress(withCard(teamsProp, initialProgress?.committed), slots, initialProgress));
   // THE MOCK'S TWO PIECES OF SELECTION STATE, and there is no third. `cur` is
   // the team whose six are in the panel; `held` is the player waiting for a
   // slot. Both are cleared by placing a pick. The modal sheet flow they
   // replace is gone: the panel is always on screen, so a tap never covers the
   // board it is about.
-  const [cur, setCur] = useState(null);
+  // THE LOCK-IN (mon-4): `cur` IS THE COMMITTED TEAM - set by a choice, cleared
+  // only by a placed pick. deadKeys: sealed teams the server said fit nothing.
+  const [cur, setCur] = useState(initialProgress?.committed?.key ?? null);
+  const [deadKeys, setDeadKeys] = useState(() => new Set());
+  const [stepBusy, setStepBusy] = useState(false);
+  const [stepError, setStepError] = useState(null);
   const [held, setHeld] = useState(null);
   const [toast, setToast] = useState(null);
   const [startedAt, setStartedAt] = useState(
@@ -264,8 +289,10 @@ export default function SeasonBoard({
       }
       if (body.year) setYear(String(body.year));
       if (Array.isArray(body.teams)) {
-        setTeams(body.teams);
-        setPlay(initBoardPlay(body.teams, slots));
+        const t0 = withCard(body.teams, body.committed);
+        setTeams(t0);
+        setPlay(playFromProgress(t0, slots, body));
+        setCur(body.committed?.key ?? null);
       }
       if (body.token) setGuestToken(body.token);
       beginTimer(body.startedAt);
@@ -277,44 +304,89 @@ export default function SeasonBoard({
     }
   };
 
-  // OPENING A TEAM COSTS NOTHING NOW. The old board was commit-on-open - look
-  // at a team and you had spent it - and the modal existed to enforce that.
-  // The v2.0 mock replaces it with a panel you can browse: the team is spent
-  // when a player of theirs lands in a slot, and not before.
-  const selectTeam = (team) => {
-    if (teamIsDead(play, team)) return;
-    setCur(team.key);
-    setHeld(null);
+  // THE LOCK-IN (mon-4) - THE RULE THIS BOARD ONCE DROPPED IS BACK, AND THE
+  // SERVER HOLDS IT. Choosing a team COMMITS the run: its card opens and no
+  // other team can be chosen until one of its players is placed. A placed
+  // player is FINAL - there is no clearing a slot. On a ranked run each step is
+  // a request (/api/daily/{board|guest}/{choose|pick}, lib/daily/lockIn.js) and
+  // the screen moves only on the server's yes; the free-play preview has no run
+  // row, so it applies the same rules here.
+  const serverSteps = ranked && boardId != null;
+  const stepPost = async (kind, payload) => {
+    const res = await fetch(`/api/daily/${guestMode ? 'guest' : 'board'}/${kind}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(guestMode ? { token: guestToken, ...payload } : { boardId, ...payload }),
+    });
+    const body = await res.json().catch(() => ({}));
+    return res.ok && body?.ok ? body : { ok: false, reason: body?.error ?? 'Could not save that. Try again.' };
+  };
+
+  const selectTeam = async (team) => {
+    if (stepBusy || play.used.has(team.key) || deadKeys.has(team.key)) return;
+    if (cur) {
+      if (cur !== team.key) setStepError(`You chose ${teams.find((t) => t.key === cur)?.abbr ?? cur} - pick one of its players.`);
+      return;
+    }
+    setStepError(null);
+    if (!serverSteps) {
+      if (teamIsDead(play, team)) return;
+      setCur(team.key);
+      setHeld(null);
+      return;
+    }
+    setStepBusy(true);
+    try {
+      const r = await stepPost('choose', { teamKey: team.key });
+      if (!r.ok) {
+        if (/fits a slot/.test(r.reason)) setDeadKeys((d) => new Set([...d, team.key]));
+        setStepError(r.reason);
+        return;
+      }
+      setTeams((ts) => withCard(ts, r.team));
+      setCur(team.key);
+      setHeld(null);
+    } catch {
+      setStepError('Could not reach the server. Try again.');
+    } finally {
+      setStepBusy(false);
+    }
   };
 
   // HOLDING A PLAYER IS NOT PLACING ONE. A held player lights the slots he can
-  // fill; tapping another player just moves the hold, which is the mock's own
-  // "or tap another player to change your mind".
+  // fill; tapping another player OF THE COMMITTED TEAM just moves the hold -
+  // nothing is final until he lands in a slot.
   const holdPlayer = (team, player) => {
+    if (team.key !== cur) return;
     if (!legalSlotIndexes(play, player.position).length) return; // row renders inert
     setHeld({ teamKey: team.key, player });
   };
 
-  const placeInSlot = (slotIndex) => {
-    if (!held) return;
+  const placeInSlot = async (slotIndex) => {
+    if (!held || stepBusy) return;
     const team = teams.find((t) => t.key === held.teamKey);
     if (!team) return;
     if (!legalSlotIndexes(play, held.player.position).includes(slotIndex)) return;
     const slotPos = play.slots[slotIndex];
-    setPlay((p) => commitPick(p, team, held.player, slotIndex));
+    const placed = held;
+    if (serverSteps) {
+      setStepBusy(true);
+      try {
+        const r = await stepPost('pick', { slotIndex, playerName: placed.player.name });
+        if (!r.ok) { setStepError(r.reason); return; }
+      } catch {
+        setStepError('Could not reach the server. Try again.');
+        return;
+      } finally {
+        setStepBusy(false);
+      }
+    }
+    setStepError(null);
+    setPlay((p) => commitPick(p, team, placed.player, slotIndex));
     setHeld(null);
     setCur(null);
-    setToast({ name: held.player.name, slot: slotPos, abbr: team.abbr });
+    setToast({ name: placed.player.name, slot: slotPos, abbr: team.abbr });
     setTimeout(() => setToast(null), 1500);
-  };
-
-  // TAP A FILLED SLOT TO CLEAR IT (the mock's copy, and the rule it reverses).
-  // The team comes back with it - clearSlot rebuilds `used` from what is left
-  // rather than decrementing, so a team cannot be released twice.
-  const clearAt = (slotIndex) => {
-    if (!play.roster[slotIndex]?.pick) return;
-    setPlay((p) => clearSlot(p, slotIndex));
-    setHeld(null);
   };
 
   //
@@ -405,7 +477,6 @@ export default function SeasonBoard({
 
   const complete = isRosterComplete(play);
   const filled = filledCount(play);
-  const left = teamsLeft(play);
 
   // THE COUNTDOWN. Remaining = the round minus time since the SERVER's
   // started_at; nowMs is only ever compared against that anchor, so a reload
@@ -591,20 +662,20 @@ export default function SeasonBoard({
             its two em dashes written as hyphens per the house rule. */}
         <p className="sbd-note">
           {stage === 1 ? (
-            <>Fill <b>eight slots</b> from <b>twelve teams</b>, one player each. Their real <b>{year}</b> season points are your score. Tap a team to see its players.</>
+            <>Fill <b>eight slots</b> from <b>twelve teams</b>, one player each. Their real <b>{year}</b> season points are your score. Choosing a team commits you to one of its players.</>
           ) : stage === 2 ? (
-            <>The <b>{curTeam?.abbr}</b> card. Dimmed ones fit no slot you have left. Tap one.</>
+            <>You chose <b>{curTeam?.abbr}</b> - take one of its players. Dimmed ones fit no slot you have left.</>
           ) : stage === 3 ? (
-            <><b>{held.player.name}</b> fits the lit slots. Tap one to place him - or tap another player to change your mind.</>
+            <><b>{held.player.name}</b> fits the lit slots. Tap one to place him - every pick is final - or tap another {curTeam?.abbr} player.</>
           ) : (
-            <>All eight in. <b>Lock it in</b> before the clock runs out, or keep swapping - tap any filled slot to clear it.</>
+            <>All eight in. <b>Lock it in</b> before the clock runs out.</>
           )}
         </p>
       </div>
 
       <div className="sbd-sh2">
         <h3>Teams</h3>
-        <span>{held ? 'tap a lit slot' : 'tap a team'}</span>
+        <span>{held ? 'tap a lit slot' : cur ? `pick from ${curTeam?.abbr ?? cur}` : 'tap a team - it commits you'}</span>
       </div>
       <div className="sbd-grid">
         {teams.map((t) => {
@@ -613,12 +684,16 @@ export default function SeasonBoard({
           // wears the tick. DEAD-BUT-UNSPENT is a team that can no longer fill
           // anything still open; it dims and refuses a tap, but it never
           // claims a pick that was not made.
+          // A SEALED chip (no card yet) is never judged dead here - the server
+          // says so if it is, and it dims from then on (deadKeys). While a team
+          // is committed every other chip is shut (mon-4).
           const spent = play.used.has(t.key);
-          const dead = teamIsDead(play, t);
+          const dead = spent || deadKeys.has(t.key) || (t.card?.length > 0 && teamIsDead(play, t));
+          const shut = cur != null && cur !== t.key;
           return (
             <button key={t.key} type="button"
-              className={`sbd-tc2${cur === t.key ? ' sbd-tcon' : ''}${spent ? ' sbd-used' : ''}${dead && !spent ? ' sbd-dead2' : ''}`}
-              disabled={dead} onClick={() => selectTeam(t)}>
+              className={`sbd-tc2${cur === t.key ? ' sbd-tcon' : ''}${spent ? ' sbd-used' : ''}${(dead && !spent) || shut ? ' sbd-dead2' : ''}`}
+              disabled={dead || shut || stepBusy} onClick={() => selectTeam(t)} data-team-chip={t.key}>
               <span className="sbd-mk" aria-hidden="true" />
               <b>{t.abbr}</b>
             </button>
@@ -633,16 +708,15 @@ export default function SeasonBoard({
               const lit = litSlots.includes(i);
               const cls = SLOT_CLASS[r.pos] ?? 'flx';
               if (r.pick) {
+                // A PLACED PICK IS FINAL (mon-4): no clear, no swap.
                 return (
-                  <button key={i} type="button" className={`sbd-slot filled ${cls}`}
-                    onClick={() => clearAt(i)} aria-label={`Clear ${r.pos}`}>
-                    <span className="sbd-x">&times;</span>
+                  <div key={i} className={`sbd-slot filled ${cls}`} aria-label={`${r.pos} locked`} data-slot-locked={i}>
                     <span className="sbd-spos">{r.pos}</span>
                     {/* THE NAME, NOT A JERSEY (R4). */}
                     <span className="sbd-nm">{lastNameOf(r.pick.player.name)}</span>
                     <span className="sbd-tm">{abbrOf(teams, r.pick.teamKey)}</span>
                     <span className="sbd-pts n">{Number(r.pick.player.points).toFixed(1)}</span>
-                  </button>
+                  </div>
                 );
               }
               return (
@@ -674,7 +748,7 @@ export default function SeasonBoard({
               return (
                 <button key={`${p.name}-${i}`} type="button"
                   className={`sbd-prow${sel ? ' sel' : ''}${fits ? '' : ' gone'}`}
-                  disabled={!fits} onClick={() => holdPlayer(curTeam, p)}>
+                  disabled={!fits || stepBusy} onClick={() => holdPlayer(curTeam, p)}>
                   <span className={`sbd-pb ${SLOT_CLASS[p.position] ?? 'flx'}`}>{p.position}</span>
                   <span className="sbd-who">
                     <b>{p.name}</b>
@@ -701,6 +775,10 @@ export default function SeasonBoard({
           {finishing ? 'Locking…' : 'Lock it in'}
         </button>
       </div>
+
+      {stepError ? (
+        <div className="sbd-warn" style={{ margin: '10px 12px 0' }} role="alert" data-step-error>{stepError}</div>
+      ) : null}
 
       {/* A FAILED SUBMIT DOES NOT COST THE RUN. The board above is still
           rendered with every pick in place, the button is still there, and
@@ -740,18 +818,16 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
       <div className="sbd-rl">
         <span className="sbd-n">1</span>
         <div className="sbd-t">
-          <b>Open a team, take a player</b>
-          {/* THE RULE THIS CARD USED TO STATE IS GONE (v2.0). It read "tap one
-              and you are committed", which is no longer true and was the first
-              thing a player would have found out by tapping. */}
-          <p>Twelve team cards, 4 to 6 players each. Open any of them and look - a team is only spent once one of its players is on your board.</p>
+          <b>Choose a team, take a player</b>
+          {/* THE LOCK-IN (mon-4): the commit rule is back, and the server holds it. */}
+          <p>Twelve teams, 4 to 6 players each. Choosing a team commits you: its players appear and you take one of them. No backing out to another team.</p>
         </div>
       </div>
       <div className="sbd-rl">
         <span className="sbd-n">2</span>
         <div className="sbd-t">
           <b>You choose the slot</b>
-          <p>Take a back and decide whether he fills RB or FLEX. Tap a filled slot to clear it and get the team back.</p>
+          <p>Take a back and decide whether he fills RB or FLEX. A placed pick is final - no swaps, no undo.</p>
         </div>
       </div>
       <div className="sbd-rl">
@@ -773,11 +849,11 @@ function RulesCard({ edition, year, slotCount, teamCount, ranked, onStart, signI
         {/* sat-5 Y8: picks are held in this tab until submit (the run route
             is the only write), so a closed tab loses them. */}
         {guest
-          ? 'Three minutes from Start. The clock is on the server. One play a day on this device - sign in afterwards to keep it: your streak and a place on the board only start once you do. Your picks stay on this device until you lock in; close the tab and they are lost. A new board opens at midnight ET.'
+          ? 'Three minutes from Start. The clock is on the server. One play a day on this device - sign in afterwards to keep it: your streak and a place on the board only start once you do. Every pick is saved the moment you make it; a reload picks up where you left off. A new board opens at midnight ET.'
           : signInHref
-          ? 'Three minutes from Start. The clock is on the server. Sign in to start it. One attempt - this board is ranked. Your picks stay on this device until you lock in; close the tab and they are lost. A new board opens at midnight ET.'
+          ? 'Three minutes from Start. The clock is on the server. Sign in to start it. One attempt - this board is ranked. Every pick is saved the moment you make it; a reload picks up where you left off. A new board opens at midnight ET.'
           : ranked
-            ? 'Three minutes from Start. The clock is on the server. One attempt - this board is ranked. Your picks stay on this device until you lock in; close the tab and they are lost. A new board opens at midnight ET.'
+            ? 'Three minutes from Start. The clock is on the server. One attempt - this board is ranked. Every pick is saved the moment you make it; a reload picks up where you left off. A new board opens at midnight ET.'
             : 'Three minutes from Start. Practice is unranked and touches no leaderboard.'}
       </div>
 
