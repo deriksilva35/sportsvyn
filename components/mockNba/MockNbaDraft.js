@@ -21,7 +21,7 @@ import {
 } from '@/lib/mockNba/draft';
 import { SLOT_KEYS, SLOT_MAX, ROSTER_PRESETS, checkFillable, eligible, posLabel } from '@/lib/mockNba/roster';
 import { SCORING_PRESETS, STATS, fppgWith } from '@/lib/mockNba/scoring';
-import { rankPool } from '@/lib/mockNba/rank';
+import { rankPool, projection } from '@/lib/mockNba/rank';
 import { gradeMock } from '@/lib/mockNba/grade';
 import { encodeShare } from '@/lib/mockNba/share';
 import {
@@ -30,7 +30,7 @@ import {
 } from '@/lib/mockNba/settings';
 import { recordMockDraftAction, saveMockSettingsAction } from '@/app/actions/mockNba';
 
-const SVP_INFO = "SVP: our ranking. Last season's fantasy points per game x games played.";
+const SVP_INFO = 'SVP: our projection. Fantasy points per game (last season at 25 or younger; otherwise 70% last season, 30% the season before; adjusted for age) x 75 games.';
 const POS_FILTERS = ['ALL', 'PG', 'SG', 'SF', 'PF', 'C'];
 const surname = (n) => String(n ?? '').split(/\s+/).slice(1).join(' ') || n;
 const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : n % 10 === 1 ? 'st' : n % 10 === 2 ? 'nd' : n % 10 === 3 ? 'rd' : 'th'}`;
@@ -45,6 +45,9 @@ function ranksLine(p, adpOn) {
   return parts.join(' · ');
 }
 const sub = (p, adpOn) => `${p.team ?? 'FA'} · ${ranksLine(p, adpOn)}${p.rookie ? ' · Rookie' : ''}`;
+const pctSigned = (f) => (f === 1 ? 'no age change' : `${f > 1 ? '+' : ''}${Math.round((f - 1) * 100)}% for age`);
+// "Out" on today's injury report: a badge only, SVP is unchanged.
+const OutBadge = ({ p }) => (p.out ? <span className="mnb-out" data-mock-nba-out>Out</span> : null);
 
 // The guest's saved setup is read with useSyncExternalStore (as AppBanner does):
 // localStorage exists only in the browser, and this keeps the server render and
@@ -226,7 +229,7 @@ export default function MockNbaDraft({ pool, builtAt, adpOn = true, signedIn = f
           <button type="button" className="mnb-link" onClick={resetDefaults} data-mock-nba-reset>Reset to default</button>
           <span className="mnb-saved">{savedNote ?? (signedIn ? 'Saved to your account' : 'Saved on this device')}</span>
         </div>
-        <p className="dgm-foot">{SVP_INFO} Rookies are placed by draft slot; a player who missed last season is ranked on the season before. Pool: {pool.length} players on current NBA rosters{builtAt ? `, updated ${builtAt.slice(0, 10)}` : ''}.</p>
+        <p className="dgm-foot">{SVP_INFO} Rookies are placed by draft slot. &ldquo;Out&rdquo; marks a player on today&apos;s injury report. Pool: {pool.length} players on current NBA rosters{builtAt ? `, updated ${builtAt.slice(0, 10)}` : ''}.</p>
       </section>
     );
   }
@@ -240,7 +243,7 @@ export default function MockNbaDraft({ pool, builtAt, adpOn = true, signedIn = f
       <div className="mnb-sheet" role="dialog" aria-modal="true" aria-label={cardP.name} onClick={(e) => e.stopPropagation()}>
         <div className="mnb-sheet-hd">
           <span className="dgm-pos">{posLabel(cardP)}</span>
-          <div className="dgm-who"><b className="mnb-sheet-name">{cardP.name}</b><small>{cardP.team ?? 'Free agent'} · {ranksLine(cardP, adpOn)}</small></div>
+          <div className="dgm-who"><b className="mnb-sheet-name">{cardP.name} <OutBadge p={cardP} /></b><small>{cardP.team ?? 'Free agent'} · {ranksLine(cardP, adpOn)}</small></div>
           <button type="button" className="mnb-x" onClick={() => setCard(null)} aria-label="Close">×</button>
         </div>
         {cardP.s ? (
@@ -252,8 +255,13 @@ export default function MockNbaDraft({ pool, builtAt, adpOn = true, signedIn = f
                 <div key={k}><dt>{k}</dt><dd className="n">{v ?? '-'}</dd></div>
               ))}
             </dl>
+            {(() => {
+              const pj = projection(cardP, weights);
+              const mix = pj.before == null ? (pj.age != null && pj.age <= 25 ? 'last season only, age 25 or younger' : 'one season') : '70% last season, 30% the season before';
+              return <p className="dgm-note mnb-proj" data-mock-nba-proj>Projection: {pj.fppg?.toFixed(1) ?? '-'} FP/G ({mix}{pj.age ? `, age ${pj.age}: ${pctSigned(pj.factor)}` : ''}) x 75 games.</p>;
+            })()}
             <div className="mnb-sheet-big">
-              <div><span className="n">{fppgWith(cardP.s, weights)?.toFixed(1) ?? '-'}</span><small>FP/G ({settings.scoring === 'custom' ? 'custom' : SCORING_PRESETS[settings.scoring].label})</small></div>
+              <div><span className="n">{fppgWith(cardP.s, weights)?.toFixed(1) ?? '-'}</span><small>FP/G {seasonLabel(cardP.s.season ?? 2025)} ({settings.scoring === 'custom' ? 'custom' : SCORING_PRESETS[settings.scoring].label})</small></div>
               <div><span className="n">{cardP.svp}</span><small>SVP</small></div>
               {adpOn && <div><span className="n">{cardP.adp ?? '-'}</span><small>ADP</small></div>}
             </div>
@@ -373,7 +381,7 @@ export default function MockNbaDraft({ pool, builtAt, adpOn = true, signedIn = f
                 <li key={p.id} className={`dgm-prow${isArmed ? ' mnb-prow--armed' : ''}`} data-armed={isArmed ? '1' : undefined}>
                   <span className="dgm-pos">{posLabel(p)}</span>
                   <button type="button" className="dgm-who mnb-whobtn" onClick={() => setCard(p.id)} data-mock-nba-row>
-                    <b>{p.name}</b><small>{sub(p, adpOn)}</small>
+                    <b>{p.name} <OutBadge p={p} /></b><small>{sub(p, adpOn)}</small>
                   </button>
                   <button type="button" className={`dgm-pill dgm-pill--sm${isArmed ? ' dgm-pill--lime' : ''}`} disabled={!yourTurn || !ok} onClick={() => tap(p)}>
                     {isArmed ? 'Confirm' : 'Draft'}
