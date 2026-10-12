@@ -67,7 +67,7 @@ export default async function ResultsPage({ params, searchParams }) {
     <div className="gi" data-surface="ink">
       <GlobalHeaderServer activeNav="games" />
       <div className="rs-wrap">
-        {look ? <div className="dgm"><DraftResultView {...look} /></div> : <Results v={v} href={`/results/${game}/${id}`} />}
+        {look ? <div className="dgm drm-result-wrap"><DraftResultView {...look} /></div> : <Results v={v} href={`/results/${game}/${id}`} />}
       </div>
     </div>
   );

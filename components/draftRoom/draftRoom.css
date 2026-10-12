@@ -60,3 +60,7 @@
 .drm-board th, .drm-board td { padding: 4px 6px; border: 1px solid var(--tok-line); white-space: nowrap; }
 .drm-board th.drm-you, .drm-board td.drm-you { background: var(--tok-action); color: var(--tok-on-action); }
 .drm-board td.drm-clock { outline: 2px solid var(--tok-primary); outline-offset: -2px; }
+
+/* The weekly result on /results/draft/<id> (mon-2): .rs-wrap has no side padding, so the
+   shared result screen would sit flush against the phone's edges. The room's own gutter. */
+.drm-result-wrap { padding: 16px 16px 24px; }
