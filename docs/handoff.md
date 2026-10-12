@@ -1,29 +1,22 @@
-# Handoff - droplet relay sun-8, Mon 12 Oct 2026 (clock ~01:00Z)
+# Handoff - droplet relay mon-1, Mon 12 Oct 2026 (clock ~01:15Z)
 
 ## Live (PROD)
-- main = 3d6eb60 (mock-nba merged; code tree 93a2fbb, suite 6409/6409, preview READY). Vercel
-  production at 3d6eb60; poller head=3d6eb60 (previous 3ca0729).
-- NBA MOCK DRAFT LIVE: sportsvyn.com/mock/nba, public, in the sitemap (static-0.xml), title
-  "NBA Mock Draft 2026 - Sportsvyn", plays signed out.
-  - ESPN standard roster: PG SG SF PF C G F UTIL UTIL UTIL + 3 BN.
-  - Migration 137 is on PROD (ledgered); the PROD pool was built at 17:52Z (260 players), and the
-    cron rebuilds it daily at 10:41Z.
-- NFL mock card fixed (readFileSync font; guard lib/brand/cardFont.test.mjs). PROD 200 needs an owner session.
+- main = 9bed157 (svp-v2 merged 75caf5b on top of mock-nba-2 c406de2). Vercel production + poller
+  head=9bed157 (poller previous 3332e73). parity-intent reset after each merge.
+- NBA MOCK DRAFT v2 at sportsvyn.com/mock/nba (public, signed out):
+  - Setup dropdowns (8-14 teams, slot, clock), ESPN-style / Yahoo-style points or custom,
+    ESPN / Yahoo standard roster or custom; settings saved (account or browser) + Reset.
+  - ADP (default) / SVP sort, player card, Out badge, Auto-draft (picks like the bots) + Restart,
+    grade = rank by projected season points. Finished mocks recorded anonymously.
+  - SVP = projected FP/G (age <=25 last season only; 26+ 70/30) x age curve x 75 games.
+  - Migration 138 on PROD + DEV (ledgered). PROD pool rebuilt 01:08Z (531, 18 Out); ADP imported
+    (426 of 500 matched). MOCK_ADP_SOURCE unset = on; set it to off to hide ADP (no redeploy needed
+    beyond the env change). Cron rebuilds the pool daily 10:41Z (re-reads injuries).
+  - SV ADP: accrue nba_mock_drafts to ~300, then build (plan in docs/reports/2026-10-11-mock-nba-2.md).
+- NFL mock card fixed (readFileSync font; guard lib/brand/cardFont.test.mjs).
 - Game Drafts primetime only (BOARDS on, NBA off). Test prefixes dgtest-, dgnba(test)-; shots dgshot-.
 
 ## HOLDING-FOR-GO
-- mock-nba-2 (sun-7 + ADP addendum v2), head e401e8f, target ship Wed 14 Oct. Report:
-  docs/reports/2026-10-11-mock-nba-2.md (on the branch). Shots sent to Derik (preview 9b85e52).
-  - Migration 138 is on DEV only (mock_nba_adp, nba_mock_drafts, nba_mock_settings). The DEV pool
-    was rebuilt in the new shape (531 rows) and the DEV ADP was imported (426 matched).
-  - AT GO: apply 138 on PROD; merge; reset parity-intent.json (137 entries for mock.css); deploy;
-    rebuild the PROD pool (old rows have no `s`; rank.js tolerates them meanwhile); then
-    DATABASE_URL="$PROD_DATABASE_URL" node scripts/mock-nba-adp-import.mjs --apply.
-  - Open: preset names (brand rule) and the auto-draft ~A+ grade; see the report.
-- svp-v2 (sun-8, SVP as a projection), head 0d79e16, cut FROM mock-nba-2: merge it after that one.
-  Suite 6417/6417 on edce0d2 (+1 docs-only commit); preview READY. Report:
-  docs/reports/2026-10-12-svp-v2.md. Average gap over the ADP top 150: 33.7 -> 24.6. DEV pool rebuilt
-  with s2/age/out. AT GO: merge, reset parity-intent, deploy, rebuild the PROD pool.
 - draft-look (sun-3), held by sun-5: head 0039287, suite 6404/6404. Not done: the preview check
   and the shots. Ships after 20 Oct (ruled).
 
@@ -56,4 +49,4 @@
 - A Next route file must not export helpers; a card font is read with readFileSync.
 
 ## Next step
-Derik's GO on mock-nba-2 (steps above). Tue 13 Oct: items 1, 2, 4 above. Watch the NBA mock's 10:41Z pool rebuild (sync_runs source='nba-mock-pool').
+Watch the 10:41Z NBA pool rebuild (sync_runs source='nba-mock-pool'). Tue 13 Oct: items 1, 2, 4 above.
