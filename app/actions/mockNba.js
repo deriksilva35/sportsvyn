@@ -7,7 +7,8 @@
 // read or stored) - signed out or in alike. saveMockSettingsAction: a signed-in
 // reader's setup, so the next mock opens with it; "Reset to default" clears it.
 // The *MockSetupAction doors (mon-2): NAMED setups - save as, overwrite/rename,
-// delete - signed in only (lib/mockNba/setups.js owns the rules).
+// delete - signed in only (lib/mockNba/setups.js owns the rules). Every door takes
+// the sport ('nba' | 'nfl', mon-3); the NFL mock uses the same three.
 
 import { auth } from '@/auth';
 import { cleanMockRecord, recordMock, saveMockSettings, clearMockSettings } from '@/lib/mockNba/record';
@@ -20,36 +21,36 @@ export async function recordMockDraftAction(payload) {
   try { await recordMock(row); return { ok: true }; } catch { return { ok: false, reason: 'error' }; }
 }
 
-export async function saveMockSettingsAction(settings) {
+export async function saveMockSettingsAction(settings, sport = 'nba') {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
   const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
-  if (settings == null) { await clearMockSettings(Number(userId)); return { ok: true, settings: null }; }
-  return { ok: true, settings: await saveMockSettings(Number(userId), settings) };
+  if (settings == null) { await clearMockSettings(Number(userId), { sport }); return { ok: true, settings: null }; }
+  return { ok: true, settings: await saveMockSettings(Number(userId), settings, { sport }) };
 }
 
-export async function createMockSetupAction(name, settings) {
+export async function createMockSetupAction(name, settings, sport = 'nba') {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
   const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
-  return createSetup(Number(userId), name, settings);
+  return createSetup(Number(userId), name, settings, { sport });
 }
 
 /** Overwrite (settings), rename (name), or both. */
-export async function updateMockSetupAction(id, patch) {
+export async function updateMockSetupAction(id, patch, sport = 'nba') {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
   const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
-  return updateSetup(Number(userId), Number(id), { name: patch?.name, settings: patch?.settings });
+  return updateSetup(Number(userId), Number(id), { name: patch?.name, settings: patch?.settings }, { sport });
 }
 
-export async function deleteMockSetupAction(id) {
+export async function deleteMockSetupAction(id, sport = 'nba') {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   if (userId == null) return { ok: false, reason: 'signed_out' };
   const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
-  return deleteSetup(Number(userId), Number(id));
+  return deleteSetup(Number(userId), Number(id), { sport });
 }

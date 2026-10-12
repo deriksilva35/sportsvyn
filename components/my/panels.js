@@ -133,7 +133,7 @@ export function FantasyPanel({ drafts }) {
     return (
       <Mod tag="My Fantasy">
         <Prompt line="No mock drafts yet. The room fills with AI that reach and slide like real drafters."
-          cta="Start a mock draft" ctaHref="/sim" />
+          cta="Start a mock draft" ctaHref="/mock/nfl" />
       </Mod>
     );
   }

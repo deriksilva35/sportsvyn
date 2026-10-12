@@ -19,6 +19,7 @@ import { clientIp } from '@/lib/auth/rateLimit';
 import {
   GUEST_COOKIE, GUEST_COOKIE_MAX_AGE_S, newDeviceId, signDevice, verifyDevice, signStartToken, startGuestRun,
 } from '@/lib/daily/guestRuns';
+import { progressView } from '@/lib/daily/lockIn';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +48,9 @@ export async function POST(request) {
   }
   return Response.json({
     editionDate, boardId: board.id, startedAt: r.run.started_at, closesAt: r.closesAt, resumed: r.resumed,
-    submitted: false, teams: board.board, year: String(board.season_year),
+    submitted: false, year: String(board.season_year),
+    // THE LOCK-IN (mon-4): team names only; cards come from /api/daily/guest/choose.
+    ...progressView(board, r.run.steps),
     token: signStartToken({ runId: r.run.id, boardId: board.id, deviceId }),
   });
 }

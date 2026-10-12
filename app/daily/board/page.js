@@ -56,6 +56,7 @@ import { ensureBoardForDate, isEditionLive, effectiveEpoch, metaFor } from '@/li
 import { regradeStoredRun } from '@/lib/daily/seasonBoardRuns';
 import { todayLeaderboard, streakLeaderboard } from '@/lib/daily/seasonBoardLeaderboards';
 import { openRevealFor, sealedTeams } from '@/lib/daily/openReveal';
+import { progressView } from '@/lib/daily/lockIn';
 import { displayTeamCode } from '@/lib/footballdb/historicalTeamDisplay';
 import SeasonBoard from '@/components/daily/season/SeasonBoard';
 import {
@@ -164,10 +165,11 @@ export default async function SeasonBoardPage({ searchParams }) {
             </div>
           );
         }
-        // STILL OPEN: resume on the SAME clock, with a fresh signed token.
+        // STILL OPEN: resume on the SAME clock, with a fresh signed token. THE
+        // LOCK-IN (mon-4): sealed teams and the run's recorded steps, never the cards.
         return (
           <SeasonBoard
-            edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked
+            edition={edition} year={year} teams={sealedTeams(board.board)} initialProgress={progressView(board, g.steps)} slots={slotsOf(board)} ranked
             boardId={board.id} closesAt={board.closes_at} editionDate={editionDate}
             initialStartedAt={String(new Date(g.started_at).toISOString())} initialScreen="board"
             guest={{ signInHref, token: signStartToken({ runId: g.id, boardId: board.id, deviceId }) }}
@@ -327,7 +329,7 @@ export default async function SeasonBoardPage({ searchParams }) {
         const streak = await currentStreakFor(userId, editionDate);
         return (
           <SeasonBoard
-            edition={edition} year={year} teams={board.board} slots={slotsOf(board)} ranked userId={userId}
+            edition={edition} year={year} teams={sealedTeams(board.board)} initialProgress={progressView(board, existing.steps)} slots={slotsOf(board)} ranked userId={userId}
             boardId={board.id}
             streak={streak} closesAt={board.closes_at}
             initialStartedAt={String(new Date(existing.started_at).toISOString())}
