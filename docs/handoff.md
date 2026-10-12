@@ -1,6 +1,11 @@
-# Handoff - droplet relays mon-4 + mon-5, Mon 12 Oct 2026 (clock ~08:20Z)
+# Handoff - droplet relay tue-0, Mon 12 Oct 2026 (clock ~16:30Z)
 
-## Live (PROD) - main = 7c81af0, Vercel + poller at 7c81af0
+## Live (PROD) - main = 93a36a4, Vercel + poller at 93a36a4
+- NEW MOCKS START ON /mock/nfl (tue-0, 889d8d9): Play-tab practice tile, You tab, Draft again, the /nfl
+  card CTA (was a 404 to /sim/setup), /sim?preset= (redirect). /sim's setup form is replaced by a "New
+  mock draft" card (NFL / NBA); /sim keeps Resume, leagues + keepers, join, tracker, history, record
+  line. /mock/nfl gains SFLX, "2QB / Superflex", "The Draft (8 rounds)", league preset "The Draft
+  practice" and Full auto. Report: docs/reports/2026-10-12-sim-entry.md.
 - THE DAILY LOCK-IN (d63e2bb, migration 142): choosing a team commits, a placed pick is final,
   cards sealed until a team is chosen. Server-enforced: POST /api/daily/{board,guest}/{choose,pick},
   run.steps (lib/daily/lockIn.js); submit grades the steps. Runs started before deploy (steps NULL)
