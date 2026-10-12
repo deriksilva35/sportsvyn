@@ -21,11 +21,12 @@ test('the in-game rules card states the house rules', () => {
   const sb = src('components/daily/season/SeasonBoard.js');
   const card = sb.slice(sb.indexOf('function RulesCard('));
   for (const s of [
-    'Twelve team cards, 4 to 6 players each.',
-    'Tap a filled slot to clear it and get the team back.',
+    // THE LOCK-IN (mon-4): choosing commits, a placed pick is final.
+    'Twelve teams, 4 to 6 players each. Choosing a team commits you: its players appear and you take one of them. No backing out to another team.',
+    'A placed pick is final - no swaps, no undo.',
     'nothing is dropped: kickers get 3 per field goal and 1 per extra point, and there is no fumble penalty.',
     'Same score, same place; within a tie, the earliest lock-in lists first.',
-    'Your picks stay on this device until you lock in; close the tab and they are lost.',
+    'Every pick is saved the moment you make it; a reload picks up where you left off.',
     'A new board opens at midnight ET.',
     'Three minutes from Start. The clock is on the server.',
   ]) assert.ok(card.includes(s), `rules card is missing: ${s}`);

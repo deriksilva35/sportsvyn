@@ -16,6 +16,7 @@
 import { neon } from '@neondatabase/serverless';
 import { ensureBoardForDate } from '../lib/daily/seasonBoardEditions.js';
 import { submitRun } from '../lib/daily/seasonBoardRuns.js';
+import { playPicks } from '../lib/daily/lockIn.js';
 import { SLOTS } from '../lib/daily/boardShape.js';
 
 if (!process.env.DATABASE_URL) { console.error('DATABASE_URL not set.'); process.exit(1); }
@@ -67,6 +68,9 @@ try {
     throw new Error(`sentinel could not fill slot ${slotIndex} (${slot}) - board has no legal player left`);
   });
 
+  // THE LOCK-IN (mon-4): the picks go in step by step, as a reader's do.
+  const played = await playPicks(sql, { boardId, userId }, picks);
+  if (!played.ok) throw new Error(`sentinel steps refused: ${played.reason}`);
   const first = await submitRun(sql, { boardId, userId, picks, elapsedS: 137, slots: SLOTS });
   console.log('\nfirst submit:', JSON.stringify(first.ok ? { ok: true, run: first.run } : first, null, 2));
   if (!first.ok) throw new Error(`sentinel run should have succeeded: ${first.reason}`);

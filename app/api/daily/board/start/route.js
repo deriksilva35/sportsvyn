@@ -25,6 +25,7 @@ import { ageGateResponse } from '@/lib/auth/ageGateDb';
 import { readViewerTz } from '@/lib/gridiron/serverTz';
 import { stampRunTz } from '@/lib/daily/morningPush';
 import { GUEST_COOKIE, verifyDevice, guestBlocksStart } from '@/lib/daily/guestRuns';
+import { progressView } from '@/lib/daily/lockIn';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,7 +69,10 @@ export async function POST() {
     closesAt: r.closesAt,
     resumed: r.resumed,
     submitted: r.submitted,
-    teams: board.board,
+    // THE LOCK-IN (mon-4): team NAMES only. A team's card is handed over by
+    // /api/daily/board/choose, after the run has committed to that team; the
+    // picks already placed and a committed team come back here on a resume.
+    ...progressView(board, r.run.steps),
     // AND THE SEASON, withheld from the page with the cards for the same reason.
     year: String(board.season_year),
   });
