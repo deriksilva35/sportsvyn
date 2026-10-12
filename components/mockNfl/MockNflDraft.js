@@ -56,13 +56,17 @@ const CARD_STATS = {
   K: [['fgm', 'FG made'], ['xp', 'XP made']],
   DST: [['sacks', 'Sacks'], ['defInt', 'INT'], ['fr', 'Fum rec'], ['defTd', 'TD']],
 };
-function ranksLine(p, adpOn) {
+// IN SEASON THE ADP IS PRESEASON (mon-5): the source's boards shrink once the real
+// drafts are done (lib/mockNfl/pool.js), so the column says which board it is.
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const shortDate = (iso) => (iso ? `${MONTHS[Number(iso.slice(5, 7)) - 1]} ${Number(iso.slice(8, 10))}` : null);
+function ranksLine(p, adpOn, word = 'ADP') {
   const parts = [];
-  if (adpOn) parts.push(`ADP ${adpText(p.adp)}`);
+  if (adpOn) parts.push(`${word} ${adpText(p.adp)}`);
   parts.push(`SVP ${p.svp}`);
   return parts.join(' · ');
 }
-const sub = (p, adpOn) => `${FA(p)}${p.bye ? ` · bye ${p.bye}` : ''} · ${ranksLine(p, adpOn)}${p.rookie ? ' · Rookie' : ''}`;
+const sub = (p, adpOn, word) => `${FA(p)}${p.bye ? ` · bye ${p.bye}` : ''} · ${ranksLine(p, adpOn, word)}${p.rookie ? ' · Rookie' : ''}`;
 // Out / IR / Susp on the injury report: a badge only, SVP is unchanged.
 const OutBadge = ({ p }) => (p.inj ? <span className="mnb-out" data-mock-nfl-out>{p.inj}</span> : null);
 
@@ -87,6 +91,12 @@ function Select({ label, value, onChange, children, disabled, name }) {
 }
 
 export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = true, signedIn = false, saved = null, setups = [] }) {
+  // IN SEASON (mon-5): this season's games are in the pool. The bots and
+  // auto-draft then pick by SVP + need (ADP is a September board by now), the
+  // list opens sorted by SVP, and ADP is named for what it is.
+  const inSeason = pool.some((p) => Number(p.s?.gp) > 0);
+  const adpLabel = inSeason && adpAsOf ? `Preseason ADP (${shortDate(adpAsOf)})` : 'ADP';
+  const adpWord = inSeason ? 'Preseason ADP' : 'ADP';
   const localText = useSyncExternalStore(subscribeLocal, readLocalText, () => null);
   const [edited, setEdited] = useState(null);
   const settings = useMemo(
@@ -97,7 +107,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
   const [armed, setArmed] = useState(null);
   const [tab, setTab] = useState('players');
   const [pos, setPos] = useState('ALL');
-  const [sort, setSort] = useState(adpOn ? 'adp' : 'svp');
+  const [sort, setSort] = useState(adpOn && !inSeason ? 'adp' : 'svp');
   const [q, setQ] = useState('');
   const [card, setCard] = useState(null);
   const [left, setLeft] = useState(null);
@@ -124,7 +134,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
     const seat = settings.seat === 'random' ? Math.floor(Math.random() * settings.teams) : Number(settings.seat) - 1;
     const seed = Math.floor(Math.random() * 2 ** 32);
     recorded.current = false;
-    setSt(runBots(createMock(ranked, { userSeat: seat, seed, teams: settings.teams, slots, botKey: adpOn ? 'adp' : 'svp', kit: KIT })));
+    setSt(runBots(createMock(ranked, { userSeat: seat, seed, teams: settings.teams, slots, botKey: adpOn && !inSeason ? 'adp' : 'svp', kit: KIT })));
     setArmed(null); setTab('players'); setShared(null); setCard(null); setSavedNote(null);
   }
 
@@ -248,7 +258,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
           <button type="button" className="mnb-link" onClick={resetDefaults} data-mock-nfl-reset>Reset to default</button>
           <span className="mnb-saved">{savedNote ?? (signedIn ? 'Saved to your account' : 'Saved on this device')}</span>
         </div>
-        <p className="dgm-foot">{SVP_INFO} &ldquo;Out&rdquo; and &ldquo;IR&rdquo; mark a player on today&apos;s injury report. Kickers score field goals flat and defenses score sacks, takeaways and touchdowns only (distance and points allowed are not in our data). Pool: the top {pool.length} by ADP{adpAsOf ? ` (ADP as of ${adpAsOf})` : ''}{builtAt ? `, updated ${builtAt.slice(0, 10)}` : ''}.</p>
+        <p className="dgm-foot">{SVP_INFO} &ldquo;Out&rdquo; and &ldquo;IR&rdquo; mark a player on today&apos;s injury report. Kickers score field goals flat and defenses score sacks, takeaways and touchdowns only (distance and points allowed are not in our data). {inSeason ? ' In season the bots and auto-draft pick by SVP and roster need.' : ''} Pool: the top {pool.length} by ADP{adpAsOf ? ` (ADP as of ${adpAsOf})` : ''}{builtAt ? `, updated ${builtAt.slice(0, 10)}` : ''}.</p>
       </section>
     );
   }
@@ -262,7 +272,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
       <div className="mnb-sheet" role="dialog" aria-modal="true" aria-label={cardP.name} onClick={(e) => e.stopPropagation()}>
         <div className="mnb-sheet-hd">
           <span className="dgm-pos">{posLabel(cardP)}</span>
-          <div className="dgm-who"><b className="mnb-sheet-name">{cardP.name} <OutBadge p={cardP} /></b><small>{cardP.team ?? 'Free agent'}{cardP.bye ? ` · bye week ${cardP.bye}` : ''} · {ranksLine(cardP, adpOn)}</small></div>
+          <div className="dgm-who"><b className="mnb-sheet-name">{cardP.name} <OutBadge p={cardP} /></b><small>{cardP.team ?? 'Free agent'}{cardP.bye ? ` · bye week ${cardP.bye}` : ''} · {ranksLine(cardP, adpOn, adpWord)}</small></div>
           <button type="button" className="mnb-x" onClick={() => setCard(null)} aria-label="Close">×</button>
         </div>
         {(() => {
@@ -293,7 +303,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
               <div className="mnb-sheet-big">
                 <div><span className="n">{pj.fppg?.toFixed(1) ?? '-'}</span><small>Projected FP/G ({settings.scoring === 'custom' ? 'custom' : SCORING_PRESETS[settings.scoring].label})</small></div>
                 <div><span className="n">{cardP.svp}</span><small>SVP</small></div>
-                {adpOn && <div><span className="n">{adpText(cardP.adp)}</span><small>ADP</small></div>}
+                {adpOn && <div><span className="n">{adpText(cardP.adp)}</span><small>{adpLabel}</small></div>}
               </div>
             </>
           );
@@ -336,7 +346,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
               <li key={i} className={`dgm-srow${r.slot === 'BN' ? ' dgm-srow--out' : ''}`}>
                 <span className="dgm-pos">{SLOT_LABEL[r.slot]}</span>
                 <button type="button" className="dgm-who mnb-whobtn" onClick={() => r.player && setCard(r.player.id)}>
-                  <b>{r.player?.name ?? 'Empty'}</b><small>{r.player ? `${sub(r.player, adpOn)}${auto ? ' · auto' : ''}` : ''}</small>
+                  <b>{r.player?.name ?? 'Empty'}</b><small>{r.player ? `${sub(r.player, adpOn, adpWord)}${auto ? ' · auto' : ''}` : ''}</small>
                 </button>
                 <span className="dgm-pts n">{r.player?.sv ?? ''}</span>
               </li>
@@ -396,7 +406,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
               {POS_FILTERS.map((c) => <option key={c} value={c}>{c === 'ALL' ? 'All' : SLOT_LABEL[c]}</option>)}
             </Select>
             <Select label="Sort" name="sort" value={adpOn ? sort : 'svp'} onChange={setSort} disabled={!adpOn}>
-              {adpOn && <option value="adp">ADP</option>}
+              {adpOn && <option value="adp">{adpLabel}</option>}
               <option value="svp">SVP</option>
             </Select>
           </div>
@@ -410,7 +420,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
                 <li key={p.id} className={`dgm-prow${isArmed ? ' mnb-prow--armed' : ''}`} data-armed={isArmed ? '1' : undefined}>
                   <span className="dgm-pos">{posLabel(p)}</span>
                   <button type="button" className="dgm-who mnb-whobtn" onClick={() => setCard(p.id)} data-mock-nfl-row>
-                    <b>{p.name} <OutBadge p={p} /></b><small>{sub(p, adpOn)}</small>
+                    <b>{p.name} <OutBadge p={p} /></b><small>{sub(p, adpOn, adpWord)}</small>
                   </button>
                   <button type="button" className={`dgm-pill dgm-pill--sm${isArmed ? ' dgm-pill--lime' : ''}`} disabled={!yourTurn || !ok} onClick={() => tap(p)}>
                     {isArmed ? 'Confirm' : 'Draft'}
@@ -428,7 +438,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
             {st.rosters[st.userSeat].map((r, i) => (
               <li key={i} className="dgm-srow">
                 <span className="dgm-pos">{SLOT_LABEL[r.slot]}</span>
-                <span className="dgm-who"><b>{r.player?.name ?? 'Empty'}</b><small>{r.player ? sub(r.player, adpOn) : ''}</small></span>
+                <span className="dgm-who"><b>{r.player?.name ?? 'Empty'}</b><small>{r.player ? sub(r.player, adpOn, adpWord) : ''}</small></span>
                 <span className="dgm-pts n">{r.player?.sv ?? ''}</span>
               </li>
             ))}
