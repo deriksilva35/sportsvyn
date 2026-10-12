@@ -56,13 +56,17 @@ before(async () => {
 afterEach(() => { for (const r of roots) { try { act(() => r.unmount()); } catch { /* gone */ } } roots.clear(); });
 after(() => { try { unlinkSync(tmp); } catch { /* gone */ } });
 
-/** Render straight onto the BOARD screen, past the rules card. */
+/**
+ * Render straight onto the BOARD screen, past the rules card. NO boardId: the
+ * lock-in's rules (mon-4) run in the browser here, synchronously - the ranked
+ * board's server steps are driven at the end of this file through a fake server.
+ */
 function board(props = {}) {
   const c = document.getElementById('root');
   const root = createRoot(c); roots.add(root);
   act(() => root.render(React.createElement(SeasonBoard, {
     edition: 'The Daily · No. 031', year: '2021', teams: TEAMS, slots: SLOTS,
-    ranked: true, userId: 1, boardId: 3,
+    ranked: true, userId: 1, boardId: null,
     initialScreen: 'board', initialStartedAt: new Date().toISOString(),
     ...props,
   })));
@@ -95,7 +99,7 @@ test('step 1 is lit and the line is the mock\'s first line', () => {
   const on = c.querySelector('.sbd-stp.on');
   assert.equal(on.querySelector('b').textContent, 'Team');
   assert.match(noteText(c), /^Fill eight slots from twelve teams, one player each\./);
-  assert.match(noteText(c), /Tap a team to see its players\.$/);
+  assert.match(noteText(c), /Choosing a team commits you to one of its players\.$/);
 });
 
 test('the slots are the RANKED eight, in order, with a TE', () => {
@@ -124,18 +128,23 @@ test('tapping a team fills the panel with its six, and step 2 lights', () => {
   assert.equal(rows(c).length, 6);
   assert.equal(c.querySelector('.sbd-panh b').textContent, 'T0');
   assert.equal(c.querySelector('.sbd-stp.on b').textContent, 'Player');
-  assert.match(noteText(c), /^The T0 card\. Dimmed ones fit no slot you have left\. Tap one\.$/);
+  assert.match(noteText(c), /^You chose T0 - take one of its players\. Dimmed ones fit no slot you have left\.$/);
   assert.equal(c.querySelector('.sbd-tc2.sbd-tcon').textContent.includes('T0'), true);
   assert.equal(c.querySelector('.sbd-empty'), null, 'the empty state is gone');
 });
 
-test('OPENING A TEAM SPENDS NOTHING - the old commit-on-open rule is reversed', () => {
+test('CHOOSING A TEAM COMMITS (mon-4): no browsing, no backing out to another team', () => {
   const c = board();
   click(chips(c)[0]);
+  assert.equal(chips(c).filter((t) => t.disabled).length, 11, 'every other chip is shut');
+  click(chips(c)[1]);
+  assert.equal(c.querySelector('.sbd-panh b').textContent, 'T0', 'still committed to T0');
+  assert.equal(rows(c)[0].querySelector('b').textContent, 'QB 0', 'and only T0\'s players are on show');
+  // Placing a T0 player releases the commitment - then another team may be chosen.
+  click(rows(c)[0]); click(slots(c)[0]);
+  assert.equal(chips(c).filter((t) => t.className.includes('sbd-used')).length, 1);
   click(chips(c)[1]);
   assert.equal(c.querySelector('.sbd-panh b').textContent, 'T1');
-  assert.equal(chips(c).filter((t) => t.className.includes('sbd-used')).length, 0);
-  assert.equal(c.querySelector('.sbd-sub2').textContent.includes('12 teams left'), true);
 });
 
 // ---------------------------------------------------------------------------
@@ -150,7 +159,7 @@ test('holding a TE lights exactly the TE slot and the FLEX', () => {
   const lit = slots(c).map((s, i) => [i, s.className.includes('elig')]).filter(([, l]) => l).map(([i]) => i);
   assert.deepEqual(lit, [5, 6], 'the TE slot and the FLEX, and nothing else');
   assert.equal(c.querySelector('.sbd-stp.on b').textContent, 'Slot');
-  assert.match(noteText(c), /^TE 0 fits the lit slots\. Tap one to place him - or tap another player to change your mind\.$/);
+  assert.match(noteText(c), /^TE 0 fits the lit slots\. Tap one to place him - every pick is final - or tap another T0 player\.$/);
   assert.match(c.querySelector('.sbd-panh small').className, /go/);
 });
 
@@ -207,7 +216,7 @@ test('a filled board: eight picks, eight pips, four teams left, the lock live', 
   assert.equal(c.querySelector('.sbd-sub2').textContent.includes('8 of 8 slots'), true);
   assert.equal(c.querySelector('.sbd-sub2').textContent.includes('4 teams left'), true);
   assert.equal(c.querySelector('.sbd-lock').disabled, false);
-  assert.match(noteText(c), /^All eight in\. Lock it in before the clock runs out, or keep swapping - tap any filled slot to clear it\.$/);
+  assert.match(noteText(c), /^All eight in\. Lock it in before the clock runs out\.$/);
   assert.equal(c.querySelectorAll('.sbd-stp.done').length, 3, 'every step reads done');
 });
 
@@ -227,20 +236,20 @@ test('the points total is the sum of what is on the board', () => {
   assert.equal(c.querySelector('.sbd-tot b').textContent, sum.toFixed(1));
 });
 
-test('TAPPING A FILLED SLOT CLEARS IT AND GIVES THE TEAM BACK', () => {
+test('A PLACED PICK IS FINAL (mon-4): a filled slot is not a button, and tapping it changes nothing', () => {
   const c = fillBoard(board());
   // THE TICK IS THE SPEND, not the dimming: on a full board every chip is
   // disabled, but only the eight that gave a player wear a tick.
   const used = chips(c).filter((t) => t.className.includes('sbd-used')).length;
   assert.equal(used, 8, 'eight teams spent, four merely dead');
-  const before = Number(c.querySelector('.sbd-tot b').textContent);
+  const before = c.querySelector('.sbd-tot b').textContent;
   const filled = slots(c).find((s) => s.className.includes('filled'));
-  const points = Number(filled.querySelector('.sbd-pts').textContent);
+  assert.equal(filled.tagName, 'DIV', 'no button on a placed pick');
+  assert.equal(filled.querySelector('.sbd-x'), null, 'no clear mark');
   click(filled);
-  assert.equal(slots(c).filter((s) => s.className.includes('filled')).length, 7);
-  assert.equal(chips(c).filter((t) => t.className.includes('sbd-used')).length, used - 1);
-  assert.equal(Number(c.querySelector('.sbd-tot b').textContent), Number((before - points).toFixed(1)));
-  assert.equal(c.querySelector('.sbd-lock').disabled, true, 'seven is not eight');
+  assert.equal(slots(c).filter((s) => s.className.includes('filled')).length, 8);
+  assert.equal(chips(c).filter((t) => t.className.includes('sbd-used')).length, used);
+  assert.equal(c.querySelector('.sbd-tot b').textContent, before);
 });
 
 // ---------------------------------------------------------------------------
@@ -259,4 +268,42 @@ test('a LEGACY board renders its own two FLEX slots, not a TE', () => {
   click(rows(c).find((r) => r.querySelector('.sbd-pb').textContent === 'TE'));
   const lit = slots(c).map((s, i) => [i, s.className.includes('elig')]).filter(([, l]) => l).map(([i]) => i);
   assert.deepEqual(lit, [5, 6], 'both FLEX slots take the tight end');
+});
+
+// ---------------------------------------------------------------------------
+// THE RANKED BOARD, THROUGH A FAKE SERVER (mon-4): the cards are SEALED until
+// a team is chosen, every step is a request, and the screen moves only on yes.
+// The fake answers as lib/daily/lockIn.js does (chooseTeam / pickPlayer).
+// ---------------------------------------------------------------------------
+const { chooseTeam, pickPlayer, emptySteps } = await import('../../../lib/daily/lockIn.js');
+const sealed = TEAMS.map((t) => ({ key: t.key, abbr: t.abbr, record: null, card: [] }));
+const flush = () => act(async () => { for (let i = 0; i < 5; i += 1) await Promise.resolve(); });
+
+test('RANKED: sealed until chosen; choose and pick go to the server; a refusal is shown and nothing moves', async () => {
+  const calls = []; let steps = emptySteps();
+  const server = { board: TEAMS };
+  global.fetch = async (url, init) => {
+    const body = JSON.parse(init.body); calls.push([url, body]);
+    const r = url.endsWith('/choose') ? chooseTeam(server, steps, body.teamKey, SLOTS) : pickPlayer(server, steps, body.slotIndex, body.playerName, SLOTS);
+    if (r.ok) steps = r.steps;
+    return { ok: r.ok, json: async () => (r.ok ? { ok: true, team: r.team, pick: r.pick } : { error: r.reason }) };
+  };
+  try {
+    const c = board({ teams: sealed, boardId: 3 });
+    assert.equal(rows(c).length, 0, 'no card on the page before a choice');
+    click(chips(c)[2]); await flush();
+    assert.deepEqual(calls.map(([u, b]) => [u, b.teamKey]), [['/api/daily/board/choose', 'T2']]);
+    assert.equal(rows(c).length, 6, 'the chosen team\'s card arrived from the server');
+    assert.equal(chips(c).filter((t) => t.disabled).length, 11);
+    click(rows(c)[3]); click(slots(c)[5]); await flush();   // TE 2 into TE
+    assert.deepEqual(calls[1], ['/api/daily/board/pick', { boardId: 3, slotIndex: 5, playerName: 'TE 2' }]);
+    assert.equal(slots(c)[5].className.includes('filled'), true);
+    // The server refuses a second choice while one is open - the screen says so and stays put.
+    steps = { committed: 'T4', picks: steps.picks };          // (another tab chose T4)
+    click(chips(c)[7]); await flush();
+    assert.match(c.querySelector('[data-step-error]').textContent, /pick a player from T4 first/);
+    assert.equal(c.querySelector('.sbd-panh b').textContent, 'The board', 'no card opened on a refusal');
+  } finally {
+    global.fetch = async () => { throw new Error('no fetch in these states'); };
+  }
 });
