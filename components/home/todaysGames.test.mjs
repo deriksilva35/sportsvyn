@@ -304,10 +304,12 @@ test('the funnel keeps its place in BOTH auth states', () => {
   assert.ok(!/className="gh-cta">MOCK DRAFT/.test(header), 'the mock draft is no longer the volt button');
   // ...and the mock draft keeps a door on both: a quiet link on the wide bar,
   // a line in the drawer.
-  assert.deepEqual({ ...MOCK_DRAFT }, { label: 'MOCK DRAFT', href: '/sim' });
+  // mon-3: the door opens the public NFL mock (/mock/nfl, playable signed out); /sim
+  // keeps the sim's leagues, tracker and history.
+  assert.deepEqual({ ...MOCK_DRAFT }, { label: 'MOCK DRAFT', href: '/mock/nfl' });
   assert.match(header, /\{!isAuthed && <Link href=\{MOCK_DRAFT\.href\} className="gh-mock">\{MOCK_DRAFT\.label\}<\/Link>\}/,
     'signed out, on the bar');
-  assert.ok(accountMenu({ shell: false }).some((i) => i.href === '/sim'), 'signed in, in the account menu');
+  assert.ok(accountMenu({ shell: false }).some((i) => i.href === '/mock/nfl'), 'signed in, in the account menu');
   const drawer = header.slice(header.indexOf('className="gh-drawer"'));
   assert.match(drawer, /<Link href=\{MOCK_DRAFT\.href\} className="gh-drawer-mock">/);
   // It sits outside the isAuthed branch, so signing in cannot remove it.
