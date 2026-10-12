@@ -1,4 +1,4 @@
-# Handoff - droplet relay sun-7, Sun 11 Oct 2026 (clock ~23:15Z)
+# Handoff - droplet relay sun-8, Mon 12 Oct 2026 (clock ~01:00Z)
 
 ## Live (PROD)
 - main = 3d6eb60 (mock-nba merged; code tree 93a2fbb, suite 6409/6409, preview READY). Vercel
@@ -8,12 +8,8 @@
   - ESPN standard roster: PG SG SF PF C G F UTIL UTIL UTIL + 3 BN.
   - Migration 137 is on PROD (ledgered); the PROD pool was built at 17:52Z (260 players), and the
     cron rebuilds it daily at 10:41Z.
-  - Verified signed out: a draft to its result, and the share card 200. +30 min: app_errors
-    empty, Vercel runtime errors none on production, poller clean.
-- NFL MOCK CARD FIXED (readFileSync font). Preview: 200 for the owner, 401 signed out (it 500'd
-  before). PROD: 401 signed out as designed. A PROD 200 needs an owner's session.
-  Guard: lib/brand/cardFont.test.mjs.
-- Game Drafts primetime only; DRAFT_GAME_BOARDS=on, DRAFT_GAME_NBA=off.
+- NFL mock card fixed (readFileSync font; guard lib/brand/cardFont.test.mjs). PROD 200 needs an owner session.
+- Game Drafts primetime only (BOARDS on, NBA off). Test prefixes dgtest-, dgnba(test)-; shots dgshot-.
 
 ## HOLDING-FOR-GO
 - mock-nba-2 (sun-7 + ADP addendum v2), head e401e8f, target ship Wed 14 Oct. Report:
@@ -24,6 +20,10 @@
     rebuild the PROD pool (old rows have no `s`; rank.js tolerates them meanwhile); then
     DATABASE_URL="$PROD_DATABASE_URL" node scripts/mock-nba-adp-import.mjs --apply.
   - Open: preset names (brand rule) and the auto-draft ~A+ grade; see the report.
+- svp-v2 (sun-8, SVP as a projection), head 0d79e16, cut FROM mock-nba-2: merge it after that one.
+  Suite 6417/6417 on edce0d2 (+1 docs-only commit); preview READY. Report:
+  docs/reports/2026-10-12-svp-v2.md. Average gap over the ADP top 150: 33.7 -> 24.6. DEV pool rebuilt
+  with s2/age/out. AT GO: merge, reset parity-intent, deploy, rebuild the PROD pool.
 - draft-look (sun-3), held by sun-5: head 0039287, suite 6404/6404. Not done: the preview check
   and the shots. Ships after 20 Oct (ruled).
 
@@ -51,7 +51,6 @@
 5. FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
 
 ## Notes
-- Test-owned prefixes: dgtest-, dgsettle(test)-, dgnba(test)-. Manual sentinels: dgshot-.
 - PROD SELECTs hit the "Production Reads" check; ask Derik per read, never writes.
 - neon tagged template: `interval ${'..'}` is a syntax error; write the literal.
 - A Next route file must not export helpers; a card font is read with readFileSync.
