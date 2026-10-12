@@ -2,8 +2,8 @@
   "changes": [
     {
       "file": "app/mock/nba/mock.css",
-      "key": ".mnb-out { background }",
-      "after": "#b8410f"
+      "key": ".mnb-out { border }",
+      "after": "1.5px solid #b8410f"
     },
     {
       "file": "app/mock/nba/mock.css",
@@ -13,7 +13,7 @@
     {
       "file": "app/mock/nba/mock.css",
       "key": ".mnb-out { color }",
-      "after": "#d4ff00"
+      "after": "#f5f5f2"
     },
     {
       "file": "app/mock/nba/mock.css",
@@ -38,7 +38,7 @@
     {
       "file": "app/mock/nba/mock.css",
       "key": ".mnb-out { padding }",
-      "after": "1px 6px"
+      "after": "0 5px"
     },
     {
       "file": "app/mock/nba/mock.css",

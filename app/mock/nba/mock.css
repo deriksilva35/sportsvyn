@@ -88,7 +88,7 @@
 
 /* sun-8: "Out" on today's injury report (a badge; SVP unchanged), the card's projection line. */
 .mnb-out {
-  display: inline-block; vertical-align: 2px; margin-left: 4px; padding: 1px 6px; border-radius: 6px;
-  background: var(--tok-down); color: var(--tok-on-primary); font: 800 10px var(--tok-font-num); letter-spacing: .06em; text-transform: uppercase;
+  display: inline-block; vertical-align: 2px; margin-left: 4px; padding: 0 5px; border-radius: 6px;
+  border: 1.5px solid var(--tok-down); color: var(--tok-ink); font: 800 10px var(--tok-font-num); letter-spacing: .06em; text-transform: uppercase;
 }
 .mnb-proj { margin: 10px 0 0; }
