@@ -30,7 +30,7 @@ import {
 } from '@/lib/mockNba/settings';
 import { recordMockDraftAction, saveMockSettingsAction } from '@/app/actions/mockNba';
 
-const SVP_INFO = 'SVP: our projection. Fantasy points per game (65% last season, 35% the season before, adjusted for age) x 75 games.';
+const SVP_INFO = 'SVP: our projection. Fantasy points per game (last season at 25 or younger; otherwise 70% last season, 30% the season before; adjusted for age) x 75 games.';
 const POS_FILTERS = ['ALL', 'PG', 'SG', 'SF', 'PF', 'C'];
 const surname = (n) => String(n ?? '').split(/\s+/).slice(1).join(' ') || n;
 const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : n % 10 === 1 ? 'st' : n % 10 === 2 ? 'nd' : n % 10 === 3 ? 'rd' : 'th'}`;
@@ -257,7 +257,7 @@ export default function MockNbaDraft({ pool, builtAt, adpOn = true, signedIn = f
             </dl>
             {(() => {
               const pj = projection(cardP, weights);
-              const mix = pj.wLast === 1 || pj.before == null ? 'one season' : '65% last season, 35% the season before';
+              const mix = pj.before == null ? (pj.age != null && pj.age <= 25 ? 'last season only, age 25 or younger' : 'one season') : '70% last season, 30% the season before';
               return <p className="dgm-note mnb-proj" data-mock-nba-proj>Projection: {pj.fppg?.toFixed(1) ?? '-'} FP/G ({mix}{pj.age ? `, age ${pj.age}: ${pctSigned(pj.factor)}` : ''}) x 75 games.</p>;
             })()}
             <div className="mnb-sheet-big">
