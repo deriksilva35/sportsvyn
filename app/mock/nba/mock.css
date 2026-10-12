@@ -92,3 +92,12 @@
   border: 1.5px solid var(--tok-down); color: var(--tok-ink); font: 800 10px var(--tok-font-num); letter-spacing: .06em; text-transform: uppercase;
 }
 .mnb-proj { margin: 10px 0 0; }
+
+/* mon-2: "League setup" - the saved-setups dropdown and its Save as / Overwrite / Rename / Delete row. */
+.mnb-lib { margin: 12px 0 4px; }
+.mnb-lib-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 6px; font-size: 13px; }
+.mnb-lib-actions .mnb-saved { margin-left: auto; }
+.mnb-lib-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.mnb-lib-form .mnb-search { flex: 1 1 180px; width: auto; }
+.mnb-lib-note { margin: 6px 0 0; font-size: 13px; color: var(--tok-muted); }
+.mnb-link:disabled { opacity: .45; cursor: default; }

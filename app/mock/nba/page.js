@@ -6,7 +6,8 @@
  * the two, and hands them to the client, which runs the whole draft in the
  * browser (components/mockNba/MockNbaDraft.js). MOCK_ADP_SOURCE=off drops the ADP
  * column entirely (lib/mockNba/adp.js). A signed-in reader's saved setup comes
- * with the page; a guest's lives in their browser.
+ * with the page, and so do their NAMED setups (lib/mockNba/setups.js, mon-2); a
+ * guest's setup lives in their browser.
  */
 import Link from 'next/link';
 import { auth } from '@/auth';
@@ -16,6 +17,7 @@ import MockNbaDraft from '@/components/mockNba/MockNbaDraft';
 import { readNbaMockPool } from '@/lib/mockNba/pool';
 import { adpEnabled, readAdp, withAdp } from '@/lib/mockNba/adp';
 import { readMockSettings } from '@/lib/mockNba/record';
+import { listSetups } from '@/lib/mockNba/setups';
 import '../../daily/daily.css';
 import '../../draft/game/game.css';
 import './mock.css';
@@ -35,7 +37,9 @@ export default async function MockNbaPage() {
     auth().catch(() => null),
   ]);
   const userId = session?.user?.id ?? null;
-  const saved = userId != null ? await readMockSettings(Number(userId)).catch(() => null) : null;
+  const [saved, setups] = userId != null
+    ? await Promise.all([readMockSettings(Number(userId)).catch(() => null), listSetups(Number(userId)).catch(() => [])])
+    : [null, []];
   const rows = pool?.rows?.length ? withAdp(pool.rows, adp, { on: adpOn }) : null;
   return (
     <div className="daily-shell">
@@ -48,7 +52,7 @@ export default async function MockNbaPage() {
         <main className="daily-main dgm mnb">
           <Link className="appcrumb" href="/games">&larr; Games</Link>
           {rows ? (
-            <MockNbaDraft pool={rows} builtAt={pool.builtAt} adpOn={adpOn && adp.size > 0} signedIn={userId != null} saved={saved} />
+            <MockNbaDraft pool={rows} builtAt={pool.builtAt} adpOn={adpOn && adp.size > 0} signedIn={userId != null} saved={saved} setups={setups} />
           ) : (
             <p className="dgm-empty" data-mock-nba-empty>The NBA mock draft is getting its player pool ready. Try again in a few minutes.</p>
           )}
