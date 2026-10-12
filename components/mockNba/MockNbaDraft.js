@@ -29,6 +29,7 @@ import {
   normalizeSettings, weightsOf, countsOf, slotsOf, serializeSettings, parseSettings,
 } from '@/lib/mockNba/settings';
 import { recordMockDraftAction, saveMockSettingsAction } from '@/app/actions/mockNba';
+import SetupLibrary from './SetupLibrary';
 
 const SVP_INFO = 'SVP: our projection. Fantasy points per game (last season at 25 or younger; otherwise 70% last season, 30% the season before; adjusted for age) x 75 games.';
 const POS_FILTERS = ['ALL', 'PG', 'SG', 'SF', 'PF', 'C'];
@@ -69,7 +70,7 @@ function Select({ label, value, onChange, children, disabled, name }) {
   );
 }
 
-export default function MockNbaDraft({ pool, builtAt, adpOn = true, signedIn = false, saved = null }) {
+export default function MockNbaDraft({ pool, builtAt, adpOn = true, signedIn = false, saved = null, setups = [] }) {
   const localText = useSyncExternalStore(subscribeLocal, readLocalText, () => null);
   const [edited, setEdited] = useState(null);
   const settings = useMemo(
@@ -169,6 +170,8 @@ export default function MockNbaDraft({ pool, builtAt, adpOn = true, signedIn = f
           <h1 className="dgm-hd-title">NBA Mock Draft 2026</h1>
           <div className="dgm-hd-sub">You against {settings.teams - 1} bots. Set it up your way; we remember it for next time.</div>
         </div>
+
+        <SetupLibrary settings={settings} onApply={(s) => { const n = normalizeSettings(s); writeLocal(n); setEdited(n); }} signedIn={signedIn} initialSetups={setups} />
 
         <div className="mnb-form">
           <Select label="Teams" name="teams" value={settings.teams} onChange={(v) => set({ teams: Number(v) })}>
