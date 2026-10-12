@@ -44,3 +44,6 @@
 
 .srow .mu .win { color: var(--paper); }
 .srow .mu .dim { color: var(--muted); }
+
+/* AP rank badge before the abbreviation (CFB band); same look as .rk in gridiron.css, which the front page does not load. */
+.srow .mu .rk{display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-mono,monospace);font-style:normal;font-weight:700;font-size:9px;color:var(--tok-on-action);background:var(--tok-action);border-radius:3px;padding:1px 4px;margin-right:5px;line-height:1.4;vertical-align:1px}

@@ -9,6 +9,7 @@ import StandaloneTime from '@/components/StandaloneTime';
 import ZoneLabel from '@/components/scores/ZoneLabel';
 import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
+import Top25Link from '@/components/scores/Top25Link';
 import RankBadge from '@/components/gridiron/RankBadge';
 import PossessionDot from '@/components/gridiron/PossessionDot';
 import LiveRefresh from '@/components/scores/LiveRefresh';
@@ -282,7 +283,7 @@ export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLab
             force, no pill - the reader is never offered a filter that
             empties the board. */}
         {v.rankedToday && (
-          <Link className={`sv2-pill top25${v.top25 ? ' on' : ''}`} href={href({ date: v.date, sport: v.sport, mine: v.mine, top25: !v.top25 })} data-top25={v.top25 ? '1' : '0'}>Top 25</Link>
+          <Top25Link next={!v.top25} className={`sv2-pill top25${v.top25 ? ' on' : ''}`} href={href({ date: v.date, sport: v.sport, mine: v.mine, top25: !v.top25 })} data-top25={v.top25 ? '1' : '0'}>Top 25</Top25Link>
         )}
         <span className="sp" />
         {signedIn && <Link className={`sv2-pill mine${v.mine ? ' on' : ''}`} href={href({ date: v.date, sport: v.sport, mine: !v.mine, top25: v.top25 })} data-mine-count={v.mineCount}>Mine · {v.mineCount}</Link>}

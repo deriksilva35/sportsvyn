@@ -29,6 +29,7 @@ import { plural } from '@/lib/text/plural';
 import { arcadeFor } from '@/lib/brand/theme';
 import ScoreboardV4 from '@/components/scores/ScoreboardV4';
 import { parseV4 } from '@/lib/scores/v4';
+import { readRememberedTop25, wantTop25 } from '@/lib/scores/top25Memory';
 import { cachedOpeningSpreads } from '@/lib/gridiron/openingCache';
 import './scoresV4.css';
 
@@ -196,7 +197,7 @@ const one = (v) => (Array.isArray(v) ? v[0] : v);
 const zoneLabel = (tz) => zoneNameOf(tz);
 export default async function ScoresPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
-  const [session, viewerTz, isShell] = await Promise.all([auth().catch(() => null), readViewerTz(), resolveShellMode()]);
+  const [session, viewerTz, isShell, rememberedTop25] = await Promise.all([auth().catch(() => null), readViewerTz(), resolveShellMode(), readRememberedTop25()]);
   const userId = session?.user?.id ?? null;
   const tz = viewerTz ?? ET;
   const sportRaw = one(sp.sport);
@@ -208,7 +209,7 @@ export default async function ScoresPage({ searchParams }) {
   // request carrying the shell cookie. /scores is dynamic, so it can ask.
   const arcade = arcadeFor(isShell);
   if (arcade) {
-    const q = parseV4(sp);
+    const q = parseV4(sp, rememberedTop25);
     const v = await scoresV2({ userId, date: q.date, sport: q.sport, mine: userId != null && q.mine, top25: q.top25, tz, openings: cachedOpeningSpreads });
     return (
       <div className="gi" data-surface="ink">
@@ -218,7 +219,7 @@ export default async function ScoresPage({ searchParams }) {
       </div>
     );
   }
-  const v = await scoresV2({ userId, date: one(sp.date) ?? null, sport, mine: userId != null && one(sp.mine) === '1', top25: one(sp.top25) === '1', tz });
+  const v = await scoresV2({ userId, date: one(sp.date) ?? null, sport, mine: userId != null && one(sp.mine) === '1', top25: wantTop25(one(sp.top25), rememberedTop25), tz });
   return (
     <div className="gi" data-surface="ink">
       <ScoresChrome isShell={isShell} />

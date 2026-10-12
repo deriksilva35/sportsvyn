@@ -42,6 +42,7 @@ import MovementCard from '@/components/fantasy/MovementCard';
 import { getMovementCard } from '@/lib/fantasy/movement';
 import '@/components/fantasy/movementCard.css';
 import EditorialBoard from '@/components/gridiron/EditorialBoard';
+import { currentApRanks } from '@/lib/cfb/rankings';
 import TodaysGames from '@/components/home/TodaysGames';
 import { getEditorialBoard, getSlateByDate, getNearestUpcomingWeek } from '@/lib/gridiron/readers';
 import { resolveSeasonYear } from '@/lib/pollers/seasonResolver';
@@ -416,6 +417,8 @@ export async function FrontPage() {
     weekSlate('epl', { now }).catch(() => null),
     daySlate('mlb', { now }).catch(() => null),
   ]);
+  // AP ranks for the CFB slate rows (same reader as /scores and the game page).
+  const cfbRanks = (await currentApRanks().catch(() => null))?.ranks ?? null;
   const slateOfLeague = { cfb: cfbWeekSlate, nfl: nflWeekSlate, epl: eplWeekSlate };
 
   const order = rankLeagues(signals);
@@ -448,6 +451,7 @@ export async function FrontPage() {
             week={(isCfb ? cfbNext : nflNext)?.week ?? null}
             context={ctx}
             weekSlate={slateOfLeague[id]}
+            ranks={isCfb ? cfbRanks : null}
             boardIds={isCfb ? boardIds : null}
             boardNumber={isCfb ? board?.board_number : null}
             scoresHref={isCfb ? '/scores?sport=cfb' : '/scores?sport=nfl'}
