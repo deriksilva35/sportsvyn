@@ -13,7 +13,6 @@
     (426 of 500 matched). MOCK_ADP_SOURCE unset = on; set it to off to hide ADP (no redeploy needed
     beyond the env change). Cron rebuilds the pool daily 10:41Z (re-reads injuries).
   - SV ADP: accrue nba_mock_drafts to ~300, then build (plan in docs/reports/2026-10-11-mock-nba-2.md).
-- NFL mock card fixed (readFileSync font; guard lib/brand/cardFont.test.mjs).
 - Game Drafts primetime only (BOARDS on, NBA off). Test prefixes dgtest-, dgnba(test)-; shots dgshot-.
 
 ## HOLDING-FOR-GO
