@@ -4,7 +4,6 @@ import { auth } from '@/auth';
 import Wordmark from '@/components/gridiron/Wordmark';
 import HideInShell from '@/components/shell/HideInShell';
 import Attribution from '@/components/sim/Attribution';
-import StartForm from '@/components/sim/StartForm';
 import LiveDraftCard from '@/components/sim/LiveDraftCard';
 import SimTabBar from '@/components/sim/SimTabBar';
 import ShellPersist from '@/components/sim/ShellPersist';
@@ -14,7 +13,8 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { appleIapConfig } from '@/lib/appleIap';
 import IapConfigure from '@/components/shell/IapConfigure';
-import { getPresets, getDraftsUsed, isMember, canStartDraft, getOpenSimDraft, getMyLeagues, getDraftsSummary, FREE_DRAFT_LIMIT } from '@/lib/fantasy/drafts';
+import { isMember, getOpenSimDraft, getMyLeagues, getDraftsSummary } from '@/lib/fantasy/drafts';
+import { redirect } from 'next/navigation';
 import MyLeagues from '@/components/sim/MyLeagues';
 import JoinByCode from '@/components/sim/JoinByCode';
 import { FFC_ATTRIBUTION } from '@/lib/fantasy/ffc';
@@ -36,6 +36,10 @@ export default async function SimLobby({ searchParams }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const params = (await searchParams) ?? {};
+  // A NEW MOCK STARTS ON /mock/nfl (tue-0). An old "Draft again" link (or a
+  // bookmarked ?preset=) named a board for the setup form this page had; that
+  // form is gone, so the link goes where new mocks start now.
+  if (params.preset != null) redirect('/mock/nfl');
   const isShell = await resolveShellMode();
   // IN THE CONTAINER, SIGNED OUT, THE ANSWER IS THE SIGN-IN FORM. Ahead of the
   // lobby read below, because a redirect makes every query under it wasted.
@@ -127,19 +131,15 @@ export default async function SimLobby({ searchParams }) {
         ) : (
           await (async () => {
             // The open-draft read rides the same round trip as the other three.
-            const [presets, used, member, openDraft, myLeagues, summary] = await Promise.all([
-              getPresets(), getDraftsUsed(userId), isMember(userId), getOpenSimDraft(userId),
-              // SCOPED BY user_id AND source, in its own query. getPresets
-              // filters on is_preset alone with no user scoping, so putting an
-              // imported league through it would show one reader's league to
-              // everybody. The presets query is untouched.
+            const [member, openDraft, myLeagues, summary] = await Promise.all([
+              isMember(userId), getOpenSimDraft(userId),
+              // SCOPED BY user_id AND source, in its own query.
               getMyLeagues(userId),
               // THE HEADER'S TWO NUMBERS, on the same round trip as the other
               // five. See getDraftsSummary for why it is two and not the
               // mock's three.
               getDraftsSummary(userId).catch(() => ({ drafts: 0, bestGrade: null })),
             ]);
-            const gate = await canStartDraft(userId, member);
             return (
               <>
                 {/* WELCOMESHEET RETIRED. It was a product pitch shown once per
@@ -170,31 +170,28 @@ export default async function SimLobby({ searchParams }) {
                     Safari from the app until Universal Links ship. With
                     leagues, MyLeagues carries the same field as a small row. */}
                 {myLeagues.length === 0 && <JoinByCode variant="empty" />}
-                <section>
-                  <div className="sim-kicker">Start a mock draft</div>
-                  {/* YOUR DRAFTS - the mock's header block, with the two
-                      numbers that are one query. It renders only once there is
-                      something to report: "0 drafts" on a first visit is a
-                      scoreboard for a game nobody has played, and the deck
-                      below is the thing to look at. */}
+                {/* NEW MOCK DRAFT (tue-0). The old "NEW DRAFT / START FROM" setup
+                    form is gone: a new mock starts on the public mocks, which
+                    have every setup it had (and more). This page keeps what is
+                    the reader's own - a draft in progress (above), leagues and
+                    keepers (above), the tracker, and the record line. */}
+                <section className="sim-newmock" data-sim-newmock>
+                  <div className="sim-kicker">New mock draft</div>
+                  {/* YOUR DRAFTS - the two numbers that are one query, shown only
+                      once there is something to report. */}
                   {summary.drafts > 0 && (
                     <p className="sim-record">
                       <b>{summary.drafts}</b> draft{summary.drafts === 1 ? '' : 's'}
                       {summary.bestGrade ? <> · best grade <b>{summary.bestGrade}</b></> : null}
                     </p>
                   )}
-                  {/* ?preset= comes from the Read's "Draft again" and names
-                      the board just drafted. StartForm falls back to the first
-                      preset when the id is not on the deck, so a stale link
-                      degrades to today's behaviour rather than to an empty
-                      form. */}
-                  <StartForm presets={presets} canStart={gate.ok} used={used} limit={FREE_DRAFT_LIMIT} member={member} shell={isShell} iap={iap}
-                    initialPresetId={Array.isArray(params.preset) ? params.preset[0] : (params.preset ?? null)} />
+                  <p className="sim-newmock-sub">Any league setup - teams, scoring, roster, clock - against the bots, with a grade and a share card.</p>
+                  <div className="sim-newmock-row">
+                    <Link className="sim-cta" href="/mock/nfl" data-sim-newmock-nfl>NFL</Link>
+                    <Link className="sim-cta sim-cta--ghost" href="/mock/nba" data-sim-newmock-nba>NBA</Link>
+                  </div>
+                  <Link className="sim-trklink" href="/sim/tracker" data-sim-tracker>Track a live draft with The Tracker &rarr;</Link>
                 </section>
-                {/* The tracker link moved INTO StartForm (v0.3.1): it now
-                    carries the live config as a handoff, and only the form
-                    knows the live config. One link out is still the law -
-                    it just learned to pack a bag. */}
               </>
             );
           })()

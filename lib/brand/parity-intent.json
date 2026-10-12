@@ -1,3 +1,164 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check input { accent-color }",
+      "after": "#141414"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check input { flex }",
+      "after": "none"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check input { height }",
+      "after": "20px"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check input { margin }",
+      "after": "1px 0 0"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check input { width }",
+      "after": "20px"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check { align-items }",
+      "after": "flex-start"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check { cursor }",
+      "after": "pointer"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check { display }",
+      "after": "flex"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check { font-size }",
+      "after": "14px"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check { gap }",
+      "after": "10px"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check { grid-column }",
+      "after": "1 / -1"
+    },
+    {
+      "file": "app/mock/nba/mock.css",
+      "key": ".mnb-check { line-height }",
+      "after": "1.35"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-cta--ghost { background }",
+      "after": "transparent"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-cta--ghost { box-shadow }",
+      "after": "inset 0 0 0 1.5px #d4ff00"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-cta--ghost { color }",
+      "after": "#f5f5f2"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock .sim-trklink { color }",
+      "after": "#c5c5c2"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock .sim-trklink { display }",
+      "after": "inline-block"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock .sim-trklink { font-size }",
+      "after": "12px"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock .sim-trklink { letter-spacing }",
+      "after": ".04em"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock .sim-trklink { margin-top }",
+      "after": "18px"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock { margin }",
+      "after": "8px 0 18px"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock-row .sim-cta { margin-top }",
+      "after": "16px"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock-row .sim-cta { min-width }",
+      "after": "120px"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock-row .sim-cta { text-align }",
+      "after": "center"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock-row { display }",
+      "after": "flex"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock-row { flex-wrap }",
+      "after": "wrap"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock-row { gap }",
+      "after": "10px"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock-sub { color }",
+      "after": "#c5c5c2"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock-sub { font-size }",
+      "after": "14px"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock-sub { line-height }",
+      "after": "1.5"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock-sub { margin }",
+      "after": "6px 0 0"
+    },
+    {
+      "file": "components/sim/sim.css",
+      "key": ".sim-newmock-sub { max-width }",
+      "after": "560px"
+    }
+  ]
 }

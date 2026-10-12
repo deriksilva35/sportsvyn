@@ -216,8 +216,11 @@ test('copy uses hyphens only - no em/en dashes (house rule)', () => {
 
 const CARD_HOSTS = ['app/sim/page.js', 'app/sim/tracker/page.js'];
 
+// tue-0: /sim no longer renders the setup form (and its gate card) - the tracker
+// page is the one card host left; /sim still configures IAP (the test below).
+const GATE_CARD_HOSTS = ['app/sim/tracker/page.js'];
 test('every page rendering a gate card resolves the flag server-side', () => {
-  for (const rel of CARD_HOSTS) {
+  for (const rel of GATE_CARD_HOSTS) {
     const s = stripComments(src(rel));
     assert.match(s, /appleIapConfig/, `${rel} renders a gate card without resolving the IAP config`);
     assert.match(s, /iap=\{/, `${rel} does not thread the iap prop`);

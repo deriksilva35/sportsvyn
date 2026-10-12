@@ -150,7 +150,8 @@ export default function DraftResults({ data }) {
             travels: a custom or an imported-league config is not a row the
             deck can select, and a querystring naming one would be a link to
             a screen that ignores it. */}
-        <a className="sim-cta" href={config.is_preset ? `/sim?preset=${config.id}` : '/sim'}>Draft again</a>
+        {/* A NEW MOCK STARTS ON /mock/nfl (tue-0); /sim no longer has a setup form. */}
+        <a className="sim-cta" href="/mock/nfl">Draft again</a>
         <a href="/sim" style={{ alignSelf: 'center', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)', textDecoration: 'none' }}>History (soon)</a>
       </div>
     </div>

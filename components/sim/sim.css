@@ -57,6 +57,14 @@
 .sml-track { grid-area: track; justify-self: start; margin-top: 4px; color: var(--muted); font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .04em; text-decoration: none; border-bottom: 1px solid var(--rule-dim); }
 .sml-track:hover { color: var(--paper); border-bottom-color: var(--muted-dim); }
 .sml-err { grid-column: 1 / -1; color: var(--muted); font-size: 11px; }
+/* tue-0: NEW MOCK DRAFT - the card that replaced the setup form. Two doors
+   (NFL, NBA) to the public mocks, the tracker link, the record line above. */
+.sim-newmock { margin: 8px 0 18px; }
+.sim-newmock-sub { font-size: 14px; line-height: 1.5; color: var(--paper-dim); margin: 6px 0 0; max-width: 560px; }
+.sim-newmock-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.sim-newmock-row .sim-cta { margin-top: 16px; min-width: 120px; text-align: center; }
+.sim-cta--ghost { background: transparent; color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--volt); }
+.sim-newmock .sim-trklink { display: inline-block; margin-top: 18px; font-size: 12px; letter-spacing: .04em; color: var(--paper-dim); }
 .sim-cta-note { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .04em; color: var(--muted); margin-top: 12px; }
 
 .sim-used { font-size: 11px; letter-spacing: .06em; color: var(--muted); margin: 4px 0 20px; }
@@ -1420,3 +1428,4 @@
     background: var(--tok-page);
   }
 }
+
