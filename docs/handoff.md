@@ -1,6 +1,12 @@
-# Handoff - droplet relay tue-0, Mon 12 Oct 2026 (clock ~16:30Z)
+# Handoff - droplet relay mon-7, Mon 12 Oct 2026 (clock ~19:00Z)
 
-## Live (PROD) - main = 93a36a4, Vercel + poller at 93a36a4
+## Live (PROD) - main = see git log; Vercel auto-deploys web; poller unchanged (93a36a4)
+- TOP 25 (mon-7, merge b6ab7f7): the Top 25 chip (Scores, CFB days only) already existed; it now REMEMBERS
+  the choice (cookie sv_top25, URL wins, off-tap clears it; lib/scores/top25Memory.js). AP rank badges
+  were already on Scores cards and the CFB game header (as '#5' in the meta line); added: AP badge on
+  the front-page CFB band slate rows (SlateRow ranks prop). Not visible signed-out on PROD, so unseen live.
+  Preview-verified by curl (cookie narrows 52->13 cards, ?top25=0 overrides, no-CFB day hides chip).
+  No screenshot: no browser on the droplet - take it on the Mac. 'Lobby strip' was read as that band.
 - NEW MOCKS START ON /mock/nfl (tue-0, 889d8d9): Play-tab practice tile, You tab, Draft again, the /nfl
   card CTA (was a 404 to /sim/setup), /sim?preset= (redirect). /sim's setup form is replaced by a "New
   mock draft" card (NFL / NBA); /sim keeps Resume, leagues + keepers, join, tracker, history, record
