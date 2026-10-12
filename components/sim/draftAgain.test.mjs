@@ -109,6 +109,10 @@ test('A STALE ID DEGRADES TO TODAY, not to an empty form', () => {
 test('THE LINK AND THE FORM AGREE - the Read only ever names a PRESET', () => {
   // The other half, pinned where it is emitted: a custom or imported-league
   // config is not a row this deck can select, so it must not travel.
+  // tue-0: a new mock starts on /mock/nfl; "Draft again" goes there, and /sim
+  // sends any old ?preset= link on (app/sim/page.js).
   const src = readFileSync(path.join(REPO, 'components/sim/DraftResults.js'), 'utf8');
-  assert.match(src, /config\.is_preset \? `\/sim\?preset=\$\{config\.id\}` : '\/sim'/);
+  assert.match(src, /href="\/mock\/nfl">Draft again</);
+  const page = readFileSync(path.join(REPO, 'app/sim/page.js'), 'utf8');
+  assert.match(page, /if \(params\.preset != null\) redirect\('\/mock\/nfl'\);/);
 });

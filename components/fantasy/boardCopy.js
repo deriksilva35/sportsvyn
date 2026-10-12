@@ -122,7 +122,7 @@ export const CARD = {
   all: 'Full board',
   cta: 'Mock draft',
   href: '/nfl/fantasy',
-  ctaHref: '/sim/setup',
+  ctaHref: '/mock/nfl', // tue-0: was /sim/setup, a route that never existed (404)
   tabs: { rising: 'Rising', falling: 'Falling', climbing: 'Climbing' },
   colAdp: 'ADP',
   col3d: '3d',

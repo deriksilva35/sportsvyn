@@ -110,3 +110,7 @@
 .mnb-attr .sim-foot { margin: 8px 16px 24px; padding-top: 12px; border-top: 1px solid var(--tok-line); font-size: 11px; color: var(--tok-muted); text-align: center; }
 .mnb-attr .sim-foot a { color: var(--tok-ink); text-decoration: underline; }
 .mnb-attr .sim-foot-noaff { margin-top: 6px; font-size: 10px; }
+
+/* tue-0: the NFL mock's "Full auto" checkbox (spans the setup grid). */
+.mnb-check { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.35; cursor: pointer; }
+.mnb-check input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--tok-primary); flex: none; }

@@ -248,7 +248,10 @@ test('THE PRACTICE PAGE NO LONGER STARTS A TRACKER - two flows, two homes', () =
   const form = readFileSync(path.join(REPO, 'components/sim/StartForm.js'), 'utf8');
   assert.match(form, /Track a real draft with The Tracker/, 'one link out is enough');
   assert.match(form, /trackerHandoffHref\(config\)/, 'and it packs the live config');
-  assert.equal(/sim-trklink/.test(s), false, 'the static page link must not double it');
+  // tue-0: the setup form left /sim, so the page carries the one tracker link
+  // itself - static, because there is no live config on this page to pack.
+  assert.equal(/<StartForm/.test(s), false, 'no setup form on /sim');
+  assert.equal((s.match(/href="\/sim\/tracker"/g) ?? []).length, 1, 'one tracker link');
 });
 
 test('the BOARD grid scrolls sideways with the same fade affordance', () => {

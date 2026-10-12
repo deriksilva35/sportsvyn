@@ -23,7 +23,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   createMock, runBots, applyPick, legalFor, onClock, isDone, nextPick, roundOf, seatAt, totalPicks,
-  autoPickOnExpiry, autoDraftRest, keyOf, mustStartNow,
+  autoPickOnExpiry, autoDraftRest, keyOf, mustStartNow, stepOne,
 } from '@/lib/mockNba/draft';
 import * as KIT from '@/lib/mockNfl/roster';
 import { SCORING_PRESETS, STATS, fppgOf } from '@/lib/mockNfl/scoring';
@@ -134,7 +134,9 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
     const seat = settings.seat === 'random' ? Math.floor(Math.random() * settings.teams) : Number(settings.seat) - 1;
     const seed = Math.floor(Math.random() * 2 ** 32);
     recorded.current = false;
-    setSt(runBots(createMock(ranked, { userSeat: seat, seed, teams: settings.teams, slots, botKey: adpOn && !inSeason ? 'adp' : 'svp', kit: KIT })));
+    const fresh = createMock(ranked, { userSeat: seat, seed, teams: settings.teams, slots, botKey: adpOn && !inSeason ? 'adp' : 'svp', kit: KIT });
+    // FULL AUTO (tue-0) starts at pick 1 and plays itself, a pick at a time (below).
+    setSt(settings.fullAuto ? fresh : runBots(fresh));
     setArmed(null); setTab('players'); setShared(null); setCard(null); setSavedNote(null);
   }
 
@@ -150,7 +152,16 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
 
   // THE PICK CLOCK: counts down on your pick only; at zero your pick is made for
   // you. `left` is keyed to the pick it counts for, so a new pick starts full.
-  const clockOn = Boolean(yourTurn && settings.clock);
+  // FULL AUTO (tue-0): every pick is made for the reader too - the room steps one
+  // pick at a time so it can be watched, straight through to the result.
+  const watching = Boolean(st && !done && settings.fullAuto);
+  useEffect(() => {
+    if (!watching) return undefined;
+    const t = setTimeout(() => setSt((x) => stepOne(x)), 90);
+    return () => clearTimeout(t);
+  }, [watching, n]);
+
+  const clockOn = Boolean(yourTurn && settings.clock && !settings.fullAuto);
   useEffect(() => {
     if (!clockOn) return undefined;
     const ends = Date.now() + settings.clock * 1000;
@@ -213,6 +224,10 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
           <Select label="Pick clock" name="clock" value={settings.clock} onChange={(v) => set({ clock: Number(v) })}>
             {CLOCKS.map((c) => <option key={c} value={c}>{c ? `${c} seconds` : 'Off'}</option>)}
           </Select>
+          <label className="mnb-check" data-mock-nfl-fullauto>
+            <input type="checkbox" checked={settings.fullAuto} onChange={(e) => set({ fullAuto: e.target.checked })} />
+            <span><b>Full auto</b> - every pick is made for you; watch the room to the result.</span>
+          </label>
           <Select label="Scoring" name="scoring" value={settings.scoring} onChange={(v) => set({ scoring: v })}>
             {Object.entries(SCORING_PRESETS).map(([k, p]) => <option key={k} value={k}>{p.label}</option>)}
             <option value="custom">Custom</option>
@@ -373,7 +388,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
     <section className="mnb-room" data-mock-nfl-room>
       <div className="dgm-hd">
         <div className="dgm-eyebrow">NFL MOCK DRAFT · {teams} TEAMS · {rounds} ROUNDS</div>
-        <h1 className="dgm-hd-title" data-room-header>Round {roundOf(n, teams)} of {rounds} · {yourTurn ? 'your pick' : 'on deck'}</h1>
+        <h1 className="dgm-hd-title" data-room-header>Round {roundOf(n, teams)} of {rounds} · {watching ? 'full auto' : yourTurn ? 'your pick' : 'on deck'}</h1>
         <div className="dgm-hd-sub">
           Pick {n} of {total}
           {secs != null && <span className={`mnb-clock n${secs <= 10 ? ' mnb-clock--low' : ''}`} data-mock-nfl-clock> · {clockText(secs)}</span>}
@@ -422,7 +437,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
                   <button type="button" className="dgm-who mnb-whobtn" onClick={() => setCard(p.id)} data-mock-nfl-row>
                     <b>{p.name} <OutBadge p={p} /></b><small>{sub(p, adpOn, adpWord)}</small>
                   </button>
-                  <button type="button" className={`dgm-pill dgm-pill--sm${isArmed ? ' dgm-pill--lime' : ''}`} disabled={!yourTurn || !ok} onClick={() => tap(p)}>
+                  <button type="button" className={`dgm-pill dgm-pill--sm${isArmed ? ' dgm-pill--lime' : ''}`} disabled={!yourTurn || !ok || settings.fullAuto} onClick={() => tap(p)}>
                     {isArmed ? 'Confirm' : 'Draft'}
                   </button>
                 </li>
@@ -468,7 +483,7 @@ export default function MockNflDraft({ pool, builtAt, adpAsOf = null, adpOn = tr
       )}
 
       <div className="dgm-actions mnb-finish">
-        <button type="button" className="dgm-pill dgm-pill--lime" onClick={() => { setSt((s) => autoDraftRest(s)); setArmed(null); setCard(null); }} data-mock-nfl-autodraft>Auto-draft the rest</button>
+        <button type="button" className="dgm-pill dgm-pill--lime" onClick={() => { setSt((s) => autoDraftRest(s)); setArmed(null); setCard(null); }} data-mock-nfl-autodraft>{settings.fullAuto ? 'Skip to the result' : 'Auto-draft the rest'}</button>
         <button type="button" className="dgm-pill dgm-pill--outline" onClick={() => setSt(null)} data-mock-nfl-restart>Restart</button>
       </div>
       {sheet}

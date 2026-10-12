@@ -212,7 +212,7 @@ function Drafts({ drafts }) {
   if (!groups.length) return null;
   return (
     <>
-      <SectionHead title="Your drafts" href="/sim" label="Mock draft →" />
+      <SectionHead title="Your drafts" href="/mock/nfl" label="Mock draft →" />
       <div className="yu-card" data-section="drafts">
         {groups.map(([k, t, rows]) => (
           <div className="yu-dg" key={k} data-group={k}>

@@ -31,7 +31,7 @@ test('NO OPEN DRAFT RENDERS NOTHING - the deck just moves up', () => {
 
 test('IT SITS ABOVE THE DECK, because a room you are in outranks starting another', () => {
   const at = (n) => { const i = lobby.indexOf(n); assert.ok(i > -1, `${n} must be present`); return i; };
-  assert.ok(at('<LiveDraftCard') < at('<StartForm'), 'card before the preset deck');
+  assert.ok(at('<LiveDraftCard') < at('data-sim-newmock'), 'card before the new-mock card (tue-0)');
 });
 
 test('the read rides the existing round trip, not a fourth query', () => {
@@ -45,7 +45,7 @@ test('the read rides the existing round trip, not a fourth query', () => {
   assert.ok(m, 'one Promise.all destructure on the lobby');
   const names = m[1].split(',').map((x) => x.trim());
   assert.ok(names.includes('openDraft'), 'openDraft is a member of it');
-  assert.match(m[2], /getPresets\(\), getDraftsUsed\(userId\), isMember\(userId\), getOpenSimDraft\(userId\),/);
+  assert.match(m[2], /isMember\(userId\), getOpenSimDraft\(userId\),/);
   assert.equal((lobby.match(/await getOpenSimDraft\(/g) ?? []).length, 0, 'never awaited on its own');
 });
 
