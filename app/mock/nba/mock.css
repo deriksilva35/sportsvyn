@@ -101,3 +101,12 @@
 .mnb-lib-form .mnb-search { flex: 1 1 180px; width: auto; }
 .mnb-lib-note { margin: 6px 0 0; font-size: 13px; color: var(--tok-muted); }
 .mnb-link:disabled { opacity: .45; cursor: default; }
+
+/* mon-3: the NFL mock - its player card's two-season table, and the ADP source's
+   attribution footer (a licence condition, components/sim/Attribution.js). */
+.mnb-seasons { margin: 0 0 4px; }
+.mnb-seasons th, .mnb-seasons td { text-align: right; }
+.mnb-seasons th:first-child { text-align: left; }
+.mnb-attr .sim-foot { margin: 8px 16px 24px; padding-top: 12px; border-top: 1px solid var(--tok-line); font-size: 11px; color: var(--tok-muted); text-align: center; }
+.mnb-attr .sim-foot a { color: var(--tok-ink); text-decoration: underline; }
+.mnb-attr .sim-foot-noaff { margin-top: 6px; font-size: 10px; }

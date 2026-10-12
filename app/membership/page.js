@@ -68,7 +68,7 @@ export default async function MembershipPage({ searchParams }) {
           also getting.
         </p>
         <div className="mbr-links">
-          <a className="mbr-back" href="/sim">Start a mock draft &rarr;</a>
+          <a className="mbr-back" href="/mock/nfl">Start a mock draft &rarr;</a>
           <a className="mbr-back" href="/games">See the games &rarr;</a>
         </div>
       </main>

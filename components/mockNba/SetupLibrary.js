@@ -9,24 +9,25 @@
 // actions in app/actions/mockNba.js; refusals are shown in words (REASON_COPY).
 
 import { useState } from 'react';
-import { applyChoice, currentChoice, PRESET_SETUPS, MAX_SETUPS as MAX, NAME_MAX, REASON_COPY as COPY } from '@/lib/mockNba/setupChoice';
+import { applyChoice, currentChoice, SPORTS, MAX_SETUPS as MAX, NAME_MAX, REASON_COPY as COPY } from '@/lib/mockNba/setupChoice';
 import { createMockSetupAction, updateMockSetupAction, deleteMockSetupAction } from '@/app/actions/mockNba';
 
 const say = (r) => COPY[r?.reason] ?? 'Could not save. Try again.';
 
-export default function SetupLibrary({ settings, onApply, signedIn, initialSetups = [] }) {
+export default function SetupLibrary({ settings, onApply, signedIn, initialSetups = [], sport = 'nba' }) {
+  const PRESET_SETUPS = (SPORTS[sport] ?? SPORTS.nba).presets;
   const [setups, setSetups] = useState(initialSetups);
   const [chosen, setChosen] = useState(null);
   const [mode, setMode] = useState(null); // 'save' | 'rename' | 'delete'
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
-  const cur = currentChoice(settings, setups, chosen);
+  const cur = currentChoice(settings, setups, chosen, sport);
   const savedOne = cur.savedId != null ? setups.find((x) => x.id === cur.savedId) : null;
 
   function choose(v) {
     setChosen(v); setMode(null); setMsg(null);
-    if (v !== 'custom') onApply(applyChoice(settings, v, setups));
+    if (v !== 'custom') onApply(applyChoice(settings, v, setups, sport));
   }
   const upsert = (s) => setSetups((list) => [s, ...list.filter((x) => x.id !== s.id)]);
 
@@ -38,10 +39,10 @@ export default function SetupLibrary({ settings, onApply, signedIn, initialSetup
     } catch { setMsg('Could not save. Try again.'); }
     setBusy(false);
   }
-  const saveAs = () => run(() => createMockSetupAction(name, settings), (r) => { upsert(r.setup); setChosen(`saved:${r.setup.id}`); setMsg(`Saved "${r.setup.name}".`); });
-  const overwrite = () => run(() => updateMockSetupAction(savedOne.id, { settings }), (r) => { upsert(r.setup); setMsg(`Updated "${r.setup.name}".`); });
-  const rename = () => run(() => updateMockSetupAction(savedOne.id, { name }), (r) => { upsert(r.setup); setMsg(`Renamed to "${r.setup.name}".`); });
-  const remove = () => run(() => deleteMockSetupAction(savedOne.id), () => {
+  const saveAs = () => run(() => createMockSetupAction(name, settings, sport), (r) => { upsert(r.setup); setChosen(`saved:${r.setup.id}`); setMsg(`Saved "${r.setup.name}".`); });
+  const overwrite = () => run(() => updateMockSetupAction(savedOne.id, { settings }, sport), (r) => { upsert(r.setup); setMsg(`Updated "${r.setup.name}".`); });
+  const rename = () => run(() => updateMockSetupAction(savedOne.id, { name }, sport), (r) => { upsert(r.setup); setMsg(`Renamed to "${r.setup.name}".`); });
+  const remove = () => run(() => deleteMockSetupAction(savedOne.id, sport), () => {
     setSetups((list) => list.filter((x) => x.id !== savedOne.id)); setChosen(null); setMsg(`Deleted "${savedOne.name}".`);
   });
 
@@ -64,7 +65,7 @@ export default function SetupLibrary({ settings, onApply, signedIn, initialSetup
 
       {!signedIn ? (
         <p className="mnb-lib-note" data-mock-nba-setups-guest>
-          <a className="mnb-link" href={`/signin?callbackUrl=${encodeURIComponent('/mock/nba')}`}>Sign in to save your league setup</a>
+          <a className="mnb-link" href={`/signin?callbackUrl=${encodeURIComponent(`/mock/${sport}`)}`}>Sign in to save your league setup</a>
         </p>
       ) : (
         <>

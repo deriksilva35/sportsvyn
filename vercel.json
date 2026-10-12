@@ -71,6 +71,10 @@
       "schedule": "41 10 * * *"
     },
     {
+      "path": "/api/cron/nfl-mock-pool",
+      "schedule": "51 12 * * *"
+    },
+    {
       "path": "/api/cron/pickem-board",
       "schedule": "23 13 * * *"
     },

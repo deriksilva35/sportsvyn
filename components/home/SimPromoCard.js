@@ -7,7 +7,7 @@ import { SIM_PROMO } from './simPromoCopy';
 
 export default function SimPromoCard() {
   return (
-    <a className="dc-sim-promo" href="/sim" data-surface="ink">
+    <a className="dc-sim-promo" href="/mock/nfl" data-surface="ink">
       <div className="dc-sim-kicker">{SIM_PROMO.kicker}</div>
       <div className="dc-sim-head">{SIM_PROMO.headline}</div>
       <p className="dc-sim-line">{SIM_PROMO.line}</p>
