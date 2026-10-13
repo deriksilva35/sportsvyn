@@ -27,23 +27,22 @@
 ## Tue 13 Oct additions (mon-8, mon-9, tue-2)
 - CFB SV25 week 7 is Derik's list: content/power/cfb-2026-w7.md + its EDITOR_FILES line (lib/rankings/editorFiles.js). Each new week: write cfb-2026-w<N>.md, add the line, publish('cfb').
 - CFB 25 REMINDER (ef1c9a7): Mon 13:00Z + 15:30Z retry (/api/cron/cfb-25-reminder[-late]) emails "CFB 25 due - week N" if the file is missing; once per week via sync_runs. Dry run: node scripts/cfb25-reminder.mjs [--prod] [--week N]. First live send Mon 19 Oct, UNVERIFIED.
-- CREW STATS (tue-4/5, 6044e2d): migration 143 = schema crew_stats (11 *_v views); crew_reader reads views only (users, sessions, daily_guest_runs, daily_board_runs revoked). docs/crew/sportsvyn-stats reads crew_stats.*_v. Re-grant: scripts/crew-reader-grants.mjs --prod --apply (no password needed for the existing role). OPEN: one run AS crew_reader on PROD (needs its password; owner cannot SET ROLE).
+- CREW STATS (tue-4/5, 6044e2d): migration 143 = schema crew_stats (11 *_v views); crew_reader reads views only (also revoked: users, sessions, daily_guest_runs, daily_board_runs, revenuecat_events, memberships, push_sends, draft_config_invites - tue-6, 245e8b5). docs/crew/sportsvyn-stats reads crew_stats.*_v. Re-grant: scripts/crew-reader-grants.mjs --prod --apply (no password needed for the existing role). OPEN: one run AS crew_reader on PROD (needs its password; owner cannot SET ROLE).
 
-## TUE 13 OCT - still owed (the games had not been played when tue-1 ran)
-1. Sunday review of the 14 Game Draft boards: all settled? spot-check 3 rooms (best 3, no-shows
-   0); app_errors since Sat 10 Oct 21:52Z.
-2. Weekly Draft week 6 settled clean.
-4. docs/launch-oct20.md checks 1-5 after the 13:23Z board job.
+## TUE 13 OCT - checked (tue-1, 18:30-22:00Z)
+- Game Drafts: boards 58-71 (14, incl. Mon night 71) all settled, none void, 10 entries all scored; 10/10 rooms
+  recomputed: counted = best 3, no-shows (8) score 0. Board 78 (Thu 15 Oct) open. app_errors since Sat: 0 rows.
+- Weekly Draft + Weekly wk5 settled clean (4/4 scored each). Wk6 boards open (draft 4 entries, weekly 3).
+- launch-oct20 checks 1-4 PASS (13:23:43Z, nfl wk6 14 games #80, cfb wk42 16 games #79 vs 15 planned, REGULAR,
+  lines frozen, 0 TBD, locks = last kickoff). Check 5: pages 200, 'straight up' copy, no 'Time TBD'/'12:00 AM'.
+- Lock-in since deploy: guest 3 runs/3 with steps/1 finished/1 claimed; signed-in 2/1/2. Mocks since Mon: 0.
+- NOT DONE: room render + screenshot of the new draft look (needs sign-in + a browser: do it on the Mac);
+  409 counts and share-card failures (Vercel runtime logs returned nothing for the window).
 
 ## Needs Derik
-- Leagues (sun-4 report):
-  - P1 total points: every drafted player, or the best N per week?
-  - Bots in 4-7 team leagues?
-  - LIVE sync: polling or SSE?
-  - K/DST in the presets?
-  - Sizes: P1 22-28 d; P2 25-35 d; P3 12-18 d.
+- Leagues (sun-4 report): P1 total points = every drafted player or best N/week? bots in 4-7 team leagues? LIVE sync polling or SSE? K/DST in presets? sizes P1 22-28 d, P2 25-35 d, P3 12-18 d.
 - From wed-7 (PROD writes): the 2 unclaimed guest rows; one real magic-link sign-in. Plus 3 mon-4/5 verification guest runs (unclaimed, on no board).
-- From wed-4: Neon "ci" key, Cloudflare token, PROD crew_reader role.
+- From wed-4: Neon "ci" key, Cloudflare token. crew_reader exists on PROD; a run AS it needs its password (owner cannot SET ROLE).
 
 ## Queue
 1. 20 Oct: launch-oct20.md checks 6-13. NBA Game Drafts stay OFF until DRAFT_GAME_NBA flips.
@@ -59,4 +58,4 @@
   the orphan sweep lists 3,779 old test users. Listed only, nothing deleted (list + undo first).
 
 ## Next step
-When week 6 opens: open a weekly room on PROD and confirm the draft look. Tue 13 Oct: items 1, 2, 4.
+Open a weekly wk6 room signed in (Mac) and confirm the draft look. 20 Oct: launch-oct20 checks 6-13.
