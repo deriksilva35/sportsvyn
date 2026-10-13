@@ -2,7 +2,8 @@
 # sportsvyn-stats [since-iso]  - Pulse usage numbers, key=value only, no PII/money.
 # Forced command for crew-sportsvyn. Read-only: every query runs after
 # SET default_transaction_read_only = on, and the role should be read-only too.
-# Verified against the live PROD schema on 13 Oct 2026 (tue-2).
+# Verified against the live PROD schema on 13 Oct 2026 (tue-2). Reads ONLY the
+# crew_stats.*_v views (migration 143): crew_reader has no grant on the base tables.
 #
 # DEFINITIONS (house accounts, users.is_house, are excluded everywhere)
 #   new_users          users created in the window
@@ -52,33 +53,33 @@ q() {
 }
 echo "project=sportsvyn"; echo "since=$SINCE"; echo "until=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-q new_users "SELECT count(*) FROM users WHERE created_at >= :'since'::timestamptz AND NOT coalesce(is_house,false)"
-q seen_users "SELECT count(*) FROM users WHERE last_seen_at >= :'since'::timestamptz AND NOT coalesce(is_house,false)"
-q active_users "SELECT count(DISTINCT a.uid) FROM (SELECT r.user_id AS uid FROM daily_board_runs r WHERE r.started_at >= :'since'::timestamptz UNION SELECT e.user_id FROM contest_entries e WHERE e.created_at >= :'since'::timestamptz) a JOIN users u ON u.id = a.uid WHERE NOT coalesce(u.is_house,false)"
-q sessions "SELECT count(*) FROM sessions WHERE expires >= :'since'::timestamptz + interval '30 days'"
-q guest_runs "SELECT count(*) FROM daily_guest_runs WHERE started_at >= :'since'::timestamptz"
-q guest_claims "SELECT count(*) FROM daily_guest_runs WHERE claimed_at >= :'since'::timestamptz"
+q new_users "SELECT count(*) FROM crew_stats.users_v WHERE created_at >= :'since'::timestamptz AND NOT coalesce(is_house,false)"
+q seen_users "SELECT count(*) FROM crew_stats.users_v WHERE last_seen_at >= :'since'::timestamptz AND NOT coalesce(is_house,false)"
+q active_users "SELECT count(DISTINCT a.uid) FROM (SELECT r.user_id AS uid FROM crew_stats.daily_board_runs_v r WHERE r.started_at >= :'since'::timestamptz UNION SELECT e.user_id FROM crew_stats.contest_entries_v e WHERE e.created_at >= :'since'::timestamptz) a JOIN crew_stats.users_v u ON u.id = a.uid WHERE NOT coalesce(u.is_house,false)"
+q sessions "SELECT count(*) FROM crew_stats.sessions_v WHERE expires >= :'since'::timestamptz + interval '30 days'"
+q guest_runs "SELECT count(*) FROM crew_stats.daily_guest_runs_v WHERE started_at >= :'since'::timestamptz"
+q guest_claims "SELECT count(*) FROM crew_stats.daily_guest_runs_v WHERE claimed_at >= :'since'::timestamptz"
 
-q daily_played "SELECT (SELECT count(*) FROM daily_board_runs r JOIN users u ON u.id=r.user_id WHERE r.started_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)) + (SELECT count(*) FROM daily_guest_runs WHERE started_at >= :'since'::timestamptz)"
-q daily_finish_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE picks IS NOT NULL)/NULLIF(count(*),0),1),0) FROM (SELECT r.picks FROM daily_board_runs r JOIN users u ON u.id=r.user_id WHERE r.started_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false) UNION ALL SELECT picks FROM daily_guest_runs WHERE started_at >= :'since'::timestamptz) x"
-q daily_streak3_users "WITH played AS (SELECT r.user_id, b.edition_date FROM daily_board_runs r JOIN daily_boards b ON b.id = r.board_id JOIN users u ON u.id = r.user_id WHERE r.picks IS NOT NULL AND NOT coalesce(u.is_house,false) GROUP BY r.user_id, b.edition_date), islands AS (SELECT user_id, edition_date, edition_date - (row_number() OVER (PARTITION BY user_id ORDER BY edition_date))::int AS grp FROM played), runs AS (SELECT user_id, count(*) AS len, max(edition_date) AS last_date FROM islands GROUP BY user_id, grp) SELECT count(DISTINCT user_id) FROM runs WHERE len >= 3 AND last_date >= (now() AT TIME ZONE 'America/New_York')::date - 1"
+q daily_played "SELECT (SELECT count(*) FROM crew_stats.daily_board_runs_v r JOIN crew_stats.users_v u ON u.id=r.user_id WHERE r.started_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)) + (SELECT count(*) FROM crew_stats.daily_guest_runs_v WHERE started_at >= :'since'::timestamptz)"
+q daily_finish_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE finished)/NULLIF(count(*),0),1),0) FROM (SELECT r.finished FROM crew_stats.daily_board_runs_v r JOIN crew_stats.users_v u ON u.id=r.user_id WHERE r.started_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false) UNION ALL SELECT finished FROM crew_stats.daily_guest_runs_v WHERE started_at >= :'since'::timestamptz) x"
+q daily_streak3_users "WITH played AS (SELECT r.user_id, b.edition_date FROM crew_stats.daily_board_runs_v r JOIN crew_stats.daily_boards_v b ON b.id = r.board_id JOIN crew_stats.users_v u ON u.id = r.user_id WHERE r.finished AND NOT coalesce(u.is_house,false) GROUP BY r.user_id, b.edition_date), islands AS (SELECT user_id, edition_date, edition_date - (row_number() OVER (PARTITION BY user_id ORDER BY edition_date))::int AS grp FROM played), runs AS (SELECT user_id, count(*) AS len, max(edition_date) AS last_date FROM islands GROUP BY user_id, grp) SELECT count(DISTINCT user_id) FROM runs WHERE len >= 3 AND last_date >= (now() AT TIME ZONE 'America/New_York')::date - 1"
 
-q pickem_played "SELECT count(DISTINCT e.user_id) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='pickem' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
-q pickem_complete_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE (SELECT count(*) FROM jsonb_object_keys(e.lineup)) >= jsonb_array_length(c.board))/NULLIF(count(*),0),1),0) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='pickem' AND jsonb_typeof(c.board)='array' AND jsonb_typeof(e.lineup)='object' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
-q weekly_played "SELECT count(DISTINCT e.user_id) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='weekly' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
-q weekly_complete_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE (SELECT count(*) FROM jsonb_each(e.lineup) j WHERE j.value <> 'null'::jsonb) >= 6)/NULLIF(count(*),0),1),0) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='weekly' AND jsonb_typeof(e.lineup)='object' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
-q draft_played "SELECT count(DISTINCT e.user_id) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='draft' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
-q draft_complete_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE (SELECT count(*) FROM jsonb_each(e.lineup) j WHERE j.value <> 'null'::jsonb) >= 6)/NULLIF(count(*),0),1),0) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='draft' AND jsonb_typeof(e.lineup)='object' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
-q gamedraft_played "SELECT count(DISTINCT e.user_id) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='draft_game' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
-q gamedraft_avg_pts "SELECT coalesce(round(avg(e.score)::numeric,1),0) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='draft_game' AND e.score IS NOT NULL AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
-q other_contest_played "SELECT count(DISTINCT e.user_id) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type NOT IN ('pickem','weekly','draft','draft_game') AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q pickem_played "SELECT count(DISTINCT e.user_id) FROM crew_stats.contest_entries_v e JOIN crew_stats.contests_v c ON c.id=e.contest_id JOIN crew_stats.users_v u ON u.id=e.user_id WHERE c.game_type='pickem' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q pickem_complete_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE e.picks_n >= c.board_len)/NULLIF(count(*),0),1),0) FROM crew_stats.contest_entries_v e JOIN crew_stats.contests_v c ON c.id=e.contest_id JOIN crew_stats.users_v u ON u.id=e.user_id WHERE c.game_type='pickem' AND c.board_len IS NOT NULL AND e.picks_n IS NOT NULL AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q weekly_played "SELECT count(DISTINCT e.user_id) FROM crew_stats.contest_entries_v e JOIN crew_stats.contests_v c ON c.id=e.contest_id JOIN crew_stats.users_v u ON u.id=e.user_id WHERE c.game_type='weekly' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q weekly_complete_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE e.slots_filled >= 6)/NULLIF(count(*),0),1),0) FROM crew_stats.contest_entries_v e JOIN crew_stats.contests_v c ON c.id=e.contest_id JOIN crew_stats.users_v u ON u.id=e.user_id WHERE c.game_type='weekly' AND e.slots_filled IS NOT NULL AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q draft_played "SELECT count(DISTINCT e.user_id) FROM crew_stats.contest_entries_v e JOIN crew_stats.contests_v c ON c.id=e.contest_id JOIN crew_stats.users_v u ON u.id=e.user_id WHERE c.game_type='draft' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q draft_complete_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE e.slots_filled >= 6)/NULLIF(count(*),0),1),0) FROM crew_stats.contest_entries_v e JOIN crew_stats.contests_v c ON c.id=e.contest_id JOIN crew_stats.users_v u ON u.id=e.user_id WHERE c.game_type='draft' AND e.slots_filled IS NOT NULL AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q gamedraft_played "SELECT count(DISTINCT e.user_id) FROM crew_stats.contest_entries_v e JOIN crew_stats.contests_v c ON c.id=e.contest_id JOIN crew_stats.users_v u ON u.id=e.user_id WHERE c.game_type='draft_game' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q gamedraft_avg_pts "SELECT coalesce(round(avg(e.score)::numeric,1),0) FROM crew_stats.contest_entries_v e JOIN crew_stats.contests_v c ON c.id=e.contest_id JOIN crew_stats.users_v u ON u.id=e.user_id WHERE c.game_type='draft_game' AND e.score IS NOT NULL AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q other_contest_played "SELECT count(DISTINCT e.user_id) FROM crew_stats.contest_entries_v e JOIN crew_stats.contests_v c ON c.id=e.contest_id JOIN crew_stats.users_v u ON u.id=e.user_id WHERE c.game_type NOT IN ('pickem','weekly','draft','draft_game') AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
 
-q mock_nfl_played "SELECT count(*) FROM nba_mock_drafts WHERE sport='nfl' AND created_at >= :'since'::timestamptz"
-q mock_nba_played "SELECT count(*) FROM nba_mock_drafts WHERE sport='nba' AND created_at >= :'since'::timestamptz"
-q mock_a_grade_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE grade IN ('A+','A','A-'))/NULLIF(count(*),0),1),0) FROM nba_mock_drafts WHERE created_at >= :'since'::timestamptz"
-q mock_setups_saved "SELECT count(*) FROM nba_mock_setups WHERE created_at >= :'since'::timestamptz"
+q mock_nfl_played "SELECT count(*) FROM crew_stats.nba_mock_drafts_v WHERE sport='nfl' AND created_at >= :'since'::timestamptz"
+q mock_nba_played "SELECT count(*) FROM crew_stats.nba_mock_drafts_v WHERE sport='nba' AND created_at >= :'since'::timestamptz"
+q mock_a_grade_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE grade IN ('A+','A','A-'))/NULLIF(count(*),0),1),0) FROM crew_stats.nba_mock_drafts_v WHERE created_at >= :'since'::timestamptz"
+q mock_setups_saved "SELECT count(*) FROM crew_stats.nba_mock_setups_v WHERE created_at >= :'since'::timestamptz"
 
-q leagues_created "SELECT count(*) FROM player_leagues WHERE created_at >= :'since'::timestamptz"
-q leagues_avg_members "SELECT coalesce(round(avg(n)::numeric,1),0) FROM (SELECT l.id, count(m.league_id) AS n FROM player_leagues l LEFT JOIN league_members m ON m.league_id=l.id WHERE l.created_at >= :'since'::timestamptz GROUP BY l.id) x"
+q leagues_created "SELECT count(*) FROM crew_stats.player_leagues_v WHERE created_at >= :'since'::timestamptz"
+q leagues_avg_members "SELECT coalesce(round(avg(n)::numeric,1),0) FROM (SELECT l.id, count(m.league_id) AS n FROM crew_stats.player_leagues_v l LEFT JOIN crew_stats.league_members_v m ON m.league_id=l.id WHERE l.created_at >= :'since'::timestamptz GROUP BY l.id) x"
 echo "errors=$ERRORS"
 exit 0
