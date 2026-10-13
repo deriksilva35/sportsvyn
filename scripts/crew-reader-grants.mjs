@@ -14,6 +14,15 @@
 // auth/session/OTP/token tables whole, and the email/identity/token columns
 // of tables the crew otherwise needs (a column grant lists every other column).
 //
+// STATS SURFACE (tue-4, migration 143): the Pulse stats script reads ONLY the views in
+// schema crew_stats (users_v, sessions_v, ... - no email, token, IP or payload
+// columns). The base tables behind them (users, sessions, daily_guest_runs,
+// daily_board_runs) are revoked from crew_reader and never re-granted; every run
+// revokes crew_stats and re-grants USAGE + SELECT on whatever views exist.
+// A password is set only when the role is NEW or CREW_READER_PASSWORD is given: an
+// existing role keeps its password (the crew's stored secret) when the variable is
+// absent.
+//
 // RE-RUN after a migration adds a table the Watcher should read.
 
 import { neon } from '@neondatabase/serverless';
@@ -28,6 +37,8 @@ export const EXCLUDED_TABLES = Object.freeze([
   'email_signups', 'device_tokens', 'live_activities',
   // Guest runs are read by lib/daily/guestRuns.js alone (its guard test).
   'daily_guest_runs',
+  // The stats script reads these through crew_stats views only (migration 143).
+  'users', 'daily_board_runs',
 ]);
 
 /** Columns withheld from tables the crew does read. */
@@ -38,6 +49,16 @@ export const EXCLUDED_COLUMNS = Object.freeze({
   memberships: ['stripe_customer_id', 'stripe_subscription_id'],
   push_sends: ['device_token'],
 });
+
+/** PURE. The crew_stats surface: fail closed, then USAGE + SELECT on the views. */
+export function statsGrants(schemaExists) {
+  if (!schemaExists) return [];
+  return [
+    `REVOKE ALL ON ALL TABLES IN SCHEMA crew_stats FROM ${ROLE}`,
+    `GRANT USAGE ON SCHEMA crew_stats TO ${ROLE}`,
+    `GRANT SELECT ON ALL TABLES IN SCHEMA crew_stats TO ${ROLE}`,
+  ];
+}
 
 const q = (id) => `"${String(id).replace(/"/g, '""')}"`;
 
@@ -74,12 +95,15 @@ async function main() {
   if (!APPLY) return;
 
   const pw = process.env.CREW_READER_PASSWORD;
-  if (!pw || pw.length < 24) throw new Error('CREW_READER_PASSWORD (24+ chars) is not set');
   const db = (await sql`SELECT current_database() AS d`)[0].d;
   const [exists] = await sql`SELECT 1 AS x FROM pg_roles WHERE rolname = ${ROLE}`;
-  const lit = `'${pw.replace(/'/g, "''")}'`;
+  if ((!exists && !pw) || (pw && pw.length < 24)) throw new Error('CREW_READER_PASSWORD (24+ chars) is not set');
+  const lit = pw ? `'${pw.replace(/'/g, "''")}'` : null;
+  const [hasStats] = await sql`SELECT 1 AS x FROM pg_namespace WHERE nspname = 'crew_stats'`;
   const stmts = [
-    exists ? `ALTER ROLE ${ROLE} WITH LOGIN PASSWORD ${lit}` : `CREATE ROLE ${ROLE} WITH LOGIN NOINHERIT PASSWORD ${lit}`,
+    ...(exists
+      ? [pw ? `ALTER ROLE ${ROLE} WITH LOGIN PASSWORD ${lit}` : `ALTER ROLE ${ROLE} WITH LOGIN`]
+      : [`CREATE ROLE ${ROLE} WITH LOGIN NOINHERIT PASSWORD ${lit}`]),
     `ALTER ROLE ${ROLE} SET default_transaction_read_only = on`,
     `ALTER ROLE ${ROLE} SET statement_timeout = '30s'`,
     `REVOKE ALL ON ALL TABLES IN SCHEMA public FROM ${ROLE}`,
@@ -90,6 +114,7 @@ async function main() {
     ...plan.map((p) => p.columns
       ? `GRANT SELECT (${p.columns.map(q).join(', ')}) ON public.${q(p.table)} TO ${ROLE}`
       : `GRANT SELECT ON public.${q(p.table)} TO ${ROLE}`),
+    ...statsGrants(!!hasStats),
   ];
   // One transaction: a failure part-way leaves the previous grants as they were.
   await sql.transaction(stmts.map((s) => sql.query(s)));
