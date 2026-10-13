@@ -52,7 +52,6 @@
 5. FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
 
 ## Notes
-- PROD SELECTs hit the "Production Reads" check; ask Derik per read, never writes.
 - neon: `interval ${'..'}` is a syntax error; route files export no helpers; card fonts via readFileSync.
 - DEV: draft contest id 55759 (week 99, made 7 Oct by a test) shadows the current weekly contest;
   the orphan sweep lists 3,779 old test users. Listed only, nothing deleted (list + undo first).
