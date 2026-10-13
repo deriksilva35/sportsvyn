@@ -39,6 +39,10 @@ export const EXCLUDED_TABLES = Object.freeze([
   'daily_guest_runs',
   // The stats script reads these through crew_stats views only (migration 143).
   'users', 'daily_board_runs',
+  // tue-6 sweep of the 92 readable tables: purchase events (app_user_id, product),
+  // subscription state (Stripe ids), push send log (device-linked, message text) and
+  // join-code invites. The Watcher reads none of them.
+  'revenuecat_events', 'memberships', 'push_sends', 'draft_config_invites',
 ]);
 
 /** Columns withheld from tables the crew does read. */

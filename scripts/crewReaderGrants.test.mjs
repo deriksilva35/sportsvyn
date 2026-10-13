@@ -74,3 +74,10 @@ test('the migration names no sensitive column in any crew_stats view', () => {
     }
   }
 });
+
+test('tue-6: purchase, subscription, push-log and invite tables are withheld whole', () => {
+  const COLS3 = { revenuecat_events: ['event_id'], memberships: ['user_id', 'status'], push_sends: ['id'], draft_config_invites: ['id'], matches: ['id'] };
+  const plan = grantPlan(Object.keys(COLS3), (t) => COLS3[t]);
+  assert.deepEqual(plan.map((p) => p.table), ['matches']);
+  for (const t of ['revenuecat_events', 'memberships', 'push_sends', 'draft_config_invites']) assert.ok(EXCLUDED_TABLES.includes(t), t);
+});
