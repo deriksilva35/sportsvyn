@@ -28,6 +28,11 @@
 - NBA mock v2 + saved setups (sport column since 140; NFL settings in nfl_mock_settings, 141).
 - Game Drafts primetime only (BOARDS on, NBA off). Test prefixes dgtest-, dgnba(test)-; shots dgshot-.
 
+## Tue 13 Oct additions (mon-8, mon-9, tue-2)
+- CFB SV25 week 7 is Derik's list: content/power/cfb-2026-w7.md + its EDITOR_FILES line (lib/rankings/editorFiles.js). Each new week: write cfb-2026-w<N>.md, add the line, publish('cfb').
+- CFB 25 REMINDER (ef1c9a7): Mon 13:00Z + 15:30Z retry (/api/cron/cfb-25-reminder[-late]) emails "CFB 25 due - week N" if the file is missing; once per week via sync_runs. Dry run: node scripts/cfb25-reminder.mjs [--prod] [--week N]. First live send Mon 19 Oct, UNVERIFIED.
+- docs/crew/sportsvyn-stats (76997a3): corrected Pulse stats script, not installed; .in is Derik's v0.2. crew_reader SELECT grants unchecked.
+
 ## TUE 13 OCT - still owed (the games had not been played when tue-1 ran)
 1. Sunday review of the 14 Game Draft boards: all settled? spot-check 3 rooms (best 3, no-shows
    0); app_errors since Sat 10 Oct 21:52Z.
