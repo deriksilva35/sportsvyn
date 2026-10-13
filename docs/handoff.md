@@ -20,18 +20,14 @@
 - NFL MOCK at /mock/nfl (cb68017, migrations 140 + 141): NBA engine + NFL kit; in season the bots
   and auto-draft pick by SVP + need; ADP column "Preseason ADP (Sep 9)" (in-season boards shrink).
   PROD pool built 08:00Z (249); cron 12:51Z daily. MOCK DRAFT doors -> /mock/nfl; /sim kept as is.
-- DRAFT LOOK (7c81af0) shipped as built. ACCEPTED differences vs the mock (screens 4-5): header is a
-  rounded card with the seat strip below it; pill tabs + an Auto tab; armed row fills lime with
-  Confirm as text; no footer hint line; My team lists slots (RB1, WR1) not positions played.
-  NOT YET SEEN LIVE: PROD week 5 locked 9 Oct and week 6 is not open, so no room could be opened -
-  look at a real room when week 6 opens.
+- DRAFT LOOK (7c81af0) shipped; NOT YET SEEN LIVE - check a real room when week 6 opens.
 - NBA mock v2 + saved setups (sport column since 140; NFL settings in nfl_mock_settings, 141).
 - Game Drafts primetime only (BOARDS on, NBA off). Test prefixes dgtest-, dgnba(test)-; shots dgshot-.
 
 ## Tue 13 Oct additions (mon-8, mon-9, tue-2)
 - CFB SV25 week 7 is Derik's list: content/power/cfb-2026-w7.md + its EDITOR_FILES line (lib/rankings/editorFiles.js). Each new week: write cfb-2026-w<N>.md, add the line, publish('cfb').
 - CFB 25 REMINDER (ef1c9a7): Mon 13:00Z + 15:30Z retry (/api/cron/cfb-25-reminder[-late]) emails "CFB 25 due - week N" if the file is missing; once per week via sync_runs. Dry run: node scripts/cfb25-reminder.mjs [--prod] [--week N]. First live send Mon 19 Oct, UNVERIFIED.
-- docs/crew/sportsvyn-stats (76997a3): corrected Pulse stats script, not installed; .in is Derik's v0.2. crew_reader SELECT grants unchecked.
+- CREW STATS (tue-4/5, 6044e2d): migration 143 = schema crew_stats (11 *_v views); crew_reader reads views only (users, sessions, daily_guest_runs, daily_board_runs revoked). docs/crew/sportsvyn-stats reads crew_stats.*_v. Re-grant: scripts/crew-reader-grants.mjs --prod --apply (no password needed for the existing role). OPEN: one run AS crew_reader on PROD (needs its password; owner cannot SET ROLE).
 
 ## TUE 13 OCT - still owed (the games had not been played when tue-1 ran)
 1. Sunday review of the 14 Game Draft boards: all settled? spot-check 3 rooms (best 3, no-shows
