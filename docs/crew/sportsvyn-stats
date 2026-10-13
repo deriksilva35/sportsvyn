@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# sportsvyn-stats [since-iso]  - Pulse usage numbers, key=value only, no PII/money.
+# Forced command for crew-sportsvyn. Read-only: every query runs after
+# SET default_transaction_read_only = on, and the role should be read-only too.
+# Verified against the live PROD schema on 13 Oct 2026 (tue-2).
+#
+# DEFINITIONS (house accounts, users.is_house, are excluded everywhere)
+#   new_users          users created in the window
+#   seen_users         distinct users with users.last_seen_at in the window
+#   active_users       distinct users who STARTED a Daily run or CREATED a contest
+#                      entry (Pick'em, Weekly, Draft, Game Draft, October, Run, ...)
+#   sessions           login sessions created or renewed in the window. The sessions
+#                      table has no created_at (Auth.js database strategy, 30-day
+#                      maxAge, renewed on use), so expires >= since + 30 days.
+#   "played"           Daily: a run row started in the window (signed-in or guest).
+#                      Contest modes: a contest_entries row CREATED in the window
+#                      (updated_at is not used: lock and settle jobs bump it).
+#                      Mock drafts: a finished mock recorded in the window.
+#   guest_runs/claims  signed-out Daily runs started / claimed to an account
+# HOW THEY PLAYED (one or two per mode)
+#   daily     daily_finish_pct (runs with picks submitted), daily_streak3_users
+#             (accounts on a streak of 3+ editions, ET, as of now)
+#   pickem    pickem_complete_pct (entries that picked every game on the board)
+#   weekly    weekly_complete_pct (all 6 slots filled)
+#   draft     draft_complete_pct (all 6 slots filled)
+#   gamedraft gamedraft_avg_pts (mean score of scored entries)
+#   mock      mock_a_grade_pct (share of mocks graded A+/A/A-); mock rows carry no
+#             user id and no auto-finish flag, so neither is reported
+#   leagues   leagues_avg_members
+set -u
+umask 077
+if [ $# -ge 1 ] && [ -n "$1" ]; then
+  if ! printf '%s' "$1" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}([T ][0-9]{2}:[0-9]{2}(:[0-9]{2})?(\.[0-9]+)?(Z|[+-][0-9]{2}:?[0-9]{2})?)?$'; then
+    echo "error=bad_since"; exit 2
+  fi
+  SINCE="$1"
+else
+  SINCE="$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)"
+fi
+ENV_FILE="$HOME/crew/secrets/crew-reader.env"
+if [ ! -r "$ENV_FILE" ]; then echo "error=no_reader_env"; exit 3; fi
+. "$ENV_FILE"
+if [ -z "${CREW_READER_URL:-}" ]; then echo "error=no_reader_url"; exit 3; fi
+ERRORS=0
+q() {
+  local key="$1" sql="$2" out rc
+  out="$(printf '%s\n' "SET default_transaction_read_only = on;" "SET statement_timeout = '10s';" "$sql;" \
+    | psql "$CREW_READER_URL" -X -q -At -v ON_ERROR_STOP=1 -v since="$SINCE" -f - 2>/dev/null)"
+  rc=$?
+  out="$(printf '%s\n' "$out" | tail -n 1)"
+  if [ "$rc" -ne 0 ] || [ -z "$out" ]; then echo "$key=NA"; ERRORS=$((ERRORS+1)); else echo "$key=$out"; fi
+}
+echo "project=sportsvyn"; echo "since=$SINCE"; echo "until=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+q new_users "SELECT count(*) FROM users WHERE created_at >= :'since'::timestamptz AND NOT coalesce(is_house,false)"
+q seen_users "SELECT count(*) FROM users WHERE last_seen_at >= :'since'::timestamptz AND NOT coalesce(is_house,false)"
+q active_users "SELECT count(DISTINCT a.uid) FROM (SELECT r.user_id AS uid FROM daily_board_runs r WHERE r.started_at >= :'since'::timestamptz UNION SELECT e.user_id FROM contest_entries e WHERE e.created_at >= :'since'::timestamptz) a JOIN users u ON u.id = a.uid WHERE NOT coalesce(u.is_house,false)"
+q sessions "SELECT count(*) FROM sessions WHERE expires >= :'since'::timestamptz + interval '30 days'"
+q guest_runs "SELECT count(*) FROM daily_guest_runs WHERE started_at >= :'since'::timestamptz"
+q guest_claims "SELECT count(*) FROM daily_guest_runs WHERE claimed_at >= :'since'::timestamptz"
+
+q daily_played "SELECT (SELECT count(*) FROM daily_board_runs r JOIN users u ON u.id=r.user_id WHERE r.started_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)) + (SELECT count(*) FROM daily_guest_runs WHERE started_at >= :'since'::timestamptz)"
+q daily_finish_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE picks IS NOT NULL)/NULLIF(count(*),0),1),0) FROM (SELECT r.picks FROM daily_board_runs r JOIN users u ON u.id=r.user_id WHERE r.started_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false) UNION ALL SELECT picks FROM daily_guest_runs WHERE started_at >= :'since'::timestamptz) x"
+q daily_streak3_users "WITH played AS (SELECT r.user_id, b.edition_date FROM daily_board_runs r JOIN daily_boards b ON b.id = r.board_id JOIN users u ON u.id = r.user_id WHERE r.picks IS NOT NULL AND NOT coalesce(u.is_house,false) GROUP BY r.user_id, b.edition_date), islands AS (SELECT user_id, edition_date, edition_date - (row_number() OVER (PARTITION BY user_id ORDER BY edition_date))::int AS grp FROM played), runs AS (SELECT user_id, count(*) AS len, max(edition_date) AS last_date FROM islands GROUP BY user_id, grp) SELECT count(DISTINCT user_id) FROM runs WHERE len >= 3 AND last_date >= (now() AT TIME ZONE 'America/New_York')::date - 1"
+
+q pickem_played "SELECT count(DISTINCT e.user_id) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='pickem' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q pickem_complete_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE (SELECT count(*) FROM jsonb_object_keys(e.lineup)) >= jsonb_array_length(c.board))/NULLIF(count(*),0),1),0) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='pickem' AND jsonb_typeof(c.board)='array' AND jsonb_typeof(e.lineup)='object' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q weekly_played "SELECT count(DISTINCT e.user_id) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='weekly' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q weekly_complete_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE (SELECT count(*) FROM jsonb_each(e.lineup) j WHERE j.value <> 'null'::jsonb) >= 6)/NULLIF(count(*),0),1),0) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='weekly' AND jsonb_typeof(e.lineup)='object' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q draft_played "SELECT count(DISTINCT e.user_id) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='draft' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q draft_complete_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE (SELECT count(*) FROM jsonb_each(e.lineup) j WHERE j.value <> 'null'::jsonb) >= 6)/NULLIF(count(*),0),1),0) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='draft' AND jsonb_typeof(e.lineup)='object' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q gamedraft_played "SELECT count(DISTINCT e.user_id) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='draft_game' AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q gamedraft_avg_pts "SELECT coalesce(round(avg(e.score)::numeric,1),0) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type='draft_game' AND e.score IS NOT NULL AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+q other_contest_played "SELECT count(DISTINCT e.user_id) FROM contest_entries e JOIN contests c ON c.id=e.contest_id JOIN users u ON u.id=e.user_id WHERE c.game_type NOT IN ('pickem','weekly','draft','draft_game') AND e.created_at >= :'since'::timestamptz AND NOT coalesce(u.is_house,false)"
+
+q mock_nfl_played "SELECT count(*) FROM nba_mock_drafts WHERE sport='nfl' AND created_at >= :'since'::timestamptz"
+q mock_nba_played "SELECT count(*) FROM nba_mock_drafts WHERE sport='nba' AND created_at >= :'since'::timestamptz"
+q mock_a_grade_pct "SELECT coalesce(round(100.0*count(*) FILTER (WHERE grade IN ('A+','A','A-'))/NULLIF(count(*),0),1),0) FROM nba_mock_drafts WHERE created_at >= :'since'::timestamptz"
+q mock_setups_saved "SELECT count(*) FROM nba_mock_setups WHERE created_at >= :'since'::timestamptz"
+
+q leagues_created "SELECT count(*) FROM player_leagues WHERE created_at >= :'since'::timestamptz"
+q leagues_avg_members "SELECT coalesce(round(avg(n)::numeric,1),0) FROM (SELECT l.id, count(m.league_id) AS n FROM player_leagues l LEFT JOIN league_members m ON m.league_id=l.id WHERE l.created_at >= :'since'::timestamptz GROUP BY l.id) x"
+echo "errors=$ERRORS"
+exit 0
