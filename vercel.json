@@ -47,6 +47,14 @@
       "schedule": "15 14 * * 1,2"
     },
     {
+      "path": "/api/cron/cfb-25-reminder",
+      "schedule": "0 13 * * 1"
+    },
+    {
+      "path": "/api/cron/cfb-25-reminder-late",
+      "schedule": "30 15 * * 1"
+    },
+    {
       "path": "/api/cron/power-edition?league=cfb",
       "schedule": "0 15 * * 1"
     },
