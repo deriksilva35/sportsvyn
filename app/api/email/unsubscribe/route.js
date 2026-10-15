@@ -1,9 +1,10 @@
 /**
  * /api/email/unsubscribe -- the target of the welcome email's unsubscribe link.
  *
- * GET, because it is reached by clicking a link in a mail client. That means it
- * must be safe to hit twice, and it is: setting email_opted_out_at is
- * idempotent, and a second visit reports the same thing as the first.
+ * GET, because it is reached by clicking a link in a mail client; POST for the
+ * mail client's own one-click button (RFC 8058, see POST below). Both must be
+ * safe to hit twice, and they are: setting email_opted_out_at is idempotent,
+ * and a second visit reports the same thing as the first.
  *
  * The link is SIGNED. Without a signature the query string is just a user id,
  * and anyone could unsubscribe anyone by counting upwards. The token is an HMAC
@@ -35,14 +36,18 @@ function page(title, body) {
   );
 }
 
-export async function GET(request) {
+/**
+ * The one opt-out, shared by both doors. Returns 'incomplete' | 'unverified'
+ * | 'failed' | 'done'.
+ */
+async function optOut(request) {
   const url = new URL(request.url);
   const u = url.searchParams.get('u');
   const t = url.searchParams.get('t');
-  if (!u || !t) return page('Link incomplete', 'That unsubscribe link is missing part of itself. Reply to the email and we will take you off by hand.');
+  if (!u || !t) return 'incomplete';
 
   const ok = verifyUnsubscribe(u, t);
-  if (!ok) return page('Link not recognised', 'That unsubscribe link could not be verified. Reply to the email and we will take you off by hand.');
+  if (!ok) return 'unverified';
 
   try {
     // Idempotent: COALESCE keeps the FIRST opt-out time rather than moving it
@@ -50,7 +55,30 @@ export async function GET(request) {
     await sql`UPDATE users SET email_opted_out_at = COALESCE(email_opted_out_at, now()) WHERE id = ${Number(u)}`;
   } catch (e) {
     console.error('[unsubscribe] write failed', { u, message: e?.message });
-    return page('Something went wrong', 'We could not record that just now. Reply to the email and we will take you off by hand.');
+    return 'failed';
   }
+  return 'done';
+}
+
+export async function GET(request) {
+  const r = await optOut(request);
+  if (r === 'incomplete') return page('Link incomplete', 'That unsubscribe link is missing part of itself. Reply to the email and we will take you off by hand.');
+  if (r === 'unverified') return page('Link not recognised', 'That unsubscribe link could not be verified. Reply to the email and we will take you off by hand.');
+  if (r === 'failed') return page('Something went wrong', 'We could not record that just now. Reply to the email and we will take you off by hand.');
   return page('You are unsubscribed', 'No more account email from Sportsvyn. Your account and your drafts are untouched.');
+}
+
+/**
+ * ONE-CLICK UNSUBSCRIBE (RFC 8058). The mail carries
+ * `List-Unsubscribe-Post: List-Unsubscribe=One-Click`, so Gmail and Apple
+ * Mail POST to the same signed URL - body `List-Unsubscribe=One-Click` - and
+ * never open a page. Until wed-2 this route had only GET, so every native
+ * Unsubscribe button got a 405 and nobody was taken off. The signature in the
+ * query string is the authority, exactly as for the browser link; the body is
+ * not required, because a client that sends it differently must still work.
+ */
+export async function POST(request) {
+  const r = await optOut(request);
+  const status = r === 'done' ? 200 : r === 'failed' ? 500 : 400;
+  return new Response(r === 'done' ? 'unsubscribed' : r, { status, headers: { 'content-type': 'text/plain; charset=utf-8' } });
 }
