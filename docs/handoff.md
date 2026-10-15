@@ -1,60 +1,49 @@
-# Handoff - droplet relay mon-7, Mon 12 Oct 2026 (clock ~19:00Z)
+# Handoff - droplet relay wed-2, Thu 15 Oct 2026 (clock ~16:30Z)
 
-## Live (PROD) - main = see git log; Vercel auto-deploys web; poller unchanged (93a36a4)
-- TOP 25 (mon-7, merge b6ab7f7): the Top 25 chip (Scores, CFB days only) already existed; it now REMEMBERS
-  the choice (cookie sv_top25, URL wins, off-tap clears it; lib/scores/top25Memory.js). AP rank badges
-  were already on Scores cards and the CFB game header (as '#5' in the meta line); added: AP badge on
-  the front-page CFB band slate rows (SlateRow ranks prop). Not visible signed-out on PROD, so unseen live.
-  Preview-verified by curl (cookie narrows 52->13 cards, ?top25=0 overrides, no-CFB day hides chip).
-  No screenshot: no browser on the droplet - take it on the Mac. 'Lobby strip' was read as that band.
-- NEW MOCKS START ON /mock/nfl (tue-0, 889d8d9): Play-tab practice tile, You tab, Draft again, the /nfl
-  card CTA (was a 404 to /sim/setup), /sim?preset= (redirect). /sim's setup form is replaced by a "New
-  mock draft" card (NFL / NBA); /sim keeps Resume, leagues + keepers, join, tracker, history, record
-  line. /mock/nfl gains SFLX, "2QB / Superflex", "The Draft (8 rounds)", league preset "The Draft
-  practice" and Full auto. Report: docs/reports/2026-10-12-sim-entry.md.
-- THE DAILY LOCK-IN (d63e2bb, migration 142): choosing a team commits, a placed pick is final,
-  cards sealed until a team is chosen. Server-enforced: POST /api/daily/{board,guest}/{choose,pick},
-  run.steps (lib/daily/lockIn.js); submit grades the steps. Runs started before deploy (steps NULL)
-  keep the submit-all path. House personas play through the steps. Verified on sportsvyn.com as a
-  guest, incl. 409s for back-out, uncommitted-team pick, changed pick, re-used team.
-- NFL MOCK at /mock/nfl (cb68017, migrations 140 + 141): NBA engine + NFL kit; in season the bots
-  and auto-draft pick by SVP + need; ADP column "Preseason ADP (Sep 9)" (in-season boards shrink).
-  PROD pool built 08:00Z (249); cron 12:51Z daily. MOCK DRAFT doors -> /mock/nfl; /sim kept as is.
-- DRAFT LOOK (7c81af0) shipped; NOT YET SEEN LIVE - check a real room when week 6 opens.
-- NBA mock v2 + saved setups (sport column since 140; NFL settings in nfl_mock_settings, 141).
-- Game Drafts primetime only (BOARDS on, NBA off). Test prefixes dgtest-, dgnba(test)-; shots dgshot-.
+## Live (PROD) - main 781deba; Vercel auto-deploys web; poller unchanged (93a36a4)
+- ARCADE EMAIL READY, NOT SENT: docs/email/arcade-2026-10-15.{html,txt}, images at
+  sportsvyn.com/email/arcade/ (13 PNGs, 1200 wide, <150 KB; test pins them in lib/email/broadcastRules.test.mjs).
+  Blocks: Daily (2016 shots, pool "seasons from 2002 to 2025" = RANKED_MIN_SEASON..max), Pick'em,
+  EPL Weekly 5, Draft, Weekly, October, Run, Primetime, Mocks, Coming soon, App (listing name "Draftvyn").
+  Campaign sha 90c003d1...; PROD dry run RECIPIENTS 292 (111 Apple relay); house accounts excluded.
+  Last test: Resend 01a14031-18a5-7501-8a0d-9d228a5195d2 to deriksilva@gmail.com.
+- ONE-CLICK UNSUBSCRIBE (RFC 8058): POST /api/email/unsubscribe live (200 signed / 400 tampered); GET kept.
+- REPLY-TO derik@sportsvyn.com on every mail (lib/resend.js EMAIL_REPLY_TO; welcome + broadcast).
+- Postal address in .env.local: 3494 Camino Tassajara #1055, Danville CA 94506 (EMAIL_POSTAL_ADDRESS).
+- Earlier: Top 25 memory, /mock/nfl entry, Daily lock-in (migration 142), NFL mock, crew_stats (143),
+  crew_reader revokes (245e8b5). Details in git log and docs/reports/.
 
-## Tue 13 Oct additions (mon-8, mon-9, tue-2)
-- CFB SV25 week 7 is Derik's list: content/power/cfb-2026-w7.md + its EDITOR_FILES line (lib/rankings/editorFiles.js). Each new week: write cfb-2026-w<N>.md, add the line, publish('cfb').
-- CFB 25 REMINDER (ef1c9a7): Mon 13:00Z + 15:30Z retry (/api/cron/cfb-25-reminder[-late]) emails "CFB 25 due - week N" if the file is missing; once per week via sync_runs. Dry run: node scripts/cfb25-reminder.mjs [--prod] [--week N]. First live send Mon 19 Oct, UNVERIFIED.
-- CREW STATS (tue-4/5, 6044e2d): migration 143 = schema crew_stats (11 *_v views); crew_reader reads views only (also revoked: users, sessions, daily_guest_runs, daily_board_runs, revenuecat_events, memberships, push_sends, draft_config_invites - tue-6, 245e8b5). docs/crew/sportsvyn-stats reads crew_stats.*_v. Re-grant: scripts/crew-reader-grants.mjs --prod --apply (no password needed for the existing role). OPEN: one run AS crew_reader on PROD (needs its password; owner cannot SET ROLE).
+## HELD for Derik's GO - the full send (the 8 AM PT target, 15:00Z, has passed)
+  set -a && . ./.env.local && set +a
+  DATABASE_URL="$PROD_DATABASE_URL" node scripts/broadcast.mjs --file docs/email/arcade-2026-10-15.html --send
+  It asks for the typed count (292) and mails an uncounted verify copy first. Re-run the dry run first if
+  the roster may have moved. Any edit to the file changes the campaign sha (a new campaign).
 
-## TUE 13 OCT - checked (tue-1, 18:30-22:00Z)
-- Game Drafts: boards 58-71 (14, incl. Mon night 71) all settled, none void, 10 entries all scored; 10/10 rooms
-  recomputed: counted = best 3, no-shows (8) score 0. Board 78 (Thu 15 Oct) open. app_errors since Sat: 0 rows.
-- Weekly Draft + Weekly wk5 settled clean (4/4 scored each). Wk6 boards open (draft 4 entries, weekly 3).
-- launch-oct20 checks 1-4 PASS (13:23:43Z, nfl wk6 14 games #80, cfb wk42 16 games #79 vs 15 planned, REGULAR,
-  lines frozen, 0 TBD, locks = last kickoff). Check 5: pages 200, 'straight up' copy, no 'Time TBD'/'12:00 AM'.
-- Lock-in since deploy: guest 3 runs/3 with steps/1 finished/1 claimed; signed-in 2/1/2. Mocks since Mon: 0.
-- NOT DONE: room render + screenshot of the new draft look (needs sign-in + a browser: do it on the Mac);
-  409 counts and share-card failures (Vercel runtime logs returned nothing for the window).
+## Screenshot method (wed-2)
+- playwright-core + chrome-headless-shell in the session scratchpad (gone after /clear), 393x852 @3x,
+  against PROD. Signed-in shots need a throwaway user + session row + handle/onboarded_at set.
+  Cleanup: inventory every user-keyed table, write a JSONL undo, delete in one transaction, re-sweep.
+  wed-2 throwaways 351 and 352 and guest runs 16-19 are deleted (undo files were in the scratchpad).
+- Not shot: The Run (round locked for a new account), the Pick'em confidence rank sheet.
 
 ## Needs Derik
-- Leagues (sun-4 report): P1 total points = every drafted player or best N/week? bots in 4-7 team leagues? LIVE sync polling or SSE? K/DST in presets? sizes P1 22-28 d, P2 25-35 d, P3 12-18 d.
-- From wed-7 (PROD writes): the 2 unclaimed guest rows; one real magic-link sign-in. Plus 3 mon-4/5 verification guest runs (unclaimed, on no board).
-- From wed-4: Neon "ci" key, Cloudflare token. crew_reader exists on PROD; a run AS it needs its password (owner cannot SET ROLE).
+- GO (or new time) for the arcade full send.
+- Leagues (thu-2 recon): no feed/chat/league push today. Sizes: chat+moderation L 8-12 d, feed M 2-3 d,
+  H2H M-L 3-5 d, kick/leave S 1 d, standings polish S, league push S-M. Which first?
+- Leagues P1 questions (sun-4): total points model, bots in 4-7 team leagues, live sync method, K/DST.
+- Unclaimed guest rows from wed-7/mon-4/5; Neon "ci" key; Cloudflare token; crew_reader password for a run AS it.
 
 ## Queue
-1. 20 Oct: launch-oct20.md checks 6-13. NBA Game Drafts stay OFF until DRAFT_GAME_NBA flips.
-2. After 20 Oct: leagues P1 (slow draft first). (draft-look shipped mon-5.)
-3. Per-game S5 CFB final-only.
-4. TICKET: suite tests that mutate real DEV boards (the week-5 void_all) must use own fixtures.
-5. FCS abbreviation fill, 9 colourless CFB schools, morning email gameOfTheDay.
+1. 20 Oct: docs launch-oct20 checks 6-13 (NBA tips off; NBA Game Drafts stay OFF until DRAFT_GAME_NBA).
+2. Mon 19 Oct: first live CFB 25 reminder send - verify it. Mon 26 Oct: CFB win-prob re-score prompt.
+3. Leagues work per Derik's pick above. Morning email (add gameOfTheDay when built).
+4. Draft look: open a weekly wk6 room signed in (Mac) and confirm it.
+5. TICKET: suite tests mutating real DEV boards must use own fixtures. FCS abbreviations, 9 colourless CFB schools.
 
 ## Notes
-- neon: `interval ${'..'}` is a syntax error; route files export no helpers; card fonts via readFileSync.
-- DEV: draft contest id 55759 (week 99, made 7 Oct by a test) shadows the current weekly contest;
-  the orphan sweep lists 3,779 old test users. Listed only, nothing deleted (list + undo first).
+- PROD reads/writes for the email shots were Derik-authorized for wed-2 only.
+- neon: `interval ${'..'}` is a syntax error; route files export no helpers.
+- DEV: draft contest 55759 (week 99) shadows the weekly contest; orphan sweep lists 3,779 old test users.
 
 ## Next step
-Open a weekly wk6 room signed in (Mac) and confirm the draft look. 20 Oct: launch-oct20 checks 6-13.
+Derik's GO -> dry run -> full send (count 292). Then 20 Oct launch checks.
