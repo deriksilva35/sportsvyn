@@ -4,13 +4,18 @@ Sportsvyn is now the arcade of sports.
 Free sports games of skill you can play in minutes. No betting, no buy-ins. Here's everything on the floor.
 
 THE DAILY
-A new sports puzzle every day. Pick a team, then a player. Picks lock, so choose well. Keep your streak alive.
+Every day, a real NFL season from the past. Build the best fantasy lineup from that year's players: pick a team, then a player. Picks lock, so know your history. Three minutes, one shot, a streak to protect.
+The pool: seasons from 2002 to 2025.
 Play today: https://sportsvyn.com/daily/board
 
 PICK'EM
 Pick every game. Starting Oct 20, rank them by confidence: your surest pick is worth the most.
 Make picks: https://sportsvyn.com/pickem/nfl
 Start a league: https://sportsvyn.com/leagues/new
+
+EPL WEEKLY 5
+Pick five Premier League players every gameweek: one DEF/GK, one MID, one FWD and two FLEX. Each pick locks at its own kickoff; swap freely before it.
+Pick five: https://sportsvyn.com/epl-weekly-5
 
 THE DRAFT
 Draft against 11 others every week. Your best 6 score.
