@@ -231,11 +231,15 @@ async function recipients() {
   // person's decision, so it must survive them changing where mail goes; and
   // the owner exclusion has to catch Derik's accounts whichever address they
   // would be reached at today.
+  //
+  // HOUSE ACCOUNTS ARE NOT AN AUDIENCE (wed-2). users.is_house (migration
+  // 101) marks the personas that play the boards; their addresses are ours.
   const rows = await sql`
     SELECT id, COALESCE(contact_email, email) AS email
       FROM users
      WHERE COALESCE(contact_email, email) IS NOT NULL
        AND email_opted_out_at IS NULL
+       AND NOT is_house
        AND NOT (email = ANY(${OWNER_ADDRESSES}))
        AND NOT (COALESCE(contact_email, '') = ANY(${OWNER_ADDRESSES}))
      ORDER BY id`;
@@ -292,9 +296,9 @@ async function testSend(address) {
             ${JSON.stringify({ userId: u.id, to: address, test: true, outcome: 'sending' })}::jsonb)
     RETURNING id`)[0].id;
   try {
-    const { resend, EMAIL_FROM } = await import('../lib/resend.js');
+    const { resend, EMAIL_FROM, EMAIL_REPLY_TO } = await import('../lib/resend.js');
     const res = await resend.emails.send({
-      from: EMAIL_FROM, to: address, subject: SUBJECT,
+      from: EMAIL_FROM, replyTo: EMAIL_REPLY_TO, to: address, subject: SUBJECT,
       html: mail.html, text: mail.text, headers: unsubscribeHeaders(url),
     });
     const id = res?.data?.id ?? null;
@@ -382,7 +386,7 @@ async function main() {
   }
 
   const { resend } = await import('../lib/resend.js');
-  const { EMAIL_FROM } = await import('../lib/resend.js');
+  const { EMAIL_FROM, EMAIL_REPLY_TO } = await import('../lib/resend.js');
 
   // The verify copy goes FIRST: if the audience send is about to break, the
   // owner's inbox is the first place that shows it. Signed for user 1's real
@@ -392,7 +396,7 @@ async function main() {
     const vUrl = await unsubscribeUrlFor(vu?.id ?? 0);
     const vMail = render({ unsubscribeUrl: vUrl, userId: vu?.id ?? 0 });
     const vRes = await resend.emails.send({
-      from: EMAIL_FROM, to: OWNER_VERIFY_ADDRESS, subject: SUBJECT,
+      from: EMAIL_FROM, replyTo: EMAIL_REPLY_TO, to: OWNER_VERIFY_ADDRESS, subject: SUBJECT,
       html: vMail.html, text: vMail.text, headers: unsubscribeHeaders(vUrl),
     });
     await sql`
@@ -412,7 +416,7 @@ async function main() {
       const url = await unsubscribeUrlFor(r.id);
       const mail = render({ unsubscribeUrl: url, userId: r.id });
       const res = await resend.emails.send({
-        from: EMAIL_FROM, to: r.email, subject: SUBJECT,
+        from: EMAIL_FROM, replyTo: EMAIL_REPLY_TO, to: r.email, subject: SUBJECT,
         html: mail.html, text: mail.text, headers: unsubscribeHeaders(url),
       });
       // recordFinish REPLACES summary wholesale, so the key is restated here -
