@@ -58,22 +58,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
+      # NO CI BRANCH YET -> SKIP, GREEN (wed-2). Until the crew creates the "ci"
+      # Neon branch and sets secrets.CI_DATABASE_URL, every push failed here and
+      # emailed a failure. With the secret unset the job now says so and passes;
+      # the moment it is set, the full suite runs again with no edit to this file.
+      # A URL that IS set but points at DEV or PROD still fails hard.
       - name: The database is the "ci" branch, never DEV or PROD
+        id: db
         run: |
           host=$(node -e "try{console.log(new URL(process.env.DATABASE_URL).host)}catch{console.log('')}")
-          if [ -z "$host" ]; then echo "CI_DATABASE_URL is not set"; exit 1; fi
+          if [ -z "$host" ]; then
+            echo "::notice title=tests skipped::CI_DATABASE_URL is not set - the suite needs the dedicated 'ci' Neon branch. Skipping (exit 0) until it exists; the droplet gate (scripts/suite.sh) still runs before every merge."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           case "$host" in
             ep-rough-mouse-*|ep-winter-dawn-*) echo "refusing: CI_DATABASE_URL points at DEV or PROD ($host)"; exit 1;;
           esac
           echo "database host: $host"
 
+      - uses: actions/setup-node@v4
+        if: steps.db.outputs.skip != 'true'
+        with:
+          node-version: 22
+          cache: npm
+
       - name: Install
+        if: steps.db.outputs.skip != 'true'
         run: npm ci
 
       - name: Full suite
+        if: steps.db.outputs.skip != 'true'
         run: node --test $(git ls-files '*.test.mjs')
