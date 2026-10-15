@@ -1,13 +1,16 @@
-# Handoff - droplet relay wed-2, Thu 15 Oct 2026 (clock ~16:30Z)
+# Handoff - droplet relay wed-2, Thu 15 Oct 2026 (clock ~16:20Z)
 
-## Live (PROD) - main 781deba; Vercel auto-deploys web; poller unchanged (93a36a4)
+## Live (PROD) - main 0fd7ea6; Vercel auto-deploys web; poller unchanged (93a36a4)
 - ARCADE EMAIL READY, NOT SENT: docs/email/arcade-2026-10-15.{html,txt}, images at
   sportsvyn.com/email/arcade/ (13 PNGs, 1200 wide, <150 KB; test pins them in lib/email/broadcastRules.test.mjs).
   Blocks: Daily (2016 shots, pool "seasons from 2002 to 2025" = RANKED_MIN_SEASON..max), Pick'em,
   EPL Weekly 5, Draft, Weekly, October, Run, Primetime, Mocks, Coming soon, App (listing name "Draftvyn").
-  Campaign sha 90c003d1...; PROD dry run RECIPIENTS 292 (111 Apple relay); house accounts excluded.
-  Last test: Resend 01a14031-18a5-7501-8a0d-9d228a5195d2 to deriksilva@gmail.com.
+  LIGHT ARCADE LOOK (white, indigo #1A1650, lime chips/buttons, Rubik + Arial fallbacks, brand-kit
+  light wordmark centered + "THE ARCADE OF SPORTS"). Campaign sha c1c2ab2e...; PROD dry run RECIPIENTS 292 (111 Apple relay); house accounts excluded.
+  Last test: Resend 01a14057-d549-711d-8a37-d46376f94798 to deriksilva@gmail.com.
 - ONE-CLICK UNSUBSCRIBE (RFC 8058): POST /api/email/unsubscribe live (200 signed / 400 tampered); GET kept.
+- CI: .github/workflows/tests.yml exits 0 with a notice while CI_DATABASE_URL is unset (verified green
+  on 0fd7ea6). Set the secret (crew, "ci" Neon branch) and the full suite runs again unchanged.
 - REPLY-TO derik@sportsvyn.com on every mail (lib/resend.js EMAIL_REPLY_TO; welcome + broadcast).
 - Postal address in .env.local: 3494 Camino Tassajara #1055, Danville CA 94506 (EMAIL_POSTAL_ADDRESS).
 - Earlier: Top 25 memory, /mock/nfl entry, Daily lock-in (migration 142), NFL mock, crew_stats (143),
