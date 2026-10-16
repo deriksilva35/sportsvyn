@@ -194,7 +194,7 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
               <span className="lh-rank">{crew.table.weeks.length ? r.place : '–'}</span>
               <span className="lh-who">
                 <span className="lh-name"><span className="lh-handle">{who(r, uid)}</span><Move m={r.move} /></span>
-                <span className="lh-sub">{winsLine(r.wins, gameLabel) || (r.played ? `${r.played} game-weeks played` : 'Nothing final yet')}</span>
+                <span className="lh-sub">{winsLine(r.wins, gameLabel) || (r.played ? `${r.played} game-week${r.played === 1 ? '' : 's'} played` : 'Nothing final yet')}</span>
               </span>
               <span className="lh-total">{fmtNum(r.total)}</span>
             </div>
