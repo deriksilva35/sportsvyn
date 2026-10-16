@@ -25,7 +25,7 @@ import { hasStarted } from '@/lib/leagues/describe';
 import { leagueHref, LEAGUE_TABS, pickemBoardLinks } from '@/lib/leagues/nav';
 import { PICK_FORMAT_LABEL, leaguePlaysPickem, recordLine, switchOffer, pendingLine } from '@/lib/leagues/pickFormat';
 import PickFormatSwitch, { PendingPickFormat } from '@/components/leagues/PickFormatSwitch';
-import { fmtNum, statTiles, moveMark, subLine, tabLabel, eventLine } from '@/lib/leagues/home';
+import { fmtNum, fmtTile, statTiles, moveMark, subLine, tabLabel, eventLine } from '@/lib/leagues/home';
 import { CREW_EXPLAINER, winsLine } from '@/lib/leagues/crew';
 import { roleOf, menuFor, ROLE_LABEL } from '@/lib/leagues/members';
 import { dateLabel } from '@/lib/time/display';
@@ -105,7 +105,7 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
     ? [
       { key: 'you', label: 'You', value: table.guillotine.chopped.some((c) => c.userId === uid) ? 'OUT' : 'IN' },
       { key: 'standing', label: 'Standing', value: String(table.guillotine.standing.length) },
-      { key: 'now', label: tabLabel('today', unit), value: meNow ? fmtNum(meNow.current) : '—' },
+      { key: 'now', label: tabLabel('today', unit), value: meNow ? fmtTile(meNow.current) : '—' },
     ]
     : crewAll
       ? statTiles({
