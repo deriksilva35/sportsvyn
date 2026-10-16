@@ -125,6 +125,7 @@ export async function undoPendingPickFormatAction(leagueId) {
 export async function setMemberRoleAction(leagueId, targetId, role) {
   const userId = await uid();
   if (userId == null) return { ok: false, reason: 'Sign in first' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   try {
     return await setMemberRole(userId, Number(leagueId), Number(targetId), role);
   } catch {
@@ -158,6 +159,7 @@ export async function leaveLeagueAction(leagueId) {
 export async function setLeagueNotifyAction(leagueId, prefs) {
   const userId = await uid();
   if (userId == null) return { ok: false, reason: 'Sign in first' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   try {
     return await setNotifyPrefs(userId, Number(leagueId), prefs ?? {});
   } catch {
