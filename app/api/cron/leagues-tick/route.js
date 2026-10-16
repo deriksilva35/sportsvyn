@@ -10,6 +10,10 @@
  * 25 * * * * UTC - hourly, on a minute no settle cron claims, so it reads
  * whatever the settles wrote in the hour before.
  *
+ * THE STRIP'S WINNERS (thu-4): the same tick writes "Latest in the league"'s
+ * period winners and "took 1st" lines (lib/leagues/events.js) - after the
+ * chops, over the same finished buckets, each line once (UNIQUE + DO NOTHING).
+ *
  * Auth: Bearer ${CRON_SECRET}.
  */
 
@@ -19,6 +23,7 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { settleAllGuillotines } from '@/lib/leagues/guillotine';
+import { settleAllLeagueEvents } from '@/lib/leagues/events';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -31,7 +36,12 @@ export async function GET(request) {
   const outcome = await withAdvisoryLock(SOURCE, async () => recordRun(sql, {
     source: SOURCE,
     kind: 'settle',
-    run: async () => ({ results: await settleAllGuillotines({ now: new Date() }) }),
+    run: async () => {
+      const now = new Date();
+      const results = await settleAllGuillotines({ now });
+      const events = await settleAllLeagueEvents({ now });
+      return { results, events: { written: events.reduce((s, e) => s + (e.written ?? 0), 0), errors: events.filter((e) => e.error) } };
+    },
   }));
 
   if (outcome.locked) {
@@ -41,7 +51,7 @@ export async function GET(request) {
 
   const res = outcome.result;
   const summary = res.summary ?? {};
-  const errored = (summary.results ?? []).filter((r) => r.error);
+  const errored = [...(summary.results ?? []).filter((r) => r.error), ...(summary.events?.errors ?? [])];
   if (!res.ok || errored.length) {
     await maybeAlert(sql, {
       source: SOURCE,

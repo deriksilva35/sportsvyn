@@ -16,6 +16,7 @@
 import { auth } from '@/auth';
 import { createLeague, joinLeague, setLeaguePickFormat, undoPendingPickFormat } from '@/lib/leagues/core';
 import { joinByInvite, resetInvite } from '@/lib/leagues/invite';
+import { setMemberRole, removeMember, leaveLeague, setNotifyPrefs } from '@/lib/leagues/members';
 import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 async function uid() {
@@ -111,5 +112,55 @@ export async function undoPendingPickFormatAction(leagueId) {
     return await undoPendingPickFormat(userId, Number(leagueId));
   } catch {
     return { ok: false, reason: 'Could not undo the change' };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// THE MEMBERS TAB (thu-4) - roles, removal, leaving, the reader's toggles.
+// The rules are lib/leagues/members.js canAct(); every write re-checks them
+// against the rows as they are now.
+// ---------------------------------------------------------------------------
+
+/** Owner: make a member co-admin (role 'co_admin') or back ('member'). */
+export async function setMemberRoleAction(leagueId, targetId, role) {
+  const userId = await uid();
+  if (userId == null) return { ok: false, reason: 'Sign in first' };
+  try {
+    return await setMemberRole(userId, Number(leagueId), Number(targetId), role);
+  } catch {
+    return { ok: false, reason: 'Could not change the role' };
+  }
+}
+
+/** Owner, or a co-admin for a plain member: remove them (they stay out). */
+export async function removeMemberAction(leagueId, targetId) {
+  const userId = await uid();
+  if (userId == null) return { ok: false, reason: 'Sign in first' };
+  try {
+    return await removeMember(userId, Number(leagueId), Number(targetId));
+  } catch {
+    return { ok: false, reason: 'Could not remove them' };
+  }
+}
+
+/** Anyone but the owner: leave the league. */
+export async function leaveLeagueAction(leagueId) {
+  const userId = await uid();
+  if (userId == null) return { ok: false, reason: 'Sign in first' };
+  try {
+    return await leaveLeague(userId, Number(leagueId));
+  } catch {
+    return { ok: false, reason: 'Could not leave the league' };
+  }
+}
+
+/** The reader's own notification toggles - stored; the senders come later. */
+export async function setLeagueNotifyAction(leagueId, prefs) {
+  const userId = await uid();
+  if (userId == null) return { ok: false, reason: 'Sign in first' };
+  try {
+    return await setNotifyPrefs(userId, Number(leagueId), prefs ?? {});
+  } catch {
+    return { ok: false, reason: 'Could not save that' };
   }
 }

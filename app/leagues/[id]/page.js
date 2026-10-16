@@ -1,9 +1,10 @@
 /**
  * /leagues/[id] - the league page (Leagues V1, canvas board League).
  *
- * MEMBERS get the board: the status kicker and INVITE, the three numbers, the
- * STANDINGS | THIS WEEK | MEMBERS rail (lib/leagues/nav - the scoresNav law,
- * so a link can open a tab) and the rule line. Every number is DERIVED by
+ * MEMBERS get the league home (components/leagues/LeagueBoard.js, thu-4): the
+ * date + LIVE eyebrow and INVITE, the three tiles, the STANDINGS | TODAY |
+ * CHAT | MEMBERS rail (lib/leagues/nav - the scoresNav law, so a link can open
+ * a tab, a period chip or a crew game) and "Latest in the league". Every number is DERIVED by
  * lib/leagues/table.js from each game's own settled results - The Daily from
  * its live v2 runs (daily_board_runs), never the dead v1 puzzle_entries the
  * pre-V1 Daily tab read. ?invite=1 opens the share sheet (the create sheet
@@ -30,8 +31,9 @@ import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { leagueDetail } from '@/lib/leagues/core';
-import { parseLeagueTab, leagueHref } from '@/lib/leagues/nav';
+import { parseLeagueTab, parseLeagueView, leagueHref } from '@/lib/leagues/nav';
 import { leagueTable } from '@/lib/leagues/table';
+import { latestEvents } from '@/lib/leagues/events';
 import LeagueBoard from '@/components/leagues/LeagueBoard';
 import '../../games/games.css';
 import '../leagues.css';
@@ -83,7 +85,10 @@ export default async function LeaguePage({ params, searchParams }) {
   if (!league) notFound();
 
   // ---- MEMBER: the board ----------------------------------------------------
-  const table = await leagueTable(league).catch(() => null);
+  const view = parseLeagueView(sp);
+  const table = await leagueTable(league, view).catch(() => null);
+  // "Latest in the league" (lib/leagues/events.js): the three newest lines.
+  const events = table ? await latestEvents(league.id, { limit: 3, unit: table.unit }).catch(() => []) : [];
   return (
     <>
       <GlobalHeaderServer activeNav="leagues" />
@@ -92,7 +97,7 @@ export default async function LeaguePage({ params, searchParams }) {
           <Link className="lv-crumb" href="/leagues">&larr; Leagues</Link>
         </div>
         {table ? (
-          <LeagueBoard league={league} table={table} uid={uid} tab={tab} openInvite={sp.invite === '1'} />
+          <LeagueBoard league={league} table={table} uid={uid} tab={tab} openInvite={sp.invite === '1'} events={events} />
         ) : (
           <div className="lv"><p className="lv-empty">The table could not load. Pull to refresh.</p></div>
         )}
