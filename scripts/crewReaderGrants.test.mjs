@@ -11,18 +11,21 @@ const COLS = {
   player_leagues: ['id', 'name', 'join_code', 'invite_token'],
 };
 
-test('auth/session/token tables are never granted; withheld columns never listed', () => {
-  const plan = grantPlan(Object.keys(COLS), (t) => COLS[t]);
+test('auth/token tables are never granted; withheld columns never listed', () => {
+  const plan = grantPlan([...Object.keys(COLS), 'accounts', 'email_otp'], (t) => COLS[t] ?? ['id']);
   const by = Object.fromEntries(plan.map((p) => [p.table, p.columns]));
-  assert.ok(!('sessions' in by));
+  assert.ok(!('accounts' in by) && !('email_otp' in by));
   assert.equal(by.matches, null, 'a clean table is granted whole');
   assert.equal(by.app_errors, null, 'the crew reads app_errors');
-  assert.ok(!('users' in by), 'users is withheld whole (tue-4): the crew reads it through crew_stats.users_v');
+  // fri-1: the assistant reads users and sessions by COLUMN - never the token or the identity.
+  assert.deepEqual(by.users, ['id'], 'users: no email, handle, name, date of birth or contact email');
+  assert.deepEqual(by.sessions, ['id'], 'sessions: never the sessionToken');
   assert.deepEqual(by.player_leagues, ['id', 'name']);
 });
 
 test('the exclusion lists name the auth tables and every email/token/identity column', () => {
-  for (const t of ['accounts', 'sessions', 'verification_token', 'email_otp', 'email_signups', 'device_tokens']) assert.ok(EXCLUDED_TABLES.includes(t), t);
+  for (const t of ['accounts', 'verification_token', 'email_otp', 'email_signups', 'device_tokens']) assert.ok(EXCLUDED_TABLES.includes(t), t);
+  assert.ok(EXCLUDED_COLUMNS.sessions.includes('sessionToken'), 'the login token is never readable');
   for (const c of ['email', 'contact_email', 'date_of_birth', 'emailVerified']) assert.ok(EXCLUDED_COLUMNS.users.includes(c), c);
   assert.ok(EXCLUDED_COLUMNS.player_leagues.includes('invite_token'));
 });
@@ -31,11 +34,27 @@ test('the exclusion lists name the auth tables and every email/token/identity co
 import { readFileSync } from 'node:fs';
 import { statsGrants } from './crew-reader-grants.mjs';
 
-test('the base tables behind the stats views are excluded and never re-granted', () => {
-  const COLS2 = { users: ['id', 'created_at'], sessions: ['id'], daily_guest_runs: ['id'], daily_board_runs: ['id'], daily_boards: ['id'] };
-  const plan = grantPlan(Object.keys(COLS2), (t) => COLS2[t]);
-  assert.deepEqual(plan.map((p) => p.table), ['daily_boards'], 'only daily_boards (public game data) is granted');
-  for (const t of ['users', 'sessions', 'daily_guest_runs', 'daily_board_runs']) assert.ok(EXCLUDED_TABLES.includes(t), t);
+test('fri-1: the base tables behind the stats views are COLUMN-granted, withholding what the views withhold', () => {
+  // The PROD column lists as of 17 Oct 2026.
+  const COLS2 = {
+    users: ['id', 'name', 'email', 'emailVerified', 'image', 'created_at', 'first_seen_context', 'email_opted_out_at', 'handle',
+      'handle_changed_at', 'contact_email', 'contact_email_at', 'onboarded_at', 'push_prompted_at', 'push_choice', 'last_seen_at', 'is_house', 'date_of_birth'],
+    sessions: ['id', 'userId', 'expires', 'sessionToken'],
+    daily_board_runs: ['id', 'board_id', 'user_id', 'picks', 'score', 'pct', 'matched', 'elapsed_s', 'completed_at', 'started_at', 'tz', 'late_claim', 'steps'],
+    daily_guest_runs: ['id', 'board_id', 'device_id', 'ip', 'started_at', 'picks', 'score', 'pct', 'matched', 'elapsed_s', 'completed_at',
+      'claim_expires_at', 'claimed_by', 'claimed_at', 'claimed_day', 'steps'],
+  };
+  const by = Object.fromEntries(grantPlan(Object.keys(COLS2), (t) => COLS2[t]).map((p) => [p.table, p.columns]));
+  const never = ['email', 'emailVerified', 'contact_email', 'contact_email_at', 'email_opted_out_at', 'name', 'image', 'handle',
+    'date_of_birth', 'sessionToken', 'picks', 'steps', 'device_id', 'ip'];
+  for (const [t, cols] of Object.entries(by)) {
+    assert.ok(Array.isArray(cols) && cols.length, `${t} is column-limited, never whole`);
+    for (const c of never) assert.ok(!cols.includes(c), `${t}.${c} is never granted`);
+  }
+  assert.deepEqual(by.sessions, ['id', 'userId', 'expires']);
+  assert.ok(by.users.includes('created_at') && by.users.includes('last_seen_at') && by.users.includes('is_house'));
+  assert.ok(by.daily_board_runs.includes('score') && by.daily_guest_runs.includes('claimed_by'));
+  for (const t of Object.keys(COLS2)) assert.ok(!EXCLUDED_TABLES.includes(t), t);
 });
 
 test('statsGrants: nothing without the schema; otherwise revoke, then usage + select', () => {
