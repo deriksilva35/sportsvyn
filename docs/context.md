@@ -62,9 +62,12 @@ The CrewOS project row is `sportsvyn` (display name SPORTSVŶN). Its nightly slo
   - `sportsvyn-fixer`: shell in ~/crew/worktrees.
   - Never use the IP.
 - Admin on the crew user: `ssh derik@165.227.30.35`, then `sudo -u crew-sportsvyn -i`.
-- DB role `crew_reader`: SELECT only, and on PROD it reads ONLY the `crew_stats.*_v` views (migration 143). Those views expose counts and dates: no email, name, session token, device id, IP or pick payload.
-  - scripts/crew-reader-grants.mjs re-applies the grants.
-  - revenuecat_events, memberships, push_sends and draft_config_invites are withheld.
+- DB role `crew_reader`: SELECT only (read-only transactions, 30 s statement timeout); its grants are applied by scripts/crew-reader-grants.mjs.
+  - Most public tables are readable whole: contests, contest_entries, matches, league_members, nba_mock_*, app_errors and so on.
+  - users, sessions, daily_board_runs, daily_guest_runs and player_leagues are granted by COLUMN. Never readable: email, contact email, name, image, date of birth, handle, the session token, pick payloads, device id, IP, join code and invite token. So `SELECT *` on those five tables fails; name the columns.
+  - Withheld whole: auth/OTP/token tables, email_signups, device_tokens, live_activities, revenuecat_events, memberships, push_sends, draft_config_invites.
+  - Pulse stats reads only the `crew_stats.*_v` views (migration 143).
+  - Each run revokes everything, then re-grants, so a new table stays unreadable until the script runs again.
 - Branches: feature work goes on short kebab-case branches in their own worktrees (~/projects/sv-<name>). The crew's branches are `crew/fix-<ticket-id>`.
 - main requires a pull request. The `tests` workflow runs on PRs, and while the CI_DATABASE_URL secret is unset it exits 0 with a notice.
 - The gate is local: `scripts/suite.sh` runs the full suite (~6,500 tests, ~13 min) under the host-wide lock ~/.sportsvyn-suite.lock, shared with Derik's sessions. Planned at registration: /run/lock/sportsvyn-suite/suite.lock. A second run waits; never start a parallel one.
