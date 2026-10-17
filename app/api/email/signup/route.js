@@ -44,6 +44,7 @@ import { sql } from '@/lib/db';
 import { resend, EMAIL_FROM, EMAIL_REPLY_TO } from '@/lib/resend';
 import { buildConfirmationEmail } from '@/lib/emails/confirmation';
 import { reserveSendSafe, clientIp } from '@/lib/auth/rateLimit';
+import { isHardBounced } from '@/lib/email/suppression';
 
 async function mayConfirm(email, ip) {
   const gate = await reserveSendSafe(sql, { identifier: email, ip, purpose: 'signup_confirm' });
@@ -57,6 +58,8 @@ const BASE_URL =
 
 async function sendConfirmation(to, token) {
   try {
+    // A HARD-BOUNCED ADDRESS IS NEVER MAILED AGAIN (fri-3, lib/email/suppression.js).
+    if (await isHardBounced(sql, to)) { console.warn('confirmation suppressed: address hard-bounced'); return; }
     const confirmUrl = `${BASE_URL}/api/email/confirm?token=${token}`;
     const { subject, html, text } = buildConfirmationEmail({ confirmUrl });
     await resend.emails.send({
