@@ -30,8 +30,11 @@ test('MyLeagues has no /sim/league/ link and no route for one exists', () => {
   // rule is stated instead of implied: nothing NAVIGATES on this card except
   // that named door, and it goes to the tracker, not to a league route.
   const links = [...strip.matchAll(/<Link[\s\S]*?href=\{?([^}\n]*)/g)].map((m) => m[1]);
-  assert.equal(links.length, 1, 'exactly one link on the card');
-  assert.match(strip, /className="sml-track"/, 'and it is the tracker door');
+  // SLICE 3 (fri-3) adds the SECOND named door: a linked league's own home
+  // (/leagues/<id>?tab=draft), shown only when the config has a league_id.
+  assert.equal(links.length, 2, 'exactly two links on the card');
+  assert.match(strip, /className="sml-track"/, 'the tracker door');
+  assert.match(strip, /\{l\.league_id != null && \(\s*<Link className="sml-open-league" href=\{`\/leagues\/\$\{l\.league_id\}\?tab=draft`\}/, 'and the linked league\'s home');
   assert.match(strip, /trackerHandoffHref\(\{/, 'carrying this league\'s shape, not a bare href');
   // The card BODY is still inert: name, meta, when and the start button.
   assert.equal(/<Link[^>]*className="sml-(name|meta|when|card)"/.test(strip), false);

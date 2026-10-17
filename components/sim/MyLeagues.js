@@ -35,6 +35,10 @@ export default function MyLeagues({ leagues, tz = null, userId = null }) {
               {l.keeper_count > 0 ? ` · ${l.keeper_count} keepers` : ''}
             </span>
             {day ? <span className="sml-when">Draft {day}{at ? ` · ${at.time}` : ''}</span> : null}
+            {/* SLICE 3: a league linked to a player league opens its league home. */}
+            {l.league_id != null && (
+              <Link className="sml-open-league" href={`/leagues/${l.league_id}?tab=draft`} data-open-league={l.league_id}>Open league &rarr;</Link>
+            )}
             {/* The real start action, not a link: see LeagueStart. The default
                 seat is YOUR franchise - the one you claimed (085), or for the
                 owner the imported isMine team; an unclaimed member has none

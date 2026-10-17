@@ -8,6 +8,9 @@
 // code renders a sentence naming the league when it can, never a 404 - a bad
 // link punishes the FRIEND for the owner's typo.
 //
+// LINKED (slice 3): a config linked to a player league redirects into it
+// (lib/leagues/draftLink.js joinDoor).
+//
 // NO WRITE ON THIS RENDER. Joining is the tap on the claim screen
 // (redeemInvite action), so a preview is a preview.
 
@@ -20,7 +23,8 @@ import JoinClaim from '@/components/sim/JoinClaim';
 import OnboardingGate from '@/components/onboarding/OnboardingGate';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { shellSigninHref } from '@/lib/shell/signinHref';
-import { invitePreview, normalizeInviteCode } from '@/lib/fantasy/leagueShare';
+import { invitePreview, normalizeInviteCode, inviteLeagueDoor } from '@/lib/fantasy/leagueShare';
+import { joinDoor } from '@/lib/leagues/draftLink';
 import '@/components/gridiron/gridiron.css';
 import '@/components/sim/sim.css';
 
@@ -40,6 +44,12 @@ export default async function JoinPage({ params }) {
   // Signed out on EVERY surface: sign-in first, then back here. There is no
   // web hero for a join link - the link is the pitch.
   if (userId == null) redirect(shellSigninHref(`/join/${encodeURIComponent(code)}`, isShell));
+
+  // A LINKED DRAFT LEAGUE (slice 3): the old link walks into the player league -
+  // its Draft tab for a member, its own /j/ door for anyone else while the old
+  // code is still good. A dead code renders as before (naming the league).
+  const door = joinDoor(await inviteLeagueDoor(code, userId) ?? {});
+  if (door) redirect(door);
 
   const preview = await invitePreview(code, userId);
 
