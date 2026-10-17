@@ -11,14 +11,17 @@
 // statement timeout. FAIL CLOSED: every run REVOKEs everything and grants the
 // tables that exist NOW, so a table added later is invisible until this runs
 // again (app_errors grants itself in its own migration). Excluded below: the
-// auth/session/OTP/token tables whole, and the email/identity/token columns
+// auth/OTP/token tables whole, and the email/identity/token/payload columns
 // of tables the crew otherwise needs (a column grant lists every other column).
 //
 // STATS SURFACE (tue-4, migration 143): the Pulse stats script reads ONLY the views in
 // schema crew_stats (users_v, sessions_v, ... - no email, token, IP or payload
-// columns). The base tables behind them (users, sessions, daily_guest_runs,
-// daily_board_runs) are revoked from crew_reader and never re-granted; every run
-// revokes crew_stats and re-grants USAGE + SELECT on whatever views exist.
+// columns); every run revokes crew_stats and re-grants USAGE + SELECT on the views.
+// THE ASSISTANT (fri-1): CrewOS's read-only SQL asks for the base tables by name
+// ("FROM users"), so users, sessions, daily_board_runs and daily_guest_runs are
+// granted by COLUMN with the same columns withheld as the views (EXCLUDED_COLUMNS).
+// The login token, email, name, date of birth, handle, device id, IP and pick
+// payloads stay unreadable either way.
 // A password is set only when the role is NEW or CREW_READER_PASSWORD is given: an
 // existing role keeps its password (the crew's stored secret) when the variable is
 // absent.
@@ -31,14 +34,10 @@ const ROLE = 'crew_reader';
 const PROD = process.argv.includes('--prod');
 const APPLY = process.argv.includes('--apply');
 
-/** Whole tables the crew never reads: auth, sessions, one-time codes, push tokens, signups. */
+/** Whole tables the crew never reads: auth accounts, one-time codes, push tokens, signups. */
 export const EXCLUDED_TABLES = Object.freeze([
-  'accounts', 'sessions', 'verification_token', 'email_otp', 'auth_throttle',
+  'accounts', 'verification_token', 'email_otp', 'auth_throttle',
   'email_signups', 'device_tokens', 'live_activities',
-  // Guest runs are read by lib/daily/guestRuns.js alone (its guard test).
-  'daily_guest_runs',
-  // The stats script reads these through crew_stats views only (migration 143).
-  'users', 'daily_board_runs',
   // tue-6 sweep of the 92 readable tables: purchase events (app_user_id, product),
   // subscription state (Stripe ids), push send log (device-linked, message text) and
   // join-code invites. The Watcher reads none of them.
@@ -47,7 +46,15 @@ export const EXCLUDED_TABLES = Object.freeze([
 
 /** Columns withheld from tables the crew does read. */
 export const EXCLUDED_COLUMNS = Object.freeze({
-  users: ['email', 'emailVerified', 'contact_email', 'contact_email_at', 'email_opted_out_at', 'date_of_birth', 'name', 'image'],
+  // fri-1 (CrewOS assistant): users, sessions and the two Daily run tables are
+  // COLUMN-granted, holding back exactly what the crew_stats views hold back:
+  // identity and contact columns, the login token, pick payloads, device and IP.
+  users: ['email', 'emailVerified', 'contact_email', 'contact_email_at', 'email_opted_out_at', 'date_of_birth', 'name', 'image', 'handle'],
+  sessions: ['sessionToken'],
+  daily_board_runs: ['picks', 'steps'],
+  // Guest runs: written and read by lib/daily/guestRuns.js alone (its guard test);
+  // named here only to withhold the device, IP and payload columns.
+  daily_guest_runs: ['device_id', 'ip', 'picks', 'steps'],
   player_leagues: ['join_code', 'invite_token'],
   draft_config_invites: ['code'],
   memberships: ['stripe_customer_id', 'stripe_subscription_id'],
