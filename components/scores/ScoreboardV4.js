@@ -11,7 +11,8 @@
 //
 // ORDER, top to bottom: the head, the Yours strip (pinned above the day rail,
 // exactly withYoursBand's band), the day rail with its counts, the chip row
-// (sport pills, then ● Live · Yours · Top 25 · Close · Tonight; it scrolls
+// (sport pills with Top 25 after CFB on All, then ● Live · Yours · Close · Tonight;
+// on CFB, Top 25 opens the conference row instead; it scrolls
 // sideways), the conference picker on CFB, then the groups.
 
 import Link from 'next/link';
@@ -363,6 +364,10 @@ export default function ScoreboardV4({ v, view = null, conf = null, signedIn = f
   const ctx = { today: v.today, tz: v.tz, now };
   const counts = chipCounts(v.groups, ctx);
   const narrowed = applyView(v.groups, { view, conf, ...ctx });
+  // ONE Top 25 chip, placed by sport (sat-1): after CFB on All, first in CFB's
+  // conference row. rankedToday is false off All/CFB and on a day with no ranked
+  // CFB game, so it is hidden there. Top25Link keeps the sv_top25 memory.
+  const top25Chip = <Top25Link next={!v.top25} key="top25" className={`sv4-chip${v.top25 ? ' on' : ''}`} href={h.top25()} data-chip="top25">Top 25</Top25Link>;
   const yours = narrowed.groups.find((grp) => grp.key === 'yours') ?? null;
   const rest = narrowed.groups.filter((grp) => grp.key !== 'yours');
   const onDay = v.days.find((d) => d.on)?.counts ?? null;
@@ -394,19 +399,23 @@ export default function ScoreboardV4({ v, view = null, conf = null, signedIn = f
       </div>
 
       <div className="sv4-chips" data-section="chips">
-        {SPORTS.filter(([k]) => sportChipShown(k, { leagues: v.leagues, selected: v.sport })).map(([k, label]) => (
-          <Link key={k} className={`sv4-chip${v.sport === k ? ' on' : ''}`} href={h.sport(k)} data-chip={`sport:${k}`}>{label}</Link>
-        ))}
+        {SPORTS.filter(([k]) => sportChipShown(k, { leagues: v.leagues, selected: v.sport })).flatMap(([k, label]) => [
+          <Link key={k} className={`sv4-chip${v.sport === k ? ' on' : ''}`} href={h.sport(k)} data-chip={`sport:${k}`}>{label}</Link>,
+          // TOP 25 ON ALL sits right after CFB (sat-1), not at the end of a row that scrolls off screen.
+          ...(k === 'cfb' && v.sport === 'all' && v.rankedToday ? [top25Chip] : []),
+        ])}
         <span className="sep" aria-hidden="true" />
         {shown('live') && <Link className={`sv4-chip live${view === 'live' ? ' on' : ''}`} href={h.view('live')} data-chip="live"><i className="dot" />Live {counts.live}</Link>}
         {signedIn && <Link className={`sv4-chip${v.mine ? ' on' : ''}`} href={h.mine()} data-chip="mine" data-mine-count={v.mineCount}>Yours {v.mineCount}</Link>}
-        {v.rankedToday && <Top25Link next={!v.top25} className={`sv4-chip${v.top25 ? ' on' : ''}`} href={h.top25()} data-chip="top25">Top 25</Top25Link>}
         {shown('close') && <Link className={`sv4-chip${view === 'close' ? ' on' : ''}`} href={h.view('close')} data-chip="close">Close {counts.close}</Link>}
         {shown('tonight') && <Link className={`sv4-chip${view === 'tonight' ? ' on' : ''}`} href={h.view('tonight')} data-chip="tonight">Tonight {counts.tonight}</Link>}
       </div>
 
-      {v.sport === 'cfb' && narrowed.confs.length > 0 && (
+      {v.sport === 'cfb' && (narrowed.confs.length > 0 || v.rankedToday) && (
         <div className="sv4-chips sv4-conf" data-section="conf">
+          {/* TOP 25 ON CFB is the FIRST chip of the conference row (sat-1); it combines
+              with a conference chip and with Yours (one URL, lib/scores/v4.js). */}
+          {v.rankedToday && top25Chip}
           {narrowed.confs.map((c) => (
             <Link key={c} className={`sv4-chip${narrowed.conf === c ? ' on' : ''}`} href={h.conf(c)} data-chip={`conf:${c}`}>{c}</Link>
           ))}

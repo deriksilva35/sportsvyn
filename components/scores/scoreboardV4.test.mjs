@@ -138,12 +138,13 @@ test('the page-level fields V2 shows are on V4 too: the zone, the live count, th
   assert.equal(d4.querySelector('[data-chip="mine"]').textContent, 'Yours 3');
 });
 
-test('chips: All/NFL/CFB/MLB (no EPL), then Live · Yours · Top 25 · Close · Tonight; a zero count hides the chip; selected is .on', () => {
+test('chips: All/NFL/CFB · Top 25 · MLB (no EPL), then Live · Yours · Close · Tonight; a zero count hides the chip; selected is .on', () => {
   const v = fixture();
   const d4 = doc(v4html(v, true));
   const chips = [...d4.querySelectorAll('[data-section="chips"] .sv4-chip')].map((a) => a.dataset.chip);
   // Close: NFL 17-20 in Q4 is 3 (close); ALA 24-10 in Q3 is not; NYY 3-2 top 7th is (MLB within 2 from the 7th). Tonight: nothing left today.
-  assert.deepEqual(chips, ['sport:all', 'sport:nfl', 'sport:cfb', 'sport:mlb', 'live', 'mine', 'top25', 'close']);
+  // sat-1: on All, Top 25 sits right after CFB, not at the end of the row.
+  assert.deepEqual(chips, ['sport:all', 'sport:nfl', 'sport:cfb', 'top25', 'sport:mlb', 'live', 'mine', 'close']);
   assert.equal(d4.querySelector('[data-chip="close"]').textContent, 'Close 2');
   assert.equal(d4.querySelector('[data-chip="live"]').textContent, 'Live 4');
   assert.equal(d4.querySelector('[data-chip="sport:all"]').className, 'sv4-chip on');
@@ -162,9 +163,35 @@ test('CFB adds the conference picker, built from the day\'s rows', () => {
   v.groups = v.groups.map((g) => ({ ...g, games: g.games.filter((x) => x.leagueSlug === 'cfb') })).filter((g) => g.games.length);
   const d4 = doc(v4html(v, true, { conf: 'SEC' }));
   assert.deepEqual([...d4.querySelectorAll('[data-section="conf"] .sv4-chip')].map((a) => [a.textContent, a.className]),
-    [['ACC', 'sv4-chip'], ['American', 'sv4-chip'], ['SEC', 'sv4-chip on']]);
+    [['Top 25', 'sv4-chip'], ['ACC', 'sv4-chip'], ['American', 'sv4-chip'], ['SEC', 'sv4-chip on']]);
   assert.deepEqual([...d4.querySelectorAll('article.sv4-card')].map((c) => c.dataset.slug), ['g-3']);
   assert.equal(doc(v4html(fixture(), true)).querySelector('[data-section="conf"]'), null, 'All has no picker');
+});
+
+test('sat-1: on CFB, Top 25 is the FIRST chip of the conference row; it combines with a conference and with Yours; hidden on a day with no ranked game', () => {
+  const cfbOnly = (over = {}) => {
+    const v = { ...fixture(), sport: 'cfb', ...over };
+    v.groups = v.groups.map((g) => ({ ...g, games: g.games.filter((x) => x.leagueSlug === 'cfb') })).filter((g) => g.games.length);
+    return v;
+  };
+  const d = doc(v4html(cfbOnly(), true));
+  assert.deepEqual([...d.querySelectorAll('[data-section="conf"] .sv4-chip')].map((a) => a.dataset.chip),
+    ['top25', 'conf:ACC', 'conf:American', 'conf:SEC'], 'Top 25 before ACC');
+  assert.equal(d.querySelector('[data-section="chips"] [data-chip="top25"]'), null, 'not also in the sport row');
+  assert.equal(d.querySelectorAll('[data-chip="top25"]').length, 1);
+  // ON (lime): the chip is .on, and its href turns it off while keeping the conference and Yours.
+  const on = doc(v4html(cfbOnly({ top25: true, mine: true }), true, { conf: 'SEC' }));
+  const chip = on.querySelector('[data-chip="top25"]');
+  assert.equal(chip.className, 'sv4-chip on');
+  assert.equal(chip.getAttribute('href'), '/scores?sport=cfb&conf=SEC&mine=1');
+  // OFF: tapping adds top25 and keeps the conference and Yours.
+  const off = doc(v4html(cfbOnly({ mine: true }), true, { conf: 'SEC' }));
+  assert.equal(off.querySelector('[data-chip="top25"]').getAttribute('href'), '/scores?sport=cfb&conf=SEC&mine=1&top25=1');
+  // A conference chip keeps Top 25 on.
+  assert.match(on.querySelector('[data-chip="conf:ACC"]').getAttribute('href'), /top25=1/);
+  // No ranked CFB game that day: no chip anywhere (as before).
+  assert.equal(doc(v4html(cfbOnly({ rankedToday: false }), true)).querySelector('[data-chip="top25"]'), null);
+  assert.equal(doc(v4html({ ...fixture(), rankedToday: false }, true)).querySelector('[data-chip="top25"]'), null);
 });
 
 test('the live NFL card: volt clock pill, the leader\'s score, the ball, the field with its first-down tick, the foot with the opening and the win read', () => {

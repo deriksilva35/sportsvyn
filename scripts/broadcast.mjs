@@ -48,6 +48,7 @@ import { sql } from '../lib/db.js';
 import { unsubscribeUrlFor, unsubscribeHeaders, clickUrlFor } from '../lib/auth/welcomeEmail.js';
 import { emailLinkSecret } from '../lib/email/linkSecret.js';
 import { rewriteHrefs, emailMeta, htmlToText } from '../lib/email/broadcastRules.js';
+import { hardBouncedAddresses } from '../lib/email/suppression.js';
 import { databaseFingerprint, assertLiveTarget, validateTestRecipient, sentForCampaign } from '../lib/email/broadcastRules.js';
 
 const args = process.argv.slice(2);
@@ -234,10 +235,14 @@ async function recipients() {
   //
   // HOUSE ACCOUNTS ARE NOT AN AUDIENCE (wed-2). users.is_house (migration
   // 101) marks the personas that play the boards; their addresses are ours.
+  // HARD BOUNCES ARE OUT (fri-3, lib/email/suppression.js): an address that
+  // bounced permanently is never loaded, by the same WHERE clause.
+  const bounced = await hardBouncedAddresses(sql);
   const rows = await sql`
     SELECT id, COALESCE(contact_email, email) AS email
       FROM users
      WHERE COALESCE(contact_email, email) IS NOT NULL
+       AND NOT (lower(trim(COALESCE(contact_email, email))) = ANY(${bounced}))
        AND email_opted_out_at IS NULL
        AND NOT is_house
        AND NOT (email = ANY(${OWNER_ADDRESSES}))
