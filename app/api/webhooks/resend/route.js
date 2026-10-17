@@ -109,7 +109,10 @@ export async function POST(request) {
     INSERT INTO sync_runs (source, kind, started_at, finished_at, ok, summary)
     VALUES ('resend-webhook', ${outcome}, now(), now(),
             ${outcome !== 'bounced' && outcome !== 'complained'},
-            ${JSON.stringify({ messageId, to, outcome, type: evt.type })}::jsonb)`;
+            ${JSON.stringify({ messageId, to, outcome, type: evt.type,
+              // fri-3: the bounce's kind (Permanent / Transient / Undetermined), so
+              // lib/email/suppression.js never suppresses an address on a soft bounce.
+              ...(outcome === 'bounced' ? { bounceType: evt?.data?.bounce?.type ?? null } : {}) })}::jsonb)`;
 
   return Response.json({ ok: true, outcome, messageId });
 }
