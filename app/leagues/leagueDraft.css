@@ -1,0 +1,18 @@
+/* app/leagues/leagueDraft.css - the league home's DRAFT tab (slice 3, fri-3).
+   lh-* only, tokens only. Rows are grids whose name column is minmax(0, 1fr):
+   nothing overflows at 390, a long franchise or player name wraps or ellipsises. */
+.lh-draft-status { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; margin: 6px 0 4px; border-radius: 16px; background: var(--tok-surface-2); }
+.lh-draft-status b { font-family: var(--tok-font-num); font-weight: 400; font-size: 20px; }
+.lh-draft-bots { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 6px; font-size: 13px; }
+.lh-draft-bots .lv-btn { min-height: 40px; }
+.lh-draft-mine { font-size: 15px; margin: 0; }
+.lh-claim { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.lh-claim-label { display: flex; flex-direction: column; gap: 4px; flex: 1 1 200px; min-width: 0; }
+.lh-claim select { min-height: 44px; border-radius: 10px; border: 1.5px solid var(--tok-line); background: var(--tok-page); color: var(--tok-ink); font-size: 15px; padding: 0 10px; max-width: 100%; }
+.lh-claim .lv-btn { min-height: 44px; }
+.lh-board { display: flex; flex-direction: column; }
+.lh-franchise { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: start; column-gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--tok-line); }
+.lh-keepers { display: flex; flex-wrap: wrap; gap: 4px; padding-top: 4px; }
+.lh-keeper { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--tok-surface-2); color: var(--tok-ink); overflow-wrap: anywhere; }
+.lh-run { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-bottom: 1px solid var(--tok-line); color: var(--tok-ink); text-decoration: none; font-weight: 700; font-size: 14px; }
+.lh-run .lv-note { font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

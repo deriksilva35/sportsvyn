@@ -17,6 +17,7 @@ import { auth } from '@/auth';
 import { createLeague, joinLeague, setLeaguePickFormat, undoPendingPickFormat } from '@/lib/leagues/core';
 import { joinByInvite, resetInvite } from '@/lib/leagues/invite';
 import { setMemberRole, removeMember, leaveLeague, setNotifyPrefs } from '@/lib/leagues/members';
+import { setBotsOn } from '@/lib/leagues/draftLink';
 import { ageGateRefusal } from '@/lib/auth/ageGateDb';
 
 async function uid() {
@@ -162,6 +163,18 @@ export async function setLeagueNotifyAction(leagueId, prefs) {
   const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
   try {
     return await setNotifyPrefs(userId, Number(leagueId), prefs ?? {});
+  } catch {
+    return { ok: false, reason: 'Could not save that' };
+  }
+}
+
+/** The draft league owner's switch: empty seats are bots, or stay empty (slice 3). */
+export async function setLeagueBotsAction(leagueId, on) {
+  const userId = await uid();
+  if (userId == null) return { ok: false, reason: 'Sign in first' };
+  const ageRefused = await ageGateRefusal(userId); if (ageRefused) return ageRefused;
+  try {
+    return await setBotsOn(userId, Number(leagueId), on === true);
   } catch {
     return { ok: false, reason: 'Could not save that' };
   }
