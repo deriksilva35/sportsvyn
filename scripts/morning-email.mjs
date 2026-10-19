@@ -4,6 +4,8 @@
 //   DATABASE_URL="$PROD_DATABASE_URL" node scripts/morning-email.mjs --count --prod
 //   ... --preview /tmp/x.html [--as <userId>]                            render, send nothing
 //   ... --test derik@sportsvyn.com [--as <userId>] --prod                ONE mail to an owner address
+//   ... --b                                                              (mon-5) the NBA opener's Group B:
+//        the count, and B's mail (no YOUR MOVE, the account footer), rendered as a B account
 //
 // A TEST GOES ONLY TO AN OWNER ADDRESS (lib/email/owners.js), rendered as the
 // account given by --as (default: the first audience member), and is ledgered as
@@ -20,6 +22,8 @@ import { morningAudience } from '../lib/email/morningAudience.js';
 import { OWNER_ADDRESSES } from '../lib/email/owners.js';
 import { loadDay, loadReader, composeFor, etDay, resendSend, SOURCE } from '../lib/email/morningSend.js';
 import { unsubscribeUrlFor, clickUrlFor, unsubscribeHeaders } from '../lib/auth/welcomeEmail.js';
+import { groupB, composeB } from '../lib/email/nbaOpener.js';
+import { ACCOUNT_FOOTER } from '../lib/emails/morning.js';
 
 const arg = (k) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : null; };
 const has = (k) => process.argv.includes(k);
@@ -35,9 +39,15 @@ console.log(`TARGET ${PROD ? 'PROD' : 'DEV'} ${new URL(process.env.DATABASE_URL)
 const audience = await morningAudience(sql, { owners: OWNER_ADDRESSES });
 const why = audience.reduce((m, a) => (m[a.why] = (m[a.why] ?? 0) + 1, m), {});
 console.log(`AUDIENCE ${audience.length} · ${JSON.stringify(why)}`);
+const B = has('--b');
+const groupBRows = B ? await groupB(sql, { day: arg('--day') ?? etDay() }) : [];
+if (B) console.log(`GROUP B ${groupBRows.length} (every other account; not unsubscribed, bounced, complained, house, owner, OFF at /you, or in A)`);
 if (has('--count')) process.exit(0);
 
-const asId = arg('--as') ? Number(arg('--as')) : audience[0]?.id;
+// A B TEST IS SIGNED FOR THE OWNER'S OWN ROW (mon-5): B's mail has nothing personal
+// in it, and an unsubscribe clicked in a test must not unsubscribe a real reader.
+const ownerRow = B && arg('--test') ? (await sql`SELECT id FROM users WHERE email = ${arg('--test').split(',')[0].trim()} OR contact_email = ${arg('--test').split(',')[0].trim()} ORDER BY id LIMIT 1`)[0] : null;
+const asId = arg('--as') ? Number(arg('--as')) : (B ? (ownerRow?.id ?? groupBRows[0]?.id) : audience[0]?.id);
 if (!asId) { console.error('no account to render as (--as <userId>)'); process.exit(2); }
 // --day YYYY-MM-DD renders that morning as the 15:00Z run would see it (mon-1: "render it AS Tuesday").
 const DAY = arg('--day') ?? etDay();
@@ -46,7 +56,10 @@ const dayData = await loadDay(DAY, { now: NOW });
 const reader = await loadReader(dayData, asId);
 const unsub = await unsubscribeUrlFor(asId);
 const campaign = `morning-test-${DAY}`;
-const mail = composeFor({ dayData, reader, unsubscribeUrl: unsub, player: true, link: (p) => clickUrlFor({ campaign, userId: asId, to: `${base}${p}` }) });
+const mail = B
+  ? await composeB({ dayData, userId: asId, unsubscribeUrl: unsub, link: (p) => clickUrlFor({ campaign, userId: asId, to: `${base}${p}` }) })
+  : composeFor({ dayData, reader, unsubscribeUrl: unsub, player: true, link: (p) => clickUrlFor({ campaign, userId: asId, to: `${base}${p}` }) });
+if (B) console.log(`B MAIL: footer "${ACCOUNT_FOOTER}" · postal ${process.env.EMAIL_POSTAL_ADDRESS ? 'set' : 'NOT SET'} · YOUR MOVE ${/YOUR MOVE/i.test(mail.html) ? 'PRESENT (wrong)' : 'absent'}`);
 console.log(`AS user ${asId} · subject: ${mail.subject}`);
 console.log(`modules: ${[dayData.hero && `HERO ${dayData.hero.league} (${dayData.hero.games.length} games${dayData.hero.confidenceLine ? ', confidence board' : ', board not built yet'})`, dayData.headline && `headline "${dayData.headline}"`, dayData.yesterdayDaily && `yesterday's Daily (${dayData.yesterdayDaily.played} played)`, 'daily', dayData.week && `week (${dayData.week.rows.length} sports)`, dayData.game && `game of the day (${dayData.game.why ?? 'earliest'})`, dayData.free && `free to play ${dayData.free.length}`, (reader.yesterday || reader.locks.length) && 'your move', `spotlight${reader.hasIosDevice ? '' : ' + app link'}`].filter(Boolean).join(' · ')}`);
 
@@ -90,10 +103,10 @@ let failed = 0;
 for (const to of toList) {
   const [{ id: rowId }] = await sql`
     INSERT INTO sync_runs (source, kind, started_at, ok, summary)
-    VALUES (${SOURCE}, 'test', now(), true, ${JSON.stringify({ to, asUserId: asId, day: DAY, outcome: 'sending' })}::jsonb) RETURNING id`;
+    VALUES (${SOURCE}, 'test', now(), true, ${JSON.stringify({ to, asUserId: asId, day: DAY, ...(B ? { b: true } : {}), outcome: 'sending' })}::jsonb) RETURNING id`;
   const res = await resendSend({ to, subject: `[TEST] ${mail.subject}`, html: inline.html, text: mail.text, headers: unsubscribeHeaders(unsub), attachments: inline.attachments });
   await sql`UPDATE sync_runs SET finished_at = now(), ok = ${!res?.error},
-              summary = ${JSON.stringify({ to, asUserId: asId, day: DAY, outcome: res?.error ? 'failed' : 'sent', id: res?.data?.id ?? null })}::jsonb
+              summary = ${JSON.stringify({ to, asUserId: asId, day: DAY, ...(B ? { b: true } : {}), outcome: res?.error ? 'failed' : 'sent', id: res?.data?.id ?? null })}::jsonb
             WHERE id = ${rowId}`;
   if (res?.error) { failed += 1; console.error(`SEND FAILED to ${to}: ${res.error.message ?? res.error}`); continue; }
   console.log(`SENT test to ${to} at ${new Date().toISOString()} · Resend ${res?.data?.id}`);
