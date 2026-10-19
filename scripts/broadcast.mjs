@@ -49,6 +49,7 @@ import { unsubscribeUrlFor, unsubscribeHeaders, clickUrlFor } from '../lib/auth/
 import { emailLinkSecret } from '../lib/email/linkSecret.js';
 import { rewriteHrefs, emailMeta, htmlToText } from '../lib/email/broadcastRules.js';
 import { hardBouncedAddresses } from '../lib/email/suppression.js';
+import { OWNER_ADDRESSES } from '../lib/email/owners.js';
 import { databaseFingerprint, assertLiveTarget, validateTestRecipient, sentForCampaign } from '../lib/email/broadcastRules.js';
 
 const args = process.argv.slice(2);
@@ -67,26 +68,9 @@ const SOURCE = 'broadcast';
 // ---------------------------------------------------------------------------
 // EXCLUSIONS
 // ---------------------------------------------------------------------------
-// THE OWNER'S OWN ACCOUNTS. Five addresses that are Derik testing the product,
-// not users. Listed explicitly rather than pattern-matched on 'derik' because a
-// real user called Derik would otherwise be silently dropped.
-const OWNER_ADDRESSES = [
-  'deriksilva@gmail.com',
-  'derik@safetymanagers.com',
-  'derik@sportsvyn.com',
-  'deriksilva+welcome@gmail.com',
-  'deriksilva+welcome2@gmail.com',
-  // Sixth, added 18 Aug: signed up through the app the morning of the send and
-  // would otherwise have been mailed. THE LIST IS THE WEAKNESS OF THIS DESIGN -
-  // a new owner address is invisible until somebody reads the dry-run roster,
-  // which is the argument for reading it every time rather than trusting the
-  // count.
-  'deriksilva@compsysllc.com',
-  // Seventh, 19 Aug: the recreated Skry-identity account (user 74, Derik's
-  // push device #1). Found the same way as the sixth - by a list somewhere
-  // refusing it - which is the dry-run-roster argument restated.
-  'derik@theskry.com',
-];
+// THE OWNER'S OWN ACCOUNTS live in lib/email/owners.js (shared with the morning
+// email, sun-2): one list, so a new owner address is excluded from every send.
+
 
 // ---------------------------------------------------------------------------
 // THE FOUNDER'S VERIFY COPY. The exclusion list did its job perfectly on the

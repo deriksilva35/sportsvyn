@@ -187,8 +187,9 @@ test('ALERTS: read and link only - every row points somewhere and none writes (R
   // argument the R3 paragraph in You.js asked for), and each is /account's own
   // component, never a second copy.
   const writers = [...c.matchAll(/<([A-Z]\w+)(Row|Button|Account|Teams)\b/g)].map((m) => `${m[1]}${m[2]}`);
-  assert.deepEqual(writers, ['FollowedTeams', 'NotificationsRow', 'RedZoneRow', 'SignOutButton', 'DeleteAccount'],
-    'the red-zone switch plus the four /account controls, and nothing else');
+  // sun-2: the MORNING EMAIL switch (ruling thu-1 names /you as its home).
+  assert.deepEqual(writers, ['FollowedTeams', 'NotificationsRow', 'RedZoneRow', 'MorningEmailRow', 'SignOutButton', 'DeleteAccount'],
+    'the red-zone switch, the morning email switch, plus the four /account controls, and nothing else');
   // And it states its cost before a reader turns it on.
   assert.match(src('components/you/RedZoneRow.js'), /about 130 a Sunday/);
 });

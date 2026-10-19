@@ -43,6 +43,7 @@
 
 import Link from 'next/link';
 import RedZoneRow from '@/components/you/RedZoneRow';
+import MorningEmailRow from '@/components/you/MorningEmailRow';
 import NotificationsRow from '@/components/push/NotificationsRow';
 import FollowedTeams from '@/components/account/FollowedTeams';
 import SignOutButton from '@/components/sim/SignOutButton';
@@ -172,6 +173,8 @@ function Alerts({ alerts }) {
         {/* THE ONE WRITER ON THIS TAB. A league-wide standing instruction has
             no other surface to point at - see RedZoneRow's own note. */}
         <RedZoneRow league="nfl" label="NFL red zone" />
+        {/* THE MORNING EMAIL SWITCH (ruling thu-1) - the reader's own inbox, no other surface. */}
+        {alerts.morning && <MorningEmailRow on={alerts.morning.on} chosen={alerts.morning.chosen} unsubscribed={alerts.email.optedOut} />}
         <div className="yu-set" data-row="email">
           <span className="yu-k">Email<small>{alerts.emailMasked ?? 'your address'}</small></span>
           <span className={`yu-v${alerts.email.optedOut ? '' : ' on'}`}>{alerts.email.optedOut ? 'Unsubscribed' : 'On'}</span>
