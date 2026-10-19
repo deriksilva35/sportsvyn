@@ -13,12 +13,10 @@
     - Members names your franchise;
     - old /join/53XUHXVR (expired) lands on /leagues/11?tab=draft;
     - /sim loads with "Open league"; mock room /sim/draft/585 loads; no page errors.
-  - Off: only 1 of 4 members has claimed a franchise (3 show "Open"). The draft date reads
-    "Mon Sep 7" (ET of the stored 8 Sep UTC time).
+  - Off: 1 of 4 members has claimed a franchise; the draft date reads "Mon Sep 7" (ET of 8 Sep UTC).
 - Rulings logged in docs/decisions.md (new): expired /join stays dead (copy shipped); bots switch
   stored now, used from slice 4; MUST-DO before the 2027 keeper import: the import attaches to the
   same league (also in memory).
-- Earlier: bounce suppression, /scores Top 25 placement, crew_reader column grants, docs/context.md.
 
 ## CFB 25 WEEK 8 LIVE (mon-2)
 - content/power/cfb-2026-w8.md + EDITOR_FILES line, merge a4cc9c2 (suite 6517/0, preview READY on
@@ -46,8 +44,7 @@
   three reached Resend; 15:05 and 15:55 were confirmed delivered by webhook. Mail lands in Google
   Workspace (MX aspmx.l.google.com). The droplet's Resend key is send-only (no lookups). The second
   test address from Derik is still pending (owner addresses only).
-- Tuesday's NBA board was not built at render time (built ~10:52Z Tue): the confidence line shows
-  only once it exists; the button is /pickem/nba either way.
+- Tue's NBA board is built ~10:52Z Tue; the confidence line shows only once it exists.
 - GO ORDER for Tue 20 Oct 15:00Z: (1) 146 on PROD; (2) merge + deploy; (3) MORNING_EMAIL=on in
   Vercel production; (4) after 15:00Z check sync_runs source 'morning-email'.
 
