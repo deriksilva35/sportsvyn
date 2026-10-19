@@ -42,9 +42,9 @@ const dayData = await loadDay(etDay());
 const reader = await loadReader(dayData, asId);
 const unsub = await unsubscribeUrlFor(asId);
 const campaign = `morning-test-${etDay()}`;
-const mail = composeFor({ dayData, reader, unsubscribeUrl: unsub, link: (p) => clickUrlFor({ campaign, userId: asId, to: `${base}${p}` }) });
+const mail = composeFor({ dayData, reader, unsubscribeUrl: unsub, player: true, link: (p) => clickUrlFor({ campaign, userId: asId, to: `${base}${p}` }) });
 console.log(`AS user ${asId} · subject: ${mail.subject}`);
-console.log(`blocks: daily${reader.yesterday ? ' · yesterday' : ''}${dayData.game ? ' · game of the day' : ''}${reader.locks.length ? ` · ${reader.locks.length} locking today` : ''}`);
+console.log(`modules: ${[dayData.headline && `headline "${dayData.headline}"`, dayData.yesterdayDaily && `yesterday's Daily (${dayData.yesterdayDaily.played} played)`, 'daily', dayData.week && `week (${dayData.week.rows.length} sports)`, dayData.game && `game of the day (${dayData.game.why ?? 'earliest'})`, dayData.free && `free to play ${dayData.free.length}`, (reader.yesterday || reader.locks.length) && 'your move', `spotlight${reader.hasIosDevice ? '' : ' + app link'}`].filter(Boolean).join(' · ')}`);
 
 if (arg('--preview')) { writeFileSync(arg('--preview'), mail.html); console.log(`preview written: ${arg('--preview')}`); process.exit(0); }
 

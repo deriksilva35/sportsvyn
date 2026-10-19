@@ -58,6 +58,11 @@ export default function PrivacyPage() {
               same as any other.
             </li>
             <li>
+              <strong>Our morning email.</strong> If you have played in the last 30 days, just joined, or
+              turned it on at sportsvyn.com/you, we send one short email in the morning about the day&rsquo;s
+              games and your entries. Turn it off at sportsvyn.com/you, or use the unsubscribe link in any email.
+            </li>
+            <li>
               <strong>Your date of birth.</strong> We ask for it once, before you
               play, to confirm you are old enough to use Sportsvyn. It is stored
               privately with your account and is never shown on your profile, on a

@@ -20,7 +20,7 @@ export default async function MorningEmailPreview({ searchParams }) {
   const day = etDay();
   const dayData = await loadDay(day);
   const mail = asId
-    ? composeFor({ dayData, reader: await loadReader(dayData, asId), unsubscribeUrl: '#unsubscribe', link: (p) => `https://sportsvyn.com${p}` })
+    ? composeFor({ dayData, reader: await loadReader(dayData, asId), unsubscribeUrl: '#unsubscribe', player: true, link: (p) => `https://sportsvyn.com${p}` })
     : null;
   return (
     <main style={{ padding: 16, fontFamily: 'system-ui, sans-serif' }}>
