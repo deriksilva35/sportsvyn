@@ -1,4 +1,4 @@
-# Handoff - droplet relays sun-1 + sun-2, Mon 19 Oct 2026 (clock ~01:10Z)
+# Handoff - droplet relays sun-1/2 + mon-1/2, Mon 19 Oct 2026 (clock ~17:00Z)
 
 ## Live (PROD) - main 2c36373 (deployed ~00:55Z); poller unchanged (93a36a4)
 - SLICE 3 LIVE (sun-1 GO): migration 145 on PROD (ledgered, checksum = DEV); merge 2c36373
@@ -20,34 +20,44 @@
   same league (also in memory).
 - Earlier: bounce suppression, /scores Top 25 placement, crew_reader column grants, docs/context.md.
 
-## HOLDING FOR GO - morning email (sun-2; thu-1 recipients ruling)
-- Branch morning-email @ 22d9e3f, worktree ~/projects/sv-morning. Suite 6522/0 on 22d9e3f.
-- Migration 146 (users.morning_email; NULL = the rule decides) is on DEV ONLY.
-- Built:
-  - audience: played 30 d OR account < 14 d OR ON at /you; OFF at /you never; unsubscribed,
-    house, owner and hard-bounced excluded;
-  - a ledger row before each send, so each reader gets one mail per ET day;
-  - MORNING_EMAIL=on kill switch (OFF): an off cron firing records skipped-off;
-  - /api/cron/morning-email at 0 15 * * *, plus a watchdog entry;
-  - /admin/morning-email preview; scripts/morning-email.mjs --count / --preview / --test
-    (owner addresses only);
-  - /you Morning email switch (PUT /api/me/morning-email, age-gated).
-  - The owner list moved to lib/email/owners.js.
-- Draft body (lib/emails/morning.js): today's Daily, your yesterday (score, place of N), game of
-  the day, boards locking today, unsubscribe. The content spec was not on the droplet; Derik
-  reviews it in the test.
-- PROD audience 19 Oct 01:00Z (read-only): 43 = 38 active + 5 new.
-- TEST SENT 19 Oct 15:05:02Z to derik@sportsvyn.com (Resend 01a154b1-d121-7e3e-b42c-175b67781cb2), as
-  user 1. Subject "Cleveland Guardians at Tampa Bay Rays today - and a new Daily"; blocks: Daily,
-  game of the day, 5 locking today (user 1 had no Daily yesterday). Audience at send: 44 (40 + 4).
-- GO ORDER for Tue 20 Oct 15:00Z: (1) 146 on PROD; (2) merge + deploy; (3) set MORNING_EMAIL=on in
-  Vercel production; (4) after 15:00Z check sync_runs source 'morning-email' (sent / failed).
+## CFB 25 WEEK 8 LIVE (mon-2)
+- content/power/cfb-2026-w8.md + EDITOR_FILES line, merge a4cc9c2 (suite 6517/0, preview READY on
+  6ad2ee0 = same tree). All 25 names resolve to exactly one team (Miami = MIA 48148).
+- Published with publish({league:'cfb', apply:true}) from main against PROD (week 7's path): edition
+  157 replaced the model-only 156 from the 15:00Z cron. Ranks 1-25 = the list.
+  cfb25-reminder dry run: "would do nothing: file-exists".
+- Checked at 390:
+  - /rankings?league=cfb: the SPORTSVYN POWER block reads 1 Ohio State ▲4, 2 Miami, 3 BYU ▲5;
+    the AP block above it leads with Miami.
+  - Scores rank badges show AP ranks, not the Sportsvyn 25.
+  - Top 25 chip: first in the conference row, lime when on.
+
+## HOLDING FOR GO - morning email (sun-2, mon-1 + addendum)
+- Branch morning-email @ 05b4738, worktree ~/projects/sv-morning. Suite 6530/0, preview READY
+  on 05b4738. Migration 146 (users.morning_email) is on DEV ONLY.
+- Body to the thu-1 spec, each module hidden when empty: 0 opener HERO (SEASON_OPENERS: NBA;
+  default none), 1 headline, 2 yesterday's Daily (answer, played with house excluded, top 3),
+  3 Daily button, 4 the week grid, 5 game of the day (playoff > rivalry > closest line; the opener
+  league on hero days), 6 free to play x3, 7 YOUR MOVE (players), 8 spotlight rotation (the app on
+  opener days; Get the app only without an iOS token), 9 footer. No coins. The privacy policy has
+  one line about it.
+- Tests sent to derik@sportsvyn.com: 15:05Z (sun-2 body); 15:55Z (mon-1, as Monday); 16:34:49Z
+  (as TUESDAY: "NBA opening night: 3 games tonight - make your picks", Resend 01a15504...). All
+  three reached Resend; 15:05 and 15:55 were confirmed delivered by webhook. Mail lands in Google
+  Workspace (MX aspmx.l.google.com). The droplet's Resend key is send-only (no lookups). The second
+  test address from Derik is still pending (owner addresses only).
+- Tuesday's NBA board was not built at render time (built ~10:52Z Tue): the confidence line shows
+  only once it exists; the button is /pickem/nba either way.
+- GO ORDER for Tue 20 Oct 15:00Z: (1) 146 on PROD; (2) merge + deploy; (3) MORNING_EMAIL=on in
+  Vercel production; (4) after 15:00Z check sync_runs source 'morning-email'.
 
 ## Queue
-1. Morning email: Derik reviews the 15:05Z test, then GO (order above).
+1. Morning email GO (order above).
+2. tue-2 (after the morning email is live): league 'draft done' state for linked leagues; at GO
+   mark league 11 done, note "Drafted in person". Branch league-draft-done.
 2. 20 Oct: docs/launch-oct20 checks 6-13. Mon 19 Oct: first live CFB 25 reminder. Mon 26 Oct:
    CFB win-prob re-score prompt.
 3. Slice 4 (slow league draft) when Derik says. 2027: Fantrax import attaches (decisions.md).
 
 ## Next step
-Derik reviews the test mail; GO for Tuesday 15:00Z (order above).
+Morning email GO before Tue 15:00Z; then tue-2 (draft done).
