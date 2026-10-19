@@ -28,6 +28,7 @@ import PickFormatSwitch, { PendingPickFormat } from '@/components/leagues/PickFo
 import { fmtNum, fmtTile, statTiles, moveMark, subLine, tabLabel, eventLine } from '@/lib/leagues/home';
 import { CREW_EXPLAINER, winsLine } from '@/lib/leagues/crew';
 import { roleOf, menuFor, ROLE_LABEL } from '@/lib/leagues/members';
+import LeagueDraft from '@/components/leagues/LeagueDraft';
 import { dateLabel } from '@/lib/time/display';
 
 const who = (r, uid) => (r.userId === uid ? 'You' : r.handle ? `@${r.handle}` : 'A member');
@@ -50,8 +51,11 @@ function pickFormatLine(lg) {
 }
 
 /** "The Daily · Season · Total points" (+ " · N members" by the caller). */
-function headerLine(league, crew) {
+function headerLine(league, crew, draft) {
   const parts = [];
+  // A DRAFT LEAGUE (slice 3) says so first; its other games follow.
+  if (draft) parts.push(`Fantasy draft · ${draft.config.teams_count} teams`);
+  if (draft && !league.games?.length) return parts.join(' · ');
   if (league.games?.length) parts.push(league.games.map(gameLabel).join(' · '));
   if (league.format === 'guillotine') parts.push('Guillotine');
   if (SPAN_LABEL[league.span]) parts.push(SPAN_LABEL[league.span]);
@@ -79,7 +83,7 @@ function Chips({ items, current, href, label }) {
 
 const joinedDay = (iso) => (iso ? dateLabel(iso, { weekday: false, tz: null }) : null);
 
-export default function LeagueBoard({ league, table, uid, tab = 'standings', openInvite = false, now = new Date(), events = [] }) {
+export default function LeagueBoard({ league, table, uid, tab = 'standings', rail = LEAGUE_TABS.filter((t) => t.key !== 'draft'), draft = null, openInvite = false, now = new Date(), events = [] }) {
   const { standings, thisBucket, unit } = table;
   const unitWord = unit === 'week' ? 'week' : 'day';
   const crew = table.crew ?? null;
@@ -94,6 +98,7 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
   const offer = switchOffer(league, { now, isOwner });
   const view = { period: table.period, game: crew?.game };
   const meNow = thisBucket.rows.find((r) => r.userId === uid) ?? null;
+  const teamOf = new Map((draft?.members ?? []).filter((m) => m.teamName).map((m) => [m.userId, m.teamName]));
   const nameOf = (id) => {
     if (id === uid) return 'You';
     const m = league.members.find((x) => Number(x.user_id) === Number(id));
@@ -101,7 +106,15 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
   };
 
   // THE TILES: the crew table's numbers on All games, the table's otherwise.
-  const tiles = table.guillotine
+  const hasGames = (league.games?.length ?? 0) > 0;
+  // A DRAFT LEAGUE WITH NO GAMES (slice 3): its numbers are the draft's.
+  const tiles = draft && !hasGames
+    ? [
+      { key: 'pick', label: 'Your pick', value: draft.me.claimed ? `#${draft.me.claimed.slot}` : '—' },
+      { key: 'teams', label: 'Teams', value: String(draft.config.teams_count) },
+      { key: 'keepers', label: 'Keepers', value: String(draft.keeperCount) },
+    ]
+    : table.guillotine
     ? [
       { key: 'you', label: 'You', value: table.guillotine.chopped.some((c) => c.userId === uid) ? 'OUT' : 'IN' },
       { key: 'standing', label: 'Standing', value: String(table.guillotine.standing.length) },
@@ -132,7 +145,7 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
           </span>
         </div>
         <h1 className="lv-lname">{league.name}</h1>
-        <p className="lv-sub" data-league-line>{headerLine(league, !!crew)} · {n} {n === 1 ? 'member' : 'members'}</p>
+        <p className="lv-sub" data-league-line>{headerLine(league, !!crew, draft)} · {n} {n === 1 ? 'member' : 'members'}</p>
         <div className="lv-tiles">
           {tiles.map((t) => (
             <div className="lv-tile" key={t.key} data-tile={t.key}>
@@ -143,7 +156,7 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
       </header>
 
       <nav className="lv-seg lv-tabs" aria-label="League sections">
-        {LEAGUE_TABS.map((t) => (
+        {rail.map((t) => (
           <Link key={t.key} href={leagueHref(league.id, t.key)} aria-current={tab === t.key ? 'page' : undefined}
             className={tab === t.key ? 'on' : ''} data-tab={t.key}>
             {tabLabel(t.key, crew ? 'week' : unit)}
@@ -303,6 +316,8 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
         )
       )}
 
+      {tab === 'draft' && <LeagueDraft league={league} draft={draft} uid={uid} isOwner={isOwner} />}
+
       {tab === 'chat' && (
         <section className="lh-soon" aria-label="Chat" data-chat-soon>
           <p className="lh-kicker">Chat</p>
@@ -335,7 +350,11 @@ export default function LeagueBoard({ league, table, uid, tab = 'standings', ope
                     <span className="lh-handle">{name}</span>
                     {ROLE_LABEL[role] && <span className={`lh-badge lh-badge--${role}`}>{ROLE_LABEL[role]}</span>}
                   </span>
-                  <span className="lh-sub">{role === 'owner' ? 'Created the league' : 'Joined'} · {joinedDay(m.joined_at)}</span>
+                  <span className="lh-sub">
+                    {/* A DRAFT LEAGUE names each member's franchise (slice 3). */}
+                    {teamOf.get(id) ? <span data-franchise-name>{teamOf.get(id)} · </span> : null}
+                    {role === 'owner' ? 'Created the league' : 'Joined'} · {joinedDay(m.joined_at)}
+                  </span>
                 </span>
                 <MemberMenu leagueId={league.id} targetId={id} targetName={name} items={items} />
               </div>

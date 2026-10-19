@@ -31,7 +31,8 @@ import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { leagueDetail } from '@/lib/leagues/core';
-import { parseLeagueTab, parseLeagueView, leagueHref } from '@/lib/leagues/nav';
+import { parseLeagueTab, parseLeagueView, leagueHref, leagueTabs, landingTab } from '@/lib/leagues/nav';
+import { loadDraftHome } from '@/lib/leagues/draftLink';
 import { leagueTable } from '@/lib/leagues/table';
 import { latestEvents } from '@/lib/leagues/events';
 import LeagueBoard from '@/components/leagues/LeagueBoard';
@@ -40,6 +41,7 @@ import '../leagues.css';
 import '../leaguesV1.css';
 import '../leagueBoard.css';
 import '../leagueHome.css';
+import '../leagueDraft.css';
 import '../pickFormat.css';
 
 export const dynamic = 'force-dynamic';
@@ -70,12 +72,12 @@ export default async function LeaguePage({ params, searchParams }) {
   const leagueId = Number(id);
   if (!Number.isInteger(leagueId)) notFound();
   const sp = (await searchParams) ?? {};
-  const tab = parseLeagueTab(sp);
+  const asked = parseLeagueTab(sp);
 
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const isShell = await resolveShellMode();
-  const dest = leagueHref(leagueId, tab);
+  const dest = leagueHref(leagueId, asked);
   requireSignInInShell({ isShell, userId, dest });
 
   const uid = userId == null ? null : Number(userId);
@@ -85,11 +87,17 @@ export default async function LeaguePage({ params, searchParams }) {
   // Nothing about the league is read on this path - ./not-found.js is the body.
   if (!league) notFound();
 
+  // THE RAIL (slice 3): a league holding a Fantrax draft shows DRAFT, and opens
+  // on it when it plays no other games.
+  const rail = leagueTabs({ hasDraft: league.draft_config_id != null, hasGames: (league.games?.length ?? 0) > 0 });
+  const tab = landingTab(asked, rail);
+
   // ---- MEMBER: the board ----------------------------------------------------
   const view = parseLeagueView(sp);
   const table = await leagueTable(league, view).catch(() => null);
   // "Latest in the league" (lib/leagues/events.js): the three newest lines.
   const events = table ? await latestEvents(league.id, { limit: 3, unit: table.unit }).catch(() => []) : [];
+  const draft = league.draft_config_id != null ? await loadDraftHome(league.draft_config_id, uid).catch(() => null) : null;
   return (
     <>
       <GlobalHeaderServer activeNav="leagues" />
@@ -98,7 +106,7 @@ export default async function LeaguePage({ params, searchParams }) {
           <Link className="lv-crumb" href="/leagues">&larr; Leagues</Link>
         </div>
         {table ? (
-          <LeagueBoard league={league} table={table} uid={uid} tab={tab} openInvite={sp.invite === '1'} events={events} />
+          <LeagueBoard league={league} table={table} uid={uid} tab={tab} rail={rail} draft={draft} openInvite={sp.invite === '1'} events={events} />
         ) : (
           <div className="lv"><p className="lv-empty">The table could not load. Pull to refresh.</p></div>
         )}
