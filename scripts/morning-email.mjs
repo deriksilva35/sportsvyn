@@ -14,6 +14,7 @@
 // DATABASE_URL is PROD_DATABASE_URL (the same guard as link-draft-league.mjs).
 
 import { writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { sql } from '../lib/db.js';
 import { morningAudience } from '../lib/email/morningAudience.js';
 import { OWNER_ADDRESSES } from '../lib/email/owners.js';
@@ -49,17 +50,48 @@ const mail = composeFor({ dayData, reader, unsubscribeUrl: unsub, player: true, 
 console.log(`AS user ${asId} · subject: ${mail.subject}`);
 console.log(`modules: ${[dayData.hero && `HERO ${dayData.hero.league} (${dayData.hero.games.length} games${dayData.hero.confidenceLine ? ', confidence board' : ', board not built yet'})`, dayData.headline && `headline "${dayData.headline}"`, dayData.yesterdayDaily && `yesterday's Daily (${dayData.yesterdayDaily.played} played)`, 'daily', dayData.week && `week (${dayData.week.rows.length} sports)`, dayData.game && `game of the day (${dayData.game.why ?? 'earliest'})`, dayData.free && `free to play ${dayData.free.length}`, (reader.yesterday || reader.locks.length) && 'your move', `spotlight${reader.hasIosDevice ? '' : ' + app link'}`].filter(Boolean).join(' · ')}`);
 
-if (arg('--preview')) { writeFileSync(arg('--preview'), mail.html); console.log(`preview written: ${arg('--preview')}`); process.exit(0); }
+// THE PICTURES BEFORE THEY ARE DEPLOYED (mon-3): every /og/email/*.png the mail
+// names is drawn here from the same element trees the routes serve and sent
+// inline (cid:). The real send links the public routes; the test cannot, since
+// they are not on sportsvyn.com until the merge.
+const ogRe = /https?:\/\/[^"\s]+?(\/og\/email\/(?:chip|hero|tile)\/[a-z0-9-]+\.png)/g;
+async function inlinePictures(html) {
+  const { renderLocal } = await import('../lib/email/renderLocal.js');
+  const attachments = [];
+  const cids = new Map();
+  for (const [, path] of html.matchAll(ogRe)) {
+    if (cids.has(path)) continue;
+    const buf = await renderLocal(path);
+    if (!buf) { console.error(`picture missing: ${path}`); process.exit(1); }
+    const cid = path.slice(1).replace(/[^a-z0-9.]+/g, '-');
+    cids.set(path, cid);
+    attachments.push({ content: buf, filename: cid, contentId: cid, buf });
+  }
+  const out = html.replace(ogRe, (_, path) => `cid:${cids.get(path)}`);
+  console.log(`pictures: ${attachments.length} drawn (${attachments.map((a) => `${a.filename} ${Math.round(a.buf.length / 1024)}KB`).join(', ')})`);
+  return { html: out, attachments: attachments.map(({ buf, ...a }) => a) };
+}
+
+if (arg('--preview')) {
+  // A preview on disk shows the pictures too: written next to it, linked relatively.
+  const { html, attachments } = await inlinePictures(mail.html);
+  const dir = dirname(arg('--preview'));
+  for (const a of attachments) writeFileSync(join(dir, a.filename), a.content);
+  writeFileSync(arg('--preview'), html.replace(/cid:/g, ''));
+  console.log(`preview written: ${arg('--preview')}`);
+  process.exit(0);
+}
 
 const toList = String(arg('--test') ?? '').split(',').map((x) => x.trim()).filter(Boolean);
 if (!toList.length) { console.error('usage: --count | --preview <file> | --test <owner address>[,<owner address>]  [--as <userId>] [--day YYYY-MM-DD] [--prod]'); process.exit(2); }
 for (const to of toList) if (!OWNER_ADDRESSES.includes(to)) { console.error(`refusing: ${to} is not an owner address (lib/email/owners.js)`); process.exit(2); }
+const inline = await inlinePictures(mail.html);
 let failed = 0;
 for (const to of toList) {
   const [{ id: rowId }] = await sql`
     INSERT INTO sync_runs (source, kind, started_at, ok, summary)
     VALUES (${SOURCE}, 'test', now(), true, ${JSON.stringify({ to, asUserId: asId, day: DAY, outcome: 'sending' })}::jsonb) RETURNING id`;
-  const res = await resendSend({ to, subject: `[TEST] ${mail.subject}`, html: mail.html, text: mail.text, headers: unsubscribeHeaders(unsub) });
+  const res = await resendSend({ to, subject: `[TEST] ${mail.subject}`, html: inline.html, text: mail.text, headers: unsubscribeHeaders(unsub), attachments: inline.attachments });
   await sql`UPDATE sync_runs SET finished_at = now(), ok = ${!res?.error},
               summary = ${JSON.stringify({ to, asUserId: asId, day: DAY, outcome: res?.error ? 'failed' : 'sent', id: res?.data?.id ?? null })}::jsonb
             WHERE id = ${rowId}`;
