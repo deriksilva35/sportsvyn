@@ -37,9 +37,9 @@
   the day, boards locking today, unsubscribe. The content spec was not on the droplet; Derik
   reviews it in the test.
 - PROD audience 19 Oct 01:00Z (read-only): 43 = 38 active + 5 new.
-- TEST SEND: scheduled 15:05Z Mon 19 Oct to derik@sportsvyn.com, rendered as user 1 from PROD
-  (log: the session scratchpad, morning-test-send.log). If the session is gone, run by hand:
-  `DATABASE_URL="$PROD_DATABASE_URL" node scripts/morning-email.mjs --prod --test derik@sportsvyn.com --as 1`
+- TEST SENT 19 Oct 15:05:02Z to derik@sportsvyn.com (Resend 01a154b1-d121-7e3e-b42c-175b67781cb2), as
+  user 1. Subject "Cleveland Guardians at Tampa Bay Rays today - and a new Daily"; blocks: Daily,
+  game of the day, 5 locking today (user 1 had no Daily yesterday). Audience at send: 44 (40 + 4).
 - GO ORDER for Tue 20 Oct 15:00Z: (1) 146 on PROD; (2) merge + deploy; (3) set MORNING_EMAIL=on in
   Vercel production; (4) after 15:00Z check sync_runs source 'morning-email' (sent / failed).
 
@@ -50,4 +50,4 @@
 3. Slice 4 (slow league draft) when Derik says. 2027: Fantrax import attaches (decisions.md).
 
 ## Next step
-Check the 15:05Z morning-email test went out; Derik's GO for Tuesday.
+Derik reviews the test mail; GO for Tuesday 15:00Z (order above).
