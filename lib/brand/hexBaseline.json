@@ -1,5 +1,5 @@
 {
- "total": 887,
+ "total": 897,
  "byFile": {
   "app/admin/console/console.css": 15,
   "app/admin/prematch/[id]/page.js": 29,
@@ -80,9 +80,11 @@
   "components/team/Trajectory.js": 11,
   "lib/daily/pool.js": 1,
   "lib/dailyCardIntro.js": 1,
+  "lib/email/cards.js": 7,
+  "lib/email/imageData.js": 2,
   "lib/emails/confirmation.js": 11,
   "lib/emails/magicLink.js": 14,
-  "lib/emails/morning.js": 10,
+  "lib/emails/morning.js": 11,
   "lib/emails/welcome.js": 10,
   "lib/gridiron/gameBrief.js": 1,
   "lib/import/squadImport.js": 1,
