@@ -1,4 +1,4 @@
-# Handoff - droplet relays sun-1/2 + mon-1/2/3, Mon 19 Oct 2026 (clock ~19:00Z)
+# Handoff - droplet relays sun-1/2 + mon-1..6, Mon 19 Oct 2026 (clock ~23:30Z)
 
 ## Live (PROD) - main 2c36373 (deployed ~00:55Z); poller unchanged (93a36a4)
 - SLICE 3 LIVE (sun-1 GO): migration 145 on PROD (ledgered, checksum = DEV); merge 2c36373
@@ -38,7 +38,18 @@
 - STILL OPEN: Tue's first NBA tip stored as 3:00 PM ET (12 PT); the email prints it as stored.
 - Second test address dropped. Step 7 (after 15:00Z): report sent/skipped/bounced, Resend, app_errors.
 
+## NBA OPENER TO THE FULL LIST LIVE for Tue 20 Oct (mon-6 GO)
+- main 0038f93 (nba-opener merged; suite 6546/0 on 0038f93; preview READY on 8792f49 = same code;
+  prod READY dpl_Fy5ctpXpfHrDfccCRfunLa6FaKW6). BROADCAST_NBA_OPENER=on in Vercel prod.
+- Cron /api/cron/nba-opener 5-45 15 20 10 *: 50 per firing, after A's run finishes; stop on
+  complaints > 1 or B hard bounces > 5% (stop row + alert). Mon probe: decision wrong-day (flag on).
+- Mon 23:30Z count as Tue: A 43, B 252 (one account aged out of A). Report: docs/reports/mon-5-nba-opener.md.
+- After Tue: remove BROADCAST_NBA_OPENER from Vercel (code refuses other days anyway).
+- 20:12Z reboot was a manual `sudo reboot` (derik, pts/9), no OOM; timers and poller back.
+
 ## Queue
+0. mon-6 step 5, Tue ~16:00Z: A and B sent/skipped/bounced/complained, stop rule, opens + clicks
+   (sync_runs morning-email sends by summary.why, resend-webhook rows, email click rows). Short box.
 1. Morning email step 7 after Tue 15:00Z (sync_runs, ledger, Resend, app_errors).
 2. tue-2 (after the morning email is live): league 'draft done' state for linked leagues; at GO
    mark league 11 done, note "Drafted in person". Branch league-draft-done.
@@ -47,4 +58,4 @@
 3. Slice 4 (slow league draft) when Derik says. 2027: Fantrax import attaches (decisions.md).
 
 ## Next step
-Tue 15:00Z morning email check; then tue-2 (draft done).
+Tue ~16:00Z: morning email + NBA opener report (queue 0 + 1); then tue-2 (draft done).
