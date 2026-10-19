@@ -28,27 +28,18 @@
   - Scores rank badges show AP ranks, not the Sportsvyn 25.
   - Top 25 chip: first in the conference row, lime when on.
 
-## HOLDING FOR GO - morning email v2 (mon-3 + jerseys addendum)
-- Branch morning-email @ 6094fd8, worktree ~/projects/sv-morning. Suite 6538/0 on 6094fd8;
-  preview READY on 6094fd8. Migration 146 is on DEV ONLY.
-- Counts follow /scores (only not_needed excluded); "*" = an only-if-needed playoff game.
-- Pictures: /og/email/{hero/<date>,chip/<slug>,tile/<game>}.png, 2x, public cache, no reader in a
-  URL, alt text = matchup + time. They serve on the preview (200 image/png).
-- Layout: hero image + Make your picks + mock link (no repeated headline); lineup grid; Daily;
-  1x3 tiles; game chip + Also tonight; week; YOUR MOVE pills; lock-screen preview. PT first.
-- Lead order: NFL primetime > opener > playoff > rivalry > closest line.
-- NBA jerseys: all 30 live in the branch (Higgsfield remover, not rembg). BDL letters all match.
-  NYK/WAS outlined. TeamMark + email chips use them.
-- Test as TUESDAY sent 18:36Z to derik@sportsvyn.com (Resend 01a15573), pictures inline (cid:).
-  Second test address still pending.
-- OPEN: PROD has Tue's NBA tips at 3:00 / 7:00 / 9:30 PM ET (fed 17:52Z). The email reads
-  them as stored; 3 PM looks wrong.
-- GO ORDER for Tue 20 Oct 15:00Z: (1) 146 on PROD; (2) merge + deploy; (3) MORNING_EMAIL=on in
-  Vercel production; (4) after 15:00Z check sync_runs source 'morning-email'.
-- Details: docs/reports/2026-10-19-mon3-morning-email.md
+## MORNING EMAIL LIVE from Tue 20 Oct 15:00Z (mon-4 GO)
+- 146 on PROD (ledgered 19:41Z, sha f9836721b353 = DEV). main 83ff36f = morning-email merged with
+  main (suite 6538/0 on 83ff36f, preview READY on 83ff36f), production READY on sportsvyn.com.
+- MORNING_EMAIL=on in Vercel production (set before the build). Cron 0 15 * * * registered on
+  dpl_24u77CSYTLYFm769pnGx1SgCSYMz. /og/email/chip + /tile serve 200 image/png on sportsvyn.com.
+- PROD dry run as Tue: audience 44 (40 active, 4 new); subject "NBA opening night: 3 games tonight
+  - make your picks"; lead = NBA opener hero (3 games, confidence board not built yet).
+- STILL OPEN: Tue's first NBA tip stored as 3:00 PM ET (12 PT); the email prints it as stored.
+- Second test address dropped. Step 7 (after 15:00Z): report sent/skipped/bounced, Resend, app_errors.
 
 ## Queue
-1. Morning email GO (order above).
+1. Morning email step 7 after Tue 15:00Z (sync_runs, ledger, Resend, app_errors).
 2. tue-2 (after the morning email is live): league 'draft done' state for linked leagues; at GO
    mark league 11 done, note "Drafted in person". Branch league-draft-done.
 2. 20 Oct: docs/launch-oct20 checks 6-13. Mon 19 Oct: first live CFB 25 reminder. Mon 26 Oct:
@@ -56,4 +47,4 @@
 3. Slice 4 (slow league draft) when Derik says. 2027: Fantrax import attaches (decisions.md).
 
 ## Next step
-Morning email GO before Tue 15:00Z; then tue-2 (draft done).
+Tue 15:00Z morning email check; then tue-2 (draft done).
