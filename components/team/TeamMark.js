@@ -39,11 +39,13 @@ export default function TeamMark({
       // eslint-disable-next-line @next/next/no-img-element -- a fixed 96/192 px pair from public/, drawn at a known size; next/image's loader adds nothing here
       <img
         className={className ? `teammark teammark--headgear ${className}` : 'teammark teammark--headgear'}
-        data-teammark="headgear" data-facing={facing}
+        data-teammark="headgear" data-facing={facing} data-outline={hg.outline ? '' : undefined}
         src={hg.src1x} srcSet={`${hg.src1x} 1x, ${hg.src2x} 2x`}
         width={s} height={s} alt={title ?? abbr ?? ''} loading="lazy" decoding="async"
         style={{ width: s, height: s, objectFit: 'contain', flex: '0 0 auto', display: 'inline-block',
-          transform: facing === 'left' ? 'scaleX(-1)' : undefined }}
+          transform: facing === 'left' ? 'scaleX(-1)' : undefined,
+          // A WHITE JERSEY on a white surface: a 1px outline in the line colour, following its shape.
+          filter: hg.outline ? 'drop-shadow(0 0 1px var(--line))' : undefined }}
       />
     );
   }

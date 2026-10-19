@@ -110,3 +110,12 @@ test('headgearKey: the STORED letters decide, so an FCS side printing "ALA" neve
   assert.match(aamu, /data-teammark="circle"/); assert.doesNotMatch(aamu, /headgear/);
   assert.match(html({ abbr: 'TA&M', size: 24, leagueSlug: 'cfb' }), /src="\/headgear\/cfb\/TAM@1x\.webp"/);
 });
+
+test('NBA JERSEYS (mon-3): the jersey where the league has it, the outline on a white one, the disc for an unknown', () => {
+  const phi = html({ primary: '#006BB6', secondary: '#ED174C', abbr: 'PHI', size: 28, leagueSlug: 'nba' });
+  assert.match(phi, /data-teammark="headgear"/); assert.match(phi, /src="\/headgear\/nba\/PHI@1x\.webp"/);
+  assert.doesNotMatch(phi, /data-outline|drop-shadow/, 'a coloured jersey has no outline');
+  const nyk = html({ primary: '#006BB6', secondary: '#F58426', abbr: 'NYK', size: 28, leagueSlug: 'nba' });
+  assert.match(nyk, /data-outline=""/); assert.match(nyk, /filter:drop-shadow\(0 0 1px var\(--line\)\)/, 'white jersey: the 1px line-colour outline');
+  assert.match(html({ primary: '#006BB6', secondary: '#ED174C', abbr: 'ZZZ', size: 28, leagueSlug: 'nba' }), /data-teammark="circle"/, 'unknown: the disc');
+});
