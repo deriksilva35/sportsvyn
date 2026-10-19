@@ -1,5 +1,5 @@
 {
- "total": 885,
+ "total": 887,
  "byFile": {
   "app/admin/console/console.css": 15,
   "app/admin/prematch/[id]/page.js": 29,
@@ -82,7 +82,7 @@
   "lib/dailyCardIntro.js": 1,
   "lib/emails/confirmation.js": 11,
   "lib/emails/magicLink.js": 14,
-  "lib/emails/morning.js": 8,
+  "lib/emails/morning.js": 10,
   "lib/emails/welcome.js": 10,
   "lib/gridiron/gameBrief.js": 1,
   "lib/import/squadImport.js": 1,

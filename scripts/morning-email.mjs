@@ -38,25 +38,32 @@ if (has('--count')) process.exit(0);
 
 const asId = arg('--as') ? Number(arg('--as')) : audience[0]?.id;
 if (!asId) { console.error('no account to render as (--as <userId>)'); process.exit(2); }
-const dayData = await loadDay(etDay());
+// --day YYYY-MM-DD renders that morning as the 15:00Z run would see it (mon-1: "render it AS Tuesday").
+const DAY = arg('--day') ?? etDay();
+const NOW = arg('--day') ? new Date(`${DAY}T15:00:00Z`) : new Date();
+const dayData = await loadDay(DAY, { now: NOW });
 const reader = await loadReader(dayData, asId);
 const unsub = await unsubscribeUrlFor(asId);
-const campaign = `morning-test-${etDay()}`;
+const campaign = `morning-test-${DAY}`;
 const mail = composeFor({ dayData, reader, unsubscribeUrl: unsub, player: true, link: (p) => clickUrlFor({ campaign, userId: asId, to: `${base}${p}` }) });
 console.log(`AS user ${asId} · subject: ${mail.subject}`);
-console.log(`modules: ${[dayData.headline && `headline "${dayData.headline}"`, dayData.yesterdayDaily && `yesterday's Daily (${dayData.yesterdayDaily.played} played)`, 'daily', dayData.week && `week (${dayData.week.rows.length} sports)`, dayData.game && `game of the day (${dayData.game.why ?? 'earliest'})`, dayData.free && `free to play ${dayData.free.length}`, (reader.yesterday || reader.locks.length) && 'your move', `spotlight${reader.hasIosDevice ? '' : ' + app link'}`].filter(Boolean).join(' · ')}`);
+console.log(`modules: ${[dayData.hero && `HERO ${dayData.hero.league} (${dayData.hero.games.length} games${dayData.hero.confidenceLine ? ', confidence board' : ', board not built yet'})`, dayData.headline && `headline "${dayData.headline}"`, dayData.yesterdayDaily && `yesterday's Daily (${dayData.yesterdayDaily.played} played)`, 'daily', dayData.week && `week (${dayData.week.rows.length} sports)`, dayData.game && `game of the day (${dayData.game.why ?? 'earliest'})`, dayData.free && `free to play ${dayData.free.length}`, (reader.yesterday || reader.locks.length) && 'your move', `spotlight${reader.hasIosDevice ? '' : ' + app link'}`].filter(Boolean).join(' · ')}`);
 
 if (arg('--preview')) { writeFileSync(arg('--preview'), mail.html); console.log(`preview written: ${arg('--preview')}`); process.exit(0); }
 
-const to = arg('--test');
-if (!to) { console.error('usage: --count | --preview <file> | --test <owner address>  [--as <userId>] [--prod]'); process.exit(2); }
-if (!OWNER_ADDRESSES.includes(to)) { console.error(`refusing: ${to} is not an owner address (lib/email/owners.js)`); process.exit(2); }
-const [{ id: rowId }] = await sql`
-  INSERT INTO sync_runs (source, kind, started_at, ok, summary)
-  VALUES (${SOURCE}, 'test', now(), true, ${JSON.stringify({ to, asUserId: asId, day: etDay(), outcome: 'sending' })}::jsonb) RETURNING id`;
-const res = await resendSend({ to, subject: `[TEST] ${mail.subject}`, html: mail.html, text: mail.text, headers: unsubscribeHeaders(unsub) });
-await sql`UPDATE sync_runs SET finished_at = now(), ok = ${!res?.error},
-            summary = ${JSON.stringify({ to, asUserId: asId, day: etDay(), outcome: res?.error ? 'failed' : 'sent', id: res?.data?.id ?? null })}::jsonb
-          WHERE id = ${rowId}`;
-if (res?.error) { console.error(`SEND FAILED: ${res.error.message ?? res.error}`); process.exit(1); }
-console.log(`SENT test to ${to} at ${new Date().toISOString()} · Resend ${res?.data?.id}`);
+const toList = String(arg('--test') ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+if (!toList.length) { console.error('usage: --count | --preview <file> | --test <owner address>[,<owner address>]  [--as <userId>] [--day YYYY-MM-DD] [--prod]'); process.exit(2); }
+for (const to of toList) if (!OWNER_ADDRESSES.includes(to)) { console.error(`refusing: ${to} is not an owner address (lib/email/owners.js)`); process.exit(2); }
+let failed = 0;
+for (const to of toList) {
+  const [{ id: rowId }] = await sql`
+    INSERT INTO sync_runs (source, kind, started_at, ok, summary)
+    VALUES (${SOURCE}, 'test', now(), true, ${JSON.stringify({ to, asUserId: asId, day: DAY, outcome: 'sending' })}::jsonb) RETURNING id`;
+  const res = await resendSend({ to, subject: `[TEST] ${mail.subject}`, html: mail.html, text: mail.text, headers: unsubscribeHeaders(unsub) });
+  await sql`UPDATE sync_runs SET finished_at = now(), ok = ${!res?.error},
+              summary = ${JSON.stringify({ to, asUserId: asId, day: DAY, outcome: res?.error ? 'failed' : 'sent', id: res?.data?.id ?? null })}::jsonb
+            WHERE id = ${rowId}`;
+  if (res?.error) { failed += 1; console.error(`SEND FAILED to ${to}: ${res.error.message ?? res.error}`); continue; }
+  console.log(`SENT test to ${to} at ${new Date().toISOString()} · Resend ${res?.data?.id}`);
+}
+if (failed) process.exit(1);
