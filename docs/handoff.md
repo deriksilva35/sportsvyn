@@ -30,7 +30,7 @@
 
 ## HOLDING FOR GO - morning email v2 (mon-3 + jerseys addendum)
 - Branch morning-email @ 6094fd8, worktree ~/projects/sv-morning. Suite 6538/0 on 6094fd8;
-  preview READY on dcb811b (6094fd8 = dcb811b + one test file). Migration 146 is on DEV ONLY.
+  preview READY on 6094fd8. Migration 146 is on DEV ONLY.
 - Counts follow /scores (only not_needed excluded); "*" = an only-if-needed playoff game.
 - Pictures: /og/email/{hero/<date>,chip/<slug>,tile/<game>}.png, 2x, public cache, no reader in a
   URL, alt text = matchup + time. They serve on the preview (200 image/png).
