@@ -1,3 +1,94 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-prow .teammark { margin-right }",
+      "after": "6px",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tab { background }",
+      "after": "none",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tab { border }",
+      "after": "1px solid #2e2e2e",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tab { border-radius }",
+      "after": "99px",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tab { color }",
+      "after": "inherit",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tab { cursor }",
+      "after": "pointer",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tab { flex }",
+      "after": "1 1 0",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tab { font }",
+      "after": "inherit",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tab { font-size }",
+      "after": "12px",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tab { padding }",
+      "after": "8px 10px",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tab--on { border-color }",
+      "after": "currentcolor",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tab--on { font-weight }",
+      "after": "700",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tabs { display }",
+      "after": "flex",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tabs { gap }",
+      "after": "6px",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    },
+    {
+      "file": "app/draft/game/game.css",
+      "key": ".dgm-tabs { margin }",
+      "after": "10px 0 8px",
+      "why": "tue-6 NBA Nightly Draft: Players | My team tabs and the jersey on a pool row"
+    }
+  ]
 }

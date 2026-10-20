@@ -18,8 +18,7 @@ import SeatStrip from '@/components/draftRoom/SeatStrip';
 import PoolRow from '@/components/draftRoom/PoolRow';
 import TeamMark from '@/components/team/TeamMark';
 
-// THE NIGHTLY ROOM'S ROW LINE (tue-6): "vs NYK · 4:00 PM PT · avg 45.2".
-const tipPt = (iso) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
+import { rowLine } from '@/lib/draftGame/nightlyCopy';
 /** The seat's slots in order, each with the pick roomState assigned to it (or none). PURE. */
 export function slotRows(slots, picks) {
   const left = [...picks];
@@ -28,7 +27,6 @@ export function slotRows(slots, picks) {
     return { slot, p: i >= 0 ? left.splice(i, 1)[0] : null };
   });
 }
-export const nightlySub = (p) => `${p.home ? 'vs' : '@'} ${p.opp} · ${tipPt(p.tip)} PT · avg ${Number(p.proj).toFixed(1)}`;
 
 const REASON = {
   locked: 'The game has kicked off. Your remaining picks were made for you.',
@@ -109,7 +107,7 @@ export default function GameDraftRoom({ view }) {
         <ul className="dgm-pool" aria-label="The pool">
           {view.pool.map((p) => (
             <PoolRow key={p.id} pos={p.pos} name={p.name}
-              sub={nightly ? nightlySub(p) : `${p.team} · proj ${Number(p.proj).toFixed(1)}`}
+              sub={nightly ? rowLine(p) : `${p.team} · proj ${Number(p.proj).toFixed(1)}`}
               mark={nightly ? <TeamMark leagueSlug="nba" abbr={p.team} size={28} /> : null}
               armed={nightly && armed === p.id}
               takenBy={p.takenBy}

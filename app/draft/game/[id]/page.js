@@ -19,6 +19,7 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { readRoom } from '@/lib/draftGame/room';
 import { COPY } from '@/lib/draftGame/rules';
+import { nightlyHeader } from '@/lib/draftGame/nightlyCopy';
 import GameDraftRoom from '@/components/draftGame/GameDraftRoom';
 import RoomHeader from '@/components/draftRoom/RoomHeader';
 import GameDraftResult from '@/components/draftGame/GameDraftResult';
@@ -34,20 +35,8 @@ export async function generateViewport() {
   return simViewport(await resolveShellMode());
 }
 
-// THE NIGHTLY HEADER (tue-6): "TUE OCT 20 · 2 games · 4 drafters · 3 picks · locks 4:00 PM PT".
-const ptTime = (iso) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
-const etDay = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }).replace(',', '').toUpperCase();
-export function nightlyEyebrow(v) {
-  const n = (v.games ?? []).length;
-  const head = `${etDay(v.dayEt)} · ${n} game${n === 1 ? '' : 's'}`;
-  if (v.phase === 'final') return `${head} · FINAL`;
-  if (v.phase === 'void') return `${head} · OFF`;
-  if (v.phase === 'live') return `${head} · LIVE`;
-  return `${head} · ${v.shape.seats} drafters · ${v.shape.rounds} picks · locks ${ptTime(v.kickoffAt)} PT`;
-}
-
 function Eyebrow({ v }) {
-  if (v.nightly) return <>{nightlyEyebrow(v)}</>;
+  if (v.nightly) return <>{nightlyHeader(v)}</>;
   const match = `${v.away} @ ${v.home}`;
   if (v.phase === 'final') return <>{match} · FINAL {v.awayScore ?? 0}-{v.homeScore ?? 0}</>;
   if (v.phase === 'void') return <>{match} · OFF</>;
