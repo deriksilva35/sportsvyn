@@ -19,7 +19,11 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { readRoom } from '@/lib/draftGame/room';
 import { COPY } from '@/lib/draftGame/rules';
-import { nightlyHeader } from '@/lib/draftGame/nightlyCopy';
+import { nightlyHeadLines, roundLine, lineupLine, nextDay, tomorrowLine } from '@/lib/draftGame/nightlyCopy';
+import { nightlyContest } from '@/lib/draftGame/nightly';
+import { PLAY_REGISTRY } from '@/lib/games/playRegistry';
+import NightlyClock from '@/components/draftGame/NightlyClock';
+import NightlyFinish from '@/components/draftGame/NightlyFinish';
 import GameDraftRoom from '@/components/draftGame/GameDraftRoom';
 import RoomHeader from '@/components/draftRoom/RoomHeader';
 import GameDraftResult from '@/components/draftGame/GameDraftResult';
@@ -27,6 +31,7 @@ import StartGameDraft from '@/components/draftGame/StartGameDraft';
 import '../../../daily/daily.css';
 import '../../draft.css';
 import '../game.css';
+import '@/components/draftGame/nightly.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Draft one game - Sportsvyn' };
@@ -36,7 +41,11 @@ export async function generateViewport() {
 }
 
 function Eyebrow({ v }) {
-  if (v.nightly) return <>{nightlyHeader(v)}</>;
+  if (v.nightly) {
+    if (v.phase === 'final' || v.phase === 'void' || v.phase === 'live') return <>{nightlyHeadLines(v).line1} · {v.phase === 'final' ? 'FINAL' : v.phase === 'void' ? 'OFF' : 'LIVE'}</>;
+    const { line1, line2 } = nightlyHeadLines(v);
+    return <>{line1}<span className="nd-eyebrow-2">{line2}</span></>;
+  }
   const match = `${v.away} @ ${v.home}`;
   if (v.phase === 'final') return <>{match} · FINAL {v.awayScore ?? 0}-{v.homeScore ?? 0}</>;
   if (v.phase === 'void') return <>{match} · OFF</>;
@@ -59,6 +68,10 @@ export default async function GameDraftRoomPage({ params }) {
   const v = r.view;
   const scored = (v.phase === 'live' || v.phase === 'final') && v.result;
   const mine = v.seats.find((s) => s.you)?.picks ?? [];
+  // THE FINISH SCREEN's doors (wed-1b): the registry's hrefs, and tomorrow's room if there is one.
+  const hrefOf = (key) => PLAY_REGISTRY.find((e) => e.key === key)?.href;
+  const finishing = v.nightly && v.phase === 'waiting';
+  const tomorrow = finishing && v.dayEt ? tomorrowLine((await nightlyContest(nextDay(v.dayEt)).catch(() => null))?.meta) : null;
 
   return (
     <div className="daily-shell">
@@ -72,14 +85,17 @@ export default async function GameDraftRoomPage({ params }) {
           <Link className="appcrumb" href="/draft/game">&larr; All games</Link>
           {scored ? (
             <GameDraftResult view={v} eyebrow={<Eyebrow v={v} />} />
+          ) : finishing ? (
+            <NightlyFinish view={v} eyebrow={<Eyebrow v={v} />} pickemHref={hrefOf('nba-pickem')} dailyHref={hrefOf('daily')} tomorrow={tomorrow} />
           ) : (
             <>
               <RoomHeader
                 phase={v.phase}
                 eyebrow={<Eyebrow v={v} />}
-                title={v.phase === 'drafting' ? v.header : v.phase === 'live' ? 'Scoring starts with the first stat' : (v.nightly ? NIGHTLY_TITLE : TITLE)[v.phase] ?? ''}
-                titleProps={{ 'data-room-header': '' }}
-                sub={v.phase === 'drafting' ? (v.nightly ? `G · F · UTIL · all ${v.shape.rounds} count` : COPY.count) : null}
+                title={v.phase === 'drafting' ? (v.nightly ? roundLine({ round: v.round, rounds: v.shape.rounds, yourTurn: v.yourTurn, onClockLabel: v.onClockLabel }) : v.header) : v.phase === 'live' ? 'Scoring starts with the first stat' : (v.nightly ? NIGHTLY_TITLE : TITLE)[v.phase] ?? ''}
+                titleProps={v.nightly ? { 'data-room-header': '', 'data-nightly-title': '' } : { 'data-room-header': '' }}
+                sub={v.phase === 'drafting' ? (v.nightly ? lineupLine(v.shape) : COPY.count) : null}
+                right={v.nightly && v.phase === 'drafting' ? <NightlyClock deadline={v.deadline} yourTurn={v.yourTurn} /> : null}
               />
               {v.phase === 'drafting' ? (
                 <GameDraftRoom view={v} />
@@ -104,7 +120,7 @@ export default async function GameDraftRoomPage({ params }) {
               )}
             </>
           )}
-          <p className="dgm-foot">{v.nightly ? "Pool: every player in tonight's untipped games." : COPY.poolFoot}</p>
+          {!v.nightly && <p className="dgm-foot">{COPY.poolFoot}</p>}
         </main>
       </div>
     </div>

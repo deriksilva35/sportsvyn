@@ -5,6 +5,11 @@
 // pool best first - position chip, name, "TEAM · proj N", a "Draft" pill; a row
 // already taken is faded and carries its drafter's name.
 //
+// THE NBA NIGHTLY DRAFT (nightly mode) takes the same data to its own look
+// (wed-1b): one-line pool rows (NightlyPoolRow), ARM then CONFIRM - the row's
+// Draft pill arms it (a lime tint on that row), and ONE sticky bottom bar
+// confirms ("Armed: <name>" + "Draft <name>"). The clock is the header's pill.
+//
 // Everything comes from the server's roomView; a pick goes through
 // pickGameDraftAction and the page re-reads. When the clock reaches zero the
 // page re-reads too and the server's sweep makes the auto-pick - the client
@@ -16,17 +21,11 @@ import { pickGameDraftAction } from '@/app/actions/draftGame';
 import { ROUNDS } from '@/lib/draftGame/rules';
 import SeatStrip from '@/components/draftRoom/SeatStrip';
 import PoolRow from '@/components/draftRoom/PoolRow';
-import TeamMark from '@/components/team/TeamMark';
+import NightlyPoolRow from '@/components/draftGame/NightlyPoolRow';
+import useSecondsLeft from '@/components/draftGame/useSecondsLeft';
+import { slotRows } from '@/components/draftGame/slotRows';
 
-import { rowLine } from '@/lib/draftGame/nightlyCopy';
-/** The seat's slots in order, each with the pick roomState assigned to it (or none). PURE. */
-export function slotRows(slots, picks) {
-  const left = [...picks];
-  return slots.map((slot) => {
-    const i = left.findIndex((x) => x.slot === slot);
-    return { slot, p: i >= 0 ? left.splice(i, 1)[0] : null };
-  });
-}
+export { slotRows };
 
 const REASON = {
   locked: 'The game has kicked off. Your remaining picks were made for you.',
@@ -37,24 +36,11 @@ const REASON = {
   done: 'Your draft is complete.',
 };
 
-// Seconds left on the reader's clock, or null (no clock, or not yet ticked - the
-// first tick lands after mount, so the server render and hydration agree).
-function useSecondsLeft(deadline) {
-  const [nowMs, setNowMs] = useState(null);
-  useEffect(() => {
-    if (!deadline) return undefined;
-    const t = setInterval(() => setNowMs(Date.now()), 500);
-    return () => clearInterval(t);
-  }, [deadline]);
-  if (!deadline || nowMs == null) return null;
-  return Math.max(0, Math.ceil((new Date(deadline).getTime() - nowMs) / 1000));
-}
-
 export default function GameDraftRoom({ view }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
-  // ARM, THEN CONFIRM (nightly): the first tap arms a row, the second drafts it.
+  // ARM, THEN CONFIRM (nightly): a row's Draft pill arms it, the sticky bar drafts it.
   const [armed, setArmed] = useState(null);
   const [tab, setTab] = useState('players');
   const nightly = view.nightly === true;
@@ -62,6 +48,8 @@ export default function GameDraftRoom({ view }) {
   const legal = new Set((view.available ?? []).map((r) => Number(r.id)));
   const mine = view.seats.find((s) => s.you)?.picks ?? [];
   const left = useSecondsLeft(view.yourTurn ? view.deadline : null);
+  // An armed row that is no longer a legal pick on your turn (the room moved) is not armed.
+  const armedRow = nightly && view.yourTurn ? view.pool.find((p) => p.id === armed && !p.takenBy && legal.has(Number(p.id))) ?? null : null;
 
   // The clock ran out: re-read, and the server auto-picks.
   useEffect(() => {
@@ -70,7 +58,6 @@ export default function GameDraftRoom({ view }) {
   }, [left, router]);
 
   async function pick(id) {
-    if (nightly && armed !== id) { setArmed(id); return; }
     setArmed(null);
     setBusy(true); setMsg(null);
     const r = await pickGameDraftAction(view.contestId, id).catch(() => ({ ok: false }));
@@ -81,7 +68,7 @@ export default function GameDraftRoom({ view }) {
 
   return (
     <section className="dgm-room" data-draft-game-room data-your-turn={view.yourTurn ? '1' : '0'}>
-      {view.yourTurn && left != null && (
+      {!nightly && view.yourTurn && left != null && (
         <div className={`dgm-clock${left <= 10 ? ' dgm-clock--low' : ''}`} aria-live="polite">
           <b className="n">{left}</b>s to pick
         </div>
@@ -103,18 +90,31 @@ export default function GameDraftRoom({ view }) {
             <li key={`${slot}-${i}`}><span className="dgm-pos">{slot}</span> {p ? <><b>{p.name}</b> <small>{p.pos} · {p.team}</small></> : <small>open</small>}</li>
           ))}
         </ul>
+      ) : nightly ? (
+        <ul className="nd-pool" aria-label="The pool">
+          {view.pool.map((p) => (
+            <NightlyPoolRow key={p.id} p={p} armed={armedRow?.id === p.id}
+              disabled={!view.yourTurn || busy || (!p.takenBy && !legal.has(Number(p.id)))}
+              onArm={() => setArmed(p.id)} />
+          ))}
+        </ul>
       ) : (
         <ul className="dgm-pool" aria-label="The pool">
           {view.pool.map((p) => (
             <PoolRow key={p.id} pos={p.pos} name={p.name}
-              sub={nightly ? rowLine(p) : `${p.team} · proj ${Number(p.proj).toFixed(1)}`}
-              mark={nightly ? <TeamMark leagueSlug="nba" abbr={p.team} size={28} /> : null}
-              armed={nightly && armed === p.id}
+              sub={`${p.team} · proj ${Number(p.proj).toFixed(1)}`}
               takenBy={p.takenBy}
-              disabled={!view.yourTurn || busy || (nightly && !p.takenBy && !legal.has(Number(p.id)))}
+              disabled={!view.yourTurn || busy}
               onPick={() => pick(p.id)} />
           ))}
         </ul>
+      )}
+
+      {armedRow && tab === 'players' && (
+        <div className="nd-bar" data-nightly-bar role="region" aria-label="Confirm your pick">
+          <span className="nd-bar-k">Armed: <b>{armedRow.name}</b></span>
+          <button type="button" className="nd-bar-go" disabled={busy} onClick={() => pick(armedRow.id)}>Draft {armedRow.name}</button>
+        </div>
       )}
     </section>
   );
