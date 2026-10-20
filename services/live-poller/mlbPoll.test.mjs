@@ -6,6 +6,10 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+// THE KEY IS THE TEST'S OWN (CI, 20 Oct): every BDL call in this file is stubbed.
+// CI has no BDL key at all, and a live one loaded from .env.local must never ride
+// along - a stub that misses a route then fails on a 401, not on the real feed.
+process.env.BDL_API_KEY = 'test-bdl-key-no-network';
 import { fromMlb, fromBdl, scopeToStatus } from './poll.mjs';
 
 const LIVE = {
