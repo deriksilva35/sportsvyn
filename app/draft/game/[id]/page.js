@@ -19,6 +19,7 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { readRoom } from '@/lib/draftGame/room';
 import { COPY } from '@/lib/draftGame/rules';
+import { nightlyHeader } from '@/lib/draftGame/nightlyCopy';
 import GameDraftRoom from '@/components/draftGame/GameDraftRoom';
 import RoomHeader from '@/components/draftRoom/RoomHeader';
 import GameDraftResult from '@/components/draftGame/GameDraftResult';
@@ -35,6 +36,7 @@ export async function generateViewport() {
 }
 
 function Eyebrow({ v }) {
+  if (v.nightly) return <>{nightlyHeader(v)}</>;
   const match = `${v.away} @ ${v.home}`;
   if (v.phase === 'final') return <>{match} · FINAL {v.awayScore ?? 0}-{v.homeScore ?? 0}</>;
   if (v.phase === 'void') return <>{match} · OFF</>;
@@ -43,6 +45,7 @@ function Eyebrow({ v }) {
 }
 
 const TITLE = { pre: 'Draft this game', waiting: 'Your four are in', void: 'This game was called off' };
+const NIGHTLY_TITLE = { pre: "Draft tonight's NBA", waiting: 'Your three are in', void: "Tonight's games were called off" };
 
 export default async function GameDraftRoomPage({ params }) {
   const { id } = await params;
@@ -74,34 +77,34 @@ export default async function GameDraftRoomPage({ params }) {
               <RoomHeader
                 phase={v.phase}
                 eyebrow={<Eyebrow v={v} />}
-                title={v.phase === 'drafting' ? v.header : v.phase === 'live' ? 'Scoring starts with the first stat' : TITLE[v.phase] ?? ''}
+                title={v.phase === 'drafting' ? v.header : v.phase === 'live' ? 'Scoring starts with the first stat' : (v.nightly ? NIGHTLY_TITLE : TITLE)[v.phase] ?? ''}
                 titleProps={{ 'data-room-header': '' }}
-                sub={v.phase === 'drafting' ? COPY.count : null}
+                sub={v.phase === 'drafting' ? (v.nightly ? `G · F · UTIL · all ${v.shape.rounds} count` : COPY.count) : null}
               />
               {v.phase === 'drafting' ? (
                 <GameDraftRoom view={v} />
               ) : v.phase === 'waiting' ? (
                 <ul className="dgm-mine" data-draft-game-done>
                   {mine.map((p) => (
-                    <li key={p.id}><span className={`dgm-pos dgm-pos--${String(p.pos).toLowerCase()}`}>{p.pos}</span> <b>{p.name}</b> <small>{p.team}</small></li>
+                    <li key={p.id}><span className={`dgm-pos dgm-pos--${String(p.pos).toLowerCase()}`}>{p.slot ?? p.pos}</span> <b>{p.name}</b> <small>{p.team}</small></li>
                   ))}
-                  <li className="dgm-note">Your best three score. Points start at kickoff.</li>
+                  <li className="dgm-note">{v.nightly ? 'All three score. Points start at the first tip.' : 'Your best three score. Points start at kickoff.'}</li>
                 </ul>
               ) : v.phase === 'pre' && !v.locked ? (
                 userId == null ? (
                   <a className="dgm-pill" href={shellSigninHref(`/draft/game/${id}`, isShell)}>Sign in to draft</a>
                 ) : (
                   <div className="dgm-startbox">
-                    <p className="dgm-sub">{COPY.listSub}</p>
+                    <p className="dgm-sub">{v.nightly ? "Tonight's NBA games. Four drafters, three picks: G, F and UTIL. All three score." : COPY.listSub}</p>
                     <StartGameDraft contestId={v.contestId} inRoom />
                   </div>
                 )
               ) : (
-                <p className="dgm-empty">{v.phase === 'void' ? 'Nobody scores. Your draft is kept.' : 'This game has kicked off. The draft is closed.'}</p>
+                <p className="dgm-empty">{v.phase === 'void' ? 'Nobody scores. Your draft is kept.' : v.nightly ? 'The first game has tipped. The draft is closed.' : 'This game has kicked off. The draft is closed.'}</p>
               )}
             </>
           )}
-          <p className="dgm-foot">{COPY.poolFoot}</p>
+          <p className="dgm-foot">{v.nightly ? "Pool: every player in tonight's untipped games." : COPY.poolFoot}</p>
         </main>
       </div>
     </div>

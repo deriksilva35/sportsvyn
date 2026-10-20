@@ -84,6 +84,8 @@ test('TeamMark has only its named users, and every one passes a league', async (
     'components/account/FollowedTeams.js', 'components/run/RunRoster.js',
     // EPL Weekly 5 (thu-34): the club disc on a pool row and on a slot of your five
     'components/eplWeekly5/EplWeekly5Card.js',
+    // the NBA Nightly Draft's pool rows (tue-6): each player's jersey
+    'components/draftGame/GameDraftRoom.js',
   ];
   assert.deepEqual([...users].sort(), [...ALLOWED].sort());
   // NEVER INFER THE LEAGUE: every <TeamMark .../> on the site says which one.

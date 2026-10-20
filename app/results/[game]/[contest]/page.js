@@ -16,7 +16,8 @@
 // board already shows their score and their lineup is the thing the mock offers
 // to open. Before settle there is nothing here at all.
 
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { sql } from '@/lib/db';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import Results from '@/components/results/Results';
 import DraftResultView from '@/components/draftRoom/DraftResultView';
@@ -49,6 +50,12 @@ export default async function ResultsPage({ params, searchParams }) {
   // WHOSE RESULTS. The signed-in reader by default; ?who= overrides it, which is
   // how the board's rows open. A signed-out visitor with no ?who gets the field
   // and the ceiling with no `mine` - the screen still says something true.
+  // A GAME DRAFT (per-game or the NBA Nightly Draft, tue-6): its room page is its result.
+  if (game === 'draft') {
+    const [dg] = await sql`SELECT id FROM contests WHERE id = ${id} AND game_type = 'draft_game'`;
+    if (dg) redirect(`/draft/game/${id}`);
+  }
+
   const viewerId = (await auth().catch(() => null))?.user?.id ?? null;
   const asked = q?.who == null ? null : Number(q.who);
   const uid = Number.isFinite(asked) ? asked : (viewerId == null ? null : Number(viewerId));

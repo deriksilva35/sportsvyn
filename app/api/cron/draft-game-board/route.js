@@ -23,6 +23,7 @@ import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision } from '@/lib/pollers/runRecorder';
 import { maybeAlert } from '@/lib/pollers/alerts';
 import { ensureGameBoards } from '@/lib/draftGame/create';
+import { ensureNightlyNba } from '@/lib/draftGame/nightly';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -35,7 +36,12 @@ export async function GET(request) {
   const outcome = await withAdvisoryLock(SOURCE, async () => recordRun(sql, {
     source: SOURCE,
     kind: 'create',
-    run: async () => ensureGameBoards(),
+    // THE NBA NIGHTLY DRAFT (tue-6) rides the same hourly run, on its own switch;
+    // its failure is recorded beside the per-game boards, never instead of them.
+    run: async () => ({
+      ...(await ensureGameBoards()),
+      nightly: await ensureNightlyNba().catch((e) => ({ created: false, reason: 'error', error: String(e?.message ?? e).slice(0, 200) })),
+    }),
   }));
 
   if (outcome.locked) {

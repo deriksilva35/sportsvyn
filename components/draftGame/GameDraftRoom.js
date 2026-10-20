@@ -16,6 +16,17 @@ import { pickGameDraftAction } from '@/app/actions/draftGame';
 import { ROUNDS } from '@/lib/draftGame/rules';
 import SeatStrip from '@/components/draftRoom/SeatStrip';
 import PoolRow from '@/components/draftRoom/PoolRow';
+import TeamMark from '@/components/team/TeamMark';
+
+import { rowLine } from '@/lib/draftGame/nightlyCopy';
+/** The seat's slots in order, each with the pick roomState assigned to it (or none). PURE. */
+export function slotRows(slots, picks) {
+  const left = [...picks];
+  return slots.map((slot) => {
+    const i = left.findIndex((x) => x.slot === slot);
+    return { slot, p: i >= 0 ? left.splice(i, 1)[0] : null };
+  });
+}
 
 const REASON = {
   locked: 'The game has kicked off. Your remaining picks were made for you.',
@@ -43,6 +54,13 @@ export default function GameDraftRoom({ view }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
+  // ARM, THEN CONFIRM (nightly): the first tap arms a row, the second drafts it.
+  const [armed, setArmed] = useState(null);
+  const [tab, setTab] = useState('players');
+  const nightly = view.nightly === true;
+  const rounds = view.shape?.rounds ?? ROUNDS;
+  const legal = new Set((view.available ?? []).map((r) => Number(r.id)));
+  const mine = view.seats.find((s) => s.you)?.picks ?? [];
   const left = useSecondsLeft(view.yourTurn ? view.deadline : null);
 
   // The clock ran out: re-read, and the server auto-picks.
@@ -52,6 +70,8 @@ export default function GameDraftRoom({ view }) {
   }, [left, router]);
 
   async function pick(id) {
+    if (nightly && armed !== id) { setArmed(id); return; }
+    setArmed(null);
     setBusy(true); setMsg(null);
     const r = await pickGameDraftAction(view.contestId, id).catch(() => ({ ok: false }));
     if (!r?.ok) setMsg(REASON[r?.reason] ?? 'Could not save that pick.');
@@ -68,14 +88,34 @@ export default function GameDraftRoom({ view }) {
       )}
       {msg && <p className="dgm-err" role="alert">{msg}</p>}
 
-      <SeatStrip seats={view.seats.map((s) => ({ key: s.seat, label: s.label, sub: `${s.picks.length}/${ROUNDS}`, you: s.you, numeric: true }))} />
+      <SeatStrip seats={view.seats.map((s) => ({ key: s.seat, label: s.label, sub: `${s.picks.length}/${rounds}`, you: s.you, numeric: true }))} />
 
-      <ul className="dgm-pool" aria-label="The pool">
-        {view.pool.map((p) => (
-          <PoolRow key={p.id} pos={p.pos} name={p.name} sub={`${p.team} · proj ${Number(p.proj).toFixed(1)}`}
-            takenBy={p.takenBy} disabled={!view.yourTurn || busy} onPick={() => pick(p.id)} />
-        ))}
-      </ul>
+      {nightly && (
+        <div className="dgm-tabs" role="tablist">
+          <button type="button" role="tab" aria-selected={tab === 'players'} className={`dgm-tab${tab === 'players' ? ' dgm-tab--on' : ''}`} onClick={() => setTab('players')}>Players</button>
+          <button type="button" role="tab" aria-selected={tab === 'team'} className={`dgm-tab${tab === 'team' ? ' dgm-tab--on' : ''}`} onClick={() => setTab('team')}>My team · {mine.length}/{rounds}</button>
+        </div>
+      )}
+
+      {nightly && tab === 'team' ? (
+        <ul className="dgm-mine" data-my-team>
+          {slotRows(view.shape?.slots ?? [], mine).map(({ slot, p }, i) => (
+            <li key={`${slot}-${i}`}><span className="dgm-pos">{slot}</span> {p ? <><b>{p.name}</b> <small>{p.pos} · {p.team}</small></> : <small>open</small>}</li>
+          ))}
+        </ul>
+      ) : (
+        <ul className="dgm-pool" aria-label="The pool">
+          {view.pool.map((p) => (
+            <PoolRow key={p.id} pos={p.pos} name={p.name}
+              sub={nightly ? rowLine(p) : `${p.team} · proj ${Number(p.proj).toFixed(1)}`}
+              mark={nightly ? <TeamMark leagueSlug="nba" abbr={p.team} size={28} /> : null}
+              armed={nightly && armed === p.id}
+              takenBy={p.takenBy}
+              disabled={!view.yourTurn || busy || (nightly && !p.takenBy && !legal.has(Number(p.id)))}
+              onPick={() => pick(p.id)} />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
