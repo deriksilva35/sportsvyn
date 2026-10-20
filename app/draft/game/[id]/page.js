@@ -93,7 +93,7 @@ export default async function GameDraftRoomPage({ params }) {
                 phase={v.phase}
                 eyebrow={<Eyebrow v={v} />}
                 title={v.phase === 'drafting' ? (v.nightly ? roundLine({ round: v.round, rounds: v.shape.rounds, yourTurn: v.yourTurn, onClockLabel: v.onClockLabel }) : v.header) : v.phase === 'live' ? 'Scoring starts with the first stat' : (v.nightly ? NIGHTLY_TITLE : TITLE)[v.phase] ?? ''}
-                titleProps={{ 'data-room-header': '' }}
+                titleProps={v.nightly ? { 'data-room-header': '', 'data-nightly-title': '' } : { 'data-room-header': '' }}
                 sub={v.phase === 'drafting' ? (v.nightly ? lineupLine(v.shape) : COPY.count) : null}
                 right={v.nightly && v.phase === 'drafting' ? <NightlyClock deadline={v.deadline} yourTurn={v.yourTurn} /> : null}
               />

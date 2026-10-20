@@ -84,7 +84,10 @@
   border-radius: 999px; border: 1.5px solid var(--tok-line); background: transparent; color: var(--tok-ink);
   font: inherit; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; white-space: nowrap;
 }
-.nd-btn--main { height: 52px; border-color: var(--tok-action); background: var(--tok-action); color: var(--tok-on-action); font-size: 16px; }
+.nd-btn--main { flex: none; height: 52px; border-color: var(--tok-action); background: var(--tok-action); color: var(--tok-on-action); font-size: 16px; }
 
 /* the header's second eyebrow line */
 .nd-eyebrow-2 { display: block; margin-top: 4px; color: var(--tok-on-primary); font: 500 13px var(--tok-font-body); letter-spacing: 0; text-transform: none; opacity: .85; }
+
+/* the round line sits beside the clock pill: one line at 390px */
+.dgm-hd-title[data-nightly-title] { font-size: 22px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
