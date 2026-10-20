@@ -123,6 +123,10 @@
       "schedule": "0 15 * * *"
     },
     {
+      "path": "/api/cron/coins-mint",
+      "schedule": "7 * * * *"
+    },
+    {
       "path": "/api/cron/nba-opener",
       "schedule": "5-45 15 20 10 *"
     },
