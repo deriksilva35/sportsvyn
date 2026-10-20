@@ -43,6 +43,7 @@ import {
 } from '@/lib/daily/seasonBoardPlay';
 import { gradeBoard, boardStory } from '@/lib/daily/seasonBoardGrade';
 import { pctOfCeiling } from '@/lib/daily/format';
+import { cardLine } from '@/lib/daily/cardLine';
 import { shareCardModel, shareText as cardShareText, CARD_PATH, SHARE_URL as CARD_SHARE_URL } from '@/lib/daily/shareCard';
 import DailyShare from '@/components/daily/season/DailyShare';
 import { DAILY_ROUND_SECONDS } from '@/lib/daily/boardShape';
@@ -1110,7 +1111,7 @@ function GradeBox({ p, cls }) {
   return (
     <div className={`sbd-bx ${cls}`}>
       <div className="sbd-nm">{p.name}</div>
-      <div className="sbd-mt">{p.abbr} · {p.meta}</div>
+      <div className="sbd-mt">{p.abbr} · {cardLine(p.meta, p) ?? p.meta}</div>
       <div className="sbd-pt">{p.points}</div>
     </div>
   );

@@ -55,6 +55,13 @@
 - AT MERGE: parity-intent.json carries 2 entries (apptab .cn-bar) - reset to {"changes": []} right after.
 - Review data: scripts/coins-dev-seed.mjs --user <DEV id> --coins 4 (DEV only).
 
+## PR WORKFLOW (tue-2, standing)
+- Every change lands via a PR into main. The GitHub check "SPORTSVŶN test suite" IS the full suite
+  (no separate local full run); locally run touched tests + eslint while building.
+- Merge on green CI + Vercel preview READY for the PR head, merge commit, no rebase; no admin
+  bypass unless a relay says "bypass OK". Then wait for production READY on the merge commit.
+- Reconciled with "THE SUITE IS THE WHOLE SUITE" in CLAUDE.md: the CI run is that suite, pre-merge.
+
 ## Queue
 0. mon-6 step 5, Tue ~16:00Z: A and B sent/skipped/bounced/complained, stop rule, opens + clicks
    (sync_runs morning-email sends by summary.why, resend-webhook rows, email click rows). Short box.
