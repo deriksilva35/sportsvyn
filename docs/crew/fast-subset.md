@@ -1,6 +1,6 @@
 # Fixer fast subset: the repo-wide guards
 
-**Run time: 126 s wall, 41 files, 408 tests, 0 fail** (droplet, main 3820ed4, env sourced, 20 Oct 2026).
+**Run time: 120 s wall, 43 files, 423 tests, 0 fail** (droplet, main 4f8c13a + wed-1b, env sourced, 20 Oct 2026). voltContrast + legacyRedirect added after wed-1b's CI caught the first.
 
 Each of these tests walks the tree (app/, components/, lib/, sometimes scripts/ and services/) or a
 registry, so a rule broken in ONE file fails it no matter which directory the PR touched. The Fixer
@@ -14,6 +14,7 @@ Run (from the repo root, env sourced):
 
 app/tokens.test.mjs - hex census / colour ratchet (lib/brand/hexBaseline.json); no file gains a colour literal
 app/darkParity.test.mjs - dark page resolves as origin/main; declare intent in lib/brand/parity-intent.json, reset after merge
+app/voltContrast.test.mjs - no --tok-action/--tok-accent text on a light ground, every tracked CSS file (ON_DARK_ANCESTOR for navy cards)
 lib/time/zoneGuard.test.mjs - no hardcoded zone / "PT" clock outside the ALLOW list
 lib/time/timeTbdGuard.test.mjs - the literal "Time TBD" lives in lib/time/display.js only
 lib/legal.test.mjs - no user-facing string names a data vendor
@@ -48,6 +49,7 @@ app/surface.test.mjs - no data-surface="paper" attribute or selector anywhere
 app/sim/draft/errorBoundary.test.mjs - no test file hides under a [dynamic] segment (node --test would skip it)
 components/games/confirmCard.test.mjs - confirm card is the only confirm; no hardcoded-zone clocks on game surfaces
 components/team/teamMark.test.mjs - TeamMark has only its named users (ALLOWED)
+lib/you/legacyRedirect.test.mjs - nothing in the tree links into the /my and /account redirects
 components/appstore/appBanner.test.mjs - the app banner flag ships dark everywhere
 components/scores/scoresV2.test.mjs - no score-card class is redefined in any other sheet
 components/sim/appleIapCard.test.mjs - one buy path; the iap prop is never defaulted on

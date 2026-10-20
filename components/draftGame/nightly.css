@@ -55,7 +55,7 @@
 .nd-bar-go:disabled { opacity: .5; }
 
 /* ---- the finish screen ------------------------------------------------ */
-.nd-fin-hd { display: flex; flex-direction: column; gap: 10px; }
+.nd-fin-hd { display: flex; flex-direction: column; gap: 10px; background: var(--tok-primary); } /* = .dgm-hd, restated so the volt guard can see the navy */
 .nd-fin-title { margin: 0; font-size: 32px; line-height: 1; font-weight: 900; font-style: italic; color: var(--tok-on-primary); }
 .nd-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .nd-tile {
