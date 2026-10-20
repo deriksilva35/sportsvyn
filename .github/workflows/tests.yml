@@ -23,6 +23,8 @@ name: tests
 #   ADMIN_SECRET        lib/admin tests
 #   CRON_SECRET         lib/pollers/cronAuth.test.mjs
 #   NEXT_PUBLIC_BASE_URL  link-building tests
+#   RESEND_API_KEY      email senders imported by draft/sim component tests
+#   API_SPORTS_KEY      app/nfl/game/liveFallback.test.mjs
 # Tests do NOT need PROD_DATABASE_URL: the ones that mention it either refuse
 # to run when DATABASE_URL equals it (it is unset here) or only assert on
 # source text. lib/fantasy/collegeSurface.test.mjs falls back to DATABASE_URL
@@ -42,8 +44,8 @@ permissions:
 
 jobs:
   tests:
-    name: tests
-    runs-on: ubuntu-latest
+    name: SPORTSVŶN test suite
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 30
     env:
       DATABASE_URL: ${{ secrets.CI_DATABASE_URL }}
@@ -55,8 +57,12 @@ jobs:
       ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
       NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # NO CI BRANCH YET -> SKIP, GREEN (wed-2). Until the crew creates the "ci"
       # Neon branch and sets secrets.CI_DATABASE_URL, every push failed here and
@@ -89,4 +95,4 @@ jobs:
 
       - name: Full suite
         if: steps.db.outputs.skip != 'true'
-        run: node --test $(git ls-files '*.test.mjs')
+        run: umask 002; flock -w 900 /run/lock/sportsvyn-suite/suite.lock node --test $(git ls-files '*.test.mjs')
