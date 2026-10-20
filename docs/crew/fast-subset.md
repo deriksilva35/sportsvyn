@@ -15,41 +15,41 @@ Run (from the repo root, env sourced):
 app/tokens.test.mjs - hex census / colour ratchet (lib/brand/hexBaseline.json); no file gains a colour literal
 app/darkParity.test.mjs - dark page resolves as origin/main; declare intent in lib/brand/parity-intent.json, reset after merge
 lib/time/zoneGuard.test.mjs - no hardcoded zone / "PT" clock outside the ALLOW list
-lib/time/timeTbdGuard.test.mjs - every kickoff render honours the TBD flag
+lib/time/timeTbdGuard.test.mjs - the literal "Time TBD" lives in lib/time/display.js only
 lib/legal.test.mjs - no user-facing string names a data vendor
-lib/auth/ageGateDob.test.mjs - age gate: DOB is read only through the gate
+lib/auth/ageGateDob.test.mjs - age gate: only the gate names date_of_birth; no reader selects the whole users row
 lib/auth/ageGateDoors.test.mjs - age gate: every app/ door and server action is gated, counted
 lib/daily/guestRuns.test.mjs - daily_board_runs reader guard (every reader classified) + only guestRuns.js names the guest table
 lib/bdl/census.test.mjs - every BDL key reader goes through the one door
 lib/cfbd/clientCensus.test.mjs - every CFBD call goes through the client
 lib/admin/adminActionsCensus.test.mjs - every admin action is gated
-lib/admin/gate.test.mjs - admin cross-game read touches only tables that migrations create
-lib/clientGraph.test.mjs - no 'use client' file imports server-only code
-lib/jsxCommentSpace.test.mjs - JSX comment spacing (a hydration/text-node trap)
-lib/util/scoresOf.test.mjs - census: no hand-rolled score shape outside scoresOf
+lib/admin/gate.test.mjs - admin gate; the cross-game read touches only tables the migrations create
+lib/clientGraph.test.mjs - no client component reaches a server-only door
+lib/jsxCommentSpace.test.mjs - no JSX in app/, components/, lib/ loses a space to a comment
+lib/util/scoresOf.test.mjs - the coerce-then-filter score shape lives in one file only
 lib/brand/fontsLocal.test.mjs - no file imports next/font/google
-lib/brand/cardFont.test.mjs - every ImageResponse route registers the card font
-lib/email/suppression.test.mjs - every sender checks the suppression list
-lib/settle/voidAllReaders.test.mjs - every settle reader handles a void
+lib/brand/cardFont.test.mjs - no ImageResponse route fetches its font through import.meta.url
+lib/email/suppression.test.mjs - every send path checks the suppression list first
+lib/settle/voidAllReaders.test.mjs - every reader in lib/ treats a void_all contest as VOID
 lib/gridiron/kickoffGuard.test.mjs - no raw provider datetime parse outside ingest.js
-lib/gridiron/teamOrder.test.mjs - away/home order everywhere a matchup renders
-lib/soccer/roundLabel.test.mjs - round labels come from the one helper
-lib/seo/routes.test.mjs - every app route is in the sitemap/robots decision
-lib/scores/leagueScoreboards.test.mjs - every league page has a scoreboard wired
-lib/leagues/joinByCode.test.mjs - join codes are resolved in one place
-lib/fantasy/attribution.test.mjs - data attribution on every fantasy surface
-lib/fantasy/teardown.test.mjs - every fixture prefix has a teardown
+lib/gridiron/teamOrder.test.mjs - gridiron away-first, soccer home-first, across app/ and components/
+lib/soccer/roundLabel.test.mjs - no file spells Matchweek/Gameweek/Matchday by hand; only roundLabel.js
+lib/seo/routes.test.mjs - every private app route declares noindex
+lib/scores/leagueScoreboards.test.mjs - no route under a league mounts a scoreboard (walks app/)
+lib/leagues/joinByCode.test.mjs - no join by league id, in lib, actions or UI
+lib/fantasy/attribution.test.mjs - every ADP surface single-sources the attribution constant
+lib/fantasy/teardown.test.mjs - no shipped surface still sells a paid feature
 lib/games/playRegistry.test.mjs - registry entries: unique marks, flags, hrefs
 lib/mlb/lineups.test.mjs - no America/ zone in playRegistry
 app/games/how-it-works/howItWorks.test.mjs - every flagged registry game is listed (FLAGGED)
 app/dailyBlue.test.mjs - only the Daily banner reads --tok-daily
-app/roomBars.test.mjs - room bar CSS rule across every sheet
-app/surface.test.mjs - surface rules across app/ and components/ JS
-app/sim/draft/errorBoundary.test.mjs - error boundaries route back to the room
+app/roomBars.test.mjs - every fixed/sticky bottom rule in any sheet is a listed room bar
+app/surface.test.mjs - no data-surface="paper" attribute or selector anywhere
+app/sim/draft/errorBoundary.test.mjs - no test file hides under a [dynamic] segment (node --test would skip it)
 components/games/confirmCard.test.mjs - confirm card is the only confirm; no hardcoded-zone clocks on game surfaces
 components/team/teamMark.test.mjs - TeamMark has only its named users (ALLOWED)
 components/appstore/appBanner.test.mjs - the app banner flag ships dark everywhere
-components/scores/scoresV2.test.mjs - score card rules across app/ and components/
+components/scores/scoresV2.test.mjs - no score-card class is redefined in any other sheet
 components/sim/appleIapCard.test.mjs - one buy path; the iap prop is never defaulted on
 components/sim/joinByCode.test.mjs - every join-by-code caller uses the one action
 components/sim/membershipCopy.test.mjs - no em/en dashes in funnel copy, across app/components/lib
