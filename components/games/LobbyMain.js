@@ -8,12 +8,14 @@ import LobbyV3 from '@/components/games/LobbyV3';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import TzCookie from '@/components/gridiron/TzCookie';
 
-export default function LobbyMain({ v, chip, userId = null, isShell = false }) {
+export default function LobbyMain({ v, chip, userId = null, isShell = false, strip = null }) {
   return (
     <main className="lob lv" data-surface="ink">
       {/* sv_tz, so the Play lobby's next server paint is already in the
           reader's zone (its times and its header's zone label agree). */}
       <TzCookie />
+      {/* THE COIN STRIP (coins-2 B4): /games passes it with COINS=on; / never does. */}
+      {strip}
       {v
         ? (
           <LobbyV3

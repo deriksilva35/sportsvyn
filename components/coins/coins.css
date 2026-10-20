@@ -1,0 +1,88 @@
+/* components/coins/coins.css - Coins + The Drum (mock "Sportsvyn Coins - Weekly
+   Raffle"). Arcade tokens only: no colour literal (app/tokens.test.mjs ratchet);
+   volt is a fill or sits on navy, never text on white (app/voltContrast.test.mjs). */
+
+.cn { max-width: 560px; margin: 0 auto; padding: 8px 16px 140px; color: var(--arcade-ink); background: var(--arcade-page); font-family: Rubik, system-ui, sans-serif; }
+.cn-mono { font-family: 'Rubik Mono One', 'Arial Black', sans-serif; letter-spacing: 0.06em; }
+.cn-top { display: flex; align-items: center; justify-content: space-between; padding: 8px 0 10px; }
+.cn-top h1 { margin: 0; font-size: 13px; letter-spacing: 0.08em; color: var(--arcade-primary); }
+.cn-top a { color: var(--arcade-primary); font-size: 13px; min-height: 44px; display: inline-flex; align-items: center; }
+
+.cn-hero { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 18px; background: var(--arcade-primary); color: var(--arcade-on-primary); }
+.cn-hero-text { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.cn-eyebrow { font-size: 10px; letter-spacing: 0.12em; color: var(--arcade-volt); background: var(--arcade-primary); }
+.cn-hero p { margin: 0; font-size: 13px; line-height: 1.4; opacity: 0.85; }
+.cn-hand { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.cn-hand b { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 99px; background: var(--arcade-volt); color: var(--arcade-primary); font-size: 20px; }
+.cn-hand small { font-size: 8px; letter-spacing: 0.1em; opacity: 0.85; }
+
+.cn-sub { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 2px 8px; font-size: 12px; color: var(--arcade-muted); }
+.cn-sub .cn-mono { font-size: 10px; color: var(--arcade-primary); }
+.cn-cards { display: flex; flex-direction: column; gap: 10px; }
+.cn-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 16px; background: var(--arcade-surface); border: 2px solid var(--arcade-primary); }
+.cn-card-head { display: flex; align-items: center; gap: 12px; }
+.cn-tile { width: 56px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; background: var(--arcade-primary); color: var(--arcade-volt); }
+.cn-tile.merch { background: var(--arcade-page); color: var(--arcade-primary); border: 1px solid var(--arcade-line); font-size: 9px; }
+.cn-card-title { font-size: 12px; color: var(--arcade-primary); }
+.cn-card-meta { font-size: 12px; color: var(--arcade-muted); }
+.cn-card-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cn-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.cn-coin { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 99px; background: var(--arcade-volt); color: var(--arcade-primary); font-size: 8px; }
+.cn-yours { font-size: 13px; font-weight: 500; color: var(--arcade-primary); padding-left: 4px; }
+.cn-step { display: flex; align-items: center; gap: 8px; }
+.cn-step button { width: 44px; height: 44px; border-radius: 99px; border: 1px solid var(--arcade-primary); background: var(--arcade-page); color: var(--arcade-primary); font-size: 16px; cursor: pointer; }
+.cn-step button:disabled { border-color: var(--arcade-line); background: var(--arcade-line); color: var(--arcade-muted); cursor: default; }
+.cn-step output { font-size: 18px; color: var(--arcade-primary); min-width: 22px; text-align: center; }
+
+.cn-list { display: flex; flex-direction: column; border-radius: 16px; border: 1px solid var(--arcade-line); overflow: hidden; }
+.cn-list > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--arcade-line); }
+.cn-list > div:last-child { border-bottom: 0; }
+.cn-list b { font-size: 14px; font-weight: 500; display: block; }
+.cn-list small { font-size: 12px; color: var(--arcade-muted); }
+.cn-list .cn-mono { font-size: 12px; color: var(--arcade-primary); white-space: nowrap; }
+.cn-meter { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--arcade-line); }
+.cn-meter-bar { height: 8px; border-radius: 99px; background: var(--arcade-line); overflow: hidden; }
+.cn-meter-bar span { display: block; height: 100%; background: var(--arcade-primary); border-radius: 99px; }
+.cn-meter small { font-size: 12px; color: var(--arcade-muted); }
+.cn-fine { margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: var(--arcade-surface); font-size: 12px; line-height: 1.45; color: var(--arcade-muted); }
+.cn-fine a, .cn-note a { color: var(--arcade-primary); }
+.cn-note { padding: 12px 14px; border-radius: 14px; background: var(--arcade-surface); font-size: 13px; line-height: 1.45; color: var(--arcade-ink); }
+
+.cn-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); background: var(--arcade-page); border-top: 1px solid var(--arcade-line); }
+.cn-bar-inner { max-width: 560px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.cn-bar-sum { display: flex; justify-content: space-between; font-size: 12px; color: var(--arcade-muted); }
+.cn-bar-sum b { font-weight: 500; color: var(--arcade-primary); }
+.cn-go { display: flex; align-items: center; justify-content: center; min-height: 52px; border: 0; border-radius: 99px; background: var(--arcade-volt); color: var(--arcade-primary); font-size: 13px; letter-spacing: 0.04em; cursor: pointer; text-decoration: none; width: 100%; }
+.cn-go:disabled { background: var(--arcade-line); color: var(--arcade-muted); cursor: default; }
+.cn-link { display: flex; align-items: center; justify-content: center; min-height: 44px; border: 0; background: none; font-size: 14px; color: var(--arcade-primary); cursor: pointer; width: 100%; }
+
+.cn-scrim { position: fixed; inset: 0; z-index: 40; background: color-mix(in srgb, var(--arcade-primary) 45%, transparent); display: flex; align-items: flex-end; justify-content: center; }
+.cn-sheet { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 14px; padding: 14px 18px calc(24px + env(safe-area-inset-bottom)); background: var(--arcade-page); border-radius: 22px 22px 0 0; }
+.cn-grab { width: 40px; height: 4px; border-radius: 2px; background: var(--arcade-line); align-self: center; }
+.cn-sheet h2 { margin: 0; font-size: 20px; color: var(--arcade-primary); }
+.cn-sheet .cn-kick { font-size: 10px; letter-spacing: 0.12em; color: var(--arcade-primary); }
+.cn-sheet p { margin: 0; font-size: 13px; color: var(--arcade-muted); }
+.cn-err { font-size: 13px; color: var(--arcade-live); }
+
+/* THE PLAY STRIP (B4) */
+.cn-strip { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--arcade-primary); color: var(--arcade-on-primary); text-decoration: none; }
+.cn-strip-coin { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 99px; background: var(--arcade-volt); color: var(--arcade-primary); font-size: 15px; flex-shrink: 0; }
+.cn-strip-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cn-strip-mid b { font-size: 12px; font-weight: 400; }
+.cn-strip-mid small, .cn-strip-end small { font-size: 12px; opacity: 0.85; }
+.cn-strip-end { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+.cn-strip-end b { font-size: 10px; font-weight: 400; color: var(--arcade-volt); background: var(--arcade-primary); }
+.cn-strip-wrap { display: flex; flex-direction: column; gap: 8px; max-width: 560px; margin: 12px auto 4px; padding: 0 16px; }
+
+/* THE REVEAL (B5) */
+.cn-result { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px 20px; border-radius: 18px; background: var(--arcade-primary); color: var(--arcade-on-primary); text-align: center; }
+.cn-result h2 { margin: 0; font-size: 26px; line-height: 1.15; }
+.cn-result p { margin: 0; font-size: 13px; opacity: 0.85; max-width: 320px; }
+.cn-shown > div { font-size: 13px; }
+.cn-shown .cn-seed { font-size: 11px; }
+
+/* THE RULES (B7) */
+.cn-rules h2 { font-size: 15px; color: var(--arcade-primary); margin: 22px 0 6px; }
+.cn-rules p, .cn-rules li { font-size: 14px; line-height: 1.55; }
+.cn-rules table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cn-rules td, .cn-rules th { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--arcade-line); }

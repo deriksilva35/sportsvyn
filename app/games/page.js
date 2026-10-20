@@ -29,6 +29,10 @@ import { lobbyV3 } from '@/lib/games/lobbyV3';
 import { readViewerTz } from '@/lib/gridiron/serverTz';
 import LobbyMain from '@/components/games/LobbyMain';
 import { normalizeChip } from '@/lib/games/lobby';
+import CoinStrip from '@/components/coins/CoinStrip';
+import { coinsEnabled } from '@/lib/coins/mint';
+import { drumView } from '@/lib/coins/drum';
+import '@/components/coins/coins.css';
 import './games.css';
 import './lobbyV3.css';
 
@@ -59,13 +63,15 @@ export default async function GamesPage({ searchParams }) {
   // reader is in (sv_tz), so its first paint names the same zone as its times.
   const tz = await readViewerTz();
   const v = await lobbyV3(userId, { chip, boardKey, sport: sp.sport, tz }).catch(() => null);
+  // THE COIN STRIP (coins-2 B4): flag on, signed in; a failed read hides it, never the lobby.
+  const coins = coinsEnabled() && userId != null ? await drumView({ userId }).catch(() => null) : null;
 
   return (
     <>
       <GlobalHeaderServer activeNav="games" />
       {/* THE LOBBY'S DRAWING IS SHARED with / under the arcade theme (tue-3,
           components/games/LobbyMain); the guard and the read above stay here. */}
-      <LobbyMain v={v} chip={chip} userId={userId} isShell={isShell} />
+      <LobbyMain v={v} chip={chip} userId={userId} isShell={isShell} strip={coins ? <CoinStrip view={coins} /> : null} />
       <SiteFooter />
     </>
   );

@@ -1,3 +1,14 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "components/shell/apptab.css",
+      "key": "html[data-appbar]:not([data-clock]) :is( .trk-tabs, .dv-ft, .wkv-bar, .sbd-ft, .sbd-toast, .sx-ft, .e5-lockbar, .lv-bar, .sb-row.you ) { bottom }",
+      "after": null
+    },
+    {
+      "file": "components/shell/apptab.css",
+      "key": "html[data-appbar]:not([data-clock]) :is( .trk-tabs, .dv-ft, .wkv-bar, .sbd-ft, .sbd-toast, .sx-ft, .e5-lockbar, .lv-bar, .sb-row.you, .cn-bar ) { bottom }",
+      "after": "calc(calc(63px + env(safe-area-inset-bottom)) + 0px)"
+    }
+  ]
 }

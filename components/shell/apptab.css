@@ -95,7 +95,7 @@ html[data-appbar]:not([data-clock]) {
   scroll-padding-bottom: var(--sv-appbar-h);
 }
 html[data-appbar]:not([data-clock]) :is(
-  .trk-tabs, .dv-ft, .wkv-bar, .sbd-ft, .sbd-toast, .sx-ft, .e5-lockbar, .lv-bar, .sb-row.you
+  .trk-tabs, .dv-ft, .wkv-bar, .sbd-ft, .sbd-toast, .sx-ft, .e5-lockbar, .lv-bar, .sb-row.you, .cn-bar
 ) { bottom: calc(var(--sv-appbar-h) + var(--sv-roombar-gap, 0px)); }
 html[data-appbar] .trk-tabs { z-index: 55; }
 /* And the page must clear BOTH bars, not just one. */

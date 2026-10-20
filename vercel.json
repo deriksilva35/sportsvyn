@@ -127,6 +127,14 @@
       "schedule": "7 * * * *"
     },
     {
+      "path": "/api/cron/coins-close?slot=pdt",
+      "schedule": "0 16 * * 2"
+    },
+    {
+      "path": "/api/cron/coins-close?slot=pst",
+      "schedule": "0 17 * * 2"
+    },
+    {
       "path": "/api/cron/nba-opener",
       "schedule": "5-45 15 20 10 *"
     },
