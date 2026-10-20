@@ -6,9 +6,10 @@
 import '@/app/draft/game/game.css';
 import './draftRoom.css';
 
-export default function PoolRow({ pos, name, sub, takenBy = null, armed = false, label = 'Draft', onPick = null, disabled = false, small = true }) {
+export default function PoolRow({ pos, name, sub, takenBy = null, armed = false, label = 'Draft', onPick = null, disabled = false, small = true, mark = null }) {
   return (
     <li className={`dgm-prow${takenBy ? ' dgm-prow--taken' : ''}${armed ? ' drm-prow--armed' : ''}`} data-armed={armed ? '1' : undefined}>
+      {mark}
       <span className={`dgm-pos dgm-pos--${String(pos).toLowerCase()}`}>{pos}</span>
       <span className="dgm-who">
         <b>{name}</b>
