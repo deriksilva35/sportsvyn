@@ -14,6 +14,10 @@
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+// THE KEY IS THE TEST'S OWN (CI, 20 Oct): every BDL call in this file is stubbed.
+// CI has no BDL key at all, and a live one loaded from .env.local must never ride
+// along - a stub that misses a route then fails on a 401, not on the real feed.
+process.env.BDL_API_KEY = 'test-bdl-key-no-network';
 
 for (const k of ['PUSH_ENABLED', 'APNS_KEY', 'APNS_KEY_PATH', 'APNS_KEY_ID', 'APNS_TEAM_ID']) delete process.env[k];
 

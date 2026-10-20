@@ -25,7 +25,7 @@ import { playsFor } from '../../lib/gridiron/playsImport.js';
 import { cfbdGet } from '../../lib/cfbd/client.js';
 import { winProbTick, logWinProb, logFinalWinProb, logHoldStart, logHoldRelease, WINPROB_SPORTS, heldWinProb } from '../../lib/winprob/live.js';
 
-import { bdlFetch } from '../../lib/bdl/http.js';
+import { bdlFetch, requireBdlKey } from '../../lib/bdl/http.js';
 
 // LAST SCORE KIND, PER TEAM, PER MATCH - in-memory, one process's worth.
 // A restart loses it, which only matters for the very next delta-of-2 for a
@@ -130,7 +130,7 @@ export function cfbdScoreboard({ classification = null } = {}) {
 export function bdlDay(dateIso) {
   return async () => {
     const key = process.env.BDL_API_KEY;
-    if (!key) throw new Error('BDL_API_KEY missing in env');
+    requireBdlKey(key);
     const res = await bdlFetch(`/nfl/v1/games?dates[]=${dateIso}&per_page=100`, { key, describe: (s) => `BDL ${s} on /nfl/v1/games` });
     const j = await res.json();
     return { rows: j?.data ?? [], calls: 1 };
@@ -149,7 +149,7 @@ export function bdlDay(dateIso) {
 export function mlbDay(dateIso) {
   return async () => {
     const key = process.env.BDL_API_KEY;
-    if (!key) throw new Error('BDL_API_KEY missing in env');
+    requireBdlKey(key);
     const res = await bdlFetch(`/mlb/v1/games?dates[]=${dateIso}&per_page=100`, { key, describe: (s) => `BDL ${s} on /mlb/v1/games` });
     const j = await res.json();
     return { rows: j?.data ?? [], calls: 1 };
@@ -170,7 +170,7 @@ export function mlbDay(dateIso) {
  */
 export function nbaDay(now, { fetchImpl = fetch, key = process.env.BDL_API_KEY } = {}) {
   return async () => {
-    if (!key) throw new Error('BDL_API_KEY missing in env');
+    requireBdlKey(key);
     const day = (offset) => new Date(new Date(now).getTime() + offset * 86_400_000).toISOString().slice(0, 10);
     const get = async (path) => {
       const res = await bdlFetch(path, { key, fetchImpl, describe: (s) => `BDL ${s} on ${path.split('?')[0]}` });
