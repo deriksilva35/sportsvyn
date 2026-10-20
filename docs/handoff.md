@@ -47,6 +47,14 @@
 - After Tue: remove BROADCAST_NBA_OPENER from Vercel (code refuses other days anyway).
 - 20:12Z reboot was a manual `sudo reboot` (derik, pts/9), no OOM; timers and poller back.
 
+## COINS + THE DRUM built, HELD (coins-2) - branch coins-drum @ a45851c, NOT merged
+- B1-B5 + B7 done behind COINS=on (Vercel Preview, branch coins-drum only); B6 not started.
+- Migrations 147 + 148 on DEV only (ledgered). PROD needs dual GO.
+- Suite 6563/0 on a45851c; next build clean; preview READY sportsvyn-57mkxw52x (/coins, /coins/rules,
+  /coins/results/dry-run all 200). Report: docs/reports/coins-2-build.md (on the branch).
+- AT MERGE: parity-intent.json carries 2 entries (apptab .cn-bar) - reset to {"changes": []} right after.
+- Review data: scripts/coins-dev-seed.mjs --user <DEV id> --coins 4 (DEV only).
+
 ## Queue
 0. mon-6 step 5, Tue ~16:00Z: A and B sent/skipped/bounced/complained, stop rule, opens + clicks
    (sync_runs morning-email sends by summary.why, resend-webhook rows, email click rows). Short box.
