@@ -16,6 +16,7 @@
 // line under the win-probability module is the method note (sat-1), exactly
 // lib/winprob/display.js WINPROB_METHOD_NOTE - a source, not a gloss.
 
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { CardFace } from '@/components/scores/ScoreboardV4';
 import AlertBell from '@/components/alerts/AlertBell';
@@ -184,7 +185,7 @@ export function ScoringPlays({ list, g }) {
  * three (basketball's: the game's top three, or the season's). The season's
  * module is this same component under another label and `mod`.
  */
-export function Leaders({ rows, g, label = 'Leaders', mod = 'leaders', sub = null }) {
+export function Leaders({ rows, g, label = 'Leaders', mod = 'leaders', sub = null, from = null }) {
   const cell = (side) => {
     const one = (l, i = 0) => <span key={i} className="pl"><b>{l.name}</b><span>{l.line}</span></span>;
     if (!Array.isArray(side)) return side ? one(side) : <span className="pl none">–</span>;
@@ -193,7 +194,7 @@ export function Leaders({ rows, g, label = 'Leaders', mod = 'leaders', sub = nul
   };
   return (
     <Box label={label} mod={mod} className="gpa-leaders" right={sub ? <span className="gpa-sub">{sub}</span> : null}>
-      <div className="gpa-lrow head"><span /><span>{g.away?.abbreviation}</span><span className="r">{g.home?.abbreviation}</span></div>
+      <div className="gpa-lrow head"><span /><span>{g.away?.abbreviation}{from?.away ? <small className="gpa-from" data-from={from.away}> {from.away}</small> : null}</span><span className="r">{g.home?.abbreviation}{from?.home ? <small className="gpa-from" data-from={from.home}> {from.home}</small> : null}</span></div>
       {rows.map((r) => (
         <div key={r.cat} className="gpa-lrow" data-cat={r.cat}>
           <span className="cat">{r.cat}</span>{cell(r.away)}<span className="r">{cell(r.home)}</span>
@@ -233,11 +234,11 @@ export function Injuries({ inj, g }) {
 export function Lineups({ lineups, g }) {
   if (!lineups) return null;
   const side = (abbr, list, s) => (
-    <div className="gpa-lu" data-side={s}>
-      <b className="gpa-inj-h">{abbr}</b>
+    <div className="gpa-lu" data-side={s} data-empty={list.length ? undefined : '1'}>
+      {list.length ? <b className="gpa-inj-h">{abbr}</b> : null}
       {list.length ? (
         <ul>{list.map((p) => <li key={p.id}><span className="pos">{p.pos}</span><span className="n">{p.name}</span></li>)}</ul>
-      ) : <span className="gpa-none">–</span>}
+      ) : null}
     </div>
   );
   return (
@@ -256,11 +257,14 @@ export function Last5({ last5, g }) {
       {list ? (
         <ul>
           {list.map((r, i) => (
-            <li key={i} data-result={r.win ? 'w' : 'l'}>
-              <i className={`pip ${r.win ? 'w' : 'l'}`} aria-label={r.win ? 'Win' : 'Loss'}>{r.win ? 'W' : 'L'}</i>
-              <span className="sc">{r.score}</span>
-              <span className="op">{r.opp}</span>
-            </li>
+            <Fragment key={i}>
+              {r.prev && !list[i - 1]?.prev ? <li className="gpa-div" data-divider="1" role="separator">{last5.prevFrom?.[s]}</li> : null}
+              <li data-result={r.win ? 'w' : 'l'} data-prev={r.prev ? '1' : undefined}>
+                <i className={`pip ${r.win ? 'w' : 'l'}`} aria-label={r.win ? 'Win' : 'Loss'}>{r.win ? 'W' : 'L'}</i>
+                <span className="sc">{r.score}</span>
+                <span className="op">{r.opp}</span>
+              </li>
+            </Fragment>
           ))}
         </ul>
       ) : <span className="gpa-none">–</span>}
@@ -274,12 +278,14 @@ export function Last5({ last5, g }) {
   );
 }
 
-function BoxTables({ teams }) {
+function BoxTables({ teams, scroll = false }) {
+  // scroll (NBA): each table in its own swipe container, name column pinned (thu2-nba-page).
+  const wrap = (tbl, key) => (scroll ? <div key={key} className="gpa-tscroll" data-gpa="tscroll">{tbl}</div> : tbl);
   return (
-    <div className="gpa-boxsc" data-gpa="box" id="gpa-box">
+    <div className="gpa-boxsc" data-gpa="box" id="gpa-box" data-scroll={scroll ? '1' : undefined}>
       {teams.map((t) => (
         <div key={t.side} className="team">
-          {t.tables.filter((tb) => tb.primary !== false).map((tb) => (
+          {t.tables.filter((tb) => tb.primary !== false).map((tb) => wrap(
             <table key={tb.group} className="gpa-tbl">
               <thead><tr><th scope="col">{t.abbr} {tb.label}</th>{tb.headings.map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
               <tbody>
@@ -290,8 +296,7 @@ function BoxTables({ teams }) {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          ))}
+            </table>, tb.group))}
         </div>
       ))}
       {teams.some((t) => t.tables.some((tb) => tb.rows.some((r) => r.starter))) ? (
@@ -325,7 +330,7 @@ export default function GamePageArcade({ view, now = new Date(), tz = 'America/N
     chips: () => (
       <ArcadeChips panels={view.chips} nodes={{
         plays: <PlaysList plays={view.plays} allHref={allHref} />,
-        box: view.box.length ? <BoxTables teams={view.box} /> : null,
+        box: view.box.length ? <BoxTables teams={view.box} scroll={view.league === 'nba'} /> : null,
         stats: (
           <div data-gpa="stats">
             {view.leaders.length ? <Leaders rows={view.leaders} g={g} /> : null}
@@ -345,13 +350,13 @@ export default function GamePageArcade({ view, now = new Date(), tz = 'America/N
     // THE NBA PRE-GAME'S FOUR (thu1-nba-page). Never in a gridiron module list.
     injuries: () => <Injuries inj={view.injuries} g={g} />,
     lineups: () => <Lineups lineups={view.lineups} g={g} />,
-    seasonleaders: () => (view.seasonLeaders ? <Leaders rows={view.seasonLeaders} g={g} label="Season leaders" mod="season-leaders" sub="per game" /> : null),
+    seasonleaders: () => (view.seasonLeaders ? <Leaders rows={view.seasonLeaders} g={g} label="Season leaders" mod="season-leaders" sub="per game" from={view.seasonLeadersFrom} /> : null),
     last5: () => <Last5 last5={view.last5} g={g} />,
     // THE NBA FINAL'S THREE (nba-card, thu-37). Never in a gridiron module list
     // (lib/gridiron/gamePageArcade.js arcadeModules), so the NFL page is unchanged.
     teamstats: () => (view.teamBox ? <Box label="Team stats" mod="teamstats-box"><TeamStats box={view.teamBox} g={g} /></Box> : null),
     fullbox: () => (view.boxHref ? <Link className="gpa-all gpa-fullbox" href={view.boxHref} data-gpa="fullbox">Full box score &rsaquo;</Link> : null),
-    box: () => (view.box.length ? <Box label="Box score" mod="box-full"><BoxTables teams={view.box} /></Box> : null),
+    box: () => (view.box.length ? <Box label="Box score" mod="box-full"><BoxTables teams={view.box} scroll={view.league === 'nba'} /></Box> : null),
   };
   return (
     <div className="gpa" data-state={view.state} data-league={view.league} data-modules={view.modules.join(' ')}>
