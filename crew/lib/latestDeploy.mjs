@@ -29,7 +29,7 @@ export function summarize(d) {
 
 export async function main({ argv, env, fetchImpl }) {
   parseArgs(argv, []);
-  const token = requireToken('vercel.token', 'Vercel token', env);
+  const token = requireToken('vercel.token', 'Vercel token', env, new URL(VERCEL_API).host);
   const url = `${VERCEL_API}/v6/deployments?projectId=${VERCEL_PROJECT_ID}&teamId=${VERCEL_TEAM_ID}&target=production&limit=1`;
   const body = await fetchJson(url, { headers: vercelHeaders(token), label: 'vercel deployments', fetchImpl });
   const { summary, code } = summarize(body?.deployments?.[0]);

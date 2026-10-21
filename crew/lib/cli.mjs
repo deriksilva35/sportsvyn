@@ -16,7 +16,7 @@ export const SCRIPTS = Object.freeze({
 
 export async function run(name, opts = {}) {
   const entry = SCRIPTS[name];
-  if (!entry) { process.stdout.write(`SUMMARY ${name} status=error reason=unknown-script\n`); process.exit(2); }
+  if (!entry) { process.stdout.write(`SUMMARY ${name} status=error reason=not_found:script\n`); process.exit(2); }
   const mod = await import(entry[0]);
   return runCli(name, mod.main, { ...entry[1], ...opts });
 }

@@ -43,10 +43,10 @@ export const topUnchecked = (jobs) => jobs.find((j) => !j.checked) ?? null;
 /** PURE. `node scripts/x.mjs a b` -> argv for spawn, or throws. Refuses any apply flag and anything but a repo script. */
 export function dryRunArgv(cmd) {
   const t = String(cmd ?? '').trim().split(/\s+/);
-  if (t[0] !== 'node' || !/^scripts\/[A-Za-z0-9._-]+\.mjs$/.test(t[1] ?? '')) throw new SetupError('dry-run must be `node scripts/<name>.mjs ...`', 'bad-job');
+  if (t[0] !== 'node' || !/^scripts\/[A-Za-z0-9._-]+\.mjs$/.test(t[1] ?? '')) throw new SetupError('dry-run must be `node scripts/<name>.mjs ...`', 'not_found', 'data-queue');
   const rest = t.slice(2);
-  if (rest.some((a) => /apply/i.test(a))) throw new SetupError('the dry-run command carries an apply flag: refused', 'apply-flag');
-  if (rest.some((a) => !/^[A-Za-z0-9=_.:,/-]+$/.test(a))) throw new SetupError('dry-run argument not allowed', 'bad-job');
+  if (rest.some((a) => /apply/i.test(a))) throw new SetupError('the dry-run command carries an apply flag: refused', 'not_found', 'data-queue');
+  if (rest.some((a) => !/^[A-Za-z0-9=_.:,/-]+$/.test(a))) throw new SetupError('dry-run argument not allowed', 'not_found', 'data-queue');
   return [t[1], ...rest];
 }
 
@@ -87,9 +87,9 @@ export function sampleRows(out, pattern, n = SAMPLE_ROWS) {
 /** PURE. Everything the report needs from one finished dry run. */
 export function assess(job, out, rowsBeforeDb = null) {
   const parser = PARSERS[job.fields.parser];
-  if (!parser) throw new SetupError(`unknown parser "${job.fields.parser ?? ''}" for job ${job.id}`, 'bad-job');
+  if (!parser) throw new SetupError(`unknown parser "${job.fields.parser ?? ''}" for job ${job.id}`, 'not_found', 'data-queue');
   const p = parser(out);
-  if (!p.parsed) throw new SetupError('the dry-run output has no totals line this parser knows', 'unparsed');
+  if (!p.parsed) throw new SetupError('the dry-run output has no totals line this parser knows', 'not_found', 'dry-run-totals');
   const rowsBefore = p.before ?? rowsBeforeDb;
   const rowsAfter = p.after ?? (rowsBefore === null ? null : Math.max(rowsBefore, p.wouldChange));
   const bad = contradictions(out, p);
@@ -129,8 +129,8 @@ export async function main({ argv, env }) {
   if (!job) return { lines: ['data queue is empty: nothing to do'], summary: { status: 'ok', job: '-', rows_before: '-', rows_after: '-', would_change: '-', dry_run: '-' }, code: 0 };
 
   const argvJob = dryRunArgv(job.fields['dry-run']);
-  if (!job.fields.apply) throw new SetupError(`job ${job.id} has no apply command to hand to Derik`, 'bad-job');
-  if (!existsSync(join(root, argvJob[0]))) throw new SetupError(`script ${argvJob[0]} not found in the checkout`, 'bad-job');
+  if (!job.fields.apply) throw new SetupError(`job ${job.id} has no apply command to hand to Derik`, 'not_found', 'data-queue');
+  if (!existsSync(join(root, argvJob[0]))) throw new SetupError(`script ${argvJob[0]} not found in the checkout`, 'not_found', 'data-queue');
 
   const childEnv = { PATH: env.PATH ?? '/usr/bin:/bin', HOME: env.HOME ?? homedir(), DATABASE_URL: url };
   const cfbd = readToken('cfbd.token', env);
@@ -142,7 +142,7 @@ export async function main({ argv, env }) {
   mkdirSync(dir, { recursive: true });
   const file = join(dir, `${new Date().toISOString().slice(0, 10)}-${job.id}.txt`);
   writeFileSync(file, `# ${job.title}\n# dry run: ${job.fields['dry-run']}\n# exit: ${code}\n\n${clean}`);
-  if (code !== 0) throw new SetupError(`job script exited ${code}; full output in ${file}`, 'job-failed');
+  if (code !== 0) throw new SetupError(`job script exited ${code}; full output in ${file}`, 'unreachable', 'dry-run');
 
   let before = null;
   if (job.fields.parser === 'footballdb-import') before = await footballdbRowsBefore(url, argvJob.slice(1));

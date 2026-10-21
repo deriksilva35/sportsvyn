@@ -4,7 +4,7 @@
 // statement is SET LOCAL default_transaction_read_only = on; and the batch header
 // Neon-Batch-Read-Only opens the transaction READ ONLY. (A write probe through this path fails
 // with "cannot execute ... in a read-only transaction" - crew/lib/db.test.mjs pins the request shape.)
-import { SetupError, redact, HTTP_TIMEOUT_MS } from './common.mjs';
+import { SetupError, redact, networkError, statusError, HTTP_TIMEOUT_MS } from './common.mjs';
 
 export const READ_ONLY_PREAMBLE = 'SET LOCAL default_transaction_read_only = on';
 
@@ -35,19 +35,21 @@ export function buildRequest(url, text, params = [], timeoutMs = 8_000) {
 /** -> rows (objects; bigint/numeric arrive as strings, so cast in SQL or Number() them). */
 export async function query(url, text, params = [], { timeoutMs = HTTP_TIMEOUT_MS, fetchImpl = fetch } = {}) {
   const { endpoint, init } = buildRequest(url, text, params, timeoutMs);
-  let res;
+  const host = new URL(url).host;
+  let res; let body;
   try {
     res = await fetchImpl(endpoint, { ...init, signal: AbortSignal.timeout(timeoutMs + 1500) });
+    body = await res.json().catch((e) => { if (e?.name === 'TimeoutError' || e?.name === 'AbortError') throw e; return null; });
   } catch (e) {
-    throw new SetupError(redact(`database unreachable: ${e?.name === 'TimeoutError' ? 'timeout' : e?.message ?? e}`), 'unreachable');
+    throw networkError(e, 'database', host);
   }
-  const body = await res.json().catch(() => null);
   if (!res.ok) {
     const code = body?.code ? ` (${body.code})` : '';
-    throw new SetupError(redact(`database error${code}: ${String(body?.message ?? res.status).slice(0, 160)}`), res.status === 401 || res.status === 403 ? 'auth' : 'db');
+    const err = statusError(res.status, 'database', host);
+    throw new SetupError(redact(`database error${code}: ${String(body?.message ?? res.status).slice(0, 160)}`), err.kind, host);
   }
   const results = body?.results;
-  if (!Array.isArray(results) || !results.length) throw new SetupError('database returned no result', 'db');
+  if (!Array.isArray(results) || !results.length) throw new SetupError('database returned no result', 'unreachable', host);
   return results.at(-1).rows ?? [];
 }
 

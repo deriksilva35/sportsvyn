@@ -8,9 +8,31 @@ import { readFileSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-/** The caller asked for something the script does not take, or a secret/API is missing. -> exit 2. */
+export const ERROR_KINDS = Object.freeze(['unreachable', 'auth', 'not_found', 'timeout']);
+
+/** The caller asked for something the script does not take, or a secret/API is missing. -> exit 2.
+ *  kind is one of ERROR_KINDS; host names WHAT failed (an API/DB hostname, a secret file name, or a
+ *  local label such as `args`). The runner prints `status=error reason=<kind>:<host>`; message is
+ *  the human line (redacted) and never reaches the SUMMARY. */
 export class SetupError extends Error {
-  constructor(message, reason = 'setup') { super(message); this.name = 'SetupError'; this.reason = reason; }
+  constructor(message, kind = 'unreachable', host = 'local') {
+    super(message); this.name = 'SetupError';
+    this.kind = ERROR_KINDS.includes(kind) ? kind : 'unreachable';
+    this.host = String(host || 'local').replace(/[^A-Za-z0-9._-]/g, '_');
+  }
+  get reason() { return `${this.kind}:${this.host}`; }
+}
+
+const hostOf = (url) => { try { return new URL(url).host; } catch { return 'unknown'; } };
+const isTimeout = (e) => e?.name === 'TimeoutError' || e?.name === 'AbortError';
+/** Network-level failure -> SetupError: timeout (incl. while reading a body) or unreachable. */
+export function networkError(e, label, host) {
+  return new SetupError(redact(`${label} ${isTimeout(e) ? 'timed out' : `unreachable: ${e?.message ?? e}`}`), isTimeout(e) ? 'timeout' : 'unreachable', host);
+}
+/** HTTP status -> SetupError: 401/403 auth, 404 not_found, anything else (5xx, 429, ...) unreachable. */
+export function statusError(status, label, host) {
+  const kind = status === 401 || status === 403 ? 'auth' : status === 404 ? 'not_found' : 'unreachable';
+  return new SetupError(redact(`${label} HTTP ${status}`), kind, host);
 }
 
 export const DEFAULT_DEADLINE_MS = 9_500; // the 10 s ceiling, with a margin for process start
@@ -55,18 +77,19 @@ export function readEnvKey(file, key, env = process.env) {
 /** The read-only DB URL, or a SetupError that names the file but never a value. */
 export function requireReaderUrl(env = process.env) {
   const url = readEnvKey('crew-reader.env', 'CREW_READER_URL', env);
-  if (!url) throw new SetupError('CREW_READER_URL is not set in crew-reader.env (secrets dir)', 'no-secret');
+  if (!url) throw new SetupError('CREW_READER_URL is not set in crew-reader.env (secrets dir)', 'auth', 'crew-reader.env');
   try {
     const u = new URL(url);
     if (u.password) rememberSecret(decodeURIComponent(u.password));
     rememberSecret(url);
-  } catch { throw new SetupError('CREW_READER_URL is not a valid URL', 'bad-secret'); }
+  } catch { throw new SetupError('CREW_READER_URL is not a valid URL', 'auth', 'crew-reader.env'); }
   return url;
 }
 
-export function requireToken(file, label, env = process.env) {
+/** host = the API this token would have called (reason=auth:<host>). */
+export function requireToken(file, label, env = process.env, host = file) {
   const t = readToken(file, env);
-  if (!t) throw new SetupError(`${label} is not set (${file} in the secrets dir)`, 'no-secret');
+  if (!t) throw new SetupError(`${label} is not set (${file} in the secrets dir)`, 'auth', host);
   return t;
 }
 
@@ -101,12 +124,12 @@ export const usd = (n) => (n === null || n === undefined || !Number.isFinite(n) 
 // ---------------------------------------------------------------------------
 /** @returns {number[]} parsed integers, one per spec entry (defaults filled). Throws SetupError on extras/bad values. */
 export function parseArgs(argv, specs = []) {
-  if (argv.length > specs.length) throw new SetupError(`unexpected argument (takes ${specs.length})`, 'usage');
+  if (argv.length > specs.length) throw new SetupError(`unexpected argument (takes ${specs.length})`, 'not_found', 'args');
   return specs.map((s, i) => {
     if (argv[i] === undefined) return s.default;
-    if (!/^\d{1,6}$/.test(argv[i])) throw new SetupError(`${s.name} must be a whole number`, 'usage');
+    if (!/^\d{1,6}$/.test(argv[i])) throw new SetupError(`${s.name} must be a whole number`, 'not_found', 'args');
     const n = Number(argv[i]);
-    if (n < (s.min ?? 1) || n > (s.max ?? 10_080)) throw new SetupError(`${s.name} out of range ${s.min ?? 1}-${s.max ?? 10_080}`, 'usage');
+    if (n < (s.min ?? 1) || n > (s.max ?? 10_080)) throw new SetupError(`${s.name} out of range ${s.min ?? 1}-${s.max ?? 10_080}`, 'not_found', 'args');
     return n;
   });
 }
@@ -115,27 +138,53 @@ export function parseArgs(argv, specs = []) {
 // HTTP with a timeout on every call. Errors are redacted.
 // ---------------------------------------------------------------------------
 export async function fetchJson(url, { method = 'GET', headers = {}, body, timeoutMs = HTTP_TIMEOUT_MS, fetchImpl = fetch, label = 'request' } = {}) {
-  let res;
+  const host = hostOf(url);
+  let text;
   try {
-    res = await fetchImpl(url, { method, headers, body, signal: AbortSignal.timeout(timeoutMs) });
+    const res = await fetchImpl(url, { method, headers, body, signal: AbortSignal.timeout(timeoutMs) });
+    text = await res.text(); // inside the try: the timeout can fire while the body is read
+    if (!res.ok) throw statusError(res.status, label, host);
   } catch (e) {
-    throw new SetupError(redact(`${label} unreachable: ${e?.name === 'TimeoutError' ? 'timeout' : e?.message ?? e}`), 'unreachable');
+    throw e instanceof SetupError ? e : networkError(e, label, host);
   }
-  const text = await res.text();
-  if (!res.ok) throw new SetupError(redact(`${label} HTTP ${res.status}`), res.status === 401 || res.status === 403 ? 'auth' : 'api');
-  try { return text ? JSON.parse(text) : null; } catch { throw new SetupError(`${label} returned non-JSON`, 'api'); }
+  try { return text ? JSON.parse(text) : null; } catch { throw new SetupError(`${label} returned non-JSON`, 'unreachable', host); }
 }
 
-/** Like fetchJson but returns the body text (JSON-lines endpoints). */
+/** Like fetchJson but returns the body text. */
 export async function fetchText(url, { headers = {}, timeoutMs = HTTP_TIMEOUT_MS, fetchImpl = fetch, label = 'request' } = {}) {
-  let res;
+  const host = hostOf(url);
   try {
-    res = await fetchImpl(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
+    const res = await fetchImpl(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) throw statusError(res.status, label, host);
+    return await res.text();
   } catch (e) {
-    throw new SetupError(redact(`${label} unreachable: ${e?.name === 'TimeoutError' ? 'timeout' : e?.message ?? e}`), 'unreachable');
+    throw e instanceof SetupError ? e : networkError(e, label, host);
   }
-  if (!res.ok) throw new SetupError(redact(`${label} HTTP ${res.status}`), res.status === 401 || res.status === 403 ? 'auth' : 'api');
-  return res.text();
+}
+
+/** Stream a (possibly huge) text body line by line into onLine(line); memory stays flat. The one
+ *  timeout covers connect, headers AND the whole body read. */
+export async function fetchLines(url, onLine, { headers = {}, timeoutMs = HTTP_TIMEOUT_MS, fetchImpl = fetch, label = 'request' } = {}) {
+  const host = hostOf(url);
+  try {
+    const res = await fetchImpl(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) throw statusError(res.status, label, host);
+    if (!res.body?.getReader) { for (const l of (await res.text()).split('\n')) onLine(l); return; }
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let rest = '';
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      rest += dec.decode(value, { stream: true });
+      let nl;
+      while ((nl = rest.indexOf('\n')) >= 0) { onLine(rest.slice(0, nl)); rest = rest.slice(nl + 1); }
+    }
+    rest += dec.decode();
+    if (rest) onLine(rest);
+  } catch (e) {
+    throw e instanceof SetupError ? e : networkError(e, label, host);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -152,7 +201,7 @@ export async function runCli(name, fn, opts = {}) {
     deadlineMs = DEFAULT_DEADLINE_MS, silentOnError = false, summaryFn = (f) => summaryLine(name, f) } = opts;
   let timer = null;
   const fail = (e) => {
-    const reason = e instanceof SetupError ? e.reason : 'error';
+    const reason = e instanceof SetupError ? e.reason : 'unreachable:internal';
     if (!silentOnError) {
       out(`${name}: error: ${redact(e?.message ?? e)}`);
       out(summaryLine(name, { status: 'error', reason }));
@@ -160,7 +209,7 @@ export async function runCli(name, fn, opts = {}) {
     exit(2);
   };
   if (deadlineMs) {
-    timer = setTimeout(() => fail(new SetupError('deadline exceeded', 'timeout')), deadlineMs);
+    timer = setTimeout(() => fail(new SetupError('deadline exceeded', 'timeout', 'deadline')), deadlineMs);
     timer.unref?.();
   }
   try {
@@ -182,6 +231,6 @@ export const minutesBetween = (a, b) => Math.max(0, Math.floor((new Date(b).getT
 export function repoRoot(env = process.env, here = import.meta.dirname) {
   const cands = [env.CREW_REPO, join(here, '..', '..'), join(homedir(), 'crew', 'worktrees', 'sportsvyn-main')].filter(Boolean);
   const hit = cands.find((c) => existsSync(join(c, 'docs', 'crew', 'data-queue.md')));
-  if (!hit) throw new SetupError('repo checkout with docs/crew/data-queue.md not found (set CREW_REPO)', 'no-repo');
+  if (!hit) throw new SetupError('repo checkout with docs/crew/data-queue.md not found (set CREW_REPO)', 'not_found', 'repo');
   return hit;
 }
