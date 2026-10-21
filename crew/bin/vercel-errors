@@ -1,0 +1,3 @@
+#!/usr/bin/env node
+// crew/bin/vercel-errors - see crew/README.md and crew/lib/cli.mjs. Needs crew/lib installed beside crew/bin.
+import("../lib/cli.mjs").then((m) => m.run("vercel-errors"));
