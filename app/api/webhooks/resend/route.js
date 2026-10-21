@@ -74,6 +74,11 @@ const OUTCOME = {
   'email.bounced': 'bounced',
   'email.complained': 'complained',
   'email.delivery_delayed': 'delayed',
+  // tue-4 (measure): opens and clicks, for the morning email's daily summary
+  // (lib/email/morningStats.js). Needs open/click tracking ON for the sending
+  // domain in Resend AND this webhook subscribed to email.opened + email.clicked.
+  'email.opened': 'opened',
+  'email.clicked': 'clicked',
 };
 
 export async function POST(request) {
@@ -112,7 +117,11 @@ export async function POST(request) {
             ${JSON.stringify({ messageId, to, outcome, type: evt.type,
               // fri-3: the bounce's kind (Permanent / Transient / Undetermined), so
               // lib/email/suppression.js never suppresses an address on a soft bounce.
-              ...(outcome === 'bounced' ? { bounceType: evt?.data?.bounce?.type ?? null } : {}) })}::jsonb)`;
+              ...(outcome === 'bounced' ? { bounceType: evt?.data?.bounce?.type ?? null } : {}),
+              // tue-4: when it happened (Resend's event time) and, for a click, the link -
+              // the scanner rule (lib/email/emailMetrics.js) needs the time, not our insert time.
+              at: evt?.data?.click?.timestamp ?? evt?.data?.opened?.timestamp ?? evt?.created_at ?? null,
+              ...(outcome === 'clicked' ? { link: evt?.data?.click?.link ?? null } : {}) })}::jsonb)`;
 
   return Response.json({ ok: true, outcome, messageId });
 }
