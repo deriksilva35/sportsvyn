@@ -24,12 +24,13 @@ export function summarize(rows, retention = RETENTION) {
   return {
     per,
     summary: {
-      status: overdueTables.length ? 'regression' : 'ok',
+      // informational until a pruner exists: overdue is reported, never a regression
+      status: 'ok',
       tables: names.length,
       overdue: overdueTables.length,
       largest: `${largest}:${per[largest].rows}`,
     },
-    code: overdueTables.length ? 1 : 0,
+    code: 0, // NEVER exit 1 for overdue
   };
 }
 

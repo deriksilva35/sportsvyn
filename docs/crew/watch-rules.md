@@ -37,7 +37,7 @@ by hand when a script's number needs confirming. See crew/README.md for each scr
 | C2 Neon compute | cost | none (the API reports hours, not dollars; prints `-`) |
 | C3 Odds API credits vs month pace | cost | none (SQL cross-check below is the spec) |
 
-`app-errors`, `vercel-errors`, `cf-top`, `latest-deploy` and `board-state` are log / deploy / schedule
+`app-errors`, `vercel-errors`, `latest-deploy` and `board-state` are log / deploy / schedule
 readers and have no rule in this file (their thresholds are in crew/README.md).
 
 ---
@@ -588,6 +588,8 @@ above (which stay the spec for a deeper look).
 | ffc | max(sim_player_pool.snapshot_date) at 00:00 UTC | 2280 (38 h) | always (adp-snapshot runs daily 11:00 UTC) |
 | injuries | newest ok `sync_runs` row, source `wire` | 60 | an NFL match within 7 days either side |
 
+Injuries is excluded from the stale count until its cron is in vercel.json (it is still listed).
+
 The thresholds are first values chosen from the cron cadences (odds hourly, wire every 15 min, adp
 daily) and are for Derik to tune; changing one is an edit to `CREW_VIEWS` and a re-run of
 `scripts/crew-reader-grants.mjs --apply`.
@@ -596,9 +598,10 @@ daily) and are for Derik to tune; changing one is an edit to `CREW_VIEWS` and a 
 
 `crew/bin/retention-status` reads `crew_stats.retention_ages_v` (row counts by whole-day age). These
 four tables are NOT trimmed by the data-retention job (that job covers odds_markets 14 days and
-sync_runs 30 days, lib/ops/dataRetention.js); no keep period for them was written down anywhere in the
-repo, so the numbers below are PROPOSED in crew-bin and need Derik's ruling. Overdue = older than
-keep + 1 day. crew/lib/retentionStatus.mjs holds the same numbers (a test pins the match).
+sync_runs 30 days, lib/ops/dataRetention.js). The rule: app_errors, push_sends, daily_guest_runs and
+sessions are kept 30 days. Overdue = older than keep + 1 day. Until a pruner exists, `retention-status`
+reports overdue counts with `status=ok` and exit 0 (informational); it NEVER exits 1 for overdue.
+crew/lib/retentionStatus.mjs holds the same numbers (a test pins the match).
 
 RETENTION app_errors=30 push_sends=30 daily_guest_runs=30 sessions=30
 
@@ -609,17 +612,19 @@ RETENTION app_errors=30 push_sends=30 daily_guest_runs=30 sessions=30
 | daily_guest_runs | started_at | 30 |
 | sessions | expires (days since EXPIRY) | 30 |
 
-A first PROD run will probably say `overdue>0` (nothing deletes these yet): that is the finding, not a
-fault in the script.
+A PROD run will say `overdue>0` while nothing deletes these: that is the finding, not a fault in the
+script, and it stays exit 0.
 
 # cost budget
 
-`crew/bin/cost-watch` judges pace against this line (none existed before crew-bin; this value is a
-PLACEHOLDER for Derik to set): month-to-date Vercel spend projected to month end
-(`spend / elapsed fraction`, only once 3 days into the UTC month) over the budget -> `pace=over`,
-exit 1. Unknown figures print `-` and never count as over.
+`crew/bin/cost-watch` judges pace against this line. The value is `<VERCEL_MONTHLY_USD>`, Derik's plan
+line item, and is `unknown` until he sets it. While it is `unknown`, cost-watch prints `vercel_usd_mtd`
+and `pace=unknown`, never `over`. Once it is a number: month-to-date Vercel spend projected to month
+end (`spend / elapsed fraction`, only once 3 days into the UTC month) over the budget -> `pace=over`,
+exit 1. Unknown figures print `-` and never count as over. `neon_usd_mtd` is always `-`: Neon bills
+compute hours, not dollars.
 
-BUDGET vercel_usd_month=50
+BUDGET vercel_usd_month=unknown
 
 # Running them
 

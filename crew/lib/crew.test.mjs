@@ -16,7 +16,6 @@ import * as providers from './providerHealth.mjs';
 import * as board from './boardState.mjs';
 import * as deploy from './latestDeploy.mjs';
 import * as vercelErrors from './vercelErrors.mjs';
-import * as cf from './cfTop.mjs';
 import * as cost from './costWatch.mjs';
 import * as keeper from './dataKeeper.mjs';
 import { SCRIPTS } from './cli.mjs';
@@ -30,10 +29,9 @@ const tmp = (p) => mkdtempSync(path.join(tmpdir(), `crew-${p}-`));
 const FORMATS = {
   'app-errors': /^SUMMARY app-errors status=(ok|regression) window_min=\d+ errors=\d+ new_hashes=\d+ top_source=\S+$/,
   'vercel-errors': /^SUMMARY vercel-errors status=(ok|regression) window_min=\d+ errors_5xx=\d+ routes=\d+ top_route=\S+$/,
-  'cf-top': /^SUMMARY cf-top status=ok window_min=\d+ requests=\d+ blocked=\d+ challenged=\d+ top_asn=\S+ top_path=\S+$/,
   'retention-status': /^SUMMARY retention-status status=(ok|regression) tables=\d+ overdue=\d+ largest=[a-z_]+:\d+$/,
   'provider-health': /^SUMMARY provider-health status=(ok|regression) providers=\d+ stale=\d+ stalest=(-|[a-z]+:(\d+|never))$/,
-  'cost-watch': /^SUMMARY cost-watch status=(ok|regression) vercel_usd_mtd=(-|\d+\.\d\d) neon_usd_mtd=(-|\d+\.\d\d) resend_sent_mtd=(-|\d+) pace=(ok|over)$/,
+  'cost-watch': /^SUMMARY cost-watch status=(ok|regression) vercel_usd_mtd=(-|\d+\.\d\d) neon_usd_mtd=(-|\d+\.\d\d) resend_sent_mtd=(-|\d+) pace=(ok|over|unknown)$/,
   'latest-deploy': /^SUMMARY latest-deploy status=(ok|regression) deploy_id=\S+ state=(READY|ERROR|BUILDING|CANCELED|-) commit=\S+ created=\S+$/,
   'data-keeper': /^SUMMARY data-keeper status=(ok|regression) job=\S+ rows_before=\S+ rows_after=\S+ would_change=\S+ dry_run=\S+$/,
 };
@@ -72,22 +70,6 @@ test('vercel-errors: any 5xx is a regression; routes and top_route; 4xx and quer
   assert.ok(vercelErrors.requestLogsUrl(30, 0, 1_000_000).includes('projectId=prj_'), 'pinned to the one project');
 });
 
-test('cf-top: always exit 0; blocked/challenged/top ASN and path from the graphql shape', () => {
-  const zone = {
-    total: [{ count: 1200 }],
-    asn: [{ count: 400, dimensions: { clientAsn: '16509' } }],
-    path: [{ count: 90, dimensions: { clientRequestPath: '/games?x=1' } }],
-    fw: [{ count: 5, dimensions: { action: 'block' } }, { count: 3, dimensions: { action: 'managed_challenge' } }, { count: 2, dimensions: { action: 'js_challenge' } }, { count: 9, dimensions: { action: 'log' } }],
-  };
-  const r = cf.summarize(60, zone);
-  assert.equal(r.code, 0);
-  assert.deepEqual([r.summary.requests, r.summary.blocked, r.summary.challenged, r.summary.top_asn, r.summary.top_path], [1200, 5, 5, '16509', '/games']);
-  assert.match(summaryLine('cf-top', r.summary), FORMATS['cf-top']);
-  const empty = cf.summarize(60, undefined);
-  assert.equal(empty.code, 0);
-  assert.match(summaryLine('cf-top', empty.summary), FORMATS['cf-top']);
-});
-
 test('retention-status: overdue past keep+1 day; sessions age from expiry', () => {
   const clean = retention.summarize([
     { table_name: 'app_errors', age_days: 3, row_count: '10' }, { table_name: 'sessions', age_days: -5, row_count: '40' },
@@ -97,7 +79,8 @@ test('retention-status: overdue past keep+1 day; sessions age from expiry', () =
   assert.match(summaryLine('retention-status', clean.summary), FORMATS['retention-status']);
   assert.equal(clean.summary.largest, 'sessions:40');
   const bad = retention.summarize([{ table_name: 'push_sends', age_days: 31, row_count: '5' }, { table_name: 'sessions', age_days: 60, row_count: '2' }, { table_name: 'ignored', age_days: 999, row_count: '9' }]);
-  assert.equal(bad.code, 1);
+  assert.equal(bad.code, 0, 'overdue is informational: never exit 1');
+  assert.equal(bad.summary.status, 'ok');
   assert.deepEqual([bad.summary.tables, bad.summary.overdue], [4, 2]);
   assert.match(summaryLine('retention-status', bad.summary), FORMATS['retention-status']);
 });
@@ -112,7 +95,9 @@ test('provider-health: stale only when a write is expected and older than max, o
   ];
   const r = providers.summarize(rows);
   assert.equal(r.code, 1);
-  assert.deepEqual([r.summary.providers, r.summary.stale, r.summary.stalest], [5, 2, 'injuries:never']);
+  assert.deepEqual([r.summary.providers, r.summary.stale, r.summary.stalest], [5, 1, 'odds:200'], 'injuries excluded from the stale count');
+  const injOnly = providers.summarize([{ provider: 'injuries', max_age_min: 60, expected: true, age_min: null }]);
+  assert.deepEqual([injOnly.code, injOnly.summary.stale, injOnly.summary.stalest], [0, 0, '-']);
   assert.match(summaryLine('provider-health', r.summary), FORMATS['provider-health']);
   const quiet = providers.summarize(rows.slice(0, 2).concat(rows.slice(3, 4)));
   assert.equal(quiet.code, 0);
@@ -123,16 +108,22 @@ test('provider-health: stale only when a write is expected and older than max, o
 test('cost-watch: pace=over only for a KNOWN figure projected past budget, after 3 days; unknown is "-"', () => {
   const day10 = cost.monthProgress(Date.UTC(2026, 9, 11)); // 10 of 31 days
   assert.ok(day10.elapsedDays >= 10 && day10.fraction > 0.3 && day10.fraction < 0.33);
-  const under = cost.summarize({ vercelUsd: 10, progress: day10 });
+  const unk = cost.summarize({ vercelUsd: 20, progress: day10 });
+  assert.equal(cost.BUDGET_USD.vercel, null, 'monthly Vercel figure is unknown until Derik sets it');
+  assert.equal(unk.summary.pace, 'unknown', 'unknown budget: never over');
+  assert.equal(unk.code, 0);
+  assert.equal(unk.summary.vercel_usd_mtd, '20.00');
+  assert.match(summaryLine('cost-watch', unk.summary), FORMATS['cost-watch']);
+  const under = cost.summarize({ vercelUsd: 10, progress: day10, budget: 50 });
   assert.equal(under.code, 0);
   assert.match(summaryLine('cost-watch', under.summary), FORMATS['cost-watch']);
-  const over = cost.summarize({ vercelUsd: 20, resendSent: 12, progress: day10 }); // 20 / .32 = 62 > 50
+  const over = cost.summarize({ vercelUsd: 20, resendSent: 12, progress: day10, budget: 50 }); // 20 / .32 = 62 > 50
   assert.equal(over.code, 1);
   assert.equal(over.summary.pace, 'over');
   assert.match(summaryLine('cost-watch', over.summary), FORMATS['cost-watch']);
-  const early = cost.summarize({ vercelUsd: 49, progress: cost.monthProgress(Date.UTC(2026, 9, 2)) });
+  const early = cost.summarize({ vercelUsd: 49, progress: cost.monthProgress(Date.UTC(2026, 9, 2)), budget: 50 });
   assert.equal(early.summary.pace, 'ok', 'under 3 days in, pace is not judged');
-  const unknown = cost.summarize({ vercelUsd: null, progress: day10 });
+  const unknown = cost.summarize({ vercelUsd: null, progress: day10, budget: 50 });
   assert.equal(unknown.summary.vercel_usd_mtd, '-');
   assert.equal(unknown.summary.pace, 'ok', 'unknown never counts as over');
   assert.equal(unknown.summary.neon_usd_mtd, '-');
@@ -292,7 +283,7 @@ test('every script has a bin shim, is executable, and is in the registry; dispat
     assert.match(readFileSync(p, 'utf8'), new RegExp(`m\\.run\\("${name}"\\)`));
   }
   assert.match(readFileSync(path.join(BIN, 'dispatch'), 'utf8'), /\^\[0-9\]\+\$/);
-  assert.equal(Object.keys(SCRIPTS).length, 9);
+  assert.equal(Object.keys(SCRIPTS).length, 8);
 });
 // ---- data-keeper -------------------------------------------------------------------------------
 const QUEUE = (dry = 'node scripts/fake-dry.mjs', second = '') => `# queue
@@ -448,11 +439,13 @@ test('docs/crew/watch-rules.md states the same retention days and budget as the 
   const line = md.match(/^RETENTION (.+)$/m)[1];
   const doc = Object.fromEntries(line.split(' ').map((kv) => kv.split('=')).map(([k, v]) => [k, Number(v)]));
   assert.deepEqual(doc, { ...retention.RETENTION });
-  assert.equal(Number(md.match(/^BUDGET vercel_usd_month=(\d+)$/m)[1]), cost.BUDGET_USD.vercel);
+  const b = md.match(/^BUDGET vercel_usd_month=(unknown|\d+)$/m)[1];
+  assert.equal(b === 'unknown' ? null : Number(b), cost.BUDGET_USD.vercel);
+  assert.ok(!/cf-top|cloudflare/i.test(readFileSync(path.join(ROOT, 'crew', 'README.md'), 'utf8')), 'no cf-top / Cloudflare in the README');
 });
 
 test('crew/README.md names every script, the Drive source line, and no secret value', () => {
   const md = readFileSync(path.join(ROOT, 'crew', 'README.md'), 'utf8');
   for (const name of Object.keys(SCRIPTS)) assert.ok(md.includes(`\`${name}`), name);
-  assert.ok(md.includes('SOULs and project.yaml live in Drive CrewOS/crews/sportsvyn (single source; not copied here).'));
+  assert.ok(md.includes('SOULs and project.yaml live in Drive CrewOS/crews/sportsvyn (single source, now v1.5.2; not copied here).'));
 });
