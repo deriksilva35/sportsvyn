@@ -179,16 +179,97 @@ export function ScoringPlays({ list, g }) {
   );
 }
 
-export function Leaders({ rows, g }) {
-  const cell = (l) => (l ? <span className="pl"><b>{l.name}</b><span>{l.line}</span></span> : <span className="pl none">–</span>);
+/**
+ * A side is one leader ({ name, line }, the gridiron's) or a list of up to
+ * three (basketball's: the game's top three, or the season's). The season's
+ * module is this same component under another label and `mod`.
+ */
+export function Leaders({ rows, g, label = 'Leaders', mod = 'leaders', sub = null }) {
+  const cell = (side) => {
+    const one = (l, i = 0) => <span key={i} className="pl"><b>{l.name}</b><span>{l.line}</span></span>;
+    if (!Array.isArray(side)) return side ? one(side) : <span className="pl none">–</span>;
+    if (!side.length) return <span className="pl none">–</span>;
+    return <span className="pls">{side.map(one)}</span>;
+  };
   return (
-    <Box label="Leaders" mod="leaders" className="gpa-leaders">
+    <Box label={label} mod={mod} className="gpa-leaders" right={sub ? <span className="gpa-sub">{sub}</span> : null}>
       <div className="gpa-lrow head"><span /><span>{g.away?.abbreviation}</span><span className="r">{g.home?.abbreviation}</span></div>
       {rows.map((r) => (
         <div key={r.cat} className="gpa-lrow" data-cat={r.cat}>
           <span className="cat">{r.cat}</span>{cell(r.away)}<span className="r">{cell(r.home)}</span>
         </div>
       ))}
+    </Box>
+  );
+}
+
+/** INJURIES (nba, pre-game): per team, name · status · note; one "updated" line. */
+export function Injuries({ inj, g }) {
+  if (!inj) return null;
+  const side = (abbr, list, s) => (
+    <div className="gpa-inj" data-side={s}>
+      <b className="gpa-inj-h">{abbr}</b>
+      {list.length ? (
+        <ul>
+          {list.map((p, i) => (
+            <li key={i} data-status={p.status}>
+              <span className="n">{p.name}</span>
+              <span className="st">{p.status}</span>
+              {p.note ? <span className="nt">{p.note}</span> : null}
+            </li>
+          ))}
+        </ul>
+      ) : <span className="gpa-none">–</span>}
+    </div>
+  );
+  return (
+    <Box label="Injuries" mod="injuries-box" right={inj.updated ? <span className="gpa-sub" data-updated="1">{inj.updated}</span> : null}>
+      <div className="gpa-two">{side(g.away?.abbreviation, inj.away, 'away')}{side(g.home?.abbreviation, inj.home, 'home')}</div>
+    </Box>
+  );
+}
+
+/** STARTING LINEUPS: "Projected" until the game's own lineup is out, then "Confirmed". */
+export function Lineups({ lineups, g }) {
+  if (!lineups) return null;
+  const side = (abbr, list, s) => (
+    <div className="gpa-lu" data-side={s}>
+      <b className="gpa-inj-h">{abbr}</b>
+      {list.length ? (
+        <ul>{list.map((p) => <li key={p.id}><span className="pos">{p.pos}</span><span className="n">{p.name}</span></li>)}</ul>
+      ) : <span className="gpa-none">–</span>}
+    </div>
+  );
+  return (
+    <Box label="Starting lineups" mod="lineups-box" right={<span className="gpa-sub" data-lineup-state={lineups.label.toLowerCase()}>{lineups.label}</span>}>
+      <div className="gpa-two">{side(g.away?.abbreviation, lineups.away, 'away')}{side(g.home?.abbreviation, lineups.home, 'home')}</div>
+    </Box>
+  );
+}
+
+/** LAST 5: W/L pips with the score, newest first, per team; the season series under them. */
+export function Last5({ last5, g }) {
+  if (!last5) return null;
+  const side = (abbr, list, s) => (
+    <div className="gpa-l5" data-side={s}>
+      <b className="gpa-inj-h">{abbr}</b>
+      {list ? (
+        <ul>
+          {list.map((r, i) => (
+            <li key={i} data-result={r.win ? 'w' : 'l'}>
+              <i className={`pip ${r.win ? 'w' : 'l'}`} aria-label={r.win ? 'Win' : 'Loss'}>{r.win ? 'W' : 'L'}</i>
+              <span className="sc">{r.score}</span>
+              <span className="op">{r.opp}</span>
+            </li>
+          ))}
+        </ul>
+      ) : <span className="gpa-none">–</span>}
+    </div>
+  );
+  return (
+    <Box label="Last 5" mod="last5-box">
+      <div className="gpa-two">{side(g.away?.abbreviation, last5.away, 'away')}{side(g.home?.abbreviation, last5.home, 'home')}</div>
+      {last5.series ? <p className="gpa-series" data-series="1">{last5.series}</p> : null}
     </Box>
   );
 }
@@ -203,13 +284,19 @@ function BoxTables({ teams }) {
               <thead><tr><th scope="col">{t.abbr} {tb.label}</th>{tb.headings.map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
               <tbody>
                 {tb.rows.map((r, i) => (
-                  <tr key={`${r.name}-${i}`}><th scope="row">{r.name}</th>{r.cells.map((c, j) => <td key={j}>{c}</td>)}</tr>
+                  <tr key={`${r.name}-${i}`} data-starter={r.starter ? '1' : undefined} data-dnp={r.dnp ? '1' : undefined}>
+                    <th scope="row">{r.starter ? <i className="gpa-st" title="Starter" aria-label="Starter" /> : null}{r.name}</th>
+                    {r.dnp ? <td className="dnp" colSpan={tb.headings.length}>DNP</td> : r.cells.map((c, j) => <td key={j}>{c}</td>)}
+                  </tr>
                 ))}
               </tbody>
             </table>
           ))}
         </div>
       ))}
+      {teams.some((t) => t.tables.some((tb) => tb.rows.some((r) => r.starter))) ? (
+        <p className="gpa-legend" data-gpa="box-legend"><i className="gpa-st" aria-hidden="true" /> Starter</p>
+      ) : null}
     </div>
   );
 }
@@ -255,6 +342,11 @@ export default function GamePageArcade({ view, now = new Date(), tz = 'America/N
     ),
     scoring: () => <ScoringPlays list={view.scoring} g={g} />,
     leaders: () => <Leaders rows={view.leaders} g={g} />,
+    // THE NBA PRE-GAME'S FOUR (thu1-nba-page). Never in a gridiron module list.
+    injuries: () => <Injuries inj={view.injuries} g={g} />,
+    lineups: () => <Lineups lineups={view.lineups} g={g} />,
+    seasonleaders: () => (view.seasonLeaders ? <Leaders rows={view.seasonLeaders} g={g} label="Season leaders" mod="season-leaders" sub="per game" /> : null),
+    last5: () => <Last5 last5={view.last5} g={g} />,
     // THE NBA FINAL'S THREE (nba-card, thu-37). Never in a gridiron module list
     // (lib/gridiron/gamePageArcade.js arcadeModules), so the NFL page is unchanged.
     teamstats: () => (view.teamBox ? <Box label="Team stats" mod="teamstats-box"><TeamStats box={view.teamBox} g={g} /></Box> : null),
