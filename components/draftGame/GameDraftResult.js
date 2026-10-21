@@ -6,9 +6,11 @@
 //
 // LIVE AND FINAL ARE ONE CARD: the result is computed from the box as it stands
 // (lib/draftGame/settle.js liveResult) until the board settles, then read from
-// what settle stored. Only the percentile waits for the final.
+// what settle stored. Only the percentile - and the NIGHTLY's human field rank
+// ("You: 2nd of 7 players", bots never count) - wait for the final.
 
 import { ordinal, ROUNDS } from '@/lib/draftGame/rules';
+import { fieldLine } from '@/lib/draftGame/nightlyCopy';
 import DraftResultView from '@/components/draftRoom/DraftResultView';
 
 const pts = (n) => Number(n ?? 0).toFixed(1);
@@ -30,7 +32,7 @@ export default function GameDraftResult({ view, eyebrow }) {
       eyebrow={eyebrow}
       points={me.score}
       placeLine={`points · ${ordinal(me.place)} of ${res.seats.length}${final ? '' : ' · live'}`}
-      topLine={final && res.top_pct != null
+      topLine={view.nightly && final && res.field?.of > 1 ? fieldLine(res.field) : final && res.top_pct != null
         ? (res.entrants > 1 ? `Top ${res.top_pct}% of everyone who drafted ${view.nightly ? 'tonight' : 'this game'}` : `Nobody else drafted ${view.nightly ? 'tonight' : 'this game'} yet`)
         : null}
       players={players.map((p) => ({ id: p.id, pos: p.slot ?? p.pos, name: p.name, sub: p.played ? (p.line ?? 'no stats') : 'did not play', pts: p.pts, counted: p.counted }))}
