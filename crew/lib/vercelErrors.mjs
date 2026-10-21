@@ -3,7 +3,7 @@
 // sportsvyn project (vercel.mjs). Only status code and path are read from each row; log text,
 // headers and bodies are never kept or printed.
 import { parseArgs, requireToken, fetchJson } from './common.mjs';
-import { VERCEL_WEB, VERCEL_PROJECT_ID, VERCEL_TEAM_ID, vercelHeaders } from './vercel.mjs';
+import { VERCEL_API, VERCEL_WEB, VERCEL_PROJECT_ID, VERCEL_TEAM_ID, vercelHeaders } from './vercel.mjs';
 
 export const ARGS = [{ name: 'window_min', default: 60, min: 1, max: 1440 }];
 export const MAX_PAGES = 4;
@@ -39,7 +39,7 @@ export function requestLogsUrl(windowMin, page, now = Date.now()) {
 
 export async function main({ argv, env, fetchImpl }) {
   const [windowMin] = parseArgs(argv, ARGS);
-  const token = requireToken('vercel.token', 'Vercel token', env);
+  const token = requireToken('vercel.token', 'Vercel token', env, new URL(VERCEL_API).host);
   const rows = [];
   for (let page = 0; page < MAX_PAGES; page++) {
     const body = await fetchJson(requestLogsUrl(windowMin, page), { headers: vercelHeaders(token), label: 'vercel request logs', fetchImpl });

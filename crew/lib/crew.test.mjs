@@ -8,7 +8,7 @@ import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, existsSync, statSy
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { summaryLine, redact, parseArgs, runCli, SetupError, rememberSecret, readToken, readEnvKey, val, usd } from './common.mjs';
+import { fetchJson, summaryLine, redact, parseArgs, runCli, SetupError, rememberSecret, readToken, readEnvKey, val, usd } from './common.mjs';
 import { buildRequest, READ_ONLY_PREAMBLE } from './db.mjs';
 import * as appErrors from './appErrors.mjs';
 import * as retention from './retentionStatus.mjs';
@@ -26,6 +26,7 @@ const BIN = path.join(ROOT, 'crew', 'bin');
 const tmp = (p) => mkdtempSync(path.join(tmpdir(), `crew-${p}-`));
 
 // ---- the SUMMARY formats, exactly -------------------------------------------------------------
+const ERR = /^SUMMARY \S+ status=error reason=(unreachable|auth|not_found|timeout):\S+$/;
 const FORMATS = {
   'app-errors': /^SUMMARY app-errors status=(ok|regression) window_min=\d+ errors=\d+ new_hashes=\d+ top_source=\S+$/,
   'vercel-errors': /^SUMMARY vercel-errors status=(ok|regression) window_min=\d+ errors_5xx=\d+ routes=\d+ top_route=\S+$/,
@@ -181,7 +182,7 @@ test('every script with NO secrets: exit 2, SUMMARY status=error last (board-sta
     assert.equal(r.status, 2, `${name} exit`);
     if (name === 'board-state') { assert.equal(r.stdout, '', 'board-state stdout'); assert.equal(r.stderr, '', 'board-state stderr'); continue; }
     const lines = r.stdout.trimEnd().split('\n');
-    assert.match(lines.at(-1), new RegExp(`^SUMMARY ${name} status=error reason=\\S+$`), `${name} last line`);
+    assert.match(lines.at(-1), new RegExp(`^SUMMARY ${name} status=error reason=(unreachable|auth|not_found|timeout):\\S+$`), `${name} last line`);
   }
   rmSync(dir, { recursive: true });
 });
@@ -209,7 +210,7 @@ test('a DB script with an unreachable URL and a recognisable fake password never
     const all = r.stdout + r.stderr;
     assert.ok(!all.includes(PW), `${name} leaked the password`);
     assert.ok(!/postgres:\/\//.test(all), `${name} printed a URL`);
-    if (name !== 'board-state') assert.match(r.stdout.trimEnd().split('\n').at(-1), /^SUMMARY \S+ status=error reason=\S+$/);
+    if (name !== 'board-state') assert.match(r.stdout.trimEnd().split('\n').at(-1), ERR);
   }
   rmSync(dir, { recursive: true });
 });
@@ -226,7 +227,7 @@ test('runCli redacts a secret that leaks into an error message (token files and 
   }, { argv: [], env, out: (s) => out.push(s), exit: (n) => { code = n; }, deadlineMs: null });
   assert.equal(code, 2);
   assert.ok(!out.join('\n').includes(TOKEN));
-  assert.match(out.at(-1), /^SUMMARY latest-deploy status=error reason=error$/);
+  assert.match(out.at(-1), /^SUMMARY latest-deploy status=error reason=unreachable:internal$/);
   // success-path lines are scrubbed too
   const out2 = [];
   await runCli('x', async () => ({ lines: [`token is ${TOKEN}`], summary: { status: 'ok' }, code: 0 }), { argv: [], env, out: (s) => out2.push(s), exit: () => {}, deadlineMs: null });
@@ -399,7 +400,7 @@ test('data-keeper refuses a queue entry whose dry-run carries an apply flag, and
   const out = []; let code;
   await runCli('data-keeper', keeper.main, { argv: [], env: f.env, out: (s) => out.push(s), exit: (n) => { code = n; }, deadlineMs: null });
   assert.equal(code, 2);
-  assert.match(out.at(-1), /^SUMMARY data-keeper status=error reason=apply-flag$/);
+  assert.match(out.at(-1), /^SUMMARY data-keeper status=error reason=not_found:data-queue$/);
   assert.ok(!existsSync(path.join(f.repo, 'scripts', 'ran.txt')), 'the script never ran');
 });
 
@@ -408,7 +409,7 @@ test('data-keeper: a failing job script is exit 2 with the output kept on disk; 
   const out = []; let code;
   await runCli('data-keeper', keeper.main, { argv: [], env: f.env, out: (s) => out.push(s), exit: (n) => { code = n; }, deadlineMs: null });
   assert.equal(code, 2);
-  assert.match(out.at(-1), /reason=job-failed$/);
+  assert.match(out.at(-1), /reason=unreachable:dry-run$/);
   const f2 = fixtureRepo({ queue: '- [x] **done**\n  - dry-run: `node scripts/fake-dry.mjs`\n' });
   const out2 = []; let code2;
   await runCli('data-keeper', keeper.main, { argv: [], env: f2.env, out: (s) => out2.push(s), exit: (n) => { code2 = n; }, deadlineMs: null });
@@ -448,4 +449,95 @@ test('crew/README.md names every script, the Drive source line, and no secret va
   const md = readFileSync(path.join(ROOT, 'crew', 'README.md'), 'utf8');
   for (const name of Object.keys(SCRIPTS)) assert.ok(md.includes(`\`${name}`), name);
   assert.ok(md.includes('SOULs and project.yaml live in Drive CrewOS/crews/sportsvyn (single source, now v1.5.2; not copied here).'));
+});
+
+// ---- crew-bin-3: the error format, and cost-watch's streamed billing -------------------------
+const FAKE = 'FAKETOKEN_vcl_zz91q8w7e6r5';
+const res = (status, body = '') => async () => new Response(body, { status });
+const throws = (name, message = 'x') => async () => { const e = new Error(message); e.name = name; throw e; };
+const errOf = async (fn) => { try { await fn(); } catch (e) { return e; } return null; };
+
+test('fetchJson maps failures to reason=<kind>:<host>: unreachable, timeout, auth, 404, 5xx', async () => {
+  const url = `https://api.example.test/v1/x?token=${FAKE}`;
+  const kinds = [
+    [throws('TypeError', `getaddrinfo ENOTFOUND ${FAKE}`), 'unreachable'],
+    [throws('TimeoutError'), 'timeout'],
+    [res(401), 'auth'], [res(403), 'auth'], [res(404), 'not_found'], [res(500), 'unreachable'], [res(429), 'unreachable'],
+  ];
+  for (const [fetchImpl, kind] of kinds) {
+    const e = await errOf(() => fetchJson(url, { fetchImpl }));
+    assert.ok(e instanceof SetupError);
+    assert.equal(e.reason, `${kind}:api.example.test`);
+  }
+  // a timeout that fires while the BODY is read is a timeout, not an "error"
+  const slowBody = async () => ({ ok: true, status: 200, text: async () => { const t = new Error('t'); t.name = 'TimeoutError'; throw t; } });
+  assert.equal((await errOf(() => fetchJson(url, { fetchImpl: slowBody }))).reason, 'timeout:api.example.test');
+});
+
+test('runCli prints SUMMARY status=error reason=<kind>:<host> for every kind and leaks no secret', async () => {
+  rememberSecret(FAKE);
+  const url = `https://api.vercel.com/v1/x?token=${FAKE}`;
+  for (const [fetchImpl, want] of [[throws('TypeError', `connect ECONNREFUSED ${FAKE}`), 'unreachable'], [throws('TimeoutError'), 'timeout'], [res(401), 'auth'], [res(404), 'not_found']]) {
+    const out = []; let code;
+    await runCli('latest-deploy', () => fetchJson(url, { fetchImpl, headers: { Authorization: `Bearer ${FAKE}` } }), { argv: [], out: (s) => out.push(s), exit: (n) => { code = n; }, deadlineMs: null });
+    assert.equal(code, 2);
+    assert.equal(out.at(-1), `SUMMARY latest-deploy status=error reason=${want}:api.vercel.com`);
+    assert.match(out.at(-1), ERR);
+    assert.ok(!out.join('\n').includes(FAKE), 'no secret in output');
+    assert.ok(!out.join('\n').includes('?token'), 'no query string in output');
+  }
+});
+
+test('cost-watch CLI with no vercel.token: exit 2, reason=auth:api.vercel.com', () => {
+  const dir = tmp('nocost');
+  const r = run('cost-watch', [], { CREW_SECRETS_DIR: dir });
+  assert.equal(r.status, 2);
+  assert.equal(r.stdout.trimEnd().split('\n').at(-1), 'SUMMARY cost-watch status=error reason=auth:api.vercel.com');
+  rmSync(dir, { recursive: true });
+});
+
+const costEnv = () => {
+  const dir = tmp('costtok');
+  writeFileSync(path.join(dir, 'vercel.token'), `${FAKE}\n`);
+  return { dir, env: { CREW_SECRETS_DIR: dir } };
+};
+const NOW = Date.UTC(2026, 9, 21, 12);
+
+test('cost-watch: billing timeout / 403 / 404 / unreachable do not fail the script: vercel_usd_mtd=- pace=unknown, status ok', async () => {
+  const { dir, env } = costEnv();
+  for (const [fetchImpl, cause] of [[throws('TimeoutError'), 'timeout'], [res(403), 'auth'], [res(404), 'not_found'], [throws('TypeError'), 'unreachable']]) {
+    const out = []; let code;
+    await runCli('cost-watch', ({ argv, env: e }) => cost.main({ argv, env: e, fetchImpl, now: NOW }), { argv: [], env, out: (s) => out.push(s), exit: (n) => { code = n; }, deadlineMs: null });
+    assert.equal(code, 0, cause);
+    assert.equal(out.at(-1), 'SUMMARY cost-watch status=ok vercel_usd_mtd=- neon_usd_mtd=- resend_sent_mtd=- pace=unknown');
+    assert.match(out.at(-1), FORMATS['cost-watch']);
+    assert.ok(out.some((l) => l === `vercel billing unavailable: ${cause}:api.vercel.com`), `${cause} detail line: ${out.join(' | ')}`);
+    assert.ok(!out.join('\n').includes(FAKE));
+  }
+  rmSync(dir, { recursive: true });
+});
+
+test('cost-watch: the streamed billing sum equals sumCharges on a multi-line fixture, across chunk boundaries', async () => {
+  const lines = [];
+  for (let i = 0; i < 500; i++) lines.push(JSON.stringify({ BilledCost: i / 100, Tags: i % 7 === 0 ? { ProjectId: 'prj_other' } : {} }));
+  lines.splice(3, 0, 'not json', '');
+  const text = lines.join('\n') + '\n';
+  const bytes = new TextEncoder().encode(text);
+  const stream = new ReadableStream({ start(c) { for (let i = 0; i < bytes.length; i += 37) c.enqueue(bytes.slice(i, i + 37)); c.close(); } });
+  const total = await cost.streamedChargesUsd('https://api.vercel.com/v1/billing/charges', {}, async () => new Response(stream, { status: 200 }));
+  assert.equal(total, cost.sumCharges(text));
+  assert.ok(total > 0);
+  const t2 = await cost.streamedChargesUsd('https://api.vercel.com/x', {}, async () => new Response('{"BilledCost":1.5}\n{"BilledCost":2}', { status: 200 }));
+  assert.equal(t2, 3.5, 'a last record with no trailing newline still counts');
+});
+
+test('cost-watch: a good billing read prints the figure; a failed Resend leaves resend_sent_mtd "-"', async () => {
+  const { dir, env } = costEnv();
+  writeFileSync(path.join(dir, 'resend.token'), 'FAKERESEND_re_12345678\n');
+  const fetchImpl = async (u) => (String(u).includes('resend') ? new Response('', { status: 500 }) : new Response('{"BilledCost":4.25}\n', { status: 200 }));
+  const out = []; let code;
+  await runCli('cost-watch', ({ argv, env: e }) => cost.main({ argv, env: e, fetchImpl, now: NOW }), { argv: [], env, out: (s) => out.push(s), exit: (n) => { code = n; }, deadlineMs: null });
+  assert.equal(code, 0);
+  assert.equal(out.at(-1), 'SUMMARY cost-watch status=ok vercel_usd_mtd=4.25 neon_usd_mtd=- resend_sent_mtd=- pace=unknown');
+  rmSync(dir, { recursive: true });
 });

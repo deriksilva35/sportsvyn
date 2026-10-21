@@ -20,8 +20,18 @@ Install / update (on the droplet, as crew-sportsvyn):
 - Never prints a secret (token, URL with a password): every output line and error is scrubbed.
 - Exit 0 ok / 1 regression found / 2 setup error (missing secret, unreachable DB or API, bad argument).
 - The LAST stdout line is exactly one `SUMMARY <script> key=value ...` (space-separated, no spaces in
-  values, `-` for empty or unknown). On exit 2 it is `SUMMARY <script> status=error reason=<why>`.
-  `board-state` is the exception: it prints one state line and, on exit 2, nothing at all.
+  values, `-` for empty or unknown). On exit 2 it is exactly
+  `SUMMARY <script> status=error reason=<kind>:<host>` with kind one of `unreachable | auth | not_found | timeout`
+  (a human `<script>: error: ...` line, redacted, may precede it). `<host>` names what failed: an API or DB
+  hostname (port dropped to `_`), a secret file name, or a local label. Never a secret, a query string or a
+  connection string. `board-state` is the exception: it prints one state line and, on exit 2, nothing at all.
+
+  | kind | when | host |
+  |---|---|---|
+  | `timeout` | an HTTP/DB call's AbortSignal fired, before headers OR while the body was read; or the 9.5 s script deadline (`timeout:deadline`) | the API/DB host |
+  | `unreachable` | DNS, TLS, connection refused; any HTTP status other than 401/403/404 (5xx, 429, ...); non-JSON or empty DB reply; an unexpected internal error (`unreachable:internal`); a data-keeper job script that exited non-zero (`unreachable:dry-run`) | the API/DB host |
+  | `auth` | HTTP 401/403; a missing or malformed secret | the API host the token would have called (`api.vercel.com`), or `crew-reader.env` for the DB URL |
+  | `not_found` | HTTP 404; bad or extra arguments (`not_found:args`); unknown script (`not_found:script`); repo checkout missing (`not_found:repo`); data-keeper queue/job refused or unparsable (`not_found:data-queue`, `not_found:dry-run-totals`) | the API host, or a local label |
 - At most 10 s (a 9.5 s deadline is enforced, every HTTP/DB call has a timeout); `data-keeper` is the
   one exception.
 - Read-only. The DB is reached as `crew_reader` (SELECT on the `crew_stats` views; each call is a
@@ -60,7 +70,7 @@ Notes:
 - **app-errors**: `errors` counts distinct error signatures (service + stack_hash) seen again in the
   window, not occurrences (the table keeps one row per signature); message text is never read.
 - **vercel-errors**: reads the same request-log endpoint the Vercel CLI uses, filtered to production 5xx.
-- **cost-watch**: `neon_usd_mtd` is always `-`: Neon bills compute hours, not dollars (its API reports hours and bytes). `vercel_usd_month` (Derik's plan line item, `<VERCEL_MONTHLY_USD>`) is `unknown` until he sets it; until then `vercel_usd_mtd` prints and `pace=unknown`, never `over`.
+- **cost-watch**: `neon_usd_mtd` is always `-`: Neon bills compute hours, not dollars (its API reports hours and bytes). `vercel_usd_month` (Derik's plan line item, `<VERCEL_MONTHLY_USD>`) is `unknown` until he sets it; until then `vercel_usd_mtd` prints and `pace=unknown`, never `over`. Billing charges are a 13 MB+ JSON-lines export that grows through the month (about 5.5 s to first byte); it is streamed line by line with an 8 s budget, and if it cannot be read in time (timeout, 403/404, unreachable) the field prints `-`, `pace=unknown`, the script stays `status=ok` exit 0, and a detail line says `vercel billing unavailable: <kind>:api.vercel.com`. A failed Resend call likewise leaves `resend_sent_mtd` `-`. Only a missing `vercel.token` is exit 2 (`auth:api.vercel.com`).
 - **board-state**: a PUBLIC board is a `contests` row that is opened (`opens_at <= now`), not settled
   and not locked (`locks_at` null or in the future). Leagues' private drafts, Survivor, the Daily and
   per-user entries are other tables and are not read. `locks_in:<m>` when the soonest lock is within 120 min.

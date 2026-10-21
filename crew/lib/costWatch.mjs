@@ -8,8 +8,11 @@
 //   pace             `unknown` while the Vercel monthly budget is unknown (never `over`); `over` when a KNOWN month-to-date figure, projected to month end (needs >= 3
 //                    elapsed days), exceeds its budget (BUDGET_USD below = docs/crew/watch-rules.md,
 //                    "cost" > "Budget"); otherwise `ok`. Unknown values never count as over.
-// The Vercel token is required (exit 2 without it); the rest is optional.
-import { parseArgs, requireToken, readToken, fetchText, fetchJson, usd, SetupError } from './common.mjs';
+// The Vercel token is required (exit 2, reason=auth:api.vercel.com without it); the rest is optional.
+// The billing charges are a 13 MB+ JSON-lines export that grows through the month, streamed with an 8 s
+// budget; if it cannot be read (timeout, 403/404, unreachable) vercel_usd_mtd prints '-', pace=unknown,
+// status stays ok, and a detail line names the cause. Resend failures likewise leave '-'.
+import { parseArgs, requireToken, readToken, fetchLines, fetchJson, usd, SetupError } from './common.mjs';
 import { VERCEL_API, VERCEL_PROJECT_ID, VERCEL_TEAM_ID, vercelHeaders } from './vercel.mjs';
 
 /** Monthly budgets in USD. Mirrors the BUDGET line in docs/crew/watch-rules.md (a test pins the match).
@@ -29,13 +32,24 @@ export function monthProgress(now) {
 /** PURE. JSON-lines charges text -> billed USD (this project's charges + untagged team charges). */
 export function sumCharges(text, projectId = VERCEL_PROJECT_ID) {
   let total = 0;
-  for (const line of String(text).split('\n')) {
-    if (!line.trim()) continue;
-    let c; try { c = JSON.parse(line); } catch { continue; }
-    const tagged = c?.Tags?.ProjectId ?? c?.Tags?.projectId ?? c?.ProjectId ?? null;
-    if (tagged && tagged !== projectId) continue;
-    total += Number(c?.BilledCost ?? 0) || 0;
-  }
+  for (const line of String(text).split('\n')) total += chargeCost(line, projectId);
+  return total;
+}
+
+/** PURE. One JSON line -> its billed USD for this project (0 for blank, unparsable or another project's). */
+export function chargeCost(line, projectId = VERCEL_PROJECT_ID) {
+  if (!line.trim()) return 0;
+  let c; try { c = JSON.parse(line); } catch { return 0; }
+  const tagged = c?.Tags?.ProjectId ?? c?.Tags?.projectId ?? c?.ProjectId ?? null;
+  if (tagged && tagged !== projectId) return 0;
+  return Number(c?.BilledCost ?? 0) || 0;
+}
+
+/** The billing export is 13 MB+ of JSON lines and grows through the month: stream it, never buffer it. */
+export const BILLING_TIMEOUT_MS = 8_000;
+export async function streamedChargesUsd(url, headers, fetchImpl, timeoutMs = BILLING_TIMEOUT_MS) {
+  let total = 0;
+  await fetchLines(url, (l) => { total += chargeCost(l); }, { headers, timeoutMs, fetchImpl, label: 'vercel charges' });
   return total;
 }
 
@@ -78,18 +92,29 @@ async function resendCount(token, startMs, fetchImpl) {
 
 export async function main({ argv, env, fetchImpl, now = Date.now() }) {
   parseArgs(argv, []);
-  const token = requireToken('vercel.token', 'Vercel token', env);
+  const token = requireToken('vercel.token', 'Vercel token', env, new URL(VERCEL_API).host);
   const progress = monthProgress(now);
   const q = new URLSearchParams({ from: new Date(progress.start).toISOString(), to: new Date(now).toISOString(), teamId: VERCEL_TEAM_ID });
-  const text = await fetchText(`${VERCEL_API}/v1/billing/charges?${q}`, { headers: vercelHeaders(token), label: 'vercel charges', fetchImpl });
-  const vercelUsd = sumCharges(text);
-  let resendSent = null;
   const rt = readToken('resend.token', env);
-  if (rt) { try { resendSent = await resendCount(rt, progress.start, fetchImpl); } catch (e) { if (!(e instanceof SetupError)) throw e; } }
+  // Billing and Resend run side by side so a slow billing export cannot starve the optional call.
+  const [billing, resend] = await Promise.allSettled([
+    streamedChargesUsd(`${VERCEL_API}/v1/billing/charges?${q}`, vercelHeaders(token), fetchImpl),
+    rt ? resendCount(rt, progress.start, fetchImpl) : Promise.resolve(null),
+  ]);
+  const detail = [];
+  let vercelUsd = null;
+  if (billing.status === 'fulfilled') vercelUsd = billing.value;
+  else if (billing.reason instanceof SetupError) detail.push(`vercel billing unavailable: ${billing.reason.reason}`);
+  else throw billing.reason;
+  let resendSent = null;
+  if (resend.status === 'fulfilled') resendSent = resend.value;
+  else if (resend.reason instanceof SetupError) detail.push(`resend unavailable: ${resend.reason.reason}`);
+  else throw resend.reason;
   const { summary, code } = summarize({ vercelUsd, resendSent, progress });
+  if (vercelUsd === null) summary.pace = 'unknown'; // no reading: pace is not judged, never over
   const lines = [
-    `month to date (UTC), ${progress.elapsedDays.toFixed(1)} days in: vercel $${usd(vercelUsd)} of ${BUDGET_USD.vercel === null ? 'unknown' : `$${BUDGET_USD.vercel}`} budget`,
-    `projected month end: $${usd(progress.fraction > 0 ? vercelUsd / progress.fraction : null)}${progress.elapsedDays < MIN_ELAPSED_DAYS ? ' (under 3 days in: pace not judged)' : ''}`,
-  ];
+    `month to date (UTC), ${progress.elapsedDays.toFixed(1)} days in: vercel ${vercelUsd === null ? '-' : `$${usd(vercelUsd)}`} of ${BUDGET_USD.vercel === null ? 'unknown' : `$${BUDGET_USD.vercel}`} budget`,
+    `projected month end: ${vercelUsd === null || progress.fraction <= 0 ? '-' : `$${usd(vercelUsd / progress.fraction)}`}${progress.elapsedDays < MIN_ELAPSED_DAYS ? ' (under 3 days in: pace not judged)' : ''}`,
+  ].concat(detail);
   return { lines, summary, code };
 }
