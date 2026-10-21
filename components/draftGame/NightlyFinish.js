@@ -1,7 +1,7 @@
 'use client';
 
 // THE FINISH SCREEN (wed-1b): you have all your picks, the room has not locked.
-// A navy header "YOUR THREE ARE IN" with two tiles (the lock time and a ticking
+// A navy header "YOUR FIVE ARE IN" (the number is the room's picks) with two tiles (the lock time and a ticking
 // countdown; your total of averages against the room's best), your picks in
 // lineup order, the room, then the next doors and the share. Points are "-"
 // until the first tip: after it the page switches to the live result.
@@ -13,7 +13,7 @@ import ShareDraftGame from '@/components/draftGame/ShareDraftGame';
 import { chipClass } from '@/components/draftGame/NightlyPoolRow';
 import { slotRows } from '@/components/draftGame/slotRows';
 import {
-  finishTitle, ptClock, countdownText, avgTotal, roomBest, surnames, shareThree, rowLine,
+  finishTitle, ptClock, countdownText, avgTotal, roomBest, surnames, shareThree, shareLabel, rowLine,
 } from '@/lib/draftGame/nightlyCopy';
 import './nightly.css';
 
@@ -87,7 +87,7 @@ export default function NightlyFinish({ view, eyebrow, pickemHref, dailyHref, to
         <Link className="nd-btn nd-btn--main" href={pickemHref}>Make your NBA Pick&apos;em</Link>
         <div className="nd-cta-row">
           <Link className="nd-btn" href={dailyHref}>Play today&apos;s Daily</Link>
-          <ShareDraftGame text={shareThree(mine)} label="Share my three" className="nd-btn" />
+          <ShareDraftGame text={shareThree(mine)} label={shareLabel(mine)} className="nd-btn" />
         </div>
         {tomorrow && <p className="nd-tomorrow" data-nightly-tomorrow>{tomorrow}</p>}
       </div>
