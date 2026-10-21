@@ -5,6 +5,9 @@
 import { parseArgs, requireReaderUrl } from './common.mjs';
 import { query, num } from './db.mjs';
 
+// injuries excluded from the stale count until its cron is in vercel.json
+export const STALE_EXCLUDED = Object.freeze(['injuries']);
+
 /** PURE. rows: [{ provider, max_age_min, expected, age_min }] (age_min null = never wrote). */
 export function summarize(rows) {
   const list = rows.map((r) => ({
@@ -13,9 +16,9 @@ export function summarize(rows) {
     maxAge: num(r.max_age_min),
     age: r.age_min === null || r.age_min === undefined ? null : num(r.age_min),
   }));
-  for (const p of list) p.stale = p.expected && (p.age === null || p.age > p.maxAge);
+  for (const p of list) p.stale = p.expected && !STALE_EXCLUDED.includes(p.provider) && (p.age === null || p.age > p.maxAge);
   const stale = list.filter((p) => p.stale).length;
-  const considered = list.filter((p) => p.expected);
+  const considered = list.filter((p) => p.expected && !STALE_EXCLUDED.includes(p.provider));
   const stalest = [...considered]
     .sort((a, b) => (b.age ?? Infinity) - (a.age ?? Infinity) || a.provider.localeCompare(b.provider))[0];
   return {

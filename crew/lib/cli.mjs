@@ -6,7 +6,6 @@ import { runCli } from './common.mjs';
 export const SCRIPTS = Object.freeze({
   'app-errors': ['./appErrors.mjs', {}],
   'vercel-errors': ['./vercelErrors.mjs', {}],
-  'cf-top': ['./cfTop.mjs', {}],
   'retention-status': ['./retentionStatus.mjs', {}],
   'provider-health': ['./providerHealth.mjs', {}],
   'cost-watch': ['./costWatch.mjs', {}],

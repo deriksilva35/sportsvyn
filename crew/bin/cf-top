@@ -1,3 +1,0 @@
-#!/usr/bin/env node
-// crew/bin/cf-top - see crew/README.md and crew/lib/cli.mjs. Needs crew/lib installed beside crew/bin.
-import("../lib/cli.mjs").then((m) => m.run("cf-top"));

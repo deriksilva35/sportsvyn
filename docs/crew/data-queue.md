@@ -45,3 +45,5 @@ writes only inside `if (apply)`).
   - parser: team-colours-fill
   - sample: `^\s+(FILL|UNFILLED)\s`
   - notes: fills only teams whose BOTH colour columns are NULL (CFB from one CFBD call, EPL from the reviewed table). The CFB half calls CFBD, so the crew host needs cfbd.token in its secrets dir; without it the script exits non-zero and the run reports status=error. Re-run when a new FCS opponent or promoted club appears.
+
+Note: colour-source disagreement detection (comparing team colours across sources) is out of scope for month one.

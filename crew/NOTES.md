@@ -15,7 +15,6 @@ DECISION: suite lock across users
 
 DECISION: tokens (isolation lives in the script)
 - Vercel tokens are account-wide and cannot be scoped to one project. The isolation is in the script: vercel-errors and cost-watch in crew-sportsvyn's ~/crew/bin are hardcoded to the SPORTSVŶN Vercel project id and return only that project's data. The token sits in crew-sportsvyn's ~/crew/secrets (chmod 700); the Watcher never sees it, only script output.
-- Cloudflare: same pattern. cf-top is hardcoded to the sportsvyn.com zone; token in ~/crew/secrets; the Watcher sees only output.
 
 Where things run (3c)
 - Watcher: stays on the mini (read-only role + forced-command scripts). No change.

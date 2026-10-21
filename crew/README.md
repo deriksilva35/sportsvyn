@@ -1,6 +1,6 @@
 # crew (SPORTSVŶN)
 
-SOULs and project.yaml live in Drive CrewOS/crews/sportsvyn (single source; not copied here).
+SOULs and project.yaml live in Drive CrewOS/crews/sportsvyn (single source, now v1.5.2; not copied here).
 
 `crew/agents/` and `crew/project.yaml` were committed from Drive by #16 and are left as they are;
 Drive is the source, the copies in this repo can lag it.
@@ -35,7 +35,6 @@ Install / update (on the droplet, as crew-sportsvyn):
 |------|-------|---------|
 | `crew-reader.env` | `CREW_READER_URL=postgres://crew_reader:...` (the PROD reader) | app-errors, retention-status, provider-health, board-state, data-keeper |
 | `vercel.token` | a Vercel token (account-wide; the scripts are pinned to project `sportsvyn`, `prj_dnWLrT1wn34YScbMwQgtGT3WYVoE`, team `deriksilva35s-projects`) | vercel-errors, latest-deploy, cost-watch |
-| `cloudflare.token` | a Cloudflare token with Zone Read + Analytics Read (the zone is looked up by name, `sportsvyn.com`) | cf-top |
 | `resend.token` (optional) | a Resend API key | cost-watch (`resend_sent_mtd`; `-` without it) |
 | `cfbd.token` (optional) | the CFBD key | data-keeper, only for the team-colours job (its CFB half makes one CFBD call) |
 
@@ -49,10 +48,9 @@ output, default `~/crew/data`), `CREW_JOB_TIMEOUT_MS`.
 |--------|------|---------|-------------|
 | `app-errors` | `[window_min=60]` | `SUMMARY app-errors status=ok\|regression window_min=60 errors=N new_hashes=N top_source=<service\|->` | `new_hashes > 0` (a stack_hash first seen inside the window) |
 | `vercel-errors` | `[window_min=60]` | `SUMMARY vercel-errors status=ok\|regression window_min=60 errors_5xx=N routes=N top_route=<path\|->` | `errors_5xx > 0` |
-| `cf-top` | `[window_min=60]` | `SUMMARY cf-top status=ok window_min=60 requests=N blocked=N challenged=N top_asn=<asn\|-> top_path=<path\|->` | never (0 unless a setup error) |
-| `retention-status` | none | `SUMMARY retention-status status=ok\|regression tables=N overdue=N largest=<table>:<rows>` | `overdue > 0` (tables: app_errors, push_sends, daily_guest_runs, sessions; days in watch-rules.md "retention") |
-| `provider-health` | none | `SUMMARY provider-health status=ok\|regression providers=N stale=N stalest=<provider>:<minutes\|never>` | `stale > 0` (BDL, CFBD, odds, FFC, injuries; cadences in watch-rules.md "provider-health") |
-| `cost-watch` | none | `SUMMARY cost-watch status=ok\|regression vercel_usd_mtd=X neon_usd_mtd=X resend_sent_mtd=N pace=ok\|over` | `pace=over` (month-to-date projected past the BUDGET line in watch-rules.md); unknown values print `-` and never count as over |
+| `retention-status` | none | `SUMMARY retention-status status=ok\|regression tables=N overdue=N largest=<table>:<rows>` never for overdue (informational: overdue counts print with `status=ok` until a pruner exists; tables: app_errors, push_sends, daily_guest_runs, sessions; 30-day rule in watch-rules.md "retention") |
+| `provider-health` | none | `SUMMARY provider-health status=ok\|regression providers=N stale=N stalest=<provider>:<minutes\|never>` | `stale > 0` (BDL, CFBD, odds, FFC; injuries is excluded from the stale count until its cron is in vercel.json; cadences in watch-rules.md "provider-health") |
+| `cost-watch` | none | `SUMMARY cost-watch status=ok\|regression vercel_usd_mtd=X neon_usd_mtd=X resend_sent_mtd=N pace=ok\|over\|unknown` | `pace=over`, only when the Vercel monthly figure (BUDGET line in watch-rules.md) is a known number and month-to-date projects past it; while it is `unknown`, `pace=unknown`; unknown values print `-` and never count as over |
 | `latest-deploy` | none | `SUMMARY latest-deploy status=ok\|regression deploy_id=<dpl_x> state=READY\|ERROR\|BUILDING commit=<sha7> created=<ISO8601>` | `state=ERROR` (production target) |
 | `board-state` | none | prints one line: `locks_in:<m>`, `open` or `closed` | never; exit 2 prints nothing |
 | `data-keeper` | none | `SUMMARY data-keeper status=ok\|regression job=<id> rows_before=N rows_after=N would_change=N dry_run=<path>` | the dry run's data contradicts itself |
@@ -62,8 +60,7 @@ Notes:
 - **app-errors**: `errors` counts distinct error signatures (service + stack_hash) seen again in the
   window, not occurrences (the table keeps one row per signature); message text is never read.
 - **vercel-errors**: reads the same request-log endpoint the Vercel CLI uses, filtered to production 5xx.
-- **cf-top**: counts and ASN numbers only; client IPs are never requested.
-- **cost-watch**: `neon_usd_mtd` is always `-` (Neon's API reports hours and bytes, not dollars).
+- **cost-watch**: `neon_usd_mtd` is always `-`: Neon bills compute hours, not dollars (its API reports hours and bytes). `vercel_usd_month` (Derik's plan line item, `<VERCEL_MONTHLY_USD>`) is `unknown` until he sets it; until then `vercel_usd_mtd` prints and `pace=unknown`, never `over`.
 - **board-state**: a PUBLIC board is a `contests` row that is opened (`opens_at <= now`), not settled
   and not locked (`locks_at` null or in the future). Leagues' private drafts, Survivor, the Daily and
   per-user entries are other tables and are not read. `locks_in:<m>` when the soonest lock is within 120 min.
