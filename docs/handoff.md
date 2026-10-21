@@ -1,69 +1,53 @@
-# Handoff - droplet relays sun-1/2 + mon-1..6, Mon 19 Oct 2026 (clock ~23:30Z)
+# Handoff - droplet relays Tue 20 Oct 2026, end of day (written 21 Oct ~05:30Z)
 
-## Live (PROD) - main 2c36373 (deployed ~00:55Z); poller unchanged (93a36a4)
-- SLICE 3 LIVE (sun-1 GO): migration 145 on PROD (ledgered, checksum = DEV); merge 2c36373
-  (suite 6517/0, preview READY on 2c36373); THE LONGEST YARD moved = player league 11.
-  - Move: 1 league, 4 members (users 1/74/5/15), 4 join lines, 1 link. Draft side identical
-    before/after: members 4, claims 1, keepers 41 (hash e7e21d38...), invites 4, drafts 24,
-    picks 1944, reads 7. Checks ok.
-  - Player leagues 9->10, members 14->18, events 78->82. Manual 245 / tracker 78 / preset 4 /
-    launch 2 configs untouched and unlinked.
-  - Checked on sportsvyn.com at 390 as user 1 (30-min session, deleted):
-    - /leagues/11 opens on DRAFT: 12 teams, 41 keepers, "Pick 12 · RuDiCkUlOuS", 7 mocks;
-    - Members names your franchise;
-    - old /join/53XUHXVR (expired) lands on /leagues/11?tab=draft;
-    - /sim loads with "Open league"; mock room /sim/draft/585 loads; no page errors.
-  - Off: 1 of 4 members has claimed a franchise; the draft date reads "Mon Sep 7" (ET of 8 Sep UTC).
-- Rulings in docs/decisions.md: expired /join stays dead; bots switch from slice 4; 2027 import attaches.
+## Main
+- main 861a08fa (#17 fx-happy, after #16 crew/register-v1). 35d65286 (#15) was green on its own
+  run 39541460091. The run for 861a08fa was still PENDING (runner queue) at 05:25Z.
+- wed-0: main went red after #14 (wed-1b) because its 2 parity-intent entries went stale on merge.
+  Not a race. Fixed by #15 ({"changes": []}). "Up to date before merging" would not catch this,
+  so it was not turned on. The gh account is admin and could turn it on if asked.
+  4f8c13a5's red was a different test: lib/six/replay.test before() called fetchNbaTeams with no
+  BDL key in CI. It passed on the next run. FLAKY, unfixed.
 
-## CFB 25 WEEK 8 LIVE (mon-2)
-- content/power/cfb-2026-w8.md + EDITOR_FILES line, merge a4cc9c2 (suite 6517/0, preview READY on
-  6ad2ee0 = same tree). All 25 names resolve to exactly one team (Miami = MIA 48148).
-- Published with publish({league:'cfb', apply:true}) from main against PROD (week 7's path): edition
-  157 replaced the model-only 156 from the 15:00Z cron. Ranks 1-25 = the list.
-  cfb25-reminder dry run: "would do nothing: file-exists".
-- Checked at 390:
-  - /rankings?league=cfb: the SPORTSVYN POWER block reads 1 Ohio State ▲4, 2 Miami, 3 BYU ▲5;
-    the AP block above it leads with Miami.
-  - Scores rank badges show AP ranks, not the Sportsvyn 25.
-  - Top 25 chip: first in the conference row, lime when on.
+## PRs
+- crew-1 #13 merged 4f8c13a5. wed-1b #14 merged 57bd3267 (prod READY). wed-0 #15 merged 35d65286.
+- tue-2 #10 OPEN: CI green on bb4e7307. The builder died mid-work, so check the branch before trusting it.
+- tue-4 + tue-5 #9 OPEN: CI FAILED on 2a97c5fe. The builder died; partial work is in
+  .claude/worktrees/agent-a9996f541cb374d97.
+- wed-1 NOT STARTED: the spec never reached this session.
 
-## MORNING EMAIL LIVE from Tue 20 Oct 15:00Z (mon-4 GO)
-- 146 on PROD (ledgered 19:41Z, sha f9836721b353 = DEV). main 83ff36f = morning-email merged with
-  main (suite 6538/0 on 83ff36f, preview READY on 83ff36f), production READY on sportsvyn.com.
-- MORNING_EMAIL=on in Vercel production (set before the build). Cron 0 15 * * * registered on
-  dpl_24u77CSYTLYFm769pnGx1SgCSYMz. /og/email/chip + /tile serve 200 image/png on sportsvyn.com.
-- PROD dry run as Tue: audience 44 (40 active, 4 new); subject "NBA opening night: 3 games tonight
-  - make your picks"; lead = NBA opener hero (3 games, confidence board not built yet).
-- STILL OPEN: Tue's first NBA tip stored as 3:00 PM ET (12 PT); the email prints it as stored.
-- Second test address dropped. Step 7 (after 15:00Z): report sent/skipped/bounced, Resend, app_errors.
+## Tue 20 Oct numbers (PT day 07:00Z-07:00Z, read at 05:20Z, so the last ~1.7h is missing)
+- Played anything (Daily, contest entries of any game type, survivor, puzzle):
+  - A 43: 1 played (EPL Weekly 5).
+  - B 253: 0 played.
+- Site-wide signed-in players by game: Daily 3, Pick'em 5, Draft 5, Weekly 4, October 3, Run 3,
+  Draft game 2, EPL5 2, Six 1.
+- Since 15:00Z: 2 new accounts. Guest Daily: 3 starts, 0 finished, 0 claims.
+- NBA room 101: settled (FINAL, 2 games). 2 humans drafted, each in their own room with 3 bots.
+  - user 1 (sportsvyn_og): 4th of 4 with 93 (bots 135 / 117 / 107).
+  - user 373: 2nd with 134.
+- app_errors since 07:00Z: none.
 
-## NBA OPENER TO THE FULL LIST LIVE for Tue 20 Oct (mon-6 GO)
-- main 0038f93 (nba-opener merged; suite 6546/0 on 0038f93; preview READY on 8792f49 = same code;
-  prod READY dpl_Fy5ctpXpfHrDfccCRfunLa6FaKW6). BROADCAST_NBA_OPENER=on in Vercel prod.
-- Cron /api/cron/nba-opener 5-45 15 20 10 *: 50 per firing, after A's run finishes; stop on
-  complaints > 1 or B hard bounces > 5% (stop row + alert). Mon probe: decision wrong-day (flag on).
-- Mon 23:30Z count as Tue: A 43, B 252 (one account aged out of A). Report: docs/reports/mon-5-nba-opener.md.
-- After Tue: remove BROADCAST_NBA_OPENER from Vercel (code refuses other days anyway).
-- 20:12Z reboot was a manual `sudo reboot` (derik, pts/9), no OOM; timers and poller back.
-
-## COINS + THE DRUM built, HELD (coins-2) - branch coins-drum @ a45851c, NOT merged
-- B1-B5 + B7 done behind COINS=on (Vercel Preview, branch coins-drum only); B6 not started.
-- Migrations 147 + 148 on DEV only (ledgered). PROD needs dual GO.
-- Suite 6563/0 on a45851c; next build clean; preview READY sportsvyn-57mkxw52x (/coins, /coins/rules,
-  /coins/results/dry-run all 200). Report: docs/reports/coins-2-build.md (on the branch).
-- AT MERGE: parity-intent.json carries 2 entries (apptab .cn-bar) - reset to {"changes": []} right after.
-- Review data: scripts/coins-dev-seed.mjs --user <DEV id> --coins 4 (DEV only).
+## Wed 21 Oct
+- 6 AM PT preview: will NOT run (tue-4 #9 not merged).
+- 8 AM email: runs on the existing cron 0 15 * * * = 8 AM PDT.
+- NBA room 102: opened 04:33:48Z. 11 games, 4 drafters x 3 picks (G, F, UTIL), locks 23:00Z
+  (4:00 PM PT). It is in the OLD shape because wed-1 was not built.
+- The email lists room 102 under free to play as "Primetime Draft" -> /draft/game, using the generic
+  draft-game tile. There is no NBA Draft tile (that is wed-1).
+- wed-1 blocker: stored NBA positions are G/F/C only. The 7+ PG/SG/SF/PF/C shape needs another
+  positions source, or G/G/F/F/C.
 
 ## Queue
-0. mon-6 step 5, Tue ~16:00Z: A and B sent/skipped/bounced/complained, stop rule, opens + clicks
-   (sync_runs morning-email sends by summary.why, resend-webhook rows, email click rows). Short box.
-1. Morning email step 7 after Tue 15:00Z (sync_runs, ledger, Resend, app_errors).
-2. tue-2 (after the morning email is live): league 'draft done' state for linked leagues; at GO
-   mark league 11 done, note "Drafted in person". Branch league-draft-done.
-2. 20 Oct: docs/launch-oct20 checks 6-13. Mon 19 Oct: first live CFB 25 reminder. Mon 26 Oct:
-   CFB win-prob re-score prompt.
-3. Slice 4 (slow league draft) when Derik says. 2027: Fantrax import attaches (decisions.md).
+1. wed-1 once Derik re-sends the spec: room sizes, Tonight tab, game-time flag, email tile.
+2. tue-4/5 (#9): fix CI, then finish rate limit + 429 retry, opened/clicked store + daily summary.
+3. tue-2 (#10): verify the branch (Scores full week, Daily /wk + backfill, PR WORKFLOW rule in
+   CLAUDE.md + this file), then merge on green + READY preview.
+4. Flaky six/replay BDL hook. Coins + Drum still HELD (branch coins-drum). Mon 26 Oct CFB re-score.
+
+## Rules met today
+- Reset parity-intent.json right after any merge that declared entries (third time: #12, #15).
+- PR into main; "SPORTSVŶN test suite" green + Vercel READY; merge commit; no bypass.
 
 ## Next step
-Tue ~16:00Z: morning email + NBA opener report (queue 0 + 1); then tue-2 (draft done).
+Ask Derik for the wed-1 spec. Until it arrives, fix #9's CI.
