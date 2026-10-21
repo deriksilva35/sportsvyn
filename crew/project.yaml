@@ -1,0 +1,38 @@
+project: sportsvyn
+repo: https://github.com/deriksilva35/sportsvyn
+default_branch: main
+linux_user: crew-sportsvyn
+ssh_alias: sportsvyn-droplet
+lock_path: /run/lock/sportsvyn-suite/suite.lock
+host: mac-mini (crew home); work over SSH to the droplet "considered-cc" as crew-sportsvyn, repo /home/crew-sportsvyn/crew/worktrees/sportsvyn-main
+test_command: scripts/suite.sh   # = npm test; takes /run/lock/sportsvyn-suite/suite.lock shared with Derik's sessions; ~12 min
+preview_url: per-branch Vercel preview (DEV DB, behind Vercel login)
+error_source: app_errors table (poller, daily-tick, mlb-advance) + Vercel runtime errors via ~/crew/bin/vercel-errors
+droplet_reads: SSH forced-command scripts in ~/crew/bin (app-errors, vercel-errors, cf-top, retention-status, provider-health, cost-watch, latest-deploy); no Vercel/Cloudflare tokens on the mini
+deploy_detection: no-model poll on the mini, `ssh sportsvyn-droplet latest-deploy` every 5 min, starts the Watcher on change (max 30 runs/month)
+ci_failure_detection: none needed; branch protection blocks merges on a red "tests" check
+db_role: crew_reader (SELECT only; DEV live, PROD held until the crew turn)
+ssh_keys: { watcher: forced-command ~/crew/bin/* only, fixer: shell, worktrees under ~/crew/worktrees }
+watch_rules: docs/crew/watch-rules.md   # GAME G1-G5, PROVIDER P1-P8, COST C1-C3
+where_things_go:
+  crew_tickets: problems (Watcher findings, Data Keeper contradictions/script failures, Fixer ticket status)
+  runs.summary: every run's numbers, cap/partial notes, and the CREW-LOG line (Watcher, Data Keeper)
+  deliverables: anything waiting for Derik's decision, status = waiting (Data Keeper dry runs: counts, 10 sample rows, exact apply_command)
+  approvals: Derik's decision (Approve / Send back / Reject); Approve replays apply_command from the deliverable
+  docs/CREW-LOG.md: Fixer only, inside its PR
+drive_folder: CrewOS/crews/sportsvyn
+log_file: docs/CREW-LOG.md
+budgets:
+  monthly_usd: 45
+  per_agent: { watcher: 35, data_keeper: 10, fixer: 0 }
+  per_run: { watcher_hourly: 0.08, watcher_deploy: 0.08, watcher_nightly: 0.75, data_keeper: 0.30 }
+  runs_per_month: { watcher_hourly: 120, watcher_deploy: 30, watcher_nightly: 30, data_keeper: 30 }
+  # closes: 120*0.08 + 30*0.08 + 30*0.75 = 34.50 <= 35; 30*0.30 = 9 <= 10
+fixer_limits: { minutes: 25, full_suite_runs: 1 }
+ask_first: [merge, deploy, delete, send, backfill, testflight, prod_write, firewall, migration]
+pending_before_live:
+  - PROD crew_reader role (GO held)
+  - Neon "ci" branch + CI_DATABASE_URL secret (tests action for branch protection)
+  - branch protection on main requiring "tests"
+  - Cloudflare token + zone id in ~/crew/secrets/cloudflare.env
+  - move the two private SSH keys from ~/crew/secrets/mini-keys to the mini

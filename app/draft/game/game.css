@@ -89,3 +89,9 @@
 .dgm-place { color: var(--tok-muted); font-weight: 700; }
 .dgm-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0 4px; }
 .dgm-startbox { margin: 10px 0; }
+
+/* THE NBA NIGHTLY DRAFT (tue-6): Players | My team. */
+.dgm-tabs { display: flex; gap: 6px; margin: 10px 0 8px; }
+.dgm-tab { flex: 1 1 0; padding: 8px 10px; border: 1px solid var(--tok-line); border-radius: 99px; background: none; color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
+.dgm-tab--on { border-color: currentColor; font-weight: 700; }
+.dgm-prow .teammark { margin-right: 6px; }

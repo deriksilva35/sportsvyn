@@ -54,6 +54,7 @@ function localVars(css) {
 
 export const ON_DARK_ANCESTOR = Object.freeze({
   '.gv-now-l': '.gv-now', // the Tonight card's kicker (volt grammar: navy card, volt kicker)
+  '.nd-tile-k': '.nd-fin-hd', // the Nightly finish screen's tile labels: volt kicker on the navy header (wed-1b)
   // scores-v4: the live card is navy; its leader's score, the stake result and
   // the win read are volt marks on it (mock A, the Marquee).
   '.sv4-card.live .sv4-team.lead .sc': '.sv4-card.live',
