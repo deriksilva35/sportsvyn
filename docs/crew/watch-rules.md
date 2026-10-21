@@ -4,8 +4,9 @@ The rules the crew Watcher runs. Every SQL rule is a single read-only
 Postgres SELECT that returns rows ONLY when the rule fires (zero rows = quiet).
 Each query was run against DEV to validate syntax and column names; DEV is
 stale (its pollers do not run), so DEV returns zero rows for most, which proves
-the query parses, not that PROD is healthy. The scripts run them against PROD
-read-only (`PROD_DATABASE_URL`, see "Running them" at the end).
+the query parses, not that PROD is healthy. Since crew-bin the SQL here is the
+SPEC (and what to run by hand through crew_reader); the crew/bin scripts read the
+crew_stats views instead - see the mapping below and "Running them" at the end.
 
 Conventions used throughout:
 - "ET day" = `(ts AT TIME ZONE 'America/New_York')::date`. CLAUDE.md forbids
@@ -19,29 +20,25 @@ Conventions used throughout:
   minutes or one hour as stated.
 - Severity: `page` = wake Derik / push; `warn` = in the next report; `info`.
 
-## Mapping: rule -> ~/crew/bin script
+## Mapping: rule -> crew/bin script
+
+The scripts live in `crew/bin` (source) and install to `~/crew/bin` for user crew-sportsvyn; each
+reads ONLY the `crew_stats` views (no SQL from this file runs at run time any more - the old
+`rules.mjs` runner was removed in crew-bin). The SQL below stays as the written spec / what to run
+by hand when a script's number needs confirming. See crew/README.md for each script's SUMMARY line.
 
 | Rule | Section | Script |
 |------|---------|--------|
-| G1 next lock passed, game unstarted | game-watch | `provider-health --game` |
-| G2 card cannot be completed | game-watch | `provider-health --game` |
-| G3 00:00 ET kickoff without TBD flag | game-watch | `provider-health --game` |
-| G4 board unsettled 6 h after last final | game-watch | `provider-health --game` |
-| G5 retention job not ok | game-watch | `retention-status` |
-| P1 BDL NFL | provider | `provider-health` |
-| P2 BDL NCAAF | provider | `provider-health` |
-| P3 BDL MLB | provider | `provider-health` |
-| P4 BDL NBA | provider | `provider-health` |
-| P5 CFBD | provider | `provider-health` |
-| P6 Odds API | provider | `provider-health` |
-| P7 API-Sports EPL | provider | `provider-health` |
-| P8 FFC ADP | provider | `provider-health` |
-| C1 Vercel usage | cost | `cost-watch` |
-| C2 Neon compute | cost | `cost-watch` |
-| C3 Odds API credits vs month pace | cost | `cost-watch` |
+| G1-G4 board / kickoff rules | game-watch | none (SQL is the spec; `board-state` is the schedule signal) |
+| G5 retention job not ok | game-watch | none (SQL is the spec) |
+| P1-P8 provider freshness | provider | `provider-health` (five feeds, "provider-health" below) |
+| table retention | retention | `retention-status` ("retention" below) |
+| C1 Vercel usage | cost | `cost-watch` (dollars vs the BUDGET line below) |
+| C2 Neon compute | cost | none (the API reports hours, not dollars; prints `-`) |
+| C3 Odds API credits vs month pace | cost | none (SQL cross-check below is the spec) |
 
-`app-errors`, `vercel-errors`, `cf-top` and `latest-deploy` are log/deploy
-readers and have no rule in this file (no threshold is defined for them here).
+`app-errors`, `vercel-errors`, `cf-top`, `latest-deploy` and `board-state` are log / deploy / schedule
+readers and have no rule in this file (their thresholds are in crew/README.md).
 
 ---
 
@@ -574,6 +571,55 @@ SELECT used, remaining, used + remaining AS plan, started_at AS read_at,
   `used + remaining`.
 
 ---
+
+# provider-health
+
+`crew/bin/provider-health` reads `crew_stats.provider_freshness_v` (defined in
+scripts/crew-reader-grants.mjs, `CREW_VIEWS`): per feed the last write, `max_age_min` and whether a
+write is `expected` right now. STALE = expected AND (never wrote OR older than max_age_min).
+This is a "how old is the newest write" reading, a simpler cousin of the day-over-day P1-P8 queries
+above (which stay the spec for a deeper look).
+
+| Feed | Last write = | max_age_min | Expected when |
+|------|--------------|-------------|---------------|
+| bdl | max(matches.updated_at) with a bdl_game_id | 30 | any such match is live (status live) |
+| cfbd | max(matches.updated_at) with a cfbd_game_id | 60 | a CFB match is live |
+| odds | max(odds_markets.fetched_at) | 180 | 08:00 UTC onward and odds rows exist in the last 3 days |
+| ffc | max(sim_player_pool.snapshot_date) at 00:00 UTC | 2280 (38 h) | always (adp-snapshot runs daily 11:00 UTC) |
+| injuries | newest ok `sync_runs` row, source `wire` | 60 | an NFL match within 7 days either side |
+
+The thresholds are first values chosen from the cron cadences (odds hourly, wire every 15 min, adp
+daily) and are for Derik to tune; changing one is an edit to `CREW_VIEWS` and a re-run of
+`scripts/crew-reader-grants.mjs --apply`.
+
+# retention
+
+`crew/bin/retention-status` reads `crew_stats.retention_ages_v` (row counts by whole-day age). These
+four tables are NOT trimmed by the data-retention job (that job covers odds_markets 14 days and
+sync_runs 30 days, lib/ops/dataRetention.js); no keep period for them was written down anywhere in the
+repo, so the numbers below are PROPOSED in crew-bin and need Derik's ruling. Overdue = older than
+keep + 1 day. crew/lib/retentionStatus.mjs holds the same numbers (a test pins the match).
+
+RETENTION app_errors=30 push_sends=30 daily_guest_runs=30 sessions=30
+
+| Table | Age measured from | Keep (days) |
+|-------|-------------------|-------------|
+| app_errors | ts (last seen) | 30 |
+| push_sends | sent_at | 30 |
+| daily_guest_runs | started_at | 30 |
+| sessions | expires (days since EXPIRY) | 30 |
+
+A first PROD run will probably say `overdue>0` (nothing deletes these yet): that is the finding, not a
+fault in the script.
+
+# cost budget
+
+`crew/bin/cost-watch` judges pace against this line (none existed before crew-bin; this value is a
+PLACEHOLDER for Derik to set): month-to-date Vercel spend projected to month end
+(`spend / elapsed fraction`, only once 3 days into the UTC month) over the budget -> `pace=over`,
+exit 1. Unknown figures print `-` and never count as over.
+
+BUDGET vercel_usd_month=50
 
 # Running them
 

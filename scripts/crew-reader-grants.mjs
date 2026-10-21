@@ -22,6 +22,11 @@
 // granted by COLUMN with the same columns withheld as the views (EXCLUDED_COLUMNS).
 // The login token, email, name, date of birth, handle, device id, IP and pick
 // payloads stay unreadable either way.
+// CREW-BIN (crew/bin watcher scripts): four more views, defined HERE and created in the same
+// --apply transaction, BEFORE the grants: app_errors_v, boards_v, retention_ages_v,
+// provider_freshness_v (CREW_VIEWS below; the SQL is the contract, no PII column in any of them).
+// They run with the owner's rights, so crew_reader needs no grant on push_sends (withheld whole)
+// or on the other base tables behind them.
 // A password is set only when the role is NEW or CREW_READER_PASSWORD is given: an
 // existing role keeps its password (the crew's stored secret) when the variable is
 // absent.
@@ -71,6 +76,78 @@ export function statsGrants(schemaExists) {
   ];
 }
 
+/**
+ * The views crew/bin reads (crew-bin). CREATE OR REPLACE, so a re-run refreshes them.
+ * NO email, handle, IP, token, message text or payload in any of them:
+ *   app_errors_v      the error SIGNATURE (service, hash, counts, times) - never the message text.
+ *   boards_v          contests' schedule columns - never the board, perfect or meta payloads.
+ *   retention_ages_v  per tracked table, row counts by whole-day age from its retention clock
+ *                     (app_errors.ts, push_sends.sent_at, daily_guest_runs.started_at,
+ *                     sessions.expires = days since EXPIRY, negative while valid).
+ *   provider_freshness_v  one row per feed: when it last wrote, how stale is too stale
+ *                     (max_age_min) and whether a write is expected right now (expected).
+ * Cadences: docs/crew/watch-rules.md, "provider-health".
+ */
+export const CREW_VIEWS = Object.freeze([
+  { name: 'app_errors_v', sql: `SELECT id, service, count, first_seen, ts, stack_hash FROM public.app_errors` },
+  {
+    name: 'boards_v',
+    sql: `SELECT id, game_type, sport, season_year, week, opens_at, locks_at, settles_at, settled FROM public.contests`,
+  },
+  {
+    name: 'retention_ages_v',
+    sql: `SELECT 'app_errors'::text AS table_name, floor(extract(epoch FROM (now() - ts)) / 86400)::int AS age_days, count(*)::bigint AS row_count
+            FROM public.app_errors GROUP BY 2
+          UNION ALL
+          SELECT 'push_sends', floor(extract(epoch FROM (now() - sent_at)) / 86400)::int, count(*)::bigint
+            FROM public.push_sends GROUP BY 2
+          UNION ALL
+          SELECT 'daily_guest_runs', floor(extract(epoch FROM (now() - started_at)) / 86400)::int, count(*)::bigint
+            FROM public.daily_guest_runs GROUP BY 2
+          UNION ALL
+          SELECT 'sessions', floor(extract(epoch FROM (now() - expires)) / 86400)::int, count(*)::bigint
+            FROM public.sessions GROUP BY 2`,
+  },
+  {
+    name: 'provider_freshness_v',
+    sql: `SELECT 'bdl'::text AS provider,
+                 (SELECT max(updated_at) FROM public.matches WHERE external_ids ? 'bdl_game_id') AS last_ok_at,
+                 30 AS max_age_min,
+                 EXISTS (SELECT 1 FROM public.matches WHERE status = 'live' AND external_ids ? 'bdl_game_id') AS expected
+          UNION ALL
+          SELECT 'cfbd',
+                 (SELECT max(updated_at) FROM public.matches WHERE external_ids ? 'cfbd_game_id'),
+                 60,
+                 EXISTS (SELECT 1 FROM public.matches m JOIN public.leagues l ON l.id = m.league_id
+                          WHERE l.slug = 'cfb' AND m.status = 'live')
+          UNION ALL
+          SELECT 'odds',
+                 (SELECT max(fetched_at) FROM public.odds_markets),
+                 180,
+                 extract(hour FROM (now() AT TIME ZONE 'UTC')) >= 8
+                   AND EXISTS (SELECT 1 FROM public.odds_markets WHERE fetched_at >= now() - interval '3 days')
+          UNION ALL
+          SELECT 'ffc',
+                 (SELECT (max(snapshot_date)::timestamp AT TIME ZONE 'UTC') FROM public.sim_player_pool),
+                 2280,
+                 true
+          UNION ALL
+          SELECT 'injuries',
+                 (SELECT max(started_at) FROM public.sync_runs WHERE source = 'wire' AND ok),
+                 60,
+                 EXISTS (SELECT 1 FROM public.matches m JOIN public.leagues l ON l.id = m.league_id
+                          WHERE l.slug = 'nfl' AND m.kickoff_at BETWEEN now() - interval '7 days' AND now() + interval '7 days')`,
+  },
+]);
+
+/** PURE. The statements that (re)create the schema and views, run before the grants. */
+export function viewStatements() {
+  return [
+    'CREATE SCHEMA IF NOT EXISTS crew_stats',
+    ...CREW_VIEWS.map((v) => `CREATE OR REPLACE VIEW crew_stats.${v.name} AS ${v.sql}`),
+  ];
+}
+
 const q = (id) => `"${String(id).replace(/"/g, '""')}"`;
 
 /** PURE. -> [{ table, columns: null | [..] }] for the tables that exist. */
@@ -102,6 +179,7 @@ async function main() {
   const plan = grantPlan([...byTable.keys()], (t) => byTable.get(t));
 
   for (const p of plan) console.log(`  ${p.table}${p.columns ? ` (${p.columns.length} of ${byTable.get(p.table).length} columns)` : ''}`);
+  console.log(`crew_stats views created on --apply: ${CREW_VIEWS.map((v) => v.name).join(', ')}`);
   console.log(`grants: ${plan.length} tables (${plan.filter((p) => p.columns).length} column-limited); excluded: ${EXCLUDED_TABLES.filter((t) => byTable.has(t)).join(', ')}`);
   if (!APPLY) return;
 
@@ -110,7 +188,6 @@ async function main() {
   const [exists] = await sql`SELECT 1 AS x FROM pg_roles WHERE rolname = ${ROLE}`;
   if ((!exists && !pw) || (pw && pw.length < 24)) throw new Error('CREW_READER_PASSWORD (24+ chars) is not set');
   const lit = pw ? `'${pw.replace(/'/g, "''")}'` : null;
-  const [hasStats] = await sql`SELECT 1 AS x FROM pg_namespace WHERE nspname = 'crew_stats'`;
   const stmts = [
     ...(exists
       ? [pw ? `ALTER ROLE ${ROLE} WITH LOGIN PASSWORD ${lit}` : `ALTER ROLE ${ROLE} WITH LOGIN`]
@@ -125,7 +202,10 @@ async function main() {
     ...plan.map((p) => p.columns
       ? `GRANT SELECT (${p.columns.map(q).join(', ')}) ON public.${q(p.table)} TO ${ROLE}`
       : `GRANT SELECT ON public.${q(p.table)} TO ${ROLE}`),
-    ...statsGrants(!!hasStats),
+    // crew-bin: the schema and the four views exist before the grants run (the schema is always
+    // there after this, so the stats surface is always granted).
+    ...viewStatements(),
+    ...statsGrants(true),
   ];
   // One transaction: a failure part-way leaves the previous grants as they were.
   await sql.transaction(stmts.map((s) => sql.query(s)));

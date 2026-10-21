@@ -100,3 +100,38 @@ test('tue-6: purchase, subscription, push-log and invite tables are withheld who
   assert.deepEqual(plan.map((p) => p.table), ['matches']);
   for (const t of ['revenuecat_events', 'memberships', 'push_sends', 'draft_config_invites']) assert.ok(EXCLUDED_TABLES.includes(t), t);
 });
+
+// ---- crew-bin: the four views crew/bin reads, created in the apply transaction ----
+import { CREW_VIEWS, viewStatements } from './crew-reader-grants.mjs';
+
+test('crew-bin views: the four names, schema first, every statement a CREATE OR REPLACE in crew_stats', () => {
+  assert.deepEqual(CREW_VIEWS.map((v) => v.name), ['app_errors_v', 'boards_v', 'retention_ages_v', 'provider_freshness_v']);
+  const st = viewStatements();
+  assert.equal(st[0], 'CREATE SCHEMA IF NOT EXISTS crew_stats');
+  assert.equal(st.length, 5);
+  for (const s of st.slice(1)) assert.match(s, /^CREATE OR REPLACE VIEW crew_stats\.[a-z_]+_v AS SELECT /);
+});
+
+test('crew-bin views carry no email, handle, IP, token, message text or payload column', () => {
+  const never = ['email', 'handle', 'ip', 'device_token', 'sessionToken', 'message', 'picks', 'steps', 'board', 'perfect', 'meta', 'payload', 'name', 'error'];
+  for (const v of CREW_VIEWS) {
+    // The names a view EXPOSES: every `AS alias` plus the bare columns of a plain select list.
+    const exposed = [...v.sql.matchAll(/\bAS\s+([a-z_]+)/g)].map((m) => m[1]);
+    const plain = v.sql.match(/^SELECT ([a-z_, ]+) FROM public\./)?.[1].split(',').map((c) => c.trim()) ?? [];
+    for (const c of [...exposed, ...plain]) assert.ok(!never.includes(c), `${v.name} exposes ${c}`);
+  }
+  const by = Object.fromEntries(CREW_VIEWS.map((v) => [v.name, v.sql]));
+  assert.ok(!/\bmessage\b/.test(by.app_errors_v), 'app_errors: the signature, never the message text');
+  assert.match(by.boards_v, /FROM public\.contests$/);
+  assert.ok(!/\b(board|perfect|meta)\b/.test(by.boards_v.replace(/game_type/g, '')), 'boards: schedule columns only');
+  // push_sends is withheld whole from the role; only the owner-rights view reads it, as counts by age.
+  assert.ok(EXCLUDED_TABLES.includes('push_sends'));
+  assert.match(by.retention_ages_v, /count\(\*\)::bigint AS row_count/);
+  assert.ok(!/device_token/.test(by.retention_ages_v));
+});
+
+test('crew-bin: the apply transaction creates the views BEFORE the stats grants', () => {
+  const src = readFileSync(new URL('./crew-reader-grants.mjs', import.meta.url), 'utf8');
+  assert.ok(src.indexOf('...viewStatements()') > 0 && src.indexOf('...viewStatements()') < src.indexOf('...statsGrants(true)'));
+  assert.ok(src.includes('sql.transaction(stmts.map'), 'one transaction: a failure leaves the previous grants');
+});
