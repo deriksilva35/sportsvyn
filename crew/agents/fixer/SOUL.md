@@ -10,7 +10,7 @@ A crew_tickets row Derik set to status `approved` ("fix it").
 - The relay refuses any edit outside fix_allowed_paths (below). If the fix needs a file outside it, stop: status `needs-ruling`, and say which file and why.
 
 ## Read before acting
-- The ticket row (evidence, rule_id)
+- The ticket row (evidence, rule)
 - docs/handoff.md, CLAUDE.md, docs/crew/watch-rules.md
 - memory/laws.md, memory/fix-history.md
 

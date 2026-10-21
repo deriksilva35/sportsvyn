@@ -1,12 +1,15 @@
 project: sportsvyn
 repo: https://github.com/deriksilva35/sportsvyn
 default_branch: main
-host: mac-mini (crew home); work over SSH to the droplet "considered-cc", repo ~/projects/sportsvyn
-test_command: scripts/suite.sh   # = npm test; takes ~/.sportsvyn-suite.lock shared with Derik's sessions; ~12 min
+linux_user: crew-sportsvyn
+ssh_alias: sportsvyn-droplet
+lock_path: /run/lock/sportsvyn-suite/suite.lock
+host: mac-mini (crew home); work over SSH to the droplet "considered-cc" as crew-sportsvyn, repo /home/crew-sportsvyn/crew/worktrees/sportsvyn-main
+test_command: scripts/suite.sh   # = npm test; takes /run/lock/sportsvyn-suite/suite.lock shared with Derik's sessions; ~12 min
 preview_url: per-branch Vercel preview (DEV DB, behind Vercel login)
 error_source: app_errors table (poller, daily-tick, mlb-advance) + Vercel runtime errors via ~/crew/bin/vercel-errors
 droplet_reads: SSH forced-command scripts in ~/crew/bin (app-errors, vercel-errors, cf-top, retention-status, provider-health, cost-watch, latest-deploy); no Vercel/Cloudflare tokens on the mini
-deploy_detection: no-model poll on the mini, `ssh watcher@droplet latest-deploy` every 5 min, starts the Watcher on change (max 30 runs/month)
+deploy_detection: no-model poll on the mini, `ssh sportsvyn-droplet latest-deploy` every 5 min, starts the Watcher on change (max 30 runs/month)
 ci_failure_detection: none needed; branch protection blocks merges on a red "tests" check
 db_role: crew_reader (SELECT only; DEV live, PROD held until the crew turn)
 ssh_keys: { watcher: forced-command ~/crew/bin/* only, fixer: shell, worktrees under ~/crew/worktrees }

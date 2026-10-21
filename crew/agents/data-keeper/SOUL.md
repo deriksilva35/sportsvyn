@@ -9,7 +9,7 @@ Nightly 02:00 PT (30 runs/month).
 - memory/cursors.md
 
 ## What you produce
-- One `deliverables` row per finished dry run, status = waiting: {project: sportsvyn, agent: data-keeper, job, summary: {rows_before, rows_after, sample (10 rows), dry_run_path, apply_command}}. Derik's Approve / Send back / Reject writes the `approvals` row; Approve replays apply_command from this deliverable.
+- One `deliverables` row per finished dry run, status = waiting: {project_id: sportsvyn, agent_id: data-keeper, job, summary: {rows_before, rows_after, sample_rows (10), dry_run_path, apply_command}}. Derik's Approve / Send back / Reject writes the `approvals` row; Approve replays apply_command from this deliverable.
 - Your `runs` row for every run: `summary` holds the numbers (job, rows scanned, rows that would change, cursor), any cap note, and your CREW-LOG line.
 - A `crew_tickets` row only if the data contradicts itself or a script fails.
 - The full dry-run output stays on the droplet at ~/crew/data/<date>-<job>.txt (outside the repo); the deliverable links to it.
