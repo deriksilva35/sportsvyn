@@ -215,9 +215,79 @@ test('GAME PAGE FINAL: W and "Final · OT"; In your games settled; leaders, team
   assert.equal(c.querySelector('[data-won]').closest('.sv4-team').getAttribute('data-side'), 'away');
   assert.equal(d.querySelector('.gpa-yrow .v').textContent, 'Lost · 2 of 3 tonight');
   assert.deepEqual([...d.querySelectorAll('.gpa-mod')].map((m) => m.getAttribute('data-mod')), ['card', 'yours', 'leaders', 'teamstats', 'fullbox']);
-  assert.deepEqual([...d.querySelectorAll('.gpa-lrow[data-cat]')].map((r) => r.getAttribute('data-cat')), ['PTS', 'REB', 'AST']);
+  assert.deepEqual([...d.querySelectorAll('.gpa-lrow[data-cat]')].map((r) => r.getAttribute('data-cat')), ['PTS', 'REB', 'AST', '3PM']);
   assert.deepEqual([...d.querySelectorAll('[data-gpa="teamstats"] tbody th')].map((t) => t.textContent), ['FG%', '3PT', 'REB', 'TOV']);
   assert.equal(d.querySelector('[data-gpa="fullbox"]').getAttribute('href'), '/nba/game/nba-2026-10-20-bos-det?box=all#gpa-box');
+});
+
+test('GAME PAGE FINAL: three-deep leaders with 3PM, the box marks starters and says DNP', () => {
+  const g = G(31, 'final', DET, BOS, 114, 118, { slug: 'nba-2026-10-20-bos-det' });
+  const row = (team_id, bdl, name, pts, seconds, extra = {}) => ({ team_id, bdl_player_id: bdl, player_name: name, pts, reb: 3, ast: 2, fgm: 5, fga: 10, fg3m: 2, fg3a: 5, ftm: 0, fta: 0, turnovers: 1, seconds, plus_minus: 1, dnp: false, ...extra });
+  const box = [
+    row(1, '1', 'Jayson Tatum', 38, 2520), row(1, '2', 'Derrick White', 20, 2100), row(1, '3', 'Sam Hauser', 12, 1500), row(1, '4', 'Al Horford', 8, 900),
+    row(1, '5', 'Bench Guy', 0, 0, { dnp: true, pts: 0 }), row(2, '9', 'Cade Cunningham', 34, 2580),
+  ];
+  const leaders = C.nbaLeaders(box, { homeId: 2, awayId: 1 });
+  const view = {
+    ...pageView('final'), g, leaders, modules: ['card', 'leaders', 'box'],
+    box: C.nbaBoxTables(box, g, { starters: new Set(['2']) }),
+  };
+  const d = doc(render(React.createElement(GamePageArcade, { view, now: NOW, tz: 'America/Los_Angeles' })));
+  const pts = d.querySelector('.gpa-lrow[data-cat="PTS"]');
+  assert.deepEqual([...pts.querySelectorAll('.pls')[0].querySelectorAll('.pl b')].map((b) => b.textContent), ['Tatum', 'White', 'Hauser']);
+  assert.equal(pts.querySelectorAll('.pls')[0].querySelector('.pl span').textContent, '38 · 5/10', 'two threes: no 3PM bit in the points line');
+  assert.ok(d.querySelector('.gpa-lrow[data-cat="3PM"]'), 'a 3PM row');
+  const rows = [...d.querySelectorAll('[data-gpa="box"] tbody tr')];
+  const starter = rows.find((r) => r.querySelector('th').textContent === 'Derrick White');
+  assert.equal(starter.getAttribute('data-starter'), '1');
+  assert.ok(starter.querySelector('.gpa-st'));
+  assert.equal(rows[0].querySelector('th').textContent, 'Derrick White', 'starters first');
+  const dnp = rows.find((r) => r.getAttribute('data-dnp') === '1');
+  assert.equal(dnp.querySelector('td').textContent, 'DNP');
+  assert.equal(dnp.querySelector('td').getAttribute('colspan'), '8');
+  assert.ok(d.querySelector('[data-gpa="box-legend"]'));
+});
+
+function preView(extra = {}) {
+  const g = G(41, 'scheduled', DET, BOS, null, null, { kickoffAt: '2026-10-22T23:00:00Z', slug: 'nba-2026-10-22-bos-det' });
+  const side = (list) => list;
+  return {
+    state: 'pre', league: 'nba', simulated: false, g, signinHref: '/signin',
+    modules: ['card', 'injuries', 'lineups', 'seasonleaders', 'last5'],
+    x: X({ open: true, spreadHome: 2.5, total: 233.5, record: { home: '1-0', away: '0-1' }, nba: { bonus: null, timeouts: null, finalPeriod: null, perf: null } }),
+    odds: null, winprob: null, yours: { signedIn: false, rows: [], open: [], pre: true, playHref: null },
+    chips: [], plays: { latest: [], total: 0, all: false }, box: [], leaders: [], teamBox: null, market: { closing: null, propsCard: null }, scoring: [],
+    boxHref: null, crumb: 'NBA · Thu',
+    injuries: { away: side([{ name: 'Devin Carter', status: 'Out', note: 'Mononucleosis' }]), home: side([]), updated: 'updated 3:42 PM PT' },
+    lineups: { label: 'Projected', away: [{ id: 1, pos: 'G', name: 'Derrick White' }, { id: 2, pos: 'C', name: 'Neemias Queta' }], home: [{ id: 3, pos: 'G', name: 'Cade Cunningham' }] },
+    seasonLeaders: [{ cat: 'PTS', away: [{ name: 'Tatum', line: '27.4' }, { name: 'Brown', line: '22.0' }], home: [{ name: 'Cunningham', line: '25.1' }] }],
+    last5: { away: [{ win: true, score: '121-113', opp: '@ DET' }, { win: false, score: '99-104', opp: 'vs NYK' }], home: null, series: 'BOS leads series 2-1' },
+    ...extra,
+  };
+}
+
+test('GAME PAGE PRE: line and total on the header; injuries with one updated line; lineups; season leaders; last 5 and the series', () => {
+  const d = doc(render(React.createElement(GamePageArcade, { view: preView(), now: NOW, tz: 'America/Los_Angeles' })));
+  assert.deepEqual([...d.querySelectorAll('.gpa-mod')].map((m) => m.getAttribute('data-mod')), ['card', 'injuries', 'lineups', 'seasonleaders', 'last5']);
+  assert.match(d.querySelector('article.gpa-card').textContent, /BOS -2\.5 · 233\.5/, 'the line and the total on the header');
+  assert.equal(d.querySelectorAll('[data-updated]').length, 1);
+  assert.equal(d.querySelector('[data-updated]').textContent, 'updated 3:42 PM PT');
+  const inj = d.querySelector('[data-gpa="injuries-box"]');
+  assert.match(inj.textContent, /Devin Carter.*Out.*Mononucleosis/);
+  assert.equal(d.querySelector('[data-lineup-state]').textContent, 'Projected');
+  assert.deepEqual([...d.querySelectorAll('.gpa-lu[data-side="away"] li')].map((l) => l.textContent), ['GDerrick White', 'CNeemias Queta']);
+  assert.equal(d.querySelector('[data-gpa="season-leaders"] .gpa-sub').textContent, 'per game');
+  assert.equal(d.querySelector('[data-gpa="season-leaders"] .pl b').textContent, 'Tatum');
+  assert.deepEqual([...d.querySelectorAll('.gpa-l5[data-side="away"] li')].map((l) => l.getAttribute('data-result')), ['w', 'l']);
+  assert.equal(d.querySelector('.gpa-l5[data-side="home"] .gpa-none').textContent, '–');
+  assert.equal(d.querySelector('[data-series]').textContent, 'BOS leads series 2-1');
+  for (const bad of [/draftkings/i, /\bbdl\b/i, /balldontlie/i]) assert.ok(!bad.test(d.textContent), `no vendor named: ${bad}`);
+});
+
+test('GAME PAGE PRE: a module whose read failed is not drawn', () => {
+  const view = preView({ modules: ['card'], injuries: null, lineups: null, seasonLeaders: null, last5: null });
+  const d = doc(render(React.createElement(GamePageArcade, { view, now: NOW, tz: 'America/Los_Angeles' })));
+  assert.deepEqual([...d.querySelectorAll('.gpa-mod')].map((m) => m.getAttribute('data-mod')), ['card']);
 });
 
 test('THE ROUTE: /nba/game/[slug] draws GamePageArcade from nbaGameView - the shared structure, no second page', () => {

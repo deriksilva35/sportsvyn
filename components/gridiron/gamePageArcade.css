@@ -150,3 +150,30 @@
   border-color: color-mix(in srgb, var(--tok-on-primary) 45%, transparent);
 }
 :where(:root[data-theme="arcade"]) .gpa-card .gpa-bell .al-pill.on { color: var(--tok-on-primary); border-color: var(--tok-on-primary); }
+
+/* THE NBA GAME PAGE (thu1-nba-page): three-deep leaders, injuries, lineups,
+   last 5, the box's starter marker and DNP rows. Two columns, away | home, at
+   390px; every text cell gives way (min-width 0, ellipsis) before the page does. */
+:where(:root[data-theme="arcade"]) .gpa-lrow .pls { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+:where(:root[data-theme="arcade"]) .gpa-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+:where(:root[data-theme="arcade"]) .gpa-inj-h { display: block; margin-bottom: 4px; font: 400 10px var(--tok-font-num); letter-spacing: .06em; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-none { color: var(--tok-muted); font: 400 12px var(--tok-font-body); }
+:where(:root[data-theme="arcade"]) .gpa-inj ul, :where(:root[data-theme="arcade"]) .gpa-lu ul, :where(:root[data-theme="arcade"]) .gpa-l5 ul { list-style: none; margin: 0; padding: 0; }
+:where(:root[data-theme="arcade"]) .gpa-inj li { display: flex; flex-direction: column; gap: 1px; padding: 7px 0; border-top: 1px solid var(--tok-line); font: 400 12px/1.3 var(--tok-font-body); min-width: 0; }
+:where(:root[data-theme="arcade"]) .gpa-inj .n { font-weight: 600; color: var(--tok-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .gpa-inj .st { font: 700 11px var(--tok-font-body); color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .gpa-inj li[data-status="Probable"] .st, :where(:root[data-theme="arcade"]) .gpa-inj li[data-status="Day-to-day"] .st { font-weight: 500; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-inj .nt { font-size: 11px; color: var(--tok-muted); overflow-wrap: anywhere; }
+:where(:root[data-theme="arcade"]) .gpa-lu li { display: flex; align-items: baseline; gap: 8px; padding: 7px 0; border-top: 1px solid var(--tok-line); font: 400 12px var(--tok-font-body); min-width: 0; }
+:where(:root[data-theme="arcade"]) .gpa-lu .pos { flex: none; width: 26px; font: 400 10px var(--tok-font-num); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-lu .n { font-weight: 600; color: var(--tok-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where(:root[data-theme="arcade"]) .gpa-l5 li { display: flex; align-items: center; gap: 6px; min-height: 32px; border-top: 1px solid var(--tok-line); font: 400 12px var(--tok-font-body); font-variant-numeric: tabular-nums; min-width: 0; }
+:where(:root[data-theme="arcade"]) .gpa-l5 .pip { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font: 700 10px var(--tok-font-body); font-style: normal; }
+:where(:root[data-theme="arcade"]) .gpa-l5 .pip.w { background: var(--tok-primary); color: var(--tok-on-primary); }
+:where(:root[data-theme="arcade"]) .gpa-l5 .pip.l { border: 1px solid var(--tok-line); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-l5 .sc { flex: none; color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .gpa-l5 .op { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--tok-muted); font-size: 11px; }
+:where(:root[data-theme="arcade"]) .gpa-series { margin: 4px 0 0; font: 500 12px var(--tok-font-body); color: var(--tok-ink); }
+:where(:root[data-theme="arcade"]) .gpa-tbl .gpa-st, :where(:root[data-theme="arcade"]) .gpa-legend .gpa-st { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 1px; background: var(--tok-primary); vertical-align: middle; }
+:where(:root[data-theme="arcade"]) .gpa-legend { margin: 0; font: 400 10px var(--tok-font-body); color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-tbl td.dnp { text-align: left; color: var(--tok-muted); }
