@@ -120,7 +120,11 @@
     },
     {
       "path": "/api/cron/morning-email",
-      "schedule": "0 15 * * *"
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/morning-preview",
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/nba-opener",
