@@ -390,3 +390,7 @@ release; it ships nothing. The script refuses a commit not on origin/main
 (--force overrides), prints the poller's own `live-poller starting: ... head=<sha>`
 journal line as proof, exits 1 if the head is wrong, and keeps three releases.
 Runbook, first install and journal reading: docs/ops/poller-deploy.md.
+
+## Processes on the shared droplet
+
+Never kill processes by name or pattern (pkill -f, killall). Stop only processes this session started, by their PID. All projects share this droplet.

@@ -177,3 +177,23 @@
 :where(:root[data-theme="arcade"]) .gpa-tbl .gpa-st, :where(:root[data-theme="arcade"]) .gpa-legend .gpa-st { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 1px; background: var(--tok-primary); vertical-align: middle; }
 :where(:root[data-theme="arcade"]) .gpa-legend { margin: 0; font: 400 10px var(--tok-font-body); color: var(--tok-muted); }
 :where(:root[data-theme="arcade"]) .gpa-tbl td.dnp { text-align: left; color: var(--tok-muted); }
+
+/* THE NBA BOX (thu2-nba-page): each team's table swipes inside its own
+   container; the name column stays pinned on an opaque card ground. The page
+   body never scrolls sideways. Scoped to [data-scroll] - other sports' boxes
+   keep their one-container scroll. */
+:where(:root[data-theme="arcade"]) .gpa-boxsc[data-scroll] { overflow-x: visible; min-width: 0; }
+:where(:root[data-theme="arcade"]) .gpa-boxsc[data-scroll] .team { min-width: 0; }
+:where(:root[data-theme="arcade"]) .gpa-tscroll { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+:where(:root[data-theme="arcade"]) .gpa-tscroll .gpa-tbl { width: max-content; min-width: 100%; }
+:where(:root[data-theme="arcade"]) .gpa-tscroll .gpa-tbl th:first-child { position: sticky; left: 0; z-index: 1; background: var(--tok-page); padding-right: 8px; }
+
+/* EARLY-SEASON FALLBACK (thu2-nba-page): last season's column label and the Last 5 divider. */
+:where(:root[data-theme="arcade"]) .gpa-from { font: 400 9px var(--tok-font-num); letter-spacing: .04em; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-l5 li.gpa-div { min-height: 0; padding: 4px 0 2px; font: 400 9px var(--tok-font-num); letter-spacing: .06em; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-lu[data-empty="1"] { display: none; }
+
+/* EARLY-SEASON FALLBACK (thu2-nba-page): last season label and the Last 5 divider. */
+:where(:root[data-theme="arcade"]) .gpa-from { font: 400 9px var(--tok-font-num); letter-spacing: .04em; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-l5 li.gpa-div { min-height: 0; padding: 4px 0 2px; font: 400 9px var(--tok-font-num); letter-spacing: .06em; color: var(--tok-muted); }
+:where(:root[data-theme="arcade"]) .gpa-lu[data-empty="1"] { display: none; }
