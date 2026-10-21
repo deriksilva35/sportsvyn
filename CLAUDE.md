@@ -38,9 +38,25 @@ Restart the droplet's Remote Control session for this repo with:
 
 - Memory: the droplet has 8 GB RAM and the kernel kills anything that exceeds it (a python process hit 6.5 GB on Sep 25 and took this session down). Never load a full table, query result, or large file into memory in python or node. Stream or batch rows, and use LIMIT when exploring data. Image and ML tools (rembg, image resizing, anything that loads a model) belong on the Mac, not the droplet; if they must run here, process one downscaled image at a time.
 
+## PR WORKFLOW (tue-2, standing)
+
+Every change lands through a PR into main. The GitHub check "SPORTSVŶN test suite"
+(.github/workflows/tests.yml) IS the suite run: there is no separate local full run.
+While building, run the touched tests and `npx eslint <touched>` locally.
+- Merge when the check is green AND the Vercel preview for the PR head is READY, with a
+  merge commit (`gh pr merge <n> --merge --delete-branch`). Never rebase, never squash;
+  main comes into a branch by merge.
+- No admin bypass unless a relay says "bypass OK" for that merge.
+- Then wait for production Vercel READY on the merge commit.
+
+THIS DOES NOT LOOSEN "THE SUITE IS THE WHOLE SUITE" below; it moves where it runs. The CI
+check is the full suite on the PR's merge tree, before the merge, so the rule holds: a green
+scoped run is still nothing, the baseline is still zero, and `git add` the new tests before
+pushing (CI runs tracked files). scripts/suite.sh remains the way to run the whole suite by hand.
+
 ## THE SUITE IS THE WHOLE SUITE, and it is the default
 
-ANY RELAY THAT MERGES RUNS THE FULL SUITE BEFORE THE MERGE. Not after it, not
+ANY RELAY THAT MERGES RUNS THE FULL SUITE BEFORE THE MERGE (since tue-2: the PR's CI check; see PR WORKFLOW above). Not after it, not
 on the touched directories, not on the files the relay opened - THERE IS NO
 TOUCHED-DIR SHORTCUT, and the same applies to any relay that commits or deploys.
 With env sourced:
