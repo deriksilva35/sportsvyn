@@ -38,6 +38,13 @@
 - wed-1 blocker: stored NBA positions are G/F/C only. The 7+ PG/SG/SF/PF/C shape needs another
   positions source, or G/G/F/F/C.
 
+## PR WORKFLOW (tue-2, standing)
+- Every change lands via a PR into main. The GitHub check "SPORTSVŶN test suite" IS the full suite
+  (no separate local full run); locally run touched tests + eslint while building.
+- Merge on green CI + Vercel preview READY for the PR head, merge commit, no rebase; no admin
+  bypass unless a relay says "bypass OK". Then wait for production READY on the merge commit.
+- Reconciled with "THE SUITE IS THE WHOLE SUITE" in CLAUDE.md: the CI run is that suite, pre-merge.
+
 ## Queue
 1. wed-1 once Derik re-sends the spec: room sizes, Tonight tab, game-time flag, email tile.
 2. tue-4/5 (#9): fix CI, then finish rate limit + 429 retry, opened/clicked store + daily summary.
