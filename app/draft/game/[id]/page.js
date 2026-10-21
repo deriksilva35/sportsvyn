@@ -19,7 +19,7 @@ import { requireSignInInShell } from '@/lib/shell/signedOut';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import { readRoom } from '@/lib/draftGame/room';
 import { COPY } from '@/lib/draftGame/rules';
-import { nightlyHeadLines, roundLine, lineupLine, nextDay, tomorrowLine } from '@/lib/draftGame/nightlyCopy';
+import { nightlyHeadLines, roundLine, lineupLine, nextDay, tomorrowLine, startLine, waitingNote, waitingTitle } from '@/lib/draftGame/nightlyCopy';
 import { nightlyContest } from '@/lib/draftGame/nightly';
 import { PLAY_REGISTRY } from '@/lib/games/playRegistry';
 import NightlyClock from '@/components/draftGame/NightlyClock';
@@ -54,7 +54,7 @@ function Eyebrow({ v }) {
 }
 
 const TITLE = { pre: 'Draft this game', waiting: 'Your four are in', void: 'This game was called off' };
-const NIGHTLY_TITLE = { pre: "Draft tonight's NBA", waiting: 'Your three are in', void: "Tonight's games were called off" };
+const NIGHTLY_TITLE = { pre: "Draft tonight's NBA", void: "Tonight's games were called off" };
 
 export default async function GameDraftRoomPage({ params }) {
   const { id } = await params;
@@ -92,7 +92,7 @@ export default async function GameDraftRoomPage({ params }) {
               <RoomHeader
                 phase={v.phase}
                 eyebrow={<Eyebrow v={v} />}
-                title={v.phase === 'drafting' ? (v.nightly ? roundLine({ round: v.round, rounds: v.shape.rounds, yourTurn: v.yourTurn, onClockLabel: v.onClockLabel }) : v.header) : v.phase === 'live' ? 'Scoring starts with the first stat' : (v.nightly ? NIGHTLY_TITLE : TITLE)[v.phase] ?? ''}
+                title={v.phase === 'drafting' ? (v.nightly ? roundLine({ round: v.round, rounds: v.shape.rounds, yourTurn: v.yourTurn, onClockLabel: v.onClockLabel }) : v.header) : v.phase === 'live' ? 'Scoring starts with the first stat' : (v.nightly ? (v.phase === 'waiting' ? waitingTitle(v.shape.rounds) : NIGHTLY_TITLE[v.phase]) : TITLE[v.phase]) ?? ''}
                 titleProps={v.nightly ? { 'data-room-header': '', 'data-nightly-title': '' } : { 'data-room-header': '' }}
                 sub={v.phase === 'drafting' ? (v.nightly ? lineupLine(v.shape) : COPY.count) : null}
                 right={v.nightly && v.phase === 'drafting' ? <NightlyClock deadline={v.deadline} yourTurn={v.yourTurn} /> : null}
@@ -104,14 +104,14 @@ export default async function GameDraftRoomPage({ params }) {
                   {mine.map((p) => (
                     <li key={p.id}><span className={`dgm-pos dgm-pos--${String(p.pos).toLowerCase()}`}>{p.slot ?? p.pos}</span> <b>{p.name}</b> <small>{p.team}</small></li>
                   ))}
-                  <li className="dgm-note">{v.nightly ? 'All three score. Points start at the first tip.' : 'Your best three score. Points start at kickoff.'}</li>
+                  <li className="dgm-note">{v.nightly ? waitingNote(v.shape) : 'Your best three score. Points start at kickoff.'}</li>
                 </ul>
               ) : v.phase === 'pre' && !v.locked ? (
                 userId == null ? (
                   <a className="dgm-pill" href={shellSigninHref(`/draft/game/${id}`, isShell)}>Sign in to draft</a>
                 ) : (
                   <div className="dgm-startbox">
-                    <p className="dgm-sub">{v.nightly ? "Tonight's NBA games. Four drafters, three picks: G, F and UTIL. All three score." : COPY.listSub}</p>
+                    <p className="dgm-sub">{v.nightly ? startLine(v.shape) : COPY.listSub}</p>
                     <StartGameDraft contestId={v.contestId} inRoom />
                   </div>
                 )
