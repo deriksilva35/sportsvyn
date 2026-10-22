@@ -32,7 +32,7 @@ name: tests
 #
 # DOCS-ONLY CHANGES SKIP THE SUITE (thu-3). The "changes" job lists the changed
 # files (a PR: the PR's files against its base; a push: the compare from the
-# previous commit). DOCS are docs/**, crew/README.md, crew/agents/** (the SOULs),
+# previous commit). DOCS are docs/**, crew/agents/** (the SOULs),
 # crew/project.yaml, crew/NOTES.md and *.md at the repo root; anything else -
 # crew/bin/** and crew/lib/** included - is code. With no code
 # changed, the suite job keeps its exact name (the required check) but runs on
@@ -40,6 +40,13 @@ name: tests
 # setup, no suite lock, no ci-db queue. A workflow-level paths-ignore is NOT
 # used: it would leave a docs-only PR with no check at all, so unmergeable.
 # Any doubt (API error, no previous commit, an empty list) counts as code.
+#
+# ANY FILE A TEST READS IS CODE FOR CI'S PURPOSES, regardless of extension or
+# folder (fri-2). The `{ found = 1; next }` lines are those files; they come
+# before the docs rules because the first match wins. The receipt: thu-4 changed
+# crew/README.md, which crew.test.mjs pins, as docs-only, and main went red with
+# nobody told. lib/testing/ciDocsOnly.test.mjs scans the tests for the files they
+# read and fails if this filter would call any of them docs.
 
 on:
   pull_request:
@@ -81,8 +88,15 @@ jobs:
           code=true
           if [ -n "$files" ] && ! echo "$files" | grep -qx 'TOO-MANY'; then
             code=$(echo "$files" | awk '
+              $0 == "crew/README.md" { found = 1; next }
+              $0 == "docs/crew/data-queue.md" { found = 1; next }
+              $0 == "docs/crew/sportsvyn-stats" { found = 1; next }
+              $0 == "docs/design/daily-full-mock-v3.html" { found = 1; next }
+              $0 == "docs/email/arcade-2026-10-15.html" { found = 1; next }
+              $0 == "docs/email/arcade-2026-10-15.txt" { found = 1; next }
+              $0 == "docs/email/kickoff-sep9.html" { found = 1; next }
+              $0 == "docs/email/launch-email-sep8.html" { found = 1; next }
               /^docs\// { next }
-              $0 == "crew/README.md" { next }
               /^crew\/agents\// { next }
               $0 == "crew/project.yaml" { next }
               $0 == "crew/NOTES.md" { next }
