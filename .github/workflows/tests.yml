@@ -29,23 +29,75 @@ name: tests
 # to run when DATABASE_URL equals it (it is unset here) or only assert on
 # source text. lib/fantasy/collegeSurface.test.mjs falls back to DATABASE_URL
 # and passes vacuously if the ci branch holds no Fantrax draft_config.
+#
+# DOCS-ONLY CHANGES SKIP THE SUITE (thu-3). The "changes" job lists the changed
+# files (a PR: the PR's files against its base; a push: the compare from the
+# previous commit). DOCS are docs/**, crew/README.md and *.md at the repo root;
+# anything else - crew/bin/** and crew/lib/** included - is code. With no code
+# changed, the suite job keeps its exact name (the required check) but runs on
+# ubuntu-latest with one step that prints "skipped: docs-only" and exits 0: no
+# setup, no suite lock, no ci-db queue. A workflow-level paths-ignore is NOT
+# used: it would leave a docs-only PR with no check at all, so unmergeable.
+# Any doubt (API error, no previous commit, an empty list) counts as code.
 
 on:
   pull_request:
   push:
     branches: [main]
 
-concurrency:
-  group: ci-db
-  cancel-in-progress: false
-
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code_changed: ${{ steps.diff.outputs.code_changed }}
+    steps:
+      - name: Code changed outside the docs?
+        id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -o pipefail
+          if [ "$EVENT" = pull_request ]; then
+            files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename') || files=''
+          elif [ -n "$BEFORE" ] && [ "$BEFORE" != 0000000000000000000000000000000000000000 ]; then
+            # compare lists at most 300 files; a longer list is treated as code.
+            files=$(gh api "repos/$REPO/compare/$BEFORE...$SHA" --jq 'if (.files | length) >= 300 then "TOO-MANY" else .files[].filename end') || files=''
+          else
+            files=''
+          fi
+          echo "$files" | sed 's/^/  /'
+          code=true
+          if [ -n "$files" ] && ! echo "$files" | grep -qx 'TOO-MANY'; then
+            code=$(echo "$files" | awk '
+              /^docs\// { next }
+              $0 == "crew/README.md" { next }
+              /^[^\/]+\.md$/ { next }
+              { found = 1 }
+              END { print found ? "true" : "false" }')
+          fi
+          echo "code_changed=$code"
+          echo "code_changed=$code" >> "$GITHUB_OUTPUT"
+
   tests:
     name: SPORTSVŶN test suite
-    runs-on: [self-hosted, linux, x64]
+    needs: changes
+    # Code: the self-hosted runner, queued in ci-db as before. Docs only: a hosted
+    # runner and a per-run group, so it never waits behind (or bumps) a suite run.
+    runs-on: ${{ needs.changes.outputs.code_changed == 'true' && fromJSON('["self-hosted","linux","x64"]') || 'ubuntu-latest' }}
+    concurrency:
+      group: ${{ needs.changes.outputs.code_changed == 'true' && 'ci-db' || format('docs-{0}', github.run_id) }}
+      cancel-in-progress: false
     timeout-minutes: 30
     env:
       DATABASE_URL: ${{ secrets.CI_DATABASE_URL }}
@@ -60,7 +112,13 @@ jobs:
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
     steps:
+      - name: Docs only
+        if: needs.changes.outputs.code_changed != 'true'
+        run: |
+          echo "skipped: docs-only"
+
       - uses: actions/checkout@v4
+        if: needs.changes.outputs.code_changed == 'true'
         with:
           fetch-depth: 0
 
@@ -71,6 +129,7 @@ jobs:
       # A URL that IS set but points at DEV or PROD still fails hard.
       - name: The database is the "ci" branch, never DEV or PROD
         id: db
+        if: needs.changes.outputs.code_changed == 'true'
         run: |
           host=$(node -e "try{console.log(new URL(process.env.DATABASE_URL).host)}catch{console.log('')}")
           if [ -z "$host" ]; then
@@ -84,15 +143,15 @@ jobs:
           echo "database host: $host"
 
       - uses: actions/setup-node@v4
-        if: steps.db.outputs.skip != 'true'
+        if: needs.changes.outputs.code_changed == 'true' && steps.db.outputs.skip != 'true'
         with:
           node-version: 22
           cache: npm
 
       - name: Install
-        if: steps.db.outputs.skip != 'true'
+        if: needs.changes.outputs.code_changed == 'true' && steps.db.outputs.skip != 'true'
         run: npm ci
 
       - name: Full suite
-        if: steps.db.outputs.skip != 'true'
+        if: needs.changes.outputs.code_changed == 'true' && steps.db.outputs.skip != 'true'
         run: umask 002; flock -w 900 /run/lock/sportsvyn-suite/suite.lock node --test $(git ls-files '*.test.mjs')
