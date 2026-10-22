@@ -32,8 +32,9 @@ name: tests
 #
 # DOCS-ONLY CHANGES SKIP THE SUITE (thu-3). The "changes" job lists the changed
 # files (a PR: the PR's files against its base; a push: the compare from the
-# previous commit). DOCS are docs/**, crew/README.md and *.md at the repo root;
-# anything else - crew/bin/** and crew/lib/** included - is code. With no code
+# previous commit). DOCS are docs/**, crew/README.md, crew/agents/** (the SOULs),
+# crew/project.yaml, crew/NOTES.md and *.md at the repo root; anything else -
+# crew/bin/** and crew/lib/** included - is code. With no code
 # changed, the suite job keeps its exact name (the required check) but runs on
 # ubuntu-latest with one step that prints "skipped: docs-only" and exits 0: no
 # setup, no suite lock, no ci-db queue. A workflow-level paths-ignore is NOT
@@ -82,6 +83,9 @@ jobs:
             code=$(echo "$files" | awk '
               /^docs\// { next }
               $0 == "crew/README.md" { next }
+              /^crew\/agents\// { next }
+              $0 == "crew/project.yaml" { next }
+              $0 == "crew/NOTES.md" { next }
               /^[^\/]+\.md$/ { next }
               { found = 1 }
               END { print found ? "true" : "false" }')
