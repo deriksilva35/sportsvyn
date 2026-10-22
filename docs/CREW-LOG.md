@@ -1,2 +1,3 @@
 # Crew log - one line per crew action, newest last
 - 2026-10-22 thu-3: CI skips the suite for docs-only changes (docs/**, crew/README.md, root *.md); the required check "SPORTSVŶN test suite" still reports, as a one-step pass on ubuntu-latest. Everything else, crew/bin and crew/lib included, runs the full suite.
+- 2026-10-22 thu-3 proof: this docs-only PR (docs/CREW-LOG.md only) took the skip path of "SPORTSVŶN test suite".
