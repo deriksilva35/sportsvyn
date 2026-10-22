@@ -1,9 +1,16 @@
-# crew (SPORTSVŶN)
+# crew/ (SPORTSVŶN)
 
-SOULs and project.yaml live in Drive CrewOS/crews/sportsvyn (single source, now v1.5.2; not copied here).
+This folder is the source of truth for the SPORTSVŶN agent crew (CrewOS, adapter spec §3a).
 
-`crew/agents/` and `crew/project.yaml` were committed from Drive by #16 and are left as they are;
-Drive is the source, the copies in this repo can lag it.
+- crew/agents/watcher/SOUL.md, crew/agents/data-keeper/SOUL.md, crew/agents/fixer/SOUL.md
+- crew/project.yaml, crew/NOTES.md
+- crew/bin/ and crew/lib/: the droplet scripts (installed under crew-sportsvyn ~/crew/bin as forced commands; contract and SUMMARY formats below)
+
+CrewOS installs from this repo and records agents.soul_ref = path + commit SHA.
+Every change to a SOUL, project.yaml or NOTES.md is a PR into this folder (required check green, Derik merges). Never edit a Drive copy.
+Drive CrewOS/crews/sportsvyn/ is archived for this project (old versions in _archive/).
+
+## The scripts
 
 `crew/bin` is the reviewed source of the scripts CrewOS runs as SSH forced commands under user
 `crew-sportsvyn` (`~/crew/bin`, with `crew/lib` beside it). They are plain node (>= 20.11, no

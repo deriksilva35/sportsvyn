@@ -1,38 +1,59 @@
+# SPORTSVŶN crew · v1.5.2 · Oct 21 2026
 project: sportsvyn
 repo: https://github.com/deriksilva35/sportsvyn
 default_branch: main
-linux_user: crew-sportsvyn
-ssh_alias: sportsvyn-droplet
+crew_home: crewos-droplet (OpenClaw)
+project_host: considered-cc; crew runs as Linux user crew-sportsvyn (own clone, ~/crew/{bin,worktrees,secrets,data})
+ssh_aliases:
+  watcher: sportsvyn-droplet      # forced command, ~/crew/bin scripts only
+  data_keeper: sportsvyn-droplet  # forced command `data-keeper` (dry run only)
+  fixer: sportsvyn-fixer          # worktrees under ~/crew/worktrees, relay-sandbox for tests
+models:
+  watcher: claude-haiku-5-5
+  data_keeper: claude-haiku-5-5
+  fixer: claude-sonnet-5-5        # Claude Code subscription
+test_command: scripts/suite.sh (full suite ~13 min; CI only for the Fixer)
+fixer_tests: fast subset per docs/crew/fast-subset.md, max 2 runs per session; full suite = required CI check "SPORTSVŶN test suite"
 lock_path: /run/lock/sportsvyn-suite/suite.lock
-host: mac-mini (crew home); work over SSH to the droplet "considered-cc" as crew-sportsvyn, repo /home/crew-sportsvyn/crew/worktrees/sportsvyn-main
-test_command: scripts/suite.sh   # = npm test; takes /run/lock/sportsvyn-suite/suite.lock shared with Derik's sessions; ~12 min
 preview_url: per-branch Vercel preview (DEV DB, behind Vercel login)
 error_source: app_errors table (poller, daily-tick, mlb-advance) + Vercel runtime errors via ~/crew/bin/vercel-errors
-droplet_reads: SSH forced-command scripts in ~/crew/bin (app-errors, vercel-errors, cf-top, retention-status, provider-health, cost-watch, latest-deploy); no Vercel/Cloudflare tokens on the mini
-deploy_detection: no-model poll on the mini, `ssh sportsvyn-droplet latest-deploy` every 5 min, starts the Watcher on change (max 30 runs/month)
-ci_failure_detection: none needed; branch protection blocks merges on a red "tests" check
-db_role: crew_reader (SELECT only; DEV live, PROD held until the crew turn)
-ssh_keys: { watcher: forced-command ~/crew/bin/* only, fixer: shell, worktrees under ~/crew/worktrees }
-watch_rules: docs/crew/watch-rules.md   # GAME G1-G5, PROVIDER P1-P8, COST C1-C3
+droplet_scripts: ~/crew/bin/{app-errors,vercel-errors,retention-status,provider-health,cost-watch,latest-deploy,board-state,data-keeper}; source in repo crew/bin/
+script_contract: no caller args except those listed; read-only unless named; never print a secret; exit 0 ok / 1 regression / 2 setup error; last line = one SUMMARY line; <=10 s except data-keeper
+secrets: ~/crew/secrets/{crew-reader.env (CREW_READER_URL), vercel.token (project-scoped)} (chmod 700, filled by CrewOS)
+vercel_project_id: prj_dnWLrT1wn34YScbMwQgtGT3WYVoE  # hardcoded in latest-deploy and vercel-errors
+dns: GoDaddy (ns75/ns76.domaincontrol.com); no Cloudflare zone, so no cf-top; edge/bot traffic is Vercel-only for now
+start_gates:
+  watcher_hourly: board-state prints open or locks_in:<m<=120>; at most hourly; cap 120/month
+  watcher_deploy: latest-deploy deploy_id changed; poll every 5 min; cap 30/month
+  watcher_nightly: 06:00 PT; cap 30/month
+  data_keeper: 02:00 PT; cap 30/month
+db_role: crew_reader (SELECT on crew_stats views only)
+watch_rules: docs/crew/watch-rules.md  # GAME G1-G5, PROVIDER P1-P8, COST C1-C3
+script_rulings:  # CrewOS answers, Oct 21 2026
+  retention: 30 days for app_errors, push_sends, daily_guest_runs, sessions (documented rule). No pruner yet, so retention-status reports overdue counts with status=ok (informational, exit 0). One hand-filed ticket "retention pruner needed" covers it.
+  cost: cost-watch budget = the real Vercel plan line item (vercel_usd_month, set by Derik); neon prints "-" (Neon bills hours, not $). pace=over only when the Vercel figure is known.
+  providers: first-guess staleness thresholds stand. injuries is excluded from stale counts until its cron is in vercel.json (commented in the script).
+  data_keeper: colour-source disagreement detection is out of scope for month one (noted in data-queue.md).
+crew_stats_views_prod: [app_errors_v, boards_v, retention_ages_v, provider_freshness_v]  # no PII; applied via scripts/crew-reader-grants.mjs --prod --apply
+data_queue: docs/crew/data-queue.md
 where_things_go:
-  crew_tickets: problems (Watcher findings, Data Keeper contradictions/script failures, Fixer ticket status)
-  runs.summary: every run's numbers, cap/partial notes, and the CREW-LOG line (Watcher, Data Keeper)
-  deliverables: anything waiting for Derik's decision, status = waiting (Data Keeper dry runs: counts, 10 sample rows, exact apply_command)
-  approvals: Derik's decision (Approve / Send back / Reject); Approve replays apply_command from the deliverable
+  crew_tickets: problems (Watcher findings, Data Keeper exit 1/2, Fixer ticket status)
+  runs.summary: every run's numbers, SUMMARY lines read, cap/partial notes, CREW-LOG line (Watcher, Data Keeper)
+  deliverables: Data Keeper dry runs, status = waiting (counts, 10 sample rows, dry-run path, exact apply_command)
+  approvals: Derik's decision. MONTH ONE: Approve = Derik runs apply_command by hand; no auto-replay
   docs/CREW-LOG.md: Fixer only, inside its PR
 drive_folder: CrewOS/crews/sportsvyn
-log_file: docs/CREW-LOG.md
 budgets:
   monthly_usd: 45
   per_agent: { watcher: 35, data_keeper: 10, fixer: 0 }
   per_run: { watcher_hourly: 0.08, watcher_deploy: 0.08, watcher_nightly: 0.75, data_keeper: 0.30 }
   runs_per_month: { watcher_hourly: 120, watcher_deploy: 30, watcher_nightly: 30, data_keeper: 30 }
   # closes: 120*0.08 + 30*0.08 + 30*0.75 = 34.50 <= 35; 30*0.30 = 9 <= 10
-fixer_limits: { minutes: 25, full_suite_runs: 1 }
+fixer_limits: { minutes: 25, subset_runs: 2, local_full_suite_runs: 0, ci_followups: 1 }
+fixer_paths: see fixer/SOUL.md (allow / never lists, v1.4.1)
 ask_first: [merge, deploy, delete, send, backfill, testflight, prod_write, firewall, migration]
+rung: { fixer: 2 (PR only, Derik merges), watcher: read-only, data_keeper: dry-run only }
 pending_before_live:
-  - PROD crew_reader role (GO held)
-  - Neon "ci" branch + CI_DATABASE_URL secret (tests action for branch protection)
-  - branch protection on main requiring "tests"
-  - Cloudflare token + zone id in ~/crew/secrets/cloudflare.env
-  - move the two private SSH keys from ~/crew/secrets/mini-keys to the mini
+  - crew/bin scripts merged and installed under crew-sportsvyn (this PR)
+  - CrewOS fills crew-reader.env (vercel.token in place)
+  - poller checks written against the SUMMARY formats

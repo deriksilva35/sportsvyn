@@ -1,4 +1,4 @@
-v1.5.1 · Oct 20 2026 · Fixer SOUL v1.4.1 (adds lib/stripe/** and lib/tremendous/**) · budget option c · rung 2 · Watcher at v1.2 · Data Keeper v1.3 · stats script v1.0 (in repo)
+v1.6 · Oct 22 2026 · REPO IS CANONICAL (crew/ in the sportsvyn repo; Drive archived) · watcher v1.5.1 · data-keeper v1.5 · fixer v1.5 · project.yaml v1.5.2 · budget option c · rung 2 · Watcher at v1.2 · Data Keeper v1.3 · stats script v1.0 (in repo)
 
 ## Schema pass (one pass once crew_tickets, briefs and tasks exist; then registration)
 
@@ -15,6 +15,7 @@ DECISION: suite lock across users
 
 DECISION: tokens (isolation lives in the script)
 - Vercel tokens are account-wide and cannot be scoped to one project. The isolation is in the script: vercel-errors and cost-watch in crew-sportsvyn's ~/crew/bin are hardcoded to the SPORTSVŶN Vercel project id and return only that project's data. The token sits in crew-sportsvyn's ~/crew/secrets (chmod 700); the Watcher never sees it, only script output.
+- Cloudflare: same pattern. cf-top is hardcoded to the sportsvyn.com zone; token in ~/crew/secrets; the Watcher sees only output.
 
 Where things run (3c)
 - Watcher: stays on the mini (read-only role + forced-command scripts). No change.
@@ -78,3 +79,9 @@ DECISION: rung 2 = PR only
 
 Fixer statuses (v1.3 uses the schema names): approved -> pr-open | needs-ruling | cannot-reproduce | stuck. The fixed final message gains a CI line.
 Archived: fixer SOUL v1.2, v1.3, v1.4 and NOTES v1.3, v1.4, v1.5 in _archive/.
+
+## Repo canonical (Oct 22 2026, CrewOS adapter spec §3a)
+- crew/agents/<agent>/SOUL.md, crew/project.yaml and crew/NOTES.md in the sportsvyn repo are the source of truth. CrewOS records agents.soul_ref = path + commit SHA of what is installed.
+- Every SOUL or project.yaml change is a PR to crew/ in this repo (CI green, Derik merges). Never a Drive re-issue.
+- Drive CrewOS/crews/sportsvyn/ is archived: all prior versions in _archive/, plus a one-line README pointing at the repo.
+- Versions at the move: watcher v1.5.1, data-keeper v1.5, fixer v1.5 (alias sportsvyn-fixer, model claude-sonnet-5-5, never-list v1.4.1), project.yaml v1.5.2.
