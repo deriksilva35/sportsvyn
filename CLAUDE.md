@@ -394,3 +394,7 @@ Runbook, first install and journal reading: docs/ops/poller-deploy.md.
 ## Processes on the shared droplet
 
 Never kill processes by name or pattern (pkill -f, killall). Stop only processes this session started, by their PID. All projects share this droplet.
+
+## CI: what counts as docs
+
+Any file a test reads is code for CI's purposes, regardless of extension or folder.
