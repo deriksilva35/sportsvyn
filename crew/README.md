@@ -92,3 +92,5 @@ Notes:
 `scripts/crew-reader-grants.mjs` creates schema `crew_stats` and its views and grants the role
 (`--apply` for DEV, `--prod --apply` for PROD). Views used here: `app_errors_v`, `boards_v`,
 `retention_ages_v`, `provider_freshness_v` (no email, handle, IP, token, message text or payload).
+
+<!-- fri-2 proof: a crew/README.md-only change runs the full suite. -->
