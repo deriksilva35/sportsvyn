@@ -41,7 +41,7 @@ The CrewOS project row is `sportsvyn` (display name SPORTSVŶN). Its nightly slo
 - **Watcher** (spec v1.2): finds what is broken for players, or what is about to cost money or data, and files one crew_tickets row per problem (severity live|soon|later). It never fixes anything.
   - Runs hourly while a board is open or locks within 2 h (max 120 runs/month), after each production deploy (deploy-id poll, max 30/month), and nightly (max 30/month).
   - Nightly runs add the provider and cost rules.
-  - Rules: docs/crew/watch-rules.md. GAME G1-G5, PROVIDER P1-P8 (BDL NFL/NCAAF/MLB/NBA, CFBD, Odds API, API-Sports EPL, FFC ADP), COST C1-C3 (Vercel, Neon, Odds API credits).
+  - Rules: crew/watch-rules.md. GAME G1-G5, PROVIDER P1-P8 (BDL NFL/NCAAF/MLB/NBA, CFBD, Odds API, API-Sports EPL, FFC ADP), COST C1-C3 (Vercel, Neon, Odds API credits).
   - Budget: $0.08 per hourly/deploy run, $0.75 per nightly run, $35/month cap.
 - **Fixer** (spec v1.2): fixes one small bug that Derik approved in the dashboard.
   - Steps: reproduce on DEV, write a failing test, make the smallest fix, run the full suite once, open a PR on branch `crew/fix-<ticket-id>` with one docs/CREW-LOG.md line, then stop.

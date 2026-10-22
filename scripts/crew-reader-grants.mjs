@@ -86,7 +86,7 @@ export function statsGrants(schemaExists) {
  *                     sessions.expires = days since EXPIRY, negative while valid).
  *   provider_freshness_v  one row per feed: when it last wrote, how stale is too stale
  *                     (max_age_min) and whether a write is expected right now (expected).
- * Cadences: docs/crew/watch-rules.md, "provider-health".
+ * Cadences: crew/watch-rules.md, "provider-health".
  */
 export const CREW_VIEWS = Object.freeze([
   { name: 'app_errors_v', sql: `SELECT id, service, count, first_seen, ts, stack_hash FROM public.app_errors` },

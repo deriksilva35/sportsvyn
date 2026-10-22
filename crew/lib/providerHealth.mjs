@@ -1,7 +1,7 @@
 // crew/lib/providerHealth.mjs - provider-health: last successful write per feed vs its cadence.
 // Reads crew_stats.provider_freshness_v (provider, last_ok_at, max_age_min, expected).
 // A feed is STALE when a write is expected right now (a live game, in season, past the morning
-// cron) and its last write is older than max_age_min. Cadences: docs/crew/watch-rules.md.
+// cron) and its last write is older than max_age_min. Cadences: crew/watch-rules.md.
 import { parseArgs, requireReaderUrl } from './common.mjs';
 import { query, num } from './db.mjs';
 

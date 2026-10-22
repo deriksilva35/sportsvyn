@@ -3,3 +3,4 @@
 - 2026-10-22 thu-3 proof: this docs-only PR (docs/CREW-LOG.md only) took the skip path of "SPORTSVŶN test suite".
 - 2026-10-22 thu-3 follow-up: crew/agents/**, crew/project.yaml and crew/NOTES.md now count as docs for the CI suite skip (crew/bin/** and crew/lib/** stay code); proved by the crew/agents/README.md PR.
 - 2026-10-22 crew/ made canonical; Drive archived (CrewOS adapter spec 3a)
+- 2026-10-22 crew day-1 fixes: Watcher v1.5.2, Data Keeper v1.5.1, Fixer v1.5.1, project.yaml v1.5.3
