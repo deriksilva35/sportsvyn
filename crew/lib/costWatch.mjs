@@ -6,7 +6,7 @@
 //   resend_sent_mtd  emails created this month from Resend's list API; needs resend.token (optional);
 //                    '-' without it or when the month does not fit in MAX_PAGES x 100.
 //   pace             `unknown` while the Vercel monthly budget is unknown (never `over`); `over` when a KNOWN month-to-date figure, projected to month end (needs >= 3
-//                    elapsed days), exceeds its budget (BUDGET_USD below = docs/crew/watch-rules.md,
+//                    elapsed days), exceeds its budget (BUDGET_USD below = crew/watch-rules.md,
 //                    "cost" > "Budget"); otherwise `ok`. Unknown values never count as over.
 // The Vercel token is required (exit 2, reason=auth:api.vercel.com without it); the rest is optional.
 // The billing charges are a 13 MB+ JSON-lines export that grows through the month, streamed with an 8 s
@@ -15,7 +15,7 @@
 import { parseArgs, requireToken, readToken, fetchLines, fetchJson, usd, SetupError } from './common.mjs';
 import { VERCEL_API, VERCEL_PROJECT_ID, VERCEL_TEAM_ID, vercelHeaders } from './vercel.mjs';
 
-/** Monthly budgets in USD. Mirrors the BUDGET line in docs/crew/watch-rules.md (a test pins the match).
+/** Monthly budgets in USD. Mirrors the BUDGET line in crew/watch-rules.md (a test pins the match).
  *  vercel = <VERCEL_MONTHLY_USD>, Derik's plan line item; null = unknown (pace=unknown, never over). */
 export const BUDGET_USD = Object.freeze({ vercel: null });
 export const MIN_ELAPSED_DAYS = 3;

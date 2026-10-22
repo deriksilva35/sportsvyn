@@ -1,6 +1,6 @@
 // crew/lib/retentionStatus.mjs - retention-status: tables past their retention.
 // Reads crew_stats.retention_ages_v (row counts by whole-day age; no row content).
-// RETENTION is the one place the keep-days live; docs/crew/watch-rules.md ("retention") states
+// RETENTION is the one place the keep-days live; crew/watch-rules.md ("retention") states
 // the same numbers and crew/lib/crew.test.mjs fails if they drift apart.
 import { parseArgs, requireReaderUrl } from './common.mjs';
 import { query, num } from './db.mjs';

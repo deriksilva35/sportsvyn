@@ -435,8 +435,8 @@ test('footballdb-import parser: totals, gamesConflict, written', () => {
 });
 
 // ---- docs and code must agree ---------------------------------------------------------------
-test('docs/crew/watch-rules.md states the same retention days and budget as the code', () => {
-  const md = readFileSync(path.join(ROOT, 'docs', 'crew', 'watch-rules.md'), 'utf8');
+test('crew/watch-rules.md states the same retention days and budget as the code', () => {
+  const md = readFileSync(path.join(ROOT, 'crew', 'watch-rules.md'), 'utf8');
   const line = md.match(/^RETENTION (.+)$/m)[1];
   const doc = Object.fromEntries(line.split(' ').map((kv) => kv.split('=')).map(([k, v]) => [k, Number(v)]));
   assert.deepEqual(doc, { ...retention.RETENTION });
@@ -445,10 +445,10 @@ test('docs/crew/watch-rules.md states the same retention days and budget as the 
   assert.ok(!/cf-top|cloudflare/i.test(readFileSync(path.join(ROOT, 'crew', 'README.md'), 'utf8')), 'no cf-top / Cloudflare in the README');
 });
 
-test('crew/README.md names every script, the Drive source line, and no secret value', () => {
+test('crew/README.md names every script, the repo-canonical line, and no secret value', () => {
   const md = readFileSync(path.join(ROOT, 'crew', 'README.md'), 'utf8');
   for (const name of Object.keys(SCRIPTS)) assert.ok(md.includes(`\`${name}`), name);
-  assert.ok(md.includes('SOULs and project.yaml live in Drive CrewOS/crews/sportsvyn (single source, now v1.5.2; not copied here).'));
+  assert.ok(md.includes('This folder is the source of truth for the SPORTSVŶN agent crew (CrewOS, adapter spec §3a).'));
 });
 
 // ---- crew-bin-3: the error format, and cost-watch's streamed billing -------------------------

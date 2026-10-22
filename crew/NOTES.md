@@ -85,3 +85,11 @@ Archived: fixer SOUL v1.2, v1.3, v1.4 and NOTES v1.3, v1.4, v1.5 in _archive/.
 - Every SOUL or project.yaml change is a PR to crew/ in this repo (CI green, Derik merges). Never a Drive re-issue.
 - Drive CrewOS/crews/sportsvyn/ is archived: all prior versions in _archive/, plus a one-line README pointing at the repo.
 - Versions at the move: watcher v1.5.1, data-keeper v1.5, fixer v1.5 (alias sportsvyn-fixer, model claude-sonnet-5-5, never-list v1.4.1), project.yaml v1.5.2.
+
+## Day 1 fixes (Oct 22 2026)
+- Final-message template made literal (4 of 12 Watcher runs drifted from the fixed shape): Watcher v1.5.2.
+- Watcher cadence moved from hourly-while-open to pre-lock (once per distinct lock time, max 2/day) plus open at 09:00 and 15:00 PT; that caps at 120/month instead of spending it by day 10.
+- watch-rules.md moved into crew/ (crew/watch-rules.md); CrewOS installs it into the Watcher workspace at docs/crew/watch-rules.md.
+- Fixer never-list gains crew/** (Fixer v1.5.1): it never edits SOULs, project.yaml, NOTES or the crew scripts.
+- Data Keeper final message gains an APPLY line (Data Keeper v1.5.1).
+- Versions: watcher v1.5.2, data-keeper v1.5.1, fixer v1.5.1, project.yaml v1.5.3.

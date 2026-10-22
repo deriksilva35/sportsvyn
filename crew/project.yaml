@@ -1,4 +1,4 @@
-# SPORTSVŶN crew · v1.5.2 · Oct 21 2026
+# SPORTSVŶN crew · v1.5.3 · Oct 22 2026
 project: sportsvyn
 repo: https://github.com/deriksilva35/sportsvyn
 default_branch: main
@@ -23,12 +23,14 @@ secrets: ~/crew/secrets/{crew-reader.env (CREW_READER_URL), vercel.token (projec
 vercel_project_id: prj_dnWLrT1wn34YScbMwQgtGT3WYVoE  # hardcoded in latest-deploy and vercel-errors
 dns: GoDaddy (ns75/ns76.domaincontrol.com); no Cloudflare zone, so no cf-top; edge/bot traffic is Vercel-only for now
 start_gates:
-  watcher_hourly: board-state prints open or locks_in:<m<=120>; at most hourly; cap 120/month
+  watcher_prelock: board-state locks_in:<m<=120>; once per distinct lock time (locks within 30 min = one); max 2/day
+  watcher_open: board-state open; 09:00 and 15:00 PT only; none 21:00-06:00 PT
+  watcher_hourly_class_cap: 120/month (prelock + open)
   watcher_deploy: latest-deploy deploy_id changed; poll every 5 min; cap 30/month
   watcher_nightly: 06:00 PT; cap 30/month
   data_keeper: 02:00 PT; cap 30/month
 db_role: crew_reader (SELECT on crew_stats views only)
-watch_rules: docs/crew/watch-rules.md  # GAME G1-G5, PROVIDER P1-P8, COST C1-C3
+watch_rules: crew/watch-rules.md  # installed into the Watcher workspace at docs/crew/watch-rules.md; GAME G1-G5, PROVIDER P1-P8, COST C1-C3
 script_rulings:  # CrewOS answers, Oct 21 2026
   retention: 30 days for app_errors, push_sends, daily_guest_runs, sessions (documented rule). No pruner yet, so retention-status reports overdue counts with status=ok (informational, exit 0). One hand-filed ticket "retention pruner needed" covers it.
   cost: cost-watch budget = the real Vercel plan line item (vercel_usd_month, set by Derik); neon prints "-" (Neon bills hours, not $). pace=over only when the Vercel figure is known.
@@ -50,7 +52,7 @@ budgets:
   runs_per_month: { watcher_hourly: 120, watcher_deploy: 30, watcher_nightly: 30, data_keeper: 30 }
   # closes: 120*0.08 + 30*0.08 + 30*0.75 = 34.50 <= 35; 30*0.30 = 9 <= 10
 fixer_limits: { minutes: 25, subset_runs: 2, local_full_suite_runs: 0, ci_followups: 1 }
-fixer_paths: see fixer/SOUL.md (allow / never lists, v1.4.1)
+fixer_paths: see fixer/SOUL.md (allow / never lists, v1.5.1; never-list includes crew/**)
 ask_first: [merge, deploy, delete, send, backfill, testflight, prod_write, firewall, migration]
 rung: { fixer: 2 (PR only, Derik merges), watcher: read-only, data_keeper: dry-run only }
 pending_before_live:
