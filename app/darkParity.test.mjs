@@ -37,12 +37,29 @@ test('the comparator: grey steps pass, everything else fails', () => {
 test('INTENT IS EXACT: undeclared, mismatched and stale all fail', () => {
   const d = [{ file: 'a.css', key: '.x { color }', before: null, after: '#fff', why: 'added' }];
   assert.deepEqual(reconcileIntent(d, [{ file: 'a.css', key: '.x { color }', after: '#fff' }]),
-    { undeclared: [], mismatched: [], stale: [] }, 'declared exactly -> passes');
+    { undeclared: [], mismatched: [], stale: [], landed: [] }, 'declared exactly -> passes');
   assert.equal(reconcileIntent(d, []).undeclared.length, 1, 'an undeclared change fails');
   assert.equal(reconcileIntent(d, [{ file: 'a.css', key: '.x { color }', after: '#000' }]).mismatched.length, 1,
     'a declared change with a different value fails');
   assert.equal(reconcileIntent([], [{ file: 'a.css', key: '.x { color }', after: '#fff' }]).stale.length, 1,
     'a stale entry fails - the file is not a whitelist');
+});
+
+test('ONE PR, NO RESET: a landed entry passes alone, is stale beside new diffs, and a wrong one still fails', () => {
+  const onMain = new Map([['a.css\u0000.x { color }', '#fff']]);
+  const baseValue = (f, k) => onMain.get(`${f}\u0000${k}`) ?? null;
+  const landedEntry = { file: 'a.css', key: '.x { color }', after: '#fff' };
+  assert.deepEqual(reconcileIntent([], [landedEntry], baseValue),
+    { undeclared: [], mismatched: [], stale: [], landed: [landedEntry] }, 'merged entry, nothing new -> passes');
+  const r = reconcileIntent([], [{ file: 'a.css', key: '.x { color }', after: '#000' }], baseValue);
+  assert.equal(r.stale.length, 1, 'an entry main does not match is still stale');
+  assert.equal(reconcileIntent([], [{ file: 'a.css', key: '.y { color }', after: null }], baseValue).landed.length, 1,
+    'a removal has landed when main has no such key');
+  const d = [{ file: 'b.css', key: '.z { gap }', before: '8px', after: '4px', why: 'shape changed' }];
+  const mixed = reconcileIntent(d, [landedEntry, { file: 'b.css', key: '.z { gap }', after: '4px' }], baseValue);
+  assert.equal(mixed.stale.length, 1, 'a branch with its own diffs must replace the list');
+  assert.equal(mixed.stale[0].landed, true);
+  assert.equal(reconcileIntent([], [landedEntry]).stale.length, 1, 'without a base reader nothing is landed');
 });
 
 test('the intent file is well-formed: { changes: [{ file, key, after }] }', () => {
@@ -77,20 +94,29 @@ test(`THE DARK PAGE RESOLVES THE SAME as ${BASE} (luminance <= 1.2%, no shape ch
   const gHead = darkGlobals(atHead('app/globals.css'));
   const report = [];
   const all = [];
+  const baseMaps = new Map();
   let compared = 0;
   for (const f of files) {
     const before = atBase(f);
     if (before == null) continue; // new on this branch
     compared += 1;
-    const diffs = diffDark(resolvedDark(before, gBase), resolvedDark(atHead(f), gHead));
+    const baseMap = resolvedDark(before, gBase);
+    baseMaps.set(f, baseMap);
+    const diffs = diffDark(baseMap, resolvedDark(atHead(f), gHead));
     for (const d of diffs) all.push({ file: f, ...d });
   }
   assert.ok(compared > 50, `compared ${compared} stylesheets - the walk found too few`);
   const intent = JSON.parse(readFileSync(path.join(REPO, 'lib/brand/parity-intent.json'), 'utf8')).changes ?? [];
-  const { undeclared, mismatched, stale } = reconcileIntent(all, intent);
+  // A LANDED entry (already on main) passes; see reconcileIntent.
+  const baseValue = (file, key) => baseMaps.get(file)?.get(key) ?? null;
+  const { undeclared, mismatched, stale } = reconcileIntent(all, intent, baseValue);
   const line = (d) => `${d.file}: ${d.key}  ${d.before ?? '(none)'} -> ${d.after ?? '(none)'}  [${d.why}]`;
   for (const d of undeclared) report.push(`UNDECLARED ${line(d)}`);
   for (const d of mismatched) report.push(`MISMATCH ${line(d)} (declared ${d.declared})`);
-  for (const c of stale) report.push(`STALE intent entry, no such change: ${c.file}: ${c.key}`);
+  for (const c of stale) {
+    report.push(c.landed
+      ? `STALE intent entry, already on ${BASE} - this branch changes the dark page, so replace the whole list with its own entries: ${c.file}: ${c.key}`
+      : `STALE intent entry, no such change: ${c.file}: ${c.key}`);
+  }
   assert.equal(report.length, 0, `${report.length} problem(s) vs ${BASE} (intent: ${intent.length} declared):\n${report.join('\n')}`);
 });
