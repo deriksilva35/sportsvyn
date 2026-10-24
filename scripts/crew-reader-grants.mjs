@@ -22,6 +22,7 @@
 // granted by COLUMN with the same columns withheld as the views (EXCLUDED_COLUMNS).
 // The login token, email, name, date of birth, handle, device id, IP and pick
 // payloads stay unreadable either way.
+// (sat-1 adds provider_errors_v and live_matches_v: six views in all.)
 // CREW-BIN (crew/bin watcher scripts): four more views, defined HERE and created in the same
 // --apply transaction, BEFORE the grants: app_errors_v, boards_v, retention_ages_v,
 // provider_freshness_v (CREW_VIEWS below; the SQL is the contract, no PII column in any of them).
@@ -137,6 +138,36 @@ export const CREW_VIEWS = Object.freeze([
                  60,
                  EXISTS (SELECT 1 FROM public.matches m JOIN public.leagues l ON l.id = m.league_id
                           WHERE l.slug = 'nfl' AND m.kickoff_at BETWEEN now() - interval '7 days' AND now() + interval '7 days')`,
+  },
+  {
+    // sat-1: the live poller writes summary.provider_error (status code + endpoint NAME only,
+    // lib/pollers/providerError.js) on every heartbeat while a provider call is failing. The
+    // LATEST heartbeat per source in the last 30 min decides: a heartbeat without the key means
+    // the error cleared, so a recovered feed does not read as failing for the next 30 minutes.
+    name: 'provider_errors_v',
+    sql: `SELECT source, at, provider, endpoint, status
+            FROM (SELECT DISTINCT ON (source) source,
+                         (summary->'provider_error'->>'at')::timestamptz AS at,
+                         summary->'provider_error'->>'provider' AS provider,
+                         summary->'provider_error'->>'endpoint' AS endpoint,
+                         (summary->'provider_error'->>'status')::int AS status
+                    FROM public.sync_runs
+                   WHERE kind = 'heartbeat' AND source LIKE 'live-poller-%'
+                     AND started_at > now() - interval '30 minutes'
+                   ORDER BY source, started_at DESC) latest
+           WHERE provider IS NOT NULL`,
+  },
+  {
+    // G6 (frozen live game): live matches only, with metadata.live_changed_at (stamped by
+    // lib/live/write.js when status, a score or the period/clock moves). No user data.
+    name: 'live_matches_v',
+    sql: `SELECT m.id, l.slug AS league_slug, m.status, m.kickoff_at,
+                 (m.metadata->>'live_changed_at')::timestamptz AS last_change_at,
+                 m.home_score, m.away_score,
+                 m.metadata->'live_state'->>'period' AS period,
+                 m.metadata->'live_state'->>'clock' AS clock
+            FROM public.matches m JOIN public.leagues l ON l.id = m.league_id
+           WHERE m.status = 'live'`,
   },
 ]);
 

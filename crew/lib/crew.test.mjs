@@ -31,7 +31,7 @@ const FORMATS = {
   'app-errors': /^SUMMARY app-errors status=(ok|regression) window_min=\d+ errors=\d+ new_hashes=\d+ top_source=\S+$/,
   'vercel-errors': /^SUMMARY vercel-errors status=(ok|regression) window_min=\d+ errors_5xx=\d+ routes=\d+ top_route=\S+$/,
   'retention-status': /^SUMMARY retention-status status=(ok|regression) tables=\d+ overdue=\d+ largest=[a-z_]+:\d+$/,
-  'provider-health': /^SUMMARY provider-health status=(ok|regression) providers=\d+ stale=\d+ stalest=(-|[a-z]+:(\d+|never))$/,
+  'provider-health': /^SUMMARY provider-health status=(ok|regression) providers=\d+ stale=\d+ stalest=(-|[a-z]+:(\d+|never)|[a-z]+:[a-z0-9_\/-]+:\d{3})$/,
   'cost-watch': /^SUMMARY cost-watch status=(ok|regression) vercel_usd_mtd=(-|\d+\.\d\d) neon_usd_mtd=(-|\d+\.\d\d) resend_sent_mtd=(-|\d+) pace=(ok|over|unknown)$/,
   'latest-deploy': /^SUMMARY latest-deploy status=(ok|regression) deploy_id=\S+ state=(READY|ERROR|BUILDING|CANCELED|-) commit=\S+ created=\S+$/,
   'data-keeper': /^SUMMARY data-keeper status=(ok|regression) job=\S+ rows_before=\S+ rows_after=\S+ would_change=\S+ dry_run=\S+$/,
@@ -84,6 +84,27 @@ test('retention-status: overdue past keep+1 day; sessions age from expiry', () =
   assert.equal(bad.summary.status, 'ok');
   assert.deepEqual([bad.summary.tables, bad.summary.overdue], [4, 2]);
   assert.match(summaryLine('retention-status', bad.summary), FORMATS['retention-status']);
+});
+
+test('provider-health: a 401/403 in provider_errors_v within 15 min is STALE, outranking age; a 429 alone is not', () => {
+  const rows = [
+    { provider: 'bdl', max_age_min: 30, expected: true, age_min: 2 },
+    { provider: 'cfbd', max_age_min: 60, expected: true, age_min: 3 },
+  ];
+  const r = providers.summarize(rows, [{ source: 'live-poller-cfb', provider: 'cfbd', endpoint: 'scoreboard', status: 401, age_min: 4 }]);
+  assert.deepEqual([r.code, r.summary.status, r.summary.stale, r.summary.stalest], [1, 'regression', 1, 'cfbd:scoreboard:401']);
+  assert.match(summaryLine('provider-health', r.summary), FORMATS['provider-health']);
+  // an auth error outranks an older-by-age provider
+  const both = providers.summarize([{ provider: 'odds', max_age_min: 180, expected: true, age_min: 900 }, ...rows],
+    [{ source: 'live-poller-cfb', provider: 'cfbd', endpoint: 'scoreboard', status: 403, age_min: 1 }]);
+  assert.equal(both.summary.stalest, 'cfbd:scoreboard:403');
+  assert.equal(both.summary.stale, 2);
+  // a 429 or 5xx alone stays informational
+  const throttled = providers.summarize(rows, [{ source: 'live-poller-nfl', provider: 'bdl', endpoint: 'nfl/v1/games', status: 429, age_min: 1 }]);
+  assert.deepEqual([throttled.code, throttled.summary.status, throttled.summary.stale], [0, 'ok', 0]);
+  assert.equal(providers.summarize(rows, [{ provider: 'bdl', endpoint: 'x', status: 503, age_min: 1 }]).code, 0);
+  // an auth error older than 15 min has aged out
+  assert.equal(providers.summarize(rows, [{ provider: 'cfbd', endpoint: 'scoreboard', status: 401, age_min: 16 }]).code, 0);
 });
 
 test('provider-health: stale only when a write is expected and older than max, or never', () => {

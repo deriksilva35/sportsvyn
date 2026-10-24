@@ -193,11 +193,14 @@ export function bdlAsCfbdScoreboard({ day = bdlNcaafDay, bridge }) {
  * the poller actually depends on. A BDL answer with no bridged rows while we
  * hold live games is not a failure here - pollOnce counts those as unmatched.
  */
-export function cfbScoreboardWithFallback({ primary, fallback, log = () => {} }) {
+export function cfbScoreboardWithFallback({ primary, fallback, log = () => {}, onPrimaryError = null }) {
   return async (now = new Date()) => {
     try {
       return await primary(now);
     } catch (e) {
+      // THE HOOK RUNS BEFORE THE FALLBACK: the primary's failure is recorded (provider_error
+      // in the ledger) even when BDL answers and the poll as a whole succeeds. Contained.
+      try { onPrimaryError?.(e); } catch { /* reporting never costs the poll */ }
       try {
         const r = await fallback(now);
         log(`[cfb] primary failed (${String(e?.message ?? e).slice(0, 80)}); fallback rows=${r.rows?.length ?? 0}`);

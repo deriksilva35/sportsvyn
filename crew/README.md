@@ -66,7 +66,7 @@ output, default `~/crew/data`), `CREW_JOB_TIMEOUT_MS`.
 | `app-errors` | `[window_min=60]` | `SUMMARY app-errors status=ok\|regression window_min=60 errors=N new_hashes=N top_source=<service\|->` | `new_hashes > 0` (a stack_hash first seen inside the window) |
 | `vercel-errors` | `[window_min=60]` | `SUMMARY vercel-errors status=ok\|regression window_min=60 errors_5xx=N routes=N top_route=<path\|->` | `errors_5xx > 0` |
 | `retention-status` | none | `SUMMARY retention-status status=ok\|regression tables=N overdue=N largest=<table>:<rows>` never for overdue (informational: overdue counts print with `status=ok` until a pruner exists; tables: app_errors, push_sends, daily_guest_runs, sessions; 30-day rule in watch-rules.md "retention") |
-| `provider-health` | none | `SUMMARY provider-health status=ok\|regression providers=N stale=N stalest=<provider>:<minutes\|never>` | `stale > 0` (BDL, CFBD, odds, FFC; injuries is excluded from the stale count until its cron is in vercel.json; cadences in watch-rules.md "provider-health") |
+| `provider-health` | none | `SUMMARY provider-health status=ok\|regression providers=N stale=N stalest=<provider>:<minutes\|never>` (or `<provider>:<endpoint>:<status>` for an auth error) | `stale > 0` (BDL, CFBD, odds, FFC; a 401 or 403 in `provider_errors_v` within 15 min also counts as stale for that provider and outranks age, e.g. `stalest=cfbd:scoreboard:401`; 429/5xx stay informational unless stale by age; injuries is excluded from the stale count until its cron is in vercel.json; cadences in watch-rules.md "provider-health") |
 | `cost-watch` | none | `SUMMARY cost-watch status=ok\|regression vercel_usd_mtd=X neon_usd_mtd=X resend_sent_mtd=N pace=ok\|over\|unknown` | `pace=over`, only when the Vercel monthly figure (BUDGET line in watch-rules.md) is a known number and month-to-date projects past it; while it is `unknown`, `pace=unknown`; unknown values print `-` and never count as over |
 | `latest-deploy` | none | `SUMMARY latest-deploy status=ok\|regression deploy_id=<dpl_x> state=READY\|ERROR\|BUILDING commit=<sha7> created=<ISO8601>` | `state=ERROR` (production target) |
 | `board-state` | none | prints one line: `locks_in:<m>`, `open` or `closed` | never; exit 2 prints nothing |
@@ -91,6 +91,6 @@ Notes:
 
 `scripts/crew-reader-grants.mjs` creates schema `crew_stats` and its views and grants the role
 (`--apply` for DEV, `--prod --apply` for PROD). Views used here: `app_errors_v`, `boards_v`,
-`retention_ages_v`, `provider_freshness_v` (no email, handle, IP, token, message text or payload).
+`retention_ages_v`, `provider_freshness_v`, `provider_errors_v`, `live_matches_v` (no email, handle, IP, token, message text or payload).
 
 <!-- fri-2 proof: a crew/README.md-only change runs the full suite. -->
