@@ -44,7 +44,7 @@ Every change lands through a PR into main. The GitHub check "SPORTSVŶN test sui
 (.github/workflows/tests.yml) IS the suite run: there is no separate local full run.
 While building, run the touched tests and `npx eslint <touched>` locally.
 - Merge when the check is green AND the Vercel preview for the PR head is READY, with a
-  merge commit (`gh pr merge <n> --merge --delete-branch`). Never rebase, never squash;
+  merge commit (how: the merge rule below). Never rebase, never squash;
   main comes into a branch by merge.
 - Merge rule (main-crew-gate ruleset is live; classic protection removed):
   For YOUR PRs:
