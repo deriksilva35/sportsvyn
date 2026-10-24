@@ -46,7 +46,10 @@ While building, run the touched tests and `npx eslint <touched>` locally.
 - Merge when the check is green AND the Vercel preview for the PR head is READY, with a
   merge commit (`gh pr merge <n> --merge --delete-branch`). Never rebase, never squash;
   main comes into a branch by merge.
-- No admin bypass unless a relay says "bypass OK" for that merge.
+- main is on the ruleset "main-crew-gate" (24 Oct): an admin-authored PR (this
+  session's) merges with plain `gh pr merge <n> --merge --delete-branch` once the check
+  is green. No --admin, no "bypass OK" needed. If a merge is BLOCKED with the check green,
+  stop and report it; never bypass.
 - Then wait for production Vercel READY on the merge commit.
 
 THIS DOES NOT LOOSEN "THE SUITE IS THE WHOLE SUITE" below; it moves where it runs. The CI
