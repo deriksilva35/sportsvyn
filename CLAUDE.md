@@ -44,9 +44,16 @@ Every change lands through a PR into main. The GitHub check "SPORTSVŶN test sui
 (.github/workflows/tests.yml) IS the suite run: there is no separate local full run.
 While building, run the touched tests and `npx eslint <touched>` locally.
 - Merge when the check is green AND the Vercel preview for the PR head is READY, with a
-  merge commit (`gh pr merge <n> --merge --delete-branch`). Never rebase, never squash;
+  merge commit (how: the merge rule below). Never rebase, never squash;
   main comes into a branch by merge.
-- No admin bypass unless a relay says "bypass OK" for that merge.
+- Merge rule (main-crew-gate ruleset is live; classic protection removed):
+  For YOUR PRs:
+    1) Confirm the required check "SPORTSVŶN test suite" is green on the
+       PR head commit.
+    2) Merge server-side:
+       gh api -X PUT repos/deriksilva35/sportsvyn/pulls/<n>/merge -f merge_method=merge
+  Never use --admin (it skips the check too). If the API merge is refused
+  with the check green, stop and report.
 - Then wait for production Vercel READY on the merge commit.
 
 THIS DOES NOT LOOSEN "THE SUITE IS THE WHOLE SUITE" below; it moves where it runs. The CI
