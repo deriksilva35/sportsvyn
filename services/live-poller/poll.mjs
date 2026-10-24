@@ -124,14 +124,14 @@ export function cfbdScoreboard({ classification = null } = {}) {
 }
 
 /**
- * CFB LIVE SCORES, WITH A SECOND SOURCE (sat-1, 24 Oct 2026). CFBD /scoreboard
+ * CFB LIVE SCORES, TWO SOURCES (sat-1, 24 Oct 2026). CFBD /scoreboard
  * began answering 401 ("requires a Patreon subscription at Tier 1") at
  * 00:01Z that day, and every CFB poll failed: live games sat at 0-0 with no
  * alert. BDL's /ncaaf/v1/games carries the same live score, period and clock,
  * and its status_state uses CFBD's own tokens.
  *
- * SO THE FALLBACK SPEAKS CFBD. When the CFBD call throws, the BDL day rows are
- * reshaped into /scoreboard rows keyed by the CFBD id WE hold for the same
+ * BDL IS NOW PRIMARY AND SPEAKS CFBD: its day rows are reshaped into
+ * /scoreboard rows keyed by the CFBD id WE hold for the same
  * game (external_ids.bdl_ncaaf_game_id, cached by lib/cfb/bdlLive.js), so
  * pollOnce, fromCfbd and every gate after them are unchanged. A BDL game we
  * hold no bridge for is dropped, never guessed.
@@ -169,22 +169,39 @@ export function bdlNcaafDay(dateIso) {
 }
 
 /**
- * CFBD first; on ANY failure, BDL for today and yesterday (UTC - an evening
- * kickoff is yesterday's game after 00:00Z), reshaped by cfbdRowsFromBdl.
- * `bridge()` reads Map(bdlId -> cfbdId) from our own matches. If BDL fails
- * too, the CFBD error is the one thrown, so the journal names the real cause.
+ * BDL's NCAAF day rows for today and yesterday (UTC - an evening kickoff is
+ * yesterday's game after 00:00Z), reshaped to /scoreboard rows by
+ * cfbdRowsFromBdl. `bridge(bdlRows)` returns Map(bdlId -> cfbdId) from our own
+ * matches, resolving any near game that has no cached BDL id yet.
  */
-export function cfbScoreboardWithFallback({ primary, day = bdlNcaafDay, bridge, log = () => {} }) {
+export function bdlAsCfbdScoreboard({ day = bdlNcaafDay, bridge }) {
+  return async (now = new Date()) => {
+    const d = (off) => new Date(new Date(now).getTime() + off * 86_400_000).toISOString().slice(0, 10);
+    const [a, b] = await Promise.all([day(d(0))(), day(d(-1))()]);
+    const all = [...a.rows, ...b.rows];
+    // The bridge sees the rows: a game we have no BDL id for yet is resolved
+    // against them (names, no extra call) before it is looked up.
+    const map = await bridge(all);
+    return { rows: cfbdRowsFromBdl(all, map), calls: a.calls + b.calls, source: 'bdl' };
+  };
+}
+
+/**
+ * BDL FIRST, CFBD SECOND (sat-1 ruling: Derik's BDL plan covers CFB; no CFBD
+ * Tier-1 key). On any BDL failure the CFBD /scoreboard call is tried; if both
+ * fail, the PRIMARY's error is the one thrown, so the journal names the source
+ * the poller actually depends on. A BDL answer with no bridged rows while we
+ * hold live games is not a failure here - pollOnce counts those as unmatched.
+ */
+export function cfbScoreboardWithFallback({ primary, fallback, log = () => {} }) {
   return async (now = new Date()) => {
     try {
-      return await primary();
+      return await primary(now);
     } catch (e) {
       try {
-        const d = (off) => new Date(new Date(now).getTime() + off * 86_400_000).toISOString().slice(0, 10);
-        const [a, b, map] = await Promise.all([day(d(0))(), day(d(-1))(), bridge()]);
-        const rows = cfbdRowsFromBdl([...a.rows, ...b.rows], map);
-        log(`[cfb] CFBD failed (${String(e?.message ?? e).slice(0, 80)}); BDL fallback rows=${rows.length}`);
-        return { rows, calls: 1 + a.calls + b.calls, source: 'bdl' };
+        const r = await fallback(now);
+        log(`[cfb] primary failed (${String(e?.message ?? e).slice(0, 80)}); fallback rows=${r.rows?.length ?? 0}`);
+        return { ...r, calls: (r.calls ?? 1) + 1 };
       } catch {
         throw e;
       }
