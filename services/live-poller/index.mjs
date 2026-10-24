@@ -32,7 +32,8 @@ import { reportBdlErrors } from '../../lib/pollers/bdlFailure.js';
 import { checkWatchdogAlive, CHECK_EVERY_MS as WATCHDOG_CHECK_MS } from '../../lib/ops/watchdogWatch.js';
 import { parseProviderError } from '../../lib/pollers/providerError.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
-import { pollOnce, sweepLostFinals, cfbdScoreboard, cfbScoreboardWithFallback, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff, nbaDay, fromNba, nbaDetail, nbaKickoff, writeNbaDetail } from './poll.mjs';
+import { resolveBdlGameId } from '../../lib/cfb/bdlLive.js';
+import { pollOnce, sweepLostFinals, cfbdScoreboard, cfbScoreboardWithFallback, bdlAsCfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff, nbaDay, fromNba, nbaDetail, nbaKickoff, writeNbaDetail } from './poll.mjs';
 import { sportOf } from '../../lib/live/vocabulary.js';
 import { dispatch } from '../../lib/push/dispatch.js';
 import { drainPushCounts } from '../../lib/push/warn.js';
@@ -73,19 +74,49 @@ const HEAD = (() => {
   catch { return 'unknown'; }
 })();
 
+// Map(BDL ncaaf game id -> CFBD game id) for CFB games near now, from our own
+// cached ids (external_ids.bdl_ncaaf_game_id). A game about to kick or live
+// with no cached id is resolved here by name against the BDL rows this poll
+// already fetched (lib/cfb/bdlLive.js resolveBdlGameId; no extra call) and
+// cached, so BDL-primary does not wait for the box-score cron to bridge it.
+const cfbBridge = async (bdlRows = []) => {
+  const rows = await sql`
+    SELECT m.id, m.kickoff_at, m.status, m.external_ids, h.name AS home_name, a.name AS away_name
+      FROM matches m JOIN leagues l ON l.id = m.league_id AND l.slug = 'cfb'
+      LEFT JOIN teams h ON h.id = m.home_team_id
+      LEFT JOIN teams a ON a.id = m.away_team_id
+     WHERE m.external_ids ? 'cfbd_game_id'
+       AND m.kickoff_at > now() - interval '2 days' AND m.kickoff_at < now() + interval '1 day'`;
+  const map = new Map();
+  const soon = Date.now() + 30 * 60_000;
+  for (const m of rows) {
+    let bdl = m.external_ids?.bdl_ncaaf_game_id ?? null;
+    const near = m.status === 'live' || (m.status === 'scheduled' && new Date(m.kickoff_at).getTime() <= soon);
+    if (bdl == null && near && bdlRows.length) {
+      try {
+        const r = await resolveBdlGameId(m, {
+          fetchGames: async () => bdlRows,
+          saveGameId: async (id, gid) => { await sql`
+            UPDATE matches SET external_ids = COALESCE(external_ids, '{}'::jsonb)
+                   || jsonb_build_object('bdl_ncaaf_game_id', ${String(gid)}::text)
+             WHERE id = ${id}`; },
+        });
+        if (r.id != null) { bdl = r.id; log(`[cfb] bridged match=${m.id} bdl=${r.id}`); }
+      } catch (e) { log(`[cfb] bridge failed match=${m.id}: ${e.message}`); }
+    }
+    if (bdl != null) map.set(String(bdl), m.external_ids.cfbd_game_id);
+  }
+  return map;
+};
+
 const LEAGUES = [
-  // CFBD FIRST, BDL WHEN IT FAILS (sat-1: CFBD /scoreboard went 401 on 24 Oct).
-  // The bridge is our own cached BDL id per game; see cfbScoreboardWithFallback.
+  // BDL FIRST, CFBD WHEN IT FAILS (sat-1: CFBD /scoreboard went 401 on 24 Oct;
+  // Derik's BDL plan covers CFB). The bridge is our own cached BDL id per game.
   { slug: 'cfb', providerKey: 'cfbd_game_id', normalise: fromCfbd,
     fetcher: (now, hooks) => cfbScoreboardWithFallback({
       onPrimaryError: hooks?.onPrimaryError,
-      primary: cfbdScoreboard(),
-      bridge: async () => new Map((await sql`
-        SELECT m.external_ids->>'bdl_ncaaf_game_id' AS bdl, m.external_ids->>'cfbd_game_id' AS cfbd
-          FROM matches m JOIN leagues l ON l.id = m.league_id AND l.slug = 'cfb'
-         WHERE m.external_ids ? 'bdl_ncaaf_game_id' AND m.external_ids ? 'cfbd_game_id'
-           AND m.kickoff_at > now() - interval '2 days' AND m.kickoff_at < now() + interval '1 day'`)
-        .map((r) => [String(r.bdl), r.cfbd])),
+      primary: bdlAsCfbdScoreboard({ bridge: cfbBridge }),
+      fallback: () => cfbdScoreboard()(),
       log,
     })(now) },
   { slug: 'nfl', providerKey: 'bdl_game_id', normalise: fromBdl,
