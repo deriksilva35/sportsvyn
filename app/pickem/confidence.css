@@ -25,6 +25,9 @@
 .cfd-pills { display: flex; gap: 6px; }
 .cfd-pill { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; padding: 7px 8px; border: 0; border-radius: 9px; background: var(--tok-surface-2); color: var(--paper); text-decoration: none; text-align: left; min-height: 40px; }
 .cfd-pill b { font: 700 12px var(--font-saira-cond, sans-serif); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cfd-nm { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.cfd-nm small { font: 600 10px var(--font-mono, ui-monospace, monospace); color: var(--muted-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cfd-line { color: var(--paper); }
 .cfd-pill:disabled { cursor: default; }
 .cfd-pill.picked { background: color-mix(in srgb, var(--volt) 10%, transparent); box-shadow: inset 0 0 0 1.5px var(--volt); }
 .cfd-pill.picked b { color: var(--volt); }

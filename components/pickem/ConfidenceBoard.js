@@ -24,6 +24,9 @@ import StandaloneTime from '@/components/StandaloneTime';
 import { dayLabel } from '@/lib/nba/dayRules';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import { moveRank } from '@/lib/pickem/confidence';
+import { recordLine } from '@/lib/pickem/recordLine';
+import { spreadParts } from '@/lib/standings/view';
+import { isPreGame } from '@/lib/gridiron/oddsFormat';
 
 export default function ConfidenceBoard({
   view, signedIn, signinHref, hasHandle = true, sportSwitch = null, season = null,
@@ -54,6 +57,8 @@ export default function ConfidenceBoard({
   const pickedCount = games.filter((g) => picks[g.match_id]).length;
   const banked = games.reduce((s, g) => s + (g.my_points ?? 0), 0);
   const anyOpen = games.some((g) => !g.kicked);
+  // THE NBA HAS NO LINE ON PICK'EM (PickemBoard's rule): no spread copy at all.
+  const hasLine = contest.sport !== 'nba';
 
   function pick(g, side) {
     if (!signedIn || g.kicked) return;
@@ -121,6 +126,11 @@ export default function ConfidenceBoard({
                     const name = side === 'away' ? g.away : g.home;
                     const colors = side === 'away' ? g.away_colors : g.home_colors;
                     const abbr = side === 'away' ? g.away_abbr : g.home_abbr;
+                    // RANK AND RECORD, as on the classic board (recordLine: "#12 · 6-1"
+                    // for a ranked CFB team, the record alone otherwise); nothing
+                    // when the team has no record row.
+                    const record = side === 'away' ? g.away_record : g.home_record;
+                    const rank = side === 'away' ? g.away_rank : g.home_rank;
                     const dressed = Boolean(g.home_colors?.primary && g.away_colors?.primary);
                     const on = sideOf === side;
                     const won = on && g.graded === 'W';
@@ -133,7 +143,10 @@ export default function ConfidenceBoard({
                           abbr={abbr ?? name} size={22} title={name} leagueSlug={contest.sport}
                           facing={slot === 1 ? 'left' : 'right'}
                         />
-                        <b>{name}</b>
+                        <span className="cfd-nm">
+                          <b>{name}</b>
+                          {record ? <small>{recordLine(rank, record)}</small> : null}
+                        </span>
                       </>
                     );
                     return !signedIn && !locked
@@ -145,6 +158,17 @@ export default function ConfidenceBoard({
                   {locked
                     ? <span className="cfd-lk">{g.void ? 'Void' : 'Locked'}</span>
                     : <span><StandaloneTime iso={g.kickoff_at} tbd={g.kickoff_tbd === true} /></span>}
+                  {(() => {
+                    // THE LINE, for reference only (confidence scores straight up),
+                    // and only before kickoff: a spread on a started game is a fossil.
+                    if (!hasLine || locked || !isPreGame(g.status ?? 'scheduled')) return null;
+                    const p = spreadParts({ spreadHome: g.spread_home, homeAbbr: g.home, awayAbbr: g.away });
+                    if (p) return <span className="cfd-line" data-line>{p.fav} {p.mag}</span>;
+                    // NO SPREAD: the moneyline favourite's chance to win, when there is one.
+                    const h = g.home_win_pct;
+                    if (h == null || h === 50) return null;
+                    return <span className="cfd-line" data-winpct>{h > 50 ? g.home : g.away} {Math.max(h, 100 - h)}% to win</span>;
+                  })()}
                   {graded ? <span className={`cfd-pts ${g.my_points > 0 ? 'j' : 't'} n`}>{g.my_points > 0 ? `+${g.my_points}` : '0'}</span> : null}
                   {g.void ? <span className="cfd-pts v">void</span> : null}
                   {locked && !graded && !g.void && sideOf == null ? <span className="cfd-pts v">no pick</span> : null}
@@ -167,7 +191,9 @@ export default function ConfidenceBoard({
       <div className="pkv-ft">
         <div className="pkv-pace">
           {state === 'saved' ? <><b>Saved</b><br />change either until a game starts</>
-            : <>No spread<br />Unpicked games score <b>0</b></>}
+            : hasLine
+              ? <>Straight up, line for reference<br />Unpicked games score <b>0</b></>
+              : <>No spread<br />Unpicked games score <b>0</b></>}
         </div>
         {signedIn && anyOpen ? (
           <button type="button" className="pkv-lock cfd-save" disabled={!dirty || state === 'saving'} onClick={() => guard(save, 'sheet')}>
