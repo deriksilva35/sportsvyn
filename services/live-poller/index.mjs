@@ -30,6 +30,7 @@ import { LIVE_LOCK } from '../../lib/live/handshake.js';
 import { withBdlErrors } from '../../lib/bdl/http.js';
 import { reportBdlErrors } from '../../lib/pollers/bdlFailure.js';
 import { checkWatchdogAlive, CHECK_EVERY_MS as WATCHDOG_CHECK_MS } from '../../lib/ops/watchdogWatch.js';
+import { parseProviderError } from '../../lib/pollers/providerError.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
 import { pollOnce, sweepLostFinals, cfbdScoreboard, cfbScoreboardWithFallback, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff, nbaDay, fromNba, nbaDetail, nbaKickoff, writeNbaDetail } from './poll.mjs';
 import { sportOf } from '../../lib/live/vocabulary.js';
@@ -76,7 +77,8 @@ const LEAGUES = [
   // CFBD FIRST, BDL WHEN IT FAILS (sat-1: CFBD /scoreboard went 401 on 24 Oct).
   // The bridge is our own cached BDL id per game; see cfbScoreboardWithFallback.
   { slug: 'cfb', providerKey: 'cfbd_game_id', normalise: fromCfbd,
-    fetcher: (now) => cfbScoreboardWithFallback({
+    fetcher: (now, hooks) => cfbScoreboardWithFallback({
+      onPrimaryError: hooks?.onPrimaryError,
       primary: cfbdScoreboard(),
       bridge: async () => new Map((await sql`
         SELECT m.external_ids->>'bdl_ncaaf_game_id' AS bdl, m.external_ids->>'cfbd_game_id' AS cfbd
@@ -227,7 +229,10 @@ async function release(client, league) {
 
 async function loop(lg) {
   let lock = null, windowId = null, failures = 0, pending = 0, lastBeat = 0, lastProbables = 0;
-  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0, bdlErrors: 0 };
+  // The latest provider failure for this league (latest wins; a clean poll clears it). It rides
+  // the heartbeat and the window row as summary.provider_error (lib/pollers/providerError.js).
+  let providerError = null;
+  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0, bdlErrors: 0, pollFailures: 0 };
   // BOX SCORE PULLS: every 10th live poll per live game, once at final.
   // MLB JOINS ON THE SAME TRACKER. Its ingest existed and was called by
   // nothing, so mlb_player_game_stats stayed empty on every game ever played -
@@ -262,9 +267,10 @@ async function loop(lg) {
     }
     if (!active && lock) {
       // A WINDOW THAT SAW A SECONDARY-FEED 4xx/5xx CLOSES FAILED (ruling sun-6).
-      await closeWindow(windowId, { ...window, closedState: decision.state }, window.bdlErrors === 0);
+      // A POLL THAT FAILED OUTRIGHT CLOSES THE WINDOW FAILED TOO (sat-1: ok=true all day on a 401).
+      await closeWindow(windowId, { ...window, closedState: decision.state, ...(providerError ? { provider_error: providerError } : {}) }, window.bdlErrors === 0 && window.pollFailures === 0);
       await release(lock, lg.slug); lock = null; windowId = null;
-      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0, bdlErrors: 0 });
+      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0, bdlErrors: 0, pollFailures: 0 });
       log(`[${lg.slug}] window closed (${decision.state}) ${kickoffDelta(decision.nextKickoffAt, now)}`);
     }
 
@@ -279,9 +285,11 @@ async function loop(lg) {
     const { bdlErrors } = await withBdlErrors(async () => {
       if (active && lock && !decision.capped) {
         try {
+          // The primary feed's failure, whether or not a fallback then answered (CFB: CFBD -> BDL).
+          let primaryErr = null;
           const r = await pollOnce(sql, {
             league: lg.slug, providerKey: lg.providerKey,
-            fetcher: () => lg.fetcher(now), normalise: lg.normalise,
+            fetcher: () => lg.fetcher(now, { onPrimaryError: (e) => { primaryErr = parseProviderError(e?.message); } }), normalise: lg.normalise,
             enrich: lg.enrich ?? null, enrichScheduled: lg.enrichScheduled === true,
             // THE REGISTRY'S detail AND kickoffOf REACH pollOnce. detail was
             // declared on MLB's entry from 22 Sep and never passed here, so the
@@ -303,6 +311,7 @@ async function loop(lg) {
             log(`[${lg.slug}] lost-final sweep failed:`, String(e?.message ?? e).slice(0, 120));
           }
           failures = 0;
+          providerError = primaryErr;
           // THE POLL THAT FLIPPED A GAME LIVE WAS A PRE-KICK POLL; the sleep after it is not.
           decision = afterPoll(decision, { wentLive: r.wentLive ?? 0 }, copts);
           pending += r.calls;
@@ -445,6 +454,15 @@ async function loop(lg) {
         } catch (e) {
           failures += 1;
           log(`[${lg.slug}] poll failed (${failures}):`, e.message);
+          // THE LEDGER SAYS SO NOW, not at window close: a window can last all day. ok=false and
+          // the provider_error (status code + endpoint name only) go on the open window row.
+          window.pollFailures += 1;
+          providerError = parseProviderError(e?.message) ?? providerError;
+          if (windowId != null) {
+            await sql`UPDATE sync_runs SET ok = false,
+                      summary = ${JSON.stringify({ ...window, ...(providerError ? { provider_error: providerError } : {}) })}::jsonb
+                      WHERE id = ${windowId}`.catch(() => {});
+          }
           if (failures >= ALERT_AFTER_FAILURES) {
             const { maybeAlert } = await import('../../lib/pollers/alerts.js');
             await maybeAlert(sql, {
@@ -487,7 +505,7 @@ async function loop(lg) {
     if (Date.now() - lastBeat >= HEARTBEAT_MS) {
       const total = pending ? await addCalls(sql, lg.slug, pending, now).catch(() => null) : spent;
       pending = 0; lastBeat = Date.now();
-      await heartbeat(lg.slug, decision.state, { callsToday: total, cap: DEFAULT_CAP[lg.slug], live: decision.liveCount, ...(stats ? { statsCalls: statsCallsToday } : {}) }).catch(() => {});
+      await heartbeat(lg.slug, decision.state, { ...(providerError ? { provider_error: providerError } : {}), callsToday: total, cap: DEFAULT_CAP[lg.slug], live: decision.liveCount, ...(stats ? { statsCalls: statsCallsToday } : {}) }).catch(() => {});
       if (overCap(total, lg.slug)) {
         const { maybeAlert } = await import('../../lib/pollers/alerts.js');
         await maybeAlert(sql, {

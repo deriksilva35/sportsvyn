@@ -31,6 +31,7 @@ by hand when a script's number needs confirming. See crew/README.md for each scr
 |------|---------|--------|
 | G1-G4 board / kickoff rules | game-watch | none (SQL is the spec; `board-state` is the schedule signal) |
 | G5 retention job not ok | game-watch | none (SQL is the spec) |
+| G6 frozen live game | game-watch | none (SQL is the spec; reads `crew_stats.live_matches_v`) |
 | P1-P8 provider freshness | provider | `provider-health` (five feeds, "provider-health" below) |
 | table retention | retention | `retention-status` ("retention" below) |
 | C1 Vercel usage | cost | `cost-watch` (dollars vs the BUDGET line below) |
@@ -264,6 +265,41 @@ Confirm: read the row's `error`, then the Vercel function log for
 `/api/cron/data-retention`. Also check `cron-watchdog` (which watches the same
 job on its own schedule). False positive: a skipped cron tick on a deploy day.
 On DEV it fires with "no run recorded" (the job does not run there) - expected.
+
+## G6 - frozen live game
+
+- Meaning: a match with `status = 'live'` whose score and clock have not changed
+  for 15 minutes while it is supposed to be live (sat-1, 24 Oct 2026: CFBD went
+  401 and live CFB games sat at 0-0 for hours while every other writer kept
+  bumping `updated_at`, so freshness looked fine). The clock is
+  `metadata.live_changed_at`, a TOP-LEVEL key `writeLive` (lib/live/write.js)
+  stamps only when status, a score, or the live_state period/clock changes (the
+  win-probability keys are ignored, they move every poll). The view
+  `crew_stats.live_matches_v` exposes it as `last_change_at`.
+- Fires when `last_change_at` is older than 15 min, or is NULL and the kickoff is
+  older than 20 min (a row that went live before the stamp existed, or never
+  changed since going live).
+- Halftime is a legitimate pause: period 2 with clock `0:00`/`00:00`/`HT` is
+  excluded for up to 30 min since the last change.
+- Severity: `live` ticket (the Fixer's live-game lane), key = match id.
+- Confirm: `/games/<slug>` and the provider's own scoreboard; read the
+  `provider_errors_v` row for the league's poller (`live-poller-<league>`) - a
+  401/403 there is the cause, and `provider-health` is already red. False
+  positives: a weather delay or a long review the provider itself shows as a
+  frozen clock; an MLB rain delay.
+
+```sql
+SELECT id AS match_id, league_slug, status, kickoff_at, last_change_at,
+       home_score, away_score, period, clock,
+       round(extract(epoch FROM (now() - COALESCE(last_change_at, kickoff_at))) / 60)::int AS minutes_frozen
+  FROM crew_stats.live_matches_v
+ WHERE (last_change_at < now() - interval '15 minutes'
+        OR (last_change_at IS NULL AND kickoff_at < now() - interval '20 minutes'))
+   AND NOT (period = '2' AND (clock IN ('0:00', '00:00') OR clock ILIKE 'HT%')
+            AND COALESCE(last_change_at, kickoff_at) > now() - interval '30 minutes')
+ ORDER BY minutes_frozen DESC
+ LIMIT 50;
+```
 
 ---
 

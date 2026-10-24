@@ -105,10 +105,10 @@ test('tue-6: purchase, subscription, push-log and invite tables are withheld who
 import { CREW_VIEWS, viewStatements } from './crew-reader-grants.mjs';
 
 test('crew-bin views: the four names, schema first, every statement a CREATE OR REPLACE in crew_stats', () => {
-  assert.deepEqual(CREW_VIEWS.map((v) => v.name), ['app_errors_v', 'boards_v', 'retention_ages_v', 'provider_freshness_v']);
+  assert.deepEqual(CREW_VIEWS.map((v) => v.name), ['app_errors_v', 'boards_v', 'retention_ages_v', 'provider_freshness_v', 'provider_errors_v', 'live_matches_v']);
   const st = viewStatements();
   assert.equal(st[0], 'CREATE SCHEMA IF NOT EXISTS crew_stats');
-  assert.equal(st.length, 5);
+  assert.equal(st.length, 7);
   for (const s of st.slice(1)) assert.match(s, /^CREATE OR REPLACE VIEW crew_stats\.[a-z_]+_v AS SELECT /);
 });
 
@@ -128,6 +128,27 @@ test('crew-bin views carry no email, handle, IP, token, message text or payload 
   assert.ok(EXCLUDED_TABLES.includes('push_sends'));
   assert.match(by.retention_ages_v, /count\(\*\)::bigint AS row_count/);
   assert.ok(!/device_token/.test(by.retention_ages_v));
+});
+
+// ---- sat-1: provider_errors_v and live_matches_v ----
+test('provider_errors_v: latest heartbeat per live-poller source in 30 min; status code and endpoint name only', () => {
+  const sql = CREW_VIEWS.find((v) => v.name === 'provider_errors_v').sql;
+  assert.match(sql, /FROM public\.sync_runs/);
+  assert.match(sql, /DISTINCT ON \(source\)/);
+  assert.match(sql, /interval '30 minutes'/);
+  assert.match(sql, /kind = 'heartbeat'/);
+  assert.match(sql, /summary->'provider_error'->>'status'/);
+  assert.ok(!/message|\bbody\b|\burl\b/i.test(sql), 'no message text or URL column');
+  assert.deepEqual([...sql.matchAll(/\bAS\s+([a-z_]+)/g)].map((m) => m[1]).filter((c) => c !== 'latest'), ['at', 'provider', 'endpoint', 'status']);
+});
+
+test('live_matches_v: live rows only, the G6 columns, no user data', () => {
+  const sql = CREW_VIEWS.find((v) => v.name === 'live_matches_v').sql;
+  assert.match(sql, /FROM public\.matches m JOIN public\.leagues l/);
+  assert.match(sql, /WHERE m\.status = 'live'$/);
+  assert.match(sql, /\(m\.metadata->>'live_changed_at'\)::timestamptz AS last_change_at/);
+  for (const c of ['m.id', 'league_slug', 'm.kickoff_at', 'm.home_score', 'm.away_score', 'AS period', 'AS clock']) assert.ok(sql.includes(c), c);
+  assert.ok(!/\b(users|email|picks)\b/.test(sql));
 });
 
 test('crew-bin: the apply transaction creates the views BEFORE the stats grants', () => {

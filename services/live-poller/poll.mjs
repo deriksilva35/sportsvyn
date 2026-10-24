@@ -174,11 +174,14 @@ export function bdlNcaafDay(dateIso) {
  * `bridge()` reads Map(bdlId -> cfbdId) from our own matches. If BDL fails
  * too, the CFBD error is the one thrown, so the journal names the real cause.
  */
-export function cfbScoreboardWithFallback({ primary, day = bdlNcaafDay, bridge, log = () => {} }) {
+export function cfbScoreboardWithFallback({ primary, day = bdlNcaafDay, bridge, log = () => {}, onPrimaryError = null }) {
   return async (now = new Date()) => {
     try {
       return await primary();
     } catch (e) {
+      // THE HOOK RUNS BEFORE THE FALLBACK: the primary's failure is recorded (provider_error
+      // in the ledger) even when BDL answers and the poll as a whole succeeds. Contained.
+      try { onPrimaryError?.(e); } catch { /* reporting never costs the poll */ }
       try {
         const d = (off) => new Date(new Date(now).getTime() + off * 86_400_000).toISOString().slice(0, 10);
         const [a, b, map] = await Promise.all([day(d(0))(), day(d(-1))(), bridge()]);
