@@ -1,3 +1,19 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "app/pickem/confidence.css",
+      "key": ".cfd-foot { flex-wrap }",
+      "after": "wrap"
+    },
+    {
+      "file": "app/pickem/confidence.css",
+      "key": ".cfd-foot { gap }",
+      "after": "2px 8px"
+    },
+    {
+      "file": "app/pickem/confidence.css",
+      "key": ".cfd-list { grid-template-columns }",
+      "after": "minmax(0,1fr)"
+    }
+  ]
 }
