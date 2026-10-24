@@ -31,7 +31,7 @@ import { withBdlErrors } from '../../lib/bdl/http.js';
 import { reportBdlErrors } from '../../lib/pollers/bdlFailure.js';
 import { checkWatchdogAlive, CHECK_EVERY_MS as WATCHDOG_CHECK_MS } from '../../lib/ops/watchdogWatch.js';
 import { withAdvisoryLock, directConnectionString, lockKey } from '../../lib/pollers/lock.js';
-import { pollOnce, sweepLostFinals, cfbdScoreboard, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff, nbaDay, fromNba, nbaDetail, nbaKickoff, writeNbaDetail } from './poll.mjs';
+import { pollOnce, sweepLostFinals, cfbdScoreboard, cfbScoreboardWithFallback, bdlDay, mlbDay, fromCfbd, fromBdl, fromMlb, mlbDetail, mlbEnrich, mlbKickoff, nbaDay, fromNba, nbaDetail, nbaKickoff, writeNbaDetail } from './poll.mjs';
 import { sportOf } from '../../lib/live/vocabulary.js';
 import { dispatch } from '../../lib/push/dispatch.js';
 import { drainPushCounts } from '../../lib/push/warn.js';
@@ -73,8 +73,19 @@ const HEAD = (() => {
 })();
 
 const LEAGUES = [
+  // CFBD FIRST, BDL WHEN IT FAILS (sat-1: CFBD /scoreboard went 401 on 24 Oct).
+  // The bridge is our own cached BDL id per game; see cfbScoreboardWithFallback.
   { slug: 'cfb', providerKey: 'cfbd_game_id', normalise: fromCfbd,
-    fetcher: () => cfbdScoreboard()() },
+    fetcher: (now) => cfbScoreboardWithFallback({
+      primary: cfbdScoreboard(),
+      bridge: async () => new Map((await sql`
+        SELECT m.external_ids->>'bdl_ncaaf_game_id' AS bdl, m.external_ids->>'cfbd_game_id' AS cfbd
+          FROM matches m JOIN leagues l ON l.id = m.league_id AND l.slug = 'cfb'
+         WHERE m.external_ids ? 'bdl_ncaaf_game_id' AND m.external_ids ? 'cfbd_game_id'
+           AND m.kickoff_at > now() - interval '2 days' AND m.kickoff_at < now() + interval '1 day'`)
+        .map((r) => [String(r.bdl), r.cfbd])),
+      log,
+    })(now) },
   { slug: 'nfl', providerKey: 'bdl_game_id', normalise: fromBdl,
     fetcher: (now) => bdlDay(new Date(now).toISOString().slice(0, 10))() },
   // MLB. SAME CADENCE AS THE NFL - one slate call per poll - but its live

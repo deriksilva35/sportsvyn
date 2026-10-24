@@ -123,6 +123,75 @@ export function cfbdScoreboard({ classification = null } = {}) {
   };
 }
 
+/**
+ * CFB LIVE SCORES, WITH A SECOND SOURCE (sat-1, 24 Oct 2026). CFBD /scoreboard
+ * began answering 401 ("requires a Patreon subscription at Tier 1") at
+ * 00:01Z that day, and every CFB poll failed: live games sat at 0-0 with no
+ * alert. BDL's /ncaaf/v1/games carries the same live score, period and clock,
+ * and its status_state uses CFBD's own tokens.
+ *
+ * SO THE FALLBACK SPEAKS CFBD. When the CFBD call throws, the BDL day rows are
+ * reshaped into /scoreboard rows keyed by the CFBD id WE hold for the same
+ * game (external_ids.bdl_ncaaf_game_id, cached by lib/cfb/bdlLive.js), so
+ * pollOnce, fromCfbd and every gate after them are unchanged. A BDL game we
+ * hold no bridge for is dropped, never guessed.
+ */
+const BDL_TO_CFBD_STATUS = Object.freeze({ final: 'completed' });
+
+/** BDL ncaaf rows + Map(bdlId -> cfbdId) -> CFBD /scoreboard-shaped rows. PURE. */
+export function cfbdRowsFromBdl(bdlRows, bridge) {
+  const out = [];
+  for (const r of bdlRows ?? []) {
+    const cfbdId = bridge.get(String(r?.id));
+    if (cfbdId == null) continue;
+    const st = r?.status_state == null ? null : String(r.status_state);
+    out.push({
+      id: cfbdId,
+      status: st == null ? null : (BDL_TO_CFBD_STATUS[st] ?? st),
+      period: r?.period ?? null,
+      clock: r?.time ?? null,
+      homeTeam: { points: r?.home_score ?? null },
+      awayTeam: { points: r?.away_score ?? null },
+    });
+  }
+  return out;
+}
+
+/** One day of NCAAF from BDL (dates[] = that day). */
+export function bdlNcaafDay(dateIso) {
+  return async () => {
+    const key = process.env.BDL_API_KEY;
+    requireBdlKey(key);
+    const res = await bdlFetch(`/ncaaf/v1/games?dates[]=${dateIso}&per_page=100`, { key, describe: (s) => `BDL ${s} on /ncaaf/v1/games` });
+    const j = await res.json();
+    return { rows: j?.data ?? [], calls: 1 };
+  };
+}
+
+/**
+ * CFBD first; on ANY failure, BDL for today and yesterday (UTC - an evening
+ * kickoff is yesterday's game after 00:00Z), reshaped by cfbdRowsFromBdl.
+ * `bridge()` reads Map(bdlId -> cfbdId) from our own matches. If BDL fails
+ * too, the CFBD error is the one thrown, so the journal names the real cause.
+ */
+export function cfbScoreboardWithFallback({ primary, day = bdlNcaafDay, bridge, log = () => {} }) {
+  return async (now = new Date()) => {
+    try {
+      return await primary();
+    } catch (e) {
+      try {
+        const d = (off) => new Date(new Date(now).getTime() + off * 86_400_000).toISOString().slice(0, 10);
+        const [a, b, map] = await Promise.all([day(d(0))(), day(d(-1))(), bridge()]);
+        const rows = cfbdRowsFromBdl([...a.rows, ...b.rows], map);
+        log(`[cfb] CFBD failed (${String(e?.message ?? e).slice(0, 80)}); BDL fallback rows=${rows.length}`);
+        return { rows, calls: 1 + a.calls + b.calls, source: 'bdl' };
+      } catch {
+        throw e;
+      }
+    }
+  };
+}
+
 // DATES[], NOT SEASONS[]. The season query pages the whole schedule at 100 a
 // page - three calls to learn about twelve games - and every page after the
 // first is spent on games that finished in September. One day is one call and
