@@ -357,7 +357,7 @@ function Group({ grp, ...rest }) {
   );
 }
 
-export default function ScoreboardV4({ v, view = null, conf = null, signedIn = false, isShell = false, zoneLabel = 'Eastern', now = new Date() }) {
+export default function ScoreboardV4({ v, view = null, conf = null, signedIn = false, isShell = false, zoneLabel = 'Eastern', now = new Date(), tabs = null }) {
   const signinHref = shellSigninHref('/scores', isShell);
   const state = { date: v.date === v.today ? null : v.date, sport: v.sport, view, conf, mine: v.mine, top25: v.top25 };
   const h = hrefs(state);
@@ -384,6 +384,7 @@ export default function ScoreboardV4({ v, view = null, conf = null, signedIn = f
         </div>
       </div>
       <div className="sv4-eb">{weekdayOf(v.date, true)} · all times <ZoneLabel initial={zoneLabel} /></div>
+      {tabs}
 
       {yours && <Group grp={yours} {...cardProps} />}
 

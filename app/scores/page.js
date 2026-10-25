@@ -32,6 +32,10 @@ import { parseV4 } from '@/lib/scores/v4';
 import { readRememberedTop25, wantTop25 } from '@/lib/scores/top25Memory';
 import { cachedOpeningSpreads } from '@/lib/gridiron/openingCache';
 import './scoresV4.css';
+import './statsTab.css';
+import ScoresTabs from '@/components/scores/ScoresTabs';
+import StatsTab from '@/components/scores/StatsTab';
+import { readRememberedTab, wantTab } from '@/lib/scores/statsTab';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Scores - Sportsvyn' };
@@ -197,7 +201,7 @@ const one = (v) => (Array.isArray(v) ? v[0] : v);
 const zoneLabel = (tz) => zoneNameOf(tz);
 export default async function ScoresPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
-  const [session, viewerTz, isShell, rememberedTop25] = await Promise.all([auth().catch(() => null), readViewerTz(), resolveShellMode(), readRememberedTop25()]);
+  const [session, viewerTz, isShell, rememberedTop25, rememberedTab] = await Promise.all([auth().catch(() => null), readViewerTz(), resolveShellMode(), readRememberedTop25(), readRememberedTab()]);
   const userId = session?.user?.id ?? null;
   const tz = viewerTz ?? ET;
   const sportRaw = one(sp.sport);
@@ -205,6 +209,17 @@ export default async function ScoresPage({ searchParams }) {
   // THE ARCADE BOARD (scores-v4), flag-gated with the theme: under
   // data-theme="arcade" /scores draws ScoreboardV4; the dark page below is
   // ScoresV2 exactly as it was. Same reader, plus the opening lines.
+  // THE STATS TAB (sun-1): ?tab= wins, else the sv_scores_tab cookie, else Games.
+  if (wantTab(one(sp.tab), rememberedTab) === 'stats') {
+    return (
+      <div className="gi" data-surface="ink">
+        <ScoresChrome isShell={isShell} />
+        <TzCookie />
+        <StatsTab sp={sp} userId={userId} zoneLabel={zoneLabel(tz)} />
+      </div>
+    );
+  }
+  const tabs = <ScoresTabs active="games" sport={sport} />;
   // THE APP FLIP (tue-0): the whole deployment's flag, or ARCADE_SHELL for a
   // request carrying the shell cookie. /scores is dynamic, so it can ask.
   const arcade = arcadeFor(isShell);
@@ -215,7 +230,7 @@ export default async function ScoresPage({ searchParams }) {
       <div className="gi" data-surface="ink">
         <ScoresChrome isShell={isShell} />
         <TzCookie />
-        <ScoreboardV4 v={v} view={q.view} conf={q.conf} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} />
+        <ScoreboardV4 v={v} view={q.view} conf={q.conf} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} tabs={tabs} />
       </div>
     );
   }
@@ -228,7 +243,7 @@ export default async function ScoresPage({ searchParams }) {
           the header and the day strip stayed on Eastern for the whole first
           session. From the second request on, both read the viewer's zone. */}
       <TzCookie />
-      <ScoresV2 v={v} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} arcade={arcade} />
+      <ScoresV2 v={v} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} arcade={arcade} tabs={tabs} />
     </div>
   );
 }

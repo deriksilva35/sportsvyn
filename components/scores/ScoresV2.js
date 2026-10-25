@@ -252,7 +252,7 @@ function Card({ g, x, signedIn, signinHref, tz }) {
   );
 }
 
-export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLabel = 'Eastern', arcade = false }) {
+export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLabel = 'Eastern', arcade = false, tabs = null }) {
   const signinHref = shellSigninHref('/scores', isShell);
   // EPL IS A PILL AGAIN (thu-24), on both pages: it left the arcade row on
   // mon-17 and both rows with soccer on tue-14.
@@ -264,6 +264,7 @@ export default function ScoresV2({ v, signedIn = false, isShell = false, zoneLab
         <div><h1>Scores</h1><div className="sv2-eb q">{weekdayOf(v.date, true)} · all times <ZoneLabel initial={zoneLabel} /></div></div>
         <div className="sv2-eb" data-live-count={v.liveCount}>{v.liveCount > 0 ? `${v.liveCount} live` : ''}</div>
       </div>
+      {tabs}
       <div className="sv2-days" data-section="days">
         {v.days.map((d) => {
           const c = countLine(d.counts);
