@@ -1,0 +1,86 @@
+/* app/scores/statsTab.css - the Scoreboard's Stats tab (sun-1).
+
+   A NEW STYLESHEET with NEW class names (svs-*): nothing here selects an
+   element a page already draws, so the dark page's resolved declarations are
+   unchanged. Colours are tokens (--tok-*); the only literals are the position
+   colours the approved mock fixes (they carry meaning, not theme).
+
+   390 PX: no sideways page scroll. Every text part of a row is ONE line with an
+   ellipsis (min-width: 0 all the way down); the chip rows scroll inside
+   themselves. */
+
+.svs-tabs { display: flex; margin-top: 10px; border-bottom: 1px solid var(--tok-line); }
+.svs-tab { flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--tok-muted); font: 700 11px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.svs-tab.on { color: var(--tok-ink); border-bottom-color: var(--tok-action); }
+
+.svs { --svs-qb: #C2185B; --svs-rb: #0E8A6B; --svs-wr: #245BFF; --svs-te: #B8410F; --svs-k: #8A5A00; --svs-dst: #3A3480; --svs-pg: #245BFF; --svs-sg: #0E8A6B; --svs-g: #245BFF; --svs-sf: #B8410F; --svs-pf: #7A3FC4; --svs-f: #7A3FC4; --svs-c: #C2185B;
+  max-width: 640px; margin: 0 auto; padding: 8px 16px 48px; overflow-x: clip; background: var(--tok-page); color: var(--tok-ink); font-family: var(--tok-font-body); }
+.svs-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding-top: 6px; }
+.svs-head h1 { margin: 0; font: italic 900 34px/1 var(--tok-font-display); letter-spacing: -0.02em; text-transform: uppercase; color: var(--tok-ink); }
+.svs-sub { font: 500 11px var(--tok-font-num); color: var(--tok-muted); white-space: nowrap; }
+.svs-eb { margin-top: 6px; font: 600 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-muted); }
+
+.svs-chips { display: flex; align-items: center; gap: 6px; overflow-x: auto; margin: 12px -16px 0; padding: 0 16px 2px; scrollbar-width: none; }
+.svs-chips::-webkit-scrollbar { display: none; }
+.svs-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: 99px; border: 1px solid var(--tok-line); background: var(--tok-page); color: var(--tok-primary); font: 700 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.svs-chip.on { background: var(--tok-action); border-color: var(--tok-action); color: var(--tok-on-action); }
+
+.svs-days { display: flex; gap: 6px; overflow-x: auto; margin: 12px -16px 0; padding: 0 16px 2px; scrollbar-width: none; }
+.svs-days::-webkit-scrollbar { display: none; }
+.svs-day { flex: none; min-width: 56px; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 6px; border: 1px solid var(--tok-line); border-radius: 12px; background: var(--tok-page); color: var(--tok-primary); text-decoration: none; }
+.svs-day small { font: 700 10px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
+.svs-day b { font: 700 18px/1.1 var(--tok-font-num); color: var(--tok-ink); }
+.svs-day.on { background: var(--tok-action); border-color: var(--tok-action); }
+.svs-day.on small, .svs-day.on b { color: var(--tok-on-action); }
+
+.svs-empty { margin: 18px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--tok-surface); border: 1px dashed var(--tok-line); font: 500 12px var(--tok-font-num); color: var(--tok-muted); }
+
+.svs-ctl { display: flex; flex-direction: column; gap: 0; }
+.svs-search { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+.svs-lbl { font: 700 9px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
+.svs-search input { width: 100%; box-sizing: border-box; height: 44px; border: 1px solid var(--tok-line); border-radius: 12px; padding: 0 14px; background: var(--tok-page); color: var(--tok-ink); font: 400 15px var(--tok-font-body); }
+.svs-ctl .svs-chips { margin-top: 10px; }
+
+.svs-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin: 14px 0 12px; }
+.svs-tile { min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 14px; background: var(--tok-surface); color: var(--tok-ink); }
+.svs-tile.dk { background: var(--tok-primary); color: var(--tok-on-primary); }
+.svs-tile small { font: 700 8px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
+.svs-tile.dk small { color: var(--tok-accent); }
+.svs-tile .t { font: 700 13px var(--tok-font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.svs-tile em { font: italic 900 20px/1.1 var(--tok-font-display); }
+.svs-tile span { font: 400 11px var(--tok-font-body); color: var(--tok-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.svs-hd { display: flex; justify-content: space-between; padding: 4px 0 6px; font: 700 8px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
+.svs-list { list-style: none; margin: 0; padding: 0; }
+.svs-row { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--tok-line); min-width: 0; }
+.svs-row.mine { background: color-mix(in srgb, var(--tok-action) 12%, transparent); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+.svs-row .rkn { flex: none; width: 20px; text-align: center; font: 700 10px var(--tok-font-num); color: var(--tok-muted); }
+.svs-row .bd { flex: 1; min-width: 0; }
+.svs-row .l1 { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.svs-row .nm { min-width: 0; font: 700 15px var(--tok-font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.svs-row .tag { flex: none; padding: 2px 6px; border-radius: 99px; background: var(--tok-action); color: var(--tok-on-action); font: 700 7px var(--tok-font-num); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.svs-row .l2 { display: flex; align-items: center; gap: 6px; margin-top: 2px; min-width: 0; font: 400 11px var(--tok-font-body); color: var(--tok-muted); white-space: nowrap; }
+.svs-row .pos { flex: none; font-weight: 700; color: var(--tok-muted); }
+.svs-row .gm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.svs-row .pill { flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 99px; font: 700 8px var(--tok-font-num); letter-spacing: .06em; text-transform: uppercase; }
+.svs-row .pill.live { background: color-mix(in srgb, var(--tok-live) 14%, var(--tok-page)); color: var(--tok-live); }
+.svs-row .pill.final { background: var(--tok-surface); color: var(--tok-muted); }
+.svs-row .pill .dot { width: 6px; height: 6px; border-radius: 99px; background: var(--tok-live); }
+.svs-row .l3 { margin-top: 4px; font: 400 12px var(--tok-font-body); color: var(--tok-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.svs-row .pt { flex: none; min-width: 52px; text-align: right; display: flex; flex-direction: column; }
+.svs-row .pt b { font: italic 900 24px/1 var(--tok-font-display); font-variant-numeric: tabular-nums; }
+.svs-row .pt small { font: 700 7px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
+
+.svs-row[data-pos="QB"] .pos { color: var(--svs-qb); } .svs-row[data-pos="RB"] .pos { color: var(--svs-rb); }
+.svs-row[data-pos="WR"] .pos { color: var(--svs-wr); } .svs-row[data-pos="TE"] .pos { color: var(--svs-te); }
+.svs-row[data-pos="K"] .pos { color: var(--svs-k); } .svs-row[data-pos="DST"] .pos { color: var(--svs-dst); }
+.svs-row[data-pos="PG"] .pos { color: var(--svs-pg); } .svs-row[data-pos="SG"] .pos { color: var(--svs-sg); }
+.svs-row[data-pos="G"] .pos { color: var(--svs-g); } .svs-row[data-pos="SF"] .pos { color: var(--svs-sf); }
+.svs-row[data-pos="PF"] .pos { color: var(--svs-pf); } .svs-row[data-pos="F"] .pos { color: var(--svs-f); }
+.svs-row[data-pos="C"] .pos { color: var(--svs-c); }
+
+.svs-foot { margin: 14px 0 0; font: 400 12px var(--tok-font-body); color: var(--tok-muted); }
+.svs-more { display: block; width: 100%; height: 44px; margin-top: 10px; border-radius: 12px; border: 1px solid var(--tok-line); background: var(--tok-page); color: var(--tok-primary); font: 700 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+
+/* The tab bar inside the existing boards keeps their gutter. */
+.sv4 .svs-tabs, .sv2 .svs-tabs { margin-top: 12px; }
