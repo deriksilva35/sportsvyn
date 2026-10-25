@@ -13,7 +13,9 @@
 .svs-tab { flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--tok-muted); font: 700 11px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; border-bottom: 3px solid transparent; margin-bottom: -1px; }
 .svs-tab.on { color: var(--tok-ink); border-bottom-color: var(--tok-action); }
 
-.svs { --svs-qb: #C2185B; --svs-rb: #0E8A6B; --svs-wr: #245BFF; --svs-te: #B8410F; --svs-k: #8A5A00; --svs-dst: #3A3480; --svs-pg: #245BFF; --svs-sg: #0E8A6B; --svs-g: #245BFF; --svs-sf: #B8410F; --svs-pf: #7A3FC4; --svs-f: #7A3FC4; --svs-c: #C2185B;
+/* Position colours are the site's position tokens (app/globals.css --tok-pos-*), the ones the
+   Weekly and the Draft use; the NBA spots borrow them (guards = WR's, forwards = TE/K's, C = QB's). */
+.svs { --svs-qb: var(--tok-pos-qb); --svs-rb: var(--tok-pos-rb); --svs-wr: var(--tok-pos-wr); --svs-te: var(--tok-pos-te); --svs-k: var(--tok-pos-k); --svs-dst: var(--tok-muted); --svs-pg: var(--tok-pos-wr); --svs-sg: var(--tok-pos-rb); --svs-g: var(--tok-pos-wr); --svs-sf: var(--tok-pos-te); --svs-pf: var(--tok-pos-k); --svs-f: var(--tok-pos-k); --svs-c: var(--tok-pos-qb);
   max-width: 640px; margin: 0 auto; padding: 8px 16px 48px; overflow-x: clip; background: var(--tok-page); color: var(--tok-ink); font-family: var(--tok-font-body); }
 .svs-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding-top: 6px; }
 .svs-head h1 { margin: 0; font: italic 900 34px/1 var(--tok-font-display); letter-spacing: -0.02em; text-transform: uppercase; color: var(--tok-ink); }
@@ -45,7 +47,7 @@
 .svs-tile { min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 14px; background: var(--tok-surface); color: var(--tok-ink); }
 .svs-tile.dk { background: var(--tok-primary); color: var(--tok-on-primary); }
 .svs-tile small { font: 700 8px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
-.svs-tile.dk small { color: var(--tok-accent); }
+.svs-tile.dk small { color: var(--tok-on-primary); opacity: .75; }
 .svs-tile .t { font: 700 13px var(--tok-font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .svs-tile em { font: italic 900 20px/1.1 var(--tok-font-display); }
 .svs-tile span { font: 400 11px var(--tok-font-body); color: var(--tok-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -209,9 +209,6 @@ export default async function ScoresPage({ searchParams }) {
   // THE ARCADE BOARD (scores-v4), flag-gated with the theme: under
   // data-theme="arcade" /scores draws ScoreboardV4; the dark page below is
   // ScoresV2 exactly as it was. Same reader, plus the opening lines.
-  // THE APP FLIP (tue-0): the whole deployment's flag, or ARCADE_SHELL for a
-  // request carrying the shell cookie. /scores is dynamic, so it can ask.
-  const arcade = arcadeFor(isShell);
   // THE STATS TAB (sun-1): ?tab= wins, else the sv_scores_tab cookie, else Games.
   if (wantTab(one(sp.tab), rememberedTab) === 'stats') {
     return (
@@ -223,6 +220,9 @@ export default async function ScoresPage({ searchParams }) {
     );
   }
   const tabs = <ScoresTabs active="games" sport={sport} />;
+  // THE APP FLIP (tue-0): the whole deployment's flag, or ARCADE_SHELL for a
+  // request carrying the shell cookie. /scores is dynamic, so it can ask.
+  const arcade = arcadeFor(isShell);
   if (arcade) {
     const q = parseV4(sp, rememberedTop25);
     const v = await scoresV2({ userId, date: q.date, sport: q.sport, mine: userId != null && q.mine, top25: q.top25, tz, openings: cachedOpeningSpreads });
