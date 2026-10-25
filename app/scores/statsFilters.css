@@ -1,0 +1,38 @@
+/* app/scores/statsFilters.css - the Stats tab's Filters sheet, position rank and whole-token stat lines (mon-1).
+
+   A NEW STYLESHEET with NEW class names (svs-*): kept out of statsTab.css so the
+   dark page's resolved declarations of that sheet are untouched. The stat line's
+   override (.l3.tks) is a more specific selector than statsTab.css's .l3, so it
+   wins without editing it. Colours are tokens only. */
+
+/* THE STAT LINE WRAPS BETWEEN TOKENS, NEVER INSIDE ONE: no ellipsis, no cut number. */
+.svs-row .l3.tks { display: flex; flex-wrap: wrap; gap: 0 6px; white-space: normal; overflow: visible; text-overflow: clip; }
+.svs-row .l3.tks .tk { white-space: nowrap; }
+.svs-row .l3.tks .sep { font-style: normal; margin-right: 6px; color: var(--tok-muted); }
+
+/* ---- mon-1: position rank, the Filters chip and the Filters sheet ---- */
+.svs-chip.dk { background: var(--tok-primary); border-color: var(--tok-primary); color: var(--tok-on-primary); }
+.svs-chip.dk.on { background: var(--tok-action); border-color: var(--tok-action); color: var(--tok-on-action); }
+
+.svs-row .rkn.pr { width: 38px; display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.svs-row .rkn.pr b { font: 700 11px var(--tok-font-num); color: var(--tok-ink); white-space: nowrap; }
+.svs-row .rkn.pr small { font: 500 8px var(--tok-font-num); color: var(--tok-muted); }
+
+.svs-sheet-wrap { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; justify-content: flex-end; }
+.svs-backdrop { position: absolute; inset: 0; background: color-mix(in srgb, var(--tok-primary) 55%, transparent); }
+.svs-sheet { position: relative; max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; width: 100%; max-width: 640px; margin: 0 auto; padding: 14px 16px 24px; border-radius: 24px 24px 0 0; background: var(--tok-page); color: var(--tok-ink); display: flex; flex-direction: column; gap: 18px; }
+.svs-grab { width: 40px; height: 4px; border-radius: 99px; background: var(--tok-line); align-self: center; flex: none; }
+.svs-sheet-top { display: flex; align-items: center; gap: 4px; }
+.svs-sheet-top h2 { flex: 1; margin: 0; font: italic 900 24px var(--tok-font-display); text-transform: uppercase; }
+.svs-reset, .svs-x { min-height: 44px; padding: 0 10px; border: 0; background: transparent; color: var(--tok-muted); font: 700 14px var(--tok-font-body); cursor: pointer; }
+.svs-grp { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.svs-grp-h { font: 700 9px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
+.svs-grp-b { display: flex; flex-wrap: wrap; gap: 6px; }
+.svs-in { width: 100%; box-sizing: border-box; height: 44px; border: 1px solid var(--tok-line); border-radius: 12px; padding: 0 14px; background: var(--tok-page); color: var(--tok-ink); font: 400 15px var(--tok-font-body); }
+.svs-range { width: 100%; accent-color: var(--tok-action); min-height: 28px; }
+.svs-apply { height: 52px; border: 0; border-radius: 99px; background: var(--tok-action); color: var(--tok-on-action); font: 700 17px var(--tok-font-body); cursor: pointer; flex: none; }
+.svs-sheet button:focus-visible, .svs-sheet input:focus-visible { outline: 2px solid var(--tok-action); outline-offset: 2px; }
+
+/* The base chip and the "Show more" button read --tok-primary, which is the dark page's
+   NEAR-BLACK (invisible text on its own ground); ink is the readable role in both themes. */
+.svs-chip, .svs-more { color: var(--tok-ink); }

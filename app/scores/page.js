@@ -33,6 +33,7 @@ import { readRememberedTop25, wantTop25 } from '@/lib/scores/top25Memory';
 import { cachedOpeningSpreads } from '@/lib/gridiron/openingCache';
 import './scoresV4.css';
 import './statsTab.css';
+import './statsFilters.css';
 import ScoresTabs from '@/components/scores/ScoresTabs';
 import StatsTab from '@/components/scores/StatsTab';
 import { readRememberedTab, wantTab } from '@/lib/scores/statsTab';
@@ -215,7 +216,7 @@ export default async function ScoresPage({ searchParams }) {
       <div className="gi" data-surface="ink">
         <ScoresChrome isShell={isShell} />
         <TzCookie />
-        <StatsTab sp={sp} userId={userId} zoneLabel={zoneLabel(tz)} />
+        <StatsTab sp={sp} userId={userId} zoneLabel={zoneLabel(tz)} viewerTz={viewerTz} />
       </div>
     );
   }
