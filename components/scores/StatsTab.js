@@ -12,11 +12,12 @@ import ZoneLabel from '@/components/scores/ZoneLabel';
 import { cachedStatsDay } from '@/lib/scores/statsCached';
 import { readMineKeys } from '@/lib/scores/statsMine';
 import { statsView, statsSport, STATS_CHIPS, STATS_SPORTS, SPORT_NAME } from '@/lib/scores/statsTab';
+import { parseState } from '@/lib/scores/statsFilter';
 import { ET, viewerDay, dayStripDays, weekdayOf } from '@/lib/gridiron/scoresV2Shape';
 
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export default async function StatsTab({ sp, userId = null, zoneLabel = 'Eastern', now = new Date() }) {
+export default async function StatsTab({ sp, userId = null, zoneLabel = 'Eastern', viewerTz = null, now = new Date() }) {
   const one = (v) => (Array.isArray(v) ? v[0] : v);
   const league = statsSport(one(sp.sport));
   const today = viewerDay(now.toISOString(), ET);
@@ -28,10 +29,11 @@ export default async function StatsTab({ sp, userId = null, zoneLabel = 'Eastern
     return `/scores?${p}`;
   };
   let view; let games = 0; let live = 0;
+  const state = parseState(league, sp);
   if (STATS_SPORTS.includes(league)) {
-    const day = await cachedStatsDay(league, date).catch(() => ({ total: 0, games: [], stats: [] }));
+    const day = await cachedStatsDay(league, date).catch(() => ({ total: 0, firstKickoff: null, games: [], stats: [] }));
     const mine = userId == null ? null : await readMineKeys({ userId, league, date, games: day.games }).catch(() => new Set());
-    view = statsView({ league, games: day.games, stats: day.stats, mine, signedIn: userId != null });
+    view = statsView({ league, games: day.games, stats: day.stats, mine, signedIn: userId != null, total: day.total, firstKickoff: day.firstKickoff, today: date === today });
     games = day.total; live = day.games.filter((g) => g.status === 'live').length;
   } else {
     view = statsView({ league, games: [], stats: [] });
@@ -57,7 +59,7 @@ export default async function StatsTab({ sp, userId = null, zoneLabel = 'Eastern
         ))}
       </div>
       {view.supported
-        ? <StatsBoard key={`${league}:${date}`} view={view} signedIn={userId != null} />
+        ? <StatsBoard key={`${league}:${date}`} view={view} signedIn={userId != null} initial={state} serverTz={viewerTz} />
         : <p className="svs-empty" data-soon={league}>{view.soon ?? `Stats for ${SPORT_NAME[league]} coming soon`}</p>}
     </div>
   );
