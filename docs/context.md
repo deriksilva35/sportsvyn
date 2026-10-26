@@ -2,6 +2,8 @@
 
 Stable orientation. Moving state (what's live this week, holds, the queue) is in docs/handoff.md; crew actions are in docs/CREW-LOG.md. The engineering laws are in CLAUDE.md, and they win over anything here.
 
+MERGE RULE for Derik's own sessions: server-side merge via `gh api -X PUT repos/deriksilva35/sportsvyn/pulls/<n>/merge -f merge_method=merge` after the required check is green; never --admin.
+
 ## What SPORTSVŶN is
 SPORTSVŶN ("the arcade of sports", sportsvyn.com) is a free sports-games site and iOS app (App Store listing name "Draftvyn"). The games are:
 - The Daily, a fantasy lineup puzzle with guest play and a season pool;
@@ -34,22 +36,20 @@ Data providers:
 Mail goes out through Resend (hello@sportsvyn.com, reply-to derik@sportsvyn.com).
 
 ## The crew (CrewOS)
-The definitions are in Drive under CrewOS/crews/sportsvyn/: a SOUL.md per agent, project.yaml and NOTES.md.
+SOURCE OF TRUTH: crew/ in this repo (CrewOS adapter spec §3a): crew/agents/<agent>/SOUL.md, crew/project.yaml, crew/NOTES.md, crew/watch-rules.md and the droplet scripts in crew/bin + crew/lib. Every SOUL / project.yaml / NOTES change is a PR there. Drive (CrewOS/crews/sportsvyn) is archived.
 
-The CrewOS project row is `sportsvyn` (display name SPORTSVŶN). Its nightly slot is 02:00 PT and its crew budget is $35/month. Watcher, Fixer and Data Keeper are SPECIFIED but NOT YET REGISTERED: the CrewOS seed has the project inactive and no SportsVyn agent rows. Registration follows the CrewOS template when the Boss's Next-crew line says `go` for sportsvyn.
+The CrewOS project row is `sportsvyn` (display name SPORTSVŶN). All three agents are LIVE.
 
-- **Watcher** (spec v1.2): finds what is broken for players, or what is about to cost money or data, and files one crew_tickets row per problem (severity live|soon|later). It never fixes anything.
-  - Runs hourly while a board is open or locks within 2 h (max 120 runs/month), after each production deploy (deploy-id poll, max 30/month), and nightly (max 30/month).
-  - Nightly runs add the provider and cost rules.
-  - Rules: crew/watch-rules.md. GAME G1-G5, PROVIDER P1-P8 (BDL NFL/NCAAF/MLB/NBA, CFBD, Odds API, API-Sports EPL, FFC ADP), COST C1-C3 (Vercel, Neon, Odds API credits).
-  - Budget: $0.08 per hourly/deploy run, $0.75 per nightly run, $35/month cap.
-- **Fixer** (spec v1.2): fixes one small bug that Derik approved in the dashboard.
-  - Steps: reproduce on DEV, write a failing test, make the smallest fix, run the full suite once, open a PR on branch `crew/fix-<ticket-id>` with one docs/CREW-LOG.md line, then stop.
-  - Limits: 25 minutes and one full suite run. It never merges, deploys or writes PROD.
-- **Data Keeper** (spec v1.3): keeps reference data complete (team colours and marks, player pools, the Daily season-pool backfill).
-  - Runs nightly at 02:00 PT. It takes the top data task, runs the existing script as a dry run, and files a `deliverables` row with counts, 10 sample rows and the exact apply_command.
-  - A PROD write happens only when Derik's Approve replays that command.
-  - Budget: $0.30 per run, $10/month cap.
+- **Fixer** (LIVE): registered via crewctl; soul_ref from crew/agents/fixer (currently 263995f7).
+  - Runs as claude-relay under the bot account `deriksilva35-crew` (write, no admin). It opens PRs only (branch `crew/fix-<ticket-id>`, one docs/CREW-LOG.md line).
+  - auto_merge is on: a Fixer PR merges once the required check "SPORTSVŶN test suite" is green AND Derik's one-tap Approve in the CrewOS dashboard posts the review (through the separate `crew-approver` identity).
+  - Undo is enabled: a revert opens as its own PR (e.g. #55).
+  - Shipped so far: #22, #40; undo #55.
+  - Limits: crew/agents/fixer/SOUL.md (25 min per session, the fast test subset, a never-list that includes crew/**).
+- **Watcher** and **Data Keeper** (LIVE on OpenClaw, crewos-droplet): installed from crew/agents/* in this repo.
+  - Cadence = crew/project.yaml start_gates: pre-lock (max 2/day), open-board checks at 09:00 and 15:00 PT, nightly 06:00 PT, post-deploy; hourly-class runs capped at 120/month.
+  - The Watcher files one crew_tickets row per problem and never fixes anything; rules in crew/watch-rules.md (GAME G1-G6, PROVIDER P1-P8, COST C1-C3).
+  - The Data Keeper is dry-run only; Derik applies approved changes by hand.
 - **Pulse stats** (LIVE): `sportsvyn-stats [since-iso]` (source: docs/crew/sportsvyn-stats) prints key=value product counts for the shared Pulse agent.
   - Reads PROD as crew_reader, read-only, with a 10 s statement timeout.
   - House accounts are excluded; no names, emails, ids or money ever appear in the output.
@@ -98,7 +98,6 @@ The CrewOS project row is `sportsvyn` (display name SPORTSVŶN). Its nightly slo
 - Email dormant accounts: the daily/morning email goes only to 30-day players, accounts under 14 days old and /you opt-ins (ruling thu-1).
 
 ## Known live issues and holds
-- The CrewOS crew is not yet registered (see above).
 - CI runs no real tests until the Neon "ci" branch and its CI_DATABASE_URL secret exist.
 - NBA Game Drafts stay off until DRAFT_GAME_NBA is set (NBA tips off 20 Oct 2026).
 - CFB win probability is CALIBRATING. Flip it off only after the sealed re-score passes.

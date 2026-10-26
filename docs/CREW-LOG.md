@@ -6,3 +6,4 @@
 - 2026-10-22 crew day-1 fixes: Watcher v1.5.2, Data Keeper v1.5.1, Fixer v1.5.1, project.yaml v1.5.3
 - 2026-10-22 fri-2: any file a test reads is code to CI; crew/README.md and 7 docs/ files the tests read left the docs-only list; lib/testing/ciDocsOnly.test.mjs guards it.
 - 2026-10-24 sat-1: provider-health reads provider_errors_v (a 401/403 within 15 min = stale, stalest=cfbd:scoreboard:401); rule G6 frozen live game on live_matches_v; the poller stamps metadata.live_changed_at and records provider_error in sync_runs. Run crew-reader-grants on PROD to create the views.
+- 2026-10-26 mon-4: docs/context.md crew section refreshed to the live state (Fixer, Watcher, Data Keeper live; repo canonical).
