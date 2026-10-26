@@ -28,6 +28,7 @@
 .svs-grp { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .svs-grp-h { font: 700 9px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
 .svs-grp-b { display: flex; flex-wrap: wrap; gap: 6px; }
+.svs-grp-note { flex-basis: 100%; margin: 2px 0 0; font: 400 11px var(--tok-font-body); color: var(--tok-muted); }
 .svs-in { width: 100%; box-sizing: border-box; height: 44px; border: 1px solid var(--tok-line); border-radius: 12px; padding: 0 14px; background: var(--tok-page); color: var(--tok-ink); font: 400 15px var(--tok-font-body); }
 .svs-range { width: 100%; accent-color: var(--tok-action); min-height: 28px; }
 .svs-apply { height: 52px; border: 0; border-radius: 99px; background: var(--tok-action); color: var(--tok-on-action); font: 700 17px var(--tok-font-body); cursor: pointer; flex: none; }

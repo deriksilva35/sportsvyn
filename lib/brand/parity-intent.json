@@ -1,3 +1,24 @@
 {
-  "changes": []
+  "changes": [
+    {
+      "file": "app/scores/statsFilters.css",
+      "key": ".svs-grp-note { color }",
+      "after": "#888888"
+    },
+    {
+      "file": "app/scores/statsFilters.css",
+      "key": ".svs-grp-note { flex-basis }",
+      "after": "100%"
+    },
+    {
+      "file": "app/scores/statsFilters.css",
+      "key": ".svs-grp-note { font }",
+      "after": "400 11px ui-sans-serif,system-ui,-apple-system,blinkmacsystemfont,'segoe ui',roboto,sans-serif"
+    },
+    {
+      "file": "app/scores/statsFilters.css",
+      "key": ".svs-grp-note { margin }",
+      "after": "2px 0 0"
+    }
+  ]
 }

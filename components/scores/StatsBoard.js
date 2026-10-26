@@ -70,8 +70,8 @@ export default function StatsBoard({ view, signedIn = false, initial, serverTz =
   const raw = state.sc === 'raw';
   const tiles = useMemo(() => {
     if (raw) return null;
-    return tilesOf([...all].sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name)), { signedIn });
-  }, [all, raw, signedIn]);
+    return tilesOf([...all].sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name)), { signedIn, state });
+  }, [all, raw, signedIn, state]);
 
   const set = useCallback((patch) => {
     setState((prev) => {
@@ -123,7 +123,7 @@ export default function StatsBoard({ view, signedIn = false, initial, serverTz =
           {tiles && (
             <div className="svs-tiles" data-section="tiles">
               <div className="svs-tile dk" data-tile="top">
-                <small>Top scorer</small>
+                <small>{tiles.topLabel}</small>
                 <b className="t">{tiles.top?.name ?? '—'}</b>
                 <em>{tiles.top ? pts(tiles.top.pts) : ''}</em>
               </div>
