@@ -99,7 +99,6 @@ The CrewOS project row is `sportsvyn` (display name SPORTSVŶN). Its nightly slo
 
 ## Known live issues and holds
 - The CrewOS crew is not yet registered (see above).
-- CI runs no real tests until the Neon "ci" branch and its CI_DATABASE_URL secret exist.
 - NBA Game Drafts stay off until DRAFT_GAME_NBA is set (NBA tips off 20 Oct 2026).
 - CFB win probability is CALIBRATING. Flip it off only after the sealed re-score passes.
 - League chat is "Coming soon"; the league notify toggles are stored, but nothing sends yet.
