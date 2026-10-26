@@ -13,8 +13,9 @@ name: tests
 # THERE IS NO SHARED CONCURRENCY GROUP ANY MORE. The old `ci-db` group allowed
 # one pending run and cancelled every older pending one, so on 26 Oct #56 was
 # bumped three times by other PRs and pushes. Now each PR has its own group
-# (ci-pr-<number>), so only a NEWER push to the SAME PR cancels its older run;
-# a push to main gets a group per commit and is never cancelled.
+# (ci-db-<number>), so only a NEWER push to the SAME PR cancels its older run;
+# a push to main gets a group per commit and is never cancelled. Across PRs the
+# DB is serialized by QUEUEING (the runner, suite.lock), never by cancelling.
 #
 # ENV VARS the tests and the code they import read (grep of process.env across
 # the *.test.mjs files; each maps to a secret of the same name). Many are set by
@@ -61,7 +62,11 @@ on:
     branches: [main]
 
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('ci-pr-{0}', github.event.pull_request.number) || format('ci-main-{0}', github.sha) }}
+  # ci-db-<PR number> for a PR; ci-db-<commit sha> for a push. NOT github.ref for a
+  # push: a group holds one pending run and REPLACES an older pending one even
+  # with cancel-in-progress false, so two quick pushes to main would cancel the
+  # first. Main runs are never cancelled; a crew draft PR's card waits on its check.
+  group: ci-db-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
