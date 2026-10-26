@@ -70,6 +70,7 @@ export default function StatsFilters({ league, state, set, onReset, onClose, cou
 
         <Group label="Scoring" id="svs-g-sc">
           {SCORING_OPTS[lg].map(([k, w]) => <Opt key={k} on={state.sc === k} onClick={() => set({ sc: k })} data-opt={`sc:${k}`}>{w}</Opt>)}
+          {lg === 'nfl' ? <p className="svs-grp-note" data-note="dst">D/ST: Yahoo standard</p> : null}
         </Group>
 
         <Group label="Sort by" id="svs-g-sort">
