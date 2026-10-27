@@ -168,36 +168,48 @@ const sportRender = (sport, games) => render(games, {
   view: { contest: { id: 7, boardNumber: 3, sport, displayWeek: 7, scoring: 'confidence' }, games },
 });
 
-test('CFB: a ranked team reads "#rank · record", the line sits in the foot, the footer says straight up', () => {
-  const c = sportRender('cfb', [game({ home: 'Michigan', away: 'Indiana', home_rank: null, away_rank: 2, home_record: '5-2', away_record: '7-0', spread_home: 6.5 })]);
+test('CFB: a ranked team reads "#rank · record", win % (not the spread) sits in the foot, the footer says straight up', () => {
+  const c = sportRender('cfb', [game({ home: 'Michigan', away: 'Indiana', home_rank: null, away_rank: 2, home_record: '5-2', away_record: '7-0', spread_home: 6.5, home_win_pct: 30 })]);
   const small = [...c.querySelectorAll('.cfd-nm small')].map((s) => s.textContent);
   assert.ok(small.includes('#2 · 7-0'), small.join('|'));
   assert.ok(small.includes('5-2'), small.join('|'));
-  assert.match(c.querySelector('[data-line]').textContent, /^Indiana [−-]6\.5$/);
-  assert.match(c.querySelector('.pkv-pace').textContent, /Straight up, line for reference/);
+  assert.equal(c.querySelector('[data-line]'), null, 'the spread is gone from the board');
+  assert.equal(c.querySelector('[data-winpct]').textContent, 'Indiana 70%');
+  assert.match(c.querySelector('.pkv-pace').textContent, /Straight up · win % from betting odds/);
+  assert.doesNotMatch(c.querySelector('.pkv-pace').textContent, /No spread|line for reference/);
 });
 
-test('NFL: records only; no spread falls back to the moneyline favourite\'s win %', () => {
-  const c = sportRender('nfl', [game({ home_record: '4-2', away_record: '2-4', spread_home: null, home_win_pct: 64 })]);
+test('NFL: records and the moneyline favourite\'s win %', () => {
+  const c = sportRender('nfl', [game({ home_record: '4-2', away_record: '2-4', spread_home: -3, home_win_pct: 64 })]);
   const small = [...c.querySelectorAll('.cfd-nm small')].map((s) => s.textContent);
   assert.deepEqual(small.sort(), ['2-4', '4-2']);
   assert.equal(c.querySelector('[data-line]'), null);
-  assert.equal(c.querySelector('[data-winpct]').textContent, 'Bills 64% to win');
+  assert.equal(c.querySelector('[data-winpct]').textContent, 'Bills 64%');
 });
 
-test('an away favourite by moneyline, a coin flip, a locked game and the NBA show no line or the right one', () => {
-  let c = sportRender('nfl', [game({ spread_home: null, home_win_pct: 30 })]);
-  assert.equal(c.querySelector('[data-winpct]').textContent, 'Lions 70% to win');
+test('NBA: the record shows under each name and the win % shows too', () => {
+  const c = sportRender('nba', [game({ home: 'Celtics', away: 'Knicks', home_record: '3-1', away_record: '2-2', home_win_pct: 70 })]);
+  const small = [...c.querySelectorAll('.cfd-nm small')].map((s) => s.textContent);
+  assert.deepEqual(small.sort(), ['2-2', '3-1']);
+  assert.equal(c.querySelector('[data-winpct]').textContent, 'Celtics 70%');
+});
+
+test('an away favourite by moneyline, a coin flip, no moneyline and a locked game', () => {
+  let c = sportRender('nfl', [game({ spread_home: -3, home_win_pct: 30 })]);
+  assert.equal(c.querySelector('[data-winpct]').textContent, 'Lions 70%');
   act(() => { for (const r of roots) r.unmount(); }); roots.clear();
-  c = sportRender('nfl', [game({ spread_home: null, home_win_pct: 50 })]);
-  assert.equal(c.querySelector('[data-winpct]'), null);
-  act(() => { for (const r of roots) r.unmount(); }); roots.clear();
-  c = sportRender('nfl', [game({ kickoff_at: past(), kicked: true, status: 'live', spread_home: -3 })]);
+  c = sportRender('nfl', [game({ spread_home: -3, home_win_pct: 50 })]);
+  assert.equal(c.querySelector('[data-winpct]'), null, 'exactly 50% names no favourite');
   assert.equal(c.querySelector('[data-line]'), null);
   act(() => { for (const r of roots) r.unmount(); }); roots.clear();
-  c = sportRender('nba', [game({ spread_home: -3, home_win_pct: 70 })]);
+  c = sportRender('nfl', [game({ spread_home: -3, home_win_pct: null })]);
+  assert.equal(c.querySelector('[data-winpct]'), null, 'no moneyline: no win %');
+  assert.equal(c.querySelector('[data-line]'), null, 'and never the spread');
+  assert.doesNotMatch(c.querySelector('.cfd-foot').textContent, /[−+-]\s*3/);
+  act(() => { for (const r of roots) r.unmount(); }); roots.clear();
+  c = sportRender('nfl', [game({ kickoff_at: past(), kicked: true, status: 'live', spread_home: -3, home_win_pct: 70 })]);
   assert.equal(c.querySelector('[data-line]'), null);
-  assert.equal(c.querySelector('[data-winpct]'), null);
+  assert.equal(c.querySelector('[data-winpct]'), null, 'a started game shows no line');
 });
 
 test('a team with no record row shows no small line (never a bare "-")', () => {

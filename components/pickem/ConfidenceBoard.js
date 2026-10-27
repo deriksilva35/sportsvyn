@@ -25,7 +25,7 @@ import { dayLabel } from '@/lib/nba/dayRules';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import { moveRank } from '@/lib/pickem/confidence';
 import { recordLine } from '@/lib/pickem/recordLine';
-import { spreadParts } from '@/lib/standings/view';
+import { winPctText } from '@/lib/pickem/winPctLine';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 
 export default function ConfidenceBoard({
@@ -57,8 +57,6 @@ export default function ConfidenceBoard({
   const pickedCount = games.filter((g) => picks[g.match_id]).length;
   const banked = games.reduce((s, g) => s + (g.my_points ?? 0), 0);
   const anyOpen = games.some((g) => !g.kicked);
-  // THE NBA HAS NO LINE ON PICK'EM (PickemBoard's rule): no spread copy at all.
-  const hasLine = contest.sport !== 'nba';
 
   function pick(g, side) {
     if (!signedIn || g.kicked) return;
@@ -159,15 +157,11 @@ export default function ConfidenceBoard({
                     ? <span className="cfd-lk">{g.void ? 'Void' : 'Locked'}</span>
                     : <span><StandaloneTime iso={g.kickoff_at} tbd={g.kickoff_tbd === true} /></span>}
                   {(() => {
-                    // THE LINE, for reference only (confidence scores straight up),
-                    // and only before kickoff: a spread on a started game is a fossil.
-                    if (!hasLine || locked || !isPreGame(g.status ?? 'scheduled')) return null;
-                    const p = spreadParts({ spreadHome: g.spread_home, homeAbbr: g.home, awayAbbr: g.away });
-                    if (p) return <span className="cfd-line" data-line>{p.fav} {p.mag}</span>;
-                    // NO SPREAD: the moneyline favourite's chance to win, when there is one.
-                    const h = g.home_win_pct;
-                    if (h == null || h === 50) return null;
-                    return <span className="cfd-line" data-winpct>{h > 50 ? g.home : g.away} {Math.max(h, 100 - h)}% to win</span>;
+                    // WIN % REPLACES THE SPREAD (wed-1): "PACKERS 64%", only before
+                    // kickoff; no moneyline (or exactly 50%) is no line, never the spread.
+                    if (locked || !isPreGame(g.status ?? 'scheduled')) return null;
+                    const t = winPctText(g);
+                    return t ? <span className="cfd-line" data-winpct>{t}</span> : null;
                   })()}
                   {graded ? <span className={`cfd-pts ${g.my_points > 0 ? 'j' : 't'} n`}>{g.my_points > 0 ? `+${g.my_points}` : '0'}</span> : null}
                   {g.void ? <span className="cfd-pts v">void</span> : null}
@@ -191,9 +185,7 @@ export default function ConfidenceBoard({
       <div className="pkv-ft">
         <div className="pkv-pace">
           {state === 'saved' ? <><b>Saved</b><br />change either until a game starts</>
-            : hasLine
-              ? <>Straight up, line for reference<br />Unpicked games score <b>0</b></>
-              : <>No spread<br />Unpicked games score <b>0</b></>}
+            : <>Straight up &middot; win % from betting odds<br />Unpicked games score <b>0</b></>}
         </div>
         {signedIn && anyOpen ? (
           <button type="button" className="pkv-lock cfd-save" disabled={!dirty || state === 'saving'} onClick={() => guard(save, 'sheet')}>

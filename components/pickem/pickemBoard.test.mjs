@@ -52,7 +52,7 @@ const future = new Date(Date.now() + 3 * 3600_000).toISOString();
 const game = () => ({
   match_id: 20749, slug: 'nfl-2026-reg-w1-ne-sea', home: 'Seahawks', away: 'Patriots',
   kickoff_at: future, status: 'scheduled', kicked: false, my_side: null, graded: null,
-  spread_home: -3, home_rank: null, away_rank: null, home_record: null, away_record: null,
+  spread_home: -3, home_win_pct: 64, home_rank: null, away_rank: null, home_record: null, away_record: null,
   home_score: null, away_score: null,
 });
 function renderMany(sport, games) {
@@ -78,14 +78,13 @@ const click = (el) => act(async () => { el.dispatchEvent(new dom.window.MouseEve
 test('1. STRAIGHT UP IS SAID ONCE, in the step strip, on both sports', () => {
   // v2 moved this sentence out of its own .pk-straight paragraph and into the
   // step strip's one contextual line. The RULE is unchanged and is what this
-  // test protects: a board that shows a spread beside two buttons must say, in
-  // words, that the spread is not the bet.
+  // test protects: a board that shows odds beside two buttons must say, in
+  // words, that they are not the bet.
   for (const sport of ['nfl', 'cfb']) {
     const c = render(sport);
     const note = c.querySelector('.pkv-note');
     assert.ok(note, `${sport}: the line exists`);
     assert.match(note.textContent, /straight up/i);
-    assert.match(note.textContent, /does not change the scoring/i);
     assert.match(note.textContent, /locks at its own kickoff/i);
     act(() => { for (const r of roots) r.unmount(); }); roots.clear();
   }
@@ -94,11 +93,11 @@ test('1. STRAIGHT UP IS SAID ONCE, in the step strip, on both sports', () => {
 test('2. the line sits BELOW both sides - never in the kickoff row', () => {
   const c = render();
   const line = c.querySelector('.pkv-line'); assert.ok(line, 'the line renders pre-kick');
-  assert.match(line.textContent, /Seahawks\s*−3/u);
+  assert.equal(line.textContent, 'Seahawks 64%', 'win % replaces the spread');
   const sidesEl = c.querySelector('.pkv-sides'); const top = c.querySelector('.pkv-gtop');
   assert.ok(sidesEl.compareDocumentPosition(line) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING, 'after the sides');
   assert.ok(!top.contains(line), 'not in the kickoff row');
-  assert.doesNotMatch(top.textContent, /[−+-]\s*\d/, 'the kickoff row carries no odds');
+  assert.doesNotMatch(top.textContent, /[−+-]\s*\d|%/, 'the kickoff row carries no odds');
   assert.equal(c.querySelector('.pk-spread'), null, 'the old chip is gone');
 });
 

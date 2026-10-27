@@ -56,7 +56,7 @@ const etDay = (offsetDays, hms = '20:00:00') => {
 const game = (o = {}) => ({
   match_id: 1, slug: 'a-at-b', home: 'Bills', away: 'Lions',
   kickoff_at: future(), status: 'scheduled', kicked: false, my_side: null, graded: null,
-  spread_home: -4.5, home_rank: null, away_rank: null, home_record: null, away_record: null,
+  spread_home: -4.5, home_win_pct: 60, home_rank: null, away_rank: null, home_record: null, away_record: null,
   home_colors: { primary: '#00338D', secondary: '#C60C30' },
   away_colors: { primary: '#0076B6', secondary: '#B0B7BC' },
   home_score: null, away_score: null, period: null, clock: null, network: null,
@@ -234,9 +234,9 @@ test('AN UNPICKED KICKED GAME is greyed, untappable, and out of the counter', ()
   assert.match([...c.querySelectorAll('.pkv-pip')][0].className, /none/);
 });
 
-test('the line shows before kickoff and is gone once it kicks', () => {
+test('the win % shows before kickoff and is gone once it kicks', () => {
   const open = render([game()]);
-  assert.ok(open.querySelector('.pkv-line'), 'the line renders pre-kick');
+  assert.equal(open.querySelector('.pkv-line').textContent, 'Bills 60%', 'the win % renders pre-kick');
   act(() => { for (const r of roots) r.unmount(); }); roots.clear();
   const live = render([game({ status: 'live', kicked: true, kickoff_at: past(1), home_score: 3, away_score: 0 })]);
   assert.equal(live.querySelector('.pkv-line'), null, 'a pre-kickoff line beside a live score is a number that stopped being true');
