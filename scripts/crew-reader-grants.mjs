@@ -131,13 +131,7 @@ export const CREW_VIEWS = Object.freeze([
           SELECT 'ffc',
                  (SELECT (max(snapshot_date)::timestamp AT TIME ZONE 'UTC') FROM public.sim_player_pool),
                  2280,
-                 true
-          UNION ALL
-          SELECT 'injuries',
-                 (SELECT max(started_at) FROM public.sync_runs WHERE source = 'wire' AND ok),
-                 60,
-                 EXISTS (SELECT 1 FROM public.matches m JOIN public.leagues l ON l.id = m.league_id
-                          WHERE l.slug = 'nfl' AND m.kickoff_at BETWEEN now() - interval '7 days' AND now() + interval '7 days')`,
+                 true`,
   },
   {
     // sat-1: the live poller writes summary.provider_error (status code + endpoint NAME only,

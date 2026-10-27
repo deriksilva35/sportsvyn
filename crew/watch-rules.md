@@ -622,12 +622,11 @@ above (which stay the spec for a deeper look).
 | cfbd | max(matches.updated_at) with a cfbd_game_id | 60 | a CFB match is live |
 | odds | max(odds_markets.fetched_at) | 180 | 08:00 UTC onward and odds rows exist in the last 3 days |
 | ffc | max(sim_player_pool.snapshot_date) at 00:00 UTC | 2280 (38 h) | always (adp-snapshot runs daily 11:00 UTC) |
-| injuries | newest ok `sync_runs` row, source `wire` | 60 | an NFL match within 7 days either side |
 
-Injuries is excluded from the stale count until its cron is in vercel.json (it is still listed).
+Injuries is gone (mon-5): it read the wire cron, retired with its pages on 29 Sep (4093afad), and
+nothing reads what it wrote. provider-health drops the row even where the view still lists it.
 
-The thresholds are first values chosen from the cron cadences (odds hourly, wire every 15 min, adp
-daily) and are for Derik to tune; changing one is an edit to `CREW_VIEWS` and a re-run of
+The thresholds are first values chosen from the cron cadences (odds hourly, adp daily) and are for Derik to tune; changing one is an edit to `CREW_VIEWS` and a re-run of
 `scripts/crew-reader-grants.mjs --apply`.
 
 # retention
