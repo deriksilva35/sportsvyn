@@ -9,20 +9,22 @@
 import { parseArgs, requireReaderUrl } from './common.mjs';
 import { query, num } from './db.mjs';
 
-// injuries excluded from the stale count until its cron is in vercel.json
-export const STALE_EXCLUDED = Object.freeze(['injuries']);
+// RETIRED feeds are dropped from the list entirely (mon-5): 'injuries' was the wire cron, whose
+// cron and pages were retired 29 Sep (4093afad) and which nothing reads. Dropped here as well as
+// from provider_freshness_v, so a database whose view still lists it reads the same.
+export const RETIRED = Object.freeze(['injuries']);
 export const AUTH_STATUSES = Object.freeze([401, 403]);
 export const AUTH_WINDOW_MIN = 15;
 
 /** PURE. rows: [{ provider, max_age_min, expected, age_min }] (age_min null = never wrote). */
 export function summarize(rows, errorRows = []) {
-  const list = rows.map((r) => ({
+  const list = rows.filter((r) => !RETIRED.includes(r.provider)).map((r) => ({
     provider: r.provider,
     expected: r.expected === true || r.expected === 't' || r.expected === 'true',
     maxAge: num(r.max_age_min),
     age: r.age_min === null || r.age_min === undefined ? null : num(r.age_min),
   }));
-  for (const p of list) p.stale = p.expected && !STALE_EXCLUDED.includes(p.provider) && (p.age === null || p.age > p.maxAge);
+  for (const p of list) p.stale = p.expected && (p.age === null || p.age > p.maxAge);
   // Auth errors: [{ provider, endpoint, status, age_min }], newest per provider wins.
   const auth = new Map();
   for (const e of errorRows) {
@@ -35,7 +37,7 @@ export function summarize(rows, errorRows = []) {
   // A provider with an auth error that freshness does not list still counts (a feed we have no row for).
   const unlisted = [...auth.values()].filter((a) => !list.some((p) => p.provider === a.provider));
   const stale = list.filter((p) => p.stale).length + unlisted.length;
-  const considered = list.filter((p) => p.expected && !STALE_EXCLUDED.includes(p.provider));
+  const considered = list.filter((p) => p.expected);
   const stalest = [...considered]
     .sort((a, b) => (b.age ?? Infinity) - (a.age ?? Infinity) || a.provider.localeCompare(b.provider))[0];
   // AUTH ERRORS OUTRANK AGE: the first auth error (freshest) names itself provider:endpoint:status.

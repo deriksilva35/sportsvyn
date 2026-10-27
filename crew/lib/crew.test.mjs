@@ -117,9 +117,10 @@ test('provider-health: stale only when a write is expected and older than max, o
   ];
   const r = providers.summarize(rows);
   assert.equal(r.code, 1);
-  assert.deepEqual([r.summary.providers, r.summary.stale, r.summary.stalest], [5, 1, 'odds:200'], 'injuries excluded from the stale count');
+  assert.deepEqual([r.summary.providers, r.summary.stale, r.summary.stalest], [4, 1, 'odds:200'], 'injuries (retired) is dropped, not counted');
+  assert.ok(!r.list.some((p) => p.provider === 'injuries'), 'a retired feed is not listed at all');
   const injOnly = providers.summarize([{ provider: 'injuries', max_age_min: 60, expected: true, age_min: null }]);
-  assert.deepEqual([injOnly.code, injOnly.summary.stale, injOnly.summary.stalest], [0, 0, '-']);
+  assert.deepEqual([injOnly.code, injOnly.summary.providers, injOnly.summary.stale, injOnly.summary.stalest], [0, 0, 0, '-']);
   assert.match(summaryLine('provider-health', r.summary), FORMATS['provider-health']);
   const quiet = providers.summarize(rows.slice(0, 2).concat(rows.slice(3, 4)));
   assert.equal(quiet.code, 0);
