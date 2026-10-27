@@ -11,7 +11,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { spreadParts } from '@/lib/standings/view';
+import { winPctText } from '@/lib/pickem/winPctLine';
 import { spreadFor } from '@/lib/pickem/ats';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 import { recordLine } from '@/lib/pickem/recordLine';
@@ -92,8 +92,6 @@ export default function PickemBoard({
   const [confirming, setConfirming] = useState(false);
   const { contest, games: initialGames } = view;
   const W = vocabFor(contest?.sport);
-  // THE NBA HAS NO LINE ON THIS BOARD (no spread copy at all): straight up.
-  const hasLine = contest?.sport !== 'nba';
   // Optimistic overlay: matchId -> side. The server payload stays the truth
   // for everything else.
   const [mine, setMine] = useState({});
@@ -255,8 +253,6 @@ export default function PickemBoard({
           {stage === 1 ? (
             ats
               ? <>Pick who <b>covers the spread</b> in every game. The line was set when the week opened and does not move. A push, or a game with no line, counts for nobody. Each game locks at its own kickoff.</>
-              : hasLine
-              ? <>Pick the <b>winner</b> of every game, straight up. The line is shown for reference and does not change the scoring. Each game locks at its own kickoff. A tie or a called-off game counts for nobody.</>
               : <>Pick the <b>winner</b> of every game, straight up. Each game locks at its own {W.start}. A tie or a called-off game counts for nobody.</>
           ) : stage === 2 ? (
             <><b>{toGo} still open.</b> Tap a side to change a pick any time before that game {W.startsVerb}. A game you never picked scores nothing.</>
@@ -379,10 +375,11 @@ export default function PickemBoard({
                             : `${g.away} ${spreadFor(g.frozen_spread_home, 'away')} · ${g.home} ${spreadFor(g.frozen_spread_home, 'home')}`}
                         </span>
                       ) : (() => {
-                        if (!hasLine || !isPreGame(g.status)) return null;
-                        const p = spreadParts({ spreadHome: g.spread_home, homeAbbr: g.home, awayAbbr: g.away });
-                        if (!p) return null;
-                        return <span className="pkv-line">{p.fav}{' '}{p.mag}</span>;
+                        // WIN % REPLACES THE SPREAD (wed-1): "PACKERS 64%", pre-lock only;
+                        // no moneyline (or exactly 50%) is no line, never the spread.
+                        if (!isPreGame(g.status)) return null;
+                        const t = winPctText(g);
+                        return t ? <span className="pkv-line" data-winpct>{t}</span> : null;
                       })()}
                       {off ? (
                         <span className="pkv-pick pkv-nopick">void</span>
@@ -419,10 +416,8 @@ export default function PickemBoard({
             <><b>Saved</b><br />edit any pick until its {W.start}</>
           ) : ats ? (
             <>Against the spread<br />Lines froze when the week opened. A <b>push</b> counts for nobody</>
-          ) : hasLine ? (
-            <>Straight up, no spread<br />The line is <b>for reference only</b></>
           ) : (
-            <>Straight up<br />One point a <b>winner</b></>
+            <>Straight up &middot; win % from betting odds<br />One point a <b>winner</b></>
           )}
         </div>
         {signedIn && pickable > 0 ? (
