@@ -6,8 +6,16 @@ name: tests
 #
 # DATABASE: secrets.CI_DATABASE_URL is a DEDICATED Neon branch named "ci".
 # NEVER DEV, NEVER PROD. The DB tests write and tear down real rows, so two runs
-# must never share the branch at once: the `ci-db` concurrency group queues them
-# (cancel-in-progress: false, so a queued run is not thrown away mid-teardown).
+# must never share the branch at once. TWO THINGS SERIALIZE THEM (mon-5, 26 Oct):
+# there is ONE self-hosted runner, and GitHub queues jobs for it without
+# cancelling; and the suite step holds /run/lock/sportsvyn-suite/suite.lock
+# (flock, waits up to 60 min), shared with the droplet's own suite runs.
+# THERE IS NO SHARED CONCURRENCY GROUP ANY MORE. The old `ci-db` group allowed
+# one pending run and cancelled every older pending one, so on 26 Oct #56 was
+# bumped three times by other PRs and pushes. Now each PR has its own group
+# (ci-db-<number>), so only a NEWER push to the SAME PR cancels its older run;
+# a push to main gets a group per commit and is never cancelled. Across PRs the
+# DB is serialized by QUEUEING (the runner, suite.lock), never by cancelling.
 #
 # ENV VARS the tests and the code they import read (grep of process.env across
 # the *.test.mjs files; each maps to a secret of the same name). Many are set by
@@ -37,7 +45,7 @@ name: tests
 # crew/bin/** and crew/lib/** included - is code. With no code
 # changed, the suite job keeps its exact name (the required check) but runs on
 # ubuntu-latest with one step that prints "skipped: docs-only" and exits 0: no
-# setup, no suite lock, no ci-db queue. A workflow-level paths-ignore is NOT
+# setup, no suite lock, no runner queue. A workflow-level paths-ignore is NOT
 # used: it would leave a docs-only PR with no check at all, so unmergeable.
 # Any doubt (API error, no previous commit, an empty list) counts as code.
 #
@@ -52,6 +60,14 @@ on:
   pull_request:
   push:
     branches: [main]
+
+concurrency:
+  # ci-db-<PR number> for a PR; ci-db-<commit sha> for a push. NOT github.ref for a
+  # push: a group holds one pending run and REPLACES an older pending one even
+  # with cancel-in-progress false, so two quick pushes to main would cancel the
+  # first. Main runs are never cancelled; a crew draft PR's card waits on its check.
+  group: ci-db-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -110,13 +126,11 @@ jobs:
   tests:
     name: SPORTSVŶN test suite
     needs: changes
-    # Code: the self-hosted runner, queued in ci-db as before. Docs only: a hosted
-    # runner and a per-run group, so it never waits behind (or bumps) a suite run.
+    # Code: the self-hosted runner (one; jobs wait for it, never cancelled). Docs
+    # only: a hosted runner, so it never waits behind a suite run.
     runs-on: ${{ needs.changes.outputs.code_changed == 'true' && fromJSON('["self-hosted","linux","x64"]') || 'ubuntu-latest' }}
-    concurrency:
-      group: ${{ needs.changes.outputs.code_changed == 'true' && 'ci-db' || format('docs-{0}', github.run_id) }}
-      cancel-in-progress: false
-    timeout-minutes: 30
+    # 90 = up to 60 min waiting on suite.lock plus the ~15 min suite and setup.
+    timeout-minutes: 90
     env:
       DATABASE_URL: ${{ secrets.CI_DATABASE_URL }}
       CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
@@ -172,4 +186,4 @@ jobs:
 
       - name: Full suite
         if: needs.changes.outputs.code_changed == 'true' && steps.db.outputs.skip != 'true'
-        run: umask 002; flock -w 900 /run/lock/sportsvyn-suite/suite.lock node --test $(git ls-files '*.test.mjs')
+        run: umask 002; flock -w 3600 /run/lock/sportsvyn-suite/suite.lock node --test $(git ls-files '*.test.mjs')

@@ -98,7 +98,6 @@ The CrewOS project row is `sportsvyn` (display name SPORTSVŶN). All three agent
 - Email dormant accounts: the daily/morning email goes only to 30-day players, accounts under 14 days old and /you opt-ins (ruling thu-1).
 
 ## Known live issues and holds
-- CI runs no real tests until the Neon "ci" branch and its CI_DATABASE_URL secret exist.
 - NBA Game Drafts stay off until DRAFT_GAME_NBA is set (NBA tips off 20 Oct 2026).
 - CFB win probability is CALIBRATING. Flip it off only after the sealed re-score passes.
 - League chat is "Coming soon"; the league notify toggles are stored, but nothing sends yet.
