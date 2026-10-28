@@ -69,8 +69,8 @@ The CrewOS project row is `sportsvyn` (display name SPORTSVŶN). All three agent
   - Pulse stats reads only the `crew_stats.*_v` views (migration 143).
   - Each run revokes everything, then re-grants, so a new table stays unreadable until the script runs again.
 - Branches: feature work goes on short kebab-case branches in their own worktrees (~/projects/sv-<name>). The crew's branches are `crew/fix-<ticket-id>`.
-- main requires a pull request. The `tests` workflow runs on PRs, and while the CI_DATABASE_URL secret is unset it exits 0 with a notice.
-- The gate is local: `scripts/suite.sh` runs the full suite (~6,500 tests, ~13 min) under the host-wide lock ~/.sportsvyn-suite.lock, shared with Derik's sessions. Planned at registration: /run/lock/sportsvyn-suite/suite.lock. A second run waits; never start a parallel one.
+- main requires a pull request. The gate is the required CI check "SPORTSVŶN test suite" (.github/workflows/tests.yml): the full suite (~6,500 tests, ~13 min) on the PR's merge tree, against the dedicated `ci` Neon branch.
+- One suite lock per host: /run/lock/sportsvyn-suite/suite.lock (group sportsvyn: derik, crew-sportsvyn, the CI runner). `scripts/suite.sh` flocks it (falling back to ~/.sportsvyn-suite.lock only where that directory is missing), and CI's suite step runs under `flock -w 3600` on the same file (since #61). A second run waits; never start a parallel one.
 - NAMING LANDMINE: the table `leagues` is SPORTS leagues (NFL, CFB, EPL…). Friends' leagues are `player_leagues` / `league_members`. Fantasy drafts are `draft_configs` / `drafts`.
 - `contests.game_type` values: pickem, weekly, draft (the weekly Draft), draft_game (Primetime), october, run, epl_weekly_5.
 - "ET day" is the sports day. Provider datetimes go through lib/gridiron/ingest.js `toUtc()` only. A displayed time goes through lib/time/display.js; a hard-coded zone is a test failure.

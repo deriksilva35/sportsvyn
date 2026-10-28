@@ -56,6 +56,4 @@ fixer_paths: see fixer/SOUL.md (allow / never lists, v1.5.1; never-list includes
 ask_first: [merge, deploy, delete, send, backfill, testflight, prod_write, firewall, migration]
 rung: { fixer: 2 (PR only, Derik merges), watcher: read-only, data_keeper: dry-run only }
 pending_before_live:
-  - crew/bin scripts merged and installed under crew-sportsvyn (this PR)
-  - CrewOS fills crew-reader.env (vercel.token in place)
   - poller checks written against the SUMMARY formats
