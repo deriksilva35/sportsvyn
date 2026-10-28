@@ -151,7 +151,7 @@ test('PER-PLAY WP DELTAS STAY OFF: the plays list carries none (sat-1 item 4)', 
   const feed = asrc.slice(asrc.indexOf('export async function playsFeed'), asrc.indexOf('export async function networkFor'));
   assert.doesNotMatch(feed, /winprob|p_home|delta/i);
   const vsrc = src('lib/gridiron/gamePageArcadeView.js');
-  assert.match(vsrc, /plays\.latest = plays\.latest\.map\(\(p\) => \(\{ when: whenOf\(p\), abbr: abbrOf\(p\.offenseTeamId\) \?\? '', text: p\.text \?\? '' \}\)\);/,
+  assert.match(vsrc, /plays\.latest = plays\.latest\.map\(\(p\) => \(\{ when: whenOf\(p\), abbr: abbrOf\(p\.offenseTeamId\) \?\? '', text: clean\(p\.text \?\? ''\) \}\)\);/,
     'a play row is when, team and text - nothing else');
 });
 

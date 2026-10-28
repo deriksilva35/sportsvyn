@@ -140,12 +140,12 @@ export function DriveStrip({ state, lastPlay, now = null, drive, homeAbbr, awayA
 }
 
 /** The mock's "Last play" card - the sentence the strip cannot say. */
-export function LastPlay({ play }) {
+export function LastPlay({ play, format = (s) => s }) {
   if (!play?.text) return null;
   return (
     <div className="ds-lastplay">
       <div className="lbl">Last play</div>
-      <div className="txt">{play.text}</div>
+      <div className="txt">{format(play.text)}</div>
     </div>
   );
 }
@@ -160,7 +160,7 @@ const TAG_CLASS = {
  * dependency at all. Every drive of a completed game, newest first, with its
  * plays beneath.
  */
-export function DriveChart({ rows, expandFirst = true, teamAbbr = new Map(), homeTeamId }) {
+export function DriveChart({ rows, expandFirst = true, teamAbbr = new Map(), homeTeamId, format = (s) => s }) {
   if (!rows?.length) {
     return <div className="ds-empty">No play-by-play stored for this game.</div>;
   }
@@ -206,7 +206,7 @@ export function DriveChart({ rows, expandFirst = true, teamAbbr = new Map(), hom
                       unrecoverable. title costs no client boundary and no
                       bytes worth counting, and it is what a native tooltip and
                       a screen reader both already know how to surface. */}
-                  <span className="pt" title={p.text}>{p.text}</span>
+                  <span className="pt" title={format(p.text)}>{format(p.text)}</span>
                   <span className={`yd ${p.yardsGained > 0 ? 'pos' : p.yardsGained < 0 ? 'neg' : 'zero'}`}>
                     {p.yardsGained == null ? '—' : `${p.yardsGained > 0 ? '+' : ''}${p.yardsGained}`}
                   </span>
