@@ -50,8 +50,9 @@ names (each is the SQL below, rows only when the rule fires; thu-4 adds `hours_o
 `minutes_to_kickoff` to G3 so the script needs no clock of its own, and G5 omits the run's `error`
 text), G6 reads `live_matches_v`. One line per firing row, `G<n> <severity> <key> <detail>`, then
 `SUMMARY game-watch g1=N .. g6=N status=ok|regression`. Dedupe keys: G1 match id, G2 contest id,
-G3 match id, G4 contest id, G5 `data-retention`, G6 match id. Severity is the rule's own (page /
-warn / live); G5 with no run recorded is `warn`.
+G3 match id, G4 contest id, G5 `data-retention`, G6 match id. Severity is the Watcher's ticket
+enum (thu-5): game-watch prints `live` or `soon` (`later` is unused by G1-G6), per rule below; G5 with
+no run recorded is `soon`.
 
 ## G1 - next lock in the past with an unstarted game
 
@@ -61,7 +62,8 @@ warn / live); G5 with no run recorded is `warn`.
   (lib/mlb/kickoffTbd.js `isGameLocked`, lib/pickem/view.js), so a game past
   kickoff but still `scheduled` means the poller did not flip it: the card shows
   it as locked while the feed says it has not started (or the kickoff is wrong).
-- Severity: `page` if minutes_past > 30, else `warn`.
+- Severity: `live` if minutes_past > 30, else `soon`.
+- Dedupe key: match id.
 - Covers every board whose `board` jsonb elements carry a `match_id`: football
   Pick'em (nfl/cfb), October (mlb), EPL Weekly 5. Series boards (`series_key`)
   and boards with no `match_id` (weekly lineups, run, draft) are not match-locked
@@ -109,8 +111,9 @@ status before paging.
   complete sheet (a no-pick is scored 0), so incomplete entries are a normal
   state, not a fault. After the last kickoff every game is unpickable by
   design, so that condition is excluded by the `now() < locks_at` clause.
-- Severity: `page` when `pickable = 0` and the board has been open over 12 h;
-  `warn` for dangling ids only.
+- Severity: `live` when `pickable = 0` and the board has been open over 12 h;
+  `soon` otherwise, and for dangling ids.
+- Dedupe key: contest id.
 - Covered: boards with `match_id` elements, i.e. football Pick'em, October,
   EPL Weekly 5. NOT covered (no "complete" notion in SQL, or no match ids):
   Pick'em series/day boards (`series_key`), The Run rounds, weekly lineups,
@@ -162,7 +165,8 @@ not fire here; they would fire G4 only if their matches were all final.
   they are the schedule's "date only" placeholders (CFBD start-time-TBD, flex
   weeks) and are normal until a time posts. Only an imminent one can lock a
   pick wrongly, so only those fire. A CFB/NFL row inside 72 h is real news.
-- Severity: `warn`; `page` if the kickoff is within 24 h.
+- Severity: `soon`; `live` if the kickoff is within 24 h.
+- Dedupe key: match id.
 - Monitoring query, not app code (see conventions).
 
 ```sql
@@ -197,7 +201,8 @@ placeholder, so treat it as a real fire for Pick'em boards).
   present, else `matches.updated_at` (final_seen_at covers only part of the
   rows, lib/wire/finals.js). If `updated_at` was bumped later by an unrelated
   write the fire is later than 6 h, never earlier.
-- Severity: `warn`; `page` once 24 h past.
+- Severity: `soon`; `live` once 24 h past.
+- Dedupe key: contest id.
 - Covered: boards with `match_id` elements (football Pick'em, October, EPL
   Weekly 5). Series/day boards and lineups have no per-game status to read here.
   Pick'em football settle runs only Sun-Tue (`pickem-settle`), so a late final
@@ -245,7 +250,9 @@ a board whose `settles_at` is deliberately later.
   `skipped-locked` decisions are ignored (another run held the lock).
 - A run still in flight (`ok = false`, `finished_at IS NULL`, under 10 min old,
   maxDuration is 300 s) is not a failure.
-- Severity: `page` when the latest run is not ok or older than 50 h; else `warn`.
+- Severity: `live` when the latest run is not ok or older than 50 h; else `soon`
+  (including no run recorded).
+- Dedupe key: `data-retention`.
 - Note: the job DRY-RUNS unless `RETENTION_APPLY=on`; a `dry-run` kind is a
   healthy run. Whether deletes are happening is a separate question (the kind).
 
@@ -289,7 +296,8 @@ On DEV it fires with "no run recorded" (the job does not run there) - expected.
   changed since going live).
 - Halftime is a legitimate pause: period 2 with clock `0:00`/`00:00`/`HT` is
   excluded for up to 30 min since the last change.
-- Severity: `live` ticket (the Fixer's live-game lane), key = match id.
+- Severity: `live` ticket (the Fixer's live-game lane).
+- Dedupe key: match id.
 - Confirm: `/games/<slug>` and the provider's own scoreboard; read the
   `provider_errors_v` row for the league's poller (`live-poller-<league>`) - a
   401/403 there is the cause, and `provider-health` is already red. False

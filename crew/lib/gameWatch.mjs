@@ -1,8 +1,9 @@
 // crew/lib/gameWatch.mjs - game-watch: the Watcher's GAME rules G1-G6 (crew/watch-rules.md).
 // Reads the crew_stats views g1_lock_unstarted .. g5_retention_not_ok (each is that rule's SQL and
 // returns rows ONLY when the rule fires) and live_matches_v for G6. No arguments, read only.
-// One line per firing row: `G<n> <severity> <key> <detail>`. Severity is the rule's ticket severity
-// (page | warn | live, as watch-rules.md states them); key is the dedupe key:
+// One line per firing row: `G<n> <severity> <key> <detail>`. Severity is the Watcher's ticket
+// severity (thu-5: live | soon | later; a watch-rules `page` is `live`, `warn` is `soon`, `later` is
+// unused); key is the dedupe key:
 //   G1 match id, G2 contest id, G3 match id, G4 contest id, G5 `data-retention`, G6 match id.
 import { parseArgs, requireReaderUrl } from './common.mjs';
 import { query, num } from './db.mjs';
@@ -29,29 +30,29 @@ export const SQL = Object.freeze({
 /** PURE. One row per rule -> { sev, key, detail }. */
 export const FORMAT = Object.freeze({
   G1: (r) => ({
-    sev: num(r.minutes_past) > 30 ? 'page' : 'warn',
+    sev: num(r.minutes_past) > 30 ? 'live' : 'soon',
     key: r.match_id,
     detail: `contest=${r.contest_id} ${tok(r.game_type)} match=${tok(r.slug)} still_scheduled minutes_past=${num(r.minutes_past)}`,
   }),
   G2: (r) => ({
-    // dangling ids are warn only; no pickable game pages once the board has been open over 12 h
-    sev: num(r.dangling) === 0 && num(r.hours_open) > 12 ? 'page' : 'warn',
+    // dangling ids are soon only; no pickable game is live once the board has been open over 12 h
+    sev: num(r.dangling) === 0 && num(r.hours_open) > 12 ? 'live' : 'soon',
     key: r.contest_id,
     detail: `${tok(r.game_type)} ${tok(r.why)} games=${num(r.games)} pickable=${num(r.pickable)} dangling=${num(r.dangling)} hours_open=${num(r.hours_open)}`,
   }),
   G3: (r) => ({
-    sev: num(r.minutes_to_kickoff) <= 24 * 60 ? 'page' : 'warn',
+    sev: num(r.minutes_to_kickoff) <= 24 * 60 ? 'live' : 'soon',
     key: r.match_id,
     detail: `${tok(r.league)} ${tok(r.slug)} midnight_et_no_tbd minutes_to_kickoff=${num(r.minutes_to_kickoff)}`,
   }),
   G4: (r) => ({
-    sev: num(r.hours_since_last_final) >= 24 ? 'page' : 'warn',
+    sev: num(r.hours_since_last_final) >= 24 ? 'live' : 'soon',
     key: r.contest_id,
     detail: `${tok(r.game_type)} games=${num(r.games)} finals=${num(r.finals)} hours_since_last_final=${num(r.hours_since_last_final)}`,
   }),
   G5: (r) => ({
-    // page when the latest run is not ok or older than 50 h; "no run recorded" and a 26-50 h gap are warn
-    sev: r.why === 'last run not ok' || num(r.hours_since_start) > 50 ? 'page' : 'warn',
+    // live when the latest run is not ok or older than 50 h; "no run recorded" and a 26-50 h gap are soon
+    sev: r.why === 'last run not ok' || num(r.hours_since_start) > 50 ? 'live' : 'soon',
     key: 'data-retention',
     detail: `${tok(r.why)} kind=${tok(r.kind)} hours_since_start=${r.hours_since_start == null ? '-' : num(r.hours_since_start)}`,
   }),
