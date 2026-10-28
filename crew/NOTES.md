@@ -4,8 +4,8 @@ v1.6 · Oct 22 2026 · REPO IS CANONICAL (crew/ in the sportsvyn repo; Drive arc
 
 User, alias, paths
 - Crew runs as Linux user `crew-sportsvyn`; OpenClaw (crewos-droplet) reaches it via SSH alias `sportsvyn-droplet` (never the IP). All files: replace `watcher@droplet` / `ssh droplet` with the alias.
-- Paths move to /home/crew-sportsvyn/crew/{bin,worktrees,secrets,data}. The Oct 7 setup (wed-4) put the ~/crew/bin scripts, ~/crew/secrets, the two mini keys and the DEV sentinel creds under Derik's own user. The two keys and their private halves were removed Oct 8; the rest was listed then. At registration, keys and scripts are re-created under crew-sportsvyn.
-- Repo access: crew-sportsvyn gets its own clone of github.com/deriksilva35/sportsvyn on the droplet via a read-only GitHub deploy key scoped to this repo (Fixer worktrees come from that clone; the Fixer's PRs need a separate push path, decided at registration). It must not read Derik's ~/projects tree, which holds the other six repos.
+- Paths move to /home/crew-sportsvyn/crew/{bin,worktrees,secrets,data}. The Oct 7 setup (wed-4) put the ~/crew/bin scripts, ~/crew/secrets, the two mini keys and the DEV sentinel creds under Derik's own user. The two keys and their private halves were removed Oct 8; the rest was listed then. Done: keys and scripts now live under crew-sportsvyn (~/crew/bin, ~/crew/secrets).
+- Repo access: crew-sportsvyn gets its own clone of github.com/deriksilva35/sportsvyn on the droplet via a read-only GitHub deploy key scoped to this repo (Fixer worktrees come from that clone; the Fixer's PRs go out on the relay path: claude-relay, crewctl). It must not read Derik's ~/projects tree, which holds the other six repos.
 
 DECISION: suite lock across users
 - One lock for Derik's sessions (user derik) and the Fixer (user crew-sportsvyn); per project, never global.
@@ -65,7 +65,7 @@ DECISION: budget = option (c)
 - No full suite in a Fixer session. The PR's required CI check ("SPORTSVŶN test suite") is the full run; branch protection on main already requires it.
 - Red CI: CrewOS may start ONE follow-up session on the same branch with the CI log; red again = stuck.
 - Why: a local full run would duplicate CI's 13 min and hold the shared suite lock that Derik's sessions use. (a) and (b) both spend that time twice.
-- To create at registration: docs/crew/fast-subset.md listing the repo guard tests (hex census, zone guard, legal/census, age gate and any other repo-wide guards) so the subset catches what usually breaks.
+- Done: docs/crew/fast-subset.md lists the repo guard tests (hex census, zone guard, legal/census, age gate and any other repo-wide guards) so the subset catches what usually breaks.
 
 DECISION: fix_allowed_paths (rung 2), v1.4 after CREW-1's glob check
 - Allowed: app/**/*.{js,jsx,css}, components/**, lib/**, test/**, tests/**, **/*.test.mjs, docs/CREW-LOG.md.
