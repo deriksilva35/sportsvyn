@@ -15,8 +15,9 @@ Drive CrewOS/crews/sportsvyn/ is archived for this project (old versions in _arc
 `crew/bin` is the reviewed source of the scripts CrewOS runs as SSH forced commands under user
 `crew-sportsvyn` (`~/crew/bin`, with `crew/lib` beside it). They are plain node (>= 20.11, no
 dependencies) and read-only. `dispatch` is the forced-command router: it runs ONE script from
-`~/crew/bin` by name, only if the name is on its ALLOWED list (the eight scripts above; anything
-else exits 2 and runs nothing), and passes only whole-number arguments.
+`~/crew/bin` by name, only if the name is on its ALLOWED list (the nine scripts in the table below; anything
+else exits 2 and runs nothing), and passes only whole-number arguments (sportsvyn-stats: one
+optional `YYYY-MM-DDTHH:MM:SSZ`).
 
 Install / update (on the droplet, as crew-sportsvyn):
 
@@ -72,6 +73,7 @@ output, default `~/crew/data`), `CREW_JOB_TIMEOUT_MS`.
 | `latest-deploy` | none | `SUMMARY latest-deploy status=ok\|regression deploy_id=<dpl_x> state=READY\|ERROR\|BUILDING commit=<sha7> created=<ISO8601>` | `state=ERROR` (production target) |
 | `board-state` | none | prints one line: `locks_in:<m>`, `open` or `closed` | never; exit 2 prints nothing |
 | `data-keeper` | none | `SUMMARY data-keeper status=ok\|regression job=<id> rows_before=N rows_after=N would_change=N dry_run=<path>` | the dry run's data contradicts itself |
+| `sportsvyn-stats` | `[since]`, `YYYY-MM-DDTHH:MM:SSZ` (default 24 h ago) | none: key=value lines only (Pulse usage numbers, no PII or money); source `docs/crew/sportsvyn-stats`, installed separately | never; a malformed `since` prints `error=bad_since`, exit 2 |
 
 Notes:
 
