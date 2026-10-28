@@ -55,5 +55,3 @@ fixer_limits: { minutes: 25, subset_runs: 2, local_full_suite_runs: 0, ci_follow
 fixer_paths: see fixer/SOUL.md (allow / never lists, v1.5.1; never-list includes crew/**)
 ask_first: [merge, deploy, delete, send, backfill, testflight, prod_write, firewall, migration]
 rung: { fixer: 2 (PR only, Derik merges), watcher: read-only, data_keeper: dry-run only }
-pending_before_live:
-  - poller checks written against the SUMMARY formats
