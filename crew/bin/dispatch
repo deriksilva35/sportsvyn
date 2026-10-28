@@ -1,17 +1,24 @@
 #!/usr/bin/env bash
 # ~/crew/bin/dispatch - the WATCHER key's forced command (authorized_keys command=).
 # Runs ONE script from ~/crew/bin by name, with simple arguments. Nothing else.
+# The command arrives as $1 (command="~/crew/bin/dispatch \"$SSH_ORIGINAL_COMMAND\"", the host's
+# wiring) or, failing that, in SSH_ORIGINAL_COMMAND itself. Never eval'd.
+# ALLOWED IS THE WHOLE LIST (thu-1): a name not on it - unknown, empty, a path, dispatch itself -
+# is refused with exit 2 and nothing runs. The host copy kept the list in ~/crew/bin/ALLOWED;
+# here it is reviewed source, so widening it is a PR.
 # The scripts are node programs (crew/lib/cli.mjs); a forced command has a bare PATH, so put the
 # newest nvm node first when there is one.
 set -euo pipefail
+ALLOWED=(app-errors vercel-errors retention-status provider-health cost-watch latest-deploy board-state data-keeper)
 BIN="$HOME/crew/bin"
 for d in "$HOME"/.nvm/versions/node/*/bin; do [ -d "$d" ] && PATH="$d:$PATH"; done
 export PATH
-read -r -a argv <<< "${SSH_ORIGINAL_COMMAND:-}"
+cmd="${1:-${SSH_ORIGINAL_COMMAND:-}}"
+read -r -a argv <<< "$cmd" || true
 name="${argv[0]:-}"
-if [ -z "$name" ] || [ "$name" = help ]; then
-  echo "crew watcher: available:"; for f in "$BIN"/*; do b=$(basename "$f"); [ "$b" = dispatch ] || echo "  $b"; done; exit 0
-fi
-[[ "$name" =~ ^[a-z][a-z0-9-]*$ ]] && [ "$name" != dispatch ] && [ -x "$BIN/$name" ] || { echo "not allowed: $name" >&2; exit 126; }
-for a in "${argv[@]:1}"; do [[ "$a" =~ ^[0-9]+$ ]] || { echo "argument not allowed: $a" >&2; exit 126; }; done
+ok=0
+for a in "${ALLOWED[@]}"; do [ "$name" = "$a" ] && ok=1; done
+[ "$ok" = 1 ] && [ -x "$BIN/$name" ] || { echo "not allowed: $name" >&2; exit 2; }
+for a in "${argv[@]:1}"; do [[ "$a" =~ ^[0-9]+$ ]] || { echo "argument not allowed: $a" >&2; exit 2; }; done
+cd "$HOME/crew"
 exec "$BIN/$name" "${argv[@]:1}"

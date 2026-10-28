@@ -15,7 +15,8 @@ Drive CrewOS/crews/sportsvyn/ is archived for this project (old versions in _arc
 `crew/bin` is the reviewed source of the scripts CrewOS runs as SSH forced commands under user
 `crew-sportsvyn` (`~/crew/bin`, with `crew/lib` beside it). They are plain node (>= 20.11, no
 dependencies) and read-only. `dispatch` is the forced-command router: it runs ONE script from
-`~/crew/bin` by name and passes only whole-number arguments.
+`~/crew/bin` by name, only if the name is on its ALLOWED list (the eight scripts above; anything
+else exits 2 and runs nothing), and passes only whole-number arguments.
 
 Install / update (on the droplet, as crew-sportsvyn):
 
