@@ -93,3 +93,7 @@ Archived: fixer SOUL v1.2, v1.3, v1.4 and NOTES v1.3, v1.4, v1.5 in _archive/.
 - Fixer never-list gains crew/** (Fixer v1.5.1): it never edits SOULs, project.yaml, NOTES or the crew scripts.
 - Data Keeper final message gains an APPLY line (Data Keeper v1.5.1).
 - Versions: watcher v1.5.2, data-keeper v1.5.1, fixer v1.5.1, project.yaml v1.5.3.
+
+## thu-1 (Oct 28 2026)
+- Watcher v1.5.3: rule 1 exempts board-state from the SUMMARY-line rule by name (it prints one state line, open | locks_in:<m> | closed, for the poller), so its format is never a SETUP ticket. board-state itself unchanged; a test pins its output.
+- dispatch refuses (exit 2, nothing run) any name not on its ALLOWED list of the eight crew scripts, as the host copy already did; the list now lives in the repo's dispatch.
