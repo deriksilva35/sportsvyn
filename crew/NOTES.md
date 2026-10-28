@@ -3,7 +3,7 @@ v1.6 · Oct 22 2026 · REPO IS CANONICAL (crew/ in the sportsvyn repo; Drive arc
 ## Schema pass (one pass once crew_tickets, briefs and tasks exist; then registration)
 
 User, alias, paths
-- Crew runs as Linux user `crew-sportsvyn`; the mini reaches it via SSH alias `sportsvyn-droplet` (never the IP). All files: replace `watcher@droplet` / `ssh droplet` with the alias.
+- Crew runs as Linux user `crew-sportsvyn`; OpenClaw (crewos-droplet) reaches it via SSH alias `sportsvyn-droplet` (never the IP). All files: replace `watcher@droplet` / `ssh droplet` with the alias.
 - Paths move to /home/crew-sportsvyn/crew/{bin,worktrees,secrets,data}. The Oct 7 setup (wed-4) put the ~/crew/bin scripts, ~/crew/secrets, the two mini keys and the DEV sentinel creds under Derik's own user. The two keys and their private halves were removed Oct 8; the rest was listed then. At registration, keys and scripts are re-created under crew-sportsvyn.
 - Repo access: crew-sportsvyn gets its own clone of github.com/deriksilva35/sportsvyn on the droplet via a read-only GitHub deploy key scoped to this repo (Fixer worktrees come from that clone; the Fixer's PRs need a separate push path, decided at registration). It must not read Derik's ~/projects tree, which holds the other six repos.
 
@@ -15,12 +15,12 @@ DECISION: suite lock across users
 
 DECISION: tokens (isolation lives in the script)
 - Vercel tokens are account-wide and cannot be scoped to one project. The isolation is in the script: vercel-errors and cost-watch in crew-sportsvyn's ~/crew/bin are hardcoded to the SPORTSVŶN Vercel project id and return only that project's data. The token sits in crew-sportsvyn's ~/crew/secrets (chmod 700); the Watcher never sees it, only script output.
-- Cloudflare: same pattern. cf-top is hardcoded to the sportsvyn.com zone; token in ~/crew/secrets; the Watcher sees only output.
+- Cloudflare: none. sportsvyn.com DNS is on GoDaddy, so there is no cf-top or other edge script and no Cloudflare token; edge traffic is read from Vercel only.
 
 Where things run (3c)
-- Watcher: stays on the mini (read-only role + forced-command scripts). No change.
-- Data Keeper: holds DEV write creds and its approved command writes PROD, so it moves to the droplet as a forced-command script under crew-sportsvyn; the mini invokes it and reads the run back. The dashboard's Approve replay also executes there.
-- Fixer: works in droplet worktrees over SSH as crew-sportsvyn.
+- Watcher: on OpenClaw (crewos-droplet), read-only role + forced-command scripts via sportsvyn-droplet. Soul b8cca024 / v1.5.4; v1.5.5 pending.
+- Data Keeper: holds DEV write creds and its approved command writes PROD, so it runs on the droplet as a forced-command script under crew-sportsvyn; OpenClaw invokes it and reads the run back. The dashboard's Approve replay also executes there.
+- Fixer: live on the relay path (claude-relay, crewctl, soul 263995f7), in droplet worktrees as crew-sportsvyn.
 
 Rows
 - Data Keeper queue: docs/crew/data-queue.md is replaced by `tasks` rows (agent_id = data-keeper, kind = data, payload = {job, script, scope}). Takes the oldest highest-priority `new` task, sets `taken`, sets `done` with result_ref = deliverable id. Only on its 02:00 PT run; a new task never starts a daytime run. Seed the current queue (season pool backfill 2000-2001 then 1997-1999; team colours re-check) by script.
