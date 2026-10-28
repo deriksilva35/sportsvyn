@@ -163,6 +163,123 @@ export const CREW_VIEWS = Object.freeze([
             FROM public.matches m JOIN public.leagues l ON l.id = m.league_id
            WHERE m.status = 'live'`,
   },
+  {
+    // thu-4 G1-G5 (crew/watch-rules.md, game-watch): each view is that rule's SQL, rows ONLY when the
+    // rule fires. Ids, slugs, times and counts; no user data. The view owner reads contests/matches/
+    // sync_runs; the role gets SELECT on the view only.
+    name: 'g1_lock_unstarted',
+    sql: `SELECT c.id AS contest_id, c.game_type, c.sport, c.season_year, c.week,
+                 m.id AS match_id, m.slug, m.status, m.kickoff_at,
+                 round(extract(epoch FROM (now() - m.kickoff_at)) / 60)::int AS minutes_past
+            FROM public.contests c
+            CROSS JOIN LATERAL jsonb_array_elements(
+                  CASE WHEN jsonb_typeof(c.board) = 'array' THEN c.board ELSE '[]'::jsonb END) AS g(e)
+            JOIN public.matches m ON m.id = (g.e->>'match_id')::int
+            JOIN public.leagues l ON l.id = m.league_id
+           WHERE c.settled = false
+             AND c.opens_at <= now()
+             AND g.e ? 'match_id'
+             AND m.status = 'scheduled'
+             AND (m.metadata->>'kickoff_tbd') IS DISTINCT FROM 'true'
+             AND NOT (l.slug = 'mlb' AND (m.kickoff_at AT TIME ZONE 'America/New_York')::time = TIME '00:00')
+             AND m.kickoff_at <= now() - interval '10 minutes'
+           ORDER BY m.kickoff_at
+           LIMIT 50`,
+  },
+  {
+    // hours_open is added to the spec's columns so game-watch can apply "page when pickable = 0 and
+    // open over 12 h" without its own clock.
+    name: 'g2_card_incomplete',
+    sql: `WITH b AS (
+            SELECT c.id, c.game_type, c.sport, c.season_year, c.week, c.opens_at, c.locks_at,
+                   count(g.e) FILTER (WHERE g.e ? 'match_id') AS games,
+                   count(g.e) FILTER (WHERE g.e ? 'match_id' AND m.id IS NULL) AS dangling,
+                   count(g.e) FILTER (WHERE g.e ? 'match_id' AND m.status = 'scheduled'
+                                        AND ((m.metadata->>'kickoff_tbd') = 'true' OR m.kickoff_at > now())) AS pickable,
+                   bool_or(g.e ? 'series_key') AS is_series
+              FROM public.contests c
+              LEFT JOIN LATERAL jsonb_array_elements(
+                    CASE WHEN jsonb_typeof(c.board) = 'array' THEN c.board ELSE '[]'::jsonb END) AS g(e) ON true
+              LEFT JOIN public.matches m ON m.id = CASE WHEN g.e ? 'match_id' THEN (g.e->>'match_id')::int END
+             WHERE c.settled = false
+               AND c.opens_at <= now()
+               AND c.game_type IN ('pickem', 'october', 'epl_weekly_5')
+             GROUP BY c.id
+          )
+          SELECT id AS contest_id, game_type, sport, season_year, week, opens_at, locks_at,
+                 games, pickable, dangling,
+                 round(extract(epoch FROM (now() - opens_at)) / 3600)::int AS hours_open,
+                 CASE WHEN dangling > 0 THEN 'dangling match_id' ELSE 'no pickable game before lock' END AS why
+            FROM b
+           WHERE NOT COALESCE(is_series, false)
+             AND (dangling > 0 OR (now() < locks_at AND pickable = 0))
+           ORDER BY id`,
+  },
+  {
+    // minutes_to_kickoff is added for "page if the kickoff is within 24 h".
+    name: 'g3_kickoff_midnight_untbd',
+    sql: `SELECT m.id AS match_id, l.slug AS league, m.slug, m.status, m.kickoff_at,
+                 (m.kickoff_at AT TIME ZONE 'America/New_York') AS kickoff_et,
+                 m.metadata->>'kickoff_tbd' AS kickoff_tbd,
+                 round(extract(epoch FROM (m.kickoff_at - now())) / 60)::int AS minutes_to_kickoff
+            FROM public.matches m
+            JOIN public.leagues l ON l.id = m.league_id
+           WHERE m.status = 'scheduled'
+             AND m.kickoff_at > now()
+             AND m.kickoff_at < now() + interval '72 hours'
+             AND (m.kickoff_at AT TIME ZONE 'America/New_York')::time = TIME '00:00'
+             AND (m.metadata->>'kickoff_tbd') IS DISTINCT FROM 'true'
+           ORDER BY m.kickoff_at
+           LIMIT 50`,
+  },
+  {
+    name: 'g4_board_unsettled',
+    sql: `WITH b AS (
+            SELECT c.id, c.game_type, c.sport, c.season_year, c.week, c.settles_at,
+                   count(*) AS games,
+                   count(*) FILTER (WHERE m.status = 'final') AS finals,
+                   count(*) FILTER (WHERE m.status IN ('final', 'cancelled', 'not_needed')) AS terminal,
+                   max(COALESCE((m.metadata->'detail'->>'final_seen_at')::timestamptz, m.updated_at))
+                       FILTER (WHERE m.status = 'final') AS last_final
+              FROM public.contests c
+              CROSS JOIN LATERAL jsonb_array_elements(
+                    CASE WHEN jsonb_typeof(c.board) = 'array' THEN c.board ELSE '[]'::jsonb END) AS g(e)
+              JOIN public.matches m ON m.id = (g.e->>'match_id')::int
+             WHERE c.settled = false
+               AND g.e ? 'match_id'
+             GROUP BY c.id
+          )
+          SELECT id AS contest_id, game_type, sport, season_year, week, settles_at, games, finals,
+                 last_final, round(extract(epoch FROM (now() - last_final)) / 3600)::int AS hours_since_last_final
+            FROM b
+           WHERE games > 0
+             AND terminal = games
+             AND finals > 0
+             AND last_final < now() - interval '6 hours'
+           ORDER BY last_final`,
+  },
+  {
+    // The spec's left(error, 200) AS error is NOT exposed: run error text is free text and the views
+    // carry no message text. game-watch needs ok / why / age, not the message.
+    name: 'g5_retention_not_ok',
+    sql: `WITH r AS (
+            SELECT id, kind, ok, started_at, finished_at
+              FROM public.sync_runs
+             WHERE source = 'data-retention' AND kind IN ('apply', 'dry-run')
+             ORDER BY started_at DESC
+             LIMIT 1
+          )
+          SELECT r.id AS run_id, r.kind, r.ok, r.started_at, r.finished_at,
+                 round(extract(epoch FROM (now() - r.started_at)) / 3600)::int AS hours_since_start,
+                 CASE WHEN r.id IS NULL THEN 'no run recorded'
+                      WHEN r.ok IS NOT TRUE THEN 'last run not ok'
+                      ELSE 'last run older than 26h' END AS why
+            FROM (SELECT 1) x
+            LEFT JOIN r ON true
+           WHERE r.id IS NULL
+              OR (r.ok IS NOT TRUE AND NOT (r.finished_at IS NULL AND r.started_at > now() - interval '10 minutes'))
+              OR (r.ok AND r.started_at < now() - interval '26 hours')`,
+  },
 ]);
 
 /** PURE. The statements that (re)create the schema and views, run before the grants. */

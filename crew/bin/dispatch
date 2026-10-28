@@ -3,15 +3,15 @@
 # Runs ONE script from ~/crew/bin by name, with simple arguments. Nothing else.
 # The command arrives as $1 (command="~/crew/bin/dispatch \"$SSH_ORIGINAL_COMMAND\"", the host's
 # wiring) or, failing that, in SSH_ORIGINAL_COMMAND itself. Never eval'd.
-# ALLOWED IS THE WHOLE LIST (thu-1, thu-3): a name not on it - unknown, empty, a path, dispatch itself -
+# ALLOWED IS THE WHOLE LIST (thu-1, thu-3, thu-4): a name not on it - unknown, empty, a path, dispatch itself -
 # is refused with exit 2 and nothing runs. The host copy kept the list in ~/crew/bin/ALLOWED;
 # here it is reviewed source, so widening it is a PR.
-# ARGUMENTS: whole numbers only, except sportsvyn-stats (thu-3: CrewOS Pulse calls
+# ARGUMENTS: whole numbers only, except game-watch (thu-4: none at all) and sportsvyn-stats (thu-3: CrewOS Pulse calls
 # `sportsvyn-stats <since>`), which takes zero or ONE ISO-8601 UTC instant to the second.
 # The scripts are node programs (crew/lib/cli.mjs); a forced command has a bare PATH, so put the
 # newest nvm node first when there is one.
 set -euo pipefail
-ALLOWED=(app-errors vercel-errors retention-status provider-health cost-watch latest-deploy board-state data-keeper sportsvyn-stats)
+ALLOWED=(app-errors vercel-errors retention-status provider-health cost-watch latest-deploy board-state data-keeper sportsvyn-stats game-watch)
 BIN="$HOME/crew/bin"
 for d in "$HOME"/.nvm/versions/node/*/bin; do [ -d "$d" ] && PATH="$d:$PATH"; done
 export PATH
@@ -21,7 +21,9 @@ name="${argv[0]:-}"
 ok=0
 for a in "${ALLOWED[@]}"; do [ "$name" = "$a" ] && ok=1; done
 [ "$ok" = 1 ] && [ -x "$BIN/$name" ] || { echo "not allowed: $name" >&2; exit 2; }
-if [ "$name" = sportsvyn-stats ]; then
+if [ "$name" = game-watch ]; then
+  [ "${#argv[@]}" -le 1 ] || { echo "game-watch takes no arguments" >&2; exit 2; }
+elif [ "$name" = sportsvyn-stats ]; then
   [ "${#argv[@]}" -le 2 ] || { echo "too many arguments" >&2; exit 2; }
   for a in "${argv[@]:1}"; do [[ "$a" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] || { echo "argument not allowed: $a" >&2; exit 2; }; done
 else

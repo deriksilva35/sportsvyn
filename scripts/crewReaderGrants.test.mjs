@@ -104,12 +104,27 @@ test('tue-6: purchase, subscription, push-log and invite tables are withheld who
 // ---- crew-bin: the four views crew/bin reads, created in the apply transaction ----
 import { CREW_VIEWS, viewStatements } from './crew-reader-grants.mjs';
 
-test('crew-bin views: the four names, schema first, every statement a CREATE OR REPLACE in crew_stats', () => {
-  assert.deepEqual(CREW_VIEWS.map((v) => v.name), ['app_errors_v', 'boards_v', 'retention_ages_v', 'provider_freshness_v', 'provider_errors_v', 'live_matches_v']);
+test('crew-bin views: the eleven names, schema first, every statement a CREATE OR REPLACE in crew_stats', () => {
+  assert.deepEqual(CREW_VIEWS.map((v) => v.name), ['app_errors_v', 'boards_v', 'retention_ages_v', 'provider_freshness_v', 'provider_errors_v', 'live_matches_v',
+    'g1_lock_unstarted', 'g2_card_incomplete', 'g3_kickoff_midnight_untbd', 'g4_board_unsettled', 'g5_retention_not_ok']);
   const st = viewStatements();
   assert.equal(st[0], 'CREATE SCHEMA IF NOT EXISTS crew_stats');
-  assert.equal(st.length, 7);
-  for (const s of st.slice(1)) assert.match(s, /^CREATE OR REPLACE VIEW crew_stats\.[a-z_]+_v AS SELECT /);
+  assert.equal(st.length, 12);
+  for (const s of st.slice(1)) assert.match(s, /^CREATE OR REPLACE VIEW crew_stats\.[a-z0-9_]+ AS (SELECT|WITH) /);
+});
+
+test('thu-4 G1-G5 views: read contests/matches/sync_runs as the owner, no user table, no run error text', () => {
+  const by = Object.fromEntries(CREW_VIEWS.map((v) => [v.name, v.sql]));
+  for (const n of ['g1_lock_unstarted', 'g2_card_incomplete', 'g3_kickoff_midnight_untbd', 'g4_board_unsettled', 'g5_retention_not_ok']) {
+    assert.ok(!/\b(users|sessions|accounts|contest_entries|email|handle)\b/.test(by[n]), `${n} touches no user data`);
+    assert.ok(!/\bFROM (contests|matches|leagues|sync_runs)\b/.test(by[n]), `${n} schema-qualifies its tables`);
+  }
+  assert.match(by.g1_lock_unstarted, /m\.kickoff_at <= now\(\) - interval '10 minutes'/);
+  assert.match(by.g2_card_incomplete, /AS hours_open/);
+  assert.match(by.g3_kickoff_midnight_untbd, /interval '72 hours'/);
+  assert.match(by.g4_board_unsettled, /interval '6 hours'/);
+  assert.match(by.g5_retention_not_ok, /source = 'data-retention'/);
+  assert.ok(!/\berror\b/.test(by.g5_retention_not_ok), 'g5 does not expose the run error text');
 });
 
 test('crew-bin views carry no email, handle, IP, token, message text or payload column', () => {
