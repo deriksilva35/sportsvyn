@@ -50,6 +50,8 @@ import { auth } from '@/auth';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import { possessionSide } from '@/lib/gridiron/possession';
 import GameTeamRow from '@/components/gridiron/GameTeamRow';
+import { cfbPlayText } from '@/lib/gridiron/playText';
+import { heroName } from '@/lib/gridiron/heroName';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import { getFollowedTeamIds } from '@/lib/follows';
 import { resolveShellMode } from '@/lib/shell/shell';
@@ -288,8 +290,8 @@ export default async function CfbGamePage({ params, searchParams }) {
             defenseAbbr={defenseAbbr}
             simulated={sim.simulated}
           />
-          {stripState.mode !== 'final' && <LastPlay play={stripLastPlay} />}
-          <DriveChart rows={driveRows} teamAbbr={gamecast.teamAbbr} homeTeamId={game.home?.id} />
+          {stripState.mode !== 'final' && <LastPlay play={stripLastPlay} format={cfbPlayText} />}
+          <DriveChart rows={driveRows} teamAbbr={gamecast.teamAbbr} homeTeamId={game.home?.id} format={cfbPlayText} />
         </>
       ) : (
         <div className="ds-empty">
@@ -344,7 +346,7 @@ export default async function CfbGamePage({ params, searchParams }) {
             return (
               <GameTeamRow
                 key={side} record={side === 'home' ? homeRecord : awayRecord} t={t}
-                leagueSlug={game.leagueSlug} headgear={pairHeadgear}
+                leagueSlug={game.leagueSlug} headgear={pairHeadgear} label={heroName(t)}
                 score={side === 'home' ? game.homeScore : game.awayScore}
                 loser={winner === (side === 'home' ? 'away' : 'home')} show={final || live}
                 hasBall={ballSide === side}

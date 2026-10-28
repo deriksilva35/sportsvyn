@@ -27,7 +27,7 @@ import PossessionDot from '@/components/gridiron/PossessionDot';
 export default function GameTeamRow({
   t, score, loser, show, rank = null, record = null,
   signedIn = false, isShell = false, following = null, hasBall = false,
-  leagueSlug = null, headgear = true,
+  leagueSlug = null, headgear = true, label = null,
 }) {
   // THE STAR IS SIGNED-IN ONLY HERE, and that is a deliberate difference from
   // the team page. On /team/[slug] the star is the page's own call to action
@@ -52,7 +52,7 @@ export default function GameTeamRow({
           than becoming a seventh child of a row whose child count has already
           broken this layout once. */}
       <span className="abbr">{t?.abbreviation ?? ''}{hasBall ? <PossessionDot abbr={t?.abbreviation ?? null} /> : null}</span>
-      <span className="tname">{t?.name ?? 'TBD'}</span>
+      <span className="tname" title={label && label !== t?.name ? t?.name : undefined}>{label ?? t?.name ?? 'TBD'}</span>
       {/* A chip may only claim knowledge. Records carry no kickoff, so this
           renders pre-game, live and final alike - unlike the market strip. */}
       {record ? <span className="gg-rec">{record}</span> : null}
