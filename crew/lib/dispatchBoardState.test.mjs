@@ -4,7 +4,8 @@
 // states and nothing else; a setup error exits 2 with stdout empty. The database is a fetch stub
 // preloaded with --import (written to test-tmp/ via stubPath), so no network and no secret.
 //
-// DISPATCH: the forced-command router runs a name on its ALLOWED list and refuses (exit 2,
+// DISPATCH: the forced-command router runs a name on its ALLOWED list (sportsvyn-stats with its
+// one optional ISO instant, thu-3) and refuses (exit 2,
 // nothing executed) an unknown name, a path and an empty name. It runs against a throwaway HOME
 // whose ~/crew/bin holds dispatch plus marker-writing fakes, so a refusal is proven by the
 // marker NOT existing, not by the exit code alone.
@@ -66,8 +67,9 @@ function fakeHome() {
   mkdirSync(bin, { recursive: true });
   copyFileSync(path.join(BIN, 'dispatch'), path.join(bin, 'dispatch'));
   chmodSync(path.join(bin, 'dispatch'), 0o755);
-  // An allowed name and an executable that is NOT on the list; each leaves a marker if run.
-  for (const name of ['provider-health', 'evil']) {
+  // Two allowed names, and two executables NOT on the list (crew-install-soul is a real host
+  // script, thu-3 keeps it off); each leaves a marker holding its arguments if run.
+  for (const name of ['provider-health', 'sportsvyn-stats', 'crew-install-soul', 'evil']) {
     writeFileSync(path.join(bin, name), `#!/bin/sh\necho "$@" > "$HOME/ran-${name}"\necho ran ${name}\n`);
     chmodSync(path.join(bin, name), 0o755);
   }
@@ -111,9 +113,48 @@ test('dispatch: an unknown name, a path and an empty name are refused with exit 
   } finally { rmSync(home, { recursive: true, force: true }); }
 });
 
-test('dispatch: ALLOWED is exactly the eight crew scripts', () => {
+test('dispatch: sportsvyn-stats takes zero or one ISO-8601 UTC instant, nothing else (thu-3)', () => {
+  const home = fakeHome();
+  const marker = path.join(home, 'ran-sportsvyn-stats');
+  try {
+    const r = dispatch(home, 'sportsvyn-stats 2026-10-28T00:00:00Z');
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(readFileSync(marker, 'utf8'), '2026-10-28T00:00:00Z\n');
+    rmSync(marker);
+    const r0 = dispatch(home, 'sportsvyn-stats');
+    assert.equal(r0.status, 0, r0.stderr);
+    assert.equal(readFileSync(marker, 'utf8'), '\n', 'no argument passed');
+    rmSync(marker);
+    for (const cmd of ['sportsvyn-stats x;id', 'sportsvyn-stats 2026-10-28', 'sportsvyn-stats 60',
+      'sportsvyn-stats 2026-10-28T00:00:00Z 2026-10-29T00:00:00Z', 'sportsvyn-stats 2026-10-28T00:00:00+00:00',
+      'sportsvyn-stats 2026-10-28T00:00:00Z;id', 'sportsvyn-stats $(id)']) {
+      const x = dispatch(home, cmd);
+      assert.equal(x.status, 2, `"${cmd}" exit`);
+      assert.equal(x.stdout, '', `"${cmd}" stdout`);
+    }
+    assert.ok(!existsSync(marker), 'no refused call ran sportsvyn-stats');
+    // the ISO form stays sportsvyn-stats' own: another script still takes digits only
+    assert.equal(dispatch(home, 'provider-health 2026-10-28T00:00:00Z').status, 2);
+    assert.ok(!existsSync(path.join(home, 'ran-provider-health')));
+  } finally { rmSync(home, { recursive: true, force: true }); }
+});
+
+test('dispatch: crew-install-soul and the other host-only crew scripts stay refused (thu-3)', () => {
+  const home = fakeHome();
+  try {
+    const r = dispatch(home, 'crew-install-soul');
+    assert.equal(r.status, 2);
+    assert.ok(!existsSync(path.join(home, 'ran-crew-install-soul')));
+  } finally { rmSync(home, { recursive: true, force: true }); }
+  const src = readFileSync(path.join(BIN, 'dispatch'), 'utf8').match(/^ALLOWED=\(([^)]*)\)$/m)[1].split(/\s+/);
+  for (const n of ['crew-run-open', 'crew-run-close', 'suite.sh', 'crew-ci', 'crew-deploy', 'crew-errors', 'crew-cost', 'crew-slot-check', 'crew-soul-blob', 'crew-install-soul']) {
+    assert.ok(!src.includes(n), `${n} is not allowed`);
+  }
+});
+
+test('dispatch: ALLOWED is exactly the nine crew scripts', () => {
   const m = readFileSync(path.join(BIN, 'dispatch'), 'utf8').match(/^ALLOWED=\(([^)]*)\)$/m);
   assert.ok(m, 'one ALLOWED=( ... ) line');
   assert.deepEqual(m[1].trim().split(/\s+/).sort(),
-    ['app-errors', 'board-state', 'cost-watch', 'data-keeper', 'latest-deploy', 'provider-health', 'retention-status', 'vercel-errors']);
+    ['app-errors', 'board-state', 'cost-watch', 'data-keeper', 'latest-deploy', 'provider-health', 'retention-status', 'sportsvyn-stats', 'vercel-errors']);
 });
