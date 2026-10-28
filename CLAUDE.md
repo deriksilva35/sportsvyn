@@ -55,6 +55,12 @@ While building, run the touched tests and `npx eslint <touched>` locally.
   Never use --admin (it skips the check too). If the API merge is refused
   with the check green, stop and report.
 - Then wait for production Vercel READY on the merge commit.
+- STACKED PRs: when a PR's base is another PR's branch, retarget it to main
+  (gh pr edit <n> --base main) BEFORE merging the base PR, or merge the base
+  without deleting its branch. Deleting the base branch on merge CLOSES the
+  stacked PR, and a closed PR cannot be retargeted; it has to be reopened as a
+  new PR from the same branch. Receipt, 29 Oct (thu-4): #68 sat on #67's branch,
+  #67 merged with its branch deleted, #68 closed, re-filed as #69.
 
 THIS DOES NOT LOOSEN "THE SUITE IS THE WHOLE SUITE" below; it moves where it runs. The CI
 check is the full suite on the PR's merge tree, before the merge, so the rule holds: a green
