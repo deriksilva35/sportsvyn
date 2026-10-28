@@ -42,7 +42,7 @@ where_things_go:
   crew_tickets: problems (Watcher findings, Data Keeper exit 1/2, Fixer ticket status)
   runs.summary: every run's numbers, SUMMARY lines read, cap/partial notes, CREW-LOG line (Watcher, Data Keeper)
   deliverables: Data Keeper dry runs, status = waiting (counts, 10 sample rows, dry-run path, exact apply_command)
-  approvals: Derik's decision. MONTH ONE: Approve = Derik runs apply_command by hand; no auto-replay
+  approvals: "Derik's decision. MONTH ONE: Approve = Derik runs apply_command by hand; no auto-replay"
   docs/CREW-LOG.md: Fixer only, inside its PR
 drive_folder: CrewOS/crews/sportsvyn
 budgets:
@@ -54,4 +54,4 @@ budgets:
 fixer_limits: { minutes: 25, subset_runs: 2, local_full_suite_runs: 0, ci_followups: 1 }
 fixer_paths: see fixer/SOUL.md (allow / never lists, v1.5.1; never-list includes crew/**)
 ask_first: [merge, deploy, delete, send, backfill, testflight, prod_write, firewall, migration]
-rung: { fixer: 2 (PR only, Derik merges), watcher: read-only, data_keeper: dry-run only }
+rung: { fixer: "2 (PR only, Derik merges)", watcher: read-only, data_keeper: dry-run only }
