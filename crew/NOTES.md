@@ -97,3 +97,6 @@ Archived: fixer SOUL v1.2, v1.3, v1.4 and NOTES v1.3, v1.4, v1.5 in _archive/.
 ## thu-1 (Oct 28 2026)
 - Watcher v1.5.3: rule 1 exempts board-state from the SUMMARY-line rule by name (it prints one state line, open | locks_in:<m> | closed, for the poller), so its format is never a SETUP ticket. board-state itself unchanged; a test pins its output.
 - dispatch refuses (exit 2, nothing run) any name not on its ALLOWED list of the eight crew scripts, as the host copy already did; the list now lives in the repo's dispatch.
+
+## thu-4 (Oct 29 2026)
+- game-watch: the Watcher's G1-G6 read path. Five new crew_stats views (g1_lock_unstarted, g2_card_incomplete, g3_kickoff_midnight_untbd, g4_board_unsettled, g5_retention_not_ok) hold each rule's SQL from watch-rules.md; G6 reads live_matches_v. `game-watch` (no arguments) prints `G<n> <severity> <key> <detail>` per firing row, then `SUMMARY game-watch g1..g6 status`. dispatch ALLOWED is now ten names and refuses any argument to game-watch. Watcher v1.5.4. PROD needs `scripts/crew-reader-grants.mjs --prod --apply` before the script can read there.

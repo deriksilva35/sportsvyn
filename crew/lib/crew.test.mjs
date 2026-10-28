@@ -35,6 +35,7 @@ const FORMATS = {
   'cost-watch': /^SUMMARY cost-watch status=(ok|regression) vercel_usd_mtd=(-|\d+\.\d\d) neon_usd_mtd=(-|\d+\.\d\d) resend_sent_mtd=(-|\d+) pace=(ok|over|unknown)$/,
   'latest-deploy': /^SUMMARY latest-deploy status=(ok|regression) deploy_id=\S+ state=(READY|ERROR|BUILDING|CANCELED|-) commit=\S+ created=\S+$/,
   'data-keeper': /^SUMMARY data-keeper status=(ok|regression) job=\S+ rows_before=\S+ rows_after=\S+ would_change=\S+ dry_run=\S+$/,
+  'game-watch': /^SUMMARY game-watch g1=\d+ g2=\d+ g3=\d+ g4=\d+ g5=\d+ g6=\d+ status=(ok|regression)$/,
 };
 
 test('summaryLine: key=value, no spaces in values, empty is "-"', () => {
@@ -306,7 +307,7 @@ test('every script has a bin shim, is executable, and is in the registry; dispat
     assert.match(readFileSync(p, 'utf8'), new RegExp(`m\\.run\\("${name}"\\)`));
   }
   assert.match(readFileSync(path.join(BIN, 'dispatch'), 'utf8'), /\^\[0-9\]\+\$/);
-  assert.equal(Object.keys(SCRIPTS).length, 8);
+  assert.equal(Object.keys(SCRIPTS).length, 9);
 });
 // ---- data-keeper -------------------------------------------------------------------------------
 const QUEUE = (dry = 'node scripts/fake-dry.mjs', second = '') => `# queue

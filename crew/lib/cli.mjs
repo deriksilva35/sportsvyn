@@ -12,6 +12,7 @@ export const SCRIPTS = Object.freeze({
   'latest-deploy': ['./latestDeploy.mjs', {}],
   'board-state': ['./boardState.mjs', { silentOnError: true, summaryFn: (s) => s }],
   'data-keeper': ['./dataKeeper.mjs', { deadlineMs: null }],
+  'game-watch': ['./gameWatch.mjs', {}],
 });
 
 export async function run(name, opts = {}) {

@@ -15,7 +15,7 @@ Drive CrewOS/crews/sportsvyn/ is archived for this project (old versions in _arc
 `crew/bin` is the reviewed source of the scripts CrewOS runs as SSH forced commands under user
 `crew-sportsvyn` (`~/crew/bin`, with `crew/lib` beside it). They are plain node (>= 20.11, no
 dependencies) and read-only. `dispatch` is the forced-command router: it runs ONE script from
-`~/crew/bin` by name, only if the name is on its ALLOWED list (the nine scripts in the table below; anything
+`~/crew/bin` by name, only if the name is on its ALLOWED list (the ten scripts in the table below; anything
 else exits 2 and runs nothing), and passes only whole-number arguments (sportsvyn-stats: one
 optional `YYYY-MM-DDTHH:MM:SSZ`).
 
@@ -52,7 +52,7 @@ Install / update (on the droplet, as crew-sportsvyn):
 
 | File | Holds | Used by |
 |------|-------|---------|
-| `crew-reader.env` | `CREW_READER_URL=postgres://crew_reader:...` (the PROD reader) | app-errors, retention-status, provider-health, board-state, data-keeper |
+| `crew-reader.env` | `CREW_READER_URL=postgres://crew_reader:...` (the PROD reader) | app-errors, retention-status, provider-health, board-state, data-keeper, game-watch |
 | `vercel.token` | a Vercel token (account-wide; the scripts are pinned to project `sportsvyn`, `prj_dnWLrT1wn34YScbMwQgtGT3WYVoE`, team `deriksilva35s-projects`) | vercel-errors, latest-deploy, cost-watch |
 | `resend.token` (optional) | a Resend API key | cost-watch (`resend_sent_mtd`; `-` without it) |
 | `cfbd.token` (optional) | the CFBD key | data-keeper, only for the team-colours job (its CFB half makes one CFBD call) |
@@ -73,6 +73,7 @@ output, default `~/crew/data`), `CREW_JOB_TIMEOUT_MS`.
 | `latest-deploy` | none | `SUMMARY latest-deploy status=ok\|regression deploy_id=<dpl_x> state=READY\|ERROR\|BUILDING commit=<sha7> created=<ISO8601>` | `state=ERROR` (production target) |
 | `board-state` | none | prints one line: `locks_in:<m>`, `open` or `closed` | never; exit 2 prints nothing |
 | `data-keeper` | none | `SUMMARY data-keeper status=ok\|regression job=<id> rows_before=N rows_after=N would_change=N dry_run=<path>` | the dry run's data contradicts itself |
+| `game-watch` | none (any argument is exit 2; dispatch refuses one too) | one line per firing row `G<n> <page\|warn\|live> <key> <detail>`, then `SUMMARY game-watch g1=N g2=N g3=N g4=N g5=N g6=N status=ok\|regression` | any rule fired: G1 unstarted game past lock, G2 card with no pickable game, G3 midnight-ET kickoff without TBD, G4 board unsettled 6 h after its last final, G5 retention job not ok, G6 frozen live game (rules, severities and dedupe keys: watch-rules.md "game-watch") |
 | `sportsvyn-stats` | `[since]`, `YYYY-MM-DDTHH:MM:SSZ` (default 24 h ago) | none: key=value lines only (Pulse usage numbers, no PII or money); source `docs/crew/sportsvyn-stats`, installed separately | never; a malformed `since` prints `error=bad_since`, exit 2 |
 
 Notes:
@@ -94,6 +95,6 @@ Notes:
 
 `scripts/crew-reader-grants.mjs` creates schema `crew_stats` and its views and grants the role
 (`--apply` for DEV, `--prod --apply` for PROD). Views used here: `app_errors_v`, `boards_v`,
-`retention_ages_v`, `provider_freshness_v`, `provider_errors_v`, `live_matches_v` (no email, handle, IP, token, message text or payload).
+`retention_ages_v`, `provider_freshness_v`, `provider_errors_v`, `live_matches_v`, `g1_lock_unstarted`, `g2_card_incomplete`, `g3_kickoff_midnight_untbd`, `g4_board_unsettled`, `g5_retention_not_ok` (no email, handle, IP, token, message text or payload).
 
 <!-- fri-2 proof: a crew/README.md-only change runs the full suite. -->

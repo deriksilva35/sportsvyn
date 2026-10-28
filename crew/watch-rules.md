@@ -29,9 +29,9 @@ by hand when a script's number needs confirming. See crew/README.md for each scr
 
 | Rule | Section | Script |
 |------|---------|--------|
-| G1-G4 board / kickoff rules | game-watch | none (SQL is the spec; `board-state` is the schedule signal) |
-| G5 retention job not ok | game-watch | none (SQL is the spec) |
-| G6 frozen live game | game-watch | none (SQL is the spec; reads `crew_stats.live_matches_v`) |
+| G1-G4 board / kickoff rules | game-watch | `game-watch` (reads views g1_lock_unstarted .. g4_board_unsettled; `board-state` is the schedule signal) |
+| G5 retention job not ok | game-watch | `game-watch` (view g5_retention_not_ok) |
+| G6 frozen live game | game-watch | `game-watch` (reads `crew_stats.live_matches_v`) |
 | P1-P8 provider freshness | provider | `provider-health` (five feeds, "provider-health" below) |
 | table retention | retention | `retention-status` ("retention" below) |
 | C1 Vercel usage | cost | `cost-watch` (dollars vs the BUDGET line below) |
@@ -44,6 +44,14 @@ readers and have no rule in this file (their thresholds are in crew/README.md).
 ---
 
 # game-watch
+
+`crew/bin/game-watch` (no arguments) runs G1-G6: G1-G5 read the `crew_stats` views of the same
+names (each is the SQL below, rows only when the rule fires; thu-4 adds `hours_open` to G2 and
+`minutes_to_kickoff` to G3 so the script needs no clock of its own, and G5 omits the run's `error`
+text), G6 reads `live_matches_v`. One line per firing row, `G<n> <severity> <key> <detail>`, then
+`SUMMARY game-watch g1=N .. g6=N status=ok|regression`. Dedupe keys: G1 match id, G2 contest id,
+G3 match id, G4 contest id, G5 `data-retention`, G6 match id. Severity is the rule's own (page /
+warn / live); G5 with no run recorded is `warn`.
 
 ## G1 - next lock in the past with an unstarted game
 
