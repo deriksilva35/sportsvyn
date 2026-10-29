@@ -103,3 +103,6 @@ Archived: fixer SOUL v1.2, v1.3, v1.4 and NOTES v1.3, v1.4, v1.5 in _archive/.
 
 ## fri-1 (Oct 30 2026)
 - Watcher v1.5.5: log_line is the CrewOS standard `<YYYY-MM-DD> · Watcher · <one line> · runs <run id first 8 chars>` (replaces "CREW-LOG line"); the trigger is reported as CrewOS gave it (cron | deploy | board | manual), never inferred, `manual` if none.
+
+## fri-5 (Oct 30 2026)
+- Watcher v1.5.6: trigger via crew-trigger; examples made generic.
