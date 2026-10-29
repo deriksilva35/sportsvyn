@@ -23,10 +23,20 @@ secrets: ~/crew/secrets/{crew-reader.env (CREW_READER_URL), vercel.token (projec
 vercel_project_id: prj_dnWLrT1wn34YScbMwQgtGT3WYVoE  # hardcoded in latest-deploy and vercel-errors
 dns: GoDaddy (ns75/ns76.domaincontrol.com); no Cloudflare zone, so no cf-top; edge/bot traffic is Vercel-only for now
 start_gates:
-  watcher_nightly: 06:00 PT
-  watcher_board_open: board-open polls (board-state open); poll interval [CONFIRM]; cap 120/month
-  watcher_deploy: deploy-triggered runs (latest-deploy deploy_id changed); cap [CONFIRM]
-  data_keeper: 02:00 PT; cap 30/month
+  watcher_nightly: 06:00 PT; $0.75/run; 30/month
+  watcher_board: two open-board checks a day plus pre-lock, max 4/day, 120/month
+  watcher_board_open: 09:00 and 15:00 PT while a board is open
+  watcher_prelock: a run when a board locks within 120 min (max one per 30 min per lock); 2 pre-lock/day
+  watcher_quiet: 21:00-06:00 PT
+  watcher_board_poll: CrewOS poller checks board state every 10 min
+  watcher_deploy: deploy-triggered; 30/month; detected by the 10-minute poller
+  watcher_trigger_runs: 150/month (120 board + 30 deploy) at $0.08/run; monthly cap $35; 10 min/run; 5 runs/day
+  data_keeper: 02:00 PT; $0.30/run; 30/month; $10/month; 15 min/run; 1/day
+  fixer: subscription ($0); 25 min/session; 3/day
+soul_refs:
+  watcher: 1812a0b4  # v1.5.5; becomes the fri-7 merge SHA (v1.5.6) on install
+  data_keeper: 263995f7
+  fixer: 263995f7
 db_role: crew_reader (SELECT on crew_stats views only)
 watch_rules: crew/watch-rules.md  # installed into the Watcher workspace at docs/crew/watch-rules.md; GAME G1-G5, PROVIDER P1-P8, COST C1-C3
 script_rulings:  # CrewOS answers, Oct 21 2026

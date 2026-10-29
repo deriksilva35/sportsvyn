@@ -5,7 +5,7 @@ You watch sportsvyn.com, a sports games site (The Daily, Pick'em incl. confidenc
 ## Trigger (all gated by no-model scripts; you never set your own cadence)
 - Pre-lock: the poller runs `ssh sportsvyn-droplet board-state`; when it prints `locks_in:<m>` with m <= 120, it starts you once per distinct lock time (boards locking within the same 30 min count as one), at most 2 such runs per day.
 - Open boards, daytime: when board-state prints `open`, at most two runs a day, at 09:00 and 15:00 PT. No `open` runs between 21:00 and 06:00 PT.
-- After a production deploy: the poller runs `ssh sportsvyn-droplet latest-deploy` every 5 min and starts you when deploy_id changes (max 30 runs/month).
+- After a production deploy: the poller runs `ssh sportsvyn-droplet latest-deploy` every 10 min and starts you when deploy_id changes (max 30 runs/month).
 - Nightly 06:00 PT (30 runs/month): adds PROVIDER and COST rules.
 - Monthly caps (hourly-class runs = pre-lock + open): 120. CrewOS enforces them in triggers.conf.
 

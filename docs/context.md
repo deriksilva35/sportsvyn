@@ -42,11 +42,11 @@ The CrewOS project row is `sportsvyn` (display name SPORTSVŶN). The crew is REG
 
 | Agent | Runs on | Schedule and caps | Rung | soul_ref (installed) |
 |---|---|---|---|---|
-| Watcher | OpenClaw on crewos-droplet | nightly 06:00 PT; board-open polls, cap 120/month (poll interval [CONFIRM]); deploy-triggered runs (cap [CONFIRM]) | read-only; files crew_tickets | b8cca024 (v1.5.4); v1.5.5 merged at 9cb9eb93, install [CONFIRM] |
-| Fixer | relay path: claude-relay via crewctl, on considered-cc as crew-sportsvyn | one session per approved ticket, 25 min | PR only; auto-merge after the green check + Derik's Approve | 263995f7 (v1.5.1) |
-| Data Keeper | OpenClaw on crewos-droplet | nightly 02:00 PT; 30/month | dry-run only | [CONFIRM] |
+| Watcher | OpenClaw on crewos-droplet | nightly 06:00 PT ($0.75, 30/month). Board: two open-board checks a day plus pre-lock, max 4/day, 120/month - 09:00 and 15:00 PT while a board is open; a pre-lock run when a board locks within 120 min (max one per 30 min per lock, 2 pre-lock/day); quiet 21:00-06:00 PT; the CrewOS poller checks board state every 10 min. Deploy-triggered: 30/month, detected by the 10-minute poller. Trigger runs 150/month (120 board + 30 deploy) at $0.08; monthly cap $35; 10 min/run; 5 runs/day | read-only; files crew_tickets | 1812a0b4 (v1.5.5); becomes the fri-7 merge SHA (v1.5.6) on install |
+| Fixer | relay path: claude-relay via crewctl, on considered-cc as crew-sportsvyn | subscription ($0); one session per approved ticket, 25 min; 3/day | PR only; auto-merge after the green check + Derik's Approve | 263995f7 |
+| Data Keeper | OpenClaw on crewos-droplet | 02:00 PT; $0.30/run; 30/month; $10/month; 15 min; 1/day | dry-run only | 263995f7 |
 
-Live infrastructure: the ruleset `main-crew-gate` on main (active); crew-sportsvyn's own clone of this repo on considered-cc (~/crew/worktrees/sportsvyn-main); the shared suite lock (see Conventions). Watcher runs started through `crew-trigger`: pending fri-5 (Watcher v1.5.6, not merged).
+Live infrastructure: the ruleset `main-crew-gate` on main (active); crew-sportsvyn's own clone of this repo on considered-cc (~/crew/worktrees/sportsvyn-main); the shared suite lock (see Conventions). Watcher runs start with `~/crew/bin/crew-trigger take sportsvyn-watcher` (Watcher v1.5.6, #79).
 
 - **Fixer**:
   - Runs as claude-relay under the bot account `deriksilva35-crew` (write, no admin). It opens PRs only (branch `crew/fix-<ticket-id>`, one docs/CREW-LOG.md line).
@@ -55,7 +55,7 @@ Live infrastructure: the ruleset `main-crew-gate` on main (active); crew-sportsv
   - Shipped so far: #22, #40; undo #55.
   - Limits: crew/agents/fixer/SOUL.md (25 min per session, the fast test subset, a never-list that includes crew/**).
 - **Watcher** and **Data Keeper** (OpenClaw, crewos-droplet): installed from crew/agents/* in this repo.
-  - Cadence = crew/project.yaml start_gates, matching the CrewOS registry: Watcher nightly 06:00 PT, board-open polls (cap 120/month), deploy-triggered runs; Data Keeper nightly 02:00 PT (30/month).
+  - Cadence = crew/project.yaml start_gates, matching the CrewOS registry (the table above).
   - The Watcher files one crew_tickets row per problem and never fixes anything; rules in crew/watch-rules.md (GAME G1-G6, PROVIDER P1-P8, COST C1-C3).
   - The Data Keeper is dry-run only; Derik applies approved changes by hand.
 - **Pulse stats** (LIVE): `sportsvyn-stats [since-iso]` (source: docs/crew/sportsvyn-stats) prints key=value product counts for the shared Pulse agent.
