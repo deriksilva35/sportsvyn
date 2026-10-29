@@ -34,7 +34,7 @@ start_gates:
   data_keeper: 02:00 PT; $0.30/run; 30/month; $10/month; 15 min/run; 1/day
   fixer: subscription ($0); 25 min/session; 3/day
 soul_refs:
-  watcher: d19ce47c  # v1.5.6 as installed; becomes the fri-8 merge SHA (v1.5.7) once ops installs it
+  watcher: 03f76e22  # v1.5.7, installed
   data_keeper: 263995f7
   fixer: 263995f7
 db_role: crew_reader (SELECT on crew_stats views only)
@@ -56,8 +56,8 @@ drive_folder: CrewOS/crews/sportsvyn
 budgets:
   monthly_usd: 45
   per_agent: { watcher: 35, data_keeper: 10, fixer: 0 }
-  per_run: { watcher_hourly: 0.08, watcher_deploy: 0.08, watcher_nightly: 0.75, data_keeper: 0.30 }
-  runs_per_month: { watcher_hourly: 120, watcher_deploy: 30, watcher_nightly: 30, data_keeper: 30 }
+  per_run: { watcher_board: 0.08, watcher_deploy: 0.08, watcher_nightly: 0.75, data_keeper: 0.30 }
+  runs_per_month: { watcher_board: 120, watcher_deploy: 30, watcher_nightly: 30, data_keeper: 30 }
   # closes: 120*0.08 + 30*0.08 + 30*0.75 = 34.50 <= 35; 30*0.30 = 9 <= 10
 fixer_limits: { minutes: 25, subset_runs: 2, local_full_suite_runs: 0, ci_followups: 1 }
 fixer_paths: see fixer/SOUL.md (allow / never lists, v1.5.1; never-list includes crew/**)
