@@ -34,7 +34,7 @@ start_gates:
   data_keeper: 02:00 PT; $0.30/run; 30/month; $10/month; 15 min/run; 1/day
   fixer: subscription ($0); 25 min/session; 3/day
 soul_refs:
-  watcher: 1812a0b4  # v1.5.5; becomes the fri-7 merge SHA (v1.5.6) on install
+  watcher: d19ce47c  # v1.5.6 as installed; becomes the fri-8 merge SHA (v1.5.7) once ops installs it
   data_keeper: 263995f7
   fixer: 263995f7
 db_role: crew_reader (SELECT on crew_stats views only)
