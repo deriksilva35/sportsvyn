@@ -106,3 +106,6 @@ Archived: fixer SOUL v1.2, v1.3, v1.4 and NOTES v1.3, v1.4, v1.5 in _archive/.
 
 ## fri-5 (Oct 30 2026)
 - Watcher v1.5.6: trigger via crew-trigger; examples made generic.
+
+## fri-8 (Oct 30 2026)
+- Watcher v1.5.7: summary.log_line is only the single CrewOS log line (the Boss copies it verbatim into docs/CREW-LOG.md); all scan detail goes in summary.scan.
