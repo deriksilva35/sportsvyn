@@ -36,7 +36,7 @@ import { sql } from '../lib/db.js';
 import { inSeasonTransaction, upsertSeasonTotal } from '../lib/footballdb/seasonTxn.js';
 import { readWorkbook, readAboutLines } from '../lib/footballdb/xlsxReader.js';
 import { toSeasonRows, teamCountFromAbout } from '../lib/footballdb/parse.js';
-import { loadCandidateIndex, resolveAndPersistIdentity, inferPosition } from '../lib/footballdb/identity.js';
+import { loadCandidateIndex, loadEvidence, addEvidence, resolveAndPersistIdentity, inferPosition } from '../lib/footballdb/identity.js';
 import { canonicalTeamKey } from '../lib/footballdb/teamKey.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -75,7 +75,9 @@ const nflTeams = await sql`SELECT t.name, t.abbreviation FROM teams t JOIN leagu
 const teamByName = new Map(nflTeams.map((t) => [t.name.toLowerCase(), t.abbreviation]));
 const teamResolver = (name) => teamByName.get(name.toLowerCase()) ?? null;
 
-const totals = { rows: 0, exact: 0, created: 0, ambiguous: 0, defenseOnly: 0, gamesConflict: 0 };
+const totals = { rows: 0, written: 0, exact: 0, byContext: 0, created: 0, ambiguous: 0, defenseOnly: 0, gamesConflict: 0 };
+// This run's own resolved rows, so 2001 sees 2000's teams (ids known: exact, and created on --apply).
+const runEvidence = [];
 const allAmbiguous = [];
 const allRefusedPositionless = [];
 
@@ -93,8 +95,10 @@ for (const year of seasons) {
   // false: reads only) or the transaction adapter on --apply.
   const processSeason = async (db) => {
     const candidateIndex = await loadCandidateIndex(db);
+    const evidence = await loadEvidence(db);
+    for (const e of runEvidence) addEvidence(evidence, e.id, e.year, e.team);
 
-    let exact = 0; let created = 0; let ambiguous = 0; let defenseOnly = 0; let gamesConflict = 0;
+    let exact = 0; let byContext = 0; let created = 0; let ambiguous = 0; let defenseOnly = 0; let gamesConflict = 0;
     const written = [];
     const ambiguousRows = [];
     const byTab = { Passing: 0, Rushing: 0, Receiving: 0, Kicking: 0, Defense: 0 };
@@ -110,29 +114,25 @@ for (const year of seasons) {
       if (position == null) { defenseOnly += 1; continue; } // no slot in QB/RB/WR/TE/FLEX/PK/DEF
 
       // ONE FUNCTION DOES THE RESOLVE AND THE WRITE IT IMPLIES
-      // (lib/footballdb/identity.js's resolveAndPersistIdentity) - ambiguous
-      // is STORED, never ATTACHED (ruling): a brand-new nfl_players row is
-      // minted for it, never one of the 2+ colliding candidateIds, matched_by
-      // 'created-ambiguous' marking it as neither a confident match nor an
-      // ordinary creation. See that function's own comment for why this mints
-      // a NEW player per ambiguous row even across seasons, rather than
-      // reusing one - Marcus Allen (Los Angeles Raiders) collides in 13
-      // different seasons in this corpus, and merging those without real
-      // matching evidence would be exactly the guess this system refuses.
-      const resolved = await resolveAndPersistIdentity(db, r.rawName, position, candidateIndex, { apply });
+      // (lib/footballdb/identity.js's resolveAndPersistIdentity). A same-name
+      // tie is broken by team-season context (fri-11); a tie it cannot break
+      // is AMBIGUOUS: nothing is minted, the row is SKIPPED and reported.
+      const teamKey = canonicalTeamKey(r.team, teamResolver);
+      const resolved = await resolveAndPersistIdentity(db, r.rawName, position, candidateIndex,
+        { apply, context: { year, team: teamKey, evidence } });
       const { nflPlayerId, matchedBy } = resolved;
 
       if (resolved.outcome === 'ambiguous') {
         ambiguous += 1;
         ambiguousRows.push({ year, rawName: r.rawName, team: r.team, candidateIds: resolved.candidateIds });
-      } else if (resolved.outcome === 'created') {
-        created += 1;
-      } else {
-        exact += 1;
+        continue;
       }
+      if (resolved.outcome === 'created') created += 1;
+      else { exact += 1; if (resolved.via) byContext += 1; }
+      if (nflPlayerId != null) { addEvidence(evidence, nflPlayerId, year, teamKey); runEvidence.push({ id: nflPlayerId, year, team: teamKey }); }
 
       written.push({
-        nflPlayerId, season_year: year, team_key: canonicalTeamKey(r.team, teamResolver), position: resolved.position ?? position,
+        nflPlayerId, season_year: year, team_key: teamKey, position: resolved.position ?? position,
         games: r.games ?? null, pass_cmp: r.passCmp ?? null, pass_att: r.passAtt ?? null,
         pass_yds: r.passYds ?? null, pass_td: r.passTd ?? null, pass_int: r.passInt ?? null,
         rush_att: r.rushAtt ?? null, rush_yds: r.rushYds ?? null, rush_td: r.rushTd ?? null,
@@ -145,7 +145,7 @@ for (const year of seasons) {
       });
     }
     if (apply) for (const w of written) await upsertSeasonTotal(db, w);
-    return { exact, created, ambiguous, defenseOnly, gamesConflict, written, ambiguousRows, byTab };
+    return { exact, byContext, created, ambiguous, defenseOnly, gamesConflict, written, ambiguousRows, byTab };
   };
 
   let result;
@@ -160,26 +160,26 @@ for (const year of seasons) {
   } else {
     result = await processSeason(sql);
   }
-  const { exact, created, ambiguous, defenseOnly, gamesConflict, written, ambiguousRows, byTab } = result;
+  const { exact, byContext, created, ambiguous, defenseOnly, gamesConflict, written, ambiguousRows, byTab } = result;
 
   const pct = (n, d) => (d ? `${Math.round((100 * n) / d)}%` : '0%');
   console.log(`\n${year}  teams(About)=${teamCount}  rows(tabs merged)=${seasonRows.length}  ` +
     `by-tab: Pass=${byTab.Passing} Rush=${byTab.Rushing} Rec=${byTab.Receiving} Kick=${byTab.Kicking} Def=${byTab.Defense}`);
-  console.log(`   written=${written.length}  exact=${exact} (${pct(exact, written.length)})  ` +
-    `created=${created} (${pct(created, written.length)})  ambiguous=${ambiguous}  ` +
+  console.log(`   written=${written.length}  exact=${exact} (${pct(exact, written.length)}; ${byContext} by team-season context)  ` +
+    `created=${created} (${pct(created, written.length)})  ambiguous-skipped=${ambiguous}  ` +
     `defenseOnly(no slot, not written)=${defenseOnly}  gamesConflict=${gamesConflict}`);
   if (ambiguousRows.length) {
-    console.log('   AMBIGUOUS (stored under a brand-new player, never attached):');
-    for (const a of ambiguousRows) console.log(`      ${a.rawName} (${a.team}) -> never attached to existing nfl_players ids ${JSON.stringify(a.candidateIds)}`);
+    console.log('   AMBIGUOUS - SKIPPED, not written, no player created (same name, context cannot tell them apart):');
+    for (const a of ambiguousRows) console.log(`      ${a.rawName} (${a.team}) -> candidates ${JSON.stringify(a.candidateIds)}`);
   }
 
-  totals.rows += seasonRows.length; totals.exact += exact; totals.created += created;
+  totals.rows += seasonRows.length; totals.written += written.length; totals.exact += exact; totals.byContext += byContext; totals.created += created;
   totals.ambiguous += ambiguous; totals.defenseOnly += defenseOnly; totals.gamesConflict += gamesConflict;
   allAmbiguous.push(...ambiguousRows);
 }
 
 console.log('\n' + '='.repeat(74));
-console.log(`TOTALS ${seasons[0]}-${seasons.at(-1)}: rows=${totals.rows} exact=${totals.exact} created=${totals.created} ` +
-  `ambiguous=${totals.ambiguous} defenseOnly=${totals.defenseOnly} gamesConflict=${totals.gamesConflict}`);
+console.log(`TOTALS ${seasons[0]}-${seasons.at(-1)}: rows=${totals.rows} written=${totals.written} exact=${totals.exact} (by context ${totals.byContext}) created=${totals.created} ` +
+  `ambiguous-skipped=${totals.ambiguous} defenseOnly=${totals.defenseOnly} gamesConflict=${totals.gamesConflict}`);
 console.log(apply ? 'WROTE to the database.' : 'DRY RUN — nothing written. Re-run with --apply to write.');
 if (client) await client.end();
