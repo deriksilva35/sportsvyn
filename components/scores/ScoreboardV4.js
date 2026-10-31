@@ -22,6 +22,7 @@ import ZoneLabel from '@/components/scores/ZoneLabel';
 import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import LiveRefresh from '@/components/scores/LiveRefresh';
+import ScoresRail from '@/components/scores/ScoresRail';
 import ExpandCard, { ExpandLine } from '@/components/scores/ExpandCard';
 import { liveWinProbView } from '@/components/gridiron/LiveWinProb';
 import { shellSigninHref } from '@/lib/shell/signinHref';
@@ -350,14 +351,14 @@ function Group({ grp, ...rest }) {
   return (
     <section className={`sv4-group${grp.key === 'yours' ? ' yours' : ''}`} data-group={grp.key}>
       <div className="sv4-gh"><h2>{grp.title}</h2><small>{grp.sub}</small></div>
-      <div className="sv4-list">
+      <div className="sv4-list sv4-compact">
         {grp.games.map((g) => <Card key={g.id} g={g} x={rest.v.extras.get(g.id)} {...rest} />)}
       </div>
     </section>
   );
 }
 
-export default function ScoreboardV4({ v, view = null, conf = null, signedIn = false, isShell = false, zoneLabel = 'Eastern', now = new Date(), tabs = null }) {
+export default function ScoreboardV4({ v, view = null, conf = null, signedIn = false, isShell = false, zoneLabel = 'Eastern', now = new Date(), tabs = null, featured = null, weekly = null }) {
   const signinHref = shellSigninHref('/scores', isShell);
   const state = { date: v.date === v.today ? null : v.date, sport: v.sport, view, conf, mine: v.mine, top25: v.top25 };
   const h = hrefs(state);
@@ -377,6 +378,10 @@ export default function ScoreboardV4({ v, view = null, conf = null, signedIn = f
   return (
     <div className="sv4" data-surface="ink">
       {v.liveCount > 0 && <LiveRefresh />}
+      {/* THE LANDSCAPE RAIL: drawn on every request, display:none outside the
+          landscape query (scoresV4.css), so portrait is the same page. */}
+      <ScoresRail sport={v.sport} counts={v.sportCounts ?? {}} leagues={v.leagues} href={h.sport} weekly={weekly} signedIn={signedIn} />
+      <div className="sv4-main">
       <div className="sv4-head">
         <h1>Scoreboard</h1>
         <div className="sv4-sub" data-live-count={v.liveCount}>
@@ -385,6 +390,8 @@ export default function ScoreboardV4({ v, view = null, conf = null, signedIn = f
       </div>
       <div className="sv4-eb">{weekdayOf(v.date, true)} · all times <ZoneLabel initial={zoneLabel} /></div>
       {tabs}
+      {/* THE FEATURED CARD (FeaturedGame, handed in by the page): hidden outside landscape. */}
+      {featured}
 
       {yours && <Group grp={yours} {...cardProps} />}
 
@@ -431,6 +438,7 @@ export default function ScoreboardV4({ v, view = null, conf = null, signedIn = f
       {rest.length === 0 && !yours && <p className="sv4-empty">{emptyLine(v, view)}</p>}
       {rest.map((grp) => <Group key={grp.key} grp={grp} {...cardProps} />)}
       <NbaPickemStrip s={v.nbaPickem ?? null} tz={v.tz} />
+      </div>
     </div>
   );
 }
