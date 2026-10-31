@@ -1,0 +1,187 @@
+/* app/scores/scoresLandscape.css - the Scores board in iPhone landscape.
+   Mock: docs/design/mocks/scores-landscape-v1.html (844x390: a 150px rail, then
+   a main column - the day, the view pills, a featured card, a 3-wide grid).
+
+   EVERY RULE IS INSIDE THE ONE ORIENTATION QUERY (scoresLandscape.test.mjs
+   parses this file and fails on a rule outside it). Portrait is untouched; the
+   rail and the featured card are display:none outside the query, set in
+   scoresV4.css.
+
+   NO COLOUR LITERAL. The navy set is the --arcade-* tokens in app/globals.css
+   (--arcade-ink-2, --arcade-line-ink, --arcade-text-2, --arcade-text-3 are the
+   mock's four extra values); the live dot, clock and LIVE pill are
+   --arcade-live. The light arcade theme's --tok-* roles are re-pointed on
+   .sv4 below, so the same CardFace markup draws navy without a second set of
+   card rules.
+
+   SCOPING: page chrome is reached through body:has(.sv4-rail). This stylesheet
+   is loaded for the whole client session once /scores has been visited, and a
+   bare .apptab rule would hide the bottom bar on every other page too. */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* ---- page chrome: bottom bar, header and segment go; the rail replaces them ---- */
+  html body:has(.sv4-rail) .apptab,
+  html body:has(.sv4-rail) .svseg,
+  html body:has(.sv4-rail) .gh { display: none; }
+  html body:has(.sv4-rail) { padding-bottom: 0; overflow: hidden; background: var(--arcade-primary); }
+  html body:has(.sv4-rail) .gi { min-height: 0; background: var(--arcade-primary); }
+
+  /* ---- the frame: rail | main, the height of the screen ---- */
+  .sv4 {
+    --tok-page: var(--arcade-primary);
+    --tok-surface: var(--arcade-ink-2);
+    --tok-ink: var(--arcade-on-primary);
+    --tok-muted: var(--arcade-text-3);
+    --tok-line: var(--arcade-line-ink);
+    --tok-primary: var(--arcade-ink-2);
+    --tok-on-primary: var(--arcade-on-primary);
+    max-width: none; margin: 0; height: 100dvh; box-sizing: border-box;
+    padding: 0 max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left));
+    display: grid; grid-template-columns: 150px minmax(0, 1fr); overflow: hidden;
+  }
+  .svseg { max-width: none; }
+
+  /* ---- the rail ---- */
+  .sv4 .sv4-rail {
+    grid-column: 1; display: flex; flex-direction: column; gap: 3px; min-height: 0; box-sizing: border-box;
+    padding: 12px 10px 10px 0; border-right: 1px solid var(--arcade-line-ink); overflow-y: auto; scrollbar-width: none;
+  }
+  .sv4-rail .rail-tabs { display: flex; justify-content: space-between; padding-bottom: 8px; }
+  .sv4-rail .rail-tab {
+    width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px;
+    color: var(--arcade-text-2); text-decoration: none; font-size: 14px; line-height: 1;
+  }
+  .sv4-rail .rail-tab.on { background: var(--arcade-ink-2); color: var(--arcade-on-primary); }
+  .sv4-rail .rail-sports { display: flex; flex-direction: column; gap: 3px; }
+  .sv4-rail .rail-nav {
+    display: flex; align-items: center; justify-content: space-between; height: 30px; padding: 0 10px; border-radius: 9px;
+    color: var(--arcade-text-2); text-decoration: none; font: 500 12px var(--tok-font-body);
+  }
+  .sv4-rail .rail-nav.on { background: var(--arcade-ink-2); color: var(--arcade-on-primary); }
+  .sv4-rail .rail-nav .n { font: 400 10px var(--tok-font-num); font-variant-numeric: tabular-nums; color: var(--arcade-text-3); }
+  .sv4-rail .rail-weekly {
+    margin-top: auto; display: flex; flex-direction: column; gap: 3px; padding: 9px 10px; border-radius: 11px;
+    background: var(--arcade-ink-2); border: 1px solid var(--arcade-line-ink); text-decoration: none; color: var(--arcade-on-primary);
+  }
+  .sv4-rail .rail-weekly .eb { font: 400 8px var(--tok-font-num); letter-spacing: .08em; color: var(--arcade-volt); }
+  .sv4-rail .rail-weekly .tot { font: 600 18px/1 var(--tok-font-body); font-variant-numeric: tabular-nums; }
+  .sv4-rail .rail-weekly .sub { font: 400 10px var(--tok-font-body); color: var(--arcade-text-2); }
+
+  /* ---- the main column: the header rows are sticky at fixed heights, the rest scrolls ---- */
+  .sv4 .sv4-main {
+    grid-column: 2; display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100dvh; box-sizing: border-box;
+    padding: 0 0 10px 14px; overflow-y: auto; scrollbar-width: none;
+  }
+  .sv4-main::-webkit-scrollbar { display: none; }
+  .sv4-main > * { flex: none; }
+  .sv4-main .sv4-head, .sv4-main .sv4-days, .sv4-main .sv4-chips {
+    position: sticky; z-index: 5; background: var(--arcade-primary); box-sizing: border-box; margin: 0;
+  }
+  /* ROW 1: the title on the left (the date line is hidden here), the view pills on the right (the pills
+     are pulled up over the head's row by a negative margin; every height here is
+     fixed, so the overlap is exact). ROW 2: the days. */
+  .sv4-main .sv4-head { order: 1; top: 0; height: 34px; padding: 9px 0 0; align-items: baseline; flex-wrap: nowrap; }
+  .sv4-head h1 { font: 400 16px/1 var(--tok-font-num); font-style: normal; letter-spacing: -.02em; }
+  .sv4-head .sv4-sub { display: none; }
+  .sv4-main .sv4-eb { display: none; }
+  .sv4-main .sv4-chips { order: 3; top: 0; height: 34px; margin-top: -34px; padding: 4px 0; gap: 6px; align-self: flex-end; max-width: 60%; background: none; overflow-x: auto; }
+  .sv4-main .sv4-days { order: 4; top: 34px; height: 34px; padding: 4px 0; gap: 5px; align-items: center; }
+  .sv4-main .sv4-chips.sv4-conf { order: 5; top: 68px; height: 28px; margin: 0; align-self: stretch; max-width: none; background: var(--arcade-primary); }
+  .sv4-main .svs-tabs { order: 16; margin-top: 6px; width: 220px; }
+  .svs-tab { height: 26px; font-size: 8px; }
+  .sv4-main .sv4-featured { order: 10; }
+  .sv4-main .sv4-group.yours { order: 11; }
+  .sv4-main .sv4-liveaway { order: 11; }
+  .sv4-main .sv4-empty { order: 13; }
+  .sv4-main .sv4-group { order: 14; }
+  .sv4-main .sv4-pkstrip { order: 15; }
+
+  /* the sports live in the rail here; the view pills stay in the header */
+  .sv4-chips .sv4-chip[data-chip^="sport:"], .sv4-chips .sep { display: none; }
+  .sv4-chip {
+    height: 26px; padding: 0 10px; box-sizing: border-box; gap: 5px; background: transparent;
+    border-color: var(--arcade-line-ink); color: var(--arcade-text-2); font: 400 8px var(--tok-font-num); letter-spacing: .06em;
+  }
+  .sv4-chip.on { background: var(--arcade-volt); border-color: var(--arcade-volt); color: var(--arcade-primary); }
+  .sv4-chip.live { color: var(--arcade-live); }
+  .sv4-chip.live.on .dot { background: var(--arcade-live); }
+  .sv4-conf .sv4-chip { padding: 0 9px; font-size: 8px; }
+  .sv4-day {
+    min-width: 0; height: 26px; flex-direction: row; align-items: center; gap: 5px; padding: 0 9px; border-radius: 99px;
+    background: transparent; border-color: var(--arcade-line-ink); color: var(--arcade-text-2);
+  }
+  .sv4-day small { font-size: 8px; color: var(--arcade-text-3); }
+  .sv4-day b { font-size: 11px; line-height: 1; color: var(--arcade-on-primary); }
+  .sv4-day i { display: none; }
+  .sv4-day.on { background: var(--arcade-volt); border-color: var(--arcade-volt); }
+  .sv4-day.on small, .sv4-day.on b { color: var(--arcade-primary); }
+  .sv4-day.live small { color: var(--arcade-live); }
+
+  /* ---- the featured card ---- */
+  .sv4-featured {
+    position: relative; display: grid; grid-template-columns: 1.1fr 1fr .9fr; gap: 16px; align-items: center; box-sizing: border-box;
+    margin-top: 8px; padding: 10px 14px; border-radius: 14px; background: var(--arcade-ink-2); border: 1px solid var(--arcade-volt);
+    color: var(--arcade-on-primary);
+  }
+  .sv4-featured .sv4-fhit { position: absolute; inset: 0; border-radius: inherit; z-index: 0; }
+  .sv4-featured a:not(.sv4-fhit) { position: relative; z-index: 1; }
+  .sv4-featured .f-face { display: flex; flex-direction: column; gap: 6px; min-width: 0; position: relative; }
+  .sv4-featured .f-label { font: 400 8px var(--tok-font-num); letter-spacing: .08em; color: var(--arcade-volt); }
+  .sv4-featured .f-face .sv4-lbl { color: var(--arcade-text-3); }
+  .sv4-featured .f-face .sv4-series, .sv4-featured .f-face .sv4-team .meta, .sv4-featured .f-face .sv4-team .pk,
+  .sv4-featured .f-face .sv4-field, .sv4-featured .f-face .sv4-bb, .sv4-featured .f-face .sv4-foot,
+  .sv4-featured .f-face .sv4-stake, .sv4-featured .f-face .sv4-soc, .sv4-featured .f-face .sv4-prob { display: none; }
+  .sv4-featured .f-face .sv4-team { gap: 7px; }
+  .sv4-featured .f-face .teammark { width: 18px !important; height: 18px !important; }
+  .sv4-featured .f-face .sv4-team .nm .n { font: 600 15px var(--tok-font-body); letter-spacing: 0; text-transform: none; }
+  .sv4-featured .f-face .sv4-team .sc { font: 400 28px/1 var(--tok-font-num); color: var(--arcade-text-2); }
+  .sv4-featured .f-face .sv4-team.lead .sc { color: var(--arcade-on-primary); }
+  .sv4-featured .f-read { display: flex; flex-direction: column; gap: 5px; min-width: 0; position: relative; }
+  .sv4-featured .eb { font: 400 8px var(--tok-font-num); letter-spacing: .08em; color: var(--arcade-text-3); }
+  .sv4-featured .wpl { display: flex; justify-content: space-between; font: 400 10px var(--tok-font-body); font-variant-numeric: tabular-nums; }
+  .sv4-featured .wpbar { display: flex; height: 6px; border-radius: 99px; overflow: hidden; background: var(--arcade-line-ink); }
+  .sv4-featured .wpbar .a { background: var(--arcade-text-3); }
+  .sv4-featured .wpbar .h { background: var(--arcade-volt); }
+  .sv4-featured .f-read p { margin: 0; font: 400 10px/1.35 var(--tok-font-body); color: var(--arcade-text-2); }
+  .sv4-featured .f-stake { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding-left: 14px; border-left: 1px solid var(--arcade-line-ink); position: relative; }
+  .sv4-featured .f-stake .row { display: flex; justify-content: space-between; gap: 8px; font: 400 12px var(--tok-font-body); }
+  .sv4-featured .f-stake .row b { font-weight: 600; color: var(--arcade-volt); }
+  .sv4-featured .f-stake .more { font: 400 9px var(--tok-font-body); color: var(--arcade-text-3); }
+
+  /* ---- the grid: 3 wide, fixed-height rows, the same CardFace markup, smaller ---- */
+  .sv4-group, .sv4-group.yours { margin-top: 8px; padding: 0; border: 0; border-radius: 0; background: none; }
+  .sv4-gh { padding-bottom: 5px; }
+  .sv4-gh h2 { font: 400 8px var(--tok-font-num); letter-spacing: .08em; color: var(--arcade-text-3); }
+  .sv4-gh small { font-size: 8px; color: var(--arcade-text-3); }
+  .sv4-list.sv4-compact { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 108px; gap: 8px; }
+  .sv4-compact .sv4-card, .sv4-compact .sv4-card.live {
+    min-height: 0; gap: 5px; padding: 10px 12px; border-radius: 14px; overflow: hidden; box-shadow: none;
+    background: var(--arcade-ink-2); border: 1px solid var(--arcade-line-ink); color: var(--arcade-on-primary);
+  }
+  .sv4-compact .sv4-card[data-open="1"] { grid-row: span 3; overflow-y: auto; }
+  .sv4-compact .sv4-lbl { font: 400 8px var(--tok-font-num); letter-spacing: .08em; color: var(--arcade-text-3); }
+  .sv4-compact .sv4-lbl .where { color: var(--arcade-text-3); }
+  .sv4-compact .sv4-card.live .sv4-lbl .where { color: var(--arcade-text-3); }
+  .sv4-compact .sv4-lbl .clock { padding: 0; background: none; gap: 5px; color: var(--arcade-live); font: 600 10px var(--tok-font-body); letter-spacing: 0; }
+  .sv4-compact .sv4-lbl .dot { width: 6px; height: 6px; background: var(--arcade-live); }
+  .sv4-compact .sv4-lbl .fin, .sv4-compact .sv4-lbl .ko { padding: 0; border: 0; font: 400 8px var(--tok-font-num); letter-spacing: .08em; color: var(--arcade-volt); }
+  .sv4-compact .sv4-lbl .ko { color: var(--arcade-text-2); }
+  .sv4-compact .sv4-series, .sv4-compact .sv4-team .meta, .sv4-compact .sv4-team .pk, .sv4-compact .sv4-team .bonus,
+  .sv4-compact .sv4-stake, .sv4-compact .sv4-soc, .sv4-compact .sv4-prob, .sv4-compact .sv4-ls,
+  .sv4-compact .sv4-field .track, .sv4-compact .sv4-field .lp, .sv4-compact .sv4-bb .lp, .sv4-compact .sv4-diamond { display: none; }
+  .sv4-compact .sv4-team { gap: 7px; }
+  .sv4-compact .teammark { width: 18px !important; height: 18px !important; }
+  .sv4-compact .sv4-team .nm .n { font: 500 13px var(--tok-font-body); letter-spacing: 0; text-transform: none; }
+  .sv4-compact .sv4-card.live .sv4-team .nm .n { font-size: 13px; }
+  .sv4-compact .sv4-team .sc, .sv4-compact .sv4-card.live .sv4-team .sc { font: 400 17px/1 var(--tok-font-num); color: var(--arcade-on-primary); }
+  .sv4-compact .sv4-card.live .sv4-team.trail .sc, .sv4-compact .sv4-card.final .sv4-team.trail .sc { color: var(--arcade-text-3); }
+  .sv4-compact .sv4-card.live .sv4-team.lead .sc { color: var(--arcade-on-primary); }
+  .sv4-compact .sv4-field, .sv4-compact .sv4-bb { display: block; margin-top: auto; font: 400 10px var(--tok-font-body); color: var(--arcade-text-2); }
+  .sv4-compact .sv4-field .sit { font: 400 10px var(--tok-font-body); color: var(--arcade-text-2); }
+  .sv4-compact .sv4-bb .st { font: 400 10px var(--tok-font-body); color: var(--arcade-text-2); }
+  .sv4-compact .sv4-bb .cnt { display: none; }
+  .sv4-compact .sv4-foot, .sv4-compact .sv4-card.live .sv4-foot {
+    margin-top: auto; padding: 0; border-top: 0; gap: 8px; font: 400 10px var(--tok-font-body); color: var(--arcade-text-3);
+  }
+  .sv4-compact .sv4-foot .go { font: 400 10px var(--tok-font-body); letter-spacing: 0; text-transform: none; color: var(--arcade-text-2); }
+  .sv4-compact .sv4-card.live .sv4-foot .wp { color: var(--arcade-volt); font-size: 10px; }
+}

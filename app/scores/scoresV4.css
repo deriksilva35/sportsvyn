@@ -178,3 +178,7 @@
 :where(:root[data-theme="arcade"]) .sv4-pkstrip b { font: 700 10px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-primary); }
 :where(:root[data-theme="arcade"]) .sv4-pkstrip .l { font: 500 13px var(--tok-font-body); color: var(--tok-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 :where(:root[data-theme="arcade"]) .sv4-pkstrip .go { flex: none; font: 700 11px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--tok-primary); }
+
+/* THE LANDSCAPE PIECES ARE HIDDEN HERE, shown by scoresLandscape.css inside its
+   orientation query. Portrait therefore draws exactly what it drew before. */
+:where(:root[data-theme="arcade"]) .sv4-rail, :where(:root[data-theme="arcade"]) .sv4-featured { display: none; }

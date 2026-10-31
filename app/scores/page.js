@@ -32,6 +32,11 @@ import { parseV4 } from '@/lib/scores/v4';
 import { readRememberedTop25, wantTop25 } from '@/lib/scores/top25Memory';
 import { cachedOpeningSpreads } from '@/lib/gridiron/openingCache';
 import './scoresV4.css';
+import './scoresLandscape.css';
+import FeaturedGame from '@/components/scores/FeaturedGame';
+import { pickFeatured } from '@/lib/scores/featured';
+import { weeklyHero } from '@/lib/gridiron/todayReads';
+import { shellSigninHref } from '@/lib/shell/signinHref';
 import './statsTab.css';
 import './statsFilters.css';
 import ScoresTabs from '@/components/scores/ScoresTabs';
@@ -226,12 +231,20 @@ export default async function ScoresPage({ searchParams }) {
   const arcade = arcadeFor(isShell);
   if (arcade) {
     const q = parseV4(sp, rememberedTop25);
-    const v = await scoresV2({ userId, date: q.date, sport: q.sport, mine: userId != null && q.mine, top25: q.top25, tz, openings: cachedOpeningSpreads });
+    const now = new Date();
+    // THE LANDSCAPE BOARD'S ONE EXTRA READ: the Weekly tile in the rail. Caught -
+    // a failed read drops the tile, never the board.
+    const [v, weekly] = await Promise.all([
+      scoresV2({ userId, date: q.date, sport: q.sport, mine: userId != null && q.mine, top25: q.top25, tz, openings: cachedOpeningSpreads, now }),
+      userId != null ? weeklyHero(userId).catch(() => null) : null,
+    ]);
+    const featured = <FeaturedGame pick={pickFeatured({ games: v.dayGames, extras: v.extras, signedIn: userId != null, now })}
+      signedIn={userId != null} signinHref={shellSigninHref('/scores', isShell)} tz={v.tz} now={now} />;
     return (
       <div className="gi" data-surface="ink">
         <ScoresChrome isShell={isShell} />
         <TzCookie />
-        <ScoreboardV4 v={v} view={q.view} conf={q.conf} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} tabs={tabs} />
+        <ScoreboardV4 v={v} view={q.view} conf={q.conf} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} tabs={tabs} featured={featured} weekly={weekly} now={now} />
       </div>
     );
   }
