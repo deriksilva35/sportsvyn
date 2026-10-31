@@ -73,20 +73,24 @@
   }
   .sv4-main::-webkit-scrollbar { display: none; }
   .sv4-main > * { flex: none; }
-  .sv4-main .sv4-head, .sv4-main .sv4-eb, .sv4-main .sv4-days, .sv4-main .sv4-chips {
+  .sv4-main .sv4-head, .sv4-main .sv4-days, .sv4-main .sv4-chips {
     position: sticky; z-index: 5; background: var(--arcade-primary); box-sizing: border-box; margin: 0;
   }
-  .sv4-main .sv4-head { order: 1; top: 0; height: 28px; padding: 10px 0 0; align-items: baseline; flex-wrap: nowrap; }
+  /* ROW 1: the title on the left (the date line is hidden here), the view pills on the right (the pills
+     are pulled up over the head's row by a negative margin; every height here is
+     fixed, so the overlap is exact). ROW 2: the days. */
+  .sv4-main .sv4-head { order: 1; top: 0; height: 34px; padding: 9px 0 0; align-items: baseline; flex-wrap: nowrap; }
   .sv4-head h1 { font: 400 16px/1 var(--tok-font-num); font-style: normal; letter-spacing: -.02em; }
-  .sv4-head .sv4-sub { font: 400 8px var(--tok-font-num); letter-spacing: .08em; text-transform: uppercase; color: var(--arcade-text-3); }
-  .sv4-main .sv4-eb { order: 2; top: 28px; height: 14px; padding: 2px 0 0; font: 400 8px var(--tok-font-num); }
-  .sv4-main .sv4-days { order: 3; top: 42px; height: 34px; padding: 4px 0; gap: 5px; align-items: center; }
-  .sv4-main .sv4-chips { order: 4; top: 76px; height: 32px; padding: 3px 0; gap: 6px; }
-  .sv4-main .sv4-chips.sv4-conf { order: 5; top: 108px; height: 28px; margin: 0; }
-  .sv4-main .svs-tabs { order: 9; }
+  .sv4-head .sv4-sub { display: none; }
+  .sv4-main .sv4-eb { display: none; }
+  .sv4-main .sv4-chips { order: 3; top: 0; height: 34px; margin-top: -34px; padding: 4px 0; gap: 6px; align-self: flex-end; max-width: 60%; background: none; overflow-x: auto; }
+  .sv4-main .sv4-days { order: 4; top: 34px; height: 34px; padding: 4px 0; gap: 5px; align-items: center; }
+  .sv4-main .sv4-chips.sv4-conf { order: 5; top: 68px; height: 28px; margin: 0; align-self: stretch; max-width: none; background: var(--arcade-primary); }
+  .sv4-main .svs-tabs { order: 16; margin-top: 6px; width: 220px; }
+  .svs-tab { height: 26px; font-size: 8px; }
   .sv4-main .sv4-featured { order: 10; }
   .sv4-main .sv4-group.yours { order: 11; }
-  .sv4-main .sv4-liveaway { order: 12; }
+  .sv4-main .sv4-liveaway { order: 11; }
   .sv4-main .sv4-empty { order: 13; }
   .sv4-main .sv4-group { order: 14; }
   .sv4-main .sv4-pkstrip { order: 15; }

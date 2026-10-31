@@ -95,7 +95,7 @@ export default function FeaturedGame({ pick, signedIn = false, signinHref = '/si
   return (
     <section className="sv4-featured" data-featured="1" data-featured-id={g.id} data-league={g.leagueSlug}>
       <Link className="sv4-fhit" href={hrefOf(g)} aria-label={`${away} at ${home}`} />
-      <div className="f-face" data-variant={g.status}>
+      <div className="f-face sv4-compact" data-variant={g.status}>
         <span className="f-label" data-featured-label="1">{label}</span>
         <CardFace g={g} x={x} signedIn={signedIn} signinHref={signinHref} tz={tz} now={now} />
       </div>
