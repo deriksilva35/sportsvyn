@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>iPhone landscape · Scoreboard</title>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&amp;family=Rubik+Mono+One&amp;display=swap">
+<style>
+body{margin:0;font-family:Rubik,system-ui,sans-serif;background:#1A1650}
+a{color:#fff}a:hover{color:#D4FF00}
+.mono{font-family:'Rubik Mono One',monospace}
+.num{font-variant-numeric:tabular-nums}
+.nav{display:flex;align-items:center;justify-content:space-between;height:30px;padding:0 10px;border-radius:9px;color:#C9C6E6;text-decoration:none;font-size:12px;font-weight:500}
+.nav.on{background:#241F62;color:#fff}
+.card{background:#241F62;border:1px solid #352F7A;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:5px;text-decoration:none;color:#fff;min-height:0}
+.card:hover{border-color:#D4FF00;color:#fff}
+.row{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:7px;font-size:13px;font-weight:500}
+.dot{width:6px;height:6px;border-radius:50%;background:#E63946}
+.eyebrow{font-family:'Rubik Mono One',monospace;font-size:8px;letter-spacing:.08em;color:#9E9BC4}
+.live{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:#FF7B86}
+.sc{font-family:'Rubik Mono One',monospace;font-size:17px;font-variant-numeric:tabular-nums}
+.pill{font-family:'Rubik Mono One',monospace;font-size:8px;letter-spacing:.06em;height:26px;padding:0 10px;display:inline-flex;align-items:center;gap:5px;border-radius:99px;border:1px solid #352F7A;color:#C9C6E6;text-decoration:none;white-space:nowrap}
+</style>
+<div style="width:844px;height:390px;box-sizing:border-box;background:#1A1650;color:#fff;display:grid;grid-template-columns:150px 1fr;overflow:hidden;padding-left:44px;padding-right:44px">
+
+  <!-- Rail -->
+  <div style="border-right:1px solid #352F7A;padding:14px 10px 10px 0;display:flex;flex-direction:column;gap:3px">
+    <span class="mono" style="font-size:12px;letter-spacing:-.02em;padding:0 10px 10px">SPORTSV<span style="border-bottom:2px solid #D4FF00">Ŷ</span>N</span>
+    <a href="#" class="nav on"><span>All</span><span class="num" style="font-size:10px;color:#9E9BC4">9</span></a>
+    <a href="#" class="nav"><span>NBA</span><span class="num" style="font-size:10px;color:#9E9BC4">7</span></a>
+    <a href="#" class="nav"><span>CFB</span><span class="num" style="font-size:10px;color:#9E9BC4">1</span></a>
+    <a href="#" class="nav"><span>NFL</span><span class="num" style="font-size:10px;color:#9E9BC4">Sun</span></a>
+    <a href="#" class="nav"><span>EPL</span><span class="num" style="font-size:10px;color:#9E9BC4">Sat</span></a>
+    <div style="margin-top:auto;background:#241F62;border:1px solid #352F7A;border-radius:11px;padding:9px 10px;display:flex;flex-direction:column;gap:3px">
+      <span class="eyebrow" style="color:#D4FF00">YOUR WEEKLY · LIVE</span>
+      <span class="num" style="font-size:18px;font-weight:600;line-height:1">41.8</span>
+      <span style="font-size:10px;color:#C9C6E6">3 playing · Curry 31</span>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div style="padding:14px 0 10px 14px;display:flex;flex-direction:column;gap:8px;min-width:0">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:baseline;gap:10px"><span class="mono" style="font-size:16px;letter-spacing:-.02em">SCORES</span><span class="mono" style="font-size:8px;letter-spacing:.08em;color:#9E9BC4">FRI OCT 30 · 7:48 PM PT</span></div>
+      <div style="display:flex;gap:6px">
+        <a href="#" class="pill num" style="background:#D4FF00;color:#1A1650;border-color:#D4FF00"><span class="dot" style="background:#1A1650"></span>LIVE 4</a>
+        <a href="#" class="pill">YOUR TEAMS</a>
+        <a href="#" class="pill">IN YOUR GAMES</a>
+      </div>
+    </div>
+
+    <!-- Featured -->
+    <a href="#" class="card" style="border-color:#D4FF00;display:grid;grid-template-columns:1.1fr 1fr 0.9fr;gap:16px;align-items:center;padding:10px 14px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow" style="color:#D4FF00">NBA · YOUR TEAM</span><span class="live"><span class="dot"></span>Q4 · 3:12</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#FFC72C"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#1D428A"/></svg><span style="font-size:15px;font-weight:600">Warriors <span style="font-size:10px;color:#9E9BC4;font-weight:400">2-2</span></span><span class="mono" style="font-size:28px;line-height:1;color:#C9C6E6">104</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#FDB927"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#552583"/></svg><span style="font-size:15px;font-weight:600">Lakers <span style="font-size:10px;color:#9E9BC4;font-weight:400">3-1</span></span><span class="mono" style="font-size:28px;line-height:1">109</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <span class="eyebrow">WIN PROBABILITY</span>
+        <div style="display:flex;justify-content:space-between;font-size:10px" class="num"><span style="color:#9E9BC4">GSW 31%</span><span>LAL 69%</span></div>
+        <div style="height:6px;border-radius:99px;background:#352F7A;overflow:hidden;display:flex"><span style="width:31%;background:#9E9BC4"></span><span style="flex:1;background:#D4FF00"></span></div>
+        <svg viewBox="0 0 300 40" width="100%" height="40" role="img" aria-label="Win probability through the game">
+          <polyline points="0,20 30,18 60,22 90,27 120,25 150,30 180,22 210,19 240,16 270,13 300,12" fill="none" stroke="#D4FF00" stroke-width="2"/>
+          <line x1="0" y1="20" x2="300" y2="20" stroke="#352F7A" stroke-width="1" stroke-dasharray="3 3"/>
+        </svg>
+        <span style="font-size:10px;color:#C9C6E6">Curry pull-up three · timeout GSW</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;border-left:1px solid #352F7A;padding-left:14px">
+        <span class="eyebrow">IN YOUR GAMES</span>
+        <div style="display:flex;justify-content:space-between;font-size:12px" class="num"><span>Curry</span><span style="font-weight:600;color:#D4FF00">31 · 7 ast</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px" class="num"><span>James</span><span style="font-weight:600">22 · 9 reb</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px" class="num"><span>Reaves</span><span style="font-weight:600">18</span></div>
+        <span style="font-size:9px;color:#9E9BC4">Weekly · Nightly Draft seat 4</span>
+      </div>
+    </a>
+
+    <!-- Grid -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:108px;gap:8px;flex:1;min-height:0;overflow:hidden">
+      <a href="#" class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">CFB</span><span class="live"><span class="dot"></span>4th 6:40</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#AD0000"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#000"/></svg><span>Louisville</span><span class="sc">24</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#630031"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#CF4420"/></svg><span>Virginia Tech</span><span class="sc" style="color:#9E9BC4">21</span></div>
+        <span style="font-size:10px;color:#C9C6E6;margin-top:auto" class="num"><span style="color:#D4FF00;font-weight:600">2nd &amp; 7</span> · VT 38 · UL ball</span>
+      </a>
+      <a href="#" class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">NBA</span><span class="live"><span class="dot"></span>Q4 1:05</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#007A33"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#BA9653"/></svg><span>Celtics</span><span class="sc" style="color:#9E9BC4">88</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#006BB6"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#F58426"/></svg><span>Knicks</span><span class="sc">91</span></div>
+        <span style="font-size:10px;color:#C9C6E6;margin-top:auto" class="num">Brunson 12 · in your Weekly</span>
+      </a>
+      <a href="#" class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">NBA</span><span class="live"><span class="dot"></span>Q3 4:50</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#0E2240"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#FEC524"/></svg><span>Nuggets</span><span class="sc" style="color:#9E9BC4">62</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#007AC1"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#EF6024"/></svg><span>Thunder</span><span class="sc">70</span></div>
+        <span style="font-size:10px;color:#C9C6E6;margin-top:auto" class="num">Jokic 18 · 11 reb</span>
+      </a>
+      <a href="#" class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">NBA</span><span class="live"><span class="dot"></span>Q3 8:14</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#C4CED4"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#000"/></svg><span>Spurs</span><span class="sc" style="color:#9E9BC4">55</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#CE1141"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#000"/></svg><span>Rockets</span><span class="sc">58</span></div>
+        <span style="font-size:10px;color:#C9C6E6;margin-top:auto" class="num">Wembanyama 19 · 4 blk</span>
+      </a>
+      <a href="#" class="card" style="color:#C9C6E6">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">NBA</span><span class="mono" style="font-size:8px;letter-spacing:.08em;color:#D4FF00">FINAL</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#98002E"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#F9A01B"/></svg><span style="color:#fff;font-weight:600">Heat</span><span class="sc" style="color:#fff">102</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#0077C0"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#C4CED4"/></svg><span>Magic</span><span class="sc" style="color:#9E9BC4">97</span></div>
+        <span style="font-size:10px;color:#9E9BC4;margin-top:auto" class="num">Recap · Box score</span>
+      </a>
+      <a href="#" class="card" style="color:#C9C6E6">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">NBA</span><span class="num" style="font-size:10px;color:#C9C6E6">9:00 PM</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#1D1160"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#E56020"/></svg><span>Suns</span><span class="num" style="font-size:10px;color:#9E9BC4">1-3</span></div>
+        <div class="row num"><svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#E03A3E"/><path d="M13 1a12 12 0 0 1 0 24z" fill="#000"/></svg><span>Trail Blazers</span><span class="num" style="font-size:10px;color:#9E9BC4">2-2</span></div>
+        <span style="font-size:10px;color:#9E9BC4;margin-top:auto" class="num">POR -3.5 · O/U 226.5</span>
+      </a>
+    </div>
+  </div>
+</div>
+</body>
+</html>
