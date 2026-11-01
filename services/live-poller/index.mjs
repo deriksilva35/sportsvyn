@@ -15,6 +15,7 @@
 import { neon } from '@neondatabase/serverless';
 import { cadence, sleepUntilNext, kickoffDelta, afterPoll } from '../../lib/live/cadence.js';
 import { addCalls, callsToday, applyCap, overCap, DEFAULT_CAP } from '../../lib/live/quota.js';
+import { shouldPoll, createCapNotes } from '../../lib/live/capPolicy.js';
 import { StatsTracker, nbaPlaysDue } from '../../lib/live/statsCadence.js';
 import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
 import { syncMlbGameStats } from '../../lib/mlb/statsSync.js';
@@ -276,6 +277,7 @@ async function loop(lg) {
 
   // THE LEAGUE'S CADENCE KNOBS, read once: the slate's decision and afterPoll use the same ones.
   const copts = lg.cadenceOpts ?? {};
+  const capNotes = createCapNotes(log);
   for (;;) {
     const now = new Date();
     let decision;
@@ -289,6 +291,7 @@ async function loop(lg) {
     const spent = await callsToday(sql, lg.slug, now).catch(() => 0);
     decision = applyCap(decision, spent + pending, lg.slug);
     const active = decision.state !== 'idle' && !decision.state.startsWith('idle');
+    capNotes.tick({ league: lg.slug, capped: decision.capped === true, calls: spent + pending, cap: DEFAULT_CAP[lg.slug], windowOpen: false, now });
 
     // --- lock + window lifecycle -----------------------------------------
     if (active && !lock) {
@@ -302,8 +305,11 @@ async function loop(lg) {
       await closeWindow(windowId, { ...window, closedState: decision.state, ...(providerError ? { provider_error: providerError } : {}) }, window.bdlErrors === 0 && window.pollFailures === 0);
       await release(lock, lg.slug); lock = null; windowId = null;
       Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0, bdlErrors: 0, pollFailures: 0 });
+      capNotes.windowClosed();
       log(`[${lg.slug}] window closed (${decision.state}) ${kickoffDelta(decision.nextKickoffAt, now)}`);
     }
+    // CAPPED = SLOW, NOT STOPPED: the window announces it once; the poll below still runs.
+    if (lock) capNotes.tick({ league: lg.slug, capped: decision.capped === true, calls: spent + pending, cap: DEFAULT_CAP[lg.slug], windowOpen: true, now });
 
     // --- the poll ---------------------------------------------------------
     // SCOPED FOR THE SECONDARY FEED (ruling sun-6). Every step below keeps its
@@ -314,7 +320,7 @@ async function loop(lg) {
     // as a FAILED row and alerted under this poller's own source
     // (lib/pollers/bdlFailure.js). Reporting never throws into the loop.
     const { bdlErrors } = await withBdlErrors(async () => {
-      if (active && lock && !decision.capped) {
+      if (shouldPoll({ active, lock })) {
         try {
           // The primary feed's failure, whether or not a fallback then answered (CFB: CFBD -> BDL).
           let primaryErr = null;
@@ -542,7 +548,7 @@ async function loop(lg) {
         await maybeAlert(sql, {
           source: `live-poller-${lg.slug}`,
           subject: `live poller: ${lg.slug} hit its daily provider cap`,
-          body: `${total} calls today against a cap of ${DEFAULT_CAP[lg.slug]}. Dropped to the idle cadence.`,
+          body: `${total} calls today against a cap of ${DEFAULT_CAP[lg.slug]}. Polling continues at the 5-minute cadence.`,
         }).catch(() => {});
       }
     }
