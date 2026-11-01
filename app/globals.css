@@ -186,6 +186,15 @@
   --tok-pos-k: var(--arcade-primary);
   /* GK (R2 batch 2 ruling): a purple of its own, 6.99:1 on the page. */
   --tok-pos-gk: #7A3E9D;
+  /* THE LANDSCAPE BOARD'S NAVY SET (scores-landscape, docs/design/mocks/scores-landscape-v1.html).
+     Names and values live HERE and nowhere else: scoresLandscape.css reads them
+     with var() and holds no literal. The mock's line colour is --arcade-line-ink,
+     not --arcade-line, because --arcade-line is already the light theme's rule
+     colour (#E3E3E0) and --tok-line reads it. Live red is --arcade-live. */
+  --arcade-ink-2: #241F62;
+  --arcade-line-ink: #352F7A;
+  --arcade-text-2: #C9C6E6;
+  --arcade-text-3: #9E9BC4;
   --tok-font-display: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   --tok-font-body: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   --tok-font-num: var(--font-rubik-mono), ui-monospace, monospace;

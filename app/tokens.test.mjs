@@ -241,3 +241,14 @@ test('ARCADE MUTED IS A NEUTRAL GREY at >= 4.5:1 on the page and both surfaces (
     assert.ok(x >= 4.5, `${m} on ${bg} ${rootTokens[bg]} is ${x.toFixed(2)}:1`);
   }
 });
+
+test('THE LANDSCAPE NAVY SET lives in the arcade block, and --arcade-line stays the light rule', () => {
+  assert.equal(arcadeBlock['--arcade-ink-2'], '#241F62');
+  assert.equal(arcadeBlock['--arcade-line-ink'], '#352F7A');
+  assert.equal(arcadeBlock['--arcade-text-2'], '#C9C6E6');
+  assert.equal(arcadeBlock['--arcade-text-3'], '#9E9BC4');
+  assert.equal(rootTokens['--arcade-line'], '#E3E3E0', 'the light theme\'s rule colour is not redefined');
+  for (const k of ['--arcade-ink-2', '--arcade-line-ink', '--arcade-text-2', '--arcade-text-3']) {
+    assert.equal(rootTokens[k], undefined, `${k} is not in the dark :root`);
+  }
+});
