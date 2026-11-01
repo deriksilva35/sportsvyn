@@ -322,3 +322,29 @@ test('THE STARTERS SIT UNDER THE TEAMS on a scheduled MLB card, and the foot kee
   const css = readFileSync(new URL('../../app/scores/scoresV4.css', import.meta.url), 'utf8');
   assert.match(css, /\.sv4-prob \{[^}]*white-space: nowrap[^}]*text-overflow: ellipsis/, 'one line at 390');
 });
+
+// scores-landscape fix: the featured game is not repeated in the landscape grid.
+test('FEATURED DUP: with a featured id, exactly that game carries .sv4-featured-dup (grid shows N-1 in landscape); none without', async () => {
+  const { readFileSync } = await import('node:fs');
+  const v = fixture();
+  const all = doc(v4html(v, true)).querySelectorAll('article.sv4-card').length;
+  const none = doc(v4html(v, true));
+  assert.equal(none.querySelectorAll('.sv4-featured-dup').length, 0, 'no pick: no card is marked');
+  const d = doc(v4html(v, true, { featuredId: 7 }));
+  assert.equal(d.querySelectorAll('article.sv4-card').length, all, 'portrait DOM keeps every card (the mark hides it only in landscape)');
+  const dups = [...d.querySelectorAll('.sv4-featured-dup')];
+  assert.equal(dups.length, 1);
+  assert.equal(dups[0].dataset.slug, 'g-7');
+  assert.equal(d.querySelectorAll('article.sv4-card:not(.sv4-featured-dup)').length, all - 1, 'landscape grid: N-1 visible cards');
+  assert.ok(![...d.querySelectorAll('article.sv4-card:not(.sv4-featured-dup)')].some((c) => c.dataset.slug === 'g-7'));
+  const land = readFileSync(new URL('../../app/scores/scoresLandscape.css', import.meta.url), 'utf8');
+  assert.match(land, /\.sv4-card\.sv4-featured-dup\s*\{\s*display:\s*none/);
+});
+
+test('HEADER DATE: the date beside the title, upper-case, in the reader\'s zone; hidden outside landscape', async () => {
+  const { readFileSync } = await import('node:fs');
+  const d = doc(v4html({ ...fixture(), tz: 'America/Los_Angeles' }, true, { now: new Date('2026-11-02T03:30:00Z') }));
+  assert.equal(d.querySelector('.sv4-head [data-head-date]').textContent, 'SUN NOV 1', 'Pacific evening of Nov 1, not UTC Nov 2');
+  const base = readFileSync(new URL('../../app/scores/scoresV4.css', import.meta.url), 'utf8');
+  assert.match(base, /\.sv4-headdate \{ display: none; \}/);
+});

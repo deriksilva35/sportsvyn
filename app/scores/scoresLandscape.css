@@ -82,6 +82,10 @@
   .sv4-main .sv4-head { order: 1; top: 0; height: 34px; padding: 9px 0 0; align-items: baseline; flex-wrap: nowrap; }
   .sv4-head h1 { font: 400 16px/1 var(--tok-font-num); font-style: normal; letter-spacing: -.02em; }
   .sv4-head .sv4-sub { display: none; }
+  .sv4-main .sv4-head { justify-content: flex-start; }
+  .sv4-head .sv4-headdate { display: inline; margin-left: 10px; font: 400 8px var(--tok-font-num); letter-spacing: .08em; color: var(--arcade-text-3); }
+  /* the featured game is the card above; the grid takes the rest */
+  .sv4-card.sv4-featured-dup { display: none; }
   .sv4-main .sv4-eb { display: none; }
   .sv4-main .sv4-chips { order: 3; top: 0; height: 34px; margin-top: -34px; padding: 4px 0; gap: 6px; align-self: flex-end; max-width: 60%; background: none; overflow-x: auto; }
   .sv4-main .sv4-days { order: 4; top: 34px; height: 34px; padding: 4px 0; gap: 5px; align-items: center; }
@@ -142,6 +146,10 @@
   .sv4-featured .wpbar .a { background: var(--arcade-text-3); }
   .sv4-featured .wpbar .h { background: var(--arcade-volt); }
   .sv4-featured .f-read p { margin: 0; font: 400 10px/1.35 var(--tok-font-body); color: var(--arcade-text-2); }
+  .sv4-featured .f-soon { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; justify-content: center; flex: 1; }
+  .sv4-featured .f-soon { word-spacing: .18em; }
+  .sv4-featured .f-soon .t { font: 600 18px/1 var(--tok-font-body); font-variant-numeric: tabular-nums; color: var(--arcade-on-primary); }
+  .sv4-featured .f-soon .s { font: 400 10px var(--tok-font-body); color: var(--arcade-text-3); }
   .sv4-featured .f-stake { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding-left: 14px; border-left: 1px solid var(--arcade-line-ink); position: relative; }
   .sv4-featured .f-stake .row { display: flex; justify-content: space-between; gap: 8px; font: 400 12px var(--tok-font-body); }
   .sv4-featured .f-stake .row b { font-weight: 600; color: var(--arcade-volt); }

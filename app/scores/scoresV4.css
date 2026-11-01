@@ -182,3 +182,4 @@
 /* THE LANDSCAPE PIECES ARE HIDDEN HERE, shown by scoresLandscape.css inside its
    orientation query. Portrait therefore draws exactly what it drew before. */
 :where(:root[data-theme="arcade"]) .sv4-rail, :where(:root[data-theme="arcade"]) .sv4-featured { display: none; }
+:where(:root[data-theme="arcade"]) .sv4-headdate { display: none; }

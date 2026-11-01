@@ -129,3 +129,28 @@ test('HYPHENS ONLY: no en or em dash in anything the card prints', () => {
     assert.doesNotMatch(render(p).d.body.textContent, /[–—]/);
   }
 });
+
+test('EMPTY MIDDLE before the first play: kickoff time in the viewer zone and "First play soon"; any read replaces it', () => {
+  const up = game(20, 'nfl', 'live', 0, team(1, 'CHI', 'Bears'), team(2, 'PHI', 'Eagles'), 0, 0, { liveState: { period: 1, clock: '15:00' } });
+  const { d, html } = render({ g: up, x: X(), label: 'LIVE NOW', via: [] });
+  const soon = d.querySelector('.f-read [data-first-play]');
+  assert.ok(soon, 'the empty state');
+  assert.match(soon.textContent, /\d:\d\d [AP]M PDT/, 'the kickoff in Pacific');
+  assert.match(soon.textContent, /First play soon/);
+  assert.doesNotMatch(html, /[\u2013\u2014]/, 'hyphens only');
+  // a drive line replaces it
+  const withDrive = render({ g: up, x: X({ drive: { label: '1st & 10', spot: 'CHI 25', offenseAbbr: 'PHI', pct: 25, togo: 10, lastPlay: 'kickoff' } }), label: 'LIVE NOW', via: [] });
+  assert.equal(withDrive.d.querySelector('[data-first-play]'), null);
+  assert.ok(withDrive.d.querySelector('[data-sit]'));
+  // a win probability replaces it
+  const withWp = render({ g: nfl, x: X(), label: 'LIVE NOW', via: [] });
+  assert.equal(withWp.d.querySelector('[data-first-play]'), null);
+  assert.ok(withWp.d.querySelector('[data-winprob-bar]'));
+  // a last play replaces it (NBA)
+  const withLp = render({ g: nba, x: X(), label: 'LIVE NOW', via: [] });
+  assert.equal(withLp.d.querySelector('[data-first-play]'), null);
+  assert.ok(withLp.d.querySelector('[data-last-play]'));
+  // a final game has no first play to wait for
+  const fin = game(21, 'nfl', 'final', -200, team(1, 'CHI', 'Bears'), team(2, 'PHI', 'Eagles'), 20, 17);
+  assert.equal(render({ g: fin, x: X(), label: 'YOUR PICK', via: ['pickem'] }).d.querySelector('[data-first-play]'), null);
+});

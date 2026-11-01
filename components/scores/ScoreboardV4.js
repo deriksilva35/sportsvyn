@@ -22,6 +22,7 @@ import ZoneLabel from '@/components/scores/ZoneLabel';
 import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import LiveRefresh from '@/components/scores/LiveRefresh';
+import { dateLabel } from '@/lib/time/display';
 import ScoresRail from '@/components/scores/ScoresRail';
 import ExpandCard, { ExpandLine } from '@/components/scores/ExpandCard';
 import { liveWinProbView } from '@/components/gridiron/LiveWinProb';
@@ -313,7 +314,7 @@ export function Card(props) {
     // work, and a tap anywhere else opens the drawer. EPL keeps no drawer - it
     // left the arcade chip row - and stays one link to its match page.
     <ExpandCard
-      articleProps={{ className: `sv4-card ${variant}`, 'data-variant': variant, 'data-league': g.leagueSlug, 'data-slug': g.slug }}
+      articleProps={{ className: `sv4-card ${variant}${props.featuredId != null && g.id === props.featuredId ? ' sv4-featured-dup' : ''}`, 'data-variant': variant, 'data-league': g.leagueSlug, 'data-slug': g.slug }}
       league={g.leagueSlug} slug={g.slug} live={live} label={label} gameHref={gameHrefOf(g)}
       line={props.x.line ?? null} expandable={!isSoccerSlug(g.leagueSlug)}>
       <CardFace {...props} />
@@ -358,7 +359,7 @@ function Group({ grp, ...rest }) {
   );
 }
 
-export default function ScoreboardV4({ v, view = null, conf = null, signedIn = false, isShell = false, zoneLabel = 'Eastern', now = new Date(), tabs = null, featured = null, weekly = null }) {
+export default function ScoreboardV4({ v, view = null, conf = null, signedIn = false, isShell = false, zoneLabel = 'Eastern', now = new Date(), tabs = null, featured = null, featuredId = null, weekly = null }) {
   const signinHref = shellSigninHref('/scores', isShell);
   const state = { date: v.date === v.today ? null : v.date, sport: v.sport, view, conf, mine: v.mine, top25: v.top25 };
   const h = hrefs(state);
@@ -374,7 +375,7 @@ export default function ScoreboardV4({ v, view = null, conf = null, signedIn = f
   const onDay = v.days.find((d) => d.on)?.counts ?? null;
   const slate = onDay ? onDay.live + onDay.final + onDay.scheduled : 0;
   const shown = (k) => counts[k] > 0 || view === k;
-  const cardProps = { v, signedIn, signinHref, tz: v.tz, now };
+  const cardProps = { v, signedIn, signinHref, tz: v.tz, now, featuredId };
   return (
     <div className="sv4" data-surface="ink">
       {v.liveCount > 0 && <LiveRefresh />}
@@ -384,6 +385,8 @@ export default function ScoreboardV4({ v, view = null, conf = null, signedIn = f
       <div className="sv4-main">
       <div className="sv4-head">
         <h1>Scoreboard</h1>
+        {/* THE DATE BESIDE THE TITLE: landscape only (scoresV4.css hides it elsewhere). */}
+        <span className="sv4-headdate" data-head-date="1">{dateLabel(now, { tz: v.tz }).toUpperCase()}</span>
         <div className="sv4-sub" data-live-count={v.liveCount}>
           {v.liveCount > 0 ? `${v.liveCount} live · ` : ''}{slate} on the slate
         </div>

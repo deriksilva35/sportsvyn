@@ -238,13 +238,14 @@ export default async function ScoresPage({ searchParams }) {
       scoresV2({ userId, date: q.date, sport: q.sport, mine: userId != null && q.mine, top25: q.top25, tz, openings: cachedOpeningSpreads, now }),
       userId != null ? weeklyHero(userId).catch(() => null) : null,
     ]);
-    const featured = <FeaturedGame pick={pickFeatured({ games: v.dayGames, extras: v.extras, signedIn: userId != null, now })}
+    const pick = pickFeatured({ games: v.dayGames, extras: v.extras, signedIn: userId != null, now });
+    const featured = <FeaturedGame pick={pick}
       signedIn={userId != null} signinHref={shellSigninHref('/scores', isShell)} tz={v.tz} now={now} />;
     return (
       <div className="gi" data-surface="ink">
         <ScoresChrome isShell={isShell} />
         <TzCookie />
-        <ScoreboardV4 v={v} view={q.view} conf={q.conf} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} tabs={tabs} featured={featured} weekly={weekly} now={now} />
+        <ScoreboardV4 v={v} view={q.view} conf={q.conf} signedIn={userId != null} isShell={isShell} zoneLabel={zoneLabel(tz)} tabs={tabs} featured={featured} featuredId={pick?.g.id ?? null} weekly={weekly} now={now} />
       </div>
     );
   }

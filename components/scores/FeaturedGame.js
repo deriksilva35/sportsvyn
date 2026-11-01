@@ -19,6 +19,7 @@
 // link); the links inside the face sit above it, as on every card.
 
 import Link from 'next/link';
+import StandaloneTime from '@/components/StandaloneTime';
 import { CardFace } from '@/components/scores/ScoreboardV4';
 import { liveWinProbView } from '@/components/gridiron/LiveWinProb';
 import { winProbDisplayed } from '@/lib/winprob/display';
@@ -46,7 +47,7 @@ export function stakeLines(stake, g) {
   return out;
 }
 
-function Read({ g, x, now }) {
+function ReadBody({ g, x, now }) {
   const sport = sportOf(g.leagueSlug);
   const live = g.status === 'live';
   if (sport === BASKETBALL) {
@@ -84,6 +85,25 @@ function Read({ g, x, now }) {
   );
 }
 
+/**
+ * THE MIDDLE COLUMN, never empty for a game still to be read: when the sport's own
+ * read has nothing yet (no win probability, no drive line, no last play, no
+ * diamond), the kickoff time in the viewer's zone and "First play soon". The
+ * moment any of them exists, ReadBody's content replaces it. A final game with
+ * nothing to read stays empty (there is no first play to wait for).
+ */
+function Read({ g, x, now, tz }) {
+  const body = ReadBody({ g, x, now });
+  if (body) return body;
+  if (g.status === 'final') return null;
+  return (
+    <div className="f-soon" data-first-play="1">
+      <b className="t"><StandaloneTime iso={g.kickoffAt} serverTz={tz} /></b>
+      <span className="s">First play soon</span>
+    </div>
+  );
+}
+
 export default function FeaturedGame({ pick, signedIn = false, signinHref = '/signin', tz, now = new Date() }) {
   if (!pick) return null;
   const { g, x, label } = pick;
@@ -100,7 +120,7 @@ export default function FeaturedGame({ pick, signedIn = false, signinHref = '/si
         <CardFace g={g} x={x} signedIn={signedIn} signinHref={signinHref} tz={tz} now={now} />
       </div>
       <div className="f-read">
-        <Read g={g} x={x} now={now} />
+        <Read g={g} x={x} now={now} tz={tz} />
       </div>
       <div className="f-stake">
         {shown.length ? (
