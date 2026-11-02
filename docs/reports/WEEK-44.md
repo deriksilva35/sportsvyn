@@ -1,50 +1,47 @@
-# SPORTSVŶN — week 44 (2026-10-26 to 2026-10-29, partial: filed Thursday)
-Crew ran 58 times · 0 capped · 2 stuck · $1.16 (−$0.87 vs last week: 71 runs, $2.03) · proof runs: 2
+# SPORTSVŶN — week 44 (2026-10-26 to 2026-11-01)
+Crew ran 91 times · 0 capped · 2 stuck · $2.15 (+$0.12 vs last week: 71 runs, $2.03) · proof runs: 2
 
-Plainly: A busy week. A wording fix in the follow-limit code went live after one false start, the crew's tooling on the server was reinstalled at Derik's request, and the missing game-check script was restored so the nightly checks now cover the games again. One repeat reinstall request is waiting on Derik, and one live-game alert from Wednesday is still open.
+Plainly: A busy week. The crew's install on the droplet was reinstalled and the game checks (G1–G6) started working again on Oct 28; since then the Watcher has filed seven live tickets about games that stay "scheduled" after kickoff or freeze mid-match. One small comment fix landed after an undo-and-redo. Nothing is waiting on Derik in the Outbox, but the seven game-feed tickets need someone to look at the poller.
 
 ## Fixed
-- Comment at lib/follows.js:15 said THREE teams per league vs FOLLOW_CAP_PER_LEAGUE → corrected (PR #60, merged 10-26; ticket 90827016 closed 10-26). The first merge (PR #40) was undone 10-26 (deliverable c70b906f, reverted); the re-relay (87af578a) published 10-27. Two further undo requests on 87af578a (10-27) were cancelled before the runner took them.
-- SETUP: game-watch script missing on droplet, G1-G6 not evaluable (ticket 6032bf49) → restored; closed 10-29 via ops card 26eb5ce4. Watcher has reported "G1-G6 clean/quiet" on every run since 10-28 13:33.
-- SETUP: board-state printed no SUMMARY line (ticket 21986e4a, open since 10-21) → closed 10-28.
-- Injuries provider stale ~21 days (ticket 16dfae18, open since 10-22) → closed 10-28.
-- Vercel production 5xx on / (ticket 8b0dc772, 10-27) → closed 10-28.
-- crew/ reinstalled at 362fd73e (ops cards 2ed4ccf9, f9c1495b, efd950f3 approved 10-28; ticket 9f55defe closed 10-28 via ed54ebfe).
+- Comment at lib/follows.js:15 said THREE teams per league, cap is 5 → PR #40 merged 10-23, undone via revert PR #55 (checks failed first, merged on retry 10-26), redone as PR #60, merged 10-26 (ticket 90827016 closed).
+- crew/ on the droplet behind main → reinstalled at 362fd73e (deliverable approved 10-28, ticket 9f55defe closed 10-28).
+- game-watch script missing on droplet (G1–G6 not evaluable) → ticket 6032bf49 closed 10-29; G1–G6 evaluated from 10-28 15:40 PT onward.
+- board-state printed no SUMMARY line (ticket 21986e4a) → closed 10-28. Injuries provider stale ~21 days (ticket 16dfae18) → closed 10-28. Vercel 5xx on / (1 in 60 min) → closed 10-28.
 
 ## Added
-- daily-season-backfill-2000-2001: 1119 rows (Data Keeper, deliverable 57e9a74b, approved 10-26). Data Keeper runs 10-27, 10-28, 10-29 report "dup-skipped vs approved 57e9a74b".
+- daily-season-backfill-2000-2001: 1119 rows (Data Keeper, approved 10-26, 57e9a74b); daily runs since report dup-skip.
 
 ## In the Outbox / waiting on Derik
-- Reinstall SPORTSVŶN crew/ at 3cb72dd8 (ops card 9de1f194) · waiting 0 days · a repeat of 9d169f62, which Derik rejected 10-29 ("dont want").
-- Ticket a637378d · G1: NBA Oct 28 ORL@TOR still scheduled 11 min past kickoff (severity live, new 10-28) · needs a ruling: real feed problem or expected lag?
+- none
 
 ## Sent back or rejected
-- Reinstall crew/ at 3cb72dd8 (9d169f62) · "dont want" · Fixer re-filed it as 9de1f194 at 09:20 (now waiting).
-- Reinstall crew/ at 1812a0b4 (af92f06a) · "CH-5 proof — box already restored" · no follow-up.
-- Roll back crew/ to 362fd73e (ae52b6b8) · "rollback proof — dry run only" · no follow-up.
+- Reinstall crew/ at 1812a0b4 · "CH-5 proof — box already restored" · proof, no action.
+- Roll back crew/ to 362fd73e · "rollback proof — dry run only" · proof.
+- Reinstall crew/ at 3cb72dd8 (×2, 10-29 and 10-30) · "dont want" / "No note" · Fixer re-offered after rejection; recommend it stop re-offering a rejected target.
+- Reinstall crew/ at d19ce47c · "proof (CH-6b)" · proof.
 
 ## Failed, capped or stuck
-- SPORTSVŶN Fixer · undo-merge c70b906f · stuck 10-26 14:00 · 1 of 2 attempts (done 15:35) · revert PR checks failed (brief daa685dc: nbaOpener.test.mjs on shared CI data); Derik re-ran the job, green.
-- SPORTSVŶN Fixer · relay 8a0fe2c3 · stuck 10-27 18:00 · 1 attempt, no retry seen, no deliverable row with that id · my read: relay push with lock_wait 0 (10-28 daily note); check what ticket it belonged to.
-- SPORTSVŶN Watcher · run_events errors: vercel.com timeout 10-26 06:01 (partial scan, cost pace unknown); board-state no SUMMARY 10-26 15:41 (deduped to 21986e4a); not_found:script 10-28 15:11 (game-watch, since fixed). Partial scans (G1-G5 not evaluated) on every run 10-26 → 10-28 12:31.
-- Proof runs (not crew failures): Watcher proof:ops2b-test ×2 stuck 10-26 17:24.
+- SPORTSVŶN Fixer · undo-merge c70b906f · 10-26 14:00 stuck · revert PR #55 failed the SPORTSVN test suite (nbaOpener.test.mjs on shared CI data); re-run green 15:21, merged on retry. CI flake, not a code bug.
+- SPORTSVŶN Fixer · relay 8a0fe2c3 · 10-27 18:00 stuck · stopped to ask Derik to reinstall crew/ from main; brief answered 10-28 ("Done: 362fd73e"). Expected stop.
+- SPORTSVŶN Watcher · 6 run_events of kind error: vercel.com timeout ×2 (partial scan, cost pace unknown), not_found:script ×1 (game-watch, 10-28), G1 hit ×1, G6 regression ×1, board-state no SUMMARY ×1.
 
 ## Decisions Derik made this week (now in agent memory)
-- Undo of PR #40 failed its checks → re-ran the failed job (attempt 2 green 15:21; nbaOpener.test.mjs on shared CI data)
-- Test question from OPS-2b → yes
-- Reinstall crew/ from main through the crew shell → done at 362fd73e; 9f55defe closed via ops cards
-- Reinstall at 1812a0b4 → reject · Roll back to 362fd73e → reject · Reinstall at 3cb72dd8 → reject ("dont want")
+- Undo of PR #40 failed checks → "re-run the failed job" (brief 10-26).
+- OPS-2b test question → "Yes" (ignore).
+- Reinstall crew/ from main → done at 362fd73e, ticket 9f55defe closed (brief 10-28).
+- Reinstall at 3cb72dd8 → rejected twice ("dont want").
 
 ## Recommendations
-- Fixer: never re-file an ops card Derik rejected the same day (9de1f194 duplicates 9d169f62); treat a reject as final unless the ticket changes.
-- Watcher: when a check script is missing, file the SETUP ticket on the first partial scan, not after two days (6032bf49 was filed 10-28; partials began 10-26).
-- Watcher: Vercel billing timeout leaves "cost pace unknown"; add a fallback (last known pace) so the line is never blank.
-- Ticket a637378d (live) needs a ruling from Derik: real or feed lag.
+- Seven live game-feed tickets opened 10-28..11-01, same two signatures: G1 "past kickoff still scheduled" ×3 (ORL@TOR 10-28, NBA 10-31, BOS-ORL/BKN-IND 11-01) and G6 "live match frozen" ×4 (EPL 24683, 5 EPL at HT, 19 CFB, EPL 24691). Watch rule fired (same signature 3+ runs): the score poller is not flipping or updating; one fix, not seven.
+- Fixer: do not re-offer a reinstall target Derik already rejected (3cb72dd8 offered twice).
+- Watcher: Vercel billing/cost-pace timed out 2 nights; "cost pace unknown" all week — the cost-watch trigger lost 10-09 (registration note) still needs re-issuing.
+- Data Keeper: 7 runs, log_line missing on 10-26 run; sign every run.
 
 ## Spend
 | Agent | Runs | Cost | Cap | Note |
 |---|---|---|---|---|
-| SPORTSVŶN Watcher | 36 (+2 proof) | $1.05 | $0.75/run · $35/mo | MTD $2.91 |
-| SPORTSVŶN Fixer | 18 | $0.00 | — | 2 stuck |
-| SPORTSVŶN Data Keeper | 4 | $0.11 | $0.30/run · $10/mo | MTD $0.28 |
-| Project | 58 (+2 proof) | $1.16 | $35/mo | Console workspace sportsvyn $0.75 MTD |
+| SPORTSVŶN Watcher | 65 (+2 proof) | $1.92 | $0.75/run · $35/mo | 7 tickets filed |
+| SPORTSVŶN Data Keeper | 7 | $0.23 | $0.30/run · $10/mo | 1 approved deliverable |
+| SPORTSVŶN Fixer | 19 | $0.00 | — | 2 stuck |
+| Project | 91 | $2.15 | $35/mo | Console workspace sportsvyn $0.06 Nov MTD |
