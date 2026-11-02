@@ -45,3 +45,39 @@ CREW-LOG watcher board-prelock 16:00 PT: 4 scripts ok, G1-G6 clean, 0 tickets, l
 2026-10-29 · Watcher · 5 scripts, G1-G6 quiet · runs eb19fe1e
 2026-10-29 · Watcher · 5 scripts, G1-G6 quiet · runs 7068b00a
 2026-10-29 · Watcher · 5 scripts, G1-G6 quiet · runs 8ea6cb27
+2026-10-26 · Data Keeper · no log line · run 85d58df8
+CREW-LOG data-keeper 2026-10-27 job=daily-season-backfill-2000-2001 would_change=1119 dedupe=skip
+CREW-LOG daily-season-backfill-2000-2001 dup-skipped vs approved 57e9a74b
+CREW-LOG data-keeper 2026-10-29 daily-season-backfill-2000-2001 dup-skipped
+2026-10-29 · Watcher · deploy d19ce47 clean, G1-G6 quiet · runs d62e411c
+trigger=manual trigger_reason=run_now; app-errors, vercel-errors, latest-deploy, board-state, game-watch all clean (SUMMARY ok); board open; deploy dpl_HAkw... READY d19ce47; G1-G6 ok; no tickets; nightly PROVIDER/COST not run (manual trigger); log_line: 2026-10-29 · Watcher · triggered scan clean, board open, no tickets · runs 3f81eb6d
+2026-10-29 · Watcher · deploy 03f76e2 clean; app/vercel 0 errors; G1-G6 clean · runs b47619fa
+2026-10-29 · Watcher · manual run: app 0 errors, 5xx 0, deploy 03f76e2 clean, G1-G6 0, board open · runs 43cac0ff
+2026-10-29 · Watcher · deploy run clean: app/vercel 0 errors, G1-G6 clear, board open · runs 0e517d57
+2026-10-29 · Watcher · pre-lock (locks_in:119): deploy e6c7b0c clean, app/vercel errors 0, G1-G6 clean · runs 4bd095a8
+2026-10-29 · Watcher · manual run: 4 scripts + game-watch clean, locks_in 42m, no tickets · runs cba9ceb9
+2026-10-29 · Watcher · pre-lock board run, all triggered rules clean, no tickets · runs e4767294
+CREW-LOG data-keeper 2026-10-30 daily-season-backfill-2000-2001 would_change=1119 dup-skip 57e9a74b
+2026-10-30 · Watcher · nightly: app/vercel errors 0, G1-G6 clean, deploy e6c7b0c clean, providers ok · runs 5fee14e6
+2026-10-30 · Watcher · Board-open 09:00 scan clean: app/vercel errors 0, deploy e6c7b0c clean, G1-G6 all 0, no new tickets · runs 1c84c8db
+2026-10-30 · Watcher · deploy dpl_5EyPge5XNW1 clean, app/vercel 0 errors, G1-G6 clean, no tickets · runs 359e794d
+2026-10-30 · Watcher · deploy dpl_2jogFi clean; app/vercel/game-watch no hits · runs 4725d307
+2026-10-30 · Watcher · pre-lock board run (locks_in:119): app/vercel errors 0, deploy dpl_2jogFiPg READY, G1-G6 clean · runs 7976e63d
+2026-10-30 · Watcher · deploy 9e6abb1 clean; app/vercel errors 0; G1-G6 clear; board locks in 109m · runs 2058b7a7
+2026-10-30 · Watcher · board pre-lock (locks_in:118), 0 hits across app-errors, vercel-errors, G1-G6, deploy clean · runs b6ba3c29
+CREW-LOG data-keeper daily-season-backfill-2000-2001 dry-run ok would_change=1119 dup-skip 57e9a74b
+2026-10-31 · Watcher · nightly: 8 checks ran, EPL match 24683 frozen 31 min filed (86ac6b2b) · runs e8f3d69a
+2026-10-31 · Watcher · board-open: EPL G6 5 matches frozen at HT, filed c6b8f12f · runs 54b7c2a5
+2026-10-31 · Watcher · pre-lock board run clean: G1-G6 zero hits, 0 errors, no new deploy · runs dfb36029
+2026-10-31 · Watcher · board run: 19 live CFB matches frozen 106-181 min (G6), filed 83d3faf1; app/vercel clean · runs 767d0d20
+2026-10-31 · Watcher · board prelock 119m; G6 16 cfb frozen dedupe 83d3faf1; no new tickets · runs 20267484
+2026-10-31 · Watcher · deploy dpl_EoRPKK clean; G1 NBA 10-31 games unflipped, ticketed · runs e54c344d
+2026-10-31 · Watcher · deploy-changed: G1 OKC-HOU still scheduled, deduped 0cc9b2f0; app/vercel clean · runs e8695c49
+2026-10-31 · Watcher · deploy 0038930 clean; app/vercel errors 0; G1-G6 clean · runs 7aed3908
+CREW-LOG data-keeper 2026-11-01 daily-season-backfill-2000-2001 ok would_change=1119 dup-skip
+2026-11-01 · Watcher · nightly: 8 scripts ok, 0 hits, no new tickets · runs 83af19d3
+2026-11-01 · Watcher · board-open: G6 EPL 24691 frozen 32m filed; app/vercel clean · runs 6a8fce16
+2026-11-01 · Watcher · prelock 119m: app, vercel, G1-G6 clean; no new tickets · runs 1ba61d95
+2026-11-01 · Watcher · board run: G1 hit on 2 NBA 11-01 games (ticket 9ca94186-7764-4edb-9eb1-8ee14e2b48e1), app/vercel/deploy clean · runs 7d288701
+2026-11-01 · Watcher · G1 still-scheduled regression on 11-01 NBA games, deduped to 9ca94186 · runs c394981d
+2026-11-01 · Watcher · deploy 60fad9f clean: app/vercel errors 0, G1-G6 clear, board open · runs ed836765
