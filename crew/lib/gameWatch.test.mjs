@@ -13,7 +13,7 @@ import { summarize, SQL } from './gameWatch.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const BIN = path.join(HERE, '..', 'bin', 'game-watch');
-const SUMMARY = /^SUMMARY game-watch g1=(\d+) g2=(\d+) g3=(\d+) g4=(\d+) g5=(\d+) g6=(\d+) status=(ok|regression)$/;
+const SUMMARY = /^SUMMARY game-watch g1=(\d+) g2=(\d+) g3=(\d+) g4=(\d+) g5=(\d+) g6=(\d+) g7=(\d+) status=(ok|regression)$/;
 
 // `rows`: view name -> rows; `missing`: a view that does not exist (the database answers 400).
 function runGameWatch(rows = {}, { missing = null, args = [], secrets = true } = {}) {
@@ -47,7 +47,7 @@ test('game-watch quiet: exit 0, SUMMARY all zeros, status=ok', () => {
   const r = runGameWatch();
   assert.equal(r.status, 0, r.stderr);
   assert.deepEqual(lines(r).length, 1);
-  assert.equal(lines(r)[0], 'SUMMARY game-watch g1=0 g2=0 g3=0 g4=0 g5=0 g6=0 status=ok');
+  assert.equal(lines(r)[0], 'SUMMARY game-watch g1=0 g2=0 g3=0 g4=0 g5=0 g6=0 g7=0 status=ok');
 });
 
 const FIRING = [
@@ -57,6 +57,7 @@ const FIRING = [
   ['g4_board_unsettled', { contest_id: 11, game_type: 'pickem', games: '4', finals: '4', hours_since_last_final: 7 }, /^G4 soon 11 pickem games=4 finals=4 hours_since_last_final=7$/, 'g4'],
   ['g5_retention_not_ok', { run_id: null, kind: null, hours_since_start: null, why: 'no run recorded' }, /^G5 soon data-retention no_run_recorded kind=- hours_since_start=-$/, 'g5'],
   ['live_matches_v', { match_id: 99, league_slug: 'cfb', minutes_frozen: 44, home_score: 0, away_score: 0, period: '1', clock: '13:40' }, /^G6 live 99 cfb frozen_min=44 score=0-0 period=1 clock=13:40$/, 'g6'],
+  ['g7_past_start_not_live', { match_id: 77, league: 'nba', slug: 'bos-nyk-2026-11-02', minutes_past: 22 }, /^G7 live 77 nba bos-nyk-2026-11-02 still_scheduled minutes_past=22$/, 'g7'],
 ];
 
 for (const [view, row, want, g] of FIRING) {
@@ -68,9 +69,9 @@ for (const [view, row, want, g] of FIRING) {
     assert.match(out[0], want);
     const m = out[1].match(SUMMARY);
     assert.ok(m, out[1]);
-    assert.equal(m[7], 'regression');
-    const counts = m.slice(1, 7).map(Number);
-    assert.deepEqual(counts, [1, 2, 3, 4, 5, 6].map((n) => (`g${n}` === g ? 1 : 0)));
+    assert.equal(m[8], 'regression');
+    const counts = m.slice(1, 8).map(Number);
+    assert.deepEqual(counts, [1, 2, 3, 4, 5, 6, 7].map((n) => (`g${n}` === g ? 1 : 0)));
   });
 }
 
@@ -87,9 +88,10 @@ test('game-watch severities are the Watcher enum (page -> live, warn -> soon), p
   assert.equal(sev({ g5: [{ why: 'last run older than 26h', hours_since_start: 30 }] }), 'soon');
   assert.equal(sev({ g5: [{ why: 'last run older than 26h', hours_since_start: 51 }] }), 'live');
   assert.equal(summarize({ g6: [{ match_id: 3, minutes_frozen: 20 }] }).lines[0].split(' ').slice(0, 3).join(' '), 'G6 live 3');
+  assert.equal(summarize({ g7: [{ match_id: 8, minutes_past: 15 }] }).lines[0].split(' ').slice(0, 3).join(' '), 'G7 live 8');
   // every severity game-watch can print is in the Watcher's enum
   const all = summarize({ g1: [{ match_id: 1, minutes_past: 99 }, { match_id: 2, minutes_past: 1 }], g2: [{ contest_id: 1, dangling: 1 }],
-    g3: [{ match_id: 3, minutes_to_kickoff: 5 }], g4: [{ contest_id: 2, hours_since_last_final: 7 }], g5: [{ why: 'no run recorded' }], g6: [{ match_id: 4 }] });
+    g3: [{ match_id: 3, minutes_to_kickoff: 5 }], g4: [{ contest_id: 2, hours_since_last_final: 7 }], g5: [{ why: 'no run recorded' }], g6: [{ match_id: 4 }], g7: [{ match_id: 5, minutes_past: 16 }] });
   for (const l of all.lines.filter((x) => /^G\d /.test(x))) assert.match(l.split(' ')[1], /^(live|soon|later)$/, l);
 });
 
@@ -98,6 +100,18 @@ test('game-watch reads only the crew_stats views, G6 over live_matches_v, with t
   assert.match(SQL.g6, /crew_stats\.live_matches_v/);
   assert.match(SQL.g6, /interval '15 minutes'/);
   assert.match(SQL.g6, /ILIKE 'HT%'/);
+});
+
+test('game-watch G7 reads its view; the view is past start 15 min, scheduled only, TBD and MLB-midnight excluded', async () => {
+  assert.match(SQL.g7, /crew_stats\.g7_past_start_not_live/);
+  const { CREW_VIEWS } = await import('../../scripts/crew-reader-grants.mjs');
+  const v = CREW_VIEWS.find((x) => x.name === 'g7_past_start_not_live');
+  assert.ok(v);
+  assert.match(v.sql, /m\.status = 'scheduled'/);
+  assert.match(v.sql, /interval '15 minutes'/);
+  assert.match(v.sql, /kickoff_tbd/);
+  assert.match(v.sql, /America\/New_York/);
+  assert.doesNotMatch(v.sql, /email|token|ip_address|payload/i);
 });
 
 test('game-watch: a missing view exits 2 with reason=<kind>:<host>', () => {
