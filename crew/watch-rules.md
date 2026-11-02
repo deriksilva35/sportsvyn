@@ -32,6 +32,7 @@ by hand when a script's number needs confirming. See crew/README.md for each scr
 | G1-G4 board / kickoff rules | game-watch | `game-watch` (reads views g1_lock_unstarted .. g4_board_unsettled; `board-state` is the schedule signal) |
 | G5 retention job not ok | game-watch | `game-watch` (view g5_retention_not_ok) |
 | G6 frozen live game | game-watch | `game-watch` (reads `crew_stats.live_matches_v`) |
+| G7 past start, not live | game-watch | `game-watch` (view g7_past_start_not_live) |
 | P1-P8 provider freshness | provider | `provider-health` (five feeds, "provider-health" below) |
 | table retention | retention | `retention-status` ("retention" below) |
 | C1 Vercel usage | cost | `cost-watch` (dollars vs the BUDGET line below) |
@@ -45,13 +46,13 @@ readers and have no rule in this file (their thresholds are in crew/README.md).
 
 # game-watch
 
-`crew/bin/game-watch` (no arguments) runs G1-G6: G1-G5 read the `crew_stats` views of the same
+`crew/bin/game-watch` (no arguments) runs G1-G7: G1-G5 read the `crew_stats` views of the same
 names (each is the SQL below, rows only when the rule fires; thu-4 adds `hours_open` to G2 and
 `minutes_to_kickoff` to G3 so the script needs no clock of its own, and G5 omits the run's `error`
-text), G6 reads `live_matches_v`. One line per firing row, `G<n> <severity> <key> <detail>`, then
-`SUMMARY game-watch g1=N .. g6=N status=ok|regression`. Dedupe keys: G1 match id, G2 contest id,
-G3 match id, G4 contest id, G5 `data-retention`, G6 match id. Severity is the Watcher's ticket
-enum (thu-5): game-watch prints `live` or `soon` (`later` is unused by G1-G6), per rule below; G5 with
+text), G6 reads `live_matches_v`, G7 reads the view `g7_past_start_not_live`. One line per firing row, `G<n> <severity> <key> <detail>`, then
+`SUMMARY game-watch g1=N .. g7=N status=ok|regression`. Dedupe keys: G1 match id, G2 contest id,
+G3 match id, G4 contest id, G5 `data-retention`, G6 match id, G7 match id. Severity is the Watcher's ticket
+enum (thu-5): game-watch prints `live` or `soon` (`later` is unused by G1-G7), per rule below; G5 with
 no run recorded is `soon`.
 
 ## G1 - next lock in the past with an unstarted game
@@ -314,6 +315,37 @@ SELECT id AS match_id, league_slug, status, kickoff_at, last_change_at,
    AND NOT (period = '2' AND (clock IN ('0:00', '00:00') OR clock ILIKE 'HT%')
             AND COALESCE(last_change_at, kickoff_at) > now() - interval '30 minutes')
  ORDER BY minutes_frozen DESC
+ LIMIT 50;
+```
+
+## G7 - past start, not live
+
+- Meaning: a match still `status = 'scheduled'` 15 or more minutes after its
+  `kickoff_at` (1 Nov 2026: NBA games sat scheduled past tip-off because the
+  live overlay returned 401, and nothing else said so). Postponed and cancelled
+  games carry their own status values (`postponed`, `cancelled`,
+  lib/live/vocabulary.js), so `status = 'scheduled'` already excludes them.
+  Same exclusions as G1: `metadata.kickoff_tbd = 'true'`, and an MLB row whose
+  ET kickoff is exactly midnight (a placeholder). Kickoffs older than 24 h are
+  not reported (stale fixtures, not a missed live flip).
+- Severity: `live` ticket (the Fixer's live-game lane).
+- Dedupe key: match id.
+- Confirm: `/games/<slug>`, the provider's scoreboard, and `provider_errors_v`
+  for the league's poller (`live-poller-<league>`); `provider-health` names a
+  401/403/429 endpoint. False positives: a delayed tip the provider has not yet
+  marked postponed (rare; clears when the provider flips the status).
+
+```sql
+SELECT m.id AS match_id, l.slug AS league, m.slug, m.status, m.kickoff_at,
+       round(extract(epoch FROM (now() - m.kickoff_at)) / 60)::int AS minutes_past
+  FROM matches m
+  JOIN leagues l ON l.id = m.league_id
+ WHERE m.status = 'scheduled'
+   AND (m.metadata->>'kickoff_tbd') IS DISTINCT FROM 'true'
+   AND NOT (l.slug = 'mlb' AND (m.kickoff_at AT TIME ZONE 'America/New_York')::time = TIME '00:00')
+   AND m.kickoff_at <= now() - interval '15 minutes'
+   AND m.kickoff_at > now() - interval '24 hours'
+ ORDER BY m.kickoff_at
  LIMIT 50;
 ```
 
@@ -641,6 +673,17 @@ above (which stay the spec for a deeper look).
 
 Injuries is gone (mon-5): it read the wire cron, retired with its pages on 29 Sep (4093afad), and
 nothing reads what it wrote. provider-health drops the row even where the view still lists it.
+
+BDL PROBE (2 Nov 2026). When the secrets dir holds `bdl.token`, provider-health also makes one
+`per_page=1` GET per BDL endpoint the product uses (crew/lib/bdlProbe.mjs `BDL_ENDPOINTS`: nba games,
+box_scores/live, plays, stats; nfl games, stats, plays; ncaaf games, player_stats; mlb games, plays,
+lineups). A 401, 403 or 429 on any of them is STALE for `bdl` and the SUMMARY names it
+(`stalest=bdl:nba/v1/box_scores/live:401`); the same statuses in the poller's `provider_errors_v`
+row (15 min window) count the same. A sport whose lowest `x-ratelimit-remaining` is under 10% of
+`x-ratelimit-limit` prints `ratelimit LOW <sport> remaining=N limit=N` and `ratelimit_low=<sports>`;
+that is informational (exit unchanged). A 5xx or no answer from a probe is informational. No
+`bdl.token` -> `probe=skipped`, database reads only. Only status codes and the two headers are
+read, never a body, and the key is never printed.
 
 The thresholds are first values chosen from the cron cadences (odds hourly, adp daily) and are for Derik to tune; changing one is an edit to `CREW_VIEWS` and a re-run of
 `scripts/crew-reader-grants.mjs --apply`.

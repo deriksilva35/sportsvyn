@@ -259,6 +259,24 @@ export const CREW_VIEWS = Object.freeze([
            ORDER BY last_final`,
   },
   {
+    // G7 (past start, not live): any match still 'scheduled' 15+ min after kickoff_at. Postponed and
+    // cancelled are their own status values (lib/live/vocabulary.js), so status = 'scheduled' already
+    // excludes them. Same TBD / MLB-midnight-placeholder exclusions as G1. Rows older than 24 h are
+    // not "not live", they are stale fixtures (the board rules and data-keeper own those).
+    name: 'g7_past_start_not_live',
+    sql: `SELECT m.id AS match_id, l.slug AS league, m.slug, m.status, m.kickoff_at,
+                 round(extract(epoch FROM (now() - m.kickoff_at)) / 60)::int AS minutes_past
+            FROM public.matches m
+            JOIN public.leagues l ON l.id = m.league_id
+           WHERE m.status = 'scheduled'
+             AND (m.metadata->>'kickoff_tbd') IS DISTINCT FROM 'true'
+             AND NOT (l.slug = 'mlb' AND (m.kickoff_at AT TIME ZONE 'America/New_York')::time = TIME '00:00')
+             AND m.kickoff_at <= now() - interval '15 minutes'
+             AND m.kickoff_at > now() - interval '24 hours'
+           ORDER BY m.kickoff_at
+           LIMIT 50`,
+  },
+  {
     // The spec's left(error, 200) AS error is NOT exposed: run error text is free text and the views
     // carry no message text. game-watch needs ok / why / age, not the message.
     name: 'g5_retention_not_ok',

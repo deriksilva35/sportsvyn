@@ -1,10 +1,10 @@
-// crew/lib/gameWatch.mjs - game-watch: the Watcher's GAME rules G1-G6 (crew/watch-rules.md).
+// crew/lib/gameWatch.mjs - game-watch: the Watcher's GAME rules G1-G7 (crew/watch-rules.md).
 // Reads the crew_stats views g1_lock_unstarted .. g5_retention_not_ok (each is that rule's SQL and
-// returns rows ONLY when the rule fires) and live_matches_v for G6. No arguments, read only.
+// returns rows ONLY when the rule fires) and live_matches_v for G6; G7 is crew_stats.g7_past_start_not_live. No arguments, read only.
 // One line per firing row: `G<n> <severity> <key> <detail>`. Severity is the Watcher's ticket
 // severity (thu-5: live | soon | later; a watch-rules `page` is `live`, `warn` is `soon`, `later` is
 // unused); key is the dedupe key:
-//   G1 match id, G2 contest id, G3 match id, G4 contest id, G5 `data-retention`, G6 match id.
+//   G1 match id, G2 contest id, G3 match id, G4 contest id, G5 `data-retention`, G6 match id, G7 match id.
 import { parseArgs, requireReaderUrl } from './common.mjs';
 import { query, num } from './db.mjs';
 
@@ -25,6 +25,7 @@ export const SQL = Object.freeze({
            AND NOT (period = '2' AND (clock IN ('0:00', '00:00') OR clock ILIKE 'HT%')
                     AND COALESCE(last_change_at, kickoff_at) > now() - interval '30 minutes')
          ORDER BY minutes_frozen DESC`,
+  g7: 'SELECT * FROM crew_stats.g7_past_start_not_live',
 });
 
 /** PURE. One row per rule -> { sev, key, detail }. */
@@ -61,13 +62,18 @@ export const FORMAT = Object.freeze({
     key: r.match_id,
     detail: `${tok(r.league_slug)} frozen_min=${num(r.minutes_frozen)} score=${num(r.home_score)}-${num(r.away_score)} period=${tok(r.period)} clock=${tok(r.clock)}`,
   }),
+  G7: (r) => ({
+    sev: 'live',
+    key: r.match_id,
+    detail: `${tok(r.league)} ${tok(r.slug)} still_scheduled minutes_past=${num(r.minutes_past)}`,
+  }),
 });
 
-/** PURE. rows: { g1..g6: [row] } -> { lines, summary, code }. */
+/** PURE. rows: { g1..g7: [row] } -> { lines, summary, code }. */
 export function summarize(rows) {
   const lines = [];
   const counts = {};
-  for (const n of [1, 2, 3, 4, 5, 6]) {
+  for (const n of [1, 2, 3, 4, 5, 6, 7]) {
     const list = rows[`g${n}`] ?? [];
     counts[`g${n}`] = list.length;
     for (const r of list) {
@@ -82,6 +88,6 @@ export function summarize(rows) {
 export async function main({ argv, env }) {
   parseArgs(argv, []);
   const url = requireReaderUrl(env);
-  const [g1, g2, g3, g4, g5, g6] = await Promise.all(Object.values(SQL).map((s) => query(url, s)));
-  return summarize({ g1, g2, g3, g4, g5, g6 });
+  const [g1, g2, g3, g4, g5, g6, g7] = await Promise.all(Object.values(SQL).map((s) => query(url, s)));
+  return summarize({ g1, g2, g3, g4, g5, g6, g7 });
 }

@@ -19,7 +19,7 @@ preview_url: per-branch Vercel preview (DEV DB, behind Vercel login)
 error_source: app_errors table (poller, daily-tick, mlb-advance) + Vercel runtime errors via ~/crew/bin/vercel-errors
 droplet_scripts: ~/crew/bin/{app-errors,vercel-errors,retention-status,provider-health,cost-watch,latest-deploy,board-state,data-keeper}; source in repo crew/bin/
 script_contract: no caller args except those listed; read-only unless named; never print a secret; exit 0 ok / 1 regression / 2 setup error; last line = one SUMMARY line; <=10 s except data-keeper
-secrets: ~/crew/secrets/{crew-reader.env (CREW_READER_URL), vercel.token (project-scoped)} (chmod 700, filled by CrewOS)
+secrets: ~/crew/secrets/{crew-reader.env (CREW_READER_URL), vercel.token (project-scoped), bdl.token (optional, provider-health probe)} (chmod 700, filled by CrewOS)
 vercel_project_id: prj_dnWLrT1wn34YScbMwQgtGT3WYVoE  # hardcoded in latest-deploy and vercel-errors
 dns: GoDaddy (ns75/ns76.domaincontrol.com); no Cloudflare zone, so no cf-top; edge/bot traffic is Vercel-only for now
 start_gates:
@@ -38,7 +38,7 @@ soul_refs:
   data_keeper: 263995f7
   fixer: 263995f7
 db_role: crew_reader (SELECT on crew_stats views only)
-watch_rules: crew/watch-rules.md  # installed into the Watcher workspace at docs/crew/watch-rules.md; GAME G1-G5, PROVIDER P1-P8, COST C1-C3
+watch_rules: crew/watch-rules.md  # installed into the Watcher workspace at docs/crew/watch-rules.md; GAME G1-G7, PROVIDER P1-P8, COST C1-C3
 script_rulings:  # CrewOS answers, Oct 21 2026
   retention: 30 days for app_errors, push_sends, daily_guest_runs, sessions (documented rule). No pruner yet, so retention-status reports overdue counts with status=ok (informational, exit 0). One hand-filed ticket "retention pruner needed" covers it.
   cost: cost-watch budget = the real Vercel plan line item (vercel_usd_month, set by Derik); neon prints "-" (Neon bills hours, not $). pace=over only when the Vercel figure is known.

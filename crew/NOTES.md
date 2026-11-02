@@ -109,3 +109,6 @@ Archived: fixer SOUL v1.2, v1.3, v1.4 and NOTES v1.3, v1.4, v1.5 in _archive/.
 
 ## fri-8 (Oct 30 2026)
 - Watcher v1.5.7: summary.log_line is only the single CrewOS log line (the Boss copies it verbatim into docs/CREW-LOG.md); all scan detail goes in summary.scan.
+
+## sun-1 (Nov 2 2026)
+- Watcher v1.5.8: rule 3 says G1-G7. game-watch gains G7 (past start, not live: a match still `scheduled` 15+ min after kickoff, severity live, key match id) via the view crew_stats.g7_past_start_not_live; SUMMARY line gains g7. PROD needs `scripts/crew-reader-grants.mjs --prod --apply` first. provider-health now counts a 401/403/429 on any BDL endpoint the product uses as stale and names it.

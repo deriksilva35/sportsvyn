@@ -5,15 +5,20 @@
 // sat-1: ALSO reads crew_stats.provider_errors_v (the live poller's last provider failure per
 // source). A 401 or 403 within AUTH_WINDOW_MIN counts as STALE for that provider whatever its
 // age: freshness is max(updated_at) and other writers keep bumping it while the feed is dead.
-// Other statuses (429, 5xx) stay informational unless the provider is stale by age too.
-import { parseArgs, requireReaderUrl } from './common.mjs';
+// Other statuses (5xx) stay informational unless the provider is stale by age too.
+// 2 Nov 2026: a 429 counts like a 401/403 (BAD_STATUSES), and when the crew secrets dir holds
+// bdl.token the script ALSO probes every BDL endpoint the product uses (crew/lib/bdlProbe.mjs, one
+// per_page=1 GET each): a 401/403/429 on any of them is STALE and names the endpoint; a sport whose
+// x-ratelimit-remaining is under 10% of x-ratelimit-limit is reported (informational).
+import { parseArgs, requireReaderUrl, readToken } from './common.mjs';
+import { probeAll, judgeProbe, BAD_STATUSES } from './bdlProbe.mjs';
 import { query, num } from './db.mjs';
 
 // RETIRED feeds are dropped from the list entirely (mon-5): 'injuries' was the wire cron, whose
 // cron and pages were retired 29 Sep (4093afad) and which nothing reads. Dropped here as well as
 // from provider_freshness_v, so a database whose view still lists it reads the same.
 export const RETIRED = Object.freeze(['injuries']);
-export const AUTH_STATUSES = Object.freeze([401, 403]);
+export const AUTH_STATUSES = BAD_STATUSES; // 401, 403, 429
 export const AUTH_WINDOW_MIN = 15;
 
 /** PURE. rows: [{ provider, max_age_min, expected, age_min }] (age_min null = never wrote). */
@@ -51,6 +56,8 @@ export function summarize(rows, errorRows = []) {
       stale,
       stalest: firstAuth ? `${safe(firstAuth.provider)}:${safe(firstAuth.endpoint)}:${firstAuth.status}`
         : (stalest ? `${stalest.provider}:${stalest.age === null ? 'never' : stalest.age}` : '-'),
+      probe: 'skipped', // main() overwrites both when bdl.token is present
+      ratelimit_low: '-',
     },
     code: stale ? 1 : 0,
   };
@@ -71,7 +78,21 @@ export async function main({ argv, env }) {
   // The view arrives with the next crew-reader-grants run; until then the age check stands alone.
   let errs = [], note = null;
   try { errs = await query(url, ERRORS_SQL); } catch { note = '  (provider_errors_v unavailable: age check only)'; }
+  // The BDL probe: key from bdl.token, optional. Probe rows join the poller's as age_min 0.
+  const key = readToken('bdl.token', env);
+  let probe = null, probeLines = [];
+  if (key) {
+    const results = await probeAll(key);
+    probe = judgeProbe(results);
+    errs = errs.concat(probe.bad.map((b) => ({ provider: 'bdl', endpoint: b.endpoint, status: b.status, age_min: 0 })));
+    probeLines = [
+      `bdl probe ${results.length} endpoints: ${probe.bad.length ? `BAD ${probe.bad.map((b) => `${b.endpoint}:${b.status}`).join(' ')}` : 'all ok'}${probe.silent ? ` (no answer from ${probe.silent})` : ''}`,
+      ...probe.low.map((l) => `  ratelimit LOW ${l.sport} remaining=${l.remaining} limit=${l.limit}`),
+    ];
+  } else probeLines = ['bdl probe skipped (no bdl.token in the secrets dir)'];
   const { list, summary, code } = summarize(rows, errs);
-  const lines = list.map((p) => `  ${p.provider.padEnd(10)} ${p.stale ? 'STALE' : 'ok   '} age_min=${p.age ?? 'never'} max=${p.maxAge} expected_now=${p.expected}${p.authError ? ` auth_error=${p.authError.endpoint}:${p.authError.status}` : ''}`);
-  return { lines: ['provider freshness', ...lines, ...(note ? [note] : [])], summary, code };
+  summary.probe = probe ? (probe.bad.length ? 'bad' : 'ok') : 'skipped';
+  summary.ratelimit_low = probe?.low.length ? probe.low.map((l) => l.sport).join(',') : '-';
+  const lines = list.map((p) => `  ${p.provider.padEnd(10)} ${p.stale ? 'STALE' : 'ok   '} age_min=${p.age ?? 'never'} max=${p.maxAge} expected_now=${p.expected}${p.authError ? ` http_error=${p.authError.endpoint}:${p.authError.status}` : ''}`);
+  return { lines: ['provider freshness', ...lines, ...probeLines, ...(note ? [note] : [])], summary, code };
 }
