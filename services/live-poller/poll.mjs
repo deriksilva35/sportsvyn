@@ -274,7 +274,15 @@ export function nbaDay(now, { fetchImpl = fetch, key = process.env.BDL_API_KEY }
     const due = (r) => String(r?.status_state ?? '') === 'in_progress'
       || (String(r?.status_state ?? '') === 'scheduled' && Date.parse(r?.datetime ?? '') <= t);
     if ([...byId.values()].some(due)) {
-      const live = await get('/nba/v1/box_scores/live');
+      // THE LIVE ROUTE IS AN OVERLAY, NOT THE FEED (sun-nba, 1 Nov): from the
+      // first tip at 20:30Z BDL answered /box_scores/live with 401 on every
+      // poll, the throw took the whole tick, and /games - which carries the
+      // score, status_state, period and clock on its own - was never written:
+      // both night games sat "scheduled". Its failure is still recorded (bdlFetch
+      // reports it into the tick's scope, so the tick is marked FAILED); the
+      // /games rows go out whole.
+      let live = [];
+      try { live = await get('/nba/v1/box_scores/live'); } catch { live = []; }
       calls += 1;
       for (const b of live) {
         if (b?.id == null) continue;
