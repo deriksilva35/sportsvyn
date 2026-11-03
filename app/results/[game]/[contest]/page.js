@@ -16,6 +16,7 @@
 // board already shows their score and their lineup is the thing the mock offers
 // to open. Before settle there is nothing here at all.
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import { notFound, redirect } from 'next/navigation';
 import { sql } from '@/lib/db';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -60,7 +61,7 @@ export default async function ResultsPage({ params, searchParams }) {
   const asked = q?.who == null ? null : Number(q.who);
   const uid = Number.isFinite(asked) ? asked : (viewerId == null ? null : Number(viewerId));
 
-  const v = await read(id, uid).catch(() => null);
+  const v = await read(id, uid).catch(pageCatch('/results/[game]/[contest]:read', { service: 'page', route: '/results/[game]/[contest]' }));
   // A CONTEST THAT IS NOT SETTLED, OR DOES NOT EXIST, IS A 404 - not an empty
   // results screen, which would read as "you scored nothing".
   if (!v) notFound();

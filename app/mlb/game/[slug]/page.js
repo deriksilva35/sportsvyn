@@ -21,6 +21,7 @@
 // searchParam tab costs no client boundary, and the resulting URL is one a
 // reader can send to somebody.
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -95,7 +96,7 @@ export default async function MlbGamePage({ params, searchParams }) {
   const { slug } = await params;
   const q = await searchParams;
   const tab = TABS.some(([k]) => k === q?.box) ? q.box : 'hitting';
-  const g = await getMlbGame(slug).catch(() => null);
+  const g = await getMlbGame(slug).catch(pageCatch('/mlb/game:getMlbGame', { service: 'page', route: '/mlb/game' }));
   if (!g) notFound();
   // FOR THE BELL AND THE TWO STARS ONLY. The page itself is open to everyone;
   // this decides whether the sheet shows toggles or a sign-in, and whether a

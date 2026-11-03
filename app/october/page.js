@@ -9,6 +9,7 @@
  * picks would be.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -34,9 +35,9 @@ export default async function OctoberPage() {
   const tz = await readViewerTz();
   const signinHref = shellSigninHref('/october', shell?.isShell ?? false);
 
-  const contest = await currentOctoberDay({ now: new Date() }).catch(() => null);
+  const contest = await currentOctoberDay({ now: new Date() }).catch(pageCatch('/october:currentOctoberDay', { service: 'page', route: '/october' }));
   const view = contest
-    ? await octoberView(uid == null ? null : Number(uid), contest, { now: new Date() }).catch(() => null)
+    ? await octoberView(uid == null ? null : Number(uid), contest, { now: new Date() }).catch(pageCatch('/october:octoberView', { service: 'page', route: '/october' }))
     : null;
 
   return (

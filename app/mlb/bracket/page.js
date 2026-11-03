@@ -13,6 +13,7 @@
 // waiting on an earlier result names where its club will come from ("Winner
 // 4/5"); a slot that knows nothing at all says TBD and the day it is set.
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import TeamMark from '@/components/team/TeamMark';
@@ -91,7 +92,7 @@ export default async function MlbBracketPage({ searchParams }) {
   const q = await searchParams;
   const asked = Number(q?.season);
   const season = Number.isInteger(asked) && asked > 2000 ? asked : new Date().getUTCFullYear();
-  const b = await getBracket(season).catch(() => null);
+  const b = await getBracket(season).catch(pageCatch('/mlb/bracket:getBracket', { service: 'page', route: '/mlb/bracket' }));
 
   return (
     <div className="gi bkpage" data-surface="ink">

@@ -6,6 +6,7 @@
  * the scoring are public facts - with one sign-in primary where the picks go.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -28,7 +29,7 @@ export default async function RunPage() {
   const shell = await resolveShellMode();
   const signinHref = shellSigninHref('/run', shell?.isShell ?? false);
 
-  const contest = await currentRunRound({ now: new Date() }).catch(() => null);
+  const contest = await currentRunRound({ now: new Date() }).catch(pageCatch('/run:currentRunRound', { service: 'page', route: '/run' }));
   const [view, leagues] = await Promise.all([
     contest ? runView(uid == null ? null : Number(uid), contest, { now: new Date() }).catch(() => null) : null,
     uid == null ? [] : myLeagues(Number(uid)).catch(() => []),

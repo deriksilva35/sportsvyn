@@ -17,6 +17,7 @@
  * NEVER A 404 FOR "NOT YET": no pool, or no open week, says so.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { survivorOn } from '@/lib/survivor/flag';
@@ -78,7 +79,7 @@ export default async function SurvivorPage() {
   const now = new Date();
 
   // 118 unapplied, or no pool seeded: a sentence, never a 500.
-  const pool = await currentNationalPool().catch(() => null);
+  const pool = await currentNationalPool().catch(pageCatch('/survivor:currentNationalPool', { service: 'page', route: '/survivor' }));
   if (!pool) return <NotOpen line="Survivor opens with its first week." />;
   const { week, weeks } = await poolWeek(pool, now).catch(() => ({ week: null, weeks: [] }));
   if (week == null) return <NotOpen line={`The ${pool.season_year} pool is over.`} />;
