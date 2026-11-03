@@ -7,6 +7,7 @@
 import LobbyV3 from '@/components/games/LobbyV3';
 import { shellSigninHref } from '@/lib/shell/signinHref';
 import TzCookie from '@/components/gridiron/TzCookie';
+import LobbyHealth from '@/components/games/LobbyHealth';
 
 export default function LobbyMain({ v, chip, userId = null, isShell = false }) {
   return (
@@ -16,16 +17,20 @@ export default function LobbyMain({ v, chip, userId = null, isShell = false }) {
       <TzCookie />
       {v
         ? (
+          <>
+          {/* The health marker is read server-side here; stripped from v so it never rides the client payload. */}
+          <LobbyHealth health={v.health} signedIn={userId != null} />
           <LobbyV3
-            v={v}
+            v={(({ health: _health, ...rest }) => rest)(v)}
             chip={chip}
             signedIn={userId != null}
             signinHref={(dest) => shellSigninHref(dest, isShell)}
             userId={userId == null ? null : Number(userId)}
           />
+          </>
         )
         : (
-          <section className="mod">
+          <section className="mod" data-sv-lobby-error="">
             <p className="muted">The lobby is having a moment. Try again shortly.</p>
           </section>
         )}
