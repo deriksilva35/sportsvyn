@@ -34,6 +34,7 @@ by hand when a script's number needs confirming. See crew/README.md for each scr
 | G6 frozen live game | game-watch | `game-watch` (reads `crew_stats.live_matches_v`) |
 | G7 past start, not live | game-watch | `game-watch` (view g7_past_start_not_live) |
 | P1-P8 provider freshness | provider | `provider-health` (five feeds, "provider-health" below) |
+| P9 lobby renders | provider | `lobby-probe` (GET / as the crew probe account; "P9" below) |
 | table retention | retention | `retention-status` ("retention" below) |
 | C1 Vercel usage | cost | `cost-watch` (dollars vs the BUDGET line below) |
 | C2 Neon compute | cost | none (the API reports hours, not dollars; prints `-`) |
@@ -555,6 +556,41 @@ HAVING extract(hour FROM (now() AT TIME ZONE 'UTC')) >= 12
    AND count(*) FILTER (WHERE snapshot_date = (now() AT TIME ZONE 'UTC')::date - 1) > 0
    AND count(*) FILTER (WHERE snapshot_date = (now() AT TIME ZONE 'UTC')::date) = 0;
 ```
+
+## P9 - lobby renders
+
+`crew/bin/lobby-probe` (no arguments) loads `GET /` on sportsvyn.com as the crew probe account (a real
+signed-in session; `users.is_probe`, created by `scripts/crew-probe-account.mjs`, token in
+`probe.token`) and reads the two machine markers the lobby renders. There is no SQL: the page is the
+check. It exists because of 3 Nov 2026: a settled Weekly's rank threw, the page's catch swallowed it
+and the lobby was blank for every signed-in entrant while every provider, deploy and error check
+stayed green.
+
+- Meaning: the signed-in lobby did not render whole. Either the whole-lobby error state is showing
+  (`data-sv-lobby-error`, the "The lobby is having a moment" copy), or one or more modules were hidden
+  by an error (`data-sv-lobby-health data-hidden=N data-hidden-names=a,b`; each hidden module is also a
+  `lobby:<module>` row in `app_errors`). Since PR #95 a single module fails alone, so this is the only
+  place a hidden module is visible to the crew.
+- Output: one line per hidden module, then
+  `SUMMARY lobby-probe status=ok|regression modules=<n> hidden=<n> reason=<-|error_page|hidden:<a,b>|no_marker|http_<5xx>>`.
+- Severity: `error_page` and `http_5xx` = `page` (ticket `live`, the Fixer's live lane). `hidden:<names>`
+  = `warn` (ticket `soon`). `no_marker` = `warn` (`soon`): a 200 without the marker means the page
+  changed shape or the arcade theme is off, not necessarily that the lobby is broken.
+- Dedupe key: `lobby` for `error_page` / `http_5xx` / `no_marker`; `lobby:<name>` per hidden module
+  (one ticket per module, so a second module going down is a new ticket).
+- Confirm: `app-errors` (a `lobby:<name>` or `page:/...` signature with the same top_source), the
+  Vercel runtime logs for `/` (`vercel-errors`), then open `/games` signed in. The app_errors message
+  names the route and a user hash, never the user.
+- Exit 2 is a PROBE problem, not a site problem, and is never a lobby ticket: `auth:probe.token`
+  (no token file, or the session expired or was revoked, or the page rendered signed out: mint a new
+  token with `scripts/crew-probe-account.mjs --mint-token`), `timeout:` / `unreachable:` (the site or the
+  network did not answer in 6 s). Two exit 2s in a row from `unreachable:sportsvyn.com` is a site-down
+  signal and goes to `latest-deploy` and `vercel-errors`.
+- False positives: a deploy swapping builds during the request (re-run once before ticketing; the
+  health marker is per request, so a single hidden module that clears on the next run is a blip only
+  if its `app_errors` count did not grow); a module that is hidden by design never counts (only an
+  error does). The probe cannot see per-user data problems (it is one account), so a lobby that breaks
+  only for entrants of a settled board needs the `app_errors` `lobby:*` rows, not this probe.
 
 ---
 

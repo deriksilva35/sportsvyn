@@ -15,7 +15,7 @@ Drive CrewOS/crews/sportsvyn/ is archived for this project (old versions in _arc
 `crew/bin` is the reviewed source of the scripts CrewOS runs as SSH forced commands under user
 `crew-sportsvyn` (`~/crew/bin`, with `crew/lib` beside it). They are plain node (>= 20.11, no
 dependencies) and read-only. `dispatch` is the forced-command router: it runs ONE script from
-`~/crew/bin` by name, only if the name is on its ALLOWED list (the ten scripts in the table below; anything
+`~/crew/bin` by name, only if the name is on its ALLOWED list (the eleven scripts in the table below; anything
 else exits 2 and runs nothing), and passes only whole-number arguments (sportsvyn-stats: one
 optional `YYYY-MM-DDTHH:MM:SSZ`).
 
@@ -57,6 +57,7 @@ Install / update (on the droplet, as crew-sportsvyn):
 | `resend.token` (optional) | a Resend API key | cost-watch (`resend_sent_mtd`; `-` without it) |
 | `bdl.token` (optional) | the BDL key | provider-health, for the live endpoint probe (without it the probe is skipped, `probe=skipped`) |
 | `cfbd.token` (optional) | the CFBD key | data-keeper, only for the team-colours job (its CFB half makes one CFBD call) |
+| `probe.token` | a long-lived Auth.js session token of the crew probe account (`users.is_probe`); created by `scripts/crew-probe-account.mjs --mint-token` piped into this file (chmod 600), revoked with `--revoke`; never printed | lobby-probe |
 
 Other environment: `CREW_REPO` (the repo checkout holding `docs/crew/data-queue.md`; default the
 checkout the scripts sit in, else `~/crew/worktrees/sportsvyn-main`), `CREW_DATA_DIR` (data-keeper
@@ -75,6 +76,7 @@ output, default `~/crew/data`), `CREW_JOB_TIMEOUT_MS`.
 | `board-state` | none | prints one line: `locks_in:<m>`, `open` or `closed` | never; exit 2 prints nothing |
 | `data-keeper` | none | `SUMMARY data-keeper status=ok\|regression job=<id> rows_before=N rows_after=N would_change=N dry_run=<path>` | the dry run's data contradicts itself |
 | `game-watch` | none (any argument is exit 2; dispatch refuses one too) | one line per firing row `G<n> <page\|warn\|live> <key> <detail>`, then `SUMMARY game-watch g1=N g2=N g3=N g4=N g5=N g6=N g7=N status=ok\|regression` | any rule fired: G1 unstarted game past lock, G2 card with no pickable game, G3 midnight-ET kickoff without TBD, G4 board unsettled 6 h after its last final, G5 retention job not ok, G6 frozen live game, G7 scheduled game 15+ min past kickoff (rules, severities and dedupe keys: watch-rules.md "game-watch") |
+| `lobby-probe` | none (any argument is exit 2; dispatch refuses one too) | zero or more `lobby: module hidden by error: <name>` lines, then `SUMMARY lobby-probe status=ok\|regression modules=N hidden=N reason=<-\|error_page\|hidden:<a,b>\|no_marker\|http_<5xx>>` (exit 2: `auth:probe.token` for a missing, expired or revoked token or a signed-out page, `timeout:` / `unreachable:<host>`) | GET `/` as the probe account shows the whole-lobby error state, any module hidden by an error, no health marker, or a 5xx (rule P9 in watch-rules.md; `CREW_PROBE_URL` overrides the URL for tests) |
 | `sportsvyn-stats` | `[since]`, `YYYY-MM-DDTHH:MM:SSZ` (default 24 h ago) | none: key=value lines only (Pulse usage numbers, no PII or money); source `docs/crew/sportsvyn-stats`, installed separately | never; a malformed `since` prints `error=bad_since`, exit 2 |
 
 Notes:
@@ -91,6 +93,18 @@ Notes:
   one is refused), writes the full output to `~/crew/data/<YYYY-MM-DD>-<job>.txt`, and prints the counts,
   10 sample rows, the file path, then `APPLY: <exact command for Derik to run by hand>`, then the SUMMARY.
   The checkout needs `npm ci` done (the job scripts import repo modules).
+- **lobby-probe**: one GET of `/` as the crew probe account, `redirect: 'manual'`, 6 s call timeout inside the 9.5 s
+  deadline. It sends the Auth.js session cookie for the URL's scheme (`__Secure-authjs.session-token` on https,
+  `authjs.session-token` on http) and the per-session age marker `sv_age` (computed from the token, as
+  lib/auth/ageCookie.js does), then reads `data-sv-lobby-error` and `data-sv-lobby-health data-modules data-hidden
+  data-hidden-names data-signed-in` from the HTML (components/games/LobbyMain.js, LobbyHealth.js). Error state or any
+  hidden module is exit 1; a page that renders signed out, or a redirect to sign-in or /age, is exit 2
+  `auth:probe.token` (the token expired or was revoked). It is read only (one GET, nothing stored) and the account
+  is excluded from every count, leaderboard and email (migration 150; docs/reports/2026-11-03-probe-exclusion.md).
+  Mint or rotate the token on the Mac or the droplet that holds `PROD_DATABASE_URL`, never in a terminal:
+  `scripts/crew-probe-account.mjs --prod --apply` once, then
+  `scripts/crew-probe-account.mjs --prod --mint-token | ssh <crew host> 'umask 077; cat > ~/crew/secrets/probe.token'`.
+  If the arcade theme is ever off, `/` is the editorial front page with no marker and the probe reports `no_marker`.
 
 ## The database surface
 

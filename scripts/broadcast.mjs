@@ -229,6 +229,7 @@ async function recipients() {
        AND NOT (lower(trim(COALESCE(contact_email, email))) = ANY(${bounced}))
        AND email_opted_out_at IS NULL
        AND NOT is_house
+       AND NOT is_probe
        AND NOT (email = ANY(${OWNER_ADDRESSES}))
        AND NOT (COALESCE(contact_email, '') = ANY(${OWNER_ADDRESSES}))
      ORDER BY id`;

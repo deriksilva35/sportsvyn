@@ -13,6 +13,7 @@ export const SCRIPTS = Object.freeze({
   'board-state': ['./boardState.mjs', { silentOnError: true, summaryFn: (s) => s }],
   'data-keeper': ['./dataKeeper.mjs', { deadlineMs: null }],
   'game-watch': ['./gameWatch.mjs', {}],
+  'lobby-probe': ['./lobbyProbe.mjs', {}],
 });
 
 export async function run(name, opts = {}) {

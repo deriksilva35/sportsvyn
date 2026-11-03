@@ -5,7 +5,7 @@
 // preloaded with --import (written to test-tmp/ via stubPath), so no network and no secret.
 //
 // DISPATCH: the forced-command router runs a name on its ALLOWED list (sportsvyn-stats with its
-// one optional ISO instant, thu-3; game-watch with no argument, thu-4) and refuses (exit 2,
+// one optional ISO instant, thu-3; game-watch and lobby-probe with no argument, thu-4) and refuses (exit 2,
 // nothing executed) an unknown name, a path and an empty name. It runs against a throwaway HOME
 // whose ~/crew/bin holds dispatch plus marker-writing fakes, so a refusal is proven by the
 // marker NOT existing, not by the exit code alone.
@@ -69,7 +69,7 @@ function fakeHome() {
   chmodSync(path.join(bin, 'dispatch'), 0o755);
   // Two allowed names, and two executables NOT on the list (crew-install-soul is a real host
   // script, thu-3 keeps it off); each leaves a marker holding its arguments if run.
-  for (const name of ['provider-health', 'sportsvyn-stats', 'game-watch', 'crew-install-soul', 'evil']) {
+  for (const name of ['provider-health', 'sportsvyn-stats', 'game-watch', 'lobby-probe', 'crew-install-soul', 'evil']) {
     writeFileSync(path.join(bin, name), `#!/bin/sh\necho "$@" > "$HOME/ran-${name}"\necho ran ${name}\n`);
     chmodSync(path.join(bin, name), 0o755);
   }
@@ -157,6 +157,24 @@ test('dispatch: game-watch runs with no arguments and is refused with any (thu-4
   } finally { rmSync(home, { recursive: true, force: true }); }
 });
 
+test('dispatch: lobby-probe runs with no arguments and is refused with any', () => {
+  const home = fakeHome();
+  const marker = path.join(home, 'ran-lobby-probe');
+  try {
+    const r = dispatch(home, 'lobby-probe');
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(r.stdout, 'ran lobby-probe\n');
+    assert.equal(readFileSync(marker, 'utf8'), '\n', 'no argument passed');
+    rmSync(marker);
+    for (const cmd of ['lobby-probe 5', 'lobby-probe --url', 'lobby-probe https://evil.example/', 'lobby-probe ;id', 'lobby-probe $(id)']) {
+      const x = dispatch(home, cmd);
+      assert.equal(x.status, 2, `"${cmd}" exit`);
+      assert.equal(x.stdout, '', `"${cmd}" stdout`);
+    }
+    assert.ok(!existsSync(marker), 'no refused call ran lobby-probe');
+  } finally { rmSync(home, { recursive: true, force: true }); }
+});
+
 test('dispatch: crew-install-soul and the other host-only crew scripts stay refused (thu-3)', () => {
   const home = fakeHome();
   try {
@@ -170,9 +188,9 @@ test('dispatch: crew-install-soul and the other host-only crew scripts stay refu
   }
 });
 
-test('dispatch: ALLOWED is exactly the ten crew scripts', () => {
+test('dispatch: ALLOWED is exactly the eleven crew scripts', () => {
   const m = readFileSync(path.join(BIN, 'dispatch'), 'utf8').match(/^ALLOWED=\(([^)]*)\)$/m);
   assert.ok(m, 'one ALLOWED=( ... ) line');
   assert.deepEqual(m[1].trim().split(/\s+/).sort(),
-    ['app-errors', 'board-state', 'cost-watch', 'data-keeper', 'game-watch', 'latest-deploy', 'provider-health', 'retention-status', 'sportsvyn-stats', 'vercel-errors']);
+    ['app-errors', 'board-state', 'cost-watch', 'data-keeper', 'game-watch', 'latest-deploy', 'lobby-probe', 'provider-health', 'retention-status', 'sportsvyn-stats', 'vercel-errors']);
 });
