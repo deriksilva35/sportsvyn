@@ -185,6 +185,21 @@ jobs:
         if: needs.changes.outputs.code_changed == 'true' && steps.db.outputs.skip != 'true'
         run: npm ci
 
+      # THE CI BRANCH GETS THIS CHANGE'S MIGRATIONS (lobby-3, 3 Nov). Nothing else applies
+      # migrations to the "ci" Neon branch, so a PR that adds a column failed every test whose
+      # code reads it (#96: users.is_probe, 17 failures). The checkout is the merge commit, so
+      # HEAD^1 is the base: the numbered migration files this change adds or edits are applied
+      # through scripts/apply-migrations.mjs (ledgered; an already-applied file is skipped, an
+      # edited applied file is refused), under the suite lock so no running suite sees DDL
+      # mid-test. Additive by convention; a PR that is never merged leaves its migration on ci.
+      - name: Migrations this change adds, on the ci branch
+        if: needs.changes.outputs.code_changed == 'true' && steps.db.outputs.skip != 'true'
+        run: |
+          files=$(git diff --name-only --diff-filter=AM HEAD^1 HEAD -- 'migrations/[0-9]*.sql' | sort)
+          if [ -z "$files" ]; then echo "no new migrations"; exit 0; fi
+          echo "$files"
+          flock -w 3600 /run/lock/sportsvyn-suite/suite.lock node scripts/apply-migrations.mjs $(for f in $files; do basename "$f" .sql; done)
+
       - name: Full suite
         if: needs.changes.outputs.code_changed == 'true' && steps.db.outputs.skip != 'true'
         run: umask 002; flock -w 3600 /run/lock/sportsvyn-suite/suite.lock node --test $(git ls-files '*.test.mjs')
