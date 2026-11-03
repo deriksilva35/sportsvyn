@@ -8,6 +8,7 @@
  * on an 0-0 record is a number the provider computes and nobody should read.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import StandingsPage from '@/components/standings/StandingsPage';
 import { nflColumns } from '@/lib/standings/columns';
 import { getLeagueRecords } from '@/lib/standings/read';
@@ -24,7 +25,7 @@ export default async function NflStandings() {
   // Read once here purely to decide whether the seed column means anything;
   // StandingsPage reads again for the render. Two cheap indexed reads beat
   // threading the rows through a prop that every other caller ignores.
-  const rows = await getLeagueRecords('nfl', season).catch(() => []);
+  const rows = await getLeagueRecords('nfl', season).catch(pageCatch('/nfl/standings:getLeagueRecords', { service: 'page', route: '/nfl/standings' }, []));
 
   return (
     <StandingsPage

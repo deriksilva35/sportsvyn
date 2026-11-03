@@ -14,6 +14,7 @@
  * anyone else's - lib/pickem/entry owns that wire, pinned by leak test.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
@@ -96,7 +97,7 @@ export default async function PickemSportPage({ params, searchParams }) {
   // simply absent, and one board renders no switch at all.
   // THE NBA BOARD HAS NO SWITCH: it is one sport's day, not one of a pair.
   const boards = sport === 'nba' ? [] : (await Promise.all(PICKEM_SPORTS.map(async (s) => {
-    const d = await pickemCardData(uid, { sport: s, now }).catch(() => null);
+    const d = await pickemCardData(uid, { sport: s, now }).catch(pageCatch('/pickem/[sport]:pickemCardData', { service: 'page', route: '/pickem/[sport]' }));
     return d ? { sport: s, pickedOpen: d.pickedOpen, pickable: d.pickable, settled: Boolean(d.settled) } : null;
   }))).filter(Boolean);
   const sportSwitch = <SportSwitch boards={boards} sport={sport} />;
@@ -111,7 +112,7 @@ export default async function PickemSportPage({ params, searchParams }) {
   // one: a season aggregate that cannot be read must not take the board down,
   // and a reader with no settled board yet correctly has no line at all.
   const season = mySeason(
-    await pickemTable(uid, { sport }).catch(() => null),
+    await pickemTable(uid, { sport }).catch(pageCatch('/pickem/[sport]:pickemTable', { service: 'page', route: '/pickem/[sport]' })),
     uid,
   );
 

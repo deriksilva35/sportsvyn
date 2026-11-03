@@ -7,6 +7,7 @@
  * would be.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -34,9 +35,9 @@ export default async function SixPage() {
   const signinHref = shellSigninHref('/six', shell?.isShell ?? false);
   const now = new Date();
 
-  const contest = await currentSixNight({ now }).catch(() => null);
+  const contest = await currentSixNight({ now }).catch(pageCatch('/six:currentSixNight', { service: 'page', route: '/six' }));
   const view = contest
-    ? await sixView(uid == null ? null : Number(uid), contest, { now }).catch(() => null)
+    ? await sixView(uid == null ? null : Number(uid), contest, { now }).catch(pageCatch('/six:sixView', { service: 'page', route: '/six' }))
     : null;
 
   return (

@@ -14,6 +14,7 @@
 // NO WIN PROBABILITY and NO LIVE ACTIVITY (liveActivitySupported is false for
 // basketball, thu-18) - neither is drawn, not even as a placeholder.
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
 import { resolveShellMode } from '@/lib/shell/shell';
@@ -34,7 +35,7 @@ const one = (v) => (Array.isArray(v) ? v[0] : v);
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const g = await getNbaGame(slug).catch(() => null);
+  const g = await getNbaGame(slug).catch(pageCatch('/nba/game:getNbaGame', { service: 'page', route: '/nba/game' }));
   if (!g) return { title: 'Game not found - Sportsvyn' };
   const fixture = `${g.away?.name} at ${g.home?.name}`;
   const score = g.status === 'final' ? `Final ${g.away?.abbreviation} ${g.awayScore}, ${g.home?.abbreviation} ${g.homeScore}.` : null;
@@ -47,7 +48,7 @@ export async function generateMetadata({ params }) {
 export default async function NbaGamePage({ params, searchParams }) {
   const { slug } = await params;
   const sp = (await searchParams) ?? {};
-  const game = await getNbaGame(slug).catch(() => null);
+  const game = await getNbaGame(slug).catch(pageCatch('/nba/game:getNbaGame', { service: 'page', route: '/nba/game' }));
   if (!game) notFound();
   const [session, isShell, tz] = await Promise.all([
     auth().catch(() => null), resolveShellMode().catch(() => false), readViewerTz(),

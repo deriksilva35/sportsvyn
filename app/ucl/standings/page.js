@@ -10,6 +10,7 @@
  * unchanged) with the same bands as its rails.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
@@ -34,7 +35,7 @@ export const metadata = {
 const DARK_RAIL = { r16: 'ucl', playoff: 'uel' };
 
 export default async function UclStandingsPage() {
-  const table = await getSoccerStandings('ucl').catch(() => null);
+  const table = await getSoccerStandings('ucl').catch(pageCatch('/ucl/standings:getSoccerStandings', { service: 'page', route: '/ucl/standings' }));
 
   const isShell = await resolveShellMode().catch(() => false);
   if (arcadeFor(isShell)) {

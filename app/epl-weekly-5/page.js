@@ -10,6 +10,7 @@
  * sign-in door where the picks would be.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -38,11 +39,11 @@ export default async function EplWeekly5Page({ searchParams }) {
   const now = new Date();
 
   const gw = Number(q?.gw);
-  const current = await currentGameweek({ now }).catch(() => null);
+  const current = await currentGameweek({ now }).catch(pageCatch('/epl-weekly-5:currentGameweek', { service: 'page', route: '/epl-weekly-5' }));
   const contest = Number.isInteger(gw) && gw > 0 && current
     ? (await gameweek(current.season_year, gw).catch(() => null)) ?? current
     : current;
-  const view = contest ? await epl5View(uid == null ? null : Number(uid), contest, { now }).catch(() => null) : null;
+  const view = contest ? await epl5View(uid == null ? null : Number(uid), contest, { now }).catch(pageCatch('/epl-weekly-5:epl5View', { service: 'page', route: '/epl-weekly-5' })) : null;
   const other = view && current && contest && current.id !== contest.id ? current : null;
 
   return (

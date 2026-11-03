@@ -23,6 +23,7 @@
  * league modules'.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
@@ -63,7 +64,7 @@ export async function generateMetadata({ params }) {
   const uid = session?.user?.id == null ? null : Number(session.user.id);
   const lg = uid == null || !Number.isInteger(leagueId)
     ? null
-    : await leagueDetail(leagueId, uid).catch(() => null);
+    : await leagueDetail(leagueId, uid).catch(pageCatch('/leagues/[id]:leagueDetail', { service: 'page', route: '/leagues/[id]' }));
   return { title: lg ? `${lg.name} - Leagues - Sportsvyn` : GENERIC_TITLE, robots: LEAGUE_ROBOTS };
 }
 
@@ -81,7 +82,7 @@ export default async function LeaguePage({ params, searchParams }) {
   requireSignInInShell({ isShell, userId, dest });
 
   const uid = userId == null ? null : Number(userId);
-  const league = uid == null ? null : await leagueDetail(leagueId, uid).catch(() => null);
+  const league = uid == null ? null : await leagueDetail(leagueId, uid).catch(pageCatch('/leagues/[id]:leagueDetail', { service: 'page', route: '/leagues/[id]' }));
 
   // ---- NON-MEMBER, SIGNED OUT, OR NO SUCH LEAGUE: one 404 ---------------
   // Nothing about the league is read on this path - ./not-found.js is the body.
@@ -94,7 +95,7 @@ export default async function LeaguePage({ params, searchParams }) {
 
   // ---- MEMBER: the board ----------------------------------------------------
   const view = parseLeagueView(sp);
-  const table = await leagueTable(league, view).catch(() => null);
+  const table = await leagueTable(league, view).catch(pageCatch('/leagues/[id]:leagueTable', { service: 'page', route: '/leagues/[id]' }));
   // "Latest in the league" (lib/leagues/events.js): the three newest lines.
   const events = table ? await latestEvents(league.id, { limit: 3, unit: table.unit }).catch(() => []) : [];
   const draft = league.draft_config_id != null ? await loadDraftHome(league.draft_config_id, uid).catch(() => null) : null;

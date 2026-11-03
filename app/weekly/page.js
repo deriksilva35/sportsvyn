@@ -18,6 +18,7 @@
  * not recompute. See lib/weekly/settle.js.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { auth } from '@/auth';
@@ -151,7 +152,7 @@ export default async function WeeklyPage({ searchParams }) {
 
   // A missing contests table (067 unapplied) must ghost, not 500 - same posture
   // as the lobby's card reads.
-  const contest = await currentContest().catch(() => null);
+  const contest = await currentContest().catch(pageCatch('/weekly:currentContest', { service: 'page', route: '/weekly' }));
   const entry = contest && userId != null
     ? await getEntry(contest.id, Number(userId)).catch(() => null)
     : null;

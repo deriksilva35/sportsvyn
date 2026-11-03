@@ -13,6 +13,7 @@
  * a broken page.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
@@ -44,7 +45,7 @@ function Form({ form }) {
 }
 
 export default async function EplStandingsPage() {
-  const table = await getEplStandings().catch(() => null);
+  const table = await getEplStandings().catch(pageCatch('/epl/standings:getEplStandings', { service: 'page', route: '/epl/standings' }));
 
   // THE ARCADE TABLE (thu-24): #, club, P, W, D, L, GD, Pts, form. The dark
   // page below is unchanged.

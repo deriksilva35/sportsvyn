@@ -26,6 +26,7 @@ import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
 import { resolveShellMode, simViewport } from '@/lib/shell/shell';
 import { lobbyV3 } from '@/lib/games/lobbyV3';
+import { pageCatch } from '@/lib/games/lobbySection';
 import { readViewerTz } from '@/lib/gridiron/serverTz';
 import LobbyMain from '@/components/games/LobbyMain';
 import { normalizeChip } from '@/lib/games/lobby';
@@ -58,7 +59,7 @@ export default async function GamesPage({ searchParams }) {
   // THE PLAY LOBBY'S SPORT CHIP (?sport=) and the zone the server knows the
   // reader is in (sv_tz), so its first paint names the same zone as its times.
   const tz = await readViewerTz();
-  const v = await lobbyV3(userId, { chip, boardKey, sport: sp.sport, tz }).catch(() => null);
+  const v = await lobbyV3(userId, { chip, boardKey, sport: sp.sport, tz, route: '/games' }).catch(pageCatch('lobby-v3', { route: '/games', uid: userId }));
 
   return (
     <>

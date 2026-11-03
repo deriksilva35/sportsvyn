@@ -14,6 +14,7 @@
  * before that it says whose league it is.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import { auth } from '@/auth';
 import Link from 'next/link';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
@@ -54,7 +55,7 @@ export default async function LeaguesPage({ searchParams }) {
   const invite = joinRaw ? await invitePreview(joinRaw, uid).catch(() => null) : null;
   const now = new Date();
   // The cards - lib/leagues/cards.js, the same reader the Play lobby uses.
-  const cards = uid == null ? [] : await myLeagueCards(uid, { now }).catch(() => []);
+  const cards = uid == null ? [] : await myLeagueCards(uid, { now }).catch(pageCatch('/leagues:myLeagueCards', { service: 'page', route: '/leagues' }, []));
 
   return (
     <>

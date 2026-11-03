@@ -13,6 +13,7 @@
  * No match, no card.
  */
 
+import { pageCatch } from '@/lib/games/lobbySection';
 import { notFound } from 'next/navigation';
 import GlobalHeaderServer from '@/components/GlobalHeaderServer';
 import SiteFooter from '@/components/SiteFooter';
@@ -31,7 +32,7 @@ export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
   const sp = (await searchParams) ?? {};
   const matchId = Number(Array.isArray(sp.match) ? sp.match[0] : sp.match);
-  const card = Number.isInteger(matchId) ? await playerPropCard(slug, matchId).catch(() => null) : null;
+  const card = Number.isInteger(matchId) ? await playerPropCard(slug, matchId).catch(pageCatch('/market/props:playerPropCard', { service: 'page', route: '/market/props' })) : null;
   if (!card) return { title: 'Props - Sportsvyn', robots: { index: false } };
   return {
     title: `${card.player.name} props - ${card.game.away.abbr} at ${card.game.home.abbr} - Sportsvyn`,
@@ -49,7 +50,7 @@ export default async function PlayerPropsPage({ params, searchParams }) {
   const matchId = Number(raw);
   if (!Number.isInteger(matchId) || matchId <= 0) notFound();
 
-  const card = await playerPropCard(slug, matchId).catch(() => null);
+  const card = await playerPropCard(slug, matchId).catch(pageCatch('/market/props:playerPropCard', { service: 'page', route: '/market/props' }));
   // NOTHING PRICED IS A 404, NOT AN EMPTY CARD. A page whose whole subject is
   // a set of prices has nothing to say when there are none.
   if (!card) notFound();
