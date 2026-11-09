@@ -423,7 +423,7 @@ test('LIVE: no drive module; the card carries the field strip and the last play'
   assert.match(noDown, /<div class="sv4-field" data-drive="0"><p class="lp" title="C.Santos 48 yard field goal is GOOD">C.Santos 48 yard field goal is GOOD<\/p><\/div>/,
     'no down to name: the page card still says what happened');
   const board = src('components/scores/ScoreboardV4.js');
-  assert.match(board, /\{onPage && live && !x\.drive && x\.lastPlay \?/, 'the fallback is page-only; /scores is unchanged');
+  assert.match(board, /\{onPage && live && !x\.drive && !x\.driveCard && x\.lastPlay \?/, 'the fallback is page-only; /scores is unchanged (and the drive card carries its own last play)');
 });
 
 test('PLAYS LIST: latest first, five shown, "All plays · N" from the count', () => {

@@ -22,6 +22,7 @@ import ZoneLabel from '@/components/scores/ZoneLabel';
 import TeamMark from '@/components/team/TeamMark';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import LiveRefresh from '@/components/scores/LiveRefresh';
+import DriveCard from '@/components/gridiron/DriveCard';
 import { dateLabel } from '@/lib/time/display';
 import ScoresRail from '@/components/scores/ScoresRail';
 import ExpandCard, { ExpandLine } from '@/components/scores/ExpandCard';
@@ -211,7 +212,11 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false, 
           foot beside the line: "RHP Z. Wheeler vs LHP C. Sale" is who is
           playing, and the foot is the market. Pre-game baseball only. */}
       {baseball && !live && !final && x.probables ? <p className="sv4-prob" data-probables="1">{x.probables}</p> : null}
-      {live && x.drive && (
+      {/* THE DRIVE CARD (drive-2): the mock's field strip, down line, drive line and
+          scoring moment, from lib/gridiron/driveCard.js. When it has nothing to draw
+          the old strip below stands. */}
+      {live && x.driveCard ? <DriveCard dc={x.driveCard} lastPlay={x.drive?.lastPlay ?? x.lastPlay ?? null} /> : null}
+      {live && x.drive && !x.driveCard && (
         <div className="sv4-field" data-drive="1">
           {/* mon-21. THE SITUATION FIRST: down & distance · spot, the strip
               under it (ball + first-down tick), then the last play on ONE line.
@@ -232,7 +237,7 @@ export function CardFace({ g, x, signedIn, signinHref, tz, now, onPage = false, 
       {/* THE GAME PAGE'S LAST PLAY when the field cannot be drawn (thu-5): no
           down to name means no x.drive, but the page has no drive module any
           more, so its card still says what just happened. Page only. */}
-      {onPage && live && !x.drive && x.lastPlay ? (
+      {onPage && live && !x.drive && !x.driveCard && x.lastPlay ? (
         <div className="sv4-field" data-drive="0"><p className="lp" title={x.lastPlay}>{x.lastPlay}</p></div>
       ) : null}
       {live && x.diamond && (
