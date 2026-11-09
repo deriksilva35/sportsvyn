@@ -55,6 +55,13 @@ While building, run the touched tests and `npx eslint <touched>` locally.
   Never use --admin (it skips the check too). If the API merge is refused
   with the check green, stop and report.
 - Then wait for production Vercel READY on the merge commit.
+- MIGRATIONS (crew-migrate, standing): a migration ships as migrations/NNN_*.sql inside
+  the PR, numbered as the next free number on origin/main. If it cannot run in a
+  transaction, its first line is `-- crew-migrate: no-transaction`.
+  - Never apply a migration to PROD yourself, and never put an apply command in a report.
+  - After the merge, CrewOS files an Approvals card, Derik taps it, and crew-migrate applies it.
+  - A migration PR needs Derik's approving review on GitHub before it merges. Stop at green
+    and ask him; the merge rule above waits for that review.
 - STACKED PRs: when a PR's base is another PR's branch, retarget it to main
   (gh pr edit <n> --base main) BEFORE merging the base PR, or merge the base
   without deleting its branch. Deleting the base branch on merge CLOSES the
