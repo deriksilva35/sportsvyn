@@ -22,16 +22,17 @@ Replay derivation, live card and the stored envelope now agree for CLE@NO (r12: 
 a DEV copy of the game with the recomputed envelopes).
 
 ## 2. CFB clock "Q1 15:00" mid-drive
-Cause: CFBD /live/plays carries ONE clock per drive on every play (the drive's start) except the drive's last play
-(and a period's last row), which carries the clock it ended on. The sentence has no "(08:21)" prefix (that is the
-historical /plays shape), only scoring plays state "clock 03:25". `wallClock` is per play but plays.* does not keep it.
-So plays.clock is the feed's value, NOT an ingest bug, and no backfill can repair it (the per-play clock is not in
-what we stored; nothing to dry-run). The LIVE card is unaffected: its period/clock come from matches.metadata.live_state
-(poller / CFBD scoreboard), never a play row, and driveCardFor reads no play clock (test).
-Replay: `lib/gridiron/cfbClock.js` spreads the drive's clock between its start and end by position, per drive and
-period, and uses a scoring sentence's stated clock as an exact anchor; estimated plays are marked `clockEst` and the
-replay play list shows `~` after their clock. The card shows the clock of that play (estimate between the drive's
-start and end), exact on a drive's first and last play and on scores.
+CFBD /live/plays gives every play of a drive the drive's clock (start), except the drive's last play, which carries
+the end clock. wallClock is per play but plays.* does not keep it. MOST GAMES, HOWEVER, STATE THE PLAY'S OWN CLOCK IN
+THE SENTENCE: plays.text starts "(08:21) Shotgun #23 ..." (PROD, CFB since 6 Nov: 56 of 58 games, 8,512 of 10,299
+plays; ORE@OSU is one of the two without it, which is why the first pass missed it). Scoring sentences of the
+prefix-less games say "clock 03:25". The stored `plays.clock` is the feed's value, not an ingest bug; nothing to backfill.
+The LIVE card is unaffected: its clock is matches.metadata.live_state, and driveCardFor reads no play clock (test).
+Replay: `lib/gridiron/cfbClock.js` takes a leading "(MM:SS)" / "(M:SS)" / "(:SS)" (or a stated "clock MM:SS") as that
+play's EXACT clock and an anchor, and estimates (even spread by position, per drive and period) only the plays between
+anchors that state none. Only estimated plays are marked `clockEst` / "~" in the replay list. cfbPlayText still strips
+the prefix from displayed text. Frame cfb-e-prefixed-mid (texas-state-oregon-state, play 401860912227): card says
+Q2 13:55 (the sentence's "(13:55)"; the stored clock is 13:50), exact, no "~".
 
 ## 3. NFL last-play text
 `nflPlayText` / `footballPlayText(league, text)` in lib/gridiron/playText.js: strips "(Shotgun)", "(No Huddle, Shotgun)",
@@ -66,10 +67,10 @@ removed afterwards (2 matches, 411 plays), undo/ids file test-tmp/undo-dev-repla
 | cfb-a-mid | 189.08 ok | 216.26 ok | 6, 29, no time (CFB) ok | none | none | Q1 12:14 (was 15:00, estimate) | B.Jackson rush middle for 1 yard gain to the Oregon46 (...) |
 | cfb-b-rz | 71.3 ok | 65.26 ok | 11, 60, no time | tint ok | none | Q2 11:53 (was 15:00, estimate) | D.Raiola pass complete short right to J.Lott caught at ... |
 | cfb-c-td | 328 ok | - | 10, 93, 3:48 (stored) | none | TD right ok | Q4 3:25 (stated in the TD sentence, exact) | L.Fahey pass complete short middle to J.Smith ... TOUCHDOWN, clock 03:25 ... |
+| cfb-e-prefixed-mid (texas-state-oregon-state) | 65.26 ok | 47.14 ok | 5 plays, 62 yds, no time | tint ok | none | Q2 13:55 (exact, from the "(13:55)" prefix) | B.Jackson rush middle for 0 yards to the OSU13 (...) |
 | cfb-d-fg | 26 ok | - | 12, 60, 4:54 (stored) | none | FG left ok | Q2 11:26 (stored, exact) | G.Hurych field goal attempt from 33 yards GOOD ... |
 
 ## Unsettled
-- CFB mid-drive clocks are estimates (the feed has none per play); marked `~` in the replay list only, the card shows
-  the estimated number as a plain clock.
+- CFB clocks are exact where the sentence has a "(MM:SS)" prefix (56 of 58 recent games); in the rest (e.g. ORE@OSU) mid-drive clocks are estimates, marked `~` in the replay list only.
 - The cfb-c-td last-play sentence runs three plays together (TD + penalty + next play, one CFBD row); thu-2's cleaner does not split it.
 - Replay/live drive "yards" for a FG flash use the kick line already; the stored envelope is now consistent with it once the PROD recompute is applied.
