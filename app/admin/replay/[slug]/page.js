@@ -22,10 +22,10 @@ import { getGamePage } from '@/lib/gridiron/gameDetail';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { CardFace } from '@/components/scores/ScoreboardV4';
 import { cardVariant } from '@/lib/gridiron/scoresV2Shape';
-import { replayFor, replayOrder } from '@/lib/gridiron/replay';
+import { replayFor, replayOrder, replayPlays } from '@/lib/gridiron/replay';
 import { whenLabel } from '@/lib/gridiron/gamePageArcade';
 import { downLabel } from '@/lib/gridiron/driveCard';
-import { cfbPlayText } from '@/lib/gridiron/playText';
+import { cfbPlayText, nflPlayText } from '@/lib/gridiron/playText';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Drive card replay', robots: { index: false, follow: false } };
@@ -48,8 +48,8 @@ export default async function ReplayPage({ params, searchParams }) {
   if (!r) notFound();
 
   const cfb = game.leagueSlug === 'cfb';
-  const txt = (t) => (cfb ? cfbPlayText(t) : t) ?? '';
-  const ordered = replayOrder(plays);
+  const txt = (t) => (cfb ? cfbPlayText(t) : nflPlayText(t)) ?? '';
+  const ordered = replayOrder(replayPlays(game, plays));
   const cur = r.cut.index;
   const prev = cur > 0 ? ordered[cur - 1] : null;
   const next = cur < ordered.length - 1 ? ordered[cur + 1] : null;
@@ -72,7 +72,7 @@ export default async function ReplayPage({ params, searchParams }) {
           <li key={`${p.providerPlayId}-${i}`} data-replay-play={p.providerPlayId} aria-current={i === cur ? 'true' : undefined}
             style={{ padding: '4px 0', borderTop: '1px solid var(--tok-line)', fontWeight: i === cur ? 700 : 400 }}>
             <Link href={href(game.slug, p.providerPlayId)}>{p.providerPlayId}</Link>
-            {' · '}{whenLabel(p.period, p.clock)}
+            {' · '}{whenLabel(p.period, p.clock)}{p.clockEst ? '~' : ''}
             {' · '}{downLabel(p.down, p.distance, p.yardsToGoal) ?? '-'}
             {p.scoring ? ' · SCORING' : ''}
             {' · '}{txt(p.text)}

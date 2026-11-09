@@ -34,6 +34,7 @@ import GameTeamRow from '@/components/gridiron/GameTeamRow';
 import { pairHasHeadgear } from '@/lib/teams/headgear';
 import { getFollowedTeamIds } from '@/lib/follows';
 import { resolveShellMode } from '@/lib/shell/shell';
+import { nflPlayText } from '@/lib/gridiron/playText';
 import { DriveStrip, LastPlay, DriveChart } from '@/components/gridiron/Gamecast';
 import { gamecastFor } from '@/lib/gridiron/playsImport';
 import { gamecastState, buildDriveChart, simulateAsOf, lastLivePlay, lastActionPlay, showGamecast } from '@/lib/gridiron/driveStrip';
@@ -324,6 +325,7 @@ export default async function GamePage({ params, searchParams }) {
                 plays: sim.plays,
                 homeTeamId: game.home?.id,
                 teamAbbr: gamecast?.teamAbbr ?? new Map(),
+                league: 'nfl',
               })),
               final: game.status === 'final',
               live: game.status === 'live',
@@ -372,7 +374,7 @@ export default async function GamePage({ params, searchParams }) {
               defenseAbbr={defenseAbbr}
               simulated={sim.simulated}
             />
-            {stripState.mode !== 'final' && <LastPlay play={lastActionPlay(sim.plays) ?? stripLastPlay} />}
+            {stripState.mode !== 'final' && <LastPlay play={lastActionPlay(sim.plays) ?? stripLastPlay} format={nflPlayText} />}
             {/* THE DRIVE LIST LIVES IN THE DRIVES TAB (gamecast mock v0.2,
                 frame 1): the strip and the last play are the hero, the
                 drives are a tab beside the scoring summary. */}
@@ -405,7 +407,7 @@ export default async function GamePage({ params, searchParams }) {
               scoring: quarters.length ? <ScoringPanel quarters={quarters} game={game} /> : null,
               teambox: teamBox ? <TeamBoxPanel box={teamBox} teams={teams} /> : null,
               drives: gamecast?.plays?.length ? (
-                <DriveChart rows={driveRows} teamAbbr={gamecast.teamAbbr} homeTeamId={game.home?.id} />
+                <DriveChart rows={driveRows} teamAbbr={gamecast.teamAbbr} homeTeamId={game.home?.id} format={nflPlayText} />
               ) : null,
               boxscore: game.boxScore?.length ? <BoxScore boxScore={game.boxScore} teams={teams} leagueSlug={game.leagueSlug} /> : null,
             }}

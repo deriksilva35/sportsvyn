@@ -601,6 +601,7 @@ export async function laLineFor(sql, m) {
     plays,
     homeTeamId: m.home_team_id,
     teamAbbr: new Map([[m.home_team_id, m.home_abbr], [m.away_team_id, m.away_abbr]]),
+    league: m.league_slug,
   });
 }
 
