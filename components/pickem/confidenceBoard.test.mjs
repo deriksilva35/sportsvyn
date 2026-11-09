@@ -216,3 +216,76 @@ test('a team with no record row shows no small line (never a bare "-")', () => {
   const c = sportRender('nfl', [game({ home_record: null, away_record: null })]);
   assert.equal(c.querySelectorAll('.cfd-nm small').length, 0);
 });
+
+// ---- RANK BY WIN % (pickem-rank) ----
+const rankBtn = (c) => c.querySelector('[data-rank-winpct]');
+const pct = () => [
+  game({ match_id: 1, my_rank: 3, home: 'Bills', away: 'Lions', home_win_pct: 55 }),
+  game({ match_id: 2, my_rank: 2, home: 'Chiefs', away: 'Colts', home_win_pct: 80 }),
+  game({ match_id: 3, my_rank: 1, home: 'Jets', away: 'Titans', home_win_pct: 65 }),
+];
+
+test('the chip is on NFL, CFB and NBA confidence boards, a real 44px-class button; hidden on ATS and signed out', () => {
+  for (const sport of ['nfl', 'cfb', 'nba']) {
+    const c = sportRender(sport, pct());
+    assert.equal(rankBtn(c).tagName, 'BUTTON');
+    assert.equal(rankBtn(c).textContent, 'Rank by win %');
+    act(() => { for (const r of roots) r.unmount(); }); roots.clear();
+  }
+  let c = render(pct(), { ats: true });
+  assert.equal(rankBtn(c), null, 'ATS league board: no chip');
+  act(() => { for (const r of roots) r.unmount(); }); roots.clear();
+  c = render(pct(), { signedIn: false });
+  assert.equal(rankBtn(c), null);
+  assert.deepEqual([...render(pct()).querySelectorAll('.cfd-chip')].length, 2, 'the two header chips are unchanged');
+});
+
+test('tap reorders by win %, never changes picks, Undo restores exactly, nothing saves until Save picks', async () => {
+  const s = await stub();
+  const before = s.sheets.length;
+  const g = pct();
+  g[0].my_side = 'away';        // Lions pick at 45% ranks low
+  const c = render(g);
+  assert.equal(c.querySelector('.pkv-lock').disabled, true);
+  await click(rankBtn(c));
+  // wins: g2 80, g3 65, g1 picked away 45
+  assert.deepEqual(order(c), [2, 3, 1]);
+  assert.deepEqual(chips(c), ['3', '2', '1']);
+  assert.equal(rows(c)[2].querySelectorAll('.cfd-pill')[0].getAttribute('aria-pressed'), 'true', 'pick untouched');
+  assert.equal(rankBtn(c).textContent, 'Undo');
+  assert.match(c.querySelector('.cfd-live').textContent, /Undo is available/);
+  assert.equal(c.querySelector('.pkv-lock').disabled, false, 'dirty like a manual move');
+  assert.equal(s.sheets.length, before);
+  await click(rankBtn(c));
+  assert.deepEqual(order(c), [1, 2, 3]);
+  assert.deepEqual(chips(c), ['3', '2', '1']);
+  assert.equal(rankBtn(c).textContent, 'Rank by win %');
+  assert.equal(c.querySelector('.pkv-lock').disabled, true, 'clean again');
+});
+
+test('a locked row keeps its number and a no-line row goes last; a manual move drops the Undo', async () => {
+  const c = render([
+    game({ match_id: 1, my_rank: 4, home_win_pct: null }),
+    game({ match_id: 2, my_rank: 3, kicked: true, kickoff_at: past(), status: 'live', home_win_pct: 99 }),
+    game({ match_id: 3, my_rank: 2, home_win_pct: 60 }),
+    game({ match_id: 4, my_rank: 1, home_win_pct: 75 }),
+  ]);
+  await click(rankBtn(c));
+  assert.deepEqual(order(c), [4, 2, 3, 1]);
+  assert.deepEqual(chips(c), ['4', '3', '2', '1']);
+  assert.equal(rows(c)[1].dataset.match, '2', 'locked row still 3rd number');
+  await click(rows(c)[0].querySelectorAll('.cfd-mv button')[1]);
+  assert.equal(rankBtn(c).textContent, 'Rank by win %', 'manual change clears the Undo');
+});
+
+test('the Undo goes away after 10 seconds', async () => {
+  const { mock } = await import('node:test');
+  mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    const c = render(pct());
+    await click(rankBtn(c));
+    assert.equal(rankBtn(c).textContent, 'Undo');
+    await act(async () => { mock.timers.tick(10_000); });
+    assert.equal(rankBtn(c).textContent, 'Rank by win %');
+  } finally { mock.timers.reset(); }
+});

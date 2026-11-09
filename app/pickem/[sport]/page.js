@@ -138,6 +138,7 @@ export default async function PickemSportPage({ params, searchParams }) {
             hasHandle={hasHandle}
             sportSwitch={sportSwitch}
             season={season}
+            ats={ats}
           />
         )}
         {view.phase === 'living' && view.contest?.scoring !== 'confidence' && (

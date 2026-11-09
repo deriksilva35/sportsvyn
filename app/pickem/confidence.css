@@ -56,3 +56,7 @@
 .cfd-gr .cfd-rk { width: 30px; min-height: 30px; font-size: 14px; }
 .cfd-gr-nm { flex: 1; min-width: 0; font: 700 12px var(--font-saira-cond, sans-serif); text-transform: uppercase; }
 .cfd-gr-nm small { display: block; color: var(--muted-dim); font: 500 10px var(--font-mono, ui-monospace, monospace); text-transform: none; }
+
+/* ---- RANK BY WIN % chip (pickem-rank): a real button, 44px touch target ---- */
+.cfd-rankbtn { min-height: 44px; padding: 0 14px; border: 1px solid var(--volt); border-radius: 99px; background: transparent; color: var(--volt); font: 700 11px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.04em; cursor: pointer; }
+.cfd-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
