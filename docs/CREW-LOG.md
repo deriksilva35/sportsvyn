@@ -81,3 +81,45 @@ CREW-LOG data-keeper 2026-11-01 daily-season-backfill-2000-2001 ok would_change=
 2026-11-01 · Watcher · board run: G1 hit on 2 NBA 11-01 games (ticket 9ca94186-7764-4edb-9eb1-8ee14e2b48e1), app/vercel/deploy clean · runs 7d288701
 2026-11-01 · Watcher · G1 still-scheduled regression on 11-01 NBA games, deduped to 9ca94186 · runs c394981d
 2026-11-01 · Watcher · deploy 60fad9f clean: app/vercel errors 0, G1-G6 clear, board open · runs ed836765
+CREW-LOG data-keeper daily-season-backfill-2000-2001 dry-run exit=0 would_change=1119 dup-skipped
+2026-11-02 · Watcher · G4 unsettled boards 143 + 145 filed; app/5xx clean; providers ok · runs f7982282
+2026-11-02 · Watcher · board-open scan clean; G1-G7 0, app/vercel 0, deploy unchanged · runs 3026ad08
+2026-11-02 · Watcher · pre-lock run (locks_in 119m): app, vercel, deploy, G1-G7 clean · runs 1bf372d9
+2026-11-02 · Watcher · pre-lock check (locks in 119 min): 0 errors, 0 5xx, G1-G7 clean, no tickets · runs 1157c16d
+CREW-LOG data-keeper 2026-11-03 daily-season-backfill-2000-2001 would_change=1119 dup-skip 57e9a74b
+2026-11-03 · Watcher · nightly clean: G1-G7, app/vercel errors 0, deploy dpl_2Hv unchanged, providers 4/4 ok, Vercel budget unset · runs 8b45a60d
+2026-11-03 · Watcher · deploy dpl_AhibE2oT clean; app/vercel errors 0; G1-G7 ok; board open · runs fdb617d2
+2026-11-03 · Watcher · board open 09:00 PT: app/vercel errors 0, G1-G7 clean, no ticket · runs 6cc24c69
+2026-11-03 · Watcher · deploy dpl_4YXFitz clean; app/vercel errors 0; G1-G7 clear; board open · runs 5ddf8382
+2026-11-03 · Watcher · board-open run: 1 ticket (G4 contest 118 unsettled); app/vercel errors 0 · runs c583a388
+2026-11-03 · Watcher · deploy dpl_2CaBeM3 clean; G4 contest 118 deduped to 038aaded · runs c2c7fcb6
+SUMMARY data-keeper status=ok job=daily-season-backfill-2000-2001 rows_before=0 rows_after=1119 would_change=1119 dry_run=/home/crew-sportsvyn/crew/data/2026-11-04-daily-season-backfill-2000-2001.txt
+2026-11-04 · Watcher · nightly clean: errors 0, G1-G7 clear, providers ok, Vercel pace unknown · runs 88478c82
+2026-11-04 · Watcher · board-open 09:00 scan clean, 0 hits · runs 3735e4fe
+2026-11-04 · Watcher · pre-lock run, locks_in:119, deploy unchanged, G1-G7 clean, 0 errors, no tickets · runs 1f14f667
+2026-11-04 · Watcher · pre-lock board run, 0 hits (G1-G7 clean, errors 0, deploy unchanged) · runs 83f195b1
+2026-11-05 · Data Keeper · no log line · run 96d94963
+2026-11-05 · Watcher · nightly clean: 8 scripts ran, no hits; C1 cost unjudged (billing timeout) · runs a6a80030
+2026-11-05 · Watcher · Board open 09:00: deploy, app errors, 5xx, G1-G7 all clean; no tickets · runs ffae9288
+2026-11-05 · Watcher · deploy 18c384b clean; app/vercel 0 errors; G1-G7 clean · runs 2103f10a
+2026-11-05 · Watcher · board-open run: deploy 18c384b clean, app/5xx 0, G1-G7 clear, no tickets · runs 02eebb66
+2026-11-05 · Watcher · board pre-lock check (locks_in 114m): 0 errors, 0 5xx, deploy clean, G1-G7 clear · runs 42f1d209
+2026-11-05 · Watcher · pre-lock board scan clean (locks_in 39m, 0 hits) · runs dd81b157
+CREW-LOG data-keeper 2026-11-06 daily-season-backfill-2000-2001 dry-run ok; dup of approved 57e9a74b; no new deliverable
+2026-11-06 · Watcher · nightly clean: 8 scripts ok, G1-G7 clean, no tickets · runs ef185f6e
+2026-11-06 · Watcher · board-open run: app/vercel errors clean, deploy dpl_8X3H unchanged, G1-G7 clean · runs 0a42b017
+2026-11-06 · Watcher · board pre-lock 119m: app/vercel/deploy/G1-G7 clean, no tickets · runs 226e3999
+2026-11-06 · Watcher · board pre-lock run, 5 scripts clean, no tickets · runs 5a832160
+CREW-LOG daily-season-backfill-2000-2001 exit=0 would_change=1119 deliverable=d24f20ec
+2026-11-07 · Watcher · no log line · run beb1c150
+2026-11-07 · Watcher · board open: app/vercel errors 0, deploy dpl_8X3H clean, G1-G7 clean · runs 3bebf429
+2026-11-07 · Watcher · pre-lock board scan clean (G1-G7 0, errors 0, 5xx 0, deploy unchanged) · runs d60ffcd7
+2026-11-07 · Watcher · board open 15:00 PT, scripts clean, no hits · runs 8672f5bb
+2026-11-07 · Watcher · board pre-lock (locks in 119m); app, Vercel, deploy, G1-G7 clean · runs ca832e64
+2026-11-07 · Watcher · deploy dpl_7B9K clean; app/vercel errors 0; G1-G7 no hits; locks_in:68 · runs 88539f2f
+CREW-LOG daily-season-backfill-2000-2001 dup-skip 1119
+2026-11-08 · Watcher · nightly clean: 0 app/5xx errors, G1-G7 clean, providers ok, deploy 1dd7296 clean, cost pace unknown · runs 25bbba03
+2026-11-08 · Watcher · board pre-lock 119m: G6 frozen EPL x4 filed c6aeb59c; app/vercel/deploy clean · runs a15ff14c
+2026-11-08 · Watcher · board run: G6 EPL 40337 frozen 31m appended to c6aeb59c; app/vercel clean · runs 5d9cb02a
+2026-11-08 · Watcher · pre-lock 119m: app, vercel, deploy, G1-G7 clean; no tickets · runs 1c586982
+2026-11-08 · Watcher · board open, 0 hits: app, vercel, deploy, G1-G7 clean · runs 1b096136
