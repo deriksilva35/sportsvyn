@@ -388,6 +388,7 @@ export default async function CfbGamePage({ params, searchParams }) {
                 plays: sim.plays,
                 homeTeamId: game.home?.id,
                 teamAbbr: gamecast?.teamAbbr ?? new Map(),
+                league: 'cfb',
               })),
               final: game.status === 'final',
               live: game.status === 'live',

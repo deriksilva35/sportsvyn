@@ -12,6 +12,7 @@ import { FIELD, inkOn } from '@/lib/gridiron/driveCard';
 import { DRIVE_PALETTE as P } from '@/lib/brand/driveCardPalette';
 
 const { width: W, zone: Z, top: T, height: H } = FIELD;
+const BALL_R = 7;
 const MONO = { fontFamily: "var(--tok-font-num, 'Rubik Mono One', sans-serif)" };
 const SANS = { fontFamily: "var(--tok-font-display, 'Rubik', sans-serif)" };
 
@@ -50,9 +51,12 @@ export default function DriveCard({ dc, lastPlay = null }) {
         {dc.yardLines.map((x) => <line key={x} x1={x} y1={T} x2={x} y2={T + H} stroke={P.yardLine} strokeWidth="1" />)}
         {dc.band ? <rect data-band="1" x={dc.band.x} y="16" width={dc.band.w} height="14" fill={P.ball} opacity="0.28" /> : null}
         {dc.startX != null ? <line data-start="1" x1={dc.startX} y1="12" x2={dc.startX} y2="34" stroke={P.ball} strokeWidth="1" strokeDasharray="2 2" opacity="0.7" /> : null}
+        {/* THE BALL SITS UNDER THE LINES (drive-4): at the goal line the dot is centred on the
+            line of scrimmage, and drawn last it hid the very line it marks. The dot is
+            kept inside the field of play (one radius in from each goal line), and the first-down line and the LOS are drawn over it. */}
+        {dc.ballX != null ? <circle data-ball="1" cx={Math.max(Z + BALL_R, Math.min(W - Z - BALL_R, dc.ballX))} cy="23" r={BALL_R} fill={P.ball} stroke={P.ballRing} strokeWidth="2" /> : null}
         {dc.firstDownX != null ? <line data-firstdown="1" x1={dc.firstDownX} y1={T} x2={dc.firstDownX} y2={T + H} stroke={P.firstDown} strokeWidth="2.5" /> : null}
         {dc.losX != null ? <line data-los="1" x1={dc.losX} y1={T} x2={dc.losX} y2={T + H} stroke={P.los} strokeWidth="2" /> : null}
-        {dc.ballX != null ? <circle data-ball="1" cx={dc.ballX} cy="23" r="7" fill={P.ball} stroke={P.ballRing} strokeWidth="2" /> : null}
         {dc.yardLabels.map((l, i) => <text key={i} x={l.x} y="54" fill={P.yardLabel} fontSize="8" textAnchor="middle" style={SANS}>{l.text}</text>)}
       </svg>
       {lastPlay ? <p className="lp" title={lastPlay}>{lastPlay}</p> : null}

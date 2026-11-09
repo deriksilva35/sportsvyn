@@ -147,6 +147,13 @@
 :where(:root[data-theme="arcade"]) .sv4-ls td.t { font-weight: 700; color: var(--tok-ink); padding-left: 10px; }
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls thead th, :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls td { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls tbody th, :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-ls td.t { color: var(--tok-on-primary); }
+/* FIXED-WIDTH COLUMNS (drive-4): with auto layout every column took the width of its own
+   digits, so a 2-digit score or a long team code moved Q1-Q4 and T off the header (CLE@NO 13-16,
+   ORE@OSU 38-22; OT columns drifted the same way). Fixed layout: the code column takes what the
+   period columns leave, every period column (Q1-Q4 and OT) is the same width, T is one step wider. */
+:where(:root[data-theme="arcade"]) .sv4-ls { table-layout: fixed; }
+:where(:root[data-theme="arcade"]) .sv4-ls thead th:not(:first-child) { width: 3em; }
+:where(:root[data-theme="arcade"]) .sv4-ls thead th.t { width: 3.5em; }
 :where(:root[data-theme="arcade"]) .sv4-xs h3 { margin: 0 0 6px; font: 700 11px var(--tok-font-num); letter-spacing: .1em; text-transform: uppercase; color: var(--tok-muted); }
 :where(:root[data-theme="arcade"]) .sv4-card.live .sv4-xs h3 { color: color-mix(in srgb, var(--tok-on-primary) 78%, var(--tok-primary)); }
 :where(:root[data-theme="arcade"]) .sv4-xs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
