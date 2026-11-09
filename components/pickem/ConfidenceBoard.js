@@ -15,7 +15,7 @@
 // rule against its own clock (lib/pickem/confidence.js validateSheet); this
 // clock only decides what looks tappable.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { saveSheetAction } from '@/app/actions/pickem';
 import { sendPicksChanged } from '@/lib/shell/bridge';
 import { useHandleGate } from '@/components/handle/HandleGate';
@@ -24,12 +24,15 @@ import StandaloneTime from '@/components/StandaloneTime';
 import { dayLabel } from '@/lib/nba/dayRules';
 import { orderFor } from '@/lib/gridiron/teamOrder';
 import { moveRank } from '@/lib/pickem/confidence';
+import { rankByWinPct } from '@/lib/pickem/rankByWinPct';
 import { recordLine } from '@/lib/pickem/recordLine';
 import { winPctText } from '@/lib/pickem/winPctLine';
 import { isPreGame } from '@/lib/gridiron/oddsFormat';
 
+const nowMs = () => Date.now();
+
 export default function ConfidenceBoard({
-  view, signedIn, signinHref, hasHandle = true, sportSwitch = null, season = null,
+  view, signedIn, signinHref, hasHandle = true, sportSwitch = null, season = null, ats = false,
 }) {
   const { guard, modal: handleModal } = useHandleGate(hasHandle);
   const { contest, games: initial } = view;
@@ -58,26 +61,53 @@ export default function ConfidenceBoard({
   const banked = games.reduce((s, g) => s + (g.my_points ?? 0), 0);
   const anyOpen = games.some((g) => !g.kicked);
 
+  // RANK BY WIN %: one tap reorders the unlocked games (lib/pickem/rankByWinPct.js),
+  // through the same state a manual move uses, so dirty / Save behave the same.
+  // The tap leaves an "Undo" for 10 s; any manual change (or unmount) drops it.
+  const [undo, setUndo] = useState(null);                // { ranks, dirty } | null
+  const undoTimer = useRef(null);
+  const clearUndo = () => { clearTimeout(undoTimer.current); undoTimer.current = null; setUndo(null); };
+  useEffect(() => () => clearTimeout(undoTimer.current), []);
+  const canRank = signedIn && !ats && anyOpen;
+  function rankNow() {
+    const next = rankByWinPct(games.map((g) => ({
+      id: g.match_id, locked: g.kicked, confidence: ranks[g.match_id], pick: picks[g.match_id] ?? null,
+      winPct: g.home_win_pct == null ? null : { home: Number(g.home_win_pct), away: 100 - Number(g.home_win_pct) },
+    })));
+    clearTimeout(undoTimer.current);
+    setUndo({ ranks, dirty });
+    undoTimer.current = setTimeout(clearUndo, 10_000);
+    setRanks(next);
+    setDirty(true); setState('idle'); setMsg(null);
+  }
+  function undoRank() {
+    if (!undo) return;
+    setRanks(undo.ranks); setDirty(undo.dirty);
+    clearUndo();
+  }
+
   function pick(g, side) {
     if (!signedIn || g.kicked) return;
+    clearUndo();
     setPicks((p) => ({ ...p, [g.match_id]: side }));
     setDirty(true); setState('idle'); setMsg(null);
   }
   function move(g, dir) {
+    clearUndo();
     setRanks((r) => moveRank(r, games, g.match_id, dir));
     setDirty(true); setState('idle'); setMsg(null);
   }
 
   async function save() {
     if (state === 'saving') return;
-    setState('saving'); setMsg(null);
+    setState('saving'); setMsg(null); clearUndo();
     const res = await saveSheetAction(contest.id, picks, ranks).catch(() => ({ ok: false, reason: 'network' }));
     if (!res.ok) {
       setState('error');
       setMsg(res.reason === 'game_locked' || res.reason === 'rank_locked'
         ? 'A game just started - its pick and number are sealed. Reload to see the board as it stands.'
         : 'That did not save. Try again.');
-      setNow(Date.now());
+      setNow(nowMs());
       return;
     }
     setRanks(res.ranks);
@@ -104,7 +134,13 @@ export default function ConfidenceBoard({
           <span className="cfd-chip"><b className="n">{pickedCount}</b> of {n} picked</span>
           {banked > 0 ? <span className="cfd-chip cfd-chip--up"><b className="n">{banked}</b> banked</span> : null}
           {season?.avg ? <span className="cfd-chip"><b className="n">{season.avg}</b> season</span> : null}
+          {canRank ? (
+            <button type="button" className="cfd-rankbtn" data-rank-winpct onClick={undo ? undoRank : rankNow}>
+              {undo ? 'Undo' : 'Rank by win %'}
+            </button>
+          ) : null}
         </div>
+        <span className="cfd-live" role="status" aria-live="polite">{undo ? 'Ranked by win %. Undo is available for ten seconds.' : ''}</span>
       </header>
 
       {sportSwitch}
