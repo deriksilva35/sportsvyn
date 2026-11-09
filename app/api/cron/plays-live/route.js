@@ -31,13 +31,18 @@
  * or past ITS interval since its last poll - 90 s on an open board, 5 min off
  * one, 12 min at halftime, never again after Final plus one.
  *
+ * NFL (drive-2): the real cadence is 30 s and belongs to the droplet live
+ * poller (a minute-granularity cron cannot do it). Here an NFL game is read
+ * only when its plays are 180 s stale - the backstop for a down poller. Same
+ * `plays.updated_at` clock on both sides, so nothing is read twice.
+ *
  * Auth: Bearer ${CRON_SECRET}, the same secret as every other cron.
  */
 
 import { sql } from '@/lib/db';
 import { cronAuthorized } from '@/lib/pollers/cronAuth';
 import { liveBoardGames, lastPolledAt, cfbPlaysAll, recordPlaysPoll } from '@/lib/pollers/playsScope';
-import { dueByState, drainWithBudget, PLAYS_BUDGET } from '@/lib/pollers/playsCadence';
+import { dueByState, drainWithBudget, PLAYS_BUDGET, PLAYS_CADENCE } from '@/lib/pollers/playsCadence';
 import { importPlaysFor } from '@/lib/gridiron/playsImport';
 import { withAdvisoryLock } from '@/lib/pollers/lock';
 import { recordRun, recordDecision, probeCfbdBudget, closeAbandonedRuns } from '@/lib/pollers/runRecorder';
@@ -83,8 +88,10 @@ export async function GET(request) {
 
   const last = await lastPolledAt(inScope.map((g) => g.id));
   // CADENCE BY STATE (sun-9 f, lib/pollers/playsCadence.js): 90 s on a board,
-  // 5 min off it, 12 min at halftime, stop after Final. NFL stays at 90 s.
-  const due = dueByState(inScope, last, now);
+  // 5 min off it, 12 min at halftime, stop after Final. NFL is the droplet live
+  // poller's (30 s, drive-2); this cron reads an NFL game only as a BACKSTOP,
+  // when its plays are nflBackstopSec stale - the poller is down.
+  const due = dueByState(inScope, last, now, { ...PLAYS_CADENCE, nflSec: PLAYS_CADENCE.nflBackstopSec });
   if (!due.length) {
     return Response.json({ inScope: inScope.length, polled: 0, decision: 'throttled' });
   }

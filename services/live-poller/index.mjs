@@ -21,6 +21,8 @@ import { syncGameStats } from '../../lib/gridiron/gameStatsSync.js';
 import { syncMlbGameStats } from '../../lib/mlb/statsSync.js';
 import { syncMlbPlays } from '../../lib/mlb/playsSync.js';
 import { syncNbaGameStats, syncNbaLastPlay } from '../../lib/nba/statsSync.js';
+import { createNflPlays, liveNflGames, playsWrittenAt } from '../../lib/live/nflPlays.js';
+import { importPlaysFor } from '../../lib/gridiron/playsImport.js';
 import { snapshotLiveBoards } from '../../lib/boards/live.js';
 import { snapshotMlbBoards } from '../../lib/boards/mlb.js';
 import { kickIfDayDone } from '../../lib/mlb/advanceKick.js';
@@ -264,7 +266,7 @@ async function loop(lg) {
   // The latest provider failure for this league (latest wins; a clean poll clears it). It rides
   // the heartbeat and the window row as summary.provider_error (lib/pollers/providerError.js).
   let providerError = null;
-  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0, bdlErrors: 0, pollFailures: 0 };
+  const window = { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0, nflPlays: 0, nflPlaysFailed: 0, bdlErrors: 0, pollFailures: 0 };
   // BOX SCORE PULLS: every 10th live poll per live game, once at final.
   // MLB JOINS ON THE SAME TRACKER. Its ingest existed and was called by
   // nothing, so mlb_player_game_stats stayed empty on every game ever played -
@@ -272,6 +274,11 @@ async function loop(lg) {
   // healthily. One shared cadence, two sports, one quota count.
   // THE NBA JOINS TOO (nba-core): nba_player_game_stats is what Tonight's Six
   // will settle against, and an ingest nothing calls is the October lesson.
+  // NFL PLAY-BY-PLAY, EVERY TICK (drive-2, lib/live/nflPlays.js): started here, never awaited
+  // by the score poll, failures counted and logged. Null for every other league.
+  const nflPlays = lg.slug === 'nfl'
+    ? createNflPlays({ importFn: (id) => importPlaysFor(id), listFn: () => liveNflGames(sql), lastFn: (ids) => playsWrittenAt(sql, ids), log })
+    : null;
   const stats = (lg.slug === 'nfl' || lg.slug === 'mlb' || lg.slug === 'nba') ? new StatsTracker() : null;
   let statsCallsToday = 0;
 
@@ -304,7 +311,7 @@ async function loop(lg) {
       // A POLL THAT FAILED OUTRIGHT CLOSES THE WINDOW FAILED TOO (sat-1: ok=true all day on a 401).
       await closeWindow(windowId, { ...window, closedState: decision.state, ...(providerError ? { provider_error: providerError } : {}) }, window.bdlErrors === 0 && window.pollFailures === 0);
       await release(lock, lg.slug); lock = null; windowId = null;
-      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0, bdlErrors: 0, pollFailures: 0 });
+      Object.assign(window, { polls: 0, scoreChanges: 0, finals: 0, events: 0, calls: 0, unmapped: [], latencies: [], statsCalls: 0, lineups: 0, probables: 0, plays: 0, nflPlays: 0, nflPlaysFailed: 0, bdlErrors: 0, pollFailures: 0 });
       capNotes.windowClosed();
       log(`[${lg.slug}] window closed (${decision.state}) ${kickoffDelta(decision.nextKickoffAt, now)}`);
     }
@@ -401,6 +408,19 @@ async function loop(lg) {
               // Unmarked, so a later flip of the same game may still kick it.
               for (const id of ids) cfbKicked.delete(id);
               log('[cfb] box-score kick failed:', String(e?.message ?? e).slice(0, 120));
+            }
+          }
+          // NFL PLAYS: start what is due (never awaited), and book what finished since the
+          // last tick. A failed import closes the window FAILED, like any secondary-feed error.
+          if (nflPlays) {
+            await nflPlays.tick(now);
+            const d = nflPlays.drain();
+            pending += d.calls; window.calls += d.calls; window.nflPlays += d.imported;
+            if (d.failed) {
+              window.nflPlaysFailed += d.failed; window.bdlErrors += d.failed;
+              if (windowId != null) {
+                await sql`UPDATE sync_runs SET ok = false, summary = ${JSON.stringify({ ...window })}::jsonb WHERE id = ${windowId}`.catch(() => {});
+              }
             }
           }
           if (stats) {
@@ -542,7 +562,7 @@ async function loop(lg) {
     if (Date.now() - lastBeat >= HEARTBEAT_MS) {
       const total = pending ? await addCalls(sql, lg.slug, pending, now).catch(() => null) : spent;
       pending = 0; lastBeat = Date.now();
-      await heartbeat(lg.slug, decision.state, { ...(providerError ? { provider_error: providerError } : {}), callsToday: total, cap: DEFAULT_CAP[lg.slug], live: decision.liveCount, ...(stats ? { statsCalls: statsCallsToday } : {}) }).catch(() => {});
+      await heartbeat(lg.slug, decision.state, { ...(providerError ? { provider_error: providerError } : {}), callsToday: total, cap: DEFAULT_CAP[lg.slug], live: decision.liveCount, ...(stats ? { statsCalls: statsCallsToday } : {}), ...(nflPlays ? { nflPlaysAt: nflPlays.lastOkAt } : {}) }).catch(() => {});
       if (overCap(total, lg.slug)) {
         const { maybeAlert } = await import('../../lib/pollers/alerts.js');
         await maybeAlert(sql, {
