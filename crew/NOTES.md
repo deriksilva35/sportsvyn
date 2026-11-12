@@ -118,3 +118,4 @@ Archived: fixer SOUL v1.2, v1.3, v1.4 and NOTES v1.3, v1.4, v1.5 in _archive/.
 
 ## Nov 11 2026 (plainly-line, CrewOS ruling 00d)
 - Watcher v1.5.9, Data Keeper v1.5.2: the final message gains a last line, PLAINLY: <one sentence> (first person, everyday words, 120 characters or fewer; CrewOS stores it), with three examples each. Nothing else about either agent changes. The Fixer is unchanged: CrewOS's relay runner writes its final message.
+- Watcher v1.5.9 and Data Keeper v1.5.2: installed + registered by CrewOS from 5bce9697, Nov 11 2026, 4:20 PM PT. project.yaml soul_refs record both. New test scripts/footballdbImportDryRun.test.mjs pins that the Data Keeper's footballdb job script writes nothing without --apply.
