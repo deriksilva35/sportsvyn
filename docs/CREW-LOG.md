@@ -123,3 +123,41 @@ CREW-LOG daily-season-backfill-2000-2001 dup-skip 1119
 2026-11-08 · Watcher · board run: G6 EPL 40337 frozen 31m appended to c6aeb59c; app/vercel clean · runs 5d9cb02a
 2026-11-08 · Watcher · pre-lock 119m: app, vercel, deploy, G1-G7 clean; no tickets · runs 1c586982
 2026-11-08 · Watcher · board open, 0 hits: app, vercel, deploy, G1-G7 clean · runs 1b096136
+CREW-LOG data-keeper daily-season-backfill-2000-2001 would_change=1119 dup-skipped
+2026-11-09 · Watcher · nightly clean: 0 errors, 0 5xx, G1-G7 clean, providers ok, no tickets · runs 2181c1cd
+2026-11-09 · Watcher · board-open 09:00: app/vercel errors 0, deploy dpl_5jeP READY clean, G1-G7 clean, no tickets · runs 6ce5ac6a
+2026-11-09 · Watcher · deploy dpl_8c7R clean; app/vercel errors 0; G1-G7 clear; board open · runs bdd703cb
+2026-11-09 · Watcher · deploy dpl_12GT4 clean; app/vercel errors 0; G1-G7 clean; board open · runs b2cfbc24
+2026-11-09 · Watcher · deploy 74d0a03 clean; G1-G7 0 hits; board open · runs 2bf0ac2c
+2026-11-09 · Watcher · pre-lock (locks in 119m): app, 5xx, deploy, G1-G7 all clean · runs 95668193
+2026-11-09 · Watcher · pre-lock 73m: deploy 74d0a03 unchanged, errors 0, 5xx 0, G1-G7 clean, no tickets · runs d453ec1f
+CREW-LOG data-keeper run=50f3a0c5-3a5c-4bad-bebb-f749596df314 job=daily-season-backfill-2000-2001 would_change=1119 dedupe=d24f20ec
+2026-11-10 · Watcher · nightly clean: 8 scripts ok, no rule hits, no tickets · runs e34abcbb
+2026-11-10 · Watcher · board-open run: 4 scripts ok, G1-G7 clean, no tickets · runs 7858aa35
+2026-11-10 · Watcher · board pre-lock run, 0 hits (locks_in:118, deploy READY 74d0a03) · runs 0ccf6652
+2026-11-10 · Watcher · pre-lock locks_in:119, all rules clean, no tickets · runs 5246f7d5
+CREW-LOG daily-season-backfill-2000-2001 dup-skipped; d24f20ec approved 2026-11-07 not applied
+2026-11-11 · Watcher · Nightly: 0 hits across G1-G7, 5xx, app errors, deploy, provider, retention; no tickets · runs ad9bb1d7
+2026-11-11 · Watcher · board-open run clean: app/vercel errors 0, G1-G7 clear, deploy dpl_Fi3i READY · runs 608dea6b
+2026-11-11 · Watcher · board pre-lock 119 min; app/vercel/deploy/G1-G7 clean · runs 2fa7df42
+2026-11-11 · Watcher · Pre-lock check clean; no errors, 5xx or game issues, latest deploy was canceled and not ticketed · runs e1b520d2
+CREW-LOG data-keeper daily-season-backfill-2000-2001 dry-run ok, 1119 would change
+2026-11-12 · Watcher · Nightly scan clean: 8 scripts ok, G1-G7 quiet, no tickets · runs 986653d6
+2026-11-12 · Watcher · board open scan clean, no tickets · runs 18d6b18c
+2026-11-12 · Watcher · pre-lock check (locks in 119 min): app, site, games and deploy all clean · runs 7b4a0c0c
+2026-11-12 · Watcher · Pre-lock check clean: no app or 5xx errors, all game rules clear, no ticket · runs e4e44996
+2026-11-13 · Data Keeper · no log line · run d7917bd0
+2026-11-13 · Watcher · Nightly clean: scripts ok, no rule fired, no tickets · runs 1f28c16c
+2026-11-13 · Watcher · Board open 9am: app errors, 5xx and game rules G1-G7 clean; latest deploy canceled (no rule) · runs 11899684
+2026-11-13 · Watcher · Pre-lock check clean: no errors, 5xx, or game freezes; 118 min to lock · runs 7f581302
+2026-11-13 · Watcher · Pre-lock check clean; no errors, no game or deploy issues · runs 22a11b97
+CREW-LOG daily-season-backfill-2000-2001 dry-run identical; dup-skipped
+2026-11-14 · Watcher · Nightly clean: no errors, 5xx, or game rule hits; no new tickets · runs 183698ae
+2026-11-14 · Watcher · Board open, all scripts clean, no tickets · runs af895b81
+2026-11-14 · Watcher · Pre-lock check: 0 errors, 0 5xx, G1-G7 all clean; no ticket · runs d4e573b0
+2026-11-14 · Watcher · Pre-lock check clean; scores, errors and the site looked normal · runs fe9412d8
+CREW-LOG daily-season-backfill-2000-2001 dry-run: would_change=1119 rows_before=0 rows_after=1119; dup of approved 60919d73, not re-filed; Derik to apply by hand
+2026-11-15 · Watcher · Nightly clean: scripts ok, no tickets, retention overdue noted · runs bd80c726
+2026-11-15 · Watcher · Pre-lock check clean; scores, boards and site normal; no tickets · runs ac599079
+2026-11-15 · Watcher · Board-open run: all triggered checks clean, no tickets · runs fa032038
+2026-11-15 · Watcher · Pre-lock board run: app errors, 5xx, deploy and G1-G7 all clean; no tickets · runs 8c1ec565
