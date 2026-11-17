@@ -34,8 +34,8 @@ start_gates:
   data_keeper: 02:00 PT; $0.30/run; 30/month; $10/month; 15 min/run; 1/day
   fixer: subscription ($0); 25 min/session; 3/day
 soul_refs:
-  watcher: 03f76e22  # v1.5.7, installed
-  data_keeper: 263995f7
+  watcher: 5bce9697  # v1.5.9, installed + registered Nov 11 2026
+  data_keeper: 5bce9697  # v1.5.2, installed + registered Nov 11 2026
   fixer: 263995f7
 db_role: crew_reader (SELECT on crew_stats views only)
 watch_rules: crew/watch-rules.md  # installed into the Watcher workspace at docs/crew/watch-rules.md; GAME G1-G7, PROVIDER P1-P8, COST C1-C3
