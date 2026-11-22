@@ -52,6 +52,12 @@ While building, run the touched tests and `npx eslint <touched>` locally.
        PR head commit.
     2) Merge server-side:
        gh api -X PUT repos/deriksilva35/sportsvyn/pulls/<n>/merge -f merge_method=merge
+  MERGE COMMITS ONLY (CrewOS ops, 22 Nov; holds until ops says the new filer is
+  installed): every PR lands with a merge commit, via the API PUT above
+  (merge_method=merge), the GitHub Merge button, or `gh pr merge <n> --merge`.
+  Never squash, never `git merge --ff-only` + push to main. CrewOS files
+  migration Approvals cards ONLY from merge commits on main, so a migration that
+  lands any other way never gets a card and never gets applied.
   Never use --admin (it skips the check too). If the API merge is refused
   with the check green, stop and report.
 - Then wait for production Vercel READY on the merge commit.
