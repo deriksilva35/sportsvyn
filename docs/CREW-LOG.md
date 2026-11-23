@@ -161,3 +161,38 @@ CREW-LOG daily-season-backfill-2000-2001 dry-run: would_change=1119 rows_before=
 2026-11-15 · Watcher · Pre-lock check clean; scores, boards and site normal; no tickets · runs ac599079
 2026-11-15 · Watcher · Board-open run: all triggered checks clean, no tickets · runs fa032038
 2026-11-15 · Watcher · Pre-lock board run: app errors, 5xx, deploy and G1-G7 all clean; no tickets · runs 8c1ec565
+CREW-LOG daily-season-backfill-2000-2001 dry-run exit=0 would_change=1119 dedupe=60919d73
+2026-11-16 · Watcher · Nightly: board open, 7 game rules clean, providers fresh, 0 app/5xx errors, no tickets · runs f576cad2
+2026-11-16 · Watcher · Board open; apps, site and all games clean, nothing filed · runs d156fcb2
+2026-11-16 · Watcher · pre-lock board run, 0 errors, 0 5xx, G1-G7 clean, no tickets · runs a767f867
+2026-11-16 · Watcher · Pre-lock board check (locks in 74 min): all clean, no tickets · runs 9577f2e1
+CREW-LOG data-keeper run done: 2000-2001 identical dup of 60919d73
+2026-11-17 · Watcher · Nightly clean: 8 scripts ran, no rule fired, no tickets · runs ccb45675
+2026-11-17 · Watcher · Board open, 60-min app and Vercel errors zero, games G1-G7 clean, no new tickets · runs bef9d5d9
+2026-11-17 · Watcher · Pre-lock check clean; scores, boards and the site looked normal · runs b6a1093d
+2026-11-17 · Watcher · Pre-lock board run: app errors, 5xx, deploy and games G1-G7 all clean · runs 6226eb48
+CREW-LOG data-keeper 2026-11-18 dup-skipped 60919d73 approved not applied
+2026-11-18 · Watcher · Nightly scan clean; no hits; Vercel billing read timed out · runs 91765833
+2026-11-18 · Watcher · Board open; app and Vercel errors clean, game-watch G1-G7 clean, no new tickets · runs 55ea78a9
+2026-11-18 · Watcher · pre-lock check clean, no errors or game issues · runs d929aa71
+2026-11-18 · Watcher · Pre-lock board run, all quiet; no tickets · runs d4ddf055
+2026-11-19 · Data Keeper · no log line · run 6d9aeddc
+2026-11-19 · Watcher · Nightly clean: no errors, no 5xx, games G1-G7 all 0, providers and boards normal · runs 21ebb32a
+2026-11-19 · Watcher · Board-open check clean; no tickets · runs ab2a0b0a
+2026-11-19 · Watcher · Pre-lock check (locks in 119 min): errors, deploys and games all clean, no tickets · runs 6ef0bb9d
+CREW-LOG daily-season-backfill-2000-2001 dup-skipped of 60919d73
+2026-11-20 · Watcher · Nightly scan clean; Vercel billing check timed out, cost pace unknown · runs d61e7593
+2026-11-20 · Watcher · Board open; app, Vercel, deploy and G1-G7 game checks clean, no tickets · runs 6ce4d09a
+2026-11-20 · Watcher · Pre-lock board check clean; no errors, deploy or game issues · runs 15f5ba30
+2026-11-20 · Watcher · Pre-lock check clean; scores, site and deploy all normal · runs ac36bbc8
+CREW-LOG dry-run ok; 1119 rows would change; 60919d73 still approved-not-applied; no dup filed
+2026-11-21 · Watcher · Nightly: one live ticket, EPL match 24708 frozen 91 min · runs f6015376
+2026-11-21 · Watcher · 5 EPL matches frozen at half-time; ticketed 681b0ba3 · runs e99c8410
+2026-11-21 · Watcher · Board-open scan clean: app errors, 5xx, game rules G1-G7 all quiet · runs e7b11734
+2026-11-21 · Watcher · pre-lock check clean, no hits, no tickets · runs 8b9dd7f2
+2026-11-22 · Data Keeper · no log line · run f77c58ee
+2026-11-22 · Watcher · nightly: no app or 5xx errors, G1-G7 clean, BDL MLB 401 ticketed · runs 42adc205
+2026-11-22 · Watcher · Board open; G6 frozen EPL match 40346 ticketed, rest clean · runs 9a15d2aa
+2026-11-22 · Watcher · Pre-lock board run, 119 min to lock; app, Vercel, deploy and G1-G7 clean · runs b324a0a1
+2026-11-22 · Watcher · Board open; 4 checks clean, no hits · runs c79c8773
+2026-11-22 · Watcher · pre-lock check (119 min): app errors, Vercel 5xx, deploy and game rules all clean · runs 8c56c15a
